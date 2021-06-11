@@ -390,7 +390,7 @@ TEST(Instrument, FindWindowFieldOfView)
 
 	orientationData.push_back(interval);
 
-	s.WriteOrientations(orientationData, IO::SDK::Frames::InertialFrames::ICRF);
+	s.WriteOrientations(orientationData);
 
 	//Check frame name and id
 	auto id = IO::SDK::DataPoolMonitoring::Instance().GetIntegerProperty("FRAME_SC179FOV_CAMERAFOV789", 1);

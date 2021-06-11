@@ -1,7 +1,19 @@
+/**
+ * @file Propagator.cpp
+ * @author Sylvain Guillet (sylvain.guillet@live.com)
+ * @brief 
+ * @version 0.1
+ * @date 2021-06-11
+ * 
+ * @copyright Copyright (c) 2021
+ * 
+ */
 #include <Propagator.h>
 #include <PropagatorException.h>
 #include <algorithm>
 #include <ManeuverBase.h>
+
+using namespace std::chrono_literals;
 
 IO::SDK::Propagators::Propagator::Propagator(const IO::SDK::Body::Spacecraft::Spacecraft &spacecraft, IO::SDK::Integrators::IntegratorBase &integrator, const IO::SDK::Time::Window<IO::SDK::Time::TDB> &window)
     : m_spacecraft{spacecraft}, m_integrator{integrator}, m_window{window}
@@ -19,6 +31,7 @@ void IO::SDK::Propagators::Propagator::Propagate()
     IO::SDK::OrbitalParameters::StateVector stateVector{m_spacecraft.GetOrbitalParametersAtEpoch()->GetStateVector(m_window.GetStartDate())};
     m_stateVectors.push_back(stateVector);
 
+    //Initial alignment, spacecraft back points toward the earth
     IO::SDK::OrbitalParameters::StateOrientation attitude(m_spacecraft.Front.To(stateVector.GetPosition().Normalize()), IO::SDK::Math::Vector3D(0.0, 0.0, 0.0), stateVector.GetEpoch(), stateVector.GetFrame());
     m_StateOrientations.push_back(std::vector<IO::SDK::OrbitalParameters::StateOrientation>{attitude});
 
@@ -43,10 +56,20 @@ void IO::SDK::Propagators::Propagator::Propagate()
     //Write ephemeris
     m_spacecraft.WriteEphemeris(m_stateVectors, IO::SDK::Frames::InertialFrames::ICRF);
 
-    if (m_StateOrientations.size() > 1)
-    {
-        m_spacecraft.WriteOrientations(m_StateOrientations, IO::SDK::Frames::InertialFrames::ICRF);
-    }
+    //Write orientations
+    //Set the latest known orientation
+    auto latestManeuverOrientationAtBegining = m_StateOrientations.back().front();
+    auto latestManeuverOrientationAtEnd = m_StateOrientations.back().back();
+
+    //Set new latestOrientation 0.1s before
+    IO::SDK::OrbitalParameters::StateOrientation orientationAtBegin(latestManeuverOrientationAtBegining.GetQuaternion(), latestManeuverOrientationAtBegining.GetAngularVelocity(), m_window.GetEndDate().Add(IO::SDK::Time::TimeSpan(-0.1s)), latestManeuverOrientationAtBegining.GetFrame());
+
+    IO::SDK::OrbitalParameters::StateOrientation orientationAtEnd(latestManeuverOrientationAtEnd.GetQuaternion(), latestManeuverOrientationAtEnd.GetAngularVelocity(),  m_window.GetEndDate(), latestManeuverOrientationAtEnd.GetFrame());
+
+    m_StateOrientations.push_back(std::vector<IO::SDK::OrbitalParameters::StateOrientation>{orientationAtBegin, orientationAtEnd});
+
+    //Wriet orientation data
+    m_spacecraft.WriteOrientations(m_StateOrientations);
 }
 
 const IO::SDK::OrbitalParameters::StateVector *IO::SDK::Propagators::Propagator::FindNearestLowerStateVector(const IO::SDK::Time::TDB &epoch) const

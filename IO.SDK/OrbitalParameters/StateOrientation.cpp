@@ -30,3 +30,8 @@ IO::SDK::Math::Vector3D IO::SDK::OrbitalParameters::StateOrientation::GetAngular
 {
 	return m_angularVelocity;
 }
+
+IO::SDK::Frames::Frames IO::SDK::OrbitalParameters::StateOrientation::GetFrame() const
+{
+	return m_frame;
+}
