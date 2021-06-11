@@ -1,0 +1,24 @@
+KPL/SCLK
+
+Generic clock used only in pre mission design
+It's generated as 2021-01-01/00:00:00.0 TDB ans is equal to 6.62731200000000E+08 TDB past seconds
+Resolution : 15.259 us
+
+\begindata
+
+SCLK_KERNEL_ID           = ( @2021-01-01/00:00:00.0 )
+
+SCLK_DATA_TYPE_34        = ( 1 )
+SCLK01_TIME_SYSTEM_34    = ( 1 )
+SCLK01_N_FIELDS_34       = ( 2 )
+SCLK01_MODULI_34         = ( 4294967296 65536 )
+SCLK01_OFFSETS_34        = ( 0 0 )
+SCLK01_OUTPUT_DELIM_34   = ( 2 )
+
+SCLK_PARTITION_START_34  = ( 0.0000000000000E+00 )
+
+SCLK_PARTITION_END_34    = ( 2.8147497671065E+14 )
+
+SCLK01_COEFFICIENTS_34   = ( 0.0000000000000E+00     6.62731200000000E+08     1.0000000000000E+00 )
+
+\begintext

@@ -1,0 +1,38 @@
+﻿cmake_minimum_required (VERSION 3.18)
+set(This IO.SDK)
+message(STATUS "Tests Projet source: ${PROJECT_SOURCE_DIR}")
+message(STATUS "Tests CMake source dir: ${CMAKE_SOURCE_DIR}")
+message(STATUS "Tests CMake current source dir: ${CMAKE_CURRENT_SOURCE_DIR}")
+message(STATUS "Tests CMake current bin dir: ${CMAKE_CURRENT_BINARY_DIR}")
+
+file(GLOB_RECURSE IO_SDK_SRC "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp")
+file(GLOB_RECURSE IO_SDK_H "${CMAKE_CURRENT_SOURCE_DIR}/*.h")
+
+add_library(${This} SHARED ${IO_SDK_SRC})
+
+# REFERENCE SDK INCLUDES
+MACRO(HEADER_DIRECTORIES return_list)
+    FILE(GLOB_RECURSE new_list ${CMAKE_CURRENT_SOURCE_DIR}/*.h)
+    SET(dir_list "")
+    FOREACH(file_path ${new_list})
+        GET_FILENAME_COMPONENT(dir_path ${file_path} PATH)
+        SET(dir_list ${dir_list} ${dir_path})
+    ENDFOREACH()
+    LIST(REMOVE_DUPLICATES dir_list)
+    SET(${return_list} ${dir_list})
+ENDMACRO()
+HEADER_DIRECTORIES(MyList)
+target_include_directories(${This} PUBLIC ${MyList})
+
+#ADD SPECIFICS LIBS AND HEADERS 
+if (MSVC)
+    target_include_directories(${This} PUBLIC ${CMAKE_SOURCE_DIR}/lib/includeWindows)
+    target_link_libraries(${This} ${CMAKE_SOURCE_DIR}/lib/cspice.lib)
+elseif(UNIX)
+    target_include_directories(${This} PUBLIC ${CMAKE_SOURCE_DIR}/lib/includeLinux)
+    target_link_libraries(${This} ${CMAKE_SOURCE_DIR}/lib/cspice.a)
+endif ()
+
+#INSTALL
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} DESTINATION include FILES_MATCHING PATTERN "*.h")
+install(TARGETS ${This} DESTINATION lib)

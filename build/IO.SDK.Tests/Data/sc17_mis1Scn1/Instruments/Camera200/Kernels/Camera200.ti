@@ -1,0 +1,12 @@
+KPL/IK
+
+\begindata
+
+    INS-17200_FOV_CLASS_SPEC       = 'ANGLES'
+    INS-17200_FOV_SHAPE            = 'CIRCLE'
+    INS-17200_FOV_FRAME            = 'sc17_Camera200'
+    INS-17200_BORESIGHT            = ( 1.000000, 2.000000, 3.000000 )
+    INS-17200_FOV_REF_VECTOR       = ( 1.000000, 0.000000, 0.000000 )
+    INS-17200_FOV_REF_ANGLE        = 0.087266
+    INS-17200_FOV_ANGLE_UNITS      = 'RADIANS'
+\begintext

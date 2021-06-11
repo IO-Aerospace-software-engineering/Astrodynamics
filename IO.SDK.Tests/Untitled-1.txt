@@ -1,0 +1,4 @@
+message(STATUS "Tests Projet source: ${PROJECT_SOURCE_DIR}")
+message(STATUS "Tests CMake source dir: ${CMAKE_SOURCE_DIR}")
+message(STATUS "Tests CMake current source dir: ${CMAKE_CURRENT_SOURCE_DIR}")
+message(STATUS "Tests CMake current bin dir: ${CMAKE_CURRENT_BINARY_DIR}")
