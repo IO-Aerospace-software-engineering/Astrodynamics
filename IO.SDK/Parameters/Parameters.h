@@ -10,9 +10,12 @@ namespace IO::SDK::Parameters
 	inline constexpr std::string_view SiteFramesPath = "Data/Sites/Frames";
 	inline constexpr int CommentAreaSize = 5000;
 	inline constexpr int LagrangePolynomialDegree = 9;//[1-27]
+	inline constexpr int MaximumOrientationLagrangePolynomialDegree = 23;//[1-23]
+
 	inline constexpr double NodeDetectionAccuraccy = 0.0017453;//0.1°
 	inline constexpr double IntersectDetectionAccuraccy = 0.017453;//1.0°
 	inline constexpr double CircularEccentricityAccuraccy = 1E-03;
+	inline constexpr double ClockAccuracy = 1.0/65536.0;
 
 }
 #endif

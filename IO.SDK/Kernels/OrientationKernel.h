@@ -1,3 +1,13 @@
+/**
+ * @file OrientationKernel.h
+ * @author Sylvain Guillet (sylvain.guillet@live.com)
+ * @brief 
+ * @version 0.1
+ * @date 2021-06-11
+ * 
+ * @copyright Copyright (c) 2021
+ * 
+ */
 #ifndef ORIENTATION_KERNEL_H
 #define ORIENTATION_KERNEL_H
 
@@ -21,10 +31,11 @@ namespace IO::SDK::Kernels
 	class OrientationKernel :public IO::SDK::Kernels::Kernel
 	{
 	private:
-		/// <summary>
-		/// Instanciate orientation kernel
-		/// </summary>
-		/// <param name="spacecraft"></param>
+		/**
+		 * @brief Construct a new Orientation Kernel object
+		 * 
+		 * @param spacecraft 
+		 */
 		OrientationKernel(const IO::SDK::Body::Spacecraft::Spacecraft& spacecraft);
 		const IO::SDK::Body::Spacecraft::Spacecraft& m_spacecraft;
 
@@ -34,26 +45,28 @@ namespace IO::SDK::Kernels
 
 		virtual ~OrientationKernel();
 
-		/// <summary>
-		/// Write orientation data to the kernel
-		/// </summary>
-		/// <param name="orientations">Orientation data</param>
-		/// <param name="frame">Inertial frame</param>
-		void WriteOrientations(const std::vector<std::vector<IO::SDK::OrbitalParameters::StateOrientation>>& orientations, const IO::SDK::Frames::Frames& frame) const;
+		/**
+		 * @brief Write orientations data
+		 * 
+		 * @param orientations 
+		 */
+		void WriteOrientations(const std::vector<std::vector<IO::SDK::OrbitalParameters::StateOrientation>>& orientations) const;
 
-		/// <summary>
-		/// Get kernel coverage window
-		/// </summary>
-		/// <returns></returns>
+		/**
+		 * @brief Get the Coverage Window
+		 * 
+		 * @return IO::SDK::Time::Window<IO::SDK::Time::TDB> 
+		 */
 		IO::SDK::Time::Window<IO::SDK::Time::TDB> GetCoverageWindow() const override;
 
-		/// <summary>
-		/// read a state orientation
-		/// </summary>
-		/// <param name="epoch"></param>
-		/// <param name="tolerance"></param>
-		/// <param name="frame"></param>
-		/// <returns></returns>
+		/**
+		 * @brief Read state orientations
+		 * 
+		 * @param epoch 
+		 * @param tolerance 
+		 * @param frame 
+		 * @return IO::SDK::OrbitalParameters::StateOrientation 
+		 */
 		IO::SDK::OrbitalParameters::StateOrientation ReadStateOrientation(const IO::SDK::Time::TDB& epoch, const IO::SDK::Time::TimeSpan& tolerance, const IO::SDK::Frames::Frames& frame)const;
 
 		friend class IO::SDK::Body::Spacecraft::Spacecraft;
