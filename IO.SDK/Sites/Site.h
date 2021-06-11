@@ -45,19 +45,6 @@ namespace IO::SDK::Sites
         std::unique_ptr<IO::SDK::Frames::SiteFrameFile> m_frame;
         const int m_id;
 
-        // /**
-        //  * @brief Find solar windows
-        //  * 
-        //  * @param start 
-        //  * @param end 
-        //  * @param twilight 
-        //  * @param operator 
-        //  * @return std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>> 
-        //  */
-        // std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>> FindSolarWindows(const IO::SDK::Time::TDB &start, const IO::SDK::Time::TDB &end, const double twilight, const std::string comparator) const;
-
-        
-
     public:
         /**
          * @brief Construct a new Site object

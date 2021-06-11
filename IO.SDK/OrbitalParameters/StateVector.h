@@ -53,14 +53,14 @@ namespace IO::SDK::OrbitalParameters
 		 */
 		StateVector(const std::shared_ptr<IO::SDK::Body::CelestialBody> &centerOfMotion, const IO::SDK::Math::Vector3D& position, const IO::SDK::Math::Vector3D& velocity, const IO::SDK::Time::TDB &epoch, const IO::SDK::Frames::Frames &frame);
 
-		/**
-		 * @brief Construct a new State Vector object
-		 * 
-		 * @param centerOfMotion 
-		 * @param position 
-		 * @param epoch 
-		 */
-		StateVector(const std::shared_ptr<IO::SDK::Body::CelestialBody> &centerOfMotion, const IO::SDK::Math::Vector3D& position, const IO::SDK::Time::TDB &epoch);
+		// /**
+		//  * @brief Construct a new State Vector object without
+		//  * 
+		//  * @param centerOfMotion 
+		//  * @param position 
+		//  * @param epoch 
+		//  */
+		// StateVector(const std::shared_ptr<IO::SDK::Body::CelestialBody> &centerOfMotion, const IO::SDK::Math::Vector3D& position, const IO::SDK::Time::TDB &epoch);
 
 		/**
 		 * @brief Construct a new State Vector object
