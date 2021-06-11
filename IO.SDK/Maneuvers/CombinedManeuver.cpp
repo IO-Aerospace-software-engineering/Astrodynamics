@@ -2,11 +2,11 @@
 #include <ConicOrbitalElements.h>
 #include <Vector3D.h>
 
-IO::SDK::Maneuvers::CombinedManeuver::CombinedManeuver(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, const IO::SDK::Body::Spacecraft::Spacecraft &spacecraft, IO::SDK::Propagators::Propagator *propagator, const double inclination, const double perigeeRadius) : m_inclination{inclination}, m_peregeeRadius{perigeeRadius}, IO::SDK::Maneuvers::ManeuverBase(engines, spacecraft, propagator)
+IO::SDK::Maneuvers::CombinedManeuver::CombinedManeuver(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator *propagator, const double inclination, const double perigeeRadius) : m_inclination{inclination}, m_peregeeRadius{perigeeRadius}, IO::SDK::Maneuvers::ManeuverBase(engines, propagator)
 {
 }
 
-IO::SDK::Maneuvers::CombinedManeuver::CombinedManeuver(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, const IO::SDK::Time::TDB &minimumEpoch, const IO::SDK::Body::Spacecraft::Spacecraft &spacecraft, IO::SDK::Propagators::Propagator *propagator, const double inclination, const double perigeeRadius) : m_inclination{inclination}, m_peregeeRadius{perigeeRadius}, IO::SDK::Maneuvers::ManeuverBase(engines, minimumEpoch, spacecraft, propagator)
+IO::SDK::Maneuvers::CombinedManeuver::CombinedManeuver(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, const IO::SDK::Time::TDB &minimumEpoch, IO::SDK::Propagators::Propagator *propagator, const double inclination, const double perigeeRadius) : m_inclination{inclination}, m_peregeeRadius{perigeeRadius}, IO::SDK::Maneuvers::ManeuverBase(engines, minimumEpoch,  propagator)
 {
 }
 

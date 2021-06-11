@@ -3,7 +3,7 @@
 #include <chrono>
 #include <cmath>
 
-IO::SDK::Maneuvers::PhasingManeuver::PhasingManeuver(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, const IO::SDK::Body::Spacecraft::Spacecraft &spacecraft, IO::SDK::Propagators::Propagator *propagator, const uint revolutionNumber, IO::SDK::OrbitalParameters::OrbitalParameters *targetOrbit) : m_revolutionsNumber{revolutionNumber}, m_targetOrbit{targetOrbit}, IO::SDK::Maneuvers::ManeuverBase(engines, spacecraft, propagator)
+IO::SDK::Maneuvers::PhasingManeuver::PhasingManeuver(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator *propagator, const uint revolutionNumber, IO::SDK::OrbitalParameters::OrbitalParameters *targetOrbit) : m_revolutionsNumber{revolutionNumber}, m_targetOrbit{targetOrbit}, IO::SDK::Maneuvers::ManeuverBase(engines, propagator)
 {
     if (!targetOrbit)
     {

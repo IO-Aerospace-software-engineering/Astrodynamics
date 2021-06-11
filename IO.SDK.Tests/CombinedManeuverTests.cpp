@@ -34,7 +34,7 @@ TEST(CombinedManeuver, CanExecute)
     std::vector<IO::SDK::Body::Spacecraft::Engine> engines;
     engines.push_back(*engine1);
 
-    IO::SDK::Maneuvers::CombinedManeuver maneuver(engines, s, &prop, 20.0 * IO::SDK::Constants::DEG_RAD, 12000000.0);
+    IO::SDK::Maneuvers::CombinedManeuver maneuver(engines, &prop, 20.0 * IO::SDK::Constants::DEG_RAD, 12000000.0);
 
     ASSERT_FALSE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()->GetStateVector(178.0 * IO::SDK::Constants::DEG_RAD)));
     ASSERT_FALSE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()->GetStateVector(179.0 * IO::SDK::Constants::DEG_RAD)));
@@ -60,7 +60,7 @@ TEST(CombinedManeuver, TryExecuteWithPeregeeHigherThanApogee)
     std::vector<IO::SDK::Body::Spacecraft::Engine> engines;
     engines.push_back(*engine1);
 
-    IO::SDK::Maneuvers::CombinedManeuver maneuver(engines, s, &prop, 0.0, 42164000.0);
+    IO::SDK::Maneuvers::CombinedManeuver maneuver(engines, &prop, 0.0, 42164000.0);
 
     //Initialize
     maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()->GetStateVector(178.0 * IO::SDK::Constants::DEG_RAD));
@@ -95,7 +95,7 @@ TEST(CombinedManeuver, TryExecuteWithPeregeeLowerThanApogee)
     std::vector<IO::SDK::Body::Spacecraft::Engine> engines;
     engines.push_back(*engine1);
 
-    IO::SDK::Maneuvers::CombinedManeuver maneuver(engines, s, &prop, 0.0, 42164000.0);
+    IO::SDK::Maneuvers::CombinedManeuver maneuver(engines, &prop, 0.0, 42164000.0);
 
     //Initialize
     maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()->GetStateVector(178.0 * IO::SDK::Constants::DEG_RAD));

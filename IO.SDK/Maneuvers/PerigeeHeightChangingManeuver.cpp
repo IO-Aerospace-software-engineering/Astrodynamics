@@ -2,7 +2,7 @@
 #include <InvalidArgumentException.h>
 #include <SDKException.h>
 
-IO::SDK::Maneuvers::PerigeeHeightChangingManeuver::PerigeeHeightChangingManeuver(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, const IO::SDK::Body::Spacecraft::Spacecraft &spacecraft, IO::SDK::Propagators::Propagator *propagator, const double targetHeight) : m_targetHeight{targetHeight}, IO::SDK::Maneuvers::ManeuverBase(engines, spacecraft, propagator)
+IO::SDK::Maneuvers::PerigeeHeightChangingManeuver::PerigeeHeightChangingManeuver(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator *propagator, const double targetHeight) : m_targetHeight{targetHeight}, IO::SDK::Maneuvers::ManeuverBase(engines, propagator)
 {
 }
 

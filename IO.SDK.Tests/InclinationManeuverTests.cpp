@@ -34,7 +34,7 @@ TEST(OrbitalPlaneChangingManeuver, CanExecute)
     std::vector<IO::SDK::Body::Spacecraft::Engine> engines;
     engines.push_back(*engine1);
 
-    IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver maneuver(engines, s, &prop, orbitalParams2.get());
+    IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver maneuver(engines, &prop, orbitalParams2.get());
 
     auto T = s.GetOrbitalParametersAtEpoch()->GetPeriod().GetSeconds().count();
 
@@ -111,7 +111,7 @@ TEST(OrbitalPlaneChangingManeuver, IdentifyNode)
     std::vector<IO::SDK::Body::Spacecraft::Engine> engines;
     engines.push_back(*engine1);
 
-    IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver maneuver(engines, s, &prop, orbitalParams2.get());
+    IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver maneuver(engines, &prop, orbitalParams2.get());
 
     auto timeToTrueAnomalyDN = s.GetOrbitalParametersAtEpoch()->GetTimeToTrueAnomaly(2.197893);
     auto timeToTrueAnomalyAN = s.GetOrbitalParametersAtEpoch()->GetTimeToTrueAnomaly(2.197893 + IO::SDK::Constants::PI);
@@ -140,7 +140,7 @@ TEST(OrbitalPlaneChangingManeuver, IdentifyNode2)
     std::vector<IO::SDK::Body::Spacecraft::Engine> engines;
     engines.push_back(*engine1);
 
-    IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver maneuver(engines, s, &prop, orbitalParams2.get());
+    IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver maneuver(engines, &prop, orbitalParams2.get());
 
     auto timeToTrueAnomalyDN = s.GetOrbitalParametersAtEpoch()->GetTimeToTrueAnomaly(5.4677);
     auto timeToTrueAnomalyAN = s.GetOrbitalParametersAtEpoch()->GetTimeToTrueAnomaly(5.4677 - IO::SDK::Constants::PI);
@@ -169,7 +169,7 @@ TEST(OrbitalPlaneChangingManeuver, IdentifyNode3)
     std::vector<IO::SDK::Body::Spacecraft::Engine> engines;
     engines.push_back(*engine1);
 
-    IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver maneuver(engines, s, &prop, orbitalParams2.get());
+    IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver maneuver(engines, &prop, orbitalParams2.get());
 
     auto timeToTrueAnomalyDN = s.GetOrbitalParametersAtEpoch()->GetTimeToTrueAnomaly(6.24);
     auto timeToTrueAnomalyAN = s.GetOrbitalParametersAtEpoch()->GetTimeToTrueAnomaly(6.24 - IO::SDK::Constants::PI);
@@ -199,7 +199,7 @@ TEST(OrbitalPlaneChangingManeuver, ExecuteInsuffisantDeltaV)
     std::vector<IO::SDK::Body::Spacecraft::Engine> engines;
     engines.push_back(*engine1);
 
-    IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver maneuver(engines, s, &prop, orbitalParams2.get());
+    IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver maneuver(engines, &prop, orbitalParams2.get());
 
     auto timeToTrueAnomalyDN = s.GetOrbitalParametersAtEpoch()->GetTimeToTrueAnomaly(2.197937654);
     auto timeToTrueAnomalyAN = s.GetOrbitalParametersAtEpoch()->GetTimeToTrueAnomaly(2.197937654 + IO::SDK::Constants::PI);
@@ -237,7 +237,7 @@ TEST(OrbitalPlaneChangingManeuver, ExecuteDN)
     std::vector<IO::SDK::Body::Spacecraft::Engine> engines;
     engines.push_back(*engine1);
 
-    IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver maneuver(engines, s, &prop, orbitalParams2.get());
+    IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver maneuver(engines, &prop, orbitalParams2.get());
 
     auto timeToTrueAnomalyDN = s.GetOrbitalParametersAtEpoch()->GetTimeToTrueAnomaly(2.197937654);                          //4282s
     auto timeToTrueAnomalyAN = s.GetOrbitalParametersAtEpoch()->GetTimeToTrueAnomaly(2.197937654 + IO::SDK::Constants::PI); //10402s
@@ -292,7 +292,7 @@ TEST(OrbitalPlaneChangingManeuver, ExecuteAN)
     std::vector<IO::SDK::Body::Spacecraft::Engine> engines;
     engines.push_back(*engine1);
 
-    IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver maneuver(engines, s, &prop, orbitalParams2.get());
+    IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver maneuver(engines, &prop, orbitalParams2.get());
 
     auto timeToTrueAnomalyDN = s.GetOrbitalParametersAtEpoch()->GetTimeToTrueAnomaly(2.197937654);                          //4282s
     auto timeToTrueAnomalyAN = s.GetOrbitalParametersAtEpoch()->GetTimeToTrueAnomaly(2.197937654 + IO::SDK::Constants::PI); //10402s
