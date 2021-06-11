@@ -49,7 +49,7 @@ TEST(PhasingManeuver, CanExecute)
     std::vector<IO::SDK::Body::Spacecraft::Engine> engines;
     engines.push_back(*engine1);
 
-    IO::SDK::Maneuvers::PhasingManeuver maneuver(engines, s, &prop, 3, orbitalParams2.get());
+    IO::SDK::Maneuvers::PhasingManeuver maneuver(engines, &prop, 3, orbitalParams2.get());
 
     //Initialize CanExecute
     ASSERT_FALSE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()->GetStateVector(358.0 * IO::SDK::Constants::DEG_RAD)));
@@ -87,7 +87,7 @@ TEST(PhasingManeuver, TryExecute)
     std::vector<IO::SDK::Body::Spacecraft::Engine> engines;
     engines.push_back(*engine1);
 
-    IO::SDK::Maneuvers::PhasingManeuver maneuver(engines, s, &prop, 3, orbitalParams2.get());
+    IO::SDK::Maneuvers::PhasingManeuver maneuver(engines, &prop, 3, orbitalParams2.get());
 
     prop.AddStateVector(IO::SDK::OrbitalParameters::StateVector(earth, IO::SDK::Math::Vector3D(1.0, 2.0, 3.0), IO::SDK::Math::Vector3D(4.0, 5.0, 6.0), IO::SDK::Time::TDB(-10.0s), IO::SDK::Frames::InertialFrames::ICRF));
 

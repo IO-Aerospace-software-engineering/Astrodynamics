@@ -3,8 +3,8 @@
 #include <chrono>
 #include <ManeuverBase.h>
 
-IO::SDK::Maneuvers::ManeuverBase::ManeuverBase(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, const IO::SDK::Body::Spacecraft::Spacecraft &spacecraft, IO::SDK::Propagators::Propagator *propagator)
-    : m_engines{engines}, m_spacecraft{spacecraft}, m_propagator{propagator}
+IO::SDK::Maneuvers::ManeuverBase::ManeuverBase(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator *propagator)
+    : m_engines{engines}, m_spacecraft{engines[0].GetFuelTank().GetSpacecraft()}, m_propagator{propagator}
 {
     for (auto &&engine : m_engines)
     {
@@ -18,7 +18,7 @@ IO::SDK::Maneuvers::ManeuverBase::ManeuverBase(const std::vector<IO::SDK::Body::
     }
 }
 
-IO::SDK::Maneuvers::ManeuverBase::ManeuverBase(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, const IO::SDK::Time::TDB &minimumEpoch, const IO::SDK::Body::Spacecraft::Spacecraft &spacecraft, IO::SDK::Propagators::Propagator *propagator) : ManeuverBase(engines, spacecraft, propagator)
+IO::SDK::Maneuvers::ManeuverBase::ManeuverBase(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, const IO::SDK::Time::TDB &minimumEpoch, IO::SDK::Propagators::Propagator *propagator) : ManeuverBase(engines, propagator)
 {
     m_minimumEpoch = std::make_unique<IO::SDK::Time::TDB>(minimumEpoch);
 }

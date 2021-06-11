@@ -2,11 +2,11 @@
 #include <cmath>
 #include <Constants.h>
 
-IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver::OrbitalPlaneChangingManeuver(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, const IO::SDK::Body::Spacecraft::Spacecraft &spacecraft, IO::SDK::Propagators::Propagator *propagator, IO::SDK::OrbitalParameters::OrbitalParameters *targetOrbit) : m_targetOrbit{targetOrbit}, IO::SDK::Maneuvers::ManeuverBase(engines, spacecraft, propagator)
+IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver::OrbitalPlaneChangingManeuver(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator *propagator, IO::SDK::OrbitalParameters::OrbitalParameters *targetOrbit) : m_targetOrbit{targetOrbit}, IO::SDK::Maneuvers::ManeuverBase(engines, propagator)
 {
 }
 
-IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver::OrbitalPlaneChangingManeuver(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, const IO::SDK::Time::TDB &minimumEpoch, const IO::SDK::Body::Spacecraft::Spacecraft &spacecraft, IO::SDK::Propagators::Propagator *propagator, IO::SDK::OrbitalParameters::OrbitalParameters *targetOrbit) : m_targetOrbit{targetOrbit}, IO::SDK::Maneuvers::ManeuverBase(engines, minimumEpoch, spacecraft, propagator)
+IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver::OrbitalPlaneChangingManeuver(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, const IO::SDK::Time::TDB &minimumEpoch, IO::SDK::Propagators::Propagator *propagator, IO::SDK::OrbitalParameters::OrbitalParameters *targetOrbit) : m_targetOrbit{targetOrbit}, IO::SDK::Maneuvers::ManeuverBase(engines, minimumEpoch,  propagator)
 {
 }
 

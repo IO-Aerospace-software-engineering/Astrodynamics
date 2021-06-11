@@ -92,7 +92,7 @@ namespace IO::SDK::Body::Spacecraft
 		 * @param attitudeAtEpoch 
 		 */
 		Spacecraft(const int id, const std::string &name, const double dryOperatingMass, double maximumOperatingMass, const std::string &missionPrefix, std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParametersAtEpoch);
-		Spacecraft(const Spacecraft &spacecraft);
+		Spacecraft(const Spacecraft &spacecraft) = delete;
 		virtual ~Spacecraft() override = default;
 
 		/**
