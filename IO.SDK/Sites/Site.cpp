@@ -1,3 +1,13 @@
+/**
+ * @file Site.cpp
+ * @author Sylvain Guillet (sylvain.guillet@live.com)
+ * @brief 
+ * @version 0.1
+ * @date 2021-06-11
+ * 
+ * @copyright Copyright (c) 2021
+ * 
+ */
 #include <cmath>
 
 #include <SDKException.h>
@@ -21,7 +31,7 @@ IO::SDK::OrbitalParameters::StateVector IO::SDK::Sites::Site::GetStateVector(con
     auto radius = m_body->GetRadius() * 1000.0;
     SpiceDouble bodyFixedLocation[3];
     georec_c(m_coordinates.GetLongitude(), m_coordinates.GetLatitude(), m_coordinates.GetAltitude(), radius.GetX(), m_body->GetFlattening(), bodyFixedLocation);
-    IO::SDK::OrbitalParameters::StateVector siteVectorState{m_body, IO::SDK::Math::Vector3D(bodyFixedLocation[0], bodyFixedLocation[1], bodyFixedLocation[2]), epoch};
+    IO::SDK::OrbitalParameters::StateVector siteVectorState{m_body, IO::SDK::Math::Vector3D(bodyFixedLocation[0], bodyFixedLocation[1], bodyFixedLocation[2]), IO::SDK::Math::Vector3D(), epoch, m_body->GetBodyFixedFrame()};
 
     return siteVectorState.ToFrame(frame);
 }
