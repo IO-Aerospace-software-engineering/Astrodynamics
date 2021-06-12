@@ -1,5 +1,18 @@
+/**
+ * @file TLE.h
+ * @author Sylvain Guillet (sylvain.guillet@live.com)
+ * @brief 
+ * @version 0.1
+ * @date 2021-06-12
+ * 
+ * @copyright Copyright (c) 2021
+ * 
+ */
 #ifndef TLE_H
-#define TKE_H
+#define TLE_H
+
+#include <memory>
+
 #include <OrbitalParameters.h>
 #include <CelestialBody.h>
 #include <StateVector.h>
@@ -19,8 +32,8 @@ namespace IO::SDK::OrbitalParameters
 
 		SpiceDouble m_elements[10]{};
 		const std::string m_satelliteName{};
-		ConicOrbitalElements *m_conicOrbitalElements{nullptr};
-		StateVector *m_stateVector{nullptr};
+		std::unique_ptr<ConicOrbitalElements> m_conicOrbitalElements{nullptr};
+		std::unique_ptr<StateVector> m_stateVector{nullptr};
 		IO::SDK::Time::TimeSpan m_period;
 		bool m_isDeepSpace{false};
 
@@ -29,7 +42,7 @@ namespace IO::SDK::OrbitalParameters
 
 	public:
 		TLE(const std::shared_ptr<IO::SDK::Body::CelestialBody> &centerOfmotion, std::string lines[3]);
-		virtual ~TLE();
+		virtual ~TLE() = default;
 
 		/// <summary>
 		/// Get the satellite name

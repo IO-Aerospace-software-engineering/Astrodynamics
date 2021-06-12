@@ -51,9 +51,9 @@ namespace IO::SDK::Maneuvers
          * @brief Construct a new Combined Maneuver object
          * 
          */
-        CombinedManeuver(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator *propagator, const double inclination, const double perigeeRadius);
+        CombinedManeuver(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator, const double inclination, const double perigeeRadius);
 
-        CombinedManeuver(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, const IO::SDK::Time::TDB &minimumEpoch, IO::SDK::Propagators::Propagator *propagator, const double inclination, const double perigeeRadius);
+        CombinedManeuver(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, const IO::SDK::Time::TDB &minimumEpoch, IO::SDK::Propagators::Propagator &propagator, const double inclination, const double perigeeRadius);
 
         ~CombinedManeuver()=default;
         /**

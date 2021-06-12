@@ -9,37 +9,37 @@ const IO::SDK::Math::Vector3D IO::SDK::Math::Vector3D::VectorZ{0.0,0.0,1.0};
 
 double IO::SDK::Math::Vector3D::Magnitude() const
 {
-	return std::sqrt(_x * _x + _y * _y + _z * _z);
+	return std::sqrt(m_x * m_x + m_y * m_y + m_z * m_z);
 }
 
 IO::SDK::Math::Vector3D const IO::SDK::Math::Vector3D::operator+(const Vector3D &vector) const
 {
-	return Vector3D(_x + vector._x, _y + vector._y, _z + vector._z);
+	return Vector3D(m_x + vector.m_x, m_y + vector.m_y, m_z + vector.m_z);
 }
 
 IO::SDK::Math::Vector3D const IO::SDK::Math::Vector3D::operator-(const Vector3D &vector) const
 {
-	return Vector3D(_x - vector._x, _y - vector._y, _z - vector._z);
+	return Vector3D(m_x - vector.m_x, m_y - vector.m_y, m_z - vector.m_z);
 }
 
 IO::SDK::Math::Vector3D const IO::SDK::Math::Vector3D::operator*(const double value) const
 {
-	return Vector3D(_x * value, _y * value, _z * value);
+	return Vector3D(m_x * value, m_y * value, m_z * value);
 }
 
 IO::SDK::Math::Vector3D const IO::SDK::Math::Vector3D::operator/(const double value) const
 {
-	return Vector3D(_x / value, _y / value, _z / value);
+	return Vector3D(m_x / value, m_y / value, m_z / value);
 }
 
 IO::SDK::Math::Vector3D IO::SDK::Math::Vector3D::CrossProduct(const Vector3D &vector) const
 {
-	return Vector3D(_y * vector._z - _z * vector._y, _z * vector._x - _x * vector._z, _x * vector._y - _y * vector._x);
+	return Vector3D(m_y * vector.m_z - m_z * vector.m_y, m_z * vector.m_x - m_x * vector.m_z, m_x * vector.m_y - m_y * vector.m_x);
 }
 
 double IO::SDK::Math::Vector3D::DotProduct(const Vector3D &vector) const
 {
-	return _x * vector._x + _y * vector._y + _z * vector._z;
+	return m_x * vector.m_x + m_y * vector.m_y + m_z * vector.m_z;
 }
 
 IO::SDK::Math::Vector3D &IO::SDK::Math::Vector3D::operator=(const Vector3D &vector)
@@ -49,9 +49,9 @@ IO::SDK::Math::Vector3D &IO::SDK::Math::Vector3D::operator=(const Vector3D &vect
 		return *this;
 	}
 
-	const_cast<double &>(_x) = vector._x;
-	const_cast<double &>(_y) = vector._y;
-	const_cast<double &>(_z) = vector._z;
+	const_cast<double &>(m_x) = vector.m_x;
+	const_cast<double &>(m_y) = vector.m_y;
+	const_cast<double &>(m_z) = vector.m_z;
 
 	return *this;
 }
@@ -72,7 +72,7 @@ double IO::SDK::Math::Vector3D::GetAngle(const Vector3D &vector) const
 
 bool IO::SDK::Math::Vector3D::operator==(const IO::SDK::Math::Vector3D &vector) const
 {
-	return _x == vector.GetX() && _y == vector.GetY() && _z == vector.GetZ();
+	return m_x == vector.GetX() && m_y == vector.GetY() && m_z == vector.GetZ();
 }
 
 IO::SDK::Math::Vector3D IO::SDK::Math::Vector3D::Rotate(const IO::SDK::Math::Quaternion &quaternion) const

@@ -18,7 +18,7 @@ namespace IO::SDK::Math
 	class Vector3D
 	{
 	private:
-		double const _x{}, _y{}, _z{};
+		double const m_x{}, m_y{}, m_z{};
 
 	public:
 		static const Vector3D VectorX;
@@ -31,9 +31,11 @@ namespace IO::SDK::Math
 		/// <param name="x"></param>
 		/// <param name="y"></param>
 		/// <param name="z"></param>
-		Vector3D(double x, double y, double z) : _x{x}, _y{y}, _z{z} {};
+		Vector3D(double x, double y, double z) : m_x{x}, m_y{y}, m_z{z} {};
 
-		Vector3D(const Vector3D &vector) : _x{vector._x}, _y{vector._y}, _z{vector._z} {};
+		Vector3D(const Vector3D &vector) : m_x{vector.m_x}, m_y{vector.m_y}, m_z{vector.m_z} {};
+
+		Vector3D &operator=(const Vector3D &vector);
 
 		~Vector3D() = default;
 
@@ -41,19 +43,19 @@ namespace IO::SDK::Math
 		/// Get X
 		/// </summary>
 		/// <returns></returns>
-		double GetX() const { return this->_x; }
+		double GetX() const { return this->m_x; }
 
 		/// <summary>
 		/// Get Y
 		/// </summary>
 		/// <returns></returns>
-		double GetY() const { return this->_y; }
+		double GetY() const { return this->m_y; }
 
 		/// <summary>
 		/// Get Z
 		/// </summary>
 		/// <returns></returns>
-		double GetZ() const { return this->_z; }
+		double GetZ() const { return this->m_z; }
 
 		/// <summary>
 		/// Get the vector magnitude
@@ -65,7 +67,7 @@ namespace IO::SDK::Math
 		Vector3D const operator-(const Vector3D &vector) const;
 		Vector3D const operator*(const double value) const;
 		Vector3D const operator/(const double value) const;
-		Vector3D &operator=(const Vector3D &vector);
+		
 
 		/// <summary>
 		/// Get the cross product from another vector

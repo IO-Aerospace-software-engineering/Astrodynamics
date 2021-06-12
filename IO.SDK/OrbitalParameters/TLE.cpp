@@ -25,16 +25,10 @@ IO::SDK::OrbitalParameters::TLE::TLE(const std::shared_ptr<IO::SDK::Body::Celest
 	m_period = IO::SDK::Time::TimeSpan(std::chrono::duration<double>(IO::SDK::Constants::_2PI / (m_elements[8] / 60.0)));
 
 	//Set stateVector
-	m_stateVector = new IO::SDK::OrbitalParameters::StateVector(GetStateVector(m_epoch));
+	m_stateVector = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(GetStateVector(m_epoch));
 
 	// Set conical elements
-	m_conicOrbitalElements = new ConicOrbitalElements(*m_stateVector);
-}
-
-IO::SDK::OrbitalParameters::TLE::~TLE()
-{
-	delete m_conicOrbitalElements;
-	delete m_stateVector;
+	m_conicOrbitalElements = std::make_unique<IO::SDK::OrbitalParameters::ConicOrbitalElements>(*m_stateVector);
 }
 
 std::string IO::SDK::OrbitalParameters::TLE::GetSatelliteName()

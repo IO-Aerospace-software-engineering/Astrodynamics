@@ -34,7 +34,7 @@ TEST(ApsidalAlignmentManeuver, CanExecute)
     std::vector<IO::SDK::Body::Spacecraft::Engine> engines;
     engines.push_back(*engine1);
 
-    IO::SDK::Maneuvers::ApsidalAlignmentManeuver maneuver(engines, &prop, orbitalParams2.get());
+    IO::SDK::Maneuvers::ApsidalAlignmentManeuver maneuver(engines, prop, orbitalParams2.get());
 
     //Initialize
     ASSERT_FALSE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()->GetStateVector(150.0 * IO::SDK::Constants::DEG_RAD)));
@@ -77,7 +77,7 @@ TEST(ApsidalAlignmentManeuver, ExecuteP)
     std::vector<IO::SDK::Body::Spacecraft::Engine> engines;
     engines.push_back(*engine1);
 
-    IO::SDK::Maneuvers::ApsidalAlignmentManeuver maneuver(engines, &prop, orbitalParams2.get());
+    IO::SDK::Maneuvers::ApsidalAlignmentManeuver maneuver(engines, prop, orbitalParams2.get());
 
     //Initialize
     maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()->GetStateVector(155.0 * IO::SDK::Constants::DEG_RAD));
@@ -125,7 +125,7 @@ TEST(ApsidalAlignmentManeuver, ExecuteQ)
     std::vector<IO::SDK::Body::Spacecraft::Engine> engines;
     engines.push_back(*engine1);
 
-    IO::SDK::Maneuvers::ApsidalAlignmentManeuver maneuver(engines, &prop, orbitalParams2.get());
+    IO::SDK::Maneuvers::ApsidalAlignmentManeuver maneuver(engines, prop, orbitalParams2.get());
 
     //Initialize
     maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()->GetStateVector(340.0 * IO::SDK::Constants::DEG_RAD));

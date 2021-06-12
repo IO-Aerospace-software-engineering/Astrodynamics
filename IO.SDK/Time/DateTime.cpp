@@ -5,7 +5,7 @@ IO::SDK::Time::DateTime::DateTime()
 {
 }
 
-IO::SDK::Time::DateTime::DateTime(std::chrono::duration<double> secondsFromJ2000) : m_secondsFromJ2000{secondsFromJ2000}
+IO::SDK::Time::DateTime::DateTime(const std::chrono::duration<double> secondsFromJ2000) : m_secondsFromJ2000{secondsFromJ2000}
 {
 }
 
@@ -70,7 +70,7 @@ IO::SDK::Time::DateTime &IO::SDK::Time::DateTime::operator=(const DateTime &date
 	if (this == &datetime)
 		return *this;
 
-	m_secondsFromJ2000 = datetime.m_secondsFromJ2000;
+	const_cast<std::chrono::duration<double>&>(m_secondsFromJ2000) = datetime.m_secondsFromJ2000;
 
 	return *this;
 }

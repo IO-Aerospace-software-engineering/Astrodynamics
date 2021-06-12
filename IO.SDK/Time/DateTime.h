@@ -1,3 +1,13 @@
+/**
+ * @file DateTime.h
+ * @author Sylvain Guillet (sylvain.guillet@live.com)
+ * @brief 
+ * @version 0.1
+ * @date 2021-06-12
+ * 
+ * @copyright Copyright (c) 2021
+ * 
+ */
 #ifndef DATETIME_H
 #define DATETIME_H
 
@@ -13,7 +23,7 @@ namespace IO::SDK::Time
 	{
 	private:
 	protected:
-		std::chrono::duration<double> m_secondsFromJ2000{};
+		const std::chrono::duration<double> m_secondsFromJ2000{};
 		DateTime();
 		virtual ~DateTime() = default;
 
@@ -22,7 +32,7 @@ namespace IO::SDK::Time
 		/// </summary>
 		/// <param name="secondsFromJ2000"></param>
 		/// <param name="timeSystem"></param>
-		DateTime(std::chrono::duration<double> secondsFromJ2000);
+		DateTime(const std::chrono::duration<double> secondsFromJ2000);
 
 	public:
 		/// <summary>

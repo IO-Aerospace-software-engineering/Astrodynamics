@@ -27,14 +27,14 @@ namespace IO::SDK::Time
 		 * 
 		 * @param ellapsedSecondsFromJ2000 
 		 */
-		TDB(std::chrono::duration<double> ellapsedSecondsFromJ2000);
+		TDB(const std::chrono::duration<double> ellapsedSecondsFromJ2000);
 
 		/**
 		 * @brief Construct a new TDB object
 		 * 
 		 * @param string 
 		 */
-		TDB(std::string string);
+		TDB(const std::string string);
 
 		/**
 		 * @brief Get string representation

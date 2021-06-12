@@ -25,9 +25,9 @@ namespace IO::SDK::Time
     private:
         /* data */
     public:
-        UTC(std::chrono::duration<double> ellapsedSecondsFromJ2000);
+        UTC(const std::chrono::duration<double> ellapsedSecondsFromJ2000);
 
-        UTC(std::string string);
+        UTC(const std::string string);
         ~UTC() = default;
 
         IO::SDK::Time::UTC Add(const IO::SDK::Time::TimeSpan &timespan) const;
