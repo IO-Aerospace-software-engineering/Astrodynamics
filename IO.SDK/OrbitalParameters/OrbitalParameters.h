@@ -118,7 +118,7 @@ namespace IO::SDK::OrbitalParameters
 		 * 
 		 * @return StateVector 
 		 */
-		StateVector GetStateVector() const;
+		virtual StateVector GetStateVector() const;
 
 		/**
 		 * @brief Is elliptical ?
