@@ -1,7 +1,15 @@
+/**
+ * @file GravityForce.h
+ * @author Sylvain Guillet (sylvain.guillet@live.com)
+ * @brief 
+ * @version 0.1
+ * @date 2021-06-12
+ * 
+ * @copyright Copyright (c) 2021
+ * 
+ */
 #ifndef GRAVITY_FORCE_H
 #define GRAVITY_FORCE_H
-
-
 
 #include <Force.h>
 #include <CelestialBody.h>

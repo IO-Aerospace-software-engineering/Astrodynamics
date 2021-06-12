@@ -9,7 +9,7 @@ namespace IO::SDK::Parameters
 	inline constexpr std::string_view SolarSystemKernelPath = "Data/SolarSystem";
 	inline constexpr std::string_view SiteFramesPath = "Data/Sites/Frames";
 	inline constexpr int CommentAreaSize = 5000;
-	inline constexpr int LagrangePolynomialDegree = 9;//[1-27]
+	inline constexpr int MaximumEphemerisLagrangePolynomialDegree = 27;//[1-23]
 	inline constexpr int MaximumOrientationLagrangePolynomialDegree = 23;//[1-23]
 
 	inline constexpr double NodeDetectionAccuraccy = 0.0017453;//0.1°

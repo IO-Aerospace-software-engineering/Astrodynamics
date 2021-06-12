@@ -11,15 +11,15 @@
 #include <TDB.h>
 #include <UTC.h>
 
-IO::SDK::Time::TDB::TDB(std::chrono::duration<double> ellapsedSecondsFromJ2000) : IO::SDK::Time::DateTime(ellapsedSecondsFromJ2000)
+IO::SDK::Time::TDB::TDB(const std::chrono::duration<double> ellapsedSecondsFromJ2000) : IO::SDK::Time::DateTime(ellapsedSecondsFromJ2000)
 {
 }
 
-IO::SDK::Time::TDB::TDB(std::string string)
+IO::SDK::Time::TDB::TDB(const std::string string)
 {
 	SpiceDouble tdb;
 	str2et_c(string.c_str(), &tdb);
-	m_secondsFromJ2000 = std::chrono::duration<double>(tdb);
+	const_cast<std::chrono::duration<double>&>(m_secondsFromJ2000) = std::chrono::duration<double>(tdb);
 }
 
 std::string IO::SDK::Time::TDB::ToString() const

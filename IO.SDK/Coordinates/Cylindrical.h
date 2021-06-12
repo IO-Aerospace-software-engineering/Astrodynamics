@@ -8,7 +8,7 @@ namespace IO::SDK::Coordinates
 	class Cylindrical
 	{
 	private:
-		double _radius{}, _longitude{}, _z{};
+		const double _radius, _longitude, _z;
 
 	public:
 		/// <summary>
@@ -17,24 +17,19 @@ namespace IO::SDK::Coordinates
 		/// <param name="radius">radius</param>
 		/// <param name="longitude">longitude in radians</param>
 		/// <param name="z">z</param>
-		Cylindrical(double radius, double longitude, double z) :_radius{ radius }, _longitude{ longitude }, _z{ z }
+		Cylindrical(const double radius, const double longitude, const double z) : _radius{radius}, _longitude{longitude}, _z{z}
 		{
-
 		}
-		
+
 		/// <summary>
 		/// Get the radius
 		/// </summary>
 		/// <returns></returns>
-		double GetRadius() { return this->_radius; }
-		
-		
-		double GetLongitude() { return this->_longitude; }
+		double GetRadius() const { return this->_radius; }
 
-		
-		double GetZ() { return this->_z; }
+		double GetLongitude() const { return this->_longitude; }
+
+		double GetZ() const { return this->_z; }
 	};
 }
 #endif // !CYLINDRICAL_H
-
-

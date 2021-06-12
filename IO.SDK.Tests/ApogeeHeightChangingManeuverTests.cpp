@@ -30,7 +30,7 @@ TEST(ApogeeHeightChangingManeuverTests, CanExecute)
 
     std::vector<IO::SDK::Body::Spacecraft::Engine> engines;
     engines.push_back(*engine1);
-    IO::SDK::Maneuvers::ApogeeHeightChangingManeuver acm(engines, &prop, 8000000.0);
+    IO::SDK::Maneuvers::ApogeeHeightChangingManeuver acm(engines, prop, 8000000.0);
 
     //Initialize CanExecute
     ASSERT_FALSE(acm.CanExecute(s.GetOrbitalParametersAtEpoch()->GetStateVector(IO::SDK::Time::TDB(80.0s))));
@@ -63,7 +63,7 @@ TEST(ApogeeHeightChangingManeuverTests, IncreaseApogeeHeight)
     prop.AddStateVector(IO::SDK::OrbitalParameters::StateVector(earth, IO::SDK::Math::Vector3D(1.0, 2.0, 3.0), IO::SDK::Math::Vector3D(4.0, 5.0, 6.0), IO::SDK::Time::TDB(80.0s), IO::SDK::Frames::InertialFrames::ICRF));
     std::vector<IO::SDK::Body::Spacecraft::Engine> engines;
     engines.push_back(*engine1);
-    IO::SDK::Maneuvers::ApogeeHeightChangingManeuver acm(engines, &prop, 42164000.0);
+    IO::SDK::Maneuvers::ApogeeHeightChangingManeuver acm(engines, prop, 42164000.0);
 
     acm.CanExecute(s.GetOrbitalParametersAtEpoch()->GetStateVector(IO::SDK::Time::TDB(80.0s)));
     auto res = acm.TryExecute(s.GetOrbitalParametersAtEpoch()->GetStateVector(IO::SDK::Time::TDB(100.1s)));
@@ -93,7 +93,7 @@ TEST(ApogeeHeightChangingManeuverTests, DecreaseApogeeHeight)
     prop.AddStateVector(IO::SDK::OrbitalParameters::StateVector(earth, IO::SDK::Math::Vector3D(1.0, 2.0, 3.0), IO::SDK::Math::Vector3D(4.0, 5.0, 6.0), IO::SDK::Time::TDB(80.0s), IO::SDK::Frames::InertialFrames::ICRF));
     std::vector<IO::SDK::Body::Spacecraft::Engine> engines;
     engines.push_back(*engine1);
-    IO::SDK::Maneuvers::ApogeeHeightChangingManeuver acm(engines, &prop, 6678000.0);
+    IO::SDK::Maneuvers::ApogeeHeightChangingManeuver acm(engines, prop, 6678000.0);
 
     acm.CanExecute(s.GetOrbitalParametersAtEpoch()->GetStateVector(IO::SDK::Time::TDB(80.0s)));
     auto res = acm.TryExecute(s.GetOrbitalParametersAtEpoch()->GetStateVector(IO::SDK::Time::TDB(100.1s)));

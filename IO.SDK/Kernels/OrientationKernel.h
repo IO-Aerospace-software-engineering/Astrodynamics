@@ -37,9 +37,7 @@ namespace IO::SDK::Kernels
 		 * @param spacecraft 
 		 */
 		OrientationKernel(const IO::SDK::Body::Spacecraft::Spacecraft& spacecraft);
-		const IO::SDK::Body::Spacecraft::Spacecraft& m_spacecraft;
-
-		
+		const IO::SDK::Body::Spacecraft::Spacecraft& m_spacecraft;		
 
 	public:
 

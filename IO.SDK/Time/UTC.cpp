@@ -13,11 +13,11 @@
 #include <SDKException.h>
 #include <TDB.h>
 
-IO::SDK::Time::UTC::UTC(std::chrono::duration<double> ellapsedSecondsFromJ2000) : IO::SDK::Time::DateTime(ellapsedSecondsFromJ2000)
+IO::SDK::Time::UTC::UTC(const std::chrono::duration<double> ellapsedSecondsFromJ2000) : IO::SDK::Time::DateTime(ellapsedSecondsFromJ2000)
 {
 }
 
-IO::SDK::Time::UTC::UTC(std::string string)
+IO::SDK::Time::UTC::UTC(const std::string string)
 {
     SpiceDouble utc;
     SpiceChar errMsg[100];
@@ -28,7 +28,7 @@ IO::SDK::Time::UTC::UTC(std::string string)
         throw IO::SDK::Exception::SDKException(std::string(errMsg));
     }
 
-    m_secondsFromJ2000 = std::chrono::duration<double>(utc);
+    const_cast<std::chrono::duration<double>&>(m_secondsFromJ2000) = std::chrono::duration<double>(utc);
 }
 
 std::string IO::SDK::Time::UTC::ToString() const
@@ -42,17 +42,17 @@ std::string IO::SDK::Time::UTC::ToString() const
 
 IO::SDK::Time::TDB IO::SDK::Time::UTC::ToTDB() const
 {
-	double delta{};
-	deltet_c(m_secondsFromJ2000.count(), "UTC", &delta);
-	return TDB(m_secondsFromJ2000 + std::chrono::duration<double>(delta));
+    double delta{};
+    deltet_c(m_secondsFromJ2000.count(), "UTC", &delta);
+    return TDB(m_secondsFromJ2000 + std::chrono::duration<double>(delta));
 }
 
 IO::SDK::Time::UTC IO::SDK::Time::UTC::Add(const IO::SDK::Time::TimeSpan &timespan) const
 {
-	return IO::SDK::Time::UTC(m_secondsFromJ2000 + timespan.GetSeconds());
+    return IO::SDK::Time::UTC(m_secondsFromJ2000 + timespan.GetSeconds());
 }
 
 IO::SDK::Time::UTC IO::SDK::Time::UTC::operator+(const IO::SDK::Time::TimeSpan &timespan) const
 {
-	return Add(timespan);
+    return Add(timespan);
 }

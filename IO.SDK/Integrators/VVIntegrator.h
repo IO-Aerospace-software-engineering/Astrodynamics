@@ -13,7 +13,7 @@
 #define VVINTEGRATOR_H
 
 #include <vector>
-#include<memory>
+#include <memory>
 
 #include <Force.h>
 #include <GravityForce.h>
@@ -29,7 +29,7 @@ namespace IO::SDK::Integrators
     class VVIntegrator : public IO::SDK::Integrators::IntegratorBase
     {
     private:
-        std::vector<IO::SDK::Integrators::Forces::Force*> m_forces{};
+        std::vector<IO::SDK::Integrators::Forces::Force *> m_forces{};
         std::unique_ptr<IO::SDK::Math::Vector3D> m_acceleration{};
         IO::SDK::Math::Vector3D ComputeAcceleration(const IO::SDK::Body::Body &body, const IO::SDK::OrbitalParameters::StateVector &stateVector) const;
 
@@ -47,7 +47,7 @@ namespace IO::SDK::Integrators
          * @param stepDuration 
          * @param forces 
          */
-        VVIntegrator(const IO::SDK::Time::TimeSpan &stepDuration, std::vector<IO::SDK::Integrators::Forces::Force*> forces);
+        VVIntegrator(const IO::SDK::Time::TimeSpan &stepDuration, std::vector<IO::SDK::Integrators::Forces::Force *> forces);
 
         /**
          * @brief Destroy the VVIntegrator object
@@ -63,7 +63,6 @@ namespace IO::SDK::Integrators
          * @return IO::SDK::OrbitalParameters::StateVector 
          */
         IO::SDK::OrbitalParameters::StateVector Integrate(const IO::SDK::Body::Body &body, const IO::SDK::OrbitalParameters::StateVector &stateVector) override;
-
     };
 
 }

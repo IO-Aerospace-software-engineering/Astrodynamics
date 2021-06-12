@@ -8,7 +8,7 @@ namespace IO::SDK::Coordinates
 	class Geodetic
 	{
 	private:
-		const double _altitude{}, _longitude{}, _latitude{};
+		const double _altitude, _longitude, _latitude;
 
 	public:
 		/// <summary>

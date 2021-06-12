@@ -1,3 +1,13 @@
+/**
+ * @file VVIntegrator.cpp
+ * @author Sylvain Guillet (sylvain.guillet@live.com)
+ * @brief 
+ * @version 0.1
+ * @date 2021-06-12
+ * 
+ * @copyright Copyright (c) 2021
+ * 
+ */
 #include <VVIntegrator.h>
 #include <Helpers/Type.cpp>
 #include <InvalidArgumentException.h>

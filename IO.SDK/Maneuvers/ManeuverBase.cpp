@@ -3,7 +3,7 @@
 #include <chrono>
 #include <ManeuverBase.h>
 
-IO::SDK::Maneuvers::ManeuverBase::ManeuverBase(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator *propagator)
+IO::SDK::Maneuvers::ManeuverBase::ManeuverBase(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator)
     : m_engines{engines}, m_spacecraft{engines[0].GetFuelTank().GetSpacecraft()}, m_propagator{propagator}
 {
     for (auto &&engine : m_engines)
@@ -18,7 +18,7 @@ IO::SDK::Maneuvers::ManeuverBase::ManeuverBase(const std::vector<IO::SDK::Body::
     }
 }
 
-IO::SDK::Maneuvers::ManeuverBase::ManeuverBase(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, const IO::SDK::Time::TDB &minimumEpoch, IO::SDK::Propagators::Propagator *propagator) : ManeuverBase(engines, propagator)
+IO::SDK::Maneuvers::ManeuverBase::ManeuverBase(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, const IO::SDK::Time::TDB &minimumEpoch, IO::SDK::Propagators::Propagator &propagator) : ManeuverBase(engines, propagator)
 {
     m_minimumEpoch = std::make_unique<IO::SDK::Time::TDB>(minimumEpoch);
 }
@@ -38,7 +38,7 @@ void IO::SDK::Maneuvers::ManeuverBase::Handle(const IO::SDK::Time::TDB &notBefor
         //We initialize minimum epoch
         m_minimumEpoch = std::make_unique<IO::SDK::Time::TDB>(notBeforeEpoch);
     }
-    m_propagator->SetStandbyManeuver(this);
+    m_propagator.SetStandbyManeuver(this);
 }
 
 IO::SDK::Maneuvers::ManeuverResult IO::SDK::Maneuvers::ManeuverBase::TryExecute(const IO::SDK::OrbitalParameters::OrbitalParameters &maneuverPoint)
@@ -92,7 +92,8 @@ IO::SDK::Maneuvers::ManeuverResult IO::SDK::Maneuvers::ManeuverBase::TryExecute(
 IO::SDK::Maneuvers::ManeuverResult IO::SDK::Maneuvers::ManeuverBase::Validate()
 {
     //Get fuel mass available
-    const double fuelMassAvailable = std::accumulate(m_fuelTanks.begin(), m_fuelTanks.end(), 0.0, [](double total, const IO::SDK::Body::Spacecraft::FuelTank *f) { return total + f->GetQuantity(); });
+    const double fuelMassAvailable = std::accumulate(m_fuelTanks.begin(), m_fuelTanks.end(), 0.0, [](double total, const IO::SDK::Body::Spacecraft::FuelTank *f)
+                                                     { return total + f->GetQuantity(); });
 
     //Get delta V available
     const double deltaVAvailable{IO::SDK::Body::Spacecraft::Engine::ComputeDeltaV(GetRemainingAvgISP(), m_spacecraft.GetMass(), m_spacecraft.GetDryOperatingMass())};
@@ -125,9 +126,9 @@ void IO::SDK::Maneuvers::ManeuverBase::ExecuteAt(const IO::SDK::OrbitalParameter
 
     //Find position at maneuver begin
     //Get lower value nearest maneuver begin epoch
-    const IO::SDK::OrbitalParameters::OrbitalParameters* nearestLowerState = m_propagator->FindNearestLowerStateVector(m_window->GetStartDate());
+    const IO::SDK::OrbitalParameters::OrbitalParameters *nearestLowerState = m_propagator.FindNearestLowerStateVector(m_window->GetStartDate());
 
-    if (m_propagator->GetStateVectors().empty())
+    if (m_propagator.GetStateVectors().empty())
     {
         nearestLowerState = &maneuverPoint;
     }
@@ -137,7 +138,7 @@ void IO::SDK::Maneuvers::ManeuverBase::ExecuteAt(const IO::SDK::OrbitalParameter
 
     //Compute oriention at begining
     auto orientationBegining = ComputeOrientation(beginState);
-    
+
     //write orientation
     std::vector<IO::SDK::OrbitalParameters::StateOrientation> StateOrientations;
     StateOrientations.push_back(orientationBegining);
@@ -154,15 +155,15 @@ void IO::SDK::Maneuvers::ManeuverBase::ExecuteAt(const IO::SDK::OrbitalParameter
     StateOrientations.push_back(orientationEnd);
 
     //Write orientation
-    m_propagator->AddStateOrientation(StateOrientations);
+    m_propagator.AddStateOrientation(StateOrientations);
 
     //Write Data in propagator
     //Erase unecessary vector states
-    m_propagator->EraseDataFromEpochToEnd(beginState.GetEpoch());
+    m_propagator.EraseDataFromEpochToEnd(beginState.GetEpoch());
 
     //Write vector states at maneuver begin and end;
-    m_propagator->AddStateVector(beginState);
-    m_propagator->AddStateVector(endState);
+    m_propagator.AddStateVector(beginState);
+    m_propagator.AddStateVector(endState);
 }
 
 bool IO::SDK::Maneuvers::ManeuverBase::IsValid()

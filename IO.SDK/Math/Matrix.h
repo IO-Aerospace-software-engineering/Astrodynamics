@@ -1,3 +1,13 @@
+/**
+ * @file Matrix.h
+ * @author Sylvain Guillet (sylvain.guillet@live.com)
+ * @brief 
+ * @version 0.1
+ * @date 2021-06-12
+ * 
+ * @copyright Copyright (c) 2021
+ * 
+ */
 #ifndef MATRIX_H
 #define MATRIX_H
 #include<cstddef>
@@ -22,7 +32,7 @@ namespace IO::SDK::Math
 		/// </summary>
 		/// <param name="rowSize"></param>
 		/// <param name="colSize"></param>
-		Matrix(std::size_t rowSize, std::size_t colSize) :m_colSize{ colSize }, m_rowSize{ rowSize }
+		Matrix(const std::size_t rowSize, const std::size_t colSize) :m_colSize{ colSize }, m_rowSize{ rowSize }
 		{
 			this->m_data = new double* [rowSize];
 
@@ -38,7 +48,7 @@ namespace IO::SDK::Math
 		/// <param name="rowSize"></param>
 		/// <param name="colSize"></param>
 		/// <param name="data"></param>
-		Matrix(std::size_t rowSize, std::size_t colSize, double** data) :Matrix{ rowSize, colSize }
+		Matrix(const std::size_t rowSize, const std::size_t colSize, double** data) :Matrix{ rowSize, colSize }
 		{
 			for (size_t i = 0; i < rowSize; i++)
 			{
@@ -57,7 +67,7 @@ namespace IO::SDK::Math
 		/// <param name="rowIdx">Row index</param>
 		/// <param name="colIdx">Column index</param>
 		/// <returns></returns>
-		double GetValue(std::size_t rowIdx, std::size_t colIdx) const;
+		double GetValue(const std::size_t rowIdx, const std::size_t colIdx) const;
 
 		/// <summary>
 		/// Set value at given index
@@ -65,7 +75,7 @@ namespace IO::SDK::Math
 		/// <param name="rowIdx">Row index</param>
 		/// <param name="colIdx">Column index</param>
 		/// <param name="value">Value index</param>
-		void SetValue(std::size_t rowIdx, std::size_t colIdx, double value);
+		void SetValue(const std::size_t rowIdx, const std::size_t colIdx, const double value);
 
 		/// <summary>
 		/// Get the matrix columns size
@@ -90,7 +100,7 @@ namespace IO::SDK::Math
 		/// Transpose this matrix
 		/// </summary>
 		/// <returns></returns>
-		Matrix Transpose();
+		Matrix Transpose() const;
 
 		double** GetRawData() const;
 	};

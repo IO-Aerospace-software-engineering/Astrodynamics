@@ -1,3 +1,13 @@
+/**
+ * @file SurfaceCoordinates.h
+ * @author Sylvain Guillet (sylvain.guillet@live.com)
+ * @brief 
+ * @version 0.1
+ * @date 2021-06-12
+ * 
+ * @copyright Copyright (c) 2021
+ * 
+ */
 #ifndef SURFACE_COORDINATES_H
 #define SURFACE_COORDINATES_H
 #include <Vector3D.h>
@@ -21,56 +31,13 @@ namespace IO::SDK::Coordinates
 		/// </summary>
 		/// <param name="longitudeSpan">Longitude span</param>
 		/// <param name="latitudeSpan">Latitude span</param>
-		SurfaceCoordinates(size_t longitudeSpan, size_t latitudeSpan) {
-			size_t n = longitudeSpan * latitudeSpan;
-			m_surfacePoints.reserve(n);
-			m_surfaceNormals.reserve(n);
-		}
+		SurfaceCoordinates(const size_t longitudeSpan,const size_t latitudeSpan);
 
-		SurfaceCoordinates(const SurfaceCoordinates& surfaceCoordinates) {
-			m_surfaceNormals.reserve(surfaceCoordinates.m_surfaceNormals.size());
-			m_surfacePoints.reserve(surfaceCoordinates.m_surfacePoints.size());
+		SurfaceCoordinates(const SurfaceCoordinates& surfaceCoordinates);
 
-			for (auto& p : surfaceCoordinates.m_surfacePoints)
-			{
-				AddPoint(*p);
-			}
+		SurfaceCoordinates& operator=(const SurfaceCoordinates& surfaceCoordinates);
 
-			for (auto& n : surfaceCoordinates.m_surfaceNormals)
-			{
-				AddNormal(*n);
-			}
-		}
-
-		SurfaceCoordinates& operator=(const SurfaceCoordinates& surfaceCoordinates)
-		{
-			if (&surfaceCoordinates == this)
-			{
-				return *this;
-			}
-
-			m_surfaceNormals.clear();
-			m_surfacePoints.clear();
-
-			m_surfaceNormals.reserve(surfaceCoordinates.m_surfaceNormals.size());
-			m_surfacePoints.reserve(surfaceCoordinates.m_surfacePoints.size());
-
-			for (auto& p : surfaceCoordinates.m_surfacePoints)
-			{
-				AddPoint(*p);
-			}
-
-			for (auto& n : surfaceCoordinates.m_surfaceNormals)
-			{
-				AddNormal(*n);
-			}
-
-			return *this;
-		}
-
-		~SurfaceCoordinates() 
-		{
-		}
+		~SurfaceCoordinates()=default;
 
 		const std::vector<std::unique_ptr<IO::SDK::Math::Vector3D>>& GetSurfacePoints() const
 		{

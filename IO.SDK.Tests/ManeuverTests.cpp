@@ -31,9 +31,9 @@ TEST(Maneuvers, Initialization)
     std::vector<IO::SDK::Body::Spacecraft::Engine> engines;
     engines.push_back(*engine1);
 
-    TestManeuver m_first(engines, &prop);
+    TestManeuver m_first(engines, prop);
 
-    TestManeuver m_second(engines, &prop);
+    TestManeuver m_second(engines, prop);
 }
 
 TEST(Maneuvers, Execute)
@@ -70,7 +70,7 @@ TEST(Maneuvers, Execute)
     engines.push_back(*engine2);
     engines.push_back(*engine3);
 
-    TestManeuver maneuver(engines, &pro);
+    TestManeuver maneuver(engines, pro);
 
     maneuver.Handle(IO::SDK::Time::TDB(100.0s));
 
