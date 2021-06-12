@@ -198,6 +198,13 @@ namespace IO::SDK::OrbitalParameters
 		using IO::SDK::OrbitalParameters::OrbitalParameters::GetStateVector;
 
 		/**
+		 * @brief Get state vector
+		 * 
+		 * @return StateVector 
+		 */
+		StateVector GetStateVector() const override;
+
+		/**
 		 * @brief Get this state vector relative to another frame
 		 * 
 		 * @param frame 
