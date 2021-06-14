@@ -37,7 +37,7 @@ TEST(OrientationKernel, WriteData)
 
 	data.push_back(interval);
 
-	s.WriteOrientations(data, IO::SDK::Frames::InertialFrames::ICRF);
+	s.WriteOrientations(data);
 
 	//Read first known orientation 0deg
 	auto e0 = IO::SDK::Time::TDB("2021-01-01T12:00:10");
@@ -124,7 +124,7 @@ TEST(OrientationKernel, GetCoverage)
 
 	data.push_back(interval);
 
-	s.WriteOrientations(data, IO::SDK::Frames::InertialFrames::ICRF);
+	s.WriteOrientations(data);
 
 	const auto window = s.GetOrientationsCoverageWindow();
 	ASSERT_DOUBLE_EQ(662774479.18394315, window.GetStartDate().GetSecondsFromJ2000().count());//2021-01-01 12:00:10.000000 UTC
@@ -157,7 +157,7 @@ TEST(OrientationKernel, WriteComment)
 
 	data.push_back(interval);
 
-	s.WriteOrientations(data, IO::SDK::Frames::InertialFrames::ICRF);
+	s.WriteOrientations(data);
 
 	s.WriteOrientationKernelComment("Comment Test");
 	auto comment = s.ReadOrientationKernelComment();

@@ -117,7 +117,7 @@ namespace IO::SDK::Maneuvers
         std::unique_ptr<IO::SDK::Time::TDB> m_minimumEpoch{};
         ManeuverBase *m_nextManeuver{};
         bool m_isValid{false};
-        IO::SDK::Propagators::Propagator *m_propagator{};
+        IO::SDK::Propagators::Propagator& m_propagator;
         std::vector<ManeuverBase *> m_subManeuvers{};
         std::set<const IO::SDK::Body::Spacecraft::FuelTank *> m_fuelTanks;
         std::map<const IO::SDK::Body::Spacecraft::FuelTank *, IO::SDK::Maneuvers::DynamicFuelTank> m_dynamicFuelTanks;
@@ -128,7 +128,7 @@ namespace IO::SDK::Maneuvers
          * 
          * @param engines Used by maneuver
          */
-        ManeuverBase(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, const IO::SDK::Body::Spacecraft::Spacecraft &spacecraft, IO::SDK::Propagators::Propagator *propagator);
+        ManeuverBase(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator& propagator);
 
         /**
          * @brief Construct a new Maneuver Base object
@@ -136,7 +136,7 @@ namespace IO::SDK::Maneuvers
          * @param engines Used by maneuver
          * @param minimumEpoch No maneuver execution before this epoch
          */
-        ManeuverBase(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, const IO::SDK::Time::TDB &minimumEpoch, const IO::SDK::Body::Spacecraft::Spacecraft &spacecraft, IO::SDK::Propagators::Propagator *propagator);
+        ManeuverBase(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, const IO::SDK::Time::TDB &minimumEpoch, IO::SDK::Propagators::Propagator& propagator);
         virtual ~ManeuverBase() = default;
 
         /**

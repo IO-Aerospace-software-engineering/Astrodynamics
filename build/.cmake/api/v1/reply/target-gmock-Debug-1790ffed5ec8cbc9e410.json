@@ -3,7 +3,7 @@
 	"artifacts" : 
 	[
 		{
-			"path" : "lib/libgtestd.a"
+			"path" : "lib/libgmockd.a"
 		}
 	],
 	"backtrace" : 3,
@@ -16,12 +16,13 @@
 			"cxx_library",
 			"install",
 			"install_project",
+			"target_link_libraries",
 			"include_directories"
 		],
 		"files" : 
 		[
-			"googletest/googletest/cmake/internal_utils.cmake",
-			"googletest/googletest/CMakeLists.txt"
+			"build/_deps/googletest-src/googletest/cmake/internal_utils.cmake",
+			"build/_deps/googletest-src/googlemock/CMakeLists.txt"
 		],
 		"nodes" : 
 		[
@@ -31,37 +32,43 @@
 			{
 				"command" : 2,
 				"file" : 1,
-				"line" : 128,
+				"line" : 101,
 				"parent" : 0
 			},
 			{
 				"command" : 1,
 				"file" : 0,
-				"line" : 206,
+				"line" : 209,
 				"parent" : 1
 			},
 			{
 				"command" : 0,
 				"file" : 0,
-				"line" : 150,
+				"line" : 152,
 				"parent" : 2
 			},
 			{
 				"command" : 4,
 				"file" : 1,
-				"line" : 148,
+				"line" : 123,
 				"parent" : 0
 			},
 			{
 				"command" : 3,
 				"file" : 0,
-				"line" : 315,
+				"line" : 318,
 				"parent" : 4
 			},
 			{
 				"command" : 5,
 				"file" : 1,
-				"line" : 118,
+				"line" : 102,
+				"parent" : 0
+			},
+			{
+				"command" : 6,
+				"file" : 1,
+				"line" : 79,
 				"parent" : 0
 			}
 		]
@@ -84,12 +91,22 @@
 			"includes" : 
 			[
 				{
-					"backtrace" : 6,
-					"path" : "/home/sylvain/Sources/IO/SDK/googletest/googletest/include"
+					"backtrace" : 7,
+					"path" : "/home/sylvain/Sources/IO/SDK/build/_deps/googletest-src/googlemock/include"
 				},
 				{
-					"backtrace" : 6,
-					"path" : "/home/sylvain/Sources/IO/SDK/googletest/googletest"
+					"backtrace" : 7,
+					"path" : "/home/sylvain/Sources/IO/SDK/build/_deps/googletest-src/googlemock"
+				},
+				{
+					"backtrace" : 7,
+					"isSystem" : true,
+					"path" : "/home/sylvain/Sources/IO/SDK/build/_deps/googletest-src/googletest/include"
+				},
+				{
+					"backtrace" : 7,
+					"isSystem" : true,
+					"path" : "/home/sylvain/Sources/IO/SDK/build/_deps/googletest-src/googletest"
 				}
 			],
 			"language" : "CXX",
@@ -99,7 +116,14 @@
 			]
 		}
 	],
-	"id" : "gtest::@f95b5c00bd49b3b4698d",
+	"dependencies" : 
+	[
+		{
+			"backtrace" : 6,
+			"id" : "gtest::@1ea2dfc0605fe3ab2a3f"
+		}
+	],
+	"id" : "gmock::@0f7bb11d64f3678238c7",
 	"install" : 
 	{
 		"destinations" : 
@@ -114,12 +138,12 @@
 			"path" : "/usr/local"
 		}
 	},
-	"name" : "gtest",
-	"nameOnDisk" : "libgtestd.a",
+	"name" : "gmock",
+	"nameOnDisk" : "libgmockd.a",
 	"paths" : 
 	{
-		"build" : "googletest/googletest",
-		"source" : "googletest/googletest"
+		"build" : "_deps/googletest-build/googlemock",
+		"source" : "build/_deps/googletest-src/googlemock"
 	},
 	"sourceGroups" : 
 	[
@@ -136,7 +160,7 @@
 		{
 			"backtrace" : 3,
 			"compileGroupIndex" : 0,
-			"path" : "googletest/googletest/src/gtest-all.cc",
+			"path" : "build/_deps/googletest-src/googlemock/src/gmock-all.cc",
 			"sourceGroupIndex" : 0
 		}
 	],

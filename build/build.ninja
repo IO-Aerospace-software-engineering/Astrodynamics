@@ -120,125 +120,125 @@ build install: phony CMakeFiles/install.util
 #############################################
 # Utility command for install/strip
 
-build googletest/CMakeFiles/install/strip.util: CUSTOM_COMMAND googletest/all
-  COMMAND = cd /home/sylvain/Sources/IO/SDK/build/googletest && /usr/bin/cmake -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
+build _deps/googletest-build/CMakeFiles/install/strip.util: CUSTOM_COMMAND _deps/googletest-build/all
+  COMMAND = cd /home/sylvain/Sources/IO/SDK/build/_deps/googletest-build && /usr/bin/cmake -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
   DESC = Installing the project stripped...
   pool = console
   restat = 1
 
-build googletest/install/strip: phony googletest/CMakeFiles/install/strip.util
+build _deps/googletest-build/install/strip: phony _deps/googletest-build/CMakeFiles/install/strip.util
 
 
 #############################################
 # Utility command for install/local
 
-build googletest/CMakeFiles/install/local.util: CUSTOM_COMMAND googletest/all
-  COMMAND = cd /home/sylvain/Sources/IO/SDK/build/googletest && /usr/bin/cmake -DCMAKE_INSTALL_LOCAL_ONLY=1 -P cmake_install.cmake
+build _deps/googletest-build/CMakeFiles/install/local.util: CUSTOM_COMMAND _deps/googletest-build/all
+  COMMAND = cd /home/sylvain/Sources/IO/SDK/build/_deps/googletest-build && /usr/bin/cmake -DCMAKE_INSTALL_LOCAL_ONLY=1 -P cmake_install.cmake
   DESC = Installing only the local directory...
   pool = console
   restat = 1
 
-build googletest/install/local: phony googletest/CMakeFiles/install/local.util
+build _deps/googletest-build/install/local: phony _deps/googletest-build/CMakeFiles/install/local.util
 
 
 #############################################
 # Utility command for edit_cache
 
-build googletest/CMakeFiles/edit_cache.util: CUSTOM_COMMAND
-  COMMAND = cd /home/sylvain/Sources/IO/SDK/build/googletest && /usr/bin/cmake -E echo No\ interactive\ CMake\ dialog\ available.
+build _deps/googletest-build/CMakeFiles/edit_cache.util: CUSTOM_COMMAND
+  COMMAND = cd /home/sylvain/Sources/IO/SDK/build/_deps/googletest-build && /usr/bin/cmake -E echo No\ interactive\ CMake\ dialog\ available.
   DESC = No interactive CMake dialog available...
   restat = 1
 
-build googletest/edit_cache: phony googletest/CMakeFiles/edit_cache.util
+build _deps/googletest-build/edit_cache: phony _deps/googletest-build/CMakeFiles/edit_cache.util
 
 
 #############################################
 # Utility command for test
 
-build googletest/CMakeFiles/test.util: CUSTOM_COMMAND
-  COMMAND = cd /home/sylvain/Sources/IO/SDK/build/googletest && /usr/bin/ctest --force-new-ctest-process
+build _deps/googletest-build/CMakeFiles/test.util: CUSTOM_COMMAND
+  COMMAND = cd /home/sylvain/Sources/IO/SDK/build/_deps/googletest-build && /usr/bin/ctest --force-new-ctest-process
   DESC = Running tests...
   pool = console
   restat = 1
 
-build googletest/test: phony googletest/CMakeFiles/test.util
+build _deps/googletest-build/test: phony _deps/googletest-build/CMakeFiles/test.util
 
 
 #############################################
 # Utility command for rebuild_cache
 
-build googletest/CMakeFiles/rebuild_cache.util: CUSTOM_COMMAND
-  COMMAND = cd /home/sylvain/Sources/IO/SDK/build/googletest && /usr/bin/cmake --regenerate-during-build -S/home/sylvain/Sources/IO/SDK -B/home/sylvain/Sources/IO/SDK/build
+build _deps/googletest-build/CMakeFiles/rebuild_cache.util: CUSTOM_COMMAND
+  COMMAND = cd /home/sylvain/Sources/IO/SDK/build/_deps/googletest-build && /usr/bin/cmake --regenerate-during-build -S/home/sylvain/Sources/IO/SDK -B/home/sylvain/Sources/IO/SDK/build
   DESC = Running CMake to regenerate build system...
   pool = console
   restat = 1
 
-build googletest/rebuild_cache: phony googletest/CMakeFiles/rebuild_cache.util
+build _deps/googletest-build/rebuild_cache: phony _deps/googletest-build/CMakeFiles/rebuild_cache.util
 
 
 #############################################
 # Utility command for list_install_components
 
-build googletest/list_install_components: phony
+build _deps/googletest-build/list_install_components: phony
 
 
 #############################################
 # Utility command for install
 
-build googletest/CMakeFiles/install.util: CUSTOM_COMMAND googletest/all
-  COMMAND = cd /home/sylvain/Sources/IO/SDK/build/googletest && /usr/bin/cmake -P cmake_install.cmake
+build _deps/googletest-build/CMakeFiles/install.util: CUSTOM_COMMAND _deps/googletest-build/all
+  COMMAND = cd /home/sylvain/Sources/IO/SDK/build/_deps/googletest-build && /usr/bin/cmake -P cmake_install.cmake
   DESC = Install the project...
   pool = console
   restat = 1
 
-build googletest/install: phony googletest/CMakeFiles/install.util
+build _deps/googletest-build/install: phony _deps/googletest-build/CMakeFiles/install.util
 
 # =============================================================================
 # Write statements declared in CMakeLists.txt:
-# /home/sylvain/Sources/IO/SDK/googletest/CMakeLists.txt
+# /home/sylvain/Sources/IO/SDK/build/_deps/googletest-src/CMakeLists.txt
 # =============================================================================
 
 
 #############################################
 # Utility command for install/strip
 
-build googletest/googlemock/CMakeFiles/install/strip.util: CUSTOM_COMMAND googletest/googlemock/all
-  COMMAND = cd /home/sylvain/Sources/IO/SDK/build/googletest/googlemock && /usr/bin/cmake -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
+build _deps/googletest-build/googlemock/CMakeFiles/install/strip.util: CUSTOM_COMMAND _deps/googletest-build/googlemock/all
+  COMMAND = cd /home/sylvain/Sources/IO/SDK/build/_deps/googletest-build/googlemock && /usr/bin/cmake -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
   DESC = Installing the project stripped...
   pool = console
   restat = 1
 
-build googletest/googlemock/install/strip: phony googletest/googlemock/CMakeFiles/install/strip.util
+build _deps/googletest-build/googlemock/install/strip: phony _deps/googletest-build/googlemock/CMakeFiles/install/strip.util
 
 
 #############################################
 # Utility command for install/local
 
-build googletest/googlemock/CMakeFiles/install/local.util: CUSTOM_COMMAND googletest/googlemock/all
-  COMMAND = cd /home/sylvain/Sources/IO/SDK/build/googletest/googlemock && /usr/bin/cmake -DCMAKE_INSTALL_LOCAL_ONLY=1 -P cmake_install.cmake
+build _deps/googletest-build/googlemock/CMakeFiles/install/local.util: CUSTOM_COMMAND _deps/googletest-build/googlemock/all
+  COMMAND = cd /home/sylvain/Sources/IO/SDK/build/_deps/googletest-build/googlemock && /usr/bin/cmake -DCMAKE_INSTALL_LOCAL_ONLY=1 -P cmake_install.cmake
   DESC = Installing only the local directory...
   pool = console
   restat = 1
 
-build googletest/googlemock/install/local: phony googletest/googlemock/CMakeFiles/install/local.util
+build _deps/googletest-build/googlemock/install/local: phony _deps/googletest-build/googlemock/CMakeFiles/install/local.util
 
 
 #############################################
 # Utility command for install
 
-build googletest/googlemock/CMakeFiles/install.util: CUSTOM_COMMAND googletest/googlemock/all
-  COMMAND = cd /home/sylvain/Sources/IO/SDK/build/googletest/googlemock && /usr/bin/cmake -P cmake_install.cmake
+build _deps/googletest-build/googlemock/CMakeFiles/install.util: CUSTOM_COMMAND _deps/googletest-build/googlemock/all
+  COMMAND = cd /home/sylvain/Sources/IO/SDK/build/_deps/googletest-build/googlemock && /usr/bin/cmake -P cmake_install.cmake
   DESC = Install the project...
   pool = console
   restat = 1
 
-build googletest/googlemock/install: phony googletest/googlemock/CMakeFiles/install.util
+build _deps/googletest-build/googlemock/install: phony _deps/googletest-build/googlemock/CMakeFiles/install.util
 
 
 #############################################
 # Utility command for list_install_components
 
-build googletest/googlemock/list_install_components: phony
+build _deps/googletest-build/googlemock/list_install_components: phony
 
 # =============================================================================
 # Object build statements for STATIC_LIBRARY target gmock_main
@@ -249,12 +249,12 @@ build googletest/googlemock/list_install_components: phony
 
 build cmake_object_order_depends_target_gmock_main: phony || cmake_object_order_depends_target_gmock cmake_object_order_depends_target_gtest
 
-build googletest/googlemock/CMakeFiles/gmock_main.dir/src/gmock_main.cc.o: CXX_COMPILER__gmock_main_Debug ../googletest/googlemock/src/gmock_main.cc || cmake_object_order_depends_target_gmock_main
-  DEP_FILE = googletest/googlemock/CMakeFiles/gmock_main.dir/src/gmock_main.cc.o.d
+build _deps/googletest-build/googlemock/CMakeFiles/gmock_main.dir/src/gmock_main.cc.o: CXX_COMPILER__gmock_main_Debug _deps/googletest-src/googlemock/src/gmock_main.cc || cmake_object_order_depends_target_gmock_main
+  DEP_FILE = _deps/googletest-build/googlemock/CMakeFiles/gmock_main.dir/src/gmock_main.cc.o.d
   FLAGS = -g -fPIC -Wall -Wshadow -Werror -Wno-error=dangling-else -DGTEST_HAS_PTHREAD=1 -fexceptions -Wextra -Wno-unused-parameter -Wno-missing-field-initializers -std=c++17
-  INCLUDES = -isystem ../googletest/googlemock/include -isystem ../googletest/googlemock -isystem ../googletest/googletest/include -isystem ../googletest/googletest
-  OBJECT_DIR = googletest/googlemock/CMakeFiles/gmock_main.dir
-  OBJECT_FILE_DIR = googletest/googlemock/CMakeFiles/gmock_main.dir/src
+  INCLUDES = -isystem _deps/googletest-src/googlemock/include -isystem _deps/googletest-src/googlemock -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
+  OBJECT_DIR = _deps/googletest-build/googlemock/CMakeFiles/gmock_main.dir
+  OBJECT_FILE_DIR = _deps/googletest-build/googlemock/CMakeFiles/gmock_main.dir/src
 
 
 # =============================================================================
@@ -264,9 +264,9 @@ build googletest/googlemock/CMakeFiles/gmock_main.dir/src/gmock_main.cc.o: CXX_C
 #############################################
 # Link the static library lib/libgmock_maind.a
 
-build lib/libgmock_maind.a: CXX_STATIC_LIBRARY_LINKER__gmock_main_Debug googletest/googlemock/CMakeFiles/gmock_main.dir/src/gmock_main.cc.o || lib/libgmockd.a lib/libgtestd.a
+build lib/libgmock_maind.a: CXX_STATIC_LIBRARY_LINKER__gmock_main_Debug _deps/googletest-build/googlemock/CMakeFiles/gmock_main.dir/src/gmock_main.cc.o || lib/libgmockd.a lib/libgtestd.a
   LANGUAGE_COMPILE_FLAGS = -g
-  OBJECT_DIR = googletest/googlemock/CMakeFiles/gmock_main.dir
+  OBJECT_DIR = _deps/googletest-build/googlemock/CMakeFiles/gmock_main.dir
   POST_BUILD = :
   PRE_LINK = :
   TARGET_FILE = lib/libgmock_maind.a
@@ -276,13 +276,13 @@ build lib/libgmock_maind.a: CXX_STATIC_LIBRARY_LINKER__gmock_main_Debug googlete
 #############################################
 # Utility command for test
 
-build googletest/googlemock/CMakeFiles/test.util: CUSTOM_COMMAND
-  COMMAND = cd /home/sylvain/Sources/IO/SDK/build/googletest/googlemock && /usr/bin/ctest --force-new-ctest-process
+build _deps/googletest-build/googlemock/CMakeFiles/test.util: CUSTOM_COMMAND
+  COMMAND = cd /home/sylvain/Sources/IO/SDK/build/_deps/googletest-build/googlemock && /usr/bin/ctest --force-new-ctest-process
   DESC = Running tests...
   pool = console
   restat = 1
 
-build googletest/googlemock/test: phony googletest/googlemock/CMakeFiles/test.util
+build _deps/googletest-build/googlemock/test: phony _deps/googletest-build/googlemock/CMakeFiles/test.util
 
 # =============================================================================
 # Object build statements for STATIC_LIBRARY target gmock
@@ -293,12 +293,12 @@ build googletest/googlemock/test: phony googletest/googlemock/CMakeFiles/test.ut
 
 build cmake_object_order_depends_target_gmock: phony || cmake_object_order_depends_target_gtest
 
-build googletest/googlemock/CMakeFiles/gmock.dir/src/gmock-all.cc.o: CXX_COMPILER__gmock_Debug ../googletest/googlemock/src/gmock-all.cc || cmake_object_order_depends_target_gmock
-  DEP_FILE = googletest/googlemock/CMakeFiles/gmock.dir/src/gmock-all.cc.o.d
+build _deps/googletest-build/googlemock/CMakeFiles/gmock.dir/src/gmock-all.cc.o: CXX_COMPILER__gmock_Debug _deps/googletest-src/googlemock/src/gmock-all.cc || cmake_object_order_depends_target_gmock
+  DEP_FILE = _deps/googletest-build/googlemock/CMakeFiles/gmock.dir/src/gmock-all.cc.o.d
   FLAGS = -g -fPIC -Wall -Wshadow -Werror -Wno-error=dangling-else -DGTEST_HAS_PTHREAD=1 -fexceptions -Wextra -Wno-unused-parameter -Wno-missing-field-initializers -std=c++17
-  INCLUDES = -I../googletest/googlemock/include -I../googletest/googlemock -isystem ../googletest/googletest/include -isystem ../googletest/googletest
-  OBJECT_DIR = googletest/googlemock/CMakeFiles/gmock.dir
-  OBJECT_FILE_DIR = googletest/googlemock/CMakeFiles/gmock.dir/src
+  INCLUDES = -I_deps/googletest-src/googlemock/include -I_deps/googletest-src/googlemock -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
+  OBJECT_DIR = _deps/googletest-build/googlemock/CMakeFiles/gmock.dir
+  OBJECT_FILE_DIR = _deps/googletest-build/googlemock/CMakeFiles/gmock.dir/src
 
 
 # =============================================================================
@@ -308,9 +308,9 @@ build googletest/googlemock/CMakeFiles/gmock.dir/src/gmock-all.cc.o: CXX_COMPILE
 #############################################
 # Link the static library lib/libgmockd.a
 
-build lib/libgmockd.a: CXX_STATIC_LIBRARY_LINKER__gmock_Debug googletest/googlemock/CMakeFiles/gmock.dir/src/gmock-all.cc.o || lib/libgtestd.a
+build lib/libgmockd.a: CXX_STATIC_LIBRARY_LINKER__gmock_Debug _deps/googletest-build/googlemock/CMakeFiles/gmock.dir/src/gmock-all.cc.o || lib/libgtestd.a
   LANGUAGE_COMPILE_FLAGS = -g
-  OBJECT_DIR = googletest/googlemock/CMakeFiles/gmock.dir
+  OBJECT_DIR = _deps/googletest-build/googlemock/CMakeFiles/gmock.dir
   POST_BUILD = :
   PRE_LINK = :
   TARGET_FILE = lib/libgmockd.a
@@ -320,71 +320,71 @@ build lib/libgmockd.a: CXX_STATIC_LIBRARY_LINKER__gmock_Debug googletest/googlem
 #############################################
 # Utility command for edit_cache
 
-build googletest/googlemock/CMakeFiles/edit_cache.util: CUSTOM_COMMAND
-  COMMAND = cd /home/sylvain/Sources/IO/SDK/build/googletest/googlemock && /usr/bin/cmake -E echo No\ interactive\ CMake\ dialog\ available.
+build _deps/googletest-build/googlemock/CMakeFiles/edit_cache.util: CUSTOM_COMMAND
+  COMMAND = cd /home/sylvain/Sources/IO/SDK/build/_deps/googletest-build/googlemock && /usr/bin/cmake -E echo No\ interactive\ CMake\ dialog\ available.
   DESC = No interactive CMake dialog available...
   restat = 1
 
-build googletest/googlemock/edit_cache: phony googletest/googlemock/CMakeFiles/edit_cache.util
+build _deps/googletest-build/googlemock/edit_cache: phony _deps/googletest-build/googlemock/CMakeFiles/edit_cache.util
 
 
 #############################################
 # Utility command for rebuild_cache
 
-build googletest/googlemock/CMakeFiles/rebuild_cache.util: CUSTOM_COMMAND
-  COMMAND = cd /home/sylvain/Sources/IO/SDK/build/googletest/googlemock && /usr/bin/cmake --regenerate-during-build -S/home/sylvain/Sources/IO/SDK -B/home/sylvain/Sources/IO/SDK/build
+build _deps/googletest-build/googlemock/CMakeFiles/rebuild_cache.util: CUSTOM_COMMAND
+  COMMAND = cd /home/sylvain/Sources/IO/SDK/build/_deps/googletest-build/googlemock && /usr/bin/cmake --regenerate-during-build -S/home/sylvain/Sources/IO/SDK -B/home/sylvain/Sources/IO/SDK/build
   DESC = Running CMake to regenerate build system...
   pool = console
   restat = 1
 
-build googletest/googlemock/rebuild_cache: phony googletest/googlemock/CMakeFiles/rebuild_cache.util
+build _deps/googletest-build/googlemock/rebuild_cache: phony _deps/googletest-build/googlemock/CMakeFiles/rebuild_cache.util
 
 # =============================================================================
 # Write statements declared in CMakeLists.txt:
-# /home/sylvain/Sources/IO/SDK/googletest/googlemock/CMakeLists.txt
+# /home/sylvain/Sources/IO/SDK/build/_deps/googletest-src/googlemock/CMakeLists.txt
 # =============================================================================
 
 
 #############################################
 # Utility command for install/strip
 
-build googletest/googletest/CMakeFiles/install/strip.util: CUSTOM_COMMAND googletest/googletest/all
-  COMMAND = cd /home/sylvain/Sources/IO/SDK/build/googletest/googletest && /usr/bin/cmake -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
+build _deps/googletest-build/googletest/CMakeFiles/install/strip.util: CUSTOM_COMMAND _deps/googletest-build/googletest/all
+  COMMAND = cd /home/sylvain/Sources/IO/SDK/build/_deps/googletest-build/googletest && /usr/bin/cmake -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
   DESC = Installing the project stripped...
   pool = console
   restat = 1
 
-build googletest/googletest/install/strip: phony googletest/googletest/CMakeFiles/install/strip.util
+build _deps/googletest-build/googletest/install/strip: phony _deps/googletest-build/googletest/CMakeFiles/install/strip.util
 
 
 #############################################
 # Utility command for install/local
 
-build googletest/googletest/CMakeFiles/install/local.util: CUSTOM_COMMAND googletest/googletest/all
-  COMMAND = cd /home/sylvain/Sources/IO/SDK/build/googletest/googletest && /usr/bin/cmake -DCMAKE_INSTALL_LOCAL_ONLY=1 -P cmake_install.cmake
+build _deps/googletest-build/googletest/CMakeFiles/install/local.util: CUSTOM_COMMAND _deps/googletest-build/googletest/all
+  COMMAND = cd /home/sylvain/Sources/IO/SDK/build/_deps/googletest-build/googletest && /usr/bin/cmake -DCMAKE_INSTALL_LOCAL_ONLY=1 -P cmake_install.cmake
   DESC = Installing only the local directory...
   pool = console
   restat = 1
 
-build googletest/googletest/install/local: phony googletest/googletest/CMakeFiles/install/local.util
+build _deps/googletest-build/googletest/install/local: phony _deps/googletest-build/googletest/CMakeFiles/install/local.util
 
 
 #############################################
 # Utility command for install
 
-build googletest/googletest/CMakeFiles/install.util: CUSTOM_COMMAND googletest/googletest/all
-  COMMAND = cd /home/sylvain/Sources/IO/SDK/build/googletest/googletest && /usr/bin/cmake -P cmake_install.cmake
+build _deps/googletest-build/googletest/CMakeFiles/install.util: CUSTOM_COMMAND _deps/googletest-build/googletest/all
+  COMMAND = cd /home/sylvain/Sources/IO/SDK/build/_deps/googletest-build/googletest && /usr/bin/cmake -P cmake_install.cmake
   DESC = Install the project...
   pool = console
   restat = 1
 
-build googletest/googletest/install: phony googletest/googletest/CMakeFiles/install.util
+build _deps/googletest-build/googletest/install: phony _deps/googletest-build/googletest/CMakeFiles/install.util
 
 
 #############################################
 # Utility command for list_install_components
 
-build googletest/googletest/list_install_components: phony
+build _deps/googletest-build/googletest/list_install_components: phony
 
 # =============================================================================
 # Object build statements for STATIC_LIBRARY target gtest_main
@@ -395,12 +395,12 @@ build googletest/googletest/list_install_components: phony
 
 build cmake_object_order_depends_target_gtest_main: phony || cmake_object_order_depends_target_gtest
 
-build googletest/googletest/CMakeFiles/gtest_main.dir/src/gtest_main.cc.o: CXX_COMPILER__gtest_main_Debug ../googletest/googletest/src/gtest_main.cc || cmake_object_order_depends_target_gtest_main
-  DEP_FILE = googletest/googletest/CMakeFiles/gtest_main.dir/src/gtest_main.cc.o.d
+build _deps/googletest-build/googletest/CMakeFiles/gtest_main.dir/src/gtest_main.cc.o: CXX_COMPILER__gtest_main_Debug _deps/googletest-src/googletest/src/gtest_main.cc || cmake_object_order_depends_target_gtest_main
+  DEP_FILE = _deps/googletest-build/googletest/CMakeFiles/gtest_main.dir/src/gtest_main.cc.o.d
   FLAGS = -g -fPIC -Wall -Wshadow -Werror -Wno-error=dangling-else -DGTEST_HAS_PTHREAD=1 -fexceptions -Wextra -Wno-unused-parameter -Wno-missing-field-initializers -std=c++17
-  INCLUDES = -isystem ../googletest/googletest/include -isystem ../googletest/googletest
-  OBJECT_DIR = googletest/googletest/CMakeFiles/gtest_main.dir
-  OBJECT_FILE_DIR = googletest/googletest/CMakeFiles/gtest_main.dir/src
+  INCLUDES = -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
+  OBJECT_DIR = _deps/googletest-build/googletest/CMakeFiles/gtest_main.dir
+  OBJECT_FILE_DIR = _deps/googletest-build/googletest/CMakeFiles/gtest_main.dir/src
 
 
 # =============================================================================
@@ -410,9 +410,9 @@ build googletest/googletest/CMakeFiles/gtest_main.dir/src/gtest_main.cc.o: CXX_C
 #############################################
 # Link the static library lib/libgtest_maind.a
 
-build lib/libgtest_maind.a: CXX_STATIC_LIBRARY_LINKER__gtest_main_Debug googletest/googletest/CMakeFiles/gtest_main.dir/src/gtest_main.cc.o || lib/libgtestd.a
+build lib/libgtest_maind.a: CXX_STATIC_LIBRARY_LINKER__gtest_main_Debug _deps/googletest-build/googletest/CMakeFiles/gtest_main.dir/src/gtest_main.cc.o || lib/libgtestd.a
   LANGUAGE_COMPILE_FLAGS = -g
-  OBJECT_DIR = googletest/googletest/CMakeFiles/gtest_main.dir
+  OBJECT_DIR = _deps/googletest-build/googletest/CMakeFiles/gtest_main.dir
   POST_BUILD = :
   PRE_LINK = :
   TARGET_FILE = lib/libgtest_maind.a
@@ -422,24 +422,24 @@ build lib/libgtest_maind.a: CXX_STATIC_LIBRARY_LINKER__gtest_main_Debug googlete
 #############################################
 # Utility command for edit_cache
 
-build googletest/googletest/CMakeFiles/edit_cache.util: CUSTOM_COMMAND
-  COMMAND = cd /home/sylvain/Sources/IO/SDK/build/googletest/googletest && /usr/bin/cmake -E echo No\ interactive\ CMake\ dialog\ available.
+build _deps/googletest-build/googletest/CMakeFiles/edit_cache.util: CUSTOM_COMMAND
+  COMMAND = cd /home/sylvain/Sources/IO/SDK/build/_deps/googletest-build/googletest && /usr/bin/cmake -E echo No\ interactive\ CMake\ dialog\ available.
   DESC = No interactive CMake dialog available...
   restat = 1
 
-build googletest/googletest/edit_cache: phony googletest/googletest/CMakeFiles/edit_cache.util
+build _deps/googletest-build/googletest/edit_cache: phony _deps/googletest-build/googletest/CMakeFiles/edit_cache.util
 
 
 #############################################
 # Utility command for test
 
-build googletest/googletest/CMakeFiles/test.util: CUSTOM_COMMAND
-  COMMAND = cd /home/sylvain/Sources/IO/SDK/build/googletest/googletest && /usr/bin/ctest --force-new-ctest-process
+build _deps/googletest-build/googletest/CMakeFiles/test.util: CUSTOM_COMMAND
+  COMMAND = cd /home/sylvain/Sources/IO/SDK/build/_deps/googletest-build/googletest && /usr/bin/ctest --force-new-ctest-process
   DESC = Running tests...
   pool = console
   restat = 1
 
-build googletest/googletest/test: phony googletest/googletest/CMakeFiles/test.util
+build _deps/googletest-build/googletest/test: phony _deps/googletest-build/googletest/CMakeFiles/test.util
 
 # =============================================================================
 # Object build statements for STATIC_LIBRARY target gtest
@@ -448,14 +448,14 @@ build googletest/googletest/test: phony googletest/googletest/CMakeFiles/test.ut
 #############################################
 # Order-only phony target for gtest
 
-build cmake_object_order_depends_target_gtest: phony || googletest/googletest/CMakeFiles/gtest.dir
+build cmake_object_order_depends_target_gtest: phony || _deps/googletest-build/googletest/CMakeFiles/gtest.dir
 
-build googletest/googletest/CMakeFiles/gtest.dir/src/gtest-all.cc.o: CXX_COMPILER__gtest_Debug ../googletest/googletest/src/gtest-all.cc || cmake_object_order_depends_target_gtest
-  DEP_FILE = googletest/googletest/CMakeFiles/gtest.dir/src/gtest-all.cc.o.d
+build _deps/googletest-build/googletest/CMakeFiles/gtest.dir/src/gtest-all.cc.o: CXX_COMPILER__gtest_Debug _deps/googletest-src/googletest/src/gtest-all.cc || cmake_object_order_depends_target_gtest
+  DEP_FILE = _deps/googletest-build/googletest/CMakeFiles/gtest.dir/src/gtest-all.cc.o.d
   FLAGS = -g -fPIC -Wall -Wshadow -Werror -Wno-error=dangling-else -DGTEST_HAS_PTHREAD=1 -fexceptions -Wextra -Wno-unused-parameter -Wno-missing-field-initializers -std=c++17
-  INCLUDES = -I../googletest/googletest/include -I../googletest/googletest
-  OBJECT_DIR = googletest/googletest/CMakeFiles/gtest.dir
-  OBJECT_FILE_DIR = googletest/googletest/CMakeFiles/gtest.dir/src
+  INCLUDES = -I_deps/googletest-src/googletest/include -I_deps/googletest-src/googletest
+  OBJECT_DIR = _deps/googletest-build/googletest/CMakeFiles/gtest.dir
+  OBJECT_FILE_DIR = _deps/googletest-build/googletest/CMakeFiles/gtest.dir/src
 
 
 # =============================================================================
@@ -465,9 +465,9 @@ build googletest/googletest/CMakeFiles/gtest.dir/src/gtest-all.cc.o: CXX_COMPILE
 #############################################
 # Link the static library lib/libgtestd.a
 
-build lib/libgtestd.a: CXX_STATIC_LIBRARY_LINKER__gtest_Debug googletest/googletest/CMakeFiles/gtest.dir/src/gtest-all.cc.o
+build lib/libgtestd.a: CXX_STATIC_LIBRARY_LINKER__gtest_Debug _deps/googletest-build/googletest/CMakeFiles/gtest.dir/src/gtest-all.cc.o
   LANGUAGE_COMPILE_FLAGS = -g
-  OBJECT_DIR = googletest/googletest/CMakeFiles/gtest.dir
+  OBJECT_DIR = _deps/googletest-build/googletest/CMakeFiles/gtest.dir
   POST_BUILD = :
   PRE_LINK = :
   TARGET_FILE = lib/libgtestd.a
@@ -477,13 +477,13 @@ build lib/libgtestd.a: CXX_STATIC_LIBRARY_LINKER__gtest_Debug googletest/googlet
 #############################################
 # Utility command for rebuild_cache
 
-build googletest/googletest/CMakeFiles/rebuild_cache.util: CUSTOM_COMMAND
-  COMMAND = cd /home/sylvain/Sources/IO/SDK/build/googletest/googletest && /usr/bin/cmake --regenerate-during-build -S/home/sylvain/Sources/IO/SDK -B/home/sylvain/Sources/IO/SDK/build
+build _deps/googletest-build/googletest/CMakeFiles/rebuild_cache.util: CUSTOM_COMMAND
+  COMMAND = cd /home/sylvain/Sources/IO/SDK/build/_deps/googletest-build/googletest && /usr/bin/cmake --regenerate-during-build -S/home/sylvain/Sources/IO/SDK -B/home/sylvain/Sources/IO/SDK/build
   DESC = Running CMake to regenerate build system...
   pool = console
   restat = 1
 
-build googletest/googletest/rebuild_cache: phony googletest/googletest/CMakeFiles/rebuild_cache.util
+build _deps/googletest-build/googletest/rebuild_cache: phony _deps/googletest-build/googletest/CMakeFiles/rebuild_cache.util
 
 # =============================================================================
 # Write statements declared in CMakeLists.txt:
@@ -1224,392 +1224,392 @@ build cmake_object_order_depends_target_IO.SDK.Tests: phony || cmake_object_orde
 build IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/AberrationTests.cpp.o: CXX_COMPILER__IO.2eSDK.2eTests_Debug ../IO.SDK.Tests/AberrationTests.cpp || cmake_object_order_depends_target_IO.SDK.Tests
   DEP_FILE = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/AberrationTests.cpp.o.d
   FLAGS = -g -fPIE -std=gnu++17
-  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../lib/includeLinux -isystem ../googletest/googletest/include -isystem ../googletest/googletest
+  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
   OBJECT_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
   OBJECT_FILE_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
 
 build IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/ApogeeHeightChangingManeuverTests.cpp.o: CXX_COMPILER__IO.2eSDK.2eTests_Debug ../IO.SDK.Tests/ApogeeHeightChangingManeuverTests.cpp || cmake_object_order_depends_target_IO.SDK.Tests
   DEP_FILE = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/ApogeeHeightChangingManeuverTests.cpp.o.d
   FLAGS = -g -fPIE -std=gnu++17
-  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../lib/includeLinux -isystem ../googletest/googletest/include -isystem ../googletest/googletest
+  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
   OBJECT_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
   OBJECT_FILE_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
 
 build IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/ApsidalAlignmentManeuverTests.cpp.o: CXX_COMPILER__IO.2eSDK.2eTests_Debug ../IO.SDK.Tests/ApsidalAlignmentManeuverTests.cpp || cmake_object_order_depends_target_IO.SDK.Tests
   DEP_FILE = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/ApsidalAlignmentManeuverTests.cpp.o.d
   FLAGS = -g -fPIE -std=gnu++17
-  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../lib/includeLinux -isystem ../googletest/googletest/include -isystem ../googletest/googletest
+  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
   OBJECT_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
   OBJECT_FILE_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
 
 build IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/AzimuthRangeTests.cpp.o: CXX_COMPILER__IO.2eSDK.2eTests_Debug ../IO.SDK.Tests/AzimuthRangeTests.cpp || cmake_object_order_depends_target_IO.SDK.Tests
   DEP_FILE = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/AzimuthRangeTests.cpp.o.d
   FLAGS = -g -fPIE -std=gnu++17
-  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../lib/includeLinux -isystem ../googletest/googletest/include -isystem ../googletest/googletest
+  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
   OBJECT_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
   OBJECT_FILE_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
 
 build IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/BodyTests.cpp.o: CXX_COMPILER__IO.2eSDK.2eTests_Debug ../IO.SDK.Tests/BodyTests.cpp || cmake_object_order_depends_target_IO.SDK.Tests
   DEP_FILE = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/BodyTests.cpp.o.d
   FLAGS = -g -fPIE -std=gnu++17
-  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../lib/includeLinux -isystem ../googletest/googletest/include -isystem ../googletest/googletest
+  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
   OBJECT_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
   OBJECT_FILE_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
 
 build IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/CelestialBodyTests.cpp.o: CXX_COMPILER__IO.2eSDK.2eTests_Debug ../IO.SDK.Tests/CelestialBodyTests.cpp || cmake_object_order_depends_target_IO.SDK.Tests
   DEP_FILE = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/CelestialBodyTests.cpp.o.d
   FLAGS = -g -fPIE -std=gnu++17
-  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../lib/includeLinux -isystem ../googletest/googletest/include -isystem ../googletest/googletest
+  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
   OBJECT_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
   OBJECT_FILE_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
 
 build IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/CentrifugalForceTests.cpp.o: CXX_COMPILER__IO.2eSDK.2eTests_Debug ../IO.SDK.Tests/CentrifugalForceTests.cpp || cmake_object_order_depends_target_IO.SDK.Tests
   DEP_FILE = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/CentrifugalForceTests.cpp.o.d
   FLAGS = -g -fPIE -std=gnu++17
-  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../lib/includeLinux -isystem ../googletest/googletest/include -isystem ../googletest/googletest
+  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
   OBJECT_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
   OBJECT_FILE_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
 
 build IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/CombinedManeuverTests.cpp.o: CXX_COMPILER__IO.2eSDK.2eTests_Debug ../IO.SDK.Tests/CombinedManeuverTests.cpp || cmake_object_order_depends_target_IO.SDK.Tests
   DEP_FILE = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/CombinedManeuverTests.cpp.o.d
   FLAGS = -g -fPIE -std=gnu++17
-  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../lib/includeLinux -isystem ../googletest/googletest/include -isystem ../googletest/googletest
+  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
   OBJECT_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
   OBJECT_FILE_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
 
 build IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/ConicOrbitalElementsTests.cpp.o: CXX_COMPILER__IO.2eSDK.2eTests_Debug ../IO.SDK.Tests/ConicOrbitalElementsTests.cpp || cmake_object_order_depends_target_IO.SDK.Tests
   DEP_FILE = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/ConicOrbitalElementsTests.cpp.o.d
   FLAGS = -g -fPIE -std=gnu++17
-  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../lib/includeLinux -isystem ../googletest/googletest/include -isystem ../googletest/googletest
+  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
   OBJECT_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
   OBJECT_FILE_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
 
 build IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/CylindricalTests.cpp.o: CXX_COMPILER__IO.2eSDK.2eTests_Debug ../IO.SDK.Tests/CylindricalTests.cpp || cmake_object_order_depends_target_IO.SDK.Tests
   DEP_FILE = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/CylindricalTests.cpp.o.d
   FLAGS = -g -fPIE -std=gnu++17
-  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../lib/includeLinux -isystem ../googletest/googletest/include -isystem ../googletest/googletest
+  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
   OBJECT_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
   OBJECT_FILE_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
 
 build IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/EngineTests.cpp.o: CXX_COMPILER__IO.2eSDK.2eTests_Debug ../IO.SDK.Tests/EngineTests.cpp || cmake_object_order_depends_target_IO.SDK.Tests
   DEP_FILE = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/EngineTests.cpp.o.d
   FLAGS = -g -fPIE -std=gnu++17
-  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../lib/includeLinux -isystem ../googletest/googletest/include -isystem ../googletest/googletest
+  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
   OBJECT_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
   OBJECT_FILE_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
 
 build IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/EphemerisKernelTests.cpp.o: CXX_COMPILER__IO.2eSDK.2eTests_Debug ../IO.SDK.Tests/EphemerisKernelTests.cpp || cmake_object_order_depends_target_IO.SDK.Tests
   DEP_FILE = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/EphemerisKernelTests.cpp.o.d
   FLAGS = -g -fPIE -std=gnu++17
-  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../lib/includeLinux -isystem ../googletest/googletest/include -isystem ../googletest/googletest
+  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
   OBJECT_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
   OBJECT_FILE_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
 
 build IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/EquinoctialElementsTests.cpp.o: CXX_COMPILER__IO.2eSDK.2eTests_Debug ../IO.SDK.Tests/EquinoctialElementsTests.cpp || cmake_object_order_depends_target_IO.SDK.Tests
   DEP_FILE = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/EquinoctialElementsTests.cpp.o.d
   FLAGS = -g -fPIE -std=gnu++17
-  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../lib/includeLinux -isystem ../googletest/googletest/include -isystem ../googletest/googletest
+  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
   OBJECT_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
   OBJECT_FILE_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
 
 build IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/FuelTankTests.cpp.o: CXX_COMPILER__IO.2eSDK.2eTests_Debug ../IO.SDK.Tests/FuelTankTests.cpp || cmake_object_order_depends_target_IO.SDK.Tests
   DEP_FILE = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/FuelTankTests.cpp.o.d
   FLAGS = -g -fPIE -std=gnu++17
-  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../lib/includeLinux -isystem ../googletest/googletest/include -isystem ../googletest/googletest
+  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
   OBJECT_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
   OBJECT_FILE_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
 
 build IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/GeodeticTests.cpp.o: CXX_COMPILER__IO.2eSDK.2eTests_Debug ../IO.SDK.Tests/GeodeticTests.cpp || cmake_object_order_depends_target_IO.SDK.Tests
   DEP_FILE = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/GeodeticTests.cpp.o.d
   FLAGS = -g -fPIE -std=gnu++17
-  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../lib/includeLinux -isystem ../googletest/googletest/include -isystem ../googletest/googletest
+  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
   OBJECT_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
   OBJECT_FILE_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
 
 build IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/GravityForceTests.cpp.o: CXX_COMPILER__IO.2eSDK.2eTests_Debug ../IO.SDK.Tests/GravityForceTests.cpp || cmake_object_order_depends_target_IO.SDK.Tests
   DEP_FILE = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/GravityForceTests.cpp.o.d
   FLAGS = -g -fPIE -std=gnu++17
-  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../lib/includeLinux -isystem ../googletest/googletest/include -isystem ../googletest/googletest
+  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
   OBJECT_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
   OBJECT_FILE_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
 
 build IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/HelpersTests.cpp.o: CXX_COMPILER__IO.2eSDK.2eTests_Debug ../IO.SDK.Tests/HelpersTests.cpp || cmake_object_order_depends_target_IO.SDK.Tests
   DEP_FILE = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/HelpersTests.cpp.o.d
   FLAGS = -g -fPIE -std=gnu++17
-  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../lib/includeLinux -isystem ../googletest/googletest/include -isystem ../googletest/googletest
+  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
   OBJECT_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
   OBJECT_FILE_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
 
 build IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/HorizontalCoordinatesTests.cpp.o: CXX_COMPILER__IO.2eSDK.2eTests_Debug ../IO.SDK.Tests/HorizontalCoordinatesTests.cpp || cmake_object_order_depends_target_IO.SDK.Tests
   DEP_FILE = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/HorizontalCoordinatesTests.cpp.o.d
   FLAGS = -g -fPIE -std=gnu++17
-  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../lib/includeLinux -isystem ../googletest/googletest/include -isystem ../googletest/googletest
+  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
   OBJECT_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
   OBJECT_FILE_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
 
 build IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/IlluminationTests.cpp.o: CXX_COMPILER__IO.2eSDK.2eTests_Debug ../IO.SDK.Tests/IlluminationTests.cpp || cmake_object_order_depends_target_IO.SDK.Tests
   DEP_FILE = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/IlluminationTests.cpp.o.d
   FLAGS = -g -fPIE -std=gnu++17
-  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../lib/includeLinux -isystem ../googletest/googletest/include -isystem ../googletest/googletest
+  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
   OBJECT_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
   OBJECT_FILE_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
 
 build IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/InclinationManeuverTests.cpp.o: CXX_COMPILER__IO.2eSDK.2eTests_Debug ../IO.SDK.Tests/InclinationManeuverTests.cpp || cmake_object_order_depends_target_IO.SDK.Tests
   DEP_FILE = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/InclinationManeuverTests.cpp.o.d
   FLAGS = -g -fPIE -std=gnu++17
-  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../lib/includeLinux -isystem ../googletest/googletest/include -isystem ../googletest/googletest
+  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
   OBJECT_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
   OBJECT_FILE_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
 
 build IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/InertialFramesTestscpp.cpp.o: CXX_COMPILER__IO.2eSDK.2eTests_Debug ../IO.SDK.Tests/InertialFramesTestscpp.cpp || cmake_object_order_depends_target_IO.SDK.Tests
   DEP_FILE = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/InertialFramesTestscpp.cpp.o.d
   FLAGS = -g -fPIE -std=gnu++17
-  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../lib/includeLinux -isystem ../googletest/googletest/include -isystem ../googletest/googletest
+  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
   OBJECT_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
   OBJECT_FILE_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
 
 build IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/InstrumentTests.cpp.o: CXX_COMPILER__IO.2eSDK.2eTests_Debug ../IO.SDK.Tests/InstrumentTests.cpp || cmake_object_order_depends_target_IO.SDK.Tests
   DEP_FILE = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/InstrumentTests.cpp.o.d
   FLAGS = -g -fPIE -std=gnu++17
-  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../lib/includeLinux -isystem ../googletest/googletest/include -isystem ../googletest/googletest
+  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
   OBJECT_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
   OBJECT_FILE_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
 
 build IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/LatitudinalTests.cpp.o: CXX_COMPILER__IO.2eSDK.2eTests_Debug ../IO.SDK.Tests/LatitudinalTests.cpp || cmake_object_order_depends_target_IO.SDK.Tests
   DEP_FILE = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/LatitudinalTests.cpp.o.d
   FLAGS = -g -fPIE -std=gnu++17
-  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../lib/includeLinux -isystem ../googletest/googletest/include -isystem ../googletest/googletest
+  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
   OBJECT_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
   OBJECT_FILE_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
 
 build IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/LaunchSiteTests.cpp.o: CXX_COMPILER__IO.2eSDK.2eTests_Debug ../IO.SDK.Tests/LaunchSiteTests.cpp || cmake_object_order_depends_target_IO.SDK.Tests
   DEP_FILE = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/LaunchSiteTests.cpp.o.d
   FLAGS = -g -fPIE -std=gnu++17
-  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../lib/includeLinux -isystem ../googletest/googletest/include -isystem ../googletest/googletest
+  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
   OBJECT_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
   OBJECT_FILE_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
 
 build IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/LaunchTests.cpp.o: CXX_COMPILER__IO.2eSDK.2eTests_Debug ../IO.SDK.Tests/LaunchTests.cpp || cmake_object_order_depends_target_IO.SDK.Tests
   DEP_FILE = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/LaunchTests.cpp.o.d
   FLAGS = -g -fPIE -std=gnu++17
-  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../lib/includeLinux -isystem ../googletest/googletest/include -isystem ../googletest/googletest
+  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
   OBJECT_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
   OBJECT_FILE_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
 
 build IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/LaunchWindowTests.cpp.o: CXX_COMPILER__IO.2eSDK.2eTests_Debug ../IO.SDK.Tests/LaunchWindowTests.cpp || cmake_object_order_depends_target_IO.SDK.Tests
   DEP_FILE = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/LaunchWindowTests.cpp.o.d
   FLAGS = -g -fPIE -std=gnu++17
-  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../lib/includeLinux -isystem ../googletest/googletest/include -isystem ../googletest/googletest
+  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
   OBJECT_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
   OBJECT_FILE_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
 
 build IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/Main.cpp.o: CXX_COMPILER__IO.2eSDK.2eTests_Debug ../IO.SDK.Tests/Main.cpp || cmake_object_order_depends_target_IO.SDK.Tests
   DEP_FILE = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/Main.cpp.o.d
   FLAGS = -g -fPIE -std=gnu++17
-  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../lib/includeLinux -isystem ../googletest/googletest/include -isystem ../googletest/googletest
+  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
   OBJECT_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
   OBJECT_FILE_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
 
 build IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/ManeuverTests.cpp.o: CXX_COMPILER__IO.2eSDK.2eTests_Debug ../IO.SDK.Tests/ManeuverTests.cpp || cmake_object_order_depends_target_IO.SDK.Tests
   DEP_FILE = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/ManeuverTests.cpp.o.d
   FLAGS = -g -fPIE -std=gnu++17
-  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../lib/includeLinux -isystem ../googletest/googletest/include -isystem ../googletest/googletest
+  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
   OBJECT_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
   OBJECT_FILE_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
 
 build IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/MatrixTests.cpp.o: CXX_COMPILER__IO.2eSDK.2eTests_Debug ../IO.SDK.Tests/MatrixTests.cpp || cmake_object_order_depends_target_IO.SDK.Tests
   DEP_FILE = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/MatrixTests.cpp.o.d
   FLAGS = -g -fPIE -std=gnu++17
-  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../lib/includeLinux -isystem ../googletest/googletest/include -isystem ../googletest/googletest
+  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
   OBJECT_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
   OBJECT_FILE_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
 
 build IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/OrientationKernelTests.cpp.o: CXX_COMPILER__IO.2eSDK.2eTests_Debug ../IO.SDK.Tests/OrientationKernelTests.cpp || cmake_object_order_depends_target_IO.SDK.Tests
   DEP_FILE = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/OrientationKernelTests.cpp.o.d
   FLAGS = -g -fPIE -std=gnu++17
-  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../lib/includeLinux -isystem ../googletest/googletest/include -isystem ../googletest/googletest
+  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
   OBJECT_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
   OBJECT_FILE_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
 
 build IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/PayloadTests.cpp.o: CXX_COMPILER__IO.2eSDK.2eTests_Debug ../IO.SDK.Tests/PayloadTests.cpp || cmake_object_order_depends_target_IO.SDK.Tests
   DEP_FILE = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/PayloadTests.cpp.o.d
   FLAGS = -g -fPIE -std=gnu++17
-  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../lib/includeLinux -isystem ../googletest/googletest/include -isystem ../googletest/googletest
+  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
   OBJECT_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
   OBJECT_FILE_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
 
 build IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/PerigeeHeightChangingManeuverTests.cpp.o: CXX_COMPILER__IO.2eSDK.2eTests_Debug ../IO.SDK.Tests/PerigeeHeightChangingManeuverTests.cpp || cmake_object_order_depends_target_IO.SDK.Tests
   DEP_FILE = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/PerigeeHeightChangingManeuverTests.cpp.o.d
   FLAGS = -g -fPIE -std=gnu++17
-  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../lib/includeLinux -isystem ../googletest/googletest/include -isystem ../googletest/googletest
+  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
   OBJECT_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
   OBJECT_FILE_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
 
 build IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/PhasingDuration.cpp.o: CXX_COMPILER__IO.2eSDK.2eTests_Debug ../IO.SDK.Tests/PhasingDuration.cpp || cmake_object_order_depends_target_IO.SDK.Tests
   DEP_FILE = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/PhasingDuration.cpp.o.d
   FLAGS = -g -fPIE -std=gnu++17
-  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../lib/includeLinux -isystem ../googletest/googletest/include -isystem ../googletest/googletest
+  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
   OBJECT_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
   OBJECT_FILE_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
 
 build IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/PlanetographicTests.cpp.o: CXX_COMPILER__IO.2eSDK.2eTests_Debug ../IO.SDK.Tests/PlanetographicTests.cpp || cmake_object_order_depends_target_IO.SDK.Tests
   DEP_FILE = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/PlanetographicTests.cpp.o.d
   FLAGS = -g -fPIE -std=gnu++17
-  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../lib/includeLinux -isystem ../googletest/googletest/include -isystem ../googletest/googletest
+  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
   OBJECT_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
   OBJECT_FILE_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
 
 build IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/PropagatorTests.cpp.o: CXX_COMPILER__IO.2eSDK.2eTests_Debug ../IO.SDK.Tests/PropagatorTests.cpp || cmake_object_order_depends_target_IO.SDK.Tests
   DEP_FILE = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/PropagatorTests.cpp.o.d
   FLAGS = -g -fPIE -std=gnu++17
-  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../lib/includeLinux -isystem ../googletest/googletest/include -isystem ../googletest/googletest
+  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
   OBJECT_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
   OBJECT_FILE_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
 
 build IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/QuaternionTests.cpp.o: CXX_COMPILER__IO.2eSDK.2eTests_Debug ../IO.SDK.Tests/QuaternionTests.cpp || cmake_object_order_depends_target_IO.SDK.Tests
   DEP_FILE = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/QuaternionTests.cpp.o.d
   FLAGS = -g -fPIE -std=gnu++17
-  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../lib/includeLinux -isystem ../googletest/googletest/include -isystem ../googletest/googletest
+  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
   OBJECT_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
   OBJECT_FILE_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
 
 build IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/RADecTests.cpp.o: CXX_COMPILER__IO.2eSDK.2eTests_Debug ../IO.SDK.Tests/RADecTests.cpp || cmake_object_order_depends_target_IO.SDK.Tests
   DEP_FILE = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/RADecTests.cpp.o.d
   FLAGS = -g -fPIE -std=gnu++17
-  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../lib/includeLinux -isystem ../googletest/googletest/include -isystem ../googletest/googletest
+  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
   OBJECT_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
   OBJECT_FILE_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
 
 build IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/RectangularTests.cpp.o: CXX_COMPILER__IO.2eSDK.2eTests_Debug ../IO.SDK.Tests/RectangularTests.cpp || cmake_object_order_depends_target_IO.SDK.Tests
   DEP_FILE = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/RectangularTests.cpp.o.d
   FLAGS = -g -fPIE -std=gnu++17
-  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../lib/includeLinux -isystem ../googletest/googletest/include -isystem ../googletest/googletest
+  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
   OBJECT_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
   OBJECT_FILE_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
 
 build IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/RotationTests.cpp.o: CXX_COMPILER__IO.2eSDK.2eTests_Debug ../IO.SDK.Tests/RotationTests.cpp || cmake_object_order_depends_target_IO.SDK.Tests
   DEP_FILE = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/RotationTests.cpp.o.d
   FLAGS = -g -fPIE -std=gnu++17
-  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../lib/includeLinux -isystem ../googletest/googletest/include -isystem ../googletest/googletest
+  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
   OBJECT_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
   OBJECT_FILE_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
 
 build IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/SiteFrameTests.cpp.o: CXX_COMPILER__IO.2eSDK.2eTests_Debug ../IO.SDK.Tests/SiteFrameTests.cpp || cmake_object_order_depends_target_IO.SDK.Tests
   DEP_FILE = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/SiteFrameTests.cpp.o.d
   FLAGS = -g -fPIE -std=gnu++17
-  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../lib/includeLinux -isystem ../googletest/googletest/include -isystem ../googletest/googletest
+  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
   OBJECT_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
   OBJECT_FILE_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
 
 build IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/SiteTests.cpp.o: CXX_COMPILER__IO.2eSDK.2eTests_Debug ../IO.SDK.Tests/SiteTests.cpp || cmake_object_order_depends_target_IO.SDK.Tests
   DEP_FILE = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/SiteTests.cpp.o.d
   FLAGS = -g -fPIE -std=gnu++17
-  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../lib/includeLinux -isystem ../googletest/googletest/include -isystem ../googletest/googletest
+  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
   OBJECT_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
   OBJECT_FILE_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
 
 build IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/SpacecraftClockKernelTests.cpp.o: CXX_COMPILER__IO.2eSDK.2eTests_Debug ../IO.SDK.Tests/SpacecraftClockKernelTests.cpp || cmake_object_order_depends_target_IO.SDK.Tests
   DEP_FILE = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/SpacecraftClockKernelTests.cpp.o.d
   FLAGS = -g -fPIE -std=gnu++17
-  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../lib/includeLinux -isystem ../googletest/googletest/include -isystem ../googletest/googletest
+  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
   OBJECT_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
   OBJECT_FILE_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
 
 build IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/SpacecraftFrameTests.cpp.o: CXX_COMPILER__IO.2eSDK.2eTests_Debug ../IO.SDK.Tests/SpacecraftFrameTests.cpp || cmake_object_order_depends_target_IO.SDK.Tests
   DEP_FILE = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/SpacecraftFrameTests.cpp.o.d
   FLAGS = -g -fPIE -std=gnu++17
-  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../lib/includeLinux -isystem ../googletest/googletest/include -isystem ../googletest/googletest
+  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
   OBJECT_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
   OBJECT_FILE_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
 
 build IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/SpacecraftTests.cpp.o: CXX_COMPILER__IO.2eSDK.2eTests_Debug ../IO.SDK.Tests/SpacecraftTests.cpp || cmake_object_order_depends_target_IO.SDK.Tests
   DEP_FILE = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/SpacecraftTests.cpp.o.d
   FLAGS = -g -fPIE -std=gnu++17
-  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../lib/includeLinux -isystem ../googletest/googletest/include -isystem ../googletest/googletest
+  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
   OBJECT_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
   OBJECT_FILE_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
 
 build IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/SphericalTests.cpp.o: CXX_COMPILER__IO.2eSDK.2eTests_Debug ../IO.SDK.Tests/SphericalTests.cpp || cmake_object_order_depends_target_IO.SDK.Tests
   DEP_FILE = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/SphericalTests.cpp.o.d
   FLAGS = -g -fPIE -std=gnu++17
-  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../lib/includeLinux -isystem ../googletest/googletest/include -isystem ../googletest/googletest
+  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
   OBJECT_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
   OBJECT_FILE_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
 
 build IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/StateVectorTests.cpp.o: CXX_COMPILER__IO.2eSDK.2eTests_Debug ../IO.SDK.Tests/StateVectorTests.cpp || cmake_object_order_depends_target_IO.SDK.Tests
   DEP_FILE = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/StateVectorTests.cpp.o.d
   FLAGS = -g -fPIE -std=gnu++17
-  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../lib/includeLinux -isystem ../googletest/googletest/include -isystem ../googletest/googletest
+  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
   OBJECT_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
   OBJECT_FILE_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
 
 build IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/SurfaceCoordinatesTests.cpp.o: CXX_COMPILER__IO.2eSDK.2eTests_Debug ../IO.SDK.Tests/SurfaceCoordinatesTests.cpp || cmake_object_order_depends_target_IO.SDK.Tests
   DEP_FILE = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/SurfaceCoordinatesTests.cpp.o.d
   FLAGS = -g -fPIE -std=gnu++17
-  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../lib/includeLinux -isystem ../googletest/googletest/include -isystem ../googletest/googletest
+  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
   OBJECT_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
   OBJECT_FILE_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
 
 build IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/SurfaceInterceptPointTests.cpp.o: CXX_COMPILER__IO.2eSDK.2eTests_Debug ../IO.SDK.Tests/SurfaceInterceptPointTests.cpp || cmake_object_order_depends_target_IO.SDK.Tests
   DEP_FILE = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/SurfaceInterceptPointTests.cpp.o.d
   FLAGS = -g -fPIE -std=gnu++17
-  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../lib/includeLinux -isystem ../googletest/googletest/include -isystem ../googletest/googletest
+  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
   OBJECT_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
   OBJECT_FILE_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
 
 build IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/TDBTests.cpp.o: CXX_COMPILER__IO.2eSDK.2eTests_Debug ../IO.SDK.Tests/TDBTests.cpp || cmake_object_order_depends_target_IO.SDK.Tests
   DEP_FILE = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/TDBTests.cpp.o.d
   FLAGS = -g -fPIE -std=gnu++17
-  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../lib/includeLinux -isystem ../googletest/googletest/include -isystem ../googletest/googletest
+  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
   OBJECT_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
   OBJECT_FILE_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
 
 build IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/TLEIntegratorTests.cpp.o: CXX_COMPILER__IO.2eSDK.2eTests_Debug ../IO.SDK.Tests/TLEIntegratorTests.cpp || cmake_object_order_depends_target_IO.SDK.Tests
   DEP_FILE = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/TLEIntegratorTests.cpp.o.d
   FLAGS = -g -fPIE -std=gnu++17
-  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../lib/includeLinux -isystem ../googletest/googletest/include -isystem ../googletest/googletest
+  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
   OBJECT_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
   OBJECT_FILE_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
 
 build IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/TLETests.cpp.o: CXX_COMPILER__IO.2eSDK.2eTests_Debug ../IO.SDK.Tests/TLETests.cpp || cmake_object_order_depends_target_IO.SDK.Tests
   DEP_FILE = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/TLETests.cpp.o.d
   FLAGS = -g -fPIE -std=gnu++17
-  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../lib/includeLinux -isystem ../googletest/googletest/include -isystem ../googletest/googletest
+  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
   OBJECT_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
   OBJECT_FILE_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
 
 build IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/TimeSpanTests.cpp.o: CXX_COMPILER__IO.2eSDK.2eTests_Debug ../IO.SDK.Tests/TimeSpanTests.cpp || cmake_object_order_depends_target_IO.SDK.Tests
   DEP_FILE = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/TimeSpanTests.cpp.o.d
   FLAGS = -g -fPIE -std=gnu++17
-  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../lib/includeLinux -isystem ../googletest/googletest/include -isystem ../googletest/googletest
+  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
   OBJECT_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
   OBJECT_FILE_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
 
 build IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/UTCTests.cpp.o: CXX_COMPILER__IO.2eSDK.2eTests_Debug ../IO.SDK.Tests/UTCTests.cpp || cmake_object_order_depends_target_IO.SDK.Tests
   DEP_FILE = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/UTCTests.cpp.o.d
   FLAGS = -g -fPIE -std=gnu++17
-  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../lib/includeLinux -isystem ../googletest/googletest/include -isystem ../googletest/googletest
+  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
   OBJECT_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
   OBJECT_FILE_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
 
 build IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/VVIntegratorTests.cpp.o: CXX_COMPILER__IO.2eSDK.2eTests_Debug ../IO.SDK.Tests/VVIntegratorTests.cpp || cmake_object_order_depends_target_IO.SDK.Tests
   DEP_FILE = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/VVIntegratorTests.cpp.o.d
   FLAGS = -g -fPIE -std=gnu++17
-  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../lib/includeLinux -isystem ../googletest/googletest/include -isystem ../googletest/googletest
+  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
   OBJECT_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
   OBJECT_FILE_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
 
 build IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/VectorTests.cpp.o: CXX_COMPILER__IO.2eSDK.2eTests_Debug ../IO.SDK.Tests/VectorTests.cpp || cmake_object_order_depends_target_IO.SDK.Tests
   DEP_FILE = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/VectorTests.cpp.o.d
   FLAGS = -g -fPIE -std=gnu++17
-  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../lib/includeLinux -isystem ../googletest/googletest/include -isystem ../googletest/googletest
+  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
   OBJECT_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
   OBJECT_FILE_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
 
 build IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/WindowTests.cpp.o: CXX_COMPILER__IO.2eSDK.2eTests_Debug ../IO.SDK.Tests/WindowTests.cpp || cmake_object_order_depends_target_IO.SDK.Tests
   DEP_FILE = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/WindowTests.cpp.o.d
   FLAGS = -g -fPIE -std=gnu++17
-  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../lib/includeLinux -isystem ../googletest/googletest/include -isystem ../googletest/googletest
+  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
   OBJECT_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
   OBJECT_FILE_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
 
@@ -1704,7 +1704,7 @@ build libgtestd.a: phony lib/libgtestd.a
 #############################################
 # Folder: /home/sylvain/Sources/IO/SDK/build
 
-build all: phony googletest/all IO.SDK/all IO.SDK.Tests/all
+build all: phony _deps/googletest-build/all IO.SDK/all IO.SDK.Tests/all
 
 # =============================================================================
 
@@ -1723,23 +1723,23 @@ build IO.SDK.Tests/all: phony IO.SDK.Tests/IO.SDK.Tests
 # =============================================================================
 
 #############################################
-# Folder: /home/sylvain/Sources/IO/SDK/build/googletest
+# Folder: /home/sylvain/Sources/IO/SDK/build/_deps/googletest-build
 
-build googletest/all: phony googletest/googlemock/all
-
-# =============================================================================
-
-#############################################
-# Folder: /home/sylvain/Sources/IO/SDK/build/googletest/googlemock
-
-build googletest/googlemock/all: phony lib/libgmock_maind.a lib/libgmockd.a googletest/googletest/all
+build _deps/googletest-build/all: phony _deps/googletest-build/googlemock/all
 
 # =============================================================================
 
 #############################################
-# Folder: /home/sylvain/Sources/IO/SDK/build/googletest/googletest
+# Folder: /home/sylvain/Sources/IO/SDK/build/_deps/googletest-build/googlemock
 
-build googletest/googletest/all: phony lib/libgtest_maind.a lib/libgtestd.a
+build _deps/googletest-build/googlemock/all: phony lib/libgmock_maind.a lib/libgmockd.a _deps/googletest-build/googletest/all
+
+# =============================================================================
+
+#############################################
+# Folder: /home/sylvain/Sources/IO/SDK/build/_deps/googletest-build/googletest
+
+build _deps/googletest-build/googletest/all: phony lib/libgtest_maind.a lib/libgtestd.a
 
 # =============================================================================
 # Built-in targets
@@ -1748,14 +1748,14 @@ build googletest/googletest/all: phony lib/libgtest_maind.a lib/libgtestd.a
 #############################################
 # Re-run CMake if any of its inputs changed.
 
-build build.ninja: RERUN_CMAKE | ../CMakeLists.txt ../IO.SDK.Tests/CMakeLists.txt ../IO.SDK/CMakeLists.txt ../googletest/CMakeLists.txt ../googletest/googlemock/CMakeLists.txt ../googletest/googlemock/cmake/gmock.pc.in ../googletest/googlemock/cmake/gmock_main.pc.in ../googletest/googletest/CMakeLists.txt ../googletest/googletest/cmake/Config.cmake.in ../googletest/googletest/cmake/gtest.pc.in ../googletest/googletest/cmake/gtest_main.pc.in ../googletest/googletest/cmake/internal_utils.cmake /usr/share/cmake-3.18/Modules/BasicConfigVersion-AnyNewerVersion.cmake.in /usr/share/cmake-3.18/Modules/CMakeCInformation.cmake /usr/share/cmake-3.18/Modules/CMakeCXXInformation.cmake /usr/share/cmake-3.18/Modules/CMakeCheckCompilerFlagCommonPatterns.cmake /usr/share/cmake-3.18/Modules/CMakeCommonLanguageInclude.cmake /usr/share/cmake-3.18/Modules/CMakeDependentOption.cmake /usr/share/cmake-3.18/Modules/CMakeGenericSystem.cmake /usr/share/cmake-3.18/Modules/CMakeInitializeConfigs.cmake /usr/share/cmake-3.18/Modules/CMakeLanguageInformation.cmake /usr/share/cmake-3.18/Modules/CMakePackageConfigHelpers.cmake /usr/share/cmake-3.18/Modules/CMakeSystemSpecificInformation.cmake /usr/share/cmake-3.18/Modules/CMakeSystemSpecificInitialize.cmake /usr/share/cmake-3.18/Modules/CheckCSourceCompiles.cmake /usr/share/cmake-3.18/Modules/CheckIncludeFile.cmake /usr/share/cmake-3.18/Modules/CheckLibraryExists.cmake /usr/share/cmake-3.18/Modules/Compiler/CMakeCommonCompilerMacros.cmake /usr/share/cmake-3.18/Modules/Compiler/GNU-C.cmake /usr/share/cmake-3.18/Modules/Compiler/GNU-CXX.cmake /usr/share/cmake-3.18/Modules/Compiler/GNU.cmake /usr/share/cmake-3.18/Modules/FindPackageHandleStandardArgs.cmake /usr/share/cmake-3.18/Modules/FindPackageMessage.cmake /usr/share/cmake-3.18/Modules/FindPython.cmake /usr/share/cmake-3.18/Modules/FindPython/Support.cmake /usr/share/cmake-3.18/Modules/FindThreads.cmake /usr/share/cmake-3.18/Modules/GNUInstallDirs.cmake /usr/share/cmake-3.18/Modules/Internal/CMakeCheckCompilerFlag.cmake /usr/share/cmake-3.18/Modules/Platform/Linux-GNU-C.cmake /usr/share/cmake-3.18/Modules/Platform/Linux-GNU-CXX.cmake /usr/share/cmake-3.18/Modules/Platform/Linux-GNU.cmake /usr/share/cmake-3.18/Modules/Platform/Linux.cmake /usr/share/cmake-3.18/Modules/Platform/UnixPaths.cmake /usr/share/cmake-3.18/Modules/WriteBasicConfigVersionFile.cmake CMakeCache.txt CMakeFiles/3.18.3975358-MSVC_2/CMakeCCompiler.cmake CMakeFiles/3.18.3975358-MSVC_2/CMakeCXXCompiler.cmake CMakeFiles/3.18.3975358-MSVC_2/CMakeSystem.cmake
+build build.ninja: RERUN_CMAKE | ../CMakeLists.txt ../IO.SDK.Tests/CMakeLists.txt ../IO.SDK/CMakeLists.txt /usr/share/cmake-3.18/Modules/BasicConfigVersion-AnyNewerVersion.cmake.in /usr/share/cmake-3.18/Modules/CMakeCInformation.cmake /usr/share/cmake-3.18/Modules/CMakeCXXInformation.cmake /usr/share/cmake-3.18/Modules/CMakeCheckCompilerFlagCommonPatterns.cmake /usr/share/cmake-3.18/Modules/CMakeCommonLanguageInclude.cmake /usr/share/cmake-3.18/Modules/CMakeDependentOption.cmake /usr/share/cmake-3.18/Modules/CMakeGenericSystem.cmake /usr/share/cmake-3.18/Modules/CMakeInitializeConfigs.cmake /usr/share/cmake-3.18/Modules/CMakeLanguageInformation.cmake /usr/share/cmake-3.18/Modules/CMakePackageConfigHelpers.cmake /usr/share/cmake-3.18/Modules/CMakeSystemSpecificInformation.cmake /usr/share/cmake-3.18/Modules/CMakeSystemSpecificInitialize.cmake /usr/share/cmake-3.18/Modules/CheckCSourceCompiles.cmake /usr/share/cmake-3.18/Modules/CheckIncludeFile.cmake /usr/share/cmake-3.18/Modules/CheckLibraryExists.cmake /usr/share/cmake-3.18/Modules/Compiler/CMakeCommonCompilerMacros.cmake /usr/share/cmake-3.18/Modules/Compiler/GNU-C.cmake /usr/share/cmake-3.18/Modules/Compiler/GNU-CXX.cmake /usr/share/cmake-3.18/Modules/Compiler/GNU.cmake /usr/share/cmake-3.18/Modules/FetchContent.cmake /usr/share/cmake-3.18/Modules/FetchContent/CMakeLists.cmake.in /usr/share/cmake-3.18/Modules/FindPackageHandleStandardArgs.cmake /usr/share/cmake-3.18/Modules/FindPackageMessage.cmake /usr/share/cmake-3.18/Modules/FindPython.cmake /usr/share/cmake-3.18/Modules/FindPython/Support.cmake /usr/share/cmake-3.18/Modules/FindThreads.cmake /usr/share/cmake-3.18/Modules/GNUInstallDirs.cmake /usr/share/cmake-3.18/Modules/Internal/CMakeCheckCompilerFlag.cmake /usr/share/cmake-3.18/Modules/Platform/Linux-GNU-C.cmake /usr/share/cmake-3.18/Modules/Platform/Linux-GNU-CXX.cmake /usr/share/cmake-3.18/Modules/Platform/Linux-GNU.cmake /usr/share/cmake-3.18/Modules/Platform/Linux.cmake /usr/share/cmake-3.18/Modules/Platform/UnixPaths.cmake /usr/share/cmake-3.18/Modules/WriteBasicConfigVersionFile.cmake CMakeCache.txt CMakeFiles/3.18.3975358-MSVC_2/CMakeCCompiler.cmake CMakeFiles/3.18.3975358-MSVC_2/CMakeCXXCompiler.cmake CMakeFiles/3.18.3975358-MSVC_2/CMakeSystem.cmake _deps/googletest-src/CMakeLists.txt _deps/googletest-src/googlemock/CMakeLists.txt _deps/googletest-src/googlemock/cmake/gmock.pc.in _deps/googletest-src/googlemock/cmake/gmock_main.pc.in _deps/googletest-src/googletest/CMakeLists.txt _deps/googletest-src/googletest/cmake/Config.cmake.in _deps/googletest-src/googletest/cmake/gtest.pc.in _deps/googletest-src/googletest/cmake/gtest_main.pc.in _deps/googletest-src/googletest/cmake/internal_utils.cmake
   pool = console
 
 
 #############################################
 # A missing CMake input file is not an error.
 
-build ../CMakeLists.txt ../IO.SDK.Tests/CMakeLists.txt ../IO.SDK/CMakeLists.txt ../googletest/CMakeLists.txt ../googletest/googlemock/CMakeLists.txt ../googletest/googlemock/cmake/gmock.pc.in ../googletest/googlemock/cmake/gmock_main.pc.in ../googletest/googletest/CMakeLists.txt ../googletest/googletest/cmake/Config.cmake.in ../googletest/googletest/cmake/gtest.pc.in ../googletest/googletest/cmake/gtest_main.pc.in ../googletest/googletest/cmake/internal_utils.cmake /usr/share/cmake-3.18/Modules/BasicConfigVersion-AnyNewerVersion.cmake.in /usr/share/cmake-3.18/Modules/CMakeCInformation.cmake /usr/share/cmake-3.18/Modules/CMakeCXXInformation.cmake /usr/share/cmake-3.18/Modules/CMakeCheckCompilerFlagCommonPatterns.cmake /usr/share/cmake-3.18/Modules/CMakeCommonLanguageInclude.cmake /usr/share/cmake-3.18/Modules/CMakeDependentOption.cmake /usr/share/cmake-3.18/Modules/CMakeGenericSystem.cmake /usr/share/cmake-3.18/Modules/CMakeInitializeConfigs.cmake /usr/share/cmake-3.18/Modules/CMakeLanguageInformation.cmake /usr/share/cmake-3.18/Modules/CMakePackageConfigHelpers.cmake /usr/share/cmake-3.18/Modules/CMakeSystemSpecificInformation.cmake /usr/share/cmake-3.18/Modules/CMakeSystemSpecificInitialize.cmake /usr/share/cmake-3.18/Modules/CheckCSourceCompiles.cmake /usr/share/cmake-3.18/Modules/CheckIncludeFile.cmake /usr/share/cmake-3.18/Modules/CheckLibraryExists.cmake /usr/share/cmake-3.18/Modules/Compiler/CMakeCommonCompilerMacros.cmake /usr/share/cmake-3.18/Modules/Compiler/GNU-C.cmake /usr/share/cmake-3.18/Modules/Compiler/GNU-CXX.cmake /usr/share/cmake-3.18/Modules/Compiler/GNU.cmake /usr/share/cmake-3.18/Modules/FindPackageHandleStandardArgs.cmake /usr/share/cmake-3.18/Modules/FindPackageMessage.cmake /usr/share/cmake-3.18/Modules/FindPython.cmake /usr/share/cmake-3.18/Modules/FindPython/Support.cmake /usr/share/cmake-3.18/Modules/FindThreads.cmake /usr/share/cmake-3.18/Modules/GNUInstallDirs.cmake /usr/share/cmake-3.18/Modules/Internal/CMakeCheckCompilerFlag.cmake /usr/share/cmake-3.18/Modules/Platform/Linux-GNU-C.cmake /usr/share/cmake-3.18/Modules/Platform/Linux-GNU-CXX.cmake /usr/share/cmake-3.18/Modules/Platform/Linux-GNU.cmake /usr/share/cmake-3.18/Modules/Platform/Linux.cmake /usr/share/cmake-3.18/Modules/Platform/UnixPaths.cmake /usr/share/cmake-3.18/Modules/WriteBasicConfigVersionFile.cmake CMakeCache.txt CMakeFiles/3.18.3975358-MSVC_2/CMakeCCompiler.cmake CMakeFiles/3.18.3975358-MSVC_2/CMakeCXXCompiler.cmake CMakeFiles/3.18.3975358-MSVC_2/CMakeSystem.cmake: phony
+build ../CMakeLists.txt ../IO.SDK.Tests/CMakeLists.txt ../IO.SDK/CMakeLists.txt /usr/share/cmake-3.18/Modules/BasicConfigVersion-AnyNewerVersion.cmake.in /usr/share/cmake-3.18/Modules/CMakeCInformation.cmake /usr/share/cmake-3.18/Modules/CMakeCXXInformation.cmake /usr/share/cmake-3.18/Modules/CMakeCheckCompilerFlagCommonPatterns.cmake /usr/share/cmake-3.18/Modules/CMakeCommonLanguageInclude.cmake /usr/share/cmake-3.18/Modules/CMakeDependentOption.cmake /usr/share/cmake-3.18/Modules/CMakeGenericSystem.cmake /usr/share/cmake-3.18/Modules/CMakeInitializeConfigs.cmake /usr/share/cmake-3.18/Modules/CMakeLanguageInformation.cmake /usr/share/cmake-3.18/Modules/CMakePackageConfigHelpers.cmake /usr/share/cmake-3.18/Modules/CMakeSystemSpecificInformation.cmake /usr/share/cmake-3.18/Modules/CMakeSystemSpecificInitialize.cmake /usr/share/cmake-3.18/Modules/CheckCSourceCompiles.cmake /usr/share/cmake-3.18/Modules/CheckIncludeFile.cmake /usr/share/cmake-3.18/Modules/CheckLibraryExists.cmake /usr/share/cmake-3.18/Modules/Compiler/CMakeCommonCompilerMacros.cmake /usr/share/cmake-3.18/Modules/Compiler/GNU-C.cmake /usr/share/cmake-3.18/Modules/Compiler/GNU-CXX.cmake /usr/share/cmake-3.18/Modules/Compiler/GNU.cmake /usr/share/cmake-3.18/Modules/FetchContent.cmake /usr/share/cmake-3.18/Modules/FetchContent/CMakeLists.cmake.in /usr/share/cmake-3.18/Modules/FindPackageHandleStandardArgs.cmake /usr/share/cmake-3.18/Modules/FindPackageMessage.cmake /usr/share/cmake-3.18/Modules/FindPython.cmake /usr/share/cmake-3.18/Modules/FindPython/Support.cmake /usr/share/cmake-3.18/Modules/FindThreads.cmake /usr/share/cmake-3.18/Modules/GNUInstallDirs.cmake /usr/share/cmake-3.18/Modules/Internal/CMakeCheckCompilerFlag.cmake /usr/share/cmake-3.18/Modules/Platform/Linux-GNU-C.cmake /usr/share/cmake-3.18/Modules/Platform/Linux-GNU-CXX.cmake /usr/share/cmake-3.18/Modules/Platform/Linux-GNU.cmake /usr/share/cmake-3.18/Modules/Platform/Linux.cmake /usr/share/cmake-3.18/Modules/Platform/UnixPaths.cmake /usr/share/cmake-3.18/Modules/WriteBasicConfigVersionFile.cmake CMakeCache.txt CMakeFiles/3.18.3975358-MSVC_2/CMakeCCompiler.cmake CMakeFiles/3.18.3975358-MSVC_2/CMakeCXXCompiler.cmake CMakeFiles/3.18.3975358-MSVC_2/CMakeSystem.cmake _deps/googletest-src/CMakeLists.txt _deps/googletest-src/googlemock/CMakeLists.txt _deps/googletest-src/googlemock/cmake/gmock.pc.in _deps/googletest-src/googlemock/cmake/gmock_main.pc.in _deps/googletest-src/googletest/CMakeLists.txt _deps/googletest-src/googletest/cmake/Config.cmake.in _deps/googletest-src/googletest/cmake/gtest.pc.in _deps/googletest-src/googletest/cmake/gtest_main.pc.in _deps/googletest-src/googletest/cmake/internal_utils.cmake: phony
 
 
 #############################################

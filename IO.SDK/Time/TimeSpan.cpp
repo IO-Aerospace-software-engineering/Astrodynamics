@@ -4,7 +4,7 @@ IO::SDK::Time::TimeSpan::TimeSpan()
 {
 }
 
-IO::SDK::Time::TimeSpan::TimeSpan(std::chrono::duration<double> seconds) : m_seconds{seconds}
+IO::SDK::Time::TimeSpan::TimeSpan(const std::chrono::duration<double> seconds) : m_seconds{seconds}
 {
 }
 

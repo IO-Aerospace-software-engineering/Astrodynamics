@@ -9,6 +9,7 @@
 #include <SpiceUsr.h>
 #include<Builder.h>
 
+
 std::string IO::SDK::Instruments::Instrument::GetFilesPath() const
 {
 	return m_filesPath;

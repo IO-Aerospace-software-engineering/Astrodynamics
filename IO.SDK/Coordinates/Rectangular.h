@@ -8,7 +8,7 @@ namespace IO::SDK::Coordinates
 	class Rectangular
 	{
 	private:
-		double _x{}, _y{}, _z{};
+		const double m_x, m_y, m_z;
 
 	public:
 		/// <summary>
@@ -17,7 +17,7 @@ namespace IO::SDK::Coordinates
 		/// <param name="x"></param>
 		/// <param name="y"></param>
 		/// <param name="z"></param>
-		Rectangular(double x, double y, double z) :_x{ x }, _y{ y }, _z{ z }
+		Rectangular(const double x, const double y,const double z) :m_x{ x }, m_y{ y }, m_z{ z }
 		{
 
 		}
@@ -26,19 +26,19 @@ namespace IO::SDK::Coordinates
 		/// Get X
 		/// </summary>
 		/// <returns></returns>
-		double GetX() { return this->_x; }
+		double GetX() const { return this->m_x; }
 
 		/// <summary>
 		/// Get Y
 		/// </summary>
 		/// <returns></returns>
-		double GetY() { return this->_y; }
+		double GetY() const { return this->m_y; }
 
 		/// <summary>
 		/// Get Z
 		/// </summary>
 		/// <returns></returns>
-		double GetZ() { return this->_z; }
+		double GetZ() const { return this->m_z; }
 	};
 }
 #endif // !RECTANGULAR_H

@@ -21,7 +21,7 @@ IO::SDK::Math::Matrix::~Matrix()
 	delete[] m_data;
 }
 
-double IO::SDK::Math::Matrix::GetValue(size_t rowIdx, size_t colIdx) const
+double IO::SDK::Math::Matrix::GetValue(const size_t rowIdx, const size_t colIdx) const
 {
 	if (rowIdx >= m_rowSize)
 	{
@@ -35,7 +35,7 @@ double IO::SDK::Math::Matrix::GetValue(size_t rowIdx, size_t colIdx) const
 	return this->m_data[rowIdx][colIdx];
 }
 
-void IO::SDK::Math::Matrix::SetValue(size_t rowIdx, size_t colIdx, double value)
+void IO::SDK::Math::Matrix::SetValue(const size_t rowIdx, const size_t colIdx, double value)
 {
 	if (rowIdx >= m_rowSize)
 	{
@@ -73,7 +73,7 @@ IO::SDK::Math::Matrix IO::SDK::Math::Matrix::Multiply(const Matrix& matrix)
 	return res;
 }
 
-IO::SDK::Math::Matrix IO::SDK::Math::Matrix::Transpose()
+IO::SDK::Math::Matrix IO::SDK::Math::Matrix::Transpose() const
 {
 	//Row and columns size are switched
 	Matrix res(m_colSize, m_rowSize);

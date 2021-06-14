@@ -1,3 +1,13 @@
+/**
+ * @file StateVector.cpp
+ * @author Sylvain Guillet (sylvain.guillet@live.com)
+ * @brief 
+ * @version 0.1
+ * @date 2021-06-12
+ * 
+ * @copyright Copyright (c) 2021
+ * 
+ */
 #include <StateVector.h>
 #include <GravityForce.h>
 #include "Helpers/Type.cpp"
@@ -5,17 +15,16 @@
 
 IO::SDK::OrbitalParameters::StateVector::StateVector(const std::shared_ptr<IO::SDK::Body::CelestialBody> &centerOfMotion, const IO::SDK::Math::Vector3D &position, const IO::SDK::Math::Vector3D &velocity, const IO::SDK::Time::TDB &epoch, const IO::SDK::Frames::Frames &frame) : m_position{position}, m_velocity{velocity}, m_momentum{position.CrossProduct(velocity)}, OrbitalParameters(centerOfMotion, epoch, frame)
 {
-	ConstSpiceDouble state[6]{position.GetX(), position.GetY(), position.GetZ(), velocity.GetX(), velocity.GetY(), velocity.GetZ()};
-	SpiceDouble elts[SPICE_OSCLTX_NELTS]{};
-	oscltx_c(state, epoch.GetSecondsFromJ2000().count(), centerOfMotion->GetMu(), elts);
-	std::array<SpiceDouble, SPICE_OSCLTX_NELTS> arr;
-	std::copy(std::begin(elts), std::end(elts), std::begin(m_osculatingElements));
+	//We define osculating elements only when velocity is defined
+	if (velocity.Magnitude() > 0.0)
+	{
+		ConstSpiceDouble state[6]{position.GetX(), position.GetY(), position.GetZ(), velocity.GetX(), velocity.GetY(), velocity.GetZ()};
+		SpiceDouble elts[SPICE_OSCLTX_NELTS]{};
+		oscltx_c(state, epoch.GetSecondsFromJ2000().count(), centerOfMotion->GetMu(), elts);
+		std::copy(std::begin(elts), std::end(elts), std::begin(m_osculatingElements));
+	}
 }
 
-IO::SDK::OrbitalParameters::StateVector::StateVector(const std::shared_ptr<IO::SDK::Body::CelestialBody> &centerOfMotion, const IO::SDK::Math::Vector3D& position, const IO::SDK::Time::TDB &epoch): m_position{position}, OrbitalParameters(centerOfMotion, epoch, centerOfMotion->GetBodyFixedFrame())
-{
-
-}
 
 IO::SDK::OrbitalParameters::StateVector::StateVector(const std::shared_ptr<IO::SDK::Body::CelestialBody> &centerOfMotion, double state[6], const IO::SDK::Time::TDB &epoch, const IO::SDK::Frames::Frames &frame) : StateVector(centerOfMotion, IO::SDK::Math::Vector3D(state[0], state[1], state[2]), IO::SDK::Math::Vector3D(state[3], state[4], state[5]), epoch, frame)
 {
@@ -205,4 +214,9 @@ IO::SDK::OrbitalParameters::StateVector IO::SDK::OrbitalParameters::StateVector:
 IO::SDK::OrbitalParameters::StateVector IO::SDK::OrbitalParameters::StateVector::ToBodyFixedFrame() const
 {
 	return ToFrame(m_centerOfMotion->GetBodyFixedFrame());
+}
+
+IO::SDK::OrbitalParameters::StateVector IO::SDK::OrbitalParameters::StateVector::GetStateVector() const
+{
+	return *this;
 }

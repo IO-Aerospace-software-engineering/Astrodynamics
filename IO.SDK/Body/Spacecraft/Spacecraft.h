@@ -92,7 +92,7 @@ namespace IO::SDK::Body::Spacecraft
 		 * @param attitudeAtEpoch 
 		 */
 		Spacecraft(const int id, const std::string &name, const double dryOperatingMass, double maximumOperatingMass, const std::string &missionPrefix, std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParametersAtEpoch);
-		Spacecraft(const Spacecraft &spacecraft);
+		Spacecraft(const Spacecraft &spacecraft) = delete;
 		virtual ~Spacecraft() override = default;
 
 		/**
@@ -113,16 +113,15 @@ namespace IO::SDK::Body::Spacecraft
 		 * @brief 
 		 * 
 		 * @param orientations 
-		 * @param frame 
 		 */
-		void WriteOrientations(const std::vector<std::vector<IO::SDK::OrbitalParameters::StateOrientation>> &orientations, const IO::SDK::Frames::Frames &frame) const;
+		void WriteOrientations(const std::vector<std::vector<IO::SDK::OrbitalParameters::StateOrientation>> &orientations) const;
 
 		/**
 		 * @brief Get the Orientation object
 		 * 
-		 * @param epoch 
-		 * @param tolerance 
-		 * @param frame 
+		 * @param epoch Orientation at epoch
+		 * @param tolerance Tolerance after and before epoch
+		 * @param frame Frame in wich orienation will be returned
 		 * @return IO::SDK::OrbitalParameters::StateOrientation 
 		 */
 		IO::SDK::OrbitalParameters::StateOrientation GetOrientation(const IO::SDK::Time::TDB &epoch, const IO::SDK::Time::TimeSpan &tolerance, const IO::SDK::Frames::Frames &frame) const;

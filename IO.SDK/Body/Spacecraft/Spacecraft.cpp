@@ -1,3 +1,13 @@
+/**
+ * @file Spacecraft.cpp
+ * @author Sylvain Guillet (sylvain.guillet@live.com)
+ * @brief 
+ * @version 0.1
+ * @date 2021-06-11
+ * 
+ * @copyright Copyright (c) 2021
+ * 
+ */
 #include <Spacecraft.h>
 #include <algorithm>
 #include <exception>
@@ -27,9 +37,9 @@ std::string IO::SDK::Body::Spacecraft::Spacecraft::GetFilesPath() const
 	return m_filesPath;
 }
 
-void IO::SDK::Body::Spacecraft::Spacecraft::WriteOrientations(const std::vector<std::vector<IO::SDK::OrbitalParameters::StateOrientation>> &orientations, const IO::SDK::Frames::Frames &frame) const
+void IO::SDK::Body::Spacecraft::Spacecraft::WriteOrientations(const std::vector<std::vector<IO::SDK::OrbitalParameters::StateOrientation>> &orientations) const
 {
-	m_orientationKernel->WriteOrientations(orientations, frame);
+	m_orientationKernel->WriteOrientations(orientations);
 }
 
 IO::SDK::OrbitalParameters::StateOrientation IO::SDK::Body::Spacecraft::Spacecraft::GetOrientation(const IO::SDK::Time::TDB &epoch, const IO::SDK::Time::TimeSpan &tolerance, const IO::SDK::Frames::Frames &frame) const

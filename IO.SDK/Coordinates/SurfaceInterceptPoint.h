@@ -1,3 +1,13 @@
+/**
+ * @file SurfaceInterceptPoint.h
+ * @author Sylvain Guillet (sylvain.guillet@live.com)
+ * @brief 
+ * @version 0.1
+ * @date 2021-06-12
+ * 
+ * @copyright Copyright (c) 2021
+ * 
+ */
 #ifndef SURFACE_INTERCEP_POINT_H
 #define SURFACE_INTERCEP_POINT_H
 

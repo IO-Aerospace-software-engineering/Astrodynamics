@@ -8,6 +8,7 @@
 #include <InertialFrames.h>
 #include <Spacecraft.h>
 #include <SpacecraftClockKernel.h>
+#include <Builder.h>
 
 IO::SDK::Kernels::OrientationKernel::OrientationKernel(const IO::SDK::Body::Spacecraft::Spacecraft &spacecraft) : Kernel(spacecraft.GetFilesPath() + "/Orientations/" + spacecraft.GetName() + ".ck"), m_spacecraft{spacecraft}
 {
@@ -17,11 +18,23 @@ IO::SDK::Kernels::OrientationKernel::~OrientationKernel()
 {
 }
 
-void IO::SDK::Kernels::OrientationKernel::WriteOrientations(const std::vector<std::vector<IO::SDK::OrbitalParameters::StateOrientation>> &orientations, const IO::SDK::Frames::Frames &frame) const
+void IO::SDK::Kernels::OrientationKernel::WriteOrientations(const std::vector<std::vector<IO::SDK::OrbitalParameters::StateOrientation>> &orientations) const
 {
 	if (orientations.size() <= 0)
 	{
-		throw IO::SDK::Exception::SDKException("Intervals array is empty");
+		throw IO::SDK::Exception::SDKException("Orientations array is empty");
+	}
+
+	auto frame = orientations.front().front().GetFrame();
+	for (auto &&orientation : orientations)
+	{
+		for (auto &&orientationPart : orientation)
+		{
+			if (orientationPart.GetFrame() != frame)
+			{
+				throw IO::SDK::Exception::InvalidArgumentException("Orientations collection contains data with differents frames : " + frame.GetName() + " - " + orientationPart.GetFrame().GetName() + ". All orientations must have the same frame. ");
+			}
+		}
 	}
 
 	//Compute segment start date
@@ -79,10 +92,7 @@ void IO::SDK::Kernels::OrientationKernel::WriteOrientations(const std::vector<st
 		}
 	}
 
-	//Number of seconds per ticks
-	double rate = 1.0 / 65536.0;
-
-	int degree = DefinePolynomialDegree(minSize, 23);
+	int degree = DefinePolynomialDegree(minSize, IO::SDK::Parameters::MaximumOrientationLagrangePolynomialDegree);
 
 	if (std::filesystem::exists(m_filePath))
 	{
@@ -93,7 +103,7 @@ void IO::SDK::Kernels::OrientationKernel::WriteOrientations(const std::vector<st
 	//Write data
 	SpiceInt handle;
 	ckopn_c(m_filePath.c_str(), "CK_file", 5000, &handle);
-	ckw05_c(handle, SpiceCK05Subtype::C05TP3, degree, begtime, endtime, id, frame.ToCharArray(), true, "Seg1", n, &sclks[0], &data[0], rate, nbIntervals, &intervalsStarts[0]);
+	ckw05_c(handle, SpiceCK05Subtype::C05TP3, degree, begtime, endtime, id, frame.ToCharArray(), true, "Seg1", n, &sclks[0], &data[0], IO::SDK::Parameters::ClockAccuracy, nbIntervals, &intervalsStarts[0]);
 	ckcls_c(handle);
 
 	furnsh_c(m_filePath.c_str());
@@ -117,6 +127,11 @@ IO::SDK::OrbitalParameters::StateOrientation IO::SDK::Kernels::OrientationKernel
 
 	//Get orientation and angular velocity
 	ckgpav_c(id, sclk, tol, frame.ToCharArray(), cmat, av, &clkout, &found);
+
+	if(!found)
+	{
+		throw IO::SDK::Exception::SDKException("No orientation found");
+	}
 
 	//Build array pointers
 	double **arrayCmat;
@@ -151,13 +166,14 @@ IO::SDK::OrbitalParameters::StateOrientation IO::SDK::Kernels::OrientationKernel
 
 IO::SDK::Time::Window<IO::SDK::Time::TDB> IO::SDK::Kernels::OrientationKernel::GetCoverageWindow() const
 {
-	SPICEDOUBLE_CELL(cover, 2);
+	SpiceDouble SPICE_CELL_CKCOV[SPICE_CELL_CTRLSZ + 2];
+	SpiceCell cnfine =IO::SDK::Spice::Builder::CreateDoubleCell(2,SPICE_CELL_CKCOV);
 
-	ckcov_c(m_filePath.c_str(), m_spacecraft.GetId() * 1000, false, "SEGMENT", 0.0, "TDB", &cover);
+	ckcov_c(m_filePath.c_str(), m_spacecraft.GetId() * 1000, false, "SEGMENT", 0.0, "TDB", &cnfine);
 	double start;
 	double end;
 
-	wnfetd_c(&cover, 0, &start, &end);
+	wnfetd_c(&cnfine, 0, &start, &end);
 
 	return IO::SDK::Time::Window<IO::SDK::Time::TDB>(IO::SDK::Time::TDB(std::chrono::duration<double>(start)), IO::SDK::Time::TDB(std::chrono::duration<double>(end)));
 }

@@ -69,7 +69,7 @@ void IO::SDK::Kernels::EphemerisKernel::WriteData(const std::vector<OrbitalParam
 
 	if (IsEvenlySpacedData(states))
 	{
-		spkw08_c(handle, m_spacecraft.GetId(), first.GetCenterOfMotion()->GetId(), frame.ToCharArray(), first.GetEpoch().GetSecondsFromJ2000().count(), last.GetEpoch().GetSecondsFromJ2000().count(), "Seg1", DefinePolynomialDegree(states.size(), 27), (SpiceInt)size, statesArray, first.GetEpoch().GetSecondsFromJ2000().count(), delta.GetSeconds().count());
+		spkw08_c(handle, m_spacecraft.GetId(), first.GetCenterOfMotion()->GetId(), frame.ToCharArray(), first.GetEpoch().GetSecondsFromJ2000().count(), last.GetEpoch().GetSecondsFromJ2000().count(), "Seg1", DefinePolynomialDegree(states.size(), IO::SDK::Parameters::MaximumEphemerisLagrangePolynomialDegree), (SpiceInt)size, statesArray, first.GetEpoch().GetSecondsFromJ2000().count(), delta.GetSeconds().count());
 	}
 	else
 	{

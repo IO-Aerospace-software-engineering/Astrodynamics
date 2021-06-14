@@ -85,7 +85,7 @@ int IO::SDK::Kernels::Kernel::DefinePolynomialDegree(const int dataSize, const i
 	//min size used to define polynomial degree
 	int degree{ dataSize };
 
-	if (degree < 2)
+	if (degree < 1)
 	{
 		throw IO::SDK::Exception::SDKException("Insuffisant data provided. 2 data are required at least");
 	}

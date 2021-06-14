@@ -30,7 +30,7 @@ TEST(PerigeeHeightChangingManeuverTests, CanExecute)
 
     std::vector<IO::SDK::Body::Spacecraft::Engine> engines;
     engines.push_back(*engine1);
-    IO::SDK::Maneuvers::PerigeeHeightChangingManeuver pcm(engines, s, &prop, 8000000.0);
+    IO::SDK::Maneuvers::PerigeeHeightChangingManeuver pcm(engines, prop, 8000000.0);
 
     auto apogeeEpoch{s.GetOrbitalParametersAtEpoch()->GetEpoch() + s.GetOrbitalParametersAtEpoch()->GetPeriod() / 2.0};
 
@@ -65,7 +65,7 @@ TEST(PerigeeHeightChangingManeuverTests, IncreasePerigeeHeight)
     prop.AddStateVector(IO::SDK::OrbitalParameters::StateVector(earth, IO::SDK::Math::Vector3D(1.0, 2.0, 3.0), IO::SDK::Math::Vector3D(4.0, 5.0, 6.0), IO::SDK::Time::TDB(80.0s), IO::SDK::Frames::InertialFrames::ICRF));
     std::vector<IO::SDK::Body::Spacecraft::Engine> engines;
     engines.push_back(*engine1);
-    IO::SDK::Maneuvers::PerigeeHeightChangingManeuver pcm(engines, s, &prop, 42164000.0);
+    IO::SDK::Maneuvers::PerigeeHeightChangingManeuver pcm(engines, prop, 42164000.0);
     auto apogeeEpoch{s.GetOrbitalParametersAtEpoch()->GetEpoch() + s.GetOrbitalParametersAtEpoch()->GetPeriod() / 2.0};
 
     auto res = pcm.TryExecute(s.GetOrbitalParametersAtEpoch()->GetStateVector(apogeeEpoch + IO::SDK::Time::TimeSpan(0.1s)));
@@ -95,7 +95,7 @@ TEST(PerigeeHeightChangingManeuverTests, DecreasePerigeeHeight)
     prop.AddStateVector(IO::SDK::OrbitalParameters::StateVector(earth, IO::SDK::Math::Vector3D(1.0, 2.0, 3.0), IO::SDK::Math::Vector3D(4.0, 5.0, 6.0), IO::SDK::Time::TDB(80.0s), IO::SDK::Frames::InertialFrames::ICRF));
     std::vector<IO::SDK::Body::Spacecraft::Engine> engines;
     engines.push_back(*engine1);
-    IO::SDK::Maneuvers::PerigeeHeightChangingManeuver pcm(engines, s, &prop, 6678000.0);
+    IO::SDK::Maneuvers::PerigeeHeightChangingManeuver pcm(engines, prop, 6678000.0);
 
     auto apogeeEpoch{s.GetOrbitalParametersAtEpoch()->GetEpoch() + s.GetOrbitalParametersAtEpoch()->GetPeriod() / 2.0};
 

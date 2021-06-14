@@ -31,7 +31,7 @@ namespace IO::SDK::Propagators
     class Propagator
     {
     private:
-        IO::SDK::Maneuvers::ManeuverBase *m_standbyManeuver{};
+        IO::SDK::Maneuvers::ManeuverBase *m_standbyManeuver{nullptr};
         const IO::SDK::Body::Spacecraft::Spacecraft &m_spacecraft;
         IO::SDK::Integrators::IntegratorBase &m_integrator;
         IO::SDK::Time::Window<IO::SDK::Time::TDB> m_window;

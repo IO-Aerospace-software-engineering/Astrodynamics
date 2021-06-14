@@ -368,7 +368,6 @@ TEST(Instrument, FindWindowFieldOfView)
 
 	IO::SDK::Propagators::Propagator pro(s, integrator, IO::SDK::Time::Window(epoch, epoch + duration));
 
-	auto t1 = std::chrono::high_resolution_clock::now();
 	pro.Propagate();
 
 	//=======Orientation==========
@@ -390,7 +389,7 @@ TEST(Instrument, FindWindowFieldOfView)
 
 	orientationData.push_back(interval);
 
-	s.WriteOrientations(orientationData, IO::SDK::Frames::InertialFrames::ICRF);
+	s.WriteOrientations(orientationData);
 
 	//Check frame name and id
 	auto id = IO::SDK::DataPoolMonitoring::Instance().GetIntegerProperty("FRAME_SC179FOV_CAMERAFOV789", 1);
