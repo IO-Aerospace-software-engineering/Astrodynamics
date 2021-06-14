@@ -1,5 +1,5 @@
 
-name: Create Release
+name: IO SDK Deployment
 
 on:
   push:
@@ -28,3 +28,10 @@ jobs:
             - Second Change
           draft: false
           prerelease: false
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: README.md
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
