@@ -36,7 +36,7 @@ jobs:
           dst_path: includes/
           dst_owner: sylvain-guillet
           dst_repo_name: SDK
-          file_filter: *.h          
+          file_filter: '*.h'          
       - name: Release
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
