@@ -1478,6 +1478,78 @@
 			"value" : "FALSE"
 		},
 		{
+			"name" : "FETCHCONTENT_BASE_DIR",
+			"properties" : 
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Directory under which to collect all populated content"
+				}
+			],
+			"type" : "PATH",
+			"value" : "/home/sylvain/Sources/IO/SDK/build/_deps"
+		},
+		{
+			"name" : "FETCHCONTENT_FULLY_DISCONNECTED",
+			"properties" : 
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Disables all attempts to download or update content and assumes source dirs already exist"
+				}
+			],
+			"type" : "BOOL",
+			"value" : "OFF"
+		},
+		{
+			"name" : "FETCHCONTENT_QUIET",
+			"properties" : 
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Enables QUIET option for all content population"
+				}
+			],
+			"type" : "BOOL",
+			"value" : "ON"
+		},
+		{
+			"name" : "FETCHCONTENT_SOURCE_DIR_GOOGLETEST",
+			"properties" : 
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "When not empty, overrides where to find pre-populated content for googletest"
+				}
+			],
+			"type" : "PATH",
+			"value" : ""
+		},
+		{
+			"name" : "FETCHCONTENT_UPDATES_DISCONNECTED",
+			"properties" : 
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Enables UPDATE_DISCONNECTED behavior for all content population"
+				}
+			],
+			"type" : "BOOL",
+			"value" : "OFF"
+		},
+		{
+			"name" : "FETCHCONTENT_UPDATES_DISCONNECTED_GOOGLETEST",
+			"properties" : 
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Enables UPDATE_DISCONNECTED behavior just for population of googletest"
+				}
+			],
+			"type" : "BOOL",
+			"value" : "OFF"
+		},
+		{
 			"name" : "FIND_PACKAGE_MESSAGE_DETAILS_Python",
 			"properties" : 
 			[
@@ -1586,6 +1658,18 @@
 			"value" : "28c129decd38964df5236e30f1913f21"
 		},
 		{
+			"name" : "cmake_package_name",
+			"properties" : 
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : ""
+				}
+			],
+			"type" : "INTERNAL",
+			"value" : "GTest"
+		},
+		{
 			"name" : "generated_dir",
 			"properties" : 
 			[
@@ -1595,7 +1679,7 @@
 				}
 			],
 			"type" : "INTERNAL",
-			"value" : "/home/sylvain/Sources/IO/SDK/build/googletest/googletest/generated"
+			"value" : "/home/sylvain/Sources/IO/SDK/build/_deps/googletest-build/googletest/generated"
 		},
 		{
 			"name" : "gmock_BINARY_DIR",
@@ -1607,7 +1691,7 @@
 				}
 			],
 			"type" : "STATIC",
-			"value" : "/home/sylvain/Sources/IO/SDK/build/googletest/googlemock"
+			"value" : "/home/sylvain/Sources/IO/SDK/build/_deps/googletest-build/googlemock"
 		},
 		{
 			"name" : "gmock_LIB_DEPENDS",
@@ -1631,7 +1715,7 @@
 				}
 			],
 			"type" : "STATIC",
-			"value" : "/home/sylvain/Sources/IO/SDK/googletest/googlemock"
+			"value" : "/home/sylvain/Sources/IO/SDK/build/_deps/googletest-src/googlemock"
 		},
 		{
 			"name" : "gmock_build_tests",
@@ -1671,7 +1755,7 @@
 				}
 			],
 			"type" : "STATIC",
-			"value" : "/home/sylvain/Sources/IO/SDK/build/googletest"
+			"value" : "/home/sylvain/Sources/IO/SDK/build/_deps/googletest-build"
 		},
 		{
 			"name" : "googletest-distribution_SOURCE_DIR",
@@ -1683,7 +1767,7 @@
 				}
 			],
 			"type" : "STATIC",
-			"value" : "/home/sylvain/Sources/IO/SDK/googletest"
+			"value" : "/home/sylvain/Sources/IO/SDK/build/_deps/googletest-src"
 		},
 		{
 			"name" : "gtest_BINARY_DIR",
@@ -1695,7 +1779,7 @@
 				}
 			],
 			"type" : "STATIC",
-			"value" : "/home/sylvain/Sources/IO/SDK/build/googletest/googletest"
+			"value" : "/home/sylvain/Sources/IO/SDK/build/_deps/googletest-build/googletest"
 		},
 		{
 			"name" : "gtest_SOURCE_DIR",
@@ -1707,7 +1791,7 @@
 				}
 			],
 			"type" : "STATIC",
-			"value" : "/home/sylvain/Sources/IO/SDK/googletest/googletest"
+			"value" : "/home/sylvain/Sources/IO/SDK/build/_deps/googletest-src/googletest"
 		},
 		{
 			"name" : "gtest_build_samples",
@@ -1771,7 +1855,7 @@
 				}
 			],
 			"type" : "BOOL",
-			"value" : "FALSE"
+			"value" : "ON"
 		},
 		{
 			"name" : "gtest_hide_internal_symbols",
