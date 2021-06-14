@@ -117,12 +117,15 @@ TEST(Propagator, PropagateVVIntegrator)
 
     auto t1 = std::chrono::high_resolution_clock::now();
     pro.Propagate();
+
+#ifdef DEBUG
     auto t2 = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double, std::milli> ms_double = t2 - t1;
     std::cout << std::to_string(ms_double.count()) << " ms" << std::endl;
 
     //Check performance
     ASSERT_TRUE(4.0 > ms_double.count());
+#endif
 
     auto sv = pro.GetStateVectors()[1];
 
@@ -180,9 +183,13 @@ TEST(Propagator, PropagatorVsKepler)
 
     auto t1 = std::chrono::high_resolution_clock::now();
     pro.Propagate();
+#ifdef DEBUG
     auto t2 = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double, std::milli> ms_double = t2 - t1;
     std::cout << std::to_string(ms_double.count()) << " ms" << std::endl;
+    //Check performance
+    ASSERT_TRUE(25.0 > ms_double.count());
+#endif
 
     const std::vector<IO::SDK::OrbitalParameters::StateVector> &propagationResults = pro.GetStateVectors();
     auto propagationResult = propagationResults[duration.GetSeconds().count() / step.GetSeconds().count()];
@@ -214,12 +221,9 @@ TEST(Propagator, PropagatorVsKepler)
     ASSERT_NEAR(keplerResults.GetVelocity().GetY(), propagationResult.GetVelocity().GetY(), IO::SDK::Test::Constants::VELOCITY_ACCURACY);
     ASSERT_NEAR(keplerResults.GetVelocity().GetZ(), propagationResult.GetVelocity().GetZ(), IO::SDK::Test::Constants::VELOCITY_ACCURACY);
 
-    //Check performance
-    ASSERT_TRUE(25.0 > ms_double.count());
-
     auto orientationCoverage = spc.GetOrientationsCoverageWindow();
-    ASSERT_STREQ("2021-01-01 00:00:00.000000 (TDB)",orientationCoverage.GetStartDate().ToString().c_str());
-    ASSERT_STREQ("2021-01-01 01:47:27.000000 (TDB)",orientationCoverage.GetEndDate().ToString().c_str());
+    ASSERT_STREQ("2021-01-01 00:00:00.000000 (TDB)", orientationCoverage.GetStartDate().ToString().c_str());
+    ASSERT_STREQ("2021-01-01 01:47:27.000000 (TDB)", orientationCoverage.GetEndDate().ToString().c_str());
 
     //Analyse energy
     // std::ofstream myfile("SpecificEnergy.csv", std::ios_base::trunc);
@@ -250,9 +254,14 @@ TEST(Propagator, PropagateTLEIntegrator)
 
     auto t1 = std::chrono::high_resolution_clock::now();
     pro.Propagate();
+    
+    #ifdef DEBUG
     auto t2 = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double, std::milli> ms_double = t2 - t1;
     std::cout << std::to_string(ms_double.count()) << " ms" << std::endl;
+    //Check performance
+    ASSERT_TRUE(0.9 > ms_double.count());
+    #endif
 
     //Read propagator results
     auto stateVector = pro.GetStateVectors()[1];
@@ -279,6 +288,5 @@ TEST(Propagator, PropagateTLEIntegrator)
     ASSERT_DOUBLE_EQ(ephemerisSv.GetVelocity().GetY(), stateVector.GetVelocity().GetY());
     ASSERT_DOUBLE_EQ(ephemerisSv.GetVelocity().GetZ(), stateVector.GetVelocity().GetZ());
 
-    //Check performance
-    ASSERT_TRUE(0.9 > ms_double.count());
+    
 }
