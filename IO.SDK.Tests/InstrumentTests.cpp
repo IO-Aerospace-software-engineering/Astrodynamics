@@ -368,7 +368,6 @@ TEST(Instrument, FindWindowFieldOfView)
 
 	IO::SDK::Propagators::Propagator pro(s, integrator, IO::SDK::Time::Window(epoch, epoch + duration));
 
-	auto t1 = std::chrono::high_resolution_clock::now();
 	pro.Propagate();
 
 	//=======Orientation==========

@@ -34,10 +34,13 @@ TEST(VVIntegrator, IntegrateGravity)
 
     auto t1 = std::chrono::high_resolution_clock::now();
     auto sv = integrator.Integrate(spc, IO::SDK::OrbitalParameters::StateVector(earth, IO::SDK::Math::Vector3D(6800000.0, 0.0, 0.0), IO::SDK::Math::Vector3D(0.0, 8000.0, 0.0), epoch, IO::SDK::Frames::InertialFrames::ICRF));
+    #ifdef DEBUG
     auto t2 = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double, std::milli> ms_double = t2 - t1;
     std::cout << std::to_string(ms_double.count()) << " ms" << std::endl;
     ASSERT_TRUE(0.12 > ms_double.count());
+    #endif
+    
     ASSERT_DOUBLE_EQ(6799995.6897156574, sv.GetPosition().GetX());
     ASSERT_DOUBLE_EQ(7999.9982033708893, sv.GetPosition().GetY());
     ASSERT_DOUBLE_EQ(-0.00069076103852024734, sv.GetPosition().GetZ());
