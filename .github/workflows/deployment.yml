@@ -33,6 +33,6 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
         with:
           files: |
-            *.so
+            build/IO.SDK/libIO.SDK.so
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
