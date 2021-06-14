@@ -122,7 +122,7 @@ TEST(Propagator, PropagateVVIntegrator)
     std::cout << std::to_string(ms_double.count()) << " ms" << std::endl;
 
     //Check performance
-    ASSERT_TRUE(4.0 > ms_double.count());
+    ASSERT_TRUE(6.0 > ms_double.count());
 
     auto sv = pro.GetStateVectors()[1];
 
@@ -280,5 +280,5 @@ TEST(Propagator, PropagateTLEIntegrator)
     ASSERT_DOUBLE_EQ(ephemerisSv.GetVelocity().GetZ(), stateVector.GetVelocity().GetZ());
 
     //Check performance
-    ASSERT_TRUE(0.9 > ms_double.count());
+    ASSERT_TRUE(1.4 > ms_double.count());
 }
