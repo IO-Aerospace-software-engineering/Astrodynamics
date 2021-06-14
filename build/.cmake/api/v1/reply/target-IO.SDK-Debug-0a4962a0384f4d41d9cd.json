@@ -11,7 +11,6 @@
 		"commands" : 
 		[
 			"add_library",
-			"install",
 			"target_link_libraries",
 			"target_include_directories"
 		],
@@ -33,23 +32,17 @@
 			{
 				"command" : 1,
 				"file" : 0,
-				"line" : 38,
+				"line" : 33,
 				"parent" : 0
 			},
 			{
 				"command" : 2,
 				"file" : 0,
-				"line" : 33,
-				"parent" : 0
-			},
-			{
-				"command" : 3,
-				"file" : 0,
 				"line" : 25,
 				"parent" : 0
 			},
 			{
-				"command" : 3,
+				"command" : 2,
 				"file" : 0,
 				"line" : 32,
 				"parent" : 0
@@ -77,83 +70,83 @@
 			"includes" : 
 			[
 				{
-					"backtrace" : 4,
+					"backtrace" : 3,
 					"path" : "/home/elgringo/Sources/SDK/IO.SDK"
 				},
 				{
-					"backtrace" : 4,
+					"backtrace" : 3,
 					"path" : "/home/elgringo/Sources/SDK/IO.SDK/Body"
 				},
 				{
-					"backtrace" : 4,
+					"backtrace" : 3,
 					"path" : "/home/elgringo/Sources/SDK/IO.SDK/Body/Spacecraft"
 				},
 				{
-					"backtrace" : 4,
+					"backtrace" : 3,
 					"path" : "/home/elgringo/Sources/SDK/IO.SDK/Coordinates"
 				},
 				{
-					"backtrace" : 4,
+					"backtrace" : 3,
 					"path" : "/home/elgringo/Sources/SDK/IO.SDK/Exceptions"
 				},
 				{
-					"backtrace" : 4,
+					"backtrace" : 3,
 					"path" : "/home/elgringo/Sources/SDK/IO.SDK/Frames"
 				},
 				{
-					"backtrace" : 4,
+					"backtrace" : 3,
 					"path" : "/home/elgringo/Sources/SDK/IO.SDK/Illumination"
 				},
 				{
-					"backtrace" : 4,
+					"backtrace" : 3,
 					"path" : "/home/elgringo/Sources/SDK/IO.SDK/Instruments"
 				},
 				{
-					"backtrace" : 4,
+					"backtrace" : 3,
 					"path" : "/home/elgringo/Sources/SDK/IO.SDK/Integrators/Forces"
 				},
 				{
-					"backtrace" : 4,
+					"backtrace" : 3,
 					"path" : "/home/elgringo/Sources/SDK/IO.SDK/Integrators"
 				},
 				{
-					"backtrace" : 4,
+					"backtrace" : 3,
 					"path" : "/home/elgringo/Sources/SDK/IO.SDK/Kernels"
 				},
 				{
-					"backtrace" : 4,
+					"backtrace" : 3,
 					"path" : "/home/elgringo/Sources/SDK/IO.SDK/Maneuvers"
 				},
 				{
-					"backtrace" : 4,
+					"backtrace" : 3,
 					"path" : "/home/elgringo/Sources/SDK/IO.SDK/Math"
 				},
 				{
-					"backtrace" : 4,
+					"backtrace" : 3,
 					"path" : "/home/elgringo/Sources/SDK/IO.SDK/OrbitalParameters"
 				},
 				{
-					"backtrace" : 4,
+					"backtrace" : 3,
 					"path" : "/home/elgringo/Sources/SDK/IO.SDK/Parameters"
 				},
 				{
-					"backtrace" : 4,
+					"backtrace" : 3,
 					"path" : "/home/elgringo/Sources/SDK/IO.SDK/Propagators"
 				},
 				{
-					"backtrace" : 4,
+					"backtrace" : 3,
 					"path" : "/home/elgringo/Sources/SDK/IO.SDK/Sites"
 				},
 				{
-					"backtrace" : 4,
+					"backtrace" : 3,
 					"path" : "/home/elgringo/Sources/SDK/IO.SDK/Spice"
 				},
 				{
-					"backtrace" : 4,
+					"backtrace" : 3,
 					"path" : "/home/elgringo/Sources/SDK/IO.SDK/Time"
 				},
 				{
-					"backtrace" : 5,
+					"backtrace" : 4,
 					"path" : "/home/elgringo/Sources/SDK/lib/includeLinux"
 				}
 			],
@@ -244,24 +237,6 @@
 		}
 	],
 	"id" : "IO.SDK::@9b98061eb6da086a5c30",
-	"install" : 
-	{
-		"destinations" : 
-		[
-			{
-				"backtrace" : 2,
-				"path" : "lib"
-			},
-			{
-				"backtrace" : 2,
-				"path" : "lib"
-			}
-		],
-		"prefix" : 
-		{
-			"path" : "/usr/local"
-		}
-	},
 	"link" : 
 	{
 		"commandFragments" : 
@@ -271,7 +246,7 @@
 				"role" : "flags"
 			},
 			{
-				"backtrace" : 3,
+				"backtrace" : 2,
 				"fragment" : "../../lib/cspice.a",
 				"role" : "libraries"
 			}

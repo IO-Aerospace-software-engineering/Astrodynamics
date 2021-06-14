@@ -73,7 +73,6 @@
 				},
 				{
 					"build" : "IO.SDK",
-					"hasInstallRule" : true,
 					"minimumCMakeVersion" : 
 					{
 						"string" : "3.18"
@@ -170,7 +169,7 @@
 				{
 					"directoryIndex" : 4,
 					"id" : "IO.SDK::@9b98061eb6da086a5c30",
-					"jsonFile" : "target-IO.SDK-Debug-8bea049ae8a7dbb468e7.json",
+					"jsonFile" : "target-IO.SDK-Debug-0a4962a0384f4d41d9cd.json",
 					"name" : "IO.SDK",
 					"projectIndex" : 0
 				},
