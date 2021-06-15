@@ -33,11 +33,19 @@ jobs:
           mkdir -p Toolkit/Linux/Includes
           find IO.SDK/ -type f -name "*.h" -exec cp {} Toolkit/Linux/Includes/ \;
           cp -f build/IO.SDK/libIO.SDK.so Toolkit/Linux/
+          zip -r IO-Toolkit.zip Toolkit
+      - name: Copy solar system data and templates
+        run: |
+          mkdir -p Toolkit/Linux/Data/SolarSystem
+          mkdir -p Toolkit/Linux/Templates
+          find build/IO.SDK.Tests/Data/SolarSystem/ -type f -name "*.*" -exec cp {} Toolkit/Linux/Data/SolarSystem \;
+          find build/IO.SDK.Tests/Templates/ -type f -name "*.*" -exec cp {} Toolkit/Linux/Templates \;         
+          zip -r IO-Toolkit.zip Toolkit
       - name: Release
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
         with:
           files: |
-            build/IO.SDK/libIO.SDK.so
+            Toolkit.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
