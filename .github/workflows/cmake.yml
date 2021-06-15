@@ -1,4 +1,4 @@
-name: CMake
+name: IO SDK Integration
 
 on:
   push:
