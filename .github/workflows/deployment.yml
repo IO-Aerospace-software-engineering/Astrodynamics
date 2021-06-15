@@ -14,12 +14,14 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
+
       - name: Copy Headers and library
         run: |
           mkdir -p Toolkit/Linux/Includes
           find IO.SDK/ -type f -name "*.h" -exec cp {} Toolkit/Linux/Includes/ \;
           cp -f build/IO.SDK/libIO.SDK.so Toolkit/Linux/
           zip -r IO-Toolkit.zip Toolkit
+
       - name: Copy solar system data and templates
         run: |
           mkdir -p Toolkit/Linux/Data/SolarSystem
@@ -27,6 +29,7 @@ jobs:
           find build/IO.SDK.Tests/Data/SolarSystem/ -type f -name "*.*" -exec cp {} Toolkit/Linux/Data/SolarSystem \;
           find build/IO.SDK.Tests/Templates/ -type f -name "*.*" -exec cp {} Toolkit/Linux/Templates \;         
           zip -r IO-Toolkit.zip Toolkit
+
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
@@ -38,7 +41,8 @@ jobs:
           body: |
             Changes in this Release
           draft: false
-          prerelease: true      
+          prerelease: true
+          
       - name: Release
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
