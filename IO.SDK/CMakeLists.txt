@@ -26,11 +26,11 @@ target_include_directories(${This} PUBLIC ${MyList})
 
 #ADD SPECIFICS LIBS AND HEADERS 
 if (MSVC)
-    target_include_directories(${This} PUBLIC ${CMAKE_SOURCE_DIR}/lib/includeWindows)
-    target_link_libraries(${This} ${CMAKE_SOURCE_DIR}/lib/cspice.lib)
+    target_include_directories(${This} PUBLIC ${CMAKE_SOURCE_DIR}/external-lib/includeWindows)
+    target_link_libraries(${This} ${CMAKE_SOURCE_DIR}/external-lib/cspice.lib)
 elseif(UNIX)
-    target_include_directories(${This} PUBLIC ${CMAKE_SOURCE_DIR}/lib/includeLinux)
-    target_link_libraries(${This} ${CMAKE_SOURCE_DIR}/lib/cspice.a)
+    target_include_directories(${This} PUBLIC ${CMAKE_SOURCE_DIR}/external-lib/includeLinux)
+    target_link_libraries(${This} ${CMAKE_SOURCE_DIR}/external-lib/cspice.a)
 endif ()
 
 #INSTALL
