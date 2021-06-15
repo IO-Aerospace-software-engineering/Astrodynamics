@@ -2,7 +2,7 @@ name: IO SDK Integration
 
 on:
   push:
-    branches: [ develop ]
+    branches: [ develop,main ]
   pull_request:
     branches: [ develop ]
 
