@@ -28,7 +28,7 @@ jobs:
           mkdir -p Toolkit/Linux/Templates
           find build/IO.SDK.Tests/Data/SolarSystem/ -type f -name "*.*" -exec cp {} Toolkit/Linux/Data/SolarSystem \;
           find build/IO.SDK.Tests/Templates/ -type f -name "*.*" -exec cp {} Toolkit/Linux/Templates \;         
-          zip -r IO-Toolkit.zip Toolkit
+          zip -r IO-Toolkit${{ github.ref }}.zip Toolkit
 
       - name: Create Release
         id: create_release
@@ -42,11 +42,11 @@ jobs:
             Changes in this Release
           draft: false
           prerelease: true
-          
+
       - name: Release
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
         with:
-          files: IO-Toolkit.zip
+          files: IO-Toolkit${{ github.ref }}.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
