@@ -15,11 +15,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
       - name: Copy Headers and library
-      run: |
-        mkdir -p Toolkit/Linux/Includes
-        find IO.SDK/ -type f -name "*.h" -exec cp {} Toolkit/Linux/Includes/ \;
-        cp -f build/IO.SDK/libIO.SDK.so Toolkit/Linux/
-        zip -r IO-Toolkit.zip Toolkit
+        run: |
+          mkdir -p Toolkit/Linux/Includes
+          find IO.SDK/ -type f -name "*.h" -exec cp {} Toolkit/Linux/Includes/ \;
+          cp -f build/IO.SDK/libIO.SDK.so Toolkit/Linux/
+          zip -r IO-Toolkit.zip Toolkit
       - name: Copy solar system data and templates
         run: |
           mkdir -p Toolkit/Linux/Data/SolarSystem
