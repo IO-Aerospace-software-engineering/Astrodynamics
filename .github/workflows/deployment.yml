@@ -17,6 +17,14 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
+        
+      - name: Get tag
+        id: tag
+        uses: dawidd6/action-get-tag@v1
+      
+      - name: Use tag
+        run: echo ${{steps.tag.outputs.tag}}
+
 
       - name: Configure CMake
         # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
@@ -38,7 +46,6 @@ jobs:
           mkdir -p Toolkit/Linux/Includes
           find IO.SDK/ -type f -name "*.h" -exec cp {} Toolkit/Linux/Includes/ \;
           cp -f build/IO.SDK/libIO.SDK.so Toolkit/Linux/
-          zip -r IO-Toolkit.zip Toolkit
 
       - name: Copy solar system data and templates
         run: |
@@ -46,7 +53,7 @@ jobs:
           mkdir -p Toolkit/Linux/Templates
           find build/IO.SDK.Tests/Data/SolarSystem/ -type f -name "*.*" -exec cp {} Toolkit/Linux/Data/SolarSystem \;
           find build/IO.SDK.Tests/Templates/ -type f -name "*.*" -exec cp {} Toolkit/Linux/Templates \;         
-          zip -r IO-Toolkit.zip Toolkit
+          zip -r IO-Toolkit-${{steps.tag.outputs.tag}}.zip Toolkit
 
       - name: Create Release
         id: create_release
@@ -65,6 +72,6 @@ jobs:
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
         with:
-          files: IO-Toolkit.zip
+          files: IO-Toolkit-${{steps.tag.outputs.tag}}.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
