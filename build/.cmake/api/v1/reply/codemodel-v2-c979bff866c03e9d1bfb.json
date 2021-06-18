@@ -170,14 +170,14 @@
 				{
 					"directoryIndex" : 4,
 					"id" : "IO.SDK::@9b98061eb6da086a5c30",
-					"jsonFile" : "target-IO.SDK-Debug-d2bb45c0f6a7b2372b56.json",
+					"jsonFile" : "target-IO.SDK-Debug-22fb6f866b2f826af1de.json",
 					"name" : "IO.SDK",
 					"projectIndex" : 0
 				},
 				{
 					"directoryIndex" : 5,
 					"id" : "IO.SDK.Tests::@45d666cd8047a1ca5230",
-					"jsonFile" : "target-IO.SDK.Tests-Debug-45e8125d2cfcea44fe78.json",
+					"jsonFile" : "target-IO.SDK.Tests-Debug-e31b1ce53aa787984bcd.json",
 					"name" : "IO.SDK.Tests",
 					"projectIndex" : 0
 				},

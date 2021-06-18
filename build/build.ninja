@@ -539,7 +539,7 @@ build IO.SDK/CMakeFiles/IO.SDK.dir/Aberrations.cpp.o: CXX_COMPILER__IO.2eSDK_Deb
   DEFINES = -DIO_SDK_EXPORTS
   DEP_FILE = IO.SDK/CMakeFiles/IO.SDK.dir/Aberrations.cpp.o.d
   FLAGS = -g -fPIC -std=gnu++17
-  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
+  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
   OBJECT_DIR = IO.SDK/CMakeFiles/IO.SDK.dir
   OBJECT_FILE_DIR = IO.SDK/CMakeFiles/IO.SDK.dir
 
@@ -547,7 +547,7 @@ build IO.SDK/CMakeFiles/IO.SDK.dir/Body/Body.cpp.o: CXX_COMPILER__IO.2eSDK_Debug
   DEFINES = -DIO_SDK_EXPORTS
   DEP_FILE = IO.SDK/CMakeFiles/IO.SDK.dir/Body/Body.cpp.o.d
   FLAGS = -g -fPIC -std=gnu++17
-  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
+  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
   OBJECT_DIR = IO.SDK/CMakeFiles/IO.SDK.dir
   OBJECT_FILE_DIR = IO.SDK/CMakeFiles/IO.SDK.dir/Body
 
@@ -555,7 +555,7 @@ build IO.SDK/CMakeFiles/IO.SDK.dir/Body/CelestialBody.cpp.o: CXX_COMPILER__IO.2e
   DEFINES = -DIO_SDK_EXPORTS
   DEP_FILE = IO.SDK/CMakeFiles/IO.SDK.dir/Body/CelestialBody.cpp.o.d
   FLAGS = -g -fPIC -std=gnu++17
-  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
+  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
   OBJECT_DIR = IO.SDK/CMakeFiles/IO.SDK.dir
   OBJECT_FILE_DIR = IO.SDK/CMakeFiles/IO.SDK.dir/Body
 
@@ -563,7 +563,7 @@ build IO.SDK/CMakeFiles/IO.SDK.dir/Body/Spacecraft/Engine.cpp.o: CXX_COMPILER__I
   DEFINES = -DIO_SDK_EXPORTS
   DEP_FILE = IO.SDK/CMakeFiles/IO.SDK.dir/Body/Spacecraft/Engine.cpp.o.d
   FLAGS = -g -fPIC -std=gnu++17
-  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
+  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
   OBJECT_DIR = IO.SDK/CMakeFiles/IO.SDK.dir
   OBJECT_FILE_DIR = IO.SDK/CMakeFiles/IO.SDK.dir/Body/Spacecraft
 
@@ -571,7 +571,7 @@ build IO.SDK/CMakeFiles/IO.SDK.dir/Body/Spacecraft/FuelTank.cpp.o: CXX_COMPILER_
   DEFINES = -DIO_SDK_EXPORTS
   DEP_FILE = IO.SDK/CMakeFiles/IO.SDK.dir/Body/Spacecraft/FuelTank.cpp.o.d
   FLAGS = -g -fPIC -std=gnu++17
-  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
+  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
   OBJECT_DIR = IO.SDK/CMakeFiles/IO.SDK.dir
   OBJECT_FILE_DIR = IO.SDK/CMakeFiles/IO.SDK.dir/Body/Spacecraft
 
@@ -579,7 +579,7 @@ build IO.SDK/CMakeFiles/IO.SDK.dir/Body/Spacecraft/Payload.cpp.o: CXX_COMPILER__
   DEFINES = -DIO_SDK_EXPORTS
   DEP_FILE = IO.SDK/CMakeFiles/IO.SDK.dir/Body/Spacecraft/Payload.cpp.o.d
   FLAGS = -g -fPIC -std=gnu++17
-  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
+  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
   OBJECT_DIR = IO.SDK/CMakeFiles/IO.SDK.dir
   OBJECT_FILE_DIR = IO.SDK/CMakeFiles/IO.SDK.dir/Body/Spacecraft
 
@@ -587,7 +587,7 @@ build IO.SDK/CMakeFiles/IO.SDK.dir/Body/Spacecraft/Spacecraft.cpp.o: CXX_COMPILE
   DEFINES = -DIO_SDK_EXPORTS
   DEP_FILE = IO.SDK/CMakeFiles/IO.SDK.dir/Body/Spacecraft/Spacecraft.cpp.o.d
   FLAGS = -g -fPIC -std=gnu++17
-  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
+  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
   OBJECT_DIR = IO.SDK/CMakeFiles/IO.SDK.dir
   OBJECT_FILE_DIR = IO.SDK/CMakeFiles/IO.SDK.dir/Body/Spacecraft
 
@@ -595,7 +595,7 @@ build IO.SDK/CMakeFiles/IO.SDK.dir/Constraint.cpp.o: CXX_COMPILER__IO.2eSDK_Debu
   DEFINES = -DIO_SDK_EXPORTS
   DEP_FILE = IO.SDK/CMakeFiles/IO.SDK.dir/Constraint.cpp.o.d
   FLAGS = -g -fPIC -std=gnu++17
-  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
+  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
   OBJECT_DIR = IO.SDK/CMakeFiles/IO.SDK.dir
   OBJECT_FILE_DIR = IO.SDK/CMakeFiles/IO.SDK.dir
 
@@ -603,7 +603,7 @@ build IO.SDK/CMakeFiles/IO.SDK.dir/Coordinate.cpp.o: CXX_COMPILER__IO.2eSDK_Debu
   DEFINES = -DIO_SDK_EXPORTS
   DEP_FILE = IO.SDK/CMakeFiles/IO.SDK.dir/Coordinate.cpp.o.d
   FLAGS = -g -fPIC -std=gnu++17
-  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
+  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
   OBJECT_DIR = IO.SDK/CMakeFiles/IO.SDK.dir
   OBJECT_FILE_DIR = IO.SDK/CMakeFiles/IO.SDK.dir
 
@@ -611,7 +611,7 @@ build IO.SDK/CMakeFiles/IO.SDK.dir/CoordinateSystem.cpp.o: CXX_COMPILER__IO.2eSD
   DEFINES = -DIO_SDK_EXPORTS
   DEP_FILE = IO.SDK/CMakeFiles/IO.SDK.dir/CoordinateSystem.cpp.o.d
   FLAGS = -g -fPIC -std=gnu++17
-  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
+  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
   OBJECT_DIR = IO.SDK/CMakeFiles/IO.SDK.dir
   OBJECT_FILE_DIR = IO.SDK/CMakeFiles/IO.SDK.dir
 
@@ -619,7 +619,7 @@ build IO.SDK/CMakeFiles/IO.SDK.dir/Coordinates/AzimuthRange.cpp.o: CXX_COMPILER_
   DEFINES = -DIO_SDK_EXPORTS
   DEP_FILE = IO.SDK/CMakeFiles/IO.SDK.dir/Coordinates/AzimuthRange.cpp.o.d
   FLAGS = -g -fPIC -std=gnu++17
-  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
+  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
   OBJECT_DIR = IO.SDK/CMakeFiles/IO.SDK.dir
   OBJECT_FILE_DIR = IO.SDK/CMakeFiles/IO.SDK.dir/Coordinates
 
@@ -627,7 +627,7 @@ build IO.SDK/CMakeFiles/IO.SDK.dir/Coordinates/SurfaceCoordinates.cpp.o: CXX_COM
   DEFINES = -DIO_SDK_EXPORTS
   DEP_FILE = IO.SDK/CMakeFiles/IO.SDK.dir/Coordinates/SurfaceCoordinates.cpp.o.d
   FLAGS = -g -fPIC -std=gnu++17
-  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
+  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
   OBJECT_DIR = IO.SDK/CMakeFiles/IO.SDK.dir
   OBJECT_FILE_DIR = IO.SDK/CMakeFiles/IO.SDK.dir/Coordinates
 
@@ -635,7 +635,7 @@ build IO.SDK/CMakeFiles/IO.SDK.dir/DataPoolMonitoring.cpp.o: CXX_COMPILER__IO.2e
   DEFINES = -DIO_SDK_EXPORTS
   DEP_FILE = IO.SDK/CMakeFiles/IO.SDK.dir/DataPoolMonitoring.cpp.o.d
   FLAGS = -g -fPIC -std=gnu++17
-  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
+  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
   OBJECT_DIR = IO.SDK/CMakeFiles/IO.SDK.dir
   OBJECT_FILE_DIR = IO.SDK/CMakeFiles/IO.SDK.dir
 
@@ -643,7 +643,7 @@ build IO.SDK/CMakeFiles/IO.SDK.dir/Exceptions/InvalidArgumentException.cpp.o: CX
   DEFINES = -DIO_SDK_EXPORTS
   DEP_FILE = IO.SDK/CMakeFiles/IO.SDK.dir/Exceptions/InvalidArgumentException.cpp.o.d
   FLAGS = -g -fPIC -std=gnu++17
-  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
+  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
   OBJECT_DIR = IO.SDK/CMakeFiles/IO.SDK.dir
   OBJECT_FILE_DIR = IO.SDK/CMakeFiles/IO.SDK.dir/Exceptions
 
@@ -651,7 +651,7 @@ build IO.SDK/CMakeFiles/IO.SDK.dir/Exceptions/PropagatorException.cpp.o: CXX_COM
   DEFINES = -DIO_SDK_EXPORTS
   DEP_FILE = IO.SDK/CMakeFiles/IO.SDK.dir/Exceptions/PropagatorException.cpp.o.d
   FLAGS = -g -fPIC -std=gnu++17
-  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
+  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
   OBJECT_DIR = IO.SDK/CMakeFiles/IO.SDK.dir
   OBJECT_FILE_DIR = IO.SDK/CMakeFiles/IO.SDK.dir/Exceptions
 
@@ -659,7 +659,7 @@ build IO.SDK/CMakeFiles/IO.SDK.dir/Exceptions/SDKException.cpp.o: CXX_COMPILER__
   DEFINES = -DIO_SDK_EXPORTS
   DEP_FILE = IO.SDK/CMakeFiles/IO.SDK.dir/Exceptions/SDKException.cpp.o.d
   FLAGS = -g -fPIC -std=gnu++17
-  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
+  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
   OBJECT_DIR = IO.SDK/CMakeFiles/IO.SDK.dir
   OBJECT_FILE_DIR = IO.SDK/CMakeFiles/IO.SDK.dir/Exceptions
 
@@ -667,7 +667,7 @@ build IO.SDK/CMakeFiles/IO.SDK.dir/Exceptions/TooEarlyManeuverException.cpp.o: C
   DEFINES = -DIO_SDK_EXPORTS
   DEP_FILE = IO.SDK/CMakeFiles/IO.SDK.dir/Exceptions/TooEarlyManeuverException.cpp.o.d
   FLAGS = -g -fPIC -std=gnu++17
-  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
+  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
   OBJECT_DIR = IO.SDK/CMakeFiles/IO.SDK.dir
   OBJECT_FILE_DIR = IO.SDK/CMakeFiles/IO.SDK.dir/Exceptions
 
@@ -675,7 +675,7 @@ build IO.SDK/CMakeFiles/IO.SDK.dir/Frames/BodyFixedFrame.cpp.o: CXX_COMPILER__IO
   DEFINES = -DIO_SDK_EXPORTS
   DEP_FILE = IO.SDK/CMakeFiles/IO.SDK.dir/Frames/BodyFixedFrame.cpp.o.d
   FLAGS = -g -fPIC -std=gnu++17
-  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
+  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
   OBJECT_DIR = IO.SDK/CMakeFiles/IO.SDK.dir
   OBJECT_FILE_DIR = IO.SDK/CMakeFiles/IO.SDK.dir/Frames
 
@@ -683,7 +683,7 @@ build IO.SDK/CMakeFiles/IO.SDK.dir/Frames/FrameFile.cpp.o: CXX_COMPILER__IO.2eSD
   DEFINES = -DIO_SDK_EXPORTS
   DEP_FILE = IO.SDK/CMakeFiles/IO.SDK.dir/Frames/FrameFile.cpp.o.d
   FLAGS = -g -fPIC -std=gnu++17
-  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
+  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
   OBJECT_DIR = IO.SDK/CMakeFiles/IO.SDK.dir
   OBJECT_FILE_DIR = IO.SDK/CMakeFiles/IO.SDK.dir/Frames
 
@@ -691,7 +691,7 @@ build IO.SDK/CMakeFiles/IO.SDK.dir/Frames/Frames.cpp.o: CXX_COMPILER__IO.2eSDK_D
   DEFINES = -DIO_SDK_EXPORTS
   DEP_FILE = IO.SDK/CMakeFiles/IO.SDK.dir/Frames/Frames.cpp.o.d
   FLAGS = -g -fPIC -std=gnu++17
-  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
+  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
   OBJECT_DIR = IO.SDK/CMakeFiles/IO.SDK.dir
   OBJECT_FILE_DIR = IO.SDK/CMakeFiles/IO.SDK.dir/Frames
 
@@ -699,7 +699,7 @@ build IO.SDK/CMakeFiles/IO.SDK.dir/Frames/InertialFrames.cpp.o: CXX_COMPILER__IO
   DEFINES = -DIO_SDK_EXPORTS
   DEP_FILE = IO.SDK/CMakeFiles/IO.SDK.dir/Frames/InertialFrames.cpp.o.d
   FLAGS = -g -fPIC -std=gnu++17
-  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
+  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
   OBJECT_DIR = IO.SDK/CMakeFiles/IO.SDK.dir
   OBJECT_FILE_DIR = IO.SDK/CMakeFiles/IO.SDK.dir/Frames
 
@@ -707,7 +707,7 @@ build IO.SDK/CMakeFiles/IO.SDK.dir/Frames/InstrumentFrameFile.cpp.o: CXX_COMPILE
   DEFINES = -DIO_SDK_EXPORTS
   DEP_FILE = IO.SDK/CMakeFiles/IO.SDK.dir/Frames/InstrumentFrameFile.cpp.o.d
   FLAGS = -g -fPIC -std=gnu++17
-  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
+  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
   OBJECT_DIR = IO.SDK/CMakeFiles/IO.SDK.dir
   OBJECT_FILE_DIR = IO.SDK/CMakeFiles/IO.SDK.dir/Frames
 
@@ -715,7 +715,7 @@ build IO.SDK/CMakeFiles/IO.SDK.dir/Frames/SiteFrameFile.cpp.o: CXX_COMPILER__IO.
   DEFINES = -DIO_SDK_EXPORTS
   DEP_FILE = IO.SDK/CMakeFiles/IO.SDK.dir/Frames/SiteFrameFile.cpp.o.d
   FLAGS = -g -fPIC -std=gnu++17
-  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
+  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
   OBJECT_DIR = IO.SDK/CMakeFiles/IO.SDK.dir
   OBJECT_FILE_DIR = IO.SDK/CMakeFiles/IO.SDK.dir/Frames
 
@@ -723,7 +723,7 @@ build IO.SDK/CMakeFiles/IO.SDK.dir/Frames/SiteFramesLoader.cpp.o: CXX_COMPILER__
   DEFINES = -DIO_SDK_EXPORTS
   DEP_FILE = IO.SDK/CMakeFiles/IO.SDK.dir/Frames/SiteFramesLoader.cpp.o.d
   FLAGS = -g -fPIC -std=gnu++17
-  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
+  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
   OBJECT_DIR = IO.SDK/CMakeFiles/IO.SDK.dir
   OBJECT_FILE_DIR = IO.SDK/CMakeFiles/IO.SDK.dir/Frames
 
@@ -731,7 +731,7 @@ build IO.SDK/CMakeFiles/IO.SDK.dir/Frames/SpacecraftFrameFile.cpp.o: CXX_COMPILE
   DEFINES = -DIO_SDK_EXPORTS
   DEP_FILE = IO.SDK/CMakeFiles/IO.SDK.dir/Frames/SpacecraftFrameFile.cpp.o.d
   FLAGS = -g -fPIC -std=gnu++17
-  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
+  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
   OBJECT_DIR = IO.SDK/CMakeFiles/IO.SDK.dir
   OBJECT_FILE_DIR = IO.SDK/CMakeFiles/IO.SDK.dir/Frames
 
@@ -739,7 +739,7 @@ build IO.SDK/CMakeFiles/IO.SDK.dir/Helpers/Type.cpp.o: CXX_COMPILER__IO.2eSDK_De
   DEFINES = -DIO_SDK_EXPORTS
   DEP_FILE = IO.SDK/CMakeFiles/IO.SDK.dir/Helpers/Type.cpp.o.d
   FLAGS = -g -fPIC -std=gnu++17
-  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
+  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
   OBJECT_DIR = IO.SDK/CMakeFiles/IO.SDK.dir
   OBJECT_FILE_DIR = IO.SDK/CMakeFiles/IO.SDK.dir/Helpers
 
@@ -747,7 +747,7 @@ build IO.SDK/CMakeFiles/IO.SDK.dir/IlluminationAngle.cpp.o: CXX_COMPILER__IO.2eS
   DEFINES = -DIO_SDK_EXPORTS
   DEP_FILE = IO.SDK/CMakeFiles/IO.SDK.dir/IlluminationAngle.cpp.o.d
   FLAGS = -g -fPIC -std=gnu++17
-  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
+  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
   OBJECT_DIR = IO.SDK/CMakeFiles/IO.SDK.dir
   OBJECT_FILE_DIR = IO.SDK/CMakeFiles/IO.SDK.dir
 
@@ -755,7 +755,7 @@ build IO.SDK/CMakeFiles/IO.SDK.dir/Instruments/FOVShapes.cpp.o: CXX_COMPILER__IO
   DEFINES = -DIO_SDK_EXPORTS
   DEP_FILE = IO.SDK/CMakeFiles/IO.SDK.dir/Instruments/FOVShapes.cpp.o.d
   FLAGS = -g -fPIC -std=gnu++17
-  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
+  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
   OBJECT_DIR = IO.SDK/CMakeFiles/IO.SDK.dir
   OBJECT_FILE_DIR = IO.SDK/CMakeFiles/IO.SDK.dir/Instruments
 
@@ -763,7 +763,7 @@ build IO.SDK/CMakeFiles/IO.SDK.dir/Instruments/Instrument.cpp.o: CXX_COMPILER__I
   DEFINES = -DIO_SDK_EXPORTS
   DEP_FILE = IO.SDK/CMakeFiles/IO.SDK.dir/Instruments/Instrument.cpp.o.d
   FLAGS = -g -fPIC -std=gnu++17
-  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
+  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
   OBJECT_DIR = IO.SDK/CMakeFiles/IO.SDK.dir
   OBJECT_FILE_DIR = IO.SDK/CMakeFiles/IO.SDK.dir/Instruments
 
@@ -771,7 +771,7 @@ build IO.SDK/CMakeFiles/IO.SDK.dir/Integrators/Forces/CentrifugalForce.cpp.o: CX
   DEFINES = -DIO_SDK_EXPORTS
   DEP_FILE = IO.SDK/CMakeFiles/IO.SDK.dir/Integrators/Forces/CentrifugalForce.cpp.o.d
   FLAGS = -g -fPIC -std=gnu++17
-  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
+  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
   OBJECT_DIR = IO.SDK/CMakeFiles/IO.SDK.dir
   OBJECT_FILE_DIR = IO.SDK/CMakeFiles/IO.SDK.dir/Integrators/Forces
 
@@ -779,7 +779,7 @@ build IO.SDK/CMakeFiles/IO.SDK.dir/Integrators/Forces/Force.cpp.o: CXX_COMPILER_
   DEFINES = -DIO_SDK_EXPORTS
   DEP_FILE = IO.SDK/CMakeFiles/IO.SDK.dir/Integrators/Forces/Force.cpp.o.d
   FLAGS = -g -fPIC -std=gnu++17
-  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
+  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
   OBJECT_DIR = IO.SDK/CMakeFiles/IO.SDK.dir
   OBJECT_FILE_DIR = IO.SDK/CMakeFiles/IO.SDK.dir/Integrators/Forces
 
@@ -787,7 +787,7 @@ build IO.SDK/CMakeFiles/IO.SDK.dir/Integrators/Forces/GravityForce.cpp.o: CXX_CO
   DEFINES = -DIO_SDK_EXPORTS
   DEP_FILE = IO.SDK/CMakeFiles/IO.SDK.dir/Integrators/Forces/GravityForce.cpp.o.d
   FLAGS = -g -fPIC -std=gnu++17
-  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
+  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
   OBJECT_DIR = IO.SDK/CMakeFiles/IO.SDK.dir
   OBJECT_FILE_DIR = IO.SDK/CMakeFiles/IO.SDK.dir/Integrators/Forces
 
@@ -795,7 +795,7 @@ build IO.SDK/CMakeFiles/IO.SDK.dir/Integrators/IntegratorBase.cpp.o: CXX_COMPILE
   DEFINES = -DIO_SDK_EXPORTS
   DEP_FILE = IO.SDK/CMakeFiles/IO.SDK.dir/Integrators/IntegratorBase.cpp.o.d
   FLAGS = -g -fPIC -std=gnu++17
-  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
+  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
   OBJECT_DIR = IO.SDK/CMakeFiles/IO.SDK.dir
   OBJECT_FILE_DIR = IO.SDK/CMakeFiles/IO.SDK.dir/Integrators
 
@@ -803,7 +803,7 @@ build IO.SDK/CMakeFiles/IO.SDK.dir/Integrators/TLEIntegrator.cpp.o: CXX_COMPILER
   DEFINES = -DIO_SDK_EXPORTS
   DEP_FILE = IO.SDK/CMakeFiles/IO.SDK.dir/Integrators/TLEIntegrator.cpp.o.d
   FLAGS = -g -fPIC -std=gnu++17
-  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
+  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
   OBJECT_DIR = IO.SDK/CMakeFiles/IO.SDK.dir
   OBJECT_FILE_DIR = IO.SDK/CMakeFiles/IO.SDK.dir/Integrators
 
@@ -811,7 +811,7 @@ build IO.SDK/CMakeFiles/IO.SDK.dir/Integrators/VVIntegrator.cpp.o: CXX_COMPILER_
   DEFINES = -DIO_SDK_EXPORTS
   DEP_FILE = IO.SDK/CMakeFiles/IO.SDK.dir/Integrators/VVIntegrator.cpp.o.d
   FLAGS = -g -fPIC -std=gnu++17
-  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
+  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
   OBJECT_DIR = IO.SDK/CMakeFiles/IO.SDK.dir
   OBJECT_FILE_DIR = IO.SDK/CMakeFiles/IO.SDK.dir/Integrators
 
@@ -819,7 +819,7 @@ build IO.SDK/CMakeFiles/IO.SDK.dir/Kernels/CircularInstrumentKernel.cpp.o: CXX_C
   DEFINES = -DIO_SDK_EXPORTS
   DEP_FILE = IO.SDK/CMakeFiles/IO.SDK.dir/Kernels/CircularInstrumentKernel.cpp.o.d
   FLAGS = -g -fPIC -std=gnu++17
-  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
+  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
   OBJECT_DIR = IO.SDK/CMakeFiles/IO.SDK.dir
   OBJECT_FILE_DIR = IO.SDK/CMakeFiles/IO.SDK.dir/Kernels
 
@@ -827,7 +827,7 @@ build IO.SDK/CMakeFiles/IO.SDK.dir/Kernels/EllipticalInstrumentKernel.cpp.o: CXX
   DEFINES = -DIO_SDK_EXPORTS
   DEP_FILE = IO.SDK/CMakeFiles/IO.SDK.dir/Kernels/EllipticalInstrumentKernel.cpp.o.d
   FLAGS = -g -fPIC -std=gnu++17
-  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
+  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
   OBJECT_DIR = IO.SDK/CMakeFiles/IO.SDK.dir
   OBJECT_FILE_DIR = IO.SDK/CMakeFiles/IO.SDK.dir/Kernels
 
@@ -835,7 +835,7 @@ build IO.SDK/CMakeFiles/IO.SDK.dir/Kernels/EphemerisKernel.cpp.o: CXX_COMPILER__
   DEFINES = -DIO_SDK_EXPORTS
   DEP_FILE = IO.SDK/CMakeFiles/IO.SDK.dir/Kernels/EphemerisKernel.cpp.o.d
   FLAGS = -g -fPIC -std=gnu++17
-  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
+  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
   OBJECT_DIR = IO.SDK/CMakeFiles/IO.SDK.dir
   OBJECT_FILE_DIR = IO.SDK/CMakeFiles/IO.SDK.dir/Kernels
 
@@ -843,7 +843,7 @@ build IO.SDK/CMakeFiles/IO.SDK.dir/Kernels/InstrumentKernel.cpp.o: CXX_COMPILER_
   DEFINES = -DIO_SDK_EXPORTS
   DEP_FILE = IO.SDK/CMakeFiles/IO.SDK.dir/Kernels/InstrumentKernel.cpp.o.d
   FLAGS = -g -fPIC -std=gnu++17
-  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
+  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
   OBJECT_DIR = IO.SDK/CMakeFiles/IO.SDK.dir
   OBJECT_FILE_DIR = IO.SDK/CMakeFiles/IO.SDK.dir/Kernels
 
@@ -851,7 +851,7 @@ build IO.SDK/CMakeFiles/IO.SDK.dir/Kernels/Kernel.cpp.o: CXX_COMPILER__IO.2eSDK_
   DEFINES = -DIO_SDK_EXPORTS
   DEP_FILE = IO.SDK/CMakeFiles/IO.SDK.dir/Kernels/Kernel.cpp.o.d
   FLAGS = -g -fPIC -std=gnu++17
-  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
+  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
   OBJECT_DIR = IO.SDK/CMakeFiles/IO.SDK.dir
   OBJECT_FILE_DIR = IO.SDK/CMakeFiles/IO.SDK.dir/Kernels
 
@@ -859,7 +859,7 @@ build IO.SDK/CMakeFiles/IO.SDK.dir/Kernels/OrientationKernel.cpp.o: CXX_COMPILER
   DEFINES = -DIO_SDK_EXPORTS
   DEP_FILE = IO.SDK/CMakeFiles/IO.SDK.dir/Kernels/OrientationKernel.cpp.o.d
   FLAGS = -g -fPIC -std=gnu++17
-  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
+  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
   OBJECT_DIR = IO.SDK/CMakeFiles/IO.SDK.dir
   OBJECT_FILE_DIR = IO.SDK/CMakeFiles/IO.SDK.dir/Kernels
 
@@ -867,7 +867,7 @@ build IO.SDK/CMakeFiles/IO.SDK.dir/Kernels/RectangularInstrumentKernel.cpp.o: CX
   DEFINES = -DIO_SDK_EXPORTS
   DEP_FILE = IO.SDK/CMakeFiles/IO.SDK.dir/Kernels/RectangularInstrumentKernel.cpp.o.d
   FLAGS = -g -fPIC -std=gnu++17
-  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
+  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
   OBJECT_DIR = IO.SDK/CMakeFiles/IO.SDK.dir
   OBJECT_FILE_DIR = IO.SDK/CMakeFiles/IO.SDK.dir/Kernels
 
@@ -875,7 +875,7 @@ build IO.SDK/CMakeFiles/IO.SDK.dir/Kernels/SolarSystemKernelsLoader.cpp.o: CXX_C
   DEFINES = -DIO_SDK_EXPORTS
   DEP_FILE = IO.SDK/CMakeFiles/IO.SDK.dir/Kernels/SolarSystemKernelsLoader.cpp.o.d
   FLAGS = -g -fPIC -std=gnu++17
-  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
+  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
   OBJECT_DIR = IO.SDK/CMakeFiles/IO.SDK.dir
   OBJECT_FILE_DIR = IO.SDK/CMakeFiles/IO.SDK.dir/Kernels
 
@@ -883,7 +883,7 @@ build IO.SDK/CMakeFiles/IO.SDK.dir/Kernels/SpacecraftClockKernel.cpp.o: CXX_COMP
   DEFINES = -DIO_SDK_EXPORTS
   DEP_FILE = IO.SDK/CMakeFiles/IO.SDK.dir/Kernels/SpacecraftClockKernel.cpp.o.d
   FLAGS = -g -fPIC -std=gnu++17
-  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
+  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
   OBJECT_DIR = IO.SDK/CMakeFiles/IO.SDK.dir
   OBJECT_FILE_DIR = IO.SDK/CMakeFiles/IO.SDK.dir/Kernels
 
@@ -891,7 +891,7 @@ build IO.SDK/CMakeFiles/IO.SDK.dir/Maneuvers/ApogeeHeightChangingManeuver.cpp.o:
   DEFINES = -DIO_SDK_EXPORTS
   DEP_FILE = IO.SDK/CMakeFiles/IO.SDK.dir/Maneuvers/ApogeeHeightChangingManeuver.cpp.o.d
   FLAGS = -g -fPIC -std=gnu++17
-  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
+  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
   OBJECT_DIR = IO.SDK/CMakeFiles/IO.SDK.dir
   OBJECT_FILE_DIR = IO.SDK/CMakeFiles/IO.SDK.dir/Maneuvers
 
@@ -899,7 +899,7 @@ build IO.SDK/CMakeFiles/IO.SDK.dir/Maneuvers/ApsidalAlignmentManeuver.cpp.o: CXX
   DEFINES = -DIO_SDK_EXPORTS
   DEP_FILE = IO.SDK/CMakeFiles/IO.SDK.dir/Maneuvers/ApsidalAlignmentManeuver.cpp.o.d
   FLAGS = -g -fPIC -std=gnu++17
-  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
+  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
   OBJECT_DIR = IO.SDK/CMakeFiles/IO.SDK.dir
   OBJECT_FILE_DIR = IO.SDK/CMakeFiles/IO.SDK.dir/Maneuvers
 
@@ -907,7 +907,7 @@ build IO.SDK/CMakeFiles/IO.SDK.dir/Maneuvers/CombinedManeuver.cpp.o: CXX_COMPILE
   DEFINES = -DIO_SDK_EXPORTS
   DEP_FILE = IO.SDK/CMakeFiles/IO.SDK.dir/Maneuvers/CombinedManeuver.cpp.o.d
   FLAGS = -g -fPIC -std=gnu++17
-  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
+  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
   OBJECT_DIR = IO.SDK/CMakeFiles/IO.SDK.dir
   OBJECT_FILE_DIR = IO.SDK/CMakeFiles/IO.SDK.dir/Maneuvers
 
@@ -915,7 +915,7 @@ build IO.SDK/CMakeFiles/IO.SDK.dir/Maneuvers/DynamicFuelTank.cpp.o: CXX_COMPILER
   DEFINES = -DIO_SDK_EXPORTS
   DEP_FILE = IO.SDK/CMakeFiles/IO.SDK.dir/Maneuvers/DynamicFuelTank.cpp.o.d
   FLAGS = -g -fPIC -std=gnu++17
-  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
+  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
   OBJECT_DIR = IO.SDK/CMakeFiles/IO.SDK.dir
   OBJECT_FILE_DIR = IO.SDK/CMakeFiles/IO.SDK.dir/Maneuvers
 
@@ -923,7 +923,7 @@ build IO.SDK/CMakeFiles/IO.SDK.dir/Maneuvers/Launch.cpp.o: CXX_COMPILER__IO.2eSD
   DEFINES = -DIO_SDK_EXPORTS
   DEP_FILE = IO.SDK/CMakeFiles/IO.SDK.dir/Maneuvers/Launch.cpp.o.d
   FLAGS = -g -fPIC -std=gnu++17
-  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
+  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
   OBJECT_DIR = IO.SDK/CMakeFiles/IO.SDK.dir
   OBJECT_FILE_DIR = IO.SDK/CMakeFiles/IO.SDK.dir/Maneuvers
 
@@ -931,7 +931,7 @@ build IO.SDK/CMakeFiles/IO.SDK.dir/Maneuvers/LaunchWindow.cpp.o: CXX_COMPILER__I
   DEFINES = -DIO_SDK_EXPORTS
   DEP_FILE = IO.SDK/CMakeFiles/IO.SDK.dir/Maneuvers/LaunchWindow.cpp.o.d
   FLAGS = -g -fPIC -std=gnu++17
-  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
+  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
   OBJECT_DIR = IO.SDK/CMakeFiles/IO.SDK.dir
   OBJECT_FILE_DIR = IO.SDK/CMakeFiles/IO.SDK.dir/Maneuvers
 
@@ -939,7 +939,7 @@ build IO.SDK/CMakeFiles/IO.SDK.dir/Maneuvers/ManeuverBase.cpp.o: CXX_COMPILER__I
   DEFINES = -DIO_SDK_EXPORTS
   DEP_FILE = IO.SDK/CMakeFiles/IO.SDK.dir/Maneuvers/ManeuverBase.cpp.o.d
   FLAGS = -g -fPIC -std=gnu++17
-  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
+  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
   OBJECT_DIR = IO.SDK/CMakeFiles/IO.SDK.dir
   OBJECT_FILE_DIR = IO.SDK/CMakeFiles/IO.SDK.dir/Maneuvers
 
@@ -947,7 +947,7 @@ build IO.SDK/CMakeFiles/IO.SDK.dir/Maneuvers/OrbitalPlaneChangingManeuver.cpp.o:
   DEFINES = -DIO_SDK_EXPORTS
   DEP_FILE = IO.SDK/CMakeFiles/IO.SDK.dir/Maneuvers/OrbitalPlaneChangingManeuver.cpp.o.d
   FLAGS = -g -fPIC -std=gnu++17
-  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
+  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
   OBJECT_DIR = IO.SDK/CMakeFiles/IO.SDK.dir
   OBJECT_FILE_DIR = IO.SDK/CMakeFiles/IO.SDK.dir/Maneuvers
 
@@ -955,7 +955,7 @@ build IO.SDK/CMakeFiles/IO.SDK.dir/Maneuvers/PerigeeHeightChangingManeuver.cpp.o
   DEFINES = -DIO_SDK_EXPORTS
   DEP_FILE = IO.SDK/CMakeFiles/IO.SDK.dir/Maneuvers/PerigeeHeightChangingManeuver.cpp.o.d
   FLAGS = -g -fPIC -std=gnu++17
-  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
+  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
   OBJECT_DIR = IO.SDK/CMakeFiles/IO.SDK.dir
   OBJECT_FILE_DIR = IO.SDK/CMakeFiles/IO.SDK.dir/Maneuvers
 
@@ -963,7 +963,7 @@ build IO.SDK/CMakeFiles/IO.SDK.dir/Maneuvers/PhasingManeuver.cpp.o: CXX_COMPILER
   DEFINES = -DIO_SDK_EXPORTS
   DEP_FILE = IO.SDK/CMakeFiles/IO.SDK.dir/Maneuvers/PhasingManeuver.cpp.o.d
   FLAGS = -g -fPIC -std=gnu++17
-  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
+  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
   OBJECT_DIR = IO.SDK/CMakeFiles/IO.SDK.dir
   OBJECT_FILE_DIR = IO.SDK/CMakeFiles/IO.SDK.dir/Maneuvers
 
@@ -971,7 +971,7 @@ build IO.SDK/CMakeFiles/IO.SDK.dir/Math/Matrix.cpp.o: CXX_COMPILER__IO.2eSDK_Deb
   DEFINES = -DIO_SDK_EXPORTS
   DEP_FILE = IO.SDK/CMakeFiles/IO.SDK.dir/Math/Matrix.cpp.o.d
   FLAGS = -g -fPIC -std=gnu++17
-  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
+  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
   OBJECT_DIR = IO.SDK/CMakeFiles/IO.SDK.dir
   OBJECT_FILE_DIR = IO.SDK/CMakeFiles/IO.SDK.dir/Math
 
@@ -979,7 +979,7 @@ build IO.SDK/CMakeFiles/IO.SDK.dir/Math/Quaternion.cpp.o: CXX_COMPILER__IO.2eSDK
   DEFINES = -DIO_SDK_EXPORTS
   DEP_FILE = IO.SDK/CMakeFiles/IO.SDK.dir/Math/Quaternion.cpp.o.d
   FLAGS = -g -fPIC -std=gnu++17
-  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
+  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
   OBJECT_DIR = IO.SDK/CMakeFiles/IO.SDK.dir
   OBJECT_FILE_DIR = IO.SDK/CMakeFiles/IO.SDK.dir/Math
 
@@ -987,7 +987,7 @@ build IO.SDK/CMakeFiles/IO.SDK.dir/Math/Vector3D.cpp.o: CXX_COMPILER__IO.2eSDK_D
   DEFINES = -DIO_SDK_EXPORTS
   DEP_FILE = IO.SDK/CMakeFiles/IO.SDK.dir/Math/Vector3D.cpp.o.d
   FLAGS = -g -fPIC -std=gnu++17
-  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
+  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
   OBJECT_DIR = IO.SDK/CMakeFiles/IO.SDK.dir
   OBJECT_FILE_DIR = IO.SDK/CMakeFiles/IO.SDK.dir/Math
 
@@ -995,7 +995,7 @@ build IO.SDK/CMakeFiles/IO.SDK.dir/OccultationType.cpp.o: CXX_COMPILER__IO.2eSDK
   DEFINES = -DIO_SDK_EXPORTS
   DEP_FILE = IO.SDK/CMakeFiles/IO.SDK.dir/OccultationType.cpp.o.d
   FLAGS = -g -fPIC -std=gnu++17
-  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
+  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
   OBJECT_DIR = IO.SDK/CMakeFiles/IO.SDK.dir
   OBJECT_FILE_DIR = IO.SDK/CMakeFiles/IO.SDK.dir
 
@@ -1003,7 +1003,7 @@ build IO.SDK/CMakeFiles/IO.SDK.dir/OrbitalParameters/ConicOrbitalElements.cpp.o:
   DEFINES = -DIO_SDK_EXPORTS
   DEP_FILE = IO.SDK/CMakeFiles/IO.SDK.dir/OrbitalParameters/ConicOrbitalElements.cpp.o.d
   FLAGS = -g -fPIC -std=gnu++17
-  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
+  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
   OBJECT_DIR = IO.SDK/CMakeFiles/IO.SDK.dir
   OBJECT_FILE_DIR = IO.SDK/CMakeFiles/IO.SDK.dir/OrbitalParameters
 
@@ -1011,7 +1011,7 @@ build IO.SDK/CMakeFiles/IO.SDK.dir/OrbitalParameters/EquinoctialElements.cpp.o: 
   DEFINES = -DIO_SDK_EXPORTS
   DEP_FILE = IO.SDK/CMakeFiles/IO.SDK.dir/OrbitalParameters/EquinoctialElements.cpp.o.d
   FLAGS = -g -fPIC -std=gnu++17
-  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
+  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
   OBJECT_DIR = IO.SDK/CMakeFiles/IO.SDK.dir
   OBJECT_FILE_DIR = IO.SDK/CMakeFiles/IO.SDK.dir/OrbitalParameters
 
@@ -1019,7 +1019,7 @@ build IO.SDK/CMakeFiles/IO.SDK.dir/OrbitalParameters/OrbitalParameters.cpp.o: CX
   DEFINES = -DIO_SDK_EXPORTS
   DEP_FILE = IO.SDK/CMakeFiles/IO.SDK.dir/OrbitalParameters/OrbitalParameters.cpp.o.d
   FLAGS = -g -fPIC -std=gnu++17
-  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
+  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
   OBJECT_DIR = IO.SDK/CMakeFiles/IO.SDK.dir
   OBJECT_FILE_DIR = IO.SDK/CMakeFiles/IO.SDK.dir/OrbitalParameters
 
@@ -1027,7 +1027,7 @@ build IO.SDK/CMakeFiles/IO.SDK.dir/OrbitalParameters/StateOrientation.cpp.o: CXX
   DEFINES = -DIO_SDK_EXPORTS
   DEP_FILE = IO.SDK/CMakeFiles/IO.SDK.dir/OrbitalParameters/StateOrientation.cpp.o.d
   FLAGS = -g -fPIC -std=gnu++17
-  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
+  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
   OBJECT_DIR = IO.SDK/CMakeFiles/IO.SDK.dir
   OBJECT_FILE_DIR = IO.SDK/CMakeFiles/IO.SDK.dir/OrbitalParameters
 
@@ -1035,7 +1035,7 @@ build IO.SDK/CMakeFiles/IO.SDK.dir/OrbitalParameters/StateVector.cpp.o: CXX_COMP
   DEFINES = -DIO_SDK_EXPORTS
   DEP_FILE = IO.SDK/CMakeFiles/IO.SDK.dir/OrbitalParameters/StateVector.cpp.o.d
   FLAGS = -g -fPIC -std=gnu++17
-  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
+  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
   OBJECT_DIR = IO.SDK/CMakeFiles/IO.SDK.dir
   OBJECT_FILE_DIR = IO.SDK/CMakeFiles/IO.SDK.dir/OrbitalParameters
 
@@ -1043,7 +1043,7 @@ build IO.SDK/CMakeFiles/IO.SDK.dir/OrbitalParameters/TLE.cpp.o: CXX_COMPILER__IO
   DEFINES = -DIO_SDK_EXPORTS
   DEP_FILE = IO.SDK/CMakeFiles/IO.SDK.dir/OrbitalParameters/TLE.cpp.o.d
   FLAGS = -g -fPIC -std=gnu++17
-  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
+  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
   OBJECT_DIR = IO.SDK/CMakeFiles/IO.SDK.dir
   OBJECT_FILE_DIR = IO.SDK/CMakeFiles/IO.SDK.dir/OrbitalParameters
 
@@ -1051,7 +1051,7 @@ build IO.SDK/CMakeFiles/IO.SDK.dir/Propagators/Propagator.cpp.o: CXX_COMPILER__I
   DEFINES = -DIO_SDK_EXPORTS
   DEP_FILE = IO.SDK/CMakeFiles/IO.SDK.dir/Propagators/Propagator.cpp.o.d
   FLAGS = -g -fPIC -std=gnu++17
-  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
+  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
   OBJECT_DIR = IO.SDK/CMakeFiles/IO.SDK.dir
   OBJECT_FILE_DIR = IO.SDK/CMakeFiles/IO.SDK.dir/Propagators
 
@@ -1059,7 +1059,7 @@ build IO.SDK/CMakeFiles/IO.SDK.dir/Sites/LaunchSite.cpp.o: CXX_COMPILER__IO.2eSD
   DEFINES = -DIO_SDK_EXPORTS
   DEP_FILE = IO.SDK/CMakeFiles/IO.SDK.dir/Sites/LaunchSite.cpp.o.d
   FLAGS = -g -fPIC -std=gnu++17
-  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
+  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
   OBJECT_DIR = IO.SDK/CMakeFiles/IO.SDK.dir
   OBJECT_FILE_DIR = IO.SDK/CMakeFiles/IO.SDK.dir/Sites
 
@@ -1067,7 +1067,7 @@ build IO.SDK/CMakeFiles/IO.SDK.dir/Sites/Site.cpp.o: CXX_COMPILER__IO.2eSDK_Debu
   DEFINES = -DIO_SDK_EXPORTS
   DEP_FILE = IO.SDK/CMakeFiles/IO.SDK.dir/Sites/Site.cpp.o.d
   FLAGS = -g -fPIC -std=gnu++17
-  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
+  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
   OBJECT_DIR = IO.SDK/CMakeFiles/IO.SDK.dir
   OBJECT_FILE_DIR = IO.SDK/CMakeFiles/IO.SDK.dir/Sites
 
@@ -1075,7 +1075,7 @@ build IO.SDK/CMakeFiles/IO.SDK.dir/Spice/Builder.cpp.o: CXX_COMPILER__IO.2eSDK_D
   DEFINES = -DIO_SDK_EXPORTS
   DEP_FILE = IO.SDK/CMakeFiles/IO.SDK.dir/Spice/Builder.cpp.o.d
   FLAGS = -g -fPIC -std=gnu++17
-  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
+  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
   OBJECT_DIR = IO.SDK/CMakeFiles/IO.SDK.dir
   OBJECT_FILE_DIR = IO.SDK/CMakeFiles/IO.SDK.dir/Spice
 
@@ -1083,7 +1083,7 @@ build IO.SDK/CMakeFiles/IO.SDK.dir/Time/DateTime.cpp.o: CXX_COMPILER__IO.2eSDK_D
   DEFINES = -DIO_SDK_EXPORTS
   DEP_FILE = IO.SDK/CMakeFiles/IO.SDK.dir/Time/DateTime.cpp.o.d
   FLAGS = -g -fPIC -std=gnu++17
-  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
+  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
   OBJECT_DIR = IO.SDK/CMakeFiles/IO.SDK.dir
   OBJECT_FILE_DIR = IO.SDK/CMakeFiles/IO.SDK.dir/Time
 
@@ -1091,7 +1091,7 @@ build IO.SDK/CMakeFiles/IO.SDK.dir/Time/TDB.cpp.o: CXX_COMPILER__IO.2eSDK_Debug 
   DEFINES = -DIO_SDK_EXPORTS
   DEP_FILE = IO.SDK/CMakeFiles/IO.SDK.dir/Time/TDB.cpp.o.d
   FLAGS = -g -fPIC -std=gnu++17
-  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
+  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
   OBJECT_DIR = IO.SDK/CMakeFiles/IO.SDK.dir
   OBJECT_FILE_DIR = IO.SDK/CMakeFiles/IO.SDK.dir/Time
 
@@ -1099,7 +1099,7 @@ build IO.SDK/CMakeFiles/IO.SDK.dir/Time/TimeSpan.cpp.o: CXX_COMPILER__IO.2eSDK_D
   DEFINES = -DIO_SDK_EXPORTS
   DEP_FILE = IO.SDK/CMakeFiles/IO.SDK.dir/Time/TimeSpan.cpp.o.d
   FLAGS = -g -fPIC -std=gnu++17
-  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
+  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
   OBJECT_DIR = IO.SDK/CMakeFiles/IO.SDK.dir
   OBJECT_FILE_DIR = IO.SDK/CMakeFiles/IO.SDK.dir/Time
 
@@ -1107,7 +1107,7 @@ build IO.SDK/CMakeFiles/IO.SDK.dir/Time/UTC.cpp.o: CXX_COMPILER__IO.2eSDK_Debug 
   DEFINES = -DIO_SDK_EXPORTS
   DEP_FILE = IO.SDK/CMakeFiles/IO.SDK.dir/Time/UTC.cpp.o.d
   FLAGS = -g -fPIC -std=gnu++17
-  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
+  INCLUDES = -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux
   OBJECT_DIR = IO.SDK/CMakeFiles/IO.SDK.dir
   OBJECT_FILE_DIR = IO.SDK/CMakeFiles/IO.SDK.dir/Time
 
@@ -1224,392 +1224,392 @@ build cmake_object_order_depends_target_IO.SDK.Tests: phony || cmake_object_orde
 build IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/AberrationTests.cpp.o: CXX_COMPILER__IO.2eSDK.2eTests_Debug ../IO.SDK.Tests/AberrationTests.cpp || cmake_object_order_depends_target_IO.SDK.Tests
   DEP_FILE = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/AberrationTests.cpp.o.d
   FLAGS = -g -fPIE -std=gnu++17
-  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
+  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
   OBJECT_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
   OBJECT_FILE_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
 
 build IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/ApogeeHeightChangingManeuverTests.cpp.o: CXX_COMPILER__IO.2eSDK.2eTests_Debug ../IO.SDK.Tests/ApogeeHeightChangingManeuverTests.cpp || cmake_object_order_depends_target_IO.SDK.Tests
   DEP_FILE = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/ApogeeHeightChangingManeuverTests.cpp.o.d
   FLAGS = -g -fPIE -std=gnu++17
-  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
+  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
   OBJECT_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
   OBJECT_FILE_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
 
 build IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/ApsidalAlignmentManeuverTests.cpp.o: CXX_COMPILER__IO.2eSDK.2eTests_Debug ../IO.SDK.Tests/ApsidalAlignmentManeuverTests.cpp || cmake_object_order_depends_target_IO.SDK.Tests
   DEP_FILE = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/ApsidalAlignmentManeuverTests.cpp.o.d
   FLAGS = -g -fPIE -std=gnu++17
-  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
+  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
   OBJECT_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
   OBJECT_FILE_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
 
 build IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/AzimuthRangeTests.cpp.o: CXX_COMPILER__IO.2eSDK.2eTests_Debug ../IO.SDK.Tests/AzimuthRangeTests.cpp || cmake_object_order_depends_target_IO.SDK.Tests
   DEP_FILE = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/AzimuthRangeTests.cpp.o.d
   FLAGS = -g -fPIE -std=gnu++17
-  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
+  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
   OBJECT_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
   OBJECT_FILE_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
 
 build IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/BodyTests.cpp.o: CXX_COMPILER__IO.2eSDK.2eTests_Debug ../IO.SDK.Tests/BodyTests.cpp || cmake_object_order_depends_target_IO.SDK.Tests
   DEP_FILE = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/BodyTests.cpp.o.d
   FLAGS = -g -fPIE -std=gnu++17
-  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
+  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
   OBJECT_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
   OBJECT_FILE_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
 
 build IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/CelestialBodyTests.cpp.o: CXX_COMPILER__IO.2eSDK.2eTests_Debug ../IO.SDK.Tests/CelestialBodyTests.cpp || cmake_object_order_depends_target_IO.SDK.Tests
   DEP_FILE = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/CelestialBodyTests.cpp.o.d
   FLAGS = -g -fPIE -std=gnu++17
-  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
+  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
   OBJECT_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
   OBJECT_FILE_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
 
 build IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/CentrifugalForceTests.cpp.o: CXX_COMPILER__IO.2eSDK.2eTests_Debug ../IO.SDK.Tests/CentrifugalForceTests.cpp || cmake_object_order_depends_target_IO.SDK.Tests
   DEP_FILE = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/CentrifugalForceTests.cpp.o.d
   FLAGS = -g -fPIE -std=gnu++17
-  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
+  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
   OBJECT_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
   OBJECT_FILE_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
 
 build IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/CombinedManeuverTests.cpp.o: CXX_COMPILER__IO.2eSDK.2eTests_Debug ../IO.SDK.Tests/CombinedManeuverTests.cpp || cmake_object_order_depends_target_IO.SDK.Tests
   DEP_FILE = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/CombinedManeuverTests.cpp.o.d
   FLAGS = -g -fPIE -std=gnu++17
-  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
+  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
   OBJECT_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
   OBJECT_FILE_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
 
 build IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/ConicOrbitalElementsTests.cpp.o: CXX_COMPILER__IO.2eSDK.2eTests_Debug ../IO.SDK.Tests/ConicOrbitalElementsTests.cpp || cmake_object_order_depends_target_IO.SDK.Tests
   DEP_FILE = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/ConicOrbitalElementsTests.cpp.o.d
   FLAGS = -g -fPIE -std=gnu++17
-  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
+  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
   OBJECT_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
   OBJECT_FILE_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
 
 build IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/CylindricalTests.cpp.o: CXX_COMPILER__IO.2eSDK.2eTests_Debug ../IO.SDK.Tests/CylindricalTests.cpp || cmake_object_order_depends_target_IO.SDK.Tests
   DEP_FILE = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/CylindricalTests.cpp.o.d
   FLAGS = -g -fPIE -std=gnu++17
-  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
+  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
   OBJECT_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
   OBJECT_FILE_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
 
 build IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/EngineTests.cpp.o: CXX_COMPILER__IO.2eSDK.2eTests_Debug ../IO.SDK.Tests/EngineTests.cpp || cmake_object_order_depends_target_IO.SDK.Tests
   DEP_FILE = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/EngineTests.cpp.o.d
   FLAGS = -g -fPIE -std=gnu++17
-  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
+  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
   OBJECT_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
   OBJECT_FILE_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
 
 build IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/EphemerisKernelTests.cpp.o: CXX_COMPILER__IO.2eSDK.2eTests_Debug ../IO.SDK.Tests/EphemerisKernelTests.cpp || cmake_object_order_depends_target_IO.SDK.Tests
   DEP_FILE = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/EphemerisKernelTests.cpp.o.d
   FLAGS = -g -fPIE -std=gnu++17
-  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
+  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
   OBJECT_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
   OBJECT_FILE_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
 
 build IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/EquinoctialElementsTests.cpp.o: CXX_COMPILER__IO.2eSDK.2eTests_Debug ../IO.SDK.Tests/EquinoctialElementsTests.cpp || cmake_object_order_depends_target_IO.SDK.Tests
   DEP_FILE = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/EquinoctialElementsTests.cpp.o.d
   FLAGS = -g -fPIE -std=gnu++17
-  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
+  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
   OBJECT_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
   OBJECT_FILE_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
 
 build IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/FuelTankTests.cpp.o: CXX_COMPILER__IO.2eSDK.2eTests_Debug ../IO.SDK.Tests/FuelTankTests.cpp || cmake_object_order_depends_target_IO.SDK.Tests
   DEP_FILE = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/FuelTankTests.cpp.o.d
   FLAGS = -g -fPIE -std=gnu++17
-  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
+  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
   OBJECT_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
   OBJECT_FILE_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
 
 build IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/GeodeticTests.cpp.o: CXX_COMPILER__IO.2eSDK.2eTests_Debug ../IO.SDK.Tests/GeodeticTests.cpp || cmake_object_order_depends_target_IO.SDK.Tests
   DEP_FILE = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/GeodeticTests.cpp.o.d
   FLAGS = -g -fPIE -std=gnu++17
-  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
+  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
   OBJECT_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
   OBJECT_FILE_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
 
 build IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/GravityForceTests.cpp.o: CXX_COMPILER__IO.2eSDK.2eTests_Debug ../IO.SDK.Tests/GravityForceTests.cpp || cmake_object_order_depends_target_IO.SDK.Tests
   DEP_FILE = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/GravityForceTests.cpp.o.d
   FLAGS = -g -fPIE -std=gnu++17
-  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
+  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
   OBJECT_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
   OBJECT_FILE_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
 
 build IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/HelpersTests.cpp.o: CXX_COMPILER__IO.2eSDK.2eTests_Debug ../IO.SDK.Tests/HelpersTests.cpp || cmake_object_order_depends_target_IO.SDK.Tests
   DEP_FILE = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/HelpersTests.cpp.o.d
   FLAGS = -g -fPIE -std=gnu++17
-  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
+  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
   OBJECT_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
   OBJECT_FILE_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
 
 build IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/HorizontalCoordinatesTests.cpp.o: CXX_COMPILER__IO.2eSDK.2eTests_Debug ../IO.SDK.Tests/HorizontalCoordinatesTests.cpp || cmake_object_order_depends_target_IO.SDK.Tests
   DEP_FILE = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/HorizontalCoordinatesTests.cpp.o.d
   FLAGS = -g -fPIE -std=gnu++17
-  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
+  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
   OBJECT_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
   OBJECT_FILE_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
 
 build IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/IlluminationTests.cpp.o: CXX_COMPILER__IO.2eSDK.2eTests_Debug ../IO.SDK.Tests/IlluminationTests.cpp || cmake_object_order_depends_target_IO.SDK.Tests
   DEP_FILE = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/IlluminationTests.cpp.o.d
   FLAGS = -g -fPIE -std=gnu++17
-  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
+  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
   OBJECT_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
   OBJECT_FILE_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
 
 build IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/InclinationManeuverTests.cpp.o: CXX_COMPILER__IO.2eSDK.2eTests_Debug ../IO.SDK.Tests/InclinationManeuverTests.cpp || cmake_object_order_depends_target_IO.SDK.Tests
   DEP_FILE = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/InclinationManeuverTests.cpp.o.d
   FLAGS = -g -fPIE -std=gnu++17
-  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
+  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
   OBJECT_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
   OBJECT_FILE_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
 
 build IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/InertialFramesTestscpp.cpp.o: CXX_COMPILER__IO.2eSDK.2eTests_Debug ../IO.SDK.Tests/InertialFramesTestscpp.cpp || cmake_object_order_depends_target_IO.SDK.Tests
   DEP_FILE = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/InertialFramesTestscpp.cpp.o.d
   FLAGS = -g -fPIE -std=gnu++17
-  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
+  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
   OBJECT_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
   OBJECT_FILE_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
 
 build IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/InstrumentTests.cpp.o: CXX_COMPILER__IO.2eSDK.2eTests_Debug ../IO.SDK.Tests/InstrumentTests.cpp || cmake_object_order_depends_target_IO.SDK.Tests
   DEP_FILE = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/InstrumentTests.cpp.o.d
   FLAGS = -g -fPIE -std=gnu++17
-  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
+  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
   OBJECT_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
   OBJECT_FILE_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
 
 build IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/LatitudinalTests.cpp.o: CXX_COMPILER__IO.2eSDK.2eTests_Debug ../IO.SDK.Tests/LatitudinalTests.cpp || cmake_object_order_depends_target_IO.SDK.Tests
   DEP_FILE = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/LatitudinalTests.cpp.o.d
   FLAGS = -g -fPIE -std=gnu++17
-  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
+  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
   OBJECT_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
   OBJECT_FILE_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
 
 build IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/LaunchSiteTests.cpp.o: CXX_COMPILER__IO.2eSDK.2eTests_Debug ../IO.SDK.Tests/LaunchSiteTests.cpp || cmake_object_order_depends_target_IO.SDK.Tests
   DEP_FILE = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/LaunchSiteTests.cpp.o.d
   FLAGS = -g -fPIE -std=gnu++17
-  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
+  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
   OBJECT_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
   OBJECT_FILE_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
 
 build IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/LaunchTests.cpp.o: CXX_COMPILER__IO.2eSDK.2eTests_Debug ../IO.SDK.Tests/LaunchTests.cpp || cmake_object_order_depends_target_IO.SDK.Tests
   DEP_FILE = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/LaunchTests.cpp.o.d
   FLAGS = -g -fPIE -std=gnu++17
-  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
+  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
   OBJECT_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
   OBJECT_FILE_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
 
 build IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/LaunchWindowTests.cpp.o: CXX_COMPILER__IO.2eSDK.2eTests_Debug ../IO.SDK.Tests/LaunchWindowTests.cpp || cmake_object_order_depends_target_IO.SDK.Tests
   DEP_FILE = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/LaunchWindowTests.cpp.o.d
   FLAGS = -g -fPIE -std=gnu++17
-  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
+  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
   OBJECT_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
   OBJECT_FILE_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
 
 build IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/Main.cpp.o: CXX_COMPILER__IO.2eSDK.2eTests_Debug ../IO.SDK.Tests/Main.cpp || cmake_object_order_depends_target_IO.SDK.Tests
   DEP_FILE = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/Main.cpp.o.d
   FLAGS = -g -fPIE -std=gnu++17
-  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
+  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
   OBJECT_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
   OBJECT_FILE_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
 
 build IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/ManeuverTests.cpp.o: CXX_COMPILER__IO.2eSDK.2eTests_Debug ../IO.SDK.Tests/ManeuverTests.cpp || cmake_object_order_depends_target_IO.SDK.Tests
   DEP_FILE = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/ManeuverTests.cpp.o.d
   FLAGS = -g -fPIE -std=gnu++17
-  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
+  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
   OBJECT_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
   OBJECT_FILE_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
 
 build IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/MatrixTests.cpp.o: CXX_COMPILER__IO.2eSDK.2eTests_Debug ../IO.SDK.Tests/MatrixTests.cpp || cmake_object_order_depends_target_IO.SDK.Tests
   DEP_FILE = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/MatrixTests.cpp.o.d
   FLAGS = -g -fPIE -std=gnu++17
-  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
+  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
   OBJECT_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
   OBJECT_FILE_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
 
 build IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/OrientationKernelTests.cpp.o: CXX_COMPILER__IO.2eSDK.2eTests_Debug ../IO.SDK.Tests/OrientationKernelTests.cpp || cmake_object_order_depends_target_IO.SDK.Tests
   DEP_FILE = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/OrientationKernelTests.cpp.o.d
   FLAGS = -g -fPIE -std=gnu++17
-  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
+  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
   OBJECT_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
   OBJECT_FILE_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
 
 build IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/PayloadTests.cpp.o: CXX_COMPILER__IO.2eSDK.2eTests_Debug ../IO.SDK.Tests/PayloadTests.cpp || cmake_object_order_depends_target_IO.SDK.Tests
   DEP_FILE = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/PayloadTests.cpp.o.d
   FLAGS = -g -fPIE -std=gnu++17
-  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
+  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
   OBJECT_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
   OBJECT_FILE_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
 
 build IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/PerigeeHeightChangingManeuverTests.cpp.o: CXX_COMPILER__IO.2eSDK.2eTests_Debug ../IO.SDK.Tests/PerigeeHeightChangingManeuverTests.cpp || cmake_object_order_depends_target_IO.SDK.Tests
   DEP_FILE = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/PerigeeHeightChangingManeuverTests.cpp.o.d
   FLAGS = -g -fPIE -std=gnu++17
-  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
+  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
   OBJECT_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
   OBJECT_FILE_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
 
 build IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/PhasingDuration.cpp.o: CXX_COMPILER__IO.2eSDK.2eTests_Debug ../IO.SDK.Tests/PhasingDuration.cpp || cmake_object_order_depends_target_IO.SDK.Tests
   DEP_FILE = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/PhasingDuration.cpp.o.d
   FLAGS = -g -fPIE -std=gnu++17
-  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
+  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
   OBJECT_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
   OBJECT_FILE_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
 
 build IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/PlanetographicTests.cpp.o: CXX_COMPILER__IO.2eSDK.2eTests_Debug ../IO.SDK.Tests/PlanetographicTests.cpp || cmake_object_order_depends_target_IO.SDK.Tests
   DEP_FILE = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/PlanetographicTests.cpp.o.d
   FLAGS = -g -fPIE -std=gnu++17
-  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
+  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
   OBJECT_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
   OBJECT_FILE_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
 
 build IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/PropagatorTests.cpp.o: CXX_COMPILER__IO.2eSDK.2eTests_Debug ../IO.SDK.Tests/PropagatorTests.cpp || cmake_object_order_depends_target_IO.SDK.Tests
   DEP_FILE = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/PropagatorTests.cpp.o.d
   FLAGS = -g -fPIE -std=gnu++17
-  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
+  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
   OBJECT_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
   OBJECT_FILE_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
 
 build IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/QuaternionTests.cpp.o: CXX_COMPILER__IO.2eSDK.2eTests_Debug ../IO.SDK.Tests/QuaternionTests.cpp || cmake_object_order_depends_target_IO.SDK.Tests
   DEP_FILE = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/QuaternionTests.cpp.o.d
   FLAGS = -g -fPIE -std=gnu++17
-  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
+  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
   OBJECT_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
   OBJECT_FILE_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
 
 build IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/RADecTests.cpp.o: CXX_COMPILER__IO.2eSDK.2eTests_Debug ../IO.SDK.Tests/RADecTests.cpp || cmake_object_order_depends_target_IO.SDK.Tests
   DEP_FILE = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/RADecTests.cpp.o.d
   FLAGS = -g -fPIE -std=gnu++17
-  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
+  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
   OBJECT_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
   OBJECT_FILE_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
 
 build IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/RectangularTests.cpp.o: CXX_COMPILER__IO.2eSDK.2eTests_Debug ../IO.SDK.Tests/RectangularTests.cpp || cmake_object_order_depends_target_IO.SDK.Tests
   DEP_FILE = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/RectangularTests.cpp.o.d
   FLAGS = -g -fPIE -std=gnu++17
-  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
+  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
   OBJECT_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
   OBJECT_FILE_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
 
 build IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/RotationTests.cpp.o: CXX_COMPILER__IO.2eSDK.2eTests_Debug ../IO.SDK.Tests/RotationTests.cpp || cmake_object_order_depends_target_IO.SDK.Tests
   DEP_FILE = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/RotationTests.cpp.o.d
   FLAGS = -g -fPIE -std=gnu++17
-  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
+  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
   OBJECT_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
   OBJECT_FILE_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
 
 build IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/SiteFrameTests.cpp.o: CXX_COMPILER__IO.2eSDK.2eTests_Debug ../IO.SDK.Tests/SiteFrameTests.cpp || cmake_object_order_depends_target_IO.SDK.Tests
   DEP_FILE = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/SiteFrameTests.cpp.o.d
   FLAGS = -g -fPIE -std=gnu++17
-  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
+  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
   OBJECT_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
   OBJECT_FILE_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
 
 build IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/SiteTests.cpp.o: CXX_COMPILER__IO.2eSDK.2eTests_Debug ../IO.SDK.Tests/SiteTests.cpp || cmake_object_order_depends_target_IO.SDK.Tests
   DEP_FILE = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/SiteTests.cpp.o.d
   FLAGS = -g -fPIE -std=gnu++17
-  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
+  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
   OBJECT_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
   OBJECT_FILE_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
 
 build IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/SpacecraftClockKernelTests.cpp.o: CXX_COMPILER__IO.2eSDK.2eTests_Debug ../IO.SDK.Tests/SpacecraftClockKernelTests.cpp || cmake_object_order_depends_target_IO.SDK.Tests
   DEP_FILE = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/SpacecraftClockKernelTests.cpp.o.d
   FLAGS = -g -fPIE -std=gnu++17
-  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
+  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
   OBJECT_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
   OBJECT_FILE_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
 
 build IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/SpacecraftFrameTests.cpp.o: CXX_COMPILER__IO.2eSDK.2eTests_Debug ../IO.SDK.Tests/SpacecraftFrameTests.cpp || cmake_object_order_depends_target_IO.SDK.Tests
   DEP_FILE = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/SpacecraftFrameTests.cpp.o.d
   FLAGS = -g -fPIE -std=gnu++17
-  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
+  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
   OBJECT_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
   OBJECT_FILE_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
 
 build IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/SpacecraftTests.cpp.o: CXX_COMPILER__IO.2eSDK.2eTests_Debug ../IO.SDK.Tests/SpacecraftTests.cpp || cmake_object_order_depends_target_IO.SDK.Tests
   DEP_FILE = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/SpacecraftTests.cpp.o.d
   FLAGS = -g -fPIE -std=gnu++17
-  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
+  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
   OBJECT_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
   OBJECT_FILE_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
 
 build IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/SphericalTests.cpp.o: CXX_COMPILER__IO.2eSDK.2eTests_Debug ../IO.SDK.Tests/SphericalTests.cpp || cmake_object_order_depends_target_IO.SDK.Tests
   DEP_FILE = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/SphericalTests.cpp.o.d
   FLAGS = -g -fPIE -std=gnu++17
-  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
+  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
   OBJECT_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
   OBJECT_FILE_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
 
 build IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/StateVectorTests.cpp.o: CXX_COMPILER__IO.2eSDK.2eTests_Debug ../IO.SDK.Tests/StateVectorTests.cpp || cmake_object_order_depends_target_IO.SDK.Tests
   DEP_FILE = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/StateVectorTests.cpp.o.d
   FLAGS = -g -fPIE -std=gnu++17
-  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
+  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
   OBJECT_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
   OBJECT_FILE_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
 
 build IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/SurfaceCoordinatesTests.cpp.o: CXX_COMPILER__IO.2eSDK.2eTests_Debug ../IO.SDK.Tests/SurfaceCoordinatesTests.cpp || cmake_object_order_depends_target_IO.SDK.Tests
   DEP_FILE = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/SurfaceCoordinatesTests.cpp.o.d
   FLAGS = -g -fPIE -std=gnu++17
-  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
+  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
   OBJECT_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
   OBJECT_FILE_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
 
 build IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/SurfaceInterceptPointTests.cpp.o: CXX_COMPILER__IO.2eSDK.2eTests_Debug ../IO.SDK.Tests/SurfaceInterceptPointTests.cpp || cmake_object_order_depends_target_IO.SDK.Tests
   DEP_FILE = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/SurfaceInterceptPointTests.cpp.o.d
   FLAGS = -g -fPIE -std=gnu++17
-  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
+  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
   OBJECT_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
   OBJECT_FILE_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
 
 build IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/TDBTests.cpp.o: CXX_COMPILER__IO.2eSDK.2eTests_Debug ../IO.SDK.Tests/TDBTests.cpp || cmake_object_order_depends_target_IO.SDK.Tests
   DEP_FILE = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/TDBTests.cpp.o.d
   FLAGS = -g -fPIE -std=gnu++17
-  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
+  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
   OBJECT_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
   OBJECT_FILE_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
 
 build IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/TLEIntegratorTests.cpp.o: CXX_COMPILER__IO.2eSDK.2eTests_Debug ../IO.SDK.Tests/TLEIntegratorTests.cpp || cmake_object_order_depends_target_IO.SDK.Tests
   DEP_FILE = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/TLEIntegratorTests.cpp.o.d
   FLAGS = -g -fPIE -std=gnu++17
-  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
+  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
   OBJECT_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
   OBJECT_FILE_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
 
 build IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/TLETests.cpp.o: CXX_COMPILER__IO.2eSDK.2eTests_Debug ../IO.SDK.Tests/TLETests.cpp || cmake_object_order_depends_target_IO.SDK.Tests
   DEP_FILE = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/TLETests.cpp.o.d
   FLAGS = -g -fPIE -std=gnu++17
-  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
+  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
   OBJECT_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
   OBJECT_FILE_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
 
 build IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/TimeSpanTests.cpp.o: CXX_COMPILER__IO.2eSDK.2eTests_Debug ../IO.SDK.Tests/TimeSpanTests.cpp || cmake_object_order_depends_target_IO.SDK.Tests
   DEP_FILE = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/TimeSpanTests.cpp.o.d
   FLAGS = -g -fPIE -std=gnu++17
-  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
+  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
   OBJECT_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
   OBJECT_FILE_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
 
 build IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/UTCTests.cpp.o: CXX_COMPILER__IO.2eSDK.2eTests_Debug ../IO.SDK.Tests/UTCTests.cpp || cmake_object_order_depends_target_IO.SDK.Tests
   DEP_FILE = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/UTCTests.cpp.o.d
   FLAGS = -g -fPIE -std=gnu++17
-  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
+  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
   OBJECT_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
   OBJECT_FILE_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
 
 build IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/VVIntegratorTests.cpp.o: CXX_COMPILER__IO.2eSDK.2eTests_Debug ../IO.SDK.Tests/VVIntegratorTests.cpp || cmake_object_order_depends_target_IO.SDK.Tests
   DEP_FILE = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/VVIntegratorTests.cpp.o.d
   FLAGS = -g -fPIE -std=gnu++17
-  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
+  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
   OBJECT_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
   OBJECT_FILE_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
 
 build IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/VectorTests.cpp.o: CXX_COMPILER__IO.2eSDK.2eTests_Debug ../IO.SDK.Tests/VectorTests.cpp || cmake_object_order_depends_target_IO.SDK.Tests
   DEP_FILE = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/VectorTests.cpp.o.d
   FLAGS = -g -fPIE -std=gnu++17
-  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
+  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
   OBJECT_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
   OBJECT_FILE_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
 
 build IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/WindowTests.cpp.o: CXX_COMPILER__IO.2eSDK.2eTests_Debug ../IO.SDK.Tests/WindowTests.cpp || cmake_object_order_depends_target_IO.SDK.Tests
   DEP_FILE = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir/WindowTests.cpp.o.d
   FLAGS = -g -fPIE -std=gnu++17
-  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
+  INCLUDES = -I../IO.SDK.Tests -I../IO.SDK -I../IO.SDK/Body -I../IO.SDK/Body/Spacecraft -I../IO.SDK/Coordinates -I../IO.SDK/Exceptions -I../IO.SDK/Frames -I../IO.SDK/Illumination -I../IO.SDK/Instruments -I../IO.SDK/Integrators/Forces -I../IO.SDK/Integrators -I../IO.SDK/Kernels -I../IO.SDK/Maneuvers -I../IO.SDK/Maneuvers/Attitudes -I../IO.SDK/Math -I../IO.SDK/OrbitalParameters -I../IO.SDK/Parameters -I../IO.SDK/Propagators -I../IO.SDK/Sites -I../IO.SDK/Spice -I../IO.SDK/Time -I../external-lib/includeLinux -isystem _deps/googletest-src/googletest/include -isystem _deps/googletest-src/googletest
   OBJECT_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
   OBJECT_FILE_DIR = IO.SDK.Tests/CMakeFiles/IO.SDK.Tests.dir
 

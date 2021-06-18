@@ -111,6 +111,10 @@
 				},
 				{
 					"backtrace" : 2,
+					"path" : "/home/sylvain/Sources/IO/SDK/IO.SDK/Maneuvers/Attitudes"
+				},
+				{
+					"backtrace" : 2,
 					"path" : "/home/sylvain/Sources/IO/SDK/IO.SDK/Math"
 				},
 				{
