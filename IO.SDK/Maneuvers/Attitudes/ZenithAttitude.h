@@ -11,6 +11,8 @@
 #ifndef ZENITH_ATTITUDE_H
 #define ZENITH_ATTITUDE_H
 
+#include<ManeuverBase.h>
+
 namespace IO::SDK::Maneuvers::Attitudes
 {
     class ZenithAttitude
