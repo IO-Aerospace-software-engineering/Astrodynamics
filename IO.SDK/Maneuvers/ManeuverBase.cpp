@@ -74,6 +74,10 @@ IO::SDK::Maneuvers::ManeuverResult IO::SDK::Maneuvers::ManeuverBase::TryExecute(
             //Maneuver is complete, next maneuver will be handled by propagator and can't be executed before end of this maneuver
             m_nextManeuver->Handle(m_window->GetEndDate());
         }
+        else
+        {
+            m_propagator.SetStandbyManeuver(nullptr);
+        }
 
         result.SetValid("Maneuver successfully executed");
     }
@@ -147,12 +151,15 @@ void IO::SDK::Maneuvers::ManeuverBase::ExecuteAt(const IO::SDK::OrbitalParameter
     //Add deltaV vector to maneuver point
     IO::SDK::OrbitalParameters::StateVector newManeuverState(maneuverPoint.GetCenterOfMotion(), maneuverPoint.GetStateVector().GetPosition(), maneuverPoint.GetStateVector().GetVelocity() + *m_deltaV, maneuverPoint.GetEpoch(), maneuverPoint.GetFrame());
 
-    //Propagate from new maneuver point up to end maneuver epoch
-    auto endState = newManeuverState.GetStateVector(m_window->GetEndDate());
+    if (m_window->GetLength().GetSeconds().count() > 0.0)
+    {
+        //Propagate from new maneuver point up to end maneuver epoch
+        auto endState = newManeuverState.GetStateVector(m_window->GetEndDate());
 
-    //Compute oriention at end
-    auto orientationEnd = ComputeOrientation(endState);
-    stateOrientations.push_back(orientationEnd);
+        //Compute oriention at end
+        auto orientationEnd = ComputeOrientation(endState);
+        stateOrientations.push_back(orientationEnd);
+    }
 
     //Write orientation
     m_propagator.AddStateOrientation(stateOrientations);
@@ -163,7 +170,12 @@ void IO::SDK::Maneuvers::ManeuverBase::ExecuteAt(const IO::SDK::OrbitalParameter
 
     //Write vector states at maneuver begin and end;
     m_propagator.AddStateVector(beginState);
-    m_propagator.AddStateVector(endState);
+
+    if (m_window->GetLength().GetSeconds().count() > 0.0)
+    {
+        auto endState = newManeuverState.GetStateVector(m_window->GetEndDate());
+        m_propagator.AddStateVector(endState);
+    }
 }
 
 bool IO::SDK::Maneuvers::ManeuverBase::IsValid()
