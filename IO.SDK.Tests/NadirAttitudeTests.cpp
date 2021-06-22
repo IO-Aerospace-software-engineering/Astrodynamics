@@ -35,31 +35,16 @@ TEST(NadirAttitude, GetOrientation)
     std::vector<IO::SDK::Body::Spacecraft::Engine> engines;
     engines.push_back(*engine1);
 
-    // //Add fictive data because it executed outside propagator
-    // prop.AddStateVector(IO::SDK::OrbitalParameters::StateVector(earth, IO::SDK::Math::Vector3D(1.0, 2.0, 3.0), IO::SDK::Math::Vector3D(4.0, 5.0, 6.0), IO::SDK::Time::TDB(80.0s), IO::SDK::Frames::InertialFrames::ICRF));
-    
-   
-    // auto e0 = IO::SDK::Time::TDB("2000-01-01T12:00:00");
+    IO::SDK::Maneuvers::Attitudes::NadirAttitude nadir(engines, prop);
+    prop.SetStandbyManeuver(&nadir);
 
-    // for (size_t i = 0; i < 9; i++)
-    // {
-    //     e = e + IO::SDK::Time::TimeSpan(10s);
-    //     auto q = IO::SDK::Math::Quaternion(a, i * 10 * IO::SDK::Constants::DEG_RAD);
-    //     IO::SDK::OrbitalParameters::StateOrientation s(q, v, e, IO::SDK::Frames::InertialFrames::ICRF);
-    //     interval.push_back(s);
-    // }
-
-    // data.push_back(interval);
-
-    // s.WriteOrientations(data);
-
-     IO::SDK::Maneuvers::Attitudes::NadirAttitude nadir(engines, prop);
-     prop.SetStandbyManeuver(&nadir);
-
-     prop.Propagate();
+    prop.Propagate();
 
     //auto res = nadir.TryExecute(s.GetOrbitalParametersAtEpoch()->GetStateVector(IO::SDK::Time::TDB(100.1s)));
-    auto orientation = s.GetOrientation(IO::SDK::Time::TDB("2021-01-01T13:00:05"), IO::SDK::Time::TimeSpan(10s), IO::SDK::Frames::InertialFrames::ICRF);
+    auto orientation = s.GetOrientation(IO::SDK::Time::TDB("2021-01-01T13:00:10"), IO::SDK::Time::TimeSpan(10s), IO::SDK::Frames::InertialFrames::ICRF);
 
     ASSERT_DOUBLE_EQ(0.0, nadir.GetDeltaV().Magnitude());
+    ASSERT_EQ(IO::SDK::Frames::InertialFrames::ICRF, orientation.GetFrame());
+    auto newVector = s.Front.Rotate(orientation.GetQuaternion());
+    ASSERT_EQ(IO::SDK::Math::Vector3D(-1.0, 0.0, 0.0), newVector);
 }

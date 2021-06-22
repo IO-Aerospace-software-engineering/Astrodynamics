@@ -31,7 +31,7 @@ void IO::SDK::Propagators::Propagator::Propagate()
     IO::SDK::OrbitalParameters::StateVector stateVector{m_spacecraft.GetOrbitalParametersAtEpoch()->GetStateVector(m_window.GetStartDate())};
     m_stateVectors.push_back(stateVector);
 
-    //Initial alignment, spacecraft back points toward the earth
+    // Initial alignment, spacecraft back points toward the earth
     IO::SDK::OrbitalParameters::StateOrientation attitude(m_spacecraft.Front.To(stateVector.GetPosition().Normalize()), IO::SDK::Math::Vector3D(0.0, 0.0, 0.0), stateVector.GetEpoch(), stateVector.GetFrame());
     m_StateOrientations.push_back(std::vector<IO::SDK::OrbitalParameters::StateOrientation>{attitude});
 
@@ -64,7 +64,7 @@ void IO::SDK::Propagators::Propagator::Propagate()
     //Set new latestOrientation 0.1s before
     IO::SDK::OrbitalParameters::StateOrientation orientationAtBegin(latestManeuverOrientationAtBegining.GetQuaternion(), latestManeuverOrientationAtBegining.GetAngularVelocity(), m_window.GetEndDate().Add(IO::SDK::Time::TimeSpan(-0.1s)), latestManeuverOrientationAtBegining.GetFrame());
 
-    IO::SDK::OrbitalParameters::StateOrientation orientationAtEnd(latestManeuverOrientationAtEnd.GetQuaternion(), latestManeuverOrientationAtEnd.GetAngularVelocity(),  m_window.GetEndDate(), latestManeuverOrientationAtEnd.GetFrame());
+    IO::SDK::OrbitalParameters::StateOrientation orientationAtEnd(latestManeuverOrientationAtEnd.GetQuaternion(), latestManeuverOrientationAtEnd.GetAngularVelocity(), m_window.GetEndDate(), latestManeuverOrientationAtEnd.GetFrame());
 
     m_StateOrientations.push_back(std::vector<IO::SDK::OrbitalParameters::StateOrientation>{orientationAtBegin, orientationAtEnd});
 
@@ -92,14 +92,23 @@ const IO::SDK::OrbitalParameters::StateVector *IO::SDK::Propagators::Propagator:
     return &(*it);
 }
 
-void IO::SDK::Propagators::Propagator::AddStateVector(const IO::SDK::OrbitalParameters::StateVector &vs)
+void IO::SDK::Propagators::Propagator::AddStateVector(const IO::SDK::OrbitalParameters::StateVector &sv)
 {
-    m_stateVectors.push_back(vs);
+    //Check if state vector to add is after previous state vector
+    if (m_stateVectors.empty() || m_stateVectors.back().GetEpoch() < sv.GetEpoch())
+    {
+        m_stateVectors.push_back(sv);
+    }
 }
 
 void IO::SDK::Propagators::Propagator::AddStateOrientation(const std::vector<IO::SDK::OrbitalParameters::StateOrientation> &so)
 {
-    m_StateOrientations.push_back(so);
+    if (!m_StateOrientations.empty() && m_StateOrientations.back().back().GetEpoch() >= so.front().GetEpoch())
+    {
+       m_StateOrientations.erase(--m_StateOrientations.end());
+    }
+
+     m_StateOrientations.push_back(so);
 }
 
 void IO::SDK::Propagators::Propagator::EraseDataFromEpochToEnd(const IO::SDK::Time::DateTime &epoch)
