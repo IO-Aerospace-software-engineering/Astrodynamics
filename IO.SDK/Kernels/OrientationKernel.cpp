@@ -66,9 +66,9 @@ void IO::SDK::Kernels::OrientationKernel::WriteOrientations(const std::vector<st
 
 	for (auto &interval : orientations)
 	{
-		if (interval.size() <= 0)
+		if (interval.empty())
 		{
-			throw IO::SDK::Exception::SDKException("Orientation array is empty");
+			throw IO::SDK::Exception::InvalidArgumentException("Orientation array is empty");
 		}
 
 		//Add interval start date
@@ -84,8 +84,8 @@ void IO::SDK::Kernels::OrientationKernel::WriteOrientations(const std::vector<st
 		n += intervalSize;
 		for (auto &orientation : interval)
 		{
-			//Add encoded clock
-			sclks.push_back(m_spacecraft.GetClock().ConvertToEncodedClock(orientation.GetEpoch()));
+			//Add encoded clock			
+			sclks.push_back(m_spacecraft.GetClock().ConvertToEncodedClock(orientation.GetEpoch()));			
 
 			//Add orientation data
 			data.push_back({orientation.GetQuaternion().GetQ0(), orientation.GetQuaternion().GetQ1(), orientation.GetQuaternion().GetQ2(), orientation.GetQuaternion().GetQ3(), orientation.GetAngularVelocity().GetX(), orientation.GetAngularVelocity().GetY(), orientation.GetAngularVelocity().GetZ()});
@@ -128,7 +128,7 @@ IO::SDK::OrbitalParameters::StateOrientation IO::SDK::Kernels::OrientationKernel
 	//Get orientation and angular velocity
 	ckgpav_c(id, sclk, tol, frame.ToCharArray(), cmat, av, &clkout, &found);
 
-	if(!found)
+	if (!found)
 	{
 		throw IO::SDK::Exception::SDKException("No orientation found");
 	}
@@ -167,7 +167,7 @@ IO::SDK::OrbitalParameters::StateOrientation IO::SDK::Kernels::OrientationKernel
 IO::SDK::Time::Window<IO::SDK::Time::TDB> IO::SDK::Kernels::OrientationKernel::GetCoverageWindow() const
 {
 	SpiceDouble SPICE_CELL_CKCOV[SPICE_CELL_CTRLSZ + 2];
-	SpiceCell cnfine =IO::SDK::Spice::Builder::CreateDoubleCell(2,SPICE_CELL_CKCOV);
+	SpiceCell cnfine = IO::SDK::Spice::Builder::CreateDoubleCell(2, SPICE_CELL_CKCOV);
 
 	ckcov_c(m_filePath.c_str(), m_spacecraft.GetId() * 1000, false, "SEGMENT", 0.0, "TDB", &cnfine);
 	double start;

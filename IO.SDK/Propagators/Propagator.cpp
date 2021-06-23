@@ -53,22 +53,19 @@ void IO::SDK::Propagators::Propagator::Propagate()
         m_stateVectors.push_back(stateVector);
     }
 
-    //Write ephemeris
+    //Write state vector data
     m_spacecraft.WriteEphemeris(m_stateVectors, IO::SDK::Frames::InertialFrames::ICRF);
 
     //Write orientations
-    //Set the latest known orientation
-    auto latestManeuverOrientationAtBegining = m_StateOrientations.back().front();
-    auto latestManeuverOrientationAtEnd = m_StateOrientations.back().back();
+    //Set the latest known orientation if only 1 orientation state (Otherwise Lagrance interpolation will not work at read)
+    if (m_StateOrientations.size() == 1)
+    {
+        auto latestManeuverOrientationAtEnd = m_StateOrientations.back().back();
+        IO::SDK::OrbitalParameters::StateOrientation orientationAtEnd(latestManeuverOrientationAtEnd.GetQuaternion(), latestManeuverOrientationAtEnd.GetAngularVelocity(), m_window.GetEndDate(), latestManeuverOrientationAtEnd.GetFrame());
+        m_StateOrientations.push_back(std::vector<IO::SDK::OrbitalParameters::StateOrientation>{orientationAtEnd});
+    }
 
-    //Set new latestOrientation 0.1s before
-    IO::SDK::OrbitalParameters::StateOrientation orientationAtBegin(latestManeuverOrientationAtBegining.GetQuaternion(), latestManeuverOrientationAtBegining.GetAngularVelocity(), m_window.GetEndDate().Add(IO::SDK::Time::TimeSpan(-0.1s)), latestManeuverOrientationAtBegining.GetFrame());
-
-    IO::SDK::OrbitalParameters::StateOrientation orientationAtEnd(latestManeuverOrientationAtEnd.GetQuaternion(), latestManeuverOrientationAtEnd.GetAngularVelocity(), m_window.GetEndDate(), latestManeuverOrientationAtEnd.GetFrame());
-
-    m_StateOrientations.push_back(std::vector<IO::SDK::OrbitalParameters::StateOrientation>{orientationAtBegin, orientationAtEnd});
-
-    //Wriet orientation data
+    //Write orientation data
     m_spacecraft.WriteOrientations(m_StateOrientations);
 }
 
@@ -105,10 +102,10 @@ void IO::SDK::Propagators::Propagator::AddStateOrientation(const std::vector<IO:
 {
     if (!m_StateOrientations.empty() && m_StateOrientations.back().back().GetEpoch() >= so.front().GetEpoch())
     {
-       m_StateOrientations.erase(--m_StateOrientations.end());
+        m_StateOrientations.erase(--m_StateOrientations.end());
     }
 
-     m_StateOrientations.push_back(so);
+    m_StateOrientations.push_back(so);
 }
 
 void IO::SDK::Propagators::Propagator::EraseDataFromEpochToEnd(const IO::SDK::Time::DateTime &epoch)

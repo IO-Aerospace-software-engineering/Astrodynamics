@@ -154,9 +154,12 @@ void IO::SDK::Maneuvers::ManeuverBase::ExecuteAt(const IO::SDK::OrbitalParameter
     //Propagate from new maneuver point up to end maneuver epoch
     auto endState = newManeuverState.GetStateVector(m_window->GetEndDate());
 
-    //Compute oriention at end
-    auto orientationEnd = ComputeOrientation(endState);
-    stateOrientations.push_back(orientationEnd);
+    if (m_window->GetLength().GetSeconds().count() > 0.0)
+    {
+        // Compute oriention at end
+        auto orientationEnd = ComputeOrientation(endState);
+        stateOrientations.push_back(orientationEnd);
+    }
 
     //Write orientation
     m_propagator.AddStateOrientation(stateOrientations);
