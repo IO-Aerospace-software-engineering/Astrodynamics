@@ -1,0 +1,721 @@
+{
+	"artifacts" : 
+	[
+		{
+			"path" : "IO.SDK.Tests/IO.SDK.Tests"
+		}
+	],
+	"backtrace" : 1,
+	"backtraceGraph" : 
+	{
+		"commands" : 
+		[
+			"add_executable",
+			"target_link_libraries",
+			"target_include_directories"
+		],
+		"files" : 
+		[
+			"IO.SDK.Tests/CMakeLists.txt"
+		],
+		"nodes" : 
+		[
+			{
+				"file" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 6,
+				"parent" : 0
+			},
+			{
+				"command" : 1,
+				"file" : 0,
+				"line" : 8,
+				"parent" : 0
+			},
+			{
+				"command" : 2,
+				"file" : 0,
+				"line" : 12,
+				"parent" : 0
+			}
+		]
+	},
+	"compileGroups" : 
+	[
+		{
+			"compileCommandFragments" : 
+			[
+				{
+					"fragment" : "-g -fPIE"
+				},
+				{
+					"fragment" : "-std=gnu++17"
+				}
+			],
+			"includes" : 
+			[
+				{
+					"backtrace" : 3,
+					"path" : "/home/sylvain/Sources/IO/SDK/IO.SDK.Tests"
+				},
+				{
+					"backtrace" : 2,
+					"path" : "/home/sylvain/Sources/IO/SDK/IO.SDK"
+				},
+				{
+					"backtrace" : 2,
+					"path" : "/home/sylvain/Sources/IO/SDK/IO.SDK/Body"
+				},
+				{
+					"backtrace" : 2,
+					"path" : "/home/sylvain/Sources/IO/SDK/IO.SDK/Body/Spacecraft"
+				},
+				{
+					"backtrace" : 2,
+					"path" : "/home/sylvain/Sources/IO/SDK/IO.SDK/Coordinates"
+				},
+				{
+					"backtrace" : 2,
+					"path" : "/home/sylvain/Sources/IO/SDK/IO.SDK/Exceptions"
+				},
+				{
+					"backtrace" : 2,
+					"path" : "/home/sylvain/Sources/IO/SDK/IO.SDK/Frames"
+				},
+				{
+					"backtrace" : 2,
+					"path" : "/home/sylvain/Sources/IO/SDK/IO.SDK/Illumination"
+				},
+				{
+					"backtrace" : 2,
+					"path" : "/home/sylvain/Sources/IO/SDK/IO.SDK/Instruments"
+				},
+				{
+					"backtrace" : 2,
+					"path" : "/home/sylvain/Sources/IO/SDK/IO.SDK/Integrators/Forces"
+				},
+				{
+					"backtrace" : 2,
+					"path" : "/home/sylvain/Sources/IO/SDK/IO.SDK/Integrators"
+				},
+				{
+					"backtrace" : 2,
+					"path" : "/home/sylvain/Sources/IO/SDK/IO.SDK/Kernels"
+				},
+				{
+					"backtrace" : 2,
+					"path" : "/home/sylvain/Sources/IO/SDK/IO.SDK/Maneuvers"
+				},
+				{
+					"backtrace" : 2,
+					"path" : "/home/sylvain/Sources/IO/SDK/IO.SDK/Maneuvers/Attitudes"
+				},
+				{
+					"backtrace" : 2,
+					"path" : "/home/sylvain/Sources/IO/SDK/IO.SDK/Math"
+				},
+				{
+					"backtrace" : 2,
+					"path" : "/home/sylvain/Sources/IO/SDK/IO.SDK/OrbitalParameters"
+				},
+				{
+					"backtrace" : 2,
+					"path" : "/home/sylvain/Sources/IO/SDK/IO.SDK/Parameters"
+				},
+				{
+					"backtrace" : 2,
+					"path" : "/home/sylvain/Sources/IO/SDK/IO.SDK/Propagators"
+				},
+				{
+					"backtrace" : 2,
+					"path" : "/home/sylvain/Sources/IO/SDK/IO.SDK/Sites"
+				},
+				{
+					"backtrace" : 2,
+					"path" : "/home/sylvain/Sources/IO/SDK/IO.SDK/Spice"
+				},
+				{
+					"backtrace" : 2,
+					"path" : "/home/sylvain/Sources/IO/SDK/IO.SDK/Time"
+				},
+				{
+					"backtrace" : 2,
+					"path" : "/home/sylvain/Sources/IO/SDK/external-lib/includeLinux"
+				},
+				{
+					"backtrace" : 2,
+					"isSystem" : true,
+					"path" : "/home/sylvain/Sources/IO/SDK/build/_deps/googletest-src/googletest/include"
+				},
+				{
+					"backtrace" : 2,
+					"isSystem" : true,
+					"path" : "/home/sylvain/Sources/IO/SDK/build/_deps/googletest-src/googletest"
+				}
+			],
+			"language" : "CXX",
+			"sourceIndexes" : 
+			[
+				0,
+				1,
+				2,
+				3,
+				4,
+				5,
+				6,
+				7,
+				8,
+				9,
+				10,
+				11,
+				12,
+				13,
+				14,
+				15,
+				16,
+				17,
+				18,
+				19,
+				20,
+				21,
+				22,
+				23,
+				24,
+				25,
+				26,
+				27,
+				28,
+				29,
+				30,
+				31,
+				32,
+				33,
+				34,
+				35,
+				36,
+				37,
+				38,
+				39,
+				40,
+				41,
+				42,
+				43,
+				44,
+				45,
+				46,
+				47,
+				48,
+				49,
+				50,
+				51,
+				52,
+				53,
+				54,
+				55,
+				56,
+				57,
+				58,
+				59
+			]
+		}
+	],
+	"dependencies" : 
+	[
+		{
+			"backtrace" : 2,
+			"id" : "gtest_main::@1ea2dfc0605fe3ab2a3f"
+		},
+		{
+			"backtrace" : 2,
+			"id" : "gtest::@1ea2dfc0605fe3ab2a3f"
+		},
+		{
+			"id" : "IO.SDK::@9b98061eb6da086a5c30"
+		}
+	],
+	"id" : "IO.SDK.Tests::@45d666cd8047a1ca5230",
+	"link" : 
+	{
+		"commandFragments" : 
+		[
+			{
+				"fragment" : "-g",
+				"role" : "flags"
+			},
+			{
+				"fragment" : "",
+				"role" : "flags"
+			},
+			{
+				"fragment" : "-Wl,-rpath,/home/sylvain/Sources/IO/SDK/build/IO.SDK",
+				"role" : "libraries"
+			},
+			{
+				"backtrace" : 2,
+				"fragment" : "../IO.SDK/libIO.SDK.so",
+				"role" : "libraries"
+			},
+			{
+				"backtrace" : 2,
+				"fragment" : "../lib/libgtest_maind.a",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "../../external-lib/cspice.a",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "../lib/libgtestd.a",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-lpthread",
+				"role" : "libraries"
+			}
+		],
+		"language" : "CXX"
+	},
+	"name" : "IO.SDK.Tests",
+	"nameOnDisk" : "IO.SDK.Tests",
+	"paths" : 
+	{
+		"build" : "IO.SDK.Tests",
+		"source" : "IO.SDK.Tests"
+	},
+	"sourceGroups" : 
+	[
+		{
+			"name" : "Source Files",
+			"sourceIndexes" : 
+			[
+				0,
+				1,
+				2,
+				3,
+				4,
+				5,
+				6,
+				7,
+				8,
+				9,
+				10,
+				11,
+				12,
+				13,
+				14,
+				15,
+				16,
+				17,
+				18,
+				19,
+				20,
+				21,
+				22,
+				23,
+				24,
+				25,
+				26,
+				27,
+				28,
+				29,
+				30,
+				31,
+				32,
+				33,
+				34,
+				35,
+				36,
+				37,
+				38,
+				39,
+				40,
+				41,
+				42,
+				43,
+				44,
+				45,
+				46,
+				47,
+				48,
+				49,
+				50,
+				51,
+				52,
+				53,
+				54,
+				55,
+				56,
+				57,
+				58,
+				59
+			]
+		}
+	],
+	"sources" : 
+	[
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "IO.SDK.Tests/AberrationTests.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "IO.SDK.Tests/ApogeeHeightChangingManeuverTests.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "IO.SDK.Tests/ApsidalAlignmentManeuverTests.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "IO.SDK.Tests/AzimuthRangeTests.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "IO.SDK.Tests/BodyTests.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "IO.SDK.Tests/CelestialBodyTests.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "IO.SDK.Tests/CentrifugalForceTests.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "IO.SDK.Tests/CombinedManeuverTests.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "IO.SDK.Tests/ConicOrbitalElementsTests.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "IO.SDK.Tests/CylindricalTests.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "IO.SDK.Tests/EngineTests.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "IO.SDK.Tests/EphemerisKernelTests.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "IO.SDK.Tests/EquinoctialElementsTests.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "IO.SDK.Tests/FuelTankTests.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "IO.SDK.Tests/GeodeticTests.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "IO.SDK.Tests/GravityForceTests.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "IO.SDK.Tests/HelpersTests.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "IO.SDK.Tests/HorizontalCoordinatesTests.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "IO.SDK.Tests/IlluminationTests.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "IO.SDK.Tests/InclinationManeuverTests.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "IO.SDK.Tests/InertialFramesTestscpp.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "IO.SDK.Tests/InstrumentTests.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "IO.SDK.Tests/LatitudinalTests.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "IO.SDK.Tests/LaunchSiteTests.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "IO.SDK.Tests/LaunchTests.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "IO.SDK.Tests/LaunchWindowTests.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "IO.SDK.Tests/Main.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "IO.SDK.Tests/ManeuverTests.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "IO.SDK.Tests/MatrixTests.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "IO.SDK.Tests/NadirAttitudeTests.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "IO.SDK.Tests/OrientationKernelTests.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "IO.SDK.Tests/PayloadTests.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "IO.SDK.Tests/PerigeeHeightChangingManeuverTests.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "IO.SDK.Tests/PhasingDuration.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "IO.SDK.Tests/PlanetographicTests.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "IO.SDK.Tests/ProgradeAttitudeTests.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "IO.SDK.Tests/PropagatorTests.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "IO.SDK.Tests/QuaternionTests.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "IO.SDK.Tests/RADecTests.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "IO.SDK.Tests/RectangularTests.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "IO.SDK.Tests/RetrogradeAttitudeTests.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "IO.SDK.Tests/RotationTests.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "IO.SDK.Tests/SiteFrameTests.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "IO.SDK.Tests/SiteTests.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "IO.SDK.Tests/SpacecraftClockKernelTests.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "IO.SDK.Tests/SpacecraftFrameTests.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "IO.SDK.Tests/SpacecraftTests.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "IO.SDK.Tests/SphericalTests.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "IO.SDK.Tests/StateVectorTests.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "IO.SDK.Tests/SurfaceCoordinatesTests.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "IO.SDK.Tests/SurfaceInterceptPointTests.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "IO.SDK.Tests/TDBTests.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "IO.SDK.Tests/TLEIntegratorTests.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "IO.SDK.Tests/TLETests.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "IO.SDK.Tests/TimeSpanTests.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "IO.SDK.Tests/UTCTests.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "IO.SDK.Tests/VVIntegratorTests.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "IO.SDK.Tests/VectorTests.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "IO.SDK.Tests/WindowTests.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "IO.SDK.Tests/ZenithAttitudeTests.cpp",
+			"sourceGroupIndex" : 0
+		}
+	],
+	"type" : "EXECUTABLE"
+}

@@ -72,7 +72,7 @@ void IO::SDK::Body::Spacecraft::Spacecraft::WriteEphemeris(const std::vector<Orb
 	return this->m_ephemerisKernel->WriteData(states, frame);
 }
 
-IO::SDK::OrbitalParameters::StateVector IO::SDK::Body::Spacecraft::Spacecraft::ReadEphemeris(const IO::SDK::Body::CelestialBody &observer, const IO::SDK::Frames::Frames &frame, const IO::SDK::AberrationsEnum aberration, const IO::SDK::Time::TDB &tdb) const
+IO::SDK::OrbitalParameters::StateVector IO::SDK::Body::Spacecraft::Spacecraft::ReadEphemeris( const IO::SDK::Frames::Frames &frame, const IO::SDK::AberrationsEnum aberration, const IO::SDK::Time::TDB &tdb,const IO::SDK::Body::CelestialBody &observer) const
 {
 	return this->m_ephemerisKernel->ReadStateVector(observer, frame, aberration, tdb);
 }

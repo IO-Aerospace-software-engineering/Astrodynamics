@@ -129,7 +129,7 @@ IO::SDK::OrbitalParameters::StateVector IO::SDK::OrbitalParameters::StateVector:
 	while (currentBody->GetOrbitalParametersAtEpoch())
 	{
 		//Compute vector state
-		auto sv = currentBody->ReadEphemeris(*currentBody->GetOrbitalParametersAtEpoch()->GetCenterOfMotion(), m_frame, AberrationsEnum::None, m_epoch);
+		auto sv = currentBody->ReadEphemeris(m_frame, AberrationsEnum::None, m_epoch,*currentBody->GetOrbitalParametersAtEpoch()->GetCenterOfMotion());
 		position = position + sv.GetPosition();
 		velocity = velocity + sv.GetVelocity();
 
