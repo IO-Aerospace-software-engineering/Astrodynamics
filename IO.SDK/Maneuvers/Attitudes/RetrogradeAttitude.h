@@ -11,14 +11,64 @@
 #ifndef RETROGRADE_ATTITUDE_H
 #define RETROGRADE_ATTITUDE_H
 
+#include <vector>
+#include <memory>
+
+#include <ManeuverBase.h>
+#include <OrbitalParameters.h>
+#include <Engine.h>
+#include <Propagator.h>
+#include <Vector3D.h>
+
 namespace IO::SDK::Maneuvers::Attitudes
 {
-    class RetrogradeAttitude
+    class RetrogradeAttitude : public IO::SDK::Maneuvers::ManeuverBase
     {
     private:
         /* data */
+
+    protected:
+        /**
+         * @brief Compute impulsive maneuver
+         * 
+         * @param maneuverPoint 
+         */
+        void Compute(const IO::SDK::OrbitalParameters::OrbitalParameters &maneuverPoint) override;
+
+        /**
+         * @brief Compute orientation
+         * 
+         * @param maneuverPoint 
+         * @return IO::SDK::OrbitalParameters::StateOrientation 
+         */
+        IO::SDK::OrbitalParameters::StateOrientation ComputeOrientation(const IO::SDK::OrbitalParameters::OrbitalParameters &maneuverPoint) override;
+
     public:
-        RetrogradeAttitude(/* args */);
+        /**
+         * @brief Construct a new Retrograde Attitude object
+         * 
+         * @param engines 
+         * @param propagator 
+         */
+        RetrogradeAttitude(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator);
+
+        /**
+         * @brief Construct a new Retrograde Attitude object
+         * 
+         * @param engines 
+         * @param propagator 
+         * @param minimumEpoch 
+         */
+        RetrogradeAttitude(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator, const IO::SDK::Time::TDB &minimumEpoch);
+
+        /**
+         * @brief Evaluate if maneuver can occurs
+         * 
+         * @param stateVector Evaluated to check if condition is satisfied
+         * @return true 
+         * @return false 
+         */
+        bool CanExecute(const IO::SDK::OrbitalParameters::OrbitalParameters &orbitalParams) override;
     };
 }
 

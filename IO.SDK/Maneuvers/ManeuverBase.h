@@ -136,7 +136,7 @@ namespace IO::SDK::Maneuvers
          * @param engines Used by maneuver
          * @param minimumEpoch No maneuver execution before this epoch
          */
-        ManeuverBase(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, const IO::SDK::Time::TDB &minimumEpoch, IO::SDK::Propagators::Propagator& propagator);
+        ManeuverBase(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator& propagator, const IO::SDK::Time::TDB &minimumEpoch);
         virtual ~ManeuverBase() = default;
 
         /**

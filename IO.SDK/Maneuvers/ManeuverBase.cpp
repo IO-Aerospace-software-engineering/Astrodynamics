@@ -18,7 +18,7 @@ IO::SDK::Maneuvers::ManeuverBase::ManeuverBase(const std::vector<IO::SDK::Body::
     }
 }
 
-IO::SDK::Maneuvers::ManeuverBase::ManeuverBase(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, const IO::SDK::Time::TDB &minimumEpoch, IO::SDK::Propagators::Propagator &propagator) : ManeuverBase(engines, propagator)
+IO::SDK::Maneuvers::ManeuverBase::ManeuverBase(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator, const IO::SDK::Time::TDB &minimumEpoch) : ManeuverBase(engines, propagator)
 {
     m_minimumEpoch = std::make_unique<IO::SDK::Time::TDB>(minimumEpoch);
 }

@@ -53,6 +53,15 @@ namespace IO::SDK::Maneuvers::Attitudes
         NadirAttitude(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator);
 
         /**
+         * @brief Construct a new Nadir Attitude object
+         * 
+         * @param engines 
+         * @param propagator 
+         * @param minimumEpoch Not executed before this date
+         */
+        NadirAttitude(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator, const IO::SDK::Time::TDB &minimumEpoch);
+
+        /**
          * @brief Evaluate if maneuver can occurs
          * 
          * @param stateVector Evaluated to check if condition is satisfied

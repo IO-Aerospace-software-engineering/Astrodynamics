@@ -43,15 +43,14 @@ namespace IO::SDK::Maneuvers
         bool IsApproachingIntersectPointP(const IO::SDK::OrbitalParameters::StateVector &stateVector) const;
         bool IsApproachingIntersectPointQ(const IO::SDK::OrbitalParameters::StateVector &stateVector) const;
 
-        std::map<std::string,double> GetCoefficients(const IO::SDK::OrbitalParameters::StateVector &stateVector) const;
+        std::map<std::string, double> GetCoefficients(const IO::SDK::OrbitalParameters::StateVector &stateVector) const;
 
-        double GetPTrueAnomaly(const IO::SDK::OrbitalParameters::StateVector& sv) const;
-        double GetQTrueAnomaly(const IO::SDK::OrbitalParameters::StateVector& sv) const;
+        double GetPTrueAnomaly(const IO::SDK::OrbitalParameters::StateVector &sv) const;
+        double GetQTrueAnomaly(const IO::SDK::OrbitalParameters::StateVector &sv) const;
 
-        double GetPTargetTrueAnomaly(const IO::SDK::OrbitalParameters::StateVector& sv) const;
-        double GetQTargetTrueAnomaly(const IO::SDK::OrbitalParameters::StateVector& sv) const;
-        IO::SDK::Math::Vector3D GetDeltaV(const IO::SDK::OrbitalParameters::StateVector& sv) const;
-
+        double GetPTargetTrueAnomaly(const IO::SDK::OrbitalParameters::StateVector &sv) const;
+        double GetQTargetTrueAnomaly(const IO::SDK::OrbitalParameters::StateVector &sv) const;
+        IO::SDK::Math::Vector3D GetDeltaV(const IO::SDK::OrbitalParameters::StateVector &sv) const;
 
     protected:
         /**
@@ -71,9 +70,9 @@ namespace IO::SDK::Maneuvers
 
     public:
         ApsidalAlignmentManeuver(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator, IO::SDK::OrbitalParameters::OrbitalParameters *targetOrbit);
-        ApsidalAlignmentManeuver(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, const IO::SDK::Time::TDB &minimumEpoch, IO::SDK::Propagators::Propagator &propagator, IO::SDK::OrbitalParameters::OrbitalParameters *targetOrbit);
+        ApsidalAlignmentManeuver(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator, IO::SDK::OrbitalParameters::OrbitalParameters *targetOrbit, const IO::SDK::Time::TDB &minimumEpoch );
 
-        virtual ~ApsidalAlignmentManeuver()=default;
+        virtual ~ApsidalAlignmentManeuver() = default;
 
         using IO::SDK::Maneuvers::ManeuverBase::GetDeltaV;
 
@@ -99,7 +98,7 @@ namespace IO::SDK::Maneuvers
          * @param stateVector 
          * @return double 
          */
-        double GetTheta(const IO::SDK::OrbitalParameters::StateVector& stateVector) const;
+        double GetTheta(const IO::SDK::OrbitalParameters::StateVector &stateVector) const;
     };
 }
 

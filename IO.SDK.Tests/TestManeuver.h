@@ -32,7 +32,7 @@ protected:
     /* data */
 public:
     TestManeuver(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator);
-    TestManeuver(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, const IO::SDK::Time::TDB &minimumEpoch, IO::SDK::Propagators::Propagator &propagator);
+    TestManeuver(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator, const IO::SDK::Time::TDB &minimumEpoch);
     ~TestManeuver();
     IO::SDK::Maneuvers::ManeuverResult TryExecute(const IO::SDK::OrbitalParameters::OrbitalParameters &maneuverPoint, double deltaV);
 };
@@ -41,7 +41,7 @@ TestManeuver::TestManeuver(const std::vector<IO::SDK::Body::Spacecraft::Engine> 
 {
 }
 
-TestManeuver::TestManeuver(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, const IO::SDK::Time::TDB &minimumEpoch, IO::SDK::Propagators::Propagator &propagator) : IO::SDK::Maneuvers::ManeuverBase(engines, minimumEpoch, propagator)
+TestManeuver::TestManeuver(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator, const IO::SDK::Time::TDB &minimumEpoch) : IO::SDK::Maneuvers::ManeuverBase(engines, propagator, minimumEpoch)
 {
 }
 
