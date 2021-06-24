@@ -2,10 +2,11 @@
 #include <cmath>
 #include <SDKException.h>
 #include <Quaternion.h>
+#include <Constants.h>
 
-const IO::SDK::Math::Vector3D IO::SDK::Math::Vector3D::VectorX{1.0,0.0,0.0};
-const IO::SDK::Math::Vector3D IO::SDK::Math::Vector3D::VectorY{0.0,1.0,0.0};
-const IO::SDK::Math::Vector3D IO::SDK::Math::Vector3D::VectorZ{0.0,0.0,1.0};
+const IO::SDK::Math::Vector3D IO::SDK::Math::Vector3D::VectorX{1.0, 0.0, 0.0};
+const IO::SDK::Math::Vector3D IO::SDK::Math::Vector3D::VectorY{0.0, 1.0, 0.0};
+const IO::SDK::Math::Vector3D IO::SDK::Math::Vector3D::VectorZ{0.0, 0.0, 1.0};
 
 double IO::SDK::Math::Vector3D::Magnitude() const
 {
@@ -91,10 +92,24 @@ IO::SDK::Math::Vector3D IO::SDK::Math::Vector3D::Rotate(const IO::SDK::Math::Qua
 
 IO::SDK::Math::Quaternion IO::SDK::Math::Vector3D::To(const Vector3D &vector) const
 {
+	auto dot = this->DotProduct(vector);
+
+	if (dot == -1.0)//Manage 180° case
+	{
+		float x = std::abs(vector.GetX());
+		float y = std::abs(vector.GetY());
+		float z = std::abs(vector.GetZ());
+
+		IO::SDK::Math::Vector3D axis = x < y ? (x < z ? IO::SDK::Math::Vector3D::VectorX : IO::SDK::Math::Vector3D::VectorZ) : (y < z ? IO::SDK::Math::Vector3D::VectorY : IO::SDK::Math::Vector3D::VectorZ);
+		auto v = vector.CrossProduct(axis);
+		return IO::SDK::Math::Quaternion(0.0, v.GetX(), v.GetY(), v.GetZ());
+	}
+
 	auto mag1 = this->Magnitude();
 	auto mag2 = vector.Magnitude();
 	auto v = this->CrossProduct(vector);
-	auto w = this->DotProduct(vector) + std::sqrt(mag1 * mag1 * mag2 * mag2);
+	auto w = dot + std::sqrt(mag1 * mag1 * mag2 * mag2);
+
 	return IO::SDK::Math::Quaternion(w, v.GetX(), v.GetY(), v.GetZ());
 }
 
