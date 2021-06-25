@@ -39,7 +39,7 @@ IO::SDK::OrbitalParameters::StateVector IO::SDK::Sites::Site::GetStateVector(con
 IO::SDK::Coordinates::RADec IO::SDK::Sites::Site::GetRADec(const IO::SDK::Body::Body &body, const IO::SDK::AberrationsEnum aberrationCorrection, const IO::SDK::Time::TDB &epoch) const
 {
     auto radius = m_body->GetRadius();
-    auto bodiesSv = body.ReadEphemeris(*m_body, IO::SDK::Frames::InertialFrames::ICRF, aberrationCorrection, epoch);
+    auto bodiesSv = body.ReadEphemeris(IO::SDK::Frames::InertialFrames::ICRF, aberrationCorrection, epoch, *m_body);
 
     auto siteVector = GetStateVector(IO::SDK::Frames::InertialFrames::ICRF, epoch);
 
@@ -158,7 +158,7 @@ IO::SDK::Coordinates::HorizontalCoordinates IO::SDK::Sites::Site::GetHorizontalC
 IO::SDK::OrbitalParameters::StateVector IO::SDK::Sites::Site::GetStateVector(const IO::SDK::Body::Body &body, const IO::SDK::Frames::Frames frame, const IO::SDK::AberrationsEnum aberrationCorrection, const IO::SDK::Time::TDB &epoch) const
 {
     auto radius = m_body->GetRadius();
-    auto bodiesSv = body.ReadEphemeris(*m_body, frame, aberrationCorrection, epoch);
+    auto bodiesSv = body.ReadEphemeris(frame, aberrationCorrection, epoch, *m_body);
 
     auto siteVector = GetStateVector(frame, epoch);
 

@@ -171,7 +171,7 @@ namespace IO::SDK::Body::Spacecraft
 		 * @param tdb 
 		 * @return IO::SDK::OrbitalParameters::StateVector 
 		 */
-		IO::SDK::OrbitalParameters::StateVector ReadEphemeris(const IO::SDK::Body::CelestialBody &observer, const IO::SDK::Frames::Frames &frame, const IO::SDK::AberrationsEnum aberration, const IO::SDK::Time::TDB &tdb) const override;
+		IO::SDK::OrbitalParameters::StateVector ReadEphemeris( const IO::SDK::Frames::Frames &frame, const IO::SDK::AberrationsEnum aberration, const IO::SDK::Time::TDB &tdb,const IO::SDK::Body::CelestialBody &observer) const override;
 
 		/**
 		 * @brief Get the Ephemeris Coverage Window object

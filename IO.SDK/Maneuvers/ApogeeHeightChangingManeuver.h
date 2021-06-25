@@ -19,7 +19,6 @@ namespace IO::SDK::Maneuvers
     private:
         const double m_targetHeight;
         std::unique_ptr<bool> m_isApproachingPerigee{nullptr};
-        
 
         bool IsApproachingPerigee(const IO::SDK::OrbitalParameters::StateVector &stateVector) const;
 
@@ -41,6 +40,7 @@ namespace IO::SDK::Maneuvers
         /* data */
     public:
         ApogeeHeightChangingManeuver(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator, const double targetHeight);
+        ApogeeHeightChangingManeuver(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator, const double targetHeight, const IO::SDK::Time::TDB &minimumEpoch);
         ~ApogeeHeightChangingManeuver() = default;
 
         /**
@@ -51,8 +51,6 @@ namespace IO::SDK::Maneuvers
          * @return false 
          */
         bool CanExecute(const IO::SDK::OrbitalParameters::OrbitalParameters &orbitalParams) override;
-
-        
     };
 }
 

@@ -100,8 +100,8 @@ TEST(ApsidalAlignmentManeuver, ExecuteP)
     ASSERT_DOUBLE_EQ(561.37992422677098, maneuver.GetDeltaV().GetY());
     ASSERT_DOUBLE_EQ(0.0, maneuver.GetDeltaV().GetZ());
 
-    ASSERT_DOUBLE_EQ(6990.2572903422742, maneuver.GetWindow()->GetStartDate().GetSecondsFromJ2000().count());
-    ASSERT_DOUBLE_EQ(7000.94482521596, maneuver.GetWindow()->GetEndDate().GetSecondsFromJ2000().count());
+    ASSERT_DOUBLE_EQ(6990.2572903422742, maneuver.GetThrustWindow()->GetStartDate().GetSecondsFromJ2000().count());
+    ASSERT_DOUBLE_EQ(7000.94482521596, maneuver.GetThrustWindow()->GetEndDate().GetSecondsFromJ2000().count());
     ASSERT_DOUBLE_EQ(10.68753487368553, maneuver.GetThrustDuration().GetSeconds().count());
     ASSERT_DOUBLE_EQ(534.37674368427656, maneuver.GetFuelBurned());
 }
@@ -148,8 +148,8 @@ TEST(ApsidalAlignmentManeuver, ExecuteQ)
     ASSERT_DOUBLE_EQ(498.19546700885803, maneuver.GetDeltaV().GetY());
     ASSERT_DOUBLE_EQ(0.0, maneuver.GetDeltaV().GetZ());
 
-    ASSERT_DOUBLE_EQ(17843.16033783407, maneuver.GetWindow()->GetStartDate().GetSecondsFromJ2000().count());
-    ASSERT_DOUBLE_EQ(17853.844824920649, maneuver.GetWindow()->GetEndDate().GetSecondsFromJ2000().count());
+    ASSERT_DOUBLE_EQ(17843.16033783407, maneuver.GetThrustWindow()->GetStartDate().GetSecondsFromJ2000().count());
+    ASSERT_DOUBLE_EQ(17853.844824920649, maneuver.GetThrustWindow()->GetEndDate().GetSecondsFromJ2000().count());
     ASSERT_DOUBLE_EQ(10.684487086579903, maneuver.GetThrustDuration().GetSeconds().count());
     ASSERT_DOUBLE_EQ(534.2243543289951, maneuver.GetFuelBurned());
 }

@@ -139,7 +139,7 @@ TEST(Propagator, PropagateVVIntegrator)
 
     //Read ephemeris
     sv = pro.GetStateVectors()[80];
-    auto ephemerisSv = spc.ReadEphemeris(*earth, IO::SDK::Frames::InertialFrames::ICRF, IO::SDK::AberrationsEnum::None, epoch + step * 80.0);
+    auto ephemerisSv = spc.ReadEphemeris(IO::SDK::Frames::InertialFrames::ICRF, IO::SDK::AberrationsEnum::None, epoch + step * 80.0,*earth);
     ASSERT_EQ(ephemerisSv.GetEpoch(), sv.GetEpoch());
     ASSERT_DOUBLE_EQ(ephemerisSv.GetPosition().GetX(), sv.GetPosition().GetX());
     ASSERT_DOUBLE_EQ(ephemerisSv.GetPosition().GetY(), sv.GetPosition().GetY());
@@ -223,7 +223,7 @@ TEST(Propagator, PropagatorVsKepler)
 
     auto orientationCoverage = spc.GetOrientationsCoverageWindow();
     ASSERT_STREQ("2021-01-01 00:00:00.000000 (TDB)", orientationCoverage.GetStartDate().ToString().c_str());
-    ASSERT_STREQ("2021-01-01 01:47:27.000000 (TDB)", orientationCoverage.GetEndDate().ToString().c_str());
+    ASSERT_STREQ("2021-01-01 00:00:00.000000 (TDB)", orientationCoverage.GetEndDate().ToString().c_str());
 
     //Analyse energy
     // std::ofstream myfile("SpecificEnergy.csv", std::ios_base::trunc);
@@ -279,7 +279,7 @@ TEST(Propagator, PropagateTLEIntegrator)
     //  VX=-6.921346768046464E+00 VY= 9.156923051627522E-02 VZ=-3.288419444276052E+00
     //Read ephemeris results
     stateVector = pro.GetStateVectors()[80];
-    auto ephemerisSv = spc.ReadEphemeris(*earth, IO::SDK::Frames::InertialFrames::ICRF, IO::SDK::AberrationsEnum::None, epoch + step * 80.0);
+    auto ephemerisSv = spc.ReadEphemeris(IO::SDK::Frames::InertialFrames::ICRF, IO::SDK::AberrationsEnum::None, epoch + step * 80.0,*earth);
     ASSERT_EQ(ephemerisSv.GetEpoch(), stateVector.GetEpoch());
     ASSERT_DOUBLE_EQ(ephemerisSv.GetPosition().GetX(), stateVector.GetPosition().GetX());
     ASSERT_DOUBLE_EQ(ephemerisSv.GetPosition().GetY(), stateVector.GetPosition().GetY());

@@ -57,7 +57,7 @@ IO::SDK::OrbitalParameters::StateVector IO::SDK::Body::CelestialBody::GetRelativ
         return targetStateVector;
     }
 
-    auto sv = ReadEphemeris(*targetStateVector.GetCenterOfMotion(), targetStateVector.GetFrame(), IO::SDK::AberrationsEnum::None, targetStateVector.GetEpoch());
+    auto sv = ReadEphemeris( targetStateVector.GetFrame(), IO::SDK::AberrationsEnum::None, targetStateVector.GetEpoch(),*targetStateVector.GetCenterOfMotion());
 
     return IO::SDK::OrbitalParameters::StateVector(targetStateVector.GetCenterOfMotion(), targetStateVector.GetPosition() - sv.GetPosition(), targetStateVector.GetVelocity() - sv.GetVelocity(), targetStateVector.GetEpoch(), targetStateVector.GetFrame());
 }

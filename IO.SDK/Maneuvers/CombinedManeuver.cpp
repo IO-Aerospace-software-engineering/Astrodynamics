@@ -6,7 +6,7 @@ IO::SDK::Maneuvers::CombinedManeuver::CombinedManeuver(const std::vector<IO::SDK
 {
 }
 
-IO::SDK::Maneuvers::CombinedManeuver::CombinedManeuver(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, const IO::SDK::Time::TDB &minimumEpoch, IO::SDK::Propagators::Propagator &propagator, const double inclination, const double perigeeRadius) : m_inclination{inclination}, m_peregeeRadius{perigeeRadius}, IO::SDK::Maneuvers::ManeuverBase(engines, minimumEpoch,  propagator)
+IO::SDK::Maneuvers::CombinedManeuver::CombinedManeuver(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator, const double inclination, const double perigeeRadius, const IO::SDK::Time::TDB &minimumEpoch) : m_inclination{inclination}, m_peregeeRadius{perigeeRadius}, IO::SDK::Maneuvers::ManeuverBase(engines,  propagator, minimumEpoch)
 {
 }
 

@@ -18,16 +18,26 @@ IO::SDK::Maneuvers::ManeuverBase::ManeuverBase(const std::vector<IO::SDK::Body::
     }
 }
 
-IO::SDK::Maneuvers::ManeuverBase::ManeuverBase(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, const IO::SDK::Time::TDB &minimumEpoch, IO::SDK::Propagators::Propagator &propagator) : ManeuverBase(engines, propagator)
+IO::SDK::Maneuvers::ManeuverBase::ManeuverBase(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator, const IO::SDK::Time::TimeSpan &attitudeHoldDuration) : ManeuverBase(engines, propagator)
+{
+    const_cast<IO::SDK::Time::TimeSpan &>(m_attitudeHoldDuration) = attitudeHoldDuration;
+}
+
+IO::SDK::Maneuvers::ManeuverBase::ManeuverBase(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator, const IO::SDK::Time::TDB &minimumEpoch) : ManeuverBase(engines, propagator)
 {
     m_minimumEpoch = std::make_unique<IO::SDK::Time::TDB>(minimumEpoch);
+}
+
+IO::SDK::Maneuvers::ManeuverBase::ManeuverBase(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator, const IO::SDK::Time::TDB &minimumEpoch, const IO::SDK::Time::TimeSpan &attitudeHoldDuration) : ManeuverBase(engines, propagator, minimumEpoch)
+{
+    const_cast<IO::SDK::Time::TimeSpan &>(m_attitudeHoldDuration) = attitudeHoldDuration;
 }
 
 void IO::SDK::Maneuvers::ManeuverBase::Handle(const IO::SDK::Time::TDB &notBeforeEpoch)
 {
     if (m_minimumEpoch)
     {
-        //current minimum epich is updated only if new notBeforeEpoch is greater
+        //current minimum epoch is updated only if new notBeforeEpoch is greater
         if (*m_minimumEpoch < notBeforeEpoch)
         {
             m_minimumEpoch.reset(new IO::SDK::Time::TDB(notBeforeEpoch));
@@ -72,7 +82,11 @@ IO::SDK::Maneuvers::ManeuverResult IO::SDK::Maneuvers::ManeuverBase::TryExecute(
         if (m_nextManeuver)
         {
             //Maneuver is complete, next maneuver will be handled by propagator and can't be executed before end of this maneuver
-            m_nextManeuver->Handle(m_window->GetEndDate());
+            m_nextManeuver->Handle(m_attitudeWindow->GetEndDate());
+        }
+        else
+        {
+            m_propagator.SetStandbyManeuver(nullptr);
         }
 
         result.SetValid("Maneuver successfully executed");
@@ -117,16 +131,26 @@ void IO::SDK::Maneuvers::ManeuverBase::ExecuteAt(const IO::SDK::OrbitalParameter
     SpreadThrust();
 
     //Compute maneuver window
-    m_window = std::make_unique<IO::SDK::Time::Window<IO::SDK::Time::TDB>>(maneuverPoint.GetEpoch() - m_thrustDuration / 2, m_thrustDuration);
+    m_thrustWindow = std::make_unique<IO::SDK::Time::Window<IO::SDK::Time::TDB>>(maneuverPoint.GetEpoch() - m_thrustDuration / 2, m_thrustDuration);
 
-    if (m_minimumEpoch && m_window->GetStartDate() < *m_minimumEpoch)
+    //Set minimum attitude window
+    if (m_attitudeHoldDuration > m_thrustWindow->GetLength())
+    {
+        m_attitudeWindow = std::make_unique<IO::SDK::Time::Window<IO::SDK::Time::TDB>>(m_thrustWindow->GetStartDate(), m_attitudeHoldDuration);
+    }
+    else
+    {
+        m_attitudeWindow = std::make_unique<IO::SDK::Time::Window<IO::SDK::Time::TDB>>(m_thrustWindow->GetStartDate(), m_thrustWindow->GetEndDate());
+    }
+
+    if (m_minimumEpoch && (m_thrustWindow->GetStartDate() < *m_minimumEpoch || m_attitudeWindow->GetStartDate() < *m_minimumEpoch))
     {
         throw IO::SDK::Exception::TooEarlyManeuverException("The maneuver begins too early.");
     }
 
     //Find position at maneuver begin
     //Get lower value nearest maneuver begin epoch
-    const IO::SDK::OrbitalParameters::OrbitalParameters *nearestLowerState = m_propagator.FindNearestLowerStateVector(m_window->GetStartDate());
+    const IO::SDK::OrbitalParameters::OrbitalParameters *nearestLowerState = m_propagator.FindNearestLowerStateVector(m_attitudeWindow->GetStartDate());
 
     if (m_propagator.GetStateVectors().empty())
     {
@@ -134,28 +158,28 @@ void IO::SDK::Maneuvers::ManeuverBase::ExecuteAt(const IO::SDK::OrbitalParameter
     }
 
     //propagate from nearest value up to begin epoch
-    auto beginState = nearestLowerState->GetStateVector(m_window->GetStartDate());
+    auto beginState = nearestLowerState->GetStateVector(m_attitudeWindow->GetStartDate());
 
     //Compute oriention at begining
     auto orientationBegining = ComputeOrientation(beginState);
 
     //write orientation
-    std::vector<IO::SDK::OrbitalParameters::StateOrientation> StateOrientations;
-    StateOrientations.push_back(orientationBegining);
+    std::vector<IO::SDK::OrbitalParameters::StateOrientation> stateOrientations;
+    stateOrientations.push_back(orientationBegining);
 
     //Find position at maneuver end
     //Add deltaV vector to maneuver point
     IO::SDK::OrbitalParameters::StateVector newManeuverState(maneuverPoint.GetCenterOfMotion(), maneuverPoint.GetStateVector().GetPosition(), maneuverPoint.GetStateVector().GetVelocity() + *m_deltaV, maneuverPoint.GetEpoch(), maneuverPoint.GetFrame());
 
     //Propagate from new maneuver point up to end maneuver epoch
-    auto endState = newManeuverState.GetStateVector(m_window->GetEndDate());
+    auto endState = newManeuverState.GetStateVector(m_attitudeWindow->GetEndDate());
 
-    //Compute oriention at end
+    // Compute oriention at end
     auto orientationEnd = ComputeOrientation(endState);
-    StateOrientations.push_back(orientationEnd);
+    stateOrientations.push_back(orientationEnd);
 
     //Write orientation
-    m_propagator.AddStateOrientation(StateOrientations);
+    m_propagator.AddStateOrientation(stateOrientations);
 
     //Write Data in propagator
     //Erase unecessary vector states
@@ -177,9 +201,9 @@ IO::SDK::Maneuvers::ManeuverBase &IO::SDK::Maneuvers::ManeuverBase::SetNextManeu
     return nextManeuver;
 }
 
-IO::SDK::Time::Window<IO::SDK::Time::TDB> *IO::SDK::Maneuvers::ManeuverBase::GetWindow() const
+IO::SDK::Time::Window<IO::SDK::Time::TDB> *IO::SDK::Maneuvers::ManeuverBase::GetThrustWindow() const
 {
-    return m_window.get();
+    return m_thrustWindow.get();
 }
 
 void IO::SDK::Maneuvers::ManeuverBase::ManeuverBase::SpreadThrust()

@@ -100,6 +100,6 @@ TEST(PhasingManeuver, TryExecute)
     ASSERT_DOUBLE_EQ(8.5968782802424241e-16, maneuver.GetDeltaV().GetZ());
     ASSERT_DOUBLE_EQ(6.0351723087874625, maneuver.GetFuelBurned());
     ASSERT_DOUBLE_EQ(0.12070344617574924, maneuver.GetThrustDuration().GetSeconds().count());
-    ASSERT_EQ(IO::SDK::Time::Window<IO::SDK::Time::TDB>(IO::SDK::Time::TDB(1.3109841010206829s),IO::SDK::Time::TDB(1.4316875471964321s)), *maneuver.GetWindow());
+    ASSERT_EQ(IO::SDK::Time::Window<IO::SDK::Time::TDB>(IO::SDK::Time::TDB(1.3109841010206829s),IO::SDK::Time::TDB(1.4316875471964321s)), *maneuver.GetThrustWindow());
 
 }

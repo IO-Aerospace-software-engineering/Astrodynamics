@@ -26,7 +26,7 @@ IO::SDK::Math::Vector3D IO::SDK::Integrators::Forces::GravityForce::Apply(const 
     while (currentBody->GetOrbitalParametersAtEpoch())
     {
         //Compute vector state
-        position = position + currentBody->ReadEphemeris(*currentBody->GetOrbitalParametersAtEpoch()->GetCenterOfMotion(), stateVector.GetFrame(), AberrationsEnum::None, stateVector.GetEpoch()).GetPosition();
+        position = position + currentBody->ReadEphemeris(stateVector.GetFrame(), AberrationsEnum::None, stateVector.GetEpoch(),*currentBody->GetOrbitalParametersAtEpoch()->GetCenterOfMotion()).GetPosition();
 
         //Compute force
         force = force + ComputeForce(currentBody->GetOrbitalParametersAtEpoch()->GetCenterOfMotion()->GetMass(),bodyMass, position.Magnitude(), position.Normalize());
