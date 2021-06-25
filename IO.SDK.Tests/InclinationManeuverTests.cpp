@@ -267,7 +267,7 @@ TEST(OrbitalPlaneChangingManeuver, ExecuteDN)
     ASSERT_DOUBLE_EQ(1687.9426869962572, maneuver.GetFuelBurned());
 
     //Check maneuver window
-    ASSERT_EQ(IO::SDK::Time::Window<IO::SDK::Time::TDB>(IO::SDK::Time::TDB(4265.245338621311s), IO::SDK::Time::TDB(4299.0041923612362s)), *maneuver.GetWindow());
+    ASSERT_EQ(IO::SDK::Time::Window<IO::SDK::Time::TDB>(IO::SDK::Time::TDB(4265.245338621311s), IO::SDK::Time::TDB(4299.0041923612362s)), *maneuver.GetThrustWindow());
 }
 
 TEST(OrbitalPlaneChangingManeuver, ExecuteAN)
@@ -322,5 +322,5 @@ TEST(OrbitalPlaneChangingManeuver, ExecuteAN)
     ASSERT_DOUBLE_EQ(1687.9426869962572, maneuver.GetFuelBurned());
 
     //Check maneuver window
-    ASSERT_EQ(IO::SDK::Time::Window<IO::SDK::Time::TDB>(IO::SDK::Time::TDB(10385.842836252745s), IO::SDK::Time::TDB(10419.601689992669s)), *maneuver.GetWindow());
+    ASSERT_EQ(IO::SDK::Time::Window<IO::SDK::Time::TDB>(IO::SDK::Time::TDB(10385.842836252745s), IO::SDK::Time::TDB(10419.601689992669s)), *maneuver.GetThrustWindow());
 }

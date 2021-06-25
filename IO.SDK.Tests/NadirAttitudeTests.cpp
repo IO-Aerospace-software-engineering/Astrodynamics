@@ -35,12 +35,11 @@ TEST(NadirAttitude, GetOrientation)
     std::vector<IO::SDK::Body::Spacecraft::Engine> engines;
     engines.push_back(*engine1);
 
-    IO::SDK::Maneuvers::Attitudes::NadirAttitude nadir(engines, prop);
+    IO::SDK::Maneuvers::Attitudes::NadirAttitude nadir(engines, prop, IO::SDK::Time::TimeSpan(10s));
     prop.SetStandbyManeuver(&nadir);
 
     prop.Propagate();
 
-    //auto res = nadir.TryExecute(s.GetOrbitalParametersAtEpoch()->GetStateVector(IO::SDK::Time::TDB(100.1s)));
     auto orientation = s.GetOrientation(IO::SDK::Time::TDB("2021-01-01T13:00:00"), IO::SDK::Time::TimeSpan(10s), IO::SDK::Frames::InertialFrames::ICRF);
 
     ASSERT_DOUBLE_EQ(0.0, nadir.GetDeltaV().Magnitude());

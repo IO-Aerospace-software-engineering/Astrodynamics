@@ -8,7 +8,7 @@
 #include <StateOrientation.h>
 #include <VVIntegrator.h>
 #include <Propagator.h>
-#include <ZenithAttitude.h>
+#include <TowardObjectAttitude.h>
 #include <TimeSpan.h>
 #include <InertialFrames.h>
 #include <TDB.h>
@@ -17,7 +17,10 @@ using namespace std::chrono_literals;
 
 TEST(TowardObjectAttitude, GetOrientation)
 {
-    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth"); //GEOPHYSICAL PROPERTIES provided by JPL
+
+    auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10, "sun");
+    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth", sun);
+    auto moon = std::make_shared<IO::SDK::Body::CelestialBody>(301, "moon", earth);
 
     std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams1 = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth, IO::SDK::Math::Vector3D(6678000.0, 0.0, 0.0), IO::SDK::Math::Vector3D(0.0, 7727.0, 0.0), IO::SDK::Time::TDB("2021-01-01T13:00:00"), IO::SDK::Frames::InertialFrames::ICRF);
 
@@ -35,16 +38,15 @@ TEST(TowardObjectAttitude, GetOrientation)
     std::vector<IO::SDK::Body::Spacecraft::Engine> engines;
     engines.push_back(*engine1);
 
-    IO::SDK::Maneuvers::Attitudes::ZenithAttitude zenith(engines, prop);
-    prop.SetStandbyManeuver(&zenith);
+    IO::SDK::Maneuvers::Attitudes::TowardObjectAttitude toward(engines, prop,IO::SDK::Time::TimeSpan(10s), *moon);
+    prop.SetStandbyManeuver(&toward);
 
     prop.Propagate();
 
     auto orientation = s.GetOrientation(IO::SDK::Time::TDB("2021-01-01T13:00:00"), IO::SDK::Time::TimeSpan(10s), IO::SDK::Frames::InertialFrames::ICRF);
 
-    ASSERT_TRUE(false);
-    ASSERT_DOUBLE_EQ(0.0, zenith.GetDeltaV().Magnitude());
+    ASSERT_DOUBLE_EQ(0.0, toward.GetDeltaV().Magnitude());
     ASSERT_EQ(IO::SDK::Frames::InertialFrames::ICRF, orientation.GetFrame());
     auto newVector = s.Front.Rotate(orientation.GetQuaternion());
-    ASSERT_EQ(IO::SDK::Math::Vector3D(0.99999998288572889, -2.980232227667301e-08, 0.0), newVector);
+    ASSERT_EQ(IO::SDK::Math::Vector3D(-0.64548856202739258, 0.67028532443717903, 0.36614494833208727), newVector);
 }

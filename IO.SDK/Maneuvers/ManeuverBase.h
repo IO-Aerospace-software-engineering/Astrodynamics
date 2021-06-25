@@ -108,8 +108,12 @@ namespace IO::SDK::Maneuvers
          */
         virtual IO::SDK::Maneuvers::ManeuverBase &SetNextManeuver(IO::SDK::Maneuvers::ManeuverBase &maneuver);
 
+        const IO::SDK::Time::TimeSpan m_attitudeHoldDuration;
+        std::unique_ptr<IO::SDK::Time::Window<IO::SDK::Time::TDB>> m_attitudeWindow{};
+
     protected:
-        std::unique_ptr<IO::SDK::Time::Window<IO::SDK::Time::TDB>> m_window{};
+        std::unique_ptr<IO::SDK::Time::Window<IO::SDK::Time::TDB>> m_thrustWindow{};
+        
         std::unique_ptr<IO::SDK::Math::Vector3D> m_deltaV{};
         IO::SDK::Time::TimeSpan m_thrustDuration{};
         double m_fuelBurned{};
@@ -137,6 +141,25 @@ namespace IO::SDK::Maneuvers
          * @param minimumEpoch No maneuver execution before this epoch
          */
         ManeuverBase(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator& propagator, const IO::SDK::Time::TDB &minimumEpoch);
+
+        /**
+         * @brief Construct a new Maneuver Base object
+         * 
+         * @param engines 
+         * @param propagator 
+         * @param attitudeHoldDuration 
+         */
+        ManeuverBase(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator& propagator, const IO::SDK::Time::TimeSpan& attitudeHoldDuration );
+
+        /**
+         * @brief Construct a new Maneuver Base object
+         * 
+         * @param engines 
+         * @param propagator 
+         * @param minimumEpoch 
+         * @param attitudeHoldDuration 
+         */
+        ManeuverBase(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator& propagator, const IO::SDK::Time::TDB &minimumEpoch, const IO::SDK::Time::TimeSpan& attitudeHoldDuration );
         virtual ~ManeuverBase() = default;
 
         /**
@@ -184,7 +207,7 @@ namespace IO::SDK::Maneuvers
          * 
          * @return IO::SDK::Time::Window<IO::SDK::Time::TDB>* 
          */
-        IO::SDK::Time::Window<IO::SDK::Time::TDB> *GetWindow() const;
+        IO::SDK::Time::Window<IO::SDK::Time::TDB> *GetThrustWindow() const;
 
         /**
          * @brief Get the Fuel Burned in kg

@@ -49,21 +49,12 @@ void IO::SDK::Propagators::Propagator::Propagate()
         }
 
         //Integrate vector state
-        stateVector = m_integrator.Integrate(m_spacecraft, stateVector);
+        stateVector = m_integrator.Integrate(m_spacecraft, m_stateVectors.back());
         m_stateVectors.push_back(stateVector);
     }
 
     //Write state vector data
     m_spacecraft.WriteEphemeris(m_stateVectors, IO::SDK::Frames::InertialFrames::ICRF);
-
-    //Write orientations
-    //Set the latest known orientation if only 1 orientation state (Otherwise Lagrance interpolation will not work at read)
-    if (m_StateOrientations.size() == 1)
-    {
-        auto latestManeuverOrientationAtEnd = m_StateOrientations.back().back();
-        IO::SDK::OrbitalParameters::StateOrientation orientationAtEnd(latestManeuverOrientationAtEnd.GetQuaternion(), latestManeuverOrientationAtEnd.GetAngularVelocity(), m_window.GetEndDate(), latestManeuverOrientationAtEnd.GetFrame());
-        m_StateOrientations.push_back(std::vector<IO::SDK::OrbitalParameters::StateOrientation>{orientationAtEnd});
-    }
 
     //Write orientation data
     m_spacecraft.WriteOrientations(m_StateOrientations);

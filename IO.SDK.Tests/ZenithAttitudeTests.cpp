@@ -35,8 +35,8 @@ TEST(ZenithAttitude, GetOrientation)
     std::vector<IO::SDK::Body::Spacecraft::Engine> engines;
     engines.push_back(*engine1);
 
-    IO::SDK::Maneuvers::Attitudes::ZenithAttitude zenith(engines, prop);
-    prop.SetStandbyManeuver(&zenith);
+    IO::SDK::Maneuvers::Attitudes::ZenithAttitude zenith(engines, prop,IO::SDK::Time::TimeSpan(10s));
+    zenith.Handle(IO::SDK::Time::TDB("2021-01-01T13:00:00"));
 
     prop.Propagate();
 

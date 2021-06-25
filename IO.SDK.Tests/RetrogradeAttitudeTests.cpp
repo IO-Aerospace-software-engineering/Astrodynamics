@@ -35,7 +35,7 @@ TEST(RetrogradeAttitude, GetOrientation)
     std::vector<IO::SDK::Body::Spacecraft::Engine> engines;
     engines.push_back(*engine1);
 
-    IO::SDK::Maneuvers::Attitudes::RetrogradeAttitude retrograde(engines, prop);
+    IO::SDK::Maneuvers::Attitudes::RetrogradeAttitude retrograde(engines, prop,IO::SDK::Time::TimeSpan(10s));
     prop.SetStandbyManeuver(&retrograde);
 
     prop.Propagate();
