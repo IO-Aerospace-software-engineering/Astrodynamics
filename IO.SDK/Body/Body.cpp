@@ -25,7 +25,7 @@ IO::SDK::Body::Body::Body(const int id, const std::string &name, const double ma
 
 IO::SDK::Body::Body::Body(const int id, const std::string &name, const double mass, std::shared_ptr<IO::SDK::Body::CelestialBody> &centerOfMotion) : Body(id, name, mass)
 {
-	m_orbitalParametersAtEpoch = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(this->ReadEphemeris(IO::SDK::Frames::InertialFrames::ICRF, IO::SDK::AberrationsEnum::None, IO::SDK::Time::TDB(0s),*centerOfMotion));
+	m_orbitalParametersAtEpoch = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(this->ReadEphemeris(IO::SDK::Frames::InertialFrames::ICRF, IO::SDK::AberrationsEnum::None, IO::SDK::Time::TDB(0s), *centerOfMotion));
 	centerOfMotion->m_satellites.push_back(this);
 }
 
@@ -61,7 +61,7 @@ const std::vector<IO::SDK::Body::Body *> &IO::SDK::Body::Body::GetSatellites() c
 	return m_satellites;
 }
 
-IO::SDK::OrbitalParameters::StateVector IO::SDK::Body::Body::ReadEphemeris( const IO::SDK::Frames::Frames &frame, const IO::SDK::AberrationsEnum aberration, const IO::SDK::Time::TDB &epoch,const IO::SDK::Body::CelestialBody &relativeTo) const
+IO::SDK::OrbitalParameters::StateVector IO::SDK::Body::Body::ReadEphemeris(const IO::SDK::Frames::Frames &frame, const IO::SDK::AberrationsEnum aberration, const IO::SDK::Time::TDB &epoch, const IO::SDK::Body::CelestialBody &relativeTo) const
 {
 	IO::SDK::Aberrations aberrationHelper;
 	SpiceDouble vs[6];
@@ -162,4 +162,17 @@ std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>> IO::SDK::Body::Body::Find
 		windows.push_back(IO::SDK::Time::Window<IO::SDK::Time::TDB>(IO::SDK::Time::TDB(std::chrono::duration<double>(windowStart)), IO::SDK::Time::TDB(std::chrono::duration<double>(windowEnd))));
 	}
 	return windows;
+}
+
+IO::SDK::Coordinates::Planetographic IO::SDK::Body::Body::GetSubObserverPoint(const IO::SDK::Body::CelestialBody &targetBody, const IO::SDK::AberrationsEnum &aberration, const IO::SDK::Time::DateTime &epoch) const
+{
+	IO::SDK::Aberrations abe;
+	SpiceDouble spoint[3];
+	SpiceDouble srfVector[3];
+	SpiceDouble subEpoch;
+	subpnt_c("INTERCEPT/ELLIPSOID", std::to_string(targetBody.GetId()).c_str(), epoch.GetSecondsFromJ2000().count(), targetBody.GetBodyFixedFrame().GetName().c_str(), abe.ToString(aberration).c_str(), std::to_string(m_id).c_str(), spoint, &subEpoch, srfVector);
+	SpiceDouble lat, lon, alt;
+	recpgr_c(std::to_string(targetBody.GetId()).c_str(), spoint, targetBody.GetRadius().GetX(), targetBody.GetFlattening(), &lon, &lat, &alt);
+
+	return IO::SDK::Coordinates::Planetographic(lon, lat, alt);
 }
