@@ -29,7 +29,7 @@ namespace IO::SDK::Kernels
 
 		IO::SDK::OrbitalParameters::StateVector ReadStateVector(const IO::SDK::Body::CelestialBody &observer, const IO::SDK::Frames::Frames& frame, const IO::SDK::AberrationsEnum aberration, const IO::SDK::Time::TDB &epoch) const;
 		IO::SDK::Time::Window<IO::SDK::Time::TDB> GetCoverageWindow() const override;
-		void WriteData(const std::vector<OrbitalParameters::StateVector> &states, IO::SDK::Frames::Frames& frame);
+		void WriteData(const std::vector<OrbitalParameters::StateVector> &states);
 	};
 }
 #endif

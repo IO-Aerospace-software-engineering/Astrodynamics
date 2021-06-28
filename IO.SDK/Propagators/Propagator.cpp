@@ -56,7 +56,7 @@ void IO::SDK::Propagators::Propagator::Propagate()
     }
 
     //Write state vector data
-    m_spacecraft.WriteEphemeris(m_stateVectors, IO::SDK::Frames::InertialFrames::ICRF);
+    m_spacecraft.WriteEphemeris(m_stateVectors);
 
     //Write orientation data
     m_spacecraft.WriteOrientations(m_StateOrientations);
