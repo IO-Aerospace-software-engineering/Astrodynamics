@@ -46,4 +46,8 @@ TEST(NadirAttitude, GetOrientation)
     ASSERT_EQ(IO::SDK::Frames::InertialFrames::ICRF, orientation.GetFrame());
     auto newVector = s.Front.Rotate(orientation.GetQuaternion());
     ASSERT_EQ(IO::SDK::Math::Vector3D(-0.99999998288572889, -2.980232227667301e-08, 0.0), newVector);
+    ASSERT_EQ(IO::SDK::Time::TimeSpan(10s), s.GetOrientationsCoverageWindow().GetLength());
+    ASSERT_EQ(IO::SDK::Time::TDB("2021-01-01T13:00:00"), s.GetOrientationsCoverageWindow().GetStartDate());
+    ASSERT_EQ(IO::SDK::Time::TDB("2021-01-01T13:00:10"), s.GetOrientationsCoverageWindow().GetEndDate());
+
 }
