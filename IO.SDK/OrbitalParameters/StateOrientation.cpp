@@ -16,6 +16,23 @@ IO::SDK::OrbitalParameters::StateOrientation::StateOrientation(const IO::SDK::Ma
 {
 }
 
+IO::SDK::OrbitalParameters::StateOrientation::StateOrientation(const IO::SDK::OrbitalParameters::StateOrientation& stateOrientation):m_angularVelocity{stateOrientation.m_angularVelocity},m_epoch{stateOrientation.m_epoch},m_frame{stateOrientation.m_frame},m_quaternion{stateOrientation.m_quaternion}
+{
+
+}
+
+IO::SDK::OrbitalParameters::StateOrientation &IO::SDK::OrbitalParameters::StateOrientation::operator=(const StateOrientation &rhs)
+{
+	if (this != &rhs) 
+	{
+		const_cast<IO::SDK::Math::Vector3D&>(m_angularVelocity) = rhs.m_angularVelocity;
+		const_cast<IO::SDK::Time::TDB&>(m_epoch) = rhs.m_epoch;
+		const_cast<IO::SDK::Frames::Frames&>(m_frame) = rhs.m_frame;
+		const_cast<IO::SDK::Math::Quaternion&>(m_quaternion) = rhs.m_quaternion;
+	}
+	return *this;
+}
+
 IO::SDK::Time::TDB IO::SDK::OrbitalParameters::StateOrientation::GetEpoch() const
 {
 	return m_epoch;

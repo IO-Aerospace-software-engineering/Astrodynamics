@@ -8,13 +8,13 @@ IO::SDK::Kernels::EphemerisKernel::EphemerisKernel(const IO::SDK::Body::Spacecra
 {
 }
 
-IO::SDK::OrbitalParameters::StateVector IO::SDK::Kernels::EphemerisKernel::ReadStateVector(const IO::SDK::Body::CelestialBody &observer, const IO::SDK::Frames::Frames& frame, const IO::SDK::AberrationsEnum aberration, const IO::SDK::Time::TDB &epoch) const
+IO::SDK::OrbitalParameters::StateVector IO::SDK::Kernels::EphemerisKernel::ReadStateVector(const IO::SDK::Body::CelestialBody &observer, const IO::SDK::Frames::Frames &frame, const IO::SDK::AberrationsEnum aberration, const IO::SDK::Time::TDB &epoch) const
 {
 	SpiceDouble states[6];
 	SpiceDouble lt;
 	IO::SDK::Aberrations a{};
 	spkezr_c(std::to_string(m_spacecraft.GetId()).c_str(), epoch.GetSecondsFromJ2000().count(), frame.ToCharArray(), a.ToString(aberration).c_str(), observer.GetName().c_str(), states, &lt);
-	return IO::SDK::OrbitalParameters::StateVector(std::make_shared<IO::SDK::Body::CelestialBody>(observer), states, epoch,frame);
+	return IO::SDK::OrbitalParameters::StateVector(std::make_shared<IO::SDK::Body::CelestialBody>(observer), states, epoch, frame);
 }
 
 IO::SDK::Time::Window<IO::SDK::Time::TDB> IO::SDK::Kernels::EphemerisKernel::GetCoverageWindow() const
@@ -30,11 +30,22 @@ IO::SDK::Time::Window<IO::SDK::Time::TDB> IO::SDK::Kernels::EphemerisKernel::Get
 	return IO::SDK::Time::Window<IO::SDK::Time::TDB>(IO::SDK::Time::TDB(std::chrono::duration<double>(start)), IO::SDK::Time::TDB(std::chrono::duration<double>(end)));
 }
 
-void IO::SDK::Kernels::EphemerisKernel::WriteData(const std::vector<OrbitalParameters::StateVector> &states, IO::SDK::Frames::Frames& frame)
+void IO::SDK::Kernels::EphemerisKernel::WriteData(const std::vector<OrbitalParameters::StateVector> &states)
 {
+
 	if (states.size() <= 2)
 	{
 		throw IO::SDK::Exception::InvalidArgumentException("State vector set must have 2 items or more");
+	}
+
+	auto frame = states.front().GetFrame();
+	for (auto &&sv : states)
+	{
+		if (sv.GetFrame() != frame)
+		{
+			throw IO::SDK::Exception::InvalidArgumentException("State vectors must have the same frame");
+			break;
+		}
 	}
 
 	if (std::filesystem::exists(m_filePath))

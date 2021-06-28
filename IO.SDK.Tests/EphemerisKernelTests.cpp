@@ -51,7 +51,7 @@ TEST(EphemerisKernel, WriteEvenlySpacedData)
 	v.push_back(sv9);
 	v.push_back(sv10);
 
-	iss.WriteEphemeris(v, IO::SDK::Frames::InertialFrames::ICRF);
+	iss.WriteEphemeris(v);
 
 	auto svStart = iss.ReadEphemeris(IO::SDK::Frames::InertialFrames::ICRF, IO::SDK::AberrationsEnum::None, IO::SDK::Time::TDB(626417577.7641s), *earth);
 
@@ -119,7 +119,7 @@ TEST(EphemerisKernel, GetCoverage)
 	v.push_back(sv9);
 	v.push_back(sv10);
 
-	iss.WriteEphemeris(v, IO::SDK::Frames::InertialFrames::ICRF);
+	iss.WriteEphemeris(v);
 	auto coverage = iss.GetEphemerisCoverageWindow();
 	ASSERT_DOUBLE_EQ(5400.0, coverage.GetLength().GetSeconds().count());
 	ASSERT_DOUBLE_EQ(626417577.7641, coverage.GetStartDate().GetSecondsFromJ2000().count());
@@ -164,7 +164,7 @@ TEST(EphemerisKernel, AddComment)
 	v.push_back(sv9);
 	v.push_back(sv10);
 
-	iss.WriteEphemeris(v, IO::SDK::Frames::InertialFrames::ICRF);
+	iss.WriteEphemeris(v);
 	iss.WriteEphemerisKernelComment("Comment Test");
 	auto comment = iss.ReadEphemerisKernelComment();
 	ASSERT_STREQ("Comment Test", comment.c_str());

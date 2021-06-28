@@ -72,6 +72,21 @@ namespace IO::SDK::OrbitalParameters
 		StateOrientation(const IO::SDK::Math::Quaternion &quaternion, const IO::SDK::Math::Vector3D &angularVelocity, const IO::SDK::Time::TDB &epoch, const IO::SDK::Frames::Frames &frame);
 
 		/**
+		 * @brief Assignment operator
+		 * 
+		 * @param rhs 
+		 * @return StateOrientation& 
+		 */
+		StateOrientation &operator=(const StateOrientation &rhs);
+
+		/**
+		 * @brief Construct a new State Orientation object
+		 * 
+		 * @param stateOrientation 
+		 */
+		StateOrientation(const StateOrientation& stateOrientation);
+
+		/**
 		 * @brief Get the Epoch
 		 * 
 		 * @return IO::SDK::Time::TDB 

@@ -160,7 +160,7 @@ namespace IO::SDK::Body::Spacecraft
 		 * @param states 
 		 * @param frame 
 		 */
-		void WriteEphemeris(const std::vector<OrbitalParameters::StateVector> &states, IO::SDK::Frames::Frames &frame) const;
+		void WriteEphemeris(const std::vector<OrbitalParameters::StateVector> &states) const;
 
 		/**
 		 * @brief Get the Statevector object
