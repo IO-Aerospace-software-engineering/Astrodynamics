@@ -164,8 +164,7 @@ void IO::SDK::Maneuvers::ManeuverBase::ExecuteAt(const IO::SDK::OrbitalParameter
     auto orientationBegining = ComputeOrientation(beginState);
 
     //write orientation
-    std::vector<IO::SDK::OrbitalParameters::StateOrientation> stateOrientations;
-    stateOrientations.push_back(orientationBegining);
+    m_propagator.AddStateOrientation(orientationBegining);
 
     //Find position at maneuver end
     //Add deltaV vector to maneuver point
@@ -176,10 +175,9 @@ void IO::SDK::Maneuvers::ManeuverBase::ExecuteAt(const IO::SDK::OrbitalParameter
 
     // Compute oriention at end
     auto orientationEnd = ComputeOrientation(endState);
-    stateOrientations.push_back(orientationEnd);
 
     //Write orientation
-    m_propagator.AddStateOrientation(stateOrientations);
+    m_propagator.AddStateOrientation(orientationEnd);
 
     //Write Data in propagator
     //Erase unecessary vector states

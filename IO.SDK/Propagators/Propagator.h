@@ -81,7 +81,7 @@ namespace IO::SDK::Propagators
          * 
          * @param so State orientation
          */
-        void AddStateOrientation(const std::vector<IO::SDK::OrbitalParameters::StateOrientation> &so);
+        void AddStateOrientation(const IO::SDK::OrbitalParameters::StateOrientation &so);
 
         /**
          * @brief Erase data from a given epoch up to end
