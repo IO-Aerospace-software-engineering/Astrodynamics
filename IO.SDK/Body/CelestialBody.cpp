@@ -105,3 +105,4 @@ IO::SDK::Time::TimeSpan IO::SDK::Body::CelestialBody::GetSideralRotationPeriod(c
 {
     return IO::SDK::Time::TimeSpan(std::chrono::duration<double>(IO::SDK::Constants::_2PI / GetAngularVelocity(epoch)));
 }
+

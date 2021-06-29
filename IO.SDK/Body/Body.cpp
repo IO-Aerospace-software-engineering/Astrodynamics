@@ -176,3 +176,16 @@ IO::SDK::Coordinates::Planetographic IO::SDK::Body::Body::GetSubObserverPoint(co
 
 	return IO::SDK::Coordinates::Planetographic(lon, lat, alt);
 }
+
+IO::SDK::Coordinates::Planetographic IO::SDK::Body::Body::GetSubSolarPoint(const IO::SDK::Body::CelestialBody &targetBody, const IO::SDK::AberrationsEnum aberration, const IO::SDK::Time::TDB &epoch) const
+{
+	IO::SDK::Aberrations abe;
+	SpiceDouble spoint[3];
+	SpiceDouble srfVector[3];
+	SpiceDouble subEpoch;
+	subslr_c("INTERCEPT/ELLIPSOID", std::to_string(targetBody.GetId()).c_str(), epoch.GetSecondsFromJ2000().count(), targetBody.GetBodyFixedFrame().GetName().c_str(), abe.ToString(aberration).c_str(), std::to_string(m_id).c_str(), spoint, &subEpoch, srfVector);
+	SpiceDouble lat, lon, alt;
+	recpgr_c(std::to_string(targetBody.GetId()).c_str(), spoint, targetBody.GetRadius().GetX(), targetBody.GetFlattening(), &lon, &lat, &alt);
+
+	return IO::SDK::Coordinates::Planetographic(lon, lat, alt);
+}
