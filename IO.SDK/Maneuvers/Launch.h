@@ -32,10 +32,11 @@ namespace IO::SDK::Maneuvers
     class Launch
     {
     private:
-        const IO::SDK::OrbitalParameters::OrbitalParameters &m_targetOrbit;
+        
         const std::shared_ptr<IO::SDK::Sites::LaunchSite> m_launchSite;
         const std::shared_ptr<IO::SDK::Sites::LaunchSite> m_recoverySite{nullptr};
         const bool m_launchByDay;
+        const IO::SDK::OrbitalParameters::OrbitalParameters &m_targetOrbit;
         double m_nonInertialAscendingAzimuthLaunch{std::numeric_limits<double>::quiet_NaN()};
         double m_inertialAscendingAzimuthLaunch{std::numeric_limits<double>::quiet_NaN()};
         double m_inertialDescendingAzimuthLaunch{std::numeric_limits<double>::quiet_NaN()};

@@ -35,7 +35,7 @@ namespace IO::SDK::Maneuvers
         std::unique_ptr<bool> m_isApproachingP{nullptr};
         std::unique_ptr<bool> m_isApproachingQ{nullptr};
 
-        IO::SDK::OrbitalParameters::OrbitalParameters *m_targetOrbit{nullptr};
+        
 
         bool IsIntersectP(const IO::SDK::OrbitalParameters::StateVector &stateVector) const;
         bool IsIntersectQ(const IO::SDK::OrbitalParameters::StateVector &stateVector) const;
@@ -51,6 +51,8 @@ namespace IO::SDK::Maneuvers
         double GetPTargetTrueAnomaly(const IO::SDK::OrbitalParameters::StateVector &sv) const;
         double GetQTargetTrueAnomaly(const IO::SDK::OrbitalParameters::StateVector &sv) const;
         IO::SDK::Math::Vector3D GetDeltaV(const IO::SDK::OrbitalParameters::StateVector &sv) const;
+
+        IO::SDK::OrbitalParameters::OrbitalParameters *m_targetOrbit{nullptr};
 
     protected:
         /**

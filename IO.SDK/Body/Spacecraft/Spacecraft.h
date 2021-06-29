@@ -63,9 +63,9 @@ namespace IO::SDK::Body::Spacecraft
 	private:
 		const std::string m_missionPrefix{};
 		const std::string m_filesPath{};
+		const std::unique_ptr<IO::SDK::Frames::SpacecraftFrameFile> m_frame;
 		const std::unique_ptr<IO::SDK::Kernels::SpacecraftClockKernel> m_clockKernel;
 		const std::unique_ptr<IO::SDK::Kernels::OrientationKernel> m_orientationKernel;
-		const std::unique_ptr<IO::SDK::Frames::SpacecraftFrameFile> m_frame;
 		const std::unique_ptr<IO::SDK::Kernels::EphemerisKernel> m_ephemerisKernel;
 		std::vector<std::unique_ptr<IO::SDK::Instruments::Instrument>> m_instruments{};
 		std::vector<std::unique_ptr<IO::SDK::Body::Spacecraft::FuelTank>> m_fuelTanks{};

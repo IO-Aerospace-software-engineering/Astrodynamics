@@ -30,13 +30,14 @@ namespace IO::SDK::Body::Spacecraft
 	{
 	private:
 		const std::string m_name{};
+		const IO::SDK::Body::Spacecraft::FuelTank &m_fuelTank;
 		const IO::SDK::Math::Vector3D m_position;
 		const IO::SDK::Math::Vector3D m_orientation;
 		const double m_isp{};
 		const double m_fuelFlow{};
 		const std::string m_serialNumber{};
 		const double m_thrust{};
-		const IO::SDK::Body::Spacecraft::FuelTank &m_fuelTank;
+		
 
 	public:
 		/**

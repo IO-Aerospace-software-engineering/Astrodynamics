@@ -127,7 +127,7 @@ std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>> IO::SDK::Body::Body::Find
 
 	gfdist_c(targetBody.GetName().c_str(), abe.ToString(aberration).c_str(), oberver.GetName().c_str(), constraint.ToCharArray(), value * 1E-03, 0.0, step.GetSeconds().count(), NINTVL, &cnfine, &results);
 
-	for (size_t i = 0; i < wncard_c(&results); i++)
+	for (int i = 0; i < wncard_c(&results); i++)
 	{
 		wnfetd_c(&results, i, &windowStart, &windowEnd);
 		windows.push_back(IO::SDK::Time::Window<IO::SDK::Time::TDB>(IO::SDK::Time::TDB(std::chrono::duration<double>(windowStart)), IO::SDK::Time::TDB(std::chrono::duration<double>(windowEnd))));
@@ -143,7 +143,6 @@ std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>> IO::SDK::Body::Body::Find
 
 	Aberrations abe;
 
-	const SpiceInt NINTVL{10000};
 	const SpiceInt MAXWIN{20000};
 
 	SpiceDouble SPICE_CELL_OCCLT[SPICE_CELL_CTRLSZ + MAXWIN];
@@ -156,7 +155,7 @@ std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>> IO::SDK::Body::Body::Find
 
 	gfoclt_c(occultationType.ToCharArray(), frontBody.GetName().c_str(), "ELLIPSOID", frontBody.GetBodyFixedFrame().GetName().c_str(), targetBody.GetName().c_str(), "ELLIPSOID", targetBody.GetBodyFixedFrame().GetName().c_str(), abe.ToString(aberration).c_str(), m_name.c_str(), stepSize.GetSeconds().count(), &cnfine, &results);
 
-	for (size_t i = 0; i < wncard_c(&results); i++)
+	for (int i = 0; i < wncard_c(&results); i++)
 	{
 		wnfetd_c(&results, i, &windowStart, &windowEnd);
 		windows.push_back(IO::SDK::Time::Window<IO::SDK::Time::TDB>(IO::SDK::Time::TDB(std::chrono::duration<double>(windowStart)), IO::SDK::Time::TDB(std::chrono::duration<double>(windowEnd))));

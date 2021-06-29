@@ -99,7 +99,7 @@ std::vector<IO::SDK::Math::Vector3D> IO::SDK::Instruments::Instrument::GetFOVBou
 	getfov_c(m_id, 4, 20, 50, shape, frame, boresight, &n, bounds);
 
 	std::vector<IO::SDK::Math::Vector3D> res;
-	for (size_t i = 0; i < n; i++)
+	for (int i = 0; i < n; i++)
 	{
 		res.push_back({bounds[i][0], bounds[i][1], bounds[i][2]});
 	}
@@ -125,7 +125,6 @@ std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>> IO::SDK::Instruments::Ins
 
 	Aberrations abe;
 
-	const SpiceInt NINTVL{10000};
 	const SpiceInt MAXWIN{20000};
 
 	SpiceDouble SPICE_CELL_OCCLT[SPICE_CELL_CTRLSZ + MAXWIN];
@@ -138,7 +137,7 @@ std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>> IO::SDK::Instruments::Ins
 
 	gftfov_c(std::to_string(m_id).c_str(), targetBody.GetName().c_str(), shape.c_str(), frame.c_str(), abe.ToString(aberration).c_str(), std::to_string(m_spacecraft.GetId()).c_str(), stepSize.GetSeconds().count(), &cnfine, &results);
 
-	for (size_t i = 0; i < wncard_c(&results); i++)
+	for (int i = 0; i < wncard_c(&results); i++)
 	{
 		wnfetd_c(&results, i, &windowStart, &windowEnd);
 		windows.push_back(IO::SDK::Time::Window<IO::SDK::Time::TDB>(IO::SDK::Time::TDB(std::chrono::duration<double>(windowStart)), IO::SDK::Time::TDB(std::chrono::duration<double>(windowEnd))));

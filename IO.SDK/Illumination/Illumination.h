@@ -9,11 +9,12 @@ namespace IO::SDK::Illumination
 	class Illumination
 	{
 	private:
-		const IO::SDK::Time::TDB m_targetEpoch;
+		
 		const IO::SDK::Math::Vector3D m_observerToSurfacePoint{};
 		const double m_phaseAngle{};
 		const double m_incidence{};
 		const double m_emission{};
+		const IO::SDK::Time::TDB m_targetEpoch;
 
 	public:
 		/// <summary>

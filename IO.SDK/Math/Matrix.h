@@ -36,7 +36,7 @@ namespace IO::SDK::Math
 		{
 			this->m_data = new double* [rowSize];
 
-			for (int i = 0; i < rowSize; i++)
+			for (std::size_t i = 0; i < rowSize; i++)
 			{
 				this->m_data[i] = new double[colSize] {};
 			}
