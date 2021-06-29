@@ -8,7 +8,7 @@ IO::SDK::Integrators::TLEIntegrator::~TLEIntegrator()
 {
 }
 
-IO::SDK::OrbitalParameters::StateVector IO::SDK::Integrators::TLEIntegrator::Integrate(const IO::SDK::Body::Body &body, const IO::SDK::OrbitalParameters::StateVector &stateVector)
+IO::SDK::OrbitalParameters::StateVector IO::SDK::Integrators::TLEIntegrator::Integrate(const IO::SDK::Body::Body &body __attribute__((unused)), const IO::SDK::OrbitalParameters::StateVector &stateVector)
 {
     return m_tle.GetStateVector(stateVector.GetEpoch() + m_stepDuration);
 }

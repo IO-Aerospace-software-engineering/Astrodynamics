@@ -1,7 +1,7 @@
 #include <Launch.h>
 #include <vector>
 
-IO::SDK::Maneuvers::Launch::Launch(const std::shared_ptr<IO::SDK::Sites::LaunchSite> launchSite, const std::shared_ptr<IO::SDK::Sites::LaunchSite> recoverySite, bool launchByDay, const IO::SDK::OrbitalParameters::OrbitalParameters &targetOrbit, const IO::SDK::Body::Spacecraft::Spacecraft &spacecraft) : m_launchSite{launchSite}, m_recoverySite{recoverySite}, m_launchByDay{launchByDay}, m_targetOrbit{targetOrbit}
+IO::SDK::Maneuvers::Launch::Launch(const std::shared_ptr<IO::SDK::Sites::LaunchSite> launchSite, const std::shared_ptr<IO::SDK::Sites::LaunchSite> recoverySite, bool launchByDay, const IO::SDK::OrbitalParameters::OrbitalParameters &targetOrbit) : m_launchSite{launchSite}, m_recoverySite{recoverySite}, m_launchByDay{launchByDay}, m_targetOrbit{targetOrbit}
 {
     const_cast<double &>(m_inclination) = m_targetOrbit.GetStateVector().ToFrame(IO::SDK::Frames::InertialFrames::ICRF).GetSpecificAngularMomentum().GetAngle(m_launchSite->GetBody()->GetBodyFixedFrame().TransformVector(IO::SDK::Frames::InertialFrames::ICRF, IO::SDK::Math::Vector3D::VectorZ, IO::SDK::Time::TDB(std::chrono::duration<double>(0.0))));
 

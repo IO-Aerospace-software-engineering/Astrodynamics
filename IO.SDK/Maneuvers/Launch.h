@@ -59,7 +59,7 @@ namespace IO::SDK::Maneuvers
          * @param targetOrbit 
          * @param spacecraft 
          */
-        Launch(const std::shared_ptr<IO::SDK::Sites::LaunchSite> launchSite, const std::shared_ptr<IO::SDK::Sites::LaunchSite> recoverySite, bool launchByDay, const IO::SDK::OrbitalParameters::OrbitalParameters &targetOrbit, const IO::SDK::Body::Spacecraft::Spacecraft &spacecraft);
+        Launch(const std::shared_ptr<IO::SDK::Sites::LaunchSite> launchSite, const std::shared_ptr<IO::SDK::Sites::LaunchSite> recoverySite, bool launchByDay, const IO::SDK::OrbitalParameters::OrbitalParameters &targetOrbit);
 
         ~Launch() = default;
 
