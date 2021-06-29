@@ -49,7 +49,7 @@ TestManeuver::~TestManeuver()
 {
 }
 
-void TestManeuver::Compute(const IO::SDK::OrbitalParameters::OrbitalParameters &maneuverPoint)
+void TestManeuver::Compute(const IO::SDK::OrbitalParameters::OrbitalParameters &maneuverPoint __attribute__((unused)))
 {
 }
 
@@ -58,7 +58,7 @@ IO::SDK::OrbitalParameters::StateOrientation TestManeuver::ComputeOrientation(co
     return IO::SDK::OrbitalParameters::StateOrientation(maneuverPoint.GetEpoch(), IO::SDK::Frames::InertialFrames::ICRF);
 }
 
-bool TestManeuver::CanExecute(const IO::SDK::OrbitalParameters::OrbitalParameters &maneuverPoint)
+bool TestManeuver::CanExecute(const IO::SDK::OrbitalParameters::OrbitalParameters &maneuverPoint __attribute__((unused)))
 {
     return true;
 }

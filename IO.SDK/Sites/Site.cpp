@@ -83,16 +83,16 @@ bool IO::SDK::Sites::Site::IsNight(const IO::SDK::Time::TDB &epoch, const double
 std::vector<IO::SDK::Time::Window<IO::SDK::Time::UTC>> IO::SDK::Sites::Site::FindDayWindows(const IO::SDK::Time::Window<IO::SDK::Time::UTC> &searchWindow, const double twilight) const
 {
     IO::SDK::Body::CelestialBody sun(10, "Sun");
-    return FindWindowsOnIlluminationConstraint(searchWindow, *m_body, sun, IO::SDK::IlluminationAngle::Incidence, IO::SDK::Constraint::LowerThan, IO::SDK::Constants::PI2 - twilight);
+    return FindWindowsOnIlluminationConstraint(searchWindow, sun, IO::SDK::IlluminationAngle::Incidence, IO::SDK::Constraint::LowerThan, IO::SDK::Constants::PI2 - twilight);
 }
 
 std::vector<IO::SDK::Time::Window<IO::SDK::Time::UTC>> IO::SDK::Sites::Site::FindNightWindows(const IO::SDK::Time::Window<IO::SDK::Time::UTC> &searchWindow, const double twilight) const
 {
     IO::SDK::Body::CelestialBody sun(10, "Sun");
-    return FindWindowsOnIlluminationConstraint(searchWindow, *m_body, sun, IO::SDK::IlluminationAngle::Incidence, IO::SDK::Constraint::GreaterThan, IO::SDK::Constants::PI2 - twilight);
+    return FindWindowsOnIlluminationConstraint(searchWindow, sun, IO::SDK::IlluminationAngle::Incidence, IO::SDK::Constraint::GreaterThan, IO::SDK::Constants::PI2 - twilight);
 }
 
-std::vector<IO::SDK::Time::Window<IO::SDK::Time::UTC>> IO::SDK::Sites::Site::FindWindowsOnIlluminationConstraint(const IO::SDK::Time::Window<IO::SDK::Time::UTC> &searchWindow, const IO::SDK::Body::Body &targetBody, const IO::SDK::Body::Body &observerBody, const IO::SDK::IlluminationAngle &illuminationAgngle, const IO::SDK::Constraint &constraint, const double value) const
+std::vector<IO::SDK::Time::Window<IO::SDK::Time::UTC>> IO::SDK::Sites::Site::FindWindowsOnIlluminationConstraint(const IO::SDK::Time::Window<IO::SDK::Time::UTC> &searchWindow, const IO::SDK::Body::Body &observerBody, const IO::SDK::IlluminationAngle &illuminationAgngle, const IO::SDK::Constraint &constraint, const double value) const
 {
     std::vector<IO::SDK::Time::Window<IO::SDK::Time::UTC>> windows;
     SpiceDouble bodyFixedLocation[3];

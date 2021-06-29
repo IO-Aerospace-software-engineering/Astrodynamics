@@ -156,7 +156,7 @@ namespace IO::SDK::Sites
          * @param value 
          * @return std::vector<IO::SDK::Time::Window<IO::SDK::Time::UTC>> 
          */
-        std::vector<IO::SDK::Time::Window<IO::SDK::Time::UTC>> FindWindowsOnIlluminationConstraint(const IO::SDK::Time::Window<IO::SDK::Time::UTC> &searchWindow, const IO::SDK::Body::Body &targetBody, const IO::SDK::Body::Body &observerBody, const IO::SDK::IlluminationAngle &illuminationAgngle, const IO::SDK::Constraint &constraint, const double value) const;
+        std::vector<IO::SDK::Time::Window<IO::SDK::Time::UTC>> FindWindowsOnIlluminationConstraint(const IO::SDK::Time::Window<IO::SDK::Time::UTC> &searchWindow, const IO::SDK::Body::Body &observerBody, const IO::SDK::IlluminationAngle &illuminationAgngle, const IO::SDK::Constraint &constraint, const double value) const;
 
         /**
          * @brief Get the Horizontal Coordinates

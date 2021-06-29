@@ -29,9 +29,9 @@ IO::SDK::Body::Body::Body(const int id, const std::string &name, const double ma
 	centerOfMotion->m_satellites.push_back(this);
 }
 
-IO::SDK::Body::Body::Body(const Body &body) : m_id{body.m_id}, m_name{body.m_name}, m_mass{body.m_mass}, m_mu{body.m_mu} {}
+IO::SDK::Body::Body::Body(const Body &body) :Body(body.m_id, body.m_name, body.m_mass) {}
 
-const int IO::SDK::Body::Body::GetId() const
+int IO::SDK::Body::Body::GetId() const
 {
 	return m_id;
 }

@@ -22,6 +22,9 @@ namespace IO::SDK::Time
 	public:
 		Window(T startdate, TimeSpan length) : m_start{startdate}, m_end{m_start + length}, m_length{length} {};
 		Window(T startdate, T endDate) : m_start{startdate}, m_end{endDate}, m_length{endDate - startdate} {};
+		Window(const Window<T> &window) : m_start{window.m_start}, m_end{window.m_end}, m_length{window.m_length}
+		{
+		}
 
 		T GetStartDate() const { return m_start; }
 		T GetEndDate() const { return m_end; }
@@ -50,7 +53,7 @@ namespace IO::SDK::Time
 			return Window<T>(min, max);
 		}
 
-		Window<T> &operator=(const Window<T> window)
+		Window<T> &operator=(const Window<T> &window)
 		{
 			// Guard self assignment
 			if (this == &window)

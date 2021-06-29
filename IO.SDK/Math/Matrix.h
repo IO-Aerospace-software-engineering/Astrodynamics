@@ -81,13 +81,13 @@ namespace IO::SDK::Math
 		/// Get the matrix columns size
 		/// </summary>
 		/// <returns></returns>
-		const std::size_t GetColumsSize() const { return m_colSize; }
+		std::size_t GetColumsSize() const { return m_colSize; }
 
 		/// <summary>
 		/// Get the matirx rows size
 		/// </summary>
 		/// <returns></returns>
-		const std::size_t GetRowsSize() const { return m_rowSize; }
+		std::size_t GetRowsSize() const { return m_rowSize; }
 
 		/// <summary>
 		/// Multiply this matrix by another
