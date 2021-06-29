@@ -33,9 +33,7 @@ namespace IO::SDK::Maneuvers
     private:
         double m_theta{};
         std::unique_ptr<bool> m_isApproachingP{nullptr};
-        std::unique_ptr<bool> m_isApproachingQ{nullptr};
-
-        
+        std::unique_ptr<bool> m_isApproachingQ{nullptr};        
 
         bool IsIntersectP(const IO::SDK::OrbitalParameters::StateVector &stateVector) const;
         bool IsIntersectQ(const IO::SDK::OrbitalParameters::StateVector &stateVector) const;

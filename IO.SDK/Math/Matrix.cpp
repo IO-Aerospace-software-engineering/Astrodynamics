@@ -1,12 +1,11 @@
 #include "Matrix.h"
 #include <SDKException.h>
 
-
-IO::SDK::Math::Matrix::Matrix(const Matrix& v) :Matrix(v.m_rowSize, v.m_colSize)
+IO::SDK::Math::Matrix::Matrix(const Matrix &v) : Matrix(v.m_rowSize, v.m_colSize)
 {
-	for (size_t i = 0; i < v.m_rowSize; i++)
+	for (std::size_t i = 0; i < v.m_rowSize; i++)
 	{
-		for (size_t j = 0; j < v.m_colSize; j++)
+		for (std::size_t j = 0; j < v.m_colSize; j++)
 		{
 			m_data[i][j] = v.m_data[i][j];
 		}
@@ -15,7 +14,7 @@ IO::SDK::Math::Matrix::Matrix(const Matrix& v) :Matrix(v.m_rowSize, v.m_colSize)
 
 IO::SDK::Math::Matrix::~Matrix()
 {
-	for (int i = 0; i < m_rowSize; i++)
+	for (std::size_t i = 0; i < m_rowSize; i++)
 		delete[] this->m_data[i];
 
 	delete[] m_data;
@@ -48,7 +47,7 @@ void IO::SDK::Math::Matrix::SetValue(const size_t rowIdx, const size_t colIdx, d
 	this->m_data[rowIdx][colIdx] = value;
 }
 
-IO::SDK::Math::Matrix IO::SDK::Math::Matrix::Multiply(const Matrix& matrix)
+IO::SDK::Math::Matrix IO::SDK::Math::Matrix::Multiply(const Matrix &matrix)
 {
 	if (m_colSize != matrix.m_rowSize)
 	{
@@ -89,7 +88,7 @@ IO::SDK::Math::Matrix IO::SDK::Math::Matrix::Transpose() const
 	return res;
 }
 
-double** IO::SDK::Math::Matrix::GetRawData() const
+double **IO::SDK::Math::Matrix::GetRawData() const
 {
 	return m_data;
 }

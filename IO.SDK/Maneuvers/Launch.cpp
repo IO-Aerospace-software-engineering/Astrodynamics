@@ -201,7 +201,7 @@ std::vector<IO::SDK::Maneuvers::LaunchWindow> IO::SDK::Maneuvers::Launch::FindLa
             //nb remaining launch windows
             int nbLaunchWindows = remainingTime.GetSeconds().count() / halfSideralRotation.GetSeconds().count();
 
-            for (size_t i = 0; i < nbLaunchWindows; i++)
+            for (int i = 0; i < nbLaunchWindows; i++)
             {
                 //If previous is ascending next will be descending
                 isAscending = !isAscending;

@@ -115,7 +115,10 @@ TEST(Propagator, PropagateVVIntegrator)
 
     IO::SDK::Propagators::Propagator pro(spc, integrator, IO::SDK::Time::Window(epoch, epoch + step * 100.0));
 
+#ifdef DEBUG
     auto t1 = std::chrono::high_resolution_clock::now();
+#endif
+
     pro.Propagate();
 
 #ifdef DEBUG
@@ -139,7 +142,7 @@ TEST(Propagator, PropagateVVIntegrator)
 
     //Read ephemeris
     sv = pro.GetStateVectors()[80];
-    auto ephemerisSv = spc.ReadEphemeris(IO::SDK::Frames::InertialFrames::ICRF, IO::SDK::AberrationsEnum::None, epoch + step * 80.0,*earth);
+    auto ephemerisSv = spc.ReadEphemeris(IO::SDK::Frames::InertialFrames::ICRF, IO::SDK::AberrationsEnum::None, epoch + step * 80.0, *earth);
     ASSERT_EQ(ephemerisSv.GetEpoch(), sv.GetEpoch());
     ASSERT_DOUBLE_EQ(ephemerisSv.GetPosition().GetX(), sv.GetPosition().GetX());
     ASSERT_DOUBLE_EQ(ephemerisSv.GetPosition().GetY(), sv.GetPosition().GetY());
@@ -181,7 +184,10 @@ TEST(Propagator, PropagatorVsKepler)
 
     IO::SDK::Propagators::Propagator pro(spc, integrator, IO::SDK::Time::Window(epoch, epoch + duration));
 
+#ifdef DEBUG
     auto t1 = std::chrono::high_resolution_clock::now();
+#endif
+
     pro.Propagate();
 #ifdef DEBUG
     auto t2 = std::chrono::high_resolution_clock::now();
@@ -194,8 +200,6 @@ TEST(Propagator, PropagatorVsKepler)
     const std::vector<IO::SDK::OrbitalParameters::StateVector> &propagationResults = pro.GetStateVectors();
     auto propagationResult = propagationResults[duration.GetSeconds().count() / step.GetSeconds().count()];
     auto keplerResults = localOrbitalparams->GetStateVector(epoch + duration);
-
-    auto originEnergy = localOrbitalparams->GetSpecificOrbitalEnergy();
 
     std::cout << "Delta dX : " << std::abs(keplerResults.GetPosition().GetX() - propagationResult.GetPosition().GetX()) << " m" << std::endl;
     std::cout << "Delta dY : " << std::abs(keplerResults.GetPosition().GetY() - propagationResult.GetPosition().GetY()) << " m" << std::endl;
@@ -252,16 +256,19 @@ TEST(Propagator, PropagateTLEIntegrator)
 
     IO::SDK::Propagators::Propagator pro(spc, integrator, IO::SDK::Time::Window(epoch, epoch + step * 100.0));
 
+#ifdef DEBUG
     auto t1 = std::chrono::high_resolution_clock::now();
+#endif
+
     pro.Propagate();
-    
-    #ifdef DEBUG
+
+#ifdef DEBUG
     auto t2 = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double, std::milli> ms_double = t2 - t1;
     std::cout << std::to_string(ms_double.count()) << " ms" << std::endl;
     //Check performance
     ASSERT_TRUE(0.9 > ms_double.count());
-    #endif
+#endif
 
     //Read propagator results
     auto stateVector = pro.GetStateVectors()[1];
@@ -279,7 +286,7 @@ TEST(Propagator, PropagateTLEIntegrator)
     //  VX=-6.921346768046464E+00 VY= 9.156923051627522E-02 VZ=-3.288419444276052E+00
     //Read ephemeris results
     stateVector = pro.GetStateVectors()[80];
-    auto ephemerisSv = spc.ReadEphemeris(IO::SDK::Frames::InertialFrames::ICRF, IO::SDK::AberrationsEnum::None, epoch + step * 80.0,*earth);
+    auto ephemerisSv = spc.ReadEphemeris(IO::SDK::Frames::InertialFrames::ICRF, IO::SDK::AberrationsEnum::None, epoch + step * 80.0, *earth);
     ASSERT_EQ(ephemerisSv.GetEpoch(), stateVector.GetEpoch());
     ASSERT_DOUBLE_EQ(ephemerisSv.GetPosition().GetX(), stateVector.GetPosition().GetX());
     ASSERT_DOUBLE_EQ(ephemerisSv.GetPosition().GetY(), stateVector.GetPosition().GetY());
@@ -287,6 +294,4 @@ TEST(Propagator, PropagateTLEIntegrator)
     ASSERT_DOUBLE_EQ(ephemerisSv.GetVelocity().GetX(), stateVector.GetVelocity().GetX());
     ASSERT_DOUBLE_EQ(ephemerisSv.GetVelocity().GetY(), stateVector.GetVelocity().GetY());
     ASSERT_DOUBLE_EQ(ephemerisSv.GetVelocity().GetZ(), stateVector.GetVelocity().GetZ());
-
-    
 }

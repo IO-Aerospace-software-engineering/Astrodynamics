@@ -21,9 +21,14 @@ namespace IO::SDK::OrbitalParameters
 		const double m_L{};
 		const double m_periapsisLongitudeRate{};
 		const double m_meanAnomalyRate{};
-		const double m_ascendingNodeLongitudeRate{};
 		const double m_rightAscensionOfThePole{};
 		const double m_declinationOfThePole{};
+		const double m_ascendingNodeLongitudeRate{};
+		
+		
+		
+		
+		
 
 		IO::SDK::Time::TimeSpan m_period;
 		double m_elements[9]{};

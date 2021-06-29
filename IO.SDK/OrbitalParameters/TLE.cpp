@@ -5,7 +5,7 @@
 #include <Constants.h>
 #include <InertialFrames.h>
 
-IO::SDK::OrbitalParameters::TLE::TLE(const std::shared_ptr<IO::SDK::Body::CelestialBody> &centerOfmotion, std::string lines[3]) : m_satelliteName{lines[0]}, OrbitalParameters(centerOfmotion, std::chrono::duration<double>(0.0), IO::SDK::Frames::InertialFrames::ICRF)
+IO::SDK::OrbitalParameters::TLE::TLE(const std::shared_ptr<IO::SDK::Body::CelestialBody> &centerOfmotion, std::string lines[3]) :  OrbitalParameters(centerOfmotion, std::chrono::duration<double>(0.0), IO::SDK::Frames::InertialFrames::ICRF),m_satelliteName{lines[0]}
 {
 	//Build lines
 	size_t length = lines[1].length();

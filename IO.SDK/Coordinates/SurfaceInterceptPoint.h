@@ -23,8 +23,9 @@ namespace IO::SDK::Coordinates
 	{
 	private:
 		const IO::SDK::Math::Vector3D m_interceptPoint;
-		const IO::SDK::Time::TDB m_interceptEpoch;
 		const IO::SDK::Math::Vector3D m_observerToInterceptPointVector;
+		const IO::SDK::Time::TDB m_interceptEpoch;
+		
 
 	public:
 		/// <summary>

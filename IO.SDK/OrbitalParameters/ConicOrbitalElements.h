@@ -29,8 +29,9 @@ namespace IO::SDK::OrbitalParameters
 		double m_periapsisArgument{};
 		double m_meanAnomaly{};
 		double m_trueAnomaly{};
-		double m_semiMajorAxis{};
 		IO::SDK::Time::TimeSpan m_orbitalPeriod;
+		double m_semiMajorAxis{};
+		
 
 	public:
 		

@@ -20,7 +20,7 @@ namespace IO::SDK::Time
 		const TimeSpan m_length;
 
 	public:
-		Window(T startdate, TimeSpan length) : m_start{startdate}, m_length{length}, m_end{m_start + length} {};
+		Window(T startdate, TimeSpan length) : m_start{startdate}, m_end{m_start + length}, m_length{length} {};
 		Window(T startdate, T endDate) : m_start{startdate}, m_end{endDate}, m_length{endDate - startdate} {};
 
 		T GetStartDate() const { return m_start; }
@@ -56,9 +56,9 @@ namespace IO::SDK::Time
 			if (this == &window)
 				return *this;
 
-			const_cast<T&>(m_start) = window.m_start;
-			const_cast<T&>(m_end) = window.m_end;
-			const_cast<IO::SDK::Time::TimeSpan&>(m_length) = window.m_length;
+			const_cast<T &>(m_start) = window.m_start;
+			const_cast<T &>(m_end) = window.m_end;
+			const_cast<IO::SDK::Time::TimeSpan &>(m_length) = window.m_length;
 			return *this;
 		}
 	};
