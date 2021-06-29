@@ -37,3 +37,15 @@ TEST(Body, SubObserverPoint)
     ASSERT_DOUBLE_EQ(-0.34238142277532951, subpoint.GetLatitude());
     ASSERT_DOUBLE_EQ(1.0586118481814565e-12, subpoint.GetAltitude());
 }
+
+TEST(Body, SubSolarPoint)
+{
+    auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10, "sun");
+    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth", sun);
+    auto moon = std::make_shared<IO::SDK::Body::CelestialBody>(301, "moon", earth);
+
+    auto subpoint = moon->GetSubSolarPoint(*earth, IO::SDK::AberrationsEnum::None, IO::SDK::Time::TDB("2021-06-28T12:00:00"));
+    ASSERT_DOUBLE_EQ(0.01592876989506849, subpoint.GetLongitude());
+    ASSERT_DOUBLE_EQ(0.40823584501112109, subpoint.GetLatitude());
+    ASSERT_DOUBLE_EQ(0.0, subpoint.GetAltitude());
+}

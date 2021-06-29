@@ -12,12 +12,13 @@
 #ifndef CELESTIAL_BODY_H
 #define CELESTIAL_BODY_H
 
+#include <string>
+#include <cmath>
+
 #include <Body.h>
 #include <BodyFixedFrames.h>
 #include <TDB.h>
-
-#include <string>
-#include <cmath>
+#include <Planetographic.h>
 
 namespace IO::SDK::Body
 {
@@ -116,6 +117,8 @@ namespace IO::SDK::Body
 	 * @return double 
 	 */
 	double HillSphere(double a, double e, double majorMass, double minorMass);
+
+
 
 }
 #endif

@@ -145,7 +145,7 @@ namespace IO::SDK::Body
 		 * @param epoch 
 		 * @return IO::SDK::OrbitalParameters::StateVector 
 		 */
-		virtual IO::SDK::OrbitalParameters::StateVector ReadEphemeris( const IO::SDK::Frames::Frames &frame, const IO::SDK::AberrationsEnum aberration, const IO::SDK::Time::TDB &epoch,const IO::SDK::Body::CelestialBody &relativeTo) const;
+		virtual IO::SDK::OrbitalParameters::StateVector ReadEphemeris(const IO::SDK::Frames::Frames &frame, const IO::SDK::AberrationsEnum aberration, const IO::SDK::Time::TDB &epoch, const IO::SDK::Body::CelestialBody &relativeTo) const;
 
 		virtual bool operator==(const IO::SDK::Body::Body &rhs) const;
 		virtual bool operator!=(const IO::SDK::Body::Body &rhs) const;
@@ -177,19 +177,27 @@ namespace IO::SDK::Body
 		 * @param stepSize Step size (should be shorter than the shortest of these intervals. WARNING : A short step size could increase compute time)
 		 * @return std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>> 
 		 */
-		std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>> FindWindowsOnOccultationConstraint(const IO::SDK::Time::Window<IO::SDK::Time::TDB> searchWindow, const IO::SDK::Body::CelestialBody &targetBody, const IO::SDK::Body::CelestialBody &frontBody, const IO::SDK::OccultationType &occultationType, const IO::SDK::AberrationsEnum aberration,const IO::SDK::Time::TimeSpan& stepSize) const;
-
+		std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>> FindWindowsOnOccultationConstraint(const IO::SDK::Time::Window<IO::SDK::Time::TDB> searchWindow, const IO::SDK::Body::CelestialBody &targetBody, const IO::SDK::Body::CelestialBody &frontBody, const IO::SDK::OccultationType &occultationType, const IO::SDK::AberrationsEnum aberration, const IO::SDK::Time::TimeSpan &stepSize) const;
 
 		/**
-		 * @brief Get the Sub Observer Point
+		 * @brief Get the Sub Observer Point observed from this body
 		 * 
 		 * @param targetBody 
 		 * @param aberration 
 		 * @param epoch 
 		 * @return IO::SDK::Coordinates::Planetographic 
 		 */
-		IO::SDK::Coordinates::Planetographic GetSubObserverPoint(const IO::SDK::Body::CelestialBody& targetBody, const IO::SDK::AberrationsEnum& aberration, const IO::SDK::Time::DateTime& epoch) const;
-		
+		IO::SDK::Coordinates::Planetographic GetSubObserverPoint(const IO::SDK::Body::CelestialBody &targetBody, const IO::SDK::AberrationsEnum &aberration, const IO::SDK::Time::DateTime &epoch) const;
+
+		/**
+		 * @brief Get the Sub Solar Point observed from this body
+		 * 
+		 * @param targetBody 
+		 * @param abberation 
+		 * @param epoch 
+		 * @return IO::SDK::Coordinates::Planetographic 
+		 */
+		IO::SDK::Coordinates::Planetographic GetSubSolarPoint(const IO::SDK::Body::CelestialBody &targetBody, const IO::SDK::AberrationsEnum aberration, const IO::SDK::Time::TDB &epoch) const;
 	};
 }
 #endif
