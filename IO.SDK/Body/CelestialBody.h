@@ -25,10 +25,11 @@ namespace IO::SDK::Body
 	class CelestialBody : public IO::SDK::Body::Body
 	{
 	private:
-		const double m_sphereOfInfluence{};
+		
+		const double m_sphereOfInfluence{};		
 		const double m_hillSphere{};
-		double ReadGM(int id);
 		const IO::SDK::Frames::BodyFixedFrames m_BodyFixedFrame;
+		double ReadGM(int id);
 
 	public:
 		CelestialBody(const int id, const std::string &name, std::shared_ptr<IO::SDK::Body::CelestialBody> &centerOfMotion);
@@ -117,8 +118,6 @@ namespace IO::SDK::Body
 	 * @return double 
 	 */
 	double HillSphere(double a, double e, double majorMass, double minorMass);
-
-
 
 }
 #endif

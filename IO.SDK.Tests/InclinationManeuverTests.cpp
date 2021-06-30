@@ -36,8 +36,6 @@ TEST(OrbitalPlaneChangingManeuver, CanExecute)
 
     IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver maneuver(engines, prop, orbitalParams2.get());
 
-    auto T = s.GetOrbitalParametersAtEpoch()->GetPeriod().GetSeconds().count();
-
     auto timeToTrueAnomalyDN = s.GetOrbitalParametersAtEpoch()->GetTimeToTrueAnomaly(2.197937654);
     auto timeToTrueAnomalyAN = s.GetOrbitalParametersAtEpoch()->GetTimeToTrueAnomaly(2.197937654 + IO::SDK::Constants::PI);
     //Initialize

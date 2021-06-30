@@ -116,8 +116,6 @@ TEST(Instrument, Kernel)
 	IO::SDK::Body::Spacecraft::Spacecraft s{-17, "sc17", 1000.0, 3000.0, "mis1Scn1", std::move(orbitalParams)};
 	s.AddCircularFOVInstrument(200, "Camera200", orientation, boresight, fovvector, 1.5);
 
-	const IO::SDK::Instruments::Instrument *instrument{s.GetInstrument(200)};
-
 	auto classSpec = IO::SDK::DataPoolMonitoring::Instance().GetStringProperty("INS-17200_FOV_CLASS_SPEC", 1);
 	ASSERT_STREQ("ANGLES", classSpec[0].c_str());
 

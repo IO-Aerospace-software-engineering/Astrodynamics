@@ -121,11 +121,12 @@ namespace IO::SDK::Maneuvers
         std::unique_ptr<IO::SDK::Time::TDB> m_minimumEpoch{};
         ManeuverBase *m_nextManeuver{};
         bool m_isValid{false};
+        const IO::SDK::Body::Spacecraft::Spacecraft &m_spacecraft;
         IO::SDK::Propagators::Propagator& m_propagator;
         std::vector<ManeuverBase *> m_subManeuvers{};
         std::set<const IO::SDK::Body::Spacecraft::FuelTank *> m_fuelTanks;
         std::map<const IO::SDK::Body::Spacecraft::FuelTank *, IO::SDK::Maneuvers::DynamicFuelTank> m_dynamicFuelTanks;
-        const IO::SDK::Body::Spacecraft::Spacecraft &m_spacecraft;
+        
 
         /**
          * @brief Construct a new Maneuver Base object

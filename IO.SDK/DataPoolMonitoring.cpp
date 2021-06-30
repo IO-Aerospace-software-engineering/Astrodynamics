@@ -19,7 +19,7 @@ std::vector<std::string> IO::SDK::DataPoolMonitoring::GetStringProperty(const st
 
 	if (found)
 	{
-		for (size_t i = 0; i < n; i++)
+		for (int i = 0; i < n; i++)
 		{
 			res.push_back(values[i]);
 		}
@@ -38,7 +38,7 @@ std::vector<int> IO::SDK::DataPoolMonitoring::GetIntegerProperty(const std::stri
 
 	std::vector<int> res;
 
-	for (size_t i = 0; i < n; i++)
+	for (int i = 0; i < n; i++)
 	{
 		res.push_back(values[i]);
 	}
@@ -57,7 +57,7 @@ std::vector<double> IO::SDK::DataPoolMonitoring::GetDoubleProperty(const std::st
 
 	std::vector<double> res;
 
-	for (size_t i = 0; i < n; i++)
+	for (int i = 0; i < n; i++)
 	{
 		res.push_back(values[i]);
 	}

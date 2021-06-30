@@ -105,10 +105,6 @@ IO::SDK::Maneuvers::ManeuverResult IO::SDK::Maneuvers::ManeuverBase::TryExecute(
 
 IO::SDK::Maneuvers::ManeuverResult IO::SDK::Maneuvers::ManeuverBase::Validate()
 {
-    //Get fuel mass available
-    const double fuelMassAvailable = std::accumulate(m_fuelTanks.begin(), m_fuelTanks.end(), 0.0, [](double total, const IO::SDK::Body::Spacecraft::FuelTank *f)
-                                                     { return total + f->GetQuantity(); });
-
     //Get delta V available
     const double deltaVAvailable{IO::SDK::Body::Spacecraft::Engine::ComputeDeltaV(GetRemainingAvgISP(), m_spacecraft.GetMass(), m_spacecraft.GetDryOperatingMass())};
 

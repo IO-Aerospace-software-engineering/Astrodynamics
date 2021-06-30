@@ -21,10 +21,12 @@ namespace IO::SDK::OrbitalParameters
 	class StateOrientation
 	{
 	private:
-		const IO::SDK::Time::TDB m_epoch;
-		const IO::SDK::Frames::Frames m_frame;
 		const IO::SDK::Math::Quaternion m_quaternion{};
 		const IO::SDK::Math::Vector3D m_angularVelocity{};
+		const IO::SDK::Time::TDB m_epoch;
+		const IO::SDK::Frames::Frames m_frame;
+		
+		
 
 	public:
 		/**

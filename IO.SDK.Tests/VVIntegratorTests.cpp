@@ -28,19 +28,21 @@ TEST(VVIntegrator, IntegrateGravity)
     //  X =-2.068864826237993E+05 Y = 2.891146390982051E+05 Z = 1.515746884380044E+05
     //  VX=-8.366764389833921E-01 VY=-5.602543663174073E-01 VZ=-1.710459390585548E-01
     auto moon = std::make_shared<IO::SDK::Body::CelestialBody>(301, "moon", earth);
-    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth, IO::SDK::Math::Vector3D(6800000.0, 0.0, 0.0), IO::SDK::Math::Vector3D(0.0, 8000.0, 0.0), epoch,IO::SDK::Frames::InertialFrames::ICRF);
-    IO::SDK::OrbitalParameters::StateOrientation attitude(IO::SDK::Time::TDB(100.0s),IO::SDK::Frames::InertialFrames::ICRF);
+    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth, IO::SDK::Math::Vector3D(6800000.0, 0.0, 0.0), IO::SDK::Math::Vector3D(0.0, 8000.0, 0.0), epoch, IO::SDK::Frames::InertialFrames::ICRF);
+    IO::SDK::OrbitalParameters::StateOrientation attitude(IO::SDK::Time::TDB(100.0s), IO::SDK::Frames::InertialFrames::ICRF);
     IO::SDK::Body::Spacecraft::Spacecraft spc(-12, "spc12", 1000.0, 3000.0, "missGravity", std::move(orbitalParams));
 
+#ifdef DEBUG
     auto t1 = std::chrono::high_resolution_clock::now();
+#endif
     auto sv = integrator.Integrate(spc, IO::SDK::OrbitalParameters::StateVector(earth, IO::SDK::Math::Vector3D(6800000.0, 0.0, 0.0), IO::SDK::Math::Vector3D(0.0, 8000.0, 0.0), epoch, IO::SDK::Frames::InertialFrames::ICRF));
-    #ifdef DEBUG
+#ifdef DEBUG
     auto t2 = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double, std::milli> ms_double = t2 - t1;
     std::cout << std::to_string(ms_double.count()) << " ms" << std::endl;
     ASSERT_TRUE(0.12 > ms_double.count());
-    #endif
-    
+#endif
+
     ASSERT_DOUBLE_EQ(6799995.6897156574, sv.GetPosition().GetX());
     ASSERT_DOUBLE_EQ(7999.9982033708893, sv.GetPosition().GetY());
     ASSERT_DOUBLE_EQ(-0.00069076103852024734, sv.GetPosition().GetZ());

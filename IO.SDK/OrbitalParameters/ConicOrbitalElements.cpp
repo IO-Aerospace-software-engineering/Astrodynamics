@@ -6,29 +6,14 @@
 #include <SpiceUsr.h>
 #include <chrono>
 
-IO::SDK::OrbitalParameters::ConicOrbitalElements::ConicOrbitalElements(const std::shared_ptr<IO::SDK::Body::CelestialBody> &centerOfMotion, const double perifocalDistance, const double eccentricity, const double inclination, const double ascendingNodeLongitude, const double periapsisArgument, const double meanAnomaly, const IO::SDK::Time::TDB &epoch, const IO::SDK::Frames::Frames &frame) : m_perifocalDistance{perifocalDistance},
-																																																																																																		 m_eccentricity{eccentricity},
-																																																																																																		 m_inclination{inclination},
-																																																																																																		 m_ascendingNodeLongitude{ascendingNodeLongitude},
-																																																																																																		 m_periapsisArgument{periapsisArgument},
-																																																																																																		 m_meanAnomaly{meanAnomaly},
-																																																																																																		 OrbitalParameters(centerOfMotion, epoch, frame)
+IO::SDK::OrbitalParameters::ConicOrbitalElements::ConicOrbitalElements(const std::shared_ptr<IO::SDK::Body::CelestialBody> &centerOfMotion, const double perifocalDistance, const double eccentricity, const double inclination, const double ascendingNodeLongitude, const double periapsisArgument, const double meanAnomaly, const IO::SDK::Time::TDB &epoch, const IO::SDK::Frames::Frames &frame) : OrbitalParameters(centerOfMotion, epoch, frame), m_perifocalDistance{perifocalDistance}, m_eccentricity{eccentricity}, m_inclination{inclination}, m_ascendingNodeLongitude{ascendingNodeLongitude}, m_periapsisArgument{periapsisArgument}, m_meanAnomaly{meanAnomaly}
 {
 	m_semiMajorAxis = -(m_centerOfMotion->GetMu() / (2.0 * GetSpecificOrbitalEnergy()));
 	m_orbitalPeriod = IO::SDK::Time::TimeSpan(std::chrono::duration<double>(IO::SDK::Constants::_2PI * std::sqrt(std::pow(m_semiMajorAxis, 3.0) / m_centerOfMotion->GetMu())));
 	m_trueAnomaly = GetTrueAnomaly(epoch);
 }
 
-IO::SDK::OrbitalParameters::ConicOrbitalElements::ConicOrbitalElements(const std::shared_ptr<IO::SDK::Body::CelestialBody> &centerOfMotion, const double spiceElements[SPICE_OSCLTX_NELTS], const IO::SDK::Frames::Frames &frame) : m_perifocalDistance{spiceElements[0]},
-																																																									m_eccentricity{spiceElements[1]},
-																																																									m_inclination{spiceElements[2]},
-																																																									m_ascendingNodeLongitude{spiceElements[3]},
-																																																									m_periapsisArgument{spiceElements[4]},
-																																																									m_meanAnomaly{spiceElements[5]},
-																																																									m_trueAnomaly{spiceElements[8]},
-																																																									m_orbitalPeriod{std::chrono::duration<double>(spiceElements[10])},
-																																																									m_semiMajorAxis{spiceElements[9]},
-																																																									OrbitalParameters(centerOfMotion, IO::SDK::Time::TDB(std::chrono::duration<double>(spiceElements[6])), frame)
+IO::SDK::OrbitalParameters::ConicOrbitalElements::ConicOrbitalElements(const std::shared_ptr<IO::SDK::Body::CelestialBody> &centerOfMotion, const double spiceElements[SPICE_OSCLTX_NELTS], const IO::SDK::Frames::Frames &frame) : OrbitalParameters(centerOfMotion, IO::SDK::Time::TDB(std::chrono::duration<double>(spiceElements[6])), frame), m_perifocalDistance{spiceElements[0]}, m_eccentricity{spiceElements[1]}, m_inclination{spiceElements[2]}, m_ascendingNodeLongitude{spiceElements[3]}, m_periapsisArgument{spiceElements[4]}, m_meanAnomaly{spiceElements[5]}, m_trueAnomaly{spiceElements[8]}, m_orbitalPeriod{std::chrono::duration<double>(spiceElements[10])}, m_semiMajorAxis{spiceElements[9]}
 {
 }
 

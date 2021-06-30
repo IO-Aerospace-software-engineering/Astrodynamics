@@ -25,6 +25,7 @@ namespace IO::SDK::Time
 	protected:
 		const std::chrono::duration<double> m_secondsFromJ2000{};
 		DateTime();
+		DateTime(const DateTime& datetime);
 		virtual ~DateTime() = default;
 
 		/// <summary>

@@ -10,13 +10,13 @@
 
 using namespace std::chrono_literals;
 
-IO::SDK::Body::CelestialBody::CelestialBody(const int id, const std::string &name, std::shared_ptr<IO::SDK::Body::CelestialBody> &centerOfMotion) : m_BodyFixedFrame{"IAU_" + name}, IO::SDK::Body::Body(id, name, ReadGM(id) / IO::SDK::Constants::G, centerOfMotion)
+IO::SDK::Body::CelestialBody::CelestialBody(const int id, const std::string &name, std::shared_ptr<IO::SDK::Body::CelestialBody> &centerOfMotion) : IO::SDK::Body::Body(id, name, ReadGM(id) / IO::SDK::Constants::G, centerOfMotion),m_BodyFixedFrame{"IAU_" + name}
 {
     const_cast<double &>(m_sphereOfInfluence) = IO::SDK::Body::SphereOfInfluence(m_orbitalParametersAtEpoch->GetSemiMajorAxis(), m_orbitalParametersAtEpoch->GetCenterOfMotion()->GetMu(), m_mu);
     const_cast<double &>(m_hillSphere) = IO::SDK::Body::HillSphere(m_orbitalParametersAtEpoch->GetSemiMajorAxis(), m_orbitalParametersAtEpoch->GetEccentricity(), m_orbitalParametersAtEpoch->GetCenterOfMotion()->GetMu(), m_mu);
 }
 
-IO::SDK::Body::CelestialBody::CelestialBody(const int id, const std::string &name) : m_BodyFixedFrame{"IAU_" + name}, IO::SDK::Body::Body(id, name, ReadGM(id) / IO::SDK::Constants::G)
+IO::SDK::Body::CelestialBody::CelestialBody(const int id, const std::string &name) : IO::SDK::Body::Body(id, name, ReadGM(id) / IO::SDK::Constants::G),m_BodyFixedFrame{"IAU_" + name}
 {
     const_cast<double &>(m_sphereOfInfluence) = std::numeric_limits<double>::infinity();
     const_cast<double &>(m_hillSphere) = std::numeric_limits<double>::infinity();

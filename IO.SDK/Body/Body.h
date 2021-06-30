@@ -92,7 +92,7 @@ namespace IO::SDK::Body
 		 * 
 		 * @return const int 
 		 */
-		const int GetId() const;
+		int GetId() const;
 
 		/**
 		 * @brief Get the body name

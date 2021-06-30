@@ -16,8 +16,9 @@ namespace IO::SDK::Maneuvers
         const IO::SDK::Time::Window<IO::SDK::Time::UTC> m_window;
         const double m_inertialAzimuth;
         const double m_nonInertialAzimuth;
-        const double m_inertialInsertionVelocity;
+        
         const double m_nonInertialInsertionVelocity;
+        const double m_inertialInsertionVelocity;
 
     public:
         /**

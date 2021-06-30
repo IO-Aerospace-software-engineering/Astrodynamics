@@ -9,10 +9,10 @@
  * 
  */
 #include "SDKException.h"
-IO::SDK::Exception::SDKException::SDKException(const std::string &msg) : m_msg{msg}, std::exception()
-		{
-		}
-const char * IO::SDK::Exception::SDKException::what() const noexcept
+IO::SDK::Exception::SDKException::SDKException(const std::string &msg) : std::exception(), m_msg{msg}
 {
-    return m_msg.c_str();
+}
+const char *IO::SDK::Exception::SDKException::what() const noexcept
+{
+	return m_msg.c_str();
 }
