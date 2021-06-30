@@ -1,0 +1,456 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites tests="327" name="AllTests">
+  <testsuite name="Aberration" tests="1">
+    <testcase name="ToString" file="../IO.SDK.Tests/AberrationTests.cpp" line="3" />
+  </testsuite>
+  <testsuite name="ApogeeHeightChangingManeuverTests" tests="3">
+    <testcase name="CanExecute" file="../IO.SDK.Tests/ApogeeHeightChangingManeuverTests.cpp" line="17" />
+    <testcase name="IncreaseApogeeHeight" file="../IO.SDK.Tests/ApogeeHeightChangingManeuverTests.cpp" line="48" />
+    <testcase name="DecreaseApogeeHeight" file="../IO.SDK.Tests/ApogeeHeightChangingManeuverTests.cpp" line="78" />
+  </testsuite>
+  <testsuite name="ApsidalAlignmentManeuver" tests="3">
+    <testcase name="CanExecute" file="../IO.SDK.Tests/ApsidalAlignmentManeuverTests.cpp" line="18" />
+    <testcase name="ExecuteP" file="../IO.SDK.Tests/ApsidalAlignmentManeuverTests.cpp" line="61" />
+    <testcase name="ExecuteQ" file="../IO.SDK.Tests/ApsidalAlignmentManeuverTests.cpp" line="109" />
+  </testsuite>
+  <testsuite name="AzimuthRange" tests="10">
+    <testcase name="Initialization" file="../IO.SDK.Tests/AzimuthRangeTests.cpp" line="4" />
+    <testcase name="Span1" file="../IO.SDK.Tests/AzimuthRangeTests.cpp" line="13" />
+    <testcase name="Span2" file="../IO.SDK.Tests/AzimuthRangeTests.cpp" line="22" />
+    <testcase name="Span3" file="../IO.SDK.Tests/AzimuthRangeTests.cpp" line="31" />
+    <testcase name="IsInRange" file="../IO.SDK.Tests/AzimuthRangeTests.cpp" line="40" />
+    <testcase name="IsInRange2" file="../IO.SDK.Tests/AzimuthRangeTests.cpp" line="52" />
+    <testcase name="IsInRange3" file="../IO.SDK.Tests/AzimuthRangeTests.cpp" line="64" />
+    <testcase name="IsInRange4" file="../IO.SDK.Tests/AzimuthRangeTests.cpp" line="75" />
+    <testcase name="IsInRange5" file="../IO.SDK.Tests/AzimuthRangeTests.cpp" line="87" />
+    <testcase name="IsIntersected" file="../IO.SDK.Tests/AzimuthRangeTests.cpp" line="99" />
+  </testsuite>
+  <testsuite name="Body" tests="4">
+    <testcase name="Initialization" file="../IO.SDK.Tests/BodyTests.cpp" line="8" />
+    <testcase name="Satellites" file="../IO.SDK.Tests/BodyTests.cpp" line="18" />
+    <testcase name="SubObserverPoint" file="../IO.SDK.Tests/BodyTests.cpp" line="29" />
+    <testcase name="SubSolarPoint" file="../IO.SDK.Tests/BodyTests.cpp" line="41" />
+  </testsuite>
+  <testsuite name="CelestialBody" tests="12">
+    <testcase name="SphereOfInfluence" file="../IO.SDK.Tests/CelestialBodyTests.cpp" line="14" />
+    <testcase name="HillSphere" file="../IO.SDK.Tests/CelestialBodyTests.cpp" line="27" />
+    <testcase name="GetStateVector" file="../IO.SDK.Tests/CelestialBodyTests.cpp" line="40" />
+    <testcase name="GetRelativeStateVector" file="../IO.SDK.Tests/CelestialBodyTests.cpp" line="55" />
+    <testcase name="IsInSphereOfInfluence" file="../IO.SDK.Tests/CelestialBodyTests.cpp" line="67" />
+    <testcase name="IsInHillSphere" file="../IO.SDK.Tests/CelestialBodyTests.cpp" line="80" />
+    <testcase name="GetRadii" file="../IO.SDK.Tests/CelestialBodyTests.cpp" line="93" />
+    <testcase name="GetFlattening" file="../IO.SDK.Tests/CelestialBodyTests.cpp" line="101" />
+    <testcase name="GetAngularVelocity" file="../IO.SDK.Tests/CelestialBodyTests.cpp" line="109" />
+    <testcase name="GetSideralRotationPeriod" file="../IO.SDK.Tests/CelestialBodyTests.cpp" line="117" />
+    <testcase name="FindDistanceConstraint" file="../IO.SDK.Tests/CelestialBodyTests.cpp" line="125" />
+    <testcase name="FindOccultationConstraint" file="../IO.SDK.Tests/CelestialBodyTests.cpp" line="142" />
+  </testsuite>
+  <testsuite name="CentrifugalForce" tests="1">
+    <testcase name="SimpleCases" file="../IO.SDK.Tests/CentrifugalForceTests.cpp" line="12" />
+  </testsuite>
+  <testsuite name="CombinedManeuver" tests="3">
+    <testcase name="CanExecute" file="../IO.SDK.Tests/CombinedManeuverTests.cpp" line="19" />
+    <testcase name="TryExecuteWithPeregeeHigherThanApogee" file="../IO.SDK.Tests/CombinedManeuverTests.cpp" line="45" />
+    <testcase name="TryExecuteWithPeregeeLowerThanApogee" file="../IO.SDK.Tests/CombinedManeuverTests.cpp" line="80" />
+  </testsuite>
+  <testsuite name="ConicOrbitalElements" tests="14">
+    <testcase name="Initialization" file="../IO.SDK.Tests/ConicOrbitalElementsTests.cpp" line="14" />
+    <testcase name="GetMeanAnomaly" file="../IO.SDK.Tests/ConicOrbitalElementsTests.cpp" line="47" />
+    <testcase name="GetEccentricAnomaly" file="../IO.SDK.Tests/ConicOrbitalElementsTests.cpp" line="70" />
+    <testcase name="GetTrueAnomaly" file="../IO.SDK.Tests/ConicOrbitalElementsTests.cpp" line="85" />
+    <testcase name="GetTimeToMeanAnomaly" file="../IO.SDK.Tests/ConicOrbitalElementsTests.cpp" line="100" />
+    <testcase name="GetTimeToTrueAnomaly" file="../IO.SDK.Tests/ConicOrbitalElementsTests.cpp" line="112" />
+    <testcase name="GetStateVector" file="../IO.SDK.Tests/ConicOrbitalElementsTests.cpp" line="130" />
+    <testcase name="IsElliptical" file="../IO.SDK.Tests/ConicOrbitalElementsTests.cpp" line="161" />
+    <testcase name="IsHyperbolic" file="../IO.SDK.Tests/ConicOrbitalElementsTests.cpp" line="170" />
+    <testcase name="IsParabolic" file="../IO.SDK.Tests/ConicOrbitalElementsTests.cpp" line="179" />
+    <testcase name="GetMeanMotion" file="../IO.SDK.Tests/ConicOrbitalElementsTests.cpp" line="188" />
+    <testcase name="GetSpecificOrbitalEnergy" file="../IO.SDK.Tests/ConicOrbitalElementsTests.cpp" line="200" />
+    <testcase name="GetSpecificAngularMomentum" file="../IO.SDK.Tests/ConicOrbitalElementsTests.cpp" line="209" />
+    <testcase name="GetRADec" file="../IO.SDK.Tests/ConicOrbitalElementsTests.cpp" line="218" />
+  </testsuite>
+  <testsuite name="CoordinateSystem" tests="1">
+    <testcase name="ToCharArray" file="../IO.SDK.Tests/CoordinateSystemTests.cpp" line="4" />
+  </testsuite>
+  <testsuite name="Coordinate" tests="1">
+    <testcase name="ToCharArray" file="../IO.SDK.Tests/CoordinateTests.cpp" line="4" />
+  </testsuite>
+  <testsuite name="Cylindrical" tests="1">
+    <testcase name="Initialization" file="../IO.SDK.Tests/CylindricalTests.cpp" line="4" />
+  </testsuite>
+  <testsuite name="Engine" tests="4">
+    <testcase name="Initialization" file="../IO.SDK.Tests/EngineTests.cpp" line="15" />
+    <testcase name="DeltaV" file="../IO.SDK.Tests/EngineTests.cpp" line="38" />
+    <testcase name="DeltaT" file="../IO.SDK.Tests/EngineTests.cpp" line="45" />
+    <testcase name="DeltaM" file="../IO.SDK.Tests/EngineTests.cpp" line="51" />
+  </testsuite>
+  <testsuite name="EphemerisKernel" tests="4">
+    <testcase name="WriteEvenlySpacedData" file="../IO.SDK.Tests/EphemerisKernelTests.cpp" line="15" />
+    <testcase name="GetCoverage" file="../IO.SDK.Tests/EphemerisKernelTests.cpp" line="83" />
+    <testcase name="AddComment" file="../IO.SDK.Tests/EphemerisKernelTests.cpp" line="128" />
+    <testcase name="AddTooLongComment" file="../IO.SDK.Tests/EphemerisKernelTests.cpp" line="172" />
+  </testsuite>
+  <testsuite name="EquinoctialElements" tests="21">
+    <testcase name="Initialization" file="../IO.SDK.Tests/EquinoctialElementsTests.cpp" line="15" />
+    <testcase name="InitializationFromKeplerian" file="../IO.SDK.Tests/EquinoctialElementsTests.cpp" line="54" />
+    <testcase name="GetPeriod" file="../IO.SDK.Tests/EquinoctialElementsTests.cpp" line="97" />
+    <testcase name="GetStateVector" file="../IO.SDK.Tests/EquinoctialElementsTests.cpp" line="122" />
+    <testcase name="GetStateVectorFromKeplerian" file="../IO.SDK.Tests/EquinoctialElementsTests.cpp" line="156" />
+    <testcase name="GetStateVectorFrom0Eccentricity" file="../IO.SDK.Tests/EquinoctialElementsTests.cpp" line="183" />
+    <testcase name="GetEccentricity" file="../IO.SDK.Tests/EquinoctialElementsTests.cpp" line="207" />
+    <testcase name="GetInclination" file="../IO.SDK.Tests/EquinoctialElementsTests.cpp" line="235" />
+    <testcase name="GetPeriapsisArgument" file="../IO.SDK.Tests/EquinoctialElementsTests.cpp" line="263" />
+    <testcase name="GetRightAscendingNode" file="../IO.SDK.Tests/EquinoctialElementsTests.cpp" line="291" />
+    <testcase name="GetMeanAnomalyAtEpoch" file="../IO.SDK.Tests/EquinoctialElementsTests.cpp" line="319" />
+    <testcase name="GetSpecificOrbitalEnergy" file="../IO.SDK.Tests/EquinoctialElementsTests.cpp" line="347" />
+    <testcase name="GetSpecificAngularMomentum" file="../IO.SDK.Tests/EquinoctialElementsTests.cpp" line="375" />
+    <testcase name="GetTrueAnomalyAtEpoch" file="../IO.SDK.Tests/EquinoctialElementsTests.cpp" line="402" />
+    <testcase name="GetISSMeanAnomaly" file="../IO.SDK.Tests/EquinoctialElementsTests.cpp" line="429" />
+    <testcase name="GetSemiMajorAxis" file="../IO.SDK.Tests/EquinoctialElementsTests.cpp" line="456" />
+    <testcase name="GetTimeToMeanAnomaly" file="../IO.SDK.Tests/EquinoctialElementsTests.cpp" line="483" />
+    <testcase name="GetMeanAnomalyForEpoch" file="../IO.SDK.Tests/EquinoctialElementsTests.cpp" line="510" />
+    <testcase name="GetTimeToTrueAnomaly" file="../IO.SDK.Tests/EquinoctialElementsTests.cpp" line="537" />
+    <testcase name="GetTrueAnomalyForEpoch" file="../IO.SDK.Tests/EquinoctialElementsTests.cpp" line="564" />
+    <testcase name="TrajectoryType" file="../IO.SDK.Tests/EquinoctialElementsTests.cpp" line="591" />
+  </testsuite>
+  <testsuite name="Exceptions" tests="3">
+    <testcase name="SDKException" file="../IO.SDK.Tests/ExceptionsTests.cpp" line="6" />
+    <testcase name="TooEarlyManeuverException" file="../IO.SDK.Tests/ExceptionsTests.cpp" line="12" />
+    <testcase name="PropagatorException" file="../IO.SDK.Tests/ExceptionsTests.cpp" line="18" />
+  </testsuite>
+  <testsuite name="FuelTank" tests="7">
+    <testcase name="Initialization" file="../IO.SDK.Tests/FuelTankTests.cpp" line="8" />
+    <testcase name="OverQuantity" file="../IO.SDK.Tests/FuelTankTests.cpp" line="23" />
+    <testcase name="EmptySerialNumber" file="../IO.SDK.Tests/FuelTankTests.cpp" line="32" />
+    <testcase name="InvalidCapacity" file="../IO.SDK.Tests/FuelTankTests.cpp" line="41" />
+    <testcase name="InvalidQuantity" file="../IO.SDK.Tests/FuelTankTests.cpp" line="50" />
+    <testcase name="UpdateFuelQuantity" file="../IO.SDK.Tests/FuelTankTests.cpp" line="59" />
+    <testcase name="IsEmpty" file="../IO.SDK.Tests/FuelTankTests.cpp" line="82" />
+  </testsuite>
+  <testsuite name="Geodetic" tests="1">
+    <testcase name="Initialization" file="../IO.SDK.Tests/GeodeticTests.cpp" line="4" />
+  </testsuite>
+  <testsuite name="GravityForce" tests="3">
+    <testcase name="ComputeForce" file="../IO.SDK.Tests/GravityForceTests.cpp" line="11" />
+    <testcase name="ApplyToBody" file="../IO.SDK.Tests/GravityForceTests.cpp" line="17" />
+    <testcase name="ApplyToBodyWithSatellites" file="../IO.SDK.Tests/GravityForceTests.cpp" line="29" />
+  </testsuite>
+  <testsuite name="Helpers" tests="1">
+    <testcase name="TypeOf" file="../IO.SDK.Tests/HelpersTests.cpp" line="5" />
+  </testsuite>
+  <testsuite name="HorizontalCoordinates" tests="1">
+    <testcase name="Initialization" file="../IO.SDK.Tests/HorizontalCoordinatesTests.cpp" line="4" />
+  </testsuite>
+  <testsuite name="Illumination" tests="2">
+    <testcase name="Initialization" file="../IO.SDK.Tests/IlluminationTests.cpp" line="8" />
+    <testcase name="Copy" file="../IO.SDK.Tests/IlluminationTests.cpp" line="22" />
+  </testsuite>
+  <testsuite name="OrbitalPlaneChangingManeuver" tests="7">
+    <testcase name="CanExecute" file="../IO.SDK.Tests/InclinationManeuverTests.cpp" line="18" />
+    <testcase name="IdentifyNode" file="../IO.SDK.Tests/InclinationManeuverTests.cpp" line="93" />
+    <testcase name="IdentifyNode2" file="../IO.SDK.Tests/InclinationManeuverTests.cpp" line="122" />
+    <testcase name="IdentifyNode3" file="../IO.SDK.Tests/InclinationManeuverTests.cpp" line="151" />
+    <testcase name="ExecuteInsuffisantDeltaV" file="../IO.SDK.Tests/InclinationManeuverTests.cpp" line="180" />
+    <testcase name="ExecuteDN" file="../IO.SDK.Tests/InclinationManeuverTests.cpp" line="216" />
+    <testcase name="ExecuteAN" file="../IO.SDK.Tests/InclinationManeuverTests.cpp" line="271" />
+  </testsuite>
+  <testsuite name="InertialFrames" tests="6">
+    <testcase name="ToString" file="../IO.SDK.Tests/InertialFramesTestscpp.cpp" line="11" />
+    <testcase name="GetName" file="../IO.SDK.Tests/InertialFramesTestscpp.cpp" line="18" />
+    <testcase name="Equal" file="../IO.SDK.Tests/InertialFramesTestscpp.cpp" line="25" />
+    <testcase name="NotEqual" file="../IO.SDK.Tests/InertialFramesTestscpp.cpp" line="30" />
+    <testcase name="ToFrame6x6" file="../IO.SDK.Tests/InertialFramesTestscpp.cpp" line="35" />
+    <testcase name="TransformVector" file="../IO.SDK.Tests/InertialFramesTestscpp.cpp" line="82" />
+  </testsuite>
+  <testsuite name="Instrument" tests="12">
+    <testcase name="Initialization" file="../IO.SDK.Tests/InstrumentTests.cpp" line="24" />
+    <testcase name="Frame" file="../IO.SDK.Tests/InstrumentTests.cpp" line="50" />
+    <testcase name="CircularKernel" file="../IO.SDK.Tests/InstrumentTests.cpp" line="101" />
+    <testcase name="RectangularKernel" file="../IO.SDK.Tests/InstrumentTests.cpp" line="145" />
+    <testcase name="EllipticalKernel" file="../IO.SDK.Tests/InstrumentTests.cpp" line="189" />
+    <testcase name="Boundaries" file="../IO.SDK.Tests/InstrumentTests.cpp" line="233" />
+    <testcase name="Boresight" file="../IO.SDK.Tests/InstrumentTests.cpp" line="260" />
+    <testcase name="FOVShape" file="../IO.SDK.Tests/InstrumentTests.cpp" line="287" />
+    <testcase name="GetBadId" file="../IO.SDK.Tests/InstrumentTests.cpp" line="312" />
+    <testcase name="CreateBadId" file="../IO.SDK.Tests/InstrumentTests.cpp" line="334" />
+    <testcase name="AlreadyExists" file="../IO.SDK.Tests/InstrumentTests.cpp" line="355" />
+    <testcase name="FindWindowFieldOfView" file="../IO.SDK.Tests/InstrumentTests.cpp" line="376" />
+  </testsuite>
+  <testsuite name="Latitudinal" tests="1">
+    <testcase name="Initialization" file="../IO.SDK.Tests/LatitudinalTests.cpp" line="4" />
+  </testsuite>
+  <testsuite name="LaunchSite" tests="3">
+    <testcase name="AddAzimuth" file="../IO.SDK.Tests/LaunchSiteTests.cpp" line="9" />
+    <testcase name="ClearAzimuth" file="../IO.SDK.Tests/LaunchSiteTests.cpp" line="21" />
+    <testcase name="IsAzimuthLaunchAllowed" file="../IO.SDK.Tests/LaunchSiteTests.cpp" line="35" />
+  </testsuite>
+  <testsuite name="Launch" tests="14">
+    <testcase name="InertialAscendingAzimuth" file="../IO.SDK.Tests/LaunchTests.cpp" line="15" />
+    <testcase name="InertialDescendingAzimuth" file="../IO.SDK.Tests/LaunchTests.cpp" line="30" />
+    <testcase name="InertialInsertionVelocity" file="../IO.SDK.Tests/LaunchTests.cpp" line="45" />
+    <testcase name="NonInertialAscendingAzimuth" file="../IO.SDK.Tests/LaunchTests.cpp" line="60" />
+    <testcase name="NonInertialDescendingAzimuth" file="../IO.SDK.Tests/LaunchTests.cpp" line="75" />
+    <testcase name="NonInertialInsertionVelocity" file="../IO.SDK.Tests/LaunchTests.cpp" line="90" />
+    <testcase name="RetrogradeNonInertialAscendingAzimuth" file="../IO.SDK.Tests/LaunchTests.cpp" line="105" />
+    <testcase name="RetrogradeInertialAscendingAzimuth" file="../IO.SDK.Tests/LaunchTests.cpp" line="120" />
+    <testcase name="RetrogradeNonInertialInsertionVelocity" file="../IO.SDK.Tests/LaunchTests.cpp" line="135" />
+    <testcase name="RetrogradeInertialInsertionVelocity" file="../IO.SDK.Tests/LaunchTests.cpp" line="150" />
+    <testcase name="GetLaunchWindows" file="../IO.SDK.Tests/LaunchTests.cpp" line="165" />
+    <testcase name="GetLaunchWindowsByDay" file="../IO.SDK.Tests/LaunchTests.cpp" line="201" />
+    <testcase name="GetSouthLaunchSiteLaunchWindowsByDay" file="../IO.SDK.Tests/LaunchTests.cpp" line="229" />
+    <testcase name="GetSouthLaunchSiteLaunchWindows" file="../IO.SDK.Tests/LaunchTests.cpp" line="257" />
+  </testsuite>
+  <testsuite name="LaunchWindow" tests="1">
+    <testcase name="Initialize" file="../IO.SDK.Tests/LaunchWindowTests.cpp" line="16" />
+  </testsuite>
+  <testsuite name="Maneuvers" tests="2">
+    <testcase name="Initialization" file="../IO.SDK.Tests/ManeuverTests.cpp" line="15" />
+    <testcase name="Execute" file="../IO.SDK.Tests/ManeuverTests.cpp" line="39" />
+  </testsuite>
+  <testsuite name="Matrix" tests="5">
+    <testcase name="Initialization" file="../IO.SDK.Tests/MatrixTests.cpp" line="5" />
+    <testcase name="SetValue" file="../IO.SDK.Tests/MatrixTests.cpp" line="40" />
+    <testcase name="OutOfrange" file="../IO.SDK.Tests/MatrixTests.cpp" line="48" />
+    <testcase name="Multiply" file="../IO.SDK.Tests/MatrixTests.cpp" line="57" />
+    <testcase name="Transpose" file="../IO.SDK.Tests/MatrixTests.cpp" line="80" />
+  </testsuite>
+  <testsuite name="NadirAttitude" tests="2">
+    <testcase name="GetOrientation" file="../IO.SDK.Tests/NadirAttitudeTests.cpp" line="18" />
+    <testcase name="GetOrientationMinimumEpoch" file="../IO.SDK.Tests/NadirAttitudeTests.cpp" line="55" />
+  </testsuite>
+  <testsuite name="OrientationKernel" tests="3">
+    <testcase name="WriteData" file="../IO.SDK.Tests/OrientationKernelTests.cpp" line="16" />
+    <testcase name="GetCoverage" file="../IO.SDK.Tests/OrientationKernelTests.cpp" line="104" />
+    <testcase name="WriteComment" file="../IO.SDK.Tests/OrientationKernelTests.cpp" line="137" />
+  </testsuite>
+  <testsuite name="Payload" tests="4">
+    <testcase name="Initialization" file="../IO.SDK.Tests/PayloadTests.cpp" line="5" />
+    <testcase name="InvalidName" file="../IO.SDK.Tests/PayloadTests.cpp" line="13" />
+    <testcase name="InvalidSerialNumber" file="../IO.SDK.Tests/PayloadTests.cpp" line="18" />
+    <testcase name="InvalidMass" file="../IO.SDK.Tests/PayloadTests.cpp" line="23" />
+  </testsuite>
+  <testsuite name="PerigeeHeightChangingManeuverTests" tests="3">
+    <testcase name="CanExecute" file="../IO.SDK.Tests/PerigeeHeightChangingManeuverTests.cpp" line="17" />
+    <testcase name="IncreasePerigeeHeight" file="../IO.SDK.Tests/PerigeeHeightChangingManeuverTests.cpp" line="50" />
+    <testcase name="DecreasePerigeeHeight" file="../IO.SDK.Tests/PerigeeHeightChangingManeuverTests.cpp" line="80" />
+  </testsuite>
+  <testsuite name="PhasingManeuver" tests="4">
+    <testcase name="PhasingDuration" file="../IO.SDK.Tests/PhasingDuration.cpp" line="20" />
+    <testcase name="SemiMajorAxis" file="../IO.SDK.Tests/PhasingDuration.cpp" line="27" />
+    <testcase name="CanExecute" file="../IO.SDK.Tests/PhasingDuration.cpp" line="33" />
+    <testcase name="TryExecute" file="../IO.SDK.Tests/PhasingDuration.cpp" line="71" />
+  </testsuite>
+  <testsuite name="Planetographic" tests="1">
+    <testcase name="Initialization" file="../IO.SDK.Tests/PlanetographicTests.cpp" line="4" />
+  </testsuite>
+  <testsuite name="ProgradeAttitude" tests="1">
+    <testcase name="GetOrientation" file="../IO.SDK.Tests/ProgradeAttitudeTests.cpp" line="18" />
+  </testsuite>
+  <testsuite name="Propagator" tests="6">
+    <testcase name="Initialization" file="../IO.SDK.Tests/PropagatorTests.cpp" line="17" />
+    <testcase name="FindNearestLowerValue" file="../IO.SDK.Tests/PropagatorTests.cpp" line="27" />
+    <testcase name="EraseDataRange" file="../IO.SDK.Tests/PropagatorTests.cpp" line="59" />
+    <testcase name="PropagateVVIntegrator" file="../IO.SDK.Tests/PropagatorTests.cpp" line="91" />
+    <testcase name="PropagatorVsKepler" file="../IO.SDK.Tests/PropagatorTests.cpp" line="155" />
+    <testcase name="PropagateTLEIntegrator" file="../IO.SDK.Tests/PropagatorTests.cpp" line="245" />
+  </testsuite>
+  <testsuite name="Quaternion" tests="6">
+    <testcase name="Initialization" file="../IO.SDK.Tests/QuaternionTests.cpp" line="5" />
+    <testcase name="Multiply" file="../IO.SDK.Tests/QuaternionTests.cpp" line="38" />
+    <testcase name="GetMatrix" file="../IO.SDK.Tests/QuaternionTests.cpp" line="50" />
+    <testcase name="Magnitude" file="../IO.SDK.Tests/QuaternionTests.cpp" line="66" />
+    <testcase name="Normalize" file="../IO.SDK.Tests/QuaternionTests.cpp" line="74" />
+    <testcase name="Conjugate" file="../IO.SDK.Tests/QuaternionTests.cpp" line="85" />
+  </testsuite>
+  <testsuite name="RADec" tests="1">
+    <testcase name="Initialization" file="../IO.SDK.Tests/RADecTests.cpp" line="4" />
+  </testsuite>
+  <testsuite name="Rectangular" tests="1">
+    <testcase name="Initialization" file="../IO.SDK.Tests/RectangularTests.cpp" line="4" />
+  </testsuite>
+  <testsuite name="RetrogradeAttitude" tests="1">
+    <testcase name="GetOrientation" file="../IO.SDK.Tests/RetrogradeAttitudeTests.cpp" line="18" />
+  </testsuite>
+  <testsuite name="StateOrientation" tests="3">
+    <testcase name="InitializationByValues" file="../IO.SDK.Tests/RotationTests.cpp" line="9" />
+    <testcase name="InitializationFromAngles" file="../IO.SDK.Tests/RotationTests.cpp" line="23" />
+    <testcase name="InitializationFromQuaternion" file="../IO.SDK.Tests/RotationTests.cpp" line="37" />
+  </testsuite>
+  <testsuite name="SiteFrame" tests="1">
+    <testcase name="Initialization" file="../IO.SDK.Tests/SiteFrameTests.cpp" line="9" />
+  </testsuite>
+  <testsuite name="Site" tests="10">
+    <testcase name="GetRADDec" file="../IO.SDK.Tests/SiteTests.cpp" line="8" />
+    <testcase name="Illumination" file="../IO.SDK.Tests/SiteTests.cpp" line="19" />
+    <testcase name="IsDay" file="../IO.SDK.Tests/SiteTests.cpp" line="32" />
+    <testcase name="IsNight" file="../IO.SDK.Tests/SiteTests.cpp" line="43" />
+    <testcase name="FindDayWindows" file="../IO.SDK.Tests/SiteTests.cpp" line="54" />
+    <testcase name="FindNightWindows" file="../IO.SDK.Tests/SiteTests.cpp" line="68" />
+    <testcase name="GetStateVector" file="../IO.SDK.Tests/SiteTests.cpp" line="81" />
+    <testcase name="ConvertToLocalFrame" file="../IO.SDK.Tests/SiteTests.cpp" line="95" />
+    <testcase name="GetHorizontalCoordinates" file="../IO.SDK.Tests/SiteTests.cpp" line="114" />
+    <testcase name="FindWindowsOnIlluminationConstraint" file="../IO.SDK.Tests/SiteTests.cpp" line="146" />
+  </testsuite>
+  <testsuite name="SpacecraftClockKernel" tests="8">
+    <testcase name="BuildGenericKernel" file="../IO.SDK.Tests/SpacecraftClockKernelTests.cpp" line="12" />
+    <testcase name="GetCoverage" file="../IO.SDK.Tests/SpacecraftClockKernelTests.cpp" line="25" />
+    <testcase name="ConvertToTDB" file="../IO.SDK.Tests/SpacecraftClockKernelTests.cpp" line="39" />
+    <testcase name="ConvertToClock" file="../IO.SDK.Tests/SpacecraftClockKernelTests.cpp" line="51" />
+    <testcase name="ConvertToEncodedClock" file="../IO.SDK.Tests/SpacecraftClockKernelTests.cpp" line="63" />
+    <testcase name="GetResolution" file="../IO.SDK.Tests/SpacecraftClockKernelTests.cpp" line="77" />
+    <testcase name="GetSecondsPerTick" file="../IO.SDK.Tests/SpacecraftClockKernelTests.cpp" line="90" />
+    <testcase name="GetTicksPerSeconds" file="../IO.SDK.Tests/SpacecraftClockKernelTests.cpp" line="103" />
+  </testsuite>
+  <testsuite name="SpacecraftFrameFile" tests="1">
+    <testcase name="Initialization" file="../IO.SDK.Tests/SpacecraftFrameTests.cpp" line="12" />
+  </testsuite>
+  <testsuite name="Spacecraft" tests="16">
+    <testcase name="Initialization" file="../IO.SDK.Tests/SpacecraftTests.cpp" line="13" />
+    <testcase name="InvalidId" file="../IO.SDK.Tests/SpacecraftTests.cpp" line="26" />
+    <testcase name="AddPayload" file="../IO.SDK.Tests/SpacecraftTests.cpp" line="33" />
+    <testcase name="ReleasePayload" file="../IO.SDK.Tests/SpacecraftTests.cpp" line="44" />
+    <testcase name="ReleaseInvalidPayload" file="../IO.SDK.Tests/SpacecraftTests.cpp" line="56" />
+    <testcase name="EngineInvalidISP" file="../IO.SDK.Tests/SpacecraftTests.cpp" line="69" />
+    <testcase name="EngineInvalidFuelFlow" file="../IO.SDK.Tests/SpacecraftTests.cpp" line="78" />
+    <testcase name="GetFuelTank" file="../IO.SDK.Tests/SpacecraftTests.cpp" line="87" />
+    <testcase name="EngineInvalidSerialNumber" file="../IO.SDK.Tests/SpacecraftTests.cpp" line="97" />
+    <testcase name="FuelTankOverQuantity" file="../IO.SDK.Tests/SpacecraftTests.cpp" line="106" />
+    <testcase name="FuelTankEmptySerialNumber" file="../IO.SDK.Tests/SpacecraftTests.cpp" line="114" />
+    <testcase name="FuelTankInvalidCapacity" file="../IO.SDK.Tests/SpacecraftTests.cpp" line="122" />
+    <testcase name="FuelTankInvalidQuantity" file="../IO.SDK.Tests/SpacecraftTests.cpp" line="130" />
+    <testcase name="FuelTankInvalidName" file="../IO.SDK.Tests/SpacecraftTests.cpp" line="138" />
+    <testcase name="GetEngine" file="../IO.SDK.Tests/SpacecraftTests.cpp" line="146" />
+    <testcase name="Orientation" file="../IO.SDK.Tests/SpacecraftTests.cpp" line="157" />
+  </testsuite>
+  <testsuite name="Spherical" tests="1">
+    <testcase name="Initialization" file="../IO.SDK.Tests/SphericalTests.cpp" line="4" />
+  </testsuite>
+  <testsuite name="StateVector" tests="25">
+    <testcase name="Initialization" file="../IO.SDK.Tests/StateVectorTests.cpp" line="13" />
+    <testcase name="GetSpecificAngularMomentum" file="../IO.SDK.Tests/StateVectorTests.cpp" line="43" />
+    <testcase name="GetSpecificOrbitalEnergy" file="../IO.SDK.Tests/StateVectorTests.cpp" line="50" />
+    <testcase name="GetSemiMajorAxis" file="../IO.SDK.Tests/StateVectorTests.cpp" line="57" />
+    <testcase name="GetEccentricity" file="../IO.SDK.Tests/StateVectorTests.cpp" line="67" />
+    <testcase name="GetInclination" file="../IO.SDK.Tests/StateVectorTests.cpp" line="77" />
+    <testcase name="GetPeriapsisArgument" file="../IO.SDK.Tests/StateVectorTests.cpp" line="87" />
+    <testcase name="GetRAN" file="../IO.SDK.Tests/StateVectorTests.cpp" line="97" />
+    <testcase name="GetMeanAnomaly" file="../IO.SDK.Tests/StateVectorTests.cpp" line="107" />
+    <testcase name="GetTrueAnomaly" file="../IO.SDK.Tests/StateVectorTests.cpp" line="117" />
+    <testcase name="GetPeriod" file="../IO.SDK.Tests/StateVectorTests.cpp" line="127" />
+    <testcase name="GetMeanMotion" file="../IO.SDK.Tests/StateVectorTests.cpp" line="137" />
+    <testcase name="IsElliptical" file="../IO.SDK.Tests/StateVectorTests.cpp" line="147" />
+    <testcase name="IsHyperbolic" file="../IO.SDK.Tests/StateVectorTests.cpp" line="157" />
+    <testcase name="IsParabolic" file="../IO.SDK.Tests/StateVectorTests.cpp" line="167" />
+    <testcase name="CheckUpdateCenterOfMotionToParentBody" file="../IO.SDK.Tests/StateVectorTests.cpp" line="179" />
+    <testcase name="CheckUpdateCenterOfMotionToSatelliteBody" file="../IO.SDK.Tests/StateVectorTests.cpp" line="201" />
+    <testcase name="Assignement" file="../IO.SDK.Tests/StateVectorTests.cpp" line="223" />
+    <testcase name="Frame" file="../IO.SDK.Tests/StateVectorTests.cpp" line="242" />
+    <testcase name="EccentricityVector" file="../IO.SDK.Tests/StateVectorTests.cpp" line="252" />
+    <testcase name="PerigeeVector" file="../IO.SDK.Tests/StateVectorTests.cpp" line="265" />
+    <testcase name="ApogeeVector" file="../IO.SDK.Tests/StateVectorTests.cpp" line="278" />
+    <testcase name="FromTrueAnomaly" file="../IO.SDK.Tests/StateVectorTests.cpp" line="291" />
+    <testcase name="ToFrame" file="../IO.SDK.Tests/StateVectorTests.cpp" line="308" />
+    <testcase name="GetAscendingNodeVector" file="../IO.SDK.Tests/StateVectorTests.cpp" line="323" />
+  </testsuite>
+  <testsuite name="SurfaceCoordinates" tests="3">
+    <testcase name="Initialization" file="../IO.SDK.Tests/SurfaceCoordinatesTests.cpp" line="7" />
+    <testcase name="Add" file="../IO.SDK.Tests/SurfaceCoordinatesTests.cpp" line="14" />
+    <testcase name="Copy" file="../IO.SDK.Tests/SurfaceCoordinatesTests.cpp" line="34" />
+  </testsuite>
+  <testsuite name="SurfaceInterceptpoint" tests="2">
+    <testcase name="Initialization" file="../IO.SDK.Tests/SurfaceInterceptPointTests.cpp" line="7" />
+    <testcase name="Copy" file="../IO.SDK.Tests/SurfaceInterceptPointTests.cpp" line="24" />
+  </testsuite>
+  <testsuite name="TDB" tests="13">
+    <testcase name="ToString" file="../IO.SDK.Tests/TDBTests.cpp" line="10" />
+    <testcase name="GetTDB" file="../IO.SDK.Tests/TDBTests.cpp" line="17" />
+    <testcase name="SubstractTDB" file="../IO.SDK.Tests/TDBTests.cpp" line="23" />
+    <testcase name="Add" file="../IO.SDK.Tests/TDBTests.cpp" line="32" />
+    <testcase name="SubstractTimeSpan" file="../IO.SDK.Tests/TDBTests.cpp" line="39" />
+    <testcase name="Equal" file="../IO.SDK.Tests/TDBTests.cpp" line="46" />
+    <testcase name="NotEqual" file="../IO.SDK.Tests/TDBTests.cpp" line="53" />
+    <testcase name="GreaterThan" file="../IO.SDK.Tests/TDBTests.cpp" line="60" />
+    <testcase name="LowerThan" file="../IO.SDK.Tests/TDBTests.cpp" line="67" />
+    <testcase name="GreaterThanOrEqual" file="../IO.SDK.Tests/TDBTests.cpp" line="74" />
+    <testcase name="LowerThanOrEqual" file="../IO.SDK.Tests/TDBTests.cpp" line="85" />
+    <testcase name="ToJulian" file="../IO.SDK.Tests/TDBTests.cpp" line="96" />
+    <testcase name="ToUTC" file="../IO.SDK.Tests/TDBTests.cpp" line="102" />
+  </testsuite>
+  <testsuite name="TLEIntegrator" tests="1">
+    <testcase name="Integrate" file="../IO.SDK.Tests/TLEIntegratorTests.cpp" line="10" />
+  </testsuite>
+  <testsuite name="TLE" tests="22">
+    <testcase name="Initialization" file="../IO.SDK.Tests/TLETests.cpp" line="11" />
+    <testcase name="GetSatelliteName" file="../IO.SDK.Tests/TLETests.cpp" line="18" />
+    <testcase name="GetBalisticCoefficient" file="../IO.SDK.Tests/TLETests.cpp" line="27" />
+    <testcase name="GetSecondDerivativeOfMeanMotion" file="../IO.SDK.Tests/TLETests.cpp" line="36" />
+    <testcase name="GetDragTerm" file="../IO.SDK.Tests/TLETests.cpp" line="45" />
+    <testcase name="GetPeriod" file="../IO.SDK.Tests/TLETests.cpp" line="54" />
+    <testcase name="GetCenterOfMotion" file="../IO.SDK.Tests/TLETests.cpp" line="65" />
+    <testcase name="GetEccentricity" file="../IO.SDK.Tests/TLETests.cpp" line="76" />
+    <testcase name="GetEpoch" file="../IO.SDK.Tests/TLETests.cpp" line="87" />
+    <testcase name="GetInclination" file="../IO.SDK.Tests/TLETests.cpp" line="98" />
+    <testcase name="GetMeanAnomaly" file="../IO.SDK.Tests/TLETests.cpp" line="109" />
+    <testcase name="GetMeanMotion" file="../IO.SDK.Tests/TLETests.cpp" line="120" />
+    <testcase name="GetPeriapsisArgument" file="../IO.SDK.Tests/TLETests.cpp" line="131" />
+    <testcase name="GetRightAscendingNodeLongitude" file="../IO.SDK.Tests/TLETests.cpp" line="142" />
+    <testcase name="GetSemiMajorAxis" file="../IO.SDK.Tests/TLETests.cpp" line="153" />
+    <testcase name="GetTimeToMeanAnomaly" file="../IO.SDK.Tests/TLETests.cpp" line="164" />
+    <testcase name="GetTimeToTrueAnomaly" file="../IO.SDK.Tests/TLETests.cpp" line="175" />
+    <testcase name="GetTrueAnomaly" file="../IO.SDK.Tests/TLETests.cpp" line="186" />
+    <testcase name="GetTrueAnomalyAtEpoch" file="../IO.SDK.Tests/TLETests.cpp" line="197" />
+    <testcase name="GetMeanAnomalyAtEpoch" file="../IO.SDK.Tests/TLETests.cpp" line="208" />
+    <testcase name="TrajectoryType" file="../IO.SDK.Tests/TLETests.cpp" line="219" />
+    <testcase name="GetStateVectorAtEpoch" file="../IO.SDK.Tests/TLETests.cpp" line="230" />
+  </testsuite>
+  <testsuite name="TimeSpan" tests="12">
+    <testcase name="Initialization" file="../IO.SDK.Tests/TimeSpanTests.cpp" line="6" />
+    <testcase name="GetNanoseconds" file="../IO.SDK.Tests/TimeSpanTests.cpp" line="13" />
+    <testcase name="GetMicroseconds" file="../IO.SDK.Tests/TimeSpanTests.cpp" line="20" />
+    <testcase name="GetMilliseconds" file="../IO.SDK.Tests/TimeSpanTests.cpp" line="27" />
+    <testcase name="GetSeconds" file="../IO.SDK.Tests/TimeSpanTests.cpp" line="34" />
+    <testcase name="GetMinutes" file="../IO.SDK.Tests/TimeSpanTests.cpp" line="41" />
+    <testcase name="GetHours" file="../IO.SDK.Tests/TimeSpanTests.cpp" line="48" />
+    <testcase name="Add" file="../IO.SDK.Tests/TimeSpanTests.cpp" line="55" />
+    <testcase name="Substract" file="../IO.SDK.Tests/TimeSpanTests.cpp" line="63" />
+    <testcase name="Multiply" file="../IO.SDK.Tests/TimeSpanTests.cpp" line="71" />
+    <testcase name="Divide" file="../IO.SDK.Tests/TimeSpanTests.cpp" line="78" />
+    <testcase name="Equals" file="../IO.SDK.Tests/TimeSpanTests.cpp" line="85" />
+  </testsuite>
+  <testsuite name="TowardObjectAttitude" tests="1">
+    <testcase name="GetOrientation" file="../IO.SDK.Tests/TowardObjectAttitudeTests.cpp" line="18" />
+  </testsuite>
+  <testsuite name="UTC" tests="4">
+    <testcase name="ToString" file="../IO.SDK.Tests/UTCTests.cpp" line="6" />
+    <testcase name="ToJulian" file="../IO.SDK.Tests/UTCTests.cpp" line="12" />
+    <testcase name="CenturiesFromJ2000" file="../IO.SDK.Tests/UTCTests.cpp" line="18" />
+    <testcase name="ToTDB" file="../IO.SDK.Tests/UTCTests.cpp" line="24" />
+  </testsuite>
+  <testsuite name="VVIntegrator" tests="1">
+    <testcase name="IntegrateGravity" file="../IO.SDK.Tests/VVIntegratorTests.cpp" line="11" />
+  </testsuite>
+  <testsuite name="Vector" tests="13">
+    <testcase name="Initialization" file="../IO.SDK.Tests/VectorTests.cpp" line="6" />
+    <testcase name="Magnitude" file="../IO.SDK.Tests/VectorTests.cpp" line="14" />
+    <testcase name="Add" file="../IO.SDK.Tests/VectorTests.cpp" line="20" />
+    <testcase name="Substract" file="../IO.SDK.Tests/VectorTests.cpp" line="31" />
+    <testcase name="Multiply" file="../IO.SDK.Tests/VectorTests.cpp" line="42" />
+    <testcase name="Divide" file="../IO.SDK.Tests/VectorTests.cpp" line="53" />
+    <testcase name="CrossProduct" file="../IO.SDK.Tests/VectorTests.cpp" line="63" />
+    <testcase name="DotProduct" file="../IO.SDK.Tests/VectorTests.cpp" line="74" />
+    <testcase name="Normalize" file="../IO.SDK.Tests/VectorTests.cpp" line="83" />
+    <testcase name="GetAngle" file="../IO.SDK.Tests/VectorTests.cpp" line="97" />
+    <testcase name="Rotate" file="../IO.SDK.Tests/VectorTests.cpp" line="116" />
+    <testcase name="To" file="../IO.SDK.Tests/VectorTests.cpp" line="155" />
+    <testcase name="Reverse" file="../IO.SDK.Tests/VectorTests.cpp" line="169" />
+  </testsuite>
+  <testsuite name="Window" tests="4">
+    <testcase name="Length" file="../IO.SDK.Tests/WindowTests.cpp" line="8" />
+    <testcase name="EndDate" file="../IO.SDK.Tests/WindowTests.cpp" line="17" />
+    <testcase name="Equals" file="../IO.SDK.Tests/WindowTests.cpp" line="26" />
+    <testcase name="Intersects" file="../IO.SDK.Tests/WindowTests.cpp" line="42" />
+  </testsuite>
+  <testsuite name="ZenithAttitude" tests="1">
+    <testcase name="GetOrientation" file="../IO.SDK.Tests/ZenithAttitudeTests.cpp" line="18" />
+  </testsuite>
+</testsuites>
