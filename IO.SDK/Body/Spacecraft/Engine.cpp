@@ -83,12 +83,12 @@ double IO::SDK::Body::Spacecraft::Engine::GetThrust() const
 bool IO::SDK::Body::Spacecraft::Engine::operator==(const IO::SDK::Body::Spacecraft::Engine &other) const
 {
     return m_serialNumber == other.m_serialNumber;
-};
+}
 
 bool IO::SDK::Body::Spacecraft::Engine::operator!=(const IO::SDK::Body::Spacecraft::Engine &other) const
 {
     return !(m_serialNumber == other.m_serialNumber);
-};
+}
 
 double IO::SDK::Body::Spacecraft::Engine::ComputeDeltaV(double isp, double initialMass, double finalMass)
 {

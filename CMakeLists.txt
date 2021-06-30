@@ -12,7 +12,7 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
 
 # add_compile_options(-Wall -Wextra -pedantic -Werror)
-add_compile_options(-Wall -Wextra)
+add_compile_options(-Wall -Wextra -Wpedantic -Werror)
 
 enable_testing()
 

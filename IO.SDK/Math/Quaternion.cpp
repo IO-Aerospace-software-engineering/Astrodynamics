@@ -41,6 +41,11 @@ IO::SDK::Math::Quaternion::Quaternion(const IO::SDK::Math::Matrix &mtx)
 	const_cast<double &>(m_q3) = q[3];
 }
 
+IO::SDK::Math::Quaternion::Quaternion(const IO::SDK::Math::Quaternion &quaternion):Quaternion(quaternion.GetQ0(),quaternion.GetQ1(),quaternion.GetQ2(),quaternion.GetQ3())
+{
+
+}
+
 IO::SDK::Math::Quaternion IO::SDK::Math::Quaternion::Multiply(const Quaternion &quaternion) const
 {
 	return *this * quaternion;

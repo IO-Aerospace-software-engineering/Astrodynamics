@@ -53,6 +53,15 @@ namespace IO::SDK::Math
 		 */
 		Quaternion(const IO::SDK::Math::Matrix &mtx);
 
+		/**
+		 * @brief Construct a new Quaternion object
+		 * 
+		 * @param quaternion 
+		 */
+		Quaternion(const Quaternion &quaternion);
+		
+
+
 		Quaternion &operator=(const Quaternion &quaternion);
 
 		double GetQ0() const { return m_q0; }
