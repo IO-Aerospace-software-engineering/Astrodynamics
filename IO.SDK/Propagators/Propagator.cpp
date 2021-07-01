@@ -44,7 +44,7 @@ void IO::SDK::Propagators::Propagator::Propagate()
         {
             //if maneuver occurs, state vectors collection will be automatically updated by maneuver object
             auto result = m_standbyManeuver->TryExecute(stateVector);
-            if (!result.IsValid())
+            if (!result.IsValid() && !result.CanRetryLater())
             {
                 throw IO::SDK::Exception::PropagatorException("Maneuver can't be executed for this reason : " + result.GetMessage());
             }

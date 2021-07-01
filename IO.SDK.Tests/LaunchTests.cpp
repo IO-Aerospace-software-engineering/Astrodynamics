@@ -177,23 +177,23 @@ TEST(Launch, GetLaunchWindows)
     auto targetOrbit = std::make_shared<IO::SDK::OrbitalParameters::TLE>(earth, tle);
     IO::SDK::Maneuvers::Launch launch(ls, ls, false, *targetOrbit);
     auto windows = launch.GetLaunchWindows(IO::SDK::Time::Window<IO::SDK::Time::UTC>(IO::SDK::Time::UTC("2021-06-02T00:00:00"), IO::SDK::Time::UTC("2021-06-03T00:00:00")));
-    
+
     //Two launch windows
     ASSERT_EQ(2, windows.size());
 
     //first launch window
     ASSERT_STREQ("2021-06-02 02:47:43.037109 (UTC)", windows[0].GetWindow().GetStartDate().ToString().c_str());
     ASSERT_EQ(1, windows[0].GetLaunchSite()->GetId());
-    ASSERT_DOUBLE_EQ(135.09370992117638, windows[0].GetInertialAzimuth()*IO::SDK::Constants::RAD_DEG);
-    ASSERT_DOUBLE_EQ(137.34288002286198, windows[0].GetNonInertialAzimuth()*IO::SDK::Constants::RAD_DEG);
+    ASSERT_DOUBLE_EQ(135.09370992117638, windows[0].GetInertialAzimuth() * IO::SDK::Constants::RAD_DEG);
+    ASSERT_DOUBLE_EQ(137.34288002286198, windows[0].GetNonInertialAzimuth() * IO::SDK::Constants::RAD_DEG);
     ASSERT_DOUBLE_EQ(7665.2355903714715, windows[0].GetInertialInsertionVelocity());
     ASSERT_DOUBLE_EQ(7382.1537527826185, windows[0].GetNonInertialInsertionVelocity());
 
     //Second launch window
     ASSERT_STREQ("2021-06-02 18:08:40.928101 (UTC)", windows[1].GetWindow().GetStartDate().ToString().c_str());
     ASSERT_EQ(1, windows[1].GetLaunchSite()->GetId());
-    ASSERT_DOUBLE_EQ(44.906290078823638, windows[1].GetInertialAzimuth()*IO::SDK::Constants::RAD_DEG);
-    ASSERT_DOUBLE_EQ(42.657119977138009, windows[1].GetNonInertialAzimuth()*IO::SDK::Constants::RAD_DEG);
+    ASSERT_DOUBLE_EQ(44.906290078823638, windows[1].GetInertialAzimuth() * IO::SDK::Constants::RAD_DEG);
+    ASSERT_DOUBLE_EQ(42.657119977138009, windows[1].GetNonInertialAzimuth() * IO::SDK::Constants::RAD_DEG);
     ASSERT_DOUBLE_EQ(7665.2355903714715, windows[1].GetInertialInsertionVelocity());
     ASSERT_DOUBLE_EQ(7382.1537527826185, windows[1].GetNonInertialInsertionVelocity());
 }
@@ -213,17 +213,17 @@ TEST(Launch, GetLaunchWindowsByDay)
     auto targetOrbit = std::make_shared<IO::SDK::OrbitalParameters::TLE>(earth, tle);
     IO::SDK::Maneuvers::Launch launch(ls, ls, true, *targetOrbit);
     auto windows = launch.GetLaunchWindows(IO::SDK::Time::Window<IO::SDK::Time::UTC>(IO::SDK::Time::UTC("2021-06-02T00:00:00"), IO::SDK::Time::UTC("2021-06-03T00:00:00")));
-    
+
     //Only one launch window
     ASSERT_EQ(1, windows.size());
 
     //first launch window
     ASSERT_STREQ("2021-06-02 18:08:00.980377 (UTC)", windows[0].GetWindow().GetStartDate().ToString().c_str());
     ASSERT_EQ(3, windows[0].GetLaunchSite()->GetId());
-    ASSERT_DOUBLE_EQ(44.906290078823638, windows[0].GetInertialAzimuth()*IO::SDK::Constants::RAD_DEG);
-    ASSERT_DOUBLE_EQ(42.657119977138009, windows[0].GetNonInertialAzimuth()*IO::SDK::Constants::RAD_DEG);
+    ASSERT_DOUBLE_EQ(44.906290078823638, windows[0].GetInertialAzimuth() * IO::SDK::Constants::RAD_DEG);
+    ASSERT_DOUBLE_EQ(42.657119977138009, windows[0].GetNonInertialAzimuth() * IO::SDK::Constants::RAD_DEG);
     ASSERT_DOUBLE_EQ(7665.2355903714715, windows[0].GetInertialInsertionVelocity());
-    ASSERT_DOUBLE_EQ(7382.1537527826185, windows[0].GetNonInertialInsertionVelocity());    
+    ASSERT_DOUBLE_EQ(7382.1537527826185, windows[0].GetNonInertialInsertionVelocity());
 }
 
 TEST(Launch, GetSouthLaunchSiteLaunchWindowsByDay)
@@ -241,17 +241,17 @@ TEST(Launch, GetSouthLaunchSiteLaunchWindowsByDay)
     auto targetOrbit = std::make_shared<IO::SDK::OrbitalParameters::TLE>(earth, tle);
     IO::SDK::Maneuvers::Launch launch(ls, ls, true, *targetOrbit);
     auto windows = launch.GetLaunchWindows(IO::SDK::Time::Window<IO::SDK::Time::UTC>(IO::SDK::Time::UTC("2021-06-02T00:00:00"), IO::SDK::Time::UTC("2021-06-03T00:00:00")));
-    
+
     //Only one launch window
     ASSERT_EQ(1, windows.size());
 
     //first launch window
     ASSERT_STREQ("2021-06-02 15:06:01.057589 (UTC)", windows[0].GetWindow().GetStartDate().ToString().c_str());
     ASSERT_EQ(1, windows[0].GetLaunchSite()->GetId());
-    ASSERT_DOUBLE_EQ(55.289381850887146, windows[0].GetInertialAzimuth()*IO::SDK::Constants::RAD_DEG);
-    ASSERT_DOUBLE_EQ(53.734938879897108, windows[0].GetNonInertialAzimuth()*IO::SDK::Constants::RAD_DEG);
+    ASSERT_DOUBLE_EQ(55.289381850887146, windows[0].GetInertialAzimuth() * IO::SDK::Constants::RAD_DEG);
+    ASSERT_DOUBLE_EQ(53.734938879897108, windows[0].GetNonInertialAzimuth() * IO::SDK::Constants::RAD_DEG);
     ASSERT_DOUBLE_EQ(7665.2355903714715, windows[0].GetInertialInsertionVelocity());
-    ASSERT_DOUBLE_EQ(7378.9855901408182, windows[0].GetNonInertialInsertionVelocity());    
+    ASSERT_DOUBLE_EQ(7378.9855901408182, windows[0].GetNonInertialInsertionVelocity());
 }
 
 TEST(Launch, GetSouthLaunchSiteLaunchWindows)
@@ -269,23 +269,23 @@ TEST(Launch, GetSouthLaunchSiteLaunchWindows)
     auto targetOrbit = std::make_shared<IO::SDK::OrbitalParameters::TLE>(earth, tle);
     IO::SDK::Maneuvers::Launch launch(ls, ls, false, *targetOrbit);
     auto windows = launch.GetLaunchWindows(IO::SDK::Time::Window<IO::SDK::Time::UTC>(IO::SDK::Time::UTC("2021-06-02T00:00:00"), IO::SDK::Time::UTC("2021-06-03T00:00:00")));
-    
+
     //Two launch windows
     ASSERT_EQ(2, windows.size());
 
     //first launch window
     ASSERT_STREQ("2021-06-02 08:53:12.626953 (UTC)", windows[0].GetWindow().GetStartDate().ToString().c_str());
     ASSERT_EQ(1, windows[0].GetLaunchSite()->GetId());
-    ASSERT_DOUBLE_EQ(124.71061814911286, windows[0].GetInertialAzimuth()*IO::SDK::Constants::RAD_DEG);
-    ASSERT_DOUBLE_EQ(126.2650611201029, windows[0].GetNonInertialAzimuth()*IO::SDK::Constants::RAD_DEG);
+    ASSERT_DOUBLE_EQ(124.71061814911286, windows[0].GetInertialAzimuth() * IO::SDK::Constants::RAD_DEG);
+    ASSERT_DOUBLE_EQ(126.2650611201029, windows[0].GetNonInertialAzimuth() * IO::SDK::Constants::RAD_DEG);
     ASSERT_DOUBLE_EQ(7665.2355903714715, windows[0].GetInertialInsertionVelocity());
     ASSERT_DOUBLE_EQ(7378.9855901408182, windows[0].GetNonInertialInsertionVelocity());
 
     //Second launch window
     ASSERT_STREQ("2021-06-02 15:04:38.698620 (UTC)", windows[1].GetWindow().GetStartDate().ToString().c_str());
     ASSERT_EQ(1, windows[1].GetLaunchSite()->GetId());
-    ASSERT_DOUBLE_EQ(55.289381850887146, windows[1].GetInertialAzimuth()*IO::SDK::Constants::RAD_DEG);
-    ASSERT_DOUBLE_EQ(53.734938879897108, windows[1].GetNonInertialAzimuth()*IO::SDK::Constants::RAD_DEG);
+    ASSERT_DOUBLE_EQ(55.289381850887146, windows[1].GetInertialAzimuth() * IO::SDK::Constants::RAD_DEG);
+    ASSERT_DOUBLE_EQ(53.734938879897108, windows[1].GetNonInertialAzimuth() * IO::SDK::Constants::RAD_DEG);
     ASSERT_DOUBLE_EQ(7665.2355903714715, windows[1].GetInertialInsertionVelocity());
     ASSERT_DOUBLE_EQ(7378.9855901408182, windows[1].GetNonInertialInsertionVelocity());
 }

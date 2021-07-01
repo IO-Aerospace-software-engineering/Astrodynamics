@@ -139,7 +139,7 @@ void IO::SDK::Maneuvers::ManeuverBase::ExecuteAt(const IO::SDK::OrbitalParameter
         m_attitudeWindow = std::make_unique<IO::SDK::Time::Window<IO::SDK::Time::TDB>>(m_thrustWindow->GetStartDate(), m_thrustWindow->GetEndDate());
     }
 
-    if (m_minimumEpoch && (m_thrustWindow->GetStartDate() < *m_minimumEpoch || m_attitudeWindow->GetStartDate() < *m_minimumEpoch))
+    if (m_minimumEpoch && (m_attitudeWindow->GetStartDate() < *m_minimumEpoch))
     {
         throw IO::SDK::Exception::TooEarlyManeuverException("The maneuver begins too early.");
     }

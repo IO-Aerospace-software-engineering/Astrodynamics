@@ -72,8 +72,6 @@ namespace IO::SDK::Maneuvers
         ApsidalAlignmentManeuver(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator, IO::SDK::OrbitalParameters::OrbitalParameters *targetOrbit);
         ApsidalAlignmentManeuver(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator, IO::SDK::OrbitalParameters::OrbitalParameters *targetOrbit, const IO::SDK::Time::TDB &minimumEpoch );
 
-        virtual ~ApsidalAlignmentManeuver() = default;
-
         using IO::SDK::Maneuvers::ManeuverBase::GetDeltaV;
 
         /**

@@ -25,6 +25,7 @@ namespace IO::SDK::Maneuvers
         bool _isValid{false};
         std::string _message{};
         bool _tooEarly{false};
+        bool _canRetryLater{false};
 
     public:
         /**
@@ -66,6 +67,17 @@ namespace IO::SDK::Maneuvers
         bool IsValid() { return _isValid; }
 
         /**
+         * @brief The current maneuver is not valid new attempt will happen later
+         * 
+         * @return true 
+         * @return false 
+         */
+        bool CanRetryLater()
+        {
+            return _canRetryLater;
+        }
+
+        /**
          * @brief Maneuver executed too early
          * 
          * @return true 
@@ -77,8 +89,8 @@ namespace IO::SDK::Maneuvers
         {
             _message = "Maneuver executed too early";
             _isValid = false;
+            _canRetryLater = true;
         }
-
 
         /**
          * @brief Get the Message object
