@@ -22,7 +22,7 @@
 
 namespace IO::SDK::Body
 {
-	class CelestialBody : public IO::SDK::Body::Body
+	class CelestialBody final : public IO::SDK::Body::Body
 	{
 	private:
 		

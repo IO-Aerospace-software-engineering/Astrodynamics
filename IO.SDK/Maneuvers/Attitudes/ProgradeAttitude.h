@@ -22,7 +22,7 @@
 
 namespace IO::SDK::Maneuvers::Attitudes
 {
-    class ProgradeAttitude : public IO::SDK::Maneuvers::ManeuverBase
+    class ProgradeAttitude final : public IO::SDK::Maneuvers::ManeuverBase
     {
     private:
         /* data */

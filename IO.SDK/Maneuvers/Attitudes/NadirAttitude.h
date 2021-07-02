@@ -22,7 +22,7 @@
 
 namespace IO::SDK::Maneuvers::Attitudes
 {
-    class NadirAttitude : public IO::SDK::Maneuvers::ManeuverBase
+    class NadirAttitude final : public IO::SDK::Maneuvers::ManeuverBase
     {
     private:
         /* data */

@@ -20,7 +20,7 @@
 namespace IO::SDK::Time
 {
     class TDB;
-    class UTC : public IO::SDK::Time::DateTime
+    class UTC final: public IO::SDK::Time::DateTime
     {
     private:
         /* data */

@@ -14,7 +14,7 @@
 
 namespace IO::SDK::Maneuvers
 {
-    class ApogeeHeightChangingManeuver : public IO::SDK::Maneuvers::ManeuverBase
+    class ApogeeHeightChangingManeuver final : public IO::SDK::Maneuvers::ManeuverBase
     {
     private:
         std::unique_ptr<bool> m_isApproachingPerigee{nullptr};

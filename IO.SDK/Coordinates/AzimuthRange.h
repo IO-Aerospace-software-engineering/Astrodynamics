@@ -28,7 +28,6 @@ namespace IO::SDK::Coordinates
          * @param end End range [-2pi;2pi]
          */
         AzimuthRange(const double start, const double end);
-        ~AzimuthRange() = default;
 
         /**
          * @brief Know if angle is in range

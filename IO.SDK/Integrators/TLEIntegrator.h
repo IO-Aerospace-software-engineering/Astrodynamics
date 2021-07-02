@@ -18,7 +18,7 @@
 
 namespace IO::SDK::Integrators
 {
-    class TLEIntegrator : public IO::SDK::Integrators::IntegratorBase
+    class TLEIntegrator final : public IO::SDK::Integrators::IntegratorBase
     {
     private:
         const IO::SDK::OrbitalParameters::TLE& m_tle;

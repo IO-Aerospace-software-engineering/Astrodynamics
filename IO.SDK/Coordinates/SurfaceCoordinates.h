@@ -37,8 +37,6 @@ namespace IO::SDK::Coordinates
 
 		SurfaceCoordinates& operator=(const SurfaceCoordinates& surfaceCoordinates);
 
-		~SurfaceCoordinates()=default;
-
 		const std::vector<std::unique_ptr<IO::SDK::Math::Vector3D>>& GetSurfacePoints() const
 		{
 			return m_surfacePoints;

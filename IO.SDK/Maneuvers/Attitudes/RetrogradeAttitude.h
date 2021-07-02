@@ -22,7 +22,7 @@
 
 namespace IO::SDK::Maneuvers::Attitudes
 {
-    class RetrogradeAttitude : public IO::SDK::Maneuvers::ManeuverBase
+    class RetrogradeAttitude final : public IO::SDK::Maneuvers::ManeuverBase
     {
     private:
         /* data */

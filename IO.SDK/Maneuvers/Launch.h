@@ -29,7 +29,7 @@
 
 namespace IO::SDK::Maneuvers
 {
-    class Launch
+    class Launch final
     {
     private:
         

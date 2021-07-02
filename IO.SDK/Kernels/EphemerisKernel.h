@@ -17,7 +17,7 @@
 
 namespace IO::SDK::Kernels
 {
-	class EphemerisKernel : public Kernel
+	class EphemerisKernel final : public Kernel
 	{
 	private:
 		const IO::SDK::Body::Spacecraft::Spacecraft &m_spacecraft;

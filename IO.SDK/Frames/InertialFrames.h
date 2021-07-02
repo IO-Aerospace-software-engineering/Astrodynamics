@@ -6,7 +6,7 @@
 namespace IO::SDK::Frames
 {
 
-	class InertialFrames : public IO::SDK::Frames::Frames
+	class InertialFrames final : public IO::SDK::Frames::Frames
 	{
 
 	private:

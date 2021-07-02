@@ -19,7 +19,7 @@ namespace IO::SDK::OrbitalParameters
 	/// <summary>
 	/// Conic orbital elements
 	/// </summary>
-	class ConicOrbitalElements :public IO::SDK::OrbitalParameters::OrbitalParameters
+	class ConicOrbitalElements final :public IO::SDK::OrbitalParameters::OrbitalParameters
 	{
 	private:
 		double m_perifocalDistance{};

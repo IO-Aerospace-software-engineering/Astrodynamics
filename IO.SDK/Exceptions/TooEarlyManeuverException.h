@@ -16,7 +16,7 @@
 
 namespace IO::SDK::Exception
 {
-    class TooEarlyManeuverException : public SDKException
+    class TooEarlyManeuverException final : public SDKException
     {
     private:
         /* data */

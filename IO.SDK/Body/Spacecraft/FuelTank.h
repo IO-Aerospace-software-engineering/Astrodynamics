@@ -23,7 +23,7 @@ namespace IO::SDK::Body::Spacecraft
      * @brief Fuel tank class
      * 
      */
-    class FuelTank
+    class FuelTank final
     {
     private:
         const std::string m_serialNumber{};

@@ -22,7 +22,7 @@
 
 namespace IO::SDK::Maneuvers::Attitudes
 {
-    class ZenithAttitude : public IO::SDK::Maneuvers::ManeuverBase
+    class ZenithAttitude final : public IO::SDK::Maneuvers::ManeuverBase
     {
     private:
         /* data */

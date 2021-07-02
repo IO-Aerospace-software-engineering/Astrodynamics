@@ -6,7 +6,7 @@
 namespace IO::SDK::Frames
 {
 
-    class BodyFixedFrames : public IO::SDK::Frames::Frames
+    class BodyFixedFrames final : public IO::SDK::Frames::Frames
     {
 
     private:
