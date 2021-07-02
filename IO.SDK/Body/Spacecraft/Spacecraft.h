@@ -75,7 +75,7 @@ namespace IO::SDK::Body::Spacecraft
 		const double m_maximumOperatingMass;
 
 	public:
-		//Orientation
+		
 		const IO::SDK::Math::Vector3D Up{0.0, 0.0, 1.0};
 		const IO::SDK::Math::Vector3D Front{0.0, 1.0, 0.0};
 		const IO::SDK::Math::Vector3D Left{-1.0, 0.0, 0.0};

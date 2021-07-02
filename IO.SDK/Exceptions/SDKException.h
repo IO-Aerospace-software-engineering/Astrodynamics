@@ -16,6 +16,10 @@
 
 namespace IO::SDK::Exception
 {
+	/**
+	 * @brief IO SDK Exception 
+	 * 
+	 */
 	class SDKException : public std::exception
 	{
 

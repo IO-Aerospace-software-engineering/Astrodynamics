@@ -16,6 +16,10 @@
 
 namespace IO::SDK::Exception
 {
+    /**
+     * @brief Invalid argument exception
+     * 
+     */
     class InvalidArgumentException final: public SDKException
     {
     private:

@@ -1,42 +1,57 @@
+/**
+ * @file Spherical.h
+ * @author Sylvain Guillet (sylvain.guillet@live.com)
+ * @brief 
+ * @version 0.1
+ * @date 2021-07-02
+ * 
+ * @copyright Copyright (c) 2021
+ * 
+ */
 #ifndef SPHERICAL_H
 #define SPHERICAL_H
 namespace IO::SDK::Coordinates
 {
-	/// <summary>
-	/// Spherical coordinates
-	/// </summary>
+	/**
+	 * @brief Get spherical coordinate
+	 * 
+	 */
 	class Spherical
 	{
 	private:
 		const double _radius, _longitude, _colatitude;
 
 	public:
-		/// <summary>
-		/// Instanciate spherical coordinates
-		/// </summary>
-		/// <param name="radius">radius in meter</param>
-		/// <param name="longitude">longitude in radian</param>
-		/// <param name="colatitude">colatitude in radian</param>
+		/**
+		 * @brief Construct a new Spherical object
+		 * 
+		 * @param longitude 
+		 * @param colatitude 
+		 * @param radius 
+		 */
 		Spherical(const double longitude, const double colatitude, const double radius) : _radius{radius}, _longitude{longitude}, _colatitude{colatitude}
 		{
 		}
 
-		/// <summary>
-		/// Get the radius
-		/// </summary>
-		/// <returns></returns>
+		/**
+		 * @brief Get the Radius
+		 * 
+		 * @return double 
+		 */
 		double GetRadius() const { return this->_radius; }
 
-		/// <summary>
-		/// Get the longitude in radians
-		/// </summary>
-		/// <returns></returns>
+		/**
+		 * @brief Get the Longitude
+		 * 
+		 * @return double 
+		 */
 		double GetLongitude() const { return this->_longitude; }
 
-		/// <summary>
-		/// Get the colatitude in radians
-		/// </summary>
-		/// <returns></returns>
+		/**
+		 * @brief Get the Colatitude
+		 * 
+		 * @return double 
+		 */
 		double GetColatitude() const { return this->_colatitude; }
 	};
 }

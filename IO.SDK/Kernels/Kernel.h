@@ -1,3 +1,13 @@
+/**
+ * @file Kernel.h
+ * @author Sylvain Guillet (sylvain.guillet@live.com)
+ * @brief 
+ * @version 0.1
+ * @date 2021-07-02
+ * 
+ * @copyright Copyright (c) 2021
+ * 
+ */
 #ifndef KERNEL_H
 #define KERNEL_H
 #include <string>
@@ -26,35 +36,40 @@ namespace IO::SDK::Kernels
 	public:
 		virtual ~Kernel();
 
-		/// <summary>
-		/// get Kernel file path
-		/// </summary>
-		/// <returns></returns>
+		/**
+		 * @brief Get the Path
+		 * 
+		 * @return std::string 
+		 */
 		std::string GetPath() const;
 
-		/// <summary>
-		/// Know if Kernel is loaded
-		/// </summary>
-		/// <returns></returns>
+		/**
+		 * @brief 
+		 * 
+		 * @return true 
+		 * @return false 
+		 */
 		bool IsLoaded() const;
 
-		/// <summary>
-		/// Get Kernel coverage window
-		/// </summary>
-		/// <param name="id"></param>
-		/// <returns></returns>
+		/**
+		 * @brief Get the Coverage Window
+		 * 
+		 * @return IO::SDK::Time::Window<IO::SDK::Time::TDB> 
+		 */
 		virtual IO::SDK::Time::Window<IO::SDK::Time::TDB> GetCoverageWindow() const = 0;
 
-		/// <summary>
-		/// Add comment to kernel
-		/// </summary>
-		/// <param name="comment">Comment to add. It must not exceed 80 chars</param>
+		/**
+		 * @brief Add comment to kernel
+		 * 
+		 * @param comment 
+		 */
 		virtual void AddComment(const std::string &comment) const;
 
-		/// <summary>
-		/// Read kernel comment
-		/// </summary>
-		/// <returns></returns>
+		/**
+		 * @brief Read comment from kernel
+		 * 
+		 * @return std::string 
+		 */
 		virtual std::string ReadComment() const;
 	};
 

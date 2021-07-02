@@ -17,13 +17,29 @@
 
 namespace IO::SDK::Integrators::Forces
 {
+    /**
+     * @brief Force
+     * 
+     */
     class Force
     {
     private:
         /* data */
     public:
+        /**
+         * @brief Construct a new Force object
+         * 
+         */
         Force();
-        virtual IO::SDK::Math::Vector3D Apply(const IO::SDK::Body::Body &body,const IO::SDK::OrbitalParameters::StateVector& stateVector) = 0;
+
+        /**
+         * @brief Apply force to body
+         * 
+         * @param body 
+         * @param stateVector 
+         * @return IO::SDK::Math::Vector3D 
+         */
+        virtual IO::SDK::Math::Vector3D Apply(const IO::SDK::Body::Body &body, const IO::SDK::OrbitalParameters::StateVector &stateVector) = 0;
     };
 
 }

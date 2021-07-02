@@ -14,6 +14,16 @@
 #include <memory>
 #include <string>
 #include <vector>
+/**
+ * @file Instrument.h
+ * @author Sylvain Guillet (sylvain.guillet@live.com)
+ * @brief 
+ * @version 0.1
+ * @date 2021-07-02
+ * 
+ * @copyright Copyright (c) 2021
+ * 
+ */
 #include <SpiceUsr.h>
 
 #include <Vector3D.h>

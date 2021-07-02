@@ -56,7 +56,7 @@ TEST(SpacecraftClockKernel, ConvertToClock)
 	IO::SDK::Body::Spacecraft::Spacecraft s(-456, "sc456", 1000.0, 3000.0, "mission1", std::move(orbitalParams));
 	std::string filepath = s.GetFilesPath() + "/Clocks/" + s.GetName() + ".tsc";
 
-	std::string sclk = s.GetClock().ConvertToClock(IO::SDK::Time::TDB(6.62732200E+08s));
+	std::string sclk = s.GetClock().ConvertToClockString(IO::SDK::Time::TDB(6.62732200E+08s));
 	ASSERT_STREQ("1/0000001000:00000", sclk.c_str());
 }
 
