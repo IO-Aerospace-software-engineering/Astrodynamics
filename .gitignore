@@ -15,3 +15,5 @@ build/.ninja_log
 build/.ninja_deps
 build/IO.SDK/libIO.SDK.so
 build/.cmake
+build/out/
+out/

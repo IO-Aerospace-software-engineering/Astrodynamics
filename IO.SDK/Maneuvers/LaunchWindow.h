@@ -32,7 +32,6 @@ namespace IO::SDK::Maneuvers
          * @param nonInertialInsertionVelocity 
          */
         LaunchWindow(const std::shared_ptr<IO::SDK::Sites::LaunchSite> &launchSite, const IO::SDK::Time::Window<IO::SDK::Time::UTC> &window, const double inertialAzimuth, const double nonInertialAzimuth, const double inertialInsertionVelocity, const double nonInertialInsertionVelocity);
-        ~LaunchWindow() = default;
 
         LaunchWindow& operator=(const LaunchWindow& lw);
 

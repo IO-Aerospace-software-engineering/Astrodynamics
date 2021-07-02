@@ -41,7 +41,6 @@ namespace IO::SDK::Frames
          * @return const char* 
          */
         const char *ToCharArray() const;
-        virtual ~Frames() = default;
 
         /**
          * @brief Equality comparer

@@ -98,7 +98,7 @@ TEST(Instrument, Frame)
 	ASSERT_EQ(3, axes[2]);
 }
 
-TEST(Instrument, Kernel)
+TEST(Instrument, CircularKernel)
 {
 	std::string filepath = std::string(IO::SDK::Parameters::KernelsPath) + "/sc17_mis1Scn1/Instruments/Camera200/Frames/Camera200.tf";
 	if (std::filesystem::exists(filepath))
@@ -139,6 +139,94 @@ TEST(Instrument, Kernel)
 	ASSERT_DOUBLE_EQ(1.5, angle[0]);
 
 	auto units = IO::SDK::DataPoolMonitoring::Instance().GetStringProperty("INS-17200_FOV_ANGLE_UNITS", 1);
+	ASSERT_STREQ("RADIANS", units[0].c_str());
+}
+
+TEST(Instrument, RectangularKernel)
+{
+	std::string filepath = std::string(IO::SDK::Parameters::KernelsPath) + "/sc17_mis1Scn1/Instruments/Camera300/Frames/Camera300.tf";
+	if (std::filesystem::exists(filepath))
+	{
+		std::filesystem::remove(filepath);
+	}
+
+	IO::SDK::Math::Vector3D orientation{1.0, 2.0, 3.0};
+	IO::SDK::Math::Vector3D boresight{1.0, 2.0, 3.0};
+	IO::SDK::Math::Vector3D fovvector{4.0, 5.0, 6.0};
+
+	const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
+	std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth, IO::SDK::Math::Vector3D(1.0, 2.0, 3.0), IO::SDK::Math::Vector3D(4.0, 5.0, 6.0), IO::SDK::Time::TDB(100.0s), IO::SDK::Frames::InertialFrames::ICRF);
+	IO::SDK::OrbitalParameters::StateOrientation attitude(IO::SDK::Time::TDB(100.0s), IO::SDK::Frames::InertialFrames::ICRF);
+	IO::SDK::Body::Spacecraft::Spacecraft s{-17, "sc17", 1000.0, 3000.0, "mis1Scn1", std::move(orbitalParams)};
+	s.AddRectangularFOVInstrument(300, "Camera300", orientation, boresight, fovvector, 1.5,IO::SDK::Constants::PI2);
+
+	auto classSpec = IO::SDK::DataPoolMonitoring::Instance().GetStringProperty("INS-17300_FOV_CLASS_SPEC", 1);
+	ASSERT_STREQ("ANGLES", classSpec[0].c_str());
+
+	auto shape = IO::SDK::DataPoolMonitoring::Instance().GetStringProperty("INS-17300_FOV_SHAPE", 1);
+	ASSERT_STREQ("RECTANGLE", shape[0].c_str());
+
+	auto frame = IO::SDK::DataPoolMonitoring::Instance().GetStringProperty("INS-17300_FOV_FRAME", 1);
+	ASSERT_STREQ("sc17_Camera300", frame[0].c_str());
+
+	auto boresightKernel = IO::SDK::DataPoolMonitoring::Instance().GetDoubleProperty("INS-17300_BORESIGHT", 3);
+	ASSERT_DOUBLE_EQ(boresight.GetX(), boresightKernel[0]);
+	ASSERT_DOUBLE_EQ(boresight.GetY(), boresightKernel[1]);
+	ASSERT_DOUBLE_EQ(boresight.GetZ(), boresightKernel[2]);
+
+	auto fovVectorKernel = IO::SDK::DataPoolMonitoring::Instance().GetDoubleProperty("INS-17300_FOV_REF_VECTOR", 3);
+	ASSERT_DOUBLE_EQ(fovvector.GetX(), fovVectorKernel[0]);
+	ASSERT_DOUBLE_EQ(fovvector.GetY(), fovVectorKernel[1]);
+	ASSERT_DOUBLE_EQ(fovvector.GetZ(), fovVectorKernel[2]);
+
+	auto angle = IO::SDK::DataPoolMonitoring::Instance().GetDoubleProperty("INS-17300_FOV_REF_ANGLE", 1);
+	ASSERT_DOUBLE_EQ(1.5, angle[0]);
+
+	auto units = IO::SDK::DataPoolMonitoring::Instance().GetStringProperty("INS-17300_FOV_ANGLE_UNITS", 1);
+	ASSERT_STREQ("RADIANS", units[0].c_str());
+}
+
+TEST(Instrument, EllipticalKernel)
+{
+	std::string filepath = std::string(IO::SDK::Parameters::KernelsPath) + "/sc17_mis1Scn1/Instruments/Camera400/Frames/Camera400.tf";
+	if (std::filesystem::exists(filepath))
+	{
+		std::filesystem::remove(filepath);
+	}
+
+	IO::SDK::Math::Vector3D orientation{1.0, 2.0, 3.0};
+	IO::SDK::Math::Vector3D boresight{1.0, 2.0, 3.0};
+	IO::SDK::Math::Vector3D fovvector{4.0, 5.0, 6.0};
+
+	const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
+	std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth, IO::SDK::Math::Vector3D(1.0, 2.0, 3.0), IO::SDK::Math::Vector3D(4.0, 5.0, 6.0), IO::SDK::Time::TDB(100.0s), IO::SDK::Frames::InertialFrames::ICRF);
+	IO::SDK::OrbitalParameters::StateOrientation attitude(IO::SDK::Time::TDB(100.0s), IO::SDK::Frames::InertialFrames::ICRF);
+	IO::SDK::Body::Spacecraft::Spacecraft s{-17, "sc17", 1000.0, 3000.0, "mis1Scn1", std::move(orbitalParams)};
+	s.AddEllipticalFOVInstrument(400, "Camera400", orientation, boresight, fovvector, 1.5,IO::SDK::Constants::PI2);
+
+	auto classSpec = IO::SDK::DataPoolMonitoring::Instance().GetStringProperty("INS-17400_FOV_CLASS_SPEC", 1);
+	ASSERT_STREQ("ANGLES", classSpec[0].c_str());
+
+	auto shape = IO::SDK::DataPoolMonitoring::Instance().GetStringProperty("INS-17400_FOV_SHAPE", 1);
+	ASSERT_STREQ("ELLIPSE", shape[0].c_str());
+
+	auto frame = IO::SDK::DataPoolMonitoring::Instance().GetStringProperty("INS-17400_FOV_FRAME", 1);
+	ASSERT_STREQ("sc17_Camera400", frame[0].c_str());
+
+	auto boresightKernel = IO::SDK::DataPoolMonitoring::Instance().GetDoubleProperty("INS-17400_BORESIGHT", 3);
+	ASSERT_DOUBLE_EQ(boresight.GetX(), boresightKernel[0]);
+	ASSERT_DOUBLE_EQ(boresight.GetY(), boresightKernel[1]);
+	ASSERT_DOUBLE_EQ(boresight.GetZ(), boresightKernel[2]);
+
+	auto fovVectorKernel = IO::SDK::DataPoolMonitoring::Instance().GetDoubleProperty("INS-17400_FOV_REF_VECTOR", 3);
+	ASSERT_DOUBLE_EQ(fovvector.GetX(), fovVectorKernel[0]);
+	ASSERT_DOUBLE_EQ(fovvector.GetY(), fovVectorKernel[1]);
+	ASSERT_DOUBLE_EQ(fovvector.GetZ(), fovVectorKernel[2]);
+
+	auto angle = IO::SDK::DataPoolMonitoring::Instance().GetDoubleProperty("INS-17400_FOV_REF_ANGLE", 1);
+	ASSERT_DOUBLE_EQ(1.5, angle[0]);
+
+	auto units = IO::SDK::DataPoolMonitoring::Instance().GetStringProperty("INS-17400_FOV_ANGLE_UNITS", 1);
 	ASSERT_STREQ("RADIANS", units[0].c_str());
 }
 
@@ -287,51 +375,7 @@ TEST(Instrument, AlreadyExists)
 
 TEST(Instrument, FindWindowFieldOfView)
 {
-	// furnsh_c("Data/SolarSystem/de440s.bsp");
-	// furnsh_c("Data/SolarSystem/earth_assoc_itrf93.tf");
-	// furnsh_c("Data/SolarSystem/earth_fixed.tf");
-	// furnsh_c("Data/SolarSystem/earth_latest_high_prec.bpc");
-	// furnsh_c("Data/SolarSystem/geophysical.ker");
-	// furnsh_c("Data/SolarSystem/gm_de431.tpc");
-	// furnsh_c("Data/SolarSystem/naif0012.tls");
-	// furnsh_c("Data/SolarSystem/pck00010.tpc");
-	// furnsh_c("Data/SolarSystem/moon_080317.tf");
-	// furnsh_c("Data/SolarSystem/moon_assoc_me.tf");
-	// furnsh_c("Data/SolarSystem/moon_assoc_pa.tf");
-	// furnsh_c("Data/SolarSystem/moon_pa_de421_1900-2050.bpc");
-
-	// furnsh_c("Data/SC179FOV_MISSFOVTEST/Clocks/SC179FOV.tsc");
-	// furnsh_c("Data/SC179FOV_MISSFOVTEST/Ephemeris/SC179FOV.spk");
-	// furnsh_c("Data/SC179FOV_MISSFOVTEST/Frames/SC179FOV.tf");
-	// furnsh_c("Data/SC179FOV_MISSFOVTEST/Instruments/CAMERAFOV789/Frames/CAMERAFOV789.tf");
-	// furnsh_c("Data/SC179FOV_MISSFOVTEST/Instruments/CAMERAFOV789/Kernels/CAMERAFOV789.ti");
-	// furnsh_c("Data/SC179FOV_MISSFOVTEST/Orientations/SC179FOV.ck");
-
-	// IO::SDK::Time::Window<IO::SDK::Time::TDB> searchWindow(IO::SDK::Time::TDB("2021-JUN-10 00:20:00.0000 TDB"), IO::SDK::Time::TDB("2021-JUN-10 01:00:00.0000 TDB"));
-	// //Debug cspice
-	// std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>> windows;
-	// SpiceDouble windowStart;
-	// SpiceDouble windowEnd;
-
-	// const SpiceInt NINTVL{10000};
-	// const SpiceInt MAXWIN{20000};
-
-	// SpiceDouble SPICE_CELL_OCCLT[SPICE_CELL_CTRLSZ + MAXWIN];
-	// SpiceCell cnfine = IO::SDK::Spice::Builder::CreateDoubleCell(MAXWIN, SPICE_CELL_OCCLT);
-
-	// SpiceDouble SPICE_CELL_OCCLT_RESULT[SPICE_CELL_CTRLSZ + MAXWIN];
-	// SpiceCell res = IO::SDK::Spice::Builder::CreateDoubleCell(MAXWIN, SPICE_CELL_OCCLT_RESULT);
-
-	// wninsd_c(searchWindow.GetStartDate().GetSecondsFromJ2000().count(), searchWindow.GetEndDate().GetSecondsFromJ2000().count(), &cnfine);
-
-	// gftfov_c("-179789", "3", "POINT", "", "NONE", "-179", 10, &cnfine, &res);
-
-	// for (size_t i = 0; i < wncard_c(&res); i++)
-	// {
-	// 	wnfetd_c(&res, i, &windowStart, &windowEnd);
-	// 	windows.push_back(IO::SDK::Time::Window<IO::SDK::Time::TDB>(IO::SDK::Time::TDB(std::chrono::duration<double>(windowStart)), IO::SDK::Time::TDB(std::chrono::duration<double>(windowEnd))));
-	// }
-
+	
 	//========== Configure spacecraft===================
 	std::string filepath = std::string(IO::SDK::Parameters::KernelsPath) + "/SC179FOV_MISSFOVTEST/Instruments/CAMERAFOV789/Frames/CAMERAFOV789.tf";
 	if (std::filesystem::exists(filepath))

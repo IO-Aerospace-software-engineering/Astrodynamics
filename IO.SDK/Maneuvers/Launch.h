@@ -61,8 +61,6 @@ namespace IO::SDK::Maneuvers
          */
         Launch(const std::shared_ptr<IO::SDK::Sites::LaunchSite> launchSite, const std::shared_ptr<IO::SDK::Sites::LaunchSite> recoverySite, bool launchByDay, const IO::SDK::OrbitalParameters::OrbitalParameters &targetOrbit);
 
-        ~Launch() = default;
-
         /**
          * @brief Get the Non Inertial Ascending Azimuth Launch
          * 

@@ -41,7 +41,6 @@ namespace IO::SDK::Maneuvers
     public:
         ApogeeHeightChangingManeuver(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator, const double targetHeight);
         ApogeeHeightChangingManeuver(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator, const double targetHeight, const IO::SDK::Time::TDB &minimumEpoch);
-        ~ApogeeHeightChangingManeuver() = default;
 
         /**
          * @brief Evaluate if maneuver can occurs

@@ -62,5 +62,8 @@
         "mutex": "cpp",
         "thread": "cpp"
     },
-    "C_Cpp.errorSquiggles": "Disabled"
+    "C_Cpp.errorSquiggles": "Disabled",
+    "gcovViewer.buildDirectories": [
+        "/home/sylvain/Sources/IO/SDK/build/IO.SDK/CMakeFiles/IO.SDK.dir/Integrators/Forces"
+    ]
 }

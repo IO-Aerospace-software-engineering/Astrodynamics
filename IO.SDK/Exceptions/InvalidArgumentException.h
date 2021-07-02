@@ -22,7 +22,6 @@ namespace IO::SDK::Exception
         /* data */
     public:
         InvalidArgumentException(const std::string &message);
-        ~InvalidArgumentException() = default;
     };
 
 } // namespace IO::SDK::Exception

@@ -22,7 +22,6 @@ namespace IO::SDK::Exception
         /* data */
     public:
         TooEarlyManeuverException(const std::string &message);
-        ~TooEarlyManeuverException() = default;
     };
 
 } // namespace IO::SDK::Exception

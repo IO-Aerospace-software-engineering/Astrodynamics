@@ -93,3 +93,27 @@ TEST(Matrix, Transpose)
 	ASSERT_DOUBLE_EQ(5.0, res.GetValue(1, 1));
 
 }
+
+TEST(Matrix, Copy)
+{
+	IO::SDK::Math::Matrix mat(2, 2);
+	mat.SetValue(0, 0, 2.0);
+	mat.SetValue(0, 1, 3.0);
+	mat.SetValue(1, 0, 4.0);
+	mat.SetValue(1, 1, 5.0);
+
+	IO::SDK::Math::Matrix mat2(mat);
+
+	auto raw=mat.GetRawData();
+	auto raw2=mat2.GetRawData();
+	
+for (size_t i = 0; i < 2; i++)
+{
+	for (size_t j = 0; j < 2; j++)
+	{
+		ASSERT_DOUBLE_EQ(raw[i][j],raw2[i][j]);
+	}
+	
+}
+
+}

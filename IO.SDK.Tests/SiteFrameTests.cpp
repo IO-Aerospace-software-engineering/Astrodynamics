@@ -4,7 +4,8 @@
 #include <Constants.h>
 #include <Site.h>
 #include <Geodetic.h>
-#include<DataPoolMonitoring.h>
+#include <DataPoolMonitoring.h>
+#include <SiteFrameFile.h>
 
 TEST(SiteFrame, Initialization)
 {

@@ -22,7 +22,6 @@ namespace IO::SDK::Exception
         /* data */
     public:
         PropagatorException(const std::string &message);
-        ~PropagatorException() = default;
     };
 
 } // namespace IO::SDK::Exception
