@@ -18,8 +18,6 @@ namespace IO::SDK::Frames
 	public:
 		virtual ~FrameFile();
 
-		std::string GetFilePath();
-
 		std::string GetName() const;
 	};
 }

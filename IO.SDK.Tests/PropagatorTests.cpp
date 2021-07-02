@@ -294,4 +294,24 @@ TEST(Propagator, PropagateTLEIntegrator)
     ASSERT_DOUBLE_EQ(ephemerisSv.GetVelocity().GetX(), stateVector.GetVelocity().GetX());
     ASSERT_DOUBLE_EQ(ephemerisSv.GetVelocity().GetY(), stateVector.GetVelocity().GetY());
     ASSERT_DOUBLE_EQ(ephemerisSv.GetVelocity().GetZ(), stateVector.GetVelocity().GetZ());
+
+    auto latestAttitude = pro.GetLatestStateOrientation();
+    ASSERT_TRUE(latestAttitude);
+}
+
+TEST(Propagator, EraseEmptyPropagator)
+{
+    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
+    std::string lines[3]{"ISS (ZARYA)", "1 25544U 98067A   21096.43776852  .00000912  00000-0  24825-4 0  9997", "2 25544  51.6463 337.6022 0002945 188.9422 344.4138 15.48860043277477"}; //2021-04-06 10:31:32.385783 TDB
+    auto tleIntegrator = std::make_unique<IO::SDK::OrbitalParameters::TLE>(earth, lines);
+    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> tle = std::make_unique<IO::SDK::OrbitalParameters::TLE>(earth, lines);
+    IO::SDK::Time::TimeSpan step{60s};
+    IO::SDK::Integrators::TLEIntegrator integrator(*tleIntegrator, step);
+    IO::SDK::Body::Spacecraft::Spacecraft spc(-233, "issTLE", 1000.0, 3000.0, "MissTLEInteg", std::move(tle));
+
+    IO::SDK::Time::TDB epoch{tleIntegrator->GetEpoch()};
+
+    IO::SDK::Propagators::Propagator pro(spc, integrator, IO::SDK::Time::Window(epoch, epoch + step * 100.0));
+
+    pro.EraseDataFromEpochToEnd(epoch);
 }

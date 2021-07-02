@@ -27,11 +27,6 @@ IO::SDK::Frames::FrameFile::~FrameFile()
 	unload_c(m_filePath.c_str());
 }
 
-std::string IO::SDK::Frames::FrameFile::GetFilePath()
-{
-	return m_filePath;
-}
-
 std::string IO::SDK::Frames::FrameFile::GetName() const
 {
 	return m_name;
