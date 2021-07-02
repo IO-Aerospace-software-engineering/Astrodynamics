@@ -14,7 +14,7 @@
 
 namespace IO::SDK::Maneuvers
 {
-    class PerigeeHeightChangingManeuver : public IO::SDK::Maneuvers::ManeuverBase
+    class PerigeeHeightChangingManeuver final: public IO::SDK::Maneuvers::ManeuverBase
     {
     private:
         double m_targetHeight;

@@ -3,7 +3,7 @@
 
 namespace IO::SDK::Frames
 {
-	class SiteFramesLoader
+	class SiteFramesLoader final
 	{
 	private:
 		static SiteFramesLoader m_instance;

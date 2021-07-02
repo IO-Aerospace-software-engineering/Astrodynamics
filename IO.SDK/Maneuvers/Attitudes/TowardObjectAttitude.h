@@ -22,7 +22,7 @@
 
 namespace IO::SDK::Maneuvers::Attitudes
 {
-    class TowardObjectAttitude : public IO::SDK::Maneuvers::ManeuverBase
+    class TowardObjectAttitude final : public IO::SDK::Maneuvers::ManeuverBase
     {
     private:
         const IO::SDK::Body::Body &m_targetBody;

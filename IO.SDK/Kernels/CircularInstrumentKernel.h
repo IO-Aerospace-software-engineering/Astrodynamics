@@ -12,7 +12,7 @@ namespace IO::SDK::Instruments
 
 namespace IO::SDK::Kernels
 {
-	class CircularInstrumentKernel :public IO::SDK::Kernels::InstrumentKernel
+	class CircularInstrumentKernel final :public IO::SDK::Kernels::InstrumentKernel
 	{
 	private:
 

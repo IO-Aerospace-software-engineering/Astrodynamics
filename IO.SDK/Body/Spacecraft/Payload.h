@@ -20,7 +20,7 @@ namespace IO::SDK::Body::Spacecraft
 	 * @brief Payload class
 	 * 
 	 */
-	class Payload
+	class Payload final
 	{
 	private:
 		const std::string m_serialNumber{};

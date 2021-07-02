@@ -33,7 +33,7 @@ namespace IO::SDK::OrbitalParameters
 	 * @brief State vector class
 	 * 
 	 */
-	class StateVector : public IO::SDK::OrbitalParameters::OrbitalParameters
+	class StateVector final : public IO::SDK::OrbitalParameters::OrbitalParameters
 	{
 	private:
 		const IO::SDK::Math::Vector3D m_position{};

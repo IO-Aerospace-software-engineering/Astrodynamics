@@ -19,7 +19,7 @@
 
 namespace IO::SDK::Maneuvers
 {
-    class OrbitalPlaneChangingManeuver : public IO::SDK::Maneuvers::ManeuverBase
+    class OrbitalPlaneChangingManeuver final : public IO::SDK::Maneuvers::ManeuverBase
     {
     private:
         double m_relativeInclination{};

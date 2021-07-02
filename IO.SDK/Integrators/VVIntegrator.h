@@ -26,7 +26,7 @@
 
 namespace IO::SDK::Integrators
 {
-    class VVIntegrator : public IO::SDK::Integrators::IntegratorBase
+    class VVIntegrator final : public IO::SDK::Integrators::IntegratorBase
     {
     private:
         std::vector<IO::SDK::Integrators::Forces::Force *> m_forces{};

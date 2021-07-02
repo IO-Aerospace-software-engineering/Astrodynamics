@@ -12,7 +12,7 @@ namespace IO::SDK::Instruments
 		Rectangular
 	};
 
-	class FOVShapes
+	class FOVShapes final
 	{
 	public:
 	

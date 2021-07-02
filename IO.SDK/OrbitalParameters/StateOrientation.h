@@ -18,7 +18,7 @@
 
 namespace IO::SDK::OrbitalParameters
 {
-	class StateOrientation
+	class StateOrientation final
 	{
 	private:
 		const IO::SDK::Math::Quaternion m_quaternion{};

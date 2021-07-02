@@ -28,7 +28,7 @@ namespace IO::SDK::Body::Spacecraft
 
 namespace IO::SDK::Kernels
 {
-	class OrientationKernel :public IO::SDK::Kernels::Kernel
+	class OrientationKernel final :public IO::SDK::Kernels::Kernel
 	{
 	private:
 		/**

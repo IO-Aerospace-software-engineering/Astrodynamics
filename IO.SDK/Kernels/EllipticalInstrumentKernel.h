@@ -13,7 +13,7 @@ namespace IO::SDK::Instruments
 
 namespace IO::SDK::Kernels
 {
-	class EllipticalInstrumentKernel :public IO::SDK::Kernels::InstrumentKernel
+	class EllipticalInstrumentKernel final :public IO::SDK::Kernels::InstrumentKernel
 	{
 	private:
 		double m_crossAngle{};

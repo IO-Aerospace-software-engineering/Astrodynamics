@@ -6,7 +6,7 @@
 
 namespace IO::SDK::Illumination
 {
-	class Illumination
+	class Illumination final
 	{
 	private:
 		
@@ -27,7 +27,6 @@ namespace IO::SDK::Illumination
 		/// <param name="targetEpoch">TDB target epoch</param>
 		Illumination(const IO::SDK::Math::Vector3D& observerToSurfacePoint, const double phaseAngle, const double incidence, const double emission, const IO::SDK::Time::TDB& targetEpoch)
 			:m_observerToSurfacePoint{ observerToSurfacePoint }, m_phaseAngle{ phaseAngle }, m_incidence{ incidence }, m_emission{ emission }, m_targetEpoch{ targetEpoch } {};
-		~Illumination() = default;
 		Illumination(const Illumination& illumination) = default;
 
 		/// <summary>

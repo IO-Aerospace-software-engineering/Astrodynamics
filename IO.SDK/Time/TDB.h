@@ -18,7 +18,7 @@
 namespace IO::SDK::Time
 {
 	class UTC;
-	class TDB : public IO::SDK::Time::DateTime
+	class TDB final : public IO::SDK::Time::DateTime
 	{
 	private:
 	public:
@@ -81,7 +81,6 @@ namespace IO::SDK::Time
 		 * @return UTC 
 		 */
 		UTC ToUTC() const;
-
 	};
 }
 #endif // !TDB_H

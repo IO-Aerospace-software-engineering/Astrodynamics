@@ -16,7 +16,7 @@
 
 namespace IO::SDK::Exception
 {
-    class PropagatorException : public SDKException
+    class PropagatorException final : public SDKException
     {
     private:
         /* data */

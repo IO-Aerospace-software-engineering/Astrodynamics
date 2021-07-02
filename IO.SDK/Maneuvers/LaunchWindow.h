@@ -9,7 +9,7 @@
 
 namespace IO::SDK::Maneuvers
 {
-    class LaunchWindow
+    class LaunchWindow final
     {
     private:
         const std::shared_ptr<IO::SDK::Sites::LaunchSite> m_launchSite;

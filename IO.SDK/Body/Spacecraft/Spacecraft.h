@@ -58,7 +58,7 @@ namespace IO::SDK::Body::Spacecraft
 	 * @brief Spacecraft class
 	 * 
 	 */
-	class Spacecraft : public Body
+	class Spacecraft final : public Body
 	{
 	private:
 		const std::string m_missionPrefix{};

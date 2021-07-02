@@ -14,7 +14,7 @@ namespace IO::SDK::Body::Spacecraft
 
 namespace IO::SDK::Kernels
 {
-	class SpacecraftClockKernel :public IO::SDK::Kernels::Kernel
+	class SpacecraftClockKernel final :public IO::SDK::Kernels::Kernel
 	{
 	private:
 		void BuildGenericClockKernel();

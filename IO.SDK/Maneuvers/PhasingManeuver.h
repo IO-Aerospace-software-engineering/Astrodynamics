@@ -13,7 +13,7 @@
 
 namespace IO::SDK::Maneuvers
 {
-    class PhasingManeuver : public IO::SDK::Maneuvers::ManeuverBase
+    class PhasingManeuver final : public IO::SDK::Maneuvers::ManeuverBase
     {
     private:
         const uint m_revolutionsNumber;

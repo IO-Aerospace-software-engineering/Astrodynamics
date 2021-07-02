@@ -10,14 +10,14 @@ namespace IO::SDK::Sites
 
 namespace IO::SDK::Frames
 {
-    class SiteFrameFile : public FrameFile
+    class SiteFrameFile final : public FrameFile
     {
     private:
-        const IO::SDK::Sites::Site& m_site;
+        const IO::SDK::Sites::Site &m_site;
         void BuildFrame();
+
     public:
-        SiteFrameFile(const IO::SDK::Sites::Site& site);
-        ~SiteFrameFile() = default;
+        SiteFrameFile(const IO::SDK::Sites::Site &site);
     };
 }
 

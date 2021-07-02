@@ -24,7 +24,7 @@
 
 namespace IO::SDK::OrbitalParameters
 {
-	class TLE : public IO::SDK::OrbitalParameters::OrbitalParameters
+	class TLE final : public IO::SDK::OrbitalParameters::OrbitalParameters
 	{
 	private:
 		SpiceChar m_lines[2][70]{};

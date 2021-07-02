@@ -12,7 +12,7 @@ namespace IO::SDK::Instruments
 
 namespace IO::SDK::Kernels
 {
-	class RectangularInstrumentKernel :public IO::SDK::Kernels::InstrumentKernel
+	class RectangularInstrumentKernel final :public IO::SDK::Kernels::InstrumentKernel
 	{
 	private:
 		double m_crossAngle{};

@@ -28,7 +28,7 @@
 
 namespace IO::SDK::Maneuvers
 {
-    class ApsidalAlignmentManeuver : public IO::SDK::Maneuvers::ManeuverBase
+    class ApsidalAlignmentManeuver final : public IO::SDK::Maneuvers::ManeuverBase
     {
     private:
         double m_theta{};

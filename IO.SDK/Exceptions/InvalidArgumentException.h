@@ -16,7 +16,7 @@
 
 namespace IO::SDK::Exception
 {
-    class InvalidArgumentException : public SDKException
+    class InvalidArgumentException final: public SDKException
     {
     private:
         /* data */

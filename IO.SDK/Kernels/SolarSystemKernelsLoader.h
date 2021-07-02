@@ -3,7 +3,7 @@
 
 namespace IO::SDK::Kernels
 {
-	class SolarSystemKernelsLoader
+	class SolarSystemKernelsLoader final
 	{
 	private:
 		static SolarSystemKernelsLoader m_instance;

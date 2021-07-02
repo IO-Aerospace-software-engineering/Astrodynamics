@@ -12,7 +12,7 @@ namespace IO::SDK::Instruments
 
 namespace IO::SDK::Frames
 {
-	class InstrumentFrameFile :public IO::SDK::Frames::FrameFile
+	class InstrumentFrameFile final :public IO::SDK::Frames::FrameFile
 	{
 
 	private:

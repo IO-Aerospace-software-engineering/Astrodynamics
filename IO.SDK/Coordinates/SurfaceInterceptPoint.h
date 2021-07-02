@@ -38,7 +38,6 @@ namespace IO::SDK::Coordinates
 			:m_interceptPoint{ interceptPoint }, m_observerToInterceptPointVector{ observerToInterceptPoint }, m_interceptEpoch{ interceptEpoch }
 		{};
 		SurfaceInterceptPoint(const SurfaceInterceptPoint& surfaceInterceptPoint) = default;
-		~SurfaceInterceptPoint() = default;
 
 		/// <summary>
 		/// Get the intercept point

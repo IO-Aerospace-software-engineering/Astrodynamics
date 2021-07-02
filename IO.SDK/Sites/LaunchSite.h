@@ -11,14 +11,14 @@
 #ifndef LAUNCH_SITE_H
 #define LAUNCH_SITE_H
 
-#include<string>
-#include<vector>
-#include<memory>
+#include <string>
+#include <vector>
+#include <memory>
 
-#include<Geodetic.h>
-#include<Site.h>
-#include<CelestialBody.h>
-#include<AzimuthRange.h>
+#include <Geodetic.h>
+#include <Site.h>
+#include <CelestialBody.h>
+#include <AzimuthRange.h>
 
 namespace IO::SDK::Sites
 {
@@ -26,10 +26,11 @@ namespace IO::SDK::Sites
      * @brief Lauch site class
      * 
      */
-    class LaunchSite:public IO::SDK::Sites::Site
+    class LaunchSite final : public IO::SDK::Sites::Site
     {
     private:
         std::vector<IO::SDK::Coordinates::AzimuthRange> m_azimuthRanges;
+
     public:
         /**
          * @brief Construct a new Launch Site object
@@ -40,14 +41,13 @@ namespace IO::SDK::Sites
          * @param body 
          */
         LaunchSite(const int id, const std::string name, const IO::SDK::Coordinates::Geodetic coordinates, std::shared_ptr<IO::SDK::Body::CelestialBody> body);
-        ~LaunchSite() = default;
 
         /**
          * @brief Add an azimuth range
          * 
          * @param azimuthRange 
          */
-        void AddAzimuthLaunchRange(IO::SDK::Coordinates::AzimuthRange& azimuthRange);
+        void AddAzimuthLaunchRange(IO::SDK::Coordinates::AzimuthRange &azimuthRange);
 
         /**
          * @brief Clear all azimuth ranges

@@ -17,7 +17,7 @@
 
 namespace IO::SDK::Maneuvers
 {
-    class CombinedManeuver : public IO::SDK::Maneuvers::ManeuverBase
+    class CombinedManeuver final : public IO::SDK::Maneuvers::ManeuverBase
     {
     private:
         double m_relativeInclination{};

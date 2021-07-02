@@ -26,7 +26,7 @@ namespace IO::SDK::Body::Spacecraft
 	 * @brief Engine class
 	 * 
 	 */
-	class Engine
+	class Engine final
 	{
 	private:
 		const std::string m_name{};
