@@ -29,7 +29,7 @@ namespace IO::SDK::Kernels
 		
 	protected:
 		/**
-		 * @brief 
+		 * @brief Build kernel
 		 * 
 		 */
 		void BuildKernel() override;

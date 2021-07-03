@@ -29,6 +29,12 @@ namespace IO::SDK::Instruments
 	class FOVShapes final
 	{
 	public:
+		/**
+		 * @brief Get enum string value
+		 * 
+		 * @param e 
+		 * @return std::string 
+		 */
 		std::string ToString(const FOVShapeEnum e) const;
 	};
 }

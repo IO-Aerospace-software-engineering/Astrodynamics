@@ -1,16 +1,16 @@
-#ifndef STATE_VECTOR_H
-#define STATE_VECTOR_H
-
 /**
  * @file StateVector.h
  * @author Sylvain Guillet (sylvain.guillet@live.com)
  * @brief 
  * @version 0.1
- * @date 2021-05-19
+ * @date 2021-07-03
  * 
  * @copyright Copyright (c) 2021
  * 
  */
+#ifndef STATE_VECTOR_H
+#define STATE_VECTOR_H
+
 #include<array>
 #include<memory>
 #include<cmath>
