@@ -16,9 +16,10 @@
 
 namespace IO::SDK::Coordinates
 {
-	/// <summary>
-	/// Surface coordinates
-	/// </summary>
+	/**
+	 * @brief Surface coordinates
+	 * 
+	 */
 	class SurfaceCoordinates
 	{
 	private:
@@ -26,37 +27,56 @@ namespace IO::SDK::Coordinates
 		std::vector<std::unique_ptr<IO::SDK::Math::Vector3D>> m_surfaceNormals;
 
 	public:
-		/// <summary>
-		/// Instanciate surface coordinates
-		/// </summary>
-		/// <param name="longitudeSpan">Longitude span</param>
-		/// <param name="latitudeSpan">Latitude span</param>
+		/**
+		 * @brief Construct a new Surface Coordinates object
+		 * 
+		 * @param longitudeSpan 
+		 * @param latitudeSpan 
+		 */
 		SurfaceCoordinates(const size_t longitudeSpan,const size_t latitudeSpan);
 
+		/**
+		 * @brief Construct a new Surface Coordinates object
+		 * 
+		 * @param surfaceCoordinates 
+		 */
 		SurfaceCoordinates(const SurfaceCoordinates& surfaceCoordinates);
 
 		SurfaceCoordinates& operator=(const SurfaceCoordinates& surfaceCoordinates);
 
+
+		/**
+		 * @brief Get the Surface Points
+		 * 
+		 * @return const std::vector<std::unique_ptr<IO::SDK::Math::Vector3D>>& 
+		 */
 		const std::vector<std::unique_ptr<IO::SDK::Math::Vector3D>>& GetSurfacePoints() const
 		{
 			return m_surfacePoints;
 		}
 
+		/**
+		 * @brief Get the Surface Normals
+		 * 
+		 * @return const std::vector<std::unique_ptr<IO::SDK::Math::Vector3D>>& 
+		 */
 		const std::vector<std::unique_ptr<IO::SDK::Math::Vector3D>>& GetSurfaceNormals() const
 		{
 			return m_surfaceNormals;
 		}
 
-		/// <summary>
-		/// Add surface point
-		/// </summary>
-		/// <param name="point"></param>
+		/**
+		 * @brief Add a surface point
+		 * 
+		 * @param point 
+		 */
 		void AddPoint(const IO::SDK::Math::Vector3D& point);
 
-		/// <summary>
-		/// Add normal point
-		/// </summary>
-		/// <param name="normal"></param>
+		/**
+		 * @brief Add normal vector
+		 * 
+		 * @param normal 
+		 */
 		void AddNormal(const IO::SDK::Math::Vector3D& normal);
 	};
 }

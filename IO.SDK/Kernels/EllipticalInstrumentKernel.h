@@ -1,10 +1,20 @@
+/**
+ * @file EllipticalInstrumentKernel.h
+ * @author Sylvain Guillet (sylvain.guillet@live.com)
+ * @brief 
+ * @version 0.1
+ * @date 2021-07-02
+ * 
+ * @copyright Copyright (c) 2021
+ * 
+ */
 #ifndef ELLIPTICAL_INSTRUMENT_KERNEL_H
 #define ELLIPTICAL_INSTRUMENT_KERNEL_H
 
-#include<InstrumentKernel.h>
-#include<Instrument.h>
-#include<Vector3D.h>
-#include<string>
+#include <InstrumentKernel.h>
+#include <Instrument.h>
+#include <Vector3D.h>
+#include <string>
 
 namespace IO::SDK::Instruments
 {
@@ -13,19 +23,34 @@ namespace IO::SDK::Instruments
 
 namespace IO::SDK::Kernels
 {
-	class EllipticalInstrumentKernel final :public IO::SDK::Kernels::InstrumentKernel
+	/**
+	 * @brief Elliptical instrument kernel
+	 * 
+	 */
+	class EllipticalInstrumentKernel final : public IO::SDK::Kernels::InstrumentKernel
 	{
 	private:
 		double m_crossAngle{};
 
 	protected:
+		/**
+		 * @brief 
+		 * 
+		 */
 		void BuildKernel() override;
 
 	public:
-		EllipticalInstrumentKernel(const IO::SDK::Instruments::Instrument& instrument, const IO::SDK::Math::Vector3D& boresight, const IO::SDK::Math::Vector3D& refVector, const double angle, const double crossAngle);
+		/**
+		 * @brief Construct a new Elliptical Instrument Kernel object
+		 * 
+		 * @param instrument 
+		 * @param boresight 
+		 * @param refVector 
+		 * @param angle 
+		 * @param crossAngle 
+		 */
+		EllipticalInstrumentKernel(const IO::SDK::Instruments::Instrument &instrument, const IO::SDK::Math::Vector3D &boresight, const IO::SDK::Math::Vector3D &refVector, const double angle, const double crossAngle);
 		virtual ~EllipticalInstrumentKernel() = default;
-		
-
 	};
 }
 

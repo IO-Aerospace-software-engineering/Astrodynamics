@@ -1,11 +1,21 @@
+/**
+ * @file SpacecraftClockKernel.h
+ * @author Sylvain Guillet (sylvain.guillet@live.com)
+ * @brief 
+ * @version 0.1
+ * @date 2021-07-02
+ * 
+ * @copyright Copyright (c) 2021
+ * 
+ */
 #ifndef SPACECRAFT_CLOCK_KERNEL_H
 #define SPACECRAFT_CLOCK_KERNEL_H
 
-#include<string>
-#include<Kernel.h>
-#include<TDB.h>
-#include<Spacecraft.h>
-#include<cmath>
+#include <string>
+#include <Kernel.h>
+#include <TDB.h>
+#include <Spacecraft.h>
+#include <cmath>
 
 namespace IO::SDK::Body::Spacecraft
 {
@@ -14,72 +24,93 @@ namespace IO::SDK::Body::Spacecraft
 
 namespace IO::SDK::Kernels
 {
-	class SpacecraftClockKernel final :public IO::SDK::Kernels::Kernel
+	class SpacecraftClockKernel final : public IO::SDK::Kernels::Kernel
 	{
 	private:
+		/**
+		 * @brief Build a generic clock kernel
+		 * 
+		 */
 		void BuildGenericClockKernel();
-		const IO::SDK::Body::Spacecraft::Spacecraft& m_spacecraft;
+		const IO::SDK::Body::Spacecraft::Spacecraft &m_spacecraft;
 		const int m_resolution{};
-		SpacecraftClockKernel(const IO::SDK::Body::Spacecraft::Spacecraft& spacecraft, const int resolution);
+
+		/**
+		 * @brief Construct a new Spacecraft Clock Kernel object
+		 * 
+		 * @param spacecraft 
+		 * @param resolution 
+		 */
+		SpacecraftClockKernel(const IO::SDK::Body::Spacecraft::Spacecraft &spacecraft, const int resolution);
 
 	public:
-
 		virtual ~SpacecraftClockKernel() = default;
 
-		/// <summary>
-		/// Return partition window
-		/// </summary>
-		/// <param name="id"></param>
-		/// <returns></returns>
+		/**
+		 * @brief Get the Coverage Window
+		 * 
+		 * @return IO::SDK::Time::Window<IO::SDK::Time::TDB> 
+		 */
 		IO::SDK::Time::Window<IO::SDK::Time::TDB> GetCoverageWindow() const override;
 
-		/// <summary>
-		/// Convert string clock to TDB
-		/// </summary>
-		/// <param name="clock">string clock with partition number</param>
-		/// <returns></returns>
-		IO::SDK::Time::TDB ConvertToTDB(const std::string& clock) const;
+		/**
+		 * @brief Convert to TDB
+		 * 
+		 * @param clock 
+		 * @return IO::SDK::Time::TDB 
+		 */
+		IO::SDK::Time::TDB ConvertToTDB(const std::string &clock) const;
 
-		/// <summary>
-		/// Convert encoded clock to TDB
-		/// </summary>
-		/// <param name="encodedClock"></param>
-		/// <returns></returns>
+		/**
+		 * @brief Convert to TDB
+		 * 
+		 * @param encodedClock 
+		 * @return IO::SDK::Time::TDB 
+		 */
 		IO::SDK::Time::TDB ConvertToTDB(const double encodedClock) const;
 
-		/// <summary>
-		/// Convert TDB to string clock
-		/// </summary>
-		/// <param name="epoch">TDB</param>
-		/// <returns></returns>
-		std::string ConvertToClock(const IO::SDK::Time::TDB& epoch) const;
+		/**
+		 * @brief Convert to spacecraft clock
+		 * 
+		 * @param epoch 
+		 * @return std::string 
+		 */
+		std::string ConvertToClockString(const IO::SDK::Time::TDB &epoch) const;
 
-		/// <summary>
-		/// Convert TDB to continuous encoded spacecraft clock
-		/// </summary>
-		double ConvertToEncodedClock(const IO::SDK::Time::TDB& epoch) const;
+		/**
+		 * @brief Convert to enoded clock
+		 * 
+		 * @param epoch 
+		 * @return double 
+		 */
+		double ConvertToEncodedClock(const IO::SDK::Time::TDB &epoch) const;
 
+		/**
+		 * @brief Get the Resolution
+		 * 
+		 * @return int 
+		 */
 		int GetResolution() const
 		{
 			return m_resolution;
 		}
 
-		/// <summary>
-		/// Get ticks per seconds
-		/// </summary>
-		/// <returns></returns>
+		/**
+		 * @brief Get the Ticks Per Seconds
+		 * 
+		 * @return int 
+		 */
 		int GetTicksPerSeconds() const;
 
-		/// <summary>
-		/// Get seconds per ticks
-		/// </summary>
-		/// <returns></returns>
-		double GetSecondsPerTick()const ;
+		/**
+		 * @brief Get the Seconds Per Tick
+		 * 
+		 * @return double 
+		 */
+		double GetSecondsPerTick() const;
 
 		friend class IO::SDK::Body::Spacecraft::Spacecraft;
 	};
 }
 
 #endif // !SPACECRAFT_CLOCK_KERNEL_H
-
-

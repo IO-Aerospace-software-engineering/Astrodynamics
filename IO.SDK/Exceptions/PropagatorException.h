@@ -16,6 +16,10 @@
 
 namespace IO::SDK::Exception
 {
+    /**
+     * @brief Propagator exception
+     * 
+     */
     class PropagatorException final : public SDKException
     {
     private:

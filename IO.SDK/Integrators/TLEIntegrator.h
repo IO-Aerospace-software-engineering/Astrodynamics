@@ -18,14 +18,32 @@
 
 namespace IO::SDK::Integrators
 {
+    /**
+     * @brief 
+     * 
+     */
     class TLEIntegrator final : public IO::SDK::Integrators::IntegratorBase
     {
     private:
-        const IO::SDK::OrbitalParameters::TLE& m_tle;
+        const IO::SDK::OrbitalParameters::TLE &m_tle;
 
     public:
-        TLEIntegrator(const IO::SDK::OrbitalParameters::TLE& tle,const IO::SDK::Time::TimeSpan& stepDuration);
+        /**
+         * @brief Construct a new TLEIntegrator object
+         * 
+         * @param tle 
+         * @param stepDuration 
+         */
+        TLEIntegrator(const IO::SDK::OrbitalParameters::TLE &tle, const IO::SDK::Time::TimeSpan &stepDuration);
         ~TLEIntegrator();
+
+        /**
+         * @brief Integrate
+         * 
+         * @param body 
+         * @param stateVector 
+         * @return IO::SDK::OrbitalParameters::StateVector 
+         */
         IO::SDK::OrbitalParameters::StateVector Integrate(const IO::SDK::Body::Body &body, const IO::SDK::OrbitalParameters::StateVector &stateVector) override;
     };
 

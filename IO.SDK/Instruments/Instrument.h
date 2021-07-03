@@ -14,6 +14,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+
 #include <SpiceUsr.h>
 
 #include <Vector3D.h>

@@ -1,43 +1,58 @@
+/**
+ * @file Rectangular.h
+ * @author Sylvain Guillet (sylvain.guillet@live.com)
+ * @brief 
+ * @version 0.1
+ * @date 2021-07-02
+ * 
+ * @copyright Copyright (c) 2021
+ * 
+ */
 #ifndef RECTANGULAR_H
 #define RECTANGULAR_H
 namespace IO::SDK::Coordinates
 {
-	/// <summary>
-	/// Rectangular coordinates
-	/// </summary>
+	/**
+	 * @brief Rectangular coordinates
+	 * 
+	 */
 	class Rectangular
 	{
 	private:
 		const double m_x, m_y, m_z;
 
 	public:
-		/// <summary>
-		/// Instanciate rectangular coordinates
-		/// </summary>
-		/// <param name="x"></param>
-		/// <param name="y"></param>
-		/// <param name="z"></param>
+		/**
+		 * @brief Construct a new Rectangular object
+		 * 
+		 * @param x 
+		 * @param y 
+		 * @param z 
+		 */
 		Rectangular(const double x, const double y,const double z) :m_x{ x }, m_y{ y }, m_z{ z }
 		{
 
 		}
 
-		/// <summary>
-		/// Get X
-		/// </summary>
-		/// <returns></returns>
+		/**
+		 * @brief Get X
+		 * 
+		 * @return double 
+		 */
 		double GetX() const { return this->m_x; }
 
-		/// <summary>
-		/// Get Y
-		/// </summary>
-		/// <returns></returns>
+		/**
+		 * @brief Get Y
+		 * 
+		 * @return double 
+		 */
 		double GetY() const { return this->m_y; }
 
-		/// <summary>
-		/// Get Z
-		/// </summary>
-		/// <returns></returns>
+		/**
+		 * @brief Get Z
+		 * 
+		 * @return double 
+		 */
 		double GetZ() const { return this->m_z; }
 	};
 }

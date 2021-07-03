@@ -1,3 +1,13 @@
+/**
+ * @file SurfaceCoordinates.cpp
+ * @author Sylvain Guillet (sylvain.guillet@live.com)
+ * @brief 
+ * @version 0.1
+ * @date 2021-07-03
+ * 
+ * @copyright Copyright (c) 2021
+ * 
+ */
 #include "SurfaceCoordinates.h"
 
 IO::SDK::Coordinates::SurfaceCoordinates::SurfaceCoordinates(const size_t longitudeSpan, const size_t latitudeSpan)

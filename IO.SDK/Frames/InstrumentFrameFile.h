@@ -1,3 +1,13 @@
+/**
+ * @file InstrumentFrameFile.h
+ * @author Sylvain Guillet (sylvain.guillet@live.com)
+ * @brief 
+ * @version 0.1
+ * @date 2021-07-02
+ * 
+ * @copyright Copyright (c) 2021
+ * 
+ */
 #ifndef INSTRUMENT_FRAME_H
 #define INSTRUMENT_FRAME_H
 
@@ -12,15 +22,20 @@ namespace IO::SDK::Instruments
 
 namespace IO::SDK::Frames
 {
+	/**
+	 * @brief Instrument file frame
+	 * 
+	 */
 	class InstrumentFrameFile final :public IO::SDK::Frames::FrameFile
 	{
 
 	private:
-		/// <summary>
-		/// Instanciate instrument frame
-		/// </summary>
-		/// <param name="instrument">Associated instrument</param>
-		/// <param name="orientation">Instrument orientation relative to spacecraft frame</param>
+		/**
+		 * @brief Construct a new Instrument Frame File object
+		 * 
+		 * @param instrument 
+		 * @param orientation 
+		 */
 		InstrumentFrameFile(const IO::SDK::Instruments::Instrument& instrument, const IO::SDK::Math::Vector3D& orientation);
 		const IO::SDK::Instruments::Instrument& m_instrument;
 		const IO::SDK::Math::Vector3D m_orientation{};

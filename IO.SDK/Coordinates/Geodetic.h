@@ -1,43 +1,59 @@
+/**
+ * @file Geodetic.h
+ * @author Sylvain Guillet (sylvain.guillet@live.com)
+ * @brief 
+ * @version 0.1
+ * @date 2021-07-02
+ * 
+ * @copyright Copyright (c) 2021
+ * 
+ */
 #ifndef GEODETIC_H
 #define GEODETIC_H
 namespace IO::SDK::Coordinates
 {
-	/// <summary>
-	/// Geodetic coordinates
-	/// </summary>
+	/**
+	 * @brief Geodetic coordinate
+	 * 
+	 */
 	class Geodetic
 	{
 	private:
 		const double _altitude, _longitude, _latitude;
 
 	public:
-		/// <summary>
-		/// Instanciate geodetic coordinates
-		/// </summary>
-		/// <param name="altitude">altitude in meter</param>
-		/// <param name="longitude">longitude in radian</param>
-		/// <param name="latitude">latitude in radian</param>
+		
+		/**
+		 * @brief Construct a new Geodetic object
+		 * 
+		 * @param longitude 
+		 * @param latitude 
+		 * @param altitude 
+		 */
 		Geodetic(const double longitude, const double latitude, const double altitude) :_altitude{ altitude }, _longitude{ longitude }, _latitude{ latitude }
 		{
 
 		}
 
-		/// <summary>
-		/// Get the altitude
-		/// </summary>
-		/// <returns></returns>
+		/**
+		 * @brief Get the Altitude
+		 * 
+		 * @return double 
+		 */
 		double GetAltitude() const { return this->_altitude; }
 
-		/// <summary>
-		/// Get the longitude in radians
-		/// </summary>
-		/// <returns></returns>
+		/**
+		 * @brief Get the Longitude
+		 * 
+		 * @return double 
+		 */
 		double GetLongitude() const { return this->_longitude; }
 		
-		/// <summary>
-		/// Get the latitude in radians
-		/// </summary>
-		/// <returns></returns>
+		/**
+		 * @brief Get the Latitude
+		 * 
+		 * @return double 
+		 */
 		double GetLatitude() const { return this->_latitude; }
 	};
 }

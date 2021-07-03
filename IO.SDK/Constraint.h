@@ -21,7 +21,11 @@ namespace IO::SDK
         const std::string m_name;
 
     public:
-
+        /**
+         * @brief Construct a new Constraint object
+         * 
+         * @param name 
+         */
         Constraint(const std::string &name);
 
         static Constraint GreaterThan;
@@ -32,6 +36,11 @@ namespace IO::SDK
         static Constraint LocalMin;
         static Constraint LocalMax;
 
+        /**
+         * @brief Get char array constraint name
+         * 
+         * @return const char* 
+         */
         const char *ToCharArray() const;
     };
 

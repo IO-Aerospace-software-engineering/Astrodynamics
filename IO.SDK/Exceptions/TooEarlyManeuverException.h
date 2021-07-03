@@ -16,6 +16,10 @@
 
 namespace IO::SDK::Exception
 {
+    /**
+     * @brief 
+     * 
+     */
     class TooEarlyManeuverException final : public SDKException
     {
     private:

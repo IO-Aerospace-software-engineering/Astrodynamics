@@ -1,3 +1,13 @@
+/**
+ * @file DataPoolMonitoring.h
+ * @author Sylvain Guillet (sylvain.guillet@live.com)
+ * @brief 
+ * @version 0.1
+ * @date 2021-07-03
+ * 
+ * @copyright Copyright (c) 2021
+ * 
+ */
 #ifndef KERNEL_POOL_MONITORING_H
 #define KERNEL_POOL_MONITORING_H
 
@@ -7,6 +17,10 @@
 
 namespace IO::SDK
 {
+	/**
+	 * @brief Class used to read raw data pool
+	 * 
+	 */
 	class DataPoolMonitoring
 	{
 	public:

@@ -1,3 +1,13 @@
+/**
+ * @file SpacecraftClockKernel.cpp
+ * @author Sylvain Guillet (sylvain.guillet@live.com)
+ * @brief 
+ * @version 0.1
+ * @date 2021-07-02
+ * 
+ * @copyright Copyright (c) 2021
+ * 
+ */
 #include <SpacecraftClockKernel.h>
 #include<iostream>
 #include<fstream>
@@ -51,7 +61,7 @@ IO::SDK::Time::TDB IO::SDK::Kernels::SpacecraftClockKernel::ConvertToTDB(const d
 	return IO::SDK::Time::TDB(std::chrono::duration<double>(et));
 }
 
-std::string IO::SDK::Kernels::SpacecraftClockKernel::ConvertToClock(const IO::SDK::Time::TDB& epoch) const
+std::string IO::SDK::Kernels::SpacecraftClockKernel::ConvertToClockString(const IO::SDK::Time::TDB& epoch) const
 {
 	SpiceChar sclk[30];
 	sce2s_c(m_spacecraft.GetId(), epoch.GetSecondsFromJ2000().count(), 30, sclk);

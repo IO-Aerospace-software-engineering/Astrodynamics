@@ -34,6 +34,12 @@ namespace IO::SDK::Maneuvers
          */
         ManeuverResult(){};
 
+        /**
+         * @brief Construct a new Maneuver Result object
+         * 
+         * @param isValid 
+         * @param message 
+         */
         ManeuverResult(bool isValid, std::string message) : _isValid{isValid}, _message{message} {};
 
         /**

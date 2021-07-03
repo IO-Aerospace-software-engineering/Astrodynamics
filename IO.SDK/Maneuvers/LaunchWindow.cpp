@@ -1,3 +1,13 @@
+/**
+ * @file LaunchWindow.cpp
+ * @author Sylvain Guillet (sylvain.guillet@live.com)
+ * @brief 
+ * @version 0.1
+ * @date 2021-07-03
+ * 
+ * @copyright Copyright (c) 2021
+ * 
+ */
 #include <LaunchWindow.h>
 
 IO::SDK::Maneuvers::LaunchWindow::LaunchWindow(const std::shared_ptr<IO::SDK::Sites::LaunchSite> &launchSite, const IO::SDK::Time::Window<IO::SDK::Time::UTC> &window, const double inertialAzimuth, const double nonInertialAzimuth, double inertialInsertionVelocity, const double nonInertialInsertionVelocity) : m_launchSite{launchSite}, m_window{window}, m_inertialAzimuth{inertialAzimuth}, m_nonInertialAzimuth{nonInertialAzimuth}, m_nonInertialInsertionVelocity{nonInertialInsertionVelocity}, m_inertialInsertionVelocity{inertialInsertionVelocity}
