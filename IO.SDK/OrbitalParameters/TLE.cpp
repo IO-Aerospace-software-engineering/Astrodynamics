@@ -1,3 +1,13 @@
+/**
+ * @file TLE.cpp
+ * @author Sylvain Guillet (sylvain.guillet@live.com)
+ * @brief 
+ * @version 0.1
+ * @date 2021-07-03
+ * 
+ * @copyright Copyright (c) 2021
+ * 
+ */
 #include "TLE.h"
 #include <algorithm>
 #include <SpiceUsr.h>
@@ -5,7 +15,7 @@
 #include <Constants.h>
 #include <InertialFrames.h>
 
-IO::SDK::OrbitalParameters::TLE::TLE(const std::shared_ptr<IO::SDK::Body::CelestialBody> &centerOfmotion, std::string lines[3]) : m_satelliteName{lines[0]}, OrbitalParameters(centerOfmotion, std::chrono::duration<double>(0.0), IO::SDK::Frames::InertialFrames::ICRF)
+IO::SDK::OrbitalParameters::TLE::TLE(const std::shared_ptr<IO::SDK::Body::CelestialBody> &centerOfmotion, std::string lines[3]) :  OrbitalParameters(centerOfmotion, std::chrono::duration<double>(0.0), IO::SDK::Frames::InertialFrames::ICRF),m_satelliteName{lines[0]}
 {
 	//Build lines
 	size_t length = lines[1].length();

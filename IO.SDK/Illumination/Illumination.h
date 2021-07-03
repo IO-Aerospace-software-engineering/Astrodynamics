@@ -1,3 +1,13 @@
+/**
+ * @file Illumination.h
+ * @author Sylvain Guillet (sylvain.guillet@live.com)
+ * @brief 
+ * @version 0.1
+ * @date 2021-07-02
+ * 
+ * @copyright Copyright (c) 2021
+ * 
+ */
 #ifndef ILLUMINATION_H
 #define ILLUMINATION_H
 
@@ -6,69 +16,74 @@
 
 namespace IO::SDK::Illumination
 {
-	class Illumination
+	class Illumination final
 	{
 	private:
-		const IO::SDK::Time::TDB m_targetEpoch;
+		
 		const IO::SDK::Math::Vector3D m_observerToSurfacePoint{};
 		const double m_phaseAngle{};
 		const double m_incidence{};
 		const double m_emission{};
+		const IO::SDK::Time::TDB m_targetEpoch;
 
 	public:
-		/// <summary>
-		/// Instanciate illumination
-		/// </summary>
-		/// <param name="observerToSurfacePoint">Observer to surface point vector</param>
-		/// <param name="phaseAngle">The phase angle in radians</param>
-		/// <param name="incidence">The incidence angle in radians</param>
-		/// <param name="emission">The emiision angle in radians</param>
-		/// <param name="targetEpoch">TDB target epoch</param>
+		/**
+		 * @brief Construct a new Illumination object
+		 * 
+		 * @param observerToSurfacePoint 
+		 * @param phaseAngle 
+		 * @param incidence 
+		 * @param emission 
+		 * @param targetEpoch 
+		 */
 		Illumination(const IO::SDK::Math::Vector3D& observerToSurfacePoint, const double phaseAngle, const double incidence, const double emission, const IO::SDK::Time::TDB& targetEpoch)
 			:m_observerToSurfacePoint{ observerToSurfacePoint }, m_phaseAngle{ phaseAngle }, m_incidence{ incidence }, m_emission{ emission }, m_targetEpoch{ targetEpoch } {};
-		~Illumination() = default;
-		Illumination(const Illumination& illumination) = default;
 
-		/// <summary>
-		/// Get the TDB target epoch
-		/// </summary>
-		/// <returns></returns>
+		/**
+		 * @brief Get the Epoch
+		 * 
+		 * @return IO::SDK::Time::TDB 
+		 */
 		IO::SDK::Time::TDB GetEpoch() const
 		{
 			return m_targetEpoch;
 		}
 
-		/// <summary>
-		/// Get observer to surface point vector
-		/// </summary>
-		/// <returns></returns>
+		/**
+		 * @brief Get the Observer To Surface Point
+		 * 
+		 * @return const IO::SDK::Math::Vector3D& 
+		 */
 		const IO::SDK::Math::Vector3D& GetObserverToSurfacePoint() const
 		{
 			return m_observerToSurfacePoint;
 		}
 
-		/// <summary>
-		/// Get the phase angle in radians
-		/// </summary>
-		/// <returns></returns>
+		/**
+		 * @brief Get the Phase Angle
+		 * 
+		 * @return double 
+		 */
 		double GetPhaseAngle() const
 		{
 			return m_phaseAngle;
 		}
 
-		/// <summary>
-		/// Get the incidence angle in radians
-		/// </summary>
-		/// <returns></returns>
+		/**
+		 * @brief Get the Incidence
+		 * 
+		 * @return double 
+		 */
 		double GetIncidence() const
 		{
 			return m_incidence;
 		}
 
-		/// <summary>
-		/// Get the emission angle in radians
-		/// </summary>
-		/// <returns></returns>
+		/**
+		 * @brief Get the Emission
+		 * 
+		 * @return double 
+		 */
 		double GetEmission() const
 		{
 			return m_emission;

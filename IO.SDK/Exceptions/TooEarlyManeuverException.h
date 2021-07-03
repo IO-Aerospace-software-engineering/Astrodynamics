@@ -16,13 +16,16 @@
 
 namespace IO::SDK::Exception
 {
-    class TooEarlyManeuverException : public SDKException
+    /**
+     * @brief 
+     * 
+     */
+    class TooEarlyManeuverException final : public SDKException
     {
     private:
         /* data */
     public:
         TooEarlyManeuverException(const std::string &message);
-        ~TooEarlyManeuverException() = default;
     };
 
 } // namespace IO::SDK::Exception

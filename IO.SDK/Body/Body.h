@@ -28,6 +28,7 @@
 #include <Constraint.h>
 #include <TimeSpan.h>
 #include <OccultationType.h>
+#include <Planetographic.h>
 
 namespace IO::SDK::OrbitalParameters
 {
@@ -91,7 +92,7 @@ namespace IO::SDK::Body
 		 * 
 		 * @return const int 
 		 */
-		const int GetId() const;
+		int GetId() const;
 
 		/**
 		 * @brief Get the body name
@@ -144,7 +145,7 @@ namespace IO::SDK::Body
 		 * @param epoch 
 		 * @return IO::SDK::OrbitalParameters::StateVector 
 		 */
-		virtual IO::SDK::OrbitalParameters::StateVector ReadEphemeris(const IO::SDK::Body::CelestialBody &relativeTo, const IO::SDK::Frames::Frames &frame, const IO::SDK::AberrationsEnum aberration, const IO::SDK::Time::TDB &epoch) const;
+		virtual IO::SDK::OrbitalParameters::StateVector ReadEphemeris(const IO::SDK::Frames::Frames &frame, const IO::SDK::AberrationsEnum aberration, const IO::SDK::Time::TDB &epoch, const IO::SDK::Body::CelestialBody &relativeTo) const;
 
 		virtual bool operator==(const IO::SDK::Body::Body &rhs) const;
 		virtual bool operator!=(const IO::SDK::Body::Body &rhs) const;
@@ -165,7 +166,38 @@ namespace IO::SDK::Body
 		 */
 		std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>> FindWindowsOnDistanceConstraint(const IO::SDK::Time::Window<IO::SDK::Time::TDB> searchWindow, const Body &targetBody, const Body &oberver, const IO::SDK::Constraint &constraint, const IO::SDK::AberrationsEnum aberration, const double value, const IO::SDK::Time::TimeSpan &step) const;
 
-		std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>> FindWindowsOnOccultationConstraint(const IO::SDK::Time::Window<IO::SDK::Time::TDB> searchWindow, const IO::SDK::Body::CelestialBody &targetBody, const IO::SDK::Body::CelestialBody &frontBody, const IO::SDK::OccultationType &occultationType, const IO::SDK::AberrationsEnum aberration,const IO::SDK::Time::TimeSpan& stepSize) const;
+		/**
+		 * @brief Find windows when occultation occurs
+		 * 
+		 * @param searchWindow Time window where constraint is evaluated
+		 * @param targetBody Target body
+		 * @param frontBody Front body between target and observer
+		 * @param occultationType Full-Annular-Partial-Any
+		 * @param aberration Aberration correction
+		 * @param stepSize Step size (should be shorter than the shortest of these intervals. WARNING : A short step size could increase compute time)
+		 * @return std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>> 
+		 */
+		std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>> FindWindowsOnOccultationConstraint(const IO::SDK::Time::Window<IO::SDK::Time::TDB> searchWindow, const IO::SDK::Body::CelestialBody &targetBody, const IO::SDK::Body::CelestialBody &frontBody, const IO::SDK::OccultationType &occultationType, const IO::SDK::AberrationsEnum aberration, const IO::SDK::Time::TimeSpan &stepSize) const;
+
+		/**
+		 * @brief Get the Sub Observer Point observed from this body
+		 * 
+		 * @param targetBody 
+		 * @param aberration 
+		 * @param epoch 
+		 * @return IO::SDK::Coordinates::Planetographic 
+		 */
+		IO::SDK::Coordinates::Planetographic GetSubObserverPoint(const IO::SDK::Body::CelestialBody &targetBody, const IO::SDK::AberrationsEnum &aberration, const IO::SDK::Time::DateTime &epoch) const;
+
+		/**
+		 * @brief Get the Sub Solar Point observed from this body
+		 * 
+		 * @param targetBody 
+		 * @param abberation 
+		 * @param epoch 
+		 * @return IO::SDK::Coordinates::Planetographic 
+		 */
+		IO::SDK::Coordinates::Planetographic GetSubSolarPoint(const IO::SDK::Body::CelestialBody &targetBody, const IO::SDK::AberrationsEnum aberration, const IO::SDK::Time::TDB &epoch) const;
 	};
 }
 #endif

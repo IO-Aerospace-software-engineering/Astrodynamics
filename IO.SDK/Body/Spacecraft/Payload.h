@@ -20,7 +20,7 @@ namespace IO::SDK::Body::Spacecraft
 	 * @brief Payload class
 	 * 
 	 */
-	class Payload
+	class Payload final
 	{
 	private:
 		const std::string m_serialNumber{};
@@ -31,8 +31,9 @@ namespace IO::SDK::Body::Spacecraft
 		/**
 		 * @brief Construct a new Payload object
 		 * 
-		 * @param name 
-		 * @param mass 
+		 * @param serialNumber Paulaod serial number
+		 * @param name Payload name
+		 * @param mass Payload mass
 		 */
 		Payload(const std::string &serialNumber, const std::string& name, const double mass);
 

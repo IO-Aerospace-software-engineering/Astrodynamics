@@ -1,3 +1,13 @@
+/**
+ * @file Quaternion.cpp
+ * @author Sylvain Guillet (sylvain.guillet@live.com)
+ * @brief 
+ * @version 0.1
+ * @date 2021-07-03
+ * 
+ * @copyright Copyright (c) 2021
+ * 
+ */
 #include <Quaternion.h>
 #include <cmath>
 #include <SpiceUsr.h>
@@ -39,6 +49,11 @@ IO::SDK::Math::Quaternion::Quaternion(const IO::SDK::Math::Matrix &mtx)
 	const_cast<double &>(m_q1) = q[1];
 	const_cast<double &>(m_q2) = q[2];
 	const_cast<double &>(m_q3) = q[3];
+}
+
+IO::SDK::Math::Quaternion::Quaternion(const IO::SDK::Math::Quaternion &quaternion):Quaternion(quaternion.GetQ0(),quaternion.GetQ1(),quaternion.GetQ2(),quaternion.GetQ3())
+{
+
 }
 
 IO::SDK::Math::Quaternion IO::SDK::Math::Quaternion::Multiply(const Quaternion &quaternion) const

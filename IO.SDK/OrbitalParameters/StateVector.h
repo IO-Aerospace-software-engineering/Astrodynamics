@@ -1,16 +1,16 @@
-#ifndef STATE_VECTOR_H
-#define STATE_VECTOR_H
-
 /**
  * @file StateVector.h
  * @author Sylvain Guillet (sylvain.guillet@live.com)
  * @brief 
  * @version 0.1
- * @date 2021-05-19
+ * @date 2021-07-03
  * 
  * @copyright Copyright (c) 2021
  * 
  */
+#ifndef STATE_VECTOR_H
+#define STATE_VECTOR_H
+
 #include<array>
 #include<memory>
 #include<cmath>
@@ -33,7 +33,7 @@ namespace IO::SDK::OrbitalParameters
 	 * @brief State vector class
 	 * 
 	 */
-	class StateVector : public IO::SDK::OrbitalParameters::OrbitalParameters
+	class StateVector final : public IO::SDK::OrbitalParameters::OrbitalParameters
 	{
 	private:
 		const IO::SDK::Math::Vector3D m_position{};

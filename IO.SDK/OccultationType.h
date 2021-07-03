@@ -19,6 +19,11 @@ namespace IO::SDK
     private:
         const std::string m_name;
     public:
+        /**
+         * @brief Construct a new Occultation Type object
+         * 
+         * @param name 
+         */
         OccultationType(const std::string &name);
 
         static OccultationType Full;
@@ -26,6 +31,11 @@ namespace IO::SDK
         static OccultationType Partial;
         static OccultationType Any;
 
+        /**
+         * @brief Get occultation type char array
+         * 
+         * @return const char* 
+         */
         const char *ToCharArray() const;
     };
     

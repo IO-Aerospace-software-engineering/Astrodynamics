@@ -45,6 +45,12 @@ TEST(Quaternion, Multiply)
 	ASSERT_DOUBLE_EQ(0.32139380484326968, qres.GetQ1());
 	ASSERT_DOUBLE_EQ(0.32139380484326968, qres.GetQ2());
 	ASSERT_DOUBLE_EQ(0.11697777844051097, qres.GetQ3());
+
+	qres = qx.Multiply(qy);
+	ASSERT_DOUBLE_EQ(0.88302222155948906, qres.GetQ0());
+	ASSERT_DOUBLE_EQ(0.32139380484326968, qres.GetQ1());
+	ASSERT_DOUBLE_EQ(0.32139380484326968, qres.GetQ2());
+	ASSERT_DOUBLE_EQ(0.11697777844051097, qres.GetQ3());
 }
 
 TEST(Quaternion, GetMatrix)
@@ -73,7 +79,7 @@ TEST(Quaternion, Magnitude)
 
 TEST(Quaternion, Normalize)
 {
-	IO::SDK::Math::Quaternion qx(IO::SDK::Constants::DEG_RAD * 40.0,2.0, 2.0, 2.0);
+	IO::SDK::Math::Quaternion qx(IO::SDK::Constants::DEG_RAD * 40.0, 2.0, 2.0, 2.0);
 
 	auto res = qx.Normalize();
 	ASSERT_DOUBLE_EQ(0.19756115573707231, res.GetQ0());
@@ -84,11 +90,22 @@ TEST(Quaternion, Normalize)
 
 TEST(Quaternion, Conjugate)
 {
-	IO::SDK::Math::Quaternion qx(IO::SDK::Constants::DEG_RAD * 40.0,2.0, 2.0, 2.0);
+	IO::SDK::Math::Quaternion qx(IO::SDK::Constants::DEG_RAD * 40.0, 2.0, 2.0, 2.0);
 
 	auto res = qx.Conjugate();
 	ASSERT_DOUBLE_EQ(IO::SDK::Constants::DEG_RAD * 40.0, res.GetQ0());
 	ASSERT_DOUBLE_EQ(-2.0, res.GetQ1());
 	ASSERT_DOUBLE_EQ(-2.0, res.GetQ2());
 	ASSERT_DOUBLE_EQ(-2.0, res.GetQ3());
+}
+
+TEST(Quaternion, Assignment)
+{
+	IO::SDK::Math::Quaternion q(1.0, 2.0, 3.0, 4.0);
+	IO::SDK::Math::Quaternion q2(9.0, 7.0, 43.0, 1.0);
+	q2 = q;
+	ASSERT_DOUBLE_EQ(1.0, q2.GetQ0());
+	ASSERT_DOUBLE_EQ(2.0, q2.GetQ1());
+	ASSERT_DOUBLE_EQ(3.0, q2.GetQ2());
+	ASSERT_DOUBLE_EQ(4.0, q2.GetQ3());
 }

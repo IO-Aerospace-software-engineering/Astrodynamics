@@ -1,3 +1,13 @@
+/**
+ * @file EquinoctialElements.h
+ * @author Sylvain Guillet (sylvain.guillet@live.com)
+ * @brief 
+ * @version 0.1
+ * @date 2021-07-03
+ * 
+ * @copyright Copyright (c) 2021
+ * 
+ */
 #ifndef EQUINOCTIAL_ELEMENTS_H
 #define EQUINOCTIAL_ELEMENTS_H
 
@@ -10,7 +20,7 @@
 
 namespace IO::SDK::OrbitalParameters
 {
-	class EquinoctialElements : public OrbitalParameters
+	class EquinoctialElements final : public OrbitalParameters
 	{
 	private:
 		const double m_semiMajorAxis{};
@@ -21,9 +31,9 @@ namespace IO::SDK::OrbitalParameters
 		const double m_L{};
 		const double m_periapsisLongitudeRate{};
 		const double m_meanAnomalyRate{};
-		const double m_ascendingNodeLongitudeRate{};
 		const double m_rightAscensionOfThePole{};
 		const double m_declinationOfThePole{};
+		const double m_ascendingNodeLongitudeRate{};	
 
 		IO::SDK::Time::TimeSpan m_period;
 		double m_elements[9]{};

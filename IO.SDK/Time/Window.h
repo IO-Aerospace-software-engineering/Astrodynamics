@@ -1,3 +1,13 @@
+/**
+ * @file Window.h
+ * @author Sylvain Guillet (sylvain.guillet@live.com)
+ * @brief 
+ * @version 0.1
+ * @date 2021-07-03
+ * 
+ * @copyright Copyright (c) 2021
+ * 
+ */
 #ifndef WINDOW_H
 #define WINDOW_H
 
@@ -20,8 +30,11 @@ namespace IO::SDK::Time
 		const TimeSpan m_length;
 
 	public:
-		Window(T startdate, TimeSpan length) : m_start{startdate}, m_length{length}, m_end{m_start + length} {};
+		Window(T startdate, TimeSpan length) : m_start{startdate}, m_end{m_start + length}, m_length{length} {};
 		Window(T startdate, T endDate) : m_start{startdate}, m_end{endDate}, m_length{endDate - startdate} {};
+		Window(const Window<T> &window) : m_start{window.m_start}, m_end{window.m_end}, m_length{window.m_length}
+		{
+		}
 
 		T GetStartDate() const { return m_start; }
 		T GetEndDate() const { return m_end; }
@@ -50,15 +63,15 @@ namespace IO::SDK::Time
 			return Window<T>(min, max);
 		}
 
-		Window<T> &operator=(const Window<T> window)
+		Window<T> &operator=(const Window<T> &window)
 		{
 			// Guard self assignment
 			if (this == &window)
 				return *this;
 
-			const_cast<T&>(m_start) = window.m_start;
-			const_cast<T&>(m_end) = window.m_end;
-			const_cast<IO::SDK::Time::TimeSpan&>(m_length) = window.m_length;
+			const_cast<T &>(m_start) = window.m_start;
+			const_cast<T &>(m_end) = window.m_end;
+			const_cast<IO::SDK::Time::TimeSpan &>(m_length) = window.m_length;
 			return *this;
 		}
 	};

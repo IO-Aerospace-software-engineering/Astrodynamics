@@ -1,7 +1,17 @@
+/**
+ * @file Launch.cpp
+ * @author Sylvain Guillet (sylvain.guillet@live.com)
+ * @brief 
+ * @version 0.1
+ * @date 2021-07-03
+ * 
+ * @copyright Copyright (c) 2021
+ * 
+ */
 #include <Launch.h>
 #include <vector>
 
-IO::SDK::Maneuvers::Launch::Launch(const std::shared_ptr<IO::SDK::Sites::LaunchSite> launchSite, const std::shared_ptr<IO::SDK::Sites::LaunchSite> recoverySite, bool launchByDay, const IO::SDK::OrbitalParameters::OrbitalParameters &targetOrbit, const IO::SDK::Body::Spacecraft::Spacecraft &spacecraft) : m_launchSite{launchSite}, m_recoverySite{recoverySite}, m_launchByDay{launchByDay}, m_targetOrbit{targetOrbit}
+IO::SDK::Maneuvers::Launch::Launch(const std::shared_ptr<IO::SDK::Sites::LaunchSite> launchSite, const std::shared_ptr<IO::SDK::Sites::LaunchSite> recoverySite, bool launchByDay, const IO::SDK::OrbitalParameters::OrbitalParameters &targetOrbit) : m_launchSite{launchSite}, m_recoverySite{recoverySite}, m_launchByDay{launchByDay}, m_targetOrbit{targetOrbit}
 {
     const_cast<double &>(m_inclination) = m_targetOrbit.GetStateVector().ToFrame(IO::SDK::Frames::InertialFrames::ICRF).GetSpecificAngularMomentum().GetAngle(m_launchSite->GetBody()->GetBodyFixedFrame().TransformVector(IO::SDK::Frames::InertialFrames::ICRF, IO::SDK::Math::Vector3D::VectorZ, IO::SDK::Time::TDB(std::chrono::duration<double>(0.0))));
 
@@ -201,7 +211,7 @@ std::vector<IO::SDK::Maneuvers::LaunchWindow> IO::SDK::Maneuvers::Launch::FindLa
             //nb remaining launch windows
             int nbLaunchWindows = remainingTime.GetSeconds().count() / halfSideralRotation.GetSeconds().count();
 
-            for (size_t i = 0; i < nbLaunchWindows; i++)
+            for (int i = 0; i < nbLaunchWindows; i++)
             {
                 //If previous is ascending next will be descending
                 isAscending = !isAscending;

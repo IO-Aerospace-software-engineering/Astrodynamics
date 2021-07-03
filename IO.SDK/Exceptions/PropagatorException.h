@@ -16,13 +16,16 @@
 
 namespace IO::SDK::Exception
 {
-    class PropagatorException : public SDKException
+    /**
+     * @brief Propagator exception
+     * 
+     */
+    class PropagatorException final : public SDKException
     {
     private:
         /* data */
     public:
         PropagatorException(const std::string &message);
-        ~PropagatorException() = default;
     };
 
 } // namespace IO::SDK::Exception

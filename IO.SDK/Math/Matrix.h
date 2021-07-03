@@ -36,7 +36,7 @@ namespace IO::SDK::Math
 		{
 			this->m_data = new double* [rowSize];
 
-			for (int i = 0; i < rowSize; i++)
+			for (std::size_t i = 0; i < rowSize; i++)
 			{
 				this->m_data[i] = new double[colSize] {};
 			}
@@ -81,13 +81,13 @@ namespace IO::SDK::Math
 		/// Get the matrix columns size
 		/// </summary>
 		/// <returns></returns>
-		const std::size_t GetColumsSize() const { return m_colSize; }
+		std::size_t GetColumsSize() const { return m_colSize; }
 
 		/// <summary>
 		/// Get the matirx rows size
 		/// </summary>
 		/// <returns></returns>
-		const std::size_t GetRowsSize() const { return m_rowSize; }
+		std::size_t GetRowsSize() const { return m_rowSize; }
 
 		/// <summary>
 		/// Multiply this matrix by another

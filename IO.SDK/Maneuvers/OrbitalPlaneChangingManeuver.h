@@ -19,7 +19,7 @@
 
 namespace IO::SDK::Maneuvers
 {
-    class OrbitalPlaneChangingManeuver : public IO::SDK::Maneuvers::ManeuverBase
+    class OrbitalPlaneChangingManeuver final : public IO::SDK::Maneuvers::ManeuverBase
     {
     private:
         double m_relativeInclination{};
@@ -29,9 +29,24 @@ namespace IO::SDK::Maneuvers
 
 
     public:
+        /**
+         * @brief Construct a new Orbital Plane Changing Maneuver object
+         * 
+         * @param engines 
+         * @param propagator 
+         * @param targetOrbit 
+         */
         OrbitalPlaneChangingManeuver(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator, IO::SDK::OrbitalParameters::OrbitalParameters *targetOrbit);
-        OrbitalPlaneChangingManeuver(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, const IO::SDK::Time::TDB &minimumEpoch, IO::SDK::Propagators::Propagator &propagator, IO::SDK::OrbitalParameters::OrbitalParameters *targetOrbit);
-        ~OrbitalPlaneChangingManeuver() = default;
+        
+        /**
+         * @brief Construct a new Orbital Plane Changing Maneuver object
+         * 
+         * @param engines 
+         * @param propagator 
+         * @param targetOrbit 
+         * @param minimumEpoch 
+         */
+        OrbitalPlaneChangingManeuver(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator, IO::SDK::OrbitalParameters::OrbitalParameters *targetOrbit, const IO::SDK::Time::TDB &minimumEpoch);
 
         /**
          * @brief Define maneuver execution condition
@@ -57,8 +72,29 @@ namespace IO::SDK::Maneuvers
          */
         virtual IO::SDK::OrbitalParameters::StateOrientation ComputeOrientation(const IO::SDK::OrbitalParameters::OrbitalParameters &maneuverPoint) override;
 
+        /**
+         * @brief Know if is an ascending node
+         * 
+         * @param stateVector 
+         * @return true 
+         * @return false 
+         */
         bool IsAscendingNode(const IO::SDK::OrbitalParameters::StateVector &stateVector) const;
+
+        /**
+         * @brief Know if approaching ascending node
+         * 
+         * @param stateVector 
+         * @return true 
+         * @return false 
+         */
         bool IsApproachingAscendingNode(const IO::SDK::OrbitalParameters::StateVector &stateVector) const;
+
+        /**
+         * @brief Get the Relative Inclination
+         * 
+         * @return double 
+         */
         double GetRelativeInclination() const;
     };
 }

@@ -1,3 +1,13 @@
+/**
+ * @file ConicOrbitalElements.h
+ * @author Sylvain Guillet (sylvain.guillet@live.com)
+ * @brief 
+ * @version 0.1
+ * @date 2021-07-03
+ * 
+ * @copyright Copyright (c) 2021
+ * 
+ */
 #ifndef CONIC_ORBITAL_ELEMENTS_H
 #define CONIC_ORBITAL_ELEMENTS_H
 
@@ -19,7 +29,7 @@ namespace IO::SDK::OrbitalParameters
 	/// <summary>
 	/// Conic orbital elements
 	/// </summary>
-	class ConicOrbitalElements :public IO::SDK::OrbitalParameters::OrbitalParameters
+	class ConicOrbitalElements final :public IO::SDK::OrbitalParameters::OrbitalParameters
 	{
 	private:
 		double m_perifocalDistance{};
@@ -29,8 +39,9 @@ namespace IO::SDK::OrbitalParameters
 		double m_periapsisArgument{};
 		double m_meanAnomaly{};
 		double m_trueAnomaly{};
-		double m_semiMajorAxis{};
 		IO::SDK::Time::TimeSpan m_orbitalPeriod;
+		double m_semiMajorAxis{};
+		
 
 	public:
 		

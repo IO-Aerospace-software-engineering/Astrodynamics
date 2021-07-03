@@ -1,9 +1,29 @@
+/**
+ * @file PhasingManeuver.cpp
+ * @author Sylvain Guillet (sylvain.guillet@live.com)
+ * @brief 
+ * @version 0.1
+ * @date 2021-07-03
+ * 
+ * @copyright Copyright (c) 2021
+ * 
+ */
 #include <PhasingManeuver.h>
 #include <InvalidArgumentException.h>
 #include <chrono>
 #include <cmath>
 
-IO::SDK::Maneuvers::PhasingManeuver::PhasingManeuver(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator, const uint revolutionNumber, IO::SDK::OrbitalParameters::OrbitalParameters *targetOrbit) : m_revolutionsNumber{revolutionNumber}, m_targetOrbit{targetOrbit}, IO::SDK::Maneuvers::ManeuverBase(engines, propagator)
+IO::SDK::Maneuvers::PhasingManeuver::PhasingManeuver(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator, const uint revolutionNumber, IO::SDK::OrbitalParameters::OrbitalParameters *targetOrbit) :  IO::SDK::Maneuvers::ManeuverBase(engines, propagator),m_revolutionsNumber{revolutionNumber}, m_targetOrbit{targetOrbit}
+{
+    if (!targetOrbit)
+    {
+        throw IO::SDK::Exception::InvalidArgumentException("A target orbit must be defined.");
+    }
+
+    m_targetOrbit = targetOrbit;
+}
+
+IO::SDK::Maneuvers::PhasingManeuver::PhasingManeuver(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator, const uint revolutionNumber, IO::SDK::OrbitalParameters::OrbitalParameters *targetOrbit, const IO::SDK::Time::TDB &minimumEpoch) : IO::SDK::Maneuvers::ManeuverBase(engines, propagator, minimumEpoch),m_revolutionsNumber{revolutionNumber}, m_targetOrbit{targetOrbit}
 {
     if (!targetOrbit)
     {

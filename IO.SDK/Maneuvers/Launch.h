@@ -29,13 +29,14 @@
 
 namespace IO::SDK::Maneuvers
 {
-    class Launch
+    class Launch final
     {
     private:
-        const IO::SDK::OrbitalParameters::OrbitalParameters &m_targetOrbit;
+        
         const std::shared_ptr<IO::SDK::Sites::LaunchSite> m_launchSite;
         const std::shared_ptr<IO::SDK::Sites::LaunchSite> m_recoverySite{nullptr};
         const bool m_launchByDay;
+        const IO::SDK::OrbitalParameters::OrbitalParameters &m_targetOrbit;
         double m_nonInertialAscendingAzimuthLaunch{std::numeric_limits<double>::quiet_NaN()};
         double m_inertialAscendingAzimuthLaunch{std::numeric_limits<double>::quiet_NaN()};
         double m_inertialDescendingAzimuthLaunch{std::numeric_limits<double>::quiet_NaN()};
@@ -58,9 +59,7 @@ namespace IO::SDK::Maneuvers
          * @param targetOrbit 
          * @param spacecraft 
          */
-        Launch(const std::shared_ptr<IO::SDK::Sites::LaunchSite> launchSite, const std::shared_ptr<IO::SDK::Sites::LaunchSite> recoverySite, bool launchByDay, const IO::SDK::OrbitalParameters::OrbitalParameters &targetOrbit, const IO::SDK::Body::Spacecraft::Spacecraft &spacecraft);
-
-        ~Launch() = default;
+        Launch(const std::shared_ptr<IO::SDK::Sites::LaunchSite> launchSite, const std::shared_ptr<IO::SDK::Sites::LaunchSite> recoverySite, bool launchByDay, const IO::SDK::OrbitalParameters::OrbitalParameters &targetOrbit);
 
         /**
          * @brief Get the Non Inertial Ascending Azimuth Launch

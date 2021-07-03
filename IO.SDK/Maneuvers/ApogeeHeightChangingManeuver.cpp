@@ -1,9 +1,23 @@
+/**
+ * @file ApogeeHeightChangingManeuver.cpp
+ * @author Sylvain Guillet (sylvain.guillet@live.com)
+ * @brief 
+ * @version 0.1
+ * @date 2021-07-03
+ * 
+ * @copyright Copyright (c) 2021
+ * 
+ */
 #include <ApogeeHeightChangingManeuver.h>
 #include <InvalidArgumentException.h>
 #include <SDKException.h>
 #include <cmath>
 
-IO::SDK::Maneuvers::ApogeeHeightChangingManeuver::ApogeeHeightChangingManeuver(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator, const double targetHeight) : m_targetHeight{targetHeight}, IO::SDK::Maneuvers::ManeuverBase(engines, propagator)
+IO::SDK::Maneuvers::ApogeeHeightChangingManeuver::ApogeeHeightChangingManeuver(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator, const double targetHeight): IO::SDK::Maneuvers::ManeuverBase(engines, propagator),m_targetHeight{targetHeight}
+{
+}
+
+IO::SDK::Maneuvers::ApogeeHeightChangingManeuver::ApogeeHeightChangingManeuver(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator, const double targetHeight, const IO::SDK::Time::TDB &minimumEpoch) :  IO::SDK::Maneuvers::ManeuverBase(engines, propagator, minimumEpoch),m_targetHeight{targetHeight}
 {
 }
 
@@ -71,4 +85,3 @@ bool IO::SDK::Maneuvers::ApogeeHeightChangingManeuver::IsApproachingPerigee(cons
 
     return false;
 }
-

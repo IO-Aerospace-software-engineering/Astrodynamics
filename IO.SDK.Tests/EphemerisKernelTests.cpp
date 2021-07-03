@@ -16,8 +16,8 @@ TEST(EphemerisKernel, WriteEvenlySpacedData)
 {
 
 	auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
-	std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth, IO::SDK::Math::Vector3D(1.0, 2.0, 3.0), IO::SDK::Math::Vector3D(4.0, 5.0, 6.0), IO::SDK::Time::TDB(100.0s),IO::SDK::Frames::InertialFrames::ICRF);
-	IO::SDK::OrbitalParameters::StateOrientation attitude(IO::SDK::Time::TDB(100.0s),IO::SDK::Frames::InertialFrames::ICRF);
+	std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth, IO::SDK::Math::Vector3D(1.0, 2.0, 3.0), IO::SDK::Math::Vector3D(4.0, 5.0, 6.0), IO::SDK::Time::TDB(100.0s), IO::SDK::Frames::InertialFrames::ICRF);
+	IO::SDK::OrbitalParameters::StateOrientation attitude(IO::SDK::Time::TDB(100.0s), IO::SDK::Frames::InertialFrames::ICRF);
 	IO::SDK::Body::Spacecraft::Spacecraft iss(-34, "ISS", 1.0, 3000.0, "mission1", std::move(orbitalParams));
 	IO::SDK::OrbitalParameters::StateVector sv1(earth, IO::SDK::Math::Vector3D{5.314354587795519E+06, 3.155847941008321E+06, 2.822346477531172E+06}, IO::SDK::Math::Vector3D{-4.672670954754818E+03, 3.299429157421530E+03, 5.095794593488111E+03}, IO::SDK::Time::TDB(626417577.7641s), IO::SDK::Frames::InertialFrames::ICRF);
 
@@ -51,9 +51,9 @@ TEST(EphemerisKernel, WriteEvenlySpacedData)
 	v.push_back(sv9);
 	v.push_back(sv10);
 
-	iss.WriteEphemeris(v, IO::SDK::Frames::InertialFrames::ICRF);
+	iss.WriteEphemeris(v);
 
-	auto svStart = iss.ReadEphemeris(*earth, IO::SDK::Frames::InertialFrames::ICRF, IO::SDK::AberrationsEnum::None, IO::SDK::Time::TDB(626417577.7641s));
+	auto svStart = iss.ReadEphemeris(IO::SDK::Frames::InertialFrames::ICRF, IO::SDK::AberrationsEnum::None, IO::SDK::Time::TDB(626417577.7641s), *earth);
 
 	ASSERT_NEAR(5.314354587795519E+06, svStart.GetPosition().GetX(), IO::SDK::Test::Constants::DISTANCE_ACCURACY);
 	ASSERT_NEAR(3.155847941008321E+06, svStart.GetPosition().GetY(), IO::SDK::Test::Constants::DISTANCE_ACCURACY);
@@ -62,7 +62,7 @@ TEST(EphemerisKernel, WriteEvenlySpacedData)
 	ASSERT_NEAR(3.299429157421530E+03, svStart.GetVelocity().GetY(), IO::SDK::Test::Constants::VELOCITY_ACCURACY);
 	ASSERT_NEAR(5.095794593488111E+03, svStart.GetVelocity().GetZ(), IO::SDK::Test::Constants::VELOCITY_ACCURACY);
 
-	auto svEnd = iss.ReadEphemeris(*earth, IO::SDK::Frames::InertialFrames::ICRF, IO::SDK::AberrationsEnum::None, IO::SDK::Time::TDB(626421177.7641s));
+	auto svEnd = iss.ReadEphemeris(IO::SDK::Frames::InertialFrames::ICRF, IO::SDK::AberrationsEnum::None, IO::SDK::Time::TDB(626421177.7641s), *earth);
 
 	ASSERT_NEAR(6.797277129039097E+04, svEnd.GetPosition().GetX(), IO::SDK::Test::Constants::DISTANCE_ACCURACY);
 	ASSERT_NEAR(-4.244124430692066E+06, svEnd.GetPosition().GetY(), IO::SDK::Test::Constants::DISTANCE_ACCURACY);
@@ -71,7 +71,7 @@ TEST(EphemerisKernel, WriteEvenlySpacedData)
 	ASSERT_NEAR(8.052537216112745E+02, svEnd.GetVelocity().GetY(), IO::SDK::Test::Constants::VELOCITY_ACCURACY);
 	ASSERT_NEAR(-5.494145941903844E+02, svEnd.GetVelocity().GetZ(), IO::SDK::Test::Constants::VELOCITY_ACCURACY);
 
-	auto svInterpolated = iss.ReadEphemeris(*earth, IO::SDK::Frames::InertialFrames::ICRF, IO::SDK::AberrationsEnum::None, IO::SDK::Time::TDB(626421000.000000s)); //"2019-11-07 17:50:00.0 TDB"
+	auto svInterpolated = iss.ReadEphemeris(IO::SDK::Frames::InertialFrames::ICRF, IO::SDK::AberrationsEnum::None, IO::SDK::Time::TDB(626421000.000000s), *earth); //"2019-11-07 17:50:00.0 TDB"
 
 	ASSERT_NEAR(-1.274181283920850E+06, svInterpolated.GetPosition().GetX(), IO::SDK::Test::Constants::DISTANCE_ACCURACY);
 	ASSERT_NEAR(-4.301645045480280E+06, svInterpolated.GetPosition().GetY(), IO::SDK::Test::Constants::DISTANCE_ACCURACY);
@@ -83,8 +83,8 @@ TEST(EphemerisKernel, WriteEvenlySpacedData)
 TEST(EphemerisKernel, GetCoverage)
 {
 	auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
-	std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth, IO::SDK::Math::Vector3D(1.0, 2.0, 3.0), IO::SDK::Math::Vector3D(4.0, 5.0, 6.0), IO::SDK::Time::TDB(100.0s),IO::SDK::Frames::InertialFrames::ICRF);
-	IO::SDK::OrbitalParameters::StateOrientation attitude(IO::SDK::Time::TDB(100.0s),IO::SDK::Frames::InertialFrames::ICRF);
+	std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth, IO::SDK::Math::Vector3D(1.0, 2.0, 3.0), IO::SDK::Math::Vector3D(4.0, 5.0, 6.0), IO::SDK::Time::TDB(100.0s), IO::SDK::Frames::InertialFrames::ICRF);
+	IO::SDK::OrbitalParameters::StateOrientation attitude(IO::SDK::Time::TDB(100.0s), IO::SDK::Frames::InertialFrames::ICRF);
 	IO::SDK::Body::Spacecraft::Spacecraft iss(-34, "ISS", 1.0, 3000.0, "mission1", std::move(orbitalParams));
 
 	IO::SDK::OrbitalParameters::StateVector sv1(earth, IO::SDK::Math::Vector3D{5.314354587795519E+03, 3.155847941008321E+03, 2.822346477531172E+03}, IO::SDK::Math::Vector3D{-4.672670954754818E+00, 3.299429157421530E+00, 5.095794593488111E+00}, IO::SDK::Time::TDB(626417577.7641s), IO::SDK::Frames::InertialFrames::ICRF);
@@ -119,7 +119,7 @@ TEST(EphemerisKernel, GetCoverage)
 	v.push_back(sv9);
 	v.push_back(sv10);
 
-	iss.WriteEphemeris(v, IO::SDK::Frames::InertialFrames::ICRF);
+	iss.WriteEphemeris(v);
 	auto coverage = iss.GetEphemerisCoverageWindow();
 	ASSERT_DOUBLE_EQ(5400.0, coverage.GetLength().GetSeconds().count());
 	ASSERT_DOUBLE_EQ(626417577.7641, coverage.GetStartDate().GetSecondsFromJ2000().count());
@@ -128,8 +128,8 @@ TEST(EphemerisKernel, GetCoverage)
 TEST(EphemerisKernel, AddComment)
 {
 	auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
-	std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth, IO::SDK::Math::Vector3D(1.0, 2.0, 3.0), IO::SDK::Math::Vector3D(4.0, 5.0, 6.0), IO::SDK::Time::TDB(100.0s),IO::SDK::Frames::InertialFrames::ICRF);
-	IO::SDK::OrbitalParameters::StateOrientation attitude(IO::SDK::Time::TDB(100.0s),IO::SDK::Frames::InertialFrames::ICRF);
+	std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth, IO::SDK::Math::Vector3D(1.0, 2.0, 3.0), IO::SDK::Math::Vector3D(4.0, 5.0, 6.0), IO::SDK::Time::TDB(100.0s), IO::SDK::Frames::InertialFrames::ICRF);
+	IO::SDK::OrbitalParameters::StateOrientation attitude(IO::SDK::Time::TDB(100.0s), IO::SDK::Frames::InertialFrames::ICRF);
 	IO::SDK::Body::Spacecraft::Spacecraft iss(-34, "ISS", 1.0, 3000.0, "mission1", std::move(orbitalParams));
 
 	IO::SDK::OrbitalParameters::StateVector sv1(earth, IO::SDK::Math::Vector3D{5.314354587795519E+03, 3.155847941008321E+03, 2.822346477531172E+03}, IO::SDK::Math::Vector3D{-4.672670954754818E+00, 3.299429157421530E+00, 5.095794593488111E+00}, IO::SDK::Time::TDB(626417577.7641s), IO::SDK::Frames::InertialFrames::ICRF);
@@ -164,7 +164,7 @@ TEST(EphemerisKernel, AddComment)
 	v.push_back(sv9);
 	v.push_back(sv10);
 
-	iss.WriteEphemeris(v, IO::SDK::Frames::InertialFrames::ICRF);
+	iss.WriteEphemeris(v);
 	iss.WriteEphemerisKernelComment("Comment Test");
 	auto comment = iss.ReadEphemerisKernelComment();
 	ASSERT_STREQ("Comment Test", comment.c_str());
@@ -172,8 +172,8 @@ TEST(EphemerisKernel, AddComment)
 TEST(EphemerisKernel, AddTooLongComment)
 {
 	auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
-	std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth, IO::SDK::Math::Vector3D(1.0, 2.0, 3.0), IO::SDK::Math::Vector3D(4.0, 5.0, 6.0), IO::SDK::Time::TDB(100.0s),IO::SDK::Frames::InertialFrames::ICRF);
-	IO::SDK::OrbitalParameters::StateOrientation attitude(IO::SDK::Time::TDB(100.0s),IO::SDK::Frames::InertialFrames::ICRF);
+	std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth, IO::SDK::Math::Vector3D(1.0, 2.0, 3.0), IO::SDK::Math::Vector3D(4.0, 5.0, 6.0), IO::SDK::Time::TDB(100.0s), IO::SDK::Frames::InertialFrames::ICRF);
+	IO::SDK::OrbitalParameters::StateOrientation attitude(IO::SDK::Time::TDB(100.0s), IO::SDK::Frames::InertialFrames::ICRF);
 	IO::SDK::Body::Spacecraft::Spacecraft iss(-34, "ISS", 1.0, 3000.0, "mission1", std::move(orbitalParams));
 
 	ASSERT_THROW(iss.WriteEphemerisKernelComment("This is a big message which exceed the maximum chars allowed-This is a big message which exceed the maximum chars allowed"), IO::SDK::Exception::SDKException);

@@ -1,3 +1,13 @@
+/**
+ * @file ApogeeHeightChangingManeuver.h
+ * @author Sylvain Guillet (sylvain.guillet@live.com)
+ * @brief 
+ * @version 0.1
+ * @date 2021-07-03
+ * 
+ * @copyright Copyright (c) 2021
+ * 
+ */
 #ifndef APOGEE_HEIGHT_CHANGING_MANEUVERS_H
 #define APOGEE_HEIGHT_CHANGING_MANEUVERS_H
 
@@ -14,12 +24,11 @@
 
 namespace IO::SDK::Maneuvers
 {
-    class ApogeeHeightChangingManeuver : public IO::SDK::Maneuvers::ManeuverBase
+    class ApogeeHeightChangingManeuver final : public IO::SDK::Maneuvers::ManeuverBase
     {
     private:
-        const double m_targetHeight;
         std::unique_ptr<bool> m_isApproachingPerigee{nullptr};
-        
+        const double m_targetHeight;
 
         bool IsApproachingPerigee(const IO::SDK::OrbitalParameters::StateVector &stateVector) const;
 
@@ -41,7 +50,7 @@ namespace IO::SDK::Maneuvers
         /* data */
     public:
         ApogeeHeightChangingManeuver(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator, const double targetHeight);
-        ~ApogeeHeightChangingManeuver() = default;
+        ApogeeHeightChangingManeuver(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator, const double targetHeight, const IO::SDK::Time::TDB &minimumEpoch);
 
         /**
          * @brief Evaluate if maneuver can occurs
@@ -51,8 +60,6 @@ namespace IO::SDK::Maneuvers
          * @return false 
          */
         bool CanExecute(const IO::SDK::OrbitalParameters::OrbitalParameters &orbitalParams) override;
-
-        
     };
 }
 

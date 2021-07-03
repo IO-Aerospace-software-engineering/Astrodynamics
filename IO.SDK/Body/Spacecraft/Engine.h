@@ -26,17 +26,18 @@ namespace IO::SDK::Body::Spacecraft
 	 * @brief Engine class
 	 * 
 	 */
-	class Engine
+	class Engine final
 	{
 	private:
 		const std::string m_name{};
+		const IO::SDK::Body::Spacecraft::FuelTank &m_fuelTank;
 		const IO::SDK::Math::Vector3D m_position;
 		const IO::SDK::Math::Vector3D m_orientation;
 		const double m_isp{};
 		const double m_fuelFlow{};
 		const std::string m_serialNumber{};
 		const double m_thrust{};
-		const IO::SDK::Body::Spacecraft::FuelTank &m_fuelTank;
+		
 
 	public:
 		/**
@@ -107,15 +108,53 @@ namespace IO::SDK::Body::Spacecraft
 		 */
 		const IO::SDK::Body::Spacecraft::FuelTank &GetFuelTank() const;
 
+		/**
+		 * @brief Get the Thrust
+		 * 
+		 * @return double 
+		 */
 		double GetThrust() const;
 
+		/**
+		 * @brief Ignite engine and get burned fuel
+		 * 
+		 * @param duration 
+		 * @return double 
+		 */
 		double Burn(const IO::SDK::Time::TimeSpan& duration);
 
 		bool operator==(const IO::SDK::Body::Spacecraft::Engine &other) const;
 		bool operator!=(const IO::SDK::Body::Spacecraft::Engine &other) const;
 
+		/**
+		 * @brief Comptue Delta V from mass changing
+		 * 
+		 * @param isp Specific impulse
+		 * @param initialMass Spacecraft initial mass
+		 * @param finalMass Spacecraft final mass
+		 * @return double Delta V
+		 */
 		static double ComputeDeltaV(double isp, double initialMass, double finalMass);
+
+		/**
+		 * @brief Compute time required to reach Delta V
+		 * 
+		 * @param isp Specific impulse
+		 * @param initialMass Spacecraft initial mass
+		 * @param fuelFlow Engine fuel flow
+		 * @param deltaV Delat V
+		 * @return IO::SDK::Time::TimeSpan 
+		 */
 		static IO::SDK::Time::TimeSpan ComputeDeltaT(double isp, double initialMass, double fuelFlow, double deltaV);
+
+		/**
+		 * @brief Compute fuel mass required to reach Delta V
+		 * 
+		 * @param isp Specific impulse
+		 * @param initialMass Spacecraft initial mass
+		 * @param deltaV Delta V
+		 * @return double 
+		 */
 		static double ComputeDeltaM(double isp, double initialMass, double deltaV);
 	};
 }

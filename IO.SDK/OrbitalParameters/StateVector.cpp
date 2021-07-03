@@ -13,7 +13,7 @@
 #include "Helpers/Type.cpp"
 #include <SpiceUsr.h>
 
-IO::SDK::OrbitalParameters::StateVector::StateVector(const std::shared_ptr<IO::SDK::Body::CelestialBody> &centerOfMotion, const IO::SDK::Math::Vector3D &position, const IO::SDK::Math::Vector3D &velocity, const IO::SDK::Time::TDB &epoch, const IO::SDK::Frames::Frames &frame) : m_position{position}, m_velocity{velocity}, m_momentum{position.CrossProduct(velocity)}, OrbitalParameters(centerOfMotion, epoch, frame)
+IO::SDK::OrbitalParameters::StateVector::StateVector(const std::shared_ptr<IO::SDK::Body::CelestialBody> &centerOfMotion, const IO::SDK::Math::Vector3D &position, const IO::SDK::Math::Vector3D &velocity, const IO::SDK::Time::TDB &epoch, const IO::SDK::Frames::Frames &frame) :  OrbitalParameters(centerOfMotion, epoch, frame),m_position{position}, m_velocity{velocity}, m_momentum{position.CrossProduct(velocity)}
 {
 	//We define osculating elements only when velocity is defined
 	if (velocity.Magnitude() > 0.0)
@@ -30,7 +30,7 @@ IO::SDK::OrbitalParameters::StateVector::StateVector(const std::shared_ptr<IO::S
 {
 }
 
-IO::SDK::OrbitalParameters::StateVector::StateVector(const StateVector &v) : m_position{v.m_position}, m_velocity{v.m_velocity}, m_momentum{v.m_momentum}, OrbitalParameters(v.m_centerOfMotion, v.m_epoch, v.m_frame)
+IO::SDK::OrbitalParameters::StateVector::StateVector(const StateVector &v) :  OrbitalParameters(v.m_centerOfMotion, v.m_epoch, v.m_frame),m_position{v.m_position}, m_velocity{v.m_velocity}, m_momentum{v.m_momentum}
 {
 	std::copy(std::begin(v.m_osculatingElements), std::end(v.m_osculatingElements), std::begin(m_osculatingElements));
 }
@@ -129,7 +129,7 @@ IO::SDK::OrbitalParameters::StateVector IO::SDK::OrbitalParameters::StateVector:
 	while (currentBody->GetOrbitalParametersAtEpoch())
 	{
 		//Compute vector state
-		auto sv = currentBody->ReadEphemeris(*currentBody->GetOrbitalParametersAtEpoch()->GetCenterOfMotion(), m_frame, AberrationsEnum::None, m_epoch);
+		auto sv = currentBody->ReadEphemeris(m_frame, AberrationsEnum::None, m_epoch,*currentBody->GetOrbitalParametersAtEpoch()->GetCenterOfMotion());
 		position = position + sv.GetPosition();
 		velocity = velocity + sv.GetVelocity();
 

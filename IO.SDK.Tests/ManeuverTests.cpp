@@ -85,7 +85,7 @@ TEST(Maneuvers, Execute)
     ASSERT_EQ(IO::SDK::Time::TimeSpan(14.148441346767905s), maneuver.GetThrustDuration());
     ASSERT_EQ(IO::SDK::Math::Vector3D(2000.0, 0.0, 0.0), maneuver.GetDeltaV());
     ASSERT_DOUBLE_EQ(1331.8753077414322, maneuver.GetFuelBurned());
-    ASSERT_EQ(IO::SDK::Time::Window<IO::SDK::Time::TDB>(IO::SDK::Time::TDB(122.92577932661605s), IO::SDK::Time::TimeSpan(14.148441346767905s)), *maneuver.GetWindow());
+    ASSERT_EQ(IO::SDK::Time::Window<IO::SDK::Time::TDB>(IO::SDK::Time::TDB(122.92577932661605s), IO::SDK::Time::TimeSpan(14.148441346767905s)), *maneuver.GetThrustWindow());
 
     //Check maneuver actions on propagator
     ASSERT_EQ(5, pro.GetStateVectors().size());

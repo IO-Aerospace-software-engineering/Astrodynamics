@@ -1,3 +1,13 @@
+/**
+ * @file Engine.cpp
+ * @author Sylvain Guillet (sylvain.guillet@live.com)
+ * @brief 
+ * @version 0.1
+ * @date 2021-07-03
+ * 
+ * @copyright Copyright (c) 2021
+ * 
+ */
 #include <Engine.h>
 #include <InvalidArgumentException.h>
 #include <Constants.h>
@@ -83,12 +93,12 @@ double IO::SDK::Body::Spacecraft::Engine::GetThrust() const
 bool IO::SDK::Body::Spacecraft::Engine::operator==(const IO::SDK::Body::Spacecraft::Engine &other) const
 {
     return m_serialNumber == other.m_serialNumber;
-};
+}
 
 bool IO::SDK::Body::Spacecraft::Engine::operator!=(const IO::SDK::Body::Spacecraft::Engine &other) const
 {
     return !(m_serialNumber == other.m_serialNumber);
-};
+}
 
 double IO::SDK::Body::Spacecraft::Engine::ComputeDeltaV(double isp, double initialMass, double finalMass)
 {

@@ -22,6 +22,11 @@ namespace IO::SDK
 
     public:
 
+        /**
+         * @brief Construct a new Coordinate object
+         * 
+         * @param name 
+         */
         Coordinate(const std::string &name);
 
         static Coordinate X;
@@ -36,6 +41,11 @@ namespace IO::SDK
         static Coordinate Colatitude;
         static Coordinate Altitude;
 
+        /**
+         * @brief Get char array
+         * 
+         * @return const char* 
+         */
         const char *ToCharArray() const;
     };
 

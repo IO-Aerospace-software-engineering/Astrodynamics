@@ -1,3 +1,13 @@
+/**
+ * @file CelestialBody.cpp
+ * @author Sylvain Guillet (sylvain.guillet@live.com)
+ * @brief 
+ * @version 0.1
+ * @date 2021-07-03
+ * 
+ * @copyright Copyright (c) 2021
+ * 
+ */
 #include <limits>
 #include <chrono>
 
@@ -10,13 +20,13 @@
 
 using namespace std::chrono_literals;
 
-IO::SDK::Body::CelestialBody::CelestialBody(const int id, const std::string &name, std::shared_ptr<IO::SDK::Body::CelestialBody> &centerOfMotion) : m_BodyFixedFrame{"IAU_" + name}, IO::SDK::Body::Body(id, name, ReadGM(id) / IO::SDK::Constants::G, centerOfMotion)
+IO::SDK::Body::CelestialBody::CelestialBody(const int id, const std::string &name, std::shared_ptr<IO::SDK::Body::CelestialBody> &centerOfMotion) : IO::SDK::Body::Body(id, name, ReadGM(id) / IO::SDK::Constants::G, centerOfMotion),m_BodyFixedFrame{"IAU_" + name}
 {
     const_cast<double &>(m_sphereOfInfluence) = IO::SDK::Body::SphereOfInfluence(m_orbitalParametersAtEpoch->GetSemiMajorAxis(), m_orbitalParametersAtEpoch->GetCenterOfMotion()->GetMu(), m_mu);
     const_cast<double &>(m_hillSphere) = IO::SDK::Body::HillSphere(m_orbitalParametersAtEpoch->GetSemiMajorAxis(), m_orbitalParametersAtEpoch->GetEccentricity(), m_orbitalParametersAtEpoch->GetCenterOfMotion()->GetMu(), m_mu);
 }
 
-IO::SDK::Body::CelestialBody::CelestialBody(const int id, const std::string &name) : m_BodyFixedFrame{"IAU_" + name}, IO::SDK::Body::Body(id, name, ReadGM(id) / IO::SDK::Constants::G)
+IO::SDK::Body::CelestialBody::CelestialBody(const int id, const std::string &name) : IO::SDK::Body::Body(id, name, ReadGM(id) / IO::SDK::Constants::G),m_BodyFixedFrame{"IAU_" + name}
 {
     const_cast<double &>(m_sphereOfInfluence) = std::numeric_limits<double>::infinity();
     const_cast<double &>(m_hillSphere) = std::numeric_limits<double>::infinity();
@@ -57,7 +67,7 @@ IO::SDK::OrbitalParameters::StateVector IO::SDK::Body::CelestialBody::GetRelativ
         return targetStateVector;
     }
 
-    auto sv = ReadEphemeris(*targetStateVector.GetCenterOfMotion(), targetStateVector.GetFrame(), IO::SDK::AberrationsEnum::None, targetStateVector.GetEpoch());
+    auto sv = ReadEphemeris( targetStateVector.GetFrame(), IO::SDK::AberrationsEnum::None, targetStateVector.GetEpoch(),*targetStateVector.GetCenterOfMotion());
 
     return IO::SDK::OrbitalParameters::StateVector(targetStateVector.GetCenterOfMotion(), targetStateVector.GetPosition() - sv.GetPosition(), targetStateVector.GetVelocity() - sv.GetVelocity(), targetStateVector.GetEpoch(), targetStateVector.GetFrame());
 }
@@ -105,3 +115,4 @@ IO::SDK::Time::TimeSpan IO::SDK::Body::CelestialBody::GetSideralRotationPeriod(c
 {
     return IO::SDK::Time::TimeSpan(std::chrono::duration<double>(IO::SDK::Constants::_2PI / GetAngularVelocity(epoch)));
 }
+

@@ -12,22 +12,24 @@
 #ifndef CELESTIAL_BODY_H
 #define CELESTIAL_BODY_H
 
-#include <Body.h>
-#include <BodyFixedFrames.h>
-#include <TDB.h>
-
 #include <string>
 #include <cmath>
 
+#include <Body.h>
+#include <BodyFixedFrames.h>
+#include <TDB.h>
+#include <Planetographic.h>
+
 namespace IO::SDK::Body
 {
-	class CelestialBody : public IO::SDK::Body::Body
+	class CelestialBody final : public IO::SDK::Body::Body
 	{
 	private:
-		const double m_sphereOfInfluence{};
+		
+		const double m_sphereOfInfluence{};		
 		const double m_hillSphere{};
-		double ReadGM(int id);
 		const IO::SDK::Frames::BodyFixedFrames m_BodyFixedFrame;
+		double ReadGM(int id);
 
 	public:
 		CelestialBody(const int id, const std::string &name, std::shared_ptr<IO::SDK::Body::CelestialBody> &centerOfMotion);

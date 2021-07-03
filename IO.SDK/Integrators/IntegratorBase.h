@@ -16,6 +16,10 @@
 
 namespace IO::SDK::Integrators
 {
+    /**
+     * @brief Integrator base
+     * 
+     */
     class IntegratorBase
     {
     private:

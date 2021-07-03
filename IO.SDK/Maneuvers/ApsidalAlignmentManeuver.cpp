@@ -1,12 +1,22 @@
+/**
+ * @file ApsidalAlignmentManeuver.cpp
+ * @author Sylvain Guillet (sylvain.guillet@live.com)
+ * @brief 
+ * @version 0.1
+ * @date 2021-07-03
+ * 
+ * @copyright Copyright (c) 2021
+ * 
+ */
 #include <ApsidalAlignmentManeuver.h>
 #include <SDKException.h>
 #include <cmath>
 
-IO::SDK::Maneuvers::ApsidalAlignmentManeuver::ApsidalAlignmentManeuver(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator, IO::SDK::OrbitalParameters::OrbitalParameters *targetOrbit) : m_targetOrbit{targetOrbit}, IO::SDK::Maneuvers::ManeuverBase(engines, propagator)
+IO::SDK::Maneuvers::ApsidalAlignmentManeuver::ApsidalAlignmentManeuver(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator, IO::SDK::OrbitalParameters::OrbitalParameters *targetOrbit) : IO::SDK::Maneuvers::ManeuverBase(engines, propagator), m_targetOrbit{targetOrbit}
 {
 }
 
-IO::SDK::Maneuvers::ApsidalAlignmentManeuver::ApsidalAlignmentManeuver(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, const IO::SDK::Time::TDB &minimumEpoch, IO::SDK::Propagators::Propagator &propagator, IO::SDK::OrbitalParameters::OrbitalParameters *targetOrbit) : m_targetOrbit{targetOrbit}, IO::SDK::Maneuvers::ManeuverBase(engines, minimumEpoch, propagator)
+IO::SDK::Maneuvers::ApsidalAlignmentManeuver::ApsidalAlignmentManeuver(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator, IO::SDK::OrbitalParameters::OrbitalParameters *targetOrbit, const IO::SDK::Time::TDB &minimumEpoch) : IO::SDK::Maneuvers::ManeuverBase(engines, propagator, minimumEpoch), m_targetOrbit{targetOrbit}
 {
 }
 

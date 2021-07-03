@@ -1,3 +1,13 @@
+/**
+ * @file CombinedManeuver.h
+ * @author Sylvain Guillet (sylvain.guillet@live.com)
+ * @brief 
+ * @version 0.1
+ * @date 2021-07-03
+ * 
+ * @copyright Copyright (c) 2021
+ * 
+ */
 #ifndef COMBINED_MANEUVER_H
 #define COMBINED_MANEUVER_H
 
@@ -17,7 +27,7 @@
 
 namespace IO::SDK::Maneuvers
 {
-    class CombinedManeuver : public IO::SDK::Maneuvers::ManeuverBase
+    class CombinedManeuver final : public IO::SDK::Maneuvers::ManeuverBase
     {
     private:
         double m_relativeInclination{};
@@ -53,9 +63,8 @@ namespace IO::SDK::Maneuvers
          */
         CombinedManeuver(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator, const double inclination, const double perigeeRadius);
 
-        CombinedManeuver(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, const IO::SDK::Time::TDB &minimumEpoch, IO::SDK::Propagators::Propagator &propagator, const double inclination, const double perigeeRadius);
+        CombinedManeuver(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator, const double inclination, const double perigeeRadius, const IO::SDK::Time::TDB &minimumEpoch);
 
-        ~CombinedManeuver()=default;
         /**
          * @brief Evaluate if maneuver can occurs
          * 

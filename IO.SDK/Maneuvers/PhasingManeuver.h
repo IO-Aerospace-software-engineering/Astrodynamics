@@ -1,3 +1,13 @@
+/**
+ * @file PhasingManeuver.h
+ * @author Sylvain Guillet (sylvain.guillet@live.com)
+ * @brief 
+ * @version 0.1
+ * @date 2021-07-03
+ * 
+ * @copyright Copyright (c) 2021
+ * 
+ */
 #ifndef PHASING_MANEUVER_H
 #define PHASING_MANEUVER_H
 
@@ -13,7 +23,7 @@
 
 namespace IO::SDK::Maneuvers
 {
-    class PhasingManeuver : public IO::SDK::Maneuvers::ManeuverBase
+    class PhasingManeuver final : public IO::SDK::Maneuvers::ManeuverBase
     {
     private:
         const uint m_revolutionsNumber;
@@ -42,7 +52,7 @@ namespace IO::SDK::Maneuvers
         /* data */
     public:
         PhasingManeuver(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator, const uint revolutionNumber, IO::SDK::OrbitalParameters::OrbitalParameters *targetOrbit);
-        ~PhasingManeuver() = default;
+        PhasingManeuver(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator, const uint revolutionNumber, IO::SDK::OrbitalParameters::OrbitalParameters *targetOrbit, const IO::SDK::Time::TDB &minimumEpoch);
 
         /**
          * @brief Evaluate if maneuver can occurs

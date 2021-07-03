@@ -1,3 +1,13 @@
+/**
+ * @file FrameFile.cpp
+ * @author Sylvain Guillet (sylvain.guillet@live.com)
+ * @brief 
+ * @version 0.1
+ * @date 2021-07-03
+ * 
+ * @copyright Copyright (c) 2021
+ * 
+ */
 #include <FrameFile.h>
 #include<Parameters.h>
 #include<filesystem>
@@ -25,11 +35,6 @@ IO::SDK::Frames::FrameFile::FrameFile(const std::string& filePath, const std::st
 IO::SDK::Frames::FrameFile::~FrameFile()
 {
 	unload_c(m_filePath.c_str());
-}
-
-std::string IO::SDK::Frames::FrameFile::GetFilePath()
-{
-	return m_filePath;
 }
 
 std::string IO::SDK::Frames::FrameFile::GetName() const

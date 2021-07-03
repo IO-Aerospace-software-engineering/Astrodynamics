@@ -39,11 +39,12 @@ namespace IO::SDK::Sites
     class Site
     {
     private:
-        const IO::SDK::Coordinates::Geodetic m_coordinates;
+        const int m_id;
         const std::string m_name;
+        const IO::SDK::Coordinates::Geodetic m_coordinates;
+
         const std::shared_ptr<IO::SDK::Body::CelestialBody> m_body;
         std::unique_ptr<IO::SDK::Frames::SiteFrameFile> m_frame;
-        const int m_id;
 
     public:
         /**
@@ -53,7 +54,6 @@ namespace IO::SDK::Sites
          * @param coordinates 
          */
         Site(const int id, const std::string &name, const IO::SDK::Coordinates::Geodetic &coordinates, std::shared_ptr<IO::SDK::Body::CelestialBody> &body);
-        virtual ~Site() = default;
 
         /**
          * @brief Get the Id
@@ -155,7 +155,7 @@ namespace IO::SDK::Sites
          * @param value 
          * @return std::vector<IO::SDK::Time::Window<IO::SDK::Time::UTC>> 
          */
-        std::vector<IO::SDK::Time::Window<IO::SDK::Time::UTC>> FindWindowsOnIlluminationConstraint(const IO::SDK::Time::Window<IO::SDK::Time::UTC>& searchWindow, const IO::SDK::Body::Body& targetBody, const IO::SDK::Body::Body& observerBody,const IO::SDK::IlluminationAngle& illuminationAgngle, const IO::SDK::Constraint& constraint, const double value) const;
+        std::vector<IO::SDK::Time::Window<IO::SDK::Time::UTC>> FindWindowsOnIlluminationConstraint(const IO::SDK::Time::Window<IO::SDK::Time::UTC> &searchWindow, const IO::SDK::Body::Body &observerBody, const IO::SDK::IlluminationAngle &illuminationAgngle, const IO::SDK::Constraint &constraint, const double value) const;
 
         /**
          * @brief Get the Horizontal Coordinates
@@ -175,8 +175,6 @@ namespace IO::SDK::Sites
          * @return IO::SDK::OrbitalParameters::StateVector 
          */
         IO::SDK::OrbitalParameters::StateVector GetStateVector(const IO::SDK::Body::Body &body, const IO::SDK::Frames::Frames frame, const IO::SDK::AberrationsEnum aberrationCorrection, const IO::SDK::Time::TDB &epoch) const;
-
-        
     };
 }
 

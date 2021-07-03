@@ -1,3 +1,13 @@
+/**
+ * @file GravityForce.cpp
+ * @author Sylvain Guillet (sylvain.guillet@live.com)
+ * @brief 
+ * @version 0.1
+ * @date 2021-07-03
+ * 
+ * @copyright Copyright (c) 2021
+ * 
+ */
 #include <GravityForce.h>
 #include <Constants.h>
 #include <InertialFrames.h>
@@ -26,7 +36,7 @@ IO::SDK::Math::Vector3D IO::SDK::Integrators::Forces::GravityForce::Apply(const 
     while (currentBody->GetOrbitalParametersAtEpoch())
     {
         //Compute vector state
-        position = position + currentBody->ReadEphemeris(*currentBody->GetOrbitalParametersAtEpoch()->GetCenterOfMotion(), stateVector.GetFrame(), AberrationsEnum::None, stateVector.GetEpoch()).GetPosition();
+        position = position + currentBody->ReadEphemeris(stateVector.GetFrame(), AberrationsEnum::None, stateVector.GetEpoch(),*currentBody->GetOrbitalParametersAtEpoch()->GetCenterOfMotion()).GetPosition();
 
         //Compute force
         force = force + ComputeForce(currentBody->GetOrbitalParametersAtEpoch()->GetCenterOfMotion()->GetMass(),bodyMass, position.Magnitude(), position.Normalize());

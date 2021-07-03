@@ -1,7 +1,17 @@
+/**
+ * @file FOVShapes.h
+ * @author Sylvain Guillet (sylvain.guillet@live.com)
+ * @brief 
+ * @version 0.1
+ * @date 2021-07-02
+ * 
+ * @copyright Copyright (c) 2021
+ * 
+ */
 #ifndef FOV_SHAPES_H
 #define FOV_SHAPES_H
 
-#include<string>
+#include <string>
 
 namespace IO::SDK::Instruments
 {
@@ -12,10 +22,19 @@ namespace IO::SDK::Instruments
 		Rectangular
 	};
 
-	class FOVShapes
+	/**
+	 * @brief Field of view shape
+	 * 
+	 */
+	class FOVShapes final
 	{
 	public:
-	
+		/**
+		 * @brief Get enum string value
+		 * 
+		 * @param e 
+		 * @return std::string 
+		 */
 		std::string ToString(const FOVShapeEnum e) const;
 	};
 }

@@ -1,3 +1,13 @@
+/**
+ * @file StateOrientation.cpp
+ * @author Sylvain Guillet (sylvain.guillet@live.com)
+ * @brief 
+ * @version 0.1
+ * @date 2021-07-03
+ * 
+ * @copyright Copyright (c) 2021
+ * 
+ */
 #include "StateOrientation.h"
 
 IO::SDK::OrbitalParameters::StateOrientation::StateOrientation(const IO::SDK::Time::TDB &epoch, const IO::SDK::Frames::Frames &frame) : m_epoch{epoch}, m_frame{frame}
@@ -14,6 +24,22 @@ IO::SDK::OrbitalParameters::StateOrientation::StateOrientation(const double q0, 
 
 IO::SDK::OrbitalParameters::StateOrientation::StateOrientation(const IO::SDK::Math::Quaternion &quaternion, const IO::SDK::Math::Vector3D &angularVelocity, const IO::SDK::Time::TDB &epoch, const IO::SDK::Frames::Frames &frame) : m_quaternion{quaternion}, m_angularVelocity{angularVelocity}, m_epoch{epoch}, m_frame{frame}
 {
+}
+
+IO::SDK::OrbitalParameters::StateOrientation::StateOrientation(const IO::SDK::OrbitalParameters::StateOrientation &stateOrientation) : m_quaternion{stateOrientation.m_quaternion}, m_angularVelocity{stateOrientation.m_angularVelocity}, m_epoch{stateOrientation.m_epoch}, m_frame{stateOrientation.m_frame}
+{
+}
+
+IO::SDK::OrbitalParameters::StateOrientation &IO::SDK::OrbitalParameters::StateOrientation::operator=(const StateOrientation &rhs)
+{
+	if (this != &rhs)
+	{
+		const_cast<IO::SDK::Math::Vector3D &>(m_angularVelocity) = rhs.m_angularVelocity;
+		const_cast<IO::SDK::Time::TDB &>(m_epoch) = rhs.m_epoch;
+		const_cast<IO::SDK::Frames::Frames &>(m_frame) = rhs.m_frame;
+		const_cast<IO::SDK::Math::Quaternion &>(m_quaternion) = rhs.m_quaternion;
+	}
+	return *this;
 }
 
 IO::SDK::Time::TDB IO::SDK::OrbitalParameters::StateOrientation::GetEpoch() const

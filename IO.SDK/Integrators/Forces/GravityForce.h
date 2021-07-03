@@ -17,17 +17,40 @@
 
 namespace IO::SDK::Integrators::Forces
 {
+    /**
+     * @brief Gravity force
+     * 
+     */
     class GravityForce : public IO::SDK::Integrators::Forces::Force
     {
     private:
         /* data */
     public:
-        GravityForce(/* args */);
+        /**
+         * @brief 
+         * 
+         */
+        GravityForce();
         ~GravityForce();
 
+        /**
+         * @brief Apply force
+         * 
+         * @param body 
+         * @param stateVector 
+         * @return IO::SDK::Math::Vector3D 
+         */
         IO::SDK::Math::Vector3D Apply(const IO::SDK::Body::Body &body, const IO::SDK::OrbitalParameters::StateVector &stateVector) override;
-        
     };
+    /**
+     * @brief 
+     * 
+     * @param m1 
+     * @param m2 
+     * @param distance 
+     * @param u12 
+     * @return IO::SDK::Math::Vector3D 
+     */
     IO::SDK::Math::Vector3D ComputeForce(const double m1, const double m2, const double distance, const IO::SDK::Math::Vector3D &u12);
 
 }

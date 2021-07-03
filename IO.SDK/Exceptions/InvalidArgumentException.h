@@ -16,13 +16,16 @@
 
 namespace IO::SDK::Exception
 {
-    class InvalidArgumentException : public SDKException
+    /**
+     * @brief Invalid argument exception
+     * 
+     */
+    class InvalidArgumentException final: public SDKException
     {
     private:
         /* data */
     public:
         InvalidArgumentException(const std::string &message);
-        ~InvalidArgumentException() = default;
     };
 
 } // namespace IO::SDK::Exception

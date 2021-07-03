@@ -18,13 +18,15 @@
 
 namespace IO::SDK::OrbitalParameters
 {
-	class StateOrientation
+	class StateOrientation final
 	{
 	private:
-		const IO::SDK::Time::TDB m_epoch;
-		const IO::SDK::Frames::Frames m_frame;
 		const IO::SDK::Math::Quaternion m_quaternion{};
 		const IO::SDK::Math::Vector3D m_angularVelocity{};
+		const IO::SDK::Time::TDB m_epoch;
+		const IO::SDK::Frames::Frames m_frame;
+		
+		
 
 	public:
 		/**
@@ -70,6 +72,21 @@ namespace IO::SDK::OrbitalParameters
 		 * @param frame 
 		 */
 		StateOrientation(const IO::SDK::Math::Quaternion &quaternion, const IO::SDK::Math::Vector3D &angularVelocity, const IO::SDK::Time::TDB &epoch, const IO::SDK::Frames::Frames &frame);
+
+		/**
+		 * @brief Assignment operator
+		 * 
+		 * @param rhs 
+		 * @return StateOrientation& 
+		 */
+		StateOrientation &operator=(const StateOrientation &rhs);
+
+		/**
+		 * @brief Construct a new State Orientation object
+		 * 
+		 * @param stateOrientation 
+		 */
+		StateOrientation(const StateOrientation& stateOrientation);
 
 		/**
 		 * @brief Get the Epoch

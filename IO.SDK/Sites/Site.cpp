@@ -39,7 +39,7 @@ IO::SDK::OrbitalParameters::StateVector IO::SDK::Sites::Site::GetStateVector(con
 IO::SDK::Coordinates::RADec IO::SDK::Sites::Site::GetRADec(const IO::SDK::Body::Body &body, const IO::SDK::AberrationsEnum aberrationCorrection, const IO::SDK::Time::TDB &epoch) const
 {
     auto radius = m_body->GetRadius();
-    auto bodiesSv = body.ReadEphemeris(*m_body, IO::SDK::Frames::InertialFrames::ICRF, aberrationCorrection, epoch);
+    auto bodiesSv = body.ReadEphemeris(IO::SDK::Frames::InertialFrames::ICRF, aberrationCorrection, epoch, *m_body);
 
     auto siteVector = GetStateVector(IO::SDK::Frames::InertialFrames::ICRF, epoch);
 
@@ -83,26 +83,20 @@ bool IO::SDK::Sites::Site::IsNight(const IO::SDK::Time::TDB &epoch, const double
 std::vector<IO::SDK::Time::Window<IO::SDK::Time::UTC>> IO::SDK::Sites::Site::FindDayWindows(const IO::SDK::Time::Window<IO::SDK::Time::UTC> &searchWindow, const double twilight) const
 {
     IO::SDK::Body::CelestialBody sun(10, "Sun");
-    return FindWindowsOnIlluminationConstraint(searchWindow, *m_body, sun, IO::SDK::IlluminationAngle::Incidence, IO::SDK::Constraint::LowerThan, IO::SDK::Constants::PI2 - twilight);
+    return FindWindowsOnIlluminationConstraint(searchWindow, sun, IO::SDK::IlluminationAngle::Incidence, IO::SDK::Constraint::LowerThan, IO::SDK::Constants::PI2 - twilight);
 }
 
 std::vector<IO::SDK::Time::Window<IO::SDK::Time::UTC>> IO::SDK::Sites::Site::FindNightWindows(const IO::SDK::Time::Window<IO::SDK::Time::UTC> &searchWindow, const double twilight) const
 {
     IO::SDK::Body::CelestialBody sun(10, "Sun");
-    return FindWindowsOnIlluminationConstraint(searchWindow, *m_body, sun, IO::SDK::IlluminationAngle::Incidence, IO::SDK::Constraint::GreaterThan, IO::SDK::Constants::PI2 - twilight);
+    return FindWindowsOnIlluminationConstraint(searchWindow, sun, IO::SDK::IlluminationAngle::Incidence, IO::SDK::Constraint::GreaterThan, IO::SDK::Constants::PI2 - twilight);
 }
 
-std::vector<IO::SDK::Time::Window<IO::SDK::Time::UTC>> IO::SDK::Sites::Site::FindWindowsOnIlluminationConstraint(const IO::SDK::Time::Window<IO::SDK::Time::UTC> &searchWindow, const IO::SDK::Body::Body &targetBody, const IO::SDK::Body::Body &observerBody, const IO::SDK::IlluminationAngle &illuminationAgngle, const IO::SDK::Constraint &constraint, const double value) const
+std::vector<IO::SDK::Time::Window<IO::SDK::Time::UTC>> IO::SDK::Sites::Site::FindWindowsOnIlluminationConstraint(const IO::SDK::Time::Window<IO::SDK::Time::UTC> &searchWindow, const IO::SDK::Body::Body &observerBody, const IO::SDK::IlluminationAngle &illuminationAgngle, const IO::SDK::Constraint &constraint, const double value) const
 {
     std::vector<IO::SDK::Time::Window<IO::SDK::Time::UTC>> windows;
     SpiceDouble bodyFixedLocation[3];
     georec_c(m_coordinates.GetLongitude(), m_coordinates.GetLatitude(), m_coordinates.GetAltitude(), m_body->GetRadius().GetX(), m_body->GetFlattening(), bodyFixedLocation);
-
-    SpiceDouble srfvec[3];
-    SpiceDouble emi;
-    SpiceDouble pha;
-    SpiceDouble inc;
-    SpiceDouble srfEpoch;
 
     SpiceDouble windowStart;
     SpiceDouble windowEnd;
@@ -118,14 +112,11 @@ std::vector<IO::SDK::Time::Window<IO::SDK::Time::UTC>> IO::SDK::Sites::Site::Fin
     SpiceDouble SPICE_CELL_B[SPICE_CELL_CTRLSZ + MAXWIN];
     SpiceCell results = IO::SDK::Spice::Builder::CreateDoubleCell(MAXWIN, SPICE_CELL_B);
 
-    SpiceDouble SPICE_CELL_C[SPICE_CELL_CTRLSZ + MAXWIN];
-    SpiceCell wnsolr = IO::SDK::Spice::Builder::CreateDoubleCell(MAXWIN, SPICE_CELL_C);
-
     wninsd_c(searchWindow.GetStartDate().ToTDB().GetSecondsFromJ2000().count(), searchWindow.GetEndDate().ToTDB().GetSecondsFromJ2000().count(), &cnfine);
 
     gfilum_c("Ellipsoid", illuminationAgngle.ToCharArray(), std::to_string(m_body->GetId()).c_str(), "Sun", m_body->GetBodyFixedFrame().GetName().c_str(), abe.ToString(IO::SDK::AberrationsEnum::CNS).c_str(), observerBody.GetName().c_str(), bodyFixedLocation, constraint.ToCharArray(), value, 0.0, 4.5 * 60 * 60, MAXIVL, &cnfine, &results);
 
-    for (size_t i = 0; i < wncard_c(&results); i++)
+    for (int i = 0; i < wncard_c(&results); i++)
     {
         wnfetd_c(&results, i, &windowStart, &windowEnd);
         windows.push_back(IO::SDK::Time::Window<IO::SDK::Time::UTC>(IO::SDK::Time::TDB(std::chrono::duration<double>(windowStart)).ToUTC(), IO::SDK::Time::TDB(std::chrono::duration<double>(windowEnd)).ToUTC()));
@@ -158,7 +149,7 @@ IO::SDK::Coordinates::HorizontalCoordinates IO::SDK::Sites::Site::GetHorizontalC
 IO::SDK::OrbitalParameters::StateVector IO::SDK::Sites::Site::GetStateVector(const IO::SDK::Body::Body &body, const IO::SDK::Frames::Frames frame, const IO::SDK::AberrationsEnum aberrationCorrection, const IO::SDK::Time::TDB &epoch) const
 {
     auto radius = m_body->GetRadius();
-    auto bodiesSv = body.ReadEphemeris(*m_body, frame, aberrationCorrection, epoch);
+    auto bodiesSv = body.ReadEphemeris(frame, aberrationCorrection, epoch, *m_body);
 
     auto siteVector = GetStateVector(frame, epoch);
 

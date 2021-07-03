@@ -58,14 +58,14 @@ namespace IO::SDK::Body::Spacecraft
 	 * @brief Spacecraft class
 	 * 
 	 */
-	class Spacecraft : public Body
+	class Spacecraft final : public Body
 	{
 	private:
 		const std::string m_missionPrefix{};
 		const std::string m_filesPath{};
+		const std::unique_ptr<IO::SDK::Frames::SpacecraftFrameFile> m_frame;
 		const std::unique_ptr<IO::SDK::Kernels::SpacecraftClockKernel> m_clockKernel;
 		const std::unique_ptr<IO::SDK::Kernels::OrientationKernel> m_orientationKernel;
-		const std::unique_ptr<IO::SDK::Frames::SpacecraftFrameFile> m_frame;
 		const std::unique_ptr<IO::SDK::Kernels::EphemerisKernel> m_ephemerisKernel;
 		std::vector<std::unique_ptr<IO::SDK::Instruments::Instrument>> m_instruments{};
 		std::vector<std::unique_ptr<IO::SDK::Body::Spacecraft::FuelTank>> m_fuelTanks{};
@@ -75,7 +75,7 @@ namespace IO::SDK::Body::Spacecraft
 		const double m_maximumOperatingMass;
 
 	public:
-		//Orientation
+		
 		const IO::SDK::Math::Vector3D Up{0.0, 0.0, 1.0};
 		const IO::SDK::Math::Vector3D Front{0.0, 1.0, 0.0};
 		const IO::SDK::Math::Vector3D Left{-1.0, 0.0, 0.0};
@@ -160,7 +160,7 @@ namespace IO::SDK::Body::Spacecraft
 		 * @param states 
 		 * @param frame 
 		 */
-		void WriteEphemeris(const std::vector<OrbitalParameters::StateVector> &states, IO::SDK::Frames::Frames &frame) const;
+		void WriteEphemeris(const std::vector<OrbitalParameters::StateVector> &states) const;
 
 		/**
 		 * @brief Get the Statevector object
@@ -171,7 +171,7 @@ namespace IO::SDK::Body::Spacecraft
 		 * @param tdb 
 		 * @return IO::SDK::OrbitalParameters::StateVector 
 		 */
-		IO::SDK::OrbitalParameters::StateVector ReadEphemeris(const IO::SDK::Body::CelestialBody &observer, const IO::SDK::Frames::Frames &frame, const IO::SDK::AberrationsEnum aberration, const IO::SDK::Time::TDB &tdb) const override;
+		IO::SDK::OrbitalParameters::StateVector ReadEphemeris( const IO::SDK::Frames::Frames &frame, const IO::SDK::AberrationsEnum aberration, const IO::SDK::Time::TDB &tdb,const IO::SDK::Body::CelestialBody &observer) const override;
 
 		/**
 		 * @brief Get the Ephemeris Coverage Window object

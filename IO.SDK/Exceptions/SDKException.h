@@ -16,6 +16,10 @@
 
 namespace IO::SDK::Exception
 {
+	/**
+	 * @brief IO SDK Exception 
+	 * 
+	 */
 	class SDKException : public std::exception
 	{
 
@@ -24,8 +28,6 @@ namespace IO::SDK::Exception
 
 	public:
 		SDKException(const std::string &msg);
-
-		virtual ~SDKException() = default;
 
 		const char *what() const noexcept override;
 	};

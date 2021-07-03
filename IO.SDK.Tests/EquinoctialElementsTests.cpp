@@ -26,7 +26,6 @@ TEST(EquinoctialElements, Initialization)
 	double node = 15. * rpd_c();
 	double inc = 10. * rpd_c();
 	double m0 = 45. * rpd_c();
-	double t0 = -100000000.;
 
 	//equinoctial elements
 	double h = ecc * sin(argp + node);
@@ -101,15 +100,12 @@ TEST(EquinoctialElements, GetPeriod)
 
 	//keplerian elements
 	double p = 1.0e7;
-	double gm = 3.98600435436e14;
 	double ecc = 0.1;
 	double a = p / (1. - ecc);
-	double n = sqrt(gm / a) / a;
 	double argp = 30. * rpd_c();
 	double node = 15. * rpd_c();
 	double inc = 10. * rpd_c();
 	double m0 = 45. * rpd_c();
-	double t0 = -100000000.;
 
 	//equinoctial elements
 	double h = ecc * sin(argp + node);
@@ -129,10 +125,8 @@ TEST(EquinoctialElements, GetStateVector)
 
 	//keplerian elements
 	double p = 1.0e7;
-	double gm = earth->GetMu();
 	double ecc = 0.1;
 	double a = p / (1. - ecc);
-	double n = sqrt(gm / a) / a;
 	double argp = 30.0 * rpd_c();
 	double node = 15.0 * rpd_c();
 	double inc = 10.0 * rpd_c();
@@ -165,7 +159,6 @@ TEST(EquinoctialElements, GetStateVectorFromKeplerian)
 
 	//keplerian elements
 	double p = 1.0e7;
-	double gm = earth->GetMu();
 	double ecc = 0.1;
 	double a = p / (1. - ecc);
 	double argp = 0.0 * rpd_c();
@@ -193,7 +186,6 @@ TEST(EquinoctialElements, GetStateVectorFrom0Eccentricity)
 
 	//keplerian elements
 	double p = 1.0e7;
-	double gm = earth->GetMu();
 	double ecc = 0.0;
 	double a = p / (1. - ecc);
 	double argp = 0.0 * rpd_c();
@@ -218,10 +210,8 @@ TEST(EquinoctialElements, GetEccentricity)
 
 	//keplerian elements
 	double p = 1.0e7;
-	double gm = 3.98600435436e14;
 	double ecc = 0.1;
 	double a = p / (1. - ecc);
-	double n = sqrt(gm / a) / a;
 	double argp = 30.0 * rpd_c();
 	double node = 15.0 * rpd_c();
 	double inc = 10.0 * rpd_c();
@@ -248,10 +238,8 @@ TEST(EquinoctialElements, GetInclination)
 
 	//keplerian elements
 	double p = 1.0e7;
-	double gm = 3.98600435436e14;
 	double ecc = 0.1;
 	double a = p / (1. - ecc);
-	double n = sqrt(gm / a) / a;
 	double argp = 30.0 * rpd_c();
 	double node = 15.0 * rpd_c();
 	double inc = 10.0 * IO::SDK::Constants::DEG_RAD;
@@ -278,10 +266,8 @@ TEST(EquinoctialElements, GetPeriapsisArgument)
 
 	//keplerian elements
 	double p = 1.0e7;
-	double gm = 3.98600435436e14;
 	double ecc = 0.1;
 	double a = p / (1. - ecc);
-	double n = sqrt(gm / a) / a;
 	double argp = 30.0 * rpd_c();
 	double node = 15.0 * rpd_c();
 	double inc = 10.0 * IO::SDK::Constants::DEG_RAD;
@@ -308,10 +294,8 @@ TEST(EquinoctialElements, GetRightAscendingNode)
 
 	//keplerian elements
 	double p = 1.0e7;
-	double gm = 3.98600435436e14;
 	double ecc = 0.1;
 	double a = p / (1. - ecc);
-	double n = sqrt(gm / a) / a;
 	double argp = 30.0 * rpd_c();
 	double node = 15.0 * rpd_c();
 	double inc = 10.0 * IO::SDK::Constants::DEG_RAD;
@@ -338,10 +322,8 @@ TEST(EquinoctialElements, GetMeanAnomalyAtEpoch)
 
 	//keplerian elements
 	double p = 1.0e7;
-	double gm = 3.98600435436e14;
 	double ecc = 0.1;
 	double a = p / (1. - ecc);
-	double n = sqrt(gm / a) / a;
 	double argp = 30.0 * rpd_c();
 	double node = 15.0 * rpd_c();
 	double inc = 10.0 * IO::SDK::Constants::DEG_RAD;
@@ -368,10 +350,8 @@ TEST(EquinoctialElements, GetSpecificOrbitalEnergy)
 
 	//ISS keplerian elements
 	//double p = 1.0e7;
-	double gm = 3.98600435436e14;
 	double ecc = 8.258860265483704E-04;
 	double a = 6.797371275322830E+06;
-	double n = 6.454758958139520E-02 * rpd_c();
 	double argp = 9.311325640521339E+01 * rpd_c();
 	double node = 9.542543898089574E+00 * rpd_c();
 	double inc = 5.167235936552875E+01 * IO::SDK::Constants::DEG_RAD;
@@ -397,11 +377,8 @@ TEST(EquinoctialElements, GetSpecificAngularMomentum)
 	const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
 
 	//ISS keplerian elements
-	//double p = 1.0e7;
-	double gm = 3.98600435436e14;
 	double ecc = 8.258860265483704E-04;
 	double a = 6.797371275322830E+06;
-	double n = 6.454758958139520E-02 * rpd_c();
 	double argp = 9.311325640521339E+01 * rpd_c();
 	double node = 9.542543898089574E+00 * rpd_c();
 	double inc = 5.167235936552875E+01 * IO::SDK::Constants::DEG_RAD;
@@ -427,11 +404,8 @@ TEST(EquinoctialElements, GetTrueAnomalyAtEpoch)
 	const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
 
 	//ISS keplerian elements
-	//double p = 1.0e7;
-	double gm = 3.98600435436e14;
 	double ecc = 8.258860265483704E-04;
 	double a = 6.797371275322830E+06;
-	double n = 6.454758958139520E-02 * rpd_c();
 	double argp = 9.311325640521339E+01 * rpd_c();
 	double node = 9.542543898089574E+00 * rpd_c();
 	double inc = 5.167235936552875E+01 * IO::SDK::Constants::DEG_RAD;
@@ -457,10 +431,8 @@ TEST(EquinoctialElements, GetISSMeanAnomaly)
 	const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
 
 	//keplerian elements
-	double gm = 3.98600435436e14;
 	double ecc = 8.258860265483704E-04;
 	double a = 6.797371275322830E+06;
-	double n = 6.454758958139520E-02 * rpd_c();
 	double argp = 9.311325640521339E+01 * rpd_c();
 	double node = 9.542543898089574E+00 * rpd_c();
 	double inc = 5.167235936552875E+01 * IO::SDK::Constants::DEG_RAD;
@@ -486,10 +458,8 @@ TEST(EquinoctialElements, GetSemiMajorAxis)
 	const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
 
 	//keplerian elements
-	double gm = 3.98600435436e14;
 	double ecc = 8.258860265483704E-04;
 	double a = 6.797371275322830E+06;
-	double n = 6.454758958139520E-02 * rpd_c();
 	double argp = 9.311325640521339E+01 * rpd_c();
 	double node = 9.542543898089574E+00 * rpd_c();
 	double inc = 5.167235936552875E+01 * IO::SDK::Constants::DEG_RAD;
@@ -515,10 +485,8 @@ TEST(EquinoctialElements, GetTimeToMeanAnomaly)
 	const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
 
 	//keplerian elements
-	double gm = 3.98600435436e14;
 	double ecc = 0.5;
 	double a = 7136635.456;
-	double n = sqrt(gm / a) / a;
 	double argp = 20.0 * rpd_c();
 	double node = 45.0 * rpd_c();
 	double inc = 60.0 * IO::SDK::Constants::DEG_RAD;
@@ -544,10 +512,8 @@ TEST(EquinoctialElements, GetMeanAnomalyForEpoch)
 	const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
 
 	//keplerian elements
-	double gm = 3.98600435436e14;
 	double ecc = 0.5;
 	double a = 7136635.456;
-	double n = sqrt(gm / a) / a;
 	double argp = 20.0 * rpd_c();
 	double node = 45.0 * rpd_c();
 	double inc = 60.0 * IO::SDK::Constants::DEG_RAD;
@@ -573,10 +539,8 @@ TEST(EquinoctialElements, GetTimeToTrueAnomaly)
 	const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
 
 	//keplerian elements
-	double gm = 3.98600435436e14;
 	double ecc = 0.5;
 	double a = 7136635.456;
-	double n = sqrt(gm / a) / a;
 	double argp = 20.0 * rpd_c();
 	double node = 45.0 * rpd_c();
 	double inc = 60.0 * IO::SDK::Constants::DEG_RAD;
@@ -602,10 +566,8 @@ TEST(EquinoctialElements, GetTrueAnomalyForEpoch)
 	const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
 
 	//keplerian elements
-	double gm = 3.98600435436e14;
 	double ecc = 0.5;
 	double a = 7136635.456;
-	double n = sqrt(gm / a) / a;
 	double argp = 20.0 * rpd_c();
 	double node = 45.0 * rpd_c();
 	double inc = 60.0 * IO::SDK::Constants::DEG_RAD;
@@ -631,10 +593,8 @@ TEST(EquinoctialElements, TrajectoryType)
 	const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
 
 	//keplerian elements
-	double gm = 3.98600435436e14;
 	double ecc = 0.5;
 	double a = 7136635.456;
-	double n = sqrt(gm / a) / a;
 	double argp = 20.0 * rpd_c();
 	double node = 45.0 * rpd_c();
 	double inc = 60.0 * IO::SDK::Constants::DEG_RAD;

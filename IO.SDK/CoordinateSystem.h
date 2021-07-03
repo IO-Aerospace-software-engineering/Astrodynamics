@@ -22,6 +22,11 @@ namespace IO::SDK
 
     public:
 
+        /**
+         * @brief Construct a new Coordinate System object
+         * 
+         * @param name 
+         */
         CoordinateSystem(const std::string &name);
 
         static CoordinateSystem Rectangular;
@@ -32,6 +37,11 @@ namespace IO::SDK
         static CoordinateSystem Geodetic;
         static CoordinateSystem Planetographic;
 
+        /**
+         * @brief Get char array coordinate system
+         * 
+         * @return const char* 
+         */
         const char *ToCharArray() const;
     };
 

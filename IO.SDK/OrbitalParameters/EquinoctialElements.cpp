@@ -1,18 +1,18 @@
+/**
+ * @file EquinoctialElements.cpp
+ * @author Sylvain Guillet (sylvain.guillet@live.com)
+ * @brief 
+ * @version 0.1
+ * @date 2021-07-03
+ * 
+ * @copyright Copyright (c) 2021
+ * 
+ */
 #include "EquinoctialElements.h"
 #include "Constants.h"
 #include <chrono>
 
-IO::SDK::OrbitalParameters::EquinoctialElements::EquinoctialElements(const std::shared_ptr<IO::SDK::Body::CelestialBody> &centerOfMotion, const IO::SDK::Time::TDB &epoch, const double semiMajorAxis, const double h, const double k, const double p, const double q, const double L, const double periapsisLongitudeRate, const double ascendingNodeLongitudeRate, const double rightAscensionOfThePole, const double declinationOfThePole, const IO::SDK::Frames::Frames &frame) : m_semiMajorAxis{semiMajorAxis},
-																																																																																																																													m_h{h},
-																																																																																																																													m_k{k},
-																																																																																																																													m_p{p},
-																																																																																																																													m_q{q},
-																																																																																																																													m_L{L},
-																																																																																																																													m_periapsisLongitudeRate{periapsisLongitudeRate},
-																																																																																																																													m_ascendingNodeLongitudeRate{ascendingNodeLongitudeRate},
-																																																																																																																													m_rightAscensionOfThePole{rightAscensionOfThePole},
-																																																																																																																													m_declinationOfThePole{declinationOfThePole},
-																																																																																																																													OrbitalParameters(centerOfMotion, epoch, frame)
+IO::SDK::OrbitalParameters::EquinoctialElements::EquinoctialElements(const std::shared_ptr<IO::SDK::Body::CelestialBody> &centerOfMotion, const IO::SDK::Time::TDB &epoch, const double semiMajorAxis, const double h, const double k, const double p, const double q, const double L, const double periapsisLongitudeRate, const double ascendingNodeLongitudeRate, const double rightAscensionOfThePole, const double declinationOfThePole, const IO::SDK::Frames::Frames &frame) : OrbitalParameters(centerOfMotion, epoch, frame), m_semiMajorAxis{semiMajorAxis}, m_h{h}, m_k{k}, m_p{p}, m_q{q}, m_L{L}, m_periapsisLongitudeRate{periapsisLongitudeRate},m_rightAscensionOfThePole{rightAscensionOfThePole}, m_declinationOfThePole{declinationOfThePole}, m_ascendingNodeLongitudeRate{ascendingNodeLongitudeRate}
 {
 	const_cast<double &>(m_meanAnomalyRate) = std::sqrt(centerOfMotion->GetMu() / semiMajorAxis) / semiMajorAxis;
 
@@ -29,7 +29,7 @@ IO::SDK::OrbitalParameters::EquinoctialElements::EquinoctialElements(const std::
 	m_period = IO::SDK::Time::TimeSpan(std::chrono::duration<double>(IO::SDK::Constants::_2PI * (std::sqrt(std::pow(semiMajorAxis, 3) / centerOfMotion->GetMu()))));
 }
 
-IO::SDK::OrbitalParameters::EquinoctialElements::EquinoctialElements(const std::shared_ptr<IO::SDK::Body::CelestialBody> &centerOfMotion, const double semiMajorAxis, const double eccentricity, const double inclination, const double peregeeArgument, const double longitudeAN, const double meanAnomaly, const double periapsisLongitudeRate, const double ascendingNodeLongitudeRate, const double rightAscensionOfThePole, const double declinationOfThePole, const IO::SDK::Time::TDB &epoch, const IO::SDK::Frames::Frames &frame) : m_semiMajorAxis{semiMajorAxis}, m_periapsisLongitudeRate{periapsisLongitudeRate}, m_rightAscensionOfThePole{rightAscensionOfThePole}, m_declinationOfThePole{declinationOfThePole}, m_ascendingNodeLongitudeRate{ascendingNodeLongitudeRate}, OrbitalParameters(centerOfMotion, epoch, frame)
+IO::SDK::OrbitalParameters::EquinoctialElements::EquinoctialElements(const std::shared_ptr<IO::SDK::Body::CelestialBody> &centerOfMotion, const double semiMajorAxis, const double eccentricity, const double inclination, const double peregeeArgument, const double longitudeAN, const double meanAnomaly, const double periapsisLongitudeRate, const double ascendingNodeLongitudeRate, const double rightAscensionOfThePole, const double declinationOfThePole, const IO::SDK::Time::TDB &epoch, const IO::SDK::Frames::Frames &frame) :OrbitalParameters(centerOfMotion, epoch, frame), m_semiMajorAxis{semiMajorAxis}, m_periapsisLongitudeRate{periapsisLongitudeRate}, m_rightAscensionOfThePole{rightAscensionOfThePole}, m_declinationOfThePole{declinationOfThePole}, m_ascendingNodeLongitudeRate{ascendingNodeLongitudeRate}
 {
 
 	const_cast<double &>(m_h) = eccentricity * sin(peregeeArgument + longitudeAN);
@@ -38,7 +38,6 @@ IO::SDK::OrbitalParameters::EquinoctialElements::EquinoctialElements(const std::
 	const_cast<double &>(m_q) = tan(inclination * 0.5) * cos(longitudeAN);
 	const_cast<double &>(m_L) = meanAnomaly + peregeeArgument + longitudeAN;
 	const_cast<double &>(m_meanAnomalyRate) = std::sqrt(centerOfMotion->GetMu() / semiMajorAxis) / semiMajorAxis;
-	
 
 	m_elements[0] = semiMajorAxis;
 	m_elements[1] = m_h;

@@ -10,7 +10,7 @@
  */
 #ifndef ILLUMINATION_ANGLE_H
 #define ILLUMINATION_ANGLE_H
-#include<string>
+#include <string>
 
 namespace IO::SDK
 {
@@ -18,6 +18,7 @@ namespace IO::SDK
     {
     private:
         const std::string m_name;
+
     public:
         IlluminationAngle(const std::string &name);
 
@@ -27,9 +28,7 @@ namespace IO::SDK
 
         const char *ToCharArray() const;
     };
-    
 
-    
 } // namespace IO::SDK
 
 #endif

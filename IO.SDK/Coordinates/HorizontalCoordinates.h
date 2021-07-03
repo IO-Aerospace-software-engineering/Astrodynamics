@@ -49,8 +49,6 @@ namespace IO::SDK::Coordinates
 		{
 		}
 
-
-
 		/**
 		 * @brief Get the Altitude
 		 * 
