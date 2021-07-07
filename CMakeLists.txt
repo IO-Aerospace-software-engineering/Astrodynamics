@@ -15,11 +15,11 @@ SET(CMAKE_CXX_OUTPUT_EXTENSION_REPLACE 1)
 
 if(UNIX)
     SET(CMAKE_CXX_FLAGS_DEBUG  "-O0 -g --coverage")
-    add_compile_options(-Wall -Wextra -Wpedantic -Werror)
+    add_compile_options(-Wall -Wextra -Wpedantic)
 endif ()
 
 if(MSVC)
-    add_compile_options(/MT)
+    # add_compile_options(/MT)
 endif ()
 
 enable_testing()
