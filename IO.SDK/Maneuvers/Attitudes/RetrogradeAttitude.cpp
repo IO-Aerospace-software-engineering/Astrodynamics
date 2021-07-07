@@ -9,6 +9,7 @@
  * 
  */
 #include<RetrogradeAttitude.h>
+#include<Macros.h>
 
 IO::SDK::Maneuvers::Attitudes::RetrogradeAttitude::RetrogradeAttitude(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator,const IO::SDK::Time::TimeSpan& attitudeHoldDuration) : IO::SDK::Maneuvers::ManeuverBase(engines, propagator,attitudeHoldDuration)
 {
@@ -18,7 +19,7 @@ IO::SDK::Maneuvers::Attitudes::RetrogradeAttitude::RetrogradeAttitude(const std:
 {
 }
 
-void IO::SDK::Maneuvers::Attitudes::RetrogradeAttitude::Compute(const IO::SDK::OrbitalParameters::OrbitalParameters &maneuverPoint __attribute__((unused)))
+void IO::SDK::Maneuvers::Attitudes::RetrogradeAttitude::Compute(const IO::SDK::OrbitalParameters::OrbitalParameters UNUSED(&maneuverPoint))
 {
     m_deltaV = std::make_unique<IO::SDK::Math::Vector3D>();
 }
@@ -28,7 +29,7 @@ IO::SDK::OrbitalParameters::StateOrientation  IO::SDK::Maneuvers::Attitudes::Ret
     return IO::SDK::OrbitalParameters::StateOrientation(m_spacecraft.Front.To(maneuverPoint.GetStateVector().GetVelocity().Normalize().Reverse()), IO::SDK::Math::Vector3D(0.0, 0.0, 0.0), maneuverPoint.GetEpoch(), maneuverPoint.GetFrame());
 }
 
-bool  IO::SDK::Maneuvers::Attitudes::RetrogradeAttitude::CanExecute(const IO::SDK::OrbitalParameters::OrbitalParameters &orbitalParams __attribute__((unused)))
+bool  IO::SDK::Maneuvers::Attitudes::RetrogradeAttitude::CanExecute(const IO::SDK::OrbitalParameters::OrbitalParameters UNUSED(&orbitalParams))
 {
     return true;
 }
