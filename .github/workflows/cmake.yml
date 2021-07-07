@@ -1,4 +1,4 @@
-name: IO SDK Integration
+name: IO SDK Linux integration
 
 on:
   pull_request:
