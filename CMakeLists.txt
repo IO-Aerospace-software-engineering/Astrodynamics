@@ -13,8 +13,11 @@ set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
 SET(CMAKE_CXX_FLAGS_DEBUG  "-O0 -g --coverage")
 SET(CMAKE_CXX_OUTPUT_EXTENSION_REPLACE 1)
 
-# add_compile_options(-Wall -Wextra -pedantic -Werror)
-add_compile_options(-Wall -Wextra -Wpedantic -Werror)
+if (MSVC)
+    add_compile_options(-Wall)
+elseif(UNIX)
+    add_compile_options(-Wall -Wextra -Wpedantic -Werror)
+endif ()
 
 enable_testing()
 
