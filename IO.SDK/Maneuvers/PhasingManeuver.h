@@ -26,7 +26,7 @@ namespace IO::SDK::Maneuvers
     class PhasingManeuver final : public IO::SDK::Maneuvers::ManeuverBase
     {
     private:
-        const uint m_revolutionsNumber;
+        const unsigned int m_revolutionsNumber;
         std::unique_ptr<bool> m_isApproachingPerigee{nullptr};
         IO::SDK::OrbitalParameters::OrbitalParameters *m_targetOrbit{nullptr};
 
@@ -51,8 +51,8 @@ namespace IO::SDK::Maneuvers
         IO::SDK::OrbitalParameters::StateOrientation ComputeOrientation(const IO::SDK::OrbitalParameters::OrbitalParameters &maneuverPoint) override;
         /* data */
     public:
-        PhasingManeuver(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator, const uint revolutionNumber, IO::SDK::OrbitalParameters::OrbitalParameters *targetOrbit);
-        PhasingManeuver(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator, const uint revolutionNumber, IO::SDK::OrbitalParameters::OrbitalParameters *targetOrbit, const IO::SDK::Time::TDB &minimumEpoch);
+        PhasingManeuver(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator, const unsigned revolutionNumber, IO::SDK::OrbitalParameters::OrbitalParameters *targetOrbit);
+        PhasingManeuver(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator, const unsigned revolutionNumber, IO::SDK::OrbitalParameters::OrbitalParameters *targetOrbit, const IO::SDK::Time::TDB &minimumEpoch);
 
         /**
          * @brief Evaluate if maneuver can occurs
@@ -72,7 +72,7 @@ namespace IO::SDK::Maneuvers
      * @param deltaTrueAnomaly Delta true anomaly
      * @return IO::SDK::Time::TimeSpan 
      */
-    IO::SDK::Time::TimeSpan PhasingDuration(const uint k,const double n, const double deltaTrueAnomaly);
+    IO::SDK::Time::TimeSpan PhasingDuration(const unsigned int k,const double n, const double deltaTrueAnomaly);
 
     /**
      * @brief Computa semi major axis for phasing

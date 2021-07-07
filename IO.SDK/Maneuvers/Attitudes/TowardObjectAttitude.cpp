@@ -19,7 +19,7 @@ IO::SDK::Maneuvers::Attitudes::TowardObjectAttitude::TowardObjectAttitude(const 
 {
 }
 
-void IO::SDK::Maneuvers::Attitudes::TowardObjectAttitude::Compute(const IO::SDK::OrbitalParameters::OrbitalParameters UNUSED(&maneuverPoint))
+void IO::SDK::Maneuvers::Attitudes::TowardObjectAttitude::Compute(const IO::SDK::OrbitalParameters::OrbitalParameters &maneuverPoint)
 {
     m_deltaV = std::make_unique<IO::SDK::Math::Vector3D>();
 }
@@ -31,7 +31,7 @@ IO::SDK::OrbitalParameters::StateOrientation IO::SDK::Maneuvers::Attitudes::Towa
     return IO::SDK::OrbitalParameters::StateOrientation(m_spacecraft.Front.To(relativeStatevector.Normalize()), IO::SDK::Math::Vector3D(0.0, 0.0, 0.0), maneuverPoint.GetEpoch(), maneuverPoint.GetFrame());
 }
 
-bool IO::SDK::Maneuvers::Attitudes::TowardObjectAttitude::CanExecute(const IO::SDK::OrbitalParameters::OrbitalParameters UNUSED(&orbitalParams ))
+bool IO::SDK::Maneuvers::Attitudes::TowardObjectAttitude::CanExecute(const IO::SDK::OrbitalParameters::OrbitalParameters &orbitalParams )
 {
     return true;
 }

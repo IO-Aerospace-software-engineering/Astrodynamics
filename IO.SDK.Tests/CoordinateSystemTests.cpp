@@ -3,5 +3,5 @@
 
 TEST(CoordinateSystem, ToCharArray)
 {
-    ASSERT_STREQ("PLANETOGRAPHIC", IO::SDK::CoordinateSystem::Planetographic.ToCharArray());
+    ASSERT_STREQ("PLANETOGRAPHIC", IO::SDK::CoordinateSystem::Planetographic().ToCharArray());
 }

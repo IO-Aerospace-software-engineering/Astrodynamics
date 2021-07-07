@@ -17,3 +17,5 @@ build/IO.SDK/libIO.SDK.so
 build/.cmake
 build/out/
 out/
+build/
+.vscode/

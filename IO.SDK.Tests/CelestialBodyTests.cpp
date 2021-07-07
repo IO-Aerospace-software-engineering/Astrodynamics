@@ -44,12 +44,12 @@ TEST(CelestialBody, GetStateVector)
 	auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth", sun);
 
 	double expectedData[6]{-2.6795375379297768E+10, 1.3270111352322429E+11, 5.7525334752378304E+10, -29765.580095900841, -5075.3399173890839, -2200.9299676732885};
-	auto sv = earth->ReadEphemeris( IO::SDK::Frames::InertialFrames::ICRF, IO::SDK::AberrationsEnum::None, epoch,*sun);
-	ASSERT_EQ(IO::SDK::OrbitalParameters::StateVector(sun, expectedData, epoch, IO::SDK::Frames::InertialFrames::ICRF), sv);
+	auto sv = earth->ReadEphemeris( IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::AberrationsEnum::None, epoch,*sun);
+	ASSERT_EQ(IO::SDK::OrbitalParameters::StateVector(sun, expectedData, epoch, IO::SDK::Frames::InertialFrames::GetICRF()), sv);
 
 	//second overload
-	auto sv2 = earth->ReadEphemeris(IO::SDK::Frames::InertialFrames::ICRF, IO::SDK::AberrationsEnum::None, epoch);
-	ASSERT_EQ(IO::SDK::OrbitalParameters::StateVector(sun, expectedData, epoch, IO::SDK::Frames::InertialFrames::ICRF), sv2);
+	auto sv2 = earth->ReadEphemeris(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::AberrationsEnum::None, epoch);
+	ASSERT_EQ(IO::SDK::OrbitalParameters::StateVector(sun, expectedData, epoch, IO::SDK::Frames::InertialFrames::GetICRF()), sv2);
 }
 
 TEST(CelestialBody, GetRelativeStateVector)
@@ -60,8 +60,8 @@ TEST(CelestialBody, GetRelativeStateVector)
 	auto marsBarycenter = std::make_shared<IO::SDK::Body::CelestialBody>(4, "mars", sun);
 
 	double expectedData[6]{1.1967701118722568E+11, 5.5305597076056137E+10, 2.6202720828289268E+10, 8.5989974247898281E+03, 1.5803131615538015E+04, 7.6926453157571395E+03};
-	auto sv = earth->GetRelativeStatevector(marsBarycenter->ReadEphemeris( IO::SDK::Frames::InertialFrames::ICRF, IO::SDK::AberrationsEnum::None, epoch,*sun));
-	ASSERT_EQ(IO::SDK::OrbitalParameters::StateVector(earth, expectedData, epoch, IO::SDK::Frames::InertialFrames::ICRF), sv);
+	auto sv = earth->GetRelativeStatevector(marsBarycenter->ReadEphemeris( IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::AberrationsEnum::None, epoch,*sun));
+	ASSERT_EQ(IO::SDK::OrbitalParameters::StateVector(earth, expectedData, epoch, IO::SDK::Frames::InertialFrames::GetICRF()), sv);
 }
 
 TEST(CelestialBody, IsInSphereOfInfluence)
@@ -71,9 +71,9 @@ TEST(CelestialBody, IsInSphereOfInfluence)
 	auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth", sun);
 	auto marsBarycenter = std::make_shared<IO::SDK::Body::CelestialBody>(4, "mars", sun);
 
-	ASSERT_FALSE(earth->IsInSphereOfInfluence(marsBarycenter->ReadEphemeris(IO::SDK::Frames::InertialFrames::ICRF, IO::SDK::AberrationsEnum::None, epoch,*sun)));
+	ASSERT_FALSE(earth->IsInSphereOfInfluence(marsBarycenter->ReadEphemeris(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::AberrationsEnum::None, epoch,*sun)));
 
-	auto fictiveBody = IO::SDK::OrbitalParameters::StateVector(earth, IO::SDK::Math::Vector3D(900000000.0, 0.0, 0.0), IO::SDK::Math::Vector3D(0.0, 1000.0, 0.0), epoch, IO::SDK::Frames::InertialFrames::ICRF);
+	auto fictiveBody = IO::SDK::OrbitalParameters::StateVector(earth, IO::SDK::Math::Vector3D(900000000.0, 0.0, 0.0), IO::SDK::Math::Vector3D(0.0, 1000.0, 0.0), epoch, IO::SDK::Frames::InertialFrames::GetICRF());
 	ASSERT_TRUE(earth->IsInSphereOfInfluence(fictiveBody));
 }
 
@@ -84,9 +84,9 @@ TEST(CelestialBody, IsInHillSphere)
 	auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth", sun);
 	auto marsBarycenter = std::make_shared<IO::SDK::Body::CelestialBody>(4, "mars", sun);
 
-	ASSERT_FALSE(earth->IsInHillSphere(marsBarycenter->ReadEphemeris(IO::SDK::Frames::InertialFrames::ICRF, IO::SDK::AberrationsEnum::None, epoch,*sun)));
+	ASSERT_FALSE(earth->IsInHillSphere(marsBarycenter->ReadEphemeris(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::AberrationsEnum::None, epoch,*sun)));
 
-	auto fictiveBody = IO::SDK::OrbitalParameters::StateVector(earth, IO::SDK::Math::Vector3D(1400000000.0, 0.0, 0.0), IO::SDK::Math::Vector3D(0.0, 1000.0, 0.0), epoch, IO::SDK::Frames::InertialFrames::ICRF);
+	auto fictiveBody = IO::SDK::OrbitalParameters::StateVector(earth, IO::SDK::Math::Vector3D(1400000000.0, 0.0, 0.0), IO::SDK::Math::Vector3D(0.0, 1000.0, 0.0), epoch, IO::SDK::Frames::InertialFrames::GetICRF());
 	ASSERT_TRUE(earth->IsInHillSphere(fictiveBody));
 }
 
@@ -130,7 +130,7 @@ TEST(CelestialBody, FindDistanceConstraint)
 	auto moon = std::make_shared<IO::SDK::Body::CelestialBody>(301, "moon", earth);
 
 	auto searchWindow = IO::SDK::Time::Window<IO::SDK::Time::TDB>(IO::SDK::Time::TDB("2007 JAN 1"), IO::SDK::Time::TDB("2007 APR 1"));
-	auto results = earth->FindWindowsOnDistanceConstraint(searchWindow,*moon, *earth, IO::SDK::Constraint::GreaterThan, IO::SDK::AberrationsEnum::None, 400000000.0, IO::SDK::Time::TimeSpan(86400s));
+	auto results = earth->FindWindowsOnDistanceConstraint(searchWindow,*moon, *earth, IO::SDK::Constraint::GreaterThan(), IO::SDK::AberrationsEnum::None, 400000000.0, IO::SDK::Time::TimeSpan(86400s));
 
 	ASSERT_EQ(4, results.size());
 	ASSERT_STREQ("2007-01-08 00:11:07.628591 (TDB)", results[0].GetStartDate().ToString().c_str());
@@ -147,7 +147,7 @@ TEST(CelestialBody, FindOccultationConstraint)
 	auto moon = std::make_shared<IO::SDK::Body::CelestialBody>(301, "moon", earth);
 
 	auto searchWindow = IO::SDK::Time::Window<IO::SDK::Time::TDB>(IO::SDK::Time::TDB("2001 DEC 13"), IO::SDK::Time::TDB("2001 DEC 15"));
-	auto results = earth->FindWindowsOnOccultationConstraint(searchWindow,*sun, *moon,IO::SDK::OccultationType::Any, IO::SDK::AberrationsEnum::LT, IO::SDK::Time::TimeSpan(240s));
+	auto results = earth->FindWindowsOnOccultationConstraint(searchWindow,*sun, *moon,IO::SDK::OccultationType::Any(), IO::SDK::AberrationsEnum::LT, IO::SDK::Time::TimeSpan(240s));
 
 	ASSERT_EQ(1, results.size());
 	ASSERT_STREQ("2001-12-14 20:10:14.194986 (TDB)", results[0].GetStartDate().ToString().c_str());

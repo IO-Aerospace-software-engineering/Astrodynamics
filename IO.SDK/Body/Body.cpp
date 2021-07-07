@@ -35,7 +35,7 @@ IO::SDK::Body::Body::Body(const int id, const std::string &name, const double ma
 
 IO::SDK::Body::Body::Body(const int id, const std::string &name, const double mass, std::shared_ptr<IO::SDK::Body::CelestialBody> &centerOfMotion) : Body(id, name, mass)
 {
-	m_orbitalParametersAtEpoch = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(this->ReadEphemeris(IO::SDK::Frames::InertialFrames::ICRF, IO::SDK::AberrationsEnum::None, IO::SDK::Time::TDB(0s), *centerOfMotion));
+	m_orbitalParametersAtEpoch = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(this->ReadEphemeris(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::AberrationsEnum::None, IO::SDK::Time::TDB(0s), *centerOfMotion));
 	centerOfMotion->m_satellites.push_back(this);
 }
 

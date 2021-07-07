@@ -13,7 +13,7 @@
 #include <chrono>
 #include <cmath>
 
-IO::SDK::Maneuvers::PhasingManeuver::PhasingManeuver(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator, const uint revolutionNumber, IO::SDK::OrbitalParameters::OrbitalParameters *targetOrbit) :  IO::SDK::Maneuvers::ManeuverBase(engines, propagator),m_revolutionsNumber{revolutionNumber}, m_targetOrbit{targetOrbit}
+IO::SDK::Maneuvers::PhasingManeuver::PhasingManeuver(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator, const unsigned int revolutionNumber, IO::SDK::OrbitalParameters::OrbitalParameters *targetOrbit) : IO::SDK::Maneuvers::ManeuverBase(engines, propagator),m_revolutionsNumber{revolutionNumber}, m_targetOrbit{targetOrbit}
 {
     if (!targetOrbit)
     {
@@ -23,7 +23,7 @@ IO::SDK::Maneuvers::PhasingManeuver::PhasingManeuver(const std::vector<IO::SDK::
     m_targetOrbit = targetOrbit;
 }
 
-IO::SDK::Maneuvers::PhasingManeuver::PhasingManeuver(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator, const uint revolutionNumber, IO::SDK::OrbitalParameters::OrbitalParameters *targetOrbit, const IO::SDK::Time::TDB &minimumEpoch) : IO::SDK::Maneuvers::ManeuverBase(engines, propagator, minimumEpoch),m_revolutionsNumber{revolutionNumber}, m_targetOrbit{targetOrbit}
+IO::SDK::Maneuvers::PhasingManeuver::PhasingManeuver(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator, const unsigned revolutionNumber, IO::SDK::OrbitalParameters::OrbitalParameters *targetOrbit, const IO::SDK::Time::TDB &minimumEpoch) : IO::SDK::Maneuvers::ManeuverBase(engines, propagator, minimumEpoch),m_revolutionsNumber{revolutionNumber}, m_targetOrbit{targetOrbit}
 {
     if (!targetOrbit)
     {
@@ -101,7 +101,7 @@ bool IO::SDK::Maneuvers::PhasingManeuver::IsApproachingPerigee(const IO::SDK::Or
     return false;
 }
 
-IO::SDK::Time::TimeSpan IO::SDK::Maneuvers::PhasingDuration(const uint k, const double n, const double deltaTrueAnomaly)
+IO::SDK::Time::TimeSpan IO::SDK::Maneuvers::PhasingDuration(const unsigned int k, const double n, const double deltaTrueAnomaly)
 {
     return IO::SDK::Time::TimeSpan(std::chrono::duration<double>((2.0 * k * IO::SDK::Constants::PI + deltaTrueAnomaly) / (k * n)));
 }
