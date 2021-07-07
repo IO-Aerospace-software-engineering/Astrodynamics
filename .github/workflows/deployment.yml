@@ -1,5 +1,5 @@
 
-name: IO SDK Deployment
+name: IO SDK Linux deployment
 
 on:
   push:
