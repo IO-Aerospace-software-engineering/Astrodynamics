@@ -3,6 +3,8 @@ name: IO SDK Linux integration
 on:
   pull_request:
     branches: [ develop ]
+  push:
+    branches: [ develop ]
 
 env:
   # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
