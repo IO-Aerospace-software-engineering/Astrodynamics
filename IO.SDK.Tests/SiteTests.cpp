@@ -83,7 +83,7 @@ TEST(Site, GetStateVector)
     auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10, "sun");
     auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth", sun);
     IO::SDK::Sites::Site s{2, "S2", IO::SDK::Coordinates::Geodetic(2.2 * IO::SDK::Constants::DEG_RAD, 48.0 * IO::SDK::Constants::DEG_RAD, 0.0), earth};
-    auto sv = s.GetStateVector(*sun, IO::SDK::Frames::InertialFrames::ICRF, IO::SDK::AberrationsEnum::None, IO::SDK::Time::TDB("2021-05-18 12:00:00 TDB"));
+    auto sv = s.GetStateVector(*sun, IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::AberrationsEnum::None, IO::SDK::Time::TDB("2021-05-18 12:00:00 TDB"));
     ASSERT_DOUBLE_EQ(81351867346.038025, sv.GetPosition().GetX());
     ASSERT_DOUBLE_EQ(117072193426.44914, sv.GetPosition().GetY());
     ASSERT_DOUBLE_EQ(50747426654.325386, sv.GetPosition().GetZ());
@@ -99,7 +99,7 @@ TEST(Site, ConvertToLocalFrame)
 
     //Position virtual station on same location as DSS-13
     IO::SDK::Sites::Site s{12945, "FAKE_DSS-13", IO::SDK::Coordinates::Geodetic(-116.7944627147624 * IO::SDK::Constants::DEG_RAD, 35.2471635434595 * IO::SDK::Constants::DEG_RAD, 107.0), earth};
-    auto sv = s.GetStateVector(*sun, IO::SDK::Frames::InertialFrames::ICRF, IO::SDK::AberrationsEnum::None, IO::SDK::Time::TDB("2021-05-18 12:00:00 TDB"));
+    auto sv = s.GetStateVector(*sun, IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::AberrationsEnum::None, IO::SDK::Time::TDB("2021-05-18 12:00:00 TDB"));
     auto frm = sv.ToFrame(IO::SDK::Frames::Frames("DSS-13_TOPO"));
     ASSERT_DOUBLE_EQ(151331784302.33798, frm.GetPosition().Magnitude());
     ASSERT_DOUBLE_EQ(10363092.453507947, frm.GetVelocity().Magnitude());
@@ -148,7 +148,7 @@ TEST(Site, FindWindowsOnIlluminationConstraint)
     auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10, "sun");
     auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth", sun);
     IO::SDK::Sites::Site s{2, "S2", IO::SDK::Coordinates::Geodetic(2.2 * IO::SDK::Constants::DEG_RAD, 48.0 * IO::SDK::Constants::DEG_RAD, 0.0), earth};
-    auto windows = s.FindWindowsOnIlluminationConstraint(IO::SDK::Time::Window<IO::SDK::Time::UTC>(IO::SDK::Time::TDB("2021-05-17 12:00:00 TDB").ToUTC(), IO::SDK::Time::TDB("2021-05-18 12:00:00 TDB").ToUTC()),*sun,IO::SDK::IlluminationAngle::Incidence,IO::SDK::Constraint::LowerThan,IO::SDK::Constants::PI2- IO::SDK::Constants::OfficialTwilight);
+    auto windows = s.FindWindowsOnIlluminationConstraint(IO::SDK::Time::Window<IO::SDK::Time::UTC>(IO::SDK::Time::TDB("2021-05-17 12:00:00 TDB").ToUTC(), IO::SDK::Time::TDB("2021-05-18 12:00:00 TDB").ToUTC()),*sun,IO::SDK::IlluminationAngle::Incidence(),IO::SDK::Constraint::LowerThan(),IO::SDK::Constants::PI2- IO::SDK::Constants::OfficialTwilight);
 
     ASSERT_EQ(2, windows.size());
     ASSERT_STREQ("2021-05-17 12:00:00.000000 (TDB)", windows[0].GetStartDate().ToTDB().ToString().c_str());

@@ -19,7 +19,7 @@ IO::SDK::Maneuvers::Attitudes::RetrogradeAttitude::RetrogradeAttitude(const std:
 {
 }
 
-void IO::SDK::Maneuvers::Attitudes::RetrogradeAttitude::Compute(const IO::SDK::OrbitalParameters::OrbitalParameters UNUSED(&maneuverPoint))
+void IO::SDK::Maneuvers::Attitudes::RetrogradeAttitude::Compute(const IO::SDK::OrbitalParameters::OrbitalParameters &maneuverPoint)
 {
     m_deltaV = std::make_unique<IO::SDK::Math::Vector3D>();
 }
@@ -29,7 +29,7 @@ IO::SDK::OrbitalParameters::StateOrientation  IO::SDK::Maneuvers::Attitudes::Ret
     return IO::SDK::OrbitalParameters::StateOrientation(m_spacecraft.Front.To(maneuverPoint.GetStateVector().GetVelocity().Normalize().Reverse()), IO::SDK::Math::Vector3D(0.0, 0.0, 0.0), maneuverPoint.GetEpoch(), maneuverPoint.GetFrame());
 }
 
-bool  IO::SDK::Maneuvers::Attitudes::RetrogradeAttitude::CanExecute(const IO::SDK::OrbitalParameters::OrbitalParameters UNUSED(&orbitalParams))
+bool  IO::SDK::Maneuvers::Attitudes::RetrogradeAttitude::CanExecute(const IO::SDK::OrbitalParameters::OrbitalParameters &orbitalParams)
 {
     return true;
 }

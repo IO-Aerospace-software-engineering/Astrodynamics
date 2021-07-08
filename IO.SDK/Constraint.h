@@ -19,6 +19,8 @@ namespace IO::SDK
     {
     private:
         const std::string m_name;
+        static Constraint _GreaterThan;
+        static Constraint _LowerThan;
 
     public:
         /**
@@ -28,8 +30,8 @@ namespace IO::SDK
          */
         Constraint(const std::string &name);
 
-        static Constraint GreaterThan;
-        static Constraint LowerThan;
+        
+        
         static Constraint Equal;
         static Constraint AbsMin;
         static Constraint AbsMax;
@@ -42,6 +44,9 @@ namespace IO::SDK
          * @return const char* 
          */
         const char *ToCharArray() const;
+
+        static IO::SDK::Constraint& GreaterThan();
+        static IO::SDK::Constraint& LowerThan();
     };
 
 } // namespace IO::SDK

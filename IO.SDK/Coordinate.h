@@ -20,6 +20,18 @@ namespace IO::SDK
     private:
         const std::string m_name;
 
+        static Coordinate _X;
+        static Coordinate _Y;
+        static Coordinate _Z;
+        static Coordinate _Longitude;
+        static Coordinate _Latitude;
+        static Coordinate _Radius;
+        static Coordinate _Range;
+        static Coordinate _RightAscension;
+        static Coordinate _Declination;
+        static Coordinate _Colatitude;
+        static Coordinate _Altitude;
+
     public:
 
         /**
@@ -29,17 +41,7 @@ namespace IO::SDK
          */
         Coordinate(const std::string &name);
 
-        static Coordinate X;
-        static Coordinate Y;
-        static Coordinate Z;
-        static Coordinate Longitude;
-        static Coordinate Latitude;
-        static Coordinate Radius;
-        static Coordinate Range;
-        static Coordinate RightAscension;
-        static Coordinate Declination;
-        static Coordinate Colatitude;
-        static Coordinate Altitude;
+        
 
         /**
          * @brief Get char array
@@ -47,6 +49,18 @@ namespace IO::SDK
          * @return const char* 
          */
         const char *ToCharArray() const;
+
+        static Coordinate& Altitude();
+        static Coordinate& X();
+        static Coordinate& Y();
+        static Coordinate& Z();
+        static Coordinate& Longitude();
+        static Coordinate& Latitude();
+        static Coordinate& Radius();
+        static Coordinate& Range();
+        static Coordinate& RightAscension();
+        static Coordinate& Declination();
+        static Coordinate& Colatitude();
     };
 
 } // namespace IO::SDK

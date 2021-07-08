@@ -173,9 +173,9 @@ IO::SDK::Math::Vector3D IO::SDK::OrbitalParameters::OrbitalParameters::GetAscend
 IO::SDK::Coordinates::RADec IO::SDK::OrbitalParameters::OrbitalParameters::GetRADec() const
 {
 	auto sv = GetStateVector();
-	if (sv.GetFrame() != IO::SDK::Frames::InertialFrames::ICRF)
+	if (sv.GetFrame() != IO::SDK::Frames::InertialFrames::GetICRF())
 	{
-		sv = sv.ToFrame(IO::SDK::Frames::InertialFrames::ICRF);
+		sv = sv.ToFrame(IO::SDK::Frames::InertialFrames::GetICRF());
 	}
 
 	ConstSpiceDouble rectan[3]{sv.GetPosition().GetX(), sv.GetPosition().GetY(), sv.GetPosition().GetZ()};

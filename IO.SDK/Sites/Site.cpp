@@ -39,9 +39,9 @@ IO::SDK::OrbitalParameters::StateVector IO::SDK::Sites::Site::GetStateVector(con
 IO::SDK::Coordinates::RADec IO::SDK::Sites::Site::GetRADec(const IO::SDK::Body::Body &body, const IO::SDK::AberrationsEnum aberrationCorrection, const IO::SDK::Time::TDB &epoch) const
 {
     auto radius = m_body->GetRadius();
-    auto bodiesSv = body.ReadEphemeris(IO::SDK::Frames::InertialFrames::ICRF, aberrationCorrection, epoch, *m_body);
+    auto bodiesSv = body.ReadEphemeris(IO::SDK::Frames::InertialFrames::GetICRF(), aberrationCorrection, epoch, *m_body);
 
-    auto siteVector = GetStateVector(IO::SDK::Frames::InertialFrames::ICRF, epoch);
+    auto siteVector = GetStateVector(IO::SDK::Frames::InertialFrames::GetICRF(), epoch);
 
     auto resultSv = bodiesSv.GetPosition() - siteVector.GetPosition();
 
@@ -83,13 +83,13 @@ bool IO::SDK::Sites::Site::IsNight(const IO::SDK::Time::TDB &epoch, const double
 std::vector<IO::SDK::Time::Window<IO::SDK::Time::UTC>> IO::SDK::Sites::Site::FindDayWindows(const IO::SDK::Time::Window<IO::SDK::Time::UTC> &searchWindow, const double twilight) const
 {
     IO::SDK::Body::CelestialBody sun(10, "Sun");
-    return FindWindowsOnIlluminationConstraint(searchWindow, sun, IO::SDK::IlluminationAngle::Incidence, IO::SDK::Constraint::LowerThan, IO::SDK::Constants::PI2 - twilight);
+    return FindWindowsOnIlluminationConstraint(searchWindow, sun, IO::SDK::IlluminationAngle::Incidence(), IO::SDK::Constraint::LowerThan(), IO::SDK::Constants::PI2 - twilight);
 }
 
 std::vector<IO::SDK::Time::Window<IO::SDK::Time::UTC>> IO::SDK::Sites::Site::FindNightWindows(const IO::SDK::Time::Window<IO::SDK::Time::UTC> &searchWindow, const double twilight) const
 {
     IO::SDK::Body::CelestialBody sun(10, "Sun");
-    return FindWindowsOnIlluminationConstraint(searchWindow, sun, IO::SDK::IlluminationAngle::Incidence, IO::SDK::Constraint::GreaterThan, IO::SDK::Constants::PI2 - twilight);
+    return FindWindowsOnIlluminationConstraint(searchWindow, sun, IO::SDK::IlluminationAngle::Incidence(), IO::SDK::Constraint::GreaterThan(), IO::SDK::Constants::PI2 - twilight);
 }
 
 std::vector<IO::SDK::Time::Window<IO::SDK::Time::UTC>> IO::SDK::Sites::Site::FindWindowsOnIlluminationConstraint(const IO::SDK::Time::Window<IO::SDK::Time::UTC> &searchWindow, const IO::SDK::Body::Body &observerBody, const IO::SDK::IlluminationAngle &illuminationAgngle, const IO::SDK::Constraint &constraint, const double value) const
@@ -126,7 +126,7 @@ std::vector<IO::SDK::Time::Window<IO::SDK::Time::UTC>> IO::SDK::Sites::Site::Fin
 
 IO::SDK::Coordinates::HorizontalCoordinates IO::SDK::Sites::Site::GetHorizontalCoordinates(const IO::SDK::Body::Body &body, const IO::SDK::AberrationsEnum aberrationCorrection, const IO::SDK::Time::TDB &epoch) const
 {
-    auto sv = GetStateVector(body, IO::SDK::Frames::InertialFrames::ICRF, aberrationCorrection, epoch);
+    auto sv = GetStateVector(body, IO::SDK::Frames::InertialFrames::GetICRF(), aberrationCorrection, epoch);
     auto pos = sv.ToFrame(IO::SDK::Frames::Frames(m_frame->GetName())).GetPosition();
     ConstSpiceDouble rec[3] = {pos.GetX(), pos.GetY(), pos.GetZ()};
     SpiceDouble r;

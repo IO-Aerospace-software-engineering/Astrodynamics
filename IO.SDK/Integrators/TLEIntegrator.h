@@ -15,6 +15,7 @@
 #include <TimeSpan.h>
 #include <StateVector.h>
 #include <Body.h>
+#include<Macros.h>
 
 namespace IO::SDK::Integrators
 {
