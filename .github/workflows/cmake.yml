@@ -38,7 +38,9 @@ jobs:
       # Execute tests defined by the CMake configuration.  
       # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
     - if: matrix.os == 'ubuntu-latest'
-      run: ./IO.SDK.Tests
-    - if: matrix.os == 'windows-latest'
-      run: Debug/IO.SDK.Tests.exe
+      run: |
+        if: matrix.os == 'ubuntu-latest'
+        ./IO.SDK.Tests
+        if: matrix.os == 'windows-latest'
+        Debug/IO.SDK.Tests.exe
       
