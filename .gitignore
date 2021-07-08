@@ -9,13 +9,6 @@ install_manifest.txt
 compile_commands.json
 CTestTestfile.cmake
 _deps
-build/IO.SDK/libIO.SDK.so
-build/IO.SDK.Tests/libIO.SDK.so
-build/.ninja_log
-build/.ninja_deps
-build/IO.SDK/libIO.SDK.so
-build/.cmake
-build/out/
 out/
 build/
 .vscode/
