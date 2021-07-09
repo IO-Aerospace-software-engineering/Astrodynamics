@@ -76,8 +76,7 @@ jobs:
         run: |
           mkdir -p Toolkit\Windows\Data\SolarSystem
           mkdir -p Toolkit\Windows\Templates
-          xcopy build\IO.SDK.Tests\Release\Data\SolarSystem\ Toolkit\Windows\Data\SolarSystem\ /s /e
-          xcopy build\IO.SDK.Tests\Release\Templates\ Toolkit\Windows\Templates\ /s /e
+          Copy-Item -Path "IO.SDK.Tests\Data\Windows\*" -Destination "Toolkit\Windows" -recurse
           Compress-Archive -Path Toolkit\Windows\* -DestinationPath IO-Toolkit-Windows-.zip -Force
         if: matrix.os == 'windows-latest'
 
