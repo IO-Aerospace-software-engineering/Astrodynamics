@@ -73,13 +73,12 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
 
       - name: Copy solar system data and templates (Windows)
-        shell: cmd
         run: |
           mkdir -p Toolkit\Windows\Data\SolarSystem
           mkdir -p Toolkit\Windows\Templates
           xcopy build\IO.SDK.Tests\Release\Data\SolarSystem\ Toolkit\Windows\Data\SolarSystem\ /s /e
           xcopy build\IO.SDK.Tests\Release\Templates\ Toolkit\Windows\Templates\ /s /e
-          zip -r IO-Toolkit-Windows-${{steps.tag.outputs.tag}}.zip Toolkit\Windows
+          Compress-Archive -Path Toolkit\Windows\* -DestinationPath IO-Toolkit-Windows-.zip -Force
         if: matrix.os == 'windows-latest'
 
       - name: Create Release
