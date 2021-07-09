@@ -3,5 +3,5 @@
 
 TEST(Coordinate, ToCharArray)
 {
-    ASSERT_STREQ("X", IO::SDK::Coordinate::X.ToCharArray());
+    ASSERT_STREQ("X", IO::SDK::Coordinate::X().ToCharArray());
 }

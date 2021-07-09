@@ -34,7 +34,7 @@ TEST(EquinoctialElements, Initialization)
 	double q = tan(inc / 2.) * cos(node);
 	double L = m0 + argp + node;
 
-	IO::SDK::OrbitalParameters::EquinoctialElements eq(earth, IO::SDK::Time::TDB(120.0s), a, h, k, p2, q, L, 2.0, 3.0, -IO::SDK::Constants::PI2, IO::SDK::Constants::PI2, IO::SDK::Frames::InertialFrames::ICRF);
+	IO::SDK::OrbitalParameters::EquinoctialElements eq(earth, IO::SDK::Time::TDB(120.0s), a, h, k, p2, q, L, 2.0, 3.0, -IO::SDK::Constants::PI2, IO::SDK::Constants::PI2, IO::SDK::Frames::InertialFrames::GetICRF());
 
 	ASSERT_DOUBLE_EQ(3.0, eq.GetAscendingNodeLongitudeRate());
 	ASSERT_DOUBLE_EQ(IO::SDK::Constants::PI2, eq.GetDeclinationOfPole());
@@ -73,7 +73,7 @@ TEST(EquinoctialElements, InitializationFromKeplerian)
 	double q = tan(inc / 2.) * cos(node);
 	double L = m0 + argp + node;
 
-	IO::SDK::OrbitalParameters::EquinoctialElements eq(earth, a, ecc, inc, argp, node, m0, 2.0, 3.0, -IO::SDK::Constants::PI2, IO::SDK::Constants::PI2, IO::SDK::Time::TDB(120.0s), IO::SDK::Frames::InertialFrames::ICRF);
+	IO::SDK::OrbitalParameters::EquinoctialElements eq(earth, a, ecc, inc, argp, node, m0, 2.0, 3.0, -IO::SDK::Constants::PI2, IO::SDK::Constants::PI2, IO::SDK::Time::TDB(120.0s), IO::SDK::Frames::InertialFrames::GetICRF());
 
 	ASSERT_DOUBLE_EQ(3.0, eq.GetAscendingNodeLongitudeRate());
 	ASSERT_DOUBLE_EQ(IO::SDK::Constants::PI2, eq.GetDeclinationOfPole());
@@ -114,7 +114,7 @@ TEST(EquinoctialElements, GetPeriod)
 	double q = tan(inc / 2.) * cos(node);
 	double L = m0 + argp + node;
 
-	IO::SDK::OrbitalParameters::EquinoctialElements eq(earth, IO::SDK::Time::TDB(120.0s), a, h, k, p2, q, L, 2.0, 3.0, -IO::SDK::Constants::PI2, IO::SDK::Constants::PI2, IO::SDK::Frames::InertialFrames::ICRF);
+	IO::SDK::OrbitalParameters::EquinoctialElements eq(earth, IO::SDK::Time::TDB(120.0s), a, h, k, p2, q, L, 2.0, 3.0, -IO::SDK::Constants::PI2, IO::SDK::Constants::PI2, IO::SDK::Frames::InertialFrames::GetICRF());
 
 	ASSERT_DOUBLE_EQ(11655.937761769412, eq.GetPeriod().GetSeconds().count());
 }
@@ -140,7 +140,7 @@ TEST(EquinoctialElements, GetStateVector)
 	double q = tan(inc / 2.) * cos(node);
 	double L = m0 + argp + node;
 
-	IO::SDK::OrbitalParameters::EquinoctialElements eq(earth, t0, a, h, k, p2, q, L, 0.0, 0.0, -IO::SDK::Constants::PI2, IO::SDK::Constants::PI2, IO::SDK::Frames::InertialFrames::ICRF);
+	IO::SDK::OrbitalParameters::EquinoctialElements eq(earth, t0, a, h, k, p2, q, L, 0.0, 0.0, -IO::SDK::Constants::PI2, IO::SDK::Constants::PI2, IO::SDK::Frames::InertialFrames::GetICRF());
 
 	IO::SDK::Time::TimeSpan et = t0.Substract(IO::SDK::Time::TDB(10000.0s));
 	auto sv = eq.GetStateVector(IO::SDK::Time::TDB(et.GetSeconds() + 250s));
@@ -167,7 +167,7 @@ TEST(EquinoctialElements, GetStateVectorFromKeplerian)
 	double m0 = 0.0 * rpd_c();
 	IO::SDK::Time::TDB t0{0.0s};
 
-	IO::SDK::OrbitalParameters::EquinoctialElements eq(earth, a, ecc, inc, argp, node, m0, 0.0, 0.0, -IO::SDK::Constants::PI2, IO::SDK::Constants::PI2, t0, IO::SDK::Frames::InertialFrames::ICRF);
+	IO::SDK::OrbitalParameters::EquinoctialElements eq(earth, a, ecc, inc, argp, node, m0, 0.0, 0.0, -IO::SDK::Constants::PI2, IO::SDK::Constants::PI2, t0, IO::SDK::Frames::InertialFrames::GetICRF());
 
 	auto sv = eq.GetStateVector(t0);
 
@@ -194,7 +194,7 @@ TEST(EquinoctialElements, GetStateVectorFrom0Eccentricity)
 	double m0 = 0.0 * rpd_c();
 	IO::SDK::Time::TDB t0{0.0s};
 
-	IO::SDK::OrbitalParameters::EquinoctialElements eq(earth, a, ecc, inc, argp, node, m0, 0.0, 0.0, -IO::SDK::Constants::PI2, IO::SDK::Constants::PI2, t0, IO::SDK::Frames::InertialFrames::ICRF);
+	IO::SDK::OrbitalParameters::EquinoctialElements eq(earth, a, ecc, inc, argp, node, m0, 0.0, 0.0, -IO::SDK::Constants::PI2, IO::SDK::Constants::PI2, t0, IO::SDK::Frames::InertialFrames::GetICRF());
 
 	for (size_t i = 0; i < 360; i++)
 	{
@@ -225,7 +225,7 @@ TEST(EquinoctialElements, GetEccentricity)
 	double q = tan(inc / 2.) * cos(node);  //h
 	double L = m0 + argp + node;
 
-	IO::SDK::OrbitalParameters::EquinoctialElements eq(earth, t0, a, h, k, p2, q, L, 0.0, 0.0, -IO::SDK::Constants::PI2, IO::SDK::Constants::PI2, IO::SDK::Frames::InertialFrames::ICRF);
+	IO::SDK::OrbitalParameters::EquinoctialElements eq(earth, t0, a, h, k, p2, q, L, 0.0, 0.0, -IO::SDK::Constants::PI2, IO::SDK::Constants::PI2, IO::SDK::Frames::InertialFrames::GetICRF());
 
 	auto e = eq.GetEccentricity();
 
@@ -253,7 +253,7 @@ TEST(EquinoctialElements, GetInclination)
 	double q = tan(inc / 2.) * cos(node);  //h
 	double L = m0 + argp + node;
 
-	IO::SDK::OrbitalParameters::EquinoctialElements eq(earth, t0, a, h, k, p2, q, L, 0.0, 0.0, -IO::SDK::Constants::PI2, IO::SDK::Constants::PI2, IO::SDK::Frames::InertialFrames::ICRF);
+	IO::SDK::OrbitalParameters::EquinoctialElements eq(earth, t0, a, h, k, p2, q, L, 0.0, 0.0, -IO::SDK::Constants::PI2, IO::SDK::Constants::PI2, IO::SDK::Frames::InertialFrames::GetICRF());
 
 	auto i = eq.GetInclination();
 
@@ -281,7 +281,7 @@ TEST(EquinoctialElements, GetPeriapsisArgument)
 	double q = tan(inc / 2.) * cos(node);  //h
 	double L = m0 + argp + node;
 
-	IO::SDK::OrbitalParameters::EquinoctialElements eq(earth, t0, a, h, k, p2, q, L, 0.0, 0.0, -IO::SDK::Constants::PI2, IO::SDK::Constants::PI2, IO::SDK::Frames::InertialFrames::ICRF);
+	IO::SDK::OrbitalParameters::EquinoctialElements eq(earth, t0, a, h, k, p2, q, L, 0.0, 0.0, -IO::SDK::Constants::PI2, IO::SDK::Constants::PI2, IO::SDK::Frames::InertialFrames::GetICRF());
 
 	auto w = eq.GetPeriapsisArgument();
 
@@ -309,7 +309,7 @@ TEST(EquinoctialElements, GetRightAscendingNode)
 	double q = tan(inc / 2.) * cos(node);  //h
 	double L = m0 + argp + node;
 
-	IO::SDK::OrbitalParameters::EquinoctialElements eq(earth, t0, a, h, k, p2, q, L, 0.0, 0.0, -IO::SDK::Constants::PI2, IO::SDK::Constants::PI2, IO::SDK::Frames::InertialFrames::ICRF);
+	IO::SDK::OrbitalParameters::EquinoctialElements eq(earth, t0, a, h, k, p2, q, L, 0.0, 0.0, -IO::SDK::Constants::PI2, IO::SDK::Constants::PI2, IO::SDK::Frames::InertialFrames::GetICRF());
 
 	auto o = eq.GetRightAscendingNodeLongitude();
 
@@ -337,7 +337,7 @@ TEST(EquinoctialElements, GetMeanAnomalyAtEpoch)
 	double q = tan(inc / 2.) * cos(node);  //h
 	double L = m0 + argp + node;
 
-	IO::SDK::OrbitalParameters::EquinoctialElements eq(earth, t0, a, h, k, p2, q, L, 0.0, 0.0, -IO::SDK::Constants::PI2, IO::SDK::Constants::PI2, IO::SDK::Frames::InertialFrames::ICRF);
+	IO::SDK::OrbitalParameters::EquinoctialElements eq(earth, t0, a, h, k, p2, q, L, 0.0, 0.0, -IO::SDK::Constants::PI2, IO::SDK::Constants::PI2, IO::SDK::Frames::InertialFrames::GetICRF());
 
 	auto m0Res = eq.GetMeanAnomaly();
 
@@ -365,7 +365,7 @@ TEST(EquinoctialElements, GetSpecificOrbitalEnergy)
 	double q = tan(inc / 2.) * cos(node);  //h
 	double L = m0 + argp + node;
 
-	IO::SDK::OrbitalParameters::EquinoctialElements eq(earth, t0, a, h, k, p2, q, L, 0.0, 0.0, -IO::SDK::Constants::PI2, IO::SDK::Constants::PI2, IO::SDK::Frames::InertialFrames::ICRF);
+	IO::SDK::OrbitalParameters::EquinoctialElements eq(earth, t0, a, h, k, p2, q, L, 0.0, 0.0, -IO::SDK::Constants::PI2, IO::SDK::Constants::PI2, IO::SDK::Frames::InertialFrames::GetICRF());
 
 	auto j = eq.GetSpecificOrbitalEnergy();
 
@@ -392,7 +392,7 @@ TEST(EquinoctialElements, GetSpecificAngularMomentum)
 	double q = tan(inc / 2.) * cos(node);  //h
 	double L = m0 + argp + node;
 
-	IO::SDK::OrbitalParameters::EquinoctialElements eq(earth, t0, a, h, k, p2, q, L, 0.0, 0.0, -IO::SDK::Constants::PI2, IO::SDK::Constants::PI2, IO::SDK::Frames::InertialFrames::ICRF);
+	IO::SDK::OrbitalParameters::EquinoctialElements eq(earth, t0, a, h, k, p2, q, L, 0.0, 0.0, -IO::SDK::Constants::PI2, IO::SDK::Constants::PI2, IO::SDK::Frames::InertialFrames::GetICRF());
 
 	auto mom = eq.GetSpecificAngularMomentum();
 
@@ -419,7 +419,7 @@ TEST(EquinoctialElements, GetTrueAnomalyAtEpoch)
 	double q = tan(inc / 2.) * cos(node);  //h
 	double L = m0 + argp + node;
 
-	IO::SDK::OrbitalParameters::EquinoctialElements eq(earth, t0, a, h, k, p2, q, L, 0.0, 0.0, -IO::SDK::Constants::PI2, IO::SDK::Constants::PI2, IO::SDK::Frames::InertialFrames::ICRF);
+	IO::SDK::OrbitalParameters::EquinoctialElements eq(earth, t0, a, h, k, p2, q, L, 0.0, 0.0, -IO::SDK::Constants::PI2, IO::SDK::Constants::PI2, IO::SDK::Frames::InertialFrames::GetICRF());
 
 	auto v = eq.GetTrueAnomaly();
 
@@ -446,7 +446,7 @@ TEST(EquinoctialElements, GetISSMeanAnomaly)
 	double q = tan(inc / 2.0) * cos(node);	//h
 	double L = m0 + argp + node;
 
-	IO::SDK::OrbitalParameters::EquinoctialElements eq(earth, t0, a, h, k, p2, q, L, 0.0, 0.0, -IO::SDK::Constants::PI2, IO::SDK::Constants::PI2, IO::SDK::Frames::InertialFrames::ICRF);
+	IO::SDK::OrbitalParameters::EquinoctialElements eq(earth, t0, a, h, k, p2, q, L, 0.0, 0.0, -IO::SDK::Constants::PI2, IO::SDK::Constants::PI2, IO::SDK::Frames::InertialFrames::GetICRF());
 
 	auto m0Res = eq.GetMeanAnomaly();
 
@@ -473,7 +473,7 @@ TEST(EquinoctialElements, GetSemiMajorAxis)
 	double q = tan(inc / 2.0) * cos(node);	//h
 	double L = m0 + argp + node;
 
-	IO::SDK::OrbitalParameters::EquinoctialElements eq(earth, t0, a, h, k, p2, q, L, 0.0, 0.0, -IO::SDK::Constants::PI2, IO::SDK::Constants::PI2, IO::SDK::Frames::InertialFrames::ICRF);
+	IO::SDK::OrbitalParameters::EquinoctialElements eq(earth, t0, a, h, k, p2, q, L, 0.0, 0.0, -IO::SDK::Constants::PI2, IO::SDK::Constants::PI2, IO::SDK::Frames::InertialFrames::GetICRF());
 
 	auto semiMajorAxis = eq.GetSemiMajorAxis();
 
@@ -500,7 +500,7 @@ TEST(EquinoctialElements, GetTimeToMeanAnomaly)
 	double q = tan(inc / 2.0) * cos(node);	//h
 	double L = m0 + argp + node;
 
-	IO::SDK::OrbitalParameters::EquinoctialElements eq(earth, t0, a, h, k, p2, q, L, 0.0, 0.0, -IO::SDK::Constants::PI2, IO::SDK::Constants::PI2, IO::SDK::Frames::InertialFrames::ICRF);
+	IO::SDK::OrbitalParameters::EquinoctialElements eq(earth, t0, a, h, k, p2, q, L, 0.0, 0.0, -IO::SDK::Constants::PI2, IO::SDK::Constants::PI2, IO::SDK::Frames::InertialFrames::GetICRF());
 
 	auto epoch = eq.GetTimeToMeanAnomaly(IO::SDK::Constants::PI2);
 
@@ -527,7 +527,7 @@ TEST(EquinoctialElements, GetMeanAnomalyForEpoch)
 	double q = tan(inc / 2.0) * cos(node);	//h
 	double L = m0 + argp + node;
 
-	IO::SDK::OrbitalParameters::EquinoctialElements eq(earth, t0, a, h, k, p2, q, L, 0.0, 0.0, -IO::SDK::Constants::PI2, IO::SDK::Constants::PI2, IO::SDK::Frames::InertialFrames::ICRF);
+	IO::SDK::OrbitalParameters::EquinoctialElements eq(earth, t0, a, h, k, p2, q, L, 0.0, 0.0, -IO::SDK::Constants::PI2, IO::SDK::Constants::PI2, IO::SDK::Frames::InertialFrames::GetICRF());
 
 	auto meanAnomaly = eq.GetMeanAnomaly(IO::SDK::Time::TDB(60001333.333344065s)); //=90� mean anomaly;
 
@@ -554,7 +554,7 @@ TEST(EquinoctialElements, GetTimeToTrueAnomaly)
 	double q = tan(inc / 2.0) * cos(node);	//h
 	double L = m0 + argp + node;
 
-	IO::SDK::OrbitalParameters::EquinoctialElements eq(earth, t0, a, h, k, p2, q, L, 0.0, 0.0, -IO::SDK::Constants::PI2, IO::SDK::Constants::PI2, IO::SDK::Frames::InertialFrames::ICRF);
+	IO::SDK::OrbitalParameters::EquinoctialElements eq(earth, t0, a, h, k, p2, q, L, 0.0, 0.0, -IO::SDK::Constants::PI2, IO::SDK::Constants::PI2, IO::SDK::Frames::InertialFrames::GetICRF());
 
 	auto epoch = eq.GetTimeToTrueAnomaly(2.446560878); //=90� mean anomaly;
 
@@ -581,7 +581,7 @@ TEST(EquinoctialElements, GetTrueAnomalyForEpoch)
 	double q = tan(inc / 2.0) * cos(node);	//h
 	double L = m0 + argp + node;
 
-	IO::SDK::OrbitalParameters::EquinoctialElements eq(earth, t0, a, h, k, p2, q, L, 0.0, 0.0, -IO::SDK::Constants::PI2, IO::SDK::Constants::PI2, IO::SDK::Frames::InertialFrames::ICRF);
+	IO::SDK::OrbitalParameters::EquinoctialElements eq(earth, t0, a, h, k, p2, q, L, 0.0, 0.0, -IO::SDK::Constants::PI2, IO::SDK::Constants::PI2, IO::SDK::Frames::InertialFrames::GetICRF());
 
 	auto trueAnomaly = eq.GetTrueAnomaly(IO::SDK::Time::TDB(60001333.333344109s)); //=90� mean anomaly;
 
@@ -608,7 +608,7 @@ TEST(EquinoctialElements, TrajectoryType)
 	double q = tan(inc / 2.0) * cos(node);	//h
 	double L = m0 + argp + node;
 
-	IO::SDK::OrbitalParameters::EquinoctialElements eq(earth, t0, a, h, k, p2, q, L, 0.0, 0.0, -IO::SDK::Constants::PI2, IO::SDK::Constants::PI2, IO::SDK::Frames::InertialFrames::ICRF);
+	IO::SDK::OrbitalParameters::EquinoctialElements eq(earth, t0, a, h, k, p2, q, L, 0.0, 0.0, -IO::SDK::Constants::PI2, IO::SDK::Constants::PI2, IO::SDK::Frames::InertialFrames::GetICRF());
 
 	ASSERT_TRUE(eq.IsElliptical());
 	ASSERT_FALSE(eq.IsParabolic());

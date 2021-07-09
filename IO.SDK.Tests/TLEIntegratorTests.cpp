@@ -4,6 +4,7 @@
 #include <chrono>
 #include <vector>
 #include <iostream>
+#include<InertialFrames.h>
 
 using namespace std::chrono_literals;
 
@@ -16,7 +17,7 @@ TEST(TLEIntegrator, Integrate)
     std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> tle = std::make_unique<IO::SDK::OrbitalParameters::TLE>(earth, lines);
     auto str = tle->GetEpoch().ToString();
     auto localTLE = dynamic_cast<IO::SDK::OrbitalParameters::TLE *>(tle.get());
-    IO::SDK::OrbitalParameters::StateOrientation attitude(IO::SDK::Time::TDB(100.0s), IO::SDK::Frames::InertialFrames::ICRF);
+    IO::SDK::OrbitalParameters::StateOrientation attitude(IO::SDK::Time::TDB(100.0s), IO::SDK::Frames::InertialFrames::GetICRF());
     IO::SDK::Body::Spacecraft::Spacecraft spc(-12, "spc12", 1000.0, 3000.0, "missGravity", std::move(tle));
     IO::SDK::Integrators::TLEIntegrator integrator(*localTLE, IO::SDK::Time::TimeSpan(60s));
 

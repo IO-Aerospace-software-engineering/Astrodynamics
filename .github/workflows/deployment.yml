@@ -1,5 +1,5 @@
 
-name: IO SDK Deployment
+name: IO SDK Linux deployment
 
 on:
   push:
@@ -12,8 +12,11 @@ env:
 
 jobs:
   build:
+    strategy:
+        matrix:
+          os: [ubuntu-latest,windows-latest]
     name: Create Release
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -31,25 +34,52 @@ jobs:
         # Build your program with the given configuration
         run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
 
-      - name: Test
+      - name: Tests (Linux)
         working-directory: ${{github.workspace}}/build/IO.SDK.Tests
         # Execute tests defined by the CMake configuration.  
         # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
         run: ./IO.SDK.Tests
+        if: matrix.os == 'ubuntu-latest'
+        
+      - name: Tests (Windows)
+        working-directory: ${{github.workspace}}\build\IO.SDK.Tests\Release
+        shell: cmd      
+        # Execute tests defined by the CMake configuration.  
+        # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
+        run: IO.SDK.Tests.exe      
+        if: matrix.os == 'windows-latest'      
 
-      - name: Copy Headers and library
+      - name: Copy Headers and library (Linux)
         run: |
           mkdir -p Toolkit/Linux/Includes
           find IO.SDK/ -type f -name "*.h" -exec cp {} Toolkit/Linux/Includes/ \;
           cp -f build/IO.SDK/libIO.SDK.so Toolkit/Linux/
+        if: matrix.os == 'ubuntu-latest'
 
-      - name: Copy solar system data and templates
+      - name: Copy Headers and library (Windows)
+        run: |
+          mkdir -p Toolkit/Windows/Includes
+          find IO.SDK/ -type f -name "*.h" -exec cp {} Toolkit/Windows/Includes/ \;
+          cp -f build/IO.SDK/Release/IO.SDK.dll Toolkit/Windows/
+        if: matrix.os == 'windows-latest'
+
+      - name: Copy solar system data and templates (Linux)
         run: |
           mkdir -p Toolkit/Linux/Data/SolarSystem
           mkdir -p Toolkit/Linux/Templates
           find build/IO.SDK.Tests/Data/SolarSystem/ -type f -name "*.*" -exec cp {} Toolkit/Linux/Data/SolarSystem \;
           find build/IO.SDK.Tests/Templates/ -type f -name "*.*" -exec cp {} Toolkit/Linux/Templates \;         
-          zip -r IO-Toolkit-${{steps.tag.outputs.tag}}.zip Toolkit
+          zip -r IO-Toolkit-Linux-${{steps.tag.outputs.tag}}.zip Toolkit/Linux
+        if: matrix.os == 'ubuntu-latest'
+
+      - name: Copy solar system data and templates (Windows)
+        run: |
+          mkdir -p Toolkit/Windows/Data/SolarSystem
+          mkdir -p Toolkit/Windows/Templates
+          find build/IO.SDK.Tests/Release/Data/SolarSystem/ -type f -name "*.*" -exec cp {} Toolkit/Windows/Data/SolarSystem \;
+          find build/IO.SDK.Tests/Release/Templates/ -type f -name "*.*" -exec cp {} Toolkit/Windows/Templates \;         
+          zip -r IO-Toolkit-Windows-${{steps.tag.outputs.tag}}.zip Toolkit/Windows
+        if: matrix.os == 'windows-latest'
 
       - name: Create Release
         id: create_release
@@ -64,10 +94,18 @@ jobs:
           draft: false
           prerelease: true
 
-      - name: Release
+      - name: Release (Linux)
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
         with:
-          files: IO-Toolkit-${{steps.tag.outputs.tag}}.zip
+          files: IO-Toolkit-Linux-${{steps.tag.outputs.tag}}.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Release (Windows)
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: IO-Toolkit-Windows-${{steps.tag.outputs.tag}}.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

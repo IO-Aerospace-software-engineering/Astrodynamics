@@ -19,7 +19,7 @@ using namespace std::chrono_literals;
 TEST(CombinedManeuver, CanExecute)
 {
     const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
-    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams1 = std::make_unique<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth, 10000000.0, 0.333333, 10.0 * IO::SDK::Constants::DEG_RAD, 0.0, 0.0, 0.0, IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::ICRF);
+    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams1 = std::make_unique<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth, 10000000.0, 0.333333, 10.0 * IO::SDK::Constants::DEG_RAD, 0.0, 0.0, 0.0, IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::GetICRF());
 
     IO::SDK::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, "ms01", std::move(orbitalParams1)};
 
@@ -45,7 +45,7 @@ TEST(CombinedManeuver, CanExecute)
 TEST(CombinedManeuver, TryExecuteWithPeregeeHigherThanApogee)
 {
     const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
-    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams1 = std::make_unique<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth, 6678000.0, 0.726546824, 28.5 * IO::SDK::Constants::DEG_RAD, 0.0, 0.0, 0.0, IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::ICRF);
+    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams1 = std::make_unique<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth, 6678000.0, 0.726546824, 28.5 * IO::SDK::Constants::DEG_RAD, 0.0, 0.0, 0.0, IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::GetICRF());
 
     IO::SDK::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 10000.0, "ms01", std::move(orbitalParams1)};
 
@@ -80,7 +80,7 @@ TEST(CombinedManeuver, TryExecuteWithPeregeeHigherThanApogee)
 TEST(CombinedManeuver, TryExecuteWithPeregeeLowerThanApogee)
 {
     const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
-    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams1 = std::make_unique<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth, 6678000.0, 0.7266, 28.5 * IO::SDK::Constants::DEG_RAD, 0.0, 0.0, 0.0, IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::ICRF);
+    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams1 = std::make_unique<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth, 6678000.0, 0.7266, 28.5 * IO::SDK::Constants::DEG_RAD, 0.0, 0.0, 0.0, IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::GetICRF());
 
     IO::SDK::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 10000.0, "ms01", std::move(orbitalParams1)};
 

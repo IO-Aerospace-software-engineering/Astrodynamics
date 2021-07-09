@@ -106,8 +106,8 @@ double IO::SDK::Body::CelestialBody::GetFlattening() const
 
 double IO::SDK::Body::CelestialBody::GetAngularVelocity(const IO::SDK::Time::TDB &epoch) const
 {
-    auto initialVector = m_BodyFixedFrame.TransformVector(IO::SDK::Frames::InertialFrames::ICRF, IO::SDK::Math::Vector3D::VectorX, epoch);
-    auto finalVector = m_BodyFixedFrame.TransformVector(IO::SDK::Frames::InertialFrames::ICRF, IO::SDK::Math::Vector3D::VectorX, epoch + IO::SDK::Time::TimeSpan(1000.0s));
+    auto initialVector = m_BodyFixedFrame.TransformVector(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::Math::Vector3D::VectorX, epoch);
+    auto finalVector = m_BodyFixedFrame.TransformVector(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::Math::Vector3D::VectorX, epoch + IO::SDK::Time::TimeSpan(1000.0s));
     return std::abs(finalVector.GetAngle(initialVector)) / 1000.0;
 }
 

@@ -21,6 +21,7 @@
 #include <StateOrientation.h>
 
 #include <memory>
+#include<Macros.h>
 
 class TestManeuver : public IO::SDK::Maneuvers::ManeuverBase
 {
@@ -49,16 +50,16 @@ TestManeuver::~TestManeuver()
 {
 }
 
-void TestManeuver::Compute(const IO::SDK::OrbitalParameters::OrbitalParameters &maneuverPoint __attribute__((unused)))
+void TestManeuver::Compute(const IO::SDK::OrbitalParameters::OrbitalParameters &maneuverPoint)
 {
 }
 
 IO::SDK::OrbitalParameters::StateOrientation TestManeuver::ComputeOrientation(const IO::SDK::OrbitalParameters::OrbitalParameters &maneuverPoint)
 {
-    return IO::SDK::OrbitalParameters::StateOrientation(maneuverPoint.GetEpoch(), IO::SDK::Frames::InertialFrames::ICRF);
+    return IO::SDK::OrbitalParameters::StateOrientation(maneuverPoint.GetEpoch(), IO::SDK::Frames::InertialFrames::GetICRF());
 }
 
-bool TestManeuver::CanExecute(const IO::SDK::OrbitalParameters::OrbitalParameters &maneuverPoint __attribute__((unused)))
+bool TestManeuver::CanExecute(const IO::SDK::OrbitalParameters::OrbitalParameters &maneuverPoint)
 {
     return true;
 }

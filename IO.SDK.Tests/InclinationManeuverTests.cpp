@@ -18,9 +18,9 @@ using namespace std::chrono_literals;
 TEST(OrbitalPlaneChangingManeuver, CanExecute)
 {
     const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
-    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams1 = std::make_unique<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth, 11480000.0, 0.5, 60.0 * IO::SDK::Constants::DEG_RAD, 10.0 * IO::SDK::Constants::DEG_RAD, 0.0, 0.0, IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::ICRF);
-    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams2 = std::make_unique<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth, 11480000.0, 0.5, 45.0 * IO::SDK::Constants::DEG_RAD, 55.0 * IO::SDK::Constants::DEG_RAD, 0.0, 0.0, IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::ICRF);
-    IO::SDK::OrbitalParameters::StateOrientation attitude(IO::SDK::Time::TDB(0.0s),IO::SDK::Frames::InertialFrames::ICRF);
+    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams1 = std::make_unique<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth, 11480000.0, 0.5, 60.0 * IO::SDK::Constants::DEG_RAD, 10.0 * IO::SDK::Constants::DEG_RAD, 0.0, 0.0, IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::GetICRF());
+    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams2 = std::make_unique<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth, 11480000.0, 0.5, 45.0 * IO::SDK::Constants::DEG_RAD, 55.0 * IO::SDK::Constants::DEG_RAD, 0.0, 0.0, IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::GetICRF());
+    IO::SDK::OrbitalParameters::StateOrientation attitude(IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::GetICRF());
     IO::SDK::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, "ms01", std::move(orbitalParams1)};
 
     IO::SDK::Integrators::VVIntegrator integrator(IO::SDK::Time::TimeSpan(1.0s));
@@ -93,9 +93,9 @@ TEST(OrbitalPlaneChangingManeuver, CanExecute)
 TEST(OrbitalPlaneChangingManeuver, IdentifyNode)
 {
     const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
-    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams1 = std::make_unique<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth, 11480000.0, 0.2, 60.0 * IO::SDK::Constants::DEG_RAD, 10.0 * IO::SDK::Constants::DEG_RAD, 0.0, 0.0, IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::ICRF);
-    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams2 = std::make_unique<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth, 11480000.0, 0.2, 45.0 * IO::SDK::Constants::DEG_RAD, 55.0 * IO::SDK::Constants::DEG_RAD, 0.0, 0.0, IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::ICRF);
-    IO::SDK::OrbitalParameters::StateOrientation attitude(IO::SDK::Time::TDB(0.0s),IO::SDK::Frames::InertialFrames::ICRF);
+    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams1 = std::make_unique<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth, 11480000.0, 0.2, 60.0 * IO::SDK::Constants::DEG_RAD, 10.0 * IO::SDK::Constants::DEG_RAD, 0.0, 0.0, IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::GetICRF());
+    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams2 = std::make_unique<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth, 11480000.0, 0.2, 45.0 * IO::SDK::Constants::DEG_RAD, 55.0 * IO::SDK::Constants::DEG_RAD, 0.0, 0.0, IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::GetICRF());
+    IO::SDK::OrbitalParameters::StateOrientation attitude(IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::GetICRF());
     IO::SDK::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, "ms01", std::move(orbitalParams1)};
 
     IO::SDK::Integrators::VVIntegrator integrator(IO::SDK::Time::TimeSpan(1.0s));
@@ -122,9 +122,9 @@ TEST(OrbitalPlaneChangingManeuver, IdentifyNode)
 TEST(OrbitalPlaneChangingManeuver, IdentifyNode2)
 {
     const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
-    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams1 = std::make_unique<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth, 11480000.0, 0.2, 60.0 * IO::SDK::Constants::DEG_RAD, 220.0 * IO::SDK::Constants::DEG_RAD, 0.0, 0.0, IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::ICRF);
-    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams2 = std::make_unique<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth, 11480000.0, 0.2, 130.0 * IO::SDK::Constants::DEG_RAD, 55.0 * IO::SDK::Constants::DEG_RAD, 0.0, 0.0, IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::ICRF);
-    IO::SDK::OrbitalParameters::StateOrientation attitude(IO::SDK::Time::TDB(0.0s),IO::SDK::Frames::InertialFrames::ICRF);
+    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams1 = std::make_unique<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth, 11480000.0, 0.2, 60.0 * IO::SDK::Constants::DEG_RAD, 220.0 * IO::SDK::Constants::DEG_RAD, 0.0, 0.0, IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::GetICRF());
+    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams2 = std::make_unique<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth, 11480000.0, 0.2, 130.0 * IO::SDK::Constants::DEG_RAD, 55.0 * IO::SDK::Constants::DEG_RAD, 0.0, 0.0, IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::GetICRF());
+    IO::SDK::OrbitalParameters::StateOrientation attitude(IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::GetICRF());
     IO::SDK::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, "ms01", std::move(orbitalParams1)};
 
     IO::SDK::Integrators::VVIntegrator integrator(IO::SDK::Time::TimeSpan(1.0s));
@@ -151,9 +151,9 @@ TEST(OrbitalPlaneChangingManeuver, IdentifyNode2)
 TEST(OrbitalPlaneChangingManeuver, IdentifyNode3)
 {
     const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
-    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams1 = std::make_unique<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth, 11480000.0, 0.2, 140.0 * IO::SDK::Constants::DEG_RAD, 220.0 * IO::SDK::Constants::DEG_RAD, 70.0 * IO::SDK::Constants::DEG_RAD, 0.0, IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::ICRF);
-    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams2 = std::make_unique<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth, 11480000.0, 0.2, 130.0 * IO::SDK::Constants::DEG_RAD, 300.0 * IO::SDK::Constants::DEG_RAD, 205.0 * IO::SDK::Constants::DEG_RAD, 0.0, IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::ICRF);
-    IO::SDK::OrbitalParameters::StateOrientation attitude(IO::SDK::Time::TDB(0.0s),IO::SDK::Frames::InertialFrames::ICRF);
+    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams1 = std::make_unique<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth, 11480000.0, 0.2, 140.0 * IO::SDK::Constants::DEG_RAD, 220.0 * IO::SDK::Constants::DEG_RAD, 70.0 * IO::SDK::Constants::DEG_RAD, 0.0, IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::GetICRF());
+    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams2 = std::make_unique<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth, 11480000.0, 0.2, 130.0 * IO::SDK::Constants::DEG_RAD, 300.0 * IO::SDK::Constants::DEG_RAD, 205.0 * IO::SDK::Constants::DEG_RAD, 0.0, IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::GetICRF());
+    IO::SDK::OrbitalParameters::StateOrientation attitude(IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::GetICRF());
     IO::SDK::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, "ms01", std::move(orbitalParams1)};
 
     IO::SDK::Integrators::VVIntegrator integrator(IO::SDK::Time::TimeSpan(1.0s));
@@ -181,9 +181,9 @@ TEST(OrbitalPlaneChangingManeuver, ExecuteInsuffisantDeltaV)
 {
 
     const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
-    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams1 = std::make_unique<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth, 11480000.0, 0.0, 60.0 * IO::SDK::Constants::DEG_RAD, 10.0 * IO::SDK::Constants::DEG_RAD, 0.0, 0.0, IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::ICRF);
-    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams2 = std::make_unique<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth, 11480000.0, 0.0, 45.0 * IO::SDK::Constants::DEG_RAD, 55.0 * IO::SDK::Constants::DEG_RAD, 0.0, 0.0, IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::ICRF);
-    IO::SDK::OrbitalParameters::StateOrientation attitude(IO::SDK::Time::TDB(0.0s),IO::SDK::Frames::InertialFrames::ICRF);
+    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams1 = std::make_unique<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth, 11480000.0, 0.0, 60.0 * IO::SDK::Constants::DEG_RAD, 10.0 * IO::SDK::Constants::DEG_RAD, 0.0, 0.0, IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::GetICRF());
+    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams2 = std::make_unique<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth, 11480000.0, 0.0, 45.0 * IO::SDK::Constants::DEG_RAD, 55.0 * IO::SDK::Constants::DEG_RAD, 0.0, 0.0, IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::GetICRF());
+    IO::SDK::OrbitalParameters::StateOrientation attitude(IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::GetICRF());
     IO::SDK::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, "ms01", std::move(orbitalParams1)};
 
     IO::SDK::Integrators::VVIntegrator integrator(IO::SDK::Time::TimeSpan(1.0s));
@@ -217,15 +217,15 @@ TEST(OrbitalPlaneChangingManeuver, ExecuteDN)
 {
 
     const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
-    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams1 = std::make_unique<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth, 11480000.0, 0.0, 60.0 * IO::SDK::Constants::DEG_RAD, 10.0 * IO::SDK::Constants::DEG_RAD, 0.0, 0.0, IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::ICRF);
-    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams2 = std::make_unique<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth, 11480000.0, 0.0, 45.0 * IO::SDK::Constants::DEG_RAD, 55.0 * IO::SDK::Constants::DEG_RAD, 0.0, 0.0, IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::ICRF);
-    IO::SDK::OrbitalParameters::StateOrientation attitude(IO::SDK::Time::TDB(0.0s),IO::SDK::Frames::InertialFrames::ICRF);
+    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams1 = std::make_unique<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth, 11480000.0, 0.0, 60.0 * IO::SDK::Constants::DEG_RAD, 10.0 * IO::SDK::Constants::DEG_RAD, 0.0, 0.0, IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::GetICRF());
+    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams2 = std::make_unique<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth, 11480000.0, 0.0, 45.0 * IO::SDK::Constants::DEG_RAD, 55.0 * IO::SDK::Constants::DEG_RAD, 0.0, 0.0, IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::GetICRF());
+    IO::SDK::OrbitalParameters::StateOrientation attitude(IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::GetICRF());
     IO::SDK::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, "ms01", std::move(orbitalParams1)};
 
     IO::SDK::Integrators::VVIntegrator integrator(IO::SDK::Time::TimeSpan(1.0s));
     IO::SDK::Propagators::Propagator prop(s, integrator, IO::SDK::Time::Window(IO::SDK::Time::TDB(100.0s), IO::SDK::Time::TDB(200.0s)));
     //Add fictive data
-    prop.AddStateVector(IO::SDK::OrbitalParameters::StateVector(earth, IO::SDK::Math::Vector3D(1.0, 2.0, 3.0), IO::SDK::Math::Vector3D(4.0, 5.0, 6.0), IO::SDK::Time::TDB(4260.0s), IO::SDK::Frames::InertialFrames::ICRF));
+    prop.AddStateVector(IO::SDK::OrbitalParameters::StateVector(earth, IO::SDK::Math::Vector3D(1.0, 2.0, 3.0), IO::SDK::Math::Vector3D(4.0, 5.0, 6.0), IO::SDK::Time::TDB(4260.0s), IO::SDK::Frames::InertialFrames::GetICRF()));
 
     s.AddFuelTank("ft1", 2000.0, 1900.0);
     s.AddEngine("sn1", "eng1", "ft1", {1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}, 450.0, 50.0);
@@ -254,9 +254,9 @@ TEST(OrbitalPlaneChangingManeuver, ExecuteDN)
 
     //Check if delta v vector is parallel to moment of momentum and points to the right direction
     auto orientation = maneuver.GetDeltaV().Normalize();
-    ASSERT_NEAR(s.GetOrbitalParametersAtEpoch()->GetSpecificAngularMomentum().Normalize().GetX(), orientation.GetX(),1E-07);
-    ASSERT_NEAR(s.GetOrbitalParametersAtEpoch()->GetSpecificAngularMomentum().Normalize().GetY(), orientation.GetY(),1E-07);
-    ASSERT_NEAR(s.GetOrbitalParametersAtEpoch()->GetSpecificAngularMomentum().Normalize().GetZ(), orientation.GetZ(),1E-07);
+    ASSERT_NEAR(s.GetOrbitalParametersAtEpoch()->GetSpecificAngularMomentum().Normalize().GetX(), orientation.GetX(), 1E-07);
+    ASSERT_NEAR(s.GetOrbitalParametersAtEpoch()->GetSpecificAngularMomentum().Normalize().GetY(), orientation.GetY(), 1E-07);
+    ASSERT_NEAR(s.GetOrbitalParametersAtEpoch()->GetSpecificAngularMomentum().Normalize().GetZ(), orientation.GetZ(), 1E-07);
 
     //Check inclination
     ASSERT_DOUBLE_EQ(0.66556812329478388, maneuver.GetRelativeInclination());
@@ -264,23 +264,28 @@ TEST(OrbitalPlaneChangingManeuver, ExecuteDN)
     //Check fuel burned
     ASSERT_DOUBLE_EQ(1687.9426869962572, maneuver.GetFuelBurned());
 
-    //Check maneuver window
+//Check maneuver window
+#ifdef _WIN32
+    ASSERT_EQ(IO::SDK::Time::Window<IO::SDK::Time::TDB>(IO::SDK::Time::TDB(4265.2453386213119s), IO::SDK::Time::TDB(4299.0041923612371s)), *maneuver.GetThrustWindow());
+
+#else
     ASSERT_EQ(IO::SDK::Time::Window<IO::SDK::Time::TDB>(IO::SDK::Time::TDB(4265.245338621311s), IO::SDK::Time::TDB(4299.0041923612362s)), *maneuver.GetThrustWindow());
+#endif
 }
 
 TEST(OrbitalPlaneChangingManeuver, ExecuteAN)
 {
 
     const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
-    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams1 = std::make_unique<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth, 11480000.0, 0.0, 60.0 * IO::SDK::Constants::DEG_RAD, 10.0 * IO::SDK::Constants::DEG_RAD, 0.0, 0.0, IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::ICRF);
-    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams2 = std::make_unique<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth, 11480000.0, 0.0, 45.0 * IO::SDK::Constants::DEG_RAD, 55.0 * IO::SDK::Constants::DEG_RAD, 0.0, 0.0, IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::ICRF);
-    IO::SDK::OrbitalParameters::StateOrientation attitude(IO::SDK::Time::TDB(0.0s),IO::SDK::Frames::InertialFrames::ICRF);
+    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams1 = std::make_unique<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth, 11480000.0, 0.0, 60.0 * IO::SDK::Constants::DEG_RAD, 10.0 * IO::SDK::Constants::DEG_RAD, 0.0, 0.0, IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::GetICRF());
+    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams2 = std::make_unique<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth, 11480000.0, 0.0, 45.0 * IO::SDK::Constants::DEG_RAD, 55.0 * IO::SDK::Constants::DEG_RAD, 0.0, 0.0, IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::GetICRF());
+    IO::SDK::OrbitalParameters::StateOrientation attitude(IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::GetICRF());
     IO::SDK::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, "ms01", std::move(orbitalParams1)};
 
     IO::SDK::Integrators::VVIntegrator integrator(IO::SDK::Time::TimeSpan(1.0s));
     IO::SDK::Propagators::Propagator prop(s, integrator, IO::SDK::Time::Window(IO::SDK::Time::TDB(100.0s), IO::SDK::Time::TDB(200.0s)));
     //Add fictive data
-    prop.AddStateVector(IO::SDK::OrbitalParameters::StateVector(earth, IO::SDK::Math::Vector3D(1.0, 2.0, 3.0), IO::SDK::Math::Vector3D(4.0, 5.0, 6.0), IO::SDK::Time::TDB(4260.0s), IO::SDK::Frames::InertialFrames::ICRF));
+    prop.AddStateVector(IO::SDK::OrbitalParameters::StateVector(earth, IO::SDK::Math::Vector3D(1.0, 2.0, 3.0), IO::SDK::Math::Vector3D(4.0, 5.0, 6.0), IO::SDK::Time::TDB(4260.0s), IO::SDK::Frames::InertialFrames::GetICRF()));
 
     s.AddFuelTank("ft1", 2000.0, 1900.0);
     s.AddEngine("sn1", "eng1", "ft1", {1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}, 450.0, 50.0);
@@ -309,15 +314,19 @@ TEST(OrbitalPlaneChangingManeuver, ExecuteAN)
 
     //Check if delta v vector is parallel to moment of momentum and points to the right direction
     auto orientation = maneuver.GetDeltaV().Normalize();
-    ASSERT_NEAR(s.GetOrbitalParametersAtEpoch()->GetSpecificAngularMomentum().Normalize().GetX(), -orientation.GetX(),1E-07);
-    ASSERT_NEAR(s.GetOrbitalParametersAtEpoch()->GetSpecificAngularMomentum().Normalize().GetY(), -orientation.GetY(),1E-07);
-    ASSERT_NEAR(s.GetOrbitalParametersAtEpoch()->GetSpecificAngularMomentum().Normalize().GetZ(), -orientation.GetZ(),1E-07);
+    ASSERT_NEAR(s.GetOrbitalParametersAtEpoch()->GetSpecificAngularMomentum().Normalize().GetX(), -orientation.GetX(), 1E-07);
+    ASSERT_NEAR(s.GetOrbitalParametersAtEpoch()->GetSpecificAngularMomentum().Normalize().GetY(), -orientation.GetY(), 1E-07);
+    ASSERT_NEAR(s.GetOrbitalParametersAtEpoch()->GetSpecificAngularMomentum().Normalize().GetZ(), -orientation.GetZ(), 1E-07);
 
     //Check inclination
     ASSERT_DOUBLE_EQ(0.66556812329478388, maneuver.GetRelativeInclination());
 
+#ifdef _WIN32
+    ASSERT_DOUBLE_EQ(1687.9426869962556, maneuver.GetFuelBurned());
+#else
     //Check fuel burned
     ASSERT_DOUBLE_EQ(1687.9426869962572, maneuver.GetFuelBurned());
+#endif
 
     //Check maneuver window
     ASSERT_EQ(IO::SDK::Time::Window<IO::SDK::Time::TDB>(IO::SDK::Time::TDB(10385.842836252745s), IO::SDK::Time::TDB(10419.601689992669s)), *maneuver.GetThrustWindow());

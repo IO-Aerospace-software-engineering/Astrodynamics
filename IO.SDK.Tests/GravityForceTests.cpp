@@ -18,8 +18,8 @@ TEST(GravityForce, ApplyToBody)
 {
     IO::SDK::Integrators::Forces::GravityForce gravityForce;
     auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
-    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth, IO::SDK::Math::Vector3D(10000000.0, 0.0, 0.0), IO::SDK::Math::Vector3D(0.0, 1000.0, 0.0), IO::SDK::Time::TDB(100.0s), IO::SDK::Frames::InertialFrames::ICRF);
-    IO::SDK::OrbitalParameters::StateOrientation attitude(IO::SDK::Time::TDB(100.0s),IO::SDK::Frames::InertialFrames::ICRF);
+    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth, IO::SDK::Math::Vector3D(10000000.0, 0.0, 0.0), IO::SDK::Math::Vector3D(0.0, 1000.0, 0.0), IO::SDK::Time::TDB(100.0s), IO::SDK::Frames::InertialFrames::GetICRF());
+    IO::SDK::OrbitalParameters::StateOrientation attitude(IO::SDK::Time::TDB(100.0s),IO::SDK::Frames::InertialFrames::GetICRF());
     IO::SDK::Body::Spacecraft::Spacecraft spc(-12, "spc12", 1000.0, 3000.0, "missGravity", std::move(orbitalParams));
 
     auto force = gravityForce.Apply(spc, *dynamic_cast<IO::SDK::OrbitalParameters::StateVector *>(spc.GetOrbitalParametersAtEpoch().get()));
@@ -41,8 +41,8 @@ TEST(GravityForce, ApplyToBodyWithSatellites)
     //  X =-2.068864826237993E+05 Y = 2.891146390982051E+05 Z = 1.515746884380044E+05
     //  VX=-8.366764389833921E-01 VY=-5.602543663174073E-01 VZ=-1.710459390585548E-01
     auto moon = std::make_shared<IO::SDK::Body::CelestialBody>(301, "moon", earth);
-    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth, IO::SDK::Math::Vector3D(6800000.0, 0.0, 0.0), IO::SDK::Math::Vector3D(0.0, 8000.0, 0.0), epoch, IO::SDK::Frames::InertialFrames::ICRF);
-    IO::SDK::OrbitalParameters::StateOrientation attitude(IO::SDK::Time::TDB(100.0s),IO::SDK::Frames::InertialFrames::ICRF);
+    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth, IO::SDK::Math::Vector3D(6800000.0, 0.0, 0.0), IO::SDK::Math::Vector3D(0.0, 8000.0, 0.0), epoch, IO::SDK::Frames::InertialFrames::GetICRF());
+    IO::SDK::OrbitalParameters::StateOrientation attitude(IO::SDK::Time::TDB(100.0s),IO::SDK::Frames::InertialFrames::GetICRF());
     IO::SDK::Body::Spacecraft::Spacecraft spc(-12, "spc12", 1000.0, 3000.0, "missGravity", std::move(orbitalParams));
 
     auto force = gravityForce.Apply(spc, *dynamic_cast<IO::SDK::OrbitalParameters::StateVector *>(spc.GetOrbitalParametersAtEpoch().get()));

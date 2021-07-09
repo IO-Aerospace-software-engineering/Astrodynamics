@@ -18,8 +18,8 @@ TEST(Propagator, Initialization)
 {
     IO::SDK::Integrators::VVIntegrator integrator(IO::SDK::Time::TimeSpan(1.0s));
     auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
-    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth, IO::SDK::Math::Vector3D(1.0, 2.0, 3.0), IO::SDK::Math::Vector3D(4.0, 5.0, 6.0), IO::SDK::Time::TDB(100.0s), IO::SDK::Frames::InertialFrames::ICRF);
-    IO::SDK::OrbitalParameters::StateOrientation attitude(IO::SDK::Time::TDB(100.0s), IO::SDK::Frames::InertialFrames::ICRF);
+    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth, IO::SDK::Math::Vector3D(1.0, 2.0, 3.0), IO::SDK::Math::Vector3D(4.0, 5.0, 6.0), IO::SDK::Time::TDB(100.0s), IO::SDK::Frames::InertialFrames::GetICRF());
+    IO::SDK::OrbitalParameters::StateOrientation attitude(IO::SDK::Time::TDB(100.0s), IO::SDK::Frames::InertialFrames::GetICRF());
     IO::SDK::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, "ms01", std::move(orbitalParams)};
     IO::SDK::Propagators::Propagator pro(s, integrator, IO::SDK::Time::Window(IO::SDK::Time::TDB(100.0s), IO::SDK::Time::TDB(200.0s)));
 }
@@ -28,8 +28,8 @@ TEST(Propagator, FindNearestLowerValue)
 {
     IO::SDK::Integrators::VVIntegrator integrator(IO::SDK::Time::TimeSpan(1.0s));
     auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
-    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth, IO::SDK::Math::Vector3D(1.0, 2.0, 3.0), IO::SDK::Math::Vector3D(4.0, 5.0, 6.0), IO::SDK::Time::TDB(100.0s), IO::SDK::Frames::InertialFrames::ICRF);
-    IO::SDK::OrbitalParameters::StateOrientation attitude(IO::SDK::Time::TDB(100.0s), IO::SDK::Frames::InertialFrames::ICRF);
+    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth, IO::SDK::Math::Vector3D(1.0, 2.0, 3.0), IO::SDK::Math::Vector3D(4.0, 5.0, 6.0), IO::SDK::Time::TDB(100.0s), IO::SDK::Frames::InertialFrames::GetICRF());
+    IO::SDK::OrbitalParameters::StateOrientation attitude(IO::SDK::Time::TDB(100.0s), IO::SDK::Frames::InertialFrames::GetICRF());
     IO::SDK::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, "ms01", std::move(orbitalParams)};
     IO::SDK::Propagators::Propagator pro(s, integrator, IO::SDK::Time::Window(IO::SDK::Time::TDB(100.0s), IO::SDK::Time::TDB(200.0s)));
 
@@ -37,10 +37,10 @@ TEST(Propagator, FindNearestLowerValue)
     auto nearestEmpty = pro.FindNearestLowerStateVector(IO::SDK::Time::TDB(99.5s));
     ASSERT_FALSE(nearestEmpty);
 
-    pro.AddStateVector(IO::SDK::OrbitalParameters::StateVector(earth, IO::SDK::Math::Vector3D(1.0, 2.0, 3.0), IO::SDK::Math::Vector3D(4.0, 5.0, 6.0), IO::SDK::Time::TDB(101.0s), IO::SDK::Frames::InertialFrames::ICRF));
-    pro.AddStateVector(IO::SDK::OrbitalParameters::StateVector(earth, IO::SDK::Math::Vector3D(1.0, 2.0, 3.0), IO::SDK::Math::Vector3D(4.0, 5.0, 6.0), IO::SDK::Time::TDB(102.0s), IO::SDK::Frames::InertialFrames::ICRF));
-    pro.AddStateVector(IO::SDK::OrbitalParameters::StateVector(earth, IO::SDK::Math::Vector3D(1.0, 2.0, 3.0), IO::SDK::Math::Vector3D(4.0, 5.0, 6.0), IO::SDK::Time::TDB(103.0s), IO::SDK::Frames::InertialFrames::ICRF));
-    pro.AddStateVector(IO::SDK::OrbitalParameters::StateVector(earth, IO::SDK::Math::Vector3D(1.0, 2.0, 3.0), IO::SDK::Math::Vector3D(4.0, 5.0, 6.0), IO::SDK::Time::TDB(104.0s), IO::SDK::Frames::InertialFrames::ICRF));
+    pro.AddStateVector(IO::SDK::OrbitalParameters::StateVector(earth, IO::SDK::Math::Vector3D(1.0, 2.0, 3.0), IO::SDK::Math::Vector3D(4.0, 5.0, 6.0), IO::SDK::Time::TDB(101.0s), IO::SDK::Frames::InertialFrames::GetICRF()));
+    pro.AddStateVector(IO::SDK::OrbitalParameters::StateVector(earth, IO::SDK::Math::Vector3D(1.0, 2.0, 3.0), IO::SDK::Math::Vector3D(4.0, 5.0, 6.0), IO::SDK::Time::TDB(102.0s), IO::SDK::Frames::InertialFrames::GetICRF()));
+    pro.AddStateVector(IO::SDK::OrbitalParameters::StateVector(earth, IO::SDK::Math::Vector3D(1.0, 2.0, 3.0), IO::SDK::Math::Vector3D(4.0, 5.0, 6.0), IO::SDK::Time::TDB(103.0s), IO::SDK::Frames::InertialFrames::GetICRF()));
+    pro.AddStateVector(IO::SDK::OrbitalParameters::StateVector(earth, IO::SDK::Math::Vector3D(1.0, 2.0, 3.0), IO::SDK::Math::Vector3D(4.0, 5.0, 6.0), IO::SDK::Time::TDB(104.0s), IO::SDK::Frames::InertialFrames::GetICRF()));
 
     auto nearest = pro.FindNearestLowerStateVector(IO::SDK::Time::TDB(103.5s));
     ASSERT_EQ(IO::SDK::Time::TDB(103.0s), nearest->GetEpoch());
@@ -60,8 +60,8 @@ TEST(Propagator, EraseDataRange)
 {
     IO::SDK::Integrators::VVIntegrator integrator(IO::SDK::Time::TimeSpan(1.0s));
     auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
-    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth, IO::SDK::Math::Vector3D(1.0, 2.0, 3.0), IO::SDK::Math::Vector3D(4.0, 5.0, 6.0), IO::SDK::Time::TDB(100.0s), IO::SDK::Frames::InertialFrames::ICRF);
-    IO::SDK::OrbitalParameters::StateOrientation attitude(IO::SDK::Time::TDB(100.0s), IO::SDK::Frames::InertialFrames::ICRF);
+    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth, IO::SDK::Math::Vector3D(1.0, 2.0, 3.0), IO::SDK::Math::Vector3D(4.0, 5.0, 6.0), IO::SDK::Time::TDB(100.0s), IO::SDK::Frames::InertialFrames::GetICRF());
+    IO::SDK::OrbitalParameters::StateOrientation attitude(IO::SDK::Time::TDB(100.0s), IO::SDK::Frames::InertialFrames::GetICRF());
     IO::SDK::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, "ms01", std::move(orbitalParams)};
     IO::SDK::Propagators::Propagator pro(s, integrator, IO::SDK::Time::Window(IO::SDK::Time::TDB(100.0s), IO::SDK::Time::TDB(200.0s)));
 
@@ -69,12 +69,12 @@ TEST(Propagator, EraseDataRange)
     auto nearestEmpty = pro.FindNearestLowerStateVector(IO::SDK::Time::TDB(99.5s));
     ASSERT_FALSE(nearestEmpty);
 
-    pro.AddStateVector(IO::SDK::OrbitalParameters::StateVector(earth, IO::SDK::Math::Vector3D(1.0, 2.0, 3.0), IO::SDK::Math::Vector3D(4.0, 5.0, 6.0), IO::SDK::Time::TDB(101.0s), IO::SDK::Frames::InertialFrames::ICRF));
-    pro.AddStateVector(IO::SDK::OrbitalParameters::StateVector(earth, IO::SDK::Math::Vector3D(1.0, 2.0, 3.0), IO::SDK::Math::Vector3D(4.0, 5.0, 6.0), IO::SDK::Time::TDB(102.0s), IO::SDK::Frames::InertialFrames::ICRF));
-    pro.AddStateVector(IO::SDK::OrbitalParameters::StateVector(earth, IO::SDK::Math::Vector3D(1.0, 2.0, 3.0), IO::SDK::Math::Vector3D(4.0, 5.0, 6.0), IO::SDK::Time::TDB(103.0s), IO::SDK::Frames::InertialFrames::ICRF));
-    pro.AddStateVector(IO::SDK::OrbitalParameters::StateVector(earth, IO::SDK::Math::Vector3D(1.0, 2.0, 3.0), IO::SDK::Math::Vector3D(4.0, 5.0, 6.0), IO::SDK::Time::TDB(104.0s), IO::SDK::Frames::InertialFrames::ICRF));
-    pro.AddStateVector(IO::SDK::OrbitalParameters::StateVector(earth, IO::SDK::Math::Vector3D(1.0, 2.0, 3.0), IO::SDK::Math::Vector3D(4.0, 5.0, 6.0), IO::SDK::Time::TDB(105.0s), IO::SDK::Frames::InertialFrames::ICRF));
-    pro.AddStateVector(IO::SDK::OrbitalParameters::StateVector(earth, IO::SDK::Math::Vector3D(1.0, 2.0, 3.0), IO::SDK::Math::Vector3D(4.0, 5.0, 6.0), IO::SDK::Time::TDB(106.0s), IO::SDK::Frames::InertialFrames::ICRF));
+    pro.AddStateVector(IO::SDK::OrbitalParameters::StateVector(earth, IO::SDK::Math::Vector3D(1.0, 2.0, 3.0), IO::SDK::Math::Vector3D(4.0, 5.0, 6.0), IO::SDK::Time::TDB(101.0s), IO::SDK::Frames::InertialFrames::GetICRF()));
+    pro.AddStateVector(IO::SDK::OrbitalParameters::StateVector(earth, IO::SDK::Math::Vector3D(1.0, 2.0, 3.0), IO::SDK::Math::Vector3D(4.0, 5.0, 6.0), IO::SDK::Time::TDB(102.0s), IO::SDK::Frames::InertialFrames::GetICRF()));
+    pro.AddStateVector(IO::SDK::OrbitalParameters::StateVector(earth, IO::SDK::Math::Vector3D(1.0, 2.0, 3.0), IO::SDK::Math::Vector3D(4.0, 5.0, 6.0), IO::SDK::Time::TDB(103.0s), IO::SDK::Frames::InertialFrames::GetICRF()));
+    pro.AddStateVector(IO::SDK::OrbitalParameters::StateVector(earth, IO::SDK::Math::Vector3D(1.0, 2.0, 3.0), IO::SDK::Math::Vector3D(4.0, 5.0, 6.0), IO::SDK::Time::TDB(104.0s), IO::SDK::Frames::InertialFrames::GetICRF()));
+    pro.AddStateVector(IO::SDK::OrbitalParameters::StateVector(earth, IO::SDK::Math::Vector3D(1.0, 2.0, 3.0), IO::SDK::Math::Vector3D(4.0, 5.0, 6.0), IO::SDK::Time::TDB(105.0s), IO::SDK::Frames::InertialFrames::GetICRF()));
+    pro.AddStateVector(IO::SDK::OrbitalParameters::StateVector(earth, IO::SDK::Math::Vector3D(1.0, 2.0, 3.0), IO::SDK::Math::Vector3D(4.0, 5.0, 6.0), IO::SDK::Time::TDB(106.0s), IO::SDK::Frames::InertialFrames::GetICRF()));
 
     pro.EraseDataFromEpochToEnd(IO::SDK::Time::TDB(103.5s));
 
@@ -110,7 +110,7 @@ TEST(Propagator, PropagateVVIntegrator)
     //  X =-2.068864826237993E+05 Y = 2.891146390982051E+05 Z = 1.515746884380044E+05
     //  VX=-8.366764389833921E-01 VY=-5.602543663174073E-01 VZ=-1.710459390585548E-01
     auto moon = std::make_shared<IO::SDK::Body::CelestialBody>(301, "moon", earth);
-    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth, IO::SDK::Math::Vector3D(6800000.0, 0.0, 0.0), IO::SDK::Math::Vector3D(0.0, 8000.0, 0.0), epoch, IO::SDK::Frames::InertialFrames::ICRF);
+    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth, IO::SDK::Math::Vector3D(6800000.0, 0.0, 0.0), IO::SDK::Math::Vector3D(0.0, 8000.0, 0.0), epoch, IO::SDK::Frames::InertialFrames::GetICRF());
     IO::SDK::Body::Spacecraft::Spacecraft spc(-125, "spc125", 1000.0, 3000.0, "missGravity", std::move(orbitalParams));
 
     IO::SDK::Propagators::Propagator pro(spc, integrator, IO::SDK::Time::Window(epoch, epoch + step * 100.0));
@@ -142,7 +142,7 @@ TEST(Propagator, PropagateVVIntegrator)
 
     //Read ephemeris
     sv = pro.GetStateVectors()[80];
-    auto ephemerisSv = spc.ReadEphemeris(IO::SDK::Frames::InertialFrames::ICRF, IO::SDK::AberrationsEnum::None, epoch + step * 80.0, *earth);
+    auto ephemerisSv = spc.ReadEphemeris(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::AberrationsEnum::None, epoch + step * 80.0, *earth);
     ASSERT_EQ(ephemerisSv.GetEpoch(), sv.GetEpoch());
     ASSERT_DOUBLE_EQ(ephemerisSv.GetPosition().GetX(), sv.GetPosition().GetX());
     ASSERT_DOUBLE_EQ(ephemerisSv.GetPosition().GetY(), sv.GetPosition().GetY());
@@ -177,9 +177,9 @@ TEST(Propagator, PropagatorVsKepler)
     //  X =-2.068864826237993E+05 Y = 2.891146390982051E+05 Z = 1.515746884380044E+05
     //  VX=-8.366764389833921E-01 VY=-5.602543663174073E-01 VZ=-1.710459390585548E-01
     // auto moon = std::make_shared<IO::SDK::Body::CelestialBody>(301, "moon", earth);
-    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth, IO::SDK::Math::Vector3D(a, 0.0, 0.0), IO::SDK::Math::Vector3D(0.0, v, 0.0), epoch, IO::SDK::Frames::InertialFrames::ICRF);
+    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth, IO::SDK::Math::Vector3D(a, 0.0, 0.0), IO::SDK::Math::Vector3D(0.0, v, 0.0), epoch, IO::SDK::Frames::InertialFrames::GetICRF());
     auto localOrbitalparams = dynamic_cast<IO::SDK::OrbitalParameters::StateVector *>(orbitalParams.get());
-    IO::SDK::OrbitalParameters::StateOrientation attitude(IO::SDK::Time::TDB(100.0s), IO::SDK::Frames::InertialFrames::ICRF);
+    IO::SDK::OrbitalParameters::StateOrientation attitude(IO::SDK::Time::TDB(100.0s), IO::SDK::Frames::InertialFrames::GetICRF());
     IO::SDK::Body::Spacecraft::Spacecraft spc(-12, "spc12", 1000.0, 3000.0, "missGravity", std::move(orbitalParams));
 
     IO::SDK::Propagators::Propagator pro(spc, integrator, IO::SDK::Time::Window(epoch, epoch + duration));
@@ -286,7 +286,7 @@ TEST(Propagator, PropagateTLEIntegrator)
     //  VX=-6.921346768046464E+00 VY= 9.156923051627522E-02 VZ=-3.288419444276052E+00
     //Read ephemeris results
     stateVector = pro.GetStateVectors()[80];
-    auto ephemerisSv = spc.ReadEphemeris(IO::SDK::Frames::InertialFrames::ICRF, IO::SDK::AberrationsEnum::None, epoch + step * 80.0, *earth);
+    auto ephemerisSv = spc.ReadEphemeris(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::AberrationsEnum::None, epoch + step * 80.0, *earth);
     ASSERT_EQ(ephemerisSv.GetEpoch(), stateVector.GetEpoch());
     ASSERT_DOUBLE_EQ(ephemerisSv.GetPosition().GetX(), stateVector.GetPosition().GetX());
     ASSERT_DOUBLE_EQ(ephemerisSv.GetPosition().GetY(), stateVector.GetPosition().GetY());

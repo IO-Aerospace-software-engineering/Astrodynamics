@@ -19,7 +19,7 @@ TEST(ProgradeAttitude, GetOrientation)
 {
     auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth"); //GEOPHYSICAL PROPERTIES provided by JPL
 
-    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams1 = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth, IO::SDK::Math::Vector3D(6678000.0, 0.0, 0.0), IO::SDK::Math::Vector3D(0.0, 7727.0, 0.0), IO::SDK::Time::TDB("2021-01-01T13:00:00"), IO::SDK::Frames::InertialFrames::ICRF);
+    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams1 = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth, IO::SDK::Math::Vector3D(6678000.0, 0.0, 0.0), IO::SDK::Math::Vector3D(0.0, 7727.0, 0.0), IO::SDK::Time::TDB("2021-01-01T13:00:00"), IO::SDK::Frames::InertialFrames::GetICRF());
 
     IO::SDK::Body::Spacecraft::Spacecraft s{-1, "maneuverTest", 1000.0, 3000.0, "mt01", std::move(orbitalParams1)};
 
@@ -41,10 +41,10 @@ TEST(ProgradeAttitude, GetOrientation)
     prop.Propagate();
 
     //auto res = nadir.TryExecute(s.GetOrbitalParametersAtEpoch()->GetStateVector(IO::SDK::Time::TDB(100.1s)));
-    auto orientation = s.GetOrientation(IO::SDK::Time::TDB("2021-01-01T13:00:00"), IO::SDK::Time::TimeSpan(10s), IO::SDK::Frames::InertialFrames::ICRF);
+    auto orientation = s.GetOrientation(IO::SDK::Time::TDB("2021-01-01T13:00:00"), IO::SDK::Time::TimeSpan(10s), IO::SDK::Frames::InertialFrames::GetICRF());
 
     ASSERT_DOUBLE_EQ(0.0, prograde.GetDeltaV().Magnitude());
-    ASSERT_EQ(IO::SDK::Frames::InertialFrames::ICRF, orientation.GetFrame());
+    ASSERT_EQ(IO::SDK::Frames::InertialFrames::GetICRF(), orientation.GetFrame());
     auto newVector = s.Front.Rotate(orientation.GetQuaternion());
     ASSERT_EQ(IO::SDK::Math::Vector3D(0.0, 1.0, 0.0), newVector);
 }
@@ -53,7 +53,7 @@ TEST(ProgradeAttitude, GetOrientationMinimumEpoch)
 {
     auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth"); //GEOPHYSICAL PROPERTIES provided by JPL
 
-    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams1 = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth, IO::SDK::Math::Vector3D(6678000.0, 0.0, 0.0), IO::SDK::Math::Vector3D(0.0, 7727.0, 0.0), IO::SDK::Time::TDB("2021-01-01T13:00:00"), IO::SDK::Frames::InertialFrames::ICRF);
+    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams1 = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth, IO::SDK::Math::Vector3D(6678000.0, 0.0, 0.0), IO::SDK::Math::Vector3D(0.0, 7727.0, 0.0), IO::SDK::Time::TDB("2021-01-01T13:00:00"), IO::SDK::Frames::InertialFrames::GetICRF());
 
     IO::SDK::Body::Spacecraft::Spacecraft s{-1, "maneuverTest", 1000.0, 3000.0, "mt01", std::move(orbitalParams1)};
 
@@ -74,10 +74,10 @@ TEST(ProgradeAttitude, GetOrientationMinimumEpoch)
 
     prop.Propagate();
 
-    auto orientation = s.GetOrientation(IO::SDK::Time::TDB("2021-01-01T13:00:10"), IO::SDK::Time::TimeSpan(10s), IO::SDK::Frames::InertialFrames::ICRF);
+    auto orientation = s.GetOrientation(IO::SDK::Time::TDB("2021-01-01T13:00:10"), IO::SDK::Time::TimeSpan(10s), IO::SDK::Frames::InertialFrames::GetICRF());
 
     ASSERT_DOUBLE_EQ(0.0, prograde.GetDeltaV().Magnitude());
-    ASSERT_EQ(IO::SDK::Frames::InertialFrames::ICRF, orientation.GetFrame());
+    ASSERT_EQ(IO::SDK::Frames::InertialFrames::GetICRF(), orientation.GetFrame());
     auto newVector = s.Front.Rotate(orientation.GetQuaternion());
     ASSERT_EQ(IO::SDK::Math::Vector3D(0.0, 1.0, 0.0), newVector);
     ASSERT_EQ(IO::SDK::Time::TDB("2021-01-01T13:00:00"), s.GetOrientationsCoverageWindow().GetStartDate());
