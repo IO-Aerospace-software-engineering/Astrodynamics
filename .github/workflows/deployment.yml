@@ -100,6 +100,7 @@ jobs:
           files: IO-Toolkit-Linux-${{steps.tag.outputs.tag}}.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        if: matrix.os == 'ubuntu-latest'
 
       - name: Release (Windows)
         uses: softprops/action-gh-release@v1
@@ -108,3 +109,4 @@ jobs:
           files: IO-Toolkit-Windows-${{steps.tag.outputs.tag}}.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        if: matrix.os == 'windows-latest'
