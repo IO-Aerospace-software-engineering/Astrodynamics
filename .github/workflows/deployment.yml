@@ -57,6 +57,7 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
 
       - name: Copy Headers and library (Windows)
+        shell: cmd
         run: |
           mkdir -p Toolkit\Windows\Includes
           for /r IO.SDK\ %f in (*.h) do @copy "%f" "Toolkit\Windows\Includes\"
@@ -73,12 +74,13 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
 
       - name: Copy solar system data and templates (Windows)
+        shell: cmd
         run: |
-          mkdir -p Toolkit/Windows/Data/SolarSystem
-          mkdir -p Toolkit/Windows/Templates
-          find build/IO.SDK.Tests/Release/Data/SolarSystem/ -type f -name "*.*" -exec cp {} Toolkit/Windows/Data/SolarSystem \;
-          find build/IO.SDK.Tests/Release/Templates/ -type f -name "*.*" -exec cp {} Toolkit/Windows/Templates \;         
-          zip -r IO-Toolkit-Windows-${{steps.tag.outputs.tag}}.zip Toolkit/Windows
+          mkdir -p Toolkit\Windows\Data\SolarSystem
+          mkdir -p Toolkit\Windows\Templates
+          xcopy build\IO.SDK.Tests\Release\Data\SolarSystem\ Toolkit\Windows\Data\SolarSystem\ /s /e
+          xcopy build\IO.SDK.Tests\Release\Templates\ Toolkit\Windows\Templates\ /s /e
+          zip -r IO-Toolkit-Windows-${{steps.tag.outputs.tag}}.zip Toolkit\Windows
         if: matrix.os == 'windows-latest'
 
       - name: Create Release
