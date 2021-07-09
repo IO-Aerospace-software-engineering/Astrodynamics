@@ -57,11 +57,10 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
 
       - name: Copy Headers and library (Windows)
-        shell: cmd
         run: |
           mkdir -p Toolkit\Windows\Includes
-          for /r IO.SDK\ %f in (*.h) do @copy %f "Toolkit\Windows\Includes\"
-          cp -Force build\IO.SDK\Release\IO.SDK.dll Toolkit\Windows\
+          Get-ChildItem IO.SDK -recurse -force -filter "*.h" | Copy-Item -Destination Toolkit\Windows\Includes\
+          Copy-Item .\build\IO.SDK\Release\IO.SDK.dll Toolkit\Windows\
         if: matrix.os == 'windows-latest'
 
       - name: Copy solar system data and templates (Linux)
