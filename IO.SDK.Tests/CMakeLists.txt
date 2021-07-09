@@ -24,7 +24,7 @@ add_custom_command(TARGET ${This}
 POST_BUILD
 COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:IO.SDK> "${CMAKE_CURRENT_BINARY_DIR}/"
 COMMENT "Copy dll file to ${CMAKE_CURRENT_BINARY_DIR} directory" VERBATIM)
-file(COPY "Data/Linux/" DESTINATION "/")
+file(COPY "Data/Linux/" DESTINATION ".")
 endif ()
 
 
