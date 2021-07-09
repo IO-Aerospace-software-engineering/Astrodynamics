@@ -46,5 +46,7 @@ jobs:
       # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
       run: |
         dir ${{github.workspace}}\build\IO.SDK.Tests\Release
+        dir ${{github.workspace}}\build\IO.SDK.Tests\Release\Data
+        dir ${{github.workspace}}\build\IO.SDK.Tests\Release\Data\SolarSystem
         ${{github.workspace}}\build\IO.SDK.Tests\Release\IO.SDK.Tests.exe      
       if: matrix.os == 'windows-latest'      
