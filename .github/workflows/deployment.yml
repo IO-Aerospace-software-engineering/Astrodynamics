@@ -77,7 +77,7 @@ jobs:
           mkdir -p Toolkit\Windows\Data\SolarSystem
           mkdir -p Toolkit\Windows\Templates
           Copy-Item -Path "IO.SDK.Tests\Data\Windows\*" -Destination "Toolkit\Windows" -recurse -Force
-          Compress-Archive -Path Toolkit\Windows\* -DestinationPath IO-Toolkit-Windows-.zip -Force
+          Compress-Archive -Path Toolkit\Windows\* -DestinationPath IO-Toolkit-Windows-${{steps.tag.outputs.tag}}.zip -Force
         if: matrix.os == 'windows-latest'
 
       - name: Create Release
