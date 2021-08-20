@@ -70,6 +70,7 @@ jobs:
         run: |
           mkdir -p Toolkit/Linux/Includes
           find IO.SDK/ -type f -name "*.h" -exec cp {} Toolkit/Linux/Includes/ \;
+          find external-lib/includeLinux/ -type f -name "*.h" -exec cp {} Toolkit/Linux/Includes/ \;
           cp -f build/IO.SDK/libIO.SDK.so Toolkit/Linux/
         if: matrix.os == 'ubuntu-latest'
 
@@ -77,6 +78,7 @@ jobs:
         run: |
           mkdir -p Toolkit\Windows\Includes
           Get-ChildItem IO.SDK -recurse -force -filter "*.h" | Copy-Item -Destination Toolkit\Windows\Includes\
+          Get-ChildItem external-lib/includeWindows -recurse -force -filter "*.h" | Copy-Item -Destination Toolkit\Windows\Includes\
           Copy-Item .\build\IO.SDK\Release\IO.SDK.dll Toolkit\Windows\
         if: matrix.os == 'windows-latest'
 

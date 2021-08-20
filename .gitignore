@@ -12,3 +12,4 @@ _deps
 out/
 build/
 .vscode/
+build/lib/
