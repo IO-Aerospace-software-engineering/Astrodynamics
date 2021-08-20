@@ -12,30 +12,37 @@ Download the latest Linux or Windows release :
 [Releases](https://github.com/IO-Aerospace-software-engineering/SDK/releases)
 
 ## Install the SDK
-1. Create a project folder
-2. Extract folders (Data, Includes and Templates) from archive IO-Toolkit-OS-vx.x.xx-x to the root of your project folder.
-3. You should have :
-    - ProjectFolder
-        - Data
-        - Includes
-        - Templates
-4. Copy libIO.SDK.so to /usr/lib/
 
-
-## Use SDK
 At this stage we assume that you have mastered your development environment but if you need some advises we can suggest you these approches :
 - [Cross plateform development](https://code.visualstudio.com/docs/cpp/cmake-linux)
 - [Linux development](https://code.visualstudio.com/docs/cpp/config-linux)
 - [Windows development](https://code.visualstudio.com/docs/cpp/config-mingw)
 
-In this quick start we encourage you to use [cross plateform](https://code.visualstudio.com/docs/cpp/cmake-linux) approach.
+In this quick start we suggest you to use [cross plateform approach](https://code.visualstudio.com/docs/cpp/cmake-linux) with CMake.
+
+1. Create a cmake project
+
+2. Extract Includes folder from archive IO-Toolkit-OS-vx.x.xx-x to the root folder.
+
+3. Extract Data and Templates folders from archive IO-Toolkit-OS-vx.x.xx-x to the build folder.
+
+4. You should have :
+    - ProjectFolder
+        - Includes
+        - build
+            - Data
+            - Templates
+
+5. For linux Copy libIO.SDK.so to /usr/lib/
+
+
+## Use SDK
 
 In this example we will create a small program that will compute ISS orbital period from TLE(two lines elements), earth Hill sphere and angle between two vectors. 
 
-1. Configure CMake like this example :
+1. Ensure your CMake projet contains at least these parameters :
     ```CMAKE
     cmake_minimum_required(VERSION 3.18.0)
-
     project(MyApp VERSION 0.1.0)
 
     project (${This} C CXX)
@@ -45,17 +52,10 @@ In this example we will create a small program that will compute ISS orbital per
     set(CMAKE_POSITION_INDEPENDENT_CODE ON)
     set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
 
-    include(CTest)
-    enable_testing()
-
     add_executable(MyApp main.cpp)
 
     include_directories(${CMAKE_SOURCE_DIR}/Includes)
     target_link_libraries(MyApp libIO.SDK.so)
-
-    set(CPACK_PROJECT_NAME ${PROJECT_NAME})
-    set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})
-    include(CPack)
     ```
 
 2. Create a main.cpp file in project root folder.
@@ -98,4 +98,4 @@ In this example we will create a small program that will compute ISS orbital per
     the earth's Hill sphere radius is :1.4716e+09
     Angle between v1 and v2 is :1.5708
     ```
-    Remark : All values are expressed in international system (meter, second, radian, m/s, ...)
+    Remark : All values are expressed in international system of units (meter, second, radian, m/s, ...)
