@@ -33,7 +33,7 @@ In this quick start we suggest you to use [cross plateform approach](https://cod
             - Data
             - Templates
 
-5. For linux Copy libIO.SDK.so to /usr/lib/
+5. For linux copy libIO.SDK.so to /usr/lib/
 
 
 ## Use SDK
