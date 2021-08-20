@@ -98,4 +98,4 @@ In this example we will create a small program that will compute ISS orbital per
     the earth's Hill sphere radius is :1.4716e+09
     Angle between v1 and v2 is :1.5708
     ```
-    Remark : All values are expressed in SI (meter, second, radian, m/s, ...)
+    Remark : All values are expressed in international system (meter, second, radian, m/s, ...)
