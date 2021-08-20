@@ -60,7 +60,7 @@ In this example we will create a small program that will compute ISS orbital per
 
 2. Create a main.cpp file in project root folder.
 
-3. Create program in myapp.cpp file :
+3. Create program in main.cpp file :
     ```C++
     #include <memory>
     #include <iostream>
