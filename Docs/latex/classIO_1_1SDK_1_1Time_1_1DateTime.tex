@@ -1,0 +1,155 @@
+\hypertarget{classIO_1_1SDK_1_1Time_1_1DateTime}{}\doxysection{IO\+::SDK\+::Time\+::Date\+Time Class Reference}
+\label{classIO_1_1SDK_1_1Time_1_1DateTime}\index{IO::SDK::Time::DateTime@{IO::SDK::Time::DateTime}}
+Inheritance diagram for IO\+::SDK\+::Time\+::Date\+Time\+:\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=2.000000cm]{classIO_1_1SDK_1_1Time_1_1DateTime}
+\end{center}
+\end{figure}
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+std\+::chrono\+::duration$<$ double $>$ \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1DateTime_a98d7975b9422550fcd658040392d94ca}{Get\+Seconds\+From\+J2000}} () const
+\begin{DoxyCompactList}\small\item\em Ellapsed seconds from J2000 \end{DoxyCompactList}\item 
+virtual std\+::string \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1DateTime_a18bc7d081609ca935efa0a04f0cf2db3}{To\+String}} () const =0
+\begin{DoxyCompactList}\small\item\em Get ISO \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1UTC}{UTC}} string \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO\+::\+SDK\+::\+Time\+::\+Time\+Span}} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1DateTime_aa73aaa910577466bcde537d381ebe749}{Substract}} (const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1DateTime}{IO\+::\+SDK\+::\+Time\+::\+Date\+Time}} \&datetime) const
+\begin{DoxyCompactList}\small\item\em Substract two Date\+Times \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO\+::\+SDK\+::\+Time\+::\+Time\+Span}} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1DateTime_ad6174101984cc414abe7d61e9faf63c0}{operator-\/}} (const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1DateTime}{IO\+::\+SDK\+::\+Time\+::\+Date\+Time}} \&other) const
+\begin{DoxyCompactList}\small\item\em Substract two Date\+Times \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Time_1_1DateTime_a348f8d2d43f92990d602a5d9eb86b0b9}\label{classIO_1_1SDK_1_1Time_1_1DateTime_a348f8d2d43f92990d602a5d9eb86b0b9}} 
+bool {\bfseries operator==} (const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1DateTime}{IO\+::\+SDK\+::\+Time\+::\+Date\+Time}} \&other) const
+\item 
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Time_1_1DateTime_a57ed99a06d4c9e06817682738250f664}\label{classIO_1_1SDK_1_1Time_1_1DateTime_a57ed99a06d4c9e06817682738250f664}} 
+bool {\bfseries operator!=} (const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1DateTime}{IO\+::\+SDK\+::\+Time\+::\+Date\+Time}} \&other) const
+\item 
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Time_1_1DateTime_a12e7963af46b00f536d1080014ebfc12}\label{classIO_1_1SDK_1_1Time_1_1DateTime_a12e7963af46b00f536d1080014ebfc12}} 
+bool {\bfseries operator$>$} (const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1DateTime}{IO\+::\+SDK\+::\+Time\+::\+Date\+Time}} \&other) const
+\item 
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Time_1_1DateTime_a1ce12a6af5b2a07461feccd313c9cb0d}\label{classIO_1_1SDK_1_1Time_1_1DateTime_a1ce12a6af5b2a07461feccd313c9cb0d}} 
+bool {\bfseries operator$>$=} (const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1DateTime}{IO\+::\+SDK\+::\+Time\+::\+Date\+Time}} \&other) const
+\item 
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Time_1_1DateTime_a6da93cffb10ce9dd56fcc86b6b5fb236}\label{classIO_1_1SDK_1_1Time_1_1DateTime_a6da93cffb10ce9dd56fcc86b6b5fb236}} 
+bool {\bfseries operator$<$} (const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1DateTime}{IO\+::\+SDK\+::\+Time\+::\+Date\+Time}} \&other) const
+\item 
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Time_1_1DateTime_a7d9594a26d5d61a79248307e98fa4187}\label{classIO_1_1SDK_1_1Time_1_1DateTime_a7d9594a26d5d61a79248307e98fa4187}} 
+bool {\bfseries operator$<$=} (const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1DateTime}{IO\+::\+SDK\+::\+Time\+::\+Date\+Time}} \&other) const
+\item 
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Time_1_1DateTime_a4fa81bfb1e5337e249a14995abad3e72}\label{classIO_1_1SDK_1_1Time_1_1DateTime_a4fa81bfb1e5337e249a14995abad3e72}} 
+virtual double {\bfseries To\+Julian} () const
+\item 
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Time_1_1DateTime_a4375c2d9d131990912f38d6f20577e0f}\label{classIO_1_1SDK_1_1Time_1_1DateTime_a4375c2d9d131990912f38d6f20577e0f}} 
+double {\bfseries Centuries\+From\+J2000} () const
+\item 
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Time_1_1DateTime_aea56fafe2b7990c4e1232f5bf062eb84}\label{classIO_1_1SDK_1_1Time_1_1DateTime_aea56fafe2b7990c4e1232f5bf062eb84}} 
+\mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1DateTime}{Date\+Time}} \& {\bfseries operator=} (const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1DateTime}{Date\+Time}} \&datetime)
+\end{DoxyCompactItemize}
+\doxysubsection*{Protected Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Time_1_1DateTime_a09dcb5c21602a44c19c2bcf3e4e4c82d}\label{classIO_1_1SDK_1_1Time_1_1DateTime_a09dcb5c21602a44c19c2bcf3e4e4c82d}} 
+{\bfseries Date\+Time} (const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1DateTime}{Date\+Time}} \&datetime)
+\item 
+\mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1DateTime_a9dfff37dc32d350823e6729600b9f467}{Date\+Time}} (const std\+::chrono\+::duration$<$ double $>$ seconds\+From\+J2000)
+\begin{DoxyCompactList}\small\item\em Instanciate from seconds ellapsed from J2000 \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsection*{Protected Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Time_1_1DateTime_a0515ac5362569a8c3955a185e2c2690d}\label{classIO_1_1SDK_1_1Time_1_1DateTime_a0515ac5362569a8c3955a185e2c2690d}} 
+const std\+::chrono\+::duration$<$ double $>$ {\bfseries m\+\_\+seconds\+From\+J2000} \{\}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Time_1_1DateTime_a9dfff37dc32d350823e6729600b9f467}\label{classIO_1_1SDK_1_1Time_1_1DateTime_a9dfff37dc32d350823e6729600b9f467}} 
+\index{IO::SDK::Time::DateTime@{IO::SDK::Time::DateTime}!DateTime@{DateTime}}
+\index{DateTime@{DateTime}!IO::SDK::Time::DateTime@{IO::SDK::Time::DateTime}}
+\doxysubsubsection{\texorpdfstring{DateTime()}{DateTime()}}
+{\footnotesize\ttfamily IO\+::\+SDK\+::\+Time\+::\+Date\+Time\+::\+Date\+Time (\begin{DoxyParamCaption}\item[{const std\+::chrono\+::duration$<$ double $>$}]{seconds\+From\+J2000 }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Instanciate from seconds ellapsed from J2000 
+
+
+\begin{DoxyParams}{Parameters}
+{\em seconds\+From\+J2000} & \\
+\hline
+{\em time\+System} & \\
+\hline
+\end{DoxyParams}
+
+
+\doxysubsection{Member Function Documentation}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Time_1_1DateTime_a98d7975b9422550fcd658040392d94ca}\label{classIO_1_1SDK_1_1Time_1_1DateTime_a98d7975b9422550fcd658040392d94ca}} 
+\index{IO::SDK::Time::DateTime@{IO::SDK::Time::DateTime}!GetSecondsFromJ2000@{GetSecondsFromJ2000}}
+\index{GetSecondsFromJ2000@{GetSecondsFromJ2000}!IO::SDK::Time::DateTime@{IO::SDK::Time::DateTime}}
+\doxysubsubsection{\texorpdfstring{GetSecondsFromJ2000()}{GetSecondsFromJ2000()}}
+{\footnotesize\ttfamily std\+::chrono\+::duration$<$ double $>$ IO\+::\+SDK\+::\+Time\+::\+Date\+Time\+::\+Get\+Seconds\+From\+J2000 (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+
+
+Ellapsed seconds from J2000 
+
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Time_1_1DateTime_ad6174101984cc414abe7d61e9faf63c0}\label{classIO_1_1SDK_1_1Time_1_1DateTime_ad6174101984cc414abe7d61e9faf63c0}} 
+\index{IO::SDK::Time::DateTime@{IO::SDK::Time::DateTime}!operator-\/@{operator-\/}}
+\index{operator-\/@{operator-\/}!IO::SDK::Time::DateTime@{IO::SDK::Time::DateTime}}
+\doxysubsubsection{\texorpdfstring{operator-\/()}{operator-()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO\+::\+SDK\+::\+Time\+::\+Time\+Span}} IO\+::\+SDK\+::\+Time\+::\+Date\+Time\+::operator-\/ (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1DateTime}{IO\+::\+SDK\+::\+Time\+::\+Date\+Time}} \&}]{other }\end{DoxyParamCaption}) const}
+
+
+
+Substract two Date\+Times 
+
+
+\begin{DoxyParams}{Parameters}
+{\em other} & Substracted this datetime\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Time_1_1DateTime_aa73aaa910577466bcde537d381ebe749}\label{classIO_1_1SDK_1_1Time_1_1DateTime_aa73aaa910577466bcde537d381ebe749}} 
+\index{IO::SDK::Time::DateTime@{IO::SDK::Time::DateTime}!Substract@{Substract}}
+\index{Substract@{Substract}!IO::SDK::Time::DateTime@{IO::SDK::Time::DateTime}}
+\doxysubsubsection{\texorpdfstring{Substract()}{Substract()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO\+::\+SDK\+::\+Time\+::\+Time\+Span}} IO\+::\+SDK\+::\+Time\+::\+Date\+Time\+::\+Substract (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1DateTime}{IO\+::\+SDK\+::\+Time\+::\+Date\+Time}} \&}]{datetime }\end{DoxyParamCaption}) const}
+
+
+
+Substract two Date\+Times 
+
+
+\begin{DoxyParams}{Parameters}
+{\em datetime} & Substracted this datetime\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Time_1_1DateTime_a18bc7d081609ca935efa0a04f0cf2db3}\label{classIO_1_1SDK_1_1Time_1_1DateTime_a18bc7d081609ca935efa0a04f0cf2db3}} 
+\index{IO::SDK::Time::DateTime@{IO::SDK::Time::DateTime}!ToString@{ToString}}
+\index{ToString@{ToString}!IO::SDK::Time::DateTime@{IO::SDK::Time::DateTime}}
+\doxysubsubsection{\texorpdfstring{ToString()}{ToString()}}
+{\footnotesize\ttfamily virtual std\+::string IO\+::\+SDK\+::\+Time\+::\+Date\+Time\+::\+To\+String (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [pure virtual]}}
+
+
+
+Get ISO \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1UTC}{UTC}} string 
+
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+
+
+Implemented in \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB_a052c59cf78649300f515a0a590da0e83}{IO\+::\+SDK\+::\+Time\+::\+TDB}}, and \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1UTC_a432137549002510ea01664efd65bde47}{IO\+::\+SDK\+::\+Time\+::\+UTC}}.
+
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+IO.\+SDK/\+Time/\mbox{\hyperlink{DateTime_8h}{Date\+Time.\+h}}\item 
+IO.\+SDK/\+Time/\mbox{\hyperlink{DateTime_8cpp}{Date\+Time.\+cpp}}\end{DoxyCompactItemize}

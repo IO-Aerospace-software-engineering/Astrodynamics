@@ -1,0 +1,47 @@
+\hypertarget{TimeSpan_8h_source}{}\doxysection{Time\+Span.\+h}
+\label{TimeSpan_8h_source}\index{IO.SDK/Time/TimeSpan.h@{IO.SDK/Time/TimeSpan.h}}
+\mbox{\hyperlink{TimeSpan_8h}{Go to the documentation of this file.}}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{1 }
+\DoxyCodeLine{11 \textcolor{preprocessor}{\#ifndef TIMESPAN\_H}}
+\DoxyCodeLine{12 \textcolor{preprocessor}{\#define TIMESPAN\_H}}
+\DoxyCodeLine{13 \textcolor{preprocessor}{\#include<string>}}
+\DoxyCodeLine{14 \textcolor{preprocessor}{\#include<chrono>}}
+\DoxyCodeLine{15 \textcolor{preprocessor}{\#include<SpiceUsr.h>}}
+\DoxyCodeLine{16 }
+\DoxyCodeLine{17 \textcolor{keyword}{namespace }IO::SDK::Time}
+\DoxyCodeLine{18 \{}
+\DoxyCodeLine{19     \textcolor{keyword}{using namespace }std::literals::chrono\_literals;}
+\DoxyCodeLine{20     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{TimeSpan}}}
+\DoxyCodeLine{21     \{}
+\DoxyCodeLine{22     \textcolor{keyword}{private}:}
+\DoxyCodeLine{23         std::chrono::duration<double> m\_seconds\{\};}
+\DoxyCodeLine{24 }
+\DoxyCodeLine{25     \textcolor{keyword}{public}:}
+\DoxyCodeLine{26 }
+\DoxyCodeLine{27         \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{TimeSpan}}();}
+\DoxyCodeLine{32         \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{TimeSpan}}(\textcolor{keyword}{const} std::chrono::duration<double> period);}
+\DoxyCodeLine{33 }
+\DoxyCodeLine{34         std::chrono::duration<double, std::nano> GetNanoseconds() \textcolor{keyword}{const};}
+\DoxyCodeLine{35         std::chrono::duration<double, std::micro> GetMicroseconds()\textcolor{keyword}{const};}
+\DoxyCodeLine{36         std::chrono::duration<double, std::milli> GetMilliseconds()\textcolor{keyword}{const};}
+\DoxyCodeLine{37         std::chrono::duration<double> GetSeconds() \textcolor{keyword}{const};}
+\DoxyCodeLine{38         std::chrono::duration<double, std::ratio<60>> GetMinutes()\textcolor{keyword}{const};}
+\DoxyCodeLine{39         std::chrono::duration<double, std::ratio<3600>> GetHours()\textcolor{keyword}{const};}
+\DoxyCodeLine{40 }
+\DoxyCodeLine{41         \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO::SDK::Time::TimeSpan}} operator+(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO::SDK::Time::TimeSpan}}\& ts) \textcolor{keyword}{const};}
+\DoxyCodeLine{42         \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO::SDK::Time::TimeSpan}} operator+(\textcolor{keyword}{const} \textcolor{keywordtype}{double} val) \textcolor{keyword}{const};}
+\DoxyCodeLine{43         \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO::SDK::Time::TimeSpan}} operator-\/(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO::SDK::Time::TimeSpan}}\& ts) \textcolor{keyword}{const};}
+\DoxyCodeLine{44         \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO::SDK::Time::TimeSpan}} operator*(\textcolor{keyword}{const} \textcolor{keywordtype}{double} ts) \textcolor{keyword}{const};}
+\DoxyCodeLine{45         \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO::SDK::Time::TimeSpan}} operator/(\textcolor{keyword}{const} \textcolor{keywordtype}{double} ts) \textcolor{keyword}{const};}
+\DoxyCodeLine{46         \textcolor{keywordtype}{bool} operator==(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO::SDK::Time::TimeSpan}}\& ts) \textcolor{keyword}{const};}
+\DoxyCodeLine{47         \textcolor{keywordtype}{bool} operator!=(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO::SDK::Time::TimeSpan}}\& ts) \textcolor{keyword}{const};}
+\DoxyCodeLine{48         \textcolor{keywordtype}{bool} operator<(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO::SDK::Time::TimeSpan}}\& ts) \textcolor{keyword}{const};}
+\DoxyCodeLine{49         \textcolor{keywordtype}{bool} operator>(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO::SDK::Time::TimeSpan}}\& ts) \textcolor{keyword}{const};}
+\DoxyCodeLine{50         \textcolor{keywordtype}{bool} operator>=(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO::SDK::Time::TimeSpan}}\& ts) \textcolor{keyword}{const};}
+\DoxyCodeLine{51         \textcolor{keywordtype}{bool} operator<=(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO::SDK::Time::TimeSpan}}\& ts) \textcolor{keyword}{const};}
+\DoxyCodeLine{52     \};}
+\DoxyCodeLine{53 \}}
+\DoxyCodeLine{54 \textcolor{preprocessor}{\#endif}}
+
+\end{DoxyCode}

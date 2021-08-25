@@ -1,0 +1,82 @@
+\hypertarget{PhasingManeuver_8h}{}\doxysection{IO.\+SDK/\+Maneuvers/\+Phasing\+Maneuver.h File Reference}
+\label{PhasingManeuver_8h}\index{IO.SDK/Maneuvers/PhasingManeuver.h@{IO.SDK/Maneuvers/PhasingManeuver.h}}
+{\ttfamily \#include $<$memory$>$}\newline
+{\ttfamily \#include $<$Maneuver\+Base.\+h$>$}\newline
+{\ttfamily \#include $<$Orbital\+Parameters.\+h$>$}\newline
+{\ttfamily \#include $<$Engine.\+h$>$}\newline
+{\ttfamily \#include $<$Spacecraft.\+h$>$}\newline
+{\ttfamily \#include $<$Propagator.\+h$>$}\newline
+{\ttfamily \#include $<$State\+Orientation.\+h$>$}\newline
+{\ttfamily \#include $<$Time\+Span.\+h$>$}\newline
+\doxysubsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+class \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1PhasingManeuver}{IO\+::\+SDK\+::\+Maneuvers\+::\+Phasing\+Maneuver}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO\+::\+SDK\+::\+Time\+::\+Time\+Span}} \mbox{\hyperlink{PhasingManeuver_8h_ae37aa8d46bd7ef5e5f6a3a6b8499a67a}{IO\+::\+SDK\+::\+Maneuvers\+::\+Phasing\+Duration}} (const unsigned int k, const double n, const double delta\+True\+Anomaly)
+\begin{DoxyCompactList}\small\item\em Compute phasing duration. \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{PhasingManeuver_8h_a3aabb342d1200eb4998491f7ddf9ba45}{IO\+::\+SDK\+::\+Maneuvers\+::\+Phasing\+Semi\+Major\+Axis}} (const double gm, \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO\+::\+SDK\+::\+Time\+::\+Time\+Span}} phasing\+Duration)
+\begin{DoxyCompactList}\small\item\em Computa semi major axis for phasing. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+\begin{DoxyAuthor}{Author}
+Sylvain Guillet (\href{mailto:sylvain.guillet@live.com}{\texttt{ sylvain.\+guillet@live.\+com}}) 
+\end{DoxyAuthor}
+\begin{DoxyVersion}{Version}
+0.\+1 
+\end{DoxyVersion}
+\begin{DoxyDate}{Date}
+2021-\/07-\/03
+\end{DoxyDate}
+\begin{DoxyCopyright}{Copyright}
+Copyright (c) 2021 
+\end{DoxyCopyright}
+
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{PhasingManeuver_8h_ae37aa8d46bd7ef5e5f6a3a6b8499a67a}\label{PhasingManeuver_8h_ae37aa8d46bd7ef5e5f6a3a6b8499a67a}} 
+\index{PhasingManeuver.h@{PhasingManeuver.h}!PhasingDuration@{PhasingDuration}}
+\index{PhasingDuration@{PhasingDuration}!PhasingManeuver.h@{PhasingManeuver.h}}
+\doxysubsubsection{\texorpdfstring{PhasingDuration()}{PhasingDuration()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO\+::\+SDK\+::\+Time\+::\+Time\+Span}} IO\+::\+SDK\+::\+Maneuvers\+::\+Phasing\+Duration (\begin{DoxyParamCaption}\item[{const unsigned int}]{k,  }\item[{const double}]{n,  }\item[{const double}]{delta\+True\+Anomaly }\end{DoxyParamCaption})}
+
+
+
+Compute phasing duration. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em k} & nimber of revolutions \\
+\hline
+{\em n} & Mean motion \\
+\hline
+{\em delta\+True\+Anomaly} & Delta true anomaly \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+\mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO\+::\+SDK\+::\+Time\+::\+Time\+Span}} 
+\end{DoxyReturn}
+\mbox{\Hypertarget{PhasingManeuver_8h_a3aabb342d1200eb4998491f7ddf9ba45}\label{PhasingManeuver_8h_a3aabb342d1200eb4998491f7ddf9ba45}} 
+\index{PhasingManeuver.h@{PhasingManeuver.h}!PhasingSemiMajorAxis@{PhasingSemiMajorAxis}}
+\index{PhasingSemiMajorAxis@{PhasingSemiMajorAxis}!PhasingManeuver.h@{PhasingManeuver.h}}
+\doxysubsubsection{\texorpdfstring{PhasingSemiMajorAxis()}{PhasingSemiMajorAxis()}}
+{\footnotesize\ttfamily double IO\+::\+SDK\+::\+Maneuvers\+::\+Phasing\+Semi\+Major\+Axis (\begin{DoxyParamCaption}\item[{const double}]{gm,  }\item[{\mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO\+::\+SDK\+::\+Time\+::\+Time\+Span}}}]{phasing\+Duration }\end{DoxyParamCaption})}
+
+
+
+Computa semi major axis for phasing. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em gm} & GM parameter \\
+\hline
+{\em phasing\+Duration} & Phasing duration \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+double 
+\end{DoxyReturn}

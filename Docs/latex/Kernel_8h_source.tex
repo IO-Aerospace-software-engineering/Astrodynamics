@@ -1,0 +1,42 @@
+\hypertarget{Kernel_8h_source}{}\doxysection{Kernel.\+h}
+\label{Kernel_8h_source}\index{IO.SDK/Kernels/Kernel.h@{IO.SDK/Kernels/Kernel.h}}
+\mbox{\hyperlink{Kernel_8h}{Go to the documentation of this file.}}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{1 }
+\DoxyCodeLine{11 \textcolor{preprocessor}{\#ifndef KERNEL\_H}}
+\DoxyCodeLine{12 \textcolor{preprocessor}{\#define KERNEL\_H}}
+\DoxyCodeLine{13 \textcolor{preprocessor}{\#include <string>}}
+\DoxyCodeLine{14 \textcolor{preprocessor}{\#include <SpiceUsr.h>}}
+\DoxyCodeLine{15 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{Window_8h}{Window.h}}>}}
+\DoxyCodeLine{16 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{TDB_8h}{TDB.h}}>}}
+\DoxyCodeLine{17 }
+\DoxyCodeLine{18 \textcolor{keyword}{namespace }IO::SDK::Kernels}
+\DoxyCodeLine{19 \{}
+\DoxyCodeLine{20     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1SDK_1_1Kernels_1_1Kernel}{Kernel}}}
+\DoxyCodeLine{21     \{}
+\DoxyCodeLine{22     \textcolor{keyword}{protected}:}
+\DoxyCodeLine{23         \textcolor{keyword}{const} std::string m\_filePath;}
+\DoxyCodeLine{24         std::string m\_comments;}
+\DoxyCodeLine{25         \textcolor{keywordtype}{bool} m\_isLoaded\{\textcolor{keyword}{false}\};}
+\DoxyCodeLine{26         \textcolor{keywordtype}{bool} m\_fileExists\{\textcolor{keyword}{false}\};}
+\DoxyCodeLine{27         \mbox{\hyperlink{classIO_1_1SDK_1_1Kernels_1_1Kernel}{Kernel}}(\textcolor{keyword}{const} std::string \&fileName);}
+\DoxyCodeLine{34         \textcolor{keywordtype}{int} \mbox{\hyperlink{classIO_1_1SDK_1_1Kernels_1_1Kernel_a3e841838ecb29fc2b394a2f911f5c49b}{DefinePolynomialDegree}}(\textcolor{keyword}{const} \textcolor{keywordtype}{int} dataSize, \textcolor{keyword}{const} \textcolor{keywordtype}{int} maximumDegree) \textcolor{keyword}{const};}
+\DoxyCodeLine{35 }
+\DoxyCodeLine{36     \textcolor{keyword}{public}:}
+\DoxyCodeLine{37         \textcolor{keyword}{virtual} \mbox{\hyperlink{classIO_1_1SDK_1_1Kernels_1_1Kernel}{\string~Kernel}}();}
+\DoxyCodeLine{38 }
+\DoxyCodeLine{44         std::string \mbox{\hyperlink{classIO_1_1SDK_1_1Kernels_1_1Kernel_a0d608db1a0482d297358e2d3624a4f2c}{GetPath}}() \textcolor{keyword}{const};}
+\DoxyCodeLine{45 }
+\DoxyCodeLine{52         \textcolor{keywordtype}{bool} \mbox{\hyperlink{classIO_1_1SDK_1_1Kernels_1_1Kernel_abf5eb355341830674f1cb2373a94ffd4}{IsLoaded}}() \textcolor{keyword}{const};}
+\DoxyCodeLine{53 }
+\DoxyCodeLine{59         \textcolor{keyword}{virtual} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO::SDK::Time::Window<IO::SDK::Time::TDB>}} \mbox{\hyperlink{classIO_1_1SDK_1_1Kernels_1_1Kernel_a752d5b214ec50307c47fb63daa89f749}{GetCoverageWindow}}() \textcolor{keyword}{const} = 0;}
+\DoxyCodeLine{60 }
+\DoxyCodeLine{66         \textcolor{keyword}{virtual} \textcolor{keywordtype}{void} \mbox{\hyperlink{classIO_1_1SDK_1_1Kernels_1_1Kernel_a38c3e78ab819b5a1b47ac2d4e0f027aa}{AddComment}}(\textcolor{keyword}{const} std::string \&comment) \textcolor{keyword}{const};}
+\DoxyCodeLine{67 }
+\DoxyCodeLine{73         \textcolor{keyword}{virtual} std::string \mbox{\hyperlink{classIO_1_1SDK_1_1Kernels_1_1Kernel_a34cf2be98d928c830f01e69d8e04c8e8}{ReadComment}}() \textcolor{keyword}{const};}
+\DoxyCodeLine{74     \};}
+\DoxyCodeLine{75 }
+\DoxyCodeLine{76 \}}
+\DoxyCodeLine{77 \textcolor{preprocessor}{\#endif}}
+
+\end{DoxyCode}

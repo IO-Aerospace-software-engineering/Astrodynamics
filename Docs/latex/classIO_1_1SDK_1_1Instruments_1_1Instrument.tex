@@ -1,0 +1,164 @@
+\hypertarget{classIO_1_1SDK_1_1Instruments_1_1Instrument}{}\doxysection{IO\+::SDK\+::Instruments\+::Instrument Class Reference}
+\label{classIO_1_1SDK_1_1Instruments_1_1Instrument}\index{IO::SDK::Instruments::Instrument@{IO::SDK::Instruments::Instrument}}
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+std\+::string \mbox{\hyperlink{classIO_1_1SDK_1_1Instruments_1_1Instrument_ad48012eb7fe85f98520127fed4dfcc83}{Get\+Files\+Path}} () const
+\begin{DoxyCompactList}\small\item\em Get the Files Path object. \end{DoxyCompactList}\item 
+std\+::string \mbox{\hyperlink{classIO_1_1SDK_1_1Instruments_1_1Instrument_aa33eae21a590349a69d5fa120c586249}{Get\+Name}} () const
+\begin{DoxyCompactList}\small\item\em Get the Name object. \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{classIO_1_1SDK_1_1Instruments_1_1Instrument_af75a9a634ec6a2982976fdf336726d92}{Get\+Id}} () const
+\begin{DoxyCompactList}\small\item\em Get the Id object. \end{DoxyCompactList}\item 
+const \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft}{IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Spacecraft}} \& \mbox{\hyperlink{classIO_1_1SDK_1_1Instruments_1_1Instrument_a853610ef36cfe48496957d7fb0cf7267}{Get\+Spacecraft}} () const
+\begin{DoxyCompactList}\small\item\em Get the Spacecraft object. \end{DoxyCompactList}\item 
+const std\+::unique\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1InstrumentFrameFile}{IO\+::\+SDK\+::\+Frames\+::\+Instrument\+Frame\+File}} $>$ \& \mbox{\hyperlink{classIO_1_1SDK_1_1Instruments_1_1Instrument_a507debd3d58ec879bc46a09fe34ec5b6}{Get\+Frame}} () const
+\begin{DoxyCompactList}\small\item\em Get the Frame object. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO\+::\+SDK\+::\+Math\+::\+Vector3D}} \mbox{\hyperlink{classIO_1_1SDK_1_1Instruments_1_1Instrument_aa6f77570a793a4f4312c9b16fe571d66}{Get\+Boresight}} () const
+\begin{DoxyCompactList}\small\item\em Get the Boresight object. \end{DoxyCompactList}\item 
+IO\+::\+SDK\+::\+Instruments\+::\+FOVShape\+Enum \mbox{\hyperlink{classIO_1_1SDK_1_1Instruments_1_1Instrument_a0057e7de1e5f8c090bc9dc513a09cca3}{Get\+FOVShape}} () const
+\begin{DoxyCompactList}\small\item\em Get the FOV shape. \end{DoxyCompactList}\item 
+std\+::vector$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO\+::\+SDK\+::\+Math\+::\+Vector3D}} $>$ \mbox{\hyperlink{classIO_1_1SDK_1_1Instruments_1_1Instrument_ae295a6c847553a08b9ebb87004b9594e}{Get\+FOVBoundaries}} () const
+\begin{DoxyCompactList}\small\item\em Get the FOV boundaries. \end{DoxyCompactList}\item 
+std\+::vector$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO\+::\+SDK\+::\+Time\+::\+Window}}$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} $>$ $>$ \mbox{\hyperlink{classIO_1_1SDK_1_1Instruments_1_1Instrument_a3ae1261d4a7814a2063ebf3720902765}{Find\+Windows\+Where\+In\+Field\+Of\+View}} (const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO\+::\+SDK\+::\+Time\+::\+Window}}$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} $>$ search\+Window, const \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body}{IO\+::\+SDK\+::\+Body\+::\+Body}} \&target\+Body, const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO\+::\+SDK\+::\+Time\+::\+Time\+Span}} \&step\+Size, const IO\+::\+SDK\+::\+Aberrations\+Enum \&aberration) const
+\begin{DoxyCompactList}\small\item\em Find window where target body is in field of view. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsection*{Friends}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Instruments_1_1Instrument_a1ba9c39cf070407c14e63796ae7abbb9}\label{classIO_1_1SDK_1_1Instruments_1_1Instrument_a1ba9c39cf070407c14e63796ae7abbb9}} 
+class {\bfseries IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Spacecraft}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Member Function Documentation}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Instruments_1_1Instrument_a3ae1261d4a7814a2063ebf3720902765}\label{classIO_1_1SDK_1_1Instruments_1_1Instrument_a3ae1261d4a7814a2063ebf3720902765}} 
+\index{IO::SDK::Instruments::Instrument@{IO::SDK::Instruments::Instrument}!FindWindowsWhereInFieldOfView@{FindWindowsWhereInFieldOfView}}
+\index{FindWindowsWhereInFieldOfView@{FindWindowsWhereInFieldOfView}!IO::SDK::Instruments::Instrument@{IO::SDK::Instruments::Instrument}}
+\doxysubsubsection{\texorpdfstring{FindWindowsWhereInFieldOfView()}{FindWindowsWhereInFieldOfView()}}
+{\footnotesize\ttfamily std\+::vector$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO\+::\+SDK\+::\+Time\+::\+Window}}$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} $>$ $>$ IO\+::\+SDK\+::\+Instruments\+::\+Instrument\+::\+Find\+Windows\+Where\+In\+Field\+Of\+View (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO\+::\+SDK\+::\+Time\+::\+Window}}$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} $>$}]{search\+Window,  }\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body}{IO\+::\+SDK\+::\+Body\+::\+Body}} \&}]{target\+Body,  }\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO\+::\+SDK\+::\+Time\+::\+Time\+Span}} \&}]{step\+Size,  }\item[{const IO\+::\+SDK\+::\+Aberrations\+Enum \&}]{aberration }\end{DoxyParamCaption}) const}
+
+
+
+Find window where target body is in field of view. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em search\+Window} & \\
+\hline
+{\em target\+Body} & \\
+\hline
+{\em step\+Size} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+std\+::vector$<$\+IO\+::\+SDK\+::\+Time\+::\+Window$<$\+IO\+::\+SDK\+::\+Time\+::\+TDB$>$$>$ 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Instruments_1_1Instrument_aa6f77570a793a4f4312c9b16fe571d66}\label{classIO_1_1SDK_1_1Instruments_1_1Instrument_aa6f77570a793a4f4312c9b16fe571d66}} 
+\index{IO::SDK::Instruments::Instrument@{IO::SDK::Instruments::Instrument}!GetBoresight@{GetBoresight}}
+\index{GetBoresight@{GetBoresight}!IO::SDK::Instruments::Instrument@{IO::SDK::Instruments::Instrument}}
+\doxysubsubsection{\texorpdfstring{GetBoresight()}{GetBoresight()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO\+::\+SDK\+::\+Math\+::\+Vector3D}} IO\+::\+SDK\+::\+Instruments\+::\+Instrument\+::\+Get\+Boresight (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+
+
+Get the Boresight object. 
+
+\begin{DoxyReturn}{Returns}
+\mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO\+::\+SDK\+::\+Math\+::\+Vector3D}} 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Instruments_1_1Instrument_ad48012eb7fe85f98520127fed4dfcc83}\label{classIO_1_1SDK_1_1Instruments_1_1Instrument_ad48012eb7fe85f98520127fed4dfcc83}} 
+\index{IO::SDK::Instruments::Instrument@{IO::SDK::Instruments::Instrument}!GetFilesPath@{GetFilesPath}}
+\index{GetFilesPath@{GetFilesPath}!IO::SDK::Instruments::Instrument@{IO::SDK::Instruments::Instrument}}
+\doxysubsubsection{\texorpdfstring{GetFilesPath()}{GetFilesPath()}}
+{\footnotesize\ttfamily std\+::string IO\+::\+SDK\+::\+Instruments\+::\+Instrument\+::\+Get\+Files\+Path (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+
+
+Get the Files Path object. 
+
+\begin{DoxyReturn}{Returns}
+std\+::string 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Instruments_1_1Instrument_ae295a6c847553a08b9ebb87004b9594e}\label{classIO_1_1SDK_1_1Instruments_1_1Instrument_ae295a6c847553a08b9ebb87004b9594e}} 
+\index{IO::SDK::Instruments::Instrument@{IO::SDK::Instruments::Instrument}!GetFOVBoundaries@{GetFOVBoundaries}}
+\index{GetFOVBoundaries@{GetFOVBoundaries}!IO::SDK::Instruments::Instrument@{IO::SDK::Instruments::Instrument}}
+\doxysubsubsection{\texorpdfstring{GetFOVBoundaries()}{GetFOVBoundaries()}}
+{\footnotesize\ttfamily std\+::vector$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO\+::\+SDK\+::\+Math\+::\+Vector3D}} $>$ IO\+::\+SDK\+::\+Instruments\+::\+Instrument\+::\+Get\+FOVBoundaries (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+
+
+Get the FOV boundaries. 
+
+\begin{DoxyReturn}{Returns}
+std\+::vector$<$\+IO\+::\+SDK\+::\+Math\+::\+Vector3\+D$>$ 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Instruments_1_1Instrument_a0057e7de1e5f8c090bc9dc513a09cca3}\label{classIO_1_1SDK_1_1Instruments_1_1Instrument_a0057e7de1e5f8c090bc9dc513a09cca3}} 
+\index{IO::SDK::Instruments::Instrument@{IO::SDK::Instruments::Instrument}!GetFOVShape@{GetFOVShape}}
+\index{GetFOVShape@{GetFOVShape}!IO::SDK::Instruments::Instrument@{IO::SDK::Instruments::Instrument}}
+\doxysubsubsection{\texorpdfstring{GetFOVShape()}{GetFOVShape()}}
+{\footnotesize\ttfamily IO\+::\+SDK\+::\+Instruments\+::\+FOVShape\+Enum IO\+::\+SDK\+::\+Instruments\+::\+Instrument\+::\+Get\+FOVShape (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+
+
+Get the FOV shape. 
+
+\begin{DoxyReturn}{Returns}
+IO\+::\+SDK\+::\+Instruments\+::\+FOVShape\+Enum 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Instruments_1_1Instrument_a507debd3d58ec879bc46a09fe34ec5b6}\label{classIO_1_1SDK_1_1Instruments_1_1Instrument_a507debd3d58ec879bc46a09fe34ec5b6}} 
+\index{IO::SDK::Instruments::Instrument@{IO::SDK::Instruments::Instrument}!GetFrame@{GetFrame}}
+\index{GetFrame@{GetFrame}!IO::SDK::Instruments::Instrument@{IO::SDK::Instruments::Instrument}}
+\doxysubsubsection{\texorpdfstring{GetFrame()}{GetFrame()}}
+{\footnotesize\ttfamily const std\+::unique\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1InstrumentFrameFile}{IO\+::\+SDK\+::\+Frames\+::\+Instrument\+Frame\+File}} $>$ \& IO\+::\+SDK\+::\+Instruments\+::\+Instrument\+::\+Get\+Frame (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+
+
+Get the Frame object. 
+
+\begin{DoxyReturn}{Returns}
+const std\+::unique\+\_\+ptr$<$\+IO\+::\+SDK\+::\+Frames\+::\+Instrument\+Frame$>$\& 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Instruments_1_1Instrument_af75a9a634ec6a2982976fdf336726d92}\label{classIO_1_1SDK_1_1Instruments_1_1Instrument_af75a9a634ec6a2982976fdf336726d92}} 
+\index{IO::SDK::Instruments::Instrument@{IO::SDK::Instruments::Instrument}!GetId@{GetId}}
+\index{GetId@{GetId}!IO::SDK::Instruments::Instrument@{IO::SDK::Instruments::Instrument}}
+\doxysubsubsection{\texorpdfstring{GetId()}{GetId()}}
+{\footnotesize\ttfamily int IO\+::\+SDK\+::\+Instruments\+::\+Instrument\+::\+Get\+Id (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+
+
+Get the Id object. 
+
+\begin{DoxyReturn}{Returns}
+int 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Instruments_1_1Instrument_aa33eae21a590349a69d5fa120c586249}\label{classIO_1_1SDK_1_1Instruments_1_1Instrument_aa33eae21a590349a69d5fa120c586249}} 
+\index{IO::SDK::Instruments::Instrument@{IO::SDK::Instruments::Instrument}!GetName@{GetName}}
+\index{GetName@{GetName}!IO::SDK::Instruments::Instrument@{IO::SDK::Instruments::Instrument}}
+\doxysubsubsection{\texorpdfstring{GetName()}{GetName()}}
+{\footnotesize\ttfamily std\+::string IO\+::\+SDK\+::\+Instruments\+::\+Instrument\+::\+Get\+Name (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+
+
+Get the Name object. 
+
+\begin{DoxyReturn}{Returns}
+std\+::string 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Instruments_1_1Instrument_a853610ef36cfe48496957d7fb0cf7267}\label{classIO_1_1SDK_1_1Instruments_1_1Instrument_a853610ef36cfe48496957d7fb0cf7267}} 
+\index{IO::SDK::Instruments::Instrument@{IO::SDK::Instruments::Instrument}!GetSpacecraft@{GetSpacecraft}}
+\index{GetSpacecraft@{GetSpacecraft}!IO::SDK::Instruments::Instrument@{IO::SDK::Instruments::Instrument}}
+\doxysubsubsection{\texorpdfstring{GetSpacecraft()}{GetSpacecraft()}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft}{IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Spacecraft}} \& IO\+::\+SDK\+::\+Instruments\+::\+Instrument\+::\+Get\+Spacecraft (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+
+
+Get the Spacecraft object. 
+
+\begin{DoxyReturn}{Returns}
+const IO\+::\+SDK\+::\+Body\+::\+Spacecraft\& 
+\end{DoxyReturn}
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+IO.\+SDK/\+Instruments/\mbox{\hyperlink{Instrument_8h}{Instrument.\+h}}\item 
+IO.\+SDK/\+Instruments/\mbox{\hyperlink{Instrument_8cpp}{Instrument.\+cpp}}\end{DoxyCompactItemize}

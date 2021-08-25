@@ -1,0 +1,36 @@
+\hypertarget{SpacecraftFrameFile_8h_source}{}\doxysection{Spacecraft\+Frame\+File.\+h}
+\label{SpacecraftFrameFile_8h_source}\index{IO.SDK/Frames/SpacecraftFrameFile.h@{IO.SDK/Frames/SpacecraftFrameFile.h}}
+\mbox{\hyperlink{SpacecraftFrameFile_8h}{Go to the documentation of this file.}}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{1 }
+\DoxyCodeLine{11 \textcolor{preprocessor}{\#ifndef SPACECRAFT\_FRAME\_H}}
+\DoxyCodeLine{12 \textcolor{preprocessor}{\#define SPACECRAFT\_FRAME\_H}}
+\DoxyCodeLine{13 }
+\DoxyCodeLine{14 \textcolor{preprocessor}{\#include <string>}}
+\DoxyCodeLine{15 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{Spacecraft_8h}{Spacecraft.h}}>}}
+\DoxyCodeLine{16 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{FrameFile_8h}{FrameFile.h}}>}}
+\DoxyCodeLine{17 }
+\DoxyCodeLine{18 \textcolor{comment}{//Forward declaration}}
+\DoxyCodeLine{19 \textcolor{keyword}{namespace }IO::SDK::Body::Spacecraft}
+\DoxyCodeLine{20 \{}
+\DoxyCodeLine{21     \textcolor{keyword}{class }Spacecraft;}
+\DoxyCodeLine{22 \}}
+\DoxyCodeLine{23 }
+\DoxyCodeLine{24 \textcolor{keyword}{namespace }IO::SDK::Frames}
+\DoxyCodeLine{25 \{}
+\DoxyCodeLine{30     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1SpacecraftFrameFile}{SpacecraftFrameFile}} final : \textcolor{keyword}{public} \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1FrameFile}{IO::SDK::Frames::FrameFile}}}
+\DoxyCodeLine{31     \{}
+\DoxyCodeLine{32     \textcolor{keyword}{private}:}
+\DoxyCodeLine{33         \textcolor{keyword}{const} \textcolor{keywordtype}{int} m\_id;}
+\DoxyCodeLine{34         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft}{IO::SDK::Body::Spacecraft::Spacecraft}} \&m\_spacecraft;}
+\DoxyCodeLine{35         \textcolor{keywordtype}{void} BuildFrame();}
+\DoxyCodeLine{36 }
+\DoxyCodeLine{42         \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1SpacecraftFrameFile}{SpacecraftFrameFile}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft}{IO::SDK::Body::Spacecraft::Spacecraft}} \&spacecraft);}
+\DoxyCodeLine{43 }
+\DoxyCodeLine{44     \textcolor{keyword}{public}:}
+\DoxyCodeLine{45         \textcolor{keyword}{friend} \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft}{IO::SDK::Body::Spacecraft::Spacecraft}};}
+\DoxyCodeLine{46     \};}
+\DoxyCodeLine{47 \}}
+\DoxyCodeLine{48 \textcolor{preprocessor}{\#endif}}
+
+\end{DoxyCode}
