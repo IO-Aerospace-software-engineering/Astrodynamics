@@ -1,0 +1,125 @@
+\hypertarget{classIO_1_1SDK_1_1Coordinates_1_1AzimuthRange}{}\doxysection{IO\+::SDK\+::Coordinates\+::Azimuth\+Range Class Reference}
+\label{classIO_1_1SDK_1_1Coordinates_1_1AzimuthRange}\index{IO::SDK::Coordinates::AzimuthRange@{IO::SDK::Coordinates::AzimuthRange}}
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1AzimuthRange_a269c3b3d8bc727cad334abe3fb40c739}{Azimuth\+Range}} (const double start, const double end)
+\begin{DoxyCompactList}\small\item\em Construct a new Azimuth Range object. \end{DoxyCompactList}\item 
+bool \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1AzimuthRange_a7b252e577b3d75552fe8ebb29f38d236}{Is\+In\+Range}} (const double angle) const
+\begin{DoxyCompactList}\small\item\em Know if angle is in range. \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1AzimuthRange_af5f14096e4dce0522ea0971fb0a039d7}{Get\+Start}} () const
+\begin{DoxyCompactList}\small\item\em Get the Start. \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1AzimuthRange_a0ce744b64eec268b9d006155a2e24abc}{Get\+End}} () const
+\begin{DoxyCompactList}\small\item\em Get the End. \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1AzimuthRange_a40680aeb4a4b6db06b322d66cc7f5356}{Get\+Span}} () const
+\begin{DoxyCompactList}\small\item\em Get the Span. \end{DoxyCompactList}\item 
+bool \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1AzimuthRange_a07d4c5b33eadc2c4b87935f1612bef91}{Is\+Intersected}} (const \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1AzimuthRange}{Azimuth\+Range}} \&azimuth\+Range) const
+\begin{DoxyCompactList}\small\item\em Know if an azimuth range intersects this azimuth range. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\doxysubsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Coordinates_1_1AzimuthRange_a269c3b3d8bc727cad334abe3fb40c739}\label{classIO_1_1SDK_1_1Coordinates_1_1AzimuthRange_a269c3b3d8bc727cad334abe3fb40c739}} 
+\index{IO::SDK::Coordinates::AzimuthRange@{IO::SDK::Coordinates::AzimuthRange}!AzimuthRange@{AzimuthRange}}
+\index{AzimuthRange@{AzimuthRange}!IO::SDK::Coordinates::AzimuthRange@{IO::SDK::Coordinates::AzimuthRange}}
+\doxysubsubsection{\texorpdfstring{AzimuthRange()}{AzimuthRange()}}
+{\footnotesize\ttfamily IO\+::\+SDK\+::\+Coordinates\+::\+Azimuth\+Range\+::\+Azimuth\+Range (\begin{DoxyParamCaption}\item[{const double}]{start,  }\item[{const double}]{end }\end{DoxyParamCaption})}
+
+
+
+Construct a new Azimuth Range object. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em start} & Start range \mbox{[}-\/2pi;2pi\mbox{]} \\
+\hline
+{\em end} & End range \mbox{[}-\/2pi;2pi\mbox{]} \\
+\hline
+\end{DoxyParams}
+
+
+\doxysubsection{Member Function Documentation}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Coordinates_1_1AzimuthRange_a0ce744b64eec268b9d006155a2e24abc}\label{classIO_1_1SDK_1_1Coordinates_1_1AzimuthRange_a0ce744b64eec268b9d006155a2e24abc}} 
+\index{IO::SDK::Coordinates::AzimuthRange@{IO::SDK::Coordinates::AzimuthRange}!GetEnd@{GetEnd}}
+\index{GetEnd@{GetEnd}!IO::SDK::Coordinates::AzimuthRange@{IO::SDK::Coordinates::AzimuthRange}}
+\doxysubsubsection{\texorpdfstring{GetEnd()}{GetEnd()}}
+{\footnotesize\ttfamily double IO\+::\+SDK\+::\+Coordinates\+::\+Azimuth\+Range\+::\+Get\+End (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Get the End. 
+
+\begin{DoxyReturn}{Returns}
+double 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Coordinates_1_1AzimuthRange_a40680aeb4a4b6db06b322d66cc7f5356}\label{classIO_1_1SDK_1_1Coordinates_1_1AzimuthRange_a40680aeb4a4b6db06b322d66cc7f5356}} 
+\index{IO::SDK::Coordinates::AzimuthRange@{IO::SDK::Coordinates::AzimuthRange}!GetSpan@{GetSpan}}
+\index{GetSpan@{GetSpan}!IO::SDK::Coordinates::AzimuthRange@{IO::SDK::Coordinates::AzimuthRange}}
+\doxysubsubsection{\texorpdfstring{GetSpan()}{GetSpan()}}
+{\footnotesize\ttfamily double IO\+::\+SDK\+::\+Coordinates\+::\+Azimuth\+Range\+::\+Get\+Span (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Get the Span. 
+
+\begin{DoxyReturn}{Returns}
+double 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Coordinates_1_1AzimuthRange_af5f14096e4dce0522ea0971fb0a039d7}\label{classIO_1_1SDK_1_1Coordinates_1_1AzimuthRange_af5f14096e4dce0522ea0971fb0a039d7}} 
+\index{IO::SDK::Coordinates::AzimuthRange@{IO::SDK::Coordinates::AzimuthRange}!GetStart@{GetStart}}
+\index{GetStart@{GetStart}!IO::SDK::Coordinates::AzimuthRange@{IO::SDK::Coordinates::AzimuthRange}}
+\doxysubsubsection{\texorpdfstring{GetStart()}{GetStart()}}
+{\footnotesize\ttfamily double IO\+::\+SDK\+::\+Coordinates\+::\+Azimuth\+Range\+::\+Get\+Start (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Get the Start. 
+
+\begin{DoxyReturn}{Returns}
+double 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Coordinates_1_1AzimuthRange_a7b252e577b3d75552fe8ebb29f38d236}\label{classIO_1_1SDK_1_1Coordinates_1_1AzimuthRange_a7b252e577b3d75552fe8ebb29f38d236}} 
+\index{IO::SDK::Coordinates::AzimuthRange@{IO::SDK::Coordinates::AzimuthRange}!IsInRange@{IsInRange}}
+\index{IsInRange@{IsInRange}!IO::SDK::Coordinates::AzimuthRange@{IO::SDK::Coordinates::AzimuthRange}}
+\doxysubsubsection{\texorpdfstring{IsInRange()}{IsInRange()}}
+{\footnotesize\ttfamily bool IO\+::\+SDK\+::\+Coordinates\+::\+Azimuth\+Range\+::\+Is\+In\+Range (\begin{DoxyParamCaption}\item[{const double}]{angle }\end{DoxyParamCaption}) const}
+
+
+
+Know if angle is in range. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em angle} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+true 
+
+false 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Coordinates_1_1AzimuthRange_a07d4c5b33eadc2c4b87935f1612bef91}\label{classIO_1_1SDK_1_1Coordinates_1_1AzimuthRange_a07d4c5b33eadc2c4b87935f1612bef91}} 
+\index{IO::SDK::Coordinates::AzimuthRange@{IO::SDK::Coordinates::AzimuthRange}!IsIntersected@{IsIntersected}}
+\index{IsIntersected@{IsIntersected}!IO::SDK::Coordinates::AzimuthRange@{IO::SDK::Coordinates::AzimuthRange}}
+\doxysubsubsection{\texorpdfstring{IsIntersected()}{IsIntersected()}}
+{\footnotesize\ttfamily bool IO\+::\+SDK\+::\+Coordinates\+::\+Azimuth\+Range\+::\+Is\+Intersected (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1AzimuthRange}{Azimuth\+Range}} \&}]{azimuth\+Range }\end{DoxyParamCaption}) const}
+
+
+
+Know if an azimuth range intersects this azimuth range. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em azimuth\+Range} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+true 
+
+false 
+\end{DoxyReturn}
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+IO.\+SDK/\+Coordinates/\mbox{\hyperlink{AzimuthRange_8h}{Azimuth\+Range.\+h}}\item 
+IO.\+SDK/\+Coordinates/\mbox{\hyperlink{AzimuthRange_8cpp}{Azimuth\+Range.\+cpp}}\end{DoxyCompactItemize}

@@ -1,0 +1,132 @@
+\hypertarget{classIO_1_1SDK_1_1Maneuvers_1_1ApsidalAlignmentManeuver}{}\doxysection{IO\+::SDK\+::Maneuvers\+::Apsidal\+Alignment\+Maneuver Class Reference}
+\label{classIO_1_1SDK_1_1Maneuvers_1_1ApsidalAlignmentManeuver}\index{IO::SDK::Maneuvers::ApsidalAlignmentManeuver@{IO::SDK::Maneuvers::ApsidalAlignmentManeuver}}
+Inheritance diagram for IO\+::SDK\+::Maneuvers\+::Apsidal\+Alignment\+Maneuver\+:\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=2.000000cm]{classIO_1_1SDK_1_1Maneuvers_1_1ApsidalAlignmentManeuver}
+\end{center}
+\end{figure}
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Maneuvers_1_1ApsidalAlignmentManeuver_a0cdd488a6ba91c3ed9b9071fa16f2e72}\label{classIO_1_1SDK_1_1Maneuvers_1_1ApsidalAlignmentManeuver_a0cdd488a6ba91c3ed9b9071fa16f2e72}} 
+{\bfseries Apsidal\+Alignment\+Maneuver} (const std\+::vector$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Engine}{IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Engine}} $>$ \&engines, \mbox{\hyperlink{classIO_1_1SDK_1_1Propagators_1_1Propagator}{IO\+::\+SDK\+::\+Propagators\+::\+Propagator}} \&propagator, \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}} $\ast$target\+Orbit)
+\item 
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Maneuvers_1_1ApsidalAlignmentManeuver_a10db2c8d5f0c552bf83d32003b1c6a47}\label{classIO_1_1SDK_1_1Maneuvers_1_1ApsidalAlignmentManeuver_a10db2c8d5f0c552bf83d32003b1c6a47}} 
+{\bfseries Apsidal\+Alignment\+Maneuver} (const std\+::vector$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Engine}{IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Engine}} $>$ \&engines, \mbox{\hyperlink{classIO_1_1SDK_1_1Propagators_1_1Propagator}{IO\+::\+SDK\+::\+Propagators\+::\+Propagator}} \&propagator, \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}} $\ast$target\+Orbit, const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} \&minimum\+Epoch)
+\item 
+virtual bool \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ApsidalAlignmentManeuver_abccf6c20c8266615d3d9f0edc424cdf0}{Can\+Execute}} (const \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}} \&orbital\+Params) override
+\begin{DoxyCompactList}\small\item\em Define maneuver execution condition. \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ApsidalAlignmentManeuver_ac7bcd06f49af20d58a945eb4044b766d}{Get\+Theta}} () const
+\begin{DoxyCompactList}\small\item\em Get the theta angle. \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ApsidalAlignmentManeuver_a2f4147ed58b5828f5e45f77facf17b56}{Get\+Theta}} (const \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+State\+Vector}} \&state\+Vector) const
+\begin{DoxyCompactList}\small\item\em Get the Theta. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsection*{Protected Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+virtual void \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ApsidalAlignmentManeuver_a3678b43d7f32de52bca3b97a3c68c046}{Compute}} (const \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}} \&maneuver\+Point) override
+\begin{DoxyCompactList}\small\item\em Compute impulsive maneuver. \end{DoxyCompactList}\item 
+virtual \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateOrientation}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+State\+Orientation}} \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ApsidalAlignmentManeuver_a446d463805067fec8ca3e1926b30553c}{Compute\+Orientation}} (const \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}} \&maneuver\+Point) override
+\end{DoxyCompactItemize}
+\doxysubsection*{Additional Inherited Members}
+
+
+\doxysubsection{Member Function Documentation}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Maneuvers_1_1ApsidalAlignmentManeuver_abccf6c20c8266615d3d9f0edc424cdf0}\label{classIO_1_1SDK_1_1Maneuvers_1_1ApsidalAlignmentManeuver_abccf6c20c8266615d3d9f0edc424cdf0}} 
+\index{IO::SDK::Maneuvers::ApsidalAlignmentManeuver@{IO::SDK::Maneuvers::ApsidalAlignmentManeuver}!CanExecute@{CanExecute}}
+\index{CanExecute@{CanExecute}!IO::SDK::Maneuvers::ApsidalAlignmentManeuver@{IO::SDK::Maneuvers::ApsidalAlignmentManeuver}}
+\doxysubsubsection{\texorpdfstring{CanExecute()}{CanExecute()}}
+{\footnotesize\ttfamily bool IO\+::\+SDK\+::\+Maneuvers\+::\+Apsidal\+Alignment\+Maneuver\+::\+Can\+Execute (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}} \&}]{orbital\+Params }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Define maneuver execution condition. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em state\+Vector} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+true 
+
+false 
+\end{DoxyReturn}
+
+
+Implements \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase_a5aa0c82f84ec1d521b42b46f0f91d40d}{IO\+::\+SDK\+::\+Maneuvers\+::\+Maneuver\+Base}}.
+
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Maneuvers_1_1ApsidalAlignmentManeuver_a3678b43d7f32de52bca3b97a3c68c046}\label{classIO_1_1SDK_1_1Maneuvers_1_1ApsidalAlignmentManeuver_a3678b43d7f32de52bca3b97a3c68c046}} 
+\index{IO::SDK::Maneuvers::ApsidalAlignmentManeuver@{IO::SDK::Maneuvers::ApsidalAlignmentManeuver}!Compute@{Compute}}
+\index{Compute@{Compute}!IO::SDK::Maneuvers::ApsidalAlignmentManeuver@{IO::SDK::Maneuvers::ApsidalAlignmentManeuver}}
+\doxysubsubsection{\texorpdfstring{Compute()}{Compute()}}
+{\footnotesize\ttfamily void IO\+::\+SDK\+::\+Maneuvers\+::\+Apsidal\+Alignment\+Maneuver\+::\+Compute (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}} \&}]{maneuver\+Point }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [protected]}, {\ttfamily [virtual]}}
+
+
+
+Compute impulsive maneuver. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em maneuver\+Point} & \\
+\hline
+\end{DoxyParams}
+
+
+Implements \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase_a3d206dbe0f7f5ad8b18e0601f154e873}{IO\+::\+SDK\+::\+Maneuvers\+::\+Maneuver\+Base}}.
+
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Maneuvers_1_1ApsidalAlignmentManeuver_a446d463805067fec8ca3e1926b30553c}\label{classIO_1_1SDK_1_1Maneuvers_1_1ApsidalAlignmentManeuver_a446d463805067fec8ca3e1926b30553c}} 
+\index{IO::SDK::Maneuvers::ApsidalAlignmentManeuver@{IO::SDK::Maneuvers::ApsidalAlignmentManeuver}!ComputeOrientation@{ComputeOrientation}}
+\index{ComputeOrientation@{ComputeOrientation}!IO::SDK::Maneuvers::ApsidalAlignmentManeuver@{IO::SDK::Maneuvers::ApsidalAlignmentManeuver}}
+\doxysubsubsection{\texorpdfstring{ComputeOrientation()}{ComputeOrientation()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateOrientation}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+State\+Orientation}} IO\+::\+SDK\+::\+Maneuvers\+::\+Apsidal\+Alignment\+Maneuver\+::\+Compute\+Orientation (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}} \&}]{maneuver\+Point }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [protected]}, {\ttfamily [virtual]}}
+
+
+\begin{DoxyParams}{Parameters}
+{\em maneuver\+Point} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+\mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateOrientation}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+State\+Orientation}} 
+\end{DoxyReturn}
+
+
+Implements \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase_a2339b5313d34fe2d7bf474f645030bc5}{IO\+::\+SDK\+::\+Maneuvers\+::\+Maneuver\+Base}}.
+
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Maneuvers_1_1ApsidalAlignmentManeuver_ac7bcd06f49af20d58a945eb4044b766d}\label{classIO_1_1SDK_1_1Maneuvers_1_1ApsidalAlignmentManeuver_ac7bcd06f49af20d58a945eb4044b766d}} 
+\index{IO::SDK::Maneuvers::ApsidalAlignmentManeuver@{IO::SDK::Maneuvers::ApsidalAlignmentManeuver}!GetTheta@{GetTheta}}
+\index{GetTheta@{GetTheta}!IO::SDK::Maneuvers::ApsidalAlignmentManeuver@{IO::SDK::Maneuvers::ApsidalAlignmentManeuver}}
+\doxysubsubsection{\texorpdfstring{GetTheta()}{GetTheta()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily double IO\+::\+SDK\+::\+Maneuvers\+::\+Apsidal\+Alignment\+Maneuver\+::\+Get\+Theta (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+
+
+Get the theta angle. 
+
+\begin{DoxyReturn}{Returns}
+double 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Maneuvers_1_1ApsidalAlignmentManeuver_a2f4147ed58b5828f5e45f77facf17b56}\label{classIO_1_1SDK_1_1Maneuvers_1_1ApsidalAlignmentManeuver_a2f4147ed58b5828f5e45f77facf17b56}} 
+\index{IO::SDK::Maneuvers::ApsidalAlignmentManeuver@{IO::SDK::Maneuvers::ApsidalAlignmentManeuver}!GetTheta@{GetTheta}}
+\index{GetTheta@{GetTheta}!IO::SDK::Maneuvers::ApsidalAlignmentManeuver@{IO::SDK::Maneuvers::ApsidalAlignmentManeuver}}
+\doxysubsubsection{\texorpdfstring{GetTheta()}{GetTheta()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily double IO\+::\+SDK\+::\+Maneuvers\+::\+Apsidal\+Alignment\+Maneuver\+::\+Get\+Theta (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+State\+Vector}} \&}]{state\+Vector }\end{DoxyParamCaption}) const}
+
+
+
+Get the Theta. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em state\+Vector} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+double 
+\end{DoxyReturn}
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+IO.\+SDK/\+Maneuvers/\mbox{\hyperlink{ApsidalAlignmentManeuver_8h}{Apsidal\+Alignment\+Maneuver.\+h}}\item 
+IO.\+SDK/\+Maneuvers/\mbox{\hyperlink{ApsidalAlignmentManeuver_8cpp}{Apsidal\+Alignment\+Maneuver.\+cpp}}\end{DoxyCompactItemize}

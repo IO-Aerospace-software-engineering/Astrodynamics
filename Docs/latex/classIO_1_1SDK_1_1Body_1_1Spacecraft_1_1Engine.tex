@@ -1,0 +1,296 @@
+\hypertarget{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Engine}{}\doxysection{IO\+::SDK\+::Body\+::Spacecraft\+::Engine Class Reference}
+\label{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Engine}\index{IO::SDK::Body::Spacecraft::Engine@{IO::SDK::Body::Spacecraft::Engine}}
+
+
+\mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Engine}{Engine}} class.  
+
+
+
+
+{\ttfamily \#include $<$Engine.\+h$>$}
+
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Engine_aa7f21c85ba377fe33b261430134f1883}{Engine}} (const std\+::string \&serial\+Number, const std\+::string \&name, const \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1FuelTank}{IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Fuel\+Tank}} \&fueltank, const \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{Math\+::\+Vector3D}} \&position, const \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{Math\+::\+Vector3D}} \&orientation, const double isp, const double fuel\+Flow)
+\begin{DoxyCompactList}\small\item\em Construct a new \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Engine}{Engine}} object. \end{DoxyCompactList}\item 
+std\+::string \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Engine_a75aa9f2cd1bb22c6aed24f424801ae6f}{Get\+Name}} () const
+\begin{DoxyCompactList}\small\item\em Get the Name object. \end{DoxyCompactList}\item 
+std\+::string \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Engine_abdd3f5332895a3f1927736e7ee5820a5}{Get\+Serial\+Number}} () const
+\begin{DoxyCompactList}\small\item\em Get the Serial Number object. \end{DoxyCompactList}\item 
+const \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{Math\+::\+Vector3D}} \& \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Engine_a5e4a870a8045a8c57175a624ea8bf2bd}{Get\+Position}} () const
+\begin{DoxyCompactList}\small\item\em Get the Position object. \end{DoxyCompactList}\item 
+const \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{Math\+::\+Vector3D}} \& \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Engine_a3e48202e92a39cb96cebb13f0d1776e4}{Get\+Orientation}} () const
+\begin{DoxyCompactList}\small\item\em Get the Orientation object. \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Engine_acade86d58e0cf22863cee725df6609e1}{Get\+ISP}} () const
+\begin{DoxyCompactList}\small\item\em Get then engine specific impulse. \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Engine_a427c17c9cee639f820f7911d341ca4c6}{Get\+Fuel\+Flow}} () const
+\begin{DoxyCompactList}\small\item\em Get the Fuel Flow object. \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Engine_ae3d3cf4da32b145b08d196f4c8b4b880}{Get\+Remaining\+DeltaV}} () const
+\begin{DoxyCompactList}\small\item\em Get the Remaining Delta V object. \end{DoxyCompactList}\item 
+const \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1FuelTank}{IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Fuel\+Tank}} \& \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Engine_a8ac4fd6045ed7ca58a54ad49421df245}{Get\+Fuel\+Tank}} () const
+\begin{DoxyCompactList}\small\item\em Get the Fuel Tank object. \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Engine_a68b4d9b372f2d999b5de23e05066fe1b}{Get\+Thrust}} () const
+\begin{DoxyCompactList}\small\item\em Get the Thrust. \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Engine_a1fcb854224bc1e3e53e8522a93895712}{Burn}} (const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO\+::\+SDK\+::\+Time\+::\+Time\+Span}} \&duration)
+\begin{DoxyCompactList}\small\item\em Ignite engine and get burned fuel. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Engine_a3b1b0a9b9528e7d162f2b0cc6b90fd12}\label{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Engine_a3b1b0a9b9528e7d162f2b0cc6b90fd12}} 
+bool {\bfseries operator==} (const \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Engine}{IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Engine}} \&other) const
+\item 
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Engine_ad0e51d8938c245ba998380ca6c7e4f1a}\label{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Engine_ad0e51d8938c245ba998380ca6c7e4f1a}} 
+bool {\bfseries operator!=} (const \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Engine}{IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Engine}} \&other) const
+\end{DoxyCompactItemize}
+\doxysubsection*{Static Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+static double \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Engine_a4b14cc7d6389c0b87e7b811646b28676}{Compute\+DeltaV}} (double isp, double initial\+Mass, double final\+Mass)
+\begin{DoxyCompactList}\small\item\em Comptue Delta V from mass changing. \end{DoxyCompactList}\item 
+static \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO\+::\+SDK\+::\+Time\+::\+Time\+Span}} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Engine_ae00608073fd874aa24c42052f298d2d8}{Compute\+DeltaT}} (double isp, double initial\+Mass, double fuel\+Flow, double deltaV)
+\begin{DoxyCompactList}\small\item\em Compute time required to reach Delta V. \end{DoxyCompactList}\item 
+static double \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Engine_a1b5f0bb14b3c136acfca35e13ac112d1}{Compute\+DeltaM}} (double isp, double initial\+Mass, double deltaV)
+\begin{DoxyCompactList}\small\item\em Compute fuel mass required to reach Delta V. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+\mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Engine}{Engine}} class. 
+
+\doxysubsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Engine_aa7f21c85ba377fe33b261430134f1883}\label{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Engine_aa7f21c85ba377fe33b261430134f1883}} 
+\index{IO::SDK::Body::Spacecraft::Engine@{IO::SDK::Body::Spacecraft::Engine}!Engine@{Engine}}
+\index{Engine@{Engine}!IO::SDK::Body::Spacecraft::Engine@{IO::SDK::Body::Spacecraft::Engine}}
+\doxysubsubsection{\texorpdfstring{Engine()}{Engine()}}
+{\footnotesize\ttfamily IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Engine\+::\+Engine (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{serial\+Number,  }\item[{const std\+::string \&}]{name,  }\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1FuelTank}{IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Fuel\+Tank}} \&}]{fueltank,  }\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{Math\+::\+Vector3D}} \&}]{position,  }\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{Math\+::\+Vector3D}} \&}]{orientation,  }\item[{const double}]{isp,  }\item[{const double}]{fuel\+Flow }\end{DoxyParamCaption})}
+
+
+
+Construct a new \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Engine}{Engine}} object. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em serial\+Number} & \\
+\hline
+{\em name} & \\
+\hline
+{\em fueltank} & Associated fuel tank \\
+\hline
+{\em position} & \\
+\hline
+{\em orientation} & \\
+\hline
+{\em isp} & s \\
+\hline
+{\em fuel\+Flow} & kg/s \\
+\hline
+\end{DoxyParams}
+
+
+\doxysubsection{Member Function Documentation}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Engine_a1fcb854224bc1e3e53e8522a93895712}\label{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Engine_a1fcb854224bc1e3e53e8522a93895712}} 
+\index{IO::SDK::Body::Spacecraft::Engine@{IO::SDK::Body::Spacecraft::Engine}!Burn@{Burn}}
+\index{Burn@{Burn}!IO::SDK::Body::Spacecraft::Engine@{IO::SDK::Body::Spacecraft::Engine}}
+\doxysubsubsection{\texorpdfstring{Burn()}{Burn()}}
+{\footnotesize\ttfamily double IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Engine\+::\+Burn (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO\+::\+SDK\+::\+Time\+::\+Time\+Span}} \&}]{duration }\end{DoxyParamCaption})}
+
+
+
+Ignite engine and get burned fuel. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em duration} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+double 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Engine_a1b5f0bb14b3c136acfca35e13ac112d1}\label{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Engine_a1b5f0bb14b3c136acfca35e13ac112d1}} 
+\index{IO::SDK::Body::Spacecraft::Engine@{IO::SDK::Body::Spacecraft::Engine}!ComputeDeltaM@{ComputeDeltaM}}
+\index{ComputeDeltaM@{ComputeDeltaM}!IO::SDK::Body::Spacecraft::Engine@{IO::SDK::Body::Spacecraft::Engine}}
+\doxysubsubsection{\texorpdfstring{ComputeDeltaM()}{ComputeDeltaM()}}
+{\footnotesize\ttfamily double IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Engine\+::\+Compute\+DeltaM (\begin{DoxyParamCaption}\item[{double}]{isp,  }\item[{double}]{initial\+Mass,  }\item[{double}]{deltaV }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Compute fuel mass required to reach Delta V. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em isp} & Specific impulse \\
+\hline
+{\em initial\+Mass} & \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft}{Spacecraft}} initial mass \\
+\hline
+{\em deltaV} & Delta V \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+double 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Engine_ae00608073fd874aa24c42052f298d2d8}\label{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Engine_ae00608073fd874aa24c42052f298d2d8}} 
+\index{IO::SDK::Body::Spacecraft::Engine@{IO::SDK::Body::Spacecraft::Engine}!ComputeDeltaT@{ComputeDeltaT}}
+\index{ComputeDeltaT@{ComputeDeltaT}!IO::SDK::Body::Spacecraft::Engine@{IO::SDK::Body::Spacecraft::Engine}}
+\doxysubsubsection{\texorpdfstring{ComputeDeltaT()}{ComputeDeltaT()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO\+::\+SDK\+::\+Time\+::\+Time\+Span}} IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Engine\+::\+Compute\+DeltaT (\begin{DoxyParamCaption}\item[{double}]{isp,  }\item[{double}]{initial\+Mass,  }\item[{double}]{fuel\+Flow,  }\item[{double}]{deltaV }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Compute time required to reach Delta V. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em isp} & Specific impulse \\
+\hline
+{\em initial\+Mass} & \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft}{Spacecraft}} initial mass \\
+\hline
+{\em fuel\+Flow} & \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Engine}{Engine}} fuel flow \\
+\hline
+{\em deltaV} & Delat V \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+\mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO\+::\+SDK\+::\+Time\+::\+Time\+Span}} 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Engine_a4b14cc7d6389c0b87e7b811646b28676}\label{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Engine_a4b14cc7d6389c0b87e7b811646b28676}} 
+\index{IO::SDK::Body::Spacecraft::Engine@{IO::SDK::Body::Spacecraft::Engine}!ComputeDeltaV@{ComputeDeltaV}}
+\index{ComputeDeltaV@{ComputeDeltaV}!IO::SDK::Body::Spacecraft::Engine@{IO::SDK::Body::Spacecraft::Engine}}
+\doxysubsubsection{\texorpdfstring{ComputeDeltaV()}{ComputeDeltaV()}}
+{\footnotesize\ttfamily double IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Engine\+::\+Compute\+DeltaV (\begin{DoxyParamCaption}\item[{double}]{isp,  }\item[{double}]{initial\+Mass,  }\item[{double}]{final\+Mass }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Comptue Delta V from mass changing. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em isp} & Specific impulse \\
+\hline
+{\em initial\+Mass} & \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft}{Spacecraft}} initial mass \\
+\hline
+{\em final\+Mass} & \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft}{Spacecraft}} final mass \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+double Delta V 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Engine_a427c17c9cee639f820f7911d341ca4c6}\label{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Engine_a427c17c9cee639f820f7911d341ca4c6}} 
+\index{IO::SDK::Body::Spacecraft::Engine@{IO::SDK::Body::Spacecraft::Engine}!GetFuelFlow@{GetFuelFlow}}
+\index{GetFuelFlow@{GetFuelFlow}!IO::SDK::Body::Spacecraft::Engine@{IO::SDK::Body::Spacecraft::Engine}}
+\doxysubsubsection{\texorpdfstring{GetFuelFlow()}{GetFuelFlow()}}
+{\footnotesize\ttfamily double IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Engine\+::\+Get\+Fuel\+Flow (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+
+
+Get the Fuel Flow object. 
+
+\begin{DoxyReturn}{Returns}
+double 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Engine_a8ac4fd6045ed7ca58a54ad49421df245}\label{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Engine_a8ac4fd6045ed7ca58a54ad49421df245}} 
+\index{IO::SDK::Body::Spacecraft::Engine@{IO::SDK::Body::Spacecraft::Engine}!GetFuelTank@{GetFuelTank}}
+\index{GetFuelTank@{GetFuelTank}!IO::SDK::Body::Spacecraft::Engine@{IO::SDK::Body::Spacecraft::Engine}}
+\doxysubsubsection{\texorpdfstring{GetFuelTank()}{GetFuelTank()}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1FuelTank}{IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Fuel\+Tank}} \& IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Engine\+::\+Get\+Fuel\+Tank (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+
+
+Get the Fuel Tank object. 
+
+\begin{DoxyReturn}{Returns}
+const \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1FuelTank}{IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Fuel\+Tank}}\& 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Engine_acade86d58e0cf22863cee725df6609e1}\label{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Engine_acade86d58e0cf22863cee725df6609e1}} 
+\index{IO::SDK::Body::Spacecraft::Engine@{IO::SDK::Body::Spacecraft::Engine}!GetISP@{GetISP}}
+\index{GetISP@{GetISP}!IO::SDK::Body::Spacecraft::Engine@{IO::SDK::Body::Spacecraft::Engine}}
+\doxysubsubsection{\texorpdfstring{GetISP()}{GetISP()}}
+{\footnotesize\ttfamily double IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Engine\+::\+Get\+ISP (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+
+
+Get then engine specific impulse. 
+
+\begin{DoxyReturn}{Returns}
+double 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Engine_a75aa9f2cd1bb22c6aed24f424801ae6f}\label{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Engine_a75aa9f2cd1bb22c6aed24f424801ae6f}} 
+\index{IO::SDK::Body::Spacecraft::Engine@{IO::SDK::Body::Spacecraft::Engine}!GetName@{GetName}}
+\index{GetName@{GetName}!IO::SDK::Body::Spacecraft::Engine@{IO::SDK::Body::Spacecraft::Engine}}
+\doxysubsubsection{\texorpdfstring{GetName()}{GetName()}}
+{\footnotesize\ttfamily std\+::string IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Engine\+::\+Get\+Name (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+
+
+Get the Name object. 
+
+\begin{DoxyReturn}{Returns}
+std\+::string 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Engine_a3e48202e92a39cb96cebb13f0d1776e4}\label{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Engine_a3e48202e92a39cb96cebb13f0d1776e4}} 
+\index{IO::SDK::Body::Spacecraft::Engine@{IO::SDK::Body::Spacecraft::Engine}!GetOrientation@{GetOrientation}}
+\index{GetOrientation@{GetOrientation}!IO::SDK::Body::Spacecraft::Engine@{IO::SDK::Body::Spacecraft::Engine}}
+\doxysubsubsection{\texorpdfstring{GetOrientation()}{GetOrientation()}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO\+::\+SDK\+::\+Math\+::\+Vector3D}} \& IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Engine\+::\+Get\+Orientation (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+
+
+Get the Orientation object. 
+
+\begin{DoxyReturn}{Returns}
+\mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{Math\+::\+Vector3D}} 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Engine_a5e4a870a8045a8c57175a624ea8bf2bd}\label{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Engine_a5e4a870a8045a8c57175a624ea8bf2bd}} 
+\index{IO::SDK::Body::Spacecraft::Engine@{IO::SDK::Body::Spacecraft::Engine}!GetPosition@{GetPosition}}
+\index{GetPosition@{GetPosition}!IO::SDK::Body::Spacecraft::Engine@{IO::SDK::Body::Spacecraft::Engine}}
+\doxysubsubsection{\texorpdfstring{GetPosition()}{GetPosition()}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO\+::\+SDK\+::\+Math\+::\+Vector3D}} \& IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Engine\+::\+Get\+Position (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+
+
+Get the Position object. 
+
+\begin{DoxyReturn}{Returns}
+\mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{Math\+::\+Vector3D}} 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Engine_ae3d3cf4da32b145b08d196f4c8b4b880}\label{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Engine_ae3d3cf4da32b145b08d196f4c8b4b880}} 
+\index{IO::SDK::Body::Spacecraft::Engine@{IO::SDK::Body::Spacecraft::Engine}!GetRemainingDeltaV@{GetRemainingDeltaV}}
+\index{GetRemainingDeltaV@{GetRemainingDeltaV}!IO::SDK::Body::Spacecraft::Engine@{IO::SDK::Body::Spacecraft::Engine}}
+\doxysubsubsection{\texorpdfstring{GetRemainingDeltaV()}{GetRemainingDeltaV()}}
+{\footnotesize\ttfamily double IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Engine\+::\+Get\+Remaining\+DeltaV (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+
+
+Get the Remaining Delta V object. 
+
+\begin{DoxyReturn}{Returns}
+double 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Engine_abdd3f5332895a3f1927736e7ee5820a5}\label{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Engine_abdd3f5332895a3f1927736e7ee5820a5}} 
+\index{IO::SDK::Body::Spacecraft::Engine@{IO::SDK::Body::Spacecraft::Engine}!GetSerialNumber@{GetSerialNumber}}
+\index{GetSerialNumber@{GetSerialNumber}!IO::SDK::Body::Spacecraft::Engine@{IO::SDK::Body::Spacecraft::Engine}}
+\doxysubsubsection{\texorpdfstring{GetSerialNumber()}{GetSerialNumber()}}
+{\footnotesize\ttfamily std\+::string IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Engine\+::\+Get\+Serial\+Number (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+
+
+Get the Serial Number object. 
+
+\begin{DoxyReturn}{Returns}
+std\+::string 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Engine_a68b4d9b372f2d999b5de23e05066fe1b}\label{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Engine_a68b4d9b372f2d999b5de23e05066fe1b}} 
+\index{IO::SDK::Body::Spacecraft::Engine@{IO::SDK::Body::Spacecraft::Engine}!GetThrust@{GetThrust}}
+\index{GetThrust@{GetThrust}!IO::SDK::Body::Spacecraft::Engine@{IO::SDK::Body::Spacecraft::Engine}}
+\doxysubsubsection{\texorpdfstring{GetThrust()}{GetThrust()}}
+{\footnotesize\ttfamily double IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Engine\+::\+Get\+Thrust (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+
+
+Get the Thrust. 
+
+\begin{DoxyReturn}{Returns}
+double 
+\end{DoxyReturn}
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+IO.\+SDK/\+Body/\+Spacecraft/\mbox{\hyperlink{Engine_8h}{Engine.\+h}}\item 
+IO.\+SDK/\+Body/\+Spacecraft/\mbox{\hyperlink{Engine_8cpp}{Engine.\+cpp}}\end{DoxyCompactItemize}

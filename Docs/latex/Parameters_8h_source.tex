@@ -1,0 +1,28 @@
+\hypertarget{Parameters_8h_source}{}\doxysection{Parameters.\+h}
+\label{Parameters_8h_source}\index{IO.SDK/Parameters/Parameters.h@{IO.SDK/Parameters/Parameters.h}}
+\mbox{\hyperlink{Parameters_8h}{Go to the documentation of this file.}}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{1 }
+\DoxyCodeLine{11 \textcolor{preprocessor}{\#ifndef PARAMETERS\_H}}
+\DoxyCodeLine{12 \textcolor{preprocessor}{\#define PARAMETERS\_H}}
+\DoxyCodeLine{13 \textcolor{preprocessor}{\#include<string>}}
+\DoxyCodeLine{14 }
+\DoxyCodeLine{15 \textcolor{keyword}{namespace }IO::SDK::Parameters}
+\DoxyCodeLine{16 \{}
+\DoxyCodeLine{17     \textcolor{keyword}{inline} \textcolor{keyword}{constexpr} std::string\_view KernelsPath = \textcolor{stringliteral}{"{}Data"{}};}
+\DoxyCodeLine{18     \textcolor{keyword}{inline} \textcolor{keyword}{constexpr} std::string\_view KernelTemplates = \textcolor{stringliteral}{"{}Templates"{}};}
+\DoxyCodeLine{19     \textcolor{keyword}{inline} \textcolor{keyword}{constexpr} std::string\_view SolarSystemKernelPath = \textcolor{stringliteral}{"{}Data/SolarSystem"{}};}
+\DoxyCodeLine{20     \textcolor{keyword}{inline} \textcolor{keyword}{constexpr} std::string\_view SiteFramesPath = \textcolor{stringliteral}{"{}Data/Sites/Frames"{}};}
+\DoxyCodeLine{21     \textcolor{keyword}{inline} \textcolor{keyword}{constexpr} \textcolor{keywordtype}{int} CommentAreaSize = 5000;}
+\DoxyCodeLine{22     \textcolor{keyword}{inline} \textcolor{keyword}{constexpr} \textcolor{keywordtype}{int} MaximumEphemerisLagrangePolynomialDegree = 27;\textcolor{comment}{//[1-\/23]}}
+\DoxyCodeLine{23     \textcolor{keyword}{inline} \textcolor{keyword}{constexpr} \textcolor{keywordtype}{int} MaximumOrientationLagrangePolynomialDegree = 23;\textcolor{comment}{//[1-\/23]}}
+\DoxyCodeLine{24 }
+\DoxyCodeLine{25     \textcolor{keyword}{inline} \textcolor{keyword}{constexpr} \textcolor{keywordtype}{double} NodeDetectionAccuraccy = 0.0017453;\textcolor{comment}{//0.1°}}
+\DoxyCodeLine{26     \textcolor{keyword}{inline} \textcolor{keyword}{constexpr} \textcolor{keywordtype}{double} IntersectDetectionAccuraccy = 0.017453;\textcolor{comment}{//1.0°}}
+\DoxyCodeLine{27     \textcolor{keyword}{inline} \textcolor{keyword}{constexpr} \textcolor{keywordtype}{double} CircularEccentricityAccuraccy = 1E-\/03;}
+\DoxyCodeLine{28     \textcolor{keyword}{inline} \textcolor{keyword}{constexpr} \textcolor{keywordtype}{double} ClockAccuracy = 1.0/65536.0;}
+\DoxyCodeLine{29 }
+\DoxyCodeLine{30 \}}
+\DoxyCodeLine{31 \textcolor{preprocessor}{\#endif}}
+
+\end{DoxyCode}

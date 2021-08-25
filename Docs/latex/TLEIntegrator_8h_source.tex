@@ -1,0 +1,33 @@
+\hypertarget{TLEIntegrator_8h_source}{}\doxysection{TLEIntegrator.\+h}
+\label{TLEIntegrator_8h_source}\index{IO.SDK/Integrators/TLEIntegrator.h@{IO.SDK/Integrators/TLEIntegrator.h}}
+\mbox{\hyperlink{TLEIntegrator_8h}{Go to the documentation of this file.}}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{1 }
+\DoxyCodeLine{11 \textcolor{preprocessor}{\#ifndef TLE\_INTEGRATOR\_H}}
+\DoxyCodeLine{12 \textcolor{preprocessor}{\#define TLE\_INTEGRATOR\_H}}
+\DoxyCodeLine{13 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{IntegratorBase_8h}{IntegratorBase.h}}>}}
+\DoxyCodeLine{14 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{TLE_8h}{TLE.h}}>}}
+\DoxyCodeLine{15 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{TimeSpan_8h}{TimeSpan.h}}>}}
+\DoxyCodeLine{16 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{StateVector_8h}{StateVector.h}}>}}
+\DoxyCodeLine{17 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{Body_8h}{Body.h}}>}}
+\DoxyCodeLine{18 \textcolor{preprocessor}{\#include<Macros.h>}}
+\DoxyCodeLine{19 }
+\DoxyCodeLine{20 \textcolor{keyword}{namespace }IO::SDK::Integrators}
+\DoxyCodeLine{21 \{}
+\DoxyCodeLine{26     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1SDK_1_1Integrators_1_1TLEIntegrator}{TLEIntegrator}} final : \textcolor{keyword}{public} \mbox{\hyperlink{classIO_1_1SDK_1_1Integrators_1_1IntegratorBase}{IO::SDK::Integrators::IntegratorBase}}}
+\DoxyCodeLine{27     \{}
+\DoxyCodeLine{28     \textcolor{keyword}{private}:}
+\DoxyCodeLine{29         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1TLE}{IO::SDK::OrbitalParameters::TLE}} \&m\_tle;}
+\DoxyCodeLine{30 }
+\DoxyCodeLine{31     \textcolor{keyword}{public}:}
+\DoxyCodeLine{38         \mbox{\hyperlink{classIO_1_1SDK_1_1Integrators_1_1TLEIntegrator_aac9421604995737be2624992067a3df3}{TLEIntegrator}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1TLE}{IO::SDK::OrbitalParameters::TLE}} \&tle, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO::SDK::Time::TimeSpan}} \&stepDuration);}
+\DoxyCodeLine{39         \mbox{\hyperlink{classIO_1_1SDK_1_1Integrators_1_1TLEIntegrator}{\string~TLEIntegrator}}();}
+\DoxyCodeLine{40 }
+\DoxyCodeLine{48         \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{IO::SDK::OrbitalParameters::StateVector}} \mbox{\hyperlink{classIO_1_1SDK_1_1Integrators_1_1TLEIntegrator_af4d7e158892a2b52f04258b37d387b65}{Integrate}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body}{IO::SDK::Body::Body}} \&body, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{IO::SDK::OrbitalParameters::StateVector}} \&stateVector) \textcolor{keyword}{override};}
+\DoxyCodeLine{49     \};}
+\DoxyCodeLine{50 }
+\DoxyCodeLine{51 \}}
+\DoxyCodeLine{52 }
+\DoxyCodeLine{53 \textcolor{preprocessor}{\#endif}}
+
+\end{DoxyCode}

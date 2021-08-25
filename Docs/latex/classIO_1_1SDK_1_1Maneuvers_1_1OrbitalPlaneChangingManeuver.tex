@@ -1,0 +1,194 @@
+\hypertarget{classIO_1_1SDK_1_1Maneuvers_1_1OrbitalPlaneChangingManeuver}{}\doxysection{IO\+::SDK\+::Maneuvers\+::Orbital\+Plane\+Changing\+Maneuver Class Reference}
+\label{classIO_1_1SDK_1_1Maneuvers_1_1OrbitalPlaneChangingManeuver}\index{IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver@{IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver}}
+Inheritance diagram for IO\+::SDK\+::Maneuvers\+::Orbital\+Plane\+Changing\+Maneuver\+:\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=2.000000cm]{classIO_1_1SDK_1_1Maneuvers_1_1OrbitalPlaneChangingManeuver}
+\end{center}
+\end{figure}
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1OrbitalPlaneChangingManeuver_a0989a3382965036d46b1703c08eb2d8a}{Orbital\+Plane\+Changing\+Maneuver}} (const std\+::vector$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Engine}{IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Engine}} $>$ \&engines, \mbox{\hyperlink{classIO_1_1SDK_1_1Propagators_1_1Propagator}{IO\+::\+SDK\+::\+Propagators\+::\+Propagator}} \&propagator, \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}} $\ast$target\+Orbit)
+\begin{DoxyCompactList}\small\item\em Construct a new Orbital Plane Changing Maneuver object. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1OrbitalPlaneChangingManeuver_a0a4b2561cc41ad9ea1f2d79ac85c2d7a}{Orbital\+Plane\+Changing\+Maneuver}} (const std\+::vector$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Engine}{IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Engine}} $>$ \&engines, \mbox{\hyperlink{classIO_1_1SDK_1_1Propagators_1_1Propagator}{IO\+::\+SDK\+::\+Propagators\+::\+Propagator}} \&propagator, \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}} $\ast$target\+Orbit, const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} \&minimum\+Epoch)
+\begin{DoxyCompactList}\small\item\em Construct a new Orbital Plane Changing Maneuver object. \end{DoxyCompactList}\item 
+virtual bool \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1OrbitalPlaneChangingManeuver_a62c42ad79ae57ceb86a639a4909d8ae5}{Can\+Execute}} (const \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}} \&orbital\+Params) override
+\begin{DoxyCompactList}\small\item\em Define maneuver execution condition. \end{DoxyCompactList}\item 
+virtual void \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1OrbitalPlaneChangingManeuver_aceb2eb7b1264d8014e0f05d97962885c}{Compute}} (const \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}} \&maneuver\+Point) override
+\begin{DoxyCompactList}\small\item\em Compute impulsive maneuver. \end{DoxyCompactList}\item 
+virtual \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateOrientation}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+State\+Orientation}} \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1OrbitalPlaneChangingManeuver_a7472c24685a1eea73ff6bb7253f084ef}{Compute\+Orientation}} (const \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}} \&maneuver\+Point) override
+\item 
+bool \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1OrbitalPlaneChangingManeuver_aff3fe52a45211ea6346f861e789c40db}{Is\+Ascending\+Node}} (const \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+State\+Vector}} \&state\+Vector) const
+\begin{DoxyCompactList}\small\item\em Know if is an ascending node. \end{DoxyCompactList}\item 
+bool \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1OrbitalPlaneChangingManeuver_aa3eb625bd7d519a98c7639a86ba32a4e}{Is\+Approaching\+Ascending\+Node}} (const \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+State\+Vector}} \&state\+Vector) const
+\begin{DoxyCompactList}\small\item\em Know if approaching ascending node. \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1OrbitalPlaneChangingManeuver_ae558a4d5c41376d4ca09455504d9ea2e}{Get\+Relative\+Inclination}} () const
+\begin{DoxyCompactList}\small\item\em Get the Relative Inclination. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsection*{Additional Inherited Members}
+
+
+\doxysubsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Maneuvers_1_1OrbitalPlaneChangingManeuver_a0989a3382965036d46b1703c08eb2d8a}\label{classIO_1_1SDK_1_1Maneuvers_1_1OrbitalPlaneChangingManeuver_a0989a3382965036d46b1703c08eb2d8a}} 
+\index{IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver@{IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver}!OrbitalPlaneChangingManeuver@{OrbitalPlaneChangingManeuver}}
+\index{OrbitalPlaneChangingManeuver@{OrbitalPlaneChangingManeuver}!IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver@{IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver}}
+\doxysubsubsection{\texorpdfstring{OrbitalPlaneChangingManeuver()}{OrbitalPlaneChangingManeuver()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily IO\+::\+SDK\+::\+Maneuvers\+::\+Orbital\+Plane\+Changing\+Maneuver\+::\+Orbital\+Plane\+Changing\+Maneuver (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Engine}{IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Engine}} $>$ \&}]{engines,  }\item[{\mbox{\hyperlink{classIO_1_1SDK_1_1Propagators_1_1Propagator}{IO\+::\+SDK\+::\+Propagators\+::\+Propagator}} \&}]{propagator,  }\item[{\mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}} $\ast$}]{target\+Orbit }\end{DoxyParamCaption})}
+
+
+
+Construct a new Orbital Plane Changing Maneuver object. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em engines} & \\
+\hline
+{\em propagator} & \\
+\hline
+{\em target\+Orbit} & \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Maneuvers_1_1OrbitalPlaneChangingManeuver_a0a4b2561cc41ad9ea1f2d79ac85c2d7a}\label{classIO_1_1SDK_1_1Maneuvers_1_1OrbitalPlaneChangingManeuver_a0a4b2561cc41ad9ea1f2d79ac85c2d7a}} 
+\index{IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver@{IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver}!OrbitalPlaneChangingManeuver@{OrbitalPlaneChangingManeuver}}
+\index{OrbitalPlaneChangingManeuver@{OrbitalPlaneChangingManeuver}!IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver@{IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver}}
+\doxysubsubsection{\texorpdfstring{OrbitalPlaneChangingManeuver()}{OrbitalPlaneChangingManeuver()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily IO\+::\+SDK\+::\+Maneuvers\+::\+Orbital\+Plane\+Changing\+Maneuver\+::\+Orbital\+Plane\+Changing\+Maneuver (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Engine}{IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Engine}} $>$ \&}]{engines,  }\item[{\mbox{\hyperlink{classIO_1_1SDK_1_1Propagators_1_1Propagator}{IO\+::\+SDK\+::\+Propagators\+::\+Propagator}} \&}]{propagator,  }\item[{\mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}} $\ast$}]{target\+Orbit,  }\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} \&}]{minimum\+Epoch }\end{DoxyParamCaption})}
+
+
+
+Construct a new Orbital Plane Changing Maneuver object. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em engines} & \\
+\hline
+{\em propagator} & \\
+\hline
+{\em target\+Orbit} & \\
+\hline
+{\em minimum\+Epoch} & \\
+\hline
+\end{DoxyParams}
+
+
+\doxysubsection{Member Function Documentation}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Maneuvers_1_1OrbitalPlaneChangingManeuver_a62c42ad79ae57ceb86a639a4909d8ae5}\label{classIO_1_1SDK_1_1Maneuvers_1_1OrbitalPlaneChangingManeuver_a62c42ad79ae57ceb86a639a4909d8ae5}} 
+\index{IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver@{IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver}!CanExecute@{CanExecute}}
+\index{CanExecute@{CanExecute}!IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver@{IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver}}
+\doxysubsubsection{\texorpdfstring{CanExecute()}{CanExecute()}}
+{\footnotesize\ttfamily bool IO\+::\+SDK\+::\+Maneuvers\+::\+Orbital\+Plane\+Changing\+Maneuver\+::\+Can\+Execute (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}} \&}]{orbital\+Params }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Define maneuver execution condition. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em state\+Vector} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+true 
+
+false 
+\end{DoxyReturn}
+
+
+Implements \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase_a5aa0c82f84ec1d521b42b46f0f91d40d}{IO\+::\+SDK\+::\+Maneuvers\+::\+Maneuver\+Base}}.
+
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Maneuvers_1_1OrbitalPlaneChangingManeuver_aceb2eb7b1264d8014e0f05d97962885c}\label{classIO_1_1SDK_1_1Maneuvers_1_1OrbitalPlaneChangingManeuver_aceb2eb7b1264d8014e0f05d97962885c}} 
+\index{IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver@{IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver}!Compute@{Compute}}
+\index{Compute@{Compute}!IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver@{IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver}}
+\doxysubsubsection{\texorpdfstring{Compute()}{Compute()}}
+{\footnotesize\ttfamily void IO\+::\+SDK\+::\+Maneuvers\+::\+Orbital\+Plane\+Changing\+Maneuver\+::\+Compute (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}} \&}]{maneuver\+Point }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Compute impulsive maneuver. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em maneuver\+Point} & \\
+\hline
+\end{DoxyParams}
+
+
+Implements \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase_a3d206dbe0f7f5ad8b18e0601f154e873}{IO\+::\+SDK\+::\+Maneuvers\+::\+Maneuver\+Base}}.
+
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Maneuvers_1_1OrbitalPlaneChangingManeuver_a7472c24685a1eea73ff6bb7253f084ef}\label{classIO_1_1SDK_1_1Maneuvers_1_1OrbitalPlaneChangingManeuver_a7472c24685a1eea73ff6bb7253f084ef}} 
+\index{IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver@{IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver}!ComputeOrientation@{ComputeOrientation}}
+\index{ComputeOrientation@{ComputeOrientation}!IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver@{IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver}}
+\doxysubsubsection{\texorpdfstring{ComputeOrientation()}{ComputeOrientation()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateOrientation}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+State\+Orientation}} IO\+::\+SDK\+::\+Maneuvers\+::\+Orbital\+Plane\+Changing\+Maneuver\+::\+Compute\+Orientation (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}} \&}]{maneuver\+Point }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+\begin{DoxyParams}{Parameters}
+{\em maneuver\+Point} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+\mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateOrientation}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+State\+Orientation}} 
+\end{DoxyReturn}
+
+
+Implements \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase_a2339b5313d34fe2d7bf474f645030bc5}{IO\+::\+SDK\+::\+Maneuvers\+::\+Maneuver\+Base}}.
+
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Maneuvers_1_1OrbitalPlaneChangingManeuver_ae558a4d5c41376d4ca09455504d9ea2e}\label{classIO_1_1SDK_1_1Maneuvers_1_1OrbitalPlaneChangingManeuver_ae558a4d5c41376d4ca09455504d9ea2e}} 
+\index{IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver@{IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver}!GetRelativeInclination@{GetRelativeInclination}}
+\index{GetRelativeInclination@{GetRelativeInclination}!IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver@{IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver}}
+\doxysubsubsection{\texorpdfstring{GetRelativeInclination()}{GetRelativeInclination()}}
+{\footnotesize\ttfamily double IO\+::\+SDK\+::\+Maneuvers\+::\+Orbital\+Plane\+Changing\+Maneuver\+::\+Get\+Relative\+Inclination (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+
+
+Get the Relative Inclination. 
+
+\begin{DoxyReturn}{Returns}
+double 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Maneuvers_1_1OrbitalPlaneChangingManeuver_aa3eb625bd7d519a98c7639a86ba32a4e}\label{classIO_1_1SDK_1_1Maneuvers_1_1OrbitalPlaneChangingManeuver_aa3eb625bd7d519a98c7639a86ba32a4e}} 
+\index{IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver@{IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver}!IsApproachingAscendingNode@{IsApproachingAscendingNode}}
+\index{IsApproachingAscendingNode@{IsApproachingAscendingNode}!IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver@{IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver}}
+\doxysubsubsection{\texorpdfstring{IsApproachingAscendingNode()}{IsApproachingAscendingNode()}}
+{\footnotesize\ttfamily bool IO\+::\+SDK\+::\+Maneuvers\+::\+Orbital\+Plane\+Changing\+Maneuver\+::\+Is\+Approaching\+Ascending\+Node (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+State\+Vector}} \&}]{state\+Vector }\end{DoxyParamCaption}) const}
+
+
+
+Know if approaching ascending node. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em state\+Vector} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+true 
+
+false 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Maneuvers_1_1OrbitalPlaneChangingManeuver_aff3fe52a45211ea6346f861e789c40db}\label{classIO_1_1SDK_1_1Maneuvers_1_1OrbitalPlaneChangingManeuver_aff3fe52a45211ea6346f861e789c40db}} 
+\index{IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver@{IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver}!IsAscendingNode@{IsAscendingNode}}
+\index{IsAscendingNode@{IsAscendingNode}!IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver@{IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver}}
+\doxysubsubsection{\texorpdfstring{IsAscendingNode()}{IsAscendingNode()}}
+{\footnotesize\ttfamily bool IO\+::\+SDK\+::\+Maneuvers\+::\+Orbital\+Plane\+Changing\+Maneuver\+::\+Is\+Ascending\+Node (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+State\+Vector}} \&}]{state\+Vector }\end{DoxyParamCaption}) const}
+
+
+
+Know if is an ascending node. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em state\+Vector} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+true 
+
+false 
+\end{DoxyReturn}
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+IO.\+SDK/\+Maneuvers/\mbox{\hyperlink{OrbitalPlaneChangingManeuver_8h}{Orbital\+Plane\+Changing\+Maneuver.\+h}}\item 
+IO.\+SDK/\+Maneuvers/\mbox{\hyperlink{OrbitalPlaneChangingManeuver_8cpp}{Orbital\+Plane\+Changing\+Maneuver.\+cpp}}\end{DoxyCompactItemize}

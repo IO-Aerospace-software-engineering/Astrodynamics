@@ -1,0 +1,39 @@
+\hypertarget{LaunchSite_8h_source}{}\doxysection{Launch\+Site.\+h}
+\label{LaunchSite_8h_source}\index{IO.SDK/Sites/LaunchSite.h@{IO.SDK/Sites/LaunchSite.h}}
+\mbox{\hyperlink{LaunchSite_8h}{Go to the documentation of this file.}}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{1 }
+\DoxyCodeLine{11 \textcolor{preprocessor}{\#ifndef LAUNCH\_SITE\_H}}
+\DoxyCodeLine{12 \textcolor{preprocessor}{\#define LAUNCH\_SITE\_H}}
+\DoxyCodeLine{13 }
+\DoxyCodeLine{14 \textcolor{preprocessor}{\#include <string>}}
+\DoxyCodeLine{15 \textcolor{preprocessor}{\#include <vector>}}
+\DoxyCodeLine{16 \textcolor{preprocessor}{\#include <memory>}}
+\DoxyCodeLine{17 }
+\DoxyCodeLine{18 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{Geodetic_8h}{Geodetic.h}}>}}
+\DoxyCodeLine{19 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{Site_8h}{Site.h}}>}}
+\DoxyCodeLine{20 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{CelestialBody_8h}{CelestialBody.h}}>}}
+\DoxyCodeLine{21 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{AzimuthRange_8h}{AzimuthRange.h}}>}}
+\DoxyCodeLine{22 }
+\DoxyCodeLine{23 \textcolor{keyword}{namespace }IO::SDK::Sites}
+\DoxyCodeLine{24 \{}
+\DoxyCodeLine{29     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1LaunchSite}{LaunchSite}} final : \textcolor{keyword}{public} \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site}{IO::SDK::Sites::Site}}}
+\DoxyCodeLine{30     \{}
+\DoxyCodeLine{31     \textcolor{keyword}{private}:}
+\DoxyCodeLine{32         std::vector<IO::SDK::Coordinates::AzimuthRange> m\_azimuthRanges;}
+\DoxyCodeLine{33 }
+\DoxyCodeLine{34     \textcolor{keyword}{public}:}
+\DoxyCodeLine{43         \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1LaunchSite_a3d74e3bf1f857da9f0c6d5ec1edb9110}{LaunchSite}}(\textcolor{keyword}{const} \textcolor{keywordtype}{int} \textcolor{keywordtype}{id}, \textcolor{keyword}{const} std::string name, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1Geodetic}{IO::SDK::Coordinates::Geodetic}} coordinates, std::shared\_ptr<IO::SDK::Body::CelestialBody> body);}
+\DoxyCodeLine{44 }
+\DoxyCodeLine{50         \textcolor{keywordtype}{void} \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1LaunchSite_ad828c9877d22155bb3d0cee0b5c9bc06}{AddAzimuthLaunchRange}}(\mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1AzimuthRange}{IO::SDK::Coordinates::AzimuthRange}} \&azimuthRange);}
+\DoxyCodeLine{51 }
+\DoxyCodeLine{56         \textcolor{keywordtype}{void} \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1LaunchSite_a06774cb6d482c4357f89055a1ce8831e}{ClearAzimuthLaunchRanges}}();}
+\DoxyCodeLine{57 }
+\DoxyCodeLine{65         \textcolor{keywordtype}{bool} \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1LaunchSite_ae379d1f9b257dfa8c9dd93f5db341b41}{IsAzimuthLaunchAllowed}}(\textcolor{keyword}{const} \textcolor{keywordtype}{double} azimuth) \textcolor{keyword}{const};}
+\DoxyCodeLine{66     \};}
+\DoxyCodeLine{67 }
+\DoxyCodeLine{68 \} \textcolor{comment}{// namespace IO::SDK::Sites}}
+\DoxyCodeLine{69 }
+\DoxyCodeLine{70 \textcolor{preprocessor}{\#endif}}
+
+\end{DoxyCode}
