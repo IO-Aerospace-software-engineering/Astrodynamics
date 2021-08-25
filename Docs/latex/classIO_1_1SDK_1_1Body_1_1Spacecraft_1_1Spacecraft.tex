@@ -1,0 +1,574 @@
+\hypertarget{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft}{}\doxysection{IO\+::SDK\+::Body\+::Spacecraft\+::Spacecraft Class Reference}
+\label{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft}\index{IO::SDK::Body::Spacecraft::Spacecraft@{IO::SDK::Body::Spacecraft::Spacecraft}}
+
+
+\mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft}{Spacecraft}} class.  
+
+
+
+
+{\ttfamily \#include $<$Spacecraft.\+h$>$}
+
+Inheritance diagram for IO\+::SDK\+::Body\+::Spacecraft\+::Spacecraft\+:\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=3.000000cm]{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft}
+\end{center}
+\end{figure}
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft_a781c8b00e10e6cb347124bc50c4dac7b}{Spacecraft}} (const int id, const std\+::string \&name, const double dry\+Operating\+Mass, double maximum\+Operating\+Mass, const std\+::string \&mission\+Prefix, std\+::unique\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}} $>$ orbital\+Parameters\+At\+Epoch)
+\begin{DoxyCompactList}\small\item\em Construct a new \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft}{Spacecraft}} object. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft_a7a0cadc2ec814d9ebfc63f93374c0c11}\label{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft_a7a0cadc2ec814d9ebfc63f93374c0c11}} 
+{\bfseries Spacecraft} (const \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft}{Spacecraft}} \&spacecraft)=delete
+\item 
+std\+::string \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft_a027103fe4148e6dd2b07a0a2e6a07b92}{Get\+Mission\+Prefix}} () const
+\begin{DoxyCompactList}\small\item\em Get the Mission Prefix object. \end{DoxyCompactList}\item 
+std\+::string \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft_aca5fd9b10b104833eecf7e52c334552a}{Get\+Files\+Path}} () const
+\begin{DoxyCompactList}\small\item\em Get the Files Path object. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft_a50c25eb963c31fb366c7705659380c71}{Write\+Orientations}} (const std\+::vector$<$ std\+::vector$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateOrientation}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+State\+Orientation}} $>$ $>$ \&orientations) const
+\item 
+\mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateOrientation}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+State\+Orientation}} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft_ababce78d27520ce4fe4ee9a86ff5049b}{Get\+Orientation}} (const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} \&epoch, const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO\+::\+SDK\+::\+Time\+::\+Time\+Span}} \&tolerance, const \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1Frames}{IO\+::\+SDK\+::\+Frames\+::\+Frames}} \&frame) const
+\begin{DoxyCompactList}\small\item\em Get the Orientation object. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft_af1b4e362e3d2db8634e6d22f49fbda1a}{Write\+Orientation\+Kernel\+Comment}} (const std\+::string \&comment) const
+\begin{DoxyCompactList}\small\item\em Write comment in orientation kernel. \end{DoxyCompactList}\item 
+std\+::string \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft_a7605ca7034e5e3aff17e49c91731939d}{Read\+Orientation\+Kernel\+Comment}} () const
+\begin{DoxyCompactList}\small\item\em Read orientation kernel comment. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO\+::\+SDK\+::\+Time\+::\+Window}}$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} $>$ \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft_a30b054da19d424c78fb2686f40f316d3}{Get\+Orientations\+Coverage\+Window}} () const
+\begin{DoxyCompactList}\small\item\em Get the Orientations Coverage Window object. \end{DoxyCompactList}\item 
+const \mbox{\hyperlink{classIO_1_1SDK_1_1Kernels_1_1SpacecraftClockKernel}{IO\+::\+SDK\+::\+Kernels\+::\+Spacecraft\+Clock\+Kernel}} \& \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft_a499480469f3bb351733bc0aa8bd6fb6d}{Get\+Clock}} () const
+\begin{DoxyCompactList}\small\item\em Get the Clock object. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft_a8fc5a2e2b3e908e1c2e2e3a8ee987013}{Write\+Ephemeris}} (const std\+::vector$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{Orbital\+Parameters\+::\+State\+Vector}} $>$ \&states) const
+\begin{DoxyCompactList}\small\item\em Write ephemeris data. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+State\+Vector}} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft_aa1174159add9f4bcbb281a90ed99acf1}{Read\+Ephemeris}} (const \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1Frames}{IO\+::\+SDK\+::\+Frames\+::\+Frames}} \&frame, const IO\+::\+SDK\+::\+Aberrations\+Enum aberration, const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} \&tdb, const \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1CelestialBody}{IO\+::\+SDK\+::\+Body\+::\+Celestial\+Body}} \&observer) const override
+\begin{DoxyCompactList}\small\item\em Get the Statevector object. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO\+::\+SDK\+::\+Time\+::\+Window}}$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} $>$ \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft_afbde7b52db1419c26db76dae2a5ec877}{Get\+Ephemeris\+Coverage\+Window}} () const
+\begin{DoxyCompactList}\small\item\em Get the Ephemeris Coverage Window object. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft_adc485efb956d7b98a0c5dca516b15987}{Write\+Ephemeris\+Kernel\+Comment}} (const std\+::string \&comment) const
+\begin{DoxyCompactList}\small\item\em Write a comment in ephemeris kernel. \end{DoxyCompactList}\item 
+std\+::string \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft_aa782d5c15359f177e8d0fe0cb808d4c4}{Read\+Ephemeris\+Kernel\+Comment}} () const
+\begin{DoxyCompactList}\small\item\em Read ephemeris kernel comment. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft_afc0e77ac6e576b85eca2dc4ebb338889}{Add\+Circular\+FOVInstrument}} (const unsigned short id, const std\+::string \&name, const \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO\+::\+SDK\+::\+Math\+::\+Vector3D}} \&orientation, const \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO\+::\+SDK\+::\+Math\+::\+Vector3D}} \&boresight, const \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO\+::\+SDK\+::\+Math\+::\+Vector3D}} \&fov\+Ref\+Vector, const double fov\+Angle)
+\begin{DoxyCompactList}\small\item\em Add instrument with a circular field of view. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft_ab3de25be2b6e681d618453c14ce040c2}{Add\+Rectangular\+FOVInstrument}} (const unsigned short id, const std\+::string \&name, const \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO\+::\+SDK\+::\+Math\+::\+Vector3D}} \&orientation, const \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO\+::\+SDK\+::\+Math\+::\+Vector3D}} \&boresight, const \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO\+::\+SDK\+::\+Math\+::\+Vector3D}} \&fov\+Ref\+Vector, const double fov\+Angle, const double cross\+Angle)
+\begin{DoxyCompactList}\small\item\em Add an instrument with a rectangular field of view. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft_a9147f20e685f94f3162a8dbd5a53ba63}{Add\+Elliptical\+FOVInstrument}} (const unsigned short id, const std\+::string \&name, const \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO\+::\+SDK\+::\+Math\+::\+Vector3D}} \&orientation, const \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO\+::\+SDK\+::\+Math\+::\+Vector3D}} \&boresight, const \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO\+::\+SDK\+::\+Math\+::\+Vector3D}} \&fov\+Ref\+Vector, const double fov\+Angle, const double cross\+Angle)
+\begin{DoxyCompactList}\small\item\em Add an instrument with an elliptical field of view. \end{DoxyCompactList}\item 
+const \mbox{\hyperlink{classIO_1_1SDK_1_1Instruments_1_1Instrument}{IO\+::\+SDK\+::\+Instruments\+::\+Instrument}} $\ast$ \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft_a283a9cdd3590477898e24ee4cbb59029}{Get\+Instrument}} (const int id) const
+\begin{DoxyCompactList}\small\item\em Get the Instrument object. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft_aaa86bd057c3011bc8ee6df08201f84e0}{Add\+Fuel\+Tank}} (const std\+::string \&serial\+Number, const double capacity, const double quantity)
+\begin{DoxyCompactList}\small\item\em Add a fuel tank. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft_a997aece06b5dbc2836b58192ec621f86}{Add\+Engine}} (const std\+::string \&serial\+Number, const std\+::string \&name, const std\+::string \&fuel\+Tank\+Serial\+Number, const \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{Math\+::\+Vector3D}} \&position, const \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{Math\+::\+Vector3D}} \&orientation, const double isp, const double fuel\+Flow)
+\begin{DoxyCompactList}\small\item\em Add an engine. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft_a9ca0deb6588f802ab2093f50b90fdecb}{Add\+Payload}} (const std\+::string \&serial\+Number, const std\+::string \&name, const double mass)
+\begin{DoxyCompactList}\small\item\em Add a payload. \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft_ae7354800272662d52d64c5a1f2ade5c0}{Get\+Mass}} () const override
+\begin{DoxyCompactList}\small\item\em Get the toal mass. \end{DoxyCompactList}\item 
+const \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Engine}{IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Engine}} $\ast$ \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft_a2b643943275e9b123592ad6061f04d20}{Get\+Engine}} (const std\+::string \&serial\+Number) const
+\begin{DoxyCompactList}\small\item\em Get the \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Engine}{Engine}} object. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1FuelTank}{IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Fuel\+Tank}} $\ast$ \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft_a347135bd0b7c9834754e0b5cf366f4de}{Get\+Fueltank}} (const std\+::string \&serial\+Number) const
+\begin{DoxyCompactList}\small\item\em Get the Fueltank object. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft_aa034821fef6e2acb1afbb97558f325c7}{Release\+Payload}} (const std\+::string \&serial\+Number)
+\begin{DoxyCompactList}\small\item\em Release a payload. \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft_a606c034d1c378a73fc0ddab89111eaa2}{Get\+Dry\+Operating\+Mass}} () const
+\begin{DoxyCompactList}\small\item\em Get the Dry Operating Mass object. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft_a5eb3fc1a3145637c8eae3fe25497e024}\label{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft_a5eb3fc1a3145637c8eae3fe25497e024}} 
+const \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO\+::\+SDK\+::\+Math\+::\+Vector3D}} {\bfseries Up} \{0.\+0, 0.\+0, 1.\+0\}
+\item 
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft_a8da4c8da839ad35b02645cd93a2c6cc9}\label{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft_a8da4c8da839ad35b02645cd93a2c6cc9}} 
+const \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO\+::\+SDK\+::\+Math\+::\+Vector3D}} {\bfseries Front} \{0.\+0, 1.\+0, 0.\+0\}
+\item 
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft_a98a070475cc95330e8fa585e1e5dda26}\label{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft_a98a070475cc95330e8fa585e1e5dda26}} 
+const \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO\+::\+SDK\+::\+Math\+::\+Vector3D}} {\bfseries Left} \{-\/1.\+0, 0.\+0, 0.\+0\}
+\end{DoxyCompactItemize}
+\doxysubsection*{Additional Inherited Members}
+
+
+\doxysubsection{Detailed Description}
+\mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft}{Spacecraft}} class. 
+
+\doxysubsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft_a781c8b00e10e6cb347124bc50c4dac7b}\label{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft_a781c8b00e10e6cb347124bc50c4dac7b}} 
+\index{IO::SDK::Body::Spacecraft::Spacecraft@{IO::SDK::Body::Spacecraft::Spacecraft}!Spacecraft@{Spacecraft}}
+\index{Spacecraft@{Spacecraft}!IO::SDK::Body::Spacecraft::Spacecraft@{IO::SDK::Body::Spacecraft::Spacecraft}}
+\doxysubsubsection{\texorpdfstring{Spacecraft()}{Spacecraft()}}
+{\footnotesize\ttfamily IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Spacecraft\+::\+Spacecraft (\begin{DoxyParamCaption}\item[{const int}]{id,  }\item[{const std\+::string \&}]{name,  }\item[{const double}]{dry\+Operating\+Mass,  }\item[{double}]{maximum\+Operating\+Mass,  }\item[{const std\+::string \&}]{mission\+Prefix,  }\item[{std\+::unique\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}} $>$}]{orbital\+Parameters\+At\+Epoch }\end{DoxyParamCaption})}
+
+
+
+Construct a new \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft}{Spacecraft}} object. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em id} & \\
+\hline
+{\em name} & \\
+\hline
+{\em dry\+Operating\+Mass} & \\
+\hline
+{\em maximum\+Operating\+Mass} & \\
+\hline
+{\em mission\+Prefix} & \\
+\hline
+{\em orbital\+Parameters\+At\+Epoch} & \\
+\hline
+{\em attitude\+At\+Epoch} & \\
+\hline
+\end{DoxyParams}
+
+
+\doxysubsection{Member Function Documentation}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft_afc0e77ac6e576b85eca2dc4ebb338889}\label{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft_afc0e77ac6e576b85eca2dc4ebb338889}} 
+\index{IO::SDK::Body::Spacecraft::Spacecraft@{IO::SDK::Body::Spacecraft::Spacecraft}!AddCircularFOVInstrument@{AddCircularFOVInstrument}}
+\index{AddCircularFOVInstrument@{AddCircularFOVInstrument}!IO::SDK::Body::Spacecraft::Spacecraft@{IO::SDK::Body::Spacecraft::Spacecraft}}
+\doxysubsubsection{\texorpdfstring{AddCircularFOVInstrument()}{AddCircularFOVInstrument()}}
+{\footnotesize\ttfamily void IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Spacecraft\+::\+Add\+Circular\+FOVInstrument (\begin{DoxyParamCaption}\item[{const unsigned short}]{id,  }\item[{const std\+::string \&}]{name,  }\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO\+::\+SDK\+::\+Math\+::\+Vector3D}} \&}]{orientation,  }\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO\+::\+SDK\+::\+Math\+::\+Vector3D}} \&}]{boresight,  }\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO\+::\+SDK\+::\+Math\+::\+Vector3D}} \&}]{fov\+Ref\+Vector,  }\item[{const double}]{fov\+Angle }\end{DoxyParamCaption})}
+
+
+
+Add instrument with a circular field of view. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em id} & \\
+\hline
+{\em name} & \\
+\hline
+{\em orientation} & \\
+\hline
+{\em boresight} & \\
+\hline
+{\em fov\+Ref\+Vector} & \\
+\hline
+{\em fov\+Angle} & \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft_a9147f20e685f94f3162a8dbd5a53ba63}\label{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft_a9147f20e685f94f3162a8dbd5a53ba63}} 
+\index{IO::SDK::Body::Spacecraft::Spacecraft@{IO::SDK::Body::Spacecraft::Spacecraft}!AddEllipticalFOVInstrument@{AddEllipticalFOVInstrument}}
+\index{AddEllipticalFOVInstrument@{AddEllipticalFOVInstrument}!IO::SDK::Body::Spacecraft::Spacecraft@{IO::SDK::Body::Spacecraft::Spacecraft}}
+\doxysubsubsection{\texorpdfstring{AddEllipticalFOVInstrument()}{AddEllipticalFOVInstrument()}}
+{\footnotesize\ttfamily void IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Spacecraft\+::\+Add\+Elliptical\+FOVInstrument (\begin{DoxyParamCaption}\item[{const unsigned short}]{id,  }\item[{const std\+::string \&}]{name,  }\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO\+::\+SDK\+::\+Math\+::\+Vector3D}} \&}]{orientation,  }\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO\+::\+SDK\+::\+Math\+::\+Vector3D}} \&}]{boresight,  }\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO\+::\+SDK\+::\+Math\+::\+Vector3D}} \&}]{fov\+Ref\+Vector,  }\item[{const double}]{fov\+Angle,  }\item[{const double}]{cross\+Angle }\end{DoxyParamCaption})}
+
+
+
+Add an instrument with an elliptical field of view. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em id} & \\
+\hline
+{\em name} & \\
+\hline
+{\em orientation} & \\
+\hline
+{\em boresight} & \\
+\hline
+{\em fov\+Ref\+Vector} & \\
+\hline
+{\em fov\+Angle} & \\
+\hline
+{\em cross\+Angle} & \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft_a997aece06b5dbc2836b58192ec621f86}\label{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft_a997aece06b5dbc2836b58192ec621f86}} 
+\index{IO::SDK::Body::Spacecraft::Spacecraft@{IO::SDK::Body::Spacecraft::Spacecraft}!AddEngine@{AddEngine}}
+\index{AddEngine@{AddEngine}!IO::SDK::Body::Spacecraft::Spacecraft@{IO::SDK::Body::Spacecraft::Spacecraft}}
+\doxysubsubsection{\texorpdfstring{AddEngine()}{AddEngine()}}
+{\footnotesize\ttfamily void IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Spacecraft\+::\+Add\+Engine (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{serial\+Number,  }\item[{const std\+::string \&}]{name,  }\item[{const std\+::string \&}]{fuel\+Tank\+Serial\+Number,  }\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{Math\+::\+Vector3D}} \&}]{position,  }\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{Math\+::\+Vector3D}} \&}]{orientation,  }\item[{const double}]{isp,  }\item[{const double}]{fuel\+Flow }\end{DoxyParamCaption})}
+
+
+
+Add an engine. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em id} & \\
+\hline
+{\em serial\+Number} & \\
+\hline
+{\em name} & \\
+\hline
+{\em fueltank} & \\
+\hline
+{\em position} & \\
+\hline
+{\em orientation} & \\
+\hline
+{\em isp} & \\
+\hline
+{\em fuel\+Flow} & \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft_aaa86bd057c3011bc8ee6df08201f84e0}\label{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft_aaa86bd057c3011bc8ee6df08201f84e0}} 
+\index{IO::SDK::Body::Spacecraft::Spacecraft@{IO::SDK::Body::Spacecraft::Spacecraft}!AddFuelTank@{AddFuelTank}}
+\index{AddFuelTank@{AddFuelTank}!IO::SDK::Body::Spacecraft::Spacecraft@{IO::SDK::Body::Spacecraft::Spacecraft}}
+\doxysubsubsection{\texorpdfstring{AddFuelTank()}{AddFuelTank()}}
+{\footnotesize\ttfamily void IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Spacecraft\+::\+Add\+Fuel\+Tank (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{serial\+Number,  }\item[{const double}]{capacity,  }\item[{const double}]{quantity }\end{DoxyParamCaption})}
+
+
+
+Add a fuel tank. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em id} & \\
+\hline
+{\em capacity} & \\
+\hline
+{\em quantity} & \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft_a9ca0deb6588f802ab2093f50b90fdecb}\label{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft_a9ca0deb6588f802ab2093f50b90fdecb}} 
+\index{IO::SDK::Body::Spacecraft::Spacecraft@{IO::SDK::Body::Spacecraft::Spacecraft}!AddPayload@{AddPayload}}
+\index{AddPayload@{AddPayload}!IO::SDK::Body::Spacecraft::Spacecraft@{IO::SDK::Body::Spacecraft::Spacecraft}}
+\doxysubsubsection{\texorpdfstring{AddPayload()}{AddPayload()}}
+{\footnotesize\ttfamily void IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Spacecraft\+::\+Add\+Payload (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{serial\+Number,  }\item[{const std\+::string \&}]{name,  }\item[{const double}]{mass }\end{DoxyParamCaption})}
+
+
+
+Add a payload. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em serial\+Number} & \\
+\hline
+{\em name} & \\
+\hline
+{\em mass} & \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft_ab3de25be2b6e681d618453c14ce040c2}\label{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft_ab3de25be2b6e681d618453c14ce040c2}} 
+\index{IO::SDK::Body::Spacecraft::Spacecraft@{IO::SDK::Body::Spacecraft::Spacecraft}!AddRectangularFOVInstrument@{AddRectangularFOVInstrument}}
+\index{AddRectangularFOVInstrument@{AddRectangularFOVInstrument}!IO::SDK::Body::Spacecraft::Spacecraft@{IO::SDK::Body::Spacecraft::Spacecraft}}
+\doxysubsubsection{\texorpdfstring{AddRectangularFOVInstrument()}{AddRectangularFOVInstrument()}}
+{\footnotesize\ttfamily void IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Spacecraft\+::\+Add\+Rectangular\+FOVInstrument (\begin{DoxyParamCaption}\item[{const unsigned short}]{id,  }\item[{const std\+::string \&}]{name,  }\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO\+::\+SDK\+::\+Math\+::\+Vector3D}} \&}]{orientation,  }\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO\+::\+SDK\+::\+Math\+::\+Vector3D}} \&}]{boresight,  }\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO\+::\+SDK\+::\+Math\+::\+Vector3D}} \&}]{fov\+Ref\+Vector,  }\item[{const double}]{fov\+Angle,  }\item[{const double}]{cross\+Angle }\end{DoxyParamCaption})}
+
+
+
+Add an instrument with a rectangular field of view. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em id} & \\
+\hline
+{\em name} & \\
+\hline
+{\em orientation} & \\
+\hline
+{\em boresight} & \\
+\hline
+{\em fov\+Ref\+Vector} & \\
+\hline
+{\em fov\+Angle} & \\
+\hline
+{\em cross\+Angle} & \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft_a499480469f3bb351733bc0aa8bd6fb6d}\label{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft_a499480469f3bb351733bc0aa8bd6fb6d}} 
+\index{IO::SDK::Body::Spacecraft::Spacecraft@{IO::SDK::Body::Spacecraft::Spacecraft}!GetClock@{GetClock}}
+\index{GetClock@{GetClock}!IO::SDK::Body::Spacecraft::Spacecraft@{IO::SDK::Body::Spacecraft::Spacecraft}}
+\doxysubsubsection{\texorpdfstring{GetClock()}{GetClock()}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{classIO_1_1SDK_1_1Kernels_1_1SpacecraftClockKernel}{IO\+::\+SDK\+::\+Kernels\+::\+Spacecraft\+Clock\+Kernel}} \& IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Spacecraft\+::\+Get\+Clock (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+
+
+Get the Clock object. 
+
+\begin{DoxyReturn}{Returns}
+const \mbox{\hyperlink{classIO_1_1SDK_1_1Kernels_1_1SpacecraftClockKernel}{IO\+::\+SDK\+::\+Kernels\+::\+Spacecraft\+Clock\+Kernel}}\& 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft_a606c034d1c378a73fc0ddab89111eaa2}\label{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft_a606c034d1c378a73fc0ddab89111eaa2}} 
+\index{IO::SDK::Body::Spacecraft::Spacecraft@{IO::SDK::Body::Spacecraft::Spacecraft}!GetDryOperatingMass@{GetDryOperatingMass}}
+\index{GetDryOperatingMass@{GetDryOperatingMass}!IO::SDK::Body::Spacecraft::Spacecraft@{IO::SDK::Body::Spacecraft::Spacecraft}}
+\doxysubsubsection{\texorpdfstring{GetDryOperatingMass()}{GetDryOperatingMass()}}
+{\footnotesize\ttfamily double IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Spacecraft\+::\+Get\+Dry\+Operating\+Mass (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+
+
+Get the Dry Operating Mass object. 
+
+\begin{DoxyReturn}{Returns}
+double 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft_a2b643943275e9b123592ad6061f04d20}\label{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft_a2b643943275e9b123592ad6061f04d20}} 
+\index{IO::SDK::Body::Spacecraft::Spacecraft@{IO::SDK::Body::Spacecraft::Spacecraft}!GetEngine@{GetEngine}}
+\index{GetEngine@{GetEngine}!IO::SDK::Body::Spacecraft::Spacecraft@{IO::SDK::Body::Spacecraft::Spacecraft}}
+\doxysubsubsection{\texorpdfstring{GetEngine()}{GetEngine()}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Engine}{IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Engine}} $\ast$ IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Spacecraft\+::\+Get\+Engine (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{serial\+Number }\end{DoxyParamCaption}) const}
+
+
+
+Get the \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Engine}{Engine}} object. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em serial\+Number} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+\mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Engine}{IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Engine}}$\ast$ 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft_afbde7b52db1419c26db76dae2a5ec877}\label{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft_afbde7b52db1419c26db76dae2a5ec877}} 
+\index{IO::SDK::Body::Spacecraft::Spacecraft@{IO::SDK::Body::Spacecraft::Spacecraft}!GetEphemerisCoverageWindow@{GetEphemerisCoverageWindow}}
+\index{GetEphemerisCoverageWindow@{GetEphemerisCoverageWindow}!IO::SDK::Body::Spacecraft::Spacecraft@{IO::SDK::Body::Spacecraft::Spacecraft}}
+\doxysubsubsection{\texorpdfstring{GetEphemerisCoverageWindow()}{GetEphemerisCoverageWindow()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO\+::\+SDK\+::\+Time\+::\+Window}}$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} $>$ IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Spacecraft\+::\+Get\+Ephemeris\+Coverage\+Window (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+
+
+Get the Ephemeris Coverage Window object. 
+
+\begin{DoxyReturn}{Returns}
+IO\+::\+SDK\+::\+Time\+::\+Window$<$\+IO\+::\+SDK\+::\+Time\+::\+TDB$>$ 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft_aca5fd9b10b104833eecf7e52c334552a}\label{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft_aca5fd9b10b104833eecf7e52c334552a}} 
+\index{IO::SDK::Body::Spacecraft::Spacecraft@{IO::SDK::Body::Spacecraft::Spacecraft}!GetFilesPath@{GetFilesPath}}
+\index{GetFilesPath@{GetFilesPath}!IO::SDK::Body::Spacecraft::Spacecraft@{IO::SDK::Body::Spacecraft::Spacecraft}}
+\doxysubsubsection{\texorpdfstring{GetFilesPath()}{GetFilesPath()}}
+{\footnotesize\ttfamily std\+::string IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Spacecraft\+::\+Get\+Files\+Path (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+
+
+Get the Files Path object. 
+
+\begin{DoxyReturn}{Returns}
+std\+::string 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft_a347135bd0b7c9834754e0b5cf366f4de}\label{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft_a347135bd0b7c9834754e0b5cf366f4de}} 
+\index{IO::SDK::Body::Spacecraft::Spacecraft@{IO::SDK::Body::Spacecraft::Spacecraft}!GetFueltank@{GetFueltank}}
+\index{GetFueltank@{GetFueltank}!IO::SDK::Body::Spacecraft::Spacecraft@{IO::SDK::Body::Spacecraft::Spacecraft}}
+\doxysubsubsection{\texorpdfstring{GetFueltank()}{GetFueltank()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1FuelTank}{IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Fuel\+Tank}} $\ast$ IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Spacecraft\+::\+Get\+Fueltank (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{serial\+Number }\end{DoxyParamCaption}) const}
+
+
+
+Get the Fueltank object. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em serial\+Number} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+\mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1FuelTank}{IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Fuel\+Tank}}$\ast$ 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft_a283a9cdd3590477898e24ee4cbb59029}\label{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft_a283a9cdd3590477898e24ee4cbb59029}} 
+\index{IO::SDK::Body::Spacecraft::Spacecraft@{IO::SDK::Body::Spacecraft::Spacecraft}!GetInstrument@{GetInstrument}}
+\index{GetInstrument@{GetInstrument}!IO::SDK::Body::Spacecraft::Spacecraft@{IO::SDK::Body::Spacecraft::Spacecraft}}
+\doxysubsubsection{\texorpdfstring{GetInstrument()}{GetInstrument()}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{classIO_1_1SDK_1_1Instruments_1_1Instrument}{IO\+::\+SDK\+::\+Instruments\+::\+Instrument}} $\ast$ IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Spacecraft\+::\+Get\+Instrument (\begin{DoxyParamCaption}\item[{const int}]{id }\end{DoxyParamCaption}) const}
+
+
+
+Get the Instrument object. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em id} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+const \mbox{\hyperlink{classIO_1_1SDK_1_1Instruments_1_1Instrument}{IO\+::\+SDK\+::\+Instruments\+::\+Instrument}}$\ast$ 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft_ae7354800272662d52d64c5a1f2ade5c0}\label{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft_ae7354800272662d52d64c5a1f2ade5c0}} 
+\index{IO::SDK::Body::Spacecraft::Spacecraft@{IO::SDK::Body::Spacecraft::Spacecraft}!GetMass@{GetMass}}
+\index{GetMass@{GetMass}!IO::SDK::Body::Spacecraft::Spacecraft@{IO::SDK::Body::Spacecraft::Spacecraft}}
+\doxysubsubsection{\texorpdfstring{GetMass()}{GetMass()}}
+{\footnotesize\ttfamily double IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Spacecraft\+::\+Get\+Mass (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Get the toal mass. 
+
+\begin{DoxyReturn}{Returns}
+double 
+\end{DoxyReturn}
+
+
+Reimplemented from \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body_a166ce7048ed87d61f6f40b51e5d4f609}{IO\+::\+SDK\+::\+Body\+::\+Body}}.
+
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft_a027103fe4148e6dd2b07a0a2e6a07b92}\label{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft_a027103fe4148e6dd2b07a0a2e6a07b92}} 
+\index{IO::SDK::Body::Spacecraft::Spacecraft@{IO::SDK::Body::Spacecraft::Spacecraft}!GetMissionPrefix@{GetMissionPrefix}}
+\index{GetMissionPrefix@{GetMissionPrefix}!IO::SDK::Body::Spacecraft::Spacecraft@{IO::SDK::Body::Spacecraft::Spacecraft}}
+\doxysubsubsection{\texorpdfstring{GetMissionPrefix()}{GetMissionPrefix()}}
+{\footnotesize\ttfamily std\+::string IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Spacecraft\+::\+Get\+Mission\+Prefix (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+
+
+Get the Mission Prefix object. 
+
+\begin{DoxyReturn}{Returns}
+std\+::string 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft_ababce78d27520ce4fe4ee9a86ff5049b}\label{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft_ababce78d27520ce4fe4ee9a86ff5049b}} 
+\index{IO::SDK::Body::Spacecraft::Spacecraft@{IO::SDK::Body::Spacecraft::Spacecraft}!GetOrientation@{GetOrientation}}
+\index{GetOrientation@{GetOrientation}!IO::SDK::Body::Spacecraft::Spacecraft@{IO::SDK::Body::Spacecraft::Spacecraft}}
+\doxysubsubsection{\texorpdfstring{GetOrientation()}{GetOrientation()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateOrientation}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+State\+Orientation}} IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Spacecraft\+::\+Get\+Orientation (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} \&}]{epoch,  }\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO\+::\+SDK\+::\+Time\+::\+Time\+Span}} \&}]{tolerance,  }\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1Frames}{IO\+::\+SDK\+::\+Frames\+::\+Frames}} \&}]{frame }\end{DoxyParamCaption}) const}
+
+
+
+Get the Orientation object. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em epoch} & Orientation at epoch \\
+\hline
+{\em tolerance} & Tolerance after and before epoch \\
+\hline
+{\em frame} & Frame in wich orienation will be returned \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+\mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateOrientation}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+State\+Orientation}} 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft_a30b054da19d424c78fb2686f40f316d3}\label{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft_a30b054da19d424c78fb2686f40f316d3}} 
+\index{IO::SDK::Body::Spacecraft::Spacecraft@{IO::SDK::Body::Spacecraft::Spacecraft}!GetOrientationsCoverageWindow@{GetOrientationsCoverageWindow}}
+\index{GetOrientationsCoverageWindow@{GetOrientationsCoverageWindow}!IO::SDK::Body::Spacecraft::Spacecraft@{IO::SDK::Body::Spacecraft::Spacecraft}}
+\doxysubsubsection{\texorpdfstring{GetOrientationsCoverageWindow()}{GetOrientationsCoverageWindow()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO\+::\+SDK\+::\+Time\+::\+Window}}$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} $>$ IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Spacecraft\+::\+Get\+Orientations\+Coverage\+Window (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+
+
+Get the Orientations Coverage Window object. 
+
+\begin{DoxyReturn}{Returns}
+IO\+::\+SDK\+::\+Time\+::\+Window$<$\+IO\+::\+SDK\+::\+Time\+::\+TDB$>$ 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft_aa1174159add9f4bcbb281a90ed99acf1}\label{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft_aa1174159add9f4bcbb281a90ed99acf1}} 
+\index{IO::SDK::Body::Spacecraft::Spacecraft@{IO::SDK::Body::Spacecraft::Spacecraft}!ReadEphemeris@{ReadEphemeris}}
+\index{ReadEphemeris@{ReadEphemeris}!IO::SDK::Body::Spacecraft::Spacecraft@{IO::SDK::Body::Spacecraft::Spacecraft}}
+\doxysubsubsection{\texorpdfstring{ReadEphemeris()}{ReadEphemeris()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+State\+Vector}} IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Spacecraft\+::\+Read\+Ephemeris (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1Frames}{IO\+::\+SDK\+::\+Frames\+::\+Frames}} \&}]{frame,  }\item[{const IO\+::\+SDK\+::\+Aberrations\+Enum}]{aberration,  }\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} \&}]{tdb,  }\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1CelestialBody}{IO\+::\+SDK\+::\+Body\+::\+Celestial\+Body}} \&}]{observer }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Get the Statevector object. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em observer} & \\
+\hline
+{\em frame} & \\
+\hline
+{\em aberration} & \\
+\hline
+{\em tdb} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+\mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+State\+Vector}} 
+\end{DoxyReturn}
+
+
+Reimplemented from \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body_a4585506e3bf57bbeb1652bb1bb45b19a}{IO\+::\+SDK\+::\+Body\+::\+Body}}.
+
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft_aa782d5c15359f177e8d0fe0cb808d4c4}\label{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft_aa782d5c15359f177e8d0fe0cb808d4c4}} 
+\index{IO::SDK::Body::Spacecraft::Spacecraft@{IO::SDK::Body::Spacecraft::Spacecraft}!ReadEphemerisKernelComment@{ReadEphemerisKernelComment}}
+\index{ReadEphemerisKernelComment@{ReadEphemerisKernelComment}!IO::SDK::Body::Spacecraft::Spacecraft@{IO::SDK::Body::Spacecraft::Spacecraft}}
+\doxysubsubsection{\texorpdfstring{ReadEphemerisKernelComment()}{ReadEphemerisKernelComment()}}
+{\footnotesize\ttfamily std\+::string IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Spacecraft\+::\+Read\+Ephemeris\+Kernel\+Comment (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+
+
+Read ephemeris kernel comment. 
+
+\begin{DoxyReturn}{Returns}
+std\+::string 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft_a7605ca7034e5e3aff17e49c91731939d}\label{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft_a7605ca7034e5e3aff17e49c91731939d}} 
+\index{IO::SDK::Body::Spacecraft::Spacecraft@{IO::SDK::Body::Spacecraft::Spacecraft}!ReadOrientationKernelComment@{ReadOrientationKernelComment}}
+\index{ReadOrientationKernelComment@{ReadOrientationKernelComment}!IO::SDK::Body::Spacecraft::Spacecraft@{IO::SDK::Body::Spacecraft::Spacecraft}}
+\doxysubsubsection{\texorpdfstring{ReadOrientationKernelComment()}{ReadOrientationKernelComment()}}
+{\footnotesize\ttfamily std\+::string IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Spacecraft\+::\+Read\+Orientation\+Kernel\+Comment (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+
+
+Read orientation kernel comment. 
+
+\begin{DoxyReturn}{Returns}
+std\+::string 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft_aa034821fef6e2acb1afbb97558f325c7}\label{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft_aa034821fef6e2acb1afbb97558f325c7}} 
+\index{IO::SDK::Body::Spacecraft::Spacecraft@{IO::SDK::Body::Spacecraft::Spacecraft}!ReleasePayload@{ReleasePayload}}
+\index{ReleasePayload@{ReleasePayload}!IO::SDK::Body::Spacecraft::Spacecraft@{IO::SDK::Body::Spacecraft::Spacecraft}}
+\doxysubsubsection{\texorpdfstring{ReleasePayload()}{ReleasePayload()}}
+{\footnotesize\ttfamily void IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Spacecraft\+::\+Release\+Payload (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{serial\+Number }\end{DoxyParamCaption})}
+
+
+
+Release a payload. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em serial\+Number} & \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft_a8fc5a2e2b3e908e1c2e2e3a8ee987013}\label{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft_a8fc5a2e2b3e908e1c2e2e3a8ee987013}} 
+\index{IO::SDK::Body::Spacecraft::Spacecraft@{IO::SDK::Body::Spacecraft::Spacecraft}!WriteEphemeris@{WriteEphemeris}}
+\index{WriteEphemeris@{WriteEphemeris}!IO::SDK::Body::Spacecraft::Spacecraft@{IO::SDK::Body::Spacecraft::Spacecraft}}
+\doxysubsubsection{\texorpdfstring{WriteEphemeris()}{WriteEphemeris()}}
+{\footnotesize\ttfamily void IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Spacecraft\+::\+Write\+Ephemeris (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{Orbital\+Parameters\+::\+State\+Vector}} $>$ \&}]{states }\end{DoxyParamCaption}) const}
+
+
+
+Write ephemeris data. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em states} & \\
+\hline
+{\em frame} & \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft_adc485efb956d7b98a0c5dca516b15987}\label{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft_adc485efb956d7b98a0c5dca516b15987}} 
+\index{IO::SDK::Body::Spacecraft::Spacecraft@{IO::SDK::Body::Spacecraft::Spacecraft}!WriteEphemerisKernelComment@{WriteEphemerisKernelComment}}
+\index{WriteEphemerisKernelComment@{WriteEphemerisKernelComment}!IO::SDK::Body::Spacecraft::Spacecraft@{IO::SDK::Body::Spacecraft::Spacecraft}}
+\doxysubsubsection{\texorpdfstring{WriteEphemerisKernelComment()}{WriteEphemerisKernelComment()}}
+{\footnotesize\ttfamily void IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Spacecraft\+::\+Write\+Ephemeris\+Kernel\+Comment (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{comment }\end{DoxyParamCaption}) const}
+
+
+
+Write a comment in ephemeris kernel. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em comment} & \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft_af1b4e362e3d2db8634e6d22f49fbda1a}\label{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft_af1b4e362e3d2db8634e6d22f49fbda1a}} 
+\index{IO::SDK::Body::Spacecraft::Spacecraft@{IO::SDK::Body::Spacecraft::Spacecraft}!WriteOrientationKernelComment@{WriteOrientationKernelComment}}
+\index{WriteOrientationKernelComment@{WriteOrientationKernelComment}!IO::SDK::Body::Spacecraft::Spacecraft@{IO::SDK::Body::Spacecraft::Spacecraft}}
+\doxysubsubsection{\texorpdfstring{WriteOrientationKernelComment()}{WriteOrientationKernelComment()}}
+{\footnotesize\ttfamily void IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Spacecraft\+::\+Write\+Orientation\+Kernel\+Comment (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{comment }\end{DoxyParamCaption}) const}
+
+
+
+Write comment in orientation kernel. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em comment} & \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft_a50c25eb963c31fb366c7705659380c71}\label{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft_a50c25eb963c31fb366c7705659380c71}} 
+\index{IO::SDK::Body::Spacecraft::Spacecraft@{IO::SDK::Body::Spacecraft::Spacecraft}!WriteOrientations@{WriteOrientations}}
+\index{WriteOrientations@{WriteOrientations}!IO::SDK::Body::Spacecraft::Spacecraft@{IO::SDK::Body::Spacecraft::Spacecraft}}
+\doxysubsubsection{\texorpdfstring{WriteOrientations()}{WriteOrientations()}}
+{\footnotesize\ttfamily void IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Spacecraft\+::\+Write\+Orientations (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ std\+::vector$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateOrientation}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+State\+Orientation}} $>$ $>$ \&}]{orientations }\end{DoxyParamCaption}) const}
+
+
+\begin{DoxyParams}{Parameters}
+{\em orientations} & \\
+\hline
+\end{DoxyParams}
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+IO.\+SDK/\+Body/\+Spacecraft/\mbox{\hyperlink{Spacecraft_8h}{Spacecraft.\+h}}\item 
+IO.\+SDK/\+Body/\+Spacecraft/\mbox{\hyperlink{Spacecraft_8cpp}{Spacecraft.\+cpp}}\end{DoxyCompactItemize}

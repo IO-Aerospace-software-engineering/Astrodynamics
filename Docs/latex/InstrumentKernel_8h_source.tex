@@ -1,0 +1,52 @@
+\hypertarget{InstrumentKernel_8h_source}{}\doxysection{Instrument\+Kernel.\+h}
+\label{InstrumentKernel_8h_source}\index{IO.SDK/Kernels/InstrumentKernel.h@{IO.SDK/Kernels/InstrumentKernel.h}}
+\mbox{\hyperlink{InstrumentKernel_8h}{Go to the documentation of this file.}}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{1 }
+\DoxyCodeLine{11 \textcolor{preprocessor}{\#ifndef INSTRUMENT\_KERNEL\_H}}
+\DoxyCodeLine{12 \textcolor{preprocessor}{\#define INSTRUMENT\_KERNEL\_H}}
+\DoxyCodeLine{13 }
+\DoxyCodeLine{14 \textcolor{preprocessor}{\#include<string>}}
+\DoxyCodeLine{15 \textcolor{preprocessor}{\#include<\mbox{\hyperlink{Kernel_8h}{Kernel.h}}>}}
+\DoxyCodeLine{16 \textcolor{preprocessor}{\#include<\mbox{\hyperlink{Instrument_8h}{Instrument.h}}>}}
+\DoxyCodeLine{17 \textcolor{preprocessor}{\#include<\mbox{\hyperlink{Vector3D_8h}{Vector3D.h}}>}}
+\DoxyCodeLine{18 \textcolor{preprocessor}{\#include<\mbox{\hyperlink{TDB_8h}{TDB.h}}>}}
+\DoxyCodeLine{19 \textcolor{preprocessor}{\#include<\mbox{\hyperlink{Window_8h}{Window.h}}>}}
+\DoxyCodeLine{20 }
+\DoxyCodeLine{21 \textcolor{keyword}{namespace }IO::SDK::Instruments}
+\DoxyCodeLine{22 \{}
+\DoxyCodeLine{23     \textcolor{keyword}{class }Instrument;}
+\DoxyCodeLine{24 \}}
+\DoxyCodeLine{25 }
+\DoxyCodeLine{26 \textcolor{keyword}{namespace }IO::SDK::Kernels}
+\DoxyCodeLine{27 \{}
+\DoxyCodeLine{32     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1SDK_1_1Kernels_1_1InstrumentKernel}{InstrumentKernel}} :\textcolor{keyword}{public} \mbox{\hyperlink{classIO_1_1SDK_1_1Kernels_1_1Kernel}{Kernel}}}
+\DoxyCodeLine{33     \{}
+\DoxyCodeLine{34     \textcolor{keyword}{private}:}
+\DoxyCodeLine{35 }
+\DoxyCodeLine{36 }
+\DoxyCodeLine{37     \textcolor{keyword}{protected}:}
+\DoxyCodeLine{47         \mbox{\hyperlink{classIO_1_1SDK_1_1Kernels_1_1InstrumentKernel_a163e2f7144b814d72d64c2f298e097a0}{InstrumentKernel}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Instruments_1_1Instrument}{IO::SDK::Instruments::Instrument}}\& instrument, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO::SDK::Math::Vector3D}}\& boresight, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO::SDK::Math::Vector3D}}\& refVector, \textcolor{keyword}{const} \textcolor{keywordtype}{double} angle, \textcolor{keyword}{const} std::string\& templateName);}
+\DoxyCodeLine{48         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Instruments_1_1Instrument}{IO::SDK::Instruments::Instrument}}\& m\_instrument;}
+\DoxyCodeLine{49         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO::SDK::Math::Vector3D}} m\_boresight\{\};}
+\DoxyCodeLine{50         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO::SDK::Math::Vector3D}} m\_refVector\{\};}
+\DoxyCodeLine{51         \textcolor{keyword}{const} \textcolor{keywordtype}{double} m\_angle\{\};}
+\DoxyCodeLine{52         \textcolor{keyword}{const} std::string m\_templatePath;}
+\DoxyCodeLine{53 }
+\DoxyCodeLine{58         \textcolor{keyword}{virtual} \textcolor{keywordtype}{void} \mbox{\hyperlink{classIO_1_1SDK_1_1Kernels_1_1InstrumentKernel_a3a2ede777155a55120fb5a1f9d152f1f}{BuildKernel}}();}
+\DoxyCodeLine{59 }
+\DoxyCodeLine{60     \textcolor{keyword}{public}:}
+\DoxyCodeLine{61 }
+\DoxyCodeLine{62         \textcolor{keyword}{virtual} \mbox{\hyperlink{classIO_1_1SDK_1_1Kernels_1_1InstrumentKernel}{\string~InstrumentKernel}}() = \textcolor{keywordflow}{default};}
+\DoxyCodeLine{63 }
+\DoxyCodeLine{69         \textcolor{keyword}{virtual} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO::SDK::Time::Window<IO::SDK::Time::TDB>}} \mbox{\hyperlink{classIO_1_1SDK_1_1Kernels_1_1InstrumentKernel_a006ae1f485f4be36580068766d3c714b}{GetCoverageWindow}}() \textcolor{keyword}{const override};}
+\DoxyCodeLine{70 }
+\DoxyCodeLine{71         \textcolor{keyword}{friend} \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1SDK_1_1Instruments_1_1Instrument}{IO::SDK::Instruments::Instrument}};}
+\DoxyCodeLine{72 }
+\DoxyCodeLine{73     \};}
+\DoxyCodeLine{74 \}}
+\DoxyCodeLine{75 \textcolor{preprocessor}{\#endif }\textcolor{comment}{// !INSTRUMENT\_KERNEL\_H}}
+\DoxyCodeLine{76 }
+\DoxyCodeLine{77 }
+
+\end{DoxyCode}

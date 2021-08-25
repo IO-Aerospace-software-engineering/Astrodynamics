@@ -1,0 +1,142 @@
+\hypertarget{classIO_1_1SDK_1_1Maneuvers_1_1Attitudes_1_1TowardObjectAttitude}{}\doxysection{IO\+::SDK\+::Maneuvers\+::Attitudes\+::Toward\+Object\+Attitude Class Reference}
+\label{classIO_1_1SDK_1_1Maneuvers_1_1Attitudes_1_1TowardObjectAttitude}\index{IO::SDK::Maneuvers::Attitudes::TowardObjectAttitude@{IO::SDK::Maneuvers::Attitudes::TowardObjectAttitude}}
+Inheritance diagram for IO\+::SDK\+::Maneuvers\+::Attitudes\+::Toward\+Object\+Attitude\+:\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=2.000000cm]{classIO_1_1SDK_1_1Maneuvers_1_1Attitudes_1_1TowardObjectAttitude}
+\end{center}
+\end{figure}
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1Attitudes_1_1TowardObjectAttitude_ac7862caf92c841ad801b4990403846ef}{Toward\+Object\+Attitude}} (const std\+::vector$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Engine}{IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Engine}} $>$ \&engines, \mbox{\hyperlink{classIO_1_1SDK_1_1Propagators_1_1Propagator}{IO\+::\+SDK\+::\+Propagators\+::\+Propagator}} \&propagator, const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO\+::\+SDK\+::\+Time\+::\+Time\+Span}} \&attitude\+Hold\+Duration, const \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body}{IO\+::\+SDK\+::\+Body\+::\+Body}} \&target\+Body)
+\begin{DoxyCompactList}\small\item\em Construct a new Toward Object Attitude object. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1Attitudes_1_1TowardObjectAttitude_aa1657b74402ccdbb688c4d988a23107a}{Toward\+Object\+Attitude}} (const std\+::vector$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Engine}{IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Engine}} $>$ \&engines, \mbox{\hyperlink{classIO_1_1SDK_1_1Propagators_1_1Propagator}{IO\+::\+SDK\+::\+Propagators\+::\+Propagator}} \&propagator, const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} \&minimum\+Epoch, const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO\+::\+SDK\+::\+Time\+::\+Time\+Span}} \&attitude\+Hold\+Duration, const \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body}{IO\+::\+SDK\+::\+Body\+::\+Body}} \&target\+Body)
+\begin{DoxyCompactList}\small\item\em Construct a new Toward Object Attitude object. \end{DoxyCompactList}\item 
+bool \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1Attitudes_1_1TowardObjectAttitude_a8d3620611d4b1983dfc2a15fbb9b1128}{Can\+Execute}} (const \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}} \&orbital\+Params) override
+\begin{DoxyCompactList}\small\item\em Evaluate if maneuver can occurs. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsection*{Protected Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+void \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1Attitudes_1_1TowardObjectAttitude_aa434bb37713a5a45791625ecff25fe90}{Compute}} (const \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}} \&maneuver\+Point) override
+\begin{DoxyCompactList}\small\item\em Compute impulsive maneuver. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateOrientation}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+State\+Orientation}} \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1Attitudes_1_1TowardObjectAttitude_a2296926c7cc97c3d118181b802f3720c}{Compute\+Orientation}} (const \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}} \&maneuver\+Point) override
+\begin{DoxyCompactList}\small\item\em Compute orientation. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsection*{Additional Inherited Members}
+
+
+\doxysubsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Maneuvers_1_1Attitudes_1_1TowardObjectAttitude_ac7862caf92c841ad801b4990403846ef}\label{classIO_1_1SDK_1_1Maneuvers_1_1Attitudes_1_1TowardObjectAttitude_ac7862caf92c841ad801b4990403846ef}} 
+\index{IO::SDK::Maneuvers::Attitudes::TowardObjectAttitude@{IO::SDK::Maneuvers::Attitudes::TowardObjectAttitude}!TowardObjectAttitude@{TowardObjectAttitude}}
+\index{TowardObjectAttitude@{TowardObjectAttitude}!IO::SDK::Maneuvers::Attitudes::TowardObjectAttitude@{IO::SDK::Maneuvers::Attitudes::TowardObjectAttitude}}
+\doxysubsubsection{\texorpdfstring{TowardObjectAttitude()}{TowardObjectAttitude()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily IO\+::\+SDK\+::\+Maneuvers\+::\+Attitudes\+::\+Toward\+Object\+Attitude\+::\+Toward\+Object\+Attitude (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Engine}{IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Engine}} $>$ \&}]{engines,  }\item[{\mbox{\hyperlink{classIO_1_1SDK_1_1Propagators_1_1Propagator}{IO\+::\+SDK\+::\+Propagators\+::\+Propagator}} \&}]{propagator,  }\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO\+::\+SDK\+::\+Time\+::\+Time\+Span}} \&}]{attitude\+Hold\+Duration,  }\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body}{IO\+::\+SDK\+::\+Body\+::\+Body}} \&}]{target\+Body }\end{DoxyParamCaption})}
+
+
+
+Construct a new Toward Object Attitude object. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em engines} & \\
+\hline
+{\em propagator} & \\
+\hline
+{\em target\+Body} & \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Maneuvers_1_1Attitudes_1_1TowardObjectAttitude_aa1657b74402ccdbb688c4d988a23107a}\label{classIO_1_1SDK_1_1Maneuvers_1_1Attitudes_1_1TowardObjectAttitude_aa1657b74402ccdbb688c4d988a23107a}} 
+\index{IO::SDK::Maneuvers::Attitudes::TowardObjectAttitude@{IO::SDK::Maneuvers::Attitudes::TowardObjectAttitude}!TowardObjectAttitude@{TowardObjectAttitude}}
+\index{TowardObjectAttitude@{TowardObjectAttitude}!IO::SDK::Maneuvers::Attitudes::TowardObjectAttitude@{IO::SDK::Maneuvers::Attitudes::TowardObjectAttitude}}
+\doxysubsubsection{\texorpdfstring{TowardObjectAttitude()}{TowardObjectAttitude()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily IO\+::\+SDK\+::\+Maneuvers\+::\+Attitudes\+::\+Toward\+Object\+Attitude\+::\+Toward\+Object\+Attitude (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Engine}{IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Engine}} $>$ \&}]{engines,  }\item[{\mbox{\hyperlink{classIO_1_1SDK_1_1Propagators_1_1Propagator}{IO\+::\+SDK\+::\+Propagators\+::\+Propagator}} \&}]{propagator,  }\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} \&}]{minimum\+Epoch,  }\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO\+::\+SDK\+::\+Time\+::\+Time\+Span}} \&}]{attitude\+Hold\+Duration,  }\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body}{IO\+::\+SDK\+::\+Body\+::\+Body}} \&}]{target\+Body }\end{DoxyParamCaption})}
+
+
+
+Construct a new Toward Object Attitude object. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em engines} & \\
+\hline
+{\em propagator} & \\
+\hline
+{\em minimum\+Epoch} & \\
+\hline
+{\em target\+Body} & \\
+\hline
+\end{DoxyParams}
+
+
+\doxysubsection{Member Function Documentation}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Maneuvers_1_1Attitudes_1_1TowardObjectAttitude_a8d3620611d4b1983dfc2a15fbb9b1128}\label{classIO_1_1SDK_1_1Maneuvers_1_1Attitudes_1_1TowardObjectAttitude_a8d3620611d4b1983dfc2a15fbb9b1128}} 
+\index{IO::SDK::Maneuvers::Attitudes::TowardObjectAttitude@{IO::SDK::Maneuvers::Attitudes::TowardObjectAttitude}!CanExecute@{CanExecute}}
+\index{CanExecute@{CanExecute}!IO::SDK::Maneuvers::Attitudes::TowardObjectAttitude@{IO::SDK::Maneuvers::Attitudes::TowardObjectAttitude}}
+\doxysubsubsection{\texorpdfstring{CanExecute()}{CanExecute()}}
+{\footnotesize\ttfamily bool IO\+::\+SDK\+::\+Maneuvers\+::\+Attitudes\+::\+Toward\+Object\+Attitude\+::\+Can\+Execute (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}} \&}]{orbital\+Params }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Evaluate if maneuver can occurs. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em state\+Vector} & Evaluated to check if condition is satisfied \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+true 
+
+false 
+\end{DoxyReturn}
+
+
+Implements \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase_a5aa0c82f84ec1d521b42b46f0f91d40d}{IO\+::\+SDK\+::\+Maneuvers\+::\+Maneuver\+Base}}.
+
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Maneuvers_1_1Attitudes_1_1TowardObjectAttitude_aa434bb37713a5a45791625ecff25fe90}\label{classIO_1_1SDK_1_1Maneuvers_1_1Attitudes_1_1TowardObjectAttitude_aa434bb37713a5a45791625ecff25fe90}} 
+\index{IO::SDK::Maneuvers::Attitudes::TowardObjectAttitude@{IO::SDK::Maneuvers::Attitudes::TowardObjectAttitude}!Compute@{Compute}}
+\index{Compute@{Compute}!IO::SDK::Maneuvers::Attitudes::TowardObjectAttitude@{IO::SDK::Maneuvers::Attitudes::TowardObjectAttitude}}
+\doxysubsubsection{\texorpdfstring{Compute()}{Compute()}}
+{\footnotesize\ttfamily void IO\+::\+SDK\+::\+Maneuvers\+::\+Attitudes\+::\+Toward\+Object\+Attitude\+::\+Compute (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}} \&}]{maneuver\+Point }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [protected]}, {\ttfamily [virtual]}}
+
+
+
+Compute impulsive maneuver. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em maneuver\+Point} & \\
+\hline
+\end{DoxyParams}
+
+
+Implements \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase_a3d206dbe0f7f5ad8b18e0601f154e873}{IO\+::\+SDK\+::\+Maneuvers\+::\+Maneuver\+Base}}.
+
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Maneuvers_1_1Attitudes_1_1TowardObjectAttitude_a2296926c7cc97c3d118181b802f3720c}\label{classIO_1_1SDK_1_1Maneuvers_1_1Attitudes_1_1TowardObjectAttitude_a2296926c7cc97c3d118181b802f3720c}} 
+\index{IO::SDK::Maneuvers::Attitudes::TowardObjectAttitude@{IO::SDK::Maneuvers::Attitudes::TowardObjectAttitude}!ComputeOrientation@{ComputeOrientation}}
+\index{ComputeOrientation@{ComputeOrientation}!IO::SDK::Maneuvers::Attitudes::TowardObjectAttitude@{IO::SDK::Maneuvers::Attitudes::TowardObjectAttitude}}
+\doxysubsubsection{\texorpdfstring{ComputeOrientation()}{ComputeOrientation()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateOrientation}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+State\+Orientation}} IO\+::\+SDK\+::\+Maneuvers\+::\+Attitudes\+::\+Toward\+Object\+Attitude\+::\+Compute\+Orientation (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}} \&}]{maneuver\+Point }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [protected]}, {\ttfamily [virtual]}}
+
+
+
+Compute orientation. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em maneuver\+Point} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+\mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateOrientation}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+State\+Orientation}} 
+\end{DoxyReturn}
+
+
+Implements \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase_a2339b5313d34fe2d7bf474f645030bc5}{IO\+::\+SDK\+::\+Maneuvers\+::\+Maneuver\+Base}}.
+
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+IO.\+SDK/\+Maneuvers/\+Attitudes/\mbox{\hyperlink{TowardObjectAttitude_8h}{Toward\+Object\+Attitude.\+h}}\item 
+IO.\+SDK/\+Maneuvers/\+Attitudes/\mbox{\hyperlink{TowardObjectAttitude_8cpp}{Toward\+Object\+Attitude.\+cpp}}\end{DoxyCompactItemize}
