@@ -33,7 +33,8 @@ In this quick start we suggest you to use [cross plateform approach](https://cod
             - Data
             - Templates
 
-5. For linux copy libIO.SDK.so to /usr/lib/
+5a. For Linux copy libIO.SDK.so to /usr/lib/
+5b. For Windows copy IO.SDK.dll at the same level of your executable.
 
 
 ## Use SDK
@@ -55,7 +56,12 @@ In this example we will create a small program that will compute ISS orbital per
     add_executable(MyApp main.cpp)
 
     include_directories(${CMAKE_SOURCE_DIR}/Includes)
-    target_link_libraries(MyApp libIO.SDK.so)
+
+    if (MSVC)
+        target_link_libraries(MyApp IO.SDK.dll)
+    elseif(UNIX)
+        target_link_libraries(MyApp libIO.SDK.so)
+    endif ()
     ```
 
 2. Create a main.cpp file in project root folder.
