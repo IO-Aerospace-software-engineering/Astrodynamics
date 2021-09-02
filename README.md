@@ -24,7 +24,7 @@ In this quick start we suggest you to use [cross plateform approach](https://cod
 
 2. Extract Includes folder from archive IO-Toolkit-OS-vx.x.xx-x to the root folder.
 
-3. Extract Data and Templates folders from archive IO-Toolkit-OS-vx.x.xx-x to the build folder.
+3. Extract Data and Templates folders from archive IO-Toolkit-OS-vx.x.xx-x to your executable build folder.
 
 4. You should have :
     - ProjectFolder
@@ -35,7 +35,7 @@ In this quick start we suggest you to use [cross plateform approach](https://cod
 
 5a. For Linux copy libIO.SDK.so to /usr/lib/
 
-5b. For Windows copy IO.SDK.dll at the same level of your executable.
+5b. For Windows copy IO.SDK.dll and IO.SDK.lib in build directory and in the same place of your executable.
 
 
 ## Use SDK
