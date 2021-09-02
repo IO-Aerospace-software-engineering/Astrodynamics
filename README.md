@@ -34,6 +34,7 @@ In this quick start we suggest you to use [cross plateform approach](https://cod
             - Templates
 
 5a. For Linux copy libIO.SDK.so to /usr/lib/
+
 5b. For Windows copy IO.SDK.dll at the same level of your executable.
 
 
@@ -46,7 +47,7 @@ In this example we will create a small program that will compute ISS orbital per
     cmake_minimum_required(VERSION 3.18.0)
     project(MyApp VERSION 0.1.0)
 
-    project (${This} C CXX)
+    project (MyApp C CXX)
 
     set(CMAKE_C_STANDARD 99)
     set(CMAKE_CXX_STANDARD 17)
