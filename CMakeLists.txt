@@ -19,7 +19,6 @@ if(UNIX)
 endif ()
 
 if(MSVC)
-    # add_compile_options(/MT)
 endif ()
 
 enable_testing()
