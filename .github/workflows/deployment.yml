@@ -26,9 +26,9 @@ jobs:
           body: |
             Changes in this Release
           draft: false
-          prerelease: true
+          prerelease: false
 
-  create_artifact:
+  create_release_artifact:
     strategy:
         matrix:
           os: [ubuntu-latest,windows-latest]
@@ -119,3 +119,63 @@ jobs:
           files: IO-Toolkit-Windows-${{steps.tag.outputs.tag}}.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  create_debug_artifact:
+    strategy:
+        matrix:
+          os: [windows-latest]
+    name: Create artifact
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        
+      - name: Get tag
+        id: tag
+        uses: dawidd6/action-get-tag@v1
+
+      - name: Configure CMake
+        # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
+        # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
+        run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=Debug
+
+      - name: Build
+        # Build your program with the given configuration
+        run: cmake --build ${{github.workspace}}/build --config Debug
+
+      - name: Tests (Windows)
+        working-directory: ${{github.workspace}}\build\IO.SDK.Tests\Debug
+        shell: cmd      
+        # Execute tests defined by the CMake configuration.  
+        # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
+        run: IO.SDK.Tests.exe      
+        if: matrix.os == 'windows-latest'      
+
+      - name: Copy Headers and library (Windows)
+        run: |
+          mkdir -p Toolkit\Windows\Includes
+          Get-ChildItem IO.SDK -recurse -force -filter "*.h" | Copy-Item -Destination Toolkit\Windows\Includes\
+          Get-ChildItem external-lib/includeWindows -recurse -force -filter "*.h" | Copy-Item -Destination Toolkit\Windows\Includes\
+          Copy-Item .\build\IO.SDK\Debug\IO.SDK.dll Toolkit\Windows\
+          Copy-Item .\build\IO.SDK\Debug\IO.SDK.lib Toolkit\Windows\
+          Copy-Item .\build\IO.SDK\Debug\IO.SDK.exp Toolkit\Windows\
+          Copy-Item .\build\IO.SDK\Debug\IO.SDK.pdb Toolkit\Windows\
+        if: matrix.os == 'windows-latest'
+
+      - name: Copy solar system data and templates (Windows)
+        run: |
+          mkdir -p Toolkit\Windows\Data\SolarSystem
+          mkdir -p Toolkit\Windows\Templates
+          Copy-Item -Path "IO.SDK.Tests\Data\Windows\*" -Destination "Toolkit\Windows" -recurse -Force
+          Compress-Archive -Path Toolkit\Windows\* -DestinationPath IO-Toolkit-Windows-${{steps.tag.outputs.tag}}-Debug.zip -Force
+        if: matrix.os == 'windows-latest'
+
+      - name: Release (Windows)
+        uses: softprops/action-gh-release@v1
+        if: |
+          startsWith(github.ref, 'refs/tags/') &&
+          matrix.os == 'windows-latest'
+        with:
+          files: IO-Toolkit-Windows-${{steps.tag.outputs.tag}}-Debug.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}        
