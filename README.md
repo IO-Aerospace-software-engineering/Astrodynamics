@@ -11,8 +11,6 @@ Astrodynamics toolkit
 Download the latest Linux or Windows release :
 [Releases](https://github.com/IO-Aerospace-software-engineering/SDK/releases)
 
-## Install the SDK
-
 At this stage we assume that you have mastered your development environment but if you need some advises we can suggest you these approches :
 - [Cross plateform development](https://code.visualstudio.com/docs/cpp/cmake-linux)
 - [Linux development](https://code.visualstudio.com/docs/cpp/config-linux)
@@ -20,25 +18,50 @@ At this stage we assume that you have mastered your development environment but 
 
 In this quick start we suggest you to use [cross plateform approach](https://code.visualstudio.com/docs/cpp/cmake-linux) with CMake.
 
+## Install the SDK on Linux
+
 1. Create a cmake project
 
-2. Extract Includes folder from archive IO-Toolkit-OS-vx.x.xx-x to the root folder.
+2. Extract **Includes** folder from archive IO-Toolkit-Linux-vx.x.xx-x to the root folder.
 
-3. Extract Data and Templates folders from archive IO-Toolkit-OS-vx.x.xx-x to your executable build folder.
+3. Extract **Data** and **Templates** folders from archive IO-Toolkit-Linux-vx.x.xx-x to your executable build folder.
 
 4. You should have :
-    - ProjectFolder
-        - Includes
-        - build
-            - Data
-            - Templates
+    ```
+    SdkProject
+        | Includes
+        | build
+           | Data
+           | Template
+    ```
+5. Copy **libIO.SDK.so<span>** to /usr/lib/
 
-5a. For Linux copy libIO.SDK.so to /usr/lib/
+## Install the SDK on Windows
 
-5b. For Windows copy IO.SDK.dll and IO.SDK.lib in build directory and in the same place of your executable.
+1. Create a cmake project
+
+2. From the dll package you just downloaded
+   - Copy **Includes** folder at the root of the project
+   - Copy **IO.SDK.dll** and **IO.SDK.lib** in the build folder and in the Debug folder
+   - Copy folders : **Data** and **Template** in the Debug folder\ 
+
+    You should have a folder tree like below
+
+    ```
+    SdkProject
+        | Includes
+        | build
+            | IO.SDK.dll
+            | IO.SDK.lib
+            | Debug (generated after the first compile and run)
+                | Data
+                | Template
+                | IO.SDK.dll
+                | IO.SDK.lib
+    ```
 
 
-## Use SDK
+## Use the SDK
 
 In this example we will create a small program that will compute ISS orbital period from TLE(two lines elements), earth Hill sphere and angle between two vectors. 
 
