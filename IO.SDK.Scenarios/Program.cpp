@@ -26,7 +26,8 @@ int main()
 {
     //=======================Configure universe topology======================================
     auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10, "sun");
-    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth", sun);
+    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth",sun);
+    auto moon = std::make_shared<IO::SDK::Body::CelestialBody>(301, "moon",earth);
 
     //========================Compute launch parameters=======================================
 
@@ -36,10 +37,21 @@ int main()
     //Define parking orbit
     auto parkingOrbit = std::make_shared<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth,
                                                                                            6700000.0,
-                                                                                           0.0,
+                                                                                           0.3,
                                                                                            50.0 * IO::SDK::Constants::DEG_RAD,
                                                                                            53.90 * IO::SDK::Constants::DEG_RAD,
-                                                                                           92.34 * IO::SDK::Constants::DEG_RAD, 0.0,
+                                                                                           92.34 * IO::SDK::Constants::DEG_RAD, 
+                                                                                           0.0,
+                                                                                           IO::SDK::Time::TDB("2021-06-02T18:28:00"),
+                                                                                           IO::SDK::Frames::InertialFrames::GetICRF());
+    //Define target orbit
+    auto targetOrbit = std::make_shared<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth,
+                                                                                           6720000.0,
+                                                                                           0.3,
+                                                                                           50.3 * IO::SDK::Constants::DEG_RAD,
+                                                                                           50.0 * IO::SDK::Constants::DEG_RAD,
+                                                                                           90.0 * IO::SDK::Constants::DEG_RAD, 
+                                                                                           0.0,
                                                                                            IO::SDK::Time::TDB("2021-06-02T18:28:00"),
                                                                                            IO::SDK::Frames::InertialFrames::GetICRF());
     //Compute launch windows
@@ -57,17 +69,13 @@ int main()
 
     //===================Compute maneuvers to reach target body================================
 
-    //Define target orbit
-    std::string tle[3] = {"ISS (ZARYA)", "1 25544U 98067A   21153.20885672  .00000635  00000-0  19731-4 0  9999", "2 25544  51.6454  56.8104 0003459  55.0598  93.6040 15.48940796286274"};
-    auto targetOrbit = std::make_unique<IO::SDK::OrbitalParameters::TLE>(earth, tle);
-
     //Configure spacecraft
-    IO::SDK::Body::Spacecraft::Spacecraft spacecraft{-1, "MySpacecraft", 1000.0, 10000.0, "mission01", std::make_unique<IO::SDK::OrbitalParameters::ConicOrbitalElements>(*parkingOrbit)};
-    spacecraft.AddFuelTank("fuelTank1", 9000.0, 9000.0);
+    IO::SDK::Body::Spacecraft::Spacecraft spacecraft{-1, "MySpacecraft", 1000.0, 3000.0, "mission01", std::make_unique<IO::SDK::OrbitalParameters::ConicOrbitalElements>(*parkingOrbit)};
+    spacecraft.AddFuelTank("fuelTank1", 2000.0, 1000.0);
     spacecraft.AddEngine("serialNumber1", "engine1", "fuelTank1", {1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}, 450.0, 50.0);
 
     //Configure propagator
-    auto step{IO::SDK::Time::TimeSpan(1.0s)};
+    auto step{IO::SDK::Time::TimeSpan(0.5s)};
 
     //Add gravity to forces model
     std::vector<IO::SDK::Integrators::Forces::Force *> forces{};
@@ -93,7 +101,7 @@ int main()
     IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver planeAlignment(engines, propagator, targetOrbit.get());
     IO::SDK::Maneuvers::ApogeeHeightChangingManeuver apogeeChange(engines, propagator, targetOrbit->GetApogeeVector().Magnitude());
     IO::SDK::Maneuvers::ApsidalAlignmentManeuver apsidalAlignment(engines, propagator, targetOrbit.get());
-    IO::SDK::Maneuvers::PhasingManeuver phasing(engines, propagator, 1, targetOrbit.get());
+    IO::SDK::Maneuvers::PhasingManeuver phasing(engines, propagator, 2, targetOrbit.get());
 
     //We link maneuvers
     planeAlignment.SetNextManeuver(apogeeChange).SetNextManeuver(apsidalAlignment).SetNextManeuver(phasing);
@@ -103,17 +111,19 @@ int main()
 
     propagator.Propagate();
 
-    auto ti = targetOrbit->GetInclination()*IO::SDK::Constants::RAD_DEG;
-    auto si = spacecraft.ReadEphemeris(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::AberrationsEnum::None, endEpoch.ToTDB(), *earth).GetInclination()*IO::SDK::Constants::RAD_DEG;
+    auto e=targetOrbit->GetStateVector().GetEccentricity();
 
-    auto tom = targetOrbit->GetRightAscendingNodeLongitude()*IO::SDK::Constants::RAD_DEG;
-    auto som = spacecraft.ReadEphemeris(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::AberrationsEnum::None, endEpoch.ToTDB(), *earth).GetRightAscendingNodeLongitude()*IO::SDK::Constants::RAD_DEG;
+    auto ti = targetOrbit->GetInclination() * IO::SDK::Constants::RAD_DEG;
+    auto si = spacecraft.ReadEphemeris(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::AberrationsEnum::None, endEpoch.ToTDB(), *earth).GetInclination() * IO::SDK::Constants::RAD_DEG;
+
+    auto tom = targetOrbit->GetRightAscendingNodeLongitude() * IO::SDK::Constants::RAD_DEG;
+    auto som = spacecraft.ReadEphemeris(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::AberrationsEnum::None, endEpoch.ToTDB(), *earth).GetRightAscendingNodeLongitude() * IO::SDK::Constants::RAD_DEG;
 
     auto tecc = targetOrbit->GetEccentricity();
-    auto secc = spacecraft.ReadEphemeris(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::AberrationsEnum::None, endEpoch.ToTDB(), *earth).GetEccentricity();
+    auto secc = spacecraft.ReadEphemeris(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::AberrationsEnum::None, IO::SDK::Time::TDB(675948900.98037732s), *earth).GetEccentricity();
 
-    auto tw = targetOrbit->GetPeriapsisArgument()*IO::SDK::Constants::RAD_DEG;
-    auto sw = spacecraft.ReadEphemeris(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::AberrationsEnum::None, endEpoch.ToTDB(), *earth).GetPeriapsisArgument()*IO::SDK::Constants::RAD_DEG;
+    auto tw = targetOrbit->GetPeriapsisArgument() * IO::SDK::Constants::RAD_DEG;
+    auto sw = spacecraft.ReadEphemeris(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::AberrationsEnum::None, IO::SDK::Time::TDB(675948900.98037732s), *earth).GetPeriapsisArgument() * IO::SDK::Constants::RAD_DEG;
     //     2459368.250000000 = A.D. 2021-Jun-02 18:00:00.0000 TDB
     //  EC= 1.645965536521140E-03 QR= 6.781987029515979E+03 IN= 5.172225994694696E+01
     //  OM= 5.390581000057843E+01 W = 9.234298392810511E+01 Tp=  2459368.280228322838
