@@ -53,8 +53,6 @@ void IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver::Compute(const IO::SDK::Or
     //Rotate velocity vector
     auto rotateVecor = orbitalParams.GetStateVector().GetVelocity().Rotate(q).Normalize();
 
-    auto angle = orbitalParams.GetStateVector().GetVelocity().GetAngle(rotateVecor);
-
     //Compute delta V vector
     m_deltaV = std::make_unique<IO::SDK::Math::Vector3D>(rotateVecor * deltaV);
 }
