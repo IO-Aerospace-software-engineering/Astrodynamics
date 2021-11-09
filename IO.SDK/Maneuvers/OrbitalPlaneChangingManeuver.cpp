@@ -11,6 +11,7 @@
 #include <OrbitalPlaneChangingManeuver.h>
 #include <cmath>
 #include <Constants.h>
+#include <ConicOrbitalElements.h>
 
 IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver::OrbitalPlaneChangingManeuver(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator, IO::SDK::OrbitalParameters::OrbitalParameters *targetOrbit) : IO::SDK::Maneuvers::ManeuverBase(engines, propagator), m_targetOrbit{targetOrbit}
 {
@@ -41,17 +42,26 @@ bool IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver::CanExecute(const IO::SDK:
 
 void IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver::Compute(const IO::SDK::OrbitalParameters::OrbitalParameters &orbitalParams)
 {
+    auto currentvectorState = orbitalParams.GetStateVector();
     //Compute relative inclination
     m_relativeInclination = std::acos(std::cos(orbitalParams.GetInclination()) * std::cos(m_targetOrbit->GetInclination()) + (std::sin(orbitalParams.GetInclination()) * std::sin(m_targetOrbit->GetInclination())) * std::cos(m_targetOrbit->GetRightAscendingNodeLongitude() - orbitalParams.GetRightAscendingNodeLongitude()));
 
-    //Compute deltaV
-    auto deltaV = 2.0 * orbitalParams.GetStateVector().GetVelocity().Magnitude() * std::sin(m_relativeInclination * 0.5);
+    double rotationAngle = IO::SDK::Constants::PI2 + m_relativeInclination * 0.5;
 
+    if (IsAscendingNode(currentvectorState))
+    {
+        rotationAngle = -rotationAngle;
+    }
+
+    //Compute deltaV
+    auto deltaV = 2.0 * currentvectorState.GetVelocity().Magnitude() * std::sin(m_relativeInclination * 0.5);
+
+    IO::SDK::Math::Vector3D positionRotationAxis = currentvectorState.GetPosition().Normalize();
     //Compute the quaternion
-    auto q = IO::SDK::Math::Quaternion(orbitalParams.GetStateVector().GetPosition().Normalize(), IO::SDK::Constants::PI2 + m_relativeInclination * 0.5);
+    auto q = IO::SDK::Math::Quaternion(positionRotationAxis, rotationAngle);
 
     //Rotate velocity vector
-    auto rotateVecor = orbitalParams.GetStateVector().GetVelocity().Rotate(q).Normalize();
+    auto rotateVecor = currentvectorState.GetVelocity().Rotate(q).Normalize();
 
     //Compute delta V vector
     m_deltaV = std::make_unique<IO::SDK::Math::Vector3D>(rotateVecor * deltaV);

@@ -334,17 +334,105 @@ TEST(PlaneChangingManeuver, ExecuteAN)
     ASSERT_EQ(IO::SDK::Time::Window<IO::SDK::Time::TDB>(IO::SDK::Time::TDB(10385.842836252745s), IO::SDK::Time::TDB(10419.601689992669s)), *maneuver.GetThrustWindow());
 }
 
-TEST(PlaneChangingManeuver, CheckOrbitalParameters)
+TEST(PlaneChangingManeuver, CheckOrbitalParametersToHigherInclination)
 {
     //=======================Configure universe topology======================================
-    auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10, "sun");
-    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth", sun);
-    auto moon = std::make_shared<IO::SDK::Body::CelestialBody>(301, "moon", earth);
+    // auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10, "sun");
+    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
+    // auto moon = std::make_shared<IO::SDK::Body::CelestialBody>(301, "moon", earth);
 
     //Define parking orbit
     auto parkingOrbit = std::make_shared<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth,
                                                                                            6700000.0,
-                                                                                           0.3,
+                                                                                           0.7,
+                                                                                           40.0 * IO::SDK::Constants::DEG_RAD,
+                                                                                           20.0 * IO::SDK::Constants::DEG_RAD,
+                                                                                           10.0 * IO::SDK::Constants::DEG_RAD,
+                                                                                           190.0,
+                                                                                           IO::SDK::Time::TDB("2021-06-02T00:00:00"),
+                                                                                           IO::SDK::Frames::InertialFrames::GetICRF());
+    //Define target orbit
+    auto targetOrbit = std::make_shared<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth,
+                                                                                          6700000.0,
+                                                                                          0.7,
+                                                                                          55.0 * IO::SDK::Constants::DEG_RAD,
+                                                                                          20.0 * IO::SDK::Constants::DEG_RAD,
+                                                                                          10.0 * IO::SDK::Constants::DEG_RAD,
+                                                                                          190.0,
+                                                                                          IO::SDK::Time::TDB("2021-06-02T00:00:00"),
+                                                                                          IO::SDK::Frames::InertialFrames::GetICRF());
+
+    //===================Compute maneuvers to reach target body================================
+
+    //Configure spacecraft
+    IO::SDK::Body::Spacecraft::Spacecraft spacecraft{-1, "MySpacecraft", 1000.0, 3000.0, "mission01", std::make_unique<IO::SDK::OrbitalParameters::ConicOrbitalElements>(*parkingOrbit)};
+    spacecraft.AddFuelTank("fuelTank1", 2000.0, 1000.0);
+    spacecraft.AddEngine("serialNumber1", "engine1", "fuelTank1", {1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}, 450.0, 50.0);
+
+    //Configure propagator
+    auto step{IO::SDK::Time::TimeSpan(1.0s)};
+
+    //Add gravity to forces model
+    std::vector<IO::SDK::Integrators::Forces::Force *> forces{};
+    IO::SDK::Integrators::Forces::GravityForce gravityForce;
+    forces.push_back(&gravityForce);
+
+    //Initialize integrator
+    IO::SDK::Integrators::VVIntegrator integrator(step, forces);
+
+    //Configure propagator
+    IO::SDK::Time::UTC startEpoch("2021-06-02T00:00:00");
+    IO::SDK::Time::UTC endEpoch("2021-06-03T00:00:00");
+    IO::SDK::Propagators::Propagator propagator(spacecraft, integrator, IO::SDK::Time::Window(startEpoch.ToTDB(), endEpoch.ToTDB()));
+
+    //Configure maneuvers
+
+    //We define which engines can be used to realize maneuvers
+    auto engine1 = spacecraft.GetEngine("serialNumber1");
+    std::vector<IO::SDK::Body::Spacecraft::Engine> engines;
+    engines.push_back(*engine1);
+
+    //We configre each maneuver
+    IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver planeAlignment(engines, propagator, targetOrbit.get());
+
+    //We define the first maneuver in standby
+    propagator.SetStandbyManeuver(&planeAlignment);
+
+    propagator.Propagate();
+
+    auto startManeuver = planeAlignment.GetThrustWindow()->GetStartDate().Add(IO::SDK::Time::TimeSpan(-60.0s));
+    auto endManeuver = planeAlignment.GetThrustWindow()->GetEndDate().Add(IO::SDK::Time::TimeSpan(60.0s));
+
+    auto ephemeris = spacecraft.ReadEphemeris(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::AberrationsEnum::None, endManeuver, *earth);
+
+    auto p = ephemeris.GetPerigeeVector().Magnitude();
+    auto e = ephemeris.GetEccentricity();
+    auto i = ephemeris.GetInclination() * IO::SDK::Constants::RAD_DEG;
+    auto o = ephemeris.GetRightAscendingNodeLongitude() * IO::SDK::Constants::RAD_DEG;
+    auto w = ephemeris.GetPeriapsisArgument() * IO::SDK::Constants::RAD_DEG;
+    
+    ASSERT_DOUBLE_EQ(6717541.614511854, p);
+
+    ASSERT_DOUBLE_EQ(0.30232570876553228, e);
+
+    ASSERT_DOUBLE_EQ(44.999751834402794, i);
+
+    ASSERT_DOUBLE_EQ(20.001211287343011, o);
+
+    ASSERT_DOUBLE_EQ(9.8193698593635013, w);
+}
+
+TEST(PlaneChangingManeuver, CheckOrbitalParametersToLowerInclination)
+{
+    //=======================Configure universe topology======================================
+    // auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10, "sun");
+    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
+    // auto moon = std::make_shared<IO::SDK::Body::CelestialBody>(301, "moon", earth);
+
+    //Define parking orbit
+    auto parkingOrbit = std::make_shared<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth,
+                                                                                           6700000.0,
+                                                                                           0.0,
                                                                                            40.0 * IO::SDK::Constants::DEG_RAD,
                                                                                            20.0 * IO::SDK::Constants::DEG_RAD,
                                                                                            10.0 * IO::SDK::Constants::DEG_RAD,
@@ -354,9 +442,9 @@ TEST(PlaneChangingManeuver, CheckOrbitalParameters)
     //Define target orbit
     auto targetOrbit = std::make_shared<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth,
                                                                                           6700000.0,
-                                                                                          0.3,
-                                                                                          45.0 * IO::SDK::Constants::DEG_RAD,
-                                                                                          20.0 * IO::SDK::Constants::DEG_RAD,
+                                                                                          0.0,
+                                                                                          35.0 * IO::SDK::Constants::DEG_RAD,
+                                                                                          30.0 * IO::SDK::Constants::DEG_RAD,
                                                                                           10.0 * IO::SDK::Constants::DEG_RAD,
                                                                                           10.0,
                                                                                           IO::SDK::Time::TDB("2021-06-02T00:00:00"),

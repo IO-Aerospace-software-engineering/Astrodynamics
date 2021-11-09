@@ -104,7 +104,7 @@ int main()
     IO::SDK::Maneuvers::PhasingManeuver phasing(engines, propagator, 2, targetOrbit.get());
 
     //We link maneuvers
-    planeAlignment.SetNextManeuver(apogeeChange).SetNextManeuver(apsidalAlignment).SetNextManeuver(phasing);
+    //planeAlignment.SetNextManeuver(apogeeChange).SetNextManeuver(apsidalAlignment).SetNextManeuver(phasing);
 
     //We define the first maneuver in standby
     propagator.SetStandbyManeuver(&planeAlignment);
