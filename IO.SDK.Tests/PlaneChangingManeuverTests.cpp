@@ -268,7 +268,7 @@ TEST(PlaneChangingManeuver, ExecuteDN)
 
 //Check maneuver window
 #ifdef _WIN32
-    ASSERT_EQ(IO::SDK::Time::Window<IO::SDK::Time::TDB>(IO::SDK::Time::TDB(4265.2453386213119s), IO::SDK::Time::TDB(4299.0041923612371s)), *maneuver.GetThrustWindow());
+    ASSERT_EQ(IO::SDK::Time::Window<IO::SDK::Time::TDB>(IO::SDK::Time::TDB(4265.245338359885s), IO::SDK::Time::TDB(4299.004192622664s)), *maneuver.GetThrustWindow());
 
 #else
     ASSERT_EQ(IO::SDK::Time::Window<IO::SDK::Time::TDB>(IO::SDK::Time::TDB(4265.245338359885s), IO::SDK::Time::TDB(4299.004192622664s)), *maneuver.GetThrustWindow());
