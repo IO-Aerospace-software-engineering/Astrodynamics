@@ -194,6 +194,11 @@ double IO::SDK::Maneuvers::ApsidalAlignmentManeuver::GetQTargetTrueAnomaly(const
 
 IO::SDK::Math::Vector3D IO::SDK::Maneuvers::ApsidalAlignmentManeuver::GetDeltaV(const IO::SDK::OrbitalParameters::StateVector &sv) const
 {
+    if(m_deltaV)
+    {
+        return *m_deltaV;
+    }
+    
     IO::SDK::Math::Vector3D resVector;
     if (IsIntersectP(sv))
     {

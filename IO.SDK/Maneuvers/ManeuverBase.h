@@ -100,13 +100,7 @@ namespace IO::SDK::Maneuvers
          */
         void SpreadThrust();
 
-        /**
-         * @brief Set the Next Maneuver object
-         * 
-         * @param maneuver 
-         * @return ManeuverBase* 
-         */
-        virtual IO::SDK::Maneuvers::ManeuverBase &SetNextManeuver(IO::SDK::Maneuvers::ManeuverBase &maneuver);
+        
 
         const IO::SDK::Time::TimeSpan m_attitudeHoldDuration;
         std::unique_ptr<IO::SDK::Time::Window<IO::SDK::Time::TDB>> m_attitudeWindow{};
@@ -229,6 +223,14 @@ namespace IO::SDK::Maneuvers
          * @return IO::SDK::Math::Vector3D 
          */
         IO::SDK::Math::Vector3D GetDeltaV() const;
+
+        /**
+         * @brief Set the Next Maneuver object
+         * 
+         * @param maneuver 
+         * @return IO::SDK::Maneuvers::ManeuverBase& 
+         */
+        virtual IO::SDK::Maneuvers::ManeuverBase &SetNextManeuver(IO::SDK::Maneuvers::ManeuverBase &maneuver);
     };
 }
 

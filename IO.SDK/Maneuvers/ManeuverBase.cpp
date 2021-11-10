@@ -70,7 +70,8 @@ IO::SDK::Maneuvers::ManeuverResult IO::SDK::Maneuvers::ManeuverBase::TryExecute(
         //Check if maneuver can be executed at this point
         if (!CanExecute(maneuverPoint))
         {
-            result.SetInvalid("Maneuver can't be executed at this point");
+            // result.SetInvalid("Maneuver can't be executed at this point");
+            result.SetTooEarly();
             return result;
         }
 

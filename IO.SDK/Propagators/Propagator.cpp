@@ -40,7 +40,7 @@ void IO::SDK::Propagators::Propagator::Propagate()
     //Update spacecraft orbital parameters
     while (stateVector.GetEpoch() < m_window.GetEndDate())
     {
-        if (m_standbyManeuver && m_standbyManeuver->CanExecute(stateVector))
+        if (m_standbyManeuver)
         {
             //if maneuver occurs, state vectors collection will be automatically updated by maneuver object
             auto result = m_standbyManeuver->TryExecute(stateVector);

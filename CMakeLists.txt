@@ -35,5 +35,5 @@ FetchContent_MakeAvailable(googletest)
 
 # Include sub-projects.
 add_subdirectory("IO.SDK")
-
 add_subdirectory("IO.SDK.Tests")
+add_subdirectory("IO.SDK.Scenarios")
