@@ -212,7 +212,7 @@ TEST(PlaneChangingManeuver, ExecuteInsuffisantDeltaV)
     auto res = maneuver.TryExecute(s.GetOrbitalParametersAtEpoch()->GetStateVector(timeToTrueAnomalyDN));
 
     ASSERT_FALSE(res.IsValid());
-    ASSERT_DOUBLE_EQ(3849.8574224042982, maneuver.GetDeltaV().Magnitude());
+    ASSERT_DOUBLE_EQ(3849.8575175874462, maneuver.GetDeltaV().Magnitude());
 }
 
 TEST(PlaneChangingManeuver, ExecuteDN)
@@ -252,7 +252,7 @@ TEST(PlaneChangingManeuver, ExecuteDN)
     ASSERT_TRUE(res.IsValid());
 
     //Check Delta V magnitude
-    ASSERT_DOUBLE_EQ(3849.8574224042982, maneuver.GetDeltaV().Magnitude());
+    ASSERT_DOUBLE_EQ(3849.8575175874462, maneuver.GetDeltaV().Magnitude());
 
     //Check if delta v vector points to the right direction
     auto orientation = maneuver.GetDeltaV().Normalize();
@@ -264,14 +264,14 @@ TEST(PlaneChangingManeuver, ExecuteDN)
     ASSERT_DOUBLE_EQ(0.66556812329478388, maneuver.GetRelativeInclination());
 
     //Check fuel burned
-    ASSERT_DOUBLE_EQ(1687.9426869962572, maneuver.GetFuelBurned());
+    ASSERT_DOUBLE_EQ(1687.9427131389323, maneuver.GetFuelBurned());
 
 //Check maneuver window
 #ifdef _WIN32
     ASSERT_EQ(IO::SDK::Time::Window<IO::SDK::Time::TDB>(IO::SDK::Time::TDB(4265.2453386213119s), IO::SDK::Time::TDB(4299.0041923612371s)), *maneuver.GetThrustWindow());
 
 #else
-    ASSERT_EQ(IO::SDK::Time::Window<IO::SDK::Time::TDB>(IO::SDK::Time::TDB(4265.2453386213119s), IO::SDK::Time::TDB(4299.0041923612371s)), *maneuver.GetThrustWindow());
+    ASSERT_EQ(IO::SDK::Time::Window<IO::SDK::Time::TDB>(IO::SDK::Time::TDB(4265.245338359885s), IO::SDK::Time::TDB(4299.004192622664s)), *maneuver.GetThrustWindow());
 #endif
 }
 
@@ -312,26 +312,26 @@ TEST(PlaneChangingManeuver, ExecuteAN)
     ASSERT_TRUE(res.IsValid());
 
     //Check Delta V magnitude
-    ASSERT_DOUBLE_EQ(3849.8574224042945, maneuver.GetDeltaV().Magnitude());
+    ASSERT_DOUBLE_EQ(3849.8575175874421, maneuver.GetDeltaV().Magnitude());
 
     //Check if delta v vector points to the right direction
     auto orientation = maneuver.GetDeltaV().Normalize();
-    ASSERT_NEAR(-0.10171576230403212, orientation.GetX(), 1E-07);
-    ASSERT_NEAR(-0.94640493999586328, orientation.GetY(), 1E-07);
-    ASSERT_NEAR(0.30654786453396848, orientation.GetZ(), 1E-07);
+    ASSERT_NEAR(-0.38598208120028066, orientation.GetX(), 1E-07);
+    ASSERT_NEAR(0.66574946629008003, orientation.GetY(), 1E-07);
+    ASSERT_NEAR(-0.63858866348125343, orientation.GetZ(), 1E-07);
 
     //Check inclination
     ASSERT_DOUBLE_EQ(0.66556812329478388, maneuver.GetRelativeInclination());
 
 #ifdef _WIN32
-    ASSERT_DOUBLE_EQ(1687.9426869962556, maneuver.GetFuelBurned());
+    ASSERT_DOUBLE_EQ(1687.9427131389309, maneuver.GetFuelBurned());
 #else
     //Check fuel burned
-    ASSERT_DOUBLE_EQ(1687.9426869962556, maneuver.GetFuelBurned());
+    ASSERT_DOUBLE_EQ(1687.9427131389309, maneuver.GetFuelBurned());
 #endif
 
     //Check maneuver window
-    ASSERT_EQ(IO::SDK::Time::Window<IO::SDK::Time::TDB>(IO::SDK::Time::TDB(10385.842836252745s), IO::SDK::Time::TDB(10419.601689992669s)), *maneuver.GetThrustWindow());
+    ASSERT_EQ(IO::SDK::Time::Window<IO::SDK::Time::TDB>(IO::SDK::Time::TDB(10385.842835991318s), IO::SDK::Time::TDB(10419.601690254096s)), *maneuver.GetThrustWindow());
 }
 
 TEST(PlaneChangingManeuver, CheckOrbitalParametersToHigherInclination)
@@ -411,15 +411,15 @@ TEST(PlaneChangingManeuver, CheckOrbitalParametersToHigherInclination)
     auto o = ephemeris.GetRightAscendingNodeLongitude() * IO::SDK::Constants::RAD_DEG;
     auto w = ephemeris.GetPeriapsisArgument() * IO::SDK::Constants::RAD_DEG;
     
-    ASSERT_DOUBLE_EQ(6700003.9035819015, p);
+    ASSERT_DOUBLE_EQ(6700004.1067949599, p);
 
-    ASSERT_DOUBLE_EQ(0.70011860542809112, e);
+    ASSERT_DOUBLE_EQ(0.10001034044290764, e);
 
-    ASSERT_DOUBLE_EQ(55.010190070805216, i);
+    ASSERT_DOUBLE_EQ(54.999995365922835, i);
 
-    ASSERT_DOUBLE_EQ(25.013634145170158, o);
+    ASSERT_DOUBLE_EQ(20.015974011532073, o);
 
-    ASSERT_DOUBLE_EQ(6.5835517961802026, w);
+    ASSERT_DOUBLE_EQ(9.9879515017488227, w);
 }
 
 TEST(PlaneChangingManeuver, CheckOrbitalParametersToLowerInclination)
@@ -499,13 +499,13 @@ TEST(PlaneChangingManeuver, CheckOrbitalParametersToLowerInclination)
     auto o = ephemeris.GetRightAscendingNodeLongitude() * IO::SDK::Constants::RAD_DEG;
     auto w = ephemeris.GetPeriapsisArgument() * IO::SDK::Constants::RAD_DEG;
     
-    ASSERT_DOUBLE_EQ(6717541.614511854, p);
+    ASSERT_DOUBLE_EQ(6700011.5756513746, p);
 
-    ASSERT_DOUBLE_EQ(0.30232570876553228, e);
+    ASSERT_DOUBLE_EQ(0.89999976627196931, e);
 
-    ASSERT_DOUBLE_EQ(44.999751834402794, i);
+    ASSERT_DOUBLE_EQ(40.004520687725375, i);
 
-    ASSERT_DOUBLE_EQ(20.001211287343011, o);
+    ASSERT_DOUBLE_EQ(15.004839992067712, o);
 
-    ASSERT_DOUBLE_EQ(9.8193698593635013, w);
+    ASSERT_DOUBLE_EQ(21.932445485694235, w);
 }

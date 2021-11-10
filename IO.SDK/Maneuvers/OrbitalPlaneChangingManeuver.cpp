@@ -48,7 +48,7 @@ void IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver::Compute(const IO::SDK::Or
     IO::SDK::Math::Vector3D pos = currentvectorState.GetPosition();
 
     //Project vector
-    IO::SDK::Math::Vector3D projectedVector = projectedVector - (currentvectorState.GetPosition() * (vel.DotProduct(pos) / pos.DotProduct(pos)));
+    IO::SDK::Math::Vector3D projectedVector = vel - (pos * (vel.DotProduct(pos) / pos.DotProduct(pos)));
 
     //Compute relative inclination
     m_relativeInclination = std::acos(std::cos(orbitalParams.GetInclination()) * std::cos(m_targetOrbit->GetInclination()) + (std::sin(orbitalParams.GetInclination()) * std::sin(m_targetOrbit->GetInclination())) * std::cos(m_targetOrbit->GetRightAscendingNodeLongitude() - orbitalParams.GetRightAscendingNodeLongitude()));
