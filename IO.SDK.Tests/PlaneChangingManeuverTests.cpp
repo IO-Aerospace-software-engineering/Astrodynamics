@@ -344,21 +344,21 @@ TEST(PlaneChangingManeuver, CheckOrbitalParametersToHigherInclination)
     //Define parking orbit
     auto parkingOrbit = std::make_shared<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth,
                                                                                            6700000.0,
-                                                                                           0.7,
+                                                                                           0.1,
                                                                                            40.0 * IO::SDK::Constants::DEG_RAD,
                                                                                            20.0 * IO::SDK::Constants::DEG_RAD,
                                                                                            10.0 * IO::SDK::Constants::DEG_RAD,
-                                                                                           190.0,
+                                                                                           10.0,
                                                                                            IO::SDK::Time::TDB("2021-06-02T00:00:00"),
                                                                                            IO::SDK::Frames::InertialFrames::GetICRF());
     //Define target orbit
     auto targetOrbit = std::make_shared<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth,
                                                                                           6700000.0,
-                                                                                          0.7,
+                                                                                          0.1,
                                                                                           55.0 * IO::SDK::Constants::DEG_RAD,
                                                                                           20.0 * IO::SDK::Constants::DEG_RAD,
                                                                                           10.0 * IO::SDK::Constants::DEG_RAD,
-                                                                                          190.0,
+                                                                                          10.0,
                                                                                           IO::SDK::Time::TDB("2021-06-02T00:00:00"),
                                                                                           IO::SDK::Frames::InertialFrames::GetICRF());
 
@@ -411,15 +411,15 @@ TEST(PlaneChangingManeuver, CheckOrbitalParametersToHigherInclination)
     auto o = ephemeris.GetRightAscendingNodeLongitude() * IO::SDK::Constants::RAD_DEG;
     auto w = ephemeris.GetPeriapsisArgument() * IO::SDK::Constants::RAD_DEG;
     
-    ASSERT_DOUBLE_EQ(6717541.614511854, p);
+    ASSERT_DOUBLE_EQ(6700003.9035819015, p);
 
-    ASSERT_DOUBLE_EQ(0.30232570876553228, e);
+    ASSERT_DOUBLE_EQ(0.70011860542809112, e);
 
-    ASSERT_DOUBLE_EQ(44.999751834402794, i);
+    ASSERT_DOUBLE_EQ(55.010190070805216, i);
 
-    ASSERT_DOUBLE_EQ(20.001211287343011, o);
+    ASSERT_DOUBLE_EQ(25.013634145170158, o);
 
-    ASSERT_DOUBLE_EQ(9.8193698593635013, w);
+    ASSERT_DOUBLE_EQ(6.5835517961802026, w);
 }
 
 TEST(PlaneChangingManeuver, CheckOrbitalParametersToLowerInclination)
@@ -432,9 +432,9 @@ TEST(PlaneChangingManeuver, CheckOrbitalParametersToLowerInclination)
     //Define parking orbit
     auto parkingOrbit = std::make_shared<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth,
                                                                                            6700000.0,
-                                                                                           0.0,
-                                                                                           40.0 * IO::SDK::Constants::DEG_RAD,
-                                                                                           20.0 * IO::SDK::Constants::DEG_RAD,
+                                                                                           0.9,
+                                                                                           35.0 * IO::SDK::Constants::DEG_RAD,
+                                                                                           30.0 * IO::SDK::Constants::DEG_RAD,
                                                                                            10.0 * IO::SDK::Constants::DEG_RAD,
                                                                                            10.0,
                                                                                            IO::SDK::Time::TDB("2021-06-02T00:00:00"),
@@ -442,9 +442,9 @@ TEST(PlaneChangingManeuver, CheckOrbitalParametersToLowerInclination)
     //Define target orbit
     auto targetOrbit = std::make_shared<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth,
                                                                                           6700000.0,
-                                                                                          0.0,
-                                                                                          35.0 * IO::SDK::Constants::DEG_RAD,
-                                                                                          30.0 * IO::SDK::Constants::DEG_RAD,
+                                                                                          0.9,
+                                                                                          40.0 * IO::SDK::Constants::DEG_RAD,
+                                                                                          15.0 * IO::SDK::Constants::DEG_RAD,
                                                                                           10.0 * IO::SDK::Constants::DEG_RAD,
                                                                                           10.0,
                                                                                           IO::SDK::Time::TDB("2021-06-02T00:00:00"),

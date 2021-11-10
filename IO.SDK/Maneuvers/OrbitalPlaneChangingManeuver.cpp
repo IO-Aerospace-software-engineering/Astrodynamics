@@ -43,6 +43,13 @@ bool IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver::CanExecute(const IO::SDK:
 void IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver::Compute(const IO::SDK::OrbitalParameters::OrbitalParameters &orbitalParams)
 {
     auto currentvectorState = orbitalParams.GetStateVector();
+
+    IO::SDK::Math::Vector3D vel = currentvectorState.GetVelocity();
+    IO::SDK::Math::Vector3D pos = currentvectorState.GetPosition();
+
+    //Project vector
+    IO::SDK::Math::Vector3D projectedVector = projectedVector - (currentvectorState.GetPosition() * (vel.DotProduct(pos) / pos.DotProduct(pos)));
+
     //Compute relative inclination
     m_relativeInclination = std::acos(std::cos(orbitalParams.GetInclination()) * std::cos(m_targetOrbit->GetInclination()) + (std::sin(orbitalParams.GetInclination()) * std::sin(m_targetOrbit->GetInclination())) * std::cos(m_targetOrbit->GetRightAscendingNodeLongitude() - orbitalParams.GetRightAscendingNodeLongitude()));
 
@@ -54,14 +61,13 @@ void IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver::Compute(const IO::SDK::Or
     }
 
     //Compute deltaV
-    auto deltaV = 2.0 * currentvectorState.GetVelocity().Magnitude() * std::sin(m_relativeInclination * 0.5);
+    auto deltaV = 2.0 * projectedVector.Magnitude() * std::sin(m_relativeInclination * 0.5);
 
-    IO::SDK::Math::Vector3D positionRotationAxis = currentvectorState.GetPosition().Normalize();
     //Compute the quaternion
-    auto q = IO::SDK::Math::Quaternion(positionRotationAxis, rotationAngle);
+    auto q = IO::SDK::Math::Quaternion(pos.Normalize(), rotationAngle);
 
     //Rotate velocity vector
-    auto rotateVecor = currentvectorState.GetVelocity().Rotate(q).Normalize();
+    auto rotateVecor = projectedVector.Normalize().Rotate(q);
 
     //Compute delta V vector
     m_deltaV = std::make_unique<IO::SDK::Math::Vector3D>(rotateVecor * deltaV);
