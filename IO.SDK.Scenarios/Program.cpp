@@ -25,9 +25,9 @@ using namespace std::literals::chrono_literals;
 int main()
 {
     //=======================Configure universe topology======================================
-    auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10, "sun");
-    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth",sun);
-    auto moon = std::make_shared<IO::SDK::Body::CelestialBody>(301, "moon",earth);
+    //auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10, "sun");
+    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
+    //auto moon = std::make_shared<IO::SDK::Body::CelestialBody>(301, "moon",earth);
 
     //========================Compute launch parameters=======================================
 
@@ -104,7 +104,7 @@ int main()
     IO::SDK::Maneuvers::PhasingManeuver phasing(engines, propagator, 2, targetOrbit.get());
 
     //We link maneuvers
-    //planeAlignment.SetNextManeuver(apogeeChange).SetNextManeuver(apsidalAlignment).SetNextManeuver(phasing);
+    planeAlignment.SetNextManeuver(apogeeChange).SetNextManeuver(apsidalAlignment).SetNextManeuver(phasing);
 
     //We define the first maneuver in standby
     propagator.SetStandbyManeuver(&planeAlignment);
