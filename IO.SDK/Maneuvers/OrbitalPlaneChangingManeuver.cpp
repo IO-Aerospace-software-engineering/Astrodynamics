@@ -11,12 +11,13 @@
 #include <OrbitalPlaneChangingManeuver.h>
 #include <cmath>
 #include <Constants.h>
+#include <ConicOrbitalElements.h>
 
-IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver::OrbitalPlaneChangingManeuver(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator, IO::SDK::OrbitalParameters::OrbitalParameters *targetOrbit) :  IO::SDK::Maneuvers::ManeuverBase(engines, propagator),m_targetOrbit{targetOrbit}
+IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver::OrbitalPlaneChangingManeuver(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator, IO::SDK::OrbitalParameters::OrbitalParameters *targetOrbit) : IO::SDK::Maneuvers::ManeuverBase(engines, propagator), m_targetOrbit{targetOrbit}
 {
 }
 
-IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver::OrbitalPlaneChangingManeuver(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator, IO::SDK::OrbitalParameters::OrbitalParameters *targetOrbit, const IO::SDK::Time::TDB &minimumEpoch) : IO::SDK::Maneuvers::ManeuverBase(engines,  propagator, minimumEpoch),m_targetOrbit{targetOrbit}
+IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver::OrbitalPlaneChangingManeuver(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator, IO::SDK::OrbitalParameters::OrbitalParameters *targetOrbit, const IO::SDK::Time::TDB &minimumEpoch) : IO::SDK::Maneuvers::ManeuverBase(engines, propagator, minimumEpoch), m_targetOrbit{targetOrbit}
 {
 }
 
@@ -41,17 +42,32 @@ bool IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver::CanExecute(const IO::SDK:
 
 void IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver::Compute(const IO::SDK::OrbitalParameters::OrbitalParameters &orbitalParams)
 {
+    auto currentvectorState = orbitalParams.GetStateVector();
+
+    IO::SDK::Math::Vector3D vel = currentvectorState.GetVelocity();
+    IO::SDK::Math::Vector3D pos = currentvectorState.GetPosition();
+
+    //Project vector
+    IO::SDK::Math::Vector3D projectedVector = vel - (pos * (vel.DotProduct(pos) / pos.DotProduct(pos)));
+
     //Compute relative inclination
     m_relativeInclination = std::acos(std::cos(orbitalParams.GetInclination()) * std::cos(m_targetOrbit->GetInclination()) + (std::sin(orbitalParams.GetInclination()) * std::sin(m_targetOrbit->GetInclination())) * std::cos(m_targetOrbit->GetRightAscendingNodeLongitude() - orbitalParams.GetRightAscendingNodeLongitude()));
 
+    double rotationAngle = IO::SDK::Constants::PI2 + m_relativeInclination * 0.5;
+
+    if (IsAscendingNode(currentvectorState))
+    {
+        rotationAngle = -rotationAngle;
+    }
+
     //Compute deltaV
-    auto deltaV = 2.0 * orbitalParams.GetStateVector().GetVelocity().Magnitude() * std::sin(m_relativeInclination * 0.5);
+    auto deltaV = 2.0 * projectedVector.Magnitude() * std::sin(m_relativeInclination * 0.5);
 
     //Compute the quaternion
-    auto q = ComputeOrientation(orbitalParams).GetQuaternion().Normalize();
+    auto q = IO::SDK::Math::Quaternion(pos.Normalize(), rotationAngle);
 
     //Rotate velocity vector
-    auto rotateVecor = m_spacecraft.Front.Rotate(q).Normalize();
+    auto rotateVecor = projectedVector.Normalize().Rotate(q);
 
     //Compute delta V vector
     m_deltaV = std::make_unique<IO::SDK::Math::Vector3D>(rotateVecor * deltaV);
@@ -94,7 +110,7 @@ bool IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver::IsApproachingAscendingNod
 
     //Ascending node vector
     auto ANVector = m_targetOrbit->GetSpecificAngularMomentum().CrossProduct(stateVector.GetSpecificAngularMomentum());
-    
+
     //Angle between AN and spacecraft
     double dp = ANVector.DotProduct(stateVector.GetSpecificAngularMomentum().CrossProduct(stateVector.GetPosition()));
 
