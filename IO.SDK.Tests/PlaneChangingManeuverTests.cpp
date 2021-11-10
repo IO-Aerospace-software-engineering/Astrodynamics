@@ -14,6 +14,7 @@
 
 #include <chrono>
 #include <memory>
+#include <iostream>
 
 using namespace std::chrono_literals;
 
@@ -265,7 +266,9 @@ TEST(PlaneChangingManeuver, ExecuteDN)
 
     //Check fuel burned
     ASSERT_DOUBLE_EQ(1687.9427131389323, maneuver.GetFuelBurned());
-
+    std::cout.precision(17);
+    std::cout<<maneuver.GetThrustWindow()->GetStartDate().GetSecondsFromJ2000().count()<<std::endl;
+    std::cout<<maneuver.GetThrustWindow()->GetEndDate().GetSecondsFromJ2000().count()<<std::endl;
 //Check maneuver window
 #ifdef _WIN32
     ASSERT_EQ(IO::SDK::Time::Window<IO::SDK::Time::TDB>(IO::SDK::Time::TDB(4265.245338359885s), IO::SDK::Time::TDB(4299.004192622664s)), *maneuver.GetThrustWindow());
@@ -410,7 +413,7 @@ TEST(PlaneChangingManeuver, CheckOrbitalParametersToHigherInclination)
     auto i = ephemeris.GetInclination() * IO::SDK::Constants::RAD_DEG;
     auto o = ephemeris.GetRightAscendingNodeLongitude() * IO::SDK::Constants::RAD_DEG;
     auto w = ephemeris.GetPeriapsisArgument() * IO::SDK::Constants::RAD_DEG;
-    
+
     ASSERT_DOUBLE_EQ(6700004.1067949599, p);
 
     ASSERT_DOUBLE_EQ(0.10001034044290764, e);
@@ -419,7 +422,12 @@ TEST(PlaneChangingManeuver, CheckOrbitalParametersToHigherInclination)
 
     ASSERT_DOUBLE_EQ(20.015974011532073, o);
 
+#ifdef _WIN32
+
+    ASSERT_DOUBLE_EQ(9.9879515017487623, w);
+#else
     ASSERT_DOUBLE_EQ(9.9879515017488227, w);
+#endif
 }
 
 TEST(PlaneChangingManeuver, CheckOrbitalParametersToLowerInclination)
@@ -498,7 +506,7 @@ TEST(PlaneChangingManeuver, CheckOrbitalParametersToLowerInclination)
     auto i = ephemeris.GetInclination() * IO::SDK::Constants::RAD_DEG;
     auto o = ephemeris.GetRightAscendingNodeLongitude() * IO::SDK::Constants::RAD_DEG;
     auto w = ephemeris.GetPeriapsisArgument() * IO::SDK::Constants::RAD_DEG;
-    
+
     ASSERT_DOUBLE_EQ(6700011.5756513746, p);
 
     ASSERT_DOUBLE_EQ(0.89999976627196931, e);
