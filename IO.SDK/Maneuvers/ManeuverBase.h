@@ -197,11 +197,26 @@ namespace IO::SDK::Maneuvers
         IO::SDK::Maneuvers::ManeuverResult TryExecute(const IO::SDK::OrbitalParameters::OrbitalParameters &maneuverPoint);
 
         /**
-         * @brief Get the maneuver window
+         * @brief Get the thrust window
          * 
          * @return IO::SDK::Time::Window<IO::SDK::Time::TDB>* 
          */
         IO::SDK::Time::Window<IO::SDK::Time::TDB> *GetThrustWindow() const;
+
+        /**
+         * @brief Get the attitude window
+         * 
+         * @return IO::SDK::Time::Window<IO::SDK::Time::TDB>* 
+         */
+        IO::SDK::Time::Window<IO::SDK::Time::TDB> *GetAttitudeWindow() const;
+
+        /**
+         * @brief Get the maneuver window.
+         * Maneuver window start at burn and end when the maneuver is completed. 
+         * 
+         * @return IO::SDK::Time::Window<IO::SDK::Time::TDB>* 
+         */
+        IO::SDK::Time::Window<IO::SDK::Time::TDB> *GetManeuverWindow() const;
 
         /**
          * @brief Get the Fuel Burned in kg

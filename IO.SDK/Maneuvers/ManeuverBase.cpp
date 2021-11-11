@@ -221,6 +221,16 @@ IO::SDK::Time::Window<IO::SDK::Time::TDB> *IO::SDK::Maneuvers::ManeuverBase::Get
     return m_thrustWindow.get();
 }
 
+IO::SDK::Time::Window<IO::SDK::Time::TDB> *IO::SDK::Maneuvers::ManeuverBase::GetAttitudeWindow() const
+{
+    return m_attitudeWindow.get();
+}
+
+IO::SDK::Time::Window<IO::SDK::Time::TDB> *IO::SDK::Maneuvers::ManeuverBase::GetManeuverWindow() const
+{
+    return m_maneuverWindow.get();
+}
+
 void IO::SDK::Maneuvers::ManeuverBase::ManeuverBase::SpreadThrust()
 {
     if (m_deltaV == 0)
