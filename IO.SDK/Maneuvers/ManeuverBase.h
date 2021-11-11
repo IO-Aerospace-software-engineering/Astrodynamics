@@ -29,6 +29,8 @@
 #include <TimeSpan.h>
 #include <TooEarlyManeuverException.h>
 
+using namespace std::chrono_literals;
+
 namespace IO::SDK::Propagators
 {
     class Propagator;
@@ -70,7 +72,7 @@ namespace IO::SDK::Maneuvers
          * @param duration 
          * @return Fuel burned quantity in kg
          */
-        double Burn(const IO::SDK::Time::TimeSpan& duration);
+        double Burn(const IO::SDK::Time::TimeSpan &duration);
 
         /**
          * @brief Check if computed maneuver is valid
@@ -100,34 +102,33 @@ namespace IO::SDK::Maneuvers
          */
         void SpreadThrust();
 
-        
-
         const IO::SDK::Time::TimeSpan m_attitudeHoldDuration;
         std::unique_ptr<IO::SDK::Time::Window<IO::SDK::Time::TDB>> m_attitudeWindow{};
 
+        std::unique_ptr<IO::SDK::Time::Window<IO::SDK::Time::TDB>> m_maneuverWindow{};
+
     protected:
         std::unique_ptr<IO::SDK::Time::Window<IO::SDK::Time::TDB>> m_thrustWindow{};
-        
         std::unique_ptr<IO::SDK::Math::Vector3D> m_deltaV{};
-        IO::SDK::Time::TimeSpan m_thrustDuration{};
+        IO::SDK::Time::TimeSpan m_thrustDuration{0.0s};
         double m_fuelBurned{};
         const std::vector<IO::SDK::Body::Spacecraft::Engine> m_engines{};
         std::unique_ptr<IO::SDK::Time::TDB> m_minimumEpoch{};
         ManeuverBase *m_nextManeuver{};
         bool m_isValid{false};
         const IO::SDK::Body::Spacecraft::Spacecraft &m_spacecraft;
-        IO::SDK::Propagators::Propagator& m_propagator;
+        IO::SDK::Propagators::Propagator &m_propagator;
         std::vector<ManeuverBase *> m_subManeuvers{};
         std::set<const IO::SDK::Body::Spacecraft::FuelTank *> m_fuelTanks;
         std::map<const IO::SDK::Body::Spacecraft::FuelTank *, IO::SDK::Maneuvers::DynamicFuelTank> m_dynamicFuelTanks;
-        
+        IO::SDK::Time::TimeSpan m_maneuverHoldDuration{0.0s};
 
         /**
          * @brief Construct a new Maneuver Base object
          * 
          * @param engines Used by maneuver
          */
-        ManeuverBase(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator& propagator);
+        ManeuverBase(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator);
 
         /**
          * @brief Construct a new Maneuver Base object
@@ -135,7 +136,7 @@ namespace IO::SDK::Maneuvers
          * @param engines Used by maneuver
          * @param minimumEpoch No maneuver execution before this epoch
          */
-        ManeuverBase(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator& propagator, const IO::SDK::Time::TDB &minimumEpoch);
+        ManeuverBase(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator, const IO::SDK::Time::TDB &minimumEpoch);
 
         /**
          * @brief Construct a new Maneuver Base object
@@ -144,7 +145,7 @@ namespace IO::SDK::Maneuvers
          * @param propagator 
          * @param attitudeHoldDuration 
          */
-        ManeuverBase(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator& propagator, const IO::SDK::Time::TimeSpan& attitudeHoldDuration );
+        ManeuverBase(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator, const IO::SDK::Time::TimeSpan &attitudeHoldDuration);
 
         /**
          * @brief Construct a new Maneuver Base object
@@ -154,7 +155,7 @@ namespace IO::SDK::Maneuvers
          * @param minimumEpoch 
          * @param attitudeHoldDuration 
          */
-        ManeuverBase(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator& propagator, const IO::SDK::Time::TDB &minimumEpoch, const IO::SDK::Time::TimeSpan& attitudeHoldDuration );
+        ManeuverBase(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator, const IO::SDK::Time::TDB &minimumEpoch, const IO::SDK::Time::TimeSpan &attitudeHoldDuration);
 
         /**
          * @brief Compute impulsive maneuver
@@ -178,7 +179,6 @@ namespace IO::SDK::Maneuvers
          * @param notBeforeEpoch Maneuver must not start before this epoch
          */
         void Handle(const IO::SDK::Time::TDB &notBeforeEpoch);
-        
 
         /**
          * @brief Evaluate if maneuver can occurs
