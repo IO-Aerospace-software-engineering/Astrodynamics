@@ -104,6 +104,13 @@ TEST(ApsidalAlignmentManeuver, ExecuteP)
     ASSERT_DOUBLE_EQ(7000.94482521596, maneuver.GetThrustWindow()->GetEndDate().GetSecondsFromJ2000().count());
     ASSERT_DOUBLE_EQ(10.68753487368553, maneuver.GetThrustDuration().GetSeconds().count());
     ASSERT_DOUBLE_EQ(534.37674368427656, maneuver.GetFuelBurned());
+
+    auto sv = prop.GetStateVectors().back();
+    ASSERT_DOUBLE_EQ(8927813.7585891597, sv.GetPerigeeVector().Magnitude());
+    ASSERT_DOUBLE_EQ(0.50035609083434074, sv.GetEccentricity());
+    ASSERT_DOUBLE_EQ(orbitalParams2->GetInclination() * IO::SDK::Constants::RAD_DEG, sv.GetInclination() * IO::SDK::Constants::RAD_DEG);
+    ASSERT_DOUBLE_EQ(orbitalParams2->GetRightAscendingNodeLongitude() * IO::SDK::Constants::RAD_DEG, sv.GetRightAscendingNodeLongitude() * IO::SDK::Constants::RAD_DEG);
+    ASSERT_DOUBLE_EQ(29.63896762669858, sv.GetPeriapsisArgument() * IO::SDK::Constants::RAD_DEG);
 }
 
 TEST(ApsidalAlignmentManeuver, ExecuteQ)
@@ -141,7 +148,7 @@ TEST(ApsidalAlignmentManeuver, ExecuteQ)
     ASSERT_TRUE(res.IsValid());
 
     //Theta 30°
-    ASSERT_NEAR(30.0 * IO::SDK::Constants::DEG_RAD, maneuver.GetTheta(),1E-12);
+    ASSERT_NEAR(30.0 * IO::SDK::Constants::DEG_RAD, maneuver.GetTheta(), 1E-12);
 
     ASSERT_DOUBLE_EQ(1456.8673054332951, maneuver.GetDeltaV().Magnitude());
     ASSERT_DOUBLE_EQ(-1369.0374802364965, maneuver.GetDeltaV().GetX());
@@ -152,4 +159,37 @@ TEST(ApsidalAlignmentManeuver, ExecuteQ)
     ASSERT_DOUBLE_EQ(17853.844824920649, maneuver.GetThrustWindow()->GetEndDate().GetSecondsFromJ2000().count());
     ASSERT_DOUBLE_EQ(10.684487086579903, maneuver.GetThrustDuration().GetSeconds().count());
     ASSERT_DOUBLE_EQ(534.2243543289951, maneuver.GetFuelBurned());
+}
+
+TEST(ApsidalAlignmentManeuver, CheckOrbitalParameters)
+{
+    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
+    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams1 = std::make_unique<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth, 10000000.0, 0.333333, 0.0, 0.0, 0.0, 0.0, IO::SDK::Time::TDB("2021-06-02T00:00:00"), IO::SDK::Frames::InertialFrames::GetICRF());
+    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams2 = std::make_unique<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth, 9000000.0, 0.5, 0.0, 0.0, 30.0 * IO::SDK::Constants::DEG_RAD, 0.0, IO::SDK::Time::TDB("2021-06-02T00:00:00"), IO::SDK::Frames::InertialFrames::GetICRF());
+
+    IO::SDK::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, "ms01", std::move(orbitalParams1)};
+
+    IO::SDK::Integrators::VVIntegrator integrator(IO::SDK::Time::TimeSpan(1.0s));
+    IO::SDK::Propagators::Propagator prop(s, integrator, IO::SDK::Time::Window(IO::SDK::Time::TDB("2021-06-02T00:00:00"), IO::SDK::Time::TDB("2021-06-03T00:00:00")));
+
+    s.AddFuelTank("ft1", 1000.0, 900.0);
+    s.AddEngine("sn1", "eng1", "ft1", {1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}, 450.0, 50.0);
+
+    auto engine1 = s.GetEngine("sn1");
+
+    std::vector<IO::SDK::Body::Spacecraft::Engine> engines;
+    engines.push_back(*engine1);
+
+    IO::SDK::Maneuvers::ApsidalAlignmentManeuver maneuver(engines, prop, orbitalParams2.get());
+
+    prop.SetStandbyManeuver(&maneuver);
+
+    prop.Propagate();
+
+    auto sv = s.ReadEphemeris(IO::SDK::Frames::InertialFrames::GetICRF(),IO::SDK::AberrationsEnum::None,IO::SDK::Time::TDB(200.0s),*earth);
+    ASSERT_DOUBLE_EQ(8927813.7585891597, sv.GetPerigeeVector().Magnitude());
+    ASSERT_DOUBLE_EQ(0.50035609083434074, sv.GetEccentricity());
+    ASSERT_DOUBLE_EQ(orbitalParams2->GetInclination() * IO::SDK::Constants::RAD_DEG, sv.GetInclination() * IO::SDK::Constants::RAD_DEG);
+    ASSERT_DOUBLE_EQ(orbitalParams2->GetRightAscendingNodeLongitude() * IO::SDK::Constants::RAD_DEG, sv.GetRightAscendingNodeLongitude() * IO::SDK::Constants::RAD_DEG);
+    ASSERT_DOUBLE_EQ(29.63896762669858, sv.GetPeriapsisArgument() * IO::SDK::Constants::RAD_DEG);
 }
