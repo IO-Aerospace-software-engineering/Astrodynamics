@@ -10,10 +10,11 @@
  */
 #include <PhasingManeuver.h>
 #include <InvalidArgumentException.h>
+
 #include <chrono>
 #include <cmath>
 
-IO::SDK::Maneuvers::PhasingManeuver::PhasingManeuver(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator, const unsigned int revolutionNumber, IO::SDK::OrbitalParameters::OrbitalParameters *targetOrbit) : IO::SDK::Maneuvers::ManeuverBase(engines, propagator),m_revolutionsNumber{revolutionNumber}, m_targetOrbit{targetOrbit}
+IO::SDK::Maneuvers::PhasingManeuver::PhasingManeuver(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator, const unsigned int revolutionNumber, IO::SDK::OrbitalParameters::OrbitalParameters *targetOrbit) : IO::SDK::Maneuvers::ManeuverBase(engines, propagator), m_revolutionsNumber{revolutionNumber}, m_targetOrbit{targetOrbit}
 {
     if (!targetOrbit)
     {
@@ -23,7 +24,7 @@ IO::SDK::Maneuvers::PhasingManeuver::PhasingManeuver(const std::vector<IO::SDK::
     m_targetOrbit = targetOrbit;
 }
 
-IO::SDK::Maneuvers::PhasingManeuver::PhasingManeuver(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator, const unsigned revolutionNumber, IO::SDK::OrbitalParameters::OrbitalParameters *targetOrbit, const IO::SDK::Time::TDB &minimumEpoch) : IO::SDK::Maneuvers::ManeuverBase(engines, propagator, minimumEpoch),m_revolutionsNumber{revolutionNumber}, m_targetOrbit{targetOrbit}
+IO::SDK::Maneuvers::PhasingManeuver::PhasingManeuver(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator, const unsigned revolutionNumber, IO::SDK::OrbitalParameters::OrbitalParameters *targetOrbit, const IO::SDK::Time::TDB &minimumEpoch) : IO::SDK::Maneuvers::ManeuverBase(engines, propagator, minimumEpoch), m_revolutionsNumber{revolutionNumber}, m_targetOrbit{targetOrbit}
 {
     if (!targetOrbit)
     {
@@ -39,6 +40,8 @@ void IO::SDK::Maneuvers::PhasingManeuver::Compute(const IO::SDK::OrbitalParamete
     double vInit = maneuverPoint.GetStateVector().GetVelocity().Magnitude();
     double vFinal = std::sqrt(maneuverPoint.GetCenterOfMotion()->GetMu() * ((2.0 / maneuverPoint.GetPerigeeVector().Magnitude()) - (1.0 / ((maneuverPoint.GetPerigeeVector().Magnitude() + targetHeight) / 2.0))));
     m_deltaV = std::make_unique<IO::SDK::Math::Vector3D>(m_spacecraft.Front.Rotate(ComputeOrientation(maneuverPoint).GetQuaternion()).Normalize() * std::abs(vFinal - vInit));
+    double deltaTrueAnomaly = DeltaTrueAnomaly(maneuverPoint);
+    m_maneuverHoldDuration = PhasingDuration(m_revolutionsNumber, maneuverPoint.GetMeanMotion(), deltaTrueAnomaly) * m_revolutionsNumber;
 }
 
 IO::SDK::OrbitalParameters::StateOrientation IO::SDK::Maneuvers::PhasingManeuver::ComputeOrientation(const IO::SDK::OrbitalParameters::OrbitalParameters &maneuverPoint)
@@ -113,10 +116,16 @@ double IO::SDK::Maneuvers::PhasingSemiMajorAxis(const double gm, IO::SDK::Time::
 
 double IO::SDK::Maneuvers::PhasingManeuver::DeltaHeight(const IO::SDK::OrbitalParameters::OrbitalParameters &orbitalParameters)
 {
+    double deltaTrueAnomaly = DeltaTrueAnomaly(orbitalParameters);
+    return (PhasingSemiMajorAxis(orbitalParameters.GetCenterOfMotion()->GetMu(), PhasingDuration(m_revolutionsNumber, orbitalParameters.GetMeanMotion(), deltaTrueAnomaly)) - orbitalParameters.GetSemiMajorAxis()) * 2.0;
+}
+
+double IO::SDK::Maneuvers::PhasingManeuver::DeltaTrueAnomaly(const IO::SDK::OrbitalParameters::OrbitalParameters &orbitalParameters)
+{
     double deltaTrueAnomaly = orbitalParameters.GetStateVector().GetPosition().GetAngle(m_targetOrbit->GetStateVector(orbitalParameters.GetEpoch()).GetPosition());
     if (deltaTrueAnomaly < 0.0)
     {
         deltaTrueAnomaly += IO::SDK::Constants::_2PI;
     }
-    return (PhasingSemiMajorAxis(orbitalParameters.GetCenterOfMotion()->GetMu(), PhasingDuration(m_revolutionsNumber, orbitalParameters.GetMeanMotion(), deltaTrueAnomaly)) - orbitalParameters.GetSemiMajorAxis()) * 2.0;
+    return deltaTrueAnomaly;
 }

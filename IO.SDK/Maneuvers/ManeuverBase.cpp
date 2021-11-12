@@ -93,7 +93,7 @@ IO::SDK::Maneuvers::ManeuverResult IO::SDK::Maneuvers::ManeuverBase::TryExecute(
         if (m_nextManeuver)
         {
             //Maneuver is complete, next maneuver will be handled by propagator and can't be executed before end of this maneuver
-            m_nextManeuver->Handle(m_attitudeWindow->GetEndDate());
+            m_nextManeuver->Handle(m_maneuverWindow->GetEndDate());
         }
         else
         {
@@ -137,10 +137,11 @@ void IO::SDK::Maneuvers::ManeuverBase::ExecuteAt(const IO::SDK::OrbitalParameter
     //Compute Thrust spreading
     SpreadThrust();
 
-    //Compute maneuver window
+    //set maneuver window
     m_thrustWindow = std::make_unique<IO::SDK::Time::Window<IO::SDK::Time::TDB>>(maneuverPoint.GetEpoch() - m_thrustDuration / 2, m_thrustDuration);
 
-    //Set minimum attitude window
+
+    //Set attitude window
     if (m_attitudeHoldDuration > m_thrustWindow->GetLength())
     {
         m_attitudeWindow = std::make_unique<IO::SDK::Time::Window<IO::SDK::Time::TDB>>(m_thrustWindow->GetStartDate(), m_attitudeHoldDuration);
@@ -154,6 +155,9 @@ void IO::SDK::Maneuvers::ManeuverBase::ExecuteAt(const IO::SDK::OrbitalParameter
     {
         throw IO::SDK::Exception::TooEarlyManeuverException("The maneuver begins too early.");
     }
+
+    //Set maneuver window
+    m_maneuverWindow=std::make_unique<IO::SDK::Time::Window<IO::SDK::Time::TDB>>(m_attitudeWindow->Merge(*m_thrustWindow).Merge(IO::SDK::Time::Window(maneuverPoint.GetEpoch(),m_maneuverHoldDuration)));
 
     //Find position at maneuver begin
     //Get lower value nearest maneuver begin epoch
@@ -215,6 +219,16 @@ IO::SDK::Maneuvers::ManeuverBase &IO::SDK::Maneuvers::ManeuverBase::SetNextManeu
 IO::SDK::Time::Window<IO::SDK::Time::TDB> *IO::SDK::Maneuvers::ManeuverBase::GetThrustWindow() const
 {
     return m_thrustWindow.get();
+}
+
+IO::SDK::Time::Window<IO::SDK::Time::TDB> *IO::SDK::Maneuvers::ManeuverBase::GetAttitudeWindow() const
+{
+    return m_attitudeWindow.get();
+}
+
+IO::SDK::Time::Window<IO::SDK::Time::TDB> *IO::SDK::Maneuvers::ManeuverBase::GetManeuverWindow() const
+{
+    return m_maneuverWindow.get();
 }
 
 void IO::SDK::Maneuvers::ManeuverBase::ManeuverBase::SpreadThrust()
