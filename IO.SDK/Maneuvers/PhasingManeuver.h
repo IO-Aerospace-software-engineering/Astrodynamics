@@ -11,7 +11,8 @@
 #ifndef PHASING_MANEUVER_H
 #define PHASING_MANEUVER_H
 
-#include<memory>
+#include <memory>
+#include <vector>
 
 #include <ManeuverBase.h>
 #include <OrbitalParameters.h>
@@ -32,7 +33,15 @@ namespace IO::SDK::Maneuvers
 
         bool IsApproachingPerigee(const IO::SDK::OrbitalParameters::StateVector &stateVector) const;
 
-        double DeltaHeight(const IO::SDK::OrbitalParameters::OrbitalParameters& orbitalParameters);
+        double DeltaHeight(const IO::SDK::OrbitalParameters::OrbitalParameters &orbitalParameters);
+
+        /**
+         * @brief Compute true anomaly delta
+         * 
+         * @param orbitalParameters 
+         * @return double 
+         */
+        double DeltaTrueAnomaly(const IO::SDK::OrbitalParameters::OrbitalParameters &orbitalParameters);
 
     protected:
         /**
@@ -72,7 +81,7 @@ namespace IO::SDK::Maneuvers
      * @param deltaTrueAnomaly Delta true anomaly
      * @return IO::SDK::Time::TimeSpan 
      */
-    IO::SDK::Time::TimeSpan PhasingDuration(const unsigned int k,const double n, const double deltaTrueAnomaly);
+    IO::SDK::Time::TimeSpan PhasingDuration(const unsigned int k, const double n, const double deltaTrueAnomaly);
 
     /**
      * @brief Computa semi major axis for phasing
@@ -81,8 +90,7 @@ namespace IO::SDK::Maneuvers
      * @param phasingDuration Phasing duration
      * @return double 
      */
-    double PhasingSemiMajorAxis(const double gm,IO::SDK::Time::TimeSpan phasingDuration);
-
+    double PhasingSemiMajorAxis(const double gm, IO::SDK::Time::TimeSpan phasingDuration);
 
 } // namespace IO::SDK::Maneuvers
 

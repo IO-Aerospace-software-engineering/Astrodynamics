@@ -100,6 +100,7 @@ int main()
     IO::SDK::Maneuvers::ApogeeHeightChangingManeuver apogeeChange(engines, propagator, targetOrbit->GetApogeeVector().Magnitude());
     IO::SDK::Maneuvers::ApsidalAlignmentManeuver apsidalAlignment(engines, propagator, targetOrbit.get());
     IO::SDK::Maneuvers::PhasingManeuver phasing(engines, propagator, 2, targetOrbit.get());
+    IO::SDK::Maneuvers::ApogeeHeightChangingManeuver finalApogeeChanging(engines, propagator, targetOrbit->GetApogeeVector().Magnitude());
 
     //We link maneuvers
     planeAlignment.SetNextManeuver(apsidalAlignment).SetNextManeuver(phasing).SetNextManeuver(apogeeChange);
