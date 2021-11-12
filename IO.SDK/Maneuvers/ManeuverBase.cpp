@@ -71,8 +71,7 @@ IO::SDK::Maneuvers::ManeuverResult IO::SDK::Maneuvers::ManeuverBase::TryExecute(
         if (!CanExecute(maneuverPoint))
         {
             // result.SetInvalid("Maneuver can't be executed at this point");
-            result.SetTooEarly();
-            return result;
+            throw IO::SDK::Exception::TooEarlyManeuverException("");
         }
 
         //Compute maneuver parameters

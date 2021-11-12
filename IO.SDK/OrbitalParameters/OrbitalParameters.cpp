@@ -157,8 +157,7 @@ IO::SDK::Math::Vector3D IO::SDK::OrbitalParameters::OrbitalParameters::GetApogee
 
 IO::SDK::OrbitalParameters::StateVector IO::SDK::OrbitalParameters::OrbitalParameters::GetStateVector(const double trueAnomalie) const
 {
-	auto epoch = GetTimeToTrueAnomaly(trueAnomalie);
-	return GetStateVector(epoch);
+	return GetStateVector(GetTimeToTrueAnomaly(trueAnomalie));
 }
 
 IO::SDK::Math::Vector3D IO::SDK::OrbitalParameters::OrbitalParameters::GetAscendingNodeVector() const
