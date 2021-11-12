@@ -69,6 +69,10 @@ IO::SDK::Time::TDB IO::SDK::OrbitalParameters::OrbitalParameters::GetTimeToMeanA
 
 IO::SDK::Time::TDB IO::SDK::OrbitalParameters::OrbitalParameters::GetTimeToTrueAnomaly(double trueAnomalyTarget) const
 {
+	if(trueAnomalyTarget<0.0)
+	{
+		trueAnomalyTarget+=IO::SDK::Constants::_2PI;
+	}
 	//X = cos E
 	double X = (GetEccentricity() + std::cos(trueAnomalyTarget)) / (1 + GetEccentricity() * std::cos(trueAnomalyTarget));
 	double E = std::acos(X);

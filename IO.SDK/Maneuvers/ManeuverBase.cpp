@@ -158,7 +158,7 @@ void IO::SDK::Maneuvers::ManeuverBase::ExecuteAt(const IO::SDK::OrbitalParameter
     //Get lower value nearest maneuver begin epoch
     const IO::SDK::OrbitalParameters::OrbitalParameters *nearestLowerState = m_propagator.FindNearestLowerStateVector(m_attitudeWindow->GetStartDate());
 
-    if (m_propagator.GetStateVectors().empty())
+    if (m_propagator.GetStateVectors().empty() || !nearestLowerState)
     {
         nearestLowerState = &maneuverPoint;
     }
