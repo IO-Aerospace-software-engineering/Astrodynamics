@@ -71,8 +71,7 @@ IO::SDK::Maneuvers::ManeuverResult IO::SDK::Maneuvers::ManeuverBase::TryExecute(
         if (!CanExecute(maneuverPoint))
         {
             // result.SetInvalid("Maneuver can't be executed at this point");
-            result.SetTooEarly();
-            return result;
+            throw IO::SDK::Exception::TooEarlyManeuverException("");
         }
 
         //Compute maneuver parameters
@@ -163,7 +162,7 @@ void IO::SDK::Maneuvers::ManeuverBase::ExecuteAt(const IO::SDK::OrbitalParameter
     //Get lower value nearest maneuver begin epoch
     const IO::SDK::OrbitalParameters::OrbitalParameters *nearestLowerState = m_propagator.FindNearestLowerStateVector(m_attitudeWindow->GetStartDate());
 
-    if (m_propagator.GetStateVectors().empty())
+    if (m_propagator.GetStateVectors().empty() || !nearestLowerState)
     {
         nearestLowerState = &maneuverPoint;
     }
