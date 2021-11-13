@@ -68,7 +68,7 @@ TEST(PhasingManeuver, CanExecute)
     ASSERT_FALSE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()->GetStateVector(181.0 * IO::SDK::Constants::DEG_RAD)));
 }
 
-TEST(PhasingManeuver, TryExecute)
+TEST(PhasingManeuver, TryExecuteOnGeostationary)
 {
     const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
     std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams1 = std::make_unique<IO::SDK::OrbitalParameters::EquinoctialElements>(earth, 42164000.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -IO::SDK::Constants::PI2, IO::SDK::Constants::PI2, IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::GetICRF());
@@ -114,4 +114,16 @@ TEST(PhasingManeuver, TryExecute)
     ASSERT_EQ(IO::SDK::Time::Window<IO::SDK::Time::TDB>(IO::SDK::Time::TDB(1.3109841010206829s), IO::SDK::Time::TDB(1.4316875471964321s)), *maneuver.GetThrustWindow());
 
 #endif
+
+    ASSERT_DOUBLE_EQ(maneuver.GetThrustWindow()->GetLength().GetSeconds().count(), maneuver.GetThrustDuration().GetSeconds().count());
+
+    //Attitude and thrust window must be the same
+    ASSERT_DOUBLE_EQ(maneuver.GetAttitudeWindow()->GetLength().GetSeconds().count(), maneuver.GetThrustWindow()->GetLength().GetSeconds().count());
+    ASSERT_DOUBLE_EQ(maneuver.GetAttitudeWindow()->GetStartDate().GetSecondsFromJ2000().count(), maneuver.GetThrustWindow()->GetStartDate().GetSecondsFromJ2000().count());
+    ASSERT_DOUBLE_EQ(maneuver.GetAttitudeWindow()->GetEndDate().GetSecondsFromJ2000().count(), maneuver.GetThrustWindow()->GetEndDate().GetSecondsFromJ2000().count());
+
+    //Check maneuver windows
+    ASSERT_DOUBLE_EQ(maneuver.GetManeuverWindow()->GetStartDate().GetSecondsFromJ2000().count(), maneuver.GetThrustWindow()->GetStartDate().GetSecondsFromJ2000().count());
+    ASSERT_DOUBLE_EQ(262080.92286854095, maneuver.GetManeuverWindow()->GetLength().GetSeconds().count());
 }
+

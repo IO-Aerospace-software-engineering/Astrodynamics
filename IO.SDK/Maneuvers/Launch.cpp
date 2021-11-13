@@ -113,7 +113,7 @@ std::vector<IO::SDK::Maneuvers::LaunchWindow> IO::SDK::Maneuvers::Launch::GetLau
         {
             for (auto &&recoverySiteWindow : recoverySiteDayWindows)
             {
-                if (launchSiteWindow.ItIntersects(recoverySiteWindow))
+                if (launchSiteWindow.Intersects(recoverySiteWindow))
                 {
                     auto intersection = launchSiteWindow.GetIntersection(recoverySiteWindow);
                     sunLightWindowsOnBothSites.push_back(IO::SDK::Time::Window<IO::SDK::Time::UTC>(intersection.GetStartDate(), intersection.GetEndDate()));

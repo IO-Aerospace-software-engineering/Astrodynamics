@@ -41,25 +41,34 @@ namespace IO::SDK::Time
 		TimeSpan GetLength() const { return m_length; }
 		bool operator==(const Window<T> &window) const { return m_start == window.m_start && m_end == window.m_end; }
 		bool operator!=(const Window<T> &window) const { return !(*this == window); }
-		bool ItIntersects(const Window<T> &window) const
+		
+		bool Intersects(const Window<T> &window) const
 		{
 			return !(window.GetStartDate() >= m_end || window.GetEndDate() <= m_start);
 		}
 
-		bool ItIntersects(const T &epoch) const
+
+		bool Contains(const T &epoch) const
 		{
 			return epoch > m_start && epoch < m_end;
 		}
 
 		Window<T> GetIntersection(const Window<T> &window) const
 		{
-			if (!ItIntersects(window))
+			if (!Intersects(window))
 			{
 				throw IO::SDK::Exception::SDKException("Windows don't intersect");
 			}
 
 			T min = m_start > window.m_start ? m_start : window.m_start;
 			T max = m_end < window.m_end ? m_end : window.m_end;
+			return Window<T>(min, max);
+		}
+
+		Window<T> Merge(const Window<T> &window) const
+		{
+			T min = m_start < window.m_start ? m_start : window.m_start;
+			T max = m_end > window.m_end ? m_end : window.m_end;
 			return Window<T>(min, max);
 		}
 

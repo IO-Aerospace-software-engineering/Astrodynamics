@@ -242,6 +242,102 @@ TEST(Propagator, PropagatorVsKepler)
     // myfile.close();
 }
 
+TEST(Propagator, PropagatorVsKepler2)
+{
+    auto step{IO::SDK::Time::TimeSpan(1.0s)};
+    IO::SDK::Time::TimeSpan duration(6447.0s);
+
+    std::vector<IO::SDK::Integrators::Forces::Force *> forces{};
+
+    IO::SDK::Integrators::Forces::GravityForce gravityForce;
+    forces.push_back(&gravityForce);
+    IO::SDK::Integrators::VVIntegrator integrator(step, forces);
+
+    IO::SDK::Time::TDB startEpoch("2021-Jan-01 00:00:00.0000 TDB");
+    IO::SDK::Time::TDB endEpoch("2021-Jan-02 00:00:00.0000 TDB");
+    // auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10, "sun");
+
+    //  2459215.500000000 = A.D. 2021-Jan-01 00:00:00.0000 TDB [del_T=     69.183909 s]
+    //  X =-2.679537555216521E+07 Y = 1.327011135216045E+08 Z = 5.752533467064925E+07
+    //  VX=-2.976558008982104E+01 VY=-5.075339952746913E+00 VZ=-2.200929976753953E+00
+    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
+    double a = 6800000.0;
+    auto v = std::sqrt(earth->GetMu() / a);
+
+    //  2459215.500000000 = A.D. 2021-Jan-01 00:00:00.0000 TDB [del_T=     69.183909 s]
+    //  X =-2.068864826237993E+05 Y = 2.891146390982051E+05 Z = 1.515746884380044E+05
+    //  VX=-8.366764389833921E-01 VY=-5.602543663174073E-01 VZ=-1.710459390585548E-01
+    // auto moon = std::make_shared<IO::SDK::Body::CelestialBody>(301, "moon", earth);
+    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth, 10000000.0, 0.3, 0.0, 0.0, 0.0, 0.0, startEpoch, IO::SDK::Frames::InertialFrames::GetICRF());
+    auto localOrbitalparams = dynamic_cast<IO::SDK::OrbitalParameters::ConicOrbitalElements *>(orbitalParams.get());
+    IO::SDK::Body::Spacecraft::Spacecraft spc(-12, "spc12", 1000.0, 3000.0, "misskepler2", std::move(orbitalParams));
+
+    IO::SDK::Propagators::Propagator pro(spc, integrator, IO::SDK::Time::Window(startEpoch, endEpoch));
+
+#ifdef DEBUG
+    auto t1 = std::chrono::high_resolution_clock::now();
+#endif
+
+    pro.Propagate();
+#ifdef DEBUG
+    auto t2 = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double, std::milli> ms_double = t2 - t1;
+    std::cout << std::to_string(ms_double.count()) << " ms" << std::endl;
+    //Check performance
+    ASSERT_TRUE(25.0 > ms_double.count());
+#endif
+
+    const std::vector<IO::SDK::OrbitalParameters::StateVector> &propagationResults = pro.GetStateVectors();
+    auto propagationResult = propagationResults.back();
+    auto keplerResults = localOrbitalparams->GetStateVector(endEpoch);
+
+    std::cout << "Delta dX : " << std::abs(keplerResults.GetPosition().GetX() - propagationResult.GetPosition().GetX()) << " m" << std::endl;
+    std::cout << "Delta dY : " << std::abs(keplerResults.GetPosition().GetY() - propagationResult.GetPosition().GetY()) << " m" << std::endl;
+    std::cout << "Delta dZ : " << std::abs(keplerResults.GetPosition().GetZ() - propagationResult.GetPosition().GetZ()) << " m" << std::endl;
+    std::cout << "Delta dTotal : " << std::abs(keplerResults.GetPosition().Magnitude() - propagationResult.GetPosition().Magnitude()) << " m" << std::endl;
+
+    std::cout << "Delta dvX : " << std::abs(keplerResults.GetVelocity().GetX() - propagationResult.GetVelocity().GetX()) << " m/s" << std::endl;
+    std::cout << "Delta dvY : " << std::abs(keplerResults.GetVelocity().GetY() - propagationResult.GetVelocity().GetY()) << " m/s" << std::endl;
+    std::cout << "Delta dvZ : " << std::abs(keplerResults.GetVelocity().GetZ() - propagationResult.GetVelocity().GetZ()) << " m/s" << std::endl;
+    std::cout << "Delta dvTotal : " << std::abs(keplerResults.GetVelocity().Magnitude() - propagationResult.GetVelocity().Magnitude()) << " m/s" << std::endl;
+
+    //Check epoch
+    ASSERT_EQ(keplerResults.GetEpoch(), propagationResult.GetEpoch());
+
+    //Check energy
+    ASSERT_NEAR(-13951014.677293681, propagationResult.GetSpecificOrbitalEnergy(), 1E-05);
+
+    ASSERT_NEAR(keplerResults.GetPosition().GetX(), propagationResult.GetPosition().GetX(), IO::SDK::Test::Constants::DISTANCE_ACCURACY);
+    ASSERT_NEAR(keplerResults.GetPosition().GetY(), propagationResult.GetPosition().GetY(), IO::SDK::Test::Constants::DISTANCE_ACCURACY);
+    ASSERT_NEAR(keplerResults.GetPosition().GetZ(), propagationResult.GetPosition().GetZ(), IO::SDK::Test::Constants::DISTANCE_ACCURACY);
+
+    ASSERT_NEAR(keplerResults.GetVelocity().GetX(), propagationResult.GetVelocity().GetX(), IO::SDK::Test::Constants::VELOCITY_ACCURACY);
+    ASSERT_NEAR(keplerResults.GetVelocity().GetY(), propagationResult.GetVelocity().GetY(), IO::SDK::Test::Constants::VELOCITY_ACCURACY);
+    ASSERT_NEAR(keplerResults.GetVelocity().GetZ(), propagationResult.GetVelocity().GetZ(), IO::SDK::Test::Constants::VELOCITY_ACCURACY);
+
+    auto orientationCoverage = spc.GetOrientationsCoverageWindow();
+    ASSERT_STREQ("2021-01-01 00:00:00.000000 (TDB)", orientationCoverage.GetStartDate().ToString().c_str());
+    ASSERT_STREQ("2021-01-01 00:00:00.000000 (TDB)", orientationCoverage.GetEndDate().ToString().c_str());
+
+    ASSERT_DOUBLE_EQ(9999999.5292096715, propagationResult.GetPerigeeVector().Magnitude());
+    ASSERT_DOUBLE_EQ(0.30000006120264006, propagationResult.GetEccentricity());
+    ASSERT_DOUBLE_EQ(keplerResults.GetInclination(), propagationResult.GetInclination());
+    ASSERT_DOUBLE_EQ(keplerResults.GetRightAscendingNodeLongitude(), propagationResult.GetRightAscendingNodeLongitude());
+    ASSERT_DOUBLE_EQ(6.283183583000322, propagationResult.GetPeriapsisArgument());
+
+    //Analyse energy
+    // std::ofstream myfile("SpecificEnergy.csv", std::ios_base::trunc);
+    // myfile << std::fixed;
+    // double i{0.0};
+    // //Write energy file summary
+    // for (auto &&sv : propagationResults)
+    // {
+    //     myfile << i * step.GetSeconds().count() << ";" << sv.GetSpecificOrbitalEnergy() << "\n";
+    //     i++;
+    // }
+    // myfile.close();
+}
+
 TEST(Propagator, PropagateTLEIntegrator)
 {
     auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");

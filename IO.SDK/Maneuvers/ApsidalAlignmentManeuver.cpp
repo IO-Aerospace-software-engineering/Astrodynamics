@@ -11,6 +11,7 @@
 #include <ApsidalAlignmentManeuver.h>
 #include <SDKException.h>
 #include <cmath>
+#include <ConicOrbitalElements.h>
 
 IO::SDK::Maneuvers::ApsidalAlignmentManeuver::ApsidalAlignmentManeuver(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator, IO::SDK::OrbitalParameters::OrbitalParameters *targetOrbit) : IO::SDK::Maneuvers::ManeuverBase(engines, propagator), m_targetOrbit{targetOrbit}
 {
@@ -22,6 +23,7 @@ IO::SDK::Maneuvers::ApsidalAlignmentManeuver::ApsidalAlignmentManeuver(const std
 
 bool IO::SDK::Maneuvers::ApsidalAlignmentManeuver::CanExecute(const IO::SDK::OrbitalParameters::OrbitalParameters &orbitalParams)
 {
+    IO::SDK::OrbitalParameters::ConicOrbitalElements orb(orbitalParams.GetStateVector());
     bool resP = false;
     bool resQ = false;
 
@@ -42,6 +44,7 @@ bool IO::SDK::Maneuvers::ApsidalAlignmentManeuver::CanExecute(const IO::SDK::Orb
         resQ = !*m_isApproachingQ;
         if (resQ)
         {
+            m_isIntersectQ = true;
             return true;
         }
     }
@@ -61,6 +64,7 @@ bool IO::SDK::Maneuvers::ApsidalAlignmentManeuver::CanExecute(const IO::SDK::Orb
         resP = !*m_isApproachingP;
         if (resP)
         {
+            m_isIntersectP = true;
             return true;
         }
     }
@@ -194,19 +198,20 @@ double IO::SDK::Maneuvers::ApsidalAlignmentManeuver::GetQTargetTrueAnomaly(const
 
 IO::SDK::Math::Vector3D IO::SDK::Maneuvers::ApsidalAlignmentManeuver::GetDeltaV(const IO::SDK::OrbitalParameters::StateVector &sv) const
 {
-    if(m_deltaV)
+    if (m_deltaV)
     {
         return *m_deltaV;
     }
-    
+
     IO::SDK::Math::Vector3D resVector;
-    if (IsIntersectP(sv))
+    if (m_isIntersectP)
     {
-        resVector = m_targetOrbit->GetStateVector(GetPTargetTrueAnomaly(sv)).GetVelocity() - sv.GetStateVector(GetPTrueAnomaly(sv)).GetVelocity();
+        auto dist = m_targetOrbit->GetStateVector(GetPTargetTrueAnomaly(sv)).GetPosition() - sv.GetPosition();
+        resVector = m_targetOrbit->GetStateVector(GetPTargetTrueAnomaly(sv)).GetVelocity() - sv.GetVelocity();
     }
-    else if (IsIntersectQ(sv))
+    else if (m_isIntersectQ)
     {
-        resVector = m_targetOrbit->GetStateVector(GetQTargetTrueAnomaly(sv)).GetVelocity() - sv.GetStateVector(GetQTrueAnomaly(sv)).GetVelocity();
+        resVector = m_targetOrbit->GetStateVector(GetQTargetTrueAnomaly(sv)).GetVelocity() - sv.GetVelocity();
     }
     else
     {
