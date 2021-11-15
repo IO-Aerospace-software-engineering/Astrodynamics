@@ -23,7 +23,6 @@ IO::SDK::Maneuvers::ApsidalAlignmentManeuver::ApsidalAlignmentManeuver(const std
 
 bool IO::SDK::Maneuvers::ApsidalAlignmentManeuver::CanExecute(const IO::SDK::OrbitalParameters::OrbitalParameters &orbitalParams)
 {
-    IO::SDK::OrbitalParameters::ConicOrbitalElements orb(orbitalParams.GetStateVector());
     bool resP = false;
     bool resQ = false;
 

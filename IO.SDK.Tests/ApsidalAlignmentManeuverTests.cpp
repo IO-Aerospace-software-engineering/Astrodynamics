@@ -19,7 +19,7 @@ TEST(ApsidalAlignmentManeuver, CanExecute)
 {
     const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
     std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams1 = std::make_unique<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth, 10000000.0, 0.333333, 0.0, 0.0, 0.0, 0.0, IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::GetICRF());
-    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams2 = std::make_unique<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth, 9000000.0, 0.5, 0.0, 0.0, 30.0 * IO::SDK::Constants::DEG_RAD, 0.0, IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::GetICRF());
+    std::shared_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams2 = std::make_shared<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth, 9000000.0, 0.5, 0.0, 0.0, 30.0 * IO::SDK::Constants::DEG_RAD, 0.0, IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::GetICRF());
 
     IO::SDK::Body::Spacecraft::Spacecraft s{-105, "szptest", 1000.0, 3000.0, "ms01", std::move(orbitalParams1)};
 
@@ -93,6 +93,7 @@ TEST(ApsidalAlignmentManeuver, ExecuteQ)
     //try execute at Q
     auto res = maneuver.TryExecute(s.GetOrbitalParametersAtEpoch()->GetStateVector(342.0 * IO::SDK::Constants::DEG_RAD));
 
+    std::cout<<res.GetMessage()<<std::endl;
     //Can't execute, too early
     ASSERT_TRUE(res.IsValid());
 
@@ -114,7 +115,7 @@ TEST(ApsidalAlignmentManeuver, ExecuteP)
 {
     const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
     std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams1 = std::make_unique<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth, 10000000.0, 0.333333, 0.0, 0.0, 0.0, 0.0, IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::GetICRF());
-    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams2 = std::make_unique<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth, 9000000.0, 0.5, 0.0, 0.0, 30.0 * IO::SDK::Constants::DEG_RAD, 0.0, IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::GetICRF());
+    std::shared_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams2 = std::make_shared<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth, 9000000.0, 0.5, 0.0, 0.0, 30.0 * IO::SDK::Constants::DEG_RAD, 0.0, IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::GetICRF());
 
     IO::SDK::Body::Spacecraft::Spacecraft s{-107, "sptest", 1000.0, 3000.0, "ms01", std::move(orbitalParams1)};
 
