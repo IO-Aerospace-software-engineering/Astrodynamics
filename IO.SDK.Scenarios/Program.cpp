@@ -22,6 +22,13 @@
 
 using namespace std::literals::chrono_literals;
 
+void WriteManeuverSummary(IO::SDK::Maneuvers::ManeuverBase *maneuver, const std::string title)
+{
+    std::cout << "=====================" << title << "====================" << std::endl;
+    std::cout << "Maneuver window : " << maneuver->GetManeuverWindow()->GetStartDate().ToString() << " => " << maneuver->GetManeuverWindow()->GetEndDate().ToString() << std::endl;
+    std::cout << "Delta V : " << maneuver->GetDeltaV().Magnitude() << " m/s" << std::endl;
+}
+
 int main()
 {
     //=======================Configure universe topology======================================
@@ -97,13 +104,12 @@ int main()
 
     //We configre each maneuver
     IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver planeAlignment(engines, propagator, targetOrbit.get());
-    IO::SDK::Maneuvers::ApogeeHeightChangingManeuver apogeeChange(engines, propagator, targetOrbit->GetApogeeVector().Magnitude());
     IO::SDK::Maneuvers::ApsidalAlignmentManeuver apsidalAlignment(engines, propagator, targetOrbit.get());
     IO::SDK::Maneuvers::PhasingManeuver phasing(engines, propagator, 2, targetOrbit.get());
     IO::SDK::Maneuvers::ApogeeHeightChangingManeuver finalApogeeChanging(engines, propagator, targetOrbit->GetApogeeVector().Magnitude());
 
     //We link maneuvers
-    planeAlignment.SetNextManeuver(apsidalAlignment).SetNextManeuver(phasing).SetNextManeuver(apogeeChange);
+    planeAlignment.SetNextManeuver(apsidalAlignment).SetNextManeuver(phasing).SetNextManeuver(finalApogeeChanging);
 
     //We define the first maneuver in standby
     propagator.SetStandbyManeuver(&planeAlignment);
@@ -112,25 +118,34 @@ int main()
 
     auto e = targetOrbit->GetStateVector().GetEccentricity();
 
+    auto epoch=phasing.GetManeuverWindow()->GetStartDate();
+
     auto ti = targetOrbit->GetInclination() * IO::SDK::Constants::RAD_DEG;
-    auto si = spacecraft.ReadEphemeris(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::AberrationsEnum::None, endEpoch, *earth).GetInclination() * IO::SDK::Constants::RAD_DEG;
+    auto si = spacecraft.ReadEphemeris(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::AberrationsEnum::None, epoch, *earth).GetInclination() * IO::SDK::Constants::RAD_DEG;
 
     auto tom = targetOrbit->GetRightAscendingNodeLongitude() * IO::SDK::Constants::RAD_DEG;
-    auto som = spacecraft.ReadEphemeris(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::AberrationsEnum::None, endEpoch, *earth).GetRightAscendingNodeLongitude() * IO::SDK::Constants::RAD_DEG;
+    auto som = spacecraft.ReadEphemeris(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::AberrationsEnum::None, epoch, *earth).GetRightAscendingNodeLongitude() * IO::SDK::Constants::RAD_DEG;
 
     auto tecc = targetOrbit->GetEccentricity();
-    auto secc = spacecraft.ReadEphemeris(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::AberrationsEnum::None, endEpoch, *earth).GetEccentricity();
+    auto secc = spacecraft.ReadEphemeris(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::AberrationsEnum::None, epoch, *earth).GetEccentricity();
 
-    auto tw = targetOrbit->GetPeriapsisArgument() * IO::SDK::Constants::RAD_DEG;
-    auto sw = spacecraft.ReadEphemeris(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::AberrationsEnum::None, endEpoch, *earth).GetPeriapsisArgument() * IO::SDK::Constants::RAD_DEG;
+    auto tw = targetOrbit->GetStateVector(epoch).GetPeriapsisArgument() * IO::SDK::Constants::RAD_DEG;
+    auto sw = spacecraft.ReadEphemeris(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::AberrationsEnum::None, epoch, *earth).GetPeriapsisArgument() * IO::SDK::Constants::RAD_DEG;
 
-    auto tq = targetOrbit->GetPerigeeVector().Magnitude();
-    auto sq = spacecraft.ReadEphemeris(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::AberrationsEnum::None, endEpoch, *earth).GetPerigeeVector().Magnitude();
-    
-    auto tm = targetOrbit->GetMeanAnomaly(endEpoch) * IO::SDK::Constants::RAD_DEG;
-    auto sm = spacecraft.ReadEphemeris(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::AberrationsEnum::None, endEpoch, *earth).GetMeanAnomaly() * IO::SDK::Constants::RAD_DEG;
+    auto tq = targetOrbit->GetStateVector(epoch).GetPerigeeVector().Magnitude();
+    auto sq = spacecraft.ReadEphemeris(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::AberrationsEnum::None, epoch, *earth).GetPerigeeVector().Magnitude();
 
-    auto tv = targetOrbit->GetTrueAnomaly(endEpoch) * IO::SDK::Constants::RAD_DEG;
-    auto sv = spacecraft.ReadEphemeris(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::AberrationsEnum::None, endEpoch, *earth).GetTrueAnomaly() * IO::SDK::Constants::RAD_DEG;
-    
+    auto tm = targetOrbit->GetStateVector(epoch).GetMeanAnomaly() * IO::SDK::Constants::RAD_DEG;
+    auto sm = spacecraft.ReadEphemeris(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::AberrationsEnum::None, epoch, *earth).GetMeanAnomaly() * IO::SDK::Constants::RAD_DEG;
+
+    auto tv = targetOrbit->GetStateVector(epoch).GetTrueAnomaly() * IO::SDK::Constants::RAD_DEG;
+    auto sv = spacecraft.ReadEphemeris(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::AberrationsEnum::None, epoch, *earth).GetTrueAnomaly() * IO::SDK::Constants::RAD_DEG;
+
+    auto tp = targetOrbit->GetStateVector(epoch).GetPeriod().GetHours().count();
+    auto sp = spacecraft.ReadEphemeris(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::AberrationsEnum::None, epoch, *earth).GetPeriod().GetHours().count();
+
+    WriteManeuverSummary(&planeAlignment, "Plane alignment");
+    WriteManeuverSummary(&apsidalAlignment, "Aspidal alignment");
+    WriteManeuverSummary(&phasing, "Phasing");
+    WriteManeuverSummary(&finalApogeeChanging, "Final apogee changing");
 }

@@ -122,10 +122,19 @@ double IO::SDK::Maneuvers::PhasingManeuver::DeltaHeight(const IO::SDK::OrbitalPa
 
 double IO::SDK::Maneuvers::PhasingManeuver::DeltaTrueAnomaly(const IO::SDK::OrbitalParameters::OrbitalParameters &orbitalParameters)
 {
-    double deltaTrueAnomaly = orbitalParameters.GetStateVector().GetPosition().GetAngle(m_targetOrbit->GetStateVector(orbitalParameters.GetEpoch()).GetPosition());
+    double deltaTrueAnomaly = m_targetOrbit->GetStateVector(orbitalParameters.GetEpoch()).GetTrueAnomaly() - orbitalParameters.GetTrueAnomaly();
     if (deltaTrueAnomaly < 0.0)
     {
         deltaTrueAnomaly += IO::SDK::Constants::_2PI;
+    }
+
+    if (deltaTrueAnomaly < IO::SDK::Constants::PI)
+    {
+        deltaTrueAnomaly *= -1.0;
+    }
+    else
+    {
+        deltaTrueAnomaly = IO::SDK::Constants::_2PI - deltaTrueAnomaly;
     }
     return deltaTrueAnomaly;
 }

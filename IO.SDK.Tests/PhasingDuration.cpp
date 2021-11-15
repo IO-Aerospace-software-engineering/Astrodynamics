@@ -14,6 +14,7 @@
 #include <InertialFrames.h>
 #include <ConicOrbitalElements.h>
 #include <EquinoctialElements.h>
+#include <ApogeeHeightChangingManeuver.h>
 
 using namespace std::chrono_literals;
 
@@ -127,3 +128,69 @@ TEST(PhasingManeuver, TryExecuteOnGeostationary)
     ASSERT_DOUBLE_EQ(262080.92286854095, maneuver.GetManeuverWindow()->GetLength().GetSeconds().count());
 }
 
+TEST(PhasingManeuver, CheckOrbitalParameters)
+{
+    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
+    IO::SDK::Time::TDB startEpoch("2021-01-01T00:00:00");
+    IO::SDK::Time::TDB endEpoch("2021-01-04T01:00:00");
+
+    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams1 = std::make_unique<IO::SDK::OrbitalParameters::EquinoctialElements>(earth, 42164000.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -IO::SDK::Constants::PI2, IO::SDK::Constants::PI2, startEpoch, IO::SDK::Frames::InertialFrames::GetICRF());
+    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams2 = std::make_unique<IO::SDK::OrbitalParameters::EquinoctialElements>(earth, 42164000.0, 0.0, 0.0, 0.0, 0.0, 345.0 * IO::SDK::Constants::DEG_RAD, 0.0, 0.0, -IO::SDK::Constants::PI2, IO::SDK::Constants::PI2, startEpoch, IO::SDK::Frames::InertialFrames::GetICRF());
+
+    IO::SDK::Body::Spacecraft::Spacecraft s{-189, "189test", 1000.0, 3000.0, "ms0189", std::move(orbitalParams1)};
+
+    //Add gravity to forces model
+    std::vector<IO::SDK::Integrators::Forces::Force *> forces{};
+    IO::SDK::Integrators::Forces::GravityForce gravityForce;
+    forces.push_back(&gravityForce);
+
+    IO::SDK::Integrators::VVIntegrator integrator(IO::SDK::Time::TimeSpan(1.0s), forces);
+    IO::SDK::Propagators::Propagator prop(s, integrator, IO::SDK::Time::Window(startEpoch, endEpoch));
+
+    s.AddFuelTank("ft1", 1000.0, 900.0);
+    s.AddEngine("sn1", "eng1", "ft1", {1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}, 450.0, 50.0);
+
+    auto engine1 = s.GetEngine("sn1");
+
+    std::vector<IO::SDK::Body::Spacecraft::Engine> engines;
+    engines.push_back(*engine1);
+
+    IO::SDK::Maneuvers::PhasingManeuver phasingManeuver(engines, prop, 3, orbitalParams2.get());
+    IO::SDK::Maneuvers::ApogeeHeightChangingManeuver finalManeuver(engines, prop, orbitalParams2->GetApogeeVector().Magnitude());
+    phasingManeuver.SetNextManeuver(finalManeuver);
+
+    prop.SetStandbyManeuver(&phasingManeuver);
+    prop.Propagate();
+
+    ASSERT_STREQ("2021-01-01 00:01:09.123576 (TDB)", phasingManeuver.GetManeuverWindow()->GetStartDate().ToString().c_str());
+    ASSERT_STREQ("2021-01-04 00:49:10.046445 (TDB)", phasingManeuver.GetManeuverWindow()->GetEndDate().ToString().c_str());
+
+    auto sv = prop.GetStateVectors().back();
+    ASSERT_NEAR(42164000.0, sv.GetPerigeeVector().Magnitude(), 6);
+    ASSERT_NEAR(0.0091533983852081068, sv.GetEccentricity(), 1E-02);
+    ASSERT_DOUBLE_EQ(0.0, sv.GetInclination() * IO::SDK::Constants::RAD_DEG);
+    ASSERT_DOUBLE_EQ(0.0, sv.GetRightAscendingNodeLongitude() * IO::SDK::Constants::RAD_DEG);
+    ASSERT_NEAR(270.41900116340412, sv.GetStateVector(finalManeuver.GetManeuverWindow()->GetEndDate()).GetPeriapsisArgument() * IO::SDK::Constants::RAD_DEG, 1E-06);
+    ASSERT_DOUBLE_EQ(89.582563885095453, sv.GetStateVector(finalManeuver.GetManeuverWindow()->GetEndDate()).GetMeanAnomaly() * IO::SDK::Constants::RAD_DEG);
+
+    ASSERT_DOUBLE_EQ(90.001578244752039, orbitalParams2->GetStateVector(finalManeuver.GetManeuverWindow()->GetEndDate()).GetPeriapsisArgument() * IO::SDK::Constants::RAD_DEG);
+    ASSERT_DOUBLE_EQ(270.0, orbitalParams2->GetStateVector(finalManeuver.GetManeuverWindow()->GetEndDate()).GetMeanAnomaly() * IO::SDK::Constants::RAD_DEG);
+
+    double longitude1 = sv.GetPeriapsisArgument() + sv.GetStateVector(finalManeuver.GetManeuverWindow()->GetEndDate()).GetMeanAnomaly();
+    if (longitude1 > IO::SDK::Constants::_2PI)
+    {
+        longitude1 -= IO::SDK::Constants::_2PI;
+    }
+
+    double longitude2 = orbitalParams2->GetStateVector(finalManeuver.GetManeuverWindow()->GetEndDate()).GetPeriapsisArgument() + orbitalParams2->GetStateVector(finalManeuver.GetManeuverWindow()->GetEndDate()).GetMeanAnomaly();
+    if (longitude2 > IO::SDK::Constants::_2PI)
+    {
+        longitude2 -= IO::SDK::Constants::_2PI;
+    }
+
+    //At the end of maneuver two bodies are exactly at the same place w1+m1 = w2+m2 (all others parameters are equal)
+    ASSERT_NEAR(longitude1, longitude2, 1E-6);
+
+    //Check distance between two objects lower than 2m
+    ASSERT_NEAR(0.0, (sv.GetStateVector(finalManeuver.GetManeuverWindow()->GetEndDate()).GetPosition() - orbitalParams2->GetStateVector(finalManeuver.GetManeuverWindow()->GetEndDate()).GetPosition()).Magnitude(),2.0);
+}

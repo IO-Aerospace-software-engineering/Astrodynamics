@@ -205,7 +205,6 @@ IO::SDK::Math::Vector3D IO::SDK::Maneuvers::ApsidalAlignmentManeuver::GetDeltaV(
     IO::SDK::Math::Vector3D resVector;
     if (m_isIntersectP)
     {
-        auto dist = m_targetOrbit->GetStateVector(GetPTargetTrueAnomaly(sv)).GetPosition() - sv.GetPosition();
         resVector = m_targetOrbit->GetStateVector(GetPTargetTrueAnomaly(sv)).GetVelocity() - sv.GetVelocity();
     }
     else if (m_isIntersectQ)
