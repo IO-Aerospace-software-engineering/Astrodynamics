@@ -33,9 +33,9 @@ namespace IO::SDK::Maneuvers
     private:
         double m_theta{};
         std::unique_ptr<bool> m_isApproachingP{nullptr};
-        std::unique_ptr<bool> m_isApproachingQ{nullptr}; 
-        bool m_isIntersectP;       
-        bool m_isIntersectQ;       
+        std::unique_ptr<bool> m_isApproachingQ{nullptr};
+        bool m_isIntersectP{false};
+        bool m_isIntersectQ{false};
 
         bool IsIntersectP(const IO::SDK::OrbitalParameters::StateVector &stateVector) const;
         bool IsIntersectQ(const IO::SDK::OrbitalParameters::StateVector &stateVector) const;
@@ -72,7 +72,7 @@ namespace IO::SDK::Maneuvers
 
     public:
         ApsidalAlignmentManeuver(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator, IO::SDK::OrbitalParameters::OrbitalParameters *targetOrbit);
-        ApsidalAlignmentManeuver(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator, IO::SDK::OrbitalParameters::OrbitalParameters *targetOrbit, const IO::SDK::Time::TDB &minimumEpoch );
+        ApsidalAlignmentManeuver(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator, IO::SDK::OrbitalParameters::OrbitalParameters *targetOrbit, const IO::SDK::Time::TDB &minimumEpoch);
 
         using IO::SDK::Maneuvers::ManeuverBase::GetDeltaV;
 
