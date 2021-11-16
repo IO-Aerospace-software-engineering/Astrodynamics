@@ -10,6 +10,7 @@
  */
 #include <PhasingManeuver.h>
 #include <InvalidArgumentException.h>
+#include <ConicOrbitalElements.h>
 
 #include <chrono>
 #include <cmath>
@@ -36,26 +37,35 @@ IO::SDK::Maneuvers::PhasingManeuver::PhasingManeuver(const std::vector<IO::SDK::
 
 void IO::SDK::Maneuvers::PhasingManeuver::Compute(const IO::SDK::OrbitalParameters::OrbitalParameters &maneuverPoint)
 {
-    double targetHeight = DeltaHeight(maneuverPoint) + maneuverPoint.GetApogeeVector().Magnitude();
-    double vInit = maneuverPoint.GetStateVector().GetVelocity().Magnitude();
-    double vFinal = std::sqrt(maneuverPoint.GetCenterOfMotion()->GetMu() * ((2.0 / maneuverPoint.GetPerigeeVector().Magnitude()) - (1.0 / ((maneuverPoint.GetPerigeeVector().Magnitude() + targetHeight) / 2.0))));
-    m_deltaV = std::make_unique<IO::SDK::Math::Vector3D>(m_spacecraft.Front.Rotate(ComputeOrientation(maneuverPoint).GetQuaternion()).Normalize() * std::abs(vFinal - vInit));
-    double deltaTrueAnomaly = DeltaTrueAnomaly(maneuverPoint);
-    m_maneuverHoldDuration = PhasingDuration(m_revolutionsNumber, maneuverPoint.GetMeanMotion(), deltaTrueAnomaly) * m_revolutionsNumber;
+    double deltaTrueAnomaly = m_targetOrbit->GetTrueLongitude(maneuverPoint.GetEpoch()) - maneuverPoint.GetTrueLongitude();
+    double e = maneuverPoint.GetEccentricity();
+
+    double E = 2 * std::atan((std::sqrt((1 - e) / (1 + e))) * std::tan(deltaTrueAnomaly / 2.0));
+    double T1 = maneuverPoint.GetPeriod().GetSeconds().count();
+    double t = T1 / IO::SDK::Constants::_2PI * (E - e * std::sin(E));
+
+    double T2 = T1 - t / m_revolutionsNumber;
+
+    double u = maneuverPoint.GetCenterOfMotion()->GetMu();
+
+    double a2 = std::pow((std::sqrt(u) * T2 / IO::SDK::Constants::_2PI), 2.0 / 3.0);
+
+    double rp = maneuverPoint.GetPerigeeVector().Magnitude();
+    double ra = 2 * a2 - rp;
+
+    double h2 = std::sqrt(2 * u) * std::sqrt(ra * rp / (ra + rp));
+
+    double dv = h2 / rp - m_targetOrbit->GetSpecificAngularMomentum().Magnitude() / rp;
+
+    m_deltaV = std::make_unique<IO::SDK::Math::Vector3D>(m_spacecraft.Front.Rotate(ComputeOrientation(maneuverPoint).GetQuaternion()).Normalize() * dv);
+
+    m_maneuverHoldDuration = std::chrono::duration<double>(T2 * m_revolutionsNumber * 0.90);
 }
 
 IO::SDK::OrbitalParameters::StateOrientation IO::SDK::Maneuvers::PhasingManeuver::ComputeOrientation(const IO::SDK::OrbitalParameters::OrbitalParameters &maneuverPoint)
 {
 
-    double deltaH = DeltaHeight(maneuverPoint);
-
     auto velocityVector = maneuverPoint.GetStateVector().GetVelocity().Normalize();
-
-    //Check if it's a retrograde burn
-    if (deltaH < 0.0)
-    {
-        velocityVector = velocityVector.Reverse();
-    }
 
     return IO::SDK::OrbitalParameters::StateOrientation(m_spacecraft.Front.To(velocityVector), IO::SDK::Math::Vector3D(0.0, 0.0, 0.0), maneuverPoint.GetEpoch(), maneuverPoint.GetFrame());
 }
@@ -102,39 +112,4 @@ bool IO::SDK::Maneuvers::PhasingManeuver::IsApproachingPerigee(const IO::SDK::Or
     }
 
     return false;
-}
-
-IO::SDK::Time::TimeSpan IO::SDK::Maneuvers::PhasingDuration(const unsigned int k, const double n, const double deltaTrueAnomaly)
-{
-    return IO::SDK::Time::TimeSpan(std::chrono::duration<double>((2.0 * k * IO::SDK::Constants::PI + deltaTrueAnomaly) / (k * n)));
-}
-
-double IO::SDK::Maneuvers::PhasingSemiMajorAxis(const double gm, IO::SDK::Time::TimeSpan phasingDuration)
-{
-    return std::cbrt((gm * phasingDuration.GetSeconds().count() * phasingDuration.GetSeconds().count()) / (4 * IO::SDK::Constants::PI * IO::SDK::Constants::PI));
-}
-
-double IO::SDK::Maneuvers::PhasingManeuver::DeltaHeight(const IO::SDK::OrbitalParameters::OrbitalParameters &orbitalParameters)
-{
-    double deltaTrueAnomaly = DeltaTrueAnomaly(orbitalParameters);
-    return (PhasingSemiMajorAxis(orbitalParameters.GetCenterOfMotion()->GetMu(), PhasingDuration(m_revolutionsNumber, orbitalParameters.GetMeanMotion(), deltaTrueAnomaly)) - orbitalParameters.GetSemiMajorAxis()) * 2.0;
-}
-
-double IO::SDK::Maneuvers::PhasingManeuver::DeltaTrueAnomaly(const IO::SDK::OrbitalParameters::OrbitalParameters &orbitalParameters)
-{
-    double deltaTrueAnomaly = m_targetOrbit->GetStateVector(orbitalParameters.GetEpoch()).GetTrueAnomaly() - orbitalParameters.GetTrueAnomaly();
-    if (deltaTrueAnomaly < 0.0)
-    {
-        deltaTrueAnomaly += IO::SDK::Constants::_2PI;
-    }
-
-    if (deltaTrueAnomaly < IO::SDK::Constants::PI)
-    {
-        deltaTrueAnomaly *= -1.0;
-    }
-    else
-    {
-        deltaTrueAnomaly = IO::SDK::Constants::_2PI - deltaTrueAnomaly;
-    }
-    return deltaTrueAnomaly;
 }

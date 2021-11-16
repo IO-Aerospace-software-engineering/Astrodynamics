@@ -18,19 +18,6 @@
 
 using namespace std::chrono_literals;
 
-TEST(PhasingManeuver, PhasingDuration)
-{
-    auto n = 7.2922E-05;
-    auto phasingDuration = IO::SDK::Maneuvers::PhasingDuration(3, n, 15 * IO::SDK::Constants::PI / 180.0);
-    ASSERT_DOUBLE_EQ(87359.805954023512, phasingDuration.GetSeconds().count());
-}
-
-TEST(PhasingManeuver, SemiMajorAxis)
-{
-    auto a = IO::SDK::Maneuvers::PhasingSemiMajorAxis(3.986004418E14, IO::SDK::Time::TimeSpan(87359.805954023512s));
-    ASSERT_DOUBLE_EQ(42553353.069617197, a);
-}
-
 TEST(PhasingManeuver, CanExecute)
 {
     const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
@@ -106,13 +93,13 @@ TEST(PhasingManeuver, TryExecuteOnGeostationary)
 
 #else
 
-    ASSERT_DOUBLE_EQ(14.039767793790816, maneuver.GetDeltaV().Magnitude());
-    ASSERT_DOUBLE_EQ(-0.0014039767698487144, maneuver.GetDeltaV().GetX());
-    ASSERT_DOUBLE_EQ(14.039767723591977, maneuver.GetDeltaV().GetY());
-    ASSERT_DOUBLE_EQ(8.5968782802424241e-16, maneuver.GetDeltaV().GetZ());
-    ASSERT_DOUBLE_EQ(6.0351723087874625, maneuver.GetFuelBurned());
-    ASSERT_DOUBLE_EQ(0.12070344617574924, maneuver.GetThrustDuration().GetSeconds().count());
-    ASSERT_EQ(IO::SDK::Time::Window<IO::SDK::Time::TDB>(IO::SDK::Time::TDB(1.3109841010206829s), IO::SDK::Time::TDB(1.4316875471964321s)), *maneuver.GetThrustWindow());
+    ASSERT_DOUBLE_EQ(14.03976779378854, maneuver.GetDeltaV().Magnitude());
+    ASSERT_DOUBLE_EQ(-0.001403976769848487, maneuver.GetDeltaV().GetX());
+    ASSERT_DOUBLE_EQ(14.039767723589703, maneuver.GetDeltaV().GetY());
+    ASSERT_DOUBLE_EQ(8.5968782802410318e-16, maneuver.GetDeltaV().GetZ());
+    ASSERT_DOUBLE_EQ(6.0351723087866187, maneuver.GetFuelBurned());
+    ASSERT_DOUBLE_EQ(0.12070344617573237, maneuver.GetThrustDuration().GetSeconds().count());
+    ASSERT_EQ(IO::SDK::Time::Window<IO::SDK::Time::TDB>(IO::SDK::Time::TDB(1.3109841010206913s), IO::SDK::Time::TDB(1.4316875471964237s)), *maneuver.GetThrustWindow());
 
 #endif
 
@@ -125,7 +112,7 @@ TEST(PhasingManeuver, TryExecuteOnGeostationary)
 
     //Check maneuver windows
     ASSERT_DOUBLE_EQ(maneuver.GetManeuverWindow()->GetStartDate().GetSecondsFromJ2000().count(), maneuver.GetThrustWindow()->GetStartDate().GetSecondsFromJ2000().count());
-    ASSERT_DOUBLE_EQ(262080.92286854095, maneuver.GetManeuverWindow()->GetLength().GetSeconds().count());
+    ASSERT_DOUBLE_EQ(235872.83661685922, maneuver.GetManeuverWindow()->GetLength().GetSeconds().count());
 }
 
 TEST(PhasingManeuver, CheckOrbitalParameters)
@@ -163,15 +150,15 @@ TEST(PhasingManeuver, CheckOrbitalParameters)
     prop.Propagate();
 
     ASSERT_STREQ("2021-01-01 00:01:09.123576 (TDB)", phasingManeuver.GetManeuverWindow()->GetStartDate().ToString().c_str());
-    ASSERT_STREQ("2021-01-04 00:49:10.046445 (TDB)", phasingManeuver.GetManeuverWindow()->GetEndDate().ToString().c_str());
+    ASSERT_STREQ("2021-01-03 17:32:21.960193 (TDB)", phasingManeuver.GetManeuverWindow()->GetEndDate().ToString().c_str());
 
     auto sv = prop.GetStateVectors().back();
     ASSERT_NEAR(42164000.0, sv.GetPerigeeVector().Magnitude(), 6);
     ASSERT_NEAR(0.0091533983852081068, sv.GetEccentricity(), 1E-02);
     ASSERT_DOUBLE_EQ(0.0, sv.GetInclination() * IO::SDK::Constants::RAD_DEG);
     ASSERT_DOUBLE_EQ(0.0, sv.GetRightAscendingNodeLongitude() * IO::SDK::Constants::RAD_DEG);
-    ASSERT_NEAR(270.41900116340412, sv.GetStateVector(finalManeuver.GetManeuverWindow()->GetEndDate()).GetPeriapsisArgument() * IO::SDK::Constants::RAD_DEG, 1E-06);
-    ASSERT_DOUBLE_EQ(89.582563885095453, sv.GetStateVector(finalManeuver.GetManeuverWindow()->GetEndDate()).GetMeanAnomaly() * IO::SDK::Constants::RAD_DEG);
+    ASSERT_NEAR(270.41903346738013, sv.GetStateVector(finalManeuver.GetManeuverWindow()->GetEndDate()).GetPeriapsisArgument() * IO::SDK::Constants::RAD_DEG, 1E-06);
+    ASSERT_DOUBLE_EQ(89.58253158115312, sv.GetStateVector(finalManeuver.GetManeuverWindow()->GetEndDate()).GetMeanAnomaly() * IO::SDK::Constants::RAD_DEG);
 
     ASSERT_DOUBLE_EQ(90.001578244752039, orbitalParams2->GetStateVector(finalManeuver.GetManeuverWindow()->GetEndDate()).GetPeriapsisArgument() * IO::SDK::Constants::RAD_DEG);
     ASSERT_DOUBLE_EQ(270.0, orbitalParams2->GetStateVector(finalManeuver.GetManeuverWindow()->GetEndDate()).GetMeanAnomaly() * IO::SDK::Constants::RAD_DEG);
