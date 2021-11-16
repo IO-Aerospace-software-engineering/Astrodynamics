@@ -22,20 +22,33 @@
 
 using namespace std::literals::chrono_literals;
 
+void WriteManeuverSummary(IO::SDK::Maneuvers::ManeuverBase *maneuver, const std::string title)
+{
+    std::cout << "===================== " << title << " ====================" << std::endl;
+    std::cout << "Maneuver window : " << maneuver->GetManeuverWindow()->GetStartDate().ToString() << " => " << maneuver->GetManeuverWindow()->GetEndDate().ToString() << std::endl;
+    std::cout << "Thrust window : " << maneuver->GetThrustWindow()->GetStartDate().ToString() << " => " << maneuver->GetThrustWindow()->GetEndDate().ToString() << std::endl;
+    std::cout << "Delta V : " << maneuver->GetDeltaV().Magnitude() << " m/s" << std::endl;
+    auto v = maneuver->GetDeltaV().Normalize();
+    std::cout << "Spacecraft orientation : X : " << v.GetX() << " Y : " << v.GetY() << " Z : " << v.GetZ() << std::endl;
+    std::cout << "Fuel burned :" << maneuver->GetFuelBurned() << " kg" << std::endl;
+}
+
 int main()
 {
     //=======================Configure universe topology======================================
-    //auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10, "sun");
-    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
-    //auto moon = std::make_shared<IO::SDK::Body::CelestialBody>(301, "moon",earth);
+    auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10, "sun");
+    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth", sun);
+    auto moon = std::make_shared<IO::SDK::Body::CelestialBody>(301, "moon", earth);
 
     //========================Compute launch parameters=======================================
 
     //Define launch site
     auto ls = std::make_shared<IO::SDK::Sites::LaunchSite>(3, "S3", IO::SDK::Coordinates::Geodetic(-81.0 * IO::SDK::Constants::DEG_RAD, 28.5 * IO::SDK::Constants::DEG_RAD, 0.0), earth);
 
+    //Dates must be greater to 2021-01-01 to be compliant 
     IO::SDK::Time::TDB startEpoch("2021-06-02T00:00:00");
     IO::SDK::Time::TDB endEpoch("2021-06-03T00:00:00");
+    
     //Define parking orbit
     auto parkingOrbit = std::make_shared<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth,
                                                                                            6700000.0,
@@ -61,7 +74,7 @@ int main()
     auto windows = launch.GetLaunchWindows(IO::SDK::Time::Window<IO::SDK::Time::UTC>(startEpoch.ToUTC(), endEpoch.ToUTC()));
 
     //Display launch window results
-    std::cout << "========== LAUNCH ==========" << std::endl;
+    std::cout << "========== Launch ==========" << std::endl;
 
     std::cout << "Launch epoch :" << windows[0].GetWindow().GetStartDate().ToString().c_str() << std::endl;
     std::cout << "Inertial azimuth :" << windows[0].GetInertialAzimuth() * IO::SDK::Constants::RAD_DEG << " °" << std::endl;
@@ -97,40 +110,54 @@ int main()
 
     //We configre each maneuver
     IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver planeAlignment(engines, propagator, targetOrbit.get());
-    IO::SDK::Maneuvers::ApogeeHeightChangingManeuver apogeeChange(engines, propagator, targetOrbit->GetApogeeVector().Magnitude());
     IO::SDK::Maneuvers::ApsidalAlignmentManeuver apsidalAlignment(engines, propagator, targetOrbit.get());
-    IO::SDK::Maneuvers::PhasingManeuver phasing(engines, propagator, 2, targetOrbit.get());
+    IO::SDK::Maneuvers::PhasingManeuver phasing(engines, propagator, 1, targetOrbit.get());
     IO::SDK::Maneuvers::ApogeeHeightChangingManeuver finalApogeeChanging(engines, propagator, targetOrbit->GetApogeeVector().Magnitude());
 
     //We link maneuvers
-    planeAlignment.SetNextManeuver(apsidalAlignment).SetNextManeuver(phasing).SetNextManeuver(apogeeChange);
+    planeAlignment.SetNextManeuver(apsidalAlignment).SetNextManeuver(phasing).SetNextManeuver(finalApogeeChanging);
 
     //We define the first maneuver in standby
     propagator.SetStandbyManeuver(&planeAlignment);
 
+    //We execute the propagator
     propagator.Propagate();
 
-    auto e = targetOrbit->GetStateVector().GetEccentricity();
+    auto epoch = finalApogeeChanging.GetManeuverWindow()->GetEndDate();
 
+    auto ephemeris = spacecraft.ReadEphemeris(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::AberrationsEnum::None, epoch, *earth);
+    auto e = targetOrbit->GetStateVector().GetEccentricity();
     auto ti = targetOrbit->GetInclination() * IO::SDK::Constants::RAD_DEG;
-    auto si = spacecraft.ReadEphemeris(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::AberrationsEnum::None, endEpoch, *earth).GetInclination() * IO::SDK::Constants::RAD_DEG;
+    auto si = ephemeris.GetInclination() * IO::SDK::Constants::RAD_DEG;
 
     auto tom = targetOrbit->GetRightAscendingNodeLongitude() * IO::SDK::Constants::RAD_DEG;
-    auto som = spacecraft.ReadEphemeris(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::AberrationsEnum::None, endEpoch, *earth).GetRightAscendingNodeLongitude() * IO::SDK::Constants::RAD_DEG;
+    auto som = ephemeris.GetRightAscendingNodeLongitude() * IO::SDK::Constants::RAD_DEG;
 
     auto tecc = targetOrbit->GetEccentricity();
-    auto secc = spacecraft.ReadEphemeris(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::AberrationsEnum::None, endEpoch, *earth).GetEccentricity();
+    auto secc = ephemeris.GetEccentricity();
 
-    auto tw = targetOrbit->GetPeriapsisArgument() * IO::SDK::Constants::RAD_DEG;
-    auto sw = spacecraft.ReadEphemeris(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::AberrationsEnum::None, endEpoch, *earth).GetPeriapsisArgument() * IO::SDK::Constants::RAD_DEG;
+    auto tw = targetOrbit->GetStateVector(epoch).GetPeriapsisArgument() * IO::SDK::Constants::RAD_DEG;
+    auto sw = ephemeris.GetPeriapsisArgument() * IO::SDK::Constants::RAD_DEG;
 
-    auto tq = targetOrbit->GetPerigeeVector().Magnitude();
-    auto sq = spacecraft.ReadEphemeris(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::AberrationsEnum::None, endEpoch, *earth).GetPerigeeVector().Magnitude();
-    
-    auto tm = targetOrbit->GetMeanAnomaly(endEpoch) * IO::SDK::Constants::RAD_DEG;
-    auto sm = spacecraft.ReadEphemeris(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::AberrationsEnum::None, endEpoch, *earth).GetMeanAnomaly() * IO::SDK::Constants::RAD_DEG;
+    auto tq = targetOrbit->GetStateVector(epoch).GetPerigeeVector().Magnitude();
+    auto sq = ephemeris.GetPerigeeVector().Magnitude();
 
-    auto tv = targetOrbit->GetTrueAnomaly(endEpoch) * IO::SDK::Constants::RAD_DEG;
-    auto sv = spacecraft.ReadEphemeris(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::AberrationsEnum::None, endEpoch, *earth).GetTrueAnomaly() * IO::SDK::Constants::RAD_DEG;
-    
+    auto tm = targetOrbit->GetStateVector(epoch).GetMeanLongitude() * IO::SDK::Constants::RAD_DEG;
+    auto sm = ephemeris.GetMeanLongitude() * IO::SDK::Constants::RAD_DEG;
+
+    auto tv = targetOrbit->GetStateVector(epoch).GetTrueLongitude() * IO::SDK::Constants::RAD_DEG;
+    auto sv = ephemeris.GetTrueLongitude() * IO::SDK::Constants::RAD_DEG;
+
+    auto tp = targetOrbit->GetStateVector(epoch).GetPeriod().GetHours().count();
+    auto sp = ephemeris.GetPeriod().GetHours().count();
+
+    auto ta = targetOrbit->GetStateVector(epoch).GetSemiMajorAxis();
+    auto sa = ephemeris.GetSemiMajorAxis();
+
+    double dp = (ephemeris.GetPosition() - targetOrbit->GetStateVector(epoch).GetPosition()).Magnitude();
+
+    WriteManeuverSummary(&planeAlignment, "Plane alignment");
+    WriteManeuverSummary(&apsidalAlignment, "Aspidal alignment");
+    WriteManeuverSummary(&phasing, "Phasing");
+    WriteManeuverSummary(&finalApogeeChanging, "Apogee height changing");
 }

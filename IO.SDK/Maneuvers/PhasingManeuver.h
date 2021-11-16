@@ -33,8 +33,6 @@ namespace IO::SDK::Maneuvers
 
         bool IsApproachingPerigee(const IO::SDK::OrbitalParameters::StateVector &stateVector) const;
 
-        double DeltaHeight(const IO::SDK::OrbitalParameters::OrbitalParameters &orbitalParameters);
-
         /**
          * @brief Compute true anomaly delta
          * 
@@ -72,25 +70,6 @@ namespace IO::SDK::Maneuvers
          */
         bool CanExecute(const IO::SDK::OrbitalParameters::OrbitalParameters &orbitalParams) override;
     };
-
-    /**
-     * @brief Compute phasing duration
-     * 
-     * @param k nimber of revolutions
-     * @param n Mean motion
-     * @param deltaTrueAnomaly Delta true anomaly
-     * @return IO::SDK::Time::TimeSpan 
-     */
-    IO::SDK::Time::TimeSpan PhasingDuration(const unsigned int k, const double n, const double deltaTrueAnomaly);
-
-    /**
-     * @brief Computa semi major axis for phasing
-     * 
-     * @param gm GM parameter
-     * @param phasingDuration Phasing duration
-     * @return double 
-     */
-    double PhasingSemiMajorAxis(const double gm, IO::SDK::Time::TimeSpan phasingDuration);
 
 } // namespace IO::SDK::Maneuvers
 

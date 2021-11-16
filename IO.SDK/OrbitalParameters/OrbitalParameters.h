@@ -295,6 +295,36 @@ namespace IO::SDK::OrbitalParameters
 		 * @return double 
 		 */
 		double GetVelocityAtApogee() const;
+
+		/**
+		 * @brief Get the True Longitude
+		 * 
+		 * @return double 
+		 */
+		double GetTrueLongitude() const;
+		
+		/**
+		 * @brief Get the Mean Longitude
+		 * 
+		 * @return double 
+		 */
+		double GetMeanLongitude() const;
+
+		/**
+		 * @brief Get the Mean Longitude at epoch
+		 * 
+		 * @param epoch 
+		 * @return double 
+		 */
+		double GetMeanLongitude(const IO::SDK::Time::TDB& epoch) const;
+
+		/**
+		 * @brief Get the True Longitude at epoch
+		 * 
+		 * @param epoch 
+		 * @return double 
+		 */
+		double GetTrueLongitude(const IO::SDK::Time::TDB& epoch) const;
 		
 	};
 }
