@@ -83,13 +83,13 @@ TEST(PhasingManeuver, TryExecuteOnGeostationary)
 
     ASSERT_TRUE(res.IsValid());
 #ifdef _WIN32
-    ASSERT_DOUBLE_EQ(14.039767793790361, maneuver.GetDeltaV().Magnitude());
-    ASSERT_DOUBLE_EQ(-0.0014039767698486689, maneuver.GetDeltaV().GetX());
-    ASSERT_DOUBLE_EQ(14.039767723591522, maneuver.GetDeltaV().GetY());
-    ASSERT_DOUBLE_EQ(8.5968782802421451e-16, maneuver.GetDeltaV().GetZ());
-    ASSERT_DOUBLE_EQ(6.0351723087874625, maneuver.GetFuelBurned());
-    ASSERT_DOUBLE_EQ(0.12070344617574924, maneuver.GetThrustDuration().GetSeconds().count());
-    ASSERT_EQ(IO::SDK::Time::Window<IO::SDK::Time::TDB>(IO::SDK::Time::TDB(1.3109841010206829s), IO::SDK::Time::TDB(1.4316875471964321s)), *maneuver.GetThrustWindow());
+    ASSERT_DOUBLE_EQ(14.03976779378854, maneuver.GetDeltaV().Magnitude());
+    ASSERT_DOUBLE_EQ(-0.001403976769848487, maneuver.GetDeltaV().GetX());
+    ASSERT_DOUBLE_EQ(14.039767723589703, maneuver.GetDeltaV().GetY());
+    ASSERT_DOUBLE_EQ(8.5968782802410318e-16, maneuver.GetDeltaV().GetZ());
+    ASSERT_DOUBLE_EQ(6.0351723087866187, maneuver.GetFuelBurned());
+    ASSERT_DOUBLE_EQ(0.12070344617573237, maneuver.GetThrustDuration().GetSeconds().count());
+    ASSERT_EQ(IO::SDK::Time::Window<IO::SDK::Time::TDB>(IO::SDK::Time::TDB(1.3109841010206913s), IO::SDK::Time::TDB(1.4316875471964237s)), *maneuver.GetThrustWindow());
 
 #else
 
