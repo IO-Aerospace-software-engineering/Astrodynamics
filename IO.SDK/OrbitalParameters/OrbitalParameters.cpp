@@ -69,9 +69,9 @@ IO::SDK::Time::TDB IO::SDK::OrbitalParameters::OrbitalParameters::GetTimeToMeanA
 
 IO::SDK::Time::TDB IO::SDK::OrbitalParameters::OrbitalParameters::GetTimeToTrueAnomaly(double trueAnomalyTarget) const
 {
-	if(trueAnomalyTarget<0.0)
+	if (trueAnomalyTarget < 0.0)
 	{
-		trueAnomalyTarget+=IO::SDK::Constants::_2PI;
+		trueAnomalyTarget += IO::SDK::Constants::_2PI;
 	}
 	//X = cos E
 	double X = (GetEccentricity() + std::cos(trueAnomalyTarget)) / (1 + GetEccentricity() * std::cos(trueAnomalyTarget));
@@ -196,4 +196,50 @@ double IO::SDK::OrbitalParameters::OrbitalParameters::GetVelocityAtPerigee() con
 double IO::SDK::OrbitalParameters::OrbitalParameters::GetVelocityAtApogee() const
 {
 	return GetStateVector(IO::SDK::Constants::PI).GetVelocity().Magnitude();
+}
+
+double IO::SDK::OrbitalParameters::OrbitalParameters::GetTrueLongitude() const
+{
+	double res = this->GetRightAscendingNodeLongitude() + this->GetPeriapsisArgument() + this->GetTrueAnomaly();
+	while (res > IO::SDK::Constants::_2PI)
+	{
+		res -= IO::SDK::Constants::_2PI;
+	}
+
+	return res;
+}
+
+double IO::SDK::OrbitalParameters::OrbitalParameters::GetMeanLongitude() const
+{
+	double res = this->GetRightAscendingNodeLongitude() + this->GetPeriapsisArgument() + this->GetMeanAnomaly();
+	while (res > IO::SDK::Constants::_2PI)
+	{
+		res -= IO::SDK::Constants::_2PI;
+	}
+
+	return res;
+}
+
+double IO::SDK::OrbitalParameters::OrbitalParameters::GetTrueLongitude(const IO::SDK::Time::TDB &epoch) const
+{
+	double res = this->GetRightAscendingNodeLongitude() + this->GetPeriapsisArgument() + this->GetTrueAnomaly(epoch);
+
+	while (res > IO::SDK::Constants::_2PI)
+	{
+		res -= IO::SDK::Constants::_2PI;
+	}
+
+	return res;
+}
+
+double IO::SDK::OrbitalParameters::OrbitalParameters::GetMeanLongitude(const IO::SDK::Time::TDB &epoch) const
+{
+	double res = this->GetRightAscendingNodeLongitude() + this->GetPeriapsisArgument() + this->GetMeanAnomaly();
+
+	while (res > IO::SDK::Constants::_2PI)
+	{
+		res -= IO::SDK::Constants::_2PI;
+	}
+
+	return res;
 }
