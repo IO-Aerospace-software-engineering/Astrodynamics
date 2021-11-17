@@ -59,7 +59,7 @@ void IO::SDK::Maneuvers::PhasingManeuver::Compute(const IO::SDK::OrbitalParamete
 
     m_deltaV = std::make_unique<IO::SDK::Math::Vector3D>(m_spacecraft.Front.Rotate(ComputeOrientation(maneuverPoint).GetQuaternion()).Normalize() * dv);
 
-    m_maneuverHoldDuration = std::chrono::duration<double>(T2 * m_revolutionsNumber * 0.90);
+    m_maneuverHoldDuration = std::chrono::duration<double>(T2 * m_revolutionsNumber * 0.9);//Hold maneuver for 90% of maneuver total time
 }
 
 IO::SDK::OrbitalParameters::StateOrientation IO::SDK::Maneuvers::PhasingManeuver::ComputeOrientation(const IO::SDK::OrbitalParameters::OrbitalParameters &maneuverPoint)

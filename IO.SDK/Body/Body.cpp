@@ -163,7 +163,7 @@ std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>> IO::SDK::Body::Body::Find
 
 	wninsd_c(searchWindow.GetStartDate().GetSecondsFromJ2000().count(), searchWindow.GetEndDate().GetSecondsFromJ2000().count(), &cnfine);
 
-	gfoclt_c(occultationType.ToCharArray(), frontBody.GetName().c_str(), "ELLIPSOID", frontBody.GetBodyFixedFrame().GetName().c_str(), targetBody.GetName().c_str(), "ELLIPSOID", targetBody.GetBodyFixedFrame().GetName().c_str(), abe.ToString(aberration).c_str(), m_name.c_str(), stepSize.GetSeconds().count(), &cnfine, &results);
+	gfoclt_c(occultationType.ToCharArray(), frontBody.GetName().c_str(), "ELLIPSOID", frontBody.GetBodyFixedFrame().GetName().c_str(), targetBody.GetName().c_str(), "ELLIPSOID", targetBody.GetBodyFixedFrame().GetName().c_str(), abe.ToString(aberration).c_str(), std::to_string(m_id).c_str(), stepSize.GetSeconds().count(), &cnfine, &results);
 
 	for (int i = 0; i < wncard_c(&results); i++)
 	{
