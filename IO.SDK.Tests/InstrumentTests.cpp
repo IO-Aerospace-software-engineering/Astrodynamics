@@ -85,7 +85,7 @@ TEST(Instrument, Frame)
 	ASSERT_STREQ("ANGLES", spec[0].c_str());
 
 	auto relative = IO::SDK::DataPoolMonitoring::Instance().GetStringProperty("TKFRAME_-17200_RELATIVE", 1);
-	ASSERT_STREQ("sc17", relative[0].c_str());
+	ASSERT_STREQ("sc17_SPACECRAFT", relative[0].c_str());
 
 	auto frameAngles = IO::SDK::DataPoolMonitoring::Instance().GetDoubleProperty("TKFRAME_-17200_ANGLES", 3);
 	ASSERT_DOUBLE_EQ(orientation.GetX() * -1.0, frameAngles[0]);
@@ -377,7 +377,7 @@ TEST(Instrument, FindWindowFieldOfView)
 {
 	
 	//========== Configure spacecraft===================
-	std::string filepath = std::string(IO::SDK::Parameters::KernelsPath) + "/SC179FOV_MISSFOVTEST/Instruments/CAMERAFOV789/Frames/CAMERAFOV789.tf";
+	std::string filepath = std::string(IO::SDK::Parameters::KernelsPath) + "/SC179_MISSFOVTEST/Instruments/CAMERA789/Frames/CAMERA789.tf";
 	if (std::filesystem::exists(filepath))
 	{
 		std::filesystem::remove(filepath);
@@ -393,9 +393,9 @@ TEST(Instrument, FindWindowFieldOfView)
 	IO::SDK::Time::TDB epoch("2021-JUN-10 00:00:00.0000 TDB");
 
 	std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth, IO::SDK::Math::Vector3D(a, 0.0, 0.0), IO::SDK::Math::Vector3D(0.0, v, 0.0), epoch, IO::SDK::Frames::InertialFrames::GetICRF());
-	IO::SDK::Body::Spacecraft::Spacecraft s{-179, "SC179FOV", 1000.0, 3000.0, "MISSFOVTEST", std::move(orbitalParams)};
+	IO::SDK::Body::Spacecraft::Spacecraft s{-179, "SC179", 1000.0, 3000.0, "MISSFOVTEST", std::move(orbitalParams)};
 
-	s.AddCircularFOVInstrument(789, "CAMERAFOV789", orientation, boresight, fovvector, 1.5);
+	s.AddCircularFOVInstrument(789, "CAMERA789", orientation, boresight, fovvector, 1.5);
 	const IO::SDK::Instruments::Instrument *instrument{s.GetInstrument(789)};
 
 	//==========PROPAGATOR====================
@@ -434,11 +434,11 @@ TEST(Instrument, FindWindowFieldOfView)
 	s.WriteOrientations(orientationData);
 
 	//Check frame name and id
-	auto id = IO::SDK::DataPoolMonitoring::Instance().GetIntegerProperty("FRAME_SC179FOV_CAMERAFOV789", 1);
+	auto id = IO::SDK::DataPoolMonitoring::Instance().GetIntegerProperty("FRAME_SC179_CAMERA789", 1);
 	ASSERT_EQ(-179789, id[0]);
 
 	auto name = IO::SDK::DataPoolMonitoring::Instance().GetStringProperty("FRAME_-179789_NAME", 1);
-	ASSERT_STREQ("SC179FOV_CAMERAFOV789", name[0].c_str());
+	ASSERT_STREQ("SC179_CAMERA789", name[0].c_str());
 
 	//Get windows
 	auto results = instrument->FindWindowsWhereInFieldOfView(IO::SDK::Time::Window<IO::SDK::Time::TDB>(IO::SDK::Time::TDB("2021-JUN-10 00:00:00.0000 TDB"), epoch + duration), *earth, IO::SDK::Time::TimeSpan(60s), IO::SDK::AberrationsEnum::None);

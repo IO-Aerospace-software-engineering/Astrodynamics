@@ -24,11 +24,11 @@ TEST(SpacecraftFrameFile, Initialization)
 	ASSERT_TRUE(std::filesystem::exists(filepath));
 	ASSERT_GT(std::filesystem::file_size(filepath), 0.0);
 
-	auto id = IO::SDK::DataPoolMonitoring::Instance().GetIntegerProperty("FRAME_sc17", 1);
+	auto id = IO::SDK::DataPoolMonitoring::Instance().GetIntegerProperty("FRAME_sc17_SPACECRAFT", 1);
 	ASSERT_EQ(-17000, id[0]);
 
 	auto name = IO::SDK::DataPoolMonitoring::Instance().GetStringProperty("FRAME_-17000_NAME", 1);
-	ASSERT_STREQ("sc17", name[0].c_str());
+	ASSERT_STREQ("sc17_SPACECRAFT", name[0].c_str());
 
 	auto classFrame = IO::SDK::DataPoolMonitoring::Instance().GetIntegerProperty("FRAME_-17000_CLASS", 1);
 	ASSERT_EQ(3, classFrame[0]);
@@ -46,5 +46,5 @@ TEST(SpacecraftFrameFile, Initialization)
 	ASSERT_EQ(-17, ephemeris[0]);
 
 	auto frameName = IO::SDK::DataPoolMonitoring::Instance().GetStringProperty("OBJECT_-17_FRAME", 1);
-	ASSERT_STREQ("sc17", frameName[0].c_str());
+	ASSERT_STREQ("sc17_SPACECRAFT", frameName[0].c_str());
 }

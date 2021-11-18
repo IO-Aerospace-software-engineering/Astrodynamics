@@ -68,19 +68,19 @@ int main()
     //========================Compute launch parameters=======================================
 
     //Define launch site and recovery site
-    auto launchSite = std::make_shared<IO::SDK::Sites::LaunchSite>(3, "S3", IO::SDK::Coordinates::Geodetic(-81.0 * IO::SDK::Constants::DEG_RAD, 28.5 * IO::SDK::Constants::DEG_RAD, 0.0), earth);
-    auto recoverySite = std::make_shared<IO::SDK::Sites::LaunchSite>(4, "S4", IO::SDK::Coordinates::Geodetic(-80.0 * IO::SDK::Constants::DEG_RAD, 28.5 * IO::SDK::Constants::DEG_RAD, 0.0), earth);
+    auto launchSite = std::make_shared<IO::SDK::Sites::LaunchSite>(3, "S3", IO::SDK::Coordinates::Geodetic(-81.0 * IO::SDK::Constants::DEG_RAD, 0.5 * IO::SDK::Constants::DEG_RAD, 0.0), earth);
+    auto recoverySite = std::make_shared<IO::SDK::Sites::LaunchSite>(4, "S4", IO::SDK::Coordinates::Geodetic(-80.0 * IO::SDK::Constants::DEG_RAD, 0.5 * IO::SDK::Constants::DEG_RAD, 0.0), earth);
 
     //Define simulation window. (Warning : Dates must be greater to 2021-01-01 to be compliant with spacecraft clock)
-    IO::SDK::Time::TDB startEpoch("2021-06-02T00:00:00");
-    IO::SDK::Time::TDB endEpoch("2021-06-03T00:00:00");
+    IO::SDK::Time::TDB startEpoch("2021-03-02T00:00:00");
+    IO::SDK::Time::TDB endEpoch("2021-03-05T00:00:00");
 
     //Define parking orbit
     auto parkingOrbit = std::make_shared<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth,
                                                                                            6700000.0,
-                                                                                           0.3,
-                                                                                           50.0 * IO::SDK::Constants::DEG_RAD,
-                                                                                           40.0 * IO::SDK::Constants::DEG_RAD,
+                                                                                           0.1,
+                                                                                           5.0 * IO::SDK::Constants::DEG_RAD,
+                                                                                           0.0 * IO::SDK::Constants::DEG_RAD,
                                                                                            0.0 * IO::SDK::Constants::DEG_RAD,
                                                                                            0.0,
                                                                                            startEpoch,
@@ -88,9 +88,9 @@ int main()
     //Define orbit of the target
     auto targetOrbit = std::make_shared<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth,
                                                                                           6700000.0,
-                                                                                          0.4,
-                                                                                          50.5 * IO::SDK::Constants::DEG_RAD,
-                                                                                          42.0 * IO::SDK::Constants::DEG_RAD,
+                                                                                          0.1,
+                                                                                          5.5 * IO::SDK::Constants::DEG_RAD,
+                                                                                          0.0 * IO::SDK::Constants::DEG_RAD,
                                                                                           10.0 * IO::SDK::Constants::DEG_RAD,
                                                                                           0.0,
                                                                                           startEpoch,
@@ -151,7 +151,7 @@ int main()
     // spacecraft.ReloadKernel();
 
     //Find sun occultation
-    auto occultationWindows = spacecraft.FindWindowsOnOccultationConstraint(IO::SDK::Time::Window(IO::SDK::Time::TDB("2021-06-02T17:30:00"), IO::SDK::Time::TDB("2021-06-02T23:00:00")), *sun, *earth, IO::SDK::OccultationType::Any(), IO::SDK::AberrationsEnum::LT, IO::SDK::Time::TimeSpan(240s));
+    auto occultationWindows = spacecraft.FindWindowsOnOccultationConstraint(IO::SDK::Time::Window<IO::SDK::Time::TDB>(launchWindows[0].GetWindow().GetStartDate().ToTDB().Add(IO::SDK::Time::TimeSpan(601s)), endEpoch.Add(IO::SDK::Time::TimeSpan(-601s))), *sun, *earth, IO::SDK::OccultationType::Any(), IO::SDK::AberrationsEnum::LT, IO::SDK::Time::TimeSpan(30s));
 
     //From here Only for data vizualization
     auto epoch = finalApogeeChanging.GetManeuverWindow()->GetEndDate();
