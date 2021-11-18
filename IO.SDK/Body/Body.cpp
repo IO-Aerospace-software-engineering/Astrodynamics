@@ -39,7 +39,7 @@ IO::SDK::Body::Body::Body(const int id, const std::string &name, const double ma
 	centerOfMotion->m_satellites.push_back(this);
 }
 
-IO::SDK::Body::Body::Body(const Body &body) :Body(body.m_id, body.m_name, body.m_mass) {}
+IO::SDK::Body::Body::Body(const Body &body) : Body(body.m_id, body.m_name, body.m_mass) {}
 
 int IO::SDK::Body::Body::GetId() const
 {
@@ -163,7 +163,7 @@ std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>> IO::SDK::Body::Body::Find
 
 	wninsd_c(searchWindow.GetStartDate().GetSecondsFromJ2000().count(), searchWindow.GetEndDate().GetSecondsFromJ2000().count(), &cnfine);
 
-	gfoclt_c(occultationType.ToCharArray(), "399", "ELLIPSOID", frontBody.GetBodyFixedFrame().GetName().c_str(), "10", "POINT", targetBody.GetBodyFixedFrame().GetName().c_str(), abe.ToString(aberration).c_str(), m_name.c_str(), stepSize.GetSeconds().count(), &cnfine, &results);
+	gfoclt_c(occultationType.ToCharArray(), frontBody.m_name.c_str(), "ELLIPSOID", frontBody.GetBodyFixedFrame().GetName().c_str(), targetBody.m_name.c_str(), "ELLIPSOID", targetBody.GetBodyFixedFrame().GetName().c_str(), abe.ToString(aberration).c_str(), m_name.c_str(), stepSize.GetSeconds().count(), &cnfine, &results);
 
 	for (int i = 0; i < wncard_c(&results); i++)
 	{

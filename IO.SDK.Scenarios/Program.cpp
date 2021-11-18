@@ -151,7 +151,7 @@ int main()
     // spacecraft.ReloadKernel();
 
     //Find sun occultation
-    auto occultationWindows = spacecraft.FindWindowsOnOccultationConstraint(IO::SDK::Time::Window<IO::SDK::Time::TDB>(launchWindows[0].GetWindow().GetStartDate().ToTDB().Add(IO::SDK::Time::TimeSpan(601s)), endEpoch.Add(IO::SDK::Time::TimeSpan(-601s))), *sun, *earth, IO::SDK::OccultationType::Any(), IO::SDK::AberrationsEnum::LT, IO::SDK::Time::TimeSpan(30s));
+    auto occultationWindows = spacecraft.FindWindowsOnOccultationConstraint(IO::SDK::Time::Window<IO::SDK::Time::TDB>(launchWindows[0].GetWindow().GetStartDate().ToTDB().Add(IO::SDK::Time::TimeSpan(601s)), endEpoch.Add(IO::SDK::Time::TimeSpan(-601s))), *sun, *earth, IO::SDK::OccultationType::Any(), IO::SDK::AberrationsEnum::None, IO::SDK::Time::TimeSpan(30s));
 
     //From here Only for data vizualization
     auto epoch = finalApogeeChanging.GetManeuverWindow()->GetEndDate();
@@ -185,7 +185,8 @@ int main()
     auto ta = targetOrbit->GetStateVector(epoch).GetSemiMajorAxis();
     auto sa = ephemeris.GetSemiMajorAxis();
 
-    double dp = (ephemeris.GetPosition() - targetOrbit->GetStateVector(epoch).GetPosition()).Magnitude();
+    double dpos = (ephemeris.GetPosition() - targetOrbit->GetStateVector(epoch).GetPosition()).Magnitude();
+    double period = ephemeris.GetPeriod().GetHours().count();
 
     DisplayManeuverSummary(&planeAlignment, "Plane alignment");
     DisplayManeuverSummary(&apsidalAlignment, "Aspidal alignment");
