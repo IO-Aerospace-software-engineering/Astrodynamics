@@ -24,6 +24,11 @@ IO::SDK::OrbitalParameters::StateVector IO::SDK::Kernels::EphemerisKernel::ReadS
 	SpiceDouble lt;
 	IO::SDK::Aberrations a{};
 	spkezr_c(std::to_string(m_spacecraft.GetId()).c_str(), epoch.GetSecondsFromJ2000().count(), frame.ToCharArray(), a.ToString(aberration).c_str(), observer.GetName().c_str(), states, &lt);
+	for (size_t i = 0; i < 6; i++)
+	{
+		states[i]=states[i]*1000.0;
+	}
+	
 	return IO::SDK::OrbitalParameters::StateVector(std::make_shared<IO::SDK::Body::CelestialBody>(observer), states, epoch, frame);
 }
 
@@ -76,12 +81,12 @@ void IO::SDK::Kernels::EphemerisKernel::WriteData(const std::vector<OrbitalParam
 		Math::Vector3D position = states[i].GetPosition();
 		Math::Vector3D velocity = states[i].GetVelocity();
 
-		statesArray[i][0] = position.GetX();
-		statesArray[i][1] = position.GetY();
-		statesArray[i][2] = position.GetZ();
-		statesArray[i][3] = velocity.GetX();
-		statesArray[i][4] = velocity.GetY();
-		statesArray[i][5] = velocity.GetZ();
+		statesArray[i][0] = position.GetX()/1000.0;
+		statesArray[i][1] = position.GetY()/1000.0;
+		statesArray[i][2] = position.GetZ()/1000.0;
+		statesArray[i][3] = velocity.GetX()/1000.0;
+		statesArray[i][4] = velocity.GetY()/1000.0;
+		statesArray[i][5] = velocity.GetZ()/1000.0;
 	};
 
 	SpiceInt handle{};

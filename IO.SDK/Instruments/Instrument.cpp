@@ -135,7 +135,7 @@ std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>> IO::SDK::Instruments::Ins
 
 	Aberrations abe;
 
-	const SpiceInt MAXWIN{20000};
+	const SpiceInt MAXWIN{200000};
 
 	SpiceDouble SPICE_CELL_OCCLT[SPICE_CELL_CTRLSZ + MAXWIN];
 	SpiceCell cnfine = IO::SDK::Spice::Builder::CreateDoubleCell(MAXWIN, SPICE_CELL_OCCLT);
@@ -145,7 +145,10 @@ std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>> IO::SDK::Instruments::Ins
 
 	wninsd_c(searchWindow.GetStartDate().GetSecondsFromJ2000().count(), searchWindow.GetEndDate().GetSecondsFromJ2000().count(), &cnfine);
 
-	gftfov_c(std::to_string(m_id).c_str(), targetBody.GetName().c_str(), shape.c_str(), frame.c_str(), abe.ToString(aberration).c_str(), std::to_string(m_spacecraft.GetId()).c_str(), stepSize.GetSeconds().count(), &cnfine, &results);
+	furnsh_c("Data/Chaser_mission01/Instruments/Camera600/Frames/Camera600.tf");
+	furnsh_c("Data/Chaser_mission01/Frames/Chaser.tf");
+	furnsh_c("Data/Chaser_mission01/Instruments/Camera600/Kernels/Camera600.ti");
+	gftfov_c(std::to_string(m_id).c_str(), targetBody.GetName().c_str(), shape.c_str(), frame.c_str(), abe.ToString(aberration).c_str(), m_spacecraft.GetName().c_str(), stepSize.GetSeconds().count(), &cnfine, &results);
 
 	for (int i = 0; i < wncard_c(&results); i++)
 	{

@@ -441,12 +441,9 @@ TEST(Instrument, FindWindowFieldOfView)
 	ASSERT_STREQ("SC179_CAMERA789", name[0].c_str());
 
 	//Get windows
-	auto results = instrument->FindWindowsWhereInFieldOfView(IO::SDK::Time::Window<IO::SDK::Time::TDB>(IO::SDK::Time::TDB("2021-JUN-10 00:00:00.0000 TDB"), epoch + duration), *earth, IO::SDK::Time::TimeSpan(60s), IO::SDK::AberrationsEnum::None);
+	auto results = instrument->FindWindowsWhereInFieldOfView(IO::SDK::Time::Window<IO::SDK::Time::TDB>(IO::SDK::Time::TDB("2021-JUN-10 00:00:00.0000 TDB"), epoch + duration), *earth, IO::SDK::Time::TimeSpan(60s), IO::SDK::AberrationsEnum::LT);
 
-	ASSERT_EQ(2, results.size());
-	ASSERT_STREQ("2021-06-10 00:01:13.760767 (TDB)", results[0].GetStartDate().ToString().c_str());
-	ASSERT_STREQ("2021-06-10 00:45:16.498288 (TDB)", results[0].GetEndDate().ToString().c_str());
-
-	ASSERT_STREQ("2021-06-10 01:34:14.279066 (TDB)", results[1].GetStartDate().ToString().c_str());
-	ASSERT_STREQ("2021-06-10 01:47:27.000000 (TDB)", results[1].GetEndDate().ToString().c_str());
+	ASSERT_EQ(1, results.size());
+	ASSERT_STREQ("2021-06-10 00:00:00.000000 (TDB)", results[0].GetStartDate().ToString().c_str());
+	ASSERT_STREQ("2021-06-10 01:47:27.000000 (TDB)", results[0].GetEndDate().ToString().c_str());
 }

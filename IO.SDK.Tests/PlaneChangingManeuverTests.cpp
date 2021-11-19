@@ -426,7 +426,7 @@ TEST(PlaneChangingManeuver, CheckOrbitalParametersToHigherInclination)
 
     ASSERT_DOUBLE_EQ(9.9879515017487623, w);
 #else
-    ASSERT_DOUBLE_EQ(9.9879515017488227, w);
+    ASSERT_DOUBLE_EQ(9.9879515017487588, w);
 #endif
 }
 
@@ -507,13 +507,13 @@ TEST(PlaneChangingManeuver, CheckOrbitalParametersToLowerInclination)
     auto o = ephemeris.GetRightAscendingNodeLongitude() * IO::SDK::Constants::RAD_DEG;
     auto w = ephemeris.GetPeriapsisArgument() * IO::SDK::Constants::RAD_DEG;
 
-    ASSERT_DOUBLE_EQ(6700011.5756513746, p);
+    ASSERT_DOUBLE_EQ(6700011.5756513486, p);
 
-    ASSERT_DOUBLE_EQ(0.89999976627196931, e);
+    ASSERT_DOUBLE_EQ(0.8999997662719702, e);
 
     ASSERT_DOUBLE_EQ(40.004520687725375, i);
 
-    ASSERT_DOUBLE_EQ(15.004839992067712, o);
+    ASSERT_DOUBLE_EQ(15.004839992067728, o);
 
-    ASSERT_DOUBLE_EQ(21.932445485694235, w);
+    ASSERT_DOUBLE_EQ(21.932445485694203, w);
 }
