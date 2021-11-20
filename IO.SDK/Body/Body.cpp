@@ -15,12 +15,13 @@
 #include <chrono>
 #include <InertialFrames.h>
 #include <Builder.h>
+#include <StringHelpers.h>
 
 using namespace std::chrono_literals;
 
 IO::SDK::Body::Body::Body(const int id, const std::string &name, const double mass)
 	: m_id{id},
-	  m_name{std::toupper(name)},
+	  m_name{IO::SDK::StringHelpers::ToUpper(name)},
 	  m_mass{mass > 0 ? mass : throw IO::SDK::Exception::SDKException("Mass must be a positive value")},
 	  m_mu{mass * IO::SDK::Constants::G}
 

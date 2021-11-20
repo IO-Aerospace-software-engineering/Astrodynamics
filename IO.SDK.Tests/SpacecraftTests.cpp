@@ -16,9 +16,9 @@ TEST(Spacecraft, Initialization)
 	std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth, IO::SDK::Math::Vector3D(1.0, 2.0, 3.0), IO::SDK::Math::Vector3D(4.0, 5.0, 6.0), IO::SDK::Time::TDB(100.0s), IO::SDK::Frames::InertialFrames::GetICRF());
 	IO::SDK::Body::Spacecraft::Spacecraft spc(-1, "Spacecraft1", 1000.0, 3000.0, "Mission1", std::move(orbitalParams));
 	ASSERT_EQ(-1, spc.GetId());
-	ASSERT_STREQ("Spacecraft1", spc.GetName().c_str());
-	ASSERT_STREQ("Mission1", spc.GetMissionPrefix().c_str());
-	ASSERT_STREQ("Data/Spacecraft1_Mission1", spc.GetFilesPath().c_str());
+	ASSERT_STREQ("SPACECRAFT1", spc.GetName().c_str());
+	ASSERT_STREQ("MISSION1", spc.GetMissionPrefix().c_str());
+	ASSERT_STREQ("Data/SPACECRAFT1_MISSION1", spc.GetFilesPath().c_str());
 	ASSERT_DOUBLE_EQ(1000.0, spc.GetMass());
 	ASSERT_DOUBLE_EQ(0.000000066743, spc.GetMu());
 }
