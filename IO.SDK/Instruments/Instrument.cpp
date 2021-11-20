@@ -17,8 +17,7 @@
 #include <RectangularInstrumentKernel.h>
 #include <CircularInstrumentKernel.h>
 #include <SpiceUsr.h>
-#include<Builder.h>
-
+#include <Builder.h>
 
 std::string IO::SDK::Instruments::Instrument::GetFilesPath() const
 {
@@ -145,9 +144,6 @@ std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>> IO::SDK::Instruments::Ins
 
 	wninsd_c(searchWindow.GetStartDate().GetSecondsFromJ2000().count(), searchWindow.GetEndDate().GetSecondsFromJ2000().count(), &cnfine);
 
-	furnsh_c("Data/Chaser_mission01/Instruments/Camera600/Frames/Camera600.tf");
-	furnsh_c("Data/Chaser_mission01/Frames/Chaser.tf");
-	furnsh_c("Data/Chaser_mission01/Instruments/Camera600/Kernels/Camera600.ti");
 	gftfov_c(std::to_string(m_id).c_str(), targetBody.GetName().c_str(), shape.c_str(), frame.c_str(), abe.ToString(aberration).c_str(), m_spacecraft.GetName().c_str(), stepSize.GetSeconds().count(), &cnfine, &results);
 
 	for (int i = 0; i < wncard_c(&results); i++)

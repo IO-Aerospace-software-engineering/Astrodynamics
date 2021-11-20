@@ -121,17 +121,17 @@ int main()
     //===================Compute maneuvers to reach target body================================
 
     //Configure spacecraft at insertion orbit
-    IO::SDK::Body::Spacecraft::Spacecraft spacecraft{-178, "Chaser", 1000.0, 10000.0, "mission01", std::make_unique<IO::SDK::OrbitalParameters::ConicOrbitalElements>(*parkingOrbit)};
+    IO::SDK::Body::Spacecraft::Spacecraft spacecraft{-178, "CHASER", 1000.0, 10000.0, "MIS01", std::make_unique<IO::SDK::OrbitalParameters::ConicOrbitalElements>(*parkingOrbit)};
     spacecraft.AddFuelTank("fuelTank1", 9000.0, 9000.0);                                                          // Add fuel tank
     spacecraft.AddEngine("serialNumber1", "engine1", "fuelTank1", {1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}, 450.0, 50.0); //Add engine and link with fuel tank
 
     IO::SDK::Math::Vector3D orientation{1.0, 0.0, 0.0};
     IO::SDK::Math::Vector3D boresight{0.0, 0.0, 1.0};
     IO::SDK::Math::Vector3D fovvector{1.0, 0.0, 0.0};
-    spacecraft.AddCircularFOVInstrument(600, "Camera600", orientation, boresight, fovvector, 80.0 * IO::SDK::Constants::DEG_RAD);
+    spacecraft.AddCircularFOVInstrument(600, "CAM600", orientation, boresight, fovvector, 80.0 * IO::SDK::Constants::DEG_RAD);
 
     //Target
-    IO::SDK::Body::Spacecraft::Spacecraft spacecraftTarget{-179, "Target", 1000.0, 10000.0, "mission01", std::make_unique<IO::SDK::OrbitalParameters::ConicOrbitalElements>(*targetOrbit)};
+    IO::SDK::Body::Spacecraft::Spacecraft spacecraftTarget{-179, "TARGET", 1000.0, 10000.0, "MIS01", std::make_unique<IO::SDK::OrbitalParameters::ConicOrbitalElements>(*targetOrbit)};
     spacecraftTarget.AddFuelTank("fuelTank1", 9000.0, 9000.0);                                                          // Add fuel tank
     spacecraftTarget.AddEngine("serialNumber1", "engine1", "fuelTank1", {1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}, 450.0, 50.0); //Add engine and link with fuel tank
 
@@ -179,12 +179,12 @@ int main()
     //Find sun occultation
     auto occultationWindows = spacecraft.FindWindowsOnOccultationConstraint(IO::SDK::Time::Window<IO::SDK::Time::TDB>(startDatePropagator, endEpoch), *sun, *earth, IO::SDK::OccultationType::Any(), IO::SDK::AberrationsEnum::None, IO::SDK::Time::TimeSpan(30s));
     
-    auto id = IO::SDK::DataPoolMonitoring::Instance().GetIntegerProperty("FRAME_Chaser_Camera600", 1);
+    auto id = IO::SDK::DataPoolMonitoring::Instance().GetIntegerProperty("FRAME_CHASER_CAMERA600", 1);
 	// ASSERT_EQ(-178600, id[0]);
 
 	auto name = IO::SDK::DataPoolMonitoring::Instance().GetStringProperty("FRAME_-178600_NAME", 1);
 	// ASSERT_STREQ("Chaser_Camera600", name[0].c_str());
-    auto fovWindows = spacecraft.GetInstrument(600)->FindWindowsWhereInFieldOfView(IO::SDK::Time::Window<IO::SDK::Time::TDB>(startDatePropagator, endEpoch), *moon, IO::SDK::Time::TimeSpan(300s), IO::SDK::AberrationsEnum::LT);
+    auto fovWindows = spacecraft.GetInstrument(600)->FindWindowsWhereInFieldOfView(IO::SDK::Time::Window<IO::SDK::Time::TDB>(spacecraft.GetOrientationsCoverageWindow().GetStartDate(), spacecraft.GetOrientationsCoverageWindow().GetEndDate()), *moon, IO::SDK::Time::TimeSpan(300s), IO::SDK::AberrationsEnum::LT);
 
     //From here Only for data vizualization
     auto epoch = finalApogeeChanging.GetManeuverWindow()->GetEndDate();
