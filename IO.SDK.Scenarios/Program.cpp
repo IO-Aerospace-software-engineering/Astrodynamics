@@ -35,6 +35,7 @@ void DisplayManeuverSummary(IO::SDK::Maneuvers::ManeuverBase *maneuver, const st
     auto v = maneuver->GetDeltaV().Normalize();
     std::cout << "Spacecraft orientation : X : " << v.GetX() << " Y : " << v.GetY() << " Z : " << v.GetZ() << " ( ICRF )" << std::endl;
     std::cout << "Fuel burned :" << maneuver->GetFuelBurned() << " kg" << std::endl;
+    std::cout <<std::endl;
 }
 
 void DisplayLaunchWindowsSummary(const std::vector<IO::SDK::Maneuvers::LaunchWindow> &launchWindows)
@@ -48,6 +49,7 @@ void DisplayLaunchWindowsSummary(const std::vector<IO::SDK::Maneuvers::LaunchWin
         std::cout << "Non inertial azimuth :" << launchWindows[i].GetNonInertialAzimuth() * IO::SDK::Constants::RAD_DEG << " °" << std::endl;
         std::cout << "Inertial insertion velocity :" << launchWindows[i].GetInertialInsertionVelocity() << " m/s" << std::endl;
         std::cout << "Non inertial insertion velocity :" << launchWindows[i].GetNonInertialInsertionVelocity() << " m/s" << std::endl;
+        std::cout <<std::endl;
     }
 }
 
@@ -60,6 +62,20 @@ void DisplayOccultations(const std::vector<IO::SDK::Time::Window<IO::SDK::Time::
     {
         std::cout << "Occulation start at :" << occultations[i].GetStartDate().ToString().c_str() << std::endl;
         std::cout << "Occulation end at :" << occultations[i].GetEndDate().ToString().c_str() << std::endl;
+        std::cout <<std::endl;
+    }
+}
+
+void DisplayInsight(const std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>> &windows)
+{
+    std::cout << "========================================"
+              << " Windows when the moon is in camera's field of view"
+              << " ========================================" << std::endl;
+    for (size_t i = 0; i < windows.size(); i++)
+    {
+        std::cout << "Opportunity start at :" << windows[i].GetStartDate().ToString().c_str() << std::endl;
+        std::cout << "Opportunity end at :" << windows[i].GetEndDate().ToString().c_str() << std::endl;
+        std::cout <<std::endl;
     }
 }
 
@@ -222,4 +238,5 @@ int main()
     DisplayManeuverSummary(&phasing, "Phasing");
     DisplayManeuverSummary(&finalApogeeChanging, "Apogee height changing");
     DisplayOccultations(occultationWindows);
+    DisplayInsight(fovWindows);
 }
