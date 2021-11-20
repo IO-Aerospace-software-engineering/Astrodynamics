@@ -46,8 +46,8 @@ const std::unique_ptr<IO::SDK::Frames::InstrumentFrameFile> &IO::SDK::Instrument
 
 IO::SDK::Instruments::Instrument::Instrument(const IO::SDK::Body::Spacecraft::Spacecraft &spacecraft, const unsigned short id, const std::string &name, const IO::SDK::Math::Vector3D &orientation, const IO::SDK::Math::Vector3D &boresight, const IO::SDK::Math::Vector3D &fovRefVector, const double fovAngle) : m_spacecraft{spacecraft},
 																																																																													m_id{id < 1000 ? spacecraft.GetId() * 1000 - id : throw IO::SDK::Exception::InvalidArgumentException("Instrument Id must be a positive number < 1000")},
-																																																																													m_name{name},
-																																																																													m_filesPath{spacecraft.GetFilesPath() + "/Instruments/" + name},
+																																																																													m_name{std::toupper(name)},
+																																																																													m_filesPath{spacecraft.GetFilesPath() + "/Instruments/" + std::toupper(name)},
 																																																																													m_frame(new IO::SDK::Frames::InstrumentFrameFile(*this, orientation)),
 																																																																													m_orientation{orientation},
 																																																																													m_fovShape{IO::SDK::Instruments::FOVShapeEnum::Circular},
@@ -61,8 +61,8 @@ IO::SDK::Instruments::Instrument::Instrument(const IO::SDK::Body::Spacecraft::Sp
 
 IO::SDK::Instruments::Instrument::Instrument(const IO::SDK::Body::Spacecraft::Spacecraft &spacecraft, const unsigned short id, const std::string &name, const IO::SDK::Math::Vector3D &orientation, const IO::SDK::Instruments::FOVShapeEnum fovShape, const IO::SDK::Math::Vector3D &boresight, const IO::SDK::Math::Vector3D &fovRefVector, const double fovAngle, const double crossAngle) : m_spacecraft{spacecraft},
 																																																																																																m_id{id < 1000 ? spacecraft.GetId() * 1000 - id : throw IO::SDK::Exception::InvalidArgumentException("Instrument Id must be a positive number < 1000")},
-																																																																																																m_name{name},
-																																																																																																m_filesPath{spacecraft.GetFilesPath() + "/Instruments/" + name},
+																																																																																																m_name{std::toupper(name.c_str())},
+																																																																																																m_filesPath{spacecraft.GetFilesPath() + "/Instruments/" + std::toupper(name)},
 																																																																																																m_frame(new IO::SDK::Frames::InstrumentFrameFile(*this, orientation)),
 																																																																																																m_orientation{orientation},
 																																																																																																m_fovShape{fovShape},
