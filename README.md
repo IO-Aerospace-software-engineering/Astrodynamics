@@ -93,39 +93,210 @@ In this example we will create a small program that will compute ISS orbital per
 3. Create program in main.cpp file :
     ```C++
     #include <memory>
-    #include <iostream>
     #include <string>
+    #include <iostream>
+    #include <chrono>
+    #include <vector>
 
-    //IO SDK headers to include
+    #include <CelestialBody.h>
+    #include <LaunchSite.h>
+    #include <OrbitalParameters.h>
+    #include <Spacecraft.h>
+    #include <StateVector.h>
     #include <TLE.h>
-    #include <Vector3D.h>
-    #include <CelestialBody.h>    
+    #include <Launch.h>
+    #include <LaunchWindow.h>
+    #include <Window.h>
+    #include <UTC.h>
+    #include <TDB.h>
+    #include <Propagator.h>
+    #include <VVIntegrator.h>
+    #include <OrbitalPlaneChangingManeuver.h>
+    #include <ApogeeHeightChangingManeuver.h>
+    #include <ApsidalAlignmentManeuver.h>
+    #include <PhasingManeuver.h>
+    #include <DataPoolMonitoring.h> 
 
-    int main(int, char **)
+   int main()
     {
-        //1. Compute ISS orbital period from two lines elements
+        /*========================== Scenario Description =====================================
+        We are at Cap canaveral and we have to join another spacecraft in orbit.
+        The launch must occurs by day at launch site and recovery site
+        To realize this operation, we'll show you how to use IO SDK to find launch windows then maneuvers sequence to reach our objective.
+        For each maneuver you will obtain the maneuver window, the thrust window, Delta V, Spacecraft or satellite orientation and mass of fuel burned.
+        We also get sun occultations and windows when the moon will be in camera's field of view
+        */
+
+        //=======================Configure universe topology======================================
+        //Bodies id are defined here https://naif.jpl.nasa.gov/pub/naif/toolkit_docs/C/req/naif_ids.html#NAIF%20Object%20ID%20numbers
         auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10, "sun");
-        auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth", sun);
-        std::string lines[3]{"ISS", "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054", "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703"};
-        IO::SDK::OrbitalParameters::TLE tle(earth, lines);
+        auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
+        auto moon = std::make_shared<IO::SDK::Body::CelestialBody>(301, "moon");
 
-        double period = tle.GetPeriod().GetSeconds().count();
-        std::cout << "ISS orbital period is :" << period << std::endl;
+        //========================Compute launch parameters=======================================
 
-        //2. Get the Earth Hill sphere
-        double hillSphereRadius = earth->GetHillSphere();
-        std::cout << "the earth Hill sphere radius is :" << hillSphereRadius << std::endl;
+        //Define launch site and recovery site
+        auto launchSite = std::make_shared<IO::SDK::Sites::LaunchSite>(3, "S3", IO::SDK::Coordinates::Geodetic(-81.0 * IO::SDK::Constants::DEG_RAD, 28.5 * IO::SDK::Constants::DEG_RAD, 0.0), earth);
+        auto recoverySite = std::make_shared<IO::SDK::Sites::LaunchSite>(4, "S4", IO::SDK::Coordinates::Geodetic(-80.0 * IO::SDK::Constants::DEG_RAD, 28.5 * IO::SDK::Constants::DEG_RAD, 0.0), earth);
 
-        //3. Compute angle between two vectors
-        IO::SDK::Math::Vector3D v1(1.0, 0.0, 0.0);
-        IO::SDK::Math::Vector3D v2(0.0, 1.0, 0.0);
-        std::cout << "Angle between v1 and v2 is :" << v1.GetAngle(v2) << std::endl;
+        //Define simulation window. (Warning : When spacecraft is involved, dates must be greater than 2021-01-01 to be compliant with spacecraft clock)
+        IO::SDK::Time::TDB startEpoch("2021-03-02T00:00:00");
+        IO::SDK::Time::TDB endEpoch("2021-03-05T00:00:00");
+
+        //Define parking orbit
+        auto parkingOrbit = std::make_shared<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth,
+                                                                                               6700000.0,
+                                                                                               0.3,
+                                                                                               50.0 * IO::SDK::Constants::DEG_RAD,
+                                                                                               41.0 * IO::SDK::Constants::DEG_RAD,
+                                                                                               0.0 * IO::SDK::Constants::DEG_RAD,
+                                                                                               0.0,
+                                                                                               startEpoch,
+                                                                                               IO::SDK::Frames::InertialFrames::GetICRF());
+        //Define orbit of the target
+        auto targetOrbit = std::make_shared<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth,
+                                                                                              6800000.0,
+                                                                                              0.4,
+                                                                                              51.0 * IO::SDK::Constants::DEG_RAD,
+                                                                                              43.0 * IO::SDK::Constants::DEG_RAD,
+                                                                                              10.0 * IO::SDK::Constants::DEG_RAD,
+                                                                                              0.0,
+                                                                                              startEpoch,
+                                                                                              IO::SDK::Frames::InertialFrames::GetICRF());
+
+        //Compute launch windows, to launch by day on launch site and recovery site when the launch site crosses the parking orbital plane
+        IO::SDK::Maneuvers::Launch launch(launchSite, recoverySite, true, *parkingOrbit);
+        auto launchWindows = launch.GetLaunchWindows(IO::SDK::Time::Window<IO::SDK::Time::UTC>(startEpoch.ToUTC(), endEpoch.ToUTC()));
+
+        //Display launch window results (this is not necessary)
+        DisplayLaunchWindowsSummary(launchWindows);
+
+        //===================Compute maneuvers to reach target body================================
+
+        //Configure spacecraft at insertion orbit
+        IO::SDK::Body::Spacecraft::Spacecraft spacecraft{-178, "DRAGONFLY", 1000.0, 10000.0, "MIS01", std::make_unique<IO::SDK::OrbitalParameters::ConicOrbitalElements>(*parkingOrbit)};
+        spacecraft.AddFuelTank("fuelTank1", 9000.0, 9000.0);                                                          // Add fuel tank
+        spacecraft.AddEngine("serialNumber1", "engine1", "fuelTank1", {1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}, 450.0, 50.0); //Add engine and link with fuel tank
+        spacecraft.AddPayload("PAY01", "Payload 01", 50.0);                                                           //We add a 50 kg payload to the spacecraft
+
+        //We add an instrument with a circular field of view  aligned with the spacecraft Z axis
+        IO::SDK::Math::Vector3D orientation{1.0, 0.0, 0.0};
+        IO::SDK::Math::Vector3D boresight{0.0, 0.0, 1.0};
+        IO::SDK::Math::Vector3D fovvector{1.0, 0.0, 0.0};
+        spacecraft.AddCircularFOVInstrument(600, "CAM600", orientation, boresight, fovvector, 80.0 * IO::SDK::Constants::DEG_RAD);
+
+        //Target
+        IO::SDK::Body::Spacecraft::Spacecraft spacecraftTarget{-179, "TARGET", 1000.0, 10000.0, "MIS01", std::make_unique<IO::SDK::OrbitalParameters::ConicOrbitalElements>(*targetOrbit)};
+        spacecraftTarget.AddFuelTank("fuelTank2", 9000.0, 9000.0);                                                          // Add fuel tank
+        spacecraftTarget.AddEngine("serialNumber2", "engine2", "fuelTank2", {1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}, 450.0, 50.0); //Add engine and link with fuel tank
+
+        //Configure propagator
+        auto step{IO::SDK::Time::TimeSpan(1.0s)};
+
+        //Add gravity to forces model
+        //You can add your own force model
+        std::vector<IO::SDK::Integrators::Forces::Force *> forces{};
+        IO::SDK::Integrators::Forces::GravityForce gravityForce;
+        forces.push_back(&gravityForce);
+
+        //Initialize an integrator
+        IO::SDK::Integrators::VVIntegrator integrator(step, forces);
+
+        //We assume the ship will be in orbit 10 minutes after launch.
+        IO::SDK::Time::TDB startDatePropagator = launchWindows[0].GetWindow().GetStartDate().ToTDB().Add(IO::SDK::Time::TimeSpan(600.0s));
+
+        //Initialize propagator for dragonfly spacecraft
+        IO::SDK::Propagators::Propagator propagator(spacecraft, integrator, IO::SDK::Time::Window(startDatePropagator, endEpoch));
+
+        //Intialize propagator for target spacecraft
+        IO::SDK::Propagators::Propagator targetPropagator(spacecraftTarget, integrator, IO::SDK::Time::Window(startDatePropagator, endEpoch));
+        targetPropagator.Propagate();
+
+        //We define which engines can be used to realize maneuvers
+        auto engine1 = spacecraft.GetEngine("serialNumber1");
+        std::vector<IO::SDK::Body::Spacecraft::Engine> engines;
+        engines.push_back(*engine1);
+
+        //We configure each maneuver
+        IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver planeAlignment(engines, propagator, targetOrbit.get(), startDatePropagator); //The first maneuver must not start until the launch is complete
+        IO::SDK::Maneuvers::ApsidalAlignmentManeuver apsidalAlignment(engines, propagator, targetOrbit.get());
+        IO::SDK::Maneuvers::PhasingManeuver phasing(engines, propagator, 1, targetOrbit.get());
+        IO::SDK::Maneuvers::ApogeeHeightChangingManeuver finalApogeeChanging(engines, propagator, targetOrbit->GetApogeeVector().Magnitude());
+
+        //We order maneuvers
+        planeAlignment.SetNextManeuver(apsidalAlignment).SetNextManeuver(phasing).SetNextManeuver(finalApogeeChanging);
+
+        //We set the first maneuver in standby
+        propagator.SetStandbyManeuver(&planeAlignment);
+
+        //We execute the propagator
+        propagator.Propagate();
+
+        //Find sun occultation
+        auto occultationWindows = spacecraft.FindWindowsOnOccultationConstraint(IO::SDK::Time::Window<IO::SDK::Time::TDB>(startDatePropagator, endEpoch), *sun, *earth, IO::SDK::OccultationType::Any(), IO::SDK::AberrationsEnum::None, IO::SDK::Time::TimeSpan(30s));
+
+        //Find when moon will be in instrument field of view
+        auto fovWindows = spacecraft.GetInstrument(600)->FindWindowsWhereInFieldOfView(IO::SDK::Time::Window<IO::SDK::Time::TDB>(startDatePropagator, spacecraft.GetOrientationsCoverageWindow().GetEndDate()), *moon, IO::SDK::Time::TimeSpan(300s), IO::SDK::AberrationsEnum::LT);
+
     }
     ```
-4. Run your application, you should have these outputs :
+4. Run your application, if you read launch windows, maneuvers, occultations and fov windows you will retrieve these informations :
     ```CMD
-    ISS orbital period is :5576.68
-    the earth's Hill sphere radius is :1.4716e+09
-    Angle between v1 and v2 is :1.5708
+    ========================================Launch Window 0 ========================================
+    Launch epoch :2021-03-03 23:09:15.829809 (UTC)
+    Inertial azimuth :47.0059 °
+    Non inertial azimuth :45.1252 °
+    Inertial insertion velocity :8794.34 m/s
+    Non inertial insertion velocity :8499.73 m/s
+
+    ========================================Launch Window 1 ========================================
+    Launch epoch :2021-03-04 23:05:20.139985 (UTC)
+    Inertial azimuth :47.0059 °
+    Non inertial azimuth :45.1252 °
+    Inertial insertion velocity :8794.34 m/s
+    Non inertial insertion velocity :8499.73 m/s
+
+    ======================================== Plane alignment ========================================
+    Maneuver window : 2021-03-04 00:33:28.947415 (TDB) => 2021-03-04 00:33:37.083057 (TDB)
+    Thrust window : 2021-03-04 00:33:28.947415 (TDB) => 2021-03-04 00:33:37.083057 (TDB)
+    Thrust duration : 8.13564 s
+    Delta V : 182.335 m/s
+    Spacecraft orientation : X : -0.516358 Y : 0.573323 Z : -0.636141 ( ICRF )
+    Fuel burned :406.782 kg
+
+    ======================================== Aspidal alignment ========================================
+    Maneuver window : 2021-03-04 01:18:24.928793 (TDB) => 2021-03-04 01:18:43.237321 (TDB)
+    Thrust window : 2021-03-04 01:18:24.928793 (TDB) => 2021-03-04 01:18:43.237321 (TDB)
+    Thrust duration : 18.3085 s
+    Delta V : 440.163 m/s
+    Spacecraft orientation : X : -0.844401 Y : -0.286639 Z : 0.452575 ( ICRF )
+    Fuel burned :915.426 kg
+
+    ======================================== Phasing ========================================
+    Maneuver window : 2021-03-04 04:34:57.320071 (TDB) => 2021-03-04 08:18:28.240580 (TDB)
+    Thrust window : 2021-03-04 04:34:57.320071 (TDB) => 2021-03-04 04:35:07.154572 (TDB)
+    Thrust duration : 9.8345 s
+    Delta V : 255.907 m/s
+    Spacecraft orientation : X : -0.549214 Y : 0.335374 Z : 0.765434 ( ICRF )
+    Fuel burned :491.725 kg
+
+    ======================================== Apogee height changing ========================================
+    Maneuver window : 2021-03-04 08:43:16.504286 (TDB) => 2021-03-04 08:43:25.804857 (TDB)
+    Thrust window : 2021-03-04 08:43:16.504286 (TDB) => 2021-03-04 08:43:25.804857 (TDB)
+    Thrust duration : 9.30057 s
+    Delta V : 256.479 m/s
+    Spacecraft orientation : X : 0.549319 Y : -0.335252 Z : -0.765412 ( ICRF )
+    Fuel burned :465.029 kg
+
+    ======================================== Sun occultations from dragonfly spacecraft ========================================
+    Occulation start at :2021-03-03 23:20:25.015236 (TDB)
+    Occulation end at :2021-03-03 23:25:08.727103 (TDB)
+
+    ======================================== Windows when the moon is in camera's field of view ========================================
+    Opportunity start at :2021-03-03 23:20:25.187133 (TDB)
+    Opportunity end at :2021-03-04 01:15:44.489464 (TDB)
+
+    Opportunity start at :2021-03-04 01:21:23.355170 (TDB)
+    Opportunity end at :2021-03-04 04:33:14.824913 (TDB)
     ```
-    Remark : All values are expressed in international system of units (meter, second, radian, m/s, ...)
+    Remark : If unspecified, all values are expressed in international system of units (meter, second, radian, m/s, ...)
