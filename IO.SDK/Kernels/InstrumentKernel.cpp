@@ -9,16 +9,16 @@
  * 
  */
 #include <InstrumentKernel.h>
-#include<fstream>
-#include<filesystem>
-#include<InstrumentFrameFile.h>
+#include <fstream>
+#include <filesystem>
+#include <InstrumentFrameFile.h>
 
-IO::SDK::Kernels::InstrumentKernel::InstrumentKernel(const IO::SDK::Instruments::Instrument& instrument, const IO::SDK::Math::Vector3D& boresight, const IO::SDK::Math::Vector3D& refVector, const double angle, const std::string& templateName) :Kernel(instrument.GetFilesPath() + "/Kernels/" + instrument.GetName() + ".ti"),
-m_instrument{ instrument },
-m_boresight{ boresight },
-m_refVector{ refVector },
-m_angle{ angle },
-m_templatePath{ std::string(IO::SDK::Parameters::KernelTemplates) + "/" + templateName }
+IO::SDK::Kernels::InstrumentKernel::InstrumentKernel(const IO::SDK::Instruments::Instrument &instrument, const IO::SDK::Math::Vector3D &boresight, const IO::SDK::Math::Vector3D &refVector, const double angle, const std::string &templateName) : Kernel(instrument.GetFilesPath() + "/Kernels/" + instrument.GetName() + ".ti"),
+																																																													m_instrument{instrument},
+																																																													m_boresight{boresight},
+																																																													m_refVector{refVector},
+																																																													m_angle{angle},
+																																																													m_templatePath{std::string(IO::SDK::Parameters::KernelTemplates) + "/" + templateName}
 {
 }
 
@@ -107,5 +107,12 @@ void IO::SDK::Kernels::InstrumentKernel::BuildKernel()
 
 			outFile << readout << std::endl;
 		}
+
+		outFile.flush();
+		outFile.close();
+
+		readFile.close();
+
+		m_fileExists = true;
 	}
 }

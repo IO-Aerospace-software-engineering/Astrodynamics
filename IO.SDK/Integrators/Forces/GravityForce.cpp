@@ -48,7 +48,7 @@ IO::SDK::Math::Vector3D IO::SDK::Integrators::Forces::GravityForce::Apply(const 
     //Compute force induced by others satellites with the same center of motion
     for (auto &&sat : body.GetOrbitalParametersAtEpoch()->GetCenterOfMotion()->GetSatellites())
     {
-        if (*sat == body && !IO::SDK::Helpers::IsInstanceOf<IO::SDK::Body::CelestialBody>(sat))
+        if (*sat == body || !IO::SDK::Helpers::IsInstanceOf<IO::SDK::Body::CelestialBody>(sat))
         {
             continue;
         }

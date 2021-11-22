@@ -102,13 +102,13 @@ TEST(Site, ConvertToLocalFrame)
     auto sv = s.GetStateVector(*sun, IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::AberrationsEnum::None, IO::SDK::Time::TDB("2021-05-18 12:00:00 TDB"));
     auto frm = sv.ToFrame(IO::SDK::Frames::Frames("DSS-13_TOPO"));
     ASSERT_DOUBLE_EQ(151331784302.33798, frm.GetPosition().Magnitude());
-    ASSERT_DOUBLE_EQ(10363092.453507947, frm.GetVelocity().Magnitude());
-    ASSERT_DOUBLE_EQ(77897211309.970612, frm.GetPosition().GetX());
-    ASSERT_DOUBLE_EQ(-127863172317.2211, frm.GetPosition().GetY());
-    ASSERT_DOUBLE_EQ(-22007784423.602455, frm.GetPosition().GetZ());
-    ASSERT_DOUBLE_EQ(-5361336.2921343744, frm.GetVelocity().GetX());
-    ASSERT_DOUBLE_EQ(-4574026.9080048762, frm.GetVelocity().GetY());
-    ASSERT_DOUBLE_EQ(7597896.8279020172, frm.GetVelocity().GetZ());
+    ASSERT_DOUBLE_EQ(10363092.453308845, frm.GetVelocity().Magnitude());
+    ASSERT_DOUBLE_EQ(77897211194.850403, frm.GetPosition().GetX());
+    ASSERT_DOUBLE_EQ(-127863172415.52254, frm.GetPosition().GetY());
+    ASSERT_DOUBLE_EQ(-22007784259.951591, frm.GetPosition().GetZ());
+    ASSERT_DOUBLE_EQ(-5361336.2961583128, frm.GetVelocity().GetX());
+    ASSERT_DOUBLE_EQ(-4574026.8933693748, frm.GetVelocity().GetY());
+    ASSERT_DOUBLE_EQ(7597896.8336017765, frm.GetVelocity().GetZ());
 }
 
 TEST(Site, GetHorizontalCoordinates)

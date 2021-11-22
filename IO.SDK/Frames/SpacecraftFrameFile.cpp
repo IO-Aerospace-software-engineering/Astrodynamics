@@ -9,13 +9,13 @@
  * 
  */
 #include <SpacecraftFrameFile.h>
-#include<Parameters.h>
-#include<SpiceUsr.h>
-#include<iostream>
-#include<fstream>
-#include<filesystem>
+#include <Parameters.h>
+#include <SpiceUsr.h>
+#include <iostream>
+#include <fstream>
+#include <filesystem>
 
-IO::SDK::Frames::SpacecraftFrameFile::SpacecraftFrameFile(const IO::SDK::Body::Spacecraft::Spacecraft& spacecraft) :FrameFile(spacecraft.GetFilesPath() + "/Frames/" + spacecraft.GetName() + ".tf", spacecraft.GetName()), m_id{ spacecraft.GetId() * 1000 }, m_spacecraft{ spacecraft }
+IO::SDK::Frames::SpacecraftFrameFile::SpacecraftFrameFile(const IO::SDK::Body::Spacecraft::Spacecraft &spacecraft) : FrameFile(spacecraft.GetFilesPath() + "/Frames/" + spacecraft.GetName() + ".tf", spacecraft.GetName()), m_id{spacecraft.GetId() * 1000}, m_spacecraft{spacecraft}
 {
 	if (!m_fileExists)
 	{
@@ -73,7 +73,6 @@ void IO::SDK::Frames::SpacecraftFrameFile::BuildFrame()
 			{
 				readout = readout.replace(posspid, 14, std::to_string(m_spacecraft.GetId()));
 			}
-
 
 			outFile << readout << std::endl;
 		}

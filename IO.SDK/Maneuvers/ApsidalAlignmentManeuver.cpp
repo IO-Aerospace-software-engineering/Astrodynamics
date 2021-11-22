@@ -167,6 +167,11 @@ double IO::SDK::Maneuvers::ApsidalAlignmentManeuver::GetPTrueAnomaly(const IO::S
 {
     auto coef = GetCoefficients(sv);
     double res = coef["alpha"] + std::acos((coef["C"] / coef["A"]) * std::cos(coef["alpha"]));
+    if(std::isnan(res))
+    {
+        throw IO::SDK::Exception::InvalidArgumentException("Apsidal alignment requieres orbits intersection");
+    }
+
     if (res < 0.0)
     {
         res += IO::SDK::Constants::_2PI;
@@ -178,6 +183,11 @@ double IO::SDK::Maneuvers::ApsidalAlignmentManeuver::GetQTrueAnomaly(const IO::S
 {
     auto coef = GetCoefficients(sv);
     double res = coef["alpha"] - std::acos((coef["C"] / coef["A"]) * std::cos(coef["alpha"]));
+    if(std::isnan(res))
+    {
+        throw IO::SDK::Exception::InvalidArgumentException("Apsidal alignment requieres orbits intersection");
+    }
+
     if (res < 0.0)
     {
         res += IO::SDK::Constants::_2PI;

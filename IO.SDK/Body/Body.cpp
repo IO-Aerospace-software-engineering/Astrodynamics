@@ -15,12 +15,13 @@
 #include <chrono>
 #include <InertialFrames.h>
 #include <Builder.h>
+#include <StringHelpers.h>
 
 using namespace std::chrono_literals;
 
 IO::SDK::Body::Body::Body(const int id, const std::string &name, const double mass)
 	: m_id{id},
-	  m_name{name},
+	  m_name{IO::SDK::StringHelpers::ToUpper(name)},
 	  m_mass{mass > 0 ? mass : throw IO::SDK::Exception::SDKException("Mass must be a positive value")},
 	  m_mu{mass * IO::SDK::Constants::G}
 
@@ -39,7 +40,7 @@ IO::SDK::Body::Body::Body(const int id, const std::string &name, const double ma
 	centerOfMotion->m_satellites.push_back(this);
 }
 
-IO::SDK::Body::Body::Body(const Body &body) :Body(body.m_id, body.m_name, body.m_mass) {}
+IO::SDK::Body::Body::Body(const Body &body) : Body(body.m_id, body.m_name, body.m_mass) {}
 
 int IO::SDK::Body::Body::GetId() const
 {
@@ -163,7 +164,7 @@ std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>> IO::SDK::Body::Body::Find
 
 	wninsd_c(searchWindow.GetStartDate().GetSecondsFromJ2000().count(), searchWindow.GetEndDate().GetSecondsFromJ2000().count(), &cnfine);
 
-	gfoclt_c(occultationType.ToCharArray(), frontBody.GetName().c_str(), "ELLIPSOID", frontBody.GetBodyFixedFrame().GetName().c_str(), targetBody.GetName().c_str(), "ELLIPSOID", targetBody.GetBodyFixedFrame().GetName().c_str(), abe.ToString(aberration).c_str(), m_name.c_str(), stepSize.GetSeconds().count(), &cnfine, &results);
+	gfoclt_c(occultationType.ToCharArray(), frontBody.m_name.c_str(), "ELLIPSOID", frontBody.GetBodyFixedFrame().GetName().c_str(), targetBody.m_name.c_str(), "ELLIPSOID", targetBody.GetBodyFixedFrame().GetName().c_str(), abe.ToString(aberration).c_str(), m_name.c_str(), stepSize.GetSeconds().count(), &cnfine, &results);
 
 	for (int i = 0; i < wncard_c(&results); i++)
 	{

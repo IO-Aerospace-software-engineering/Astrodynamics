@@ -246,14 +246,3 @@ std::vector<IO::SDK::Maneuvers::LaunchWindow> IO::SDK::Maneuvers::Launch::FindLa
 
     return launchWindows;
 }
-
-//1. GHA L = Position de greenwitch par rapport au point vernal pour que le site de lancement soit dans le plan de l'orbite cible (Equivalent à RA)
-//2. Calculer RA du meridien de greenwich à un instant t
-
-//(RA alignement des plans - RA meridien greenwich à t) + 2m pi / we
-
-//================================================
-//1. Compute inclination using moment momentum
-//2. Apply SDK spec for Az and velocity
-//3. Compute RA to launch?? Use dot product =0 between moment momentum and topocentric vector
-//4. Use geometry solver to find time where RA is reached

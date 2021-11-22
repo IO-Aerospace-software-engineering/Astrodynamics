@@ -139,7 +139,6 @@ void IO::SDK::Maneuvers::ManeuverBase::ExecuteAt(const IO::SDK::OrbitalParameter
     //set maneuver window
     m_thrustWindow = std::make_unique<IO::SDK::Time::Window<IO::SDK::Time::TDB>>(maneuverPoint.GetEpoch() - m_thrustDuration / 2, m_thrustDuration);
 
-
     //Set attitude window
     if (m_attitudeHoldDuration > m_thrustWindow->GetLength())
     {
@@ -156,7 +155,7 @@ void IO::SDK::Maneuvers::ManeuverBase::ExecuteAt(const IO::SDK::OrbitalParameter
     }
 
     //Set maneuver window
-    m_maneuverWindow=std::make_unique<IO::SDK::Time::Window<IO::SDK::Time::TDB>>(m_attitudeWindow->Merge(*m_thrustWindow).Merge(IO::SDK::Time::Window(maneuverPoint.GetEpoch(),m_maneuverHoldDuration)));
+    m_maneuverWindow = std::make_unique<IO::SDK::Time::Window<IO::SDK::Time::TDB>>(m_attitudeWindow->Merge(*m_thrustWindow).Merge(IO::SDK::Time::Window(maneuverPoint.GetEpoch(), m_maneuverHoldDuration)));
 
     //Find position at maneuver begin
     //Get lower value nearest maneuver begin epoch
