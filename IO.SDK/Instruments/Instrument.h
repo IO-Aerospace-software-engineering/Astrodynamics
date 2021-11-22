@@ -157,7 +157,7 @@ namespace IO::SDK::Instruments
 		 * @param stepSize 
 		 * @return std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>> 
 		 */
-		std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>> FindWindowsWhereInFieldOfView(const IO::SDK::Time::Window<IO::SDK::Time::TDB> searchWindow,const IO::SDK::Body::Body& targetBody,const IO::SDK::Time::TimeSpan& stepSize,const IO::SDK::AberrationsEnum& aberration) const;
+		std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>> FindWindowsWhereInFieldOfView(const IO::SDK::Time::Window<IO::SDK::Time::TDB>& searchWindow,const IO::SDK::Body::Body& targetBody,const IO::SDK::Time::TimeSpan& stepSize,const IO::SDK::AberrationsEnum& aberration) const;
 
 		friend class IO::SDK::Body::Spacecraft::Spacecraft;
 	};

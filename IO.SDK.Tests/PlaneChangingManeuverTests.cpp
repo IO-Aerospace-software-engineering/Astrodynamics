@@ -416,7 +416,7 @@ TEST(PlaneChangingManeuver, CheckOrbitalParametersToHigherInclination)
 
     ASSERT_DOUBLE_EQ(6700004.1067949599, p);
 
-    ASSERT_DOUBLE_EQ(0.10001034044290764, e);
+    ASSERT_NEAR(0.10001034044290764, e,1e-09);
 
     ASSERT_DOUBLE_EQ(54.999995365922835, i);
 
@@ -424,7 +424,7 @@ TEST(PlaneChangingManeuver, CheckOrbitalParametersToHigherInclination)
 
 #ifdef _WIN32
 
-    ASSERT_DOUBLE_EQ(9.9879515017487623, w);
+    ASSERT_DOUBLE_EQ(9.9879515017488565, w);
 #else
     ASSERT_DOUBLE_EQ(9.9879515017487588, w);
 #endif

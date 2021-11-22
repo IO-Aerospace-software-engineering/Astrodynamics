@@ -117,7 +117,7 @@ std::vector<IO::SDK::Math::Vector3D> IO::SDK::Instruments::Instrument::GetFOVBou
 	return res;
 }
 
-std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>> IO::SDK::Instruments::Instrument::FindWindowsWhereInFieldOfView(const IO::SDK::Time::Window<IO::SDK::Time::TDB> searchWindow, const IO::SDK::Body::Body &targetBody, const IO::SDK::Time::TimeSpan &stepSize, const IO::SDK::AberrationsEnum &aberration) const
+std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>> IO::SDK::Instruments::Instrument::FindWindowsWhereInFieldOfView(const IO::SDK::Time::Window<IO::SDK::Time::TDB>& searchWindow, const IO::SDK::Body::Body &targetBody, const IO::SDK::Time::TimeSpan &stepSize, const IO::SDK::AberrationsEnum &aberration) const
 {
 	std::string shape{"POINT"};
 	std::string frame{""};
@@ -135,7 +135,7 @@ std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>> IO::SDK::Instruments::Ins
 
 	Aberrations abe;
 
-	const SpiceInt MAXWIN{200000};
+	const SpiceInt MAXWIN{20000};
 
 	SpiceDouble SPICE_CELL_OCCLT[SPICE_CELL_CTRLSZ + MAXWIN];
 	SpiceCell cnfine = IO::SDK::Spice::Builder::CreateDoubleCell(MAXWIN, SPICE_CELL_OCCLT);
