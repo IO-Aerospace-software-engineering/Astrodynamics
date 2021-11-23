@@ -1,0 +1,187 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - coverage.info - IO.SDK.Tests/QuaternionTests.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">IO.SDK.Tests</a> - QuaternionTests.cpp<span style="font-size: 80%;"> (source / <a href="QuaternionTests.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">coverage.info</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">77</td>
+            <td class="headerCovTableEntry">77</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2021-11-23 16:38:32</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">28</td>
+            <td class="headerCovTableEntry">28</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : #include &lt;gtest/gtest.h&gt;</a>
+<a name="2"><span class="lineNum">       2 </span>            : #include &lt;Quaternion.h&gt;</a>
+<a name="3"><span class="lineNum">       3 </span>            : #include &lt;Constants.h&gt;</a>
+<a name="4"><span class="lineNum">       4 </span>            : </a>
+<a name="5"><span class="lineNum">       5 </span><span class="lineCov">          4 : TEST(Quaternion, Initialization)</span></a>
+<a name="6"><span class="lineNum">       6 </span>            : {</a>
+<a name="7"><span class="lineNum">       7 </span><span class="lineCov">          1 :         IO::SDK::Math::Quaternion q(1.0, 2.0, 3.0, 4.0);</span></a>
+<a name="8"><span class="lineNum">       8 </span><span class="lineCov">          1 :         ASSERT_DOUBLE_EQ(1.0, q.GetQ0());</span></a>
+<a name="9"><span class="lineNum">       9 </span><span class="lineCov">          1 :         ASSERT_DOUBLE_EQ(2.0, q.GetQ1());</span></a>
+<a name="10"><span class="lineNum">      10 </span><span class="lineCov">          1 :         ASSERT_DOUBLE_EQ(3.0, q.GetQ2());</span></a>
+<a name="11"><span class="lineNum">      11 </span><span class="lineCov">          1 :         ASSERT_DOUBLE_EQ(4.0, q.GetQ3());</span></a>
+<a name="12"><span class="lineNum">      12 </span>            : </a>
+<a name="13"><span class="lineNum">      13 </span><span class="lineCov">          1 :         IO::SDK::Math::Quaternion qx({1.0, 0.0, 0.0}, IO::SDK::Constants::DEG_RAD * 40.0);</span></a>
+<a name="14"><span class="lineNum">      14 </span><span class="lineCov">          1 :         ASSERT_DOUBLE_EQ(0.93969262078590843, qx.GetQ0());</span></a>
+<a name="15"><span class="lineNum">      15 </span><span class="lineCov">          1 :         ASSERT_DOUBLE_EQ(0.34202014332566871, qx.GetQ1());</span></a>
+<a name="16"><span class="lineNum">      16 </span><span class="lineCov">          1 :         ASSERT_DOUBLE_EQ(0.0, qx.GetQ2());</span></a>
+<a name="17"><span class="lineNum">      17 </span><span class="lineCov">          1 :         ASSERT_DOUBLE_EQ(0.0, qx.GetQ3());</span></a>
+<a name="18"><span class="lineNum">      18 </span>            : </a>
+<a name="19"><span class="lineNum">      19 </span><span class="lineCov">          1 :         IO::SDK::Math::Quaternion qy({0.0, 1.0, 0.0}, IO::SDK::Constants::DEG_RAD * 40.0);</span></a>
+<a name="20"><span class="lineNum">      20 </span><span class="lineCov">          1 :         ASSERT_DOUBLE_EQ(0.93969262078590843, qy.GetQ0());</span></a>
+<a name="21"><span class="lineNum">      21 </span><span class="lineCov">          1 :         ASSERT_DOUBLE_EQ(0.0, qy.GetQ1());</span></a>
+<a name="22"><span class="lineNum">      22 </span><span class="lineCov">          1 :         ASSERT_DOUBLE_EQ(0.34202014332566871, qy.GetQ2());</span></a>
+<a name="23"><span class="lineNum">      23 </span><span class="lineCov">          1 :         ASSERT_DOUBLE_EQ(0.0, qy.GetQ3());</span></a>
+<a name="24"><span class="lineNum">      24 </span>            : </a>
+<a name="25"><span class="lineNum">      25 </span><span class="lineCov">          1 :         IO::SDK::Math::Quaternion qz({0.0, 0.0, 1.0}, IO::SDK::Constants::DEG_RAD * 40.0);</span></a>
+<a name="26"><span class="lineNum">      26 </span><span class="lineCov">          1 :         ASSERT_DOUBLE_EQ(0.93969262078590843, qz.GetQ0());</span></a>
+<a name="27"><span class="lineNum">      27 </span><span class="lineCov">          1 :         ASSERT_DOUBLE_EQ(0.0, qz.GetQ1());</span></a>
+<a name="28"><span class="lineNum">      28 </span><span class="lineCov">          1 :         ASSERT_DOUBLE_EQ(0.0, qz.GetQ2());</span></a>
+<a name="29"><span class="lineNum">      29 </span><span class="lineCov">          1 :         ASSERT_DOUBLE_EQ(0.34202014332566871, qz.GetQ3());</span></a>
+<a name="30"><span class="lineNum">      30 </span>            : </a>
+<a name="31"><span class="lineNum">      31 </span><span class="lineCov">          1 :         IO::SDK::Math::Quaternion qall(IO::SDK::Math::Vector3D(1.0, 1.0, 1.0).Normalize(), IO::SDK::Constants::DEG_RAD * 40.0);</span></a>
+<a name="32"><span class="lineNum">      32 </span><span class="lineCov">          1 :         ASSERT_DOUBLE_EQ(0.93969262078590843, qall.GetQ0());</span></a>
+<a name="33"><span class="lineNum">      33 </span><span class="lineCov">          1 :         ASSERT_DOUBLE_EQ(0.19746542181734925, qall.GetQ1());</span></a>
+<a name="34"><span class="lineNum">      34 </span><span class="lineCov">          1 :         ASSERT_DOUBLE_EQ(0.19746542181734925, qall.GetQ2());</span></a>
+<a name="35"><span class="lineNum">      35 </span><span class="lineCov">          1 :         ASSERT_DOUBLE_EQ(0.19746542181734925, qall.GetQ3());</span></a>
+<a name="36"><span class="lineNum">      36 </span>            : }</a>
+<a name="37"><span class="lineNum">      37 </span>            : </a>
+<a name="38"><span class="lineNum">      38 </span><span class="lineCov">          4 : TEST(Quaternion, Multiply)</span></a>
+<a name="39"><span class="lineNum">      39 </span>            : {</a>
+<a name="40"><span class="lineNum">      40 </span><span class="lineCov">          1 :         IO::SDK::Math::Quaternion qx({1.0, 0.0, 0.0}, IO::SDK::Constants::DEG_RAD * 40.0);</span></a>
+<a name="41"><span class="lineNum">      41 </span><span class="lineCov">          1 :         IO::SDK::Math::Quaternion qy({0.0, 1.0, 0.0}, IO::SDK::Constants::DEG_RAD * 40.0);</span></a>
+<a name="42"><span class="lineNum">      42 </span>            : </a>
+<a name="43"><span class="lineNum">      43 </span><span class="lineCov">          1 :         auto qres = qx * qy;</span></a>
+<a name="44"><span class="lineNum">      44 </span><span class="lineCov">          1 :         ASSERT_DOUBLE_EQ(0.88302222155948906, qres.GetQ0());</span></a>
+<a name="45"><span class="lineNum">      45 </span><span class="lineCov">          1 :         ASSERT_DOUBLE_EQ(0.32139380484326968, qres.GetQ1());</span></a>
+<a name="46"><span class="lineNum">      46 </span><span class="lineCov">          1 :         ASSERT_DOUBLE_EQ(0.32139380484326968, qres.GetQ2());</span></a>
+<a name="47"><span class="lineNum">      47 </span><span class="lineCov">          1 :         ASSERT_DOUBLE_EQ(0.11697777844051097, qres.GetQ3());</span></a>
+<a name="48"><span class="lineNum">      48 </span>            : </a>
+<a name="49"><span class="lineNum">      49 </span><span class="lineCov">          1 :         qres = qx.Multiply(qy);</span></a>
+<a name="50"><span class="lineNum">      50 </span><span class="lineCov">          1 :         ASSERT_DOUBLE_EQ(0.88302222155948906, qres.GetQ0());</span></a>
+<a name="51"><span class="lineNum">      51 </span><span class="lineCov">          1 :         ASSERT_DOUBLE_EQ(0.32139380484326968, qres.GetQ1());</span></a>
+<a name="52"><span class="lineNum">      52 </span><span class="lineCov">          1 :         ASSERT_DOUBLE_EQ(0.32139380484326968, qres.GetQ2());</span></a>
+<a name="53"><span class="lineNum">      53 </span><span class="lineCov">          1 :         ASSERT_DOUBLE_EQ(0.11697777844051097, qres.GetQ3());</span></a>
+<a name="54"><span class="lineNum">      54 </span>            : }</a>
+<a name="55"><span class="lineNum">      55 </span>            : </a>
+<a name="56"><span class="lineNum">      56 </span><span class="lineCov">          4 : TEST(Quaternion, GetMatrix)</span></a>
+<a name="57"><span class="lineNum">      57 </span>            : {</a>
+<a name="58"><span class="lineNum">      58 </span><span class="lineCov">          1 :         IO::SDK::Math::Quaternion qx(IO::SDK::Math::Vector3D(1.0, 0.0, 1.0).Normalize(), IO::SDK::Constants::DEG_RAD * 40.0);</span></a>
+<a name="59"><span class="lineNum">      59 </span>            : </a>
+<a name="60"><span class="lineNum">      60 </span><span class="lineCov">          1 :         auto mtx = qx.GetMatrix();</span></a>
+<a name="61"><span class="lineNum">      61 </span><span class="lineCov">          1 :         ASSERT_DOUBLE_EQ(0.88302222155948906, mtx.GetValue(0, 0));</span></a>
+<a name="62"><span class="lineNum">      62 </span><span class="lineCov">          1 :         ASSERT_DOUBLE_EQ(-0.45451947767204359, mtx.GetValue(0, 1));</span></a>
+<a name="63"><span class="lineNum">      63 </span><span class="lineCov">          1 :         ASSERT_DOUBLE_EQ(0.11697777844051094, mtx.GetValue(0, 2));</span></a>
+<a name="64"><span class="lineNum">      64 </span><span class="lineCov">          1 :         ASSERT_DOUBLE_EQ(0.45451947767204359, mtx.GetValue(1, 0));</span></a>
+<a name="65"><span class="lineNum">      65 </span><span class="lineCov">          1 :         ASSERT_DOUBLE_EQ(0.76604444311897812, mtx.GetValue(1, 1));</span></a>
+<a name="66"><span class="lineNum">      66 </span><span class="lineCov">          1 :         ASSERT_DOUBLE_EQ(-0.45451947767204359, mtx.GetValue(1, 2));</span></a>
+<a name="67"><span class="lineNum">      67 </span><span class="lineCov">          1 :         ASSERT_DOUBLE_EQ(0.11697777844051094, mtx.GetValue(2, 0));</span></a>
+<a name="68"><span class="lineNum">      68 </span><span class="lineCov">          1 :         ASSERT_DOUBLE_EQ(0.45451947767204359, mtx.GetValue(2, 1));</span></a>
+<a name="69"><span class="lineNum">      69 </span><span class="lineCov">          1 :         ASSERT_DOUBLE_EQ(0.88302222155948906, mtx.GetValue(2, 2));</span></a>
+<a name="70"><span class="lineNum">      70 </span>            : }</a>
+<a name="71"><span class="lineNum">      71 </span>            : </a>
+<a name="72"><span class="lineNum">      72 </span><span class="lineCov">          4 : TEST(Quaternion, Magnitude)</span></a>
+<a name="73"><span class="lineNum">      73 </span>            : {</a>
+<a name="74"><span class="lineNum">      74 </span><span class="lineCov">          1 :         IO::SDK::Math::Quaternion qx(IO::SDK::Constants::DEG_RAD * 40.0, 2.0, 2.0, 2.0);</span></a>
+<a name="75"><span class="lineNum">      75 </span>            : </a>
+<a name="76"><span class="lineNum">      76 </span><span class="lineCov">          1 :         auto res = qx.Magnitude();</span></a>
+<a name="77"><span class="lineNum">      77 </span><span class="lineCov">          1 :         ASSERT_DOUBLE_EQ(3.5337498315045921, res);</span></a>
+<a name="78"><span class="lineNum">      78 </span>            : }</a>
+<a name="79"><span class="lineNum">      79 </span>            : </a>
+<a name="80"><span class="lineNum">      80 </span><span class="lineCov">          4 : TEST(Quaternion, Normalize)</span></a>
+<a name="81"><span class="lineNum">      81 </span>            : {</a>
+<a name="82"><span class="lineNum">      82 </span><span class="lineCov">          1 :         IO::SDK::Math::Quaternion qx(IO::SDK::Constants::DEG_RAD * 40.0, 2.0, 2.0, 2.0);</span></a>
+<a name="83"><span class="lineNum">      83 </span>            : </a>
+<a name="84"><span class="lineNum">      84 </span><span class="lineCov">          1 :         auto res = qx.Normalize();</span></a>
+<a name="85"><span class="lineNum">      85 </span><span class="lineCov">          1 :         ASSERT_DOUBLE_EQ(0.19756115573707231, res.GetQ0());</span></a>
+<a name="86"><span class="lineNum">      86 </span><span class="lineCov">          1 :         ASSERT_DOUBLE_EQ(0.56597102097305074, res.GetQ1());</span></a>
+<a name="87"><span class="lineNum">      87 </span><span class="lineCov">          1 :         ASSERT_DOUBLE_EQ(0.56597102097305074, res.GetQ2());</span></a>
+<a name="88"><span class="lineNum">      88 </span><span class="lineCov">          1 :         ASSERT_DOUBLE_EQ(0.56597102097305074, res.GetQ3());</span></a>
+<a name="89"><span class="lineNum">      89 </span>            : }</a>
+<a name="90"><span class="lineNum">      90 </span>            : </a>
+<a name="91"><span class="lineNum">      91 </span><span class="lineCov">          4 : TEST(Quaternion, Conjugate)</span></a>
+<a name="92"><span class="lineNum">      92 </span>            : {</a>
+<a name="93"><span class="lineNum">      93 </span><span class="lineCov">          1 :         IO::SDK::Math::Quaternion qx(IO::SDK::Constants::DEG_RAD * 40.0, 2.0, 2.0, 2.0);</span></a>
+<a name="94"><span class="lineNum">      94 </span>            : </a>
+<a name="95"><span class="lineNum">      95 </span><span class="lineCov">          1 :         auto res = qx.Conjugate();</span></a>
+<a name="96"><span class="lineNum">      96 </span><span class="lineCov">          1 :         ASSERT_DOUBLE_EQ(IO::SDK::Constants::DEG_RAD * 40.0, res.GetQ0());</span></a>
+<a name="97"><span class="lineNum">      97 </span><span class="lineCov">          1 :         ASSERT_DOUBLE_EQ(-2.0, res.GetQ1());</span></a>
+<a name="98"><span class="lineNum">      98 </span><span class="lineCov">          1 :         ASSERT_DOUBLE_EQ(-2.0, res.GetQ2());</span></a>
+<a name="99"><span class="lineNum">      99 </span><span class="lineCov">          1 :         ASSERT_DOUBLE_EQ(-2.0, res.GetQ3());</span></a>
+<a name="100"><span class="lineNum">     100 </span>            : }</a>
+<a name="101"><span class="lineNum">     101 </span>            : </a>
+<a name="102"><span class="lineNum">     102 </span><span class="lineCov">          4 : TEST(Quaternion, Assignment)</span></a>
+<a name="103"><span class="lineNum">     103 </span>            : {</a>
+<a name="104"><span class="lineNum">     104 </span><span class="lineCov">          1 :         IO::SDK::Math::Quaternion q(1.0, 2.0, 3.0, 4.0);</span></a>
+<a name="105"><span class="lineNum">     105 </span><span class="lineCov">          1 :         IO::SDK::Math::Quaternion q2(9.0, 7.0, 43.0, 1.0);</span></a>
+<a name="106"><span class="lineNum">     106 </span><span class="lineCov">          1 :         q2 = q;</span></a>
+<a name="107"><span class="lineNum">     107 </span><span class="lineCov">          1 :         ASSERT_DOUBLE_EQ(1.0, q2.GetQ0());</span></a>
+<a name="108"><span class="lineNum">     108 </span><span class="lineCov">          1 :         ASSERT_DOUBLE_EQ(2.0, q2.GetQ1());</span></a>
+<a name="109"><span class="lineNum">     109 </span><span class="lineCov">          1 :         ASSERT_DOUBLE_EQ(3.0, q2.GetQ2());</span></a>
+<a name="110"><span class="lineNum">     110 </span><span class="lineCov">          1 :         ASSERT_DOUBLE_EQ(4.0, q2.GetQ3());</span></a>
+<a name="111"><span class="lineNum">     111 </span>            : }</a>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.14</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>
