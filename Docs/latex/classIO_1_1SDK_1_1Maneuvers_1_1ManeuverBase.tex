@@ -25,13 +25,19 @@ virtual bool \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase_a5aa0c
 \mbox{\hyperlink{structIO_1_1SDK_1_1Maneuvers_1_1ManeuverResult}{IO\+::\+SDK\+::\+Maneuvers\+::\+Maneuver\+Result}} \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase_a0cd50901e65b4dd6aeb53e439f3cbe95}{Try\+Execute}} (const \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}} \&maneuver\+Point)
 \begin{DoxyCompactList}\small\item\em Try to execute maneuver at maneuver point. \end{DoxyCompactList}\item 
 \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO\+::\+SDK\+::\+Time\+::\+Window}}$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} $>$ $\ast$ \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase_ac2f09cb89dda1eca99e730403db94211}{Get\+Thrust\+Window}} () const
-\begin{DoxyCompactList}\small\item\em Get the maneuver window. \end{DoxyCompactList}\item 
+\begin{DoxyCompactList}\small\item\em Get the thrust window. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO\+::\+SDK\+::\+Time\+::\+Window}}$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} $>$ $\ast$ \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase_a1c30f26398b3d43de365b5f91cac150d}{Get\+Attitude\+Window}} () const
+\begin{DoxyCompactList}\small\item\em Get the attitude window. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO\+::\+SDK\+::\+Time\+::\+Window}}$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} $>$ $\ast$ \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase_aebd09e68febba286a736389c09c0d819}{Get\+Maneuver\+Window}} () const
+\begin{DoxyCompactList}\small\item\em Get the maneuver window. Maneuver window start at burn and end when the maneuver is completed. \end{DoxyCompactList}\item 
 double \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase_a5101aadb6cde34bd57057ff3561cbe6c}{Get\+Fuel\+Burned}} () const
 \begin{DoxyCompactList}\small\item\em Get the Fuel Burned in kg. \end{DoxyCompactList}\item 
 \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO\+::\+SDK\+::\+Time\+::\+Time\+Span}} \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase_ae0f12c4f4bfe674582064c5d1b81e641}{Get\+Thrust\+Duration}} () const
 \begin{DoxyCompactList}\small\item\em Get the Thrust duration. \end{DoxyCompactList}\item 
 \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO\+::\+SDK\+::\+Math\+::\+Vector3D}} \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase_afa17b51d0c2bb7bd8f5abd2645664be8}{Get\+DeltaV}} () const
-\begin{DoxyCompactList}\small\item\em Get the maneuver delta V. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\begin{DoxyCompactList}\small\item\em Get the maneuver delta V. \end{DoxyCompactList}\item 
+virtual \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase}{IO\+::\+SDK\+::\+Maneuvers\+::\+Maneuver\+Base}} \& \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase_a691f1a798e4cb01b9a0bb3dac42452f8}{Set\+Next\+Maneuver}} (\mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase}{IO\+::\+SDK\+::\+Maneuvers\+::\+Maneuver\+Base}} \&maneuver)
+\begin{DoxyCompactList}\small\item\em Set the Next Maneuver object. \end{DoxyCompactList}\end{DoxyCompactItemize}
 \doxysubsection*{Protected Member Functions}
 \begin{DoxyCompactItemize}
 \item 
@@ -57,7 +63,7 @@ std\+::unique\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO\
 std\+::unique\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO\+::\+SDK\+::\+Math\+::\+Vector3D}} $>$ {\bfseries m\+\_\+deltaV} \{\}
 \item 
 \mbox{\Hypertarget{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase_ab67455f45086e468ae07ba9d3c65f81a}\label{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase_ab67455f45086e468ae07ba9d3c65f81a}} 
-\mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO\+::\+SDK\+::\+Time\+::\+Time\+Span}} {\bfseries m\+\_\+thrust\+Duration} \{\}
+\mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO\+::\+SDK\+::\+Time\+::\+Time\+Span}} {\bfseries m\+\_\+thrust\+Duration} \{0.\+0s\}
 \item 
 \mbox{\Hypertarget{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase_a1b8aa4e7f5899e450c254036483a889c}\label{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase_a1b8aa4e7f5899e450c254036483a889c}} 
 double {\bfseries m\+\_\+fuel\+Burned} \{\}
@@ -88,6 +94,9 @@ std\+::set$<$ const \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Fue
 \item 
 \mbox{\Hypertarget{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase_a7d9396c9cbe3b08068e1572f38a5da65}\label{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase_a7d9396c9cbe3b08068e1572f38a5da65}} 
 std\+::map$<$ const \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1FuelTank}{IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Fuel\+Tank}} $\ast$, \mbox{\hyperlink{structIO_1_1SDK_1_1Maneuvers_1_1DynamicFuelTank}{IO\+::\+SDK\+::\+Maneuvers\+::\+Dynamic\+Fuel\+Tank}} $>$ {\bfseries m\+\_\+dynamic\+Fuel\+Tanks}
+\item 
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase_aa6daf0173ab368b0a90eebd402700804}\label{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase_aa6daf0173ab368b0a90eebd402700804}} 
+\mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO\+::\+SDK\+::\+Time\+::\+Time\+Span}} {\bfseries m\+\_\+maneuver\+Hold\+Duration} \{0.\+0s\}
 \end{DoxyCompactItemize}
 
 
@@ -192,7 +201,7 @@ false
 \end{DoxyReturn}
 
 
-Implemented in \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ApogeeHeightChangingManeuver_a9ea7346a9c11f2ede41982a0f6761705}{IO\+::\+SDK\+::\+Maneuvers\+::\+Apogee\+Height\+Changing\+Maneuver}}, \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ApsidalAlignmentManeuver_abccf6c20c8266615d3d9f0edc424cdf0}{IO\+::\+SDK\+::\+Maneuvers\+::\+Apsidal\+Alignment\+Maneuver}}, \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1Attitudes_1_1NadirAttitude_a9f7b6b754fcf56017f44c1499a3decb1}{IO\+::\+SDK\+::\+Maneuvers\+::\+Attitudes\+::\+Nadir\+Attitude}}, \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1Attitudes_1_1ProgradeAttitude_acc05df379c165ce5052799888f9e3719}{IO\+::\+SDK\+::\+Maneuvers\+::\+Attitudes\+::\+Prograde\+Attitude}}, \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1Attitudes_1_1RetrogradeAttitude_ace8726c7e00edf44bb790be5050a7f24}{IO\+::\+SDK\+::\+Maneuvers\+::\+Attitudes\+::\+Retrograde\+Attitude}}, \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1Attitudes_1_1TowardObjectAttitude_a8d3620611d4b1983dfc2a15fbb9b1128}{IO\+::\+SDK\+::\+Maneuvers\+::\+Attitudes\+::\+Toward\+Object\+Attitude}}, \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1Attitudes_1_1ZenithAttitude_a02199451b76c086541d3a99f5032ed84}{IO\+::\+SDK\+::\+Maneuvers\+::\+Attitudes\+::\+Zenith\+Attitude}}, \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1CombinedManeuver_a8e0b5838b45f0ab7abb381214eba5159}{IO\+::\+SDK\+::\+Maneuvers\+::\+Combined\+Maneuver}}, \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1OrbitalPlaneChangingManeuver_a62c42ad79ae57ceb86a639a4909d8ae5}{IO\+::\+SDK\+::\+Maneuvers\+::\+Orbital\+Plane\+Changing\+Maneuver}}, \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1PerigeeHeightChangingManeuver_a65ecf4a5bd8e1caa9f2d3fdcef625b3b}{IO\+::\+SDK\+::\+Maneuvers\+::\+Perigee\+Height\+Changing\+Maneuver}}, and \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1PhasingManeuver_afc6d51d3f4236c3774ec6a3a4da38d7a}{IO\+::\+SDK\+::\+Maneuvers\+::\+Phasing\+Maneuver}}.
+Implemented in \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1PhasingManeuver_afc6d51d3f4236c3774ec6a3a4da38d7a}{IO\+::\+SDK\+::\+Maneuvers\+::\+Phasing\+Maneuver}}, \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1PerigeeHeightChangingManeuver_a65ecf4a5bd8e1caa9f2d3fdcef625b3b}{IO\+::\+SDK\+::\+Maneuvers\+::\+Perigee\+Height\+Changing\+Maneuver}}, \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1OrbitalPlaneChangingManeuver_a62c42ad79ae57ceb86a639a4909d8ae5}{IO\+::\+SDK\+::\+Maneuvers\+::\+Orbital\+Plane\+Changing\+Maneuver}}, \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1CombinedManeuver_a8e0b5838b45f0ab7abb381214eba5159}{IO\+::\+SDK\+::\+Maneuvers\+::\+Combined\+Maneuver}}, \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1Attitudes_1_1ZenithAttitude_a02199451b76c086541d3a99f5032ed84}{IO\+::\+SDK\+::\+Maneuvers\+::\+Attitudes\+::\+Zenith\+Attitude}}, \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1Attitudes_1_1TowardObjectAttitude_a8d3620611d4b1983dfc2a15fbb9b1128}{IO\+::\+SDK\+::\+Maneuvers\+::\+Attitudes\+::\+Toward\+Object\+Attitude}}, \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1Attitudes_1_1RetrogradeAttitude_ace8726c7e00edf44bb790be5050a7f24}{IO\+::\+SDK\+::\+Maneuvers\+::\+Attitudes\+::\+Retrograde\+Attitude}}, \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1Attitudes_1_1ProgradeAttitude_acc05df379c165ce5052799888f9e3719}{IO\+::\+SDK\+::\+Maneuvers\+::\+Attitudes\+::\+Prograde\+Attitude}}, \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1Attitudes_1_1NadirAttitude_a9f7b6b754fcf56017f44c1499a3decb1}{IO\+::\+SDK\+::\+Maneuvers\+::\+Attitudes\+::\+Nadir\+Attitude}}, \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ApsidalAlignmentManeuver_abccf6c20c8266615d3d9f0edc424cdf0}{IO\+::\+SDK\+::\+Maneuvers\+::\+Apsidal\+Alignment\+Maneuver}}, and \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ApogeeHeightChangingManeuver_a9ea7346a9c11f2ede41982a0f6761705}{IO\+::\+SDK\+::\+Maneuvers\+::\+Apogee\+Height\+Changing\+Maneuver}}.
 
 \mbox{\Hypertarget{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase_a3d206dbe0f7f5ad8b18e0601f154e873}\label{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase_a3d206dbe0f7f5ad8b18e0601f154e873}} 
 \index{IO::SDK::Maneuvers::ManeuverBase@{IO::SDK::Maneuvers::ManeuverBase}!Compute@{Compute}}
@@ -211,7 +220,7 @@ Compute impulsive maneuver.
 \end{DoxyParams}
 
 
-Implemented in \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ApogeeHeightChangingManeuver_ace55130cf9da0835630d59876d160d77}{IO\+::\+SDK\+::\+Maneuvers\+::\+Apogee\+Height\+Changing\+Maneuver}}, \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ApsidalAlignmentManeuver_a3678b43d7f32de52bca3b97a3c68c046}{IO\+::\+SDK\+::\+Maneuvers\+::\+Apsidal\+Alignment\+Maneuver}}, \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1Attitudes_1_1NadirAttitude_a4001fc23a9f67eb3be581b0322e5907c}{IO\+::\+SDK\+::\+Maneuvers\+::\+Attitudes\+::\+Nadir\+Attitude}}, \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1Attitudes_1_1ProgradeAttitude_a225c851079cdcaa986ba9eb715c2994c}{IO\+::\+SDK\+::\+Maneuvers\+::\+Attitudes\+::\+Prograde\+Attitude}}, \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1Attitudes_1_1RetrogradeAttitude_ad96bb05dd539d40d01139b9c06fb972d}{IO\+::\+SDK\+::\+Maneuvers\+::\+Attitudes\+::\+Retrograde\+Attitude}}, \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1Attitudes_1_1TowardObjectAttitude_aa434bb37713a5a45791625ecff25fe90}{IO\+::\+SDK\+::\+Maneuvers\+::\+Attitudes\+::\+Toward\+Object\+Attitude}}, \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1Attitudes_1_1ZenithAttitude_abcc5ebba2edb760cc3d08e8dbc6a9e60}{IO\+::\+SDK\+::\+Maneuvers\+::\+Attitudes\+::\+Zenith\+Attitude}}, \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1CombinedManeuver_a40963ff9fa4aff926dcbbe5e3b96e946}{IO\+::\+SDK\+::\+Maneuvers\+::\+Combined\+Maneuver}}, \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1OrbitalPlaneChangingManeuver_aceb2eb7b1264d8014e0f05d97962885c}{IO\+::\+SDK\+::\+Maneuvers\+::\+Orbital\+Plane\+Changing\+Maneuver}}, \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1PerigeeHeightChangingManeuver_a8c067bea765699c058a5f812e90ca2d5}{IO\+::\+SDK\+::\+Maneuvers\+::\+Perigee\+Height\+Changing\+Maneuver}}, and \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1PhasingManeuver_a355d84f389b2632194c0c75963a6bd3b}{IO\+::\+SDK\+::\+Maneuvers\+::\+Phasing\+Maneuver}}.
+Implemented in \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1PhasingManeuver_a355d84f389b2632194c0c75963a6bd3b}{IO\+::\+SDK\+::\+Maneuvers\+::\+Phasing\+Maneuver}}, \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1PerigeeHeightChangingManeuver_a8c067bea765699c058a5f812e90ca2d5}{IO\+::\+SDK\+::\+Maneuvers\+::\+Perigee\+Height\+Changing\+Maneuver}}, \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1OrbitalPlaneChangingManeuver_aceb2eb7b1264d8014e0f05d97962885c}{IO\+::\+SDK\+::\+Maneuvers\+::\+Orbital\+Plane\+Changing\+Maneuver}}, \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1CombinedManeuver_a40963ff9fa4aff926dcbbe5e3b96e946}{IO\+::\+SDK\+::\+Maneuvers\+::\+Combined\+Maneuver}}, \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1Attitudes_1_1ZenithAttitude_abcc5ebba2edb760cc3d08e8dbc6a9e60}{IO\+::\+SDK\+::\+Maneuvers\+::\+Attitudes\+::\+Zenith\+Attitude}}, \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1Attitudes_1_1TowardObjectAttitude_aa434bb37713a5a45791625ecff25fe90}{IO\+::\+SDK\+::\+Maneuvers\+::\+Attitudes\+::\+Toward\+Object\+Attitude}}, \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1Attitudes_1_1RetrogradeAttitude_ad96bb05dd539d40d01139b9c06fb972d}{IO\+::\+SDK\+::\+Maneuvers\+::\+Attitudes\+::\+Retrograde\+Attitude}}, \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1Attitudes_1_1ProgradeAttitude_a225c851079cdcaa986ba9eb715c2994c}{IO\+::\+SDK\+::\+Maneuvers\+::\+Attitudes\+::\+Prograde\+Attitude}}, \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1Attitudes_1_1NadirAttitude_a4001fc23a9f67eb3be581b0322e5907c}{IO\+::\+SDK\+::\+Maneuvers\+::\+Attitudes\+::\+Nadir\+Attitude}}, \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ApsidalAlignmentManeuver_a3678b43d7f32de52bca3b97a3c68c046}{IO\+::\+SDK\+::\+Maneuvers\+::\+Apsidal\+Alignment\+Maneuver}}, and \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ApogeeHeightChangingManeuver_ace55130cf9da0835630d59876d160d77}{IO\+::\+SDK\+::\+Maneuvers\+::\+Apogee\+Height\+Changing\+Maneuver}}.
 
 \mbox{\Hypertarget{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase_a2339b5313d34fe2d7bf474f645030bc5}\label{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase_a2339b5313d34fe2d7bf474f645030bc5}} 
 \index{IO::SDK::Maneuvers::ManeuverBase@{IO::SDK::Maneuvers::ManeuverBase}!ComputeOrientation@{ComputeOrientation}}
@@ -233,8 +242,21 @@ Compute orientation.
 \end{DoxyReturn}
 
 
-Implemented in \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ApogeeHeightChangingManeuver_a0420e3c596bf0950af745dc8ffc2dd83}{IO\+::\+SDK\+::\+Maneuvers\+::\+Apogee\+Height\+Changing\+Maneuver}}, \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ApsidalAlignmentManeuver_a446d463805067fec8ca3e1926b30553c}{IO\+::\+SDK\+::\+Maneuvers\+::\+Apsidal\+Alignment\+Maneuver}}, \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1Attitudes_1_1NadirAttitude_ad6c8b02e0d98d55a3f047a67638261cd}{IO\+::\+SDK\+::\+Maneuvers\+::\+Attitudes\+::\+Nadir\+Attitude}}, \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1Attitudes_1_1ProgradeAttitude_a794ab49935a4feced62692674ea8109d}{IO\+::\+SDK\+::\+Maneuvers\+::\+Attitudes\+::\+Prograde\+Attitude}}, \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1Attitudes_1_1RetrogradeAttitude_a8f938d701ccc27bd757bd1017e3561c7}{IO\+::\+SDK\+::\+Maneuvers\+::\+Attitudes\+::\+Retrograde\+Attitude}}, \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1Attitudes_1_1TowardObjectAttitude_a2296926c7cc97c3d118181b802f3720c}{IO\+::\+SDK\+::\+Maneuvers\+::\+Attitudes\+::\+Toward\+Object\+Attitude}}, \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1Attitudes_1_1ZenithAttitude_adb59be8151c3be823650ed5a0f1d16f4}{IO\+::\+SDK\+::\+Maneuvers\+::\+Attitudes\+::\+Zenith\+Attitude}}, \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1CombinedManeuver_aa1430b3b1b33863ce6c7082dc8cb294f}{IO\+::\+SDK\+::\+Maneuvers\+::\+Combined\+Maneuver}}, \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1OrbitalPlaneChangingManeuver_a7472c24685a1eea73ff6bb7253f084ef}{IO\+::\+SDK\+::\+Maneuvers\+::\+Orbital\+Plane\+Changing\+Maneuver}}, \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1PerigeeHeightChangingManeuver_ad728f1a93ea87372db5dc95720889ce6}{IO\+::\+SDK\+::\+Maneuvers\+::\+Perigee\+Height\+Changing\+Maneuver}}, and \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1PhasingManeuver_a67e84783cd78806ceb55385e53828841}{IO\+::\+SDK\+::\+Maneuvers\+::\+Phasing\+Maneuver}}.
+Implemented in \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1PhasingManeuver_a67e84783cd78806ceb55385e53828841}{IO\+::\+SDK\+::\+Maneuvers\+::\+Phasing\+Maneuver}}, \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1PerigeeHeightChangingManeuver_ad728f1a93ea87372db5dc95720889ce6}{IO\+::\+SDK\+::\+Maneuvers\+::\+Perigee\+Height\+Changing\+Maneuver}}, \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1OrbitalPlaneChangingManeuver_a7472c24685a1eea73ff6bb7253f084ef}{IO\+::\+SDK\+::\+Maneuvers\+::\+Orbital\+Plane\+Changing\+Maneuver}}, \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1CombinedManeuver_aa1430b3b1b33863ce6c7082dc8cb294f}{IO\+::\+SDK\+::\+Maneuvers\+::\+Combined\+Maneuver}}, \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1Attitudes_1_1ZenithAttitude_adb59be8151c3be823650ed5a0f1d16f4}{IO\+::\+SDK\+::\+Maneuvers\+::\+Attitudes\+::\+Zenith\+Attitude}}, \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1Attitudes_1_1TowardObjectAttitude_a2296926c7cc97c3d118181b802f3720c}{IO\+::\+SDK\+::\+Maneuvers\+::\+Attitudes\+::\+Toward\+Object\+Attitude}}, \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1Attitudes_1_1RetrogradeAttitude_a8f938d701ccc27bd757bd1017e3561c7}{IO\+::\+SDK\+::\+Maneuvers\+::\+Attitudes\+::\+Retrograde\+Attitude}}, \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1Attitudes_1_1ProgradeAttitude_a794ab49935a4feced62692674ea8109d}{IO\+::\+SDK\+::\+Maneuvers\+::\+Attitudes\+::\+Prograde\+Attitude}}, \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1Attitudes_1_1NadirAttitude_ad6c8b02e0d98d55a3f047a67638261cd}{IO\+::\+SDK\+::\+Maneuvers\+::\+Attitudes\+::\+Nadir\+Attitude}}, \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ApsidalAlignmentManeuver_a446d463805067fec8ca3e1926b30553c}{IO\+::\+SDK\+::\+Maneuvers\+::\+Apsidal\+Alignment\+Maneuver}}, and \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ApogeeHeightChangingManeuver_a0420e3c596bf0950af745dc8ffc2dd83}{IO\+::\+SDK\+::\+Maneuvers\+::\+Apogee\+Height\+Changing\+Maneuver}}.
 
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase_a1c30f26398b3d43de365b5f91cac150d}\label{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase_a1c30f26398b3d43de365b5f91cac150d}} 
+\index{IO::SDK::Maneuvers::ManeuverBase@{IO::SDK::Maneuvers::ManeuverBase}!GetAttitudeWindow@{GetAttitudeWindow}}
+\index{GetAttitudeWindow@{GetAttitudeWindow}!IO::SDK::Maneuvers::ManeuverBase@{IO::SDK::Maneuvers::ManeuverBase}}
+\doxysubsubsection{\texorpdfstring{GetAttitudeWindow()}{GetAttitudeWindow()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO\+::\+SDK\+::\+Time\+::\+Window}}$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} $>$ $\ast$ IO\+::\+SDK\+::\+Maneuvers\+::\+Maneuver\+Base\+::\+Get\+Attitude\+Window (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+
+
+Get the attitude window. 
+
+\begin{DoxyReturn}{Returns}
+IO\+::\+SDK\+::\+Time\+::\+Window$<$\+IO\+::\+SDK\+::\+Time\+::\+TDB$>$$\ast$ 
+\end{DoxyReturn}
 \mbox{\Hypertarget{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase_afa17b51d0c2bb7bd8f5abd2645664be8}\label{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase_afa17b51d0c2bb7bd8f5abd2645664be8}} 
 \index{IO::SDK::Maneuvers::ManeuverBase@{IO::SDK::Maneuvers::ManeuverBase}!GetDeltaV@{GetDeltaV}}
 \index{GetDeltaV@{GetDeltaV}!IO::SDK::Maneuvers::ManeuverBase@{IO::SDK::Maneuvers::ManeuverBase}}
@@ -261,6 +283,19 @@ Get the Fuel Burned in kg.
 \begin{DoxyReturn}{Returns}
 double 
 \end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase_aebd09e68febba286a736389c09c0d819}\label{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase_aebd09e68febba286a736389c09c0d819}} 
+\index{IO::SDK::Maneuvers::ManeuverBase@{IO::SDK::Maneuvers::ManeuverBase}!GetManeuverWindow@{GetManeuverWindow}}
+\index{GetManeuverWindow@{GetManeuverWindow}!IO::SDK::Maneuvers::ManeuverBase@{IO::SDK::Maneuvers::ManeuverBase}}
+\doxysubsubsection{\texorpdfstring{GetManeuverWindow()}{GetManeuverWindow()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO\+::\+SDK\+::\+Time\+::\+Window}}$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} $>$ $\ast$ IO\+::\+SDK\+::\+Maneuvers\+::\+Maneuver\+Base\+::\+Get\+Maneuver\+Window (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+
+
+Get the maneuver window. Maneuver window start at burn and end when the maneuver is completed. 
+
+\begin{DoxyReturn}{Returns}
+IO\+::\+SDK\+::\+Time\+::\+Window$<$\+IO\+::\+SDK\+::\+Time\+::\+TDB$>$$\ast$ 
+\end{DoxyReturn}
 \mbox{\Hypertarget{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase_ae0f12c4f4bfe674582064c5d1b81e641}\label{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase_ae0f12c4f4bfe674582064c5d1b81e641}} 
 \index{IO::SDK::Maneuvers::ManeuverBase@{IO::SDK::Maneuvers::ManeuverBase}!GetThrustDuration@{GetThrustDuration}}
 \index{GetThrustDuration@{GetThrustDuration}!IO::SDK::Maneuvers::ManeuverBase@{IO::SDK::Maneuvers::ManeuverBase}}
@@ -282,7 +317,7 @@ Get the Thrust duration.
 
 
 
-Get the maneuver window. 
+Get the thrust window. 
 
 \begin{DoxyReturn}{Returns}
 IO\+::\+SDK\+::\+Time\+::\+Window$<$\+IO\+::\+SDK\+::\+Time\+::\+TDB$>$$\ast$ 
@@ -302,6 +337,24 @@ Handle maneuver by propagator.
 {\em not\+Before\+Epoch} & Maneuver must not start before this epoch \\
 \hline
 \end{DoxyParams}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase_a691f1a798e4cb01b9a0bb3dac42452f8}\label{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase_a691f1a798e4cb01b9a0bb3dac42452f8}} 
+\index{IO::SDK::Maneuvers::ManeuverBase@{IO::SDK::Maneuvers::ManeuverBase}!SetNextManeuver@{SetNextManeuver}}
+\index{SetNextManeuver@{SetNextManeuver}!IO::SDK::Maneuvers::ManeuverBase@{IO::SDK::Maneuvers::ManeuverBase}}
+\doxysubsubsection{\texorpdfstring{SetNextManeuver()}{SetNextManeuver()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase}{IO\+::\+SDK\+::\+Maneuvers\+::\+Maneuver\+Base}} \& IO\+::\+SDK\+::\+Maneuvers\+::\+Maneuver\+Base\+::\+Set\+Next\+Maneuver (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase}{IO\+::\+SDK\+::\+Maneuvers\+::\+Maneuver\+Base}} \&}]{maneuver }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+
+Set the Next Maneuver object. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em maneuver} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+\mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase}{IO\+::\+SDK\+::\+Maneuvers\+::\+Maneuver\+Base}}\& 
+\end{DoxyReturn}
 \mbox{\Hypertarget{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase_a0cd50901e65b4dd6aeb53e439f3cbe95}\label{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase_a0cd50901e65b4dd6aeb53e439f3cbe95}} 
 \index{IO::SDK::Maneuvers::ManeuverBase@{IO::SDK::Maneuvers::ManeuverBase}!TryExecute@{TryExecute}}
 \index{TryExecute@{TryExecute}!IO::SDK::Maneuvers::ManeuverBase@{IO::SDK::Maneuvers::ManeuverBase}}
