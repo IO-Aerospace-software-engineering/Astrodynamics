@@ -7,6 +7,8 @@ Astrodynamics toolkit
 
 [![Code coverage](https://github.com/IO-Aerospace-software-engineering/SDK/actions/workflows/deployment.yml/badge.svg)](https://htmlpreview.github.io/?https://github.com/IO-Aerospace-software-engineering/SDK/blob/develop/coverage/index.html)
 
+[![Code coverage](https://img.shields.io/badge/Code coverage-Pass-Green.svg)](https://htmlpreview.github.io/?https://github.com/IO-Aerospace-software-engineering/SDK/blob/develop/coverage/index.html)
+
 # Quick start
 ## Download SDK
 Download the latest Linux or Windows release :
