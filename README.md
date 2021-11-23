@@ -5,7 +5,7 @@ Astrodynamics toolkit
 
 [![IO SDK Deployment](https://github.com/IO-Aerospace-software-engineering/SDK/actions/workflows/deployment.yml/badge.svg)](https://github.com/IO-Aerospace-software-engineering/SDK/actions/workflows/deployment.yml)
 
-[IO SDK Deployment](https://github.com/IO-Aerospace-software-engineering/SDK/blob/develop/coverage/index.html)
+[Code coverage](https://rawgit.com/IO-Aerospace-software-engineering/SDK/blob/develop/coverage/index.html)
 
 
 # Quick start
