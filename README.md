@@ -19,7 +19,8 @@ At this stage we assume that you have mastered your development environment but 
 
 In this quick start we suggest you to use [cross plateform approach](https://code.visualstudio.com/docs/cpp/cmake-linux) with CMake.
 
-## Install the SDK on Linux
+## Install from binaries
+### On Linux
 
 1. Create a cmake project
 
@@ -37,7 +38,7 @@ In this quick start we suggest you to use [cross plateform approach](https://cod
     ```
 5. Copy **libIO.SDK.so<span>** to /usr/lib/
 
-## Install the SDK on Windows
+### On Windows
 
 1. Create a cmake project
 
@@ -61,7 +62,82 @@ In this quick start we suggest you to use [cross plateform approach](https://cod
                 | IO.SDK.lib
     ```
 
+## Install from source code
+    1. Clone the main branch on your computer
+    2. Your root CMakelists.txt must contains at least :
+    ```
+    set(CMAKE_C_STANDARD 99)
+    set(CMAKE_CXX_STANDARD 17)
+    set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+    set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
 
+    SET(CMAKE_CXX_OUTPUT_EXTENSION_REPLACE 1)
+    
+    ... your configuration ...
+    
+    add_subdirectory("IO.SDK")
+    
+    add_subdirectory("MyProject")  #This is your project folder
+    
+    ```
+    3. Reference IO SDK in your project
+    The CmakeLists.txt in your porject folder "MyProject" must contains at least this configurration :
+    ```
+    cmake_minimum_required (VERSION 3.18)
+    set(This IO.SDK)
+
+    file(GLOB_RECURSE IO_SDK_SRC "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp")
+    file(GLOB_RECURSE IO_SDK_H "${CMAKE_CURRENT_SOURCE_DIR}/*.h")
+
+    add_library(${This} SHARED ${IO_SDK_SRC})
+
+    # REFERENCE SDK INCLUDES
+    MACRO(HEADER_DIRECTORIES return_list)
+        FILE(GLOB_RECURSE new_list ${CMAKE_CURRENT_SOURCE_DIR}/*.h)
+        SET(dir_list "")
+        FOREACH(file_path ${new_list})
+            GET_FILENAME_COMPONENT(dir_path ${file_path} PATH)
+            SET(dir_list ${dir_list} ${dir_path})
+        ENDFOREACH()
+        LIST(REMOVE_DUPLICATES dir_list)
+        SET(${return_list} ${dir_list})
+    ENDMACRO()
+    HEADER_DIRECTORIES(MyList)
+    target_include_directories(${This} PUBLIC ${MyList})
+
+    #ADD SPECIFICS LIBS AND HEADERS 
+    if (MSVC)
+        target_include_directories(${This} PUBLIC ${CMAKE_SOURCE_DIR}/external-lib/includeWindows)
+        target_link_libraries(${This} ${CMAKE_SOURCE_DIR}/external-lib/cspice.lib)
+    elseif(UNIX)
+        target_include_directories(${This} PUBLIC ${CMAKE_SOURCE_DIR}/external-lib/includeLinux)
+        target_link_libraries(${This} ${CMAKE_SOURCE_DIR}/external-lib/cspice.a)
+    endif ()
+
+    #INSTALL
+    install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} DESTINATION include FILES_MATCHING PATTERN "*.h")
+    install(TARGETS ${This} LIBRARY DESTINATION lib)
+    ```
+                                           
+    4. If you want to use unit tests(optionnal) add this configuration
+    ```
+    enable_testing()
+
+    #Install Google Tests 
+    include(FetchContent)
+    FetchContent_Declare(
+      googletest
+      URL https://github.com/google/googletest/archive/e2239ee6043f73722e7aa812a459f54a28552929.zip
+    )
+    # For Windows: Prevent overriding the parent project's compiler/linker settings
+    set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+    FetchContent_MakeAvailable(googletest)
+
+    # Include sub-projects.
+    add_subdirectory("IO.SDK.Tests")
+    ```
+    4. In your project add
+    
 ## Use the SDK
 
 In this example we will create a small program that will compute ISS orbital period from TLE(two lines elements), earth Hill sphere and angle between two vectors. 
