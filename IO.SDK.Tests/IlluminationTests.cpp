@@ -1,5 +1,6 @@
 #include<gtest/gtest.h>
 #include<Illumination.h>
+#include<IlluminationAngle.h>
 #include<Vector3D.h>
 #include<TDB.h>
 #include<functional>
@@ -34,4 +35,11 @@ TEST(Illumination, Copy)
 	ASSERT_EQ(6.0, illCopy.GetIncidence());
 	ASSERT_EQ(7.0, illCopy.GetEmission());
 	ASSERT_EQ(789.3, illCopy.GetEpoch().GetSecondsFromJ2000().count());
+}
+
+TEST(Illumination, Types)
+{
+	ASSERT_STREQ("EMISSION", IO::SDK::IlluminationAngle::Emission().ToCharArray());
+	ASSERT_STREQ("PHASE", IO::SDK::IlluminationAngle::Phase().ToCharArray());
+	ASSERT_STREQ("INCIDENCE", IO::SDK::IlluminationAngle::Incidence().ToCharArray());
 }

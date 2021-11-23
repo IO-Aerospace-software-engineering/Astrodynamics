@@ -23,7 +23,7 @@ using namespace std::chrono_literals;
 
 TEST(Instrument, Initialization)
 {
-	std::string filepath = std::string(IO::SDK::Parameters::KernelsPath) + "/sc17_mis1Scn1/Instruments/Camera200/Frames/Camera200.tf";
+	std::string filepath = std::string(IO::SDK::Parameters::KernelsPath) + "/SC17_MIS1SCN1/Instruments/CAMERA200/Frames/CAMERA200.tf";
 	if (std::filesystem::exists(filepath))
 	{
 		std::filesystem::remove(filepath);
@@ -43,13 +43,13 @@ TEST(Instrument, Initialization)
 
 	ASSERT_TRUE(std::filesystem::exists(filepath));
 	ASSERT_GT(std::filesystem::file_size(filepath), 0.0);
-	ASSERT_STREQ("sc17_Camera200", instrument->GetFrame()->GetName().c_str());
+	ASSERT_STREQ("SC17_CAMERA200", instrument->GetFrame()->GetName().c_str());
 	ASSERT_EQ(&s, &instrument->GetSpacecraft());
 }
 
 TEST(Instrument, Frame)
 {
-	std::string filepath = std::string(IO::SDK::Parameters::KernelsPath) + "/sc17_mis1Scn1/Instruments/Camera200/Frames/Camera200.tf";
+	std::string filepath = std::string(IO::SDK::Parameters::KernelsPath) + "/SC17_MIS1SCN1/Instruments/CAMERA200/Frames/CAMERA200.tf";
 	if (std::filesystem::exists(filepath))
 	{
 		std::filesystem::remove(filepath);
@@ -66,11 +66,11 @@ TEST(Instrument, Frame)
 
 	s.AddCircularFOVInstrument(200, "Camera200", orientation, boresight, fovvector, 1.5);
 
-	auto id = IO::SDK::DataPoolMonitoring::Instance().GetIntegerProperty("FRAME_sc17_Camera200", 1);
+	auto id = IO::SDK::DataPoolMonitoring::Instance().GetIntegerProperty("FRAME_SC17_CAMERA200", 1);
 	ASSERT_EQ(-17200, id[0]);
 
 	auto name = IO::SDK::DataPoolMonitoring::Instance().GetStringProperty("FRAME_-17200_NAME", 1);
-	ASSERT_STREQ("sc17_Camera200", name[0].c_str());
+	ASSERT_STREQ("SC17_CAMERA200", name[0].c_str());
 
 	auto classVal = IO::SDK::DataPoolMonitoring::Instance().GetIntegerProperty("FRAME_-17200_CLASS", 1);
 	ASSERT_EQ(4, classVal[0]);
@@ -85,7 +85,7 @@ TEST(Instrument, Frame)
 	ASSERT_STREQ("ANGLES", spec[0].c_str());
 
 	auto relative = IO::SDK::DataPoolMonitoring::Instance().GetStringProperty("TKFRAME_-17200_RELATIVE", 1);
-	ASSERT_STREQ("sc17", relative[0].c_str());
+	ASSERT_STREQ("SC17_SPACECRAFT", relative[0].c_str());
 
 	auto frameAngles = IO::SDK::DataPoolMonitoring::Instance().GetDoubleProperty("TKFRAME_-17200_ANGLES", 3);
 	ASSERT_DOUBLE_EQ(orientation.GetX() * -1.0, frameAngles[0]);
@@ -100,7 +100,7 @@ TEST(Instrument, Frame)
 
 TEST(Instrument, CircularKernel)
 {
-	std::string filepath = std::string(IO::SDK::Parameters::KernelsPath) + "/sc17_mis1Scn1/Instruments/Camera200/Frames/Camera200.tf";
+	std::string filepath = std::string(IO::SDK::Parameters::KernelsPath) + "/SC17_MIS1SCN1/Instruments/CAMERA200/Frames/CAMERA200.tf";
 	if (std::filesystem::exists(filepath))
 	{
 		std::filesystem::remove(filepath);
@@ -123,7 +123,7 @@ TEST(Instrument, CircularKernel)
 	ASSERT_STREQ("CIRCLE", shape[0].c_str());
 
 	auto frame = IO::SDK::DataPoolMonitoring::Instance().GetStringProperty("INS-17200_FOV_FRAME", 1);
-	ASSERT_STREQ("sc17_Camera200", frame[0].c_str());
+	ASSERT_STREQ("SC17_CAMERA200", frame[0].c_str());
 
 	auto boresightKernel = IO::SDK::DataPoolMonitoring::Instance().GetDoubleProperty("INS-17200_BORESIGHT", 3);
 	ASSERT_DOUBLE_EQ(boresight.GetX(), boresightKernel[0]);
@@ -144,7 +144,7 @@ TEST(Instrument, CircularKernel)
 
 TEST(Instrument, RectangularKernel)
 {
-	std::string filepath = std::string(IO::SDK::Parameters::KernelsPath) + "/sc17_mis1Scn1/Instruments/Camera300/Frames/Camera300.tf";
+	std::string filepath = std::string(IO::SDK::Parameters::KernelsPath) + "/SC17_MIS1SCN1/Instruments/CAMERA300/Frames/CAMERA300.tf";
 	if (std::filesystem::exists(filepath))
 	{
 		std::filesystem::remove(filepath);
@@ -167,7 +167,7 @@ TEST(Instrument, RectangularKernel)
 	ASSERT_STREQ("RECTANGLE", shape[0].c_str());
 
 	auto frame = IO::SDK::DataPoolMonitoring::Instance().GetStringProperty("INS-17300_FOV_FRAME", 1);
-	ASSERT_STREQ("sc17_Camera300", frame[0].c_str());
+	ASSERT_STREQ("SC17_CAMERA300", frame[0].c_str());
 
 	auto boresightKernel = IO::SDK::DataPoolMonitoring::Instance().GetDoubleProperty("INS-17300_BORESIGHT", 3);
 	ASSERT_DOUBLE_EQ(boresight.GetX(), boresightKernel[0]);
@@ -188,7 +188,7 @@ TEST(Instrument, RectangularKernel)
 
 TEST(Instrument, EllipticalKernel)
 {
-	std::string filepath = std::string(IO::SDK::Parameters::KernelsPath) + "/sc17_mis1Scn1/Instruments/Camera400/Frames/Camera400.tf";
+	std::string filepath = std::string(IO::SDK::Parameters::KernelsPath) + "/SC17_MIS1SCN1/Instruments/CAMERA400/Frames/CAMERA400.tf";
 	if (std::filesystem::exists(filepath))
 	{
 		std::filesystem::remove(filepath);
@@ -211,7 +211,7 @@ TEST(Instrument, EllipticalKernel)
 	ASSERT_STREQ("ELLIPSE", shape[0].c_str());
 
 	auto frame = IO::SDK::DataPoolMonitoring::Instance().GetStringProperty("INS-17400_FOV_FRAME", 1);
-	ASSERT_STREQ("sc17_Camera400", frame[0].c_str());
+	ASSERT_STREQ("SC17_CAMERA400", frame[0].c_str());
 
 	auto boresightKernel = IO::SDK::DataPoolMonitoring::Instance().GetDoubleProperty("INS-17400_BORESIGHT", 3);
 	ASSERT_DOUBLE_EQ(boresight.GetX(), boresightKernel[0]);
@@ -232,7 +232,7 @@ TEST(Instrument, EllipticalKernel)
 
 TEST(Instrument, Boundaries)
 {
-	std::string filepath = std::string(IO::SDK::Parameters::KernelsPath) + "/sc17_mis1Scn1/Instruments/Camera200/Frames/Camera200.tf";
+	std::string filepath = std::string(IO::SDK::Parameters::KernelsPath) + "/SC17_MIS1SCN1/Instruments/CAMERA200/Frames/CAMERA200.tf";
 	if (std::filesystem::exists(filepath))
 	{
 		std::filesystem::remove(filepath);
@@ -259,7 +259,7 @@ TEST(Instrument, Boundaries)
 
 TEST(Instrument, Boresight)
 {
-	std::string filepath = std::string(IO::SDK::Parameters::KernelsPath) + "/sc17_mis1Scn1/Instruments/Camera200/Frames/Camera200.tf";
+	std::string filepath = std::string(IO::SDK::Parameters::KernelsPath) + "/SC17_MIS1SCN1/Instruments/CAMERA200/Frames/CAMERA200.tf";
 	if (std::filesystem::exists(filepath))
 	{
 		std::filesystem::remove(filepath);
@@ -286,7 +286,7 @@ TEST(Instrument, Boresight)
 
 TEST(Instrument, FOVShape)
 {
-	std::string filepath = std::string(IO::SDK::Parameters::KernelsPath) + "/sc17_mis1Scn1/Instruments/Camera200/Frames/Camera200.tf";
+	std::string filepath = std::string(IO::SDK::Parameters::KernelsPath) + "/SC17_MIS1SCN1/Instruments/CAMERA200/Frames/CAMERA200.tf";
 	if (std::filesystem::exists(filepath))
 	{
 		std::filesystem::remove(filepath);
@@ -311,7 +311,7 @@ TEST(Instrument, FOVShape)
 
 TEST(Instrument, GetBadId)
 {
-	std::string filepath = std::string(IO::SDK::Parameters::KernelsPath) + "/sc17_mis1Scn1/Instruments/Camera200/Frames/Camera200.tf";
+	std::string filepath = std::string(IO::SDK::Parameters::KernelsPath) + "/SC17_MIS1SCN1/Instruments/CAMERA200/Frames/CAMERA200.tf";
 	if (std::filesystem::exists(filepath))
 	{
 		std::filesystem::remove(filepath);
@@ -333,7 +333,7 @@ TEST(Instrument, GetBadId)
 
 TEST(Instrument, CreateBadId)
 {
-	std::string filepath = std::string(IO::SDK::Parameters::KernelsPath) + "/sc17_mis1Scn1/Instruments/Camera200/Frames/Camera200.tf";
+	std::string filepath = std::string(IO::SDK::Parameters::KernelsPath) + "/SC17_MIS1SCN1/Instruments/CAMERA200/Frames/CAMERA200.tf";
 	if (std::filesystem::exists(filepath))
 	{
 		std::filesystem::remove(filepath);
@@ -354,7 +354,7 @@ TEST(Instrument, CreateBadId)
 
 TEST(Instrument, AlreadyExists)
 {
-	std::string filepath = std::string(IO::SDK::Parameters::KernelsPath) + "/sc17_mis1Scn1/Instruments/Camera200/Frames/Camera200.tf";
+	std::string filepath = std::string(IO::SDK::Parameters::KernelsPath) + "/SC17_MIS1SCN1/Instruments/CAMERA200/Frames/CAMERA200.tf";
 	if (std::filesystem::exists(filepath))
 	{
 		std::filesystem::remove(filepath);
@@ -377,7 +377,7 @@ TEST(Instrument, FindWindowFieldOfView)
 {
 	
 	//========== Configure spacecraft===================
-	std::string filepath = std::string(IO::SDK::Parameters::KernelsPath) + "/SC179FOV_MISSFOVTEST/Instruments/CAMERAFOV789/Frames/CAMERAFOV789.tf";
+	std::string filepath = std::string(IO::SDK::Parameters::KernelsPath) + "/SC179_MISSFOVTEST/Instruments/CAMERA789/Frames/CAMERA789.tf";
 	if (std::filesystem::exists(filepath))
 	{
 		std::filesystem::remove(filepath);
@@ -393,9 +393,9 @@ TEST(Instrument, FindWindowFieldOfView)
 	IO::SDK::Time::TDB epoch("2021-JUN-10 00:00:00.0000 TDB");
 
 	std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth, IO::SDK::Math::Vector3D(a, 0.0, 0.0), IO::SDK::Math::Vector3D(0.0, v, 0.0), epoch, IO::SDK::Frames::InertialFrames::GetICRF());
-	IO::SDK::Body::Spacecraft::Spacecraft s{-179, "SC179FOV", 1000.0, 3000.0, "MISSFOVTEST", std::move(orbitalParams)};
+	IO::SDK::Body::Spacecraft::Spacecraft s{-179, "SC179", 1000.0, 3000.0, "MISSFOVTEST", std::move(orbitalParams)};
 
-	s.AddCircularFOVInstrument(789, "CAMERAFOV789", orientation, boresight, fovvector, 1.5);
+	s.AddCircularFOVInstrument(789, "CAMERA789", orientation, boresight, fovvector, 1.5);
 	const IO::SDK::Instruments::Instrument *instrument{s.GetInstrument(789)};
 
 	//==========PROPAGATOR====================
@@ -434,19 +434,16 @@ TEST(Instrument, FindWindowFieldOfView)
 	s.WriteOrientations(orientationData);
 
 	//Check frame name and id
-	auto id = IO::SDK::DataPoolMonitoring::Instance().GetIntegerProperty("FRAME_SC179FOV_CAMERAFOV789", 1);
+	auto id = IO::SDK::DataPoolMonitoring::Instance().GetIntegerProperty("FRAME_SC179_CAMERA789", 1);
 	ASSERT_EQ(-179789, id[0]);
 
 	auto name = IO::SDK::DataPoolMonitoring::Instance().GetStringProperty("FRAME_-179789_NAME", 1);
-	ASSERT_STREQ("SC179FOV_CAMERAFOV789", name[0].c_str());
+	ASSERT_STREQ("SC179_CAMERA789", name[0].c_str());
 
 	//Get windows
-	auto results = instrument->FindWindowsWhereInFieldOfView(IO::SDK::Time::Window<IO::SDK::Time::TDB>(IO::SDK::Time::TDB("2021-JUN-10 00:00:00.0000 TDB"), epoch + duration), *earth, IO::SDK::Time::TimeSpan(60s), IO::SDK::AberrationsEnum::None);
+	auto results = instrument->FindWindowsWhereInFieldOfView(IO::SDK::Time::Window<IO::SDK::Time::TDB>(IO::SDK::Time::TDB("2021-JUN-10 00:00:00.0000 TDB"), epoch + duration), *earth, IO::SDK::Time::TimeSpan(60s), IO::SDK::AberrationsEnum::LT);
 
-	ASSERT_EQ(2, results.size());
-	ASSERT_STREQ("2021-06-10 00:01:13.760767 (TDB)", results[0].GetStartDate().ToString().c_str());
-	ASSERT_STREQ("2021-06-10 00:45:16.498288 (TDB)", results[0].GetEndDate().ToString().c_str());
-
-	ASSERT_STREQ("2021-06-10 01:34:14.279066 (TDB)", results[1].GetStartDate().ToString().c_str());
-	ASSERT_STREQ("2021-06-10 01:47:27.000000 (TDB)", results[1].GetEndDate().ToString().c_str());
+	ASSERT_EQ(1, results.size());
+	ASSERT_STREQ("2021-06-10 00:00:00.000000 (TDB)", results[0].GetStartDate().ToString().c_str());
+	ASSERT_STREQ("2021-06-10 01:47:27.000000 (TDB)", results[0].GetEndDate().ToString().c_str());
 }

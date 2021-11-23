@@ -10,7 +10,7 @@ TEST(Body, Initialization)
 	auto sun=std::make_shared<IO::SDK::Body::CelestialBody>(10, "sun");
 	IO::SDK::Body::CelestialBody body(399, "earth", sun);
 	ASSERT_EQ(399, body.GetId());
-	ASSERT_STREQ("earth", body.GetName().c_str());
+	ASSERT_STREQ("EARTH", body.GetName().c_str());
 	ASSERT_DOUBLE_EQ(5.9721683987248994e+24, body.GetMass());
 	ASSERT_DOUBLE_EQ(5.9721683987248994e+24 * IO::SDK::Constants::G, body.GetMu());
 }

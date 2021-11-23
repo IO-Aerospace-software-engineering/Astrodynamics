@@ -1,0 +1,595 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - coverage.info - IO.SDK.Tests/PlaneChangingManeuverTests.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">IO.SDK.Tests</a> - PlaneChangingManeuverTests.cpp<span style="font-size: 80%;"> (source / <a href="PlaneChangingManeuverTests.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">coverage.info</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">238</td>
+            <td class="headerCovTableEntry">258</td>
+            <td class="headerCovTableEntryHi">92.2 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2021-11-23 16:38:32</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">36</td>
+            <td class="headerCovTableEntry">36</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : #include &lt;gtest/gtest.h&gt;</a>
+<a name="2"><span class="lineNum">       2 </span>            : #include &lt;Engine.h&gt;</a>
+<a name="3"><span class="lineNum">       3 </span>            : #include &lt;Spacecraft.h&gt;</a>
+<a name="4"><span class="lineNum">       4 </span>            : #include &lt;vector&gt;</a>
+<a name="5"><span class="lineNum">       5 </span>            : #include &lt;CelestialBody.h&gt;</a>
+<a name="6"><span class="lineNum">       6 </span>            : #include &lt;OrbitalPlaneChangingManeuver.h&gt;</a>
+<a name="7"><span class="lineNum">       7 </span>            : #include &lt;TimeSpan.h&gt;</a>
+<a name="8"><span class="lineNum">       8 </span>            : #include &lt;Propagator.h&gt;</a>
+<a name="9"><span class="lineNum">       9 </span>            : #include &lt;VVIntegrator.h&gt;</a>
+<a name="10"><span class="lineNum">      10 </span>            : #include &lt;ConicOrbitalElements.h&gt;</a>
+<a name="11"><span class="lineNum">      11 </span>            : #include &lt;TestsConstants.h&gt;</a>
+<a name="12"><span class="lineNum">      12 </span>            : #include &lt;UTC.h&gt;</a>
+<a name="13"><span class="lineNum">      13 </span>            : #include &lt;TDB.h&gt;</a>
+<a name="14"><span class="lineNum">      14 </span>            : </a>
+<a name="15"><span class="lineNum">      15 </span>            : #include &lt;chrono&gt;</a>
+<a name="16"><span class="lineNum">      16 </span>            : #include &lt;memory&gt;</a>
+<a name="17"><span class="lineNum">      17 </span>            : #include &lt;iostream&gt;</a>
+<a name="18"><span class="lineNum">      18 </span>            : </a>
+<a name="19"><span class="lineNum">      19 </span>            : using namespace std::chrono_literals;</a>
+<a name="20"><span class="lineNum">      20 </span>            : </a>
+<a name="21"><span class="lineNum">      21 </span><span class="lineCov">          4 : TEST(PlaneChangingManeuver, CanExecute)</span></a>
+<a name="22"><span class="lineNum">      22 </span>            : {</a>
+<a name="23"><span class="lineNum">      23 </span><span class="lineCov">          1 :     const auto earth = std::make_shared&lt;IO::SDK::Body::CelestialBody&gt;(399, &quot;earth&quot;);</span></a>
+<a name="24"><span class="lineNum">      24 </span><span class="lineCov">          2 :     std::unique_ptr&lt;IO::SDK::OrbitalParameters::OrbitalParameters&gt; orbitalParams1 = std::make_unique&lt;IO::SDK::OrbitalParameters::ConicOrbitalElements&gt;(earth, 11480000.0, 0.5, 60.0 * IO::SDK::Constants::DEG_RAD, 10.0 * IO::SDK::Constants::DEG_RAD, 0.0, 0.0, IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::GetICRF());</span></a>
+<a name="25"><span class="lineNum">      25 </span><span class="lineCov">          2 :     std::unique_ptr&lt;IO::SDK::OrbitalParameters::OrbitalParameters&gt; orbitalParams2 = std::make_unique&lt;IO::SDK::OrbitalParameters::ConicOrbitalElements&gt;(earth, 11480000.0, 0.5, 45.0 * IO::SDK::Constants::DEG_RAD, 55.0 * IO::SDK::Constants::DEG_RAD, 0.0, 0.0, IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::GetICRF());</span></a>
+<a name="26"><span class="lineNum">      26 </span><span class="lineCov">          1 :     IO::SDK::OrbitalParameters::StateOrientation attitude(IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::GetICRF());</span></a>
+<a name="27"><span class="lineNum">      27 </span><span class="lineCov">          3 :     IO::SDK::Body::Spacecraft::Spacecraft s{-1, &quot;sptest&quot;, 1000.0, 3000.0, &quot;ms01&quot;, std::move(orbitalParams1)};</span></a>
+<a name="28"><span class="lineNum">      28 </span>            : </a>
+<a name="29"><span class="lineNum">      29 </span><span class="lineCov">          1 :     IO::SDK::Integrators::VVIntegrator integrator(IO::SDK::Time::TimeSpan(1.0s));</span></a>
+<a name="30"><span class="lineNum">      30 </span><span class="lineCov">          2 :     IO::SDK::Propagators::Propagator prop(s, integrator, IO::SDK::Time::Window(IO::SDK::Time::TDB(100.0s), IO::SDK::Time::TDB(200.0s)));</span></a>
+<a name="31"><span class="lineNum">      31 </span>            : </a>
+<a name="32"><span class="lineNum">      32 </span><span class="lineCov">          1 :     s.AddFuelTank(&quot;ft1&quot;, 1000.0, 900.0);</span></a>
+<a name="33"><span class="lineNum">      33 </span><span class="lineCov">          1 :     s.AddEngine(&quot;sn1&quot;, &quot;eng1&quot;, &quot;ft1&quot;, {1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}, 450.0, 50.0);</span></a>
+<a name="34"><span class="lineNum">      34 </span>            : </a>
+<a name="35"><span class="lineNum">      35 </span><span class="lineCov">          1 :     auto engine1 = s.GetEngine(&quot;sn1&quot;);</span></a>
+<a name="36"><span class="lineNum">      36 </span>            : </a>
+<a name="37"><span class="lineNum">      37 </span><span class="lineCov">          1 :     std::vector&lt;IO::SDK::Body::Spacecraft::Engine&gt; engines;</span></a>
+<a name="38"><span class="lineNum">      38 </span><span class="lineCov">          1 :     engines.push_back(*engine1);</span></a>
+<a name="39"><span class="lineNum">      39 </span>            : </a>
+<a name="40"><span class="lineNum">      40 </span><span class="lineCov">          1 :     IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver maneuver(engines, prop, orbitalParams2.get());</span></a>
+<a name="41"><span class="lineNum">      41 </span>            : </a>
+<a name="42"><span class="lineNum">      42 </span><span class="lineCov">          1 :     auto timeToTrueAnomalyDN = s.GetOrbitalParametersAtEpoch()-&gt;GetTimeToTrueAnomaly(2.197937654);</span></a>
+<a name="43"><span class="lineNum">      43 </span><span class="lineCov">          1 :     auto timeToTrueAnomalyAN = s.GetOrbitalParametersAtEpoch()-&gt;GetTimeToTrueAnomaly(2.197937654 + IO::SDK::Constants::PI);</span></a>
+<a name="44"><span class="lineNum">      44 </span>            :     //Initialize</a>
+<a name="45"><span class="lineNum">      45 </span><span class="lineCov">          1 :     ASSERT_FALSE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()-&gt;GetStateVector()));</span></a>
+<a name="46"><span class="lineNum">      46 </span>            : </a>
+<a name="47"><span class="lineNum">      47 </span>            :     //Can't execute, too early</a>
+<a name="48"><span class="lineNum">      48 </span><span class="lineCov">          1 :     ASSERT_FALSE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()-&gt;GetStateVector(timeToTrueAnomalyDN - IO::SDK::Time::TimeSpan(10s))));</span></a>
+<a name="49"><span class="lineNum">      49 </span>            : </a>
+<a name="50"><span class="lineNum">      50 </span>            :     //Must execute at 125.93° == t+6600s</a>
+<a name="51"><span class="lineNum">      51 </span><span class="lineCov">          1 :     ASSERT_TRUE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()-&gt;GetStateVector(timeToTrueAnomalyDN + IO::SDK::Time::TimeSpan(10s))));</span></a>
+<a name="52"><span class="lineNum">      52 </span>            : </a>
+<a name="53"><span class="lineNum">      53 </span>            :     //Can't execute because node is behind</a>
+<a name="54"><span class="lineNum">      54 </span><span class="lineCov">          1 :     ASSERT_FALSE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()-&gt;GetStateVector(timeToTrueAnomalyDN + IO::SDK::Time::TimeSpan(30s))));</span></a>
+<a name="55"><span class="lineNum">      55 </span>            : </a>
+<a name="56"><span class="lineNum">      56 </span>            :     //==============</a>
+<a name="57"><span class="lineNum">      57 </span>            :     //!!NEXT NODE!!</a>
+<a name="58"><span class="lineNum">      58 </span>            :     //==============</a>
+<a name="59"><span class="lineNum">      59 </span>            : </a>
+<a name="60"><span class="lineNum">      60 </span>            :     //Can't execute, too far</a>
+<a name="61"><span class="lineNum">      61 </span><span class="lineCov">          1 :     ASSERT_FALSE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()-&gt;GetStateVector(timeToTrueAnomalyAN - IO::SDK::Time::TimeSpan(10s))));</span></a>
+<a name="62"><span class="lineNum">      62 </span>            : </a>
+<a name="63"><span class="lineNum">      63 </span>            :     //Must execute at 125.93°+180° == t+32959</a>
+<a name="64"><span class="lineNum">      64 </span><span class="lineCov">          1 :     ASSERT_TRUE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()-&gt;GetStateVector(timeToTrueAnomalyAN + IO::SDK::Time::TimeSpan(10s))));</span></a>
+<a name="65"><span class="lineNum">      65 </span>            : </a>
+<a name="66"><span class="lineNum">      66 </span>            :     //Can't execute because node is behind</a>
+<a name="67"><span class="lineNum">      67 </span><span class="lineCov">          1 :     ASSERT_FALSE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()-&gt;GetStateVector(timeToTrueAnomalyAN + IO::SDK::Time::TimeSpan(30s))));</span></a>
+<a name="68"><span class="lineNum">      68 </span>            : </a>
+<a name="69"><span class="lineNum">      69 </span>            :     //==============</a>
+<a name="70"><span class="lineNum">      70 </span>            :     //Test another lap to validate switching between node inbound and outbound</a>
+<a name="71"><span class="lineNum">      71 </span>            :     //==============</a>
+<a name="72"><span class="lineNum">      72 </span>            : </a>
+<a name="73"><span class="lineNum">      73 </span>            :     //Can't execute, too early</a>
+<a name="74"><span class="lineNum">      74 </span><span class="lineCov">          1 :     ASSERT_FALSE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()-&gt;GetStateVector(timeToTrueAnomalyDN - IO::SDK::Time::TimeSpan(10s) + s.GetOrbitalParametersAtEpoch()-&gt;GetPeriod())));</span></a>
+<a name="75"><span class="lineNum">      75 </span>            : </a>
+<a name="76"><span class="lineNum">      76 </span>            :     //Must execute at 125.93° == t+6600s+Orbital Period</a>
+<a name="77"><span class="lineNum">      77 </span><span class="lineCov">          1 :     ASSERT_TRUE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()-&gt;GetStateVector(timeToTrueAnomalyDN + IO::SDK::Time::TimeSpan(10s) + s.GetOrbitalParametersAtEpoch()-&gt;GetPeriod())));</span></a>
+<a name="78"><span class="lineNum">      78 </span>            : </a>
+<a name="79"><span class="lineNum">      79 </span>            :     //Can't execute because node is behind</a>
+<a name="80"><span class="lineNum">      80 </span><span class="lineCov">          1 :     ASSERT_FALSE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()-&gt;GetStateVector(timeToTrueAnomalyDN + IO::SDK::Time::TimeSpan(30s) + s.GetOrbitalParametersAtEpoch()-&gt;GetPeriod())));</span></a>
+<a name="81"><span class="lineNum">      81 </span>            : </a>
+<a name="82"><span class="lineNum">      82 </span>            :     //==============</a>
+<a name="83"><span class="lineNum">      83 </span>            :     //!!NEXT NODE!!</a>
+<a name="84"><span class="lineNum">      84 </span>            :     //==============</a>
+<a name="85"><span class="lineNum">      85 </span>            : </a>
+<a name="86"><span class="lineNum">      86 </span>            :     //Can't execute, too far</a>
+<a name="87"><span class="lineNum">      87 </span><span class="lineCov">          1 :     ASSERT_FALSE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()-&gt;GetStateVector(timeToTrueAnomalyAN - IO::SDK::Time::TimeSpan(10s) + s.GetOrbitalParametersAtEpoch()-&gt;GetPeriod())));</span></a>
+<a name="88"><span class="lineNum">      88 </span>            : </a>
+<a name="89"><span class="lineNum">      89 </span>            :     //Must execute at 125.93°+180° == t+32959+Orbital Period</a>
+<a name="90"><span class="lineNum">      90 </span><span class="lineCov">          1 :     ASSERT_TRUE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()-&gt;GetStateVector(timeToTrueAnomalyAN + IO::SDK::Time::TimeSpan(10s) + s.GetOrbitalParametersAtEpoch()-&gt;GetPeriod())));</span></a>
+<a name="91"><span class="lineNum">      91 </span>            : </a>
+<a name="92"><span class="lineNum">      92 </span>            :     //Can't execute because node is behind</a>
+<a name="93"><span class="lineNum">      93 </span><span class="lineCov">          1 :     ASSERT_FALSE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()-&gt;GetStateVector(timeToTrueAnomalyAN + IO::SDK::Time::TimeSpan(30s) + s.GetOrbitalParametersAtEpoch()-&gt;GetPeriod())));</span></a>
+<a name="94"><span class="lineNum">      94 </span>            : }</a>
+<a name="95"><span class="lineNum">      95 </span>            : </a>
+<a name="96"><span class="lineNum">      96 </span><span class="lineCov">          4 : TEST(PlaneChangingManeuver, IdentifyNode)</span></a>
+<a name="97"><span class="lineNum">      97 </span>            : {</a>
+<a name="98"><span class="lineNum">      98 </span><span class="lineCov">          1 :     const auto earth = std::make_shared&lt;IO::SDK::Body::CelestialBody&gt;(399, &quot;earth&quot;);</span></a>
+<a name="99"><span class="lineNum">      99 </span><span class="lineCov">          2 :     std::unique_ptr&lt;IO::SDK::OrbitalParameters::OrbitalParameters&gt; orbitalParams1 = std::make_unique&lt;IO::SDK::OrbitalParameters::ConicOrbitalElements&gt;(earth, 11480000.0, 0.2, 60.0 * IO::SDK::Constants::DEG_RAD, 10.0 * IO::SDK::Constants::DEG_RAD, 0.0, 0.0, IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::GetICRF());</span></a>
+<a name="100"><span class="lineNum">     100 </span><span class="lineCov">          2 :     std::unique_ptr&lt;IO::SDK::OrbitalParameters::OrbitalParameters&gt; orbitalParams2 = std::make_unique&lt;IO::SDK::OrbitalParameters::ConicOrbitalElements&gt;(earth, 11480000.0, 0.2, 45.0 * IO::SDK::Constants::DEG_RAD, 55.0 * IO::SDK::Constants::DEG_RAD, 0.0, 0.0, IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::GetICRF());</span></a>
+<a name="101"><span class="lineNum">     101 </span><span class="lineCov">          1 :     IO::SDK::OrbitalParameters::StateOrientation attitude(IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::GetICRF());</span></a>
+<a name="102"><span class="lineNum">     102 </span><span class="lineCov">          3 :     IO::SDK::Body::Spacecraft::Spacecraft s{-1, &quot;sptest&quot;, 1000.0, 3000.0, &quot;ms01&quot;, std::move(orbitalParams1)};</span></a>
+<a name="103"><span class="lineNum">     103 </span>            : </a>
+<a name="104"><span class="lineNum">     104 </span><span class="lineCov">          1 :     IO::SDK::Integrators::VVIntegrator integrator(IO::SDK::Time::TimeSpan(1.0s));</span></a>
+<a name="105"><span class="lineNum">     105 </span><span class="lineCov">          2 :     IO::SDK::Propagators::Propagator prop(s, integrator, IO::SDK::Time::Window(IO::SDK::Time::TDB(100.0s), IO::SDK::Time::TDB(200.0s)));</span></a>
+<a name="106"><span class="lineNum">     106 </span>            : </a>
+<a name="107"><span class="lineNum">     107 </span><span class="lineCov">          1 :     s.AddFuelTank(&quot;ft1&quot;, 1000.0, 900.0);</span></a>
+<a name="108"><span class="lineNum">     108 </span><span class="lineCov">          1 :     s.AddEngine(&quot;sn1&quot;, &quot;eng1&quot;, &quot;ft1&quot;, {1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}, 450.0, 50.0);</span></a>
+<a name="109"><span class="lineNum">     109 </span>            : </a>
+<a name="110"><span class="lineNum">     110 </span><span class="lineCov">          1 :     auto engine1 = s.GetEngine(&quot;sn1&quot;);</span></a>
+<a name="111"><span class="lineNum">     111 </span>            : </a>
+<a name="112"><span class="lineNum">     112 </span><span class="lineCov">          1 :     std::vector&lt;IO::SDK::Body::Spacecraft::Engine&gt; engines;</span></a>
+<a name="113"><span class="lineNum">     113 </span><span class="lineCov">          1 :     engines.push_back(*engine1);</span></a>
+<a name="114"><span class="lineNum">     114 </span>            : </a>
+<a name="115"><span class="lineNum">     115 </span><span class="lineCov">          1 :     IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver maneuver(engines, prop, orbitalParams2.get());</span></a>
+<a name="116"><span class="lineNum">     116 </span>            : </a>
+<a name="117"><span class="lineNum">     117 </span><span class="lineCov">          1 :     auto timeToTrueAnomalyDN = s.GetOrbitalParametersAtEpoch()-&gt;GetTimeToTrueAnomaly(2.197893);</span></a>
+<a name="118"><span class="lineNum">     118 </span><span class="lineCov">          1 :     auto timeToTrueAnomalyAN = s.GetOrbitalParametersAtEpoch()-&gt;GetTimeToTrueAnomaly(2.197893 + IO::SDK::Constants::PI);</span></a>
+<a name="119"><span class="lineNum">     119 </span>            : </a>
+<a name="120"><span class="lineNum">     120 </span>            :     //Initialize</a>
+<a name="121"><span class="lineNum">     121 </span><span class="lineCov">          1 :     ASSERT_FALSE(maneuver.IsAscendingNode(s.GetOrbitalParametersAtEpoch()-&gt;GetStateVector(timeToTrueAnomalyDN)));</span></a>
+<a name="122"><span class="lineNum">     122 </span><span class="lineCov">          1 :     ASSERT_TRUE(maneuver.IsAscendingNode(s.GetOrbitalParametersAtEpoch()-&gt;GetStateVector(timeToTrueAnomalyAN)));</span></a>
+<a name="123"><span class="lineNum">     123 </span>            : }</a>
+<a name="124"><span class="lineNum">     124 </span>            : </a>
+<a name="125"><span class="lineNum">     125 </span><span class="lineCov">          4 : TEST(PlaneChangingManeuver, IdentifyNode2)</span></a>
+<a name="126"><span class="lineNum">     126 </span>            : {</a>
+<a name="127"><span class="lineNum">     127 </span><span class="lineCov">          1 :     const auto earth = std::make_shared&lt;IO::SDK::Body::CelestialBody&gt;(399, &quot;earth&quot;);</span></a>
+<a name="128"><span class="lineNum">     128 </span><span class="lineCov">          2 :     std::unique_ptr&lt;IO::SDK::OrbitalParameters::OrbitalParameters&gt; orbitalParams1 = std::make_unique&lt;IO::SDK::OrbitalParameters::ConicOrbitalElements&gt;(earth, 11480000.0, 0.2, 60.0 * IO::SDK::Constants::DEG_RAD, 220.0 * IO::SDK::Constants::DEG_RAD, 0.0, 0.0, IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::GetICRF());</span></a>
+<a name="129"><span class="lineNum">     129 </span><span class="lineCov">          2 :     std::unique_ptr&lt;IO::SDK::OrbitalParameters::OrbitalParameters&gt; orbitalParams2 = std::make_unique&lt;IO::SDK::OrbitalParameters::ConicOrbitalElements&gt;(earth, 11480000.0, 0.2, 130.0 * IO::SDK::Constants::DEG_RAD, 55.0 * IO::SDK::Constants::DEG_RAD, 0.0, 0.0, IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::GetICRF());</span></a>
+<a name="130"><span class="lineNum">     130 </span><span class="lineCov">          1 :     IO::SDK::OrbitalParameters::StateOrientation attitude(IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::GetICRF());</span></a>
+<a name="131"><span class="lineNum">     131 </span><span class="lineCov">          3 :     IO::SDK::Body::Spacecraft::Spacecraft s{-1, &quot;sptest&quot;, 1000.0, 3000.0, &quot;ms01&quot;, std::move(orbitalParams1)};</span></a>
+<a name="132"><span class="lineNum">     132 </span>            : </a>
+<a name="133"><span class="lineNum">     133 </span><span class="lineCov">          1 :     IO::SDK::Integrators::VVIntegrator integrator(IO::SDK::Time::TimeSpan(1.0s));</span></a>
+<a name="134"><span class="lineNum">     134 </span><span class="lineCov">          2 :     IO::SDK::Propagators::Propagator prop(s, integrator, IO::SDK::Time::Window(IO::SDK::Time::TDB(100.0s), IO::SDK::Time::TDB(200.0s)));</span></a>
+<a name="135"><span class="lineNum">     135 </span>            : </a>
+<a name="136"><span class="lineNum">     136 </span><span class="lineCov">          1 :     s.AddFuelTank(&quot;ft1&quot;, 1000.0, 900.0);</span></a>
+<a name="137"><span class="lineNum">     137 </span><span class="lineCov">          1 :     s.AddEngine(&quot;sn1&quot;, &quot;eng1&quot;, &quot;ft1&quot;, {1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}, 450.0, 50.0);</span></a>
+<a name="138"><span class="lineNum">     138 </span>            : </a>
+<a name="139"><span class="lineNum">     139 </span><span class="lineCov">          1 :     auto engine1 = s.GetEngine(&quot;sn1&quot;);</span></a>
+<a name="140"><span class="lineNum">     140 </span>            : </a>
+<a name="141"><span class="lineNum">     141 </span><span class="lineCov">          1 :     std::vector&lt;IO::SDK::Body::Spacecraft::Engine&gt; engines;</span></a>
+<a name="142"><span class="lineNum">     142 </span><span class="lineCov">          1 :     engines.push_back(*engine1);</span></a>
+<a name="143"><span class="lineNum">     143 </span>            : </a>
+<a name="144"><span class="lineNum">     144 </span><span class="lineCov">          1 :     IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver maneuver(engines, prop, orbitalParams2.get());</span></a>
+<a name="145"><span class="lineNum">     145 </span>            : </a>
+<a name="146"><span class="lineNum">     146 </span><span class="lineCov">          1 :     auto timeToTrueAnomalyDN = s.GetOrbitalParametersAtEpoch()-&gt;GetTimeToTrueAnomaly(5.4677);</span></a>
+<a name="147"><span class="lineNum">     147 </span><span class="lineCov">          1 :     auto timeToTrueAnomalyAN = s.GetOrbitalParametersAtEpoch()-&gt;GetTimeToTrueAnomaly(5.4677 - IO::SDK::Constants::PI);</span></a>
+<a name="148"><span class="lineNum">     148 </span>            : </a>
+<a name="149"><span class="lineNum">     149 </span>            :     //Initialize</a>
+<a name="150"><span class="lineNum">     150 </span><span class="lineCov">          1 :     ASSERT_FALSE(maneuver.IsAscendingNode(s.GetOrbitalParametersAtEpoch()-&gt;GetStateVector(timeToTrueAnomalyDN)));</span></a>
+<a name="151"><span class="lineNum">     151 </span><span class="lineCov">          1 :     ASSERT_TRUE(maneuver.IsAscendingNode(s.GetOrbitalParametersAtEpoch()-&gt;GetStateVector(timeToTrueAnomalyAN)));</span></a>
+<a name="152"><span class="lineNum">     152 </span>            : }</a>
+<a name="153"><span class="lineNum">     153 </span>            : </a>
+<a name="154"><span class="lineNum">     154 </span><span class="lineCov">          4 : TEST(PlaneChangingManeuver, IdentifyNode3)</span></a>
+<a name="155"><span class="lineNum">     155 </span>            : {</a>
+<a name="156"><span class="lineNum">     156 </span><span class="lineCov">          1 :     const auto earth = std::make_shared&lt;IO::SDK::Body::CelestialBody&gt;(399, &quot;earth&quot;);</span></a>
+<a name="157"><span class="lineNum">     157 </span><span class="lineCov">          2 :     std::unique_ptr&lt;IO::SDK::OrbitalParameters::OrbitalParameters&gt; orbitalParams1 = std::make_unique&lt;IO::SDK::OrbitalParameters::ConicOrbitalElements&gt;(earth, 11480000.0, 0.2, 140.0 * IO::SDK::Constants::DEG_RAD, 220.0 * IO::SDK::Constants::DEG_RAD, 70.0 * IO::SDK::Constants::DEG_RAD, 0.0, IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::GetICRF());</span></a>
+<a name="158"><span class="lineNum">     158 </span><span class="lineCov">          2 :     std::unique_ptr&lt;IO::SDK::OrbitalParameters::OrbitalParameters&gt; orbitalParams2 = std::make_unique&lt;IO::SDK::OrbitalParameters::ConicOrbitalElements&gt;(earth, 11480000.0, 0.2, 130.0 * IO::SDK::Constants::DEG_RAD, 300.0 * IO::SDK::Constants::DEG_RAD, 205.0 * IO::SDK::Constants::DEG_RAD, 0.0, IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::GetICRF());</span></a>
+<a name="159"><span class="lineNum">     159 </span><span class="lineCov">          1 :     IO::SDK::OrbitalParameters::StateOrientation attitude(IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::GetICRF());</span></a>
+<a name="160"><span class="lineNum">     160 </span><span class="lineCov">          3 :     IO::SDK::Body::Spacecraft::Spacecraft s{-1, &quot;sptest&quot;, 1000.0, 3000.0, &quot;ms01&quot;, std::move(orbitalParams1)};</span></a>
+<a name="161"><span class="lineNum">     161 </span>            : </a>
+<a name="162"><span class="lineNum">     162 </span><span class="lineCov">          1 :     IO::SDK::Integrators::VVIntegrator integrator(IO::SDK::Time::TimeSpan(1.0s));</span></a>
+<a name="163"><span class="lineNum">     163 </span><span class="lineCov">          2 :     IO::SDK::Propagators::Propagator prop(s, integrator, IO::SDK::Time::Window(IO::SDK::Time::TDB(100.0s), IO::SDK::Time::TDB(200.0s)));</span></a>
+<a name="164"><span class="lineNum">     164 </span>            : </a>
+<a name="165"><span class="lineNum">     165 </span><span class="lineCov">          1 :     s.AddFuelTank(&quot;ft1&quot;, 1000.0, 900.0);</span></a>
+<a name="166"><span class="lineNum">     166 </span><span class="lineCov">          1 :     s.AddEngine(&quot;sn1&quot;, &quot;eng1&quot;, &quot;ft1&quot;, {1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}, 450.0, 50.0);</span></a>
+<a name="167"><span class="lineNum">     167 </span>            : </a>
+<a name="168"><span class="lineNum">     168 </span><span class="lineCov">          1 :     auto engine1 = s.GetEngine(&quot;sn1&quot;);</span></a>
+<a name="169"><span class="lineNum">     169 </span>            : </a>
+<a name="170"><span class="lineNum">     170 </span><span class="lineCov">          1 :     std::vector&lt;IO::SDK::Body::Spacecraft::Engine&gt; engines;</span></a>
+<a name="171"><span class="lineNum">     171 </span><span class="lineCov">          1 :     engines.push_back(*engine1);</span></a>
+<a name="172"><span class="lineNum">     172 </span>            : </a>
+<a name="173"><span class="lineNum">     173 </span><span class="lineCov">          1 :     IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver maneuver(engines, prop, orbitalParams2.get());</span></a>
+<a name="174"><span class="lineNum">     174 </span>            : </a>
+<a name="175"><span class="lineNum">     175 </span><span class="lineCov">          1 :     auto timeToTrueAnomalyDN = s.GetOrbitalParametersAtEpoch()-&gt;GetTimeToTrueAnomaly(6.24);</span></a>
+<a name="176"><span class="lineNum">     176 </span><span class="lineCov">          1 :     auto timeToTrueAnomalyAN = s.GetOrbitalParametersAtEpoch()-&gt;GetTimeToTrueAnomaly(6.24 - IO::SDK::Constants::PI);</span></a>
+<a name="177"><span class="lineNum">     177 </span>            : </a>
+<a name="178"><span class="lineNum">     178 </span>            :     //Initialize</a>
+<a name="179"><span class="lineNum">     179 </span><span class="lineCov">          1 :     ASSERT_FALSE(maneuver.IsAscendingNode(s.GetOrbitalParametersAtEpoch()-&gt;GetStateVector(timeToTrueAnomalyDN)));</span></a>
+<a name="180"><span class="lineNum">     180 </span><span class="lineCov">          1 :     ASSERT_TRUE(maneuver.IsAscendingNode(s.GetOrbitalParametersAtEpoch()-&gt;GetStateVector(timeToTrueAnomalyAN)));</span></a>
+<a name="181"><span class="lineNum">     181 </span>            : }</a>
+<a name="182"><span class="lineNum">     182 </span>            : </a>
+<a name="183"><span class="lineNum">     183 </span><span class="lineCov">          4 : TEST(PlaneChangingManeuver, ExecuteInsuffisantDeltaV)</span></a>
+<a name="184"><span class="lineNum">     184 </span>            : {</a>
+<a name="185"><span class="lineNum">     185 </span>            : </a>
+<a name="186"><span class="lineNum">     186 </span><span class="lineCov">          1 :     const auto earth = std::make_shared&lt;IO::SDK::Body::CelestialBody&gt;(399, &quot;earth&quot;);</span></a>
+<a name="187"><span class="lineNum">     187 </span><span class="lineCov">          2 :     std::unique_ptr&lt;IO::SDK::OrbitalParameters::OrbitalParameters&gt; orbitalParams1 = std::make_unique&lt;IO::SDK::OrbitalParameters::ConicOrbitalElements&gt;(earth, 11480000.0, 0.0, 60.0 * IO::SDK::Constants::DEG_RAD, 10.0 * IO::SDK::Constants::DEG_RAD, 0.0, 0.0, IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::GetICRF());</span></a>
+<a name="188"><span class="lineNum">     188 </span><span class="lineCov">          2 :     std::unique_ptr&lt;IO::SDK::OrbitalParameters::OrbitalParameters&gt; orbitalParams2 = std::make_unique&lt;IO::SDK::OrbitalParameters::ConicOrbitalElements&gt;(earth, 11480000.0, 0.0, 45.0 * IO::SDK::Constants::DEG_RAD, 55.0 * IO::SDK::Constants::DEG_RAD, 0.0, 0.0, IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::GetICRF());</span></a>
+<a name="189"><span class="lineNum">     189 </span><span class="lineCov">          1 :     IO::SDK::OrbitalParameters::StateOrientation attitude(IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::GetICRF());</span></a>
+<a name="190"><span class="lineNum">     190 </span><span class="lineCov">          3 :     IO::SDK::Body::Spacecraft::Spacecraft s{-1, &quot;sptest&quot;, 1000.0, 3000.0, &quot;ms01&quot;, std::move(orbitalParams1)};</span></a>
+<a name="191"><span class="lineNum">     191 </span>            : </a>
+<a name="192"><span class="lineNum">     192 </span><span class="lineCov">          1 :     IO::SDK::Integrators::VVIntegrator integrator(IO::SDK::Time::TimeSpan(1.0s));</span></a>
+<a name="193"><span class="lineNum">     193 </span><span class="lineCov">          2 :     IO::SDK::Propagators::Propagator prop(s, integrator, IO::SDK::Time::Window(IO::SDK::Time::TDB(100.0s), IO::SDK::Time::TDB(200.0s)));</span></a>
+<a name="194"><span class="lineNum">     194 </span>            : </a>
+<a name="195"><span class="lineNum">     195 </span><span class="lineCov">          1 :     s.AddFuelTank(&quot;ft1&quot;, 1000.0, 900.0);</span></a>
+<a name="196"><span class="lineNum">     196 </span><span class="lineCov">          1 :     s.AddEngine(&quot;sn1&quot;, &quot;eng1&quot;, &quot;ft1&quot;, {1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}, 450.0, 50.0);</span></a>
+<a name="197"><span class="lineNum">     197 </span>            : </a>
+<a name="198"><span class="lineNum">     198 </span><span class="lineCov">          1 :     auto engine1 = s.GetEngine(&quot;sn1&quot;);</span></a>
+<a name="199"><span class="lineNum">     199 </span>            : </a>
+<a name="200"><span class="lineNum">     200 </span><span class="lineCov">          1 :     std::vector&lt;IO::SDK::Body::Spacecraft::Engine&gt; engines;</span></a>
+<a name="201"><span class="lineNum">     201 </span><span class="lineCov">          1 :     engines.push_back(*engine1);</span></a>
+<a name="202"><span class="lineNum">     202 </span>            : </a>
+<a name="203"><span class="lineNum">     203 </span><span class="lineCov">          1 :     IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver maneuver(engines, prop, orbitalParams2.get());</span></a>
+<a name="204"><span class="lineNum">     204 </span>            : </a>
+<a name="205"><span class="lineNum">     205 </span><span class="lineCov">          1 :     auto timeToTrueAnomalyDN = s.GetOrbitalParametersAtEpoch()-&gt;GetTimeToTrueAnomaly(2.197937654);</span></a>
+<a name="206"><span class="lineNum">     206 </span><span class="lineCov">          1 :     auto timeToTrueAnomalyAN = s.GetOrbitalParametersAtEpoch()-&gt;GetTimeToTrueAnomaly(2.197937654 + IO::SDK::Constants::PI);</span></a>
+<a name="207"><span class="lineNum">     207 </span>            : </a>
+<a name="208"><span class="lineNum">     208 </span>            :     //To detect if we're passing through the node we need at least two</a>
+<a name="209"><span class="lineNum">     209 </span>            :     //This canExecute will evaluate a first point</a>
+<a name="210"><span class="lineNum">     210 </span><span class="lineCov">          1 :     maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()-&gt;GetStateVector(timeToTrueAnomalyDN - IO::SDK::Time::TimeSpan(10.0s)));</span></a>
+<a name="211"><span class="lineNum">     211 </span>            : </a>
+<a name="212"><span class="lineNum">     212 </span>            :     //The &quot;TryExecute&quot; will evaluate a second time &quot;CanExecute&quot;, so it will be able to check the passage of the node</a>
+<a name="213"><span class="lineNum">     213 </span><span class="lineCov">          1 :     auto res = maneuver.TryExecute(s.GetOrbitalParametersAtEpoch()-&gt;GetStateVector(timeToTrueAnomalyDN));</span></a>
+<a name="214"><span class="lineNum">     214 </span>            : </a>
+<a name="215"><span class="lineNum">     215 </span><span class="lineCov">          1 :     ASSERT_FALSE(res.IsValid());</span></a>
+<a name="216"><span class="lineNum">     216 </span><span class="lineCov">          1 :     ASSERT_DOUBLE_EQ(3849.8575175874462, maneuver.GetDeltaV().Magnitude());</span></a>
+<a name="217"><span class="lineNum">     217 </span>            : }</a>
+<a name="218"><span class="lineNum">     218 </span>            : </a>
+<a name="219"><span class="lineNum">     219 </span><span class="lineCov">          4 : TEST(PlaneChangingManeuver, ExecuteDN)</span></a>
+<a name="220"><span class="lineNum">     220 </span>            : {</a>
+<a name="221"><span class="lineNum">     221 </span>            : </a>
+<a name="222"><span class="lineNum">     222 </span><span class="lineCov">          1 :     const auto earth = std::make_shared&lt;IO::SDK::Body::CelestialBody&gt;(399, &quot;earth&quot;);</span></a>
+<a name="223"><span class="lineNum">     223 </span><span class="lineCov">          2 :     std::unique_ptr&lt;IO::SDK::OrbitalParameters::OrbitalParameters&gt; orbitalParams1 = std::make_unique&lt;IO::SDK::OrbitalParameters::ConicOrbitalElements&gt;(earth, 11480000.0, 0.0, 60.0 * IO::SDK::Constants::DEG_RAD, 10.0 * IO::SDK::Constants::DEG_RAD, 0.0, 0.0, IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::GetICRF());</span></a>
+<a name="224"><span class="lineNum">     224 </span><span class="lineCov">          2 :     std::unique_ptr&lt;IO::SDK::OrbitalParameters::OrbitalParameters&gt; orbitalParams2 = std::make_unique&lt;IO::SDK::OrbitalParameters::ConicOrbitalElements&gt;(earth, 11480000.0, 0.0, 45.0 * IO::SDK::Constants::DEG_RAD, 55.0 * IO::SDK::Constants::DEG_RAD, 0.0, 0.0, IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::GetICRF());</span></a>
+<a name="225"><span class="lineNum">     225 </span><span class="lineCov">          1 :     IO::SDK::OrbitalParameters::StateOrientation attitude(IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::GetICRF());</span></a>
+<a name="226"><span class="lineNum">     226 </span><span class="lineCov">          3 :     IO::SDK::Body::Spacecraft::Spacecraft s{-1, &quot;sptest&quot;, 1000.0, 3000.0, &quot;ms01&quot;, std::move(orbitalParams1)};</span></a>
+<a name="227"><span class="lineNum">     227 </span>            : </a>
+<a name="228"><span class="lineNum">     228 </span><span class="lineCov">          1 :     IO::SDK::Integrators::VVIntegrator integrator(IO::SDK::Time::TimeSpan(1.0s));</span></a>
+<a name="229"><span class="lineNum">     229 </span><span class="lineCov">          2 :     IO::SDK::Propagators::Propagator prop(s, integrator, IO::SDK::Time::Window(IO::SDK::Time::TDB(100.0s), IO::SDK::Time::TDB(200.0s)));</span></a>
+<a name="230"><span class="lineNum">     230 </span>            :     //Add fictive data</a>
+<a name="231"><span class="lineNum">     231 </span><span class="lineCov">          1 :     prop.AddStateVector(IO::SDK::OrbitalParameters::StateVector(earth, IO::SDK::Math::Vector3D(1.0, 2.0, 3.0), IO::SDK::Math::Vector3D(4.0, 5.0, 6.0), IO::SDK::Time::TDB(4260.0s), IO::SDK::Frames::InertialFrames::GetICRF()));</span></a>
+<a name="232"><span class="lineNum">     232 </span>            : </a>
+<a name="233"><span class="lineNum">     233 </span><span class="lineCov">          1 :     s.AddFuelTank(&quot;ft1&quot;, 2000.0, 1900.0);</span></a>
+<a name="234"><span class="lineNum">     234 </span><span class="lineCov">          1 :     s.AddEngine(&quot;sn1&quot;, &quot;eng1&quot;, &quot;ft1&quot;, {1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}, 450.0, 50.0);</span></a>
+<a name="235"><span class="lineNum">     235 </span>            : </a>
+<a name="236"><span class="lineNum">     236 </span><span class="lineCov">          1 :     auto engine1 = s.GetEngine(&quot;sn1&quot;);</span></a>
+<a name="237"><span class="lineNum">     237 </span>            : </a>
+<a name="238"><span class="lineNum">     238 </span><span class="lineCov">          1 :     std::vector&lt;IO::SDK::Body::Spacecraft::Engine&gt; engines;</span></a>
+<a name="239"><span class="lineNum">     239 </span><span class="lineCov">          1 :     engines.push_back(*engine1);</span></a>
+<a name="240"><span class="lineNum">     240 </span>            : </a>
+<a name="241"><span class="lineNum">     241 </span><span class="lineCov">          1 :     IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver maneuver(engines, prop, orbitalParams2.get());</span></a>
+<a name="242"><span class="lineNum">     242 </span>            : </a>
+<a name="243"><span class="lineNum">     243 </span><span class="lineCov">          1 :     auto timeToTrueAnomalyDN = s.GetOrbitalParametersAtEpoch()-&gt;GetTimeToTrueAnomaly(2.197937654);                          //4282s</span></a>
+<a name="244"><span class="lineNum">     244 </span><span class="lineCov">          1 :     auto timeToTrueAnomalyAN = s.GetOrbitalParametersAtEpoch()-&gt;GetTimeToTrueAnomaly(2.197937654 + IO::SDK::Constants::PI); //10402s</span></a>
+<a name="245"><span class="lineNum">     245 </span>            : </a>
+<a name="246"><span class="lineNum">     246 </span>            :     //To detect if we're passing through the node we need at least two</a>
+<a name="247"><span class="lineNum">     247 </span>            :     //This canExecute will evaluate a first point</a>
+<a name="248"><span class="lineNum">     248 </span><span class="lineCov">          1 :     maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()-&gt;GetStateVector(timeToTrueAnomalyDN - IO::SDK::Time::TimeSpan(10.0s)));</span></a>
+<a name="249"><span class="lineNum">     249 </span>            : </a>
+<a name="250"><span class="lineNum">     250 </span>            :     //The &quot;TryExecute&quot; will evaluate a second time &quot;CanExecute&quot;, so it will be able to check the passage of the node</a>
+<a name="251"><span class="lineNum">     251 </span><span class="lineCov">          1 :     auto res = maneuver.TryExecute(s.GetOrbitalParametersAtEpoch()-&gt;GetStateVector(timeToTrueAnomalyDN));</span></a>
+<a name="252"><span class="lineNum">     252 </span>            : </a>
+<a name="253"><span class="lineNum">     253 </span><span class="lineCov">          1 :     ASSERT_TRUE(res.IsValid());</span></a>
+<a name="254"><span class="lineNum">     254 </span>            : </a>
+<a name="255"><span class="lineNum">     255 </span>            :     //Check Delta V magnitude</a>
+<a name="256"><span class="lineNum">     256 </span><span class="lineCov">          1 :     ASSERT_DOUBLE_EQ(3849.8575175874462, maneuver.GetDeltaV().Magnitude());</span></a>
+<a name="257"><span class="lineNum">     257 </span>            : </a>
+<a name="258"><span class="lineNum">     258 </span>            :     //Check if delta v vector points to the right direction</a>
+<a name="259"><span class="lineNum">     259 </span><span class="lineCov">          1 :     auto orientation = maneuver.GetDeltaV().Normalize();</span></a>
+<a name="260"><span class="lineNum">     260 </span><span class="lineCov">          1 :     ASSERT_NEAR(0.38598208120028127, orientation.GetX(), 1E-07);</span></a>
+<a name="261"><span class="lineNum">     261 </span><span class="lineCov">          1 :     ASSERT_NEAR(-0.66574946629008014, orientation.GetY(), 1E-07);</span></a>
+<a name="262"><span class="lineNum">     262 </span><span class="lineCov">          1 :     ASSERT_NEAR(0.63858866348125298, orientation.GetZ(), 1E-07);</span></a>
+<a name="263"><span class="lineNum">     263 </span>            : </a>
+<a name="264"><span class="lineNum">     264 </span>            :     //Check inclination</a>
+<a name="265"><span class="lineNum">     265 </span><span class="lineCov">          1 :     ASSERT_DOUBLE_EQ(0.66556812329478388, maneuver.GetRelativeInclination());</span></a>
+<a name="266"><span class="lineNum">     266 </span>            : </a>
+<a name="267"><span class="lineNum">     267 </span>            :     //Check fuel burned</a>
+<a name="268"><span class="lineNum">     268 </span><span class="lineCov">          1 :     ASSERT_DOUBLE_EQ(1687.9427131389323, maneuver.GetFuelBurned());</span></a>
+<a name="269"><span class="lineNum">     269 </span><span class="lineCov">          1 :     std::cout.precision(17);</span></a>
+<a name="270"><span class="lineNum">     270 </span><span class="lineCov">          1 :     std::cout&lt;&lt;maneuver.GetThrustWindow()-&gt;GetStartDate().GetSecondsFromJ2000().count()&lt;&lt;std::endl;</span></a>
+<a name="271"><span class="lineNum">     271 </span><span class="lineCov">          1 :     std::cout&lt;&lt;maneuver.GetThrustWindow()-&gt;GetEndDate().GetSecondsFromJ2000().count()&lt;&lt;std::endl;</span></a>
+<a name="272"><span class="lineNum">     272 </span>            : //Check maneuver window</a>
+<a name="273"><span class="lineNum">     273 </span>            : #ifdef _WIN32</a>
+<a name="274"><span class="lineNum">     274 </span>            :     ASSERT_EQ(IO::SDK::Time::Window&lt;IO::SDK::Time::TDB&gt;(IO::SDK::Time::TDB(4265.245338359885s), IO::SDK::Time::TDB(4299.004192622664s)), *maneuver.GetThrustWindow());</a>
+<a name="275"><span class="lineNum">     275 </span>            : </a>
+<a name="276"><span class="lineNum">     276 </span>            : #else</a>
+<a name="277"><span class="lineNum">     277 </span><span class="lineCov">          2 :     ASSERT_EQ(IO::SDK::Time::Window&lt;IO::SDK::Time::TDB&gt;(IO::SDK::Time::TDB(4265.245338359885s), IO::SDK::Time::TDB(4299.004192622664s)), *maneuver.GetThrustWindow());</span></a>
+<a name="278"><span class="lineNum">     278 </span>            : #endif</a>
+<a name="279"><span class="lineNum">     279 </span>            : }</a>
+<a name="280"><span class="lineNum">     280 </span>            : </a>
+<a name="281"><span class="lineNum">     281 </span><span class="lineCov">          4 : TEST(PlaneChangingManeuver, ExecuteAN)</span></a>
+<a name="282"><span class="lineNum">     282 </span>            : {</a>
+<a name="283"><span class="lineNum">     283 </span>            : </a>
+<a name="284"><span class="lineNum">     284 </span><span class="lineCov">          1 :     const auto earth = std::make_shared&lt;IO::SDK::Body::CelestialBody&gt;(399, &quot;earth&quot;);</span></a>
+<a name="285"><span class="lineNum">     285 </span><span class="lineCov">          2 :     std::unique_ptr&lt;IO::SDK::OrbitalParameters::OrbitalParameters&gt; orbitalParams1 = std::make_unique&lt;IO::SDK::OrbitalParameters::ConicOrbitalElements&gt;(earth, 11480000.0, 0.0, 60.0 * IO::SDK::Constants::DEG_RAD, 10.0 * IO::SDK::Constants::DEG_RAD, 0.0, 0.0, IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::GetICRF());</span></a>
+<a name="286"><span class="lineNum">     286 </span><span class="lineCov">          2 :     std::unique_ptr&lt;IO::SDK::OrbitalParameters::OrbitalParameters&gt; orbitalParams2 = std::make_unique&lt;IO::SDK::OrbitalParameters::ConicOrbitalElements&gt;(earth, 11480000.0, 0.0, 45.0 * IO::SDK::Constants::DEG_RAD, 55.0 * IO::SDK::Constants::DEG_RAD, 0.0, 0.0, IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::GetICRF());</span></a>
+<a name="287"><span class="lineNum">     287 </span><span class="lineCov">          1 :     IO::SDK::OrbitalParameters::StateOrientation attitude(IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::GetICRF());</span></a>
+<a name="288"><span class="lineNum">     288 </span><span class="lineCov">          3 :     IO::SDK::Body::Spacecraft::Spacecraft s{-1, &quot;sptest&quot;, 1000.0, 3000.0, &quot;ms01&quot;, std::move(orbitalParams1)};</span></a>
+<a name="289"><span class="lineNum">     289 </span>            : </a>
+<a name="290"><span class="lineNum">     290 </span><span class="lineCov">          1 :     IO::SDK::Integrators::VVIntegrator integrator(IO::SDK::Time::TimeSpan(1.0s));</span></a>
+<a name="291"><span class="lineNum">     291 </span><span class="lineCov">          2 :     IO::SDK::Propagators::Propagator prop(s, integrator, IO::SDK::Time::Window(IO::SDK::Time::TDB(100.0s), IO::SDK::Time::TDB(200.0s)));</span></a>
+<a name="292"><span class="lineNum">     292 </span>            :     //Add fictive data</a>
+<a name="293"><span class="lineNum">     293 </span><span class="lineCov">          1 :     prop.AddStateVector(IO::SDK::OrbitalParameters::StateVector(earth, IO::SDK::Math::Vector3D(1.0, 2.0, 3.0), IO::SDK::Math::Vector3D(4.0, 5.0, 6.0), IO::SDK::Time::TDB(4260.0s), IO::SDK::Frames::InertialFrames::GetICRF()));</span></a>
+<a name="294"><span class="lineNum">     294 </span>            : </a>
+<a name="295"><span class="lineNum">     295 </span><span class="lineCov">          1 :     s.AddFuelTank(&quot;ft1&quot;, 2000.0, 1900.0);</span></a>
+<a name="296"><span class="lineNum">     296 </span><span class="lineCov">          1 :     s.AddEngine(&quot;sn1&quot;, &quot;eng1&quot;, &quot;ft1&quot;, {1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}, 450.0, 50.0);</span></a>
+<a name="297"><span class="lineNum">     297 </span>            : </a>
+<a name="298"><span class="lineNum">     298 </span><span class="lineCov">          1 :     auto engine1 = s.GetEngine(&quot;sn1&quot;);</span></a>
+<a name="299"><span class="lineNum">     299 </span>            : </a>
+<a name="300"><span class="lineNum">     300 </span><span class="lineCov">          1 :     std::vector&lt;IO::SDK::Body::Spacecraft::Engine&gt; engines;</span></a>
+<a name="301"><span class="lineNum">     301 </span><span class="lineCov">          1 :     engines.push_back(*engine1);</span></a>
+<a name="302"><span class="lineNum">     302 </span>            : </a>
+<a name="303"><span class="lineNum">     303 </span><span class="lineCov">          1 :     IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver maneuver(engines, prop, orbitalParams2.get());</span></a>
+<a name="304"><span class="lineNum">     304 </span>            : </a>
+<a name="305"><span class="lineNum">     305 </span><span class="lineCov">          1 :     auto timeToTrueAnomalyDN = s.GetOrbitalParametersAtEpoch()-&gt;GetTimeToTrueAnomaly(2.197937654);                          //4282s</span></a>
+<a name="306"><span class="lineNum">     306 </span><span class="lineCov">          1 :     auto timeToTrueAnomalyAN = s.GetOrbitalParametersAtEpoch()-&gt;GetTimeToTrueAnomaly(2.197937654 + IO::SDK::Constants::PI); //10402s</span></a>
+<a name="307"><span class="lineNum">     307 </span>            : </a>
+<a name="308"><span class="lineNum">     308 </span>            :     //To detect if we're passing through the node we need at least two</a>
+<a name="309"><span class="lineNum">     309 </span>            :     //This canExecute will evaluate a first point</a>
+<a name="310"><span class="lineNum">     310 </span><span class="lineCov">          1 :     maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()-&gt;GetStateVector(timeToTrueAnomalyAN - IO::SDK::Time::TimeSpan(10.0s)));</span></a>
+<a name="311"><span class="lineNum">     311 </span>            : </a>
+<a name="312"><span class="lineNum">     312 </span>            :     //The &quot;TryExecute&quot; will evaluate a second time &quot;CanExecute&quot;, so it will be able to check the passage of the node</a>
+<a name="313"><span class="lineNum">     313 </span><span class="lineCov">          1 :     auto res = maneuver.TryExecute(s.GetOrbitalParametersAtEpoch()-&gt;GetStateVector(timeToTrueAnomalyAN));</span></a>
+<a name="314"><span class="lineNum">     314 </span>            : </a>
+<a name="315"><span class="lineNum">     315 </span><span class="lineCov">          1 :     ASSERT_TRUE(res.IsValid());</span></a>
+<a name="316"><span class="lineNum">     316 </span>            : </a>
+<a name="317"><span class="lineNum">     317 </span>            :     //Check Delta V magnitude</a>
+<a name="318"><span class="lineNum">     318 </span><span class="lineCov">          1 :     ASSERT_DOUBLE_EQ(3849.8575175874421, maneuver.GetDeltaV().Magnitude());</span></a>
+<a name="319"><span class="lineNum">     319 </span>            : </a>
+<a name="320"><span class="lineNum">     320 </span>            :     //Check if delta v vector points to the right direction</a>
+<a name="321"><span class="lineNum">     321 </span><span class="lineCov">          1 :     auto orientation = maneuver.GetDeltaV().Normalize();</span></a>
+<a name="322"><span class="lineNum">     322 </span><span class="lineCov">          1 :     ASSERT_NEAR(-0.38598208120028066, orientation.GetX(), 1E-07);</span></a>
+<a name="323"><span class="lineNum">     323 </span><span class="lineCov">          1 :     ASSERT_NEAR(0.66574946629008003, orientation.GetY(), 1E-07);</span></a>
+<a name="324"><span class="lineNum">     324 </span><span class="lineCov">          1 :     ASSERT_NEAR(-0.63858866348125343, orientation.GetZ(), 1E-07);</span></a>
+<a name="325"><span class="lineNum">     325 </span>            : </a>
+<a name="326"><span class="lineNum">     326 </span>            :     //Check inclination</a>
+<a name="327"><span class="lineNum">     327 </span><span class="lineCov">          1 :     ASSERT_DOUBLE_EQ(0.66556812329478388, maneuver.GetRelativeInclination());</span></a>
+<a name="328"><span class="lineNum">     328 </span>            : </a>
+<a name="329"><span class="lineNum">     329 </span>            : #ifdef _WIN32</a>
+<a name="330"><span class="lineNum">     330 </span>            :     ASSERT_DOUBLE_EQ(1687.9427131389309, maneuver.GetFuelBurned());</a>
+<a name="331"><span class="lineNum">     331 </span>            : #else</a>
+<a name="332"><span class="lineNum">     332 </span>            :     //Check fuel burned</a>
+<a name="333"><span class="lineNum">     333 </span><span class="lineCov">          1 :     ASSERT_DOUBLE_EQ(1687.9427131389309, maneuver.GetFuelBurned());</span></a>
+<a name="334"><span class="lineNum">     334 </span>            : #endif</a>
+<a name="335"><span class="lineNum">     335 </span>            : </a>
+<a name="336"><span class="lineNum">     336 </span>            :     //Check maneuver window</a>
+<a name="337"><span class="lineNum">     337 </span><span class="lineCov">          2 :     ASSERT_EQ(IO::SDK::Time::Window&lt;IO::SDK::Time::TDB&gt;(IO::SDK::Time::TDB(10385.842835991318s), IO::SDK::Time::TDB(10419.601690254096s)), *maneuver.GetThrustWindow());</span></a>
+<a name="338"><span class="lineNum">     338 </span>            : }</a>
+<a name="339"><span class="lineNum">     339 </span>            : </a>
+<a name="340"><span class="lineNum">     340 </span><span class="lineCov">          4 : TEST(PlaneChangingManeuver, CheckOrbitalParametersToHigherInclination)</span></a>
+<a name="341"><span class="lineNum">     341 </span>            : {</a>
+<a name="342"><span class="lineNum">     342 </span>            :     //=======================Configure universe topology======================================</a>
+<a name="343"><span class="lineNum">     343 </span>            :     // auto sun = std::make_shared&lt;IO::SDK::Body::CelestialBody&gt;(10, &quot;sun&quot;);</a>
+<a name="344"><span class="lineNum">     344 </span><span class="lineCov">          1 :     auto earth = std::make_shared&lt;IO::SDK::Body::CelestialBody&gt;(399, &quot;earth&quot;);</span></a>
+<a name="345"><span class="lineNum">     345 </span>            :     // auto moon = std::make_shared&lt;IO::SDK::Body::CelestialBody&gt;(301, &quot;moon&quot;, earth);</a>
+<a name="346"><span class="lineNum">     346 </span>            : </a>
+<a name="347"><span class="lineNum">     347 </span>            :     //Define parking orbit</a>
+<a name="348"><span class="lineNum">     348 </span>            :     auto parkingOrbit = std::make_shared&lt;IO::SDK::OrbitalParameters::ConicOrbitalElements&gt;(earth,</a>
+<a name="349"><span class="lineNum">     349 </span><span class="lineNoCov">          0 :                                                                                            6700000.0,</span></a>
+<a name="350"><span class="lineNum">     350 </span><span class="lineNoCov">          0 :                                                                                            0.1,</span></a>
+<a name="351"><span class="lineNum">     351 </span><span class="lineNoCov">          0 :                                                                                            40.0 * IO::SDK::Constants::DEG_RAD,</span></a>
+<a name="352"><span class="lineNum">     352 </span><span class="lineNoCov">          0 :                                                                                            20.0 * IO::SDK::Constants::DEG_RAD,</span></a>
+<a name="353"><span class="lineNum">     353 </span><span class="lineNoCov">          0 :                                                                                            10.0 * IO::SDK::Constants::DEG_RAD,</span></a>
+<a name="354"><span class="lineNum">     354 </span><span class="lineCov">          1 :                                                                                            10.0,</span></a>
+<a name="355"><span class="lineNum">     355 </span><span class="lineCov">          2 :                                                                                            IO::SDK::Time::TDB(&quot;2021-06-02T00:00:00&quot;),</span></a>
+<a name="356"><span class="lineNum">     356 </span><span class="lineCov">          2 :                                                                                            IO::SDK::Frames::InertialFrames::GetICRF());</span></a>
+<a name="357"><span class="lineNum">     357 </span>            :     //Define target orbit</a>
+<a name="358"><span class="lineNum">     358 </span>            :     auto targetOrbit = std::make_shared&lt;IO::SDK::OrbitalParameters::ConicOrbitalElements&gt;(earth,</a>
+<a name="359"><span class="lineNum">     359 </span><span class="lineNoCov">          0 :                                                                                           6700000.0,</span></a>
+<a name="360"><span class="lineNum">     360 </span><span class="lineNoCov">          0 :                                                                                           0.1,</span></a>
+<a name="361"><span class="lineNum">     361 </span><span class="lineNoCov">          0 :                                                                                           55.0 * IO::SDK::Constants::DEG_RAD,</span></a>
+<a name="362"><span class="lineNum">     362 </span><span class="lineNoCov">          0 :                                                                                           20.0 * IO::SDK::Constants::DEG_RAD,</span></a>
+<a name="363"><span class="lineNum">     363 </span><span class="lineNoCov">          0 :                                                                                           10.0 * IO::SDK::Constants::DEG_RAD,</span></a>
+<a name="364"><span class="lineNum">     364 </span><span class="lineCov">          1 :                                                                                           10.0,</span></a>
+<a name="365"><span class="lineNum">     365 </span><span class="lineCov">          2 :                                                                                           IO::SDK::Time::TDB(&quot;2021-06-02T00:00:00&quot;),</span></a>
+<a name="366"><span class="lineNum">     366 </span><span class="lineCov">          2 :                                                                                           IO::SDK::Frames::InertialFrames::GetICRF());</span></a>
+<a name="367"><span class="lineNum">     367 </span>            : </a>
+<a name="368"><span class="lineNum">     368 </span>            :     //===================Compute maneuvers to reach target body================================</a>
+<a name="369"><span class="lineNum">     369 </span>            : </a>
+<a name="370"><span class="lineNum">     370 </span>            :     //Configure spacecraft</a>
+<a name="371"><span class="lineNum">     371 </span><span class="lineCov">          3 :     IO::SDK::Body::Spacecraft::Spacecraft spacecraft{-1, &quot;MySpacecraft&quot;, 1000.0, 3000.0, &quot;mission01&quot;, std::make_unique&lt;IO::SDK::OrbitalParameters::ConicOrbitalElements&gt;(*parkingOrbit)};</span></a>
+<a name="372"><span class="lineNum">     372 </span><span class="lineCov">          1 :     spacecraft.AddFuelTank(&quot;fuelTank1&quot;, 2000.0, 1000.0);</span></a>
+<a name="373"><span class="lineNum">     373 </span><span class="lineCov">          1 :     spacecraft.AddEngine(&quot;serialNumber1&quot;, &quot;engine1&quot;, &quot;fuelTank1&quot;, {1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}, 450.0, 50.0);</span></a>
+<a name="374"><span class="lineNum">     374 </span>            : </a>
+<a name="375"><span class="lineNum">     375 </span>            :     //Configure propagator</a>
+<a name="376"><span class="lineNum">     376 </span><span class="lineCov">          1 :     auto step{IO::SDK::Time::TimeSpan(1.0s)};</span></a>
+<a name="377"><span class="lineNum">     377 </span>            : </a>
+<a name="378"><span class="lineNum">     378 </span>            :     //Add gravity to forces model</a>
+<a name="379"><span class="lineNum">     379 </span><span class="lineCov">          1 :     std::vector&lt;IO::SDK::Integrators::Forces::Force *&gt; forces{};</span></a>
+<a name="380"><span class="lineNum">     380 </span><span class="lineCov">          1 :     IO::SDK::Integrators::Forces::GravityForce gravityForce;</span></a>
+<a name="381"><span class="lineNum">     381 </span><span class="lineCov">          1 :     forces.push_back(&amp;gravityForce);</span></a>
+<a name="382"><span class="lineNum">     382 </span>            : </a>
+<a name="383"><span class="lineNum">     383 </span>            :     //Initialize integrator</a>
+<a name="384"><span class="lineNum">     384 </span><span class="lineCov">          1 :     IO::SDK::Integrators::VVIntegrator integrator(step, forces);</span></a>
+<a name="385"><span class="lineNum">     385 </span>            : </a>
+<a name="386"><span class="lineNum">     386 </span>            :     //Configure propagator</a>
+<a name="387"><span class="lineNum">     387 </span><span class="lineCov">          2 :     IO::SDK::Time::UTC startEpoch(&quot;2021-06-02T00:00:00&quot;);</span></a>
+<a name="388"><span class="lineNum">     388 </span><span class="lineCov">          2 :     IO::SDK::Time::UTC endEpoch(&quot;2021-06-03T00:00:00&quot;);</span></a>
+<a name="389"><span class="lineNum">     389 </span><span class="lineCov">          2 :     IO::SDK::Propagators::Propagator propagator(spacecraft, integrator, IO::SDK::Time::Window(startEpoch.ToTDB(), endEpoch.ToTDB()));</span></a>
+<a name="390"><span class="lineNum">     390 </span>            : </a>
+<a name="391"><span class="lineNum">     391 </span>            :     //Configure maneuvers</a>
+<a name="392"><span class="lineNum">     392 </span>            : </a>
+<a name="393"><span class="lineNum">     393 </span>            :     //We define which engines can be used to realize maneuvers</a>
+<a name="394"><span class="lineNum">     394 </span><span class="lineCov">          1 :     auto engine1 = spacecraft.GetEngine(&quot;serialNumber1&quot;);</span></a>
+<a name="395"><span class="lineNum">     395 </span><span class="lineCov">          1 :     std::vector&lt;IO::SDK::Body::Spacecraft::Engine&gt; engines;</span></a>
+<a name="396"><span class="lineNum">     396 </span><span class="lineCov">          1 :     engines.push_back(*engine1);</span></a>
+<a name="397"><span class="lineNum">     397 </span>            : </a>
+<a name="398"><span class="lineNum">     398 </span>            :     //We configre each maneuver</a>
+<a name="399"><span class="lineNum">     399 </span><span class="lineCov">          1 :     IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver planeAlignment(engines, propagator, targetOrbit.get());</span></a>
+<a name="400"><span class="lineNum">     400 </span>            : </a>
+<a name="401"><span class="lineNum">     401 </span>            :     //We define the first maneuver in standby</a>
+<a name="402"><span class="lineNum">     402 </span><span class="lineCov">          1 :     propagator.SetStandbyManeuver(&amp;planeAlignment);</span></a>
+<a name="403"><span class="lineNum">     403 </span>            : </a>
+<a name="404"><span class="lineNum">     404 </span><span class="lineCov">          1 :     propagator.Propagate();</span></a>
+<a name="405"><span class="lineNum">     405 </span>            : </a>
+<a name="406"><span class="lineNum">     406 </span><span class="lineCov">          1 :     auto startManeuver = planeAlignment.GetThrustWindow()-&gt;GetStartDate().Add(IO::SDK::Time::TimeSpan(-60.0s));</span></a>
+<a name="407"><span class="lineNum">     407 </span><span class="lineCov">          1 :     auto endManeuver = planeAlignment.GetThrustWindow()-&gt;GetEndDate().Add(IO::SDK::Time::TimeSpan(60.0s));</span></a>
+<a name="408"><span class="lineNum">     408 </span>            : </a>
+<a name="409"><span class="lineNum">     409 </span><span class="lineCov">          1 :     auto ephemeris = spacecraft.ReadEphemeris(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::AberrationsEnum::None, endManeuver, *earth);</span></a>
+<a name="410"><span class="lineNum">     410 </span>            : </a>
+<a name="411"><span class="lineNum">     411 </span><span class="lineCov">          1 :     auto p = ephemeris.GetPerigeeVector().Magnitude();</span></a>
+<a name="412"><span class="lineNum">     412 </span><span class="lineCov">          1 :     auto e = ephemeris.GetEccentricity();</span></a>
+<a name="413"><span class="lineNum">     413 </span><span class="lineCov">          1 :     auto i = ephemeris.GetInclination() * IO::SDK::Constants::RAD_DEG;</span></a>
+<a name="414"><span class="lineNum">     414 </span><span class="lineCov">          1 :     auto o = ephemeris.GetRightAscendingNodeLongitude() * IO::SDK::Constants::RAD_DEG;</span></a>
+<a name="415"><span class="lineNum">     415 </span><span class="lineCov">          1 :     auto w = ephemeris.GetPeriapsisArgument() * IO::SDK::Constants::RAD_DEG;</span></a>
+<a name="416"><span class="lineNum">     416 </span>            : </a>
+<a name="417"><span class="lineNum">     417 </span><span class="lineCov">          1 :     ASSERT_DOUBLE_EQ(6700004.1067949599, p);</span></a>
+<a name="418"><span class="lineNum">     418 </span>            : </a>
+<a name="419"><span class="lineNum">     419 </span><span class="lineCov">          1 :     ASSERT_NEAR(0.10001034044290764, e,1e-09);</span></a>
+<a name="420"><span class="lineNum">     420 </span>            : </a>
+<a name="421"><span class="lineNum">     421 </span><span class="lineCov">          1 :     ASSERT_DOUBLE_EQ(54.999995365922835, i);</span></a>
+<a name="422"><span class="lineNum">     422 </span>            : </a>
+<a name="423"><span class="lineNum">     423 </span><span class="lineCov">          1 :     ASSERT_DOUBLE_EQ(20.015974011532073, o);</span></a>
+<a name="424"><span class="lineNum">     424 </span>            : </a>
+<a name="425"><span class="lineNum">     425 </span>            : #ifdef _WIN32</a>
+<a name="426"><span class="lineNum">     426 </span>            : </a>
+<a name="427"><span class="lineNum">     427 </span>            :     ASSERT_DOUBLE_EQ(9.9879515017488565, w);</a>
+<a name="428"><span class="lineNum">     428 </span>            : #else</a>
+<a name="429"><span class="lineNum">     429 </span><span class="lineCov">          1 :     ASSERT_DOUBLE_EQ(9.9879515017487588, w);</span></a>
+<a name="430"><span class="lineNum">     430 </span>            : #endif</a>
+<a name="431"><span class="lineNum">     431 </span>            : }</a>
+<a name="432"><span class="lineNum">     432 </span>            : </a>
+<a name="433"><span class="lineNum">     433 </span><span class="lineCov">          4 : TEST(PlaneChangingManeuver, CheckOrbitalParametersToLowerInclination)</span></a>
+<a name="434"><span class="lineNum">     434 </span>            : {</a>
+<a name="435"><span class="lineNum">     435 </span>            :     //=======================Configure universe topology======================================</a>
+<a name="436"><span class="lineNum">     436 </span>            :     // auto sun = std::make_shared&lt;IO::SDK::Body::CelestialBody&gt;(10, &quot;sun&quot;);</a>
+<a name="437"><span class="lineNum">     437 </span><span class="lineCov">          1 :     auto earth = std::make_shared&lt;IO::SDK::Body::CelestialBody&gt;(399, &quot;earth&quot;);</span></a>
+<a name="438"><span class="lineNum">     438 </span>            :     // auto moon = std::make_shared&lt;IO::SDK::Body::CelestialBody&gt;(301, &quot;moon&quot;, earth);</a>
+<a name="439"><span class="lineNum">     439 </span>            : </a>
+<a name="440"><span class="lineNum">     440 </span>            :     //Define parking orbit</a>
+<a name="441"><span class="lineNum">     441 </span>            :     auto parkingOrbit = std::make_shared&lt;IO::SDK::OrbitalParameters::ConicOrbitalElements&gt;(earth,</a>
+<a name="442"><span class="lineNum">     442 </span><span class="lineNoCov">          0 :                                                                                            6700000.0,</span></a>
+<a name="443"><span class="lineNum">     443 </span><span class="lineNoCov">          0 :                                                                                            0.9,</span></a>
+<a name="444"><span class="lineNum">     444 </span><span class="lineNoCov">          0 :                                                                                            35.0 * IO::SDK::Constants::DEG_RAD,</span></a>
+<a name="445"><span class="lineNum">     445 </span><span class="lineNoCov">          0 :                                                                                            30.0 * IO::SDK::Constants::DEG_RAD,</span></a>
+<a name="446"><span class="lineNum">     446 </span><span class="lineNoCov">          0 :                                                                                            10.0 * IO::SDK::Constants::DEG_RAD,</span></a>
+<a name="447"><span class="lineNum">     447 </span><span class="lineCov">          1 :                                                                                            10.0,</span></a>
+<a name="448"><span class="lineNum">     448 </span><span class="lineCov">          2 :                                                                                            IO::SDK::Time::TDB(&quot;2021-06-02T00:00:00&quot;),</span></a>
+<a name="449"><span class="lineNum">     449 </span><span class="lineCov">          2 :                                                                                            IO::SDK::Frames::InertialFrames::GetICRF());</span></a>
+<a name="450"><span class="lineNum">     450 </span>            :     //Define target orbit</a>
+<a name="451"><span class="lineNum">     451 </span>            :     auto targetOrbit = std::make_shared&lt;IO::SDK::OrbitalParameters::ConicOrbitalElements&gt;(earth,</a>
+<a name="452"><span class="lineNum">     452 </span><span class="lineNoCov">          0 :                                                                                           6700000.0,</span></a>
+<a name="453"><span class="lineNum">     453 </span><span class="lineNoCov">          0 :                                                                                           0.9,</span></a>
+<a name="454"><span class="lineNum">     454 </span><span class="lineNoCov">          0 :                                                                                           40.0 * IO::SDK::Constants::DEG_RAD,</span></a>
+<a name="455"><span class="lineNum">     455 </span><span class="lineNoCov">          0 :                                                                                           15.0 * IO::SDK::Constants::DEG_RAD,</span></a>
+<a name="456"><span class="lineNum">     456 </span><span class="lineNoCov">          0 :                                                                                           10.0 * IO::SDK::Constants::DEG_RAD,</span></a>
+<a name="457"><span class="lineNum">     457 </span><span class="lineCov">          1 :                                                                                           10.0,</span></a>
+<a name="458"><span class="lineNum">     458 </span><span class="lineCov">          2 :                                                                                           IO::SDK::Time::TDB(&quot;2021-06-02T00:00:00&quot;),</span></a>
+<a name="459"><span class="lineNum">     459 </span><span class="lineCov">          2 :                                                                                           IO::SDK::Frames::InertialFrames::GetICRF());</span></a>
+<a name="460"><span class="lineNum">     460 </span>            : </a>
+<a name="461"><span class="lineNum">     461 </span>            :     //===================Compute maneuvers to reach target body================================</a>
+<a name="462"><span class="lineNum">     462 </span>            : </a>
+<a name="463"><span class="lineNum">     463 </span>            :     //Configure spacecraft</a>
+<a name="464"><span class="lineNum">     464 </span><span class="lineCov">          3 :     IO::SDK::Body::Spacecraft::Spacecraft spacecraft{-1, &quot;MySpacecraft&quot;, 1000.0, 3000.0, &quot;mission01&quot;, std::make_unique&lt;IO::SDK::OrbitalParameters::ConicOrbitalElements&gt;(*parkingOrbit)};</span></a>
+<a name="465"><span class="lineNum">     465 </span><span class="lineCov">          1 :     spacecraft.AddFuelTank(&quot;fuelTank1&quot;, 2000.0, 1000.0);</span></a>
+<a name="466"><span class="lineNum">     466 </span><span class="lineCov">          1 :     spacecraft.AddEngine(&quot;serialNumber1&quot;, &quot;engine1&quot;, &quot;fuelTank1&quot;, {1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}, 450.0, 50.0);</span></a>
+<a name="467"><span class="lineNum">     467 </span>            : </a>
+<a name="468"><span class="lineNum">     468 </span>            :     //Configure propagator</a>
+<a name="469"><span class="lineNum">     469 </span><span class="lineCov">          1 :     auto step{IO::SDK::Time::TimeSpan(1.0s)};</span></a>
+<a name="470"><span class="lineNum">     470 </span>            : </a>
+<a name="471"><span class="lineNum">     471 </span>            :     //Add gravity to forces model</a>
+<a name="472"><span class="lineNum">     472 </span><span class="lineCov">          1 :     std::vector&lt;IO::SDK::Integrators::Forces::Force *&gt; forces{};</span></a>
+<a name="473"><span class="lineNum">     473 </span><span class="lineCov">          1 :     IO::SDK::Integrators::Forces::GravityForce gravityForce;</span></a>
+<a name="474"><span class="lineNum">     474 </span><span class="lineCov">          1 :     forces.push_back(&amp;gravityForce);</span></a>
+<a name="475"><span class="lineNum">     475 </span>            : </a>
+<a name="476"><span class="lineNum">     476 </span>            :     //Initialize integrator</a>
+<a name="477"><span class="lineNum">     477 </span><span class="lineCov">          1 :     IO::SDK::Integrators::VVIntegrator integrator(step, forces);</span></a>
+<a name="478"><span class="lineNum">     478 </span>            : </a>
+<a name="479"><span class="lineNum">     479 </span>            :     //Configure propagator</a>
+<a name="480"><span class="lineNum">     480 </span><span class="lineCov">          2 :     IO::SDK::Time::UTC startEpoch(&quot;2021-06-02T00:00:00&quot;);</span></a>
+<a name="481"><span class="lineNum">     481 </span><span class="lineCov">          2 :     IO::SDK::Time::UTC endEpoch(&quot;2021-06-03T00:00:00&quot;);</span></a>
+<a name="482"><span class="lineNum">     482 </span><span class="lineCov">          2 :     IO::SDK::Propagators::Propagator propagator(spacecraft, integrator, IO::SDK::Time::Window(startEpoch.ToTDB(), endEpoch.ToTDB()));</span></a>
+<a name="483"><span class="lineNum">     483 </span>            : </a>
+<a name="484"><span class="lineNum">     484 </span>            :     //Configure maneuvers</a>
+<a name="485"><span class="lineNum">     485 </span>            : </a>
+<a name="486"><span class="lineNum">     486 </span>            :     //We define which engines can be used to realize maneuvers</a>
+<a name="487"><span class="lineNum">     487 </span><span class="lineCov">          1 :     auto engine1 = spacecraft.GetEngine(&quot;serialNumber1&quot;);</span></a>
+<a name="488"><span class="lineNum">     488 </span><span class="lineCov">          1 :     std::vector&lt;IO::SDK::Body::Spacecraft::Engine&gt; engines;</span></a>
+<a name="489"><span class="lineNum">     489 </span><span class="lineCov">          1 :     engines.push_back(*engine1);</span></a>
+<a name="490"><span class="lineNum">     490 </span>            : </a>
+<a name="491"><span class="lineNum">     491 </span>            :     //We configre each maneuver</a>
+<a name="492"><span class="lineNum">     492 </span><span class="lineCov">          1 :     IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver planeAlignment(engines, propagator, targetOrbit.get());</span></a>
+<a name="493"><span class="lineNum">     493 </span>            : </a>
+<a name="494"><span class="lineNum">     494 </span>            :     //We define the first maneuver in standby</a>
+<a name="495"><span class="lineNum">     495 </span><span class="lineCov">          1 :     propagator.SetStandbyManeuver(&amp;planeAlignment);</span></a>
+<a name="496"><span class="lineNum">     496 </span>            : </a>
+<a name="497"><span class="lineNum">     497 </span><span class="lineCov">          1 :     propagator.Propagate();</span></a>
+<a name="498"><span class="lineNum">     498 </span>            : </a>
+<a name="499"><span class="lineNum">     499 </span><span class="lineCov">          1 :     auto startManeuver = planeAlignment.GetThrustWindow()-&gt;GetStartDate().Add(IO::SDK::Time::TimeSpan(-60.0s));</span></a>
+<a name="500"><span class="lineNum">     500 </span><span class="lineCov">          1 :     auto endManeuver = planeAlignment.GetThrustWindow()-&gt;GetEndDate().Add(IO::SDK::Time::TimeSpan(60.0s));</span></a>
+<a name="501"><span class="lineNum">     501 </span>            : </a>
+<a name="502"><span class="lineNum">     502 </span><span class="lineCov">          1 :     auto ephemeris = spacecraft.ReadEphemeris(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::AberrationsEnum::None, endManeuver, *earth);</span></a>
+<a name="503"><span class="lineNum">     503 </span>            : </a>
+<a name="504"><span class="lineNum">     504 </span><span class="lineCov">          1 :     auto p = ephemeris.GetPerigeeVector().Magnitude();</span></a>
+<a name="505"><span class="lineNum">     505 </span><span class="lineCov">          1 :     auto e = ephemeris.GetEccentricity();</span></a>
+<a name="506"><span class="lineNum">     506 </span><span class="lineCov">          1 :     auto i = ephemeris.GetInclination() * IO::SDK::Constants::RAD_DEG;</span></a>
+<a name="507"><span class="lineNum">     507 </span><span class="lineCov">          1 :     auto o = ephemeris.GetRightAscendingNodeLongitude() * IO::SDK::Constants::RAD_DEG;</span></a>
+<a name="508"><span class="lineNum">     508 </span><span class="lineCov">          1 :     auto w = ephemeris.GetPeriapsisArgument() * IO::SDK::Constants::RAD_DEG;</span></a>
+<a name="509"><span class="lineNum">     509 </span>            : </a>
+<a name="510"><span class="lineNum">     510 </span><span class="lineCov">          1 :     ASSERT_DOUBLE_EQ(6700011.5756513486, p);</span></a>
+<a name="511"><span class="lineNum">     511 </span>            : </a>
+<a name="512"><span class="lineNum">     512 </span><span class="lineCov">          1 :     ASSERT_DOUBLE_EQ(0.8999997662719702, e);</span></a>
+<a name="513"><span class="lineNum">     513 </span>            : </a>
+<a name="514"><span class="lineNum">     514 </span><span class="lineCov">          1 :     ASSERT_DOUBLE_EQ(40.004520687725375, i);</span></a>
+<a name="515"><span class="lineNum">     515 </span>            : </a>
+<a name="516"><span class="lineNum">     516 </span><span class="lineCov">          1 :     ASSERT_DOUBLE_EQ(15.004839992067728, o);</span></a>
+<a name="517"><span class="lineNum">     517 </span>            : </a>
+<a name="518"><span class="lineNum">     518 </span><span class="lineCov">          1 :     ASSERT_DOUBLE_EQ(21.932445485694203, w);</span></a>
+<a name="519"><span class="lineNum">     519 </span>            : }</a>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.14</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

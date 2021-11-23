@@ -17,8 +17,8 @@
 #include <RectangularInstrumentKernel.h>
 #include <CircularInstrumentKernel.h>
 #include <SpiceUsr.h>
-#include<Builder.h>
-
+#include <Builder.h>
+#include <StringHelpers.h>
 
 std::string IO::SDK::Instruments::Instrument::GetFilesPath() const
 {
@@ -47,8 +47,8 @@ const std::unique_ptr<IO::SDK::Frames::InstrumentFrameFile> &IO::SDK::Instrument
 
 IO::SDK::Instruments::Instrument::Instrument(const IO::SDK::Body::Spacecraft::Spacecraft &spacecraft, const unsigned short id, const std::string &name, const IO::SDK::Math::Vector3D &orientation, const IO::SDK::Math::Vector3D &boresight, const IO::SDK::Math::Vector3D &fovRefVector, const double fovAngle) : m_spacecraft{spacecraft},
 																																																																													m_id{id < 1000 ? spacecraft.GetId() * 1000 - id : throw IO::SDK::Exception::InvalidArgumentException("Instrument Id must be a positive number < 1000")},
-																																																																													m_name{name},
-																																																																													m_filesPath{spacecraft.GetFilesPath() + "/Instruments/" + name},
+																																																																													m_name{IO::SDK::StringHelpers::ToUpper(name)},
+																																																																													m_filesPath{spacecraft.GetFilesPath() + "/Instruments/" + IO::SDK::StringHelpers::ToUpper(name)},
 																																																																													m_frame(new IO::SDK::Frames::InstrumentFrameFile(*this, orientation)),
 																																																																													m_orientation{orientation},
 																																																																													m_fovShape{IO::SDK::Instruments::FOVShapeEnum::Circular},
@@ -62,8 +62,8 @@ IO::SDK::Instruments::Instrument::Instrument(const IO::SDK::Body::Spacecraft::Sp
 
 IO::SDK::Instruments::Instrument::Instrument(const IO::SDK::Body::Spacecraft::Spacecraft &spacecraft, const unsigned short id, const std::string &name, const IO::SDK::Math::Vector3D &orientation, const IO::SDK::Instruments::FOVShapeEnum fovShape, const IO::SDK::Math::Vector3D &boresight, const IO::SDK::Math::Vector3D &fovRefVector, const double fovAngle, const double crossAngle) : m_spacecraft{spacecraft},
 																																																																																																m_id{id < 1000 ? spacecraft.GetId() * 1000 - id : throw IO::SDK::Exception::InvalidArgumentException("Instrument Id must be a positive number < 1000")},
-																																																																																																m_name{name},
-																																																																																																m_filesPath{spacecraft.GetFilesPath() + "/Instruments/" + name},
+																																																																																																m_name{IO::SDK::StringHelpers::ToUpper(name)},
+																																																																																																m_filesPath{spacecraft.GetFilesPath() + "/Instruments/" + IO::SDK::StringHelpers::ToUpper(name)},
 																																																																																																m_frame(new IO::SDK::Frames::InstrumentFrameFile(*this, orientation)),
 																																																																																																m_orientation{orientation},
 																																																																																																m_fovShape{fovShape},
@@ -117,7 +117,7 @@ std::vector<IO::SDK::Math::Vector3D> IO::SDK::Instruments::Instrument::GetFOVBou
 	return res;
 }
 
-std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>> IO::SDK::Instruments::Instrument::FindWindowsWhereInFieldOfView(const IO::SDK::Time::Window<IO::SDK::Time::TDB> searchWindow, const IO::SDK::Body::Body &targetBody, const IO::SDK::Time::TimeSpan &stepSize, const IO::SDK::AberrationsEnum &aberration) const
+std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>> IO::SDK::Instruments::Instrument::FindWindowsWhereInFieldOfView(const IO::SDK::Time::Window<IO::SDK::Time::TDB>& searchWindow, const IO::SDK::Body::Body &targetBody, const IO::SDK::Time::TimeSpan &stepSize, const IO::SDK::AberrationsEnum &aberration) const
 {
 	std::string shape{"POINT"};
 	std::string frame{""};
@@ -145,7 +145,7 @@ std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>> IO::SDK::Instruments::Ins
 
 	wninsd_c(searchWindow.GetStartDate().GetSecondsFromJ2000().count(), searchWindow.GetEndDate().GetSecondsFromJ2000().count(), &cnfine);
 
-	gftfov_c(std::to_string(m_id).c_str(), targetBody.GetName().c_str(), shape.c_str(), frame.c_str(), abe.ToString(aberration).c_str(), std::to_string(m_spacecraft.GetId()).c_str(), stepSize.GetSeconds().count(), &cnfine, &results);
+	gftfov_c(std::to_string(m_id).c_str(), targetBody.GetName().c_str(), shape.c_str(), frame.c_str(), abe.ToString(aberration).c_str(), m_spacecraft.GetName().c_str(), stepSize.GetSeconds().count(), &cnfine, &results);
 
 	for (int i = 0; i < wncard_c(&results); i++)
 	{
