@@ -26,7 +26,7 @@ std\+::string \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_a9078603afed99466
 \begin{DoxyCompactList}\small\item\em Get the Name. \end{DoxyCompactList}\item 
 \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1Geodetic}{IO\+::\+SDK\+::\+Coordinates\+::\+Geodetic}} \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_a87b8550acd86a6809885c84236c3855a}{Get\+Coordinates}} () const
 \begin{DoxyCompactList}\small\item\em Get the Coordinates. \end{DoxyCompactList}\item 
-std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1CelestialBody}{IO\+::\+SDK\+::\+Body\+::\+Celestial\+Body}} $>$ \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_a9ec6961014a7e44b4a70035dbadea015}{Get\+Body}} () const
+std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1CelestialBody}{IO\+::\+SDK\+::\+Body\+::\+Celestial\+Body}} $>$ \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_a031a181416875bf07360b62d6874468b}{Get\+Body}} () const
 \begin{DoxyCompactList}\small\item\em Get the Body. \end{DoxyCompactList}\item 
 \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1RADec}{IO\+::\+SDK\+::\+Coordinates\+::\+RADec}} \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_a16715975f67576334937bfb31a8c1f54}{Get\+RADec}} (const \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body}{IO\+::\+SDK\+::\+Body\+::\+Body}} \&body, const IO\+::\+SDK\+::\+Aberrations\+Enum aberration\+Correction, const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} \&epoch) const
 \begin{DoxyCompactList}\small\item\em Get Right ascension, declination and range. \end{DoxyCompactList}\item 
@@ -92,7 +92,7 @@ Find day windows.
 \hline
 \end{DoxyParams}
 \begin{DoxyReturn}{Returns}
-std\+::vector$<$\+IO\+::\+SDK\+::\+Time\+::\+Window$<$\+IO\+::\+SDK\+::\+Time\+::\+UTC$>$$>$ 
+std\+::vector$<$IO\+::\+SDK\+::\+Time\+::\+Window$<$\+IO\+::\+SDK\+::\+Time\+::\+UTC$>$$>$ 
 \end{DoxyReturn}
 \mbox{\Hypertarget{classIO_1_1SDK_1_1Sites_1_1Site_acb323aa6647b0066a7767775d9e31b5a}\label{classIO_1_1SDK_1_1Sites_1_1Site_acb323aa6647b0066a7767775d9e31b5a}} 
 \index{IO::SDK::Sites::Site@{IO::SDK::Sites::Site}!FindNightWindows@{FindNightWindows}}
@@ -112,7 +112,7 @@ Find night windows.
 \hline
 \end{DoxyParams}
 \begin{DoxyReturn}{Returns}
-std\+::vector$<$\+IO\+::\+SDK\+::\+Time\+::\+Window$<$\+IO\+::\+SDK\+::\+Time\+::\+UTC$>$$>$ 
+std\+::vector$<$IO\+::\+SDK\+::\+Time\+::\+Window$<$\+IO\+::\+SDK\+::\+Time\+::\+UTC$>$$>$ 
 \end{DoxyReturn}
 \mbox{\Hypertarget{classIO_1_1SDK_1_1Sites_1_1Site_a43dce3a4dee3aecff1b90da750373137}\label{classIO_1_1SDK_1_1Sites_1_1Site_a43dce3a4dee3aecff1b90da750373137}} 
 \index{IO::SDK::Sites::Site@{IO::SDK::Sites::Site}!FindWindowsOnIlluminationConstraint@{FindWindowsOnIlluminationConstraint}}
@@ -140,13 +140,13 @@ Find windows where illumination constraint is satisfied.
 \hline
 \end{DoxyParams}
 \begin{DoxyReturn}{Returns}
-std\+::vector$<$\+IO\+::\+SDK\+::\+Time\+::\+Window$<$\+IO\+::\+SDK\+::\+Time\+::\+UTC$>$$>$ 
+std\+::vector$<$IO\+::\+SDK\+::\+Time\+::\+Window$<$\+IO\+::\+SDK\+::\+Time\+::\+UTC$>$$>$ 
 \end{DoxyReturn}
-\mbox{\Hypertarget{classIO_1_1SDK_1_1Sites_1_1Site_a9ec6961014a7e44b4a70035dbadea015}\label{classIO_1_1SDK_1_1Sites_1_1Site_a9ec6961014a7e44b4a70035dbadea015}} 
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Sites_1_1Site_a031a181416875bf07360b62d6874468b}\label{classIO_1_1SDK_1_1Sites_1_1Site_a031a181416875bf07360b62d6874468b}} 
 \index{IO::SDK::Sites::Site@{IO::SDK::Sites::Site}!GetBody@{GetBody}}
 \index{GetBody@{GetBody}!IO::SDK::Sites::Site@{IO::SDK::Sites::Site}}
 \doxysubsubsection{\texorpdfstring{GetBody()}{GetBody()}}
-{\footnotesize\ttfamily std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1CelestialBody}{IO\+::\+SDK\+::\+Body\+::\+Celestial\+Body}} $>$ IO\+::\+SDK\+::\+Sites\+::\+Site\+::\+Get\+Body (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+{\footnotesize\ttfamily std\+::shared\+\_\+ptr$<$\mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1CelestialBody}{IO\+::\+SDK\+::\+Body\+::\+Celestial\+Body}}$>$ IO\+::\+SDK\+::\+Sites\+::\+Site\+::\+Get\+Body (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
 
 
 
