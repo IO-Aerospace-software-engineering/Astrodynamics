@@ -14,7 +14,8 @@ set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
 SET(CMAKE_CXX_OUTPUT_EXTENSION_REPLACE 1)
 
 if(UNIX)
-    SET(CMAKE_CXX_FLAGS_DEBUG  "-O0 -g --coverage")
+    # SET(CMAKE_CXX_FLAGS_DEBUG  "-O0 -g --coverage") Convrage
+    SET(CMAKE_CXX_FLAGS_DEBUG  "-O0 -g")
     add_compile_options(-Wall -Wextra -Wpedantic)
 endif ()
 
@@ -37,3 +38,4 @@ FetchContent_MakeAvailable(googletest)
 add_subdirectory("IO.SDK")
 add_subdirectory("IO.SDK.Tests")
 add_subdirectory("IO.SDK.Scenarios")
+add_subdirectory("IO.SDK.Proxy")

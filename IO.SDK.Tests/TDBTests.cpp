@@ -1,9 +1,9 @@
-#include<gtest/gtest.h>
-#include<TDB.h>
-#include<UTC.h>
-#include<string>
-#include<chrono>
-#include<TimeSpan.h>
+#include <gtest/gtest.h>
+#include <TDB.h>
+#include <UTC.h>
+#include <string>
+#include <chrono>
+#include <TimeSpan.h>
 
 using namespace std::chrono_literals;
 
@@ -27,7 +27,6 @@ TEST(TDB, SubstractTDB)
 	auto delta = d2 - dt;
 	ASSERT_DOUBLE_EQ(48.0, delta.GetHours().count());
 }
-
 
 TEST(TDB, Add)
 {
@@ -95,12 +94,26 @@ TEST(TDB, LowerThanOrEqual)
 
 TEST(TDB, ToJulian)
 {
-    IO::SDK::Time::TDB tdb{"2021-01-15 12:05:16.627484 TDB"};
-    ASSERT_DOUBLE_EQ(2459230.0036646700, tdb.ToJulian());
+	IO::SDK::Time::TDB tdb{"2021-01-15 12:05:16.627484 TDB"};
+	ASSERT_DOUBLE_EQ(2459230.0036646700, tdb.ToJulian());
 }
 
 TEST(TDB, ToUTC)
 {
-    IO::SDK::Time::TDB tdb{"2010-06-21 00:07:06.184395 TDB"};
-    ASSERT_STREQ("2010-06-21 00:05:59.999999 (UTC)", tdb.ToUTC().ToString().c_str());
+	IO::SDK::Time::TDB tdb{"2010-06-21 00:07:06.184395 TDB"};
+	ASSERT_STREQ("2010-06-21 00:05:59.999999 (UTC)", tdb.ToUTC().ToString().c_str());
+}
+
+TEST(TDB, Delta)
+{
+
+	IO::SDK::Time::UTC utc{"1969-01-01 00:00:00.000000"};
+	double t0 = utc.GetSecondsFromJ2000().count();
+	for (size_t i = 0; i < 100; i++)
+	{
+		double res = 0.0;
+		deltet_c(t0 + i * 31622400.0, "ET", &res);
+		IO::SDK::Time::UTC utc(std::chrono::duration<double>(t0 + i * 31622400.0));
+		std::cout << utc.ToString()<< " ==> " << res << std::endl;
+	}
 }

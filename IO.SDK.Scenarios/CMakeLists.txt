@@ -6,7 +6,7 @@ file(GLOB_RECURSE IO_SDK_SCENARIOS_H "${CMAKE_CURRENT_SOURCE_DIR}/*.h")
 
 add_executable(${This} ${IO_SDK_SCENARIOS_SRC} )
 
-target_link_libraries(${This} PUBLIC "IO.SDK" gtest_main)
+target_link_libraries(${This} PUBLIC "IO.SDK")
 
 target_include_directories(${This} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
