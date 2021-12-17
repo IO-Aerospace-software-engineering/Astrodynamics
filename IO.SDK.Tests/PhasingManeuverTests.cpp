@@ -158,7 +158,7 @@ TEST(PhasingManeuver, CheckOrbitalParameters)
     ASSERT_DOUBLE_EQ(0.0, sv.GetInclination() * IO::SDK::Constants::RAD_DEG);
     ASSERT_DOUBLE_EQ(0.0, sv.GetRightAscendingNodeLongitude() * IO::SDK::Constants::RAD_DEG);
     ASSERT_NEAR(270.41903346738013, sv.GetStateVector(finalManeuver.GetManeuverWindow()->GetEndDate()).GetPeriapsisArgument() * IO::SDK::Constants::RAD_DEG, 1E-06);
-    ASSERT_DOUBLE_EQ(89.58253158115312, sv.GetStateVector(finalManeuver.GetManeuverWindow()->GetEndDate()).GetMeanAnomaly() * IO::SDK::Constants::RAD_DEG);
+    ASSERT_DOUBLE_EQ(89.582531293985937, sv.GetStateVector(finalManeuver.GetManeuverWindow()->GetEndDate()).GetMeanAnomaly() * IO::SDK::Constants::RAD_DEG);
 
     ASSERT_DOUBLE_EQ(90.001578244752039, orbitalParams2->GetStateVector(finalManeuver.GetManeuverWindow()->GetEndDate()).GetPeriapsisArgument() * IO::SDK::Constants::RAD_DEG);
     ASSERT_DOUBLE_EQ(270.0, orbitalParams2->GetStateVector(finalManeuver.GetManeuverWindow()->GetEndDate()).GetMeanAnomaly() * IO::SDK::Constants::RAD_DEG);
