@@ -70,7 +70,7 @@ TEST(ApogeeHeightChangingManeuverTests, IncreaseApogeeHeight)
 
     ASSERT_TRUE(res.IsValid());
     ASSERT_DOUBLE_EQ(2424.6084264204073, acm.GetDeltaV().Magnitude());
-    ASSERT_DOUBLE_EQ(-0.28046303852605231, acm.GetDeltaV().GetX());
+    ASSERT_DOUBLE_EQ(-0.28046303946422696, acm.GetDeltaV().GetX());
     ASSERT_DOUBLE_EQ(2424.608410199331, acm.GetDeltaV().GetY());
     ASSERT_DOUBLE_EQ(0.0, acm.GetDeltaV().GetZ());
 }
@@ -100,7 +100,7 @@ TEST(ApogeeHeightChangingManeuverTests, DecreaseApogeeHeight)
 
     ASSERT_TRUE(res.IsValid());
     ASSERT_DOUBLE_EQ(1467.2074439917321, acm.GetDeltaV().Magnitude());
-    ASSERT_DOUBLE_EQ(0.010697776475445682, acm.GetDeltaV().GetX());
+    ASSERT_DOUBLE_EQ(0.010697828170955959, acm.GetDeltaV().GetX());
     ASSERT_DOUBLE_EQ(-1467.2074439527321, acm.GetDeltaV().GetY());
     ASSERT_DOUBLE_EQ(0.0, acm.GetDeltaV().GetZ());
 }
