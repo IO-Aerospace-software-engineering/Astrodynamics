@@ -103,17 +103,3 @@ TEST(TDB, ToUTC)
 	IO::SDK::Time::TDB tdb{"2010-06-21 00:07:06.184395 TDB"};
 	ASSERT_STREQ("2010-06-21 00:05:59.999999 (UTC)", tdb.ToUTC().ToString().c_str());
 }
-
-TEST(TDB, Delta)
-{
-
-	IO::SDK::Time::UTC utc{"1969-01-01 00:00:00.000000"};
-	double t0 = utc.GetSecondsFromJ2000().count();
-	for (size_t i = 0; i < 100; i++)
-	{
-		double res = 0.0;
-		deltet_c(t0 + i * 31622400.0, "ET", &res);
-		IO::SDK::Time::UTC utc(std::chrono::duration<double>(t0 + i * 31622400.0));
-		std::cout << utc.ToString()<< " ==> " << res << std::endl;
-	}
-}
