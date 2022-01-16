@@ -83,9 +83,7 @@ IO::SDK::Time::TDB IO::SDK::OrbitalParameters::OrbitalParameters::GetTimeToTrueA
 		M = IO::SDK::Constants::_2PI - M;
 	}
 
-	auto res = GetTimeToMeanAnomaly(M);
-
-	return res;
+	return GetTimeToMeanAnomaly(M);
 }
 
 double IO::SDK::OrbitalParameters::OrbitalParameters::GetEccentricAnomaly(IO::SDK::Time::TDB epoch) const
