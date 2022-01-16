@@ -58,7 +58,6 @@ TEST(ApsidalAlignmentManeuver, CanExecute)
     ASSERT_FALSE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()->GetStateVector(345.0 * IO::SDK::Constants::DEG_RAD)));
 }
 
-
 TEST(ApsidalAlignmentManeuver, ExecuteQ)
 {
     const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
@@ -93,7 +92,7 @@ TEST(ApsidalAlignmentManeuver, ExecuteQ)
     //try execute at Q
     auto res = maneuver.TryExecute(s.GetOrbitalParametersAtEpoch()->GetStateVector(342.0 * IO::SDK::Constants::DEG_RAD));
 
-    std::cout<<res.GetMessage()<<std::endl;
+    std::cout << res.GetMessage() << std::endl;
     //Can't execute, too early
     ASSERT_TRUE(res.IsValid());
 
@@ -158,7 +157,6 @@ TEST(ApsidalAlignmentManeuver, ExecuteP)
     ASSERT_DOUBLE_EQ(10.738631853571592, maneuver.GetThrustDuration().GetSeconds().count());
     ASSERT_DOUBLE_EQ(536.93159267857959, maneuver.GetFuelBurned());
 }
-
 
 TEST(ApsidalAlignmentManeuver, CheckOrbitalParams)
 {
