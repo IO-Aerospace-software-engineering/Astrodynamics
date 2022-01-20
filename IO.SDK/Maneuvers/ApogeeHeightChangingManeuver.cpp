@@ -44,29 +44,9 @@ IO::SDK::OrbitalParameters::StateOrientation IO::SDK::Maneuvers::ApogeeHeightCha
 
 bool IO::SDK::Maneuvers::ApogeeHeightChangingManeuver::CanExecute(const IO::SDK::OrbitalParameters::OrbitalParameters &orbitalParams)
 {
-    if (orbitalParams.IsCircular())
+    if (orbitalParams.IsCircular() || orbitalParams.GetMeanAnomaly()<=Parameters::NodeDetectionAccuraccy)
     {
         return true;
-    }
-
-    bool isApproachingPerigee = IsApproachingPerigee(orbitalParams.GetStateVector());
-
-    //If approaching is not initialized
-    if (!m_isApproachingPerigee)
-    {
-        //is initialized
-        m_isApproachingPerigee = std::make_unique<bool>(isApproachingPerigee);
-        return false;
-    }
-
-    //If perigee approaching is changing, we passed maneuver point
-    if (isApproachingPerigee != *m_isApproachingPerigee)
-    {
-        //Set new value
-        *m_isApproachingPerigee = isApproachingPerigee;
-
-        //If maneuver point is passed we return true
-        return !*m_isApproachingPerigee;
     }
 
     return false;

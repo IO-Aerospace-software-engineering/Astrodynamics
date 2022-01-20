@@ -46,7 +46,7 @@ TEST(PhasingManeuver, CanExecute)
     ASSERT_FALSE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()->GetStateVector(359.0 * IO::SDK::Constants::DEG_RAD)));
 
     //Evaluate 1°s after and must execute
-    ASSERT_TRUE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()->GetStateVector(1.0 * IO::SDK::Constants::DEG_RAD)));
+    ASSERT_TRUE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()->GetStateVector(0.001 * IO::SDK::Constants::DEG_RAD)));
 
     //Evaluate 2° after
     ASSERT_FALSE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()->GetStateVector(2.0 * IO::SDK::Constants::DEG_RAD)));
@@ -154,13 +154,15 @@ TEST(PhasingManeuver, CheckOrbitalParameters)
 
     auto sv = prop.GetStateVectors().back();
     ASSERT_NEAR(42164000.0, sv.GetPerigeeVector().Magnitude(), 6);
-    ASSERT_NEAR(0.0091533983852081068, sv.GetEccentricity(), 1E-02);
+    ASSERT_NEAR(0.0, sv.GetEccentricity(), 1E-06);
     ASSERT_DOUBLE_EQ(0.0, sv.GetInclination() * IO::SDK::Constants::RAD_DEG);
     ASSERT_DOUBLE_EQ(0.0, sv.GetRightAscendingNodeLongitude() * IO::SDK::Constants::RAD_DEG);
-    ASSERT_NEAR(270.41903346738013, sv.GetStateVector(finalManeuver.GetManeuverWindow()->GetEndDate()).GetPeriapsisArgument() * IO::SDK::Constants::RAD_DEG, 1E-06);
-    ASSERT_DOUBLE_EQ(89.582531293985937, sv.GetStateVector(finalManeuver.GetManeuverWindow()->GetEndDate()).GetMeanAnomaly() * IO::SDK::Constants::RAD_DEG);
 
-    ASSERT_DOUBLE_EQ(90.001578244752039, orbitalParams2->GetStateVector(finalManeuver.GetManeuverWindow()->GetEndDate()).GetPeriapsisArgument() * IO::SDK::Constants::RAD_DEG);
+    auto sv2=orbitalParams2->GetStateVector(finalManeuver.GetManeuverWindow()->GetEndDate());
+    ASSERT_NEAR(279.02559168459368, sv.GetStateVector(finalManeuver.GetManeuverWindow()->GetEndDate()).GetPeriapsisArgument() * IO::SDK::Constants::RAD_DEG, 1E-06);
+    ASSERT_DOUBLE_EQ(80.991621690861436, sv.GetStateVector(finalManeuver.GetManeuverWindow()->GetEndDate()).GetMeanAnomaly() * IO::SDK::Constants::RAD_DEG);
+
+    ASSERT_DOUBLE_EQ(90.017226571823784, orbitalParams2->GetStateVector(finalManeuver.GetManeuverWindow()->GetEndDate()).GetPeriapsisArgument() * IO::SDK::Constants::RAD_DEG);
     ASSERT_DOUBLE_EQ(270.0, orbitalParams2->GetStateVector(finalManeuver.GetManeuverWindow()->GetEndDate()).GetMeanAnomaly() * IO::SDK::Constants::RAD_DEG);
 
     double longitude1 = sv.GetPeriapsisArgument() + sv.GetStateVector(finalManeuver.GetManeuverWindow()->GetEndDate()).GetMeanAnomaly();
