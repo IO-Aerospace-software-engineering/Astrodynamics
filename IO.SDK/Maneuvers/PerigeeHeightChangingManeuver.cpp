@@ -12,14 +12,13 @@
 #include <InvalidArgumentException.h>
 #include <SDKException.h>
 
-IO::SDK::Maneuvers::PerigeeHeightChangingManeuver::PerigeeHeightChangingManeuver(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator, const double targetHeight) :  IO::SDK::Maneuvers::ManeuverBase(engines, propagator),m_targetHeight{targetHeight}
+IO::SDK::Maneuvers::PerigeeHeightChangingManeuver::PerigeeHeightChangingManeuver(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator, const double targetHeight) : IO::SDK::Maneuvers::ManeuverBase(engines, propagator), m_targetHeight{targetHeight}
 {
 }
 
-IO::SDK::Maneuvers::PerigeeHeightChangingManeuver::PerigeeHeightChangingManeuver(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator, const double targetHeight, const IO::SDK::Time::TDB &minimumEpoch) :  IO::SDK::Maneuvers::ManeuverBase(engines, propagator,minimumEpoch),m_targetHeight{targetHeight}
+IO::SDK::Maneuvers::PerigeeHeightChangingManeuver::PerigeeHeightChangingManeuver(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator, const double targetHeight, const IO::SDK::Time::TDB &minimumEpoch) : IO::SDK::Maneuvers::ManeuverBase(engines, propagator, minimumEpoch), m_targetHeight{targetHeight}
 {
 }
-
 
 void IO::SDK::Maneuvers::PerigeeHeightChangingManeuver::Compute(const IO::SDK::OrbitalParameters::OrbitalParameters &maneuverPoint)
 {
@@ -44,29 +43,9 @@ IO::SDK::OrbitalParameters::StateOrientation IO::SDK::Maneuvers::PerigeeHeightCh
 
 bool IO::SDK::Maneuvers::PerigeeHeightChangingManeuver::CanExecute(const IO::SDK::OrbitalParameters::OrbitalParameters &orbitalParams)
 {
-    if (orbitalParams.IsCircular())
+    if (orbitalParams.IsCircular() || (orbitalParams.GetMeanAnomaly() >= Constants::PI && orbitalParams.GetMeanAnomaly() < Constants::PI + Parameters::NodeDetectionAccuraccy))
     {
         return true;
-    }
-
-    bool isApproachingApogee = IsApproachingApogee(orbitalParams.GetStateVector());
-
-    //If approaching is not initialized
-    if (!m_isApproachingApogee)
-    {
-        //is initialized
-        m_isApproachingApogee = std::make_unique<bool>(isApproachingApogee);
-        return false;
-    }
-
-    //If apogee approaching is changing, we passed maneuver point
-    if (isApproachingApogee != *m_isApproachingApogee)
-    {
-        //Set new value
-        *m_isApproachingApogee = isApproachingApogee;
-
-        //If maneuver point is passed we return true
-        return !*m_isApproachingApogee;
     }
 
     return false;

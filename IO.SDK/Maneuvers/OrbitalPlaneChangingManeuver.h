@@ -26,6 +26,7 @@ namespace IO::SDK::Maneuvers
         std::unique_ptr<bool> m_isApproachingNode{nullptr};
 
         IO::SDK::OrbitalParameters::OrbitalParameters *m_targetOrbit{nullptr};
+        bool m_isAscendingNode{false};
 
 
     public:
@@ -71,24 +72,6 @@ namespace IO::SDK::Maneuvers
          * @return IO::SDK::OrbitalParameters::StateOrientation 
          */
         virtual IO::SDK::OrbitalParameters::StateOrientation ComputeOrientation(const IO::SDK::OrbitalParameters::OrbitalParameters &maneuverPoint) override;
-
-        /**
-         * @brief Know if is an ascending node
-         * 
-         * @param stateVector 
-         * @return true 
-         * @return false 
-         */
-        bool IsAscendingNode(const IO::SDK::OrbitalParameters::StateVector &stateVector) const;
-
-        /**
-         * @brief Know if approaching ascending node
-         * 
-         * @param stateVector 
-         * @return true 
-         * @return false 
-         */
-        bool IsApproachingAscendingNode(const IO::SDK::OrbitalParameters::StateVector &stateVector) const;
 
         /**
          * @brief Get the Relative Inclination
