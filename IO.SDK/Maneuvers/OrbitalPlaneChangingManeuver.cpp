@@ -23,23 +23,6 @@ IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver::OrbitalPlaneChangingManeuver(c
 
 bool IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver::CanExecute(const IO::SDK::OrbitalParameters::OrbitalParameters &orbitalParams)
 {
-    // bool isApproachingNode = IsApproachingAscendingNode(orbitalParams.GetStateVector());
-
-    // if (!m_isApproachingNode)
-    // {
-    //     m_isApproachingNode = std::make_unique<bool>(isApproachingNode);
-    //     return false;
-    // }
-
-    // if (isApproachingNode != *m_isApproachingNode)
-    // {
-    //     *m_isApproachingNode = isApproachingNode;
-    //     return true;
-    // }
-
-    // return false;
-
-    //==============================
     auto spacecraftSv = orbitalParams.GetStateVector();
 
     if (std::abs(spacecraftSv.GetPosition().GetAngle(m_targetOrbit->GetSpecificAngularMomentum().CrossProduct(orbitalParams.GetSpecificAngularMomentum()))) < Parameters::NodeDetectionAccuraccy)
@@ -101,43 +84,6 @@ IO::SDK::OrbitalParameters::StateOrientation IO::SDK::Maneuvers::OrbitalPlaneCha
 
     return IO::SDK::OrbitalParameters::StateOrientation(q, IO::SDK::Math::Vector3D(0.0, 0.0, 0.0), maneuverPoint.GetEpoch(), maneuverPoint.GetFrame());
 }
-
-// bool IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver::IsAscendingNode(const IO::SDK::OrbitalParameters::StateVector &stateVector) const
-// {
-//     if (*stateVector.GetCenterOfMotion() != *m_targetOrbit->GetCenterOfMotion())
-//     {
-//         throw IO::SDK::Exception::InvalidArgumentException("State vector and target orbit must have the same center of motion");
-//     }
-//     auto ANVector = m_targetOrbit->GetSpecificAngularMomentum().CrossProduct(stateVector.GetSpecificAngularMomentum());
-//     if (ANVector.GetAngle(stateVector.GetPosition()) < IO::SDK::Parameters::NodeDetectionAccuraccy)
-//     {
-//         return true;
-//     }
-
-//     return false;
-// }
-
-// bool IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver::IsApproachingAscendingNode(const IO::SDK::OrbitalParameters::StateVector &stateVector) const
-// {
-//     if (*stateVector.GetCenterOfMotion() != *m_targetOrbit->GetCenterOfMotion())
-//     {
-//         throw IO::SDK::Exception::InvalidArgumentException("State vector and target orbit must have the same center of motion");
-//     }
-
-//     //Ascending node vector
-//     auto ANVector = m_targetOrbit->GetSpecificAngularMomentum().CrossProduct(stateVector.GetSpecificAngularMomentum());
-
-//     //Angle between AN and spacecraft
-//     double dp = ANVector.DotProduct(stateVector.GetSpecificAngularMomentum().CrossProduct(stateVector.GetPosition()));
-
-//     //if < 90° we're in inbound sector
-//     if (dp > 0.0)
-//     {
-//         return true;
-//     }
-
-//     return false;
-// }
 
 double IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver::GetRelativeInclination() const
 {

@@ -32,16 +32,11 @@ namespace IO::SDK::Maneuvers
     {
     private:
         double m_theta{};
-        std::unique_ptr<bool> m_isApproachingP{nullptr};
-        std::unique_ptr<bool> m_isApproachingQ{nullptr};
         bool m_isIntersectP{false};
         bool m_isIntersectQ{false};
 
         bool IsIntersectP(const IO::SDK::OrbitalParameters::StateVector &stateVector) const;
         bool IsIntersectQ(const IO::SDK::OrbitalParameters::StateVector &stateVector) const;
-
-        bool IsApproachingIntersectPointP(const IO::SDK::OrbitalParameters::StateVector &stateVector) const;
-        bool IsApproachingIntersectPointQ(const IO::SDK::OrbitalParameters::StateVector &stateVector) const;
 
         std::map<std::string, double> GetCoefficients(const IO::SDK::OrbitalParameters::StateVector &stateVector) const;
 

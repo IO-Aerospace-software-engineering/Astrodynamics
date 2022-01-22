@@ -23,7 +23,6 @@ namespace IO::SDK::Maneuvers
     {
     private:
         double m_relativeInclination{};
-        std::unique_ptr<bool> m_isApproachingNode{nullptr};
 
         IO::SDK::OrbitalParameters::OrbitalParameters *m_targetOrbit{nullptr};
         bool m_isAscendingNode{false};

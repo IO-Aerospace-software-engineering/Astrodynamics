@@ -28,10 +28,7 @@ namespace IO::SDK::Maneuvers
     {
     private:
         const unsigned int m_revolutionsNumber;
-        std::unique_ptr<bool> m_isApproachingPerigee{nullptr};
         IO::SDK::OrbitalParameters::OrbitalParameters *m_targetOrbit{nullptr};
-
-        bool IsApproachingPerigee(const IO::SDK::OrbitalParameters::StateVector &stateVector) const;
 
         /**
          * @brief Compute true anomaly delta

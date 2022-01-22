@@ -23,54 +23,6 @@ IO::SDK::Maneuvers::ApsidalAlignmentManeuver::ApsidalAlignmentManeuver(const std
 
 bool IO::SDK::Maneuvers::ApsidalAlignmentManeuver::CanExecute(const IO::SDK::OrbitalParameters::OrbitalParameters &orbitalParams)
 {
-    // bool resP = false;
-    // bool resQ = false;
-
-    // //Q POINT
-    // bool isApproachingQ = IsApproachingIntersectPointQ(orbitalParams.GetStateVector());
-
-    // //Initialize status
-    // if (!m_isApproachingQ)
-    // {
-    //     m_isApproachingQ = std::make_unique<bool>(isApproachingQ);
-    //     return false;
-    // }
-
-    // //Check status changing
-    // if (isApproachingQ != *m_isApproachingQ)
-    // {
-    //     *m_isApproachingQ = isApproachingQ;
-    //     resQ = !*m_isApproachingQ;
-    //     if (resQ)
-    //     {
-    //         m_isIntersectQ = true;
-    //         return true;
-    //     }
-    // }
-
-    // // P POINT
-    // bool isApproachingP = IsApproachingIntersectPointP(orbitalParams.GetStateVector());
-
-    // if (!m_isApproachingP)
-    // {
-    //     m_isApproachingP = std::make_unique<bool>(isApproachingP);
-    //     return false;
-    // }
-
-    // if (isApproachingP != *m_isApproachingP)
-    // {
-    //     *m_isApproachingP = isApproachingP;
-    //     resP = !*m_isApproachingP;
-    //     if (resP)
-    //     {
-    //         m_isIntersectP = true;
-    //         return true;
-    //     }
-    // }
-
-    // return false;
-
-    //==========================================================
     double pv = GetPTrueAnomaly(orbitalParams.GetStateVector());
     double qv = GetQTrueAnomaly(orbitalParams.GetStateVector());
     double v = orbitalParams.GetTrueAnomaly();
@@ -131,34 +83,6 @@ bool IO::SDK::Maneuvers::ApsidalAlignmentManeuver::IsIntersectQ(const IO::SDK::O
 
     auto v_vector = stateVector.GetStateVector(v).GetPosition();
     if (v_vector.GetAngle(stateVector.GetPosition()) < IO::SDK::Parameters::IntersectDetectionAccuraccy)
-    {
-        return true;
-    }
-
-    return false;
-}
-
-bool IO::SDK::Maneuvers::ApsidalAlignmentManeuver::IsApproachingIntersectPointP(const IO::SDK::OrbitalParameters::StateVector &stateVector) const
-{
-    double v = GetPTrueAnomaly(stateVector);
-
-    auto v_vector = stateVector.GetStateVector(v).GetPosition();
-
-    if (v_vector.DotProduct(stateVector.GetSpecificAngularMomentum().CrossProduct(stateVector.GetPosition())) > 0)
-    {
-        return true;
-    }
-
-    return false;
-}
-
-bool IO::SDK::Maneuvers::ApsidalAlignmentManeuver::IsApproachingIntersectPointQ(const IO::SDK::OrbitalParameters::StateVector &stateVector) const
-{
-    double v = GetQTrueAnomaly(stateVector);
-
-    auto v_vector = stateVector.GetStateVector(v).GetPosition();
-
-    if (v_vector.DotProduct(stateVector.GetSpecificAngularMomentum().CrossProduct(stateVector.GetPosition())) > 0)
     {
         return true;
     }

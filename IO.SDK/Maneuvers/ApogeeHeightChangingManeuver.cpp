@@ -52,16 +52,16 @@ bool IO::SDK::Maneuvers::ApogeeHeightChangingManeuver::CanExecute(const IO::SDK:
     return false;
 }
 
-bool IO::SDK::Maneuvers::ApogeeHeightChangingManeuver::IsApproachingPerigee(const IO::SDK::OrbitalParameters::StateVector &stateVector) const
-{
-    //Angle between perigee vector and spacecraft velocity
-    double dp = stateVector.GetPerigeeVector().DotProduct(stateVector.GetVelocity());
+// bool IO::SDK::Maneuvers::ApogeeHeightChangingManeuver::IsApproachingPerigee(const IO::SDK::OrbitalParameters::StateVector &stateVector) const
+// {
+//     //Angle between perigee vector and spacecraft velocity
+//     double dp = stateVector.GetPerigeeVector().DotProduct(stateVector.GetVelocity());
 
-    //if < 90° we're in inbound sector
-    if (dp > 0.0)
-    {
-        return true;
-    }
+//     //if < 90° we're in inbound sector
+//     if (dp > 0.0)
+//     {
+//         return true;
+//     }
 
-    return false;
-}
+//     return false;
+// }
