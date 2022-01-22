@@ -28,9 +28,6 @@ namespace IO::SDK::Maneuvers
     {
     private:
         double m_targetHeight;
-        std::unique_ptr<bool> m_isApproachingApogee{nullptr};
-
-        bool IsApproachingApogee(const IO::SDK::OrbitalParameters::StateVector &stateVector) const;
 
     protected:
         /**

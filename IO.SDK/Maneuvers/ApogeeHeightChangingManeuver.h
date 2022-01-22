@@ -27,10 +27,7 @@ namespace IO::SDK::Maneuvers
     class ApogeeHeightChangingManeuver final : public IO::SDK::Maneuvers::ManeuverBase
     {
     private:
-        std::unique_ptr<bool> m_isApproachingPerigee{nullptr};
         const double m_targetHeight;
-
-        bool IsApproachingPerigee(const IO::SDK::OrbitalParameters::StateVector &stateVector) const;
 
     protected:
         /**

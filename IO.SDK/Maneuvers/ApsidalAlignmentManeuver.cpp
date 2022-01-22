@@ -23,51 +23,31 @@ IO::SDK::Maneuvers::ApsidalAlignmentManeuver::ApsidalAlignmentManeuver(const std
 
 bool IO::SDK::Maneuvers::ApsidalAlignmentManeuver::CanExecute(const IO::SDK::OrbitalParameters::OrbitalParameters &orbitalParams)
 {
-    bool resP = false;
-    bool resQ = false;
+    double pv = GetPTrueAnomaly(orbitalParams.GetStateVector());
+    double qv = GetQTrueAnomaly(orbitalParams.GetStateVector());
+    double v = orbitalParams.GetTrueAnomaly();
+    double vRelativeToP = v - pv;
+    double vRelativeToQ = v - qv;
 
-    //Q POINT
-    bool isApproachingQ = IsApproachingIntersectPointQ(orbitalParams.GetStateVector());
+    if (vRelativeToP < 0.0)
+        vRelativeToP += Constants::_2PI;
+    if (vRelativeToQ < 0.0)
+        vRelativeToQ += Constants::_2PI;
 
-    //Initialize status
-    if (!m_isApproachingQ)
+    vRelativeToP = std::fmod(vRelativeToP, Constants::_2PI);
+    vRelativeToQ = std::fmod(vRelativeToQ, Constants::_2PI);
+
+    //TODO:manage case where pv or pq == 359° and Tolerance + 2° (that does mean uppervalue ==361°)
+    if (vRelativeToP < Parameters::NodeDetectionAccuraccy)
     {
-        m_isApproachingQ = std::make_unique<bool>(isApproachingQ);
-        return false;
+        m_isIntersectP = true;
+        return true;
     }
-
-    //Check status changing
-    if (isApproachingQ != *m_isApproachingQ)
+    else if (vRelativeToQ < Parameters::NodeDetectionAccuraccy)
     {
-        *m_isApproachingQ = isApproachingQ;
-        resQ = !*m_isApproachingQ;
-        if (resQ)
-        {
-            m_isIntersectQ = true;
-            return true;
-        }
+        m_isIntersectQ = true;
+        return true;
     }
-
-    // P POINT
-    bool isApproachingP = IsApproachingIntersectPointP(orbitalParams.GetStateVector());
-
-    if (!m_isApproachingP)
-    {
-        m_isApproachingP = std::make_unique<bool>(isApproachingP);
-        return false;
-    }
-
-    if (isApproachingP != *m_isApproachingP)
-    {
-        *m_isApproachingP = isApproachingP;
-        resP = !*m_isApproachingP;
-        if (resP)
-        {
-            m_isIntersectP = true;
-            return true;
-        }
-    }
-
     return false;
 }
 
@@ -110,34 +90,6 @@ bool IO::SDK::Maneuvers::ApsidalAlignmentManeuver::IsIntersectQ(const IO::SDK::O
     return false;
 }
 
-bool IO::SDK::Maneuvers::ApsidalAlignmentManeuver::IsApproachingIntersectPointP(const IO::SDK::OrbitalParameters::StateVector &stateVector) const
-{
-    double v = GetPTrueAnomaly(stateVector);
-
-    auto v_vector = stateVector.GetStateVector(v).GetPosition();
-
-    if (v_vector.DotProduct(stateVector.GetSpecificAngularMomentum().CrossProduct(stateVector.GetPosition())) > 0)
-    {
-        return true;
-    }
-
-    return false;
-}
-
-bool IO::SDK::Maneuvers::ApsidalAlignmentManeuver::IsApproachingIntersectPointQ(const IO::SDK::OrbitalParameters::StateVector &stateVector) const
-{
-    double v = GetQTrueAnomaly(stateVector);
-
-    auto v_vector = stateVector.GetStateVector(v).GetPosition();
-
-    if (v_vector.DotProduct(stateVector.GetSpecificAngularMomentum().CrossProduct(stateVector.GetPosition())) > 0)
-    {
-        return true;
-    }
-
-    return false;
-}
-
 double IO::SDK::Maneuvers::ApsidalAlignmentManeuver::GetTheta() const
 {
     return m_theta;
@@ -167,7 +119,7 @@ double IO::SDK::Maneuvers::ApsidalAlignmentManeuver::GetPTrueAnomaly(const IO::S
 {
     auto coef = GetCoefficients(sv);
     double res = coef["alpha"] + std::acos((coef["C"] / coef["A"]) * std::cos(coef["alpha"]));
-    if(std::isnan(res))
+    if (std::isnan(res))
     {
         throw IO::SDK::Exception::InvalidArgumentException("Apsidal alignment requieres orbits intersection");
     }
@@ -183,7 +135,7 @@ double IO::SDK::Maneuvers::ApsidalAlignmentManeuver::GetQTrueAnomaly(const IO::S
 {
     auto coef = GetCoefficients(sv);
     double res = coef["alpha"] - std::acos((coef["C"] / coef["A"]) * std::cos(coef["alpha"]));
-    if(std::isnan(res))
+    if (std::isnan(res))
     {
         throw IO::SDK::Exception::InvalidArgumentException("Apsidal alignment requieres orbits intersection");
     }
