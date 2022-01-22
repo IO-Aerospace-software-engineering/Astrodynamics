@@ -38,7 +38,7 @@ TEST(CombinedManeuver, CanExecute)
 
     ASSERT_FALSE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()->GetStateVector(178.0 * IO::SDK::Constants::DEG_RAD)));
     ASSERT_FALSE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()->GetStateVector(179.0 * IO::SDK::Constants::DEG_RAD)));
-    ASSERT_TRUE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()->GetStateVector(180.5 * IO::SDK::Constants::DEG_RAD)));
+    ASSERT_TRUE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()->GetStateVector(180.0 * IO::SDK::Constants::DEG_RAD)));
     ASSERT_FALSE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()->GetStateVector(182.0 * IO::SDK::Constants::DEG_RAD)));
 }
 

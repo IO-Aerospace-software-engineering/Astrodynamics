@@ -12,34 +12,27 @@
 #include <ConicOrbitalElements.h>
 #include <Vector3D.h>
 
-IO::SDK::Maneuvers::CombinedManeuver::CombinedManeuver(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator, const double inclination, const double perigeeRadius) : IO::SDK::Maneuvers::ManeuverBase(engines, propagator),m_inclination{inclination}, m_peregeeRadius{perigeeRadius}
+IO::SDK::Maneuvers::CombinedManeuver::CombinedManeuver(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator, const double inclination, const double perigeeRadius) : IO::SDK::Maneuvers::ManeuverBase(engines, propagator), m_inclination{inclination}, m_peregeeRadius{perigeeRadius}
 {
 }
 
-IO::SDK::Maneuvers::CombinedManeuver::CombinedManeuver(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator, const double inclination, const double perigeeRadius, const IO::SDK::Time::TDB &minimumEpoch) :  IO::SDK::Maneuvers::ManeuverBase(engines,  propagator, minimumEpoch),m_inclination{inclination}, m_peregeeRadius{perigeeRadius}
+IO::SDK::Maneuvers::CombinedManeuver::CombinedManeuver(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator, const double inclination, const double perigeeRadius, const IO::SDK::Time::TDB &minimumEpoch) : IO::SDK::Maneuvers::ManeuverBase(engines, propagator, minimumEpoch), m_inclination{inclination}, m_peregeeRadius{perigeeRadius}
 {
 }
 
 bool IO::SDK::Maneuvers::CombinedManeuver::CanExecute(const IO::SDK::OrbitalParameters::OrbitalParameters &orbitalParams)
 {
     //Check apsidal apogee vector and node line are aligned
-    auto ANVectorDirection = orbitalParams.GetAscendingNodeVector();
-    if (ANVectorDirection.CrossProduct(orbitalParams.GetStateVector().GetApogeeVector().Normalize()).Magnitude() > 0.1)
+    auto ANVectorDirection = orbitalParams.GetAscendingNodeVector().Normalize();
+    auto DNVectorDirection = ANVectorDirection.Reverse();
+    auto apogeeVector = orbitalParams.GetApogeeVector().Normalize();
+    if (std::abs(ANVectorDirection.DotProduct(apogeeVector)) < 0.9 && std::abs(DNVectorDirection.DotProduct(apogeeVector)) < 0.9)
     {
         return false;
     }
 
-    bool isApproachingNode = IsApproachingAscendingNode(orbitalParams.GetStateVector());
-
-    if (!m_isApproachingNode)
+    if (orbitalParams.IsCircular() || (orbitalParams.GetMeanAnomaly() >= Constants::PI && orbitalParams.GetMeanAnomaly() < Constants::PI + Parameters::NodeDetectionAccuraccy))
     {
-        m_isApproachingNode = std::make_unique<bool>(isApproachingNode);
-        return false;
-    }
-
-    if (isApproachingNode != *m_isApproachingNode)
-    {
-        *m_isApproachingNode = isApproachingNode;
         return true;
     }
 
@@ -61,33 +54,6 @@ IO::SDK::OrbitalParameters::StateOrientation IO::SDK::Maneuvers::CombinedManeuve
     return IO::SDK::OrbitalParameters::StateOrientation(q, IO::SDK::Math::Vector3D(0.0, 0.0, 0.0), maneuverPoint.GetEpoch(), maneuverPoint.GetFrame());
 }
 
-bool IO::SDK::Maneuvers::CombinedManeuver::IsAscendingNode(const IO::SDK::OrbitalParameters::StateVector &stateVector) const
-{
-    if (stateVector.ToBodyFixedFrame().GetVelocity().GetZ() > 0.0)
-    {
-        return true;
-    }
-
-    return false;
-}
-
-bool IO::SDK::Maneuvers::CombinedManeuver::IsApproachingAscendingNode(const IO::SDK::OrbitalParameters::StateVector &stateVector) const
-{
-    //Ascending node vector
-    auto ANVector = stateVector.GetAscendingNodeVector();
-
-    //Angle between AN and spacecraft
-    double dp = ANVector.DotProduct(stateVector.GetSpecificAngularMomentum().Normalize().CrossProduct(stateVector.GetPosition().Normalize()));
-
-    //if < 90° we're in inbound sector
-    if (dp > 0.0)
-    {
-        return true;
-    }
-
-    return false;
-}
-
 IO::SDK::Math::Vector3D IO::SDK::Maneuvers::CombinedManeuver::GetDeltaV(const IO::SDK::OrbitalParameters::StateVector &sv) const
 {
     double e{};
@@ -95,7 +61,7 @@ IO::SDK::Math::Vector3D IO::SDK::Maneuvers::CombinedManeuver::GetDeltaV(const IO
     double meanAnomaly = IO::SDK::Constants::PI;
     double periapsisArgument = sv.GetPeriapsisArgument();
 
-    //If target perigee is higher than current apogee    
+    //If target perigee is higher than current apogee
     if (m_peregeeRadius > sv.GetApogeeVector().Magnitude())
     {
         rp = sv.GetApogeeVector().Magnitude();

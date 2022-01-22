@@ -58,7 +58,6 @@ TEST(ApsidalAlignmentManeuver, CanExecute)
     ASSERT_FALSE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()->GetStateVector(345.0 * IO::SDK::Constants::DEG_RAD)));
 }
 
-
 TEST(ApsidalAlignmentManeuver, ExecuteQ)
 {
     const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
@@ -91,24 +90,24 @@ TEST(ApsidalAlignmentManeuver, ExecuteQ)
     prop.AddStateVector(IO::SDK::OrbitalParameters::StateVector(earth, IO::SDK::Math::Vector3D(1.0, 2.0, 3.0), IO::SDK::Math::Vector3D(4.0, 5.0, 6.0), IO::SDK::Time::TDB(10.0s), IO::SDK::Frames::InertialFrames::GetICRF()));
 
     //try execute at Q
-    auto res = maneuver.TryExecute(s.GetOrbitalParametersAtEpoch()->GetStateVector(342.0 * IO::SDK::Constants::DEG_RAD));
+    auto res = maneuver.TryExecute(s.GetOrbitalParametersAtEpoch()->GetStateVector(341.77 * IO::SDK::Constants::DEG_RAD));
 
-    std::cout<<res.GetMessage()<<std::endl;
+    std::cout << res.GetMessage() << std::endl;
     //Can't execute, too early
     ASSERT_TRUE(res.IsValid());
 
     //Theta 30°
     ASSERT_NEAR(30.0 * IO::SDK::Constants::DEG_RAD, maneuver.GetTheta(), 1E-12);
 
-    ASSERT_DOUBLE_EQ(1434.7124650347721, maneuver.GetDeltaV().Magnitude());
-    ASSERT_DOUBLE_EQ(-1347.9693757605455, maneuver.GetDeltaV().GetX());
-    ASSERT_DOUBLE_EQ(491.30277766147174, maneuver.GetDeltaV().GetY());
+    ASSERT_DOUBLE_EQ(1456.6489286382466, maneuver.GetDeltaV().Magnitude());
+    ASSERT_DOUBLE_EQ(-1368.8299669788796, maneuver.GetDeltaV().GetX());
+    ASSERT_DOUBLE_EQ(498.12711510572353, maneuver.GetDeltaV().GetY());
     ASSERT_DOUBLE_EQ(0.0, maneuver.GetDeltaV().GetZ());
 
-    ASSERT_DOUBLE_EQ(17843.229077183169, maneuver.GetThrustWindow()->GetStartDate().GetSecondsFromJ2000().count());
-    ASSERT_DOUBLE_EQ(17853.776085571553, maneuver.GetThrustWindow()->GetEndDate().GetSecondsFromJ2000().count());
-    ASSERT_DOUBLE_EQ(10.547008388383837, maneuver.GetThrustDuration().GetSeconds().count());
-    ASSERT_DOUBLE_EQ(527.35041941919189, maneuver.GetFuelBurned());
+    ASSERT_DOUBLE_EQ(17837.515578464092, maneuver.GetThrustWindow()->GetStartDate().GetSecondsFromJ2000().count());
+    ASSERT_DOUBLE_EQ(17848.198713809928, maneuver.GetThrustWindow()->GetEndDate().GetSecondsFromJ2000().count());
+    ASSERT_DOUBLE_EQ(10.683135345837465, maneuver.GetThrustDuration().GetSeconds().count());
+    ASSERT_DOUBLE_EQ(534.15676729187328, maneuver.GetFuelBurned());
 }
 
 TEST(ApsidalAlignmentManeuver, ExecuteP)
@@ -158,7 +157,6 @@ TEST(ApsidalAlignmentManeuver, ExecuteP)
     ASSERT_DOUBLE_EQ(10.738631853571592, maneuver.GetThrustDuration().GetSeconds().count());
     ASSERT_DOUBLE_EQ(536.93159267857959, maneuver.GetFuelBurned());
 }
-
 
 TEST(ApsidalAlignmentManeuver, CheckOrbitalParams)
 {

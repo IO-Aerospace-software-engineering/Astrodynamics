@@ -33,7 +33,6 @@ namespace IO::SDK::Maneuvers
         double m_relativeInclination{};
         double m_inclination;
         double m_peregeeRadius;
-        std::unique_ptr<bool> m_isApproachingNode{nullptr};
 
         IO::SDK::Math::Vector3D GetDeltaV(const IO::SDK::OrbitalParameters::StateVector& sv) const;
 
@@ -52,9 +51,6 @@ namespace IO::SDK::Maneuvers
          * @return IO::SDK::OrbitalParameters::StateOrientation 
          */
         IO::SDK::OrbitalParameters::StateOrientation ComputeOrientation(const IO::SDK::OrbitalParameters::OrbitalParameters &maneuverPoint) override;
-
-        bool IsAscendingNode(const IO::SDK::OrbitalParameters::StateVector &stateVector) const;
-        bool IsApproachingAscendingNode(const IO::SDK::OrbitalParameters::StateVector &stateVector) const;
 
     public:
         /**
