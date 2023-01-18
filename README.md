@@ -81,7 +81,7 @@ cmake -DCMAKE_BUILD_TYPE=Release ..
 
 #Build porject
 #-j 4 option is used to define how many thread could be used to compile project, is this example will use 4 threads
-cmake.exe --build C:\Sources\IO\Tests\SDK\build_release\ --target IO.SDK -j 4
+cmake.exe --build . --config Release --target IO.SDK -j 4
 
 #Install libraries and includes
 #This command must be executed with admin rights
