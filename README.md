@@ -24,19 +24,18 @@ In this quick start we suggest you to use [cross plateform approach](https://cod
 
 1. Create a cmake project
 
-2. Extract **Includes** folder from archive IO-Toolkit-Linux-vx.x.xx-x to the root folder.
+2. Extract **Includes** folder from archive IO-Toolkit-Linux-vx.x.xx-x to folder /usr/local/include/IO/.
 
 3. Extract **Data** and **Templates** folders from archive IO-Toolkit-Linux-vx.x.xx-x to your executable build folder.
 
 4. You should have :
     ```
-    SdkProject
-        | Includes
+    YourProject
         | build
            | Data
            | Template
     ```
-5. Copy **libIO.SDK.so<span>** to /usr/lib/
+5. Copy **libIO.SDK.so<span>** to /usr/local/lib/
 
 ### On Windows
 
@@ -44,13 +43,13 @@ In this quick start we suggest you to use [cross plateform approach](https://cod
 
 2. From the dll package you just downloaded
    - Copy **Includes** folder at the root of the project
-   - Copy **IO.SDK.dll** and **IO.SDK.lib** in the build folder and in the Debug folder
+   - Copy **IO.SDK.dll** and **IO.SDK.lib** in the build folder and in the Debug folder. You can also copy the library in parent folder and configure your linker to use the relative path of the library
    - Copy folders : **Data** and **Template** in the Debug folder\ 
 
     You should have a folder tree like below
 
     ```
-    SdkProject
+    YourProject
         | Includes
         | build
             | IO.SDK.dll
