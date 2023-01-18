@@ -91,7 +91,7 @@ cmake --install IO.SDK
     
 ## Use the SDK
 
-In this example we will create a small program that will compute ISS orbital period from TLE(two lines elements), earth Hill sphere and angle between two vectors. 
+In this example we will create a small program to compute maneuvers required to join another spacecraft from earth surface
 
 1. (Execute this step only with binary installation) Ensure your CMake projet contains at least these parameters :
     ```CMAKE
