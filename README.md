@@ -24,19 +24,18 @@ In this quick start we suggest you to use [cross plateform approach](https://cod
 
 1. Create a cmake project
 
-2. Extract **Includes** folder from archive IO-Toolkit-Linux-vx.x.xx-x to the root folder.
+2. Extract **Includes** folder from archive IO-Toolkit-Linux-vx.x.xx-x to folder /usr/local/include/IO/.
 
 3. Extract **Data** and **Templates** folders from archive IO-Toolkit-Linux-vx.x.xx-x to your executable build folder.
 
 4. You should have :
     ```
-    SdkProject
-        | Includes
+    YourProject
         | build
            | Data
            | Template
     ```
-5. Copy **libIO.SDK.so<span>** to /usr/lib/
+5. Copy **libIO.SDK.so<span>** to /usr/local/lib/
 
 ### On Windows
 
@@ -44,13 +43,13 @@ In this quick start we suggest you to use [cross plateform approach](https://cod
 
 2. From the dll package you just downloaded
    - Copy **Includes** folder at the root of the project
-   - Copy **IO.SDK.dll** and **IO.SDK.lib** in the build folder and in the Debug folder
+   - Copy **IO.SDK.dll** and **IO.SDK.lib** in the build folder and in the Debug folder. You can also copy the library in parent folder and configure your linker to use the relative path of the library
    - Copy folders : **Data** and **Template** in the Debug folder\ 
 
     You should have a folder tree like below
 
     ```
-    SdkProject
+    YourProject
         | Includes
         | build
             | IO.SDK.dll
@@ -62,103 +61,37 @@ In this quick start we suggest you to use [cross plateform approach](https://cod
                 | IO.SDK.lib
     ```
 
-## Install from source code
-1. Clone the main branch on your computer
-2. Your root CMakeLists.txt must contains at least :
-
-    ```CMAKE
-    set(CMAKE_C_STANDARD 99)
-    set(CMAKE_CXX_STANDARD 17)
-    set(CMAKE_POSITION_INDEPENDENT_CODE ON)
-    set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
-
-    SET(CMAKE_CXX_OUTPUT_EXTENSION_REPLACE 1)
-
-    ... your configuration ...
-
-    add_subdirectory("IO.SDK")
-
-    add_subdirectory("MyProject")  #This is your project folder
-
-    ```
+## Build and install from source code
     
-3. If you want to use unit tests(optionnal) add this configuration
-    ```CMAKE
-    enable_testing()
+```bash
+#Clone project    
+git clone https://github.com/IO-Aerospace-software-engineering/SDK.git
 
-    #Install Google Tests 
-    include(FetchContent)
-    FetchContent_Declare(
-      googletest
-      URL https://github.com/google/googletest/archive/e2239ee6043f73722e7aa812a459f54a28552929.zip
-    )
-    # For Windows: Prevent overriding the parent project's compiler/linker settings
-    set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
-    FetchContent_MakeAvailable(googletest)
+#Go into directory
+cd SDK
 
-    # Include sub-projects.
-    add_subdirectory("IO.SDK.Tests")
-    ```
-    
-4. Reference IO SDK in your project
-    
-    The CmakeLists.txt in your project folder "MyProject" must contains at least this configurration :
-    
-    ```CMAKE
-    cmake_minimum_required (VERSION 3.18)
-    set(This IO.SDK)
+#Create build directory    
+mkdir build_release
 
-    file(GLOB_RECURSE IO_SDK_SRC "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp")
-    file(GLOB_RECURSE IO_SDK_H "${CMAKE_CURRENT_SOURCE_DIR}/*.h")
+#Go into build directory
+cd build_release
 
-    add_library(${This} SHARED ${IO_SDK_SRC})
+#Configure Cmake project
+cmake -DCMAKE_BUILD_TYPE=Release ..
 
-    #REFERENCE SDK INCLUDES
-    MACRO(HEADER_DIRECTORIES return_list)
-        FILE(GLOB_RECURSE new_list ${CMAKE_CURRENT_SOURCE_DIR}/*.h)
-        SET(dir_list "")
-        FOREACH(file_path ${new_list})
-            GET_FILENAME_COMPONENT(dir_path ${file_path} PATH)
-            SET(dir_list ${dir_list} ${dir_path})
-        ENDFOREACH()
-        LIST(REMOVE_DUPLICATES dir_list)
-        SET(${return_list} ${dir_list})
-    ENDMACRO()
-    HEADER_DIRECTORIES(MyList)
-    target_include_directories(${This} PUBLIC ${MyList})
+#Build porject
+#-j 4 option is used to define how many threads could be used to compile project, is this example will use 4 threads
+cmake --build . --config Release --target IO.SDK -j 4
 
-    #ADD SPECIFICS LIBS AND HEADERS 
-    if (MSVC)
-        target_include_directories(${This} PUBLIC ${CMAKE_SOURCE_DIR}/external-lib/includeWindows)
-        target_link_libraries(${This} ${CMAKE_SOURCE_DIR}/external-lib/cspice.lib)
-    elseif(UNIX)
-        target_include_directories(${This} PUBLIC ${CMAKE_SOURCE_DIR}/external-lib/includeLinux)
-        target_link_libraries(${This} ${CMAKE_SOURCE_DIR}/external-lib/cspice.a)
-    endif ()
-
-    #INSTALL
-    install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} DESTINATION include FILES_MATCHING PATTERN "*.h")
-    install(TARGETS ${This} LIBRARY DESTINATION lib)
-    
-    ```
-5. Extract **Data** and **Templates** folders from archive IO-Toolkit-os-vx.x.xx-x to your executable build folder.
-6. At the end you should have this structure
-    ```
-    Project
-        | IO.SDK
-        | YourProject
-            | CMakeLists.txt (configured at step 4)
-            | build
-                | Data
-                | Template
-        | CMakeLists.txt (configured at step 2 and 3)
-        
-    ```
+#Install libraries and includes
+#This command must be executed with admin rights
+cmake --install IO.SDK
+```
 
     
 ## Use the SDK
 
-In this example we will create a small program that will compute ISS orbital period from TLE(two lines elements), earth Hill sphere and angle between two vectors. 
+In this example we will create a small program to compute maneuvers required to join another spacecraft from earth surface
 
 1. (Execute this step only with binary installation) Ensure your CMake projet contains at least these parameters :
     ```CMAKE
