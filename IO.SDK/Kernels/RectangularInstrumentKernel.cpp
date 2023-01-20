@@ -11,6 +11,8 @@
 #include "RectangularInstrumentKernel.h"
 #include<filesystem>
 #include<fstream>
+#include <sstream>
+#include <Templates/Templates.cpp>
 
 void IO::SDK::Kernels::RectangularInstrumentKernel::BuildKernel()
 {
@@ -21,7 +23,7 @@ void IO::SDK::Kernels::RectangularInstrumentKernel::BuildKernel()
 	}
 
 	std::ofstream outFile(m_filePath);
-	std::ifstream readFile(m_templatePath);
+	std::stringstream readFile(IKRectangular);
 	std::string readout;
 	std::string search;
 	std::string replace;
@@ -102,7 +104,7 @@ void IO::SDK::Kernels::RectangularInstrumentKernel::BuildKernel()
 }
 
 IO::SDK::Kernels::RectangularInstrumentKernel::RectangularInstrumentKernel(const IO::SDK::Instruments::Instrument& instrument, const IO::SDK::Math::Vector3D& boresight, const IO::SDK::Math::Vector3D& refVector, const double angle, const double crossAngle)
-	:InstrumentKernel(instrument, boresight, refVector, angle, "IKRectangularTemplate.ti"), m_crossAngle{ crossAngle }
+	:InstrumentKernel(instrument, boresight, refVector, angle), m_crossAngle{ crossAngle }
 {
 	BuildKernel();
 	furnsh_c(m_filePath.c_str());
