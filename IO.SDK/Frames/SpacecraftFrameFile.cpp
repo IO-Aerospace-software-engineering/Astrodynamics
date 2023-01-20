@@ -14,6 +14,8 @@
 #include <iostream>
 #include <fstream>
 #include <filesystem>
+#include <sstream>
+#include "Templates/Templates.cpp"
 
 IO::SDK::Frames::SpacecraftFrameFile::SpacecraftFrameFile(const IO::SDK::Body::Spacecraft::Spacecraft &spacecraft) : FrameFile(spacecraft.GetFilesPath() + "/Frames/" + spacecraft.GetName() + ".tf", spacecraft.GetName()), m_id{spacecraft.GetId() * 1000}, m_spacecraft{spacecraft}
 {
@@ -34,7 +36,8 @@ void IO::SDK::Frames::SpacecraftFrameFile::BuildFrame()
 	}
 
 	std::ofstream outFile(m_filePath);
-	std::ifstream readFile(std::string(IO::SDK::Parameters::KernelTemplates) + "/cktemplate.tf");
+//	std::ifstream readFile(std::string(IO::SDK::Parameters::KernelTemplates) + "/cktemplate.tf");
+    std::istringstream readFile(ckTemplate);
 	std::string readout;
 	std::string search;
 	std::string replace;
@@ -81,7 +84,7 @@ void IO::SDK::Frames::SpacecraftFrameFile::BuildFrame()
 	outFile.flush();
 	outFile.close();
 
-	readFile.close();
+//	readFile.close();
 
 	m_fileExists = true;
 }
