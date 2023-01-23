@@ -11,12 +11,15 @@
 #include <SpacecraftClockKernel.h>
 #include<iostream>
 #include<fstream>
+#include<sstream>
 #include<Parameters.h>
 #include<TDB.h>
 #include<chrono>
 #include<SpiceUsr.h>
 #include<SDKException.h>
 #include<filesystem>
+
+#include "Templates/Templates.cpp"
 
 using namespace std::chrono_literals;
 
@@ -77,7 +80,7 @@ void IO::SDK::Kernels::SpacecraftClockKernel::BuildGenericClockKernel()
 	}
 
 	std::ofstream outFile(m_filePath, std::ios::out);
-	std::ifstream readFile(std::string(IO::SDK::Parameters::KernelTemplates) + "/sclktemplate.tsc");
+	std::stringstream readFile(Sclk);
 	std::string readout;
 	std::string search;
 	std::string replace;
@@ -107,7 +110,7 @@ void IO::SDK::Kernels::SpacecraftClockKernel::BuildGenericClockKernel()
 	outFile.flush();
 	outFile.close();
 
-	readFile.close();
+    m_fileExists= true;
 }
 
 double IO::SDK::Kernels::SpacecraftClockKernel::ConvertToEncodedClock(const IO::SDK::Time::TDB& tdb) const
