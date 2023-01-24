@@ -76,3 +76,38 @@ static const std::string Sclk =
 "SCLK_PARTITION_END_{id}    = ( 2.8147497671065E+14 )\n"
 "SCLK01_COEFFICIENTS_{id}   = ( 0.0000000000000E+00     6.62731200000000E+08     1.0000000000000E+00 )\n"
 "\\begintext\n";
+
+static const std::string Tk =
+"KPL/FK\n"
+"\\begindata\n"
+"FRAME_{spacecraftname}_{instrumentname}             = {instrumentid}\n"
+"FRAME_{instrumentid}_NAME        = '{framename}'\n"
+"FRAME_{instrumentid}_CLASS       = 4\n"
+"FRAME_{instrumentid}_CLASS_ID    = {instrumentid}\n"
+"FRAME_{instrumentid}_CENTER      = {spacecraftid}\n"
+"TKFRAME_{instrumentid}_SPEC      = 'ANGLES'\n"
+"TKFRAME_{instrumentid}_RELATIVE  = '{spacecraftname}_SPACECRAFT'\n"
+"TKFRAME_{instrumentid}_ANGLES    = ( {x},{y},{z} )\n"
+"TKFRAME_{instrumentid}_AXES      = ( 1,    2,   3   )\n"
+"TKFRAME_{instrumentid}_UNITS     = 'RADIANS'\n"
+"NAIF_BODY_NAME              += '{spacecraftname}_{instrumentname}'\n"
+"NAIF_BODY_CODE              += {instrumentid}\n"
+"\\begintext\n";
+
+static const std::string Site=
+"KPL/FK\n"
+"\\begindata\n"
+"NAIF_BODY_NAME              += '{sitename}'\n"
+"NAIF_BODY_CODE              += {siteid}\n"
+"FRAME_{sitenametopo}        = {frameid}\n"
+"FRAME_{frameid}_NAME        = '{sitenametopo}'\n"
+"FRAME_{frameid}_CLASS       = 4\n"
+"FRAME_{frameid}_CLASS_ID    = {frameid}\n"
+"FRAME_{frameid}_CENTER      = {siteid}\n"
+"OBJECT_{siteid}_FRAME       = '{sitenametopo}'\n"
+"TKFRAME_{frameid}_SPEC      = 'ANGLES'\n"
+"TKFRAME_{frameid}_RELATIVE  = '{fixedframe}'\n"
+"TKFRAME_{frameid}_ANGLES    = ({long},{colat},3.141592653589793116)\n"
+"TKFRAME_{frameid}_AXES      = (3,2,3)\n"
+"TKFRAME_{frameid}_UNITS     = 'RADIANS'\n"
+"\\begintext\n";

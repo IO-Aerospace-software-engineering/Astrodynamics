@@ -11,9 +11,11 @@
 #include <SiteFrameFile.h>
 #include <filesystem>
 #include <fstream>
+#include <sstream>
 #include <string>
 #include <Parameters.h>
 #include <Site.h>
+#include <Templates/Templates.cpp>
 
 IO::SDK::Frames::SiteFrameFile::SiteFrameFile(const IO::SDK::Sites::Site &site) : FrameFile(std::string(IO::SDK::Parameters::SiteFramesPath) + "/" + site.GetName() + ".tf", site.GetName() + "_TOPO"), m_site{site}
 {
@@ -34,7 +36,7 @@ void IO::SDK::Frames::SiteFrameFile::BuildFrame()
     }
 
     std::ofstream outFile(m_filePath);
-    std::ifstream readFile(std::string(IO::SDK::Parameters::KernelTemplates) + "/sitetktemplate.tf");
+    std::stringstream readFile(Site);
     std::string readout;
     std::string search;
     std::string replace;
@@ -97,8 +99,6 @@ void IO::SDK::Frames::SiteFrameFile::BuildFrame()
 
     outFile.flush();
     outFile.close();
-
-    readFile.close();
 
     m_fileExists = true;
 }

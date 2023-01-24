@@ -11,6 +11,8 @@
 #include <InstrumentFrameFile.h>
 #include<filesystem>
 #include<fstream>
+#include<sstream>
+#include<Templates/Templates.cpp>
 
 IO::SDK::Frames::InstrumentFrameFile::InstrumentFrameFile(const IO::SDK::Instruments::Instrument& instrument, const IO::SDK::Math::Vector3D& orientation) :FrameFile(instrument.GetFilesPath() + "/Frames/" + instrument.GetName() + ".tf", instrument.GetSpacecraft().GetName() + "_" + instrument.GetName()), m_instrument{ instrument }, m_orientation{ orientation }
 {
@@ -31,7 +33,7 @@ void IO::SDK::Frames::InstrumentFrameFile::BuildFrame()
 	}
 
 	std::ofstream outFile(m_filePath);
-	std::ifstream readFile(std::string(IO::SDK::Parameters::KernelTemplates) + "/tktemplate.tf");
+	std::stringstream readFile(Tk);
 	std::string readout;
 	std::string search;
 	std::string replace;
@@ -101,8 +103,6 @@ void IO::SDK::Frames::InstrumentFrameFile::BuildFrame()
 
 	outFile.flush();
 	outFile.close();
-
-	readFile.close();
 
 	m_fileExists = true;
 }
