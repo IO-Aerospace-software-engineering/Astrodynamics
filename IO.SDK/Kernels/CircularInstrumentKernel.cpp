@@ -13,7 +13,7 @@
 #include<fstream>
 
 IO::SDK::Kernels::CircularInstrumentKernel::CircularInstrumentKernel(const IO::SDK::Instruments::Instrument& instrument, const IO::SDK::Math::Vector3D& boresight, const IO::SDK::Math::Vector3D& refVector, const double angle)
-	:InstrumentKernel(instrument, boresight, refVector, angle, "IKCircularTemplate.ti")
+	:InstrumentKernel(instrument, boresight, refVector, angle)
 {
 	BuildKernel();
 	furnsh_c(m_filePath.c_str());

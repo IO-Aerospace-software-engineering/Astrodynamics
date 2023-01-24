@@ -10,15 +10,16 @@
  */
 #include <InstrumentKernel.h>
 #include <fstream>
+#include <sstream>
 #include <filesystem>
 #include <InstrumentFrameFile.h>
+#include <Templates/Templates.cpp>
 
-IO::SDK::Kernels::InstrumentKernel::InstrumentKernel(const IO::SDK::Instruments::Instrument &instrument, const IO::SDK::Math::Vector3D &boresight, const IO::SDK::Math::Vector3D &refVector, const double angle, const std::string &templateName) : Kernel(instrument.GetFilesPath() + "/Kernels/" + instrument.GetName() + ".ti"),
+IO::SDK::Kernels::InstrumentKernel::InstrumentKernel(const IO::SDK::Instruments::Instrument &instrument, const IO::SDK::Math::Vector3D &boresight, const IO::SDK::Math::Vector3D &refVector, const double angle) : Kernel(instrument.GetFilesPath() + "/Kernels/" + instrument.GetName() + ".ti"),
 																																																													m_instrument{instrument},
 																																																													m_boresight{boresight},
 																																																													m_refVector{refVector},
-																																																													m_angle{angle},
-																																																													m_templatePath{std::string(IO::SDK::Parameters::KernelTemplates) + "/" + templateName}
+																																																													m_angle{angle}
 {
 }
 
@@ -36,14 +37,14 @@ void IO::SDK::Kernels::InstrumentKernel::BuildKernel()
 	}
 
 	std::ofstream outFile(m_filePath);
-	std::ifstream readFile(m_templatePath);
+	std::stringstream readTemplate(IKCircular);
 	std::string readout;
 	std::string search;
 	std::string replace;
 
-	if (readFile.good() && outFile.good())
+	if (readTemplate.good() && outFile.good())
 	{
-		while (std::getline(readFile, readout))
+		while (std::getline(readTemplate, readout))
 		{
 			auto posinstid = readout.find("{instrumentid}");
 			if (posinstid != std::string::npos)
@@ -110,8 +111,6 @@ void IO::SDK::Kernels::InstrumentKernel::BuildKernel()
 
 		outFile.flush();
 		outFile.close();
-
-		readFile.close();
 
 		m_fileExists = true;
 	}
