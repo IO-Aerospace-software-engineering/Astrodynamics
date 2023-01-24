@@ -21,13 +21,13 @@ void IO::SDK::Kernels::EllipticalInstrumentKernel::BuildKernel() {
     }
 
     std::ofstream outFile(m_filePath);
-    std::stringstream readFile(IKEliptical);
+    std::stringstream readTemplate(IKEliptical);
     std::string readout;
     std::string search;
     std::string replace;
 
-    if (readFile.good() && outFile.good()) {
-        while (std::getline(readFile, readout)) {
+    if (readTemplate.good() && outFile.good()) {
+        while (std::getline(readTemplate, readout)) {
             auto posinstid = readout.find("{instrumentid}");
             if (posinstid != std::string::npos) {
                 readout = readout.replace(posinstid, 14, std::to_string(m_instrument.GetId()));

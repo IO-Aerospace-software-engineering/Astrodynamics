@@ -37,14 +37,14 @@ void IO::SDK::Kernels::InstrumentKernel::BuildKernel()
 	}
 
 	std::ofstream outFile(m_filePath);
-	std::stringstream readFile(IKCircular);
+	std::stringstream readTemplate(IKCircular);
 	std::string readout;
 	std::string search;
 	std::string replace;
 
-	if (readFile.good() && outFile.good())
+	if (readTemplate.good() && outFile.good())
 	{
-		while (std::getline(readFile, readout))
+		while (std::getline(readTemplate, readout))
 		{
 			auto posinstid = readout.find("{instrumentid}");
 			if (posinstid != std::string::npos)

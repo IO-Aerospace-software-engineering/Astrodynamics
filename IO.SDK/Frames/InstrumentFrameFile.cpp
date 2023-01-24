@@ -33,14 +33,14 @@ void IO::SDK::Frames::InstrumentFrameFile::BuildFrame()
 	}
 
 	std::ofstream outFile(m_filePath);
-	std::stringstream readFile(Tk);
+	std::stringstream readTemplate(Tk);
 	std::string readout;
 	std::string search;
 	std::string replace;
 
-	if (readFile.good() && outFile.good())
+	if (readTemplate.good() && outFile.good())
 	{
-		while (std::getline(readFile, readout))
+		while (std::getline(readTemplate, readout))
 		{
 			auto posspname = readout.find("{spacecraftname}");
 			if (posspname != std::string::npos)

@@ -23,14 +23,14 @@ void IO::SDK::Kernels::RectangularInstrumentKernel::BuildKernel()
 	}
 
 	std::ofstream outFile(m_filePath);
-	std::stringstream readFile(IKRectangular);
+	std::stringstream readTemplate(IKRectangular);
 	std::string readout;
 	std::string search;
 	std::string replace;
 
-	if (readFile.good() && outFile.good())
+	if (readTemplate.good() && outFile.good())
 	{
-		while (std::getline(readFile, readout))
+		while (std::getline(readTemplate, readout))
 		{
 			auto posinstid = readout.find("{instrumentid}");
 			if (posinstid != std::string::npos)

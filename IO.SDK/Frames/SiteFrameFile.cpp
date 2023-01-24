@@ -36,14 +36,14 @@ void IO::SDK::Frames::SiteFrameFile::BuildFrame()
     }
 
     std::ofstream outFile(m_filePath);
-    std::stringstream readFile(Site);
+    std::stringstream readTemplate(Site);
     std::string readout;
     std::string search;
     std::string replace;
 
-    if (readFile.good() && outFile.good())
+    if (readTemplate.good() && outFile.good())
     {
-        while (std::getline(readFile, readout))
+        while (std::getline(readTemplate, readout))
         {
             auto posspname = readout.find("{sitename}");
             if (posspname != std::string::npos)

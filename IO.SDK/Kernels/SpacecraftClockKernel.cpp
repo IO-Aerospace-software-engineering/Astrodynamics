@@ -80,16 +80,16 @@ void IO::SDK::Kernels::SpacecraftClockKernel::BuildGenericClockKernel()
 	}
 
 	std::ofstream outFile(m_filePath, std::ios::out);
-	std::stringstream readFile(Sclk);
+	std::stringstream readTemplate(Sclk);
 	std::string readout;
 	std::string search;
 	std::string replace;
 
 	std::string positiveId{ std::to_string(std::abs(m_spacecraft.GetId())) };
 
-	if (readFile.good() && outFile.good())
+	if (readTemplate.good() && outFile.good())
 	{
-		while (std::getline(readFile, readout))
+		while (std::getline(readTemplate, readout))
 		{
 			auto pos = readout.find("{id}");
 			if (pos != std::string::npos)
