@@ -20,7 +20,9 @@ Inheritance diagram for IO\+::SDK\+::Kernels\+::Ephemeris\+Kernel\+:\begin{figur
 \item 
 \mbox{\hyperlink{classIO_1_1SDK_1_1Kernels_1_1EphemerisKernel_acf34c07a1abc3f3f9a3aeaad823549db}{Ephemeris\+Kernel}} (const \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft}{IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Spacecraft}} \&spacecraft)
 \begin{DoxyCompactList}\small\item\em Construct a new Ephemeris \mbox{\hyperlink{classIO_1_1SDK_1_1Kernels_1_1Kernel}{Kernel}} object. \end{DoxyCompactList}\item 
-\mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+State\+Vector}} \mbox{\hyperlink{classIO_1_1SDK_1_1Kernels_1_1EphemerisKernel_ac09746242c43cdafa8acd2175ca3c407}{Read\+State\+Vector}} (const \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1CelestialBody}{IO\+::\+SDK\+::\+Body\+::\+Celestial\+Body}} \&observer, const \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1Frames}{IO\+::\+SDK\+::\+Frames\+::\+Frames}} \&frame, const IO\+::\+SDK\+::\+Aberrations\+Enum aberration, const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} \&epoch) const
+virtual \mbox{\hyperlink{classIO_1_1SDK_1_1Kernels_1_1EphemerisKernel_a46c686505373d02dc1798df419b3d26e}{$\sim$\+Ephemeris\+Kernel}} ()=default
+\item 
+\mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+State\+Vector}} \mbox{\hyperlink{classIO_1_1SDK_1_1Kernels_1_1EphemerisKernel_ac09746242c43cdafa8acd2175ca3c407}{Read\+State\+Vector}} (const \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1CelestialBody}{IO\+::\+SDK\+::\+Body\+::\+Celestial\+Body}} \&observer, const \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1Frames}{IO\+::\+SDK\+::\+Frames\+::\+Frames}} \&frame, const \mbox{\hyperlink{namespaceIO_1_1SDK_abbb4827ec6a24ad346d9a60473ad3b81}{IO\+::\+SDK\+::\+Aberrations\+Enum}} aberration, const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} \&epoch) const
 \item 
 \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO\+::\+SDK\+::\+Time\+::\+Window}}$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} $>$ \mbox{\hyperlink{classIO_1_1SDK_1_1Kernels_1_1EphemerisKernel_a8787db722addf17f38381016593cf83a}{Get\+Coverage\+Window}} () const override
 \begin{DoxyCompactList}\small\item\em Get the Coverage Window. \end{DoxyCompactList}\item 
@@ -48,6 +50,12 @@ Construct a new Ephemeris \mbox{\hyperlink{classIO_1_1SDK_1_1Kernels_1_1Kernel}{
 {\em spacecraft} & \\
 \hline
 \end{DoxyParams}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Kernels_1_1EphemerisKernel_a46c686505373d02dc1798df419b3d26e}\label{classIO_1_1SDK_1_1Kernels_1_1EphemerisKernel_a46c686505373d02dc1798df419b3d26e}} 
+\index{IO::SDK::Kernels::EphemerisKernel@{IO::SDK::Kernels::EphemerisKernel}!````~EphemerisKernel@{$\sim$EphemerisKernel}}
+\index{````~EphemerisKernel@{$\sim$EphemerisKernel}!IO::SDK::Kernels::EphemerisKernel@{IO::SDK::Kernels::EphemerisKernel}}
+\doxysubsubsection{\texorpdfstring{$\sim$EphemerisKernel()}{~EphemerisKernel()}}
+{\footnotesize\ttfamily virtual IO\+::\+SDK\+::\+Kernels\+::\+Ephemeris\+Kernel\+::$\sim$\+Ephemeris\+Kernel (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}, {\ttfamily [default]}}
+
 
 
 \doxysubsection{Member Function Documentation}
@@ -66,13 +74,13 @@ IO\+::\+SDK\+::\+Time\+::\+Window$<$\+IO\+::\+SDK\+::\+Time\+::\+TDB$>$
 \end{DoxyReturn}
 
 
-Implements \mbox{\hyperlink{classIO_1_1SDK_1_1Kernels_1_1Kernel_ac1d538eac591753cb98b33ed41a11dd9}{IO\+::\+SDK\+::\+Kernels\+::\+Kernel}}.
+Implements \mbox{\hyperlink{classIO_1_1SDK_1_1Kernels_1_1Kernel_a752d5b214ec50307c47fb63daa89f749}{IO\+::\+SDK\+::\+Kernels\+::\+Kernel}}.
 
 \mbox{\Hypertarget{classIO_1_1SDK_1_1Kernels_1_1EphemerisKernel_ac09746242c43cdafa8acd2175ca3c407}\label{classIO_1_1SDK_1_1Kernels_1_1EphemerisKernel_ac09746242c43cdafa8acd2175ca3c407}} 
 \index{IO::SDK::Kernels::EphemerisKernel@{IO::SDK::Kernels::EphemerisKernel}!ReadStateVector@{ReadStateVector}}
 \index{ReadStateVector@{ReadStateVector}!IO::SDK::Kernels::EphemerisKernel@{IO::SDK::Kernels::EphemerisKernel}}
 \doxysubsubsection{\texorpdfstring{ReadStateVector()}{ReadStateVector()}}
-{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+State\+Vector}} IO\+::\+SDK\+::\+Kernels\+::\+Ephemeris\+Kernel\+::\+Read\+State\+Vector (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1CelestialBody}{IO\+::\+SDK\+::\+Body\+::\+Celestial\+Body}} \&}]{observer,  }\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1Frames}{IO\+::\+SDK\+::\+Frames\+::\+Frames}} \&}]{frame,  }\item[{const IO\+::\+SDK\+::\+Aberrations\+Enum}]{aberration,  }\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} \&}]{epoch }\end{DoxyParamCaption}) const}
+{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+State\+Vector}} IO\+::\+SDK\+::\+Kernels\+::\+Ephemeris\+Kernel\+::\+Read\+State\+Vector (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1CelestialBody}{IO\+::\+SDK\+::\+Body\+::\+Celestial\+Body}} \&}]{observer,  }\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1Frames}{IO\+::\+SDK\+::\+Frames\+::\+Frames}} \&}]{frame,  }\item[{const \mbox{\hyperlink{namespaceIO_1_1SDK_abbb4827ec6a24ad346d9a60473ad3b81}{IO\+::\+SDK\+::\+Aberrations\+Enum}}}]{aberration,  }\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} \&}]{epoch }\end{DoxyParamCaption}) const}
 
 
 \begin{DoxyParams}{Parameters}

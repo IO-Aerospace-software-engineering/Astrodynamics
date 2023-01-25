@@ -1,5 +1,9 @@
 \hypertarget{classIO_1_1SDK_1_1Maneuvers_1_1OrbitalPlaneChangingManeuver}{}\doxysection{IO\+::SDK\+::Maneuvers\+::Orbital\+Plane\+Changing\+Maneuver Class Reference}
 \label{classIO_1_1SDK_1_1Maneuvers_1_1OrbitalPlaneChangingManeuver}\index{IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver@{IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver}}
+
+
+{\ttfamily \#include $<$Orbital\+Plane\+Changing\+Maneuver.\+h$>$}
+
 Inheritance diagram for IO\+::SDK\+::Maneuvers\+::Orbital\+Plane\+Changing\+Maneuver\+:\begin{figure}[H]
 \begin{center}
 \leavevmode
@@ -19,10 +23,6 @@ virtual void \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1OrbitalPlaneChangin
 \begin{DoxyCompactList}\small\item\em Compute impulsive maneuver. \end{DoxyCompactList}\item 
 virtual \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateOrientation}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+State\+Orientation}} \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1OrbitalPlaneChangingManeuver_a7472c24685a1eea73ff6bb7253f084ef}{Compute\+Orientation}} (const \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}} \&maneuver\+Point) override
 \item 
-bool \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1OrbitalPlaneChangingManeuver_aff3fe52a45211ea6346f861e789c40db}{Is\+Ascending\+Node}} (const \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+State\+Vector}} \&state\+Vector) const
-\begin{DoxyCompactList}\small\item\em Know if is an ascending node. \end{DoxyCompactList}\item 
-bool \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1OrbitalPlaneChangingManeuver_aa3eb625bd7d519a98c7639a86ba32a4e}{Is\+Approaching\+Ascending\+Node}} (const \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+State\+Vector}} \&state\+Vector) const
-\begin{DoxyCompactList}\small\item\em Know if approaching ascending node. \end{DoxyCompactList}\item 
 double \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1OrbitalPlaneChangingManeuver_ae558a4d5c41376d4ca09455504d9ea2e}{Get\+Relative\+Inclination}} () const
 \begin{DoxyCompactList}\small\item\em Get the Relative Inclination. \end{DoxyCompactList}\end{DoxyCompactItemize}
 \doxysubsection*{Additional Inherited Members}
@@ -145,46 +145,6 @@ Get the Relative Inclination.
 
 \begin{DoxyReturn}{Returns}
 double 
-\end{DoxyReturn}
-\mbox{\Hypertarget{classIO_1_1SDK_1_1Maneuvers_1_1OrbitalPlaneChangingManeuver_aa3eb625bd7d519a98c7639a86ba32a4e}\label{classIO_1_1SDK_1_1Maneuvers_1_1OrbitalPlaneChangingManeuver_aa3eb625bd7d519a98c7639a86ba32a4e}} 
-\index{IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver@{IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver}!IsApproachingAscendingNode@{IsApproachingAscendingNode}}
-\index{IsApproachingAscendingNode@{IsApproachingAscendingNode}!IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver@{IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver}}
-\doxysubsubsection{\texorpdfstring{IsApproachingAscendingNode()}{IsApproachingAscendingNode()}}
-{\footnotesize\ttfamily bool IO\+::\+SDK\+::\+Maneuvers\+::\+Orbital\+Plane\+Changing\+Maneuver\+::\+Is\+Approaching\+Ascending\+Node (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+State\+Vector}} \&}]{state\+Vector }\end{DoxyParamCaption}) const}
-
-
-
-Know if approaching ascending node. 
-
-
-\begin{DoxyParams}{Parameters}
-{\em state\+Vector} & \\
-\hline
-\end{DoxyParams}
-\begin{DoxyReturn}{Returns}
-true 
-
-false 
-\end{DoxyReturn}
-\mbox{\Hypertarget{classIO_1_1SDK_1_1Maneuvers_1_1OrbitalPlaneChangingManeuver_aff3fe52a45211ea6346f861e789c40db}\label{classIO_1_1SDK_1_1Maneuvers_1_1OrbitalPlaneChangingManeuver_aff3fe52a45211ea6346f861e789c40db}} 
-\index{IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver@{IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver}!IsAscendingNode@{IsAscendingNode}}
-\index{IsAscendingNode@{IsAscendingNode}!IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver@{IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver}}
-\doxysubsubsection{\texorpdfstring{IsAscendingNode()}{IsAscendingNode()}}
-{\footnotesize\ttfamily bool IO\+::\+SDK\+::\+Maneuvers\+::\+Orbital\+Plane\+Changing\+Maneuver\+::\+Is\+Ascending\+Node (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+State\+Vector}} \&}]{state\+Vector }\end{DoxyParamCaption}) const}
-
-
-
-Know if is an ascending node. 
-
-
-\begin{DoxyParams}{Parameters}
-{\em state\+Vector} & \\
-\hline
-\end{DoxyParams}
-\begin{DoxyReturn}{Returns}
-true 
-
-false 
 \end{DoxyReturn}
 
 

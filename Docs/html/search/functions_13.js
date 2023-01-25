@@ -1,5 +1,5 @@
 var searchData=
 [
-  ['vector3d_1054',['Vector3D',['../classIO_1_1SDK_1_1Math_1_1Vector3D.html#aeafff1dcd5923d36498b8e0389fc6149',1,'IO::SDK::Math::Vector3D']]],
-  ['vvintegrator_1055',['VVIntegrator',['../classIO_1_1SDK_1_1Integrators_1_1VVIntegrator.html#ac341aab71d9616351343693f0998fb48',1,'IO::SDK::Integrators::VVIntegrator::VVIntegrator(const IO::SDK::Time::TimeSpan &amp;stepDuration)'],['../classIO_1_1SDK_1_1Integrators_1_1VVIntegrator.html#a5541bb124ed69b1ba72f86131ca84d7d',1,'IO::SDK::Integrators::VVIntegrator::VVIntegrator(const IO::SDK::Time::TimeSpan &amp;stepDuration, std::vector&lt; IO::SDK::Integrators::Forces::Force * &gt; forces)']]]
+  ['updatefuelquantity_0',['UpdateFuelQuantity',['../classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1FuelTank.html#ace7f581639fbfcfa73b4a6a467df0826',1,'IO::SDK::Body::Spacecraft::FuelTank']]],
+  ['utc_1',['UTC',['../classIO_1_1SDK_1_1Time_1_1UTC.html#af2c966513327fbca710532013b41cca1',1,'IO::SDK::Time::UTC::UTC(const std::chrono::duration&lt; double &gt; ellapsedSecondsFromJ2000)'],['../classIO_1_1SDK_1_1Time_1_1UTC.html#a58a04f81ad13d8c610b1b91469761bda',1,'IO::SDK::Time::UTC::UTC(const std::string string)']]]
 ];

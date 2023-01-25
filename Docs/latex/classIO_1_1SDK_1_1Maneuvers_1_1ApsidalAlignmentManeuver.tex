@@ -1,5 +1,9 @@
 \hypertarget{classIO_1_1SDK_1_1Maneuvers_1_1ApsidalAlignmentManeuver}{}\doxysection{IO\+::SDK\+::Maneuvers\+::Apsidal\+Alignment\+Maneuver Class Reference}
 \label{classIO_1_1SDK_1_1Maneuvers_1_1ApsidalAlignmentManeuver}\index{IO::SDK::Maneuvers::ApsidalAlignmentManeuver@{IO::SDK::Maneuvers::ApsidalAlignmentManeuver}}
+
+
+{\ttfamily \#include $<$Apsidal\+Alignment\+Maneuver.\+h$>$}
+
 Inheritance diagram for IO\+::SDK\+::Maneuvers\+::Apsidal\+Alignment\+Maneuver\+:\begin{figure}[H]
 \begin{center}
 \leavevmode
@@ -9,11 +13,9 @@ Inheritance diagram for IO\+::SDK\+::Maneuvers\+::Apsidal\+Alignment\+Maneuver\+
 \doxysubsection*{Public Member Functions}
 \begin{DoxyCompactItemize}
 \item 
-\mbox{\Hypertarget{classIO_1_1SDK_1_1Maneuvers_1_1ApsidalAlignmentManeuver_a0cdd488a6ba91c3ed9b9071fa16f2e72}\label{classIO_1_1SDK_1_1Maneuvers_1_1ApsidalAlignmentManeuver_a0cdd488a6ba91c3ed9b9071fa16f2e72}} 
-{\bfseries Apsidal\+Alignment\+Maneuver} (const std\+::vector$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Engine}{IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Engine}} $>$ \&engines, \mbox{\hyperlink{classIO_1_1SDK_1_1Propagators_1_1Propagator}{IO\+::\+SDK\+::\+Propagators\+::\+Propagator}} \&propagator, \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}} $\ast$target\+Orbit)
+\mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ApsidalAlignmentManeuver_a0cdd488a6ba91c3ed9b9071fa16f2e72}{Apsidal\+Alignment\+Maneuver}} (const std\+::vector$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Engine}{IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Engine}} $>$ \&engines, \mbox{\hyperlink{classIO_1_1SDK_1_1Propagators_1_1Propagator}{IO\+::\+SDK\+::\+Propagators\+::\+Propagator}} \&propagator, \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}} $\ast$target\+Orbit)
 \item 
-\mbox{\Hypertarget{classIO_1_1SDK_1_1Maneuvers_1_1ApsidalAlignmentManeuver_a10db2c8d5f0c552bf83d32003b1c6a47}\label{classIO_1_1SDK_1_1Maneuvers_1_1ApsidalAlignmentManeuver_a10db2c8d5f0c552bf83d32003b1c6a47}} 
-{\bfseries Apsidal\+Alignment\+Maneuver} (const std\+::vector$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Engine}{IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Engine}} $>$ \&engines, \mbox{\hyperlink{classIO_1_1SDK_1_1Propagators_1_1Propagator}{IO\+::\+SDK\+::\+Propagators\+::\+Propagator}} \&propagator, \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}} $\ast$target\+Orbit, const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} \&minimum\+Epoch)
+\mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ApsidalAlignmentManeuver_a10db2c8d5f0c552bf83d32003b1c6a47}{Apsidal\+Alignment\+Maneuver}} (const std\+::vector$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Engine}{IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Engine}} $>$ \&engines, \mbox{\hyperlink{classIO_1_1SDK_1_1Propagators_1_1Propagator}{IO\+::\+SDK\+::\+Propagators\+::\+Propagator}} \&propagator, \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}} $\ast$target\+Orbit, const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} \&minimum\+Epoch)
 \item 
 virtual bool \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ApsidalAlignmentManeuver_abccf6c20c8266615d3d9f0edc424cdf0}{Can\+Execute}} (const \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}} \&orbital\+Params) override
 \begin{DoxyCompactList}\small\item\em Define maneuver execution condition. \end{DoxyCompactList}\item 
@@ -29,6 +31,21 @@ virtual void \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ApsidalAlignmentMan
 virtual \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateOrientation}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+State\+Orientation}} \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ApsidalAlignmentManeuver_a446d463805067fec8ca3e1926b30553c}{Compute\+Orientation}} (const \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}} \&maneuver\+Point) override
 \end{DoxyCompactItemize}
 \doxysubsection*{Additional Inherited Members}
+
+
+\doxysubsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Maneuvers_1_1ApsidalAlignmentManeuver_a0cdd488a6ba91c3ed9b9071fa16f2e72}\label{classIO_1_1SDK_1_1Maneuvers_1_1ApsidalAlignmentManeuver_a0cdd488a6ba91c3ed9b9071fa16f2e72}} 
+\index{IO::SDK::Maneuvers::ApsidalAlignmentManeuver@{IO::SDK::Maneuvers::ApsidalAlignmentManeuver}!ApsidalAlignmentManeuver@{ApsidalAlignmentManeuver}}
+\index{ApsidalAlignmentManeuver@{ApsidalAlignmentManeuver}!IO::SDK::Maneuvers::ApsidalAlignmentManeuver@{IO::SDK::Maneuvers::ApsidalAlignmentManeuver}}
+\doxysubsubsection{\texorpdfstring{ApsidalAlignmentManeuver()}{ApsidalAlignmentManeuver()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily IO\+::\+SDK\+::\+Maneuvers\+::\+Apsidal\+Alignment\+Maneuver\+::\+Apsidal\+Alignment\+Maneuver (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Engine}{IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Engine}} $>$ \&}]{engines,  }\item[{\mbox{\hyperlink{classIO_1_1SDK_1_1Propagators_1_1Propagator}{IO\+::\+SDK\+::\+Propagators\+::\+Propagator}} \&}]{propagator,  }\item[{\mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}} $\ast$}]{target\+Orbit }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Maneuvers_1_1ApsidalAlignmentManeuver_a10db2c8d5f0c552bf83d32003b1c6a47}\label{classIO_1_1SDK_1_1Maneuvers_1_1ApsidalAlignmentManeuver_a10db2c8d5f0c552bf83d32003b1c6a47}} 
+\index{IO::SDK::Maneuvers::ApsidalAlignmentManeuver@{IO::SDK::Maneuvers::ApsidalAlignmentManeuver}!ApsidalAlignmentManeuver@{ApsidalAlignmentManeuver}}
+\index{ApsidalAlignmentManeuver@{ApsidalAlignmentManeuver}!IO::SDK::Maneuvers::ApsidalAlignmentManeuver@{IO::SDK::Maneuvers::ApsidalAlignmentManeuver}}
+\doxysubsubsection{\texorpdfstring{ApsidalAlignmentManeuver()}{ApsidalAlignmentManeuver()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily IO\+::\+SDK\+::\+Maneuvers\+::\+Apsidal\+Alignment\+Maneuver\+::\+Apsidal\+Alignment\+Maneuver (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Engine}{IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Engine}} $>$ \&}]{engines,  }\item[{\mbox{\hyperlink{classIO_1_1SDK_1_1Propagators_1_1Propagator}{IO\+::\+SDK\+::\+Propagators\+::\+Propagator}} \&}]{propagator,  }\item[{\mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}} $\ast$}]{target\+Orbit,  }\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} \&}]{minimum\+Epoch }\end{DoxyParamCaption})}
+
 
 
 \doxysubsection{Member Function Documentation}

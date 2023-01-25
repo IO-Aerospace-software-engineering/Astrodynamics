@@ -16,8 +16,9 @@
 \begin{DoxyCompactList}\small\item\em Instanciate sized matix \end{DoxyCompactList}\item 
 \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Matrix_aca9ef9c2adf51b4715a91ebd33089340}{Matrix}} (const std\+::size\+\_\+t row\+Size, const std\+::size\+\_\+t col\+Size, double $\ast$$\ast$data)
 \begin{DoxyCompactList}\small\item\em Instanciate matrix with data \end{DoxyCompactList}\item 
-\mbox{\Hypertarget{classIO_1_1SDK_1_1Math_1_1Matrix_a1e6dde7eca8c636a68b54ded13b5d835}\label{classIO_1_1SDK_1_1Math_1_1Matrix_a1e6dde7eca8c636a68b54ded13b5d835}} 
-{\bfseries Matrix} (const \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Matrix}{Matrix}} \&v)
+\mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Matrix_a1e6dde7eca8c636a68b54ded13b5d835}{Matrix}} (const \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Matrix}{Matrix}} \&v)
+\item 
+\mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Matrix_af75b07f627de187673a062c31ec7f351}{$\sim$\+Matrix}} ()
 \item 
 double \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Matrix_a5715abe199ab48d05026b6e6f28f7298}{Get\+Value}} (const std\+::size\+\_\+t row\+Idx, const std\+::size\+\_\+t col\+Idx) const
 \begin{DoxyCompactList}\small\item\em Get value at given index \end{DoxyCompactList}\item 
@@ -31,21 +32,18 @@ std\+::size\+\_\+t \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Matrix_a3252003659
 \begin{DoxyCompactList}\small\item\em Multiply this matrix by another \end{DoxyCompactList}\item 
 \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Matrix}{Matrix}} \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Matrix_a97ca6c1edeae30a316e26dd1cd43f738}{Transpose}} () const
 \begin{DoxyCompactList}\small\item\em Transpose this matrix \end{DoxyCompactList}\item 
-\mbox{\Hypertarget{classIO_1_1SDK_1_1Math_1_1Matrix_a8047f31f1639ae3a665a09b3687475a5}\label{classIO_1_1SDK_1_1Math_1_1Matrix_a8047f31f1639ae3a665a09b3687475a5}} 
-double $\ast$$\ast$ {\bfseries Get\+Raw\+Data} () const
+double $\ast$$\ast$ \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Matrix_a8047f31f1639ae3a665a09b3687475a5}{Get\+Raw\+Data}} () const
 \end{DoxyCompactItemize}
 
 
 \doxysubsection{Detailed Description}
 \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Matrix}{Matrix}} 
 
-
-
 \doxysubsection{Constructor \& Destructor Documentation}
 \mbox{\Hypertarget{classIO_1_1SDK_1_1Math_1_1Matrix_a6d6373343a1f41b1636caf44f05c01ca}\label{classIO_1_1SDK_1_1Math_1_1Matrix_a6d6373343a1f41b1636caf44f05c01ca}} 
 \index{IO::SDK::Math::Matrix@{IO::SDK::Math::Matrix}!Matrix@{Matrix}}
 \index{Matrix@{Matrix}!IO::SDK::Math::Matrix@{IO::SDK::Math::Matrix}}
-\doxysubsubsection{\texorpdfstring{Matrix()}{Matrix()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+\doxysubsubsection{\texorpdfstring{Matrix()}{Matrix()}\hspace{0.1cm}{\footnotesize\ttfamily [1/3]}}
 {\footnotesize\ttfamily IO\+::\+SDK\+::\+Math\+::\+Matrix\+::\+Matrix (\begin{DoxyParamCaption}\item[{const std\+::size\+\_\+t}]{row\+Size,  }\item[{const std\+::size\+\_\+t}]{col\+Size }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
 
 
@@ -62,7 +60,7 @@ Instanciate sized matix
 \mbox{\Hypertarget{classIO_1_1SDK_1_1Math_1_1Matrix_aca9ef9c2adf51b4715a91ebd33089340}\label{classIO_1_1SDK_1_1Math_1_1Matrix_aca9ef9c2adf51b4715a91ebd33089340}} 
 \index{IO::SDK::Math::Matrix@{IO::SDK::Math::Matrix}!Matrix@{Matrix}}
 \index{Matrix@{Matrix}!IO::SDK::Math::Matrix@{IO::SDK::Math::Matrix}}
-\doxysubsubsection{\texorpdfstring{Matrix()}{Matrix()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+\doxysubsubsection{\texorpdfstring{Matrix()}{Matrix()}\hspace{0.1cm}{\footnotesize\ttfamily [2/3]}}
 {\footnotesize\ttfamily IO\+::\+SDK\+::\+Math\+::\+Matrix\+::\+Matrix (\begin{DoxyParamCaption}\item[{const std\+::size\+\_\+t}]{row\+Size,  }\item[{const std\+::size\+\_\+t}]{col\+Size,  }\item[{double $\ast$$\ast$}]{data }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
 
 
@@ -78,6 +76,18 @@ Instanciate matrix with data
 {\em data} & \\
 \hline
 \end{DoxyParams}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Math_1_1Matrix_a1e6dde7eca8c636a68b54ded13b5d835}\label{classIO_1_1SDK_1_1Math_1_1Matrix_a1e6dde7eca8c636a68b54ded13b5d835}} 
+\index{IO::SDK::Math::Matrix@{IO::SDK::Math::Matrix}!Matrix@{Matrix}}
+\index{Matrix@{Matrix}!IO::SDK::Math::Matrix@{IO::SDK::Math::Matrix}}
+\doxysubsubsection{\texorpdfstring{Matrix()}{Matrix()}\hspace{0.1cm}{\footnotesize\ttfamily [3/3]}}
+{\footnotesize\ttfamily IO\+::\+SDK\+::\+Math\+::\+Matrix\+::\+Matrix (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Matrix}{Matrix}} \&}]{v }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Math_1_1Matrix_af75b07f627de187673a062c31ec7f351}\label{classIO_1_1SDK_1_1Math_1_1Matrix_af75b07f627de187673a062c31ec7f351}} 
+\index{IO::SDK::Math::Matrix@{IO::SDK::Math::Matrix}!````~Matrix@{$\sim$Matrix}}
+\index{````~Matrix@{$\sim$Matrix}!IO::SDK::Math::Matrix@{IO::SDK::Math::Matrix}}
+\doxysubsubsection{\texorpdfstring{$\sim$Matrix()}{~Matrix()}}
+{\footnotesize\ttfamily IO\+::\+SDK\+::\+Math\+::\+Matrix\+::$\sim$\+Matrix (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
 
 
 \doxysubsection{Member Function Documentation}
@@ -94,6 +104,12 @@ Get the matrix columns size
 \begin{DoxyReturn}{Returns}
 
 \end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Math_1_1Matrix_a8047f31f1639ae3a665a09b3687475a5}\label{classIO_1_1SDK_1_1Math_1_1Matrix_a8047f31f1639ae3a665a09b3687475a5}} 
+\index{IO::SDK::Math::Matrix@{IO::SDK::Math::Matrix}!GetRawData@{GetRawData}}
+\index{GetRawData@{GetRawData}!IO::SDK::Math::Matrix@{IO::SDK::Math::Matrix}}
+\doxysubsubsection{\texorpdfstring{GetRawData()}{GetRawData()}}
+{\footnotesize\ttfamily double $\ast$$\ast$ IO\+::\+SDK\+::\+Math\+::\+Matrix\+::\+Get\+Raw\+Data (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
 \mbox{\Hypertarget{classIO_1_1SDK_1_1Math_1_1Matrix_a3252003659d0450c811f655ef4a34fd2}\label{classIO_1_1SDK_1_1Math_1_1Matrix_a3252003659d0450c811f655ef4a34fd2}} 
 \index{IO::SDK::Math::Matrix@{IO::SDK::Math::Matrix}!GetRowsSize@{GetRowsSize}}
 \index{GetRowsSize@{GetRowsSize}!IO::SDK::Math::Matrix@{IO::SDK::Math::Matrix}}
