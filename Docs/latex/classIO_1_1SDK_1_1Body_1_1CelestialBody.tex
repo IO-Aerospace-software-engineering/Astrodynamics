@@ -1,5 +1,9 @@
 \hypertarget{classIO_1_1SDK_1_1Body_1_1CelestialBody}{}\doxysection{IO\+::SDK\+::Body\+::Celestial\+Body Class Reference}
 \label{classIO_1_1SDK_1_1Body_1_1CelestialBody}\index{IO::SDK::Body::CelestialBody@{IO::SDK::Body::CelestialBody}}
+
+
+{\ttfamily \#include $<$Celestial\+Body.\+h$>$}
+
 Inheritance diagram for IO\+::SDK\+::Body\+::Celestial\+Body\+:\begin{figure}[H]
 \begin{center}
 \leavevmode
@@ -9,17 +13,13 @@ Inheritance diagram for IO\+::SDK\+::Body\+::Celestial\+Body\+:\begin{figure}[H]
 \doxysubsection*{Public Member Functions}
 \begin{DoxyCompactItemize}
 \item 
-\mbox{\Hypertarget{classIO_1_1SDK_1_1Body_1_1CelestialBody_a5a9fa71829587e628d020d44454d27a4}\label{classIO_1_1SDK_1_1Body_1_1CelestialBody_a5a9fa71829587e628d020d44454d27a4}} 
-{\bfseries Celestial\+Body} (const int id, const std\+::string \&name, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1CelestialBody}{IO\+::\+SDK\+::\+Body\+::\+Celestial\+Body}} $>$ \&center\+Of\+Motion)
+\mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1CelestialBody_a5a9fa71829587e628d020d44454d27a4}{Celestial\+Body}} (const int id, const std\+::string \&name, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1CelestialBody}{IO\+::\+SDK\+::\+Body\+::\+Celestial\+Body}} $>$ \&center\+Of\+Motion)
 \item 
-\mbox{\Hypertarget{classIO_1_1SDK_1_1Body_1_1CelestialBody_a802cfe7400cee183e88314b50c2889f0}\label{classIO_1_1SDK_1_1Body_1_1CelestialBody_a802cfe7400cee183e88314b50c2889f0}} 
-{\bfseries Celestial\+Body} (const int id, const std\+::string \&name)
+\mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1CelestialBody_a802cfe7400cee183e88314b50c2889f0}{Celestial\+Body}} (const int id, const std\+::string \&name)
 \item 
-\mbox{\Hypertarget{classIO_1_1SDK_1_1Body_1_1CelestialBody_ad1eea8d0697bc7332b6837087d64cc97}\label{classIO_1_1SDK_1_1Body_1_1CelestialBody_ad1eea8d0697bc7332b6837087d64cc97}} 
-double {\bfseries Get\+Sphere\+Of\+Influence} () const
+double \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1CelestialBody_ad1eea8d0697bc7332b6837087d64cc97}{Get\+Sphere\+Of\+Influence}} () const
 \item 
-\mbox{\Hypertarget{classIO_1_1SDK_1_1Body_1_1CelestialBody_aa232ec64950a86ab5ceaa9c0b510e1fb}\label{classIO_1_1SDK_1_1Body_1_1CelestialBody_aa232ec64950a86ab5ceaa9c0b510e1fb}} 
-double {\bfseries Get\+Hill\+Sphere} () const
+double \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1CelestialBody_aa232ec64950a86ab5ceaa9c0b510e1fb}{Get\+Hill\+Sphere}} () const
 \item 
 \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+State\+Vector}} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1CelestialBody_a634f512bd9e44f367c737355595af14c}{Get\+Relative\+Statevector}} (const \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+State\+Vector}} \&target\+State\+Vector) const
 \begin{DoxyCompactList}\small\item\em Get the Relative Statevector from this celestial body to a given target. \end{DoxyCompactList}\item 
@@ -38,6 +38,21 @@ double \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1CelestialBody_ad1059d6ea728433
 \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO\+::\+SDK\+::\+Time\+::\+Time\+Span}} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1CelestialBody_a2eaf5625f83cb2aae61d954d1a74e0c4}{Get\+Sideral\+Rotation\+Period}} (const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} \&epoch) const
 \begin{DoxyCompactList}\small\item\em Get the Sideral Rotation Period. \end{DoxyCompactList}\end{DoxyCompactItemize}
 \doxysubsection*{Additional Inherited Members}
+
+
+\doxysubsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Body_1_1CelestialBody_a5a9fa71829587e628d020d44454d27a4}\label{classIO_1_1SDK_1_1Body_1_1CelestialBody_a5a9fa71829587e628d020d44454d27a4}} 
+\index{IO::SDK::Body::CelestialBody@{IO::SDK::Body::CelestialBody}!CelestialBody@{CelestialBody}}
+\index{CelestialBody@{CelestialBody}!IO::SDK::Body::CelestialBody@{IO::SDK::Body::CelestialBody}}
+\doxysubsubsection{\texorpdfstring{CelestialBody()}{CelestialBody()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily IO\+::\+SDK\+::\+Body\+::\+Celestial\+Body\+::\+Celestial\+Body (\begin{DoxyParamCaption}\item[{const int}]{id,  }\item[{const std\+::string \&}]{name,  }\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1CelestialBody}{IO\+::\+SDK\+::\+Body\+::\+Celestial\+Body}} $>$ \&}]{center\+Of\+Motion }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Body_1_1CelestialBody_a802cfe7400cee183e88314b50c2889f0}\label{classIO_1_1SDK_1_1Body_1_1CelestialBody_a802cfe7400cee183e88314b50c2889f0}} 
+\index{IO::SDK::Body::CelestialBody@{IO::SDK::Body::CelestialBody}!CelestialBody@{CelestialBody}}
+\index{CelestialBody@{CelestialBody}!IO::SDK::Body::CelestialBody@{IO::SDK::Body::CelestialBody}}
+\doxysubsubsection{\texorpdfstring{CelestialBody()}{CelestialBody()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily IO\+::\+SDK\+::\+Body\+::\+Celestial\+Body\+::\+Celestial\+Body (\begin{DoxyParamCaption}\item[{const int}]{id,  }\item[{const std\+::string \&}]{name }\end{DoxyParamCaption})}
+
 
 
 \doxysubsection{Member Function Documentation}
@@ -85,6 +100,12 @@ Get the Flattening.
 \begin{DoxyReturn}{Returns}
 double 
 \end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Body_1_1CelestialBody_aa232ec64950a86ab5ceaa9c0b510e1fb}\label{classIO_1_1SDK_1_1Body_1_1CelestialBody_aa232ec64950a86ab5ceaa9c0b510e1fb}} 
+\index{IO::SDK::Body::CelestialBody@{IO::SDK::Body::CelestialBody}!GetHillSphere@{GetHillSphere}}
+\index{GetHillSphere@{GetHillSphere}!IO::SDK::Body::CelestialBody@{IO::SDK::Body::CelestialBody}}
+\doxysubsubsection{\texorpdfstring{GetHillSphere()}{GetHillSphere()}}
+{\footnotesize\ttfamily double IO\+::\+SDK\+::\+Body\+::\+Celestial\+Body\+::\+Get\+Hill\+Sphere (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
 \mbox{\Hypertarget{classIO_1_1SDK_1_1Body_1_1CelestialBody_a579737ca89a3c2a0651674a28d177319}\label{classIO_1_1SDK_1_1Body_1_1CelestialBody_a579737ca89a3c2a0651674a28d177319}} 
 \index{IO::SDK::Body::CelestialBody@{IO::SDK::Body::CelestialBody}!GetRadius@{GetRadius}}
 \index{GetRadius@{GetRadius}!IO::SDK::Body::CelestialBody@{IO::SDK::Body::CelestialBody}}
@@ -134,6 +155,12 @@ Get the Sideral Rotation Period.
 \begin{DoxyReturn}{Returns}
 \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO\+::\+SDK\+::\+Time\+::\+Time\+Span}} 
 \end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Body_1_1CelestialBody_ad1eea8d0697bc7332b6837087d64cc97}\label{classIO_1_1SDK_1_1Body_1_1CelestialBody_ad1eea8d0697bc7332b6837087d64cc97}} 
+\index{IO::SDK::Body::CelestialBody@{IO::SDK::Body::CelestialBody}!GetSphereOfInfluence@{GetSphereOfInfluence}}
+\index{GetSphereOfInfluence@{GetSphereOfInfluence}!IO::SDK::Body::CelestialBody@{IO::SDK::Body::CelestialBody}}
+\doxysubsubsection{\texorpdfstring{GetSphereOfInfluence()}{GetSphereOfInfluence()}}
+{\footnotesize\ttfamily double IO\+::\+SDK\+::\+Body\+::\+Celestial\+Body\+::\+Get\+Sphere\+Of\+Influence (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
 \mbox{\Hypertarget{classIO_1_1SDK_1_1Body_1_1CelestialBody_a7cafdbfbf4e2215de2d943f945acd3d7}\label{classIO_1_1SDK_1_1Body_1_1CelestialBody_a7cafdbfbf4e2215de2d943f945acd3d7}} 
 \index{IO::SDK::Body::CelestialBody@{IO::SDK::Body::CelestialBody}!IsInHillSphere@{IsInHillSphere}}
 \index{IsInHillSphere@{IsInHillSphere}!IO::SDK::Body::CelestialBody@{IO::SDK::Body::CelestialBody}}

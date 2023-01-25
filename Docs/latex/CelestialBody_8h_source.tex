@@ -14,7 +14,7 @@
 \DoxyCodeLine{20 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{TDB_8h}{TDB.h}}>}}
 \DoxyCodeLine{21 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{Planetographic_8h}{Planetographic.h}}>}}
 \DoxyCodeLine{22 }
-\DoxyCodeLine{23 \textcolor{keyword}{namespace }IO::SDK::Body}
+\DoxyCodeLine{23 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1SDK_1_1Body}{IO::SDK::Body}}}
 \DoxyCodeLine{24 \{}
 \DoxyCodeLine{25     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1CelestialBody}{CelestialBody}} final : \textcolor{keyword}{public} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body}{IO::SDK::Body::Body}}}
 \DoxyCodeLine{26     \{}
@@ -26,10 +26,10 @@
 \DoxyCodeLine{32         \textcolor{keywordtype}{double} ReadGM(\textcolor{keywordtype}{int} \textcolor{keywordtype}{id});}
 \DoxyCodeLine{33 }
 \DoxyCodeLine{34     \textcolor{keyword}{public}:}
-\DoxyCodeLine{35         \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1CelestialBody}{CelestialBody}}(\textcolor{keyword}{const} \textcolor{keywordtype}{int} \textcolor{keywordtype}{id}, \textcolor{keyword}{const} std::string \&name, std::shared\_ptr<IO::SDK::Body::CelestialBody> \&centerOfMotion);}
-\DoxyCodeLine{36         \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1CelestialBody}{CelestialBody}}(\textcolor{keyword}{const} \textcolor{keywordtype}{int} \textcolor{keywordtype}{id}, \textcolor{keyword}{const} std::string \&name);}
-\DoxyCodeLine{37         \textcolor{keywordtype}{double} GetSphereOfInfluence() \textcolor{keyword}{const};}
-\DoxyCodeLine{38         \textcolor{keywordtype}{double} GetHillSphere() \textcolor{keyword}{const};}
+\DoxyCodeLine{35         \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1CelestialBody_a5a9fa71829587e628d020d44454d27a4}{CelestialBody}}(\textcolor{keyword}{const} \textcolor{keywordtype}{int} \textcolor{keywordtype}{id}, \textcolor{keyword}{const} std::string \&name, std::shared\_ptr<IO::SDK::Body::CelestialBody> \&centerOfMotion);}
+\DoxyCodeLine{36         \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1CelestialBody_a5a9fa71829587e628d020d44454d27a4}{CelestialBody}}(\textcolor{keyword}{const} \textcolor{keywordtype}{int} \textcolor{keywordtype}{id}, \textcolor{keyword}{const} std::string \&name);}
+\DoxyCodeLine{37         \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1CelestialBody_ad1eea8d0697bc7332b6837087d64cc97}{GetSphereOfInfluence}}() \textcolor{keyword}{const};}
+\DoxyCodeLine{38         \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1CelestialBody_aa232ec64950a86ab5ceaa9c0b510e1fb}{GetHillSphere}}() \textcolor{keyword}{const};}
 \DoxyCodeLine{45         \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{IO::SDK::OrbitalParameters::StateVector}} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1CelestialBody_a634f512bd9e44f367c737355595af14c}{GetRelativeStatevector}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{IO::SDK::OrbitalParameters::StateVector}} \&targetStateVector) \textcolor{keyword}{const};}
 \DoxyCodeLine{46 }
 \DoxyCodeLine{54         \textcolor{keywordtype}{bool} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1CelestialBody_ab17033988c4a437c703aa0afc4c78814}{IsInSphereOfInfluence}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{IO::SDK::OrbitalParameters::StateVector}} \&targetStateVector) \textcolor{keyword}{const};}
@@ -46,9 +46,9 @@
 \DoxyCodeLine{93 }
 \DoxyCodeLine{100         \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO::SDK::Time::TimeSpan}} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1CelestialBody_a2eaf5625f83cb2aae61d954d1a74e0c4}{GetSideralRotationPeriod}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO::SDK::Time::TDB}} \&epoch) \textcolor{keyword}{const};}
 \DoxyCodeLine{101     \};}
-\DoxyCodeLine{110     \textcolor{keywordtype}{double} \mbox{\hyperlink{CelestialBody_8h_a9abfd773dafb894db167ef501387abc2}{SphereOfInfluence}}(\textcolor{keywordtype}{double} a, \textcolor{keywordtype}{double} majorMass, \textcolor{keywordtype}{double} minorMass);}
+\DoxyCodeLine{110     \textcolor{keywordtype}{double} \mbox{\hyperlink{namespaceIO_1_1SDK_1_1Body_a9abfd773dafb894db167ef501387abc2}{SphereOfInfluence}}(\textcolor{keywordtype}{double} a, \textcolor{keywordtype}{double} majorMass, \textcolor{keywordtype}{double} minorMass);}
 \DoxyCodeLine{111 }
-\DoxyCodeLine{120     \textcolor{keywordtype}{double} \mbox{\hyperlink{CelestialBody_8h_a5284cae8d8f1d235b18f568019a5cb13}{HillSphere}}(\textcolor{keywordtype}{double} a, \textcolor{keywordtype}{double} e, \textcolor{keywordtype}{double} majorMass, \textcolor{keywordtype}{double} minorMass);}
+\DoxyCodeLine{120     \textcolor{keywordtype}{double} \mbox{\hyperlink{namespaceIO_1_1SDK_1_1Body_a5284cae8d8f1d235b18f568019a5cb13}{HillSphere}}(\textcolor{keywordtype}{double} a, \textcolor{keywordtype}{double} e, \textcolor{keywordtype}{double} majorMass, \textcolor{keywordtype}{double} minorMass);}
 \DoxyCodeLine{121 }
 \DoxyCodeLine{122 \}}
 \DoxyCodeLine{123 \textcolor{preprocessor}{\#endif}}

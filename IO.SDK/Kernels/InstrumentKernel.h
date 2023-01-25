@@ -44,12 +44,11 @@ namespace IO::SDK::Kernels
 		 * @param angle 
 		 * @param templateName 
 		 */
-		InstrumentKernel(const IO::SDK::Instruments::Instrument& instrument, const IO::SDK::Math::Vector3D& boresight, const IO::SDK::Math::Vector3D& refVector, const double angle, const std::string& templateName);
+		InstrumentKernel(const IO::SDK::Instruments::Instrument& instrument, const IO::SDK::Math::Vector3D& boresight, const IO::SDK::Math::Vector3D& refVector, const double angle);
 		const IO::SDK::Instruments::Instrument& m_instrument;
 		const IO::SDK::Math::Vector3D m_boresight{};
 		const IO::SDK::Math::Vector3D m_refVector{};
 		const double m_angle{};
-		const std::string m_templatePath;
 
 		/**
 		 * @brief Build kernel

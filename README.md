@@ -26,14 +26,13 @@ In this quick start we suggest you to use [cross plateform approach](https://cod
 
 2. Extract **Includes** folder from archive IO-Toolkit-Linux-vx.x.xx-x to folder /usr/local/include/IO/.
 
-3. Extract **Data** and **Templates** folders from archive IO-Toolkit-Linux-vx.x.xx-x to your executable build folder.
+3. Extract **Data** folder from archive IO-Toolkit-Linux-vx.x.xx-x to your executable build folder.
 
 4. You should have :
     ```
     YourProject
         | build
            | Data
-           | Template
     ```
 5. Copy **libIO.SDK.so<span>** to /usr/local/lib/
 
@@ -44,7 +43,7 @@ In this quick start we suggest you to use [cross plateform approach](https://cod
 2. From the dll package you just downloaded
    - Copy **Includes** folder at the root of the project
    - Copy **IO.SDK.dll** and **IO.SDK.lib** in the build folder and in the Debug folder. You can also copy the library in parent folder and configure your linker to use the relative path of the library
-   - Copy folders : **Data** and **Template** in the Debug folder\ 
+   - Copy folder : **Data** in the Debug folder\ 
 
     You should have a folder tree like below
 
@@ -56,7 +55,6 @@ In this quick start we suggest you to use [cross plateform approach](https://cod
             | IO.SDK.lib
             | Debug (generated after the first compile and run)
                 | Data
-                | Template
                 | IO.SDK.dll
                 | IO.SDK.lib
     ```
@@ -107,9 +105,8 @@ In this example we will create a small program to compute maneuvers required to 
 
     add_executable(MyApp main.cpp)
 
-    include_directories(${CMAKE_SOURCE_DIR}/Includes)
-
     if (MSVC)
+        include_directories(${CMAKE_SOURCE_DIR}/Includes)
         target_link_libraries(MyApp IO.SDK.dll)
     elseif(UNIX)
         target_link_libraries(MyApp libIO.SDK.so)

@@ -45,10 +45,10 @@ TEST(Site, IsNight)
     auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10, "sun");
     auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth", sun);
     IO::SDK::Sites::Site s{2, "S2", IO::SDK::Coordinates::Geodetic(0.0, 45.0 * IO::SDK::Constants::DEG_RAD, 0.0), earth};
-    auto isDay = s.IsNight(IO::SDK::Time::TDB("2021-05-17 12:00:00 UTC"), IO::SDK::Constants::OfficialTwilight);
-    ASSERT_FALSE(isDay);
-    isDay = s.IsNight(IO::SDK::Time::TDB("2021-05-17 00:00:00 UTC"), IO::SDK::Constants::OfficialTwilight);
-    ASSERT_TRUE(isDay);
+    auto isNight = s.IsNight(IO::SDK::Time::TDB("2021-05-17 12:00:00 UTC"), IO::SDK::Constants::OfficialTwilight);
+    ASSERT_FALSE(isNight);
+    isNight = s.IsNight(IO::SDK::Time::TDB("2021-05-17 00:00:00 UTC"), IO::SDK::Constants::OfficialTwilight);
+    ASSERT_TRUE(isNight);
 }
 
 TEST(Site, FindDayWindows)

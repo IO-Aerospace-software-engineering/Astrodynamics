@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['_7evvintegrator_1062',['~VVIntegrator',['../classIO_1_1SDK_1_1Integrators_1_1VVIntegrator.html#a57d57cd3a83f83c8f4bafc3b3f0c0105',1,'IO::SDK::Integrators::VVIntegrator']]]
+  ['x_0',['X',['../classIO_1_1SDK_1_1Coordinate.html#a82a365ac761ad4545091ec584866073d',1,'IO::SDK::Coordinate']]]
 ];

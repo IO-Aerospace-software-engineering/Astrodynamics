@@ -1,13 +1,22 @@
 var searchData=
 [
-  ['magnitude_328',['Magnitude',['../classIO_1_1SDK_1_1Math_1_1Quaternion.html#aeacd14768f5d2df97236d1c66dd3ea42',1,'IO::SDK::Math::Quaternion::Magnitude()'],['../classIO_1_1SDK_1_1Math_1_1Vector3D.html#a245468c79fd297d2275ccaa3fca308eb',1,'IO::SDK::Math::Vector3D::Magnitude()']]],
-  ['maneuverbase_329',['ManeuverBase',['../classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase.html',1,'IO::SDK::Maneuvers::ManeuverBase'],['../classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase.html#ada694e84713b67fee5158f23f6e64e97',1,'IO::SDK::Maneuvers::ManeuverBase::ManeuverBase(const std::vector&lt; IO::SDK::Body::Spacecraft::Engine &gt; &amp;engines, IO::SDK::Propagators::Propagator &amp;propagator, const IO::SDK::Time::TDB &amp;minimumEpoch, const IO::SDK::Time::TimeSpan &amp;attitudeHoldDuration)'],['../classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase.html#ada8b39c90cb566efc36747bc767bb32f',1,'IO::SDK::Maneuvers::ManeuverBase::ManeuverBase(const std::vector&lt; IO::SDK::Body::Spacecraft::Engine &gt; &amp;engines, IO::SDK::Propagators::Propagator &amp;propagator, const IO::SDK::Time::TimeSpan &amp;attitudeHoldDuration)'],['../classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase.html#a5c4204bf3e0d5ed1ddd6a5551dfe719a',1,'IO::SDK::Maneuvers::ManeuverBase::ManeuverBase(const std::vector&lt; IO::SDK::Body::Spacecraft::Engine &gt; &amp;engines, IO::SDK::Propagators::Propagator &amp;propagator, const IO::SDK::Time::TDB &amp;minimumEpoch)'],['../classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase.html#ac2d5c28ab11d271793322af807d211f0',1,'IO::SDK::Maneuvers::ManeuverBase::ManeuverBase(const std::vector&lt; IO::SDK::Body::Spacecraft::Engine &gt; &amp;engines, IO::SDK::Propagators::Propagator &amp;propagator)']]],
-  ['maneuverbase_2ecpp_330',['ManeuverBase.cpp',['../ManeuverBase_8cpp.html',1,'']]],
-  ['maneuverbase_2eh_331',['ManeuverBase.h',['../ManeuverBase_8h.html',1,'']]],
-  ['maneuverresult_332',['ManeuverResult',['../structIO_1_1SDK_1_1Maneuvers_1_1ManeuverResult.html',1,'IO::SDK::Maneuvers::ManeuverResult'],['../structIO_1_1SDK_1_1Maneuvers_1_1ManeuverResult.html#ae6504733ccf06b3d923d2a1af3ef00a6',1,'IO::SDK::Maneuvers::ManeuverResult::ManeuverResult()'],['../structIO_1_1SDK_1_1Maneuvers_1_1ManeuverResult.html#a86ed87b3731270a1c40f5d9a8c81a2f5',1,'IO::SDK::Maneuvers::ManeuverResult::ManeuverResult(bool isValid, std::string message)']]],
-  ['maneuverresult_2eh_333',['ManeuverResult.h',['../ManeuverResult_8h.html',1,'']]],
-  ['matrix_334',['Matrix',['../classIO_1_1SDK_1_1Math_1_1Matrix.html',1,'IO::SDK::Math::Matrix'],['../classIO_1_1SDK_1_1Math_1_1Matrix.html#a6d6373343a1f41b1636caf44f05c01ca',1,'IO::SDK::Math::Matrix::Matrix(const std::size_t rowSize, const std::size_t colSize)'],['../classIO_1_1SDK_1_1Math_1_1Matrix.html#aca9ef9c2adf51b4715a91ebd33089340',1,'IO::SDK::Math::Matrix::Matrix(const std::size_t rowSize, const std::size_t colSize, double **data)']]],
-  ['matrix_2ecpp_335',['Matrix.cpp',['../Matrix_8cpp.html',1,'']]],
-  ['matrix_2eh_336',['Matrix.h',['../Matrix_8h.html',1,'']]],
-  ['multiply_337',['Multiply',['../classIO_1_1SDK_1_1Math_1_1Matrix.html#adaf69eafeefd8208cfcbbeabf44c1b94',1,'IO::SDK::Math::Matrix::Multiply()'],['../classIO_1_1SDK_1_1Math_1_1Quaternion.html#a4d1d1aa368eeb9332b0725fabd2e9c06',1,'IO::SDK::Math::Quaternion::Multiply()']]]
+  ['latitude_0',['Latitude',['../classIO_1_1SDK_1_1Coordinate.html#a0a31f53ea7d962c8d97e4e4f6b609c6d',1,'IO::SDK::Coordinate']]],
+  ['latitudinal_1',['Latitudinal',['../classIO_1_1SDK_1_1Coordinates_1_1Latitudinal.html',1,'IO::SDK::Coordinates::Latitudinal'],['../classIO_1_1SDK_1_1CoordinateSystem.html#aae985b3e116351d0f4915bde5aac57ea',1,'IO::SDK::CoordinateSystem::Latitudinal()'],['../classIO_1_1SDK_1_1Coordinates_1_1Latitudinal.html#a9cfa0678cc58ff3a28871d3100733bca',1,'IO::SDK::Coordinates::Latitudinal::Latitudinal()']]],
+  ['latitudinal_2eh_2',['Latitudinal.h',['../Latitudinal_8h.html',1,'']]],
+  ['launch_3',['Launch',['../classIO_1_1SDK_1_1Maneuvers_1_1Launch.html',1,'IO::SDK::Maneuvers::Launch'],['../classIO_1_1SDK_1_1Maneuvers_1_1Launch.html#a43b61266bcd7a2f93dbe5e6a0bcdb7d5',1,'IO::SDK::Maneuvers::Launch::Launch()']]],
+  ['launch_2ecpp_4',['Launch.cpp',['../Launch_8cpp.html',1,'']]],
+  ['launch_2eh_5',['Launch.h',['../Launch_8h.html',1,'']]],
+  ['launchsite_6',['LaunchSite',['../classIO_1_1SDK_1_1Sites_1_1LaunchSite.html',1,'IO::SDK::Sites::LaunchSite'],['../classIO_1_1SDK_1_1Sites_1_1LaunchSite.html#a3d74e3bf1f857da9f0c6d5ec1edb9110',1,'IO::SDK::Sites::LaunchSite::LaunchSite()']]],
+  ['launchsite_2ecpp_7',['LaunchSite.cpp',['../LaunchSite_8cpp.html',1,'']]],
+  ['launchsite_2eh_8',['LaunchSite.h',['../LaunchSite_8h.html',1,'']]],
+  ['launchwindow_9',['LaunchWindow',['../classIO_1_1SDK_1_1Maneuvers_1_1LaunchWindow.html',1,'IO::SDK::Maneuvers::LaunchWindow'],['../classIO_1_1SDK_1_1Maneuvers_1_1LaunchWindow.html#a453a7d493a2ab23157928f0de4baa8b7',1,'IO::SDK::Maneuvers::LaunchWindow::LaunchWindow()']]],
+  ['launchwindow_2ecpp_10',['LaunchWindow.cpp',['../LaunchWindow_8cpp.html',1,'']]],
+  ['launchwindow_2eh_11',['LaunchWindow.h',['../LaunchWindow_8h.html',1,'']]],
+  ['left_12',['Left',['../classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft.html#a98a070475cc95330e8fa585e1e5dda26',1,'IO::SDK::Body::Spacecraft::Spacecraft']]],
+  ['localmax_13',['LocalMax',['../classIO_1_1SDK_1_1Constraint.html#a26ee1247832de363357644c87579001b',1,'IO::SDK::Constraint']]],
+  ['localmin_14',['LocalMin',['../classIO_1_1SDK_1_1Constraint.html#a289ab580c12fa7111903fd63267919f4',1,'IO::SDK::Constraint']]],
+  ['longitude_15',['Longitude',['../classIO_1_1SDK_1_1Coordinate.html#ae7dbceef56ca6f0701029d37f9b3f986',1,'IO::SDK::Coordinate']]],
+  ['lowerthan_16',['LowerThan',['../classIO_1_1SDK_1_1Constraint.html#a29d89bf17ea408b6351785e852994181',1,'IO::SDK::Constraint']]],
+  ['lt_17',['LT',['../namespaceIO_1_1SDK.html#abbb4827ec6a24ad346d9a60473ad3b81ac562607189d77eb9dfb707464c1e7b0b',1,'IO::SDK']]],
+  ['lts_18',['LTS',['../namespaceIO_1_1SDK.html#abbb4827ec6a24ad346d9a60473ad3b81ad73f00aebeafb26d0f4f8869cba3c480',1,'IO::SDK']]]
 ];

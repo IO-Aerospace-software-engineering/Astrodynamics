@@ -22,15 +22,15 @@ Inheritance diagram for IO\+::SDK\+::Orbital\+Parameters\+::State\+Vector\+:\beg
 \begin{DoxyCompactList}\small\item\em Construct a new State Vector object. \end{DoxyCompactList}\item 
 \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector_ae69a74c24d1a2f3308f940c2fa3dfed0}{State\+Vector}} (const std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1CelestialBody}{IO\+::\+SDK\+::\+Body\+::\+Celestial\+Body}} $>$ \&center\+Of\+Motion, double spice\+State\mbox{[}6\mbox{]}, const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} \&epoch, const \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1Frames}{IO\+::\+SDK\+::\+Frames\+::\+Frames}} \&frame)
 \begin{DoxyCompactList}\small\item\em Construct a new State Vector object. \end{DoxyCompactList}\item 
-\mbox{\Hypertarget{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector_aed24536ab245249515cd97877a0017f0}\label{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector_aed24536ab245249515cd97877a0017f0}} 
-{\bfseries State\+Vector} (const \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{State\+Vector}} \&v)
+virtual \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector_af6913c30db4033dbfd1f17d5ec63be9f}{$\sim$\+State\+Vector}} ()=default
 \item 
-\mbox{\Hypertarget{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector_a07af50c26b29e4a4aadba8c3a5436301}\label{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector_a07af50c26b29e4a4aadba8c3a5436301}} 
-\mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{State\+Vector}} \& {\bfseries operator=} (const \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{State\+Vector}} \&other)
+\mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector_aed24536ab245249515cd97877a0017f0}{State\+Vector}} (const \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{State\+Vector}} \&v)
 \item 
-const \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO\+::\+SDK\+::\+Math\+::\+Vector3D}} \& \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector_a98112bfc3e8515f1913d0891a6068255}{Get\+Position}} () const
+\mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{State\+Vector}} \& \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector_a07af50c26b29e4a4aadba8c3a5436301}{operator=}} (const \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{State\+Vector}} \&other)
+\item 
+const \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO\+::\+SDK\+::\+Math\+::\+Vector3D}} \& \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector_aededa29c887cda753e85527809fe77ab}{Get\+Position}} () const
 \begin{DoxyCompactList}\small\item\em Get the Position. \end{DoxyCompactList}\item 
-const \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO\+::\+SDK\+::\+Math\+::\+Vector3D}} \& \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector_a91f08de0b7c7957d5938fedc912553c0}{Get\+Velocity}} () const
+const \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO\+::\+SDK\+::\+Math\+::\+Vector3D}} \& \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector_a332de9de9dc18d3dfd4a0923e8879884}{Get\+Velocity}} () const
 \begin{DoxyCompactList}\small\item\em Get the Velocity. \end{DoxyCompactList}\item 
 \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO\+::\+SDK\+::\+Math\+::\+Vector3D}} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector_a7fa8add2591a9e1cf4efdc77076e2536}{Get\+Specific\+Angular\+Momentum}} () const override
 \begin{DoxyCompactList}\small\item\em Get the Specific Angular Momentum. \end{DoxyCompactList}\item 
@@ -74,7 +74,7 @@ State vector class.
 \mbox{\Hypertarget{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector_af828475071cab0ed417f496a33874d28}\label{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector_af828475071cab0ed417f496a33874d28}} 
 \index{IO::SDK::OrbitalParameters::StateVector@{IO::SDK::OrbitalParameters::StateVector}!StateVector@{StateVector}}
 \index{StateVector@{StateVector}!IO::SDK::OrbitalParameters::StateVector@{IO::SDK::OrbitalParameters::StateVector}}
-\doxysubsubsection{\texorpdfstring{StateVector()}{StateVector()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+\doxysubsubsection{\texorpdfstring{StateVector()}{StateVector()}\hspace{0.1cm}{\footnotesize\ttfamily [1/3]}}
 {\footnotesize\ttfamily IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+State\+Vector\+::\+State\+Vector (\begin{DoxyParamCaption}\item[{const std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1CelestialBody}{IO\+::\+SDK\+::\+Body\+::\+Celestial\+Body}} $>$ \&}]{center\+Of\+Motion,  }\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO\+::\+SDK\+::\+Math\+::\+Vector3D}} \&}]{position,  }\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO\+::\+SDK\+::\+Math\+::\+Vector3D}} \&}]{velocity,  }\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} \&}]{epoch,  }\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1Frames}{IO\+::\+SDK\+::\+Frames\+::\+Frames}} \&}]{frame }\end{DoxyParamCaption})}
 
 
@@ -97,7 +97,7 @@ Construct a new State Vector object.
 \mbox{\Hypertarget{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector_ae69a74c24d1a2f3308f940c2fa3dfed0}\label{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector_ae69a74c24d1a2f3308f940c2fa3dfed0}} 
 \index{IO::SDK::OrbitalParameters::StateVector@{IO::SDK::OrbitalParameters::StateVector}!StateVector@{StateVector}}
 \index{StateVector@{StateVector}!IO::SDK::OrbitalParameters::StateVector@{IO::SDK::OrbitalParameters::StateVector}}
-\doxysubsubsection{\texorpdfstring{StateVector()}{StateVector()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+\doxysubsubsection{\texorpdfstring{StateVector()}{StateVector()}\hspace{0.1cm}{\footnotesize\ttfamily [2/3]}}
 {\footnotesize\ttfamily IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+State\+Vector\+::\+State\+Vector (\begin{DoxyParamCaption}\item[{const std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1CelestialBody}{IO\+::\+SDK\+::\+Body\+::\+Celestial\+Body}} $>$ \&}]{center\+Of\+Motion,  }\item[{double}]{spice\+State\mbox{[}6\mbox{]},  }\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} \&}]{epoch,  }\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1Frames}{IO\+::\+SDK\+::\+Frames\+::\+Frames}} \&}]{frame }\end{DoxyParamCaption})}
 
 
@@ -115,6 +115,18 @@ Construct a new State Vector object.
 {\em frame} & \\
 \hline
 \end{DoxyParams}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector_af6913c30db4033dbfd1f17d5ec63be9f}\label{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector_af6913c30db4033dbfd1f17d5ec63be9f}} 
+\index{IO::SDK::OrbitalParameters::StateVector@{IO::SDK::OrbitalParameters::StateVector}!````~StateVector@{$\sim$StateVector}}
+\index{````~StateVector@{$\sim$StateVector}!IO::SDK::OrbitalParameters::StateVector@{IO::SDK::OrbitalParameters::StateVector}}
+\doxysubsubsection{\texorpdfstring{$\sim$StateVector()}{~StateVector()}}
+{\footnotesize\ttfamily virtual IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+State\+Vector\+::$\sim$\+State\+Vector (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}, {\ttfamily [default]}}
+
+\mbox{\Hypertarget{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector_aed24536ab245249515cd97877a0017f0}\label{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector_aed24536ab245249515cd97877a0017f0}} 
+\index{IO::SDK::OrbitalParameters::StateVector@{IO::SDK::OrbitalParameters::StateVector}!StateVector@{StateVector}}
+\index{StateVector@{StateVector}!IO::SDK::OrbitalParameters::StateVector@{IO::SDK::OrbitalParameters::StateVector}}
+\doxysubsubsection{\texorpdfstring{StateVector()}{StateVector()}\hspace{0.1cm}{\footnotesize\ttfamily [3/3]}}
+{\footnotesize\ttfamily IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+State\+Vector\+::\+State\+Vector (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{State\+Vector}} \&}]{v }\end{DoxyParamCaption})}
+
 
 
 \doxysubsection{Member Function Documentation}
@@ -221,11 +233,11 @@ Get the Period.
 
 Implements \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters_a6c4e8f705d6252ee70f70c2bd1e760c6}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}}.
 
-\mbox{\Hypertarget{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector_a98112bfc3e8515f1913d0891a6068255}\label{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector_a98112bfc3e8515f1913d0891a6068255}} 
+\mbox{\Hypertarget{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector_aededa29c887cda753e85527809fe77ab}\label{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector_aededa29c887cda753e85527809fe77ab}} 
 \index{IO::SDK::OrbitalParameters::StateVector@{IO::SDK::OrbitalParameters::StateVector}!GetPosition@{GetPosition}}
 \index{GetPosition@{GetPosition}!IO::SDK::OrbitalParameters::StateVector@{IO::SDK::OrbitalParameters::StateVector}}
 \doxysubsubsection{\texorpdfstring{GetPosition()}{GetPosition()}}
-{\footnotesize\ttfamily const \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO\+::\+SDK\+::\+Math\+::\+Vector3D}}\& IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+State\+Vector\+::\+Get\+Position (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO\+::\+SDK\+::\+Math\+::\+Vector3D}} \& IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+State\+Vector\+::\+Get\+Position (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
 
 
 
@@ -358,11 +370,11 @@ double
 
 Reimplemented from \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters_a20b8e8626b722022cbd5598d6998d430}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}}.
 
-\mbox{\Hypertarget{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector_a91f08de0b7c7957d5938fedc912553c0}\label{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector_a91f08de0b7c7957d5938fedc912553c0}} 
+\mbox{\Hypertarget{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector_a332de9de9dc18d3dfd4a0923e8879884}\label{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector_a332de9de9dc18d3dfd4a0923e8879884}} 
 \index{IO::SDK::OrbitalParameters::StateVector@{IO::SDK::OrbitalParameters::StateVector}!GetVelocity@{GetVelocity}}
 \index{GetVelocity@{GetVelocity}!IO::SDK::OrbitalParameters::StateVector@{IO::SDK::OrbitalParameters::StateVector}}
 \doxysubsubsection{\texorpdfstring{GetVelocity()}{GetVelocity()}}
-{\footnotesize\ttfamily const \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO\+::\+SDK\+::\+Math\+::\+Vector3D}}\& IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+State\+Vector\+::\+Get\+Velocity (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO\+::\+SDK\+::\+Math\+::\+Vector3D}} \& IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+State\+Vector\+::\+Get\+Velocity (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
 
 
 
@@ -371,6 +383,12 @@ Get the Velocity.
 \begin{DoxyReturn}{Returns}
 const \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO\+::\+SDK\+::\+Math\+::\+Vector3D}}\& 
 \end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector_a07af50c26b29e4a4aadba8c3a5436301}\label{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector_a07af50c26b29e4a4aadba8c3a5436301}} 
+\index{IO::SDK::OrbitalParameters::StateVector@{IO::SDK::OrbitalParameters::StateVector}!operator=@{operator=}}
+\index{operator=@{operator=}!IO::SDK::OrbitalParameters::StateVector@{IO::SDK::OrbitalParameters::StateVector}}
+\doxysubsubsection{\texorpdfstring{operator=()}{operator=()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+State\+Vector}} \& IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+State\+Vector\+::operator= (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{State\+Vector}} \&}]{other }\end{DoxyParamCaption})}
+
 \mbox{\Hypertarget{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector_a06eb54dff8bb899eb10ede7f2c645860}\label{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector_a06eb54dff8bb899eb10ede7f2c645860}} 
 \index{IO::SDK::OrbitalParameters::StateVector@{IO::SDK::OrbitalParameters::StateVector}!operator==@{operator==}}
 \index{operator==@{operator==}!IO::SDK::OrbitalParameters::StateVector@{IO::SDK::OrbitalParameters::StateVector}}

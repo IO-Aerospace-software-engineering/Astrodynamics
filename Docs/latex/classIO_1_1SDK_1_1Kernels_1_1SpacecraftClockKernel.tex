@@ -1,5 +1,9 @@
 \hypertarget{classIO_1_1SDK_1_1Kernels_1_1SpacecraftClockKernel}{}\doxysection{IO\+::SDK\+::Kernels\+::Spacecraft\+Clock\+Kernel Class Reference}
 \label{classIO_1_1SDK_1_1Kernels_1_1SpacecraftClockKernel}\index{IO::SDK::Kernels::SpacecraftClockKernel@{IO::SDK::Kernels::SpacecraftClockKernel}}
+
+
+{\ttfamily \#include $<$Spacecraft\+Clock\+Kernel.\+h$>$}
+
 Inheritance diagram for IO\+::SDK\+::Kernels\+::Spacecraft\+Clock\+Kernel\+:\begin{figure}[H]
 \begin{center}
 \leavevmode
@@ -8,6 +12,8 @@ Inheritance diagram for IO\+::SDK\+::Kernels\+::Spacecraft\+Clock\+Kernel\+:\beg
 \end{figure}
 \doxysubsection*{Public Member Functions}
 \begin{DoxyCompactItemize}
+\item 
+virtual \mbox{\hyperlink{classIO_1_1SDK_1_1Kernels_1_1SpacecraftClockKernel_a33455c8dcfa34ad96eccce881de86162}{$\sim$\+Spacecraft\+Clock\+Kernel}} ()=default
 \item 
 \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO\+::\+SDK\+::\+Time\+::\+Window}}$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} $>$ \mbox{\hyperlink{classIO_1_1SDK_1_1Kernels_1_1SpacecraftClockKernel_a0caa5d066fdc3084192431c1fe0a4b55}{Get\+Coverage\+Window}} () const override
 \begin{DoxyCompactList}\small\item\em Get the Coverage Window. \end{DoxyCompactList}\item 
@@ -28,10 +34,18 @@ double \mbox{\hyperlink{classIO_1_1SDK_1_1Kernels_1_1SpacecraftClockKernel_aa2bd
 \doxysubsection*{Friends}
 \begin{DoxyCompactItemize}
 \item 
-\mbox{\Hypertarget{classIO_1_1SDK_1_1Kernels_1_1SpacecraftClockKernel_a1ba9c39cf070407c14e63796ae7abbb9}\label{classIO_1_1SDK_1_1Kernels_1_1SpacecraftClockKernel_a1ba9c39cf070407c14e63796ae7abbb9}} 
-class {\bfseries IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Spacecraft}
+class \mbox{\hyperlink{classIO_1_1SDK_1_1Kernels_1_1SpacecraftClockKernel_a1ba9c39cf070407c14e63796ae7abbb9}{IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Spacecraft}}
 \end{DoxyCompactItemize}
 \doxysubsection*{Additional Inherited Members}
+
+
+\doxysubsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Kernels_1_1SpacecraftClockKernel_a33455c8dcfa34ad96eccce881de86162}\label{classIO_1_1SDK_1_1Kernels_1_1SpacecraftClockKernel_a33455c8dcfa34ad96eccce881de86162}} 
+\index{IO::SDK::Kernels::SpacecraftClockKernel@{IO::SDK::Kernels::SpacecraftClockKernel}!````~SpacecraftClockKernel@{$\sim$SpacecraftClockKernel}}
+\index{````~SpacecraftClockKernel@{$\sim$SpacecraftClockKernel}!IO::SDK::Kernels::SpacecraftClockKernel@{IO::SDK::Kernels::SpacecraftClockKernel}}
+\doxysubsubsection{\texorpdfstring{$\sim$SpacecraftClockKernel()}{~SpacecraftClockKernel()}}
+{\footnotesize\ttfamily virtual IO\+::\+SDK\+::\+Kernels\+::\+Spacecraft\+Clock\+Kernel\+::$\sim$\+Spacecraft\+Clock\+Kernel (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}, {\ttfamily [default]}}
+
 
 
 \doxysubsection{Member Function Documentation}
@@ -122,7 +136,7 @@ IO\+::\+SDK\+::\+Time\+::\+Window$<$\+IO\+::\+SDK\+::\+Time\+::\+TDB$>$
 \end{DoxyReturn}
 
 
-Implements \mbox{\hyperlink{classIO_1_1SDK_1_1Kernels_1_1Kernel_ac1d538eac591753cb98b33ed41a11dd9}{IO\+::\+SDK\+::\+Kernels\+::\+Kernel}}.
+Implements \mbox{\hyperlink{classIO_1_1SDK_1_1Kernels_1_1Kernel_a752d5b214ec50307c47fb63daa89f749}{IO\+::\+SDK\+::\+Kernels\+::\+Kernel}}.
 
 \mbox{\Hypertarget{classIO_1_1SDK_1_1Kernels_1_1SpacecraftClockKernel_a10ff8310319cd3408905401585e03ba2}\label{classIO_1_1SDK_1_1Kernels_1_1SpacecraftClockKernel_a10ff8310319cd3408905401585e03ba2}} 
 \index{IO::SDK::Kernels::SpacecraftClockKernel@{IO::SDK::Kernels::SpacecraftClockKernel}!GetResolution@{GetResolution}}
@@ -163,6 +177,15 @@ Get the Ticks Per Seconds.
 \begin{DoxyReturn}{Returns}
 int 
 \end{DoxyReturn}
+
+
+\doxysubsection{Friends And Related Function Documentation}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Kernels_1_1SpacecraftClockKernel_a1ba9c39cf070407c14e63796ae7abbb9}\label{classIO_1_1SDK_1_1Kernels_1_1SpacecraftClockKernel_a1ba9c39cf070407c14e63796ae7abbb9}} 
+\index{IO::SDK::Kernels::SpacecraftClockKernel@{IO::SDK::Kernels::SpacecraftClockKernel}!IO::SDK::Body::Spacecraft::Spacecraft@{IO::SDK::Body::Spacecraft::Spacecraft}}
+\index{IO::SDK::Body::Spacecraft::Spacecraft@{IO::SDK::Body::Spacecraft::Spacecraft}!IO::SDK::Kernels::SpacecraftClockKernel@{IO::SDK::Kernels::SpacecraftClockKernel}}
+\doxysubsubsection{\texorpdfstring{IO::SDK::Body::Spacecraft::Spacecraft}{IO::SDK::Body::Spacecraft::Spacecraft}}
+{\footnotesize\ttfamily friend class \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft}{IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Spacecraft}}\hspace{0.3cm}{\ttfamily [friend]}}
+
 
 
 The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
