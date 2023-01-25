@@ -106,6 +106,7 @@ In this example we will create a small program to compute maneuvers required to 
     add_executable(MyApp main.cpp)
 
     if (MSVC)
+        include_directories(${CMAKE_SOURCE_DIR}/Includes)
         target_link_libraries(MyApp IO.SDK.dll)
     elseif(UNIX)
         target_link_libraries(MyApp libIO.SDK.so)
