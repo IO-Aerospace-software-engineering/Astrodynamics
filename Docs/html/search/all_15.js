@@ -1,12 +1,12 @@
 var searchData=
 [
-  ['window_489',['Window',['../classIO_1_1SDK_1_1Time_1_1Window.html',1,'IO::SDK::Time']]],
-  ['window_2eh_490',['Window.h',['../Window_8h.html',1,'']]],
-  ['window_3c_20io_3a_3asdk_3a_3atime_3a_3atdb_20_3e_491',['Window&lt; IO::SDK::Time::TDB &gt;',['../classIO_1_1SDK_1_1Time_1_1Window.html',1,'IO::SDK::Time']]],
-  ['window_3c_20io_3a_3asdk_3a_3atime_3a_3autc_20_3e_492',['Window&lt; IO::SDK::Time::UTC &gt;',['../classIO_1_1SDK_1_1Time_1_1Window.html',1,'IO::SDK::Time']]],
-  ['writedata_493',['WriteData',['../classIO_1_1SDK_1_1Kernels_1_1EphemerisKernel.html#a78970ad88a5d18ee8b6db10f060e2c86',1,'IO::SDK::Kernels::EphemerisKernel']]],
-  ['writeephemeris_494',['WriteEphemeris',['../classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft.html#a8fc5a2e2b3e908e1c2e2e3a8ee987013',1,'IO::SDK::Body::Spacecraft::Spacecraft']]],
-  ['writeephemeriskernelcomment_495',['WriteEphemerisKernelComment',['../classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft.html#adc485efb956d7b98a0c5dca516b15987',1,'IO::SDK::Body::Spacecraft::Spacecraft']]],
-  ['writeorientationkernelcomment_496',['WriteOrientationKernelComment',['../classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft.html#af1b4e362e3d2db8634e6d22f49fbda1a',1,'IO::SDK::Body::Spacecraft::Spacecraft']]],
-  ['writeorientations_497',['WriteOrientations',['../classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft.html#a5c57e3a8a5c3a4337d7de86a03428481',1,'IO::SDK::Body::Spacecraft::Spacecraft::WriteOrientations()'],['../classIO_1_1SDK_1_1Kernels_1_1OrientationKernel.html#a823ca2e5fd877d16337d541596a59e38',1,'IO::SDK::Kernels::OrientationKernel::WriteOrientations()']]]
+  ['vector3d_0',['Vector3D',['../classIO_1_1SDK_1_1Math_1_1Vector3D.html',1,'IO::SDK::Math::Vector3D'],['../classIO_1_1SDK_1_1Math_1_1Vector3D.html#aa02f7381c12cf7ea4f6c69df871356ce',1,'IO::SDK::Math::Vector3D::Vector3D()'],['../classIO_1_1SDK_1_1Math_1_1Vector3D.html#aeafff1dcd5923d36498b8e0389fc6149',1,'IO::SDK::Math::Vector3D::Vector3D(double x, double y, double z)'],['../classIO_1_1SDK_1_1Math_1_1Vector3D.html#ad62e73dbb269f9094ba5570f14d1d7d3',1,'IO::SDK::Math::Vector3D::Vector3D(const Vector3D &amp;vector)']]],
+  ['vector3d_2ecpp_1',['Vector3D.cpp',['../Vector3D_8cpp.html',1,'']]],
+  ['vector3d_2eh_2',['Vector3D.h',['../Vector3D_8h.html',1,'']]],
+  ['vectorx_3',['VectorX',['../classIO_1_1SDK_1_1Math_1_1Vector3D.html#a3ecbf632c133541ee7afe3cf17d95dfe',1,'IO::SDK::Math::Vector3D']]],
+  ['vectory_4',['VectorY',['../classIO_1_1SDK_1_1Math_1_1Vector3D.html#ad385c9904cef5b38c9d62099a93f4bde',1,'IO::SDK::Math::Vector3D']]],
+  ['vectorz_5',['VectorZ',['../classIO_1_1SDK_1_1Math_1_1Vector3D.html#a1cc449c8317c585aeb7dbcf5afc00e3e',1,'IO::SDK::Math::Vector3D']]],
+  ['vvintegrator_6',['VVIntegrator',['../classIO_1_1SDK_1_1Integrators_1_1VVIntegrator.html',1,'IO::SDK::Integrators::VVIntegrator'],['../classIO_1_1SDK_1_1Integrators_1_1VVIntegrator.html#ac341aab71d9616351343693f0998fb48',1,'IO::SDK::Integrators::VVIntegrator::VVIntegrator(const IO::SDK::Time::TimeSpan &amp;stepDuration)'],['../classIO_1_1SDK_1_1Integrators_1_1VVIntegrator.html#a5541bb124ed69b1ba72f86131ca84d7d',1,'IO::SDK::Integrators::VVIntegrator::VVIntegrator(const IO::SDK::Time::TimeSpan &amp;stepDuration, std::vector&lt; IO::SDK::Integrators::Forces::Force * &gt; forces)']]],
+  ['vvintegrator_2ecpp_7',['VVIntegrator.cpp',['../VVIntegrator_8cpp.html',1,'']]],
+  ['vvintegrator_2eh_8',['VVIntegrator.h',['../VVIntegrator_8h.html',1,'']]]
 ];
