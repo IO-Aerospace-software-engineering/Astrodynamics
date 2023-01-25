@@ -18,7 +18,7 @@ TEST(Spacecraft, Initialization)
 	ASSERT_EQ(-1, spc.GetId());
 	ASSERT_STREQ("SPACECRAFT1", spc.GetName().c_str());
 	ASSERT_STREQ("MISSION1", spc.GetMissionPrefix().c_str());
-	ASSERT_STREQ("Data/SPACECRAFT1_MISSION1", spc.GetFilesPath().c_str());
+	ASSERT_STREQ("Data/User/Spacecrafts/SPACECRAFT1_MISSION1", spc.GetFilesPath().c_str());
 	ASSERT_DOUBLE_EQ(1000.0, spc.GetMass());
 	ASSERT_DOUBLE_EQ(0.000000066743, spc.GetMu());
 }
