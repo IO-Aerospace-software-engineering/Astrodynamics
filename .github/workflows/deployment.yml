@@ -86,7 +86,6 @@ jobs:
       - name: Copy solar system data and templates (Linux)
         run: |
           mkdir -p Toolkit/Linux/Data/SolarSystem
-          mkdir -p Toolkit/Linux/Templates
           find build/IO.SDK.Tests/Data/SolarSystem/ -type f -name "*.*" -exec cp {} Toolkit/Linux/Data/SolarSystem \;       
           zip -r IO-Toolkit-Linux-${{steps.tag.outputs.tag}}.zip Toolkit/Linux
         if: matrix.os == 'ubuntu-latest'
