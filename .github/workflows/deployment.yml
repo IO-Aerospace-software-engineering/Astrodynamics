@@ -87,15 +87,13 @@ jobs:
         run: |
           mkdir -p Toolkit/Linux/Data/SolarSystem
           mkdir -p Toolkit/Linux/Templates
-          find build/IO.SDK.Tests/Data/SolarSystem/ -type f -name "*.*" -exec cp {} Toolkit/Linux/Data/SolarSystem \;
-          find build/IO.SDK.Tests/Templates/ -type f -name "*.*" -exec cp {} Toolkit/Linux/Templates \;         
+          find build/IO.SDK.Tests/Data/SolarSystem/ -type f -name "*.*" -exec cp {} Toolkit/Linux/Data/SolarSystem \;       
           zip -r IO-Toolkit-Linux-${{steps.tag.outputs.tag}}.zip Toolkit/Linux
         if: matrix.os == 'ubuntu-latest'
 
       - name: Copy solar system data and templates (Windows)
         run: |
           mkdir -p Toolkit\Windows\Data\SolarSystem
-          mkdir -p Toolkit\Windows\Templates
           Copy-Item -Path "IO.SDK.Tests\Data\Windows\*" -Destination "Toolkit\Windows" -recurse -Force
           Compress-Archive -Path Toolkit\Windows\* -DestinationPath IO-Toolkit-Windows-${{steps.tag.outputs.tag}}.zip -Force
         if: matrix.os == 'windows-latest'
@@ -165,7 +163,6 @@ jobs:
       - name: Copy solar system data and templates (Windows)
         run: |
           mkdir -p Toolkit\Windows\Data\SolarSystem
-          mkdir -p Toolkit\Windows\Templates
           Copy-Item -Path "IO.SDK.Tests\Data\Windows\*" -Destination "Toolkit\Windows" -recurse -Force
           Compress-Archive -Path Toolkit\Windows\* -DestinationPath IO-Toolkit-Windows-${{steps.tag.outputs.tag}}-Debug.zip -Force
         if: matrix.os == 'windows-latest'
