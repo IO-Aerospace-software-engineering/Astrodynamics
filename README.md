@@ -1,7 +1,7 @@
 # SDK
 Welcome!
 
-Astrodynamics toolkit can be seen as an extension and a C++ wrapper of cspice toolkit developped by the JPL.
+Astrodynamics toolkit can be seen as an extension and a C++ wrapper of cspice toolkit(N 67) developped by the JPL.
 
 This project has been initiated to make life easier for people who don't know cspice.
 
@@ -10,11 +10,6 @@ The goal of this project is to :
 - Abstract kernels and frames files management
 - Provides a body integrator
 - Simulate spacecraft and impulsive maneuvers
-    - Delta V
-    - Fuel balance
-    - Orientation
-    - Burn duration
-    - Maneuver window
     
 ## Project status
 
