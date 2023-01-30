@@ -1,5 +1,22 @@
 # SDK
-Astrodynamics toolkit
+Welcome!
+
+Astrodynamics toolkit can be seen as an extension and a C++ wrapper of cspice toolkit developped by the JPL.
+
+This project has been initiated to make life easier for people who don't know cspice.
+
+The goal of this project is to :
+- Allow object oriented development and provide high level objects
+- Abstract kernels and frames files management
+- Provides a body integrator
+- Simulate spacecraft and impulsive maneuvers
+    - Delta V
+    - Fuel balance
+    - Orientation
+    - Burn duration
+    - Maneuver window
+    
+## Project status
 
 [![IO SDK Integration](https://github.com/IO-Aerospace-software-engineering/SDK/actions/workflows/cmake.yml/badge.svg?branch=develop)](https://github.com/IO-Aerospace-software-engineering/SDK/actions/workflows/cmake.yml)
 
