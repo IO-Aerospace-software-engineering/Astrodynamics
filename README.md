@@ -3,7 +3,7 @@ Welcome!
 
 Astrodynamics toolkit can be seen as an extension and a C++ wrapper of cspice toolkit(N 67) developped by the JPL.
 
-This project has been initiated to make life easier for people who don't know cspice.
+This project has been initiated to make life easier for people who don't know cspice or nedd an object-oriented approach.
 
 The goal of this project is to :
 - Allow object oriented development and provide high level objects
