@@ -152,57 +152,21 @@ IO::SDK::Sites::Site::FindWindowsOnIlluminationConstraint(const IO::SDK::Time::W
     return windows;
 }
 
-IO::SDK::Coordinates::HorizontalCoordinates
-IO::SDK::Sites::Site::GetHorizontalCoordinates(const IO::SDK::Body::Body &body,
-                                               const IO::SDK::AberrationsEnum aberrationCorrection,
-                                               const IO::SDK::Time::TDB &epoch) const {
-    auto sv = GetStateVector(body, IO::SDK::Frames::InertialFrames::GetICRF(), aberrationCorrection, epoch);
-    auto pos = sv.ToFrame(IO::SDK::Frames::Frames(m_frame->GetName())).GetPosition();
-    ConstSpiceDouble rec[3] = {pos.GetX(), pos.GetY(), pos.GetZ()};
-    SpiceDouble r;
-    SpiceDouble lon;
-    SpiceDouble lat;
-    recsph_c(rec, &r, &lat, &lon);
-
-    if (lon < 0.0) {
-        lon *= -1.0;
-    } else {
-        lon = IO::SDK::Constants::_2PI - lon;
-    }
-
-    return IO::SDK::Coordinates::HorizontalCoordinates(lon, IO::SDK::Constants::PI2 - lat, r);
-}
-
-IO::SDK::Coordinates::HorizontalCoordinates
-IO::SDK::Sites::Site::GetHorizontalCoordinates2(const IO::SDK::Body::Body &body,
-                                                const IO::SDK::AberrationsEnum aberrationCorrection,
-                                                const IO::SDK::Time::TDB &epoch,
-                                                const IO::SDK::AberrationsEnum aberration) const {
-    auto radius = m_body->GetRadius() * 1000.0;
+IO::SDK::Coordinates::HorizontalCoordinates IO::SDK::Sites::Site::GetHorizontalCoordinates(const IO::SDK::Body::Body &body, const IO::SDK::AberrationsEnum aberrationCorrection,
+                                                                                           const IO::SDK::Time::TDB &epoch) const {
+    auto radius = m_body->GetRadius();
     SpiceDouble bodyFixedLocation[3];
     georec_c(m_coordinates.GetLongitude(), m_coordinates.GetLatitude(), m_coordinates.GetAltitude(), radius.GetX(),
              m_body->GetFlattening(), bodyFixedLocation);
 
     SpiceDouble res[6];
     SpiceDouble lt;
-    azlcpo_c("ELLIPSOID", body.GetName().c_str(), epoch.GetSecondsFromJ2000().count(),
-             m_aberrationHelper.ToString(aberration).c_str(), false, true, bodyFixedLocation, m_body->GetName().c_str(),
+    azlcpo_c("ELLIPSOID", std::to_string(body.GetId()).c_str(), epoch.GetSecondsFromJ2000().count(),
+             m_aberrationHelper.ToString(aberrationCorrection).c_str(), false, true, bodyFixedLocation,
+             std::to_string(m_body->GetId()).c_str(),
              m_body->GetBodyFixedFrame().GetName().c_str(), res, &lt);
-    auto sv = GetStateVector(body, IO::SDK::Frames::InertialFrames::GetICRF(), aberrationCorrection, epoch);
-    auto pos = sv.ToFrame(IO::SDK::Frames::Frames(m_frame->GetName())).GetPosition();
-    ConstSpiceDouble rec[3] = {pos.GetX(), pos.GetY(), pos.GetZ()};
-    SpiceDouble r;
-    SpiceDouble lon;
-    SpiceDouble lat;
-    recsph_c(rec, &r, &lat, &lon);
 
-    if (lon < 0.0) {
-        lon *= -1.0;
-    } else {
-        lon = IO::SDK::Constants::_2PI - lon;
-    }
-
-    return IO::SDK::Coordinates::HorizontalCoordinates(lon, IO::SDK::Constants::PI2 - lat, r);
+    return IO::SDK::Coordinates::HorizontalCoordinates(res[1], res[2], res[0] * 1000.0);
 }
 
 IO::SDK::OrbitalParameters::StateVector

@@ -92,7 +92,6 @@ TEST(ApsidalAlignmentManeuver, ExecuteQ)
     //try execute at Q
     auto res = maneuver.TryExecute(s.GetOrbitalParametersAtEpoch()->GetStateVector(341.77 * IO::SDK::Constants::DEG_RAD));
 
-    std::cout << res.GetMessage() << std::endl;
     //Can't execute, too early
     ASSERT_TRUE(res.IsValid());
 
