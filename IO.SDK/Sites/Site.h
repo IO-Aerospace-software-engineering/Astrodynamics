@@ -45,6 +45,7 @@ namespace IO::SDK::Sites
 
         const std::shared_ptr<IO::SDK::Body::CelestialBody> m_body;
         std::unique_ptr<IO::SDK::Frames::SiteFrameFile> m_frame;
+        const IO::SDK::Aberrations m_aberrationHelper{};
 
     public:
         /**
@@ -150,7 +151,7 @@ namespace IO::SDK::Sites
          * @param searchWindow 
          * @param targetBody 
          * @param observerBody 
-         * @param illuminationAgngle 
+         * @param illuminationAngle
          * @param constraint 
          * @param value 
          * @return std::vector<IO::SDK::Time::Window<IO::SDK::Time::UTC>> 
@@ -158,13 +159,14 @@ namespace IO::SDK::Sites
         std::vector<IO::SDK::Time::Window<IO::SDK::Time::UTC>> FindWindowsOnIlluminationConstraint(const IO::SDK::Time::Window<IO::SDK::Time::UTC> &searchWindow, const IO::SDK::Body::Body &observerBody, const IO::SDK::IlluminationAngle &illuminationAgngle, const IO::SDK::Constraint &constraint, const double value) const;
 
         /**
-         * @brief Get the Horizontal Coordinates
+         * @brief Get the Horizontal Coordinates to the target body
          * 
          * @param body 
          * @param epoch 
          * @return IO::SDK::Coordinates::HorizontalCoordinates 
          */
         IO::SDK::Coordinates::HorizontalCoordinates GetHorizontalCoordinates(const IO::SDK::Body::Body &body, const IO::SDK::AberrationsEnum aberrationCorrection, const IO::SDK::Time::TDB &epoch) const;
+
 
         /**
          * @brief Get the State Vector to target body

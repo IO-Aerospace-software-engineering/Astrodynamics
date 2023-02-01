@@ -266,9 +266,6 @@ TEST(PlaneChangingManeuver, ExecuteDN)
 
     //Check fuel burned
     ASSERT_DOUBLE_EQ(1687.9427131389323, maneuver.GetFuelBurned());
-    std::cout.precision(17);
-    std::cout << maneuver.GetThrustWindow()->GetStartDate().GetSecondsFromJ2000().count() << std::endl;
-    std::cout << maneuver.GetThrustWindow()->GetEndDate().GetSecondsFromJ2000().count() << std::endl;
 //Check maneuver window
 #ifdef _WIN32
     ASSERT_EQ(IO::SDK::Time::Window<IO::SDK::Time::TDB>(IO::SDK::Time::TDB(4265.245338359885s), IO::SDK::Time::TDB(4299.004192622664s)), *maneuver.GetThrustWindow());

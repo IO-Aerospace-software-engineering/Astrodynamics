@@ -201,16 +201,6 @@ TEST(Propagator, PropagatorVsKepler)
     auto propagationResult = propagationResults[duration.GetSeconds().count() / step.GetSeconds().count()];
     auto keplerResults = localOrbitalparams->GetStateVector(epoch + duration);
 
-    std::cout << "Delta dX : " << std::abs(keplerResults.GetPosition().GetX() - propagationResult.GetPosition().GetX()) << " m" << std::endl;
-    std::cout << "Delta dY : " << std::abs(keplerResults.GetPosition().GetY() - propagationResult.GetPosition().GetY()) << " m" << std::endl;
-    std::cout << "Delta dZ : " << std::abs(keplerResults.GetPosition().GetZ() - propagationResult.GetPosition().GetZ()) << " m" << std::endl;
-    std::cout << "Delta dTotal : " << std::abs(keplerResults.GetPosition().Magnitude() - propagationResult.GetPosition().Magnitude()) << " m" << std::endl;
-
-    std::cout << "Delta dvX : " << std::abs(keplerResults.GetVelocity().GetX() - propagationResult.GetVelocity().GetX()) << " m/s" << std::endl;
-    std::cout << "Delta dvY : " << std::abs(keplerResults.GetVelocity().GetY() - propagationResult.GetVelocity().GetY()) << " m/s" << std::endl;
-    std::cout << "Delta dvZ : " << std::abs(keplerResults.GetVelocity().GetZ() - propagationResult.GetVelocity().GetZ()) << " m/s" << std::endl;
-    std::cout << "Delta dvTotal : " << std::abs(keplerResults.GetVelocity().Magnitude() - propagationResult.GetVelocity().Magnitude()) << " m/s" << std::endl;
-
     //Check epoch
     ASSERT_EQ(keplerResults.GetEpoch(), propagationResult.GetEpoch());
 
@@ -290,16 +280,6 @@ TEST(Propagator, PropagatorVsKepler2)
     const std::vector<IO::SDK::OrbitalParameters::StateVector> &propagationResults = pro.GetStateVectors();
     auto propagationResult = propagationResults.back();
     auto keplerResults = localOrbitalparams->GetStateVector(endEpoch);
-
-    std::cout << "Delta dX : " << std::abs(keplerResults.GetPosition().GetX() - propagationResult.GetPosition().GetX()) << " m" << std::endl;
-    std::cout << "Delta dY : " << std::abs(keplerResults.GetPosition().GetY() - propagationResult.GetPosition().GetY()) << " m" << std::endl;
-    std::cout << "Delta dZ : " << std::abs(keplerResults.GetPosition().GetZ() - propagationResult.GetPosition().GetZ()) << " m" << std::endl;
-    std::cout << "Delta dTotal : " << std::abs(keplerResults.GetPosition().Magnitude() - propagationResult.GetPosition().Magnitude()) << " m" << std::endl;
-
-    std::cout << "Delta dvX : " << std::abs(keplerResults.GetVelocity().GetX() - propagationResult.GetVelocity().GetX()) << " m/s" << std::endl;
-    std::cout << "Delta dvY : " << std::abs(keplerResults.GetVelocity().GetY() - propagationResult.GetVelocity().GetY()) << " m/s" << std::endl;
-    std::cout << "Delta dvZ : " << std::abs(keplerResults.GetVelocity().GetZ() - propagationResult.GetVelocity().GetZ()) << " m/s" << std::endl;
-    std::cout << "Delta dvTotal : " << std::abs(keplerResults.GetVelocity().Magnitude() - propagationResult.GetVelocity().Magnitude()) << " m/s" << std::endl;
 
     //Check epoch
     ASSERT_EQ(keplerResults.GetEpoch(), propagationResult.GetEpoch());
