@@ -45,6 +45,7 @@ namespace IO::SDK::Sites
 
         const std::shared_ptr<IO::SDK::Body::CelestialBody> m_body;
         std::unique_ptr<IO::SDK::Frames::SiteFrameFile> m_frame;
+        const IO::SDK::Aberrations m_aberrationHelper;
 
     public:
         /**
@@ -165,6 +166,8 @@ namespace IO::SDK::Sites
          * @return IO::SDK::Coordinates::HorizontalCoordinates 
          */
         IO::SDK::Coordinates::HorizontalCoordinates GetHorizontalCoordinates(const IO::SDK::Body::Body &body, const IO::SDK::AberrationsEnum aberrationCorrection, const IO::SDK::Time::TDB &epoch) const;
+
+        IO::SDK::Coordinates::HorizontalCoordinates GetHorizontalCoordinates2(const IO::SDK::Body::Body &body, const IO::SDK::AberrationsEnum aberrationCorrection, const IO::SDK::Time::TDB &epoch) const;
 
         /**
          * @brief Get the State Vector to target body
