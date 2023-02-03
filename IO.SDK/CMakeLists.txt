@@ -33,6 +33,13 @@ elseif(UNIX)
     target_link_libraries(${This} ${CMAKE_SOURCE_DIR}/external-lib/cspice.a)
 endif ()
 
+
 #INSTALL
-install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} DESTINATION include FILES_MATCHING PATTERN "*.h")
+if (MSVC)
+    install(DIRECTORY ${CMAKE_SOURCE_DIR}/external-lib/includeWindows/ DESTINATION include/IO FILES_MATCHING PATTERN "*.h")
+elseif(UNIX)
+    install(DIRECTORY ${CMAKE_SOURCE_DIR}/external-lib/includeLinux/ DESTINATION include/IO FILES_MATCHING PATTERN "*.h")
+endif ()
+
+install(FILES ${IO_SDK_H} DESTINATION include/IO)
 install(TARGETS ${This} LIBRARY DESTINATION lib)
