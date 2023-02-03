@@ -34,27 +34,27 @@ In this quick start we suggest you to use [cross plateform approach](https://cod
 ## Install from binaries
 ### On Linux
 
-1. Create a cmake project
+1. Create your C/C++ project folder, in this example we assume your output path will be called "build" but you can use the name of your choice. 
 
 2. Extract **Includes** folder from archive IO-Toolkit-Linux-vx.x.xx-x to folder /usr/local/include/IO/.
+3. Copy **libIO.SDK.so<span>** to /usr/local/lib/
 
-3. Extract **Data** folder from archive IO-Toolkit-Linux-vx.x.xx-x to your executable build folder.
-
-4. You should have :
+4. Extract **Data** folder from archive IO-Toolkit-Linux-vx.x.xx-x to your executable build folder.
+5. You should have :
     ```
     YourProject
         | build
            | Data
     ```
-5. Copy **libIO.SDK.so<span>** to /usr/local/lib/
+
 
 ### On Windows
 
-1. Create a cmake project
+1. Create your C/C++ project folder, in this example we assume your output path will be called "build" but you can use the name of your choice.
 
 2. From the dll package you just downloaded
    - Copy **Includes** folder at the root of the project
-   - Copy **IO.SDK.dll** and **IO.SDK.lib** in the build folder and in the Debug folder. You can also copy the library in parent folder and configure your linker to use the relative path of the library
+   - Copy **IO.SDK.dll** and **IO.SDK.lib** in the build folder and in the Debug or Release folder (this depends on your build configuration). You can also copy the library in parent folder and configure your linker to use the relative path of the library
    - Copy folder : **Data** in the Debug folder\ 
 
     You should have a folder tree like below
@@ -89,7 +89,7 @@ cd build_release
 #Configure Cmake project
 cmake -DCMAKE_BUILD_TYPE=Release ..
 
-#Build porject
+#Build project
 #-j 4 option is used to define how many threads could be used to compile project, is this example will use 4 threads
 cmake --build . --config Release --target IO.SDK -j 4
 
@@ -121,7 +121,9 @@ In this example we will create a small program to compute maneuvers required to 
         include_directories(${CMAKE_SOURCE_DIR}/Includes)
         target_link_libraries(MyApp IO.SDK.dll)
     elseif(UNIX)
-        target_link_libraries(MyApp libIO.SDK.so)
+        include_directories(/usr/local/include/IO)
+        find_library(IO_SDK_LIB NAMES libIO.SDK.so)
+        target_link_libraries(IOSDKTEST ${IO_SDK_LIB})
     endif ()
     ```
 
