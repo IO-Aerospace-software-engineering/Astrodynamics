@@ -54,7 +54,7 @@ In this quick start we suggest you to use [cross plateform approach](https://cod
 
 2. From the dll package you just downloaded
    - Copy **Includes** folder at the root of the project
-   - Copy **IO.SDK.dll** and **IO.SDK.lib** in the build folder and in the Debug or Release folder (this depends on your build configuration). You can also copy the library in parent folder and configure your linker to use the relative path of the library
+   - Copy **IO.SDK.dll** and **IO.SDK.lib** in the build folder and in the Debug or Release folder (this depends on your build configuration).
    - Copy folder : **Data** in the Debug folder\ 
 
     You should have a folder tree like below
@@ -96,14 +96,25 @@ cmake --build . --config Release --target IO.SDK -j 4
 #Install libraries and includes
 #This command must be executed with admin rights
 cmake --install IO.SDK
+
+cp 
 ```
+:warning: Windows users :warning:
+
+Due to heterogeneous Windows development environment, you will have to copy headers and libraries into your project.
+
+This step will be described in the next section.
 
     
 ## Use the SDK
 
+:warning: Windows users who have used cmake install, you have to copy headers in "Includes" folder at project root and libs at project root.
+ These file locations have been given by the cmake install output.
+
 In this example we will create a small program to compute maneuvers required to join another spacecraft from earth surface
 
-1. (Execute this step only with binary installation) Ensure your CMake projet contains at least these parameters :
+
+1. Ensure your CMake project contains at least these parameters :
     ```CMAKE
     cmake_minimum_required(VERSION 3.18.0)
     project(MyApp VERSION 0.1.0)
