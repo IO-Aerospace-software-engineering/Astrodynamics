@@ -10,6 +10,7 @@ The goal of this project is to :
 - Abstract kernels and frames files management
 - Provides a body integrator
 - Simulate spacecraft and impulsive maneuvers
+- Evaluate constraints like occultations, body in instrument field of view, ...
     
 ## Project status
 
@@ -24,22 +25,22 @@ The goal of this project is to :
 Download the latest Linux or Windows release :
 [Releases](https://github.com/IO-Aerospace-software-engineering/SDK/releases)
 
-At this stage we assume that you have mastered your development environment but if you need some advises we can suggest you these approches :
+At this stage we assume that you have mastered your development environment but if you need some advises for yours developments we suggest you this approach :
 - [Cross plateform development](https://code.visualstudio.com/docs/cpp/cmake-linux)
 - [Linux development](https://code.visualstudio.com/docs/cpp/config-linux)
 - [Windows development](https://code.visualstudio.com/docs/cpp/config-mingw)
 
-In this quick start we suggest you to use [cross plateform approach](https://code.visualstudio.com/docs/cpp/cmake-linux) with CMake.
+In this quick start you have 2 options to install the SDK, one from binaries another from cmake.
 
-## Install from binaries
+## Option 1 - Install from binaries
 ### On Linux
 
 1. Create your C/C++ project folder, in this example we assume your output path will be called "build" but you can use the name of your choice. 
 
 2. Extract **Includes** folder from archive IO-Toolkit-Linux-vx.x.xx-x to folder /usr/local/include/IO/.
-3. Copy **libIO.SDK.so<span>** to /usr/local/lib/
+3. Copy **libIO.SDK.so** to /usr/local/lib/
 
-4. Extract **Data** folder from archive IO-Toolkit-Linux-vx.x.xx-x to your executable build folder.
+4. Extract **Data** folder from archive IO-Toolkit-Linux-vx.x.xx-x to your build folder.
 5. You should have :
     ```
     YourProject
@@ -54,24 +55,23 @@ In this quick start we suggest you to use [cross plateform approach](https://cod
 
 2. From the dll package you just downloaded
    - Copy **Includes** folder at the root of the project
-   - Copy **IO.SDK.dll** and **IO.SDK.lib** in the build folder and in the Debug or Release folder (this depends on your build configuration).
-   - Copy folder : **Data** in the Debug folder\ 
+   - Copy **IO.SDK.dll** and **IO.SDK.lib** in the root folder(used to link libraries) and in the build folder(used at runtime).
+   - Copy folder : **Data** into the build folder\ 
 
-    You should have a folder tree like below
-
+    You should have a folder tree like that :
+   
     ```
     YourProject
-        | Includes
-        | build
-            | IO.SDK.dll
-            | IO.SDK.lib
-            | Debug (generated after the first compile and run)
-                | Data
-                | IO.SDK.dll
-                | IO.SDK.lib
+      | Includes
+      | build
+         | Data
+         | IO.SDK.dll
+         | IO.SDK.lib
+      | IO.SDK.dll
+      | IO.SDK.lib
     ```
 
-## Build and install from source code
+## Option 2 - Build and install from source code
     
 ```bash
 #Clone project    
@@ -97,22 +97,46 @@ cmake --build . --config Release --target IO.SDK -j 4
 #This command must be executed with admin rights
 cmake --install IO.SDK
 
-cp 
+#When you create a project that will use the SDK, don't forget to import **Data** into your build directory.
+#We suggest you to use Data from IO.SDK.Tests project because these data have been used to approved software
+#You could use one of these scripts to copy data folder:
+#========Windows user======== : 
+cp ../IO.SDK.Tests/Data/Windows/ <your build path>
+
+#========Linux user======== : 
+cp ../IO.SDK.Tests/Data/Linux/ <your build path>
+
 ```
+
 :warning: Windows users :warning:
 
-Due to heterogeneous Windows development environment, you will have to copy headers and libraries into your project.
+Due to heterogeneous Windows development environments, once you've proceeded cmake install you must copy headers and libraries into your project.
 
-This step will be described in the next section.
+Windows users should have a folder tree like that for their project :
+```
+ YourProject
+   | Includes
+   | build_release
+      | Data
+      | IO.SDK.dll
+      | IO.SDK.lib
+   | IO.SDK.dll
+   | IO.SDK.lib
+```
 
+Linux users should have a folder tree like that :
+```
+YourProject
+   | build_release
+      | Data
+```
     
 ## Use the SDK
+Before use the SDK, you must install it.
 
-:warning: Windows users who have used cmake install, you have to copy headers in "Includes" folder at project root and libs at project root.
- These file locations have been given by the cmake install output.
+It can be installed from binaries or cmake, these procedures are described above. 
 
-In this example we will create a small program to compute maneuvers required to join another spacecraft from earth surface
-
+In this example we will create a small program based on cmake to compute maneuvers required to join another spacecraft from earth surface and evaluate some constraints during the flight.
 
 1. Ensure your CMake project contains at least these parameters :
     ```CMAKE
@@ -138,9 +162,9 @@ In this example we will create a small program to compute maneuvers required to 
     endif ()
     ```
 
-2. You can create a scenario based on this [Example](https://github.com/IO-Aerospace-software-engineering/SDK/tree/develop/IO.SDK.Scenarios)
+2. You can create a scenario based on this [Example](https://github.com/IO-Aerospace-software-engineering/SDK/tree/develop/IO.SDK.Scenarios/Program.cpp)
 
-3. You should see this output :
+3. When you execute it, you should have this output :
     ```CMD
     ========================================Launch Window 0 ========================================
     Launch epoch :2021-03-03 23:09:15.829809 (UTC)
