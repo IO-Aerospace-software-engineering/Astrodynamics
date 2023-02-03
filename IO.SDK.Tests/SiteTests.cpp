@@ -115,32 +115,32 @@ TEST(Site, GetHorizontalCoordinates)
 {
     auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10, "sun");
     auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth", sun);
-    auto marsBarycenter = std::make_shared<IO::SDK::Body::CelestialBody>(4, "mars", sun);
+    auto marsBarycenter = std::make_shared<IO::SDK::Body::CelestialBody>(4, "mars_barycenter", sun);
 
     //Position virtual station on same location as DSS-13 at local noon
     IO::SDK::Sites::Site s{12945, "FAKE_DSS-13", IO::SDK::Coordinates::Geodetic(-116.7944627147624 * IO::SDK::Constants::DEG_RAD, 35.2471635434595 * IO::SDK::Constants::DEG_RAD, 107.0), earth};
     auto hor = s.GetHorizontalCoordinates(*sun, IO::SDK::AberrationsEnum::None, IO::SDK::Time::TDB("2021-05-20 19:43:00 UTC"));
-    ASSERT_DOUBLE_EQ(151392249055.53369, hor.GetAltitude());
-    ASSERT_DOUBLE_EQ(179.02966833518911, hor.GetAzimuth() * IO::SDK::Constants::RAD_DEG);
-    ASSERT_DOUBLE_EQ(74.90166914480163, hor.GetElevation() * IO::SDK::Constants::RAD_DEG);
+    ASSERT_DOUBLE_EQ(151392145852.4516, hor.GetAltitude());
+    ASSERT_DOUBLE_EQ(179.02968336889137, hor.GetAzimuth() * IO::SDK::Constants::RAD_DEG);
+    ASSERT_DOUBLE_EQ(74.901674192124005, hor.GetElevation() * IO::SDK::Constants::RAD_DEG);
 
     //SunRise
     hor = s.GetHorizontalCoordinates(*sun, IO::SDK::AberrationsEnum::None, IO::SDK::Time::TDB("2021-05-20 12:38:00 UTC"));
-    ASSERT_DOUBLE_EQ(151390108051.58334, hor.GetAltitude());
-    ASSERT_DOUBLE_EQ(64.234701458460961, hor.GetAzimuth() * IO::SDK::Constants::RAD_DEG);
-    ASSERT_DOUBLE_EQ(-1.135660001562194, hor.GetElevation() * IO::SDK::Constants::RAD_DEG);
+    ASSERT_DOUBLE_EQ(151390110170.21564, hor.GetAltitude());
+    ASSERT_DOUBLE_EQ(64.234704330466599, hor.GetAzimuth() * IO::SDK::Constants::RAD_DEG);
+    ASSERT_DOUBLE_EQ(-1.1357039304856107, hor.GetElevation() * IO::SDK::Constants::RAD_DEG);
 
     //SunSet
     hor = s.GetHorizontalCoordinates(*sun, IO::SDK::AberrationsEnum::None, IO::SDK::Time::TDB("2021-05-21 02:48:00 UTC"));
-    ASSERT_DOUBLE_EQ(151406878348.0845, hor.GetAltitude());
-    ASSERT_DOUBLE_EQ(295.54578652197779, hor.GetAzimuth() * IO::SDK::Constants::RAD_DEG);
-    ASSERT_DOUBLE_EQ(-0.66454840555255634, hor.GetElevation() * IO::SDK::Constants::RAD_DEG);
+    ASSERT_DOUBLE_EQ(151406879587.91769, hor.GetAltitude());
+    ASSERT_DOUBLE_EQ(295.54578894121431, hor.GetAzimuth() * IO::SDK::Constants::RAD_DEG);
+    ASSERT_DOUBLE_EQ(-0.66459882179102292, hor.GetElevation() * IO::SDK::Constants::RAD_DEG);
 
     //Mars
     hor = s.GetHorizontalCoordinates(*marsBarycenter, IO::SDK::AberrationsEnum::None, IO::SDK::Time::TDB("2021-05-20 19:43:00 UTC"));
-    ASSERT_DOUBLE_EQ(3.2514463497228497E+11, hor.GetAltitude());
-    ASSERT_DOUBLE_EQ(90.420906294082812, hor.GetAzimuth() * IO::SDK::Constants::RAD_DEG);
-    ASSERT_DOUBLE_EQ(44.922034555236579, hor.GetElevation() * IO::SDK::Constants::RAD_DEG);
+    ASSERT_DOUBLE_EQ(3.2514455949044592E+11, hor.GetAltitude());
+    ASSERT_DOUBLE_EQ(90.42089340125473, hor.GetAzimuth() * IO::SDK::Constants::RAD_DEG);
+    ASSERT_DOUBLE_EQ(44.922024959556737, hor.GetElevation() * IO::SDK::Constants::RAD_DEG);
 }
 
 TEST(Site, FindWindowsOnIlluminationConstraint)

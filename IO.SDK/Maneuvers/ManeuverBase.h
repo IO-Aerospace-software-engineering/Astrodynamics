@@ -24,7 +24,7 @@
 #include <StateVector.h>
 #include <ManeuverResult.h>
 #include <Propagator.h>
-#include <DynamicFuelTank.cpp>
+#include <DynamicFuelTank.h>
 #include <Spacecraft.h>
 #include <TimeSpan.h>
 #include <TooEarlyManeuverException.h>
