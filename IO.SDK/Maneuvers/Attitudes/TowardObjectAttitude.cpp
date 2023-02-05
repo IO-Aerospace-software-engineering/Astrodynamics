@@ -27,8 +27,8 @@ void IO::SDK::Maneuvers::Attitudes::TowardObjectAttitude::Compute(const IO::SDK:
 IO::SDK::OrbitalParameters::StateOrientation IO::SDK::Maneuvers::Attitudes::TowardObjectAttitude::ComputeOrientation(const IO::SDK::OrbitalParameters::OrbitalParameters &maneuverPoint)
 {
     auto targetStateVector = m_targetBody.ReadEphemeris(m_spacecraft.GetOrbitalParametersAtEpoch()->GetFrame(), IO::SDK::AberrationsEnum::LTS, maneuverPoint.GetEpoch());
-    auto relativeStatevector = targetStateVector.GetPosition() - maneuverPoint.GetStateVector().GetPosition();
-    return IO::SDK::OrbitalParameters::StateOrientation(m_spacecraft.Front.To(relativeStatevector.Normalize()), IO::SDK::Math::Vector3D(0.0, 0.0, 0.0), maneuverPoint.GetEpoch(), maneuverPoint.GetFrame());
+    auto relativeStateVector = targetStateVector.GetPosition() - maneuverPoint.GetStateVector().GetPosition();
+    return IO::SDK::OrbitalParameters::StateOrientation(m_spacecraft.Front.To(relativeStateVector.Normalize()), IO::SDK::Math::Vector3D(0.0, 0.0, 0.0), maneuverPoint.GetEpoch(), maneuverPoint.GetFrame());
 }
 
 bool IO::SDK::Maneuvers::Attitudes::TowardObjectAttitude::CanExecute(const IO::SDK::OrbitalParameters::OrbitalParameters &orbitalParams )

@@ -166,33 +166,33 @@ void IO::SDK::Maneuvers::ManeuverBase::ExecuteAt(const IO::SDK::OrbitalParameter
         nearestLowerState = &maneuverPoint;
     }
 
-    //propagate from nearest value up to begin epoch
+    //propagate from the nearest value up to begin epoch
     auto beginState = nearestLowerState->GetStateVector(m_attitudeWindow->GetStartDate());
 
-    //Compute oriention at begining
-    auto orientationBegining = ComputeOrientation(beginState);
+    //Compute orientation at beginning
+    auto orientationBeginning = ComputeOrientation(beginState);
 
     //write orientation
-    m_propagator.AddStateOrientation(orientationBegining);
+    m_propagator.AddStateOrientation(orientationBeginning);
 
     //Find position at maneuver end
     //Add deltaV vector to maneuver point
     IO::SDK::OrbitalParameters::StateVector newManeuverState(maneuverPoint.GetCenterOfMotion(), maneuverPoint.GetStateVector().GetPosition(), maneuverPoint.GetStateVector().GetVelocity() + *m_deltaV, maneuverPoint.GetEpoch(), maneuverPoint.GetFrame());
 
     //Write Data in propagator
-    //Erase unecessary vector states
+    //Erase unnecessary vector states
     m_propagator.EraseDataFromEpochToEnd(beginState.GetEpoch());
 
     //Write vector states at maneuver begin and end;
     m_propagator.AddStateVector(beginState);
 
-    //Write end maneuver data only if is not ponctual maneuver
+    //Write end maneuver data only if is not punctual maneuver
     if (m_attitudeWindow->GetLength().GetSeconds().count() > 0.0)
     {
         //Propagate from new maneuver point up to end maneuver epoch
         auto endState = newManeuverState.GetStateVector(m_attitudeWindow->GetEndDate());
 
-        // Compute oriention at end
+        // Compute orientation at end
         auto orientationEnd = ComputeOrientation(endState);
 
         //Write orientation at end

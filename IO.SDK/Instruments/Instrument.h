@@ -15,8 +15,6 @@
 #include <string>
 #include <vector>
 
-#include <SpiceUsr.h>
-
 #include <Vector3D.h>
 #include <Spacecraft.h>
 #include <FOVShapes.h>
@@ -129,7 +127,7 @@ namespace IO::SDK::Instruments
 		const std::unique_ptr<IO::SDK::Frames::InstrumentFrameFile> &GetFrame() const;
 
 		/**
-		 * @brief Get the Boresight object
+		 * @brief Get the Boresight vector
 		 * 
 		 * @return IO::SDK::Math::Vector3D 
 		 */
