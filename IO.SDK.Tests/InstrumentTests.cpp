@@ -447,3 +447,69 @@ TEST(Instrument, FindWindowFieldOfView)
 	ASSERT_STREQ("2021-06-10 00:00:00.000000 (TDB)", results[0].GetStartDate().ToString().c_str());
 	ASSERT_STREQ("2021-06-10 01:47:27.000000 (TDB)", results[0].GetEndDate().ToString().c_str());
 }
+
+TEST(Instrument, GetBoresightAtEpoch)
+{
+
+    //========== Configure spacecraft===================
+    std::string filepath = std::string(IO::SDK::Parameters::KernelsPath) + "/SC179_MISSFOVTEST/Instruments/CAMERA789/Frames/CAMERA789.tf";
+    if (std::filesystem::exists(filepath))
+    {
+        std::filesystem::remove(filepath);
+    }
+
+    IO::SDK::Math::Vector3D orientation{1.0, 0.0, 0.0};
+    IO::SDK::Math::Vector3D boresight{0.0, 0.0, 1.0};
+    IO::SDK::Math::Vector3D fovvector{1.0, 0.0, 0.0};
+
+    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
+    double a = 6800000.0;
+    auto v = std::sqrt(earth->GetMu() / a); //Compute velocity for a circular orbit
+    IO::SDK::Time::TDB epoch("2021-JUN-10 00:00:00.0000 TDB");
+
+    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth, IO::SDK::Math::Vector3D(a, 0.0, 0.0), IO::SDK::Math::Vector3D(0.0, v, 0.0), epoch, IO::SDK::Frames::InertialFrames::GetICRF());
+    IO::SDK::Body::Spacecraft::Spacecraft s{-179, "SC179", 1000.0, 3000.0, "MISSFOVTEST", std::move(orbitalParams)};
+
+    s.AddCircularFOVInstrument(789, "CAMERA789", orientation, boresight, fovvector, 1.5);
+    const IO::SDK::Instruments::Instrument *instrument{s.GetInstrument(789)};
+
+    //==========PROPAGATOR====================
+    auto step{IO::SDK::Time::TimeSpan(1.0s)};
+    IO::SDK::Time::TimeSpan duration(6447.0s);
+
+    std::vector<IO::SDK::Integrators::Forces::Force *> forces{};
+
+    IO::SDK::Integrators::Forces::GravityForce gravityForce;
+    forces.push_back(&gravityForce);
+    IO::SDK::Integrators::VVIntegrator integrator(step, forces);
+
+    IO::SDK::Propagators::Propagator pro(s, integrator, IO::SDK::Time::Window(epoch, epoch + duration));
+
+    pro.Propagate();
+
+    //=======Orientation==========
+    std::vector<std::vector<IO::SDK::OrbitalParameters::StateOrientation>> orientationData;
+    std::vector<IO::SDK::OrbitalParameters::StateOrientation> interval;
+    auto epoch_or = IO::SDK::Time::TDB("2021-JUN-10 00:00:00.0000 TDB");
+    auto axis_or = IO::SDK::Math::Vector3D(1.0, 0.0, 0.0);
+    auto angularVelocity_or = IO::SDK::Math::Vector3D();
+
+    IO::SDK::Time::TimeSpan ts(10s);
+
+    for (size_t i = 0; i < 646; i++)
+    {
+        auto q = IO::SDK::Math::Quaternion(axis_or, 0.0);
+        IO::SDK::OrbitalParameters::StateOrientation s_or(q, angularVelocity_or, epoch_or, IO::SDK::Frames::InertialFrames::GetICRF());
+        interval.push_back(s_or);
+        epoch_or = epoch_or + ts;
+    }
+
+    orientationData.push_back(interval);
+
+    s.WriteOrientations(orientationData);
+
+        //Get windows
+    auto results = instrument->GetBoresight(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::Time::TDB("2021-JUN-10 00:00:00.0000 TDB"));
+
+    ASSERT_EQ( IO::SDK::Math::Vector3D(0.0,0.0,0.0), results);
+}
