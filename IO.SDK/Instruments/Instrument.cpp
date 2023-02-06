@@ -150,6 +150,7 @@ IO::SDK::Instruments::Instrument::FindWindowsWhereInFieldOfView(const IO::SDK::T
 }
 
 IO::SDK::Math::Vector3D IO::SDK::Instruments::Instrument::GetBoresight(const IO::SDK::Frames::Frames &frame, const IO::SDK::Time::TDB &epoch) const {
+
     double encodedClock = m_spacecraft.GetClock().ConvertToEncodedClock(epoch);
     double tolerance = m_spacecraft.GetClock().GetTicksPerSeconds(); // Tolerance of 1 second is acceptable
     SpiceDouble cmat[3][3];
@@ -159,7 +160,7 @@ IO::SDK::Math::Vector3D IO::SDK::Instruments::Instrument::GetBoresight(const IO:
     ckgp_c(m_id, encodedClock, tolerance, frame.ToCharArray(), cmat, &clockOut, &found);
 
     if (!found) {
-        throw IO::SDK::Exception::SDKException("Insuffisant data to compute boresight in frame at give epoch");
+        throw IO::SDK::Exception::SDKException("Insufficient data to compute boresight in frame at give epoch");
     }
 
     SpiceDouble localBoresight[3] = {m_boresight.GetX(), m_boresight.GetY(), m_boresight.GetZ()};
