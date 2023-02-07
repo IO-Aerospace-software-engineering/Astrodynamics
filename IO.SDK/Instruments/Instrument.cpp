@@ -40,28 +40,43 @@ const std::unique_ptr<IO::SDK::Frames::InstrumentFrameFile> &IO::SDK::Instrument
     return m_frame;
 }
 
-IO::SDK::Instruments::Instrument::Instrument(const IO::SDK::Body::Spacecraft::Spacecraft &spacecraft, const unsigned short id, const std::string &name,
-                                             const IO::SDK::Math::Vector3D &orientation, const IO::SDK::Math::Vector3D &boresight, const IO::SDK::Math::Vector3D &fovRefVector,
+IO::SDK::Instruments::Instrument::Instrument(const IO::SDK::Body::Spacecraft::Spacecraft &spacecraft,
+                                             const unsigned short id, const std::string &name,
+                                             const IO::SDK::Math::Vector3D &orientation,
+                                             const IO::SDK::Math::Vector3D &boresight,
+                                             const IO::SDK::Math::Vector3D &fovRefVector,
                                              const double fovAngle) : m_spacecraft{spacecraft},
-                                                                      m_id{id < 1000 ? spacecraft.GetId() * 1000 - id : throw IO::SDK::Exception::InvalidArgumentException(
-                                                                              "Instrument Id must be a positive number < 1000")},
+                                                                      m_id{id < 1000 ? spacecraft.GetId() * 1000 - id
+                                                                                     : throw IO::SDK::Exception::InvalidArgumentException(
+                                                                                      "Instrument Id must be a positive number < 1000")},
                                                                       m_name{IO::SDK::StringHelpers::ToUpper(name)},
-                                                                      m_filesPath{spacecraft.GetFilesPath() + "/Instruments/" + IO::SDK::StringHelpers::ToUpper(name)},
-                                                                      m_frame(new IO::SDK::Frames::InstrumentFrameFile(*this, orientation)),
+                                                                      m_filesPath{spacecraft.GetFilesPath() +
+                                                                                  "/Instruments/" +
+                                                                                  IO::SDK::StringHelpers::ToUpper(
+                                                                                          name)},
+                                                                      m_frame(new IO::SDK::Frames::InstrumentFrameFile(
+                                                                              *this, orientation)),
                                                                       m_orientation{orientation},
-                                                                      m_fovShape{IO::SDK::Instruments::FOVShapeEnum::Circular},
+                                                                      m_fovShape{
+                                                                              IO::SDK::Instruments::FOVShapeEnum::Circular},
                                                                       m_boresight{boresight},
                                                                       m_fovRefVector{fovRefVector},
                                                                       m_fovAngle{fovAngle} {
 
-    const_cast<std::unique_ptr<IO::SDK::Kernels::InstrumentKernel> &>(m_kernel).reset(new IO::SDK::Kernels::CircularInstrumentKernel(*this, boresight, fovRefVector, fovAngle));
+    const_cast<std::unique_ptr<IO::SDK::Kernels::InstrumentKernel> &>(m_kernel).reset(
+            new IO::SDK::Kernels::CircularInstrumentKernel(*this, boresight, fovRefVector, fovAngle));
 }
 
-IO::SDK::Instruments::Instrument::Instrument(const IO::SDK::Body::Spacecraft::Spacecraft &spacecraft, const unsigned short id, const std::string &name,
-                                             const IO::SDK::Math::Vector3D &orientation, const IO::SDK::Instruments::FOVShapeEnum fovShape,
-                                             const IO::SDK::Math::Vector3D &boresight, const IO::SDK::Math::Vector3D &fovRefVector, const double fovAngle, const double crossAngle)
+IO::SDK::Instruments::Instrument::Instrument(const IO::SDK::Body::Spacecraft::Spacecraft &spacecraft,
+                                             const unsigned short id, const std::string &name,
+                                             const IO::SDK::Math::Vector3D &orientation,
+                                             const IO::SDK::Instruments::FOVShapeEnum fovShape,
+                                             const IO::SDK::Math::Vector3D &boresight,
+                                             const IO::SDK::Math::Vector3D &fovRefVector, const double fovAngle,
+                                             const double crossAngle)
         : m_spacecraft{spacecraft},
-          m_id{id < 1000 ? spacecraft.GetId() * 1000 - id : throw IO::SDK::Exception::InvalidArgumentException("Instrument Id must be a positive number < 1000")},
+          m_id{id < 1000 ? spacecraft.GetId() * 1000 - id : throw IO::SDK::Exception::InvalidArgumentException(
+                  "Instrument Id must be a positive number < 1000")},
           m_name{IO::SDK::StringHelpers::ToUpper(name)},
           m_filesPath{spacecraft.GetFilesPath() + "/Instruments/" + IO::SDK::StringHelpers::ToUpper(name)},
           m_frame(new IO::SDK::Frames::InstrumentFrameFile(*this, orientation)),
@@ -78,7 +93,8 @@ IO::SDK::Instruments::Instrument::Instrument(const IO::SDK::Body::Spacecraft::Sp
 
     if (fovShape == IO::SDK::Instruments::FOVShapeEnum::Rectangular) {
         const_cast<std::unique_ptr<IO::SDK::Kernels::InstrumentKernel> &>(m_kernel).reset(
-                new IO::SDK::Kernels::RectangularInstrumentKernel(*this, boresight, fovRefVector, fovAngle, crossAngle));
+                new IO::SDK::Kernels::RectangularInstrumentKernel(*this, boresight, fovRefVector, fovAngle,
+                                                                  crossAngle));
     } else if (fovShape == IO::SDK::Instruments::FOVShapeEnum::Elliptical) {
         const_cast<std::unique_ptr<IO::SDK::Kernels::InstrumentKernel> &>(m_kernel).reset(
                 new IO::SDK::Kernels::EllipticalInstrumentKernel(*this, boresight, fovRefVector, fovAngle, crossAngle));
@@ -111,8 +127,9 @@ std::vector<IO::SDK::Math::Vector3D> IO::SDK::Instruments::Instrument::GetFOVBou
 }
 
 std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>>
-IO::SDK::Instruments::Instrument::FindWindowsWhereInFieldOfView(const IO::SDK::Time::Window<IO::SDK::Time::TDB> &searchWindow, const IO::SDK::Body::Body &targetBody,
-                                                                const IO::SDK::Time::TimeSpan &stepSize, const IO::SDK::AberrationsEnum &aberration) const {
+IO::SDK::Instruments::Instrument::FindWindowsWhereInFieldOfView(
+        const IO::SDK::Time::Window<IO::SDK::Time::TDB> &searchWindow, const IO::SDK::Body::Body &targetBody,
+        const IO::SDK::Time::TimeSpan &stepSize, const IO::SDK::AberrationsEnum &aberration) const {
     std::string shape{"POINT"};
     std::string frame{""};
 
@@ -136,28 +153,32 @@ IO::SDK::Instruments::Instrument::FindWindowsWhereInFieldOfView(const IO::SDK::T
     SpiceDouble SPICE_CELL_OCCLT_RESULT[SPICE_CELL_CTRLSZ + MAXWIN];
     SpiceCell results = IO::SDK::Spice::Builder::CreateDoubleCell(MAXWIN, SPICE_CELL_OCCLT_RESULT);
 
-    wninsd_c(searchWindow.GetStartDate().GetSecondsFromJ2000().count(), searchWindow.GetEndDate().GetSecondsFromJ2000().count(), &cnfine);
+    wninsd_c(searchWindow.GetStartDate().GetSecondsFromJ2000().count(),
+             searchWindow.GetEndDate().GetSecondsFromJ2000().count(), &cnfine);
 
-    gftfov_c(std::to_string(m_id).c_str(), targetBody.GetName().c_str(), shape.c_str(), frame.c_str(), abe.ToString(aberration).c_str(), m_spacecraft.GetName().c_str(),
+    gftfov_c(std::to_string(m_id).c_str(), targetBody.GetName().c_str(), shape.c_str(), frame.c_str(),
+             abe.ToString(aberration).c_str(), m_spacecraft.GetName().c_str(),
              stepSize.GetSeconds().count(), &cnfine, &results);
 
     for (int i = 0; i < wncard_c(&results); i++) {
         wnfetd_c(&results, i, &windowStart, &windowEnd);
-        windows.push_back(IO::SDK::Time::Window<IO::SDK::Time::TDB>(IO::SDK::Time::TDB(std::chrono::duration<double>(windowStart)),
-                                                                    IO::SDK::Time::TDB(std::chrono::duration<double>(windowEnd))));
+        windows.push_back(IO::SDK::Time::Window<IO::SDK::Time::TDB>(
+                IO::SDK::Time::TDB(std::chrono::duration<double>(windowStart)),
+                IO::SDK::Time::TDB(std::chrono::duration<double>(windowEnd))));
     }
     return windows;
 }
 
-IO::SDK::Math::Vector3D IO::SDK::Instruments::Instrument::GetBoresight(const IO::SDK::Frames::Frames &frame, const IO::SDK::Time::TDB &epoch) const {
+IO::SDK::Math::Vector3D IO::SDK::Instruments::Instrument::GetBoresight(const IO::SDK::Frames::Frames &frame,
+                                                                       const IO::SDK::Time::TDB &epoch) const {
 
     double encodedClock = m_spacecraft.GetClock().ConvertToEncodedClock(epoch);
     double tolerance = m_spacecraft.GetClock().GetTicksPerSeconds(); // Tolerance of 1 second is acceptable
-    SpiceDouble cmat[3][3];
-    SpiceDouble clockOut;
-    SpiceBoolean found;
+    SpiceDouble cmat[3][3]{};
+    SpiceDouble clockOut{};
+    SpiceBoolean found{};
 
-    ckgp_c(m_id, encodedClock, tolerance, frame.ToCharArray(), cmat, &clockOut, &found);
+    ckgp_c(m_spacecraft.GetFrame()->GetId(), encodedClock, tolerance, frame.ToCharArray(), cmat, &clockOut, &found);
 
     if (!found) {
         throw IO::SDK::Exception::SDKException("Insufficient data to compute boresight in frame at give epoch");

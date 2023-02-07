@@ -535,5 +535,5 @@ TEST(Instrument, GetBoresightAtEpoch) {
 
     auto results = instrument->GetBoresight(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::Time::TDB("2021-JUN-10 00:00:00.0000 TDB"));
 
-    ASSERT_EQ(IO::SDK::Math::Vector3D(0.0, 0.0, 0.0), results);
+    ASSERT_EQ(IO::SDK::Math::Vector3D(0.0, 0.0, 1.0), results);
 }

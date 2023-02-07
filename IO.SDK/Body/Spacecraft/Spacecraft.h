@@ -308,6 +308,12 @@ namespace IO::SDK::Body::Spacecraft
 		 * @return double 
 		 */
 		double GetDryOperatingMass() const;
+
+        /**
+         * Get associated frame
+         * @return frame
+         */
+        const std::unique_ptr<IO::SDK::Frames::SpacecraftFrameFile>& GetFrame() const;
 	};
 }
 
