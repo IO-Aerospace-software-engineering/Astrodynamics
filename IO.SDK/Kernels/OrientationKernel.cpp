@@ -54,7 +54,7 @@ void IO::SDK::Kernels::OrientationKernel::WriteOrientations(const std::vector<st
 	double endtime = m_spacecraft.GetClock().ConvertToEncodedClock(orientations.back().back().GetEpoch());
 
 	//Compute spacecraft frame id
-	int id = m_spacecraft.GetId() * 1000.0;
+	int id = m_spacecraft.GetFrame()->GetId();
 
 	//Number of orientation data
 	int n{};
