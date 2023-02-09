@@ -21,7 +21,8 @@
 
 using namespace std::chrono_literals;
 
-TEST(Instrument, Initialization) {
+TEST(Instrument, Initialization)
+{
     std::string filepath = std::string(IO::SDK::Parameters::KernelsPath) + "/SC17_MIS1SCN1/Instruments/CAMERA200/Frames/CAMERA200.tf";
     if (std::filesystem::exists(filepath)) {
         std::filesystem::remove(filepath);
@@ -49,7 +50,8 @@ TEST(Instrument, Initialization) {
     ASSERT_EQ(&s, &instrument->GetSpacecraft());
 }
 
-TEST(Instrument, Frame) {
+TEST(Instrument, Frame)
+{
     std::string filepath = std::string(IO::SDK::Parameters::KernelsPath) + "/SC17_MIS1SCN1/Instruments/CAMERA200/Frames/CAMERA200.tf";
     if (std::filesystem::exists(filepath)) {
         std::filesystem::remove(filepath);
@@ -102,7 +104,8 @@ TEST(Instrument, Frame) {
     ASSERT_EQ(3, axes[2]);
 }
 
-TEST(Instrument, CircularKernel) {
+TEST(Instrument, CircularKernel)
+{
     std::string filepath = std::string(IO::SDK::Parameters::KernelsPath) + "/SC17_MIS1SCN1/Instruments/CAMERA200/Frames/CAMERA200.tf";
     if (std::filesystem::exists(filepath)) {
         std::filesystem::remove(filepath);
@@ -148,7 +151,8 @@ TEST(Instrument, CircularKernel) {
     ASSERT_STREQ("RADIANS", units[0].c_str());
 }
 
-TEST(Instrument, RectangularKernel) {
+TEST(Instrument, RectangularKernel)
+{
     std::string filepath = std::string(IO::SDK::Parameters::KernelsPath) + "/SC17_MIS1SCN1/Instruments/CAMERA300/Frames/CAMERA300.tf";
     if (std::filesystem::exists(filepath)) {
         std::filesystem::remove(filepath);
@@ -194,7 +198,8 @@ TEST(Instrument, RectangularKernel) {
     ASSERT_STREQ("RADIANS", units[0].c_str());
 }
 
-TEST(Instrument, EllipticalKernel) {
+TEST(Instrument, EllipticalKernel)
+{
     std::string filepath = std::string(IO::SDK::Parameters::KernelsPath) + "/SC17_MIS1SCN1/Instruments/CAMERA400/Frames/CAMERA400.tf";
     if (std::filesystem::exists(filepath)) {
         std::filesystem::remove(filepath);
@@ -240,7 +245,8 @@ TEST(Instrument, EllipticalKernel) {
     ASSERT_STREQ("RADIANS", units[0].c_str());
 }
 
-TEST(Instrument, Boundaries) {
+TEST(Instrument, Boundaries)
+{
     std::string filepath = std::string(IO::SDK::Parameters::KernelsPath) + "/SC17_MIS1SCN1/Instruments/CAMERA200/Frames/CAMERA200.tf";
     if (std::filesystem::exists(filepath)) {
         std::filesystem::remove(filepath);
@@ -269,7 +275,8 @@ TEST(Instrument, Boundaries) {
     ASSERT_DOUBLE_EQ(0.99619473840986084, boundaries[0].GetZ());
 }
 
-TEST(Instrument, Boresight) {
+TEST(Instrument, Boresight)
+{
     std::string filepath = std::string(IO::SDK::Parameters::KernelsPath) + "/SC17_MIS1SCN1/Instruments/CAMERA200/Frames/CAMERA200.tf";
     if (std::filesystem::exists(filepath)) {
         std::filesystem::remove(filepath);
@@ -298,7 +305,8 @@ TEST(Instrument, Boresight) {
     ASSERT_DOUBLE_EQ(boresight.GetZ(), boresightRes.GetZ());
 }
 
-TEST(Instrument, FOVShape) {
+TEST(Instrument, FOVShape)
+{
     std::string filepath = std::string(IO::SDK::Parameters::KernelsPath) + "/SC17_MIS1SCN1/Instruments/CAMERA200/Frames/CAMERA200.tf";
     if (std::filesystem::exists(filepath)) {
         std::filesystem::remove(filepath);
@@ -325,7 +333,8 @@ TEST(Instrument, FOVShape) {
     ASSERT_EQ(IO::SDK::Instruments::FOVShapeEnum::Circular, shape);
 }
 
-TEST(Instrument, GetBadId) {
+TEST(Instrument, GetBadId)
+{
     std::string filepath = std::string(IO::SDK::Parameters::KernelsPath) + "/SC17_MIS1SCN1/Instruments/CAMERA200/Frames/CAMERA200.tf";
     if (std::filesystem::exists(filepath)) {
         std::filesystem::remove(filepath);
@@ -349,7 +358,8 @@ TEST(Instrument, GetBadId) {
     ASSERT_FALSE(s.GetInstrument(1234));
 }
 
-TEST(Instrument, CreateBadId) {
+TEST(Instrument, CreateBadId)
+{
     std::string filepath = std::string(IO::SDK::Parameters::KernelsPath) + "/SC17_MIS1SCN1/Instruments/CAMERA200/Frames/CAMERA200.tf";
     if (std::filesystem::exists(filepath)) {
         std::filesystem::remove(filepath);
@@ -372,7 +382,8 @@ TEST(Instrument, CreateBadId) {
     ASSERT_THROW(s.AddCircularFOVInstrument(1200, "Camera200", orientation, boresight, fovvector, 5 * IO::SDK::Constants::DEG_RAD), IO::SDK::Exception::InvalidArgumentException);
 }
 
-TEST(Instrument, AlreadyExists) {
+TEST(Instrument, AlreadyExists)
+{
     std::string filepath = std::string(IO::SDK::Parameters::KernelsPath) + "/SC17_MIS1SCN1/Instruments/CAMERA200/Frames/CAMERA200.tf";
     if (std::filesystem::exists(filepath)) {
         std::filesystem::remove(filepath);
@@ -395,7 +406,8 @@ TEST(Instrument, AlreadyExists) {
     ASSERT_THROW(s.AddCircularFOVInstrument(200, "Camera200", orientation, boresight, fovvector, 5 * IO::SDK::Constants::DEG_RAD), IO::SDK::Exception::InvalidArgumentException);
 }
 
-TEST(Instrument, FindWindowFieldOfView) {
+TEST(Instrument, FindWindowFieldOfView)
+{
 
     //========== Configure spacecraft===================
     std::string filepath = std::string(IO::SDK::Parameters::KernelsPath) + "/SC179_MISSFOVTEST/Instruments/CAMERA789/Frames/CAMERA789.tf";
@@ -472,7 +484,8 @@ TEST(Instrument, FindWindowFieldOfView) {
     ASSERT_STREQ("2021-06-10 01:47:27.000000 (TDB)", results[0].GetEndDate().ToString().c_str());
 }
 
-TEST(Instrument, GetBoresightAtEpoch) {
+TEST(Instrument, GetBoresightAtEpoch)
+{
 
     //========== Configure spacecraft===================
     std::string filepath = std::string(IO::SDK::Parameters::KernelsPath) + "/SC179_MISSFOVTEST/Instruments/CAMERA789/Frames/CAMERA789.tf";
@@ -536,4 +549,61 @@ TEST(Instrument, GetBoresightAtEpoch) {
     auto results = instrument->GetBoresight(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::Time::TDB("2021-JUN-10 00:00:00.0000 TDB"));
 
     ASSERT_EQ(IO::SDK::Math::Vector3D(0.0, 0.0, 1.0), results);
+}
+
+TEST(Instrument, GetBoresightInSpaecraftFrame)
+{
+    std::string filepath = std::string(IO::SDK::Parameters::KernelsPath) + "/SC17_MIS1SCN1/Instruments/CAMERA200/Frames/CAMERA200.tf";
+    if (std::filesystem::exists(filepath)) {
+        std::filesystem::remove(filepath);
+    }
+
+    IO::SDK::Math::Vector3D orientation{0.0, 0.0, 0.0};
+    IO::SDK::Math::Vector3D boresight{0.0, 0.0, 1.0};
+    IO::SDK::Math::Vector3D fovvector{0.0, 1.0, 6.0};
+
+    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
+    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth,
+                                                                                                                                             IO::SDK::Math::Vector3D(1.0, 2.0, 3.0),
+                                                                                                                                             IO::SDK::Math::Vector3D(4.0, 5.0, 6.0),
+                                                                                                                                             IO::SDK::Time::TDB(100.0s),
+                                                                                                                                             IO::SDK::Frames::InertialFrames::GetICRF());
+    IO::SDK::OrbitalParameters::StateOrientation attitude(IO::SDK::Time::TDB(100.0s), IO::SDK::Frames::InertialFrames::GetICRF());
+    IO::SDK::Body::Spacecraft::Spacecraft s{-17, "sc17", 1000.0, 3000.0, "mis1Scn1", std::move(orbitalParams)};
+
+    s.AddCircularFOVInstrument(200, "Camera200", orientation, boresight, fovvector, 1.5);
+    const IO::SDK::Instruments::Instrument *instrument{s.GetInstrument(200)};
+    double mat[3][3];
+    eul2m_c(0.0, 0.0, 0.0, 1, 2, 3, mat);
+    double q[4];
+    m2q_c(mat, q);
+    ASSERT_EQ(s.Top, instrument->GetBoresightInSpacecraftFrame());
+}
+
+TEST(Instrument, GetBoresightInSpaecraftFrame2)
+{
+    std::string filepath = std::string(IO::SDK::Parameters::KernelsPath) + "/SC17_MIS1SCN1/Instruments/CAMERA200/Frames/CAMERA200.tf";
+    if (std::filesystem::exists(filepath)) {
+        std::filesystem::remove(filepath);
+    }
+
+    IO::SDK::Math::Vector3D orientation{IO::SDK::Constants::PI2, 0.0, 0.0};
+    IO::SDK::Math::Vector3D boresight{0.0, 0.0, 1.0};
+    IO::SDK::Math::Vector3D fovvector{0.0, 1.0, 6.0};
+
+    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
+    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth,
+                                                                                                                                             IO::SDK::Math::Vector3D(1.0, 2.0, 3.0),
+                                                                                                                                             IO::SDK::Math::Vector3D(4.0, 5.0, 6.0),
+                                                                                                                                             IO::SDK::Time::TDB(100.0s),
+                                                                                                                                             IO::SDK::Frames::InertialFrames::GetICRF());
+    IO::SDK::OrbitalParameters::StateOrientation attitude(IO::SDK::Time::TDB(100.0s), IO::SDK::Frames::InertialFrames::GetICRF());
+    IO::SDK::Body::Spacecraft::Spacecraft s{-17, "sc17", 1000.0, 3000.0, "mis1Scn1", std::move(orbitalParams)};
+
+    s.AddCircularFOVInstrument(200, "Camera200", orientation, boresight, fovvector, 1.5);
+    const IO::SDK::Instruments::Instrument *instrument{s.GetInstrument(200)};
+    auto vRes{instrument->GetBoresightInSpacecraftFrame()};
+    ASSERT_NEAR(s.Back.GetX(), vRes.GetX(),1E-09);
+    ASSERT_NEAR(s.Back.GetY(), vRes.GetY(),1E-07);
+    ASSERT_NEAR(s.Back.GetZ(), vRes.GetZ(),1E-07);
 }

@@ -165,6 +165,11 @@ namespace IO::SDK::Instruments
 		 */
 		std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>> FindWindowsWhereInFieldOfView(const IO::SDK::Time::Window<IO::SDK::Time::TDB>& searchWindow,const IO::SDK::Body::Body& targetBody,const IO::SDK::Time::TimeSpan& stepSize,const IO::SDK::AberrationsEnum& aberration) const;
 
+        /**
+         * Compute boresight in spacecraft frame
+         * @return
+         */
+        IO::SDK::Math::Vector3D GetBoresightInSpacecraftFrame() const;
 		friend class IO::SDK::Body::Spacecraft::Spacecraft;
 	};
 }

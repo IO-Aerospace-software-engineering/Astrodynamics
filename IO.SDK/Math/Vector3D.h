@@ -24,6 +24,7 @@ namespace IO::SDK::Math
 		static const Vector3D VectorX;
 		static const Vector3D VectorY;
 		static const Vector3D VectorZ;
+		static const Vector3D Zero;
 		Vector3D(){};
 		/// <summary>
 		/// Instanciate a 3D vector

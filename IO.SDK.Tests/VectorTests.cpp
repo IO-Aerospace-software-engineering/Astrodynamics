@@ -91,7 +91,7 @@ TEST(Vector, Normalize)
 	ASSERT_DOUBLE_EQ(1.0, res.Magnitude());
 
 	IO::SDK::Math::Vector3D vectorZero(0.0, 0.0, 0.0);
-	ASSERT_THROW(vectorZero.Normalize(), std::exception);
+	ASSERT_EQ(vectorZero.Normalize(), IO::SDK::Math::Vector3D(0,0,0));
 }
 
 TEST(Vector, GetAngle)
