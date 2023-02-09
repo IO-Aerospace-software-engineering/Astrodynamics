@@ -16,20 +16,47 @@
 #include <InstrumentFrameFile.h>
 #include <StringHelpers.h>
 
+IO::SDK::Body::Spacecraft::Spacecraft::Spacecraft(const int id, const std::string &name, const double dryOperatingMass, const double maximumOperatingMass,
+                                                  const std::string &missionPrefix, std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParametersAtEpoch)
+        : Spacecraft(id, name, dryOperatingMass, maximumOperatingMass, missionPrefix, std::move(orbitalParametersAtEpoch), IO::SDK::Math::Vector3D(0.0, 1.0, 0.0),
+                     IO::SDK::Math::Vector3D(0.0, 0.0, 1.0)) {
+
+
+}
+
 IO::SDK::Body::Spacecraft::Spacecraft::Spacecraft(const int id, const std::string &name, const double dryOperatingMass,
-                                                  const double maximumOperatingMass, const std::string &missionPrefix,
-                                                  std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParametersAtEpoch)
-        : IO::SDK::Body::Body((id >= 0 ? throw SDK::Exception::SDKException("Spacecraft must have negative id") : id),
-                              name, dryOperatingMass, std::move(orbitalParametersAtEpoch)),
-          m_missionPrefix{IO::SDK::StringHelpers::ToUpper(missionPrefix)},
-          m_filesPath{
-                  std::string(IO::SDK::Parameters::KernelsPath) + "/" + IO::SDK::StringHelpers::ToUpper(name) + "_" +
-                  IO::SDK::StringHelpers::ToUpper(m_missionPrefix)},
-          m_frame(new IO::SDK::Frames::SpacecraftFrameFile(*this)),
-          m_clockKernel(new IO::SDK::Kernels::SpacecraftClockKernel(*this, 16)),
-          m_orientationKernel(new IO::SDK::Kernels::OrientationKernel(*this)),
-          m_ephemerisKernel(new IO::SDK::Kernels::EphemerisKernel(*this)),
-          m_maximumOperatingMass{maximumOperatingMass} {
+                                                  double maximumOperatingMass, const std::string &missionPrefix,
+                                                  std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParametersAtEpoch,
+                                                  const IO::SDK::Math::Vector3D &front,
+                                                  const IO::SDK::Math::Vector3D &top) : IO::SDK::Body::Body(
+        (id >= 0 ? throw SDK::Exception::SDKException("Spacecraft must have negative id") : id),
+        name, dryOperatingMass, std::move(orbitalParametersAtEpoch)),
+                                                                                        m_missionPrefix{
+                                                                                                IO::SDK::StringHelpers::ToUpper(
+                                                                                                        missionPrefix)},
+                                                                                        m_filesPath{
+                                                                                                std::string(
+                                                                                                        IO::SDK::Parameters::KernelsPath) +
+                                                                                                "/" +
+                                                                                                IO::SDK::StringHelpers::ToUpper(
+                                                                                                        name) + "_" +
+                                                                                                IO::SDK::StringHelpers::ToUpper(
+                                                                                                        m_missionPrefix)},
+                                                                                        m_frame(new IO::SDK::Frames::SpacecraftFrameFile(
+                                                                                                *this)),
+                                                                                        m_clockKernel(
+                                                                                                new IO::SDK::Kernels::SpacecraftClockKernel(
+                                                                                                        *this, 16)),
+                                                                                        m_orientationKernel(
+                                                                                                new IO::SDK::Kernels::OrientationKernel(
+                                                                                                        *this)),
+                                                                                        m_ephemerisKernel(
+                                                                                                new IO::SDK::Kernels::EphemerisKernel(
+                                                                                                        *this)),
+                                                                                        m_maximumOperatingMass{
+                                                                                                maximumOperatingMass},
+                                                                                        Top{top}, Front{front}, Right{front.CrossProduct(top)}, Bottom{top.Reverse()},
+                                                                                        Back(front.Reverse()), Left{Right.Reverse()} {
 }
 
 std::string IO::SDK::Body::Spacecraft::Spacecraft::GetMissionPrefix() const {
@@ -270,3 +297,5 @@ double IO::SDK::Body::Spacecraft::Spacecraft::GetDryOperatingMass() const {
 const std::unique_ptr<IO::SDK::Frames::SpacecraftFrameFile> &IO::SDK::Body::Spacecraft::Spacecraft::GetFrame() const {
     return this->m_frame;
 }
+
+
