@@ -7,8 +7,11 @@
 #include <memory>
 #include <InertialFrames.h>
 #include <Engine.h>
+#include <Vectors.h>
 
 using namespace std::chrono_literals;
+
+
 
 TEST(Spacecraft, Initialization) {
     const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
@@ -208,27 +211,29 @@ TEST(Spacecraft, Orientation) {
                                                                                                                                              IO::SDK::Frames::InertialFrames::GetICRF());
     IO::SDK::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, "ms01", std::move(orbitalParams)};
 
-    ASSERT_EQ(IO::SDK::Math::Vector3D::VectorY, s.Front);
-    ASSERT_EQ(IO::SDK::Math::Vector3D::VectorZ, s.Top);
-    ASSERT_EQ(IO::SDK::Math::Vector3D::VectorX, s.Right);
-    ASSERT_EQ(IO::SDK::Math::Vector3D::VectorY.Reverse(), s.Back);
-    ASSERT_EQ(IO::SDK::Math::Vector3D::VectorZ.Reverse(), s.Bottom);
-    ASSERT_EQ(IO::SDK::Math::Vector3D::VectorX.Reverse(), s.Left);
+    ASSERT_EQ(VectorY, s.Front);
+    ASSERT_EQ(VectorZ, s.Top);
+    ASSERT_EQ(VectorX, s.Right);
+    ASSERT_EQ(VectorY.Reverse(), s.Back);
+    ASSERT_EQ(VectorZ.Reverse(), s.Bottom);
+    ASSERT_EQ(VectorX.Reverse(), s.Left);
 }
 
+
 TEST(Spacecraft, Orientation2) {
+
     const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
     std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth,
                                                                                                                                              IO::SDK::Math::Vector3D(1.0, 2.0, 3.0),
                                                                                                                                              IO::SDK::Math::Vector3D(4.0, 5.0, 6.0),
                                                                                                                                              IO::SDK::Time::TDB(100.0s),
                                                                                                                                              IO::SDK::Frames::InertialFrames::GetICRF());
-    IO::SDK::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, "ms01", std::move(orbitalParams), IO::SDK::Math::Vector3D::VectorX, IO::SDK::Math::Vector3D::VectorY};
+    IO::SDK::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, "ms01", std::move(orbitalParams), VectorX, VectorY};
 
-    ASSERT_EQ(IO::SDK::Math::Vector3D::VectorX, s.Front);
-    ASSERT_EQ(IO::SDK::Math::Vector3D::VectorY, s.Top);
-    ASSERT_EQ(IO::SDK::Math::Vector3D::VectorZ, s.Right);
-    ASSERT_EQ(IO::SDK::Math::Vector3D::VectorX.Reverse(), s.Back);
-    ASSERT_EQ(IO::SDK::Math::Vector3D::VectorY.Reverse(), s.Bottom);
-    ASSERT_EQ(IO::SDK::Math::Vector3D::VectorZ.Reverse(), s.Left);
+    ASSERT_EQ(VectorX, s.Front);
+    ASSERT_EQ(VectorY, s.Top);
+    ASSERT_EQ(VectorZ, s.Right);
+    ASSERT_EQ(VectorX.Reverse(), s.Back);
+    ASSERT_EQ(VectorY.Reverse(), s.Bottom);
+    ASSERT_EQ(VectorZ.Reverse(), s.Left);
 }
