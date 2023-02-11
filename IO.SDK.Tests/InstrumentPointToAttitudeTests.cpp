@@ -58,14 +58,10 @@ TEST(InstrumentPointingTotAttitude, GetOrientation)
 
     ASSERT_DOUBLE_EQ(0.0, pointingManeuver.GetDeltaV().Magnitude());
 //    ASSERT_EQ(IO::SDK::Frames::InertialFrames::GetICRF(), orientation.GetFrame());
-    auto newVector = instrument->GetBoresight(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::Time::TDB("2021-01-01T13:00:02"));
-    auto towardMoon = s.ReadEphemeris(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::AberrationsEnum::None, IO::SDK::Time::TDB("2021-01-01T13:00:00"),
-                                      *moon).GetPosition().Reverse().Normalize();
+    auto pointingVector = instrument->GetBoresight(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::Time::TDB("2021-01-01T13:00:00"));
 
-    ASSERT_EQ(IO::SDK::Math::Vector3D(-0.64548856202739258, 0.67028532443717903, 0.36614494833208727), newVector);
+    ASSERT_EQ(IO::SDK::Math::Vector3D(-0.64548856398372612, 0.67028530475051784, 0.36614494944179204), pointingVector);
 
-    //Must implement instrument test
-    ASSERT_TRUE(false);
 }
 
 TEST(InstrumentPointingTotAttitude, GetOrientationNotBeforeEpoch)

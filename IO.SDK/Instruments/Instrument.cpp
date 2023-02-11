@@ -203,9 +203,9 @@ IO::SDK::Math::Vector3D IO::SDK::Instruments::Instrument::GetBoresight(const IO:
         throw IO::SDK::Exception::SDKException("Insufficient data to compute boresight in frame at give epoch");
     }
 
-    SpiceDouble localBoresight[3] = {0.0, 1.0, 0.0};
+    auto boresightInFrame = GetBoresightInSpacecraftFrame().Normalize();
+    SpiceDouble localBoresight[3] = {boresightInFrame.GetX(), boresightInFrame.GetY(), boresightInFrame.GetZ()};
     SpiceDouble boresight[3];
-
     mxv_c(cmat, localBoresight, boresight);
     return IO::SDK::Math::Vector3D(boresight[0], boresight[1], boresight[2]);
 }

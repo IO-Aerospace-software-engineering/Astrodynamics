@@ -551,7 +551,7 @@ TEST(Instrument, GetBoresightAtEpoch)
     ASSERT_EQ(IO::SDK::Math::Vector3D(0.0, 0.0, 1.0), results);
 }
 
-TEST(Instrument, GetBoresightInSpaecraftFrame)
+TEST(Instrument, GetBoresightInSpacecraftFrame)
 {
     std::string filepath = std::string(IO::SDK::Parameters::KernelsPath) + "/SC17_MIS1SCN1/Instruments/CAMERA200/Frames/CAMERA200.tf";
     if (std::filesystem::exists(filepath)) {
