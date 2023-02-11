@@ -211,12 +211,12 @@ TEST(Spacecraft, Orientation) {
                                                                                                                                              IO::SDK::Frames::InertialFrames::GetICRF());
     IO::SDK::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, "ms01", std::move(orbitalParams)};
 
-    ASSERT_EQ(VectorY, s.Front);
-    ASSERT_EQ(VectorZ, s.Top);
-    ASSERT_EQ(VectorX, s.Right);
-    ASSERT_EQ(VectorY.Reverse(), s.Back);
-    ASSERT_EQ(VectorZ.Reverse(), s.Bottom);
-    ASSERT_EQ(VectorX.Reverse(), s.Left);
+    ASSERT_EQ(IO::SDK::Tests::VectorY, s.Front);
+    ASSERT_EQ(IO::SDK::Tests::VectorZ, s.Top);
+    ASSERT_EQ(IO::SDK::Tests::VectorX, s.Right);
+    ASSERT_EQ(IO::SDK::Tests::VectorY.Reverse(), s.Back);
+    ASSERT_EQ(IO::SDK::Tests::VectorZ.Reverse(), s.Bottom);
+    ASSERT_EQ(IO::SDK::Tests::VectorX.Reverse(), s.Left);
 }
 
 
@@ -228,12 +228,12 @@ TEST(Spacecraft, Orientation2) {
                                                                                                                                              IO::SDK::Math::Vector3D(4.0, 5.0, 6.0),
                                                                                                                                              IO::SDK::Time::TDB(100.0s),
                                                                                                                                              IO::SDK::Frames::InertialFrames::GetICRF());
-    IO::SDK::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, "ms01", std::move(orbitalParams), VectorX, VectorY};
+    IO::SDK::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, "ms01", std::move(orbitalParams), IO::SDK::Tests::VectorX, IO::SDK::Tests::VectorY};
 
-    ASSERT_EQ(VectorX, s.Front);
-    ASSERT_EQ(VectorY, s.Top);
-    ASSERT_EQ(VectorZ, s.Right);
-    ASSERT_EQ(VectorX.Reverse(), s.Back);
-    ASSERT_EQ(VectorY.Reverse(), s.Bottom);
-    ASSERT_EQ(VectorZ.Reverse(), s.Left);
+    ASSERT_EQ(IO::SDK::Tests::VectorX, s.Front);
+    ASSERT_EQ(IO::SDK::Tests::VectorY, s.Top);
+    ASSERT_EQ(IO::SDK::Tests::VectorZ, s.Right);
+    ASSERT_EQ(IO::SDK::Tests::VectorX.Reverse(), s.Back);
+    ASSERT_EQ(IO::SDK::Tests::VectorY.Reverse(), s.Bottom);
+    ASSERT_EQ(IO::SDK::Tests::VectorZ.Reverse(), s.Left);
 }
