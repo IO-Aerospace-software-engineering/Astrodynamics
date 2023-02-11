@@ -212,7 +212,6 @@ IO::SDK::Math::Vector3D IO::SDK::Instruments::Instrument::GetBoresight(const IO:
 
 IO::SDK::Math::Vector3D IO::SDK::Instruments::Instrument::GetBoresightInSpacecraftFrame() const
 {
-
     auto q = IO::SDK::Math::Quaternion(m_orientation.Normalize(), m_orientation.Magnitude());
     return m_boresight.Rotate(q);
 }

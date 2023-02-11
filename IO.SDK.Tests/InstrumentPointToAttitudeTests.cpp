@@ -110,5 +110,5 @@ TEST(InstrumentPointingTotAttitude, GetOrientationNotBeforeEpoch)
 //    ASSERT_EQ(IO::SDK::Time::TimeSpan(20s).GetSeconds().count(), s.GetOrientationsCoverageWindow().GetLength().GetSeconds().count());
 //
 //    //Must implement instrument test
-//    ASSERT_TRUE(false);
+    ASSERT_TRUE(false);
 }
