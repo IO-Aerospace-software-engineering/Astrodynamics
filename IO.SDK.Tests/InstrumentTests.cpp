@@ -573,10 +573,6 @@ TEST(Instrument, GetBoresightInSpaecraftFrame)
 
     s.AddCircularFOVInstrument(200, "Camera200", orientation, boresight, fovvector, 1.5);
     const IO::SDK::Instruments::Instrument *instrument{s.GetInstrument(200)};
-    double mat[3][3];
-    eul2m_c(0.0, 0.0, 0.0, 1, 2, 3, mat);
-    double q[4];
-    m2q_c(mat, q);
     ASSERT_EQ(s.Top, instrument->GetBoresightInSpacecraftFrame());
 }
 

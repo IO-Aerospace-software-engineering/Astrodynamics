@@ -1,5 +1,5 @@
 /**
- * @file InstrumentAlignedToAttitude.h
+ * @file InstrumentPointingToAttitude.h
  * @author Sylvain Guillet (sylvain.guillet@live.com)
  * @brief 
  * @version 0.2
@@ -24,7 +24,7 @@
 
 namespace IO::SDK::Maneuvers::Attitudes
 {
-    class InstrumentAlignedToAttitude final : public IO::SDK::Maneuvers::ManeuverBase
+    class InstrumentPointingToAttitude final : public IO::SDK::Maneuvers::ManeuverBase
     {
     private:
         const IO::SDK::Body::Body *m_targetBody{nullptr};
@@ -56,8 +56,8 @@ namespace IO::SDK::Maneuvers::Attitudes
          * @instrument instrument
          * @param targetBody
          */
-        InstrumentAlignedToAttitude(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator,
-                                    const IO::SDK::Time::TimeSpan &attitudeHoldDuration, const IO::SDK::Instruments::Instrument &instrument, const IO::SDK::Body::Body &targetBody);
+        InstrumentPointingToAttitude(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator,
+                                     const IO::SDK::Time::TimeSpan &attitudeHoldDuration, const IO::SDK::Instruments::Instrument &instrument, const IO::SDK::Body::Body &targetBody);
 
         /**
          * Construct a new instrument aligned to object
@@ -67,9 +67,9 @@ namespace IO::SDK::Maneuvers::Attitudes
          * @instrument instrument
          * @param targetSite
          */
-        InstrumentAlignedToAttitude(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator,
-                                    const IO::SDK::Time::TimeSpan &attitudeHoldDuration, const IO::SDK::Instruments::Instrument &instrument,
-                                    const IO::SDK::Sites::Site &targetSite);
+        InstrumentPointingToAttitude(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator,
+                                     const IO::SDK::Time::TimeSpan &attitudeHoldDuration, const IO::SDK::Instruments::Instrument &instrument,
+                                     const IO::SDK::Sites::Site &targetSite);
 
         /**
          * Construct a new instrument aligned to object
@@ -80,9 +80,9 @@ namespace IO::SDK::Maneuvers::Attitudes
          * @instrument instrument
          * @param targetBody 
          */
-        InstrumentAlignedToAttitude(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator,
-                                    const IO::SDK::Time::TDB &minimumEpoch, const IO::SDK::Time::TimeSpan &attitudeHoldDuration, const IO::SDK::Instruments::Instrument &instrument,
-                                    const IO::SDK::Body::Body &targetBody);
+        InstrumentPointingToAttitude(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator,
+                                     const IO::SDK::Time::TDB &minimumEpoch, const IO::SDK::Time::TimeSpan &attitudeHoldDuration, const IO::SDK::Instruments::Instrument &instrument,
+                                     const IO::SDK::Body::Body &targetBody);
 
         /**
          * Construct a new instrument aligned to object
@@ -93,9 +93,9 @@ namespace IO::SDK::Maneuvers::Attitudes
          * @instrument instrument
          * @param targetSite
          */
-        InstrumentAlignedToAttitude(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator,
-                                    const IO::SDK::Time::TDB &minimumEpoch, const IO::SDK::Time::TimeSpan &attitudeHoldDuration, const IO::SDK::Instruments::Instrument &instrument,
-                                    const IO::SDK::Sites::Site &targetSite);
+        InstrumentPointingToAttitude(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator,
+                                     const IO::SDK::Time::TDB &minimumEpoch, const IO::SDK::Time::TimeSpan &attitudeHoldDuration, const IO::SDK::Instruments::Instrument &instrument,
+                                     const IO::SDK::Sites::Site &targetSite);
 
         /**
          * @brief Evaluate if maneuver can occurs

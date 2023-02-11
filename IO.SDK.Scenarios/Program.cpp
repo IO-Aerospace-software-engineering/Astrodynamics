@@ -201,39 +201,39 @@ int main()
     auto fovWindows = spacecraft.GetInstrument(600)->FindWindowsWhereInFieldOfView(IO::SDK::Time::Window<IO::SDK::Time::TDB>(startDatePropagator, spacecraft.GetOrientationsCoverageWindow().GetEndDate()), *moon, IO::SDK::Time::TimeSpan(300s), IO::SDK::AberrationsEnum::LT);
 
     //From here Only for data vizualization
-    auto epoch = finalApogeeChanging.GetManeuverWindow()->GetEndDate();
-
-    auto ephemeris = spacecraft.ReadEphemeris(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::AberrationsEnum::None, epoch, *earth);
-    auto e = targetOrbit->GetStateVector().GetEccentricity();
-    auto ti = targetOrbit->GetInclination() * IO::SDK::Constants::RAD_DEG;
-    auto si = ephemeris.GetInclination() * IO::SDK::Constants::RAD_DEG;
-
-    auto tom = targetOrbit->GetRightAscendingNodeLongitude() * IO::SDK::Constants::RAD_DEG;
-    auto som = ephemeris.GetRightAscendingNodeLongitude() * IO::SDK::Constants::RAD_DEG;
-
-    auto tecc = targetOrbit->GetEccentricity();
-    auto secc = ephemeris.GetEccentricity();
-
-    auto tw = targetOrbit->GetStateVector(epoch).GetPeriapsisArgument() * IO::SDK::Constants::RAD_DEG;
-    auto sw = ephemeris.GetPeriapsisArgument() * IO::SDK::Constants::RAD_DEG;
-
-    auto tq = targetOrbit->GetStateVector(epoch).GetPerigeeVector().Magnitude();
-    auto sq = ephemeris.GetPerigeeVector().Magnitude();
-
-    auto tm = targetOrbit->GetStateVector(epoch).GetMeanLongitude() * IO::SDK::Constants::RAD_DEG;
-    auto sm = ephemeris.GetMeanLongitude() * IO::SDK::Constants::RAD_DEG;
-
-    auto tv = targetOrbit->GetStateVector(epoch).GetTrueLongitude() * IO::SDK::Constants::RAD_DEG;
-    auto sv = ephemeris.GetTrueLongitude() * IO::SDK::Constants::RAD_DEG;
-
-    auto tp = targetOrbit->GetStateVector(epoch).GetPeriod().GetHours().count();
-    auto sp = ephemeris.GetPeriod().GetHours().count();
-
-    auto ta = targetOrbit->GetStateVector(epoch).GetSemiMajorAxis();
-    auto sa = ephemeris.GetSemiMajorAxis();
-
-    double dpos = (ephemeris.GetPosition() - targetOrbit->GetStateVector(epoch).GetPosition()).Magnitude();
-    double period = ephemeris.GetPeriod().GetHours().count();
+//    auto epoch = finalApogeeChanging.GetManeuverWindow()->GetEndDate();
+//
+//    auto ephemeris = spacecraft.ReadEphemeris(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::AberrationsEnum::None, epoch, *earth);
+//    auto e = targetOrbit->GetStateVector().GetEccentricity();
+//    auto ti = targetOrbit->GetInclination() * IO::SDK::Constants::RAD_DEG;
+//    auto si = ephemeris.GetInclination() * IO::SDK::Constants::RAD_DEG;
+//
+//    auto tom = targetOrbit->GetRightAscendingNodeLongitude() * IO::SDK::Constants::RAD_DEG;
+//    auto som = ephemeris.GetRightAscendingNodeLongitude() * IO::SDK::Constants::RAD_DEG;
+//
+//    auto tecc = targetOrbit->GetEccentricity();
+//    auto secc = ephemeris.GetEccentricity();
+//
+//    auto tw = targetOrbit->GetStateVector(epoch).GetPeriapsisArgument() * IO::SDK::Constants::RAD_DEG;
+//    auto sw = ephemeris.GetPeriapsisArgument() * IO::SDK::Constants::RAD_DEG;
+//
+//    auto tq = targetOrbit->GetStateVector(epoch).GetPerigeeVector().Magnitude();
+//    auto sq = ephemeris.GetPerigeeVector().Magnitude();
+//
+//    auto tm = targetOrbit->GetStateVector(epoch).GetMeanLongitude() * IO::SDK::Constants::RAD_DEG;
+//    auto sm = ephemeris.GetMeanLongitude() * IO::SDK::Constants::RAD_DEG;
+//
+//    auto tv = targetOrbit->GetStateVector(epoch).GetTrueLongitude() * IO::SDK::Constants::RAD_DEG;
+//    auto sv = ephemeris.GetTrueLongitude() * IO::SDK::Constants::RAD_DEG;
+//
+//    auto tp = targetOrbit->GetStateVector(epoch).GetPeriod().GetHours().count();
+//    auto sp = ephemeris.GetPeriod().GetHours().count();
+//
+//    auto ta = targetOrbit->GetStateVector(epoch).GetSemiMajorAxis();
+//    auto sa = ephemeris.GetSemiMajorAxis();
+//
+//    double dpos = (ephemeris.GetPosition() - targetOrbit->GetStateVector(epoch).GetPosition()).Magnitude();
+//    double period = ephemeris.GetPeriod().GetHours().count();
 
     DisplayManeuverSummary(&planeAlignment, "Plane alignment");
     DisplayManeuverSummary(&apsidalAlignment, "Aspidal alignment");
