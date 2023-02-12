@@ -16,8 +16,9 @@
 
 using namespace std::chrono_literals;
 
-IO::SDK::Propagators::Propagator::Propagator(const IO::SDK::Body::Spacecraft::Spacecraft &spacecraft, IO::SDK::Integrators::IntegratorBase &integrator, const IO::SDK::Time::Window<IO::SDK::Time::TDB> &window)
-    : m_spacecraft{spacecraft}, m_integrator{integrator}, m_window{window}
+IO::SDK::Propagators::Propagator::Propagator(const IO::SDK::Body::Spacecraft::Spacecraft &spacecraft, IO::SDK::Integrators::IntegratorBase &integrator,
+                                             const IO::SDK::Time::Window<IO::SDK::Time::TDB> &window)
+        : m_spacecraft{spacecraft}, m_integrator{integrator}, m_window{window}
 {
     m_StateOrientations.push_back(std::vector<IO::SDK::OrbitalParameters::StateOrientation>{});
 }
@@ -34,8 +35,11 @@ void IO::SDK::Propagators::Propagator::Propagate()
     m_stateVectors.push_back(stateVector);
 
     // Initial alignment, spacecraft back points toward the earth
-    IO::SDK::OrbitalParameters::StateOrientation attitude(m_spacecraft.Front.To(stateVector.GetPosition().Normalize()), IO::SDK::Math::Vector3D(0.0, 0.0, 0.0), stateVector.GetEpoch(), stateVector.GetFrame());
+    IO::SDK::OrbitalParameters::StateOrientation attitude(m_spacecraft.Front.To(stateVector.GetPosition().Normalize()), IO::SDK::Math::Vector3D(0.0, 0.0, 0.0),
+                                                          stateVector.GetEpoch(), stateVector.GetFrame());
     AddStateOrientation(attitude);
+    m_spacecraft.WriteOrientations(m_StateOrientations);
+    ClearStateOrientations();
 
     //Update spacecraft orbital parameters
     while (stateVector.GetEpoch() < m_window.GetEndDate())
@@ -131,4 +135,17 @@ const IO::SDK::OrbitalParameters::StateOrientation *IO::SDK::Propagators::Propag
     }
 
     return &m_StateOrientations.back().back();
+}
+
+const std::vector<std::vector<IO::SDK::OrbitalParameters::StateOrientation>> &IO::SDK::Propagators::Propagator::GetStateOrientations() const
+{
+    return m_StateOrientations;
+}
+
+void IO::SDK::Propagators::Propagator::ClearStateOrientations()
+{
+    for (auto so: m_StateOrientations)
+    {
+        so.clear();
+    }
 }
