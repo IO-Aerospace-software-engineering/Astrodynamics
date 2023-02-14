@@ -109,6 +109,8 @@ namespace IO::SDK::Kernels
 		 */
 		double GetSecondsPerTick() const;
 
+
+
 		friend class IO::SDK::Body::Spacecraft::Spacecraft;
 	};
 }

@@ -8,7 +8,7 @@ This project has been initiated to make life easier for people who don't know cs
 The goal of this project is to :
 - Allow object oriented development and provide high level objects
 - Abstract kernels and frames files management
-- Provides a body integrator
+- Provide a body integrator
 - Simulate spacecraft and impulsive maneuvers
 - Evaluate constraints like occultations, body in instrument field of view, ...
     

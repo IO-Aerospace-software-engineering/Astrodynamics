@@ -12,33 +12,40 @@
 #include <limits>
 #include <chrono>
 #include <ManeuverBase.h>
+#include <TimeSpan.h>
+
+using namespace std::literals::chrono_literals;
 
 IO::SDK::Maneuvers::ManeuverBase::ManeuverBase(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator)
-    : m_engines{engines}, m_spacecraft{engines[0].GetFuelTank().GetSpacecraft()}, m_propagator{propagator}
+        : m_engines{engines}, m_spacecraft{engines[0].GetFuelTank().GetSpacecraft()}, m_propagator{propagator}
 {
-    for (auto &&engine : m_engines)
+    for (auto &&engine: m_engines)
     {
         m_fuelTanks.insert(&engine.GetFuelTank());
     }
 
     //Create dynamics fuel tank for spread thrust compute
-    for (auto &&engine : m_engines)
+    for (auto &&engine: m_engines)
     {
         m_dynamicFuelTanks[&engine.GetFuelTank()].EquivalentFuelFlow += engine.GetFuelFlow();
     }
 }
 
-IO::SDK::Maneuvers::ManeuverBase::ManeuverBase(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator, const IO::SDK::Time::TimeSpan &attitudeHoldDuration) : ManeuverBase(engines, propagator)
+IO::SDK::Maneuvers::ManeuverBase::ManeuverBase(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator,
+                                               const IO::SDK::Time::TimeSpan &attitudeHoldDuration) : ManeuverBase(engines, propagator)
 {
     const_cast<IO::SDK::Time::TimeSpan &>(m_attitudeHoldDuration) = attitudeHoldDuration;
 }
 
-IO::SDK::Maneuvers::ManeuverBase::ManeuverBase(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator, const IO::SDK::Time::TDB &minimumEpoch) : ManeuverBase(engines, propagator)
+IO::SDK::Maneuvers::ManeuverBase::ManeuverBase(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator,
+                                               const IO::SDK::Time::TDB &minimumEpoch) : ManeuverBase(engines, propagator)
 {
     m_minimumEpoch = std::make_unique<IO::SDK::Time::TDB>(minimumEpoch);
 }
 
-IO::SDK::Maneuvers::ManeuverBase::ManeuverBase(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator, const IO::SDK::Time::TDB &minimumEpoch, const IO::SDK::Time::TimeSpan &attitudeHoldDuration) : ManeuverBase(engines, propagator, minimumEpoch)
+IO::SDK::Maneuvers::ManeuverBase::ManeuverBase(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator,
+                                               const IO::SDK::Time::TDB &minimumEpoch, const IO::SDK::Time::TimeSpan &attitudeHoldDuration) : ManeuverBase(engines, propagator,
+                                                                                                                                                           minimumEpoch)
 {
     const_cast<IO::SDK::Time::TimeSpan &>(m_attitudeHoldDuration) = attitudeHoldDuration;
 }
@@ -52,8 +59,7 @@ void IO::SDK::Maneuvers::ManeuverBase::Handle(const IO::SDK::Time::TDB &notBefor
         {
             m_minimumEpoch.reset(new IO::SDK::Time::TDB(notBeforeEpoch));
         }
-    }
-    else
+    } else
     {
         //We initialize minimum epoch
         m_minimumEpoch = std::make_unique<IO::SDK::Time::TDB>(notBeforeEpoch);
@@ -93,8 +99,7 @@ IO::SDK::Maneuvers::ManeuverResult IO::SDK::Maneuvers::ManeuverBase::TryExecute(
         {
             //Maneuver is complete, next maneuver will be handled by propagator and can't be executed before end of this maneuver
             m_nextManeuver->Handle(m_maneuverWindow->GetEndDate());
-        }
-        else
+        } else
         {
             m_propagator.SetStandbyManeuver(nullptr);
         }
@@ -143,8 +148,7 @@ void IO::SDK::Maneuvers::ManeuverBase::ExecuteAt(const IO::SDK::OrbitalParameter
     if (m_attitudeHoldDuration > m_thrustWindow->GetLength())
     {
         m_attitudeWindow = std::make_unique<IO::SDK::Time::Window<IO::SDK::Time::TDB>>(m_thrustWindow->GetStartDate(), m_attitudeHoldDuration);
-    }
-    else
+    } else
     {
         m_attitudeWindow = std::make_unique<IO::SDK::Time::Window<IO::SDK::Time::TDB>>(m_thrustWindow->GetStartDate(), m_thrustWindow->GetEndDate());
     }
@@ -155,7 +159,8 @@ void IO::SDK::Maneuvers::ManeuverBase::ExecuteAt(const IO::SDK::OrbitalParameter
     }
 
     //Set maneuver window
-    m_maneuverWindow = std::make_unique<IO::SDK::Time::Window<IO::SDK::Time::TDB>>(m_attitudeWindow->Merge(*m_thrustWindow).Merge(IO::SDK::Time::Window(maneuverPoint.GetEpoch(), m_maneuverHoldDuration)));
+    m_maneuverWindow = std::make_unique<IO::SDK::Time::Window<IO::SDK::Time::TDB>>(
+            m_attitudeWindow->Merge(*m_thrustWindow).Merge(IO::SDK::Time::Window(maneuverPoint.GetEpoch(), m_maneuverHoldDuration)));
 
     //Find position at maneuver begin
     //Get lower value nearest maneuver begin epoch
@@ -166,33 +171,54 @@ void IO::SDK::Maneuvers::ManeuverBase::ExecuteAt(const IO::SDK::OrbitalParameter
         nearestLowerState = &maneuverPoint;
     }
 
-    //propagate from nearest value up to begin epoch
+    //propagate from the nearest value up to begin epoch
     auto beginState = nearestLowerState->GetStateVector(m_attitudeWindow->GetStartDate());
 
-    //Compute oriention at begining
-    auto orientationBegining = ComputeOrientation(beginState);
+    //Compute orientation at beginning
+    auto orientationBeginning = ComputeOrientation(beginState);
 
     //write orientation
-    m_propagator.AddStateOrientation(orientationBegining);
+    m_propagator.AddStateOrientation(orientationBeginning);
 
     //Find position at maneuver end
     //Add deltaV vector to maneuver point
-    IO::SDK::OrbitalParameters::StateVector newManeuverState(maneuverPoint.GetCenterOfMotion(), maneuverPoint.GetStateVector().GetPosition(), maneuverPoint.GetStateVector().GetVelocity() + *m_deltaV, maneuverPoint.GetEpoch(), maneuverPoint.GetFrame());
+    IO::SDK::OrbitalParameters::StateVector newManeuverState(maneuverPoint.GetCenterOfMotion(), maneuverPoint.GetStateVector().GetPosition(),
+                                                             maneuverPoint.GetStateVector().GetVelocity() + *m_deltaV, maneuverPoint.GetEpoch(), maneuverPoint.GetFrame());
 
     //Write Data in propagator
-    //Erase unecessary vector states
+    //Erase unnecessary vector states
     m_propagator.EraseDataFromEpochToEnd(beginState.GetEpoch());
 
     //Write vector states at maneuver begin and end;
     m_propagator.AddStateVector(beginState);
 
-    //Write end maneuver data only if is not ponctual maneuver
+    //Write end maneuver data only if is not punctual maneuver
     if (m_attitudeWindow->GetLength().GetSeconds().count() > 0.0)
     {
+        const double stepSize{30};
+        //Compute attitude until the end every 5 minutes
+        auto remainingTime = m_attitudeWindow->GetEndDate() - maneuverPoint.GetEpoch();
+        int interval = remainingTime.GetSeconds().count() / stepSize;
+        for (int i = 1; i <= interval; ++i)
+        {
+            IO::SDK::Time::TimeSpan ts(std::chrono::duration<double>(i * stepSize));
+            //Propagate from new maneuver point up to end maneuver epoch
+            auto intermediateState = newManeuverState.GetStateVector(maneuverPoint.GetEpoch().Add(ts));
+
+            // Compute orientation at end
+            auto intermediateOrientation = ComputeOrientation(intermediateState);
+
+            //Write orientation at end
+            m_propagator.AddStateOrientation(intermediateOrientation);
+
+            //Add state vector at end
+            m_propagator.AddStateVector(intermediateState);
+        }
+
         //Propagate from new maneuver point up to end maneuver epoch
         auto endState = newManeuverState.GetStateVector(m_attitudeWindow->GetEndDate());
 
-        // Compute oriention at end
+        // Compute orientation at end
         auto orientationEnd = ComputeOrientation(endState);
 
         //Write orientation at end
@@ -241,7 +267,8 @@ void IO::SDK::Maneuvers::ManeuverBase::ManeuverBase::SpreadThrust()
     double currentAvgISP{};
 
     //Get the remaining thrust duration
-    IO::SDK::Time::TimeSpan remainingThrustDuration{IO::SDK::Body::Spacecraft::Engine::ComputeDeltaT(GetRemainingAvgISP(), m_spacecraft.GetMass(), GetRemainingAvgFuelFlow(), m_deltaV->Magnitude())};
+    IO::SDK::Time::TimeSpan remainingThrustDuration{
+            IO::SDK::Body::Spacecraft::Engine::ComputeDeltaT(GetRemainingAvgISP(), m_spacecraft.GetMass(), GetRemainingAvgFuelFlow(), m_deltaV->Magnitude())};
 
     //Compute spread thrust step by step
     //No analytical solution seems to exist
@@ -270,7 +297,8 @@ void IO::SDK::Maneuvers::ManeuverBase::ManeuverBase::SpreadThrust()
             cumulatedDeltaV += IO::SDK::Body::Spacecraft::Engine::ComputeDeltaV(currentAvgISP, masseAfterStepBurn + burnedFuel, masseAfterStepBurn);
 
             //We compute remaining thrust duration for the next step
-            remainingThrustDuration = IO::SDK::Body::Spacecraft::Engine::ComputeDeltaT(GetRemainingAvgISP(), masseAfterStepBurn, GetRemainingAvgFuelFlow(), m_deltaV->Magnitude() - cumulatedDeltaV);
+            remainingThrustDuration = IO::SDK::Body::Spacecraft::Engine::ComputeDeltaT(GetRemainingAvgISP(), masseAfterStepBurn, GetRemainingAvgFuelFlow(),
+                                                                                       m_deltaV->Magnitude() - cumulatedDeltaV);
 
             continue;
         }
@@ -288,7 +316,7 @@ double IO::SDK::Maneuvers::ManeuverBase::GetRemainingAvgFuelFlow()
 {
     double res{};
 
-    for (auto &&engine : m_engines)
+    for (auto &&engine: m_engines)
     {
         if (!engine.GetFuelTank().IsEmpty())
         {
@@ -302,7 +330,7 @@ double IO::SDK::Maneuvers::ManeuverBase::GetRemainingAvgFuelFlow()
 double IO::SDK::Maneuvers::ManeuverBase::GetRemainingAvgISP()
 {
     double thrust{};
-    for (const auto &engine : m_engines)
+    for (const auto &engine: m_engines)
     {
         if (!engine.GetFuelTank().IsEmpty())
         {
@@ -317,7 +345,7 @@ IO::SDK::Time::TimeSpan IO::SDK::Maneuvers::ManeuverBase::GetMinimumRemainingThr
 {
     IO::SDK::Time::TimeSpan minValue{std::chrono::duration<double>(std::numeric_limits<double>::max())};
 
-    for (auto &&tank : m_dynamicFuelTanks)
+    for (auto &&tank: m_dynamicFuelTanks)
     {
         if (!tank.first->IsEmpty())
         {
@@ -334,7 +362,7 @@ IO::SDK::Time::TimeSpan IO::SDK::Maneuvers::ManeuverBase::GetMinimumRemainingThr
 double IO::SDK::Maneuvers::ManeuverBase::Burn(const IO::SDK::Time::TimeSpan &duration)
 {
     double totalFuelBurned{};
-    for (auto &&engine : m_engines)
+    for (auto &&engine: m_engines)
     {
         if (!engine.GetFuelTank().IsEmpty())
         {

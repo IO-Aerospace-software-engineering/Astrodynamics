@@ -252,7 +252,7 @@ TEST(Propagator, PropagatorVsKepler2)
     //  VX=-2.976558008982104E+01 VY=-5.075339952746913E+00 VZ=-2.200929976753953E+00
     auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
     double a = 6800000.0;
-    auto v = std::sqrt(earth->GetMu() / a);
+    [[maybe_unused]] auto v = std::sqrt(earth->GetMu() / a);
 
     //  2459215.500000000 = A.D. 2021-Jan-01 00:00:00.0000 TDB [del_T=     69.183909 s]
     //  X =-2.068864826237993E+05 Y = 2.891146390982051E+05 Z = 1.515746884380044E+05

@@ -15,14 +15,20 @@
 
 using namespace std::chrono_literals;
 
-TEST(TowardObjectAttitude, GetOrientation)
-{
+TEST(TowardObjectAttitude, GetOrientation) {
 
     auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10, "sun");
     auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth", sun);
     auto moon = std::make_shared<IO::SDK::Body::CelestialBody>(301, "moon", earth);
 
-    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams1 = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth, IO::SDK::Math::Vector3D(6678000.0, 0.0, 0.0), IO::SDK::Math::Vector3D(0.0, 7727.0, 0.0), IO::SDK::Time::TDB("2021-01-01T13:00:00"), IO::SDK::Frames::InertialFrames::GetICRF());
+    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams1 = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth,
+                                                                                                                                              IO::SDK::Math::Vector3D(6678000.0,
+                                                                                                                                                                      0.0, 0.0),
+                                                                                                                                              IO::SDK::Math::Vector3D(0.0, 7727.0,
+                                                                                                                                                                      0.0),
+                                                                                                                                              IO::SDK::Time::TDB(
+                                                                                                                                                      "2021-01-01T13:00:00"),
+                                                                                                                                              IO::SDK::Frames::InertialFrames::GetICRF());
 
     IO::SDK::Body::Spacecraft::Spacecraft s{-1, "maneuverTest", 1000.0, 3000.0, "mt01", std::move(orbitalParams1)};
 
@@ -38,7 +44,7 @@ TEST(TowardObjectAttitude, GetOrientation)
     std::vector<IO::SDK::Body::Spacecraft::Engine> engines;
     engines.push_back(*engine1);
 
-    IO::SDK::Maneuvers::Attitudes::TowardObjectAttitude toward(engines, prop,IO::SDK::Time::TimeSpan(10s), *moon);
+    IO::SDK::Maneuvers::Attitudes::TowardObjectAttitude toward(engines, prop, IO::SDK::Time::TimeSpan(10s), *moon);
     prop.SetStandbyManeuver(&toward);
 
     prop.Propagate();
@@ -48,17 +54,25 @@ TEST(TowardObjectAttitude, GetOrientation)
     ASSERT_DOUBLE_EQ(0.0, toward.GetDeltaV().Magnitude());
     ASSERT_EQ(IO::SDK::Frames::InertialFrames::GetICRF(), orientation.GetFrame());
     auto newVector = s.Front.Rotate(orientation.GetQuaternion());
-    ASSERT_EQ(IO::SDK::Math::Vector3D(-0.64548856202739258, 0.67028532443717903, 0.36614494833208727), newVector);
+    ASSERT_NEAR(-0.64548856202739258, newVector.GetX(), 1E-12);
+    ASSERT_NEAR(0.67028532443717903, newVector.GetY(), 1E-12);
+    ASSERT_NEAR(0.36614494833208738, newVector.GetZ(), 1E-12);
 }
 
-TEST(TowardObjectAttitude, GetOrientationNotBeforeEpoch)
-{
+TEST(TowardObjectAttitude, GetOrientationNotBeforeEpoch) {
 
     auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10, "sun");
     auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth", sun);
     auto moon = std::make_shared<IO::SDK::Body::CelestialBody>(301, "moon", earth);
 
-    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams1 = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth, IO::SDK::Math::Vector3D(6678000.0, 0.0, 0.0), IO::SDK::Math::Vector3D(0.0, 7727.0, 0.0), IO::SDK::Time::TDB("2021-01-01T13:00:00"), IO::SDK::Frames::InertialFrames::GetICRF());
+    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams1 = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth,
+                                                                                                                                              IO::SDK::Math::Vector3D(6678000.0,
+                                                                                                                                                                      0.0, 0.0),
+                                                                                                                                              IO::SDK::Math::Vector3D(0.0, 7727.0,
+                                                                                                                                                                      0.0),
+                                                                                                                                              IO::SDK::Time::TDB(
+                                                                                                                                                      "2021-01-01T13:00:00"),
+                                                                                                                                              IO::SDK::Frames::InertialFrames::GetICRF());
 
     IO::SDK::Body::Spacecraft::Spacecraft s{-1, "maneuverTest", 1000.0, 3000.0, "mt01", std::move(orbitalParams1)};
 
@@ -74,7 +88,7 @@ TEST(TowardObjectAttitude, GetOrientationNotBeforeEpoch)
     std::vector<IO::SDK::Body::Spacecraft::Engine> engines;
     engines.push_back(*engine1);
 
-    IO::SDK::Maneuvers::Attitudes::TowardObjectAttitude toward(engines, prop,IO::SDK::Time::TDB("2021-01-01T13:00:10"),IO::SDK::Time::TimeSpan(10s), *moon);
+    IO::SDK::Maneuvers::Attitudes::TowardObjectAttitude toward(engines, prop, IO::SDK::Time::TDB("2021-01-01T13:00:10"), IO::SDK::Time::TimeSpan(10s), *moon);
     prop.SetStandbyManeuver(&toward);
 
     prop.Propagate();
