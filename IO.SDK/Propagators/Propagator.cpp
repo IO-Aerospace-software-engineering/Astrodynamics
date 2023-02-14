@@ -38,8 +38,6 @@ void IO::SDK::Propagators::Propagator::Propagate()
     IO::SDK::OrbitalParameters::StateOrientation attitude(m_spacecraft.Front.To(stateVector.GetPosition().Normalize()), IO::SDK::Math::Vector3D(0.0, 0.0, 0.0),
                                                           stateVector.GetEpoch(), stateVector.GetFrame());
     AddStateOrientation(attitude);
-    m_spacecraft.WriteOrientations(m_StateOrientations);
-    ClearStateOrientations();
 
     //Update spacecraft orbital parameters
     while (stateVector.GetEpoch() < m_window.GetEndDate())

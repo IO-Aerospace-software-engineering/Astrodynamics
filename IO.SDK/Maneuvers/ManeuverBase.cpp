@@ -195,25 +195,25 @@ void IO::SDK::Maneuvers::ManeuverBase::ExecuteAt(const IO::SDK::OrbitalParameter
     //Write end maneuver data only if is not punctual maneuver
     if (m_attitudeWindow->GetLength().GetSeconds().count() > 0.0)
     {
-//        const double stepSize{30};
-//        //Compute attitude until the end every 5 minutes
-//        auto remainingTime = m_attitudeWindow->GetEndDate() - maneuverPoint.GetEpoch();
-//        int interval = remainingTime.GetSeconds().count() / stepSize;
-//        for (int i = 1; i <= interval; ++i)
-//        {
-//            IO::SDK::Time::TimeSpan ts(std::chrono::duration<double>(i * stepSize));
-//            //Propagate from new maneuver point up to end maneuver epoch
-//            auto intermediateState = newManeuverState.GetStateVector(maneuverPoint.GetEpoch().Add(ts));
-//
-//            // Compute orientation at end
-//            auto intermediateOrientation = ComputeOrientation(intermediateState);
-//
-//            //Write orientation at end
-//            m_propagator.AddStateOrientation(intermediateOrientation);
-//
-//            //Add state vector at end
-//            m_propagator.AddStateVector(intermediateState);
-//        }
+        const double stepSize{30};
+        //Compute attitude until the end every 5 minutes
+        auto remainingTime = m_attitudeWindow->GetEndDate() - maneuverPoint.GetEpoch();
+        int interval = remainingTime.GetSeconds().count() / stepSize;
+        for (int i = 1; i <= interval; ++i)
+        {
+            IO::SDK::Time::TimeSpan ts(std::chrono::duration<double>(i * stepSize));
+            //Propagate from new maneuver point up to end maneuver epoch
+            auto intermediateState = newManeuverState.GetStateVector(maneuverPoint.GetEpoch().Add(ts));
+
+            // Compute orientation at end
+            auto intermediateOrientation = ComputeOrientation(intermediateState);
+
+            //Write orientation at end
+            m_propagator.AddStateOrientation(intermediateOrientation);
+
+            //Add state vector at end
+            m_propagator.AddStateVector(intermediateState);
+        }
 
         //Propagate from new maneuver point up to end maneuver epoch
         auto endState = newManeuverState.GetStateVector(m_attitudeWindow->GetEndDate());

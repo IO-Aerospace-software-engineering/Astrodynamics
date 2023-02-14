@@ -16,8 +16,7 @@
 
 using namespace std::chrono_literals;
 
-TEST(InstrumentPointingTotAttitude, GetOrientation)
-{
+TEST(InstrumentPointingTotAttitude, GetOrientation) {
 
     auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10, "sun");
     auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth", sun);
@@ -57,12 +56,13 @@ TEST(InstrumentPointingTotAttitude, GetOrientation)
     ASSERT_DOUBLE_EQ(0.0, pointingManeuver.GetDeltaV().Magnitude());
     auto pointingVector = instrument->GetBoresight(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::Time::TDB("2021-01-01T13:00:00"));
 
-    ASSERT_EQ(IO::SDK::Math::Vector3D(-0.64548856398372612, 0.67028530475051784, 0.36614494944179204), pointingVector);
+    ASSERT_NEAR(-0.64548856398372612, pointingVector.GetX(), 1E-09);
+    ASSERT_NEAR(0.67028530475051784, pointingVector.GetY(), 1E-09);
+    ASSERT_NEAR(0.36614494944179204, pointingVector.GetZ(), 1E-09);
 
 }
 
-TEST(InstrumentPointingTotAttitude, GetOrientationNotBeforeEpoch)
-{
+TEST(InstrumentPointingTotAttitude, GetOrientationNotBeforeEpoch) {
     auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10, "sun");
     auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth", sun);
     auto moon = std::make_shared<IO::SDK::Body::CelestialBody>(301, "moon", earth);
@@ -102,5 +102,7 @@ TEST(InstrumentPointingTotAttitude, GetOrientationNotBeforeEpoch)
     ASSERT_DOUBLE_EQ(0.0, pointingManeuver.GetDeltaV().Magnitude());
     auto pointingVector = instrument->GetBoresight(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::Time::TDB("2021-01-01T13:00:00"));
 
-    ASSERT_EQ(IO::SDK::Math::Vector3D(-0.64548856398372612, 0.67028530475051784, 0.36614494944179204), pointingVector);
+    ASSERT_NEAR(-0.64548856398372612, pointingVector.GetX(), 1E-09);
+    ASSERT_NEAR(0.67028530475051784, pointingVector.GetY(), 1E-09);
+    ASSERT_NEAR(0.36614494944179204, pointingVector.GetZ(), 1E-09);
 }
