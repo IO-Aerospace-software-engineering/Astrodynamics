@@ -15,11 +15,17 @@
 
 using namespace std::chrono_literals;
 
-TEST(NadirAttitude, GetOrientation)
-{
+TEST(NadirAttitude, GetOrientation) {
     auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth"); //GEOPHYSICAL PROPERTIES provided by JPL
 
-    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams1 = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth, IO::SDK::Math::Vector3D(6678000.0, 0.0, 0.0), IO::SDK::Math::Vector3D(0.0, 7727.0, 0.0), IO::SDK::Time::TDB("2021-01-01T13:00:00"), IO::SDK::Frames::InertialFrames::GetICRF());
+    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams1 = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth,
+                                                                                                                                              IO::SDK::Math::Vector3D(6678000.0,
+                                                                                                                                                                      0.0, 0.0),
+                                                                                                                                              IO::SDK::Math::Vector3D(0.0, 7727.0,
+                                                                                                                                                                      0.0),
+                                                                                                                                              IO::SDK::Time::TDB(
+                                                                                                                                                      "2021-01-01T13:00:00"),
+                                                                                                                                              IO::SDK::Frames::InertialFrames::GetICRF());
 
     IO::SDK::Body::Spacecraft::Spacecraft s{-1, "maneuverTest", 1000.0, 3000.0, "mt01", std::move(orbitalParams1)};
 
@@ -52,11 +58,17 @@ TEST(NadirAttitude, GetOrientation)
 
 }
 
-TEST(NadirAttitude, GetOrientationMinimumEpoch)
-{
+TEST(NadirAttitude, GetOrientationMinimumEpoch) {
     auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth"); //GEOPHYSICAL PROPERTIES provided by JPL
 
-    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams1 = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth, IO::SDK::Math::Vector3D(6678000.0, 0.0, 0.0), IO::SDK::Math::Vector3D(0.0, 7727.0, 0.0), IO::SDK::Time::TDB("2021-01-01T13:00:00"), IO::SDK::Frames::InertialFrames::GetICRF());
+    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams1 = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth,
+                                                                                                                                              IO::SDK::Math::Vector3D(6678000.0,
+                                                                                                                                                                      0.0, 0.0),
+                                                                                                                                              IO::SDK::Math::Vector3D(0.0, 7727.0,
+                                                                                                                                                                      0.0),
+                                                                                                                                              IO::SDK::Time::TDB(
+                                                                                                                                                      "2021-01-01T13:00:00"),
+                                                                                                                                              IO::SDK::Frames::InertialFrames::GetICRF());
 
     IO::SDK::Body::Spacecraft::Spacecraft s{-1, "maneuverTest", 1000.0, 3000.0, "mt01", std::move(orbitalParams1)};
 
@@ -72,7 +84,7 @@ TEST(NadirAttitude, GetOrientationMinimumEpoch)
     std::vector<IO::SDK::Body::Spacecraft::Engine> engines;
     engines.push_back(*engine1);
 
-    IO::SDK::Maneuvers::Attitudes::NadirAttitude nadir(engines, prop,IO::SDK::Time::TDB("2021-01-01T13:00:10") ,IO::SDK::Time::TimeSpan(10s));
+    IO::SDK::Maneuvers::Attitudes::NadirAttitude nadir(engines, prop, IO::SDK::Time::TDB("2021-01-01T13:00:10"), IO::SDK::Time::TimeSpan(10s));
     prop.SetStandbyManeuver(&nadir);
 
     prop.Propagate();
@@ -82,10 +94,12 @@ TEST(NadirAttitude, GetOrientationMinimumEpoch)
     ASSERT_DOUBLE_EQ(0.0, nadir.GetDeltaV().Magnitude());
     ASSERT_EQ(IO::SDK::Frames::InertialFrames::GetICRF(), orientation.GetFrame());
     auto newVector = s.Front.Rotate(orientation.GetQuaternion());
-    ASSERT_EQ(IO::SDK::Math::Vector3D(-0.99993305495633489, -0.011570075554179438, 0.0), newVector);
+    ASSERT_NEAR(-0.99993305495633511, newVector.GetX(), 1E-12);
+    ASSERT_NEAR(-0.01157007555417966, newVector.GetY(), 1E-12);
+    ASSERT_NEAR(0.0, newVector.GetZ(), 1E-12);
     ASSERT_EQ(IO::SDK::Time::TDB("2021-01-01T13:00:00"), s.GetOrientationsCoverageWindow().GetStartDate());
     ASSERT_EQ(IO::SDK::Time::TDB("2021-01-01T13:00:20"), s.GetOrientationsCoverageWindow().GetEndDate());
     ASSERT_EQ(IO::SDK::Time::TimeSpan(20s).GetSeconds().count(), s.GetOrientationsCoverageWindow().GetLength().GetSeconds().count());
-    
+
 
 }

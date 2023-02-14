@@ -15,8 +15,6 @@
 #include <string>
 #include <vector>
 
-#include <SpiceUsr.h>
-
 #include <Vector3D.h>
 #include <Spacecraft.h>
 #include <FOVShapes.h>
@@ -64,29 +62,29 @@ namespace IO::SDK::Instruments
 
 		/**
 		 * @brief Construct a new circular instrument object
-		 * 
-		 * @param spacecraft 
-		 * @param id 
-		 * @param name 
-		 * @param orientation 
-		 * @param boresight 
-		 * @param fovRefVector 
-		 * @param fovAngle 
+		 *
+		 * @param spacecraft
+		 * @param id
+		 * @param name
+		 * @param orientation
+		 * @param boresight
+		 * @param fovRefVector
+		 * @param fovAngle
 		 */
 		Instrument(const IO::SDK::Body::Spacecraft::Spacecraft &spacecraft, const unsigned short id, const std::string &name, const IO::SDK::Math::Vector3D &orientation, const IO::SDK::Math::Vector3D &boresight, const IO::SDK::Math::Vector3D &fovRefVector, const double fovAngle);
 
 		/**
 		 * @brief Construct a new rectangular or elliptical instrument object
-		 * 
-		 * @param spacecraft 
-		 * @param id 
-		 * @param name 
-		 * @param orientation 
-		 * @param fovShape 
-		 * @param boresight 
-		 * @param fovRefVector 
-		 * @param fovAngle 
-		 * @param crossAngle 
+		 *
+		 * @param spacecraft
+		 * @param id
+		 * @param name
+		 * @param orientation
+		 * @param fovShape
+		 * @param boresight
+		 * @param fovRefVector
+		 * @param fovAngle
+		 * @param crossAngle
 		 */
 		Instrument(const IO::SDK::Body::Spacecraft::Spacecraft &spacecraft, const unsigned short id, const std::string &name, const IO::SDK::Math::Vector3D &orientation, const IO::SDK::Instruments::FOVShapeEnum fovShape, const IO::SDK::Math::Vector3D &boresight, const IO::SDK::Math::Vector3D &fovRefVector, const double fovAngle, const double crossAngle);
 
@@ -95,70 +93,83 @@ namespace IO::SDK::Instruments
 
 		/**
 		 * @brief Get the Files Path object
-		 * 
-		 * @return std::string 
+		 *
+		 * @return std::string
 		 */
 		std::string GetFilesPath() const;
 
 		/**
 		 * @brief Get the Name object
-		 * 
-		 * @return std::string 
+		 *
+		 * @return std::string
 		 */
 		std::string GetName() const;
 
 		/**
 		 * @brief Get the Id object
-		 * 
-		 * @return int 
+		 *
+		 * @return int
 		 */
 		int GetId() const;
 
 		/**
 		 * @brief Get the Spacecraft object
-		 * 
-		 * @return const IO::SDK::Body::Spacecraft& 
+		 *
+		 * @return const IO::SDK::Body::Spacecraft&
 		 */
 		const IO::SDK::Body::Spacecraft::Spacecraft &GetSpacecraft() const;
 
 		/**
 		 * @brief Get the Frame object
-		 * 
-		 * @return const std::unique_ptr<IO::SDK::Frames::InstrumentFrame>& 
+		 *
+		 * @return const std::unique_ptr<IO::SDK::Frames::InstrumentFrame>&
 		 */
 		const std::unique_ptr<IO::SDK::Frames::InstrumentFrameFile> &GetFrame() const;
 
 		/**
-		 * @brief Get the Boresight object
-		 * 
-		 * @return IO::SDK::Math::Vector3D 
+		 * @brief Get the Boresight vector
+		 *
+		 * @return IO::SDK::Math::Vector3D
 		 */
 		IO::SDK::Math::Vector3D GetBoresight() const;
 
+        /**
+         * Get the boresight vector at specified epoch in a given frame
+         * @param frame
+         * @param epoch
+         * @return IO::SDK::Math::Vector3D
+         */
+        IO::SDK::Math::Vector3D GetBoresight(const IO::SDK::Frames::Frames &frame, const IO::SDK::Time::TDB &epoch) const;
+
 		/**
 		 * @brief Get the FOV shape
-		 * 
-		 * @return IO::SDK::Instruments::FOVShapeEnum 
+		 *
+		 * @return IO::SDK::Instruments::FOVShapeEnum
 		 */
 		IO::SDK::Instruments::FOVShapeEnum GetFOVShape() const;
 
 		/**
 		 * @brief Get the FOV boundaries
-		 * 
-		 * @return std::vector<IO::SDK::Math::Vector3D> 
+		 *
+		 * @return std::vector<IO::SDK::Math::Vector3D>
 		 */
 		std::vector<IO::SDK::Math::Vector3D> GetFOVBoundaries() const;
 
 		/**
 		 * @brief Find window where target body is in field of view
-		 * 
-		 * @param searchWindow 
-		 * @param targetBody 
-		 * @param stepSize 
-		 * @return std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>> 
+		 *
+		 * @param searchWindow
+		 * @param targetBody
+		 * @param stepSize
+		 * @return std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>>
 		 */
 		std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>> FindWindowsWhereInFieldOfView(const IO::SDK::Time::Window<IO::SDK::Time::TDB>& searchWindow,const IO::SDK::Body::Body& targetBody,const IO::SDK::Time::TimeSpan& stepSize,const IO::SDK::AberrationsEnum& aberration) const;
 
+        /**
+         * Compute boresight in spacecraft frame
+         * @return
+         */
+        IO::SDK::Math::Vector3D GetBoresightInSpacecraftFrame() const;
 		friend class IO::SDK::Body::Spacecraft::Spacecraft;
 	};
 }

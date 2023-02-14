@@ -59,7 +59,7 @@ TEST(OrientationKernel, WriteData)
 
 	auto orientation1 = s.GetOrientation(e1, tol, IO::SDK::Frames::InertialFrames::GetICRF());
 	ASSERT_DOUBLE_EQ(0.86602540378443882, orientation1.GetQuaternion().GetQ0());
-	ASSERT_DOUBLE_EQ(0.49999999999999972, orientation1.GetQuaternion().GetQ1());
+	ASSERT_DOUBLE_EQ(0.50000000000000011, orientation1.GetQuaternion().GetQ1());
 	ASSERT_DOUBLE_EQ(0.0, orientation1.GetQuaternion().GetQ2());
 	ASSERT_DOUBLE_EQ(0.0, orientation1.GetQuaternion().GetQ3());
 

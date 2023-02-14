@@ -29,6 +29,7 @@ IO::SDK::Kernels::SpacecraftClockKernel::SpacecraftClockKernel(const IO::SDK::Bo
 	{
 		BuildGenericClockKernel();
 		furnsh_c(m_filePath.c_str());
+        m_isLoaded= true;
 	}
 }
 
