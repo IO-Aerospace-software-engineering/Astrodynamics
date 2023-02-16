@@ -1,5 +1,11 @@
+# How contribute
+
+## Generality
 * You can use the IDE of your choice
 * You must create a feature branch before merge
 * You must apply OOP principles
 * You must apply S.O.L.I.D principles [Definition](https://en.wikipedia.org/wiki/SOLID)
 * Server application is based on clean architecture concept
+ 
+## Documentation
+* Once your developement is done, it's important to update the [wiki](https://github.com/IO-Aerospace-software-engineering/SDK/wiki) 
