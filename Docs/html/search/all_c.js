@@ -24,7 +24,7 @@ var searchData=
   ['m_5fminimumepoch_21',['m_minimumEpoch',['../classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase.html#aca1853fe97aeda8d435912cefa5cc485',1,'IO::SDK::Maneuvers::ManeuverBase']]],
   ['m_5fmsg_22',['m_msg',['../classIO_1_1SDK_1_1Exception_1_1SDKException.html#a5dc8e9a07fac1cb80febb41612a2820e',1,'IO::SDK::Exception::SDKException']]],
   ['m_5fmu_23',['m_mu',['../classIO_1_1SDK_1_1Body_1_1Body.html#a94666bb0eea716788c8bc4f02201a939',1,'IO::SDK::Body::Body']]],
-  ['m_5fname_24',['m_name',['../classIO_1_1SDK_1_1Body_1_1Body.html#ac1a1633c2de78a5065ba1704481fff64',1,'IO::SDK::Body::Body::m_name()'],['../classIO_1_1SDK_1_1Frames_1_1FrameFile.html#a9b0e652fc7622e68ff507dd69cc7eb47',1,'IO::SDK::Frames::FrameFile::m_name()'],['../classIO_1_1SDK_1_1Frames_1_1Frames.html#a57015777f13ddca0adc7eea53d85858d',1,'IO::SDK::Frames::Frames::m_name()']]],
+  ['m_5fname_24',['m_name',['../classIO_1_1SDK_1_1Frames_1_1Frames.html#a57015777f13ddca0adc7eea53d85858d',1,'IO::SDK::Frames::Frames::m_name()'],['../classIO_1_1SDK_1_1Body_1_1Body.html#ac1a1633c2de78a5065ba1704481fff64',1,'IO::SDK::Body::Body::m_name()'],['../classIO_1_1SDK_1_1Frames_1_1FrameFile.html#a9b0e652fc7622e68ff507dd69cc7eb47',1,'IO::SDK::Frames::FrameFile::m_name()']]],
   ['m_5fnextmaneuver_25',['m_nextManeuver',['../classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase.html#adeef4a3da2ed3145cc30d12c1e2101d5',1,'IO::SDK::Maneuvers::ManeuverBase']]],
   ['m_5forbitalparametersatepoch_26',['m_orbitalParametersAtEpoch',['../classIO_1_1SDK_1_1Body_1_1Body.html#a998dfa70fdc885068e0ffd549a219513',1,'IO::SDK::Body::Body']]],
   ['m_5fpropagator_27',['m_propagator',['../classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase.html#a87752af3fdfb1e6c94ebfac8fbcef118',1,'IO::SDK::Maneuvers::ManeuverBase']]],

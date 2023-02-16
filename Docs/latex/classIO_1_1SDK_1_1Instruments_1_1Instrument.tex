@@ -20,13 +20,17 @@ const \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft}{IO\+:
 const std\+::unique\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1InstrumentFrameFile}{IO\+::\+SDK\+::\+Frames\+::\+Instrument\+Frame\+File}} $>$ \& \mbox{\hyperlink{classIO_1_1SDK_1_1Instruments_1_1Instrument_a507debd3d58ec879bc46a09fe34ec5b6}{Get\+Frame}} () const
 \begin{DoxyCompactList}\small\item\em Get the Frame object. \end{DoxyCompactList}\item 
 \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO\+::\+SDK\+::\+Math\+::\+Vector3D}} \mbox{\hyperlink{classIO_1_1SDK_1_1Instruments_1_1Instrument_aa6f77570a793a4f4312c9b16fe571d66}{Get\+Boresight}} () const
-\begin{DoxyCompactList}\small\item\em Get the Boresight object. \end{DoxyCompactList}\item 
+\begin{DoxyCompactList}\small\item\em Get the Boresight vector. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO\+::\+SDK\+::\+Math\+::\+Vector3D}} \mbox{\hyperlink{classIO_1_1SDK_1_1Instruments_1_1Instrument_a81e7fabadb3b56a2d468cffdf8e0486e}{Get\+Boresight}} (const \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1Frames}{IO\+::\+SDK\+::\+Frames\+::\+Frames}} \&frame, const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} \&epoch) const
+\item 
 \mbox{\hyperlink{namespaceIO_1_1SDK_1_1Instruments_a9f6ec163810e86690573e4d0dfec1b9a}{IO\+::\+SDK\+::\+Instruments\+::\+FOVShape\+Enum}} \mbox{\hyperlink{classIO_1_1SDK_1_1Instruments_1_1Instrument_a0057e7de1e5f8c090bc9dc513a09cca3}{Get\+FOVShape}} () const
 \begin{DoxyCompactList}\small\item\em Get the FOV shape. \end{DoxyCompactList}\item 
 std\+::vector$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO\+::\+SDK\+::\+Math\+::\+Vector3D}} $>$ \mbox{\hyperlink{classIO_1_1SDK_1_1Instruments_1_1Instrument_ae295a6c847553a08b9ebb87004b9594e}{Get\+FOVBoundaries}} () const
 \begin{DoxyCompactList}\small\item\em Get the FOV boundaries. \end{DoxyCompactList}\item 
 std\+::vector$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO\+::\+SDK\+::\+Time\+::\+Window}}$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} $>$ $>$ \mbox{\hyperlink{classIO_1_1SDK_1_1Instruments_1_1Instrument_ad547ec35b6883d637eb4db50c7f41048}{Find\+Windows\+Where\+In\+Field\+Of\+View}} (const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO\+::\+SDK\+::\+Time\+::\+Window}}$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} $>$ \&search\+Window, const \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body}{IO\+::\+SDK\+::\+Body\+::\+Body}} \&target\+Body, const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO\+::\+SDK\+::\+Time\+::\+Time\+Span}} \&step\+Size, const \mbox{\hyperlink{namespaceIO_1_1SDK_abbb4827ec6a24ad346d9a60473ad3b81}{IO\+::\+SDK\+::\+Aberrations\+Enum}} \&aberration) const
-\begin{DoxyCompactList}\small\item\em Find window where target body is in field of view. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\begin{DoxyCompactList}\small\item\em Find window where target body is in field of view. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO\+::\+SDK\+::\+Math\+::\+Vector3D}} \mbox{\hyperlink{classIO_1_1SDK_1_1Instruments_1_1Instrument_a9a43beaf8232330372883951ac8bc176}{Get\+Boresight\+In\+Spacecraft\+Frame}} () const
+\end{DoxyCompactItemize}
 \doxysubsection*{Friends}
 \begin{DoxyCompactItemize}
 \item 
@@ -69,15 +73,40 @@ std\+::vector$<$\+IO\+::\+SDK\+::\+Time\+::\+Window$<$\+IO\+::\+SDK\+::\+Time\+:
 \mbox{\Hypertarget{classIO_1_1SDK_1_1Instruments_1_1Instrument_aa6f77570a793a4f4312c9b16fe571d66}\label{classIO_1_1SDK_1_1Instruments_1_1Instrument_aa6f77570a793a4f4312c9b16fe571d66}} 
 \index{IO::SDK::Instruments::Instrument@{IO::SDK::Instruments::Instrument}!GetBoresight@{GetBoresight}}
 \index{GetBoresight@{GetBoresight}!IO::SDK::Instruments::Instrument@{IO::SDK::Instruments::Instrument}}
-\doxysubsubsection{\texorpdfstring{GetBoresight()}{GetBoresight()}}
+\doxysubsubsection{\texorpdfstring{GetBoresight()}{GetBoresight()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
 {\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO\+::\+SDK\+::\+Math\+::\+Vector3D}} IO\+::\+SDK\+::\+Instruments\+::\+Instrument\+::\+Get\+Boresight (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
 
 
 
-Get the Boresight object. 
+Get the Boresight vector. 
 
 \begin{DoxyReturn}{Returns}
 \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO\+::\+SDK\+::\+Math\+::\+Vector3D}} 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Instruments_1_1Instrument_a81e7fabadb3b56a2d468cffdf8e0486e}\label{classIO_1_1SDK_1_1Instruments_1_1Instrument_a81e7fabadb3b56a2d468cffdf8e0486e}} 
+\index{IO::SDK::Instruments::Instrument@{IO::SDK::Instruments::Instrument}!GetBoresight@{GetBoresight}}
+\index{GetBoresight@{GetBoresight}!IO::SDK::Instruments::Instrument@{IO::SDK::Instruments::Instrument}}
+\doxysubsubsection{\texorpdfstring{GetBoresight()}{GetBoresight()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO\+::\+SDK\+::\+Math\+::\+Vector3D}} IO\+::\+SDK\+::\+Instruments\+::\+Instrument\+::\+Get\+Boresight (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1Frames}{IO\+::\+SDK\+::\+Frames\+::\+Frames}} \&}]{frame,  }\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} \&}]{epoch }\end{DoxyParamCaption}) const}
+
+Get the boresight vector at specified epoch in a given frame 
+\begin{DoxyParams}{Parameters}
+{\em frame} & \\
+\hline
+{\em epoch} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+\mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO\+::\+SDK\+::\+Math\+::\+Vector3D}} 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Instruments_1_1Instrument_a9a43beaf8232330372883951ac8bc176}\label{classIO_1_1SDK_1_1Instruments_1_1Instrument_a9a43beaf8232330372883951ac8bc176}} 
+\index{IO::SDK::Instruments::Instrument@{IO::SDK::Instruments::Instrument}!GetBoresightInSpacecraftFrame@{GetBoresightInSpacecraftFrame}}
+\index{GetBoresightInSpacecraftFrame@{GetBoresightInSpacecraftFrame}!IO::SDK::Instruments::Instrument@{IO::SDK::Instruments::Instrument}}
+\doxysubsubsection{\texorpdfstring{GetBoresightInSpacecraftFrame()}{GetBoresightInSpacecraftFrame()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO\+::\+SDK\+::\+Math\+::\+Vector3D}} IO\+::\+SDK\+::\+Instruments\+::\+Instrument\+::\+Get\+Boresight\+In\+Spacecraft\+Frame (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+Compute boresight in spacecraft frame \begin{DoxyReturn}{Returns}
+
 \end{DoxyReturn}
 \mbox{\Hypertarget{classIO_1_1SDK_1_1Instruments_1_1Instrument_ad48012eb7fe85f98520127fed4dfcc83}\label{classIO_1_1SDK_1_1Instruments_1_1Instrument_ad48012eb7fe85f98520127fed4dfcc83}} 
 \index{IO::SDK::Instruments::Instrument@{IO::SDK::Instruments::Instrument}!GetFilesPath@{GetFilesPath}}

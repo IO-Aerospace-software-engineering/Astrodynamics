@@ -1,7 +1,7 @@
 var searchData=
 [
   ['latitude_0',['Latitude',['../classIO_1_1SDK_1_1Coordinate.html#a0a31f53ea7d962c8d97e4e4f6b609c6d',1,'IO::SDK::Coordinate']]],
-  ['latitudinal_1',['Latitudinal',['../classIO_1_1SDK_1_1Coordinates_1_1Latitudinal.html',1,'IO::SDK::Coordinates::Latitudinal'],['../classIO_1_1SDK_1_1CoordinateSystem.html#aae985b3e116351d0f4915bde5aac57ea',1,'IO::SDK::CoordinateSystem::Latitudinal()'],['../classIO_1_1SDK_1_1Coordinates_1_1Latitudinal.html#a9cfa0678cc58ff3a28871d3100733bca',1,'IO::SDK::Coordinates::Latitudinal::Latitudinal()']]],
+  ['latitudinal_1',['Latitudinal',['../classIO_1_1SDK_1_1Coordinates_1_1Latitudinal.html',1,'IO::SDK::Coordinates::Latitudinal'],['../classIO_1_1SDK_1_1Coordinates_1_1Latitudinal.html#a9cfa0678cc58ff3a28871d3100733bca',1,'IO::SDK::Coordinates::Latitudinal::Latitudinal()'],['../classIO_1_1SDK_1_1CoordinateSystem.html#aae985b3e116351d0f4915bde5aac57ea',1,'IO::SDK::CoordinateSystem::Latitudinal()']]],
   ['latitudinal_2eh_2',['Latitudinal.h',['../Latitudinal_8h.html',1,'']]],
   ['launch_3',['Launch',['../classIO_1_1SDK_1_1Maneuvers_1_1Launch.html',1,'IO::SDK::Maneuvers::Launch'],['../classIO_1_1SDK_1_1Maneuvers_1_1Launch.html#a43b61266bcd7a2f93dbe5e6a0bcdb7d5',1,'IO::SDK::Maneuvers::Launch::Launch()']]],
   ['launch_2ecpp_4',['Launch.cpp',['../Launch_8cpp.html',1,'']]],

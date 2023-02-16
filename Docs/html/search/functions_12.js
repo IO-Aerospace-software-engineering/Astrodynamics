@@ -1,6 +1,6 @@
 var searchData=
 [
-  ['tdb_0',['TDB',['../classIO_1_1SDK_1_1Time_1_1TDB.html#a6f2d715194c5222d54923cb14c231a66',1,'IO::SDK::Time::TDB::TDB(const std::string string)'],['../classIO_1_1SDK_1_1Time_1_1TDB.html#ad542ac2d77b3b9c75312a2b34a0f568b',1,'IO::SDK::Time::TDB::TDB(const std::chrono::duration&lt; double &gt; ellapsedSecondsFromJ2000)']]],
+  ['tdb_0',['TDB',['../classIO_1_1SDK_1_1Time_1_1TDB.html#ad542ac2d77b3b9c75312a2b34a0f568b',1,'IO::SDK::Time::TDB::TDB(const std::chrono::duration&lt; double &gt; ellapsedSecondsFromJ2000)'],['../classIO_1_1SDK_1_1Time_1_1TDB.html#a6f2d715194c5222d54923cb14c231a66',1,'IO::SDK::Time::TDB::TDB(const std::string string)']]],
   ['timespan_1',['TimeSpan',['../classIO_1_1SDK_1_1Time_1_1TimeSpan.html#a8b1b5bfe288bc94084bda1c43a27bb2d',1,'IO::SDK::Time::TimeSpan::TimeSpan()'],['../classIO_1_1SDK_1_1Time_1_1TimeSpan.html#ab60983e75581842b0376e122dce4ec17',1,'IO::SDK::Time::TimeSpan::TimeSpan(const std::chrono::duration&lt; double &gt; period)']]],
   ['tle_2',['TLE',['../classIO_1_1SDK_1_1OrbitalParameters_1_1TLE.html#a1f1de57f7c7d7327c27ac580cad07dec',1,'IO::SDK::OrbitalParameters::TLE']]],
   ['tleintegrator_3',['TLEIntegrator',['../classIO_1_1SDK_1_1Integrators_1_1TLEIntegrator.html#aac9421604995737be2624992067a3df3',1,'IO::SDK::Integrators::TLEIntegrator']]],
