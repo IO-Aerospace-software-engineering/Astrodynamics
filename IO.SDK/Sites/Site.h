@@ -177,6 +177,9 @@ namespace IO::SDK::Sites
          * @return IO::SDK::OrbitalParameters::StateVector 
          */
         IO::SDK::OrbitalParameters::StateVector GetStateVector(const IO::SDK::Body::Body &body, const IO::SDK::Frames::Frames frame, const IO::SDK::AberrationsEnum aberrationCorrection, const IO::SDK::Time::TDB &epoch) const;
+
+
+        std::vector<IO::SDK::Time::Window<IO::SDK::Time::UTC>> FindBodyVisibilityWindows(const IO::SDK::Body::Body &body,const IO::SDK::Time::Window<IO::SDK::Time::UTC> &searchWindow,const IO::SDK::AberrationsEnum aberrationCorrection);
     };
 }
 

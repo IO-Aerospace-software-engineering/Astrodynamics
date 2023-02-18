@@ -18,6 +18,8 @@
 #include <SpiceUsr.h>
 #include <SiteFrameFile.h>
 #include <Builder.h>
+#include <CoordinateSystem.h>
+#include <Coordinate.h>
 
 
 using namespace std::chrono_literals;
@@ -180,4 +182,37 @@ IO::SDK::Sites::Site::GetStateVector(const IO::SDK::Body::Body &body, const IO::
 
     return IO::SDK::OrbitalParameters::StateVector(m_body, bodiesSv.GetPosition() - siteVector.GetPosition(),
                                                    bodiesSv.GetVelocity() - siteVector.GetVelocity(), epoch, frame);
+}
+
+std::vector<IO::SDK::Time::Window<IO::SDK::Time::UTC>>
+IO::SDK::Sites::Site::FindBodyVisibilityWindows(const IO::SDK::Body::Body &body,
+                                                const IO::SDK::Time::Window<IO::SDK::Time::UTC> &searchWindow,
+                                                const IO::SDK::AberrationsEnum aberrationCorrection) {
+    std::vector<IO::SDK::Time::Window<IO::SDK::Time::UTC>> windows;
+    SpiceDouble windowStart;
+    SpiceDouble windowEnd;
+
+    Aberrations abe;
+
+    const SpiceInt NINTVL{10000};
+    const SpiceInt MAXWIN{20000};
+
+    SpiceDouble SPICE_CELL_OCCLT[SPICE_CELL_CTRLSZ + MAXWIN];
+    SpiceCell cnfine = IO::SDK::Spice::Builder::CreateDoubleCell(MAXWIN, SPICE_CELL_OCCLT);
+
+    SpiceDouble SPICE_CELL_OCCLT_RESULT[SPICE_CELL_CTRLSZ + MAXWIN];
+    SpiceCell results = IO::SDK::Spice::Builder::CreateDoubleCell(MAXWIN, SPICE_CELL_OCCLT_RESULT);
+
+    wninsd_c(searchWindow.GetStartDate().GetSecondsFromJ2000().count(), searchWindow.GetEndDate().GetSecondsFromJ2000().count(), &cnfine);
+
+    gfposc_c(std::to_string(body.GetId()).c_str(), m_frame->GetName().c_str(), abe.ToString(aberrationCorrection).c_str(), std::to_string(m_id).c_str(),
+             IO::SDK::CoordinateSystem::Latitudinal().ToCharArray(), IO::SDK::Coordinate::Latitude().ToCharArray(), ">", 0.0, 0.0, 60.0, NINTVL, &cnfine, &results);
+
+    for (int i = 0; i < wncard_c(&results); i++) {
+        wnfetd_c(&results, i, &windowStart, &windowEnd);
+        windows.push_back(IO::SDK::Time::Window<IO::SDK::Time::UTC>(
+                IO::SDK::Time::TDB(std::chrono::duration<double>(windowStart)).ToUTC(),
+                IO::SDK::Time::TDB(std::chrono::duration<double>(windowEnd)).ToUTC()));
+    }
+    return windows;
 }
