@@ -77,7 +77,7 @@
 <a name="15"><span class="lineNum">      15 </span>            : #include &lt;Parameters.h&gt;</a>
 <a name="16"><span class="lineNum">      16 </span>            : #include &lt;Site.h&gt;</a>
 <a name="17"><span class="lineNum">      17 </span>            : </a>
-<a name="18"><span class="lineNum">      18 </span><span class="lineCov">         31 : IO::SDK::Frames::SiteFrameFile::SiteFrameFile(const IO::SDK::Sites::Site &amp;site) : FrameFile(std::string(IO::SDK::Parameters::SiteFramesPath) + &quot;/&quot; + site.GetName() + &quot;.tf&quot;, site.GetName() + &quot;_TOPO&quot;), m_site{site}</span></a>
+<a name="18"><span class="lineNum">      18 </span><span class="lineCov">         31 : IO::SDK::Frames::SiteFrameFile::SiteFrameFile(const IO::SDK::Sites::Site &amp;site) : FrameFile(std::string(IO::SDK::Parameters::SitePath) + &quot;/&quot; + site.GetName() + &quot;.tf&quot;, site.GetName() + &quot;_TOPO&quot;), m_site{site}</span></a>
 <a name="19"><span class="lineNum">      19 </span>            : {</a>
 <a name="20"><span class="lineNum">      20 </span><span class="lineCov">         31 :     if (!m_fileExists)</span></a>
 <a name="21"><span class="lineNum">      21 </span>            :     {</a>

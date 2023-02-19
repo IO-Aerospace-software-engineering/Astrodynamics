@@ -27,12 +27,14 @@ using namespace std::chrono_literals;
 IO::SDK::Sites::Site::Site(const int id, const std::string &name, const IO::SDK::Coordinates::Geodetic &coordinates,
                            std::shared_ptr<IO::SDK::Body::CelestialBody> &body) : m_id{id}, m_name{name},
                                                                                   m_coordinates{coordinates},
-                                                                                  m_body{body} {
-    m_frame = std::make_unique<IO::SDK::Frames::SiteFrameFile>(*this);
+                                                                                  m_body{body}, m_filePath{std::string(IO::SDK::Parameters::SitePath) + "/" + name},
+                                                                                  m_frame{std::make_unique<IO::SDK::Frames::SiteFrameFile>(*this)}
+{
 }
 
 IO::SDK::OrbitalParameters::StateVector
-IO::SDK::Sites::Site::GetStateVector(const IO::SDK::Frames::Frames frame, const IO::SDK::Time::TDB &epoch) const {
+IO::SDK::Sites::Site::GetStateVector(const IO::SDK::Frames::Frames frame, const IO::SDK::Time::TDB &epoch) const
+{
     auto radius = m_body->GetRadius() * 1000.0;
     SpiceDouble bodyFixedLocation[3];
     georec_c(m_coordinates.GetLongitude(), m_coordinates.GetLatitude(), m_coordinates.GetAltitude(), radius.GetX(),
@@ -48,7 +50,8 @@ IO::SDK::Sites::Site::GetStateVector(const IO::SDK::Frames::Frames frame, const 
 
 IO::SDK::Coordinates::RADec
 IO::SDK::Sites::Site::GetRADec(const IO::SDK::Body::Body &body, const IO::SDK::AberrationsEnum aberrationCorrection,
-                               const IO::SDK::Time::TDB &epoch) const {
+                               const IO::SDK::Time::TDB &epoch) const
+{
     auto radius = m_body->GetRadius();
     auto bodiesSv = body.ReadEphemeris(IO::SDK::Frames::InertialFrames::GetICRF(), aberrationCorrection, epoch,
                                        *m_body);
@@ -66,7 +69,8 @@ IO::SDK::Sites::Site::GetRADec(const IO::SDK::Body::Body &body, const IO::SDK::A
 
 IO::SDK::Illumination::Illumination
 IO::SDK::Sites::Site::GetIllumination(const IO::SDK::AberrationsEnum aberrationCorrection,
-                                      const IO::SDK::Time::TDB &epoch) const {
+                                      const IO::SDK::Time::TDB &epoch) const
+{
     SpiceDouble bodyFixedLocation[3];
     georec_c(m_coordinates.GetLongitude(), m_coordinates.GetLatitude(), m_coordinates.GetAltitude(),
              m_body->GetRadius().GetX(), m_body->GetFlattening(), bodyFixedLocation);
@@ -88,17 +92,20 @@ IO::SDK::Sites::Site::GetIllumination(const IO::SDK::AberrationsEnum aberrationC
             IO::SDK::Time::TDB(std::chrono::duration<double>(srfEpoch)));
 }
 
-bool IO::SDK::Sites::Site::IsDay(const IO::SDK::Time::TDB &epoch, const double twilight) const {
+bool IO::SDK::Sites::Site::IsDay(const IO::SDK::Time::TDB &epoch, const double twilight) const
+{
     return GetIllumination(AberrationsEnum::CNS, epoch).GetIncidence() < IO::SDK::Constants::PI2 - twilight;
 }
 
-bool IO::SDK::Sites::Site::IsNight(const IO::SDK::Time::TDB &epoch, const double twilight) const {
+bool IO::SDK::Sites::Site::IsNight(const IO::SDK::Time::TDB &epoch, const double twilight) const
+{
     return GetIllumination(AberrationsEnum::CNS, epoch).GetIncidence() >= IO::SDK::Constants::PI2 - twilight;
 }
 
 std::vector<IO::SDK::Time::Window<IO::SDK::Time::UTC>>
 IO::SDK::Sites::Site::FindDayWindows(const IO::SDK::Time::Window<IO::SDK::Time::UTC> &searchWindow,
-                                     const double twilight) const {
+                                     const double twilight) const
+{
     IO::SDK::Body::CelestialBody sun(10, "Sun");
     return FindWindowsOnIlluminationConstraint(searchWindow, sun, IO::SDK::IlluminationAngle::Incidence(),
                                                IO::SDK::Constraint::LowerThan(), IO::SDK::Constants::PI2 - twilight);
@@ -106,7 +113,8 @@ IO::SDK::Sites::Site::FindDayWindows(const IO::SDK::Time::Window<IO::SDK::Time::
 
 std::vector<IO::SDK::Time::Window<IO::SDK::Time::UTC>>
 IO::SDK::Sites::Site::FindNightWindows(const IO::SDK::Time::Window<IO::SDK::Time::UTC> &searchWindow,
-                                       const double twilight) const {
+                                       const double twilight) const
+{
     IO::SDK::Body::CelestialBody sun(10, "Sun");
     return FindWindowsOnIlluminationConstraint(searchWindow, sun, IO::SDK::IlluminationAngle::Incidence(),
                                                IO::SDK::Constraint::GreaterThan(), IO::SDK::Constants::PI2 - twilight);
@@ -117,7 +125,8 @@ IO::SDK::Sites::Site::FindWindowsOnIlluminationConstraint(const IO::SDK::Time::W
                                                           const IO::SDK::Body::Body &observerBody,
                                                           const IO::SDK::IlluminationAngle &illuminationAgngle,
                                                           const IO::SDK::Constraint &constraint,
-                                                          const double value) const {
+                                                          const double value) const
+{
     std::vector<IO::SDK::Time::Window<IO::SDK::Time::UTC>> windows;
     SpiceDouble bodyFixedLocation[3];
     georec_c(m_coordinates.GetLongitude(), m_coordinates.GetLatitude(), m_coordinates.GetAltitude(),
@@ -145,7 +154,8 @@ IO::SDK::Sites::Site::FindWindowsOnIlluminationConstraint(const IO::SDK::Time::W
              observerBody.GetName().c_str(), bodyFixedLocation, constraint.ToCharArray(), value, 0.0, 4.5 * 60 * 60,
              MAXIVL, &cnfine, &results);
 
-    for (int i = 0; i < wncard_c(&results); i++) {
+    for (int i = 0; i < wncard_c(&results); i++)
+    {
         wnfetd_c(&results, i, &windowStart, &windowEnd);
         windows.push_back(IO::SDK::Time::Window<IO::SDK::Time::UTC>(
                 IO::SDK::Time::TDB(std::chrono::duration<double>(windowStart)).ToUTC(),
@@ -155,7 +165,8 @@ IO::SDK::Sites::Site::FindWindowsOnIlluminationConstraint(const IO::SDK::Time::W
 }
 
 IO::SDK::Coordinates::HorizontalCoordinates IO::SDK::Sites::Site::GetHorizontalCoordinates(const IO::SDK::Body::Body &body, const IO::SDK::AberrationsEnum aberrationCorrection,
-                                                                                           const IO::SDK::Time::TDB &epoch) const {
+                                                                                           const IO::SDK::Time::TDB &epoch) const
+{
     auto radius = m_body->GetRadius();
     SpiceDouble bodyFixedLocation[3];
     georec_c(m_coordinates.GetLongitude(), m_coordinates.GetLatitude(), m_coordinates.GetAltitude(), radius.GetX(),
@@ -174,7 +185,8 @@ IO::SDK::Coordinates::HorizontalCoordinates IO::SDK::Sites::Site::GetHorizontalC
 IO::SDK::OrbitalParameters::StateVector
 IO::SDK::Sites::Site::GetStateVector(const IO::SDK::Body::Body &body, const IO::SDK::Frames::Frames frame,
                                      const IO::SDK::AberrationsEnum aberrationCorrection,
-                                     const IO::SDK::Time::TDB &epoch) const {
+                                     const IO::SDK::Time::TDB &epoch) const
+{
     auto radius = m_body->GetRadius();
     auto bodiesSv = body.ReadEphemeris(frame, aberrationCorrection, epoch, *m_body);
 
@@ -187,7 +199,8 @@ IO::SDK::Sites::Site::GetStateVector(const IO::SDK::Body::Body &body, const IO::
 std::vector<IO::SDK::Time::Window<IO::SDK::Time::UTC>>
 IO::SDK::Sites::Site::FindBodyVisibilityWindows(const IO::SDK::Body::Body &body,
                                                 const IO::SDK::Time::Window<IO::SDK::Time::UTC> &searchWindow,
-                                                const IO::SDK::AberrationsEnum aberrationCorrection) {
+                                                const IO::SDK::AberrationsEnum aberrationCorrection)
+{
     std::vector<IO::SDK::Time::Window<IO::SDK::Time::UTC>> windows;
     SpiceDouble windowStart;
     SpiceDouble windowEnd;
@@ -208,7 +221,8 @@ IO::SDK::Sites::Site::FindBodyVisibilityWindows(const IO::SDK::Body::Body &body,
     gfposc_c(std::to_string(body.GetId()).c_str(), m_frame->GetName().c_str(), abe.ToString(aberrationCorrection).c_str(), std::to_string(m_id).c_str(),
              IO::SDK::CoordinateSystem::Latitudinal().ToCharArray(), IO::SDK::Coordinate::Latitude().ToCharArray(), ">", 0.0, 0.0, 60.0, NINTVL, &cnfine, &results);
 
-    for (int i = 0; i < wncard_c(&results); i++) {
+    for (int i = 0; i < wncard_c(&results); i++)
+    {
         wnfetd_c(&results, i, &windowStart, &windowEnd);
         windows.push_back(IO::SDK::Time::Window<IO::SDK::Time::UTC>(
                 IO::SDK::Time::TDB(std::chrono::duration<double>(windowStart)).ToUTC(),

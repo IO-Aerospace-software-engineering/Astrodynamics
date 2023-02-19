@@ -40,9 +40,10 @@ namespace IO::SDK::Sites {
         const int m_id;
         const std::string m_name;
         const IO::SDK::Coordinates::Geodetic m_coordinates;
+        const std::string m_filePath;
 
         const std::shared_ptr<IO::SDK::Body::CelestialBody> m_body;
-        std::unique_ptr<IO::SDK::Frames::SiteFrameFile> m_frame;
+        const std::unique_ptr<IO::SDK::Frames::SiteFrameFile> m_frame;
         const IO::SDK::Aberrations m_aberrationHelper{};
 
     public:
@@ -187,10 +188,16 @@ namespace IO::SDK::Sites {
                                   const IO::SDK::AberrationsEnum aberrationCorrection);
 
         /**
-         * Get the site frame
+         * Get the site frame file
          * @return
          */
-        inline std::unique_ptr<IO::SDK::Frames::SiteFrameFile> &GetFrame() { return m_frame; }
+        inline const std::unique_ptr<IO::SDK::Frames::SiteFrameFile> &GetFrame() const { return m_frame; }
+
+        /**
+         * Get the file path to this site
+         * @return
+         */
+        inline const std::string GetFilesPath() const { return m_filePath; }
     };
 }
 

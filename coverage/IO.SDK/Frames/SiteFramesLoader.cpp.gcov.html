@@ -79,12 +79,12 @@
 <a name="17"><span class="lineNum">      17 </span>            : </a>
 <a name="18"><span class="lineNum">      18 </span><span class="lineCov">          5 : IO::SDK::Frames::SiteFramesLoader::SiteFramesLoader()</span></a>
 <a name="19"><span class="lineNum">      19 </span>            : {</a>
-<a name="20"><span class="lineNum">      20 </span><span class="lineCov">          5 :         if (!std::filesystem::exists(IO::SDK::Parameters::SiteFramesPath))</span></a>
+<a name="20"><span class="lineNum">      20 </span><span class="lineCov">          5 :         if (!std::filesystem::exists(IO::SDK::Parameters::SitePath))</span></a>
 <a name="21"><span class="lineNum">      21 </span>            :         {</a>
-<a name="22"><span class="lineNum">      22 </span><span class="lineNoCov">          0 :                 std::filesystem::create_directories(IO::SDK::Parameters::SiteFramesPath);</span></a>
+<a name="22"><span class="lineNum">      22 </span><span class="lineNoCov">          0 :                 std::filesystem::create_directories(IO::SDK::Parameters::SitePath);</span></a>
 <a name="23"><span class="lineNum">      23 </span>            :         }</a>
 <a name="24"><span class="lineNum">      24 </span>            : </a>
-<a name="25"><span class="lineNum">      25 </span><span class="lineCov">         35 :         for (const auto&amp; entry : std::filesystem::directory_iterator(IO::SDK::Parameters::SiteFramesPath))</span></a>
+<a name="25"><span class="lineNum">      25 </span><span class="lineCov">         35 :         for (const auto&amp; entry : std::filesystem::directory_iterator(IO::SDK::Parameters::SitePath))</span></a>
 <a name="26"><span class="lineNum">      26 </span>            :         {</a>
 <a name="27"><span class="lineNum">      27 </span><span class="lineCov">         20 :                 furnsh_c(entry.path().string().c_str());</span></a>
 <a name="28"><span class="lineNum">      28 </span>            :         }</a>
