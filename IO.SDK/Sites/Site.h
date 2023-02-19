@@ -30,14 +30,12 @@
 #include <Coordinate.h>
 #include <IlluminationAngle.h>
 
-namespace IO::SDK::Sites
-{
+namespace IO::SDK::Sites {
     /**
      * @brief Site class
      * 
      */
-    class Site
-    {
+    class Site {
     private:
         const int m_id;
         const std::string m_name;
@@ -156,7 +154,9 @@ namespace IO::SDK::Sites
          * @param value 
          * @return std::vector<IO::SDK::Time::Window<IO::SDK::Time::UTC>> 
          */
-        std::vector<IO::SDK::Time::Window<IO::SDK::Time::UTC>> FindWindowsOnIlluminationConstraint(const IO::SDK::Time::Window<IO::SDK::Time::UTC> &searchWindow, const IO::SDK::Body::Body &observerBody, const IO::SDK::IlluminationAngle &illuminationAgngle, const IO::SDK::Constraint &constraint, const double value) const;
+        std::vector<IO::SDK::Time::Window<IO::SDK::Time::UTC>>
+        FindWindowsOnIlluminationConstraint(const IO::SDK::Time::Window<IO::SDK::Time::UTC> &searchWindow, const IO::SDK::Body::Body &observerBody,
+                                            const IO::SDK::IlluminationAngle &illuminationAgngle, const IO::SDK::Constraint &constraint, const double value) const;
 
         /**
          * @brief Get the Horizontal Coordinates to the target body
@@ -165,7 +165,8 @@ namespace IO::SDK::Sites
          * @param epoch 
          * @return IO::SDK::Coordinates::HorizontalCoordinates 
          */
-        IO::SDK::Coordinates::HorizontalCoordinates GetHorizontalCoordinates(const IO::SDK::Body::Body &body, const IO::SDK::AberrationsEnum aberrationCorrection, const IO::SDK::Time::TDB &epoch) const;
+        IO::SDK::Coordinates::HorizontalCoordinates
+        GetHorizontalCoordinates(const IO::SDK::Body::Body &body, const IO::SDK::AberrationsEnum aberrationCorrection, const IO::SDK::Time::TDB &epoch) const;
 
 
         /**
@@ -176,10 +177,20 @@ namespace IO::SDK::Sites
          * @param epoch 
          * @return IO::SDK::OrbitalParameters::StateVector 
          */
-        IO::SDK::OrbitalParameters::StateVector GetStateVector(const IO::SDK::Body::Body &body, const IO::SDK::Frames::Frames frame, const IO::SDK::AberrationsEnum aberrationCorrection, const IO::SDK::Time::TDB &epoch) const;
+        IO::SDK::OrbitalParameters::StateVector
+        GetStateVector(const IO::SDK::Body::Body &body, const IO::SDK::Frames::Frames frame, const IO::SDK::AberrationsEnum aberrationCorrection,
+                       const IO::SDK::Time::TDB &epoch) const;
 
 
-        std::vector<IO::SDK::Time::Window<IO::SDK::Time::UTC>> FindBodyVisibilityWindows(const IO::SDK::Body::Body &body,const IO::SDK::Time::Window<IO::SDK::Time::UTC> &searchWindow,const IO::SDK::AberrationsEnum aberrationCorrection);
+        std::vector<IO::SDK::Time::Window<IO::SDK::Time::UTC>>
+        FindBodyVisibilityWindows(const IO::SDK::Body::Body &body, const IO::SDK::Time::Window<IO::SDK::Time::UTC> &searchWindow,
+                                  const IO::SDK::AberrationsEnum aberrationCorrection);
+
+        /**
+         * Get the site frame
+         * @return
+         */
+        inline std::unique_ptr<IO::SDK::Frames::SiteFrameFile> &GetFrame() { return m_frame; }
     };
 }
 

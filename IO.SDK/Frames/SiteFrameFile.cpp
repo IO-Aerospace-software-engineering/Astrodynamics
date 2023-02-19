@@ -16,6 +16,7 @@
 #include <Parameters.h>
 #include <Site.h>
 #include <Templates/Templates.cpp>
+#include <StringHelpers.h>
 
 IO::SDK::Frames::SiteFrameFile::SiteFrameFile(const IO::SDK::Sites::Site &site) : FrameFile(std::string(IO::SDK::Parameters::SiteFramesPath) + "/" + site.GetName() + ".tf", site.GetName() + "_TOPO"), m_site{site}
 {
@@ -78,7 +79,7 @@ void IO::SDK::Frames::SiteFrameFile::BuildFrame()
             auto posframename = readout.find("{fixedframe}");
             if (posframename != std::string::npos)
             {
-                readout = readout.replace(posframename, 12, m_site.GetBody()->GetBodyFixedFrame().GetName());
+                readout = readout.replace(posframename, 12, IO::SDK::StringHelpers::ToUpper(m_site.GetBody()->GetBodyFixedFrame().GetName()));
             }
 
             auto poslong = readout.find("{long}");
