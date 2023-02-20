@@ -29,18 +29,26 @@
 #include <CoordinateSystem.h>
 #include <Coordinate.h>
 #include <IlluminationAngle.h>
+#include <EphemerisKernel.h>
 
-namespace IO::SDK::Sites {
+namespace IO::SDK::Kernels
+{
+    class EphemerisKernel;
+}
+namespace IO::SDK::Sites
+{
     /**
      * @brief Site class
      * 
      */
-    class Site {
+    class Site
+    {
     private:
         const int m_id;
         const std::string m_name;
         const IO::SDK::Coordinates::Geodetic m_coordinates;
         const std::string m_filePath;
+        const std::unique_ptr<IO::SDK::Kernels::EphemerisKernel> m_ephemerisKernel;
 
         const std::shared_ptr<IO::SDK::Body::CelestialBody> m_body;
         const std::unique_ptr<IO::SDK::Frames::SiteFrameFile> m_frame;
@@ -60,28 +68,32 @@ namespace IO::SDK::Sites {
          * 
          * @return int 
          */
-        int GetId() const { return m_id; }
+        int GetId() const
+        { return m_id; }
 
         /**
          * @brief Get the Name
          * 
          * @return std::string 
          */
-        std::string GetName() const { return m_name; }
+        std::string GetName() const
+        { return m_name; }
 
         /**
          * @brief Get the Coordinates
          * 
          * @return IO::SDK::Coordinates::Geodetic 
          */
-        IO::SDK::Coordinates::Geodetic GetCoordinates() const { return m_coordinates; }
+        IO::SDK::Coordinates::Geodetic GetCoordinates() const
+        { return m_coordinates; }
 
         /**
          * @brief Get the Body
          * 
          * @return std::shared_ptr<IO::SDK::Body::CelestialBody> 
          */
-        std::shared_ptr<IO::SDK::Body::CelestialBody> GetBody() const { return m_body; }
+        std::shared_ptr<IO::SDK::Body::CelestialBody> GetBody() const
+        { return m_body; }
 
         /**
          * @brief Get Right ascension, declination and range
@@ -191,13 +203,50 @@ namespace IO::SDK::Sites {
          * Get the site frame file
          * @return
          */
-        inline const std::unique_ptr<IO::SDK::Frames::SiteFrameFile> &GetFrame() const { return m_frame; }
+        inline const std::unique_ptr<IO::SDK::Frames::SiteFrameFile> &GetFrame() const
+        { return m_frame; }
 
         /**
          * Get the file path to this site
          * @return
          */
-        inline const std::string GetFilesPath() const { return m_filePath; }
+        inline const std::string GetFilesPath() const
+        { return m_filePath; }
+
+        /**
+         * Write stateVectors into ephemeris file
+         * @param states
+         */
+        void WriteEphemeris(const std::vector<OrbitalParameters::StateVector> &states) const;
+
+        /**
+         * Read ephemeris from ephemeris file
+         * @param frame
+         * @param aberration
+         * @param epoch
+         * @param observer
+         * @return
+         */
+        OrbitalParameters::StateVector
+        ReadEphemeris(const Frames::Frames &frame, const AberrationsEnum aberration, const Time::TDB &epoch, const Body::CelestialBody &observer) const;
+
+        /**
+         * Get Time span covered by the ephemeris file
+         * @return
+         */
+        Time::Window <IO::SDK::Time::TDB> GetEphemerisCoverageWindow() const;
+
+        /**
+         * Write a comment into ephemeris file
+         * @param comment
+         */
+        void WriteEphemerisKernelComment(const std::string &comment) const;
+
+        /**
+         * Read comment into ephemeris file
+         * @return
+         */
+        std::string ReadEphemerisKernelComment() const;
     };
 }
 

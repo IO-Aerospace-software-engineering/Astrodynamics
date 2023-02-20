@@ -27,7 +27,9 @@ using namespace std::chrono_literals;
 IO::SDK::Sites::Site::Site(const int id, const std::string &name, const IO::SDK::Coordinates::Geodetic &coordinates,
                            std::shared_ptr<IO::SDK::Body::CelestialBody> &body) : m_id{id}, m_name{name},
                                                                                   m_coordinates{coordinates},
-                                                                                  m_body{body}, m_filePath{std::string(IO::SDK::Parameters::SitePath) + "/" + name},
+                                                                                  m_filePath{std::string(IO::SDK::Parameters::SitePath) + "/" + name},
+                                                                                  m_body{body},
+                                                                                  m_ephemerisKernel{std::make_unique<IO::SDK::Kernels::EphemerisKernel>(*this)},
                                                                                   m_frame{std::make_unique<IO::SDK::Frames::SiteFrameFile>(*this)}
 {
 }
@@ -229,4 +231,32 @@ IO::SDK::Sites::Site::FindBodyVisibilityWindows(const IO::SDK::Body::Body &body,
                 IO::SDK::Time::TDB(std::chrono::duration<double>(windowEnd)).ToUTC()));
     }
     return windows;
+}
+
+void IO::SDK::Sites::Site::WriteEphemeris(const std::vector<OrbitalParameters::StateVector> &states) const
+{
+    return this->m_ephemerisKernel->WriteData(states);
+}
+
+IO::SDK::OrbitalParameters::StateVector IO::SDK::Sites::Site::ReadEphemeris(const IO::SDK::Frames::Frames &frame,
+                                                                            const IO::SDK::AberrationsEnum aberration,
+                                                                            const IO::SDK::Time::TDB &epoch,
+                                                                            const IO::SDK::Body::CelestialBody &observer) const
+{
+    return this->m_ephemerisKernel->ReadStateVector(observer, frame, aberration, epoch);
+}
+
+IO::SDK::Time::Window<IO::SDK::Time::TDB> IO::SDK::Sites::Site::GetEphemerisCoverageWindow() const
+{
+    return this->m_ephemerisKernel->GetCoverageWindow();
+}
+
+void IO::SDK::Sites::Site::WriteEphemerisKernelComment(const std::string &comment) const
+{
+    this->m_ephemerisKernel->AddComment(comment);
+}
+
+std::string IO::SDK::Sites::Site::ReadEphemerisKernelComment() const
+{
+    return this->m_ephemerisKernel->ReadComment();
 }
