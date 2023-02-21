@@ -49,4 +49,5 @@ jobs:
       
     - name: Doxygen Action
       uses: mattnotmitt/doxygen-action@1.9.5
+      if: matrix.os == 'ubuntu-latest'
       
