@@ -9,11 +9,10 @@
  * 
  */
 #include <Kernel.h>
-#include <Parameters.h>
 #include <SpiceUsr.h>
 #include <SDKException.h>
-#include<filesystem>
-#include<cstring>
+#include <filesystem>
+#include <cstring>
 
 constexpr size_t COMLENGTH = 80;
 

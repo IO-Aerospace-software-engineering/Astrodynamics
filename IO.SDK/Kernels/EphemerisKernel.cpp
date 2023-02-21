@@ -13,6 +13,7 @@
 #include <filesystem>
 #include <Parameters.h>
 #include <SpiceUsr.h>
+#include <Builder.h>
 
 IO::SDK::Kernels::EphemerisKernel::EphemerisKernel(const IO::SDK::Body::Spacecraft::Spacecraft &spacecraft) : Kernel(
         spacecraft.GetFilesPath() + "/Ephemeris/" + spacecraft.GetName() + ".spk"), m_objectId{spacecraft.GetId()} {
@@ -39,13 +40,16 @@ IO::SDK::Kernels::EphemerisKernel::ReadStateVector(const IO::SDK::Body::Celestia
 }
 
 IO::SDK::Time::Window<IO::SDK::Time::TDB> IO::SDK::Kernels::EphemerisKernel::GetCoverageWindow() const {
-    SPICEDOUBLE_CELL(cover, 2);
+    const SpiceInt MAXWIN{2};
 
-    spkcov_c(m_filePath.c_str(), m_objectId, &cover);
+    SpiceDouble SPICE_CELL_DIST[SPICE_CELL_CTRLSZ + MAXWIN];
+    SpiceCell cnfine = IO::SDK::Spice::Builder::CreateDoubleCell(MAXWIN, SPICE_CELL_DIST);
+
+    spkcov_c(m_filePath.c_str(), m_objectId, &cnfine);
     double start;
     double end;
 
-    wnfetd_c(&cover, 0, &start, &end);
+    wnfetd_c(&cnfine, 0, &start, &end);
 
     return IO::SDK::Time::Window<IO::SDK::Time::TDB>(IO::SDK::Time::TDB(std::chrono::duration<double>(start)), IO::SDK::Time::TDB(std::chrono::duration<double>(end)));
 }

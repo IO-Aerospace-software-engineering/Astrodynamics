@@ -179,7 +179,6 @@ TEST(Site, WriteEphemeris)
         svectors.push_back(s.GetStateVector(IO::SDK::Frames::InertialFrames::GetICRF(), epoch));
     }
 
-
     s.WriteEphemeris(svectors);
 
     auto windows = s.GetEphemerisCoverageWindow();

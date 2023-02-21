@@ -16,6 +16,7 @@
 #include <InertialFrames.h>
 #include <Builder.h>
 #include <StringHelpers.h>
+#include <SpiceUsr.h>
 
 using namespace std::chrono_literals;
 

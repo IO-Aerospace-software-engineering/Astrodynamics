@@ -9,7 +9,7 @@
  * 
  */
 #include "DateTime.h"
-#include <SDKException.h>
+#include <SpiceUsr.h>
 
 IO::SDK::Time::DateTime::DateTime()
 {
