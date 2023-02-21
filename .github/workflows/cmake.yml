@@ -49,11 +49,11 @@ jobs:
       uses: mattnotmitt/doxygen-action@1.9.5
       if: matrix.os == 'ubuntu-latest'
       
-    - name: Commit version
+    - name: Commit generated docs
       run: |
         git config --global user.name 'Sylvain Guillet'
         git config --global user.email 'sylvain.guillet@live.com'
         git add Docs/
-        git commit -am "update docs"
-      if: matrix.os == 'ubuntu-latest'
+        git commit -am "update docs"      
         git push origin HEAD:develop
+      if: matrix.os == 'ubuntu-latest'
