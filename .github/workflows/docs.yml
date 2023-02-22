@@ -21,4 +21,4 @@ jobs:
         git branch
         git add Docs/
         git commit -am "update docs [skip ci]"      
-        git push origin HEAD:develop
+        git push origin HEAD:develop --force
