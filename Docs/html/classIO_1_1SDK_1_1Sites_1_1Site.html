@@ -21,7 +21,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">IO-SDK<span id="projectnumber">&#160;0.3.0</span>
+   <div id="projectname">IO-SDK<span id="projectnumber">&#160;0.3.x</span>
    </div>
    <div id="projectbrief">Astrodynamics framework</div>
   </td>
@@ -135,6 +135,22 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:af29c8570c7b36f0c074f3c9b6637957a"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector.html">IO::SDK::OrbitalParameters::StateVector</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Sites_1_1Site.html#af29c8570c7b36f0c074f3c9b6637957a">GetStateVector</a> (const <a class="el" href="classIO_1_1SDK_1_1Body_1_1Body.html">IO::SDK::Body::Body</a> &amp;body, const <a class="el" href="classIO_1_1SDK_1_1Frames_1_1Frames.html">IO::SDK::Frames::Frames</a> frame, const <a class="el" href="namespaceIO_1_1SDK.html#abbb4827ec6a24ad346d9a60473ad3b81">IO::SDK::AberrationsEnum</a> aberrationCorrection, const <a class="el" href="classIO_1_1SDK_1_1Time_1_1TDB.html">IO::SDK::Time::TDB</a> &amp;epoch) const</td></tr>
 <tr class="memdesc:af29c8570c7b36f0c074f3c9b6637957a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the State Vector to target body.  <a href="classIO_1_1SDK_1_1Sites_1_1Site.html#af29c8570c7b36f0c074f3c9b6637957a">More...</a><br /></td></tr>
 <tr class="separator:af29c8570c7b36f0c074f3c9b6637957a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa238c1dbccd10d1a35917f29eda12c24"><td class="memItemLeft" align="right" valign="top">std::vector&lt; <a class="el" href="classIO_1_1SDK_1_1Time_1_1Window.html">IO::SDK::Time::Window</a>&lt; <a class="el" href="classIO_1_1SDK_1_1Time_1_1UTC.html">IO::SDK::Time::UTC</a> &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Sites_1_1Site.html#aa238c1dbccd10d1a35917f29eda12c24">FindBodyVisibilityWindows</a> (const <a class="el" href="classIO_1_1SDK_1_1Body_1_1Body.html">IO::SDK::Body::Body</a> &amp;body, const <a class="el" href="classIO_1_1SDK_1_1Time_1_1Window.html">IO::SDK::Time::Window</a>&lt; <a class="el" href="classIO_1_1SDK_1_1Time_1_1UTC.html">IO::SDK::Time::UTC</a> &gt; &amp;searchWindow, const <a class="el" href="namespaceIO_1_1SDK.html#abbb4827ec6a24ad346d9a60473ad3b81">IO::SDK::AberrationsEnum</a> aberrationCorrection)</td></tr>
+<tr class="separator:aa238c1dbccd10d1a35917f29eda12c24"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab39517b6c983d54c6ce8db8bfb440e8d"><td class="memItemLeft" align="right" valign="top">const std::unique_ptr&lt; <a class="el" href="classIO_1_1SDK_1_1Frames_1_1SiteFrameFile.html">IO::SDK::Frames::SiteFrameFile</a> &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Sites_1_1Site.html#ab39517b6c983d54c6ce8db8bfb440e8d">GetFrame</a> () const</td></tr>
+<tr class="separator:ab39517b6c983d54c6ce8db8bfb440e8d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab30557b04599d469876047d9ac6c3587"><td class="memItemLeft" align="right" valign="top">const std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Sites_1_1Site.html#ab30557b04599d469876047d9ac6c3587">GetFilesPath</a> () const</td></tr>
+<tr class="separator:ab30557b04599d469876047d9ac6c3587"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afd7cd0a5bd88c097f84e68360015a6f4"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Sites_1_1Site.html#afd7cd0a5bd88c097f84e68360015a6f4">WriteEphemeris</a> (const std::vector&lt; <a class="el" href="classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector.html">OrbitalParameters::StateVector</a> &gt; &amp;states) const</td></tr>
+<tr class="separator:afd7cd0a5bd88c097f84e68360015a6f4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac1701ec2bfbc8298f77b58184c8403d7"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector.html">OrbitalParameters::StateVector</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Sites_1_1Site.html#ac1701ec2bfbc8298f77b58184c8403d7">ReadEphemeris</a> (const <a class="el" href="classIO_1_1SDK_1_1Frames_1_1Frames.html">Frames::Frames</a> &amp;frame, const <a class="el" href="namespaceIO_1_1SDK.html#abbb4827ec6a24ad346d9a60473ad3b81">AberrationsEnum</a> aberration, const <a class="el" href="classIO_1_1SDK_1_1Time_1_1TDB.html">Time::TDB</a> &amp;epoch, const <a class="el" href="classIO_1_1SDK_1_1Body_1_1CelestialBody.html">Body::CelestialBody</a> &amp;observer) const</td></tr>
+<tr class="separator:ac1701ec2bfbc8298f77b58184c8403d7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a99128f1aea970dfb4c5b6a6dcf39a63c"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classIO_1_1SDK_1_1Time_1_1Window.html">Time::Window</a>&lt; <a class="el" href="classIO_1_1SDK_1_1Time_1_1TDB.html">IO::SDK::Time::TDB</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Sites_1_1Site.html#a99128f1aea970dfb4c5b6a6dcf39a63c">GetEphemerisCoverageWindow</a> () const</td></tr>
+<tr class="separator:a99128f1aea970dfb4c5b6a6dcf39a63c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa8c1fdc55eaa275d594bb30b99f11582"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Sites_1_1Site.html#aa8c1fdc55eaa275d594bb30b99f11582">WriteEphemerisKernelComment</a> (const std::string &amp;comment) const</td></tr>
+<tr class="separator:aa8c1fdc55eaa275d594bb30b99f11582"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abddbfa11d39410da5b01052ba2f3837f"><td class="memItemLeft" align="right" valign="top">std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Sites_1_1Site.html#abddbfa11d39410da5b01052ba2f3837f">ReadEphemerisKernelComment</a> () const</td></tr>
+<tr class="separator:abddbfa11d39410da5b01052ba2f3837f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p ><a class="el" href="classIO_1_1SDK_1_1Sites_1_1Site.html" title="Site class.">Site</a> class. </p>
@@ -189,6 +205,40 @@ Public Member Functions</h2></td></tr>
 </div>
 </div>
 <h2 class="groupheader">Member Function Documentation</h2>
+<a id="aa238c1dbccd10d1a35917f29eda12c24" name="aa238c1dbccd10d1a35917f29eda12c24"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa238c1dbccd10d1a35917f29eda12c24">&#9670;&nbsp;</a></span>FindBodyVisibilityWindows()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::vector&lt; <a class="el" href="classIO_1_1SDK_1_1Time_1_1Window.html">IO::SDK::Time::Window</a>&lt; <a class="el" href="classIO_1_1SDK_1_1Time_1_1UTC.html">IO::SDK::Time::UTC</a> &gt; &gt; IO::SDK::Sites::Site::FindBodyVisibilityWindows </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="classIO_1_1SDK_1_1Body_1_1Body.html">IO::SDK::Body::Body</a> &amp;&#160;</td>
+          <td class="paramname"><em>body</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="classIO_1_1SDK_1_1Time_1_1Window.html">IO::SDK::Time::Window</a>&lt; <a class="el" href="classIO_1_1SDK_1_1Time_1_1UTC.html">IO::SDK::Time::UTC</a> &gt; &amp;&#160;</td>
+          <td class="paramname"><em>searchWindow</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="namespaceIO_1_1SDK.html#abbb4827ec6a24ad346d9a60473ad3b81">IO::SDK::AberrationsEnum</a>&#160;</td>
+          <td class="paramname"><em>aberrationCorrection</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
 <a id="a56d6be12b94d4b10d9f1434e02b29955" name="a56d6be12b94d4b10d9f1434e02b29955"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a56d6be12b94d4b10d9f1434e02b29955">&#9670;&nbsp;</a></span>FindDayWindows()</h2>
 
@@ -378,6 +428,76 @@ Public Member Functions</h2></td></tr>
 
 <p>Get the <a class="el" href="namespaceIO_1_1SDK_1_1Coordinates.html">Coordinates</a>. </p>
 <dl class="section return"><dt>Returns</dt><dd><a class="el" href="classIO_1_1SDK_1_1Coordinates_1_1Geodetic.html" title="Geodetic coordinate.">IO::SDK::Coordinates::Geodetic</a> </dd></dl>
+
+</div>
+</div>
+<a id="a99128f1aea970dfb4c5b6a6dcf39a63c" name="a99128f1aea970dfb4c5b6a6dcf39a63c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a99128f1aea970dfb4c5b6a6dcf39a63c">&#9670;&nbsp;</a></span>GetEphemerisCoverageWindow()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classIO_1_1SDK_1_1Time_1_1Window.html">IO::SDK::Time::Window</a>&lt; <a class="el" href="classIO_1_1SDK_1_1Time_1_1TDB.html">IO::SDK::Time::TDB</a> &gt; IO::SDK::Sites::Site::GetEphemerisCoverageWindow </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p >Get <a class="el" href="namespaceIO_1_1SDK_1_1Time.html">Time</a> span covered by the ephemeris file </p><dl class="section return"><dt>Returns</dt><dd></dd></dl>
+
+</div>
+</div>
+<a id="ab30557b04599d469876047d9ac6c3587" name="ab30557b04599d469876047d9ac6c3587"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab30557b04599d469876047d9ac6c3587">&#9670;&nbsp;</a></span>GetFilesPath()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">const std::string IO::SDK::Sites::Site::GetFilesPath </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p >Get the file path to this site </p><dl class="section return"><dt>Returns</dt><dd></dd></dl>
+
+</div>
+</div>
+<a id="ab39517b6c983d54c6ce8db8bfb440e8d" name="ab39517b6c983d54c6ce8db8bfb440e8d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab39517b6c983d54c6ce8db8bfb440e8d">&#9670;&nbsp;</a></span>GetFrame()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">const std::unique_ptr&lt; <a class="el" href="classIO_1_1SDK_1_1Frames_1_1SiteFrameFile.html">IO::SDK::Frames::SiteFrameFile</a> &gt; &amp; IO::SDK::Sites::Site::GetFrame </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p >Get the site frame file </p><dl class="section return"><dt>Returns</dt><dd></dd></dl>
 
 </div>
 </div>
@@ -720,6 +840,122 @@ false </dd></dl>
 <dl class="section return"><dt>Returns</dt><dd>true </dd>
 <dd>
 false </dd></dl>
+
+</div>
+</div>
+<a id="ac1701ec2bfbc8298f77b58184c8403d7" name="ac1701ec2bfbc8298f77b58184c8403d7"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac1701ec2bfbc8298f77b58184c8403d7">&#9670;&nbsp;</a></span>ReadEphemeris()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector.html">IO::SDK::OrbitalParameters::StateVector</a> IO::SDK::Sites::Site::ReadEphemeris </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="classIO_1_1SDK_1_1Frames_1_1Frames.html">Frames::Frames</a> &amp;&#160;</td>
+          <td class="paramname"><em>frame</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="namespaceIO_1_1SDK.html#abbb4827ec6a24ad346d9a60473ad3b81">AberrationsEnum</a>&#160;</td>
+          <td class="paramname"><em>aberration</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="classIO_1_1SDK_1_1Time_1_1TDB.html">Time::TDB</a> &amp;&#160;</td>
+          <td class="paramname"><em>epoch</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="classIO_1_1SDK_1_1Body_1_1CelestialBody.html">Body::CelestialBody</a> &amp;&#160;</td>
+          <td class="paramname"><em>observer</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p >Read ephemeris from ephemeris file </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">frame</td><td></td></tr>
+    <tr><td class="paramname">aberration</td><td></td></tr>
+    <tr><td class="paramname">epoch</td><td></td></tr>
+    <tr><td class="paramname">observer</td><td></td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd></dd></dl>
+
+</div>
+</div>
+<a id="abddbfa11d39410da5b01052ba2f3837f" name="abddbfa11d39410da5b01052ba2f3837f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#abddbfa11d39410da5b01052ba2f3837f">&#9670;&nbsp;</a></span>ReadEphemerisKernelComment()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::string IO::SDK::Sites::Site::ReadEphemerisKernelComment </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p >Read comment into ephemeris file </p><dl class="section return"><dt>Returns</dt><dd></dd></dl>
+
+</div>
+</div>
+<a id="afd7cd0a5bd88c097f84e68360015a6f4" name="afd7cd0a5bd88c097f84e68360015a6f4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#afd7cd0a5bd88c097f84e68360015a6f4">&#9670;&nbsp;</a></span>WriteEphemeris()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void IO::SDK::Sites::Site::WriteEphemeris </td>
+          <td>(</td>
+          <td class="paramtype">const std::vector&lt; <a class="el" href="classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector.html">OrbitalParameters::StateVector</a> &gt; &amp;&#160;</td>
+          <td class="paramname"><em>states</em></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p >Write stateVectors into ephemeris file </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">states</td><td></td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="aa8c1fdc55eaa275d594bb30b99f11582" name="aa8c1fdc55eaa275d594bb30b99f11582"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa8c1fdc55eaa275d594bb30b99f11582">&#9670;&nbsp;</a></span>WriteEphemerisKernelComment()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void IO::SDK::Sites::Site::WriteEphemerisKernelComment </td>
+          <td>(</td>
+          <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramname"><em>comment</em></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p >Write a comment into ephemeris file </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">comment</td><td></td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>

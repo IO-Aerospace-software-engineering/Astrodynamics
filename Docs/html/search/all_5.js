@@ -10,7 +10,7 @@ var searchData=
   ['engine_7',['Engine',['../classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Engine.html#aa7f21c85ba377fe33b261430134f1883',1,'IO::SDK::Body::Spacecraft::Engine::Engine()'],['../classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Engine.html',1,'IO::SDK::Body::Spacecraft::Engine']]],
   ['engine_2ecpp_8',['Engine.cpp',['../Engine_8cpp.html',1,'']]],
   ['engine_2eh_9',['Engine.h',['../Engine_8h.html',1,'']]],
-  ['ephemeriskernel_10',['EphemerisKernel',['../classIO_1_1SDK_1_1Kernels_1_1EphemerisKernel.html#acf34c07a1abc3f3f9a3aeaad823549db',1,'IO::SDK::Kernels::EphemerisKernel::EphemerisKernel()'],['../classIO_1_1SDK_1_1Kernels_1_1EphemerisKernel.html',1,'IO::SDK::Kernels::EphemerisKernel']]],
+  ['ephemeriskernel_10',['EphemerisKernel',['../classIO_1_1SDK_1_1Kernels_1_1EphemerisKernel.html#acf34c07a1abc3f3f9a3aeaad823549db',1,'IO::SDK::Kernels::EphemerisKernel::EphemerisKernel(const IO::SDK::Body::Spacecraft::Spacecraft &amp;spacecraft)'],['../classIO_1_1SDK_1_1Kernels_1_1EphemerisKernel.html#af79e3386a443207b18142a8057e268b5',1,'IO::SDK::Kernels::EphemerisKernel::EphemerisKernel(const IO::SDK::Sites::Site &amp;site)'],['../classIO_1_1SDK_1_1Kernels_1_1EphemerisKernel.html',1,'IO::SDK::Kernels::EphemerisKernel']]],
   ['ephemeriskernel_2ecpp_11',['EphemerisKernel.cpp',['../EphemerisKernel_8cpp.html',1,'']]],
   ['ephemeriskernel_2eh_12',['EphemerisKernel.h',['../EphemerisKernel_8h.html',1,'']]],
   ['equal_13',['Equal',['../classIO_1_1SDK_1_1Constraint.html#a08ced92a7f4a9b0587e75ab275e75ddb',1,'IO::SDK::Constraint']]],

@@ -25,7 +25,7 @@ var searchData=
   ['converttotdb_22',['ConvertToTDB',['../classIO_1_1SDK_1_1Kernels_1_1SpacecraftClockKernel.html#a54e4d6898f6be23593d8a38b3a517071',1,'IO::SDK::Kernels::SpacecraftClockKernel::ConvertToTDB(const double encodedClock) const'],['../classIO_1_1SDK_1_1Kernels_1_1SpacecraftClockKernel.html#a9c61a0f733a909d715adc5900a0f8114',1,'IO::SDK::Kernels::SpacecraftClockKernel::ConvertToTDB(const std::string &amp;clock) const']]],
   ['coordinate_23',['Coordinate',['../classIO_1_1SDK_1_1Coordinate.html#a14bc2970fed38a4ef4048cac18b7e716',1,'IO::SDK::Coordinate']]],
   ['coordinatesystem_24',['CoordinateSystem',['../classIO_1_1SDK_1_1CoordinateSystem.html#aa137864ed0c08113f72f8fb4d99e2158',1,'IO::SDK::CoordinateSystem']]],
-  ['createdoublecell_25',['CreateDoubleCell',['../classIO_1_1SDK_1_1Spice_1_1Builder.html#a5f1e20acb64238d69f26cfa2b8e1ddd7',1,'IO::SDK::Spice::Builder']]],
+  ['createdoublecell_25',['CreateDoubleCell',['../classIO_1_1SDK_1_1Spice_1_1Builder.html#a8ca1ab7f2c5ff0c9567bf6517a046785',1,'IO::SDK::Spice::Builder']]],
   ['crossproduct_26',['CrossProduct',['../classIO_1_1SDK_1_1Math_1_1Vector3D.html#ae6575d9aa896eed9a32588d9503dd6a0',1,'IO::SDK::Math::Vector3D']]],
   ['cylindrical_27',['Cylindrical',['../classIO_1_1SDK_1_1Coordinates_1_1Cylindrical.html#a299316c14615539126a3d74019d09b60',1,'IO::SDK::Coordinates::Cylindrical::Cylindrical()'],['../classIO_1_1SDK_1_1CoordinateSystem.html#a7c20aa58ee892a0e693ecec10ffa307d',1,'IO::SDK::CoordinateSystem::Cylindrical()']]]
 ];
