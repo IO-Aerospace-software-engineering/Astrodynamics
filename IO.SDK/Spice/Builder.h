@@ -26,7 +26,7 @@ namespace IO::SDK::Spice
          * @param SPICE_CELL 
          * @return SpiceCell 
          */
-        static SpiceCell CreateDoubleCell(const SpiceInt size, SpiceDouble *SPICE_CELL);
+        static SpiceCell CreateDoubleCell(const int size, double *SPICE_CELL);
     };
 
 } // namespace IO::SDK::Spice

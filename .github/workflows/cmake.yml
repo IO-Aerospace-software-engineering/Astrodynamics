@@ -3,6 +3,8 @@ name: IO SDK integration
 on:
   pull_request:
     branches: [ develop ]
+  push:
+    branches: [ develop ]
 
 env:
   # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
@@ -28,7 +30,7 @@ jobs:
 
     - name: Build
       # Build your program with the given configuration
-      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
+      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}} -j 2
 
     - name: Tests (Linux)
       working-directory: ${{github.workspace}}/build/IO.SDK.Tests
@@ -44,16 +46,3 @@ jobs:
       # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
       run: IO.SDK.Tests.exe      
       if: matrix.os == 'windows-latest'
-      
-    - name: Doxygen Action
-      uses: mattnotmitt/doxygen-action@1.9.5
-      if: matrix.os == 'ubuntu-latest'
-      
-    - name: Commit generated docs
-      run: |
-        git config --global user.name 'Sylvain Guillet'
-        git config --global user.email 'sylvain.guillet@live.com'
-        git add Docs/
-        git commit -am "update docs"      
-        git push origin HEAD:develop
-      if: matrix.os == 'ubuntu-latest'

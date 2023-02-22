@@ -31,7 +31,7 @@ TEST(SiteFrame, Initialization)
     ASSERT_STREQ("ANGLES", spec[0].c_str());
 
     auto relative = IO::SDK::DataPoolMonitoring::Instance().GetStringProperty("TKFRAME_1522456_RELATIVE", 1);
-    ASSERT_STREQ("IAU_earth", relative[0].c_str());
+    ASSERT_STREQ("IAU_EARTH", relative[0].c_str());
 
     auto frameAngles = IO::SDK::DataPoolMonitoring::Instance().GetDoubleProperty("TKFRAME_1522456_ANGLES", 3);
     ASSERT_DOUBLE_EQ(-0.038397, frameAngles[0]);

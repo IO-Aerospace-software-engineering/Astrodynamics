@@ -16,7 +16,6 @@
 #include<OrbitalParameters.h>
 #include<CelestialBody.h>
 #include<Constants.h>
-#include<SpiceUsr.h>
 #include<TimeSpan.h>
 #include<chrono>
 #include<TDB.h>

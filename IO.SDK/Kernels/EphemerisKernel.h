@@ -14,16 +14,17 @@
 #include <vector>
 #include <memory>
 
-#include <SpiceUsr.h>
 #include <Kernel.h>
 #include <StateVector.h>
 #include <Aberrations.h>
 #include <CelestialBody.h>
 #include <TDB.h>
 #include <InertialFrames.h>
+#include <Site.h>
 #include <Spacecraft.h>
 #include <Window.h>
 #include <InvalidArgumentException.h>
+
 
 namespace IO::SDK::Kernels
 {
@@ -34,16 +35,17 @@ namespace IO::SDK::Kernels
 	class EphemerisKernel final : public Kernel
 	{
 	private:
-		const IO::SDK::Body::Spacecraft::Spacecraft &m_spacecraft;
+		const int m_objectId;
 		bool IsEvenlySpacedData(const std::vector<OrbitalParameters::StateVector> &states) const;
 
 	public:
 		/**
 		 * @brief Construct a new Ephemeris Kernel object
 		 * 
-		 * @param spacecraft 
+		 * @param spacecraft
 		 */
 		EphemerisKernel(const IO::SDK::Body::Spacecraft::Spacecraft &spacecraft);
+		EphemerisKernel(const IO::SDK::Sites::Site &site);
 		virtual ~EphemerisKernel() = default;
 
 		/**

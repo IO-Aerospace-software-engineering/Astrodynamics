@@ -12,7 +12,6 @@
 #define DATETIME_H
 
 #include <string>
-#include <SpiceUsr.h>
 #include <TimeSpan.h>
 #include <chrono>
 #include <SpiceUsr.h>

@@ -11,7 +11,6 @@
 #ifndef KERNEL_H
 #define KERNEL_H
 #include <string>
-#include <SpiceUsr.h>
 #include <Window.h>
 #include <TDB.h>
 
