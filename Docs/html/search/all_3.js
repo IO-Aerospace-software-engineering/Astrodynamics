@@ -48,7 +48,7 @@ var searchData=
   ['coordinatesystem_45',['CoordinateSystem',['../classIO_1_1SDK_1_1CoordinateSystem.html#aa137864ed0c08113f72f8fb4d99e2158',1,'IO::SDK::CoordinateSystem::CoordinateSystem()'],['../classIO_1_1SDK_1_1CoordinateSystem.html',1,'IO::SDK::CoordinateSystem']]],
   ['coordinatesystem_2ecpp_46',['CoordinateSystem.cpp',['../CoordinateSystem_8cpp.html',1,'']]],
   ['coordinatesystem_2eh_47',['CoordinateSystem.h',['../CoordinateSystem_8h.html',1,'']]],
-  ['createdoublecell_48',['CreateDoubleCell',['../classIO_1_1SDK_1_1Spice_1_1Builder.html#a5f1e20acb64238d69f26cfa2b8e1ddd7',1,'IO::SDK::Spice::Builder']]],
+  ['createdoublecell_48',['CreateDoubleCell',['../classIO_1_1SDK_1_1Spice_1_1Builder.html#a8ca1ab7f2c5ff0c9567bf6517a046785',1,'IO::SDK::Spice::Builder']]],
   ['crossproduct_49',['CrossProduct',['../classIO_1_1SDK_1_1Math_1_1Vector3D.html#ae6575d9aa896eed9a32588d9503dd6a0',1,'IO::SDK::Math::Vector3D']]],
   ['cylindrical_50',['Cylindrical',['../classIO_1_1SDK_1_1Coordinates_1_1Cylindrical.html#a299316c14615539126a3d74019d09b60',1,'IO::SDK::Coordinates::Cylindrical::Cylindrical()'],['../classIO_1_1SDK_1_1CoordinateSystem.html#a7c20aa58ee892a0e693ecec10ffa307d',1,'IO::SDK::CoordinateSystem::Cylindrical()'],['../classIO_1_1SDK_1_1Coordinates_1_1Cylindrical.html',1,'IO::SDK::Coordinates::Cylindrical']]],
   ['cylindrical_2eh_51',['Cylindrical.h',['../Cylindrical_8h.html',1,'']]]

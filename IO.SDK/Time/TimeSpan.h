@@ -12,7 +12,6 @@
 #define TIMESPAN_H
 #include<string>
 #include<chrono>
-#include<SpiceUsr.h>
 
 namespace IO::SDK::Time
 {

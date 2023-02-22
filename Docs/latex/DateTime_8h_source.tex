@@ -7,47 +7,46 @@
 \DoxyCodeLine{12 \textcolor{preprocessor}{\#define DATETIME\_H}}
 \DoxyCodeLine{13 }
 \DoxyCodeLine{14 \textcolor{preprocessor}{\#include <string>}}
-\DoxyCodeLine{15 \textcolor{preprocessor}{\#include <SpiceUsr.h>}}
-\DoxyCodeLine{16 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{TimeSpan_8h}{TimeSpan.h}}>}}
-\DoxyCodeLine{17 \textcolor{preprocessor}{\#include <chrono>}}
-\DoxyCodeLine{18 \textcolor{preprocessor}{\#include <SpiceUsr.h>}}
-\DoxyCodeLine{19 }
-\DoxyCodeLine{20 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1SDK_1_1Time}{IO::SDK::Time}}}
-\DoxyCodeLine{21 \{}
-\DoxyCodeLine{22     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1DateTime}{DateTime}}}
-\DoxyCodeLine{23     \{}
-\DoxyCodeLine{24     \textcolor{keyword}{private}:}
-\DoxyCodeLine{25     \textcolor{keyword}{protected}:}
-\DoxyCodeLine{26         \textcolor{keyword}{const} std::chrono::duration<double> \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1DateTime_a0515ac5362569a8c3955a185e2c2690d}{m\_secondsFromJ2000}}\{\};}
-\DoxyCodeLine{27         \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1DateTime_a0c9b91e1f718de1a80aad1925c271e25}{DateTime}}();}
-\DoxyCodeLine{28         \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1DateTime_a0c9b91e1f718de1a80aad1925c271e25}{DateTime}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1DateTime}{DateTime}}\& datetime);}
-\DoxyCodeLine{29         \textcolor{keyword}{virtual} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1DateTime_add023eabeddb874ac1d55237884fe24c}{\string~DateTime}}() = \textcolor{keywordflow}{default};}
-\DoxyCodeLine{30 }
-\DoxyCodeLine{36         \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1DateTime_a0c9b91e1f718de1a80aad1925c271e25}{DateTime}}(\textcolor{keyword}{const} std::chrono::duration<double> secondsFromJ2000);}
-\DoxyCodeLine{37 }
-\DoxyCodeLine{38     \textcolor{keyword}{public}:}
-\DoxyCodeLine{43         std::chrono::duration<double> \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1DateTime_a98d7975b9422550fcd658040392d94ca}{GetSecondsFromJ2000}}() \textcolor{keyword}{const};}
-\DoxyCodeLine{44 }
-\DoxyCodeLine{49         \textcolor{keyword}{virtual} std::string \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1DateTime_a18bc7d081609ca935efa0a04f0cf2db3}{ToString}}() \textcolor{keyword}{const} = 0;}
-\DoxyCodeLine{50 }
-\DoxyCodeLine{56         \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO::SDK::Time::TimeSpan}} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1DateTime_aa73aaa910577466bcde537d381ebe749}{Substract}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1DateTime}{IO::SDK::Time::DateTime}} \&datetime) \textcolor{keyword}{const};}
-\DoxyCodeLine{57 }
-\DoxyCodeLine{63         \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO::SDK::Time::TimeSpan}} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1DateTime_ad6174101984cc414abe7d61e9faf63c0}{operator-\/}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1DateTime}{IO::SDK::Time::DateTime}} \&other) \textcolor{keyword}{const};}
-\DoxyCodeLine{64 }
-\DoxyCodeLine{65         \textcolor{keywordtype}{bool} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1DateTime_a348f8d2d43f92990d602a5d9eb86b0b9}{operator==}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1DateTime}{IO::SDK::Time::DateTime}} \&other) \textcolor{keyword}{const};}
-\DoxyCodeLine{66         \textcolor{keywordtype}{bool} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1DateTime_a57ed99a06d4c9e06817682738250f664}{operator!=}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1DateTime}{IO::SDK::Time::DateTime}} \&other) \textcolor{keyword}{const};}
-\DoxyCodeLine{67         \textcolor{keywordtype}{bool} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1DateTime_a12e7963af46b00f536d1080014ebfc12}{operator>}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1DateTime}{IO::SDK::Time::DateTime}} \&other) \textcolor{keyword}{const};}
-\DoxyCodeLine{68         \textcolor{keywordtype}{bool} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1DateTime_a1ce12a6af5b2a07461feccd313c9cb0d}{operator>=}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1DateTime}{IO::SDK::Time::DateTime}} \&other) \textcolor{keyword}{const};}
-\DoxyCodeLine{69         \textcolor{keywordtype}{bool} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1DateTime_a6da93cffb10ce9dd56fcc86b6b5fb236}{operator<}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1DateTime}{IO::SDK::Time::DateTime}} \&other) \textcolor{keyword}{const};}
-\DoxyCodeLine{70         \textcolor{keywordtype}{bool} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1DateTime_a7d9594a26d5d61a79248307e98fa4187}{operator<=}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1DateTime}{IO::SDK::Time::DateTime}} \&other) \textcolor{keyword}{const};}
-\DoxyCodeLine{71 }
-\DoxyCodeLine{72         \textcolor{keyword}{virtual} \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1DateTime_a4fa81bfb1e5337e249a14995abad3e72}{ToJulian}}() \textcolor{keyword}{const};}
-\DoxyCodeLine{73 }
-\DoxyCodeLine{74         \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1DateTime_a4375c2d9d131990912f38d6f20577e0f}{CenturiesFromJ2000}}() \textcolor{keyword}{const};}
-\DoxyCodeLine{75 }
-\DoxyCodeLine{76         \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1DateTime}{DateTime}} \&\mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1DateTime_aea56fafe2b7990c4e1232f5bf062eb84}{operator=}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1DateTime}{DateTime}} \&datetime);}
-\DoxyCodeLine{77     \};}
-\DoxyCodeLine{78 \}}
-\DoxyCodeLine{79 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{15 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{TimeSpan_8h}{TimeSpan.h}}>}}
+\DoxyCodeLine{16 \textcolor{preprocessor}{\#include <chrono>}}
+\DoxyCodeLine{17 \textcolor{preprocessor}{\#include <SpiceUsr.h>}}
+\DoxyCodeLine{18 }
+\DoxyCodeLine{19 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1SDK_1_1Time}{IO::SDK::Time}}}
+\DoxyCodeLine{20 \{}
+\DoxyCodeLine{21     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1DateTime}{DateTime}}}
+\DoxyCodeLine{22     \{}
+\DoxyCodeLine{23     \textcolor{keyword}{private}:}
+\DoxyCodeLine{24     \textcolor{keyword}{protected}:}
+\DoxyCodeLine{25         \textcolor{keyword}{const} std::chrono::duration<double> \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1DateTime_a0515ac5362569a8c3955a185e2c2690d}{m\_secondsFromJ2000}}\{\};}
+\DoxyCodeLine{26         \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1DateTime_a0c9b91e1f718de1a80aad1925c271e25}{DateTime}}();}
+\DoxyCodeLine{27         \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1DateTime_a0c9b91e1f718de1a80aad1925c271e25}{DateTime}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1DateTime}{DateTime}}\& datetime);}
+\DoxyCodeLine{28         \textcolor{keyword}{virtual} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1DateTime_add023eabeddb874ac1d55237884fe24c}{\string~DateTime}}() = \textcolor{keywordflow}{default};}
+\DoxyCodeLine{29 }
+\DoxyCodeLine{35         \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1DateTime_a0c9b91e1f718de1a80aad1925c271e25}{DateTime}}(\textcolor{keyword}{const} std::chrono::duration<double> secondsFromJ2000);}
+\DoxyCodeLine{36 }
+\DoxyCodeLine{37     \textcolor{keyword}{public}:}
+\DoxyCodeLine{42         std::chrono::duration<double> \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1DateTime_a98d7975b9422550fcd658040392d94ca}{GetSecondsFromJ2000}}() \textcolor{keyword}{const};}
+\DoxyCodeLine{43 }
+\DoxyCodeLine{48         \textcolor{keyword}{virtual} std::string \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1DateTime_a18bc7d081609ca935efa0a04f0cf2db3}{ToString}}() \textcolor{keyword}{const} = 0;}
+\DoxyCodeLine{49 }
+\DoxyCodeLine{55         \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO::SDK::Time::TimeSpan}} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1DateTime_aa73aaa910577466bcde537d381ebe749}{Substract}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1DateTime}{IO::SDK::Time::DateTime}} \&datetime) \textcolor{keyword}{const};}
+\DoxyCodeLine{56 }
+\DoxyCodeLine{62         \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO::SDK::Time::TimeSpan}} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1DateTime_ad6174101984cc414abe7d61e9faf63c0}{operator-\/}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1DateTime}{IO::SDK::Time::DateTime}} \&other) \textcolor{keyword}{const};}
+\DoxyCodeLine{63 }
+\DoxyCodeLine{64         \textcolor{keywordtype}{bool} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1DateTime_a348f8d2d43f92990d602a5d9eb86b0b9}{operator==}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1DateTime}{IO::SDK::Time::DateTime}} \&other) \textcolor{keyword}{const};}
+\DoxyCodeLine{65         \textcolor{keywordtype}{bool} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1DateTime_a57ed99a06d4c9e06817682738250f664}{operator!=}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1DateTime}{IO::SDK::Time::DateTime}} \&other) \textcolor{keyword}{const};}
+\DoxyCodeLine{66         \textcolor{keywordtype}{bool} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1DateTime_a12e7963af46b00f536d1080014ebfc12}{operator>}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1DateTime}{IO::SDK::Time::DateTime}} \&other) \textcolor{keyword}{const};}
+\DoxyCodeLine{67         \textcolor{keywordtype}{bool} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1DateTime_a1ce12a6af5b2a07461feccd313c9cb0d}{operator>=}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1DateTime}{IO::SDK::Time::DateTime}} \&other) \textcolor{keyword}{const};}
+\DoxyCodeLine{68         \textcolor{keywordtype}{bool} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1DateTime_a6da93cffb10ce9dd56fcc86b6b5fb236}{operator<}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1DateTime}{IO::SDK::Time::DateTime}} \&other) \textcolor{keyword}{const};}
+\DoxyCodeLine{69         \textcolor{keywordtype}{bool} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1DateTime_a7d9594a26d5d61a79248307e98fa4187}{operator<=}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1DateTime}{IO::SDK::Time::DateTime}} \&other) \textcolor{keyword}{const};}
+\DoxyCodeLine{70 }
+\DoxyCodeLine{71         \textcolor{keyword}{virtual} \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1DateTime_a4fa81bfb1e5337e249a14995abad3e72}{ToJulian}}() \textcolor{keyword}{const};}
+\DoxyCodeLine{72 }
+\DoxyCodeLine{73         \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1DateTime_a4375c2d9d131990912f38d6f20577e0f}{CenturiesFromJ2000}}() \textcolor{keyword}{const};}
+\DoxyCodeLine{74 }
+\DoxyCodeLine{75         \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1DateTime}{DateTime}} \&\mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1DateTime_aea56fafe2b7990c4e1232f5bf062eb84}{operator=}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1DateTime}{DateTime}} \&datetime);}
+\DoxyCodeLine{76     \};}
+\DoxyCodeLine{77 \}}
+\DoxyCodeLine{78 \textcolor{preprocessor}{\#endif}}
 
 \end{DoxyCode}

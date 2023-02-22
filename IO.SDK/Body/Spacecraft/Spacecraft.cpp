@@ -36,7 +36,7 @@ IO::SDK::Body::Spacecraft::Spacecraft::Spacecraft(const int id, const std::strin
                                                                                                         missionPrefix)},
                                                                                         m_filesPath{
                                                                                                 std::string(
-                                                                                                        IO::SDK::Parameters::KernelsPath) +
+                                                                                                        IO::SDK::Parameters::SpacecraftPath) +
                                                                                                 "/" +
                                                                                                 IO::SDK::StringHelpers::ToUpper(
                                                                                                         name) + "_" +

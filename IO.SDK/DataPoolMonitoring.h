@@ -13,7 +13,6 @@
 
 #include<vector>
 #include<string>
-#include<SpiceUsr.h>
 
 namespace IO::SDK
 {

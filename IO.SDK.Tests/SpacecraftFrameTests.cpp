@@ -11,7 +11,7 @@ using namespace std::chrono_literals;
 
 TEST(SpacecraftFrameFile, Initialization)
 {
-	std::string filepath = std::string(IO::SDK::Parameters::KernelsPath) + "/SC17_MIS1SCN1/Frames/SC17.tf";
+	std::string filepath = std::string(IO::SDK::Parameters::SpacecraftPath) + "/SC17_MIS1SCN1/Frames/SC17.tf";
 	if (std::filesystem::exists(filepath))
 	{
 		std::filesystem::remove(filepath);

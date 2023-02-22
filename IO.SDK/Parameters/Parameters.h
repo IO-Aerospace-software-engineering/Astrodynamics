@@ -14,9 +14,9 @@
 
 namespace IO::SDK::Parameters
 {
-	inline constexpr std::string_view KernelsPath = "Data/User/Spacecrafts";
+	inline constexpr std::string_view SpacecraftPath = "Data/User/Spacecrafts";
 	inline constexpr std::string_view SolarSystemKernelPath = "Data/SolarSystem";
-	inline constexpr std::string_view SiteFramesPath = "Data/User/Sites/Frames";
+	inline constexpr std::string_view SitePath = "Data/User/Sites";
 	inline constexpr int CommentAreaSize = 5000;
 	inline constexpr int MaximumEphemerisLagrangePolynomialDegree = 27;//[1-23]
 	inline constexpr int MaximumOrientationLagrangePolynomialDegree = 23;//[1-23]

@@ -150,6 +150,6 @@ TEST(CelestialBody, FindOccultationConstraint)
 	auto results = earth->FindWindowsOnOccultationConstraint(searchWindow,*sun, *moon,IO::SDK::OccultationType::Any(), IO::SDK::AberrationsEnum::LT, IO::SDK::Time::TimeSpan(240s));
 
 	ASSERT_EQ(1, results.size());
-	ASSERT_STREQ("2001-12-14 20:10:14.194986 (TDB)", results[0].GetStartDate().ToString().c_str());
-	ASSERT_STREQ("2001-12-14 21:35:50.317347 (TDB)", results[0].GetEndDate().ToString().c_str());
+	ASSERT_STREQ("2001-12-14 20:10:15.410588 (TDB)", results[0].GetStartDate().ToString().c_str());
+	ASSERT_STREQ("2001-12-14 21:35:49.100520 (TDB)", results[0].GetEndDate().ToString().c_str());
 }

@@ -9,6 +9,7 @@
  * 
  */
 #include "DataPoolMonitoring.h"
+#include <SpiceUsr.h>
 
 IO::SDK::DataPoolMonitoring IO::SDK::DataPoolMonitoring::m_instance;
 

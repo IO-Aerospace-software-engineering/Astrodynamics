@@ -17,7 +17,6 @@
 #include <CelestialBody.h>
 #include <StateVector.h>
 #include <string>
-#include <SpiceUsr.h>
 #include <ConicOrbitalElements.h>
 #include <chrono>
 #include <TDB.h>

@@ -20,7 +20,6 @@
 #include <SDKException.h>
 #include <Parameters.h>
 #include <OrbitalParameters.h>
-#include <SpiceUsr.h>
 #include <Frames.h>
 #include <Aberrations.h>
 #include <Window.h>

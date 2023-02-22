@@ -3,8 +3,6 @@ name: IO SDK integration
 on:
   pull_request:
     branches: [ develop ]
-  push:
-    branches: [ develop ]
 
 env:
   # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
@@ -30,7 +28,7 @@ jobs:
 
     - name: Build
       # Build your program with the given configuration
-      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
+      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}} -j 2
 
     - name: Tests (Linux)
       working-directory: ${{github.workspace}}/build/IO.SDK.Tests
@@ -45,4 +43,4 @@ jobs:
       # Execute tests defined by the CMake configuration.  
       # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
       run: IO.SDK.Tests.exe      
-      if: matrix.os == 'windows-latest'      
+      if: matrix.os == 'windows-latest'
