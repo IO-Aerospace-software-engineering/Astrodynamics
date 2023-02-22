@@ -3,6 +3,8 @@ name: IO SDK integration
 on:
   pull_request:
     branches: [ develop ]
+  push:
+    branches: [ develop ]
 
 env:
   # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
@@ -28,7 +30,7 @@ jobs:
 
     - name: Build
       # Build your program with the given configuration
-      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
+      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}} -j 2
 
     - name: Tests (Linux)
       working-directory: ${{github.workspace}}/build/IO.SDK.Tests
@@ -55,6 +57,6 @@ jobs:
         git config --global user.email 'sylvain.guillet@live.com'
         git branch
         git add Docs/
-        git commit -am "update docs"      
+        git commit -am "update docs [skip ci]"      
         git push origin HEAD:develop
       if: matrix.os == 'ubuntu-latest'
