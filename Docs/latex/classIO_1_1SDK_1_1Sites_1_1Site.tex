@@ -47,7 +47,23 @@ std\+::vector$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO\+::\+SDK\
 \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1HorizontalCoordinates}{IO\+::\+SDK\+::\+Coordinates\+::\+Horizontal\+Coordinates}} \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_a551acf961b448cf2857ee02212bdfa1b}{Get\+Horizontal\+Coordinates}} (const \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body}{IO\+::\+SDK\+::\+Body\+::\+Body}} \&body, const \mbox{\hyperlink{namespaceIO_1_1SDK_abbb4827ec6a24ad346d9a60473ad3b81}{IO\+::\+SDK\+::\+Aberrations\+Enum}} aberration\+Correction, const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} \&epoch) const
 \begin{DoxyCompactList}\small\item\em Get the Horizontal \mbox{\hyperlink{namespaceIO_1_1SDK_1_1Coordinates}{Coordinates}} to the target body. \end{DoxyCompactList}\item 
 \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+State\+Vector}} \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_af29c8570c7b36f0c074f3c9b6637957a}{Get\+State\+Vector}} (const \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body}{IO\+::\+SDK\+::\+Body\+::\+Body}} \&body, const \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1Frames}{IO\+::\+SDK\+::\+Frames\+::\+Frames}} frame, const \mbox{\hyperlink{namespaceIO_1_1SDK_abbb4827ec6a24ad346d9a60473ad3b81}{IO\+::\+SDK\+::\+Aberrations\+Enum}} aberration\+Correction, const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} \&epoch) const
-\begin{DoxyCompactList}\small\item\em Get the State Vector to target body. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\begin{DoxyCompactList}\small\item\em Get the State Vector to target body. \end{DoxyCompactList}\item 
+std\+::vector$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO\+::\+SDK\+::\+Time\+::\+Window}}$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1UTC}{IO\+::\+SDK\+::\+Time\+::\+UTC}} $>$ $>$ \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_aa238c1dbccd10d1a35917f29eda12c24}{Find\+Body\+Visibility\+Windows}} (const \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body}{IO\+::\+SDK\+::\+Body\+::\+Body}} \&body, const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO\+::\+SDK\+::\+Time\+::\+Window}}$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1UTC}{IO\+::\+SDK\+::\+Time\+::\+UTC}} $>$ \&search\+Window, const \mbox{\hyperlink{namespaceIO_1_1SDK_abbb4827ec6a24ad346d9a60473ad3b81}{IO\+::\+SDK\+::\+Aberrations\+Enum}} aberration\+Correction)
+\item 
+const std\+::unique\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1SiteFrameFile}{IO\+::\+SDK\+::\+Frames\+::\+Site\+Frame\+File}} $>$ \& \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_ab39517b6c983d54c6ce8db8bfb440e8d}{Get\+Frame}} () const
+\item 
+const std\+::string \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_ab30557b04599d469876047d9ac6c3587}{Get\+Files\+Path}} () const
+\item 
+void \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_afd7cd0a5bd88c097f84e68360015a6f4}{Write\+Ephemeris}} (const std\+::vector$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{Orbital\+Parameters\+::\+State\+Vector}} $>$ \&states) const
+\item 
+\mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{Orbital\+Parameters\+::\+State\+Vector}} \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_ac1701ec2bfbc8298f77b58184c8403d7}{Read\+Ephemeris}} (const \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1Frames}{Frames\+::\+Frames}} \&frame, const \mbox{\hyperlink{namespaceIO_1_1SDK_abbb4827ec6a24ad346d9a60473ad3b81}{Aberrations\+Enum}} aberration, const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{Time\+::\+TDB}} \&epoch, const \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1CelestialBody}{Body\+::\+Celestial\+Body}} \&observer) const
+\item 
+\mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{Time\+::\+Window}}$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} $>$ \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_a99128f1aea970dfb4c5b6a6dcf39a63c}{Get\+Ephemeris\+Coverage\+Window}} () const
+\item 
+void \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_aa8c1fdc55eaa275d594bb30b99f11582}{Write\+Ephemeris\+Kernel\+Comment}} (const std\+::string \&comment) const
+\item 
+std\+::string \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_abddbfa11d39410da5b01052ba2f3837f}{Read\+Ephemeris\+Kernel\+Comment}} () const
+\end{DoxyCompactItemize}
 
 
 \doxysubsection{Detailed Description}
@@ -74,6 +90,12 @@ Construct a new \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site}{Site}} object.
 
 
 \doxysubsection{Member Function Documentation}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Sites_1_1Site_aa238c1dbccd10d1a35917f29eda12c24}\label{classIO_1_1SDK_1_1Sites_1_1Site_aa238c1dbccd10d1a35917f29eda12c24}} 
+\index{IO::SDK::Sites::Site@{IO::SDK::Sites::Site}!FindBodyVisibilityWindows@{FindBodyVisibilityWindows}}
+\index{FindBodyVisibilityWindows@{FindBodyVisibilityWindows}!IO::SDK::Sites::Site@{IO::SDK::Sites::Site}}
+\doxysubsubsection{\texorpdfstring{FindBodyVisibilityWindows()}{FindBodyVisibilityWindows()}}
+{\footnotesize\ttfamily std\+::vector$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO\+::\+SDK\+::\+Time\+::\+Window}}$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1UTC}{IO\+::\+SDK\+::\+Time\+::\+UTC}} $>$ $>$ IO\+::\+SDK\+::\+Sites\+::\+Site\+::\+Find\+Body\+Visibility\+Windows (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body}{IO\+::\+SDK\+::\+Body\+::\+Body}} \&}]{body,  }\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO\+::\+SDK\+::\+Time\+::\+Window}}$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1UTC}{IO\+::\+SDK\+::\+Time\+::\+UTC}} $>$ \&}]{search\+Window,  }\item[{const \mbox{\hyperlink{namespaceIO_1_1SDK_abbb4827ec6a24ad346d9a60473ad3b81}{IO\+::\+SDK\+::\+Aberrations\+Enum}}}]{aberration\+Correction }\end{DoxyParamCaption})}
+
 \mbox{\Hypertarget{classIO_1_1SDK_1_1Sites_1_1Site_a56d6be12b94d4b10d9f1434e02b29955}\label{classIO_1_1SDK_1_1Sites_1_1Site_a56d6be12b94d4b10d9f1434e02b29955}} 
 \index{IO::SDK::Sites::Site@{IO::SDK::Sites::Site}!FindDayWindows@{FindDayWindows}}
 \index{FindDayWindows@{FindDayWindows}!IO::SDK::Sites::Site@{IO::SDK::Sites::Site}}
@@ -167,6 +189,33 @@ Get the \mbox{\hyperlink{namespaceIO_1_1SDK_1_1Coordinates}{Coordinates}}.
 
 \begin{DoxyReturn}{Returns}
 \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1Geodetic}{IO\+::\+SDK\+::\+Coordinates\+::\+Geodetic}} 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Sites_1_1Site_a99128f1aea970dfb4c5b6a6dcf39a63c}\label{classIO_1_1SDK_1_1Sites_1_1Site_a99128f1aea970dfb4c5b6a6dcf39a63c}} 
+\index{IO::SDK::Sites::Site@{IO::SDK::Sites::Site}!GetEphemerisCoverageWindow@{GetEphemerisCoverageWindow}}
+\index{GetEphemerisCoverageWindow@{GetEphemerisCoverageWindow}!IO::SDK::Sites::Site@{IO::SDK::Sites::Site}}
+\doxysubsubsection{\texorpdfstring{GetEphemerisCoverageWindow()}{GetEphemerisCoverageWindow()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO\+::\+SDK\+::\+Time\+::\+Window}}$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} $>$ IO\+::\+SDK\+::\+Sites\+::\+Site\+::\+Get\+Ephemeris\+Coverage\+Window (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+Get \mbox{\hyperlink{namespaceIO_1_1SDK_1_1Time}{Time}} span covered by the ephemeris file \begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Sites_1_1Site_ab30557b04599d469876047d9ac6c3587}\label{classIO_1_1SDK_1_1Sites_1_1Site_ab30557b04599d469876047d9ac6c3587}} 
+\index{IO::SDK::Sites::Site@{IO::SDK::Sites::Site}!GetFilesPath@{GetFilesPath}}
+\index{GetFilesPath@{GetFilesPath}!IO::SDK::Sites::Site@{IO::SDK::Sites::Site}}
+\doxysubsubsection{\texorpdfstring{GetFilesPath()}{GetFilesPath()}}
+{\footnotesize\ttfamily const std\+::string IO\+::\+SDK\+::\+Sites\+::\+Site\+::\+Get\+Files\+Path (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+Get the file path to this site \begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Sites_1_1Site_ab39517b6c983d54c6ce8db8bfb440e8d}\label{classIO_1_1SDK_1_1Sites_1_1Site_ab39517b6c983d54c6ce8db8bfb440e8d}} 
+\index{IO::SDK::Sites::Site@{IO::SDK::Sites::Site}!GetFrame@{GetFrame}}
+\index{GetFrame@{GetFrame}!IO::SDK::Sites::Site@{IO::SDK::Sites::Site}}
+\doxysubsubsection{\texorpdfstring{GetFrame()}{GetFrame()}}
+{\footnotesize\ttfamily const std\+::unique\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1SiteFrameFile}{IO\+::\+SDK\+::\+Frames\+::\+Site\+Frame\+File}} $>$ \& IO\+::\+SDK\+::\+Sites\+::\+Site\+::\+Get\+Frame (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+Get the site frame file \begin{DoxyReturn}{Returns}
+
 \end{DoxyReturn}
 \mbox{\Hypertarget{classIO_1_1SDK_1_1Sites_1_1Site_a551acf961b448cf2857ee02212bdfa1b}\label{classIO_1_1SDK_1_1Sites_1_1Site_a551acf961b448cf2857ee02212bdfa1b}} 
 \index{IO::SDK::Sites::Site@{IO::SDK::Sites::Site}!GetHorizontalCoordinates@{GetHorizontalCoordinates}}
@@ -329,6 +378,57 @@ true
 
 false 
 \end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Sites_1_1Site_ac1701ec2bfbc8298f77b58184c8403d7}\label{classIO_1_1SDK_1_1Sites_1_1Site_ac1701ec2bfbc8298f77b58184c8403d7}} 
+\index{IO::SDK::Sites::Site@{IO::SDK::Sites::Site}!ReadEphemeris@{ReadEphemeris}}
+\index{ReadEphemeris@{ReadEphemeris}!IO::SDK::Sites::Site@{IO::SDK::Sites::Site}}
+\doxysubsubsection{\texorpdfstring{ReadEphemeris()}{ReadEphemeris()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+State\+Vector}} IO\+::\+SDK\+::\+Sites\+::\+Site\+::\+Read\+Ephemeris (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1Frames}{Frames\+::\+Frames}} \&}]{frame,  }\item[{const \mbox{\hyperlink{namespaceIO_1_1SDK_abbb4827ec6a24ad346d9a60473ad3b81}{Aberrations\+Enum}}}]{aberration,  }\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{Time\+::\+TDB}} \&}]{epoch,  }\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1CelestialBody}{Body\+::\+Celestial\+Body}} \&}]{observer }\end{DoxyParamCaption}) const}
+
+Read ephemeris from ephemeris file 
+\begin{DoxyParams}{Parameters}
+{\em frame} & \\
+\hline
+{\em aberration} & \\
+\hline
+{\em epoch} & \\
+\hline
+{\em observer} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Sites_1_1Site_abddbfa11d39410da5b01052ba2f3837f}\label{classIO_1_1SDK_1_1Sites_1_1Site_abddbfa11d39410da5b01052ba2f3837f}} 
+\index{IO::SDK::Sites::Site@{IO::SDK::Sites::Site}!ReadEphemerisKernelComment@{ReadEphemerisKernelComment}}
+\index{ReadEphemerisKernelComment@{ReadEphemerisKernelComment}!IO::SDK::Sites::Site@{IO::SDK::Sites::Site}}
+\doxysubsubsection{\texorpdfstring{ReadEphemerisKernelComment()}{ReadEphemerisKernelComment()}}
+{\footnotesize\ttfamily std\+::string IO\+::\+SDK\+::\+Sites\+::\+Site\+::\+Read\+Ephemeris\+Kernel\+Comment (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+Read comment into ephemeris file \begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Sites_1_1Site_afd7cd0a5bd88c097f84e68360015a6f4}\label{classIO_1_1SDK_1_1Sites_1_1Site_afd7cd0a5bd88c097f84e68360015a6f4}} 
+\index{IO::SDK::Sites::Site@{IO::SDK::Sites::Site}!WriteEphemeris@{WriteEphemeris}}
+\index{WriteEphemeris@{WriteEphemeris}!IO::SDK::Sites::Site@{IO::SDK::Sites::Site}}
+\doxysubsubsection{\texorpdfstring{WriteEphemeris()}{WriteEphemeris()}}
+{\footnotesize\ttfamily void IO\+::\+SDK\+::\+Sites\+::\+Site\+::\+Write\+Ephemeris (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{Orbital\+Parameters\+::\+State\+Vector}} $>$ \&}]{states }\end{DoxyParamCaption}) const}
+
+Write state\+Vectors into ephemeris file 
+\begin{DoxyParams}{Parameters}
+{\em states} & \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Sites_1_1Site_aa8c1fdc55eaa275d594bb30b99f11582}\label{classIO_1_1SDK_1_1Sites_1_1Site_aa8c1fdc55eaa275d594bb30b99f11582}} 
+\index{IO::SDK::Sites::Site@{IO::SDK::Sites::Site}!WriteEphemerisKernelComment@{WriteEphemerisKernelComment}}
+\index{WriteEphemerisKernelComment@{WriteEphemerisKernelComment}!IO::SDK::Sites::Site@{IO::SDK::Sites::Site}}
+\doxysubsubsection{\texorpdfstring{WriteEphemerisKernelComment()}{WriteEphemerisKernelComment()}}
+{\footnotesize\ttfamily void IO\+::\+SDK\+::\+Sites\+::\+Site\+::\+Write\+Ephemeris\+Kernel\+Comment (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{comment }\end{DoxyParamCaption}) const}
+
+Write a comment into ephemeris file 
+\begin{DoxyParams}{Parameters}
+{\em comment} & \\
+\hline
+\end{DoxyParams}
 
 
 The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}

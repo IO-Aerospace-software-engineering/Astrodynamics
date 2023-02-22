@@ -6,8 +6,8 @@ var searchData=
   ['window_3c_20io_3a_3asdk_3a_3atime_3a_3atdb_20_3e_3',['Window&lt; IO::SDK::Time::TDB &gt;',['../classIO_1_1SDK_1_1Time_1_1Window.html',1,'IO::SDK::Time']]],
   ['window_3c_20io_3a_3asdk_3a_3atime_3a_3autc_20_3e_4',['Window&lt; IO::SDK::Time::UTC &gt;',['../classIO_1_1SDK_1_1Time_1_1Window.html',1,'IO::SDK::Time']]],
   ['writedata_5',['WriteData',['../classIO_1_1SDK_1_1Kernels_1_1EphemerisKernel.html#a78970ad88a5d18ee8b6db10f060e2c86',1,'IO::SDK::Kernels::EphemerisKernel']]],
-  ['writeephemeris_6',['WriteEphemeris',['../classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft.html#a8fc5a2e2b3e908e1c2e2e3a8ee987013',1,'IO::SDK::Body::Spacecraft::Spacecraft']]],
-  ['writeephemeriskernelcomment_7',['WriteEphemerisKernelComment',['../classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft.html#adc485efb956d7b98a0c5dca516b15987',1,'IO::SDK::Body::Spacecraft::Spacecraft']]],
+  ['writeephemeris_6',['WriteEphemeris',['../classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft.html#a8fc5a2e2b3e908e1c2e2e3a8ee987013',1,'IO::SDK::Body::Spacecraft::Spacecraft::WriteEphemeris()'],['../classIO_1_1SDK_1_1Sites_1_1Site.html#afd7cd0a5bd88c097f84e68360015a6f4',1,'IO::SDK::Sites::Site::WriteEphemeris()']]],
+  ['writeephemeriskernelcomment_7',['WriteEphemerisKernelComment',['../classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft.html#adc485efb956d7b98a0c5dca516b15987',1,'IO::SDK::Body::Spacecraft::Spacecraft::WriteEphemerisKernelComment()'],['../classIO_1_1SDK_1_1Sites_1_1Site.html#aa8c1fdc55eaa275d594bb30b99f11582',1,'IO::SDK::Sites::Site::WriteEphemerisKernelComment()']]],
   ['writeorientationkernelcomment_8',['WriteOrientationKernelComment',['../classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft.html#af1b4e362e3d2db8634e6d22f49fbda1a',1,'IO::SDK::Body::Spacecraft::Spacecraft']]],
   ['writeorientations_9',['WriteOrientations',['../classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft.html#a50c25eb963c31fb366c7705659380c71',1,'IO::SDK::Body::Spacecraft::Spacecraft::WriteOrientations()'],['../classIO_1_1SDK_1_1Kernels_1_1OrientationKernel.html#a3568dbf0fceb125a7e77e1558c099ffb',1,'IO::SDK::Kernels::OrientationKernel::WriteOrientations()']]]
 ];
