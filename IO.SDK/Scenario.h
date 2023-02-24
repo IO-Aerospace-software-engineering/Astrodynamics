@@ -8,10 +8,14 @@
 #include <string>
 #include <vector>
 
+#include <Body.h>
 #include <UTC.h>
 #include <Window.h>
+#include <TimeSpan.h>
 #include <CelestialBody.h>
 #include <Spacecraft.h>
+#include <map>
+#include <optional>
 
 
 namespace IO::SDK
@@ -21,35 +25,110 @@ namespace IO::SDK
     private:
         const std::string m_name;
         const IO::SDK::Time::Window<IO::SDK::Time::UTC> m_windows;
-        const std::vector<IO::SDK::Body::CelestialBody> m_celestialBodies;
-        const std::vector<IO::SDK::Body::Spacecraft::Spacecraft> m_spacecrafts;
-        const std::vector<IO::SDK::Sites::Site> m_sites;
+        std::vector<const IO::SDK::Body::CelestialBody *> m_celestialBodies;
+        std::vector<const IO::SDK::Body::Spacecraft::Spacecraft *> m_spacecrafts;
+        std::vector<const IO::SDK::Sites::Site *> m_sites;
+
+        //Body constraints
+        std::map<std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>>(*)(
+                const IO::SDK::Time::Window<IO::SDK::Time::TDB> searchWindow,
+                const IO::SDK::Body::Body &,
+                const IO::SDK::Body::Body &,
+                const IO::SDK::Constraint &,
+                const IO::SDK::AberrationsEnum,
+                const double value,
+                const IO::SDK::Time::TimeSpan &
+        ),
+                std::optional<std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>>>> m_distanceConstraints;
+
+
+        std::map<std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>>(*)(const IO::SDK::Time::Window<IO::SDK::Time::TDB>,
+                                                                           const IO::SDK::Body::CelestialBody &, const IO::SDK::Body::CelestialBody &,
+                                                                           const IO::SDK::OccultationType &, const IO::SDK::AberrationsEnum,
+                                                                           const IO::SDK::Time::TimeSpan &
+        ),
+                std::optional<std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>>>> m_occultationConstraints;
+
+        //Site constraints
+        std::map<std::vector<IO::SDK::Time::Window<IO::SDK::Time::UTC>>(*)(const IO::SDK::Time::Window<IO::SDK::Time::UTC> &searchWindow, const double twilight
+        ),
+                std::optional<std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>>>> m_dayConstraints;
+
+        std::map<std::vector<IO::SDK::Time::Window<IO::SDK::Time::UTC>>(*)(const IO::SDK::Time::Window<IO::SDK::Time::UTC> &searchWindow, const double twilight
+        ),
+                std::optional<std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>>>> m_nightConstraints;
+
+        std::map<std::vector<IO::SDK::Time::Window<IO::SDK::Time::UTC>>(*)(const IO::SDK::Body::Body &body, const IO::SDK::Time::Window<IO::SDK::Time::UTC> &searchWindow,
+                                                                           const IO::SDK::AberrationsEnum aberrationCorrection
+        ),
+                std::optional<std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>>>> m_bodyVisibilityConstraints;
+
 
     public:
         Scenario(const std::string &name, const IO::SDK::Time::Window<IO::SDK::Time::UTC> &windows);
 
-        void AddCelestialBody(const IO::SDK::Body::CelestialBody &celestialBody) const;
+        void AddCelestialBody(const IO::SDK::Body::CelestialBody &celestialBody);
 
-        void AddSpacecraft(const IO::SDK::Body::Spacecraft::Spacecraft &spacecraft) const;
+        void AddSpacecraft(const IO::SDK::Body::Spacecraft::Spacecraft &spacecraft);
 
-        void AddSite(const IO::SDK::Sites::Site &site) const;
+        void AddSite(const IO::SDK::Sites::Site &site);
 
-        inline std::string GetName() const
+        inline const std::string GetName() const
         { return m_name; }
 
         inline const IO::SDK::Time::Window<IO::SDK::Time::UTC> &GetWindow() const
         { return m_windows; }
 
-        inline const std::vector<IO::SDK::Body::CelestialBody> &GetCelestialBodies() const
+        inline const std::vector<const IO::SDK::Body::CelestialBody *> &GetCelestialBodies()
         { return m_celestialBodies; }
 
-        inline const std::vector<IO::SDK::Body::Spacecraft::Spacecraft> &GetSpacecrafts() const
+        inline const std::vector<const IO::SDK::Body::Spacecraft::Spacecraft *> &GetSpacecrafts()
         { return m_spacecrafts; }
 
-        inline const std::vector<IO::SDK::Sites::Site>& GetSites() const
+        inline const std::vector<const IO::SDK::Sites::Site *> &GetSites()
         { return m_sites; }
 
-        void Execute() const;
+        void AddDistanceConstraintWindow(std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>>(*func
+
+        )(
+                const IO::SDK::Time::Window<IO::SDK::Time::TDB> searchWindow,
+                const IO::SDK::Body::Body &targetBody,
+                const IO::SDK::Body::Body &observer,
+                const IO::SDK::Constraint &constraint,
+                const IO::SDK::AberrationsEnum aberration,
+                const double value,
+                const IO::SDK::Time::TimeSpan &step
+        ));
+
+        void AddOccultationConstraintWindow(std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>>(*func
+
+        )(
+                const IO::SDK::Time::Window<IO::SDK::Time::TDB>,
+                const IO::SDK::Body::CelestialBody &, const IO::SDK::Body::CelestialBody &,
+                const IO::SDK::OccultationType &, const IO::SDK::AberrationsEnum,
+                const IO::SDK::Time::TimeSpan &
+        ));
+
+        void AddDayConstraintsWindow(std::vector<IO::SDK::Time::Window<IO::SDK::Time::UTC>>(*func
+
+        )(
+                const IO::SDK::Time::Window<IO::SDK::Time::UTC> &, const double
+        ));
+
+        void AddNightConstraintsWindow(std::vector<IO::SDK::Time::Window<IO::SDK::Time::UTC>>(*func
+
+        )(
+                const IO::SDK::Time::Window<IO::SDK::Time::UTC> &, const double
+        ));
+
+        void AddBodyVisibilityConstraintsWindow(std::vector<IO::SDK::Time::Window<IO::SDK::Time::UTC>>(*func
+
+        )(
+                const IO::SDK::Body::Body &, const IO::SDK::Time::Window<IO::SDK::Time::UTC> &,
+                const IO::SDK::AberrationsEnum
+        ));
+
+        void Execute();
     };
 
 } // IO::SDK

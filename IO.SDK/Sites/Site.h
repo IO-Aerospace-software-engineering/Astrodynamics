@@ -169,7 +169,7 @@ namespace IO::SDK::Sites
          */
         std::vector<IO::SDK::Time::Window<IO::SDK::Time::UTC>>
         FindWindowsOnIlluminationConstraint(const IO::SDK::Time::Window<IO::SDK::Time::UTC> &searchWindow, const IO::SDK::Body::Body &observerBody,
-                                            const IO::SDK::IlluminationAngle &illuminationAgngle, const IO::SDK::Constraint &constraint, const double value) const;
+                                            const IO::SDK::IlluminationAngle &illuminationAngle, const IO::SDK::Constraint &constraint, const double value) const;
 
         /**
          * @brief Get the Horizontal Coordinates to the target body
