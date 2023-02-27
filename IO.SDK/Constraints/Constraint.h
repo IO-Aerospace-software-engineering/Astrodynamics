@@ -13,7 +13,7 @@
 
 #include <string>
 
-namespace IO::SDK
+namespace IO::SDK::Constraints
 {
     class Constraint
     {
@@ -45,8 +45,8 @@ namespace IO::SDK
          */
         const char *ToCharArray() const;
 
-        static IO::SDK::Constraint& GreaterThan();
-        static IO::SDK::Constraint& LowerThan();
+        static IO::SDK::Constraints::Constraint& GreaterThan();
+        static IO::SDK::Constraints::Constraint& LowerThan();
     };
 
 } // namespace IO::SDK

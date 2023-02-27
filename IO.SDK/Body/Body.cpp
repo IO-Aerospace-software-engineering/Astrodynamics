@@ -118,7 +118,7 @@ std::shared_ptr<IO::SDK::Body::Body> IO::SDK::Body::Body::GetSharedPointer()
 	return this->shared_from_this();
 }
 
-std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>> IO::SDK::Body::Body::FindWindowsOnDistanceConstraint(const IO::SDK::Time::Window<IO::SDK::Time::TDB> window, const Body &targetBody, const Body &oberver, const IO::SDK::Constraint &constraint, const IO::SDK::AberrationsEnum aberration, const double value, const IO::SDK::Time::TimeSpan &step) const
+std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>> IO::SDK::Body::Body::FindWindowsOnDistanceConstraint(const IO::SDK::Time::Window<IO::SDK::Time::TDB> window, const Body &targetBody, const Body &oberver, const IO::SDK::Constraints::Constraint &constraint, const IO::SDK::AberrationsEnum aberration, const double value, const IO::SDK::Time::TimeSpan &step) const
 {
 	std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>> windows;
 	SpiceDouble windowStart;

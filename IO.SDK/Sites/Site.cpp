@@ -110,7 +110,7 @@ IO::SDK::Sites::Site::FindDayWindows(const IO::SDK::Time::Window<IO::SDK::Time::
 {
     IO::SDK::Body::CelestialBody sun(10, "Sun");
     return FindWindowsOnIlluminationConstraint(searchWindow, sun, IO::SDK::IlluminationAngle::Incidence(),
-                                               IO::SDK::Constraint::LowerThan(), IO::SDK::Constants::PI2 - twilight);
+                                               IO::SDK::Constraints::Constraint::LowerThan(), IO::SDK::Constants::PI2 - twilight);
 }
 
 std::vector<IO::SDK::Time::Window<IO::SDK::Time::UTC>>
@@ -119,14 +119,14 @@ IO::SDK::Sites::Site::FindNightWindows(const IO::SDK::Time::Window<IO::SDK::Time
 {
     IO::SDK::Body::CelestialBody sun(10, "Sun");
     return FindWindowsOnIlluminationConstraint(searchWindow, sun, IO::SDK::IlluminationAngle::Incidence(),
-                                               IO::SDK::Constraint::GreaterThan(), IO::SDK::Constants::PI2 - twilight);
+                                               IO::SDK::Constraints::Constraint::GreaterThan(), IO::SDK::Constants::PI2 - twilight);
 }
 
 std::vector<IO::SDK::Time::Window<IO::SDK::Time::UTC>>
 IO::SDK::Sites::Site::FindWindowsOnIlluminationConstraint(const IO::SDK::Time::Window<IO::SDK::Time::UTC> &searchWindow,
                                                           const IO::SDK::Body::Body &observerBody,
                                                           const IO::SDK::IlluminationAngle &illuminationAgngle,
-                                                          const IO::SDK::Constraint &constraint,
+                                                          const IO::SDK::Constraints::Constraint &constraint,
                                                           const double value) const
 {
     std::vector<IO::SDK::Time::Window<IO::SDK::Time::UTC>> windows;

@@ -25,7 +25,7 @@
 #include <Window.h>
 #include <SiteFrameFile.h>
 #include <HorizontalCoordinates.h>
-#include <Constraint.h>
+#include "Constraints/Constraint.h"
 #include <CoordinateSystem.h>
 #include <Coordinate.h>
 #include <IlluminationAngle.h>
@@ -169,7 +169,7 @@ namespace IO::SDK::Sites
          */
         std::vector<IO::SDK::Time::Window<IO::SDK::Time::UTC>>
         FindWindowsOnIlluminationConstraint(const IO::SDK::Time::Window<IO::SDK::Time::UTC> &searchWindow, const IO::SDK::Body::Body &observerBody,
-                                            const IO::SDK::IlluminationAngle &illuminationAngle, const IO::SDK::Constraint &constraint, const double value) const;
+                                            const IO::SDK::IlluminationAngle &illuminationAngle, const IO::SDK::Constraints::Constraint &constraint, const double value) const;
 
         /**
          * @brief Get the Horizontal Coordinates to the target body

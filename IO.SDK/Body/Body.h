@@ -24,7 +24,7 @@
 #include <Aberrations.h>
 #include <Window.h>
 #include <TDB.h>
-#include <Constraint.h>
+#include "Constraints/Constraint.h"
 #include <TimeSpan.h>
 #include <OccultationType.h>
 #include <Planetographic.h>
@@ -163,7 +163,7 @@ namespace IO::SDK::Body
 		 * @param step Step size (should be shorter than the shortest of these intervals. WARNING : A short step size could increase compute time)
 		 * @return std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>> 
 		 */
-		std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>> FindWindowsOnDistanceConstraint(const IO::SDK::Time::Window<IO::SDK::Time::TDB> searchWindow, const Body &targetBody, const Body &observer, const IO::SDK::Constraint &constraint, const IO::SDK::AberrationsEnum aberration, const double value, const IO::SDK::Time::TimeSpan &step) const;
+		std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>> FindWindowsOnDistanceConstraint(const IO::SDK::Time::Window<IO::SDK::Time::TDB> searchWindow, const Body &targetBody, const Body &observer, const IO::SDK::Constraints::Constraint &constraint, const IO::SDK::AberrationsEnum aberration, const double value, const IO::SDK::Time::TimeSpan &step) const;
 
 		/**
 		 * @brief Find windows when occultation occurs

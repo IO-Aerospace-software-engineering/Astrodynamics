@@ -8,12 +8,12 @@
 #include <string>
 #include <vector>
 
-#include <Body.h>
-#include <UTC.h>
-#include <Window.h>
-#include <TimeSpan.h>
-#include <CelestialBody.h>
-#include <Spacecraft.h>
+#include "Body/Body.h"
+#include "Time/UTC.h"
+#include "Time/Window.h"
+#include "Time/TimeSpan.h"
+#include "Body/CelestialBody.h"
+#include "Body/Spacecraft/Spacecraft.h"
 #include <map>
 #include <optional>
 
@@ -34,7 +34,7 @@ namespace IO::SDK
                 const IO::SDK::Time::Window<IO::SDK::Time::TDB> searchWindow,
                 const IO::SDK::Body::Body &,
                 const IO::SDK::Body::Body &,
-                const IO::SDK::Constraint &,
+                const IO::SDK::Constraints::Constraint &,
                 const IO::SDK::AberrationsEnum,
                 const double value,
                 const IO::SDK::Time::TimeSpan &
@@ -94,7 +94,7 @@ namespace IO::SDK
                 const IO::SDK::Time::Window<IO::SDK::Time::TDB> searchWindow,
                 const IO::SDK::Body::Body &targetBody,
                 const IO::SDK::Body::Body &observer,
-                const IO::SDK::Constraint &constraint,
+                const IO::SDK::Constraints::Constraint &constraint,
                 const IO::SDK::AberrationsEnum aberration,
                 const double value,
                 const IO::SDK::Time::TimeSpan &step

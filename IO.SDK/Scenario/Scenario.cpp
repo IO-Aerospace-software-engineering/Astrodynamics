@@ -26,7 +26,7 @@ void IO::SDK::Scenario::AddCelestialBody(const IO::SDK::Body::CelestialBody &cel
 
 void IO::SDK::Scenario::AddDistanceConstraintWindow(
         std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>> (*func)(const IO::SDK::Time::Window<IO::SDK::Time::TDB>, const IO::SDK::Body::Body &, const IO::SDK::Body::Body &,
-                                                                       const IO::SDK::Constraint &, const IO::SDK::AberrationsEnum, const double, const IO::SDK::Time::TimeSpan &))
+                                                                       const IO::SDK::Constraints::Constraint &, const IO::SDK::AberrationsEnum, const double, const IO::SDK::Time::TimeSpan &))
 {
     m_distanceConstraints[func] = std::nullopt;
 }
