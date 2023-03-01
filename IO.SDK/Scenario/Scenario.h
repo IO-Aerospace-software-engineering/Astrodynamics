@@ -7,6 +7,8 @@
 
 #include <string>
 #include <vector>
+#include <map>
+#include <optional>
 
 #include "Body/Body.h"
 #include "Time/UTC.h"
@@ -14,8 +16,11 @@
 #include "Time/TimeSpan.h"
 #include "Body/CelestialBody.h"
 #include "Body/Spacecraft/Spacecraft.h"
-#include <map>
-#include <optional>
+#include <DistanceParameters.h>
+#include <OccultationParameters.h>
+#include <ByDayParameters.h>
+#include <ByNightParameters.h>
+#include <BodyVisibilityParameters.h>
 
 
 namespace IO::SDK
@@ -30,38 +35,16 @@ namespace IO::SDK
         std::vector<const IO::SDK::Sites::Site *> m_sites;
 
         //Body constraints
-        std::map<std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>>(*)(
-                const IO::SDK::Time::Window<IO::SDK::Time::TDB> searchWindow,
-                const IO::SDK::Body::Body &,
-                const IO::SDK::Body::Body &,
-                const IO::SDK::Constraints::Constraint &,
-                const IO::SDK::AberrationsEnum,
-                const double value,
-                const IO::SDK::Time::TimeSpan &
-        ),
-                std::optional<std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>>>> m_distanceConstraints;
+        std::map<IO::SDK::Constraints::Parameters::DistanceParameters, std::optional<std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>>>> m_distanceConstraints;
 
-
-        std::map<std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>>(*)(const IO::SDK::Time::Window<IO::SDK::Time::TDB>,
-                                                                           const IO::SDK::Body::CelestialBody &, const IO::SDK::Body::CelestialBody &,
-                                                                           const IO::SDK::OccultationType &, const IO::SDK::AberrationsEnum,
-                                                                           const IO::SDK::Time::TimeSpan &
-        ),
-                std::optional<std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>>>> m_occultationConstraints;
+        std::map<IO::SDK::Constraints::Parameters::OccultationParameters, std::optional<std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>>>> m_occultationConstraints;
 
         //Site constraints
-        std::map<std::vector<IO::SDK::Time::Window<IO::SDK::Time::UTC>>(*)(const IO::SDK::Time::Window<IO::SDK::Time::UTC> &searchWindow, const double twilight
-        ),
-                std::optional<std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>>>> m_dayConstraints;
+        std::map<IO::SDK::Constraints::Parameters::ByDayParameters, std::optional<std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>>>> m_dayConstraints;
 
-        std::map<std::vector<IO::SDK::Time::Window<IO::SDK::Time::UTC>>(*)(const IO::SDK::Time::Window<IO::SDK::Time::UTC> &searchWindow, const double twilight
-        ),
-                std::optional<std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>>>> m_nightConstraints;
+        std::map<IO::SDK::Constraints::Parameters::ByNightParameters, std::optional<std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>>>> m_nightConstraints;
 
-        std::map<std::vector<IO::SDK::Time::Window<IO::SDK::Time::UTC>>(*)(const IO::SDK::Body::Body &body, const IO::SDK::Time::Window<IO::SDK::Time::UTC> &searchWindow,
-                                                                           const IO::SDK::AberrationsEnum aberrationCorrection
-        ),
-                std::optional<std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>>>> m_bodyVisibilityConstraints;
+        std::map<IO::SDK::Constraints::Parameters::BodyVisibilityParameters, std::optional<std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>>>> m_bodyVisibilityConstraints;
 
 
     public:
@@ -88,45 +71,21 @@ namespace IO::SDK
         inline const std::vector<const IO::SDK::Sites::Site *> &GetSites()
         { return m_sites; }
 
-        void AddDistanceConstraintWindow(std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>>(*func
+        inline const std::map<IO::SDK::Constraints::Parameters::DistanceParameters, std::optional<std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>>>> &
+        GetDistanceConstraints() const
+        {
+            return m_distanceConstraints;
+        }
 
-        )(
-                const IO::SDK::Time::Window<IO::SDK::Time::TDB> searchWindow,
-                const IO::SDK::Body::Body &targetBody,
-                const IO::SDK::Body::Body &observer,
-                const IO::SDK::Constraints::Constraint &constraint,
-                const IO::SDK::AberrationsEnum aberration,
-                const double value,
-                const IO::SDK::Time::TimeSpan &step
-        ));
+        void AddDistanceConstraint(Constraints::Parameters::DistanceParameters &distanceParameters);
 
-        void AddOccultationConstraintWindow(std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>>(*func
+        void AddOccultationConstraint(IO::SDK::Constraints::Parameters::OccultationParameters &occultationParameters);
 
-        )(
-                const IO::SDK::Time::Window<IO::SDK::Time::TDB>,
-                const IO::SDK::Body::CelestialBody &, const IO::SDK::Body::CelestialBody &,
-                const IO::SDK::OccultationType &, const IO::SDK::AberrationsEnum,
-                const IO::SDK::Time::TimeSpan &
-        ));
+        void AddDayConstraint(IO::SDK::Constraints::Parameters::ByDayParameters &byDayParameters);
 
-        void AddDayConstraintsWindow(std::vector<IO::SDK::Time::Window<IO::SDK::Time::UTC>>(*func
+        void AddNightConstraint(IO::SDK::Constraints::Parameters::ByNightParameters &byNightParameters);
 
-        )(
-                const IO::SDK::Time::Window<IO::SDK::Time::UTC> &, const double
-        ));
-
-        void AddNightConstraintsWindow(std::vector<IO::SDK::Time::Window<IO::SDK::Time::UTC>>(*func
-
-        )(
-                const IO::SDK::Time::Window<IO::SDK::Time::UTC> &, const double
-        ));
-
-        void AddBodyVisibilityConstraintsWindow(std::vector<IO::SDK::Time::Window<IO::SDK::Time::UTC>>(*func
-
-        )(
-                const IO::SDK::Body::Body &, const IO::SDK::Time::Window<IO::SDK::Time::UTC> &,
-                const IO::SDK::AberrationsEnum
-        ));
+        void AddBodyVisibilityConstraint(IO::SDK::Constraints::Parameters::BodyVisibilityParameters &bodyVisibilityParameters);
 
         void Execute();
     };

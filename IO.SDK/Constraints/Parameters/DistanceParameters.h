@@ -18,6 +18,7 @@ namespace IO::SDK::Constraints::Parameters
     class DistanceParameters
     {
     private:
+
         const IO::SDK::Time::Window<IO::SDK::Time::TDB> m_window;
         const IO::SDK::Body::Body &m_observer;
         const IO::SDK::Body::Body &m_target;
@@ -26,20 +27,23 @@ namespace IO::SDK::Constraints::Parameters
         const double m_value;
         const IO::SDK::Time::TimeSpan &m_initialStepSize;
 
+
     public:
-        DistanceParameters(const IO::SDK::Time::Window<IO::SDK::Time::TDB> window,
+        size_t Order{};
+
+        DistanceParameters(const IO::SDK::Time::Window<IO::SDK::Time::TDB>& window,
                            const IO::SDK::Body::Body &observer,
                            const IO::SDK::Body::Body &target,
                            const IO::SDK::Constraints::Constraint &constraint,
                            const IO::SDK::AberrationsEnum aberration,
                            const double value,
-                           const IO::SDK::Time::TimeSpan &initialStepSize) : m_window{window}, m_observer{observer}, m_target{target}, m_constraint{constraint},
-                                                                             m_aberration{aberration}, m_value{value}, m_initialStepSize{initialStepSize}
-        {
+                           const IO::SDK::Time::TimeSpan &initialStepSize);
 
-        }
+        inline bool operator<(const DistanceParameters &rhs) const
+        { return Order < rhs.Order; }
 
     };
+
 
 } // IO
 

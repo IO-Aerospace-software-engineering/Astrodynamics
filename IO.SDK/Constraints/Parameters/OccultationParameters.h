@@ -24,6 +24,17 @@ namespace IO::SDK::Constraints::Parameters
         const IO::SDK::AberrationsEnum m_aberration;
         const IO::SDK::Time::TimeSpan &m_initialStepSize;
 
+    public:
+        OccultationParameters(const IO::SDK::Time::Window<IO::SDK::Time::TDB> &window,
+                              const IO::SDK::Body::Body &observer,
+                              const IO::SDK::Body::CelestialBody &front,
+                              const IO::SDK::Body::Body &back,
+                              const IO::SDK::OccultationType &occultationType,
+                              const IO::SDK::AberrationsEnum aberration,
+                              const IO::SDK::Time::TimeSpan &initialStepSize);
+        int Order{};
+        inline bool operator<(const OccultationParameters &rhs) const
+        { return Order < rhs.Order; }
     };
 }
 

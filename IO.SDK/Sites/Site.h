@@ -63,6 +63,8 @@ namespace IO::SDK::Sites
          */
         Site(const int id, const std::string &name, const IO::SDK::Coordinates::Geodetic &coordinates, std::shared_ptr<IO::SDK::Body::CelestialBody> &body);
 
+        virtual ~Site() = default;
+
         /**
          * @brief Get the Id
          * 
@@ -234,7 +236,7 @@ namespace IO::SDK::Sites
          * Get Time span covered by the ephemeris file
          * @return
          */
-        Time::Window <IO::SDK::Time::TDB> GetEphemerisCoverageWindow() const;
+        Time::Window<IO::SDK::Time::TDB> GetEphemerisCoverageWindow() const;
 
         /**
          * Write a comment into ephemeris file

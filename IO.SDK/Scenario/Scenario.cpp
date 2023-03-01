@@ -2,7 +2,7 @@
 // Created by s.guillet on 23/02/2023.
 //
 
-#include "Scenario.h"
+#include <Scenario.h>
 
 IO::SDK::Scenario::Scenario(const std::string &name, const IO::SDK::Time::Window<IO::SDK::Time::UTC> &windows) : m_name{name}, m_windows{windows}
 {
@@ -24,43 +24,40 @@ void IO::SDK::Scenario::AddCelestialBody(const IO::SDK::Body::CelestialBody &cel
     m_celestialBodies.push_back(&celestialBody);
 }
 
-void IO::SDK::Scenario::AddDistanceConstraintWindow(
-        std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>> (*func)(const IO::SDK::Time::Window<IO::SDK::Time::TDB>, const IO::SDK::Body::Body &, const IO::SDK::Body::Body &,
-                                                                       const IO::SDK::Constraints::Constraint &, const IO::SDK::AberrationsEnum, const double, const IO::SDK::Time::TimeSpan &))
+void IO::SDK::Scenario::AddDistanceConstraint(Constraints::Parameters::DistanceParameters& distanceParameters)
 {
-    m_distanceConstraints[func] = std::nullopt;
+    distanceParameters.Order = m_distanceConstraints.size();
+    m_distanceConstraints[distanceParameters] = std::nullopt;
 }
 
-void IO::SDK::Scenario::AddOccultationConstraintWindow(
-        std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>> (*func)(const IO::SDK::Time::Window<IO::SDK::Time::TDB>,
-                                                                       const IO::SDK::Body::CelestialBody &, const IO::SDK::Body::CelestialBody &,
-                                                                       const IO::SDK::OccultationType &, const IO::SDK::AberrationsEnum,
-                                                                       const IO::SDK::Time::TimeSpan &))
+void IO::SDK::Scenario::AddOccultationConstraint(IO::SDK::Constraints::Parameters::OccultationParameters &occultationParameters)
 {
-    m_occultationConstraints[func] = std::nullopt;
+    occultationParameters.Order = m_occultationConstraints.size();
+    m_occultationConstraints[occultationParameters] = std::nullopt;
 }
 
-void IO::SDK::Scenario::AddDayConstraintsWindow(std::vector<IO::SDK::Time::Window<IO::SDK::Time::UTC>> (*func)(const IO::SDK::Time::Window<IO::SDK::Time::UTC> &, const double))
+void IO::SDK::Scenario::AddDayConstraint(IO::SDK::Constraints::Parameters::ByDayParameters &byDayParameters)
 {
-    m_dayConstraints[func] = std::nullopt;
+    byDayParameters.Order = m_dayConstraints.size();
+    m_dayConstraints[byDayParameters] = std::nullopt;
 }
 
-void IO::SDK::Scenario::AddNightConstraintsWindow(std::vector<IO::SDK::Time::Window<IO::SDK::Time::UTC>> (*func)(const IO::SDK::Time::Window<IO::SDK::Time::UTC> &, const double))
+void IO::SDK::Scenario::AddNightConstraint(IO::SDK::Constraints::Parameters::ByNightParameters &byNightParameters)
 {
-    m_nightConstraints[func] = std::nullopt;
+    byNightParameters.Order = m_nightConstraints.size();
+    m_nightConstraints[byNightParameters] = std::nullopt;
 }
 
-void IO::SDK::Scenario::AddBodyVisibilityConstraintsWindow(
-        std::vector<IO::SDK::Time::Window<IO::SDK::Time::UTC>> (*func)(const IO::SDK::Body::Body &, const IO::SDK::Time::Window<IO::SDK::Time::UTC> &,
-                                                                       const IO::SDK::AberrationsEnum))
+void IO::SDK::Scenario::AddBodyVisibilityConstraint(IO::SDK::Constraints::Parameters::BodyVisibilityParameters &bodyVisibilityParameters)
 {
-    m_bodyVisibilityConstraints[func] = std::nullopt;
+    bodyVisibilityParameters.Order = m_bodyVisibilityConstraints.size();
+    m_bodyVisibilityConstraints[bodyVisibilityParameters] = std::nullopt;
 }
 
 void IO::SDK::Scenario::Execute()
 {
     // Run sites propagation
-    for (const IO::SDK::Sites::Site* site: m_sites)
+    for (const IO::SDK::Sites::Site *site: m_sites)
     {
     }
 
