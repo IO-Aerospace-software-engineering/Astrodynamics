@@ -10,18 +10,28 @@
 #include <map>
 #include <optional>
 
-#include "Body/Body.h"
-#include "Time/UTC.h"
-#include "Time/Window.h"
-#include "Time/TimeSpan.h"
-#include "Body/CelestialBody.h"
-#include "Body/Spacecraft/Spacecraft.h"
+#include <Body.h>
+#include <UTC.h>
+#include <Window.h>
+#include <TimeSpan.h>
+#include <CelestialBody.h>
+#include <Spacecraft.h>
 #include <DistanceParameters.h>
 #include <OccultationParameters.h>
 #include <ByDayParameters.h>
 #include <ByNightParameters.h>
 #include <BodyVisibilityFromSiteParameters.h>
+#include <Site.h>
 
+
+namespace IO::SDK::Constraints::Parameters
+{
+    class ByDayParameters;
+    class ByNightParameters;
+    class BodyVisibilityFromSiteParameters;
+    class OccultationParameters;
+    class DistanceParameters;
+}
 
 namespace IO::SDK
 {

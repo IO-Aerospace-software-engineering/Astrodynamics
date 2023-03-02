@@ -25,7 +25,7 @@ namespace IO::SDK::Constraints::Parameters
     public:
         size_t Order{};
 
-        BodyVisibilityFromSiteParameters(const IO::SDK::Time::Window<IO::SDK::Time::UTC> &window, const IO::SDK::Sites::Site &site, const IO::SDK::Body::Body target,
+        BodyVisibilityFromSiteParameters(const IO::SDK::Time::Window<IO::SDK::Time::UTC> &window, const IO::SDK::Sites::Site &site, const IO::SDK::Body::Body& target,
                                          const IO::SDK::AberrationsEnum aberration);
 
         inline bool operator<(const BodyVisibilityFromSiteParameters &rhs) const

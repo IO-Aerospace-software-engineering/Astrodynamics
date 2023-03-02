@@ -24,8 +24,9 @@
 
 using namespace std::chrono_literals;
 
-IO::SDK::Sites::Site::Site(const int id, const std::string &name, const IO::SDK::Coordinates::Geodetic &coordinates,
-                           std::shared_ptr<IO::SDK::Body::CelestialBody> &body) : m_id{id}, m_name{name},
+IO::SDK::Sites::Site::Site(const int id, const IO::SDK::Scenario &scenario, const std::string &name, const IO::SDK::Coordinates::Geodetic &coordinates,
+                           std::shared_ptr<IO::SDK::Body::CelestialBody> &body) : m_id{id}, m_scenario{scenario},
+                                                                                  m_name{name},
                                                                                   m_coordinates{coordinates},
                                                                                   m_filePath{std::string(IO::SDK::Parameters::SitePath) + "/" + name},
                                                                                   m_body{body},
