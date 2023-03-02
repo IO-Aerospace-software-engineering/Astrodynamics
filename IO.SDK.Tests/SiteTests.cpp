@@ -4,13 +4,16 @@
 #include <SDKException.h>
 #include <InertialFrames.h>
 #include <StateVector.h>
+#include <Scenario.h>
 
 using namespace std::chrono_literals;
 TEST(Site, GetRADDec)
 {
+    IO::SDK::Scenario sc("scenario1",
+                         IO::SDK::Time::Window<IO::SDK::Time::UTC>(IO::SDK::Time::TDB("2021-05-07 12:00:00 UTC").ToUTC(), IO::SDK::Time::TDB("2021-05-07 13:00:00 UTC").ToUTC()));
     auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10, "sun");
     auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth", sun);
-    IO::SDK::Sites::Site s{333002, "S2", IO::SDK::Coordinates::Geodetic(0.0, 45.0 * IO::SDK::Constants::DEG_RAD, 0.0), earth};
+    IO::SDK::Sites::Site s{333002, sc, "S2", IO::SDK::Coordinates::Geodetic(0.0, 45.0 * IO::SDK::Constants::DEG_RAD, 0.0), earth};
     auto radec = s.GetRADec(*sun, IO::SDK::AberrationsEnum::None, IO::SDK::Time::TDB("2021-05-07 12:00:00 UTC"));
     ASSERT_DOUBLE_EQ(44.394214788670517, radec.GetRA() * IO::SDK::Constants::RAD_DEG);
     ASSERT_DOUBLE_EQ(16.869593460563181, radec.GetDec() * IO::SDK::Constants::RAD_DEG);
@@ -19,9 +22,11 @@ TEST(Site, GetRADDec)
 
 TEST(Site, Illumination)
 {
+    IO::SDK::Scenario sc("scenario1",
+                         IO::SDK::Time::Window<IO::SDK::Time::UTC>(IO::SDK::Time::TDB("2021-05-17 12:00:00 UTC").ToUTC(), IO::SDK::Time::TDB("2021-05-17 13:00:00 UTC").ToUTC()));
     auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10, "sun");
     auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth", sun);
-    IO::SDK::Sites::Site s{333002, "S2", IO::SDK::Coordinates::Geodetic(0.0, 45.0 * IO::SDK::Constants::DEG_RAD, 0.0), earth};
+    IO::SDK::Sites::Site s{333002, sc, "S2", IO::SDK::Coordinates::Geodetic(0.0, 45.0 * IO::SDK::Constants::DEG_RAD, 0.0), earth};
     auto illumination = s.GetIllumination(IO::SDK::AberrationsEnum::None, IO::SDK::Time::TDB("2021-05-17 12:00:00 UTC"));
     ASSERT_DOUBLE_EQ(25.566693646305286, illumination.GetIncidence() * IO::SDK::Constants::RAD_DEG);
     ASSERT_DOUBLE_EQ(25.566693646305286, illumination.GetEmission() * IO::SDK::Constants::RAD_DEG);
@@ -32,9 +37,11 @@ TEST(Site, Illumination)
 
 TEST(Site, IsDay)
 {
+    IO::SDK::Scenario sc("scenario1",
+                         IO::SDK::Time::Window<IO::SDK::Time::UTC>(IO::SDK::Time::TDB("2021-05-17 00:00:00 UTC").ToUTC(), IO::SDK::Time::TDB("2021-05-18 00:00:00 UTC").ToUTC()));
     auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10, "sun");
     auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth", sun);
-    IO::SDK::Sites::Site s{333002, "S2", IO::SDK::Coordinates::Geodetic(0.0, 45.0 * IO::SDK::Constants::DEG_RAD, 0.0), earth};
+    IO::SDK::Sites::Site s{333002, sc, "S2", IO::SDK::Coordinates::Geodetic(0.0, 45.0 * IO::SDK::Constants::DEG_RAD, 0.0), earth};
     auto isDay = s.IsDay(IO::SDK::Time::TDB("2021-05-17 12:00:00 UTC"), IO::SDK::Constants::OfficialTwilight);
     ASSERT_TRUE(isDay);
     isDay = s.IsDay(IO::SDK::Time::TDB("2021-05-17 00:00:00 UTC"), IO::SDK::Constants::OfficialTwilight);
@@ -43,9 +50,11 @@ TEST(Site, IsDay)
 
 TEST(Site, IsNight)
 {
+    IO::SDK::Scenario sc("scenario1",
+                         IO::SDK::Time::Window<IO::SDK::Time::UTC>(IO::SDK::Time::TDB("2021-05-17 00:00:00 UTC").ToUTC(), IO::SDK::Time::TDB("2021-05-18 00:00:00 UTC").ToUTC()));
     auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10, "sun");
     auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth", sun);
-    IO::SDK::Sites::Site s{333002, "S2", IO::SDK::Coordinates::Geodetic(0.0, 45.0 * IO::SDK::Constants::DEG_RAD, 0.0), earth};
+    IO::SDK::Sites::Site s{333002, sc, "S2", IO::SDK::Coordinates::Geodetic(0.0, 45.0 * IO::SDK::Constants::DEG_RAD, 0.0), earth};
     auto isNight = s.IsNight(IO::SDK::Time::TDB("2021-05-17 12:00:00 UTC"), IO::SDK::Constants::OfficialTwilight);
     ASSERT_FALSE(isNight);
     isNight = s.IsNight(IO::SDK::Time::TDB("2021-05-17 00:00:00 UTC"), IO::SDK::Constants::OfficialTwilight);
@@ -54,9 +63,11 @@ TEST(Site, IsNight)
 
 TEST(Site, FindDayWindows)
 {
+    IO::SDK::Scenario sc("scenario1",
+                         IO::SDK::Time::Window<IO::SDK::Time::UTC>(IO::SDK::Time::TDB("2021-05-17 12:00:00 TDB").ToUTC(), IO::SDK::Time::TDB("2021-05-18 12:00:00 TDB").ToUTC()));
     auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10, "sun");
     auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth", sun);
-    IO::SDK::Sites::Site s{333002, "S2", IO::SDK::Coordinates::Geodetic(2.2 * IO::SDK::Constants::DEG_RAD, 48.0 * IO::SDK::Constants::DEG_RAD, 0.0), earth};
+    IO::SDK::Sites::Site s{333002, sc, "S2", IO::SDK::Coordinates::Geodetic(2.2 * IO::SDK::Constants::DEG_RAD, 48.0 * IO::SDK::Constants::DEG_RAD, 0.0), earth};
     auto windows = s.FindDayWindows(
             IO::SDK::Time::Window<IO::SDK::Time::UTC>(IO::SDK::Time::TDB("2021-05-17 12:00:00 TDB").ToUTC(), IO::SDK::Time::TDB("2021-05-18 12:00:00 TDB").ToUTC()),
             IO::SDK::Constants::OfficialTwilight);
@@ -70,9 +81,11 @@ TEST(Site, FindDayWindows)
 
 TEST(Site, FindNightWindows)
 {
+    IO::SDK::Scenario sc("scenario1",
+                         IO::SDK::Time::Window<IO::SDK::Time::UTC>(IO::SDK::Time::TDB("2021-05-17 12:00:00 TDB").ToUTC(), IO::SDK::Time::TDB("2021-05-18 12:00:00 TDB").ToUTC()));
     auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10, "sun");
     auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth", sun);
-    IO::SDK::Sites::Site s{333002, "S2", IO::SDK::Coordinates::Geodetic(2.2 * IO::SDK::Constants::DEG_RAD, 48.0 * IO::SDK::Constants::DEG_RAD, 0.0), earth};
+    IO::SDK::Sites::Site s{333002, sc, "S2", IO::SDK::Coordinates::Geodetic(2.2 * IO::SDK::Constants::DEG_RAD, 48.0 * IO::SDK::Constants::DEG_RAD, 0.0), earth};
 
     auto windows = s.FindNightWindows(
             IO::SDK::Time::Window<IO::SDK::Time::UTC>(IO::SDK::Time::TDB("2021-05-17 12:00:00 TDB").ToUTC(), IO::SDK::Time::TDB("2021-05-18 12:00:00 TDB").ToUTC()),
@@ -85,9 +98,11 @@ TEST(Site, FindNightWindows)
 
 TEST(Site, GetStateVector)
 {
+    IO::SDK::Scenario sc("scenario1",
+                         IO::SDK::Time::Window<IO::SDK::Time::UTC>(IO::SDK::Time::TDB("2021-05-17 12:00:00 TDB").ToUTC(), IO::SDK::Time::TDB("2021-05-18 12:00:00 TDB").ToUTC()));
     auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10, "sun");
     auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth", sun);
-    IO::SDK::Sites::Site s{333002, "S2", IO::SDK::Coordinates::Geodetic(2.2 * IO::SDK::Constants::DEG_RAD, 48.0 * IO::SDK::Constants::DEG_RAD, 0.0), earth};
+    IO::SDK::Sites::Site s{333002, sc, "S2", IO::SDK::Coordinates::Geodetic(2.2 * IO::SDK::Constants::DEG_RAD, 48.0 * IO::SDK::Constants::DEG_RAD, 0.0), earth};
     auto sv = s.GetStateVector(*sun, IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::AberrationsEnum::None, IO::SDK::Time::TDB("2021-05-18 12:00:00 TDB"));
     ASSERT_DOUBLE_EQ(81351867346.038025, sv.GetPosition().GetX());
     ASSERT_DOUBLE_EQ(117072193426.44914, sv.GetPosition().GetY());
@@ -99,11 +114,13 @@ TEST(Site, GetStateVector)
 
 TEST(Site, ConvertToLocalFrame)
 {
+    IO::SDK::Scenario sc("scenario1",
+                         IO::SDK::Time::Window<IO::SDK::Time::UTC>(IO::SDK::Time::TDB("2021-05-17 12:00:00 TDB").ToUTC(), IO::SDK::Time::TDB("2021-05-18 12:00:00 TDB").ToUTC()));
     auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10, "sun");
     auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth", sun);
 
     //Position virtual station on same location as DSS-13
-    IO::SDK::Sites::Site s{12945, "FAKE_DSS-13",
+    IO::SDK::Sites::Site s{12945, sc, "FAKE_DSS-13",
                            IO::SDK::Coordinates::Geodetic(-116.7944627147624 * IO::SDK::Constants::DEG_RAD, 35.2471635434595 * IO::SDK::Constants::DEG_RAD, 107.0), earth};
     auto sv = s.GetStateVector(*sun, IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::AberrationsEnum::None, IO::SDK::Time::TDB("2021-05-18 12:00:00 TDB"));
     auto frm = sv.ToFrame(IO::SDK::Frames::Frames("DSS-13_TOPO"));
@@ -119,12 +136,14 @@ TEST(Site, ConvertToLocalFrame)
 
 TEST(Site, GetHorizontalCoordinates)
 {
+    IO::SDK::Scenario sc("scenario1",
+                         IO::SDK::Time::Window<IO::SDK::Time::UTC>(IO::SDK::Time::TDB("2021-05-20 00:00:00 UTC").ToUTC(), IO::SDK::Time::TDB("2021-05-22 00:00:00 UTC").ToUTC()));
     auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10, "sun");
     auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth", sun);
     auto marsBarycenter = std::make_shared<IO::SDK::Body::CelestialBody>(4, "mars_barycenter", sun);
 
     //Position virtual station on same location as DSS-13 at local noon
-    IO::SDK::Sites::Site s{12945, "FAKE_DSS-13",
+    IO::SDK::Sites::Site s{12945, sc, "FAKE_DSS-13",
                            IO::SDK::Coordinates::Geodetic(-116.7944627147624 * IO::SDK::Constants::DEG_RAD, 35.2471635434595 * IO::SDK::Constants::DEG_RAD, 107.0), earth};
     auto hor = s.GetHorizontalCoordinates(*sun, IO::SDK::AberrationsEnum::None, IO::SDK::Time::TDB("2021-05-20 19:43:00 UTC"));
     ASSERT_DOUBLE_EQ(151392145852.4516, hor.GetAltitude());
@@ -152,9 +171,11 @@ TEST(Site, GetHorizontalCoordinates)
 
 TEST(Site, FindWindowsOnIlluminationConstraint)
 {
+    IO::SDK::Scenario sc("scenario1",
+                         IO::SDK::Time::Window<IO::SDK::Time::UTC>(IO::SDK::Time::TDB("2021-05-17 12:00:00 TDB").ToUTC(), IO::SDK::Time::TDB("2021-05-18 12:00:00 TDB").ToUTC()));
     auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10, "sun");
     auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth", sun);
-    IO::SDK::Sites::Site s{333002, "S2", IO::SDK::Coordinates::Geodetic(2.2 * IO::SDK::Constants::DEG_RAD, 48.0 * IO::SDK::Constants::DEG_RAD, 0.0), earth};
+    IO::SDK::Sites::Site s{333002, sc, "S2", IO::SDK::Coordinates::Geodetic(2.2 * IO::SDK::Constants::DEG_RAD, 48.0 * IO::SDK::Constants::DEG_RAD, 0.0), earth};
     auto windows = s.FindWindowsOnIlluminationConstraint(
             IO::SDK::Time::Window<IO::SDK::Time::UTC>(IO::SDK::Time::TDB("2021-05-17 12:00:00 TDB").ToUTC(), IO::SDK::Time::TDB("2021-05-18 12:00:00 TDB").ToUTC()), *sun,
             IO::SDK::IlluminationAngle::Incidence(), IO::SDK::Constraints::Constraint::LowerThan(), IO::SDK::Constants::PI2 - IO::SDK::Constants::OfficialTwilight);
@@ -168,9 +189,11 @@ TEST(Site, FindWindowsOnIlluminationConstraint)
 
 TEST(Site, WriteEphemeris)
 {
+    IO::SDK::Scenario sc("scenario1",
+                         IO::SDK::Time::Window<IO::SDK::Time::UTC>(IO::SDK::Time::TDB("2021-05-17 12:00:00 TDB").ToUTC(), IO::SDK::Time::TDB("2021-05-17 12:10:00 TDB").ToUTC()));
     auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10, "sun");
     auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth", sun);
-    IO::SDK::Sites::Site s{399103, "S103", IO::SDK::Coordinates::Geodetic(2.2 * IO::SDK::Constants::DEG_RAD, 48.0 * IO::SDK::Constants::DEG_RAD, 0.0), earth};
+    IO::SDK::Sites::Site s{399103, sc, "S103", IO::SDK::Coordinates::Geodetic(2.2 * IO::SDK::Constants::DEG_RAD, 48.0 * IO::SDK::Constants::DEG_RAD, 0.0), earth};
     std::vector<IO::SDK::OrbitalParameters::StateVector> svectors;
     IO::SDK::Time::TDB startDate("2021-05-17 12:00:00 TDB");
     for (int i = 0; i < 10; ++i)
@@ -189,9 +212,12 @@ TEST(Site, WriteEphemeris)
 
 TEST(Site, ReadEphemeris)
 {
+
+    IO::SDK::Scenario sc("scenario1",
+                         IO::SDK::Time::Window<IO::SDK::Time::UTC>(IO::SDK::Time::TDB("2021-05-17 12:00:00 TDB").ToUTC(), IO::SDK::Time::TDB("2021-05-18 12:00:00 TDB").ToUTC()));
     auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10, "sun");
     auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth", sun);
-    IO::SDK::Sites::Site s{399102, "S102", IO::SDK::Coordinates::Geodetic(2.2 * IO::SDK::Constants::DEG_RAD, 48.0 * IO::SDK::Constants::DEG_RAD, 0.0), earth};
+    IO::SDK::Sites::Site s{399102, sc, "S102", IO::SDK::Coordinates::Geodetic(2.2 * IO::SDK::Constants::DEG_RAD, 48.0 * IO::SDK::Constants::DEG_RAD, 0.0), earth};
     std::vector<IO::SDK::OrbitalParameters::StateVector> svectors;
     IO::SDK::Time::TDB startDate("2021-05-17 12:00:00 TDB");
     for (int i = 0; i < 10; ++i)
@@ -226,13 +252,16 @@ TEST(Site, ReadEphemeris)
 
 }
 
-TEST(Site, FindBodyVisibilityWindows) {
+TEST(Site, FindBodyVisibilityWindows)
+{
+    IO::SDK::Scenario sc("scenario1",
+                         IO::SDK::Time::Window<IO::SDK::Time::UTC>(IO::SDK::Time::TDB("2021-05-17 12:00:00 TDB").ToUTC(), IO::SDK::Time::TDB("2021-05-18 12:00:00 TDB").ToUTC()));
     auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10, "sun");
     auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth", sun);
     auto moon = std::make_shared<IO::SDK::Body::CelestialBody>(301, "moon", earth);
 
     //Position virtual station on same location as DSS-13 at local noon
-    IO::SDK::Sites::Site s{399113, "FK_DSS-13",
+    IO::SDK::Sites::Site s{399113, sc, "FK_DSS-13",
                            IO::SDK::Coordinates::Geodetic(-116.7944627147624 * IO::SDK::Constants::DEG_RAD, 35.2471635434595 * IO::SDK::Constants::DEG_RAD, 1070.0), earth};
 
     std::vector<IO::SDK::OrbitalParameters::StateVector> svectors;
@@ -245,7 +274,7 @@ TEST(Site, FindBodyVisibilityWindows) {
 
     s.WriteEphemeris(svectors);
 
-    auto res=s.GetStateVector(*moon,IO::SDK::Frames::InertialFrames::GetICRF(),IO::SDK::AberrationsEnum::None,IO::SDK::Time::TDB("2023-02-19 00:00:00 TDB"));
+    auto res = s.GetStateVector(*moon, IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::AberrationsEnum::None, IO::SDK::Time::TDB("2023-02-19 00:00:00 TDB"));
 
     auto windows = s.FindBodyVisibilityWindows(*moon, IO::SDK::Time::Window<IO::SDK::Time::UTC>(IO::SDK::Time::TDB("2023-02-19 00:00:00 TDB").ToUTC(),
                                                                                                 IO::SDK::Time::TDB("2023-02-20 00:00:00 TDB").ToUTC()),
