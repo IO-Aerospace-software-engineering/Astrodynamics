@@ -144,10 +144,10 @@ TEST(Scenario, AddByDayConstraint)
     scenario.AddSpacecraft(s);
     scenario.AddSite(*ls);
 
-    IO::SDK::Constraints::Parameters::ByDayParameters constraint1(windowUTC, IO::SDK::Constants::CivilTwilight);
+    IO::SDK::Constraints::Parameters::ByDayParameters constraint1(windowUTC, *ls, IO::SDK::Constants::CivilTwilight);
     scenario.AddDayConstraint(constraint1);
 
-    IO::SDK::Constraints::Parameters::ByDayParameters constraint2(windowUTC, IO::SDK::Constants::CivilTwilight);
+    IO::SDK::Constraints::Parameters::ByDayParameters constraint2(windowUTC, *ls, IO::SDK::Constants::CivilTwilight);
     scenario.AddDayConstraint(constraint2);
     auto constraints = scenario.GetByDaysConstraints();
     ASSERT_EQ(2, constraints.size());
@@ -179,10 +179,10 @@ TEST(Scenario, AddByNightConstraint)
     scenario.AddSpacecraft(s);
     scenario.AddSite(*ls);
 
-    IO::SDK::Constraints::Parameters::ByNightParameters constraint1(windowUTC, IO::SDK::Constants::CivilTwilight);
+    IO::SDK::Constraints::Parameters::ByNightParameters constraint1(windowUTC, *ls, IO::SDK::Constants::CivilTwilight);
     scenario.AddNightConstraint(constraint1);
 
-    IO::SDK::Constraints::Parameters::ByNightParameters constraint2(windowUTC, IO::SDK::Constants::CivilTwilight);
+    IO::SDK::Constraints::Parameters::ByNightParameters constraint2(windowUTC, *ls, IO::SDK::Constants::CivilTwilight);
     scenario.AddNightConstraint(constraint2);
     auto constraints = scenario.GetByNightConstraints();
     ASSERT_EQ(2, constraints.size());

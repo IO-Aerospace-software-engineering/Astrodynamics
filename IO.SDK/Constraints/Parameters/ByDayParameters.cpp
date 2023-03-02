@@ -4,9 +4,10 @@
 
 #include <ByDayParameters.h>
 
-IO::SDK::Constraints::Parameters::ByDayParameters::ByDayParameters(const IO::SDK::Time::Window<IO::SDK::Time::UTC>& window, const double twilightDefinition) :
+IO::SDK::Constraints::Parameters::ByDayParameters::ByDayParameters(const IO::SDK::Time::Window<IO::SDK::Time::UTC>& window,const IO::SDK::Sites::Site& site, const double twilightDefinition) :
         m_window{window},
-        m_twilightDefinition{twilightDefinition}
+        m_twilightDefinition{twilightDefinition},
+        m_site{site}
 {
 
 }

@@ -7,6 +7,7 @@
 
 #include <UTC.h>
 #include <Window.h>
+#include <Site.h>
 
 namespace IO::SDK::Constraints::Parameters
 {
@@ -16,9 +17,12 @@ namespace IO::SDK::Constraints::Parameters
     private:
         const IO::SDK::Time::Window<IO::SDK::Time::UTC> m_window;
         const double m_twilightDefinition;
+        const IO::SDK::Sites::Site& m_site;
     public :
         size_t Order{};
-        ByNightParameters(const IO::SDK::Time::Window<IO::SDK::Time::UTC>& window, const double twilightDefinition);
+
+        ByNightParameters(const IO::SDK::Time::Window<IO::SDK::Time::UTC> &window, const IO::SDK::Sites::Site &site, const double twilightDefinition);
+
         inline bool operator<(const ByNightParameters &rhs) const
         { return Order < rhs.Order; }
     };
