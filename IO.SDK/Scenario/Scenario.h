@@ -20,7 +20,7 @@
 #include <OccultationParameters.h>
 #include <ByDayParameters.h>
 #include <ByNightParameters.h>
-#include <BodyVisibilityParameters.h>
+#include <BodyVisibilityFromSiteParameters.h>
 
 
 namespace IO::SDK
@@ -44,7 +44,7 @@ namespace IO::SDK
 
         std::map<IO::SDK::Constraints::Parameters::ByNightParameters, std::optional<std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>>>> m_nightConstraints;
 
-        std::map<IO::SDK::Constraints::Parameters::BodyVisibilityParameters, std::optional<std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>>>> m_bodyVisibilityConstraints;
+        std::map<IO::SDK::Constraints::Parameters::BodyVisibilityFromSiteParameters, std::optional<std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>>>> m_bodyVisibilityConstraints;
 
 
     public:
@@ -77,6 +77,30 @@ namespace IO::SDK
             return m_distanceConstraints;
         }
 
+        inline const std::map<IO::SDK::Constraints::Parameters::OccultationParameters, std::optional<std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>>>> &
+        GetOccultationConstraints() const
+        {
+            return m_occultationConstraints;
+        }
+
+        inline const std::map<IO::SDK::Constraints::Parameters::ByDayParameters, std::optional<std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>>>> &
+        GetByDaysConstraints() const
+        {
+            return m_dayConstraints;
+        }
+
+        inline const std::map<IO::SDK::Constraints::Parameters::ByNightParameters, std::optional<std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>>>> &
+        GetByNightConstraints() const
+        {
+            return m_nightConstraints;
+        }
+
+        inline const std::map<IO::SDK::Constraints::Parameters::BodyVisibilityFromSiteParameters, std::optional<std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>>>> &
+        GetBodyVisibilityFromSiteConstraints() const
+        {
+            return m_bodyVisibilityConstraints;
+        }
+
         void AddDistanceConstraint(Constraints::Parameters::DistanceParameters &distanceParameters);
 
         void AddOccultationConstraint(IO::SDK::Constraints::Parameters::OccultationParameters &occultationParameters);
@@ -85,7 +109,7 @@ namespace IO::SDK
 
         void AddNightConstraint(IO::SDK::Constraints::Parameters::ByNightParameters &byNightParameters);
 
-        void AddBodyVisibilityConstraint(IO::SDK::Constraints::Parameters::BodyVisibilityParameters &bodyVisibilityParameters);
+        void AddBodyVisibilityConstraint(IO::SDK::Constraints::Parameters::BodyVisibilityFromSiteParameters &bodyVisibilityParameters);
 
         void Execute();
     };

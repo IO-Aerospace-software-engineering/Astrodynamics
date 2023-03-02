@@ -48,7 +48,7 @@ void IO::SDK::Scenario::AddNightConstraint(IO::SDK::Constraints::Parameters::ByN
     m_nightConstraints[byNightParameters] = std::nullopt;
 }
 
-void IO::SDK::Scenario::AddBodyVisibilityConstraint(IO::SDK::Constraints::Parameters::BodyVisibilityParameters &bodyVisibilityParameters)
+void IO::SDK::Scenario::AddBodyVisibilityConstraint(IO::SDK::Constraints::Parameters::BodyVisibilityFromSiteParameters &bodyVisibilityParameters)
 {
     bodyVisibilityParameters.Order = m_bodyVisibilityConstraints.size();
     m_bodyVisibilityConstraints[bodyVisibilityParameters] = std::nullopt;
