@@ -60,6 +60,11 @@ namespace IO::SDK::Sites
         const std::shared_ptr<IO::SDK::Body::CelestialBody> m_body;
         const std::unique_ptr<IO::SDK::Frames::SiteFrameFile> m_frame;
         const IO::SDK::Aberrations m_aberrationHelper{};
+        /**
+         * Write stateVectors into ephemeris file
+         * @param states
+         */
+        void WriteEphemeris(const std::vector<OrbitalParameters::StateVector> &states) const;
 
     protected:
         const IO::SDK::Scenario &m_scenario;
@@ -226,11 +231,13 @@ namespace IO::SDK::Sites
         inline const std::string GetFilesPath() const
         { return m_filePath; }
 
+
+
         /**
-         * Write stateVectors into ephemeris file
-         * @param states
+         * Build and write ephemeris for a given period
+         * @param searchWindow
          */
-        void WriteEphemeris(const std::vector<OrbitalParameters::StateVector> &states) const;
+        void BuildAndWriteEphemeris(const IO::SDK::Time::Window<IO::SDK::Time::UTC> &searchWindow);
 
         /**
          * Read ephemeris from ephemeris file

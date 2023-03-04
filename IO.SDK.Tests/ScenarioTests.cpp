@@ -78,17 +78,15 @@ TEST(Scenario, AddDistanceConstraint)
 
     IO::SDK::Constraints::Parameters::DistanceParameters constraint1(windowTDB, *earth, *sun, IO::SDK::Constraints::Constraint::GreaterThan(), IO::SDK::AberrationsEnum::None, 10.0,
                                                                      IO::SDK::Time::TimeSpan(3600s));
-    scenario.AddDistanceConstraint(constraint1);
+    scenario.AddDistanceConstraint(&constraint1);
 
     IO::SDK::Constraints::Parameters::DistanceParameters constraint2(windowTDB, *earth, *sun, IO::SDK::Constraints::Constraint::GreaterThan(), IO::SDK::AberrationsEnum::None, 10.0,
                                                                      IO::SDK::Time::TimeSpan(3600s));
-    scenario.AddDistanceConstraint(constraint2);
+    scenario.AddDistanceConstraint(&constraint2);
     auto distanceConstraint = scenario.GetDistanceConstraints();
     ASSERT_EQ(2, distanceConstraint.size());
-    ASSERT_EQ(0, constraint1.Order);
-    ASSERT_EQ(std::nullopt, distanceConstraint[constraint1]);
-    ASSERT_EQ(1, constraint2.Order);
-    ASSERT_EQ(std::nullopt, distanceConstraint[constraint2]);
+    ASSERT_EQ(std::nullopt, distanceConstraint[&constraint1]);
+    ASSERT_EQ(std::nullopt, distanceConstraint[&constraint2]);
 }
 
 TEST(Scenario, AddOccultationConstraint)
@@ -118,17 +116,15 @@ TEST(Scenario, AddOccultationConstraint)
 
     IO::SDK::Constraints::Parameters::OccultationParameters constraint1(windowTDB, s, *earth, *sun, IO::SDK::OccultationType::Full(), IO::SDK::AberrationsEnum::None,
                                                                         IO::SDK::Time::TimeSpan(3600s));
-    scenario.AddOccultationConstraint(constraint1);
+    scenario.AddOccultationConstraint(&constraint1);
 
     IO::SDK::Constraints::Parameters::OccultationParameters constraint2(windowTDB, s, *earth, *sun, IO::SDK::OccultationType::Full(), IO::SDK::AberrationsEnum::None,
                                                                         IO::SDK::Time::TimeSpan(3600s));
-    scenario.AddOccultationConstraint(constraint2);
+    scenario.AddOccultationConstraint(&constraint2);
     auto constraints = scenario.GetOccultationConstraints();
     ASSERT_EQ(2, constraints.size());
-    ASSERT_EQ(0, constraint1.Order);
-    ASSERT_EQ(std::nullopt, constraints[constraint1]);
-    ASSERT_EQ(1, constraint2.Order);
-    ASSERT_EQ(std::nullopt, constraints[constraint2]);
+    ASSERT_EQ(std::nullopt, constraints[&constraint1]);
+    ASSERT_EQ(std::nullopt, constraints[&constraint2]);
 }
 
 TEST(Scenario, AddByDayConstraint)
@@ -157,16 +153,14 @@ TEST(Scenario, AddByDayConstraint)
     scenario.AddSite(*ls);
 
     IO::SDK::Constraints::Parameters::ByDayParameters constraint1(windowUTC, *ls, IO::SDK::Constants::CivilTwilight);
-    scenario.AddDayConstraint(constraint1);
+    scenario.AddDayConstraint(&constraint1);
 
     IO::SDK::Constraints::Parameters::ByDayParameters constraint2(windowUTC, *ls, IO::SDK::Constants::CivilTwilight);
-    scenario.AddDayConstraint(constraint2);
+    scenario.AddDayConstraint(&constraint2);
     auto constraints = scenario.GetByDaysConstraints();
     ASSERT_EQ(2, constraints.size());
-    ASSERT_EQ(0, constraint1.Order);
-    ASSERT_EQ(std::nullopt, constraints[constraint1]);
-    ASSERT_EQ(1, constraint2.Order);
-    ASSERT_EQ(std::nullopt, constraints[constraint2]);
+    ASSERT_EQ(std::nullopt, constraints[&constraint1]);
+    ASSERT_EQ(std::nullopt, constraints[&constraint2]);
 }
 
 TEST(Scenario, AddByNightConstraint)
@@ -195,16 +189,14 @@ TEST(Scenario, AddByNightConstraint)
     scenario.AddSite(*ls);
 
     IO::SDK::Constraints::Parameters::ByNightParameters constraint1(windowUTC, *ls, IO::SDK::Constants::CivilTwilight);
-    scenario.AddNightConstraint(constraint1);
+    scenario.AddNightConstraint(&constraint1);
 
     IO::SDK::Constraints::Parameters::ByNightParameters constraint2(windowUTC, *ls, IO::SDK::Constants::CivilTwilight);
-    scenario.AddNightConstraint(constraint2);
+    scenario.AddNightConstraint(&constraint2);
     auto constraints = scenario.GetByNightConstraints();
     ASSERT_EQ(2, constraints.size());
-    ASSERT_EQ(0, constraint1.Order);
-    ASSERT_EQ(std::nullopt, constraints[constraint1]);
-    ASSERT_EQ(1, constraint2.Order);
-    ASSERT_EQ(std::nullopt, constraints[constraint2]);
+    ASSERT_EQ(std::nullopt, constraints[&constraint1]);
+    ASSERT_EQ(std::nullopt, constraints[&constraint2]);
 }
 
 TEST(Scenario, AddBodyVisibilityConstraint)
@@ -233,14 +225,12 @@ TEST(Scenario, AddBodyVisibilityConstraint)
     scenario.AddSite(*ls);
 
     IO::SDK::Constraints::Parameters::BodyVisibilityFromSiteParameters constraint1(windowUTC, *ls, *sun, IO::SDK::AberrationsEnum::None);
-    scenario.AddBodyVisibilityConstraint(constraint1);
+    scenario.AddBodyVisibilityConstraint(&constraint1);
 
     IO::SDK::Constraints::Parameters::BodyVisibilityFromSiteParameters constraint2(windowUTC, *ls, *sun, IO::SDK::AberrationsEnum::None);
-    scenario.AddBodyVisibilityConstraint(constraint2);
+    scenario.AddBodyVisibilityConstraint(&constraint2);
     auto constraints = scenario.GetBodyVisibilityFromSiteConstraints();
     ASSERT_EQ(2, constraints.size());
-    ASSERT_EQ(0, constraint1.Order);
-    ASSERT_EQ(std::nullopt, constraints[constraint1]);
-    ASSERT_EQ(1, constraint2.Order);
-    ASSERT_EQ(std::nullopt, constraints[constraint2]);
+    ASSERT_EQ(std::nullopt, constraints[&constraint1]);
+    ASSERT_EQ(std::nullopt, constraints[&constraint2]);
 }

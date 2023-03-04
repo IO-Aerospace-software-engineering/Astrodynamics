@@ -19,11 +19,7 @@ namespace IO::SDK::Constraints::Parameters
         const double m_twilightDefinition;
         const IO::SDK::Sites::Site &m_site;
     public :
-        size_t Order{};
-
         ByDayParameters(const IO::SDK::Time::Window<IO::SDK::Time::UTC>& window,const IO::SDK::Sites::Site& site, const double twilightDefinition);
-        inline bool operator<(const ByDayParameters &rhs) const
-        { return Order < rhs.Order; }
     };
 
 } // IO

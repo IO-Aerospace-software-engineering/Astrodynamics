@@ -24,33 +24,28 @@ void IO::SDK::Scenario::AddCelestialBody(const IO::SDK::Body::CelestialBody &cel
     m_celestialBodies.push_back(&celestialBody);
 }
 
-void IO::SDK::Scenario::AddDistanceConstraint(Constraints::Parameters::DistanceParameters& distanceParameters)
+void IO::SDK::Scenario::AddDistanceConstraint(Constraints::Parameters::DistanceParameters *distanceParameters)
 {
-    distanceParameters.Order = m_distanceConstraints.size();
     m_distanceConstraints[distanceParameters] = std::nullopt;
 }
 
-void IO::SDK::Scenario::AddOccultationConstraint(IO::SDK::Constraints::Parameters::OccultationParameters &occultationParameters)
+void IO::SDK::Scenario::AddOccultationConstraint(IO::SDK::Constraints::Parameters::OccultationParameters *occultationParameters)
 {
-    occultationParameters.Order = m_occultationConstraints.size();
     m_occultationConstraints[occultationParameters] = std::nullopt;
 }
 
-void IO::SDK::Scenario::AddDayConstraint(IO::SDK::Constraints::Parameters::ByDayParameters &byDayParameters)
+void IO::SDK::Scenario::AddDayConstraint(IO::SDK::Constraints::Parameters::ByDayParameters *byDayParameters)
 {
-    byDayParameters.Order = m_dayConstraints.size();
     m_dayConstraints[byDayParameters] = std::nullopt;
 }
 
-void IO::SDK::Scenario::AddNightConstraint(IO::SDK::Constraints::Parameters::ByNightParameters &byNightParameters)
+void IO::SDK::Scenario::AddNightConstraint(IO::SDK::Constraints::Parameters::ByNightParameters *byNightParameters)
 {
-    byNightParameters.Order = m_nightConstraints.size();
     m_nightConstraints[byNightParameters] = std::nullopt;
 }
 
-void IO::SDK::Scenario::AddBodyVisibilityConstraint(IO::SDK::Constraints::Parameters::BodyVisibilityFromSiteParameters &bodyVisibilityParameters)
+void IO::SDK::Scenario::AddBodyVisibilityConstraint(IO::SDK::Constraints::Parameters::BodyVisibilityFromSiteParameters *bodyVisibilityParameters)
 {
-    bodyVisibilityParameters.Order = m_bodyVisibilityConstraints.size();
     m_bodyVisibilityConstraints[bodyVisibilityParameters] = std::nullopt;
 }
 

@@ -32,9 +32,6 @@ namespace IO::SDK::Constraints::Parameters
                               const IO::SDK::OccultationType &occultationType,
                               const IO::SDK::AberrationsEnum aberration,
                               const IO::SDK::Time::TimeSpan &initialStepSize);
-        int Order{};
-        inline bool operator<(const OccultationParameters &rhs) const
-        { return Order < rhs.Order; }
     };
 }
 

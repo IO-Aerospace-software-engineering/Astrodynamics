@@ -31,7 +31,7 @@ namespace IO::SDK::Parameters
     inline constexpr double IntersectDetectionAccuraccy = 0.017453;//1.0°
     inline constexpr double CircularEccentricityAccuraccy = 1E-03;
     inline constexpr double ClockAccuracy = 1.0 / 65536.0;
-    inline const static Time::TimeSpan SitePropagationStep(600s);
+    inline const static Time::TimeSpan SitePropagationStep(60s);
 
 }
 #endif

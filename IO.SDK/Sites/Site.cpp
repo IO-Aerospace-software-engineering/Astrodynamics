@@ -261,3 +261,14 @@ std::string IO::SDK::Sites::Site::ReadEphemerisKernelComment() const
 {
     return this->m_ephemerisKernel->ReadComment();
 }
+
+void IO::SDK::Sites::Site::BuildAndWriteEphemeris(const IO::SDK::Time::Window<IO::SDK::Time::UTC> &searchWindow)
+{
+    std::vector<IO::SDK::OrbitalParameters::StateVector> svector;
+    for (auto i = searchWindow.GetStartDate().ToTDB(); i <= searchWindow.GetEndDate(); i = i + IO::SDK::Parameters::SitePropagationStep)
+    {
+        auto sv= GetStateVector(IO::SDK::Frames::InertialFrames::GetICRF(),i);
+        svector.push_back(sv);
+    }
+    WriteEphemeris(svector);
+}

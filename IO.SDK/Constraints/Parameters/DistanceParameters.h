@@ -27,10 +27,7 @@ namespace IO::SDK::Constraints::Parameters
         const double m_value;
         const IO::SDK::Time::TimeSpan &m_initialStepSize;
 
-
     public:
-        size_t Order{};
-
         DistanceParameters(const IO::SDK::Time::Window<IO::SDK::Time::TDB>& window,
                            const IO::SDK::Body::Body &observer,
                            const IO::SDK::Body::Body &target,
@@ -38,10 +35,6 @@ namespace IO::SDK::Constraints::Parameters
                            const IO::SDK::AberrationsEnum aberration,
                            const double value,
                            const IO::SDK::Time::TimeSpan &initialStepSize);
-
-        inline bool operator<(const DistanceParameters &rhs) const
-        { return Order < rhs.Order; }
-
     };
 
 
