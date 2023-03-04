@@ -22,7 +22,20 @@
 #include <ByNightParameters.h>
 #include <BodyVisibilityFromSiteParameters.h>
 #include <Site.h>
+#include <VVIntegrator.h>
+#include <GravityForce.h>
+#include <Force.h>
 
+namespace IO::SDK::Integrators
+{
+    class VVIntegrator;
+}
+//
+//namespace IO::SDK::Integrators::Forces
+//{
+//    class Force;
+//    class GravityForce;
+//}
 
 namespace IO::SDK::Constraints::Parameters
 {
@@ -43,6 +56,10 @@ namespace IO::SDK
         std::vector<const IO::SDK::Body::CelestialBody *> m_celestialBodies;
         std::vector<const IO::SDK::Body::Spacecraft::Spacecraft *> m_spacecrafts;
         std::vector<const IO::SDK::Sites::Site *> m_sites;
+
+        IO::SDK::Integrators::Forces::GravityForce m_gravityForce;
+        std::vector<IO::SDK::Integrators::Forces::Force*> m_forces{&m_gravityForce};
+        const IO::SDK::Integrators::VVIntegrator m_integrator;
 
         //Body constraints
         std::map<IO::SDK::Constraints::Parameters::DistanceParameters*, std::optional<std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>>>> m_distanceConstraints;

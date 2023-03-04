@@ -2,9 +2,12 @@
 // Created by s.guillet on 23/02/2023.
 //
 
+#include <Propagator.h>
 #include <Scenario.h>
 
-IO::SDK::Scenario::Scenario(const std::string &name, const IO::SDK::Time::Window<IO::SDK::Time::UTC> &windows) : m_name{name}, m_windows{windows}
+IO::SDK::Scenario::Scenario(const std::string &name, const IO::SDK::Time::Window<IO::SDK::Time::UTC> &windows) : m_name{name}, m_windows{windows},
+                                                                                                                 m_integrator(IO::SDK::Parameters::SpacecraftPropagationStep,
+                                                                                                                              m_forces)
 {
 
 }
@@ -52,11 +55,17 @@ void IO::SDK::Scenario::AddBodyVisibilityConstraint(IO::SDK::Constraints::Parame
 void IO::SDK::Scenario::Execute()
 {
     // Run sites propagation
-    for (const IO::SDK::Sites::Site *site: m_sites)
+    for (auto site: m_sites)
     {
+        site->BuildAndWriteEphemeris(this->m_windows);
     }
 
+    auto utc = IO::SDK::Time::Window<IO::SDK::Time::TDB>(m_windows.GetStartDate().ToTDB(), m_windows.GetEndDate().ToTDB());
     //Run bodies propagation
+    for (auto spacecraft: m_spacecrafts)
+    {
+        IO::SDK::Propagators::Propagator propagator(*spacecraft, m_integrator, utc);
+    }
 
     //Evaluate constraints
 }

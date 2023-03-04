@@ -5,6 +5,8 @@
 #include <vector>
 #include <iostream>
 #include <InertialFrames.h>
+#include <Spacecraft.h>
+#include <StateOrientation.h>
 
 using namespace std::chrono_literals;
 

@@ -32,6 +32,7 @@ namespace IO::SDK::Parameters
     inline constexpr double CircularEccentricityAccuraccy = 1E-03;
     inline constexpr double ClockAccuracy = 1.0 / 65536.0;
     inline const static Time::TimeSpan SitePropagationStep(60s);
+    inline const static Time::TimeSpan SpacecraftPropagationStep(1s);
 
 }
 #endif

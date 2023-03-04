@@ -16,9 +16,9 @@
 
 using namespace std::chrono_literals;
 
-IO::SDK::Propagators::Propagator::Propagator(const IO::SDK::Body::Spacecraft::Spacecraft &spacecraft, IO::SDK::Integrators::IntegratorBase &integrator,
+IO::SDK::Propagators::Propagator::Propagator(const IO::SDK::Body::Spacecraft::Spacecraft &spacecraft, const IO::SDK::Integrators::IntegratorBase &integrator,
                                              const IO::SDK::Time::Window<IO::SDK::Time::TDB> &window)
-        : m_spacecraft{spacecraft}, m_integrator{integrator}, m_window{window}
+        : m_spacecraft{spacecraft}, m_window{window}, m_integrator{const_cast<IO::SDK::Integrators::IntegratorBase&>(integrator)}
 {
     m_StateOrientations.push_back(std::vector<IO::SDK::OrbitalParameters::StateOrientation>{});
 }
@@ -53,7 +53,7 @@ void IO::SDK::Propagators::Propagator::Propagate()
         }
 
         //Integrate vector state
-        stateVector = m_integrator.Integrate(m_spacecraft, m_stateVectors.back());
+        stateVector =  m_integrator.Integrate(m_spacecraft, m_stateVectors.back());
         m_stateVectors.push_back(stateVector);
     }
 

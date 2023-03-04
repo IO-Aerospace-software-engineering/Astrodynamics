@@ -20,7 +20,8 @@ IO::SDK::Integrators::VVIntegrator::VVIntegrator(const IO::SDK::Time::TimeSpan &
     }
 }
 
-IO::SDK::Integrators::VVIntegrator::VVIntegrator(const IO::SDK::Time::TimeSpan &stepDuration, std::vector<IO::SDK::Integrators::Forces::Force *> forces) : VVIntegrator(stepDuration)
+IO::SDK::Integrators::VVIntegrator::VVIntegrator(const IO::SDK::Time::TimeSpan &stepDuration, std::vector<IO::SDK::Integrators::Forces::Force *> forces) : VVIntegrator(
+        stepDuration)
 {
     if (forces.size() <= 0)
     {
@@ -42,14 +43,14 @@ IO::SDK::OrbitalParameters::StateVector IO::SDK::Integrators::VVIntegrator::Inte
 
     if (!m_acceleration)
     {
-        m_acceleration = std::make_unique<IO::SDK::Math::Vector3D>(ComputeAcceleration(body, stateVector));
+        m_acceleration = ComputeAcceleration(body, stateVector);
     }
 
     velocity = velocity + (*m_acceleration * m_half_h);
 
     position = position + velocity * m_h;
 
-    *m_acceleration = ComputeAcceleration(body, IO::SDK::OrbitalParameters::StateVector(stateVector.GetCenterOfMotion(), position, velocity, nextEpoch, stateVector.GetFrame()));
+    m_acceleration = ComputeAcceleration(body, IO::SDK::OrbitalParameters::StateVector(stateVector.GetCenterOfMotion(), position, velocity, nextEpoch, stateVector.GetFrame()));
 
     velocity = velocity + (*m_acceleration * m_half_h);
 
@@ -64,7 +65,7 @@ IO::SDK::OrbitalParameters::StateVector IO::SDK::Integrators::VVIntegrator::Inte
 IO::SDK::Math::Vector3D IO::SDK::Integrators::VVIntegrator::ComputeAcceleration(const IO::SDK::Body::Body &body, const IO::SDK::OrbitalParameters::StateVector &stateVector) const
 {
     IO::SDK::Math::Vector3D forceVector{};
-    for (auto force : m_forces)
+    for (auto force: m_forces)
     {
         forceVector = forceVector + force->Apply(body, stateVector);
     }

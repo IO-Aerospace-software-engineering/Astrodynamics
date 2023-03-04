@@ -237,7 +237,7 @@ namespace IO::SDK::Sites
          * Build and write ephemeris for a given period
          * @param searchWindow
          */
-        void BuildAndWriteEphemeris(const IO::SDK::Time::Window<IO::SDK::Time::UTC> &searchWindow);
+        void BuildAndWriteEphemeris(const IO::SDK::Time::Window<IO::SDK::Time::UTC> &searchWindow) const;
 
         /**
          * Read ephemeris from ephemeris file
