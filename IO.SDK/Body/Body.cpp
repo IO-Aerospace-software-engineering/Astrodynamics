@@ -118,7 +118,7 @@ std::shared_ptr<IO::SDK::Body::Body> IO::SDK::Body::Body::GetSharedPointer()
 	return this->shared_from_this();
 }
 
-std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>> IO::SDK::Body::Body::FindWindowsOnDistanceConstraint(const IO::SDK::Time::Window<IO::SDK::Time::TDB> window, const Body &targetBody, const Body &oberver, const IO::SDK::Constraints::Constraint &constraint, const IO::SDK::AberrationsEnum aberration, const double value, const IO::SDK::Time::TimeSpan &step) const
+std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>> IO::SDK::Body::Body::FindWindowsOnDistanceConstraint(const IO::SDK::Time::Window<IO::SDK::Time::TDB> window, const Body &targetBody, const Body &observer, const IO::SDK::Constraints::Constraint &constraint, const IO::SDK::AberrationsEnum aberration, const double value, const IO::SDK::Time::TimeSpan &step) const
 {
 	std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>> windows;
 	SpiceDouble windowStart;
@@ -137,7 +137,7 @@ std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>> IO::SDK::Body::Body::Find
 
 	wninsd_c(window.GetStartDate().GetSecondsFromJ2000().count(), window.GetEndDate().GetSecondsFromJ2000().count(), &cnfine);
 
-	gfdist_c(targetBody.GetName().c_str(), abe.ToString(aberration).c_str(), oberver.GetName().c_str(), constraint.ToCharArray(), value * 1E-03, 0.0, step.GetSeconds().count(), NINTVL, &cnfine, &results);
+	gfdist_c(targetBody.GetName().c_str(), abe.ToString(aberration).c_str(), observer.GetName().c_str(), constraint.ToCharArray(), value * 1E-03, 0.0, step.GetSeconds().count(), NINTVL, &cnfine, &results);
 
 	for (int i = 0; i < wncard_c(&results); i++)
 	{

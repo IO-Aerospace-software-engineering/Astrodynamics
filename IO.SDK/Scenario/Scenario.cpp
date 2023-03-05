@@ -60,12 +60,20 @@ void IO::SDK::Scenario::Execute()
         site->BuildAndWriteEphemeris(this->m_windows);
     }
 
-    auto utc = IO::SDK::Time::Window<IO::SDK::Time::TDB>(m_windows.GetStartDate().ToTDB(), m_windows.GetEndDate().ToTDB());
+    auto tdb = IO::SDK::Time::Window<IO::SDK::Time::TDB>(m_windows.GetStartDate().ToTDB(), m_windows.GetEndDate().ToTDB());
     //Run bodies propagation
     for (auto spacecraft: m_spacecrafts)
     {
-        IO::SDK::Propagators::Propagator propagator(*spacecraft, m_integrator, utc);
+        IO::SDK::Propagators::Propagator propagator(*spacecraft, m_integrator, tdb);
+        propagator.Propagate();
     }
 
     //Evaluate constraints
+    for (auto &&constraint: m_distanceConstraints)
+    {
+        constraint.second = constraint.first->GetObserver().FindWindowsOnDistanceConstraint(tdb, constraint.first->GetTarget(), constraint.first->GetObserver(),
+                                                                                            constraint.first->GetConstraint(), constraint.first->GetAberration(),
+                                                                                            constraint.first->GetValue(),
+                                                                                            constraint.first->GetInitialStepSize());
+    }
 }

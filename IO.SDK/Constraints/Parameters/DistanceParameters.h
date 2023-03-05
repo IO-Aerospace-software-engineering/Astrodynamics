@@ -19,7 +19,6 @@ namespace IO::SDK::Constraints::Parameters
     {
     private:
 
-        const IO::SDK::Time::Window<IO::SDK::Time::TDB> m_window;
         const IO::SDK::Body::Body &m_observer;
         const IO::SDK::Body::Body &m_target;
         const IO::SDK::Constraints::Constraint &m_constraint;
@@ -28,13 +27,31 @@ namespace IO::SDK::Constraints::Parameters
         const IO::SDK::Time::TimeSpan &m_initialStepSize;
 
     public:
-        DistanceParameters(const IO::SDK::Time::Window<IO::SDK::Time::TDB>& window,
-                           const IO::SDK::Body::Body &observer,
+        DistanceParameters(const IO::SDK::Body::Body &observer,
                            const IO::SDK::Body::Body &target,
                            const IO::SDK::Constraints::Constraint &constraint,
                            const IO::SDK::AberrationsEnum aberration,
                            const double value,
                            const IO::SDK::Time::TimeSpan &initialStepSize);
+
+        inline const IO::SDK::Body::Body &GetObserver()
+        { return m_observer; }
+
+        inline const IO::SDK::Body::Body &GetTarget()
+        { return m_target; }
+
+        inline const IO::SDK::Constraints::Constraint &GetConstraint()
+        { return m_constraint; }
+
+        inline const IO::SDK::AberrationsEnum &GetAberration()
+        { return m_aberration; }
+
+        inline const double GetValue()
+        { return m_value; }
+
+        inline const IO::SDK::Time::TimeSpan &GetInitialStepSize()
+        { return m_initialStepSize; }
+
     };
 
 

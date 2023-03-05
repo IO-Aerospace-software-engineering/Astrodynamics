@@ -12,6 +12,7 @@
 #include<Scenario.h>
 #include<Window.h>
 #include<UTC.h>
+#include <DistanceParameters.h>
 
 using namespace std::chrono_literals;
 
@@ -76,11 +77,11 @@ TEST(Scenario, AddDistanceConstraint)
     scenario.AddSpacecraft(s);
     scenario.AddSite(*ls);
 
-    IO::SDK::Constraints::Parameters::DistanceParameters constraint1(windowTDB, *earth, *sun, IO::SDK::Constraints::Constraint::GreaterThan(), IO::SDK::AberrationsEnum::None, 10.0,
+    IO::SDK::Constraints::Parameters::DistanceParameters constraint1(*earth, *sun, IO::SDK::Constraints::Constraint::GreaterThan(), IO::SDK::AberrationsEnum::None, 10.0,
                                                                      IO::SDK::Time::TimeSpan(3600s));
     scenario.AddDistanceConstraint(&constraint1);
 
-    IO::SDK::Constraints::Parameters::DistanceParameters constraint2(windowTDB, *earth, *sun, IO::SDK::Constraints::Constraint::GreaterThan(), IO::SDK::AberrationsEnum::None, 10.0,
+    IO::SDK::Constraints::Parameters::DistanceParameters constraint2(*earth, *sun, IO::SDK::Constraints::Constraint::GreaterThan(), IO::SDK::AberrationsEnum::None, 10.0,
                                                                      IO::SDK::Time::TimeSpan(3600s));
     scenario.AddDistanceConstraint(&constraint2);
     auto distanceConstraint = scenario.GetDistanceConstraints();
@@ -233,4 +234,32 @@ TEST(Scenario, AddBodyVisibilityConstraint)
     ASSERT_EQ(2, constraints.size());
     ASSERT_EQ(std::nullopt, constraints[&constraint1]);
     ASSERT_EQ(std::nullopt, constraints[&constraint2]);
+}
+
+TEST(Scenario, FindDistanceConstraint)
+{
+    auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10, "sun");
+    IO::SDK::Time::TDB epoch("2021-Jan-01 00:00:00.0000 TDB");
+    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth", sun);
+    auto moon = std::make_shared<IO::SDK::Body::CelestialBody>(301, "moon", earth);
+
+    auto searchWindow = IO::SDK::Time::Window<IO::SDK::Time::UTC>(IO::SDK::Time::TDB("2007 JAN 1").ToUTC(), IO::SDK::Time::TDB("2007 APR 1").ToUTC());
+    IO::SDK::Scenario scenario("scenarioDistance", searchWindow);
+    scenario.AddCelestialBody(*sun);
+    scenario.AddCelestialBody(*earth);
+    scenario.AddCelestialBody(*moon);
+
+    auto constraint = IO::SDK::Constraints::Parameters::DistanceParameters(*earth, *moon, IO::SDK::Constraints::Constraint::GreaterThan(), IO::SDK::AberrationsEnum::None,
+                                                                           400000000.0, IO::SDK::Time::TimeSpan(86400s));
+    scenario.AddDistanceConstraint(&constraint);
+    scenario.Execute();
+
+    auto results = scenario.GetDistanceConstraints();
+    auto res = *results[&constraint];
+
+    ASSERT_EQ(4, res.size());
+    ASSERT_STREQ("2007-01-08 00:11:07.628591 (TDB)", res[0].GetStartDate().ToString().c_str());
+    ASSERT_STREQ("2007-01-13 06:37:47.948144 (TDB)", res[0].GetEndDate().ToString().c_str());
+    ASSERT_STREQ("2007-03-29 22:53:58.151896 (TDB)", res[3].GetStartDate().ToString().c_str());
+    ASSERT_STREQ("2007-04-01 00:01:05.185654 (TDB)", res[3].GetEndDate().ToString().c_str());
 }
