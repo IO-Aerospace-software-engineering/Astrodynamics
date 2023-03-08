@@ -30,8 +30,6 @@ namespace IO::SDK::Constraints
          */
         Constraint(const std::string &name);
 
-        
-        
         static Constraint Equal;
         static Constraint AbsMin;
         static Constraint AbsMax;

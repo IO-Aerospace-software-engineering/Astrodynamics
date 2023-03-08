@@ -202,7 +202,7 @@ IO::SDK::Sites::Site::GetStateVector(const IO::SDK::Body::Body &body, const IO::
 std::vector<IO::SDK::Time::Window<IO::SDK::Time::UTC>>
 IO::SDK::Sites::Site::FindBodyVisibilityWindows(const IO::SDK::Body::Body &body,
                                                 const IO::SDK::Time::Window<IO::SDK::Time::UTC> &searchWindow,
-                                                const IO::SDK::AberrationsEnum aberrationCorrection)
+                                                const IO::SDK::AberrationsEnum aberrationCorrection) const
 {
     std::vector<IO::SDK::Time::Window<IO::SDK::Time::UTC>> windows;
     SpiceDouble windowStart;
@@ -219,7 +219,7 @@ IO::SDK::Sites::Site::FindBodyVisibilityWindows(const IO::SDK::Body::Body &body,
     SpiceDouble SPICE_CELL_OCCLT_RESULT[SPICE_CELL_CTRLSZ + MAXWIN];
     SpiceCell results = IO::SDK::Spice::Builder::CreateDoubleCell(MAXWIN, SPICE_CELL_OCCLT_RESULT);
 
-    wninsd_c(searchWindow.GetStartDate().GetSecondsFromJ2000().count(), searchWindow.GetEndDate().GetSecondsFromJ2000().count(), &cnfine);
+    wninsd_c(searchWindow.GetStartDate().ToTDB().GetSecondsFromJ2000().count(), searchWindow.GetEndDate().ToTDB().GetSecondsFromJ2000().count(), &cnfine);
 
     gfposc_c(std::to_string(body.GetId()).c_str(), m_frame->GetName().c_str(), abe.ToString(aberrationCorrection).c_str(), std::to_string(m_id).c_str(),
              IO::SDK::CoordinateSystem::Latitudinal().ToCharArray(), IO::SDK::Coordinate::Latitude().ToCharArray(), ">", 0.0, 0.0, 60.0, NINTVL, &cnfine, &results);
@@ -265,10 +265,18 @@ std::string IO::SDK::Sites::Site::ReadEphemerisKernelComment() const
 void IO::SDK::Sites::Site::BuildAndWriteEphemeris(const IO::SDK::Time::Window<IO::SDK::Time::UTC> &searchWindow) const
 {
     std::vector<IO::SDK::OrbitalParameters::StateVector> svector;
-    for (auto i = searchWindow.GetStartDate().ToTDB(); i <= searchWindow.GetEndDate(); i = i + IO::SDK::Parameters::SitePropagationStep)
+    for (auto epoch = searchWindow.GetStartDate().ToTDB(); epoch <= searchWindow.GetEndDate().ToTDB(); epoch = epoch + IO::SDK::Parameters::SitePropagationStep)
     {
-        auto sv= GetStateVector(IO::SDK::Frames::InertialFrames::GetICRF(),i);
+        auto sv = GetStateVector(IO::SDK::Frames::InertialFrames::GetICRF(), epoch);
         svector.push_back(sv);
     }
+
+    //Add latest value
+    if (svector.back().GetEpoch() < searchWindow.GetEndDate().ToTDB())
+    {
+        auto sv = GetStateVector(IO::SDK::Frames::InertialFrames::GetICRF(), searchWindow.GetEndDate().ToTDB());
+        svector.push_back(sv);
+    }
+
     WriteEphemeris(svector);
 }

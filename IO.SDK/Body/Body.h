@@ -176,7 +176,7 @@ namespace IO::SDK::Body
 		 * @param stepSize Step size (should be shorter than the shortest of these intervals. WARNING : A short step size could increase compute time)
 		 * @return std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>> 
 		 */
-		std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>> FindWindowsOnOccultationConstraint(const IO::SDK::Time::Window<IO::SDK::Time::TDB> searchWindow, const IO::SDK::Body::CelestialBody &targetBody, const IO::SDK::Body::CelestialBody &frontBody, const IO::SDK::OccultationType &occultationType, const IO::SDK::AberrationsEnum aberration, const IO::SDK::Time::TimeSpan &stepSize) const;
+		std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>> FindWindowsOnOccultationConstraint(const IO::SDK::Time::Window<IO::SDK::Time::TDB> searchWindow, const IO::SDK::Body::Body &targetBody, const IO::SDK::Body::CelestialBody &frontBody, const IO::SDK::OccultationType &occultationType, const IO::SDK::AberrationsEnum aberration, const IO::SDK::Time::TimeSpan &stepSize) const;
 
 		/**
 		 * @brief Get the Sub Observer Point observed from this body

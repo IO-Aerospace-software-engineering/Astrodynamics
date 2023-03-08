@@ -15,11 +15,16 @@ namespace IO::SDK::Constraints::Parameters
     class ByDayParameters
     {
     private:
-        const IO::SDK::Time::Window<IO::SDK::Time::UTC> m_window;
         const double m_twilightDefinition;
         const IO::SDK::Sites::Site &m_site;
     public :
-        ByDayParameters(const IO::SDK::Time::Window<IO::SDK::Time::UTC>& window,const IO::SDK::Sites::Site& site, const double twilightDefinition);
+        ByDayParameters(const IO::SDK::Sites::Site &site, const double twilightDefinition);
+
+        inline double GetTwilightDefinition() const
+        { return m_twilightDefinition; }
+
+        inline const IO::SDK::Sites::Site &GetSite() const
+        { return m_site; }
     };
 
 } // IO

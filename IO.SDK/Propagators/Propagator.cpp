@@ -13,6 +13,7 @@
 #include <algorithm>
 #include <ManeuverBase.h>
 #include <ZenithAttitude.h>
+#include <StateOrientation.h>
 
 using namespace std::chrono_literals;
 
@@ -34,7 +35,7 @@ void IO::SDK::Propagators::Propagator::Propagate()
     IO::SDK::OrbitalParameters::StateVector stateVector{m_spacecraft.GetOrbitalParametersAtEpoch()->GetStateVector(m_window.GetStartDate())};
     m_stateVectors.push_back(stateVector);
 
-    // Initial alignment, spacecraft back points toward the earth
+    // Initial alignment, spacecraft back points toward the center of motion
     IO::SDK::OrbitalParameters::StateOrientation attitude(m_spacecraft.Front.To(stateVector.GetPosition().Normalize()), IO::SDK::Math::Vector3D(0.0, 0.0, 0.0),
                                                           stateVector.GetEpoch(), stateVector.GetFrame());
     AddStateOrientation(attitude);
@@ -61,6 +62,9 @@ void IO::SDK::Propagators::Propagator::Propagate()
     m_spacecraft.WriteEphemeris(m_stateVectors);
 
     //Write orientation data
+    //Add the latest known orientation at the end of kernel
+    auto latestAttitude=m_StateOrientations.back().back();
+    AddStateOrientation(IO::SDK::OrbitalParameters::StateOrientation(latestAttitude.GetQuaternion(),IO::SDK::Math::Vector3D::Zero, m_window.GetEndDate(),latestAttitude.GetFrame()));
     m_spacecraft.WriteOrientations(m_StateOrientations);
 }
 

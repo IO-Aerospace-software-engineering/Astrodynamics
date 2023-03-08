@@ -143,7 +143,9 @@ std::vector<IO::SDK::Math::Vector3D> IO::SDK::Instruments::Instrument::GetFOVBou
 std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>>
 IO::SDK::Instruments::Instrument::FindWindowsWhereInFieldOfView(
         const IO::SDK::Time::Window<IO::SDK::Time::TDB> &searchWindow, const IO::SDK::Body::Body &targetBody,
-        const IO::SDK::Time::TimeSpan &stepSize, const IO::SDK::AberrationsEnum &aberration) const
+        const IO::SDK::AberrationsEnum &aberration,
+        const IO::SDK::Time::TimeSpan &stepSize
+) const
 {
     std::string shape{"POINT"};
     std::string frame{""};
@@ -170,20 +172,27 @@ IO::SDK::Instruments::Instrument::FindWindowsWhereInFieldOfView(
     SpiceCell results = IO::SDK::Spice::Builder::CreateDoubleCell(MAXWIN, SPICE_CELL_OCCLT_RESULT);
 
     wninsd_c(searchWindow.GetStartDate().GetSecondsFromJ2000().count(),
-             searchWindow.GetEndDate().GetSecondsFromJ2000().count(), &cnfine);
+             searchWindow.GetEndDate().GetSecondsFromJ2000().count(), &cnfine
 
-    gftfov_c(std::to_string(m_id).c_str(), targetBody.GetName().c_str(), shape.c_str(), frame.c_str(),
-             abe.ToString(aberration).c_str(), m_spacecraft.GetName().c_str(),
-             stepSize.GetSeconds().count(), &cnfine, &results);
+    );
 
-    for (int i = 0; i < wncard_c(&results); i++)
+    gftfov_c(std::to_string(m_id).c_str(), targetBody.GetName().c_str(), shape.c_str(), frame.c_str(), abe.ToString(aberration).c_str(),
+             m_spacecraft.GetName().c_str(), stepSize.GetSeconds().count(), &cnfine, &results
+    );
+
+    for (
+            int i = 0;
+            i < wncard_c(&results); i++)
     {
-        wnfetd_c(&results, i, &windowStart, &windowEnd);
+        wnfetd_c(&results, i, &windowStart, &windowEnd
+        );
         windows.push_back(IO::SDK::Time::Window<IO::SDK::Time::TDB>(
                 IO::SDK::Time::TDB(std::chrono::duration<double>(windowStart)),
                 IO::SDK::Time::TDB(std::chrono::duration<double>(windowEnd))));
+
     }
-    return windows;
+    return
+            windows;
 }
 
 IO::SDK::Math::Vector3D IO::SDK::Instruments::Instrument::GetBoresight(const IO::SDK::Frames::Frames &frame,

@@ -16,7 +16,6 @@ namespace IO::SDK::Constraints::Parameters
     class OccultationParameters
     {
     private:
-        const IO::SDK::Time::Window<IO::SDK::Time::TDB> m_window;
         const IO::SDK::Body::Body &m_observer;
         const IO::SDK::Body::CelestialBody &m_front;
         const IO::SDK::Body::Body &m_back;
@@ -25,13 +24,31 @@ namespace IO::SDK::Constraints::Parameters
         const IO::SDK::Time::TimeSpan &m_initialStepSize;
 
     public:
-        OccultationParameters(const IO::SDK::Time::Window<IO::SDK::Time::TDB> &window,
-                              const IO::SDK::Body::Body &observer,
+        OccultationParameters(const IO::SDK::Body::Body &observer,
                               const IO::SDK::Body::CelestialBody &front,
                               const IO::SDK::Body::Body &back,
                               const IO::SDK::OccultationType &occultationType,
                               const IO::SDK::AberrationsEnum aberration,
                               const IO::SDK::Time::TimeSpan &initialStepSize);
+
+        inline const IO::SDK::Body::Body &GetObserver() const
+        { return m_observer; }
+
+        inline const IO::SDK::Body::CelestialBody &GetFront() const
+        { return m_front; }
+
+        inline const IO::SDK::Body::Body &GetBack() const
+        { return m_back; }
+
+        inline const IO::SDK::OccultationType &GetOccultationType() const
+        { return m_occultationType; }
+
+        inline const IO::SDK::AberrationsEnum GetAberration() const
+        { return m_aberration; }
+
+        inline const IO::SDK::Time::TimeSpan &GetInitialStepSize() const
+        { return m_initialStepSize; }
+
     };
 }
 

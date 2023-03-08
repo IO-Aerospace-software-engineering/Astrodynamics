@@ -17,15 +17,24 @@ namespace IO::SDK::Constraints::Parameters
     class BodyVisibilityFromSiteParameters
     {
     private:
-        const IO::SDK::Time::Window<IO::SDK::Time::UTC> &m_window;
         const IO::SDK::Sites::Site &m_site;
         const IO::SDK::Body::Body &m_target;
         const IO::SDK::AberrationsEnum m_aberration;
 
     public:
-        BodyVisibilityFromSiteParameters(const IO::SDK::Time::Window<IO::SDK::Time::UTC> &window, const IO::SDK::Sites::Site &site, const IO::SDK::Body::Body& target,
+        BodyVisibilityFromSiteParameters(const IO::SDK::Sites::Site &site, const IO::SDK::Body::Body &target,
                                          const IO::SDK::AberrationsEnum aberration);
+
+        inline const IO::SDK::Sites::Site &GetSite() const
+        { return m_site; }
+
+        inline const IO::SDK::Body::Body &GetTarget() const
+        { return m_target; }
+
+        inline const IO::SDK::AberrationsEnum GetAberration() const
+        { return m_aberration; }
     };
+
 
 } // IO
 

@@ -215,7 +215,7 @@ namespace IO::SDK::Sites
 
         std::vector<IO::SDK::Time::Window<IO::SDK::Time::UTC>>
         FindBodyVisibilityWindows(const IO::SDK::Body::Body &body, const IO::SDK::Time::Window<IO::SDK::Time::UTC> &searchWindow,
-                                  const IO::SDK::AberrationsEnum aberrationCorrection);
+                                  const IO::SDK::AberrationsEnum aberrationCorrection) const;
 
         /**
          * Get the site frame file

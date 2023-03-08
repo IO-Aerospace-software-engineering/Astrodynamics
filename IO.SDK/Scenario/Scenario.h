@@ -10,7 +10,6 @@
 #include <map>
 #include <optional>
 
-#include <Body.h>
 #include <UTC.h>
 #include <Window.h>
 #include <TimeSpan.h>
@@ -21,6 +20,7 @@
 #include <ByDayParameters.h>
 #include <ByNightParameters.h>
 #include <BodyVisibilityFromSiteParameters.h>
+#include <InFieldOfViewParameters.h>
 #include <Site.h>
 #include <VVIntegrator.h>
 #include <GravityForce.h>
@@ -30,20 +30,20 @@ namespace IO::SDK::Integrators
 {
     class VVIntegrator;
 }
-//
-//namespace IO::SDK::Integrators::Forces
-//{
-//    class Force;
-//    class GravityForce;
-//}
 
 namespace IO::SDK::Constraints::Parameters
 {
     class ByDayParameters;
+
     class ByNightParameters;
+
     class BodyVisibilityFromSiteParameters;
+
     class OccultationParameters;
+
     class DistanceParameters;
+
+    class InFieldOfViewParameters;
 }
 
 namespace IO::SDK
@@ -58,21 +58,22 @@ namespace IO::SDK
         std::vector<const IO::SDK::Sites::Site *> m_sites;
 
         IO::SDK::Integrators::Forces::GravityForce m_gravityForce;
-        std::vector<IO::SDK::Integrators::Forces::Force*> m_forces{&m_gravityForce};
+        std::vector<IO::SDK::Integrators::Forces::Force *> m_forces{&m_gravityForce};
         const IO::SDK::Integrators::VVIntegrator m_integrator;
 
         //Body constraints
-        std::map<IO::SDK::Constraints::Parameters::DistanceParameters*, std::optional<std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>>>> m_distanceConstraints;
+        std::map<IO::SDK::Constraints::Parameters::DistanceParameters *, std::optional<std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>>>> m_distanceConstraints;
 
-        std::map<IO::SDK::Constraints::Parameters::OccultationParameters*, std::optional<std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>>>> m_occultationConstraints;
+        std::map<IO::SDK::Constraints::Parameters::OccultationParameters *, std::optional<std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>>>> m_occultationConstraints;
 
         //Site constraints
-        std::map<IO::SDK::Constraints::Parameters::ByDayParameters*, std::optional<std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>>>> m_dayConstraints;
+        std::map<IO::SDK::Constraints::Parameters::ByDayParameters *, std::optional<std::vector<IO::SDK::Time::Window<IO::SDK::Time::UTC>>>> m_dayConstraints;
 
-        std::map<IO::SDK::Constraints::Parameters::ByNightParameters*, std::optional<std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>>>> m_nightConstraints;
+        std::map<IO::SDK::Constraints::Parameters::ByNightParameters *, std::optional<std::vector<IO::SDK::Time::Window<IO::SDK::Time::UTC>>>> m_nightConstraints;
 
-        std::map<IO::SDK::Constraints::Parameters::BodyVisibilityFromSiteParameters*, std::optional<std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>>>> m_bodyVisibilityConstraints;
+        std::map<IO::SDK::Constraints::Parameters::BodyVisibilityFromSiteParameters *, std::optional<std::vector<IO::SDK::Time::Window<IO::SDK::Time::UTC>>>> m_bodyVisibilityConstraints;
 
+        std::map<IO::SDK::Constraints::Parameters::InFieldOfViewParameters *, std::optional<std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>>>> m_inFieldOfViewConstraints;
 
     public:
         Scenario(const std::string &name, const IO::SDK::Time::Window<IO::SDK::Time::UTC> &windows);
@@ -98,34 +99,40 @@ namespace IO::SDK
         inline const std::vector<const IO::SDK::Sites::Site *> &GetSites()
         { return m_sites; }
 
-        inline const std::map<IO::SDK::Constraints::Parameters::DistanceParameters*, std::optional<std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>>>> &
+        inline const std::map<IO::SDK::Constraints::Parameters::DistanceParameters *, std::optional<std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>>>> &
         GetDistanceConstraints() const
         {
             return m_distanceConstraints;
         }
 
-        inline const std::map<IO::SDK::Constraints::Parameters::OccultationParameters*, std::optional<std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>>>> &
+        inline const std::map<IO::SDK::Constraints::Parameters::OccultationParameters *, std::optional<std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>>>> &
         GetOccultationConstraints() const
         {
             return m_occultationConstraints;
         }
 
-        inline const std::map<IO::SDK::Constraints::Parameters::ByDayParameters*, std::optional<std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>>>> &
+        inline const std::map<IO::SDK::Constraints::Parameters::ByDayParameters *, std::optional<std::vector<IO::SDK::Time::Window<IO::SDK::Time::UTC>>>> &
         GetByDaysConstraints() const
         {
             return m_dayConstraints;
         }
 
-        inline const std::map<IO::SDK::Constraints::Parameters::ByNightParameters*, std::optional<std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>>>> &
+        inline const std::map<IO::SDK::Constraints::Parameters::ByNightParameters *, std::optional<std::vector<IO::SDK::Time::Window<IO::SDK::Time::UTC>>>> &
         GetByNightConstraints() const
         {
             return m_nightConstraints;
         }
 
-        inline const std::map<IO::SDK::Constraints::Parameters::BodyVisibilityFromSiteParameters*, std::optional<std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>>>> &
+        inline const std::map<IO::SDK::Constraints::Parameters::BodyVisibilityFromSiteParameters *, std::optional<std::vector<IO::SDK::Time::Window<IO::SDK::Time::UTC>>>> &
         GetBodyVisibilityFromSiteConstraints() const
         {
             return m_bodyVisibilityConstraints;
+        }
+
+        inline const std::map<IO::SDK::Constraints::Parameters::InFieldOfViewParameters *, std::optional<std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>>>> &
+        GetInFieldOfViewConstraints() const
+        {
+            return m_inFieldOfViewConstraints;
         }
 
         void AddDistanceConstraint(Constraints::Parameters::DistanceParameters *distanceParameters);
@@ -137,6 +144,8 @@ namespace IO::SDK
         void AddNightConstraint(IO::SDK::Constraints::Parameters::ByNightParameters *byNightParameters);
 
         void AddBodyVisibilityConstraint(IO::SDK::Constraints::Parameters::BodyVisibilityFromSiteParameters *bodyVisibilityParameters);
+
+        void AddInFieldOfViewConstraint(IO::SDK::Constraints::Parameters::InFieldOfViewParameters *inFieldOfViewParameters);
 
         void Execute();
     };

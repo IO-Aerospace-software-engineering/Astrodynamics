@@ -201,7 +201,7 @@ TEST(Site, WriteEphemeris)
     auto windows = s.GetEphemerisCoverageWindow();
 
     ASSERT_STREQ("2021-05-17 12:00:00.000000 (TDB)", windows.GetStartDate().ToString().c_str());
-    ASSERT_STREQ("2021-05-17 12:09:00.000000 (TDB)", windows.GetEndDate().ToString().c_str());
+    ASSERT_STREQ("2021-05-17 12:11:00.000000 (TDB)", windows.GetEndDate().ToString().c_str());
 }
 
 TEST(Site, ReadEphemeris)
@@ -225,19 +225,6 @@ TEST(Site, ReadEphemeris)
     ASSERT_DOUBLE_EQ(-261.40764269985209, startEphemeris.GetVelocity().GetX());
     ASSERT_DOUBLE_EQ(169.93791555082862, startEphemeris.GetVelocity().GetY());
     ASSERT_DOUBLE_EQ(0.54401778415063673, startEphemeris.GetVelocity().GetZ());
-
-    //Check if stored data are equals to computed data
-//    auto endEpoch = startDate.Add(IO::SDK::Time::TimeSpan(60s * 9));
-//    auto endEphemeris = s.ReadEphemeris(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::AberrationsEnum::None, endEpoch, *earth);
-//
-//    ASSERT_DOUBLE_EQ(svectors.back().GetPosition().GetX(), endEphemeris.GetPosition().GetX());
-//    ASSERT_DOUBLE_EQ(svectors.back().GetPosition().GetY(), endEphemeris.GetPosition().GetY());
-//    ASSERT_DOUBLE_EQ(svectors.back().GetPosition().GetZ(), endEphemeris.GetPosition().GetZ());
-//    ASSERT_DOUBLE_EQ(svectors.back().GetVelocity().GetX(), endEphemeris.GetVelocity().GetX());
-//    ASSERT_DOUBLE_EQ(svectors.back().GetVelocity().GetY(), endEphemeris.GetVelocity().GetY());
-//    ASSERT_DOUBLE_EQ(svectors.back().GetVelocity().GetZ(), endEphemeris.GetVelocity().GetZ());
-
-
 }
 
 TEST(Site, FindBodyVisibilityWindows)
@@ -263,6 +250,5 @@ TEST(Site, FindBodyVisibilityWindows)
                                                IO::SDK::AberrationsEnum::None);
     ASSERT_EQ(1, windows.size());
     ASSERT_STREQ("2023-02-19 14:33:27.641498 (TDB)", windows[0].GetStartDate().ToTDB().ToString().c_str());
-    ASSERT_STREQ("2023-02-19 23:57:41.629575 (UTC)", windows[0].GetEndDate().ToString().c_str());
-
+    ASSERT_STREQ("2023-02-19 23:58:50.814787 (UTC)", windows[0].GetEndDate().ToString().c_str());
 }
