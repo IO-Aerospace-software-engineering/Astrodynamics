@@ -390,7 +390,7 @@ TEST(Scenario, FindInFieldOfViewConstraint)
                                                                                                                                              IO::SDK::Frames::InertialFrames::GetICRF());
     IO::SDK::Body::Spacecraft::Spacecraft s{-179, "SC179", 1000.0, 3000.0, "MISSFOVTEST", std::move(orbitalParams)};
 
-    s.AddCircularFOVInstrument(789, "CAMERA789", IO::SDK::Math::Vector3D::VectorX.Reverse(), IO::SDK::Math::Vector3D::VectorZ, IO::SDK::Math::Vector3D::VectorX, 1.5);
+    s.AddCircularFOVInstrument(789, "CAMERA789", IO::SDK::Math::Vector3D::Zero, IO::SDK::Math::Vector3D::VectorX.Reverse(), IO::SDK::Math::Vector3D::VectorZ, 1.5);
     scenario.AddCelestialBody(*earth);
     scenario.AddSpacecraft(s);
     auto instrument=s.GetInstrument(789);
@@ -401,8 +401,12 @@ TEST(Scenario, FindInFieldOfViewConstraint)
     auto constraints = scenario.GetInFieldOfViewConstraints();
     auto results = *constraints[&constraint];
 
-    ASSERT_EQ(1, results.size());
-    ASSERT_STREQ("2021-05-17 12:00:00 TDB", results[0].GetStartDate().ToString().c_str());
-    ASSERT_STREQ("2021-05-17 12:00:00 TDB", results[0].GetEndDate().ToString().c_str());
+    ASSERT_EQ(16, results.size());
+    ASSERT_STREQ("2021-05-17 12:00:00.000000 (TDB)", results[0].GetStartDate().ToString().c_str());
+    ASSERT_STREQ("2021-05-17 12:33:12.408545 (TDB)", results[0].GetEndDate().ToString().c_str());
+    ASSERT_STREQ("2021-05-17 12:45:47.157712 (TDB)", results[1].GetStartDate().ToString().c_str());
+    ASSERT_STREQ("2021-05-17 14:06:12.926844 (TDB)", results[1].GetEndDate().ToString().c_str());
+    ASSERT_STREQ("2021-05-17 14:18:47.676011 (TDB)", results[2].GetStartDate().ToString().c_str());
+    ASSERT_STREQ("2021-05-17 15:39:13.445143 (TDB)", results[2].GetEndDate().ToString().c_str());
 
 }

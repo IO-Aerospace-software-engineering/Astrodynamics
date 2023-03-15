@@ -98,8 +98,8 @@ TEST(NadirAttitude, GetOrientationMinimumEpoch) {
     ASSERT_NEAR(-0.01157007555417966, newVector.GetY(), 1E-12);
     ASSERT_NEAR(0.0, newVector.GetZ(), 1E-12);
     ASSERT_EQ(IO::SDK::Time::TDB("2021-01-01T13:00:00"), s.GetOrientationsCoverageWindow().GetStartDate());
-    ASSERT_EQ(IO::SDK::Time::TDB("2021-01-01T13:00:20"), s.GetOrientationsCoverageWindow().GetEndDate());
-    ASSERT_EQ(IO::SDK::Time::TimeSpan(20s).GetSeconds().count(), s.GetOrientationsCoverageWindow().GetLength().GetSeconds().count());
+    ASSERT_EQ(IO::SDK::Time::TDB("2021-01-01T13:01:00"), s.GetOrientationsCoverageWindow().GetEndDate());
+    ASSERT_EQ(IO::SDK::Time::TimeSpan(60s).GetSeconds().count(), s.GetOrientationsCoverageWindow().GetLength().GetSeconds().count());
 
 
 }
