@@ -377,36 +377,51 @@ TEST(Scenario, FindOccultationConstraint)
 TEST(Scenario, FindInFieldOfViewConstraint)
 {
     IO::SDK::Scenario scenario("scenario1",
-                         IO::SDK::Time::Window<IO::SDK::Time::UTC>(IO::SDK::Time::TDB("2021-05-17 12:00:00 TDB").ToUTC(), IO::SDK::Time::TDB("2021-05-18 12:00:00 TDB").ToUTC()));
+                               IO::SDK::Time::Window<IO::SDK::Time::UTC>(IO::SDK::Time::TDB("2021-05-17 12:00:00 TDB").ToUTC(),
+                                                                         IO::SDK::Time::TDB("2021-05-18 12:00:00 TDB").ToUTC()));
     const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
     double a = 6800000.0;
     auto v = std::sqrt(earth->GetMu() / a);
-    IO::SDK::Time::TDB epoch("2021-JUN-10 00:00:00.0000 TDB");
+    IO::SDK::Time::TDB epoch("2021-05-17 12:00:00 TDB");
 
     std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth,
                                                                                                                                              IO::SDK::Math::Vector3D(a, 0.0, 0.0),
                                                                                                                                              IO::SDK::Math::Vector3D(0.0, v, 0.0),
                                                                                                                                              epoch,
                                                                                                                                              IO::SDK::Frames::InertialFrames::GetICRF());
-    IO::SDK::Body::Spacecraft::Spacecraft s{-179, "SC179", 1000.0, 3000.0, "MISSFOVTEST", std::move(orbitalParams)};
+    IO::SDK::Body::Spacecraft::Spacecraft s{-1749, "SC1749", 1000.0, 3000.0, "MISSFOVTEST", std::move(orbitalParams)};
 
-    s.AddCircularFOVInstrument(789, "CAMERA789", IO::SDK::Math::Vector3D::Zero, IO::SDK::Math::Vector3D::VectorX.Reverse(), IO::SDK::Math::Vector3D::VectorZ, 1.5);
+    s.AddCircularFOVInstrument(799, "CAMERA799", IO::SDK::Math::Vector3D::Zero, IO::SDK::Math::Vector3D::VectorX.Reverse(), IO::SDK::Math::Vector3D::VectorZ, IO::SDK::Constants::PI2);
     scenario.AddCelestialBody(*earth);
     scenario.AddSpacecraft(s);
-    auto instrument=s.GetInstrument(789);
-    auto constraint = IO::SDK::Constraints::Parameters::InFieldOfViewParameters(*instrument,*earth,IO::SDK::AberrationsEnum::None,IO::SDK::Time::TimeSpan(300s));
+    auto instrument = s.GetInstrument(799);
+    auto constraint = IO::SDK::Constraints::Parameters::InFieldOfViewParameters(*instrument, *earth, IO::SDK::AberrationsEnum::None, IO::SDK::Time::TimeSpan(300s));
     scenario.AddInFieldOfViewConstraint(&constraint);
     scenario.Execute();
 
     auto constraints = scenario.GetInFieldOfViewConstraints();
     auto results = *constraints[&constraint];
 
+    auto res = instrument->GetBoresight(IO::SDK::Frames::InertialFrames::GetICRF(), epoch);
+    auto orientation = s.GetOrientation(epoch, IO::SDK::Time::TimeSpan(10s), IO::SDK::Frames::InertialFrames::GetICRF());
+
+    IO::SDK::Time::TDB end("2021-05-18 12:00:00 TDB");
+    auto res1 = instrument->GetBoresight(IO::SDK::Frames::InertialFrames::GetICRF(), end);
+    auto orientation1 = s.GetOrientation(end, IO::SDK::Time::TimeSpan(10s), IO::SDK::Frames::InertialFrames::GetICRF());
+
+    auto pos = s.ReadEphemeris(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::AberrationsEnum::None, epoch, *earth);
+    auto pos1 = s.ReadEphemeris(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::AberrationsEnum::None, epoch.Add(IO::SDK::Time::TimeSpan(100s)), *earth);
+    auto pos2 = s.ReadEphemeris(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::AberrationsEnum::None, epoch.Add(IO::SDK::Time::TimeSpan(200s)), *earth);
+    auto pos3 = s.ReadEphemeris(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::AberrationsEnum::None, epoch.Add(IO::SDK::Time::TimeSpan(300s)), *earth);
+    auto pos4 = s.ReadEphemeris(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::AberrationsEnum::None, epoch.Add(IO::SDK::Time::TimeSpan(400s)), *earth);
+
+
     ASSERT_EQ(16, results.size());
     ASSERT_STREQ("2021-05-17 12:00:00.000000 (TDB)", results[0].GetStartDate().ToString().c_str());
-    ASSERT_STREQ("2021-05-17 12:33:12.408545 (TDB)", results[0].GetEndDate().ToString().c_str());
-    ASSERT_STREQ("2021-05-17 12:45:47.157712 (TDB)", results[1].GetStartDate().ToString().c_str());
-    ASSERT_STREQ("2021-05-17 14:06:12.926844 (TDB)", results[1].GetEndDate().ToString().c_str());
-    ASSERT_STREQ("2021-05-17 14:18:47.676011 (TDB)", results[2].GetStartDate().ToString().c_str());
-    ASSERT_STREQ("2021-05-17 15:39:13.445143 (TDB)", results[2].GetEndDate().ToString().c_str());
+    ASSERT_STREQ("2021-05-17 12:52:53.328549 (TDB)", results[0].GetEndDate().ToString().c_str());
+    ASSERT_STREQ("2021-05-17 13:26:37.447985 (TDB)", results[1].GetStartDate().ToString().c_str());
+    ASSERT_STREQ("2021-05-17 14:25:53.846848 (TDB)", results[1].GetEndDate().ToString().c_str());
+    ASSERT_STREQ("2021-05-17 14:59:37.966284 (TDB)", results[2].GetStartDate().ToString().c_str());
+    ASSERT_STREQ("2021-05-17 15:58:54.365147 (TDB)", results[2].GetEndDate().ToString().c_str());
 
 }
