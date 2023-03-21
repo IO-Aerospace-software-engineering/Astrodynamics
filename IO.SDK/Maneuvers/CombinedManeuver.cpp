@@ -49,9 +49,7 @@ IO::SDK::OrbitalParameters::StateOrientation IO::SDK::Maneuvers::CombinedManeuve
 {
     auto maneuverVelocity = GetDeltaV(maneuverPoint.GetStateVector());
 
-    auto q = m_spacecraft.Front.To(maneuverVelocity.Normalize());
-
-    return IO::SDK::OrbitalParameters::StateOrientation(q, IO::SDK::Math::Vector3D(0.0, 0.0, 0.0), maneuverPoint.GetEpoch(), maneuverPoint.GetFrame());
+    return IO::SDK::OrbitalParameters::StateOrientation(maneuverVelocity.Normalize().To(m_spacecraft.Front), IO::SDK::Math::Vector3D(0.0, 0.0, 0.0), maneuverPoint.GetEpoch(), maneuverPoint.GetFrame());
 }
 
 IO::SDK::Math::Vector3D IO::SDK::Maneuvers::CombinedManeuver::GetDeltaV(const IO::SDK::OrbitalParameters::StateVector &sv) const

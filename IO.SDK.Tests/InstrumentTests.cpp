@@ -148,7 +148,7 @@ TEST(Instrument, CircularKernel)
     ASSERT_DOUBLE_EQ(fovvector.GetZ(), fovVectorKernel[2]);
 
     auto angle = IO::SDK::DataPoolMonitoring::Instance().GetDoubleProperty("INS-17200_FOV_REF_ANGLE", 1);
-    ASSERT_DOUBLE_EQ(1.5, angle[0]);
+    ASSERT_DOUBLE_EQ(1.5 * 0.5, angle[0]);
 
     auto units = IO::SDK::DataPoolMonitoring::Instance().GetStringProperty("INS-17200_FOV_ANGLE_UNITS", 1);
     ASSERT_STREQ("RADIANS", units[0].c_str());
@@ -276,9 +276,9 @@ TEST(Instrument, Boundaries)
 
     auto boundaries = instrument->GetFOVBoundaries();
 
-    ASSERT_DOUBLE_EQ(0.087155281908263951, boundaries[0].GetX());
+    ASSERT_DOUBLE_EQ(0.043619156285622802, boundaries[0].GetX());
     ASSERT_DOUBLE_EQ(0.0, boundaries[0].GetY());
-    ASSERT_DOUBLE_EQ(0.99619473840986084, boundaries[0].GetZ());
+    ASSERT_DOUBLE_EQ(0.99904823167098911, boundaries[0].GetZ());
 }
 
 TEST(Instrument, Boresight)
@@ -492,9 +492,12 @@ TEST(Instrument, FindWindowFieldOfView)
     auto results = instrument->FindWindowsWhereInFieldOfView(IO::SDK::Time::Window<IO::SDK::Time::TDB>(IO::SDK::Time::TDB("2021-JUN-10 00:00:00.0000 TDB"), epoch + duration),
                                                              *earth, IO::SDK::AberrationsEnum::LT, IO::SDK::Time::TimeSpan(60s));
 
-    ASSERT_EQ(1, results.size());
+    ASSERT_EQ(2, results.size());
     ASSERT_STREQ("2021-06-10 00:00:00.000000 (TDB)", results[0].GetStartDate().ToString().c_str());
-    ASSERT_STREQ("2021-06-10 01:47:27.000000 (TDB)", results[0].GetEndDate().ToString().c_str());
+    ASSERT_STREQ("2021-06-10 00:53:32.872199 (TDB)", results[0].GetEndDate().ToString().c_str());
+
+    ASSERT_STREQ("2021-06-10 01:25:58.343786 (TDB)", results[1].GetStartDate().ToString().c_str());
+    ASSERT_STREQ("2021-06-10 01:47:27.000000 (TDB)", results[1].GetEndDate().ToString().c_str());
 }
 
 TEST(Instrument, GetBoresightAtEpoch)

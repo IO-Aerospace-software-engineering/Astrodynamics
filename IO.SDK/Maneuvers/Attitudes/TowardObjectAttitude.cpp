@@ -37,7 +37,7 @@ IO::SDK::Maneuvers::Attitudes::TowardObjectAttitude::ComputeOrientation(const IO
     auto targetStateVector = m_targetBody.ReadEphemeris(m_spacecraft.GetOrbitalParametersAtEpoch()->GetFrame(), IO::SDK::AberrationsEnum::LTS, maneuverPoint.GetEpoch(),
                                                         *maneuverPoint.GetCenterOfMotion());
     auto relativeStateVector = targetStateVector.GetPosition() - maneuverPoint.GetStateVector().GetPosition();
-    return IO::SDK::OrbitalParameters::StateOrientation(m_spacecraft.Front.To(relativeStateVector.Normalize()), IO::SDK::Math::Vector3D(0.0, 0.0, 0.0), maneuverPoint.GetEpoch(),
+    return IO::SDK::OrbitalParameters::StateOrientation(relativeStateVector.Normalize().To(m_spacecraft.Front), IO::SDK::Math::Vector3D(0.0, 0.0, 0.0), maneuverPoint.GetEpoch(),
                                                         maneuverPoint.GetFrame());
 }
 

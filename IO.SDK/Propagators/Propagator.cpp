@@ -36,7 +36,7 @@ void IO::SDK::Propagators::Propagator::Propagate()
     m_stateVectors.push_back(stateVector);
 
     // Initial alignment, spacecraft back points toward the center of motion
-    IO::SDK::OrbitalParameters::StateOrientation attitude(m_spacecraft.Front.To(stateVector.GetPosition().Normalize()), IO::SDK::Math::Vector3D(0.0, 0.0, 0.0),
+    IO::SDK::OrbitalParameters::StateOrientation attitude(stateVector.GetPosition().Normalize().To(m_spacecraft.Front), IO::SDK::Math::Vector3D(0.0, 0.0, 0.0),
                                                           stateVector.GetEpoch(), stateVector.GetFrame());
     AddStateOrientation(attitude);
 

@@ -416,12 +416,12 @@ TEST(Scenario, FindInFieldOfViewConstraint)
     auto pos4 = s.ReadEphemeris(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::AberrationsEnum::None, epoch.Add(IO::SDK::Time::TimeSpan(400s)), *earth);
 
 
-    ASSERT_EQ(16, results.size());
+    ASSERT_EQ(17, results.size());
     ASSERT_STREQ("2021-05-17 12:00:00.000000 (TDB)", results[0].GetStartDate().ToString().c_str());
-    ASSERT_STREQ("2021-05-17 12:52:53.328549 (TDB)", results[0].GetEndDate().ToString().c_str());
-    ASSERT_STREQ("2021-05-17 13:26:37.447985 (TDB)", results[1].GetStartDate().ToString().c_str());
-    ASSERT_STREQ("2021-05-17 14:25:53.846848 (TDB)", results[1].GetEndDate().ToString().c_str());
-    ASSERT_STREQ("2021-05-17 14:59:37.966284 (TDB)", results[2].GetStartDate().ToString().c_str());
-    ASSERT_STREQ("2021-05-17 15:58:54.365147 (TDB)", results[2].GetEndDate().ToString().c_str());
+    ASSERT_STREQ("2021-05-17 12:06:23.070312 (TDB)", results[0].GetEndDate().ToString().c_str());
+    ASSERT_STREQ("2021-05-17 12:40:07.189748 (TDB)", results[1].GetStartDate().ToString().c_str());
+    ASSERT_STREQ("2021-05-17 13:39:23.588611 (TDB)", results[1].GetEndDate().ToString().c_str());
+    ASSERT_STREQ("2021-05-17 14:13:07.708047 (TDB)", results[2].GetStartDate().ToString().c_str());
+    ASSERT_STREQ("2021-05-17 15:12:24.106910 (TDB)", results[2].GetEndDate().ToString().c_str());
 
 }
