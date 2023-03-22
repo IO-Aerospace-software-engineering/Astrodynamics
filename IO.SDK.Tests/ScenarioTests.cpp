@@ -17,6 +17,7 @@
 #include <ByDayParameters.h>
 #include <ByNightParameters.h>
 #include <InFieldOfViewParameters.h>
+#include <vectors.h>
 
 using namespace std::chrono_literals;
 
@@ -391,7 +392,7 @@ TEST(Scenario, FindInFieldOfViewConstraint)
                                                                                                                                              IO::SDK::Frames::InertialFrames::GetICRF());
     IO::SDK::Body::Spacecraft::Spacecraft s{-1749, "SC1749", 1000.0, 3000.0, "MISSFOVTEST", std::move(orbitalParams)};
 
-    s.AddCircularFOVInstrument(799, "CAMERA799", IO::SDK::Math::Vector3D::Zero, IO::SDK::Math::Vector3D::VectorX.Reverse(), IO::SDK::Math::Vector3D::VectorZ, IO::SDK::Constants::PI2);
+    s.AddCircularFOVInstrument(799, "CAMERA799", IO::SDK::Tests::Zero, IO::SDK::Tests::VectorX.Reverse(), IO::SDK::Tests::VectorZ, IO::SDK::Constants::PI2);
     scenario.AddCelestialBody(*earth);
     scenario.AddSpacecraft(s);
     auto instrument = s.GetInstrument(799);
