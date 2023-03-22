@@ -227,6 +227,9 @@ namespace IO::SDK
          */
         void AddInFieldOfViewConstraint(IO::SDK::Constraints::Parameters::InFieldOfViewParameters *inFieldOfViewParameters);
 
+        /**
+         * Execute scenario, propagate spacecrafts, simulate maneuvers, evaluate constraints
+         */
         void Execute();
     };
 

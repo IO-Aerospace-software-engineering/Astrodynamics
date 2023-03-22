@@ -17,7 +17,7 @@
 #include <ByDayParameters.h>
 #include <ByNightParameters.h>
 #include <InFieldOfViewParameters.h>
-#include <vectors.h>
+#include <Vectors.h>
 
 using namespace std::chrono_literals;
 
