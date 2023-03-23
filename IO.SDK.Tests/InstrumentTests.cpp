@@ -21,9 +21,11 @@
 
 using namespace std::chrono_literals;
 
-TEST(Instrument, Initialization) {
+TEST(Instrument, Initialization)
+{
     std::string filepath = std::string(IO::SDK::Parameters::SpacecraftPath) + "/SC17_MIS1SCN1/Instruments/CAMERA200/Frames/CAMERA200.tf";
-    if (std::filesystem::exists(filepath)) {
+    if (std::filesystem::exists(filepath))
+    {
         std::filesystem::remove(filepath);
     }
 
@@ -49,9 +51,11 @@ TEST(Instrument, Initialization) {
     ASSERT_EQ(&s, &instrument->GetSpacecraft());
 }
 
-TEST(Instrument, Frame) {
+TEST(Instrument, Frame)
+{
     std::string filepath = std::string(IO::SDK::Parameters::SpacecraftPath) + "/SC17_MIS1SCN1/Instruments/CAMERA200/Frames/CAMERA200.tf";
-    if (std::filesystem::exists(filepath)) {
+    if (std::filesystem::exists(filepath))
+    {
         std::filesystem::remove(filepath);
     }
 
@@ -102,9 +106,11 @@ TEST(Instrument, Frame) {
     ASSERT_EQ(3, axes[2]);
 }
 
-TEST(Instrument, CircularKernel) {
+TEST(Instrument, CircularKernel)
+{
     std::string filepath = std::string(IO::SDK::Parameters::SpacecraftPath) + "/SC17_MIS1SCN1/Instruments/CAMERA200/Frames/CAMERA200.tf";
-    if (std::filesystem::exists(filepath)) {
+    if (std::filesystem::exists(filepath))
+    {
         std::filesystem::remove(filepath);
     }
 
@@ -142,15 +148,17 @@ TEST(Instrument, CircularKernel) {
     ASSERT_DOUBLE_EQ(fovvector.GetZ(), fovVectorKernel[2]);
 
     auto angle = IO::SDK::DataPoolMonitoring::Instance().GetDoubleProperty("INS-17200_FOV_REF_ANGLE", 1);
-    ASSERT_DOUBLE_EQ(1.5, angle[0]);
+    ASSERT_DOUBLE_EQ(1.5 * 0.5, angle[0]);
 
     auto units = IO::SDK::DataPoolMonitoring::Instance().GetStringProperty("INS-17200_FOV_ANGLE_UNITS", 1);
     ASSERT_STREQ("RADIANS", units[0].c_str());
 }
 
-TEST(Instrument, RectangularKernel) {
+TEST(Instrument, RectangularKernel)
+{
     std::string filepath = std::string(IO::SDK::Parameters::SpacecraftPath) + "/SC17_MIS1SCN1/Instruments/CAMERA300/Frames/CAMERA300.tf";
-    if (std::filesystem::exists(filepath)) {
+    if (std::filesystem::exists(filepath))
+    {
         std::filesystem::remove(filepath);
     }
 
@@ -194,9 +202,11 @@ TEST(Instrument, RectangularKernel) {
     ASSERT_STREQ("RADIANS", units[0].c_str());
 }
 
-TEST(Instrument, EllipticalKernel) {
+TEST(Instrument, EllipticalKernel)
+{
     std::string filepath = std::string(IO::SDK::Parameters::SpacecraftPath) + "/SC17_MIS1SCN1/Instruments/CAMERA400/Frames/CAMERA400.tf";
-    if (std::filesystem::exists(filepath)) {
+    if (std::filesystem::exists(filepath))
+    {
         std::filesystem::remove(filepath);
     }
 
@@ -240,9 +250,11 @@ TEST(Instrument, EllipticalKernel) {
     ASSERT_STREQ("RADIANS", units[0].c_str());
 }
 
-TEST(Instrument, Boundaries) {
+TEST(Instrument, Boundaries)
+{
     std::string filepath = std::string(IO::SDK::Parameters::SpacecraftPath) + "/SC17_MIS1SCN1/Instruments/CAMERA200/Frames/CAMERA200.tf";
-    if (std::filesystem::exists(filepath)) {
+    if (std::filesystem::exists(filepath))
+    {
         std::filesystem::remove(filepath);
     }
 
@@ -264,14 +276,16 @@ TEST(Instrument, Boundaries) {
 
     auto boundaries = instrument->GetFOVBoundaries();
 
-    ASSERT_DOUBLE_EQ(0.087155281908263951, boundaries[0].GetX());
+    ASSERT_DOUBLE_EQ(0.043619156285622802, boundaries[0].GetX());
     ASSERT_DOUBLE_EQ(0.0, boundaries[0].GetY());
-    ASSERT_DOUBLE_EQ(0.99619473840986084, boundaries[0].GetZ());
+    ASSERT_DOUBLE_EQ(0.99904823167098911, boundaries[0].GetZ());
 }
 
-TEST(Instrument, Boresight) {
+TEST(Instrument, Boresight)
+{
     std::string filepath = std::string(IO::SDK::Parameters::SpacecraftPath) + "/SC17_MIS1SCN1/Instruments/CAMERA200/Frames/CAMERA200.tf";
-    if (std::filesystem::exists(filepath)) {
+    if (std::filesystem::exists(filepath))
+    {
         std::filesystem::remove(filepath);
     }
 
@@ -298,9 +312,11 @@ TEST(Instrument, Boresight) {
     ASSERT_DOUBLE_EQ(boresight.GetZ(), boresightRes.GetZ());
 }
 
-TEST(Instrument, FOVShape) {
+TEST(Instrument, FOVShape)
+{
     std::string filepath = std::string(IO::SDK::Parameters::SpacecraftPath) + "/SC17_MIS1SCN1/Instruments/CAMERA200/Frames/CAMERA200.tf";
-    if (std::filesystem::exists(filepath)) {
+    if (std::filesystem::exists(filepath))
+    {
         std::filesystem::remove(filepath);
     }
 
@@ -325,9 +341,11 @@ TEST(Instrument, FOVShape) {
     ASSERT_EQ(IO::SDK::Instruments::FOVShapeEnum::Circular, shape);
 }
 
-TEST(Instrument, GetBadId) {
+TEST(Instrument, GetBadId)
+{
     std::string filepath = std::string(IO::SDK::Parameters::SpacecraftPath) + "/SC17_MIS1SCN1/Instruments/CAMERA200/Frames/CAMERA200.tf";
-    if (std::filesystem::exists(filepath)) {
+    if (std::filesystem::exists(filepath))
+    {
         std::filesystem::remove(filepath);
     }
 
@@ -349,9 +367,11 @@ TEST(Instrument, GetBadId) {
     ASSERT_FALSE(s.GetInstrument(1234));
 }
 
-TEST(Instrument, CreateBadId) {
+TEST(Instrument, CreateBadId)
+{
     std::string filepath = std::string(IO::SDK::Parameters::SpacecraftPath) + "/SC17_MIS1SCN1/Instruments/CAMERA200/Frames/CAMERA200.tf";
-    if (std::filesystem::exists(filepath)) {
+    if (std::filesystem::exists(filepath))
+    {
         std::filesystem::remove(filepath);
     }
 
@@ -372,9 +392,11 @@ TEST(Instrument, CreateBadId) {
     ASSERT_THROW(s.AddCircularFOVInstrument(1200, "Camera200", orientation, boresight, fovvector, 5 * IO::SDK::Constants::DEG_RAD), IO::SDK::Exception::InvalidArgumentException);
 }
 
-TEST(Instrument, AlreadyExists) {
+TEST(Instrument, AlreadyExists)
+{
     std::string filepath = std::string(IO::SDK::Parameters::SpacecraftPath) + "/SC17_MIS1SCN1/Instruments/CAMERA200/Frames/CAMERA200.tf";
-    if (std::filesystem::exists(filepath)) {
+    if (std::filesystem::exists(filepath))
+    {
         std::filesystem::remove(filepath);
     }
 
@@ -395,11 +417,13 @@ TEST(Instrument, AlreadyExists) {
     ASSERT_THROW(s.AddCircularFOVInstrument(200, "Camera200", orientation, boresight, fovvector, 5 * IO::SDK::Constants::DEG_RAD), IO::SDK::Exception::InvalidArgumentException);
 }
 
-TEST(Instrument, FindWindowFieldOfView) {
+TEST(Instrument, FindWindowFieldOfView)
+{
 
     //========== Configure spacecraft===================
     std::string filepath = std::string(IO::SDK::Parameters::SpacecraftPath) + "/SC179_MISSFOVTEST/Instruments/CAMERA789/Frames/CAMERA789.tf";
-    if (std::filesystem::exists(filepath)) {
+    if (std::filesystem::exists(filepath))
+    {
         std::filesystem::remove(filepath);
     }
 
@@ -445,8 +469,9 @@ TEST(Instrument, FindWindowFieldOfView) {
 
     IO::SDK::Time::TimeSpan ts(10s);
 
-    for (size_t i = 0; i < 646; i++) {
-        auto q = IO::SDK::Math::Quaternion(axis_or, 0.0);
+    auto q = IO::SDK::Math::Quaternion(axis_or, 0.0);
+    for (size_t i = 0; i < 646; i++)
+    {
         IO::SDK::OrbitalParameters::StateOrientation s_or(q, angularVelocity_or, epoch_or, IO::SDK::Frames::InertialFrames::GetICRF());
         interval.push_back(s_or);
         epoch_or = epoch_or + ts;
@@ -465,18 +490,23 @@ TEST(Instrument, FindWindowFieldOfView) {
 
     //Get windows
     auto results = instrument->FindWindowsWhereInFieldOfView(IO::SDK::Time::Window<IO::SDK::Time::TDB>(IO::SDK::Time::TDB("2021-JUN-10 00:00:00.0000 TDB"), epoch + duration),
-                                                             *earth, IO::SDK::Time::TimeSpan(60s), IO::SDK::AberrationsEnum::LT);
+                                                             *earth, IO::SDK::AberrationsEnum::LT, IO::SDK::Time::TimeSpan(60s));
 
-    ASSERT_EQ(1, results.size());
+    ASSERT_EQ(2, results.size());
     ASSERT_STREQ("2021-06-10 00:00:00.000000 (TDB)", results[0].GetStartDate().ToString().c_str());
-    ASSERT_STREQ("2021-06-10 01:47:27.000000 (TDB)", results[0].GetEndDate().ToString().c_str());
+    ASSERT_STREQ("2021-06-10 00:53:32.872199 (TDB)", results[0].GetEndDate().ToString().c_str());
+
+    ASSERT_STREQ("2021-06-10 01:25:58.343786 (TDB)", results[1].GetStartDate().ToString().c_str());
+    ASSERT_STREQ("2021-06-10 01:47:27.000000 (TDB)", results[1].GetEndDate().ToString().c_str());
 }
 
-TEST(Instrument, GetBoresightAtEpoch) {
+TEST(Instrument, GetBoresightAtEpoch)
+{
 
     //========== Configure spacecraft===================
     std::string filepath = std::string(IO::SDK::Parameters::SpacecraftPath) + "/SC179_MISSFOVTEST/Instruments/CAMERA789/Frames/CAMERA789.tf";
-    if (std::filesystem::exists(filepath)) {
+    if (std::filesystem::exists(filepath))
+    {
         std::filesystem::remove(filepath);
     }
 
@@ -522,7 +552,8 @@ TEST(Instrument, GetBoresightAtEpoch) {
 
     IO::SDK::Time::TimeSpan ts(10s);
 
-    for (size_t i = 0; i < 646; i++) {
+    for (size_t i = 0; i < 646; i++)
+    {
         auto q = IO::SDK::Math::Quaternion(axis_or, 0.0);
         IO::SDK::OrbitalParameters::StateOrientation s_or(q, angularVelocity_or, epoch_or, IO::SDK::Frames::InertialFrames::GetICRF());
         interval.push_back(s_or);
@@ -540,9 +571,11 @@ TEST(Instrument, GetBoresightAtEpoch) {
     ASSERT_NEAR(0.0, results.GetZ(), 1E-07);
 }
 
-TEST(Instrument, GetBoresightInSpacecraftFrame) {
+TEST(Instrument, GetBoresightInSpacecraftFrame)
+{
     std::string filepath = std::string(IO::SDK::Parameters::SpacecraftPath) + "/SC17_MIS1SCN1/Instruments/CAMERA200/Frames/CAMERA200.tf";
-    if (std::filesystem::exists(filepath)) {
+    if (std::filesystem::exists(filepath))
+    {
         std::filesystem::remove(filepath);
     }
 
@@ -564,9 +597,11 @@ TEST(Instrument, GetBoresightInSpacecraftFrame) {
     ASSERT_EQ(s.Top, instrument->GetBoresightInSpacecraftFrame());
 }
 
-TEST(Instrument, GetBoresightInSpaecraftFrame2) {
+TEST(Instrument, GetBoresightInSpacecraftFrame2)
+{
     std::string filepath = std::string(IO::SDK::Parameters::SpacecraftPath) + "/SC17_MIS1SCN1/Instruments/CAMERA200/Frames/CAMERA200.tf";
-    if (std::filesystem::exists(filepath)) {
+    if (std::filesystem::exists(filepath))
+    {
         std::filesystem::remove(filepath);
     }
 

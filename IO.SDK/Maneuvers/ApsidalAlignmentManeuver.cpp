@@ -61,7 +61,7 @@ IO::SDK::OrbitalParameters::StateOrientation IO::SDK::Maneuvers::ApsidalAlignmen
 {
     IO::SDK::Math::Vector3D resVector = GetDeltaV(maneuverPoint.GetStateVector());
 
-    return IO::SDK::OrbitalParameters::StateOrientation(m_spacecraft.Front.To(resVector.Normalize()), IO::SDK::Math::Vector3D(0.0, 0.0, 0.0), maneuverPoint.GetEpoch(), maneuverPoint.GetFrame());
+    return IO::SDK::OrbitalParameters::StateOrientation(resVector.Normalize().To(m_spacecraft.Front), IO::SDK::Math::Vector3D(0.0, 0.0, 0.0), maneuverPoint.GetEpoch(), maneuverPoint.GetFrame());
 }
 
 bool IO::SDK::Maneuvers::ApsidalAlignmentManeuver::IsIntersectP(const IO::SDK::OrbitalParameters::StateVector &stateVector) const

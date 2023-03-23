@@ -5,12 +5,17 @@
 #include <InertialFrames.h>
 #include <StateVector.h>
 #include <AzimuthRange.h>
+#include <Scenario.h>
+#include <Window.h>
+#include <UTC.h>
 
 TEST(LaunchSite, AddAzimuth)
 {
+
+    IO::SDK::Scenario sc("scenario1", IO::SDK::Time::Window<IO::SDK::Time::UTC>(IO::SDK::Time::UTC("2023-01-01 00:00:00.000"), IO::SDK::Time::UTC("2023-01-02 00:00:00.000")));
     auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10, "sun");
     auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth", sun);
-    IO::SDK::Sites::LaunchSite ls{1, "S1", IO::SDK::Coordinates::Geodetic(0.0, 45.0 * IO::SDK::Constants::DEG_RAD, 0.0), earth};
+    IO::SDK::Sites::LaunchSite ls{1, sc, "S1", IO::SDK::Coordinates::Geodetic(0.0, 45.0 * IO::SDK::Constants::DEG_RAD, 0.0), earth};
     auto az = IO::SDK::Coordinates::AzimuthRange(1.0, 2.0);
     ls.AddAzimuthLaunchRange(az);
 
@@ -20,9 +25,10 @@ TEST(LaunchSite, AddAzimuth)
 
 TEST(LaunchSite, ClearAzimuth)
 {
+    IO::SDK::Scenario sc("scenario1", IO::SDK::Time::Window<IO::SDK::Time::UTC>(IO::SDK::Time::UTC("2023-01-01 00:00:00.000"), IO::SDK::Time::UTC("2023-01-02 00:00:00.000")));
     auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10, "sun");
     auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth", sun);
-    IO::SDK::Sites::LaunchSite ls{1, "S1", IO::SDK::Coordinates::Geodetic(0.0, 45.0 * IO::SDK::Constants::DEG_RAD, 0.0), earth};
+    IO::SDK::Sites::LaunchSite ls{1, sc, "S1", IO::SDK::Coordinates::Geodetic(0.0, 45.0 * IO::SDK::Constants::DEG_RAD, 0.0), earth};
     auto az = IO::SDK::Coordinates::AzimuthRange(1.0, 2.0);
     ls.AddAzimuthLaunchRange(az);
 
@@ -34,9 +40,10 @@ TEST(LaunchSite, ClearAzimuth)
 
 TEST(LaunchSite, IsAzimuthLaunchAllowed)
 {
+    IO::SDK::Scenario sc("scenario1", IO::SDK::Time::Window<IO::SDK::Time::UTC>(IO::SDK::Time::UTC("2023-01-01 00:00:00.000"), IO::SDK::Time::UTC("2023-01-02 00:00:00.000")));
     auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10, "sun");
     auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth", sun);
-    IO::SDK::Sites::LaunchSite ls{1, "S1", IO::SDK::Coordinates::Geodetic(0.0, 45.0 * IO::SDK::Constants::DEG_RAD, 0.0), earth};
+    IO::SDK::Sites::LaunchSite ls{1, sc, "S1", IO::SDK::Coordinates::Geodetic(0.0, 45.0 * IO::SDK::Constants::DEG_RAD, 0.0), earth};
     auto az = IO::SDK::Coordinates::AzimuthRange(1.0, 2.0);
     ls.AddAzimuthLaunchRange(az);
 

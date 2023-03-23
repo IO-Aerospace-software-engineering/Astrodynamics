@@ -26,7 +26,7 @@ void IO::SDK::Maneuvers::Attitudes::ZenithAttitude::Compute(const IO::SDK::Orbit
 
 IO::SDK::OrbitalParameters::StateOrientation IO::SDK::Maneuvers::Attitudes::ZenithAttitude::ComputeOrientation(const IO::SDK::OrbitalParameters::OrbitalParameters &maneuverPoint)
 {
-    return IO::SDK::OrbitalParameters::StateOrientation(m_spacecraft.Front.To(maneuverPoint.GetStateVector().GetPosition().Normalize()), IO::SDK::Math::Vector3D(0.0, 0.0, 0.0), maneuverPoint.GetEpoch(), maneuverPoint.GetFrame());
+    return IO::SDK::OrbitalParameters::StateOrientation(maneuverPoint.GetStateVector().GetPosition().Normalize().To(m_spacecraft.Front), IO::SDK::Math::Vector3D(0.0, 0.0, 0.0), maneuverPoint.GetEpoch(), maneuverPoint.GetFrame());
 }
 
 bool IO::SDK::Maneuvers::Attitudes::ZenithAttitude::CanExecute(const IO::SDK::OrbitalParameters::OrbitalParameters &orbitalParams)

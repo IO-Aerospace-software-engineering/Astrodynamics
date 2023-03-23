@@ -22,6 +22,7 @@
 #include <ApsidalAlignmentManeuver.h>
 #include <PhasingManeuver.h>
 #include <DataPoolMonitoring.h>
+#include <Scenario.h>
 
 using namespace std::literals::chrono_literals;
 
@@ -88,7 +89,9 @@ int main()
     For each maneuver you will obtain the maneuver window, the thrust window, Delta V, Spacecraft or satellite orientation and mass of fuel burned.
     We also get sun occultations and windows when the moon will be in camera's field of view
     */
-
+    IO::SDK::Time::TDB startEpoch("2021-03-02T00:00:00");
+    IO::SDK::Time::TDB endEpoch("2021-03-05T00:00:00");
+    IO::SDK::Scenario scenario("scenario1", IO::SDK::Time::Window<IO::SDK::Time::UTC>(startEpoch.ToUTC(), endEpoch.ToUTC()));
     //=======================Configure universe topology======================================
     //Bodies id are defined here https://naif.jpl.nasa.gov/pub/naif/toolkit_docs/C/req/naif_ids.html#NAIF%20Object%20ID%20numbers
     auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10, "sun");
@@ -98,12 +101,15 @@ int main()
     //========================Compute launch parameters=======================================
 
     //Define launch site and recovery site
-    auto launchSite = std::make_shared<IO::SDK::Sites::LaunchSite>(3, "S3", IO::SDK::Coordinates::Geodetic(-81.0 * IO::SDK::Constants::DEG_RAD, 28.5 * IO::SDK::Constants::DEG_RAD, 0.0), earth);
-    auto recoverySite = std::make_shared<IO::SDK::Sites::LaunchSite>(4, "S4", IO::SDK::Coordinates::Geodetic(-80.0 * IO::SDK::Constants::DEG_RAD, 28.5 * IO::SDK::Constants::DEG_RAD, 0.0), earth);
+    auto launchSite = std::make_shared<IO::SDK::Sites::LaunchSite>(3,scenario, "S3",
+                                                                   IO::SDK::Coordinates::Geodetic(-81.0 * IO::SDK::Constants::DEG_RAD, 28.5 * IO::SDK::Constants::DEG_RAD, 0.0),
+                                                                   earth);
+    auto recoverySite = std::make_shared<IO::SDK::Sites::LaunchSite>(4,scenario, "S4",
+                                                                     IO::SDK::Coordinates::Geodetic(-80.0 * IO::SDK::Constants::DEG_RAD, 28.5 * IO::SDK::Constants::DEG_RAD, 0.0),
+                                                                     earth);
 
     //Define simulation window. (Warning : When spacecraft is involved, dates must be greater than 2021-01-01 to be compliant with spacecraft clock)
-    IO::SDK::Time::TDB startEpoch("2021-03-02T00:00:00");
-    IO::SDK::Time::TDB endEpoch("2021-03-05T00:00:00");
+
 
     //Define parking orbit
     auto parkingOrbit = std::make_shared<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth,
@@ -136,7 +142,8 @@ int main()
     //===================Compute maneuvers to reach target body================================
 
     //Configure spacecraft at insertion orbit
-    IO::SDK::Body::Spacecraft::Spacecraft spacecraft{-178, "DRAGONFLY", 1000.0, 10000.0, "MIS01", std::make_unique<IO::SDK::OrbitalParameters::ConicOrbitalElements>(*parkingOrbit)};
+    IO::SDK::Body::Spacecraft::Spacecraft spacecraft{-178, "DRAGONFLY", 1000.0, 10000.0, "MIS01",
+                                                     std::make_unique<IO::SDK::OrbitalParameters::ConicOrbitalElements>(*parkingOrbit)};
     spacecraft.AddFuelTank("fuelTank1", 9000.0, 9000.0);                                                          // Add fuel tank
     spacecraft.AddEngine("serialNumber1", "engine1", "fuelTank1", {1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}, 450.0, 50.0); //Add engine and link with fuel tank
     spacecraft.AddPayload("PAY01", "Payload 01", 50.0);                                                           //We add a 50 kg payload to the spacecraft
@@ -148,7 +155,8 @@ int main()
     spacecraft.AddCircularFOVInstrument(600, "CAM600", orientation, boresight, fovvector, 80.0 * IO::SDK::Constants::DEG_RAD);
 
     //Target
-    IO::SDK::Body::Spacecraft::Spacecraft spacecraftTarget{-179, "TARGET", 1000.0, 10000.0, "MIS01", std::make_unique<IO::SDK::OrbitalParameters::ConicOrbitalElements>(*targetOrbit)};
+    IO::SDK::Body::Spacecraft::Spacecraft spacecraftTarget{-179, "TARGET", 1000.0, 10000.0, "MIS01",
+                                                           std::make_unique<IO::SDK::OrbitalParameters::ConicOrbitalElements>(*targetOrbit)};
     spacecraftTarget.AddFuelTank("fuelTank2", 9000.0, 9000.0);                                                          // Add fuel tank
     spacecraftTarget.AddEngine("serialNumber2", "engine2", "fuelTank2", {1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}, 450.0, 50.0); //Add engine and link with fuel tank
 
@@ -180,7 +188,8 @@ int main()
     engines.push_back(*engine1);
 
     //We configure each maneuver
-    IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver planeAlignment(engines, propagator, targetOrbit.get(), startDatePropagator); //The first maneuver must not start until the launch is complete
+    IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver planeAlignment(engines, propagator, targetOrbit.get(),
+                                                                    startDatePropagator); //The first maneuver must not start until the launch is complete
     IO::SDK::Maneuvers::ApsidalAlignmentManeuver apsidalAlignment(engines, propagator, targetOrbit.get());
     IO::SDK::Maneuvers::PhasingManeuver phasing(engines, propagator, 1, targetOrbit.get());
     IO::SDK::Maneuvers::ApogeeHeightChangingManeuver finalApogeeChanging(engines, propagator, targetOrbit->GetApogeeVector().Magnitude());
@@ -195,10 +204,13 @@ int main()
     propagator.Propagate();
 
     //Find sun occultation
-    auto occultationWindows = spacecraft.FindWindowsOnOccultationConstraint(IO::SDK::Time::Window<IO::SDK::Time::TDB>(startDatePropagator, endEpoch), *sun, *earth, IO::SDK::OccultationType::Any(), IO::SDK::AberrationsEnum::None, IO::SDK::Time::TimeSpan(30s));
+    auto occultationWindows = spacecraft.FindWindowsOnOccultationConstraint(IO::SDK::Time::Window<IO::SDK::Time::TDB>(startDatePropagator, endEpoch), *sun, *earth,
+                                                                            IO::SDK::OccultationType::Any(), IO::SDK::AberrationsEnum::None, IO::SDK::Time::TimeSpan(30s));
 
     //Find when moon will be in instrument field of view
-    auto fovWindows = spacecraft.GetInstrument(600)->FindWindowsWhereInFieldOfView(IO::SDK::Time::Window<IO::SDK::Time::TDB>(startDatePropagator, spacecraft.GetOrientationsCoverageWindow().GetEndDate()), *moon, IO::SDK::Time::TimeSpan(300s), IO::SDK::AberrationsEnum::LT);
+    auto fovWindows = spacecraft.GetInstrument(600)->FindWindowsWhereInFieldOfView(
+            IO::SDK::Time::Window<IO::SDK::Time::TDB>(startDatePropagator, spacecraft.GetOrientationsCoverageWindow().GetEndDate()), *moon, IO::SDK::AberrationsEnum::LT,
+            IO::SDK::Time::TimeSpan(300s));
 
     //From here Only for data vizualization
 //    auto epoch = finalApogeeChanging.GetManeuverWindow()->GetEndDate();

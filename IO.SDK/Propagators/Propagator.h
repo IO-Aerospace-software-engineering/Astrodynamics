@@ -46,7 +46,7 @@ namespace IO::SDK::Propagators
          * @param integrator Integrator to use
          * @param window Time window propagation
          */
-        Propagator(const IO::SDK::Body::Spacecraft::Spacecraft &spacecraft, IO::SDK::Integrators::IntegratorBase &integrator, const IO::SDK::Time::Window<IO::SDK::Time::TDB> &window);
+        Propagator(const IO::SDK::Body::Spacecraft::Spacecraft &spacecraft, const IO::SDK::Integrators::IntegratorBase &integrator, const IO::SDK::Time::Window<IO::SDK::Time::TDB> &window);
 
         /**
          * @brief Set the Standby Maneuver

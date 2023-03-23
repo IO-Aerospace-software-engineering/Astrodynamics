@@ -11,22 +11,23 @@
 #include <LaunchSite.h>
 #include <SDKException.h>
 
-IO::SDK::Sites::LaunchSite::LaunchSite(const int id, const std::string name, const IO::SDK::Coordinates::Geodetic coordinates, std::shared_ptr<IO::SDK::Body::CelestialBody> body) : Site(id, name, coordinates, body)
+IO::SDK::Sites::LaunchSite::LaunchSite(const int id, const IO::SDK::Scenario &scenario, const std::string name, const IO::SDK::Coordinates::Geodetic coordinates,
+                                       std::shared_ptr<IO::SDK::Body::CelestialBody> body) : Site(id, scenario, name, coordinates, body)
 {
 }
 
 void IO::SDK::Sites::LaunchSite::AddAzimuthLaunchRange(IO::SDK::Coordinates::AzimuthRange &azimuthRange)
 {
-    for (auto &&az : m_azimuthRanges)
+    for (auto &&az: m_azimuthRanges)
     {
-        if(az.IsIntersected(azimuthRange))
+        if (az.IsIntersected(azimuthRange))
         {
             throw IO::SDK::Exception::SDKException("Azimuth range overlap an existing azimuth range for this site");
-        }        
+        }
     }
 
     m_azimuthRanges.push_back(azimuthRange);
-    
+
 }
 
 void IO::SDK::Sites::LaunchSite::ClearAzimuthLaunchRanges()
@@ -36,14 +37,14 @@ void IO::SDK::Sites::LaunchSite::ClearAzimuthLaunchRanges()
 
 bool IO::SDK::Sites::LaunchSite::IsAzimuthLaunchAllowed(const double azimuth) const
 {
-    for (auto &&az : m_azimuthRanges)
+    for (auto &&az: m_azimuthRanges)
     {
-        if(az.IsInRange(azimuth))
+        if (az.IsInRange(azimuth))
         {
             return true;
         }
     }
 
     return false;
-    
+
 }

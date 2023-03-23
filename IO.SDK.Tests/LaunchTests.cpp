@@ -11,168 +11,234 @@
 #include <ConicOrbitalElements.h>
 #include <Launch.h>
 #include <TLE.h>
+#include <Scenario.h>
 
 TEST(Launch, InertialAscendingAzimuth)
 {
+    IO::SDK::Scenario sc("scenario1",
+                         IO::SDK::Time::Window<IO::SDK::Time::UTC>(IO::SDK::Time::TDB("2013-10-14T10:18:00").ToUTC(), IO::SDK::Time::TDB("2013-10-15T10:18:00").ToUTC()));
     auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10, "sun");
     auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth", sun);
-    auto ls = std::make_shared<IO::SDK::Sites::LaunchSite>(1, "S1", IO::SDK::Coordinates::Geodetic(-81.0 * IO::SDK::Constants::DEG_RAD, 28.5 * IO::SDK::Constants::DEG_RAD, 0.0), earth);
-    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(ls->GetStateVector(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::Time::TDB("2013-10-14T10:18:00")));
+    auto ls = std::make_shared<IO::SDK::Sites::LaunchSite>(1, sc, "S1",
+                                                           IO::SDK::Coordinates::Geodetic(-81.0 * IO::SDK::Constants::DEG_RAD, 28.5 * IO::SDK::Constants::DEG_RAD, 0.0), earth);
+    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(
+            ls->GetStateVector(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::Time::TDB("2013-10-14T10:18:00")));
     IO::SDK::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, "ms01", std::move(orbitalParams)};
     s.AddFuelTank("ft1", 1000.0, 900.0);
     s.AddEngine("sn1", "eng1", "ft1", {1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}, 450.0, 50.0);
 
-    auto targetOrbit = std::make_shared<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth, 6728137, 0.0, 51.6494 * IO::SDK::Constants::DEG_RAD, 0.0, 0.0, 0.0, IO::SDK::Time::TDB("2013-10-14T10:18:00"), IO::SDK::Frames::InertialFrames::GetICRF());
+    auto targetOrbit = std::make_shared<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth, 6728137, 0.0, 51.6494 * IO::SDK::Constants::DEG_RAD, 0.0, 0.0, 0.0,
+                                                                                          IO::SDK::Time::TDB("2013-10-14T10:18:00"), IO::SDK::Frames::InertialFrames::GetICRF());
     IO::SDK::Maneuvers::Launch launch(ls, ls, false, *targetOrbit);
     ASSERT_DOUBLE_EQ(44.912872404793241, launch.GetInertialAscendingAzimuthLaunch() * IO::SDK::Constants::RAD_DEG);
 }
 
 TEST(Launch, InertialDescendingAzimuth)
 {
+    IO::SDK::Scenario sc("scenario1",
+                         IO::SDK::Time::Window<IO::SDK::Time::UTC>(IO::SDK::Time::TDB("2013-10-14T10:18:00").ToUTC(), IO::SDK::Time::TDB("2013-10-15T10:18:00").ToUTC()));
     auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10, "sun");
     auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth", sun);
-    auto ls = std::make_shared<IO::SDK::Sites::LaunchSite>(1, "S1", IO::SDK::Coordinates::Geodetic(-81.0 * IO::SDK::Constants::DEG_RAD, 28.5 * IO::SDK::Constants::DEG_RAD, 0.0), earth);
-    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(ls->GetStateVector(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::Time::TDB("2013-10-14T10:18:00")));
+    auto ls = std::make_shared<IO::SDK::Sites::LaunchSite>(1, sc, "S1",
+                                                           IO::SDK::Coordinates::Geodetic(-81.0 * IO::SDK::Constants::DEG_RAD, 28.5 * IO::SDK::Constants::DEG_RAD, 0.0),
+                                                           earth);
+    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(
+            ls->GetStateVector(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::Time::TDB("2013-10-14T10:18:00")));
     IO::SDK::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, "ms01", std::move(orbitalParams)};
     s.AddFuelTank("ft1", 1000.0, 900.0);
     s.AddEngine("sn1", "eng1", "ft1", {1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}, 450.0, 50.0);
 
-    auto targetOrbit = std::make_shared<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth, 6728137, 0.0, 51.6494 * IO::SDK::Constants::DEG_RAD, 0.0, 0.0, 0.0, IO::SDK::Time::TDB("2013-10-14T10:18:00"), IO::SDK::Frames::InertialFrames::GetICRF());
+    auto targetOrbit = std::make_shared<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth, 6728137, 0.0, 51.6494 * IO::SDK::Constants::DEG_RAD, 0.0, 0.0, 0.0,
+                                                                                          IO::SDK::Time::TDB("2013-10-14T10:18:00"), IO::SDK::Frames::InertialFrames::GetICRF());
     IO::SDK::Maneuvers::Launch launch(ls, ls, false, *targetOrbit);
     ASSERT_DOUBLE_EQ(180.0 - 44.912872404793241, launch.GetInertialDescendingAzimuthLaunch() * IO::SDK::Constants::RAD_DEG);
 }
 
 TEST(Launch, InertialInsertionVelocity)
 {
+    IO::SDK::Scenario sc("scenario1",
+                         IO::SDK::Time::Window<IO::SDK::Time::UTC>(IO::SDK::Time::TDB("2013-10-14T10:18:00").ToUTC(), IO::SDK::Time::TDB("2013-10-15T10:18:00").ToUTC()));
     auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10, "sun");
     auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth", sun);
-    auto ls = std::make_shared<IO::SDK::Sites::LaunchSite>(1, "S1", IO::SDK::Coordinates::Geodetic(-81.0 * IO::SDK::Constants::DEG_RAD, 28.5 * IO::SDK::Constants::DEG_RAD, 0.0), earth);
-    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(ls->GetStateVector(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::Time::TDB("2013-10-14T10:18:00")));
+    auto ls = std::make_shared<IO::SDK::Sites::LaunchSite>(1, sc, "S1",
+                                                           IO::SDK::Coordinates::Geodetic(-81.0 * IO::SDK::Constants::DEG_RAD, 28.5 * IO::SDK::Constants::DEG_RAD, 0.0),
+                                                           earth);
+    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(
+            ls->GetStateVector(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::Time::TDB("2013-10-14T10:18:00")));
     IO::SDK::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, "ms01", std::move(orbitalParams)};
     s.AddFuelTank("ft1", 1000.0, 900.0);
     s.AddEngine("sn1", "eng1", "ft1", {1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}, 450.0, 50.0);
 
-    auto targetOrbit = std::make_shared<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth, 6728137.0, 0.0, 51.6494 * IO::SDK::Constants::DEG_RAD, 0.0, 0.0, 0.0, IO::SDK::Time::TDB("2013-10-14T10:18:00"), IO::SDK::Frames::InertialFrames::GetICRF());
+    auto targetOrbit = std::make_shared<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth, 6728137.0, 0.0, 51.6494 * IO::SDK::Constants::DEG_RAD, 0.0, 0.0, 0.0,
+                                                                                          IO::SDK::Time::TDB("2013-10-14T10:18:00"), IO::SDK::Frames::InertialFrames::GetICRF());
     IO::SDK::Maneuvers::Launch launch(ls, ls, false, *targetOrbit);
     ASSERT_DOUBLE_EQ(7696.9997304533663, launch.GetInertialInsertionVelocity());
 }
 
 TEST(Launch, NonInertialAscendingAzimuth)
 {
+    IO::SDK::Scenario sc("scenario1",
+                         IO::SDK::Time::Window<IO::SDK::Time::UTC>(IO::SDK::Time::TDB("2013-10-14T10:18:00").ToUTC(), IO::SDK::Time::TDB("2013-10-15T10:18:00").ToUTC()));
     auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10, "sun");
     auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth", sun);
-    auto ls = std::make_shared<IO::SDK::Sites::LaunchSite>(1, "S1", IO::SDK::Coordinates::Geodetic(-81.0 * IO::SDK::Constants::DEG_RAD, 28.5 * IO::SDK::Constants::DEG_RAD, 0.0), earth);
-    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(ls->GetStateVector(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::Time::TDB("2013-10-14T10:18:00")));
+    auto ls = std::make_shared<IO::SDK::Sites::LaunchSite>(1, sc, "S1",
+                                                           IO::SDK::Coordinates::Geodetic(-81.0 * IO::SDK::Constants::DEG_RAD, 28.5 * IO::SDK::Constants::DEG_RAD, 0.0),
+                                                           earth);
+    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(
+            ls->GetStateVector(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::Time::TDB("2013-10-14T10:18:00")));
     IO::SDK::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, "ms01", std::move(orbitalParams)};
     s.AddFuelTank("ft1", 1000.0, 900.0);
     s.AddEngine("sn1", "eng1", "ft1", {1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}, 450.0, 50.0);
 
-    auto targetOrbit = std::make_shared<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth, 6728137, 0.0, 51.6494 * IO::SDK::Constants::DEG_RAD, 0.0, 0.0, 0.0, IO::SDK::Time::TDB("2013-10-14T10:18:00"), IO::SDK::Frames::InertialFrames::GetICRF());
+    auto targetOrbit = std::make_shared<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth, 6728137, 0.0, 51.6494 * IO::SDK::Constants::DEG_RAD, 0.0, 0.0, 0.0,
+                                                                                          IO::SDK::Time::TDB("2013-10-14T10:18:00"), IO::SDK::Frames::InertialFrames::GetICRF());
     IO::SDK::Maneuvers::Launch launch(ls, ls, false, *targetOrbit);
     ASSERT_DOUBLE_EQ(42.673582338286877, launch.GetNonInertialAscendingAzimuthLaunch() * IO::SDK::Constants::RAD_DEG);
 }
 
 TEST(Launch, NonInertialDescendingAzimuth)
 {
+    IO::SDK::Scenario sc("scenario1",
+                         IO::SDK::Time::Window<IO::SDK::Time::UTC>(IO::SDK::Time::TDB("2013-10-14T10:18:00").ToUTC(), IO::SDK::Time::TDB("2013-10-15T10:18:00").ToUTC()));
     auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10, "sun");
     auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth", sun);
-    auto ls = std::make_shared<IO::SDK::Sites::LaunchSite>(1, "S1", IO::SDK::Coordinates::Geodetic(-81.0 * IO::SDK::Constants::DEG_RAD, 28.5 * IO::SDK::Constants::DEG_RAD, 0.0), earth);
-    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(ls->GetStateVector(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::Time::TDB("2013-10-14T10:18:00")));
+    auto ls = std::make_shared<IO::SDK::Sites::LaunchSite>(1, sc, "S1",
+                                                           IO::SDK::Coordinates::Geodetic(-81.0 * IO::SDK::Constants::DEG_RAD, 28.5 * IO::SDK::Constants::DEG_RAD, 0.0),
+                                                           earth);
+    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(
+            ls->GetStateVector(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::Time::TDB("2013-10-14T10:18:00")));
     IO::SDK::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, "ms01", std::move(orbitalParams)};
     s.AddFuelTank("ft1", 1000.0, 900.0);
     s.AddEngine("sn1", "eng1", "ft1", {1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}, 450.0, 50.0);
 
-    auto targetOrbit = std::make_shared<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth, 6728137, 0.0, 51.6494 * IO::SDK::Constants::DEG_RAD, 0.0, 0.0, 0.0, IO::SDK::Time::TDB("2013-10-14T10:18:00"), IO::SDK::Frames::InertialFrames::GetICRF());
+    auto targetOrbit = std::make_shared<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth, 6728137, 0.0, 51.6494 * IO::SDK::Constants::DEG_RAD, 0.0, 0.0, 0.0,
+                                                                                          IO::SDK::Time::TDB("2013-10-14T10:18:00"), IO::SDK::Frames::InertialFrames::GetICRF());
     IO::SDK::Maneuvers::Launch launch(ls, ls, false, *targetOrbit);
     ASSERT_DOUBLE_EQ(180.0 - 42.673582338286877, launch.GetNonInertialDescendingAzimuthLaunch() * IO::SDK::Constants::RAD_DEG);
 }
 
 TEST(Launch, NonInertialInsertionVelocity)
 {
+    IO::SDK::Scenario sc("scenario1",
+                         IO::SDK::Time::Window<IO::SDK::Time::UTC>(IO::SDK::Time::TDB("2013-10-14T10:18:00").ToUTC(), IO::SDK::Time::TDB("2013-10-15T10:18:00").ToUTC()));
     auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10, "sun");
     auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth", sun);
-    auto ls = std::make_shared<IO::SDK::Sites::LaunchSite>(1, "S1", IO::SDK::Coordinates::Geodetic(-81.0 * IO::SDK::Constants::DEG_RAD, 28.5 * IO::SDK::Constants::DEG_RAD, 0.0), earth);
-    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(ls->GetStateVector(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::Time::TDB("2013-10-14T10:18:00")));
+    auto ls = std::make_shared<IO::SDK::Sites::LaunchSite>(1, sc, "S1",
+                                                           IO::SDK::Coordinates::Geodetic(-81.0 * IO::SDK::Constants::DEG_RAD, 28.5 * IO::SDK::Constants::DEG_RAD, 0.0),
+                                                           earth);
+    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(
+            ls->GetStateVector(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::Time::TDB("2013-10-14T10:18:00")));
     IO::SDK::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, "ms01", std::move(orbitalParams)};
     s.AddFuelTank("ft1", 1000.0, 900.0);
     s.AddEngine("sn1", "eng1", "ft1", {1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}, 450.0, 50.0);
 
-    auto targetOrbit = std::make_shared<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth, 6728137, 0.0, 51.6494 * IO::SDK::Constants::DEG_RAD, 0.0, 0.0, 0.0, IO::SDK::Time::TDB("2013-10-14T10:18:00"), IO::SDK::Frames::InertialFrames::GetICRF());
+    auto targetOrbit = std::make_shared<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth, 6728137, 0.0, 51.6494 * IO::SDK::Constants::DEG_RAD, 0.0, 0.0, 0.0,
+                                                                                          IO::SDK::Time::TDB("2013-10-14T10:18:00"), IO::SDK::Frames::InertialFrames::GetICRF());
     IO::SDK::Maneuvers::Launch launch(ls, ls, false, *targetOrbit);
     ASSERT_DOUBLE_EQ(7413.8589742455188, launch.GetNonInertialInsertionVelocity());
 }
 
 TEST(Launch, RetrogradeNonInertialAscendingAzimuth)
 {
+    IO::SDK::Scenario sc("scenario1",
+                         IO::SDK::Time::Window<IO::SDK::Time::UTC>(IO::SDK::Time::TDB("2013-10-14T10:18:00").ToUTC(), IO::SDK::Time::TDB("2013-10-15T10:18:00").ToUTC()));
     auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10, "sun");
     auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth", sun);
-    auto ls = std::make_shared<IO::SDK::Sites::LaunchSite>(1, "S1", IO::SDK::Coordinates::Geodetic(-81.0 * IO::SDK::Constants::DEG_RAD, 28.5 * IO::SDK::Constants::DEG_RAD, 0.0), earth);
-    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(ls->GetStateVector(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::Time::TDB("2013-10-14T10:18:00")));
+    auto ls = std::make_shared<IO::SDK::Sites::LaunchSite>(1, sc, "S1",
+                                                           IO::SDK::Coordinates::Geodetic(-81.0 * IO::SDK::Constants::DEG_RAD, 28.5 * IO::SDK::Constants::DEG_RAD, 0.0),
+                                                           earth);
+    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(
+            ls->GetStateVector(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::Time::TDB("2013-10-14T10:18:00")));
     IO::SDK::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, "ms01", std::move(orbitalParams)};
     s.AddFuelTank("ft1", 1000.0, 900.0);
     s.AddEngine("sn1", "eng1", "ft1", {1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}, 450.0, 50.0);
 
-    auto targetOrbit = std::make_shared<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth, 6728137, 0.0, 110.0 * IO::SDK::Constants::DEG_RAD, 0.0, 0.0, 0.0, IO::SDK::Time::TDB("2013-10-14T10:18:00"), IO::SDK::Frames::InertialFrames::GetICRF());
+    auto targetOrbit = std::make_shared<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth, 6728137, 0.0, 110.0 * IO::SDK::Constants::DEG_RAD, 0.0, 0.0, 0.0,
+                                                                                          IO::SDK::Time::TDB("2013-10-14T10:18:00"), IO::SDK::Frames::InertialFrames::GetICRF());
     IO::SDK::Maneuvers::Launch launch(ls, ls, false, *targetOrbit);
     ASSERT_DOUBLE_EQ(334.35043076072935, launch.GetNonInertialAscendingAzimuthLaunch() * IO::SDK::Constants::RAD_DEG);
 }
 
 TEST(Launch, RetrogradeInertialAscendingAzimuth)
 {
+    IO::SDK::Scenario sc("scenario1",
+                         IO::SDK::Time::Window<IO::SDK::Time::UTC>(IO::SDK::Time::TDB("2013-10-14T10:18:00").ToUTC(), IO::SDK::Time::TDB("2013-10-15T10:18:00").ToUTC()));
     auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10, "sun");
     auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth", sun);
-    auto ls = std::make_shared<IO::SDK::Sites::LaunchSite>(1, "S1", IO::SDK::Coordinates::Geodetic(-81.0 * IO::SDK::Constants::DEG_RAD, 28.5 * IO::SDK::Constants::DEG_RAD, 0.0), earth);
-    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(ls->GetStateVector(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::Time::TDB("2013-10-14T10:18:00")));
+    auto ls = std::make_shared<IO::SDK::Sites::LaunchSite>(1, sc, "S1",
+                                                           IO::SDK::Coordinates::Geodetic(-81.0 * IO::SDK::Constants::DEG_RAD, 28.5 * IO::SDK::Constants::DEG_RAD, 0.0),
+                                                           earth);
+    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(
+            ls->GetStateVector(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::Time::TDB("2013-10-14T10:18:00")));
     IO::SDK::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, "ms01", std::move(orbitalParams)};
     s.AddFuelTank("ft1", 1000.0, 900.0);
     s.AddEngine("sn1", "eng1", "ft1", {1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}, 450.0, 50.0);
 
-    auto targetOrbit = std::make_shared<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth, 6728137, 0.0, 110.0 * IO::SDK::Constants::DEG_RAD, 0.0, 0.0, 0.0, IO::SDK::Time::TDB("2013-10-14T10:18:00"), IO::SDK::Frames::InertialFrames::GetICRF());
+    auto targetOrbit = std::make_shared<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth, 6728137, 0.0, 110.0 * IO::SDK::Constants::DEG_RAD, 0.0, 0.0, 0.0,
+                                                                                          IO::SDK::Time::TDB("2013-10-14T10:18:00"), IO::SDK::Frames::InertialFrames::GetICRF());
     IO::SDK::Maneuvers::Launch launch(ls, ls, false, *targetOrbit);
     ASSERT_DOUBLE_EQ(337.09636518334463, launch.GetInertialAscendingAzimuthLaunch() * IO::SDK::Constants::RAD_DEG);
 }
 
 TEST(Launch, RetrogradeNonInertialInsertionVelocity)
 {
+    IO::SDK::Scenario sc("scenario1",
+                         IO::SDK::Time::Window<IO::SDK::Time::UTC>(IO::SDK::Time::TDB("2013-10-14T10:18:00").ToUTC(), IO::SDK::Time::TDB("2013-10-15T10:18:00").ToUTC()));
     auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10, "sun");
     auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth", sun);
-    auto ls = std::make_shared<IO::SDK::Sites::LaunchSite>(1, "S1", IO::SDK::Coordinates::Geodetic(-81.0 * IO::SDK::Constants::DEG_RAD, 28.5 * IO::SDK::Constants::DEG_RAD, 0.0), earth);
-    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(ls->GetStateVector(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::Time::TDB("2013-10-14T10:18:00")));
+    auto ls = std::make_shared<IO::SDK::Sites::LaunchSite>(1, sc, "S1",
+                                                           IO::SDK::Coordinates::Geodetic(-81.0 * IO::SDK::Constants::DEG_RAD, 28.5 * IO::SDK::Constants::DEG_RAD, 0.0),
+                                                           earth);
+    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(
+            ls->GetStateVector(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::Time::TDB("2013-10-14T10:18:00")));
     IO::SDK::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, "ms01", std::move(orbitalParams)};
     s.AddFuelTank("ft1", 1000.0, 900.0);
     s.AddEngine("sn1", "eng1", "ft1", {1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}, 450.0, 50.0);
 
-    auto targetOrbit = std::make_shared<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth, 6728137, 0.0, 140.0 * IO::SDK::Constants::DEG_RAD, 0.0, 0.0, 0.0, IO::SDK::Time::TDB("2013-10-14T10:18:00"), IO::SDK::Frames::InertialFrames::GetICRF());
+    auto targetOrbit = std::make_shared<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth, 6728137, 0.0, 140.0 * IO::SDK::Constants::DEG_RAD, 0.0, 0.0, 0.0,
+                                                                                          IO::SDK::Time::TDB("2013-10-14T10:18:00"), IO::SDK::Frames::InertialFrames::GetICRF());
     IO::SDK::Maneuvers::Launch launch(ls, ls, false, *targetOrbit);
     ASSERT_DOUBLE_EQ(8056.0542722844666, launch.GetNonInertialInsertionVelocity());
 }
 
 TEST(Launch, RetrogradeInertialInsertionVelocity)
 {
+    IO::SDK::Scenario sc("scenario1",
+                         IO::SDK::Time::Window<IO::SDK::Time::UTC>(IO::SDK::Time::TDB("2013-10-14T10:18:00").ToUTC(), IO::SDK::Time::TDB("2013-10-15T10:18:00").ToUTC()));
     auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10, "sun");
     auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth", sun);
-    auto ls = std::make_shared<IO::SDK::Sites::LaunchSite>(1, "S1", IO::SDK::Coordinates::Geodetic(-81.0 * IO::SDK::Constants::DEG_RAD, 28.5 * IO::SDK::Constants::DEG_RAD, 0.0), earth);
-    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(ls->GetStateVector(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::Time::TDB("2013-10-14T10:18:00")));
+    auto ls = std::make_shared<IO::SDK::Sites::LaunchSite>(1, sc, "S1",
+                                                           IO::SDK::Coordinates::Geodetic(-81.0 * IO::SDK::Constants::DEG_RAD, 28.5 * IO::SDK::Constants::DEG_RAD, 0.0),
+                                                           earth);
+    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(
+            ls->GetStateVector(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::Time::TDB("2013-10-14T10:18:00")));
     IO::SDK::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, "ms01", std::move(orbitalParams)};
     s.AddFuelTank("ft1", 1000.0, 900.0);
     s.AddEngine("sn1", "eng1", "ft1", {1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}, 450.0, 50.0);
 
-    auto targetOrbit = std::make_shared<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth, 6728137, 0.0, 140.0 * IO::SDK::Constants::DEG_RAD, 0.0, 0.0, 0.0, IO::SDK::Time::TDB("2013-10-14T10:18:00"), IO::SDK::Frames::InertialFrames::GetICRF());
+    auto targetOrbit = std::make_shared<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth, 6728137, 0.0, 140.0 * IO::SDK::Constants::DEG_RAD, 0.0, 0.0, 0.0,
+                                                                                          IO::SDK::Time::TDB("2013-10-14T10:18:00"), IO::SDK::Frames::InertialFrames::GetICRF());
     IO::SDK::Maneuvers::Launch launch(ls, ls, false, *targetOrbit);
     ASSERT_DOUBLE_EQ(7696.9997304533663, launch.GetInertialInsertionVelocity());
 }
 
 TEST(Launch, GetLaunchWindows)
 {
+    IO::SDK::Scenario sc("scenario1",
+                         IO::SDK::Time::Window<IO::SDK::Time::UTC>(IO::SDK::Time::TDB("2021-06-02T00:00:00").ToUTC(), IO::SDK::Time::TDB("2021-06-03T00:00:00").ToUTC()));
     auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10, "sun");
     auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth", sun);
-    auto ls = std::make_shared<IO::SDK::Sites::LaunchSite>(1, "S1", IO::SDK::Coordinates::Geodetic(-81.0 * IO::SDK::Constants::DEG_RAD, 28.5 * IO::SDK::Constants::DEG_RAD, 0.0), earth);
-    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(ls->GetStateVector(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::Time::TDB("2021-06-02T00:00:00")));
+    auto ls = std::make_shared<IO::SDK::Sites::LaunchSite>(1, sc, "S1",
+                                                           IO::SDK::Coordinates::Geodetic(-81.0 * IO::SDK::Constants::DEG_RAD, 28.5 * IO::SDK::Constants::DEG_RAD, 0.0),
+                                                           earth);
+    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(
+            ls->GetStateVector(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::Time::TDB("2021-06-02T00:00:00")));
     IO::SDK::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, "ms01", std::move(orbitalParams)};
     s.AddFuelTank("ft1", 1000.0, 900.0);
     s.AddEngine("sn1", "eng1", "ft1", {1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}, 450.0, 50.0);
 
-    std::string tle[3] = {"ISS (ZARYA)", "1 25544U 98067A   21153.20885672  .00000635  00000-0  19731-4 0  9999", "2 25544  51.6454  56.8104 0003459  55.0598  93.6040 15.48940796286274"};
+    std::string tle[3] = {"ISS (ZARYA)", "1 25544U 98067A   21153.20885672  .00000635  00000-0  19731-4 0  9999",
+                          "2 25544  51.6454  56.8104 0003459  55.0598  93.6040 15.48940796286274"};
 
     auto targetOrbit = std::make_shared<IO::SDK::OrbitalParameters::TLE>(earth, tle);
     IO::SDK::Maneuvers::Launch launch(ls, ls, false, *targetOrbit);
@@ -200,15 +266,21 @@ TEST(Launch, GetLaunchWindows)
 
 TEST(Launch, GetLaunchWindowsByDay)
 {
+    IO::SDK::Scenario sc("scenario1",
+                         IO::SDK::Time::Window<IO::SDK::Time::UTC>(IO::SDK::Time::TDB("2021-06-02T00:00:00").ToUTC(), IO::SDK::Time::TDB("2021-06-03T00:00:00").ToUTC()));
     auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10, "sun");
     auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth", sun);
-    auto ls = std::make_shared<IO::SDK::Sites::LaunchSite>(3, "S3", IO::SDK::Coordinates::Geodetic(-81.0 * IO::SDK::Constants::DEG_RAD, 28.5 * IO::SDK::Constants::DEG_RAD, 0.0), earth);
-    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(ls->GetStateVector(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::Time::TDB("2021-06-02T00:00:00")));
+    auto ls = std::make_shared<IO::SDK::Sites::LaunchSite>(3, sc, "S3",
+                                                           IO::SDK::Coordinates::Geodetic(-81.0 * IO::SDK::Constants::DEG_RAD, 28.5 * IO::SDK::Constants::DEG_RAD, 0.0),
+                                                           earth);
+    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(
+            ls->GetStateVector(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::Time::TDB("2021-06-02T00:00:00")));
     IO::SDK::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, "ms01", std::move(orbitalParams)};
     s.AddFuelTank("ft1", 1000.0, 900.0);
     s.AddEngine("sn1", "eng1", "ft1", {1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}, 450.0, 50.0);
 
-    std::string tle[3] = {"ISS (ZARYA)", "1 25544U 98067A   21153.20885672  .00000635  00000-0  19731-4 0  9999", "2 25544  51.6454  56.8104 0003459  55.0598  93.6040 15.48940796286274"};
+    std::string tle[3] = {"ISS (ZARYA)", "1 25544U 98067A   21153.20885672  .00000635  00000-0  19731-4 0  9999",
+                          "2 25544  51.6454  56.8104 0003459  55.0598  93.6040 15.48940796286274"};
 
     auto targetOrbit = std::make_shared<IO::SDK::OrbitalParameters::TLE>(earth, tle);
     IO::SDK::Maneuvers::Launch launch(ls, ls, true, *targetOrbit);
@@ -228,15 +300,21 @@ TEST(Launch, GetLaunchWindowsByDay)
 
 TEST(Launch, GetSouthLaunchSiteLaunchWindowsByDay)
 {
+    IO::SDK::Scenario sc("scenario1",
+                         IO::SDK::Time::Window<IO::SDK::Time::UTC>(IO::SDK::Time::TDB("2021-06-02T00:00:00").ToUTC(), IO::SDK::Time::TDB("2021-06-03T00:00:00").ToUTC()));
     auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10, "sun");
     auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth", sun);
-    auto ls = std::make_shared<IO::SDK::Sites::LaunchSite>(1, "S1", IO::SDK::Coordinates::Geodetic(-104 * IO::SDK::Constants::DEG_RAD, -41.0 * IO::SDK::Constants::DEG_RAD, 0.0), earth);
-    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(ls->GetStateVector(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::Time::TDB("2021-06-02T00:00:00")));
+    auto ls = std::make_shared<IO::SDK::Sites::LaunchSite>(1, sc, "S1",
+                                                           IO::SDK::Coordinates::Geodetic(-104 * IO::SDK::Constants::DEG_RAD, -41.0 * IO::SDK::Constants::DEG_RAD, 0.0),
+                                                           earth);
+    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(
+            ls->GetStateVector(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::Time::TDB("2021-06-02T00:00:00")));
     IO::SDK::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, "ms01", std::move(orbitalParams)};
     s.AddFuelTank("ft1", 1000.0, 900.0);
     s.AddEngine("sn1", "eng1", "ft1", {1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}, 450.0, 50.0);
 
-    std::string tle[3] = {"ISS (ZARYA)", "1 25544U 98067A   21153.20885672  .00000635  00000-0  19731-4 0  9999", "2 25544  51.6454  56.8104 0003459  55.0598  93.6040 15.48940796286274"};
+    std::string tle[3] = {"ISS (ZARYA)", "1 25544U 98067A   21153.20885672  .00000635  00000-0  19731-4 0  9999",
+                          "2 25544  51.6454  56.8104 0003459  55.0598  93.6040 15.48940796286274"};
 
     auto targetOrbit = std::make_shared<IO::SDK::OrbitalParameters::TLE>(earth, tle);
     IO::SDK::Maneuvers::Launch launch(ls, ls, true, *targetOrbit);
@@ -256,15 +334,20 @@ TEST(Launch, GetSouthLaunchSiteLaunchWindowsByDay)
 
 TEST(Launch, GetSouthLaunchSiteLaunchWindows)
 {
+    IO::SDK::Scenario sc("scenario1",
+                         IO::SDK::Time::Window<IO::SDK::Time::UTC>(IO::SDK::Time::TDB("2021-06-02T00:00:00").ToUTC(), IO::SDK::Time::TDB("2021-06-03T00:00:00").ToUTC()));
     auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10, "sun");
     auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth", sun);
-    auto ls = std::make_shared<IO::SDK::Sites::LaunchSite>(1, "S1", IO::SDK::Coordinates::Geodetic(-104.0 * IO::SDK::Constants::DEG_RAD, -41.0 * IO::SDK::Constants::DEG_RAD, 0.0), earth);
-    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(ls->GetStateVector(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::Time::TDB("2021-06-02T00:00:00")));
+    auto ls = std::make_shared<IO::SDK::Sites::LaunchSite>(1,sc, "S1", IO::SDK::Coordinates::Geodetic(-104.0 * IO::SDK::Constants::DEG_RAD, -41.0 * IO::SDK::Constants::DEG_RAD, 0.0),
+                                                           earth);
+    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(
+            ls->GetStateVector(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::Time::TDB("2021-06-02T00:00:00")));
     IO::SDK::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, "ms01", std::move(orbitalParams)};
     s.AddFuelTank("ft1", 1000.0, 900.0);
     s.AddEngine("sn1", "eng1", "ft1", {1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}, 450.0, 50.0);
 
-    std::string tle[3] = {"ISS (ZARYA)", "1 25544U 98067A   21153.20885672  .00000635  00000-0  19731-4 0  9999", "2 25544  51.6454  56.8104 0003459  55.0598  93.6040 15.48940796286274"};
+    std::string tle[3] = {"ISS (ZARYA)", "1 25544U 98067A   21153.20885672  .00000635  00000-0  19731-4 0  9999",
+                          "2 25544  51.6454  56.8104 0003459  55.0598  93.6040 15.48940796286274"};
 
     auto targetOrbit = std::make_shared<IO::SDK::OrbitalParameters::TLE>(earth, tle);
     IO::SDK::Maneuvers::Launch launch(ls, ls, false, *targetOrbit);

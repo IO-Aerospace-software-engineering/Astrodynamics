@@ -9,9 +9,11 @@
 
 TEST(SiteFrame, Initialization)
 {
+    IO::SDK::Scenario sc("scenario1",
+                         IO::SDK::Time::Window<IO::SDK::Time::UTC>(IO::SDK::Time::TDB("2021-05-17 12:00:00 TDB").ToUTC(), IO::SDK::Time::TDB("2021-05-18 12:00:00 TDB").ToUTC()));
     auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10, "sun");
     auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth", sun);
-    IO::SDK::Sites::Site s{123456, "S1", IO::SDK::Coordinates::Geodetic(2.2 * IO::SDK::Constants::DEG_RAD, 48.0 * IO::SDK::Constants::DEG_RAD, 0.0), earth};
+    IO::SDK::Sites::Site s{123456, sc, "S1", IO::SDK::Coordinates::Geodetic(2.2 * IO::SDK::Constants::DEG_RAD, 48.0 * IO::SDK::Constants::DEG_RAD, 0.0), earth};
     auto id = IO::SDK::DataPoolMonitoring::Instance().GetIntegerProperty("FRAME_S1_TOPO", 1);
     ASSERT_EQ(1522456, id[0]);
 

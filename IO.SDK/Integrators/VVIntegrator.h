@@ -23,6 +23,13 @@
 #include <Vector3D.h>
 #include <Body.h>
 #include <CelestialBody.h>
+#include <optional>
+
+//namespace IO::SDK::Integrators::Forces
+//{
+//    class Force;
+//    class GravityForce;
+//}
 
 namespace IO::SDK::Integrators
 {
@@ -30,7 +37,8 @@ namespace IO::SDK::Integrators
     {
     private:
         std::vector<IO::SDK::Integrators::Forces::Force *> m_forces{};
-        std::unique_ptr<IO::SDK::Math::Vector3D> m_acceleration{};
+        std::optional<IO::SDK::Math::Vector3D> m_acceleration{std::nullopt};
+
         IO::SDK::Math::Vector3D ComputeAcceleration(const IO::SDK::Body::Body &body, const IO::SDK::OrbitalParameters::StateVector &stateVector) const;
 
     public:

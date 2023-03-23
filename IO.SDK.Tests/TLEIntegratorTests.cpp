@@ -1,10 +1,6 @@
 #include <gtest/gtest.h>
 #include <TLEIntegrator.h>
-#include <TimeSpan.h>
-#include <chrono>
-#include <vector>
-#include <iostream>
-#include<InertialFrames.h>
+#include <Spacecraft.h>
 
 using namespace std::chrono_literals;
 

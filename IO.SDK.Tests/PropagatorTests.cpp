@@ -217,7 +217,7 @@ TEST(Propagator, PropagatorVsKepler)
 
     auto orientationCoverage = spc.GetOrientationsCoverageWindow();
     ASSERT_STREQ("2021-01-01 00:00:00.000000 (TDB)", orientationCoverage.GetStartDate().ToString().c_str());
-    ASSERT_STREQ("2021-01-01 00:00:00.000000 (TDB)", orientationCoverage.GetEndDate().ToString().c_str());
+    ASSERT_STREQ("2021-01-01 01:47:27.000000 (TDB)", orientationCoverage.GetEndDate().ToString().c_str());
 
     //Analyse energy
     // std::ofstream myfile("SpecificEnergy.csv", std::ios_base::trunc);
@@ -297,7 +297,7 @@ TEST(Propagator, PropagatorVsKepler2)
 
     auto orientationCoverage = spc.GetOrientationsCoverageWindow();
     ASSERT_STREQ("2021-01-01 00:00:00.000000 (TDB)", orientationCoverage.GetStartDate().ToString().c_str());
-    ASSERT_STREQ("2021-01-01 00:00:00.000000 (TDB)", orientationCoverage.GetEndDate().ToString().c_str());
+    ASSERT_STREQ("2021-01-02 00:00:00.000000 (TDB)", orientationCoverage.GetEndDate().ToString().c_str());
 
     ASSERT_DOUBLE_EQ(9999999.5292096715, propagationResult.GetPerigeeVector().Magnitude());
     ASSERT_DOUBLE_EQ(0.30000006120264006, propagationResult.GetEccentricity());

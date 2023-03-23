@@ -26,7 +26,7 @@ void IO::SDK::Maneuvers::Attitudes::RetrogradeAttitude::Compute(const IO::SDK::O
 
 IO::SDK::OrbitalParameters::StateOrientation  IO::SDK::Maneuvers::Attitudes::RetrogradeAttitude::ComputeOrientation(const IO::SDK::OrbitalParameters::OrbitalParameters &maneuverPoint)
 {
-    return IO::SDK::OrbitalParameters::StateOrientation(m_spacecraft.Front.To(maneuverPoint.GetStateVector().GetVelocity().Normalize().Reverse()), IO::SDK::Math::Vector3D(0.0, 0.0, 0.0), maneuverPoint.GetEpoch(), maneuverPoint.GetFrame());
+    return IO::SDK::OrbitalParameters::StateOrientation(maneuverPoint.GetStateVector().GetVelocity().Normalize().Reverse().To(m_spacecraft.Front), IO::SDK::Math::Vector3D(0.0, 0.0, 0.0), maneuverPoint.GetEpoch(), maneuverPoint.GetFrame());
 }
 
 bool  IO::SDK::Maneuvers::Attitudes::RetrogradeAttitude::CanExecute(const IO::SDK::OrbitalParameters::OrbitalParameters &orbitalParams)
