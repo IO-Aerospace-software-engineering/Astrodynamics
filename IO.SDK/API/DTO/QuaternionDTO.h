@@ -1,6 +1,6 @@
 #pragma once
 
-namespace IO::SDK::Proxy::Models
+namespace IO::SDK::API::DTO
 {
     struct QuaternionDTO
     {

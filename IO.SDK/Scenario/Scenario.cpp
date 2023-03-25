@@ -4,6 +4,7 @@
 
 #include <Propagator.h>
 #include <Scenario.h>
+#include <Launch.h>
 
 IO::SDK::Scenario::Scenario(const std::string &name, const IO::SDK::Time::Window<IO::SDK::Time::UTC> &windows) : m_name{name}, m_windows{windows},
                                                                                                                  m_integrator(IO::SDK::Parameters::SpacecraftPropagationStep,
@@ -57,6 +58,11 @@ void IO::SDK::Scenario::AddInFieldOfViewConstraint(IO::SDK::Constraints::Paramet
     m_inFieldOfViewConstraints[inFieldOfViewParameters] = std::nullopt;
 }
 
+void IO::SDK::Scenario::AddLaunchConstraint(IO::SDK::Constraints::Parameters::LaunchParameters *launchParameters)
+{
+    m_launchConstraints[launchParameters] = std::nullopt;
+}
+
 void IO::SDK::Scenario::Execute()
 {
     // Run sites propagation
@@ -72,6 +78,14 @@ void IO::SDK::Scenario::Execute()
         IO::SDK::Propagators::Propagator propagator(*spacecraft, m_integrator, tdb);
         propagator.Propagate();
     }
+
+    for (auto &&constraint: m_launchConstraints)
+    {
+        IO::SDK::Maneuvers::Launch launch(constraint.first->GetLaunchSite(), constraint.first->GetRecoverySite(), constraint.first->GetLaunchByDay(),
+                                          constraint.first->GetTargetOrbit());
+        constraint.second= launch.GetLaunchWindows(this->m_windows);
+    }
+
 
     //Evaluate distance constraints
     for (auto &&constraint: m_distanceConstraints)
@@ -115,5 +129,7 @@ void IO::SDK::Scenario::Execute()
                                                                                             constraint.first->GetInitialStepSize());
     }
 }
+
+
 
 

@@ -1,12 +1,12 @@
 #pragma once
-#include <Models/WindowDTO.h>
+#include <WindowDTO.h>
 
-namespace IO::SDK::Proxy::Models
+namespace IO::SDK::API::DTO
 {
     struct InFieldOfViewRequestDTO
     {
         int instrumentId{0};
         int targetId{0};
-        IO::SDK::Proxy::Models::WindowDTO window;
+        IO::SDK::API::DTO::WindowDTO window;
     };
 }

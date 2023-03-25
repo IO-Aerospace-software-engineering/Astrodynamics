@@ -1,7 +1,7 @@
 #pragma once
 #include<limits>
 
-namespace IO::SDK::Proxy::Models
+namespace IO::SDK::API::DTO
 {
     struct WindowDTO
     {

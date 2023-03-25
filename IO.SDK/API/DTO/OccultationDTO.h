@@ -1,7 +1,7 @@
 #pragma once
-#include <Models/WindowsDTO.h>
+#include <WindowsDTO.h>
 
-namespace IO::SDK::Proxy::Models
+namespace IO::SDK::API::DTO
 {
     struct OccultationDTO
     {
@@ -9,6 +9,7 @@ namespace IO::SDK::Proxy::Models
         int backBodyId{0};
         int frontId{0};
         int type{0};
-        IO::SDK::Proxy::Models::WindowsDTO window;
+        IO::SDK::API::DTO::WindowsDTO window;
+        int aberrationId = 0;
     };
 }

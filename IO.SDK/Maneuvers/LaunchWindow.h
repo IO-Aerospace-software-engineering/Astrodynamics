@@ -22,7 +22,7 @@ namespace IO::SDK::Maneuvers
     class LaunchWindow final
     {
     private:
-        const std::shared_ptr<IO::SDK::Sites::LaunchSite> m_launchSite;
+        const IO::SDK::Sites::LaunchSite& m_launchSite;
         const IO::SDK::Time::Window<IO::SDK::Time::UTC> m_window;
         const double m_inertialAzimuth;
         const double m_nonInertialAzimuth;
@@ -41,16 +41,16 @@ namespace IO::SDK::Maneuvers
          * @param inertialInsertionVelocity 
          * @param nonInertialInsertionVelocity 
          */
-        LaunchWindow(const std::shared_ptr<IO::SDK::Sites::LaunchSite> &launchSite, const IO::SDK::Time::Window<IO::SDK::Time::UTC> &window, const double inertialAzimuth, const double nonInertialAzimuth, const double inertialInsertionVelocity, const double nonInertialInsertionVelocity);
+        LaunchWindow(const IO::SDK::Sites::LaunchSite &launchSite, const IO::SDK::Time::Window<IO::SDK::Time::UTC> &window, const double inertialAzimuth, const double nonInertialAzimuth, const double inertialInsertionVelocity, const double nonInertialInsertionVelocity);
 
-        LaunchWindow& operator=(const LaunchWindow& lw);
+//        LaunchWindow& operator=(const LaunchWindow& lw);
 
         /**
          * @brief Get the Launch Site
          * 
          * @return const std::shared_ptr<IO::SDK::Sites::LaunchSite>& 
          */
-        const std::shared_ptr<IO::SDK::Sites::LaunchSite>& GetLaunchSite() const;
+        const IO::SDK::Sites::LaunchSite& GetLaunchSite() const;
         
         /**
          * @brief Get the Window

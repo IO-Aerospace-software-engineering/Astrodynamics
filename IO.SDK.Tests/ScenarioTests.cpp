@@ -1,23 +1,9 @@
 #include<gtest/gtest.h>
-#include<memory>
-#include<string>
 
-#include<CelestialBody.h>
-#include<LaunchSite.h>
-#include<OrbitalParameters.h>
-#include<Spacecraft.h>
-#include<StateVector.h>
 #include<TLE.h>
-#include<Launch.h>
 #include<Scenario.h>
-#include<Window.h>
-#include<UTC.h>
-#include <DistanceParameters.h>
-#include <OccultationParameters.h>
-#include <ByDayParameters.h>
-#include <ByNightParameters.h>
-#include <InFieldOfViewParameters.h>
 #include <Vectors.h>
+#include <LaunchParameters.h>
 
 using namespace std::chrono_literals;
 
@@ -27,11 +13,11 @@ TEST(Scenario, Initialize)
                          IO::SDK::Time::Window<IO::SDK::Time::UTC>(IO::SDK::Time::TDB("2021-06-02T00:00:00").ToUTC(), IO::SDK::Time::TDB("2021-06-03T00:00:00").ToUTC()));
     auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10, "sun");
     auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth", sun);
-    auto ls = std::make_shared<IO::SDK::Sites::LaunchSite>(3, sc, "S3",
-                                                           IO::SDK::Coordinates::Geodetic(-81.0 * IO::SDK::Constants::DEG_RAD, 28.5 * IO::SDK::Constants::DEG_RAD, 0.0),
-                                                           earth);
+    auto ls = IO::SDK::Sites::LaunchSite(3, "S3",
+                                         IO::SDK::Coordinates::Geodetic(-81.0 * IO::SDK::Constants::DEG_RAD, 28.5 * IO::SDK::Constants::DEG_RAD, 0.0),
+                                         earth);
     std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(
-            ls->GetStateVector(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::Time::TDB("2021-06-02T00:00:00")));
+            ls.GetStateVector(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::Time::TDB("2021-06-02T00:00:00")));
     IO::SDK::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, "ms01", std::move(orbitalParams)};
     s.AddFuelTank("ft1", 1000.0, 900.0);
     s.AddEngine("sn1", "eng1", "ft1", {1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}, 450.0, 50.0);
@@ -43,7 +29,7 @@ TEST(Scenario, Initialize)
     IO::SDK::Scenario scenario("scenariotest", window);
     scenario.AddCelestialBody(*earth);
     scenario.AddSpacecraft(s);
-    scenario.AddSite(*ls);
+    scenario.AddSite(ls);
 
     ASSERT_STREQ("scenariotest", scenario.GetName().c_str());
     ASSERT_EQ(window, scenario.GetWindow());
@@ -53,21 +39,18 @@ TEST(Scenario, Initialize)
     ASSERT_EQ(s, *scenario.GetSpacecrafts().front());
     ASSERT_EQ(*earth, *scenario.GetCelestialBodies().front());
 
-    ASSERT_EQ(ls.get(), dynamic_cast<const IO::SDK::Sites::LaunchSite *>(scenario.GetSites().front()));
+    ASSERT_EQ(&ls, dynamic_cast<const IO::SDK::Sites::LaunchSite *>(scenario.GetSites().front()));
 
 }
 
 TEST(Scenario, AddDistanceConstraint)
 {
-    IO::SDK::Scenario sc("scenario1",
-                         IO::SDK::Time::Window<IO::SDK::Time::UTC>(IO::SDK::Time::TDB("2021-06-02T00:00:00").ToUTC(), IO::SDK::Time::TDB("2021-06-03T00:00:00").ToUTC()));
     auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10, "sun");
     auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth", sun);
-    auto ls = std::make_shared<IO::SDK::Sites::LaunchSite>(3, sc, "S3",
-                                                           IO::SDK::Coordinates::Geodetic(-81.0 * IO::SDK::Constants::DEG_RAD, 28.5 * IO::SDK::Constants::DEG_RAD, 0.0),
-                                                           earth);
+    auto ls = IO::SDK::Sites::LaunchSite(3, "S3", IO::SDK::Coordinates::Geodetic(-81.0 * IO::SDK::Constants::DEG_RAD, 28.5 * IO::SDK::Constants::DEG_RAD, 0.0),
+                                         earth);
     std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(
-            ls->GetStateVector(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::Time::TDB("2021-06-02T00:00:00")));
+            ls.GetStateVector(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::Time::TDB("2021-06-02T00:00:00")));
     IO::SDK::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, "ms01", std::move(orbitalParams)};
     s.AddFuelTank("ft1", 1000.0, 900.0);
     s.AddEngine("sn1", "eng1", "ft1", {1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}, 450.0, 50.0);
@@ -80,7 +63,7 @@ TEST(Scenario, AddDistanceConstraint)
     IO::SDK::Scenario scenario("scenariotest", windowUTC);
     scenario.AddCelestialBody(*earth);
     scenario.AddSpacecraft(s);
-    scenario.AddSite(*ls);
+    scenario.AddSite(ls);
 
     IO::SDK::Constraints::Parameters::DistanceParameters constraint1(*earth, *sun, IO::SDK::Constraints::Constraint::GreaterThan(), IO::SDK::AberrationsEnum::None, 10.0,
                                                                      IO::SDK::Time::TimeSpan(3600s));
@@ -97,15 +80,13 @@ TEST(Scenario, AddDistanceConstraint)
 
 TEST(Scenario, AddOccultationConstraint)
 {
-    IO::SDK::Scenario sc("scenario1",
-                         IO::SDK::Time::Window<IO::SDK::Time::UTC>(IO::SDK::Time::TDB("2021-06-02T00:00:00").ToUTC(), IO::SDK::Time::TDB("2021-06-03T00:00:00").ToUTC()));
     auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10, "sun");
     auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth", sun);
-    auto ls = std::make_shared<IO::SDK::Sites::LaunchSite>(3, sc, "S3",
-                                                           IO::SDK::Coordinates::Geodetic(-81.0 * IO::SDK::Constants::DEG_RAD, 28.5 * IO::SDK::Constants::DEG_RAD, 0.0),
-                                                           earth);
+    auto ls = IO::SDK::Sites::LaunchSite(3, "S3",
+                                         IO::SDK::Coordinates::Geodetic(-81.0 * IO::SDK::Constants::DEG_RAD, 28.5 * IO::SDK::Constants::DEG_RAD, 0.0),
+                                         earth);
     std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(
-            ls->GetStateVector(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::Time::TDB("2021-06-02T00:00:00")));
+            ls.GetStateVector(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::Time::TDB("2021-06-02T00:00:00")));
     IO::SDK::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, "ms01", std::move(orbitalParams)};
     s.AddFuelTank("ft1", 1000.0, 900.0);
     s.AddEngine("sn1", "eng1", "ft1", {1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}, 450.0, 50.0);
@@ -118,7 +99,7 @@ TEST(Scenario, AddOccultationConstraint)
     IO::SDK::Scenario scenario("scenariotest", windowUTC);
     scenario.AddCelestialBody(*earth);
     scenario.AddSpacecraft(s);
-    scenario.AddSite(*ls);
+    scenario.AddSite(ls);
 
     IO::SDK::Constraints::Parameters::OccultationParameters constraint1(s, *earth, *sun, IO::SDK::OccultationType::Full(), IO::SDK::AberrationsEnum::None,
                                                                         IO::SDK::Time::TimeSpan(3600s));
@@ -135,15 +116,13 @@ TEST(Scenario, AddOccultationConstraint)
 
 TEST(Scenario, AddByDayConstraint)
 {
-    IO::SDK::Scenario sc("scenario1",
-                         IO::SDK::Time::Window<IO::SDK::Time::UTC>(IO::SDK::Time::TDB("2021-06-02T00:00:00").ToUTC(), IO::SDK::Time::TDB("2021-06-03T00:00:00").ToUTC()));
     auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10, "sun");
     auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth", sun);
-    auto ls = std::make_shared<IO::SDK::Sites::LaunchSite>(3, sc, "S3",
-                                                           IO::SDK::Coordinates::Geodetic(-81.0 * IO::SDK::Constants::DEG_RAD, 28.5 * IO::SDK::Constants::DEG_RAD, 0.0),
-                                                           earth);
+    auto ls = IO::SDK::Sites::LaunchSite(3, "S3",
+                                         IO::SDK::Coordinates::Geodetic(-81.0 * IO::SDK::Constants::DEG_RAD, 28.5 * IO::SDK::Constants::DEG_RAD, 0.0),
+                                         earth);
     std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(
-            ls->GetStateVector(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::Time::TDB("2021-06-02T00:00:00")));
+            ls.GetStateVector(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::Time::TDB("2021-06-02T00:00:00")));
     IO::SDK::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, "ms01", std::move(orbitalParams)};
     s.AddFuelTank("ft1", 1000.0, 900.0);
     s.AddEngine("sn1", "eng1", "ft1", {1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}, 450.0, 50.0);
@@ -156,12 +135,12 @@ TEST(Scenario, AddByDayConstraint)
     IO::SDK::Scenario scenario("scenariotest", windowUTC);
     scenario.AddCelestialBody(*earth);
     scenario.AddSpacecraft(s);
-    scenario.AddSite(*ls);
+    scenario.AddSite(ls);
 
-    IO::SDK::Constraints::Parameters::ByDayParameters constraint1(*ls, IO::SDK::Constants::CivilTwilight);
+    IO::SDK::Constraints::Parameters::ByDayParameters constraint1(ls, IO::SDK::Constants::CivilTwilight);
     scenario.AddDayConstraint(&constraint1);
 
-    IO::SDK::Constraints::Parameters::ByDayParameters constraint2(*ls, IO::SDK::Constants::CivilTwilight);
+    IO::SDK::Constraints::Parameters::ByDayParameters constraint2(ls, IO::SDK::Constants::CivilTwilight);
     scenario.AddDayConstraint(&constraint2);
     auto constraints = scenario.GetByDaysConstraints();
     ASSERT_EQ(2, constraints.size());
@@ -171,15 +150,13 @@ TEST(Scenario, AddByDayConstraint)
 
 TEST(Scenario, AddByNightConstraint)
 {
-    IO::SDK::Scenario sc("scenario1",
-                         IO::SDK::Time::Window<IO::SDK::Time::UTC>(IO::SDK::Time::TDB("2021-06-02T00:00:00").ToUTC(), IO::SDK::Time::TDB("2021-06-03T00:00:00").ToUTC()));
     auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10, "sun");
     auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth", sun);
-    auto ls = std::make_shared<IO::SDK::Sites::LaunchSite>(3, sc, "S3",
-                                                           IO::SDK::Coordinates::Geodetic(-81.0 * IO::SDK::Constants::DEG_RAD, 28.5 * IO::SDK::Constants::DEG_RAD, 0.0),
-                                                           earth);
+    auto ls = IO::SDK::Sites::LaunchSite(3, "S3",
+                                         IO::SDK::Coordinates::Geodetic(-81.0 * IO::SDK::Constants::DEG_RAD, 28.5 * IO::SDK::Constants::DEG_RAD, 0.0),
+                                         earth);
     std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(
-            ls->GetStateVector(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::Time::TDB("2021-06-02T00:00:00")));
+            ls.GetStateVector(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::Time::TDB("2021-06-02T00:00:00")));
     IO::SDK::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, "ms01", std::move(orbitalParams)};
     s.AddFuelTank("ft1", 1000.0, 900.0);
     s.AddEngine("sn1", "eng1", "ft1", {1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}, 450.0, 50.0);
@@ -192,12 +169,12 @@ TEST(Scenario, AddByNightConstraint)
     IO::SDK::Scenario scenario("scenariotest", windowUTC);
     scenario.AddCelestialBody(*earth);
     scenario.AddSpacecraft(s);
-    scenario.AddSite(*ls);
+    scenario.AddSite(ls);
 
-    IO::SDK::Constraints::Parameters::ByNightParameters constraint1(*ls, IO::SDK::Constants::CivilTwilight);
+    IO::SDK::Constraints::Parameters::ByNightParameters constraint1(ls, IO::SDK::Constants::CivilTwilight);
     scenario.AddNightConstraint(&constraint1);
 
-    IO::SDK::Constraints::Parameters::ByNightParameters constraint2(*ls, IO::SDK::Constants::CivilTwilight);
+    IO::SDK::Constraints::Parameters::ByNightParameters constraint2(ls, IO::SDK::Constants::CivilTwilight);
     scenario.AddNightConstraint(&constraint2);
     auto constraints = scenario.GetByNightConstraints();
     ASSERT_EQ(2, constraints.size());
@@ -207,15 +184,13 @@ TEST(Scenario, AddByNightConstraint)
 
 TEST(Scenario, AddBodyVisibilityConstraint)
 {
-    IO::SDK::Scenario sc("scenario1",
-                         IO::SDK::Time::Window<IO::SDK::Time::UTC>(IO::SDK::Time::TDB("2021-06-02T00:00:00").ToUTC(), IO::SDK::Time::TDB("2021-06-03T00:00:00").ToUTC()));
     auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10, "sun");
     auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth", sun);
-    auto ls = std::make_shared<IO::SDK::Sites::LaunchSite>(3, sc, "S3",
-                                                           IO::SDK::Coordinates::Geodetic(-81.0 * IO::SDK::Constants::DEG_RAD, 28.5 * IO::SDK::Constants::DEG_RAD, 0.0),
-                                                           earth);
+    auto ls = IO::SDK::Sites::LaunchSite(3, "S3",
+                                         IO::SDK::Coordinates::Geodetic(-81.0 * IO::SDK::Constants::DEG_RAD, 28.5 * IO::SDK::Constants::DEG_RAD, 0.0),
+                                         earth);
     std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(
-            ls->GetStateVector(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::Time::TDB("2021-06-02T00:00:00")));
+            ls.GetStateVector(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::Time::TDB("2021-06-02T00:00:00")));
     IO::SDK::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, "ms01", std::move(orbitalParams)};
     s.AddFuelTank("ft1", 1000.0, 900.0);
     s.AddEngine("sn1", "eng1", "ft1", {1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}, 450.0, 50.0);
@@ -228,12 +203,12 @@ TEST(Scenario, AddBodyVisibilityConstraint)
     IO::SDK::Scenario scenario("scenariotest", windowUTC);
     scenario.AddCelestialBody(*earth);
     scenario.AddSpacecraft(s);
-    scenario.AddSite(*ls);
+    scenario.AddSite(ls);
 
-    IO::SDK::Constraints::Parameters::BodyVisibilityFromSiteParameters constraint1(*ls, *sun, IO::SDK::AberrationsEnum::None);
+    IO::SDK::Constraints::Parameters::BodyVisibilityFromSiteParameters constraint1(ls, *sun, IO::SDK::AberrationsEnum::None);
     scenario.AddBodyVisibilityConstraint(&constraint1);
 
-    IO::SDK::Constraints::Parameters::BodyVisibilityFromSiteParameters constraint2(*ls, *sun, IO::SDK::AberrationsEnum::None);
+    IO::SDK::Constraints::Parameters::BodyVisibilityFromSiteParameters constraint2(ls, *sun, IO::SDK::AberrationsEnum::None);
     scenario.AddBodyVisibilityConstraint(&constraint2);
     auto constraints = scenario.GetBodyVisibilityFromSiteConstraints();
     ASSERT_EQ(2, constraints.size());
@@ -279,7 +254,7 @@ TEST(Scenario, FindBodyVisibilityConstraint)
     auto moon = std::make_shared<IO::SDK::Body::CelestialBody>(301, "moon", earth);
 
     //Position virtual station on same location as DSS-13 at local noon
-    IO::SDK::Sites::Site s{399113, scenario, "FK_DSS-13",
+    IO::SDK::Sites::Site s{399113, "FK_DSS-13",
                            IO::SDK::Coordinates::Geodetic(-116.7944627147624 * IO::SDK::Constants::DEG_RAD, 35.2471635434595 * IO::SDK::Constants::DEG_RAD, 1070.0), earth};
 
     scenario.AddCelestialBody(*sun);
@@ -306,7 +281,7 @@ TEST(Scenario, FindDayWindowsConstraint)
                          IO::SDK::Time::Window<IO::SDK::Time::UTC>(IO::SDK::Time::TDB("2021-05-17 12:00:00 TDB").ToUTC(), IO::SDK::Time::TDB("2021-05-18 12:00:00 TDB").ToUTC()));
     auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10, "sun");
     auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth", sun);
-    IO::SDK::Sites::Site s{333002, sc, "S2", IO::SDK::Coordinates::Geodetic(2.2 * IO::SDK::Constants::DEG_RAD, 48.0 * IO::SDK::Constants::DEG_RAD, 0.0), earth};
+    IO::SDK::Sites::Site s{333002, "S2", IO::SDK::Coordinates::Geodetic(2.2 * IO::SDK::Constants::DEG_RAD, 48.0 * IO::SDK::Constants::DEG_RAD, 0.0), earth};
 
     sc.AddCelestialBody(*sun);
     sc.AddCelestialBody(*earth);
@@ -332,7 +307,7 @@ TEST(Scenario, FindNightWindowsConstraint)
                          IO::SDK::Time::Window<IO::SDK::Time::UTC>(IO::SDK::Time::TDB("2021-05-17 12:00:00 TDB").ToUTC(), IO::SDK::Time::TDB("2021-05-18 12:00:00 TDB").ToUTC()));
     auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10, "sun");
     auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth", sun);
-    IO::SDK::Sites::Site s{333002, sc, "S2", IO::SDK::Coordinates::Geodetic(2.2 * IO::SDK::Constants::DEG_RAD, 48.0 * IO::SDK::Constants::DEG_RAD, 0.0), earth};
+    IO::SDK::Sites::Site s{333002, "S2", IO::SDK::Coordinates::Geodetic(2.2 * IO::SDK::Constants::DEG_RAD, 48.0 * IO::SDK::Constants::DEG_RAD, 0.0), earth};
 
     sc.AddCelestialBody(*sun);
     sc.AddCelestialBody(*earth);
@@ -425,4 +400,45 @@ TEST(Scenario, FindInFieldOfViewConstraint)
     ASSERT_STREQ("2021-05-17 14:13:07.708047 (TDB)", results[2].GetStartDate().ToString().c_str());
     ASSERT_STREQ("2021-05-17 15:12:24.106910 (TDB)", results[2].GetEndDate().ToString().c_str());
 
+}
+
+TEST(Scenario, FindLaunchWindowConstraint)
+{
+    IO::SDK::Scenario scenario("scenario1",
+                               IO::SDK::Time::Window<IO::SDK::Time::UTC>(IO::SDK::Time::TDB("2021-06-02T00:00:00").ToUTC(),
+                                                                         IO::SDK::Time::TDB("2021-06-03T00:00:00").ToUTC()));
+    auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10, "sun");
+    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth", sun);
+    auto ls = IO::SDK::Sites::LaunchSite(1, "S1",
+                                         IO::SDK::Coordinates::Geodetic(-104 * IO::SDK::Constants::DEG_RAD, -41.0 * IO::SDK::Constants::DEG_RAD, 0.0),
+                                         earth);
+    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(
+            ls.GetStateVector(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::Time::TDB("2021-06-02T00:00:00")));
+    IO::SDK::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, "ms01", std::move(orbitalParams)};
+    s.AddFuelTank("ft1", 1000.0, 900.0);
+    s.AddEngine("sn1", "eng1", "ft1", {1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}, 450.0, 50.0);
+
+    std::string tle[3] = {"ISS (ZARYA)", "1 25544U 98067A   21153.20885672  .00000635  00000-0  19731-4 0  9999",
+                          "2 25544  51.6454  56.8104 0003459  55.0598  93.6040 15.48940796286274"};
+
+
+    IO::SDK::OrbitalParameters::TLE targetOrbit(earth, tle);
+    IO::SDK::Constraints::Parameters::LaunchParameters launchParameters(ls, ls, true, targetOrbit);
+    scenario.AddSite(ls);
+    scenario.AddLaunchConstraint(&launchParameters);
+    scenario.Execute();
+
+    auto constraints = scenario.GetLaunchConstraints();
+    auto windows = *constraints[&launchParameters];
+
+    //Only one launch window
+    ASSERT_EQ(1, windows.size());
+
+    //first launch window
+    ASSERT_STREQ("2021-06-02 15:06:01.057589 (UTC)", windows[0].GetWindow().GetStartDate().ToString().c_str());
+    ASSERT_EQ(1, windows[0].GetLaunchSite().GetId());
+    ASSERT_DOUBLE_EQ(55.289381850887146, windows[0].GetInertialAzimuth() * IO::SDK::Constants::RAD_DEG);
+    ASSERT_DOUBLE_EQ(53.734938879897108, windows[0].GetNonInertialAzimuth() * IO::SDK::Constants::RAD_DEG);
+    ASSERT_DOUBLE_EQ(7665.2355903714715, windows[0].GetInertialInsertionVelocity());
+    ASSERT_DOUBLE_EQ(7378.9855901408182, windows[0].GetNonInertialInsertionVelocity());
 }
