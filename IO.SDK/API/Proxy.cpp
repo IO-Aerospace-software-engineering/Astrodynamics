@@ -21,16 +21,12 @@ IO::SDK::API::DTO::ScenarioResponseDTO Propagate(IO::SDK::API::DTO::ScenarioRequ
 
     std::cout << "occultation 0 aberrationId :" << s.occultations[0].aberrationId << std::endl;
     std::cout << "occultation 0 backBodyId :" << s.occultations[0].backBodyId << std::endl;
-    std::cout << "occultation 0 bodyId :" << s.occultations[0].bodyId << std::endl;
-    std::cout << "occultation 0 frontBodyId :" << s.occultations[0].frontBodyId << std::endl;
-    std::cout << "occultation 0 occultationType :" << s.occultations[0].occultationType << std::endl;
-    std::cout << "occultation 0 start :" << s.occultations[0].window.start << std::endl;
-    std::cout << "occultation 0 end :" << s.occultations[0].window.end << std::endl;
+    std::cout << "occultation 0 bodyId :" << s.occultations[0].observerId << std::endl;
+    std::cout << "occultation 0 frontBodyId :" << s.occultations[0].frontId << std::endl;
+    std::cout << "occultation 0 occultationType :" << s.occultations[0].type << std::endl;
 
     std::cout << "fov 0 target id :" << s.fovs[0].targetId << std::endl;
     std::cout << "fov 0 instrument id :" << s.fovs[0].instrumentId << std::endl;
-    std::cout << "fov 0 start :" << s.fovs[0].window.start << std::endl;
-    std::cout << "fov 0 end :" << s.fovs[0].window.end << std::endl;
 
     for (size_t i = 0; i < 4; i++)
     {

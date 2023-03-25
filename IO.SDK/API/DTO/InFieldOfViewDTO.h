@@ -3,13 +3,11 @@
 
 namespace IO::SDK::API::DTO
 {
-    struct OccultationDTO
+    struct InFieldOfViewDTO
     {
-        int observerId{0};
-        int backBodyId{0};
-        int frontId{0};
-        const char* type;
-        const char* aberrationId;
+        int instrumentId{0};
+        int targetId{0};
+        const char* aberration;
         double initialStepSize{0.0};
         IO::SDK::API::DTO::WindowDTO windows[1000];
     };
