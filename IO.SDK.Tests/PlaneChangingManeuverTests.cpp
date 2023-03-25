@@ -20,7 +20,7 @@ using namespace std::chrono_literals;
 
 TEST(PlaneChangingManeuver, CanExecute)
 {
-    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
+    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
     std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams1 = std::make_unique<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth, 11480000.0, 0.5, 60.0 * IO::SDK::Constants::DEG_RAD, 10.0 * IO::SDK::Constants::DEG_RAD, 0.0, 0.0, IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::GetICRF());
     std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams2 = std::make_unique<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth, 11480000.0, 0.5, 45.0 * IO::SDK::Constants::DEG_RAD, 55.0 * IO::SDK::Constants::DEG_RAD, 0.0, 0.0, IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::GetICRF());
     IO::SDK::OrbitalParameters::StateOrientation attitude(IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::GetICRF());
@@ -183,7 +183,7 @@ TEST(PlaneChangingManeuver, CanExecute)
 TEST(PlaneChangingManeuver, ExecuteInsuffisantDeltaV)
 {
 
-    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
+    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
     std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams1 = std::make_unique<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth, 11480000.0, 0.0, 60.0 * IO::SDK::Constants::DEG_RAD, 10.0 * IO::SDK::Constants::DEG_RAD, 0.0, 0.0, IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::GetICRF());
     std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams2 = std::make_unique<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth, 11480000.0, 0.0, 45.0 * IO::SDK::Constants::DEG_RAD, 55.0 * IO::SDK::Constants::DEG_RAD, 0.0, 0.0, IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::GetICRF());
     IO::SDK::OrbitalParameters::StateOrientation attitude(IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::GetICRF());
@@ -219,7 +219,7 @@ TEST(PlaneChangingManeuver, ExecuteInsuffisantDeltaV)
 TEST(PlaneChangingManeuver, ExecuteDN)
 {
 
-    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
+    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
     std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams1 = std::make_unique<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth, 11480000.0, 0.0, 60.0 * IO::SDK::Constants::DEG_RAD, 10.0 * IO::SDK::Constants::DEG_RAD, 0.0, 0.0, IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::GetICRF());
     std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams2 = std::make_unique<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth, 11480000.0, 0.0, 45.0 * IO::SDK::Constants::DEG_RAD, 55.0 * IO::SDK::Constants::DEG_RAD, 0.0, 0.0, IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::GetICRF());
     IO::SDK::OrbitalParameters::StateOrientation attitude(IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::GetICRF());
@@ -278,7 +278,7 @@ TEST(PlaneChangingManeuver, ExecuteDN)
 TEST(PlaneChangingManeuver, ExecuteAN)
 {
 
-    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
+    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
     std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams1 = std::make_unique<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth, 11480000.0, 0.0, 60.0 * IO::SDK::Constants::DEG_RAD, 10.0 * IO::SDK::Constants::DEG_RAD, 0.0, 0.0, IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::GetICRF());
     std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams2 = std::make_unique<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth, 11480000.0, 0.0, 45.0 * IO::SDK::Constants::DEG_RAD, 55.0 * IO::SDK::Constants::DEG_RAD, 0.0, 0.0, IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::GetICRF());
     IO::SDK::OrbitalParameters::StateOrientation attitude(IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::GetICRF());
@@ -338,7 +338,7 @@ TEST(PlaneChangingManeuver, CheckOrbitalParametersToHigherInclination)
 {
     //=======================Configure universe topology======================================
     // auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10, "sun");
-    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
+    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
     // auto moon = std::make_shared<IO::SDK::Body::CelestialBody>(301, "moon", earth);
 
     //Define parking orbit
@@ -426,7 +426,7 @@ TEST(PlaneChangingManeuver, CheckOrbitalParametersToLowerInclination)
 {
     //=======================Configure universe topology======================================
     // auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10, "sun");
-    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
+    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
     // auto moon = std::make_shared<IO::SDK::Body::CelestialBody>(301, "moon", earth);
 
     //Define parking orbit

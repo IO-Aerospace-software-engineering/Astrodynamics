@@ -17,8 +17,8 @@ TEST(Scenarios, ReachOrbitByDay)
 {
 
 
-    auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10, "sun");
-    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth", sun);
+    auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10);
+    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, sun);
     auto ls = IO::SDK::Sites::LaunchSite(3, "S3",
                                                            IO::SDK::Coordinates::Geodetic(-81.0 * IO::SDK::Constants::DEG_RAD, 28.5 * IO::SDK::Constants::DEG_RAD, 0.0), earth);
     std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(

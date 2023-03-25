@@ -17,7 +17,7 @@ using namespace std::chrono_literals;
 
 TEST(ApsidalAlignmentManeuver, CanExecute)
 {
-    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
+    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
     std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams1 = std::make_unique<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth, 10000000.0, 0.333333, 0.0, 0.0, 0.0, 0.0, IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::GetICRF());
     std::shared_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams2 = std::make_shared<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth, 9000000.0, 0.5, 0.0, 0.0, 30.0 * IO::SDK::Constants::DEG_RAD, 0.0, IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::GetICRF());
 
@@ -60,7 +60,7 @@ TEST(ApsidalAlignmentManeuver, CanExecute)
 
 TEST(ApsidalAlignmentManeuver, ExecuteQ)
 {
-    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
+    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
     std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams1 = std::make_unique<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth, 10000000.0, 0.333333, 0.0, 0.0, 0.0, 0.0, IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::GetICRF());
     std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams2 = std::make_unique<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth, 9000000.0, 0.5, 0.0, 0.0, 30.0 * IO::SDK::Constants::DEG_RAD, 0.0, IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::GetICRF());
 
@@ -111,7 +111,7 @@ TEST(ApsidalAlignmentManeuver, ExecuteQ)
 
 TEST(ApsidalAlignmentManeuver, ExecuteP)
 {
-    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
+    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
     std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams1 = std::make_unique<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth, 10000000.0, 0.333333, 0.0, 0.0, 0.0, 0.0, IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::GetICRF());
     std::shared_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams2 = std::make_shared<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth, 9000000.0, 0.5, 0.0, 0.0, 30.0 * IO::SDK::Constants::DEG_RAD, 0.0, IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::GetICRF());
 
@@ -159,7 +159,7 @@ TEST(ApsidalAlignmentManeuver, ExecuteP)
 
 TEST(ApsidalAlignmentManeuver, CheckOrbitalParams)
 {
-    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
+    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
 
     IO::SDK::Time::TDB startEpoch("2021-06-02T00:00:00");
     IO::SDK::Time::TDB endEpoch("2021-06-03T00:00:00");

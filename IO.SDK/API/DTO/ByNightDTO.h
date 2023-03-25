@@ -2,8 +2,8 @@
 // Created by spacer on 3/25/23.
 //
 
-#ifndef IOSDK_BYDAYDTO_H
-#define IOSDK_BYDAYDTO_H
+#ifndef IOSDK_BYNIGHTDTO_H
+#define IOSDK_BYNIGHTDTO_H
 #include <WindowDTO.h>
 namespace IO::SDK::API::DTO
 {
@@ -14,4 +14,4 @@ namespace IO::SDK::API::DTO
         IO::SDK::API::DTO::WindowDTO windows[1000];
     };
 }
-#endif //IOSDK_BYDAYDTO_H
+#endif //IOSDK_BYNIGHTDTO_H

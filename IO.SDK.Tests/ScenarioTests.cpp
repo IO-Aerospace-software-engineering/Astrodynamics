@@ -11,8 +11,8 @@ TEST(Scenario, Initialize)
 {
     IO::SDK::Scenario sc("scenario1",
                          IO::SDK::Time::Window<IO::SDK::Time::UTC>(IO::SDK::Time::TDB("2021-06-02T00:00:00").ToUTC(), IO::SDK::Time::TDB("2021-06-03T00:00:00").ToUTC()));
-    auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10, "sun");
-    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth", sun);
+    auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10);
+    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, sun);
     auto ls = IO::SDK::Sites::LaunchSite(3, "S3",
                                          IO::SDK::Coordinates::Geodetic(-81.0 * IO::SDK::Constants::DEG_RAD, 28.5 * IO::SDK::Constants::DEG_RAD, 0.0),
                                          earth);
@@ -45,8 +45,8 @@ TEST(Scenario, Initialize)
 
 TEST(Scenario, AddDistanceConstraint)
 {
-    auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10, "sun");
-    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth", sun);
+    auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10);
+    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, sun);
     auto ls = IO::SDK::Sites::LaunchSite(3, "S3", IO::SDK::Coordinates::Geodetic(-81.0 * IO::SDK::Constants::DEG_RAD, 28.5 * IO::SDK::Constants::DEG_RAD, 0.0),
                                          earth);
     std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(
@@ -80,8 +80,8 @@ TEST(Scenario, AddDistanceConstraint)
 
 TEST(Scenario, AddOccultationConstraint)
 {
-    auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10, "sun");
-    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth", sun);
+    auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10);
+    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, sun);
     auto ls = IO::SDK::Sites::LaunchSite(3, "S3",
                                          IO::SDK::Coordinates::Geodetic(-81.0 * IO::SDK::Constants::DEG_RAD, 28.5 * IO::SDK::Constants::DEG_RAD, 0.0),
                                          earth);
@@ -116,8 +116,8 @@ TEST(Scenario, AddOccultationConstraint)
 
 TEST(Scenario, AddByDayConstraint)
 {
-    auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10, "sun");
-    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth", sun);
+    auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10);
+    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, sun);
     auto ls = IO::SDK::Sites::LaunchSite(3, "S3",
                                          IO::SDK::Coordinates::Geodetic(-81.0 * IO::SDK::Constants::DEG_RAD, 28.5 * IO::SDK::Constants::DEG_RAD, 0.0),
                                          earth);
@@ -150,8 +150,8 @@ TEST(Scenario, AddByDayConstraint)
 
 TEST(Scenario, AddByNightConstraint)
 {
-    auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10, "sun");
-    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth", sun);
+    auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10);
+    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, sun);
     auto ls = IO::SDK::Sites::LaunchSite(3, "S3",
                                          IO::SDK::Coordinates::Geodetic(-81.0 * IO::SDK::Constants::DEG_RAD, 28.5 * IO::SDK::Constants::DEG_RAD, 0.0),
                                          earth);
@@ -184,8 +184,8 @@ TEST(Scenario, AddByNightConstraint)
 
 TEST(Scenario, AddBodyVisibilityConstraint)
 {
-    auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10, "sun");
-    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth", sun);
+    auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10);
+    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, sun);
     auto ls = IO::SDK::Sites::LaunchSite(3, "S3",
                                          IO::SDK::Coordinates::Geodetic(-81.0 * IO::SDK::Constants::DEG_RAD, 28.5 * IO::SDK::Constants::DEG_RAD, 0.0),
                                          earth);
@@ -218,10 +218,10 @@ TEST(Scenario, AddBodyVisibilityConstraint)
 
 TEST(Scenario, FindDistanceConstraint)
 {
-    auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10, "sun");
+    auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10);
     IO::SDK::Time::TDB epoch("2021-Jan-01 00:00:00.0000 TDB");
-    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth", sun);
-    auto moon = std::make_shared<IO::SDK::Body::CelestialBody>(301, "moon", earth);
+    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, sun);
+    auto moon = std::make_shared<IO::SDK::Body::CelestialBody>(301, earth);
 
     auto searchWindow = IO::SDK::Time::Window<IO::SDK::Time::UTC>(IO::SDK::Time::TDB("2007 JAN 1").ToUTC(), IO::SDK::Time::TDB("2007 APR 1").ToUTC());
     IO::SDK::Scenario scenario("scenarioDistance", searchWindow);
@@ -249,9 +249,9 @@ TEST(Scenario, FindBodyVisibilityConstraint)
     IO::SDK::Time::Window<IO::SDK::Time::UTC> window(IO::SDK::Time::UTC("2023-02-19T00:00:00"),
                                                      IO::SDK::Time::UTC("2023-02-20T00:00:00"));
     IO::SDK::Scenario scenario("scenarioDistance", window);
-    auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10, "sun");
-    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth", sun);
-    auto moon = std::make_shared<IO::SDK::Body::CelestialBody>(301, "moon", earth);
+    auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10);
+    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, sun);
+    auto moon = std::make_shared<IO::SDK::Body::CelestialBody>(301, earth);
 
     //Position virtual station on same location as DSS-13 at local noon
     IO::SDK::Sites::Site s{399113, "FK_DSS-13",
@@ -279,8 +279,8 @@ TEST(Scenario, FindDayWindowsConstraint)
 {
     IO::SDK::Scenario sc("scenario1",
                          IO::SDK::Time::Window<IO::SDK::Time::UTC>(IO::SDK::Time::TDB("2021-05-17 12:00:00 TDB").ToUTC(), IO::SDK::Time::TDB("2021-05-18 12:00:00 TDB").ToUTC()));
-    auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10, "sun");
-    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth", sun);
+    auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10);
+    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, sun);
     IO::SDK::Sites::Site s{333002, "S2", IO::SDK::Coordinates::Geodetic(2.2 * IO::SDK::Constants::DEG_RAD, 48.0 * IO::SDK::Constants::DEG_RAD, 0.0), earth};
 
     sc.AddCelestialBody(*sun);
@@ -305,8 +305,8 @@ TEST(Scenario, FindNightWindowsConstraint)
 {
     IO::SDK::Scenario sc("scenario1",
                          IO::SDK::Time::Window<IO::SDK::Time::UTC>(IO::SDK::Time::TDB("2021-05-17 12:00:00 TDB").ToUTC(), IO::SDK::Time::TDB("2021-05-18 12:00:00 TDB").ToUTC()));
-    auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10, "sun");
-    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth", sun);
+    auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10);
+    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, sun);
     IO::SDK::Sites::Site s{333002, "S2", IO::SDK::Coordinates::Geodetic(2.2 * IO::SDK::Constants::DEG_RAD, 48.0 * IO::SDK::Constants::DEG_RAD, 0.0), earth};
 
     sc.AddCelestialBody(*sun);
@@ -329,9 +329,9 @@ TEST(Scenario, FindOccultationConstraint)
 {
     IO::SDK::Time::Window<IO::SDK::Time::UTC> searchWindow(IO::SDK::Time::TDB("2001 DEC 13").ToUTC(), IO::SDK::Time::TDB("2001 DEC 15").ToUTC());
     IO::SDK::Scenario scenario("scenario", searchWindow);
-    auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10, "sun");
-    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth", sun);
-    auto moon = std::make_shared<IO::SDK::Body::CelestialBody>(301, "moon", earth);
+    auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10);
+    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, sun);
+    auto moon = std::make_shared<IO::SDK::Body::CelestialBody>(301, earth);
 
     scenario.AddCelestialBody(*sun);
     scenario.AddCelestialBody(*earth);
@@ -355,7 +355,7 @@ TEST(Scenario, FindInFieldOfViewConstraint)
     IO::SDK::Scenario scenario("scenario1",
                                IO::SDK::Time::Window<IO::SDK::Time::UTC>(IO::SDK::Time::TDB("2021-05-17 12:00:00 TDB").ToUTC(),
                                                                          IO::SDK::Time::TDB("2021-05-18 12:00:00 TDB").ToUTC()));
-    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
+    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
     double a = 6800000.0;
     auto v = std::sqrt(earth->GetMu() / a);
     IO::SDK::Time::TDB epoch("2021-05-17 12:00:00 TDB");
@@ -407,8 +407,8 @@ TEST(Scenario, FindLaunchWindowConstraint)
     IO::SDK::Scenario scenario("scenario1",
                                IO::SDK::Time::Window<IO::SDK::Time::UTC>(IO::SDK::Time::TDB("2021-06-02T00:00:00").ToUTC(),
                                                                          IO::SDK::Time::TDB("2021-06-03T00:00:00").ToUTC()));
-    auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10, "sun");
-    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth", sun);
+    auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10);
+    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, sun);
     auto ls = IO::SDK::Sites::LaunchSite(1, "S1",
                                          IO::SDK::Coordinates::Geodetic(-104 * IO::SDK::Constants::DEG_RAD, -41.0 * IO::SDK::Constants::DEG_RAD, 0.0),
                                          earth);

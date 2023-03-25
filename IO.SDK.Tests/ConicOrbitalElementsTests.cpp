@@ -13,7 +13,7 @@
 using namespace std::chrono_literals;
 TEST(ConicOrbitalElements, Initialization)
 {
-	auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
+	auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
 	IO::SDK::OrbitalParameters::ConicOrbitalElements conic(earth, 7000000.0, 0.5, 2.0, 3.0, 1.0, 1.57, IO::SDK::Time::TDB(100.0s), IO::SDK::Frames::InertialFrames::GetICRF());
 
 	ASSERT_EQ(earth.get(), conic.GetCenterOfMotion().get());
@@ -46,7 +46,7 @@ TEST(ConicOrbitalElements, Initialization)
 
 TEST(ConicOrbitalElements, GetMeanAnomaly)
 {
-	auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
+	auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
 	IO::SDK::OrbitalParameters::ConicOrbitalElements conic(earth, 7136635.417, 0.0, 0.0, 0.0, 0.0, 0.0, IO::SDK::Time::TDB(100.0s), IO::SDK::Frames::InertialFrames::GetICRF());
 
 	//180deg
@@ -69,7 +69,7 @@ TEST(ConicOrbitalElements, GetMeanAnomaly)
 
 TEST(ConicOrbitalElements, GetEccentricAnomaly)
 {
-	auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
+	auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
 	IO::SDK::OrbitalParameters::ConicOrbitalElements conic(earth, 7000000.0, 0.5, 0.0, 0.0, 0.0, 0.0, IO::SDK::Time::TDB(100.0s), IO::SDK::Frames::InertialFrames::GetICRF());
 
 	double eccentricAnomaly = conic.GetEccentricAnomaly(IO::SDK::Time::TDB(374.7589113s));
@@ -84,7 +84,7 @@ TEST(ConicOrbitalElements, GetEccentricAnomaly)
 
 TEST(ConicOrbitalElements, GetTrueAnomaly)
 {
-	auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
+	auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
 	IO::SDK::OrbitalParameters::ConicOrbitalElements conic(earth, 7000000.0, 0.5, 2.0, 3.0, 4.0, 0.0, IO::SDK::Time::TDB(100.0s), IO::SDK::Frames::InertialFrames::GetICRF());
 
 	double trueAnomaly = conic.GetTrueAnomaly(IO::SDK::Time::TDB(374.7589113s));
@@ -99,7 +99,7 @@ TEST(ConicOrbitalElements, GetTrueAnomaly)
 
 TEST(ConicOrbitalElements, GetTimeToMeanAnomaly)
 {
-	auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
+	auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
 	IO::SDK::OrbitalParameters::ConicOrbitalElements conic(earth, 7000000.0, 0.5, 2.0, 3.0, 4.0, 0.0, IO::SDK::Time::TDB(100.0s), IO::SDK::Frames::InertialFrames::GetICRF());
 
 	IO::SDK::Time::TDB epoch = conic.GetTimeToMeanAnomaly(IO::SDK::Constants::PI2); // to 90 �
@@ -111,7 +111,7 @@ TEST(ConicOrbitalElements, GetTimeToMeanAnomaly)
 
 TEST(ConicOrbitalElements, GetTimeToTrueAnomaly)
 {
-	auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
+	auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
 	IO::SDK::OrbitalParameters::ConicOrbitalElements conic(earth, 7000000.0, 0.5, 2.0, 3.0, 4.0, 0.0, IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::GetICRF());
 
 	IO::SDK::Time::TDB epoch = conic.GetTimeToTrueAnomaly(IO::SDK::Constants::PI); // to 180 d
@@ -130,7 +130,7 @@ TEST(ConicOrbitalElements, GetTimeToTrueAnomaly)
 TEST(ConicOrbitalElements, GetStateVector)
 {
 	//ISS
-	auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth"); //GEOPHYSICAL PROPERTIES provided by JPL
+	auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399); //GEOPHYSICAL PROPERTIES provided by JPL
 	double a = 6.800803544958167E+06;
 	IO::SDK::Time::TimeSpan ts(std::chrono::duration<double>(IO::SDK::Constants::_2PI * std::sqrt((a * a * a) / earth->GetMu())));
 
@@ -160,7 +160,7 @@ TEST(ConicOrbitalElements, GetStateVector)
 
 TEST(ConicOrbitalElements, IsElliptical)
 {
-	auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth"); //GEOPHYSICAL PROPERTIES provided by JPL
+	auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399); //GEOPHYSICAL PROPERTIES provided by JPL
 	IO::SDK::Time::TimeSpan ts(6000.0s);
 	IO::SDK::OrbitalParameters::ConicOrbitalElements conic(earth, 1.0, 0.5, 2.0, 3.0, 4.0, 0.0, IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::GetICRF());
 
@@ -169,7 +169,7 @@ TEST(ConicOrbitalElements, IsElliptical)
 
 TEST(ConicOrbitalElements, IsHyperbolic)
 {
-	auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth"); //GEOPHYSICAL PROPERTIES provided by JPL
+	auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399); //GEOPHYSICAL PROPERTIES provided by JPL
 	IO::SDK::Time::TimeSpan ts(0.0s);
 	IO::SDK::OrbitalParameters::ConicOrbitalElements conic(earth, 1.0, 1.5, 2.0, 3.0, 4.0, 0.0, IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::GetICRF());
 
@@ -178,7 +178,7 @@ TEST(ConicOrbitalElements, IsHyperbolic)
 
 TEST(ConicOrbitalElements, IsParabolic)
 {
-	auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth"); //GEOPHYSICAL PROPERTIES provided by JPL
+	auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399); //GEOPHYSICAL PROPERTIES provided by JPL
 	IO::SDK::Time::TimeSpan ts(0.0s);
 	IO::SDK::OrbitalParameters::ConicOrbitalElements conic(earth, 1.0, 1.0, 2.0, 3.0, 4.0, 0.0, IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::GetICRF());
 
@@ -187,7 +187,7 @@ TEST(ConicOrbitalElements, IsParabolic)
 
 TEST(ConicOrbitalElements, GetMeanMotion)
 {
-	auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth"); //GEOPHYSICAL PROPERTIES provided by JPL
+	auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399); //GEOPHYSICAL PROPERTIES provided by JPL
 	double elts[11]{6794349.7510811854, 1.353139738203394E-03, 5.171921958517460E+01, 3.257605322534260E+01, 1.062574316262159E+02, 4.541224977546975E+01, 663724800.00001490, 3.986004418e14, 4.552280986634524E+01, 6.800803544958167E+06, 5581.5051305524184};
 	IO::SDK::OrbitalParameters::ConicOrbitalElements conicFromArray(earth, elts, IO::SDK::Frames::InertialFrames::GetICRF());
 	ASSERT_DOUBLE_EQ(0.0011257152255914383, conicFromArray.GetMeanMotion());
@@ -199,7 +199,7 @@ TEST(ConicOrbitalElements, GetMeanMotion)
 
 TEST(ConicOrbitalElements, GetSpecificOrbitalEnergy)
 {
-	auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth"); //GEOPHYSICAL PROPERTIES provided by JPL
+	auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399); //GEOPHYSICAL PROPERTIES provided by JPL
 	double elts[11]{6794349.7510811854, 1.353139738203394E-03, 5.171921958517460E+01, 3.257605322534260E+01, 1.062574316262159E+02, 4.541224977546975E+01, 663724800.00001490, 3.986004418e14, 4.552280986634524E+01, 6.800803544958167E+06, 5581.5051305524184};
 	IO::SDK::OrbitalParameters::ConicOrbitalElements conicFromArray(earth, elts, IO::SDK::Frames::InertialFrames::GetICRF());
 
@@ -208,7 +208,7 @@ TEST(ConicOrbitalElements, GetSpecificOrbitalEnergy)
 
 TEST(ConicOrbitalElements, GetSpecificAngularMomentum)
 {
-	auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth"); //GEOPHYSICAL PROPERTIES provided by JPL
+	auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399); //GEOPHYSICAL PROPERTIES provided by JPL
 	double elts[11]{6794349.7510811854, 1.353139738203394E-03, 5.171921958517460E+01, 3.257605322534260E+01, 1.062574316262159E+02, 4.541224977546975E+01, 663724800.00001490, 3.986004418e14, 4.552280986634524E+01, 6.800803544958167E+06, 5581.5051305524184};
 	IO::SDK::OrbitalParameters::ConicOrbitalElements conicFromArray(earth, elts, IO::SDK::Frames::InertialFrames::GetICRF());
 
@@ -217,9 +217,9 @@ TEST(ConicOrbitalElements, GetSpecificAngularMomentum)
 
 TEST(ConicOrbitalElements, GetRADec)
 {
-	auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10, "sun");
+	auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10);
 	// IO::SDK::Time::TDB epoch("2021-Jan-01 00:00:00.0000 TDB");
-	auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth", sun);
+	auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, sun);
 
 	auto radec = earth->GetOrbitalParametersAtEpoch()->GetRADec();
 

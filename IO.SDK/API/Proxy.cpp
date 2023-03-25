@@ -1,11 +1,6 @@
 #include <Proxy.h>
 #include <iostream>
-#include <memory>
-#include <CelestialBody.h>
-#include <TDB.h>
 #include <chrono>
-#include <InertialFrames.h>
-#include <StateVectorDTO.h>
 
 using namespace std::chrono_literals;
 
@@ -27,11 +22,6 @@ IO::SDK::API::DTO::ScenarioResponseDTO Propagate(IO::SDK::API::DTO::ScenarioRequ
 
     std::cout << "fov 0 target id :" << s.fovs[0].targetId << std::endl;
     std::cout << "fov 0 instrument id :" << s.fovs[0].instrumentId << std::endl;
-
-    for (size_t i = 0; i < 4; i++)
-    {
-        std::cout << "Celestial body :" << s.involvedCelestialBodies[i] << std::endl;
-    }
 
     IO::SDK::API::DTO::ScenarioResponseDTO r;
 

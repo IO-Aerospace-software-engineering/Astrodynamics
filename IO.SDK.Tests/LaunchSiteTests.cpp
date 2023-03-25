@@ -11,8 +11,8 @@
 
 TEST(LaunchSite, AddAzimuth)
 {
-    auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10, "sun");
-    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth", sun);
+    auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10);
+    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, sun);
     IO::SDK::Sites::LaunchSite ls{1, "S1", IO::SDK::Coordinates::Geodetic(0.0, 45.0 * IO::SDK::Constants::DEG_RAD, 0.0), earth};
     auto az = IO::SDK::Coordinates::AzimuthRange(1.0, 2.0);
     ls.AddAzimuthLaunchRange(az);
@@ -23,8 +23,8 @@ TEST(LaunchSite, AddAzimuth)
 
 TEST(LaunchSite, ClearAzimuth)
 {
-    auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10, "sun");
-    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth", sun);
+    auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10);
+    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, sun);
     IO::SDK::Sites::LaunchSite ls{1, "S1", IO::SDK::Coordinates::Geodetic(0.0, 45.0 * IO::SDK::Constants::DEG_RAD, 0.0), earth};
     auto az = IO::SDK::Coordinates::AzimuthRange(1.0, 2.0);
     ls.AddAzimuthLaunchRange(az);
@@ -37,8 +37,8 @@ TEST(LaunchSite, ClearAzimuth)
 
 TEST(LaunchSite, IsAzimuthLaunchAllowed)
 {
-    auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10, "sun");
-    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth", sun);
+    auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10);
+    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, sun);
     IO::SDK::Sites::LaunchSite ls{1, "S1", IO::SDK::Coordinates::Geodetic(0.0, 45.0 * IO::SDK::Constants::DEG_RAD, 0.0), earth};
     auto az = IO::SDK::Coordinates::AzimuthRange(1.0, 2.0);
     ls.AddAzimuthLaunchRange(az);

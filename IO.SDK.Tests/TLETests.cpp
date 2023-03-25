@@ -10,14 +10,14 @@
 using namespace std::chrono_literals;
 TEST(TLE, Initialization)
 {
-	const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
+	const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
 	std::string lines[3]{"ISS", "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054", "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703"};
 	IO::SDK::OrbitalParameters::TLE tle(earth, lines);
 }
 
 TEST(TLE, GetSatelliteName)
 {
-	const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
+	const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
 	std::string lines[3]{"ISS", "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054", "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703"};
 	IO::SDK::OrbitalParameters::TLE tle(earth, lines);
 
@@ -26,7 +26,7 @@ TEST(TLE, GetSatelliteName)
 
 TEST(TLE, GetBalisticCoefficient)
 {
-	const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
+	const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
 	std::string lines[3]{"ISS", "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054", "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703"};
 	IO::SDK::OrbitalParameters::TLE tle(earth, lines);
 
@@ -35,7 +35,7 @@ TEST(TLE, GetBalisticCoefficient)
 
 TEST(TLE, GetSecondDerivativeOfMeanMotion)
 {
-	const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
+	const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
 	std::string lines[3]{"ISS", "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054", "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703"};
 	IO::SDK::OrbitalParameters::TLE tle(earth, lines);
 
@@ -44,7 +44,7 @@ TEST(TLE, GetSecondDerivativeOfMeanMotion)
 
 TEST(TLE, GetDragTerm)
 {
-	const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
+	const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
 	std::string lines[3]{"ISS", "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054", "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703"};
 	IO::SDK::OrbitalParameters::TLE tle(earth, lines);
 
@@ -53,7 +53,7 @@ TEST(TLE, GetDragTerm)
 
 TEST(TLE, GetPeriod)
 {
-	const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
+	const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
 	std::string lines[3]{"ISS", "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054", "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703"};
 	IO::SDK::OrbitalParameters::TLE tle(earth, lines);
 
@@ -64,7 +64,7 @@ TEST(TLE, GetPeriod)
 
 TEST(TLE, GetCenterOfMotion)
 {
-	const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
+	const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
 	std::string lines[3]{"ISS", "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054", "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703"};
 	IO::SDK::OrbitalParameters::TLE tle(earth, lines);
 
@@ -75,7 +75,7 @@ TEST(TLE, GetCenterOfMotion)
 
 TEST(TLE, GetEccentricity)
 {
-	const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
+	const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
 	std::string lines[3]{"ISS", "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054", "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703"};
 	IO::SDK::OrbitalParameters::TLE tle(earth, lines);
 
@@ -86,7 +86,7 @@ TEST(TLE, GetEccentricity)
 
 TEST(TLE, GetEpoch)
 {
-	const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
+	const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
 	std::string lines[3]{"ISS", "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054", "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703"};
 	IO::SDK::OrbitalParameters::TLE tle(earth, lines);
 
@@ -97,7 +97,7 @@ TEST(TLE, GetEpoch)
 
 TEST(TLE, GetInclination)
 {
-	const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
+	const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
 	std::string lines[3]{"ISS", "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054", "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703"};
 	IO::SDK::OrbitalParameters::TLE tle(earth, lines);
 
@@ -108,7 +108,7 @@ TEST(TLE, GetInclination)
 
 TEST(TLE, GetMeanAnomaly)
 {
-	const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
+	const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
 	std::string lines[3]{"ISS", "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054", "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703"};
 	IO::SDK::OrbitalParameters::TLE tle(earth, lines);
 
@@ -119,7 +119,7 @@ TEST(TLE, GetMeanAnomaly)
 
 TEST(TLE, GetMeanMotion)
 {
-	const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
+	const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
 	std::string lines[3]{"ISS", "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054", "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703"};
 	IO::SDK::OrbitalParameters::TLE tle(earth, lines);
 
@@ -130,7 +130,7 @@ TEST(TLE, GetMeanMotion)
 
 TEST(TLE, GetPeriapsisArgument)
 {
-	const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
+	const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
 	std::string lines[3]{"ISS", "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054", "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703"};
 	IO::SDK::OrbitalParameters::TLE tle(earth, lines);
 
@@ -141,7 +141,7 @@ TEST(TLE, GetPeriapsisArgument)
 
 TEST(TLE, GetRightAscendingNodeLongitude)
 {
-	const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
+	const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
 	std::string lines[3]{"ISS", "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054", "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703"};
 	IO::SDK::OrbitalParameters::TLE tle(earth, lines);
 
@@ -152,7 +152,7 @@ TEST(TLE, GetRightAscendingNodeLongitude)
 
 TEST(TLE, GetSemiMajorAxis)
 {
-	const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
+	const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
 	std::string lines[3]{"ISS", "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054", "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703"};
 	IO::SDK::OrbitalParameters::TLE tle(earth, lines);
 
@@ -163,7 +163,7 @@ TEST(TLE, GetSemiMajorAxis)
 
 TEST(TLE, GetTimeToMeanAnomaly)
 {
-	const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
+	const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
 	std::string lines[3]{"ISS", "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054", "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703"};
 	IO::SDK::OrbitalParameters::TLE tle(earth, lines);
 
@@ -174,7 +174,7 @@ TEST(TLE, GetTimeToMeanAnomaly)
 
 TEST(TLE, GetTimeToTrueAnomaly)
 {
-	const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
+	const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
 	std::string lines[3]{"ISS", "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054", "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703"};
 	IO::SDK::OrbitalParameters::TLE tle(earth, lines);
 
@@ -185,7 +185,7 @@ TEST(TLE, GetTimeToTrueAnomaly)
 
 TEST(TLE, GetTrueAnomaly)
 {
-	const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
+	const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
 	std::string lines[3]{"ISS", "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054", "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703"};
 	IO::SDK::OrbitalParameters::TLE tle(earth, lines);
 
@@ -196,7 +196,7 @@ TEST(TLE, GetTrueAnomaly)
 
 TEST(TLE, GetTrueAnomalyAtEpoch)
 {
-	const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
+	const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
 	std::string lines[3]{"ISS", "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054", "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703"};
 	IO::SDK::OrbitalParameters::TLE tle(earth, lines);
 
@@ -207,7 +207,7 @@ TEST(TLE, GetTrueAnomalyAtEpoch)
 
 TEST(TLE, GetMeanAnomalyAtEpoch)
 {
-	const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
+	const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
 	std::string lines[3]{"ISS", "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054", "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703"};
 	IO::SDK::OrbitalParameters::TLE tle(earth, lines);
 
@@ -218,7 +218,7 @@ TEST(TLE, GetMeanAnomalyAtEpoch)
 
 TEST(TLE, TrajectoryType)
 {
-	const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
+	const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
 	std::string lines[3]{"ISS", "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054", "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703"};
 	IO::SDK::OrbitalParameters::TLE tle(earth, lines);
 
@@ -229,7 +229,7 @@ TEST(TLE, TrajectoryType)
 
 TEST(TLE, GetStateVectorAtEpoch)
 {
-	const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
+	const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
 	std::string lines[3]{"ISS", "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054", "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703"};
 	IO::SDK::OrbitalParameters::TLE tle(earth, lines);
 	IO::SDK::Time::TDB epoch("2021-01-20T18:50:13.663106"); //utc

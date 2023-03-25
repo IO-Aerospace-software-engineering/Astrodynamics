@@ -15,8 +15,8 @@
 
 TEST(Launch, InertialAscendingAzimuth)
 {
-    auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10, "sun");
-    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth", sun);
+    auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10);
+    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, sun);
     auto ls = IO::SDK::Sites::LaunchSite(1, "S1",
                                                            IO::SDK::Coordinates::Geodetic(-81.0 * IO::SDK::Constants::DEG_RAD, 28.5 * IO::SDK::Constants::DEG_RAD, 0.0), earth);
     std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(
@@ -33,8 +33,8 @@ TEST(Launch, InertialAscendingAzimuth)
 
 TEST(Launch, InertialDescendingAzimuth)
 {
-    auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10, "sun");
-    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth", sun);
+    auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10);
+    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, sun);
     auto ls = IO::SDK::Sites::LaunchSite(1, "S1",
                                                            IO::SDK::Coordinates::Geodetic(-81.0 * IO::SDK::Constants::DEG_RAD, 28.5 * IO::SDK::Constants::DEG_RAD, 0.0),
                                                            earth);
@@ -52,8 +52,8 @@ TEST(Launch, InertialDescendingAzimuth)
 
 TEST(Launch, InertialInsertionVelocity)
 {
-    auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10, "sun");
-    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth", sun);
+    auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10);
+    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, sun);
     auto ls = IO::SDK::Sites::LaunchSite(1, "S1",
                                                            IO::SDK::Coordinates::Geodetic(-81.0 * IO::SDK::Constants::DEG_RAD, 28.5 * IO::SDK::Constants::DEG_RAD, 0.0),
                                                            earth);
@@ -71,8 +71,8 @@ TEST(Launch, InertialInsertionVelocity)
 
 TEST(Launch, NonInertialAscendingAzimuth)
 {
-    auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10, "sun");
-    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth", sun);
+    auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10);
+    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, sun);
     auto ls = IO::SDK::Sites::LaunchSite(1, "S1",
                                                            IO::SDK::Coordinates::Geodetic(-81.0 * IO::SDK::Constants::DEG_RAD, 28.5 * IO::SDK::Constants::DEG_RAD, 0.0),
                                                            earth);
@@ -90,8 +90,8 @@ TEST(Launch, NonInertialAscendingAzimuth)
 
 TEST(Launch, NonInertialDescendingAzimuth)
 {
-    auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10, "sun");
-    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth", sun);
+    auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10);
+    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, sun);
     auto ls = IO::SDK::Sites::LaunchSite(1, "S1",
                                                            IO::SDK::Coordinates::Geodetic(-81.0 * IO::SDK::Constants::DEG_RAD, 28.5 * IO::SDK::Constants::DEG_RAD, 0.0),
                                                            earth);
@@ -109,8 +109,8 @@ TEST(Launch, NonInertialDescendingAzimuth)
 
 TEST(Launch, NonInertialInsertionVelocity)
 {
-    auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10, "sun");
-    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth", sun);
+    auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10);
+    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, sun);
     auto ls = IO::SDK::Sites::LaunchSite(1, "S1",
                                                            IO::SDK::Coordinates::Geodetic(-81.0 * IO::SDK::Constants::DEG_RAD, 28.5 * IO::SDK::Constants::DEG_RAD, 0.0),
                                                            earth);
@@ -128,8 +128,8 @@ TEST(Launch, NonInertialInsertionVelocity)
 
 TEST(Launch, RetrogradeNonInertialAscendingAzimuth)
 {
-    auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10, "sun");
-    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth", sun);
+    auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10);
+    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, sun);
     auto ls = IO::SDK::Sites::LaunchSite(1, "S1",
                                                            IO::SDK::Coordinates::Geodetic(-81.0 * IO::SDK::Constants::DEG_RAD, 28.5 * IO::SDK::Constants::DEG_RAD, 0.0),
                                                            earth);
@@ -147,8 +147,8 @@ TEST(Launch, RetrogradeNonInertialAscendingAzimuth)
 
 TEST(Launch, RetrogradeInertialAscendingAzimuth)
 {
-    auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10, "sun");
-    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth", sun);
+    auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10);
+    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, sun);
     auto ls = IO::SDK::Sites::LaunchSite(1,"S1",
                                                            IO::SDK::Coordinates::Geodetic(-81.0 * IO::SDK::Constants::DEG_RAD, 28.5 * IO::SDK::Constants::DEG_RAD, 0.0),
                                                            earth);
@@ -166,8 +166,8 @@ TEST(Launch, RetrogradeInertialAscendingAzimuth)
 
 TEST(Launch, RetrogradeNonInertialInsertionVelocity)
 {
-    auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10, "sun");
-    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth", sun);
+    auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10);
+    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, sun);
     auto ls = IO::SDK::Sites::LaunchSite(1,"S1",
                                                            IO::SDK::Coordinates::Geodetic(-81.0 * IO::SDK::Constants::DEG_RAD, 28.5 * IO::SDK::Constants::DEG_RAD, 0.0),
                                                            earth);
@@ -185,8 +185,8 @@ TEST(Launch, RetrogradeNonInertialInsertionVelocity)
 
 TEST(Launch, RetrogradeInertialInsertionVelocity)
 {
-    auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10, "sun");
-    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth", sun);
+    auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10);
+    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, sun);
     auto ls = IO::SDK::Sites::LaunchSite(1, "S1",
                                                            IO::SDK::Coordinates::Geodetic(-81.0 * IO::SDK::Constants::DEG_RAD, 28.5 * IO::SDK::Constants::DEG_RAD, 0.0),
                                                            earth);
@@ -204,8 +204,8 @@ TEST(Launch, RetrogradeInertialInsertionVelocity)
 
 TEST(Launch, GetLaunchWindows)
 {
-    auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10, "sun");
-    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth", sun);
+    auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10);
+    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, sun);
     auto ls = IO::SDK::Sites::LaunchSite(1, "S1",
                                                            IO::SDK::Coordinates::Geodetic(-81.0 * IO::SDK::Constants::DEG_RAD, 28.5 * IO::SDK::Constants::DEG_RAD, 0.0),
                                                            earth);
@@ -244,8 +244,8 @@ TEST(Launch, GetLaunchWindows)
 
 TEST(Launch, GetLaunchWindowsByDay)
 {
-    auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10, "sun");
-    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth", sun);
+    auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10);
+    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, sun);
     auto ls = IO::SDK::Sites::LaunchSite(3, "S3",
                                                            IO::SDK::Coordinates::Geodetic(-81.0 * IO::SDK::Constants::DEG_RAD, 28.5 * IO::SDK::Constants::DEG_RAD, 0.0),
                                                            earth);
@@ -276,8 +276,8 @@ TEST(Launch, GetLaunchWindowsByDay)
 
 TEST(Launch, GetSouthLaunchSiteLaunchWindowsByDay)
 {
-    auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10, "sun");
-    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth", sun);
+    auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10);
+    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, sun);
     auto ls = IO::SDK::Sites::LaunchSite(1, "S1",
                                                            IO::SDK::Coordinates::Geodetic(-104 * IO::SDK::Constants::DEG_RAD, -41.0 * IO::SDK::Constants::DEG_RAD, 0.0),
                                                            earth);
@@ -308,8 +308,8 @@ TEST(Launch, GetSouthLaunchSiteLaunchWindowsByDay)
 
 TEST(Launch, GetSouthLaunchSiteLaunchWindows)
 {
-    auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10, "sun");
-    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth", sun);
+    auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10);
+    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, sun);
     auto ls = IO::SDK::Sites::LaunchSite(1, "S1", IO::SDK::Coordinates::Geodetic(-104.0 * IO::SDK::Constants::DEG_RAD, -41.0 * IO::SDK::Constants::DEG_RAD, 0.0),
                                                            earth);
     std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(

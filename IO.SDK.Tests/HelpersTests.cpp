@@ -4,7 +4,7 @@
 
 TEST(Helpers, TypeOf)
 {
-    IO::SDK::Body::CelestialBody cb(301, "moon");
+    IO::SDK::Body::CelestialBody cb(301);
     auto res = IO::SDK::Helpers::IsInstanceOf<IO::SDK::Body::CelestialBody>(&cb);
     ASSERT_TRUE(res);
 

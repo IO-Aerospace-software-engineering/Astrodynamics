@@ -20,14 +20,31 @@
 
 using namespace std::chrono_literals;
 
-IO::SDK::Body::CelestialBody::CelestialBody(const int id, const std::string &name, std::shared_ptr<IO::SDK::Body::CelestialBody> &centerOfMotion) : IO::SDK::Body::Body(id, name, ReadGM(id) / IO::SDK::Constants::G, centerOfMotion),m_BodyFixedFrame{"IAU_" + name}
+IO::SDK::Body::CelestialBody::CelestialBody(const int id, std::shared_ptr<IO::SDK::Body::CelestialBody> &centerOfMotion) : IO::SDK::Body::Body(id, "",
+                                                                                                                                               ReadGM(id) /
+                                                                                                                                               IO::SDK::Constants::G,
+                                                                                                                                               centerOfMotion),
+                                                                                                                           m_BodyFixedFrame{""}
 {
-    const_cast<double &>(m_sphereOfInfluence) = IO::SDK::Body::SphereOfInfluence(m_orbitalParametersAtEpoch->GetSemiMajorAxis(), m_orbitalParametersAtEpoch->GetCenterOfMotion()->GetMu(), m_mu);
-    const_cast<double &>(m_hillSphere) = IO::SDK::Body::HillSphere(m_orbitalParametersAtEpoch->GetSemiMajorAxis(), m_orbitalParametersAtEpoch->GetEccentricity(), m_orbitalParametersAtEpoch->GetCenterOfMotion()->GetMu(), m_mu);
+    const_cast<double &>(m_sphereOfInfluence) = IO::SDK::Body::SphereOfInfluence(m_orbitalParametersAtEpoch->GetSemiMajorAxis(),
+                                                                                 m_orbitalParametersAtEpoch->GetCenterOfMotion()->GetMu(), m_mu);
+    const_cast<double &>(m_hillSphere) = IO::SDK::Body::HillSphere(m_orbitalParametersAtEpoch->GetSemiMajorAxis(), m_orbitalParametersAtEpoch->GetEccentricity(),
+                                                                   m_orbitalParametersAtEpoch->GetCenterOfMotion()->GetMu(), m_mu);
+    SpiceBoolean found;
+    SpiceChar name[32];
+    bodc2n_c(id, 32, name, &found);
+    const_cast<std::string &>(m_name) = name;
+    const_cast<IO::SDK::Frames::BodyFixedFrames &>(m_BodyFixedFrame) = IO::SDK::Frames::BodyFixedFrames("IAU_" + std::string(name));
 }
 
-IO::SDK::Body::CelestialBody::CelestialBody(const int id, const std::string &name) : IO::SDK::Body::Body(id, name, ReadGM(id) / IO::SDK::Constants::G),m_BodyFixedFrame{"IAU_" + name}
+IO::SDK::Body::CelestialBody::CelestialBody(const int id) : IO::SDK::Body::Body(id, "", ReadGM(id) / IO::SDK::Constants::G),
+                                                            m_BodyFixedFrame{""}
 {
+    SpiceBoolean found;
+    SpiceChar name[32];
+    bodc2n_c(id, 32, name, &found);
+    const_cast<std::string &>(m_name) = name;
+    const_cast<IO::SDK::Frames::BodyFixedFrames &>(m_BodyFixedFrame) = IO::SDK::Frames::BodyFixedFrames("IAU_" + std::string(name));
     const_cast<double &>(m_sphereOfInfluence) = std::numeric_limits<double>::infinity();
     const_cast<double &>(m_hillSphere) = std::numeric_limits<double>::infinity();
 }
@@ -67,9 +84,10 @@ IO::SDK::OrbitalParameters::StateVector IO::SDK::Body::CelestialBody::GetRelativ
         return targetStateVector;
     }
 
-    auto sv = ReadEphemeris( targetStateVector.GetFrame(), IO::SDK::AberrationsEnum::None, targetStateVector.GetEpoch(),*targetStateVector.GetCenterOfMotion());
+    auto sv = ReadEphemeris(targetStateVector.GetFrame(), IO::SDK::AberrationsEnum::None, targetStateVector.GetEpoch(), *targetStateVector.GetCenterOfMotion());
 
-    return IO::SDK::OrbitalParameters::StateVector(targetStateVector.GetCenterOfMotion(), targetStateVector.GetPosition() - sv.GetPosition(), targetStateVector.GetVelocity() - sv.GetVelocity(), targetStateVector.GetEpoch(), targetStateVector.GetFrame());
+    return IO::SDK::OrbitalParameters::StateVector(targetStateVector.GetCenterOfMotion(), targetStateVector.GetPosition() - sv.GetPosition(),
+                                                   targetStateVector.GetVelocity() - sv.GetVelocity(), targetStateVector.GetEpoch(), targetStateVector.GetFrame());
 }
 
 bool IO::SDK::Body::CelestialBody::IsInSphereOfInfluence(const IO::SDK::OrbitalParameters::StateVector &targetStateVector) const

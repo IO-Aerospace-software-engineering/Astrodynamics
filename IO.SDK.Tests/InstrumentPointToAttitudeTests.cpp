@@ -20,9 +20,9 @@ using namespace std::chrono_literals;
 TEST(InstrumentPointingToAttitude, GetOrientation)
 {
 
-    auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10, "sun");
-    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth", sun);
-    auto moon = std::make_shared<IO::SDK::Body::CelestialBody>(301, "moon", earth);
+    auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10);
+    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, sun);
+    auto moon = std::make_shared<IO::SDK::Body::CelestialBody>(301, earth);
 
     std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams1 = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth,
                                                                                                                                               IO::SDK::Math::Vector3D(6678000.0,
@@ -67,9 +67,9 @@ TEST(InstrumentPointingToAttitude, GetOrientation)
 TEST(InstrumentPointingToSiteAttitude, GetOrientation)
 {
 
-    auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10, "sun");
-    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth", sun);
-    auto moon = std::make_shared<IO::SDK::Body::CelestialBody>(301, "moon", earth);
+    auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10);
+    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, sun);
+    auto moon = std::make_shared<IO::SDK::Body::CelestialBody>(301, earth);
     //    long 1.1159563818495755
     //    lat 0.0020551285296693113
     IO::SDK::Sites::Site site(13001, "targetedSite", IO::SDK::Coordinates::Geodetic(1.1159563818495755, 0.0020551285296693113, 0.0), earth);
@@ -118,9 +118,9 @@ TEST(InstrumentPointingToSiteAttitude, GetOrientation)
 
 TEST(InstrumentPointingToSiteAttitude2, GetOrientation)
 {
-    auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10, "sun");
-    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth", sun);
-    auto moon = std::make_shared<IO::SDK::Body::CelestialBody>(301, "moon", earth);
+    auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10);
+    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, sun);
+    auto moon = std::make_shared<IO::SDK::Body::CelestialBody>(301, earth);
     //    long 1.1159563818495755
     //    lat 0.0020551285296693113
     IO::SDK::Sites::Site site(13001, "targetedSite", IO::SDK::Coordinates::Geodetic(1.1159563818495755, 0.0020551285296693113, 0.0), moon);
@@ -169,9 +169,9 @@ TEST(InstrumentPointingToSiteAttitude2, GetOrientation)
 
 TEST(InstrumentPointingTotAttitude, GetOrientationNotBeforeEpoch)
 {
-    auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10, "sun");
-    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth", sun);
-    auto moon = std::make_shared<IO::SDK::Body::CelestialBody>(301, "moon", earth);
+    auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10);
+    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, sun);
+    auto moon = std::make_shared<IO::SDK::Body::CelestialBody>(301, earth);
 
     std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams1 = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth,
                                                                                                                                               IO::SDK::Math::Vector3D(6678000.0,
