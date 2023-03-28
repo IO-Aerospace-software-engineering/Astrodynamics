@@ -4,7 +4,7 @@
 
 using namespace std::chrono_literals;
 
-IO::SDK::API::DTO::ScenarioResponseDTO Propagate(IO::SDK::API::DTO::ScenarioRequestDTO s)
+IO::SDK::API::DTO::ScenarioDTO Propagate(IO::SDK::API::DTO::ScenarioDTO s)
 {
     std::cout << "fueltank 0 id :" << s.spacecrafts[0].fuelTank[0].id << std::endl;
     std::cout << "fueltank 0 capacity :" << s.spacecrafts[0].fuelTank[0].capacity << std::endl;
@@ -20,19 +20,19 @@ IO::SDK::API::DTO::ScenarioResponseDTO Propagate(IO::SDK::API::DTO::ScenarioRequ
     std::cout << "occultation 0 frontBodyId :" << s.occultations[0].frontId << std::endl;
     std::cout << "occultation 0 occultationType :" << s.occultations[0].type << std::endl;
 
-    std::cout << "fov 0 target id :" << s.fovs[0].targetId << std::endl;
-    std::cout << "fov 0 instrument id :" << s.fovs[0].instrumentId << std::endl;
+    std::cout << "fov 0 target id :" << s.inFieldOfViews[0].targetId << std::endl;
+    std::cout << "fov 0 instrument id :" << s.inFieldOfViews[0].instrumentId << std::endl;
 
-    IO::SDK::API::DTO::ScenarioResponseDTO r;
+    IO::SDK::API::DTO::ScenarioDTO r;
 
     for (size_t i = 0; i < 10; i++)
     {
-        r.sv[i].position.x = i * 1;
-        r.sv[i].position.y = i * 2;
-        r.sv[i].position.z = i * 3;
-        r.sv[i].velocity.x = i * 4;
-        r.sv[i].velocity.y = i * 5;
-        r.sv[i].velocity.z = i * 6;
+        r.spacecrafts[0].stateVectors[i].position.x = i * 1;
+        r.spacecrafts[0].stateVectors[i].position.y = i * 2;
+        r.spacecrafts[0].stateVectors[i].position.z = i * 3;
+        r.spacecrafts[0].stateVectors[i].velocity.x = i * 4;
+        r.spacecrafts[0].stateVectors[i].velocity.y = i * 5;
+        r.spacecrafts[0].stateVectors[i].velocity.z = i * 6;
     }
     return r;
 }

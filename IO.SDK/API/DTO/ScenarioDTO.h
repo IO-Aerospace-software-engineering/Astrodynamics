@@ -8,10 +8,12 @@
 #include <ByNightDTO.h>
 #include <DistanceDTO.h>
 #include <LaunchDTO.h>
+#include <AttitudeDTO.h>
+#include <InstrumentPointingToAttitudeDTO.h>
 
 namespace IO::SDK::API::DTO
 {
-    struct ScenarioRequestDTO
+    struct ScenarioDTO
     {
         IO::SDK::API::DTO::SpacecraftDTO spacecrafts[10];
         IO::SDK::API::DTO::SiteDTO sites[10];
@@ -19,8 +21,10 @@ namespace IO::SDK::API::DTO
         IO::SDK::API::DTO::ByDayDTO byDays[10];
         IO::SDK::API::DTO::ByNightDTO byNights[10];
         IO::SDK::API::DTO::DistanceDTO distances[10];
-        IO::SDK::API::DTO::InFieldOfViewDTO fovs[10];
+        IO::SDK::API::DTO::InFieldOfViewDTO inFieldOfViews[10];
         IO::SDK::API::DTO::LaunchDTO launches[10];
         IO::SDK::API::DTO::OccultationDTO occultations[10];
+        IO::SDK::API::DTO::AttitudeDTO attitude[100];
+        IO::SDK::API::DTO::InstrumentPointingToAttitudeDTO instrumentPointing[100];
     };
 }

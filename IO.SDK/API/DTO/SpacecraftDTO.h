@@ -5,19 +5,45 @@
 #include <InstrumentDTO.h>
 #include <PayloadDTO.h>
 #include <StateVectorDTO.h>
+#include <StateOrientationDTO.h>
+#include <AttitudeDTO.h>
+#include <InstrumentPointingToAttitudeDTO.h>
+#include <ApogeeHeightChangingManeuverDTO.h>
+#include <PerigeeHeightChangingManeuverDTO.h>
+#include <CombinedManeuverDTO.h>
+#include <OrbitalPlaneChangingManeuverDTO.h>
+#include <PhasingManeuverDTO.h>
+#include <ApsidalAlignmentManeuverDTO.h>
 
 namespace IO::SDK::API::DTO
 {
     struct SpacecraftDTO
     {
+        //Spacecraft structure
         int id{0};
         const char* name;
         double dryOperatingMass;
         double maximumOperatingMass;
-        IO::SDK::API::DTO::StateVectorDTO initialOrbitalParameter;
-        IO::SDK::API::DTO::FuelTankDTO fuelTank[10];
-        IO::SDK::API::DTO::EngineDTO engines[10];
-        IO::SDK::API::DTO::InstrumentDTO instruments[10];
-        IO::SDK::API::DTO::PayloadDTO payloads[10];
+        StateVectorDTO initialOrbitalParameter;
+        FuelTankDTO fuelTank[10];
+        EngineDTO engines[10];
+        InstrumentDTO instruments[10];
+        PayloadDTO payloads[10];
+
+        //Spacecraft attitudes
+        AttitudeDTO attitudes[100];
+        InstrumentPointingToAttitudeDTO pointingToAttitudes[100];
+
+        //Spacecraft maneuvers
+        PerigeeHeightChangingManeuverDTO perigeeHeightChangingManeuvers[100];
+        ApogeeHeightChangingManeuverDTO apogeeHeightChangingManeuvers[100];
+        OrbitalPlaneChangingManeuverDTO orbitalPlaneChangingManeuvers[100];
+        CombinedManeuverDTO combinedManeuvers[100];
+        ApsidalAlignmentManeuverDTO apsidalAlignmentManeuvers[100];
+        PhasingManeuverDTO phasingManeuverDto[100];
+
+        //Spacecraft states
+        StateVectorDTO stateVectors[1000];
+        StateOrientationDTO stateOrientations[1000];
     };
 }

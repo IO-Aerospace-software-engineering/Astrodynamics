@@ -1,5 +1,5 @@
 //
-// Created by spacer on 3/23/23.
+// Created by sylvain guillet on 3/23/23.
 //
 
 #include "LaunchParameters.h"

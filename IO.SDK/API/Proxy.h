@@ -1,7 +1,6 @@
 
 #include <SpacecraftDTO.h>
-#include <ScenarioResponseDTO.h>
-#include <ScenarioRequestDTO.h>
+#include <ScenarioDTO.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -15,7 +14,7 @@ extern "C" {
 #else
 #  define MODULE_API
 #endif
-	MODULE_API IO::SDK::API::DTO::ScenarioResponseDTO Propagate(IO::SDK::API::DTO::ScenarioRequestDTO s);
+	MODULE_API IO::SDK::API::DTO::ScenarioDTO Propagate(IO::SDK::API::DTO::ScenarioDTO s);
 #ifdef __cplusplus
 }
 #endif

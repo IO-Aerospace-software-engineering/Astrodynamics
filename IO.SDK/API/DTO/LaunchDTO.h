@@ -16,6 +16,11 @@ namespace IO::SDK::API::DTO
         bool launchByDay;
         double initialStepSize{0.0};
         IO::SDK::API::DTO::StateVectorDTO targetOrbit;
+        double m_inertialAzimuth{0.0};
+        double m_nonInertialAzimuth{0.0};
+
+        double m_nonInertialInsertionVelocity{0.0};
+        double m_inertialInsertionVelocity{0.0};
 
         IO::SDK::API::DTO::WindowDTO windows[1000];
     };

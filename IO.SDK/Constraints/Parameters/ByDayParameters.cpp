@@ -1,5 +1,5 @@
 //
-// Created by spacer on 3/1/23.
+// Created by sylvain guillet on 3/1/23.
 //
 
 #include <ByDayParameters.h>
