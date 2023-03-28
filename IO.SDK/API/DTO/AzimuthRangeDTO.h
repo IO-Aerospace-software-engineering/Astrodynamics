@@ -6,7 +6,7 @@
 #define IOSDK_AZIMUTHRANGESTO_H
 namespace IO::SDK::API::DTO
 {
-    struct AzimuthRangeDDTO
+    struct AzimuthRangeDTO
     {
         double start, end;
     };

@@ -15,6 +15,7 @@ extern "C" {
 #  define MODULE_API
 #endif
 	MODULE_API IO::SDK::API::DTO::ScenarioDTO Propagate(IO::SDK::API::DTO::ScenarioDTO s);
+	MODULE_API const char *GetSpiceVersionProxy();
 #ifdef __cplusplus
 }
 #endif

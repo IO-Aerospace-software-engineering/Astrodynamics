@@ -16,7 +16,7 @@ namespace IO::SDK::API::DTO
         const char *name;
         int bodyId{0};
         IO::SDK::API::DTO::GeodeticDTO coordinates;
-        IO::SDK::API::DTO::AzimuthRangeDDTO ranges[10];
+        IO::SDK::API::DTO::AzimuthRangeDTO ranges[10];
     };
 }
 #endif //IOSDK_SITEDTO_H

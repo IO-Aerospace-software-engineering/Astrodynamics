@@ -1,6 +1,7 @@
 #include <Proxy.h>
 #include <iostream>
 #include <chrono>
+#include <SpiceUsr.h>
 
 using namespace std::chrono_literals;
 
@@ -35,4 +36,11 @@ IO::SDK::API::DTO::ScenarioDTO Propagate(IO::SDK::API::DTO::ScenarioDTO s)
         r.spacecrafts[0].stateVectors[i].velocity.z = i * 6;
     }
     return r;
+}
+
+const char *GetSpiceVersionProxy()
+{
+    const char *version;
+    version = tkvrsn_c("TOOLKIT");
+    return version;
 }

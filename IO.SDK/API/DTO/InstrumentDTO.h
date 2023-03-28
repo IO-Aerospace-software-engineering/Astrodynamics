@@ -15,7 +15,7 @@ namespace IO::SDK::API::DTO
         Vector3DDTO orientation;
         Vector3DDTO boresight;
         Vector3DDTO fovRefVector;
-        double fov;
+        double fieldOfView;
     };
 
 }
