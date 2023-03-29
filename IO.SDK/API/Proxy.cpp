@@ -2,10 +2,13 @@
 #include <iostream>
 #include <SpiceUsr.h>
 #include <cstring>
+#include <Scenario.h>
+#include "Converters.cpp"
 
 
 IO::SDK::API::DTO::ScenarioDTO Execute(IO::SDK::API::DTO::ScenarioDTO s)
 {
+    IO::SDK::Scenario scenario(s.Name, ToWindow(s.Window));
 
     IO::SDK::API::DTO::ScenarioDTO res;
     res.Name = strdup(s.Name);
