@@ -23,7 +23,7 @@
 namespace IO::SDK::Body
 {
 	class CelestialBody final : public IO::SDK::Body::Body
-	{
+    {
 	private:
 		
 		const double m_sphereOfInfluence{};		

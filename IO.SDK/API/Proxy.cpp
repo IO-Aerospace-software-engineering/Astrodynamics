@@ -1,14 +1,36 @@
 #include <Proxy.h>
 #include <iostream>
+#include <map>
+#include <memory>
+
 #include <SpiceUsr.h>
 #include <cstring>
 #include <Scenario.h>
+#include <CelestialBody.h>
 #include "Converters.cpp"
+#include <TDB.h>
+#include <StateVector.h>
 
+
+std::map<int, std::shared_ptr<IO::SDK::Body::CelestialBody>> BuildCelestialBodies(IO::SDK::API::DTO::ScenarioDTO &s);
 
 IO::SDK::API::DTO::ScenarioDTO Execute(IO::SDK::API::DTO::ScenarioDTO s)
 {
+    std::map<int, std::shared_ptr<IO::SDK::Body::CelestialBody>> celestialBodies = BuildCelestialBodies(s);
+
     IO::SDK::Scenario scenario(s.Name, ToWindow(s.Window));
+
+    //==========BUILD SPACECRAFT===============
+    auto cbody = celestialBodies[s.spacecraft.initialOrbitalParameter.centerOfMotion.id];
+    auto tdb = IO::SDK::Time::TDB(std::chrono::duration<double>(s.spacecraft.initialOrbitalParameter.epoch));
+    std::string frame = s.spacecraft.initialOrbitalParameter.frame;
+    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> initialOrbitalParameters = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(
+            cbody,
+            ToVector3D(s.spacecraft.initialOrbitalParameter.position),
+            ToVector3D(s.spacecraft.initialOrbitalParameter.velocity), tdb, frame);
+
+    IO::SDK::Body::Spacecraft::Spacecraft spacecraft(s.spacecraft.id, s.spacecraft.name, s.spacecraft.dryOperatingMass, s.spacecraft.maximumOperatingMass, s.Name,
+                                                     std::move(initialOrbitalParameters));
 
     IO::SDK::API::DTO::ScenarioDTO res;
     res.Name = strdup(s.Name);
@@ -50,9 +72,24 @@ IO::SDK::API::DTO::ScenarioDTO Execute(IO::SDK::API::DTO::ScenarioDTO s)
     return res;
 }
 
+std::map<int, std::shared_ptr<IO::SDK::Body::CelestialBody>> BuildCelestialBodies(IO::SDK::API::DTO::ScenarioDTO &s)
+{
+    std::map<int, std::shared_ptr<IO::SDK::Body::CelestialBody>> celestialBodies;
+    for (auto &cb: s.celestialBodies)
+    {
+        if (cb.id >= 0)
+        {
+            IO::SDK::Body::CelestialBody c(cb.id);
+            celestialBodies.emplace(cb.id, std::make_shared<IO::SDK::Body::CelestialBody>(cb.id));
+        }
+    }
+    return celestialBodies;
+}
+
 const char *GetSpiceVersionProxy()
 {
     const char *version;
     version = tkvrsn_c("TOOLKIT");
     return version;
 }
+

@@ -4,8 +4,6 @@
 #include <Window.h>
 #include <WindowDTO.h>
 #include <Vector3DDTO.h>
-#include <Vector3D.h>
-#include <chrono>
 #include <GeodeticDTO.h>
 #include <Geodetic.h>
 #include <Quaternion.h>
