@@ -16,7 +16,7 @@ namespace IO::SDK::API::DTO
         int engines[10];
         double attitudeHoldDuration{0.0};
         double minimumEpoch{0.0};
-        IO::SDK::API::DTO::WindowDTO window;
+        IO::SDK::API::DTO::WindowDTO windows[100];
     };
 }
 #endif //IOSDK_INSTRUMENTPOINTINGTOATTITUDEDTO_H

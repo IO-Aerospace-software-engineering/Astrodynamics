@@ -21,8 +21,8 @@ namespace IO::SDK::API::DTO
         IO::SDK::API::DTO::GeodeticDTO coordinates;
         IO::SDK::API::DTO::AzimuthRangeDTO ranges[10];
         IO::SDK::API::DTO::BodyVisibilityFromSiteDTO bodyVisibilityFromSites[10];
-        IO::SDK::API::DTO::ByDayDTO byDays[10];
-        IO::SDK::API::DTO::ByNightDTO byNights[10];
+        IO::SDK::API::DTO::ByDayDTO byDay;
+        IO::SDK::API::DTO::ByNightDTO byNight;
     };
 }
 #endif //IOSDK_SITEDTO_H

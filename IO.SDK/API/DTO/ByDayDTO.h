@@ -10,7 +10,7 @@ namespace IO::SDK::API::DTO
     struct ByDayDTO
     {
         double twilightDefinition{0.0};
-        IO::SDK::API::DTO::WindowDTO windows[1000];
+        IO::SDK::API::DTO::WindowDTO windows[100];
     };
 }
 #endif //IOSDK_BYDAYDTO_H

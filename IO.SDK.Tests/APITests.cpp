@@ -7,4 +7,5 @@ TEST(API, ScenarioSize)
 {
     IO::SDK::API::DTO::ScenarioDTO scenario;
     auto size= sizeof(IO::SDK::API::DTO::ScenarioDTO);
+    ASSERT_EQ(2771968,size);
 }

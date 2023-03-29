@@ -11,6 +11,6 @@ namespace IO::SDK::API::DTO
         const char* type;
         const char* aberrationId;
         double initialStepSize{0.0};
-        IO::SDK::API::DTO::WindowDTO windows[1000];
+        IO::SDK::API::DTO::WindowDTO windows[100];
     };
 }

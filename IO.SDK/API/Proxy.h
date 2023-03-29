@@ -1,5 +1,4 @@
 
-#include <SpacecraftDTO.h>
 #include <ScenarioDTO.h>
 
 #ifdef __cplusplus

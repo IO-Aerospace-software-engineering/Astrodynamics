@@ -16,12 +16,12 @@ namespace IO::SDK::API::DTO
 {
     struct ScenarioDTO
     {
-        const char *name;
-        WindowDTO window;
-//        IO::SDK::API::DTO::SpacecraftDTO spacecraft;
-//        IO::SDK::API::DTO::SiteDTO sites[2];
-//
-//        IO::SDK::API::DTO::DistanceDTO distances[5];
-//        IO::SDK::API::DTO::OccultationDTO occultations[5];
+        char *Name;
+        WindowDTO Window;
+        IO::SDK::API::DTO::SpacecraftDTO spacecraft;
+        IO::SDK::API::DTO::SiteDTO sites[2];
+
+        IO::SDK::API::DTO::DistanceDTO distances[5];
+        IO::SDK::API::DTO::OccultationDTO occultations[5];
     };
 }

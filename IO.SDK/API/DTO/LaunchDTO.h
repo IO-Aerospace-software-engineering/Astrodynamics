@@ -22,7 +22,7 @@ namespace IO::SDK::API::DTO
         double nonInertialInsertionVelocity{0.0};
         double inertialInsertionVelocity{0.0};
 
-        IO::SDK::API::DTO::WindowDTO windows[1000];
+        IO::SDK::API::DTO::WindowDTO windows[100];
     };
 }
 #endif //IOSDK_LAUNCHDTO_H

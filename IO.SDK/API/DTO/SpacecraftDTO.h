@@ -26,26 +26,26 @@ namespace IO::SDK::API::DTO
         double dryOperatingMass;
         double maximumOperatingMass;
         StateVectorDTO initialOrbitalParameter;
-        FuelTankDTO fuelTank[10];
-        EngineDTO engines[10];
-        InstrumentDTO instruments[10];
-        PayloadDTO payloads[10];
+        FuelTankDTO fuelTank[5];
+        EngineDTO engines[5];
+        InstrumentDTO instruments[5];
+        PayloadDTO payloads[5];
 
         //Spacecraft attitudes
-        AttitudeDTO attitudes[100];
-        InstrumentPointingToAttitudeDTO pointingToAttitudes[100];
+        AttitudeDTO attitudes[50];
+        InstrumentPointingToAttitudeDTO pointingToAttitudes[10];
 
         //Spacecraft maneuvers
-        PerigeeHeightChangingManeuverDTO perigeeHeightChangingManeuvers[100];
-        ApogeeHeightChangingManeuverDTO apogeeHeightChangingManeuvers[100];
-        OrbitalPlaneChangingManeuverDTO orbitalPlaneChangingManeuvers[100];
-        CombinedManeuverDTO combinedManeuvers[100];
-        ApsidalAlignmentManeuverDTO apsidalAlignmentManeuvers[100];
-        PhasingManeuverDTO phasingManeuverDto[100];
-        LaunchDTO launches[10];
+        PerigeeHeightChangingManeuverDTO perigeeHeightChangingManeuvers[10];
+        ApogeeHeightChangingManeuverDTO apogeeHeightChangingManeuvers[10];
+        OrbitalPlaneChangingManeuverDTO orbitalPlaneChangingManeuvers[10];
+        CombinedManeuverDTO combinedManeuvers[10];
+        ApsidalAlignmentManeuverDTO apsidalAlignmentManeuvers[10];
+        PhasingManeuverDTO phasingManeuverDto[10];
+        LaunchDTO launches;
 
         //Spacecraft states
-        StateVectorDTO stateVectors[1000];
+        StateVectorDTO stateVectors[10000];
         StateOrientationDTO stateOrientations[1000];
     };
 }

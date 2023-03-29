@@ -1,14 +1,19 @@
 #include <Proxy.h>
 #include <iostream>
-#include <chrono>
 #include <SpiceUsr.h>
+#include <cstring>
 
-using namespace std::chrono_literals;
 
-IO::SDK::API::DTO::ScenarioDTO Execute(struct IO::SDK::API::DTO::ScenarioDTO s)
+IO::SDK::API::DTO::ScenarioDTO Execute(IO::SDK::API::DTO::ScenarioDTO s)
 {
+
     IO::SDK::API::DTO::ScenarioDTO res;
+    res.Name = strdup(s.Name);
+    res.Window = s.Window;
 //    res.name = "s.name";
+//    std::cout << s.Name << std::endl;
+//    std::cout << s.Window.start << std::endl;
+//    std::cout << s.Window.end << std::endl;
 //    res.window = s.window;
 //    std::cout << "fueltank 0 id :" << s.spacecraft.fuelTank[0].id << std::endl;
 //    std::cout << "fueltank 0 capacity :" << s.spacecraft.fuelTank[0].capacity << std::endl;
@@ -37,6 +42,8 @@ IO::SDK::API::DTO::ScenarioDTO Execute(struct IO::SDK::API::DTO::ScenarioDTO s)
 //        s.spacecraft.stateVectors[i].velocity.y = i * 5;
 //        s.spacecraft.stateVectors[i].velocity.z = i * 6;
 //    }
+//    return res;
+
     return res;
 }
 
