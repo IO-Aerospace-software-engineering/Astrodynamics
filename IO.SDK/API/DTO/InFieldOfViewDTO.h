@@ -5,7 +5,6 @@ namespace IO::SDK::API::DTO
 {
     struct InFieldOfViewDTO
     {
-        int instrumentId{0};
         int targetId{0};
         const char* aberration;
         double initialStepSize{0.0};

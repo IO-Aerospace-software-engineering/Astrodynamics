@@ -9,7 +9,6 @@ namespace IO::SDK::API::DTO
 {
     struct BodyVisibilityFromSiteDTO
     {
-        int siteId{0};
         int TargetBodyId{0};
         const char* aberration;
         IO::SDK::API::DTO::WindowDTO windows[1000];

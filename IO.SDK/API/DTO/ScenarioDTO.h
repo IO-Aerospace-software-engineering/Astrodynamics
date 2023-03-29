@@ -1,4 +1,5 @@
 #pragma once
+
 #include <SpacecraftDTO.h>
 #include <InFieldOfViewDTO.h>
 #include <SiteDTO.h>
@@ -15,16 +16,12 @@ namespace IO::SDK::API::DTO
 {
     struct ScenarioDTO
     {
-        IO::SDK::API::DTO::SpacecraftDTO spacecrafts[10];
-        IO::SDK::API::DTO::SiteDTO sites[10];
-        IO::SDK::API::DTO::BodyVisibilityFromSiteDTO bodyVisibilityFromSites[10];
-        IO::SDK::API::DTO::ByDayDTO byDays[10];
-        IO::SDK::API::DTO::ByNightDTO byNights[10];
-        IO::SDK::API::DTO::DistanceDTO distances[10];
-        IO::SDK::API::DTO::InFieldOfViewDTO inFieldOfViews[10];
-        IO::SDK::API::DTO::LaunchDTO launches[10];
-        IO::SDK::API::DTO::OccultationDTO occultations[10];
-        IO::SDK::API::DTO::AttitudeDTO attitude[100];
-        IO::SDK::API::DTO::InstrumentPointingToAttitudeDTO instrumentPointing[100];
+        const char *name;
+        WindowDTO window;
+//        IO::SDK::API::DTO::SpacecraftDTO spacecraft;
+//        IO::SDK::API::DTO::SiteDTO sites[2];
+//
+//        IO::SDK::API::DTO::DistanceDTO distances[5];
+//        IO::SDK::API::DTO::OccultationDTO occultations[5];
     };
 }

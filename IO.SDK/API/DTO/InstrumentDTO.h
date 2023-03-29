@@ -5,6 +5,7 @@
 #ifndef IOSDK_INSTRUMENTDTO_H
 #define IOSDK_INSTRUMENTDTO_H
 #include <Vector3DDTO.h>
+#include "InFieldOfViewDTO.h"
 
 namespace IO::SDK::API::DTO
 {
@@ -16,6 +17,7 @@ namespace IO::SDK::API::DTO
         Vector3DDTO boresight;
         Vector3DDTO fovRefVector;
         double fieldOfView;
+        IO::SDK::API::DTO::InFieldOfViewDTO inFieldOfViews[10];
     };
 
 }

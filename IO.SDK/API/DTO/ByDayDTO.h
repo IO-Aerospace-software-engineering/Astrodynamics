@@ -9,7 +9,6 @@ namespace IO::SDK::API::DTO
 {
     struct ByDayDTO
     {
-        int siteId{0};
         double twilightDefinition{0.0};
         IO::SDK::API::DTO::WindowDTO windows[1000];
     };

@@ -14,6 +14,7 @@
 #include <OrbitalPlaneChangingManeuverDTO.h>
 #include <PhasingManeuverDTO.h>
 #include <ApsidalAlignmentManeuverDTO.h>
+#include "LaunchDTO.h"
 
 namespace IO::SDK::API::DTO
 {
@@ -41,6 +42,7 @@ namespace IO::SDK::API::DTO
         CombinedManeuverDTO combinedManeuvers[100];
         ApsidalAlignmentManeuverDTO apsidalAlignmentManeuvers[100];
         PhasingManeuverDTO phasingManeuverDto[100];
+        LaunchDTO launches[10];
 
         //Spacecraft states
         StateVectorDTO stateVectors[1000];
