@@ -3,7 +3,7 @@
 
 namespace IO::SDK::API::DTO
 {
-    struct OccultationDTO
+    struct OccultationConstraintDTO
     {
         int observerId{0};
         int backBodyId{0};
@@ -11,6 +11,6 @@ namespace IO::SDK::API::DTO
         const char* type;
         const char* aberrationId;
         double initialStepSize{0.0};
-        IO::SDK::API::DTO::WindowDTO windows[100];
+        IO::SDK::API::DTO::WindowDTO windows[1000];
     };
 }

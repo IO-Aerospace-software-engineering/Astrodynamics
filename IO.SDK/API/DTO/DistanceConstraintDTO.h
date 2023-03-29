@@ -2,14 +2,14 @@
 // Created by spacer on 3/25/23.
 //
 
-#ifndef IOSDK_DISTANCEDTO_H
-#define IOSDK_DISTANCEDTO_H
+#ifndef IOSDK_DISTANCECONSTRAINTDTO_H
+#define IOSDK_DISTANCECONSTRAINTDTO_H
 
 #include <WindowDTO.h>
 
 namespace IO::SDK::API::DTO
 {
-    struct DistanceDTO
+    struct DistanceConstraintDTO
     {
         int observerId{0};
         int targetId{0};
@@ -17,7 +17,7 @@ namespace IO::SDK::API::DTO
         double value{0.0};
         const char *aberration;
         double initialStepSize{0.0};
-        IO::SDK::API::DTO::WindowDTO windows[100];
+        IO::SDK::API::DTO::WindowDTO windows[1000];
     };
 }
-#endif //IOSDK_DISTANCEDTO_H
+#endif //IOSDK_DISTANCECONSTRAINTDTO_H

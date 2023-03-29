@@ -5,9 +5,9 @@
 
 #include <GeodeticDTO.h>
 #include <AzimuthRangeDTO.h>
-#include "BodyVisibilityFromSiteDTO.h"
-#include "ByDayDTO.h"
-#include "ByNightDTO.h"
+#include "BodyVisibilityFromSiteConstraintDTO.h"
+#include "ByDayConstraintDTO.h"
+#include "ByNightConstraintDTO.h"
 
 #ifndef IOSDK_SITEDTO_H
 #define IOSDK_SITEDTO_H
@@ -20,9 +20,9 @@ namespace IO::SDK::API::DTO
         int bodyId{0};
         IO::SDK::API::DTO::GeodeticDTO coordinates;
         IO::SDK::API::DTO::AzimuthRangeDTO ranges[10];
-        IO::SDK::API::DTO::BodyVisibilityFromSiteDTO bodyVisibilityFromSites[10];
-        IO::SDK::API::DTO::ByDayDTO byDay;
-        IO::SDK::API::DTO::ByNightDTO byNight;
+        IO::SDK::API::DTO::BodyVisibilityFromSiteConstraintDTO bodyVisibilityFromSites[10];
+        IO::SDK::API::DTO::ByDayConstraintDTO byDay;
+        IO::SDK::API::DTO::ByNightConstraintDTO byNight;
     };
 }
 #endif //IOSDK_SITEDTO_H
