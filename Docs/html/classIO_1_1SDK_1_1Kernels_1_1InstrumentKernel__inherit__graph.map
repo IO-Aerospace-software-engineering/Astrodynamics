@@ -1,0 +1,7 @@
+<map id="IO::SDK::Kernels::InstrumentKernel" name="IO::SDK::Kernels::InstrumentKernel">
+<area shape="rect" id="node1" title="Instrument kernel." alt="" coords="229,71,436,112"/>
+<area shape="rect" id="node3" href="$classIO_1_1SDK_1_1Kernels_1_1CircularInstrumentKernel.html" title=" " alt="" coords="498,5,683,47"/>
+<area shape="rect" id="node4" href="$classIO_1_1SDK_1_1Kernels_1_1EllipticalInstrumentKernel.html" title="Elliptical instrument kernel." alt="" coords="495,71,686,112"/>
+<area shape="rect" id="node5" href="$classIO_1_1SDK_1_1Kernels_1_1RectangularInstrumentKernel.html" title=" " alt="" coords="484,136,697,177"/>
+<area shape="rect" id="node2" href="$classIO_1_1SDK_1_1Kernels_1_1Kernel.html" title=" " alt="" coords="5,78,181,105"/>
+</map>

@@ -1,0 +1,20 @@
+<map id="IO.SDK/Body/Spacecraft" name="IO.SDK/Body/Spacecraft">
+<area shape="rect" id="node1" href="dir_19e5da3eeaa3010bb3a6780f5fcb3ce4.html" title="Spacecraft" alt="" coords="395,52,485,100"/>
+<area shape="rect" id="node2" href="dir_1d644f90f19ce2018d1fb00b3e15f120.html" title="Math" alt="" coords="5,148,77,196"/>
+<area shape="rect" id="edge1-headlabel" href="dir_000018_000013.html" title="2" alt="" coords="93,147,102,162"/>
+<area shape="rect" id="node3" href="dir_2ee2639eb5af86af2199513eeba755ed.html" title="Parameters" alt="" coords="101,148,197,196"/>
+<area shape="rect" id="edge2-headlabel" href="dir_000018_000015.html" title="1" alt="" coords="213,147,222,162"/>
+<area shape="rect" id="node4" href="dir_568fc0acd73538c6ed9734c6f815c982.html" title="Exceptions" alt="" coords="221,148,315,196"/>
+<area shape="rect" id="edge3-headlabel" href="dir_000018_000003.html" title="4" alt="" coords="326,139,335,154"/>
+<area shape="rect" id="node5" href="dir_613760c38b17a52fedd4725c331790cb.html" title="Frames" alt="" coords="339,148,411,196"/>
+<area shape="rect" id="edge4-headlabel" href="dir_000018_000005.html" title="4" alt="" coords="403,131,413,145"/>
+<area shape="rect" id="node6" href="dir_6572a3579bb0341008dda87869facae3.html" title="OrbitalParameters" alt="" coords="435,148,575,196"/>
+<area shape="rect" id="edge5-headlabel" href="dir_000018_000014.html" title="2" alt="" coords="481,121,491,135"/>
+<area shape="rect" id="node7" href="dir_6d87844c9cb2810654f140266fb6e17b.html" title="Kernels" alt="" coords="600,148,672,196"/>
+<area shape="rect" id="edge6-headlabel" href="dir_000018_000011.html" title="3" alt="" coords="583,131,592,145"/>
+<area shape="rect" id="node8" href="dir_b5aa175c0d1497fb35a37adbf9455040.html" title="Instruments" alt="" coords="697,148,797,196"/>
+<area shape="rect" id="edge7-headlabel" href="dir_000018_000008.html" title="1" alt="" coords="677,131,687,146"/>
+<area shape="rect" id="node9" href="dir_f5484ecb79d1136e426354a0968a29d0.html" title="Time" alt="" coords="821,148,893,196"/>
+<area shape="rect" id="edge8-headlabel" href="dir_000018_000021.html" title="3" alt="" coords="802,131,811,146"/>
+<area shape="rect" id="clust1" href="dir_bf83c57161868932241da7866fba7cd0.html" title="Body" alt="" coords="384,16,496,111"/>
+</map>
