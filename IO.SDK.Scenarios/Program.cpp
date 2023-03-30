@@ -94,17 +94,17 @@ int main()
     IO::SDK::Scenario scenario("scenario1", IO::SDK::Time::Window<IO::SDK::Time::UTC>(startEpoch.ToUTC(), endEpoch.ToUTC()));
     //=======================Configure universe topology======================================
     //Bodies id are defined here https://naif.jpl.nasa.gov/pub/naif/toolkit_docs/C/req/naif_ids.html#NAIF%20Object%20ID%20numbers
-    auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10, "sun");
-    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
-    auto moon = std::make_shared<IO::SDK::Body::CelestialBody>(301, "moon");
+    auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10);
+    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
+    auto moon = std::make_shared<IO::SDK::Body::CelestialBody>(301);
 
     //========================Compute launch parameters=======================================
 
     //Define launch site and recovery site
-    auto launchSite = std::make_shared<IO::SDK::Sites::LaunchSite>(3,scenario, "S3",
+    auto launchSite = std::make_shared<IO::SDK::Sites::LaunchSite>(3, "S3",
                                                                    IO::SDK::Coordinates::Geodetic(-81.0 * IO::SDK::Constants::DEG_RAD, 28.5 * IO::SDK::Constants::DEG_RAD, 0.0),
                                                                    earth);
-    auto recoverySite = std::make_shared<IO::SDK::Sites::LaunchSite>(4,scenario, "S4",
+    auto recoverySite = std::make_shared<IO::SDK::Sites::Site>(4, "S4",
                                                                      IO::SDK::Coordinates::Geodetic(-80.0 * IO::SDK::Constants::DEG_RAD, 28.5 * IO::SDK::Constants::DEG_RAD, 0.0),
                                                                      earth);
 
@@ -133,7 +133,7 @@ int main()
                                                                                           IO::SDK::Frames::InertialFrames::GetICRF());
 
     //Compute launch windows, to launch by day on launch site and recovery site when the launch site crosses the parking orbital plane
-    IO::SDK::Maneuvers::Launch launch(launchSite, recoverySite, true, *parkingOrbit);
+    IO::SDK::Maneuvers::Launch launch(*launchSite, *recoverySite, true, *parkingOrbit);
     auto launchWindows = launch.GetLaunchWindows(IO::SDK::Time::Window<IO::SDK::Time::UTC>(startEpoch.ToUTC(), endEpoch.ToUTC()));
 
     //Display launch window results (this is not necessary)
