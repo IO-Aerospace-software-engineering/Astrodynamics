@@ -98,6 +98,13 @@ namespace IO::SDK::Body
 		 * @return IO::SDK::Time::TimeSpan 
 		 */
 		IO::SDK::Time::TimeSpan GetSideralRotationPeriod(const IO::SDK::Time::TDB &epoch) const;
+
+        static bool IsSun(int celestialBodyId);
+        static bool IsPlanet(int celestialBodyId);
+        static bool IsAsteroid(int celestialBodyId);
+        static bool IsMoon(int celestialBodyId);
+        static int FindCenterOfMotionId(int celestialBodyNaifId);
+
 	};
 	/**
 	 * @brief Compute sphere of influence radius
@@ -118,6 +125,8 @@ namespace IO::SDK::Body
 	 * @return double 
 	 */
 	double HillSphere(double a, double e, double majorMass, double minorMass);
+
+
 
 }
 #endif

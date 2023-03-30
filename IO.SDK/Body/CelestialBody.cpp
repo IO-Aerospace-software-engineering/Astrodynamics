@@ -17,6 +17,7 @@
 #include <Constants.h>
 #include <Aberrations.h>
 #include <InertialFrames.h>
+#include <InvalidArgumentException.h>
 
 using namespace std::chrono_literals;
 
@@ -132,5 +133,41 @@ double IO::SDK::Body::CelestialBody::GetAngularVelocity(const IO::SDK::Time::TDB
 IO::SDK::Time::TimeSpan IO::SDK::Body::CelestialBody::GetSideralRotationPeriod(const IO::SDK::Time::TDB &epoch) const
 {
     return IO::SDK::Time::TimeSpan(std::chrono::duration<double>(IO::SDK::Constants::_2PI / GetAngularVelocity(epoch)));
+}
+
+bool IO::SDK::Body::CelestialBody::IsSun(int celestialBodyId)
+{
+    return celestialBodyId == 10;
+}
+
+bool IO::SDK::Body::CelestialBody::IsPlanet(int celestialBodyId)
+{
+    return celestialBodyId > 100 && celestialBodyId < 1000 && (celestialBodyId % 100) == 99;
+}
+
+bool IO::SDK::Body::CelestialBody::IsAsteroid(int celestialBodyId)
+{
+    return celestialBodyId > 1000;
+}
+
+bool IO::SDK::Body::CelestialBody::IsMoon(int celestialBodyId)
+{
+    return celestialBodyId > 100 && celestialBodyId < 1000 && (celestialBodyId % 100) != 99;
+}
+
+int IO::SDK::Body::CelestialBody::FindCenterOfMotionId(int celestialBodyNaifId)
+{
+    if (IO::SDK::Body::CelestialBody::IsSun(celestialBodyNaifId) || IO::SDK::Body::CelestialBody::IsPlanet(celestialBodyNaifId) ||
+        IO::SDK::Body::CelestialBody::IsAsteroid(celestialBodyNaifId))
+    {
+        return 10;
+    }
+
+    if (IO::SDK::Body::CelestialBody::IsMoon(celestialBodyNaifId))
+    {
+        return celestialBodyNaifId - (celestialBodyNaifId % 100) + 99;
+    }
+
+    throw IO::SDK::Exception::InvalidArgumentException(std::string("Invalid Naif Id : ") + std::to_string(celestialBodyNaifId));
 }
 
