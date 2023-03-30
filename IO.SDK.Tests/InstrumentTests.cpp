@@ -33,7 +33,7 @@ TEST(Instrument, Initialization)
     IO::SDK::Math::Vector3D boresight{1.0, 2.0, 3.0};
     IO::SDK::Math::Vector3D fovvector{4.0, 5.0, 6.0};
 
-    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
+    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
     std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth,
                                                                                                                                              IO::SDK::Math::Vector3D(1.0, 2.0, 3.0),
                                                                                                                                              IO::SDK::Math::Vector3D(4.0, 5.0, 6.0),
@@ -63,7 +63,7 @@ TEST(Instrument, Frame)
     IO::SDK::Math::Vector3D boresight{1.0, 2.0, 3.0};
     IO::SDK::Math::Vector3D fovvector{4.0, 5.0, 6.0};
 
-    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
+    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
     std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth,
                                                                                                                                              IO::SDK::Math::Vector3D(1.0, 2.0, 3.0),
                                                                                                                                              IO::SDK::Math::Vector3D(4.0, 5.0, 6.0),
@@ -118,7 +118,7 @@ TEST(Instrument, CircularKernel)
     IO::SDK::Math::Vector3D boresight{1.0, 2.0, 3.0};
     IO::SDK::Math::Vector3D fovvector{4.0, 5.0, 6.0};
 
-    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
+    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
     std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth,
                                                                                                                                              IO::SDK::Math::Vector3D(1.0, 2.0, 3.0),
                                                                                                                                              IO::SDK::Math::Vector3D(4.0, 5.0, 6.0),
@@ -166,7 +166,7 @@ TEST(Instrument, RectangularKernel)
     IO::SDK::Math::Vector3D boresight{1.0, 2.0, 3.0};
     IO::SDK::Math::Vector3D fovvector{4.0, 5.0, 6.0};
 
-    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
+    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
     std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth,
                                                                                                                                              IO::SDK::Math::Vector3D(1.0, 2.0, 3.0),
                                                                                                                                              IO::SDK::Math::Vector3D(4.0, 5.0, 6.0),
@@ -214,7 +214,7 @@ TEST(Instrument, EllipticalKernel)
     IO::SDK::Math::Vector3D boresight{1.0, 2.0, 3.0};
     IO::SDK::Math::Vector3D fovvector{4.0, 5.0, 6.0};
 
-    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
+    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
     std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth,
                                                                                                                                              IO::SDK::Math::Vector3D(1.0, 2.0, 3.0),
                                                                                                                                              IO::SDK::Math::Vector3D(4.0, 5.0, 6.0),
@@ -262,7 +262,7 @@ TEST(Instrument, Boundaries)
     IO::SDK::Math::Vector3D boresight{0.0, 0.0, 1.0};
     IO::SDK::Math::Vector3D fovvector{1.0, 0.0, 0.0};
 
-    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
+    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
     std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth,
                                                                                                                                              IO::SDK::Math::Vector3D(1.0, 2.0, 3.0),
                                                                                                                                              IO::SDK::Math::Vector3D(4.0, 5.0, 6.0),
@@ -293,7 +293,7 @@ TEST(Instrument, Boresight)
     IO::SDK::Math::Vector3D boresight{1.0, 2.0, 3.0};
     IO::SDK::Math::Vector3D fovvector{1.0, 0.0, 0.0};
 
-    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
+    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
     std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth,
                                                                                                                                              IO::SDK::Math::Vector3D(1.0, 2.0, 3.0),
                                                                                                                                              IO::SDK::Math::Vector3D(4.0, 5.0, 6.0),
@@ -324,7 +324,7 @@ TEST(Instrument, FOVShape)
     IO::SDK::Math::Vector3D boresight{1.0, 2.0, 3.0};
     IO::SDK::Math::Vector3D fovvector{1.0, 0.0, 0.0};
 
-    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
+    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
     std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth,
                                                                                                                                              IO::SDK::Math::Vector3D(1.0, 2.0, 3.0),
                                                                                                                                              IO::SDK::Math::Vector3D(4.0, 5.0, 6.0),
@@ -353,7 +353,7 @@ TEST(Instrument, GetBadId)
     IO::SDK::Math::Vector3D boresight{1.0, 2.0, 3.0};
     IO::SDK::Math::Vector3D fovvector{1.0, 0.0, 0.0};
 
-    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
+    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
     std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth,
                                                                                                                                              IO::SDK::Math::Vector3D(1.0, 2.0, 3.0),
                                                                                                                                              IO::SDK::Math::Vector3D(4.0, 5.0, 6.0),
@@ -379,7 +379,7 @@ TEST(Instrument, CreateBadId)
     IO::SDK::Math::Vector3D boresight{1.0, 2.0, 3.0};
     IO::SDK::Math::Vector3D fovvector{1.0, 0.0, 0.0};
 
-    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
+    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
     std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth,
                                                                                                                                              IO::SDK::Math::Vector3D(1.0, 2.0, 3.0),
                                                                                                                                              IO::SDK::Math::Vector3D(4.0, 5.0, 6.0),
@@ -404,7 +404,7 @@ TEST(Instrument, AlreadyExists)
     IO::SDK::Math::Vector3D boresight{1.0, 2.0, 3.0};
     IO::SDK::Math::Vector3D fovvector{1.0, 0.0, 0.0};
 
-    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
+    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
     std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth,
                                                                                                                                              IO::SDK::Math::Vector3D(1.0, 2.0, 3.0),
                                                                                                                                              IO::SDK::Math::Vector3D(4.0, 5.0, 6.0),
@@ -431,7 +431,7 @@ TEST(Instrument, FindWindowFieldOfView)
     IO::SDK::Math::Vector3D boresight{0.0, 0.0, 1.0};
     IO::SDK::Math::Vector3D fovvector{1.0, 0.0, 0.0};
 
-    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
+    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
     double a = 6800000.0;
     auto v = std::sqrt(earth->GetMu() / a);
     IO::SDK::Time::TDB epoch("2021-JUN-10 00:00:00.0000 TDB");
@@ -514,7 +514,7 @@ TEST(Instrument, GetBoresightAtEpoch)
     IO::SDK::Math::Vector3D boresight{0.0, 0.0, 1.0};
     IO::SDK::Math::Vector3D fovvector{1.0, 0.0, 0.0};
 
-    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
+    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
     double a = 6800000.0;
     auto v = std::sqrt(earth->GetMu() / a); //Compute velocity for a circular orbit
     IO::SDK::Time::TDB epoch("2021-JUN-10 00:00:00.0000 TDB");
@@ -583,7 +583,7 @@ TEST(Instrument, GetBoresightInSpacecraftFrame)
     IO::SDK::Math::Vector3D boresight{0.0, 0.0, 1.0};
     IO::SDK::Math::Vector3D fovvector{0.0, 1.0, 6.0};
 
-    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
+    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
     std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth,
                                                                                                                                              IO::SDK::Math::Vector3D(1.0, 2.0, 3.0),
                                                                                                                                              IO::SDK::Math::Vector3D(4.0, 5.0, 6.0),
@@ -609,7 +609,7 @@ TEST(Instrument, GetBoresightInSpacecraftFrame2)
     IO::SDK::Math::Vector3D boresight{0.0, 0.0, 1.0};
     IO::SDK::Math::Vector3D fovvector{0.0, 1.0, 6.0};
 
-    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
+    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
     std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth,
                                                                                                                                              IO::SDK::Math::Vector3D(1.0, 2.0, 3.0),
                                                                                                                                              IO::SDK::Math::Vector3D(4.0, 5.0, 6.0),

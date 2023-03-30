@@ -8,24 +8,14 @@
  * @copyright Copyright (c) 2021
  * 
  */
-#include <cmath>
 
-#include <SDKException.h>
 #include <Site.h>
-#include <Constants.h>
-#include <InertialFrames.h>
-#include <StateVector.h>
-#include <SpiceUsr.h>
-#include <SiteFrameFile.h>
 #include <Builder.h>
-#include <CoordinateSystem.h>
-#include <Coordinate.h>
-
 
 using namespace std::chrono_literals;
 
-IO::SDK::Sites::Site::Site(const int id, const IO::SDK::Scenario &scenario, const std::string &name, const IO::SDK::Coordinates::Geodetic &coordinates,
-                           std::shared_ptr<IO::SDK::Body::CelestialBody> &body) : m_id{id}, m_scenario{scenario},
+IO::SDK::Sites::Site::Site(const int id, const std::string &name, const IO::SDK::Coordinates::Geodetic &coordinates,
+                           std::shared_ptr<IO::SDK::Body::CelestialBody> &body) : m_id{id},
                                                                                   m_name{name},
                                                                                   m_coordinates{coordinates},
                                                                                   m_filePath{std::string(IO::SDK::Parameters::SitePath) + "/" + name},
@@ -109,7 +99,7 @@ std::vector<IO::SDK::Time::Window<IO::SDK::Time::UTC>>
 IO::SDK::Sites::Site::FindDayWindows(const IO::SDK::Time::Window<IO::SDK::Time::UTC> &searchWindow,
                                      const double twilight) const
 {
-    IO::SDK::Body::CelestialBody sun(10, "Sun");
+    IO::SDK::Body::CelestialBody sun(10);
     return FindWindowsOnIlluminationConstraint(searchWindow, sun, IO::SDK::IlluminationAngle::Incidence(),
                                                IO::SDK::Constraints::Constraint::LowerThan(), IO::SDK::Constants::PI2 - twilight);
 }
@@ -118,7 +108,7 @@ std::vector<IO::SDK::Time::Window<IO::SDK::Time::UTC>>
 IO::SDK::Sites::Site::FindNightWindows(const IO::SDK::Time::Window<IO::SDK::Time::UTC> &searchWindow,
                                        const double twilight) const
 {
-    IO::SDK::Body::CelestialBody sun(10, "Sun");
+    IO::SDK::Body::CelestialBody sun(10);
     return FindWindowsOnIlluminationConstraint(searchWindow, sun, IO::SDK::IlluminationAngle::Incidence(),
                                                IO::SDK::Constraints::Constraint::GreaterThan(), IO::SDK::Constants::PI2 - twilight);
 }

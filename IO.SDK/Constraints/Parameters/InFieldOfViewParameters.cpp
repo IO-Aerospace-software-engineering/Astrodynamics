@@ -1,5 +1,5 @@
 //
-// Created by spacer on 3/7/23.
+// Created by sylvain guillet on 3/7/23.
 //
 
 #include "InFieldOfViewParameters.h"

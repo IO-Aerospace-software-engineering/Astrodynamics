@@ -13,7 +13,7 @@
 
 using namespace std::chrono_literals;
 TEST(EquinoctialElements, Initialization) {
-    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
+    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
 
     //keplerian elements
     double p = 1.0e7;
@@ -52,7 +52,7 @@ TEST(EquinoctialElements, Initialization) {
 }
 
 TEST(EquinoctialElements, InitializationFromKeplerian) {
-    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
+    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
 
     //keplerian elements
     double p = 6.780E+06;
@@ -95,7 +95,7 @@ TEST(EquinoctialElements, InitializationFromKeplerian) {
 }
 
 TEST(EquinoctialElements, GetPeriod) {
-    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
+    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
 
     //keplerian elements
     double p = 1.0e7;
@@ -120,7 +120,7 @@ TEST(EquinoctialElements, GetPeriod) {
 }
 
 TEST(EquinoctialElements, GetStateVector) {
-    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
+    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
 
     //keplerian elements
     double p = 1.0e7;
@@ -154,7 +154,7 @@ TEST(EquinoctialElements, GetStateVector) {
 }
 
 TEST(EquinoctialElements, GetStateVectorFromKeplerian) {
-    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
+    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
 
     //keplerian elements
     double p = 1.0e7;
@@ -181,7 +181,7 @@ TEST(EquinoctialElements, GetStateVectorFromKeplerian) {
 }
 
 TEST(EquinoctialElements, GetStateVectorFrom0Eccentricity) {
-    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
+    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
 
     //keplerian elements
     double p = 1.0e7;
@@ -203,7 +203,7 @@ TEST(EquinoctialElements, GetStateVectorFrom0Eccentricity) {
 }
 
 TEST(EquinoctialElements, GetEccentricity) {
-    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
+    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
 
     //keplerian elements
     double p = 1.0e7;
@@ -231,7 +231,7 @@ TEST(EquinoctialElements, GetEccentricity) {
 }
 
 TEST(EquinoctialElements, GetInclination) {
-    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
+    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
 
     //keplerian elements
     double p = 1.0e7;
@@ -259,7 +259,7 @@ TEST(EquinoctialElements, GetInclination) {
 }
 
 TEST(EquinoctialElements, GetPeriapsisArgument) {
-    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
+    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
 
     //keplerian elements
     double p = 1.0e7;
@@ -287,7 +287,7 @@ TEST(EquinoctialElements, GetPeriapsisArgument) {
 }
 
 TEST(EquinoctialElements, GetRightAscendingNode) {
-    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
+    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
 
     //keplerian elements
     double p = 1.0e7;
@@ -315,7 +315,7 @@ TEST(EquinoctialElements, GetRightAscendingNode) {
 }
 
 TEST(EquinoctialElements, GetMeanAnomalyAtEpoch) {
-    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
+    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
 
     //keplerian elements
     double p = 1.0e7;
@@ -343,7 +343,7 @@ TEST(EquinoctialElements, GetMeanAnomalyAtEpoch) {
 }
 
 TEST(EquinoctialElements, GetSpecificOrbitalEnergy) {
-    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
+    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
 
     //ISS keplerian elements
     //double p = 1.0e7;
@@ -371,7 +371,7 @@ TEST(EquinoctialElements, GetSpecificOrbitalEnergy) {
 }
 
 TEST(EquinoctialElements, GetSpecificAngularMomentum) {
-    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
+    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
 
     //ISS keplerian elements
     double ecc = 8.258860265483704E-04;
@@ -398,7 +398,7 @@ TEST(EquinoctialElements, GetSpecificAngularMomentum) {
 }
 
 TEST(EquinoctialElements, GetTrueAnomalyAtEpoch) {
-    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
+    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
 
     //ISS keplerian elements
     double ecc = 8.258860265483704E-04;
@@ -425,7 +425,7 @@ TEST(EquinoctialElements, GetTrueAnomalyAtEpoch) {
 }
 
 TEST(EquinoctialElements, GetISSMeanAnomaly) {
-    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
+    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
 
     //keplerian elements
     double ecc = 8.258860265483704E-04;
@@ -452,7 +452,7 @@ TEST(EquinoctialElements, GetISSMeanAnomaly) {
 }
 
 TEST(EquinoctialElements, GetSemiMajorAxis) {
-    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
+    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
 
     //keplerian elements
     double ecc = 8.258860265483704E-04;
@@ -479,7 +479,7 @@ TEST(EquinoctialElements, GetSemiMajorAxis) {
 }
 
 TEST(EquinoctialElements, GetTimeToMeanAnomaly) {
-    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
+    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
 
     //keplerian elements
     double ecc = 0.5;
@@ -506,7 +506,7 @@ TEST(EquinoctialElements, GetTimeToMeanAnomaly) {
 }
 
 TEST(EquinoctialElements, GetMeanAnomalyForEpoch) {
-    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
+    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
 
     //keplerian elements
     double ecc = 0.5;
@@ -533,7 +533,7 @@ TEST(EquinoctialElements, GetMeanAnomalyForEpoch) {
 }
 
 TEST(EquinoctialElements, GetTimeToTrueAnomaly) {
-    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
+    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
 
     //keplerian elements
     double ecc = 0.5;
@@ -560,7 +560,7 @@ TEST(EquinoctialElements, GetTimeToTrueAnomaly) {
 }
 
 TEST(EquinoctialElements, GetTrueAnomalyForEpoch) {
-    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
+    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
 
     //keplerian elements
     double ecc = 0.5;
@@ -587,7 +587,7 @@ TEST(EquinoctialElements, GetTrueAnomalyForEpoch) {
 }
 
 TEST(EquinoctialElements, TrajectoryType) {
-    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
+    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
 
     //keplerian elements
     double ecc = 0.5;

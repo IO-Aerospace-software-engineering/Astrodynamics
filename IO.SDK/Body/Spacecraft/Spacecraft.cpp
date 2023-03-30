@@ -46,7 +46,7 @@ IO::SDK::Body::Spacecraft::Spacecraft::Spacecraft(const int id, const std::strin
                                                                                                 *this)),
                                                                                         m_clockKernel(
                                                                                                 new IO::SDK::Kernels::SpacecraftClockKernel(
-                                                                                                        *this, 16)),
+                                                                                                        *this, Parameters::ClockAccuracy)),
                                                                                         m_orientationKernel(
                                                                                                 new IO::SDK::Kernels::OrientationKernel(
                                                                                                         *this)),

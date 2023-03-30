@@ -30,16 +30,10 @@
 #include <Coordinate.h>
 #include <IlluminationAngle.h>
 #include <EphemerisKernel.h>
-#include <Scenario.h>
 
 namespace IO::SDK::Kernels
 {
     class EphemerisKernel;
-}
-
-namespace IO::SDK
-{
-    class Scenario;
 }
 
 namespace IO::SDK::Sites
@@ -50,7 +44,7 @@ namespace IO::SDK::Sites
      */
     class Site
     {
-    private:
+    protected:
         const int m_id;
         const std::string m_name;
         const IO::SDK::Coordinates::Geodetic m_coordinates;
@@ -66,9 +60,6 @@ namespace IO::SDK::Sites
          */
         void WriteEphemeris(const std::vector<OrbitalParameters::StateVector> &states) const;
 
-    protected:
-        const IO::SDK::Scenario &m_scenario;
-
     public:
         /**
          * @brief Construct a new Site object
@@ -76,7 +67,7 @@ namespace IO::SDK::Sites
          * @param name 
          * @param coordinates 
          */
-        Site(const int id, const IO::SDK::Scenario &scenario, const std::string &name, const IO::SDK::Coordinates::Geodetic &coordinates,
+        Site(const int id, const std::string &name, const IO::SDK::Coordinates::Geodetic &coordinates,
              std::shared_ptr<IO::SDK::Body::CelestialBody> &body);
 
         virtual ~Site() = default;

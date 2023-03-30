@@ -19,6 +19,7 @@
 #include <Engine.h>
 #include <Propagator.h>
 #include <Vector3D.h>
+#include <StateOrientation.h>
 
 namespace IO::SDK::Maneuvers::Attitudes
 {

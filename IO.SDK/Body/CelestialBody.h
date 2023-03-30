@@ -23,7 +23,7 @@
 namespace IO::SDK::Body
 {
 	class CelestialBody final : public IO::SDK::Body::Body
-	{
+    {
 	private:
 		
 		const double m_sphereOfInfluence{};		
@@ -32,8 +32,8 @@ namespace IO::SDK::Body
 		double ReadGM(int id);
 
 	public:
-		CelestialBody(const int id, const std::string &name, std::shared_ptr<IO::SDK::Body::CelestialBody> &centerOfMotion);
-		CelestialBody(const int id, const std::string &name);
+		CelestialBody(const int id, std::shared_ptr<IO::SDK::Body::CelestialBody> &centerOfMotion);
+		CelestialBody(const int id);
 		double GetSphereOfInfluence() const;
 		double GetHillSphere() const;
 		/**
@@ -98,6 +98,13 @@ namespace IO::SDK::Body
 		 * @return IO::SDK::Time::TimeSpan 
 		 */
 		IO::SDK::Time::TimeSpan GetSideralRotationPeriod(const IO::SDK::Time::TDB &epoch) const;
+
+        static bool IsSun(int celestialBodyId);
+        static bool IsPlanet(int celestialBodyId);
+        static bool IsAsteroid(int celestialBodyId);
+        static bool IsMoon(int celestialBodyId);
+        static int FindCenterOfMotionId(int celestialBodyNaifId);
+
 	};
 	/**
 	 * @brief Compute sphere of influence radius
@@ -118,6 +125,8 @@ namespace IO::SDK::Body
 	 * @return double 
 	 */
 	double HillSphere(double a, double e, double majorMass, double minorMass);
+
+
 
 }
 #endif

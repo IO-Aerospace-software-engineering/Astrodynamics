@@ -1,0 +1,52 @@
+<map id="IO.SDK/Frames/SpacecraftFrameFile.h" name="IO.SDK/Frames/SpacecraftFrameFile.h">
+<area shape="rect" id="node1" title=" " alt="" coords="1496,5,1687,47"/>
+<area shape="rect" id="node2" title=" " alt="" coords="1937,841,1995,868"/>
+<area shape="rect" id="node3" href="$Spacecraft_8h.html" title=" " alt="" coords="1540,95,1643,121"/>
+<area shape="rect" id="node50" href="$FrameFile_8h.html" title=" " alt="" coords="43,393,142,420"/>
+<area shape="rect" id="node4" title=" " alt="" coords="3594,543,3671,569"/>
+<area shape="rect" id="node5" title=" " alt="" coords="1769,468,1832,495"/>
+<area shape="rect" id="node6" href="$Body_8h.html" title=" " alt="" coords="2765,393,2831,420"/>
+<area shape="rect" id="node14" href="$Vector3D_8h.html" title=" " alt="" coords="1350,617,1443,644"/>
+<area shape="rect" id="node17" href="$TDB_8h.html" title=" " alt="" coords="2342,617,2403,644"/>
+<area shape="rect" id="node23" href="$Aberrations_8h.html" title=" " alt="" coords="3721,468,3830,495"/>
+<area shape="rect" id="node24" href="$Window_8h.html" title=" " alt="" coords="1053,617,1138,644"/>
+<area shape="rect" id="node29" href="$SpacecraftClockKernel_8h.html" title=" " alt="" coords="267,319,446,345"/>
+<area shape="rect" id="node32" href="$OrientationKernel_8h.html" title=" " alt="" coords="1156,393,1304,420"/>
+<area shape="rect" id="node33" href="$StateOrientation_8h.html" title=" " alt="" coords="1553,468,1694,495"/>
+<area shape="rect" id="node35" href="$InertialFrames_8h.html" title=" " alt="" coords="571,468,699,495"/>
+<area shape="rect" id="node36" href="$EphemerisKernel_8h.html" title=" " alt="" coords="1367,169,1511,196"/>
+<area shape="rect" id="node37" href="$StateVector_8h.html" title=" " alt="" coords="1965,244,2073,271"/>
+<area shape="rect" id="node43" href="$Instrument_8h.html" title=" " alt="" coords="1328,393,1433,420"/>
+<area shape="rect" id="node46" href="$FuelTank_8h.html" title=" " alt="" coords="3865,393,3955,420"/>
+<area shape="rect" id="node47" href="$Payload_8h.html" title=" " alt="" coords="4111,244,4197,271"/>
+<area shape="rect" id="node48" href="$Engine_8h.html" title=" " alt="" coords="4031,319,4109,345"/>
+<area shape="rect" id="node49" href="$InstrumentFrameFile_8h.html" title=" " alt="" coords="789,319,959,345"/>
+<area shape="rect" id="node7" title=" " alt="" coords="2793,468,2891,495"/>
+<area shape="rect" id="node8" href="$Constants_8h.html" title=" " alt="" coords="2915,468,3014,495"/>
+<area shape="rect" id="node9" href="$SDKException_8h.html" title=" " alt="" coords="853,692,978,719"/>
+<area shape="rect" id="node11" href="$Parameters_8h.html" title=" " alt="" coords="3023,767,3131,793"/>
+<area shape="rect" id="node12" href="$OrbitalParameters_8h.html" title=" " alt="" coords="3038,468,3190,495"/>
+<area shape="rect" id="node15" href="$TimeSpan_8h.html" title=" " alt="" coords="1917,767,2015,793"/>
+<area shape="rect" id="node16" title=" " alt="" coords="453,841,543,868"/>
+<area shape="rect" id="node19" href="$Frames_8h.html" title=" " alt="" coords="2025,543,2107,569"/>
+<area shape="rect" id="node26" href="$Constraint_8h_source.html" title=" " alt="" coords="3299,692,3401,719"/>
+<area shape="rect" id="node27" href="$OccultationType_8h.html" title=" " alt="" coords="3526,767,3665,793"/>
+<area shape="rect" id="node28" href="$Planetographic_8h.html" title=" " alt="" coords="2486,468,2617,495"/>
+<area shape="rect" id="node10" title=" " alt="" coords="847,767,933,793"/>
+<area shape="rect" id="node13" title=" " alt="" coords="4189,841,4255,868"/>
+<area shape="rect" id="node22" href="$RADec_8h.html" title=" " alt="" coords="3075,543,3153,569"/>
+<area shape="rect" id="node18" href="$DateTime_8h.html" title=" " alt="" coords="1771,692,1870,719"/>
+<area shape="rect" id="node20" href="$Matrix_8h.html" title=" " alt="" coords="1519,617,1595,644"/>
+<area shape="rect" id="node21" title=" " alt="" coords="1521,692,1592,719"/>
+<area shape="rect" id="node25" title=" " alt="" coords="1053,692,1145,719"/>
+<area shape="rect" id="node30" href="$Kernel_8h.html" title=" " alt="" coords="669,543,743,569"/>
+<area shape="rect" id="node31" title=" " alt="" coords="1769,393,1832,420"/>
+<area shape="rect" id="node34" href="$Quaternion_8h.html" title=" " alt="" coords="1489,543,1595,569"/>
+<area shape="rect" id="node40" href="$CelestialBody_8h.html" title=" " alt="" coords="1958,319,2081,345"/>
+<area shape="rect" id="node42" href="$InvalidArgumentException_8h.html" title=" " alt="" coords="771,617,977,644"/>
+<area shape="rect" id="node38" title=" " alt="" coords="2105,319,2161,345"/>
+<area shape="rect" id="node39" title=" " alt="" coords="2185,319,2243,345"/>
+<area shape="rect" id="node41" href="$BodyFixedFrames_8h.html" title=" " alt="" coords="2059,468,2209,495"/>
+<area shape="rect" id="node44" href="$FOVShapes_8h.html" title=" " alt="" coords="1588,767,1696,793"/>
+<area shape="rect" id="node45" href="$InstrumentKernel_8h.html" title=" " alt="" coords="1078,468,1225,495"/>
+</map>

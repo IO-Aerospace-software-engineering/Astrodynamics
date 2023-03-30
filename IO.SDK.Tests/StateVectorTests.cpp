@@ -12,7 +12,7 @@
 using namespace std::chrono_literals;
 TEST(StateVector, Initialization)
 {
-	auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(1, "earth");
+	auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(1);
 	IO::SDK::OrbitalParameters::StateVector sv(earth, IO::SDK::Math::Vector3D(1.0, 2.0, 3.0), IO::SDK::Math::Vector3D(4.0, 5.0, 6.0), IO::SDK::Time::TDB(100.0s), IO::SDK::Frames::InertialFrames::GetICRF());
 	ASSERT_DOUBLE_EQ(1.0, sv.GetPosition().GetX());
 	ASSERT_DOUBLE_EQ(2.0, sv.GetPosition().GetY());
@@ -42,14 +42,14 @@ TEST(StateVector, Initialization)
 
 TEST(StateVector, GetSpecificAngularMomentum)
 {
-	auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10, "sun");
+	auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10);
 	IO::SDK::OrbitalParameters::StateVector sv(sun, IO::SDK::Math::Vector3D(149.6e9, 0.0, 0.0), IO::SDK::Math::Vector3D(0.0, 2.98e4, 0.0), IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::GetICRF());
 	ASSERT_DOUBLE_EQ(4458080000000000.0, sv.GetSpecificAngularMomentum().Magnitude()); //Earth momentum
 }
 
 TEST(StateVector, GetSpecificOrbitalEnergy)
 {
-	auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth"); //GEOPHYSICAL PROPERTIES provided by JPL
+	auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399); //GEOPHYSICAL PROPERTIES provided by JPL
 	IO::SDK::OrbitalParameters::StateVector sv(earth, IO::SDK::Math::Vector3D(-6.116559469556896E+06, -1.546174698676721E+06, 2.521950157430313E+06), IO::SDK::Math::Vector3D(-8.078523150700097E+02, -5.477647950892673E+03, -5.297615757935174E+03), IO::SDK::Time::TDB(663724800.00001490s), IO::SDK::Frames::InertialFrames::GetICRF());
 	ASSERT_DOUBLE_EQ(-29305465.588067468, sv.GetSpecificOrbitalEnergy()); //Earth momentum
 }
@@ -57,7 +57,7 @@ TEST(StateVector, GetSpecificOrbitalEnergy)
 TEST(StateVector, GetSemiMajorAxis)
 {
 	//ISS
-	auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth"); //GEOPHYSICAL PROPERTIES provided by JPL
+	auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399); //GEOPHYSICAL PROPERTIES provided by JPL
 	IO::SDK::OrbitalParameters::StateVector sv(earth, IO::SDK::Math::Vector3D(-6.116559469556896E+06, -1.546174698676721E+06, 2.521950157430313E+06), IO::SDK::Math::Vector3D(-8.078523150700097E+02, -5.477647950892673E+03, -5.297615757935174E+03), IO::SDK::Time::TDB(663724800.00001490s), IO::SDK::Frames::InertialFrames::GetICRF());
 
 	//Low accuracy due to conical propagation
@@ -67,7 +67,7 @@ TEST(StateVector, GetSemiMajorAxis)
 TEST(StateVector, GetEccentricity)
 {
 	//ISS
-	auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth"); //GEOPHYSICAL PROPERTIES provided by JPL
+	auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399); //GEOPHYSICAL PROPERTIES provided by JPL
 	IO::SDK::OrbitalParameters::StateVector sv(earth, IO::SDK::Math::Vector3D(-6.116559469556896E+06, -1.546174698676721E+06, 2.521950157430313E+06), IO::SDK::Math::Vector3D(-8.078523150700097E+02, -5.477647950892673E+03, -5.297615757935174E+03), IO::SDK::Time::TDB(663724800.00001490s), IO::SDK::Frames::InertialFrames::GetICRF());
 
 	//Low accuracy due to conical propagation
@@ -77,7 +77,7 @@ TEST(StateVector, GetEccentricity)
 TEST(StateVector, GetInclination)
 {
 	//ISS
-	auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth"); //GEOPHYSICAL PROPERTIES provided by JPL
+	auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399); //GEOPHYSICAL PROPERTIES provided by JPL
 	IO::SDK::OrbitalParameters::StateVector sv(earth, IO::SDK::Math::Vector3D(-6.116559469556896E+06, -1.546174698676721E+06, 2.521950157430313E+06), IO::SDK::Math::Vector3D(-8.078523150700097E+02, -5.477647950892673E+03, -5.297615757935174E+03), IO::SDK::Time::TDB(663724800.00001490s), IO::SDK::Frames::InertialFrames::GetICRF());
 
 	//Low accuracy due to conical propagation
@@ -87,7 +87,7 @@ TEST(StateVector, GetInclination)
 TEST(StateVector, GetPeriapsisArgument)
 {
 	//ISS
-	auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth"); //GEOPHYSICAL PROPERTIES provided by JPL
+	auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399); //GEOPHYSICAL PROPERTIES provided by JPL
 	IO::SDK::OrbitalParameters::StateVector sv(earth, IO::SDK::Math::Vector3D(-6.116559469556896E+06, -1.546174698676721E+06, 2.521950157430313E+06), IO::SDK::Math::Vector3D(-8.078523150700097E+02, -5.477647950892673E+03, -5.297615757935174E+03), IO::SDK::Time::TDB(663724800.00001490s), IO::SDK::Frames::InertialFrames::GetICRF());
 
 	//Low accuracy due to conical propagation
@@ -97,7 +97,7 @@ TEST(StateVector, GetPeriapsisArgument)
 TEST(StateVector, GetRAN)
 {
 	//ISS
-	auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth"); //GEOPHYSICAL PROPERTIES provided by JPL
+	auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399); //GEOPHYSICAL PROPERTIES provided by JPL
 	IO::SDK::OrbitalParameters::StateVector sv(earth, IO::SDK::Math::Vector3D(-6.116559469556896E+06, -1.546174698676721E+06, 2.521950157430313E+06), IO::SDK::Math::Vector3D(-8.078523150700097E+02, -5.477647950892673E+03, -5.297615757935174E+03), IO::SDK::Time::TDB(663724800.00001490s), IO::SDK::Frames::InertialFrames::GetICRF());
 
 	//Low accuracy due to conical propagation
@@ -107,7 +107,7 @@ TEST(StateVector, GetRAN)
 TEST(StateVector, GetMeanAnomaly)
 {
 	//ISS
-	auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth"); //GEOPHYSICAL PROPERTIES provided by JPL
+	auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399); //GEOPHYSICAL PROPERTIES provided by JPL
 	IO::SDK::OrbitalParameters::StateVector sv(earth, IO::SDK::Math::Vector3D(-6.116559469556896E+06, -1.546174698676721E+06, 2.521950157430313E+06), IO::SDK::Math::Vector3D(-8.078523150700097E+02, -5.477647950892673E+03, -5.297615757935174E+03), IO::SDK::Time::TDB(663724800.00001490s), IO::SDK::Frames::InertialFrames::GetICRF());
 
 	//Low accuracy due to conical propagation
@@ -117,7 +117,7 @@ TEST(StateVector, GetMeanAnomaly)
 TEST(StateVector, GetTrueAnomaly)
 {
 	//ISS
-	auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth"); //GEOPHYSICAL PROPERTIES provided by JPL
+	auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399); //GEOPHYSICAL PROPERTIES provided by JPL
 	IO::SDK::OrbitalParameters::StateVector sv(earth, IO::SDK::Math::Vector3D(-6.116559469556896E+06, -1.546174698676721E+06, 2.521950157430313E+06), IO::SDK::Math::Vector3D(-8.078523150700097E+02, -5.477647950892673E+03, -5.297615757935174E+03), IO::SDK::Time::TDB(663724800.00001490s), IO::SDK::Frames::InertialFrames::GetICRF());
 
 	//Low accuracy due to conical propagation
@@ -127,7 +127,7 @@ TEST(StateVector, GetTrueAnomaly)
 TEST(StateVector, GetPeriod)
 {
 	//ISS
-	auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth"); //GEOPHYSICAL PROPERTIES provided by JPL
+	auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399); //GEOPHYSICAL PROPERTIES provided by JPL
 	IO::SDK::OrbitalParameters::StateVector sv(earth, IO::SDK::Math::Vector3D(-6.116559469556896E+06, -1.546174698676721E+06, 2.521950157430313E+06), IO::SDK::Math::Vector3D(-8.078523150700097E+02, -5.477647950892673E+03, -5.297615757935174E+03), IO::SDK::Time::TDB(663724800.00001490s), IO::SDK::Frames::InertialFrames::GetICRF());
 
 	//Low accuracy due to conical propagation
@@ -137,7 +137,7 @@ TEST(StateVector, GetPeriod)
 TEST(StateVector, GetMeanMotion)
 {
 	//ISS
-	auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth"); //GEOPHYSICAL PROPERTIES provided by JPL
+	auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399); //GEOPHYSICAL PROPERTIES provided by JPL
 	IO::SDK::OrbitalParameters::StateVector sv(earth, IO::SDK::Math::Vector3D(-6.116559469556896E+06, -1.546174698676721E+06, 2.521950157430313E+06), IO::SDK::Math::Vector3D(-8.078523150700097E+02, -5.477647950892673E+03, -5.297615757935174E+03), IO::SDK::Time::TDB(663724800.00001490s), IO::SDK::Frames::InertialFrames::GetICRF());
 
 	//Low accuracy due to conical propagation
@@ -147,7 +147,7 @@ TEST(StateVector, GetMeanMotion)
 TEST(StateVector, IsElliptical)
 {
 	//ISS
-	auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth"); //GEOPHYSICAL PROPERTIES provided by JPL
+	auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399); //GEOPHYSICAL PROPERTIES provided by JPL
 	IO::SDK::OrbitalParameters::StateVector sv(earth, IO::SDK::Math::Vector3D(-6.116559469556896E+06, -1.546174698676721E+06, 2.521950157430313E+06), IO::SDK::Math::Vector3D(-8.078523150700097E+02, -5.477647950892673E+03, -5.297615757935174E+03), IO::SDK::Time::TDB(663724800.00001490s), IO::SDK::Frames::InertialFrames::GetICRF());
 
 	//Low accuracy due to conical propagation
@@ -157,7 +157,7 @@ TEST(StateVector, IsElliptical)
 TEST(StateVector, IsHyperbolic)
 {
 	//ISS
-	auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth"); //GEOPHYSICAL PROPERTIES provided by JPL
+	auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399); //GEOPHYSICAL PROPERTIES provided by JPL
 	IO::SDK::OrbitalParameters::StateVector sv(earth, IO::SDK::Math::Vector3D(6800000.0, 0.0, 0.0), IO::SDK::Math::Vector3D(0.0, 18000.0, 0.0), IO::SDK::Time::TDB(663724800.00001490s), IO::SDK::Frames::InertialFrames::GetICRF());
 
 	//Low accuracy due to conical propagation
@@ -167,7 +167,7 @@ TEST(StateVector, IsHyperbolic)
 TEST(StateVector, IsParabolic)
 {
 	//FICTIVE
-	auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth"); //GEOPHYSICAL PROPERTIES provided by JPL
+	auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399); //GEOPHYSICAL PROPERTIES provided by JPL
 	double escapeVelocity = std::sqrt((earth->GetMu() * 2.0) / 6800000.0);
 
 	IO::SDK::OrbitalParameters::StateVector sv(earth, IO::SDK::Math::Vector3D(6800000.0, 0.0, 0.0), IO::SDK::Math::Vector3D(0.0, escapeVelocity, 0.0), IO::SDK::Time::TDB(663724800.00001490s), IO::SDK::Frames::InertialFrames::GetICRF());
@@ -179,9 +179,9 @@ TEST(StateVector, IsParabolic)
 TEST(StateVector, CheckUpdateCenterOfMotionToParentBody)
 {
 	//FICTIVE
-	auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10, "sun");			//GEOPHYSICAL PROPERTIES provided by JPL
-	auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth", sun); //GEOPHYSICAL PROPERTIES provided by JPL
-	auto moon = std::make_shared<IO::SDK::Body::CelestialBody>(301, "moon", earth); //GEOPHYSICAL PROPERTIES provided by JPL
+	auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10);			//GEOPHYSICAL PROPERTIES provided by JPL
+	auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, sun); //GEOPHYSICAL PROPERTIES provided by JPL
+	auto moon = std::make_shared<IO::SDK::Body::CelestialBody>(301, earth); //GEOPHYSICAL PROPERTIES provided by JPL
 
 	//Define SV with earth as center of motion but the influence body is the sun in this case at 2021-01-01 00:00:00.000000 TDB
 	IO::SDK::OrbitalParameters::StateVector sv{earth, IO::SDK::Math::Vector3D(2000000000.0, 0.0, 0.0), IO::SDK::Math::Vector3D(0.0, 3000.0, 0.0), IO::SDK::Time::TDB(662731200.000000s), IO::SDK::Frames::InertialFrames::GetICRF()};
@@ -201,9 +201,9 @@ TEST(StateVector, CheckUpdateCenterOfMotionToParentBody)
 TEST(StateVector, CheckUpdateCenterOfMotionToSatelliteBody)
 {
 	//FICTIVE
-	auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10, "sun");			//GEOPHYSICAL PROPERTIES provided by JPL
-	auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth", sun); //GEOPHYSICAL PROPERTIES provided by JPL
-	auto moon = std::make_shared<IO::SDK::Body::CelestialBody>(301, "moon", earth); //GEOPHYSICAL PROPERTIES provided by JPL
+	auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10);			//GEOPHYSICAL PROPERTIES provided by JPL
+	auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, sun); //GEOPHYSICAL PROPERTIES provided by JPL
+	auto moon = std::make_shared<IO::SDK::Body::CelestialBody>(301, earth); //GEOPHYSICAL PROPERTIES provided by JPL
 
 	//Define SV with earth as center of motion but the influence body is the moon in this case at 2021-01-01 00:00:00.000000 TDB
 	IO::SDK::OrbitalParameters::StateVector sv{earth, IO::SDK::Math::Vector3D(-2.088864826237993E+08, 2.911146390982051E+08, 1.515746884380044E+08), IO::SDK::Math::Vector3D(-8.366764389833921E+02, -5.602543663174073E+02, -1.710459390585548E+02), IO::SDK::Time::TDB(662731200.000000s), IO::SDK::Frames::InertialFrames::GetICRF()};
@@ -223,8 +223,8 @@ TEST(StateVector, CheckUpdateCenterOfMotionToSatelliteBody)
 TEST(StateVector, Assignement)
 {
 	//FICTIVE
-	auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10, "sun");			//GEOPHYSICAL PROPERTIES provided by JPL
-	auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth", sun); //GEOPHYSICAL PROPERTIES provided by JPL
+	auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10);			//GEOPHYSICAL PROPERTIES provided by JPL
+	auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, sun); //GEOPHYSICAL PROPERTIES provided by JPL
 
 	//Define SV with earth as center of motion but the influence body is the moon in this case at 2021-01-01 00:00:00.000000 TDB
 	IO::SDK::OrbitalParameters::StateVector sv{earth, IO::SDK::Math::Vector3D(1.0, 2.0, 3.0), IO::SDK::Math::Vector3D(4.0, 5.0, 6.0), IO::SDK::Time::TDB(100.0s), IO::SDK::Frames::InertialFrames::GetICRF()};
@@ -241,7 +241,7 @@ TEST(StateVector, Assignement)
 
 TEST(StateVector, Frame)
 {
-	auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth"); //GEOPHYSICAL PROPERTIES provided by JPL
+	auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399); //GEOPHYSICAL PROPERTIES provided by JPL
 	const IO::SDK::OrbitalParameters::StateVector sv(earth, IO::SDK::Math::Vector3D(6800000.0, 0.0, 0.0), IO::SDK::Math::Vector3D(0.0, 18000.0, 0.0), IO::SDK::Time::TDB(663724800.00001490s), IO::SDK::Frames::InertialFrames::GetICRF());
 
 	//Low accuracy due to conical propagation
@@ -251,7 +251,7 @@ TEST(StateVector, Frame)
 
 TEST(StateVector, EccentricityVector)
 {
-	auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth"); //GEOPHYSICAL PROPERTIES provided by JPL
+	auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399); //GEOPHYSICAL PROPERTIES provided by JPL
 	const IO::SDK::OrbitalParameters::StateVector sv(earth, IO::SDK::Math::Vector3D(6800000.0, 0.0, 0.0), IO::SDK::Math::Vector3D(0.0, 9000.0, 0.0), IO::SDK::Time::TDB(663724800.00001490s), IO::SDK::Frames::InertialFrames::GetICRF());
 
 	auto e = sv.GetEccentricityVector();
@@ -264,7 +264,7 @@ TEST(StateVector, EccentricityVector)
 
 TEST(StateVector, PerigeeVector)
 {
-	auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth"); //GEOPHYSICAL PROPERTIES provided by JPL
+	auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399); //GEOPHYSICAL PROPERTIES provided by JPL
 	const IO::SDK::OrbitalParameters::StateVector sv(earth, IO::SDK::Math::Vector3D(6800000.0, 0.0, 0.0), IO::SDK::Math::Vector3D(0.0, 9000.0, 0.0), IO::SDK::Time::TDB(663724800.00001490s), IO::SDK::Frames::InertialFrames::GetICRF());
 
 	auto p = sv.GetPerigeeVector();
@@ -277,7 +277,7 @@ TEST(StateVector, PerigeeVector)
 
 TEST(StateVector, ApogeeVector)
 {
-	auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth"); //GEOPHYSICAL PROPERTIES provided by JPL
+	auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399); //GEOPHYSICAL PROPERTIES provided by JPL
 	const IO::SDK::OrbitalParameters::StateVector sv(earth, IO::SDK::Math::Vector3D(6800000.0, 0.0, 0.0), IO::SDK::Math::Vector3D(0.0, 9000.0, 0.0), IO::SDK::Time::TDB(663724800.00001490s), IO::SDK::Frames::InertialFrames::GetICRF());
 
 	auto p = sv.GetApogeeVector();
@@ -290,7 +290,7 @@ TEST(StateVector, ApogeeVector)
 
 TEST(StateVector, FromTrueAnomaly)
 {
-	auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth"); //GEOPHYSICAL PROPERTIES provided by JPL
+	auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399); //GEOPHYSICAL PROPERTIES provided by JPL
 	const IO::SDK::OrbitalParameters::StateVector sv(earth, IO::SDK::Math::Vector3D(6800000.0, 0.0, 0.0), IO::SDK::Math::Vector3D(0.0, 9000.0, 0.0), IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::GetICRF());
 
 	auto newSv = sv.GetStateVector(1.57);
@@ -307,7 +307,7 @@ TEST(StateVector, FromTrueAnomaly)
 
 TEST(StateVector, ToFrame)
 {
-	auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10, "sun"); //GEOPHYSICAL PROPERTIES provided by JPL
+	auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10); //GEOPHYSICAL PROPERTIES provided by JPL
 	const IO::SDK::OrbitalParameters::StateVector sv(sun, IO::SDK::Math::Vector3D(-2.649903367743050E+10,1.327574173383451E+11, 5.755671847054072E+10), IO::SDK::Math::Vector3D(-2.979426007043741E+04, -5.018052308799903E+03, -2.175393802830554E+03), IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::GetICRF());
 
 	auto nStateVector = sv.ToFrame(IO::SDK::Frames::InertialFrames::Ecliptic());
@@ -322,7 +322,7 @@ TEST(StateVector, ToFrame)
 
 TEST(StateVector, GetAscendingNodeVector)
 {
-	auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth"); //GEOPHYSICAL PROPERTIES provided by JPL
+	auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399); //GEOPHYSICAL PROPERTIES provided by JPL
 	const IO::SDK::OrbitalParameters::StateVector sv(earth, IO::SDK::Math::Vector3D(6800000.0, 0.0, 0.0), IO::SDK::Math::Vector3D(0.0, 9000.0, 1000.0), IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::GetICRF());
 
 	auto anv = sv.GetAscendingNodeVector();

@@ -25,6 +25,8 @@
 #include <VVIntegrator.h>
 #include <GravityForce.h>
 #include <Force.h>
+#include <LaunchParameters.h>
+#include <LaunchWindow.h>
 
 namespace IO::SDK::Integrators
 {
@@ -44,6 +46,8 @@ namespace IO::SDK::Constraints::Parameters
     class DistanceParameters;
 
     class InFieldOfViewParameters;
+
+    class LaunchParameters;
 }
 
 namespace IO::SDK
@@ -74,6 +78,8 @@ namespace IO::SDK
         std::map<IO::SDK::Constraints::Parameters::BodyVisibilityFromSiteParameters *, std::optional<std::vector<IO::SDK::Time::Window<IO::SDK::Time::UTC>>>> m_bodyVisibilityConstraints;
 
         std::map<IO::SDK::Constraints::Parameters::InFieldOfViewParameters *, std::optional<std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>>>> m_inFieldOfViewConstraints;
+
+        std::map<IO::SDK::Constraints::Parameters::LaunchParameters *, std::optional<std::vector<IO::SDK::Maneuvers::LaunchWindow>>> m_launchConstraints;
 
     public:
         Scenario(const std::string &name, const IO::SDK::Time::Window<IO::SDK::Time::UTC> &windows);
@@ -192,6 +198,16 @@ namespace IO::SDK
         }
 
         /**
+         * Get launch constraints
+         * @return
+         */
+        inline const std::map<IO::SDK::Constraints::Parameters::LaunchParameters *, std::optional<std::vector<IO::SDK::Maneuvers::LaunchWindow>>> &
+        GetLaunchConstraints() const
+        {
+            return m_launchConstraints;
+        }
+
+        /**
          * Add a distance constraint
          * @param distanceParameters
          */
@@ -226,6 +242,12 @@ namespace IO::SDK
          * @param inFieldOfViewParameters
          */
         void AddInFieldOfViewConstraint(IO::SDK::Constraints::Parameters::InFieldOfViewParameters *inFieldOfViewParameters);
+
+        /**
+         * Add launch constraint
+         * @param launchParameters
+         */
+        void AddLaunchConstraint(IO::SDK::Constraints::Parameters::LaunchParameters *launchParameters);
 
         /**
          * Execute scenario, propagate spacecrafts, simulate maneuvers, evaluate constraints

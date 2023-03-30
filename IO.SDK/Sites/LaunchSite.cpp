@@ -8,11 +8,12 @@
  * @copyright Copyright (c) 2021
  * 
  */
-#include <LaunchSite.h>
-#include <SDKException.h>
 
-IO::SDK::Sites::LaunchSite::LaunchSite(const int id, const IO::SDK::Scenario &scenario, const std::string name, const IO::SDK::Coordinates::Geodetic coordinates,
-                                       std::shared_ptr<IO::SDK::Body::CelestialBody> body) : Site(id, scenario, name, coordinates, body)
+#include <iterator>
+#include <LaunchSite.h>
+
+IO::SDK::Sites::LaunchSite::LaunchSite(const int id, const std::string name, const IO::SDK::Coordinates::Geodetic coordinates,
+                                       std::shared_ptr<IO::SDK::Body::CelestialBody> body) : Site(id, name, coordinates, body)
 {
 }
 

@@ -1,0 +1,12 @@
+<map id="IO.SDK/Maneuvers/Attitudes" name="IO.SDK/Maneuvers/Attitudes">
+<area shape="rect" id="node1" href="dir_c51e8bc394f44bcc936cb3df2256bc13.html" title="Attitudes" alt="" coords="191,52,272,100"/>
+<area shape="rect" id="node2" href="dir_0971778ed90f985c280a60f901282cdd.html" title="Propagators" alt="" coords="5,148,105,196"/>
+<area shape="rect" id="edge1-headlabel" href="dir_000000_000016.html" title="5" alt="" coords="114,139,123,154"/>
+<area shape="rect" id="node3" href="dir_1d644f90f19ce2018d1fb00b3e15f120.html" title="Math" alt="" coords="130,148,202,196"/>
+<area shape="rect" id="edge2-headlabel" href="dir_000000_000013.html" title="5" alt="" coords="195,131,204,145"/>
+<area shape="rect" id="node4" href="dir_6572a3579bb0341008dda87869facae3.html" title="OrbitalParameters" alt="" coords="227,148,367,196"/>
+<area shape="rect" id="edge3-headlabel" href="dir_000000_000014.html" title="5" alt="" coords="273,121,282,135"/>
+<area shape="rect" id="node5" href="dir_bf83c57161868932241da7866fba7cd0.html" title="Body" alt="" coords="391,148,463,196"/>
+<area shape="rect" id="edge4-headlabel" href="dir_000000_000001.html" title="6" alt="" coords="374,131,383,145"/>
+<area shape="rect" id="clust1" href="dir_99b2af621a449da39ec666c117a50f26.html" title="Maneuvers" alt="" coords="179,16,283,111"/>
+</map>

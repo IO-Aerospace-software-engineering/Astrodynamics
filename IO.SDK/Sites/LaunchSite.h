@@ -19,7 +19,6 @@
 #include <Site.h>
 #include <CelestialBody.h>
 #include <AzimuthRange.h>
-#include <Scenario.h>
 
 namespace IO::SDK::Sites
 {
@@ -41,7 +40,7 @@ namespace IO::SDK::Sites
          * @param coordinates 
          * @param body 
          */
-        LaunchSite(const int id, const IO::SDK::Scenario &scenario, const std::string name, const IO::SDK::Coordinates::Geodetic coordinates,
+        LaunchSite(const int id, const std::string name, const IO::SDK::Coordinates::Geodetic coordinates,
                    std::shared_ptr<IO::SDK::Body::CelestialBody> body);
 
         /**
