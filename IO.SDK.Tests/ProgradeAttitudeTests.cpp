@@ -17,7 +17,7 @@ using namespace std::chrono_literals;
 
 TEST(ProgradeAttitude, GetOrientation)
 {
-    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth"); //GEOPHYSICAL PROPERTIES provided by JPL
+    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399); //GEOPHYSICAL PROPERTIES provided by JPL
 
     std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams1 = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth, IO::SDK::Math::Vector3D(6678000.0, 0.0, 0.0), IO::SDK::Math::Vector3D(0.0, 7727.0, 0.0), IO::SDK::Time::TDB("2021-01-01T13:00:00"), IO::SDK::Frames::InertialFrames::GetICRF());
 
@@ -51,7 +51,7 @@ TEST(ProgradeAttitude, GetOrientation)
 
 TEST(ProgradeAttitude, GetOrientationMinimumEpoch)
 {
-    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth"); //GEOPHYSICAL PROPERTIES provided by JPL
+    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399); //GEOPHYSICAL PROPERTIES provided by JPL
 
     std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams1 = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth, IO::SDK::Math::Vector3D(6678000.0, 0.0, 0.0), IO::SDK::Math::Vector3D(0.0, 7727.0, 0.0), IO::SDK::Time::TDB("2021-01-01T13:00:00"), IO::SDK::Frames::InertialFrames::GetICRF());
 
@@ -81,6 +81,6 @@ TEST(ProgradeAttitude, GetOrientationMinimumEpoch)
     auto newVector = s.Front.Rotate(orientation.GetQuaternion());
     ASSERT_EQ(IO::SDK::Math::Vector3D(0.0, 1.0, 0.0), newVector);
     ASSERT_EQ(IO::SDK::Time::TDB("2021-01-01T13:00:00"), s.GetOrientationsCoverageWindow().GetStartDate());
-    ASSERT_EQ(IO::SDK::Time::TDB("2021-01-01T13:00:20"), s.GetOrientationsCoverageWindow().GetEndDate());
-    ASSERT_EQ(IO::SDK::Time::TimeSpan(20s).GetSeconds().count(), s.GetOrientationsCoverageWindow().GetLength().GetSeconds().count());
+    ASSERT_EQ(IO::SDK::Time::TDB("2021-01-01T13:01:00"), s.GetOrientationsCoverageWindow().GetEndDate());
+    ASSERT_EQ(IO::SDK::Time::TimeSpan(60s).GetSeconds().count(), s.GetOrientationsCoverageWindow().GetLength().GetSeconds().count());
 }

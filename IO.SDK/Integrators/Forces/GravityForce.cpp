@@ -54,9 +54,9 @@ IO::SDK::Math::Vector3D IO::SDK::Integrators::Forces::GravityForce::Apply(const 
         }
         auto sv = sat->ReadEphemeris(stateVector.GetFrame(), IO::SDK::AberrationsEnum::None, stateVector.GetEpoch());
 
-        auto relativeposition = stateVector.GetPosition() - sv.GetPosition();
+        auto relativePosition = stateVector.GetPosition() - sv.GetPosition();
 
-        force = force + ComputeForce(sat->GetOrbitalParametersAtEpoch()->GetCenterOfMotion()->GetMass(), bodyMass, relativeposition.Magnitude(), relativeposition.Normalize());
+        force = force + ComputeForce(sat->GetOrbitalParametersAtEpoch()->GetCenterOfMotion()->GetMass(), bodyMass, relativePosition.Magnitude(), relativePosition.Normalize());
     }
 
     return force;

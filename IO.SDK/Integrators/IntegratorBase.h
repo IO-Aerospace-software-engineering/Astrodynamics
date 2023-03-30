@@ -11,7 +11,6 @@
 #ifndef INTEGRATOR_BASE_H
 #define INTEGRATOR_BASE_H
 
-#include <Spacecraft.h>
 #include <StateVector.h>
 
 namespace IO::SDK::Integrators

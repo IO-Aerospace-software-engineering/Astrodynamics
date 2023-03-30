@@ -1,17 +1,13 @@
 #include <gtest/gtest.h>
 #include <TLEIntegrator.h>
-#include <TimeSpan.h>
-#include <chrono>
-#include <vector>
-#include <iostream>
-#include<InertialFrames.h>
+#include <Spacecraft.h>
 
 using namespace std::chrono_literals;
 
 TEST(TLEIntegrator, Integrate)
 {
 
-    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
+    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
 
     std::string lines[3]{"ISS (ZARYA)", "1 25544U 98067A   21096.43776852  .00000912  00000-0  24825-4 0  9997", "2 25544  51.6463 337.6022 0002945 188.9422 344.4138 15.48860043277477"}; //2021-04-06 10:31:32.385783 TDB
     std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> tle = std::make_unique<IO::SDK::OrbitalParameters::TLE>(earth, lines);

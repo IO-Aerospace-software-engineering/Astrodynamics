@@ -39,7 +39,7 @@ IO::SDK::OrbitalParameters::StateOrientation IO::SDK::Maneuvers::ApogeeHeightCha
         velocityVector = velocityVector.Reverse();
     }
 
-    return IO::SDK::OrbitalParameters::StateOrientation(m_spacecraft.Front.To(velocityVector), IO::SDK::Math::Vector3D(0.0, 0.0, 0.0), maneuverPoint.GetEpoch(), maneuverPoint.GetFrame());
+    return IO::SDK::OrbitalParameters::StateOrientation(velocityVector.To(m_spacecraft.Front), IO::SDK::Math::Vector3D(0.0, 0.0, 0.0), maneuverPoint.GetEpoch(), maneuverPoint.GetFrame());
 }
 
 bool IO::SDK::Maneuvers::ApogeeHeightChangingManeuver::CanExecute(const IO::SDK::OrbitalParameters::OrbitalParameters &orbitalParams)

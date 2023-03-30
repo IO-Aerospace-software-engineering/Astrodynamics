@@ -14,7 +14,7 @@ using namespace std::chrono_literals;
 
 
 TEST(Spacecraft, Initialization) {
-    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
+    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
     std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth,
                                                                                                                                              IO::SDK::Math::Vector3D(1.0, 2.0, 3.0),
                                                                                                                                              IO::SDK::Math::Vector3D(4.0, 5.0, 6.0),
@@ -30,7 +30,7 @@ TEST(Spacecraft, Initialization) {
 }
 
 TEST(Spacecraft, InvalidId) {
-    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
+    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
     std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth,
                                                                                                                                              IO::SDK::Math::Vector3D(1.0, 2.0, 3.0),
                                                                                                                                              IO::SDK::Math::Vector3D(4.0, 5.0, 6.0),
@@ -40,7 +40,7 @@ TEST(Spacecraft, InvalidId) {
 }
 
 TEST(Spacecraft, AddPayload) {
-    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
+    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
     std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth,
                                                                                                                                              IO::SDK::Math::Vector3D(1.0, 2.0, 3.0),
                                                                                                                                              IO::SDK::Math::Vector3D(4.0, 5.0, 6.0),
@@ -54,7 +54,7 @@ TEST(Spacecraft, AddPayload) {
 }
 
 TEST(Spacecraft, ReleasePayload) {
-    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
+    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
     std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth,
                                                                                                                                              IO::SDK::Math::Vector3D(1.0, 2.0, 3.0),
                                                                                                                                              IO::SDK::Math::Vector3D(4.0, 5.0, 6.0),
@@ -69,7 +69,7 @@ TEST(Spacecraft, ReleasePayload) {
 }
 
 TEST(Spacecraft, ReleaseInvalidPayload) {
-    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
+    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
     std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth,
                                                                                                                                              IO::SDK::Math::Vector3D(1.0, 2.0, 3.0),
                                                                                                                                              IO::SDK::Math::Vector3D(4.0, 5.0, 6.0),
@@ -85,7 +85,7 @@ TEST(Spacecraft, ReleaseInvalidPayload) {
 }
 
 TEST(Spacecraft, EngineInvalidISP) {
-    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
+    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
     std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth,
                                                                                                                                              IO::SDK::Math::Vector3D(1.0, 2.0, 3.0),
                                                                                                                                              IO::SDK::Math::Vector3D(4.0, 5.0, 6.0),
@@ -97,7 +97,7 @@ TEST(Spacecraft, EngineInvalidISP) {
 }
 
 TEST(Spacecraft, EngineInvalidFuelFlow) {
-    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
+    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
     std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth,
                                                                                                                                              IO::SDK::Math::Vector3D(1.0, 2.0, 3.0),
                                                                                                                                              IO::SDK::Math::Vector3D(4.0, 5.0, 6.0),
@@ -109,7 +109,7 @@ TEST(Spacecraft, EngineInvalidFuelFlow) {
 }
 
 TEST(Spacecraft, GetFuelTank) {
-    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
+    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
     std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth,
                                                                                                                                              IO::SDK::Math::Vector3D(1.0, 2.0, 3.0),
                                                                                                                                              IO::SDK::Math::Vector3D(4.0, 5.0, 6.0),
@@ -122,7 +122,7 @@ TEST(Spacecraft, GetFuelTank) {
 }
 
 TEST(Spacecraft, EngineInvalidSerialNumber) {
-    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
+    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
     std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth,
                                                                                                                                              IO::SDK::Math::Vector3D(1.0, 2.0, 3.0),
                                                                                                                                              IO::SDK::Math::Vector3D(4.0, 5.0, 6.0),
@@ -134,7 +134,7 @@ TEST(Spacecraft, EngineInvalidSerialNumber) {
 }
 
 TEST(Spacecraft, FuelTankOverQuantity) {
-    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
+    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
     std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth,
                                                                                                                                              IO::SDK::Math::Vector3D(1.0, 2.0, 3.0),
                                                                                                                                              IO::SDK::Math::Vector3D(4.0, 5.0, 6.0),
@@ -145,7 +145,7 @@ TEST(Spacecraft, FuelTankOverQuantity) {
 }
 
 TEST(Spacecraft, FuelTankEmptySerialNumber) {
-    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
+    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
     std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth,
                                                                                                                                              IO::SDK::Math::Vector3D(1.0, 2.0, 3.0),
                                                                                                                                              IO::SDK::Math::Vector3D(4.0, 5.0, 6.0),
@@ -156,7 +156,7 @@ TEST(Spacecraft, FuelTankEmptySerialNumber) {
 }
 
 TEST(Spacecraft, FuelTankInvalidCapacity) {
-    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
+    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
     std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth,
                                                                                                                                              IO::SDK::Math::Vector3D(1.0, 2.0, 3.0),
                                                                                                                                              IO::SDK::Math::Vector3D(4.0, 5.0, 6.0),
@@ -167,7 +167,7 @@ TEST(Spacecraft, FuelTankInvalidCapacity) {
 }
 
 TEST(Spacecraft, FuelTankInvalidQuantity) {
-    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
+    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
     std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth,
                                                                                                                                              IO::SDK::Math::Vector3D(1.0, 2.0, 3.0),
                                                                                                                                              IO::SDK::Math::Vector3D(4.0, 5.0, 6.0),
@@ -178,7 +178,7 @@ TEST(Spacecraft, FuelTankInvalidQuantity) {
 }
 
 TEST(Spacecraft, FuelTankInvalidName) {
-    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
+    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
     std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth,
                                                                                                                                              IO::SDK::Math::Vector3D(1.0, 2.0, 3.0),
                                                                                                                                              IO::SDK::Math::Vector3D(4.0, 5.0, 6.0),
@@ -189,7 +189,7 @@ TEST(Spacecraft, FuelTankInvalidName) {
 }
 
 TEST(Spacecraft, GetEngine) {
-    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
+    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
     std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth,
                                                                                                                                              IO::SDK::Math::Vector3D(1.0, 2.0, 3.0),
                                                                                                                                              IO::SDK::Math::Vector3D(4.0, 5.0, 6.0),
@@ -203,7 +203,7 @@ TEST(Spacecraft, GetEngine) {
 }
 
 TEST(Spacecraft, Orientation) {
-    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
+    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
     std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth,
                                                                                                                                              IO::SDK::Math::Vector3D(1.0, 2.0, 3.0),
                                                                                                                                              IO::SDK::Math::Vector3D(4.0, 5.0, 6.0),
@@ -222,7 +222,7 @@ TEST(Spacecraft, Orientation) {
 
 TEST(Spacecraft, Orientation2) {
 
-    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
+    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
     std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth,
                                                                                                                                              IO::SDK::Math::Vector3D(1.0, 2.0, 3.0),
                                                                                                                                              IO::SDK::Math::Vector3D(4.0, 5.0, 6.0),

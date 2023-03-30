@@ -17,7 +17,7 @@ using namespace std::chrono_literals;
 TEST(Propagator, Initialization)
 {
     IO::SDK::Integrators::VVIntegrator integrator(IO::SDK::Time::TimeSpan(1.0s));
-    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
+    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
     std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth, IO::SDK::Math::Vector3D(1.0, 2.0, 3.0), IO::SDK::Math::Vector3D(4.0, 5.0, 6.0), IO::SDK::Time::TDB(100.0s), IO::SDK::Frames::InertialFrames::GetICRF());
     IO::SDK::OrbitalParameters::StateOrientation attitude(IO::SDK::Time::TDB(100.0s), IO::SDK::Frames::InertialFrames::GetICRF());
     IO::SDK::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, "ms01", std::move(orbitalParams)};
@@ -27,7 +27,7 @@ TEST(Propagator, Initialization)
 TEST(Propagator, FindNearestLowerValue)
 {
     IO::SDK::Integrators::VVIntegrator integrator(IO::SDK::Time::TimeSpan(1.0s));
-    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
+    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
     std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth, IO::SDK::Math::Vector3D(1.0, 2.0, 3.0), IO::SDK::Math::Vector3D(4.0, 5.0, 6.0), IO::SDK::Time::TDB(100.0s), IO::SDK::Frames::InertialFrames::GetICRF());
     IO::SDK::OrbitalParameters::StateOrientation attitude(IO::SDK::Time::TDB(100.0s), IO::SDK::Frames::InertialFrames::GetICRF());
     IO::SDK::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, "ms01", std::move(orbitalParams)};
@@ -59,7 +59,7 @@ TEST(Propagator, FindNearestLowerValue)
 TEST(Propagator, EraseDataRange)
 {
     IO::SDK::Integrators::VVIntegrator integrator(IO::SDK::Time::TimeSpan(1.0s));
-    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
+    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
     std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth, IO::SDK::Math::Vector3D(1.0, 2.0, 3.0), IO::SDK::Math::Vector3D(4.0, 5.0, 6.0), IO::SDK::Time::TDB(100.0s), IO::SDK::Frames::InertialFrames::GetICRF());
     IO::SDK::OrbitalParameters::StateOrientation attitude(IO::SDK::Time::TDB(100.0s), IO::SDK::Frames::InertialFrames::GetICRF());
     IO::SDK::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, "ms01", std::move(orbitalParams)};
@@ -99,17 +99,17 @@ TEST(Propagator, PropagateVVIntegrator)
     IO::SDK::Integrators::VVIntegrator integrator(step, forces);
 
     IO::SDK::Time::TDB epoch("2021-Jan-01 00:00:00.0000 TDB");
-    auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10, "sun");
+    auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10);
 
     //  2459215.500000000 = A.D. 2021-Jan-01 00:00:00.0000 TDB [del_T=     69.183909 s]
     //  X =-2.679537555216521E+07 Y = 1.327011135216045E+08 Z = 5.752533467064925E+07
     //  VX=-2.976558008982104E+01 VY=-5.075339952746913E+00 VZ=-2.200929976753953E+00
-    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth", sun);
+    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, sun);
 
     //  2459215.500000000 = A.D. 2021-Jan-01 00:00:00.0000 TDB [del_T=     69.183909 s]
     //  X =-2.068864826237993E+05 Y = 2.891146390982051E+05 Z = 1.515746884380044E+05
     //  VX=-8.366764389833921E-01 VY=-5.602543663174073E-01 VZ=-1.710459390585548E-01
-    auto moon = std::make_shared<IO::SDK::Body::CelestialBody>(301, "moon", earth);
+    auto moon = std::make_shared<IO::SDK::Body::CelestialBody>(301, earth);
     std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth, IO::SDK::Math::Vector3D(6800000.0, 0.0, 0.0), IO::SDK::Math::Vector3D(0.0, 8000.0, 0.0), epoch, IO::SDK::Frames::InertialFrames::GetICRF());
     IO::SDK::Body::Spacecraft::Spacecraft spc(-125, "spc125", 1000.0, 3000.0, "missGravity", std::move(orbitalParams));
 
@@ -169,7 +169,7 @@ TEST(Propagator, PropagatorVsKepler)
     //  2459215.500000000 = A.D. 2021-Jan-01 00:00:00.0000 TDB [del_T=     69.183909 s]
     //  X =-2.679537555216521E+07 Y = 1.327011135216045E+08 Z = 5.752533467064925E+07
     //  VX=-2.976558008982104E+01 VY=-5.075339952746913E+00 VZ=-2.200929976753953E+00
-    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
+    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
     double a = 6800000.0;
     auto v = std::sqrt(earth->GetMu() / a);
 
@@ -217,7 +217,7 @@ TEST(Propagator, PropagatorVsKepler)
 
     auto orientationCoverage = spc.GetOrientationsCoverageWindow();
     ASSERT_STREQ("2021-01-01 00:00:00.000000 (TDB)", orientationCoverage.GetStartDate().ToString().c_str());
-    ASSERT_STREQ("2021-01-01 00:00:00.000000 (TDB)", orientationCoverage.GetEndDate().ToString().c_str());
+    ASSERT_STREQ("2021-01-01 01:47:27.000000 (TDB)", orientationCoverage.GetEndDate().ToString().c_str());
 
     //Analyse energy
     // std::ofstream myfile("SpecificEnergy.csv", std::ios_base::trunc);
@@ -250,7 +250,7 @@ TEST(Propagator, PropagatorVsKepler2)
     //  2459215.500000000 = A.D. 2021-Jan-01 00:00:00.0000 TDB [del_T=     69.183909 s]
     //  X =-2.679537555216521E+07 Y = 1.327011135216045E+08 Z = 5.752533467064925E+07
     //  VX=-2.976558008982104E+01 VY=-5.075339952746913E+00 VZ=-2.200929976753953E+00
-    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
+    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
     double a = 6800000.0;
     [[maybe_unused]] auto v = std::sqrt(earth->GetMu() / a);
 
@@ -297,7 +297,7 @@ TEST(Propagator, PropagatorVsKepler2)
 
     auto orientationCoverage = spc.GetOrientationsCoverageWindow();
     ASSERT_STREQ("2021-01-01 00:00:00.000000 (TDB)", orientationCoverage.GetStartDate().ToString().c_str());
-    ASSERT_STREQ("2021-01-01 00:00:00.000000 (TDB)", orientationCoverage.GetEndDate().ToString().c_str());
+    ASSERT_STREQ("2021-01-02 00:00:00.000000 (TDB)", orientationCoverage.GetEndDate().ToString().c_str());
 
     ASSERT_DOUBLE_EQ(9999999.5292096715, propagationResult.GetPerigeeVector().Magnitude());
     ASSERT_DOUBLE_EQ(0.30000006120264006, propagationResult.GetEccentricity());
@@ -320,7 +320,7 @@ TEST(Propagator, PropagatorVsKepler2)
 
 TEST(Propagator, PropagateTLEIntegrator)
 {
-    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
+    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
     std::string lines[3]{"ISS (ZARYA)", "1 25544U 98067A   21096.43776852  .00000912  00000-0  24825-4 0  9997", "2 25544  51.6463 337.6022 0002945 188.9422 344.4138 15.48860043277477"}; //2021-04-06 10:31:32.385783 TDB
     auto tleIntegrator = std::make_unique<IO::SDK::OrbitalParameters::TLE>(earth, lines);
     std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> tle = std::make_unique<IO::SDK::OrbitalParameters::TLE>(earth, lines);
@@ -377,7 +377,7 @@ TEST(Propagator, PropagateTLEIntegrator)
 
 TEST(Propagator, EraseEmptyPropagator)
 {
-    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth");
+    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
     std::string lines[3]{"ISS (ZARYA)", "1 25544U 98067A   21096.43776852  .00000912  00000-0  24825-4 0  9997", "2 25544  51.6463 337.6022 0002945 188.9422 344.4138 15.48860043277477"}; //2021-04-06 10:31:32.385783 TDB
     auto tleIntegrator = std::make_unique<IO::SDK::OrbitalParameters::TLE>(earth, lines);
     std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> tle = std::make_unique<IO::SDK::OrbitalParameters::TLE>(earth, lines);

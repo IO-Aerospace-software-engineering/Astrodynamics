@@ -11,18 +11,23 @@
 #include <Launch.h>
 #include <vector>
 
-IO::SDK::Maneuvers::Launch::Launch(const std::shared_ptr<IO::SDK::Sites::LaunchSite> launchSite, const std::shared_ptr<IO::SDK::Sites::LaunchSite> recoverySite, bool launchByDay, const IO::SDK::OrbitalParameters::OrbitalParameters &targetOrbit) : m_launchSite{launchSite}, m_recoverySite{recoverySite}, m_launchByDay{launchByDay}, m_targetOrbit{targetOrbit}
+IO::SDK::Maneuvers::Launch::Launch(const IO::SDK::Sites::LaunchSite &launchSite, const IO::SDK::Sites::Site &recoverySite, bool launchByDay,
+                                   const IO::SDK::OrbitalParameters::OrbitalParameters &targetOrbit) : m_launchSite{launchSite}, m_recoverySite{recoverySite},
+                                                                                                       m_launchByDay{launchByDay}, m_targetOrbit{targetOrbit}
 {
-    const_cast<double &>(m_inclination) = m_targetOrbit.GetStateVector().ToFrame(IO::SDK::Frames::InertialFrames::GetICRF()).GetSpecificAngularMomentum().GetAngle(m_launchSite->GetBody()->GetBodyFixedFrame().TransformVector(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::Math::Vector3D::VectorZ, IO::SDK::Time::TDB(std::chrono::duration<double>(0.0))));
+    const_cast<double &>(m_inclination) = m_targetOrbit.GetStateVector().ToFrame(IO::SDK::Frames::InertialFrames::GetICRF()).GetSpecificAngularMomentum().GetAngle(
+            m_launchSite.GetBody()->GetBodyFixedFrame().TransformVector(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::Math::Vector3D::VectorZ,
+                                                                        IO::SDK::Time::TDB(std::chrono::duration<double>(0.0))));
 
-    const_cast<double &>(m_deltaL) = std::asin(std::tan(m_launchSite->GetCoordinates().GetLatitude()) / std::tan(m_inclination));
+    const_cast<double &>(m_deltaL) = std::asin(std::tan(m_launchSite.GetCoordinates().GetLatitude()) / std::tan(m_inclination));
 }
 
 double IO::SDK::Maneuvers::Launch::GetNonInertialAscendingAzimuthLaunch()
 {
     if (std::isnan(m_nonInertialAscendingAzimuthLaunch))
     {
-        double vrotx = GetInertialInsertionVelocity() * std::sin(GetInertialAscendingAzimuthLaunch()) - m_launchSite->GetStateVector(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::Time::TDB(std::chrono::duration<double>(0.0))).GetVelocity().Magnitude();
+        double vrotx = GetInertialInsertionVelocity() * std::sin(GetInertialAscendingAzimuthLaunch()) -
+                       m_launchSite.GetStateVector(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::Time::TDB(std::chrono::duration<double>(0.0))).GetVelocity().Magnitude();
         double vroty = GetInertialInsertionVelocity() * std::cos(GetInertialAscendingAzimuthLaunch());
         m_nonInertialAscendingAzimuthLaunch = std::atan(vrotx / vroty);
         if (m_nonInertialAscendingAzimuthLaunch < 0.0)
@@ -50,7 +55,11 @@ double IO::SDK::Maneuvers::Launch::GetInertialAscendingAzimuthLaunch()
 {
     if (std::isnan(m_inertialAscendingAzimuthLaunch))
     {
-        m_inertialAscendingAzimuthLaunch = std::asin(std::cos(m_targetOrbit.GetStateVector().ToFrame(IO::SDK::Frames::InertialFrames::GetICRF()).GetSpecificAngularMomentum().GetAngle(m_launchSite->GetBody()->GetBodyFixedFrame().TransformVector(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::Math::Vector3D::VectorZ, IO::SDK::Time::TDB(std::chrono::duration<double>(0.0))))) / std::cos(m_launchSite->GetCoordinates().GetLatitude()));
+        m_inertialAscendingAzimuthLaunch = std::asin(std::cos(
+                m_targetOrbit.GetStateVector().ToFrame(IO::SDK::Frames::InertialFrames::GetICRF()).GetSpecificAngularMomentum().GetAngle(
+                        m_launchSite.GetBody()->GetBodyFixedFrame().TransformVector(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::Math::Vector3D::VectorZ,
+                                                                                    IO::SDK::Time::TDB(std::chrono::duration<double>(0.0))))) /
+                                                     std::cos(m_launchSite.GetCoordinates().GetLatitude()));
         if (m_inertialAscendingAzimuthLaunch < 0.0)
         {
             m_inertialAscendingAzimuthLaunch += IO::SDK::Constants::_2PI;
@@ -76,7 +85,8 @@ double IO::SDK::Maneuvers::Launch::GetNonInertialInsertionVelocity()
 {
     if (std::isnan(m_nonInertialInsertionVelocity))
     {
-        double vrotx = GetInertialInsertionVelocity() * std::sin(GetInertialAscendingAzimuthLaunch()) - m_launchSite->GetStateVector(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::Time::TDB(std::chrono::duration<double>(0.0))).GetVelocity().Magnitude();
+        double vrotx = GetInertialInsertionVelocity() * std::sin(GetInertialAscendingAzimuthLaunch()) -
+                       m_launchSite.GetStateVector(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::Time::TDB(std::chrono::duration<double>(0.0))).GetVelocity().Magnitude();
         double vroty = GetInertialInsertionVelocity() * std::cos(GetInertialAscendingAzimuthLaunch());
         m_nonInertialInsertionVelocity = std::sqrt(vrotx * vrotx + vroty * vroty);
     }
@@ -94,24 +104,26 @@ std::vector<IO::SDK::Maneuvers::LaunchWindow> IO::SDK::Maneuvers::Launch::GetLau
     if (m_launchByDay)
     {
         //Find sun light windows on launch site
-        auto launchSiteDayWindows = m_launchSite->FindDayWindows(searchWindow, IO::SDK::Constants::OfficialTwilight);
+        auto launchSiteDayWindows = m_launchSite.FindDayWindows(searchWindow, IO::SDK::Constants::OfficialTwilight);
         if (launchSiteDayWindows.empty())
         {
-            throw IO::SDK::Exception::SDKException("No sunlight at launch site on this search window day : " + searchWindow.GetStartDate().ToString() + " - " + searchWindow.GetEndDate().ToString());
+            throw IO::SDK::Exception::SDKException(
+                    "No sunlight at launch site on this search window day : " + searchWindow.GetStartDate().ToString() + " - " + searchWindow.GetEndDate().ToString());
         }
 
         //Find sun light windows on recovery site
-        auto recoverySiteDayWindows = m_recoverySite->FindDayWindows(searchWindow, IO::SDK::Constants::OfficialTwilight);
+        auto recoverySiteDayWindows = m_recoverySite.FindDayWindows(searchWindow, IO::SDK::Constants::OfficialTwilight);
         if (recoverySiteDayWindows.empty())
         {
-            throw IO::SDK::Exception::SDKException("No sunlight at recovery site on this launch day : " + searchWindow.GetStartDate().ToString() + " - " + searchWindow.GetEndDate().ToString());
+            throw IO::SDK::Exception::SDKException(
+                    "No sunlight at recovery site on this launch day : " + searchWindow.GetStartDate().ToString() + " - " + searchWindow.GetEndDate().ToString());
         }
 
         //Find sun light windows on both site at same time
         std::vector<IO::SDK::Time::Window<IO::SDK::Time::UTC>> sunLightWindowsOnBothSites;
-        for (auto &&launchSiteWindow : launchSiteDayWindows)
+        for (auto &&launchSiteWindow: launchSiteDayWindows)
         {
-            for (auto &&recoverySiteWindow : recoverySiteDayWindows)
+            for (auto &&recoverySiteWindow: recoverySiteDayWindows)
             {
                 if (launchSiteWindow.Intersects(recoverySiteWindow))
                 {
@@ -127,16 +139,21 @@ std::vector<IO::SDK::Maneuvers::LaunchWindow> IO::SDK::Maneuvers::Launch::GetLau
         }
 
         //Search an orbital plane alignement with launch site during sun light window on both sites
-        for (auto &&sunlightWindow : sunLightWindowsOnBothSites)
+        for (auto &&sunlightWindow: sunLightWindowsOnBothSites)
         {
             auto res = FindLaunchWindows(sunlightWindow);
-            launchWindows.insert(launchWindows.end(), res.begin(), res.end());
+            for (auto &lw: res)
+            {
+                launchWindows.push_back(lw);
+            }
         }
-    }
-    else
+    } else
     {
         auto res = FindLaunchWindows(searchWindow);
-        launchWindows.insert(launchWindows.end(), res.begin(), res.end());
+        for (auto &lw: res)
+        {
+            launchWindows.push_back(lw);
+        }
     }
 
     return launchWindows;
@@ -151,7 +168,8 @@ std::vector<IO::SDK::Maneuvers::LaunchWindow> IO::SDK::Maneuvers::Launch::FindLa
     auto step = windowToSearch.GetLength() * 0.5;
 
     //Define crossing plane inbound status
-    bool isInboundPlaneCrossing = m_targetOrbit.GetStateVector().ToFrame(IO::SDK::Frames::InertialFrames::GetICRF()).GetSpecificAngularMomentum().DotProduct(m_launchSite->GetStateVector(IO::SDK::Frames::InertialFrames::GetICRF(), date.ToTDB()).GetPosition()) > 0.0;
+    bool isInboundPlaneCrossing = m_targetOrbit.GetStateVector().ToFrame(IO::SDK::Frames::InertialFrames::GetICRF()).GetSpecificAngularMomentum().DotProduct(
+            m_launchSite.GetStateVector(IO::SDK::Frames::InertialFrames::GetICRF(), date.ToTDB()).GetPosition()) > 0.0;
 
     std::vector<LaunchWindow> launchWindows;
 
@@ -161,7 +179,8 @@ std::vector<IO::SDK::Maneuvers::LaunchWindow> IO::SDK::Maneuvers::Launch::FindLa
         date = date + step;
 
         //Compute crossing plane inbound status
-        bool isInbound = m_targetOrbit.GetStateVector().ToFrame(IO::SDK::Frames::InertialFrames::GetICRF()).GetSpecificAngularMomentum().DotProduct(m_launchSite->GetStateVector(IO::SDK::Frames::InertialFrames::GetICRF(), date.ToTDB()).GetPosition()) > 0.0;
+        bool isInbound = m_targetOrbit.GetStateVector().ToFrame(IO::SDK::Frames::InertialFrames::GetICRF()).GetSpecificAngularMomentum().DotProduct(
+                m_launchSite.GetStateVector(IO::SDK::Frames::InertialFrames::GetICRF(), date.ToTDB()).GetPosition()) > 0.0;
 
         //If inbound status has changed, we passed through orbital plane
         if (isInbound != isInboundPlaneCrossing)
@@ -185,13 +204,13 @@ std::vector<IO::SDK::Maneuvers::LaunchWindow> IO::SDK::Maneuvers::Launch::FindLa
 
             //Define if launch will be northly or southerly and set azimuths
             bool isAscending{};
-            if (m_launchSite->GetStateVector(IO::SDK::Frames::InertialFrames::GetICRF(), date.ToTDB()).GetPosition().DotProduct(m_targetOrbit.GetStateVector().ToFrame(IO::SDK::Frames::InertialFrames::GetICRF()).GetAscendingNodeVector()) > 0.0)
+            if (m_launchSite.GetStateVector(IO::SDK::Frames::InertialFrames::GetICRF(), date.ToTDB()).GetPosition().DotProduct(
+                    m_targetOrbit.GetStateVector().ToFrame(IO::SDK::Frames::InertialFrames::GetICRF()).GetAscendingNodeVector()) > 0.0)
             {
                 inertialAzimuthLaunch = GetInertialAscendingAzimuthLaunch();
                 nonInertialAzimuthLaunch = GetNonInertialAscendingAzimuthLaunch();
                 isAscending = true;
-            }
-            else
+            } else
             {
                 inertialAzimuthLaunch = GetInertialDescendingAzimuthLaunch();
                 nonInertialAzimuthLaunch = GetNonInertialDescendingAzimuthLaunch();
@@ -199,13 +218,14 @@ std::vector<IO::SDK::Maneuvers::LaunchWindow> IO::SDK::Maneuvers::Launch::FindLa
 
             //We add the first launch window in the collection
             auto window = IO::SDK::Time::Window<IO::SDK::Time::UTC>(date, date);
-            launchWindows.push_back(IO::SDK::Maneuvers::LaunchWindow(m_launchSite, window, inertialAzimuthLaunch, nonInertialAzimuthLaunch, inertialInsertionVelocity, nonInertialInsertionVelocity));
+            launchWindows.push_back(IO::SDK::Maneuvers::LaunchWindow(m_launchSite, window, inertialAzimuthLaunch, nonInertialAzimuthLaunch, inertialInsertionVelocity,
+                                                                     nonInertialInsertionVelocity));
 
             //We compute following launch windows
             auto remainingTime = windowToSearch.GetEndDate() - date;
 
             //sideral rotaion period
-            auto sideralRotation = m_launchSite->GetBody()->GetSideralRotationPeriod(date.ToTDB());
+            auto sideralRotation = m_launchSite.GetBody()->GetSideralRotationPeriod(date.ToTDB());
             auto halfSideralRotation = sideralRotation * 0.5;
 
             //nb remaining launch windows
@@ -216,14 +236,14 @@ std::vector<IO::SDK::Maneuvers::LaunchWindow> IO::SDK::Maneuvers::Launch::FindLa
                 //If previous is ascending next will be descending
                 isAscending = !isAscending;
 
-                auto deltalDuration = m_deltaL * 2.0 / m_launchSite->GetBody()->GetAngularVelocity(date.ToTDB());
+                auto deltalDuration = m_deltaL * 2.0 / m_launchSite.GetBody()->GetAngularVelocity(date.ToTDB());
 
                 if (!isAscending)
                 {
                     deltalDuration *= -1.0;
                 }
 
-                
+
 
                 //We increment next launch date
                 date = date + halfSideralRotation + IO::SDK::Time::TimeSpan(std::chrono::duration<double>(deltalDuration));
@@ -233,11 +253,13 @@ std::vector<IO::SDK::Maneuvers::LaunchWindow> IO::SDK::Maneuvers::Launch::FindLa
 
                 if (isAscending)
                 {
-                    launchWindows.push_back(IO::SDK::Maneuvers::LaunchWindow(m_launchSite, nextWindow, GetInertialAscendingAzimuthLaunch(), GetNonInertialAscendingAzimuthLaunch(), inertialInsertionVelocity, nonInertialInsertionVelocity));
-                }
-                else
+                    launchWindows.push_back(IO::SDK::Maneuvers::LaunchWindow(m_launchSite, nextWindow, GetInertialAscendingAzimuthLaunch(), GetNonInertialAscendingAzimuthLaunch(),
+                                                                             inertialInsertionVelocity, nonInertialInsertionVelocity));
+                } else
                 {
-                    launchWindows.push_back(IO::SDK::Maneuvers::LaunchWindow(m_launchSite, nextWindow, GetInertialDescendingAzimuthLaunch(), GetNonInertialDescendingAzimuthLaunch(), inertialInsertionVelocity, nonInertialInsertionVelocity));
+                    launchWindows.push_back(
+                            IO::SDK::Maneuvers::LaunchWindow(m_launchSite, nextWindow, GetInertialDescendingAzimuthLaunch(), GetNonInertialDescendingAzimuthLaunch(),
+                                                             inertialInsertionVelocity, nonInertialInsertionVelocity));
                 }
             }
             break;

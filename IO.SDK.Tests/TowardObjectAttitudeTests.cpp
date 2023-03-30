@@ -17,9 +17,9 @@ using namespace std::chrono_literals;
 
 TEST(TowardObjectAttitude, GetOrientation) {
 
-    auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10, "sun");
-    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth", sun);
-    auto moon = std::make_shared<IO::SDK::Body::CelestialBody>(301, "moon", earth);
+    auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10);
+    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, sun);
+    auto moon = std::make_shared<IO::SDK::Body::CelestialBody>(301, earth);
 
     std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams1 = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth,
                                                                                                                                               IO::SDK::Math::Vector3D(6678000.0,
@@ -53,7 +53,7 @@ TEST(TowardObjectAttitude, GetOrientation) {
 
     ASSERT_DOUBLE_EQ(0.0, toward.GetDeltaV().Magnitude());
     ASSERT_EQ(IO::SDK::Frames::InertialFrames::GetICRF(), orientation.GetFrame());
-    auto newVector = s.Front.Rotate(orientation.GetQuaternion());
+    auto newVector = s.Front.Rotate(orientation.GetQuaternion().Conjugate());
     ASSERT_NEAR(-0.64548856202739258, newVector.GetX(), 1E-12);
     ASSERT_NEAR(0.67028532443717903, newVector.GetY(), 1E-12);
     ASSERT_NEAR(0.36614494833208738, newVector.GetZ(), 1E-12);
@@ -61,9 +61,9 @@ TEST(TowardObjectAttitude, GetOrientation) {
 
 TEST(TowardObjectAttitude, GetOrientationNotBeforeEpoch) {
 
-    auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10, "sun");
-    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth", sun);
-    auto moon = std::make_shared<IO::SDK::Body::CelestialBody>(301, "moon", earth);
+    auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10);
+    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, sun);
+    auto moon = std::make_shared<IO::SDK::Body::CelestialBody>(301, earth);
 
     std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams1 = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth,
                                                                                                                                               IO::SDK::Math::Vector3D(6678000.0,
@@ -97,9 +97,9 @@ TEST(TowardObjectAttitude, GetOrientationNotBeforeEpoch) {
 
     ASSERT_DOUBLE_EQ(0.0, toward.GetDeltaV().Magnitude());
     ASSERT_EQ(IO::SDK::Frames::InertialFrames::GetICRF(), orientation.GetFrame());
-    auto newVector = s.Front.Rotate(orientation.GetQuaternion());
+    auto newVector = s.Front.Rotate(orientation.GetQuaternion().Conjugate());
     ASSERT_EQ(IO::SDK::Math::Vector3D(-0.64559450678437458, 0.67015957960628136, 0.36618829643122414), newVector);
     ASSERT_EQ(IO::SDK::Time::TDB("2021-01-01T13:00:00"), s.GetOrientationsCoverageWindow().GetStartDate());
-    ASSERT_EQ(IO::SDK::Time::TDB("2021-01-01T13:00:20"), s.GetOrientationsCoverageWindow().GetEndDate());
-    ASSERT_EQ(IO::SDK::Time::TimeSpan(20s).GetSeconds().count(), s.GetOrientationsCoverageWindow().GetLength().GetSeconds().count());
+    ASSERT_EQ(IO::SDK::Time::TDB("2021-01-01T13:01:00"), s.GetOrientationsCoverageWindow().GetEndDate());
+    ASSERT_EQ(IO::SDK::Time::TimeSpan(60s).GetSeconds().count(), s.GetOrientationsCoverageWindow().GetLength().GetSeconds().count());
 }

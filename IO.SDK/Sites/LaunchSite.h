@@ -40,7 +40,8 @@ namespace IO::SDK::Sites
          * @param coordinates 
          * @param body 
          */
-        LaunchSite(const int id, const std::string name, const IO::SDK::Coordinates::Geodetic coordinates, std::shared_ptr<IO::SDK::Body::CelestialBody> body);
+        LaunchSite(const int id, const std::string name, const IO::SDK::Coordinates::Geodetic coordinates,
+                   std::shared_ptr<IO::SDK::Body::CelestialBody> body);
 
         /**
          * @brief Add an azimuth range

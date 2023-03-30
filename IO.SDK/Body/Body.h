@@ -24,7 +24,7 @@
 #include <Aberrations.h>
 #include <Window.h>
 #include <TDB.h>
-#include <Constraint.h>
+#include "Constraints/Constraint.h"
 #include <TimeSpan.h>
 #include <OccultationType.h>
 #include <Planetographic.h>
@@ -155,7 +155,7 @@ namespace IO::SDK::Body
 		 * @brief Find windows when distance constraint occurs
 		 * 
 		 * @param targetBody Target body
-		 * @param oberver Observer
+		 * @param observer Observer
 		 * @param constraint Constraint operator
 		 * @param aberration Aberration
 		 * @param value Target value
@@ -163,7 +163,7 @@ namespace IO::SDK::Body
 		 * @param step Step size (should be shorter than the shortest of these intervals. WARNING : A short step size could increase compute time)
 		 * @return std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>> 
 		 */
-		std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>> FindWindowsOnDistanceConstraint(const IO::SDK::Time::Window<IO::SDK::Time::TDB> searchWindow, const Body &targetBody, const Body &oberver, const IO::SDK::Constraint &constraint, const IO::SDK::AberrationsEnum aberration, const double value, const IO::SDK::Time::TimeSpan &step) const;
+		std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>> FindWindowsOnDistanceConstraint(const IO::SDK::Time::Window<IO::SDK::Time::TDB> searchWindow, const Body &targetBody, const Body &observer, const IO::SDK::Constraints::Constraint &constraint, const IO::SDK::AberrationsEnum aberration, const double value, const IO::SDK::Time::TimeSpan &step) const;
 
 		/**
 		 * @brief Find windows when occultation occurs
@@ -176,7 +176,7 @@ namespace IO::SDK::Body
 		 * @param stepSize Step size (should be shorter than the shortest of these intervals. WARNING : A short step size could increase compute time)
 		 * @return std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>> 
 		 */
-		std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>> FindWindowsOnOccultationConstraint(const IO::SDK::Time::Window<IO::SDK::Time::TDB> searchWindow, const IO::SDK::Body::CelestialBody &targetBody, const IO::SDK::Body::CelestialBody &frontBody, const IO::SDK::OccultationType &occultationType, const IO::SDK::AberrationsEnum aberration, const IO::SDK::Time::TimeSpan &stepSize) const;
+		std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>> FindWindowsOnOccultationConstraint(const IO::SDK::Time::Window<IO::SDK::Time::TDB> searchWindow, const IO::SDK::Body::Body &targetBody, const IO::SDK::Body::CelestialBody &frontBody, const IO::SDK::OccultationType &occultationType, const IO::SDK::AberrationsEnum aberration, const IO::SDK::Time::TimeSpan &stepSize) const;
 
 		/**
 		 * @brief Get the Sub Observer Point observed from this body

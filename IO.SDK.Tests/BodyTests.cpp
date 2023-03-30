@@ -7,8 +7,8 @@
 using namespace std::chrono_literals;
 TEST(Body, Initialization)
 {
-	auto sun=std::make_shared<IO::SDK::Body::CelestialBody>(10, "sun");
-	IO::SDK::Body::CelestialBody body(399, "earth", sun);
+	auto sun=std::make_shared<IO::SDK::Body::CelestialBody>(10);
+	IO::SDK::Body::CelestialBody body(399, sun);
 	ASSERT_EQ(399, body.GetId());
 	ASSERT_STREQ("EARTH", body.GetName().c_str());
 	ASSERT_DOUBLE_EQ(5.9721683987248994e+24, body.GetMass());
@@ -17,8 +17,8 @@ TEST(Body, Initialization)
 
 TEST(Body, Satellites)
 {
-	auto sun=std::make_shared<IO::SDK::Body::CelestialBody>(10, "sun");
-	auto earth=std::make_shared<IO::SDK::Body::CelestialBody>(3, "earth", sun);
+	auto sun=std::make_shared<IO::SDK::Body::CelestialBody>(10);
+	auto earth=std::make_shared<IO::SDK::Body::CelestialBody>(3, sun);
 
 	//Fake data, just for technical validation
 	ASSERT_EQ(0, earth->GetSatellites().size());
@@ -28,9 +28,9 @@ TEST(Body, Satellites)
 
 TEST(Body, SubObserverPoint)
 {
-    auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10, "sun");
-    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth", sun);
-    auto moon = std::make_shared<IO::SDK::Body::CelestialBody>(301, "moon", earth);
+    auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10);
+    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, sun);
+    auto moon = std::make_shared<IO::SDK::Body::CelestialBody>(301, earth);
 
     auto subpoint = moon->GetSubObserverPoint(*earth, IO::SDK::AberrationsEnum::LT, IO::SDK::Time::TDB("2021-06-28T00:00:00"));
     ASSERT_DOUBLE_EQ(0.83233741162176433, subpoint.GetLongitude());
@@ -40,9 +40,9 @@ TEST(Body, SubObserverPoint)
 
 TEST(Body, SubSolarPoint)
 {
-    auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10, "sun");
-    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, "earth", sun);
-    auto moon = std::make_shared<IO::SDK::Body::CelestialBody>(301, "moon", earth);
+    auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10);
+    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, sun);
+    auto moon = std::make_shared<IO::SDK::Body::CelestialBody>(301, earth);
 
     auto subpoint = moon->GetSubSolarPoint(*earth, IO::SDK::AberrationsEnum::None, IO::SDK::Time::TDB("2021-06-28T12:00:00"));
     ASSERT_DOUBLE_EQ(0.01592876989506849, subpoint.GetLongitude());

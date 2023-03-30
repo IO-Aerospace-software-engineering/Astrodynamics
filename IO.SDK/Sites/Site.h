@@ -25,7 +25,7 @@
 #include <Window.h>
 #include <SiteFrameFile.h>
 #include <HorizontalCoordinates.h>
-#include <Constraint.h>
+#include "Constraints/Constraint.h"
 #include <CoordinateSystem.h>
 #include <Coordinate.h>
 #include <IlluminationAngle.h>
@@ -35,6 +35,7 @@ namespace IO::SDK::Kernels
 {
     class EphemerisKernel;
 }
+
 namespace IO::SDK::Sites
 {
     /**
@@ -43,7 +44,7 @@ namespace IO::SDK::Sites
      */
     class Site
     {
-    private:
+    protected:
         const int m_id;
         const std::string m_name;
         const IO::SDK::Coordinates::Geodetic m_coordinates;
@@ -53,6 +54,11 @@ namespace IO::SDK::Sites
         const std::shared_ptr<IO::SDK::Body::CelestialBody> m_body;
         const std::unique_ptr<IO::SDK::Frames::SiteFrameFile> m_frame;
         const IO::SDK::Aberrations m_aberrationHelper{};
+        /**
+         * Write stateVectors into ephemeris file
+         * @param states
+         */
+        void WriteEphemeris(const std::vector<OrbitalParameters::StateVector> &states) const;
 
     public:
         /**
@@ -61,7 +67,10 @@ namespace IO::SDK::Sites
          * @param name 
          * @param coordinates 
          */
-        Site(const int id, const std::string &name, const IO::SDK::Coordinates::Geodetic &coordinates, std::shared_ptr<IO::SDK::Body::CelestialBody> &body);
+        Site(const int id, const std::string &name, const IO::SDK::Coordinates::Geodetic &coordinates,
+             std::shared_ptr<IO::SDK::Body::CelestialBody> &body);
+
+        virtual ~Site() = default;
 
         /**
          * @brief Get the Id
@@ -169,7 +178,7 @@ namespace IO::SDK::Sites
          */
         std::vector<IO::SDK::Time::Window<IO::SDK::Time::UTC>>
         FindWindowsOnIlluminationConstraint(const IO::SDK::Time::Window<IO::SDK::Time::UTC> &searchWindow, const IO::SDK::Body::Body &observerBody,
-                                            const IO::SDK::IlluminationAngle &illuminationAgngle, const IO::SDK::Constraint &constraint, const double value) const;
+                                            const IO::SDK::IlluminationAngle &illuminationAngle, const IO::SDK::Constraints::Constraint &constraint, const double value) const;
 
         /**
          * @brief Get the Horizontal Coordinates to the target body
@@ -197,7 +206,7 @@ namespace IO::SDK::Sites
 
         std::vector<IO::SDK::Time::Window<IO::SDK::Time::UTC>>
         FindBodyVisibilityWindows(const IO::SDK::Body::Body &body, const IO::SDK::Time::Window<IO::SDK::Time::UTC> &searchWindow,
-                                  const IO::SDK::AberrationsEnum aberrationCorrection);
+                                  const IO::SDK::AberrationsEnum aberrationCorrection) const;
 
         /**
          * Get the site frame file
@@ -213,11 +222,13 @@ namespace IO::SDK::Sites
         inline const std::string GetFilesPath() const
         { return m_filePath; }
 
+
+
         /**
-         * Write stateVectors into ephemeris file
-         * @param states
+         * Build and write ephemeris for a given period
+         * @param searchWindow
          */
-        void WriteEphemeris(const std::vector<OrbitalParameters::StateVector> &states) const;
+        void BuildAndWriteEphemeris(const IO::SDK::Time::Window<IO::SDK::Time::UTC> &searchWindow) const;
 
         /**
          * Read ephemeris from ephemeris file
@@ -234,7 +245,7 @@ namespace IO::SDK::Sites
          * Get Time span covered by the ephemeris file
          * @return
          */
-        Time::Window <IO::SDK::Time::TDB> GetEphemerisCoverageWindow() const;
+        Time::Window<IO::SDK::Time::TDB> GetEphemerisCoverageWindow() const;
 
         /**
          * Write a comment into ephemeris file
