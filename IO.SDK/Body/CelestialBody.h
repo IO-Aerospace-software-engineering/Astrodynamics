@@ -29,7 +29,7 @@ namespace IO::SDK::Body
 		const double m_sphereOfInfluence{};		
 		const double m_hillSphere{};
 		const IO::SDK::Frames::BodyFixedFrames m_BodyFixedFrame;
-		double ReadGM(int id);
+		static double ReadGM(int id);
 
 	public:
 		CelestialBody(int id, std::shared_ptr<IO::SDK::Body::CelestialBody> &centerOfMotion);

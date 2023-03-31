@@ -81,10 +81,9 @@ IO::SDK::OrbitalParameters::StateVector
 IO::SDK::Body::Body::ReadEphemeris(const IO::SDK::Frames::Frames &frame, const IO::SDK::AberrationsEnum aberration, const IO::SDK::Time::TDB &epoch,
                                    const IO::SDK::Body::CelestialBody &relativeTo) const
 {
-    IO::SDK::Aberrations aberrationHelper;
     SpiceDouble vs[6];
     SpiceDouble lt;
-    spkezr_c(std::to_string(m_id).c_str(), epoch.GetSecondsFromJ2000().count(), frame.ToCharArray(), aberrationHelper.ToString(aberration).c_str(),
+    spkezr_c(std::to_string(m_id).c_str(), epoch.GetSecondsFromJ2000().count(), frame.ToCharArray(), IO::SDK::Aberrations::ToString(aberration).c_str(),
              std::to_string(relativeTo.m_id).c_str(), vs, &lt);
 
     //Convert to SDK unit
@@ -99,7 +98,6 @@ IO::SDK::Body::Body::ReadEphemeris(const IO::SDK::Frames::Frames &frame, const I
 IO::SDK::OrbitalParameters::StateVector
 IO::SDK::Body::Body::ReadEphemeris(const IO::SDK::Frames::Frames &frame, const IO::SDK::AberrationsEnum aberration, const IO::SDK::Time::TDB &epoch) const
 {
-    IO::SDK::Aberrations aberrationHelper;
     SpiceDouble vs[6];
     SpiceDouble lt;
     spkezr_c(std::to_string(m_id).c_str(), epoch.GetSecondsFromJ2000().count(), frame.ToCharArray(), IO::SDK::Aberrations::ToString(aberration).c_str(),
@@ -136,8 +134,6 @@ IO::SDK::Body::Body::FindWindowsOnDistanceConstraint(const IO::SDK::Time::Window
     SpiceDouble windowStart;
     SpiceDouble windowEnd;
 
-    Aberrations abe;
-
     const SpiceInt NINTVL{10000};
     const SpiceInt MAXWIN{20000};
 
@@ -149,7 +145,7 @@ IO::SDK::Body::Body::FindWindowsOnDistanceConstraint(const IO::SDK::Time::Window
 
     wninsd_c(window.GetStartDate().GetSecondsFromJ2000().count(), window.GetEndDate().GetSecondsFromJ2000().count(), &cnfine);
 
-    gfdist_c(targetBody.GetName().c_str(), abe.ToString(aberration).c_str(), observer.GetName().c_str(), constraint.ToCharArray(), value * 1E-03, 0.0, step.GetSeconds().count(),
+    gfdist_c(targetBody.GetName().c_str(), IO::SDK::Aberrations::ToString(aberration).c_str(), observer.GetName().c_str(), constraint.ToCharArray(), value * 1E-03, 0.0, step.GetSeconds().count(),
              NINTVL, &cnfine, &results);
 
     for (int i = 0; i < wncard_c(&results); i++)
@@ -169,8 +165,6 @@ IO::SDK::Body::Body::FindWindowsOnOccultationConstraint(const IO::SDK::Time::Win
     std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>> windows;
     SpiceDouble windowStart;
     SpiceDouble windowEnd;
-
-    Aberrations abe;
 
     const SpiceInt MAXWIN{20000};
 
@@ -192,7 +186,7 @@ IO::SDK::Body::Body::FindWindowsOnOccultationConstraint(const IO::SDK::Time::Win
         occultationTypeStr=occultationType.ToCharArray();
     }
     gfoclt_c(occultationTypeStr.c_str(), frontBody.m_name.c_str(), "ELLIPSOID", frontBody.GetBodyFixedFrame().GetName().c_str(), targetBody.m_name.c_str(), bshape.c_str(),
-             bframe.c_str(), abe.ToString(aberration).c_str(), m_name.c_str(), stepSize.GetSeconds().count(), &cnfine, &results);
+             bframe.c_str(), IO::SDK::Aberrations::ToString(aberration).c_str(), m_name.c_str(), stepSize.GetSeconds().count(), &cnfine, &results);
 
     for (int i = 0; i < wncard_c(&results); i++)
     {
@@ -206,12 +200,11 @@ IO::SDK::Body::Body::FindWindowsOnOccultationConstraint(const IO::SDK::Time::Win
 IO::SDK::Coordinates::Planetographic
 IO::SDK::Body::Body::GetSubObserverPoint(const IO::SDK::Body::CelestialBody &targetBody, const IO::SDK::AberrationsEnum &aberration, const IO::SDK::Time::DateTime &epoch) const
 {
-    IO::SDK::Aberrations abe;
     SpiceDouble spoint[3];
     SpiceDouble srfVector[3];
     SpiceDouble subEpoch;
     subpnt_c("INTERCEPT/ELLIPSOID", std::to_string(targetBody.GetId()).c_str(), epoch.GetSecondsFromJ2000().count(), targetBody.GetBodyFixedFrame().GetName().c_str(),
-             abe.ToString(aberration).c_str(), std::to_string(m_id).c_str(), spoint, &subEpoch, srfVector);
+             IO::SDK::Aberrations::ToString(aberration).c_str(), std::to_string(m_id).c_str(), spoint, &subEpoch, srfVector);
     SpiceDouble lat, lon, alt;
     recpgr_c(std::to_string(targetBody.GetId()).c_str(), spoint, targetBody.GetRadius().GetX(), targetBody.GetFlattening(), &lon, &lat, &alt);
 
@@ -221,12 +214,11 @@ IO::SDK::Body::Body::GetSubObserverPoint(const IO::SDK::Body::CelestialBody &tar
 IO::SDK::Coordinates::Planetographic
 IO::SDK::Body::Body::GetSubSolarPoint(const IO::SDK::Body::CelestialBody &targetBody, const IO::SDK::AberrationsEnum aberration, const IO::SDK::Time::TDB &epoch) const
 {
-    IO::SDK::Aberrations abe;
     SpiceDouble spoint[3];
     SpiceDouble srfVector[3];
     SpiceDouble subEpoch;
     subslr_c("INTERCEPT/ELLIPSOID", std::to_string(targetBody.GetId()).c_str(), epoch.GetSecondsFromJ2000().count(), targetBody.GetBodyFixedFrame().GetName().c_str(),
-             abe.ToString(aberration).c_str(), std::to_string(m_id).c_str(), spoint, &subEpoch, srfVector);
+             IO::SDK::Aberrations::ToString(aberration).c_str(), std::to_string(m_id).c_str(), spoint, &subEpoch, srfVector);
     SpiceDouble lat, lon, alt;
     recpgr_c(std::to_string(targetBody.GetId()).c_str(), spoint, targetBody.GetRadius().GetX(), targetBody.GetFlattening(), &lon, &lat, &alt);
 

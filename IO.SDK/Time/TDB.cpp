@@ -46,7 +46,7 @@ IO::SDK::Time::TDB IO::SDK::Time::TDB::operator-(const IO::SDK::Time::TimeSpan &
 
 IO::SDK::Time::TimeSpan IO::SDK::Time::TDB::operator-(const IO::SDK::Time::TDB &other) const
 {
-	return Substract(other);
+	return Subtract(other);
 }
 
 IO::SDK::Time::UTC IO::SDK::Time::TDB::ToUTC() const

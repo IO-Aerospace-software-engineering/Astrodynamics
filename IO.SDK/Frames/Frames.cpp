@@ -131,5 +131,5 @@ IO::SDK::Math::Vector3D IO::SDK::Frames::Frames::TransformVector(const Frames &t
     double nstate[3];
     mxv_c(convertedMtx, v, nstate);
 
-    return IO::SDK::Math::Vector3D(nstate[0], nstate[1], nstate[2]);
+    return IO::SDK::Math::Vector3D{nstate[0], nstate[1], nstate[2]};
 }

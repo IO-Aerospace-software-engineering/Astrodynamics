@@ -49,8 +49,8 @@ namespace IO::SDK::Kernels
 		 * @param angle 
 		 * @param crossAngle 
 		 */
-		EllipticalInstrumentKernel(const IO::SDK::Instruments::Instrument &instrument, const IO::SDK::Math::Vector3D &boresight, const IO::SDK::Math::Vector3D &refVector, const double angle, const double crossAngle);
-		virtual ~EllipticalInstrumentKernel() = default;
+		EllipticalInstrumentKernel(const IO::SDK::Instruments::Instrument &instrument, const IO::SDK::Math::Vector3D &boresight, const IO::SDK::Math::Vector3D &refVector, double angle, double crossAngle);
+		~EllipticalInstrumentKernel() override = default;
 	};
 }
 

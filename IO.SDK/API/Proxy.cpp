@@ -13,21 +13,19 @@ void BuildFuelTank(const IO::SDK::API::DTO::ScenarioDTO &scenarioDto, IO::SDK::B
 
 void BuildSpacecraft(IO::SDK::API::DTO::ScenarioDTO &scenarioDto, std::map<int, std::shared_ptr<IO::SDK::Body::CelestialBody>> &celestialBodies, IO::SDK::Scenario &scenario);
 
-IO::SDK::API::DTO::ScenarioDTO Execute(IO::SDK::API::DTO::ScenarioDTO &scenarioDto)
-{
+IO::SDK::API::DTO::ScenarioDTO Execute(IO::SDK::API::DTO::ScenarioDTO &scenarioDto) {
     IO::SDK::Scenario scenario(scenarioDto.Name, ToWindow(scenarioDto.Window));
 
     //==========Build Celestial bodies=============
     std::map<int, std::shared_ptr<IO::SDK::Body::CelestialBody>> celestialBodies = BuildCelestialBodies(scenarioDto);
-    for (auto &celestial: celestialBodies)
-    {
+    for (auto &celestial: celestialBodies) {
         scenario.AddCelestialBody(*celestial.second);
     }
 
     //==========Build spacecraft===============
     auto cbody = celestialBodies[scenarioDto.spacecraft.initialOrbitalParameter.centerOfMotion.id];
     auto tdb = IO::SDK::Time::TDB(std::chrono::duration<double>(scenarioDto.spacecraft.initialOrbitalParameter.epoch));
-    std::string frame = scenarioDto.spacecraft.initialOrbitalParameter.frame;
+    auto frame = IO::SDK::Frames::InertialFrames(scenarioDto.spacecraft.initialOrbitalParameter.frame);
     std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> initialOrbitalParameters = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(
             cbody,
             ToVector3D(scenarioDto.spacecraft.initialOrbitalParameter.position),
@@ -82,11 +80,10 @@ IO::SDK::API::DTO::ScenarioDTO Execute(IO::SDK::API::DTO::ScenarioDTO &scenarioD
     return res;
 }
 
-void BuildSpacecraft(IO::SDK::API::DTO::ScenarioDTO &scenarioDto, std::map<int, std::shared_ptr<IO::SDK::Body::CelestialBody>> &celestialBodies, IO::SDK::Scenario &scenario)
-{
+void BuildSpacecraft(IO::SDK::API::DTO::ScenarioDTO &scenarioDto, std::map<int, std::shared_ptr<IO::SDK::Body::CelestialBody>> &celestialBodies, IO::SDK::Scenario &scenario) {
     auto cbody = celestialBodies[scenarioDto.spacecraft.initialOrbitalParameter.centerOfMotion.id];
     auto tdb = IO::SDK::Time::TDB(std::chrono::duration<double>(scenarioDto.spacecraft.initialOrbitalParameter.epoch));
-    std::string frame = scenarioDto.spacecraft.initialOrbitalParameter.frame;
+    auto frame = IO::SDK::Frames::InertialFrames(scenarioDto.spacecraft.initialOrbitalParameter.frame);
     std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> initialOrbitalParameters = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(
             cbody,
             ToVector3D(scenarioDto.spacecraft.initialOrbitalParameter.position),
@@ -102,26 +99,20 @@ void BuildSpacecraft(IO::SDK::API::DTO::ScenarioDTO &scenarioDto, std::map<int, 
     scenario.AddSpacecraft(spacecraft);
 }
 
-void BuildFuelTank(const IO::SDK::API::DTO::ScenarioDTO &scenarioDto, IO::SDK::Body::Spacecraft::Spacecraft &spacecraft)
-{//Add FuelTank
-    for (int i = 0; i < 5; ++i)
-    {
+void BuildFuelTank(const IO::SDK::API::DTO::ScenarioDTO &scenarioDto, IO::SDK::Body::Spacecraft::Spacecraft &spacecraft) {//Add FuelTank
+    for (int i = 0; i < 5; ++i) {
         auto fuelTank = scenarioDto.spacecraft.fuelTank[i];
-        if (fuelTank.id == 0)
-        {
+        if (fuelTank.id == 0) {
             break;
         }
         spacecraft.AddFuelTank(fuelTank.serialNumber, fuelTank.capacity, fuelTank.quantity);
     }
 }
 
-void BuildEngines(const IO::SDK::API::DTO::ScenarioDTO &scenarioDto, IO::SDK::Body::Spacecraft::Spacecraft &spacecraft)
-{//AddEngine
-    for (int i = 0; i < 5; ++i)
-    {
+void BuildEngines(const IO::SDK::API::DTO::ScenarioDTO &scenarioDto, IO::SDK::Body::Spacecraft::Spacecraft &spacecraft) {//AddEngine
+    for (int i = 0; i < 5; ++i) {
         auto engine = scenarioDto.spacecraft.engines[i];
-        if (engine.id == 0)
-        {
+        if (engine.id == 0) {
             break;
         }
         spacecraft.AddEngine(engine.serialNumber, engine.name, engine.fuelTankSerialNumber, IO::SDK::Math::Vector3D::Zero, IO::SDK::Math::Vector3D::Zero, engine.isp,
@@ -129,30 +120,24 @@ void BuildEngines(const IO::SDK::API::DTO::ScenarioDTO &scenarioDto, IO::SDK::Bo
     }
 }
 
-void BuildInstruments(const IO::SDK::API::DTO::ScenarioDTO &scenarioDto, IO::SDK::Body::Spacecraft::Spacecraft &spacecraft)
-{//Add instrument
-    for (int i = 0; i < 5; ++i)
-    {
+void BuildInstruments(const IO::SDK::API::DTO::ScenarioDTO &scenarioDto, IO::SDK::Body::Spacecraft::Spacecraft &spacecraft) {//Add instrument
+    for (int i = 0; i < 5; ++i) {
         auto instrument = scenarioDto.spacecraft.instruments[i];
-        if (instrument.id <= 0)
-        {
+        if (instrument.id <= 0) {
             break;
         }
 
-        if (strcmp(instrument.shape, "rectangular") == 0)
-        {
+        if (strcmp(instrument.shape, "rectangular") == 0) {
             spacecraft.AddRectangularFOVInstrument(instrument.id, instrument.name, ToVector3D(instrument.orientation), ToVector3D(instrument.boresight),
                                                    ToVector3D(instrument.fovRefVector), instrument.fieldOfView, instrument.crossAngle);
         }
 
-        if (strcmp(instrument.shape, "circular") == 0)
-        {
+        if (strcmp(instrument.shape, "circular") == 0) {
             spacecraft.AddCircularFOVInstrument(instrument.id, instrument.name, ToVector3D(instrument.orientation), ToVector3D(instrument.boresight),
                                                 ToVector3D(instrument.fovRefVector), instrument.fieldOfView);
         }
 
-        if (strcmp(instrument.shape, "elliptical") == 0)
-        {
+        if (strcmp(instrument.shape, "elliptical") == 0) {
             spacecraft.AddEllipticalFOVInstrument(instrument.id, instrument.name, ToVector3D(instrument.orientation), ToVector3D(instrument.boresight),
                                                   ToVector3D(instrument.fovRefVector), instrument.fieldOfView, instrument.crossAngle);
         }
@@ -160,35 +145,28 @@ void BuildInstruments(const IO::SDK::API::DTO::ScenarioDTO &scenarioDto, IO::SDK
     }
 }
 
-std::map<int, std::shared_ptr<IO::SDK::Body::CelestialBody>> BuildCelestialBodies(IO::SDK::API::DTO::ScenarioDTO &scenario)
-{
+std::map<int, std::shared_ptr<IO::SDK::Body::CelestialBody>> BuildCelestialBodies(IO::SDK::API::DTO::ScenarioDTO &scenario) {
     std::map<int, std::shared_ptr<IO::SDK::Body::CelestialBody>> celestialBodies;
 
     // insert sun
-    for (auto &cb: scenario.celestialBodies)
-    {
-        if (IO::SDK::Body::CelestialBody::IsSun(cb.id))
-        {
+    for (auto &cb: scenario.celestialBodies) {
+        if (IO::SDK::Body::CelestialBody::IsSun(cb.id)) {
             IO::SDK::Body::CelestialBody c(cb.id);
             celestialBodies[cb.id] = std::make_shared<IO::SDK::Body::CelestialBody>(cb.id);
             break;
         }
     }
     //insert planets or asteroids
-    for (auto &cb: scenario.celestialBodies)
-    {
-        if (IO::SDK::Body::CelestialBody::IsAsteroid(cb.id) || IO::SDK::Body::CelestialBody::IsPlanet(cb.id))
-        {
+    for (auto &cb: scenario.celestialBodies) {
+        if (IO::SDK::Body::CelestialBody::IsAsteroid(cb.id) || IO::SDK::Body::CelestialBody::IsPlanet(cb.id)) {
             IO::SDK::Body::CelestialBody c(cb.id);
             celestialBodies.emplace(cb.id, std::make_shared<IO::SDK::Body::CelestialBody>(cb.id, celestialBodies[IO::SDK::Body::CelestialBody::FindCenterOfMotionId(cb.id)]));
         }
     }
 
     //insert moons
-    for (auto &cb: scenario.celestialBodies)
-    {
-        if (IO::SDK::Body::CelestialBody::IsMoon(cb.id))
-        {
+    for (auto &cb: scenario.celestialBodies) {
+        if (IO::SDK::Body::CelestialBody::IsMoon(cb.id)) {
             IO::SDK::Body::CelestialBody c(cb.id);
             celestialBodies.emplace(cb.id, std::make_shared<IO::SDK::Body::CelestialBody>(cb.id, celestialBodies[IO::SDK::Body::CelestialBody::FindCenterOfMotionId(cb.id)]));
         }
@@ -198,8 +176,7 @@ std::map<int, std::shared_ptr<IO::SDK::Body::CelestialBody>> BuildCelestialBodie
 }
 
 
-const char *GetSpiceVersionProxy()
-{
+const char *GetSpiceVersionProxy() {
     const char *version;
     version = tkvrsn_c("TOOLKIT");
     return version;

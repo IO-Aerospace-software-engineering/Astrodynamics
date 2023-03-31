@@ -46,7 +46,7 @@ namespace IO::SDK::Constraints::Parameters
         [[nodiscard]] inline const IO::SDK::AberrationsEnum &GetAberration() const
         { return m_aberration; }
 
-        [[nodiscard]] inline double GetValue()
+        [[nodiscard]] inline double GetValue() const
         { return m_value; }
 
         [[nodiscard]] inline const IO::SDK::Time::TimeSpan &GetInitialStepSize() const

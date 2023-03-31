@@ -19,14 +19,14 @@ namespace IO::SDK
     private:
         const std::string m_name;
 
-        static IlluminationAngle _Phase;
-        static IlluminationAngle _Incidence;
-        static IlluminationAngle _Emission;
+        static IlluminationAngle mPhase;
+        static IlluminationAngle mIncidence;
+        static IlluminationAngle mEmission;
 
     public:
-        IlluminationAngle(const std::string &name);
+        explicit IlluminationAngle(const std::string &name);
 
-        const char *ToCharArray() const;
+        [[nodiscard]] const char *ToCharArray() const;
 
         static IlluminationAngle& Phase();
         static IlluminationAngle& Incidence();

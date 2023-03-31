@@ -29,10 +29,10 @@ namespace IO::SDK::Constraints::Parameters
         InFieldOfViewParameters(const SDK::Instruments::Instrument &instrument, const SDK::Body::Body &targetBody,
                                 IO::SDK::AberrationsEnum aberration, const IO::SDK::Time::TimeSpan &initialStepSize);
 
-        inline const IO::SDK::Instruments::Instrument &GetInstrument() const
+        [[nodiscard]] inline const IO::SDK::Instruments::Instrument &GetInstrument() const
         { return m_instrument; }
 
-        inline const IO::SDK::Body::Body &GetTargetBody() const
+        [[nodiscard]] inline const IO::SDK::Body::Body &GetTargetBody() const
         { return m_targetBody; }
 
         inline IO::SDK::AberrationsEnum GetAberration()

@@ -15,14 +15,12 @@
 #include <Body.h>
 #include <StateVector.h>
 
-namespace IO::SDK::Integrators::Forces
-{
+namespace IO::SDK::Integrators::Forces {
     /**
      * @brief Force
      * 
      */
-    class Force
-    {
+    class Force {
     private:
         /* data */
     public:
@@ -40,6 +38,8 @@ namespace IO::SDK::Integrators::Forces
          * @return IO::SDK::Math::Vector3D 
          */
         virtual IO::SDK::Math::Vector3D Apply(const IO::SDK::Body::Body &body, const IO::SDK::OrbitalParameters::StateVector &stateVector) = 0;
+
+        virtual ~Force() = default;
     };
 
 }

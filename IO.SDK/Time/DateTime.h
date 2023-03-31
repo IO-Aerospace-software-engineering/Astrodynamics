@@ -32,27 +32,27 @@ namespace IO::SDK::Time
 		/// </summary>
 		/// <param name="secondsFromJ2000"></param>
 		/// <param name="timeSystem"></param>
-		DateTime(const std::chrono::duration<double> secondsFromJ2000);
+		explicit DateTime(const std::chrono::duration<double>& secondsFromJ2000);
 
 	public:
 		/// <summary>
 		/// Ellapsed seconds from J2000
 		/// </summary>
 		/// <returns></returns>
-		std::chrono::duration<double> GetSecondsFromJ2000() const;
+		[[nodiscard]] std::chrono::duration<double> GetSecondsFromJ2000() const;
 
 		/// <summary>
 		/// Get ISO UTC string
 		/// </summary>
 		/// <returns></returns>
-		virtual std::string ToString() const = 0;
+		[[nodiscard]] virtual std::string ToString() const = 0;
 
 		/// <summary>
 		/// Substract two DateTimes
 		/// </summary>
 		/// <param name="datetime">Substracted this datetime</param>
 		/// <returns></returns>
-		IO::SDK::Time::TimeSpan Substract(const IO::SDK::Time::DateTime &datetime) const;
+		[[nodiscard]] IO::SDK::Time::TimeSpan Subtract(const IO::SDK::Time::DateTime &datetime) const;
 
 		/// <summary>
 		/// Substract two DateTimes
@@ -68,9 +68,9 @@ namespace IO::SDK::Time
 		bool operator<(const IO::SDK::Time::DateTime &other) const;
 		bool operator<=(const IO::SDK::Time::DateTime &other) const;
 
-		virtual double ToJulian() const;
+		[[nodiscard]] virtual double ToJulian() const;
 
-		double CenturiesFromJ2000() const;
+		[[nodiscard]] double CenturiesFromJ2000() const;
 
 		DateTime &operator=(const DateTime &datetime);
 	};

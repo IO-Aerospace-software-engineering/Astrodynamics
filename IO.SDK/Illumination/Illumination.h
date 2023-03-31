@@ -36,7 +36,7 @@ namespace IO::SDK::Illumination
 		 * @param emission 
 		 * @param targetEpoch 
 		 */
-		Illumination(const IO::SDK::Math::Vector3D& observerToSurfacePoint, const double phaseAngle, const double incidence, const double emission, const IO::SDK::Time::TDB& targetEpoch)
+		Illumination(const IO::SDK::Math::Vector3D& observerToSurfacePoint, double phaseAngle, double incidence, double emission, const IO::SDK::Time::TDB& targetEpoch)
 			:m_observerToSurfacePoint{ observerToSurfacePoint }, m_phaseAngle{ phaseAngle }, m_incidence{ incidence }, m_emission{ emission }, m_targetEpoch{ targetEpoch } {};
 
 		/**
@@ -44,7 +44,7 @@ namespace IO::SDK::Illumination
 		 * 
 		 * @return IO::SDK::Time::TDB 
 		 */
-		IO::SDK::Time::TDB GetEpoch() const
+		[[nodiscard]] inline IO::SDK::Time::TDB GetEpoch() const
 		{
 			return m_targetEpoch;
 		}
@@ -54,7 +54,7 @@ namespace IO::SDK::Illumination
 		 * 
 		 * @return const IO::SDK::Math::Vector3D& 
 		 */
-		const IO::SDK::Math::Vector3D& GetObserverToSurfacePoint() const
+		[[nodiscard]] inline const IO::SDK::Math::Vector3D& GetObserverToSurfacePoint() const
 		{
 			return m_observerToSurfacePoint;
 		}
@@ -64,7 +64,7 @@ namespace IO::SDK::Illumination
 		 * 
 		 * @return double 
 		 */
-		double GetPhaseAngle() const
+		[[nodiscard]] inline double GetPhaseAngle() const
 		{
 			return m_phaseAngle;
 		}
@@ -74,7 +74,7 @@ namespace IO::SDK::Illumination
 		 * 
 		 * @return double 
 		 */
-		double GetIncidence() const
+		[[nodiscard]] inline double GetIncidence() const
 		{
 			return m_incidence;
 		}
@@ -84,7 +84,7 @@ namespace IO::SDK::Illumination
 		 * 
 		 * @return double 
 		 */
-		double GetEmission() const
+		[[nodiscard]] inline double GetEmission() const
 		{
 			return m_emission;
 		}
