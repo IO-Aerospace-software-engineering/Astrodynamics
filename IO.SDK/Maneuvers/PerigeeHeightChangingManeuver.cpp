@@ -11,6 +11,8 @@
 #include <PerigeeHeightChangingManeuver.h>
 #include <InvalidArgumentException.h>
 #include <SDKException.h>
+#include <Constants.h>
+#include <Parameters.h>
 
 IO::SDK::Maneuvers::PerigeeHeightChangingManeuver::PerigeeHeightChangingManeuver(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines,
                                                                                  IO::SDK::Propagators::Propagator &propagator, const double targetHeight)

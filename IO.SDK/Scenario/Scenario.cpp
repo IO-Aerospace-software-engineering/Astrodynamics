@@ -2,9 +2,9 @@
 // Created by s.guillet on 23/02/2023.
 //
 
-#include <Propagator.h>
 #include <Scenario.h>
 #include <Launch.h>
+#include "Parameters.h"
 
 IO::SDK::Scenario::Scenario(const std::string &name, const IO::SDK::Time::Window<IO::SDK::Time::UTC> &windows) : m_name{name}, m_windows{windows},
                                                                                                                  m_integrator(IO::SDK::Parameters::SpacecraftPropagationStep,

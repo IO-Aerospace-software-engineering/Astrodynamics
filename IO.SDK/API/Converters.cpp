@@ -11,13 +11,13 @@
 
 static IO::SDK::Time::Window<IO::SDK::Time::UTC> ToWindow(IO::SDK::API::DTO::WindowDTO &window)
 {
-    return IO::SDK::Time::Window<IO::SDK::Time::UTC>(IO::SDK::Time::UTC(std::chrono::duration<double>(window.start)),
-                                                     IO::SDK::Time::UTC(std::chrono::duration<double>(window.end)));
+    return IO::SDK::Time::Window<IO::SDK::Time::UTC>{IO::SDK::Time::UTC(std::chrono::duration<double>(window.start)),
+                                                     IO::SDK::Time::UTC(std::chrono::duration<double>(window.end))};
 }
 
 static IO::SDK::API::DTO::WindowDTO ToWindowDTO(IO::SDK::Time::Window<IO::SDK::Time::UTC> &window)
 {
-    IO::SDK::API::DTO::WindowDTO dto;
+    IO::SDK::API::DTO::WindowDTO dto{};
     dto.start = window.GetStartDate().GetSecondsFromJ2000().count();
     dto.end = window.GetEndDate().GetSecondsFromJ2000().count();
     return dto;
@@ -25,12 +25,12 @@ static IO::SDK::API::DTO::WindowDTO ToWindowDTO(IO::SDK::Time::Window<IO::SDK::T
 
 static IO::SDK::Math::Vector3D ToVector3D(IO::SDK::API::DTO::Vector3DDTO &vector)
 {
-    return IO::SDK::Math::Vector3D(vector.x, vector.y, vector.z);
+    return {vector.x, vector.y, vector.z};
 }
 
 static IO::SDK::API::DTO::Vector3DDTO ToVector3DDTO(IO::SDK::Math::Vector3D &vector)
 {
-    IO::SDK::API::DTO::Vector3DDTO dto;
+    IO::SDK::API::DTO::Vector3DDTO dto{};
     dto.x = vector.GetX();
     dto.y = vector.GetY();
     dto.z = vector.GetZ();
@@ -39,7 +39,7 @@ static IO::SDK::API::DTO::Vector3DDTO ToVector3DDTO(IO::SDK::Math::Vector3D &vec
 
 static IO::SDK::Math::Quaternion ToQuaternion(IO::SDK::API::DTO::QuaternionDTO &dto)
 {
-    return IO::SDK::Math::Quaternion(dto.w, dto.x, dto.y, dto.z);
+    return IO::SDK::Math::Quaternion{dto.w, dto.x, dto.y, dto.z};
 }
 
 static IO::SDK::API::DTO::QuaternionDTO ToQuaternionDTO(IO::SDK::Math::Quaternion &quaternion)
@@ -54,12 +54,12 @@ static IO::SDK::API::DTO::QuaternionDTO ToQuaternionDTO(IO::SDK::Math::Quaternio
 
 static IO::SDK::Coordinates::Geodetic ToGeodetic(IO::SDK::API::DTO::GeodeticDTO &dto)
 {
-    return IO::SDK::Coordinates::Geodetic(dto.longitude, dto.latitude, dto.altitude);
+    return IO::SDK::Coordinates::Geodetic{dto.longitude, dto.latitude, dto.altitude};
 }
 
 static IO::SDK::API::DTO::GeodeticDTO ToGeodeticDTO(IO::SDK::Coordinates::Geodetic &geodetic)
 {
-    IO::SDK::API::DTO::GeodeticDTO dto;
+    IO::SDK::API::DTO::GeodeticDTO dto{};
     dto.latitude = geodetic.GetLatitude();
     dto.longitude = geodetic.GetLongitude();
     dto.altitude = geodetic.GetAltitude();

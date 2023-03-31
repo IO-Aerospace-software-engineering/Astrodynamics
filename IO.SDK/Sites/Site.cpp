@@ -11,6 +11,8 @@
 
 #include <Site.h>
 #include <Builder.h>
+#include <Parameters.h>
+#include <Constants.h>
 
 using namespace std::chrono_literals;
 
@@ -19,8 +21,8 @@ IO::SDK::Sites::Site::Site(const int id, const std::string &name, const IO::SDK:
                                                                                   m_name{name},
                                                                                   m_coordinates{coordinates},
                                                                                   m_filePath{std::string(IO::SDK::Parameters::SitePath) + "/" + name},
-                                                                                  m_body{body},
                                                                                   m_ephemerisKernel{std::make_unique<IO::SDK::Kernels::EphemerisKernel>(*this)},
+                                                                                  m_body{body},
                                                                                   m_frame{std::make_unique<IO::SDK::Frames::SiteFrameFile>(*this)}
 {
 }

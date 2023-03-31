@@ -30,14 +30,6 @@ namespace IO::SDK::Maneuvers
         const unsigned int m_revolutionsNumber;
         IO::SDK::OrbitalParameters::OrbitalParameters *m_targetOrbit{nullptr};
 
-        /**
-         * @brief Compute true anomaly delta
-         * 
-         * @param orbitalParameters 
-         * @return double 
-         */
-        double DeltaTrueAnomaly(const IO::SDK::OrbitalParameters::OrbitalParameters &orbitalParameters);
-
     protected:
         /**
          * @brief Compute impulsive maneuver

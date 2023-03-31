@@ -31,12 +31,12 @@ TEST(TLEIntegrator, Integrate)
 
     ASSERT_LT(micros_double.count(), 0.01);
 #endif
-    ASSERT_DOUBLE_EQ(-6.2018228792385655E+06, stateVector.GetPosition().GetX());
-    ASSERT_DOUBLE_EQ(2.7695757618307383E+06, stateVector.GetPosition().GetY());
-    ASSERT_DOUBLE_EQ(2.4894250349276792E+05, stateVector.GetPosition().GetZ());
-    ASSERT_DOUBLE_EQ(-2.1459775555620154E+03, stateVector.GetVelocity().GetX());
-    ASSERT_DOUBLE_EQ(-4.2501793473000989E+03, stateVector.GetVelocity().GetY());
-    ASSERT_DOUBLE_EQ(-6.003797568963455E+03, stateVector.GetVelocity().GetZ());
+    ASSERT_DOUBLE_EQ(-6201822.8792385599, stateVector.GetPosition().GetX());
+    ASSERT_DOUBLE_EQ(2769575.7618307304, stateVector.GetPosition().GetY());
+    ASSERT_DOUBLE_EQ(248942.50349276056, stateVector.GetPosition().GetZ());
+    ASSERT_DOUBLE_EQ(-2145.9775555620063, stateVector.GetVelocity().GetX());
+    ASSERT_DOUBLE_EQ(-4250.1793473001053, stateVector.GetVelocity().GetY());
+    ASSERT_DOUBLE_EQ(-6003.797568963455, stateVector.GetVelocity().GetZ());
 
     IO::SDK::Time::TDB epoch(670977152.38578331s);
     ASSERT_EQ(epoch, stateVector.GetEpoch());

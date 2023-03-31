@@ -23,15 +23,15 @@ namespace IO::SDK::Constraints::Parameters
 
     public:
         BodyVisibilityFromSiteParameters(const IO::SDK::Sites::Site &site, const IO::SDK::Body::Body &target,
-                                         const IO::SDK::AberrationsEnum aberration);
+                                         IO::SDK::AberrationsEnum aberration);
 
-        inline const IO::SDK::Sites::Site &GetSite() const
+        [[nodiscard]] inline const IO::SDK::Sites::Site &GetSite() const
         { return m_site; }
 
-        inline const IO::SDK::Body::Body &GetTarget() const
+        [[nodiscard]] inline const IO::SDK::Body::Body &GetTarget() const
         { return m_target; }
 
-        inline const IO::SDK::AberrationsEnum GetAberration() const
+        [[nodiscard]] inline IO::SDK::AberrationsEnum GetAberration() const
         { return m_aberration; }
     };
 

@@ -1,9 +1,6 @@
 ﻿#include <gtest/gtest.h>
-#include <CelestialBody.h>
 #include <StateVector.h>
-#include <TDB.h>
-#include <chrono>
-#include <memory>
+#include <Constants.h>
 using namespace std::chrono_literals;
 TEST(Body, Initialization)
 {

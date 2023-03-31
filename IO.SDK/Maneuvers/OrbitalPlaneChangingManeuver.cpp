@@ -9,9 +9,8 @@
  * 
  */
 #include <OrbitalPlaneChangingManeuver.h>
-#include <cmath>
 #include <Constants.h>
-#include <ConicOrbitalElements.h>
+#include <Parameters.h>
 
 IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver::OrbitalPlaneChangingManeuver(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines,
                                                                                IO::SDK::Propagators::Propagator &propagator,
@@ -90,8 +89,6 @@ IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver::ComputeOrientation(const IO::S
     {
         targetVector = targetVector.Reverse();
     }
-
-    IO::SDK::Math::Quaternion q = m_spacecraft.Front.To(targetVector);
 
     return IO::SDK::OrbitalParameters::StateOrientation(targetVector.To(m_spacecraft.Front), IO::SDK::Math::Vector3D(0.0, 0.0, 0.0), maneuverPoint.GetEpoch(),
                                                         maneuverPoint.GetFrame());

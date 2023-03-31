@@ -31,22 +31,22 @@ namespace IO::SDK::Constraints::Parameters
                               const IO::SDK::AberrationsEnum aberration,
                               const IO::SDK::Time::TimeSpan &initialStepSize);
 
-        inline const IO::SDK::Body::Body &GetObserver() const
+        [[nodiscard]] inline const IO::SDK::Body::Body &GetObserver() const
         { return m_observer; }
 
-        inline const IO::SDK::Body::CelestialBody &GetFront() const
+        [[nodiscard]] inline const IO::SDK::Body::CelestialBody &GetFront() const
         { return m_front; }
 
-        inline const IO::SDK::Body::Body &GetBack() const
+        [[nodiscard]] inline const IO::SDK::Body::Body &GetBack() const
         { return m_back; }
 
-        inline const IO::SDK::OccultationType &GetOccultationType() const
+        [[nodiscard]] inline const IO::SDK::OccultationType &GetOccultationType() const
         { return m_occultationType; }
 
-        inline const IO::SDK::AberrationsEnum GetAberration() const
+        [[nodiscard]] inline IO::SDK::AberrationsEnum GetAberration() const
         { return m_aberration; }
 
-        inline const IO::SDK::Time::TimeSpan &GetInitialStepSize() const
+        [[nodiscard]] inline const IO::SDK::Time::TimeSpan &GetInitialStepSize() const
         { return m_initialStepSize; }
 
     };

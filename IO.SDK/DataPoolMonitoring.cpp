@@ -13,66 +13,68 @@
 
 IO::SDK::DataPoolMonitoring IO::SDK::DataPoolMonitoring::m_instance;
 
-IO::SDK::DataPoolMonitoring& IO::SDK::DataPoolMonitoring::Instance()
+IO::SDK::DataPoolMonitoring &IO::SDK::DataPoolMonitoring::Instance()
 {
-	return m_instance;
+    return m_instance;
 }
 
-std::vector<std::string> IO::SDK::DataPoolMonitoring::GetStringProperty(const std::string& propertyName, int nbValuesExpected) const
+std::vector<std::string> IO::SDK::DataPoolMonitoring::GetStringProperty(const std::string &propertyName, int nbValuesExpected)
 {
-	SpiceInt n{};
-	SpiceChar values[10][100];
-	SpiceBoolean found{ false };
+    SpiceInt n{};
+    SpiceChar values[10][100];
+    SpiceBoolean found{false};
 
-	gcpool_c(propertyName.c_str(), 0, nbValuesExpected, 100, &n, values, &found);
+    gcpool_c(propertyName.c_str(), 0, nbValuesExpected, 100, &n, values, &found);
 
-	std::vector<std::string> res;
+    std::vector<std::string> res;
 
-	if (found)
-	{
-		for (int i = 0; i < n; i++)
-		{
-			res.push_back(values[i]);
-		}
-	}
+    if (found)
+    {
+        for (int i = 0; i < n; i++)
+        {
+            res.emplace_back(values[i]);
+        }
+    }
 
-	return res;
+    return res;
 }
 
-std::vector<int> IO::SDK::DataPoolMonitoring::GetIntegerProperty(const std::string& propertyName, int nbValuesExpected) const
+std::vector<int> IO::SDK::DataPoolMonitoring::GetIntegerProperty(const std::string &propertyName, int nbValuesExpected)
 {
-	SpiceInt n{};
-	SpiceInt* values = new SpiceInt[nbValuesExpected];
-	SpiceBoolean found{ false };
+    SpiceInt n{};
+    auto values = new SpiceInt[nbValuesExpected];
+    SpiceBoolean found{false};
 
-	gipool_c(propertyName.c_str(), 0, nbValuesExpected, &n, values, &found);
+    gipool_c(propertyName.c_str(), 0, nbValuesExpected, &n, values, &found);
 
-	std::vector<int> res;
+    std::vector<int> res;
 
-	for (int i = 0; i < n; i++)
-	{
-		res.push_back(values[i]);
-	}
+    res.reserve(n);
+    for (int i = 0; i < n; i++)
+    {
+        res.push_back(values[i]);
+    }
 
-	delete[] values;
-	return res;
+    delete[] values;
+    return res;
 }
 
-std::vector<double> IO::SDK::DataPoolMonitoring::GetDoubleProperty(const std::string& propertyName, int nbValuesExpected) const
+std::vector<double> IO::SDK::DataPoolMonitoring::GetDoubleProperty(const std::string &propertyName, int nbValuesExpected)
 {
-	SpiceInt n{};
-	SpiceDouble* values = new SpiceDouble[nbValuesExpected];
-	SpiceBoolean found{ false };
+    SpiceInt n{};
+    auto values = new SpiceDouble[nbValuesExpected];
+    SpiceBoolean found{false};
 
-	gdpool_c(propertyName.c_str(), 0, nbValuesExpected, &n, values, &found);
+    gdpool_c(propertyName.c_str(), 0, nbValuesExpected, &n, values, &found);
 
-	std::vector<double> res;
+    std::vector<double> res;
 
-	for (int i = 0; i < n; i++)
-	{
-		res.push_back(values[i]);
-	}
+    res.reserve(n);
+    for (int i = 0; i < n; i++)
+    {
+        res.push_back(values[i]);
+    }
 
-	delete[] values;
-	return res;
+    delete[] values;
+    return res;
 }

@@ -30,26 +30,26 @@ namespace IO::SDK::Constraints::Parameters
         DistanceParameters(const IO::SDK::Body::Body &observer,
                            const IO::SDK::Body::Body &target,
                            const IO::SDK::Constraints::Constraint &constraint,
-                           const IO::SDK::AberrationsEnum aberration,
-                           const double value,
+                           IO::SDK::AberrationsEnum aberration,
+                           double value,
                            const IO::SDK::Time::TimeSpan &initialStepSize);
 
-        inline const IO::SDK::Body::Body &GetObserver()
+        [[nodiscard]] inline const IO::SDK::Body::Body &GetObserver() const
         { return m_observer; }
 
-        inline const IO::SDK::Body::Body &GetTarget()
+        [[nodiscard]] inline const IO::SDK::Body::Body &GetTarget() const
         { return m_target; }
 
-        inline const IO::SDK::Constraints::Constraint &GetConstraint()
+        [[nodiscard]] inline const IO::SDK::Constraints::Constraint &GetConstraint() const
         { return m_constraint; }
 
-        inline const IO::SDK::AberrationsEnum &GetAberration()
+        [[nodiscard]] inline const IO::SDK::AberrationsEnum &GetAberration() const
         { return m_aberration; }
 
-        inline const double GetValue()
+        [[nodiscard]] inline double GetValue()
         { return m_value; }
 
-        inline const IO::SDK::Time::TimeSpan &GetInitialStepSize()
+        [[nodiscard]] inline const IO::SDK::Time::TimeSpan &GetInitialStepSize() const
         { return m_initialStepSize; }
 
     };

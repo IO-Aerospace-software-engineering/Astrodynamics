@@ -38,21 +38,21 @@ namespace IO::SDK::Coordinates
 		 * 
 		 * @return double 
 		 */
-		double GetRadius() const { return this->_radius; }
+		[[nodiscard]] double GetRadius() const { return this->_radius; }
 
 		/**
 		 * @brief Get the Longitude
 		 * 
 		 * @return double 
 		 */
-		double GetLongitude() const { return this->_longitude; }
+		[[nodiscard]] double GetLongitude() const { return this->_longitude; }
 
 		/**
 		 * @brief 
 		 * 
 		 * @return double 
 		 */
-		double GetZ() const { return this->_z; }
+		[[nodiscard]] double GetZ() const { return this->_z; }
 	};
 }
 #endif // !CYLINDRICAL_H

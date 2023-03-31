@@ -6,7 +6,7 @@ IO::SDK::Maneuvers::Attitudes::InstrumentPointingToAttitude::InstrumentPointingT
                                                                                           IO::SDK::Propagators::Propagator &propagator,
                                                                                           const IO::SDK::Time::TimeSpan &attitudeHoldDuration,
                                                                                           const IO::SDK::Instruments::Instrument &instrument, const IO::SDK::Body::Body &targetBody)
-        : IO::SDK::Maneuvers::ManeuverBase(engines, propagator, attitudeHoldDuration), m_instrument{instrument}, m_targetBody{&targetBody}
+        : IO::SDK::Maneuvers::ManeuverBase(engines, propagator, attitudeHoldDuration), m_targetBody{&targetBody},m_instrument{instrument}
 {
 
 }
@@ -15,7 +15,7 @@ IO::SDK::Maneuvers::Attitudes::InstrumentPointingToAttitude::InstrumentPointingT
                                                                                           IO::SDK::Propagators::Propagator &propagator,
                                                                                           const IO::SDK::Time::TimeSpan &attitudeHoldDuration,
                                                                                           const IO::SDK::Instruments::Instrument &instrument, const IO::SDK::Sites::Site &targetSite)
-        : IO::SDK::Maneuvers::ManeuverBase(engines, propagator, attitudeHoldDuration), m_instrument{instrument}, m_targetSite{&targetSite}
+        : IO::SDK::Maneuvers::ManeuverBase(engines, propagator, attitudeHoldDuration), m_targetSite{&targetSite}, m_instrument{instrument}
 {
 
 }
@@ -24,7 +24,7 @@ IO::SDK::Maneuvers::Attitudes::InstrumentPointingToAttitude::InstrumentPointingT
                                                                                           IO::SDK::Propagators::Propagator &propagator, const IO::SDK::Time::TDB &minimumEpoch,
                                                                                           const IO::SDK::Time::TimeSpan &attitudeHoldDuration,
                                                                                           const IO::SDK::Instruments::Instrument &instrument, const IO::SDK::Body::Body &targetBody)
-        : IO::SDK::Maneuvers::ManeuverBase(engines, propagator, minimumEpoch, attitudeHoldDuration), m_instrument{instrument}, m_targetBody{&targetBody}
+        : IO::SDK::Maneuvers::ManeuverBase(engines, propagator, minimumEpoch, attitudeHoldDuration), m_targetBody{&targetBody}, m_instrument{instrument}
 {
 
 }
@@ -33,17 +33,17 @@ IO::SDK::Maneuvers::Attitudes::InstrumentPointingToAttitude::InstrumentPointingT
                                                                                           IO::SDK::Propagators::Propagator &propagator, const IO::SDK::Time::TDB &minimumEpoch,
                                                                                           const IO::SDK::Time::TimeSpan &attitudeHoldDuration,
                                                                                           const IO::SDK::Instruments::Instrument &instrument, const IO::SDK::Sites::Site &targetSite)
-        : IO::SDK::Maneuvers::ManeuverBase(engines, propagator, minimumEpoch, attitudeHoldDuration), m_instrument{instrument}, m_targetSite{&targetSite}
+        : IO::SDK::Maneuvers::ManeuverBase(engines, propagator, minimumEpoch, attitudeHoldDuration), m_targetSite{&targetSite}, m_instrument{instrument}
 {
 
 }
 
-bool IO::SDK::Maneuvers::Attitudes::InstrumentPointingToAttitude::CanExecute(const IO::SDK::OrbitalParameters::OrbitalParameters &orbitalParams)
+bool IO::SDK::Maneuvers::Attitudes::InstrumentPointingToAttitude::CanExecute([[maybe_unused]]const IO::SDK::OrbitalParameters::OrbitalParameters &orbitalParams)
 {
     return true;
 }
 
-void IO::SDK::Maneuvers::Attitudes::InstrumentPointingToAttitude::Compute(const IO::SDK::OrbitalParameters::OrbitalParameters &maneuverPoint)
+void IO::SDK::Maneuvers::Attitudes::InstrumentPointingToAttitude::Compute([[maybe_unused]]const IO::SDK::OrbitalParameters::OrbitalParameters &maneuverPoint)
 {
     m_deltaV = std::make_unique<IO::SDK::Math::Vector3D>();
 }

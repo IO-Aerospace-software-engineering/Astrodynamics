@@ -15,6 +15,7 @@
 #include <numeric>
 #include <InstrumentFrameFile.h>
 #include <StringHelpers.h>
+#include "Parameters.h"
 
 IO::SDK::Body::Spacecraft::Spacecraft::Spacecraft(const int id, const std::string &name, const double dryOperatingMass, const double maximumOperatingMass,
                                                   const std::string &missionPrefix, std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParametersAtEpoch)

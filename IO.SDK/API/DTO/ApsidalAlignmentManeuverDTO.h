@@ -12,17 +12,17 @@ namespace IO::SDK::API::DTO
     struct ApsidalAlignmentManeuverDTO
     {
         int maneuverOrder{0};
-        int engines[10];
+        int engines[10]{};
         double attitudeHoldDuration{0.0};
         double minimumEpoch{0.0};
 
         StateVectorDTO targetOrbit;
 
-        WindowDTO maneuverWindow;
-        WindowDTO thrustWindow;
-        WindowDTO attitudeWindow;
-        Vector3DDTO deltaV;
-        double theta;
+        WindowDTO maneuverWindow{};
+        WindowDTO thrustWindow{};
+        WindowDTO attitudeWindow{};
+        Vector3DDTO deltaV{};
+        double theta{};
     };
 }
 

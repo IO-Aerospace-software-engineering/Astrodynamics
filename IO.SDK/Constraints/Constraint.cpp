@@ -10,15 +10,17 @@
  */
 #include "Constraint.h"
 
-IO::SDK::Constraints::Constraint IO::SDK::Constraints::Constraint::_GreaterThan(std::string(">"));
-IO::SDK::Constraints::Constraint IO::SDK::Constraints::Constraint::_LowerThan(std::string("<"));
+#include <utility>
+
+IO::SDK::Constraints::Constraint IO::SDK::Constraints::Constraint::mGreaterThan(std::string(">"));
+IO::SDK::Constraints::Constraint IO::SDK::Constraints::Constraint::mLowerThan(std::string("<"));
 IO::SDK::Constraints::Constraint IO::SDK::Constraints::Constraint::Equal(std::string("="));
 IO::SDK::Constraints::Constraint IO::SDK::Constraints::Constraint::AbsMin(std::string("ABSMIN"));
 IO::SDK::Constraints::Constraint IO::SDK::Constraints::Constraint::AbsMax(std::string("ABSMAX"));
 IO::SDK::Constraints::Constraint IO::SDK::Constraints::Constraint::LocalMin(std::string("LOCMIN"));
 IO::SDK::Constraints::Constraint IO::SDK::Constraints::Constraint::LocalMax(std::string("LOCMAX"));
 
-IO::SDK::Constraints::Constraint::Constraint(const std::string& name) : m_name{name}
+IO::SDK::Constraints::Constraint::Constraint(std::string  name) : m_name{std::move(name)}
 {
 }
 
@@ -29,10 +31,10 @@ const char *IO::SDK::Constraints::Constraint::ToCharArray() const
 
 IO::SDK::Constraints::Constraint& IO::SDK::Constraints::Constraint::GreaterThan()
 {
-    return _GreaterThan;
+    return mGreaterThan;
 }
 
 IO::SDK::Constraints::Constraint& IO::SDK::Constraints::Constraint::LowerThan()
 {
-    return _LowerThan;
+    return mLowerThan;
 }

@@ -64,7 +64,6 @@ void IO::SDK::Kernels::EphemerisKernel::WriteData(const std::vector<OrbitalParam
     for (auto &&sv: states) {
         if (sv.GetFrame() != frame) {
             throw IO::SDK::Exception::InvalidArgumentException("State vectors must have the same frame");
-            break;
         }
     }
 
@@ -90,7 +89,7 @@ void IO::SDK::Kernels::EphemerisKernel::WriteData(const std::vector<OrbitalParam
         statesArray[i][3] = velocity.GetX() / 1000.0;
         statesArray[i][4] = velocity.GetY() / 1000.0;
         statesArray[i][5] = velocity.GetZ() / 1000.0;
-    };
+    }
 
     SpiceInt handle{};
 

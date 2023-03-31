@@ -17,6 +17,7 @@
 #include <Site.h>
 #include <Templates/Templates.cpp>
 #include <StringHelpers.h>
+#include "Constants.h"
 
 IO::SDK::Frames::SiteFrameFile::SiteFrameFile(const IO::SDK::Sites::Site& site) : FrameFile(site.GetFilesPath() + "/Frame/" + site.GetName() + ".tf", site.GetName() + "_TOPO"),
                                                                                   m_site{site} {

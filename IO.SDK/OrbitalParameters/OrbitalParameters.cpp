@@ -17,6 +17,7 @@
 #include <StateVector.h>
 #include <SpiceUsr.h>
 #include <InertialFrames.h>
+#include <Parameters.h>
 
 IO::SDK::OrbitalParameters::OrbitalParameters::OrbitalParameters(const std::shared_ptr<IO::SDK::Body::CelestialBody> &centerOfMotion, const IO::SDK::Time::TDB &epoch, const IO::SDK::Frames::Frames &frame) : m_centerOfMotion{centerOfMotion}, m_epoch{epoch}, m_frame{frame}
 {
@@ -232,7 +233,7 @@ double IO::SDK::OrbitalParameters::OrbitalParameters::GetTrueLongitude(const IO:
 
 double IO::SDK::OrbitalParameters::OrbitalParameters::GetMeanLongitude(const IO::SDK::Time::TDB &epoch) const
 {
-	double res = this->GetRightAscendingNodeLongitude() + this->GetPeriapsisArgument() + this->GetMeanAnomaly();
+	double res = this->GetRightAscendingNodeLongitude() + this->GetPeriapsisArgument() + this->GetMeanAnomaly(epoch);
 
 	while (res > IO::SDK::Constants::_2PI)
 	{

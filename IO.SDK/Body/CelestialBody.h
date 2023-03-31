@@ -32,8 +32,8 @@ namespace IO::SDK::Body
 		double ReadGM(int id);
 
 	public:
-		CelestialBody(const int id, std::shared_ptr<IO::SDK::Body::CelestialBody> &centerOfMotion);
-		CelestialBody(const int id);
+		CelestialBody(int id, std::shared_ptr<IO::SDK::Body::CelestialBody> &centerOfMotion);
+		explicit CelestialBody(int id);
 		double GetSphereOfInfluence() const;
 		double GetHillSphere() const;
 		/**

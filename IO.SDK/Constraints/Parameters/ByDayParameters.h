@@ -18,12 +18,12 @@ namespace IO::SDK::Constraints::Parameters
         const double m_twilightDefinition;
         const IO::SDK::Sites::Site &m_site;
     public :
-        ByDayParameters(const IO::SDK::Sites::Site &site, const double twilightDefinition);
+        ByDayParameters(const IO::SDK::Sites::Site &site, double twilightDefinition);
 
-        inline double GetTwilightDefinition() const
+        [[nodiscard]] inline double GetTwilightDefinition() const
         { return m_twilightDefinition; }
 
-        inline const IO::SDK::Sites::Site &GetSite() const
+        [[nodiscard]] inline const IO::SDK::Sites::Site &GetSite() const
         { return m_site; }
     };
 
