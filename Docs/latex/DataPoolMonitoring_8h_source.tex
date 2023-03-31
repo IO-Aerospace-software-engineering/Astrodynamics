@@ -1,0 +1,37 @@
+\hypertarget{DataPoolMonitoring_8h_source}{}\doxysection{Data\+Pool\+Monitoring.\+h}
+\label{DataPoolMonitoring_8h_source}\index{IO.SDK/DataPoolMonitoring.h@{IO.SDK/DataPoolMonitoring.h}}
+\mbox{\hyperlink{DataPoolMonitoring_8h}{Go to the documentation of this file.}}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{1 }
+\DoxyCodeLine{11 \textcolor{preprocessor}{\#ifndef KERNEL\_POOL\_MONITORING\_H}}
+\DoxyCodeLine{12 \textcolor{preprocessor}{\#define KERNEL\_POOL\_MONITORING\_H}}
+\DoxyCodeLine{13 }
+\DoxyCodeLine{14 \textcolor{preprocessor}{\#include<vector>}}
+\DoxyCodeLine{15 \textcolor{preprocessor}{\#include<string>}}
+\DoxyCodeLine{16 }
+\DoxyCodeLine{17 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1SDK}{IO::SDK}}}
+\DoxyCodeLine{18 \{}
+\DoxyCodeLine{23     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1SDK_1_1DataPoolMonitoring}{DataPoolMonitoring}}}
+\DoxyCodeLine{24     \{}
+\DoxyCodeLine{25     \textcolor{keyword}{public}:}
+\DoxyCodeLine{26         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1SDK_1_1DataPoolMonitoring}{DataPoolMonitoring}}\& \mbox{\hyperlink{classIO_1_1SDK_1_1DataPoolMonitoring_a5c8471b0348d6bbeb90b1d8948090a3e}{Instance}}();}
+\DoxyCodeLine{27 }
+\DoxyCodeLine{28         std::vector<std::string> \mbox{\hyperlink{classIO_1_1SDK_1_1DataPoolMonitoring_ab7c8232fc6ee21aaba316e16c909c37d}{GetStringProperty}}(\textcolor{keyword}{const} std::string\& propertyName, \textcolor{keyword}{const} \textcolor{keywordtype}{int} nbValuesExpected) \textcolor{keyword}{const};}
+\DoxyCodeLine{29         std::vector<int> \mbox{\hyperlink{classIO_1_1SDK_1_1DataPoolMonitoring_a6412e244a2448b0cf95ff98115c311fc}{GetIntegerProperty}}(\textcolor{keyword}{const} std::string\& propertyName, \textcolor{keyword}{const} \textcolor{keywordtype}{int} nbValuesExpected)\textcolor{keyword}{const};}
+\DoxyCodeLine{30         std::vector<double> \mbox{\hyperlink{classIO_1_1SDK_1_1DataPoolMonitoring_ab54ea0711b1f1213201bd7fef07a77cb}{GetDoubleProperty}}(\textcolor{keyword}{const} std::string\& propertyName, \textcolor{keyword}{const} \textcolor{keywordtype}{int} nbValuesExpected)\textcolor{keyword}{const};}
+\DoxyCodeLine{31 }
+\DoxyCodeLine{32     \textcolor{keyword}{private}:}
+\DoxyCodeLine{33         \mbox{\hyperlink{classIO_1_1SDK_1_1DataPoolMonitoring}{DataPoolMonitoring}}\& operator= (\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1DataPoolMonitoring}{DataPoolMonitoring}}\&) = \textcolor{keyword}{delete};}
+\DoxyCodeLine{34         \mbox{\hyperlink{classIO_1_1SDK_1_1DataPoolMonitoring}{DataPoolMonitoring}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1DataPoolMonitoring}{DataPoolMonitoring}}\&) = \textcolor{keyword}{delete};}
+\DoxyCodeLine{35 }
+\DoxyCodeLine{36         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1SDK_1_1DataPoolMonitoring}{DataPoolMonitoring}} m\_instance;}
+\DoxyCodeLine{37         \mbox{\hyperlink{classIO_1_1SDK_1_1DataPoolMonitoring}{DataPoolMonitoring}}() = \textcolor{keywordflow}{default};}
+\DoxyCodeLine{38         \mbox{\hyperlink{classIO_1_1SDK_1_1DataPoolMonitoring}{\string~DataPoolMonitoring}}() = \textcolor{keywordflow}{default};}
+\DoxyCodeLine{39     \};}
+\DoxyCodeLine{40 \}}
+\DoxyCodeLine{41 }
+\DoxyCodeLine{42 \textcolor{preprocessor}{\#endif }\textcolor{comment}{// !KERNEL\_POOL\_MONITORING\_H}}
+\DoxyCodeLine{43 }
+\DoxyCodeLine{44 }
+
+\end{DoxyCode}

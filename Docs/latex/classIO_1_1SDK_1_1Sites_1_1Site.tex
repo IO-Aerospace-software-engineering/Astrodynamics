@@ -1,0 +1,531 @@
+\hypertarget{classIO_1_1SDK_1_1Sites_1_1Site}{}\doxysection{IO\+::SDK\+::Sites\+::Site Class Reference}
+\label{classIO_1_1SDK_1_1Sites_1_1Site}\index{IO::SDK::Sites::Site@{IO::SDK::Sites::Site}}
+
+
+\mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site}{Site}} class.  
+
+
+
+
+{\ttfamily \#include $<$Site.\+h$>$}
+
+Inheritance diagram for IO\+::SDK\+::Sites\+::Site\+:\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=2.000000cm]{classIO_1_1SDK_1_1Sites_1_1Site}
+\end{center}
+\end{figure}
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_a8cdf5b1b03b9afaf4eaa33747f7c0445}{Site}} (const int id, const std\+::string \&name, const \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1Geodetic}{IO\+::\+SDK\+::\+Coordinates\+::\+Geodetic}} \&coordinates, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1CelestialBody}{IO\+::\+SDK\+::\+Body\+::\+Celestial\+Body}} $>$ \&body)
+\begin{DoxyCompactList}\small\item\em Construct a new \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site}{Site}} object. \end{DoxyCompactList}\item 
+virtual \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_a3e6aebec0fe50d8705d262dcd9f3209a}{$\sim$\+Site}} ()=default
+\item 
+int \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_a28a013a4a1d28604c291df89853a996f}{Get\+Id}} () const
+\begin{DoxyCompactList}\small\item\em Get the Id. \end{DoxyCompactList}\item 
+std\+::string \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_a9078603afed9946645c6546dba1b139a}{Get\+Name}} () const
+\begin{DoxyCompactList}\small\item\em Get the Name. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1Geodetic}{IO\+::\+SDK\+::\+Coordinates\+::\+Geodetic}} \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_a87b8550acd86a6809885c84236c3855a}{Get\+Coordinates}} () const
+\begin{DoxyCompactList}\small\item\em Get the \mbox{\hyperlink{namespaceIO_1_1SDK_1_1Coordinates}{Coordinates}}. \end{DoxyCompactList}\item 
+std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1CelestialBody}{IO\+::\+SDK\+::\+Body\+::\+Celestial\+Body}} $>$ \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_a9ec6961014a7e44b4a70035dbadea015}{Get\+Body}} () const
+\begin{DoxyCompactList}\small\item\em Get the \mbox{\hyperlink{namespaceIO_1_1SDK_1_1Body}{Body}}. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1RADec}{IO\+::\+SDK\+::\+Coordinates\+::\+RADec}} \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_a16715975f67576334937bfb31a8c1f54}{Get\+RADec}} (const \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body}{IO\+::\+SDK\+::\+Body\+::\+Body}} \&body, const \mbox{\hyperlink{namespaceIO_1_1SDK_abbb4827ec6a24ad346d9a60473ad3b81}{IO\+::\+SDK\+::\+Aberrations\+Enum}} aberration\+Correction, const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} \&epoch) const
+\begin{DoxyCompactList}\small\item\em Get Right ascension, declination and range. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+State\+Vector}} \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_a21c1093a89493fd9b18bbfeff1947ac6}{Get\+State\+Vector}} (const \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1Frames}{IO\+::\+SDK\+::\+Frames\+::\+Frames}} frame, const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} \&epoch) const
+\begin{DoxyCompactList}\small\item\em Get rectangular position. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classIO_1_1SDK_1_1Illumination_1_1Illumination}{IO\+::\+SDK\+::\+Illumination\+::\+Illumination}} \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_a01948f8738997106de15647caad84909}{Get\+Illumination}} (const \mbox{\hyperlink{namespaceIO_1_1SDK_abbb4827ec6a24ad346d9a60473ad3b81}{IO\+::\+SDK\+::\+Aberrations\+Enum}} aberration\+Correction, const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} \&epoch) const
+\begin{DoxyCompactList}\small\item\em Get the \mbox{\hyperlink{namespaceIO_1_1SDK_1_1Illumination}{Illumination}}. \end{DoxyCompactList}\item 
+bool \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_aca8ccfee4fe3971268c45c2c58c3bac2}{Is\+Day}} (const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} \&epoch, const double twilight) const
+\begin{DoxyCompactList}\small\item\em Know if it\textquotesingle{}s day. \end{DoxyCompactList}\item 
+bool \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_a91eea4b24fba72bc5f5a846079a94b19}{Is\+Night}} (const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} \&epoch, const double twilight) const
+\begin{DoxyCompactList}\small\item\em Know if it\textquotesingle{}s night. \end{DoxyCompactList}\item 
+std\+::vector$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO\+::\+SDK\+::\+Time\+::\+Window}}$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1UTC}{IO\+::\+SDK\+::\+Time\+::\+UTC}} $>$ $>$ \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_a56d6be12b94d4b10d9f1434e02b29955}{Find\+Day\+Windows}} (const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO\+::\+SDK\+::\+Time\+::\+Window}}$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1UTC}{IO\+::\+SDK\+::\+Time\+::\+UTC}} $>$ \&search\+Window, const double twilight) const
+\begin{DoxyCompactList}\small\item\em Find day windows. \end{DoxyCompactList}\item 
+std\+::vector$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO\+::\+SDK\+::\+Time\+::\+Window}}$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1UTC}{IO\+::\+SDK\+::\+Time\+::\+UTC}} $>$ $>$ \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_acb323aa6647b0066a7767775d9e31b5a}{Find\+Night\+Windows}} (const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO\+::\+SDK\+::\+Time\+::\+Window}}$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1UTC}{IO\+::\+SDK\+::\+Time\+::\+UTC}} $>$ \&search\+Window, const double twilight) const
+\begin{DoxyCompactList}\small\item\em Find night windows. \end{DoxyCompactList}\item 
+std\+::vector$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO\+::\+SDK\+::\+Time\+::\+Window}}$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1UTC}{IO\+::\+SDK\+::\+Time\+::\+UTC}} $>$ $>$ \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_af937f2298104652727ebecaf10b0d19e}{Find\+Windows\+On\+Illumination\+Constraint}} (const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO\+::\+SDK\+::\+Time\+::\+Window}}$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1UTC}{IO\+::\+SDK\+::\+Time\+::\+UTC}} $>$ \&search\+Window, const \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body}{IO\+::\+SDK\+::\+Body\+::\+Body}} \&observer\+Body, const \mbox{\hyperlink{classIO_1_1SDK_1_1IlluminationAngle}{IO\+::\+SDK\+::\+Illumination\+Angle}} \&illumination\+Angle, const \mbox{\hyperlink{classIO_1_1SDK_1_1Constraints_1_1Constraint}{IO\+::\+SDK\+::\+Constraints\+::\+Constraint}} \&constraint, const double value) const
+\begin{DoxyCompactList}\small\item\em Find windows where illumination constraint is satisfied. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1HorizontalCoordinates}{IO\+::\+SDK\+::\+Coordinates\+::\+Horizontal\+Coordinates}} \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_a551acf961b448cf2857ee02212bdfa1b}{Get\+Horizontal\+Coordinates}} (const \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body}{IO\+::\+SDK\+::\+Body\+::\+Body}} \&body, const \mbox{\hyperlink{namespaceIO_1_1SDK_abbb4827ec6a24ad346d9a60473ad3b81}{IO\+::\+SDK\+::\+Aberrations\+Enum}} aberration\+Correction, const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} \&epoch) const
+\begin{DoxyCompactList}\small\item\em Get the Horizontal \mbox{\hyperlink{namespaceIO_1_1SDK_1_1Coordinates}{Coordinates}} to the target body. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+State\+Vector}} \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_af29c8570c7b36f0c074f3c9b6637957a}{Get\+State\+Vector}} (const \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body}{IO\+::\+SDK\+::\+Body\+::\+Body}} \&body, const \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1Frames}{IO\+::\+SDK\+::\+Frames\+::\+Frames}} frame, const \mbox{\hyperlink{namespaceIO_1_1SDK_abbb4827ec6a24ad346d9a60473ad3b81}{IO\+::\+SDK\+::\+Aberrations\+Enum}} aberration\+Correction, const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} \&epoch) const
+\begin{DoxyCompactList}\small\item\em Get the State Vector to target body. \end{DoxyCompactList}\item 
+std\+::vector$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO\+::\+SDK\+::\+Time\+::\+Window}}$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1UTC}{IO\+::\+SDK\+::\+Time\+::\+UTC}} $>$ $>$ \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_a404c6ec68879eb7926fa301e59ba44fa}{Find\+Body\+Visibility\+Windows}} (const \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body}{IO\+::\+SDK\+::\+Body\+::\+Body}} \&body, const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO\+::\+SDK\+::\+Time\+::\+Window}}$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1UTC}{IO\+::\+SDK\+::\+Time\+::\+UTC}} $>$ \&search\+Window, const \mbox{\hyperlink{namespaceIO_1_1SDK_abbb4827ec6a24ad346d9a60473ad3b81}{IO\+::\+SDK\+::\+Aberrations\+Enum}} aberration\+Correction) const
+\item 
+const std\+::unique\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1SiteFrameFile}{IO\+::\+SDK\+::\+Frames\+::\+Site\+Frame\+File}} $>$ \& \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_ab39517b6c983d54c6ce8db8bfb440e8d}{Get\+Frame}} () const
+\item 
+const std\+::string \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_ab30557b04599d469876047d9ac6c3587}{Get\+Files\+Path}} () const
+\item 
+void \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_a00a4b10eb729acb50f04d1bc56801152}{Build\+And\+Write\+Ephemeris}} (const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO\+::\+SDK\+::\+Time\+::\+Window}}$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1UTC}{IO\+::\+SDK\+::\+Time\+::\+UTC}} $>$ \&search\+Window) const
+\item 
+\mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{Orbital\+Parameters\+::\+State\+Vector}} \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_ac1701ec2bfbc8298f77b58184c8403d7}{Read\+Ephemeris}} (const \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1Frames}{Frames\+::\+Frames}} \&frame, const \mbox{\hyperlink{namespaceIO_1_1SDK_abbb4827ec6a24ad346d9a60473ad3b81}{Aberrations\+Enum}} aberration, const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{Time\+::\+TDB}} \&epoch, const \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1CelestialBody}{Body\+::\+Celestial\+Body}} \&observer) const
+\item 
+\mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{Time\+::\+Window}}$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} $>$ \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_a99128f1aea970dfb4c5b6a6dcf39a63c}{Get\+Ephemeris\+Coverage\+Window}} () const
+\item 
+void \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_aa8c1fdc55eaa275d594bb30b99f11582}{Write\+Ephemeris\+Kernel\+Comment}} (const std\+::string \&comment) const
+\item 
+std\+::string \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_abddbfa11d39410da5b01052ba2f3837f}{Read\+Ephemeris\+Kernel\+Comment}} () const
+\end{DoxyCompactItemize}
+\doxysubsection*{Protected Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+void \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_afd7cd0a5bd88c097f84e68360015a6f4}{Write\+Ephemeris}} (const std\+::vector$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{Orbital\+Parameters\+::\+State\+Vector}} $>$ \&states) const
+\end{DoxyCompactItemize}
+\doxysubsection*{Protected Attributes}
+\begin{DoxyCompactItemize}
+\item 
+const int \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_ab94fe43caaedefea3b0c5760be92bed7}{m\+\_\+id}}
+\item 
+const std\+::string \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_ad63a9c05d45bd8c44f7655484d9bf1c7}{m\+\_\+name}}
+\item 
+const \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1Geodetic}{IO\+::\+SDK\+::\+Coordinates\+::\+Geodetic}} \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_af31b76b84e0a3cc2ac1ba7791485075c}{m\+\_\+coordinates}}
+\item 
+const std\+::string \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_a13bec2d631713b168bc4aec94542e4d3}{m\+\_\+file\+Path}}
+\item 
+const std\+::unique\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Kernels_1_1EphemerisKernel}{IO\+::\+SDK\+::\+Kernels\+::\+Ephemeris\+Kernel}} $>$ \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_ac027514ca28c242cee08222fd01883b6}{m\+\_\+ephemeris\+Kernel}}
+\item 
+const std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1CelestialBody}{IO\+::\+SDK\+::\+Body\+::\+Celestial\+Body}} $>$ \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_aab32c263be6d18a1225767c8bc688079}{m\+\_\+body}}
+\item 
+const std\+::unique\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1SiteFrameFile}{IO\+::\+SDK\+::\+Frames\+::\+Site\+Frame\+File}} $>$ \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_a34e6665bff147b05d9785df1a07e071f}{m\+\_\+frame}}
+\item 
+const \mbox{\hyperlink{classIO_1_1SDK_1_1Aberrations}{IO\+::\+SDK\+::\+Aberrations}} \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_aa67602d2c26ac352b86cfb7f54b72743}{m\+\_\+aberration\+Helper}} \{\}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+\mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site}{Site}} class. 
+
+\doxysubsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Sites_1_1Site_a8cdf5b1b03b9afaf4eaa33747f7c0445}\label{classIO_1_1SDK_1_1Sites_1_1Site_a8cdf5b1b03b9afaf4eaa33747f7c0445}} 
+\index{IO::SDK::Sites::Site@{IO::SDK::Sites::Site}!Site@{Site}}
+\index{Site@{Site}!IO::SDK::Sites::Site@{IO::SDK::Sites::Site}}
+\doxysubsubsection{\texorpdfstring{Site()}{Site()}}
+{\footnotesize\ttfamily IO\+::\+SDK\+::\+Sites\+::\+Site\+::\+Site (\begin{DoxyParamCaption}\item[{const int}]{id,  }\item[{const std\+::string \&}]{name,  }\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1Geodetic}{IO\+::\+SDK\+::\+Coordinates\+::\+Geodetic}} \&}]{coordinates,  }\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1CelestialBody}{IO\+::\+SDK\+::\+Body\+::\+Celestial\+Body}} $>$ \&}]{body }\end{DoxyParamCaption})}
+
+
+
+Construct a new \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site}{Site}} object. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em name} & \\
+\hline
+{\em coordinates} & \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Sites_1_1Site_a3e6aebec0fe50d8705d262dcd9f3209a}\label{classIO_1_1SDK_1_1Sites_1_1Site_a3e6aebec0fe50d8705d262dcd9f3209a}} 
+\index{IO::SDK::Sites::Site@{IO::SDK::Sites::Site}!````~Site@{$\sim$Site}}
+\index{````~Site@{$\sim$Site}!IO::SDK::Sites::Site@{IO::SDK::Sites::Site}}
+\doxysubsubsection{\texorpdfstring{$\sim$Site()}{~Site()}}
+{\footnotesize\ttfamily virtual IO\+::\+SDK\+::\+Sites\+::\+Site\+::$\sim$\+Site (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}, {\ttfamily [default]}}
+
+
+
+\doxysubsection{Member Function Documentation}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Sites_1_1Site_a00a4b10eb729acb50f04d1bc56801152}\label{classIO_1_1SDK_1_1Sites_1_1Site_a00a4b10eb729acb50f04d1bc56801152}} 
+\index{IO::SDK::Sites::Site@{IO::SDK::Sites::Site}!BuildAndWriteEphemeris@{BuildAndWriteEphemeris}}
+\index{BuildAndWriteEphemeris@{BuildAndWriteEphemeris}!IO::SDK::Sites::Site@{IO::SDK::Sites::Site}}
+\doxysubsubsection{\texorpdfstring{BuildAndWriteEphemeris()}{BuildAndWriteEphemeris()}}
+{\footnotesize\ttfamily void IO\+::\+SDK\+::\+Sites\+::\+Site\+::\+Build\+And\+Write\+Ephemeris (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO\+::\+SDK\+::\+Time\+::\+Window}}$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1UTC}{IO\+::\+SDK\+::\+Time\+::\+UTC}} $>$ \&}]{search\+Window }\end{DoxyParamCaption}) const}
+
+Build and write ephemeris for a given period 
+\begin{DoxyParams}{Parameters}
+{\em search\+Window} & \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Sites_1_1Site_a404c6ec68879eb7926fa301e59ba44fa}\label{classIO_1_1SDK_1_1Sites_1_1Site_a404c6ec68879eb7926fa301e59ba44fa}} 
+\index{IO::SDK::Sites::Site@{IO::SDK::Sites::Site}!FindBodyVisibilityWindows@{FindBodyVisibilityWindows}}
+\index{FindBodyVisibilityWindows@{FindBodyVisibilityWindows}!IO::SDK::Sites::Site@{IO::SDK::Sites::Site}}
+\doxysubsubsection{\texorpdfstring{FindBodyVisibilityWindows()}{FindBodyVisibilityWindows()}}
+{\footnotesize\ttfamily std\+::vector$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO\+::\+SDK\+::\+Time\+::\+Window}}$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1UTC}{IO\+::\+SDK\+::\+Time\+::\+UTC}} $>$ $>$ IO\+::\+SDK\+::\+Sites\+::\+Site\+::\+Find\+Body\+Visibility\+Windows (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body}{IO\+::\+SDK\+::\+Body\+::\+Body}} \&}]{body,  }\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO\+::\+SDK\+::\+Time\+::\+Window}}$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1UTC}{IO\+::\+SDK\+::\+Time\+::\+UTC}} $>$ \&}]{search\+Window,  }\item[{const \mbox{\hyperlink{namespaceIO_1_1SDK_abbb4827ec6a24ad346d9a60473ad3b81}{IO\+::\+SDK\+::\+Aberrations\+Enum}}}]{aberration\+Correction }\end{DoxyParamCaption}) const}
+
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Sites_1_1Site_a56d6be12b94d4b10d9f1434e02b29955}\label{classIO_1_1SDK_1_1Sites_1_1Site_a56d6be12b94d4b10d9f1434e02b29955}} 
+\index{IO::SDK::Sites::Site@{IO::SDK::Sites::Site}!FindDayWindows@{FindDayWindows}}
+\index{FindDayWindows@{FindDayWindows}!IO::SDK::Sites::Site@{IO::SDK::Sites::Site}}
+\doxysubsubsection{\texorpdfstring{FindDayWindows()}{FindDayWindows()}}
+{\footnotesize\ttfamily std\+::vector$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO\+::\+SDK\+::\+Time\+::\+Window}}$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1UTC}{IO\+::\+SDK\+::\+Time\+::\+UTC}} $>$ $>$ IO\+::\+SDK\+::\+Sites\+::\+Site\+::\+Find\+Day\+Windows (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO\+::\+SDK\+::\+Time\+::\+Window}}$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1UTC}{IO\+::\+SDK\+::\+Time\+::\+UTC}} $>$ \&}]{search\+Window,  }\item[{const double}]{twilight }\end{DoxyParamCaption}) const}
+
+
+
+Find day windows. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em search\+Window} & \\
+\hline
+{\em twilight} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+std\+::vector$<$\+IO\+::\+SDK\+::\+Time\+::\+Window$<$\+IO\+::\+SDK\+::\+Time\+::\+UTC$>$$>$ 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Sites_1_1Site_acb323aa6647b0066a7767775d9e31b5a}\label{classIO_1_1SDK_1_1Sites_1_1Site_acb323aa6647b0066a7767775d9e31b5a}} 
+\index{IO::SDK::Sites::Site@{IO::SDK::Sites::Site}!FindNightWindows@{FindNightWindows}}
+\index{FindNightWindows@{FindNightWindows}!IO::SDK::Sites::Site@{IO::SDK::Sites::Site}}
+\doxysubsubsection{\texorpdfstring{FindNightWindows()}{FindNightWindows()}}
+{\footnotesize\ttfamily std\+::vector$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO\+::\+SDK\+::\+Time\+::\+Window}}$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1UTC}{IO\+::\+SDK\+::\+Time\+::\+UTC}} $>$ $>$ IO\+::\+SDK\+::\+Sites\+::\+Site\+::\+Find\+Night\+Windows (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO\+::\+SDK\+::\+Time\+::\+Window}}$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1UTC}{IO\+::\+SDK\+::\+Time\+::\+UTC}} $>$ \&}]{search\+Window,  }\item[{const double}]{twilight }\end{DoxyParamCaption}) const}
+
+
+
+Find night windows. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em search\+Window} & \\
+\hline
+{\em twilight} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+std\+::vector$<$\+IO\+::\+SDK\+::\+Time\+::\+Window$<$\+IO\+::\+SDK\+::\+Time\+::\+UTC$>$$>$ 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Sites_1_1Site_af937f2298104652727ebecaf10b0d19e}\label{classIO_1_1SDK_1_1Sites_1_1Site_af937f2298104652727ebecaf10b0d19e}} 
+\index{IO::SDK::Sites::Site@{IO::SDK::Sites::Site}!FindWindowsOnIlluminationConstraint@{FindWindowsOnIlluminationConstraint}}
+\index{FindWindowsOnIlluminationConstraint@{FindWindowsOnIlluminationConstraint}!IO::SDK::Sites::Site@{IO::SDK::Sites::Site}}
+\doxysubsubsection{\texorpdfstring{FindWindowsOnIlluminationConstraint()}{FindWindowsOnIlluminationConstraint()}}
+{\footnotesize\ttfamily std\+::vector$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO\+::\+SDK\+::\+Time\+::\+Window}}$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1UTC}{IO\+::\+SDK\+::\+Time\+::\+UTC}} $>$ $>$ IO\+::\+SDK\+::\+Sites\+::\+Site\+::\+Find\+Windows\+On\+Illumination\+Constraint (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO\+::\+SDK\+::\+Time\+::\+Window}}$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1UTC}{IO\+::\+SDK\+::\+Time\+::\+UTC}} $>$ \&}]{search\+Window,  }\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body}{IO\+::\+SDK\+::\+Body\+::\+Body}} \&}]{observer\+Body,  }\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1IlluminationAngle}{IO\+::\+SDK\+::\+Illumination\+Angle}} \&}]{illumination\+Angle,  }\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Constraints_1_1Constraint}{IO\+::\+SDK\+::\+Constraints\+::\+Constraint}} \&}]{constraint,  }\item[{const double}]{value }\end{DoxyParamCaption}) const}
+
+
+
+Find windows where illumination constraint is satisfied. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em search\+Window} & \\
+\hline
+{\em target\+Body} & \\
+\hline
+{\em observer\+Body} & \\
+\hline
+{\em illumination\+Angle} & \\
+\hline
+{\em constraint} & \\
+\hline
+{\em value} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+std\+::vector$<$\+IO\+::\+SDK\+::\+Time\+::\+Window$<$\+IO\+::\+SDK\+::\+Time\+::\+UTC$>$$>$ 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Sites_1_1Site_a9ec6961014a7e44b4a70035dbadea015}\label{classIO_1_1SDK_1_1Sites_1_1Site_a9ec6961014a7e44b4a70035dbadea015}} 
+\index{IO::SDK::Sites::Site@{IO::SDK::Sites::Site}!GetBody@{GetBody}}
+\index{GetBody@{GetBody}!IO::SDK::Sites::Site@{IO::SDK::Sites::Site}}
+\doxysubsubsection{\texorpdfstring{GetBody()}{GetBody()}}
+{\footnotesize\ttfamily std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1CelestialBody}{IO\+::\+SDK\+::\+Body\+::\+Celestial\+Body}} $>$ IO\+::\+SDK\+::\+Sites\+::\+Site\+::\+Get\+Body (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Get the \mbox{\hyperlink{namespaceIO_1_1SDK_1_1Body}{Body}}. 
+
+\begin{DoxyReturn}{Returns}
+std\+::shared\+\_\+ptr$<$\+IO\+::\+SDK\+::\+Body\+::\+Celestial\+Body$>$ 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Sites_1_1Site_a87b8550acd86a6809885c84236c3855a}\label{classIO_1_1SDK_1_1Sites_1_1Site_a87b8550acd86a6809885c84236c3855a}} 
+\index{IO::SDK::Sites::Site@{IO::SDK::Sites::Site}!GetCoordinates@{GetCoordinates}}
+\index{GetCoordinates@{GetCoordinates}!IO::SDK::Sites::Site@{IO::SDK::Sites::Site}}
+\doxysubsubsection{\texorpdfstring{GetCoordinates()}{GetCoordinates()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1Geodetic}{IO\+::\+SDK\+::\+Coordinates\+::\+Geodetic}} IO\+::\+SDK\+::\+Sites\+::\+Site\+::\+Get\+Coordinates (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Get the \mbox{\hyperlink{namespaceIO_1_1SDK_1_1Coordinates}{Coordinates}}. 
+
+\begin{DoxyReturn}{Returns}
+\mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1Geodetic}{IO\+::\+SDK\+::\+Coordinates\+::\+Geodetic}} 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Sites_1_1Site_a99128f1aea970dfb4c5b6a6dcf39a63c}\label{classIO_1_1SDK_1_1Sites_1_1Site_a99128f1aea970dfb4c5b6a6dcf39a63c}} 
+\index{IO::SDK::Sites::Site@{IO::SDK::Sites::Site}!GetEphemerisCoverageWindow@{GetEphemerisCoverageWindow}}
+\index{GetEphemerisCoverageWindow@{GetEphemerisCoverageWindow}!IO::SDK::Sites::Site@{IO::SDK::Sites::Site}}
+\doxysubsubsection{\texorpdfstring{GetEphemerisCoverageWindow()}{GetEphemerisCoverageWindow()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO\+::\+SDK\+::\+Time\+::\+Window}}$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} $>$ IO\+::\+SDK\+::\+Sites\+::\+Site\+::\+Get\+Ephemeris\+Coverage\+Window (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+Get \mbox{\hyperlink{namespaceIO_1_1SDK_1_1Time}{Time}} span covered by the ephemeris file \begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Sites_1_1Site_ab30557b04599d469876047d9ac6c3587}\label{classIO_1_1SDK_1_1Sites_1_1Site_ab30557b04599d469876047d9ac6c3587}} 
+\index{IO::SDK::Sites::Site@{IO::SDK::Sites::Site}!GetFilesPath@{GetFilesPath}}
+\index{GetFilesPath@{GetFilesPath}!IO::SDK::Sites::Site@{IO::SDK::Sites::Site}}
+\doxysubsubsection{\texorpdfstring{GetFilesPath()}{GetFilesPath()}}
+{\footnotesize\ttfamily const std\+::string IO\+::\+SDK\+::\+Sites\+::\+Site\+::\+Get\+Files\+Path (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+Get the file path to this site \begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Sites_1_1Site_ab39517b6c983d54c6ce8db8bfb440e8d}\label{classIO_1_1SDK_1_1Sites_1_1Site_ab39517b6c983d54c6ce8db8bfb440e8d}} 
+\index{IO::SDK::Sites::Site@{IO::SDK::Sites::Site}!GetFrame@{GetFrame}}
+\index{GetFrame@{GetFrame}!IO::SDK::Sites::Site@{IO::SDK::Sites::Site}}
+\doxysubsubsection{\texorpdfstring{GetFrame()}{GetFrame()}}
+{\footnotesize\ttfamily const std\+::unique\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1SiteFrameFile}{IO\+::\+SDK\+::\+Frames\+::\+Site\+Frame\+File}} $>$ \& IO\+::\+SDK\+::\+Sites\+::\+Site\+::\+Get\+Frame (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+Get the site frame file \begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Sites_1_1Site_a551acf961b448cf2857ee02212bdfa1b}\label{classIO_1_1SDK_1_1Sites_1_1Site_a551acf961b448cf2857ee02212bdfa1b}} 
+\index{IO::SDK::Sites::Site@{IO::SDK::Sites::Site}!GetHorizontalCoordinates@{GetHorizontalCoordinates}}
+\index{GetHorizontalCoordinates@{GetHorizontalCoordinates}!IO::SDK::Sites::Site@{IO::SDK::Sites::Site}}
+\doxysubsubsection{\texorpdfstring{GetHorizontalCoordinates()}{GetHorizontalCoordinates()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1HorizontalCoordinates}{IO\+::\+SDK\+::\+Coordinates\+::\+Horizontal\+Coordinates}} IO\+::\+SDK\+::\+Sites\+::\+Site\+::\+Get\+Horizontal\+Coordinates (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body}{IO\+::\+SDK\+::\+Body\+::\+Body}} \&}]{body,  }\item[{const \mbox{\hyperlink{namespaceIO_1_1SDK_abbb4827ec6a24ad346d9a60473ad3b81}{IO\+::\+SDK\+::\+Aberrations\+Enum}}}]{aberration\+Correction,  }\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} \&}]{epoch }\end{DoxyParamCaption}) const}
+
+
+
+Get the Horizontal \mbox{\hyperlink{namespaceIO_1_1SDK_1_1Coordinates}{Coordinates}} to the target body. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em body} & \\
+\hline
+{\em epoch} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+\mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1HorizontalCoordinates}{IO\+::\+SDK\+::\+Coordinates\+::\+Horizontal\+Coordinates}} 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Sites_1_1Site_a28a013a4a1d28604c291df89853a996f}\label{classIO_1_1SDK_1_1Sites_1_1Site_a28a013a4a1d28604c291df89853a996f}} 
+\index{IO::SDK::Sites::Site@{IO::SDK::Sites::Site}!GetId@{GetId}}
+\index{GetId@{GetId}!IO::SDK::Sites::Site@{IO::SDK::Sites::Site}}
+\doxysubsubsection{\texorpdfstring{GetId()}{GetId()}}
+{\footnotesize\ttfamily int IO\+::\+SDK\+::\+Sites\+::\+Site\+::\+Get\+Id (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Get the Id. 
+
+\begin{DoxyReturn}{Returns}
+int 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Sites_1_1Site_a01948f8738997106de15647caad84909}\label{classIO_1_1SDK_1_1Sites_1_1Site_a01948f8738997106de15647caad84909}} 
+\index{IO::SDK::Sites::Site@{IO::SDK::Sites::Site}!GetIllumination@{GetIllumination}}
+\index{GetIllumination@{GetIllumination}!IO::SDK::Sites::Site@{IO::SDK::Sites::Site}}
+\doxysubsubsection{\texorpdfstring{GetIllumination()}{GetIllumination()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1SDK_1_1Illumination_1_1Illumination}{IO\+::\+SDK\+::\+Illumination\+::\+Illumination}} IO\+::\+SDK\+::\+Sites\+::\+Site\+::\+Get\+Illumination (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{namespaceIO_1_1SDK_abbb4827ec6a24ad346d9a60473ad3b81}{IO\+::\+SDK\+::\+Aberrations\+Enum}}}]{aberration\+Correction,  }\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} \&}]{epoch }\end{DoxyParamCaption}) const}
+
+
+
+Get the \mbox{\hyperlink{namespaceIO_1_1SDK_1_1Illumination}{Illumination}}. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em aberration\+Correction} & \\
+\hline
+{\em epoch} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+\mbox{\hyperlink{classIO_1_1SDK_1_1Illumination_1_1Illumination}{IO\+::\+SDK\+::\+Illumination\+::\+Illumination}} 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Sites_1_1Site_a9078603afed9946645c6546dba1b139a}\label{classIO_1_1SDK_1_1Sites_1_1Site_a9078603afed9946645c6546dba1b139a}} 
+\index{IO::SDK::Sites::Site@{IO::SDK::Sites::Site}!GetName@{GetName}}
+\index{GetName@{GetName}!IO::SDK::Sites::Site@{IO::SDK::Sites::Site}}
+\doxysubsubsection{\texorpdfstring{GetName()}{GetName()}}
+{\footnotesize\ttfamily std\+::string IO\+::\+SDK\+::\+Sites\+::\+Site\+::\+Get\+Name (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Get the Name. 
+
+\begin{DoxyReturn}{Returns}
+std\+::string 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Sites_1_1Site_a16715975f67576334937bfb31a8c1f54}\label{classIO_1_1SDK_1_1Sites_1_1Site_a16715975f67576334937bfb31a8c1f54}} 
+\index{IO::SDK::Sites::Site@{IO::SDK::Sites::Site}!GetRADec@{GetRADec}}
+\index{GetRADec@{GetRADec}!IO::SDK::Sites::Site@{IO::SDK::Sites::Site}}
+\doxysubsubsection{\texorpdfstring{GetRADec()}{GetRADec()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1RADec}{IO\+::\+SDK\+::\+Coordinates\+::\+RADec}} IO\+::\+SDK\+::\+Sites\+::\+Site\+::\+Get\+RADec (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body}{IO\+::\+SDK\+::\+Body\+::\+Body}} \&}]{body,  }\item[{const \mbox{\hyperlink{namespaceIO_1_1SDK_abbb4827ec6a24ad346d9a60473ad3b81}{IO\+::\+SDK\+::\+Aberrations\+Enum}}}]{aberration\+Correction,  }\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} \&}]{epoch }\end{DoxyParamCaption}) const}
+
+
+
+Get Right ascension, declination and range. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em body} & Target body \\
+\hline
+{\em epoch} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+\mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1RADec}{IO\+::\+SDK\+::\+Coordinates\+::\+RADec}} 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Sites_1_1Site_af29c8570c7b36f0c074f3c9b6637957a}\label{classIO_1_1SDK_1_1Sites_1_1Site_af29c8570c7b36f0c074f3c9b6637957a}} 
+\index{IO::SDK::Sites::Site@{IO::SDK::Sites::Site}!GetStateVector@{GetStateVector}}
+\index{GetStateVector@{GetStateVector}!IO::SDK::Sites::Site@{IO::SDK::Sites::Site}}
+\doxysubsubsection{\texorpdfstring{GetStateVector()}{GetStateVector()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+State\+Vector}} IO\+::\+SDK\+::\+Sites\+::\+Site\+::\+Get\+State\+Vector (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body}{IO\+::\+SDK\+::\+Body\+::\+Body}} \&}]{body,  }\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1Frames}{IO\+::\+SDK\+::\+Frames\+::\+Frames}}}]{frame,  }\item[{const \mbox{\hyperlink{namespaceIO_1_1SDK_abbb4827ec6a24ad346d9a60473ad3b81}{IO\+::\+SDK\+::\+Aberrations\+Enum}}}]{aberration\+Correction,  }\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} \&}]{epoch }\end{DoxyParamCaption}) const}
+
+
+
+Get the State Vector to target body. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em body} & \\
+\hline
+{\em aberration\+Correction} & \\
+\hline
+{\em epoch} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+\mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+State\+Vector}} 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Sites_1_1Site_a21c1093a89493fd9b18bbfeff1947ac6}\label{classIO_1_1SDK_1_1Sites_1_1Site_a21c1093a89493fd9b18bbfeff1947ac6}} 
+\index{IO::SDK::Sites::Site@{IO::SDK::Sites::Site}!GetStateVector@{GetStateVector}}
+\index{GetStateVector@{GetStateVector}!IO::SDK::Sites::Site@{IO::SDK::Sites::Site}}
+\doxysubsubsection{\texorpdfstring{GetStateVector()}{GetStateVector()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+State\+Vector}} IO\+::\+SDK\+::\+Sites\+::\+Site\+::\+Get\+State\+Vector (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1Frames}{IO\+::\+SDK\+::\+Frames\+::\+Frames}}}]{frame,  }\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} \&}]{epoch }\end{DoxyParamCaption}) const}
+
+
+
+Get rectangular position. 
+
+\begin{DoxyReturn}{Returns}
+\mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO\+::\+SDK\+::\+Math\+::\+Vector3D}} 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Sites_1_1Site_aca8ccfee4fe3971268c45c2c58c3bac2}\label{classIO_1_1SDK_1_1Sites_1_1Site_aca8ccfee4fe3971268c45c2c58c3bac2}} 
+\index{IO::SDK::Sites::Site@{IO::SDK::Sites::Site}!IsDay@{IsDay}}
+\index{IsDay@{IsDay}!IO::SDK::Sites::Site@{IO::SDK::Sites::Site}}
+\doxysubsubsection{\texorpdfstring{IsDay()}{IsDay()}}
+{\footnotesize\ttfamily bool IO\+::\+SDK\+::\+Sites\+::\+Site\+::\+Is\+Day (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} \&}]{epoch,  }\item[{const double}]{twilight }\end{DoxyParamCaption}) const}
+
+
+
+Know if it\textquotesingle{}s day. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em epoch} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+true 
+
+false 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Sites_1_1Site_a91eea4b24fba72bc5f5a846079a94b19}\label{classIO_1_1SDK_1_1Sites_1_1Site_a91eea4b24fba72bc5f5a846079a94b19}} 
+\index{IO::SDK::Sites::Site@{IO::SDK::Sites::Site}!IsNight@{IsNight}}
+\index{IsNight@{IsNight}!IO::SDK::Sites::Site@{IO::SDK::Sites::Site}}
+\doxysubsubsection{\texorpdfstring{IsNight()}{IsNight()}}
+{\footnotesize\ttfamily bool IO\+::\+SDK\+::\+Sites\+::\+Site\+::\+Is\+Night (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} \&}]{epoch,  }\item[{const double}]{twilight }\end{DoxyParamCaption}) const}
+
+
+
+Know if it\textquotesingle{}s night. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em epoch} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+true 
+
+false 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Sites_1_1Site_ac1701ec2bfbc8298f77b58184c8403d7}\label{classIO_1_1SDK_1_1Sites_1_1Site_ac1701ec2bfbc8298f77b58184c8403d7}} 
+\index{IO::SDK::Sites::Site@{IO::SDK::Sites::Site}!ReadEphemeris@{ReadEphemeris}}
+\index{ReadEphemeris@{ReadEphemeris}!IO::SDK::Sites::Site@{IO::SDK::Sites::Site}}
+\doxysubsubsection{\texorpdfstring{ReadEphemeris()}{ReadEphemeris()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+State\+Vector}} IO\+::\+SDK\+::\+Sites\+::\+Site\+::\+Read\+Ephemeris (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1Frames}{Frames\+::\+Frames}} \&}]{frame,  }\item[{const \mbox{\hyperlink{namespaceIO_1_1SDK_abbb4827ec6a24ad346d9a60473ad3b81}{Aberrations\+Enum}}}]{aberration,  }\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{Time\+::\+TDB}} \&}]{epoch,  }\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1CelestialBody}{Body\+::\+Celestial\+Body}} \&}]{observer }\end{DoxyParamCaption}) const}
+
+Read ephemeris from ephemeris file 
+\begin{DoxyParams}{Parameters}
+{\em frame} & \\
+\hline
+{\em aberration} & \\
+\hline
+{\em epoch} & \\
+\hline
+{\em observer} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Sites_1_1Site_abddbfa11d39410da5b01052ba2f3837f}\label{classIO_1_1SDK_1_1Sites_1_1Site_abddbfa11d39410da5b01052ba2f3837f}} 
+\index{IO::SDK::Sites::Site@{IO::SDK::Sites::Site}!ReadEphemerisKernelComment@{ReadEphemerisKernelComment}}
+\index{ReadEphemerisKernelComment@{ReadEphemerisKernelComment}!IO::SDK::Sites::Site@{IO::SDK::Sites::Site}}
+\doxysubsubsection{\texorpdfstring{ReadEphemerisKernelComment()}{ReadEphemerisKernelComment()}}
+{\footnotesize\ttfamily std\+::string IO\+::\+SDK\+::\+Sites\+::\+Site\+::\+Read\+Ephemeris\+Kernel\+Comment (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+Read comment into ephemeris file \begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Sites_1_1Site_afd7cd0a5bd88c097f84e68360015a6f4}\label{classIO_1_1SDK_1_1Sites_1_1Site_afd7cd0a5bd88c097f84e68360015a6f4}} 
+\index{IO::SDK::Sites::Site@{IO::SDK::Sites::Site}!WriteEphemeris@{WriteEphemeris}}
+\index{WriteEphemeris@{WriteEphemeris}!IO::SDK::Sites::Site@{IO::SDK::Sites::Site}}
+\doxysubsubsection{\texorpdfstring{WriteEphemeris()}{WriteEphemeris()}}
+{\footnotesize\ttfamily void IO\+::\+SDK\+::\+Sites\+::\+Site\+::\+Write\+Ephemeris (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{Orbital\+Parameters\+::\+State\+Vector}} $>$ \&}]{states }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [protected]}}
+
+Write state\+Vectors into ephemeris file 
+\begin{DoxyParams}{Parameters}
+{\em states} & \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Sites_1_1Site_aa8c1fdc55eaa275d594bb30b99f11582}\label{classIO_1_1SDK_1_1Sites_1_1Site_aa8c1fdc55eaa275d594bb30b99f11582}} 
+\index{IO::SDK::Sites::Site@{IO::SDK::Sites::Site}!WriteEphemerisKernelComment@{WriteEphemerisKernelComment}}
+\index{WriteEphemerisKernelComment@{WriteEphemerisKernelComment}!IO::SDK::Sites::Site@{IO::SDK::Sites::Site}}
+\doxysubsubsection{\texorpdfstring{WriteEphemerisKernelComment()}{WriteEphemerisKernelComment()}}
+{\footnotesize\ttfamily void IO\+::\+SDK\+::\+Sites\+::\+Site\+::\+Write\+Ephemeris\+Kernel\+Comment (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{comment }\end{DoxyParamCaption}) const}
+
+Write a comment into ephemeris file 
+\begin{DoxyParams}{Parameters}
+{\em comment} & \\
+\hline
+\end{DoxyParams}
+
+
+\doxysubsection{Member Data Documentation}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Sites_1_1Site_aa67602d2c26ac352b86cfb7f54b72743}\label{classIO_1_1SDK_1_1Sites_1_1Site_aa67602d2c26ac352b86cfb7f54b72743}} 
+\index{IO::SDK::Sites::Site@{IO::SDK::Sites::Site}!m\_aberrationHelper@{m\_aberrationHelper}}
+\index{m\_aberrationHelper@{m\_aberrationHelper}!IO::SDK::Sites::Site@{IO::SDK::Sites::Site}}
+\doxysubsubsection{\texorpdfstring{m\_aberrationHelper}{m\_aberrationHelper}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{classIO_1_1SDK_1_1Aberrations}{IO\+::\+SDK\+::\+Aberrations}} IO\+::\+SDK\+::\+Sites\+::\+Site\+::m\+\_\+aberration\+Helper \{\}\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Sites_1_1Site_aab32c263be6d18a1225767c8bc688079}\label{classIO_1_1SDK_1_1Sites_1_1Site_aab32c263be6d18a1225767c8bc688079}} 
+\index{IO::SDK::Sites::Site@{IO::SDK::Sites::Site}!m\_body@{m\_body}}
+\index{m\_body@{m\_body}!IO::SDK::Sites::Site@{IO::SDK::Sites::Site}}
+\doxysubsubsection{\texorpdfstring{m\_body}{m\_body}}
+{\footnotesize\ttfamily const std\+::shared\+\_\+ptr$<$\mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1CelestialBody}{IO\+::\+SDK\+::\+Body\+::\+Celestial\+Body}}$>$ IO\+::\+SDK\+::\+Sites\+::\+Site\+::m\+\_\+body\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Sites_1_1Site_af31b76b84e0a3cc2ac1ba7791485075c}\label{classIO_1_1SDK_1_1Sites_1_1Site_af31b76b84e0a3cc2ac1ba7791485075c}} 
+\index{IO::SDK::Sites::Site@{IO::SDK::Sites::Site}!m\_coordinates@{m\_coordinates}}
+\index{m\_coordinates@{m\_coordinates}!IO::SDK::Sites::Site@{IO::SDK::Sites::Site}}
+\doxysubsubsection{\texorpdfstring{m\_coordinates}{m\_coordinates}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1Geodetic}{IO\+::\+SDK\+::\+Coordinates\+::\+Geodetic}} IO\+::\+SDK\+::\+Sites\+::\+Site\+::m\+\_\+coordinates\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Sites_1_1Site_ac027514ca28c242cee08222fd01883b6}\label{classIO_1_1SDK_1_1Sites_1_1Site_ac027514ca28c242cee08222fd01883b6}} 
+\index{IO::SDK::Sites::Site@{IO::SDK::Sites::Site}!m\_ephemerisKernel@{m\_ephemerisKernel}}
+\index{m\_ephemerisKernel@{m\_ephemerisKernel}!IO::SDK::Sites::Site@{IO::SDK::Sites::Site}}
+\doxysubsubsection{\texorpdfstring{m\_ephemerisKernel}{m\_ephemerisKernel}}
+{\footnotesize\ttfamily const std\+::unique\+\_\+ptr$<$\mbox{\hyperlink{classIO_1_1SDK_1_1Kernels_1_1EphemerisKernel}{IO\+::\+SDK\+::\+Kernels\+::\+Ephemeris\+Kernel}}$>$ IO\+::\+SDK\+::\+Sites\+::\+Site\+::m\+\_\+ephemeris\+Kernel\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Sites_1_1Site_a13bec2d631713b168bc4aec94542e4d3}\label{classIO_1_1SDK_1_1Sites_1_1Site_a13bec2d631713b168bc4aec94542e4d3}} 
+\index{IO::SDK::Sites::Site@{IO::SDK::Sites::Site}!m\_filePath@{m\_filePath}}
+\index{m\_filePath@{m\_filePath}!IO::SDK::Sites::Site@{IO::SDK::Sites::Site}}
+\doxysubsubsection{\texorpdfstring{m\_filePath}{m\_filePath}}
+{\footnotesize\ttfamily const std\+::string IO\+::\+SDK\+::\+Sites\+::\+Site\+::m\+\_\+file\+Path\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Sites_1_1Site_a34e6665bff147b05d9785df1a07e071f}\label{classIO_1_1SDK_1_1Sites_1_1Site_a34e6665bff147b05d9785df1a07e071f}} 
+\index{IO::SDK::Sites::Site@{IO::SDK::Sites::Site}!m\_frame@{m\_frame}}
+\index{m\_frame@{m\_frame}!IO::SDK::Sites::Site@{IO::SDK::Sites::Site}}
+\doxysubsubsection{\texorpdfstring{m\_frame}{m\_frame}}
+{\footnotesize\ttfamily const std\+::unique\+\_\+ptr$<$\mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1SiteFrameFile}{IO\+::\+SDK\+::\+Frames\+::\+Site\+Frame\+File}}$>$ IO\+::\+SDK\+::\+Sites\+::\+Site\+::m\+\_\+frame\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Sites_1_1Site_ab94fe43caaedefea3b0c5760be92bed7}\label{classIO_1_1SDK_1_1Sites_1_1Site_ab94fe43caaedefea3b0c5760be92bed7}} 
+\index{IO::SDK::Sites::Site@{IO::SDK::Sites::Site}!m\_id@{m\_id}}
+\index{m\_id@{m\_id}!IO::SDK::Sites::Site@{IO::SDK::Sites::Site}}
+\doxysubsubsection{\texorpdfstring{m\_id}{m\_id}}
+{\footnotesize\ttfamily const int IO\+::\+SDK\+::\+Sites\+::\+Site\+::m\+\_\+id\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Sites_1_1Site_ad63a9c05d45bd8c44f7655484d9bf1c7}\label{classIO_1_1SDK_1_1Sites_1_1Site_ad63a9c05d45bd8c44f7655484d9bf1c7}} 
+\index{IO::SDK::Sites::Site@{IO::SDK::Sites::Site}!m\_name@{m\_name}}
+\index{m\_name@{m\_name}!IO::SDK::Sites::Site@{IO::SDK::Sites::Site}}
+\doxysubsubsection{\texorpdfstring{m\_name}{m\_name}}
+{\footnotesize\ttfamily const std\+::string IO\+::\+SDK\+::\+Sites\+::\+Site\+::m\+\_\+name\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+IO.\+SDK/\+Sites/\mbox{\hyperlink{Site_8h}{Site.\+h}}\item 
+IO.\+SDK/\+Sites/\mbox{\hyperlink{Site_8cpp}{Site.\+cpp}}\end{DoxyCompactItemize}

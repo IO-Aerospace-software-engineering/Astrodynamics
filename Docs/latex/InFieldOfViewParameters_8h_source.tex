@@ -1,0 +1,52 @@
+\hypertarget{InFieldOfViewParameters_8h_source}{}\doxysection{In\+Field\+Of\+View\+Parameters.\+h}
+\label{InFieldOfViewParameters_8h_source}\index{IO.SDK/Constraints/Parameters/InFieldOfViewParameters.h@{IO.SDK/Constraints/Parameters/InFieldOfViewParameters.h}}
+\mbox{\hyperlink{InFieldOfViewParameters_8h}{Go to the documentation of this file.}}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{1 \textcolor{comment}{//}}
+\DoxyCodeLine{2 \textcolor{comment}{// Created by spacer on 3/7/23.}}
+\DoxyCodeLine{3 \textcolor{comment}{//}}
+\DoxyCodeLine{4 }
+\DoxyCodeLine{5 \textcolor{preprocessor}{\#ifndef IOSDK\_INFIELDOFVIEWPARAMETERS\_H}}
+\DoxyCodeLine{6 \textcolor{preprocessor}{\#define IOSDK\_INFIELDOFVIEWPARAMETERS\_H}}
+\DoxyCodeLine{7 }
+\DoxyCodeLine{8 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{Body_8h}{Body.h}}>}}
+\DoxyCodeLine{9 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{Instrument_8h}{Instrument.h}}>}}
+\DoxyCodeLine{10 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{Aberrations_8h}{Aberrations.h}}>}}
+\DoxyCodeLine{11 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{TimeSpan_8h}{TimeSpan.h}}>}}
+\DoxyCodeLine{12 }
+\DoxyCodeLine{13 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1SDK_1_1Instruments}{IO::SDK::Instruments}}}
+\DoxyCodeLine{14 \{}
+\DoxyCodeLine{15     \textcolor{keyword}{class }Instrument;}
+\DoxyCodeLine{16 \}}
+\DoxyCodeLine{17 }
+\DoxyCodeLine{18 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1SDK_1_1Constraints_1_1Parameters}{IO::SDK::Constraints::Parameters}}}
+\DoxyCodeLine{19 \{}
+\DoxyCodeLine{20     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1SDK_1_1Constraints_1_1Parameters_1_1InFieldOfViewParameters}{InFieldOfViewParameters}}}
+\DoxyCodeLine{21     \{}
+\DoxyCodeLine{22     \textcolor{keyword}{private}:}
+\DoxyCodeLine{23         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Instruments_1_1Instrument}{IO::SDK::Instruments::Instrument}} \&m\_instrument;}
+\DoxyCodeLine{24         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body}{IO::SDK::Body::Body}} \&m\_targetBody;}
+\DoxyCodeLine{25         \textcolor{keyword}{const} \mbox{\hyperlink{namespaceIO_1_1SDK_abbb4827ec6a24ad346d9a60473ad3b81}{IO::SDK::AberrationsEnum}} m\_aberration;}
+\DoxyCodeLine{26         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO::SDK::Time::TimeSpan}} \&m\_initialStepSize;}
+\DoxyCodeLine{27 }
+\DoxyCodeLine{28     \textcolor{keyword}{public}:}
+\DoxyCodeLine{29         \mbox{\hyperlink{classIO_1_1SDK_1_1Constraints_1_1Parameters_1_1InFieldOfViewParameters_abedd92fa9a69909078d1759d3d50fb22}{InFieldOfViewParameters}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Instruments_1_1Instrument}{SDK::Instruments::Instrument}} \&instrument, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body}{SDK::Body::Body}} \&targetBody,}
+\DoxyCodeLine{30                                 \textcolor{keyword}{const} \mbox{\hyperlink{namespaceIO_1_1SDK_abbb4827ec6a24ad346d9a60473ad3b81}{IO::SDK::AberrationsEnum}} aberration, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO::SDK::Time::TimeSpan}} \&initialStepSize);}
+\DoxyCodeLine{31 }
+\DoxyCodeLine{32         \textcolor{keyword}{inline} \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Instruments_1_1Instrument}{IO::SDK::Instruments::Instrument}} \&\mbox{\hyperlink{classIO_1_1SDK_1_1Constraints_1_1Parameters_1_1InFieldOfViewParameters_a8d81e9c8ca037593645a272a6059cfd9}{GetInstrument}}()\textcolor{keyword}{ const}}
+\DoxyCodeLine{33 \textcolor{keyword}{        }\{ \textcolor{keywordflow}{return} m\_instrument; \}}
+\DoxyCodeLine{34 }
+\DoxyCodeLine{35         \textcolor{keyword}{inline} \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body}{IO::SDK::Body::Body}} \&\mbox{\hyperlink{classIO_1_1SDK_1_1Constraints_1_1Parameters_1_1InFieldOfViewParameters_a5fdfaf58e99c46b44ed1973cc354def4}{GetTargetBody}}()\textcolor{keyword}{ const}}
+\DoxyCodeLine{36 \textcolor{keyword}{        }\{ \textcolor{keywordflow}{return} m\_targetBody; \}}
+\DoxyCodeLine{37 }
+\DoxyCodeLine{38         \textcolor{keyword}{inline} \textcolor{keyword}{const} \mbox{\hyperlink{namespaceIO_1_1SDK_abbb4827ec6a24ad346d9a60473ad3b81}{IO::SDK::AberrationsEnum}} \mbox{\hyperlink{classIO_1_1SDK_1_1Constraints_1_1Parameters_1_1InFieldOfViewParameters_aa6c5887eec1e899f2ec5c4043411843c}{GetAberration}}()}
+\DoxyCodeLine{39         \{ \textcolor{keywordflow}{return} m\_aberration; \}}
+\DoxyCodeLine{40 }
+\DoxyCodeLine{41         \textcolor{keyword}{inline} \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO::SDK::Time::TimeSpan}} \&\mbox{\hyperlink{classIO_1_1SDK_1_1Constraints_1_1Parameters_1_1InFieldOfViewParameters_a401932b7109f9ebb96e8e9b3cb37b079}{GetInitialStepSize}}()}
+\DoxyCodeLine{42         \{ \textcolor{keywordflow}{return} m\_initialStepSize; \}}
+\DoxyCodeLine{43     \};}
+\DoxyCodeLine{44 \} \textcolor{comment}{// IO}}
+\DoxyCodeLine{45 }
+\DoxyCodeLine{46 \textcolor{preprocessor}{\#endif }\textcolor{comment}{//IOSDK\_INFIELDOFVIEWPARAMETERS\_H}}
+
+\end{DoxyCode}

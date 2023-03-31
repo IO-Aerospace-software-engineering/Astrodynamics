@@ -1,0 +1,67 @@
+var namespaceIO_1_1SDK =
+[
+    [ "Body", "namespaceIO_1_1SDK_1_1Body.html", "namespaceIO_1_1SDK_1_1Body" ],
+    [ "Constants", "namespaceIO_1_1SDK_1_1Constants.html", [
+      [ "_2PI", "namespaceIO_1_1SDK_1_1Constants.html#ab3681102d523b3f738565e4a47d1314f", null ],
+      [ "AstronomicalTwilight", "namespaceIO_1_1SDK_1_1Constants.html#aa5b3c4115ef9226298322c39425f7c30", null ],
+      [ "CivilTwilight", "namespaceIO_1_1SDK_1_1Constants.html#ac82563f07c4debdcbe96bceb28baf48c", null ],
+      [ "DEG_RAD", "namespaceIO_1_1SDK_1_1Constants.html#a37be231112b0bdaec6ffb94b046f2890", null ],
+      [ "ECCENTRIC_ANOMALY_ACCURACY", "namespaceIO_1_1SDK_1_1Constants.html#ab737916dd12007f3110d8edb1a390203", null ],
+      [ "G", "namespaceIO_1_1SDK_1_1Constants.html#a7f0ce791cc3ba49f074dc7e386a849e0", null ],
+      [ "g0", "namespaceIO_1_1SDK_1_1Constants.html#a7e8151db2a08a1798286be470d94f245", null ],
+      [ "NauticalTwilight", "namespaceIO_1_1SDK_1_1Constants.html#a934c3fc0b60243bb14a32f797ec41329", null ],
+      [ "OfficialTwilight", "namespaceIO_1_1SDK_1_1Constants.html#a8c3bbd0583fad71bc417aa679c20939d", null ],
+      [ "PI", "namespaceIO_1_1SDK_1_1Constants.html#ace18d3c70803242c5e39f4a512575b2b", null ],
+      [ "PI2", "namespaceIO_1_1SDK_1_1Constants.html#ac2be06eb792f3966fbf58b9f97b4a698", null ],
+      [ "RAD_DEG", "namespaceIO_1_1SDK_1_1Constants.html#a55ebb638f3fbb4d4d3fd4b2dce7e0259", null ]
+    ] ],
+    [ "Constraints", "namespaceIO_1_1SDK_1_1Constraints.html", "namespaceIO_1_1SDK_1_1Constraints" ],
+    [ "Coordinates", "namespaceIO_1_1SDK_1_1Coordinates.html", "namespaceIO_1_1SDK_1_1Coordinates" ],
+    [ "Exception", "namespaceIO_1_1SDK_1_1Exception.html", "namespaceIO_1_1SDK_1_1Exception" ],
+    [ "Frames", "namespaceIO_1_1SDK_1_1Frames.html", "namespaceIO_1_1SDK_1_1Frames" ],
+    [ "Helpers", "namespaceIO_1_1SDK_1_1Helpers.html", [
+      [ "IsInstanceOf", "namespaceIO_1_1SDK_1_1Helpers.html#a6b573631cf7ce3002a1dc8b9e3c77814", null ]
+    ] ],
+    [ "Illumination", "namespaceIO_1_1SDK_1_1Illumination.html", "namespaceIO_1_1SDK_1_1Illumination" ],
+    [ "Instruments", "namespaceIO_1_1SDK_1_1Instruments.html", "namespaceIO_1_1SDK_1_1Instruments" ],
+    [ "Integrators", "namespaceIO_1_1SDK_1_1Integrators.html", "namespaceIO_1_1SDK_1_1Integrators" ],
+    [ "Kernels", "namespaceIO_1_1SDK_1_1Kernels.html", "namespaceIO_1_1SDK_1_1Kernels" ],
+    [ "Maneuvers", "namespaceIO_1_1SDK_1_1Maneuvers.html", "namespaceIO_1_1SDK_1_1Maneuvers" ],
+    [ "Math", "namespaceIO_1_1SDK_1_1Math.html", "namespaceIO_1_1SDK_1_1Math" ],
+    [ "OrbitalParameters", "namespaceIO_1_1SDK_1_1OrbitalParameters.html", "namespaceIO_1_1SDK_1_1OrbitalParameters" ],
+    [ "Parameters", "namespaceIO_1_1SDK_1_1Parameters.html", [
+      [ "CircularEccentricityAccuraccy", "namespaceIO_1_1SDK_1_1Parameters.html#af3f8e4e755115c9fd070d564cde36241", null ],
+      [ "ClockAccuracy", "namespaceIO_1_1SDK_1_1Parameters.html#a3706cc453e95ad37a010f91469f2fcac", null ],
+      [ "CommentAreaSize", "namespaceIO_1_1SDK_1_1Parameters.html#a444b6401a92e31ac6f7c39338a49a57c", null ],
+      [ "IntersectDetectionAccuraccy", "namespaceIO_1_1SDK_1_1Parameters.html#a1181e43d26068caf60c576ec7a90cca3", null ],
+      [ "MaximumEphemerisLagrangePolynomialDegree", "namespaceIO_1_1SDK_1_1Parameters.html#af0adfe53d18f101abb6434d392c44bec", null ],
+      [ "MaximumOrientationLagrangePolynomialDegree", "namespaceIO_1_1SDK_1_1Parameters.html#a3e6f60370082b8f58457f73cb74db605", null ],
+      [ "NodeDetectionAccuraccy", "namespaceIO_1_1SDK_1_1Parameters.html#afb6663fa378276d38946b2183ba2fc5f", null ],
+      [ "SitePath", "namespaceIO_1_1SDK_1_1Parameters.html#a59216b2c5e88c1f0f5ed2587e99ca35d", null ],
+      [ "SolarSystemKernelPath", "namespaceIO_1_1SDK_1_1Parameters.html#ac26f7f4e0d89acae0ec56ef49aada4e0", null ],
+      [ "SpacecraftPath", "namespaceIO_1_1SDK_1_1Parameters.html#a7e3d270c79b30212bcc45e587cb44117", null ]
+    ] ],
+    [ "Propagators", "namespaceIO_1_1SDK_1_1Propagators.html", "namespaceIO_1_1SDK_1_1Propagators" ],
+    [ "Sites", "namespaceIO_1_1SDK_1_1Sites.html", "namespaceIO_1_1SDK_1_1Sites" ],
+    [ "Spice", "namespaceIO_1_1SDK_1_1Spice.html", "namespaceIO_1_1SDK_1_1Spice" ],
+    [ "Time", "namespaceIO_1_1SDK_1_1Time.html", "namespaceIO_1_1SDK_1_1Time" ],
+    [ "Aberrations", "classIO_1_1SDK_1_1Aberrations.html", "classIO_1_1SDK_1_1Aberrations" ],
+    [ "Coordinate", "classIO_1_1SDK_1_1Coordinate.html", "classIO_1_1SDK_1_1Coordinate" ],
+    [ "CoordinateSystem", "classIO_1_1SDK_1_1CoordinateSystem.html", "classIO_1_1SDK_1_1CoordinateSystem" ],
+    [ "DataPoolMonitoring", "classIO_1_1SDK_1_1DataPoolMonitoring.html", "classIO_1_1SDK_1_1DataPoolMonitoring" ],
+    [ "IlluminationAngle", "classIO_1_1SDK_1_1IlluminationAngle.html", "classIO_1_1SDK_1_1IlluminationAngle" ],
+    [ "OccultationType", "classIO_1_1SDK_1_1OccultationType.html", "classIO_1_1SDK_1_1OccultationType" ],
+    [ "Scenario", "classIO_1_1SDK_1_1Scenario.html", "classIO_1_1SDK_1_1Scenario" ],
+    [ "StringHelpers", "classIO_1_1SDK_1_1StringHelpers.html", null ],
+    [ "AberrationsEnum", "namespaceIO_1_1SDK.html#abbb4827ec6a24ad346d9a60473ad3b81", [
+      [ "None", "namespaceIO_1_1SDK.html#abbb4827ec6a24ad346d9a60473ad3b81a6adf97f83acf6453d4a6a4b1070f3754", null ],
+      [ "LT", "namespaceIO_1_1SDK.html#abbb4827ec6a24ad346d9a60473ad3b81ac562607189d77eb9dfb707464c1e7b0b", null ],
+      [ "LTS", "namespaceIO_1_1SDK.html#abbb4827ec6a24ad346d9a60473ad3b81ad73f00aebeafb26d0f4f8869cba3c480", null ],
+      [ "CN", "namespaceIO_1_1SDK.html#abbb4827ec6a24ad346d9a60473ad3b81a1c2903397d8833382673bab22aa8b937", null ],
+      [ "CNS", "namespaceIO_1_1SDK.html#abbb4827ec6a24ad346d9a60473ad3b81af32a97390abb58dc789ecfb99ef664d4", null ],
+      [ "XLT", "namespaceIO_1_1SDK.html#abbb4827ec6a24ad346d9a60473ad3b81aaa977c10c1d5599cdac2994345c19514", null ],
+      [ "XLTS", "namespaceIO_1_1SDK.html#abbb4827ec6a24ad346d9a60473ad3b81af9a13af2c2a725b47596f5d562c3a2ce", null ],
+      [ "XCN", "namespaceIO_1_1SDK.html#abbb4827ec6a24ad346d9a60473ad3b81aea59b3648ebcff1dbe1a35af60658e6c", null ],
+      [ "XCNS", "namespaceIO_1_1SDK.html#abbb4827ec6a24ad346d9a60473ad3b81aaac082312f16242ee4a61b3187387e79", null ]
+    ] ]
+];

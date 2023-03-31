@@ -1,0 +1,38 @@
+\hypertarget{ByNightParameters_8h_source}{}\doxysection{By\+Night\+Parameters.\+h}
+\label{ByNightParameters_8h_source}\index{IO.SDK/Constraints/Parameters/ByNightParameters.h@{IO.SDK/Constraints/Parameters/ByNightParameters.h}}
+\mbox{\hyperlink{ByNightParameters_8h}{Go to the documentation of this file.}}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{1 \textcolor{comment}{//}}
+\DoxyCodeLine{2 \textcolor{comment}{// Created by s.guillet on 27/02/2023.}}
+\DoxyCodeLine{3 \textcolor{comment}{//}}
+\DoxyCodeLine{4 }
+\DoxyCodeLine{5 \textcolor{preprocessor}{\#ifndef IOSDK\_BYNIGHTPARAMETERS\_H}}
+\DoxyCodeLine{6 \textcolor{preprocessor}{\#define IOSDK\_BYNIGHTPARAMETERS\_H}}
+\DoxyCodeLine{7 }
+\DoxyCodeLine{8 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{UTC_8h}{UTC.h}}>}}
+\DoxyCodeLine{9 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{Window_8h}{Window.h}}>}}
+\DoxyCodeLine{10 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{Site_8h}{Site.h}}>}}
+\DoxyCodeLine{11 }
+\DoxyCodeLine{12 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1SDK_1_1Constraints_1_1Parameters}{IO::SDK::Constraints::Parameters}}}
+\DoxyCodeLine{13 \{}
+\DoxyCodeLine{14 }
+\DoxyCodeLine{15     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1SDK_1_1Constraints_1_1Parameters_1_1ByNightParameters}{ByNightParameters}}}
+\DoxyCodeLine{16     \{}
+\DoxyCodeLine{17     \textcolor{keyword}{private}:}
+\DoxyCodeLine{18         \textcolor{keyword}{const} \textcolor{keywordtype}{double} m\_twilightDefinition;}
+\DoxyCodeLine{19         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site}{IO::SDK::Sites::Site}} \&m\_site;}
+\DoxyCodeLine{20     public :}
+\DoxyCodeLine{21         \mbox{\hyperlink{classIO_1_1SDK_1_1Constraints_1_1Parameters_1_1ByNightParameters_a1b8da7e08c6ee99ee7a307b536fc30f1}{ByNightParameters}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site}{IO::SDK::Sites::Site}} \&site, \textcolor{keyword}{const} \textcolor{keywordtype}{double} twilightDefinition);}
+\DoxyCodeLine{22 }
+\DoxyCodeLine{23         \textcolor{keyword}{inline} \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1SDK_1_1Constraints_1_1Parameters_1_1ByNightParameters_a193cae273a85f0bcae1f810178e51531}{GetTwilightDefinition}}()\textcolor{keyword}{ const}}
+\DoxyCodeLine{24 \textcolor{keyword}{        }\{ \textcolor{keywordflow}{return} m\_twilightDefinition; \}}
+\DoxyCodeLine{25 }
+\DoxyCodeLine{26         \textcolor{keyword}{inline} \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site}{IO::SDK::Sites::Site}} \&\mbox{\hyperlink{classIO_1_1SDK_1_1Constraints_1_1Parameters_1_1ByNightParameters_a9c870f97e16b21647458d24cd39b5665}{GetSite}}()\textcolor{keyword}{ const}}
+\DoxyCodeLine{27 \textcolor{keyword}{        }\{ \textcolor{keywordflow}{return} m\_site; \}}
+\DoxyCodeLine{28     \};}
+\DoxyCodeLine{29 }
+\DoxyCodeLine{30 \} \textcolor{comment}{// IO}}
+\DoxyCodeLine{31 }
+\DoxyCodeLine{32 \textcolor{preprocessor}{\#endif }\textcolor{comment}{//IOSDK\_BYNIGHTPARAMETERS\_H}}
+
+\end{DoxyCode}

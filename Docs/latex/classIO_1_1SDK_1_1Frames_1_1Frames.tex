@@ -1,0 +1,252 @@
+\hypertarget{classIO_1_1SDK_1_1Frames_1_1Frames}{}\doxysection{IO\+::SDK\+::Frames\+::Frames Class Reference}
+\label{classIO_1_1SDK_1_1Frames_1_1Frames}\index{IO::SDK::Frames::Frames@{IO::SDK::Frames::Frames}}
+
+
+\mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1Frames}{Frames}} base class.  
+
+
+
+
+{\ttfamily \#include $<$Frames.\+h$>$}
+
+Inheritance diagram for IO\+::SDK\+::Frames\+::Frames\+:\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=2.000000cm]{classIO_1_1SDK_1_1Frames_1_1Frames}
+\end{center}
+\end{figure}
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1Frames_aefd02e2426db139bb0053a3f11b6412a}{Frames}} (const std\+::string \&str\+View)
+\begin{DoxyCompactList}\small\item\em Construct a new \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1Frames}{Frames}} object. \end{DoxyCompactList}\item 
+const char $\ast$ \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1Frames_aa52a987b257affe726d88fba409cca4c}{To\+Char\+Array}} () const
+\begin{DoxyCompactList}\small\item\em Get frame name. \end{DoxyCompactList}\item 
+bool \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1Frames_a2fa0ce339e05394cf6450df7e1103abc}{operator==}} (const \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1Frames}{IO\+::\+SDK\+::\+Frames\+::\+Frames}} \&frame) const
+\begin{DoxyCompactList}\small\item\em Equality comparer. \end{DoxyCompactList}\item 
+bool \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1Frames_a27bb835272e17faa20a952b8746eef9d}{operator!=}} (const \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1Frames}{IO\+::\+SDK\+::\+Frames\+::\+Frames}} \&frame) const
+\begin{DoxyCompactList}\small\item\em Equality comparer. \end{DoxyCompactList}\item 
+bool \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1Frames_adcb59d53b904c9eb33baf80d3829abea}{operator==}} (\mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1Frames}{IO\+::\+SDK\+::\+Frames\+::\+Frames}} \&frame) const
+\begin{DoxyCompactList}\small\item\em Equality comparer. \end{DoxyCompactList}\item 
+bool \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1Frames_a864cf47307956513c2fb785fdb1c61e7}{operator!=}} (\mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1Frames}{IO\+::\+SDK\+::\+Frames\+::\+Frames}} \&frame) const
+\begin{DoxyCompactList}\small\item\em Equality comparer. \end{DoxyCompactList}\item 
+std\+::string \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1Frames_a69be3fd2df40fd895afeae1b4086683b}{Get\+Name}} () const
+\begin{DoxyCompactList}\small\item\em Get the Name. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Matrix}{IO\+::\+SDK\+::\+Math\+::\+Matrix}} \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1Frames_afca738a2cb43ebec4a5c352407eb00d1}{To\+Frame6x6}} (const \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1Frames}{Frames}} \&frame, const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} \&epoch) const
+\begin{DoxyCompactList}\small\item\em Get the 6X6 matrix to transform frame to another. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Matrix}{IO\+::\+SDK\+::\+Math\+::\+Matrix}} \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1Frames_a4a5e52fc8830ffa85b9f8d4383dcce3d}{To\+Frame3x3}} (const \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1Frames}{Frames}} \&frame, const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} \&epoch) const
+\begin{DoxyCompactList}\small\item\em Get the 3x3 matrix to transform frame to another. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO\+::\+SDK\+::\+Math\+::\+Vector3D}} \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1Frames_abb48a0b71ec6ed810ffb67f3e12452f9}{Transform\+Vector}} (const \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1Frames}{Frames}} \&to, const \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO\+::\+SDK\+::\+Math\+::\+Vector3D}} \&vector, const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} \&epoch) const
+\begin{DoxyCompactList}\small\item\em Transform vector from frame to another. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsection*{Protected Attributes}
+\begin{DoxyCompactItemize}
+\item 
+std\+::string \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1Frames_a57015777f13ddca0adc7eea53d85858d}{m\+\_\+name}}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+\mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1Frames}{Frames}} base class. 
+
+\doxysubsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Frames_1_1Frames_aefd02e2426db139bb0053a3f11b6412a}\label{classIO_1_1SDK_1_1Frames_1_1Frames_aefd02e2426db139bb0053a3f11b6412a}} 
+\index{IO::SDK::Frames::Frames@{IO::SDK::Frames::Frames}!Frames@{Frames}}
+\index{Frames@{Frames}!IO::SDK::Frames::Frames@{IO::SDK::Frames::Frames}}
+\doxysubsubsection{\texorpdfstring{Frames()}{Frames()}}
+{\footnotesize\ttfamily IO\+::\+SDK\+::\+Frames\+::\+Frames\+::\+Frames (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{str\+View }\end{DoxyParamCaption})}
+
+
+
+Construct a new \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1Frames}{Frames}} object. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em str\+View} & \\
+\hline
+\end{DoxyParams}
+
+
+\doxysubsection{Member Function Documentation}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Frames_1_1Frames_a69be3fd2df40fd895afeae1b4086683b}\label{classIO_1_1SDK_1_1Frames_1_1Frames_a69be3fd2df40fd895afeae1b4086683b}} 
+\index{IO::SDK::Frames::Frames@{IO::SDK::Frames::Frames}!GetName@{GetName}}
+\index{GetName@{GetName}!IO::SDK::Frames::Frames@{IO::SDK::Frames::Frames}}
+\doxysubsubsection{\texorpdfstring{GetName()}{GetName()}}
+{\footnotesize\ttfamily std\+::string IO\+::\+SDK\+::\+Frames\+::\+Frames\+::\+Get\+Name (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+
+
+Get the Name. 
+
+\begin{DoxyReturn}{Returns}
+std\+::string 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Frames_1_1Frames_a27bb835272e17faa20a952b8746eef9d}\label{classIO_1_1SDK_1_1Frames_1_1Frames_a27bb835272e17faa20a952b8746eef9d}} 
+\index{IO::SDK::Frames::Frames@{IO::SDK::Frames::Frames}!operator"!=@{operator"!=}}
+\index{operator"!=@{operator"!=}!IO::SDK::Frames::Frames@{IO::SDK::Frames::Frames}}
+\doxysubsubsection{\texorpdfstring{operator"!=()}{operator!=()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily bool IO\+::\+SDK\+::\+Frames\+::\+Frames\+::operator!= (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1Frames}{IO\+::\+SDK\+::\+Frames\+::\+Frames}} \&}]{frame }\end{DoxyParamCaption}) const}
+
+
+
+Equality comparer. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em frame} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+true 
+
+false 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Frames_1_1Frames_a864cf47307956513c2fb785fdb1c61e7}\label{classIO_1_1SDK_1_1Frames_1_1Frames_a864cf47307956513c2fb785fdb1c61e7}} 
+\index{IO::SDK::Frames::Frames@{IO::SDK::Frames::Frames}!operator"!=@{operator"!=}}
+\index{operator"!=@{operator"!=}!IO::SDK::Frames::Frames@{IO::SDK::Frames::Frames}}
+\doxysubsubsection{\texorpdfstring{operator"!=()}{operator!=()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily bool IO\+::\+SDK\+::\+Frames\+::\+Frames\+::operator!= (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1Frames}{IO\+::\+SDK\+::\+Frames\+::\+Frames}} \&}]{frame }\end{DoxyParamCaption}) const}
+
+
+
+Equality comparer. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em frame} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+true 
+
+false 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Frames_1_1Frames_a2fa0ce339e05394cf6450df7e1103abc}\label{classIO_1_1SDK_1_1Frames_1_1Frames_a2fa0ce339e05394cf6450df7e1103abc}} 
+\index{IO::SDK::Frames::Frames@{IO::SDK::Frames::Frames}!operator==@{operator==}}
+\index{operator==@{operator==}!IO::SDK::Frames::Frames@{IO::SDK::Frames::Frames}}
+\doxysubsubsection{\texorpdfstring{operator==()}{operator==()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily bool IO\+::\+SDK\+::\+Frames\+::\+Frames\+::operator== (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1Frames}{IO\+::\+SDK\+::\+Frames\+::\+Frames}} \&}]{frame }\end{DoxyParamCaption}) const}
+
+
+
+Equality comparer. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em frame} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+true 
+
+false 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Frames_1_1Frames_adcb59d53b904c9eb33baf80d3829abea}\label{classIO_1_1SDK_1_1Frames_1_1Frames_adcb59d53b904c9eb33baf80d3829abea}} 
+\index{IO::SDK::Frames::Frames@{IO::SDK::Frames::Frames}!operator==@{operator==}}
+\index{operator==@{operator==}!IO::SDK::Frames::Frames@{IO::SDK::Frames::Frames}}
+\doxysubsubsection{\texorpdfstring{operator==()}{operator==()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily bool IO\+::\+SDK\+::\+Frames\+::\+Frames\+::operator== (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1Frames}{IO\+::\+SDK\+::\+Frames\+::\+Frames}} \&}]{frame }\end{DoxyParamCaption}) const}
+
+
+
+Equality comparer. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em frame} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+true 
+
+false 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Frames_1_1Frames_aa52a987b257affe726d88fba409cca4c}\label{classIO_1_1SDK_1_1Frames_1_1Frames_aa52a987b257affe726d88fba409cca4c}} 
+\index{IO::SDK::Frames::Frames@{IO::SDK::Frames::Frames}!ToCharArray@{ToCharArray}}
+\index{ToCharArray@{ToCharArray}!IO::SDK::Frames::Frames@{IO::SDK::Frames::Frames}}
+\doxysubsubsection{\texorpdfstring{ToCharArray()}{ToCharArray()}}
+{\footnotesize\ttfamily const char $\ast$ IO\+::\+SDK\+::\+Frames\+::\+Frames\+::\+To\+Char\+Array (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+
+
+Get frame name. 
+
+\begin{DoxyReturn}{Returns}
+const char$\ast$ 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Frames_1_1Frames_a4a5e52fc8830ffa85b9f8d4383dcce3d}\label{classIO_1_1SDK_1_1Frames_1_1Frames_a4a5e52fc8830ffa85b9f8d4383dcce3d}} 
+\index{IO::SDK::Frames::Frames@{IO::SDK::Frames::Frames}!ToFrame3x3@{ToFrame3x3}}
+\index{ToFrame3x3@{ToFrame3x3}!IO::SDK::Frames::Frames@{IO::SDK::Frames::Frames}}
+\doxysubsubsection{\texorpdfstring{ToFrame3x3()}{ToFrame3x3()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Matrix}{IO\+::\+SDK\+::\+Math\+::\+Matrix}} IO\+::\+SDK\+::\+Frames\+::\+Frames\+::\+To\+Frame3x3 (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1Frames}{Frames}} \&}]{frame,  }\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} \&}]{epoch }\end{DoxyParamCaption}) const}
+
+
+
+Get the 3x3 matrix to transform frame to another. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em frame} & \\
+\hline
+{\em epoch} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+\mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Matrix}{IO\+::\+SDK\+::\+Math\+::\+Matrix}} 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Frames_1_1Frames_afca738a2cb43ebec4a5c352407eb00d1}\label{classIO_1_1SDK_1_1Frames_1_1Frames_afca738a2cb43ebec4a5c352407eb00d1}} 
+\index{IO::SDK::Frames::Frames@{IO::SDK::Frames::Frames}!ToFrame6x6@{ToFrame6x6}}
+\index{ToFrame6x6@{ToFrame6x6}!IO::SDK::Frames::Frames@{IO::SDK::Frames::Frames}}
+\doxysubsubsection{\texorpdfstring{ToFrame6x6()}{ToFrame6x6()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Matrix}{IO\+::\+SDK\+::\+Math\+::\+Matrix}} IO\+::\+SDK\+::\+Frames\+::\+Frames\+::\+To\+Frame6x6 (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1Frames}{Frames}} \&}]{frame,  }\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} \&}]{epoch }\end{DoxyParamCaption}) const}
+
+
+
+Get the 6X6 matrix to transform frame to another. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em frame} & \\
+\hline
+{\em epoch} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+\mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Matrix}{IO\+::\+SDK\+::\+Math\+::\+Matrix}} 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Frames_1_1Frames_abb48a0b71ec6ed810ffb67f3e12452f9}\label{classIO_1_1SDK_1_1Frames_1_1Frames_abb48a0b71ec6ed810ffb67f3e12452f9}} 
+\index{IO::SDK::Frames::Frames@{IO::SDK::Frames::Frames}!TransformVector@{TransformVector}}
+\index{TransformVector@{TransformVector}!IO::SDK::Frames::Frames@{IO::SDK::Frames::Frames}}
+\doxysubsubsection{\texorpdfstring{TransformVector()}{TransformVector()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO\+::\+SDK\+::\+Math\+::\+Vector3D}} IO\+::\+SDK\+::\+Frames\+::\+Frames\+::\+Transform\+Vector (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1Frames}{Frames}} \&}]{to,  }\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO\+::\+SDK\+::\+Math\+::\+Vector3D}} \&}]{vector,  }\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} \&}]{epoch }\end{DoxyParamCaption}) const}
+
+
+
+Transform vector from frame to another. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em from} & \\
+\hline
+{\em to} & \\
+\hline
+{\em vector} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+\mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO\+::\+SDK\+::\+Math\+::\+Vector3D}} 
+\end{DoxyReturn}
+
+
+\doxysubsection{Member Data Documentation}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Frames_1_1Frames_a57015777f13ddca0adc7eea53d85858d}\label{classIO_1_1SDK_1_1Frames_1_1Frames_a57015777f13ddca0adc7eea53d85858d}} 
+\index{IO::SDK::Frames::Frames@{IO::SDK::Frames::Frames}!m\_name@{m\_name}}
+\index{m\_name@{m\_name}!IO::SDK::Frames::Frames@{IO::SDK::Frames::Frames}}
+\doxysubsubsection{\texorpdfstring{m\_name}{m\_name}}
+{\footnotesize\ttfamily std\+::string IO\+::\+SDK\+::\+Frames\+::\+Frames\+::m\+\_\+name\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+IO.\+SDK/\+Frames/\mbox{\hyperlink{Frames_8h}{Frames.\+h}}\item 
+IO.\+SDK/\+Frames/\mbox{\hyperlink{Frames_8cpp}{Frames.\+cpp}}\end{DoxyCompactItemize}

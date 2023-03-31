@@ -1,0 +1,137 @@
+\hypertarget{classIO_1_1SDK_1_1Time_1_1Window}{}\doxysection{IO\+::SDK\+::Time\+::Window\texorpdfstring{$<$}{<} T \texorpdfstring{$>$}{>} Class Template Reference}
+\label{classIO_1_1SDK_1_1Time_1_1Window}\index{IO::SDK::Time::Window$<$ T $>$@{IO::SDK::Time::Window$<$ T $>$}}
+
+
+{\ttfamily \#include $<$Window.\+h$>$}
+
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window_a7598155246a7505d6b3c87b2b66ccc48}{Window}} (T startdate, \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{Time\+Span}} length)
+\item 
+\mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window_a624ffcae0063b0c1f79c95613fca8884}{Window}} (T startdate, T end\+Date)
+\item 
+\mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window_a1dcc55d740b91ec8e205cb2e81a0ba89}{Window}} (const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{Window}}$<$ T $>$ \&window)
+\item 
+T \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window_a3c16a9de713bfc52a2b7d7cf4fd76908}{Get\+Start\+Date}} () const
+\item 
+T \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window_a56f57f3b547b6ee815b98cf11f177a74}{Get\+End\+Date}} () const
+\item 
+\mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{Time\+Span}} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window_ae0ef2611d26a301ba5befbdafb9f2278}{Get\+Length}} () const
+\item 
+bool \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window_a4ebd198849c2f974e364ce86beca3be0}{operator==}} (const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{Window}}$<$ T $>$ \&window) const
+\item 
+bool \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window_a0759e406234c65bcf39eaa4aba5a8a29}{operator!=}} (const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{Window}}$<$ T $>$ \&window) const
+\item 
+bool \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window_ab013e9cbf209160c20e89dc3ef6852d2}{Intersects}} (const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{Window}}$<$ T $>$ \&window) const
+\item 
+bool \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window_a389e161e96f78c22456e31f86801b927}{Contains}} (const T \&epoch) const
+\item 
+\mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{Window}}$<$ T $>$ \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window_ac5cc17278c005eeecb158aa28cfcbb77}{Get\+Intersection}} (const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{Window}}$<$ T $>$ \&window) const
+\item 
+\mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{Window}}$<$ T $>$ \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window_a3a3afbfefe59249347c6bb0c6691a444}{Merge}} (const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{Window}}$<$ T $>$ \&window) const
+\item 
+\mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{Window}}$<$ T $>$ \& \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window_a853fceb94bfe32166b1669f601a790a3}{operator=}} (const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{Window}}$<$ T $>$ \&window)
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Time_1_1Window_a7598155246a7505d6b3c87b2b66ccc48}\label{classIO_1_1SDK_1_1Time_1_1Window_a7598155246a7505d6b3c87b2b66ccc48}} 
+\index{IO::SDK::Time::Window$<$ T $>$@{IO::SDK::Time::Window$<$ T $>$}!Window@{Window}}
+\index{Window@{Window}!IO::SDK::Time::Window$<$ T $>$@{IO::SDK::Time::Window$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{Window()}{Window()}\hspace{0.1cm}{\footnotesize\ttfamily [1/3]}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+\mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO\+::\+SDK\+::\+Time\+::\+Window}}$<$ T $>$\+::\+Window (\begin{DoxyParamCaption}\item[{T}]{startdate,  }\item[{\mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{Time\+Span}}}]{length }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Time_1_1Window_a624ffcae0063b0c1f79c95613fca8884}\label{classIO_1_1SDK_1_1Time_1_1Window_a624ffcae0063b0c1f79c95613fca8884}} 
+\index{IO::SDK::Time::Window$<$ T $>$@{IO::SDK::Time::Window$<$ T $>$}!Window@{Window}}
+\index{Window@{Window}!IO::SDK::Time::Window$<$ T $>$@{IO::SDK::Time::Window$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{Window()}{Window()}\hspace{0.1cm}{\footnotesize\ttfamily [2/3]}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+\mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO\+::\+SDK\+::\+Time\+::\+Window}}$<$ T $>$\+::\+Window (\begin{DoxyParamCaption}\item[{T}]{startdate,  }\item[{T}]{end\+Date }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Time_1_1Window_a1dcc55d740b91ec8e205cb2e81a0ba89}\label{classIO_1_1SDK_1_1Time_1_1Window_a1dcc55d740b91ec8e205cb2e81a0ba89}} 
+\index{IO::SDK::Time::Window$<$ T $>$@{IO::SDK::Time::Window$<$ T $>$}!Window@{Window}}
+\index{Window@{Window}!IO::SDK::Time::Window$<$ T $>$@{IO::SDK::Time::Window$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{Window()}{Window()}\hspace{0.1cm}{\footnotesize\ttfamily [3/3]}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+\mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO\+::\+SDK\+::\+Time\+::\+Window}}$<$ T $>$\+::\+Window (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{Window}}$<$ T $>$ \&}]{window }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+\doxysubsection{Member Function Documentation}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Time_1_1Window_a389e161e96f78c22456e31f86801b927}\label{classIO_1_1SDK_1_1Time_1_1Window_a389e161e96f78c22456e31f86801b927}} 
+\index{IO::SDK::Time::Window$<$ T $>$@{IO::SDK::Time::Window$<$ T $>$}!Contains@{Contains}}
+\index{Contains@{Contains}!IO::SDK::Time::Window$<$ T $>$@{IO::SDK::Time::Window$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{Contains()}{Contains()}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+bool \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO\+::\+SDK\+::\+Time\+::\+Window}}$<$ T $>$\+::\+Contains (\begin{DoxyParamCaption}\item[{const T \&}]{epoch }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Time_1_1Window_a56f57f3b547b6ee815b98cf11f177a74}\label{classIO_1_1SDK_1_1Time_1_1Window_a56f57f3b547b6ee815b98cf11f177a74}} 
+\index{IO::SDK::Time::Window$<$ T $>$@{IO::SDK::Time::Window$<$ T $>$}!GetEndDate@{GetEndDate}}
+\index{GetEndDate@{GetEndDate}!IO::SDK::Time::Window$<$ T $>$@{IO::SDK::Time::Window$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{GetEndDate()}{GetEndDate()}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+T \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO\+::\+SDK\+::\+Time\+::\+Window}}$<$ T $>$\+::\+Get\+End\+Date (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Time_1_1Window_ac5cc17278c005eeecb158aa28cfcbb77}\label{classIO_1_1SDK_1_1Time_1_1Window_ac5cc17278c005eeecb158aa28cfcbb77}} 
+\index{IO::SDK::Time::Window$<$ T $>$@{IO::SDK::Time::Window$<$ T $>$}!GetIntersection@{GetIntersection}}
+\index{GetIntersection@{GetIntersection}!IO::SDK::Time::Window$<$ T $>$@{IO::SDK::Time::Window$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{GetIntersection()}{GetIntersection()}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+\mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{Window}}$<$ T $>$ \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO\+::\+SDK\+::\+Time\+::\+Window}}$<$ T $>$\+::\+Get\+Intersection (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{Window}}$<$ T $>$ \&}]{window }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Time_1_1Window_ae0ef2611d26a301ba5befbdafb9f2278}\label{classIO_1_1SDK_1_1Time_1_1Window_ae0ef2611d26a301ba5befbdafb9f2278}} 
+\index{IO::SDK::Time::Window$<$ T $>$@{IO::SDK::Time::Window$<$ T $>$}!GetLength@{GetLength}}
+\index{GetLength@{GetLength}!IO::SDK::Time::Window$<$ T $>$@{IO::SDK::Time::Window$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{GetLength()}{GetLength()}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+\mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{Time\+Span}} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO\+::\+SDK\+::\+Time\+::\+Window}}$<$ T $>$\+::\+Get\+Length (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Time_1_1Window_a3c16a9de713bfc52a2b7d7cf4fd76908}\label{classIO_1_1SDK_1_1Time_1_1Window_a3c16a9de713bfc52a2b7d7cf4fd76908}} 
+\index{IO::SDK::Time::Window$<$ T $>$@{IO::SDK::Time::Window$<$ T $>$}!GetStartDate@{GetStartDate}}
+\index{GetStartDate@{GetStartDate}!IO::SDK::Time::Window$<$ T $>$@{IO::SDK::Time::Window$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{GetStartDate()}{GetStartDate()}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+T \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO\+::\+SDK\+::\+Time\+::\+Window}}$<$ T $>$\+::\+Get\+Start\+Date (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Time_1_1Window_ab013e9cbf209160c20e89dc3ef6852d2}\label{classIO_1_1SDK_1_1Time_1_1Window_ab013e9cbf209160c20e89dc3ef6852d2}} 
+\index{IO::SDK::Time::Window$<$ T $>$@{IO::SDK::Time::Window$<$ T $>$}!Intersects@{Intersects}}
+\index{Intersects@{Intersects}!IO::SDK::Time::Window$<$ T $>$@{IO::SDK::Time::Window$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{Intersects()}{Intersects()}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+bool \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO\+::\+SDK\+::\+Time\+::\+Window}}$<$ T $>$\+::\+Intersects (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{Window}}$<$ T $>$ \&}]{window }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Time_1_1Window_a3a3afbfefe59249347c6bb0c6691a444}\label{classIO_1_1SDK_1_1Time_1_1Window_a3a3afbfefe59249347c6bb0c6691a444}} 
+\index{IO::SDK::Time::Window$<$ T $>$@{IO::SDK::Time::Window$<$ T $>$}!Merge@{Merge}}
+\index{Merge@{Merge}!IO::SDK::Time::Window$<$ T $>$@{IO::SDK::Time::Window$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{Merge()}{Merge()}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+\mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{Window}}$<$ T $>$ \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO\+::\+SDK\+::\+Time\+::\+Window}}$<$ T $>$\+::\+Merge (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{Window}}$<$ T $>$ \&}]{window }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Time_1_1Window_a0759e406234c65bcf39eaa4aba5a8a29}\label{classIO_1_1SDK_1_1Time_1_1Window_a0759e406234c65bcf39eaa4aba5a8a29}} 
+\index{IO::SDK::Time::Window$<$ T $>$@{IO::SDK::Time::Window$<$ T $>$}!operator"!=@{operator"!=}}
+\index{operator"!=@{operator"!=}!IO::SDK::Time::Window$<$ T $>$@{IO::SDK::Time::Window$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{operator"!=()}{operator!=()}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+bool \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO\+::\+SDK\+::\+Time\+::\+Window}}$<$ T $>$\+::operator!= (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{Window}}$<$ T $>$ \&}]{window }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Time_1_1Window_a853fceb94bfe32166b1669f601a790a3}\label{classIO_1_1SDK_1_1Time_1_1Window_a853fceb94bfe32166b1669f601a790a3}} 
+\index{IO::SDK::Time::Window$<$ T $>$@{IO::SDK::Time::Window$<$ T $>$}!operator=@{operator=}}
+\index{operator=@{operator=}!IO::SDK::Time::Window$<$ T $>$@{IO::SDK::Time::Window$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{operator=()}{operator=()}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+\mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{Window}}$<$ T $>$ \& \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO\+::\+SDK\+::\+Time\+::\+Window}}$<$ T $>$\+::operator= (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{Window}}$<$ T $>$ \&}]{window }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Time_1_1Window_a4ebd198849c2f974e364ce86beca3be0}\label{classIO_1_1SDK_1_1Time_1_1Window_a4ebd198849c2f974e364ce86beca3be0}} 
+\index{IO::SDK::Time::Window$<$ T $>$@{IO::SDK::Time::Window$<$ T $>$}!operator==@{operator==}}
+\index{operator==@{operator==}!IO::SDK::Time::Window$<$ T $>$@{IO::SDK::Time::Window$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{operator==()}{operator==()}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+bool \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO\+::\+SDK\+::\+Time\+::\+Window}}$<$ T $>$\+::operator== (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{Window}}$<$ T $>$ \&}]{window }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+IO.\+SDK/\+Time/\mbox{\hyperlink{Window_8h}{Window.\+h}}\end{DoxyCompactItemize}

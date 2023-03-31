@@ -1,0 +1,37 @@
+\hypertarget{EllipticalInstrumentKernel_8h_source}{}\doxysection{Elliptical\+Instrument\+Kernel.\+h}
+\label{EllipticalInstrumentKernel_8h_source}\index{IO.SDK/Kernels/EllipticalInstrumentKernel.h@{IO.SDK/Kernels/EllipticalInstrumentKernel.h}}
+\mbox{\hyperlink{EllipticalInstrumentKernel_8h}{Go to the documentation of this file.}}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{1 }
+\DoxyCodeLine{11 \textcolor{preprocessor}{\#ifndef ELLIPTICAL\_INSTRUMENT\_KERNEL\_H}}
+\DoxyCodeLine{12 \textcolor{preprocessor}{\#define ELLIPTICAL\_INSTRUMENT\_KERNEL\_H}}
+\DoxyCodeLine{13 }
+\DoxyCodeLine{14 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{InstrumentKernel_8h}{InstrumentKernel.h}}>}}
+\DoxyCodeLine{15 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{Instrument_8h}{Instrument.h}}>}}
+\DoxyCodeLine{16 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{Vector3D_8h}{Vector3D.h}}>}}
+\DoxyCodeLine{17 \textcolor{preprocessor}{\#include <string>}}
+\DoxyCodeLine{18 }
+\DoxyCodeLine{19 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1SDK_1_1Instruments}{IO::SDK::Instruments}}}
+\DoxyCodeLine{20 \{}
+\DoxyCodeLine{21     \textcolor{keyword}{class }Instrument;}
+\DoxyCodeLine{22 \}}
+\DoxyCodeLine{23 }
+\DoxyCodeLine{24 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1SDK_1_1Kernels}{IO::SDK::Kernels}}}
+\DoxyCodeLine{25 \{}
+\DoxyCodeLine{30     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1SDK_1_1Kernels_1_1EllipticalInstrumentKernel}{EllipticalInstrumentKernel}} final : \textcolor{keyword}{public} \mbox{\hyperlink{classIO_1_1SDK_1_1Kernels_1_1InstrumentKernel}{IO::SDK::Kernels::InstrumentKernel}}}
+\DoxyCodeLine{31     \{}
+\DoxyCodeLine{32     \textcolor{keyword}{private}:}
+\DoxyCodeLine{33         \textcolor{keywordtype}{double} m\_crossAngle\{\};}
+\DoxyCodeLine{34 }
+\DoxyCodeLine{35     \textcolor{keyword}{protected}:}
+\DoxyCodeLine{40         \textcolor{keywordtype}{void} \mbox{\hyperlink{classIO_1_1SDK_1_1Kernels_1_1EllipticalInstrumentKernel_a9a251dcba2ed732f3fd3b5c0df7dad9c}{BuildKernel}}() \textcolor{keyword}{override};}
+\DoxyCodeLine{41 }
+\DoxyCodeLine{42     \textcolor{keyword}{public}:}
+\DoxyCodeLine{52         \mbox{\hyperlink{classIO_1_1SDK_1_1Kernels_1_1EllipticalInstrumentKernel_a1418145a8c9e1afa7d18e13273d48925}{EllipticalInstrumentKernel}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Instruments_1_1Instrument}{IO::SDK::Instruments::Instrument}} \&instrument, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO::SDK::Math::Vector3D}} \&boresight, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO::SDK::Math::Vector3D}} \&refVector, \textcolor{keyword}{const} \textcolor{keywordtype}{double} angle, \textcolor{keyword}{const} \textcolor{keywordtype}{double} crossAngle);}
+\DoxyCodeLine{53         \textcolor{keyword}{virtual} \mbox{\hyperlink{classIO_1_1SDK_1_1Kernels_1_1EllipticalInstrumentKernel_a7768f4bf273164642c470b8237bebcdb}{\string~EllipticalInstrumentKernel}}() = \textcolor{keywordflow}{default};}
+\DoxyCodeLine{54     \};}
+\DoxyCodeLine{55 \}}
+\DoxyCodeLine{56 }
+\DoxyCodeLine{57 \textcolor{preprocessor}{\#endif}}
+
+\end{DoxyCode}

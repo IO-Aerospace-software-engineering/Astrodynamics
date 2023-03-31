@@ -1,0 +1,40 @@
+\hypertarget{DynamicFuelTank_8h_source}{}\doxysection{Dynamic\+Fuel\+Tank.\+h}
+\label{DynamicFuelTank_8h_source}\index{IO.SDK/Maneuvers/DynamicFuelTank.h@{IO.SDK/Maneuvers/DynamicFuelTank.h}}
+\mbox{\hyperlink{DynamicFuelTank_8h}{Go to the documentation of this file.}}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{1 }
+\DoxyCodeLine{11 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{InvalidArgumentException_8h}{InvalidArgumentException.h}}>}}
+\DoxyCodeLine{12 \textcolor{preprocessor}{\#include<\mbox{\hyperlink{TimeSpan_8h}{TimeSpan.h}}>}}
+\DoxyCodeLine{13 \textcolor{preprocessor}{\#include<chrono>}}
+\DoxyCodeLine{14 }
+\DoxyCodeLine{15 \textcolor{preprocessor}{\#ifndef DYNAMIC\_FUELTANK\_H}}
+\DoxyCodeLine{16 \textcolor{preprocessor}{\#define DYNAMIC\_FUELTANK\_H}}
+\DoxyCodeLine{17 }
+\DoxyCodeLine{18 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1SDK_1_1Maneuvers}{IO::SDK::Maneuvers}}}
+\DoxyCodeLine{19 \{}
+\DoxyCodeLine{20     \textcolor{keyword}{struct }\mbox{\hyperlink{structIO_1_1SDK_1_1Maneuvers_1_1DynamicFuelTank}{DynamicFuelTank}}}
+\DoxyCodeLine{21     \{}
+\DoxyCodeLine{22         \textcolor{comment}{// double RemainingFuel\{\};}}
+\DoxyCodeLine{23         \textcolor{keywordtype}{double} \mbox{\hyperlink{structIO_1_1SDK_1_1Maneuvers_1_1DynamicFuelTank_a87d749360ab98fd9a1235d16313f258c}{EquivalentFuelFlow}}\{\};}
+\DoxyCodeLine{24 }
+\DoxyCodeLine{25         \mbox{\hyperlink{structIO_1_1SDK_1_1Maneuvers_1_1DynamicFuelTank_a63e63b71a97417f39857dd29938d0def}{DynamicFuelTank}}()}
+\DoxyCodeLine{26         \{}
+\DoxyCodeLine{27         \}}
+\DoxyCodeLine{28 }
+\DoxyCodeLine{29         \mbox{\hyperlink{structIO_1_1SDK_1_1Maneuvers_1_1DynamicFuelTank_aab85e4b801a15fd630dd08930d31b476}{DynamicFuelTank}}(\textcolor{keyword}{const} \textcolor{keywordtype}{double} equivalentFuelFlow)}
+\DoxyCodeLine{30         \{}
+\DoxyCodeLine{31             \mbox{\hyperlink{structIO_1_1SDK_1_1Maneuvers_1_1DynamicFuelTank_a87d749360ab98fd9a1235d16313f258c}{EquivalentFuelFlow}} = equivalentFuelFlow;}
+\DoxyCodeLine{32         \}}
+\DoxyCodeLine{33 }
+\DoxyCodeLine{34         \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO::SDK::Time::TimeSpan}} \mbox{\hyperlink{structIO_1_1SDK_1_1Maneuvers_1_1DynamicFuelTank_a44f788206a498c2a48f4438beb17e974}{GetRemainingT}}(\textcolor{keyword}{const} \textcolor{keywordtype}{double} remainingFuel)\textcolor{keyword}{ const}}
+\DoxyCodeLine{35 \textcolor{keyword}{        }\{}
+\DoxyCodeLine{36             \textcolor{keywordflow}{return} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO::SDK::Time::TimeSpan}}(std::chrono::duration<double>(remainingFuel / \mbox{\hyperlink{structIO_1_1SDK_1_1Maneuvers_1_1DynamicFuelTank_a87d749360ab98fd9a1235d16313f258c}{EquivalentFuelFlow}}));}
+\DoxyCodeLine{37         \}}
+\DoxyCodeLine{38         }
+\DoxyCodeLine{39     \};}
+\DoxyCodeLine{40 }
+\DoxyCodeLine{41 \}}
+\DoxyCodeLine{42 }
+\DoxyCodeLine{43 \textcolor{preprocessor}{\#endif}}
+
+\end{DoxyCode}

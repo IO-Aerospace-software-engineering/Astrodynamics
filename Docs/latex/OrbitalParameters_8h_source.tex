@@ -1,0 +1,119 @@
+\hypertarget{OrbitalParameters_8h_source}{}\doxysection{Orbital\+Parameters.\+h}
+\label{OrbitalParameters_8h_source}\index{IO.SDK/OrbitalParameters/OrbitalParameters.h@{IO.SDK/OrbitalParameters/OrbitalParameters.h}}
+\mbox{\hyperlink{OrbitalParameters_8h}{Go to the documentation of this file.}}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{1 }
+\DoxyCodeLine{11 \textcolor{preprocessor}{\#ifndef ORBITAL\_PARAMETERS\_H}}
+\DoxyCodeLine{12 \textcolor{preprocessor}{\#define ORBITAL\_PARAMETERS\_H}}
+\DoxyCodeLine{13 }
+\DoxyCodeLine{14 \textcolor{preprocessor}{\#include <chrono>}}
+\DoxyCodeLine{15 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{Vector3D_8h}{Vector3D.h}}>}}
+\DoxyCodeLine{16 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{TimeSpan_8h}{TimeSpan.h}}>}}
+\DoxyCodeLine{17 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{TDB_8h}{TDB.h}}>}}
+\DoxyCodeLine{18 \textcolor{preprocessor}{\#include <memory>}}
+\DoxyCodeLine{19 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{Frames_8h}{Frames.h}}>}}
+\DoxyCodeLine{20 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{RADec_8h}{RADec.h}}>}}
+\DoxyCodeLine{21 }
+\DoxyCodeLine{22 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1SDK_1_1Body}{IO::SDK::Body}}}
+\DoxyCodeLine{23 \{}
+\DoxyCodeLine{24     \textcolor{comment}{//Forward declaration}}
+\DoxyCodeLine{25     \textcolor{keyword}{class }CelestialBody;}
+\DoxyCodeLine{26 \}}
+\DoxyCodeLine{27 }
+\DoxyCodeLine{28 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1SDK_1_1OrbitalParameters}{IO::SDK::OrbitalParameters}}}
+\DoxyCodeLine{29 \{}
+\DoxyCodeLine{30     \textcolor{comment}{//Forward declaration}}
+\DoxyCodeLine{31     \textcolor{keyword}{class }StateVector;}
+\DoxyCodeLine{32 }
+\DoxyCodeLine{37     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters}{OrbitalParameters}}}
+\DoxyCodeLine{38     \{}
+\DoxyCodeLine{39 }
+\DoxyCodeLine{40     \textcolor{keyword}{protected}:}
+\DoxyCodeLine{41         \textcolor{keyword}{const} std::shared\_ptr<IO::SDK::Body::CelestialBody> \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters_a7490c9f08feaff307906625279a0597f}{m\_centerOfMotion}};}
+\DoxyCodeLine{42         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO::SDK::Time::TDB}} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters_a06d4ee0bb8edf7f0e0e140dd99ece773}{m\_epoch}};}
+\DoxyCodeLine{43         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1Frames}{IO::SDK::Frames::Frames}} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters_ac0945ce17c2c770916aaf694f5557437}{m\_frame}};}
+\DoxyCodeLine{44 }
+\DoxyCodeLine{45     \textcolor{keyword}{public}:}
+\DoxyCodeLine{53         \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters_aa2ad5e93197a2465c3cf50b8065f6d61}{OrbitalParameters}}(\textcolor{keyword}{const} std::shared\_ptr<IO::SDK::Body::CelestialBody> \&centerOfMotion, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO::SDK::Time::TDB}} \&epoch, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1Frames}{IO::SDK::Frames::Frames}} \&frame);}
+\DoxyCodeLine{54 }
+\DoxyCodeLine{55         \textcolor{keyword}{virtual} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters_a4c24cb357f03afe566885b46b86797c0}{\string~OrbitalParameters}}() = \textcolor{keywordflow}{default};}
+\DoxyCodeLine{56 }
+\DoxyCodeLine{62         \textcolor{keyword}{const} std::shared\_ptr<IO::SDK::Body::CelestialBody> \&\mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters_afd9fcdc60d3df4231c35adf23f9b6ea1}{GetCenterOfMotion}}() \textcolor{keyword}{const};}
+\DoxyCodeLine{63 }
+\DoxyCodeLine{69         \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO::SDK::Time::TDB}} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters_accb049e86e3dbeb1fb234b900467ec45}{GetEpoch}}() \textcolor{keyword}{const};}
+\DoxyCodeLine{70 }
+\DoxyCodeLine{76         \textcolor{keyword}{virtual} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO::SDK::Time::TimeSpan}} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters_a6c4e8f705d6252ee70f70c2bd1e760c6}{GetPeriod}}() \textcolor{keyword}{const} = 0;}
+\DoxyCodeLine{77 }
+\DoxyCodeLine{84         \textcolor{keyword}{virtual} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO::SDK::Time::TDB}} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters_a4a5a48e497028fd77b1b5a30b10e45fa}{GetTimeToTrueAnomaly}}(\textcolor{keywordtype}{double} trueAnomalyTarget) \textcolor{keyword}{const};}
+\DoxyCodeLine{85 }
+\DoxyCodeLine{92         \textcolor{keyword}{virtual} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO::SDK::Time::TDB}} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters_ae408441a058ed5fbab8e715cf4d4a5ee}{GetTimeToMeanAnomaly}}(\textcolor{keywordtype}{double} meanAnomalyTarget) \textcolor{keyword}{const};}
+\DoxyCodeLine{93 }
+\DoxyCodeLine{99         \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters_ae337c5ef8eb4e43477214277de253ffc}{GetMeanMotion}}() \textcolor{keyword}{const};}
+\DoxyCodeLine{100 }
+\DoxyCodeLine{106         \textcolor{keyword}{virtual} \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO::SDK::Math::Vector3D}} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters_a2c52b83f73ab83518299b65f10eb48f2}{GetSpecificAngularMomentum}}() \textcolor{keyword}{const} = 0;}
+\DoxyCodeLine{107 }
+\DoxyCodeLine{114         \textcolor{keyword}{virtual} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{StateVector}} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters_abe7428eb3270c7ad6e911d3387c08d9e}{GetStateVector}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO::SDK::Time::TDB}} \&epoch) \textcolor{keyword}{const} = 0;}
+\DoxyCodeLine{115 }
+\DoxyCodeLine{121         \textcolor{keyword}{virtual} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{StateVector}} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters_aa43c591349045654575f38b5a027149b}{GetStateVector}}() \textcolor{keyword}{const};}
+\DoxyCodeLine{122 }
+\DoxyCodeLine{129         \textcolor{keywordtype}{bool} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters_a50df9dcc7f306e45f55fac0f4b53586c}{IsElliptical}}() \textcolor{keyword}{const};}
+\DoxyCodeLine{130 }
+\DoxyCodeLine{137         \textcolor{keywordtype}{bool} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters_a5a402a0358f510d6d7cac590a2689dac}{IsParabolic}}() \textcolor{keyword}{const};}
+\DoxyCodeLine{138 }
+\DoxyCodeLine{145         \textcolor{keywordtype}{bool} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters_ad9555ce9063e9e7c6ad04eb31ad08c01}{IsHyperbolic}}() \textcolor{keyword}{const};}
+\DoxyCodeLine{146 }
+\DoxyCodeLine{153         \textcolor{keywordtype}{bool} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters_ad3c3b2261345c63993eb7552463898a8}{IsCircular}}() \textcolor{keyword}{const};}
+\DoxyCodeLine{154 }
+\DoxyCodeLine{160         \textcolor{keyword}{virtual} \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters_a6646fbe984795367951b1939882109d8}{GetEccentricity}}() \textcolor{keyword}{const} = 0;}
+\DoxyCodeLine{161 }
+\DoxyCodeLine{167         \textcolor{keyword}{virtual} \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters_a29d3b04814a8a03993df3dbcd56a98d2}{GetSemiMajorAxis}}() \textcolor{keyword}{const} = 0;}
+\DoxyCodeLine{168 }
+\DoxyCodeLine{174         \textcolor{keyword}{virtual} \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters_a18969ecae95b898960ee8fc2fa2fec12}{GetInclination}}() \textcolor{keyword}{const} = 0;}
+\DoxyCodeLine{175 }
+\DoxyCodeLine{181         \textcolor{keyword}{virtual} \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters_a8d55307a038a9c7c9b9ae407e0f84819}{GetPeriapsisArgument}}() \textcolor{keyword}{const} = 0;}
+\DoxyCodeLine{182 }
+\DoxyCodeLine{188         \textcolor{keyword}{virtual} \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters_a299972214910ac55a2e6f622024c2bce}{GetRightAscendingNodeLongitude}}() \textcolor{keyword}{const} = 0;}
+\DoxyCodeLine{189 }
+\DoxyCodeLine{195         \textcolor{keyword}{virtual} \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters_af9aebe2ea0a10ef3adbda48c4c4dc1c3}{GetMeanAnomaly}}() \textcolor{keyword}{const} = 0;}
+\DoxyCodeLine{196 }
+\DoxyCodeLine{202         \textcolor{keyword}{virtual} \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters_a20b8e8626b722022cbd5598d6998d430}{GetTrueAnomaly}}() \textcolor{keyword}{const};}
+\DoxyCodeLine{203 }
+\DoxyCodeLine{209         \textcolor{keyword}{virtual} \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters_a3502c1fc377791192f0b7d25c3adbafc}{GetSpecificOrbitalEnergy}}() \textcolor{keyword}{const} = 0;}
+\DoxyCodeLine{210 }
+\DoxyCodeLine{217         \textcolor{keyword}{virtual} \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters_a3bab8d270ea9950fed00cce67ffe0e67}{GetEccentricAnomaly}}(\mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO::SDK::Time::TDB}} epoch) \textcolor{keyword}{const};}
+\DoxyCodeLine{218 }
+\DoxyCodeLine{225         \textcolor{keyword}{virtual} \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters_af9aebe2ea0a10ef3adbda48c4c4dc1c3}{GetMeanAnomaly}}(\mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO::SDK::Time::TDB}} epoch) \textcolor{keyword}{const};}
+\DoxyCodeLine{226 }
+\DoxyCodeLine{233         \textcolor{keyword}{virtual} \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters_a20b8e8626b722022cbd5598d6998d430}{GetTrueAnomaly}}(\mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO::SDK::Time::TDB}} epoch) \textcolor{keyword}{const};}
+\DoxyCodeLine{234 }
+\DoxyCodeLine{240         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1Frames}{IO::SDK::Frames::Frames}} \&\mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters_af1e102d6ab108c321dd68f4aa67e27c9}{GetFrame}}() \textcolor{keyword}{const};}
+\DoxyCodeLine{241 }
+\DoxyCodeLine{247         \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO::SDK::Math::Vector3D}} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters_a1fe7f8430f51ebac3972f113835ac1d6}{GetEccentricityVector}}() \textcolor{keyword}{const};}
+\DoxyCodeLine{248 }
+\DoxyCodeLine{254         \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO::SDK::Math::Vector3D}} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters_ae619c78f711e053d1ad2f281e7c67596}{GetPerigeeVector}}() \textcolor{keyword}{const};}
+\DoxyCodeLine{255 }
+\DoxyCodeLine{261         \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO::SDK::Math::Vector3D}} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters_a6db13919245724695465b77c60438492}{GetApogeeVector}}() \textcolor{keyword}{const};}
+\DoxyCodeLine{262 }
+\DoxyCodeLine{269         \textcolor{keyword}{virtual} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{IO::SDK::OrbitalParameters::StateVector}} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters_aa43c591349045654575f38b5a027149b}{GetStateVector}}(\textcolor{keyword}{const} \textcolor{keywordtype}{double} trueAnomalie) \textcolor{keyword}{const};}
+\DoxyCodeLine{270 }
+\DoxyCodeLine{276         \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO::SDK::Math::Vector3D}} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters_acaadaa0b6f59cf7589a36e809a4ca86e}{GetAscendingNodeVector}}() \textcolor{keyword}{const};}
+\DoxyCodeLine{277 }
+\DoxyCodeLine{283         \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1RADec}{IO::SDK::Coordinates::RADec}} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters_ab0a8cff006da13a973ca4264ac1a6e45}{GetRADec}}() \textcolor{keyword}{const};}
+\DoxyCodeLine{284 }
+\DoxyCodeLine{290         \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters_ac0ea10baad6029eed024c359bb4298ff}{GetVelocityAtPerigee}}() \textcolor{keyword}{const};}
+\DoxyCodeLine{291 }
+\DoxyCodeLine{297         \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters_ac2ff4951dd117335f13ccdd34178833f}{GetVelocityAtApogee}}() \textcolor{keyword}{const};}
+\DoxyCodeLine{298 }
+\DoxyCodeLine{304         \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters_a703167ed2f55a57c207ba46bb63f985b}{GetTrueLongitude}}() \textcolor{keyword}{const};}
+\DoxyCodeLine{305         }
+\DoxyCodeLine{311         \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters_a81952954916bb3e58c499b55411bd88c}{GetMeanLongitude}}() \textcolor{keyword}{const};}
+\DoxyCodeLine{312 }
+\DoxyCodeLine{319         \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters_a81952954916bb3e58c499b55411bd88c}{GetMeanLongitude}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO::SDK::Time::TDB}}\& epoch) \textcolor{keyword}{const};}
+\DoxyCodeLine{320 }
+\DoxyCodeLine{327         \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters_a703167ed2f55a57c207ba46bb63f985b}{GetTrueLongitude}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO::SDK::Time::TDB}}\& epoch) \textcolor{keyword}{const};}
+\DoxyCodeLine{328         }
+\DoxyCodeLine{329     \};}
+\DoxyCodeLine{330 \}}
+\DoxyCodeLine{331 \textcolor{preprocessor}{\#endif}}
+
+\end{DoxyCode}

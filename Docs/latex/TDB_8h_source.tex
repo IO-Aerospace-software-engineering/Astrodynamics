@@ -1,0 +1,39 @@
+\hypertarget{TDB_8h_source}{}\doxysection{TDB.\+h}
+\label{TDB_8h_source}\index{IO.SDK/Time/TDB.h@{IO.SDK/Time/TDB.h}}
+\mbox{\hyperlink{TDB_8h}{Go to the documentation of this file.}}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{1 }
+\DoxyCodeLine{11 \textcolor{preprocessor}{\#ifndef TDB\_H}}
+\DoxyCodeLine{12 \textcolor{preprocessor}{\#define TDB\_H}}
+\DoxyCodeLine{13 }
+\DoxyCodeLine{14 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{DateTime_8h}{DateTime.h}}>}}
+\DoxyCodeLine{15 \textcolor{preprocessor}{\#include <chrono>}}
+\DoxyCodeLine{16 \textcolor{preprocessor}{\#include <string>}}
+\DoxyCodeLine{17 }
+\DoxyCodeLine{18 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1SDK_1_1Time}{IO::SDK::Time}}}
+\DoxyCodeLine{19 \{}
+\DoxyCodeLine{20     \textcolor{keyword}{class }UTC;}
+\DoxyCodeLine{21     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{TDB}} final : \textcolor{keyword}{public} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1DateTime}{IO::SDK::Time::DateTime}}}
+\DoxyCodeLine{22     \{}
+\DoxyCodeLine{23     \textcolor{keyword}{private}:}
+\DoxyCodeLine{24     \textcolor{keyword}{public}:}
+\DoxyCodeLine{30         \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB_ad542ac2d77b3b9c75312a2b34a0f568b}{TDB}}(\textcolor{keyword}{const} std::chrono::duration<double> ellapsedSecondsFromJ2000);}
+\DoxyCodeLine{31 }
+\DoxyCodeLine{37         \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB_ad542ac2d77b3b9c75312a2b34a0f568b}{TDB}}(\textcolor{keyword}{const} std::string \textcolor{keywordtype}{string});}
+\DoxyCodeLine{38 }
+\DoxyCodeLine{44         std::string \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB_a052c59cf78649300f515a0a590da0e83}{ToString}}() \textcolor{keyword}{const override};}
+\DoxyCodeLine{45 }
+\DoxyCodeLine{52         \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO::SDK::Time::TDB}} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB_aaddf000171e27a5fbd7043211abf3897}{Add}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO::SDK::Time::TimeSpan}} \&timespan) \textcolor{keyword}{const};}
+\DoxyCodeLine{53 }
+\DoxyCodeLine{60         \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO::SDK::Time::TDB}} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB_a960ebafc92bdc161094294e9c3ec9bee}{operator+}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO::SDK::Time::TimeSpan}} \&timespan) \textcolor{keyword}{const};}
+\DoxyCodeLine{61 }
+\DoxyCodeLine{68         \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO::SDK::Time::TDB}} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB_a825aca4f9584bd63d686dd3ac2f3b9fe}{operator-\/}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO::SDK::Time::TimeSpan}} \&other) \textcolor{keyword}{const};}
+\DoxyCodeLine{69 }
+\DoxyCodeLine{76         \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO::SDK::Time::TimeSpan}} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB_a825aca4f9584bd63d686dd3ac2f3b9fe}{operator-\/}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO::SDK::Time::TDB}} \&other) \textcolor{keyword}{const};}
+\DoxyCodeLine{77 }
+\DoxyCodeLine{83         \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1UTC}{UTC}} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB_aa5b72eea6c32716a713acf4b4c360de9}{ToUTC}}() \textcolor{keyword}{const};}
+\DoxyCodeLine{84     \};}
+\DoxyCodeLine{85 \}}
+\DoxyCodeLine{86 \textcolor{preprocessor}{\#endif }\textcolor{comment}{// !TDB\_H}}
+
+\end{DoxyCode}

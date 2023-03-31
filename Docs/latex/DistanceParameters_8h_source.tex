@@ -1,0 +1,66 @@
+\hypertarget{DistanceParameters_8h_source}{}\doxysection{Distance\+Parameters.\+h}
+\label{DistanceParameters_8h_source}\index{IO.SDK/Constraints/Parameters/DistanceParameters.h@{IO.SDK/Constraints/Parameters/DistanceParameters.h}}
+\mbox{\hyperlink{DistanceParameters_8h}{Go to the documentation of this file.}}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{1 \textcolor{comment}{//}}
+\DoxyCodeLine{2 \textcolor{comment}{// Created by s.guillet on 27/02/2023.}}
+\DoxyCodeLine{3 \textcolor{comment}{//}}
+\DoxyCodeLine{4 }
+\DoxyCodeLine{5 \textcolor{preprocessor}{\#ifndef IOSDK\_DISTANCEPARAMETERS\_H}}
+\DoxyCodeLine{6 \textcolor{preprocessor}{\#define IOSDK\_DISTANCEPARAMETERS\_H}}
+\DoxyCodeLine{7 }
+\DoxyCodeLine{8 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{Body_8h}{Body.h}}>}}
+\DoxyCodeLine{9 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{CelestialBody_8h}{CelestialBody.h}}>}}
+\DoxyCodeLine{10 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{Constraint_8h}{Constraint.h}}>}}
+\DoxyCodeLine{11 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{Aberrations_8h}{Aberrations.h}}>}}
+\DoxyCodeLine{12 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{Window_8h}{Window.h}}>}}
+\DoxyCodeLine{13 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{TDB_8h}{TDB.h}}>}}
+\DoxyCodeLine{14 }
+\DoxyCodeLine{15 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1SDK_1_1Constraints_1_1Parameters}{IO::SDK::Constraints::Parameters}}}
+\DoxyCodeLine{16 \{}
+\DoxyCodeLine{17 }
+\DoxyCodeLine{18     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1SDK_1_1Constraints_1_1Parameters_1_1DistanceParameters}{DistanceParameters}}}
+\DoxyCodeLine{19     \{}
+\DoxyCodeLine{20     \textcolor{keyword}{private}:}
+\DoxyCodeLine{21 }
+\DoxyCodeLine{22         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body}{IO::SDK::Body::Body}} \&m\_observer;}
+\DoxyCodeLine{23         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body}{IO::SDK::Body::Body}} \&m\_target;}
+\DoxyCodeLine{24         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Constraints_1_1Constraint}{IO::SDK::Constraints::Constraint}} \&m\_constraint;}
+\DoxyCodeLine{25         \textcolor{keyword}{const} \mbox{\hyperlink{namespaceIO_1_1SDK_abbb4827ec6a24ad346d9a60473ad3b81}{IO::SDK::AberrationsEnum}} m\_aberration;}
+\DoxyCodeLine{26         \textcolor{keyword}{const} \textcolor{keywordtype}{double} m\_value;}
+\DoxyCodeLine{27         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO::SDK::Time::TimeSpan}} \&m\_initialStepSize;}
+\DoxyCodeLine{28 }
+\DoxyCodeLine{29     \textcolor{keyword}{public}:}
+\DoxyCodeLine{30         \mbox{\hyperlink{classIO_1_1SDK_1_1Constraints_1_1Parameters_1_1DistanceParameters_a8c953352669cdbfc3ff8dda1f0307676}{DistanceParameters}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body}{IO::SDK::Body::Body}} \&observer,}
+\DoxyCodeLine{31                            \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body}{IO::SDK::Body::Body}} \&target,}
+\DoxyCodeLine{32                            \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Constraints_1_1Constraint}{IO::SDK::Constraints::Constraint}} \&constraint,}
+\DoxyCodeLine{33                            \textcolor{keyword}{const} \mbox{\hyperlink{namespaceIO_1_1SDK_abbb4827ec6a24ad346d9a60473ad3b81}{IO::SDK::AberrationsEnum}} aberration,}
+\DoxyCodeLine{34                            \textcolor{keyword}{const} \textcolor{keywordtype}{double} value,}
+\DoxyCodeLine{35                            \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO::SDK::Time::TimeSpan}} \&initialStepSize);}
+\DoxyCodeLine{36 }
+\DoxyCodeLine{37         \textcolor{keyword}{inline} \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body}{IO::SDK::Body::Body}} \&\mbox{\hyperlink{classIO_1_1SDK_1_1Constraints_1_1Parameters_1_1DistanceParameters_a0a2a5378f6540ca2d784fdbaa251f689}{GetObserver}}()}
+\DoxyCodeLine{38         \{ \textcolor{keywordflow}{return} m\_observer; \}}
+\DoxyCodeLine{39 }
+\DoxyCodeLine{40         \textcolor{keyword}{inline} \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body}{IO::SDK::Body::Body}} \&\mbox{\hyperlink{classIO_1_1SDK_1_1Constraints_1_1Parameters_1_1DistanceParameters_af5aafce766a9cbbeb42582962b6c78b9}{GetTarget}}()}
+\DoxyCodeLine{41         \{ \textcolor{keywordflow}{return} m\_target; \}}
+\DoxyCodeLine{42 }
+\DoxyCodeLine{43         \textcolor{keyword}{inline} \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Constraints_1_1Constraint}{IO::SDK::Constraints::Constraint}} \&\mbox{\hyperlink{classIO_1_1SDK_1_1Constraints_1_1Parameters_1_1DistanceParameters_a882baaa3df9b681c01a84213cccaf6d9}{GetConstraint}}()}
+\DoxyCodeLine{44         \{ \textcolor{keywordflow}{return} m\_constraint; \}}
+\DoxyCodeLine{45 }
+\DoxyCodeLine{46         \textcolor{keyword}{inline} \textcolor{keyword}{const} \mbox{\hyperlink{namespaceIO_1_1SDK_abbb4827ec6a24ad346d9a60473ad3b81}{IO::SDK::AberrationsEnum}} \&\mbox{\hyperlink{classIO_1_1SDK_1_1Constraints_1_1Parameters_1_1DistanceParameters_a4ccb967829aa080ad277d4d20ae8e09e}{GetAberration}}()}
+\DoxyCodeLine{47         \{ \textcolor{keywordflow}{return} m\_aberration; \}}
+\DoxyCodeLine{48 }
+\DoxyCodeLine{49         \textcolor{keyword}{inline} \textcolor{keyword}{const} \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1SDK_1_1Constraints_1_1Parameters_1_1DistanceParameters_a2c0d177ea4b5e4c703ac3d28f3115f53}{GetValue}}()}
+\DoxyCodeLine{50         \{ \textcolor{keywordflow}{return} m\_value; \}}
+\DoxyCodeLine{51 }
+\DoxyCodeLine{52         \textcolor{keyword}{inline} \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO::SDK::Time::TimeSpan}} \&\mbox{\hyperlink{classIO_1_1SDK_1_1Constraints_1_1Parameters_1_1DistanceParameters_add47d0816e80a997e70bf2444993d2fe}{GetInitialStepSize}}()}
+\DoxyCodeLine{53         \{ \textcolor{keywordflow}{return} m\_initialStepSize; \}}
+\DoxyCodeLine{54 }
+\DoxyCodeLine{55     \};}
+\DoxyCodeLine{56 }
+\DoxyCodeLine{57 }
+\DoxyCodeLine{58 \} \textcolor{comment}{// IO}}
+\DoxyCodeLine{59 }
+\DoxyCodeLine{60 \textcolor{preprocessor}{\#endif }\textcolor{comment}{//IOSDK\_DISTANCEPARAMETERS\_H}}
+
+\end{DoxyCode}
