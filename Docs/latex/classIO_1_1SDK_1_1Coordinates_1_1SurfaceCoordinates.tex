@@ -1,0 +1,137 @@
+\hypertarget{classIO_1_1SDK_1_1Coordinates_1_1SurfaceCoordinates}{}\doxysection{IO\+::SDK\+::Coordinates\+::Surface\+Coordinates Class Reference}
+\label{classIO_1_1SDK_1_1Coordinates_1_1SurfaceCoordinates}\index{IO::SDK::Coordinates::SurfaceCoordinates@{IO::SDK::Coordinates::SurfaceCoordinates}}
+
+
+Surface coordinates.  
+
+
+
+
+{\ttfamily \#include $<$Surface\+Coordinates.\+h$>$}
+
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1SurfaceCoordinates_a486f3f808bb8837afedc690f3eeaea0a}{Surface\+Coordinates}} (const size\+\_\+t longitude\+Span, const size\+\_\+t latitude\+Span)
+\begin{DoxyCompactList}\small\item\em Construct a new Surface \mbox{\hyperlink{namespaceIO_1_1SDK_1_1Coordinates}{Coordinates}} object. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1SurfaceCoordinates_a3e919f03d86a6da92ccadd33c8d69869}{Surface\+Coordinates}} (const \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1SurfaceCoordinates}{Surface\+Coordinates}} \&surface\+Coordinates)
+\begin{DoxyCompactList}\small\item\em Construct a new Surface \mbox{\hyperlink{namespaceIO_1_1SDK_1_1Coordinates}{Coordinates}} object. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1SurfaceCoordinates}{Surface\+Coordinates}} \& \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1SurfaceCoordinates_a635864d30a11d39eb12244551ef3ae5f}{operator=}} (const \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1SurfaceCoordinates}{Surface\+Coordinates}} \&surface\+Coordinates)
+\item 
+const std\+::vector$<$ std\+::unique\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO\+::\+SDK\+::\+Math\+::\+Vector3D}} $>$ $>$ \& \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1SurfaceCoordinates_a04881fd9d5eb7ea85bcf3a7952fa6bb1}{Get\+Surface\+Points}} () const
+\begin{DoxyCompactList}\small\item\em Get the Surface Points. \end{DoxyCompactList}\item 
+const std\+::vector$<$ std\+::unique\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO\+::\+SDK\+::\+Math\+::\+Vector3D}} $>$ $>$ \& \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1SurfaceCoordinates_a8717ac962ed91706938aa27c228ac556}{Get\+Surface\+Normals}} () const
+\begin{DoxyCompactList}\small\item\em Get the Surface Normals. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1SurfaceCoordinates_adb55f632ea1afa2be90ce2f9fafda3ee}{Add\+Point}} (const \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO\+::\+SDK\+::\+Math\+::\+Vector3D}} \&point)
+\begin{DoxyCompactList}\small\item\em Add a surface point. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1SurfaceCoordinates_a97ba48e578a9d58be600841c11e68770}{Add\+Normal}} (const \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO\+::\+SDK\+::\+Math\+::\+Vector3D}} \&normal)
+\begin{DoxyCompactList}\small\item\em Add normal vector. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+Surface coordinates. 
+
+\doxysubsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Coordinates_1_1SurfaceCoordinates_a486f3f808bb8837afedc690f3eeaea0a}\label{classIO_1_1SDK_1_1Coordinates_1_1SurfaceCoordinates_a486f3f808bb8837afedc690f3eeaea0a}} 
+\index{IO::SDK::Coordinates::SurfaceCoordinates@{IO::SDK::Coordinates::SurfaceCoordinates}!SurfaceCoordinates@{SurfaceCoordinates}}
+\index{SurfaceCoordinates@{SurfaceCoordinates}!IO::SDK::Coordinates::SurfaceCoordinates@{IO::SDK::Coordinates::SurfaceCoordinates}}
+\doxysubsubsection{\texorpdfstring{SurfaceCoordinates()}{SurfaceCoordinates()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily IO\+::\+SDK\+::\+Coordinates\+::\+Surface\+Coordinates\+::\+Surface\+Coordinates (\begin{DoxyParamCaption}\item[{const size\+\_\+t}]{longitude\+Span,  }\item[{const size\+\_\+t}]{latitude\+Span }\end{DoxyParamCaption})}
+
+
+
+Construct a new Surface \mbox{\hyperlink{namespaceIO_1_1SDK_1_1Coordinates}{Coordinates}} object. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em longitude\+Span} & \\
+\hline
+{\em latitude\+Span} & \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Coordinates_1_1SurfaceCoordinates_a3e919f03d86a6da92ccadd33c8d69869}\label{classIO_1_1SDK_1_1Coordinates_1_1SurfaceCoordinates_a3e919f03d86a6da92ccadd33c8d69869}} 
+\index{IO::SDK::Coordinates::SurfaceCoordinates@{IO::SDK::Coordinates::SurfaceCoordinates}!SurfaceCoordinates@{SurfaceCoordinates}}
+\index{SurfaceCoordinates@{SurfaceCoordinates}!IO::SDK::Coordinates::SurfaceCoordinates@{IO::SDK::Coordinates::SurfaceCoordinates}}
+\doxysubsubsection{\texorpdfstring{SurfaceCoordinates()}{SurfaceCoordinates()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily IO\+::\+SDK\+::\+Coordinates\+::\+Surface\+Coordinates\+::\+Surface\+Coordinates (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1SurfaceCoordinates}{Surface\+Coordinates}} \&}]{surface\+Coordinates }\end{DoxyParamCaption})}
+
+
+
+Construct a new Surface \mbox{\hyperlink{namespaceIO_1_1SDK_1_1Coordinates}{Coordinates}} object. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em surface\+Coordinates} & \\
+\hline
+\end{DoxyParams}
+
+
+\doxysubsection{Member Function Documentation}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Coordinates_1_1SurfaceCoordinates_a97ba48e578a9d58be600841c11e68770}\label{classIO_1_1SDK_1_1Coordinates_1_1SurfaceCoordinates_a97ba48e578a9d58be600841c11e68770}} 
+\index{IO::SDK::Coordinates::SurfaceCoordinates@{IO::SDK::Coordinates::SurfaceCoordinates}!AddNormal@{AddNormal}}
+\index{AddNormal@{AddNormal}!IO::SDK::Coordinates::SurfaceCoordinates@{IO::SDK::Coordinates::SurfaceCoordinates}}
+\doxysubsubsection{\texorpdfstring{AddNormal()}{AddNormal()}}
+{\footnotesize\ttfamily void IO\+::\+SDK\+::\+Coordinates\+::\+Surface\+Coordinates\+::\+Add\+Normal (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO\+::\+SDK\+::\+Math\+::\+Vector3D}} \&}]{normal }\end{DoxyParamCaption})}
+
+
+
+Add normal vector. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em normal} & \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Coordinates_1_1SurfaceCoordinates_adb55f632ea1afa2be90ce2f9fafda3ee}\label{classIO_1_1SDK_1_1Coordinates_1_1SurfaceCoordinates_adb55f632ea1afa2be90ce2f9fafda3ee}} 
+\index{IO::SDK::Coordinates::SurfaceCoordinates@{IO::SDK::Coordinates::SurfaceCoordinates}!AddPoint@{AddPoint}}
+\index{AddPoint@{AddPoint}!IO::SDK::Coordinates::SurfaceCoordinates@{IO::SDK::Coordinates::SurfaceCoordinates}}
+\doxysubsubsection{\texorpdfstring{AddPoint()}{AddPoint()}}
+{\footnotesize\ttfamily void IO\+::\+SDK\+::\+Coordinates\+::\+Surface\+Coordinates\+::\+Add\+Point (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO\+::\+SDK\+::\+Math\+::\+Vector3D}} \&}]{point }\end{DoxyParamCaption})}
+
+
+
+Add a surface point. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em point} & \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Coordinates_1_1SurfaceCoordinates_a8717ac962ed91706938aa27c228ac556}\label{classIO_1_1SDK_1_1Coordinates_1_1SurfaceCoordinates_a8717ac962ed91706938aa27c228ac556}} 
+\index{IO::SDK::Coordinates::SurfaceCoordinates@{IO::SDK::Coordinates::SurfaceCoordinates}!GetSurfaceNormals@{GetSurfaceNormals}}
+\index{GetSurfaceNormals@{GetSurfaceNormals}!IO::SDK::Coordinates::SurfaceCoordinates@{IO::SDK::Coordinates::SurfaceCoordinates}}
+\doxysubsubsection{\texorpdfstring{GetSurfaceNormals()}{GetSurfaceNormals()}}
+{\footnotesize\ttfamily const std\+::vector$<$ std\+::unique\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO\+::\+SDK\+::\+Math\+::\+Vector3D}} $>$ $>$ \& IO\+::\+SDK\+::\+Coordinates\+::\+Surface\+Coordinates\+::\+Get\+Surface\+Normals (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Get the Surface Normals. 
+
+\begin{DoxyReturn}{Returns}
+const std\+::vector$<$std\+::unique\+\_\+ptr$<$\+IO\+::\+SDK\+::\+Math\+::\+Vector3\+D$>$$>$\& 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Coordinates_1_1SurfaceCoordinates_a04881fd9d5eb7ea85bcf3a7952fa6bb1}\label{classIO_1_1SDK_1_1Coordinates_1_1SurfaceCoordinates_a04881fd9d5eb7ea85bcf3a7952fa6bb1}} 
+\index{IO::SDK::Coordinates::SurfaceCoordinates@{IO::SDK::Coordinates::SurfaceCoordinates}!GetSurfacePoints@{GetSurfacePoints}}
+\index{GetSurfacePoints@{GetSurfacePoints}!IO::SDK::Coordinates::SurfaceCoordinates@{IO::SDK::Coordinates::SurfaceCoordinates}}
+\doxysubsubsection{\texorpdfstring{GetSurfacePoints()}{GetSurfacePoints()}}
+{\footnotesize\ttfamily const std\+::vector$<$ std\+::unique\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO\+::\+SDK\+::\+Math\+::\+Vector3D}} $>$ $>$ \& IO\+::\+SDK\+::\+Coordinates\+::\+Surface\+Coordinates\+::\+Get\+Surface\+Points (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Get the Surface Points. 
+
+\begin{DoxyReturn}{Returns}
+const std\+::vector$<$std\+::unique\+\_\+ptr$<$\+IO\+::\+SDK\+::\+Math\+::\+Vector3\+D$>$$>$\& 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Coordinates_1_1SurfaceCoordinates_a635864d30a11d39eb12244551ef3ae5f}\label{classIO_1_1SDK_1_1Coordinates_1_1SurfaceCoordinates_a635864d30a11d39eb12244551ef3ae5f}} 
+\index{IO::SDK::Coordinates::SurfaceCoordinates@{IO::SDK::Coordinates::SurfaceCoordinates}!operator=@{operator=}}
+\index{operator=@{operator=}!IO::SDK::Coordinates::SurfaceCoordinates@{IO::SDK::Coordinates::SurfaceCoordinates}}
+\doxysubsubsection{\texorpdfstring{operator=()}{operator=()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1SurfaceCoordinates}{IO\+::\+SDK\+::\+Coordinates\+::\+Surface\+Coordinates}} \& IO\+::\+SDK\+::\+Coordinates\+::\+Surface\+Coordinates\+::operator= (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1SurfaceCoordinates}{Surface\+Coordinates}} \&}]{surface\+Coordinates }\end{DoxyParamCaption})}
+
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+IO.\+SDK/\+Coordinates/\mbox{\hyperlink{SurfaceCoordinates_8h}{Surface\+Coordinates.\+h}}\item 
+IO.\+SDK/\+Coordinates/\mbox{\hyperlink{SurfaceCoordinates_8cpp}{Surface\+Coordinates.\+cpp}}\end{DoxyCompactItemize}

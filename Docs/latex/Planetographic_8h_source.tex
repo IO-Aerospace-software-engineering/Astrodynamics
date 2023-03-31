@@ -1,0 +1,31 @@
+\hypertarget{Planetographic_8h_source}{}\doxysection{Planetographic.\+h}
+\label{Planetographic_8h_source}\index{IO.SDK/Coordinates/Planetographic.h@{IO.SDK/Coordinates/Planetographic.h}}
+\mbox{\hyperlink{Planetographic_8h}{Go to the documentation of this file.}}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{1 }
+\DoxyCodeLine{11 \textcolor{preprocessor}{\#ifndef PLANETOGRAPHIC\_H}}
+\DoxyCodeLine{12 \textcolor{preprocessor}{\#define PLANETOGRAPHIC\_H}}
+\DoxyCodeLine{13 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1SDK_1_1Coordinates}{IO::SDK::Coordinates}}}
+\DoxyCodeLine{14 \{}
+\DoxyCodeLine{19     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1Planetographic}{Planetographic}}}
+\DoxyCodeLine{20     \{}
+\DoxyCodeLine{21     \textcolor{keyword}{private}:}
+\DoxyCodeLine{22         \textcolor{keyword}{const} \textcolor{keywordtype}{double} \_altitude, \_longitude, \_latitude;}
+\DoxyCodeLine{23 }
+\DoxyCodeLine{24     \textcolor{keyword}{public}:}
+\DoxyCodeLine{32         \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1Planetographic_aafc94256192bb81d69a2b50bea164eae}{Planetographic}}(\textcolor{keyword}{const} \textcolor{keywordtype}{double} longitude, \textcolor{keyword}{const} \textcolor{keywordtype}{double} latitude, \textcolor{keyword}{const} \textcolor{keywordtype}{double} altitude) :\_altitude\{ altitude \}, \_longitude\{ longitude \}, \_latitude\{ latitude \}}
+\DoxyCodeLine{33         \{}
+\DoxyCodeLine{34 }
+\DoxyCodeLine{35         \}}
+\DoxyCodeLine{41         \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1Planetographic_a23f252d372d7fc5246dbba617e33f0a7}{GetAltitude}}()\textcolor{keyword}{ const }\{ \textcolor{keywordflow}{return} this-\/>\_altitude; \}}
+\DoxyCodeLine{42 }
+\DoxyCodeLine{48         \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1Planetographic_a5917ed9f3dd21d8b543793219d0a6dbc}{GetLongitude}}()\textcolor{keyword}{ const }\{ \textcolor{keywordflow}{return} this-\/>\_longitude; \}}
+\DoxyCodeLine{49 }
+\DoxyCodeLine{55         \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1Planetographic_ab01e3bf4841c5fd00539fdceb90f3e64}{GetLatitude}}()\textcolor{keyword}{ const }\{ \textcolor{keywordflow}{return} this-\/>\_latitude; \}}
+\DoxyCodeLine{56     \};}
+\DoxyCodeLine{57 \}}
+\DoxyCodeLine{58 \textcolor{preprocessor}{\#endif }\textcolor{comment}{// !PLANETOGRAPHIC\_H}}
+\DoxyCodeLine{59 }
+\DoxyCodeLine{60 }
+
+\end{DoxyCode}

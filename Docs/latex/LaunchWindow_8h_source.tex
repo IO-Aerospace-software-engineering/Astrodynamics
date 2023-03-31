@@ -1,0 +1,51 @@
+\hypertarget{LaunchWindow_8h_source}{}\doxysection{Launch\+Window.\+h}
+\label{LaunchWindow_8h_source}\index{IO.SDK/Maneuvers/LaunchWindow.h@{IO.SDK/Maneuvers/LaunchWindow.h}}
+\mbox{\hyperlink{LaunchWindow_8h}{Go to the documentation of this file.}}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{1 }
+\DoxyCodeLine{11 \textcolor{preprocessor}{\#ifndef LAUNCH\_WINDOW\_H}}
+\DoxyCodeLine{12 \textcolor{preprocessor}{\#define LAUNCH\_WINDOW\_H}}
+\DoxyCodeLine{13 }
+\DoxyCodeLine{14 \textcolor{preprocessor}{\#include<memory>}}
+\DoxyCodeLine{15 }
+\DoxyCodeLine{16 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{Window_8h}{Window.h}}>}}
+\DoxyCodeLine{17 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{UTC_8h}{UTC.h}}>}}
+\DoxyCodeLine{18 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{LaunchSite_8h}{LaunchSite.h}}>}}
+\DoxyCodeLine{19 }
+\DoxyCodeLine{20 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1SDK_1_1Maneuvers}{IO::SDK::Maneuvers}}}
+\DoxyCodeLine{21 \{}
+\DoxyCodeLine{22     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1LaunchWindow}{LaunchWindow}} final}
+\DoxyCodeLine{23     \{}
+\DoxyCodeLine{24     \textcolor{keyword}{private}:}
+\DoxyCodeLine{25         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1LaunchSite}{IO::SDK::Sites::LaunchSite}}\& m\_launchSite;}
+\DoxyCodeLine{26         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO::SDK::Time::Window<IO::SDK::Time::UTC>}} m\_window;}
+\DoxyCodeLine{27         \textcolor{keyword}{const} \textcolor{keywordtype}{double} m\_inertialAzimuth;}
+\DoxyCodeLine{28         \textcolor{keyword}{const} \textcolor{keywordtype}{double} m\_nonInertialAzimuth;}
+\DoxyCodeLine{29         }
+\DoxyCodeLine{30         \textcolor{keyword}{const} \textcolor{keywordtype}{double} m\_nonInertialInsertionVelocity;}
+\DoxyCodeLine{31         \textcolor{keyword}{const} \textcolor{keywordtype}{double} m\_inertialInsertionVelocity;}
+\DoxyCodeLine{32 }
+\DoxyCodeLine{33     \textcolor{keyword}{public}:}
+\DoxyCodeLine{44         \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1LaunchWindow_a52ebaa55b7fda7bf70c93bba22093c17}{LaunchWindow}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1LaunchSite}{IO::SDK::Sites::LaunchSite}} \&launchSite, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO::SDK::Time::Window<IO::SDK::Time::UTC>}} \&window, \textcolor{keyword}{const} \textcolor{keywordtype}{double} inertialAzimuth, \textcolor{keyword}{const} \textcolor{keywordtype}{double} nonInertialAzimuth, \textcolor{keyword}{const} \textcolor{keywordtype}{double} inertialInsertionVelocity, \textcolor{keyword}{const} \textcolor{keywordtype}{double} nonInertialInsertionVelocity);}
+\DoxyCodeLine{45 }
+\DoxyCodeLine{46 \textcolor{comment}{//        LaunchWindow\& operator=(const LaunchWindow\& lw);}}
+\DoxyCodeLine{47 }
+\DoxyCodeLine{53         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1LaunchSite}{IO::SDK::Sites::LaunchSite}}\& \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1LaunchWindow_a53d4e4340927887c951f8e53a07f7f11}{GetLaunchSite}}() \textcolor{keyword}{const};}
+\DoxyCodeLine{54         }
+\DoxyCodeLine{60         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO::SDK::Time::Window<IO::SDK::Time::UTC>}}\& \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1LaunchWindow_aaeb52d53060743a725a8e6d6b76ef1fa}{GetWindow}}() \textcolor{keyword}{const};}
+\DoxyCodeLine{61         }
+\DoxyCodeLine{67         \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1LaunchWindow_a2f5a40a0652a73d70f3bc9ce767a267c}{GetInertialAzimuth}}() \textcolor{keyword}{const};}
+\DoxyCodeLine{68 }
+\DoxyCodeLine{74         \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1LaunchWindow_a50de13a318d0f1365733f5a3e02abe17}{GetNonInertialAzimuth}}() \textcolor{keyword}{const};}
+\DoxyCodeLine{75 }
+\DoxyCodeLine{81         \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1LaunchWindow_a3f542fb576f8e607dd7fc3c20b167e0b}{GetInertialInsertionVelocity}}() \textcolor{keyword}{const};}
+\DoxyCodeLine{82 }
+\DoxyCodeLine{88         \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1LaunchWindow_a595cfed0b6a9a701216488db8dcf4458}{GetNonInertialInsertionVelocity}}() \textcolor{keyword}{const};}
+\DoxyCodeLine{89 }
+\DoxyCodeLine{90     \};}
+\DoxyCodeLine{91 }
+\DoxyCodeLine{92 \} \textcolor{comment}{// namespace IO::SDK::Maneuvers}}
+\DoxyCodeLine{93 }
+\DoxyCodeLine{94 \textcolor{preprocessor}{\#endif}}
+
+\end{DoxyCode}

@@ -1,0 +1,45 @@
+\hypertarget{HorizontalCoordinates_8h_source}{}\doxysection{Horizontal\+Coordinates.\+h}
+\label{HorizontalCoordinates_8h_source}\index{IO.SDK/Coordinates/HorizontalCoordinates.h@{IO.SDK/Coordinates/HorizontalCoordinates.h}}
+\mbox{\hyperlink{HorizontalCoordinates_8h}{Go to the documentation of this file.}}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{1 }
+\DoxyCodeLine{11 \textcolor{preprocessor}{\#ifndef HORIZONTAL\_COORDINATES\_H}}
+\DoxyCodeLine{12 \textcolor{preprocessor}{\#define HORIZONTAL\_COORDINATES\_H}}
+\DoxyCodeLine{13 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1SDK_1_1Coordinates}{IO::SDK::Coordinates}}}
+\DoxyCodeLine{14 \{}
+\DoxyCodeLine{19     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1HorizontalCoordinates}{HorizontalCoordinates}}}
+\DoxyCodeLine{20     \{}
+\DoxyCodeLine{21     \textcolor{keyword}{private}:}
+\DoxyCodeLine{22         \textcolor{keyword}{const} \textcolor{keywordtype}{double} m\_altitude, m\_azimuth, m\_elevation;}
+\DoxyCodeLine{23 }
+\DoxyCodeLine{24     \textcolor{keyword}{public}:}
+\DoxyCodeLine{32         \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1HorizontalCoordinates_a1f0c6a7fc4a5d234e1f3a6706442f270}{HorizontalCoordinates}}(\textcolor{keyword}{const} \textcolor{keywordtype}{double} azimuth, \textcolor{keyword}{const} \textcolor{keywordtype}{double} elevation, \textcolor{keyword}{const} \textcolor{keywordtype}{double} altitude) : m\_altitude\{altitude\}, m\_azimuth\{azimuth\}, m\_elevation\{elevation\}}
+\DoxyCodeLine{33         \{}
+\DoxyCodeLine{34         \}}
+\DoxyCodeLine{35 }
+\DoxyCodeLine{36         \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1HorizontalCoordinates}{HorizontalCoordinates}} \&\mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1HorizontalCoordinates_a50bb77150c6d841148d710ea33b69b3f}{operator=}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1HorizontalCoordinates}{HorizontalCoordinates}} \&rhs)}
+\DoxyCodeLine{37         \{}
+\DoxyCodeLine{38             \textcolor{keywordflow}{if} (\textcolor{keyword}{this} != \&rhs)}
+\DoxyCodeLine{39             \{}
+\DoxyCodeLine{40                 \textcolor{keyword}{const\_cast<}\textcolor{keywordtype}{double} \&\textcolor{keyword}{>}(m\_altitude) = rhs.m\_altitude;}
+\DoxyCodeLine{41                 \textcolor{keyword}{const\_cast<}\textcolor{keywordtype}{double} \&\textcolor{keyword}{>}(m\_azimuth) = rhs.m\_azimuth;}
+\DoxyCodeLine{42                 \textcolor{keyword}{const\_cast<}\textcolor{keywordtype}{double} \&\textcolor{keyword}{>}(m\_elevation) = rhs.m\_elevation;}
+\DoxyCodeLine{43             \}}
+\DoxyCodeLine{44 }
+\DoxyCodeLine{45             \textcolor{keywordflow}{return} *\textcolor{keyword}{this};}
+\DoxyCodeLine{46         \}}
+\DoxyCodeLine{47 }
+\DoxyCodeLine{48         \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1HorizontalCoordinates_aa2132dd4b6a6be0b49687a242d99b160}{HorizontalCoordinates}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1HorizontalCoordinates}{HorizontalCoordinates}}\& horizontalCoordinates) : m\_altitude\{horizontalCoordinates.m\_altitude\}, m\_azimuth\{horizontalCoordinates.m\_azimuth\}, m\_elevation\{horizontalCoordinates.m\_elevation\}}
+\DoxyCodeLine{49         \{}
+\DoxyCodeLine{50         \}}
+\DoxyCodeLine{51 }
+\DoxyCodeLine{57         \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1HorizontalCoordinates_aef3b1819777d7cfe617e2c216a81f6a1}{GetAltitude}}()\textcolor{keyword}{ const }\{ \textcolor{keywordflow}{return} this-\/>m\_altitude; \}}
+\DoxyCodeLine{58 }
+\DoxyCodeLine{64         \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1HorizontalCoordinates_a90e73f4ad98a6097070c9204cb82c5be}{GetAzimuth}}()\textcolor{keyword}{ const }\{ \textcolor{keywordflow}{return} this-\/>m\_azimuth; \}}
+\DoxyCodeLine{65 }
+\DoxyCodeLine{71         \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1HorizontalCoordinates_a29494e94ec44700c5b4faf2ed48949be}{GetElevation}}()\textcolor{keyword}{ const }\{ \textcolor{keywordflow}{return} this-\/>m\_elevation; \}}
+\DoxyCodeLine{72     \};}
+\DoxyCodeLine{73 \}}
+\DoxyCodeLine{74 \textcolor{preprocessor}{\#endif }\textcolor{comment}{// !HORIZONTAL\_COORDINATES\_H}}
+
+\end{DoxyCode}

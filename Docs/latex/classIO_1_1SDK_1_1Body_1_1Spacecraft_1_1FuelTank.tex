@@ -1,0 +1,207 @@
+\hypertarget{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1FuelTank}{}\doxysection{IO\+::SDK\+::Body\+::Spacecraft\+::Fuel\+Tank Class Reference}
+\label{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1FuelTank}\index{IO::SDK::Body::Spacecraft::FuelTank@{IO::SDK::Body::Spacecraft::FuelTank}}
+
+
+Fuel tank class.  
+
+
+
+
+{\ttfamily \#include $<$Fuel\+Tank.\+h$>$}
+
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1FuelTank_a1ff657f7428d5f7242626e4fa2d2f6f1}{Fuel\+Tank}} (const std\+::string \&serial\+Number, const \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft}{IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Spacecraft}} \&spacecraft, const double capacity, const double quantity)
+\begin{DoxyCompactList}\small\item\em Construct a new Fuel Tank object. \end{DoxyCompactList}\item 
+const \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft}{IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Spacecraft}} \& \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1FuelTank_a13a869368c2792ef02f5f65f798119b5}{Get\+Spacecraft}} () const
+\begin{DoxyCompactList}\small\item\em Get the associated spacecraft. \end{DoxyCompactList}\item 
+std\+::string \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1FuelTank_a40d4003aae9afa549671fbff40d06963}{Get\+Serial\+Number}} () const
+\begin{DoxyCompactList}\small\item\em Get the fuel tank serial number. \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1FuelTank_a1b3504beb90cae5904dc4ceca3ba9b86}{Get\+Quantity}} () const
+\begin{DoxyCompactList}\small\item\em Get the current Quantity. \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1FuelTank_a9bc6cb4f96a5cdedc0d3d287501776b5}{Get\+Initial\+Quantity}} () const
+\begin{DoxyCompactList}\small\item\em Get the Initial Quantity. \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1FuelTank_a9c4d6c03861a135b7d15f6fd61da06ed}{Get\+Capacity}} () const
+\begin{DoxyCompactList}\small\item\em Get the fuel tank capacity. \end{DoxyCompactList}\item 
+bool \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1FuelTank_ae43750d8d4bda63b19723ef7268e7287}{Is\+Empty}} () const
+\begin{DoxyCompactList}\small\item\em Know if fuel tank is empty. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1FuelTank_ace7f581639fbfcfa73b4a6a467df0826}{Update\+Fuel\+Quantity}} (const double quantity\+To\+Add)
+\begin{DoxyCompactList}\small\item\em Update the fuel tank quantity. \end{DoxyCompactList}\item 
+bool \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1FuelTank_a956b54cb8f6e629917be33abca071f34}{operator==}} (const \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1FuelTank}{IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Fuel\+Tank}} \&other) const
+\item 
+bool \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1FuelTank_ac08ea54febe03a4e1001971a37917e44}{operator!=}} (const \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1FuelTank}{IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Fuel\+Tank}} \&other) const
+\item 
+bool \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1FuelTank_ae490aaf93d9582abddde24f79a6ccab2}{operator$<$}} (const \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1FuelTank}{IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Fuel\+Tank}} \&other) const
+\item 
+bool \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1FuelTank_a214080f19830f88d166d4c35dd80694b}{operator$<$=}} (const \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1FuelTank}{IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Fuel\+Tank}} \&other) const
+\item 
+bool \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1FuelTank_acfcb2095f030dccb0d2cb65e8e0b3bad}{operator$>$}} (const \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1FuelTank}{IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Fuel\+Tank}} \&other) const
+\item 
+bool \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1FuelTank_aa9b3287bf8f9abe388f78e7329bbaa22}{operator$>$=}} (const \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1FuelTank}{IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Fuel\+Tank}} \&other) const
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+Fuel tank class. 
+
+\doxysubsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1FuelTank_a1ff657f7428d5f7242626e4fa2d2f6f1}\label{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1FuelTank_a1ff657f7428d5f7242626e4fa2d2f6f1}} 
+\index{IO::SDK::Body::Spacecraft::FuelTank@{IO::SDK::Body::Spacecraft::FuelTank}!FuelTank@{FuelTank}}
+\index{FuelTank@{FuelTank}!IO::SDK::Body::Spacecraft::FuelTank@{IO::SDK::Body::Spacecraft::FuelTank}}
+\doxysubsubsection{\texorpdfstring{FuelTank()}{FuelTank()}}
+{\footnotesize\ttfamily IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Fuel\+Tank\+::\+Fuel\+Tank (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{serial\+Number,  }\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft}{IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Spacecraft}} \&}]{spacecraft,  }\item[{const double}]{capacity,  }\item[{const double}]{quantity }\end{DoxyParamCaption})}
+
+
+
+Construct a new Fuel Tank object. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em id} & \\
+\hline
+{\em capacity} & \\
+\hline
+{\em quantity} & \\
+\hline
+\end{DoxyParams}
+
+
+\doxysubsection{Member Function Documentation}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1FuelTank_a9c4d6c03861a135b7d15f6fd61da06ed}\label{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1FuelTank_a9c4d6c03861a135b7d15f6fd61da06ed}} 
+\index{IO::SDK::Body::Spacecraft::FuelTank@{IO::SDK::Body::Spacecraft::FuelTank}!GetCapacity@{GetCapacity}}
+\index{GetCapacity@{GetCapacity}!IO::SDK::Body::Spacecraft::FuelTank@{IO::SDK::Body::Spacecraft::FuelTank}}
+\doxysubsubsection{\texorpdfstring{GetCapacity()}{GetCapacity()}}
+{\footnotesize\ttfamily double IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Fuel\+Tank\+::\+Get\+Capacity (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+
+
+Get the fuel tank capacity. 
+
+\begin{DoxyReturn}{Returns}
+double 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1FuelTank_a9bc6cb4f96a5cdedc0d3d287501776b5}\label{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1FuelTank_a9bc6cb4f96a5cdedc0d3d287501776b5}} 
+\index{IO::SDK::Body::Spacecraft::FuelTank@{IO::SDK::Body::Spacecraft::FuelTank}!GetInitialQuantity@{GetInitialQuantity}}
+\index{GetInitialQuantity@{GetInitialQuantity}!IO::SDK::Body::Spacecraft::FuelTank@{IO::SDK::Body::Spacecraft::FuelTank}}
+\doxysubsubsection{\texorpdfstring{GetInitialQuantity()}{GetInitialQuantity()}}
+{\footnotesize\ttfamily double IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Fuel\+Tank\+::\+Get\+Initial\+Quantity (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+
+
+Get the Initial Quantity. 
+
+\begin{DoxyReturn}{Returns}
+double 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1FuelTank_a1b3504beb90cae5904dc4ceca3ba9b86}\label{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1FuelTank_a1b3504beb90cae5904dc4ceca3ba9b86}} 
+\index{IO::SDK::Body::Spacecraft::FuelTank@{IO::SDK::Body::Spacecraft::FuelTank}!GetQuantity@{GetQuantity}}
+\index{GetQuantity@{GetQuantity}!IO::SDK::Body::Spacecraft::FuelTank@{IO::SDK::Body::Spacecraft::FuelTank}}
+\doxysubsubsection{\texorpdfstring{GetQuantity()}{GetQuantity()}}
+{\footnotesize\ttfamily double IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Fuel\+Tank\+::\+Get\+Quantity (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+
+
+Get the current Quantity. 
+
+\begin{DoxyReturn}{Returns}
+double 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1FuelTank_a40d4003aae9afa549671fbff40d06963}\label{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1FuelTank_a40d4003aae9afa549671fbff40d06963}} 
+\index{IO::SDK::Body::Spacecraft::FuelTank@{IO::SDK::Body::Spacecraft::FuelTank}!GetSerialNumber@{GetSerialNumber}}
+\index{GetSerialNumber@{GetSerialNumber}!IO::SDK::Body::Spacecraft::FuelTank@{IO::SDK::Body::Spacecraft::FuelTank}}
+\doxysubsubsection{\texorpdfstring{GetSerialNumber()}{GetSerialNumber()}}
+{\footnotesize\ttfamily std\+::string IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Fuel\+Tank\+::\+Get\+Serial\+Number (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+
+
+Get the fuel tank serial number. 
+
+\begin{DoxyReturn}{Returns}
+std\+::string 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1FuelTank_a13a869368c2792ef02f5f65f798119b5}\label{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1FuelTank_a13a869368c2792ef02f5f65f798119b5}} 
+\index{IO::SDK::Body::Spacecraft::FuelTank@{IO::SDK::Body::Spacecraft::FuelTank}!GetSpacecraft@{GetSpacecraft}}
+\index{GetSpacecraft@{GetSpacecraft}!IO::SDK::Body::Spacecraft::FuelTank@{IO::SDK::Body::Spacecraft::FuelTank}}
+\doxysubsubsection{\texorpdfstring{GetSpacecraft()}{GetSpacecraft()}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft}{IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Spacecraft}} \& IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Fuel\+Tank\+::\+Get\+Spacecraft (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+
+
+Get the associated spacecraft. 
+
+\begin{DoxyReturn}{Returns}
+const \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft}{IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Spacecraft}}\& 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1FuelTank_ae43750d8d4bda63b19723ef7268e7287}\label{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1FuelTank_ae43750d8d4bda63b19723ef7268e7287}} 
+\index{IO::SDK::Body::Spacecraft::FuelTank@{IO::SDK::Body::Spacecraft::FuelTank}!IsEmpty@{IsEmpty}}
+\index{IsEmpty@{IsEmpty}!IO::SDK::Body::Spacecraft::FuelTank@{IO::SDK::Body::Spacecraft::FuelTank}}
+\doxysubsubsection{\texorpdfstring{IsEmpty()}{IsEmpty()}}
+{\footnotesize\ttfamily bool IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Fuel\+Tank\+::\+Is\+Empty (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+
+
+Know if fuel tank is empty. 
+
+\begin{DoxyReturn}{Returns}
+true 
+
+false 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1FuelTank_ac08ea54febe03a4e1001971a37917e44}\label{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1FuelTank_ac08ea54febe03a4e1001971a37917e44}} 
+\index{IO::SDK::Body::Spacecraft::FuelTank@{IO::SDK::Body::Spacecraft::FuelTank}!operator"!=@{operator"!=}}
+\index{operator"!=@{operator"!=}!IO::SDK::Body::Spacecraft::FuelTank@{IO::SDK::Body::Spacecraft::FuelTank}}
+\doxysubsubsection{\texorpdfstring{operator"!=()}{operator!=()}}
+{\footnotesize\ttfamily bool IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Fuel\+Tank\+::operator!= (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1FuelTank}{IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Fuel\+Tank}} \&}]{other }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1FuelTank_ae490aaf93d9582abddde24f79a6ccab2}\label{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1FuelTank_ae490aaf93d9582abddde24f79a6ccab2}} 
+\index{IO::SDK::Body::Spacecraft::FuelTank@{IO::SDK::Body::Spacecraft::FuelTank}!operator$<$@{operator$<$}}
+\index{operator$<$@{operator$<$}!IO::SDK::Body::Spacecraft::FuelTank@{IO::SDK::Body::Spacecraft::FuelTank}}
+\doxysubsubsection{\texorpdfstring{operator$<$()}{operator<()}}
+{\footnotesize\ttfamily bool IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Fuel\+Tank\+::operator$<$ (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1FuelTank}{IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Fuel\+Tank}} \&}]{other }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1FuelTank_a214080f19830f88d166d4c35dd80694b}\label{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1FuelTank_a214080f19830f88d166d4c35dd80694b}} 
+\index{IO::SDK::Body::Spacecraft::FuelTank@{IO::SDK::Body::Spacecraft::FuelTank}!operator$<$=@{operator$<$=}}
+\index{operator$<$=@{operator$<$=}!IO::SDK::Body::Spacecraft::FuelTank@{IO::SDK::Body::Spacecraft::FuelTank}}
+\doxysubsubsection{\texorpdfstring{operator$<$=()}{operator<=()}}
+{\footnotesize\ttfamily bool IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Fuel\+Tank\+::operator$<$= (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1FuelTank}{IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Fuel\+Tank}} \&}]{other }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1FuelTank_a956b54cb8f6e629917be33abca071f34}\label{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1FuelTank_a956b54cb8f6e629917be33abca071f34}} 
+\index{IO::SDK::Body::Spacecraft::FuelTank@{IO::SDK::Body::Spacecraft::FuelTank}!operator==@{operator==}}
+\index{operator==@{operator==}!IO::SDK::Body::Spacecraft::FuelTank@{IO::SDK::Body::Spacecraft::FuelTank}}
+\doxysubsubsection{\texorpdfstring{operator==()}{operator==()}}
+{\footnotesize\ttfamily bool IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Fuel\+Tank\+::operator== (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1FuelTank}{IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Fuel\+Tank}} \&}]{other }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1FuelTank_acfcb2095f030dccb0d2cb65e8e0b3bad}\label{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1FuelTank_acfcb2095f030dccb0d2cb65e8e0b3bad}} 
+\index{IO::SDK::Body::Spacecraft::FuelTank@{IO::SDK::Body::Spacecraft::FuelTank}!operator$>$@{operator$>$}}
+\index{operator$>$@{operator$>$}!IO::SDK::Body::Spacecraft::FuelTank@{IO::SDK::Body::Spacecraft::FuelTank}}
+\doxysubsubsection{\texorpdfstring{operator$>$()}{operator>()}}
+{\footnotesize\ttfamily bool IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Fuel\+Tank\+::operator$>$ (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1FuelTank}{IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Fuel\+Tank}} \&}]{other }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1FuelTank_aa9b3287bf8f9abe388f78e7329bbaa22}\label{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1FuelTank_aa9b3287bf8f9abe388f78e7329bbaa22}} 
+\index{IO::SDK::Body::Spacecraft::FuelTank@{IO::SDK::Body::Spacecraft::FuelTank}!operator$>$=@{operator$>$=}}
+\index{operator$>$=@{operator$>$=}!IO::SDK::Body::Spacecraft::FuelTank@{IO::SDK::Body::Spacecraft::FuelTank}}
+\doxysubsubsection{\texorpdfstring{operator$>$=()}{operator>=()}}
+{\footnotesize\ttfamily bool IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Fuel\+Tank\+::operator$>$= (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1FuelTank}{IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Fuel\+Tank}} \&}]{other }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1FuelTank_ace7f581639fbfcfa73b4a6a467df0826}\label{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1FuelTank_ace7f581639fbfcfa73b4a6a467df0826}} 
+\index{IO::SDK::Body::Spacecraft::FuelTank@{IO::SDK::Body::Spacecraft::FuelTank}!UpdateFuelQuantity@{UpdateFuelQuantity}}
+\index{UpdateFuelQuantity@{UpdateFuelQuantity}!IO::SDK::Body::Spacecraft::FuelTank@{IO::SDK::Body::Spacecraft::FuelTank}}
+\doxysubsubsection{\texorpdfstring{UpdateFuelQuantity()}{UpdateFuelQuantity()}}
+{\footnotesize\ttfamily void IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Fuel\+Tank\+::\+Update\+Fuel\+Quantity (\begin{DoxyParamCaption}\item[{const double}]{quantity\+To\+Add }\end{DoxyParamCaption})}
+
+
+
+Update the fuel tank quantity. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em quantity\+To\+Add} & Quantity to add. Use negative number to remove fuel \\
+\hline
+\end{DoxyParams}
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+IO.\+SDK/\+Body/\+Spacecraft/\mbox{\hyperlink{FuelTank_8h}{Fuel\+Tank.\+h}}\item 
+IO.\+SDK/\+Body/\+Spacecraft/\mbox{\hyperlink{FuelTank_8cpp}{Fuel\+Tank.\+cpp}}\end{DoxyCompactItemize}

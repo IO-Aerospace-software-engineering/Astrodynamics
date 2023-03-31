@@ -1,0 +1,66 @@
+\hypertarget{Engine_8h_source}{}\doxysection{Engine.\+h}
+\label{Engine_8h_source}\index{IO.SDK/Body/Spacecraft/Engine.h@{IO.SDK/Body/Spacecraft/Engine.h}}
+\mbox{\hyperlink{Engine_8h}{Go to the documentation of this file.}}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{1 }
+\DoxyCodeLine{12 \textcolor{preprocessor}{\#ifndef ENGINE\_H}}
+\DoxyCodeLine{13 \textcolor{preprocessor}{\#define ENGINE\_H}}
+\DoxyCodeLine{14 }
+\DoxyCodeLine{15 \textcolor{preprocessor}{\#include<chrono>}}
+\DoxyCodeLine{16 }
+\DoxyCodeLine{17 \textcolor{preprocessor}{\#include <string>}}
+\DoxyCodeLine{18 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{Vector3D_8h}{Vector3D.h}}>}}
+\DoxyCodeLine{19 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{FuelTank_8h}{FuelTank.h}}>}}
+\DoxyCodeLine{20 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{TimeSpan_8h}{TimeSpan.h}}>}}
+\DoxyCodeLine{21 }
+\DoxyCodeLine{22 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1SDK_1_1Body_1_1Spacecraft}{IO::SDK::Body::Spacecraft}}}
+\DoxyCodeLine{23 \{}
+\DoxyCodeLine{24     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft}{Spacecraft}};}
+\DoxyCodeLine{29     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Engine}{Engine}} final}
+\DoxyCodeLine{30     \{}
+\DoxyCodeLine{31     \textcolor{keyword}{private}:}
+\DoxyCodeLine{32         \textcolor{keyword}{const} std::string m\_name\{\};}
+\DoxyCodeLine{33         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1FuelTank}{IO::SDK::Body::Spacecraft::FuelTank}} \&m\_fuelTank;}
+\DoxyCodeLine{34         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO::SDK::Math::Vector3D}} m\_position;}
+\DoxyCodeLine{35         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO::SDK::Math::Vector3D}} m\_orientation;}
+\DoxyCodeLine{36         \textcolor{keyword}{const} \textcolor{keywordtype}{double} m\_isp\{\};}
+\DoxyCodeLine{37         \textcolor{keyword}{const} \textcolor{keywordtype}{double} m\_fuelFlow\{\};}
+\DoxyCodeLine{38         \textcolor{keyword}{const} std::string m\_serialNumber\{\};}
+\DoxyCodeLine{39         \textcolor{keyword}{const} \textcolor{keywordtype}{double} m\_thrust\{\};}
+\DoxyCodeLine{40         }
+\DoxyCodeLine{41 }
+\DoxyCodeLine{42     \textcolor{keyword}{public}:}
+\DoxyCodeLine{54         \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Engine_aa7f21c85ba377fe33b261430134f1883}{Engine}}(\textcolor{keyword}{const} std::string \&serialNumber, \textcolor{keyword}{const} std::string \&name, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1FuelTank}{IO::SDK::Body::Spacecraft::FuelTank}} \&fueltank, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{Math::Vector3D}} \&position, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{Math::Vector3D}} \&orientation, \textcolor{keyword}{const} \textcolor{keywordtype}{double} isp, \textcolor{keyword}{const} \textcolor{keywordtype}{double} fuelFlow);}
+\DoxyCodeLine{60         std::string \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Engine_a75aa9f2cd1bb22c6aed24f424801ae6f}{GetName}}() \textcolor{keyword}{const};}
+\DoxyCodeLine{61 }
+\DoxyCodeLine{67         std::string \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Engine_abdd3f5332895a3f1927736e7ee5820a5}{GetSerialNumber}}() \textcolor{keyword}{const};}
+\DoxyCodeLine{68 }
+\DoxyCodeLine{74         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{Math::Vector3D}} \&\mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Engine_a5e4a870a8045a8c57175a624ea8bf2bd}{GetPosition}}() \textcolor{keyword}{const};}
+\DoxyCodeLine{75 }
+\DoxyCodeLine{81         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{Math::Vector3D}} \&\mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Engine_a3e48202e92a39cb96cebb13f0d1776e4}{GetOrientation}}() \textcolor{keyword}{const};}
+\DoxyCodeLine{82 }
+\DoxyCodeLine{88         \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Engine_acade86d58e0cf22863cee725df6609e1}{GetISP}}() \textcolor{keyword}{const};}
+\DoxyCodeLine{89 }
+\DoxyCodeLine{95         \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Engine_a427c17c9cee639f820f7911d341ca4c6}{GetFuelFlow}}() \textcolor{keyword}{const};}
+\DoxyCodeLine{96 }
+\DoxyCodeLine{102         \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Engine_ae3d3cf4da32b145b08d196f4c8b4b880}{GetRemainingDeltaV}}() \textcolor{keyword}{const};}
+\DoxyCodeLine{103 }
+\DoxyCodeLine{109         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1FuelTank}{IO::SDK::Body::Spacecraft::FuelTank}} \&\mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Engine_a8ac4fd6045ed7ca58a54ad49421df245}{GetFuelTank}}() \textcolor{keyword}{const};}
+\DoxyCodeLine{110 }
+\DoxyCodeLine{116         \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Engine_a68b4d9b372f2d999b5de23e05066fe1b}{GetThrust}}() \textcolor{keyword}{const};}
+\DoxyCodeLine{117 }
+\DoxyCodeLine{124         \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Engine_a1fcb854224bc1e3e53e8522a93895712}{Burn}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO::SDK::Time::TimeSpan}}\& duration);}
+\DoxyCodeLine{125 }
+\DoxyCodeLine{126         \textcolor{keywordtype}{bool} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Engine_a3b1b0a9b9528e7d162f2b0cc6b90fd12}{operator==}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Engine}{IO::SDK::Body::Spacecraft::Engine}} \&other) \textcolor{keyword}{const};}
+\DoxyCodeLine{127         \textcolor{keywordtype}{bool} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Engine_ad0e51d8938c245ba998380ca6c7e4f1a}{operator!=}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Engine}{IO::SDK::Body::Spacecraft::Engine}} \&other) \textcolor{keyword}{const};}
+\DoxyCodeLine{128 }
+\DoxyCodeLine{137         \textcolor{keyword}{static} \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Engine_a4b14cc7d6389c0b87e7b811646b28676}{ComputeDeltaV}}(\textcolor{keywordtype}{double} isp, \textcolor{keywordtype}{double} initialMass, \textcolor{keywordtype}{double} finalMass);}
+\DoxyCodeLine{138 }
+\DoxyCodeLine{148         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO::SDK::Time::TimeSpan}} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Engine_ae00608073fd874aa24c42052f298d2d8}{ComputeDeltaT}}(\textcolor{keywordtype}{double} isp, \textcolor{keywordtype}{double} initialMass, \textcolor{keywordtype}{double} fuelFlow, \textcolor{keywordtype}{double} deltaV);}
+\DoxyCodeLine{149 }
+\DoxyCodeLine{158         \textcolor{keyword}{static} \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Engine_a1b5f0bb14b3c136acfca35e13ac112d1}{ComputeDeltaM}}(\textcolor{keywordtype}{double} isp, \textcolor{keywordtype}{double} initialMass, \textcolor{keywordtype}{double} deltaV);}
+\DoxyCodeLine{159     \};}
+\DoxyCodeLine{160 \}}
+\DoxyCodeLine{161 \textcolor{preprocessor}{\#endif }\textcolor{comment}{// !ENGINE\_H}}
+
+\end{DoxyCode}

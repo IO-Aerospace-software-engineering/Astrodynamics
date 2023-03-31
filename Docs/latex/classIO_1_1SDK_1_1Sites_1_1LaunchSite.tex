@@ -1,0 +1,110 @@
+\hypertarget{classIO_1_1SDK_1_1Sites_1_1LaunchSite}{}\doxysection{IO\+::SDK\+::Sites\+::Launch\+Site Class Reference}
+\label{classIO_1_1SDK_1_1Sites_1_1LaunchSite}\index{IO::SDK::Sites::LaunchSite@{IO::SDK::Sites::LaunchSite}}
+
+
+Lauch site class.  
+
+
+
+
+{\ttfamily \#include $<$Launch\+Site.\+h$>$}
+
+Inheritance diagram for IO\+::SDK\+::Sites\+::Launch\+Site\+:\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=2.000000cm]{classIO_1_1SDK_1_1Sites_1_1LaunchSite}
+\end{center}
+\end{figure}
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1LaunchSite_a3d74e3bf1f857da9f0c6d5ec1edb9110}{Launch\+Site}} (const int id, const std\+::string name, const \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1Geodetic}{IO\+::\+SDK\+::\+Coordinates\+::\+Geodetic}} coordinates, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1CelestialBody}{IO\+::\+SDK\+::\+Body\+::\+Celestial\+Body}} $>$ body)
+\begin{DoxyCompactList}\small\item\em Construct a new Launch \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site}{Site}} object. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1LaunchSite_ad828c9877d22155bb3d0cee0b5c9bc06}{Add\+Azimuth\+Launch\+Range}} (\mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1AzimuthRange}{IO\+::\+SDK\+::\+Coordinates\+::\+Azimuth\+Range}} \&azimuth\+Range)
+\begin{DoxyCompactList}\small\item\em Add an azimuth range. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1LaunchSite_a06774cb6d482c4357f89055a1ce8831e}{Clear\+Azimuth\+Launch\+Ranges}} ()
+\begin{DoxyCompactList}\small\item\em Clear all azimuth ranges. \end{DoxyCompactList}\item 
+bool \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1LaunchSite_ae379d1f9b257dfa8c9dd93f5db341b41}{Is\+Azimuth\+Launch\+Allowed}} (const double azimuth) const
+\begin{DoxyCompactList}\small\item\em Know if an azimuth launch is allowed. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsection*{Additional Inherited Members}
+
+
+\doxysubsection{Detailed Description}
+Lauch site class. 
+
+\doxysubsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Sites_1_1LaunchSite_a3d74e3bf1f857da9f0c6d5ec1edb9110}\label{classIO_1_1SDK_1_1Sites_1_1LaunchSite_a3d74e3bf1f857da9f0c6d5ec1edb9110}} 
+\index{IO::SDK::Sites::LaunchSite@{IO::SDK::Sites::LaunchSite}!LaunchSite@{LaunchSite}}
+\index{LaunchSite@{LaunchSite}!IO::SDK::Sites::LaunchSite@{IO::SDK::Sites::LaunchSite}}
+\doxysubsubsection{\texorpdfstring{LaunchSite()}{LaunchSite()}}
+{\footnotesize\ttfamily IO\+::\+SDK\+::\+Sites\+::\+Launch\+Site\+::\+Launch\+Site (\begin{DoxyParamCaption}\item[{const int}]{id,  }\item[{const std\+::string}]{name,  }\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1Geodetic}{IO\+::\+SDK\+::\+Coordinates\+::\+Geodetic}}}]{coordinates,  }\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1CelestialBody}{IO\+::\+SDK\+::\+Body\+::\+Celestial\+Body}} $>$}]{body }\end{DoxyParamCaption})}
+
+
+
+Construct a new Launch \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site}{Site}} object. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em id} & \\
+\hline
+{\em name} & \\
+\hline
+{\em coordinates} & \\
+\hline
+{\em body} & \\
+\hline
+\end{DoxyParams}
+
+
+\doxysubsection{Member Function Documentation}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Sites_1_1LaunchSite_ad828c9877d22155bb3d0cee0b5c9bc06}\label{classIO_1_1SDK_1_1Sites_1_1LaunchSite_ad828c9877d22155bb3d0cee0b5c9bc06}} 
+\index{IO::SDK::Sites::LaunchSite@{IO::SDK::Sites::LaunchSite}!AddAzimuthLaunchRange@{AddAzimuthLaunchRange}}
+\index{AddAzimuthLaunchRange@{AddAzimuthLaunchRange}!IO::SDK::Sites::LaunchSite@{IO::SDK::Sites::LaunchSite}}
+\doxysubsubsection{\texorpdfstring{AddAzimuthLaunchRange()}{AddAzimuthLaunchRange()}}
+{\footnotesize\ttfamily void IO\+::\+SDK\+::\+Sites\+::\+Launch\+Site\+::\+Add\+Azimuth\+Launch\+Range (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1AzimuthRange}{IO\+::\+SDK\+::\+Coordinates\+::\+Azimuth\+Range}} \&}]{azimuth\+Range }\end{DoxyParamCaption})}
+
+
+
+Add an azimuth range. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em azimuth\+Range} & \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Sites_1_1LaunchSite_a06774cb6d482c4357f89055a1ce8831e}\label{classIO_1_1SDK_1_1Sites_1_1LaunchSite_a06774cb6d482c4357f89055a1ce8831e}} 
+\index{IO::SDK::Sites::LaunchSite@{IO::SDK::Sites::LaunchSite}!ClearAzimuthLaunchRanges@{ClearAzimuthLaunchRanges}}
+\index{ClearAzimuthLaunchRanges@{ClearAzimuthLaunchRanges}!IO::SDK::Sites::LaunchSite@{IO::SDK::Sites::LaunchSite}}
+\doxysubsubsection{\texorpdfstring{ClearAzimuthLaunchRanges()}{ClearAzimuthLaunchRanges()}}
+{\footnotesize\ttfamily void IO\+::\+SDK\+::\+Sites\+::\+Launch\+Site\+::\+Clear\+Azimuth\+Launch\+Ranges (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+Clear all azimuth ranges. 
+
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Sites_1_1LaunchSite_ae379d1f9b257dfa8c9dd93f5db341b41}\label{classIO_1_1SDK_1_1Sites_1_1LaunchSite_ae379d1f9b257dfa8c9dd93f5db341b41}} 
+\index{IO::SDK::Sites::LaunchSite@{IO::SDK::Sites::LaunchSite}!IsAzimuthLaunchAllowed@{IsAzimuthLaunchAllowed}}
+\index{IsAzimuthLaunchAllowed@{IsAzimuthLaunchAllowed}!IO::SDK::Sites::LaunchSite@{IO::SDK::Sites::LaunchSite}}
+\doxysubsubsection{\texorpdfstring{IsAzimuthLaunchAllowed()}{IsAzimuthLaunchAllowed()}}
+{\footnotesize\ttfamily bool IO\+::\+SDK\+::\+Sites\+::\+Launch\+Site\+::\+Is\+Azimuth\+Launch\+Allowed (\begin{DoxyParamCaption}\item[{const double}]{azimuth }\end{DoxyParamCaption}) const}
+
+
+
+Know if an azimuth launch is allowed. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em azimuth} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+true 
+
+false 
+\end{DoxyReturn}
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+IO.\+SDK/\+Sites/\mbox{\hyperlink{LaunchSite_8h}{Launch\+Site.\+h}}\item 
+IO.\+SDK/\+Sites/\mbox{\hyperlink{LaunchSite_8cpp}{Launch\+Site.\+cpp}}\end{DoxyCompactItemize}

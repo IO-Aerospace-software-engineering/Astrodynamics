@@ -1,0 +1,61 @@
+\hypertarget{OccultationParameters_8h_source}{}\doxysection{Occultation\+Parameters.\+h}
+\label{OccultationParameters_8h_source}\index{IO.SDK/Constraints/Parameters/OccultationParameters.h@{IO.SDK/Constraints/Parameters/OccultationParameters.h}}
+\mbox{\hyperlink{OccultationParameters_8h}{Go to the documentation of this file.}}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{1 \textcolor{comment}{//}}
+\DoxyCodeLine{2 \textcolor{comment}{// Created by s.guillet on 27/02/2023.}}
+\DoxyCodeLine{3 \textcolor{comment}{//}}
+\DoxyCodeLine{4 }
+\DoxyCodeLine{5 \textcolor{preprocessor}{\#ifndef IOSDK\_OCCULTATIONPARAMETERS\_H}}
+\DoxyCodeLine{6 \textcolor{preprocessor}{\#define IOSDK\_OCCULTATIONPARAMETERS\_H}}
+\DoxyCodeLine{7 }
+\DoxyCodeLine{8 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{Aberrations_8h}{Aberrations.h}}>}}
+\DoxyCodeLine{9 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{CelestialBody_8h}{CelestialBody.h}}>}}
+\DoxyCodeLine{10 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{OccultationType_8h}{OccultationType.h}}>}}
+\DoxyCodeLine{11 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{TDB_8h}{TDB.h}}>}}
+\DoxyCodeLine{12 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{Window_8h}{Window.h}}>}}
+\DoxyCodeLine{13 }
+\DoxyCodeLine{14 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1SDK_1_1Constraints_1_1Parameters}{IO::SDK::Constraints::Parameters}}}
+\DoxyCodeLine{15 \{}
+\DoxyCodeLine{16     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1SDK_1_1Constraints_1_1Parameters_1_1OccultationParameters}{OccultationParameters}}}
+\DoxyCodeLine{17     \{}
+\DoxyCodeLine{18     \textcolor{keyword}{private}:}
+\DoxyCodeLine{19         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body}{IO::SDK::Body::Body}} \&m\_observer;}
+\DoxyCodeLine{20         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1CelestialBody}{IO::SDK::Body::CelestialBody}} \&m\_front;}
+\DoxyCodeLine{21         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body}{IO::SDK::Body::Body}} \&m\_back;}
+\DoxyCodeLine{22         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1OccultationType}{IO::SDK::OccultationType}} \&m\_occultationType;}
+\DoxyCodeLine{23         \textcolor{keyword}{const} \mbox{\hyperlink{namespaceIO_1_1SDK_abbb4827ec6a24ad346d9a60473ad3b81}{IO::SDK::AberrationsEnum}} m\_aberration;}
+\DoxyCodeLine{24         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO::SDK::Time::TimeSpan}} \&m\_initialStepSize;}
+\DoxyCodeLine{25 }
+\DoxyCodeLine{26     \textcolor{keyword}{public}:}
+\DoxyCodeLine{27         \mbox{\hyperlink{classIO_1_1SDK_1_1Constraints_1_1Parameters_1_1OccultationParameters_a533106c7a306691feadb93f688003f38}{OccultationParameters}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body}{IO::SDK::Body::Body}} \&observer,}
+\DoxyCodeLine{28                               \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1CelestialBody}{IO::SDK::Body::CelestialBody}} \&front,}
+\DoxyCodeLine{29                               \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body}{IO::SDK::Body::Body}} \&back,}
+\DoxyCodeLine{30                               \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1OccultationType}{IO::SDK::OccultationType}} \&occultationType,}
+\DoxyCodeLine{31                               \textcolor{keyword}{const} \mbox{\hyperlink{namespaceIO_1_1SDK_abbb4827ec6a24ad346d9a60473ad3b81}{IO::SDK::AberrationsEnum}} aberration,}
+\DoxyCodeLine{32                               \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO::SDK::Time::TimeSpan}} \&initialStepSize);}
+\DoxyCodeLine{33 }
+\DoxyCodeLine{34         \textcolor{keyword}{inline} \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body}{IO::SDK::Body::Body}} \&\mbox{\hyperlink{classIO_1_1SDK_1_1Constraints_1_1Parameters_1_1OccultationParameters_a2f2426c83eeef485a6ab013efe021724}{GetObserver}}()\textcolor{keyword}{ const}}
+\DoxyCodeLine{35 \textcolor{keyword}{        }\{ \textcolor{keywordflow}{return} m\_observer; \}}
+\DoxyCodeLine{36 }
+\DoxyCodeLine{37         \textcolor{keyword}{inline} \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1CelestialBody}{IO::SDK::Body::CelestialBody}} \&\mbox{\hyperlink{classIO_1_1SDK_1_1Constraints_1_1Parameters_1_1OccultationParameters_aa9a429af1c04610630a8f473a3131a9c}{GetFront}}()\textcolor{keyword}{ const}}
+\DoxyCodeLine{38 \textcolor{keyword}{        }\{ \textcolor{keywordflow}{return} m\_front; \}}
+\DoxyCodeLine{39 }
+\DoxyCodeLine{40         \textcolor{keyword}{inline} \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body}{IO::SDK::Body::Body}} \&\mbox{\hyperlink{classIO_1_1SDK_1_1Constraints_1_1Parameters_1_1OccultationParameters_aaf5d222162c0c6fb9f431c19be484e16}{GetBack}}()\textcolor{keyword}{ const}}
+\DoxyCodeLine{41 \textcolor{keyword}{        }\{ \textcolor{keywordflow}{return} m\_back; \}}
+\DoxyCodeLine{42 }
+\DoxyCodeLine{43         \textcolor{keyword}{inline} \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1OccultationType}{IO::SDK::OccultationType}} \&\mbox{\hyperlink{classIO_1_1SDK_1_1Constraints_1_1Parameters_1_1OccultationParameters_a644384e58c4f34dec8f80672f88a5582}{GetOccultationType}}()\textcolor{keyword}{ const}}
+\DoxyCodeLine{44 \textcolor{keyword}{        }\{ \textcolor{keywordflow}{return} m\_occultationType; \}}
+\DoxyCodeLine{45 }
+\DoxyCodeLine{46         \textcolor{keyword}{inline} \textcolor{keyword}{const} \mbox{\hyperlink{namespaceIO_1_1SDK_abbb4827ec6a24ad346d9a60473ad3b81}{IO::SDK::AberrationsEnum}} \mbox{\hyperlink{classIO_1_1SDK_1_1Constraints_1_1Parameters_1_1OccultationParameters_a54e2b7c4be71948481dae26f51d59c18}{GetAberration}}()\textcolor{keyword}{ const}}
+\DoxyCodeLine{47 \textcolor{keyword}{        }\{ \textcolor{keywordflow}{return} m\_aberration; \}}
+\DoxyCodeLine{48 }
+\DoxyCodeLine{49         \textcolor{keyword}{inline} \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO::SDK::Time::TimeSpan}} \&\mbox{\hyperlink{classIO_1_1SDK_1_1Constraints_1_1Parameters_1_1OccultationParameters_ad3ce604a641c58205c78888e2a70b5d2}{GetInitialStepSize}}()\textcolor{keyword}{ const}}
+\DoxyCodeLine{50 \textcolor{keyword}{        }\{ \textcolor{keywordflow}{return} m\_initialStepSize; \}}
+\DoxyCodeLine{51 }
+\DoxyCodeLine{52     \};}
+\DoxyCodeLine{53 \}}
+\DoxyCodeLine{54 }
+\DoxyCodeLine{55 \textcolor{preprocessor}{\#endif }\textcolor{comment}{//IOSDK\_OCCULTATIONPARAMETERS\_H}}
+
+\end{DoxyCode}
