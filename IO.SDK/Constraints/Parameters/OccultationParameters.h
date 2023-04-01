@@ -5,11 +5,7 @@
 #ifndef IOSDK_OCCULTATIONPARAMETERS_H
 #define IOSDK_OCCULTATIONPARAMETERS_H
 
-#include <Aberrations.h>
 #include <CelestialBody.h>
-#include <OccultationType.h>
-#include <TDB.h>
-#include <Window.h>
 
 namespace IO::SDK::Constraints::Parameters
 {
@@ -28,7 +24,7 @@ namespace IO::SDK::Constraints::Parameters
                               const IO::SDK::Body::CelestialBody &front,
                               const IO::SDK::Body::Body &back,
                               const IO::SDK::OccultationType &occultationType,
-                              const IO::SDK::AberrationsEnum aberration,
+                              IO::SDK::AberrationsEnum aberration,
                               const IO::SDK::Time::TimeSpan &initialStepSize);
 
         [[nodiscard]] inline const IO::SDK::Body::Body &GetObserver() const

@@ -36,7 +36,7 @@ namespace IO::SDK::Math
 		 * @param q2 
 		 * @param q3 
 		 */
-		Quaternion(const double q0, const double q1, const double q2, const double q3);
+		Quaternion(double q0, double q1, double q2, double q3);
 
 		/**
 		 * @brief Construct a new Quaternion object
@@ -44,14 +44,14 @@ namespace IO::SDK::Math
 		 * @param axis 
 		 * @param angle 
 		 */
-		Quaternion(const IO::SDK::Math::Vector3D &axis, const double angle);
+		Quaternion(const IO::SDK::Math::Vector3D &axis, double angle);
 
 		/**
 		 * @brief Construct a new Quaternion object
 		 * 
 		 * @param mtx 
 		 */
-		Quaternion(const IO::SDK::Math::Matrix &mtx);
+		explicit Quaternion(const IO::SDK::Math::Matrix &mtx);
 
 		/**
 		 * @brief Construct a new Quaternion object
@@ -64,10 +64,10 @@ namespace IO::SDK::Math
 
 		Quaternion &operator=(const Quaternion &quaternion);
 
-		double GetQ0() const { return m_q0; }
-		double GetQ1() const { return m_q1; }
-		double GetQ2() const { return m_q2; }
-		double GetQ3() const { return m_q3; }
+		[[nodiscard]] inline double GetQ0() const { return m_q0; }
+		[[nodiscard]] inline double GetQ1() const { return m_q1; }
+		[[nodiscard]] inline double GetQ2() const { return m_q2; }
+		[[nodiscard]] inline double GetQ3() const { return m_q3; }
 
 		/**
 		 * @brief Multiply quaternion
@@ -75,7 +75,7 @@ namespace IO::SDK::Math
 		 * @param quaternion 
 		 * @return IO::SDK::Math::Quaternion 
 		 */
-		IO::SDK::Math::Quaternion Multiply(const Quaternion &quaternion) const;
+		[[nodiscard]] IO::SDK::Math::Quaternion Multiply(const Quaternion &quaternion) const;
 
 		/**
 		 * @brief Multiply quaternion
@@ -90,27 +90,27 @@ namespace IO::SDK::Math
 		 * 
 		 * @return IO::SDK::Math::Matrix 
 		 */
-		IO::SDK::Math::Matrix GetMatrix() const;
+		[[nodiscard]] IO::SDK::Math::Matrix GetMatrix() const;
 
 		/**
 		 * @brief Get the magnitude of the quaternion
 		 * 
 		 * @return double 
 		 */
-		double Magnitude() const;
+		[[nodiscard]] double Magnitude() const;
 
 		/**
 		 * @brief Normalize the quaternion
 		 * 
 		 * @return Quaternion 
 		 */
-		Quaternion Normalize() const;
+		[[nodiscard]] Quaternion Normalize() const;
 
 		/**
 		 * @brief Conjugate the quaternion
 		 * 
 		 */
-		Quaternion Conjugate() const;
+		[[nodiscard]] Quaternion Conjugate() const;
 	};
 }
 #endif // !QUATERNION_H

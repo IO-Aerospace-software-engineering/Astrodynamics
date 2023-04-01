@@ -128,7 +128,7 @@ std::vector<IO::SDK::Maneuvers::LaunchWindow> IO::SDK::Maneuvers::Launch::GetLau
                 if (launchSiteWindow.Intersects(recoverySiteWindow))
                 {
                     auto intersection = launchSiteWindow.GetIntersection(recoverySiteWindow);
-                    sunLightWindowsOnBothSites.push_back(IO::SDK::Time::Window<IO::SDK::Time::UTC>(intersection.GetStartDate(), intersection.GetEndDate()));
+                    sunLightWindowsOnBothSites.emplace_back(intersection.GetStartDate(), intersection.GetEndDate());
                 }
             }
         }
@@ -218,13 +218,13 @@ std::vector<IO::SDK::Maneuvers::LaunchWindow> IO::SDK::Maneuvers::Launch::FindLa
 
             //We add the first launch window in the collection
             auto window = IO::SDK::Time::Window<IO::SDK::Time::UTC>(date, date);
-            launchWindows.push_back(IO::SDK::Maneuvers::LaunchWindow(m_launchSite, window, inertialAzimuthLaunch, nonInertialAzimuthLaunch, inertialInsertionVelocity,
-                                                                     nonInertialInsertionVelocity));
+            launchWindows.emplace_back(m_launchSite, window, inertialAzimuthLaunch, nonInertialAzimuthLaunch, inertialInsertionVelocity,
+                                                                     nonInertialInsertionVelocity);
 
             //We compute following launch windows
             auto remainingTime = windowToSearch.GetEndDate() - date;
 
-            //sideral rotaion period
+            //sideral rotation period
             auto sideralRotation = m_launchSite.GetBody()->GetSideralRotationPeriod(date.ToTDB());
             auto halfSideralRotation = sideralRotation * 0.5;
 
@@ -253,13 +253,12 @@ std::vector<IO::SDK::Maneuvers::LaunchWindow> IO::SDK::Maneuvers::Launch::FindLa
 
                 if (isAscending)
                 {
-                    launchWindows.push_back(IO::SDK::Maneuvers::LaunchWindow(m_launchSite, nextWindow, GetInertialAscendingAzimuthLaunch(), GetNonInertialAscendingAzimuthLaunch(),
-                                                                             inertialInsertionVelocity, nonInertialInsertionVelocity));
+                    launchWindows.emplace_back(m_launchSite, nextWindow, GetInertialAscendingAzimuthLaunch(), GetNonInertialAscendingAzimuthLaunch(),
+                                                                             inertialInsertionVelocity, nonInertialInsertionVelocity);
                 } else
                 {
-                    launchWindows.push_back(
-                            IO::SDK::Maneuvers::LaunchWindow(m_launchSite, nextWindow, GetInertialDescendingAzimuthLaunch(), GetNonInertialDescendingAzimuthLaunch(),
-                                                             inertialInsertionVelocity, nonInertialInsertionVelocity));
+                    launchWindows.emplace_back(m_launchSite, nextWindow, GetInertialDescendingAzimuthLaunch(), GetNonInertialDescendingAzimuthLaunch(),
+                                                             inertialInsertionVelocity, nonInertialInsertionVelocity);
                 }
             }
             break;

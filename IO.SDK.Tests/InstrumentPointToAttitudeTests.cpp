@@ -157,8 +157,6 @@ TEST(InstrumentPointingToSiteAttitude2, GetOrientation)
 
     prop.Propagate();
 
-    auto point = s.GetSubObserverPoint(*earth, IO::SDK::AberrationsEnum::LT, IO::SDK::Time::TDB("2021-01-01T13:00:00"));
-
     ASSERT_DOUBLE_EQ(0.0, pointingManeuver.GetDeltaV().Magnitude());
     auto pointingVector = instrument->GetBoresight(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::Time::TDB("2021-01-01T13:00:00"));
 

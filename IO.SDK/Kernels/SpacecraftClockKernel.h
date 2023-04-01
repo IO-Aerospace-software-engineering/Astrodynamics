@@ -11,11 +11,8 @@
 #ifndef SPACECRAFT_CLOCK_KERNEL_H
 #define SPACECRAFT_CLOCK_KERNEL_H
 
-#include <string>
 #include <Kernel.h>
-#include <TDB.h>
 #include <Spacecraft.h>
-#include <cmath>
 
 namespace IO::SDK::Body::Spacecraft
 {
@@ -39,19 +36,20 @@ namespace IO::SDK::Kernels
 		 * @brief Construct a new Spacecraft Clock Kernel object
 		 * 
 		 * @param spacecraft 
-		 * @param resolution 
+		 * @param resolution in bit 2^n
+		 *
 		 */
-		SpacecraftClockKernel(const IO::SDK::Body::Spacecraft::Spacecraft &spacecraft, const int resolution);
+		SpacecraftClockKernel(const IO::SDK::Body::Spacecraft::Spacecraft &spacecraft, int resolution);
 
 	public:
-		virtual ~SpacecraftClockKernel() = default;
+		~SpacecraftClockKernel() override = default;
 
 		/**
 		 * @brief Get the Coverage Window
 		 * 
 		 * @return IO::SDK::Time::Window<IO::SDK::Time::TDB> 
 		 */
-		IO::SDK::Time::Window<IO::SDK::Time::TDB> GetCoverageWindow() const override;
+		[[nodiscard]] IO::SDK::Time::Window<IO::SDK::Time::TDB> GetCoverageWindow() const override;
 
 		/**
 		 * @brief Convert to TDB
@@ -59,7 +57,7 @@ namespace IO::SDK::Kernels
 		 * @param clock 
 		 * @return IO::SDK::Time::TDB 
 		 */
-		IO::SDK::Time::TDB ConvertToTDB(const std::string &clock) const;
+		[[nodiscard]] IO::SDK::Time::TDB ConvertToTDB(const std::string &clock) const;
 
 		/**
 		 * @brief Convert to TDB
@@ -67,7 +65,7 @@ namespace IO::SDK::Kernels
 		 * @param encodedClock 
 		 * @return IO::SDK::Time::TDB 
 		 */
-		IO::SDK::Time::TDB ConvertToTDB(const double encodedClock) const;
+		[[nodiscard]] IO::SDK::Time::TDB ConvertToTDB(double encodedClock) const;
 
 		/**
 		 * @brief Convert to spacecraft clock
@@ -75,7 +73,7 @@ namespace IO::SDK::Kernels
 		 * @param epoch 
 		 * @return std::string 
 		 */
-		std::string ConvertToClockString(const IO::SDK::Time::TDB &epoch) const;
+		[[nodiscard]] std::string ConvertToClockString(const IO::SDK::Time::TDB &epoch) const;
 
 		/**
 		 * @brief Convert to enoded clock
@@ -83,14 +81,14 @@ namespace IO::SDK::Kernels
 		 * @param epoch 
 		 * @return double 
 		 */
-		double ConvertToEncodedClock(const IO::SDK::Time::TDB &epoch) const;
+		[[nodiscard]] double ConvertToEncodedClock(const IO::SDK::Time::TDB &epoch) const;
 
 		/**
 		 * @brief Get the Resolution
 		 * 
 		 * @return int 
 		 */
-		int GetResolution() const
+		[[nodiscard]] int GetResolution() const
 		{
 			return m_resolution;
 		}
@@ -100,14 +98,14 @@ namespace IO::SDK::Kernels
 		 * 
 		 * @return int 
 		 */
-		int GetTicksPerSeconds() const;
+		[[nodiscard]] int GetTicksPerSeconds() const;
 
 		/**
 		 * @brief Get the Seconds Per Tick
 		 * 
 		 * @return double 
 		 */
-		double GetSecondsPerTick() const;
+		[[nodiscard]] double GetSecondsPerTick() const;
 
 
 

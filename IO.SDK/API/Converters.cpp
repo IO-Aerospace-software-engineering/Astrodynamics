@@ -23,12 +23,12 @@ static IO::SDK::API::DTO::WindowDTO ToWindowDTO(IO::SDK::Time::Window<IO::SDK::T
     return dto;
 }
 
-static IO::SDK::Math::Vector3D ToVector3D(IO::SDK::API::DTO::Vector3DDTO &vector)
+static IO::SDK::Math::Vector3D ToVector3D(const IO::SDK::API::DTO::Vector3DDTO &vector)
 {
     return {vector.x, vector.y, vector.z};
 }
 
-static IO::SDK::API::DTO::Vector3DDTO ToVector3DDTO(IO::SDK::Math::Vector3D &vector)
+static IO::SDK::API::DTO::Vector3DDTO ToVector3DDTO(const IO::SDK::Math::Vector3D &vector)
 {
     IO::SDK::API::DTO::Vector3DDTO dto{};
     dto.x = vector.GetX();

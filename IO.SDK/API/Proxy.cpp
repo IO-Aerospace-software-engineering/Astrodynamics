@@ -1,7 +1,6 @@
 #include <Proxy.h>
 #include <Scenario.h>
 #include "Converters.cpp"
-#include <ApogeeHeightChangingManeuver.h>
 
 std::map<int, std::shared_ptr<IO::SDK::Body::CelestialBody>> BuildCelestialBodies(IO::SDK::API::DTO::ScenarioDTO &s);
 
@@ -100,8 +99,7 @@ void BuildSpacecraft(IO::SDK::API::DTO::ScenarioDTO &scenarioDto, std::map<int, 
 }
 
 void BuildFuelTank(const IO::SDK::API::DTO::ScenarioDTO &scenarioDto, IO::SDK::Body::Spacecraft::Spacecraft &spacecraft) {//Add FuelTank
-    for (int i = 0; i < 5; ++i) {
-        auto fuelTank = scenarioDto.spacecraft.fuelTank[i];
+    for (auto &fuelTank : scenarioDto.spacecraft.fuelTank) {
         if (fuelTank.id == 0) {
             break;
         }
@@ -110,8 +108,7 @@ void BuildFuelTank(const IO::SDK::API::DTO::ScenarioDTO &scenarioDto, IO::SDK::B
 }
 
 void BuildEngines(const IO::SDK::API::DTO::ScenarioDTO &scenarioDto, IO::SDK::Body::Spacecraft::Spacecraft &spacecraft) {//AddEngine
-    for (int i = 0; i < 5; ++i) {
-        auto engine = scenarioDto.spacecraft.engines[i];
+    for (auto &engine : scenarioDto.spacecraft.engines) {
         if (engine.id == 0) {
             break;
         }
@@ -121,8 +118,7 @@ void BuildEngines(const IO::SDK::API::DTO::ScenarioDTO &scenarioDto, IO::SDK::Bo
 }
 
 void BuildInstruments(const IO::SDK::API::DTO::ScenarioDTO &scenarioDto, IO::SDK::Body::Spacecraft::Spacecraft &spacecraft) {//Add instrument
-    for (int i = 0; i < 5; ++i) {
-        auto instrument = scenarioDto.spacecraft.instruments[i];
+    for (auto &instrument : scenarioDto.spacecraft.instruments) {
         if (instrument.id <= 0) {
             break;
         }

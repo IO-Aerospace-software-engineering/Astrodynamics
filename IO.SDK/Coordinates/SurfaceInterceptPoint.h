@@ -36,8 +36,8 @@ namespace IO::SDK::Coordinates
 		 * @param observerToInterceptPoint 
 		 * @param interceptEpoch 
 		 */
-		SurfaceInterceptPoint(const IO::SDK::Math::Vector3D& interceptPoint, const IO::SDK::Math::Vector3D& observerToInterceptPoint, const IO::SDK::Time::TDB& interceptEpoch)
-			:m_interceptPoint{ interceptPoint }, m_observerToInterceptPointVector{ observerToInterceptPoint }, m_interceptEpoch{ interceptEpoch }
+		SurfaceInterceptPoint(const IO::SDK::Math::Vector3D& interceptPoint, const IO::SDK::Math::Vector3D& observerToInterceptPoint, IO::SDK::Time::TDB  interceptEpoch)
+			:m_interceptPoint{ interceptPoint }, m_observerToInterceptPointVector{ observerToInterceptPoint }, m_interceptEpoch{std::move( interceptEpoch )}
 		{};
 		SurfaceInterceptPoint(const SurfaceInterceptPoint& surfaceInterceptPoint) = default;
 
@@ -46,7 +46,7 @@ namespace IO::SDK::Coordinates
 		 * 
 		 * @return const IO::SDK::Math::Vector3D& 
 		 */
-		const IO::SDK::Math::Vector3D& GetInterceptPoint() const
+		[[nodiscard]] const IO::SDK::Math::Vector3D& GetInterceptPoint() const
 		{
 			return m_interceptPoint;
 		}
@@ -56,7 +56,7 @@ namespace IO::SDK::Coordinates
 		 * 
 		 * @return const IO::SDK::Math::Vector3D& 
 		 */
-		const IO::SDK::Math::Vector3D& GetObserverInterceptPointVector() const
+		[[nodiscard]] const IO::SDK::Math::Vector3D& GetObserverInterceptPointVector() const
 		{
 			return m_observerToInterceptPointVector;
 		}
@@ -66,7 +66,7 @@ namespace IO::SDK::Coordinates
 		 * 
 		 * @return IO::SDK::Time::TDB 
 		 */
-		IO::SDK::Time::TDB GetInterceptEpoch() const
+		[[nodiscard]] IO::SDK::Time::TDB GetInterceptEpoch() const
 		{
 			return m_interceptEpoch;
 		}

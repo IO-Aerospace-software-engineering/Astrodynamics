@@ -8,27 +8,18 @@
  * @copyright Copyright (c) 2021
  * 
  */
-#include "OrientationKernel.h"
-#include <SpiceUsr.h>
-#include <SDKException.h>
-#include <SpiceUsr.h>
-#include <array>
-#include <limits>
 #include <filesystem>
-#include <InertialFrames.h>
 #include <Spacecraft.h>
-#include <SpacecraftClockKernel.h>
 #include <Builder.h>
 
 IO::SDK::Kernels::OrientationKernel::OrientationKernel(const IO::SDK::Body::Spacecraft::Spacecraft &spacecraft) : Kernel(
         spacecraft.GetFilesPath() + "/Orientations/" + spacecraft.GetName() + ".ck"), m_spacecraft{spacecraft} {
 }
 
-IO::SDK::Kernels::OrientationKernel::~OrientationKernel() {
-}
+IO::SDK::Kernels::OrientationKernel::~OrientationKernel() = default;
 
 void IO::SDK::Kernels::OrientationKernel::WriteOrientations(const std::vector<std::vector<IO::SDK::OrbitalParameters::StateOrientation>> &orientations) const {
-    if (orientations.size() <= 0) {
+    if (orientations.empty()) {
         throw IO::SDK::Exception::SDKException("Orientations array is empty");
     }
 
@@ -37,7 +28,7 @@ void IO::SDK::Kernels::OrientationKernel::WriteOrientations(const std::vector<st
         for (auto &&orientationPart: orientation) {
             if (orientationPart.GetFrame() != frame) {
                 throw IO::SDK::Exception::InvalidArgumentException(
-                        "Orientations collection contains data with differents frames : " + frame.GetName() + " - " + orientationPart.GetFrame().GetName() +
+                        "Orientations collection contains data with different frames : " + frame.GetName() + " - " + orientationPart.GetFrame().GetName() +
                         ". All orientations must have the same frame. ");
             }
         }
@@ -53,10 +44,10 @@ void IO::SDK::Kernels::OrientationKernel::WriteOrientations(const std::vector<st
     int id = m_spacecraft.GetFrame()->GetId();
 
     //Number of orientation data
-    int n{};
+    size_t n{};
 
     //numbers of intervels
-    int nbIntervals = orientations.size();
+    size_t nbIntervals = orientations.size();
 
     //Encoded clocks array
     std::vector<double> sclks;
@@ -71,7 +62,7 @@ void IO::SDK::Kernels::OrientationKernel::WriteOrientations(const std::vector<st
     std::vector<double> intervalsStarts;
 
     //Used to define polynomial degree
-    int minSize{std::numeric_limits<int>().max()};
+    size_t minSize{std::numeric_limits<size_t>::max()};
 
     for (auto &interval: orientations) {
         if (interval.empty()) {
@@ -82,7 +73,7 @@ void IO::SDK::Kernels::OrientationKernel::WriteOrientations(const std::vector<st
         intervalsStarts.push_back(m_spacecraft.GetClock().ConvertToEncodedClock(interval.begin()->GetEpoch()));
 
         //Number of data
-        int intervalSize = interval.size();
+        size_t intervalSize = interval.size();
 
         if (intervalSize < minSize) {
             minSize = intervalSize;
@@ -160,7 +151,7 @@ IO::SDK::Kernels::OrientationKernel::ReadStateOrientation(const IO::SDK::Time::T
     IO::SDK::Time::TDB tdb = m_spacecraft.GetClock().ConvertToTDB(clkout);
 
     //return state orientation
-    return IO::SDK::OrbitalParameters::StateOrientation(q, angularVelocity, tdb, frame);
+    return IO::SDK::OrbitalParameters::StateOrientation{q, angularVelocity, tdb, frame};
 }
 
 IO::SDK::Time::Window<IO::SDK::Time::TDB> IO::SDK::Kernels::OrientationKernel::GetCoverageWindow() const {
@@ -173,5 +164,5 @@ IO::SDK::Time::Window<IO::SDK::Time::TDB> IO::SDK::Kernels::OrientationKernel::G
 
     wnfetd_c(&cnfine, 0, &start, &end);
 
-    return IO::SDK::Time::Window<IO::SDK::Time::TDB>(IO::SDK::Time::TDB(std::chrono::duration<double>(start)), IO::SDK::Time::TDB(std::chrono::duration<double>(end)));
+    return IO::SDK::Time::Window<IO::SDK::Time::TDB>{IO::SDK::Time::TDB(std::chrono::duration<double>(start)), IO::SDK::Time::TDB(std::chrono::duration<double>(end))};
 }

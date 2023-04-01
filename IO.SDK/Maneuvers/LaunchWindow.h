@@ -11,10 +11,6 @@
 #ifndef LAUNCH_WINDOW_H
 #define LAUNCH_WINDOW_H
 
-#include<memory>
-
-#include <Window.h>
-#include <UTC.h>
 #include <LaunchSite.h>
 
 namespace IO::SDK::Maneuvers
@@ -41,7 +37,7 @@ namespace IO::SDK::Maneuvers
          * @param inertialInsertionVelocity 
          * @param nonInertialInsertionVelocity 
          */
-        LaunchWindow(const IO::SDK::Sites::LaunchSite &launchSite, const IO::SDK::Time::Window<IO::SDK::Time::UTC> &window, const double inertialAzimuth, const double nonInertialAzimuth, const double inertialInsertionVelocity, const double nonInertialInsertionVelocity);
+        LaunchWindow(const IO::SDK::Sites::LaunchSite &launchSite, const IO::SDK::Time::Window<IO::SDK::Time::UTC> &window, double inertialAzimuth, double nonInertialAzimuth, double inertialInsertionVelocity, double nonInertialInsertionVelocity);
 
 //        LaunchWindow& operator=(const LaunchWindow& lw);
 
@@ -50,42 +46,42 @@ namespace IO::SDK::Maneuvers
          * 
          * @return const std::shared_ptr<IO::SDK::Sites::LaunchSite>& 
          */
-        const IO::SDK::Sites::LaunchSite& GetLaunchSite() const;
+        [[nodiscard]] const IO::SDK::Sites::LaunchSite& GetLaunchSite() const;
         
         /**
          * @brief Get the Window
          * 
          * @return const IO::SDK::Time::Window<IO::SDK::Time::UTC>& 
          */
-        const IO::SDK::Time::Window<IO::SDK::Time::UTC>& GetWindow() const;
+        [[nodiscard]] const IO::SDK::Time::Window<IO::SDK::Time::UTC>& GetWindow() const;
         
         /**
          * @brief Get the Inertial Azimuth
          * 
          * @return double 
          */
-        double GetInertialAzimuth() const;
+        [[nodiscard]] double GetInertialAzimuth() const;
 
         /**
          * @brief Get the Non Inertial Azimuth
          * 
          * @return double 
          */
-        double GetNonInertialAzimuth() const;
+        [[nodiscard]] double GetNonInertialAzimuth() const;
 
         /**
          * @brief Get the Inertial Insertion Velocity
          * 
          * @return double 
          */
-        double GetInertialInsertionVelocity() const;
+        [[nodiscard]] double GetInertialInsertionVelocity() const;
 
         /**
          * @brief Get the Non Inertial Insertion Velocity
          * 
          * @return double 
          */
-        double GetNonInertialInsertionVelocity() const;
+        [[nodiscard]] double GetNonInertialInsertionVelocity() const;
 
     };
 

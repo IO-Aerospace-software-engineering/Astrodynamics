@@ -13,7 +13,7 @@ namespace IO::SDK::API::DTO
     {
         int launchSiteId{0};
         int recoverySiteId{0};
-        bool launchByDay;
+        bool launchByDay{};
         double initialStepSize{0.0};
         IO::SDK::API::DTO::StateVectorDTO targetOrbit;
         double inertialAzimuth{0.0};
@@ -22,7 +22,7 @@ namespace IO::SDK::API::DTO
         double nonInertialInsertionVelocity{0.0};
         double inertialInsertionVelocity{0.0};
 
-        IO::SDK::API::DTO::WindowDTO windows[100];
+        IO::SDK::API::DTO::WindowDTO windows[100]{};
     };
 }
 #endif //IOSDK_LAUNCHDTO_H

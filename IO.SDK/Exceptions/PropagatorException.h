@@ -12,7 +12,6 @@
 #define PROPAGATOR_EXCEPTION
 
 #include <SDKException.h>
-#include <string>
 
 namespace IO::SDK::Exception
 {
@@ -25,7 +24,7 @@ namespace IO::SDK::Exception
     private:
         /* data */
     public:
-        PropagatorException(const std::string &message);
+        explicit PropagatorException(const std::string &message);
     };
 
 } // namespace IO::SDK::Exception

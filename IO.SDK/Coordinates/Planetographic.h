@@ -29,7 +29,7 @@ namespace IO::SDK::Coordinates
 		 * @param latitude 
 		 * @param altitude 
 		 */
-		Planetographic(const double longitude, const double latitude, const double altitude) :_altitude{ altitude }, _longitude{ longitude }, _latitude{ latitude }
+		Planetographic(double longitude, double latitude, double altitude) :_altitude{ altitude }, _longitude{ longitude }, _latitude{ latitude }
 		{
 
 		}
@@ -38,21 +38,21 @@ namespace IO::SDK::Coordinates
 		 * 
 		 * @return double 
 		 */
-		double GetAltitude() const { return this->_altitude; }
+		[[nodiscard]] inline double GetAltitude() const { return this->_altitude; }
 
 		/**
 		 * @brief Get the Longitude
 		 * 
 		 * @return double 
 		 */
-		double GetLongitude() const { return this->_longitude; }
+		[[nodiscard]] inline double GetLongitude() const { return this->_longitude; }
 
 		/**
 		 * @brief Get the Latitude
 		 * 
 		 * @return double 
 		 */
-		double GetLatitude() const { return this->_latitude; }
+		[[nodiscard]] inline double GetLatitude() const { return this->_latitude; }
 	};
 }
 #endif // !PLANETOGRAPHIC_H

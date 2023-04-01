@@ -9,14 +9,7 @@
  * 
  */
 #include <SpacecraftClockKernel.h>
-#include<iostream>
 #include<fstream>
-#include<sstream>
-#include<Parameters.h>
-#include<TDB.h>
-#include<chrono>
-#include<SpiceUsr.h>
-#include<SDKException.h>
 #include<filesystem>
 
 #include "Templates/Templates.cpp"
@@ -48,21 +41,21 @@ IO::SDK::Time::Window<IO::SDK::Time::TDB> IO::SDK::Kernels::SpacecraftClockKerne
 	sct2e_c(m_spacecraft.GetId(), pstart[0], &tdbStart);
 	sct2e_c(m_spacecraft.GetId(), pstop[0], &tdbEnd);
 
-	return IO::SDK::Time::Window<IO::SDK::Time::TDB>(IO::SDK::Time::TDB(std::chrono::duration<double>(tdbStart)), IO::SDK::Time::TDB(std::chrono::duration<double>(tdbEnd)));
+	return IO::SDK::Time::Window<IO::SDK::Time::TDB>{IO::SDK::Time::TDB(std::chrono::duration<double>(tdbStart)), IO::SDK::Time::TDB(std::chrono::duration<double>(tdbEnd))};
 }
 
 IO::SDK::Time::TDB IO::SDK::Kernels::SpacecraftClockKernel::ConvertToTDB(const std::string& clock) const
 {
 	double et;
 	scs2e_c(m_spacecraft.GetId(), clock.c_str(), &et);
-	return IO::SDK::Time::TDB(std::chrono::duration<double>(et));
+	return IO::SDK::Time::TDB{std::chrono::duration<double>(et)};
 }
 
 IO::SDK::Time::TDB IO::SDK::Kernels::SpacecraftClockKernel::ConvertToTDB(const double encodedClock) const
 {
 	double et{};
 	sct2e_c(m_spacecraft.GetId(), encodedClock, &et);
-	return IO::SDK::Time::TDB(std::chrono::duration<double>(et));
+	return IO::SDK::Time::TDB{std::chrono::duration<double>(et)};
 }
 
 std::string IO::SDK::Kernels::SpacecraftClockKernel::ConvertToClockString(const IO::SDK::Time::TDB& epoch) const
@@ -123,7 +116,7 @@ double IO::SDK::Kernels::SpacecraftClockKernel::ConvertToEncodedClock(const IO::
 
 int IO::SDK::Kernels::SpacecraftClockKernel::GetTicksPerSeconds() const
 {
-	return  std::pow(2, m_resolution);
+	return  std::pow(2.0, m_resolution);
 }
 
 double IO::SDK::Kernels::SpacecraftClockKernel::GetSecondsPerTick() const

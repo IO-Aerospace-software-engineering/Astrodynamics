@@ -9,11 +9,7 @@
  * 
  */
 #include <Spacecraft.h>
-#include <algorithm>
-#include <exception>
-#include <InvalidArgumentException.h>
 #include <numeric>
-#include <InstrumentFrameFile.h>
 #include <StringHelpers.h>
 #include "Parameters.h"
 
@@ -216,7 +212,7 @@ void IO::SDK::Body::Spacecraft::Spacecraft::AddEngine(const std::string &serialN
             const std::unique_ptr<IO::SDK::Body::Spacecraft::FuelTank> &f) {
         return f->GetSerialNumber() == fuelTankSerialNumber;
     });
-    const IO::SDK::Body::Spacecraft::FuelTank &fuelTank = *it->get();
+    const IO::SDK::Body::Spacecraft::FuelTank &fuelTank = **it;
 
     m_engines.push_back(
             std::make_unique<IO::SDK::Body::Spacecraft::Engine>(serialNumber, name, fuelTank, position, orientation,

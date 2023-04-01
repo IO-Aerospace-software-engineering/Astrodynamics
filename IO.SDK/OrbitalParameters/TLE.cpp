@@ -16,8 +16,8 @@
 #include <InertialFrames.h>
 
 IO::SDK::OrbitalParameters::TLE::TLE(const std::shared_ptr<IO::SDK::Body::CelestialBody> &centerOfmotion, std::string lines[3]) : OrbitalParameters(centerOfmotion,
-                                                                                                                                                    std::chrono::duration<double>(
-                                                                                                                                                            0.0),
+                                                                                                                                                    Time::TDB(std::chrono::duration<double>(
+                                                                                                                                                            0.0)),
                                                                                                                                                     IO::SDK::Frames::InertialFrames::GetICRF()),
                                                                                                                                   m_satelliteName{lines[0]}
 {
@@ -33,7 +33,7 @@ IO::SDK::OrbitalParameters::TLE::TLE(const std::shared_ptr<IO::SDK::Body::Celest
     SpiceDouble epoch;
     getelm_c(m_firstYear, length + 1, m_lines, &epoch, m_elements);
 
-    const_cast<IO::SDK::Time::TDB &>(m_epoch) = std::chrono::duration<double>(epoch);
+    const_cast<IO::SDK::Time::TDB &>(m_epoch) = Time::TDB(std::chrono::duration<double>(epoch));
 
     //Set period
     m_period = IO::SDK::Time::TimeSpan(std::chrono::duration<double>(IO::SDK::Constants::_2PI / (m_elements[8] / 60.0)));
@@ -45,22 +45,22 @@ IO::SDK::OrbitalParameters::TLE::TLE(const std::shared_ptr<IO::SDK::Body::Celest
     m_conicOrbitalElements = std::make_unique<IO::SDK::OrbitalParameters::ConicOrbitalElements>(*m_stateVector);
 }
 
-std::string IO::SDK::OrbitalParameters::TLE::GetSatelliteName()
+std::string IO::SDK::OrbitalParameters::TLE::GetSatelliteName() const
 {
     return m_satelliteName;
 }
 
-double IO::SDK::OrbitalParameters::TLE::GetBalisticCoefficient()
+double IO::SDK::OrbitalParameters::TLE::GetBalisticCoefficient() const
 {
     return m_elements[0];
 }
 
-double IO::SDK::OrbitalParameters::TLE::GetSecondDerivativeOfMeanMotion()
+double IO::SDK::OrbitalParameters::TLE::GetSecondDerivativeOfMeanMotion() const
 {
     return m_elements[1];
 }
 
-double IO::SDK::OrbitalParameters::TLE::GetDragTerm()
+double IO::SDK::OrbitalParameters::TLE::GetDragTerm() const
 {
     return m_elements[2];
 }

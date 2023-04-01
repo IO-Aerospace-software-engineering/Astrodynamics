@@ -29,7 +29,7 @@ namespace IO::SDK::Coordinates
 		 * @param y 
 		 * @param z 
 		 */
-		Rectangular(const double x, const double y,const double z) :m_x{ x }, m_y{ y }, m_z{ z }
+		Rectangular(double x, double y,double z) :m_x{ x }, m_y{ y }, m_z{ z }
 		{
 
 		}
@@ -39,21 +39,21 @@ namespace IO::SDK::Coordinates
 		 * 
 		 * @return double 
 		 */
-		double GetX() const { return this->m_x; }
+		[[nodiscard]] inline double GetX() const { return this->m_x; }
 
 		/**
 		 * @brief Get Y
 		 * 
 		 * @return double 
 		 */
-		double GetY() const { return this->m_y; }
+		[[nodiscard]] inline double GetY() const { return this->m_y; }
 
 		/**
 		 * @brief Get Z
 		 * 
 		 * @return double 
 		 */
-		double GetZ() const { return this->m_z; }
+		[[nodiscard]] inline double GetZ() const { return this->m_z; }
 	};
 }
 #endif // !RECTANGULAR_H

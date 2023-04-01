@@ -1,5 +1,4 @@
 #include <InstrumentPointingToAttitude.h>
-#include <TDB.h>
 
 
 IO::SDK::Maneuvers::Attitudes::InstrumentPointingToAttitude::InstrumentPointingToAttitude(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines,

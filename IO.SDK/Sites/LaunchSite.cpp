@@ -11,8 +11,9 @@
 
 #include <iterator>
 #include <LaunchSite.h>
+#include <algorithm>
 
-IO::SDK::Sites::LaunchSite::LaunchSite(const int id, const std::string name, const IO::SDK::Coordinates::Geodetic coordinates,
+IO::SDK::Sites::LaunchSite::LaunchSite(const int id, const std::string &name, const IO::SDK::Coordinates::Geodetic& coordinates,
                                        std::shared_ptr<IO::SDK::Body::CelestialBody> body) : Site(id, name, coordinates, body)
 {
 }
@@ -38,14 +39,5 @@ void IO::SDK::Sites::LaunchSite::ClearAzimuthLaunchRanges()
 
 bool IO::SDK::Sites::LaunchSite::IsAzimuthLaunchAllowed(const double azimuth) const
 {
-    for (auto &&az: m_azimuthRanges)
-    {
-        if (az.IsInRange(azimuth))
-        {
-            return true;
-        }
-    }
-
-    return false;
-
+    return std::any_of(m_azimuthRanges.cbegin(), m_azimuthRanges.cend(), [&azimuth](IO::SDK::Coordinates::AzimuthRange az) { return az.IsInRange(azimuth); });
 }

@@ -35,28 +35,28 @@ namespace IO::SDK::Body::Spacecraft
 		 * @param name Payload name
 		 * @param mass Payload mass
 		 */
-		Payload(const std::string &serialNumber, const std::string& name, const double mass);
+		Payload(const std::string &serialNumber, const std::string& name, double mass);
 
 		/**
 		 * @brief Get the Name object
 		 * 
 		 * @return std::string 
 		 */
-		std::string GetName() const;
+		[[nodiscard]] std::string GetName() const;
 
 		/**
 		 * @brief Get the Mass object
 		 * 
 		 * @return double 
 		 */
-		double GetMass() const;
+		[[nodiscard]] double GetMass() const;
 
 		/**
 		 * @brief Get the Serial Number object
 		 * 
 		 * @return std::string 
 		 */
-		std::string GetSerialNumber() const;
+		[[nodiscard]] std::string GetSerialNumber() const;
 
 		bool operator==(const IO::SDK::Body::Spacecraft::Payload &other) const { return m_serialNumber == other.m_serialNumber; };
         bool operator!=(const IO::SDK::Body::Spacecraft::Payload &other) const { return !(m_serialNumber == other.m_serialNumber); };

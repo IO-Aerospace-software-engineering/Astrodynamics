@@ -12,22 +12,12 @@
 #ifndef MANEUVER_BASE_H
 #define MANEUVER_BASE_H
 
-#include <memory>
-#include <vector>
 #include <set>
 #include <map>
 
-#include <Window.h>
-#include <Vector3D.h>
-#include <Engine.h>
-#include <TDB.h>
-#include <StateVector.h>
 #include <ManeuverResult.h>
 #include <Propagator.h>
 #include <DynamicFuelTank.h>
-#include <Spacecraft.h>
-#include <TimeSpan.h>
-#include <TooEarlyManeuverException.h>
 
 using namespace std::chrono_literals;
 
@@ -88,7 +78,7 @@ namespace IO::SDK::Maneuvers
          * @return true 
          * @return false 
          */
-        bool IsValid();
+        [[nodiscard]] bool IsValid() const;
 
         /**
          * @brief Execute maneuver and write data in propagator
@@ -201,14 +191,14 @@ namespace IO::SDK::Maneuvers
          * 
          * @return IO::SDK::Time::Window<IO::SDK::Time::TDB>* 
          */
-        IO::SDK::Time::Window<IO::SDK::Time::TDB> *GetThrustWindow() const;
+        [[nodiscard]] IO::SDK::Time::Window<IO::SDK::Time::TDB> *GetThrustWindow() const;
 
         /**
          * @brief Get the attitude window
          * 
          * @return IO::SDK::Time::Window<IO::SDK::Time::TDB>* 
          */
-        IO::SDK::Time::Window<IO::SDK::Time::TDB> *GetAttitudeWindow() const;
+        [[nodiscard]] IO::SDK::Time::Window<IO::SDK::Time::TDB> *GetAttitudeWindow() const;
 
         /**
          * @brief Get the maneuver window.
@@ -216,28 +206,28 @@ namespace IO::SDK::Maneuvers
          * 
          * @return IO::SDK::Time::Window<IO::SDK::Time::TDB>* 
          */
-        IO::SDK::Time::Window<IO::SDK::Time::TDB> *GetManeuverWindow() const;
+        [[nodiscard]] IO::SDK::Time::Window<IO::SDK::Time::TDB> *GetManeuverWindow() const;
 
         /**
          * @brief Get the Fuel Burned in kg
          * 
          * @return double 
          */
-        double GetFuelBurned() const;
+        [[nodiscard]] double GetFuelBurned() const;
 
         /**
          * @brief Get the Thrust duration 
          * 
          * @return IO::SDK::Time::TimeSpan 
          */
-        IO::SDK::Time::TimeSpan GetThrustDuration() const;
+        [[nodiscard]] IO::SDK::Time::TimeSpan GetThrustDuration() const;
 
         /**
          * @brief Get the maneuver delta V
          * 
          * @return IO::SDK::Math::Vector3D 
          */
-        IO::SDK::Math::Vector3D GetDeltaV() const;
+        [[nodiscard]] IO::SDK::Math::Vector3D GetDeltaV() const;
 
         /**
          * @brief Set the Next Maneuver object

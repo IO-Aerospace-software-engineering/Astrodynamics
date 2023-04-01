@@ -32,7 +32,7 @@ namespace IO::SDK::Maneuvers
          * @brief Construct a new Maneuver Result object
          * 
          */
-        ManeuverResult(){};
+        ManeuverResult()= default;
 
         /**
          * @brief Construct a new Maneuver Result object
@@ -40,7 +40,7 @@ namespace IO::SDK::Maneuvers
          * @param isValid 
          * @param message 
          */
-        ManeuverResult(bool isValid, std::string message) : _isValid{isValid}, _message{message} {};
+        ManeuverResult(bool isValid, std::string& message) : _isValid{isValid}, _message{message} {};
 
         /**
          * @brief Set maneuver as valid
@@ -70,7 +70,7 @@ namespace IO::SDK::Maneuvers
          * @return true 
          * @return false 
          */
-        bool IsValid() { return _isValid; }
+        [[nodiscard]] bool IsValid() const { return _isValid; }
 
         /**
          * @brief The current maneuver is not valid new attempt will happen later
@@ -78,7 +78,7 @@ namespace IO::SDK::Maneuvers
          * @return true 
          * @return false 
          */
-        bool CanRetryLater()
+        [[nodiscard]] bool CanRetryLater() const
         {
             return _canRetryLater;
         }
@@ -89,7 +89,7 @@ namespace IO::SDK::Maneuvers
          * @return true 
          * @return false 
          */
-        bool IsExecutedTooEarly() { return _tooEarly; }
+        [[nodiscard]] bool IsExecutedTooEarly() const { return _tooEarly; }
 
         void SetTooEarly()
         {

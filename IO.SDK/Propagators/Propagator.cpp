@@ -115,7 +115,7 @@ void IO::SDK::Propagators::Propagator::EraseDataFromEpochToEnd(const IO::SDK::Ti
         return;
     }
 
-    for (int i = m_stateVectors.size() - 1; i >= 0; i--)
+    for (long i = m_stateVectors.size() - 1; i >= 0; i--)
     {
         if (m_stateVectors.at(i).GetEpoch() < epoch)
         {
@@ -132,7 +132,7 @@ const std::vector<IO::SDK::OrbitalParameters::StateVector> &IO::SDK::Propagators
 
 const IO::SDK::OrbitalParameters::StateOrientation *IO::SDK::Propagators::Propagator::GetLatestStateOrientation() const
 {
-    if (m_StateOrientations.size() == 0 || m_StateOrientations.back().size() == 0)
+    if (m_StateOrientations.empty() || m_StateOrientations.back().empty())
     {
         return nullptr;
     }

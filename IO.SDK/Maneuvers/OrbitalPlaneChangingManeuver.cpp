@@ -50,8 +50,8 @@ void IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver::Compute(const IO::SDK::Or
 {
     auto currentvectorState = orbitalParams.GetStateVector();
 
-    IO::SDK::Math::Vector3D vel = currentvectorState.GetVelocity();
-    IO::SDK::Math::Vector3D pos = currentvectorState.GetPosition();
+    const IO::SDK::Math::Vector3D& vel = currentvectorState.GetVelocity();
+    const IO::SDK::Math::Vector3D& pos = currentvectorState.GetPosition();
 
     //Project vector
     IO::SDK::Math::Vector3D projectedVector = vel - (pos * (vel.DotProduct(pos) / pos.DotProduct(pos)));
@@ -90,8 +90,8 @@ IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver::ComputeOrientation(const IO::S
         targetVector = targetVector.Reverse();
     }
 
-    return IO::SDK::OrbitalParameters::StateOrientation(targetVector.To(m_spacecraft.Front), IO::SDK::Math::Vector3D(0.0, 0.0, 0.0), maneuverPoint.GetEpoch(),
-                                                        maneuverPoint.GetFrame());
+    return IO::SDK::OrbitalParameters::StateOrientation{targetVector.To(m_spacecraft.Front), IO::SDK::Math::Vector3D(0.0, 0.0, 0.0), maneuverPoint.GetEpoch(),
+                                                        maneuverPoint.GetFrame()};
 }
 
 double IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver::GetRelativeInclination() const

@@ -67,7 +67,7 @@ namespace IO::SDK::Math
 		/// <param name="rowIdx">Row index</param>
 		/// <param name="colIdx">Column index</param>
 		/// <returns></returns>
-		double GetValue(const std::size_t rowIdx, const std::size_t colIdx) const;
+		[[nodiscard]] double GetValue(std::size_t rowIdx, std::size_t colIdx) const;
 
 		/// <summary>
 		/// Set value at given index
@@ -75,19 +75,19 @@ namespace IO::SDK::Math
 		/// <param name="rowIdx">Row index</param>
 		/// <param name="colIdx">Column index</param>
 		/// <param name="value">Value index</param>
-		void SetValue(const std::size_t rowIdx, const std::size_t colIdx, const double value);
+		void SetValue(std::size_t rowIdx, std::size_t colIdx, double value);
 
 		/// <summary>
 		/// Get the matrix columns size
 		/// </summary>
 		/// <returns></returns>
-		std::size_t GetColumsSize() const { return m_colSize; }
+		[[nodiscard]] std::size_t GetColumsSize() const { return m_colSize; }
 
 		/// <summary>
 		/// Get the matirx rows size
 		/// </summary>
 		/// <returns></returns>
-		std::size_t GetRowsSize() const { return m_rowSize; }
+		[[nodiscard]] std::size_t GetRowsSize() const { return m_rowSize; }
 
 		/// <summary>
 		/// Multiply this matrix by another
@@ -100,9 +100,9 @@ namespace IO::SDK::Math
 		/// Transpose this matrix
 		/// </summary>
 		/// <returns></returns>
-		Matrix Transpose() const;
+		[[nodiscard]] Matrix Transpose() const;
 
-		double** GetRawData() const;
+		[[nodiscard]] double** GetRawData() const;
 	};
 }
 #endif // !MATRIX_H

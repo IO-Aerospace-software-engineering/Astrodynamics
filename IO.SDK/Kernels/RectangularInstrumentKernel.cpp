@@ -11,7 +11,6 @@
 #include "RectangularInstrumentKernel.h"
 #include<filesystem>
 #include<fstream>
-#include <sstream>
 #include <Templates/Templates.cpp>
 
 void IO::SDK::Kernels::RectangularInstrumentKernel::BuildKernel()

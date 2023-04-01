@@ -10,9 +10,7 @@
  */
 #ifndef KERNEL_H
 #define KERNEL_H
-#include <string>
 #include <Window.h>
-#include <TDB.h>
 
 namespace IO::SDK::Kernels
 {
@@ -23,14 +21,14 @@ namespace IO::SDK::Kernels
 		std::string m_comments;
 		bool m_isLoaded{false};
 		bool m_fileExists{false};
-		Kernel(const std::string &fileName);
+		explicit Kernel(const std::string &fileName);
 		/**
 		 * @brief Define the best Lagrange polynomial degree
 		 * 
 		 * @param dataSize - Size of data set
 		 * @return int 
 		 */
-		static int DefinePolynomialDegree(const int dataSize, const int maximumDegree) ;
+		static int DefinePolynomialDegree(int dataSize, int maximumDegree) ;
 
 	public:
 		virtual ~Kernel();
@@ -40,7 +38,7 @@ namespace IO::SDK::Kernels
 		 * 
 		 * @return std::string 
 		 */
-		std::string GetPath() const;
+		[[nodiscard]] std::string GetPath() const;
 
 		/**
 		 * @brief 
@@ -48,14 +46,14 @@ namespace IO::SDK::Kernels
 		 * @return true 
 		 * @return false 
 		 */
-		bool IsLoaded() const;
+		[[nodiscard]] bool IsLoaded() const;
 
 		/**
 		 * @brief Get the Coverage Window
 		 * 
 		 * @return IO::SDK::Time::Window<IO::SDK::Time::TDB> 
 		 */
-		virtual IO::SDK::Time::Window<IO::SDK::Time::TDB> GetCoverageWindow() const = 0;
+		[[nodiscard]] virtual IO::SDK::Time::Window<IO::SDK::Time::TDB> GetCoverageWindow() const = 0;
 
 		/**
 		 * @brief Add comment to kernel
@@ -69,7 +67,7 @@ namespace IO::SDK::Kernels
 		 * 
 		 * @return std::string 
 		 */
-		virtual std::string ReadComment() const;
+		[[nodiscard]] virtual std::string ReadComment() const;
 	};
 
 }
