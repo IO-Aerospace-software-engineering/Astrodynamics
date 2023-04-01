@@ -24,7 +24,7 @@ namespace IO::SDK
         static IlluminationAngle mEmission;
 
     public:
-        explicit IlluminationAngle(const std::string &name);
+        explicit IlluminationAngle(std::string name);
 
         [[nodiscard]] const char *ToCharArray() const;
 

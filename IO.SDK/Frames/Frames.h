@@ -33,7 +33,7 @@ namespace IO::SDK::Frames
          * 
          * @param strView 
          */
-        explicit Frames(const std::string &strView);
+        explicit Frames(std::string strView);
 
         /**
          * @brief Get frame name

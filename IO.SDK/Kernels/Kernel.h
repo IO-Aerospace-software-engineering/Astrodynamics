@@ -30,7 +30,7 @@ namespace IO::SDK::Kernels
 		 * @param dataSize - Size of data set
 		 * @return int 
 		 */
-		int DefinePolynomialDegree(const int dataSize, const int maximumDegree) const;
+		static int DefinePolynomialDegree(const int dataSize, const int maximumDegree) ;
 
 	public:
 		virtual ~Kernel();

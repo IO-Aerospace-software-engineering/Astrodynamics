@@ -10,6 +10,8 @@
  */
 #include<IlluminationAngle.h>
 
+#include <utility>
+
 IO::SDK::IlluminationAngle IO::SDK::IlluminationAngle::mPhase(std::string("PHASE"));
 IO::SDK::IlluminationAngle IO::SDK::IlluminationAngle::mIncidence(std::string("INCIDENCE"));
 IO::SDK::IlluminationAngle IO::SDK::IlluminationAngle::mEmission(std::string("EMISSION"));
@@ -19,7 +21,7 @@ IO::SDK::IlluminationAngle IO::SDK::IlluminationAngle::mEmission(std::string("EM
  * 
  * @param name 
  */
-IO::SDK::IlluminationAngle::IlluminationAngle(const std::string& name):m_name{name}
+IO::SDK::IlluminationAngle::IlluminationAngle(std::string  name):m_name{std::move(name)}
 {
 
 }

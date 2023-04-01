@@ -71,7 +71,7 @@ IO::SDK::Maneuvers::Attitudes::InstrumentPointingToAttitude::ComputeOrientation(
 
     auto q = targetOrientation.To(m_instrument.GetBoresightInSpacecraftFrame().Normalize());
 
-    return IO::SDK::OrbitalParameters::StateOrientation(q, IO::SDK::Math::Vector3D::Zero, maneuverPoint.GetEpoch(),
-                                                        maneuverPoint.GetFrame());
+    return IO::SDK::OrbitalParameters::StateOrientation{q, IO::SDK::Math::Vector3D::Zero, maneuverPoint.GetEpoch(),
+                                                        maneuverPoint.GetFrame()};
 
 }

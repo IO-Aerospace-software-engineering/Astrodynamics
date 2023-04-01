@@ -11,7 +11,9 @@
 #include <Frames.h>
 #include <SpiceUsr.h>
 
-IO::SDK::Frames::Frames::Frames(const std::string &strView) : m_name{strView}
+#include <utility>
+
+IO::SDK::Frames::Frames::Frames(std::string strView) : m_name{std::move(strView)}
 {
 }
 

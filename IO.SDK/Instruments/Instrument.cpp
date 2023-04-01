@@ -131,6 +131,7 @@ std::vector<IO::SDK::Math::Vector3D> IO::SDK::Instruments::Instrument::GetFOVBou
     getfov_c(m_id, 4, 20, 50, shape, frame, boresight, &n, bounds);
 
     std::vector<IO::SDK::Math::Vector3D> res;
+    res.reserve(n);
     for (int i = 0; i < n; i++)
     {
         res.emplace_back(bounds[i][0], bounds[i][1], bounds[i][2]);

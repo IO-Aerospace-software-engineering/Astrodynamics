@@ -8,15 +8,10 @@
  * @copyright Copyright (c) 2021
  * 
  */
-#include <Body.h>
-#include <CelestialBody.h>
 #include <StateVector.h>
-#include <TDB.h>
-#include <chrono>
 #include <InertialFrames.h>
 #include <Builder.h>
 #include <StringHelpers.h>
-#include <SpiceUsr.h>
 #include "Helpers/Type.cpp"
 #include <Constants.h>
 

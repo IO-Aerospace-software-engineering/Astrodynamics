@@ -14,6 +14,8 @@
 #include <Vector3D.h>
 #include<TDB.h>
 
+#include <utility>
+
 namespace IO::SDK::Illumination
 {
 	class Illumination final
@@ -36,8 +38,8 @@ namespace IO::SDK::Illumination
 		 * @param emission 
 		 * @param targetEpoch 
 		 */
-		Illumination(const IO::SDK::Math::Vector3D& observerToSurfacePoint, double phaseAngle, double incidence, double emission, const IO::SDK::Time::TDB& targetEpoch)
-			:m_observerToSurfacePoint{ observerToSurfacePoint }, m_phaseAngle{ phaseAngle }, m_incidence{ incidence }, m_emission{ emission }, m_targetEpoch{ targetEpoch } {};
+		Illumination(const IO::SDK::Math::Vector3D& observerToSurfacePoint, double phaseAngle, double incidence, double emission, IO::SDK::Time::TDB  targetEpoch)
+			:m_observerToSurfacePoint{ observerToSurfacePoint }, m_phaseAngle{ phaseAngle }, m_incidence{ incidence }, m_emission{ emission }, m_targetEpoch{std::move( targetEpoch )} {};
 
 		/**
 		 * @brief Get the Epoch

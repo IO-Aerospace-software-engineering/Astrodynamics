@@ -11,12 +11,7 @@
 #ifndef INSTRUMENT_KERNEL_H
 #define INSTRUMENT_KERNEL_H
 
-#include<string>
-#include<Kernel.h>
 #include<Instrument.h>
-#include<Vector3D.h>
-#include<TDB.h>
-#include<Window.h>
 
 namespace IO::SDK::Instruments
 {
@@ -44,7 +39,7 @@ namespace IO::SDK::Kernels
 		 * @param angle 
 		 * @param templateName 
 		 */
-		InstrumentKernel(const IO::SDK::Instruments::Instrument& instrument, const IO::SDK::Math::Vector3D& boresight, const IO::SDK::Math::Vector3D& refVector, const double angle);
+		InstrumentKernel(const IO::SDK::Instruments::Instrument& instrument, const IO::SDK::Math::Vector3D& boresight, const IO::SDK::Math::Vector3D& refVector, double angle);
 		const IO::SDK::Instruments::Instrument& m_instrument;
 		const IO::SDK::Math::Vector3D m_boresight{};
 		const IO::SDK::Math::Vector3D m_refVector{};
@@ -58,14 +53,14 @@ namespace IO::SDK::Kernels
 
 	public:
 
-		virtual ~InstrumentKernel() = default;
+		~InstrumentKernel() override = default;
 
 		/**
 		 * @brief Get the Coverage Window
 		 * 
 		 * @return IO::SDK::Time::Window<IO::SDK::Time::TDB> 
 		 */
-		virtual IO::SDK::Time::Window<IO::SDK::Time::TDB> GetCoverageWindow() const override;
+		[[nodiscard]] IO::SDK::Time::Window<IO::SDK::Time::TDB> GetCoverageWindow() const override;
 
 		friend class IO::SDK::Instruments::Instrument;
 

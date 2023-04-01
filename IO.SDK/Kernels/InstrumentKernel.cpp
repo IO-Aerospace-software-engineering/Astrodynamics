@@ -8,9 +8,7 @@
  * @copyright Copyright (c) 2021
  * 
  */
-#include <InstrumentKernel.h>
 #include <fstream>
-#include <sstream>
 #include <filesystem>
 #include <InstrumentFrameFile.h>
 #include <Templates/Templates.cpp>
