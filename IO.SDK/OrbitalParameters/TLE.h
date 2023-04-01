@@ -39,25 +39,25 @@ namespace IO::SDK::OrbitalParameters
 		/// Get the satellite name
 		/// </summary>
 		/// <returns></returns>
-		std::string GetSatelliteName() const;
+		[[nodiscard]] std::string GetSatelliteName() const;
 
 		/// <summary>
 		/// Get the balistic corfficien in radians/minute**2
 		/// </summary>
 		/// <returns></returns>
-		double GetBalisticCoefficient() const;
+		[[nodiscard]] double GetBalisticCoefficient() const;
 
 		/// <summary>
 		/// Second derivative of mean motion in radians/minute**3
 		/// </summary>
 		/// <returns></returns>
-		double GetSecondDerivativeOfMeanMotion() const;
+		[[nodiscard]] double GetSecondDerivativeOfMeanMotion() const;
 
 		/// <summary>
 		/// Return radiation pressure coefficient (or BSTAR)
 		/// </summary>
 		/// <returns></returns>
-		double GetDragTerm() const;
+		[[nodiscard]] double GetDragTerm() const;
 
 		/// <summary>
 		/// Get orbital period

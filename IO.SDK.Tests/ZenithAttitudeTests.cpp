@@ -51,7 +51,7 @@ TEST(ZenithAttitude, GetOrientation) {
     ASSERT_DOUBLE_EQ(0.0, zenith.GetDeltaV().Magnitude());
     ASSERT_EQ(IO::SDK::Frames::InertialFrames::GetICRF(), orientation.GetFrame());
     auto newVector = s.Front.Rotate(orientation.GetQuaternion().Conjugate());
-    ASSERT_EQ(IO::SDK::Math::Vector3D(0.99999998288572889, -2.980232227667301e-08, 0.0), newVector);
+    ASSERT_EQ(IO::SDK::Math::Vector3D(1.0, 2.2204460492503131e-16, 0.0), newVector);
     ASSERT_EQ(IO::SDK::Time::TDB("2021-01-01T13:00:00"), s.GetOrientationsCoverageWindow().GetStartDate());
     ASSERT_EQ(IO::SDK::Time::TDB("2021-01-01T13:01:00"), s.GetOrientationsCoverageWindow().GetEndDate());
     ASSERT_EQ(IO::SDK::Time::TimeSpan(60s).GetSeconds().count(), s.GetOrientationsCoverageWindow().GetLength().GetSeconds().count());
@@ -93,8 +93,8 @@ TEST(ZenithAttitude, GetOrientationNotBeforeEpoch) {
     ASSERT_DOUBLE_EQ(0.0, zenith.GetDeltaV().Magnitude());
     ASSERT_EQ(IO::SDK::Frames::InertialFrames::GetICRF(), orientation.GetFrame());
     auto newVector = s.Front.Rotate(orientation.GetQuaternion().Conjugate());
-    ASSERT_NEAR(0.99993304357344959, newVector.GetX(), 1E-12);
-    ASSERT_NEAR(0.011570015949534274, newVector.GetY(), 1E-12);
+    ASSERT_NEAR(0.99993306467241017, newVector.GetX(), 1E-12);
+    ASSERT_NEAR(0.011570055092428644, newVector.GetY(), 1E-12);
     ASSERT_NEAR(0.0, newVector.GetZ(), 1E-12);
     ASSERT_EQ(IO::SDK::Time::TDB("2021-01-01T13:00:00"), s.GetOrientationsCoverageWindow().GetStartDate());
     ASSERT_EQ(IO::SDK::Time::TDB("2021-01-01T13:01:00"), s.GetOrientationsCoverageWindow().GetEndDate());

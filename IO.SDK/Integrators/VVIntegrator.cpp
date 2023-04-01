@@ -9,7 +9,6 @@
  * 
  */
 #include <VVIntegrator.h>
-#include <Helpers/Type.cpp>
 #include <InvalidArgumentException.h>
 
 IO::SDK::Integrators::VVIntegrator::VVIntegrator(const IO::SDK::Time::TimeSpan &stepDuration) : IO::SDK::Integrators::IntegratorBase(stepDuration)
@@ -20,10 +19,10 @@ IO::SDK::Integrators::VVIntegrator::VVIntegrator(const IO::SDK::Time::TimeSpan &
     }
 }
 
-IO::SDK::Integrators::VVIntegrator::VVIntegrator(const IO::SDK::Time::TimeSpan &stepDuration, std::vector<IO::SDK::Integrators::Forces::Force *> forces) : VVIntegrator(
+IO::SDK::Integrators::VVIntegrator::VVIntegrator(const IO::SDK::Time::TimeSpan &stepDuration, std::vector<IO::SDK::Integrators::Forces::Force *>& forces) : VVIntegrator(
         stepDuration)
 {
-    if (forces.size() <= 0)
+    if (forces.empty())
     {
         throw IO::SDK::Exception::InvalidArgumentException("Forces must have one force at least");
     }
@@ -31,8 +30,7 @@ IO::SDK::Integrators::VVIntegrator::VVIntegrator(const IO::SDK::Time::TimeSpan &
 }
 
 IO::SDK::Integrators::VVIntegrator::~VVIntegrator()
-{
-}
+= default;
 
 IO::SDK::OrbitalParameters::StateVector IO::SDK::Integrators::VVIntegrator::Integrate(const IO::SDK::Body::Body &body, const IO::SDK::OrbitalParameters::StateVector &stateVector)
 {

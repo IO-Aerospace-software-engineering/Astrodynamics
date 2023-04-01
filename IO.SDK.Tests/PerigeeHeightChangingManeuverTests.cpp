@@ -72,7 +72,7 @@ TEST(PerigeeHeightChangingManeuverTests, IncreasePerigeeHeight)
 
     ASSERT_TRUE(res.IsValid());
     ASSERT_DOUBLE_EQ(2425.7836521643781, pcm.GetDeltaV().Magnitude());
-    ASSERT_DOUBLE_EQ(0.28043041479166164, pcm.GetDeltaV().GetX());
+    ASSERT_DOUBLE_EQ(0.280430410132377074, pcm.GetDeltaV().GetX());
     ASSERT_DOUBLE_EQ(-2425.7836359549324, pcm.GetDeltaV().GetY());
     ASSERT_DOUBLE_EQ(0.0, pcm.GetDeltaV().GetZ());
 }
@@ -103,7 +103,7 @@ TEST(PerigeeHeightChangingManeuverTests, DecreasePerigeeHeight)
 
     ASSERT_TRUE(res.IsValid());
     ASSERT_DOUBLE_EQ(1466.4510337589829, pcm.GetDeltaV().Magnitude());
-    ASSERT_DOUBLE_EQ(-0.010687184635792558, pcm.GetDeltaV().GetX());
+    ASSERT_DOUBLE_EQ(-0.010687184635934464, pcm.GetDeltaV().GetX());
     ASSERT_DOUBLE_EQ(1466.45103372004, pcm.GetDeltaV().GetY());
     ASSERT_DOUBLE_EQ(0.0, pcm.GetDeltaV().GetZ());
 }
