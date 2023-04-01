@@ -103,7 +103,7 @@ std::vector<IO::SDK::Maneuvers::LaunchWindow> IO::SDK::Maneuvers::Launch::GetLau
     std::vector<IO::SDK::Maneuvers::LaunchWindow> launchWindows;
     if (m_launchByDay)
     {
-        //Find sun light windows on launch site
+        //Find sunlight windows on launch site
         auto launchSiteDayWindows = m_launchSite.FindDayWindows(searchWindow, IO::SDK::Constants::OfficialTwilight);
         if (launchSiteDayWindows.empty())
         {
@@ -111,7 +111,7 @@ std::vector<IO::SDK::Maneuvers::LaunchWindow> IO::SDK::Maneuvers::Launch::GetLau
                     "No sunlight at launch site on this search window day : " + searchWindow.GetStartDate().ToString() + " - " + searchWindow.GetEndDate().ToString());
         }
 
-        //Find sun light windows on recovery site
+        //Find sunlight windows on recovery site
         auto recoverySiteDayWindows = m_recoverySite.FindDayWindows(searchWindow, IO::SDK::Constants::OfficialTwilight);
         if (recoverySiteDayWindows.empty())
         {
@@ -119,7 +119,7 @@ std::vector<IO::SDK::Maneuvers::LaunchWindow> IO::SDK::Maneuvers::Launch::GetLau
                     "No sunlight at recovery site on this launch day : " + searchWindow.GetStartDate().ToString() + " - " + searchWindow.GetEndDate().ToString());
         }
 
-        //Find sun light windows on both site at same time
+        //Find sunlight windows on both site at same time
         std::vector<IO::SDK::Time::Window<IO::SDK::Time::UTC>> sunLightWindowsOnBothSites;
         for (auto &&launchSiteWindow: launchSiteDayWindows)
         {
@@ -138,7 +138,7 @@ std::vector<IO::SDK::Maneuvers::LaunchWindow> IO::SDK::Maneuvers::Launch::GetLau
             throw IO::SDK::Exception::SDKException("No sun light at same time on both sites");
         }
 
-        //Search an orbital plane alignement with launch site during sun light window on both sites
+        //Search an orbital plane alignment with launch site during sunlight window on both sites
         for (auto &&sunlightWindow: sunLightWindowsOnBothSites)
         {
             auto res = FindLaunchWindows(sunlightWindow);

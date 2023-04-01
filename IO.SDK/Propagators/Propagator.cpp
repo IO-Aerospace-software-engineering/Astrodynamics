@@ -12,7 +12,6 @@
 #include <PropagatorException.h>
 #include <algorithm>
 #include <ManeuverBase.h>
-#include <ZenithAttitude.h>
 #include <StateOrientation.h>
 
 using namespace std::chrono_literals;

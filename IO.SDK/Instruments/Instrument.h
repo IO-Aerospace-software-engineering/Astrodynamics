@@ -52,9 +52,7 @@ namespace IO::SDK::Instruments
         const IO::SDK::Instruments::FOVShapeEnum m_fovShape{};
         const IO::SDK::Math::Vector3D m_boresight{};
         const IO::SDK::Math::Vector3D m_fovRefVector{};
-        const double m_fovAngle{};
         const std::unique_ptr<IO::SDK::Kernels::InstrumentKernel> m_kernel{nullptr};
-        const double m_crossAngle{};
 
         /**
          * @brief Construct a new circular instrument object

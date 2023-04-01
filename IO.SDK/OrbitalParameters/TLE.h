@@ -26,7 +26,6 @@ namespace IO::SDK::OrbitalParameters
 		std::unique_ptr<ConicOrbitalElements> m_conicOrbitalElements{nullptr};
 		std::unique_ptr<StateVector> m_stateVector{nullptr};
 		IO::SDK::Time::TimeSpan m_period;
-		bool m_isDeepSpace{false};
 
 		//J2 J3 J4 KE QO SO ER AE
 		inline constexpr static SpiceDouble m_geophysics[]{1.082616e-3, -2.53881e-6, -1.65597e-6, 7.43669161e-2, 120.0, 78.0, 6378.135, 1.0};

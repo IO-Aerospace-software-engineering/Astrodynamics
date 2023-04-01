@@ -9,8 +9,6 @@
  * 
  */
 #include <ApogeeHeightChangingManeuver.h>
-#include <InvalidArgumentException.h>
-#include <SDKException.h>
 #include <cmath>
 #include <Parameters.h>
 

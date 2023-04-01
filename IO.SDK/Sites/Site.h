@@ -42,7 +42,6 @@ namespace IO::SDK::Sites
 
         const std::shared_ptr<IO::SDK::Body::CelestialBody> m_body;
         const std::unique_ptr<IO::SDK::Frames::SiteFrameFile> m_frame;
-        const IO::SDK::Aberrations m_aberrationHelper{};
         /**
          * Write stateVectors into ephemeris file
          * @param states

@@ -83,6 +83,7 @@ namespace IO::SDK::Body::Spacecraft {
         Spacecraft(int id, const std::string &name, double dryOperatingMass, double maximumOperatingMass,
                    const std::string &missionPrefix,
                    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParametersAtEpoch);
+
         /**
          * Construct a new spacecraft object
          * @param id Naif identifier (must be a negative number)
@@ -96,7 +97,8 @@ namespace IO::SDK::Body::Spacecraft {
          */
         Spacecraft(int id, const std::string &name, double dryOperatingMass, double maximumOperatingMass,
                    const std::string &missionPrefix,
-                   std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParametersAtEpoch, const IO::SDK::Math::Vector3D &front, const IO::SDK::Math::Vector3D& top);
+                   std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParametersAtEpoch, const IO::SDK::Math::Vector3D &front,
+                   const IO::SDK::Math::Vector3D &top);
 
         Spacecraft(const Spacecraft &spacecraft) = delete;
 
@@ -340,6 +342,8 @@ namespace IO::SDK::Body::Spacecraft {
          * @return frame
          */
         const std::unique_ptr<IO::SDK::Frames::SpacecraftFrameFile> &GetFrame() const;
+
+        inline double GetMaximumOperatingMass() { return m_maximumOperatingMass; }
     };
 }
 

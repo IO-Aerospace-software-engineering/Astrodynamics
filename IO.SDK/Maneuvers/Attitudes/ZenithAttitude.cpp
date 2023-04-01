@@ -9,7 +9,6 @@
  * 
  */
 #include <ZenithAttitude.h>
-#include<Macros.h>
 
 IO::SDK::Maneuvers::Attitudes::ZenithAttitude::ZenithAttitude(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator,
                                                               const IO::SDK::Time::TimeSpan &attitudeHoldDuration) : IO::SDK::Maneuvers::ManeuverBase(engines, propagator,

@@ -11,7 +11,6 @@
 #include "TLE.h"
 #include <algorithm>
 #include <SpiceUsr.h>
-#include <SpiceZfc.h>
 #include <Constants.h>
 #include <InertialFrames.h>
 

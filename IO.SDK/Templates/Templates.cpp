@@ -60,7 +60,7 @@ static const std::string IKRectangular =
 "\\begintext\n";
 
 //Generic clock used only in pre mission design
-//It's generated as 2021-01-01/00:00:00.0 UTC ans is equal to 6.6273126918393E+08 TDB past seconds
+//It's generated as 2021-01-01/00:00:00.0 UTC and is equal to 6.6273126918393E+08 TDB past seconds
 //Resolution : 15.259 us
 static const std::string Sclk =
 "KPL/SCLK\n"

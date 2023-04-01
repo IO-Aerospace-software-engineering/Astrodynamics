@@ -64,8 +64,7 @@ IO::SDK::Instruments::Instrument::Instrument(const IO::SDK::Body::Spacecraft::Sp
                                                                       m_fovShape{
                                                                               IO::SDK::Instruments::FOVShapeEnum::Circular},
                                                                       m_boresight{boresight},
-                                                                      m_fovRefVector{fovRefVector},
-                                                                      m_fovAngle{fovAngle}
+                                                                      m_fovRefVector{fovRefVector}
 {
 
     const_cast<std::unique_ptr<IO::SDK::Kernels::InstrumentKernel> &>(m_kernel).reset(
@@ -88,9 +87,7 @@ IO::SDK::Instruments::Instrument::Instrument(const IO::SDK::Body::Spacecraft::Sp
           m_orientation{orientation},
           m_fovShape{fovShape},
           m_boresight{boresight},
-          m_fovRefVector{fovRefVector},
-          m_fovAngle{fovAngle},
-          m_crossAngle{crossAngle}
+          m_fovRefVector{fovRefVector}
 {
 
     if (fovShape == IO::SDK::Instruments::FOVShapeEnum::Circular)
