@@ -20,7 +20,7 @@ IO::SDK::Maneuvers::Attitudes::ZenithAttitude::ZenithAttitude(const std::vector<
         : IO::SDK::Maneuvers::ManeuverBase(engines, propagator, minimumEpoch, attitudeHoldDuration) {
 }
 
-void IO::SDK::Maneuvers::Attitudes::ZenithAttitude::Compute(const IO::SDK::OrbitalParameters::OrbitalParameters &maneuverPoint) {
+void IO::SDK::Maneuvers::Attitudes::ZenithAttitude::Compute([[maybe_unused]]const IO::SDK::OrbitalParameters::OrbitalParameters &maneuverPoint) {
     m_deltaV = std::make_unique<IO::SDK::Math::Vector3D>();
 }
 
@@ -29,6 +29,6 @@ IO::SDK::OrbitalParameters::StateOrientation IO::SDK::Maneuvers::Attitudes::Zeni
                                                         maneuverPoint.GetEpoch(), maneuverPoint.GetFrame()};
 }
 
-bool IO::SDK::Maneuvers::Attitudes::ZenithAttitude::CanExecute(const IO::SDK::OrbitalParameters::OrbitalParameters &orbitalParams) {
+bool IO::SDK::Maneuvers::Attitudes::ZenithAttitude::CanExecute([[maybe_unused]]const IO::SDK::OrbitalParameters::OrbitalParameters &orbitalParams) {
     return true;
 }
