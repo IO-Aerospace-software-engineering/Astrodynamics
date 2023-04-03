@@ -9,6 +9,7 @@
  * 
  */
 #include <fstream>
+#include <sstream>
 #include <filesystem>
 #include "Templates/Templates.cpp"
 #include <Spacecraft.h>

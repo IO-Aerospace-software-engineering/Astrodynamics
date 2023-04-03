@@ -10,6 +10,7 @@
  */
 #include "RectangularInstrumentKernel.h"
 #include<filesystem>
+#include<sstream>
 #include<fstream>
 #include <Templates/Templates.cpp>
 

@@ -10,6 +10,7 @@
  */
 #include <SpacecraftClockKernel.h>
 #include<fstream>
+#include<sstream>
 #include<filesystem>
 
 #include "Templates/Templates.cpp"

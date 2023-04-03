@@ -11,6 +11,7 @@
 
 #include <filesystem>
 #include <fstream>
+#include <sstream>
 #include <Site.h>
 #include <Templates/Templates.cpp>
 #include <StringHelpers.h>
