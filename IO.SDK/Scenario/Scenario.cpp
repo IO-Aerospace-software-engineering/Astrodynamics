@@ -2,11 +2,12 @@
 // Created by s.guillet on 23/02/2023.
 //
 
-#include <Propagator.h>
 #include <Scenario.h>
 #include <Launch.h>
 
-IO::SDK::Scenario::Scenario(const std::string &name, const IO::SDK::Time::Window<IO::SDK::Time::UTC> &windows) : m_name{name}, m_windows{windows},
+#include "Parameters.h"
+
+IO::SDK::Scenario::Scenario(std::string name, const IO::SDK::Time::Window<IO::SDK::Time::UTC> &windows) : m_name{std::move(name)}, m_windows{windows},
                                                                                                                  m_integrator(IO::SDK::Parameters::SpacecraftPropagationStep,
                                                                                                                               m_forces)
 {
@@ -90,7 +91,7 @@ void IO::SDK::Scenario::Execute()
     //Evaluate distance constraints
     for (auto &&constraint: m_distanceConstraints)
     {
-        constraint.second = constraint.first->GetObserver().FindWindowsOnDistanceConstraint(tdb, constraint.first->GetTarget(), constraint.first->GetObserver(),
+        constraint.second = Body::Body::FindWindowsOnDistanceConstraint(tdb, constraint.first->GetTarget(), constraint.first->GetObserver(),
                                                                                             constraint.first->GetConstraint(), constraint.first->GetAberration(),
                                                                                             constraint.first->GetValue(),
                                                                                             constraint.first->GetInitialStepSize());

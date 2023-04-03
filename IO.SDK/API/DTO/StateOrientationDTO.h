@@ -11,9 +11,9 @@ namespace IO::SDK::API::DTO
     struct StateOrientationDTO
     {
         QuaternionDTO orientation;
-        Vector3DDTO angularVelocity;
-        double epoch;
-        const char* frame;
+        Vector3DDTO angularVelocity{};
+        double epoch{};
+        const char* frame{};
     };
 }
 #endif //IOSDK_STATEORIENTATION_H

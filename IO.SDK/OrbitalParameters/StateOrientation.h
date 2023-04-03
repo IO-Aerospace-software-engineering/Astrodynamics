@@ -12,8 +12,6 @@
 #define StateOrientation_H
 
 #include <Quaternion.h>
-#include <Vector3D.h>
-#include <TDB.h>
 #include <Frames.h>
 
 namespace IO::SDK::OrbitalParameters
@@ -35,7 +33,7 @@ namespace IO::SDK::OrbitalParameters
 		 * @param epoch 
 		 * @param frame 
 		 */
-		StateOrientation(const IO::SDK::Time::TDB &epoch, const IO::SDK::Frames::Frames &frame);
+		StateOrientation(IO::SDK::Time::TDB epoch, IO::SDK::Frames::Frames frame);
 
 		/**
 		 * @brief Construct a new State Orientation object
@@ -46,7 +44,7 @@ namespace IO::SDK::OrbitalParameters
 		 * @param epoch 
 		 * @param frame 
 		 */
-		StateOrientation(const IO::SDK::Math::Vector3D &axis, const double angle, const IO::SDK::Math::Vector3D &angularVelocity, const IO::SDK::Time::TDB &epoch, const IO::SDK::Frames::Frames &frame);
+		StateOrientation(const IO::SDK::Math::Vector3D &axis, double angle, const IO::SDK::Math::Vector3D &angularVelocity, IO::SDK::Time::TDB epoch, IO::SDK::Frames::Frames frame);
 
 		/**
 		 * @brief Construct a new State Orientation object
@@ -61,7 +59,7 @@ namespace IO::SDK::OrbitalParameters
 		 * @param epoch 
 		 * @param frame 
 		 */
-		StateOrientation(const double q0, const double q1, const double q2, const double q3, const double v0, const double v1, const double v2, const IO::SDK::Time::TDB &epoch, const IO::SDK::Frames::Frames &frame);
+		StateOrientation(double q0, double q1, double q2, double q3, double v0, double v1, double v2, IO::SDK::Time::TDB epoch, IO::SDK::Frames::Frames frame);
 
 		/**
 		 * @brief Construct a new State Orientation object
@@ -71,7 +69,7 @@ namespace IO::SDK::OrbitalParameters
 		 * @param epoch 
 		 * @param frame 
 		 */
-		StateOrientation(const IO::SDK::Math::Quaternion &quaternion, const IO::SDK::Math::Vector3D &angularVelocity, const IO::SDK::Time::TDB &epoch, const IO::SDK::Frames::Frames &frame);
+		StateOrientation(const IO::SDK::Math::Quaternion &quaternion, const IO::SDK::Math::Vector3D &angularVelocity, IO::SDK::Time::TDB epoch, IO::SDK::Frames::Frames frame);
 
 		/**
 		 * @brief Assignment operator
@@ -93,28 +91,28 @@ namespace IO::SDK::OrbitalParameters
 		 * 
 		 * @return IO::SDK::Time::TDB 
 		 */
-		IO::SDK::Time::TDB GetEpoch() const;
+		[[nodiscard]] IO::SDK::Time::TDB GetEpoch() const;
 
 		/**
 		 * @brief Get the Quaternion
 		 * 
 		 * @return IO::SDK::Math::Quaternion 
 		 */
-		IO::SDK::Math::Quaternion GetQuaternion() const;
+		[[nodiscard]] IO::SDK::Math::Quaternion GetQuaternion() const;
 
 		/**
 		 * @brief Get the Angular Velocity
 		 * 
 		 * @return IO::SDK::Math::Vector3D 
 		 */
-		IO::SDK::Math::Vector3D GetAngularVelocity() const;
+		[[nodiscard]] IO::SDK::Math::Vector3D GetAngularVelocity() const;
 
 		/**
 		 * @brief Get the Frame
 		 * 
 		 * @return IO::SDK::Frames::Frames 
 		 */
-		IO::SDK::Frames::Frames GetFrame() const;
+		[[nodiscard]] IO::SDK::Frames::Frames GetFrame() const;
 	};
 }
 #endif // !StateOrientation_H

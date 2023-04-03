@@ -33,7 +33,7 @@ namespace IO::SDK::Integrators
          * 
          * @param deltat Step duration
          */
-        IntegratorBase(const IO::SDK::Time::TimeSpan &stepDuration);
+        explicit IntegratorBase(const IO::SDK::Time::TimeSpan &stepDuration);
 
         /**
          * @brief Integrate forces

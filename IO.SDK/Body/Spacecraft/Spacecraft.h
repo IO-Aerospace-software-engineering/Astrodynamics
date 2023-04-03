@@ -11,24 +11,10 @@
 #ifndef SPACECRAFT_H
 #define SPACECRAFT_H
 
-#include <string>
-#include <memory>
-#include <vector>
-
-#include <Body.h>
 #include <SpacecraftFrameFile.h>
 #include <SpacecraftClockKernel.h>
 #include <OrientationKernel.h>
-#include <StateOrientation.h>
 #include <EphemerisKernel.h>
-#include <InertialFrames.h>
-#include <TDB.h>
-#include <Window.h>
-#include <StateVector.h>
-#include <Aberrations.h>
-#include <Vector3D.h>
-#include <Instrument.h>
-#include <FuelTank.h>
 #include <Payload.h>
 #include <Engine.h>
 #include <InstrumentFrameFile.h>
@@ -94,9 +80,10 @@ namespace IO::SDK::Body::Spacecraft {
          * @param orbitalParametersAtEpoch
          * @param attitudeAtEpoch
          */
-        Spacecraft(const int id, const std::string &name, const double dryOperatingMass, double maximumOperatingMass,
+        Spacecraft(int id, const std::string &name, double dryOperatingMass, double maximumOperatingMass,
                    const std::string &missionPrefix,
                    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParametersAtEpoch);
+
         /**
          * Construct a new spacecraft object
          * @param id Naif identifier (must be a negative number)
@@ -108,13 +95,14 @@ namespace IO::SDK::Body::Spacecraft {
          * @param front Front vector relative to ICRF
          * @param top Top vector relative to ICRF
          */
-        Spacecraft(const int id, const std::string &name, const double dryOperatingMass, double maximumOperatingMass,
+        Spacecraft(int id, const std::string &name, double dryOperatingMass, double maximumOperatingMass,
                    const std::string &missionPrefix,
-                   std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParametersAtEpoch, const IO::SDK::Math::Vector3D &front, const IO::SDK::Math::Vector3D& top);
+                   std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParametersAtEpoch, const IO::SDK::Math::Vector3D &front,
+                   const IO::SDK::Math::Vector3D &top);
 
         Spacecraft(const Spacecraft &spacecraft) = delete;
 
-        virtual ~Spacecraft() override = default;
+        ~Spacecraft() override = default;
 
         /**
          * @brief Get the Mission Prefix object
@@ -196,7 +184,7 @@ namespace IO::SDK::Body::Spacecraft {
          * @return IO::SDK::OrbitalParameters::StateVector
          */
         IO::SDK::OrbitalParameters::StateVector
-        ReadEphemeris(const IO::SDK::Frames::Frames &frame, const IO::SDK::AberrationsEnum aberration,
+        ReadEphemeris(const IO::SDK::Frames::Frames &frame, IO::SDK::AberrationsEnum aberration,
                       const IO::SDK::Time::TDB &tdb, const IO::SDK::Body::CelestialBody &observer) const override;
 
         /**
@@ -230,10 +218,10 @@ namespace IO::SDK::Body::Spacecraft {
          * @param fovRefVector
          * @param fovAngle
          */
-        void AddCircularFOVInstrument(const unsigned short id, const std::string &name,
+        void AddCircularFOVInstrument(unsigned short id, const std::string &name,
                                       const IO::SDK::Math::Vector3D &orientation,
                                       const IO::SDK::Math::Vector3D &boresight,
-                                      const IO::SDK::Math::Vector3D &fovRefVector, const double fovAngle);
+                                      const IO::SDK::Math::Vector3D &fovRefVector, double fovAngle);
 
         /**
          * @brief Add an instrument with a rectangular field of view
@@ -246,11 +234,11 @@ namespace IO::SDK::Body::Spacecraft {
          * @param fovAngle
          * @param crossAngle
          */
-        void AddRectangularFOVInstrument(const unsigned short id, const std::string &name,
+        void AddRectangularFOVInstrument(unsigned short id, const std::string &name,
                                          const IO::SDK::Math::Vector3D &orientation,
                                          const IO::SDK::Math::Vector3D &boresight,
-                                         const IO::SDK::Math::Vector3D &fovRefVector, const double fovAngle,
-                                         const double crossAngle);
+                                         const IO::SDK::Math::Vector3D &fovRefVector, double fovAngle,
+                                         double crossAngle);
 
         /**
          * @brief Add an instrument with an elliptical field of view
@@ -263,11 +251,11 @@ namespace IO::SDK::Body::Spacecraft {
          * @param fovAngle
          * @param crossAngle
          */
-        void AddEllipticalFOVInstrument(const unsigned short id, const std::string &name,
+        void AddEllipticalFOVInstrument(unsigned short id, const std::string &name,
                                         const IO::SDK::Math::Vector3D &orientation,
                                         const IO::SDK::Math::Vector3D &boresight,
-                                        const IO::SDK::Math::Vector3D &fovRefVector, const double fovAngle,
-                                        const double crossAngle);
+                                        const IO::SDK::Math::Vector3D &fovRefVector, double fovAngle,
+                                        double crossAngle);
 
         /**
          * @brief Get the Instrument object
@@ -275,7 +263,7 @@ namespace IO::SDK::Body::Spacecraft {
          * @param id
          * @return const IO::SDK::Instruments::Instrument*
          */
-        const IO::SDK::Instruments::Instrument *GetInstrument(const int id) const;
+        const IO::SDK::Instruments::Instrument *GetInstrument(int id) const;
 
         /**
          * @brief Add a fuel tank
@@ -284,7 +272,7 @@ namespace IO::SDK::Body::Spacecraft {
          * @param capacity
          * @param quantity
          */
-        void AddFuelTank(const std::string &serialNumber, const double capacity, const double quantity);
+        void AddFuelTank(const std::string &serialNumber, double capacity, double quantity);
 
         /**
          * @brief Add an engine
@@ -292,7 +280,7 @@ namespace IO::SDK::Body::Spacecraft {
          * @param id
          * @param serialNumber
          * @param name
-         * @param fueltank
+         * @param fuelTankSerialNumber
          * @param position
          * @param orientation
          * @param isp
@@ -300,8 +288,8 @@ namespace IO::SDK::Body::Spacecraft {
          */
         void
         AddEngine(const std::string &serialNumber, const std::string &name, const std::string &fuelTankSerialNumber,
-                  const Math::Vector3D &position, const Math::Vector3D &orientation, const double isp,
-                  const double fuelFlow);
+                  const Math::Vector3D &position, const Math::Vector3D &orientation, double isp,
+                  double fuelFlow);
 
         /**
          * @brief Add a payload
@@ -310,7 +298,7 @@ namespace IO::SDK::Body::Spacecraft {
          * @param name
          * @param mass
          */
-        void AddPayload(const std::string &serialNumber, const std::string &name, const double mass);
+        void AddPayload(const std::string &serialNumber, const std::string &name, double mass);
 
         /**
          * @brief Get the toal mass
@@ -354,6 +342,8 @@ namespace IO::SDK::Body::Spacecraft {
          * @return frame
          */
         const std::unique_ptr<IO::SDK::Frames::SpacecraftFrameFile> &GetFrame() const;
+
+        inline double GetMaximumOperatingMass() { return m_maximumOperatingMass; }
     };
 }
 

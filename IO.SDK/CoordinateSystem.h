@@ -19,13 +19,13 @@ namespace IO::SDK
     {
     private:
         const std::string m_name;
-        static CoordinateSystem _Rectangular;
-        static CoordinateSystem _Latitudinal;
-        static CoordinateSystem _RA_DEC;
-        static CoordinateSystem _Spherical;
-        static CoordinateSystem _Cylindrical;
-        static CoordinateSystem _Geodetic;
-        static CoordinateSystem _Planetographic;
+        static CoordinateSystem mRectangular;
+        static CoordinateSystem mLatitudinal;
+        static CoordinateSystem mRA_DEC;
+        static CoordinateSystem mSpherical;
+        static CoordinateSystem mCylindrical;
+        static CoordinateSystem mGeodetic;
+        static CoordinateSystem mPlanetographic;
 
     public:
         /**
@@ -33,14 +33,14 @@ namespace IO::SDK
          * 
          * @param name 
          */
-        CoordinateSystem(const std::string &name);
+        explicit CoordinateSystem(const std::string &name);
 
         /**
          * @brief Get char array coordinate system
          * 
          * @return const char* 
          */
-        const char *ToCharArray() const;
+        [[nodiscard]] const char *ToCharArray() const;
 
         static CoordinateSystem& Rectangular();
         static CoordinateSystem& Latitudinal();

@@ -31,7 +31,7 @@ namespace IO::SDK::Integrators::Forces
          * 
          */
         GravityForce();
-        ~GravityForce();
+        ~GravityForce() override;
 
         /**
          * @brief Apply force
@@ -51,7 +51,7 @@ namespace IO::SDK::Integrators::Forces
      * @param u12 
      * @return IO::SDK::Math::Vector3D 
      */
-    IO::SDK::Math::Vector3D ComputeForce(const double m1, const double m2, const double distance, const IO::SDK::Math::Vector3D &u12);
+    IO::SDK::Math::Vector3D ComputeForce(double m1, double m2, double distance, const IO::SDK::Math::Vector3D &u12);
 
 }
 

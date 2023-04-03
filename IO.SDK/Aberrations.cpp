@@ -11,7 +11,7 @@
 #include "Aberrations.h"
 #include<map>
 
-std::string IO::SDK::Aberrations::ToString(const AberrationsEnum e) const
+std::string IO::SDK::Aberrations::ToString(const AberrationsEnum e)
 {
 	const std::map<AberrationsEnum, const char*> AberrationStrings{
 		{ AberrationsEnum::None, "NONE" },

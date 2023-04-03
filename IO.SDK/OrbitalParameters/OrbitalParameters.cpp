@@ -8,15 +8,10 @@
  * @copyright Copyright (c) 2021
  * 
  */
-#include <cmath>
-#include <limits>
-
-#include <OrbitalParameters.h>
-#include <SDKException.h>
 #include <Constants.h>
 #include <StateVector.h>
-#include <SpiceUsr.h>
 #include <InertialFrames.h>
+#include <Parameters.h>
 
 IO::SDK::OrbitalParameters::OrbitalParameters::OrbitalParameters(const std::shared_ptr<IO::SDK::Body::CelestialBody> &centerOfMotion, const IO::SDK::Time::TDB &epoch, const IO::SDK::Frames::Frames &frame) : m_centerOfMotion{centerOfMotion}, m_epoch{epoch}, m_frame{frame}
 {
@@ -64,7 +59,7 @@ IO::SDK::Time::TDB IO::SDK::OrbitalParameters::OrbitalParameters::GetTimeToMeanA
 	{
 		delta += IO::SDK::Constants::_2PI;
 	}
-	return IO::SDK::Time::TDB(std::chrono::duration<double>(m_epoch.GetSecondsFromJ2000().count() + std::fmod(delta, IO::SDK::Constants::_2PI) / GetMeanMotion()));
+	return IO::SDK::Time::TDB{std::chrono::duration<double>(m_epoch.GetSecondsFromJ2000().count() + std::fmod(delta, IO::SDK::Constants::_2PI) / GetMeanMotion())};
 }
 
 IO::SDK::Time::TDB IO::SDK::OrbitalParameters::OrbitalParameters::GetTimeToTrueAnomaly(double trueAnomalyTarget) const
@@ -86,7 +81,7 @@ IO::SDK::Time::TDB IO::SDK::OrbitalParameters::OrbitalParameters::GetTimeToTrueA
 	return GetTimeToMeanAnomaly(M);
 }
 
-double IO::SDK::OrbitalParameters::OrbitalParameters::GetEccentricAnomaly(IO::SDK::Time::TDB epoch) const
+double IO::SDK::OrbitalParameters::OrbitalParameters::GetEccentricAnomaly(const IO::SDK::Time::TDB& epoch) const
 {
 	double M{this->GetMeanAnomaly(epoch)};
 	double tmpE{M};
@@ -100,7 +95,7 @@ double IO::SDK::OrbitalParameters::OrbitalParameters::GetEccentricAnomaly(IO::SD
 	return E;
 }
 
-double IO::SDK::OrbitalParameters::OrbitalParameters::GetMeanAnomaly(IO::SDK::Time::TDB epoch) const
+double IO::SDK::OrbitalParameters::OrbitalParameters::GetMeanAnomaly(const IO::SDK::Time::TDB& epoch) const
 {
 	double M{GetMeanAnomaly() + GetMeanMotion() * (epoch - m_epoch).GetSeconds().count()};
 	while (M < 0.0)
@@ -110,7 +105,7 @@ double IO::SDK::OrbitalParameters::OrbitalParameters::GetMeanAnomaly(IO::SDK::Ti
 	return std::fmod(M, IO::SDK::Constants::_2PI);
 }
 
-double IO::SDK::OrbitalParameters::OrbitalParameters::GetTrueAnomaly(IO::SDK::Time::TDB epoch) const
+double IO::SDK::OrbitalParameters::OrbitalParameters::GetTrueAnomaly(const IO::SDK::Time::TDB& epoch) const
 {
 	double E{this->GetEccentricAnomaly(epoch)};
 	double v = fmod(atan2(sqrt(1 - pow(GetEccentricity(), 2)) * sin(E), cos(E) - GetEccentricity()), IO::SDK::Constants::_2PI);
@@ -157,7 +152,7 @@ IO::SDK::Math::Vector3D IO::SDK::OrbitalParameters::OrbitalParameters::GetApogee
 	return GetEccentricityVector().Normalize().Reverse() * (GetSemiMajorAxis() * (1.0 + GetEccentricity()));
 }
 
-IO::SDK::OrbitalParameters::StateVector IO::SDK::OrbitalParameters::OrbitalParameters::GetStateVector(const double trueAnomalie) const
+IO::SDK::OrbitalParameters::StateVector IO::SDK::OrbitalParameters::OrbitalParameters::GetStateVector(double trueAnomalie) const
 {
 	return GetStateVector(GetTimeToTrueAnomaly(trueAnomalie));
 }
@@ -183,7 +178,7 @@ IO::SDK::Coordinates::RADec IO::SDK::OrbitalParameters::OrbitalParameters::GetRA
 	double r, ra, dec;
 	recrad_c(rectan, &r, &ra, &dec);
 
-	return IO::SDK::Coordinates::RADec(ra, dec, r);
+	return IO::SDK::Coordinates::RADec{ra, dec, r};
 }
 
 double IO::SDK::OrbitalParameters::OrbitalParameters::GetVelocityAtPerigee() const
@@ -232,7 +227,7 @@ double IO::SDK::OrbitalParameters::OrbitalParameters::GetTrueLongitude(const IO:
 
 double IO::SDK::OrbitalParameters::OrbitalParameters::GetMeanLongitude(const IO::SDK::Time::TDB &epoch) const
 {
-	double res = this->GetRightAscendingNodeLongitude() + this->GetPeriapsisArgument() + this->GetMeanAnomaly();
+	double res = this->GetRightAscendingNodeLongitude() + this->GetPeriapsisArgument() + this->GetMeanAnomaly(epoch);
 
 	while (res > IO::SDK::Constants::_2PI)
 	{

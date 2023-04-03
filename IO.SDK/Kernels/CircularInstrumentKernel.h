@@ -35,7 +35,7 @@ namespace IO::SDK::Kernels
 		 * @param refVector 
 		 * @param angle 
 		 */
-		CircularInstrumentKernel(const IO::SDK::Instruments::Instrument& instrument, const IO::SDK::Math::Vector3D& boresight, const IO::SDK::Math::Vector3D& refVector, const double angle);
+		CircularInstrumentKernel(const IO::SDK::Instruments::Instrument& instrument, const IO::SDK::Math::Vector3D& boresight, const IO::SDK::Math::Vector3D& refVector, double angle);
 
 	};
 }

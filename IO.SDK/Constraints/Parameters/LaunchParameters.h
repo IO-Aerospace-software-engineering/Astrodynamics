@@ -22,16 +22,16 @@ namespace IO::SDK::Constraints::Parameters
         LaunchParameters(const IO::SDK::Sites::LaunchSite &launchSite, const IO::SDK::Sites::Site &recoverySite, bool launchByDay,
                          const IO::SDK::OrbitalParameters::OrbitalParameters &targetOrbit);
 
-        inline const IO::SDK::Sites::LaunchSite &GetLaunchSite()
+        [[nodiscard]] inline const IO::SDK::Sites::LaunchSite &GetLaunchSite() const
         { return m_launchSite; }
 
-        inline const IO::SDK::Sites::Site &GetRecoverySite()
+        [[nodiscard]] inline const IO::SDK::Sites::Site &GetRecoverySite() const
         { return m_recoverySite; }
 
-        inline const bool GetLaunchByDay()
+        [[nodiscard]] inline bool GetLaunchByDay() const
         { return m_launchByDay; }
 
-        inline const IO::SDK::OrbitalParameters::OrbitalParameters &GetTargetOrbit()
+        [[nodiscard]] inline const IO::SDK::OrbitalParameters::OrbitalParameters &GetTargetOrbit() const
         { return m_targetOrbit; }
     };
 }

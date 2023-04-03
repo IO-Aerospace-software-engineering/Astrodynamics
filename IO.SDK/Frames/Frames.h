@@ -33,14 +33,14 @@ namespace IO::SDK::Frames
          * 
          * @param strView 
          */
-        Frames(const std::string &strView);
+        explicit Frames(std::string strView);
 
         /**
          * @brief Get frame name
          * 
          * @return const char* 
          */
-        const char *ToCharArray() const;
+        [[nodiscard]] const char *ToCharArray() const;
 
         /**
          * @brief Equality comparer
@@ -83,7 +83,7 @@ namespace IO::SDK::Frames
          * 
          * @return std::string 
          */
-        std::string GetName() const;
+        [[nodiscard]] std::string GetName() const;
 
         /**
          * @brief Get the 6X6 matrix to transform frame to another
@@ -92,7 +92,7 @@ namespace IO::SDK::Frames
          * @param epoch 
          * @return IO::SDK::Math::Matrix 
          */
-        IO::SDK::Math::Matrix ToFrame6x6(const Frames &frame, const IO::SDK::Time::TDB &epoch) const;
+        [[nodiscard]] IO::SDK::Math::Matrix ToFrame6x6(const Frames &frame, const IO::SDK::Time::TDB &epoch) const;
 
         /**
          * @brief Get the 3x3 matrix to transform frame to another
@@ -101,7 +101,7 @@ namespace IO::SDK::Frames
          * @param epoch 
          * @return IO::SDK::Math::Matrix 
          */
-        IO::SDK::Math::Matrix ToFrame3x3(const Frames &frame, const IO::SDK::Time::TDB &epoch) const;
+        [[nodiscard]] IO::SDK::Math::Matrix ToFrame3x3(const Frames &frame, const IO::SDK::Time::TDB &epoch) const;
 
         /**
          * @brief Transform vector from frame to another
@@ -111,7 +111,7 @@ namespace IO::SDK::Frames
          * @param vector 
          * @return IO::SDK::Math::Vector3D 
          */
-        IO::SDK::Math::Vector3D TransformVector(const Frames &to, const IO::SDK::Math::Vector3D &vector, const IO::SDK::Time::TDB &epoch) const;
+        [[nodiscard]] IO::SDK::Math::Vector3D TransformVector(const Frames &to, const IO::SDK::Math::Vector3D &vector, const IO::SDK::Time::TDB &epoch) const;
     };
 }
 #endif

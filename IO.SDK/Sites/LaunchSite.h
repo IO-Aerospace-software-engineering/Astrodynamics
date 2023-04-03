@@ -11,13 +11,7 @@
 #ifndef LAUNCH_SITE_H
 #define LAUNCH_SITE_H
 
-#include <string>
-#include <vector>
-#include <memory>
-
-#include <Geodetic.h>
 #include <Site.h>
-#include <CelestialBody.h>
 #include <AzimuthRange.h>
 
 namespace IO::SDK::Sites
@@ -40,7 +34,7 @@ namespace IO::SDK::Sites
          * @param coordinates 
          * @param body 
          */
-        LaunchSite(const int id, const std::string name, const IO::SDK::Coordinates::Geodetic coordinates,
+        LaunchSite(int id, const std::string& name, const IO::SDK::Coordinates::Geodetic& coordinates,
                    std::shared_ptr<IO::SDK::Body::CelestialBody> body);
 
         /**
@@ -63,7 +57,7 @@ namespace IO::SDK::Sites
          * @return true 
          * @return false 
          */
-        bool IsAzimuthLaunchAllowed(const double azimuth) const;
+        [[nodiscard]] bool IsAzimuthLaunchAllowed(double azimuth) const;
     };
 
 } // namespace IO::SDK::Sites

@@ -10,7 +10,6 @@
  */
 #ifndef TIMESPAN_H
 #define TIMESPAN_H
-#include<string>
 #include<chrono>
 
 namespace IO::SDK::Time
@@ -25,23 +24,23 @@ namespace IO::SDK::Time
 
 		TimeSpan();
 		/// <summary>
-		/// Instanciate time span
+		/// Instantiate time span
 		/// </summary>
 		/// <param name="period">Period is defined with literal in h - min - s - ms - us - ns. If literal is not specified second will be used</param>
-		TimeSpan(const std::chrono::duration<double> period);
+		explicit TimeSpan(std::chrono::duration<double> period);
 
-		std::chrono::duration<double, std::nano> GetNanoseconds() const;
-		std::chrono::duration<double, std::micro> GetMicroseconds()const;
-		std::chrono::duration<double, std::milli> GetMilliseconds()const;
-		std::chrono::duration<double> GetSeconds() const;
-		std::chrono::duration<double, std::ratio<60>> GetMinutes()const;
-		std::chrono::duration<double, std::ratio<3600>> GetHours()const;
+		[[nodiscard]] std::chrono::duration<double, std::nano> GetNanoseconds() const;
+		[[nodiscard]] std::chrono::duration<double, std::micro> GetMicroseconds()const;
+		[[nodiscard]] std::chrono::duration<double, std::milli> GetMilliseconds()const;
+		[[nodiscard]] std::chrono::duration<double> GetSeconds() const;
+		[[nodiscard]] std::chrono::duration<double, std::ratio<60>> GetMinutes()const;
+		[[nodiscard]] std::chrono::duration<double, std::ratio<3600>> GetHours()const;
 
 		IO::SDK::Time::TimeSpan operator+(const IO::SDK::Time::TimeSpan& ts) const;
-		IO::SDK::Time::TimeSpan operator+(const double val) const;
+		IO::SDK::Time::TimeSpan operator+(double val) const;
 		IO::SDK::Time::TimeSpan operator-(const IO::SDK::Time::TimeSpan& ts) const;
-		IO::SDK::Time::TimeSpan operator*(const double ts) const;
-		IO::SDK::Time::TimeSpan operator/(const double ts) const;
+		IO::SDK::Time::TimeSpan operator*(double ts) const;
+		IO::SDK::Time::TimeSpan operator/(double ts) const;
 		bool operator==(const IO::SDK::Time::TimeSpan& ts) const;
 		bool operator!=(const IO::SDK::Time::TimeSpan& ts) const;
 		bool operator<(const IO::SDK::Time::TimeSpan& ts) const;

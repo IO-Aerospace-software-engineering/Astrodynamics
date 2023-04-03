@@ -11,6 +11,7 @@
 #include <CombinedManeuver.h>
 #include <ConicOrbitalElements.h>
 #include <Vector3D.h>
+#include <Parameters.h>
 
 IO::SDK::Maneuvers::CombinedManeuver::CombinedManeuver(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator, const double inclination, const double perigeeRadius) : IO::SDK::Maneuvers::ManeuverBase(engines, propagator), m_inclination{inclination}, m_peregeeRadius{perigeeRadius}
 {
@@ -49,7 +50,7 @@ IO::SDK::OrbitalParameters::StateOrientation IO::SDK::Maneuvers::CombinedManeuve
 {
     auto maneuverVelocity = GetDeltaV(maneuverPoint.GetStateVector());
 
-    return IO::SDK::OrbitalParameters::StateOrientation(maneuverVelocity.Normalize().To(m_spacecraft.Front), IO::SDK::Math::Vector3D(0.0, 0.0, 0.0), maneuverPoint.GetEpoch(), maneuverPoint.GetFrame());
+    return IO::SDK::OrbitalParameters::StateOrientation{maneuverVelocity.Normalize().To(m_spacecraft.Front), IO::SDK::Math::Vector3D(0.0, 0.0, 0.0), maneuverPoint.GetEpoch(), maneuverPoint.GetFrame()};
 }
 
 IO::SDK::Math::Vector3D IO::SDK::Maneuvers::CombinedManeuver::GetDeltaV(const IO::SDK::OrbitalParameters::StateVector &sv) const

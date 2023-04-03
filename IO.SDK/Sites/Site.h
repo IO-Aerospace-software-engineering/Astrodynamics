@@ -12,22 +12,11 @@
 #ifndef SITE_H
 #define SITE_H
 
-#include <string>
-#include <memory>
-#include <vector>
 
 #include <Geodetic.h>
-#include <UTC.h>
-#include <CelestialBody.h>
-#include <RADec.h>
 #include <Illumination.h>
-#include <Aberrations.h>
-#include <Window.h>
 #include <SiteFrameFile.h>
 #include <HorizontalCoordinates.h>
-#include "Constraints/Constraint.h"
-#include <CoordinateSystem.h>
-#include <Coordinate.h>
 #include <IlluminationAngle.h>
 #include <EphemerisKernel.h>
 
@@ -53,7 +42,6 @@ namespace IO::SDK::Sites
 
         const std::shared_ptr<IO::SDK::Body::CelestialBody> m_body;
         const std::unique_ptr<IO::SDK::Frames::SiteFrameFile> m_frame;
-        const IO::SDK::Aberrations m_aberrationHelper{};
         /**
          * Write stateVectors into ephemeris file
          * @param states
@@ -67,7 +55,7 @@ namespace IO::SDK::Sites
          * @param name 
          * @param coordinates 
          */
-        Site(const int id, const std::string &name, const IO::SDK::Coordinates::Geodetic &coordinates,
+        Site(int id, const std::string &name, const IO::SDK::Coordinates::Geodetic &coordinates,
              std::shared_ptr<IO::SDK::Body::CelestialBody> &body);
 
         virtual ~Site() = default;
@@ -77,7 +65,7 @@ namespace IO::SDK::Sites
          * 
          * @return int 
          */
-        int GetId() const
+        [[nodiscard]] inline int GetId() const
         { return m_id; }
 
         /**
@@ -85,7 +73,7 @@ namespace IO::SDK::Sites
          * 
          * @return std::string 
          */
-        std::string GetName() const
+        [[nodiscard]] inline std::string GetName() const
         { return m_name; }
 
         /**
@@ -93,7 +81,7 @@ namespace IO::SDK::Sites
          * 
          * @return IO::SDK::Coordinates::Geodetic 
          */
-        IO::SDK::Coordinates::Geodetic GetCoordinates() const
+        [[nodiscard]] inline IO::SDK::Coordinates::Geodetic GetCoordinates() const
         { return m_coordinates; }
 
         /**
@@ -101,7 +89,7 @@ namespace IO::SDK::Sites
          * 
          * @return std::shared_ptr<IO::SDK::Body::CelestialBody> 
          */
-        std::shared_ptr<IO::SDK::Body::CelestialBody> GetBody() const
+        [[nodiscard]] inline std::shared_ptr<IO::SDK::Body::CelestialBody> GetBody() const
         { return m_body; }
 
         /**
@@ -111,14 +99,14 @@ namespace IO::SDK::Sites
          * @param epoch 
          * @return IO::SDK::Coordinates::RADec 
          */
-        IO::SDK::Coordinates::RADec GetRADec(const IO::SDK::Body::Body &body, const IO::SDK::AberrationsEnum aberrationCorrection, const IO::SDK::Time::TDB &epoch) const;
+        [[nodiscard]] IO::SDK::Coordinates::RADec GetRADec(const IO::SDK::Body::Body &body, IO::SDK::AberrationsEnum aberrationCorrection, const IO::SDK::Time::TDB &epoch) const;
 
         /**
          * @brief Get rectangular position
          * 
          * @return IO::SDK::Math::Vector3D 
          */
-        IO::SDK::OrbitalParameters::StateVector GetStateVector(const IO::SDK::Frames::Frames frame, const IO::SDK::Time::TDB &epoch) const;
+        [[nodiscard]] IO::SDK::OrbitalParameters::StateVector GetStateVector(const IO::SDK::Frames::Frames& frame, const IO::SDK::Time::TDB &epoch) const;
 
         /**
          * @brief Get the Illumination
@@ -127,7 +115,7 @@ namespace IO::SDK::Sites
          * @param epoch 
          * @return IO::SDK::Illumination::Illumination 
          */
-        IO::SDK::Illumination::Illumination GetIllumination(const IO::SDK::AberrationsEnum aberrationCorrection, const IO::SDK::Time::TDB &epoch) const;
+        [[nodiscard]] IO::SDK::Illumination::Illumination GetIllumination(IO::SDK::AberrationsEnum aberrationCorrection, const IO::SDK::Time::TDB &epoch) const;
 
         /**
          * @brief Know if it's day
@@ -136,7 +124,7 @@ namespace IO::SDK::Sites
          * @return true 
          * @return false 
          */
-        bool IsDay(const IO::SDK::Time::TDB &epoch, const double twilight) const;
+        [[nodiscard]] bool IsDay(const IO::SDK::Time::TDB &epoch, double twilight) const;
 
         /**
          * @brief Know if it's night
@@ -145,7 +133,7 @@ namespace IO::SDK::Sites
          * @return true 
          * @return false 
          */
-        bool IsNight(const IO::SDK::Time::TDB &epoch, const double twilight) const;
+        [[nodiscard]] bool IsNight(const IO::SDK::Time::TDB &epoch, double twilight) const;
 
         /**
          * @brief Find day windows
@@ -154,7 +142,7 @@ namespace IO::SDK::Sites
          * @param twilight 
          * @return std::vector<IO::SDK::Time::Window<IO::SDK::Time::UTC>> 
          */
-        std::vector<IO::SDK::Time::Window<IO::SDK::Time::UTC>> FindDayWindows(const IO::SDK::Time::Window<IO::SDK::Time::UTC> &searchWindow, const double twilight) const;
+        [[nodiscard]] std::vector<IO::SDK::Time::Window<IO::SDK::Time::UTC>> FindDayWindows(const IO::SDK::Time::Window<IO::SDK::Time::UTC> &searchWindow, double twilight) const;
 
         /**
          * @brief Find night windows
@@ -163,7 +151,7 @@ namespace IO::SDK::Sites
          * @param twilight 
          * @return std::vector<IO::SDK::Time::Window<IO::SDK::Time::UTC>> 
          */
-        std::vector<IO::SDK::Time::Window<IO::SDK::Time::UTC>> FindNightWindows(const IO::SDK::Time::Window<IO::SDK::Time::UTC> &searchWindow, const double twilight) const;
+        [[nodiscard]] std::vector<IO::SDK::Time::Window<IO::SDK::Time::UTC>> FindNightWindows(const IO::SDK::Time::Window<IO::SDK::Time::UTC> &searchWindow, double twilight) const;
 
         /**
          * @brief Find windows where illumination constraint is satisfied
@@ -176,9 +164,9 @@ namespace IO::SDK::Sites
          * @param value 
          * @return std::vector<IO::SDK::Time::Window<IO::SDK::Time::UTC>> 
          */
-        std::vector<IO::SDK::Time::Window<IO::SDK::Time::UTC>>
+        [[nodiscard]] std::vector<IO::SDK::Time::Window<IO::SDK::Time::UTC>>
         FindWindowsOnIlluminationConstraint(const IO::SDK::Time::Window<IO::SDK::Time::UTC> &searchWindow, const IO::SDK::Body::Body &observerBody,
-                                            const IO::SDK::IlluminationAngle &illuminationAngle, const IO::SDK::Constraints::Constraint &constraint, const double value) const;
+                                            const IO::SDK::IlluminationAngle &illuminationAngle, const IO::SDK::Constraints::Constraint &constraint, double value) const;
 
         /**
          * @brief Get the Horizontal Coordinates to the target body
@@ -187,8 +175,8 @@ namespace IO::SDK::Sites
          * @param epoch 
          * @return IO::SDK::Coordinates::HorizontalCoordinates 
          */
-        IO::SDK::Coordinates::HorizontalCoordinates
-        GetHorizontalCoordinates(const IO::SDK::Body::Body &body, const IO::SDK::AberrationsEnum aberrationCorrection, const IO::SDK::Time::TDB &epoch) const;
+        [[nodiscard]] IO::SDK::Coordinates::HorizontalCoordinates
+        GetHorizontalCoordinates(const IO::SDK::Body::Body &body, IO::SDK::AberrationsEnum aberrationCorrection, const IO::SDK::Time::TDB &epoch) const;
 
 
         /**
@@ -199,27 +187,27 @@ namespace IO::SDK::Sites
          * @param epoch 
          * @return IO::SDK::OrbitalParameters::StateVector 
          */
-        IO::SDK::OrbitalParameters::StateVector
-        GetStateVector(const IO::SDK::Body::Body &body, const IO::SDK::Frames::Frames frame, const IO::SDK::AberrationsEnum aberrationCorrection,
+        [[nodiscard]] IO::SDK::OrbitalParameters::StateVector
+        GetStateVector(const IO::SDK::Body::Body &body, const IO::SDK::Frames::Frames& frame, IO::SDK::AberrationsEnum aberrationCorrection,
                        const IO::SDK::Time::TDB &epoch) const;
 
 
-        std::vector<IO::SDK::Time::Window<IO::SDK::Time::UTC>>
+        [[nodiscard]] std::vector<IO::SDK::Time::Window<IO::SDK::Time::UTC>>
         FindBodyVisibilityWindows(const IO::SDK::Body::Body &body, const IO::SDK::Time::Window<IO::SDK::Time::UTC> &searchWindow,
-                                  const IO::SDK::AberrationsEnum aberrationCorrection) const;
+                                  IO::SDK::AberrationsEnum aberrationCorrection) const;
 
         /**
          * Get the site frame file
          * @return
          */
-        inline const std::unique_ptr<IO::SDK::Frames::SiteFrameFile> &GetFrame() const
+        [[nodiscard]] inline const std::unique_ptr<IO::SDK::Frames::SiteFrameFile> &GetFrame() const
         { return m_frame; }
 
         /**
          * Get the file path to this site
          * @return
          */
-        inline const std::string GetFilesPath() const
+        [[nodiscard]] inline std::string GetFilesPath() const
         { return m_filePath; }
 
 
@@ -238,14 +226,14 @@ namespace IO::SDK::Sites
          * @param observer
          * @return
          */
-        OrbitalParameters::StateVector
-        ReadEphemeris(const Frames::Frames &frame, const AberrationsEnum aberration, const Time::TDB &epoch, const Body::CelestialBody &observer) const;
+        [[nodiscard]] OrbitalParameters::StateVector
+        ReadEphemeris(const Frames::Frames &frame, AberrationsEnum aberration, const Time::TDB &epoch, const Body::CelestialBody &observer) const;
 
         /**
          * Get Time span covered by the ephemeris file
          * @return
          */
-        Time::Window<IO::SDK::Time::TDB> GetEphemerisCoverageWindow() const;
+        [[nodiscard]] Time::Window<IO::SDK::Time::TDB> GetEphemerisCoverageWindow() const;
 
         /**
          * Write a comment into ephemeris file
@@ -257,7 +245,7 @@ namespace IO::SDK::Sites
          * Read comment into ephemeris file
          * @return
          */
-        std::string ReadEphemerisKernelComment() const;
+        [[nodiscard]] std::string ReadEphemerisKernelComment() const;
     };
 }
 

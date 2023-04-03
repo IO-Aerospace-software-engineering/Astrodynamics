@@ -11,6 +11,10 @@
 
 #include <Site.h>
 #include <Builder.h>
+#include <Parameters.h>
+#include <Constants.h>
+#include "CoordinateSystem.h"
+#include "Coordinate.h"
 
 using namespace std::chrono_literals;
 
@@ -19,14 +23,14 @@ IO::SDK::Sites::Site::Site(const int id, const std::string &name, const IO::SDK:
                                                                                   m_name{name},
                                                                                   m_coordinates{coordinates},
                                                                                   m_filePath{std::string(IO::SDK::Parameters::SitePath) + "/" + name},
-                                                                                  m_body{body},
                                                                                   m_ephemerisKernel{std::make_unique<IO::SDK::Kernels::EphemerisKernel>(*this)},
+                                                                                  m_body{body},
                                                                                   m_frame{std::make_unique<IO::SDK::Frames::SiteFrameFile>(*this)}
 {
 }
 
 IO::SDK::OrbitalParameters::StateVector
-IO::SDK::Sites::Site::GetStateVector(const IO::SDK::Frames::Frames frame, const IO::SDK::Time::TDB &epoch) const
+IO::SDK::Sites::Site::GetStateVector(const IO::SDK::Frames::Frames& frame, const IO::SDK::Time::TDB &epoch) const
 {
     auto radius = m_body->GetRadius() * 1000.0;
     SpiceDouble bodyFixedLocation[3];
@@ -57,7 +61,7 @@ IO::SDK::Sites::Site::GetRADec(const IO::SDK::Body::Body &body, const IO::SDK::A
     double r, ra, dec;
     recrad_c(rectan, &r, &ra, &dec);
 
-    return IO::SDK::Coordinates::RADec(ra, dec, r);
+    return IO::SDK::Coordinates::RADec{ra, dec, r};
 }
 
 IO::SDK::Illumination::Illumination
@@ -80,9 +84,9 @@ IO::SDK::Sites::Site::GetIllumination(const IO::SDK::AberrationsEnum aberrationC
              m_body->GetBodyFixedFrame().GetName().c_str(), abe.ToString(aberrationCorrection).c_str(), "10",
              bodyFixedLocation, &srfEpoch, srfvec, &pha, &inc, &emi);
 
-    return IO::SDK::Illumination::Illumination(
+    return IO::SDK::Illumination::Illumination{
             IO::SDK::Math::Vector3D(srfvec[0] * 1000.0, srfvec[1] * 1000.0, srfvec[2] * 1000.0), pha, inc, emi,
-            IO::SDK::Time::TDB(std::chrono::duration<double>(srfEpoch)));
+            IO::SDK::Time::TDB(std::chrono::duration<double>(srfEpoch))};
 }
 
 bool IO::SDK::Sites::Site::IsDay(const IO::SDK::Time::TDB &epoch, const double twilight) const
@@ -128,8 +132,6 @@ IO::SDK::Sites::Site::FindWindowsOnIlluminationConstraint(const IO::SDK::Time::W
     SpiceDouble windowStart;
     SpiceDouble windowEnd;
 
-    Aberrations abe;
-
     const SpiceInt MAXIVL{1000};
     const SpiceInt MAXWIN{2000};
 
@@ -143,16 +145,16 @@ IO::SDK::Sites::Site::FindWindowsOnIlluminationConstraint(const IO::SDK::Time::W
              searchWindow.GetEndDate().ToTDB().GetSecondsFromJ2000().count(), &cnfine);
 
     gfilum_c("Ellipsoid", illuminationAgngle.ToCharArray(), std::to_string(m_body->GetId()).c_str(), "Sun",
-             m_body->GetBodyFixedFrame().GetName().c_str(), abe.ToString(IO::SDK::AberrationsEnum::CNS).c_str(),
+             m_body->GetBodyFixedFrame().GetName().c_str(), IO::SDK::Aberrations::ToString(IO::SDK::AberrationsEnum::CNS).c_str(),
              observerBody.GetName().c_str(), bodyFixedLocation, constraint.ToCharArray(), value, 0.0, 4.5 * 60 * 60,
              MAXIVL, &cnfine, &results);
 
     for (int i = 0; i < wncard_c(&results); i++)
     {
         wnfetd_c(&results, i, &windowStart, &windowEnd);
-        windows.push_back(IO::SDK::Time::Window<IO::SDK::Time::UTC>(
+        windows.emplace_back(
                 IO::SDK::Time::TDB(std::chrono::duration<double>(windowStart)).ToUTC(),
-                IO::SDK::Time::TDB(std::chrono::duration<double>(windowEnd)).ToUTC()));
+                IO::SDK::Time::TDB(std::chrono::duration<double>(windowEnd)).ToUTC());
     }
     return windows;
 }
@@ -168,16 +170,16 @@ IO::SDK::Coordinates::HorizontalCoordinates IO::SDK::Sites::Site::GetHorizontalC
     SpiceDouble res[6];
     SpiceDouble lt;
     azlcpo_c("ELLIPSOID", std::to_string(body.GetId()).c_str(), epoch.GetSecondsFromJ2000().count(),
-             m_aberrationHelper.ToString(aberrationCorrection).c_str(), false, true, bodyFixedLocation,
+             IO::SDK::Aberrations::ToString(aberrationCorrection).c_str(), false, true, bodyFixedLocation,
              std::to_string(m_body->GetId()).c_str(),
              m_body->GetBodyFixedFrame().GetName().c_str(), res, &lt);
 
-    return IO::SDK::Coordinates::HorizontalCoordinates(res[1], res[2], res[0] * 1000.0);
+    return IO::SDK::Coordinates::HorizontalCoordinates{res[1], res[2], res[0] * 1000.0};
 }
 
 IO::SDK::OrbitalParameters::StateVector
-IO::SDK::Sites::Site::GetStateVector(const IO::SDK::Body::Body &body, const IO::SDK::Frames::Frames frame,
-                                     const IO::SDK::AberrationsEnum aberrationCorrection,
+IO::SDK::Sites::Site::GetStateVector(const IO::SDK::Body::Body &body, const IO::SDK::Frames::Frames& frame,
+                                     IO::SDK::AberrationsEnum aberrationCorrection,
                                      const IO::SDK::Time::TDB &epoch) const
 {
     auto radius = m_body->GetRadius();
@@ -185,8 +187,8 @@ IO::SDK::Sites::Site::GetStateVector(const IO::SDK::Body::Body &body, const IO::
 
     auto siteVector = GetStateVector(frame, epoch);
 
-    return IO::SDK::OrbitalParameters::StateVector(m_body, bodiesSv.GetPosition() - siteVector.GetPosition(),
-                                                   bodiesSv.GetVelocity() - siteVector.GetVelocity(), epoch, frame);
+    return IO::SDK::OrbitalParameters::StateVector{m_body, bodiesSv.GetPosition() - siteVector.GetPosition(),
+                                                   bodiesSv.GetVelocity() - siteVector.GetVelocity(), epoch, frame};
 }
 
 std::vector<IO::SDK::Time::Window<IO::SDK::Time::UTC>>
@@ -197,8 +199,6 @@ IO::SDK::Sites::Site::FindBodyVisibilityWindows(const IO::SDK::Body::Body &body,
     std::vector<IO::SDK::Time::Window<IO::SDK::Time::UTC>> windows;
     SpiceDouble windowStart;
     SpiceDouble windowEnd;
-
-    Aberrations abe;
 
     const SpiceInt NINTVL{10000};
     const SpiceInt MAXWIN{20000};
@@ -211,15 +211,15 @@ IO::SDK::Sites::Site::FindBodyVisibilityWindows(const IO::SDK::Body::Body &body,
 
     wninsd_c(searchWindow.GetStartDate().ToTDB().GetSecondsFromJ2000().count(), searchWindow.GetEndDate().ToTDB().GetSecondsFromJ2000().count(), &cnfine);
 
-    gfposc_c(std::to_string(body.GetId()).c_str(), m_frame->GetName().c_str(), abe.ToString(aberrationCorrection).c_str(), std::to_string(m_id).c_str(),
+    gfposc_c(std::to_string(body.GetId()).c_str(), m_frame->GetName().c_str(), IO::SDK::Aberrations::ToString(aberrationCorrection).c_str(), std::to_string(m_id).c_str(),
              IO::SDK::CoordinateSystem::Latitudinal().ToCharArray(), IO::SDK::Coordinate::Latitude().ToCharArray(), ">", 0.0, 0.0, 60.0, NINTVL, &cnfine, &results);
 
     for (int i = 0; i < wncard_c(&results); i++)
     {
         wnfetd_c(&results, i, &windowStart, &windowEnd);
-        windows.push_back(IO::SDK::Time::Window<IO::SDK::Time::UTC>(
+        windows.emplace_back(
                 IO::SDK::Time::TDB(std::chrono::duration<double>(windowStart)).ToUTC(),
-                IO::SDK::Time::TDB(std::chrono::duration<double>(windowEnd)).ToUTC()));
+                IO::SDK::Time::TDB(std::chrono::duration<double>(windowEnd)).ToUTC());
     }
     return windows;
 }

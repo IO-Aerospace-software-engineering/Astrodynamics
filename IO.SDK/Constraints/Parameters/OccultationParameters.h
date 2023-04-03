@@ -5,11 +5,7 @@
 #ifndef IOSDK_OCCULTATIONPARAMETERS_H
 #define IOSDK_OCCULTATIONPARAMETERS_H
 
-#include <Aberrations.h>
 #include <CelestialBody.h>
-#include <OccultationType.h>
-#include <TDB.h>
-#include <Window.h>
 
 namespace IO::SDK::Constraints::Parameters
 {
@@ -28,25 +24,25 @@ namespace IO::SDK::Constraints::Parameters
                               const IO::SDK::Body::CelestialBody &front,
                               const IO::SDK::Body::Body &back,
                               const IO::SDK::OccultationType &occultationType,
-                              const IO::SDK::AberrationsEnum aberration,
+                              IO::SDK::AberrationsEnum aberration,
                               const IO::SDK::Time::TimeSpan &initialStepSize);
 
-        inline const IO::SDK::Body::Body &GetObserver() const
+        [[nodiscard]] inline const IO::SDK::Body::Body &GetObserver() const
         { return m_observer; }
 
-        inline const IO::SDK::Body::CelestialBody &GetFront() const
+        [[nodiscard]] inline const IO::SDK::Body::CelestialBody &GetFront() const
         { return m_front; }
 
-        inline const IO::SDK::Body::Body &GetBack() const
+        [[nodiscard]] inline const IO::SDK::Body::Body &GetBack() const
         { return m_back; }
 
-        inline const IO::SDK::OccultationType &GetOccultationType() const
+        [[nodiscard]] inline const IO::SDK::OccultationType &GetOccultationType() const
         { return m_occultationType; }
 
-        inline const IO::SDK::AberrationsEnum GetAberration() const
+        [[nodiscard]] inline IO::SDK::AberrationsEnum GetAberration() const
         { return m_aberration; }
 
-        inline const IO::SDK::Time::TimeSpan &GetInitialStepSize() const
+        [[nodiscard]] inline const IO::SDK::Time::TimeSpan &GetInitialStepSize() const
         { return m_initialStepSize; }
 
     };

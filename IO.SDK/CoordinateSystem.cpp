@@ -10,13 +10,13 @@
  */
 #include <CoordinateSystem.h>
 
-IO::SDK::CoordinateSystem IO::SDK::CoordinateSystem::_Rectangular(std::string("RECTANGULAR"));
-IO::SDK::CoordinateSystem IO::SDK::CoordinateSystem::_Latitudinal(std::string("LATITUDINAL"));
-IO::SDK::CoordinateSystem IO::SDK::CoordinateSystem::_RA_DEC(std::string("RA/DEC"));
-IO::SDK::CoordinateSystem IO::SDK::CoordinateSystem::_Spherical(std::string("SPHERICAL"));
-IO::SDK::CoordinateSystem IO::SDK::CoordinateSystem::_Cylindrical(std::string("CYLINDRICAL"));
-IO::SDK::CoordinateSystem IO::SDK::CoordinateSystem::_Geodetic(std::string("GEODETIC"));
-IO::SDK::CoordinateSystem IO::SDK::CoordinateSystem::_Planetographic(std::string("PLANETOGRAPHIC"));
+IO::SDK::CoordinateSystem IO::SDK::CoordinateSystem::mRectangular(std::string("RECTANGULAR"));
+IO::SDK::CoordinateSystem IO::SDK::CoordinateSystem::mLatitudinal(std::string("LATITUDINAL"));
+IO::SDK::CoordinateSystem IO::SDK::CoordinateSystem::mRA_DEC(std::string("RA/DEC"));
+IO::SDK::CoordinateSystem IO::SDK::CoordinateSystem::mSpherical(std::string("SPHERICAL"));
+IO::SDK::CoordinateSystem IO::SDK::CoordinateSystem::mCylindrical(std::string("CYLINDRICAL"));
+IO::SDK::CoordinateSystem IO::SDK::CoordinateSystem::mGeodetic(std::string("GEODETIC"));
+IO::SDK::CoordinateSystem IO::SDK::CoordinateSystem::mPlanetographic(std::string("PLANETOGRAPHIC"));
 
 IO::SDK::CoordinateSystem::CoordinateSystem(const std::string &name) : m_name{name}
 {
@@ -29,29 +29,29 @@ const char *IO::SDK::CoordinateSystem::ToCharArray() const
 
 IO::SDK::CoordinateSystem &IO::SDK::CoordinateSystem::Rectangular()
 {
-    return _Rectangular;
+    return mRectangular;
 }
 IO::SDK::CoordinateSystem &IO::SDK::CoordinateSystem::Latitudinal()
 {
-    return _Latitudinal;
+    return mLatitudinal;
 }
 IO::SDK::CoordinateSystem &IO::SDK::CoordinateSystem::RA_DEC()
 {
-    return _RA_DEC;
+    return mRA_DEC;
 }
 IO::SDK::CoordinateSystem &IO::SDK::CoordinateSystem::Spherical()
 {
-    return _Spherical;
+    return mSpherical;
 }
 IO::SDK::CoordinateSystem &IO::SDK::CoordinateSystem::Cylindrical()
 {
-    return _Cylindrical;
+    return mCylindrical;
 }
 IO::SDK::CoordinateSystem &IO::SDK::CoordinateSystem::Geodetic()
 {
-    return _Geodetic;
+    return mGeodetic;
 }
 IO::SDK::CoordinateSystem &IO::SDK::CoordinateSystem::Planetographic()
 {
-    return _Planetographic;
+    return mPlanetographic;
 }

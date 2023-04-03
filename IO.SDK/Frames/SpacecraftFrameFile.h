@@ -11,8 +11,6 @@
 #ifndef SPACECRAFT_FRAME_H
 #define SPACECRAFT_FRAME_H
 
-#include <string>
-#include <Spacecraft.h>
 #include <FrameFile.h>
 
 //Forward declaration
@@ -37,12 +35,12 @@ namespace IO::SDK::Frames {
          *
          * @param spacecraft
          */
-        SpacecraftFrameFile(const IO::SDK::Body::Spacecraft::Spacecraft &spacecraft);
+        explicit SpacecraftFrameFile(const IO::SDK::Body::Spacecraft::Spacecraft &spacecraft);
 
     public:
         friend class IO::SDK::Body::Spacecraft::Spacecraft;
 
-        inline int GetId() const { return m_id; }
+        [[nodiscard]] inline int GetId() const { return m_id; }
     };
 }
 #endif

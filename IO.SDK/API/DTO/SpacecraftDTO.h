@@ -22,12 +22,12 @@ namespace IO::SDK::API::DTO
     {
         //Spacecraft structure
         int id{0};
-        const char* name;
-        double dryOperatingMass;
-        double maximumOperatingMass;
+        const char* name{};
+        double dryOperatingMass{};
+        double maximumOperatingMass{};
         StateVectorDTO initialOrbitalParameter;
-        FuelTankDTO fuelTank[5];
-        EngineDTO engines[5];
+        FuelTankDTO fuelTank[5]{};
+        EngineDTO engines[5]{};
         InstrumentDTO instruments[5];
         PayloadDTO payloads[5];
 

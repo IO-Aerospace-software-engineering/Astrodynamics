@@ -5,7 +5,7 @@
 
 IO::SDK::Constraints::Parameters::DistanceParameters::DistanceParameters(const IO::SDK::Body::Body &observer,
                                                                          const IO::SDK::Body::Body &target, const IO::SDK::Constraints::Constraint &constraint,
-                                                                         const IO::SDK::AberrationsEnum aberration, const double value,
+                                                                         IO::SDK::AberrationsEnum aberration, double value,
                                                                          const IO::SDK::Time::TimeSpan &initialStepSize) :
         m_observer{observer}, m_target{target},
         m_constraint{constraint},

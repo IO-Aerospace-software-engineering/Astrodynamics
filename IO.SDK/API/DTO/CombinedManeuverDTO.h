@@ -11,17 +11,17 @@ namespace IO::SDK::API::DTO
     struct CombinedManeuverDTO
     {
         int maneuverOrder{0};
-        int engines[10];
+        int engines[10]{};
         double attitudeHoldDuration{0.0};
         double minimumEpoch{0.0};
 
         double targetHeight{0.0};
         double targetInclination{0.0};
 
-        WindowDTO maneuverWindow;
-        WindowDTO thrustWindow;
-        WindowDTO attitudeWindow;
-        Vector3DDTO deltaV;
+        WindowDTO maneuverWindow{};
+        WindowDTO thrustWindow{};
+        WindowDTO attitudeWindow{};
+        Vector3DDTO deltaV{};
     };
 }
 

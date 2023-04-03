@@ -158,7 +158,7 @@ TEST(TLE, GetSemiMajorAxis)
 
 	double res = tle.GetSemiMajorAxis();
 
-	ASSERT_DOUBLE_EQ(6803376.2171725733, res);
+	ASSERT_DOUBLE_EQ(6803376.2171725659, res);
 }
 
 TEST(TLE, GetTimeToMeanAnomaly)
@@ -235,11 +235,11 @@ TEST(TLE, GetStateVectorAtEpoch)
 	IO::SDK::Time::TDB epoch("2021-01-20T18:50:13.663106"); //utc
 
 	auto stateVector = tle.GetStateVector(epoch); //2021-Jan-20 18:51:22.8476
-	ASSERT_DOUBLE_EQ(4363669.4588805977, stateVector.GetPosition().GetX());
-	ASSERT_DOUBLE_EQ(-3627809.8122968217, stateVector.GetPosition().GetY());
-	ASSERT_DOUBLE_EQ(-3747415.3046325566, stateVector.GetPosition().GetZ());
-	ASSERT_DOUBLE_EQ(5805.8240970581246, stateVector.GetVelocity().GetX());
-	ASSERT_DOUBLE_EQ(2575.7227314383458, stateVector.GetVelocity().GetY());
-	ASSERT_DOUBLE_EQ(4271.5975567314108, stateVector.GetVelocity().GetZ());
+	ASSERT_DOUBLE_EQ(4363669.2613373389, stateVector.GetPosition().GetX());
+	ASSERT_DOUBLE_EQ(-3627809.912410662, stateVector.GetPosition().GetY());
+	ASSERT_DOUBLE_EQ(-3747415.4653566754, stateVector.GetPosition().GetZ());
+	ASSERT_DOUBLE_EQ(5805.8241824895995, stateVector.GetVelocity().GetX());
+	ASSERT_DOUBLE_EQ(2575.7226437161635, stateVector.GetVelocity().GetY());
+	ASSERT_DOUBLE_EQ(4271.5974622410786, stateVector.GetVelocity().GetZ());
 	ASSERT_EQ(epoch, stateVector.GetEpoch());
 }

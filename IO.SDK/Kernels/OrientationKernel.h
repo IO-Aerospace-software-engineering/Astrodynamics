@@ -12,13 +12,8 @@
 #define ORIENTATION_KERNEL_H
 
 #include<Kernel.h>
-#include<string>
 #include<vector>
 #include<StateOrientation.h>
-#include<InertialFrames.h>
-#include<Window.h>
-#include<TDB.h>
-#include<TimeSpan.h>
 
 //Forward declaration
 namespace IO::SDK::Body::Spacecraft
@@ -36,12 +31,12 @@ namespace IO::SDK::Kernels
 		 * 
 		 * @param spacecraft 
 		 */
-		OrientationKernel(const IO::SDK::Body::Spacecraft::Spacecraft& spacecraft);
+		explicit OrientationKernel(const IO::SDK::Body::Spacecraft::Spacecraft& spacecraft);
 		const IO::SDK::Body::Spacecraft::Spacecraft& m_spacecraft;		
 
 	public:
 
-		virtual ~OrientationKernel();
+		~OrientationKernel() override;
 
 		/**
 		 * @brief Write orientations data
@@ -55,7 +50,7 @@ namespace IO::SDK::Kernels
 		 * 
 		 * @return IO::SDK::Time::Window<IO::SDK::Time::TDB> 
 		 */
-		IO::SDK::Time::Window<IO::SDK::Time::TDB> GetCoverageWindow() const override;
+		[[nodiscard]] IO::SDK::Time::Window<IO::SDK::Time::TDB> GetCoverageWindow() const override;
 
 		/**
 		 * @brief Read state orientations
@@ -65,7 +60,7 @@ namespace IO::SDK::Kernels
 		 * @param frame 
 		 * @return IO::SDK::OrbitalParameters::StateOrientation 
 		 */
-		IO::SDK::OrbitalParameters::StateOrientation ReadStateOrientation(const IO::SDK::Time::TDB& epoch, const IO::SDK::Time::TimeSpan& tolerance, const IO::SDK::Frames::Frames& frame)const;
+		[[nodiscard]] IO::SDK::OrbitalParameters::StateOrientation ReadStateOrientation(const IO::SDK::Time::TDB& epoch, const IO::SDK::Time::TimeSpan& tolerance, const IO::SDK::Frames::Frames& frame)const;
 
 		friend class IO::SDK::Body::Spacecraft::Spacecraft;
 	};

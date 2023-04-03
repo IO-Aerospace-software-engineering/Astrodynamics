@@ -51,69 +51,69 @@ namespace IO::SDK::Body::Spacecraft
 		 * @param isp s
 		 * @param fuelFlow kg/s
 		 */
-		Engine(const std::string &serialNumber, const std::string &name, const IO::SDK::Body::Spacecraft::FuelTank &fueltank, const Math::Vector3D &position, const Math::Vector3D &orientation, const double isp, const double fuelFlow);
+		Engine(const std::string &serialNumber, const std::string &name, const IO::SDK::Body::Spacecraft::FuelTank &fueltank, const Math::Vector3D &position, const Math::Vector3D &orientation, double isp, double fuelFlow);
 		/**
 		 * @brief Get the Name object
 		 * 
 		 * @return std::string 
 		 */
-		std::string GetName() const;
+		[[nodiscard]] std::string GetName() const;
 
 		/**
 		 * @brief Get the Serial Number object
 		 * 
 		 * @return std::string 
 		 */
-		std::string GetSerialNumber() const;
+		[[nodiscard]] std::string GetSerialNumber() const;
 
 		/**
 		 * @brief Get the Position object
 		 * 
 		 * @return Math::Vector3D 
 		 */
-		const Math::Vector3D &GetPosition() const;
+		[[nodiscard]] const Math::Vector3D &GetPosition() const;
 
 		/**
 		 * @brief Get the Orientation object
 		 * 
 		 * @return Math::Vector3D 
 		 */
-		const Math::Vector3D &GetOrientation() const;
+		[[nodiscard]] const Math::Vector3D &GetOrientation() const;
 
 		/**
 		 * @brief Get then engine specific impulse
 		 * 
 		 * @return double 
 		 */
-		double GetISP() const;
+		[[nodiscard]] double GetISP() const;
 
 		/**
 		 * @brief Get the Fuel Flow object
 		 * 
 		 * @return double 
 		 */
-		double GetFuelFlow() const;
+		[[nodiscard]] double GetFuelFlow() const;
 
 		/**
 		 * @brief Get the Remaining Delta V object
 		 * 
 		 * @return double 
 		 */
-		double GetRemainingDeltaV() const;
+		[[nodiscard]] double GetRemainingDeltaV() const;
 
 		/**
 		 * @brief Get the Fuel Tank object
 		 * 
 		 * @return const IO::SDK::Body::Spacecraft::FuelTank& 
 		 */
-		const IO::SDK::Body::Spacecraft::FuelTank &GetFuelTank() const;
+		[[nodiscard]] const IO::SDK::Body::Spacecraft::FuelTank &GetFuelTank() const;
 
 		/**
 		 * @brief Get the Thrust
 		 * 
 		 * @return double 
 		 */
-		double GetThrust() const;
+		[[nodiscard]] double GetThrust() const;
 
 		/**
 		 * @brief Ignite engine and get burned fuel

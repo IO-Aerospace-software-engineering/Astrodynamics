@@ -40,21 +40,21 @@ namespace IO::SDK::Coordinates
 		 * 
 		 * @return double 
 		 */
-		double GetAltitude() const { return this->_altitude; }
+		[[nodiscard]] inline double GetAltitude() const { return this->_altitude; }
 
 		/**
 		 * @brief Get the Longitude
 		 * 
 		 * @return double 
 		 */
-		double GetLongitude() const { return this->_longitude; }
+		[[nodiscard]] inline double GetLongitude() const { return this->_longitude; }
 		
 		/**
 		 * @brief Get the Latitude
 		 * 
 		 * @return double 
 		 */
-		double GetLatitude() const { return this->_latitude; }
+		[[nodiscard]] inline double GetLatitude() const { return this->_latitude; }
 	};
 }
 #endif // !GEODETIC_H

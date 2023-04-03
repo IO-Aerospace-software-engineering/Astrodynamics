@@ -37,7 +37,7 @@ namespace IO::SDK::Frames
 		 * 
 		 * @return std::string 
 		 */
-		std::string GetName() const;
+		[[nodiscard]] std::string GetName() const;
 	};
 }
 #endif

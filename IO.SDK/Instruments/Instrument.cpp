@@ -15,7 +15,6 @@
 #include <InvalidArgumentException.h>
 #include <EllipticalInstrumentKernel.h>
 #include <RectangularInstrumentKernel.h>
-#include <CircularInstrumentKernel.h>
 #include <SpiceUsr.h>
 #include <Builder.h>
 #include <StringHelpers.h>
@@ -65,8 +64,7 @@ IO::SDK::Instruments::Instrument::Instrument(const IO::SDK::Body::Spacecraft::Sp
                                                                       m_fovShape{
                                                                               IO::SDK::Instruments::FOVShapeEnum::Circular},
                                                                       m_boresight{boresight},
-                                                                      m_fovRefVector{fovRefVector},
-                                                                      m_fovAngle{fovAngle}
+                                                                      m_fovRefVector{fovRefVector}
 {
 
     const_cast<std::unique_ptr<IO::SDK::Kernels::InstrumentKernel> &>(m_kernel).reset(
@@ -89,9 +87,7 @@ IO::SDK::Instruments::Instrument::Instrument(const IO::SDK::Body::Spacecraft::Sp
           m_orientation{orientation},
           m_fovShape{fovShape},
           m_boresight{boresight},
-          m_fovRefVector{fovRefVector},
-          m_fovAngle{fovAngle},
-          m_crossAngle{crossAngle}
+          m_fovRefVector{fovRefVector}
 {
 
     if (fovShape == IO::SDK::Instruments::FOVShapeEnum::Circular)
@@ -132,9 +128,10 @@ std::vector<IO::SDK::Math::Vector3D> IO::SDK::Instruments::Instrument::GetFOVBou
     getfov_c(m_id, 4, 20, 50, shape, frame, boresight, &n, bounds);
 
     std::vector<IO::SDK::Math::Vector3D> res;
+    res.reserve(n);
     for (int i = 0; i < n; i++)
     {
-        res.push_back({bounds[i][0], bounds[i][1], bounds[i][2]});
+        res.emplace_back(bounds[i][0], bounds[i][1], bounds[i][2]);
     }
 
     return res;
@@ -148,9 +145,9 @@ IO::SDK::Instruments::Instrument::FindWindowsWhereInFieldOfView(
 ) const
 {
     std::string shape{"POINT"};
-    std::string frame{""};
+    std::string frame;
 
-    const IO::SDK::Body::CelestialBody *celestialBody = dynamic_cast<const IO::SDK::Body::CelestialBody *>(&targetBody);
+    auto celestialBody = dynamic_cast<const IO::SDK::Body::CelestialBody *>(&targetBody);
     if (celestialBody)
     {
         shape = "ELLIPSOID";
@@ -160,8 +157,6 @@ IO::SDK::Instruments::Instrument::FindWindowsWhereInFieldOfView(
     std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>> windows;
     SpiceDouble windowStart;
     SpiceDouble windowEnd;
-
-    Aberrations abe;
 
     const SpiceInt MAXWIN{20000};
 
@@ -176,7 +171,7 @@ IO::SDK::Instruments::Instrument::FindWindowsWhereInFieldOfView(
 
     );
 
-    gftfov_c(std::to_string(m_id).c_str(), targetBody.GetName().c_str(), shape.c_str(), frame.c_str(), abe.ToString(aberration).c_str(),
+    gftfov_c(std::to_string(m_id).c_str(), targetBody.GetName().c_str(), shape.c_str(), frame.c_str(), IO::SDK::Aberrations::ToString(aberration).c_str(),
              m_spacecraft.GetName().c_str(), stepSize.GetSeconds().count(), &cnfine, &results
     );
 
@@ -186,9 +181,9 @@ IO::SDK::Instruments::Instrument::FindWindowsWhereInFieldOfView(
     {
         wnfetd_c(&results, i, &windowStart, &windowEnd
         );
-        windows.push_back(IO::SDK::Time::Window<IO::SDK::Time::TDB>(
+        windows.emplace_back(
                 IO::SDK::Time::TDB(std::chrono::duration<double>(windowStart)),
-                IO::SDK::Time::TDB(std::chrono::duration<double>(windowEnd))));
+                IO::SDK::Time::TDB(std::chrono::duration<double>(windowEnd)));
 
     }
     return
@@ -216,7 +211,7 @@ IO::SDK::Math::Vector3D IO::SDK::Instruments::Instrument::GetBoresight(const IO:
     SpiceDouble localBoresight[3] = {boresightInFrame.GetX(), boresightInFrame.GetY(), boresightInFrame.GetZ()};
     SpiceDouble boresight[3];
     mtxv_c(cmat, localBoresight, boresight);
-    return IO::SDK::Math::Vector3D(boresight[0], boresight[1], boresight[2]);
+    return IO::SDK::Math::Vector3D{boresight[0], boresight[1], boresight[2]};
 }
 
 IO::SDK::Math::Vector3D IO::SDK::Instruments::Instrument::GetBoresightInSpacecraftFrame() const

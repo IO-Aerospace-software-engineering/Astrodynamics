@@ -11,7 +11,6 @@
 #include <ConicOrbitalElements.h>
 #include <cmath>
 #include <Vector3D.h>
-#include <iostream>
 #include <SpiceUsr.h>
 #include <chrono>
 

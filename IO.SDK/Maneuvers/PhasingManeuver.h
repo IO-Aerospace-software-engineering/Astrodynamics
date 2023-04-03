@@ -11,16 +11,7 @@
 #ifndef PHASING_MANEUVER_H
 #define PHASING_MANEUVER_H
 
-#include <memory>
-#include <vector>
-
 #include <ManeuverBase.h>
-#include <OrbitalParameters.h>
-#include <Engine.h>
-#include <Spacecraft.h>
-#include <Propagator.h>
-#include <StateOrientation.h>
-#include <TimeSpan.h>
 
 namespace IO::SDK::Maneuvers
 {
@@ -29,14 +20,6 @@ namespace IO::SDK::Maneuvers
     private:
         const unsigned int m_revolutionsNumber;
         IO::SDK::OrbitalParameters::OrbitalParameters *m_targetOrbit{nullptr};
-
-        /**
-         * @brief Compute true anomaly delta
-         * 
-         * @param orbitalParameters 
-         * @return double 
-         */
-        double DeltaTrueAnomaly(const IO::SDK::OrbitalParameters::OrbitalParameters &orbitalParameters);
 
     protected:
         /**
@@ -55,8 +38,11 @@ namespace IO::SDK::Maneuvers
         IO::SDK::OrbitalParameters::StateOrientation ComputeOrientation(const IO::SDK::OrbitalParameters::OrbitalParameters &maneuverPoint) override;
         /* data */
     public:
-        PhasingManeuver(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator, const unsigned revolutionNumber, IO::SDK::OrbitalParameters::OrbitalParameters *targetOrbit);
-        PhasingManeuver(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator, const unsigned revolutionNumber, IO::SDK::OrbitalParameters::OrbitalParameters *targetOrbit, const IO::SDK::Time::TDB &minimumEpoch);
+        PhasingManeuver(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator, unsigned revolutionNumber,
+                        IO::SDK::OrbitalParameters::OrbitalParameters *targetOrbit);
+
+        PhasingManeuver(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator, unsigned revolutionNumber,
+                        IO::SDK::OrbitalParameters::OrbitalParameters *targetOrbit, const IO::SDK::Time::TDB &minimumEpoch);
 
         /**
          * @brief Evaluate if maneuver can occurs

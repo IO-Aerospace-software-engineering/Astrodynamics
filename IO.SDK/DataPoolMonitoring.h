@@ -25,13 +25,15 @@ namespace IO::SDK
 	public:
 		static DataPoolMonitoring& Instance();
 
-		std::vector<std::string> GetStringProperty(const std::string& propertyName, const int nbValuesExpected) const;
-		std::vector<int> GetIntegerProperty(const std::string& propertyName, const int nbValuesExpected)const;
-		std::vector<double> GetDoubleProperty(const std::string& propertyName, const int nbValuesExpected)const;
+		[[nodiscard]]static std::vector<std::string> GetStringProperty(const std::string& propertyName, int nbValuesExpected) ;
+        [[nodiscard]]static std::vector<int> GetIntegerProperty(const std::string& propertyName, int nbValuesExpected);
+        [[nodiscard]]static std::vector<double> GetDoubleProperty(const std::string& propertyName, int nbValuesExpected);
+        DataPoolMonitoring(const DataPoolMonitoring&) = delete;
+        DataPoolMonitoring& operator= (const DataPoolMonitoring&) = delete;
 
 	private:
-		DataPoolMonitoring& operator= (const DataPoolMonitoring&) = delete;
-		DataPoolMonitoring(const DataPoolMonitoring&) = delete;
+
+
 
 		static DataPoolMonitoring m_instance;
 		DataPoolMonitoring() = default;

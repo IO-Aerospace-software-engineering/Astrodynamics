@@ -132,14 +132,14 @@ TEST(Vector, Rotate) {
 
     ASSERT_NEAR(0.0, res.GetX(), 1E-07);
     ASSERT_NEAR(0.70710676908493031, res.GetY(), 1E-07);
-    ASSERT_NEAR(-0.70710676908493031, res.GetZ(), 1E-09);
+    ASSERT_NEAR(-0.70710678118654746, res.GetZ(), 1E-09);
 
     IO::SDK::Math::Quaternion q4(IO::SDK::Math::Vector3D(1.0, 1.0, 1.0).Normalize(), IO::SDK::Constants::PI2);
     res = vector.Rotate(q4);
 
     ASSERT_NEAR(0.33333330353101093, res.GetX(), 1E-07);
     ASSERT_NEAR(0.91068359264203003, res.GetY(), 1E-07);
-    ASSERT_NEAR(-0.24401692597536345, res.GetZ(), 1E-09);
+    ASSERT_NEAR(-0.2440169358562925, res.GetZ(), 1E-09);
 }
 
 TEST(Vector, To) {

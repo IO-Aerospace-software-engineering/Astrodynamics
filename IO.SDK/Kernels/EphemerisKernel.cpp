@@ -29,14 +29,14 @@ IO::SDK::Kernels::EphemerisKernel::ReadStateVector(const IO::SDK::Body::Celestia
                                                    const IO::SDK::Time::TDB &epoch) const {
     SpiceDouble states[6];
     SpiceDouble lt;
-    IO::SDK::Aberrations a{};
-    spkezr_c(std::to_string(m_objectId).c_str(), epoch.GetSecondsFromJ2000().count(), frame.ToCharArray(), a.ToString(aberration).c_str(), observer.GetName().c_str(),
+    spkezr_c(std::to_string(m_objectId).c_str(), epoch.GetSecondsFromJ2000().count(), frame.ToCharArray(), IO::SDK::Aberrations::ToString(aberration).c_str(),
+             observer.GetName().c_str(),
              states, &lt);
-    for (size_t i = 0; i < 6; i++) {
-        states[i] = states[i] * 1000.0;
+    for (double & state : states) {
+        state = state * 1000.0;
     }
 
-    return IO::SDK::OrbitalParameters::StateVector(std::make_shared<IO::SDK::Body::CelestialBody>(observer), states, epoch, frame);
+    return IO::SDK::OrbitalParameters::StateVector{std::make_shared<IO::SDK::Body::CelestialBody>(observer), states, epoch, frame};
 }
 
 IO::SDK::Time::Window<IO::SDK::Time::TDB> IO::SDK::Kernels::EphemerisKernel::GetCoverageWindow() const {
@@ -51,7 +51,7 @@ IO::SDK::Time::Window<IO::SDK::Time::TDB> IO::SDK::Kernels::EphemerisKernel::Get
 
     wnfetd_c(&cnfine, 0, &start, &end);
 
-    return IO::SDK::Time::Window<IO::SDK::Time::TDB>(IO::SDK::Time::TDB(std::chrono::duration<double>(start)), IO::SDK::Time::TDB(std::chrono::duration<double>(end)));
+    return IO::SDK::Time::Window<IO::SDK::Time::TDB>{IO::SDK::Time::TDB(std::chrono::duration<double>(start)), IO::SDK::Time::TDB(std::chrono::duration<double>(end))};
 }
 
 void IO::SDK::Kernels::EphemerisKernel::WriteData(const std::vector<OrbitalParameters::StateVector> &states) {
@@ -64,7 +64,6 @@ void IO::SDK::Kernels::EphemerisKernel::WriteData(const std::vector<OrbitalParam
     for (auto &&sv: states) {
         if (sv.GetFrame() != frame) {
             throw IO::SDK::Exception::InvalidArgumentException("State vectors must have the same frame");
-            break;
         }
     }
 
@@ -90,7 +89,7 @@ void IO::SDK::Kernels::EphemerisKernel::WriteData(const std::vector<OrbitalParam
         statesArray[i][3] = velocity.GetX() / 1000.0;
         statesArray[i][4] = velocity.GetY() / 1000.0;
         statesArray[i][5] = velocity.GetZ() / 1000.0;
-    };
+    }
 
     SpiceInt handle{};
 
@@ -101,7 +100,7 @@ void IO::SDK::Kernels::EphemerisKernel::WriteData(const std::vector<OrbitalParam
                  last.GetEpoch().GetSecondsFromJ2000().count(), "Seg1", DefinePolynomialDegree(states.size(), IO::SDK::Parameters::MaximumEphemerisLagrangePolynomialDegree),
                  (SpiceInt) size, statesArray, first.GetEpoch().GetSecondsFromJ2000().count(), delta.GetSeconds().count());
     } else {
-        SpiceDouble *epochs = new SpiceDouble[size];
+        auto epochs = new SpiceDouble[size];
         for (size_t i = 0; i < size; i++) {
             epochs[i] = states[i].GetEpoch().GetSecondsFromJ2000().count();
         }
@@ -117,9 +116,9 @@ void IO::SDK::Kernels::EphemerisKernel::WriteData(const std::vector<OrbitalParam
     delete[] statesArray;
 }
 
-bool IO::SDK::Kernels::EphemerisKernel::IsEvenlySpacedData(const std::vector<OrbitalParameters::StateVector> &states) const {
+bool IO::SDK::Kernels::EphemerisKernel::IsEvenlySpacedData(const std::vector<OrbitalParameters::StateVector> &states) {
 
-    if (states.size() < 1) {
+    if (states.empty()) {
         throw IO::SDK::Exception::InvalidArgumentException("State set must have one or more");
     }
 

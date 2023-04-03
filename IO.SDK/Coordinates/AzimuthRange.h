@@ -27,7 +27,7 @@ namespace IO::SDK::Coordinates
          * @param start Start range [-2pi;2pi]
          * @param end End range [-2pi;2pi]
          */
-        AzimuthRange(const double start, const double end);
+        AzimuthRange(double start, double end);
 
         /**
          * @brief Know if angle is in range
@@ -36,28 +36,28 @@ namespace IO::SDK::Coordinates
          * @return true 
          * @return false 
          */
-        bool IsInRange(const double angle) const;
+        [[nodiscard]] bool IsInRange(double angle) const;
 
         /**
          * @brief Get the Start
          * 
          * @return double 
          */
-        double GetStart() const { return m_start; }
+        [[nodiscard]] double GetStart() const { return m_start; }
 
         /**
          * @brief Get the End
          * 
          * @return double 
          */
-        double GetEnd() const { return m_end; }
+        [[nodiscard]] double GetEnd() const { return m_end; }
 
         /**
          * @brief Get the Span
          * 
          * @return double 
          */
-        double GetSpan() const { return m_span; }
+        [[nodiscard]] double GetSpan() const { return m_span; }
 
         /**
          * @brief Know if an azimuth range intersects this azimuth range
@@ -66,7 +66,7 @@ namespace IO::SDK::Coordinates
          * @return true 
          * @return false 
          */
-        bool IsIntersected(const AzimuthRange& azimuthRange) const;
+        [[nodiscard]] bool IsIntersected(const AzimuthRange& azimuthRange) const;
     };
 
 }

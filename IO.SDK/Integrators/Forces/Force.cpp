@@ -10,6 +10,5 @@
  */
 #include <Force.h>
 
-IO::SDK::Integrators::Forces::Force::Force()
-{
-}
+IO::SDK::Integrators::Forces::Force::Force() = default;
+

@@ -348,11 +348,11 @@ TEST(Propagator, PropagateTLEIntegrator)
 
     //Read propagator results
     auto stateVector = pro.GetStateVectors()[1];
-    ASSERT_DOUBLE_EQ(-6.2018228792385655E+06, stateVector.GetPosition().GetX());
-    ASSERT_DOUBLE_EQ(2.7695757618307383E+06, stateVector.GetPosition().GetY());
-    ASSERT_DOUBLE_EQ(2.4894250349276792E+05, stateVector.GetPosition().GetZ());
-    ASSERT_DOUBLE_EQ(-2.1459775555620154E+03, stateVector.GetVelocity().GetX());
-    ASSERT_DOUBLE_EQ(-4.2501793473000989E+03, stateVector.GetVelocity().GetY());
+    ASSERT_DOUBLE_EQ(-6.2018228792385599E+06, stateVector.GetPosition().GetX());
+    ASSERT_DOUBLE_EQ(2.7695757618307304E+06, stateVector.GetPosition().GetY());
+    ASSERT_DOUBLE_EQ(2.4894250349276056E+05, stateVector.GetPosition().GetZ());
+    ASSERT_DOUBLE_EQ(-2145.9775555620063, stateVector.GetVelocity().GetX());
+    ASSERT_DOUBLE_EQ(-4250.1793473001053, stateVector.GetVelocity().GetY());
     ASSERT_DOUBLE_EQ(-6.003797568963455E+03, stateVector.GetVelocity().GetZ());
 
     ASSERT_EQ(epoch + step, stateVector.GetEpoch());

@@ -12,10 +12,6 @@
 #define ORBITAL_PLANE_CHANGING_MANEUVER_H
 
 #include <ManeuverBase.h>
-#include <Spacecraft.h>
-#include <Propagator.h>
-#include <OrbitalParameters.h>
-#include <memory>
 
 namespace IO::SDK::Maneuvers
 {
@@ -55,14 +51,14 @@ namespace IO::SDK::Maneuvers
          * @return true 
          * @return false 
          */
-        virtual bool CanExecute(const IO::SDK::OrbitalParameters::OrbitalParameters &orbitalParams) override;
+        bool CanExecute(const IO::SDK::OrbitalParameters::OrbitalParameters &orbitalParams) override;
 
         /**
          * @brief Compute impulsive maneuver
          * 
          * @param maneuverPoint 
          */
-        virtual void Compute(const IO::SDK::OrbitalParameters::OrbitalParameters &maneuverPoint) override;
+        void Compute(const IO::SDK::OrbitalParameters::OrbitalParameters &maneuverPoint) override;
 
         /**
          * @brief 
@@ -70,14 +66,14 @@ namespace IO::SDK::Maneuvers
          * @param maneuverPoint 
          * @return IO::SDK::OrbitalParameters::StateOrientation 
          */
-        virtual IO::SDK::OrbitalParameters::StateOrientation ComputeOrientation(const IO::SDK::OrbitalParameters::OrbitalParameters &maneuverPoint) override;
+        IO::SDK::OrbitalParameters::StateOrientation ComputeOrientation(const IO::SDK::OrbitalParameters::OrbitalParameters &maneuverPoint) override;
 
         /**
          * @brief Get the Relative Inclination
          * 
          * @return double 
          */
-        double GetRelativeInclination() const;
+        [[nodiscard]] double GetRelativeInclination() const;
     };
 }
 

@@ -8,15 +8,14 @@
  * @copyright Copyright (c) 2021
  * 
  */
-#include <SiteFrameFile.h>
+
 #include <filesystem>
 #include <fstream>
 #include <sstream>
-#include <string>
-#include <Parameters.h>
 #include <Site.h>
 #include <Templates/Templates.cpp>
 #include <StringHelpers.h>
+#include "Constants.h"
 
 IO::SDK::Frames::SiteFrameFile::SiteFrameFile(const IO::SDK::Sites::Site& site) : FrameFile(site.GetFilesPath() + "/Frame/" + site.GetName() + ".tf", site.GetName() + "_TOPO"),
                                                                                   m_site{site} {

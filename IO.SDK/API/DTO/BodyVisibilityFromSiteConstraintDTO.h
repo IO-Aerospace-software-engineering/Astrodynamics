@@ -10,8 +10,8 @@ namespace IO::SDK::API::DTO
     struct BodyVisibilityFromSiteConstraintDTO
     {
         int TargetBodyId{0};
-        const char* aberration;
-        IO::SDK::API::DTO::WindowDTO windows[1000];
+        const char* aberration{};
+        IO::SDK::API::DTO::WindowDTO windows[1000]{};
     };
 }
 #endif //IOSDK_BODYVISIBILITYFROMSITECONSTRAINTDTO_H

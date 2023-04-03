@@ -18,6 +18,8 @@
 #include <StateOrientation.h>
 #include <SpiceUsr.h>
 #include <Builder.h>
+#include "Parameters.h"
+#include "Constants.h"
 
 using namespace std::chrono_literals;
 

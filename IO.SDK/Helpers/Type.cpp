@@ -11,8 +11,6 @@
 #ifndef TYPE_CPP
 #define TYPE_CPP
 
-#include <iostream>
-
 namespace IO::SDK::Helpers
 {
     template <typename T, typename Base>

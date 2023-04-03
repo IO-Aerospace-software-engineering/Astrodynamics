@@ -5,7 +5,6 @@
 
 #include <CelestialBody.h>
 #include <StateVector.h>
-#include <StateOrientation.h>
 #include <VVIntegrator.h>
 #include <Propagator.h>
 #include <InstrumentPointingToAttitude.h>
@@ -13,7 +12,7 @@
 #include <InertialFrames.h>
 #include <TDB.h>
 #include <Vectors.h>
-#include <Scenario.h>
+#include "Constants.h"
 
 using namespace std::chrono_literals;
 
@@ -105,8 +104,6 @@ TEST(InstrumentPointingToSiteAttitude, GetOrientation)
 
     prop.Propagate();
 
-    auto point = s.GetSubObserverPoint(*earth, IO::SDK::AberrationsEnum::LT, IO::SDK::Time::TDB("2021-01-01T13:00:00"));
-
     ASSERT_DOUBLE_EQ(0.0, pointingManeuver.GetDeltaV().Magnitude());
     auto pointingVector = instrument->GetBoresight(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::Time::TDB("2021-01-01T13:00:00"));
 
@@ -155,8 +152,6 @@ TEST(InstrumentPointingToSiteAttitude2, GetOrientation)
     prop.SetStandbyManeuver(&pointingManeuver);
 
     prop.Propagate();
-
-    auto point = s.GetSubObserverPoint(*earth, IO::SDK::AberrationsEnum::LT, IO::SDK::Time::TDB("2021-01-01T13:00:00"));
 
     ASSERT_DOUBLE_EQ(0.0, pointingManeuver.GetDeltaV().Magnitude());
     auto pointingVector = instrument->GetBoresight(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::Time::TDB("2021-01-01T13:00:00"));

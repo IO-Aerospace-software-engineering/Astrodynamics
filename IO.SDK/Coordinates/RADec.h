@@ -30,7 +30,7 @@ namespace IO::SDK::Coordinates
 		 * @param dec 
 		 * @param range 
 		 */
-		RADec( const double ra, const double dec, const double range) :_range{ range }, _ra{ ra }, _dec{ dec }
+		RADec( double ra, double dec, double range) :_range{ range }, _ra{ ra }, _dec{ dec }
 		{
 
 		}
@@ -40,21 +40,21 @@ namespace IO::SDK::Coordinates
 		 * 
 		 * @return double 
 		 */
-		double GetRange() const { return this->_range; }
+		[[nodiscard]] inline double GetRange() const { return this->_range; }
 
 		/**
 		 * @brief 
 		 * 
 		 * @return double 
 		 */
-		double GetRA() const { return this->_ra; }
+		[[nodiscard]] inline double GetRA() const { return this->_ra; }
 
 		/**
 		 * @brief Get the Dec
 		 * 
 		 * @return double 
 		 */
-		double GetDec() const { return this->_dec; }
+		[[nodiscard]] inline double GetDec() const { return this->_dec; }
 	};
 }
 #endif // !RADEC_H

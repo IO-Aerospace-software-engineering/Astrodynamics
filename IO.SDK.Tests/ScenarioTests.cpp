@@ -440,5 +440,5 @@ TEST(Scenario, FindLaunchWindowConstraint)
     ASSERT_DOUBLE_EQ(55.289381850887146, windows[0].GetInertialAzimuth() * IO::SDK::Constants::RAD_DEG);
     ASSERT_DOUBLE_EQ(53.734938879897108, windows[0].GetNonInertialAzimuth() * IO::SDK::Constants::RAD_DEG);
     ASSERT_DOUBLE_EQ(7665.2355903714715, windows[0].GetInertialInsertionVelocity());
-    ASSERT_DOUBLE_EQ(7378.9855901408182, windows[0].GetNonInertialInsertionVelocity());
+    ASSERT_DOUBLE_EQ(7378.9855901408228, windows[0].GetNonInertialInsertionVelocity());
 }

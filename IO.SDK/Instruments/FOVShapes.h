@@ -35,7 +35,7 @@ namespace IO::SDK::Instruments
 		 * @param e 
 		 * @return std::string 
 		 */
-		std::string ToString(const FOVShapeEnum e) const;
+		static std::string ToString(FOVShapeEnum e) ;
 	};
 }
 

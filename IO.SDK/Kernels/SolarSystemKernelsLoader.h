@@ -24,7 +24,7 @@ namespace IO::SDK::Kernels
 
 		/**
 		 * @brief Construct a new Solar System Kernels Loader object
-		 * 
+		 *
 		 */
 		SolarSystemKernelsLoader();
 	};

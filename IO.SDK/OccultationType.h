@@ -18,24 +18,24 @@ namespace IO::SDK
     {
     private:
         const std::string m_name;
-        static OccultationType _Full;
-        static OccultationType _Annular;
-        static OccultationType _Partial;
-        static OccultationType _Any;
+        static OccultationType mFull;
+        static OccultationType mAnnular;
+        static OccultationType mPartial;
+        static OccultationType mAny;
     public:
         /**
          * @brief Construct a new Occultation Type object
          * 
          * @param name 
          */
-        OccultationType(const std::string &name);
+        explicit OccultationType(std::string name);
 
         /**
          * @brief Get occultation type char array
          * 
          * @return const char* 
          */
-        const char *ToCharArray() const;
+        [[nodiscard]] const char *ToCharArray() const;
 
         static IO::SDK::OccultationType& Full();
         static IO::SDK::OccultationType& Annular();

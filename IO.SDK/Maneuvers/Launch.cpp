@@ -9,7 +9,7 @@
  * 
  */
 #include <Launch.h>
-#include <vector>
+#include <Constants.h>
 
 IO::SDK::Maneuvers::Launch::Launch(const IO::SDK::Sites::LaunchSite &launchSite, const IO::SDK::Sites::Site &recoverySite, bool launchByDay,
                                    const IO::SDK::OrbitalParameters::OrbitalParameters &targetOrbit) : m_launchSite{launchSite}, m_recoverySite{recoverySite},
@@ -103,7 +103,7 @@ std::vector<IO::SDK::Maneuvers::LaunchWindow> IO::SDK::Maneuvers::Launch::GetLau
     std::vector<IO::SDK::Maneuvers::LaunchWindow> launchWindows;
     if (m_launchByDay)
     {
-        //Find sun light windows on launch site
+        //Find sunlight windows on launch site
         auto launchSiteDayWindows = m_launchSite.FindDayWindows(searchWindow, IO::SDK::Constants::OfficialTwilight);
         if (launchSiteDayWindows.empty())
         {
@@ -111,7 +111,7 @@ std::vector<IO::SDK::Maneuvers::LaunchWindow> IO::SDK::Maneuvers::Launch::GetLau
                     "No sunlight at launch site on this search window day : " + searchWindow.GetStartDate().ToString() + " - " + searchWindow.GetEndDate().ToString());
         }
 
-        //Find sun light windows on recovery site
+        //Find sunlight windows on recovery site
         auto recoverySiteDayWindows = m_recoverySite.FindDayWindows(searchWindow, IO::SDK::Constants::OfficialTwilight);
         if (recoverySiteDayWindows.empty())
         {
@@ -119,7 +119,7 @@ std::vector<IO::SDK::Maneuvers::LaunchWindow> IO::SDK::Maneuvers::Launch::GetLau
                     "No sunlight at recovery site on this launch day : " + searchWindow.GetStartDate().ToString() + " - " + searchWindow.GetEndDate().ToString());
         }
 
-        //Find sun light windows on both site at same time
+        //Find sunlight windows on both site at same time
         std::vector<IO::SDK::Time::Window<IO::SDK::Time::UTC>> sunLightWindowsOnBothSites;
         for (auto &&launchSiteWindow: launchSiteDayWindows)
         {
@@ -128,7 +128,7 @@ std::vector<IO::SDK::Maneuvers::LaunchWindow> IO::SDK::Maneuvers::Launch::GetLau
                 if (launchSiteWindow.Intersects(recoverySiteWindow))
                 {
                     auto intersection = launchSiteWindow.GetIntersection(recoverySiteWindow);
-                    sunLightWindowsOnBothSites.push_back(IO::SDK::Time::Window<IO::SDK::Time::UTC>(intersection.GetStartDate(), intersection.GetEndDate()));
+                    sunLightWindowsOnBothSites.emplace_back(intersection.GetStartDate(), intersection.GetEndDate());
                 }
             }
         }
@@ -138,7 +138,7 @@ std::vector<IO::SDK::Maneuvers::LaunchWindow> IO::SDK::Maneuvers::Launch::GetLau
             throw IO::SDK::Exception::SDKException("No sun light at same time on both sites");
         }
 
-        //Search an orbital plane alignement with launch site during sun light window on both sites
+        //Search an orbital plane alignment with launch site during sunlight window on both sites
         for (auto &&sunlightWindow: sunLightWindowsOnBothSites)
         {
             auto res = FindLaunchWindows(sunlightWindow);
@@ -218,13 +218,13 @@ std::vector<IO::SDK::Maneuvers::LaunchWindow> IO::SDK::Maneuvers::Launch::FindLa
 
             //We add the first launch window in the collection
             auto window = IO::SDK::Time::Window<IO::SDK::Time::UTC>(date, date);
-            launchWindows.push_back(IO::SDK::Maneuvers::LaunchWindow(m_launchSite, window, inertialAzimuthLaunch, nonInertialAzimuthLaunch, inertialInsertionVelocity,
-                                                                     nonInertialInsertionVelocity));
+            launchWindows.emplace_back(m_launchSite, window, inertialAzimuthLaunch, nonInertialAzimuthLaunch, inertialInsertionVelocity,
+                                                                     nonInertialInsertionVelocity);
 
             //We compute following launch windows
             auto remainingTime = windowToSearch.GetEndDate() - date;
 
-            //sideral rotaion period
+            //sideral rotation period
             auto sideralRotation = m_launchSite.GetBody()->GetSideralRotationPeriod(date.ToTDB());
             auto halfSideralRotation = sideralRotation * 0.5;
 
@@ -253,13 +253,12 @@ std::vector<IO::SDK::Maneuvers::LaunchWindow> IO::SDK::Maneuvers::Launch::FindLa
 
                 if (isAscending)
                 {
-                    launchWindows.push_back(IO::SDK::Maneuvers::LaunchWindow(m_launchSite, nextWindow, GetInertialAscendingAzimuthLaunch(), GetNonInertialAscendingAzimuthLaunch(),
-                                                                             inertialInsertionVelocity, nonInertialInsertionVelocity));
+                    launchWindows.emplace_back(m_launchSite, nextWindow, GetInertialAscendingAzimuthLaunch(), GetNonInertialAscendingAzimuthLaunch(),
+                                                                             inertialInsertionVelocity, nonInertialInsertionVelocity);
                 } else
                 {
-                    launchWindows.push_back(
-                            IO::SDK::Maneuvers::LaunchWindow(m_launchSite, nextWindow, GetInertialDescendingAzimuthLaunch(), GetNonInertialDescendingAzimuthLaunch(),
-                                                             inertialInsertionVelocity, nonInertialInsertionVelocity));
+                    launchWindows.emplace_back(m_launchSite, nextWindow, GetInertialDescendingAzimuthLaunch(), GetNonInertialDescendingAzimuthLaunch(),
+                                                             inertialInsertionVelocity, nonInertialInsertionVelocity);
                 }
             }
             break;
