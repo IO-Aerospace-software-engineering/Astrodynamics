@@ -13,10 +13,10 @@ namespace IO::SDK::API::DTO
         int targetBodyId{0};
         int targetSiteId{0};
         int maneuverOrder{0};
-        int engines[10];
+        int engines[10]{};
         double attitudeHoldDuration{0.0};
         double minimumEpoch{0.0};
-        IO::SDK::API::DTO::WindowDTO window;
+        IO::SDK::API::DTO::WindowDTO window{};
     };
 }
 #endif //IOSDK_INSTRUMENTPOINTINGTOATTITUDEDTO_H

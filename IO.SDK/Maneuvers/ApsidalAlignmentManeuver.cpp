@@ -9,9 +9,8 @@
  * 
  */
 #include <ApsidalAlignmentManeuver.h>
-#include <SDKException.h>
-#include <cmath>
 #include <ConicOrbitalElements.h>
+#include <Parameters.h>
 
 IO::SDK::Maneuvers::ApsidalAlignmentManeuver::ApsidalAlignmentManeuver(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator, IO::SDK::OrbitalParameters::OrbitalParameters *targetOrbit) : IO::SDK::Maneuvers::ManeuverBase(engines, propagator), m_targetOrbit{targetOrbit}
 {
@@ -61,7 +60,7 @@ IO::SDK::OrbitalParameters::StateOrientation IO::SDK::Maneuvers::ApsidalAlignmen
 {
     IO::SDK::Math::Vector3D resVector = GetDeltaV(maneuverPoint.GetStateVector());
 
-    return IO::SDK::OrbitalParameters::StateOrientation(resVector.Normalize().To(m_spacecraft.Front), IO::SDK::Math::Vector3D(0.0, 0.0, 0.0), maneuverPoint.GetEpoch(), maneuverPoint.GetFrame());
+    return IO::SDK::OrbitalParameters::StateOrientation{resVector.Normalize().To(m_spacecraft.Front), IO::SDK::Math::Vector3D(0.0, 0.0, 0.0), maneuverPoint.GetEpoch(), maneuverPoint.GetFrame()};
 }
 
 bool IO::SDK::Maneuvers::ApsidalAlignmentManeuver::IsIntersectP(const IO::SDK::OrbitalParameters::StateVector &stateVector) const

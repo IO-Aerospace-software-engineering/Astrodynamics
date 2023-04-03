@@ -107,7 +107,7 @@ double IO::SDK::Body::Spacecraft::Engine::ComputeDeltaV(double isp, double initi
 
 IO::SDK::Time::TimeSpan IO::SDK::Body::Spacecraft::Engine::ComputeDeltaT(double isp, double initialMass, double fuelFlow, double deltaV)
 {
-    return IO::SDK::Time::TimeSpan(std::chrono::duration<double>(initialMass / fuelFlow * (1 - std::exp(-deltaV / (isp * IO::SDK::Constants::g0)))));
+    return IO::SDK::Time::TimeSpan{std::chrono::duration<double>(initialMass / fuelFlow * (1 - std::exp(-deltaV / (isp * IO::SDK::Constants::g0))))};
 }
 
 double IO::SDK::Body::Spacecraft::Engine::ComputeDeltaM(double isp, double initialMass, double deltaV)

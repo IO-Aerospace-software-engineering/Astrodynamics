@@ -30,7 +30,7 @@ namespace IO::SDK
 	class Aberrations
 	{
 	public:
-		std::string ToString(const AberrationsEnum e) const;
+		static std::string ToString(AberrationsEnum e) ;
 
 	private:
 

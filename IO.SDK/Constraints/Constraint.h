@@ -19,8 +19,8 @@ namespace IO::SDK::Constraints
     {
     private:
         const std::string m_name;
-        static Constraint _GreaterThan;
-        static Constraint _LowerThan;
+        static Constraint mGreaterThan;
+        static Constraint mLowerThan;
 
     public:
         /**
@@ -28,7 +28,7 @@ namespace IO::SDK::Constraints
          * 
          * @param name 
          */
-        Constraint(const std::string &name);
+        explicit Constraint(std::string name);
 
         static Constraint Equal;
         static Constraint AbsMin;
@@ -41,7 +41,7 @@ namespace IO::SDK::Constraints
          * 
          * @return const char* 
          */
-        const char *ToCharArray() const;
+        [[nodiscard]] const char *ToCharArray() const;
 
         static IO::SDK::Constraints::Constraint& GreaterThan();
         static IO::SDK::Constraints::Constraint& LowerThan();

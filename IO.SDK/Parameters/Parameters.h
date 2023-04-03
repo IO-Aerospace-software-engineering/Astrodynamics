@@ -24,8 +24,7 @@ namespace IO::SDK::Parameters
     inline constexpr std::string_view SolarSystemKernelPath = "Data/SolarSystem";
     inline constexpr std::string_view SitePath = "Data/User/Sites";
     inline constexpr int CommentAreaSize = 5000;
-    inline constexpr int MaximumEphemerisLagrangePolynomialDegree = 27;//[1-23]
-    inline constexpr int MaximumOrientationLagrangePolynomialDegree = 23;//[1-23]
+    inline constexpr int MaximumEphemerisLagrangePolynomialDegree = 27;//[1-27]
 
     inline constexpr double NodeDetectionAccuraccy = 0.0017453;//0.1°
     inline constexpr double IntersectDetectionAccuraccy = 0.017453;//1.0°

@@ -11,7 +11,6 @@
 #ifndef SDK_EXCEPTION_H
 #define SDK_EXCEPTION_H
 
-#include <exception>
 #include <string>
 
 namespace IO::SDK::Exception
@@ -27,9 +26,9 @@ namespace IO::SDK::Exception
 		const std::string m_msg;
 
 	public:
-		SDKException(const std::string &msg);
+		explicit SDKException(std::string msg);
 
-		const char *what() const noexcept override;
+		[[nodiscard]] const char *what() const noexcept override;
 	};
 }
 #endif // !SDK_EXCEPTION_H

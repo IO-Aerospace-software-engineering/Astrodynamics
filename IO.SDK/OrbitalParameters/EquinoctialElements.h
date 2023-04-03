@@ -39,115 +39,115 @@ namespace IO::SDK::OrbitalParameters
 		double m_elements[9]{};
 
 	public:
-		EquinoctialElements(const std::shared_ptr<IO::SDK::Body::CelestialBody> &centerOfMotion, const IO::SDK::Time::TDB &epoch, const double semiMajorAxis, const double h, const double k, const double p, const double q, const double L, const double periapsisLongitudeRate, const double ascendingNodeLongitudeRate, const double rightAscensionOfThePole, const double declinationOfThePole, const IO::SDK::Frames::Frames &frame);
+		EquinoctialElements(const std::shared_ptr<IO::SDK::Body::CelestialBody> &centerOfMotion, const IO::SDK::Time::TDB &epoch, double semiMajorAxis, double h, double k, double p, double q, double L, double periapsisLongitudeRate, double ascendingNodeLongitudeRate, double rightAscensionOfThePole, double declinationOfThePole, const IO::SDK::Frames::Frames &frame);
 
-		EquinoctialElements(const std::shared_ptr<IO::SDK::Body::CelestialBody> &centerOfMotion, const double semiMajorAxis, const double eccentricity, const double inclination, const double peregeeArgument, const double longitudeAN, const double meanAnomaly, const double periapsisLongitudeRate, const double ascendingNodeLongitudeRate, const double rightAscensionOfThePole, const double declinationOfThePole, const IO::SDK::Time::TDB &epoch, const IO::SDK::Frames::Frames &frame);
+		EquinoctialElements(const std::shared_ptr<IO::SDK::Body::CelestialBody> &centerOfMotion, double semiMajorAxis, double eccentricity, double inclination, double peregeeArgument, double longitudeAN, double meanAnomaly, double periapsisLongitudeRate, double ascendingNodeLongitudeRate, double rightAscensionOfThePole, double declinationOfThePole, const IO::SDK::Time::TDB &epoch, const IO::SDK::Frames::Frames &frame);
 
 		/// <summary>
 		/// Get h coefficient
 		/// </summary>
 		/// <returns></returns>
-		double GetH() const { return m_h; }
+		[[nodiscard]] inline double GetH() const { return m_h; }
 
 		/// <summary>
 		/// Get k coefficient
 		/// </summary>
 		/// <returns></returns>
-		double GetK() const { return m_k; }
+		[[nodiscard]] inline double GetK() const { return m_k; }
 
 		/// <summary>
 		/// Get p coefficient
 		/// </summary>
 		/// <returns></returns>
-		double GetP() const { return m_p; }
+		[[nodiscard]] inline double GetP() const { return m_p; }
 
 		/// <summary>
 		/// Get q coefficient
 		/// </summary>
 		/// <returns></returns>
-		double GetQ() const { return m_q; }
+		[[nodiscard]] inline double GetQ() const { return m_q; }
 
 		/// <summary>
 		/// Get longitude coefficient
 		/// </summary>
 		/// <returns></returns>
-		double GetL() const { return m_L; }
+		[[nodiscard]] inline double GetL() const { return m_L; }
 
 		/// <summary>
 		/// Get periapsis longitude rate
 		/// </summary>
 		/// <returns></returns>
-		double GetPeriapsisLongitudeRate() const { return m_periapsisLongitudeRate; }
+		[[nodiscard]] inline double GetPeriapsisLongitudeRate() const { return m_periapsisLongitudeRate; }
 
 		/// <summary>
 		/// Get ascending node longitude rate
 		/// </summary>
 		/// <returns></returns>
-		double GetAscendingNodeLongitudeRate() const { return m_ascendingNodeLongitudeRate; }
+		[[nodiscard]] inline double GetAscendingNodeLongitudeRate() const { return m_ascendingNodeLongitudeRate; }
 
 		/// <summary>
 		/// Get mean anomaly rate
 		/// </summary>
 		/// <returns></returns>
-		double GetMeanAnomalyRate() const { return m_meanAnomalyRate; }
+		[[nodiscard]] inline double GetMeanAnomalyRate() const { return m_meanAnomalyRate; }
 
 		/// <summary>
 		/// Get right ascension of the pole of the reference plane
 		/// </summary>
 		/// <returns></returns>
-		double GetRightAscensionOfPole() const { return m_rightAscensionOfThePole; }
+		[[nodiscard]] inline double GetRightAscensionOfPole() const { return m_rightAscensionOfThePole; }
 
 		/// <summary>
 		/// Get declination of the pole of the reference plane
 		/// </summary>
 		/// <returns></returns>
-		double GetDeclinationOfPole() const { return m_declinationOfThePole; }
+		[[nodiscard]] inline double GetDeclinationOfPole() const { return m_declinationOfThePole; }
 
 		// Inherited via OrbitalParameters
-		virtual IO::SDK::Time::TimeSpan GetPeriod() const override;
+		[[nodiscard]] IO::SDK::Time::TimeSpan GetPeriod() const override;
 
 		/// <summary>
 		/// Get specific angular moment
 		/// </summary>
 		/// <returns></returns>
-		virtual IO::SDK::Math::Vector3D GetSpecificAngularMomentum() const override;
+		[[nodiscard]] IO::SDK::Math::Vector3D GetSpecificAngularMomentum() const override;
 
 		/// <summary>
 		/// Get state vector
 		/// </summary>
 		/// <param name="epoch"></param>
 		/// <returns></returns>
-		virtual StateVector GetStateVector(const IO::SDK::Time::TDB &epoch) const override;
+		[[nodiscard]] StateVector GetStateVector(const IO::SDK::Time::TDB &epoch) const override;
 
 		/// <summary>
 		/// Get eccentricity
 		/// </summary>
 		/// <returns></returns>
-		virtual double GetEccentricity() const override;
+		[[nodiscard]] double GetEccentricity() const override;
 
 		/// <summary>
 		/// Get semi major axis
 		/// </summary>
 		/// <returns></returns>
-		virtual double GetSemiMajorAxis() const override { return m_semiMajorAxis; }
+		[[nodiscard]] double GetSemiMajorAxis() const override { return m_semiMajorAxis; }
 
 		/// <summary>
 		/// Get inclination
 		/// </summary>
 		/// <returns></returns>
-		virtual double GetInclination() const override;
+		[[nodiscard]] double GetInclination() const override;
 
 		/// <summary>
 		/// Get periapsis argument
 		/// </summary>
 		/// <returns></returns>
-		virtual double GetPeriapsisArgument() const override;
+		[[nodiscard]] double GetPeriapsisArgument() const override;
 
 		/// <summary>
 		/// Get right ascending node longitude
 		/// </summary>
 		/// <returns></returns>
-		virtual double GetRightAscendingNodeLongitude() const override;
+		[[nodiscard]] double GetRightAscendingNodeLongitude() const override;
 
 		//Get non pure virtual function accessible
 		using OrbitalParameters::GetMeanAnomaly;
@@ -155,13 +155,13 @@ namespace IO::SDK::OrbitalParameters
 		/// Get mean anomaly at epoch
 		/// </summary>
 		/// <returns></returns>
-		virtual double GetMeanAnomaly() const override;
+		[[nodiscard]] double GetMeanAnomaly() const override;
 
 		/// <summary>
 		/// Get specific orbital energy
 		/// </summary>
 		/// <returns></returns>
-		virtual double GetSpecificOrbitalEnergy() const override;
+		[[nodiscard]] double GetSpecificOrbitalEnergy() const override;
 
 		using IO::SDK::OrbitalParameters::OrbitalParameters::GetStateVector;
 	};

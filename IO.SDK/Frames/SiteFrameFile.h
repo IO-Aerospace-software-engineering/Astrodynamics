@@ -34,7 +34,7 @@ namespace IO::SDK::Frames {
          * 
          * @param site 
          */
-        SiteFrameFile(const IO::SDK::Sites::Site &site);
+        explicit SiteFrameFile(const IO::SDK::Sites::Site &site);
     };
 }
 

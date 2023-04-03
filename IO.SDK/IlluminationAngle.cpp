@@ -10,16 +10,18 @@
  */
 #include<IlluminationAngle.h>
 
-IO::SDK::IlluminationAngle IO::SDK::IlluminationAngle::_Phase(std::string("PHASE"));
-IO::SDK::IlluminationAngle IO::SDK::IlluminationAngle::_Incidence(std::string("INCIDENCE"));
-IO::SDK::IlluminationAngle IO::SDK::IlluminationAngle::_Emission(std::string("EMISSION"));
+#include <utility>
+
+IO::SDK::IlluminationAngle IO::SDK::IlluminationAngle::mPhase(std::string("PHASE"));
+IO::SDK::IlluminationAngle IO::SDK::IlluminationAngle::mIncidence(std::string("INCIDENCE"));
+IO::SDK::IlluminationAngle IO::SDK::IlluminationAngle::mEmission(std::string("EMISSION"));
 
 /**
  * @brief Construct a new IO::SDK::IlluminationAngle::IlluminationAngle object
  * 
  * @param name 
  */
-IO::SDK::IlluminationAngle::IlluminationAngle(const std::string& name):m_name{name}
+IO::SDK::IlluminationAngle::IlluminationAngle(std::string  name):m_name{std::move(name)}
 {
 
 }
@@ -36,13 +38,13 @@ const char *IO::SDK::IlluminationAngle::ToCharArray() const
 
 IO::SDK::IlluminationAngle& IO::SDK::IlluminationAngle::Phase()
 {
-    return _Phase;
+    return mPhase;
 }
 IO::SDK::IlluminationAngle& IO::SDK::IlluminationAngle::Incidence()
 {
-    return _Incidence;
+    return mIncidence;
 }
 IO::SDK::IlluminationAngle& IO::SDK::IlluminationAngle::Emission()
 {
-    return _Emission;
+    return mEmission;
 }

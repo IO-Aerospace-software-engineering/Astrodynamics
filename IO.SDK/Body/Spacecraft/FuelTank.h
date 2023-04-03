@@ -41,42 +41,42 @@ namespace IO::SDK::Body::Spacecraft
          * @param capacity 
          * @param quantity 
          */
-        FuelTank(const std::string &serialNumber, const IO::SDK::Body::Spacecraft::Spacecraft &spacecraft, const double capacity, const double quantity);
+        FuelTank(const std::string &serialNumber, const IO::SDK::Body::Spacecraft::Spacecraft &spacecraft, double capacity, double quantity);
         
         /**
          * @brief Get the associated spacecraft
          * 
          * @return const IO::SDK::Body::Spacecraft::Spacecraft& 
          */
-        const IO::SDK::Body::Spacecraft::Spacecraft &GetSpacecraft() const;
+        [[nodiscard]] const IO::SDK::Body::Spacecraft::Spacecraft &GetSpacecraft() const;
 
         /**
          * @brief Get the fuel tank serial number
          * 
          * @return std::string 
          */
-        std::string GetSerialNumber() const;
+        [[nodiscard]] std::string GetSerialNumber() const;
 
         /**
          * @brief Get the current Quantity
          * 
          * @return double 
          */
-        double GetQuantity() const;
+        [[nodiscard]] double GetQuantity() const;
 
         /**
          * @brief Get the Initial Quantity
          * 
          * @return double 
          */
-        double GetInitialQuantity() const;
+        [[nodiscard]] double GetInitialQuantity() const;
 
         /**
          * @brief Get the fuel tank capacity
          * 
          * @return double 
          */
-        double GetCapacity() const;
+        [[nodiscard]] double GetCapacity() const;
 
         /**
          * @brief Know if fuel tank is empty
@@ -84,14 +84,14 @@ namespace IO::SDK::Body::Spacecraft
          * @return true 
          * @return false 
          */
-        bool IsEmpty() const;
+        [[nodiscard]] bool IsEmpty() const;
 
         /**
          * @brief Update the fuel tank quantity
          * 
          * @param quantityToAdd Quantity to add. Use negative number to remove fuel
          */
-        void UpdateFuelQuantity(const double quantityToAdd);
+        void UpdateFuelQuantity(double quantityToAdd);
         
         bool operator==(const IO::SDK::Body::Spacecraft::FuelTank &other) const { return m_serialNumber == other.m_serialNumber; }
         bool operator!=(const IO::SDK::Body::Spacecraft::FuelTank &other) const { return !(m_serialNumber == other.m_serialNumber); }

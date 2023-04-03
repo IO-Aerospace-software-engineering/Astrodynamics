@@ -9,8 +9,8 @@ namespace IO::SDK::API::DTO
     struct PayloadDTO
     {
         int serialNumber{0};
-        const char * name;
-        double mass;
+        const char * name{};
+        double mass{};
     };
 }
 #endif //IOSDK_PAYLOADDTO_H

@@ -25,9 +25,9 @@ namespace IO::SDK::Exception
     private:
         /* data */
     public:
-        InvalidArgumentException(const std::string &message);
+        explicit InvalidArgumentException(const std::string &message);
     };
 
 } // namespace IO::SDK::Exception
 
-#endif //INVALID_ARGUMENT_EXCETION
+#endif //INVALID_ARGUMENT_EXCEPTION

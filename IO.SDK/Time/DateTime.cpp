@@ -12,10 +12,9 @@
 #include <SpiceUsr.h>
 
 IO::SDK::Time::DateTime::DateTime()
-{
-}
+= default;
 
-IO::SDK::Time::DateTime::DateTime(const std::chrono::duration<double> secondsFromJ2000) : m_secondsFromJ2000{secondsFromJ2000}
+IO::SDK::Time::DateTime::DateTime(const std::chrono::duration<double>& secondsFromJ2000) : m_secondsFromJ2000{secondsFromJ2000}
 {
 }
 
@@ -28,14 +27,14 @@ std::chrono::duration<double> IO::SDK::Time::DateTime::GetSecondsFromJ2000() con
 	return m_secondsFromJ2000;
 }
 
-IO::SDK::Time::TimeSpan IO::SDK::Time::DateTime::Substract(const IO::SDK::Time::DateTime &other) const
+IO::SDK::Time::TimeSpan IO::SDK::Time::DateTime::Subtract(const IO::SDK::Time::DateTime &other) const
 {
-	return IO::SDK::Time::TimeSpan(m_secondsFromJ2000 - other.m_secondsFromJ2000);
+	return IO::SDK::Time::TimeSpan{m_secondsFromJ2000 - other.m_secondsFromJ2000};
 }
 
 IO::SDK::Time::TimeSpan IO::SDK::Time::DateTime::operator-(const IO::SDK::Time::DateTime &other) const
 {
-	return Substract(other);
+	return Subtract(other);
 }
 
 bool IO::SDK::Time::DateTime::operator==(const IO::SDK::Time::DateTime &other) const

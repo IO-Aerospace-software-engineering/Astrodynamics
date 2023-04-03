@@ -27,15 +27,15 @@ namespace IO::SDK::Constraints::Parameters
 
     public:
         InFieldOfViewParameters(const SDK::Instruments::Instrument &instrument, const SDK::Body::Body &targetBody,
-                                const IO::SDK::AberrationsEnum aberration, const IO::SDK::Time::TimeSpan &initialStepSize);
+                                IO::SDK::AberrationsEnum aberration, const IO::SDK::Time::TimeSpan &initialStepSize);
 
-        inline const IO::SDK::Instruments::Instrument &GetInstrument() const
+        [[nodiscard]] inline const IO::SDK::Instruments::Instrument &GetInstrument() const
         { return m_instrument; }
 
-        inline const IO::SDK::Body::Body &GetTargetBody() const
+        [[nodiscard]] inline const IO::SDK::Body::Body &GetTargetBody() const
         { return m_targetBody; }
 
-        inline const IO::SDK::AberrationsEnum GetAberration()
+        inline IO::SDK::AberrationsEnum GetAberration()
         { return m_aberration; }
 
         inline const IO::SDK::Time::TimeSpan &GetInitialStepSize()

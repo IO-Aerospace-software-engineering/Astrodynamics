@@ -1,13 +1,7 @@
 #include <gtest/gtest.h>
 #include <StateVector.h>
-#include <Vector3D.h>
-#include "TestsConstants.h"
-#include <TDB.h>
-#include <chrono>
-#include <CelestialBody.h>
-#include <memory>
 #include <InertialFrames.h>
-#include <OrbitalParameters.h>
+#include <Constants.h>
 
 using namespace std::chrono_literals;
 TEST(StateVector, Initialization)

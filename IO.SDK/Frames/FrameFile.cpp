@@ -9,7 +9,6 @@
  * 
  */
 #include <FrameFile.h>
-#include<Parameters.h>
 #include<filesystem>
 #include<SpiceUsr.h>
 

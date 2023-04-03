@@ -35,17 +35,17 @@ namespace IO::SDK::Maneuvers
         bool m_isIntersectP{false};
         bool m_isIntersectQ{false};
 
-        bool IsIntersectP(const IO::SDK::OrbitalParameters::StateVector &stateVector) const;
-        bool IsIntersectQ(const IO::SDK::OrbitalParameters::StateVector &stateVector) const;
+        [[nodiscard]] bool IsIntersectP(const IO::SDK::OrbitalParameters::StateVector &stateVector) const;
+        [[nodiscard]] bool IsIntersectQ(const IO::SDK::OrbitalParameters::StateVector &stateVector) const;
 
-        std::map<std::string, double> GetCoefficients(const IO::SDK::OrbitalParameters::StateVector &stateVector) const;
+        [[nodiscard]] std::map<std::string, double> GetCoefficients(const IO::SDK::OrbitalParameters::StateVector &stateVector) const;
 
-        double GetPTrueAnomaly(const IO::SDK::OrbitalParameters::StateVector &sv) const;
-        double GetQTrueAnomaly(const IO::SDK::OrbitalParameters::StateVector &sv) const;
+        [[nodiscard]] double GetPTrueAnomaly(const IO::SDK::OrbitalParameters::StateVector &sv) const;
+        [[nodiscard]] double GetQTrueAnomaly(const IO::SDK::OrbitalParameters::StateVector &sv) const;
 
-        double GetPTargetTrueAnomaly(const IO::SDK::OrbitalParameters::StateVector &sv) const;
-        double GetQTargetTrueAnomaly(const IO::SDK::OrbitalParameters::StateVector &sv) const;
-        IO::SDK::Math::Vector3D GetDeltaV(const IO::SDK::OrbitalParameters::StateVector &sv) const;
+        [[nodiscard]] double GetPTargetTrueAnomaly(const IO::SDK::OrbitalParameters::StateVector &sv) const;
+        [[nodiscard]] double GetQTargetTrueAnomaly(const IO::SDK::OrbitalParameters::StateVector &sv) const;
+        [[nodiscard]] IO::SDK::Math::Vector3D GetDeltaV(const IO::SDK::OrbitalParameters::StateVector &sv) const;
 
         IO::SDK::OrbitalParameters::OrbitalParameters *m_targetOrbit{nullptr};
 
@@ -55,7 +55,7 @@ namespace IO::SDK::Maneuvers
          * 
          * @param maneuverPoint 
          */
-        virtual void Compute(const IO::SDK::OrbitalParameters::OrbitalParameters &maneuverPoint) override;
+        void Compute(const IO::SDK::OrbitalParameters::OrbitalParameters &maneuverPoint) override;
 
         /**
          * @brief 
@@ -63,7 +63,7 @@ namespace IO::SDK::Maneuvers
          * @param maneuverPoint 
          * @return IO::SDK::OrbitalParameters::StateOrientation 
          */
-        virtual IO::SDK::OrbitalParameters::StateOrientation ComputeOrientation(const IO::SDK::OrbitalParameters::OrbitalParameters &maneuverPoint) override;
+        IO::SDK::OrbitalParameters::StateOrientation ComputeOrientation(const IO::SDK::OrbitalParameters::OrbitalParameters &maneuverPoint) override;
 
     public:
         ApsidalAlignmentManeuver(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator, IO::SDK::OrbitalParameters::OrbitalParameters *targetOrbit);
@@ -78,14 +78,14 @@ namespace IO::SDK::Maneuvers
          * @return true 
          * @return false 
          */
-        virtual bool CanExecute(const IO::SDK::OrbitalParameters::OrbitalParameters &orbitalParams) override;
+        bool CanExecute(const IO::SDK::OrbitalParameters::OrbitalParameters &orbitalParams) override;
 
         /**
          * @brief Get the theta angle
          * 
          * @return double 
          */
-        double GetTheta() const;
+        [[nodiscard]] double GetTheta() const;
 
         /**
          * @brief Get the Theta
@@ -93,7 +93,7 @@ namespace IO::SDK::Maneuvers
          * @param stateVector 
          * @return double 
          */
-        double GetTheta(const IO::SDK::OrbitalParameters::StateVector &stateVector) const;
+        [[nodiscard]] double GetTheta(const IO::SDK::OrbitalParameters::StateVector &stateVector) const;
     };
 }
 

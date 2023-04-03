@@ -23,16 +23,16 @@ namespace IO::SDK::Frames
 	{
 
 	private:
-		static InertialFrames _ICRF;
-		static InertialFrames _ECLIPTIC;
-		static InertialFrames _GALACTIC;
+		static InertialFrames mICRF;
+		static InertialFrames mECLIPTIC;
+		static InertialFrames mGALACTIC;
 	public:
 		/**
 		 * @brief Construct a new Inertial Frames object
 		 * 
 		 * @param name 
 		 */
-		InertialFrames(const std::string &name);
+		explicit InertialFrames(const std::string &name);
 
 		static IO::SDK::Frames::InertialFrames& GetICRF();
 		static IO::SDK::Frames::InertialFrames& Galactic();

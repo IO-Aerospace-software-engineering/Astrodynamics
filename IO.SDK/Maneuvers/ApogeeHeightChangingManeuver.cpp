@@ -9,9 +9,8 @@
  * 
  */
 #include <ApogeeHeightChangingManeuver.h>
-#include <InvalidArgumentException.h>
-#include <SDKException.h>
 #include <cmath>
+#include <Parameters.h>
 
 IO::SDK::Maneuvers::ApogeeHeightChangingManeuver::ApogeeHeightChangingManeuver(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator, const double targetHeight) : IO::SDK::Maneuvers::ManeuverBase(engines, propagator), m_targetHeight{targetHeight}
 {
@@ -39,7 +38,7 @@ IO::SDK::OrbitalParameters::StateOrientation IO::SDK::Maneuvers::ApogeeHeightCha
         velocityVector = velocityVector.Reverse();
     }
 
-    return IO::SDK::OrbitalParameters::StateOrientation(velocityVector.To(m_spacecraft.Front), IO::SDK::Math::Vector3D(0.0, 0.0, 0.0), maneuverPoint.GetEpoch(), maneuverPoint.GetFrame());
+    return IO::SDK::OrbitalParameters::StateOrientation{velocityVector.To(m_spacecraft.Front), IO::SDK::Math::Vector3D(0.0, 0.0, 0.0), maneuverPoint.GetEpoch(), maneuverPoint.GetFrame()};
 }
 
 bool IO::SDK::Maneuvers::ApogeeHeightChangingManeuver::CanExecute(const IO::SDK::OrbitalParameters::OrbitalParameters &orbitalParams)

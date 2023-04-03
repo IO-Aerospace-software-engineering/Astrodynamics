@@ -10,12 +10,12 @@
  */
 #include<OccultationType.h>
 
-IO::SDK::OccultationType IO::SDK::OccultationType::_Full(std::string("FULL"));
-IO::SDK::OccultationType IO::SDK::OccultationType::_Annular(std::string("ANNULAR"));
-IO::SDK::OccultationType IO::SDK::OccultationType::_Partial(std::string("PARTIAL"));
-IO::SDK::OccultationType IO::SDK::OccultationType::_Any(std::string("ANY"));
+IO::SDK::OccultationType IO::SDK::OccultationType::mFull(std::string("FULL"));
+IO::SDK::OccultationType IO::SDK::OccultationType::mAnnular(std::string("ANNULAR"));
+IO::SDK::OccultationType IO::SDK::OccultationType::mPartial(std::string("PARTIAL"));
+IO::SDK::OccultationType IO::SDK::OccultationType::mAny(std::string("ANY"));
 
-IO::SDK::OccultationType::OccultationType(const std::string& name):m_name{name}
+IO::SDK::OccultationType::OccultationType(std::string  name):m_name{std::move(name)}
 {
 
 }
@@ -27,20 +27,20 @@ const char *IO::SDK::OccultationType::ToCharArray() const
 
 IO::SDK::OccultationType& IO::SDK::OccultationType::Full()
 {
-    return _Full;
+    return mFull;
 }
 
 IO::SDK::OccultationType& IO::SDK::OccultationType::Annular()
 {
-    return _Annular;
+    return mAnnular;
 }
 
 IO::SDK::OccultationType& IO::SDK::OccultationType::Partial()
 {
-    return _Partial;
+    return mPartial;
 }
 
 IO::SDK::OccultationType& IO::SDK::OccultationType::Any()
 {
-    return _Any;
+    return mAny;
 }

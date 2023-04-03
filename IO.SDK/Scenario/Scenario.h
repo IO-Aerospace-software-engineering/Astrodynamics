@@ -5,26 +5,15 @@
 #ifndef IOSDK_SCENARIO_H
 #define IOSDK_SCENARIO_H
 
-#include <string>
-#include <vector>
 #include <map>
-#include <optional>
 
-#include <UTC.h>
-#include <Window.h>
-#include <TimeSpan.h>
-#include <CelestialBody.h>
-#include <Spacecraft.h>
 #include <DistanceParameters.h>
 #include <OccultationParameters.h>
 #include <ByDayParameters.h>
 #include <ByNightParameters.h>
 #include <BodyVisibilityFromSiteParameters.h>
 #include <InFieldOfViewParameters.h>
-#include <Site.h>
 #include <VVIntegrator.h>
-#include <GravityForce.h>
-#include <Force.h>
 #include <LaunchParameters.h>
 #include <LaunchWindow.h>
 
@@ -82,7 +71,7 @@ namespace IO::SDK
         std::map<IO::SDK::Constraints::Parameters::LaunchParameters *, std::optional<std::vector<IO::SDK::Maneuvers::LaunchWindow>>> m_launchConstraints;
 
     public:
-        Scenario(const std::string &name, const IO::SDK::Time::Window<IO::SDK::Time::UTC> &windows);
+        Scenario(std::string name, const IO::SDK::Time::Window<IO::SDK::Time::UTC> &windows);
 
         /**
          * Add celestial body to the scenario
@@ -106,14 +95,14 @@ namespace IO::SDK
          * Get the name of the scenario
          * @return
          */
-        inline const std::string GetName() const
+        [[nodiscard]] inline std::string GetName() const
         { return m_name; }
 
         /**
          * Get the window of the scenario
          * @return
          */
-        inline const IO::SDK::Time::Window<IO::SDK::Time::UTC> &GetWindow() const
+        [[nodiscard]] inline const IO::SDK::Time::Window<IO::SDK::Time::UTC> &GetWindow() const
         { return m_windows; }
 
         /**
@@ -141,7 +130,7 @@ namespace IO::SDK
          * Get distance constraints of the scenario
          * @return
          */
-        inline const std::map<IO::SDK::Constraints::Parameters::DistanceParameters *, std::optional<std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>>>> &
+        [[nodiscard]] inline const std::map<IO::SDK::Constraints::Parameters::DistanceParameters *, std::optional<std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>>>> &
         GetDistanceConstraints() const
         {
             return m_distanceConstraints;
@@ -151,7 +140,7 @@ namespace IO::SDK
          * Get occultation constraints of the scenario
          * @return
          */
-        inline const std::map<IO::SDK::Constraints::Parameters::OccultationParameters *, std::optional<std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>>>> &
+        [[nodiscard]] inline const std::map<IO::SDK::Constraints::Parameters::OccultationParameters *, std::optional<std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>>>> &
         GetOccultationConstraints() const
         {
             return m_occultationConstraints;
@@ -161,7 +150,7 @@ namespace IO::SDK
          * Get by day constraints of the scenario
          * @return
          */
-        inline const std::map<IO::SDK::Constraints::Parameters::ByDayParameters *, std::optional<std::vector<IO::SDK::Time::Window<IO::SDK::Time::UTC>>>> &
+        [[nodiscard]] inline const std::map<IO::SDK::Constraints::Parameters::ByDayParameters *, std::optional<std::vector<IO::SDK::Time::Window<IO::SDK::Time::UTC>>>> &
         GetByDaysConstraints() const
         {
             return m_dayConstraints;
@@ -171,7 +160,7 @@ namespace IO::SDK
          * Get by night constraints of the scenario
          * @return
          */
-        inline const std::map<IO::SDK::Constraints::Parameters::ByNightParameters *, std::optional<std::vector<IO::SDK::Time::Window<IO::SDK::Time::UTC>>>> &
+        [[nodiscard]] inline const std::map<IO::SDK::Constraints::Parameters::ByNightParameters *, std::optional<std::vector<IO::SDK::Time::Window<IO::SDK::Time::UTC>>>> &
         GetByNightConstraints() const
         {
             return m_nightConstraints;
@@ -181,7 +170,7 @@ namespace IO::SDK
          * Get body visibility constraint from site
          * @return
          */
-        inline const std::map<IO::SDK::Constraints::Parameters::BodyVisibilityFromSiteParameters *, std::optional<std::vector<IO::SDK::Time::Window<IO::SDK::Time::UTC>>>> &
+        [[nodiscard]] inline const std::map<IO::SDK::Constraints::Parameters::BodyVisibilityFromSiteParameters *, std::optional<std::vector<IO::SDK::Time::Window<IO::SDK::Time::UTC>>>> &
         GetBodyVisibilityFromSiteConstraints() const
         {
             return m_bodyVisibilityConstraints;
@@ -191,7 +180,7 @@ namespace IO::SDK
          * Get in field of view constraint parameter
          * @return
          */
-        inline const std::map<IO::SDK::Constraints::Parameters::InFieldOfViewParameters *, std::optional<std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>>>> &
+        [[nodiscard]] inline const std::map<IO::SDK::Constraints::Parameters::InFieldOfViewParameters *, std::optional<std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>>>> &
         GetInFieldOfViewConstraints() const
         {
             return m_inFieldOfViewConstraints;
@@ -201,7 +190,7 @@ namespace IO::SDK
          * Get launch constraints
          * @return
          */
-        inline const std::map<IO::SDK::Constraints::Parameters::LaunchParameters *, std::optional<std::vector<IO::SDK::Maneuvers::LaunchWindow>>> &
+        [[nodiscard]] inline const std::map<IO::SDK::Constraints::Parameters::LaunchParameters *, std::optional<std::vector<IO::SDK::Maneuvers::LaunchWindow>>> &
         GetLaunchConstraints() const
         {
             return m_launchConstraints;

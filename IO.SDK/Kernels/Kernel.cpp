@@ -9,8 +9,6 @@
  * 
  */
 #include <Kernel.h>
-#include <SpiceUsr.h>
-#include <SDKException.h>
 #include <filesystem>
 #include <cstring>
 
@@ -86,10 +84,10 @@ std::string IO::SDK::Kernels::Kernel::ReadComment() const
     dafec_c(handle, 1, COMLENGTH + 1, &n, buffer, &done);
     dafcls_c(handle);
 
-    return std::string(buffer[0]);
+    return std::string{buffer[0]};
 }
 
-int IO::SDK::Kernels::Kernel::DefinePolynomialDegree(const int dataSize, const int maximumDegree) const
+int IO::SDK::Kernels::Kernel::DefinePolynomialDegree(const int dataSize, const int maximumDegree)
 {
     //min size used to define polynomial degree
     int degree{dataSize - 1};

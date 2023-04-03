@@ -9,12 +9,12 @@ namespace IO::SDK::API::DTO
 {
     struct AttitudeDTO
     {
-        const char *name;
+        const char *name{};
         int maneuverOrder{0};
-        int engines[10];
+        int engines[10]{};
         double attitudeHoldDuration{0.0};
         double minimumEpoch{0.0};
-        IO::SDK::API::DTO::WindowDTO window;
+        IO::SDK::API::DTO::WindowDTO window{};
     };
 }
 

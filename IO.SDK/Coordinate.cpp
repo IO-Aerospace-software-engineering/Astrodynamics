@@ -10,17 +10,17 @@
  */
 #include <Coordinate.h>
 
-IO::SDK::Coordinate IO::SDK::Coordinate::_X(std::string("X"));
-IO::SDK::Coordinate IO::SDK::Coordinate::_Y(std::string("Y"));
-IO::SDK::Coordinate IO::SDK::Coordinate::_Z(std::string("Z"));
-IO::SDK::Coordinate IO::SDK::Coordinate::_Altitude(std::string("ALTITUDE"));
-IO::SDK::Coordinate IO::SDK::Coordinate::_Colatitude(std::string("COLATITUDE"));
-IO::SDK::Coordinate IO::SDK::Coordinate::_Declination(std::string("DECLINATION"));
-IO::SDK::Coordinate IO::SDK::Coordinate::_Latitude(std::string("LATITUDE"));
-IO::SDK::Coordinate IO::SDK::Coordinate::_Longitude(std::string("LONGITUDE"));
-IO::SDK::Coordinate IO::SDK::Coordinate::_Radius(std::string("RADIUS"));
-IO::SDK::Coordinate IO::SDK::Coordinate::_Range(std::string("RANGE"));
-IO::SDK::Coordinate IO::SDK::Coordinate::_RightAscension(std::string("RIGHT ASCENSION"));
+IO::SDK::Coordinate IO::SDK::Coordinate::mX(std::string("X"));
+IO::SDK::Coordinate IO::SDK::Coordinate::mY(std::string("Y"));
+IO::SDK::Coordinate IO::SDK::Coordinate::mZ(std::string("Z"));
+IO::SDK::Coordinate IO::SDK::Coordinate::mAltitude(std::string("ALTITUDE"));
+IO::SDK::Coordinate IO::SDK::Coordinate::mColatitude(std::string("COLATITUDE"));
+IO::SDK::Coordinate IO::SDK::Coordinate::mDeclination(std::string("DECLINATION"));
+IO::SDK::Coordinate IO::SDK::Coordinate::mLatitude(std::string("LATITUDE"));
+IO::SDK::Coordinate IO::SDK::Coordinate::mLongitude(std::string("LONGITUDE"));
+IO::SDK::Coordinate IO::SDK::Coordinate::mRadius(std::string("RADIUS"));
+IO::SDK::Coordinate IO::SDK::Coordinate::mRange(std::string("RANGE"));
+IO::SDK::Coordinate IO::SDK::Coordinate::mRightAscension(std::string("RIGHT ASCENSION"));
 
 IO::SDK::Coordinate::Coordinate(const std::string &name) : m_name{name}
 {
@@ -33,55 +33,55 @@ const char *IO::SDK::Coordinate::ToCharArray() const
 
 IO::SDK::Coordinate &IO::SDK::Coordinate::Altitude()
 {
-    return _Altitude;
+    return mAltitude;
 }
 
 IO::SDK::Coordinate &IO::SDK::Coordinate::X()
 {
-    return _X;
+    return mX;
 }
 
 IO::SDK::Coordinate &IO::SDK::Coordinate::Y()
 {
-    return _Y;
+    return mY;
 }
 
 IO::SDK::Coordinate &IO::SDK::Coordinate::Z()
 {
-    return _Z;
+    return mZ;
 }
 
 IO::SDK::Coordinate &IO::SDK::Coordinate::Longitude()
 {
-    return _Longitude;
+    return mLongitude;
 }
 
 IO::SDK::Coordinate &IO::SDK::Coordinate::Latitude()
 {
-    return _Latitude;
+    return mLatitude;
 }
 
 IO::SDK::Coordinate &IO::SDK::Coordinate::Radius()
 {
-    return _Radius;
+    return mRadius;
 }
 
 IO::SDK::Coordinate &IO::SDK::Coordinate::Range()
 {
-    return _Range;
+    return mRange;
 }
 
 IO::SDK::Coordinate &IO::SDK::Coordinate::RightAscension()
 {
-    return _RightAscension;
+    return mRightAscension;
 }
 
 IO::SDK::Coordinate &IO::SDK::Coordinate::Declination()
 {
-    return _Declination;
+    return mDeclination;
 }
 
 IO::SDK::Coordinate &IO::SDK::Coordinate::Colatitude()
 {
-    return _Colatitude;
+    return mColatitude;
 }

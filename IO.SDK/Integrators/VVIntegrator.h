@@ -39,7 +39,7 @@ namespace IO::SDK::Integrators
         std::vector<IO::SDK::Integrators::Forces::Force *> m_forces{};
         std::optional<IO::SDK::Math::Vector3D> m_acceleration{std::nullopt};
 
-        IO::SDK::Math::Vector3D ComputeAcceleration(const IO::SDK::Body::Body &body, const IO::SDK::OrbitalParameters::StateVector &stateVector) const;
+        [[nodiscard]] IO::SDK::Math::Vector3D ComputeAcceleration(const IO::SDK::Body::Body &body, const IO::SDK::OrbitalParameters::StateVector &stateVector) const;
 
     public:
         /**
@@ -47,7 +47,7 @@ namespace IO::SDK::Integrators
          * 
          * @param stepDuration 
          */
-        VVIntegrator(const IO::SDK::Time::TimeSpan &stepDuration);
+        explicit VVIntegrator(const IO::SDK::Time::TimeSpan &stepDuration);
 
         /**
          * @brief Construct a new VVIntegrator object
@@ -55,7 +55,7 @@ namespace IO::SDK::Integrators
          * @param stepDuration 
          * @param forces 
          */
-        VVIntegrator(const IO::SDK::Time::TimeSpan &stepDuration, std::vector<IO::SDK::Integrators::Forces::Force *> forces);
+        VVIntegrator(const IO::SDK::Time::TimeSpan &stepDuration, std::vector<IO::SDK::Integrators::Forces::Force *>& forces);
 
         /**
          * @brief Destroy the VVIntegrator object

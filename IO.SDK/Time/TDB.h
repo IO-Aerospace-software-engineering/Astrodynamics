@@ -12,8 +12,6 @@
 #define TDB_H
 
 #include <DateTime.h>
-#include <chrono>
-#include <string>
 
 namespace IO::SDK::Time
 {
@@ -27,21 +25,21 @@ namespace IO::SDK::Time
 		 * 
 		 * @param ellapsedSecondsFromJ2000 
 		 */
-		TDB(const std::chrono::duration<double> ellapsedSecondsFromJ2000);
+		explicit TDB(std::chrono::duration<double> ellapsedSecondsFromJ2000);
 
 		/**
 		 * @brief Construct a new TDB object
 		 * 
 		 * @param string 
 		 */
-		TDB(const std::string string);
+		explicit TDB(const std::string& string);
 
 		/**
 		 * @brief Get string representation
 		 * 
 		 * @return std::string 
 		 */
-		std::string ToString() const override;
+		[[nodiscard]] std::string ToString() const override;
 
 		/**
 		 * @brief Add TimeSpan to datetime
@@ -49,7 +47,7 @@ namespace IO::SDK::Time
 		 * @param timespan 
 		 * @return IO::SDK::Time::TDB 
 		 */
-		IO::SDK::Time::TDB Add(const IO::SDK::Time::TimeSpan &timespan) const;
+		[[nodiscard]] IO::SDK::Time::TDB Add(const IO::SDK::Time::TimeSpan &timespan) const;
 
 		/**
 		 * @brief Add TimeSpan to DateTime
@@ -80,7 +78,7 @@ namespace IO::SDK::Time
 		 * 
 		 * @return UTC 
 		 */
-		UTC ToUTC() const;
+		[[nodiscard]] UTC ToUTC() const;
 	};
 }
 #endif // !TDB_H

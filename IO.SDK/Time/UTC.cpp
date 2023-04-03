@@ -17,7 +17,7 @@ IO::SDK::Time::UTC::UTC(const std::chrono::duration<double> ellapsedSecondsFromJ
 {
 }
 
-IO::SDK::Time::UTC::UTC(const std::string string)
+IO::SDK::Time::UTC::UTC(const std::string& string)
 {
     SpiceDouble utc;
     SpiceChar errMsg[100];
@@ -37,7 +37,7 @@ std::string IO::SDK::Time::UTC::ToString() const
     SpiceDouble delta;
     deltet_c(m_secondsFromJ2000.count(), "UTC", &delta);
     timout_c(m_secondsFromJ2000.count() + delta, "YYYY-MM-DD HR:MN:SC.###### (UTC) ::UTC", 51, str);
-    return std::string(str);
+    return std::string{str};
 }
 
 IO::SDK::Time::TDB IO::SDK::Time::UTC::ToTDB() const
@@ -49,7 +49,7 @@ IO::SDK::Time::TDB IO::SDK::Time::UTC::ToTDB() const
 
 IO::SDK::Time::UTC IO::SDK::Time::UTC::Add(const IO::SDK::Time::TimeSpan &timespan) const
 {
-    return IO::SDK::Time::UTC(m_secondsFromJ2000 + timespan.GetSeconds());
+    return IO::SDK::Time::UTC{m_secondsFromJ2000 + timespan.GetSeconds()};
 }
 
 IO::SDK::Time::UTC IO::SDK::Time::UTC::operator+(const IO::SDK::Time::TimeSpan &timespan) const

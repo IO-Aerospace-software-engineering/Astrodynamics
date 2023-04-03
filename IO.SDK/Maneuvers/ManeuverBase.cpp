@@ -8,11 +8,9 @@
  * @copyright Copyright (c) 2021
  * 
  */
-#include <numeric>
-#include <limits>
-#include <chrono>
 #include <ManeuverBase.h>
-#include <TimeSpan.h>
+#include <Constants.h>
+#include "TooEarlyManeuverException.h"
 
 using namespace std::literals::chrono_literals;
 
@@ -127,10 +125,10 @@ IO::SDK::Maneuvers::ManeuverResult IO::SDK::Maneuvers::ManeuverBase::Validate()
     if (deltaVAvailable < m_deltaV->Magnitude())
     {
         std::string message{"No enought delta V available. Required " + std::to_string(m_deltaV->Magnitude()) + " | Available : " + std::to_string(deltaVAvailable)};
-        return IO::SDK::Maneuvers::ManeuverResult(false, message);
+        return IO::SDK::Maneuvers::ManeuverResult{false, message};
     }
     std::string s;
-    return IO::SDK::Maneuvers::ManeuverResult(true, s);
+    return IO::SDK::Maneuvers::ManeuverResult{true, s};
 }
 
 void IO::SDK::Maneuvers::ManeuverBase::ExecuteAt(const IO::SDK::OrbitalParameters::OrbitalParameters &maneuverPoint)
@@ -229,7 +227,7 @@ void IO::SDK::Maneuvers::ManeuverBase::ExecuteAt(const IO::SDK::OrbitalParameter
     }
 }
 
-bool IO::SDK::Maneuvers::ManeuverBase::IsValid()
+bool IO::SDK::Maneuvers::ManeuverBase::IsValid() const
 {
     return m_isValid;
 }
@@ -257,7 +255,7 @@ IO::SDK::Time::Window<IO::SDK::Time::TDB> *IO::SDK::Maneuvers::ManeuverBase::Get
 
 void IO::SDK::Maneuvers::ManeuverBase::ManeuverBase::SpreadThrust()
 {
-    if (m_deltaV == 0)
+    if (m_deltaV == nullptr)
     {
         return;
     }

@@ -9,7 +9,9 @@
  * 
  */
 #include "SDKException.h"
-IO::SDK::Exception::SDKException::SDKException(const std::string &msg) : std::exception(), m_msg{msg}
+
+#include <utility>
+IO::SDK::Exception::SDKException::SDKException(std::string msg) : std::exception(), m_msg{std::move(msg)}
 {
 }
 const char *IO::SDK::Exception::SDKException::what() const noexcept

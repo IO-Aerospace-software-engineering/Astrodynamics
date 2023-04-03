@@ -10,9 +10,14 @@
  */
 #include "Matrix.h"
 #include <SDKException.h>
+#include <InvalidArgumentException.h>
 
 IO::SDK::Math::Matrix::Matrix(const Matrix &v) : Matrix(v.m_rowSize, v.m_colSize)
 {
+    if(v.m_data== nullptr)
+    {
+        throw Exception::InvalidArgumentException("Matrix has null pointer");
+    }
 	for (std::size_t i = 0; i < v.m_rowSize; i++)
 	{
 		for (std::size_t j = 0; j < v.m_colSize; j++)

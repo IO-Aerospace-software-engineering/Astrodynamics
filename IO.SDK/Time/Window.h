@@ -48,7 +48,7 @@ namespace IO::SDK::Time
         T GetEndDate() const
         { return m_end; }
 
-        TimeSpan GetLength() const
+        [[nodiscard]] TimeSpan GetLength() const
         { return m_length; }
 
         bool operator==(const Window<T> &window) const

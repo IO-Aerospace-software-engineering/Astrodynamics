@@ -11,16 +11,7 @@
 #ifndef INSTRUMENT_ALIGNED_TO_ATTITUDE_H
 #define INSTRUMENT_ALIGNED_TO_ATTITUDE_H
 
-#include <vector>
-#include <memory>
-
 #include <ManeuverBase.h>
-#include <OrbitalParameters.h>
-#include <Engine.h>
-#include <Propagator.h>
-#include <Vector3D.h>
-#include <Body.h>
-#include <Site.h>
 
 namespace IO::SDK::Maneuvers::Attitudes
 {

@@ -24,8 +24,8 @@ namespace IO::SDK::Frames
 
     private:
     public:
-        BodyFixedFrames(const std::string &name);
+        explicit BodyFixedFrames(const std::string &name);
         
     };
 }
-#endif // ! INERTIAL_FRAMES_H
+#endif // ! BODY_FIXED_FRAMES_H

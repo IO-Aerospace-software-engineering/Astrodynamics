@@ -33,7 +33,7 @@ namespace IO::SDK::Coordinates
 		 * @param longitudeSpan 
 		 * @param latitudeSpan 
 		 */
-		SurfaceCoordinates(const size_t longitudeSpan,const size_t latitudeSpan);
+		SurfaceCoordinates(size_t longitudeSpan,size_t latitudeSpan);
 
 		/**
 		 * @brief Construct a new Surface Coordinates object
@@ -50,7 +50,7 @@ namespace IO::SDK::Coordinates
 		 * 
 		 * @return const std::vector<std::unique_ptr<IO::SDK::Math::Vector3D>>& 
 		 */
-		const std::vector<std::unique_ptr<IO::SDK::Math::Vector3D>>& GetSurfacePoints() const
+		[[nodiscard]] const std::vector<std::unique_ptr<IO::SDK::Math::Vector3D>>& GetSurfacePoints() const
 		{
 			return m_surfacePoints;
 		}
@@ -60,7 +60,7 @@ namespace IO::SDK::Coordinates
 		 * 
 		 * @return const std::vector<std::unique_ptr<IO::SDK::Math::Vector3D>>& 
 		 */
-		const std::vector<std::unique_ptr<IO::SDK::Math::Vector3D>>& GetSurfaceNormals() const
+		[[nodiscard]] const std::vector<std::unique_ptr<IO::SDK::Math::Vector3D>>& GetSurfaceNormals() const
 		{
 			return m_surfaceNormals;
 		}

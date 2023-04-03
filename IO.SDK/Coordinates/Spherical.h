@@ -38,21 +38,21 @@ namespace IO::SDK::Coordinates
 		 * 
 		 * @return double 
 		 */
-		double GetRadius() const { return this->_radius; }
+		[[nodiscard]] double GetRadius() const { return this->_radius; }
 
 		/**
 		 * @brief Get the Longitude
 		 * 
 		 * @return double 
 		 */
-		double GetLongitude() const { return this->_longitude; }
+		[[nodiscard]] double GetLongitude() const { return this->_longitude; }
 
 		/**
 		 * @brief Get the Colatitude
 		 * 
 		 * @return double 
 		 */
-		double GetColatitude() const { return this->_colatitude; }
+		[[nodiscard]] double GetColatitude() const { return this->_colatitude; }
 	};
 }
 #endif // !SPHERICAL_H

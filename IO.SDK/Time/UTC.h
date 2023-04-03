@@ -25,12 +25,12 @@ namespace IO::SDK::Time
     private:
         /* data */
     public:
-        UTC(const std::chrono::duration<double> ellapsedSecondsFromJ2000);
+        explicit UTC(std::chrono::duration<double> ellapsedSecondsFromJ2000);
 
-        UTC(const std::string string);
-        ~UTC() = default;
+        explicit UTC(const std::string& string);
+        ~UTC() override = default;
 
-        IO::SDK::Time::UTC Add(const IO::SDK::Time::TimeSpan &timespan) const;
+        [[nodiscard]] IO::SDK::Time::UTC Add(const IO::SDK::Time::TimeSpan &timespan) const;
 
         /**
          * @brief 
@@ -45,9 +45,9 @@ namespace IO::SDK::Time
          * 
          * @return std::string 
          */
-        std::string ToString() const override;
+        [[nodiscard]] std::string ToString() const override;
 
-        TDB ToTDB() const;
+        [[nodiscard]] TDB ToTDB() const;
     };
 
 } // namespace IO::SDK::Time
