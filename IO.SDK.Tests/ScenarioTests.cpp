@@ -22,21 +22,18 @@ TEST(Scenario, Initialize)
     s.AddFuelTank("ft1", 1000.0, 900.0);
     s.AddEngine("sn1", "eng1", "ft1", {1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}, 450.0, 50.0);
 
-    std::string tle[3] = {"ISS (ZARYA)", "1 25544U 98067A   21153.20885672  .00000635  00000-0  19731-4 0  9999",
-                          "2 25544  51.6454  56.8104 0003459  55.0598  93.6040 15.48940796286274"};
 
     IO::SDK::Time::Window<IO::SDK::Time::UTC> window(IO::SDK::Time::UTC("2021-06-02T00:00:00"), IO::SDK::Time::UTC("2021-06-02T00:00:00"));
     IO::SDK::Scenario scenario("scenariotest", window);
     scenario.AddCelestialBody(*earth);
-    scenario.AddSpacecraft(s);
+    scenario.AttachSpacecraft(s);
     scenario.AddSite(ls);
 
     ASSERT_STREQ("scenariotest", scenario.GetName().c_str());
     ASSERT_EQ(window, scenario.GetWindow());
     ASSERT_EQ(1, scenario.GetCelestialBodies().size());
     ASSERT_EQ(1, scenario.GetSites().size());
-    ASSERT_EQ(1, scenario.GetSpacecrafts().size());
-    ASSERT_EQ(s, *scenario.GetSpacecrafts().front());
+    ASSERT_EQ(s, *scenario.GetSpacecraft());
     ASSERT_EQ(*earth, *scenario.GetCelestialBodies().front());
 
     ASSERT_EQ(&ls, dynamic_cast<const IO::SDK::Sites::LaunchSite *>(scenario.GetSites().front()));
@@ -55,14 +52,12 @@ TEST(Scenario, AddDistanceConstraint)
     s.AddFuelTank("ft1", 1000.0, 900.0);
     s.AddEngine("sn1", "eng1", "ft1", {1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}, 450.0, 50.0);
 
-    std::string tle[3] = {"ISS (ZARYA)", "1 25544U 98067A   21153.20885672  .00000635  00000-0  19731-4 0  9999",
-                          "2 25544  51.6454  56.8104 0003459  55.0598  93.6040 15.48940796286274"};
 
     IO::SDK::Time::Window<IO::SDK::Time::UTC> windowUTC(IO::SDK::Time::UTC("2021-06-02T00:00:00"), IO::SDK::Time::UTC("2021-06-02T00:00:00"));
     IO::SDK::Time::Window<IO::SDK::Time::TDB> windowTDB(IO::SDK::Time::TDB("2021-06-02T00:00:00"), IO::SDK::Time::TDB("2021-06-02T00:00:00"));
     IO::SDK::Scenario scenario("scenariotest", windowUTC);
     scenario.AddCelestialBody(*earth);
-    scenario.AddSpacecraft(s);
+    scenario.AttachSpacecraft(s);
     scenario.AddSite(ls);
 
     IO::SDK::Constraints::Parameters::DistanceParameters constraint1(*earth, *sun, IO::SDK::Constraints::Constraint::GreaterThan(), IO::SDK::AberrationsEnum::None, 10.0,
@@ -91,14 +86,11 @@ TEST(Scenario, AddOccultationConstraint)
     s.AddFuelTank("ft1", 1000.0, 900.0);
     s.AddEngine("sn1", "eng1", "ft1", {1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}, 450.0, 50.0);
 
-    std::string tle[3] = {"ISS (ZARYA)", "1 25544U 98067A   21153.20885672  .00000635  00000-0  19731-4 0  9999",
-                          "2 25544  51.6454  56.8104 0003459  55.0598  93.6040 15.48940796286274"};
-
     IO::SDK::Time::Window<IO::SDK::Time::UTC> windowUTC(IO::SDK::Time::UTC("2021-06-02T00:00:00"), IO::SDK::Time::UTC("2021-06-02T00:00:00"));
     IO::SDK::Time::Window<IO::SDK::Time::TDB> windowTDB(IO::SDK::Time::TDB("2021-06-02T00:00:00"), IO::SDK::Time::TDB("2021-06-02T00:00:00"));
     IO::SDK::Scenario scenario("scenariotest", windowUTC);
     scenario.AddCelestialBody(*earth);
-    scenario.AddSpacecraft(s);
+    scenario.AttachSpacecraft(s);
     scenario.AddSite(ls);
 
     IO::SDK::Constraints::Parameters::OccultationParameters constraint1(s, *earth, *sun, IO::SDK::OccultationType::Full(), IO::SDK::AberrationsEnum::None,
@@ -127,14 +119,11 @@ TEST(Scenario, AddByDayConstraint)
     s.AddFuelTank("ft1", 1000.0, 900.0);
     s.AddEngine("sn1", "eng1", "ft1", {1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}, 450.0, 50.0);
 
-    std::string tle[3] = {"ISS (ZARYA)", "1 25544U 98067A   21153.20885672  .00000635  00000-0  19731-4 0  9999",
-                          "2 25544  51.6454  56.8104 0003459  55.0598  93.6040 15.48940796286274"};
-
     IO::SDK::Time::Window<IO::SDK::Time::UTC> windowUTC(IO::SDK::Time::UTC("2021-06-02T00:00:00"), IO::SDK::Time::UTC("2021-06-02T00:00:00"));
     IO::SDK::Time::Window<IO::SDK::Time::TDB> windowTDB(IO::SDK::Time::TDB("2021-06-02T00:00:00"), IO::SDK::Time::TDB("2021-06-02T00:00:00"));
     IO::SDK::Scenario scenario("scenariotest", windowUTC);
     scenario.AddCelestialBody(*earth);
-    scenario.AddSpacecraft(s);
+    scenario.AttachSpacecraft(s);
     scenario.AddSite(ls);
 
     IO::SDK::Constraints::Parameters::ByDayParameters constraint1(ls, IO::SDK::Constants::CivilTwilight);
@@ -161,14 +150,11 @@ TEST(Scenario, AddByNightConstraint)
     s.AddFuelTank("ft1", 1000.0, 900.0);
     s.AddEngine("sn1", "eng1", "ft1", {1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}, 450.0, 50.0);
 
-    std::string tle[3] = {"ISS (ZARYA)", "1 25544U 98067A   21153.20885672  .00000635  00000-0  19731-4 0  9999",
-                          "2 25544  51.6454  56.8104 0003459  55.0598  93.6040 15.48940796286274"};
-
     IO::SDK::Time::Window<IO::SDK::Time::UTC> windowUTC(IO::SDK::Time::UTC("2021-06-02T00:00:00"), IO::SDK::Time::UTC("2021-06-02T00:00:00"));
     IO::SDK::Time::Window<IO::SDK::Time::TDB> windowTDB(IO::SDK::Time::TDB("2021-06-02T00:00:00"), IO::SDK::Time::TDB("2021-06-02T00:00:00"));
     IO::SDK::Scenario scenario("scenariotest", windowUTC);
     scenario.AddCelestialBody(*earth);
-    scenario.AddSpacecraft(s);
+    scenario.AttachSpacecraft(s);
     scenario.AddSite(ls);
 
     IO::SDK::Constraints::Parameters::ByNightParameters constraint1(ls, IO::SDK::Constants::CivilTwilight);
@@ -195,14 +181,11 @@ TEST(Scenario, AddBodyVisibilityConstraint)
     s.AddFuelTank("ft1", 1000.0, 900.0);
     s.AddEngine("sn1", "eng1", "ft1", {1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}, 450.0, 50.0);
 
-    std::string tle[3] = {"ISS (ZARYA)", "1 25544U 98067A   21153.20885672  .00000635  00000-0  19731-4 0  9999",
-                          "2 25544  51.6454  56.8104 0003459  55.0598  93.6040 15.48940796286274"};
-
     IO::SDK::Time::Window<IO::SDK::Time::UTC> windowUTC(IO::SDK::Time::UTC("2021-06-02T00:00:00"), IO::SDK::Time::UTC("2021-06-02T00:00:00"));
     IO::SDK::Time::Window<IO::SDK::Time::TDB> windowTDB(IO::SDK::Time::TDB("2021-06-02T00:00:00"), IO::SDK::Time::TDB("2021-06-02T00:00:00"));
     IO::SDK::Scenario scenario("scenariotest", windowUTC);
     scenario.AddCelestialBody(*earth);
-    scenario.AddSpacecraft(s);
+    scenario.AttachSpacecraft(s);
     scenario.AddSite(ls);
 
     IO::SDK::Constraints::Parameters::BodyVisibilityFromSiteParameters constraint1(ls, *sun, IO::SDK::AberrationsEnum::None);
@@ -369,7 +352,7 @@ TEST(Scenario, FindInFieldOfViewConstraint)
 
     s.AddCircularFOVInstrument(799, "CAMERA799", IO::SDK::Tests::Zero, IO::SDK::Tests::VectorX.Reverse(), IO::SDK::Tests::VectorZ, IO::SDK::Constants::PI2);
     scenario.AddCelestialBody(*earth);
-    scenario.AddSpacecraft(s);
+    scenario.AttachSpacecraft(s);
     auto instrument = s.GetInstrument(799);
     auto constraint = IO::SDK::Constraints::Parameters::InFieldOfViewParameters(*instrument, *earth, IO::SDK::AberrationsEnum::None, IO::SDK::Time::TimeSpan(300s));
     scenario.AddInFieldOfViewConstraint(&constraint);

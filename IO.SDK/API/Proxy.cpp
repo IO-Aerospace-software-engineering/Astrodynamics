@@ -37,10 +37,10 @@ IO::SDK::API::DTO::ScenarioDTO Execute(IO::SDK::API::DTO::ScenarioDTO &scenarioD
     BuildEngines(scenarioDto, spacecraft);
     BuildInstruments(scenarioDto, spacecraft);
 
-    scenario.AddSpacecraft(spacecraft);
+    scenario.AttachSpacecraft(spacecraft);
 
     IO::SDK::API::DTO::ScenarioDTO res;
-    res.Name = strdup(scenarioDto.Name);
+    res.Name = _strdup(scenarioDto.Name);
     res.Window = scenarioDto.Window;
 //    res.name = "scenarioDto.name";
 //    std::cout << scenarioDto.Name << std::endl;
@@ -95,7 +95,7 @@ void BuildSpacecraft(IO::SDK::API::DTO::ScenarioDTO &scenarioDto, std::map<int, 
     BuildEngines(scenarioDto, spacecraft);
     BuildInstruments(scenarioDto, spacecraft);
 
-    scenario.AddSpacecraft(spacecraft);
+    scenario.AttachSpacecraft(spacecraft);
 }
 
 void BuildFuelTank(const IO::SDK::API::DTO::ScenarioDTO &scenarioDto, IO::SDK::Body::Spacecraft::Spacecraft &spacecraft) {//Add FuelTank

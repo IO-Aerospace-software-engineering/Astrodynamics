@@ -8,8 +8,8 @@
 #include "Parameters.h"
 
 IO::SDK::Scenario::Scenario(std::string name, const IO::SDK::Time::Window<IO::SDK::Time::UTC> &windows) : m_name{std::move(name)}, m_windows{windows},
-                                                                                                                 m_integrator(IO::SDK::Parameters::SpacecraftPropagationStep,
-                                                                                                                              m_forces)
+                                                                                                          m_integrator(IO::SDK::Parameters::SpacecraftPropagationStep,
+                                                                                                                       m_forces)
 {
 
 }
@@ -19,9 +19,15 @@ void IO::SDK::Scenario::AddSite(const IO::SDK::Sites::Site &site)
     m_sites.push_back(&site);
 }
 
-void IO::SDK::Scenario::AddSpacecraft(const IO::SDK::Body::Spacecraft::Spacecraft &spacecraft)
+void IO::SDK::Scenario::AttachSpacecraft(const IO::SDK::Body::Spacecraft::Spacecraft &spacecraft)
 {
-    m_spacecrafts.push_back(&spacecraft);
+    m_spacecraft = &spacecraft;
+    if (m_propagator != nullptr)
+    {
+
+        m_propagator = std::make_unique<Propagators::Propagator>(*m_spacecraft, m_integrator,
+                                                                 IO::SDK::Time::Window<Time::TDB>(m_windows.GetStartDate().ToTDB(), m_windows.GetEndDate().ToTDB()));
+    }
 }
 
 void IO::SDK::Scenario::AddCelestialBody(const IO::SDK::Body::CelestialBody &celestialBody)
@@ -74,60 +80,80 @@ void IO::SDK::Scenario::Execute()
 
     auto tdb = IO::SDK::Time::Window<IO::SDK::Time::TDB>(m_windows.GetStartDate().ToTDB(), m_windows.GetEndDate().ToTDB());
     //Run bodies propagation
-    for (auto spacecraft: m_spacecrafts)
+    if (m_spacecraft)
     {
-        IO::SDK::Propagators::Propagator propagator(*spacecraft, m_integrator, tdb);
-        propagator.Propagate();
+        m_propagator->Propagate();
     }
 
-    for (auto &&constraint: m_launchConstraints)
+    for (
+        auto &&constraint
+            : m_launchConstraints)
     {
         IO::SDK::Maneuvers::Launch launch(constraint.first->GetLaunchSite(), constraint.first->GetRecoverySite(), constraint.first->GetLaunchByDay(),
                                           constraint.first->GetTargetOrbit());
-        constraint.second= launch.GetLaunchWindows(this->m_windows);
+        constraint.
+                second = launch.GetLaunchWindows(this->m_windows);
     }
 
 
-    //Evaluate distance constraints
-    for (auto &&constraint: m_distanceConstraints)
+//Evaluate distance constraints
+    for (
+        auto &&constraint
+            : m_distanceConstraints)
     {
-        constraint.second = Body::Body::FindWindowsOnDistanceConstraint(tdb, constraint.first->GetTarget(), constraint.first->GetObserver(),
-                                                                                            constraint.first->GetConstraint(), constraint.first->GetAberration(),
-                                                                                            constraint.first->GetValue(),
+        constraint.
+                second = Body::Body::FindWindowsOnDistanceConstraint(tdb, constraint.first->GetTarget(), constraint.first->GetObserver(),
+                                                                     constraint.first->GetConstraint(), constraint.first->GetAberration(),
+                                                                     constraint.first->GetValue(),
+                                                                     constraint.first->GetInitialStepSize());
+    }
+
+//Evaluate body visibility from site
+    for (
+        auto &&constraint
+            : m_bodyVisibilityConstraints)
+    {
+        constraint.
+                second = constraint.first->GetSite().FindBodyVisibilityWindows(constraint.first->GetTarget(), m_windows, constraint.first->GetAberration());
+    }
+
+//Evaluate site by day
+    for (
+        auto &&constraint
+            : m_dayConstraints)
+    {
+        constraint.
+                second = constraint.first->GetSite().FindDayWindows(m_windows, constraint.first->GetTwilightDefinition());
+    }
+
+//Evaluate site by night
+    for (
+        auto &&constraint
+            : m_nightConstraints)
+    {
+        constraint.
+                second = constraint.first->GetSite().FindNightWindows(m_windows, constraint.first->GetTwilightDefinition());
+    }
+
+//EvaluateOccultation
+    for (
+        auto &&constraint
+            : m_occultationConstraints)
+    {
+        constraint.
+                second = constraint.first->GetObserver().FindWindowsOnOccultationConstraint(tdb, constraint.first->GetBack(), constraint.first->GetFront(),
+                                                                                            constraint.first->GetOccultationType(), constraint.first->GetAberration(),
                                                                                             constraint.first->GetInitialStepSize());
     }
 
-    //Evaluate body visibility from site
-    for (auto &&constraint: m_bodyVisibilityConstraints)
+//EvaluateInFieldOfView
+    for (
+        auto &&constraint
+            : m_inFieldOfViewConstraints)
     {
-        constraint.second = constraint.first->GetSite().FindBodyVisibilityWindows(constraint.first->GetTarget(), m_windows, constraint.first->GetAberration());
-    }
-
-    //Evaluate site by day
-    for (auto &&constraint: m_dayConstraints)
-    {
-        constraint.second = constraint.first->GetSite().FindDayWindows(m_windows, constraint.first->GetTwilightDefinition());
-    }
-
-    //Evaluate site by night
-    for (auto &&constraint: m_nightConstraints)
-    {
-        constraint.second = constraint.first->GetSite().FindNightWindows(m_windows, constraint.first->GetTwilightDefinition());
-    }
-
-    //EvaluateOccultation
-    for (auto &&constraint: m_occultationConstraints)
-    {
-        constraint.second = constraint.first->GetObserver().FindWindowsOnOccultationConstraint(tdb, constraint.first->GetBack(), constraint.first->GetFront(),
-                                                                                               constraint.first->GetOccultationType(), constraint.first->GetAberration(),
-                                                                                               constraint.first->GetInitialStepSize());
-    }
-
-    //EvaluateInFieldOfView
-    for (auto &&constraint: m_inFieldOfViewConstraints)
-    {
-        constraint.second = constraint.first->GetInstrument().FindWindowsWhereInFieldOfView(tdb, constraint.first->GetTargetBody(), constraint.first->GetAberration(),
-                                                                                            constraint.first->GetInitialStepSize());
+        constraint.
+                second = constraint.first->GetInstrument().FindWindowsWhereInFieldOfView(tdb, constraint.first->GetTargetBody(), constraint.first->GetAberration(),
+                                                                                         constraint.first->GetInitialStepSize());
     }
 }
 

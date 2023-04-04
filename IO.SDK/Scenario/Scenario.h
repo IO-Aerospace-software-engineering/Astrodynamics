@@ -16,6 +16,7 @@
 #include <VVIntegrator.h>
 #include <LaunchParameters.h>
 #include <LaunchWindow.h>
+#include "Propagator.h"
 
 namespace IO::SDK::Integrators
 {
@@ -47,12 +48,14 @@ namespace IO::SDK
         const std::string m_name;
         const IO::SDK::Time::Window<IO::SDK::Time::UTC> m_windows;
         std::vector<const IO::SDK::Body::CelestialBody *> m_celestialBodies;
-        std::vector<const IO::SDK::Body::Spacecraft::Spacecraft *> m_spacecrafts;
         std::vector<const IO::SDK::Sites::Site *> m_sites;
 
         IO::SDK::Integrators::Forces::GravityForce m_gravityForce;
         std::vector<IO::SDK::Integrators::Forces::Force *> m_forces{&m_gravityForce};
         const IO::SDK::Integrators::VVIntegrator m_integrator;
+
+        std::unique_ptr<Propagators::Propagator> m_propagator;
+        const Body::Spacecraft::Spacecraft *m_spacecraft{nullptr};
 
         //Body constraints
         std::map<IO::SDK::Constraints::Parameters::DistanceParameters *, std::optional<std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>>>> m_distanceConstraints;
@@ -83,7 +86,7 @@ namespace IO::SDK
          * Add spacecraft to the scenario
          * @param spacecraft
          */
-        void AddSpacecraft(const IO::SDK::Body::Spacecraft::Spacecraft &spacecraft);
+        void AttachSpacecraft(const IO::SDK::Body::Spacecraft::Spacecraft &spacecraft);
 
         /**
          * Add a site to the scenario
@@ -116,8 +119,8 @@ namespace IO::SDK
          * Get spacecrafts of the scenario
          * @return
          */
-        inline const std::vector<const IO::SDK::Body::Spacecraft::Spacecraft *> &GetSpacecrafts()
-        { return m_spacecrafts; }
+        inline const IO::SDK::Body::Spacecraft::Spacecraft * GetSpacecraft()
+        { return m_spacecraft; }
 
         /**
          * Get the sites of the scenario
