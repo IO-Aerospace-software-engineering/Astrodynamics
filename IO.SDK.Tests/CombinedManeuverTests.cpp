@@ -31,8 +31,8 @@ TEST(CombinedManeuver, CanExecute)
 
     auto engine1 = s.GetEngine("sn1");
 
-    std::vector<IO::SDK::Body::Spacecraft::Engine> engines;
-    engines.push_back(*engine1);
+    std::vector<IO::SDK::Body::Spacecraft::Engine*> engines;
+    engines.push_back(const_cast<IO::SDK::Body::Spacecraft::Engine*>(engine1));
 
     IO::SDK::Maneuvers::CombinedManeuver maneuver(engines, prop, 20.0 * IO::SDK::Constants::DEG_RAD, 12000000.0);
 
@@ -57,8 +57,8 @@ TEST(CombinedManeuver, TryExecuteWithPeregeeHigherThanApogee)
 
     auto engine1 = s.GetEngine("sn1");
 
-    std::vector<IO::SDK::Body::Spacecraft::Engine> engines;
-    engines.push_back(*engine1);
+    std::vector<IO::SDK::Body::Spacecraft::Engine*> engines;
+    engines.push_back(const_cast<IO::SDK::Body::Spacecraft::Engine*>(engine1));
 
     IO::SDK::Maneuvers::CombinedManeuver maneuver(engines, prop, 0.0, 42164000.0);
 
@@ -92,8 +92,8 @@ TEST(CombinedManeuver, TryExecuteWithPeregeeLowerThanApogee)
 
     auto engine1 = s.GetEngine("sn1");
 
-    std::vector<IO::SDK::Body::Spacecraft::Engine> engines;
-    engines.push_back(*engine1);
+    std::vector<IO::SDK::Body::Spacecraft::Engine*> engines;
+    engines.push_back(const_cast<IO::SDK::Body::Spacecraft::Engine*>(engine1));
 
     IO::SDK::Maneuvers::CombinedManeuver maneuver(engines, prop, 0.0, 42164000.0);
 

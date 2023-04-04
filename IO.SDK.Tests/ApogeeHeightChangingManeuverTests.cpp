@@ -28,8 +28,8 @@ TEST(ApogeeHeightChangingManeuverTests, CanExecute)
 
     auto engine1 = s.GetEngine("sn1");
 
-    std::vector<IO::SDK::Body::Spacecraft::Engine> engines;
-    engines.push_back(*engine1);
+    std::vector<IO::SDK::Body::Spacecraft::Engine*> engines;
+    engines.push_back(const_cast<IO::SDK::Body::Spacecraft::Engine*>(engine1));
     IO::SDK::Maneuvers::ApogeeHeightChangingManeuver acm(engines, prop, 8000000.0);
 
     //Initialize CanExecute
@@ -61,8 +61,8 @@ TEST(ApogeeHeightChangingManeuverTests, IncreaseApogeeHeight)
 
     //Add fictive data because it executed outside propagator
     prop.AddStateVector(IO::SDK::OrbitalParameters::StateVector(earth, IO::SDK::Math::Vector3D(1.0, 2.0, 3.0), IO::SDK::Math::Vector3D(4.0, 5.0, 6.0), IO::SDK::Time::TDB(80.0s), IO::SDK::Frames::InertialFrames::GetICRF()));
-    std::vector<IO::SDK::Body::Spacecraft::Engine> engines;
-    engines.push_back(*engine1);
+    std::vector<IO::SDK::Body::Spacecraft::Engine*> engines;
+    engines.push_back(const_cast<IO::SDK::Body::Spacecraft::Engine*>(engine1));
     IO::SDK::Maneuvers::ApogeeHeightChangingManeuver acm(engines, prop, 42164000.0);
 
     acm.CanExecute(s.GetOrbitalParametersAtEpoch()->GetStateVector(IO::SDK::Time::TDB(80.0s)));
@@ -91,8 +91,8 @@ TEST(ApogeeHeightChangingManeuverTests, DecreaseApogeeHeight)
 
     //Add fictive data because it executed outside propagator
     prop.AddStateVector(IO::SDK::OrbitalParameters::StateVector(earth, IO::SDK::Math::Vector3D(1.0, 2.0, 3.0), IO::SDK::Math::Vector3D(4.0, 5.0, 6.0), IO::SDK::Time::TDB(80.0s), IO::SDK::Frames::InertialFrames::GetICRF()));
-    std::vector<IO::SDK::Body::Spacecraft::Engine> engines;
-    engines.push_back(*engine1);
+    std::vector<IO::SDK::Body::Spacecraft::Engine*> engines;
+    engines.push_back(const_cast<IO::SDK::Body::Spacecraft::Engine*>(engine1));
     IO::SDK::Maneuvers::ApogeeHeightChangingManeuver acm(engines, prop, 6678000.0);
 
     acm.CanExecute(s.GetOrbitalParametersAtEpoch()->GetStateVector(IO::SDK::Time::TDB(80.0s)));

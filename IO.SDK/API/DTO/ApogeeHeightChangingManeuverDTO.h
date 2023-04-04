@@ -4,14 +4,14 @@
 
 #ifndef IOSDK_APOGEEHEIGHTCHANGINGMANEUVERDTO_H
 #define IOSDK_APOGEEHEIGHTCHANGINGMANEUVERDTO_H
+
 #include <WindowDTO.h>
 #include <Vector3DDTO.h>
-namespace IO::SDK::API::DTO
-{
-    struct ApogeeHeightChangingManeuverDTO
-    {
+
+namespace IO::SDK::API::DTO {
+    struct ApogeeHeightChangingManeuverDTO {
         int maneuverOrder{0};
-        int engines[10]{};
+        char *engines[10]{};
         double attitudeHoldDuration{0.0};
         double minimumEpoch{0.0};
 

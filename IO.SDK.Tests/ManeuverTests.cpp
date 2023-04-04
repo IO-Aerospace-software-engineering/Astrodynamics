@@ -28,8 +28,8 @@ TEST(Maneuvers, Initialization)
 
     auto engine1 = s.GetEngine("sn1");
 
-    std::vector<IO::SDK::Body::Spacecraft::Engine> engines;
-    engines.push_back(*engine1);
+    std::vector<IO::SDK::Body::Spacecraft::Engine*> engines;
+    engines.push_back(const_cast<IO::SDK::Body::Spacecraft::Engine*>(engine1));
 
     TestManeuver m_first(engines, prop);
 
@@ -65,10 +65,11 @@ TEST(Maneuvers, Execute)
     auto engine2 = s.GetEngine("sn2");
     auto engine3 = s.GetEngine("sn3");
 
-    std::vector<IO::SDK::Body::Spacecraft::Engine> engines;
-    engines.push_back(*engine1);
-    engines.push_back(*engine2);
-    engines.push_back(*engine3);
+    std::vector<IO::SDK::Body::Spacecraft::Engine*> engines;
+    engines.push_back(const_cast<IO::SDK::Body::Spacecraft::Engine*>(engine1));
+    engines.push_back(const_cast<IO::SDK::Body::Spacecraft::Engine*>(engine2));
+    engines.push_back(const_cast<IO::SDK::Body::Spacecraft::Engine*>(engine3));
+
 
     TestManeuver maneuver(engines, pro);
 

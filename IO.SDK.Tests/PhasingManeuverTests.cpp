@@ -34,8 +34,8 @@ TEST(PhasingManeuver, CanExecute)
 
     auto engine1 = s.GetEngine("sn1");
 
-    std::vector<IO::SDK::Body::Spacecraft::Engine> engines;
-    engines.push_back(*engine1);
+    std::vector<IO::SDK::Body::Spacecraft::Engine*> engines;
+    engines.push_back(const_cast<IO::SDK::Body::Spacecraft::Engine*>(engine1));
 
     IO::SDK::Maneuvers::PhasingManeuver maneuver(engines, prop, 3, orbitalParams2.get());
 
@@ -72,8 +72,8 @@ TEST(PhasingManeuver, TryExecuteOnGeostationary)
 
     auto engine1 = s.GetEngine("sn1");
 
-    std::vector<IO::SDK::Body::Spacecraft::Engine> engines;
-    engines.push_back(*engine1);
+    std::vector<IO::SDK::Body::Spacecraft::Engine*> engines;
+    engines.push_back(const_cast<IO::SDK::Body::Spacecraft::Engine*>(engine1));
 
     IO::SDK::Maneuvers::PhasingManeuver maneuver(engines, prop, 3, orbitalParams2.get());
 
@@ -139,8 +139,8 @@ TEST(PhasingManeuver, CheckOrbitalParameters)
 
     auto engine1 = s.GetEngine("sn1");
 
-    std::vector<IO::SDK::Body::Spacecraft::Engine> engines;
-    engines.push_back(*engine1);
+    std::vector<IO::SDK::Body::Spacecraft::Engine*> engines;
+    engines.push_back(const_cast<IO::SDK::Body::Spacecraft::Engine*>(engine1));
 
     IO::SDK::Maneuvers::PhasingManeuver phasingManeuver(engines, prop, 3, orbitalParams2.get());
     IO::SDK::Maneuvers::ApogeeHeightChangingManeuver finalManeuver(engines, prop, orbitalParams2->GetApogeeVector().Magnitude());

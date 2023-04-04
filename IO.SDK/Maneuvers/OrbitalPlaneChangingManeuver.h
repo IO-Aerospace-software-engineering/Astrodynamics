@@ -32,7 +32,7 @@ namespace IO::SDK::Maneuvers
          * @param propagator 
          * @param targetOrbit 
          */
-        OrbitalPlaneChangingManeuver(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator, IO::SDK::OrbitalParameters::OrbitalParameters *targetOrbit);
+        OrbitalPlaneChangingManeuver(const std::vector<IO::SDK::Body::Spacecraft::Engine*> &engines, IO::SDK::Propagators::Propagator &propagator, IO::SDK::OrbitalParameters::OrbitalParameters *targetOrbit);
         
         /**
          * @brief Construct a new Orbital Plane Changing Maneuver object
@@ -42,7 +42,7 @@ namespace IO::SDK::Maneuvers
          * @param targetOrbit 
          * @param minimumEpoch 
          */
-        OrbitalPlaneChangingManeuver(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator, IO::SDK::OrbitalParameters::OrbitalParameters *targetOrbit, const IO::SDK::Time::TDB &minimumEpoch);
+        OrbitalPlaneChangingManeuver(const std::vector<IO::SDK::Body::Spacecraft::Engine*> &engines, IO::SDK::Propagators::Propagator &propagator, IO::SDK::OrbitalParameters::OrbitalParameters *targetOrbit, const IO::SDK::Time::TDB &minimumEpoch);
 
         /**
          * @brief Define maneuver execution condition

@@ -38,8 +38,8 @@ TEST(ZenithAttitude, GetOrientation) {
 
     auto engine1 = s.GetEngine("sn1");
 
-    std::vector<IO::SDK::Body::Spacecraft::Engine> engines;
-    engines.push_back(*engine1);
+    std::vector<IO::SDK::Body::Spacecraft::Engine*> engines;
+    engines.push_back(const_cast<IO::SDK::Body::Spacecraft::Engine*>(engine1));
 
     IO::SDK::Maneuvers::Attitudes::ZenithAttitude zenith(engines, prop, IO::SDK::Time::TimeSpan(10s));
     zenith.Handle(IO::SDK::Time::TDB("2021-01-01T13:00:00"));
@@ -80,8 +80,8 @@ TEST(ZenithAttitude, GetOrientationNotBeforeEpoch) {
 
     auto engine1 = s.GetEngine("sn1");
 
-    std::vector<IO::SDK::Body::Spacecraft::Engine> engines;
-    engines.push_back(*engine1);
+    std::vector<IO::SDK::Body::Spacecraft::Engine*> engines;
+    engines.push_back(const_cast<IO::SDK::Body::Spacecraft::Engine*>(engine1));
 
     IO::SDK::Maneuvers::Attitudes::ZenithAttitude zenith(engines, prop, IO::SDK::Time::TDB("2021-01-01T13:00:10"), IO::SDK::Time::TimeSpan(10s));
     prop.SetStandbyManeuver(&zenith);

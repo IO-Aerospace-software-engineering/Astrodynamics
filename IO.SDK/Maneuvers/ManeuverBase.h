@@ -102,7 +102,7 @@ namespace IO::SDK::Maneuvers
         std::unique_ptr<IO::SDK::Math::Vector3D> m_deltaV{};
         IO::SDK::Time::TimeSpan m_thrustDuration{0.0s};
         double m_fuelBurned{};
-        const std::vector<IO::SDK::Body::Spacecraft::Engine> m_engines{};
+        const std::vector<IO::SDK::Body::Spacecraft::Engine*> m_engines{};
         std::unique_ptr<IO::SDK::Time::TDB> m_minimumEpoch{};
         ManeuverBase *m_nextManeuver{};
         bool m_isValid{false};
@@ -118,7 +118,7 @@ namespace IO::SDK::Maneuvers
          * 
          * @param engines Used by maneuver
          */
-        ManeuverBase(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator);
+        ManeuverBase(const std::vector<IO::SDK::Body::Spacecraft::Engine*> &engines, IO::SDK::Propagators::Propagator &propagator);
 
         /**
          * @brief Construct a new Maneuver Base object
@@ -126,7 +126,7 @@ namespace IO::SDK::Maneuvers
          * @param engines Used by maneuver
          * @param minimumEpoch No maneuver execution before this epoch
          */
-        ManeuverBase(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator, const IO::SDK::Time::TDB &minimumEpoch);
+        ManeuverBase(const std::vector<IO::SDK::Body::Spacecraft::Engine*> &engines, IO::SDK::Propagators::Propagator &propagator, const IO::SDK::Time::TDB &minimumEpoch);
 
         /**
          * @brief Construct a new Maneuver Base object
@@ -135,7 +135,7 @@ namespace IO::SDK::Maneuvers
          * @param propagator 
          * @param attitudeHoldDuration 
          */
-        ManeuverBase(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator,
+        ManeuverBase(const std::vector<IO::SDK::Body::Spacecraft::Engine*> &engines, IO::SDK::Propagators::Propagator &propagator,
                      const IO::SDK::Time::TimeSpan &attitudeHoldDuration);
 
         /**
@@ -146,7 +146,7 @@ namespace IO::SDK::Maneuvers
          * @param minimumEpoch 
          * @param attitudeHoldDuration 
          */
-        ManeuverBase(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator, const IO::SDK::Time::TDB &minimumEpoch,
+        ManeuverBase(const std::vector<IO::SDK::Body::Spacecraft::Engine*> &engines, IO::SDK::Propagators::Propagator &propagator, const IO::SDK::Time::TDB &minimumEpoch,
                      const IO::SDK::Time::TimeSpan &attitudeHoldDuration);
 
         /**

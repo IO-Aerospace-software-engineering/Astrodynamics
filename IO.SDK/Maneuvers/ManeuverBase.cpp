@@ -14,34 +14,34 @@
 
 using namespace std::literals::chrono_literals;
 
-IO::SDK::Maneuvers::ManeuverBase::ManeuverBase(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator)
-        : m_engines{engines}, m_spacecraft{engines[0].GetFuelTank().GetSpacecraft()}, m_propagator{propagator}
+IO::SDK::Maneuvers::ManeuverBase::ManeuverBase(const std::vector<IO::SDK::Body::Spacecraft::Engine*> &engines, IO::SDK::Propagators::Propagator &propagator)
+        : m_engines{engines}, m_spacecraft{engines[0]->GetFuelTank().GetSpacecraft()}, m_propagator{propagator}
 {
     for (auto &&engine: m_engines)
     {
-        m_fuelTanks.insert(&engine.GetFuelTank());
+        m_fuelTanks.insert(&engine->GetFuelTank());
     }
 
     //Create dynamics fuel tank for spread thrust compute
     for (auto &&engine: m_engines)
     {
-        m_dynamicFuelTanks[&engine.GetFuelTank()].EquivalentFuelFlow += engine.GetFuelFlow();
+        m_dynamicFuelTanks[&engine->GetFuelTank()].EquivalentFuelFlow += engine->GetFuelFlow();
     }
 }
 
-IO::SDK::Maneuvers::ManeuverBase::ManeuverBase(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator,
+IO::SDK::Maneuvers::ManeuverBase::ManeuverBase(const std::vector<IO::SDK::Body::Spacecraft::Engine*> &engines, IO::SDK::Propagators::Propagator &propagator,
                                                const IO::SDK::Time::TimeSpan &attitudeHoldDuration) : ManeuverBase(engines, propagator)
 {
     const_cast<IO::SDK::Time::TimeSpan &>(m_attitudeHoldDuration) = attitudeHoldDuration;
 }
 
-IO::SDK::Maneuvers::ManeuverBase::ManeuverBase(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator,
+IO::SDK::Maneuvers::ManeuverBase::ManeuverBase(const std::vector<IO::SDK::Body::Spacecraft::Engine*> &engines, IO::SDK::Propagators::Propagator &propagator,
                                                const IO::SDK::Time::TDB &minimumEpoch) : ManeuverBase(engines, propagator)
 {
     m_minimumEpoch = std::make_unique<IO::SDK::Time::TDB>(minimumEpoch);
 }
 
-IO::SDK::Maneuvers::ManeuverBase::ManeuverBase(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator,
+IO::SDK::Maneuvers::ManeuverBase::ManeuverBase(const std::vector<IO::SDK::Body::Spacecraft::Engine*> &engines, IO::SDK::Propagators::Propagator &propagator,
                                                const IO::SDK::Time::TDB &minimumEpoch, const IO::SDK::Time::TimeSpan &attitudeHoldDuration) : ManeuverBase(engines, propagator,
                                                                                                                                                            minimumEpoch)
 {
@@ -316,9 +316,9 @@ double IO::SDK::Maneuvers::ManeuverBase::GetRemainingAvgFuelFlow()
 
     for (auto &&engine: m_engines)
     {
-        if (!engine.GetFuelTank().IsEmpty())
+        if (!engine->GetFuelTank().IsEmpty())
         {
-            res += engine.GetFuelFlow();
+            res += engine->GetFuelFlow();
         }
     }
 
@@ -330,9 +330,9 @@ double IO::SDK::Maneuvers::ManeuverBase::GetRemainingAvgISP()
     double thrust{};
     for (const auto &engine: m_engines)
     {
-        if (!engine.GetFuelTank().IsEmpty())
+        if (!engine->GetFuelTank().IsEmpty())
         {
-            thrust += engine.GetThrust();
+            thrust += engine->GetThrust();
         }
     }
 
@@ -360,11 +360,11 @@ IO::SDK::Time::TimeSpan IO::SDK::Maneuvers::ManeuverBase::GetMinimumRemainingThr
 double IO::SDK::Maneuvers::ManeuverBase::Burn(const IO::SDK::Time::TimeSpan &duration)
 {
     double totalFuelBurned{};
-    for (auto &&engine: m_engines)
+    for (auto engine: m_engines)
     {
-        if (!engine.GetFuelTank().IsEmpty())
+        if (!engine->GetFuelTank().IsEmpty())
         {
-            totalFuelBurned += const_cast<IO::SDK::Body::Spacecraft::Engine &>(engine).Burn(duration);
+            totalFuelBurned += engine->Burn(duration);
         }
     }
 

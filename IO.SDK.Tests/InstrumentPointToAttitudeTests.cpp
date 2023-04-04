@@ -46,8 +46,8 @@ TEST(InstrumentPointingToAttitude, GetOrientation)
 
     auto engine1 = s.GetEngine("sn1");
 
-    std::vector<IO::SDK::Body::Spacecraft::Engine> engines;
-    engines.push_back(*engine1);
+    std::vector<IO::SDK::Body::Spacecraft::Engine*> engines;
+    engines.push_back(const_cast<IO::SDK::Body::Spacecraft::Engine*>(engine1));
 
     IO::SDK::Maneuvers::Attitudes::InstrumentPointingToAttitude pointingManeuver(engines, prop, IO::SDK::Time::TimeSpan(10s), *instrument, *moon);
     prop.SetStandbyManeuver(&pointingManeuver);
@@ -96,8 +96,8 @@ TEST(InstrumentPointingToSiteAttitude, GetOrientation)
 
     auto engine1 = s.GetEngine("sn1");
 
-    std::vector<IO::SDK::Body::Spacecraft::Engine> engines;
-    engines.push_back(*engine1);
+    std::vector<IO::SDK::Body::Spacecraft::Engine*> engines;
+    engines.push_back(const_cast<IO::SDK::Body::Spacecraft::Engine*>(engine1));
 
     IO::SDK::Maneuvers::Attitudes::InstrumentPointingToAttitude pointingManeuver(engines, prop, IO::SDK::Time::TimeSpan(10s), *instrument, site);
     prop.SetStandbyManeuver(&pointingManeuver);
@@ -145,8 +145,8 @@ TEST(InstrumentPointingToSiteAttitude2, GetOrientation)
 
     auto engine1 = s.GetEngine("sn1");
 
-    std::vector<IO::SDK::Body::Spacecraft::Engine> engines;
-    engines.push_back(*engine1);
+    std::vector<IO::SDK::Body::Spacecraft::Engine*> engines;
+    engines.push_back(const_cast<IO::SDK::Body::Spacecraft::Engine*>(engine1));
 
     IO::SDK::Maneuvers::Attitudes::InstrumentPointingToAttitude pointingManeuver(engines, prop, IO::SDK::Time::TimeSpan(10s), *instrument, site);
     prop.SetStandbyManeuver(&pointingManeuver);
@@ -191,8 +191,8 @@ TEST(InstrumentPointingTotAttitude, GetOrientationNotBeforeEpoch)
 
     auto engine1 = s.GetEngine("sn1");
 
-    std::vector<IO::SDK::Body::Spacecraft::Engine> engines;
-    engines.push_back(*engine1);
+    std::vector<IO::SDK::Body::Spacecraft::Engine*> engines;
+    engines.push_back(const_cast<IO::SDK::Body::Spacecraft::Engine*>(engine1));
 
     IO::SDK::Maneuvers::Attitudes::InstrumentPointingToAttitude pointingManeuver(engines, prop, IO::SDK::Time::TDB("2021-01-01T13:00:00"), IO::SDK::Time::TimeSpan(10s),
                                                                                  *instrument, *moon);

@@ -51,7 +51,7 @@ namespace IO::SDK::Maneuvers::Attitudes
          * @param propagator 
          * @param targetBody 
          */
-        TowardObjectAttitude(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator,const IO::SDK::Time::TimeSpan& attitudeHoldDuration, const IO::SDK::Body::Body &targetBody);
+        TowardObjectAttitude(const std::vector<IO::SDK::Body::Spacecraft::Engine*> &engines, IO::SDK::Propagators::Propagator &propagator,const IO::SDK::Time::TimeSpan& attitudeHoldDuration, const IO::SDK::Body::Body &targetBody);
 
         /**
          * @brief Construct a new Toward Object Attitude object
@@ -61,7 +61,7 @@ namespace IO::SDK::Maneuvers::Attitudes
          * @param minimumEpoch 
          * @param targetBody 
          */
-        TowardObjectAttitude(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator, const IO::SDK::Time::TDB &minimumEpoch,const IO::SDK::Time::TimeSpan& attitudeHoldDuration, const IO::SDK::Body::Body &targetBody);
+        TowardObjectAttitude(const std::vector<IO::SDK::Body::Spacecraft::Engine*> &engines, IO::SDK::Propagators::Propagator &propagator, const IO::SDK::Time::TDB &minimumEpoch,const IO::SDK::Time::TimeSpan& attitudeHoldDuration, const IO::SDK::Body::Body &targetBody);
 
         /**
          * @brief Evaluate if maneuver can occurs

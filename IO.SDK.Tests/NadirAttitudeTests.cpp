@@ -38,8 +38,8 @@ TEST(NadirAttitude, GetOrientation) {
 
     auto engine1 = s.GetEngine("sn1");
 
-    std::vector<IO::SDK::Body::Spacecraft::Engine> engines;
-    engines.push_back(*engine1);
+    std::vector<IO::SDK::Body::Spacecraft::Engine*> engines;
+    engines.push_back(const_cast<IO::SDK::Body::Spacecraft::Engine*>(engine1));
 
     IO::SDK::Maneuvers::Attitudes::NadirAttitude nadir(engines, prop, IO::SDK::Time::TimeSpan(10s));
     prop.SetStandbyManeuver(&nadir);
@@ -81,8 +81,8 @@ TEST(NadirAttitude, GetOrientationMinimumEpoch) {
 
     auto engine1 = s.GetEngine("sn1");
 
-    std::vector<IO::SDK::Body::Spacecraft::Engine> engines;
-    engines.push_back(*engine1);
+    std::vector<IO::SDK::Body::Spacecraft::Engine*> engines;
+    engines.push_back(const_cast<IO::SDK::Body::Spacecraft::Engine*>(engine1));
 
     IO::SDK::Maneuvers::Attitudes::NadirAttitude nadir(engines, prop, IO::SDK::Time::TDB("2021-01-01T13:00:10"), IO::SDK::Time::TimeSpan(10s));
     prop.SetStandbyManeuver(&nadir);

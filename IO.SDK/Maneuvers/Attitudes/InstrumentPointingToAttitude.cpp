@@ -1,7 +1,7 @@
 #include <InstrumentPointingToAttitude.h>
 
 
-IO::SDK::Maneuvers::Attitudes::InstrumentPointingToAttitude::InstrumentPointingToAttitude(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines,
+IO::SDK::Maneuvers::Attitudes::InstrumentPointingToAttitude::InstrumentPointingToAttitude(const std::vector<IO::SDK::Body::Spacecraft::Engine*> &engines,
                                                                                           IO::SDK::Propagators::Propagator &propagator,
                                                                                           const IO::SDK::Time::TimeSpan &attitudeHoldDuration,
                                                                                           const IO::SDK::Instruments::Instrument &instrument, const IO::SDK::Body::Body &targetBody)
@@ -10,7 +10,7 @@ IO::SDK::Maneuvers::Attitudes::InstrumentPointingToAttitude::InstrumentPointingT
 
 }
 
-IO::SDK::Maneuvers::Attitudes::InstrumentPointingToAttitude::InstrumentPointingToAttitude(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines,
+IO::SDK::Maneuvers::Attitudes::InstrumentPointingToAttitude::InstrumentPointingToAttitude(const std::vector<IO::SDK::Body::Spacecraft::Engine*> &engines,
                                                                                           IO::SDK::Propagators::Propagator &propagator,
                                                                                           const IO::SDK::Time::TimeSpan &attitudeHoldDuration,
                                                                                           const IO::SDK::Instruments::Instrument &instrument, const IO::SDK::Sites::Site &targetSite)
@@ -19,7 +19,7 @@ IO::SDK::Maneuvers::Attitudes::InstrumentPointingToAttitude::InstrumentPointingT
 
 }
 
-IO::SDK::Maneuvers::Attitudes::InstrumentPointingToAttitude::InstrumentPointingToAttitude(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines,
+IO::SDK::Maneuvers::Attitudes::InstrumentPointingToAttitude::InstrumentPointingToAttitude(const std::vector<IO::SDK::Body::Spacecraft::Engine*> &engines,
                                                                                           IO::SDK::Propagators::Propagator &propagator, const IO::SDK::Time::TDB &minimumEpoch,
                                                                                           const IO::SDK::Time::TimeSpan &attitudeHoldDuration,
                                                                                           const IO::SDK::Instruments::Instrument &instrument, const IO::SDK::Body::Body &targetBody)
@@ -28,7 +28,7 @@ IO::SDK::Maneuvers::Attitudes::InstrumentPointingToAttitude::InstrumentPointingT
 
 }
 
-IO::SDK::Maneuvers::Attitudes::InstrumentPointingToAttitude::InstrumentPointingToAttitude(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines,
+IO::SDK::Maneuvers::Attitudes::InstrumentPointingToAttitude::InstrumentPointingToAttitude(const std::vector<IO::SDK::Body::Spacecraft::Engine*> &engines,
                                                                                           IO::SDK::Propagators::Propagator &propagator, const IO::SDK::Time::TDB &minimumEpoch,
                                                                                           const IO::SDK::Time::TimeSpan &attitudeHoldDuration,
                                                                                           const IO::SDK::Instruments::Instrument &instrument, const IO::SDK::Sites::Site &targetSite)

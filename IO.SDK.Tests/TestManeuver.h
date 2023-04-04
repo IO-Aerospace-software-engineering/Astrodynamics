@@ -32,23 +32,22 @@ protected:
     bool CanExecute(const IO::SDK::OrbitalParameters::OrbitalParameters &maneuverPoint) override;
     /* data */
 public:
-    TestManeuver(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator);
-    TestManeuver(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator, const IO::SDK::Time::TDB &minimumEpoch);
+    TestManeuver(const std::vector<IO::SDK::Body::Spacecraft::Engine*> &engines, IO::SDK::Propagators::Propagator &propagator);
+    TestManeuver(const std::vector<IO::SDK::Body::Spacecraft::Engine*> &engines, IO::SDK::Propagators::Propagator &propagator, const IO::SDK::Time::TDB &minimumEpoch);
     ~TestManeuver();
     IO::SDK::Maneuvers::ManeuverResult TryExecute(const IO::SDK::OrbitalParameters::OrbitalParameters &maneuverPoint, double deltaV);
 };
 
-TestManeuver::TestManeuver(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator) : IO::SDK::Maneuvers::ManeuverBase(engines, propagator)
+TestManeuver::TestManeuver(const std::vector<IO::SDK::Body::Spacecraft::Engine*> &engines, IO::SDK::Propagators::Propagator &propagator) : IO::SDK::Maneuvers::ManeuverBase(engines, propagator)
 {
 }
 
-TestManeuver::TestManeuver(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator, const IO::SDK::Time::TDB &minimumEpoch) : IO::SDK::Maneuvers::ManeuverBase(engines, propagator, minimumEpoch)
+TestManeuver::TestManeuver(const std::vector<IO::SDK::Body::Spacecraft::Engine*> &engines, IO::SDK::Propagators::Propagator &propagator, const IO::SDK::Time::TDB &minimumEpoch) : IO::SDK::Maneuvers::ManeuverBase(engines, propagator, minimumEpoch)
 {
 }
 
 TestManeuver::~TestManeuver()
-{
-}
+= default;
 
 void TestManeuver::Compute([[maybe_unused]]const IO::SDK::OrbitalParameters::OrbitalParameters &maneuverPoint)
 {
@@ -56,7 +55,7 @@ void TestManeuver::Compute([[maybe_unused]]const IO::SDK::OrbitalParameters::Orb
 
 IO::SDK::OrbitalParameters::StateOrientation TestManeuver::ComputeOrientation(const IO::SDK::OrbitalParameters::OrbitalParameters &maneuverPoint)
 {
-    return IO::SDK::OrbitalParameters::StateOrientation(maneuverPoint.GetEpoch(), IO::SDK::Frames::InertialFrames::GetICRF());
+    return IO::SDK::OrbitalParameters::StateOrientation{maneuverPoint.GetEpoch(), IO::SDK::Frames::InertialFrames::GetICRF()};
 }
 
 bool TestManeuver::CanExecute([[maybe_unused]]const IO::SDK::OrbitalParameters::OrbitalParameters &maneuverPoint)
