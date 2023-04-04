@@ -1,6 +1,9 @@
+#include <set>
 #include <Proxy.h>
 #include <Scenario.h>
 #include "Converters.cpp"
+#include <ManeuverBase.h>
+#include <ApogeeHeightChangingManeuver.h>
 
 std::map<int, std::shared_ptr<IO::SDK::Body::CelestialBody>> BuildCelestialBodies(IO::SDK::API::DTO::ScenarioDTO &s);
 
@@ -38,6 +41,14 @@ IO::SDK::API::DTO::ScenarioDTO Execute(IO::SDK::API::DTO::ScenarioDTO &scenarioD
     BuildInstruments(scenarioDto, spacecraft);
 
     scenario.AttachSpacecraft(spacecraft);
+
+    std::set<int,std::shared_ptr<IO::SDK::Maneuvers::ManeuverBase>> maneuvers;
+    for (auto& maneuver:scenarioDto.spacecraft.apogeeHeightChangingManeuvers)
+    {
+        std::vector<IO::SDK::Body::Spacecraft::Engine> engines;
+        auto ptr=std::make_shared<IO::SDK::Maneuvers::ApogeeHeightChangingManeuver>(engines,scenario.GetPropagator(),10.0);
+        maneuvers.insert(ptr);
+    }
 
     IO::SDK::API::DTO::ScenarioDTO res;
     res.Name = _strdup(scenarioDto.Name);

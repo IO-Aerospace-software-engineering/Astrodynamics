@@ -22,12 +22,8 @@ void IO::SDK::Scenario::AddSite(const IO::SDK::Sites::Site &site)
 void IO::SDK::Scenario::AttachSpacecraft(const IO::SDK::Body::Spacecraft::Spacecraft &spacecraft)
 {
     m_spacecraft = &spacecraft;
-    if (m_propagator != nullptr)
-    {
-
-        m_propagator = std::make_unique<Propagators::Propagator>(*m_spacecraft, m_integrator,
-                                                                 IO::SDK::Time::Window<Time::TDB>(m_windows.GetStartDate().ToTDB(), m_windows.GetEndDate().ToTDB()));
-    }
+    m_propagator = std::make_unique<Propagators::Propagator>(*m_spacecraft, m_integrator,
+                                                             IO::SDK::Time::Window<Time::TDB>(m_windows.GetStartDate().ToTDB(), m_windows.GetEndDate().ToTDB()));
 }
 
 void IO::SDK::Scenario::AddCelestialBody(const IO::SDK::Body::CelestialBody &celestialBody)

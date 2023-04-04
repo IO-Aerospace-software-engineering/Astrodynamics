@@ -135,7 +135,8 @@ namespace IO::SDK::Maneuvers
          * @param propagator 
          * @param attitudeHoldDuration 
          */
-        ManeuverBase(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator, const IO::SDK::Time::TimeSpan &attitudeHoldDuration);
+        ManeuverBase(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator,
+                     const IO::SDK::Time::TimeSpan &attitudeHoldDuration);
 
         /**
          * @brief Construct a new Maneuver Base object
@@ -145,7 +146,8 @@ namespace IO::SDK::Maneuvers
          * @param minimumEpoch 
          * @param attitudeHoldDuration 
          */
-        ManeuverBase(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator, const IO::SDK::Time::TDB &minimumEpoch, const IO::SDK::Time::TimeSpan &attitudeHoldDuration);
+        ManeuverBase(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator, const IO::SDK::Time::TDB &minimumEpoch,
+                     const IO::SDK::Time::TimeSpan &attitudeHoldDuration);
 
         /**
          * @brief Compute impulsive maneuver

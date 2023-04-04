@@ -119,7 +119,7 @@ namespace IO::SDK
          * Get spacecrafts of the scenario
          * @return
          */
-        inline const IO::SDK::Body::Spacecraft::Spacecraft * GetSpacecraft()
+        inline const IO::SDK::Body::Spacecraft::Spacecraft *GetSpacecraft()
         { return m_spacecraft; }
 
         /**
@@ -128,6 +128,13 @@ namespace IO::SDK
          */
         inline const std::vector<const IO::SDK::Sites::Site *> &GetSites()
         { return m_sites; }
+
+        /**
+         * Return the propagator used by this scenario
+         * @return
+         */
+        inline Propagators::Propagator &GetPropagator()
+        { return *m_propagator; }
 
         /**
          * Get distance constraints of the scenario
