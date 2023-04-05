@@ -2,7 +2,7 @@
  * @file ManeuverBase.cpp
  * @author Sylvain Guillet (sylvain.guillet@live.com)
  * @brief 
- * @version 0.1
+ * @version 0.x
  * @date 2021-07-03
  * 
  * @copyright Copyright (c) 2021
@@ -10,11 +10,13 @@
  */
 #include <ManeuverBase.h>
 #include <Constants.h>
+
+#include <utility>
 #include "TooEarlyManeuverException.h"
 
 using namespace std::literals::chrono_literals;
 
-IO::SDK::Maneuvers::ManeuverBase::ManeuverBase(const std::vector<IO::SDK::Body::Spacecraft::Engine*> &engines, IO::SDK::Propagators::Propagator &propagator)
+IO::SDK::Maneuvers::ManeuverBase::ManeuverBase(std::vector<IO::SDK::Body::Spacecraft::Engine*> engines, IO::SDK::Propagators::Propagator &propagator)
         : m_engines{engines}, m_spacecraft{engines[0]->GetFuelTank().GetSpacecraft()}, m_propagator{propagator}
 {
     for (auto &&engine: m_engines)
@@ -29,20 +31,20 @@ IO::SDK::Maneuvers::ManeuverBase::ManeuverBase(const std::vector<IO::SDK::Body::
     }
 }
 
-IO::SDK::Maneuvers::ManeuverBase::ManeuverBase(const std::vector<IO::SDK::Body::Spacecraft::Engine*> &engines, IO::SDK::Propagators::Propagator &propagator,
-                                               const IO::SDK::Time::TimeSpan &attitudeHoldDuration) : ManeuverBase(engines, propagator)
+IO::SDK::Maneuvers::ManeuverBase::ManeuverBase(std::vector<IO::SDK::Body::Spacecraft::Engine*> engines, IO::SDK::Propagators::Propagator &propagator,
+                                               const IO::SDK::Time::TimeSpan &attitudeHoldDuration) : ManeuverBase(std::move(engines), propagator)
 {
     const_cast<IO::SDK::Time::TimeSpan &>(m_attitudeHoldDuration) = attitudeHoldDuration;
 }
 
-IO::SDK::Maneuvers::ManeuverBase::ManeuverBase(const std::vector<IO::SDK::Body::Spacecraft::Engine*> &engines, IO::SDK::Propagators::Propagator &propagator,
-                                               const IO::SDK::Time::TDB &minimumEpoch) : ManeuverBase(engines, propagator)
+IO::SDK::Maneuvers::ManeuverBase::ManeuverBase(std::vector<IO::SDK::Body::Spacecraft::Engine*> engines, IO::SDK::Propagators::Propagator &propagator,
+                                               const IO::SDK::Time::TDB &minimumEpoch) : ManeuverBase(std::move(engines), propagator)
 {
     m_minimumEpoch = std::make_unique<IO::SDK::Time::TDB>(minimumEpoch);
 }
 
-IO::SDK::Maneuvers::ManeuverBase::ManeuverBase(const std::vector<IO::SDK::Body::Spacecraft::Engine*> &engines, IO::SDK::Propagators::Propagator &propagator,
-                                               const IO::SDK::Time::TDB &minimumEpoch, const IO::SDK::Time::TimeSpan &attitudeHoldDuration) : ManeuverBase(engines, propagator,
+IO::SDK::Maneuvers::ManeuverBase::ManeuverBase(std::vector<IO::SDK::Body::Spacecraft::Engine*> engines, IO::SDK::Propagators::Propagator &propagator,
+                                               const IO::SDK::Time::TDB &minimumEpoch, const IO::SDK::Time::TimeSpan &attitudeHoldDuration) : ManeuverBase(std::move(engines), propagator,
                                                                                                                                                            minimumEpoch)
 {
     const_cast<IO::SDK::Time::TimeSpan &>(m_attitudeHoldDuration) = attitudeHoldDuration;

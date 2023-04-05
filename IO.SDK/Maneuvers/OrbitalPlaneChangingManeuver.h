@@ -2,7 +2,7 @@
  * @file OrbitalPlaneChangingManeuver.h
  * @author Sylvain Guillet (sylvain.guillet@live.com)
  * @brief 
- * @version 0.1
+ * @version 0.x
  * @date 2021-03-08
  * 
  * @copyright Copyright (c) 2021
@@ -20,7 +20,7 @@ namespace IO::SDK::Maneuvers
     private:
         double m_relativeInclination{};
 
-        IO::SDK::OrbitalParameters::OrbitalParameters *m_targetOrbit{nullptr};
+        std::shared_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> m_targetOrbit;
         bool m_isAscendingNode{false};
 
 
@@ -32,7 +32,7 @@ namespace IO::SDK::Maneuvers
          * @param propagator 
          * @param targetOrbit 
          */
-        OrbitalPlaneChangingManeuver(const std::vector<IO::SDK::Body::Spacecraft::Engine*> &engines, IO::SDK::Propagators::Propagator &propagator, IO::SDK::OrbitalParameters::OrbitalParameters *targetOrbit);
+        OrbitalPlaneChangingManeuver(std::vector<IO::SDK::Body::Spacecraft::Engine*> engines, IO::SDK::Propagators::Propagator &propagator, std::shared_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> targetOrbit);
         
         /**
          * @brief Construct a new Orbital Plane Changing Maneuver object
@@ -42,7 +42,7 @@ namespace IO::SDK::Maneuvers
          * @param targetOrbit 
          * @param minimumEpoch 
          */
-        OrbitalPlaneChangingManeuver(const std::vector<IO::SDK::Body::Spacecraft::Engine*> &engines, IO::SDK::Propagators::Propagator &propagator, IO::SDK::OrbitalParameters::OrbitalParameters *targetOrbit, const IO::SDK::Time::TDB &minimumEpoch);
+        OrbitalPlaneChangingManeuver(std::vector<IO::SDK::Body::Spacecraft::Engine*> engines, IO::SDK::Propagators::Propagator &propagator, std::shared_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> targetOrbit, const IO::SDK::Time::TDB &minimumEpoch);
 
         /**
          * @brief Define maneuver execution condition

@@ -2,7 +2,7 @@
  * @file PerigeeHeightChangingManeuver.h
  * @author Sylvain Guillet (sylvain.guillet@live.com)
  * @brief 
- * @version 0.1
+ * @version 0.x
  * @date 2021-07-03
  * 
  * @copyright Copyright (c) 2021
@@ -44,7 +44,7 @@ namespace IO::SDK::Maneuvers
          * @param propagator 
          * @param targetHeight 
          */
-        PerigeeHeightChangingManeuver(const std::vector<IO::SDK::Body::Spacecraft::Engine*> &engines, IO::SDK::Propagators::Propagator &propagator, double targetHeight);
+        PerigeeHeightChangingManeuver(std::vector<IO::SDK::Body::Spacecraft::Engine*> engines, IO::SDK::Propagators::Propagator &propagator, double targetHeight);
 
         /**
          * @brief Construct a new Perigee Height Changing Maneuver object
@@ -54,7 +54,7 @@ namespace IO::SDK::Maneuvers
          * @param targetHeight 
          * @param minimumEpoch 
          */
-        PerigeeHeightChangingManeuver(const std::vector<IO::SDK::Body::Spacecraft::Engine*> &engines, IO::SDK::Propagators::Propagator &propagator, double targetHeight, const IO::SDK::Time::TDB &minimumEpoch);
+        PerigeeHeightChangingManeuver(std::vector<IO::SDK::Body::Spacecraft::Engine*> engines, IO::SDK::Propagators::Propagator &propagator, double targetHeight, const IO::SDK::Time::TDB &minimumEpoch);
 
         /**
          * @brief Evaluate if maneuver can occurs

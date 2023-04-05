@@ -29,7 +29,7 @@ TEST(PlaneChangingManeuver, CanExecute)
                                                                                                                                                        0.0, 0.0,
                                                                                                                                                        IO::SDK::Time::TDB(0.0s),
                                                                                                                                                        IO::SDK::Frames::InertialFrames::GetICRF());
-    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams2 = std::make_unique<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth, 11480000.0, 0.5,
+    std::shared_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams2 = std::make_shared<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth, 11480000.0, 0.5,
                                                                                                                                                        45.0 *
                                                                                                                                                        IO::SDK::Constants::DEG_RAD,
                                                                                                                                                        55.0 *
@@ -51,7 +51,7 @@ TEST(PlaneChangingManeuver, CanExecute)
     std::vector<IO::SDK::Body::Spacecraft::Engine*> engines;
     engines.push_back(const_cast<IO::SDK::Body::Spacecraft::Engine*>(engine1));
 
-    IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver maneuver(engines, prop, orbitalParams2.get());
+    IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver maneuver(engines, prop, orbitalParams2);
 
     auto timeToTrueAnomalyDN = s.GetOrbitalParametersAtEpoch()->GetTimeToTrueAnomaly(2.197937654);
     auto timeToTrueAnomalyAN = s.GetOrbitalParametersAtEpoch()->GetTimeToTrueAnomaly(2.197937654 + IO::SDK::Constants::PI);
@@ -212,7 +212,7 @@ TEST(PlaneChangingManeuver, ExecuteInsuffisantDeltaV)
                                                                                                                                                        0.0, 0.0,
                                                                                                                                                        IO::SDK::Time::TDB(0.0s),
                                                                                                                                                        IO::SDK::Frames::InertialFrames::GetICRF());
-    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams2 = std::make_unique<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth, 11480000.0, 0.0,
+    std::shared_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams2 = std::make_shared<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth, 11480000.0, 0.0,
                                                                                                                                                        45.0 *
                                                                                                                                                        IO::SDK::Constants::DEG_RAD,
                                                                                                                                                        55.0 *
@@ -234,7 +234,7 @@ TEST(PlaneChangingManeuver, ExecuteInsuffisantDeltaV)
     std::vector<IO::SDK::Body::Spacecraft::Engine*> engines;
     engines.push_back(const_cast<IO::SDK::Body::Spacecraft::Engine*>(engine1));
 
-    IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver maneuver(engines, prop, orbitalParams2.get());
+    IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver maneuver(engines, prop, orbitalParams2);
 
     auto timeToTrueAnomalyDN = s.GetOrbitalParametersAtEpoch()->GetTimeToTrueAnomaly(2.197937654);
     auto timeToTrueAnomalyAN = s.GetOrbitalParametersAtEpoch()->GetTimeToTrueAnomaly(2.197937654 + IO::SDK::Constants::PI);
@@ -266,7 +266,7 @@ TEST(PlaneChangingManeuver, ExecuteDN)
                                                                                                                                                        0.0, 0.0,
                                                                                                                                                        IO::SDK::Time::TDB(0.0s),
                                                                                                                                                        IO::SDK::Frames::InertialFrames::GetICRF());
-    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams2 = std::make_unique<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth, 11480000.0, 0.0,
+    std::shared_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams2 = std::make_shared<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth, 11480000.0, 0.0,
                                                                                                                                                        45.0 *
                                                                                                                                                        IO::SDK::Constants::DEG_RAD,
                                                                                                                                                        55.0 *
@@ -291,7 +291,7 @@ TEST(PlaneChangingManeuver, ExecuteDN)
     std::vector<IO::SDK::Body::Spacecraft::Engine*> engines;
     engines.push_back(const_cast<IO::SDK::Body::Spacecraft::Engine*>(engine1));
 
-    IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver maneuver(engines, prop, orbitalParams2.get());
+    IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver maneuver(engines, prop, orbitalParams2);
 
     auto timeToTrueAnomalyDN = s.GetOrbitalParametersAtEpoch()->GetTimeToTrueAnomaly(2.197937654);                          //4282s
     auto timeToTrueAnomalyAN = s.GetOrbitalParametersAtEpoch()->GetTimeToTrueAnomaly(2.197937654 + IO::SDK::Constants::PI); //10402s
@@ -344,7 +344,7 @@ TEST(PlaneChangingManeuver, ExecuteAN)
                                                                                                                                                        0.0, 0.0,
                                                                                                                                                        IO::SDK::Time::TDB(0.0s),
                                                                                                                                                        IO::SDK::Frames::InertialFrames::GetICRF());
-    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams2 = std::make_unique<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth, 11480000.0, 0.0,
+    std::shared_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams2 = std::make_shared<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth, 11480000.0, 0.0,
                                                                                                                                                        45.0 *
                                                                                                                                                        IO::SDK::Constants::DEG_RAD,
                                                                                                                                                        55.0 *
@@ -369,7 +369,7 @@ TEST(PlaneChangingManeuver, ExecuteAN)
     std::vector<IO::SDK::Body::Spacecraft::Engine*> engines;
     engines.push_back(const_cast<IO::SDK::Body::Spacecraft::Engine*>(engine1));
 
-    IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver maneuver(engines, prop, orbitalParams2.get());
+    IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver maneuver(engines, prop, orbitalParams2);
 
     auto timeToTrueAnomalyDN = s.GetOrbitalParametersAtEpoch()->GetTimeToTrueAnomaly(2.197937654);                          //4282s
     auto timeToTrueAnomalyAN = s.GetOrbitalParametersAtEpoch()->GetTimeToTrueAnomaly(2.197937654 + IO::SDK::Constants::PI); //10402s
@@ -466,7 +466,7 @@ TEST(PlaneChangingManeuver, CheckOrbitalParametersToHigherInclination)
     engines.push_back(const_cast<IO::SDK::Body::Spacecraft::Engine*>(engine1));
 
     //We configre each maneuver
-    IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver planeAlignment(engines, propagator, targetOrbit.get());
+    IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver planeAlignment(engines, propagator, targetOrbit);
 
     //We define the first maneuver in standby
     propagator.SetStandbyManeuver(&planeAlignment);
@@ -555,7 +555,7 @@ TEST(PlaneChangingManeuver, CheckOrbitalParametersToLowerInclination)
     engines.push_back(const_cast<IO::SDK::Body::Spacecraft::Engine*>(engine1));
 
     //We configre each maneuver
-    IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver planeAlignment(engines, propagator, targetOrbit.get());
+    IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver planeAlignment(engines, propagator, targetOrbit);
 
     //We define the first maneuver in standby
     propagator.SetStandbyManeuver(&planeAlignment);

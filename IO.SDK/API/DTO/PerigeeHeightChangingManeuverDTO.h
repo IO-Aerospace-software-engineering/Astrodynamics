@@ -11,7 +11,7 @@ namespace IO::SDK::API::DTO
     struct PerigeeHeightChangingManeuverDTO
     {
         int maneuverOrder{0};
-        int engines[10]{};
+        char* engines[10]{};
         double attitudeHoldDuration{0.0};
         double minimumEpoch{0.0};
 

@@ -2,7 +2,7 @@
  * @file CombinedManeuver.h
  * @author Sylvain Guillet (sylvain.guillet@live.com)
  * @brief 
- * @version 0.1
+ * @version 0.x
  * @date 2021-07-03
  * 
  * @copyright Copyright (c) 2021
@@ -57,9 +57,9 @@ namespace IO::SDK::Maneuvers
          * @brief Construct a new Combined Maneuver object
          * 
          */
-        CombinedManeuver(const std::vector<IO::SDK::Body::Spacecraft::Engine*> &engines, IO::SDK::Propagators::Propagator &propagator, double inclination, double perigeeRadius);
+        CombinedManeuver(std::vector<IO::SDK::Body::Spacecraft::Engine*> engines, IO::SDK::Propagators::Propagator &propagator, double inclination, double perigeeRadius);
 
-        CombinedManeuver(const std::vector<IO::SDK::Body::Spacecraft::Engine*> &engines, IO::SDK::Propagators::Propagator &propagator, double inclination, double perigeeRadius, const IO::SDK::Time::TDB &minimumEpoch);
+        CombinedManeuver(std::vector<IO::SDK::Body::Spacecraft::Engine*> engines, IO::SDK::Propagators::Propagator &propagator, double inclination, double perigeeRadius, const IO::SDK::Time::TDB &minimumEpoch);
 
         /**
          * @brief Evaluate if maneuver can occurs

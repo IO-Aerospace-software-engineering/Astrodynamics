@@ -2,7 +2,7 @@
  * @file PhasingManeuver.h
  * @author Sylvain Guillet (sylvain.guillet@live.com)
  * @brief 
- * @version 0.1
+ * @version 0.x
  * @date 2021-07-03
  * 
  * @copyright Copyright (c) 2021
@@ -19,7 +19,7 @@ namespace IO::SDK::Maneuvers
     {
     private:
         const unsigned int m_revolutionsNumber;
-        IO::SDK::OrbitalParameters::OrbitalParameters *m_targetOrbit{nullptr};
+        std::shared_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> m_targetOrbit;
 
     protected:
         /**
@@ -38,11 +38,11 @@ namespace IO::SDK::Maneuvers
         IO::SDK::OrbitalParameters::StateOrientation ComputeOrientation(const IO::SDK::OrbitalParameters::OrbitalParameters &maneuverPoint) override;
         /* data */
     public:
-        PhasingManeuver(const std::vector<IO::SDK::Body::Spacecraft::Engine*> &engines, IO::SDK::Propagators::Propagator &propagator, unsigned revolutionNumber,
-                        IO::SDK::OrbitalParameters::OrbitalParameters *targetOrbit);
+        PhasingManeuver(std::vector<IO::SDK::Body::Spacecraft::Engine*> engines, IO::SDK::Propagators::Propagator &propagator, unsigned revolutionNumber,
+                        std::shared_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> targetOrbit);
 
-        PhasingManeuver(const std::vector<IO::SDK::Body::Spacecraft::Engine*> &engines, IO::SDK::Propagators::Propagator &propagator, unsigned revolutionNumber,
-                        IO::SDK::OrbitalParameters::OrbitalParameters *targetOrbit, const IO::SDK::Time::TDB &minimumEpoch);
+        PhasingManeuver(std::vector<IO::SDK::Body::Spacecraft::Engine*> engines, IO::SDK::Propagators::Propagator &propagator, unsigned revolutionNumber,
+                        std::shared_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> targetOrbit, const IO::SDK::Time::TDB &minimumEpoch);
 
         /**
          * @brief Evaluate if maneuver can occurs

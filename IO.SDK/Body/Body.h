@@ -2,7 +2,7 @@
  * @file Body.h
  * @author Sylvain Guillet (sylvain.guillet@live.com)
  * @brief 
- * @version 0.1
+ * @version 0.x
  * @date 2021-03-22
  * 
  * @copyright Copyright (c) 2021

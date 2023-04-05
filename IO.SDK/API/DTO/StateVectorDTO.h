@@ -10,6 +10,6 @@ namespace IO::SDK::API::DTO
         IO::SDK::API::DTO::Vector3DDTO position{};
         IO::SDK::API::DTO::Vector3DDTO velocity{};
         CelestialBodyDTO centerOfMotion;
-        const char* frame{};
+        const char* inertialFrame{};
     };
 }

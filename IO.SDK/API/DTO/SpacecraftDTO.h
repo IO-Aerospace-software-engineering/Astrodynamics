@@ -6,7 +6,6 @@
 #include <PayloadDTO.h>
 #include <StateVectorDTO.h>
 #include <StateOrientationDTO.h>
-#include <AttitudeDTO.h>
 #include <InstrumentPointingToAttitudeDTO.h>
 #include <ApogeeHeightChangingManeuverDTO.h>
 #include <PerigeeHeightChangingManeuverDTO.h>
@@ -14,7 +13,11 @@
 #include <OrbitalPlaneChangingManeuverDTO.h>
 #include <PhasingManeuverDTO.h>
 #include <ApsidalAlignmentManeuverDTO.h>
-#include "LaunchDTO.h"
+#include <LaunchDTO.h>
+#include <ProgradeAttitudeDTO.h>
+#include <RetrogradeAttitudeDTO.h>
+#include <NadirAttitudeDTO.h>
+#include <ZenithAttitudeDTO.h>
 
 namespace IO::SDK::API::DTO
 {
@@ -32,7 +35,10 @@ namespace IO::SDK::API::DTO
         PayloadDTO payloads[5];
 
         //Spacecraft attitudes
-        AttitudeDTO attitudes[50];
+        ProgradeAttitudeDTO progradeAttitudes[10];
+        RetrogradeAttitudeDTO retrogradeAttitudes[10];
+        ZenithAttitudeDTO zenithAttitudes[10];
+        NadirAttitudeDTO nadirAttitudes[10];
         InstrumentPointingToAttitudeDTO pointingToAttitudes[10];
 
         //Spacecraft maneuvers

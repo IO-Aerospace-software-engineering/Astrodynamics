@@ -2,7 +2,7 @@
  * @file ProgradeAttitude.h
  * @author Sylvain Guillet (sylvain.guillet@live.com)
  * @brief 
- * @version 0.1
+ * @version 0.x
  * @date 2021-06-18
  * 
  * @copyright Copyright (c) 2021
@@ -50,7 +50,7 @@ namespace IO::SDK::Maneuvers::Attitudes
          * @param engines 
          * @param propagator 
          */
-        ProgradeAttitude(const std::vector<IO::SDK::Body::Spacecraft::Engine*> &engines, IO::SDK::Propagators::Propagator &propagator,const IO::SDK::Time::TimeSpan& attitudeHoldDuration);
+        ProgradeAttitude(const std::vector<IO::SDK::Body::Spacecraft::Engine*> engines, IO::SDK::Propagators::Propagator &propagator,const IO::SDK::Time::TimeSpan& attitudeHoldDuration);
 
         /**
          * @brief Construct a new Prograde Attitude object
@@ -59,7 +59,7 @@ namespace IO::SDK::Maneuvers::Attitudes
          * @param propagator 
          * @param minimumEpoch 
          */
-        ProgradeAttitude(const std::vector<IO::SDK::Body::Spacecraft::Engine*> &engines, IO::SDK::Propagators::Propagator &propagator, const IO::SDK::Time::TDB &minimumEpoch,const IO::SDK::Time::TimeSpan& attitudeHoldDuration);
+        ProgradeAttitude(const std::vector<IO::SDK::Body::Spacecraft::Engine*> engines, IO::SDK::Propagators::Propagator &propagator, const IO::SDK::Time::TDB &minimumEpoch,const IO::SDK::Time::TimeSpan& attitudeHoldDuration);
 
         /**
          * @brief Evaluate if maneuver can occurs
