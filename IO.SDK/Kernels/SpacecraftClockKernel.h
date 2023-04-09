@@ -82,6 +82,7 @@ namespace IO::SDK::Kernels
 		 * @return double 
 		 */
 		[[nodiscard]] double ConvertToEncodedClock(const IO::SDK::Time::TDB &epoch) const;
+		[[nodiscard]] static double ConvertToEncodedClock(int spacecraftId, const IO::SDK::Time::TDB &epoch);
 
 		/**
 		 * @brief Get the Resolution

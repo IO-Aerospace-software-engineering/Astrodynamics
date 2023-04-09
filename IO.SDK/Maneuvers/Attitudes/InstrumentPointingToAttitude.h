@@ -12,6 +12,7 @@
 #define INSTRUMENT_ALIGNED_TO_ATTITUDE_H
 
 #include <ManeuverBase.h>
+#include "Site.h"
 
 namespace IO::SDK::Maneuvers::Attitudes
 {

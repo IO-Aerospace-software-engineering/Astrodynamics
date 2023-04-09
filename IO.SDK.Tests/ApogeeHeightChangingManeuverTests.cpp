@@ -11,6 +11,7 @@
 #include <TDB.h>
 #include <OrbitalParameters.h>
 #include <StateVector.h>
+#include "InertialFrames.h"
 
 using namespace std::chrono_literals;
 

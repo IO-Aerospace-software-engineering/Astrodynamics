@@ -19,7 +19,7 @@ namespace IO::SDK::API::DTO
         Vector3DDTO fovRefVector{};
         double fieldOfView{};
         double crossAngle{};
-        IO::SDK::API::DTO::InFieldOfViewConstraintDTO inFieldOfViews[10];
+//        IO::SDK::API::DTO::InFieldOfViewConstraintDTO inFieldOfViews[10];
     };
 
 }

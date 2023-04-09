@@ -11,20 +11,9 @@
 #ifndef EPHEMERIS_KERNEL_H
 #define EPHEMERIS_KERNEL_H
 
-#include <string>
-#include <vector>
-#include <memory>
-
 #include <Kernel.h>
 #include <StateVector.h>
-#include <Aberrations.h>
-#include <CelestialBody.h>
-#include <TDB.h>
-#include <InertialFrames.h>
-#include <Site.h>
 #include <Spacecraft.h>
-#include <Window.h>
-#include <InvalidArgumentException.h>
 
 
 namespace IO::SDK::Kernels {
@@ -44,9 +33,7 @@ namespace IO::SDK::Kernels {
          *
          * @param spacecraft
          */
-        explicit EphemerisKernel(const IO::SDK::Body::Spacecraft::Spacecraft &spacecraft);
-
-        explicit EphemerisKernel(const IO::SDK::Sites::Site &site);
+        explicit EphemerisKernel(std::string filePath, int objectId);
 
         ~EphemerisKernel() override = default;
 

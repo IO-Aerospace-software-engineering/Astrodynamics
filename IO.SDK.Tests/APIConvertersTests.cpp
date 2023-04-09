@@ -10,7 +10,7 @@ TEST(APIConverters, Window)
     window.start = 10.0;
     window.end = 20.0;
 
-    auto res = ToWindow(window);
+    auto res = ToUTCWindow(window);
 
     ASSERT_DOUBLE_EQ(res.GetStartDate().GetSecondsFromJ2000().count(), 10.0);
     ASSERT_DOUBLE_EQ(res.GetEndDate().GetSecondsFromJ2000().count(), 20.0);

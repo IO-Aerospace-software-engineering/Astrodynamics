@@ -3,6 +3,7 @@
 #include <Spacecraft.h>
 #include <InvalidArgumentException.h>
 #include <CelestialBody.h>
+#include "InertialFrames.h"
 
 using namespace std::chrono_literals;
 TEST(FuelTank, Initialization)

@@ -12,6 +12,7 @@
 #include <numeric>
 #include <StringHelpers.h>
 #include "Parameters.h"
+#include "InvalidArgumentException.h"
 
 IO::SDK::Body::Spacecraft::Spacecraft::Spacecraft(const int id, const std::string &name, const double dryOperatingMass, const double maximumOperatingMass,
                                                   const std::string &missionPrefix, std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParametersAtEpoch)
@@ -46,10 +47,10 @@ IO::SDK::Body::Spacecraft::Spacecraft::Spacecraft(const int id, const std::strin
                                                                                                         *this, Parameters::ClockAccuracy)),
                                                                                         m_orientationKernel(
                                                                                                 new IO::SDK::Kernels::OrientationKernel(
-                                                                                                        *this)),
+                                                                                                        m_filesPath + "/Orientations/" + name + ".ck",id,m_frame->m_id)),
                                                                                         m_ephemerisKernel(
                                                                                                 new IO::SDK::Kernels::EphemerisKernel(
-                                                                                                        *this)),
+                                                                                                        m_filesPath + "/Ephemeris/" + name + ".spk",id)),
                                                                                         m_maximumOperatingMass{
                                                                                                 maximumOperatingMass},
                                                                                         Top{top}, Front{front}, Right{front.CrossProduct(top)}, Bottom{top.Reverse()},
@@ -73,7 +74,7 @@ IO::SDK::OrbitalParameters::StateOrientation
 IO::SDK::Body::Spacecraft::Spacecraft::GetOrientation(const IO::SDK::Time::TDB &epoch,
                                                       const IO::SDK::Time::TimeSpan &tolerance,
                                                       const IO::SDK::Frames::Frames &frame) const {
-    return m_orientationKernel->ReadStateOrientation(epoch, tolerance, frame);
+    return m_orientationKernel->ReadStateOrientation(*this, epoch, tolerance, frame);
 }
 
 void IO::SDK::Body::Spacecraft::Spacecraft::WriteOrientationKernelComment(const std::string &comment) const {

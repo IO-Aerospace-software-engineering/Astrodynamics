@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 #include <TLEIntegrator.h>
 #include <Spacecraft.h>
+#include "InertialFrames.h"
 
 using namespace std::chrono_literals;
 

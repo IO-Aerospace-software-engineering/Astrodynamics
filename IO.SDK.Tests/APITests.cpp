@@ -2,6 +2,8 @@
 #include<ScenarioDTO.h>
 TEST(API, DTOSize)
 {
-    auto size= sizeof(IO::SDK::API::DTO::ScenarioDTO);
-    ASSERT_EQ(2160664,size);
+//    auto size= sizeof(IO::SDK::API::DTO::ApogeeHeightChangingManeuverDTO);
+//    ASSERT_EQ(2160664,size);
+    auto size2= sizeof(IO::SDK::API::DTO::SpacecraftDTO);
+    ASSERT_EQ(814192,size2);
 }

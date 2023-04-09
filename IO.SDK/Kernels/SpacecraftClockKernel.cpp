@@ -110,9 +110,7 @@ void IO::SDK::Kernels::SpacecraftClockKernel::BuildGenericClockKernel()
 
 double IO::SDK::Kernels::SpacecraftClockKernel::ConvertToEncodedClock(const IO::SDK::Time::TDB& tdb) const
 {
-	double enc{};
-	sce2c_c(m_spacecraft.GetId(), tdb.GetSecondsFromJ2000().count(), &enc);
-	return enc;
+    return ConvertToEncodedClock(m_spacecraft.GetId(),tdb);
 }
 
 int IO::SDK::Kernels::SpacecraftClockKernel::GetTicksPerSeconds() const
@@ -123,4 +121,11 @@ int IO::SDK::Kernels::SpacecraftClockKernel::GetTicksPerSeconds() const
 double IO::SDK::Kernels::SpacecraftClockKernel::GetSecondsPerTick() const
 {
 	return 1.0 / GetTicksPerSeconds();
+}
+
+double IO::SDK::Kernels::SpacecraftClockKernel::ConvertToEncodedClock(int spacecraftId, const IO::SDK::Time::TDB &epoch)
+{
+    double enc{};
+    sce2c_c(spacecraftId, epoch.GetSecondsFromJ2000().count(), &enc);
+    return enc;
 }

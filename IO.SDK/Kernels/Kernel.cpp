@@ -14,10 +14,10 @@
 
 constexpr size_t COMLENGTH = 80;
 
-IO::SDK::Kernels::Kernel::Kernel(const std::string &filePath) : m_filePath{filePath}
+IO::SDK::Kernels::Kernel::Kernel(std::string filePath) : m_filePath{std::move(filePath)}
 {
 
-    auto directory = std::filesystem::directory_entry(filePath).path();
+    auto directory = std::filesystem::directory_entry(m_filePath).path();
     if (directory.has_parent_path())
     {
         if (!std::filesystem::exists(directory.parent_path()))

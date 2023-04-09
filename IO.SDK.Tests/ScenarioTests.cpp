@@ -4,6 +4,7 @@
 #include<Scenario.h>
 #include <Vectors.h>
 #include <LaunchParameters.h>
+#include "InertialFrames.h"
 
 using namespace std::chrono_literals;
 

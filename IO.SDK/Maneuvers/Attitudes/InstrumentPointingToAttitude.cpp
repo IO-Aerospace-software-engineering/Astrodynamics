@@ -1,4 +1,5 @@
 #include <InstrumentPointingToAttitude.h>
+#include "InertialFrames.h"
 
 IO::SDK::Maneuvers::Attitudes::InstrumentPointingToAttitude::InstrumentPointingToAttitude(std::vector<IO::SDK::Body::Spacecraft::Engine*> engines,
                                                                                           IO::SDK::Propagators::Propagator &propagator,

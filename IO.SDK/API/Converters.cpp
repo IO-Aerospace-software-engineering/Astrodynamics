@@ -9,10 +9,16 @@
 #include <Quaternion.h>
 #include <QuaternionDTO.h>
 
-static IO::SDK::Time::Window<IO::SDK::Time::UTC> ToWindow(IO::SDK::API::DTO::WindowDTO &window)
+static IO::SDK::Time::Window<IO::SDK::Time::UTC> ToUTCWindow(IO::SDK::API::DTO::WindowDTO &window)
 {
     return IO::SDK::Time::Window<IO::SDK::Time::UTC>{IO::SDK::Time::UTC(std::chrono::duration<double>(window.start)),
                                                      IO::SDK::Time::UTC(std::chrono::duration<double>(window.end))};
+}
+
+static IO::SDK::Time::Window<IO::SDK::Time::TDB> ToTDBWindow(IO::SDK::API::DTO::WindowDTO &window)
+{
+    return IO::SDK::Time::Window<IO::SDK::Time::TDB>{IO::SDK::Time::TDB(std::chrono::duration<double>(window.start)),
+                                                     IO::SDK::Time::TDB(std::chrono::duration<double>(window.end))};
 }
 
 static IO::SDK::API::DTO::WindowDTO ToWindowDTO(IO::SDK::Time::Window<IO::SDK::Time::UTC> &window)

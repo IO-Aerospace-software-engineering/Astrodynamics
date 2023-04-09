@@ -12,6 +12,7 @@
 #include<LaunchWindow.h>
 #include<Window.h>
 #include<UTC.h>
+#include "InertialFrames.h"
 
 TEST(Scenarios, ReachOrbitByDay)
 {

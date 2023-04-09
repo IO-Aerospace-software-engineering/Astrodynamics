@@ -29,6 +29,7 @@ namespace IO::SDK::API::DTO
         double dryOperatingMass{};
         double maximumOperatingMass{};
         StateVectorDTO initialOrbitalParameter;
+
         FuelTankDTO fuelTank[5]{};
         EngineDTO engines[5]{};
         InstrumentDTO instruments[5];

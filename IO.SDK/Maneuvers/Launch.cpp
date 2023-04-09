@@ -10,6 +10,7 @@
  */
 #include <Launch.h>
 #include <Constants.h>
+#include "InertialFrames.h"
 
 IO::SDK::Maneuvers::Launch::Launch(const IO::SDK::Sites::LaunchSite &launchSite, const IO::SDK::Sites::Site &recoverySite, bool launchByDay,
                                    const IO::SDK::OrbitalParameters::OrbitalParameters &targetOrbit) : m_launchSite{launchSite}, m_recoverySite{recoverySite},

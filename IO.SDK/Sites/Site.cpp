@@ -15,6 +15,7 @@
 #include <Constants.h>
 #include "CoordinateSystem.h"
 #include "Coordinate.h"
+#include "InertialFrames.h"
 
 using namespace std::chrono_literals;
 
@@ -23,7 +24,7 @@ IO::SDK::Sites::Site::Site(const int id, const std::string &name, const IO::SDK:
                                                                                   m_name{name},
                                                                                   m_coordinates{coordinates},
                                                                                   m_filePath{std::string(IO::SDK::Parameters::SitePath) + "/" + name},
-                                                                                  m_ephemerisKernel{std::make_unique<IO::SDK::Kernels::EphemerisKernel>(*this)},
+                                                                                  m_ephemerisKernel{std::make_unique<IO::SDK::Kernels::EphemerisKernel>(m_filePath + "/Ephemeris/" + name + ".spk", this->m_id)},
                                                                                   m_body{body},
                                                                                   m_frame{std::make_unique<IO::SDK::Frames::SiteFrameFile>(*this)}
 {

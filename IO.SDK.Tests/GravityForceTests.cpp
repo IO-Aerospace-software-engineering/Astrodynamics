@@ -5,6 +5,7 @@
 #include <CelestialBody.h>
 #include <chrono>
 #include <memory>
+#include "InertialFrames.h"
 
 using namespace std::chrono_literals;
 

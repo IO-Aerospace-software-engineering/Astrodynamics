@@ -15,6 +15,7 @@
 #include <chrono>
 #include <memory>
 #include <iostream>
+#include "InertialFrames.h"
 
 using namespace std::chrono_literals;
 

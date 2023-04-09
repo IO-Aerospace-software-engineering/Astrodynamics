@@ -11,6 +11,7 @@
 #include <VVIntegrator.h>
 #include <TestsConstants.h>
 #include <TLEIntegrator.h>
+#include "InertialFrames.h"
 
 using namespace std::chrono_literals;
 
