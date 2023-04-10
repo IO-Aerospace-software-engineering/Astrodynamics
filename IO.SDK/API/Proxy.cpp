@@ -58,7 +58,7 @@ void BuildInstrumentPointingToAttitude(IO::SDK::API::DTO::ScenarioDTO &scenarioD
                                        std::map<int, std::shared_ptr<IO::SDK::Maneuvers::ManeuverBase>> &maneuvers,
                                        std::map<int, std::shared_ptr<IO::SDK::Body::CelestialBody>> &celestialBodies);
 
-IO::SDK::API::DTO::ScenarioDTO PropagateProxy(IO::SDK::API::DTO::ScenarioDTO scenarioDto)
+void PropagateProxy(IO::SDK::API::DTO::ScenarioDTO &scenarioDto)
 {
     IO::SDK::Scenario scenario(scenarioDto.Name, ToUTCWindow(scenarioDto.Window));
 
@@ -78,7 +78,7 @@ IO::SDK::API::DTO::ScenarioDTO PropagateProxy(IO::SDK::API::DTO::ScenarioDTO sce
             ToVector3D(scenarioDto.spacecraft.initialOrbitalParameter.position),
             ToVector3D(scenarioDto.spacecraft.initialOrbitalParameter.velocity), tdb, frame);
 //
-//    IO::SDK::Body::Spacecraft::Spacecraft spacecraft(scenarioDto.spacecraft.id,  scenarioDto.spacecraft.name,
+//    IO::SDK::Body::Spacecraft::Spacecraft spacecraft(scenarioDto.spacecraft.id, scenarioDto.spacecraft.name,
 //                                                     scenarioDto.spacecraft.dryOperatingMass,
 //                                                     scenarioDto.spacecraft.maximumOperatingMass, scenarioDto.Name,
 //                                                     std::move(initialOrbitalParameters));
@@ -91,13 +91,6 @@ IO::SDK::API::DTO::ScenarioDTO PropagateProxy(IO::SDK::API::DTO::ScenarioDTO sce
 //    std::map<int, std::shared_ptr<IO::SDK::Maneuvers::ManeuverBase>> maneuvers;
 //
 //    BuildManeuvers(scenarioDto, scenario, celestialBodies, maneuvers);
-
-    IO::SDK::API::DTO::ScenarioDTO res;
-    res.Name = strdup(scenarioDto.Name);
-    res.Window = scenarioDto.Window;
-    res.spacecraft.progradeAttitudes[0].engines[0]= strdup(scenarioDto.spacecraft.progradeAttitudes[0].engines[0]);
-
-    return res;
 }
 
 std::map<int, std::shared_ptr<IO::SDK::Body::CelestialBody>>
@@ -290,7 +283,7 @@ void BuildManeuvers(IO::SDK::API::DTO::ScenarioDTO &scenarioDto, IO::SDK::Scenar
     BuildRetrogradeAttitude(scenarioDto, scenario, maneuvers);
     BuildZenithAttitude(scenarioDto, scenario, maneuvers);
     BuildNadirAttitude(scenarioDto, scenario, maneuvers);
-    BuildInstrumentPointingToAttitude(scenarioDto, scenario, maneuvers,celestialBodies);
+    BuildInstrumentPointingToAttitude(scenarioDto, scenario, maneuvers, celestialBodies);
 
     for (auto &maneuver: maneuvers)
     {
