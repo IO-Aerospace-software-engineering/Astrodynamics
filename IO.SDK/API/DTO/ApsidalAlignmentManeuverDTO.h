@@ -13,7 +13,7 @@ namespace IO::SDK::API::DTO
 {
     struct ApsidalAlignmentManeuverDTO
     {
-        int maneuverOrder{0};
+        int maneuverOrder{-1};
         char *engines[10]{};
         double attitudeHoldDuration{0.0};
         double minimumEpoch{0.0};

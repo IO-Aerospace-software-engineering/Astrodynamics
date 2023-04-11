@@ -77,20 +77,20 @@ void PropagateProxy(IO::SDK::API::DTO::ScenarioDTO &scenarioDto)
             cbody,
             ToVector3D(scenarioDto.spacecraft.initialOrbitalParameter.position),
             ToVector3D(scenarioDto.spacecraft.initialOrbitalParameter.velocity), tdb, frame);
-//
-//    IO::SDK::Body::Spacecraft::Spacecraft spacecraft(scenarioDto.spacecraft.id, scenarioDto.spacecraft.name,
-//                                                     scenarioDto.spacecraft.dryOperatingMass,
-//                                                     scenarioDto.spacecraft.maximumOperatingMass, scenarioDto.Name,
-//                                                     std::move(initialOrbitalParameters));
-//    BuildFuelTank(scenarioDto, spacecraft);
-//    BuildEngines(scenarioDto, spacecraft);
-//    BuildInstruments(scenarioDto, spacecraft);
-//
-//    scenario.AttachSpacecraft(spacecraft);
-//
-//    std::map<int, std::shared_ptr<IO::SDK::Maneuvers::ManeuverBase>> maneuvers;
-//
-//    BuildManeuvers(scenarioDto, scenario, celestialBodies, maneuvers);
+
+    IO::SDK::Body::Spacecraft::Spacecraft spacecraft(scenarioDto.spacecraft.id, scenarioDto.spacecraft.name,
+                                                     scenarioDto.spacecraft.dryOperatingMass,
+                                                     scenarioDto.spacecraft.maximumOperatingMass, scenarioDto.Name,
+                                                     std::move(initialOrbitalParameters));
+    BuildFuelTank(scenarioDto, spacecraft);
+    BuildEngines(scenarioDto, spacecraft);
+    BuildInstruments(scenarioDto, spacecraft);
+
+    scenario.AttachSpacecraft(spacecraft);
+
+    std::map<int, std::shared_ptr<IO::SDK::Maneuvers::ManeuverBase>> maneuvers;
+
+    BuildManeuvers(scenarioDto, scenario, celestialBodies, maneuvers);
 }
 
 std::map<int, std::shared_ptr<IO::SDK::Body::CelestialBody>>
@@ -101,6 +101,10 @@ BuildCelestialBodies(IO::SDK::API::DTO::ScenarioDTO &scenario)
     // insert sun
     for (auto &cb: scenario.celestialBodies)
     {
+        if (cb.id == -1)
+        {
+            break;
+        }
         if (IO::SDK::Body::CelestialBody::IsSun(cb.id))
         {
             IO::SDK::Body::CelestialBody c(cb.id);
@@ -111,6 +115,10 @@ BuildCelestialBodies(IO::SDK::API::DTO::ScenarioDTO &scenario)
     //insert planets or asteroids
     for (auto &cb: scenario.celestialBodies)
     {
+        if (cb.id == -1)
+        {
+            break;
+        }
         if (IO::SDK::Body::CelestialBody::IsAsteroid(cb.id) || IO::SDK::Body::CelestialBody::IsPlanet(cb.id))
         {
             IO::SDK::Body::CelestialBody c(cb.id);
@@ -123,6 +131,10 @@ BuildCelestialBodies(IO::SDK::API::DTO::ScenarioDTO &scenario)
     //insert moons
     for (auto &cb: scenario.celestialBodies)
     {
+        if (cb.id == -1)
+        {
+            break;
+        }
         if (IO::SDK::Body::CelestialBody::IsMoon(cb.id))
         {
             IO::SDK::Body::CelestialBody c(cb.id);
@@ -245,6 +257,10 @@ void BuildInstrumentPointingToAttitude(IO::SDK::API::DTO::ScenarioDTO &scenarioD
 {
     for (auto &maneuver: scenarioDto.spacecraft.pointingToAttitudes)
     {
+        if (maneuver.maneuverOrder == -1)
+        {
+            break;
+        }
         std::vector<IO::SDK::Body::Spacecraft::Engine *> engines;
         for (auto engine: maneuver.engines)
         {
@@ -299,6 +315,10 @@ void BuildApogeeManeuver(IO::SDK::API::DTO::ScenarioDTO &scenarioDto, IO::SDK::S
 {
     for (auto &maneuver: scenarioDto.spacecraft.apogeeHeightChangingManeuvers)
     {
+        if (maneuver.maneuverOrder == -1)
+        {
+            break;
+        }
         std::vector<IO::SDK::Body::Spacecraft::Engine *> engines;
         for (auto engine: maneuver.engines)
         {
@@ -315,6 +335,10 @@ void BuildPerigeeManeuver(IO::SDK::API::DTO::ScenarioDTO &scenarioDto, IO::SDK::
 {
     for (auto &maneuver: scenarioDto.spacecraft.perigeeHeightChangingManeuvers)
     {
+        if (maneuver.maneuverOrder == -1)
+        {
+            break;
+        }
         std::vector<IO::SDK::Body::Spacecraft::Engine *> engines;
         for (auto engine: maneuver.engines)
         {
@@ -332,6 +356,10 @@ void BuildApsidalManeuver(IO::SDK::API::DTO::ScenarioDTO &scenarioDto, IO::SDK::
 {
     for (auto &maneuver: scenarioDto.spacecraft.apsidalAlignmentManeuvers)
     {
+        if (maneuver.maneuverOrder == -1)
+        {
+            break;
+        }
         std::vector<IO::SDK::Body::Spacecraft::Engine *> engines;
         for (auto engine: maneuver.engines)
         {
@@ -353,6 +381,10 @@ void BuildCombinedManeuver(IO::SDK::API::DTO::ScenarioDTO &scenarioDto, IO::SDK:
 {
     for (auto &maneuver: scenarioDto.spacecraft.combinedManeuvers)
     {
+        if (maneuver.maneuverOrder == -1)
+        {
+            break;
+        }
         std::vector<IO::SDK::Body::Spacecraft::Engine *> engines;
         for (auto engine: maneuver.engines)
         {
@@ -371,6 +403,10 @@ BuildOrbitalPlaneManeuver(IO::SDK::API::DTO::ScenarioDTO &scenarioDto, IO::SDK::
 {
     for (auto &maneuver: scenarioDto.spacecraft.orbitalPlaneChangingManeuvers)
     {
+        if (maneuver.maneuverOrder == -1)
+        {
+            break;
+        }
         std::vector<IO::SDK::Body::Spacecraft::Engine *> engines;
         for (auto engine: maneuver.engines)
         {
@@ -393,6 +429,10 @@ void BuildPhasingManeuver(IO::SDK::API::DTO::ScenarioDTO &scenarioDto, IO::SDK::
 {
     for (auto &maneuver: scenarioDto.spacecraft.phasingManeuverDto)
     {
+        if (maneuver.maneuverOrder == -1)
+        {
+            break;
+        }
         std::vector<IO::SDK::Body::Spacecraft::Engine *> engines;
         for (auto engine: maneuver.engines)
         {
@@ -413,14 +453,25 @@ void BuildProgradeAttitude(IO::SDK::API::DTO::ScenarioDTO &scenarioDto, IO::SDK:
 {
     for (auto &maneuver: scenarioDto.spacecraft.progradeAttitudes)
     {
+        if (maneuver.maneuverOrder == -1)
+        {
+            break;
+        }
         std::vector<IO::SDK::Body::Spacecraft::Engine *> engines;
         for (auto engine: maneuver.engines)
         {
+            if (engine == nullptr)
+            {
+                break;
+            }
             engines.push_back(const_cast<IO::SDK::Body::Spacecraft::Engine *>(scenario.GetSpacecraft()->GetEngine(strdup(engine))));
         }
-
-        maneuvers[maneuver.maneuverOrder] = std::make_shared<IO::SDK::Maneuvers::Attitudes::ProgradeAttitude>(engines, scenario.GetPropagator(), IO::SDK::Time::TDB(
-                std::chrono::duration<double>(maneuver.minimumEpoch)), IO::SDK::Time::TimeSpan(std::chrono::duration<double>(maneuver.attitudeHoldDuration)));
+        IO::SDK::Time::TDB min(std::chrono::duration<double>(maneuver.minimumEpoch));
+        IO::SDK::Time::TimeSpan hold(std::chrono::duration<double>(maneuver.attitudeHoldDuration));
+        auto prop=scenario.GetPropagator();
+        auto mnv = std::make_shared<IO::SDK::Maneuvers::Attitudes::ProgradeAttitude>(engines, prop,
+                min, hold);
+        maneuvers[maneuver.maneuverOrder] = mnv;
     }
 }
 
@@ -428,6 +479,10 @@ void BuildRetrogradeAttitude(IO::SDK::API::DTO::ScenarioDTO &scenarioDto, IO::SD
 {
     for (auto &maneuver: scenarioDto.spacecraft.retrogradeAttitudes)
     {
+        if (maneuver.maneuverOrder == -1)
+        {
+            break;
+        }
         std::vector<IO::SDK::Body::Spacecraft::Engine *> engines;
         for (auto engine: maneuver.engines)
         {
@@ -443,6 +498,10 @@ void BuildNadirAttitude(IO::SDK::API::DTO::ScenarioDTO &scenarioDto, IO::SDK::Sc
 {
     for (auto &maneuver: scenarioDto.spacecraft.nadirAttitudes)
     {
+        if (maneuver.maneuverOrder == -1)
+        {
+            break;
+        }
         std::vector<IO::SDK::Body::Spacecraft::Engine *> engines;
         for (auto engine: maneuver.engines)
         {
@@ -458,6 +517,10 @@ void BuildZenithAttitude(IO::SDK::API::DTO::ScenarioDTO &scenarioDto, IO::SDK::S
 {
     for (auto &maneuver: scenarioDto.spacecraft.zenithAttitudes)
     {
+        if (maneuver.maneuverOrder == -1)
+        {
+            break;
+        }
         std::vector<IO::SDK::Body::Spacecraft::Engine *> engines;
         for (auto engine: maneuver.engines)
         {

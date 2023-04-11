@@ -12,7 +12,7 @@ namespace IO::SDK::API::DTO
         int instrumentId{0};
         int targetBodyId{0};
         int targetSiteId{0};
-        int maneuverOrder{0};
+        int maneuverOrder{-1};
         char* engines[10]{};
         double attitudeHoldDuration{0.0};
         double minimumEpoch{0.0};

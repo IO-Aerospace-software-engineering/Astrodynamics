@@ -23,6 +23,7 @@
 #include <PhasingManeuver.h>
 #include <DataPoolMonitoring.h>
 #include <Scenario.h>
+#include "InertialFrames.h"
 
 using namespace std::literals::chrono_literals;
 
@@ -184,14 +185,14 @@ int main()
 
     //We define which engines can be used to realize maneuvers
     auto engine1 = spacecraft.GetEngine("serialNumber1");
-    std::vector<IO::SDK::Body::Spacecraft::Engine> engines;
-    engines.push_back(*engine1);
+    std::vector<IO::SDK::Body::Spacecraft::Engine*> engines;
+    engines.push_back(const_cast<IO::SDK::Body::Spacecraft::Engine*>(engine1));
 
     //We configure each maneuver
-    IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver planeAlignment(engines, propagator, targetOrbit.get(),
+    IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver planeAlignment(engines, propagator, targetOrbit,
                                                                     startDatePropagator); //The first maneuver must not start until the launch is complete
-    IO::SDK::Maneuvers::ApsidalAlignmentManeuver apsidalAlignment(engines, propagator, targetOrbit.get());
-    IO::SDK::Maneuvers::PhasingManeuver phasing(engines, propagator, 1, targetOrbit.get());
+    IO::SDK::Maneuvers::ApsidalAlignmentManeuver apsidalAlignment(engines, propagator, targetOrbit);
+    IO::SDK::Maneuvers::PhasingManeuver phasing(engines, propagator, 1, targetOrbit);
     IO::SDK::Maneuvers::ApogeeHeightChangingManeuver finalApogeeChanging(engines, propagator, targetOrbit->GetApogeeVector().Magnitude());
 
     //We order maneuvers
