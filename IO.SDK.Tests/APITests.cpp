@@ -29,7 +29,7 @@ TEST(API, Propagate)
     scenario.spacecraft.engines[0].fuelflow=50;
     scenario.spacecraft.engines[0].isp=400;
     scenario.spacecraft.engines[0].name="engine1";
-    scenario.spacecraft.progradeAttitudes[0].engines[0] = "Hello engine";
+    scenario.spacecraft.progradeAttitudes[0].engines[0] = "eng1";
     scenario.spacecraft.progradeAttitudes[0].maneuverOrder = 0;
     scenario.spacecraft.initialOrbitalParameter.centerOfMotion.id = 399;
     scenario.spacecraft.initialOrbitalParameter.centerOfMotion.centerOfMotionId = 10;
