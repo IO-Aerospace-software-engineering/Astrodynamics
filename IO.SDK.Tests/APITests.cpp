@@ -10,7 +10,7 @@ TEST(API, DTOSize)
     ASSERT_EQ(814712, size2);
 }
 
-TEST(API, Propagate)
+TEST(API, BuildScenarioAttitutesWithoutException)
 {
     IO::SDK::API::DTO::ScenarioDTO scenario;
     scenario.celestialBodies[0].id = 399;
@@ -19,18 +19,38 @@ TEST(API, Propagate)
     scenario.Name = "titi";
     scenario.Window.start = 10.0;
     scenario.Window.end = 20.0;
+    scenario.spacecraft.instruments[0].name = "inst1";
+    scenario.spacecraft.instruments[0].id = 200;
+    scenario.spacecraft.instruments[0].boresight.x = 1.0;
+    scenario.spacecraft.instruments[0].boresight.y = 0.0;
+    scenario.spacecraft.instruments[0].boresight.z = 0.0;
+    scenario.spacecraft.instruments[0].fovRefVector.x = 0.0;
+    scenario.spacecraft.instruments[0].fovRefVector.y = 1.0;
+    scenario.spacecraft.instruments[0].fovRefVector.z = 0.0;
+    scenario.spacecraft.instruments[0].fieldOfView = 3.14;
+    scenario.spacecraft.instruments[0].shape = "circular";
     scenario.spacecraft.fuelTank[0].id = 1;
     scenario.spacecraft.fuelTank[0].capacity = 1000.0;
     scenario.spacecraft.fuelTank[0].quantity = 1000.0;
     scenario.spacecraft.fuelTank[0].serialNumber = "ft1";
-    scenario.spacecraft.engines[0].id=1;
-    scenario.spacecraft.engines[0].serialNumber="eng1";
-    scenario.spacecraft.engines[0].fuelTankSerialNumber="ft1";
-    scenario.spacecraft.engines[0].fuelflow=50;
-    scenario.spacecraft.engines[0].isp=400;
-    scenario.spacecraft.engines[0].name="engine1";
+    scenario.spacecraft.engines[0].id = 1;
+    scenario.spacecraft.engines[0].serialNumber = "eng1";
+    scenario.spacecraft.engines[0].fuelTankSerialNumber = "ft1";
+    scenario.spacecraft.engines[0].fuelflow = 50;
+    scenario.spacecraft.engines[0].isp = 400;
+    scenario.spacecraft.engines[0].name = "engine1";
     scenario.spacecraft.progradeAttitudes[0].engines[0] = "eng1";
     scenario.spacecraft.progradeAttitudes[0].maneuverOrder = 0;
+    scenario.spacecraft.retrogradeAttitudes[0].engines[0] = "eng1";
+    scenario.spacecraft.retrogradeAttitudes[0].maneuverOrder = 1;
+    scenario.spacecraft.nadirAttitudes[0].engines[0] = "eng1";
+    scenario.spacecraft.nadirAttitudes[0].maneuverOrder = 2;
+    scenario.spacecraft.zenithAttitudes[0].engines[0] = "eng1";
+    scenario.spacecraft.zenithAttitudes[0].maneuverOrder = 3;
+    scenario.spacecraft.pointingToAttitudes[0].engines[0] = "eng1";
+    scenario.spacecraft.pointingToAttitudes[0].maneuverOrder = 4;
+    scenario.spacecraft.pointingToAttitudes[0].targetBodyId = 399;
+    scenario.spacecraft.pointingToAttitudes[0].instrumentId = 200;
     scenario.spacecraft.initialOrbitalParameter.centerOfMotion.id = 399;
     scenario.spacecraft.initialOrbitalParameter.centerOfMotion.centerOfMotionId = 10;
     scenario.spacecraft.initialOrbitalParameter.epoch = 15.0;
