@@ -83,7 +83,7 @@ namespace IO::SDK
         void AddCelestialBody(const IO::SDK::Body::CelestialBody &celestialBody);
 
         /**
-         * Add spacecraft to the scenario
+         * Add Spacecraft to the scenario
          * @param spacecraft
          */
         void AttachSpacecraft(const IO::SDK::Body::Spacecraft::Spacecraft &spacecraft);
@@ -123,7 +123,7 @@ namespace IO::SDK
         { return m_spacecraft; }
 
         /**
-         * Get the sites of the scenario
+         * Get the Sites of the scenario
          * @return
          */
         inline const std::vector<const IO::SDK::Sites::Site *> &GetSites()

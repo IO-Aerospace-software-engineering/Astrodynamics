@@ -58,7 +58,7 @@ void DisplayLaunchWindowsSummary(const std::vector<IO::SDK::Maneuvers::LaunchWin
 void DisplayOccultations(const std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>> &occultations)
 {
     std::cout << "========================================"
-              << " Sun occultations from chaser spacecraft"
+              << " Sun occultations from chaser Spacecraft"
               << " ========================================" << std::endl;
     for (size_t i = 0; i < occultations.size(); i++)
     {
@@ -84,7 +84,7 @@ void DisplayInsight(const std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>>
 int main()
 {
     /*========================== Scenario Description =====================================
-    We are at Cap canaveral and we have to join another spacecraft in orbit.
+    We are at Cap canaveral and we have to join another Spacecraft in orbit.
     The launch must occurs by day at launch site and recovery site
     To realize this operation, we'll show you how to use IO SDK to find launch windows then maneuvers sequence to reach our objective.
     For each maneuver you will obtain the maneuver window, the thrust window, Delta V, Spacecraft or satellite orientation and mass of fuel burned.
@@ -109,7 +109,7 @@ int main()
                                                                      IO::SDK::Coordinates::Geodetic(-80.0 * IO::SDK::Constants::DEG_RAD, 28.5 * IO::SDK::Constants::DEG_RAD, 0.0),
                                                                      earth);
 
-    //Define simulation window. (Warning : When spacecraft is involved, dates must be greater than 2021-01-01 to be compliant with spacecraft clock)
+    //Define simulation window. (Warning : When Spacecraft is involved, dates must be greater than 2021-01-01 to be compliant with Spacecraft clock)
 
 
     //Define parking orbit
@@ -142,14 +142,14 @@ int main()
 
     //===================Compute maneuvers to reach target body================================
 
-    //Configure spacecraft at insertion orbit
+    //Configure Spacecraft at insertion orbit
     IO::SDK::Body::Spacecraft::Spacecraft spacecraft{-178, "DRAGONFLY", 1000.0, 10000.0, "MIS01",
                                                      std::make_unique<IO::SDK::OrbitalParameters::ConicOrbitalElements>(*parkingOrbit)};
     spacecraft.AddFuelTank("fuelTank1", 9000.0, 9000.0);                                                          // Add fuel tank
     spacecraft.AddEngine("serialNumber1", "engine1", "fuelTank1", {1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}, 450.0, 50.0); //Add engine and link with fuel tank
-    spacecraft.AddPayload("PAY01", "Payload 01", 50.0);                                                           //We add a 50 kg payload to the spacecraft
+    spacecraft.AddPayload("PAY01", "Payload 01", 50.0);                                                           //We add a 50 kg payload to the Spacecraft
 
-    //We add an instrument with a circular field of view  aligned with the spacecraft Z axis
+    //We add an instrument with a circular field of view  aligned with the Spacecraft Z axis
     IO::SDK::Math::Vector3D orientation{1.0, 0.0, 0.0};
     IO::SDK::Math::Vector3D boresight{0.0, 0.0, 1.0};
     IO::SDK::Math::Vector3D fovvector{1.0, 0.0, 0.0};
@@ -176,10 +176,10 @@ int main()
     //We assume the ship will be in orbit 10 minutes after launch.
     IO::SDK::Time::TDB startDatePropagator = launchWindows[0].GetWindow().GetStartDate().ToTDB().Add(IO::SDK::Time::TimeSpan(600.0s));
 
-    //Initialize propagator for dragonfly spacecraft
+    //Initialize propagator for dragonfly Spacecraft
     IO::SDK::Propagators::Propagator propagator(spacecraft, integrator, IO::SDK::Time::Window(startDatePropagator, endEpoch));
 
-    //Intialize propagator for target spacecraft
+    //Intialize propagator for target Spacecraft
     IO::SDK::Propagators::Propagator targetPropagator(spacecraftTarget, integrator, IO::SDK::Time::Window(startDatePropagator, endEpoch));
     targetPropagator.Propagate();
 
@@ -216,7 +216,7 @@ int main()
     //From here Only for data vizualization
 //    auto epoch = finalApogeeChanging.GetManeuverWindow()->GetEndDate();
 //
-//    auto ephemeris = spacecraft.ReadEphemeris(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::AberrationsEnum::None, epoch, *earth);
+//    auto ephemeris = Spacecraft.ReadEphemeris(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::AberrationsEnum::None, epoch, *earth);
 //    auto e = targetOrbit->GetStateVector().GetEccentricity();
 //    auto ti = targetOrbit->GetInclination() * IO::SDK::Constants::RAD_DEG;
 //    auto si = ephemeris.GetInclination() * IO::SDK::Constants::RAD_DEG;

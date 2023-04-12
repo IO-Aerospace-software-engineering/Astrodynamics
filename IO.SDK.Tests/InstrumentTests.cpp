@@ -422,7 +422,7 @@ TEST(Instrument, AlreadyExists)
 TEST(Instrument, FindWindowFieldOfView)
 {
 
-    //========== Configure spacecraft===================
+    //========== Configure Spacecraft===================
     std::string filepath = std::string(IO::SDK::Parameters::SpacecraftPath) + "/SC179_MISSFOVTEST/Instruments/CAMERA789/Frames/CAMERA789.tf";
     if (std::filesystem::exists(filepath))
     {
@@ -505,7 +505,7 @@ TEST(Instrument, FindWindowFieldOfView)
 TEST(Instrument, GetBoresightAtEpoch)
 {
 
-    //========== Configure spacecraft===================
+    //========== Configure Spacecraft===================
     std::string filepath = std::string(IO::SDK::Parameters::SpacecraftPath) + "/SC179_MISSFOVTEST/Instruments/CAMERA789/Frames/CAMERA789.tf";
     if (std::filesystem::exists(filepath))
     {

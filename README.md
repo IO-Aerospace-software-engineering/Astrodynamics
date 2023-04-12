@@ -9,7 +9,7 @@ The goal of this project is to :
 - Allow object oriented development and provide high level objects
 - Abstract kernels and frames files management
 - Provide a body integrator
-- Simulate spacecraft and impulsive maneuvers
+- Simulate Spacecraft and impulsive maneuvers
 - Evaluate constraints like occultations, body in instrument field of view, ...
     
 ## Project status
@@ -136,7 +136,7 @@ Before use the SDK, you must install it.
 
 It can be installed from binaries or cmake, these procedures are described above. 
 
-In this example we will create a small program based on cmake to compute maneuvers required to join another spacecraft from earth surface and evaluate some constraints during the flight.
+In this example we will create a small program based on cmake to compute maneuvers required to join another Spacecraft from earth surface and evaluate some constraints during the flight.
 
 1. Ensure your CMake project contains at least these parameters :
     ```CMAKE
@@ -212,7 +212,7 @@ In this example we will create a small program based on cmake to compute maneuve
     Spacecraft orientation : X : 0.549319 Y : -0.335252 Z : -0.765412 ( ICRF )
     Fuel burned :465.029 kg
 
-    ======================================== Sun occultations from dragonfly spacecraft ========================================
+    ======================================== Sun occultations from dragonfly Spacecraft ========================================
     Occulation start at :2021-03-03 23:20:25.015236 (TDB)
     Occulation end at :2021-03-03 23:25:08.727103 (TDB)
 

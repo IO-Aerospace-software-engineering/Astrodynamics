@@ -3,7 +3,7 @@ API
 | C#                         | C++                            |
 |----------------------------|--------------------------------|
 | Create body                |                                |
-| Create spacecraft          |                                |
+| Create Spacecraft          |                                |
 | Create frame file          |                                |
 | Create instrument          |                                |
 |                            | Integrator & propagator        |

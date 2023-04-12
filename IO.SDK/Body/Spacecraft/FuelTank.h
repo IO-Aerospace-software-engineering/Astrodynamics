@@ -44,7 +44,7 @@ namespace IO::SDK::Body::Spacecraft
         FuelTank(const std::string &serialNumber, const IO::SDK::Body::Spacecraft::Spacecraft &spacecraft, double capacity, double quantity);
         
         /**
-         * @brief Get the associated spacecraft
+         * @brief Get the associated Spacecraft
          * 
          * @return const IO::SDK::Body::Spacecraft::Spacecraft& 
          */

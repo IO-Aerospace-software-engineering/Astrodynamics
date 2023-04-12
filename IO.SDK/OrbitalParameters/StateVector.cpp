@@ -126,7 +126,7 @@ IO::SDK::OrbitalParameters::StateVector IO::SDK::OrbitalParameters::StateVector:
     double greaterForce = force.Magnitude();
 
     //Each body is under sphere of influence of his major body
-    //So spacecraft is influenced by his center of motion and his parents
+    //So Spacecraft is influenced by his center of motion and his parents
     //Eg. Sun->Earth->Moon->Spacecraft
     std::shared_ptr<IO::SDK::Body::Body> currentBody = GetCenterOfMotion();
     while (currentBody->GetOrbitalParametersAtEpoch())

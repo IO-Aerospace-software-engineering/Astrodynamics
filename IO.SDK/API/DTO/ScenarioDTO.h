@@ -11,12 +11,12 @@ namespace IO::SDK::API::DTO
     {
         char *Name{};
         WindowDTO Window{};
-        SpacecraftDTO spacecraft;
-        SiteDTO sites[2];
+        SpacecraftDTO Spacecraft;
+        SiteDTO Sites[2];
 
 //        DistanceConstraintDTO distances[5];
 //        OccultationConstraintDTO occultations[5];
 
-        CelestialBodyDTO celestialBodies[10];
+        CelestialBodyDTO CelestialBodies[10];
     };
 }

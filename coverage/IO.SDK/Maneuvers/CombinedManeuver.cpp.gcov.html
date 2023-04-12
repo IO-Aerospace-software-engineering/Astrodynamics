@@ -138,7 +138,7 @@
 <a name="76"><span class="lineNum">      76 </span>            :     //Ascending node vector</a>
 <a name="77"><span class="lineNum">      77 </span><span class="lineCov">         10 :     auto ANVector = stateVector.GetAscendingNodeVector();</span></a>
 <a name="78"><span class="lineNum">      78 </span>            : </a>
-<a name="79"><span class="lineNum">      79 </span>            :     //Angle between AN and spacecraft</a>
+<a name="79"><span class="lineNum">      79 </span>            :     //Angle between AN and Spacecraft</a>
 <a name="80"><span class="lineNum">      80 </span><span class="lineCov">         10 :     double dp = ANVector.DotProduct(stateVector.GetSpecificAngularMomentum().Normalize().CrossProduct(stateVector.GetPosition().Normalize()));</span></a>
 <a name="81"><span class="lineNum">      81 </span>            : </a>
 <a name="82"><span class="lineNum">      82 </span>            :     //if &lt; 90° we're in inbound sector</a>

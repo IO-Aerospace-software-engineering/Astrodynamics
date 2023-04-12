@@ -429,10 +429,10 @@
 <a name="367"><span class="lineNum">     367 </span>            : </a>
 <a name="368"><span class="lineNum">     368 </span>            :     //===================Compute maneuvers to reach target body================================</a>
 <a name="369"><span class="lineNum">     369 </span>            : </a>
-<a name="370"><span class="lineNum">     370 </span>            :     //Configure spacecraft</a>
-<a name="371"><span class="lineNum">     371 </span><span class="lineCov">          3 :     IO::SDK::Body::Spacecraft::Spacecraft spacecraft{-1, &quot;MySpacecraft&quot;, 1000.0, 3000.0, &quot;mission01&quot;, std::make_unique&lt;IO::SDK::OrbitalParameters::ConicOrbitalElements&gt;(*parkingOrbit)};</span></a>
-<a name="372"><span class="lineNum">     372 </span><span class="lineCov">          1 :     spacecraft.AddFuelTank(&quot;fuelTank1&quot;, 2000.0, 1000.0);</span></a>
-<a name="373"><span class="lineNum">     373 </span><span class="lineCov">          1 :     spacecraft.AddEngine(&quot;serialNumber1&quot;, &quot;engine1&quot;, &quot;fuelTank1&quot;, {1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}, 450.0, 50.0);</span></a>
+<a name="370"><span class="lineNum">     370 </span>            :     //Configure Spacecraft</a>
+<a name="371"><span class="lineNum">     371 </span><span class="lineCov">          3 :     IO::SDK::Body::Spacecraft::Spacecraft Spacecraft{-1, &quot;MySpacecraft&quot;, 1000.0, 3000.0, &quot;mission01&quot;, std::make_unique&lt;IO::SDK::OrbitalParameters::ConicOrbitalElements&gt;(*parkingOrbit)};</span></a>
+<a name="372"><span class="lineNum">     372 </span><span class="lineCov">          1 :     Spacecraft.AddFuelTank(&quot;fuelTank1&quot;, 2000.0, 1000.0);</span></a>
+<a name="373"><span class="lineNum">     373 </span><span class="lineCov">          1 :     Spacecraft.AddEngine(&quot;serialNumber1&quot;, &quot;engine1&quot;, &quot;fuelTank1&quot;, {1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}, 450.0, 50.0);</span></a>
 <a name="374"><span class="lineNum">     374 </span>            : </a>
 <a name="375"><span class="lineNum">     375 </span>            :     //Configure propagator</a>
 <a name="376"><span class="lineNum">     376 </span><span class="lineCov">          1 :     auto step{IO::SDK::Time::TimeSpan(1.0s)};</span></a>
@@ -448,12 +448,12 @@
 <a name="386"><span class="lineNum">     386 </span>            :     //Configure propagator</a>
 <a name="387"><span class="lineNum">     387 </span><span class="lineCov">          2 :     IO::SDK::Time::UTC startEpoch(&quot;2021-06-02T00:00:00&quot;);</span></a>
 <a name="388"><span class="lineNum">     388 </span><span class="lineCov">          2 :     IO::SDK::Time::UTC endEpoch(&quot;2021-06-03T00:00:00&quot;);</span></a>
-<a name="389"><span class="lineNum">     389 </span><span class="lineCov">          2 :     IO::SDK::Propagators::Propagator propagator(spacecraft, integrator, IO::SDK::Time::Window(startEpoch.ToTDB(), endEpoch.ToTDB()));</span></a>
+<a name="389"><span class="lineNum">     389 </span><span class="lineCov">          2 :     IO::SDK::Propagators::Propagator propagator(Spacecraft, integrator, IO::SDK::Time::Window(startEpoch.ToTDB(), endEpoch.ToTDB()));</span></a>
 <a name="390"><span class="lineNum">     390 </span>            : </a>
 <a name="391"><span class="lineNum">     391 </span>            :     //Configure maneuvers</a>
 <a name="392"><span class="lineNum">     392 </span>            : </a>
 <a name="393"><span class="lineNum">     393 </span>            :     //We define which engines can be used to realize maneuvers</a>
-<a name="394"><span class="lineNum">     394 </span><span class="lineCov">          1 :     auto engine1 = spacecraft.GetEngine(&quot;serialNumber1&quot;);</span></a>
+<a name="394"><span class="lineNum">     394 </span><span class="lineCov">          1 :     auto engine1 = Spacecraft.GetEngine(&quot;serialNumber1&quot;);</span></a>
 <a name="395"><span class="lineNum">     395 </span><span class="lineCov">          1 :     std::vector&lt;IO::SDK::Body::Spacecraft::Engine&gt; engines;</span></a>
 <a name="396"><span class="lineNum">     396 </span><span class="lineCov">          1 :     engines.push_back(*engine1);</span></a>
 <a name="397"><span class="lineNum">     397 </span>            : </a>
@@ -468,7 +468,7 @@
 <a name="406"><span class="lineNum">     406 </span><span class="lineCov">          1 :     auto startManeuver = planeAlignment.GetThrustWindow()-&gt;GetStartDate().Add(IO::SDK::Time::TimeSpan(-60.0s));</span></a>
 <a name="407"><span class="lineNum">     407 </span><span class="lineCov">          1 :     auto endManeuver = planeAlignment.GetThrustWindow()-&gt;GetEndDate().Add(IO::SDK::Time::TimeSpan(60.0s));</span></a>
 <a name="408"><span class="lineNum">     408 </span>            : </a>
-<a name="409"><span class="lineNum">     409 </span><span class="lineCov">          1 :     auto ephemeris = spacecraft.ReadEphemeris(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::AberrationsEnum::None, endManeuver, *earth);</span></a>
+<a name="409"><span class="lineNum">     409 </span><span class="lineCov">          1 :     auto ephemeris = Spacecraft.ReadEphemeris(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::AberrationsEnum::None, endManeuver, *earth);</span></a>
 <a name="410"><span class="lineNum">     410 </span>            : </a>
 <a name="411"><span class="lineNum">     411 </span><span class="lineCov">          1 :     auto p = ephemeris.GetPerigeeVector().Magnitude();</span></a>
 <a name="412"><span class="lineNum">     412 </span><span class="lineCov">          1 :     auto e = ephemeris.GetEccentricity();</span></a>
@@ -522,10 +522,10 @@
 <a name="460"><span class="lineNum">     460 </span>            : </a>
 <a name="461"><span class="lineNum">     461 </span>            :     //===================Compute maneuvers to reach target body================================</a>
 <a name="462"><span class="lineNum">     462 </span>            : </a>
-<a name="463"><span class="lineNum">     463 </span>            :     //Configure spacecraft</a>
-<a name="464"><span class="lineNum">     464 </span><span class="lineCov">          3 :     IO::SDK::Body::Spacecraft::Spacecraft spacecraft{-1, &quot;MySpacecraft&quot;, 1000.0, 3000.0, &quot;mission01&quot;, std::make_unique&lt;IO::SDK::OrbitalParameters::ConicOrbitalElements&gt;(*parkingOrbit)};</span></a>
-<a name="465"><span class="lineNum">     465 </span><span class="lineCov">          1 :     spacecraft.AddFuelTank(&quot;fuelTank1&quot;, 2000.0, 1000.0);</span></a>
-<a name="466"><span class="lineNum">     466 </span><span class="lineCov">          1 :     spacecraft.AddEngine(&quot;serialNumber1&quot;, &quot;engine1&quot;, &quot;fuelTank1&quot;, {1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}, 450.0, 50.0);</span></a>
+<a name="463"><span class="lineNum">     463 </span>            :     //Configure Spacecraft</a>
+<a name="464"><span class="lineNum">     464 </span><span class="lineCov">          3 :     IO::SDK::Body::Spacecraft::Spacecraft Spacecraft{-1, &quot;MySpacecraft&quot;, 1000.0, 3000.0, &quot;mission01&quot;, std::make_unique&lt;IO::SDK::OrbitalParameters::ConicOrbitalElements&gt;(*parkingOrbit)};</span></a>
+<a name="465"><span class="lineNum">     465 </span><span class="lineCov">          1 :     Spacecraft.AddFuelTank(&quot;fuelTank1&quot;, 2000.0, 1000.0);</span></a>
+<a name="466"><span class="lineNum">     466 </span><span class="lineCov">          1 :     Spacecraft.AddEngine(&quot;serialNumber1&quot;, &quot;engine1&quot;, &quot;fuelTank1&quot;, {1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}, 450.0, 50.0);</span></a>
 <a name="467"><span class="lineNum">     467 </span>            : </a>
 <a name="468"><span class="lineNum">     468 </span>            :     //Configure propagator</a>
 <a name="469"><span class="lineNum">     469 </span><span class="lineCov">          1 :     auto step{IO::SDK::Time::TimeSpan(1.0s)};</span></a>
@@ -541,12 +541,12 @@
 <a name="479"><span class="lineNum">     479 </span>            :     //Configure propagator</a>
 <a name="480"><span class="lineNum">     480 </span><span class="lineCov">          2 :     IO::SDK::Time::UTC startEpoch(&quot;2021-06-02T00:00:00&quot;);</span></a>
 <a name="481"><span class="lineNum">     481 </span><span class="lineCov">          2 :     IO::SDK::Time::UTC endEpoch(&quot;2021-06-03T00:00:00&quot;);</span></a>
-<a name="482"><span class="lineNum">     482 </span><span class="lineCov">          2 :     IO::SDK::Propagators::Propagator propagator(spacecraft, integrator, IO::SDK::Time::Window(startEpoch.ToTDB(), endEpoch.ToTDB()));</span></a>
+<a name="482"><span class="lineNum">     482 </span><span class="lineCov">          2 :     IO::SDK::Propagators::Propagator propagator(Spacecraft, integrator, IO::SDK::Time::Window(startEpoch.ToTDB(), endEpoch.ToTDB()));</span></a>
 <a name="483"><span class="lineNum">     483 </span>            : </a>
 <a name="484"><span class="lineNum">     484 </span>            :     //Configure maneuvers</a>
 <a name="485"><span class="lineNum">     485 </span>            : </a>
 <a name="486"><span class="lineNum">     486 </span>            :     //We define which engines can be used to realize maneuvers</a>
-<a name="487"><span class="lineNum">     487 </span><span class="lineCov">          1 :     auto engine1 = spacecraft.GetEngine(&quot;serialNumber1&quot;);</span></a>
+<a name="487"><span class="lineNum">     487 </span><span class="lineCov">          1 :     auto engine1 = Spacecraft.GetEngine(&quot;serialNumber1&quot;);</span></a>
 <a name="488"><span class="lineNum">     488 </span><span class="lineCov">          1 :     std::vector&lt;IO::SDK::Body::Spacecraft::Engine&gt; engines;</span></a>
 <a name="489"><span class="lineNum">     489 </span><span class="lineCov">          1 :     engines.push_back(*engine1);</span></a>
 <a name="490"><span class="lineNum">     490 </span>            : </a>
@@ -561,7 +561,7 @@
 <a name="499"><span class="lineNum">     499 </span><span class="lineCov">          1 :     auto startManeuver = planeAlignment.GetThrustWindow()-&gt;GetStartDate().Add(IO::SDK::Time::TimeSpan(-60.0s));</span></a>
 <a name="500"><span class="lineNum">     500 </span><span class="lineCov">          1 :     auto endManeuver = planeAlignment.GetThrustWindow()-&gt;GetEndDate().Add(IO::SDK::Time::TimeSpan(60.0s));</span></a>
 <a name="501"><span class="lineNum">     501 </span>            : </a>
-<a name="502"><span class="lineNum">     502 </span><span class="lineCov">          1 :     auto ephemeris = spacecraft.ReadEphemeris(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::AberrationsEnum::None, endManeuver, *earth);</span></a>
+<a name="502"><span class="lineNum">     502 </span><span class="lineCov">          1 :     auto ephemeris = Spacecraft.ReadEphemeris(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::AberrationsEnum::None, endManeuver, *earth);</span></a>
 <a name="503"><span class="lineNum">     503 </span>            : </a>
 <a name="504"><span class="lineNum">     504 </span><span class="lineCov">          1 :     auto p = ephemeris.GetPerigeeVector().Magnitude();</span></a>
 <a name="505"><span class="lineNum">     505 </span><span class="lineCov">          1 :     auto e = ephemeris.GetEccentricity();</span></a>

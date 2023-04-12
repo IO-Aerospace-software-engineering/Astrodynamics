@@ -290,7 +290,7 @@ void IO::SDK::Maneuvers::ManeuverBase::ManeuverBase::SpreadThrust()
             //Get fuel burned during this step
             burnedFuel = Burn(minimumRemainingThrustDuration);
 
-            //Get spacecraft mass after burn
+            //Get Spacecraft mass after burn
             double masseAfterStepBurn = m_spacecraft.GetMass();
 
             //We evaluate cumulated deltaV

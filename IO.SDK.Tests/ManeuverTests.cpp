@@ -96,7 +96,7 @@ TEST(Maneuvers, Execute)
     ASSERT_EQ(IO::SDK::Time::TDB(122.92577932661605s), pro.GetStateVectors()[3].GetEpoch());
     ASSERT_EQ(IO::SDK::Time::TDB(122.92577932661605s + 14.148441346767905s), pro.GetStateVectors()[4].GetEpoch());
 
-    //Check spacecraft
+    //Check Spacecraft
     auto totalMass = s.GetMass();
     ASSERT_DOUBLE_EQ(2700.0 - 1331.8753077414322, totalMass);
 }

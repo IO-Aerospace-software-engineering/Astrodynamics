@@ -136,7 +136,7 @@
 <a name="74"><span class="lineNum">      74 </span>            : </a>
 <a name="75"><span class="lineNum">      75 </span><span class="lineCov">          4 : bool IO::SDK::Maneuvers::PerigeeHeightChangingManeuver::IsApproachingApogee(const IO::SDK::OrbitalParameters::StateVector &amp;stateVector) const</span></a>
 <a name="76"><span class="lineNum">      76 </span>            : {</a>
-<a name="77"><span class="lineNum">      77 </span>            :     //Angle between apogee vector and spacecraft velocity</a>
+<a name="77"><span class="lineNum">      77 </span>            :     //Angle between apogee vector and Spacecraft velocity</a>
 <a name="78"><span class="lineNum">      78 </span><span class="lineCov">          4 :     double dp = stateVector.GetApogeeVector().DotProduct(stateVector.GetVelocity());</span></a>
 <a name="79"><span class="lineNum">      79 </span>            : </a>
 <a name="80"><span class="lineNum">      80 </span>            :     //if &lt; 90° we're in inbound sector</a>

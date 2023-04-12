@@ -68,7 +68,7 @@ namespace IO::SDK::Kernels
 		[[nodiscard]] IO::SDK::Time::TDB ConvertToTDB(double encodedClock) const;
 
 		/**
-		 * @brief Convert to spacecraft clock
+		 * @brief Convert to Spacecraft clock
 		 * 
 		 * @param epoch 
 		 * @return std::string 

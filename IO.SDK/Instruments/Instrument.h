@@ -165,7 +165,7 @@ namespace IO::SDK::Instruments
                                       const IO::SDK::AberrationsEnum &aberration, const IO::SDK::Time::TimeSpan &stepSize) const;
 
         /**
-         * Compute boresight in spacecraft frame
+         * Compute boresight in Spacecraft frame
          * @return
          */
         [[nodiscard]] IO::SDK::Math::Vector3D GetBoresightInSpacecraftFrame() const;

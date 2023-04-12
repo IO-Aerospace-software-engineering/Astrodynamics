@@ -82,7 +82,7 @@
 <a name="20"><span class="lineNum">      20 </span>            : </a>
 <a name="21"><span class="lineNum">      21 </span>            : using namespace std::chrono_literals;</a>
 <a name="22"><span class="lineNum">      22 </span>            : </a>
-<a name="23"><span class="lineNum">      23 </span><span class="lineCov">        114 : IO::SDK::Kernels::SpacecraftClockKernel::SpacecraftClockKernel(const IO::SDK::Body::Spacecraft::Spacecraft&amp; spacecraft, const int resolution) :Kernel(spacecraft.GetFilesPath() + &quot;/Clocks/&quot; + spacecraft.GetName() + &quot;.tsc&quot;), m_spacecraft{ spacecraft }, m_resolution{ resolution }</span></a>
+<a name="23"><span class="lineNum">      23 </span><span class="lineCov">        114 : IO::SDK::Kernels::SpacecraftClockKernel::SpacecraftClockKernel(const IO::SDK::Body::Spacecraft::Spacecraft&amp; Spacecraft, const int resolution) :Kernel(Spacecraft.GetFilesPath() + &quot;/Clocks/&quot; + Spacecraft.GetName() + &quot;.tsc&quot;), m_spacecraft{ Spacecraft }, m_resolution{ resolution }</span></a>
 <a name="24"><span class="lineNum">      24 </span>            : {</a>
 <a name="25"><span class="lineNum">      25 </span><span class="lineCov">        114 :         if (!m_fileExists)</span></a>
 <a name="26"><span class="lineNum">      26 </span>            :         {</a>

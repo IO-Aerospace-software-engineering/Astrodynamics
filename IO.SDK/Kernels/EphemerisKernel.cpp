@@ -18,7 +18,7 @@
 #include "InvalidArgumentException.h"
 
 //IO::SDK::Kernels::EphemerisKernel::EphemerisKernel(const std::string filePath, int objectId) : Kernel(
-//        spacecraft.GetFilesPath() + "/Ephemeris/" + spacecraft.GetName() + ".spk"), m_objectId{spacecraft.GetId()}
+//        Spacecraft.GetFilesPath() + "/Ephemeris/" + Spacecraft.GetName() + ".spk"), m_objectId{Spacecraft.GetId()}
 //{
 //}
 

@@ -437,7 +437,7 @@ TEST(PlaneChangingManeuver, CheckOrbitalParametersToHigherInclination)
 
     //===================Compute maneuvers to reach target body================================
 
-    //Configure spacecraft
+    //Configure Spacecraft
     IO::SDK::Body::Spacecraft::Spacecraft spacecraft{-1, "MySpacecraft", 1000.0, 3000.0, "mission01",
                                                      std::make_unique<IO::SDK::OrbitalParameters::ConicOrbitalElements>(*parkingOrbit)};
     spacecraft.AddFuelTank("fuelTank1", 2000.0, 1000.0);
@@ -526,7 +526,7 @@ TEST(PlaneChangingManeuver, CheckOrbitalParametersToLowerInclination)
 
     //===================Compute maneuvers to reach target body================================
 
-    //Configure spacecraft
+    //Configure Spacecraft
     IO::SDK::Body::Spacecraft::Spacecraft spacecraft{-1, "MySpacecraft", 1000.0, 3000.0, "mission01",
                                                      std::make_unique<IO::SDK::OrbitalParameters::ConicOrbitalElements>(*parkingOrbit)};
     spacecraft.AddFuelTank("fuelTank1", 2000.0, 1000.0);

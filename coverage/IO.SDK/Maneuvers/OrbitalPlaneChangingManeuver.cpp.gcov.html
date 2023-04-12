@@ -173,7 +173,7 @@
 <a name="111"><span class="lineNum">     111 </span>            :     //Ascending node vector</a>
 <a name="112"><span class="lineNum">     112 </span><span class="lineCov">      71789 :     auto ANVector = m_targetOrbit-&gt;GetSpecificAngularMomentum().CrossProduct(stateVector.GetSpecificAngularMomentum());</span></a>
 <a name="113"><span class="lineNum">     113 </span>            : </a>
-<a name="114"><span class="lineNum">     114 </span>            :     //Angle between AN and spacecraft</a>
+<a name="114"><span class="lineNum">     114 </span>            :     //Angle between AN and Spacecraft</a>
 <a name="115"><span class="lineNum">     115 </span><span class="lineCov">      71789 :     double dp = ANVector.DotProduct(stateVector.GetSpecificAngularMomentum().CrossProduct(stateVector.GetPosition()));</span></a>
 <a name="116"><span class="lineNum">     116 </span>            : </a>
 <a name="117"><span class="lineNum">     117 </span>            :     //if &lt; 90° we're in inbound sector</a>

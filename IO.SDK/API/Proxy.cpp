@@ -18,6 +18,7 @@
 #include <SpiceUsr.h>
 #include <filesystem>
 #include <WindowDTO.h>
+#include <iostream>
 
 std::map<int, std::shared_ptr<IO::SDK::Body::CelestialBody>> BuildCelestialBodies(IO::SDK::API::DTO::ScenarioDTO &scenario);
 
@@ -69,18 +70,17 @@ void PropagateProxy(IO::SDK::API::DTO::ScenarioDTO &scenarioDto)
         scenario.AddCelestialBody(*celestial.second);
     }
 
-    //==========Build spacecraft===============
-    auto cbody = celestialBodies[scenarioDto.spacecraft.initialOrbitalParameter.centerOfMotion.id];
-    auto tdb = IO::SDK::Time::TDB(std::chrono::duration<double>(scenarioDto.spacecraft.initialOrbitalParameter.epoch));
-    auto frame = IO::SDK::Frames::InertialFrames(scenarioDto.spacecraft.initialOrbitalParameter.inertialFrame);
+    //==========Build Spacecraft===============
+    auto cbody = celestialBodies[scenarioDto.Spacecraft.initialOrbitalParameter.centerOfMotion.id];
+    auto tdb = IO::SDK::Time::TDB(std::chrono::duration<double>(scenarioDto.Spacecraft.initialOrbitalParameter.epoch));
+    auto frame = IO::SDK::Frames::InertialFrames(scenarioDto.Spacecraft.initialOrbitalParameter.inertialFrame);
     std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> initialOrbitalParameters = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(
             cbody,
-            ToVector3D(scenarioDto.spacecraft.initialOrbitalParameter.position),
-            ToVector3D(scenarioDto.spacecraft.initialOrbitalParameter.velocity), tdb, frame);
-
-    IO::SDK::Body::Spacecraft::Spacecraft spacecraft(scenarioDto.spacecraft.id, scenarioDto.spacecraft.name,
-                                                     scenarioDto.spacecraft.dryOperatingMass,
-                                                     scenarioDto.spacecraft.maximumOperatingMass, scenarioDto.Name,
+            ToVector3D(scenarioDto.Spacecraft.initialOrbitalParameter.position),
+            ToVector3D(scenarioDto.Spacecraft.initialOrbitalParameter.velocity), tdb, frame);
+    IO::SDK::Body::Spacecraft::Spacecraft spacecraft(scenarioDto.Spacecraft.id, scenarioDto.Spacecraft.name,
+                                                     scenarioDto.Spacecraft.dryOperatingMass,
+                                                     scenarioDto.Spacecraft.maximumOperatingMass, scenarioDto.Name,
                                                      std::move(initialOrbitalParameters));
     BuildFuelTank(scenarioDto, spacecraft);
     BuildEngines(scenarioDto, spacecraft);
@@ -99,7 +99,7 @@ BuildCelestialBodies(IO::SDK::API::DTO::ScenarioDTO &scenario)
     std::map<int, std::shared_ptr<IO::SDK::Body::CelestialBody>> celestialBodies;
 
     // insert sun
-    for (auto &cb: scenario.celestialBodies)
+    for (auto &cb: scenario.CelestialBodies)
     {
         if (cb.id == -1)
         {
@@ -113,7 +113,7 @@ BuildCelestialBodies(IO::SDK::API::DTO::ScenarioDTO &scenario)
         }
     }
     //insert planets or asteroids
-    for (auto &cb: scenario.celestialBodies)
+    for (auto &cb: scenario.CelestialBodies)
     {
         if (cb.id == -1)
         {
@@ -129,7 +129,7 @@ BuildCelestialBodies(IO::SDK::API::DTO::ScenarioDTO &scenario)
     }
 
     //insert moons
-    for (auto &cb: scenario.celestialBodies)
+    for (auto &cb: scenario.CelestialBodies)
     {
         if (cb.id == -1)
         {
@@ -149,7 +149,7 @@ BuildCelestialBodies(IO::SDK::API::DTO::ScenarioDTO &scenario)
 
 void BuildFuelTank(const IO::SDK::API::DTO::ScenarioDTO &scenarioDto, IO::SDK::Body::Spacecraft::Spacecraft &spacecraft)
 {//Add FuelTank
-    for (auto &fuelTank: scenarioDto.spacecraft.fuelTank)
+    for (auto &fuelTank: scenarioDto.Spacecraft.fuelTank)
     {
         if (fuelTank.id == 0)
         {
@@ -162,7 +162,7 @@ void BuildFuelTank(const IO::SDK::API::DTO::ScenarioDTO &scenarioDto, IO::SDK::B
 void BuildEngines(const IO::SDK::API::DTO::ScenarioDTO &scenarioDto,
                   IO::SDK::Body::Spacecraft::Spacecraft &spacecraft)
 {//AddEngine
-    for (auto &engine: scenarioDto.spacecraft.engines)
+    for (auto &engine: scenarioDto.Spacecraft.engines)
     {
         if (engine.id == 0)
         {
@@ -177,7 +177,7 @@ void BuildEngines(const IO::SDK::API::DTO::ScenarioDTO &scenarioDto,
 void BuildInstruments(const IO::SDK::API::DTO::ScenarioDTO &scenarioDto,
                       IO::SDK::Body::Spacecraft::Spacecraft &spacecraft)
 {//Add instrument
-    for (auto &instrument: scenarioDto.spacecraft.instruments)
+    for (auto &instrument: scenarioDto.Spacecraft.instruments)
     {
         if (instrument.id <= 0)
         {
@@ -214,7 +214,7 @@ void BuildInstrumentPointingToAttitude(IO::SDK::API::DTO::ScenarioDTO &scenarioD
                                        std::map<int, std::shared_ptr<IO::SDK::Maneuvers::ManeuverBase>> &maneuvers,
                                        std::map<int, std::shared_ptr<IO::SDK::Body::CelestialBody>> &celestialBodies)
 {
-    for (auto &maneuver: scenarioDto.spacecraft.pointingToAttitudes)
+    for (auto &maneuver: scenarioDto.Spacecraft.pointingToAttitudes)
     {
         if (maneuver.maneuverOrder == -1)
         {
@@ -253,31 +253,32 @@ void BuildManeuvers(IO::SDK::API::DTO::ScenarioDTO &scenarioDto, IO::SDK::Scenar
                     std::map<int, std::shared_ptr<IO::SDK::Maneuvers::ManeuverBase>> &maneuvers)
 {
     BuildApogeeManeuver(scenarioDto, scenario, maneuvers);
-    BuildPerigeeManeuver(scenarioDto, scenario, maneuvers);
-    BuildCombinedManeuver(scenarioDto, scenario, maneuvers);
-    BuildApsidalManeuver(scenarioDto, scenario, maneuvers, celestialBodies);
-    BuildOrbitalPlaneManeuver(scenarioDto, scenario, maneuvers, celestialBodies);
-    BuildPhasingManeuver(scenarioDto, scenario, maneuvers, celestialBodies);
-    BuildProgradeAttitude(scenarioDto, scenario, maneuvers);
-    BuildRetrogradeAttitude(scenarioDto, scenario, maneuvers);
-    BuildZenithAttitude(scenarioDto, scenario, maneuvers);
-    BuildNadirAttitude(scenarioDto, scenario, maneuvers);
-    BuildInstrumentPointingToAttitude(scenarioDto, scenario, maneuvers, celestialBodies);
-
-    for (auto &maneuver: maneuvers)
-    {
-        if (static_cast<size_t>(maneuver.first) >= maneuvers.size() - 1)
-        {
-            continue;
-        }
-        maneuver.second->SetNextManeuver(*maneuvers[maneuver.first + 1]);
-    }
+//    BuildPerigeeManeuver(scenarioDto, scenario, maneuvers);
+//    BuildCombinedManeuver(scenarioDto, scenario, maneuvers);
+//    BuildApsidalManeuver(scenarioDto, scenario, maneuvers, celestialBodies);
+//    BuildOrbitalPlaneManeuver(scenarioDto, scenario, maneuvers, celestialBodies);
+//    BuildPhasingManeuver(scenarioDto, scenario, maneuvers, celestialBodies);
+//    BuildProgradeAttitude(scenarioDto, scenario, maneuvers);
+//    BuildRetrogradeAttitude(scenarioDto, scenario, maneuvers);
+//    BuildZenithAttitude(scenarioDto, scenario, maneuvers);
+//    BuildNadirAttitude(scenarioDto, scenario, maneuvers);
+//    BuildInstrumentPointingToAttitude(scenarioDto, scenario, maneuvers, celestialBodies);
+//
+//    for (auto &maneuver: maneuvers)
+//    {
+//        if (static_cast<size_t>(maneuver.first) >= maneuvers.size() - 1)
+//        {
+//            continue;
+//        }
+//        maneuver.second->SetNextManeuver(*maneuvers[maneuver.first + 1]);
+//    }
 }
 
 void BuildApogeeManeuver(IO::SDK::API::DTO::ScenarioDTO &scenarioDto, IO::SDK::Scenario &scenario, std::map<int, std::shared_ptr<IO::SDK::Maneuvers::ManeuverBase>> &maneuvers)
 {
-    for (auto &maneuver: scenarioDto.spacecraft.apogeeHeightChangingManeuvers)
+    for (auto &maneuver: scenarioDto.Spacecraft.apogeeHeightChangingManeuvers)
     {
+        std::cout << "Maneuver order :" << maneuver.maneuverOrder << std::endl;
         if (maneuver.maneuverOrder == -1)
         {
             break;
@@ -300,7 +301,7 @@ void BuildApogeeManeuver(IO::SDK::API::DTO::ScenarioDTO &scenarioDto, IO::SDK::S
 
 void BuildPerigeeManeuver(IO::SDK::API::DTO::ScenarioDTO &scenarioDto, IO::SDK::Scenario &scenario, std::map<int, std::shared_ptr<IO::SDK::Maneuvers::ManeuverBase>> &maneuvers)
 {
-    for (auto &maneuver: scenarioDto.spacecraft.perigeeHeightChangingManeuvers)
+    for (auto &maneuver: scenarioDto.Spacecraft.perigeeHeightChangingManeuvers)
     {
         if (maneuver.maneuverOrder == -1)
         {
@@ -325,7 +326,7 @@ void BuildPerigeeManeuver(IO::SDK::API::DTO::ScenarioDTO &scenarioDto, IO::SDK::
 void BuildApsidalManeuver(IO::SDK::API::DTO::ScenarioDTO &scenarioDto, IO::SDK::Scenario &scenario, std::map<int, std::shared_ptr<IO::SDK::Maneuvers::ManeuverBase>> &maneuvers,
                           std::map<int, std::shared_ptr<IO::SDK::Body::CelestialBody>> &celestialBodies)
 {
-    for (auto &maneuver: scenarioDto.spacecraft.apsidalAlignmentManeuvers)
+    for (auto &maneuver: scenarioDto.Spacecraft.apsidalAlignmentManeuvers)
     {
         if (maneuver.maneuverOrder == -1)
         {
@@ -354,7 +355,7 @@ void BuildApsidalManeuver(IO::SDK::API::DTO::ScenarioDTO &scenarioDto, IO::SDK::
 
 void BuildCombinedManeuver(IO::SDK::API::DTO::ScenarioDTO &scenarioDto, IO::SDK::Scenario &scenario, std::map<int, std::shared_ptr<IO::SDK::Maneuvers::ManeuverBase>> &maneuvers)
 {
-    for (auto &maneuver: scenarioDto.spacecraft.combinedManeuvers)
+    for (auto &maneuver: scenarioDto.Spacecraft.combinedManeuvers)
     {
         if (maneuver.maneuverOrder == -1)
         {
@@ -380,7 +381,7 @@ void
 BuildOrbitalPlaneManeuver(IO::SDK::API::DTO::ScenarioDTO &scenarioDto, IO::SDK::Scenario &scenario, std::map<int, std::shared_ptr<IO::SDK::Maneuvers::ManeuverBase>> &maneuvers,
                           std::map<int, std::shared_ptr<IO::SDK::Body::CelestialBody>> &celestialBodies)
 {
-    for (auto &maneuver: scenarioDto.spacecraft.orbitalPlaneChangingManeuvers)
+    for (auto &maneuver: scenarioDto.Spacecraft.orbitalPlaneChangingManeuvers)
     {
         if (maneuver.maneuverOrder == -1)
         {
@@ -410,7 +411,7 @@ BuildOrbitalPlaneManeuver(IO::SDK::API::DTO::ScenarioDTO &scenarioDto, IO::SDK::
 void BuildPhasingManeuver(IO::SDK::API::DTO::ScenarioDTO &scenarioDto, IO::SDK::Scenario &scenario, std::map<int, std::shared_ptr<IO::SDK::Maneuvers::ManeuverBase>> &maneuvers,
                           std::map<int, std::shared_ptr<IO::SDK::Body::CelestialBody>> &celestialBodies)
 {
-    for (auto &maneuver: scenarioDto.spacecraft.phasingManeuverDto)
+    for (auto &maneuver: scenarioDto.Spacecraft.phasingManeuverDto)
     {
         if (maneuver.maneuverOrder == -1)
         {
@@ -438,7 +439,7 @@ void BuildPhasingManeuver(IO::SDK::API::DTO::ScenarioDTO &scenarioDto, IO::SDK::
 
 void BuildProgradeAttitude(IO::SDK::API::DTO::ScenarioDTO &scenarioDto, IO::SDK::Scenario &scenario, std::map<int, std::shared_ptr<IO::SDK::Maneuvers::ManeuverBase>> &maneuvers)
 {
-    for (auto &maneuver: scenarioDto.spacecraft.progradeAttitudes)
+    for (auto &maneuver: scenarioDto.Spacecraft.progradeAttitudes)
     {
         if (maneuver.maneuverOrder == -1)
         {
@@ -455,16 +456,16 @@ void BuildProgradeAttitude(IO::SDK::API::DTO::ScenarioDTO &scenarioDto, IO::SDK:
         }
         IO::SDK::Time::TDB min(std::chrono::duration<double>(maneuver.minimumEpoch));
         IO::SDK::Time::TimeSpan hold(std::chrono::duration<double>(maneuver.attitudeHoldDuration));
-        auto prop=scenario.GetPropagator();
+        auto prop = scenario.GetPropagator();
         auto mnv = std::make_shared<IO::SDK::Maneuvers::Attitudes::ProgradeAttitude>(engines, prop,
-                min, hold);
+                                                                                     min, hold);
         maneuvers[maneuver.maneuverOrder] = mnv;
     }
 }
 
 void BuildRetrogradeAttitude(IO::SDK::API::DTO::ScenarioDTO &scenarioDto, IO::SDK::Scenario &scenario, std::map<int, std::shared_ptr<IO::SDK::Maneuvers::ManeuverBase>> &maneuvers)
 {
-    for (auto &maneuver: scenarioDto.spacecraft.retrogradeAttitudes)
+    for (auto &maneuver: scenarioDto.Spacecraft.retrogradeAttitudes)
     {
         if (maneuver.maneuverOrder == -1)
         {
@@ -487,7 +488,7 @@ void BuildRetrogradeAttitude(IO::SDK::API::DTO::ScenarioDTO &scenarioDto, IO::SD
 
 void BuildNadirAttitude(IO::SDK::API::DTO::ScenarioDTO &scenarioDto, IO::SDK::Scenario &scenario, std::map<int, std::shared_ptr<IO::SDK::Maneuvers::ManeuverBase>> &maneuvers)
 {
-    for (auto &maneuver: scenarioDto.spacecraft.nadirAttitudes)
+    for (auto &maneuver: scenarioDto.Spacecraft.nadirAttitudes)
     {
         if (maneuver.maneuverOrder == -1)
         {
@@ -510,7 +511,7 @@ void BuildNadirAttitude(IO::SDK::API::DTO::ScenarioDTO &scenarioDto, IO::SDK::Sc
 
 void BuildZenithAttitude(IO::SDK::API::DTO::ScenarioDTO &scenarioDto, IO::SDK::Scenario &scenario, std::map<int, std::shared_ptr<IO::SDK::Maneuvers::ManeuverBase>> &maneuvers)
 {
-    for (auto &maneuver: scenarioDto.spacecraft.zenithAttitudes)
+    for (auto &maneuver: scenarioDto.Spacecraft.zenithAttitudes)
     {
         if (maneuver.maneuverOrder == -1)
         {

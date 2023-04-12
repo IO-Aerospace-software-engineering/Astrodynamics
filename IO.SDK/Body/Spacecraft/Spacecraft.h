@@ -85,7 +85,7 @@ namespace IO::SDK::Body::Spacecraft {
                    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParametersAtEpoch);
 
         /**
-         * Construct a new spacecraft object
+         * Construct a new Spacecraft object
          * @param id Naif identifier (must be a negative number)
          * @param name
          * @param dryOperatingMass

@@ -26,7 +26,7 @@ IO::SDK::Math::Vector3D IO::SDK::Integrators::Forces::GravityForce::Apply(const 
     IO::SDK::Math::Vector3D force{ComputeForce(stateVector.GetCenterOfMotion()->GetMass(), bodyMass, position.Magnitude(), position.Normalize())};
 
     //Each body is under sphere of influence of his major body
-    //So spacecraft is influenced by his center of motion and his parents
+    //So Spacecraft is influenced by his center of motion and his parents
     //Eg. Sun->Earth->Moon->Spacecraft
     std::shared_ptr<IO::SDK::Body::Body> currentBody = stateVector.GetCenterOfMotion();
     while (currentBody->GetOrbitalParametersAtEpoch()) {

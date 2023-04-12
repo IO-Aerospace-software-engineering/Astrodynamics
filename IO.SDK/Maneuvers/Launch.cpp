@@ -136,10 +136,10 @@ std::vector<IO::SDK::Maneuvers::LaunchWindow> IO::SDK::Maneuvers::Launch::GetLau
 
         if (sunLightWindowsOnBothSites.empty())
         {
-            throw IO::SDK::Exception::SDKException("No sun light at same time on both sites");
+            throw IO::SDK::Exception::SDKException("No sun light at same time on both Sites");
         }
 
-        //Search an orbital plane alignment with launch site during sunlight window on both sites
+        //Search an orbital plane alignment with launch site during sunlight window on both Sites
         for (auto &&sunlightWindow: sunLightWindowsOnBothSites)
         {
             auto res = FindLaunchWindows(sunlightWindow);

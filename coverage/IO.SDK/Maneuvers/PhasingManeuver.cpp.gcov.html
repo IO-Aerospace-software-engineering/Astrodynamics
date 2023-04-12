@@ -164,7 +164,7 @@
 <a name="102"><span class="lineNum">     102 </span>            : </a>
 <a name="103"><span class="lineNum">     103 </span><span class="lineCov">          6 : bool IO::SDK::Maneuvers::PhasingManeuver::IsApproachingPerigee(const IO::SDK::OrbitalParameters::StateVector &amp;stateVector) const</span></a>
 <a name="104"><span class="lineNum">     104 </span>            : {</a>
-<a name="105"><span class="lineNum">     105 </span>            :     //Angle between perigee vector and spacecraft velocity</a>
+<a name="105"><span class="lineNum">     105 </span>            :     //Angle between perigee vector and Spacecraft velocity</a>
 <a name="106"><span class="lineNum">     106 </span><span class="lineCov">          6 :     double dp = stateVector.GetPerigeeVector().DotProduct(stateVector.GetVelocity());</span></a>
 <a name="107"><span class="lineNum">     107 </span>            : </a>
 <a name="108"><span class="lineNum">     108 </span>            :     //if &lt; 90° we're in inbound sector</a>

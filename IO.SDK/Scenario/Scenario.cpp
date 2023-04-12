@@ -68,7 +68,7 @@ void IO::SDK::Scenario::AddLaunchConstraint(IO::SDK::Constraints::Parameters::La
 
 void IO::SDK::Scenario::Execute()
 {
-    // Run sites propagation
+    // Run Sites propagation
     for (auto site: m_sites)
     {
         site->BuildAndWriteEphemeris(this->m_windows);
