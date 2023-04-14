@@ -20,15 +20,18 @@
 #include <InstrumentFrameFile.h>
 
 //Forward declaration
-namespace IO::SDK::Instruments {
+namespace IO::SDK::Instruments
+{
     class Instrument;
 }
 
-namespace IO::SDK::Frames {
+namespace IO::SDK::Frames
+{
     class SpacecraftFrameFile;
 }
 
-namespace IO::SDK::Kernels {
+namespace IO::SDK::Kernels
+{
     class SpacecraftClockKernel;
 
     class OrientationKernel;
@@ -36,16 +39,17 @@ namespace IO::SDK::Kernels {
     class EphemerisKernel;
 }
 
-namespace IO::SDK::Body::Spacecraft {
+namespace IO::SDK::Body::Spacecraft
+{
     class Engine;
 
     /**
      * @brief Spacecraft class
      *
      */
-    class Spacecraft final : public Body {
+    class Spacecraft final : public Body
+    {
     private:
-        const std::string m_missionPrefix{};
         const std::string m_filesPath{};
         const std::unique_ptr<IO::SDK::Frames::SpacecraftFrameFile> m_frame;
         const std::unique_ptr<IO::SDK::Kernels::SpacecraftClockKernel> m_clockKernel;
@@ -76,12 +80,12 @@ namespace IO::SDK::Body::Spacecraft {
          * @param name
          * @param dryOperatingMass
          * @param maximumOperatingMass
-         * @param missionPrefix
+         * @param directoryPath
          * @param orbitalParametersAtEpoch
          * @param attitudeAtEpoch
          */
         Spacecraft(int id, const std::string &name, double dryOperatingMass, double maximumOperatingMass,
-                   const std::string &missionPrefix,
+                   const std::string &directoryPath,
                    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParametersAtEpoch);
 
         /**
@@ -90,13 +94,13 @@ namespace IO::SDK::Body::Spacecraft {
          * @param name
          * @param dryOperatingMass
          * @param maximumOperatingMass
-         * @param missionPrefix Mission name
+         * @param directoryPath Mission name
          * @param orbitalParametersAtEpoch Original orbital parameters
          * @param front Front vector relative to ICRF
          * @param top Top vector relative to ICRF
          */
         Spacecraft(int id, const std::string &name, double dryOperatingMass, double maximumOperatingMass,
-                   const std::string &missionPrefix,
+                   std::string directoryPath,
                    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParametersAtEpoch, const IO::SDK::Math::Vector3D &front,
                    const IO::SDK::Math::Vector3D &top);
 
@@ -105,18 +109,12 @@ namespace IO::SDK::Body::Spacecraft {
         ~Spacecraft() override = default;
 
         /**
-         * @brief Get the Mission Prefix object
-         *
-         * @return std::string
-         */
-        std::string GetMissionPrefix() const;
-
-        /**
          * @brief Get the Files Path object
          *
          * @return std::string
          */
-        std::string GetFilesPath() const;
+        inline std::string GetFilesPath() const
+        { return m_filesPath; }
 
         /**
          * @brief
@@ -343,7 +341,8 @@ namespace IO::SDK::Body::Spacecraft {
          */
         const std::unique_ptr<IO::SDK::Frames::SpacecraftFrameFile> &GetFrame() const;
 
-        inline double GetMaximumOperatingMass() { return m_maximumOperatingMass; }
+        inline double GetMaximumOperatingMass()
+        { return m_maximumOperatingMass; }
     };
 }
 

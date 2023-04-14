@@ -14,7 +14,7 @@ namespace IO::SDK::API::DTO
     struct PhasingManeuverDTO
     {
         int maneuverOrder{-1};
-        char *engines[10]{};
+        char *engines[5]{};
         double attitudeHoldDuration{0.0};
         double minimumEpoch{0.0};
 

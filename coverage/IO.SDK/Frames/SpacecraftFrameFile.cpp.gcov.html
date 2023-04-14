@@ -77,7 +77,7 @@
 <a name="15"><span class="lineNum">      15 </span>            : #include &lt;fstream&gt;</a>
 <a name="16"><span class="lineNum">      16 </span>            : #include &lt;filesystem&gt;</a>
 <a name="17"><span class="lineNum">      17 </span>            : </a>
-<a name="18"><span class="lineNum">      18 </span><span class="lineCov">        114 : IO::SDK::Frames::SpacecraftFrameFile::SpacecraftFrameFile(const IO::SDK::Body::Spacecraft::Spacecraft &amp;Spacecraft) : FrameFile(Spacecraft.GetFilesPath() + &quot;/Frames/&quot; + Spacecraft.GetName() + &quot;.tf&quot;, Spacecraft.GetName()), m_id{Spacecraft.GetId() * 1000}, m_spacecraft{Spacecraft}</span></a>
+<a name="18"><span class="lineNum">      18 </span><span class="lineCov">        114 : IO::SDK::Frames::SpacecraftFrameFile::SpacecraftFrameFile(const IO::SDK::Body::Spacecraft::Spacecraft &amp;Spacecraft) : FrameFile(Spacecraft.GetDirectoryPath() + &quot;/Frames/&quot; + Spacecraft.GetName() + &quot;.tf&quot;, Spacecraft.GetName()), m_id{Spacecraft.GetId() * 1000}, m_spacecraft{Spacecraft}</span></a>
 <a name="19"><span class="lineNum">      19 </span>            : {</a>
 <a name="20"><span class="lineNum">      20 </span><span class="lineCov">        114 :         if (!m_fileExists)</span></a>
 <a name="21"><span class="lineNum">      21 </span>            :         {</a>

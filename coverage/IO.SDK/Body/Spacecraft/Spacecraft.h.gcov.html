@@ -124,7 +124,7 @@
 <a name="62"><span class="lineNum">      62 </span>            :         {</a>
 <a name="63"><span class="lineNum">      63 </span>            :         private:</a>
 <a name="64"><span class="lineNum">      64 </span>            :                 const std::string m_missionPrefix{};</a>
-<a name="65"><span class="lineNum">      65 </span>            :                 const std::string m_filesPath{};</a>
+<a name="65"><span class="lineNum">      65 </span>            :                 const std::string m_directoryPath{};</a>
 <a name="66"><span class="lineNum">      66 </span>            :                 const std::unique_ptr&lt;IO::SDK::Frames::SpacecraftFrameFile&gt; m_frame;</a>
 <a name="67"><span class="lineNum">      67 </span>            :                 const std::unique_ptr&lt;IO::SDK::Kernels::SpacecraftClockKernel&gt; m_clockKernel;</a>
 <a name="68"><span class="lineNum">      68 </span>            :                 const std::unique_ptr&lt;IO::SDK::Kernels::OrientationKernel&gt; m_orientationKernel;</a>
@@ -169,7 +169,7 @@
 <a name="107"><span class="lineNum">     107 </span>            :                  * </a>
 <a name="108"><span class="lineNum">     108 </span>            :                  * @return std::string </a>
 <a name="109"><span class="lineNum">     109 </span>            :                  */</a>
-<a name="110"><span class="lineNum">     110 </span>            :                 std::string GetFilesPath() const;</a>
+<a name="110"><span class="lineNum">     110 </span>            :                 std::string GetDirectoryPath() const;</a>
 <a name="111"><span class="lineNum">     111 </span>            : </a>
 <a name="112"><span class="lineNum">     112 </span>            :                 /**</a>
 <a name="113"><span class="lineNum">     113 </span>            :                  * @brief </a>

@@ -1,13 +1,14 @@
 #include<gtest/gtest.h>
 #include<ScenarioDTO.h>
 #include <Proxy.h>
+#include "TestParameters.h"
 
 TEST(API, DTOSize)
 {
 //    auto size= sizeof(IO::SDK::API::DTO::ApogeeHeightChangingManeuverDTO);
 //    ASSERT_EQ(2160664,size);
     auto size2 = sizeof(IO::SDK::API::DTO::ScenarioDTO);
-    ASSERT_EQ(814712, size2);
+    ASSERT_EQ(810776, size2);
 }
 
 TEST(API, BuildScenarioAttitutesWithoutException)
@@ -16,7 +17,7 @@ TEST(API, BuildScenarioAttitutesWithoutException)
     scenario.CelestialBodies[0].id = 399;
     scenario.CelestialBodies[0].centerOfMotionId = 10;
     scenario.CelestialBodies[1].id = 10;
-    scenario.Name = "titi";
+    scenario.Name = std::string(SpacecraftPath).data();
     scenario.Window.start = 10.0;
     scenario.Window.end = 20.0;
     scenario.Spacecraft.id = -1111;
@@ -76,7 +77,7 @@ TEST(API, BuildScenarioManeuverWithoutException)
     scenario.CelestialBodies[0].id = 399;
     scenario.CelestialBodies[0].centerOfMotionId = 10;
     scenario.CelestialBodies[1].id = 10;
-    scenario.Name = "titi";
+    scenario.Name = std::string(SpacecraftPath).data();
     scenario.Window.start = 10.0;
     scenario.Window.end = 20.0;
     scenario.Spacecraft.id = -1111;

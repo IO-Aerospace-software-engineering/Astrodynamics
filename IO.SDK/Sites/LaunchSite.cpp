@@ -12,9 +12,10 @@
 #include <iterator>
 #include <LaunchSite.h>
 #include <algorithm>
+#include <utility>
 
-IO::SDK::Sites::LaunchSite::LaunchSite(const int id, const std::string &name, const IO::SDK::Coordinates::Geodetic& coordinates,
-                                       std::shared_ptr<IO::SDK::Body::CelestialBody> body) : Site(id, name, coordinates, body)
+IO::SDK::Sites::LaunchSite::LaunchSite(const int id, const std::string &name, const IO::SDK::Coordinates::Geodetic &coordinates,
+                                       std::shared_ptr<IO::SDK::Body::CelestialBody> body, std::string directoryPath) : Site(id, name, coordinates, body, std::move(directoryPath))
 {
 }
 

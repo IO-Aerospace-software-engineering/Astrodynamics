@@ -1,5 +1,5 @@
 /**
- * @file SolarSystemKernelsLoader.h
+ * @file GenericKernelsLoader.h
  * @author Sylvain Guillet (sylvain.guillet@live.com)
  * @brief 
  * @version 0.x
@@ -11,22 +11,19 @@
 #ifndef SOLAR_SYSTEM_KERNELS_H
 #define SOLAR_SYSTEM_KERNELS_H
 
+#include <string>
+
 namespace IO::SDK::Kernels
 {
 	/**
 	 * @brief 
 	 * 
 	 */
-	class SolarSystemKernelsLoader final
+	class GenericKernelsLoader final
 	{
+    public :
+        static void Load(const std::string& directoryPath);
 	private:
-		static SolarSystemKernelsLoader m_instance;
-
-		/**
-		 * @brief Construct a new Solar System Kernels Loader object
-		 *
-		 */
-		SolarSystemKernelsLoader();
 	};
 }
 

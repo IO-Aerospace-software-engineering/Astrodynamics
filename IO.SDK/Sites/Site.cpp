@@ -13,25 +13,28 @@
 #include <Builder.h>
 #include <Parameters.h>
 #include <Constants.h>
+
+#include <utility>
 #include "CoordinateSystem.h"
 #include "Coordinate.h"
 #include "InertialFrames.h"
 
 using namespace std::chrono_literals;
 
-IO::SDK::Sites::Site::Site(const int id, const std::string &name, const IO::SDK::Coordinates::Geodetic &coordinates,
-                           std::shared_ptr<IO::SDK::Body::CelestialBody> &body) : m_id{id},
-                                                                                  m_name{name},
-                                                                                  m_coordinates{coordinates},
-                                                                                  m_filePath{std::string(IO::SDK::Parameters::SitePath) + "/" + name},
-                                                                                  m_ephemerisKernel{std::make_unique<IO::SDK::Kernels::EphemerisKernel>(m_filePath + "/Ephemeris/" + name + ".spk", this->m_id)},
-                                                                                  m_body{body},
-                                                                                  m_frame{std::make_unique<IO::SDK::Frames::SiteFrameFile>(*this)}
+IO::SDK::Sites::Site::Site(const int id, std::string name, const IO::SDK::Coordinates::Geodetic &coordinates,
+                           std::shared_ptr<IO::SDK::Body::CelestialBody> &body, std::string directoryPath) : m_id{id},
+                                                                                                             m_name{std::move(name)},
+                                                                                                             m_coordinates{coordinates},
+                                                                                                             m_filesPath{std::move(directoryPath) + "/" + m_name},
+                                                                                                             m_ephemerisKernel{std::make_unique<IO::SDK::Kernels::EphemerisKernel>(
+                                                                                                                     m_filesPath + "/Ephemeris/" + m_name + ".spk", this->m_id)},
+                                                                                                             m_body{body},
+                                                                                                             m_frame{std::make_unique<IO::SDK::Frames::SiteFrameFile>(*this)}
 {
 }
 
 IO::SDK::OrbitalParameters::StateVector
-IO::SDK::Sites::Site::GetStateVector(const IO::SDK::Frames::Frames& frame, const IO::SDK::Time::TDB &epoch) const
+IO::SDK::Sites::Site::GetStateVector(const IO::SDK::Frames::Frames &frame, const IO::SDK::Time::TDB &epoch) const
 {
     auto radius = m_body->GetRadius() * 1000.0;
     SpiceDouble bodyFixedLocation[3];
@@ -179,7 +182,7 @@ IO::SDK::Coordinates::HorizontalCoordinates IO::SDK::Sites::Site::GetHorizontalC
 }
 
 IO::SDK::OrbitalParameters::StateVector
-IO::SDK::Sites::Site::GetStateVector(const IO::SDK::Body::Body &body, const IO::SDK::Frames::Frames& frame,
+IO::SDK::Sites::Site::GetStateVector(const IO::SDK::Body::Body &body, const IO::SDK::Frames::Frames &frame,
                                      IO::SDK::AberrationsEnum aberrationCorrection,
                                      const IO::SDK::Time::TDB &epoch) const
 {

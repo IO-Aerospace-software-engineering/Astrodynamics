@@ -37,7 +37,7 @@ namespace IO::SDK::Sites
         const int m_id;
         const std::string m_name;
         const IO::SDK::Coordinates::Geodetic m_coordinates;
-        const std::string m_filePath;
+        const std::string m_filesPath;
         const std::unique_ptr<IO::SDK::Kernels::EphemerisKernel> m_ephemerisKernel;
 
         const std::shared_ptr<IO::SDK::Body::CelestialBody> m_body;
@@ -55,8 +55,8 @@ namespace IO::SDK::Sites
          * @param name 
          * @param coordinates 
          */
-        Site(int id, const std::string &name, const IO::SDK::Coordinates::Geodetic &coordinates,
-             std::shared_ptr<IO::SDK::Body::CelestialBody> &body);
+        Site(int id, std::string name, const IO::SDK::Coordinates::Geodetic &coordinates,
+             std::shared_ptr<IO::SDK::Body::CelestialBody> &body, std::string directoryPath);
 
         virtual ~Site() = default;
 
@@ -208,7 +208,7 @@ namespace IO::SDK::Sites
          * @return
          */
         [[nodiscard]] inline std::string GetFilesPath() const
-        { return m_filePath; }
+        { return m_filesPath; }
 
 
 

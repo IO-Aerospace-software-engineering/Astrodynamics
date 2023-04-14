@@ -20,9 +20,7 @@ using namespace std::chrono_literals;
 
 namespace IO::SDK::Parameters
 {
-    inline constexpr std::string_view SpacecraftPath = "Data/User/Spacecrafts";
-    inline constexpr std::string_view SolarSystemKernelPath = "Data/SolarSystem";
-    inline constexpr std::string_view SitePath = "Data/User/Sites";
+
     inline constexpr int CommentAreaSize = 5000;
     inline constexpr int MaximumEphemerisLagrangePolynomialDegreeEvenSpaced = 27;//[1-27]
     inline constexpr int MaximumEphemerisLagrangePolynomialDegree = 15;//[1-27]

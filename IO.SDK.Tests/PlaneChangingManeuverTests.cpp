@@ -16,6 +16,7 @@
 #include <memory>
 #include <iostream>
 #include "InertialFrames.h"
+#include "TestParameters.h"
 
 using namespace std::chrono_literals;
 
@@ -39,7 +40,7 @@ TEST(PlaneChangingManeuver, CanExecute)
                                                                                                                                                        IO::SDK::Time::TDB(0.0s),
                                                                                                                                                        IO::SDK::Frames::InertialFrames::GetICRF());
     IO::SDK::OrbitalParameters::StateOrientation attitude(IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::GetICRF());
-    IO::SDK::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, "ms01", std::move(orbitalParams1)};
+    IO::SDK::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams1)};
 
     IO::SDK::Integrators::VVIntegrator integrator(IO::SDK::Time::TimeSpan(1.0s));
     IO::SDK::Propagators::Propagator prop(s, integrator, IO::SDK::Time::Window(IO::SDK::Time::TDB(100.0s), IO::SDK::Time::TDB(200.0s)));
@@ -120,7 +121,7 @@ TEST(PlaneChangingManeuver, CanExecute)
 //     std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams1 = std::make_unique<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth, 11480000.0, 0.2, 60.0 * IO::SDK::Constants::DEG_RAD, 10.0 * IO::SDK::Constants::DEG_RAD, 0.0, 0.0, IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::GetICRF());
 //     std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams2 = std::make_unique<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth, 11480000.0, 0.2, 45.0 * IO::SDK::Constants::DEG_RAD, 55.0 * IO::SDK::Constants::DEG_RAD, 0.0, 0.0, IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::GetICRF());
 //     IO::SDK::OrbitalParameters::StateOrientation attitude(IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::GetICRF());
-//     IO::SDK::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, "ms01", std::move(orbitalParams1)};
+//     IO::SDK::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams1)};
 
 //     IO::SDK::Integrators::VVIntegrator integrator(IO::SDK::Time::TimeSpan(1.0s));
 //     IO::SDK::Propagators::Propagator prop(s, integrator, IO::SDK::Time::Window(IO::SDK::Time::TDB(100.0s), IO::SDK::Time::TDB(200.0s)));
@@ -149,7 +150,7 @@ TEST(PlaneChangingManeuver, CanExecute)
 //     std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams1 = std::make_unique<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth, 11480000.0, 0.2, 60.0 * IO::SDK::Constants::DEG_RAD, 220.0 * IO::SDK::Constants::DEG_RAD, 0.0, 0.0, IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::GetICRF());
 //     std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams2 = std::make_unique<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth, 11480000.0, 0.2, 130.0 * IO::SDK::Constants::DEG_RAD, 55.0 * IO::SDK::Constants::DEG_RAD, 0.0, 0.0, IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::GetICRF());
 //     IO::SDK::OrbitalParameters::StateOrientation attitude(IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::GetICRF());
-//     IO::SDK::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, "ms01", std::move(orbitalParams1)};
+//     IO::SDK::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams1)};
 
 //     IO::SDK::Integrators::VVIntegrator integrator(IO::SDK::Time::TimeSpan(1.0s));
 //     IO::SDK::Propagators::Propagator prop(s, integrator, IO::SDK::Time::Window(IO::SDK::Time::TDB(100.0s), IO::SDK::Time::TDB(200.0s)));
@@ -178,7 +179,7 @@ TEST(PlaneChangingManeuver, CanExecute)
 //     std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams1 = std::make_unique<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth, 11480000.0, 0.2, 140.0 * IO::SDK::Constants::DEG_RAD, 220.0 * IO::SDK::Constants::DEG_RAD, 70.0 * IO::SDK::Constants::DEG_RAD, 0.0, IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::GetICRF());
 //     std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams2 = std::make_unique<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth, 11480000.0, 0.2, 130.0 * IO::SDK::Constants::DEG_RAD, 300.0 * IO::SDK::Constants::DEG_RAD, 205.0 * IO::SDK::Constants::DEG_RAD, 0.0, IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::GetICRF());
 //     IO::SDK::OrbitalParameters::StateOrientation attitude(IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::GetICRF());
-//     IO::SDK::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, "ms01", std::move(orbitalParams1)};
+//     IO::SDK::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams1)};
 
 //     IO::SDK::Integrators::VVIntegrator integrator(IO::SDK::Time::TimeSpan(1.0s));
 //     IO::SDK::Propagators::Propagator prop(s, integrator, IO::SDK::Time::Window(IO::SDK::Time::TDB(100.0s), IO::SDK::Time::TDB(200.0s)));
@@ -222,7 +223,7 @@ TEST(PlaneChangingManeuver, ExecuteInsuffisantDeltaV)
                                                                                                                                                        IO::SDK::Time::TDB(0.0s),
                                                                                                                                                        IO::SDK::Frames::InertialFrames::GetICRF());
     IO::SDK::OrbitalParameters::StateOrientation attitude(IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::GetICRF());
-    IO::SDK::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, "ms01", std::move(orbitalParams1)};
+    IO::SDK::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams1)};
 
     IO::SDK::Integrators::VVIntegrator integrator(IO::SDK::Time::TimeSpan(1.0s));
     IO::SDK::Propagators::Propagator prop(s, integrator, IO::SDK::Time::Window(IO::SDK::Time::TDB(100.0s), IO::SDK::Time::TDB(200.0s)));
@@ -276,7 +277,7 @@ TEST(PlaneChangingManeuver, ExecuteDN)
                                                                                                                                                        IO::SDK::Time::TDB(0.0s),
                                                                                                                                                        IO::SDK::Frames::InertialFrames::GetICRF());
     IO::SDK::OrbitalParameters::StateOrientation attitude(IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::GetICRF());
-    IO::SDK::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, "ms01", std::move(orbitalParams1)};
+    IO::SDK::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams1)};
 
     IO::SDK::Integrators::VVIntegrator integrator(IO::SDK::Time::TimeSpan(1.0s));
     IO::SDK::Propagators::Propagator prop(s, integrator, IO::SDK::Time::Window(IO::SDK::Time::TDB(100.0s), IO::SDK::Time::TDB(200.0s)));
@@ -354,7 +355,7 @@ TEST(PlaneChangingManeuver, ExecuteAN)
                                                                                                                                                        IO::SDK::Time::TDB(0.0s),
                                                                                                                                                        IO::SDK::Frames::InertialFrames::GetICRF());
     IO::SDK::OrbitalParameters::StateOrientation attitude(IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::GetICRF());
-    IO::SDK::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, "ms01", std::move(orbitalParams1)};
+    IO::SDK::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams1)};
 
     IO::SDK::Integrators::VVIntegrator integrator(IO::SDK::Time::TimeSpan(1.0s));
     IO::SDK::Propagators::Propagator prop(s, integrator, IO::SDK::Time::Window(IO::SDK::Time::TDB(100.0s), IO::SDK::Time::TDB(200.0s)));
@@ -438,7 +439,7 @@ TEST(PlaneChangingManeuver, CheckOrbitalParametersToHigherInclination)
     //===================Compute maneuvers to reach target body================================
 
     //Configure Spacecraft
-    IO::SDK::Body::Spacecraft::Spacecraft spacecraft{-1, "MySpacecraft", 1000.0, 3000.0, "mission01",
+    IO::SDK::Body::Spacecraft::Spacecraft spacecraft{-1, "MySpacecraft", 1000.0, 3000.0, std::string(SpacecraftPath),
                                                      std::make_unique<IO::SDK::OrbitalParameters::ConicOrbitalElements>(*parkingOrbit)};
     spacecraft.AddFuelTank("fuelTank1", 2000.0, 1000.0);
     spacecraft.AddEngine("serialNumber1", "engine1", "fuelTank1", {1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}, 450.0, 50.0);
@@ -527,7 +528,7 @@ TEST(PlaneChangingManeuver, CheckOrbitalParametersToLowerInclination)
     //===================Compute maneuvers to reach target body================================
 
     //Configure Spacecraft
-    IO::SDK::Body::Spacecraft::Spacecraft spacecraft{-1, "MySpacecraft", 1000.0, 3000.0, "mission01",
+    IO::SDK::Body::Spacecraft::Spacecraft spacecraft{-1, "MySpacecraft", 1000.0, 3000.0, std::string(SpacecraftPath),
                                                      std::make_unique<IO::SDK::OrbitalParameters::ConicOrbitalElements>(*parkingOrbit)};
     spacecraft.AddFuelTank("fuelTank1", 2000.0, 1000.0);
     spacecraft.AddEngine("serialNumber1", "engine1", "fuelTank1", {1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}, 450.0, 50.0);

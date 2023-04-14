@@ -114,7 +114,7 @@
 <a name="52"><span class="lineNum">      52 </span>            :                 const IO::SDK::Body::Spacecraft::Spacecraft &amp;m_spacecraft;</a>
 <a name="53"><span class="lineNum">      53 </span>            :                 const int m_id{};</a>
 <a name="54"><span class="lineNum">      54 </span>            :                 const std::string m_name;</a>
-<a name="55"><span class="lineNum">      55 </span>            :                 const std::string m_filesPath;</a>
+<a name="55"><span class="lineNum">      55 </span>            :                 const std::string m_directoryPath;</a>
 <a name="56"><span class="lineNum">      56 </span>            :                 const std::unique_ptr&lt;IO::SDK::Frames::InstrumentFrameFile&gt; m_frame{nullptr};</a>
 <a name="57"><span class="lineNum">      57 </span>            :                 const IO::SDK::Math::Vector3D m_orientation{};</a>
 <a name="58"><span class="lineNum">      58 </span>            :                 const IO::SDK::Instruments::FOVShapeEnum m_fovShape{};</a>
@@ -160,7 +160,7 @@
 <a name="98"><span class="lineNum">      98 </span>            :                  * </a>
 <a name="99"><span class="lineNum">      99 </span>            :                  * @return std::string </a>
 <a name="100"><span class="lineNum">     100 </span>            :                  */</a>
-<a name="101"><span class="lineNum">     101 </span>            :                 std::string GetFilesPath() const;</a>
+<a name="101"><span class="lineNum">     101 </span>            :                 std::string GetDirectoryPath() const;</a>
 <a name="102"><span class="lineNum">     102 </span>            : </a>
 <a name="103"><span class="lineNum">     103 </span>            :                 /**</a>
 <a name="104"><span class="lineNum">     104 </span>            :                  * @brief Get the Name object</a>

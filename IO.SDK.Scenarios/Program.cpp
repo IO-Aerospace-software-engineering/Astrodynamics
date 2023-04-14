@@ -1,33 +1,21 @@
-#include <memory>
-#include <string>
 #include <iostream>
-#include <chrono>
-#include <vector>
-
-#include <CelestialBody.h>
-#include <LaunchSite.h>
-#include <OrbitalParameters.h>
-#include <Spacecraft.h>
-#include <StateVector.h>
 #include <TLE.h>
 #include <Launch.h>
-#include <LaunchWindow.h>
-#include <Window.h>
-#include <UTC.h>
-#include <TDB.h>
-#include <Propagator.h>
-#include <VVIntegrator.h>
 #include <OrbitalPlaneChangingManeuver.h>
 #include <ApogeeHeightChangingManeuver.h>
 #include <ApsidalAlignmentManeuver.h>
 #include <PhasingManeuver.h>
-#include <DataPoolMonitoring.h>
 #include <Scenario.h>
 #include "InertialFrames.h"
+#include <GenericKernelsLoader.h>
 
 using namespace std::literals::chrono_literals;
 
-void DisplayManeuverSummary(IO::SDK::Maneuvers::ManeuverBase *maneuver, const std::string title)
+inline constexpr std::string_view SpacecraftPath = "Data/User/Spacecrafts";
+inline constexpr std::string_view SolarSystemKernelPath = "Data/SolarSystem";
+inline constexpr std::string_view SitePath = "Data/User/Sites";
+
+void DisplayManeuverSummary(IO::SDK::Maneuvers::ManeuverBase *maneuver, const std::string& title)
 {
     std::cout << "======================================== " << title << " ========================================" << std::endl;
     std::cout << "Maneuver window : " << maneuver->GetManeuverWindow()->GetStartDate().ToString() << " => " << maneuver->GetManeuverWindow()->GetEndDate().ToString() << std::endl;
@@ -60,10 +48,10 @@ void DisplayOccultations(const std::vector<IO::SDK::Time::Window<IO::SDK::Time::
     std::cout << "========================================"
               << " Sun occultations from chaser Spacecraft"
               << " ========================================" << std::endl;
-    for (size_t i = 0; i < occultations.size(); i++)
+    for (const auto & occultation : occultations)
     {
-        std::cout << "Occulation start at :" << occultations[i].GetStartDate().ToString().c_str() << std::endl;
-        std::cout << "Occulation end at :" << occultations[i].GetEndDate().ToString().c_str() << std::endl;
+        std::cout << "Occulation start at :" << occultation.GetStartDate().ToString().c_str() << std::endl;
+        std::cout << "Occulation end at :" << occultation.GetEndDate().ToString().c_str() << std::endl;
         std::cout << std::endl;
     }
 }
@@ -73,10 +61,10 @@ void DisplayInsight(const std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>>
     std::cout << "========================================"
               << " Windows when the moon is in camera's field of view"
               << " ========================================" << std::endl;
-    for (size_t i = 0; i < windows.size(); i++)
+    for (const auto & window : windows)
     {
-        std::cout << "Opportunity start at :" << windows[i].GetStartDate().ToString().c_str() << std::endl;
-        std::cout << "Opportunity end at :" << windows[i].GetEndDate().ToString().c_str() << std::endl;
+        std::cout << "Opportunity start at :" << window.GetStartDate().ToString().c_str() << std::endl;
+        std::cout << "Opportunity end at :" << window.GetEndDate().ToString().c_str() << std::endl;
         std::cout << std::endl;
     }
 }
@@ -90,6 +78,10 @@ int main()
     For each maneuver you will obtain the maneuver window, the thrust window, Delta V, Spacecraft or satellite orientation and mass of fuel burned.
     We also get sun occultations and windows when the moon will be in camera's field of view
     */
+
+    //Load generic kernel (leap second, barycenters, major bodies,...)
+    IO::SDK::Kernels::GenericKernelsLoader::Load(std::string(SolarSystemKernelPath));
+
     IO::SDK::Time::TDB startEpoch("2021-03-02T00:00:00");
     IO::SDK::Time::TDB endEpoch("2021-03-05T00:00:00");
     IO::SDK::Scenario scenario("scenario1", IO::SDK::Time::Window<IO::SDK::Time::UTC>(startEpoch.ToUTC(), endEpoch.ToUTC()));
@@ -104,10 +96,10 @@ int main()
     //Define launch site and recovery site
     auto launchSite = std::make_shared<IO::SDK::Sites::LaunchSite>(3, "S3",
                                                                    IO::SDK::Coordinates::Geodetic(-81.0 * IO::SDK::Constants::DEG_RAD, 28.5 * IO::SDK::Constants::DEG_RAD, 0.0),
-                                                                   earth);
+                                                                   earth, std::string(SitePath));
     auto recoverySite = std::make_shared<IO::SDK::Sites::Site>(4, "S4",
-                                                                     IO::SDK::Coordinates::Geodetic(-80.0 * IO::SDK::Constants::DEG_RAD, 28.5 * IO::SDK::Constants::DEG_RAD, 0.0),
-                                                                     earth);
+                                                               IO::SDK::Coordinates::Geodetic(-80.0 * IO::SDK::Constants::DEG_RAD, 28.5 * IO::SDK::Constants::DEG_RAD, 0.0),
+                                                               earth, std::string(SitePath));
 
     //Define simulation window. (Warning : When Spacecraft is involved, dates must be greater than 2021-01-01 to be compliant with Spacecraft clock)
 
@@ -133,6 +125,8 @@ int main()
                                                                                           startEpoch,
                                                                                           IO::SDK::Frames::InertialFrames::GetICRF());
 
+    auto pk = parkingOrbit->GetStateVector();
+    auto tb = targetOrbit->GetStateVector();
     //Compute launch windows, to launch by day on launch site and recovery site when the launch site crosses the parking orbital plane
     IO::SDK::Maneuvers::Launch launch(*launchSite, *recoverySite, true, *parkingOrbit);
     auto launchWindows = launch.GetLaunchWindows(IO::SDK::Time::Window<IO::SDK::Time::UTC>(startEpoch.ToUTC(), endEpoch.ToUTC()));
@@ -185,8 +179,8 @@ int main()
 
     //We define which engines can be used to realize maneuvers
     auto engine1 = spacecraft.GetEngine("serialNumber1");
-    std::vector<IO::SDK::Body::Spacecraft::Engine*> engines;
-    engines.push_back(const_cast<IO::SDK::Body::Spacecraft::Engine*>(engine1));
+    std::vector<IO::SDK::Body::Spacecraft::Engine *> engines;
+    engines.push_back(const_cast<IO::SDK::Body::Spacecraft::Engine *>(engine1));
 
     //We configure each maneuver
     IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver planeAlignment(engines, propagator, targetOrbit,

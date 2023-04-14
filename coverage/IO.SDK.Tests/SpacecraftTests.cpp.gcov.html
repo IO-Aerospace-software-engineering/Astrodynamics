@@ -80,7 +80,7 @@
 <a name="18"><span class="lineNum">      18 </span><span class="lineCov">          1 :         ASSERT_EQ(-1, spc.GetId());</span></a>
 <a name="19"><span class="lineNum">      19 </span><span class="lineCov">          2 :         ASSERT_STREQ(&quot;SPACECRAFT1&quot;, spc.GetName().c_str());</span></a>
 <a name="20"><span class="lineNum">      20 </span><span class="lineCov">          2 :         ASSERT_STREQ(&quot;MISSION1&quot;, spc.GetMissionPrefix().c_str());</span></a>
-<a name="21"><span class="lineNum">      21 </span><span class="lineCov">          2 :         ASSERT_STREQ(&quot;Data/SPACECRAFT1_MISSION1&quot;, spc.GetFilesPath().c_str());</span></a>
+<a name="21"><span class="lineNum">      21 </span><span class="lineCov">          2 :         ASSERT_STREQ(&quot;Data/SPACECRAFT1_MISSION1&quot;, spc.GetDirectoryPath().c_str());</span></a>
 <a name="22"><span class="lineNum">      22 </span><span class="lineCov">          1 :         ASSERT_DOUBLE_EQ(1000.0, spc.GetMass());</span></a>
 <a name="23"><span class="lineNum">      23 </span><span class="lineCov">          1 :         ASSERT_DOUBLE_EQ(0.000000066743, spc.GetMu());</span></a>
 <a name="24"><span class="lineNum">      24 </span>            : }</a>

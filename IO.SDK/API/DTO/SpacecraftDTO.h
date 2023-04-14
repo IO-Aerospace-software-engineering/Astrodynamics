@@ -29,6 +29,7 @@ namespace IO::SDK::API::DTO
         double dryOperatingMass{};
         double maximumOperatingMass{};
         StateVectorDTO initialOrbitalParameter;
+        const char *directoryPath{};
 
         FuelTankDTO fuelTank[5]{};
         EngineDTO engines[5]{};
@@ -49,7 +50,6 @@ namespace IO::SDK::API::DTO
         CombinedManeuverDTO combinedManeuvers[10];
         ApsidalAlignmentManeuverDTO apsidalAlignmentManeuvers[10];
         PhasingManeuverDTO phasingManeuverDto[10];
-        LaunchDTO launches;
 
         //Spacecraft states
         StateVectorDTO stateVectors[10000];

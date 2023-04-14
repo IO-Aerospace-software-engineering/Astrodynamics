@@ -15,6 +15,7 @@
 #include <ConicOrbitalElements.h>
 #include <EquinoctialElements.h>
 #include <ApogeeHeightChangingManeuver.h>
+#include "TestParameters.h"
 
 using namespace std::chrono_literals;
 
@@ -24,7 +25,7 @@ TEST(PhasingManeuver, CanExecute)
     std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams1 = std::make_unique<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth, 6800000.0, 0.5, 0.0, 0.0, 0.0, 0.0, IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::GetICRF());
     std::shared_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams2 = std::make_shared<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth, 6800000.0, 0.5, 0.0, 0.0, 30.0 * IO::SDK::Constants::DEG_RAD, 0.0, IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::GetICRF());
 
-    IO::SDK::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, "ms01", std::move(orbitalParams1)};
+    IO::SDK::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams1)};
 
     IO::SDK::Integrators::VVIntegrator integrator(IO::SDK::Time::TimeSpan(1.0s));
     IO::SDK::Propagators::Propagator prop(s, integrator, IO::SDK::Time::Window(IO::SDK::Time::TDB(100.0s), IO::SDK::Time::TDB(200.0s)));
@@ -62,7 +63,7 @@ TEST(PhasingManeuver, TryExecuteOnGeostationary)
     std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams1 = std::make_unique<IO::SDK::OrbitalParameters::EquinoctialElements>(earth, 42164000.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -IO::SDK::Constants::PI2, IO::SDK::Constants::PI2, IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::GetICRF());
     std::shared_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams2 = std::make_shared<IO::SDK::OrbitalParameters::EquinoctialElements>(earth, 42164000.0, 0.0, 0.0, 0.0, 0.0, 345.0 * IO::SDK::Constants::DEG_RAD, 0.0, 0.0, -IO::SDK::Constants::PI2, IO::SDK::Constants::PI2, IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::GetICRF());
 
-    IO::SDK::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, "ms01", std::move(orbitalParams1)};
+    IO::SDK::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams1)};
 
     IO::SDK::Integrators::VVIntegrator integrator(IO::SDK::Time::TimeSpan(1.0s));
     IO::SDK::Propagators::Propagator prop(s, integrator, IO::SDK::Time::Window(IO::SDK::Time::TDB(100.0s), IO::SDK::Time::TDB(200.0s)));
@@ -124,7 +125,7 @@ TEST(PhasingManeuver, CheckOrbitalParameters)
     std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams1 = std::make_unique<IO::SDK::OrbitalParameters::EquinoctialElements>(earth, 42164000.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -IO::SDK::Constants::PI2, IO::SDK::Constants::PI2, startEpoch, IO::SDK::Frames::InertialFrames::GetICRF());
     std::shared_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams2 = std::make_shared<IO::SDK::OrbitalParameters::EquinoctialElements>(earth, 42164000.0, 0.0, 0.0, 0.0, 0.0, 345.0 * IO::SDK::Constants::DEG_RAD, 0.0, 0.0, -IO::SDK::Constants::PI2, IO::SDK::Constants::PI2, startEpoch, IO::SDK::Frames::InertialFrames::GetICRF());
 
-    IO::SDK::Body::Spacecraft::Spacecraft s{-189, "189test", 1000.0, 3000.0, "ms0189", std::move(orbitalParams1)};
+    IO::SDK::Body::Spacecraft::Spacecraft s{-189, "189test", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams1)};
 
     //Add gravity to forces model
     std::vector<IO::SDK::Integrators::Forces::Force *> forces{};

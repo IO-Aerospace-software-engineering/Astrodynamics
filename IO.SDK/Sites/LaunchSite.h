@@ -35,7 +35,7 @@ namespace IO::SDK::Sites
          * @param body 
          */
         LaunchSite(int id, const std::string& name, const IO::SDK::Coordinates::Geodetic& coordinates,
-                   std::shared_ptr<IO::SDK::Body::CelestialBody> body);
+                   std::shared_ptr<IO::SDK::Body::CelestialBody> body,std::string directoryPath);
 
         /**
          * @brief Add an azimuth range

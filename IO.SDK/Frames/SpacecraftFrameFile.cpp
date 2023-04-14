@@ -14,7 +14,8 @@
 #include "Templates/Templates.cpp"
 #include <Spacecraft.h>
 
-IO::SDK::Frames::SpacecraftFrameFile::SpacecraftFrameFile(const IO::SDK::Body::Spacecraft::Spacecraft &spacecraft) : FrameFile(spacecraft.GetFilesPath() + "/Frames/" + spacecraft.GetName() + ".tf", spacecraft.GetName()), m_id{spacecraft.GetId() * 1000}, m_spacecraft{spacecraft}
+IO::SDK::Frames::SpacecraftFrameFile::SpacecraftFrameFile(const IO::SDK::Body::Spacecraft::Spacecraft &spacecraft) : FrameFile(
+        spacecraft.GetFilesPath() + "/Frames/" + spacecraft.GetName() + ".tf", spacecraft.GetName()), m_id{spacecraft.GetId() * 1000}, m_spacecraft{spacecraft}
 {
 	if (!m_fileExists)
 	{

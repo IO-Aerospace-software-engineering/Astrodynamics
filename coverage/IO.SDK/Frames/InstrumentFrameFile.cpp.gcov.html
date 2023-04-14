@@ -74,7 +74,7 @@
 <a name="12"><span class="lineNum">      12 </span>            : #include&lt;filesystem&gt;</a>
 <a name="13"><span class="lineNum">      13 </span>            : #include&lt;fstream&gt;</a>
 <a name="14"><span class="lineNum">      14 </span>            : </a>
-<a name="15"><span class="lineNum">      15 </span><span class="lineCov">         11 : IO::SDK::Frames::InstrumentFrameFile::InstrumentFrameFile(const IO::SDK::Instruments::Instrument&amp; instrument, const IO::SDK::Math::Vector3D&amp; orientation) :FrameFile(instrument.GetFilesPath() + &quot;/Frames/&quot; + instrument.GetName() + &quot;.tf&quot;, instrument.GetSpacecraft().GetName() + &quot;_&quot; + instrument.GetName()), m_instrument{ instrument }, m_orientation{ orientation }</span></a>
+<a name="15"><span class="lineNum">      15 </span><span class="lineCov">         11 : IO::SDK::Frames::InstrumentFrameFile::InstrumentFrameFile(const IO::SDK::Instruments::Instrument&amp; instrument, const IO::SDK::Math::Vector3D&amp; orientation) :FrameFile(instrument.GetDirectoryPath() + &quot;/Frames/&quot; + instrument.GetName() + &quot;.tf&quot;, instrument.GetSpacecraft().GetName() + &quot;_&quot; + instrument.GetName()), m_instrument{ instrument }, m_orientation{ orientation }</span></a>
 <a name="16"><span class="lineNum">      16 </span>            : {</a>
 <a name="17"><span class="lineNum">      17 </span><span class="lineCov">         11 :         if (!m_fileExists)</span></a>
 <a name="18"><span class="lineNum">      18 </span>            :         {</a>

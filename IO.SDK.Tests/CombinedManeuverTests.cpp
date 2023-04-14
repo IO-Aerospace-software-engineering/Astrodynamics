@@ -14,6 +14,7 @@
 #include <ConicOrbitalElements.h>
 #include <EquinoctialElements.h>
 #include "InertialFrames.h"
+#include "TestParameters.h"
 
 using namespace std::chrono_literals;
 
@@ -27,7 +28,7 @@ TEST(CombinedManeuver, CanExecute)
                                                                                                                                                        IO::SDK::Time::TDB(0.0s),
                                                                                                                                                        IO::SDK::Frames::InertialFrames::GetICRF());
 
-    IO::SDK::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, "ms01", std::move(orbitalParams1)};
+    IO::SDK::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams1)};
 
     IO::SDK::Integrators::VVIntegrator integrator(IO::SDK::Time::TimeSpan(1.0s));
     IO::SDK::Propagators::Propagator prop(s, integrator, IO::SDK::Time::Window(IO::SDK::Time::TDB(100.0s), IO::SDK::Time::TDB(200.0s)));
@@ -58,7 +59,7 @@ TEST(CombinedManeuver, TryExecuteWithPeregeeHigherThanApogee)
                                                                                                                                                        IO::SDK::Time::TDB(0.0s),
                                                                                                                                                        IO::SDK::Frames::InertialFrames::GetICRF());
 
-    IO::SDK::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 10000.0, "ms01", std::move(orbitalParams1)};
+    IO::SDK::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 10000.0, std::string(SpacecraftPath), std::move(orbitalParams1)};
 
     IO::SDK::Integrators::VVIntegrator integrator(IO::SDK::Time::TimeSpan(1.0s));
     IO::SDK::Propagators::Propagator prop(s, integrator, IO::SDK::Time::Window(IO::SDK::Time::TDB(100.0s), IO::SDK::Time::TDB(200.0s)));
@@ -98,7 +99,7 @@ TEST(CombinedManeuver, TryExecuteWithPeregeeLowerThanApogee)
                                                                                                                                                        IO::SDK::Time::TDB(0.0s),
                                                                                                                                                        IO::SDK::Frames::InertialFrames::GetICRF());
 
-    IO::SDK::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 10000.0, "ms01", std::move(orbitalParams1)};
+    IO::SDK::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 10000.0, std::string(SpacecraftPath), std::move(orbitalParams1)};
 
     IO::SDK::Integrators::VVIntegrator integrator(IO::SDK::Time::TimeSpan(1.0s));
     IO::SDK::Propagators::Propagator prop(s, integrator, IO::SDK::Time::Window(IO::SDK::Time::TDB(100.0s), IO::SDK::Time::TDB(200.0s)));

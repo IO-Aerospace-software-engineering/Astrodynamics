@@ -6,12 +6,13 @@
 #include <Geodetic.h>
 #include <DataPoolMonitoring.h>
 #include <SiteFrameFile.h>
+#include "TestParameters.h"
 
 TEST(SiteFrame, Initialization)
 {
     auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10);
     auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, sun);
-    IO::SDK::Sites::Site s{123456, "S1", IO::SDK::Coordinates::Geodetic(2.2 * IO::SDK::Constants::DEG_RAD, 48.0 * IO::SDK::Constants::DEG_RAD, 0.0), earth};
+    IO::SDK::Sites::Site s{123456, "S1", IO::SDK::Coordinates::Geodetic(2.2 * IO::SDK::Constants::DEG_RAD, 48.0 * IO::SDK::Constants::DEG_RAD, 0.0), earth,std::string(SitePath)};
     auto id = IO::SDK::DataPoolMonitoring::Instance().GetIntegerProperty("FRAME_S1_TOPO", 1);
     ASSERT_EQ(1522456, id[0]);
 

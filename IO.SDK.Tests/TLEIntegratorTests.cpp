@@ -2,6 +2,7 @@
 #include <TLEIntegrator.h>
 #include <Spacecraft.h>
 #include "InertialFrames.h"
+#include "TestParameters.h"
 
 using namespace std::chrono_literals;
 
@@ -15,7 +16,7 @@ TEST(TLEIntegrator, Integrate)
     auto str = tle->GetEpoch().ToString();
     auto localTLE = dynamic_cast<IO::SDK::OrbitalParameters::TLE *>(tle.get());
     IO::SDK::OrbitalParameters::StateOrientation attitude(IO::SDK::Time::TDB(100.0s), IO::SDK::Frames::InertialFrames::GetICRF());
-    IO::SDK::Body::Spacecraft::Spacecraft spc(-12, "spc12", 1000.0, 3000.0, "missGravity", std::move(tle));
+    IO::SDK::Body::Spacecraft::Spacecraft spc(-12, "spc12", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(tle));
     IO::SDK::Integrators::TLEIntegrator integrator(*localTLE, IO::SDK::Time::TimeSpan(60s));
 
     //Just to activate cache and evaluate optimized integration

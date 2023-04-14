@@ -8,7 +8,7 @@ namespace IO::SDK::API::DTO
 {
     struct PayloadDTO
     {
-        int serialNumber{0};
+        const char * serialNumber{};
         const char * name{};
         double mass{};
     };

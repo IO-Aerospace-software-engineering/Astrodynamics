@@ -18,12 +18,12 @@
 #include "InvalidArgumentException.h"
 
 //IO::SDK::Kernels::EphemerisKernel::EphemerisKernel(const std::string filePath, int objectId) : Kernel(
-//        Spacecraft.GetFilesPath() + "/Ephemeris/" + Spacecraft.GetName() + ".spk"), m_objectId{Spacecraft.GetId()}
+//        Spacecraft.GetDirectoryPath() + "/Ephemeris/" + Spacecraft.GetName() + ".spk"), m_objectId{Spacecraft.GetId()}
 //{
 //}
 
 //IO::SDK::Kernels::EphemerisKernel::EphemerisKernel(const IO::SDK::Sites::Site &site) : Kernel(
-//        site.GetFilesPath() + "/Ephemeris/" + site.GetName() + ".spk"), m_objectId{site.GetId()} {
+//        site.GetDirectoryPath() + "/Ephemeris/" + site.GetName() + ".spk"), m_objectId{site.GetId()} {
 //
 //}
 

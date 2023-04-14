@@ -17,7 +17,8 @@
 
 using namespace std::chrono_literals;
 
-IO::SDK::Kernels::SpacecraftClockKernel::SpacecraftClockKernel(const IO::SDK::Body::Spacecraft::Spacecraft& spacecraft, const int resolution) :Kernel(spacecraft.GetFilesPath() + "/Clocks/" + spacecraft.GetName() + ".tsc"), m_spacecraft{ spacecraft }, m_resolution{ resolution }
+IO::SDK::Kernels::SpacecraftClockKernel::SpacecraftClockKernel(const IO::SDK::Body::Spacecraft::Spacecraft& spacecraft, const int resolution) : Kernel(
+        spacecraft.GetFilesPath() + "/Clocks/" + spacecraft.GetName() + ".tsc"), m_spacecraft{spacecraft }, m_resolution{resolution }
 {
 	if (!m_fileExists)
 	{

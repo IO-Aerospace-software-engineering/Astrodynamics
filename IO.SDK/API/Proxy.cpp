@@ -1,3 +1,6 @@
+#include <algorithm>
+#include <iostream>
+
 #include <Proxy.h>
 #include <Scenario.h>
 #include "Converters.cpp"
@@ -10,15 +13,12 @@
 #include "NadirAttitude.h"
 #include "ZenithAttitude.h"
 #include "InertialFrames.h"
-#include "Parameters.h"
 #include <ApogeeHeightChangingManeuver.h>
 #include <PhasingManeuver.h>
 #include <InstrumentPointingToAttitude.h>
-#include <algorithm>
-#include <SpiceUsr.h>
-#include <filesystem>
-#include <WindowDTO.h>
-#include <iostream>
+#include <Launch.h>
+#include <GenericKernelsLoader.h>
+
 
 std::map<int, std::shared_ptr<IO::SDK::Body::CelestialBody>> BuildCelestialBodies(IO::SDK::API::DTO::ScenarioDTO &scenario);
 
@@ -58,6 +58,20 @@ void BuildNadirAttitude(IO::SDK::API::DTO::ScenarioDTO &scenarioDto, IO::SDK::Sc
 void BuildInstrumentPointingToAttitude(IO::SDK::API::DTO::ScenarioDTO &scenarioDto, IO::SDK::Scenario &scenario,
                                        std::map<int, std::shared_ptr<IO::SDK::Maneuvers::ManeuverBase>> &maneuvers,
                                        std::map<int, std::shared_ptr<IO::SDK::Body::CelestialBody>> &celestialBodies);
+
+void LaunchProxy(IO::SDK::API::DTO::LaunchDTO &launchDto)
+{
+    auto celestialBody = std::make_shared<IO::SDK::Body::CelestialBody>(launchDto.recoverySite.bodyId);
+    IO::SDK::Sites::LaunchSite ls(launchDto.launchSite.id, launchDto.launchSite.name, ToGeodetic(launchDto.launchSite.coordinates),
+                                  std::make_shared<IO::SDK::Body::CelestialBody>(launchDto.launchSite.bodyId), launchDto.launchSite.directoryPath);
+    IO::SDK::Sites::LaunchSite rs(launchDto.recoverySite.id, launchDto.recoverySite.name, ToGeodetic(launchDto.recoverySite.coordinates),
+                                  std::make_shared<IO::SDK::Body::CelestialBody>(launchDto.recoverySite.bodyId), launchDto.launchSite.directoryPath);
+    IO::SDK::OrbitalParameters::StateVector sv(celestialBody, ToVector3D(launchDto.targetOrbit.position), ToVector3D(launchDto.targetOrbit.velocity),
+                                               IO::SDK::Time::TDB(std::chrono::duration<double>(launchDto.targetOrbit.epoch)),
+                                               IO::SDK::Frames::Frames(launchDto.targetOrbit.inertialFrame));
+    IO::SDK::Maneuvers::Launch launch(ls, rs, launchDto.launchByDay, sv);
+    auto res = launch.GetLaunchWindows(ToUTCWindow(launchDto.window));
+}
 
 void PropagateProxy(IO::SDK::API::DTO::ScenarioDTO &scenarioDto)
 {
@@ -253,16 +267,16 @@ void BuildManeuvers(IO::SDK::API::DTO::ScenarioDTO &scenarioDto, IO::SDK::Scenar
                     std::map<int, std::shared_ptr<IO::SDK::Maneuvers::ManeuverBase>> &maneuvers)
 {
     BuildApogeeManeuver(scenarioDto, scenario, maneuvers);
-//    BuildPerigeeManeuver(scenarioDto, scenario, maneuvers);
-//    BuildCombinedManeuver(scenarioDto, scenario, maneuvers);
-//    BuildApsidalManeuver(scenarioDto, scenario, maneuvers, celestialBodies);
-//    BuildOrbitalPlaneManeuver(scenarioDto, scenario, maneuvers, celestialBodies);
-//    BuildPhasingManeuver(scenarioDto, scenario, maneuvers, celestialBodies);
-//    BuildProgradeAttitude(scenarioDto, scenario, maneuvers);
-//    BuildRetrogradeAttitude(scenarioDto, scenario, maneuvers);
-//    BuildZenithAttitude(scenarioDto, scenario, maneuvers);
-//    BuildNadirAttitude(scenarioDto, scenario, maneuvers);
-//    BuildInstrumentPointingToAttitude(scenarioDto, scenario, maneuvers, celestialBodies);
+    BuildPerigeeManeuver(scenarioDto, scenario, maneuvers);
+    BuildCombinedManeuver(scenarioDto, scenario, maneuvers);
+    BuildApsidalManeuver(scenarioDto, scenario, maneuvers, celestialBodies);
+    BuildOrbitalPlaneManeuver(scenarioDto, scenario, maneuvers, celestialBodies);
+    BuildPhasingManeuver(scenarioDto, scenario, maneuvers, celestialBodies);
+    BuildProgradeAttitude(scenarioDto, scenario, maneuvers);
+    BuildRetrogradeAttitude(scenarioDto, scenario, maneuvers);
+    BuildZenithAttitude(scenarioDto, scenario, maneuvers);
+    BuildNadirAttitude(scenarioDto, scenario, maneuvers);
+    BuildInstrumentPointingToAttitude(scenarioDto, scenario, maneuvers, celestialBodies);
 //
 //    for (auto &maneuver: maneuvers)
 //    {
@@ -278,7 +292,6 @@ void BuildApogeeManeuver(IO::SDK::API::DTO::ScenarioDTO &scenarioDto, IO::SDK::S
 {
     for (auto &maneuver: scenarioDto.Spacecraft.apogeeHeightChangingManeuvers)
     {
-        std::cout << "Maneuver order :" << maneuver.maneuverOrder << std::endl;
         if (maneuver.maneuverOrder == -1)
         {
             break;
@@ -579,4 +592,9 @@ bool WriteOrientationProxy(const char *filePath, int objectId, int spacecraftFra
     intervals.push_back(orientations);
     kernel.WriteOrientations(intervals);
     return true;
+}
+
+void LoadGenericKernelsProxy(const char *directoryPath)
+{
+    IO::SDK::Kernels::GenericKernelsLoader::Load(directoryPath);
 }
