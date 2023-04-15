@@ -21,7 +21,15 @@ static IO::SDK::Time::Window<IO::SDK::Time::TDB> ToTDBWindow(IO::SDK::API::DTO::
                                                      IO::SDK::Time::TDB(std::chrono::duration<double>(window.end))};
 }
 
-static IO::SDK::API::DTO::WindowDTO ToWindowDTO(IO::SDK::Time::Window<IO::SDK::Time::UTC> &window)
+static IO::SDK::API::DTO::WindowDTO ToWindowDTO(const IO::SDK::Time::Window<IO::SDK::Time::UTC> &window)
+{
+    IO::SDK::API::DTO::WindowDTO dto{};
+    dto.start = window.GetStartDate().GetSecondsFromJ2000().count();
+    dto.end = window.GetEndDate().GetSecondsFromJ2000().count();
+    return dto;
+}
+
+static IO::SDK::API::DTO::WindowDTO ToWindowDTO(const IO::SDK::Time::Window<IO::SDK::Time::TDB> &window)
 {
     IO::SDK::API::DTO::WindowDTO dto{};
     dto.start = window.GetStartDate().GetSecondsFromJ2000().count();

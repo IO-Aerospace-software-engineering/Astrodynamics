@@ -71,6 +71,10 @@ void LaunchProxy(IO::SDK::API::DTO::LaunchDTO &launchDto)
                                                IO::SDK::Frames::Frames(launchDto.targetOrbit.inertialFrame));
     IO::SDK::Maneuvers::Launch launch(ls, rs, launchDto.launchByDay, sv);
     auto res = launch.GetLaunchWindows(ToUTCWindow(launchDto.window));
+    for (size_t i = 0; i < res.size(); ++i)
+    {
+        launchDto.windows[i]= ToWindowDTO(res[i].GetWindow());
+    }
 }
 
 void PropagateProxy(IO::SDK::API::DTO::ScenarioDTO &scenarioDto)
