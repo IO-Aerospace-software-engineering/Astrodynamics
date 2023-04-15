@@ -109,6 +109,8 @@ void PropagateProxy(IO::SDK::API::DTO::ScenarioDTO &scenarioDto)
     std::map<int, std::shared_ptr<IO::SDK::Maneuvers::ManeuverBase>> maneuvers;
 
     BuildManeuvers(scenarioDto, scenario, celestialBodies, maneuvers);
+
+    scenario.Execute();
 }
 
 std::map<int, std::shared_ptr<IO::SDK::Body::CelestialBody>>
@@ -281,15 +283,17 @@ void BuildManeuvers(IO::SDK::API::DTO::ScenarioDTO &scenarioDto, IO::SDK::Scenar
     BuildZenithAttitude(scenarioDto, scenario, maneuvers);
     BuildNadirAttitude(scenarioDto, scenario, maneuvers);
     BuildInstrumentPointingToAttitude(scenarioDto, scenario, maneuvers, celestialBodies);
-//
-//    for (auto &maneuver: maneuvers)
-//    {
-//        if (static_cast<size_t>(maneuver.first) >= maneuvers.size() - 1)
-//        {
-//            continue;
-//        }
-//        maneuver.second->SetNextManeuver(*maneuvers[maneuver.first + 1]);
-//    }
+
+    for (auto &maneuver: maneuvers)
+    {
+        if (static_cast<size_t>(maneuver.first) >= maneuvers.size() - 1)
+        {
+            continue;
+        }
+        maneuver.second->SetNextManeuver(*maneuvers[maneuver.first + 1]);
+    }
+
+    scenario.GetPropagator().SetStandbyManeuver(maneuvers[0].get());
 }
 
 void BuildApogeeManeuver(IO::SDK::API::DTO::ScenarioDTO &scenarioDto, IO::SDK::Scenario &scenario, std::map<int, std::shared_ptr<IO::SDK::Maneuvers::ManeuverBase>> &maneuvers)
