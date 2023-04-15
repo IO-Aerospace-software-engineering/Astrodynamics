@@ -18,6 +18,7 @@
 #include <InstrumentPointingToAttitude.h>
 #include <Launch.h>
 #include <GenericKernelsLoader.h>
+#include "Helpers/Type.cpp"
 
 
 std::map<int, std::shared_ptr<IO::SDK::Body::CelestialBody>> BuildCelestialBodies(IO::SDK::API::DTO::ScenarioDTO &scenario);
@@ -73,7 +74,7 @@ void LaunchProxy(IO::SDK::API::DTO::LaunchDTO &launchDto)
     auto res = launch.GetLaunchWindows(ToUTCWindow(launchDto.window));
     for (size_t i = 0; i < res.size(); ++i)
     {
-        launchDto.windows[i]= ToWindowDTO(res[i].GetWindow());
+        launchDto.windows[i] = ToWindowDTO(res[i].GetWindow());
     }
 }
 
@@ -111,7 +112,31 @@ void PropagateProxy(IO::SDK::API::DTO::ScenarioDTO &scenarioDto)
     BuildManeuvers(scenarioDto, scenario, celestialBodies, maneuvers);
 
     scenario.Execute();
+
+    for (auto &maneuver: maneuvers)
+    {
+        if (IO::SDK::Helpers::IsInstanceOf<IO::SDK::Maneuvers::ApogeeHeightChangingManeuver>(maneuver.second.get()))
+        {
+            auto value = dynamic_cast<IO::SDK::Maneuvers::ApogeeHeightChangingManeuver *>(maneuver.second.get());
+            scenarioDto.Spacecraft.apogeeHeightChangingManeuvers[0];
+        }
+    }
+
+    for (auto &maneuver: scenarioDto.Spacecraft.apogeeHeightChangingManeuvers)
+    {
+        if (maneuver.maneuverOrder < 0)
+        {
+            break;
+        }
+
+        auto value = dynamic_cast<IO::SDK::Maneuvers::ApogeeHeightChangingManeuver *>(maneuvers[maneuver.maneuverOrder].get());
+        maneuver.attitudeWindow = ToWindowDTO(*value->GetAttitudeWindow());
+        maneuver.maneuverWindow = ToWindowDTO(*value->GetManeuverWindow());
+        maneuver.thrustWindow = ToWindowDTO(*value->GetThrustWindow());
+        maneuver.deltaV = ToVector3DDTO(value->GetDeltaV());
+    }
 }
+
 
 std::map<int, std::shared_ptr<IO::SDK::Body::CelestialBody>>
 BuildCelestialBodies(IO::SDK::API::DTO::ScenarioDTO &scenario)
