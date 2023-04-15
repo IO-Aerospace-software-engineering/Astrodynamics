@@ -50,9 +50,5 @@ namespace IO::SDK::API::DTO
         CombinedManeuverDTO combinedManeuvers[10];
         ApsidalAlignmentManeuverDTO apsidalAlignmentManeuvers[10];
         PhasingManeuverDTO phasingManeuverDto[10];
-
-        //Spacecraft states
-        StateVectorDTO stateVectors[10000];
-        StateOrientationDTO stateOrientations[1000];
     };
 }

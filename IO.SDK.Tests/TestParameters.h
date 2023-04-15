@@ -11,9 +11,9 @@
 using namespace std::chrono_literals;
 
 
-inline constexpr std::string_view SpacecraftPath = "Data/User/Spacecrafts";
-inline constexpr std::string_view SolarSystemKernelPath = "Data/SolarSystem";
-inline constexpr std::string_view SitePath = "Data/User/Sites";
+inline constexpr std::string_view SpacecraftPath = "Data/User/Spacecrafts\0";
+inline constexpr std::string_view SolarSystemKernelPath = "Data/SolarSystem\0";
+inline constexpr std::string_view SitePath = "Data/User/Sites\0";
 inline constexpr int CommentAreaSize = 5000;
 inline constexpr int MaximumEphemerisLagrangePolynomialDegreeEvenSpaced = 27;//[1-27]
 inline constexpr int MaximumEphemerisLagrangePolynomialDegree = 15;//[1-27]

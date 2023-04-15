@@ -11,9 +11,8 @@ namespace IO::SDK::API::DTO
     {
         char *Name{};
         WindowDTO Window{};
-        LaunchDTO Launch{};
         SpacecraftDTO Spacecraft;
-        SiteDTO Sites[2];
+        SiteDTO Sites[10];
 
 //        DistanceConstraintDTO distances[5];
 //        OccultationConstraintDTO occultations[5];

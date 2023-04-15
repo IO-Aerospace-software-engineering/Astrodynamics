@@ -1,8 +1,6 @@
 #include <algorithm>
-#include <iostream>
 
 #include <Proxy.h>
-#include <Scenario.h>
 #include "Converters.cpp"
 #include "PerigeeHeightChangingManeuver.h"
 #include "ApsidalAlignmentManeuver.h"
@@ -18,47 +16,8 @@
 #include <InstrumentPointingToAttitude.h>
 #include <Launch.h>
 #include <GenericKernelsLoader.h>
-#include "Helpers/Type.cpp"
+#include <iostream>
 
-
-std::map<int, std::shared_ptr<IO::SDK::Body::CelestialBody>> BuildCelestialBodies(IO::SDK::API::DTO::ScenarioDTO &scenario);
-
-void BuildInstruments(const IO::SDK::API::DTO::ScenarioDTO &scenarioDTO, IO::SDK::Body::Spacecraft::Spacecraft &spacecraft);
-
-void BuildEngines(const IO::SDK::API::DTO::ScenarioDTO &scenarioDTO, IO::SDK::Body::Spacecraft::Spacecraft &spacecraft);
-
-void BuildFuelTank(const IO::SDK::API::DTO::ScenarioDTO &scenarioDTO, IO::SDK::Body::Spacecraft::Spacecraft &spacecraft);
-
-void BuildApogeeManeuver(IO::SDK::API::DTO::ScenarioDTO &scenarioDto, IO::SDK::Scenario &scenario, std::map<int, std::shared_ptr<IO::SDK::Maneuvers::ManeuverBase>> &maneuvers);
-
-void BuildPerigeeManeuver(IO::SDK::API::DTO::ScenarioDTO &scenarioDto, IO::SDK::Scenario &scenario, std::map<int, std::shared_ptr<IO::SDK::Maneuvers::ManeuverBase>> &maneuvers);
-
-void BuildApsidalManeuver(IO::SDK::API::DTO::ScenarioDTO &scenarioDto, IO::SDK::Scenario &scenario, std::map<int, std::shared_ptr<IO::SDK::Maneuvers::ManeuverBase>> &maneuvers,
-                          std::map<int, std::shared_ptr<IO::SDK::Body::CelestialBody>> &celestialBodies);
-
-void BuildCombinedManeuver(IO::SDK::API::DTO::ScenarioDTO &scenarioDto, IO::SDK::Scenario &scenario, std::map<int, std::shared_ptr<IO::SDK::Maneuvers::ManeuverBase>> &maneuvers);
-
-void
-BuildOrbitalPlaneManeuver(IO::SDK::API::DTO::ScenarioDTO &scenarioDto, IO::SDK::Scenario &scenario, std::map<int, std::shared_ptr<IO::SDK::Maneuvers::ManeuverBase>> &maneuvers,
-                          std::map<int, std::shared_ptr<IO::SDK::Body::CelestialBody>> &celestialBodies);
-
-void BuildPhasingManeuver(IO::SDK::API::DTO::ScenarioDTO &scenarioDto, IO::SDK::Scenario &scenario, std::map<int, std::shared_ptr<IO::SDK::Maneuvers::ManeuverBase>> &maneuvers,
-                          std::map<int, std::shared_ptr<IO::SDK::Body::CelestialBody>> &celestialBodies);
-
-void BuildManeuvers(IO::SDK::API::DTO::ScenarioDTO &scenarioDto, IO::SDK::Scenario &scenario, std::map<int, std::shared_ptr<IO::SDK::Body::CelestialBody>> &celestialBodies,
-                    std::map<int, std::shared_ptr<IO::SDK::Maneuvers::ManeuverBase>> &maneuvers);
-
-void BuildProgradeAttitude(IO::SDK::API::DTO::ScenarioDTO &scenarioDto, IO::SDK::Scenario &scenario, std::map<int, std::shared_ptr<IO::SDK::Maneuvers::ManeuverBase>> &maneuvers);
-
-void BuildRetrogradeAttitude(IO::SDK::API::DTO::ScenarioDTO &scenarioDto, IO::SDK::Scenario &scenario, std::map<int, std::shared_ptr<IO::SDK::Maneuvers::ManeuverBase>> &maneuvers);
-
-void BuildZenithAttitude(IO::SDK::API::DTO::ScenarioDTO &scenarioDto, IO::SDK::Scenario &scenario, std::map<int, std::shared_ptr<IO::SDK::Maneuvers::ManeuverBase>> &maneuvers);
-
-void BuildNadirAttitude(IO::SDK::API::DTO::ScenarioDTO &scenarioDto, IO::SDK::Scenario &scenario, std::map<int, std::shared_ptr<IO::SDK::Maneuvers::ManeuverBase>> &maneuvers);
-
-void BuildInstrumentPointingToAttitude(IO::SDK::API::DTO::ScenarioDTO &scenarioDto, IO::SDK::Scenario &scenario,
-                                       std::map<int, std::shared_ptr<IO::SDK::Maneuvers::ManeuverBase>> &maneuvers,
-                                       std::map<int, std::shared_ptr<IO::SDK::Body::CelestialBody>> &celestialBodies);
 
 void LaunchProxy(IO::SDK::API::DTO::LaunchDTO &launchDto)
 {
@@ -89,7 +48,24 @@ void PropagateProxy(IO::SDK::API::DTO::ScenarioDTO &scenarioDto)
         scenario.AddCelestialBody(*celestial.second);
     }
 
+    //==========Build sites==========
+    std::vector<std::shared_ptr<IO::SDK::Sites::Site>> sites;
+    for (auto &siteDto: scenarioDto.Sites)
+    {
+        if (siteDto.id <= 0)
+        {
+            break;
+        }
+        auto site = std::make_shared<IO::SDK::Sites::Site>(siteDto.id, siteDto.name, ToGeodetic(siteDto.coordinates), celestialBodies[siteDto.bodyId], siteDto.directoryPath);
+        sites.push_back(site);
+        scenario.AddSite(*site);
+    }
+
+
     //==========Build Spacecraft===============
+    std::map<int, std::shared_ptr<IO::SDK::Maneuvers::ManeuverBase>> maneuvers;
+    std::cout << scenarioDto.Spacecraft.id << std::endl;
+
     auto cbody = celestialBodies[scenarioDto.Spacecraft.initialOrbitalParameter.centerOfMotion.id];
     auto tdb = IO::SDK::Time::TDB(std::chrono::duration<double>(scenarioDto.Spacecraft.initialOrbitalParameter.epoch));
     auto frame = IO::SDK::Frames::InertialFrames(scenarioDto.Spacecraft.initialOrbitalParameter.inertialFrame);
@@ -99,7 +75,7 @@ void PropagateProxy(IO::SDK::API::DTO::ScenarioDTO &scenarioDto)
             ToVector3D(scenarioDto.Spacecraft.initialOrbitalParameter.velocity), tdb, frame);
     IO::SDK::Body::Spacecraft::Spacecraft spacecraft(scenarioDto.Spacecraft.id, scenarioDto.Spacecraft.name,
                                                      scenarioDto.Spacecraft.dryOperatingMass,
-                                                     scenarioDto.Spacecraft.maximumOperatingMass, scenarioDto.Name,
+                                                     scenarioDto.Spacecraft.maximumOperatingMass, scenarioDto.Spacecraft.directoryPath,
                                                      std::move(initialOrbitalParameters));
     BuildFuelTank(scenarioDto, spacecraft);
     BuildEngines(scenarioDto, spacecraft);
@@ -107,82 +83,37 @@ void PropagateProxy(IO::SDK::API::DTO::ScenarioDTO &scenarioDto)
 
     scenario.AttachSpacecraft(spacecraft);
 
-    std::map<int, std::shared_ptr<IO::SDK::Maneuvers::ManeuverBase>> maneuvers;
 
     BuildManeuvers(scenarioDto, scenario, celestialBodies, maneuvers);
 
+    std::cout << "startProp" << std::endl;
     scenario.Execute();
+    std::cout << "endProp" << std::endl;
 
-    for (auto &maneuver: scenarioDto.Spacecraft.apogeeHeightChangingManeuvers)
+    if (!maneuvers.empty())
     {
-        if (maneuver.maneuverOrder < 0)
-        {
-            break;
-        }
-
-        auto value = dynamic_cast<IO::SDK::Maneuvers::ApogeeHeightChangingManeuver *>(maneuvers[maneuver.maneuverOrder].get());
-        maneuver.attitudeWindow = ToWindowDTO(*value->GetAttitudeWindow());
-        maneuver.maneuverWindow = ToWindowDTO(*value->GetManeuverWindow());
-        maneuver.thrustWindow = ToWindowDTO(*value->GetThrustWindow());
-        maneuver.deltaV = ToVector3DDTO(value->GetDeltaV());
+        ReadManeuverResults(scenarioDto, maneuvers);
     }
 
-    for (auto &maneuver: scenarioDto.Spacecraft.perigeeHeightChangingManeuvers)
-    {
-        if (maneuver.maneuverOrder < 0)
-        {
-            break;
-        }
+}
 
-        auto value = dynamic_cast<IO::SDK::Maneuvers::PerigeeHeightChangingManeuver *>(maneuvers[maneuver.maneuverOrder].get());
-        maneuver.attitudeWindow = ToWindowDTO(*value->GetAttitudeWindow());
-        maneuver.maneuverWindow = ToWindowDTO(*value->GetManeuverWindow());
-        maneuver.thrustWindow = ToWindowDTO(*value->GetThrustWindow());
-        maneuver.deltaV = ToVector3DDTO(value->GetDeltaV());
-    }
+void ReadManeuverResults(IO::SDK::API::DTO::ScenarioDTO &scenarioDto, std::map<int, std::shared_ptr<IO::SDK::Maneuvers::ManeuverBase>> &maneuvers)
+{
+    ReadApogeeManeuverResult(scenarioDto, maneuvers);
 
-    for (auto &maneuver: scenarioDto.Spacecraft.orbitalPlaneChangingManeuvers)
-    {
-        if (maneuver.maneuverOrder < 0)
-        {
-            break;
-        }
+    ReadPerigeeManeuverResult(scenarioDto, maneuvers);
 
-        auto value = dynamic_cast<IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver *>(maneuvers[maneuver.maneuverOrder].get());
-        maneuver.attitudeWindow = ToWindowDTO(*value->GetAttitudeWindow());
-        maneuver.maneuverWindow = ToWindowDTO(*value->GetManeuverWindow());
-        maneuver.thrustWindow = ToWindowDTO(*value->GetThrustWindow());
-        maneuver.deltaV = ToVector3DDTO(value->GetDeltaV());
-    }
+    ReadOrbitalPlaneManeuverResult(scenarioDto, maneuvers);
 
-    for (auto &maneuver: scenarioDto.Spacecraft.combinedManeuvers)
-    {
-        if (maneuver.maneuverOrder < 0)
-        {
-            break;
-        }
+    ReadCombinedManeuverResult(scenarioDto, maneuvers);
 
-        auto value = dynamic_cast<IO::SDK::Maneuvers::CombinedManeuver *>(maneuvers[maneuver.maneuverOrder].get());
-        maneuver.attitudeWindow = ToWindowDTO(*value->GetAttitudeWindow());
-        maneuver.maneuverWindow = ToWindowDTO(*value->GetManeuverWindow());
-        maneuver.thrustWindow = ToWindowDTO(*value->GetThrustWindow());
-        maneuver.deltaV = ToVector3DDTO(value->GetDeltaV());
-    }
+    ReadApsidalAlignmentManeuverResult(scenarioDto, maneuvers);
 
-    for (auto &maneuver: scenarioDto.Spacecraft.apsidalAlignmentManeuvers)
-    {
-        if (maneuver.maneuverOrder < 0)
-        {
-            break;
-        }
+    ReadPhasingManeuverResult(scenarioDto, maneuvers);
+}
 
-        auto value = dynamic_cast<IO::SDK::Maneuvers::ApsidalAlignmentManeuver *>(maneuvers[maneuver.maneuverOrder].get());
-        maneuver.attitudeWindow = ToWindowDTO(*value->GetAttitudeWindow());
-        maneuver.maneuverWindow = ToWindowDTO(*value->GetManeuverWindow());
-        maneuver.thrustWindow = ToWindowDTO(*value->GetThrustWindow());
-        maneuver.deltaV = ToVector3DDTO(value->GetDeltaV());
-    }
-
+void ReadPhasingManeuverResult(IO::SDK::API::DTO::ScenarioDTO &scenarioDto, std::map<int, std::shared_ptr<IO::SDK::Maneuvers::ManeuverBase>> &maneuvers)
+{
     for (auto &maneuver: scenarioDto.Spacecraft.phasingManeuverDto)
     {
         if (maneuver.maneuverOrder < 0)
@@ -190,14 +121,97 @@ void PropagateProxy(IO::SDK::API::DTO::ScenarioDTO &scenarioDto)
             break;
         }
 
-        auto value = dynamic_cast<IO::SDK::Maneuvers::PhasingManeuver *>(maneuvers[maneuver.maneuverOrder].get());
+        auto value = maneuvers[maneuver.maneuverOrder];
         maneuver.attitudeWindow = ToWindowDTO(*value->GetAttitudeWindow());
         maneuver.maneuverWindow = ToWindowDTO(*value->GetManeuverWindow());
         maneuver.thrustWindow = ToWindowDTO(*value->GetThrustWindow());
         maneuver.deltaV = ToVector3DDTO(value->GetDeltaV());
     }
+}
 
+void ReadApsidalAlignmentManeuverResult(IO::SDK::API::DTO::ScenarioDTO &scenarioDto, std::map<int, std::shared_ptr<IO::SDK::Maneuvers::ManeuverBase>> &maneuvers)
+{
+    for (auto &maneuver: scenarioDto.Spacecraft.apsidalAlignmentManeuvers)
+    {
+        if (maneuver.maneuverOrder < 0)
+        {
+            break;
+        }
 
+        auto value = maneuvers[maneuver.maneuverOrder];
+        maneuver.attitudeWindow = ToWindowDTO(*value->GetAttitudeWindow());
+        maneuver.maneuverWindow = ToWindowDTO(*value->GetManeuverWindow());
+        maneuver.thrustWindow = ToWindowDTO(*value->GetThrustWindow());
+        maneuver.deltaV = ToVector3DDTO(value->GetDeltaV());
+    }
+}
+
+void ReadCombinedManeuverResult(IO::SDK::API::DTO::ScenarioDTO &scenarioDto, std::map<int, std::shared_ptr<IO::SDK::Maneuvers::ManeuverBase>> &maneuvers)
+{
+    for (auto &maneuver: scenarioDto.Spacecraft.combinedManeuvers)
+    {
+        if (maneuver.maneuverOrder < 0)
+        {
+            break;
+        }
+
+        auto value = maneuvers[maneuver.maneuverOrder];
+        maneuver.attitudeWindow = ToWindowDTO(*value->GetAttitudeWindow());
+        maneuver.maneuverWindow = ToWindowDTO(*value->GetManeuverWindow());
+        maneuver.thrustWindow = ToWindowDTO(*value->GetThrustWindow());
+        maneuver.deltaV = ToVector3DDTO(value->GetDeltaV());
+    }
+}
+
+void ReadOrbitalPlaneManeuverResult(IO::SDK::API::DTO::ScenarioDTO &scenarioDto, std::map<int, std::shared_ptr<IO::SDK::Maneuvers::ManeuverBase>> &maneuvers)
+{
+    for (auto &maneuver: scenarioDto.Spacecraft.orbitalPlaneChangingManeuvers)
+    {
+        if (maneuver.maneuverOrder < 0)
+        {
+            break;
+        }
+
+        auto value = maneuvers[maneuver.maneuverOrder];
+        maneuver.attitudeWindow = ToWindowDTO(*value->GetAttitudeWindow());
+        maneuver.maneuverWindow = ToWindowDTO(*value->GetManeuverWindow());
+        maneuver.thrustWindow = ToWindowDTO(*value->GetThrustWindow());
+        maneuver.deltaV = ToVector3DDTO(value->GetDeltaV());
+    }
+}
+
+void ReadPerigeeManeuverResult(IO::SDK::API::DTO::ScenarioDTO &scenarioDto, std::map<int, std::shared_ptr<IO::SDK::Maneuvers::ManeuverBase>> &maneuvers)
+{
+    for (auto &maneuver: scenarioDto.Spacecraft.perigeeHeightChangingManeuvers)
+    {
+        if (maneuver.maneuverOrder < 0)
+        {
+            break;
+        }
+
+        auto value = maneuvers[maneuver.maneuverOrder];
+        maneuver.attitudeWindow = ToWindowDTO(*value->GetAttitudeWindow());
+        maneuver.maneuverWindow = ToWindowDTO(*value->GetManeuverWindow());
+        maneuver.thrustWindow = ToWindowDTO(*value->GetThrustWindow());
+        maneuver.deltaV = ToVector3DDTO(value->GetDeltaV());
+    }
+}
+
+void ReadApogeeManeuverResult(IO::SDK::API::DTO::ScenarioDTO &scenarioDto, std::map<int, std::shared_ptr<IO::SDK::Maneuvers::ManeuverBase>> &maneuvers)
+{
+    for (auto &maneuver: scenarioDto.Spacecraft.apogeeHeightChangingManeuvers)
+    {
+        if (maneuver.maneuverOrder < 0)
+        {
+            break;
+        }
+
+        auto value = maneuvers[maneuver.maneuverOrder];
+        maneuver.attitudeWindow = ToWindowDTO(*value->GetAttitudeWindow());
+        maneuver.maneuverWindow = ToWindowDTO(*value->GetManeuverWindow());
+        maneuver.thrustWindow = ToWindowDTO(*value->GetThrustWindow());
+        maneuver.deltaV = ToVector3DDTO(value->GetDeltaV());
+    }
 }
 
 
