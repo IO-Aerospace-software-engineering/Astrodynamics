@@ -113,15 +113,6 @@ void PropagateProxy(IO::SDK::API::DTO::ScenarioDTO &scenarioDto)
 
     scenario.Execute();
 
-    for (auto &maneuver: maneuvers)
-    {
-        if (IO::SDK::Helpers::IsInstanceOf<IO::SDK::Maneuvers::ApogeeHeightChangingManeuver>(maneuver.second.get()))
-        {
-            auto value = dynamic_cast<IO::SDK::Maneuvers::ApogeeHeightChangingManeuver *>(maneuver.second.get());
-            scenarioDto.Spacecraft.apogeeHeightChangingManeuvers[0];
-        }
-    }
-
     for (auto &maneuver: scenarioDto.Spacecraft.apogeeHeightChangingManeuvers)
     {
         if (maneuver.maneuverOrder < 0)
@@ -135,6 +126,78 @@ void PropagateProxy(IO::SDK::API::DTO::ScenarioDTO &scenarioDto)
         maneuver.thrustWindow = ToWindowDTO(*value->GetThrustWindow());
         maneuver.deltaV = ToVector3DDTO(value->GetDeltaV());
     }
+
+    for (auto &maneuver: scenarioDto.Spacecraft.perigeeHeightChangingManeuvers)
+    {
+        if (maneuver.maneuverOrder < 0)
+        {
+            break;
+        }
+
+        auto value = dynamic_cast<IO::SDK::Maneuvers::PerigeeHeightChangingManeuver *>(maneuvers[maneuver.maneuverOrder].get());
+        maneuver.attitudeWindow = ToWindowDTO(*value->GetAttitudeWindow());
+        maneuver.maneuverWindow = ToWindowDTO(*value->GetManeuverWindow());
+        maneuver.thrustWindow = ToWindowDTO(*value->GetThrustWindow());
+        maneuver.deltaV = ToVector3DDTO(value->GetDeltaV());
+    }
+
+    for (auto &maneuver: scenarioDto.Spacecraft.orbitalPlaneChangingManeuvers)
+    {
+        if (maneuver.maneuverOrder < 0)
+        {
+            break;
+        }
+
+        auto value = dynamic_cast<IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver *>(maneuvers[maneuver.maneuverOrder].get());
+        maneuver.attitudeWindow = ToWindowDTO(*value->GetAttitudeWindow());
+        maneuver.maneuverWindow = ToWindowDTO(*value->GetManeuverWindow());
+        maneuver.thrustWindow = ToWindowDTO(*value->GetThrustWindow());
+        maneuver.deltaV = ToVector3DDTO(value->GetDeltaV());
+    }
+
+    for (auto &maneuver: scenarioDto.Spacecraft.combinedManeuvers)
+    {
+        if (maneuver.maneuverOrder < 0)
+        {
+            break;
+        }
+
+        auto value = dynamic_cast<IO::SDK::Maneuvers::CombinedManeuver *>(maneuvers[maneuver.maneuverOrder].get());
+        maneuver.attitudeWindow = ToWindowDTO(*value->GetAttitudeWindow());
+        maneuver.maneuverWindow = ToWindowDTO(*value->GetManeuverWindow());
+        maneuver.thrustWindow = ToWindowDTO(*value->GetThrustWindow());
+        maneuver.deltaV = ToVector3DDTO(value->GetDeltaV());
+    }
+
+    for (auto &maneuver: scenarioDto.Spacecraft.apsidalAlignmentManeuvers)
+    {
+        if (maneuver.maneuverOrder < 0)
+        {
+            break;
+        }
+
+        auto value = dynamic_cast<IO::SDK::Maneuvers::ApsidalAlignmentManeuver *>(maneuvers[maneuver.maneuverOrder].get());
+        maneuver.attitudeWindow = ToWindowDTO(*value->GetAttitudeWindow());
+        maneuver.maneuverWindow = ToWindowDTO(*value->GetManeuverWindow());
+        maneuver.thrustWindow = ToWindowDTO(*value->GetThrustWindow());
+        maneuver.deltaV = ToVector3DDTO(value->GetDeltaV());
+    }
+
+    for (auto &maneuver: scenarioDto.Spacecraft.phasingManeuverDto)
+    {
+        if (maneuver.maneuverOrder < 0)
+        {
+            break;
+        }
+
+        auto value = dynamic_cast<IO::SDK::Maneuvers::PhasingManeuver *>(maneuvers[maneuver.maneuverOrder].get());
+        maneuver.attitudeWindow = ToWindowDTO(*value->GetAttitudeWindow());
+        maneuver.maneuverWindow = ToWindowDTO(*value->GetManeuverWindow());
+        maneuver.thrustWindow = ToWindowDTO(*value->GetThrustWindow());
+        maneuver.deltaV = ToVector3DDTO(value->GetDeltaV());
+    }
+
+
 }
 
 
