@@ -21,6 +21,7 @@ namespace IO::SDK::API::DTO {
         IO::SDK::API::DTO::WindowDTO thrustWindow{};
         IO::SDK::API::DTO::WindowDTO attitudeWindow{};
         IO::SDK::API::DTO::Vector3DDTO deltaV{};
+        double FuelBurned{0.0};
     };
 }
 

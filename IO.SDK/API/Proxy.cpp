@@ -33,6 +33,10 @@ void LaunchProxy(IO::SDK::API::DTO::LaunchDTO &launchDto)
     for (size_t i = 0; i < res.size(); ++i)
     {
         launchDto.windows[i] = ToWindowDTO(res[i].GetWindow());
+        launchDto.inertialAzimuth=res[i].GetInertialAzimuth();
+        launchDto.nonInertialAzimuth=res[i].GetNonInertialAzimuth();
+        launchDto.inertialInsertionVelocity=res[i].GetInertialInsertionVelocity();
+        launchDto.nonInertialInsertionVelocity=res[i].GetNonInertialInsertionVelocity();
     }
 }
 
@@ -122,6 +126,7 @@ void ReadPhasingManeuverResult(IO::SDK::API::DTO::ScenarioDTO &scenarioDto, std:
         maneuver.maneuverWindow = ToWindowDTO(*value->GetManeuverWindow());
         maneuver.thrustWindow = ToWindowDTO(*value->GetThrustWindow());
         maneuver.deltaV = ToVector3DDTO(value->GetDeltaV());
+        maneuver.FuelBurned = value->GetFuelBurned();
     }
 }
 
@@ -139,6 +144,7 @@ void ReadApsidalAlignmentManeuverResult(IO::SDK::API::DTO::ScenarioDTO &scenario
         maneuver.maneuverWindow = ToWindowDTO(*value->GetManeuverWindow());
         maneuver.thrustWindow = ToWindowDTO(*value->GetThrustWindow());
         maneuver.deltaV = ToVector3DDTO(value->GetDeltaV());
+        maneuver.FuelBurned = value->GetFuelBurned();
     }
 }
 
@@ -156,6 +162,7 @@ void ReadCombinedManeuverResult(IO::SDK::API::DTO::ScenarioDTO &scenarioDto, std
         maneuver.maneuverWindow = ToWindowDTO(*value->GetManeuverWindow());
         maneuver.thrustWindow = ToWindowDTO(*value->GetThrustWindow());
         maneuver.deltaV = ToVector3DDTO(value->GetDeltaV());
+        maneuver.FuelBurned = value->GetFuelBurned();
     }
 }
 
@@ -173,6 +180,7 @@ void ReadOrbitalPlaneManeuverResult(IO::SDK::API::DTO::ScenarioDTO &scenarioDto,
         maneuver.maneuverWindow = ToWindowDTO(*value->GetManeuverWindow());
         maneuver.thrustWindow = ToWindowDTO(*value->GetThrustWindow());
         maneuver.deltaV = ToVector3DDTO(value->GetDeltaV());
+        maneuver.FuelBurned = value->GetFuelBurned();
     }
 }
 
@@ -190,6 +198,7 @@ void ReadPerigeeManeuverResult(IO::SDK::API::DTO::ScenarioDTO &scenarioDto, std:
         maneuver.maneuverWindow = ToWindowDTO(*value->GetManeuverWindow());
         maneuver.thrustWindow = ToWindowDTO(*value->GetThrustWindow());
         maneuver.deltaV = ToVector3DDTO(value->GetDeltaV());
+        maneuver.FuelBurned = value->GetFuelBurned();
     }
 }
 
@@ -207,6 +216,7 @@ void ReadApogeeManeuverResult(IO::SDK::API::DTO::ScenarioDTO &scenarioDto, std::
         maneuver.maneuverWindow = ToWindowDTO(*value->GetManeuverWindow());
         maneuver.thrustWindow = ToWindowDTO(*value->GetThrustWindow());
         maneuver.deltaV = ToVector3DDTO(value->GetDeltaV());
+        maneuver.FuelBurned = value->GetFuelBurned();
     }
 }
 

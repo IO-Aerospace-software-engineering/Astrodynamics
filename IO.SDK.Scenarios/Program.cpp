@@ -94,10 +94,10 @@ int main()
     //========================Compute launch parameters=======================================
 
     //Define launch site and recovery site
-    auto launchSite = std::make_shared<IO::SDK::Sites::LaunchSite>(3, "S3",
+    auto launchSite = std::make_shared<IO::SDK::Sites::LaunchSite>(399003, "S3",
                                                                    IO::SDK::Coordinates::Geodetic(-81.0 * IO::SDK::Constants::DEG_RAD, 28.5 * IO::SDK::Constants::DEG_RAD, 0.0),
                                                                    earth, std::string(SitePath));
-    auto recoverySite = std::make_shared<IO::SDK::Sites::Site>(4, "S4",
+    auto recoverySite = std::make_shared<IO::SDK::Sites::Site>(399004, "S4",
                                                                IO::SDK::Coordinates::Geodetic(-80.0 * IO::SDK::Constants::DEG_RAD, 28.5 * IO::SDK::Constants::DEG_RAD, 0.0),
                                                                earth, std::string(SitePath));
 
