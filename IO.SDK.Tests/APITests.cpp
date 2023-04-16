@@ -11,7 +11,8 @@ TEST(API, DTOSize)
 
 TEST(API, SitePropagation)
 {
-    LoadGenericKernelsProxy(std::string(SolarSystemKernelPath).c_str());
+    std::string s(SolarSystemKernelPath);
+    LoadGenericKernelsProxy(s.c_str());
     IO::SDK::API::DTO::ScenarioDTO scenario{};
     scenario.Name = "scenatiosites";
     scenario.Window.start = 668085625.01523638;
@@ -21,7 +22,8 @@ TEST(API, SitePropagation)
     scenario.CelestialBodies[1].id = 10;
     scenario.Sites[0].id = 3;
     scenario.Sites[0].name = "S3";
-    scenario.Sites[0].directoryPath = std::string(SitePath).c_str();
+    std::string sitePath(SitePath);
+    scenario.Sites[0].directoryPath = sitePath.c_str();
     scenario.Sites[0].bodyId = 399;
     scenario.Sites[0].coordinates.longitude = -1.4137166941154069;
     scenario.Sites[0].coordinates.latitude = 0.49741883681838395;
@@ -40,7 +42,9 @@ TEST(API, SitePropagation)
     scenario.Spacecraft.initialOrbitalParameter.velocity.x = 0.0;
     scenario.Spacecraft.initialOrbitalParameter.velocity.y = 8.0;
     scenario.Spacecraft.initialOrbitalParameter.velocity.z = 0.0;
-    scenario.Spacecraft.directoryPath = std::string(SpacecraftPath).c_str();
+
+    std::string spacecraftPath(SpacecraftPath);
+    scenario.Spacecraft.directoryPath = spacecraftPath.c_str();
 
     PropagateProxy(scenario);
 }

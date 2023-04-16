@@ -48,7 +48,7 @@ void PropagateProxy(IO::SDK::API::DTO::ScenarioDTO &scenarioDto)
         scenario.AddCelestialBody(*celestial.second);
     }
 
-    //==========Build sites==========
+//    ==========Build sites==========
     std::vector<std::shared_ptr<IO::SDK::Sites::Site>> sites;
     for (auto &siteDto: scenarioDto.Sites)
     {
