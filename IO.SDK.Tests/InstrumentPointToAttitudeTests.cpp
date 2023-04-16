@@ -63,7 +63,7 @@ TEST(InstrumentPointingToSiteAttitude, GetOrientation)
     auto moon = std::make_shared<IO::SDK::Body::CelestialBody>(301, earth);
     //    long 1.1159563818495755
     //    lat 0.0020551285296693113
-    IO::SDK::Sites::Site site(13001, "targetedSite", IO::SDK::Coordinates::Geodetic(1.1159563818495755, 0.0020551285296693113, 0.0), earth,std::string(SitePath));
+    IO::SDK::Sites::Site site(399001, "targetedSite", IO::SDK::Coordinates::Geodetic(1.1159563818495755, 0.0020551285296693113, 0.0), earth,std::string(SitePath));
 
     std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams1 = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth,
                                                                                                                                               IO::SDK::Math::Vector3D(6678000.0,
@@ -112,7 +112,7 @@ TEST(InstrumentPointingToSiteAttitude2, GetOrientation)
     auto moon = std::make_shared<IO::SDK::Body::CelestialBody>(301, earth);
     //    long 1.1159563818495755
     //    lat 0.0020551285296693113
-    IO::SDK::Sites::Site site(13001, "targetedSite", IO::SDK::Coordinates::Geodetic(1.1159563818495755, 0.0020551285296693113, 0.0), moon,std::string(SitePath));
+    IO::SDK::Sites::Site site(399001, "targetedSite", IO::SDK::Coordinates::Geodetic(1.1159563818495755, 0.0020551285296693113, 0.0), moon,std::string(SitePath));
 
     std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams1 = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth,
                                                                                                                                               IO::SDK::Math::Vector3D(6678000.0,

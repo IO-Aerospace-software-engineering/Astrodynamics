@@ -15,7 +15,7 @@ TEST(Scenario, Initialize)
                          IO::SDK::Time::Window<IO::SDK::Time::UTC>(IO::SDK::Time::TDB("2021-06-02T00:00:00").ToUTC(), IO::SDK::Time::TDB("2021-06-03T00:00:00").ToUTC()));
     auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10);
     auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, sun);
-    auto ls = IO::SDK::Sites::LaunchSite(3, "S3",
+    auto ls = IO::SDK::Sites::LaunchSite(399003, "S3",
                                          IO::SDK::Coordinates::Geodetic(-81.0 * IO::SDK::Constants::DEG_RAD, 28.5 * IO::SDK::Constants::DEG_RAD, 0.0),
                                          earth,std::string(SitePath));
     std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(
@@ -46,7 +46,7 @@ TEST(Scenario, AddDistanceConstraint)
 {
     auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10);
     auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, sun);
-    auto ls = IO::SDK::Sites::LaunchSite(3, "S3", IO::SDK::Coordinates::Geodetic(-81.0 * IO::SDK::Constants::DEG_RAD, 28.5 * IO::SDK::Constants::DEG_RAD, 0.0),
+    auto ls = IO::SDK::Sites::LaunchSite(399003, "S3", IO::SDK::Coordinates::Geodetic(-81.0 * IO::SDK::Constants::DEG_RAD, 28.5 * IO::SDK::Constants::DEG_RAD, 0.0),
                                          earth,std::string(SitePath));
     std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(
             ls.GetStateVector(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::Time::TDB("2021-06-02T00:00:00")));
@@ -79,7 +79,7 @@ TEST(Scenario, AddOccultationConstraint)
 {
     auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10);
     auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, sun);
-    auto ls = IO::SDK::Sites::LaunchSite(3, "S3",
+    auto ls = IO::SDK::Sites::LaunchSite(399003, "S3",
                                          IO::SDK::Coordinates::Geodetic(-81.0 * IO::SDK::Constants::DEG_RAD, 28.5 * IO::SDK::Constants::DEG_RAD, 0.0),
                                          earth,std::string(SitePath));
     std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(
@@ -112,7 +112,7 @@ TEST(Scenario, AddByDayConstraint)
 {
     auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10);
     auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, sun);
-    auto ls = IO::SDK::Sites::LaunchSite(3, "S3",
+    auto ls = IO::SDK::Sites::LaunchSite(399003, "S3",
                                          IO::SDK::Coordinates::Geodetic(-81.0 * IO::SDK::Constants::DEG_RAD, 28.5 * IO::SDK::Constants::DEG_RAD, 0.0),
                                          earth,std::string(SitePath));
     std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(
@@ -143,7 +143,7 @@ TEST(Scenario, AddByNightConstraint)
 {
     auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10);
     auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, sun);
-    auto ls = IO::SDK::Sites::LaunchSite(3, "S3",
+    auto ls = IO::SDK::Sites::LaunchSite(399003, "S3",
                                          IO::SDK::Coordinates::Geodetic(-81.0 * IO::SDK::Constants::DEG_RAD, 28.5 * IO::SDK::Constants::DEG_RAD, 0.0),
                                          earth,std::string(SitePath));
     std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(
@@ -174,7 +174,7 @@ TEST(Scenario, AddBodyVisibilityConstraint)
 {
     auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10);
     auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, sun);
-    auto ls = IO::SDK::Sites::LaunchSite(3, "S3",
+    auto ls = IO::SDK::Sites::LaunchSite(399003, "S3",
                                          IO::SDK::Coordinates::Geodetic(-81.0 * IO::SDK::Constants::DEG_RAD, 28.5 * IO::SDK::Constants::DEG_RAD, 0.0),
                                          earth,std::string(SitePath));
     std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(
@@ -266,7 +266,7 @@ TEST(Scenario, FindDayWindowsConstraint)
                          IO::SDK::Time::Window<IO::SDK::Time::UTC>(IO::SDK::Time::TDB("2021-05-17 12:00:00 TDB").ToUTC(), IO::SDK::Time::TDB("2021-05-18 12:00:00 TDB").ToUTC()));
     auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10);
     auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, sun);
-    IO::SDK::Sites::Site s{333002, "S2", IO::SDK::Coordinates::Geodetic(2.2 * IO::SDK::Constants::DEG_RAD, 48.0 * IO::SDK::Constants::DEG_RAD, 0.0), earth,std::string(SitePath)};
+    IO::SDK::Sites::Site s{399002, "S2", IO::SDK::Coordinates::Geodetic(2.2 * IO::SDK::Constants::DEG_RAD, 48.0 * IO::SDK::Constants::DEG_RAD, 0.0), earth,std::string(SitePath)};
 
     sc.AddCelestialBody(*sun);
     sc.AddCelestialBody(*earth);
@@ -292,7 +292,7 @@ TEST(Scenario, FindNightWindowsConstraint)
                          IO::SDK::Time::Window<IO::SDK::Time::UTC>(IO::SDK::Time::TDB("2021-05-17 12:00:00 TDB").ToUTC(), IO::SDK::Time::TDB("2021-05-18 12:00:00 TDB").ToUTC()));
     auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10);
     auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, sun);
-    IO::SDK::Sites::Site s{333002, "S2", IO::SDK::Coordinates::Geodetic(2.2 * IO::SDK::Constants::DEG_RAD, 48.0 * IO::SDK::Constants::DEG_RAD, 0.0), earth,std::string(SitePath)};
+    IO::SDK::Sites::Site s{399002, "S2", IO::SDK::Coordinates::Geodetic(2.2 * IO::SDK::Constants::DEG_RAD, 48.0 * IO::SDK::Constants::DEG_RAD, 0.0), earth,std::string(SitePath)};
 
     sc.AddCelestialBody(*sun);
     sc.AddCelestialBody(*earth);
@@ -394,7 +394,7 @@ TEST(Scenario, FindLaunchWindowConstraint)
                                                                          IO::SDK::Time::TDB("2021-06-03T00:00:00").ToUTC()));
     auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10);
     auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, sun);
-    auto ls = IO::SDK::Sites::LaunchSite(1, "S1",
+    auto ls = IO::SDK::Sites::LaunchSite(399001, "S1",
                                          IO::SDK::Coordinates::Geodetic(-104 * IO::SDK::Constants::DEG_RAD, -41.0 * IO::SDK::Constants::DEG_RAD, 0.0),
                                          earth,std::string(SitePath));
     std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(
@@ -421,7 +421,7 @@ TEST(Scenario, FindLaunchWindowConstraint)
 
     //first launch window
     ASSERT_STREQ("2021-06-02 15:06:01.057589 (UTC)", windows[0].GetWindow().GetStartDate().ToString().c_str());
-    ASSERT_EQ(1, windows[0].GetLaunchSite().GetId());
+    ASSERT_EQ(399001, windows[0].GetLaunchSite().GetId());
     ASSERT_DOUBLE_EQ(55.289381850887146, windows[0].GetInertialAzimuth() * IO::SDK::Constants::RAD_DEG);
     ASSERT_DOUBLE_EQ(53.734938879897108, windows[0].GetNonInertialAzimuth() * IO::SDK::Constants::RAD_DEG);
     ASSERT_DOUBLE_EQ(7665.2355903714715, windows[0].GetInertialInsertionVelocity());

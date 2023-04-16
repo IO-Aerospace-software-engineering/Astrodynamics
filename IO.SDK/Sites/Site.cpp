@@ -15,6 +15,7 @@
 #include <Constants.h>
 
 #include <utility>
+
 #include "CoordinateSystem.h"
 #include "Coordinate.h"
 #include "InertialFrames.h"
@@ -22,15 +23,20 @@
 using namespace std::chrono_literals;
 
 IO::SDK::Sites::Site::Site(const int id, std::string name, const IO::SDK::Coordinates::Geodetic &coordinates,
-                           std::shared_ptr<IO::SDK::Body::CelestialBody> &body, std::string directoryPath) : m_id{id},
-                                                                                                             m_name{std::move(name)},
-                                                                                                             m_coordinates{coordinates},
-                                                                                                             m_filesPath{std::move(directoryPath) + "/" + m_name},
-                                                                                                             m_ephemerisKernel{std::make_unique<IO::SDK::Kernels::EphemerisKernel>(
-                                                                                                                     m_filesPath + "/Ephemeris/" + m_name + ".spk", this->m_id)},
-                                                                                                             m_body{body},
-                                                                                                             m_frame{std::make_unique<IO::SDK::Frames::SiteFrameFile>(*this)}
+                           std::shared_ptr<IO::SDK::Body::CelestialBody> body, std::string directoryPath) : m_id{id},
+                                                                                                            m_name{std::move(name)},
+                                                                                                            m_coordinates{coordinates},
+                                                                                                            m_filesPath{std::move(directoryPath) + "/" + m_name},
+                                                                                                            m_ephemerisKernel{std::make_unique<IO::SDK::Kernels::EphemerisKernel>(
+                                                                                                                    m_filesPath + "/Ephemeris/" + m_name + ".spk", this->m_id)},
+                                                                                                            m_body{std::move(body)},
+                                                                                                            m_frame{std::make_unique<IO::SDK::Frames::SiteFrameFile>(*this)}
 {
+    if (id < 199000 || id > 899999)
+    {
+        throw SDK::Exception::SDKException(
+                "Invalid site id. Site id must be composed by the site body id and the site number. Ex. The site 232 on earth (399) must have the id 399232.");
+    }
 }
 
 IO::SDK::OrbitalParameters::StateVector

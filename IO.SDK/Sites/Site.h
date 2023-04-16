@@ -56,7 +56,7 @@ namespace IO::SDK::Sites
          * @param coordinates 
          */
         Site(int id, std::string name, const IO::SDK::Coordinates::Geodetic &coordinates,
-             std::shared_ptr<IO::SDK::Body::CelestialBody> &body, std::string directoryPath);
+             std::shared_ptr<IO::SDK::Body::CelestialBody> body, std::string directoryPath);
 
         virtual ~Site() = default;
 

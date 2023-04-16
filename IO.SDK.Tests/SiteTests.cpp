@@ -105,7 +105,7 @@ TEST(Site, ConvertToLocalFrame)
     auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, sun);
 
     //Position virtual station on same location as DSS-13
-    IO::SDK::Sites::Site s{12945, "FAKE_DSS-13",
+    IO::SDK::Sites::Site s{399213, "FAKE_DSS-13",
                            IO::SDK::Coordinates::Geodetic(-116.7944627147624 * IO::SDK::Constants::DEG_RAD, 35.2471635434595 * IO::SDK::Constants::DEG_RAD, 107.0), earth,
                            std::string(SitePath)};
     auto sv = s.GetStateVector(*sun, IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::AberrationsEnum::None, IO::SDK::Time::TDB("2021-05-18 12:00:00 TDB"));
@@ -127,7 +127,7 @@ TEST(Site, GetHorizontalCoordinates)
     auto marsBarycenter = std::make_shared<IO::SDK::Body::CelestialBody>(4, sun);
 
     //Position virtual station on same location as DSS-13 at local noon
-    IO::SDK::Sites::Site s{12945, "FAKE_DSS-13",
+    IO::SDK::Sites::Site s{399013, "FAKE_DSS-13",
                            IO::SDK::Coordinates::Geodetic(-116.7944627147624 * IO::SDK::Constants::DEG_RAD, 35.2471635434595 * IO::SDK::Constants::DEG_RAD, 107.0), earth,
                            std::string(SitePath)};
     auto hor = s.GetHorizontalCoordinates(*sun, IO::SDK::AberrationsEnum::None, IO::SDK::Time::TDB("2021-05-20 19:43:00 UTC"));

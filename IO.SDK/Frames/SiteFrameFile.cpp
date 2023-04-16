@@ -52,17 +52,17 @@ void IO::SDK::Frames::SiteFrameFile::BuildFrame() {
 
             auto posfrid = readout.find("{frameid}");
             if (posfrid != std::string::npos) {
-                readout = readout.replace(posfrid, 9, std::to_string(1000000 + m_site.GetBody()->GetId() * 1000 + m_site.GetId()));
+                readout = readout.replace(posfrid, 9, std::to_string(1000000 + m_site.GetId()));
 
                 posfrid = readout.find("{frameid}");
                 if (posfrid != std::string::npos) {
-                    readout = readout.replace(posfrid, 9, std::to_string(1000000 + m_site.GetBody()->GetId() * 1000 + m_site.GetId()));
+                    readout = readout.replace(posfrid, 9, std::to_string(1000000 + m_site.GetId()));
                 }
             }
 
             auto possiteid = readout.find("{siteid}");
             if (possiteid != std::string::npos) {
-                readout = readout.replace(possiteid, 8, std::to_string(m_site.GetBody()->GetId() * 1000 + m_site.GetId()));
+                readout = readout.replace(possiteid, 8, std::to_string(m_site.GetId()));
             }
 
             auto posframename = readout.find("{fixedframe}");

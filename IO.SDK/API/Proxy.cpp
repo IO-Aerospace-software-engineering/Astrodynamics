@@ -16,7 +16,6 @@
 #include <InstrumentPointingToAttitude.h>
 #include <Launch.h>
 #include <GenericKernelsLoader.h>
-#include <iostream>
 
 
 void LaunchProxy(IO::SDK::API::DTO::LaunchDTO &launchDto)
@@ -48,7 +47,7 @@ void PropagateProxy(IO::SDK::API::DTO::ScenarioDTO &scenarioDto)
         scenario.AddCelestialBody(*celestial.second);
     }
 
-//    ==========Build sites==========
+//  ==========Build sites==========
     std::vector<std::shared_ptr<IO::SDK::Sites::Site>> sites;
     for (auto &siteDto: scenarioDto.Sites)
     {
@@ -64,7 +63,6 @@ void PropagateProxy(IO::SDK::API::DTO::ScenarioDTO &scenarioDto)
 
     //==========Build Spacecraft===============
     std::map<int, std::shared_ptr<IO::SDK::Maneuvers::ManeuverBase>> maneuvers;
-    std::cout << scenarioDto.Spacecraft.id << std::endl;
 
     auto cbody = celestialBodies[scenarioDto.Spacecraft.initialOrbitalParameter.centerOfMotion.id];
     auto tdb = IO::SDK::Time::TDB(std::chrono::duration<double>(scenarioDto.Spacecraft.initialOrbitalParameter.epoch));
@@ -86,9 +84,7 @@ void PropagateProxy(IO::SDK::API::DTO::ScenarioDTO &scenarioDto)
 
     BuildManeuvers(scenarioDto, scenario, celestialBodies, maneuvers);
 
-    std::cout << "startProp" << std::endl;
     scenario.Execute();
-    std::cout << "endProp" << std::endl;
 
     if (!maneuvers.empty())
     {

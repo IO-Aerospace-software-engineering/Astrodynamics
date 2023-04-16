@@ -20,8 +20,8 @@ TEST(API, SitePropagation)
     scenario.CelestialBodies[0].id = 399;
     scenario.CelestialBodies[0].centerOfMotionId = 10;
     scenario.CelestialBodies[1].id = 10;
-    scenario.Sites[0].id = 3;
-    scenario.Sites[0].name = "S3";
+    scenario.Sites[0].id = 399033;
+    scenario.Sites[0].name = "S33";
     std::string sitePath(SitePath);
     scenario.Sites[0].directoryPath = sitePath.c_str();
     scenario.Sites[0].bodyId = 399;
