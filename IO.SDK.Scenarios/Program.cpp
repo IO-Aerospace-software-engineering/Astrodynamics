@@ -21,7 +21,10 @@ void DisplayManeuverSummary(IO::SDK::Maneuvers::ManeuverBase *maneuver, const st
     std::cout << "Maneuver window : " << maneuver->GetManeuverWindow()->GetStartDate().ToString() << " => " << maneuver->GetManeuverWindow()->GetEndDate().ToString() << std::endl;
     std::cout << "Thrust window : " << maneuver->GetThrustWindow()->GetStartDate().ToString() << " => " << maneuver->GetThrustWindow()->GetEndDate().ToString() << std::endl;
     std::cout << "Thrust duration : " << maneuver->GetThrustWindow()->GetLength().GetSeconds().count() << " s" << std::endl;
-    std::cout << "Delta V : " << maneuver->GetDeltaV().Magnitude() << " m/s" << std::endl;
+    std::cout << "Delta V - X : " << maneuver->GetDeltaV().GetX() << " m/s" << std::endl;
+    std::cout << "Delta V - Y : " << maneuver->GetDeltaV().GetY() << " m/s" << std::endl;
+    std::cout << "Delta V - Z : " << maneuver->GetDeltaV().GetZ() << " m/s" << std::endl;
+    std::cout << "Delta V Magnitude : " << maneuver->GetDeltaV().Magnitude() << " m/s" << std::endl;
     auto v = maneuver->GetDeltaV().Normalize();
     std::cout << "Spacecraft orientation : X : " << v.GetX() << " Y : " << v.GetY() << " Z : " << v.GetZ() << " ( ICRF )" << std::endl;
     std::cout << "Fuel burned :" << maneuver->GetFuelBurned() << " kg" << std::endl;
@@ -173,8 +176,10 @@ int main()
     //Initialize propagator for dragonfly Spacecraft
     IO::SDK::Propagators::Propagator propagator(spacecraft, integrator, IO::SDK::Time::Window(startDatePropagator, endEpoch));
 
+    //Initialize an integrator
+    IO::SDK::Integrators::VVIntegrator targetIntegrator(step, forces);
     //Intialize propagator for target Spacecraft
-    IO::SDK::Propagators::Propagator targetPropagator(spacecraftTarget, integrator, IO::SDK::Time::Window(startDatePropagator, endEpoch));
+    IO::SDK::Propagators::Propagator targetPropagator(spacecraftTarget, targetIntegrator, IO::SDK::Time::Window(startDatePropagator, endEpoch));
     targetPropagator.Propagate();
 
     //We define which engines can be used to realize maneuvers

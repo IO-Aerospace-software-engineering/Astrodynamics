@@ -31,10 +31,8 @@ IO::SDK::Math::Vector3D IO::SDK::Integrators::Forces::GravityForce::Apply(const 
     std::shared_ptr<IO::SDK::Body::Body> currentBody = stateVector.GetCenterOfMotion();
     while (currentBody->GetOrbitalParametersAtEpoch()) {
         //Compute vector state
-        auto eph=currentBody->ReadEphemeris(stateVector.GetFrame(), AberrationsEnum::None, stateVector.GetEpoch(),
+        position=position+ currentBody->ReadEphemeris(stateVector.GetFrame(), AberrationsEnum::None, stateVector.GetEpoch(),
                                             *currentBody->GetOrbitalParametersAtEpoch()->GetCenterOfMotion()).GetPosition();
-        position = position +eph;
-
         //Compute force
         force = force + ComputeForce(currentBody->GetOrbitalParametersAtEpoch()->GetCenterOfMotion()->GetMass(), bodyMass, position.Magnitude(), position.Normalize());
 

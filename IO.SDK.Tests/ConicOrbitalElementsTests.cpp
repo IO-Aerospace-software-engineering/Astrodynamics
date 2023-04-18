@@ -158,6 +158,35 @@ TEST(ConicOrbitalElements, GetStateVector)
 	ASSERT_NEAR(-5.297615757935174E+03, sv.GetVelocity().GetZ(), 1.1);
 }
 
+TEST(ConicOrbitalElements, GetStateVectorFromToConic)
+{
+    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399); //GEOPHYSICAL PROPERTIES provided by JPL
+
+    auto parkingOrbit = std::make_shared<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth,
+                                                                                           6700000.0,
+                                                                                           0.3,
+                                                                                           50.0 * IO::SDK::Constants::DEG_RAD,
+                                                                                           41.0 * IO::SDK::Constants::DEG_RAD,
+                                                                                           0.0 * IO::SDK::Constants::DEG_RAD,
+                                                                                           0.0,
+                                                                                           IO::SDK::Time::TDB("2021-03-02T00:00:00"),
+                                                                                           IO::SDK::Frames::InertialFrames::GetICRF());
+
+    IO::SDK::OrbitalParameters::StateVector sv = parkingOrbit->GetStateVector();
+
+    //Low accuracy due to conical propagation
+    ASSERT_DOUBLE_EQ(6700000.0, sv.GetPerigeeVector().Magnitude());
+    ASSERT_NEAR(0.3, sv.GetEccentricity(),1E-09);
+    ASSERT_NEAR(50.0 * IO::SDK::Constants::DEG_RAD, sv.GetInclination(),1E-09);
+    ASSERT_NEAR(41.0 * IO::SDK::Constants::DEG_RAD, sv.GetRightAscendingNodeLongitude(),1E-09);
+    ASSERT_NEAR(0.0, sv.GetPeriapsisArgument(),1E-09);
+    ASSERT_NEAR(IO::SDK::Constants::_2PI, sv.GetMeanAnomaly(),1E-09);
+    ASSERT_NEAR(IO::SDK::Constants::_2PI, sv.GetTrueAnomaly(),1E-09);
+    ASSERT_NEAR(9571428.5714285765, sv.GetSemiMajorAxis(),1E-09);
+
+
+}
+
 TEST(ConicOrbitalElements, IsElliptical)
 {
 	auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399); //GEOPHYSICAL PROPERTIES provided by JPL

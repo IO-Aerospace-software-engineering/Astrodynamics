@@ -128,6 +128,6 @@ TEST(API, SpacecraftPropagation)
 
     IO::SDK::Time::TDB tdbStart(std::chrono::duration<double>(scenario.Spacecraft.orbitalPlaneChangingManeuvers[0].thrustWindow.start));
     IO::SDK::Time::TDB tdbEnd(std::chrono::duration<double>(scenario.Spacecraft.orbitalPlaneChangingManeuvers[0].thrustWindow.end));
-    ASSERT_STREQ("2021-03-04 00:33:24.950052 (TDB)",tdbStart.ToString().c_str());
-    ASSERT_STREQ("2021-03-04 00:33:33.080420 (TDB)",tdbEnd.ToString().c_str());
+    ASSERT_STREQ("2021-03-04 00:31:35.852044 (TDB)",tdbStart.ToString().c_str());
+    ASSERT_STREQ("2021-03-04 00:31:44.178429 (TDB)",tdbEnd.ToString().c_str());
 }

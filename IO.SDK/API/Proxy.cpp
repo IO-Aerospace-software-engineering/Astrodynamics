@@ -680,7 +680,7 @@ const char *GetSpiceVersionProxy()
 {
     const char *version;
     version = tkvrsn_c("TOOLKIT");
-    return version;
+    return strdup(version);
 }
 
 bool WriteEphemerisProxy(const char *filePath, int objectId, IO::SDK::API::DTO::StateVectorDTO *sv, int size)
