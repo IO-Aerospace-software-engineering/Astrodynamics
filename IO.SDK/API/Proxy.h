@@ -19,16 +19,16 @@ extern "C" {
  * Get the spice version
  * @return version
  */
-    MODULE_API const char *GetSpiceVersionProxy();
+MODULE_API const char *GetSpiceVersionProxy();
 
-    /**
-     * Write ephemeris into binary file (spk)
-     * @param filePath
-     * @param objectId
-     * @param sv
-     * @param size
-     * @return
-     */
+/**
+ * Write ephemeris into binary file (spk)
+ * @param filePath
+ * @param objectId
+ * @param sv
+ * @param size
+ * @return
+ */
 MODULE_API bool WriteEphemerisProxy(const char *filePath, int objectId, IO::SDK::API::DTO::StateVectorDTO sv[100000], int size);
 
 /**
@@ -45,26 +45,43 @@ MODULE_API bool WriteOrientationProxy(const char *filePath, int objectId, IO::SD
  * Propagate a scenario
  * @param scenarioDto
  */
-MODULE_API void PropagateProxy(IO::SDK::API::DTO::ScenarioDTO& scenarioDto);
+MODULE_API void PropagateProxy(IO::SDK::API::DTO::ScenarioDTO &scenarioDto);
 
 /**
  * Evaluate launch windows
  * @param launchDto
  */
-MODULE_API void LaunchProxy(IO::SDK::API::DTO::LaunchDTO& launchDto);
+MODULE_API void LaunchProxy(IO::SDK::API::DTO::LaunchDTO &launchDto);
 
 /**
  * Load generic kernels
  * @param directoryPath
  */
-MODULE_API void LoadGenericKernelsProxy(const char * directoryPath);
+MODULE_API void LoadGenericKernelsProxy(const char *directoryPath);
+
+/**
+ * Convert secondFromJ2000 to formatted string
+ * @param secondsFromJ2000
+ * @return
+ */
+MODULE_API const char * TDBToStringProxy(double secondsFromJ2000);
+
+/**
+ * Convert secondFromJ2000 to formatted string
+ * @param secondsFromJ2000
+ * @return
+ */
+MODULE_API const char * UTCToStringProxy(double secondsFromJ2000);
 #ifdef __cplusplus
 }
 #endif
 
 #ifndef PROXY_H
 #define PROXY_H
+
 std::map<int, std::shared_ptr<IO::SDK::Body::CelestialBody>> BuildCelestialBodies(IO::SDK::API::DTO::ScenarioDTO &scenario);
+
+void BuildPayload(const IO::SDK::API::DTO::ScenarioDTO &scenarioDto, IO::SDK::Body::Spacecraft::Spacecraft &spacecraft);
 
 void BuildInstruments(const IO::SDK::API::DTO::ScenarioDTO &scenarioDTO, IO::SDK::Body::Spacecraft::Spacecraft &spacecraft);
 

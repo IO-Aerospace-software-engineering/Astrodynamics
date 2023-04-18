@@ -15,7 +15,7 @@ inline constexpr std::string_view SpacecraftPath = "Data/User/Spacecrafts";
 inline constexpr std::string_view SolarSystemKernelPath = "Data/SolarSystem";
 inline constexpr std::string_view SitePath = "Data/User/Sites";
 
-void DisplayManeuverSummary(IO::SDK::Maneuvers::ManeuverBase *maneuver, const std::string& title)
+void DisplayManeuverSummary(IO::SDK::Maneuvers::ManeuverBase *maneuver, const std::string &title)
 {
     std::cout << "======================================== " << title << " ========================================" << std::endl;
     std::cout << "Maneuver window : " << maneuver->GetManeuverWindow()->GetStartDate().ToString() << " => " << maneuver->GetManeuverWindow()->GetEndDate().ToString() << std::endl;
@@ -48,7 +48,7 @@ void DisplayOccultations(const std::vector<IO::SDK::Time::Window<IO::SDK::Time::
     std::cout << "========================================"
               << " Sun occultations from chaser Spacecraft"
               << " ========================================" << std::endl;
-    for (const auto & occultation : occultations)
+    for (const auto &occultation: occultations)
     {
         std::cout << "Occulation start at :" << occultation.GetStartDate().ToString().c_str() << std::endl;
         std::cout << "Occulation end at :" << occultation.GetEndDate().ToString().c_str() << std::endl;
@@ -61,7 +61,7 @@ void DisplayInsight(const std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>>
     std::cout << "========================================"
               << " Windows when the moon is in camera's field of view"
               << " ========================================" << std::endl;
-    for (const auto & window : windows)
+    for (const auto &window: windows)
     {
         std::cout << "Opportunity start at :" << window.GetStartDate().ToString().c_str() << std::endl;
         std::cout << "Opportunity end at :" << window.GetEndDate().ToString().c_str() << std::endl;
@@ -88,8 +88,8 @@ int main()
     //=======================Configure universe topology======================================
     //Bodies id are defined here https://naif.jpl.nasa.gov/pub/naif/toolkit_docs/C/req/naif_ids.html#NAIF%20Object%20ID%20numbers
     auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10);
-    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
-    auto moon = std::make_shared<IO::SDK::Body::CelestialBody>(301);
+    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399,sun);
+    auto moon = std::make_shared<IO::SDK::Body::CelestialBody>(301,earth);
 
     //========================Compute launch parameters=======================================
 
@@ -114,6 +114,7 @@ int main()
                                                                                            0.0,
                                                                                            startEpoch,
                                                                                            IO::SDK::Frames::InertialFrames::GetICRF());
+
     //Define orbit of the target
     auto targetOrbit = std::make_shared<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth,
                                                                                           6800000.0,
@@ -124,7 +125,6 @@ int main()
                                                                                           0.0,
                                                                                           startEpoch,
                                                                                           IO::SDK::Frames::InertialFrames::GetICRF());
-
     auto pk = parkingOrbit->GetStateVector();
     auto tb = targetOrbit->GetStateVector();
     //Compute launch windows, to launch by day on launch site and recovery site when the launch site crosses the parking orbital plane

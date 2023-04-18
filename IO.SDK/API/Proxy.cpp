@@ -16,6 +16,7 @@
 #include <InstrumentPointingToAttitude.h>
 #include <Launch.h>
 #include <GenericKernelsLoader.h>
+#include <iostream>
 
 
 void LaunchProxy(IO::SDK::API::DTO::LaunchDTO &launchDto)
@@ -33,10 +34,10 @@ void LaunchProxy(IO::SDK::API::DTO::LaunchDTO &launchDto)
     for (size_t i = 0; i < res.size(); ++i)
     {
         launchDto.windows[i] = ToWindowDTO(res[i].GetWindow());
-        launchDto.inertialAzimuth=res[i].GetInertialAzimuth();
-        launchDto.nonInertialAzimuth=res[i].GetNonInertialAzimuth();
-        launchDto.inertialInsertionVelocity=res[i].GetInertialInsertionVelocity();
-        launchDto.nonInertialInsertionVelocity=res[i].GetNonInertialInsertionVelocity();
+        launchDto.inertialAzimuth = res[i].GetInertialAzimuth();
+        launchDto.nonInertialAzimuth = res[i].GetNonInertialAzimuth();
+        launchDto.inertialInsertionVelocity = res[i].GetInertialInsertionVelocity();
+        launchDto.nonInertialInsertionVelocity = res[i].GetNonInertialInsertionVelocity();
     }
 }
 
@@ -82,6 +83,7 @@ void PropagateProxy(IO::SDK::API::DTO::ScenarioDTO &scenarioDto)
     BuildFuelTank(scenarioDto, spacecraft);
     BuildEngines(scenarioDto, spacecraft);
     BuildInstruments(scenarioDto, spacecraft);
+    BuildPayload(scenarioDto,spacecraft);
 
     scenario.AttachSpacecraft(spacecraft);
 
@@ -273,6 +275,18 @@ BuildCelestialBodies(IO::SDK::API::DTO::ScenarioDTO &scenario)
     }
 
     return celestialBodies;
+}
+
+void BuildPayload(const IO::SDK::API::DTO::ScenarioDTO &scenarioDto, IO::SDK::Body::Spacecraft::Spacecraft &spacecraft)
+{//Add FuelTank
+    for (auto &payload: scenarioDto.Spacecraft.payloads)
+    {
+        if (payload.serialNumber == nullptr)
+        {
+            break;
+        }
+        spacecraft.AddPayload(payload.serialNumber, payload.name, payload.mass);
+    }
 }
 
 void BuildFuelTank(const IO::SDK::API::DTO::ScenarioDTO &scenarioDto, IO::SDK::Body::Spacecraft::Spacecraft &spacecraft)
@@ -713,4 +727,18 @@ bool WriteOrientationProxy(const char *filePath, int objectId, int spacecraftFra
 void LoadGenericKernelsProxy(const char *directoryPath)
 {
     IO::SDK::Kernels::GenericKernelsLoader::Load(directoryPath);
+}
+
+const char *TDBToStringProxy(double secondsFromJ2000)
+{
+    IO::SDK::Time::TDB tdb((std::chrono::duration<double>(secondsFromJ2000)));
+    std::string str = tdb.ToString();
+    return strdup(str.c_str());
+}
+
+const char *UTCToStringProxy(double secondsFromJ2000)
+{
+    IO::SDK::Time::UTC utc((std::chrono::duration<double>(secondsFromJ2000)));
+    std::string str = utc.ToString();
+    return strdup(str.c_str());
 }
