@@ -2,6 +2,7 @@
 #include<ScenarioDTO.h>
 #include "TestParameters.h"
 #include "Proxy.h"
+#include <GenericKernelsLoader.h>
 
 TEST(API, DTOSize)
 {
@@ -23,6 +24,8 @@ TEST(API, UTCToString)
 
 TEST(API, SitePropagation)
 {
+    std::string s(SolarSystemKernelPath);
+    LoadGenericKernelsProxy(s.c_str());
     IO::SDK::API::DTO::ScenarioDTO scenario{};
     scenario.Name = "scenatiosites";
     scenario.Window.start = 668085625.01523638;
