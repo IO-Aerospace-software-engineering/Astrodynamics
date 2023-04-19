@@ -21,9 +21,10 @@ namespace IO::SDK::Kernels
 	 */
 	class GenericKernelsLoader final
 	{
+    private:
+        inline static bool m_isLoaded;
     public :
         static void Load(const std::string& directoryPath);
-	private:
 	};
 }
 

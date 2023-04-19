@@ -11,24 +11,18 @@ TEST(API, DTOSize)
 
 TEST(API, TDBToString)
 {
-    std::string s(SolarSystemKernelPath);
-    LoadGenericKernelsProxy(s.c_str());
     auto res = TDBToStringProxy(0.0);
     ASSERT_STREQ("2000-01-01 12:00:00.000000 (TDB)", res);
 }
 
 TEST(API, UTCToString)
 {
-    std::string s(SolarSystemKernelPath);
-    LoadGenericKernelsProxy(s.c_str());
     auto res = UTCToStringProxy(0.0);
     ASSERT_STREQ("2000-01-01 12:00:00.000000 (UTC)", res);
 }
 
 TEST(API, SitePropagation)
 {
-    std::string s(SolarSystemKernelPath);
-    LoadGenericKernelsProxy(s.c_str());
     IO::SDK::API::DTO::ScenarioDTO scenario{};
     scenario.Name = "scenatiosites";
     scenario.Window.start = 668085625.01523638;
@@ -67,8 +61,6 @@ TEST(API, SitePropagation)
 
 TEST(API, SpacecraftPropagation)
 {
-    std::string s(SolarSystemKernelPath);
-    LoadGenericKernelsProxy(s.c_str());
     IO::SDK::API::DTO::ScenarioDTO scenario{};
     scenario.Name = "scenatiosites";
     scenario.Window.start = 668085555.829810;

@@ -8,9 +8,8 @@
  * @copyright Copyright (c) 2021
  * 
  */
-#include "GenericKernelsLoader.h"
+#include <GenericKernelsLoader.h>
 #include<filesystem>
-#include<Parameters.h>
 #include<SpiceUsr.h>
 #include <SDKException.h>
 
@@ -20,9 +19,19 @@ void IO::SDK::Kernels::GenericKernelsLoader::Load(const std::string &directoryPa
     {
         throw IO::SDK::Exception::SDKException("Impossible to load generic kernels. The directory doesn't exist :" + directoryPath);
     }
+    if (m_isLoaded)
+    {
+        for (const auto &entry: std::filesystem::directory_iterator(directoryPath))
+        {
+            unload_c(entry.path().string().c_str());
+        }
+        m_isLoaded = false;
+    }
 
     for (const auto &entry: std::filesystem::directory_iterator(directoryPath))
     {
         furnsh_c(entry.path().string().c_str());
     }
+
+    m_isLoaded = true;
 }
