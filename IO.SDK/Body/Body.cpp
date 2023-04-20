@@ -126,7 +126,7 @@ IO::SDK::Body::Body::FindWindowsOnDistanceConstraint(const IO::SDK::Time::Window
                                                      const IO::SDK::Constraints::Constraint &constraint, const IO::SDK::AberrationsEnum aberration, const double value,
                                                      const IO::SDK::Time::TimeSpan &step)
 {
-    return IO::SDK::Constraints::GeometryFinder::FindWindowsOnDistanceConstraint(window, targetBody.m_name, observer.m_name, constraint, value, aberration, step);
+    return IO::SDK::Constraints::GeometryFinder::FindWindowsOnDistanceConstraint(window, observer.m_name, targetBody.m_name, constraint, value, aberration, step);
 }
 
 std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>>
@@ -144,7 +144,8 @@ IO::SDK::Body::Body::FindWindowsOnOccultationConstraint(const IO::SDK::Time::Win
         selectedOccultation = occultationType;
     }
     return IO::SDK::Constraints::GeometryFinder::FindWindowsOnOccultationConstraint(searchWindow, m_name, targetBody.m_name, bframe, bshape, frontBody.m_name,
-                                                                             frontBody.GetBodyFixedFrame().GetName(), "ELLIPSOID", selectedOccultation, aberration, stepSize);
+                                                                                    frontBody.GetBodyFixedFrame().GetName(), "ELLIPSOID", selectedOccultation, aberration,
+                                                                                    stepSize);
 }
 
 IO::SDK::Coordinates::Planetographic
