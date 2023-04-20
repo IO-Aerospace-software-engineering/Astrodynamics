@@ -19,6 +19,7 @@
 #include "Constraints/Constraint.h"
 #include <OccultationType.h>
 #include <Planetographic.h>
+#include <GeometryFinder.h>
 
 namespace IO::SDK::OrbitalParameters
 {
