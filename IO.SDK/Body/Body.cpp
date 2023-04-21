@@ -123,10 +123,10 @@ std::shared_ptr<IO::SDK::Body::Body> IO::SDK::Body::Body::GetSharedPointer()
 
 std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>>
 IO::SDK::Body::Body::FindWindowsOnDistanceConstraint(const IO::SDK::Time::Window<IO::SDK::Time::TDB> &window, const Body &targetBody, const Body &observer,
-                                                     const IO::SDK::Constraints::Constraint &constraint, const IO::SDK::AberrationsEnum aberration, const double value,
+                                                     const IO::SDK::Constraints::RelationnalOperator &constraint, const IO::SDK::AberrationsEnum aberration, const double value,
                                                      const IO::SDK::Time::TimeSpan &step)
 {
-    return IO::SDK::Constraints::GeometryFinder::FindWindowsOnDistanceConstraint(window, observer.m_name, targetBody.m_name, constraint, value, aberration, step);
+    return IO::SDK::Constraints::GeometryFinder::FindWindowsOnDistanceConstraint(window, observer.m_id, targetBody.m_id, constraint, value, aberration, step);
 }
 
 std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>>
@@ -143,7 +143,7 @@ IO::SDK::Body::Body::FindWindowsOnOccultationConstraint(const IO::SDK::Time::Win
         bframe = dynamic_cast<const IO::SDK::Body::CelestialBody &>(targetBody).GetBodyFixedFrame().GetName();
         selectedOccultation = occultationType;
     }
-    return IO::SDK::Constraints::GeometryFinder::FindWindowsOnOccultationConstraint(searchWindow, m_name, targetBody.m_name, bframe, bshape, frontBody.m_name,
+    return IO::SDK::Constraints::GeometryFinder::FindWindowsOnOccultationConstraint(searchWindow, m_id, targetBody.m_id, bframe, bshape, frontBody.m_id,
                                                                                     frontBody.GetBodyFixedFrame().GetName(), "ELLIPSOID", selectedOccultation, aberration,
                                                                                     stepSize);
 }

@@ -15,6 +15,7 @@
 #include <Spacecraft.h>
 #include <FOVShapes.h>
 #include <InstrumentKernel.h>
+#include <Site.h>
 
 namespace IO::SDK::Body::Spacecraft
 {
@@ -163,6 +164,22 @@ namespace IO::SDK::Instruments
         [[nodiscard]] std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>>
         FindWindowsWhereInFieldOfView(const IO::SDK::Time::Window<IO::SDK::Time::TDB> &searchWindow, const IO::SDK::Body::Body &targetBody,
                                       const IO::SDK::AberrationsEnum &aberration, const IO::SDK::Time::TimeSpan &stepSize) const;
+
+
+        /**
+         * Find windows where a site is in field of vien
+         * @param searchWindow
+         * @param site
+         * @param aberration
+         * @param stepSize
+         * @return
+         */
+        [[nodiscard]] std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>>
+        FindWindowsWhereInFieldOfView(
+                const IO::SDK::Time::Window<IO::SDK::Time::TDB> &searchWindow, const IO::SDK::Sites::Site &site,
+                const IO::SDK::AberrationsEnum &aberration,
+                const IO::SDK::Time::TimeSpan &stepSize
+        ) const;
 
         /**
          * Compute boresight in Spacecraft frame

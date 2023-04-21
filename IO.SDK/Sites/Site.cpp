@@ -117,7 +117,7 @@ IO::SDK::Sites::Site::FindDayWindows(const IO::SDK::Time::Window<IO::SDK::Time::
 {
     IO::SDK::Body::CelestialBody sun(10);
     return FindWindowsOnIlluminationConstraint(searchWindow, sun, IO::SDK::IlluminationAngle::Incidence(),
-                                               IO::SDK::Constraints::Constraint::LowerThan(), IO::SDK::Constants::PI2 - twilight);
+                                               IO::SDK::Constraints::RelationnalOperator::LowerThan(), IO::SDK::Constants::PI2 - twilight);
 }
 
 std::vector<IO::SDK::Time::Window<IO::SDK::Time::UTC>>
@@ -126,14 +126,14 @@ IO::SDK::Sites::Site::FindNightWindows(const IO::SDK::Time::Window<IO::SDK::Time
 {
     IO::SDK::Body::CelestialBody sun(10);
     return FindWindowsOnIlluminationConstraint(searchWindow, sun, IO::SDK::IlluminationAngle::Incidence(),
-                                               IO::SDK::Constraints::Constraint::GreaterThan(), IO::SDK::Constants::PI2 - twilight);
+                                               IO::SDK::Constraints::RelationnalOperator::GreaterThan(), IO::SDK::Constants::PI2 - twilight);
 }
 
 std::vector<IO::SDK::Time::Window<IO::SDK::Time::UTC>>
 IO::SDK::Sites::Site::FindWindowsOnIlluminationConstraint(const IO::SDK::Time::Window<IO::SDK::Time::UTC> &searchWindow,
                                                           const IO::SDK::Body::Body &observerBody,
                                                           const IO::SDK::IlluminationAngle &illuminationAngle,
-                                                          const IO::SDK::Constraints::Constraint &constraint,
+                                                          const IO::SDK::Constraints::RelationnalOperator &constraint,
                                                           const double value) const
 {
     IO::SDK::Time::Window<IO::SDK::Time::TDB> tdbWindow(searchWindow.GetStartDate().ToTDB(), searchWindow.GetEndDate().ToTDB());
@@ -199,7 +199,7 @@ IO::SDK::Sites::Site::FindBodyVisibilityWindows(const IO::SDK::Body::Body &body,
 
     auto res = IO::SDK::Constraints::GeometryFinder::FindWindowsOnCoordinateConstraint(tdbWindow, std::to_string(m_id), std::to_string(body.GetId()), m_frame->GetName(),
                                                                                        IO::SDK::CoordinateSystem::Latitudinal(), IO::SDK::Coordinate::Latitude(),
-                                                                                       Constraints::Constraint::GreaterThan(), 0.0, 0.0, aberrationCorrection,
+                                                                                       Constraints::RelationnalOperator::GreaterThan(), 0.0, 0.0, aberrationCorrection,
                                                                                        IO::SDK::Time::TimeSpan(std::chrono::duration<double>(60.0)));
     std::vector<IO::SDK::Time::Window<Time::UTC>> utcWindows;
     utcWindows.reserve(res.size());

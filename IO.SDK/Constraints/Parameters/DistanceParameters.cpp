@@ -4,7 +4,7 @@
 #include <DistanceParameters.h>
 
 IO::SDK::Constraints::Parameters::DistanceParameters::DistanceParameters(const IO::SDK::Body::Body &observer,
-                                                                         const IO::SDK::Body::Body &target, const IO::SDK::Constraints::Constraint &constraint,
+                                                                         const IO::SDK::Body::Body &target, const IO::SDK::Constraints::RelationnalOperator &constraint,
                                                                          IO::SDK::AberrationsEnum aberration, double value,
                                                                          const IO::SDK::Time::TimeSpan &initialStepSize) :
         m_observer{observer}, m_target{target},
