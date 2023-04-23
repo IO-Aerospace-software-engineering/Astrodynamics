@@ -143,7 +143,7 @@ IO::SDK::Sites::Site::FindWindowsOnIlluminationConstraint(const IO::SDK::Time::W
              m_body->GetRadius().GetX(), m_body->GetFlattening(), bodyFixedLocation);
 
 
-    auto res= IO::SDK::Constraints::GeometryFinder::FindWindowsOnIlluminationConstraint(tdbWindow, observerBody.GetName(), "Sun", m_body->GetId(), m_body->GetBodyFixedFrame().GetName(),
+    auto res= IO::SDK::Constraints::GeometryFinder::FindWindowsOnIlluminationConstraint(tdbWindow, observerBody.GetId(), "Sun", m_body->GetId(), m_body->GetBodyFixedFrame().GetName(),
                                                                               bodyFixedLocation, illuminationAngle, constraint, value, 0.0,
                                                                               IO::SDK::AberrationsEnum::CNS, IO::SDK::Time::TimeSpan(std::chrono::duration<double>(4.5 * 60 * 60)),
                                                                               "Ellipsoid");
@@ -151,7 +151,7 @@ IO::SDK::Sites::Site::FindWindowsOnIlluminationConstraint(const IO::SDK::Time::W
     std::vector<IO::SDK::Time::Window<Time::UTC>> utcWindows;
     utcWindows.reserve(res.size());
 
-    std::for_each(res.begin(), res.end(), [&res, &utcWindows](Time::Window<Time::TDB> &x) { utcWindows.emplace_back(x.GetStartDate().ToUTC(), x.GetEndDate().ToUTC()); });
+    std::for_each(res.begin(), res.end(), [&utcWindows](Time::Window<Time::TDB> &x) { utcWindows.emplace_back(x.GetStartDate().ToUTC(), x.GetEndDate().ToUTC()); });
 
     return utcWindows;
 
@@ -197,14 +197,14 @@ IO::SDK::Sites::Site::FindBodyVisibilityWindows(const IO::SDK::Body::Body &body,
 {
     IO::SDK::Time::Window<IO::SDK::Time::TDB> tdbWindow(searchWindow.GetStartDate().ToTDB(), searchWindow.GetEndDate().ToTDB());
 
-    auto res = IO::SDK::Constraints::GeometryFinder::FindWindowsOnCoordinateConstraint(tdbWindow, std::to_string(m_id), std::to_string(body.GetId()), m_frame->GetName(),
+    auto res = IO::SDK::Constraints::GeometryFinder::FindWindowsOnCoordinateConstraint(tdbWindow, m_id, body.GetId(), m_frame->GetName(),
                                                                                        IO::SDK::CoordinateSystem::Latitudinal(), IO::SDK::Coordinate::Latitude(),
                                                                                        Constraints::RelationnalOperator::GreaterThan(), 0.0, 0.0, aberrationCorrection,
                                                                                        IO::SDK::Time::TimeSpan(std::chrono::duration<double>(60.0)));
     std::vector<IO::SDK::Time::Window<Time::UTC>> utcWindows;
     utcWindows.reserve(res.size());
 
-    std::for_each(res.begin(), res.end(), [&res, &utcWindows](Time::Window<Time::TDB> &x) { utcWindows.emplace_back(x.GetStartDate().ToUTC(), x.GetEndDate().ToUTC()); });
+    std::for_each(res.begin(), res.end(), [&utcWindows](Time::Window<Time::TDB> &x) { utcWindows.emplace_back(x.GetStartDate().ToUTC(), x.GetEndDate().ToUTC()); });
 
     return utcWindows;
 }

@@ -83,7 +83,7 @@ void PropagateProxy(IO::SDK::API::DTO::ScenarioDTO &scenarioDto)
     BuildFuelTank(scenarioDto, spacecraft);
     BuildEngines(scenarioDto, spacecraft);
     BuildInstruments(scenarioDto, spacecraft);
-    BuildPayload(scenarioDto,spacecraft);
+    BuildPayload(scenarioDto, spacecraft);
 
     scenario.AttachSpacecraft(spacecraft);
 
@@ -742,3 +742,57 @@ const char *UTCToStringProxy(double secondsFromJ2000)
     std::string str = utc.ToString();
     return strdup(str.c_str());
 }
+
+void FindWindowsOnDistanceConstraintProxy(IO::SDK::API::DTO::WindowDTO searchWindow, int observerId, int targetId, const char *constraint, double value, const char *aberration,
+                                          double stepSize, IO::SDK::API::DTO::WindowDTO windows[1000])
+{
+    std::cout << "searchWindow : " << searchWindow.start << std::endl;
+    std::cout << "searchWindow : " << searchWindow.end << std::endl;
+    std::cout << "observerId : " << observerId << std::endl;
+    std::cout << "targetId : " << targetId << std::endl;
+    std::cout << "constraint : " << constraint << std::endl;
+    std::cout << "value : " << value << std::endl;
+    std::cout << "aberration : " << aberration << std::endl;
+    std::cout << "stepSize : " << stepSize << std::endl;
+    windows[0].start = searchWindow.start;
+    windows[0].end = searchWindow.end;
+    //return windows;
+}
+
+void
+FindWindowsOnOccultationConstraintProxy(IO::SDK::API::DTO::WindowDTO searchWindow, int observerId, int targetId, const char *targetFrame, const char *targetShape, int frontBodyId,
+                                        const char *frontFrame, const char *frontShape, const char *occultationType, char *aberration, double stepSize,
+                                        IO::SDK::API::DTO::WindowDTO *windows)
+{
+    windows[0].start = 12;
+    windows[0].end = 13;
+}
+
+void
+FindWindowsOnCoordinateConstraintProxy(IO::SDK::API::DTO::WindowDTO searchWindow, int observerId, int targetId, const char *frame, const char *coordinateSystem,
+                                       const char *&coordinate,
+                                       const char *relationalOperator, double value, double adjustValue, const char *aberration, double stepSize,
+                                       IO::SDK::API::DTO::WindowDTO *windows)
+{
+    windows[0].start = 12;
+    windows[0].end = 13;
+}
+
+void FindWindowsOnIlluminationConstraintProxy(IO::SDK::API::DTO::WindowDTO searchWindow, int observerId, const char *illuminationSource, int targetBody, const char *fixedFrame,
+                                              IO::SDK::API::DTO::GeodeticDTO geodetic, const char *illuminationType, const char *relationalOperator, double value,
+                                              double adjustValue,
+                                              const char *aberration, double stepSize, const char *method, IO::SDK::API::DTO::WindowDTO *windows)
+{
+    windows[0].start = 12;
+    windows[0].end = 13;
+}
+
+void FindWindowsInFieldOfViewConstraintProxy(IO::SDK::API::DTO::WindowDTO searchWindow, int observerId, int instrumentId,
+                                             int targetId, const char *targetFrame,
+                                             const char *targetShape,
+                                             const char *aberration, double stepSize, IO::SDK::API::DTO::WindowDTO *windows)
+{
+    windows[0].start = 12;
+    windows[0].end = 13;
+}
+

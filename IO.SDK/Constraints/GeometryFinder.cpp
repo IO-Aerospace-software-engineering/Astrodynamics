@@ -84,8 +84,8 @@ IO::SDK::Constraints::GeometryFinder::FindWindowsOnOccultationConstraint(const I
 }
 
 std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>>
-IO::SDK::Constraints::GeometryFinder::FindWindowsOnCoordinateConstraint(const IO::SDK::Time::Window<IO::SDK::Time::TDB> &searchWindow, const std::string &observer,
-                                                                        const std::string &target, const std::string &frame, const IO::SDK::CoordinateSystem &coordinateSystem,
+IO::SDK::Constraints::GeometryFinder::FindWindowsOnCoordinateConstraint(const IO::SDK::Time::Window<IO::SDK::Time::TDB> &searchWindow, int observerId,
+                                                                        int targetId, const std::string &frame, const IO::SDK::CoordinateSystem &coordinateSystem,
                                                                         const IO::SDK::Coordinate &coordinate, const IO::SDK::Constraints::RelationnalOperator &relationalOperator,
                                                                         double value, double adjustValue, IO::SDK::AberrationsEnum aberration,
                                                                         const IO::SDK::Time::TimeSpan &stepSize)
@@ -105,7 +105,7 @@ IO::SDK::Constraints::GeometryFinder::FindWindowsOnCoordinateConstraint(const IO
 
     wninsd_c(searchWindow.GetStartDate().GetSecondsFromJ2000().count(), searchWindow.GetEndDate().GetSecondsFromJ2000().count(), &cnfine);
 
-    gfposc_c(target.c_str(), frame.c_str(), IO::SDK::Aberrations::ToString(aberration).c_str(), observer.c_str(),
+    gfposc_c( std::to_string(targetId).c_str(), frame.c_str(), IO::SDK::Aberrations::ToString(aberration).c_str(),  std::to_string(observerId).c_str(),
              coordinateSystem.ToCharArray(), coordinate.ToCharArray(), relationalOperator.ToCharArray(), value, adjustValue, stepSize.GetSeconds().count(), NINTVL, &cnfine,
              &results);
 
@@ -120,7 +120,7 @@ IO::SDK::Constraints::GeometryFinder::FindWindowsOnCoordinateConstraint(const IO
 }
 
 std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>>
-IO::SDK::Constraints::GeometryFinder::FindWindowsOnIlluminationConstraint(const IO::SDK::Time::Window<IO::SDK::Time::TDB> &searchWindow, const std::string &observer,
+IO::SDK::Constraints::GeometryFinder::FindWindowsOnIlluminationConstraint(const IO::SDK::Time::Window<IO::SDK::Time::TDB> &searchWindow, int observerId,
                                                                           const std::string &illuminationSource, int targetBody, const std::string &fixedFrame,
                                                                           const double coordinates[3], const IlluminationAngle &illuminationType,
                                                                           const IO::SDK::Constraints::RelationnalOperator &relationalOperator, double value, double adjustValue,
@@ -151,7 +151,7 @@ IO::SDK::Constraints::GeometryFinder::FindWindowsOnIlluminationConstraint(const 
 
     gfilum_c(method.c_str(), illuminationType.ToCharArray(), std::to_string(targetBody).c_str(), illuminationSource.c_str(),
              fixedFrame.c_str(), IO::SDK::Aberrations::ToString(aberration).c_str(),
-             observer.c_str(), coordinates, relationalOperator.ToCharArray(), value, adjustValue, stepSize.GetSeconds().count(),
+              std::to_string(observerId).c_str(), coordinates, relationalOperator.ToCharArray(), value, adjustValue, stepSize.GetSeconds().count(),
              MAXIVL, &cnfine, &results);
 
     for (int i = 0; i < wncard_c(&results); i++)

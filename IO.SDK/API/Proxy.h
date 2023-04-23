@@ -64,14 +64,42 @@ MODULE_API void LoadGenericKernelsProxy(const char *directoryPath);
  * @param secondsFromJ2000
  * @return
  */
-MODULE_API const char * TDBToStringProxy(double secondsFromJ2000);
+MODULE_API const char *TDBToStringProxy(double secondsFromJ2000);
 
 /**
  * Convert secondFromJ2000 to formatted string
  * @param secondsFromJ2000
  * @return
  */
-MODULE_API const char * UTCToStringProxy(double secondsFromJ2000);
+MODULE_API const char *UTCToStringProxy(double secondsFromJ2000);
+
+MODULE_API void FindWindowsOnDistanceConstraintProxy(IO::SDK::API::DTO::WindowDTO searchWindow, int observerId, int targetId,
+                                                     const char *constraint, double value, const char *aberration,
+                                                     double stepSize, IO::SDK::API::DTO::WindowDTO windows[1000]);
+
+MODULE_API void FindWindowsOnOccultationConstraintProxy(IO::SDK::API::DTO::WindowDTO searchWindow, int observerId,
+                                                        int targetId, const char *targetFrame,
+                                                        const char *targetShape,
+                                                        int frontBodyId, const char *frontFrame, const char *frontShape,
+                                                        const char *occultationType,
+                                                        char *aberration, double stepSize, IO::SDK::API::DTO::WindowDTO windows[1000]);
+
+MODULE_API void FindWindowsOnCoordinateConstraintProxy(IO::SDK::API::DTO::WindowDTO searchWindow, int observerId,
+                                                       int targetId, const char *frame, const char *coordinateSystem,
+                                                       const char *&coordinate, const char *relationalOperator,
+                                                       double value, double adjustValue, const char *aberration,
+                                                       double stepSize, IO::SDK::API::DTO::WindowDTO windows[1000]);
+
+MODULE_API void FindWindowsOnIlluminationConstraintProxy(IO::SDK::API::DTO::WindowDTO searchWindow, int observerId,
+                                                         const char *illuminationSource, int targetBody, const char *fixedFrame,
+                                                         IO::SDK::API::DTO::GeodeticDTO geodetic, const char *illuminationType,
+                                                         const char *relationalOperator, double value, double adjustValue,
+                                                         const char *aberration, double stepSize, const char *method, IO::SDK::API::DTO::WindowDTO windows[1000]);
+
+MODULE_API void
+FindWindowsInFieldOfViewConstraintProxy(IO::SDK::API::DTO::WindowDTO searchWindow, int observerId, int instrumentId,
+                                        int targetId, const char *targetFrame, const char *targetShape,
+                                        const char *aberration, double stepSize, IO::SDK::API::DTO::WindowDTO windows[1000]);
 #ifdef __cplusplus
 }
 #endif

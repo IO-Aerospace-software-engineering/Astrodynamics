@@ -38,14 +38,14 @@ namespace IO::SDK::Constraints
                                            IO::SDK::AberrationsEnum aberration, const IO::SDK::Time::TimeSpan &stepSize);
 
         static std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>>
-        FindWindowsOnCoordinateConstraint(const IO::SDK::Time::Window<IO::SDK::Time::TDB> &searchWindow, const std::string &observer,
-                                          const std::string &target, const std::string &frame, const IO::SDK::CoordinateSystem &coordinateSystem,
+        FindWindowsOnCoordinateConstraint(const IO::SDK::Time::Window<IO::SDK::Time::TDB> &searchWindow, int observerId,
+                                          int targetId, const std::string &frame, const IO::SDK::CoordinateSystem &coordinateSystem,
                                           const IO::SDK::Coordinate &coordinate, const IO::SDK::Constraints::RelationnalOperator &relationalOperator,
                                           double value, double adjustValue, IO::SDK::AberrationsEnum aberration,
                                           const IO::SDK::Time::TimeSpan &stepSize);
 
         static std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>>
-        FindWindowsOnIlluminationConstraint(const IO::SDK::Time::Window<IO::SDK::Time::TDB> &searchWindow, const std::string &observer,
+        FindWindowsOnIlluminationConstraint(const IO::SDK::Time::Window<IO::SDK::Time::TDB> &searchWindow, int observerId,
                                             const std::string &illuminationSource, int targetBody, const std::string &fixedFrame,
                                             const double coordinates[3], const IlluminationAngle &illuminationType,
                                             const IO::SDK::Constraints::RelationnalOperator &relationalOperator, double value, double adjustValue,
