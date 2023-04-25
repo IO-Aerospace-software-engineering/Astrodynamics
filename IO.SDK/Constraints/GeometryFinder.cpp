@@ -12,7 +12,7 @@
 std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>>
 IO::SDK::Constraints::GeometryFinder::FindWindowsOnDistanceConstraint(const IO::SDK::Time::Window<IO::SDK::Time::TDB> &searchWindow, int observerId,
                                                                       int targetId,
-                                                                      const Constraints::RelationnalOperator &constraint, const double value, const IO::SDK::AberrationsEnum aberration,
+                                                                      const Constraints::RelationalOperator &constraint, const double value, const IO::SDK::AberrationsEnum aberration,
                                                                       const Time::TimeSpan &stepSize)
 {
     std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>> windows;
@@ -86,7 +86,7 @@ IO::SDK::Constraints::GeometryFinder::FindWindowsOnOccultationConstraint(const I
 std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>>
 IO::SDK::Constraints::GeometryFinder::FindWindowsOnCoordinateConstraint(const IO::SDK::Time::Window<IO::SDK::Time::TDB> &searchWindow, int observerId,
                                                                         int targetId, const std::string &frame, const IO::SDK::CoordinateSystem &coordinateSystem,
-                                                                        const IO::SDK::Coordinate &coordinate, const IO::SDK::Constraints::RelationnalOperator &relationalOperator,
+                                                                        const IO::SDK::Coordinate &coordinate, const IO::SDK::Constraints::RelationalOperator &relationalOperator,
                                                                         double value, double adjustValue, IO::SDK::AberrationsEnum aberration,
                                                                         const IO::SDK::Time::TimeSpan &stepSize)
 {
@@ -123,7 +123,7 @@ std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>>
 IO::SDK::Constraints::GeometryFinder::FindWindowsOnIlluminationConstraint(const IO::SDK::Time::Window<IO::SDK::Time::TDB> &searchWindow, int observerId,
                                                                           const std::string &illuminationSource, int targetBody, const std::string &fixedFrame,
                                                                           const double coordinates[3], const IlluminationAngle &illuminationType,
-                                                                          const IO::SDK::Constraints::RelationnalOperator &relationalOperator, double value, double adjustValue,
+                                                                          const IO::SDK::Constraints::RelationalOperator &relationalOperator, double value, double adjustValue,
                                                                           IO::SDK::AberrationsEnum aberration, const IO::SDK::Time::TimeSpan &stepSize,
                                                                           const std::string &method = "Ellipsoid")
 {

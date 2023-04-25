@@ -7,7 +7,7 @@
 #include <PhasingManeuver.h>
 #include <Scenario.h>
 #include "InertialFrames.h"
-#include <GenericKernelsLoader.h>
+#include <KernelsLoader.h>
 
 using namespace std::literals::chrono_literals;
 
@@ -83,7 +83,7 @@ int main()
     */
 
     //Load generic kernel (leap second, barycenters, major bodies,...)
-    IO::SDK::Kernels::GenericKernelsLoader::Load(std::string(SolarSystemKernelPath));
+    IO::SDK::Kernels::KernelsLoader::Load(std::string(SolarSystemKernelPath));
 
     IO::SDK::Time::TDB startEpoch("2021-03-02T00:00:00");
     IO::SDK::Time::TDB endEpoch("2021-03-05T00:00:00");

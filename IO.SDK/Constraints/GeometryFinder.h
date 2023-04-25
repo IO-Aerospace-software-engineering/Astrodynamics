@@ -9,7 +9,7 @@
 #include <vector>
 
 #include <Aberrations.h>
-#include <RelationnalOperator.h>
+#include <RelationalOperator.h>
 #include <Window.h>
 #include <OccultationType.h>
 #include <CoordinateSystem.h>
@@ -26,7 +26,7 @@ namespace IO::SDK::Constraints
     public:
         static std::vector<Time::Window<Time::TDB>>
         FindWindowsOnDistanceConstraint(const IO::SDK::Time::Window<IO::SDK::Time::TDB> &searchWindow, int observerId, int targetId,
-                                        const Constraints::RelationnalOperator &constraint, double value, IO::SDK::AberrationsEnum aberration,
+                                        const Constraints::RelationalOperator &constraint, double value, IO::SDK::AberrationsEnum aberration,
                                         const Time::TimeSpan &stepSize);
 
         static std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>>
@@ -40,7 +40,7 @@ namespace IO::SDK::Constraints
         static std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>>
         FindWindowsOnCoordinateConstraint(const IO::SDK::Time::Window<IO::SDK::Time::TDB> &searchWindow, int observerId,
                                           int targetId, const std::string &frame, const IO::SDK::CoordinateSystem &coordinateSystem,
-                                          const IO::SDK::Coordinate &coordinate, const IO::SDK::Constraints::RelationnalOperator &relationalOperator,
+                                          const IO::SDK::Coordinate &coordinate, const IO::SDK::Constraints::RelationalOperator &relationalOperator,
                                           double value, double adjustValue, IO::SDK::AberrationsEnum aberration,
                                           const IO::SDK::Time::TimeSpan &stepSize);
 
@@ -48,7 +48,7 @@ namespace IO::SDK::Constraints
         FindWindowsOnIlluminationConstraint(const IO::SDK::Time::Window<IO::SDK::Time::TDB> &searchWindow, int observerId,
                                             const std::string &illuminationSource, int targetBody, const std::string &fixedFrame,
                                             const double coordinates[3], const IlluminationAngle &illuminationType,
-                                            const IO::SDK::Constraints::RelationnalOperator &relationalOperator, double value, double adjustValue,
+                                            const IO::SDK::Constraints::RelationalOperator &relationalOperator, double value, double adjustValue,
                                             IO::SDK::AberrationsEnum aberration, const IO::SDK::Time::TimeSpan &stepSize,
                                             const std::string &method
         );

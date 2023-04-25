@@ -7,7 +7,7 @@
 
 #include <Body.h>
 #include <CelestialBody.h>
-#include <RelationnalOperator.h>
+#include <RelationalOperator.h>
 #include <Aberrations.h>
 #include <Window.h>
 #include <TDB.h>
@@ -21,7 +21,7 @@ namespace IO::SDK::Constraints::Parameters
 
         const IO::SDK::Body::Body &m_observer;
         const IO::SDK::Body::Body &m_target;
-        const IO::SDK::Constraints::RelationnalOperator &m_constraint;
+        const IO::SDK::Constraints::RelationalOperator &m_constraint;
         const IO::SDK::AberrationsEnum m_aberration;
         const double m_value;
         const IO::SDK::Time::TimeSpan &m_initialStepSize;
@@ -29,7 +29,7 @@ namespace IO::SDK::Constraints::Parameters
     public:
         DistanceParameters(const IO::SDK::Body::Body &observer,
                            const IO::SDK::Body::Body &target,
-                           const IO::SDK::Constraints::RelationnalOperator &constraint,
+                           const IO::SDK::Constraints::RelationalOperator &constraint,
                            IO::SDK::AberrationsEnum aberration,
                            double value,
                            const IO::SDK::Time::TimeSpan &initialStepSize);
@@ -40,7 +40,7 @@ namespace IO::SDK::Constraints::Parameters
         [[nodiscard]] inline const IO::SDK::Body::Body &GetTarget() const
         { return m_target; }
 
-        [[nodiscard]] inline const IO::SDK::Constraints::RelationnalOperator &GetConstraint() const
+        [[nodiscard]] inline const IO::SDK::Constraints::RelationalOperator &GetConstraint() const
         { return m_constraint; }
 
         [[nodiscard]] inline const IO::SDK::AberrationsEnum &GetAberration() const

@@ -57,7 +57,7 @@ MODULE_API void LaunchProxy(IO::SDK::API::DTO::LaunchDTO &launchDto);
  * Load generic kernels
  * @param directoryPath
  */
-MODULE_API void LoadGenericKernelsProxy(const char *directoryPath);
+MODULE_API void LoadKernelsProxy(const char *path);
 
 /**
  * Convert secondFromJ2000 to formatted string
@@ -74,7 +74,7 @@ MODULE_API const char *TDBToStringProxy(double secondsFromJ2000);
 MODULE_API const char *UTCToStringProxy(double secondsFromJ2000);
 
 MODULE_API void FindWindowsOnDistanceConstraintProxy(IO::SDK::API::DTO::WindowDTO searchWindow, int observerId, int targetId,
-                                                     const char *constraint, double value, const char *aberration,
+                                                     const char *relationalOperator, double value, const char *aberration,
                                                      double stepSize, IO::SDK::API::DTO::WindowDTO windows[1000]);
 
 MODULE_API void FindWindowsOnOccultationConstraintProxy(IO::SDK::API::DTO::WindowDTO searchWindow, int observerId,

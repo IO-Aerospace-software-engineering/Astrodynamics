@@ -1,5 +1,5 @@
 /**
- * @file RelationnalOperator.cpp
+ * @file RelationalOperator.cpp
  * @author Sylvain Guillet (sylvain.guillet@live.com)
  * @brief 
  * @version 0.x
@@ -8,58 +8,96 @@
  * @copyright Copyright (c) 2021
  * 
  */
-#include "RelationnalOperator.h"
+#include "RelationalOperator.h"
 
 #include <utility>
+#include <cstring>
+#include <SDKException.h>
 
-IO::SDK::Constraints::RelationnalOperator IO::SDK::Constraints::RelationnalOperator::mGreaterThan(std::string(">"));
-IO::SDK::Constraints::RelationnalOperator IO::SDK::Constraints::RelationnalOperator::mLowerThan(std::string("<"));
-IO::SDK::Constraints::RelationnalOperator IO::SDK::Constraints::RelationnalOperator::mEqual(std::string("="));
-IO::SDK::Constraints::RelationnalOperator IO::SDK::Constraints::RelationnalOperator::mAbsMin(std::string("ABSMIN"));
-IO::SDK::Constraints::RelationnalOperator IO::SDK::Constraints::RelationnalOperator::mAbsMax(std::string("ABSMAX"));
-IO::SDK::Constraints::RelationnalOperator IO::SDK::Constraints::RelationnalOperator::mLocalMin(std::string("LOCMIN"));
-IO::SDK::Constraints::RelationnalOperator IO::SDK::Constraints::RelationnalOperator::mLocalMax(std::string("LOCMAX"));
+IO::SDK::Constraints::RelationalOperator IO::SDK::Constraints::RelationalOperator::mGreaterThan(std::string(">"));
+IO::SDK::Constraints::RelationalOperator IO::SDK::Constraints::RelationalOperator::mLowerThan(std::string("<"));
+IO::SDK::Constraints::RelationalOperator IO::SDK::Constraints::RelationalOperator::mEqual(std::string("="));
+IO::SDK::Constraints::RelationalOperator IO::SDK::Constraints::RelationalOperator::mAbsMin(std::string("ABSMIN"));
+IO::SDK::Constraints::RelationalOperator IO::SDK::Constraints::RelationalOperator::mAbsMax(std::string("ABSMAX"));
+IO::SDK::Constraints::RelationalOperator IO::SDK::Constraints::RelationalOperator::mLocalMin(std::string("LOCMIN"));
+IO::SDK::Constraints::RelationalOperator IO::SDK::Constraints::RelationalOperator::mLocalMax(std::string("LOCMAX"));
 
-IO::SDK::Constraints::RelationnalOperator::RelationnalOperator(std::string  name) : m_name{std::move(name)}
+IO::SDK::Constraints::RelationalOperator::RelationalOperator(std::string name) : m_name{std::move(name)}
 {
 }
 
-const char *IO::SDK::Constraints::RelationnalOperator::ToCharArray() const
+const char *IO::SDK::Constraints::RelationalOperator::ToCharArray() const
 {
     return m_name.c_str();
 }
 
-IO::SDK::Constraints::RelationnalOperator& IO::SDK::Constraints::RelationnalOperator::GreaterThan()
+IO::SDK::Constraints::RelationalOperator &IO::SDK::Constraints::RelationalOperator::GreaterThan()
 {
     return mGreaterThan;
 }
 
-IO::SDK::Constraints::RelationnalOperator& IO::SDK::Constraints::RelationnalOperator::LowerThan()
+IO::SDK::Constraints::RelationalOperator &IO::SDK::Constraints::RelationalOperator::LowerThan()
 {
     return mLowerThan;
 }
 
-IO::SDK::Constraints::RelationnalOperator &IO::SDK::Constraints::RelationnalOperator::Equal()
+IO::SDK::Constraints::RelationalOperator &IO::SDK::Constraints::RelationalOperator::Equal()
 {
     return mEqual;
 }
 
-IO::SDK::Constraints::RelationnalOperator &IO::SDK::Constraints::RelationnalOperator::AbsMin()
+IO::SDK::Constraints::RelationalOperator &IO::SDK::Constraints::RelationalOperator::AbsMin()
 {
     return mAbsMin;
 }
 
-IO::SDK::Constraints::RelationnalOperator &IO::SDK::Constraints::RelationnalOperator::AbsMax()
+IO::SDK::Constraints::RelationalOperator &IO::SDK::Constraints::RelationalOperator::AbsMax()
 {
     return mAbsMax;
 }
 
-IO::SDK::Constraints::RelationnalOperator &IO::SDK::Constraints::RelationnalOperator::LocalMin()
+IO::SDK::Constraints::RelationalOperator &IO::SDK::Constraints::RelationalOperator::LocalMin()
 {
     return mLocalMin;
 }
 
-IO::SDK::Constraints::RelationnalOperator &IO::SDK::Constraints::RelationnalOperator::LocalMax()
+IO::SDK::Constraints::RelationalOperator &IO::SDK::Constraints::RelationalOperator::LocalMax()
 {
     return mLocalMax;
+}
+
+IO::SDK::Constraints::RelationalOperator &IO::SDK::Constraints::RelationalOperator::operator=(const RelationalOperator &other)
+{
+    if (this == &other)
+        return *this;
+    const_cast<std::string &>(m_name) = other.m_name;
+    return *this;
+}
+
+IO::SDK::Constraints::RelationalOperator IO::SDK::Constraints::RelationalOperator::ToRelationalOperator(const std::string &relationalOperator)
+{
+    if (relationalOperator == IO::SDK::Constraints::RelationalOperator::Equal().ToCharArray())
+    {
+        return IO::SDK::Constraints::RelationalOperator::Equal();
+    } else if (relationalOperator == IO::SDK::Constraints::RelationalOperator::LowerThan().ToCharArray())
+    {
+        return IO::SDK::Constraints::RelationalOperator::LowerThan();
+    } else if (relationalOperator == IO::SDK::Constraints::RelationalOperator::GreaterThan().ToCharArray())
+    {
+        return IO::SDK::Constraints::RelationalOperator::GreaterThan();
+    } else if (relationalOperator == IO::SDK::Constraints::RelationalOperator::AbsMin().ToCharArray())
+    {
+        return IO::SDK::Constraints::RelationalOperator::AbsMin();
+    } else if (relationalOperator == IO::SDK::Constraints::RelationalOperator::AbsMax().ToCharArray())
+    {
+        return IO::SDK::Constraints::RelationalOperator::AbsMax();
+    } else if (relationalOperator == IO::SDK::Constraints::RelationalOperator::LocalMin().ToCharArray())
+    {
+        return IO::SDK::Constraints::RelationalOperator::LocalMin();
+    } else if (relationalOperator == IO::SDK::Constraints::RelationalOperator::LocalMax().ToCharArray())
+    {
+        return IO::SDK::Constraints::RelationalOperator::LocalMax();
+    }
+
+    throw IO::SDK::Exception::SDKException("Invalid relational operator : " + relationalOperator);
 }

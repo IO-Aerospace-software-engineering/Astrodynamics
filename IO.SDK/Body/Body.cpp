@@ -123,7 +123,7 @@ std::shared_ptr<IO::SDK::Body::Body> IO::SDK::Body::Body::GetSharedPointer()
 
 std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>>
 IO::SDK::Body::Body::FindWindowsOnDistanceConstraint(const IO::SDK::Time::Window<IO::SDK::Time::TDB> &window, const Body &targetBody, const Body &observer,
-                                                     const IO::SDK::Constraints::RelationnalOperator &constraint, const IO::SDK::AberrationsEnum aberration, const double value,
+                                                     const IO::SDK::Constraints::RelationalOperator &constraint, const IO::SDK::AberrationsEnum aberration, const double value,
                                                      const IO::SDK::Time::TimeSpan &step)
 {
     return IO::SDK::Constraints::GeometryFinder::FindWindowsOnDistanceConstraint(window, observer.m_id, targetBody.m_id, constraint, value, aberration, step);

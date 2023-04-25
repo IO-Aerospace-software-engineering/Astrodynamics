@@ -161,7 +161,7 @@ TEST(Site, FindWindowsOnIlluminationConstraint)
     IO::SDK::Sites::Site s{333002, "S2", IO::SDK::Coordinates::Geodetic(2.2 * IO::SDK::Constants::DEG_RAD, 48.0 * IO::SDK::Constants::DEG_RAD, 0.0), earth, std::string(SitePath)};
     auto windows = s.FindWindowsOnIlluminationConstraint(
             IO::SDK::Time::Window<IO::SDK::Time::UTC>(IO::SDK::Time::TDB("2021-05-17 12:00:00 TDB").ToUTC(), IO::SDK::Time::TDB("2021-05-18 12:00:00 TDB").ToUTC()), *sun,
-            IO::SDK::IlluminationAngle::Incidence(), IO::SDK::Constraints::RelationnalOperator::LowerThan(), IO::SDK::Constants::PI2 - IO::SDK::Constants::OfficialTwilight);
+            IO::SDK::IlluminationAngle::Incidence(), IO::SDK::Constraints::RelationalOperator::LowerThan(), IO::SDK::Constants::PI2 - IO::SDK::Constants::OfficialTwilight);
 
     ASSERT_EQ(2, windows.size());
     ASSERT_STREQ("2021-05-17 12:00:00.000000 (TDB)", windows[0].GetStartDate().ToTDB().ToString().c_str());

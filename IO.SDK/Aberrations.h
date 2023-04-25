@@ -11,6 +11,7 @@
 #ifndef  ABERRATION_H
 #define ABERRATION_H
 #include<string>
+#include <map>
 
 namespace IO::SDK
 {
@@ -29,11 +30,21 @@ namespace IO::SDK
 
 	class Aberrations
 	{
+    private:
+        static inline std::map<AberrationsEnum, const char*> AberrationStrings{
+                { AberrationsEnum::None, "NONE" },
+                { AberrationsEnum::LT, "LT" },
+                { AberrationsEnum::LTS, "LT+S" },
+                { AberrationsEnum::CN, "CN" },
+                { AberrationsEnum::CNS, "CN+S" },
+                { AberrationsEnum::XLT, "XLT" },
+                { AberrationsEnum::XLTS, "XLT+S" },
+                { AberrationsEnum::XCN, "XCN" },
+                { AberrationsEnum::XCNS, "XCN+S" }
+        };
 	public:
 		static std::string ToString(AberrationsEnum e) ;
-
-	private:
-
+		static AberrationsEnum ToEnum(const std::string& e) ;
 	};
 }
 #endif // ! ABERRATION_H

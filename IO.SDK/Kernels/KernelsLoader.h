@@ -1,5 +1,5 @@
 /**
- * @file GenericKernelsLoader.h
+ * @file KernelsLoader.h
  * @author Sylvain Guillet (sylvain.guillet@live.com)
  * @brief 
  * @version 0.x
@@ -19,11 +19,11 @@ namespace IO::SDK::Kernels
 	 * @brief 
 	 * 
 	 */
-	class GenericKernelsLoader final
+	class KernelsLoader final
 	{
     private:
     public :
-        static void Load(const std::string& directoryPath);
+        static void Load(const std::string& path);
 	};
 }
 

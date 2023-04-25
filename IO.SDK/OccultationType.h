@@ -56,6 +56,8 @@ namespace IO::SDK
         static IO::SDK::OccultationType &Partial();
 
         static IO::SDK::OccultationType &Any();
+
+        static IO::SDK::OccultationType ToOccultationType(const std::string &occultationType) ;
     };
 
 

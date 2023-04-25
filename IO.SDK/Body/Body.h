@@ -16,7 +16,7 @@
 #include <OrbitalParameters.h>
 #include <Aberrations.h>
 #include <Window.h>
-#include "Constraints/RelationnalOperator.h"
+#include "Constraints/RelationalOperator.h"
 #include <OccultationType.h>
 #include <Planetographic.h>
 #include <GeometryFinder.h>
@@ -152,7 +152,7 @@ namespace IO::SDK::Body
          *
          * @param targetBody Target body
          * @param observer Observer
-         * @param constraint RelationnalOperator operator
+         * @param constraint RelationalOperator operator
          * @param aberration Aberration
          * @param value Target value
          * @param searchWindow Time window where constraint is evaluated
@@ -161,7 +161,7 @@ namespace IO::SDK::Body
          */
         static std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>>
         FindWindowsOnDistanceConstraint(const IO::SDK::Time::Window<IO::SDK::Time::TDB> &searchWindow, const Body &targetBody, const Body &observer,
-                                        const IO::SDK::Constraints::RelationnalOperator &constraint, IO::SDK::AberrationsEnum aberration, double value, const IO::SDK::Time::TimeSpan &step);
+                                        const IO::SDK::Constraints::RelationalOperator &constraint, IO::SDK::AberrationsEnum aberration, double value, const IO::SDK::Time::TimeSpan &step);
 
         /**
          * @brief Find windows when occultation occurs

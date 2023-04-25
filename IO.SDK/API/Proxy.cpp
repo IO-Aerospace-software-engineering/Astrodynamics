@@ -15,8 +15,10 @@
 #include <PhasingManeuver.h>
 #include <InstrumentPointingToAttitude.h>
 #include <Launch.h>
-#include <GenericKernelsLoader.h>
+#include <KernelsLoader.h>
 #include <iostream>
+#include <RelationalOperator.h>
+#include <OccultationType.h>
 
 
 void LaunchProxy(IO::SDK::API::DTO::LaunchDTO &launchDto)
@@ -724,9 +726,9 @@ bool WriteOrientationProxy(const char *filePath, int objectId, int spacecraftFra
     return true;
 }
 
-void LoadGenericKernelsProxy(const char *directoryPath)
+void LoadKernelsProxy(const char *path)
 {
-    IO::SDK::Kernels::GenericKernelsLoader::Load(directoryPath);
+    IO::SDK::Kernels::KernelsLoader::Load(path);
 }
 
 const char *TDBToStringProxy(double secondsFromJ2000)
@@ -743,20 +745,19 @@ const char *UTCToStringProxy(double secondsFromJ2000)
     return strdup(str.c_str());
 }
 
-void FindWindowsOnDistanceConstraintProxy(IO::SDK::API::DTO::WindowDTO searchWindow, int observerId, int targetId, const char *constraint, double value, const char *aberration,
-                                          double stepSize, IO::SDK::API::DTO::WindowDTO windows[1000])
+void
+FindWindowsOnDistanceConstraintProxy(IO::SDK::API::DTO::WindowDTO searchWindow, int observerId, int targetId, const char *relationalOperator, double value, const char *aberration,
+                                     double stepSize, IO::SDK::API::DTO::WindowDTO windows[1000])
 {
-    std::cout << "searchWindow : " << searchWindow.start << std::endl;
-    std::cout << "searchWindow : " << searchWindow.end << std::endl;
-    std::cout << "observerId : " << observerId << std::endl;
-    std::cout << "targetId : " << targetId << std::endl;
-    std::cout << "constraint : " << constraint << std::endl;
-    std::cout << "value : " << value << std::endl;
-    std::cout << "aberration : " << aberration << std::endl;
-    std::cout << "stepSize : " << stepSize << std::endl;
-    windows[0].start = searchWindow.start;
-    windows[0].end = searchWindow.end;
-    //return windows;
+    auto relationalOpe = IO::SDK::Constraints::RelationalOperator::ToRelationalOperator(relationalOperator);
+    auto abe = IO::SDK::Aberrations::ToEnum(aberration);
+
+    auto res = IO::SDK::Constraints::GeometryFinder::FindWindowsOnDistanceConstraint(ToTDBWindow(searchWindow), observerId, targetId, relationalOpe, value, abe,
+                                                                                     IO::SDK::Time::TimeSpan(stepSize));
+    for (size_t i = 0; i < res.size(); ++i)
+    {
+        windows[i] = ToWindowDTO(res[i]);
+    }
 }
 
 void
@@ -764,8 +765,15 @@ FindWindowsOnOccultationConstraintProxy(IO::SDK::API::DTO::WindowDTO searchWindo
                                         const char *frontFrame, const char *frontShape, const char *occultationType, char *aberration, double stepSize,
                                         IO::SDK::API::DTO::WindowDTO *windows)
 {
-    windows[0].start = 12;
-    windows[0].end = 13;
+    auto abe = IO::SDK::Aberrations::ToEnum(aberration);
+    auto res = IO::SDK::Constraints::GeometryFinder::FindWindowsOnOccultationConstraint(ToTDBWindow(searchWindow), observerId, targetId, targetFrame, targetShape, frontBodyId,
+                                                                                        frontFrame, frontShape, IO::SDK::OccultationType::ToOccultationType(occultationType), abe,
+                                                                                        IO::SDK::Time::TimeSpan(stepSize));
+
+    for (size_t i = 0; i < res.size(); ++i)
+    {
+        windows[i] = ToWindowDTO(res[i]);
+    }
 }
 
 void

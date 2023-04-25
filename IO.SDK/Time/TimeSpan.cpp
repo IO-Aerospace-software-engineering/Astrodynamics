@@ -17,6 +17,11 @@ IO::SDK::Time::TimeSpan::TimeSpan(const std::chrono::duration<double> seconds) :
 {
 }
 
+IO::SDK::Time::TimeSpan::TimeSpan(double period) : TimeSpan(std::chrono::duration<double>(period))
+{
+
+}
+
 std::chrono::duration<double, std::nano> IO::SDK::Time::TimeSpan::GetNanoseconds() const
 {
     return std::chrono::duration<double, std::nano>{m_seconds};
@@ -101,3 +106,5 @@ bool IO::SDK::Time::TimeSpan::operator<=(const IO::SDK::Time::TimeSpan &ts) cons
 {
     return m_seconds <= ts.m_seconds;
 }
+
+

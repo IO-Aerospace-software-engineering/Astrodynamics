@@ -29,6 +29,9 @@ namespace IO::SDK::Time
 		/// <param name="period">Period is defined with literal in h - min - s - ms - us - ns. If literal is not specified second will be used</param>
 		explicit TimeSpan(std::chrono::duration<double> period);
 
+
+		explicit TimeSpan(double period);
+
 		[[nodiscard]] std::chrono::duration<double, std::nano> GetNanoseconds() const;
 		[[nodiscard]] std::chrono::duration<double, std::micro> GetMicroseconds()const;
 		[[nodiscard]] std::chrono::duration<double, std::milli> GetMilliseconds()const;

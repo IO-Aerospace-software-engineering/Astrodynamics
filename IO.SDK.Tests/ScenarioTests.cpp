@@ -62,11 +62,11 @@ TEST(Scenario, AddDistanceConstraint)
     scenario.AttachSpacecraft(s);
     scenario.AddSite(ls);
 
-    IO::SDK::Constraints::Parameters::DistanceParameters constraint1(*earth, *sun, IO::SDK::Constraints::RelationnalOperator::GreaterThan(), IO::SDK::AberrationsEnum::None, 10.0,
+    IO::SDK::Constraints::Parameters::DistanceParameters constraint1(*earth, *sun, IO::SDK::Constraints::RelationalOperator::GreaterThan(), IO::SDK::AberrationsEnum::None, 10.0,
                                                                      IO::SDK::Time::TimeSpan(3600s));
     scenario.AddDistanceConstraint(&constraint1);
 
-    IO::SDK::Constraints::Parameters::DistanceParameters constraint2(*earth, *sun, IO::SDK::Constraints::RelationnalOperator::GreaterThan(), IO::SDK::AberrationsEnum::None, 10.0,
+    IO::SDK::Constraints::Parameters::DistanceParameters constraint2(*earth, *sun, IO::SDK::Constraints::RelationalOperator::GreaterThan(), IO::SDK::AberrationsEnum::None, 10.0,
                                                                      IO::SDK::Time::TimeSpan(3600s));
     scenario.AddDistanceConstraint(&constraint2);
     auto distanceConstraint = scenario.GetDistanceConstraints();
@@ -214,7 +214,7 @@ TEST(Scenario, FindDistanceConstraint)
     scenario.AddCelestialBody(*earth);
     scenario.AddCelestialBody(*moon);
 
-    auto constraint = IO::SDK::Constraints::Parameters::DistanceParameters(*earth, *moon, IO::SDK::Constraints::RelationnalOperator::GreaterThan(), IO::SDK::AberrationsEnum::None,
+    auto constraint = IO::SDK::Constraints::Parameters::DistanceParameters(*earth, *moon, IO::SDK::Constraints::RelationalOperator::GreaterThan(), IO::SDK::AberrationsEnum::None,
                                                                            400000000.0, IO::SDK::Time::TimeSpan(86400s));
     scenario.AddDistanceConstraint(&constraint);
     scenario.Execute();
