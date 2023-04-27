@@ -3,6 +3,7 @@
 #include "TestParameters.h"
 #include "Proxy.h"
 #include <KernelsLoader.h>
+#include <Converters.cpp>
 
 TEST(API, DTOSize)
 {
@@ -131,6 +132,9 @@ TEST(API, FindWindowsOnCoordinateConstraint)
     IO::SDK::API::DTO::WindowDTO searchWindow{};
     searchWindow.start = 730036800.0;
     searchWindow.end = 730123200;
-    FindWindowsOnCoordinateConstraintProxy(searchWindow, 399113, 301, "DSS-13_TOPO", "LATITUDINAL", "LATITUDE", ">", 0.0, 0.0, "NONE", 60.0,
+    FindWindowsOnCoordinateConstraintProxy(searchWindow, 399013, 301, "DSS-13_TOPO", "LATITUDINAL", "LATITUDE", ">", 0.0, 0.0, "NONE", 60.0,
                                            windows);
+
+    ASSERT_STREQ("2023-02-19 14:33:08.918098 (TDB)", ToTDBWindow(windows[0]).GetStartDate().ToString().c_str());
+    ASSERT_STREQ("2023-02-19 23:58:50.814787 (UTC)", ToTDBWindow(windows[0]).GetEndDate().ToUTC().ToString().c_str());
 }
