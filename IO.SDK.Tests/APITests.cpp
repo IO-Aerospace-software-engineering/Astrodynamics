@@ -115,12 +115,22 @@ TEST(API, SpacecraftPropagation)
     scenario.Spacecraft.orbitalPlaneChangingManeuvers[0].targetOrbit.epoch = 667915269.18539762;
     scenario.Spacecraft.orbitalPlaneChangingManeuvers[0].targetOrbit.inertialFrame = "J2000";
     scenario.Spacecraft.orbitalPlaneChangingManeuvers[0].engines[0] = "eng1";
-    scenario.Spacecraft.orbitalPlaneChangingManeuvers[0].maneuverOrder= 0;
+    scenario.Spacecraft.orbitalPlaneChangingManeuvers[0].maneuverOrder = 0;
 
     PropagateProxy(scenario);
 
     IO::SDK::Time::TDB tdbStart(std::chrono::duration<double>(scenario.Spacecraft.orbitalPlaneChangingManeuvers[0].thrustWindow.start));
     IO::SDK::Time::TDB tdbEnd(std::chrono::duration<double>(scenario.Spacecraft.orbitalPlaneChangingManeuvers[0].thrustWindow.end));
-    ASSERT_STREQ("2021-03-04 00:31:35.852044 (TDB)",tdbStart.ToString().c_str());
-    ASSERT_STREQ("2021-03-04 00:31:44.178429 (TDB)",tdbEnd.ToString().c_str());
+    ASSERT_STREQ("2021-03-04 00:31:35.852044 (TDB)", tdbStart.ToString().c_str());
+    ASSERT_STREQ("2021-03-04 00:31:44.178429 (TDB)", tdbEnd.ToString().c_str());
+}
+
+TEST(API, FindWindowsOnCoordinateConstraint)
+{
+    IO::SDK::API::DTO::WindowDTO windows[1000];
+    IO::SDK::API::DTO::WindowDTO searchWindow{};
+    searchWindow.start = 730036800.0;
+    searchWindow.end = 730123200;
+    FindWindowsOnCoordinateConstraintProxy(searchWindow, 399113, 301, "DSS-13_TOPO", "LATITUDINAL", "LATITUDE", ">", 0.0, 0.0, "NONE", 60.0,
+                                           windows);
 }

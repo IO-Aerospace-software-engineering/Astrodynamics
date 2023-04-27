@@ -11,6 +11,7 @@
 #include<IlluminationAngle.h>
 
 #include <utility>
+#include "SDKException.h"
 
 IO::SDK::IlluminationAngle IO::SDK::IlluminationAngle::mPhase(std::string("PHASE"));
 IO::SDK::IlluminationAngle IO::SDK::IlluminationAngle::mIncidence(std::string("INCIDENCE"));
@@ -47,4 +48,20 @@ IO::SDK::IlluminationAngle& IO::SDK::IlluminationAngle::Incidence()
 IO::SDK::IlluminationAngle& IO::SDK::IlluminationAngle::Emission()
 {
     return mEmission;
+}
+
+IO::SDK::IlluminationAngle IO::SDK::IlluminationAngle::ToIlluminationAngleType(const std::string &illuminationAngleType)
+{
+    if (illuminationAngleType == IlluminationAngle::mPhase.ToCharArray())
+    {
+        return mPhase;
+    } else if (illuminationAngleType == IlluminationAngle::mIncidence.ToCharArray())
+    {
+        return mIncidence;
+    } else if (illuminationAngleType == IlluminationAngle::mEmission.ToCharArray())
+    {
+        return mEmission;
+    }
+
+    throw IO::SDK::Exception::SDKException("Invalid illumination type : " + illuminationAngleType);
 }

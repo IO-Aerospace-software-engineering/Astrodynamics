@@ -35,6 +35,17 @@ namespace IO::SDK
          */
         explicit CoordinateSystem(const std::string &name);
 
+        ~CoordinateSystem() = default;
+
+        CoordinateSystem &operator=(const CoordinateSystem &other)
+        {
+            if (this == &other)
+                return *this;
+
+            const_cast<std::string &>(m_name) = other.m_name;
+            return *this;
+        }
+
         /**
          * @brief Get char array coordinate system
          * 
@@ -49,6 +60,7 @@ namespace IO::SDK
         static CoordinateSystem& Cylindrical();
         static CoordinateSystem& Geodetic();
         static CoordinateSystem& Planetographic();
+        static CoordinateSystem ToCoordinateSystemType(const std::string &coordinateSystemType) ;
     };
 
 } // namespace IO::SDK

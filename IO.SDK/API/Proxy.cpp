@@ -778,12 +778,21 @@ FindWindowsOnOccultationConstraintProxy(IO::SDK::API::DTO::WindowDTO searchWindo
 
 void
 FindWindowsOnCoordinateConstraintProxy(IO::SDK::API::DTO::WindowDTO searchWindow, int observerId, int targetId, const char *frame, const char *coordinateSystem,
-                                       const char *&coordinate,
+                                       const char *coordinate,
                                        const char *relationalOperator, double value, double adjustValue, const char *aberration, double stepSize,
                                        IO::SDK::API::DTO::WindowDTO *windows)
 {
-    windows[0].start = 12;
-    windows[0].end = 13;
+    auto abe = IO::SDK::Aberrations::ToEnum(aberration);
+    auto systemType = IO::SDK::CoordinateSystem::ToCoordinateSystemType(coordinateSystem);
+    auto coordinateType = IO::SDK::Coordinate::ToCoordinateType(coordinate);
+    auto relationalOpe = IO::SDK::Constraints::RelationalOperator::ToRelationalOperator(relationalOperator);
+    auto res = IO::SDK::Constraints::GeometryFinder::FindWindowsOnCoordinateConstraint(ToTDBWindow(searchWindow), observerId, targetId, frame, systemType, coordinateType,
+                                                                                       relationalOpe, value, adjustValue, abe, IO::SDK::Time::TimeSpan(stepSize));
+
+    for (size_t i = 0; i < res.size(); ++i)
+    {
+        windows[i] = ToWindowDTO(res[i]);
+    }
 }
 
 void FindWindowsOnIlluminationConstraintProxy(IO::SDK::API::DTO::WindowDTO searchWindow, int observerId, const char *illuminationSource, int targetBody, const char *fixedFrame,
@@ -791,8 +800,21 @@ void FindWindowsOnIlluminationConstraintProxy(IO::SDK::API::DTO::WindowDTO searc
                                               double adjustValue,
                                               const char *aberration, double stepSize, const char *method, IO::SDK::API::DTO::WindowDTO *windows)
 {
-    windows[0].start = 12;
-    windows[0].end = 13;
+    double coordinates[3] = {geodetic.latitude, geodetic.longitude, geodetic.altitude};
+
+    IO::SDK::Body::CelestialBody body(targetBody);
+    SpiceDouble bodyFixedLocation[3];
+    georec_c(geodetic.longitude, geodetic.latitude, geodetic.altitude, body.GetRadius().GetX(), body.GetFlattening(), bodyFixedLocation);
+    auto abe = IO::SDK::Aberrations::ToEnum(aberration);
+    auto illumination = IO::SDK::IlluminationAngle::ToIlluminationAngleType(illuminationType);
+    auto relationalOpe = IO::SDK::Constraints::RelationalOperator::ToRelationalOperator(relationalOperator);
+    auto res = IO::SDK::Constraints::GeometryFinder::FindWindowsOnIlluminationConstraint(ToTDBWindow(searchWindow), observerId, illuminationSource, targetBody, fixedFrame,
+                                                                                         bodyFixedLocation, illumination, relationalOpe, value, adjustValue, abe,
+                                                                                         IO::SDK::Time::TimeSpan(stepSize), method);
+    for (size_t i = 0; i < res.size(); ++i)
+    {
+        windows[i] = ToWindowDTO(res[i]);
+    }
 }
 
 void FindWindowsInFieldOfViewConstraintProxy(IO::SDK::API::DTO::WindowDTO searchWindow, int observerId, int instrumentId,
@@ -800,7 +822,12 @@ void FindWindowsInFieldOfViewConstraintProxy(IO::SDK::API::DTO::WindowDTO search
                                              const char *targetShape,
                                              const char *aberration, double stepSize, IO::SDK::API::DTO::WindowDTO *windows)
 {
-    windows[0].start = 12;
-    windows[0].end = 13;
+    auto abe = IO::SDK::Aberrations::ToEnum(aberration);
+    auto res = IO::SDK::Constraints::GeometryFinder::FindWindowsInFieldOfViewConstraint(ToTDBWindow(searchWindow), observerId, instrumentId, targetId, targetFrame, targetShape,
+                                                                                        abe, IO::SDK::Time::TimeSpan(stepSize));
+    for (size_t i = 0; i < res.size(); ++i)
+    {
+        windows[i] = ToWindowDTO(res[i]);
+    }
 }
 

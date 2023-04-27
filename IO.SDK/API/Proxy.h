@@ -86,7 +86,7 @@ MODULE_API void FindWindowsOnOccultationConstraintProxy(IO::SDK::API::DTO::Windo
 
 MODULE_API void FindWindowsOnCoordinateConstraintProxy(IO::SDK::API::DTO::WindowDTO searchWindow, int observerId,
                                                        int targetId, const char *frame, const char *coordinateSystem,
-                                                       const char *&coordinate, const char *relationalOperator,
+                                                       const char *coordinate, const char *relationalOperator,
                                                        double value, double adjustValue, const char *aberration,
                                                        double stepSize, IO::SDK::API::DTO::WindowDTO windows[1000]);
 

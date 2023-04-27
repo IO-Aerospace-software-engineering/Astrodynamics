@@ -9,6 +9,7 @@
  * 
  */
 #include <Coordinate.h>
+#include "SDKException.h"
 
 IO::SDK::Coordinate IO::SDK::Coordinate::mX(std::string("X"));
 IO::SDK::Coordinate IO::SDK::Coordinate::mY(std::string("Y"));
@@ -84,4 +85,44 @@ IO::SDK::Coordinate &IO::SDK::Coordinate::Declination()
 IO::SDK::Coordinate &IO::SDK::Coordinate::Colatitude()
 {
     return mColatitude;
+}
+
+IO::SDK::Coordinate IO::SDK::Coordinate::ToCoordinateType(const std::string &coordinateType)
+{
+    if (coordinateType == Coordinate::mAltitude.ToCharArray())
+    {
+        return mAltitude;
+    } else if (coordinateType == Coordinate::mX.ToCharArray())
+    {
+        return mX;
+    } else if (coordinateType == Coordinate::mY.ToCharArray())
+    {
+        return mY;
+    } else if (coordinateType == Coordinate::mZ.ToCharArray())
+    {
+        return mZ;
+    } else if (coordinateType == Coordinate::mLongitude.ToCharArray())
+    {
+        return mLongitude;
+    } else if (coordinateType == Coordinate::mLatitude.ToCharArray())
+    {
+        return mLatitude;
+    } else if (coordinateType == Coordinate::mRadius.ToCharArray())
+    {
+        return mRadius;
+    } else if (coordinateType == Coordinate::mRange.ToCharArray())
+    {
+        return mRange;
+    } else if (coordinateType == Coordinate::mRightAscension.ToCharArray())
+    {
+        return mRightAscension;
+    } else if (coordinateType == Coordinate::mDeclination.ToCharArray())
+    {
+        return mDeclination;
+    } else if (coordinateType == Coordinate::mColatitude.ToCharArray())
+    {
+        return mColatitude;
+    }
+
+    throw IO::SDK::Exception::SDKException("Invalid coordinate type : " + coordinateType);
 }

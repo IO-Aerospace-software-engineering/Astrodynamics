@@ -25,12 +25,23 @@ namespace IO::SDK
 
     public:
         explicit IlluminationAngle(std::string name);
+        ~IlluminationAngle() = default;
+
+        IlluminationAngle &operator=(const IlluminationAngle &other)
+        {
+            if (this == &other)
+                return *this;
+
+            const_cast<std::string &>(m_name) = other.m_name;
+            return *this;
+        }
 
         [[nodiscard]] const char *ToCharArray() const;
 
         static IlluminationAngle& Phase();
         static IlluminationAngle& Incidence();
         static IlluminationAngle& Emission();
+        static IlluminationAngle ToIlluminationAngleType(const std::string &illuminationAngleType) ;
     };
 
 } // namespace IO::SDK

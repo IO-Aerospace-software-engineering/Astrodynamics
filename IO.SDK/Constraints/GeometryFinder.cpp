@@ -129,10 +129,7 @@ IO::SDK::Constraints::GeometryFinder::FindWindowsOnIlluminationConstraint(const 
 {
     std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>> windows;
 
-//    IO::SDK::Body::CelestialBody body(targetBody);
-//    SpiceDouble bodyFixedLocation[3];
-//    georec_c(coordinates.GetLongitude(), coordinates.GetLatitude(), coordinates.GetAltitude(),
-//             body.GetRadius().GetX(), body.GetFlattening(), bodyFixedLocation);
+
 
     SpiceDouble windowStart;
     SpiceDouble windowEnd;
