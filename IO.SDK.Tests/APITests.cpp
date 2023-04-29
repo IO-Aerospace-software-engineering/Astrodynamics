@@ -126,7 +126,7 @@ TEST(API, SpacecraftPropagation)
     ASSERT_STREQ("2021-03-04 00:31:44.178429 (TDB)", tdbEnd.ToString().c_str());
 }
 
-TEST(API, FindWindowsOnCoordinateConstraint)
+TEST(API, FindWindowsOnCoordinateConstraintProxy)
 {
     IO::SDK::API::DTO::WindowDTO windows[1000];
     IO::SDK::API::DTO::WindowDTO searchWindow{};
@@ -137,4 +137,32 @@ TEST(API, FindWindowsOnCoordinateConstraint)
 
     ASSERT_STREQ("2023-02-19 14:33:08.918098 (TDB)", ToTDBWindow(windows[0]).GetStartDate().ToString().c_str());
     ASSERT_STREQ("2023-02-19 23:58:50.814787 (UTC)", ToTDBWindow(windows[0]).GetEndDate().ToUTC().ToString().c_str());
+}
+
+TEST(API, FindWindowsOnDistanceConstraintProxy)
+{
+    IO::SDK::API::DTO::WindowDTO windows[1000];
+    IO::SDK::API::DTO::WindowDTO searchWindow{};
+    searchWindow.start = IO::SDK::Time::TDB("2007 JAN 1").GetSecondsFromJ2000().count();
+    searchWindow.end = IO::SDK::Time::TDB("2007 APR 1").GetSecondsFromJ2000().count();;
+    FindWindowsOnDistanceConstraintProxy(searchWindow, 399, 301, ">", 400000000, "NONE", 86400.0, windows);
+
+    ASSERT_STREQ("2007-01-08 00:11:07.628591 (TDB)", ToTDBWindow(windows[0]).GetStartDate().ToString().c_str());
+    ASSERT_STREQ("2007-01-13 06:37:47.948144 (TDB)", ToTDBWindow(windows[0]).GetEndDate().ToString().c_str());
+    ASSERT_STREQ("2007-03-29 22:53:58.151896 (TDB)", ToTDBWindow(windows[3]).GetStartDate().ToString().c_str());
+    ASSERT_STREQ("2007-04-01 00:01:05.185654 (TDB)", ToTDBWindow(windows[3]).GetEndDate().ToString().c_str());
+}
+
+TEST(API, FindWindowsOnIlluminationConstraintProxy)
+{
+    IO::SDK::API::DTO::WindowDTO windows[1000];
+    IO::SDK::API::DTO::WindowDTO searchWindow{};
+    searchWindow.start = IO::SDK::Time::TDB("2007 JAN 1").GetSecondsFromJ2000().count();
+    searchWindow.end = IO::SDK::Time::TDB("2007 APR 1").GetSecondsFromJ2000().count();;
+    FindWindowsOnIlluminationConstraintProxy(searchWindow, 399, 301, ">", 400000000, "NONE", 86400.0, windows);
+
+    ASSERT_STREQ("2007-01-08 00:11:07.628591 (TDB)", ToTDBWindow(windows[0]).GetStartDate().ToString().c_str());
+    ASSERT_STREQ("2007-01-13 06:37:47.948144 (TDB)", ToTDBWindow(windows[0]).GetEndDate().ToString().c_str());
+    ASSERT_STREQ("2007-03-29 22:53:58.151896 (TDB)", ToTDBWindow(windows[3]).GetStartDate().ToString().c_str());
+    ASSERT_STREQ("2007-04-01 00:01:05.185654 (TDB)", ToTDBWindow(windows[3]).GetEndDate().ToString().c_str());
 }
