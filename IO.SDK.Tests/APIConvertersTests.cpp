@@ -56,10 +56,7 @@ TEST(APIConverters, Quaternion)
 
 TEST(APIConverters, Geodetic)
 {
-    IO::SDK::API::DTO::GeodeticDTO geodeticDTO{};
-    geodeticDTO.latitude = 1.0;
-    geodeticDTO.longitude = 2.0;
-    geodeticDTO.altitude = 3.0;
+    IO::SDK::API::DTO::GeodeticDTO geodeticDTO(2.0,1.0,3.0);
 
     auto geodetic = ToGeodetic(geodeticDTO);
     ASSERT_DOUBLE_EQ(1.0, geodetic.GetLatitude());

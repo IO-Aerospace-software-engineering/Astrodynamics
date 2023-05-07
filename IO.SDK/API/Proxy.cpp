@@ -16,9 +16,6 @@
 #include <InstrumentPointingToAttitude.h>
 #include <Launch.h>
 #include <KernelsLoader.h>
-#include <iostream>
-#include <RelationalOperator.h>
-#include <OccultationType.h>
 
 
 void LaunchProxy(IO::SDK::API::DTO::LaunchDTO &launchDto)

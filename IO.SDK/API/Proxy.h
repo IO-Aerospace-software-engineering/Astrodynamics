@@ -73,10 +73,36 @@ MODULE_API const char *TDBToStringProxy(double secondsFromJ2000);
  */
 MODULE_API const char *UTCToStringProxy(double secondsFromJ2000);
 
+/**
+ * Find time windows witch satisfy distance constraint
+ * @param searchWindow
+ * @param observerId
+ * @param targetId
+ * @param relationalOperator
+ * @param value
+ * @param aberration
+ * @param stepSize
+ * @param windows
+ */
 MODULE_API void FindWindowsOnDistanceConstraintProxy(IO::SDK::API::DTO::WindowDTO searchWindow, int observerId, int targetId,
                                                      const char *relationalOperator, double value, const char *aberration,
                                                      double stepSize, IO::SDK::API::DTO::WindowDTO windows[1000]);
 
+/**
+ * Find time windows witch satisfy occultation constraint
+ * @param searchWindow
+ * @param observerId
+ * @param targetId
+ * @param targetFrame
+ * @param targetShape
+ * @param frontBodyId
+ * @param frontFrame
+ * @param frontShape
+ * @param occultationType
+ * @param aberration
+ * @param stepSize
+ * @param windows
+ */
 MODULE_API void FindWindowsOnOccultationConstraintProxy(IO::SDK::API::DTO::WindowDTO searchWindow, int observerId,
                                                         int targetId, const char *targetFrame,
                                                         const char *targetShape,
@@ -84,22 +110,65 @@ MODULE_API void FindWindowsOnOccultationConstraintProxy(IO::SDK::API::DTO::Windo
                                                         const char *occultationType,
                                                         char *aberration, double stepSize, IO::SDK::API::DTO::WindowDTO windows[1000]);
 
+/**
+ * Find time windows witch satisfy coordinate constraint
+ * @param searchWindow
+ * @param observerId
+ * @param targetId
+ * @param frame
+ * @param coordinateSystem
+ * @param coordinate
+ * @param relationalOperator
+ * @param value
+ * @param adjustValue
+ * @param aberration
+ * @param stepSize
+ * @param windows
+ */
 MODULE_API void FindWindowsOnCoordinateConstraintProxy(IO::SDK::API::DTO::WindowDTO searchWindow, int observerId,
                                                        int targetId, const char *frame, const char *coordinateSystem,
                                                        const char *coordinate, const char *relationalOperator,
                                                        double value, double adjustValue, const char *aberration,
                                                        double stepSize, IO::SDK::API::DTO::WindowDTO windows[1000]);
 
+/**
+ * Find time windows witch satisfy illumination constraint
+ * @param searchWindow
+ * @param observerId
+ * @param illuminationSource
+ * @param targetBody
+ * @param fixedFrame
+ * @param geodetic
+ * @param illuminationType
+ * @param relationalOperator
+ * @param value
+ * @param adjustValue
+ * @param aberration
+ * @param stepSize
+ * @param method
+ * @param windows
+ */
 MODULE_API void FindWindowsOnIlluminationConstraintProxy(IO::SDK::API::DTO::WindowDTO searchWindow, int observerId,
                                                          const char *illuminationSource, int targetBody, const char *fixedFrame,
                                                          IO::SDK::API::DTO::GeodeticDTO geodetic, const char *illuminationType,
                                                          const char *relationalOperator, double value, double adjustValue,
                                                          const char *aberration, double stepSize, const char *method, IO::SDK::API::DTO::WindowDTO windows[1000]);
 
-MODULE_API void
-FindWindowsInFieldOfViewConstraintProxy(IO::SDK::API::DTO::WindowDTO searchWindow, int observerId, int instrumentId,
-                                        int targetId, const char *targetFrame, const char *targetShape,
-                                        const char *aberration, double stepSize, IO::SDK::API::DTO::WindowDTO windows[1000]);
+/**
+ * Find time windows witch satisfy in field of view constraint
+ * @param searchWindow
+ * @param observerId
+ * @param instrumentId
+ * @param targetId
+ * @param targetFrame
+ * @param targetShape
+ * @param aberration
+ * @param stepSize
+ * @param windows
+ */
+MODULE_API void FindWindowsInFieldOfViewConstraintProxy(IO::SDK::API::DTO::WindowDTO searchWindow, int observerId, int instrumentId,
+                                                        int targetId, const char *targetFrame, const char *targetShape,
+                                                        const char *aberration, double stepSize, IO::SDK::API::DTO::WindowDTO windows[1000]);
 #ifdef __cplusplus
 }
 #endif

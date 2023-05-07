@@ -73,10 +73,7 @@ static IO::SDK::Coordinates::Geodetic ToGeodetic(IO::SDK::API::DTO::GeodeticDTO 
 
 static IO::SDK::API::DTO::GeodeticDTO ToGeodeticDTO(IO::SDK::Coordinates::Geodetic &geodetic)
 {
-    IO::SDK::API::DTO::GeodeticDTO dto{};
-    dto.latitude = geodetic.GetLatitude();
-    dto.longitude = geodetic.GetLongitude();
-    dto.altitude = geodetic.GetAltitude();
+    IO::SDK::API::DTO::GeodeticDTO dto(geodetic.GetLongitude(),geodetic.GetLatitude(),geodetic.GetAltitude());
     return dto;
 
 }

@@ -13,8 +13,8 @@ namespace IO::SDK::API::DTO
     struct LaunchDTO
     {
         IO::SDK::API::DTO::WindowDTO window{};
-        SiteDTO launchSite{0};
-        SiteDTO recoverySite{0};
+        SiteDTO launchSite;
+        SiteDTO recoverySite;
         bool launchByDay{};
         double initialStepSize{1.0};
         IO::SDK::API::DTO::StateVectorDTO targetOrbit;
