@@ -33,12 +33,7 @@ void IO::SDK::Kernels::KernelsLoader::Load(const std::string &path)
 
         for (const auto &entry: std::filesystem::directory_iterator(path))
         {
-            unload_c(entry.path().string().c_str());
-        }
-
-        for (const auto &entry: std::filesystem::directory_iterator(path))
-        {
-            furnsh_c(entry.path().string().c_str());
+            Load(entry.path().string());
         }
     }
 

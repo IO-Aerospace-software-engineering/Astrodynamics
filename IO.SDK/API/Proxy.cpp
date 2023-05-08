@@ -16,6 +16,7 @@
 #include <InstrumentPointingToAttitude.h>
 #include <Launch.h>
 #include <KernelsLoader.h>
+#include <iostream>
 
 
 void LaunchProxy(IO::SDK::API::DTO::LaunchDTO &launchDto)
@@ -759,7 +760,7 @@ FindWindowsOnDistanceConstraintProxy(IO::SDK::API::DTO::WindowDTO searchWindow, 
 
 void
 FindWindowsOnOccultationConstraintProxy(IO::SDK::API::DTO::WindowDTO searchWindow, int observerId, int targetId, const char *targetFrame, const char *targetShape, int frontBodyId,
-                                        const char *frontFrame, const char *frontShape, const char *occultationType, char *aberration, double stepSize,
+                                        const char *frontFrame, const char *frontShape, const char *occultationType, const char *aberration, double stepSize,
                                         IO::SDK::API::DTO::WindowDTO *windows)
 {
     auto abe = IO::SDK::Aberrations::ToEnum(aberration);

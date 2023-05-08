@@ -193,7 +193,9 @@ TEST(API, FindWindowsInFieldOfViewConstraintProxy)
     IO::SDK::Math::Vector3D boresight{0.0, 0.0, 1.0};
     IO::SDK::Math::Vector3D fovvector{1.0, 0.0, 0.0};
 
-    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
+    auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10);
+    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399,sun);
+    auto moon = std::make_shared<IO::SDK::Body::CelestialBody>(301,earth);
     double a = 6800000.0;
     auto v = std::sqrt(earth->GetMu() / a);
     IO::SDK::Time::TDB epoch("2021-JUN-10 00:00:00.0000 TDB");
@@ -222,28 +224,6 @@ TEST(API, FindWindowsInFieldOfViewConstraintProxy)
 
     pro.Propagate();
 
-    //=======Orientation==========
-    std::vector<std::vector<IO::SDK::OrbitalParameters::StateOrientation>> orientationData;
-    std::vector<IO::SDK::OrbitalParameters::StateOrientation> interval;
-    auto epoch_or = IO::SDK::Time::TDB("2021-JUN-10 00:00:00.0000 TDB");
-    auto axis_or = IO::SDK::Math::Vector3D(1.0, 0.0, 0.0);
-    auto angularVelocity_or = IO::SDK::Math::Vector3D();
-
-    IO::SDK::Time::TimeSpan ts(10s);
-
-    auto q = IO::SDK::Math::Quaternion(axis_or, 0.0);
-    for (size_t i = 0; i < 646; i++)
-    {
-        IO::SDK::OrbitalParameters::StateOrientation s_or(q, angularVelocity_or, epoch_or, IO::SDK::Frames::InertialFrames::GetICRF());
-        interval.push_back(s_or);
-        epoch_or = epoch_or + ts;
-    }
-
-    orientationData.push_back(interval);
-
-    s.WriteOrientations(orientationData);
-
-
     IO::SDK::API::DTO::WindowDTO windows[1000];
     IO::SDK::API::DTO::WindowDTO searchWindow{};
     searchWindow.start = IO::SDK::Time::TDB("2021-JUN-10 00:00:00.0000 TDB").GetSecondsFromJ2000().count();
@@ -251,8 +231,8 @@ TEST(API, FindWindowsInFieldOfViewConstraintProxy)
     FindWindowsInFieldOfViewConstraintProxy(searchWindow,-179,-179789,399,"IAU_EARTH","ELLIPSOID","LT",3600,windows);
 
     ASSERT_STREQ("2021-06-10 00:00:00.000000 (TDB)", ToTDBWindow(windows[0]).GetStartDate().ToString().c_str());
-    ASSERT_STREQ("2021-06-10 00:53:32.872198 (TDB)", ToTDBWindow(windows[0]).GetEndDate().ToString().c_str());
+    ASSERT_STREQ("2021-06-10 00:30:12.460950 (TDB)", ToTDBWindow(windows[0]).GetEndDate().ToString().c_str());
 
-    ASSERT_STREQ("2021-06-10 01:25:58.343786 (TDB)", ToTDBWindow(windows[1]).GetStartDate().ToString().c_str());
+    ASSERT_STREQ("2021-06-10 01:02:53.845054 (TDB)", ToTDBWindow(windows[1]).GetStartDate().ToString().c_str());
     ASSERT_STREQ("2021-06-10 01:47:27.000000 (TDB)", ToTDBWindow(windows[1]).GetEndDate().ToString().c_str());
 }

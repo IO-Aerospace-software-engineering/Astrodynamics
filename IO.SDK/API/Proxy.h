@@ -108,7 +108,7 @@ MODULE_API void FindWindowsOnOccultationConstraintProxy(IO::SDK::API::DTO::Windo
                                                         const char *targetShape,
                                                         int frontBodyId, const char *frontFrame, const char *frontShape,
                                                         const char *occultationType,
-                                                        char *aberration, double stepSize, IO::SDK::API::DTO::WindowDTO windows[1000]);
+                                                        const char *aberration, double stepSize, IO::SDK::API::DTO::WindowDTO windows[1000]);
 
 /**
  * Find time windows witch satisfy coordinate constraint
