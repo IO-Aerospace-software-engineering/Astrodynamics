@@ -6,6 +6,7 @@
 #include <Spacecraft.h>
 #include <CelestialBody.h>
 #include <InertialFrames.h>
+#include "TestParameters.h"
 
 using namespace std::chrono_literals;
 
@@ -14,7 +15,7 @@ TEST(SpacecraftClockKernel, BuildGenericKernel)
 	const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
 	std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth, IO::SDK::Math::Vector3D(1.0, 2.0, 3.0), IO::SDK::Math::Vector3D(4.0, 5.0, 6.0), IO::SDK::Time::TDB(100.0s), IO::SDK::Frames::InertialFrames::GetICRF());
 	IO::SDK::OrbitalParameters::StateOrientation attitude(IO::SDK::Time::TDB(100.0s),IO::SDK::Frames::InertialFrames::GetICRF());
-	IO::SDK::Body::Spacecraft::Spacecraft s(-456, "sc456", 1000.0, 3000.0, "mission1", std::move(orbitalParams));
+	IO::SDK::Body::Spacecraft::Spacecraft s(-456, "sc456", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams));
 	std::string filepath = s.GetFilesPath() + "/Clocks/" + s.GetName() + ".tsc";
 
 	auto path = s.GetClock().GetPath();
@@ -27,7 +28,7 @@ TEST(SpacecraftClockKernel, GetCoverage)
 	const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
 	std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth, IO::SDK::Math::Vector3D(1.0, 2.0, 3.0), IO::SDK::Math::Vector3D(4.0, 5.0, 6.0), IO::SDK::Time::TDB(100.0s), IO::SDK::Frames::InertialFrames::GetICRF());
 	IO::SDK::OrbitalParameters::StateOrientation attitude(IO::SDK::Time::TDB(100.0s),IO::SDK::Frames::InertialFrames::GetICRF());
-	IO::SDK::Body::Spacecraft::Spacecraft s(-456, "sc456", 1000.0, 3000.0, "mission1", std::move(orbitalParams));
+	IO::SDK::Body::Spacecraft::Spacecraft s(-456, "sc456", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams));
 	std::string filepath = s.GetFilesPath() + "/Clocks/" + s.GetName() + ".tsc";
 
 	const auto window = s.GetClock().GetCoverageWindow();
@@ -41,7 +42,7 @@ TEST(SpacecraftClockKernel, ConvertToTDB)
 	const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
 	std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth, IO::SDK::Math::Vector3D(1.0, 2.0, 3.0), IO::SDK::Math::Vector3D(4.0, 5.0, 6.0), IO::SDK::Time::TDB(100.0s), IO::SDK::Frames::InertialFrames::GetICRF());
 	IO::SDK::OrbitalParameters::StateOrientation attitude(IO::SDK::Time::TDB(100.0s),IO::SDK::Frames::InertialFrames::GetICRF());
-	IO::SDK::Body::Spacecraft::Spacecraft s(-456, "sc456", 1000.0, 3000.0, "mission1", std::move(orbitalParams));
+	IO::SDK::Body::Spacecraft::Spacecraft s(-456, "sc456", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams));
 	std::string filepath = s.GetFilesPath() + "/Clocks/" + s.GetName() + ".tsc";
 
 	IO::SDK::Time::TDB tdb = s.GetClock().ConvertToTDB("1/0000001000:00000");
@@ -53,7 +54,7 @@ TEST(SpacecraftClockKernel, ConvertToClock)
 	const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
 	std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth, IO::SDK::Math::Vector3D(1.0, 2.0, 3.0), IO::SDK::Math::Vector3D(4.0, 5.0, 6.0), IO::SDK::Time::TDB(100.0s), IO::SDK::Frames::InertialFrames::GetICRF());
 	IO::SDK::OrbitalParameters::StateOrientation attitude(IO::SDK::Time::TDB(100.0s),IO::SDK::Frames::InertialFrames::GetICRF());
-	IO::SDK::Body::Spacecraft::Spacecraft s(-456, "sc456", 1000.0, 3000.0, "mission1", std::move(orbitalParams));
+	IO::SDK::Body::Spacecraft::Spacecraft s(-456, "sc456", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams));
 	std::string filepath = s.GetFilesPath() + "/Clocks/" + s.GetName() + ".tsc";
 
 	std::string sclk = s.GetClock().ConvertToClockString(IO::SDK::Time::TDB(6.62732200E+08s));
@@ -65,7 +66,7 @@ TEST(SpacecraftClockKernel, ConvertToEncodedClock)
 	const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
 	std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth, IO::SDK::Math::Vector3D(1.0, 2.0, 3.0), IO::SDK::Math::Vector3D(4.0, 5.0, 6.0), IO::SDK::Time::TDB(100.0s), IO::SDK::Frames::InertialFrames::GetICRF());
 	IO::SDK::OrbitalParameters::StateOrientation attitude(IO::SDK::Time::TDB(100.0s),IO::SDK::Frames::InertialFrames::GetICRF());
-	IO::SDK::Body::Spacecraft::Spacecraft s(-456, "sc456", 1000.0, 3000.0, "mission1", std::move(orbitalParams));
+	IO::SDK::Body::Spacecraft::Spacecraft s(-456, "sc456", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams));
 	std::string filepath = s.GetFilesPath() + "/Clocks/" + s.GetName() + ".tsc";
 
 	double encodedClock = s.GetClock().ConvertToEncodedClock(IO::SDK::Time::TDB(6.62732200E+08s)); //T+1000
@@ -79,7 +80,7 @@ TEST(SpacecraftClockKernel, GetResolution)
 	const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
 	std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth, IO::SDK::Math::Vector3D(1.0, 2.0, 3.0), IO::SDK::Math::Vector3D(4.0, 5.0, 6.0), IO::SDK::Time::TDB(100.0s), IO::SDK::Frames::InertialFrames::GetICRF());
 	IO::SDK::OrbitalParameters::StateOrientation attitude(IO::SDK::Time::TDB(100.0s),IO::SDK::Frames::InertialFrames::GetICRF());
-	IO::SDK::Body::Spacecraft::Spacecraft s(-456, "sc456", 1000.0, 3000.0, "mission1", std::move(orbitalParams));
+	IO::SDK::Body::Spacecraft::Spacecraft s(-456, "sc456", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams));
 	std::string filepath = s.GetFilesPath() + "/Clocks/" + s.GetName() + ".tsc";
 
 	double res = s.GetClock().GetResolution();
@@ -92,7 +93,7 @@ TEST(SpacecraftClockKernel, GetSecondsPerTick)
 	const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
 	std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth, IO::SDK::Math::Vector3D(1.0, 2.0, 3.0), IO::SDK::Math::Vector3D(4.0, 5.0, 6.0), IO::SDK::Time::TDB(100.0s), IO::SDK::Frames::InertialFrames::GetICRF());
 	IO::SDK::OrbitalParameters::StateOrientation attitude(IO::SDK::Time::TDB(100.0s),IO::SDK::Frames::InertialFrames::GetICRF());
-	IO::SDK::Body::Spacecraft::Spacecraft s(-456, "sc456", 1000.0, 3000.0, "mission1", std::move(orbitalParams));
+	IO::SDK::Body::Spacecraft::Spacecraft s(-456, "sc456", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams));
 	std::string filepath = s.GetFilesPath() + "/Clocks/" + s.GetName() + ".tsc";
 
 	double res = s.GetClock().GetSecondsPerTick();
@@ -105,7 +106,7 @@ TEST(SpacecraftClockKernel, GetTicksPerSeconds)
 	const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
 	std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth, IO::SDK::Math::Vector3D(1.0, 2.0, 3.0), IO::SDK::Math::Vector3D(4.0, 5.0, 6.0), IO::SDK::Time::TDB(100.0s), IO::SDK::Frames::InertialFrames::GetICRF());
 	IO::SDK::OrbitalParameters::StateOrientation attitude(IO::SDK::Time::TDB(100.0s),IO::SDK::Frames::InertialFrames::GetICRF());
-	IO::SDK::Body::Spacecraft::Spacecraft s(-456, "sc456", 1000.0, 3000.0, "mission1", std::move(orbitalParams));
+	IO::SDK::Body::Spacecraft::Spacecraft s(-456, "sc456", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams));
 	std::string filepath = s.GetFilesPath() + "/Clocks/" + s.GetName() + ".tsc";
 
 	double res = s.GetClock().GetTicksPerSeconds();

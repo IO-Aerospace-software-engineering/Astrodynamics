@@ -64,7 +64,7 @@
 <a name="2"><span class="lineNum">       2 </span>            :  * @file Spacecraft.h</a>
 <a name="3"><span class="lineNum">       3 </span>            :  * @author Sylvain Guillet (sylvain.guillet@live.com)</a>
 <a name="4"><span class="lineNum">       4 </span>            :  * @brief </a>
-<a name="5"><span class="lineNum">       5 </span>            :  * @version 0.1</a>
+<a name="5"><span class="lineNum">       5 </span>            :  * @version 0.x</a>
 <a name="6"><span class="lineNum">       6 </span>            :  * @date 2021-03-04</a>
 <a name="7"><span class="lineNum">       7 </span>            :  * </a>
 <a name="8"><span class="lineNum">       8 </span>            :  * @copyright Copyright (c) 2021</a>
@@ -124,7 +124,7 @@
 <a name="62"><span class="lineNum">      62 </span>            :         {</a>
 <a name="63"><span class="lineNum">      63 </span>            :         private:</a>
 <a name="64"><span class="lineNum">      64 </span>            :                 const std::string m_missionPrefix{};</a>
-<a name="65"><span class="lineNum">      65 </span>            :                 const std::string m_filesPath{};</a>
+<a name="65"><span class="lineNum">      65 </span>            :                 const std::string m_directoryPath{};</a>
 <a name="66"><span class="lineNum">      66 </span>            :                 const std::unique_ptr&lt;IO::SDK::Frames::SpacecraftFrameFile&gt; m_frame;</a>
 <a name="67"><span class="lineNum">      67 </span>            :                 const std::unique_ptr&lt;IO::SDK::Kernels::SpacecraftClockKernel&gt; m_clockKernel;</a>
 <a name="68"><span class="lineNum">      68 </span>            :                 const std::unique_ptr&lt;IO::SDK::Kernels::OrientationKernel&gt; m_orientationKernel;</a>
@@ -154,7 +154,7 @@
 <a name="92"><span class="lineNum">      92 </span>            :                  * @param attitudeAtEpoch </a>
 <a name="93"><span class="lineNum">      93 </span>            :                  */</a>
 <a name="94"><span class="lineNum">      94 </span>            :                 Spacecraft(const int id, const std::string &amp;name, const double dryOperatingMass, double maximumOperatingMass, const std::string &amp;missionPrefix, std::unique_ptr&lt;IO::SDK::OrbitalParameters::OrbitalParameters&gt; orbitalParametersAtEpoch);</a>
-<a name="95"><span class="lineNum">      95 </span>            :                 Spacecraft(const Spacecraft &amp;spacecraft) = delete;</a>
+<a name="95"><span class="lineNum">      95 </span>            :                 Spacecraft(const Spacecraft &amp;Spacecraft) = delete;</a>
 <a name="96"><span class="lineNum">      96 </span><span class="lineCov">        114 :                 virtual ~Spacecraft() override = default;</span></a>
 <a name="97"><span class="lineNum">      97 </span>            : </a>
 <a name="98"><span class="lineNum">      98 </span>            :                 /**</a>
@@ -169,7 +169,7 @@
 <a name="107"><span class="lineNum">     107 </span>            :                  * </a>
 <a name="108"><span class="lineNum">     108 </span>            :                  * @return std::string </a>
 <a name="109"><span class="lineNum">     109 </span>            :                  */</a>
-<a name="110"><span class="lineNum">     110 </span>            :                 std::string GetFilesPath() const;</a>
+<a name="110"><span class="lineNum">     110 </span>            :                 std::string GetDirectoryPath() const;</a>
 <a name="111"><span class="lineNum">     111 </span>            : </a>
 <a name="112"><span class="lineNum">     112 </span>            :                 /**</a>
 <a name="113"><span class="lineNum">     113 </span>            :                  * @brief </a>

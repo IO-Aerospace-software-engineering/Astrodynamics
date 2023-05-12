@@ -64,7 +64,7 @@
 <a name="2"><span class="lineNum">       2 </span>            :  * @file OrientationKernel.cpp</a>
 <a name="3"><span class="lineNum">       3 </span>            :  * @author Sylvain Guillet (sylvain.guillet@live.com)</a>
 <a name="4"><span class="lineNum">       4 </span>            :  * @brief </a>
-<a name="5"><span class="lineNum">       5 </span>            :  * @version 0.1</a>
+<a name="5"><span class="lineNum">       5 </span>            :  * @version 0.x</a>
 <a name="6"><span class="lineNum">       6 </span>            :  * @date 2021-07-02</a>
 <a name="7"><span class="lineNum">       7 </span>            :  * </a>
 <a name="8"><span class="lineNum">       8 </span>            :  * @copyright Copyright (c) 2021</a>
@@ -82,7 +82,7 @@
 <a name="20"><span class="lineNum">      20 </span>            : #include &lt;SpacecraftClockKernel.h&gt;</a>
 <a name="21"><span class="lineNum">      21 </span>            : #include &lt;Builder.h&gt;</a>
 <a name="22"><span class="lineNum">      22 </span>            : </a>
-<a name="23"><span class="lineNum">      23 </span><span class="lineCov">        114 : IO::SDK::Kernels::OrientationKernel::OrientationKernel(const IO::SDK::Body::Spacecraft::Spacecraft &amp;spacecraft) : Kernel(spacecraft.GetFilesPath() + &quot;/Orientations/&quot; + spacecraft.GetName() + &quot;.ck&quot;), m_spacecraft{spacecraft}</span></a>
+<a name="23"><span class="lineNum">      23 </span><span class="lineCov">        114 : IO::SDK::Kernels::OrientationKernel::OrientationKernel(const IO::SDK::Body::Spacecraft::Spacecraft &amp;Spacecraft) : Kernel(Spacecraft.GetDirectoryPath() + &quot;/Orientations/&quot; + Spacecraft.GetName() + &quot;.ck&quot;), m_spacecraft{Spacecraft}</span></a>
 <a name="24"><span class="lineNum">      24 </span>            : {</a>
 <a name="25"><span class="lineNum">      25 </span><span class="lineCov">        114 : }</span></a>
 <a name="26"><span class="lineNum">      26 </span>            : </a>
@@ -115,7 +115,7 @@
 <a name="53"><span class="lineNum">      53 </span>            :         //Compute segment end date</a>
 <a name="54"><span class="lineNum">      54 </span><span class="lineCov">         23 :         double endtime = m_spacecraft.GetClock().ConvertToEncodedClock(orientations.back().back().GetEpoch());</span></a>
 <a name="55"><span class="lineNum">      55 </span>            : </a>
-<a name="56"><span class="lineNum">      56 </span>            :         //Compute spacecraft frame id</a>
+<a name="56"><span class="lineNum">      56 </span>            :         //Compute Spacecraft frame id</a>
 <a name="57"><span class="lineNum">      57 </span><span class="lineCov">         23 :         int id = m_spacecraft.GetId() * 1000.0;</span></a>
 <a name="58"><span class="lineNum">      58 </span>            : </a>
 <a name="59"><span class="lineNum">      59 </span>            :         //Number of orientation data</a>

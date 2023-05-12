@@ -64,7 +64,7 @@
 <a name="2"><span class="lineNum">       2 </span>            :  * @file Launch.cpp</a>
 <a name="3"><span class="lineNum">       3 </span>            :  * @author Sylvain Guillet (sylvain.guillet@live.com)</a>
 <a name="4"><span class="lineNum">       4 </span>            :  * @brief </a>
-<a name="5"><span class="lineNum">       5 </span>            :  * @version 0.1</a>
+<a name="5"><span class="lineNum">       5 </span>            :  * @version 0.x</a>
 <a name="6"><span class="lineNum">       6 </span>            :  * @date 2021-07-03</a>
 <a name="7"><span class="lineNum">       7 </span>            :  * </a>
 <a name="8"><span class="lineNum">       8 </span>            :  * @copyright Copyright (c) 2021</a>
@@ -185,10 +185,10 @@
 <a name="123"><span class="lineNum">     123 </span>            : </a>
 <a name="124"><span class="lineNum">     124 </span><span class="lineCov">          3 :         if (sunLightWindowsOnBothSites.empty())</span></a>
 <a name="125"><span class="lineNum">     125 </span>            :         {</a>
-<a name="126"><span class="lineNum">     126 </span><span class="lineNoCov">          0 :             throw IO::SDK::Exception::SDKException(&quot;No sun light at same time on both sites&quot;);</span></a>
+<a name="126"><span class="lineNum">     126 </span><span class="lineNoCov">          0 :             throw IO::SDK::Exception::SDKException(&quot;No sun light at same time on both Sites&quot;);</span></a>
 <a name="127"><span class="lineNum">     127 </span>            :         }</a>
 <a name="128"><span class="lineNum">     128 </span>            : </a>
-<a name="129"><span class="lineNum">     129 </span>            :         //Search an orbital plane alignement with launch site during sun light window on both sites</a>
+<a name="129"><span class="lineNum">     129 </span>            :         //Search an orbital plane alignement with launch site during sun light window on both Sites</a>
 <a name="130"><span class="lineNum">     130 </span><span class="lineCov">          8 :         for (auto &amp;&amp;sunlightWindow : sunLightWindowsOnBothSites)</span></a>
 <a name="131"><span class="lineNum">     131 </span>            :         {</a>
 <a name="132"><span class="lineNum">     132 </span><span class="lineCov">          5 :             auto res = FindLaunchWindows(sunlightWindow);</span></a>

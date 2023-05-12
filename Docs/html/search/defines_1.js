@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['unused_0',['UNUSED',['../Macros_8h.html#a86d500a34c624c2cae56bc25a31b12f3',1,'Macros.h']]]
+  ['proxy_5fh_0',['PROXY_H',['../Proxy_8h.html#a96f1aaaa516ec73ec2f412566f9d2ffd',1,'Proxy.h']]]
 ];

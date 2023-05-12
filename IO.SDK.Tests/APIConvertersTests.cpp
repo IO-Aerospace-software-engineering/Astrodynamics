@@ -6,11 +6,11 @@
 
 TEST(APIConverters, Window)
 {
-    IO::SDK::API::DTO::WindowDTO window;
+    IO::SDK::API::DTO::WindowDTO window{};
     window.start = 10.0;
     window.end = 20.0;
 
-    auto res = ToWindow(window);
+    auto res = ToUTCWindow(window);
 
     ASSERT_DOUBLE_EQ(res.GetStartDate().GetSecondsFromJ2000().count(), 10.0);
     ASSERT_DOUBLE_EQ(res.GetEndDate().GetSecondsFromJ2000().count(), 20.0);
@@ -22,7 +22,7 @@ TEST(APIConverters, Window)
 
 TEST(APIConverters, Vector)
 {
-    IO::SDK::API::DTO::Vector3DDTO vector3Ddto;
+    IO::SDK::API::DTO::Vector3DDTO vector3Ddto{};
     vector3Ddto.x = 1.0;
     vector3Ddto.y = 2.0;
     vector3Ddto.z = 3.0;
@@ -56,10 +56,7 @@ TEST(APIConverters, Quaternion)
 
 TEST(APIConverters, Geodetic)
 {
-    IO::SDK::API::DTO::GeodeticDTO geodeticDTO;
-    geodeticDTO.latitude = 1.0;
-    geodeticDTO.longitude = 2.0;
-    geodeticDTO.altitude = 3.0;
+    IO::SDK::API::DTO::GeodeticDTO geodeticDTO(2.0,1.0,3.0);
 
     auto geodetic = ToGeodetic(geodeticDTO);
     ASSERT_DOUBLE_EQ(1.0, geodetic.GetLatitude());

@@ -1,6 +1,8 @@
 var searchData=
 [
-  ['sitepath_0',['SitePath',['../namespaceIO_1_1SDK_1_1Parameters.html#a59216b2c5e88c1f0f5ed2587e99ca35d',1,'IO::SDK::Parameters']]],
-  ['solarsystemkernelpath_1',['SolarSystemKernelPath',['../namespaceIO_1_1SDK_1_1Parameters.html#ac26f7f4e0d89acae0ec56ef49aada4e0',1,'IO::SDK::Parameters']]],
-  ['spacecraftpath_2',['SpacecraftPath',['../namespaceIO_1_1SDK_1_1Parameters.html#a7e3d270c79b30212bcc45e587cb44117',1,'IO::SDK::Parameters']]]
+  ['rad_5fdeg_0',['RAD_DEG',['../namespaceIO_1_1SDK_1_1Constants.html#a55ebb638f3fbb4d4d3fd4b2dce7e0259',1,'IO::SDK::Constants']]],
+  ['ranges_1',['ranges',['../structIO_1_1SDK_1_1API_1_1DTO_1_1SiteDTO.html#a6d01005862e2d6cbf0199d2f80e8e96a',1,'IO::SDK::API::DTO::SiteDTO']]],
+  ['recoverysite_2',['recoverySite',['../structIO_1_1SDK_1_1API_1_1DTO_1_1LaunchDTO.html#aed869cdadad64257b67b2198a6927d72',1,'IO::SDK::API::DTO::LaunchDTO']]],
+  ['retrogradeattitudes_3',['retrogradeAttitudes',['../structIO_1_1SDK_1_1API_1_1DTO_1_1SpacecraftDTO.html#a630e257f87024f6a18062c3a8456a0bf',1,'IO::SDK::API::DTO::SpacecraftDTO']]],
+  ['right_4',['Right',['../classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft.html#aaaa566390a5bc29b8ff6e58eb12d07b9',1,'IO::SDK::Body::Spacecraft::Spacecraft']]]
 ];

@@ -33,12 +33,12 @@
 \DoxyCodeLine{39         std::vector<IO::SDK::Integrators::Forces::Force *> m\_forces\{\};}
 \DoxyCodeLine{40         std::optional<IO::SDK::Math::Vector3D> m\_acceleration\{std::nullopt\};}
 \DoxyCodeLine{41 }
-\DoxyCodeLine{42         \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO::SDK::Math::Vector3D}} ComputeAcceleration(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body}{IO::SDK::Body::Body}} \&body, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{IO::SDK::OrbitalParameters::StateVector}} \&stateVector) \textcolor{keyword}{const};}
+\DoxyCodeLine{42         [[nodiscard]] \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO::SDK::Math::Vector3D}} ComputeAcceleration(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body}{IO::SDK::Body::Body}} \&body, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{IO::SDK::OrbitalParameters::StateVector}} \&stateVector) \textcolor{keyword}{const};}
 \DoxyCodeLine{43 }
 \DoxyCodeLine{44     \textcolor{keyword}{public}:}
-\DoxyCodeLine{50         \mbox{\hyperlink{classIO_1_1SDK_1_1Integrators_1_1VVIntegrator_ac341aab71d9616351343693f0998fb48}{VVIntegrator}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO::SDK::Time::TimeSpan}} \&stepDuration);}
+\DoxyCodeLine{50         \textcolor{keyword}{explicit} \mbox{\hyperlink{classIO_1_1SDK_1_1Integrators_1_1VVIntegrator_ac341aab71d9616351343693f0998fb48}{VVIntegrator}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO::SDK::Time::TimeSpan}} \&stepDuration);}
 \DoxyCodeLine{51 }
-\DoxyCodeLine{58         \mbox{\hyperlink{classIO_1_1SDK_1_1Integrators_1_1VVIntegrator_ac341aab71d9616351343693f0998fb48}{VVIntegrator}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO::SDK::Time::TimeSpan}} \&stepDuration, std::vector<IO::SDK::Integrators::Forces::Force *> forces);}
+\DoxyCodeLine{58         \mbox{\hyperlink{classIO_1_1SDK_1_1Integrators_1_1VVIntegrator_ac341aab71d9616351343693f0998fb48}{VVIntegrator}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO::SDK::Time::TimeSpan}} \&stepDuration, std::vector<IO::SDK::Integrators::Forces::Force *>\& forces);}
 \DoxyCodeLine{59 }
 \DoxyCodeLine{64         \mbox{\hyperlink{classIO_1_1SDK_1_1Integrators_1_1VVIntegrator_a57d57cd3a83f83c8f4bafc3b3f0c0105}{\string~VVIntegrator}}();}
 \DoxyCodeLine{65 }

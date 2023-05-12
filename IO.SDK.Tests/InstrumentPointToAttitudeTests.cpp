@@ -1,18 +1,10 @@
 #include <gtest/gtest.h>
-#include <vector>
-#include <memory>
-#include <chrono>
-
-#include <CelestialBody.h>
-#include <StateVector.h>
 #include <VVIntegrator.h>
-#include <Propagator.h>
 #include <InstrumentPointingToAttitude.h>
-#include <TimeSpan.h>
 #include <InertialFrames.h>
-#include <TDB.h>
 #include <Vectors.h>
 #include "Constants.h"
+#include "TestParameters.h"
 
 using namespace std::chrono_literals;
 
@@ -32,7 +24,7 @@ TEST(InstrumentPointingToAttitude, GetOrientation)
                                                                                                                                                       "2021-01-01T13:00:00"),
                                                                                                                                               IO::SDK::Frames::InertialFrames::GetICRF());
 
-    IO::SDK::Body::Spacecraft::Spacecraft s{-544, "instPointing", 1000.0, 3000.0, "mt22", std::move(orbitalParams1)};
+    IO::SDK::Body::Spacecraft::Spacecraft s{-544, "instPointing", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams1)};
 
     IO::SDK::Integrators::VVIntegrator integrator(IO::SDK::Time::TimeSpan(1.0s));
 
@@ -46,8 +38,8 @@ TEST(InstrumentPointingToAttitude, GetOrientation)
 
     auto engine1 = s.GetEngine("sn1");
 
-    std::vector<IO::SDK::Body::Spacecraft::Engine> engines;
-    engines.push_back(*engine1);
+    std::vector<IO::SDK::Body::Spacecraft::Engine*> engines;
+    engines.push_back(const_cast<IO::SDK::Body::Spacecraft::Engine*>(engine1));
 
     IO::SDK::Maneuvers::Attitudes::InstrumentPointingToAttitude pointingManeuver(engines, prop, IO::SDK::Time::TimeSpan(10s), *instrument, *moon);
     prop.SetStandbyManeuver(&pointingManeuver);
@@ -71,7 +63,7 @@ TEST(InstrumentPointingToSiteAttitude, GetOrientation)
     auto moon = std::make_shared<IO::SDK::Body::CelestialBody>(301, earth);
     //    long 1.1159563818495755
     //    lat 0.0020551285296693113
-    IO::SDK::Sites::Site site(13001, "targetedSite", IO::SDK::Coordinates::Geodetic(1.1159563818495755, 0.0020551285296693113, 0.0), earth);
+    IO::SDK::Sites::Site site(399001, "targetedSite", IO::SDK::Coordinates::Geodetic(1.1159563818495755, 0.0020551285296693113, 0.0), earth,std::string(SitePath));
 
     std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams1 = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth,
                                                                                                                                               IO::SDK::Math::Vector3D(6678000.0,
@@ -82,7 +74,7 @@ TEST(InstrumentPointingToSiteAttitude, GetOrientation)
                                                                                                                                                       "2021-01-01T13:00:00"),
                                                                                                                                               IO::SDK::Frames::InertialFrames::GetICRF());
 
-    IO::SDK::Body::Spacecraft::Spacecraft s{-544, "instPointing", 1000.0, 3000.0, "mt22", std::move(orbitalParams1)};
+    IO::SDK::Body::Spacecraft::Spacecraft s{-544, "instPointing", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams1)};
 
     IO::SDK::Integrators::VVIntegrator integrator(IO::SDK::Time::TimeSpan(1.0s));
 
@@ -96,8 +88,8 @@ TEST(InstrumentPointingToSiteAttitude, GetOrientation)
 
     auto engine1 = s.GetEngine("sn1");
 
-    std::vector<IO::SDK::Body::Spacecraft::Engine> engines;
-    engines.push_back(*engine1);
+    std::vector<IO::SDK::Body::Spacecraft::Engine*> engines;
+    engines.push_back(const_cast<IO::SDK::Body::Spacecraft::Engine*>(engine1));
 
     IO::SDK::Maneuvers::Attitudes::InstrumentPointingToAttitude pointingManeuver(engines, prop, IO::SDK::Time::TimeSpan(10s), *instrument, site);
     prop.SetStandbyManeuver(&pointingManeuver);
@@ -120,7 +112,7 @@ TEST(InstrumentPointingToSiteAttitude2, GetOrientation)
     auto moon = std::make_shared<IO::SDK::Body::CelestialBody>(301, earth);
     //    long 1.1159563818495755
     //    lat 0.0020551285296693113
-    IO::SDK::Sites::Site site(13001, "targetedSite", IO::SDK::Coordinates::Geodetic(1.1159563818495755, 0.0020551285296693113, 0.0), moon);
+    IO::SDK::Sites::Site site(399001, "targetedSite", IO::SDK::Coordinates::Geodetic(1.1159563818495755, 0.0020551285296693113, 0.0), moon,std::string(SitePath));
 
     std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams1 = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth,
                                                                                                                                               IO::SDK::Math::Vector3D(6678000.0,
@@ -131,7 +123,7 @@ TEST(InstrumentPointingToSiteAttitude2, GetOrientation)
                                                                                                                                                       "2021-01-01T13:00:00"),
                                                                                                                                               IO::SDK::Frames::InertialFrames::GetICRF());
 
-    IO::SDK::Body::Spacecraft::Spacecraft s{-544, "instPointing", 1000.0, 3000.0, "mt22", std::move(orbitalParams1)};
+    IO::SDK::Body::Spacecraft::Spacecraft s{-544, "instPointing", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams1)};
 
     IO::SDK::Integrators::VVIntegrator integrator(IO::SDK::Time::TimeSpan(1.0s));
 
@@ -145,8 +137,8 @@ TEST(InstrumentPointingToSiteAttitude2, GetOrientation)
 
     auto engine1 = s.GetEngine("sn1");
 
-    std::vector<IO::SDK::Body::Spacecraft::Engine> engines;
-    engines.push_back(*engine1);
+    std::vector<IO::SDK::Body::Spacecraft::Engine*> engines;
+    engines.push_back(const_cast<IO::SDK::Body::Spacecraft::Engine*>(engine1));
 
     IO::SDK::Maneuvers::Attitudes::InstrumentPointingToAttitude pointingManeuver(engines, prop, IO::SDK::Time::TimeSpan(10s), *instrument, site);
     prop.SetStandbyManeuver(&pointingManeuver);
@@ -177,7 +169,7 @@ TEST(InstrumentPointingTotAttitude, GetOrientationNotBeforeEpoch)
                                                                                                                                                       "2021-01-01T13:00:00"),
                                                                                                                                               IO::SDK::Frames::InertialFrames::GetICRF());
 
-    IO::SDK::Body::Spacecraft::Spacecraft s{-544, "instPointing", 1000.0, 3000.0, "mt22", std::move(orbitalParams1)};
+    IO::SDK::Body::Spacecraft::Spacecraft s{-544, "instPointing", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams1)};
 
     IO::SDK::Integrators::VVIntegrator integrator(IO::SDK::Time::TimeSpan(1.0s));
 
@@ -191,8 +183,8 @@ TEST(InstrumentPointingTotAttitude, GetOrientationNotBeforeEpoch)
 
     auto engine1 = s.GetEngine("sn1");
 
-    std::vector<IO::SDK::Body::Spacecraft::Engine> engines;
-    engines.push_back(*engine1);
+    std::vector<IO::SDK::Body::Spacecraft::Engine*> engines;
+    engines.push_back(const_cast<IO::SDK::Body::Spacecraft::Engine*>(engine1));
 
     IO::SDK::Maneuvers::Attitudes::InstrumentPointingToAttitude pointingManeuver(engines, prop, IO::SDK::Time::TDB("2021-01-01T13:00:00"), IO::SDK::Time::TimeSpan(10s),
                                                                                  *instrument, *moon);

@@ -12,19 +12,19 @@ Result from maneuver.
 \doxysubsection*{Public Member Functions}
 \begin{DoxyCompactItemize}
 \item 
-\mbox{\hyperlink{structIO_1_1SDK_1_1Maneuvers_1_1ManeuverResult_ae6504733ccf06b3d923d2a1af3ef00a6}{Maneuver\+Result}} ()
+\mbox{\hyperlink{structIO_1_1SDK_1_1Maneuvers_1_1ManeuverResult_a3efae2dd496ee2ee38a213c1a5b9a227}{Maneuver\+Result}} ()=default
 \begin{DoxyCompactList}\small\item\em Construct a new Maneuver Result object. \end{DoxyCompactList}\item 
-\mbox{\hyperlink{structIO_1_1SDK_1_1Maneuvers_1_1ManeuverResult_a86ed87b3731270a1c40f5d9a8c81a2f5}{Maneuver\+Result}} (bool is\+Valid, std\+::string message)
+\mbox{\hyperlink{structIO_1_1SDK_1_1Maneuvers_1_1ManeuverResult_a07c4a1e7f2fff1976f4f8f58c61d03ed}{Maneuver\+Result}} (bool is\+Valid, std\+::string \&message)
 \begin{DoxyCompactList}\small\item\em Construct a new Maneuver Result object. \end{DoxyCompactList}\item 
 void \mbox{\hyperlink{structIO_1_1SDK_1_1Maneuvers_1_1ManeuverResult_a47be9658ad59edc16d77f8c5473ff2f2}{Set\+Valid}} (const std\+::string \&message)
 \begin{DoxyCompactList}\small\item\em Set maneuver as valid. \end{DoxyCompactList}\item 
 void \mbox{\hyperlink{structIO_1_1SDK_1_1Maneuvers_1_1ManeuverResult_acb6d04c912ab69a72145a54c8ea340ee}{Set\+Invalid}} (const std\+::string \&message)
 \begin{DoxyCompactList}\small\item\em Set maneuver as invalid. \end{DoxyCompactList}\item 
-bool \mbox{\hyperlink{structIO_1_1SDK_1_1Maneuvers_1_1ManeuverResult_a0a22c22f6306045c26a2933ab315b821}{Is\+Valid}} ()
+bool \mbox{\hyperlink{structIO_1_1SDK_1_1Maneuvers_1_1ManeuverResult_a6b44d036ce712a82c916458c383a190e}{Is\+Valid}} () const
 \begin{DoxyCompactList}\small\item\em Know if maneuver is valid. \end{DoxyCompactList}\item 
-bool \mbox{\hyperlink{structIO_1_1SDK_1_1Maneuvers_1_1ManeuverResult_a7e27fcfc74bf4f3b233d7b46229c0839}{Can\+Retry\+Later}} ()
+bool \mbox{\hyperlink{structIO_1_1SDK_1_1Maneuvers_1_1ManeuverResult_a734266e97690bb241a5c2109ccf0ce07}{Can\+Retry\+Later}} () const
 \begin{DoxyCompactList}\small\item\em The current maneuver is not valid new attempt will happen later. \end{DoxyCompactList}\item 
-bool \mbox{\hyperlink{structIO_1_1SDK_1_1Maneuvers_1_1ManeuverResult_a5ea8f87a62c54948312826b7477dd547}{Is\+Executed\+Too\+Early}} ()
+bool \mbox{\hyperlink{structIO_1_1SDK_1_1Maneuvers_1_1ManeuverResult_a7e862057bad457f43382432f82d6df8e}{Is\+Executed\+Too\+Early}} () const
 \begin{DoxyCompactList}\small\item\em Maneuver executed too early. \end{DoxyCompactList}\item 
 void \mbox{\hyperlink{structIO_1_1SDK_1_1Maneuvers_1_1ManeuverResult_abd83aeb9d2745a8a5856d2336fde4a9c}{Set\+Too\+Early}} ()
 \item 
@@ -36,21 +36,21 @@ std\+::string \mbox{\hyperlink{structIO_1_1SDK_1_1Maneuvers_1_1ManeuverResult_a9
 Result from maneuver. 
 
 \doxysubsection{Constructor \& Destructor Documentation}
-\mbox{\Hypertarget{structIO_1_1SDK_1_1Maneuvers_1_1ManeuverResult_ae6504733ccf06b3d923d2a1af3ef00a6}\label{structIO_1_1SDK_1_1Maneuvers_1_1ManeuverResult_ae6504733ccf06b3d923d2a1af3ef00a6}} 
+\mbox{\Hypertarget{structIO_1_1SDK_1_1Maneuvers_1_1ManeuverResult_a3efae2dd496ee2ee38a213c1a5b9a227}\label{structIO_1_1SDK_1_1Maneuvers_1_1ManeuverResult_a3efae2dd496ee2ee38a213c1a5b9a227}} 
 \index{IO::SDK::Maneuvers::ManeuverResult@{IO::SDK::Maneuvers::ManeuverResult}!ManeuverResult@{ManeuverResult}}
 \index{ManeuverResult@{ManeuverResult}!IO::SDK::Maneuvers::ManeuverResult@{IO::SDK::Maneuvers::ManeuverResult}}
 \doxysubsubsection{\texorpdfstring{ManeuverResult()}{ManeuverResult()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
-{\footnotesize\ttfamily IO\+::\+SDK\+::\+Maneuvers\+::\+Maneuver\+Result\+::\+Maneuver\+Result (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+{\footnotesize\ttfamily IO\+::\+SDK\+::\+Maneuvers\+::\+Maneuver\+Result\+::\+Maneuver\+Result (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [default]}}
 
 
 
 Construct a new Maneuver Result object. 
 
-\mbox{\Hypertarget{structIO_1_1SDK_1_1Maneuvers_1_1ManeuverResult_a86ed87b3731270a1c40f5d9a8c81a2f5}\label{structIO_1_1SDK_1_1Maneuvers_1_1ManeuverResult_a86ed87b3731270a1c40f5d9a8c81a2f5}} 
+\mbox{\Hypertarget{structIO_1_1SDK_1_1Maneuvers_1_1ManeuverResult_a07c4a1e7f2fff1976f4f8f58c61d03ed}\label{structIO_1_1SDK_1_1Maneuvers_1_1ManeuverResult_a07c4a1e7f2fff1976f4f8f58c61d03ed}} 
 \index{IO::SDK::Maneuvers::ManeuverResult@{IO::SDK::Maneuvers::ManeuverResult}!ManeuverResult@{ManeuverResult}}
 \index{ManeuverResult@{ManeuverResult}!IO::SDK::Maneuvers::ManeuverResult@{IO::SDK::Maneuvers::ManeuverResult}}
 \doxysubsubsection{\texorpdfstring{ManeuverResult()}{ManeuverResult()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
-{\footnotesize\ttfamily IO\+::\+SDK\+::\+Maneuvers\+::\+Maneuver\+Result\+::\+Maneuver\+Result (\begin{DoxyParamCaption}\item[{bool}]{is\+Valid,  }\item[{std\+::string}]{message }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+{\footnotesize\ttfamily IO\+::\+SDK\+::\+Maneuvers\+::\+Maneuver\+Result\+::\+Maneuver\+Result (\begin{DoxyParamCaption}\item[{bool}]{is\+Valid,  }\item[{std\+::string \&}]{message }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
 
 
 
@@ -66,11 +66,11 @@ Construct a new Maneuver Result object.
 
 
 \doxysubsection{Member Function Documentation}
-\mbox{\Hypertarget{structIO_1_1SDK_1_1Maneuvers_1_1ManeuverResult_a7e27fcfc74bf4f3b233d7b46229c0839}\label{structIO_1_1SDK_1_1Maneuvers_1_1ManeuverResult_a7e27fcfc74bf4f3b233d7b46229c0839}} 
+\mbox{\Hypertarget{structIO_1_1SDK_1_1Maneuvers_1_1ManeuverResult_a734266e97690bb241a5c2109ccf0ce07}\label{structIO_1_1SDK_1_1Maneuvers_1_1ManeuverResult_a734266e97690bb241a5c2109ccf0ce07}} 
 \index{IO::SDK::Maneuvers::ManeuverResult@{IO::SDK::Maneuvers::ManeuverResult}!CanRetryLater@{CanRetryLater}}
 \index{CanRetryLater@{CanRetryLater}!IO::SDK::Maneuvers::ManeuverResult@{IO::SDK::Maneuvers::ManeuverResult}}
 \doxysubsubsection{\texorpdfstring{CanRetryLater()}{CanRetryLater()}}
-{\footnotesize\ttfamily bool IO\+::\+SDK\+::\+Maneuvers\+::\+Maneuver\+Result\+::\+Can\+Retry\+Later (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+{\footnotesize\ttfamily bool IO\+::\+SDK\+::\+Maneuvers\+::\+Maneuver\+Result\+::\+Can\+Retry\+Later (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
 
 
 
@@ -94,11 +94,11 @@ Get the Message object.
 \begin{DoxyReturn}{Returns}
 std\+::string 
 \end{DoxyReturn}
-\mbox{\Hypertarget{structIO_1_1SDK_1_1Maneuvers_1_1ManeuverResult_a5ea8f87a62c54948312826b7477dd547}\label{structIO_1_1SDK_1_1Maneuvers_1_1ManeuverResult_a5ea8f87a62c54948312826b7477dd547}} 
+\mbox{\Hypertarget{structIO_1_1SDK_1_1Maneuvers_1_1ManeuverResult_a7e862057bad457f43382432f82d6df8e}\label{structIO_1_1SDK_1_1Maneuvers_1_1ManeuverResult_a7e862057bad457f43382432f82d6df8e}} 
 \index{IO::SDK::Maneuvers::ManeuverResult@{IO::SDK::Maneuvers::ManeuverResult}!IsExecutedTooEarly@{IsExecutedTooEarly}}
 \index{IsExecutedTooEarly@{IsExecutedTooEarly}!IO::SDK::Maneuvers::ManeuverResult@{IO::SDK::Maneuvers::ManeuverResult}}
 \doxysubsubsection{\texorpdfstring{IsExecutedTooEarly()}{IsExecutedTooEarly()}}
-{\footnotesize\ttfamily bool IO\+::\+SDK\+::\+Maneuvers\+::\+Maneuver\+Result\+::\+Is\+Executed\+Too\+Early (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+{\footnotesize\ttfamily bool IO\+::\+SDK\+::\+Maneuvers\+::\+Maneuver\+Result\+::\+Is\+Executed\+Too\+Early (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
 
 
 
@@ -109,11 +109,11 @@ true
 
 false 
 \end{DoxyReturn}
-\mbox{\Hypertarget{structIO_1_1SDK_1_1Maneuvers_1_1ManeuverResult_a0a22c22f6306045c26a2933ab315b821}\label{structIO_1_1SDK_1_1Maneuvers_1_1ManeuverResult_a0a22c22f6306045c26a2933ab315b821}} 
+\mbox{\Hypertarget{structIO_1_1SDK_1_1Maneuvers_1_1ManeuverResult_a6b44d036ce712a82c916458c383a190e}\label{structIO_1_1SDK_1_1Maneuvers_1_1ManeuverResult_a6b44d036ce712a82c916458c383a190e}} 
 \index{IO::SDK::Maneuvers::ManeuverResult@{IO::SDK::Maneuvers::ManeuverResult}!IsValid@{IsValid}}
 \index{IsValid@{IsValid}!IO::SDK::Maneuvers::ManeuverResult@{IO::SDK::Maneuvers::ManeuverResult}}
 \doxysubsubsection{\texorpdfstring{IsValid()}{IsValid()}}
-{\footnotesize\ttfamily bool IO\+::\+SDK\+::\+Maneuvers\+::\+Maneuver\+Result\+::\+Is\+Valid (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+{\footnotesize\ttfamily bool IO\+::\+SDK\+::\+Maneuvers\+::\+Maneuver\+Result\+::\+Is\+Valid (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
 
 
 

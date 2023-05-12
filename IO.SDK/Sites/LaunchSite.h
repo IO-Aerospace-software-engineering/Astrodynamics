@@ -2,7 +2,7 @@
  * @file LaunchSite.h
  * @author Sylvain Guillet (sylvain.guillet@live.com)
  * @brief 
- * @version 0.1
+ * @version 0.x
  * @date 2021-05-26
  * 
  * @copyright Copyright (c) 2021
@@ -35,7 +35,7 @@ namespace IO::SDK::Sites
          * @param body 
          */
         LaunchSite(int id, const std::string& name, const IO::SDK::Coordinates::Geodetic& coordinates,
-                   std::shared_ptr<IO::SDK::Body::CelestialBody> body);
+                   std::shared_ptr<IO::SDK::Body::CelestialBody> body,std::string directoryPath);
 
         /**
          * @brief Add an azimuth range

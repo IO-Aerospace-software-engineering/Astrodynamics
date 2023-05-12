@@ -2,7 +2,7 @@
  * @file Kernel.h
  * @author Sylvain Guillet (sylvain.guillet@live.com)
  * @brief 
- * @version 0.1
+ * @version 0.x
  * @date 2021-07-02
  * 
  * @copyright Copyright (c) 2021
@@ -21,14 +21,8 @@ namespace IO::SDK::Kernels
 		std::string m_comments;
 		bool m_isLoaded{false};
 		bool m_fileExists{false};
-		explicit Kernel(const std::string &fileName);
-		/**
-		 * @brief Define the best Lagrange polynomial degree
-		 * 
-		 * @param dataSize - Size of data set
-		 * @return int 
-		 */
-		static int DefinePolynomialDegree(int dataSize, int maximumDegree) ;
+		explicit Kernel(std::string fileName);
+
 
 	public:
 		virtual ~Kernel();
@@ -68,6 +62,14 @@ namespace IO::SDK::Kernels
 		 * @return std::string 
 		 */
 		[[nodiscard]] virtual std::string ReadComment() const;
+
+        /**
+		 * @brief Define the best Lagrange polynomial degree
+		 *
+		 * @param dataSize - Size of data set
+		 * @return int
+		 */
+        static int DefinePolynomialDegree(int dataSize, int maximumDegree) ;
 	};
 
 }

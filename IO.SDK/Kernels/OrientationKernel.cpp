@@ -2,7 +2,7 @@
  * @file OrientationKernel.cpp
  * @author Sylvain Guillet (sylvain.guillet@live.com)
  * @brief 
- * @version 0.1
+ * @version 0.x
  * @date 2021-07-02
  * 
  * @copyright Copyright (c) 2021
@@ -11,22 +11,36 @@
 #include <filesystem>
 #include <Spacecraft.h>
 #include <Builder.h>
+#include "InvalidArgumentException.h"
 
-IO::SDK::Kernels::OrientationKernel::OrientationKernel(const IO::SDK::Body::Spacecraft::Spacecraft &spacecraft) : Kernel(
-        spacecraft.GetFilesPath() + "/Orientations/" + spacecraft.GetName() + ".ck"), m_spacecraft{spacecraft} {
+
+//IO::SDK::Kernels::OrientationKernel::OrientationKernel(const IO::SDK::Body::Spacecraft::Spacecraft &Spacecraft) : Kernel(
+//        Spacecraft.GetDirectoryPath() + "/Orientations/" + Spacecraft.GetName() + ".ck"), m_spacecraft{Spacecraft} {
+//}
+
+IO::SDK::Kernels::OrientationKernel::OrientationKernel(std::string filePath, int spacecraftId, int spacecraftFrameId) : IO::SDK::Kernels::Kernel(std::move(filePath)),
+                                                                                                                        m_spacecraftId{spacecraftId},
+                                                                                                                        m_spacecraftFrameId{spacecraftFrameId}
+{
+
 }
 
 IO::SDK::Kernels::OrientationKernel::~OrientationKernel() = default;
 
-void IO::SDK::Kernels::OrientationKernel::WriteOrientations(const std::vector<std::vector<IO::SDK::OrbitalParameters::StateOrientation>> &orientations) const {
-    if (orientations.empty()) {
+void IO::SDK::Kernels::OrientationKernel::WriteOrientations(const std::vector<std::vector<IO::SDK::OrbitalParameters::StateOrientation>> &orientations) const
+{
+    if (orientations.empty())
+    {
         throw IO::SDK::Exception::SDKException("Orientations array is empty");
     }
 
     auto frame = orientations.front().front().GetFrame();
-    for (auto &&orientation: orientations) {
-        for (auto &&orientationPart: orientation) {
-            if (orientationPart.GetFrame() != frame) {
+    for (auto &&orientation: orientations)
+    {
+        for (auto &&orientationPart: orientation)
+        {
+            if (orientationPart.GetFrame() != frame)
+            {
                 throw IO::SDK::Exception::InvalidArgumentException(
                         "Orientations collection contains data with different frames : " + frame.GetName() + " - " + orientationPart.GetFrame().GetName() +
                         ". All orientations must have the same frame. ");
@@ -35,13 +49,10 @@ void IO::SDK::Kernels::OrientationKernel::WriteOrientations(const std::vector<st
     }
 
     //Compute segment start date
-    double begtime = m_spacecraft.GetClock().ConvertToEncodedClock(orientations.front().front().GetEpoch());
+    double begtime = SpacecraftClockKernel::ConvertToEncodedClock(m_spacecraftId, orientations.front().front().GetEpoch());
 
     //Compute segment end date
-    double endtime = m_spacecraft.GetClock().ConvertToEncodedClock(orientations.back().back().GetEpoch());
-
-    //Compute spacecraft frame id
-    int id = m_spacecraft.GetFrame()->GetId();
+    double endtime = SpacecraftClockKernel::ConvertToEncodedClock(m_spacecraftId, orientations.back().back().GetEpoch());
 
     //Number of orientation data
     size_t n{};
@@ -64,24 +75,28 @@ void IO::SDK::Kernels::OrientationKernel::WriteOrientations(const std::vector<st
     //Used to define polynomial degree
     size_t minSize{std::numeric_limits<size_t>::max()};
 
-    for (auto &interval: orientations) {
-        if (interval.empty()) {
+    for (auto &interval: orientations)
+    {
+        if (interval.empty())
+        {
             throw IO::SDK::Exception::InvalidArgumentException("Orientation array is empty");
         }
 
         //Add interval start date
-        intervalsStarts.push_back(m_spacecraft.GetClock().ConvertToEncodedClock(interval.begin()->GetEpoch()));
+        intervalsStarts.push_back(SpacecraftClockKernel::ConvertToEncodedClock(m_spacecraftId, interval.begin()->GetEpoch()));
 
         //Number of data
         size_t intervalSize = interval.size();
 
-        if (intervalSize < minSize) {
+        if (intervalSize < minSize)
+        {
             minSize = intervalSize;
         }
         n += intervalSize;
-        for (auto &orientation: interval) {
+        for (auto &orientation: interval)
+        {
             //Add encoded clock
-            sclks.push_back(m_spacecraft.GetClock().ConvertToEncodedClock(orientation.GetEpoch()));
+            sclks.push_back(SpacecraftClockKernel::ConvertToEncodedClock(m_spacecraftId, orientation.GetEpoch()));
 
             //Add orientation data
             quats.push_back({orientation.GetQuaternion().GetQ0(), orientation.GetQuaternion().GetQ1(), orientation.GetQuaternion().GetQ2(), orientation.GetQuaternion().GetQ3()});
@@ -89,7 +104,8 @@ void IO::SDK::Kernels::OrientationKernel::WriteOrientations(const std::vector<st
         }
     }
 
-    if (std::filesystem::exists(m_filePath)) {
+    if (std::filesystem::exists(m_filePath))
+    {
         unload_c(m_filePath.c_str());
         std::filesystem::remove(m_filePath);
     }
@@ -97,22 +113,23 @@ void IO::SDK::Kernels::OrientationKernel::WriteOrientations(const std::vector<st
     //Write data
     SpiceInt handle;
     ckopn_c(m_filePath.c_str(), "CK_file", 5000, &handle);
-    ckw03_c(handle, begtime, endtime, id, frame.ToCharArray(), true, "Seg1", n, &sclks[0], &quats[0], &av[0], nbIntervals, &intervalsStarts[0]);
+    ckw03_c(handle, begtime, endtime, m_spacecraftFrameId, frame.ToCharArray(), true, "Seg1", n, &sclks[0], &quats[0], &av[0], nbIntervals, &intervalsStarts[0]);
     ckcls_c(handle);
 
     furnsh_c(m_filePath.c_str());
 }
 
 IO::SDK::OrbitalParameters::StateOrientation
-IO::SDK::Kernels::OrientationKernel::ReadStateOrientation(const IO::SDK::Time::TDB &epoch, const IO::SDK::Time::TimeSpan &tolerance, const IO::SDK::Frames::Frames &frame) const {
+IO::SDK::Kernels::OrientationKernel::ReadStateOrientation(const Body::Spacecraft::Spacecraft& spacecraft, const IO::SDK::Time::TDB &epoch, const IO::SDK::Time::TimeSpan &tolerance, const IO::SDK::Frames::Frames &frame) const
+{
     //Build plateform id
-    SpiceInt id = m_spacecraft.GetId() * 1000;
+    SpiceInt id = m_spacecraftId * 1000;
 
     //Get encoded clock
-    SpiceDouble sclk = m_spacecraft.GetClock().ConvertToEncodedClock(epoch);
+    SpiceDouble sclk = SpacecraftClockKernel::ConvertToEncodedClock(m_spacecraftId, epoch);
 
     //Build tolerance
-    SpiceDouble tol = m_spacecraft.GetClock().GetTicksPerSeconds() * tolerance.GetSeconds().count();
+    SpiceDouble tol = spacecraft.GetClock().GetTicksPerSeconds() * tolerance.GetSeconds().count();
 
     SpiceDouble cmat[3][3];
     SpiceDouble av[3];
@@ -122,19 +139,23 @@ IO::SDK::Kernels::OrientationKernel::ReadStateOrientation(const IO::SDK::Time::T
     //Get orientation and angular velocity
     ckgpav_c(id, sclk, tol, frame.ToCharArray(), cmat, av, &clkout, &found);
 
-    if (!found) {
+    if (!found)
+    {
         throw IO::SDK::Exception::SDKException("No orientation found");
     }
 
     //Build array pointers
     double **arrayCmat;
     arrayCmat = new double *[3];
-    for (int i = 0; i < 3; i++) {
+    for (int i = 0; i < 3; i++)
+    {
         arrayCmat[i] = new double[3]{};
     }
 
-    for (size_t i = 0; i < 3; i++) {
-        for (size_t j = 0; j < 3; j++) {
+    for (size_t i = 0; i < 3; i++)
+    {
+        for (size_t j = 0; j < 3; j++)
+        {
             arrayCmat[i][j] = cmat[i][j];
         }
     }
@@ -148,17 +169,18 @@ IO::SDK::Kernels::OrientationKernel::ReadStateOrientation(const IO::SDK::Time::T
     delete[] arrayCmat;
 
     IO::SDK::Math::Vector3D angularVelocity{av[0], av[1], av[2]};
-    IO::SDK::Time::TDB tdb = m_spacecraft.GetClock().ConvertToTDB(clkout);
+    IO::SDK::Time::TDB tdb = spacecraft.GetClock().ConvertToTDB(clkout);
 
     //return state orientation
     return IO::SDK::OrbitalParameters::StateOrientation{q, angularVelocity, tdb, frame};
 }
 
-IO::SDK::Time::Window<IO::SDK::Time::TDB> IO::SDK::Kernels::OrientationKernel::GetCoverageWindow() const {
+IO::SDK::Time::Window<IO::SDK::Time::TDB> IO::SDK::Kernels::OrientationKernel::GetCoverageWindow() const
+{
     SpiceDouble SPICE_CELL_CKCOV[SPICE_CELL_CTRLSZ + 2];
     SpiceCell cnfine = IO::SDK::Spice::Builder::CreateDoubleCell(2, SPICE_CELL_CKCOV);
 
-    ckcov_c(m_filePath.c_str(), m_spacecraft.GetId() * 1000, false, "SEGMENT", 0.0, "TDB", &cnfine);
+    ckcov_c(m_filePath.c_str(), m_spacecraftId * 1000, false, "SEGMENT", 0.0, "TDB", &cnfine);
     double start;
     double end;
 
@@ -166,3 +188,5 @@ IO::SDK::Time::Window<IO::SDK::Time::TDB> IO::SDK::Kernels::OrientationKernel::G
 
     return IO::SDK::Time::Window<IO::SDK::Time::TDB>{IO::SDK::Time::TDB(std::chrono::duration<double>(start)), IO::SDK::Time::TDB(std::chrono::duration<double>(end))};
 }
+
+

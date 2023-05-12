@@ -64,7 +64,7 @@
 <a name="2"><span class="lineNum">       2 </span>            :  * @file PhasingManeuver.cpp</a>
 <a name="3"><span class="lineNum">       3 </span>            :  * @author Sylvain Guillet (sylvain.guillet@live.com)</a>
 <a name="4"><span class="lineNum">       4 </span>            :  * @brief </a>
-<a name="5"><span class="lineNum">       5 </span>            :  * @version 0.1</a>
+<a name="5"><span class="lineNum">       5 </span>            :  * @version 0.x</a>
 <a name="6"><span class="lineNum">       6 </span>            :  * @date 2021-07-03</a>
 <a name="7"><span class="lineNum">       7 </span>            :  * </a>
 <a name="8"><span class="lineNum">       8 </span>            :  * @copyright Copyright (c) 2021</a>
@@ -164,7 +164,7 @@
 <a name="102"><span class="lineNum">     102 </span>            : </a>
 <a name="103"><span class="lineNum">     103 </span><span class="lineCov">          6 : bool IO::SDK::Maneuvers::PhasingManeuver::IsApproachingPerigee(const IO::SDK::OrbitalParameters::StateVector &amp;stateVector) const</span></a>
 <a name="104"><span class="lineNum">     104 </span>            : {</a>
-<a name="105"><span class="lineNum">     105 </span>            :     //Angle between perigee vector and spacecraft velocity</a>
+<a name="105"><span class="lineNum">     105 </span>            :     //Angle between perigee vector and Spacecraft velocity</a>
 <a name="106"><span class="lineNum">     106 </span><span class="lineCov">          6 :     double dp = stateVector.GetPerigeeVector().DotProduct(stateVector.GetVelocity());</span></a>
 <a name="107"><span class="lineNum">     107 </span>            : </a>
 <a name="108"><span class="lineNum">     108 </span>            :     //if &lt; 90° we're in inbound sector</a>

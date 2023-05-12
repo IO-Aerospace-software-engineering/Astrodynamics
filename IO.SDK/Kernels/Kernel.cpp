@@ -2,7 +2,7 @@
  * @file Kernel.cpp
  * @author Sylvain Guillet (sylvain.guillet@live.com)
  * @brief 
- * @version 0.1
+ * @version 0.x
  * @date 2021-07-02
  * 
  * @copyright Copyright (c) 2021
@@ -14,10 +14,10 @@
 
 constexpr size_t COMLENGTH = 80;
 
-IO::SDK::Kernels::Kernel::Kernel(const std::string &filePath) : m_filePath{filePath}
+IO::SDK::Kernels::Kernel::Kernel(std::string filePath) : m_filePath{std::move(filePath)}
 {
 
-    auto directory = std::filesystem::directory_entry(filePath).path();
+    auto directory = std::filesystem::directory_entry(m_filePath).path();
     if (directory.has_parent_path())
     {
         if (!std::filesystem::exists(directory.parent_path()))

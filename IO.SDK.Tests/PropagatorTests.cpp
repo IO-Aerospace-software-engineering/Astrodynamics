@@ -11,6 +11,8 @@
 #include <VVIntegrator.h>
 #include <TestsConstants.h>
 #include <TLEIntegrator.h>
+#include "InertialFrames.h"
+#include "TestParameters.h"
 
 using namespace std::chrono_literals;
 
@@ -20,7 +22,7 @@ TEST(Propagator, Initialization)
     auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
     std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth, IO::SDK::Math::Vector3D(1.0, 2.0, 3.0), IO::SDK::Math::Vector3D(4.0, 5.0, 6.0), IO::SDK::Time::TDB(100.0s), IO::SDK::Frames::InertialFrames::GetICRF());
     IO::SDK::OrbitalParameters::StateOrientation attitude(IO::SDK::Time::TDB(100.0s), IO::SDK::Frames::InertialFrames::GetICRF());
-    IO::SDK::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, "ms01", std::move(orbitalParams)};
+    IO::SDK::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams)};
     IO::SDK::Propagators::Propagator pro(s, integrator, IO::SDK::Time::Window(IO::SDK::Time::TDB(100.0s), IO::SDK::Time::TDB(200.0s)));
 }
 
@@ -30,7 +32,7 @@ TEST(Propagator, FindNearestLowerValue)
     auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
     std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth, IO::SDK::Math::Vector3D(1.0, 2.0, 3.0), IO::SDK::Math::Vector3D(4.0, 5.0, 6.0), IO::SDK::Time::TDB(100.0s), IO::SDK::Frames::InertialFrames::GetICRF());
     IO::SDK::OrbitalParameters::StateOrientation attitude(IO::SDK::Time::TDB(100.0s), IO::SDK::Frames::InertialFrames::GetICRF());
-    IO::SDK::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, "ms01", std::move(orbitalParams)};
+    IO::SDK::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams)};
     IO::SDK::Propagators::Propagator pro(s, integrator, IO::SDK::Time::Window(IO::SDK::Time::TDB(100.0s), IO::SDK::Time::TDB(200.0s)));
 
     //Propagator vector states empty
@@ -62,7 +64,7 @@ TEST(Propagator, EraseDataRange)
     auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
     std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth, IO::SDK::Math::Vector3D(1.0, 2.0, 3.0), IO::SDK::Math::Vector3D(4.0, 5.0, 6.0), IO::SDK::Time::TDB(100.0s), IO::SDK::Frames::InertialFrames::GetICRF());
     IO::SDK::OrbitalParameters::StateOrientation attitude(IO::SDK::Time::TDB(100.0s), IO::SDK::Frames::InertialFrames::GetICRF());
-    IO::SDK::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, "ms01", std::move(orbitalParams)};
+    IO::SDK::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams)};
     IO::SDK::Propagators::Propagator pro(s, integrator, IO::SDK::Time::Window(IO::SDK::Time::TDB(100.0s), IO::SDK::Time::TDB(200.0s)));
 
     //Propagator vector states empty
@@ -111,7 +113,7 @@ TEST(Propagator, PropagateVVIntegrator)
     //  VX=-8.366764389833921E-01 VY=-5.602543663174073E-01 VZ=-1.710459390585548E-01
     auto moon = std::make_shared<IO::SDK::Body::CelestialBody>(301, earth);
     std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth, IO::SDK::Math::Vector3D(6800000.0, 0.0, 0.0), IO::SDK::Math::Vector3D(0.0, 8000.0, 0.0), epoch, IO::SDK::Frames::InertialFrames::GetICRF());
-    IO::SDK::Body::Spacecraft::Spacecraft spc(-125, "spc125", 1000.0, 3000.0, "missGravity", std::move(orbitalParams));
+    IO::SDK::Body::Spacecraft::Spacecraft spc(-125, "spc125", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams));
 
     IO::SDK::Propagators::Propagator pro(spc, integrator, IO::SDK::Time::Window(epoch, epoch + step * 100.0));
 
@@ -180,7 +182,7 @@ TEST(Propagator, PropagatorVsKepler)
     std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth, IO::SDK::Math::Vector3D(a, 0.0, 0.0), IO::SDK::Math::Vector3D(0.0, v, 0.0), epoch, IO::SDK::Frames::InertialFrames::GetICRF());
     auto localOrbitalparams = dynamic_cast<IO::SDK::OrbitalParameters::StateVector *>(orbitalParams.get());
     IO::SDK::OrbitalParameters::StateOrientation attitude(IO::SDK::Time::TDB(100.0s), IO::SDK::Frames::InertialFrames::GetICRF());
-    IO::SDK::Body::Spacecraft::Spacecraft spc(-12, "spc12", 1000.0, 3000.0, "missGravity", std::move(orbitalParams));
+    IO::SDK::Body::Spacecraft::Spacecraft spc(-12, "spc12", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams));
 
     IO::SDK::Propagators::Propagator pro(spc, integrator, IO::SDK::Time::Window(epoch, epoch + duration));
 
@@ -260,7 +262,7 @@ TEST(Propagator, PropagatorVsKepler2)
     // auto moon = std::make_shared<IO::SDK::Body::CelestialBody>(301, "moon", earth);
     std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth, 10000000.0, 0.3, 0.0, 0.0, 0.0, 0.0, startEpoch, IO::SDK::Frames::InertialFrames::GetICRF());
     auto localOrbitalparams = dynamic_cast<IO::SDK::OrbitalParameters::ConicOrbitalElements *>(orbitalParams.get());
-    IO::SDK::Body::Spacecraft::Spacecraft spc(-12, "spc12", 1000.0, 3000.0, "misskepler2", std::move(orbitalParams));
+    IO::SDK::Body::Spacecraft::Spacecraft spc(-12, "spc12", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams));
 
     IO::SDK::Propagators::Propagator pro(spc, integrator, IO::SDK::Time::Window(startEpoch, endEpoch));
 
@@ -326,7 +328,7 @@ TEST(Propagator, PropagateTLEIntegrator)
     std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> tle = std::make_unique<IO::SDK::OrbitalParameters::TLE>(earth, lines);
     IO::SDK::Time::TimeSpan step{60s};
     IO::SDK::Integrators::TLEIntegrator integrator(*tleIntegrator, step);
-    IO::SDK::Body::Spacecraft::Spacecraft spc(-233, "issTLE", 1000.0, 3000.0, "MissTLEInteg", std::move(tle));
+    IO::SDK::Body::Spacecraft::Spacecraft spc(-233, "issTLE", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(tle));
 
     IO::SDK::Time::TDB epoch{tleIntegrator->GetEpoch()};
 
@@ -383,7 +385,7 @@ TEST(Propagator, EraseEmptyPropagator)
     std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> tle = std::make_unique<IO::SDK::OrbitalParameters::TLE>(earth, lines);
     IO::SDK::Time::TimeSpan step{60s};
     IO::SDK::Integrators::TLEIntegrator integrator(*tleIntegrator, step);
-    IO::SDK::Body::Spacecraft::Spacecraft spc(-233, "issTLE", 1000.0, 3000.0, "MissTLEInteg", std::move(tle));
+    IO::SDK::Body::Spacecraft::Spacecraft spc(-233, "issTLE", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(tle));
 
     IO::SDK::Time::TDB epoch{tleIntegrator->GetEpoch()};
 

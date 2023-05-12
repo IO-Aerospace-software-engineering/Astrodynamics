@@ -9,5 +9,6 @@ var searchData=
   ['frames_2ecpp_6',['Frames.cpp',['../Frames_8cpp.html',1,'']]],
   ['frames_2eh_7',['Frames.h',['../Frames_8h.html',1,'']]],
   ['fueltank_2ecpp_8',['FuelTank.cpp',['../FuelTank_8cpp.html',1,'']]],
-  ['fueltank_2eh_9',['FuelTank.h',['../FuelTank_8h.html',1,'']]]
+  ['fueltank_2eh_9',['FuelTank.h',['../FuelTank_8h.html',1,'']]],
+  ['fueltankdto_2eh_10',['FuelTankDTO.h',['../FuelTankDTO_8h.html',1,'']]]
 ];

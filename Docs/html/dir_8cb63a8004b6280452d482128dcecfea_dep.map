@@ -1,8 +1,0 @@
-<map id="IO.SDK/Illumination" name="IO.SDK/Illumination">
-<area shape="rect" id="node1" href="dir_1d644f90f19ce2018d1fb00b3e15f120.html" title="Math" alt="" coords="27,148,99,196"/>
-<area shape="rect" id="node2" href="dir_f5484ecb79d1136e426354a0968a29d0.html" title="Time" alt="" coords="123,148,195,196"/>
-<area shape="rect" id="node3" href="dir_8cb63a8004b6280452d482128dcecfea.html" title="Illumination" alt="" coords="61,52,161,100"/>
-<area shape="rect" id="edge1-headlabel" href="dir_000007_000013.html" title="1" alt="" coords="86,128,95,143"/>
-<area shape="rect" id="edge2-headlabel" href="dir_000007_000021.html" title="1" alt="" coords="141,121,151,135"/>
-<area shape="rect" id="clust1" href="dir_5778ee96be26b2d80033eace8b85837e.html" title="IO.SDK" alt="" coords="16,16,205,207"/>
-</map>

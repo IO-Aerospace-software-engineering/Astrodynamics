@@ -2,7 +2,7 @@
  * @file FuelTank.h
  * @author Sylvain Guillet (sylvain.guillet@live.com)
  * @brief 
- * @version 0.1
+ * @version 0.x
  * @date 2021-03-04
  * 
  * @copyright Copyright (c) 2021
@@ -44,7 +44,7 @@ namespace IO::SDK::Body::Spacecraft
         FuelTank(const std::string &serialNumber, const IO::SDK::Body::Spacecraft::Spacecraft &spacecraft, double capacity, double quantity);
         
         /**
-         * @brief Get the associated spacecraft
+         * @brief Get the associated Spacecraft
          * 
          * @return const IO::SDK::Body::Spacecraft::Spacecraft& 
          */

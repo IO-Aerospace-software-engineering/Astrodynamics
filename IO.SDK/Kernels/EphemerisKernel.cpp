@@ -2,7 +2,7 @@
  * @file EphemerisKernel.cpp
  * @author Sylvain Guillet (sylvain.guillet@live.com)
  * @brief 
- * @version 0.1
+ * @version 0.x
  * @date 2021-07-03
  * 
  * @copyright Copyright (c) 2021
@@ -11,35 +11,46 @@
 #include <EphemerisKernel.h>
 #include <SDKException.h>
 #include <filesystem>
+#include <utility>
 #include <Parameters.h>
 #include <SpiceUsr.h>
 #include <Builder.h>
+#include "InvalidArgumentException.h"
 
-IO::SDK::Kernels::EphemerisKernel::EphemerisKernel(const IO::SDK::Body::Spacecraft::Spacecraft &spacecraft) : Kernel(
-        spacecraft.GetFilesPath() + "/Ephemeris/" + spacecraft.GetName() + ".spk"), m_objectId{spacecraft.GetId()} {
-}
+//IO::SDK::Kernels::EphemerisKernel::EphemerisKernel(const std::string filePath, int objectId) : Kernel(
+//        Spacecraft.GetDirectoryPath() + "/Ephemeris/" + Spacecraft.GetName() + ".spk"), m_objectId{Spacecraft.GetId()}
+//{
+//}
 
-IO::SDK::Kernels::EphemerisKernel::EphemerisKernel(const IO::SDK::Sites::Site &site) : Kernel(
-        site.GetFilesPath() + "/Ephemeris/" + site.GetName() + ".spk"), m_objectId{site.GetId()} {
+//IO::SDK::Kernels::EphemerisKernel::EphemerisKernel(const IO::SDK::Sites::Site &site) : Kernel(
+//        site.GetDirectoryPath() + "/Ephemeris/" + site.GetName() + ".spk"), m_objectId{site.GetId()} {
+//
+//}
+
+IO::SDK::Kernels::EphemerisKernel::EphemerisKernel(std::string filePath, int objectId) : Kernel(std::move(filePath)), m_objectId{objectId}
+{
 
 }
 
 IO::SDK::OrbitalParameters::StateVector
 IO::SDK::Kernels::EphemerisKernel::ReadStateVector(const IO::SDK::Body::CelestialBody &observer, const IO::SDK::Frames::Frames &frame, const IO::SDK::AberrationsEnum aberration,
-                                                   const IO::SDK::Time::TDB &epoch) const {
+                                                   const IO::SDK::Time::TDB &epoch) const
+{
     SpiceDouble states[6];
     SpiceDouble lt;
     spkezr_c(std::to_string(m_objectId).c_str(), epoch.GetSecondsFromJ2000().count(), frame.ToCharArray(), IO::SDK::Aberrations::ToString(aberration).c_str(),
              observer.GetName().c_str(),
              states, &lt);
-    for (double & state : states) {
+    for (double &state: states)
+    {
         state = state * 1000.0;
     }
 
     return IO::SDK::OrbitalParameters::StateVector{std::make_shared<IO::SDK::Body::CelestialBody>(observer), states, epoch, frame};
 }
 
-IO::SDK::Time::Window<IO::SDK::Time::TDB> IO::SDK::Kernels::EphemerisKernel::GetCoverageWindow() const {
+IO::SDK::Time::Window<IO::SDK::Time::TDB> IO::SDK::Kernels::EphemerisKernel::GetCoverageWindow() const
+{
     const SpiceInt MAXWIN{2};
 
     SpiceDouble SPICE_CELL_DIST[SPICE_CELL_CTRLSZ + MAXWIN];
@@ -54,20 +65,25 @@ IO::SDK::Time::Window<IO::SDK::Time::TDB> IO::SDK::Kernels::EphemerisKernel::Get
     return IO::SDK::Time::Window<IO::SDK::Time::TDB>{IO::SDK::Time::TDB(std::chrono::duration<double>(start)), IO::SDK::Time::TDB(std::chrono::duration<double>(end))};
 }
 
-void IO::SDK::Kernels::EphemerisKernel::WriteData(const std::vector<OrbitalParameters::StateVector> &states) {
+void IO::SDK::Kernels::EphemerisKernel::WriteData(const std::vector<OrbitalParameters::StateVector> &states)
+{
 
-    if (states.size() <= 2) {
+    if (states.size() <= 2)
+    {
         throw IO::SDK::Exception::InvalidArgumentException("State vector set must have 2 items or more");
     }
 
     auto frame = states.front().GetFrame();
-    for (auto &&sv: states) {
-        if (sv.GetFrame() != frame) {
+    for (auto &&sv: states)
+    {
+        if (sv.GetFrame() != frame)
+        {
             throw IO::SDK::Exception::InvalidArgumentException("State vectors must have the same frame");
         }
     }
 
-    if (std::filesystem::exists(m_filePath)) {
+    if (std::filesystem::exists(m_filePath))
+    {
         unload_c(m_filePath.c_str());
         std::filesystem::remove(m_filePath);
     }
@@ -79,7 +95,8 @@ void IO::SDK::Kernels::EphemerisKernel::WriteData(const std::vector<OrbitalParam
 
     auto statesArray = new SpiceDouble[size][6];
 
-    for (size_t i = 0; i < size; i++) {
+    for (size_t i = 0; i < size; i++)
+    {
         Math::Vector3D position = states[i].GetPosition();
         Math::Vector3D velocity = states[i].GetVelocity();
 
@@ -95,13 +112,16 @@ void IO::SDK::Kernels::EphemerisKernel::WriteData(const std::vector<OrbitalParam
 
     spkopn_c(m_filePath.c_str(), m_filePath.c_str(), IO::SDK::Parameters::CommentAreaSize, &handle);
 
-    if (IsEvenlySpacedData(states)) {
+    if (IsEvenlySpacedData(states))
+    {
         spkw08_c(handle, m_objectId, first.GetCenterOfMotion()->GetId(), frame.ToCharArray(), first.GetEpoch().GetSecondsFromJ2000().count(),
                  last.GetEpoch().GetSecondsFromJ2000().count(), "Seg1", DefinePolynomialDegree(states.size(), IO::SDK::Parameters::MaximumEphemerisLagrangePolynomialDegree),
                  (SpiceInt) size, statesArray, first.GetEpoch().GetSecondsFromJ2000().count(), delta.GetSeconds().count());
-    } else {
+    } else
+    {
         auto epochs = new SpiceDouble[size];
-        for (size_t i = 0; i < size; i++) {
+        for (size_t i = 0; i < size; i++)
+        {
             epochs[i] = states[i].GetEpoch().GetSecondsFromJ2000().count();
         }
 
@@ -116,22 +136,29 @@ void IO::SDK::Kernels::EphemerisKernel::WriteData(const std::vector<OrbitalParam
     delete[] statesArray;
 }
 
-bool IO::SDK::Kernels::EphemerisKernel::IsEvenlySpacedData(const std::vector<OrbitalParameters::StateVector> &states) {
+bool IO::SDK::Kernels::EphemerisKernel::IsEvenlySpacedData(const std::vector<OrbitalParameters::StateVector> &states)
+{
 
-    if (states.empty()) {
+    if (states.empty())
+    {
         throw IO::SDK::Exception::InvalidArgumentException("State set must have one or more");
     }
 
-    if (states.size() == 1) {
+    if (states.size() == 1)
+    {
         return true;
     }
 
     IO::SDK::Time::TimeSpan gap{states[1].GetEpoch() - states[0].GetEpoch()};
-    for (size_t i = 1; i < states.size() - 1; i++) {
-        if (gap != states[i + 1].GetEpoch() - states[i].GetEpoch()) {
+    for (size_t i = 1; i < states.size() - 1; i++)
+    {
+        if (gap != states[i + 1].GetEpoch() - states[i].GetEpoch())
+        {
             return false;
         }
     }
 
     return true;
 }
+
+

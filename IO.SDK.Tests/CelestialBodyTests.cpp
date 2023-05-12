@@ -7,7 +7,7 @@
 #include <memory>
 #include <InertialFrames.h>
 #include <Aberrations.h>
-#include "Constraints/Constraint.h"
+#include "Constraints/RelationalOperator.h"
 
 using namespace std::chrono_literals;
 
@@ -130,7 +130,7 @@ TEST(CelestialBody, FindDistanceConstraint)
 	auto moon = std::make_shared<IO::SDK::Body::CelestialBody>(301, earth);
 
 	auto searchWindow = IO::SDK::Time::Window<IO::SDK::Time::TDB>(IO::SDK::Time::TDB("2007 JAN 1"), IO::SDK::Time::TDB("2007 APR 1"));
-	auto results = earth->FindWindowsOnDistanceConstraint(searchWindow,*moon, *earth, IO::SDK::Constraints::Constraint::GreaterThan(), IO::SDK::AberrationsEnum::None, 400000000.0, IO::SDK::Time::TimeSpan(86400s));
+	auto results = earth->FindWindowsOnDistanceConstraint(searchWindow, *moon, *earth, IO::SDK::Constraints::RelationalOperator::GreaterThan(), IO::SDK::AberrationsEnum::None, 400000000.0, IO::SDK::Time::TimeSpan(86400s));
 
 	ASSERT_EQ(4, results.size());
 	ASSERT_STREQ("2007-01-08 00:11:07.628591 (TDB)", results[0].GetStartDate().ToString().c_str());

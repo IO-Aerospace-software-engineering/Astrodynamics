@@ -1,6 +1,0 @@
-<map id="IO::SDK::Kernels::InstrumentKernel" name="IO::SDK::Kernels::InstrumentKernel">
-<area shape="rect" id="node1" title="Instrument kernel." alt="" coords="181,127,387,168"/>
-<area shape="rect" id="node2" href="$classIO_1_1SDK_1_1Kernels_1_1Kernel.html" title=" " alt="" coords="5,14,181,41"/>
-<area shape="rect" id="node3" href="$classIO_1_1SDK_1_1Instruments_1_1Instrument.html" title=" " alt="" coords="205,7,363,48"/>
-<area shape="rect" id="node4" href="$classIO_1_1SDK_1_1Math_1_1Vector3D.html" title=" " alt="" coords="387,14,565,41"/>
-</map>

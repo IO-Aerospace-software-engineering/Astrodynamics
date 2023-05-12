@@ -14,30 +14,42 @@
 \DoxyCodeLine{19     \{}
 \DoxyCodeLine{20     \textcolor{keyword}{private}:}
 \DoxyCodeLine{21         \textcolor{keyword}{const} std::string m\_name;}
-\DoxyCodeLine{22         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1SDK_1_1CoordinateSystem}{CoordinateSystem}} \_Rectangular;}
-\DoxyCodeLine{23         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1SDK_1_1CoordinateSystem}{CoordinateSystem}} \_Latitudinal;}
-\DoxyCodeLine{24         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1SDK_1_1CoordinateSystem}{CoordinateSystem}} \_RA\_DEC;}
-\DoxyCodeLine{25         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1SDK_1_1CoordinateSystem}{CoordinateSystem}} \_Spherical;}
-\DoxyCodeLine{26         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1SDK_1_1CoordinateSystem}{CoordinateSystem}} \_Cylindrical;}
-\DoxyCodeLine{27         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1SDK_1_1CoordinateSystem}{CoordinateSystem}} \_Geodetic;}
-\DoxyCodeLine{28         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1SDK_1_1CoordinateSystem}{CoordinateSystem}} \_Planetographic;}
+\DoxyCodeLine{22         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1SDK_1_1CoordinateSystem}{CoordinateSystem}} mRectangular;}
+\DoxyCodeLine{23         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1SDK_1_1CoordinateSystem}{CoordinateSystem}} mLatitudinal;}
+\DoxyCodeLine{24         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1SDK_1_1CoordinateSystem}{CoordinateSystem}} mRA\_DEC;}
+\DoxyCodeLine{25         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1SDK_1_1CoordinateSystem}{CoordinateSystem}} mSpherical;}
+\DoxyCodeLine{26         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1SDK_1_1CoordinateSystem}{CoordinateSystem}} mCylindrical;}
+\DoxyCodeLine{27         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1SDK_1_1CoordinateSystem}{CoordinateSystem}} mGeodetic;}
+\DoxyCodeLine{28         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1SDK_1_1CoordinateSystem}{CoordinateSystem}} mPlanetographic;}
 \DoxyCodeLine{29 }
 \DoxyCodeLine{30     \textcolor{keyword}{public}:}
-\DoxyCodeLine{36         \mbox{\hyperlink{classIO_1_1SDK_1_1CoordinateSystem_aa137864ed0c08113f72f8fb4d99e2158}{CoordinateSystem}}(\textcolor{keyword}{const} std::string \&name);}
+\DoxyCodeLine{36         \textcolor{keyword}{explicit} \mbox{\hyperlink{classIO_1_1SDK_1_1CoordinateSystem_aa137864ed0c08113f72f8fb4d99e2158}{CoordinateSystem}}(\textcolor{keyword}{const} std::string \&name);}
 \DoxyCodeLine{37 }
-\DoxyCodeLine{43         \textcolor{keyword}{const} \textcolor{keywordtype}{char} *\mbox{\hyperlink{classIO_1_1SDK_1_1CoordinateSystem_ab0f94ebc09d409a7bea4f163c934061a}{ToCharArray}}() \textcolor{keyword}{const};}
+\DoxyCodeLine{38         \mbox{\hyperlink{classIO_1_1SDK_1_1CoordinateSystem_a466a4147ea415d225a6a8e190e3d010e}{\string~CoordinateSystem}}() = \textcolor{keywordflow}{default};}
+\DoxyCodeLine{39 }
+\DoxyCodeLine{40         \mbox{\hyperlink{classIO_1_1SDK_1_1CoordinateSystem}{CoordinateSystem}} \&\mbox{\hyperlink{classIO_1_1SDK_1_1CoordinateSystem_a3b99837af1dbafe9c20ba196306d1d25}{operator=}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1CoordinateSystem}{CoordinateSystem}} \&other)}
+\DoxyCodeLine{41         \{}
+\DoxyCodeLine{42             \textcolor{keywordflow}{if} (\textcolor{keyword}{this} == \&other)}
+\DoxyCodeLine{43                 \textcolor{keywordflow}{return} *\textcolor{keyword}{this};}
 \DoxyCodeLine{44 }
-\DoxyCodeLine{45         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1SDK_1_1CoordinateSystem}{CoordinateSystem}}\& \mbox{\hyperlink{classIO_1_1SDK_1_1CoordinateSystem_abf044fea7a89d88ec18d7ea8c3c8ecad}{Rectangular}}();}
-\DoxyCodeLine{46         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1SDK_1_1CoordinateSystem}{CoordinateSystem}}\& \mbox{\hyperlink{classIO_1_1SDK_1_1CoordinateSystem_aae985b3e116351d0f4915bde5aac57ea}{Latitudinal}}();}
-\DoxyCodeLine{47         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1SDK_1_1CoordinateSystem}{CoordinateSystem}}\& \mbox{\hyperlink{classIO_1_1SDK_1_1CoordinateSystem_ac92430852b055b29ca23e6aab694cea6}{RA\_DEC}}();}
-\DoxyCodeLine{48         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1SDK_1_1CoordinateSystem}{CoordinateSystem}}\& \mbox{\hyperlink{classIO_1_1SDK_1_1CoordinateSystem_a149a56c9e29438ab1c018b57b5780cbd}{Spherical}}();}
-\DoxyCodeLine{49         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1SDK_1_1CoordinateSystem}{CoordinateSystem}}\& \mbox{\hyperlink{classIO_1_1SDK_1_1CoordinateSystem_a7c20aa58ee892a0e693ecec10ffa307d}{Cylindrical}}();}
-\DoxyCodeLine{50         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1SDK_1_1CoordinateSystem}{CoordinateSystem}}\& \mbox{\hyperlink{classIO_1_1SDK_1_1CoordinateSystem_aa4efbd380d728442e022d12ddaf89ec0}{Geodetic}}();}
-\DoxyCodeLine{51         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1SDK_1_1CoordinateSystem}{CoordinateSystem}}\& \mbox{\hyperlink{classIO_1_1SDK_1_1CoordinateSystem_a4082c2d278598115638764932676208a}{Planetographic}}();}
-\DoxyCodeLine{52     \};}
-\DoxyCodeLine{53 }
-\DoxyCodeLine{54 \} \textcolor{comment}{// namespace IO::SDK}}
+\DoxyCodeLine{45             \textcolor{keyword}{const\_cast<}std::string \&\textcolor{keyword}{>}(m\_name) = other.m\_name;}
+\DoxyCodeLine{46             \textcolor{keywordflow}{return} *\textcolor{keyword}{this};}
+\DoxyCodeLine{47         \}}
+\DoxyCodeLine{48 }
+\DoxyCodeLine{54         [[nodiscard]] \textcolor{keyword}{const} \textcolor{keywordtype}{char} *\mbox{\hyperlink{classIO_1_1SDK_1_1CoordinateSystem_ab0f94ebc09d409a7bea4f163c934061a}{ToCharArray}}() \textcolor{keyword}{const};}
 \DoxyCodeLine{55 }
-\DoxyCodeLine{56 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{56         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1SDK_1_1CoordinateSystem}{CoordinateSystem}}\& \mbox{\hyperlink{classIO_1_1SDK_1_1CoordinateSystem_abf044fea7a89d88ec18d7ea8c3c8ecad}{Rectangular}}();}
+\DoxyCodeLine{57         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1SDK_1_1CoordinateSystem}{CoordinateSystem}}\& \mbox{\hyperlink{classIO_1_1SDK_1_1CoordinateSystem_aae985b3e116351d0f4915bde5aac57ea}{Latitudinal}}();}
+\DoxyCodeLine{58         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1SDK_1_1CoordinateSystem}{CoordinateSystem}}\& \mbox{\hyperlink{classIO_1_1SDK_1_1CoordinateSystem_ac92430852b055b29ca23e6aab694cea6}{RA\_DEC}}();}
+\DoxyCodeLine{59         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1SDK_1_1CoordinateSystem}{CoordinateSystem}}\& \mbox{\hyperlink{classIO_1_1SDK_1_1CoordinateSystem_a149a56c9e29438ab1c018b57b5780cbd}{Spherical}}();}
+\DoxyCodeLine{60         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1SDK_1_1CoordinateSystem}{CoordinateSystem}}\& \mbox{\hyperlink{classIO_1_1SDK_1_1CoordinateSystem_a7c20aa58ee892a0e693ecec10ffa307d}{Cylindrical}}();}
+\DoxyCodeLine{61         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1SDK_1_1CoordinateSystem}{CoordinateSystem}}\& \mbox{\hyperlink{classIO_1_1SDK_1_1CoordinateSystem_aa4efbd380d728442e022d12ddaf89ec0}{Geodetic}}();}
+\DoxyCodeLine{62         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1SDK_1_1CoordinateSystem}{CoordinateSystem}}\& \mbox{\hyperlink{classIO_1_1SDK_1_1CoordinateSystem_a4082c2d278598115638764932676208a}{Planetographic}}();}
+\DoxyCodeLine{63         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1SDK_1_1CoordinateSystem}{CoordinateSystem}} \mbox{\hyperlink{classIO_1_1SDK_1_1CoordinateSystem_aea308e4470863a8cc1567d139118bd7a}{ToCoordinateSystemType}}(\textcolor{keyword}{const} std::string \&coordinateSystemType) ;}
+\DoxyCodeLine{64     \};}
+\DoxyCodeLine{65 }
+\DoxyCodeLine{66 \} \textcolor{comment}{// namespace IO::SDK}}
+\DoxyCodeLine{67 }
+\DoxyCodeLine{68 \textcolor{preprocessor}{\#endif}}
 
 \end{DoxyCode}

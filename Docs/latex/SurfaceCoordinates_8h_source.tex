@@ -18,19 +18,19 @@
 \DoxyCodeLine{27         std::vector<std::unique\_ptr<IO::SDK::Math::Vector3D>> m\_surfaceNormals;}
 \DoxyCodeLine{28 }
 \DoxyCodeLine{29     \textcolor{keyword}{public}:}
-\DoxyCodeLine{36         \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1SurfaceCoordinates_a486f3f808bb8837afedc690f3eeaea0a}{SurfaceCoordinates}}(\textcolor{keyword}{const} \textcolor{keywordtype}{size\_t} longitudeSpan,\textcolor{keyword}{const} \textcolor{keywordtype}{size\_t} latitudeSpan);}
+\DoxyCodeLine{36         \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1SurfaceCoordinates_a6b47d2fdf839b0da4187462a4bb34a00}{SurfaceCoordinates}}(\textcolor{keywordtype}{size\_t} longitudeSpan,\textcolor{keywordtype}{size\_t} latitudeSpan);}
 \DoxyCodeLine{37 }
-\DoxyCodeLine{43         \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1SurfaceCoordinates_a486f3f808bb8837afedc690f3eeaea0a}{SurfaceCoordinates}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1SurfaceCoordinates}{SurfaceCoordinates}}\& surfaceCoordinates);}
+\DoxyCodeLine{43         \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1SurfaceCoordinates_a6b47d2fdf839b0da4187462a4bb34a00}{SurfaceCoordinates}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1SurfaceCoordinates}{SurfaceCoordinates}}\& surfaceCoordinates);}
 \DoxyCodeLine{44 }
 \DoxyCodeLine{45         \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1SurfaceCoordinates}{SurfaceCoordinates}}\& \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1SurfaceCoordinates_a635864d30a11d39eb12244551ef3ae5f}{operator=}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1SurfaceCoordinates}{SurfaceCoordinates}}\& surfaceCoordinates);}
 \DoxyCodeLine{46 }
 \DoxyCodeLine{47 }
-\DoxyCodeLine{53         \textcolor{keyword}{const} std::vector<std::unique\_ptr<IO::SDK::Math::Vector3D>>\& \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1SurfaceCoordinates_a04881fd9d5eb7ea85bcf3a7952fa6bb1}{GetSurfacePoints}}()\textcolor{keyword}{ const}}
+\DoxyCodeLine{53         [[nodiscard]] \textcolor{keyword}{const} std::vector<std::unique\_ptr<IO::SDK::Math::Vector3D>>\& \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1SurfaceCoordinates_a04881fd9d5eb7ea85bcf3a7952fa6bb1}{GetSurfacePoints}}()\textcolor{keyword}{ const}}
 \DoxyCodeLine{54 \textcolor{keyword}{        }\{}
 \DoxyCodeLine{55             \textcolor{keywordflow}{return} m\_surfacePoints;}
 \DoxyCodeLine{56         \}}
 \DoxyCodeLine{57 }
-\DoxyCodeLine{63         \textcolor{keyword}{const} std::vector<std::unique\_ptr<IO::SDK::Math::Vector3D>>\& \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1SurfaceCoordinates_a8717ac962ed91706938aa27c228ac556}{GetSurfaceNormals}}()\textcolor{keyword}{ const}}
+\DoxyCodeLine{63         [[nodiscard]] \textcolor{keyword}{const} std::vector<std::unique\_ptr<IO::SDK::Math::Vector3D>>\& \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1SurfaceCoordinates_a8717ac962ed91706938aa27c228ac556}{GetSurfaceNormals}}()\textcolor{keyword}{ const}}
 \DoxyCodeLine{64 \textcolor{keyword}{        }\{}
 \DoxyCodeLine{65             \textcolor{keywordflow}{return} m\_surfaceNormals;}
 \DoxyCodeLine{66         \}}

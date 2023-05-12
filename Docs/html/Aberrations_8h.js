@@ -1,6 +1,6 @@
 var Aberrations_8h =
 [
-    [ "IO::SDK::Aberrations", "classIO_1_1SDK_1_1Aberrations.html", "classIO_1_1SDK_1_1Aberrations" ],
+    [ "IO::SDK::Aberrations", "classIO_1_1SDK_1_1Aberrations.html", null ],
     [ "AberrationsEnum", "Aberrations_8h.html#abbb4827ec6a24ad346d9a60473ad3b81", [
       [ "None", "Aberrations_8h.html#abbb4827ec6a24ad346d9a60473ad3b81a6adf97f83acf6453d4a6a4b1070f3754", null ],
       [ "LT", "Aberrations_8h.html#abbb4827ec6a24ad346d9a60473ad3b81ac562607189d77eb9dfb707464c1e7b0b", null ],

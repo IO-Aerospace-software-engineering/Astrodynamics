@@ -6,6 +6,7 @@
 #include <TDB.h>
 #include <Spacecraft.h>
 #include "TestsConstants.h"
+#include "TestParameters.h"
 #include <Aberrations.h>
 #include <InertialFrames.h>
 #include <CelestialBody.h>
@@ -18,7 +19,7 @@ TEST(EphemerisKernel, WriteEvenlySpacedData)
 	auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
 	std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth, IO::SDK::Math::Vector3D(1.0, 2.0, 3.0), IO::SDK::Math::Vector3D(4.0, 5.0, 6.0), IO::SDK::Time::TDB(100.0s), IO::SDK::Frames::InertialFrames::GetICRF());
 	IO::SDK::OrbitalParameters::StateOrientation attitude(IO::SDK::Time::TDB(100.0s), IO::SDK::Frames::InertialFrames::GetICRF());
-	IO::SDK::Body::Spacecraft::Spacecraft iss(-34, "ISS", 1.0, 3000.0, "mission1", std::move(orbitalParams));
+	IO::SDK::Body::Spacecraft::Spacecraft iss(-34, "ISS", 1.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams));
 	IO::SDK::OrbitalParameters::StateVector sv1(earth, IO::SDK::Math::Vector3D{5.314354587795519E+06, 3.155847941008321E+06, 2.822346477531172E+06}, IO::SDK::Math::Vector3D{-4.672670954754818E+03, 3.299429157421530E+03, 5.095794593488111E+03}, IO::SDK::Time::TDB(626417577.7641s), IO::SDK::Frames::InertialFrames::GetICRF());
 
 	IO::SDK::OrbitalParameters::StateVector sv2(earth, {1.549954329309747E+06, 4.293503281635832E+06, 5.028588262180220E+06}, {-7.392939450028063E+03, 3.477943951618910E+02, 1.975839635187658E+03}, IO::SDK::Time::TDB(626418177.7641s), IO::SDK::Frames::InertialFrames::GetICRF());
@@ -85,7 +86,7 @@ TEST(EphemerisKernel, GetCoverage)
 	auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
 	std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth, IO::SDK::Math::Vector3D(1.0, 2.0, 3.0), IO::SDK::Math::Vector3D(4.0, 5.0, 6.0), IO::SDK::Time::TDB(100.0s), IO::SDK::Frames::InertialFrames::GetICRF());
 	IO::SDK::OrbitalParameters::StateOrientation attitude(IO::SDK::Time::TDB(100.0s), IO::SDK::Frames::InertialFrames::GetICRF());
-	IO::SDK::Body::Spacecraft::Spacecraft iss(-34, "ISS", 1.0, 3000.0, "mission1", std::move(orbitalParams));
+	IO::SDK::Body::Spacecraft::Spacecraft iss(-34, "ISS", 1.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams));
 
 	IO::SDK::OrbitalParameters::StateVector sv1(earth, IO::SDK::Math::Vector3D{5.314354587795519E+03, 3.155847941008321E+03, 2.822346477531172E+03}, IO::SDK::Math::Vector3D{-4.672670954754818E+00, 3.299429157421530E+00, 5.095794593488111E+00}, IO::SDK::Time::TDB(626417577.7641s), IO::SDK::Frames::InertialFrames::GetICRF());
 
@@ -130,7 +131,7 @@ TEST(EphemerisKernel, AddComment)
 	auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
 	std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth, IO::SDK::Math::Vector3D(1.0, 2.0, 3.0), IO::SDK::Math::Vector3D(4.0, 5.0, 6.0), IO::SDK::Time::TDB(100.0s), IO::SDK::Frames::InertialFrames::GetICRF());
 	IO::SDK::OrbitalParameters::StateOrientation attitude(IO::SDK::Time::TDB(100.0s), IO::SDK::Frames::InertialFrames::GetICRF());
-	IO::SDK::Body::Spacecraft::Spacecraft iss(-34, "ISS", 1.0, 3000.0, "mission1", std::move(orbitalParams));
+	IO::SDK::Body::Spacecraft::Spacecraft iss(-34, "ISS", 1.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams));
 
 	IO::SDK::OrbitalParameters::StateVector sv1(earth, IO::SDK::Math::Vector3D{5.314354587795519E+03, 3.155847941008321E+03, 2.822346477531172E+03}, IO::SDK::Math::Vector3D{-4.672670954754818E+00, 3.299429157421530E+00, 5.095794593488111E+00}, IO::SDK::Time::TDB(626417577.7641s), IO::SDK::Frames::InertialFrames::GetICRF());
 
@@ -174,7 +175,7 @@ TEST(EphemerisKernel, AddTooLongComment)
 	auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
 	std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth, IO::SDK::Math::Vector3D(1.0, 2.0, 3.0), IO::SDK::Math::Vector3D(4.0, 5.0, 6.0), IO::SDK::Time::TDB(100.0s), IO::SDK::Frames::InertialFrames::GetICRF());
 	IO::SDK::OrbitalParameters::StateOrientation attitude(IO::SDK::Time::TDB(100.0s), IO::SDK::Frames::InertialFrames::GetICRF());
-	IO::SDK::Body::Spacecraft::Spacecraft iss(-34, "ISS", 1.0, 3000.0, "mission1", std::move(orbitalParams));
+	IO::SDK::Body::Spacecraft::Spacecraft iss(-34, "ISS", 1.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams));
 
 	ASSERT_THROW(iss.WriteEphemerisKernelComment("This is a big message which exceed the maximum chars allowed-This is a big message which exceed the maximum chars allowed"), IO::SDK::Exception::SDKException);
 }

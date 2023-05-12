@@ -12,8 +12,8 @@ namespace IO::SDK::API::DTO
 {
     struct OrbitalPlaneChangingManeuverDTO
     {
-        int maneuverOrder{0};
-        int engines[10]{};
+        int maneuverOrder{-1};
+        char* engines[5]{};
         double attitudeHoldDuration{0.0};
         double minimumEpoch{0.0};
 
@@ -23,6 +23,7 @@ namespace IO::SDK::API::DTO
         WindowDTO thrustWindow{};
         WindowDTO attitudeWindow{};
         Vector3DDTO deltaV{};
+        double FuelBurned{0.0};
     };
 }
 

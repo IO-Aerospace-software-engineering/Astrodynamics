@@ -18,11 +18,11 @@ Inheritance diagram for IO\+::SDK\+::Body\+::Body\+:\begin{figure}[H]
 \doxysubsection*{Public Member Functions}
 \begin{DoxyCompactItemize}
 \item 
-\mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body_abf78b47d57db466a75d08405b17286db}{Body}} (const int id, const std\+::string \&name, const double mass)
+\mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body_a5bb5783ce846c94b7cfc3cce1e516b6e}{Body}} (int id, const std\+::string \&name, double mass)
 \begin{DoxyCompactList}\small\item\em Construct a new \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body}{Body}} object. \end{DoxyCompactList}\item 
-\mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body_adb5054417552bd6e4c504255aaa6f6e3}{Body}} (const int id, const std\+::string \&name, const double mass, std\+::unique\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}} $>$ orbital\+Parameters\+At\+Epoch)
+\mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body_a7608b5d026cf14fff528b26c44fb2448}{Body}} (int id, const std\+::string \&name, double mass, std\+::unique\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}} $>$ orbital\+Parameters\+At\+Epoch)
 \begin{DoxyCompactList}\small\item\em Construct a new \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body}{Body}} object. \end{DoxyCompactList}\item 
-\mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body_a44463544d8d738a11e61f780b224ee83}{Body}} (const int id, const std\+::string \&name, const double mass, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1CelestialBody}{IO\+::\+SDK\+::\+Body\+::\+Celestial\+Body}} $>$ \&center\+Of\+Motion)
+\mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body_af48206ca4f2f88a2e62a8d01b3700af3}{Body}} (int id, const std\+::string \&name, double mass, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1CelestialBody}{IO\+::\+SDK\+::\+Body\+::\+Celestial\+Body}} $>$ \&center\+Of\+Motion)
 \begin{DoxyCompactList}\small\item\em Construct a new \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body}{Body}} object. \end{DoxyCompactList}\item 
 \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body_adbd7d95ef089471f11cade9facce1a8c}{Body}} (const \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body}{Body}} \&body)
 \item 
@@ -30,7 +30,7 @@ virtual \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body_a362cb5e31756fe29a43f44b
 \item 
 int \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body_a27ba6eb9d8f5d669d79375214990a4e8}{Get\+Id}} () const
 \begin{DoxyCompactList}\small\item\em Get the body identifier. \end{DoxyCompactList}\item 
-const std\+::string \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body_aee9998a34d69e84d7b576a63d6f505a7}{Get\+Name}} () const
+std\+::string \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body_aab6038f9760ba8b22255c8d042a0aef2}{Get\+Name}} () const
 \begin{DoxyCompactList}\small\item\em Get the body name. \end{DoxyCompactList}\item 
 virtual double \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body_a166ce7048ed87d61f6f40b51e5d4f609}{Get\+Mass}} () const
 \begin{DoxyCompactList}\small\item\em Get the Mass. \end{DoxyCompactList}\item 
@@ -40,9 +40,9 @@ const std\+::unique\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParame
 \begin{DoxyCompactList}\small\item\em Get body orbital parameters. \end{DoxyCompactList}\item 
 const std\+::vector$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body}{IO\+::\+SDK\+::\+Body\+::\+Body}} $\ast$ $>$ \& \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body_a73ca24c3037cb7b41f0ac6a88d372f28}{Get\+Satellites}} () const
 \begin{DoxyCompactList}\small\item\em Get the Satellites. \end{DoxyCompactList}\item 
-virtual \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+State\+Vector}} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body_adc2f216ec2fd970876a40f69ca32bfbb}{Read\+Ephemeris}} (const \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1Frames}{IO\+::\+SDK\+::\+Frames\+::\+Frames}} \&frame, const \mbox{\hyperlink{namespaceIO_1_1SDK_abbb4827ec6a24ad346d9a60473ad3b81}{IO\+::\+SDK\+::\+Aberrations\+Enum}} aberration, const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} \&epoch) const
+virtual \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+State\+Vector}} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body_ae7189b7328abc3991ad4ee4581eeceb5}{Read\+Ephemeris}} (const \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1Frames}{IO\+::\+SDK\+::\+Frames\+::\+Frames}} \&frame, \mbox{\hyperlink{namespaceIO_1_1SDK_abbb4827ec6a24ad346d9a60473ad3b81}{IO\+::\+SDK\+::\+Aberrations\+Enum}} aberration, const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} \&epoch) const
 \begin{DoxyCompactList}\small\item\em Get the State Vector relative to its center of motion. \end{DoxyCompactList}\item 
-virtual \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+State\+Vector}} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body_a4585506e3bf57bbeb1652bb1bb45b19a}{Read\+Ephemeris}} (const \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1Frames}{IO\+::\+SDK\+::\+Frames\+::\+Frames}} \&frame, const \mbox{\hyperlink{namespaceIO_1_1SDK_abbb4827ec6a24ad346d9a60473ad3b81}{IO\+::\+SDK\+::\+Aberrations\+Enum}} aberration, const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} \&epoch, const \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1CelestialBody}{IO\+::\+SDK\+::\+Body\+::\+Celestial\+Body}} \&relative\+To) const
+virtual \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+State\+Vector}} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body_a96174b1cbddd7f4754cab3ebd1288591}{Read\+Ephemeris}} (const \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1Frames}{IO\+::\+SDK\+::\+Frames\+::\+Frames}} \&frame, \mbox{\hyperlink{namespaceIO_1_1SDK_abbb4827ec6a24ad346d9a60473ad3b81}{IO\+::\+SDK\+::\+Aberrations\+Enum}} aberration, const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} \&epoch, const \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1CelestialBody}{IO\+::\+SDK\+::\+Body\+::\+Celestial\+Body}} \&relative\+To) const
 \begin{DoxyCompactList}\small\item\em Get state vector from ephemeris relative to another body. \end{DoxyCompactList}\item 
 virtual bool \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body_affb081c56bb7b2ec50c5fd44c880bc0b}{operator==}} (const \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body}{IO\+::\+SDK\+::\+Body\+::\+Body}} \&rhs) const
 \item 
@@ -50,14 +50,17 @@ virtual bool \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body_a3c80e9b62cbd50a3fe
 \item 
 std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body}{IO\+::\+SDK\+::\+Body\+::\+Body}} $>$ \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body_a9bba6ae2bc97ca5345d9a9ff545184fd}{Get\+Shared\+Pointer}} ()
 \item 
-std\+::vector$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO\+::\+SDK\+::\+Time\+::\+Window}}$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} $>$ $>$ \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body_afd45a30150eb5899b52254ae25fc7936}{Find\+Windows\+On\+Distance\+Constraint}} (const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO\+::\+SDK\+::\+Time\+::\+Window}}$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} $>$ search\+Window, const \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body}{Body}} \&target\+Body, const \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body}{Body}} \&observer, const \mbox{\hyperlink{classIO_1_1SDK_1_1Constraints_1_1Constraint}{IO\+::\+SDK\+::\+Constraints\+::\+Constraint}} \&constraint, const \mbox{\hyperlink{namespaceIO_1_1SDK_abbb4827ec6a24ad346d9a60473ad3b81}{IO\+::\+SDK\+::\+Aberrations\+Enum}} aberration, const double value, const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO\+::\+SDK\+::\+Time\+::\+Time\+Span}} \&step) const
-\begin{DoxyCompactList}\small\item\em Find windows when distance constraint occurs. \end{DoxyCompactList}\item 
-std\+::vector$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO\+::\+SDK\+::\+Time\+::\+Window}}$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} $>$ $>$ \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body_ad107e43f20a3c03aba27e1216f943185}{Find\+Windows\+On\+Occultation\+Constraint}} (const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO\+::\+SDK\+::\+Time\+::\+Window}}$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} $>$ search\+Window, const \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body}{IO\+::\+SDK\+::\+Body\+::\+Body}} \&target\+Body, const \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1CelestialBody}{IO\+::\+SDK\+::\+Body\+::\+Celestial\+Body}} \&front\+Body, const \mbox{\hyperlink{classIO_1_1SDK_1_1OccultationType}{IO\+::\+SDK\+::\+Occultation\+Type}} \&occultation\+Type, const \mbox{\hyperlink{namespaceIO_1_1SDK_abbb4827ec6a24ad346d9a60473ad3b81}{IO\+::\+SDK\+::\+Aberrations\+Enum}} aberration, const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO\+::\+SDK\+::\+Time\+::\+Time\+Span}} \&step\+Size) const
+std\+::vector$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO\+::\+SDK\+::\+Time\+::\+Window}}$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} $>$ $>$ \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body_a2bcf92ebfa83f35e3f17b70d3bf38c18}{Find\+Windows\+On\+Occultation\+Constraint}} (const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO\+::\+SDK\+::\+Time\+::\+Window}}$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} $>$ \&search\+Window, const \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body}{IO\+::\+SDK\+::\+Body\+::\+Body}} \&target\+Body, const \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1CelestialBody}{IO\+::\+SDK\+::\+Body\+::\+Celestial\+Body}} \&front\+Body, const \mbox{\hyperlink{classIO_1_1SDK_1_1OccultationType}{IO\+::\+SDK\+::\+Occultation\+Type}} \&occultation\+Type, \mbox{\hyperlink{namespaceIO_1_1SDK_abbb4827ec6a24ad346d9a60473ad3b81}{IO\+::\+SDK\+::\+Aberrations\+Enum}} aberration, const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO\+::\+SDK\+::\+Time\+::\+Time\+Span}} \&step\+Size) const
 \begin{DoxyCompactList}\small\item\em Find windows when occultation occurs. \end{DoxyCompactList}\item 
 \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1Planetographic}{IO\+::\+SDK\+::\+Coordinates\+::\+Planetographic}} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body_aa22fd3b03a98e72b145002a180baf428}{Get\+Sub\+Observer\+Point}} (const \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1CelestialBody}{IO\+::\+SDK\+::\+Body\+::\+Celestial\+Body}} \&target\+Body, const \mbox{\hyperlink{namespaceIO_1_1SDK_abbb4827ec6a24ad346d9a60473ad3b81}{IO\+::\+SDK\+::\+Aberrations\+Enum}} \&aberration, const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1DateTime}{IO\+::\+SDK\+::\+Time\+::\+Date\+Time}} \&epoch) const
 \begin{DoxyCompactList}\small\item\em Get the Sub Observer Point observed from this body. \end{DoxyCompactList}\item 
-\mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1Planetographic}{IO\+::\+SDK\+::\+Coordinates\+::\+Planetographic}} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body_a48957dac85ead026cb6c736c79e155e3}{Get\+Sub\+Solar\+Point}} (const \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1CelestialBody}{IO\+::\+SDK\+::\+Body\+::\+Celestial\+Body}} \&target\+Body, const \mbox{\hyperlink{namespaceIO_1_1SDK_abbb4827ec6a24ad346d9a60473ad3b81}{IO\+::\+SDK\+::\+Aberrations\+Enum}} aberration, const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} \&epoch) const
+\mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1Planetographic}{IO\+::\+SDK\+::\+Coordinates\+::\+Planetographic}} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body_a018f89071ab60df2c208f67250ed23cb}{Get\+Sub\+Solar\+Point}} (const \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1CelestialBody}{IO\+::\+SDK\+::\+Body\+::\+Celestial\+Body}} \&target\+Body, \mbox{\hyperlink{namespaceIO_1_1SDK_abbb4827ec6a24ad346d9a60473ad3b81}{IO\+::\+SDK\+::\+Aberrations\+Enum}} aberration, const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} \&epoch) const
 \begin{DoxyCompactList}\small\item\em Get the Sub Solar Point observed from this body. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsection*{Static Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+static std\+::vector$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO\+::\+SDK\+::\+Time\+::\+Window}}$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} $>$ $>$ \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body_aafbe9ac9808c8b20f6527fa12b760a84}{Find\+Windows\+On\+Distance\+Constraint}} (const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO\+::\+SDK\+::\+Time\+::\+Window}}$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} $>$ \&search\+Window, const \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body}{Body}} \&target\+Body, const \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body}{Body}} \&observer, const \mbox{\hyperlink{classIO_1_1SDK_1_1Constraints_1_1RelationalOperator}{IO\+::\+SDK\+::\+Constraints\+::\+Relational\+Operator}} \&constraint, \mbox{\hyperlink{namespaceIO_1_1SDK_abbb4827ec6a24ad346d9a60473ad3b81}{IO\+::\+SDK\+::\+Aberrations\+Enum}} aberration, double value, const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO\+::\+SDK\+::\+Time\+::\+Time\+Span}} \&step)
+\begin{DoxyCompactList}\small\item\em Find windows when distance constraint occurs. \end{DoxyCompactList}\end{DoxyCompactItemize}
 \doxysubsection*{Protected Attributes}
 \begin{DoxyCompactItemize}
 \item 
@@ -79,11 +82,11 @@ double \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body_a94666bb0eea716788c8bc4f0
 \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body}{Body}} class. 
 
 \doxysubsection{Constructor \& Destructor Documentation}
-\mbox{\Hypertarget{classIO_1_1SDK_1_1Body_1_1Body_abf78b47d57db466a75d08405b17286db}\label{classIO_1_1SDK_1_1Body_1_1Body_abf78b47d57db466a75d08405b17286db}} 
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Body_1_1Body_a5bb5783ce846c94b7cfc3cce1e516b6e}\label{classIO_1_1SDK_1_1Body_1_1Body_a5bb5783ce846c94b7cfc3cce1e516b6e}} 
 \index{IO::SDK::Body::Body@{IO::SDK::Body::Body}!Body@{Body}}
 \index{Body@{Body}!IO::SDK::Body::Body@{IO::SDK::Body::Body}}
 \doxysubsubsection{\texorpdfstring{Body()}{Body()}\hspace{0.1cm}{\footnotesize\ttfamily [1/4]}}
-{\footnotesize\ttfamily IO\+::\+SDK\+::\+Body\+::\+Body\+::\+Body (\begin{DoxyParamCaption}\item[{const int}]{id,  }\item[{const std\+::string \&}]{name,  }\item[{const double}]{mass }\end{DoxyParamCaption})}
+{\footnotesize\ttfamily IO\+::\+SDK\+::\+Body\+::\+Body\+::\+Body (\begin{DoxyParamCaption}\item[{int}]{id,  }\item[{const std\+::string \&}]{name,  }\item[{double}]{mass }\end{DoxyParamCaption})}
 
 
 
@@ -98,11 +101,11 @@ Construct a new \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body}{Body}} object.
 {\em mass} & kg \\
 \hline
 \end{DoxyParams}
-\mbox{\Hypertarget{classIO_1_1SDK_1_1Body_1_1Body_adb5054417552bd6e4c504255aaa6f6e3}\label{classIO_1_1SDK_1_1Body_1_1Body_adb5054417552bd6e4c504255aaa6f6e3}} 
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Body_1_1Body_a7608b5d026cf14fff528b26c44fb2448}\label{classIO_1_1SDK_1_1Body_1_1Body_a7608b5d026cf14fff528b26c44fb2448}} 
 \index{IO::SDK::Body::Body@{IO::SDK::Body::Body}!Body@{Body}}
 \index{Body@{Body}!IO::SDK::Body::Body@{IO::SDK::Body::Body}}
 \doxysubsubsection{\texorpdfstring{Body()}{Body()}\hspace{0.1cm}{\footnotesize\ttfamily [2/4]}}
-{\footnotesize\ttfamily IO\+::\+SDK\+::\+Body\+::\+Body\+::\+Body (\begin{DoxyParamCaption}\item[{const int}]{id,  }\item[{const std\+::string \&}]{name,  }\item[{const double}]{mass,  }\item[{std\+::unique\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}} $>$}]{orbital\+Parameters\+At\+Epoch }\end{DoxyParamCaption})}
+{\footnotesize\ttfamily IO\+::\+SDK\+::\+Body\+::\+Body\+::\+Body (\begin{DoxyParamCaption}\item[{int}]{id,  }\item[{const std\+::string \&}]{name,  }\item[{double}]{mass,  }\item[{std\+::unique\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}} $>$}]{orbital\+Parameters\+At\+Epoch }\end{DoxyParamCaption})}
 
 
 
@@ -119,11 +122,11 @@ Construct a new \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body}{Body}} object.
 {\em orbital\+Parameters} & \\
 \hline
 \end{DoxyParams}
-\mbox{\Hypertarget{classIO_1_1SDK_1_1Body_1_1Body_a44463544d8d738a11e61f780b224ee83}\label{classIO_1_1SDK_1_1Body_1_1Body_a44463544d8d738a11e61f780b224ee83}} 
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Body_1_1Body_af48206ca4f2f88a2e62a8d01b3700af3}\label{classIO_1_1SDK_1_1Body_1_1Body_af48206ca4f2f88a2e62a8d01b3700af3}} 
 \index{IO::SDK::Body::Body@{IO::SDK::Body::Body}!Body@{Body}}
 \index{Body@{Body}!IO::SDK::Body::Body@{IO::SDK::Body::Body}}
 \doxysubsubsection{\texorpdfstring{Body()}{Body()}\hspace{0.1cm}{\footnotesize\ttfamily [3/4]}}
-{\footnotesize\ttfamily IO\+::\+SDK\+::\+Body\+::\+Body\+::\+Body (\begin{DoxyParamCaption}\item[{const int}]{id,  }\item[{const std\+::string \&}]{name,  }\item[{const double}]{mass,  }\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1CelestialBody}{IO\+::\+SDK\+::\+Body\+::\+Celestial\+Body}} $>$ \&}]{center\+Of\+Motion }\end{DoxyParamCaption})}
+{\footnotesize\ttfamily IO\+::\+SDK\+::\+Body\+::\+Body\+::\+Body (\begin{DoxyParamCaption}\item[{int}]{id,  }\item[{const std\+::string \&}]{name,  }\item[{double}]{mass,  }\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1CelestialBody}{IO\+::\+SDK\+::\+Body\+::\+Celestial\+Body}} $>$ \&}]{center\+Of\+Motion }\end{DoxyParamCaption})}
 
 
 
@@ -155,11 +158,11 @@ Construct a new \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body}{Body}} object.
 
 
 \doxysubsection{Member Function Documentation}
-\mbox{\Hypertarget{classIO_1_1SDK_1_1Body_1_1Body_afd45a30150eb5899b52254ae25fc7936}\label{classIO_1_1SDK_1_1Body_1_1Body_afd45a30150eb5899b52254ae25fc7936}} 
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Body_1_1Body_aafbe9ac9808c8b20f6527fa12b760a84}\label{classIO_1_1SDK_1_1Body_1_1Body_aafbe9ac9808c8b20f6527fa12b760a84}} 
 \index{IO::SDK::Body::Body@{IO::SDK::Body::Body}!FindWindowsOnDistanceConstraint@{FindWindowsOnDistanceConstraint}}
 \index{FindWindowsOnDistanceConstraint@{FindWindowsOnDistanceConstraint}!IO::SDK::Body::Body@{IO::SDK::Body::Body}}
 \doxysubsubsection{\texorpdfstring{FindWindowsOnDistanceConstraint()}{FindWindowsOnDistanceConstraint()}}
-{\footnotesize\ttfamily std\+::vector$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO\+::\+SDK\+::\+Time\+::\+Window}}$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} $>$ $>$ IO\+::\+SDK\+::\+Body\+::\+Body\+::\+Find\+Windows\+On\+Distance\+Constraint (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO\+::\+SDK\+::\+Time\+::\+Window}}$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} $>$}]{search\+Window,  }\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body}{Body}} \&}]{target\+Body,  }\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body}{Body}} \&}]{observer,  }\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Constraints_1_1Constraint}{IO\+::\+SDK\+::\+Constraints\+::\+Constraint}} \&}]{constraint,  }\item[{const \mbox{\hyperlink{namespaceIO_1_1SDK_abbb4827ec6a24ad346d9a60473ad3b81}{IO\+::\+SDK\+::\+Aberrations\+Enum}}}]{aberration,  }\item[{const double}]{value,  }\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO\+::\+SDK\+::\+Time\+::\+Time\+Span}} \&}]{step }\end{DoxyParamCaption}) const}
+{\footnotesize\ttfamily std\+::vector$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO\+::\+SDK\+::\+Time\+::\+Window}}$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} $>$ $>$ IO\+::\+SDK\+::\+Body\+::\+Body\+::\+Find\+Windows\+On\+Distance\+Constraint (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO\+::\+SDK\+::\+Time\+::\+Window}}$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} $>$ \&}]{search\+Window,  }\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body}{Body}} \&}]{target\+Body,  }\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body}{Body}} \&}]{observer,  }\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Constraints_1_1RelationalOperator}{IO\+::\+SDK\+::\+Constraints\+::\+Relational\+Operator}} \&}]{constraint,  }\item[{\mbox{\hyperlink{namespaceIO_1_1SDK_abbb4827ec6a24ad346d9a60473ad3b81}{IO\+::\+SDK\+::\+Aberrations\+Enum}}}]{aberration,  }\item[{double}]{value,  }\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO\+::\+SDK\+::\+Time\+::\+Time\+Span}} \&}]{step }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
 
 
 
@@ -171,7 +174,7 @@ Find windows when distance constraint occurs.
 \hline
 {\em observer} & Observer \\
 \hline
-{\em constraint} & Constraint operator \\
+{\em constraint} & Relational\+Operator operator \\
 \hline
 {\em aberration} & Aberration \\
 \hline
@@ -185,11 +188,11 @@ Find windows when distance constraint occurs.
 \begin{DoxyReturn}{Returns}
 std\+::vector$<$\+IO\+::\+SDK\+::\+Time\+::\+Window$<$\+IO\+::\+SDK\+::\+Time\+::\+TDB$>$$>$ 
 \end{DoxyReturn}
-\mbox{\Hypertarget{classIO_1_1SDK_1_1Body_1_1Body_ad107e43f20a3c03aba27e1216f943185}\label{classIO_1_1SDK_1_1Body_1_1Body_ad107e43f20a3c03aba27e1216f943185}} 
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Body_1_1Body_a2bcf92ebfa83f35e3f17b70d3bf38c18}\label{classIO_1_1SDK_1_1Body_1_1Body_a2bcf92ebfa83f35e3f17b70d3bf38c18}} 
 \index{IO::SDK::Body::Body@{IO::SDK::Body::Body}!FindWindowsOnOccultationConstraint@{FindWindowsOnOccultationConstraint}}
 \index{FindWindowsOnOccultationConstraint@{FindWindowsOnOccultationConstraint}!IO::SDK::Body::Body@{IO::SDK::Body::Body}}
 \doxysubsubsection{\texorpdfstring{FindWindowsOnOccultationConstraint()}{FindWindowsOnOccultationConstraint()}}
-{\footnotesize\ttfamily std\+::vector$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO\+::\+SDK\+::\+Time\+::\+Window}}$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} $>$ $>$ IO\+::\+SDK\+::\+Body\+::\+Body\+::\+Find\+Windows\+On\+Occultation\+Constraint (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO\+::\+SDK\+::\+Time\+::\+Window}}$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} $>$}]{search\+Window,  }\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body}{IO\+::\+SDK\+::\+Body\+::\+Body}} \&}]{target\+Body,  }\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1CelestialBody}{IO\+::\+SDK\+::\+Body\+::\+Celestial\+Body}} \&}]{front\+Body,  }\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1OccultationType}{IO\+::\+SDK\+::\+Occultation\+Type}} \&}]{occultation\+Type,  }\item[{const \mbox{\hyperlink{namespaceIO_1_1SDK_abbb4827ec6a24ad346d9a60473ad3b81}{IO\+::\+SDK\+::\+Aberrations\+Enum}}}]{aberration,  }\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO\+::\+SDK\+::\+Time\+::\+Time\+Span}} \&}]{step\+Size }\end{DoxyParamCaption}) const}
+{\footnotesize\ttfamily std\+::vector$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO\+::\+SDK\+::\+Time\+::\+Window}}$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} $>$ $>$ IO\+::\+SDK\+::\+Body\+::\+Body\+::\+Find\+Windows\+On\+Occultation\+Constraint (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO\+::\+SDK\+::\+Time\+::\+Window}}$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} $>$ \&}]{search\+Window,  }\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body}{IO\+::\+SDK\+::\+Body\+::\+Body}} \&}]{target\+Body,  }\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1CelestialBody}{IO\+::\+SDK\+::\+Body\+::\+Celestial\+Body}} \&}]{front\+Body,  }\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1OccultationType}{IO\+::\+SDK\+::\+Occultation\+Type}} \&}]{occultation\+Type,  }\item[{\mbox{\hyperlink{namespaceIO_1_1SDK_abbb4827ec6a24ad346d9a60473ad3b81}{IO\+::\+SDK\+::\+Aberrations\+Enum}}}]{aberration,  }\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO\+::\+SDK\+::\+Time\+::\+Time\+Span}} \&}]{step\+Size }\end{DoxyParamCaption}) const}
 
 
 
@@ -256,11 +259,11 @@ Get the Mu value.
 \begin{DoxyReturn}{Returns}
 double 
 \end{DoxyReturn}
-\mbox{\Hypertarget{classIO_1_1SDK_1_1Body_1_1Body_aee9998a34d69e84d7b576a63d6f505a7}\label{classIO_1_1SDK_1_1Body_1_1Body_aee9998a34d69e84d7b576a63d6f505a7}} 
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Body_1_1Body_aab6038f9760ba8b22255c8d042a0aef2}\label{classIO_1_1SDK_1_1Body_1_1Body_aab6038f9760ba8b22255c8d042a0aef2}} 
 \index{IO::SDK::Body::Body@{IO::SDK::Body::Body}!GetName@{GetName}}
 \index{GetName@{GetName}!IO::SDK::Body::Body@{IO::SDK::Body::Body}}
 \doxysubsubsection{\texorpdfstring{GetName()}{GetName()}}
-{\footnotesize\ttfamily const std\+::string IO\+::\+SDK\+::\+Body\+::\+Body\+::\+Get\+Name (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+{\footnotesize\ttfamily std\+::string IO\+::\+SDK\+::\+Body\+::\+Body\+::\+Get\+Name (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
 
 
 
@@ -323,11 +326,11 @@ Get the Sub Observer Point observed from this body.
 \begin{DoxyReturn}{Returns}
 \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1Planetographic}{IO\+::\+SDK\+::\+Coordinates\+::\+Planetographic}} 
 \end{DoxyReturn}
-\mbox{\Hypertarget{classIO_1_1SDK_1_1Body_1_1Body_a48957dac85ead026cb6c736c79e155e3}\label{classIO_1_1SDK_1_1Body_1_1Body_a48957dac85ead026cb6c736c79e155e3}} 
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Body_1_1Body_a018f89071ab60df2c208f67250ed23cb}\label{classIO_1_1SDK_1_1Body_1_1Body_a018f89071ab60df2c208f67250ed23cb}} 
 \index{IO::SDK::Body::Body@{IO::SDK::Body::Body}!GetSubSolarPoint@{GetSubSolarPoint}}
 \index{GetSubSolarPoint@{GetSubSolarPoint}!IO::SDK::Body::Body@{IO::SDK::Body::Body}}
 \doxysubsubsection{\texorpdfstring{GetSubSolarPoint()}{GetSubSolarPoint()}}
-{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1Planetographic}{IO\+::\+SDK\+::\+Coordinates\+::\+Planetographic}} IO\+::\+SDK\+::\+Body\+::\+Body\+::\+Get\+Sub\+Solar\+Point (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1CelestialBody}{IO\+::\+SDK\+::\+Body\+::\+Celestial\+Body}} \&}]{target\+Body,  }\item[{const \mbox{\hyperlink{namespaceIO_1_1SDK_abbb4827ec6a24ad346d9a60473ad3b81}{IO\+::\+SDK\+::\+Aberrations\+Enum}}}]{aberration,  }\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} \&}]{epoch }\end{DoxyParamCaption}) const}
+{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1Planetographic}{IO\+::\+SDK\+::\+Coordinates\+::\+Planetographic}} IO\+::\+SDK\+::\+Body\+::\+Body\+::\+Get\+Sub\+Solar\+Point (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1CelestialBody}{IO\+::\+SDK\+::\+Body\+::\+Celestial\+Body}} \&}]{target\+Body,  }\item[{\mbox{\hyperlink{namespaceIO_1_1SDK_abbb4827ec6a24ad346d9a60473ad3b81}{IO\+::\+SDK\+::\+Aberrations\+Enum}}}]{aberration,  }\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} \&}]{epoch }\end{DoxyParamCaption}) const}
 
 
 
@@ -357,11 +360,11 @@ Get the Sub Solar Point observed from this body.
 \doxysubsubsection{\texorpdfstring{operator==()}{operator==()}}
 {\footnotesize\ttfamily bool IO\+::\+SDK\+::\+Body\+::\+Body\+::operator== (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body}{IO\+::\+SDK\+::\+Body\+::\+Body}} \&}]{rhs }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [virtual]}}
 
-\mbox{\Hypertarget{classIO_1_1SDK_1_1Body_1_1Body_adc2f216ec2fd970876a40f69ca32bfbb}\label{classIO_1_1SDK_1_1Body_1_1Body_adc2f216ec2fd970876a40f69ca32bfbb}} 
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Body_1_1Body_ae7189b7328abc3991ad4ee4581eeceb5}\label{classIO_1_1SDK_1_1Body_1_1Body_ae7189b7328abc3991ad4ee4581eeceb5}} 
 \index{IO::SDK::Body::Body@{IO::SDK::Body::Body}!ReadEphemeris@{ReadEphemeris}}
 \index{ReadEphemeris@{ReadEphemeris}!IO::SDK::Body::Body@{IO::SDK::Body::Body}}
 \doxysubsubsection{\texorpdfstring{ReadEphemeris()}{ReadEphemeris()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
-{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+State\+Vector}} IO\+::\+SDK\+::\+Body\+::\+Body\+::\+Read\+Ephemeris (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1Frames}{IO\+::\+SDK\+::\+Frames\+::\+Frames}} \&}]{frame,  }\item[{const \mbox{\hyperlink{namespaceIO_1_1SDK_abbb4827ec6a24ad346d9a60473ad3b81}{IO\+::\+SDK\+::\+Aberrations\+Enum}}}]{aberration,  }\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} \&}]{epoch }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [virtual]}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+State\+Vector}} IO\+::\+SDK\+::\+Body\+::\+Body\+::\+Read\+Ephemeris (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1Frames}{IO\+::\+SDK\+::\+Frames\+::\+Frames}} \&}]{frame,  }\item[{\mbox{\hyperlink{namespaceIO_1_1SDK_abbb4827ec6a24ad346d9a60473ad3b81}{IO\+::\+SDK\+::\+Aberrations\+Enum}}}]{aberration,  }\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} \&}]{epoch }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [virtual]}}
 
 
 
@@ -379,11 +382,11 @@ Get the State Vector relative to its center of motion.
 \begin{DoxyReturn}{Returns}
 \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+State\+Vector}} 
 \end{DoxyReturn}
-\mbox{\Hypertarget{classIO_1_1SDK_1_1Body_1_1Body_a4585506e3bf57bbeb1652bb1bb45b19a}\label{classIO_1_1SDK_1_1Body_1_1Body_a4585506e3bf57bbeb1652bb1bb45b19a}} 
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Body_1_1Body_a96174b1cbddd7f4754cab3ebd1288591}\label{classIO_1_1SDK_1_1Body_1_1Body_a96174b1cbddd7f4754cab3ebd1288591}} 
 \index{IO::SDK::Body::Body@{IO::SDK::Body::Body}!ReadEphemeris@{ReadEphemeris}}
 \index{ReadEphemeris@{ReadEphemeris}!IO::SDK::Body::Body@{IO::SDK::Body::Body}}
 \doxysubsubsection{\texorpdfstring{ReadEphemeris()}{ReadEphemeris()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
-{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+State\+Vector}} IO\+::\+SDK\+::\+Body\+::\+Body\+::\+Read\+Ephemeris (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1Frames}{IO\+::\+SDK\+::\+Frames\+::\+Frames}} \&}]{frame,  }\item[{const \mbox{\hyperlink{namespaceIO_1_1SDK_abbb4827ec6a24ad346d9a60473ad3b81}{IO\+::\+SDK\+::\+Aberrations\+Enum}}}]{aberration,  }\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} \&}]{epoch,  }\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1CelestialBody}{IO\+::\+SDK\+::\+Body\+::\+Celestial\+Body}} \&}]{relative\+To }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [virtual]}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+State\+Vector}} IO\+::\+SDK\+::\+Body\+::\+Body\+::\+Read\+Ephemeris (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1Frames}{IO\+::\+SDK\+::\+Frames\+::\+Frames}} \&}]{frame,  }\item[{\mbox{\hyperlink{namespaceIO_1_1SDK_abbb4827ec6a24ad346d9a60473ad3b81}{IO\+::\+SDK\+::\+Aberrations\+Enum}}}]{aberration,  }\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} \&}]{epoch,  }\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1CelestialBody}{IO\+::\+SDK\+::\+Body\+::\+Celestial\+Body}} \&}]{relative\+To }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [virtual]}}
 
 
 
@@ -399,7 +402,7 @@ Get state vector from ephemeris relative to another body.
 \end{DoxyReturn}
 
 
-Reimplemented in \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft_aa1174159add9f4bcbb281a90ed99acf1}{IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Spacecraft}}.
+Reimplemented in \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft_ad061367c27a97a86d76d670b0bfdad02}{IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Spacecraft}}.
 
 
 

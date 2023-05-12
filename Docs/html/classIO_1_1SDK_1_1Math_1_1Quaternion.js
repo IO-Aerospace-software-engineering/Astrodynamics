@@ -1,8 +1,8 @@
 var classIO_1_1SDK_1_1Math_1_1Quaternion =
 [
     [ "Quaternion", "classIO_1_1SDK_1_1Math_1_1Quaternion.html#a95f689be6d7ca35cb322b57a284ae9e5", null ],
-    [ "Quaternion", "classIO_1_1SDK_1_1Math_1_1Quaternion.html#a7d96b2cf074c6828d6d1dfb89444ef62", null ],
-    [ "Quaternion", "classIO_1_1SDK_1_1Math_1_1Quaternion.html#a0a53b17c8703a5cc2ef8b2531fa08980", null ],
+    [ "Quaternion", "classIO_1_1SDK_1_1Math_1_1Quaternion.html#a7e891c0754f9972c10eba94785ecc0a2", null ],
+    [ "Quaternion", "classIO_1_1SDK_1_1Math_1_1Quaternion.html#aa7aa006f52e8bc83d63a53c753406205", null ],
     [ "Quaternion", "classIO_1_1SDK_1_1Math_1_1Quaternion.html#a05ce623ce61228d2586a0182a48bab1e", null ],
     [ "Quaternion", "classIO_1_1SDK_1_1Math_1_1Quaternion.html#a08f9d016c1dfdb5ba169e5d4d7322877", null ],
     [ "Conjugate", "classIO_1_1SDK_1_1Math_1_1Quaternion.html#ad860eb5afc90d22a9824a66556428834", null ],

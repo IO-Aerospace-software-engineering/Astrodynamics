@@ -64,7 +64,7 @@
 <a name="2"><span class="lineNum">       2 </span>            :  * @file InstrumentFrameFile.cpp</a>
 <a name="3"><span class="lineNum">       3 </span>            :  * @author Sylvain Guillet (sylvain.guillet@live.com)</a>
 <a name="4"><span class="lineNum">       4 </span>            :  * @brief </a>
-<a name="5"><span class="lineNum">       5 </span>            :  * @version 0.1</a>
+<a name="5"><span class="lineNum">       5 </span>            :  * @version 0.x</a>
 <a name="6"><span class="lineNum">       6 </span>            :  * @date 2021-07-03</a>
 <a name="7"><span class="lineNum">       7 </span>            :  * </a>
 <a name="8"><span class="lineNum">       8 </span>            :  * @copyright Copyright (c) 2021</a>
@@ -74,7 +74,7 @@
 <a name="12"><span class="lineNum">      12 </span>            : #include&lt;filesystem&gt;</a>
 <a name="13"><span class="lineNum">      13 </span>            : #include&lt;fstream&gt;</a>
 <a name="14"><span class="lineNum">      14 </span>            : </a>
-<a name="15"><span class="lineNum">      15 </span><span class="lineCov">         11 : IO::SDK::Frames::InstrumentFrameFile::InstrumentFrameFile(const IO::SDK::Instruments::Instrument&amp; instrument, const IO::SDK::Math::Vector3D&amp; orientation) :FrameFile(instrument.GetFilesPath() + &quot;/Frames/&quot; + instrument.GetName() + &quot;.tf&quot;, instrument.GetSpacecraft().GetName() + &quot;_&quot; + instrument.GetName()), m_instrument{ instrument }, m_orientation{ orientation }</span></a>
+<a name="15"><span class="lineNum">      15 </span><span class="lineCov">         11 : IO::SDK::Frames::InstrumentFrameFile::InstrumentFrameFile(const IO::SDK::Instruments::Instrument&amp; instrument, const IO::SDK::Math::Vector3D&amp; orientation) :FrameFile(instrument.GetDirectoryPath() + &quot;/Frames/&quot; + instrument.GetName() + &quot;.tf&quot;, instrument.GetSpacecraft().GetName() + &quot;_&quot; + instrument.GetName()), m_instrument{ instrument }, m_orientation{ orientation }</span></a>
 <a name="16"><span class="lineNum">      16 </span>            : {</a>
 <a name="17"><span class="lineNum">      17 </span><span class="lineCov">         11 :         if (!m_fileExists)</span></a>
 <a name="18"><span class="lineNum">      18 </span>            :         {</a>

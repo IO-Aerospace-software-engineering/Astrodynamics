@@ -2,7 +2,7 @@
  * @file PhasingManeuver.cpp
  * @author Sylvain Guillet (sylvain.guillet@live.com)
  * @brief 
- * @version 0.1
+ * @version 0.x
  * @date 2021-07-03
  * 
  * @copyright Copyright (c) 2021
@@ -12,9 +12,9 @@
 #include <ConicOrbitalElements.h>
 #include <Parameters.h>
 
-IO::SDK::Maneuvers::PhasingManeuver::PhasingManeuver(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator,
-                                                     const unsigned int revolutionNumber, IO::SDK::OrbitalParameters::OrbitalParameters *targetOrbit)
-        : IO::SDK::Maneuvers::ManeuverBase(engines, propagator), m_revolutionsNumber{revolutionNumber}, m_targetOrbit{targetOrbit}
+IO::SDK::Maneuvers::PhasingManeuver::PhasingManeuver(std::vector<IO::SDK::Body::Spacecraft::Engine*> engines, IO::SDK::Propagators::Propagator &propagator,
+                                                     const unsigned int revolutionNumber, std::shared_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> targetOrbit)
+        : IO::SDK::Maneuvers::ManeuverBase(std::move(engines), propagator), m_revolutionsNumber{revolutionNumber}, m_targetOrbit{targetOrbit}
 {
     if (!targetOrbit)
     {
@@ -24,9 +24,9 @@ IO::SDK::Maneuvers::PhasingManeuver::PhasingManeuver(const std::vector<IO::SDK::
     m_targetOrbit = targetOrbit;
 }
 
-IO::SDK::Maneuvers::PhasingManeuver::PhasingManeuver(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator,
-                                                     const unsigned revolutionNumber, IO::SDK::OrbitalParameters::OrbitalParameters *targetOrbit,
-                                                     const IO::SDK::Time::TDB &minimumEpoch) : IO::SDK::Maneuvers::ManeuverBase(engines, propagator, minimumEpoch),
+IO::SDK::Maneuvers::PhasingManeuver::PhasingManeuver(std::vector<IO::SDK::Body::Spacecraft::Engine*> engines, IO::SDK::Propagators::Propagator &propagator,
+                                                     const unsigned revolutionNumber, std::shared_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> targetOrbit,
+                                                     const IO::SDK::Time::TDB &minimumEpoch) : IO::SDK::Maneuvers::ManeuverBase(std::move(engines), propagator, minimumEpoch),
                                                                                                m_revolutionsNumber{revolutionNumber}, m_targetOrbit{targetOrbit}
 {
     if (!targetOrbit)

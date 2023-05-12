@@ -6,15 +6,17 @@
 #define IOSDK_LAUNCHDTO_H
 #include <WindowDTO.h>
 #include <StateVectorDTO.h>
+#include "SiteDTO.h"
 
 namespace IO::SDK::API::DTO
 {
     struct LaunchDTO
     {
-        int launchSiteId{0};
-        int recoverySiteId{0};
+        IO::SDK::API::DTO::WindowDTO window{};
+        SiteDTO launchSite;
+        SiteDTO recoverySite;
         bool launchByDay{};
-        double initialStepSize{0.0};
+        double initialStepSize{1.0};
         IO::SDK::API::DTO::StateVectorDTO targetOrbit;
         double inertialAzimuth{0.0};
         double nonInertialAzimuth{0.0};

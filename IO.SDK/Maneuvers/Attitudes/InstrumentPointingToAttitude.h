@@ -2,7 +2,7 @@
  * @file InstrumentPointingToAttitude.h
  * @author Sylvain Guillet (sylvain.guillet@live.com)
  * @brief 
- * @version 0.2
+ * @version 0.x
  * @date 2023-02-09
  * 
  * @copyright Copyright (c) 2021
@@ -12,6 +12,7 @@
 #define INSTRUMENT_ALIGNED_TO_ATTITUDE_H
 
 #include <ManeuverBase.h>
+#include "Site.h"
 
 namespace IO::SDK::Maneuvers::Attitudes
 {
@@ -47,7 +48,7 @@ namespace IO::SDK::Maneuvers::Attitudes
          * @instrument instrument
          * @param targetBody
          */
-        InstrumentPointingToAttitude(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator,
+        InstrumentPointingToAttitude(std::vector<IO::SDK::Body::Spacecraft::Engine*> engines, IO::SDK::Propagators::Propagator &propagator,
                                      const IO::SDK::Time::TimeSpan &attitudeHoldDuration, const IO::SDK::Instruments::Instrument &instrument, const IO::SDK::Body::Body &targetBody);
 
         /**
@@ -58,7 +59,7 @@ namespace IO::SDK::Maneuvers::Attitudes
          * @instrument instrument
          * @param targetSite
          */
-        InstrumentPointingToAttitude(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator,
+        InstrumentPointingToAttitude(const std::vector<IO::SDK::Body::Spacecraft::Engine*> engines, IO::SDK::Propagators::Propagator &propagator,
                                      const IO::SDK::Time::TimeSpan &attitudeHoldDuration, const IO::SDK::Instruments::Instrument &instrument,
                                      const IO::SDK::Sites::Site &targetSite);
 
@@ -71,7 +72,7 @@ namespace IO::SDK::Maneuvers::Attitudes
          * @instrument instrument
          * @param targetBody 
          */
-        InstrumentPointingToAttitude(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator,
+        InstrumentPointingToAttitude(const std::vector<IO::SDK::Body::Spacecraft::Engine*> engines, IO::SDK::Propagators::Propagator &propagator,
                                      const IO::SDK::Time::TDB &minimumEpoch, const IO::SDK::Time::TimeSpan &attitudeHoldDuration, const IO::SDK::Instruments::Instrument &instrument,
                                      const IO::SDK::Body::Body &targetBody);
 
@@ -84,7 +85,7 @@ namespace IO::SDK::Maneuvers::Attitudes
          * @instrument instrument
          * @param targetSite
          */
-        InstrumentPointingToAttitude(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator,
+        InstrumentPointingToAttitude(const std::vector<IO::SDK::Body::Spacecraft::Engine*> engines, IO::SDK::Propagators::Propagator &propagator,
                                      const IO::SDK::Time::TDB &minimumEpoch, const IO::SDK::Time::TimeSpan &attitudeHoldDuration, const IO::SDK::Instruments::Instrument &instrument,
                                      const IO::SDK::Sites::Site &targetSite);
 

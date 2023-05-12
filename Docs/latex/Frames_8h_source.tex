@@ -19,9 +19,9 @@
 \DoxyCodeLine{28         std::string \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1Frames_a57015777f13ddca0adc7eea53d85858d}{m\_name}};}
 \DoxyCodeLine{29 }
 \DoxyCodeLine{30     \textcolor{keyword}{public}:}
-\DoxyCodeLine{36         \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1Frames_aefd02e2426db139bb0053a3f11b6412a}{Frames}}(\textcolor{keyword}{const} std::string \&strView);}
+\DoxyCodeLine{36         \textcolor{keyword}{explicit} \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1Frames_a902775b430633d312c2cb8b08f4ce7ef}{Frames}}(std::string strView);}
 \DoxyCodeLine{37 }
-\DoxyCodeLine{43         \textcolor{keyword}{const} \textcolor{keywordtype}{char} *\mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1Frames_aa52a987b257affe726d88fba409cca4c}{ToCharArray}}() \textcolor{keyword}{const};}
+\DoxyCodeLine{43         [[nodiscard]] \textcolor{keyword}{const} \textcolor{keywordtype}{char} *\mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1Frames_aa52a987b257affe726d88fba409cca4c}{ToCharArray}}() \textcolor{keyword}{const};}
 \DoxyCodeLine{44 }
 \DoxyCodeLine{52         \textcolor{keywordtype}{bool} \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1Frames_a2fa0ce339e05394cf6450df7e1103abc}{operator==}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1Frames}{IO::SDK::Frames::Frames}} \&frame) \textcolor{keyword}{const};}
 \DoxyCodeLine{53 }
@@ -31,13 +31,13 @@
 \DoxyCodeLine{71 }
 \DoxyCodeLine{79         \textcolor{keywordtype}{bool} \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1Frames_a27bb835272e17faa20a952b8746eef9d}{operator!=}}(\mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1Frames}{IO::SDK::Frames::Frames}} \&frame) \textcolor{keyword}{const};}
 \DoxyCodeLine{80 }
-\DoxyCodeLine{86         std::string \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1Frames_a69be3fd2df40fd895afeae1b4086683b}{GetName}}() \textcolor{keyword}{const};}
+\DoxyCodeLine{86         [[nodiscard]] std::string \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1Frames_a69be3fd2df40fd895afeae1b4086683b}{GetName}}() \textcolor{keyword}{const};}
 \DoxyCodeLine{87 }
-\DoxyCodeLine{95         \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Matrix}{IO::SDK::Math::Matrix}} \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1Frames_afca738a2cb43ebec4a5c352407eb00d1}{ToFrame6x6}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1Frames}{Frames}} \&frame, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO::SDK::Time::TDB}} \&epoch) \textcolor{keyword}{const};}
+\DoxyCodeLine{95         [[nodiscard]] \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Matrix}{IO::SDK::Math::Matrix}} \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1Frames_afca738a2cb43ebec4a5c352407eb00d1}{ToFrame6x6}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1Frames}{Frames}} \&frame, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO::SDK::Time::TDB}} \&epoch) \textcolor{keyword}{const};}
 \DoxyCodeLine{96 }
-\DoxyCodeLine{104         \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Matrix}{IO::SDK::Math::Matrix}} \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1Frames_a4a5e52fc8830ffa85b9f8d4383dcce3d}{ToFrame3x3}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1Frames}{Frames}} \&frame, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO::SDK::Time::TDB}} \&epoch) \textcolor{keyword}{const};}
+\DoxyCodeLine{104         [[nodiscard]] \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Matrix}{IO::SDK::Math::Matrix}} \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1Frames_a4a5e52fc8830ffa85b9f8d4383dcce3d}{ToFrame3x3}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1Frames}{Frames}} \&frame, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO::SDK::Time::TDB}} \&epoch) \textcolor{keyword}{const};}
 \DoxyCodeLine{105 }
-\DoxyCodeLine{114         \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO::SDK::Math::Vector3D}} \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1Frames_abb48a0b71ec6ed810ffb67f3e12452f9}{TransformVector}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1Frames}{Frames}} \&to, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO::SDK::Math::Vector3D}} \&vector, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO::SDK::Time::TDB}} \&epoch) \textcolor{keyword}{const};}
+\DoxyCodeLine{114         [[nodiscard]] \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO::SDK::Math::Vector3D}} \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1Frames_abb48a0b71ec6ed810ffb67f3e12452f9}{TransformVector}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1Frames}{Frames}} \&to, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO::SDK::Math::Vector3D}} \&vector, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO::SDK::Time::TDB}} \&epoch) \textcolor{keyword}{const};}
 \DoxyCodeLine{115     \};}
 \DoxyCodeLine{116 \}}
 \DoxyCodeLine{117 \textcolor{preprocessor}{\#endif}}

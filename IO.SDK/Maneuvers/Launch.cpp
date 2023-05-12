@@ -2,7 +2,7 @@
  * @file Launch.cpp
  * @author Sylvain Guillet (sylvain.guillet@live.com)
  * @brief 
- * @version 0.1
+ * @version 0.x
  * @date 2021-07-03
  * 
  * @copyright Copyright (c) 2021
@@ -10,6 +10,7 @@
  */
 #include <Launch.h>
 #include <Constants.h>
+#include "InertialFrames.h"
 
 IO::SDK::Maneuvers::Launch::Launch(const IO::SDK::Sites::LaunchSite &launchSite, const IO::SDK::Sites::Site &recoverySite, bool launchByDay,
                                    const IO::SDK::OrbitalParameters::OrbitalParameters &targetOrbit) : m_launchSite{launchSite}, m_recoverySite{recoverySite},
@@ -135,10 +136,10 @@ std::vector<IO::SDK::Maneuvers::LaunchWindow> IO::SDK::Maneuvers::Launch::GetLau
 
         if (sunLightWindowsOnBothSites.empty())
         {
-            throw IO::SDK::Exception::SDKException("No sun light at same time on both sites");
+            throw IO::SDK::Exception::SDKException("No sun light at same time on both Sites");
         }
 
-        //Search an orbital plane alignment with launch site during sunlight window on both sites
+        //Search an orbital plane alignment with launch site during sunlight window on both Sites
         for (auto &&sunlightWindow: sunLightWindowsOnBothSites)
         {
             auto res = FindLaunchWindows(sunlightWindow);

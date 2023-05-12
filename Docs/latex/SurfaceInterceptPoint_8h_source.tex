@@ -20,22 +20,22 @@
 \DoxyCodeLine{29         }
 \DoxyCodeLine{30 }
 \DoxyCodeLine{31     \textcolor{keyword}{public}:}
-\DoxyCodeLine{39         \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1SurfaceInterceptPoint_a3d19954343f8c5d81cb52373177705a4}{SurfaceInterceptPoint}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO::SDK::Math::Vector3D}}\& interceptPoint, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO::SDK::Math::Vector3D}}\& observerToInterceptPoint, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO::SDK::Time::TDB}}\& interceptEpoch)}
-\DoxyCodeLine{40             :m\_interceptPoint\{ interceptPoint \}, m\_observerToInterceptPointVector\{ observerToInterceptPoint \}, m\_interceptEpoch\{ interceptEpoch \}}
+\DoxyCodeLine{39         \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1SurfaceInterceptPoint_a901d88735cbb9a518dee6aaaca4558ac}{SurfaceInterceptPoint}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO::SDK::Math::Vector3D}}\& interceptPoint, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO::SDK::Math::Vector3D}}\& observerToInterceptPoint, \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO::SDK::Time::TDB}}  interceptEpoch)}
+\DoxyCodeLine{40             :m\_interceptPoint\{ interceptPoint \}, m\_observerToInterceptPointVector\{ observerToInterceptPoint \}, m\_interceptEpoch\{std::move( interceptEpoch )\}}
 \DoxyCodeLine{41         \{\};}
 \DoxyCodeLine{42         \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1SurfaceInterceptPoint_af8096e8e3fdc5764434e826587599f68}{SurfaceInterceptPoint}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1SurfaceInterceptPoint}{SurfaceInterceptPoint}}\& surfaceInterceptPoint) = \textcolor{keywordflow}{default};}
 \DoxyCodeLine{43 }
-\DoxyCodeLine{49         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO::SDK::Math::Vector3D}}\& \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1SurfaceInterceptPoint_ac8903d6f6384a8b8166246d5bd57f753}{GetInterceptPoint}}()\textcolor{keyword}{ const}}
+\DoxyCodeLine{49         [[nodiscard]] \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO::SDK::Math::Vector3D}}\& \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1SurfaceInterceptPoint_ac8903d6f6384a8b8166246d5bd57f753}{GetInterceptPoint}}()\textcolor{keyword}{ const}}
 \DoxyCodeLine{50 \textcolor{keyword}{        }\{}
 \DoxyCodeLine{51             \textcolor{keywordflow}{return} m\_interceptPoint;}
 \DoxyCodeLine{52         \}}
 \DoxyCodeLine{53 }
-\DoxyCodeLine{59         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO::SDK::Math::Vector3D}}\& \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1SurfaceInterceptPoint_a5731df256ce6c6477b5fcba108ecf9d0}{GetObserverInterceptPointVector}}()\textcolor{keyword}{ const}}
+\DoxyCodeLine{59         [[nodiscard]] \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO::SDK::Math::Vector3D}}\& \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1SurfaceInterceptPoint_a5731df256ce6c6477b5fcba108ecf9d0}{GetObserverInterceptPointVector}}()\textcolor{keyword}{ const}}
 \DoxyCodeLine{60 \textcolor{keyword}{        }\{}
 \DoxyCodeLine{61             \textcolor{keywordflow}{return} m\_observerToInterceptPointVector;}
 \DoxyCodeLine{62         \}}
 \DoxyCodeLine{63 }
-\DoxyCodeLine{69         \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO::SDK::Time::TDB}} \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1SurfaceInterceptPoint_a85a5151ddda64f59c5ca36ec2d2747da}{GetInterceptEpoch}}()\textcolor{keyword}{ const}}
+\DoxyCodeLine{69         [[nodiscard]] \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO::SDK::Time::TDB}} \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1SurfaceInterceptPoint_a85a5151ddda64f59c5ca36ec2d2747da}{GetInterceptEpoch}}()\textcolor{keyword}{ const}}
 \DoxyCodeLine{70 \textcolor{keyword}{        }\{}
 \DoxyCodeLine{71             \textcolor{keywordflow}{return} m\_interceptEpoch;}
 \DoxyCodeLine{72         \}}

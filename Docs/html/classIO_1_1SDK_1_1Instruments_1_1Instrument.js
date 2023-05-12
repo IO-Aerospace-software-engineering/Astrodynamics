@@ -2,6 +2,7 @@ var classIO_1_1SDK_1_1Instruments_1_1Instrument =
 [
     [ "~Instrument", "classIO_1_1SDK_1_1Instruments_1_1Instrument.html#ac678c301ad82154dddccbf4ddcb2a45b", null ],
     [ "FindWindowsWhereInFieldOfView", "classIO_1_1SDK_1_1Instruments_1_1Instrument.html#a6c4116675100fb79d598889b2465fb9a", null ],
+    [ "FindWindowsWhereInFieldOfView", "classIO_1_1SDK_1_1Instruments_1_1Instrument.html#aca5febfb1c5504420a977e73516f34bb", null ],
     [ "GetBoresight", "classIO_1_1SDK_1_1Instruments_1_1Instrument.html#aa6f77570a793a4f4312c9b16fe571d66", null ],
     [ "GetBoresight", "classIO_1_1SDK_1_1Instruments_1_1Instrument.html#a81e7fabadb3b56a2d468cffdf8e0486e", null ],
     [ "GetBoresightInSpacecraftFrame", "classIO_1_1SDK_1_1Instruments_1_1Instrument.html#a9a43beaf8232330372883951ac8bc176", null ],

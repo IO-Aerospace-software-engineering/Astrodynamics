@@ -25,7 +25,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">IO-SDK<span id="projectnumber">&#160;0.4.x</span>
+   <div id="projectname">IO-SDK<span id="projectnumber">&#160;0.5.x</span>
    </div>
    <div id="projectbrief">Astrodynamics framework</div>
   </td>
@@ -108,8 +108,8 @@ Inheritance diagram for IO::SDK::Integrators::Forces::GravityForce:</div>
 Public Member Functions</h2></td></tr>
 <tr class="memitem:a3831b3d7ce915098948cc1f82e856b77"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Integrators_1_1Forces_1_1GravityForce.html#a3831b3d7ce915098948cc1f82e856b77">GravityForce</a> ()</td></tr>
 <tr class="separator:a3831b3d7ce915098948cc1f82e856b77"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a461569dd60972291642eca54a32c6385"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Integrators_1_1Forces_1_1GravityForce.html#a461569dd60972291642eca54a32c6385">~GravityForce</a> ()</td></tr>
-<tr class="separator:a461569dd60972291642eca54a32c6385"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a984e9feaa026398c5ccc05489aeba44f"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Integrators_1_1Forces_1_1GravityForce.html#a984e9feaa026398c5ccc05489aeba44f">~GravityForce</a> () override</td></tr>
+<tr class="separator:a984e9feaa026398c5ccc05489aeba44f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1ac748566967ca9f2585587648acc5eb"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classIO_1_1SDK_1_1Math_1_1Vector3D.html">IO::SDK::Math::Vector3D</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Integrators_1_1Forces_1_1GravityForce.html#a1ac748566967ca9f2585587648acc5eb">Apply</a> (const <a class="el" href="classIO_1_1SDK_1_1Body_1_1Body.html">IO::SDK::Body::Body</a> &amp;body, const <a class="el" href="classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector.html">IO::SDK::OrbitalParameters::StateVector</a> &amp;stateVector) override</td></tr>
 <tr class="memdesc:a1ac748566967ca9f2585587648acc5eb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Apply force.  <a href="classIO_1_1SDK_1_1Integrators_1_1Forces_1_1GravityForce.html#a1ac748566967ca9f2585587648acc5eb">More...</a><br /></td></tr>
 <tr class="separator:a1ac748566967ca9f2585587648acc5eb"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -120,6 +120,8 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a92c0d714231cdd9fd0b78153110d4c26 inherit pub_methods_classIO_1_1SDK_1_1Integrators_1_1Forces_1_1Force"><td class="memItemLeft" align="right" valign="top">virtual <a class="el" href="classIO_1_1SDK_1_1Math_1_1Vector3D.html">IO::SDK::Math::Vector3D</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Integrators_1_1Forces_1_1Force.html#a92c0d714231cdd9fd0b78153110d4c26">Apply</a> (const <a class="el" href="classIO_1_1SDK_1_1Body_1_1Body.html">IO::SDK::Body::Body</a> &amp;body, const <a class="el" href="classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector.html">IO::SDK::OrbitalParameters::StateVector</a> &amp;stateVector)=0</td></tr>
 <tr class="memdesc:a92c0d714231cdd9fd0b78153110d4c26 inherit pub_methods_classIO_1_1SDK_1_1Integrators_1_1Forces_1_1Force"><td class="mdescLeft">&#160;</td><td class="mdescRight">Apply force to body.  <a href="classIO_1_1SDK_1_1Integrators_1_1Forces_1_1Force.html#a92c0d714231cdd9fd0b78153110d4c26">More...</a><br /></td></tr>
 <tr class="separator:a92c0d714231cdd9fd0b78153110d4c26 inherit pub_methods_classIO_1_1SDK_1_1Integrators_1_1Forces_1_1Force"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afb7b891094d9f9858af152959d659848 inherit pub_methods_classIO_1_1SDK_1_1Integrators_1_1Forces_1_1Force"><td class="memItemLeft" align="right" valign="top">virtual&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Integrators_1_1Forces_1_1Force.html#afb7b891094d9f9858af152959d659848">~Force</a> ()=default</td></tr>
+<tr class="separator:afb7b891094d9f9858af152959d659848 inherit pub_methods_classIO_1_1SDK_1_1Integrators_1_1Forces_1_1Force"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p >Gravity force. </p>
@@ -129,6 +131,9 @@ Public Member Functions</h2></td></tr>
 
 <div class="memitem">
 <div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
       <table class="memname">
         <tr>
           <td class="memname">IO::SDK::Integrators::Forces::GravityForce::GravityForce </td>
@@ -137,15 +142,23 @@ Public Member Functions</h2></td></tr>
           <td></td>
         </tr>
       </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">default</span></span>  </td>
+  </tr>
+</table>
 </div><div class="memdoc">
 
 </div>
 </div>
-<a id="a461569dd60972291642eca54a32c6385" name="a461569dd60972291642eca54a32c6385"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a461569dd60972291642eca54a32c6385">&#9670;&nbsp;</a></span>~GravityForce()</h2>
+<a id="a984e9feaa026398c5ccc05489aeba44f" name="a984e9feaa026398c5ccc05489aeba44f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a984e9feaa026398c5ccc05489aeba44f">&#9670;&nbsp;</a></span>~GravityForce()</h2>
 
 <div class="memitem">
 <div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
       <table class="memname">
         <tr>
           <td class="memname">IO::SDK::Integrators::Forces::GravityForce::~GravityForce </td>
@@ -154,6 +167,11 @@ Public Member Functions</h2></td></tr>
           <td></td>
         </tr>
       </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">override</span><span class="mlabel">default</span></span>  </td>
+  </tr>
+</table>
 </div><div class="memdoc">
 
 </div>

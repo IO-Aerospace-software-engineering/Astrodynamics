@@ -13,15 +13,22 @@
 #include <StateVector.h>
 #include <ConicOrbitalElements.h>
 #include <EquinoctialElements.h>
+#include "InertialFrames.h"
+#include "TestParameters.h"
 
 using namespace std::chrono_literals;
 
 TEST(CombinedManeuver, CanExecute)
 {
     const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
-    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams1 = std::make_unique<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth, 10000000.0, 0.333333, 10.0 * IO::SDK::Constants::DEG_RAD, 0.0, 0.0, 0.0, IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::GetICRF());
+    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams1 = std::make_unique<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth, 10000000.0, 0.333333,
+                                                                                                                                                       10.0 *
+                                                                                                                                                       IO::SDK::Constants::DEG_RAD,
+                                                                                                                                                       0.0, 0.0, 0.0,
+                                                                                                                                                       IO::SDK::Time::TDB(0.0s),
+                                                                                                                                                       IO::SDK::Frames::InertialFrames::GetICRF());
 
-    IO::SDK::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, "ms01", std::move(orbitalParams1)};
+    IO::SDK::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams1)};
 
     IO::SDK::Integrators::VVIntegrator integrator(IO::SDK::Time::TimeSpan(1.0s));
     IO::SDK::Propagators::Propagator prop(s, integrator, IO::SDK::Time::Window(IO::SDK::Time::TDB(100.0s), IO::SDK::Time::TDB(200.0s)));
@@ -31,8 +38,8 @@ TEST(CombinedManeuver, CanExecute)
 
     auto engine1 = s.GetEngine("sn1");
 
-    std::vector<IO::SDK::Body::Spacecraft::Engine> engines;
-    engines.push_back(*engine1);
+    std::vector<IO::SDK::Body::Spacecraft::Engine *> engines;
+    engines.push_back(const_cast<IO::SDK::Body::Spacecraft::Engine *>(engine1));
 
     IO::SDK::Maneuvers::CombinedManeuver maneuver(engines, prop, 20.0 * IO::SDK::Constants::DEG_RAD, 12000000.0);
 
@@ -45,9 +52,14 @@ TEST(CombinedManeuver, CanExecute)
 TEST(CombinedManeuver, TryExecuteWithPeregeeHigherThanApogee)
 {
     const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
-    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams1 = std::make_unique<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth, 6678000.0, 0.726546824, 28.5 * IO::SDK::Constants::DEG_RAD, 0.0, 0.0, 0.0, IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::GetICRF());
+    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams1 = std::make_unique<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth, 6678000.0,
+                                                                                                                                                       0.726546824, 28.5 *
+                                                                                                                                                                    IO::SDK::Constants::DEG_RAD,
+                                                                                                                                                       0.0, 0.0, 0.0,
+                                                                                                                                                       IO::SDK::Time::TDB(0.0s),
+                                                                                                                                                       IO::SDK::Frames::InertialFrames::GetICRF());
 
-    IO::SDK::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 10000.0, "ms01", std::move(orbitalParams1)};
+    IO::SDK::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 10000.0, std::string(SpacecraftPath), std::move(orbitalParams1)};
 
     IO::SDK::Integrators::VVIntegrator integrator(IO::SDK::Time::TimeSpan(1.0s));
     IO::SDK::Propagators::Propagator prop(s, integrator, IO::SDK::Time::Window(IO::SDK::Time::TDB(100.0s), IO::SDK::Time::TDB(200.0s)));
@@ -57,8 +69,8 @@ TEST(CombinedManeuver, TryExecuteWithPeregeeHigherThanApogee)
 
     auto engine1 = s.GetEngine("sn1");
 
-    std::vector<IO::SDK::Body::Spacecraft::Engine> engines;
-    engines.push_back(*engine1);
+    std::vector<IO::SDK::Body::Spacecraft::Engine *> engines;
+    engines.push_back(const_cast<IO::SDK::Body::Spacecraft::Engine *>(engine1));
 
     IO::SDK::Maneuvers::CombinedManeuver maneuver(engines, prop, 0.0, 42164000.0);
 
@@ -80,9 +92,14 @@ TEST(CombinedManeuver, TryExecuteWithPeregeeHigherThanApogee)
 TEST(CombinedManeuver, TryExecuteWithPeregeeLowerThanApogee)
 {
     const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
-    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams1 = std::make_unique<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth, 6678000.0, 0.7266, 28.5 * IO::SDK::Constants::DEG_RAD, 0.0, 0.0, 0.0, IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::GetICRF());
+    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams1 = std::make_unique<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth, 6678000.0, 0.7266,
+                                                                                                                                                       28.5 *
+                                                                                                                                                       IO::SDK::Constants::DEG_RAD,
+                                                                                                                                                       0.0, 0.0, 0.0,
+                                                                                                                                                       IO::SDK::Time::TDB(0.0s),
+                                                                                                                                                       IO::SDK::Frames::InertialFrames::GetICRF());
 
-    IO::SDK::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 10000.0, "ms01", std::move(orbitalParams1)};
+    IO::SDK::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 10000.0, std::string(SpacecraftPath), std::move(orbitalParams1)};
 
     IO::SDK::Integrators::VVIntegrator integrator(IO::SDK::Time::TimeSpan(1.0s));
     IO::SDK::Propagators::Propagator prop(s, integrator, IO::SDK::Time::Window(IO::SDK::Time::TDB(100.0s), IO::SDK::Time::TDB(200.0s)));
@@ -92,8 +109,8 @@ TEST(CombinedManeuver, TryExecuteWithPeregeeLowerThanApogee)
 
     auto engine1 = s.GetEngine("sn1");
 
-    std::vector<IO::SDK::Body::Spacecraft::Engine> engines;
-    engines.push_back(*engine1);
+    std::vector<IO::SDK::Body::Spacecraft::Engine *> engines;
+    engines.push_back(const_cast<IO::SDK::Body::Spacecraft::Engine *>(engine1));
 
     IO::SDK::Maneuvers::CombinedManeuver maneuver(engines, prop, 0.0, 42164000.0);
 

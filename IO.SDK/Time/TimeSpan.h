@@ -2,7 +2,7 @@
  * @file TimeSpan.h
  * @author Sylvain Guillet (sylvain.guillet@live.com)
  * @brief 
- * @version 0.1
+ * @version 0.x
  * @date 2021-07-03
  * 
  * @copyright Copyright (c) 2021
@@ -28,6 +28,9 @@ namespace IO::SDK::Time
 		/// </summary>
 		/// <param name="period">Period is defined with literal in h - min - s - ms - us - ns. If literal is not specified second will be used</param>
 		explicit TimeSpan(std::chrono::duration<double> period);
+
+
+		explicit TimeSpan(double period);
 
 		[[nodiscard]] std::chrono::duration<double, std::nano> GetNanoseconds() const;
 		[[nodiscard]] std::chrono::duration<double, std::micro> GetMicroseconds()const;

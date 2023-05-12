@@ -2,7 +2,7 @@
  * @file Body.cpp
  * @author Sylvain Guillet (sylvain.guillet@live.com)
  * @brief 
- * @version 0.1
+ * @version 0.x
  * @date 2021-07-03
  * 
  * @copyright Copyright (c) 2021
@@ -14,6 +14,7 @@
 #include <StringHelpers.h>
 #include "Helpers/Type.cpp"
 #include <Constants.h>
+#include <GeometryFinder.h>
 
 using namespace std::chrono_literals;
 
@@ -82,7 +83,7 @@ IO::SDK::Body::Body::ReadEphemeris(const IO::SDK::Frames::Frames &frame, const I
              std::to_string(relativeTo.m_id).c_str(), vs, &lt);
 
     //Convert to SDK unit
-    for (double & v : vs)
+    for (double &v: vs)
     {
         v = v * 1000.0; /* code */
     }
@@ -98,7 +99,7 @@ IO::SDK::Body::Body::ReadEphemeris(const IO::SDK::Frames::Frames &frame, const I
     spkezr_c(std::to_string(m_id).c_str(), epoch.GetSecondsFromJ2000().count(), frame.ToCharArray(), IO::SDK::Aberrations::ToString(aberration).c_str(),
              std::to_string(m_orbitalParametersAtEpoch->GetCenterOfMotion()->m_id).c_str(), vs, &lt);
     //Convert to SDK unit
-    for (double & v : vs)
+    for (double &v: vs)
     {
         v = v * 1000.0; /* code */
     }
@@ -121,75 +122,30 @@ std::shared_ptr<IO::SDK::Body::Body> IO::SDK::Body::Body::GetSharedPointer()
 }
 
 std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>>
-IO::SDK::Body::Body::FindWindowsOnDistanceConstraint(const IO::SDK::Time::Window<IO::SDK::Time::TDB>& window, const Body &targetBody, const Body &observer,
-                                                     const IO::SDK::Constraints::Constraint &constraint, const IO::SDK::AberrationsEnum aberration, const double value,
+IO::SDK::Body::Body::FindWindowsOnDistanceConstraint(const IO::SDK::Time::Window<IO::SDK::Time::TDB> &window, const Body &targetBody, const Body &observer,
+                                                     const IO::SDK::Constraints::RelationalOperator &constraint, const IO::SDK::AberrationsEnum aberration, const double value,
                                                      const IO::SDK::Time::TimeSpan &step)
 {
-    std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>> windows;
-    SpiceDouble windowStart;
-    SpiceDouble windowEnd;
-
-    const SpiceInt NINTVL{10000};
-    const SpiceInt MAXWIN{20000};
-
-    SpiceDouble SPICE_CELL_DIST[SPICE_CELL_CTRLSZ + MAXWIN];
-    SpiceCell cnfine = IO::SDK::Spice::Builder::CreateDoubleCell(MAXWIN, SPICE_CELL_DIST);
-
-    SpiceDouble SPICE_CELL_DIST_RESULT[SPICE_CELL_CTRLSZ + MAXWIN];
-    SpiceCell results = IO::SDK::Spice::Builder::CreateDoubleCell(MAXWIN, SPICE_CELL_DIST_RESULT);
-
-    wninsd_c(window.GetStartDate().GetSecondsFromJ2000().count(), window.GetEndDate().GetSecondsFromJ2000().count(), &cnfine);
-
-    gfdist_c(targetBody.GetName().c_str(), IO::SDK::Aberrations::ToString(aberration).c_str(), observer.GetName().c_str(), constraint.ToCharArray(), value * 1E-03, 0.0, step.GetSeconds().count(),
-             NINTVL, &cnfine, &results);
-
-    for (int i = 0; i < wncard_c(&results); i++)
-    {
-        wnfetd_c(&results, i, &windowStart, &windowEnd);
-        windows.emplace_back(IO::SDK::Time::TDB(std::chrono::duration<double>(windowStart)),
-                                                                    IO::SDK::Time::TDB(std::chrono::duration<double>(windowEnd)));
-    }
-    return windows;
+    return IO::SDK::Constraints::GeometryFinder::FindWindowsOnDistanceConstraint(window, observer.m_id, targetBody.m_id, constraint, value, aberration, step);
 }
 
 std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>>
-IO::SDK::Body::Body::FindWindowsOnOccultationConstraint(const IO::SDK::Time::Window<IO::SDK::Time::TDB>& searchWindow, const IO::SDK::Body::Body &targetBody,
+IO::SDK::Body::Body::FindWindowsOnOccultationConstraint(const IO::SDK::Time::Window<IO::SDK::Time::TDB> &searchWindow, const IO::SDK::Body::Body &targetBody,
                                                         const IO::SDK::Body::CelestialBody &frontBody, const IO::SDK::OccultationType &occultationType,
                                                         const IO::SDK::AberrationsEnum aberration, const IO::SDK::Time::TimeSpan &stepSize) const
 {
-    std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>> windows;
-    SpiceDouble windowStart;
-    SpiceDouble windowEnd;
-
-    const SpiceInt MAXWIN{20000};
-
-    SpiceDouble SPICE_CELL_OCCLT[SPICE_CELL_CTRLSZ + MAXWIN];
-    SpiceCell cnfine = IO::SDK::Spice::Builder::CreateDoubleCell(MAXWIN, SPICE_CELL_OCCLT);
-
-    SpiceDouble SPICE_CELL_OCCLT_RESULT[SPICE_CELL_CTRLSZ + MAXWIN];
-    SpiceCell results = IO::SDK::Spice::Builder::CreateDoubleCell(MAXWIN, SPICE_CELL_OCCLT_RESULT);
-
-    wninsd_c(searchWindow.GetStartDate().GetSecondsFromJ2000().count(), searchWindow.GetEndDate().GetSecondsFromJ2000().count(), &cnfine);
-
     std::string bshape{"POINT"};
     std::string bframe{};
-    std::string occultationTypeStr{"ANY"};
+    auto selectedOccultation = OccultationType::Any();
     if (IO::SDK::Helpers::IsInstanceOf<IO::SDK::Body::CelestialBody>(&targetBody))
     {
         bshape = "ELLIPSOID";
-        bframe = dynamic_cast<const IO::SDK::Body::CelestialBody&>(targetBody).GetBodyFixedFrame().GetName();
-        occultationTypeStr=occultationType.ToCharArray();
+        bframe = dynamic_cast<const IO::SDK::Body::CelestialBody &>(targetBody).GetBodyFixedFrame().GetName();
+        selectedOccultation = occultationType;
     }
-    gfoclt_c(occultationTypeStr.c_str(), frontBody.m_name.c_str(), "ELLIPSOID", frontBody.GetBodyFixedFrame().GetName().c_str(), targetBody.m_name.c_str(), bshape.c_str(),
-             bframe.c_str(), IO::SDK::Aberrations::ToString(aberration).c_str(), m_name.c_str(), stepSize.GetSeconds().count(), &cnfine, &results);
-
-    for (int i = 0; i < wncard_c(&results); i++)
-    {
-        wnfetd_c(&results, i, &windowStart, &windowEnd);
-        windows.emplace_back(IO::SDK::Time::TDB(std::chrono::duration<double>(windowStart)),
-                                                                    IO::SDK::Time::TDB(std::chrono::duration<double>(windowEnd)));
-    }
-    return windows;
+    return IO::SDK::Constraints::GeometryFinder::FindWindowsOnOccultationConstraint(searchWindow, m_id, targetBody.m_id, bframe, bshape, frontBody.m_id,
+                                                                                    frontBody.GetBodyFixedFrame().GetName(), "ELLIPSOID", selectedOccultation, aberration,
+                                                                                    stepSize);
 }
 
 IO::SDK::Coordinates::Planetographic

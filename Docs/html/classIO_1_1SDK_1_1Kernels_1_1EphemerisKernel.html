@@ -25,7 +25,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">IO-SDK<span id="projectnumber">&#160;0.4.x</span>
+   <div id="projectname">IO-SDK<span id="projectnumber">&#160;0.5.x</span>
    </div>
    <div id="projectbrief">Astrodynamics framework</div>
   </td>
@@ -106,15 +106,13 @@ Inheritance diagram for IO::SDK::Kernels::EphemerisKernel:</div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:acf34c07a1abc3f3f9a3aeaad823549db"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Kernels_1_1EphemerisKernel.html#acf34c07a1abc3f3f9a3aeaad823549db">EphemerisKernel</a> (const <a class="el" href="classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft.html">IO::SDK::Body::Spacecraft::Spacecraft</a> &amp;spacecraft)</td></tr>
-<tr class="memdesc:acf34c07a1abc3f3f9a3aeaad823549db"><td class="mdescLeft">&#160;</td><td class="mdescRight">Construct a new Ephemeris <a class="el" href="classIO_1_1SDK_1_1Kernels_1_1Kernel.html">Kernel</a> object.  <a href="classIO_1_1SDK_1_1Kernels_1_1EphemerisKernel.html#acf34c07a1abc3f3f9a3aeaad823549db">More...</a><br /></td></tr>
-<tr class="separator:acf34c07a1abc3f3f9a3aeaad823549db"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af79e3386a443207b18142a8057e268b5"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Kernels_1_1EphemerisKernel.html#af79e3386a443207b18142a8057e268b5">EphemerisKernel</a> (const <a class="el" href="classIO_1_1SDK_1_1Sites_1_1Site.html">IO::SDK::Sites::Site</a> &amp;site)</td></tr>
-<tr class="separator:af79e3386a443207b18142a8057e268b5"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a46c686505373d02dc1798df419b3d26e"><td class="memItemLeft" align="right" valign="top">virtual&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Kernels_1_1EphemerisKernel.html#a46c686505373d02dc1798df419b3d26e">~EphemerisKernel</a> ()=default</td></tr>
-<tr class="separator:a46c686505373d02dc1798df419b3d26e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac09746242c43cdafa8acd2175ca3c407"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector.html">IO::SDK::OrbitalParameters::StateVector</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Kernels_1_1EphemerisKernel.html#ac09746242c43cdafa8acd2175ca3c407">ReadStateVector</a> (const <a class="el" href="classIO_1_1SDK_1_1Body_1_1CelestialBody.html">IO::SDK::Body::CelestialBody</a> &amp;observer, const <a class="el" href="classIO_1_1SDK_1_1Frames_1_1Frames.html">IO::SDK::Frames::Frames</a> &amp;frame, const <a class="el" href="namespaceIO_1_1SDK.html#abbb4827ec6a24ad346d9a60473ad3b81">IO::SDK::AberrationsEnum</a> aberration, const <a class="el" href="classIO_1_1SDK_1_1Time_1_1TDB.html">IO::SDK::Time::TDB</a> &amp;epoch) const</td></tr>
-<tr class="separator:ac09746242c43cdafa8acd2175ca3c407"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a92bc98fbd3bdbeb2256bf80003614412"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Kernels_1_1EphemerisKernel.html#a92bc98fbd3bdbeb2256bf80003614412">EphemerisKernel</a> (std::string filePath, int objectId)</td></tr>
+<tr class="memdesc:a92bc98fbd3bdbeb2256bf80003614412"><td class="mdescLeft">&#160;</td><td class="mdescRight">Construct a new Ephemeris <a class="el" href="classIO_1_1SDK_1_1Kernels_1_1Kernel.html">Kernel</a> object.  <a href="classIO_1_1SDK_1_1Kernels_1_1EphemerisKernel.html#a92bc98fbd3bdbeb2256bf80003614412">More...</a><br /></td></tr>
+<tr class="separator:a92bc98fbd3bdbeb2256bf80003614412"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad6ece1cd87c3c15ef926d0d990184701"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Kernels_1_1EphemerisKernel.html#ad6ece1cd87c3c15ef926d0d990184701">~EphemerisKernel</a> () override=default</td></tr>
+<tr class="separator:ad6ece1cd87c3c15ef926d0d990184701"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a560587c9576651e786c62b791cb00761"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector.html">IO::SDK::OrbitalParameters::StateVector</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Kernels_1_1EphemerisKernel.html#a560587c9576651e786c62b791cb00761">ReadStateVector</a> (const <a class="el" href="classIO_1_1SDK_1_1Body_1_1CelestialBody.html">IO::SDK::Body::CelestialBody</a> &amp;observer, const <a class="el" href="classIO_1_1SDK_1_1Frames_1_1Frames.html">IO::SDK::Frames::Frames</a> &amp;frame, <a class="el" href="namespaceIO_1_1SDK.html#abbb4827ec6a24ad346d9a60473ad3b81">IO::SDK::AberrationsEnum</a> aberration, const <a class="el" href="classIO_1_1SDK_1_1Time_1_1TDB.html">IO::SDK::Time::TDB</a> &amp;epoch) const</td></tr>
+<tr class="separator:a560587c9576651e786c62b791cb00761"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8787db722addf17f38381016593cf83a"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classIO_1_1SDK_1_1Time_1_1Window.html">IO::SDK::Time::Window</a>&lt; <a class="el" href="classIO_1_1SDK_1_1Time_1_1TDB.html">IO::SDK::Time::TDB</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Kernels_1_1EphemerisKernel.html#a8787db722addf17f38381016593cf83a">GetCoverageWindow</a> () const override</td></tr>
 <tr class="memdesc:a8787db722addf17f38381016593cf83a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the Coverage Window.  <a href="classIO_1_1SDK_1_1Kernels_1_1EphemerisKernel.html#a8787db722addf17f38381016593cf83a">More...</a><br /></td></tr>
 <tr class="separator:a8787db722addf17f38381016593cf83a"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -141,12 +139,13 @@ Public Member Functions</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="inherited" name="inherited"></a>
 Additional Inherited Members</h2></td></tr>
+<tr class="inherit_header pub_static_methods_classIO_1_1SDK_1_1Kernels_1_1Kernel"><td colspan="2" onclick="javascript:toggleInherit('pub_static_methods_classIO_1_1SDK_1_1Kernels_1_1Kernel')"><img src="closed.png" alt="-"/>&#160;Static Public Member Functions inherited from <a class="el" href="classIO_1_1SDK_1_1Kernels_1_1Kernel.html">IO::SDK::Kernels::Kernel</a></td></tr>
+<tr class="memitem:a6c70fcb06baeaa0d432401a21b4ec6c7 inherit pub_static_methods_classIO_1_1SDK_1_1Kernels_1_1Kernel"><td class="memItemLeft" align="right" valign="top">static int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Kernels_1_1Kernel.html#a6c70fcb06baeaa0d432401a21b4ec6c7">DefinePolynomialDegree</a> (int dataSize, int maximumDegree)</td></tr>
+<tr class="memdesc:a6c70fcb06baeaa0d432401a21b4ec6c7 inherit pub_static_methods_classIO_1_1SDK_1_1Kernels_1_1Kernel"><td class="mdescLeft">&#160;</td><td class="mdescRight">Define the best Lagrange polynomial degree.  <a href="classIO_1_1SDK_1_1Kernels_1_1Kernel.html#a6c70fcb06baeaa0d432401a21b4ec6c7">More...</a><br /></td></tr>
+<tr class="separator:a6c70fcb06baeaa0d432401a21b4ec6c7 inherit pub_static_methods_classIO_1_1SDK_1_1Kernels_1_1Kernel"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pro_methods_classIO_1_1SDK_1_1Kernels_1_1Kernel"><td colspan="2" onclick="javascript:toggleInherit('pro_methods_classIO_1_1SDK_1_1Kernels_1_1Kernel')"><img src="closed.png" alt="-"/>&#160;Protected Member Functions inherited from <a class="el" href="classIO_1_1SDK_1_1Kernels_1_1Kernel.html">IO::SDK::Kernels::Kernel</a></td></tr>
-<tr class="memitem:a9359eeb5f730fb384cc0047eb25f9dbc inherit pro_methods_classIO_1_1SDK_1_1Kernels_1_1Kernel"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Kernels_1_1Kernel.html#a9359eeb5f730fb384cc0047eb25f9dbc">Kernel</a> (const std::string &amp;fileName)</td></tr>
-<tr class="separator:a9359eeb5f730fb384cc0047eb25f9dbc inherit pro_methods_classIO_1_1SDK_1_1Kernels_1_1Kernel"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3e841838ecb29fc2b394a2f911f5c49b inherit pro_methods_classIO_1_1SDK_1_1Kernels_1_1Kernel"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Kernels_1_1Kernel.html#a3e841838ecb29fc2b394a2f911f5c49b">DefinePolynomialDegree</a> (const int dataSize, const int maximumDegree) const</td></tr>
-<tr class="memdesc:a3e841838ecb29fc2b394a2f911f5c49b inherit pro_methods_classIO_1_1SDK_1_1Kernels_1_1Kernel"><td class="mdescLeft">&#160;</td><td class="mdescRight">Define the best Lagrange polynomial degree.  <a href="classIO_1_1SDK_1_1Kernels_1_1Kernel.html#a3e841838ecb29fc2b394a2f911f5c49b">More...</a><br /></td></tr>
-<tr class="separator:a3e841838ecb29fc2b394a2f911f5c49b inherit pro_methods_classIO_1_1SDK_1_1Kernels_1_1Kernel"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acb8a086f99ed22bb8fe37aef4edb8440 inherit pro_methods_classIO_1_1SDK_1_1Kernels_1_1Kernel"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Kernels_1_1Kernel.html#acb8a086f99ed22bb8fe37aef4edb8440">Kernel</a> (std::string fileName)</td></tr>
+<tr class="separator:acb8a086f99ed22bb8fe37aef4edb8440 inherit pro_methods_classIO_1_1SDK_1_1Kernels_1_1Kernel"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pro_attribs_classIO_1_1SDK_1_1Kernels_1_1Kernel"><td colspan="2" onclick="javascript:toggleInherit('pro_attribs_classIO_1_1SDK_1_1Kernels_1_1Kernel')"><img src="closed.png" alt="-"/>&#160;Protected Attributes inherited from <a class="el" href="classIO_1_1SDK_1_1Kernels_1_1Kernel.html">IO::SDK::Kernels::Kernel</a></td></tr>
 <tr class="memitem:af3eb2e7de11059b7d462eff06252efe8 inherit pro_attribs_classIO_1_1SDK_1_1Kernels_1_1Kernel"><td class="memItemLeft" align="right" valign="top">const std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Kernels_1_1Kernel.html#af3eb2e7de11059b7d462eff06252efe8">m_filePath</a></td></tr>
 <tr class="separator:af3eb2e7de11059b7d462eff06252efe8 inherit pro_attribs_classIO_1_1SDK_1_1Kernels_1_1Kernel"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -160,20 +159,38 @@ Additional Inherited Members</h2></td></tr>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p >Ephemeris kernel. </p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
-<a id="acf34c07a1abc3f3f9a3aeaad823549db" name="acf34c07a1abc3f3f9a3aeaad823549db"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#acf34c07a1abc3f3f9a3aeaad823549db">&#9670;&nbsp;</a></span>EphemerisKernel() <span class="overload">[1/2]</span></h2>
+<a id="a92bc98fbd3bdbeb2256bf80003614412" name="a92bc98fbd3bdbeb2256bf80003614412"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a92bc98fbd3bdbeb2256bf80003614412">&#9670;&nbsp;</a></span>EphemerisKernel()</h2>
 
 <div class="memitem">
 <div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
       <table class="memname">
         <tr>
           <td class="memname">IO::SDK::Kernels::EphemerisKernel::EphemerisKernel </td>
           <td>(</td>
-          <td class="paramtype">const <a class="el" href="classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft.html">IO::SDK::Body::Spacecraft::Spacecraft</a> &amp;&#160;</td>
-          <td class="paramname"><em>spacecraft</em></td><td>)</td>
+          <td class="paramtype">std::string&#160;</td>
+          <td class="paramname"><em>filePath</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
           <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>objectId</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
         </tr>
       </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">explicit</span></span>  </td>
+  </tr>
+</table>
 </div><div class="memdoc">
 
 <p>Construct a new Ephemeris <a class="el" href="classIO_1_1SDK_1_1Kernels_1_1Kernel.html">Kernel</a> object. </p>
@@ -186,26 +203,8 @@ Additional Inherited Members</h2></td></tr>
 
 </div>
 </div>
-<a id="af79e3386a443207b18142a8057e268b5" name="af79e3386a443207b18142a8057e268b5"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#af79e3386a443207b18142a8057e268b5">&#9670;&nbsp;</a></span>EphemerisKernel() <span class="overload">[2/2]</span></h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">IO::SDK::Kernels::EphemerisKernel::EphemerisKernel </td>
-          <td>(</td>
-          <td class="paramtype">const <a class="el" href="classIO_1_1SDK_1_1Sites_1_1Site.html">IO::SDK::Sites::Site</a> &amp;&#160;</td>
-          <td class="paramname"><em>site</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a id="a46c686505373d02dc1798df419b3d26e" name="a46c686505373d02dc1798df419b3d26e"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a46c686505373d02dc1798df419b3d26e">&#9670;&nbsp;</a></span>~EphemerisKernel()</h2>
+<a id="ad6ece1cd87c3c15ef926d0d990184701" name="ad6ece1cd87c3c15ef926d0d990184701"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad6ece1cd87c3c15ef926d0d990184701">&#9670;&nbsp;</a></span>~EphemerisKernel()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -214,7 +213,7 @@ Additional Inherited Members</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">virtual IO::SDK::Kernels::EphemerisKernel::~EphemerisKernel </td>
+          <td class="memname">IO::SDK::Kernels::EphemerisKernel::~EphemerisKernel </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td></td>
@@ -222,7 +221,7 @@ Additional Inherited Members</h2></td></tr>
       </table>
   </td>
   <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">virtual</span><span class="mlabel">default</span></span>  </td>
+<span class="mlabels"><span class="mlabel">override</span><span class="mlabel">default</span></span>  </td>
   </tr>
 </table>
 </div><div class="memdoc">
@@ -260,8 +259,8 @@ Additional Inherited Members</h2></td></tr>
 
 </div>
 </div>
-<a id="ac09746242c43cdafa8acd2175ca3c407" name="ac09746242c43cdafa8acd2175ca3c407"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ac09746242c43cdafa8acd2175ca3c407">&#9670;&nbsp;</a></span>ReadStateVector()</h2>
+<a id="a560587c9576651e786c62b791cb00761" name="a560587c9576651e786c62b791cb00761"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a560587c9576651e786c62b791cb00761">&#9670;&nbsp;</a></span>ReadStateVector()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -281,7 +280,7 @@ Additional Inherited Members</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const <a class="el" href="namespaceIO_1_1SDK.html#abbb4827ec6a24ad346d9a60473ad3b81">IO::SDK::AberrationsEnum</a>&#160;</td>
+          <td class="paramtype"><a class="el" href="namespaceIO_1_1SDK.html#abbb4827ec6a24ad346d9a60473ad3b81">IO::SDK::AberrationsEnum</a>&#160;</td>
           <td class="paramname"><em>aberration</em>, </td>
         </tr>
         <tr>

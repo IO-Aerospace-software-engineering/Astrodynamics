@@ -6,13 +6,13 @@
 #include <CelestialBody.h>
 #include <memory>
 #include <InertialFrames.h>
-#include "Parameters.h"
+#include <TestParameters.h>
 
 using namespace std::chrono_literals;
 
 TEST(SpacecraftFrameFile, Initialization)
 {
-	std::string filepath = std::string(IO::SDK::Parameters::SpacecraftPath) + "/SC17_MIS1SCN1/Frames/SC17.tf";
+	std::string filepath = std::string(SpacecraftPath) + "/sc17/Frames/SC17.tf";
 	if (std::filesystem::exists(filepath))
 	{
 		std::filesystem::remove(filepath);
@@ -21,7 +21,7 @@ TEST(SpacecraftFrameFile, Initialization)
 	const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
 	std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth, IO::SDK::Math::Vector3D(1.0, 2.0, 3.0), IO::SDK::Math::Vector3D(4.0, 5.0, 6.0), IO::SDK::Time::TDB(100.0s), IO::SDK::Frames::InertialFrames::GetICRF());
 	IO::SDK::OrbitalParameters::StateOrientation attitude(IO::SDK::Time::TDB(100.0s),IO::SDK::Frames::InertialFrames::GetICRF());
-	IO::SDK::Body::Spacecraft::Spacecraft s{-17, "sc17", 1000.0, 3000.0, "mis1Scn1", std::move(orbitalParams)};
+	IO::SDK::Body::Spacecraft::Spacecraft s{-17, "sc17", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams)};
 	ASSERT_TRUE(std::filesystem::exists(filepath));
 	ASSERT_GT(std::filesystem::file_size(filepath), 0.0);
 

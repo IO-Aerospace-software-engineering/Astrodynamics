@@ -2,7 +2,7 @@
  * @file Parameters.h
  * @author Sylvain Guillet (sylvain.guillet@live.com)
  * @brief 
- * @version 0.1
+ * @version 0.x
  * @date 2021-07-03
  * 
  * @copyright Copyright (c) 2021
@@ -20,11 +20,10 @@ using namespace std::chrono_literals;
 
 namespace IO::SDK::Parameters
 {
-    inline constexpr std::string_view SpacecraftPath = "Data/User/Spacecrafts";
-    inline constexpr std::string_view SolarSystemKernelPath = "Data/SolarSystem";
-    inline constexpr std::string_view SitePath = "Data/User/Sites";
+
     inline constexpr int CommentAreaSize = 5000;
-    inline constexpr int MaximumEphemerisLagrangePolynomialDegree = 27;//[1-27]
+    inline constexpr int MaximumEphemerisLagrangePolynomialDegreeEvenSpaced = 27;//[1-27]
+    inline constexpr int MaximumEphemerisLagrangePolynomialDegree = 15;//[1-27]
 
     inline constexpr double NodeDetectionAccuraccy = 0.0017453;//0.1°
     inline constexpr double IntersectDetectionAccuraccy = 0.017453;//1.0°

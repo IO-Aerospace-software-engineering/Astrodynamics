@@ -6,23 +6,22 @@
 \DoxyCodeLine{11 \textcolor{preprocessor}{\#ifndef SDK\_EXCEPTION\_H}}
 \DoxyCodeLine{12 \textcolor{preprocessor}{\#define SDK\_EXCEPTION\_H}}
 \DoxyCodeLine{13 }
-\DoxyCodeLine{14 \textcolor{preprocessor}{\#include <exception>}}
-\DoxyCodeLine{15 \textcolor{preprocessor}{\#include <string>}}
-\DoxyCodeLine{16 }
-\DoxyCodeLine{17 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1SDK_1_1Exception}{IO::SDK::Exception}}}
-\DoxyCodeLine{18 \{}
-\DoxyCodeLine{23     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1SDK_1_1Exception_1_1SDKException}{SDKException}} : \textcolor{keyword}{public} std::exception}
-\DoxyCodeLine{24     \{}
-\DoxyCodeLine{25 }
-\DoxyCodeLine{26     \textcolor{keyword}{protected}:}
-\DoxyCodeLine{27         \textcolor{keyword}{const} std::string \mbox{\hyperlink{classIO_1_1SDK_1_1Exception_1_1SDKException_a5dc8e9a07fac1cb80febb41612a2820e}{m\_msg}};}
-\DoxyCodeLine{28 }
-\DoxyCodeLine{29     \textcolor{keyword}{public}:}
-\DoxyCodeLine{30         \mbox{\hyperlink{classIO_1_1SDK_1_1Exception_1_1SDKException_a339ec61f6124192296f78b2dd39167bc}{SDKException}}(\textcolor{keyword}{const} std::string \&msg);}
-\DoxyCodeLine{31 }
-\DoxyCodeLine{32         \textcolor{keyword}{const} \textcolor{keywordtype}{char} *\mbox{\hyperlink{classIO_1_1SDK_1_1Exception_1_1SDKException_ac99d784769289308fedeb575bf2f216b}{what}}() const noexcept override;}
-\DoxyCodeLine{33     \};}
-\DoxyCodeLine{34 \}}
-\DoxyCodeLine{35 \textcolor{preprocessor}{\#endif }\textcolor{comment}{// !SDK\_EXCEPTION\_H}}
+\DoxyCodeLine{14 \textcolor{preprocessor}{\#include <string>}}
+\DoxyCodeLine{15 }
+\DoxyCodeLine{16 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1SDK_1_1Exception}{IO::SDK::Exception}}}
+\DoxyCodeLine{17 \{}
+\DoxyCodeLine{22     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1SDK_1_1Exception_1_1SDKException}{SDKException}} : \textcolor{keyword}{public} std::exception}
+\DoxyCodeLine{23     \{}
+\DoxyCodeLine{24 }
+\DoxyCodeLine{25     \textcolor{keyword}{protected}:}
+\DoxyCodeLine{26         \textcolor{keyword}{const} std::string \mbox{\hyperlink{classIO_1_1SDK_1_1Exception_1_1SDKException_a5dc8e9a07fac1cb80febb41612a2820e}{m\_msg}};}
+\DoxyCodeLine{27 }
+\DoxyCodeLine{28     \textcolor{keyword}{public}:}
+\DoxyCodeLine{29         \textcolor{keyword}{explicit} \mbox{\hyperlink{classIO_1_1SDK_1_1Exception_1_1SDKException_aa717513ed96fe5eabc4ac4c096548ad2}{SDKException}}(std::string msg);}
+\DoxyCodeLine{30 }
+\DoxyCodeLine{31         [[nodiscard]] \textcolor{keyword}{const} \textcolor{keywordtype}{char} *\mbox{\hyperlink{classIO_1_1SDK_1_1Exception_1_1SDKException_ac99d784769289308fedeb575bf2f216b}{what}}() const noexcept override;}
+\DoxyCodeLine{32     \};}
+\DoxyCodeLine{33 \}}
+\DoxyCodeLine{34 \textcolor{preprocessor}{\#endif }\textcolor{comment}{// !SDK\_EXCEPTION\_H}}
 
 \end{DoxyCode}

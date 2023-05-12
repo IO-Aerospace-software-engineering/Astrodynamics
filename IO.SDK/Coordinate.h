@@ -2,7 +2,7 @@
  * @file Coordinate.h
  * @author Sylvain Guillet (sylvain.guillet@live.com)
  * @brief 
- * @version 0.1
+ * @version 0.x
  * @date 2021-06-07
  * 
  * @copyright Copyright (c) 2021
@@ -40,7 +40,16 @@ namespace IO::SDK
          * @param name 
          */
         explicit Coordinate(const std::string &name);
+        ~Coordinate() = default;
 
+        Coordinate &operator=(const Coordinate &other)
+        {
+            if (this == &other)
+                return *this;
+
+            const_cast<std::string &>(m_name) = other.m_name;
+            return *this;
+        }
         
 
         /**
@@ -61,6 +70,7 @@ namespace IO::SDK
         static Coordinate& RightAscension();
         static Coordinate& Declination();
         static Coordinate& Colatitude();
+        static Coordinate ToCoordinateType(const std::string &coordinateType) ;
     };
 
 } // namespace IO::SDK

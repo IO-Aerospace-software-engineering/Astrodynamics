@@ -64,7 +64,7 @@
 <a name="2"><span class="lineNum">       2 </span>            :  * @file Instrument.h</a>
 <a name="3"><span class="lineNum">       3 </span>            :  * @author Sylvain Guillet (sylvain.guillet@live.com)</a>
 <a name="4"><span class="lineNum">       4 </span>            :  * @brief </a>
-<a name="5"><span class="lineNum">       5 </span>            :  * @version 0.1</a>
+<a name="5"><span class="lineNum">       5 </span>            :  * @version 0.x</a>
 <a name="6"><span class="lineNum">       6 </span>            :  * @date 2021-02-23</a>
 <a name="7"><span class="lineNum">       7 </span>            :  * </a>
 <a name="8"><span class="lineNum">       8 </span>            :  * @copyright Copyright (c) 2021</a>
@@ -114,7 +114,7 @@
 <a name="52"><span class="lineNum">      52 </span>            :                 const IO::SDK::Body::Spacecraft::Spacecraft &amp;m_spacecraft;</a>
 <a name="53"><span class="lineNum">      53 </span>            :                 const int m_id{};</a>
 <a name="54"><span class="lineNum">      54 </span>            :                 const std::string m_name;</a>
-<a name="55"><span class="lineNum">      55 </span>            :                 const std::string m_filesPath;</a>
+<a name="55"><span class="lineNum">      55 </span>            :                 const std::string m_directoryPath;</a>
 <a name="56"><span class="lineNum">      56 </span>            :                 const std::unique_ptr&lt;IO::SDK::Frames::InstrumentFrameFile&gt; m_frame{nullptr};</a>
 <a name="57"><span class="lineNum">      57 </span>            :                 const IO::SDK::Math::Vector3D m_orientation{};</a>
 <a name="58"><span class="lineNum">      58 </span>            :                 const IO::SDK::Instruments::FOVShapeEnum m_fovShape{};</a>
@@ -127,7 +127,7 @@
 <a name="65"><span class="lineNum">      65 </span>            :                 /**</a>
 <a name="66"><span class="lineNum">      66 </span>            :                  * @brief Construct a new circular instrument object</a>
 <a name="67"><span class="lineNum">      67 </span>            :                  * </a>
-<a name="68"><span class="lineNum">      68 </span>            :                  * @param spacecraft </a>
+<a name="68"><span class="lineNum">      68 </span>            :                  * @param Spacecraft </a>
 <a name="69"><span class="lineNum">      69 </span>            :                  * @param id </a>
 <a name="70"><span class="lineNum">      70 </span>            :                  * @param name </a>
 <a name="71"><span class="lineNum">      71 </span>            :                  * @param orientation </a>
@@ -135,12 +135,12 @@
 <a name="73"><span class="lineNum">      73 </span>            :                  * @param fovRefVector </a>
 <a name="74"><span class="lineNum">      74 </span>            :                  * @param fovAngle </a>
 <a name="75"><span class="lineNum">      75 </span>            :                  */</a>
-<a name="76"><span class="lineNum">      76 </span>            :                 Instrument(const IO::SDK::Body::Spacecraft::Spacecraft &amp;spacecraft, const unsigned short id, const std::string &amp;name, const IO::SDK::Math::Vector3D &amp;orientation, const IO::SDK::Math::Vector3D &amp;boresight, const IO::SDK::Math::Vector3D &amp;fovRefVector, const double fovAngle);</a>
+<a name="76"><span class="lineNum">      76 </span>            :                 Instrument(const IO::SDK::Body::Spacecraft::Spacecraft &amp;Spacecraft, const unsigned short id, const std::string &amp;name, const IO::SDK::Math::Vector3D &amp;orientation, const IO::SDK::Math::Vector3D &amp;boresight, const IO::SDK::Math::Vector3D &amp;fovRefVector, const double fovAngle);</a>
 <a name="77"><span class="lineNum">      77 </span>            : </a>
 <a name="78"><span class="lineNum">      78 </span>            :                 /**</a>
 <a name="79"><span class="lineNum">      79 </span>            :                  * @brief Construct a new rectangular or elliptical instrument object</a>
 <a name="80"><span class="lineNum">      80 </span>            :                  * </a>
-<a name="81"><span class="lineNum">      81 </span>            :                  * @param spacecraft </a>
+<a name="81"><span class="lineNum">      81 </span>            :                  * @param Spacecraft </a>
 <a name="82"><span class="lineNum">      82 </span>            :                  * @param id </a>
 <a name="83"><span class="lineNum">      83 </span>            :                  * @param name </a>
 <a name="84"><span class="lineNum">      84 </span>            :                  * @param orientation </a>
@@ -150,7 +150,7 @@
 <a name="88"><span class="lineNum">      88 </span>            :                  * @param fovAngle </a>
 <a name="89"><span class="lineNum">      89 </span>            :                  * @param crossAngle </a>
 <a name="90"><span class="lineNum">      90 </span>            :                  */</a>
-<a name="91"><span class="lineNum">      91 </span>            :                 Instrument(const IO::SDK::Body::Spacecraft::Spacecraft &amp;spacecraft, const unsigned short id, const std::string &amp;name, const IO::SDK::Math::Vector3D &amp;orientation, const IO::SDK::Instruments::FOVShapeEnum fovShape, const IO::SDK::Math::Vector3D &amp;boresight, const IO::SDK::Math::Vector3D &amp;fovRefVector, const double fovAngle, const double crossAngle);</a>
+<a name="91"><span class="lineNum">      91 </span>            :                 Instrument(const IO::SDK::Body::Spacecraft::Spacecraft &amp;Spacecraft, const unsigned short id, const std::string &amp;name, const IO::SDK::Math::Vector3D &amp;orientation, const IO::SDK::Instruments::FOVShapeEnum fovShape, const IO::SDK::Math::Vector3D &amp;boresight, const IO::SDK::Math::Vector3D &amp;fovRefVector, const double fovAngle, const double crossAngle);</a>
 <a name="92"><span class="lineNum">      92 </span>            : </a>
 <a name="93"><span class="lineNum">      93 </span>            :         public:</a>
 <a name="94"><span class="lineNum">      94 </span><span class="lineCov">         11 :                 ~Instrument() = default;</span></a>
@@ -160,7 +160,7 @@
 <a name="98"><span class="lineNum">      98 </span>            :                  * </a>
 <a name="99"><span class="lineNum">      99 </span>            :                  * @return std::string </a>
 <a name="100"><span class="lineNum">     100 </span>            :                  */</a>
-<a name="101"><span class="lineNum">     101 </span>            :                 std::string GetFilesPath() const;</a>
+<a name="101"><span class="lineNum">     101 </span>            :                 std::string GetDirectoryPath() const;</a>
 <a name="102"><span class="lineNum">     102 </span>            : </a>
 <a name="103"><span class="lineNum">     103 </span>            :                 /**</a>
 <a name="104"><span class="lineNum">     104 </span>            :                  * @brief Get the Name object</a>
