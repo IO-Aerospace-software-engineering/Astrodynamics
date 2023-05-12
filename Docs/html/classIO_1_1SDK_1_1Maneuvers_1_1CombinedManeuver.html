@@ -25,7 +25,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">IO-SDK<span id="projectnumber">&#160;0.4.x</span>
+   <div id="projectname">IO-SDK<span id="projectnumber">&#160;0.5.x</span>
    </div>
    <div id="projectbrief">Astrodynamics framework</div>
   </td>
@@ -104,11 +104,11 @@ Inheritance diagram for IO::SDK::Maneuvers::CombinedManeuver:</div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a0f2bc2830a7c71fb5f102ac9608960cb"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Maneuvers_1_1CombinedManeuver.html#a0f2bc2830a7c71fb5f102ac9608960cb">CombinedManeuver</a> (const std::vector&lt; <a class="el" href="classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Engine.html">IO::SDK::Body::Spacecraft::Engine</a> &gt; &amp;engines, <a class="el" href="classIO_1_1SDK_1_1Propagators_1_1Propagator.html">IO::SDK::Propagators::Propagator</a> &amp;propagator, const double inclination, const double perigeeRadius)</td></tr>
-<tr class="memdesc:a0f2bc2830a7c71fb5f102ac9608960cb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Construct a new Combined Maneuver object.  <a href="classIO_1_1SDK_1_1Maneuvers_1_1CombinedManeuver.html#a0f2bc2830a7c71fb5f102ac9608960cb">More...</a><br /></td></tr>
-<tr class="separator:a0f2bc2830a7c71fb5f102ac9608960cb"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a62a4e20f9503b1dd4e9126a524f8746b"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Maneuvers_1_1CombinedManeuver.html#a62a4e20f9503b1dd4e9126a524f8746b">CombinedManeuver</a> (const std::vector&lt; <a class="el" href="classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Engine.html">IO::SDK::Body::Spacecraft::Engine</a> &gt; &amp;engines, <a class="el" href="classIO_1_1SDK_1_1Propagators_1_1Propagator.html">IO::SDK::Propagators::Propagator</a> &amp;propagator, const double inclination, const double perigeeRadius, const <a class="el" href="classIO_1_1SDK_1_1Time_1_1TDB.html">IO::SDK::Time::TDB</a> &amp;minimumEpoch)</td></tr>
-<tr class="separator:a62a4e20f9503b1dd4e9126a524f8746b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0a13db037df238426af5e5420ab4e9bc"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Maneuvers_1_1CombinedManeuver.html#a0a13db037df238426af5e5420ab4e9bc">CombinedManeuver</a> (std::vector&lt; <a class="el" href="classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Engine.html">IO::SDK::Body::Spacecraft::Engine</a> * &gt; engines, <a class="el" href="classIO_1_1SDK_1_1Propagators_1_1Propagator.html">IO::SDK::Propagators::Propagator</a> &amp;propagator, double inclination, double perigeeRadius)</td></tr>
+<tr class="memdesc:a0a13db037df238426af5e5420ab4e9bc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Construct a new Combined Maneuver object.  <a href="classIO_1_1SDK_1_1Maneuvers_1_1CombinedManeuver.html#a0a13db037df238426af5e5420ab4e9bc">More...</a><br /></td></tr>
+<tr class="separator:a0a13db037df238426af5e5420ab4e9bc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adfa5327bad14e5fd161982ea99620ed0"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Maneuvers_1_1CombinedManeuver.html#adfa5327bad14e5fd161982ea99620ed0">CombinedManeuver</a> (std::vector&lt; <a class="el" href="classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Engine.html">IO::SDK::Body::Spacecraft::Engine</a> * &gt; engines, <a class="el" href="classIO_1_1SDK_1_1Propagators_1_1Propagator.html">IO::SDK::Propagators::Propagator</a> &amp;propagator, double inclination, double perigeeRadius, const <a class="el" href="classIO_1_1SDK_1_1Time_1_1TDB.html">IO::SDK::Time::TDB</a> &amp;minimumEpoch)</td></tr>
+<tr class="separator:adfa5327bad14e5fd161982ea99620ed0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8e0b5838b45f0ab7abb381214eba5159"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Maneuvers_1_1CombinedManeuver.html#a8e0b5838b45f0ab7abb381214eba5159">CanExecute</a> (const <a class="el" href="classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters.html">IO::SDK::OrbitalParameters::OrbitalParameters</a> &amp;orbitalParams) override</td></tr>
 <tr class="memdesc:a8e0b5838b45f0ab7abb381214eba5159"><td class="mdescLeft">&#160;</td><td class="mdescRight">Evaluate if maneuver can occurs.  <a href="classIO_1_1SDK_1_1Maneuvers_1_1CombinedManeuver.html#a8e0b5838b45f0ab7abb381214eba5159">More...</a><br /></td></tr>
 <tr class="separator:a8e0b5838b45f0ab7abb381214eba5159"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -153,18 +153,18 @@ Protected Member Functions</h2></td></tr>
 <tr class="memdesc:aa1430b3b1b33863ce6c7082dc8cb294f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compute orientation.  <a href="classIO_1_1SDK_1_1Maneuvers_1_1CombinedManeuver.html#aa1430b3b1b33863ce6c7082dc8cb294f">More...</a><br /></td></tr>
 <tr class="separator:aa1430b3b1b33863ce6c7082dc8cb294f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pro_methods_classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase"><td colspan="2" onclick="javascript:toggleInherit('pro_methods_classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase')"><img src="closed.png" alt="-"/>&#160;Protected Member Functions inherited from <a class="el" href="classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase.html">IO::SDK::Maneuvers::ManeuverBase</a></td></tr>
-<tr class="memitem:ac2d5c28ab11d271793322af807d211f0 inherit pro_methods_classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase.html#ac2d5c28ab11d271793322af807d211f0">ManeuverBase</a> (const std::vector&lt; <a class="el" href="classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Engine.html">IO::SDK::Body::Spacecraft::Engine</a> &gt; &amp;engines, <a class="el" href="classIO_1_1SDK_1_1Propagators_1_1Propagator.html">IO::SDK::Propagators::Propagator</a> &amp;propagator)</td></tr>
-<tr class="memdesc:ac2d5c28ab11d271793322af807d211f0 inherit pro_methods_classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase"><td class="mdescLeft">&#160;</td><td class="mdescRight">Construct a new Maneuver Base object.  <a href="classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase.html#ac2d5c28ab11d271793322af807d211f0">More...</a><br /></td></tr>
-<tr class="separator:ac2d5c28ab11d271793322af807d211f0 inherit pro_methods_classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5c4204bf3e0d5ed1ddd6a5551dfe719a inherit pro_methods_classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase.html#a5c4204bf3e0d5ed1ddd6a5551dfe719a">ManeuverBase</a> (const std::vector&lt; <a class="el" href="classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Engine.html">IO::SDK::Body::Spacecraft::Engine</a> &gt; &amp;engines, <a class="el" href="classIO_1_1SDK_1_1Propagators_1_1Propagator.html">IO::SDK::Propagators::Propagator</a> &amp;propagator, const <a class="el" href="classIO_1_1SDK_1_1Time_1_1TDB.html">IO::SDK::Time::TDB</a> &amp;minimumEpoch)</td></tr>
-<tr class="memdesc:a5c4204bf3e0d5ed1ddd6a5551dfe719a inherit pro_methods_classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase"><td class="mdescLeft">&#160;</td><td class="mdescRight">Construct a new Maneuver Base object.  <a href="classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase.html#a5c4204bf3e0d5ed1ddd6a5551dfe719a">More...</a><br /></td></tr>
-<tr class="separator:a5c4204bf3e0d5ed1ddd6a5551dfe719a inherit pro_methods_classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ada8b39c90cb566efc36747bc767bb32f inherit pro_methods_classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase.html#ada8b39c90cb566efc36747bc767bb32f">ManeuverBase</a> (const std::vector&lt; <a class="el" href="classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Engine.html">IO::SDK::Body::Spacecraft::Engine</a> &gt; &amp;engines, <a class="el" href="classIO_1_1SDK_1_1Propagators_1_1Propagator.html">IO::SDK::Propagators::Propagator</a> &amp;propagator, const <a class="el" href="classIO_1_1SDK_1_1Time_1_1TimeSpan.html">IO::SDK::Time::TimeSpan</a> &amp;attitudeHoldDuration)</td></tr>
-<tr class="memdesc:ada8b39c90cb566efc36747bc767bb32f inherit pro_methods_classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase"><td class="mdescLeft">&#160;</td><td class="mdescRight">Construct a new Maneuver Base object.  <a href="classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase.html#ada8b39c90cb566efc36747bc767bb32f">More...</a><br /></td></tr>
-<tr class="separator:ada8b39c90cb566efc36747bc767bb32f inherit pro_methods_classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ada694e84713b67fee5158f23f6e64e97 inherit pro_methods_classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase.html#ada694e84713b67fee5158f23f6e64e97">ManeuverBase</a> (const std::vector&lt; <a class="el" href="classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Engine.html">IO::SDK::Body::Spacecraft::Engine</a> &gt; &amp;engines, <a class="el" href="classIO_1_1SDK_1_1Propagators_1_1Propagator.html">IO::SDK::Propagators::Propagator</a> &amp;propagator, const <a class="el" href="classIO_1_1SDK_1_1Time_1_1TDB.html">IO::SDK::Time::TDB</a> &amp;minimumEpoch, const <a class="el" href="classIO_1_1SDK_1_1Time_1_1TimeSpan.html">IO::SDK::Time::TimeSpan</a> &amp;attitudeHoldDuration)</td></tr>
-<tr class="memdesc:ada694e84713b67fee5158f23f6e64e97 inherit pro_methods_classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase"><td class="mdescLeft">&#160;</td><td class="mdescRight">Construct a new Maneuver Base object.  <a href="classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase.html#ada694e84713b67fee5158f23f6e64e97">More...</a><br /></td></tr>
-<tr class="separator:ada694e84713b67fee5158f23f6e64e97 inherit pro_methods_classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac9fc7e89db7b944668aecd721196ed08 inherit pro_methods_classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase.html#ac9fc7e89db7b944668aecd721196ed08">ManeuverBase</a> (std::vector&lt; <a class="el" href="classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Engine.html">IO::SDK::Body::Spacecraft::Engine</a> * &gt; engines, <a class="el" href="classIO_1_1SDK_1_1Propagators_1_1Propagator.html">IO::SDK::Propagators::Propagator</a> &amp;propagator)</td></tr>
+<tr class="memdesc:ac9fc7e89db7b944668aecd721196ed08 inherit pro_methods_classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase"><td class="mdescLeft">&#160;</td><td class="mdescRight">Construct a new Maneuver Base object.  <a href="classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase.html#ac9fc7e89db7b944668aecd721196ed08">More...</a><br /></td></tr>
+<tr class="separator:ac9fc7e89db7b944668aecd721196ed08 inherit pro_methods_classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a17f2aba69b45e921909d4c2fb312d825 inherit pro_methods_classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase.html#a17f2aba69b45e921909d4c2fb312d825">ManeuverBase</a> (std::vector&lt; <a class="el" href="classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Engine.html">IO::SDK::Body::Spacecraft::Engine</a> * &gt; engines, <a class="el" href="classIO_1_1SDK_1_1Propagators_1_1Propagator.html">IO::SDK::Propagators::Propagator</a> &amp;propagator, const <a class="el" href="classIO_1_1SDK_1_1Time_1_1TDB.html">IO::SDK::Time::TDB</a> &amp;minimumEpoch)</td></tr>
+<tr class="memdesc:a17f2aba69b45e921909d4c2fb312d825 inherit pro_methods_classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase"><td class="mdescLeft">&#160;</td><td class="mdescRight">Construct a new Maneuver Base object.  <a href="classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase.html#a17f2aba69b45e921909d4c2fb312d825">More...</a><br /></td></tr>
+<tr class="separator:a17f2aba69b45e921909d4c2fb312d825 inherit pro_methods_classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aee64e6290e8e65a829567262352ceefe inherit pro_methods_classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase.html#aee64e6290e8e65a829567262352ceefe">ManeuverBase</a> (std::vector&lt; <a class="el" href="classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Engine.html">IO::SDK::Body::Spacecraft::Engine</a> * &gt; engines, <a class="el" href="classIO_1_1SDK_1_1Propagators_1_1Propagator.html">IO::SDK::Propagators::Propagator</a> &amp;propagator, const <a class="el" href="classIO_1_1SDK_1_1Time_1_1TimeSpan.html">IO::SDK::Time::TimeSpan</a> &amp;attitudeHoldDuration)</td></tr>
+<tr class="memdesc:aee64e6290e8e65a829567262352ceefe inherit pro_methods_classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase"><td class="mdescLeft">&#160;</td><td class="mdescRight">Construct a new Maneuver Base object.  <a href="classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase.html#aee64e6290e8e65a829567262352ceefe">More...</a><br /></td></tr>
+<tr class="separator:aee64e6290e8e65a829567262352ceefe inherit pro_methods_classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4818d158556e9e89475addf76f834038 inherit pro_methods_classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase.html#a4818d158556e9e89475addf76f834038">ManeuverBase</a> (std::vector&lt; <a class="el" href="classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Engine.html">IO::SDK::Body::Spacecraft::Engine</a> * &gt; engines, <a class="el" href="classIO_1_1SDK_1_1Propagators_1_1Propagator.html">IO::SDK::Propagators::Propagator</a> &amp;propagator, const <a class="el" href="classIO_1_1SDK_1_1Time_1_1TDB.html">IO::SDK::Time::TDB</a> &amp;minimumEpoch, const <a class="el" href="classIO_1_1SDK_1_1Time_1_1TimeSpan.html">IO::SDK::Time::TimeSpan</a> &amp;attitudeHoldDuration)</td></tr>
+<tr class="memdesc:a4818d158556e9e89475addf76f834038 inherit pro_methods_classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase"><td class="mdescLeft">&#160;</td><td class="mdescRight">Construct a new Maneuver Base object.  <a href="classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase.html#a4818d158556e9e89475addf76f834038">More...</a><br /></td></tr>
+<tr class="separator:a4818d158556e9e89475addf76f834038 inherit pro_methods_classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3d206dbe0f7f5ad8b18e0601f154e873 inherit pro_methods_classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase.html#a3d206dbe0f7f5ad8b18e0601f154e873">Compute</a> (const <a class="el" href="classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters.html">IO::SDK::OrbitalParameters::OrbitalParameters</a> &amp;maneuverPoint)=0</td></tr>
 <tr class="memdesc:a3d206dbe0f7f5ad8b18e0601f154e873 inherit pro_methods_classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compute impulsive maneuver.  <a href="classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase.html#a3d206dbe0f7f5ad8b18e0601f154e873">More...</a><br /></td></tr>
 <tr class="separator:a3d206dbe0f7f5ad8b18e0601f154e873 inherit pro_methods_classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -183,8 +183,8 @@ Additional Inherited Members</h2></td></tr>
 <tr class="separator:ab67455f45086e468ae07ba9d3c65f81a inherit pro_attribs_classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1b8aa4e7f5899e450c254036483a889c inherit pro_attribs_classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase.html#a1b8aa4e7f5899e450c254036483a889c">m_fuelBurned</a> {}</td></tr>
 <tr class="separator:a1b8aa4e7f5899e450c254036483a889c inherit pro_attribs_classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0dc754420eef8c4d242229ab73cafed4 inherit pro_attribs_classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase"><td class="memItemLeft" align="right" valign="top">const std::vector&lt; <a class="el" href="classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Engine.html">IO::SDK::Body::Spacecraft::Engine</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase.html#a0dc754420eef8c4d242229ab73cafed4">m_engines</a> {}</td></tr>
-<tr class="separator:a0dc754420eef8c4d242229ab73cafed4 inherit pro_attribs_classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aefe3f0f907974cf14cdfc091eee871fe inherit pro_attribs_classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase"><td class="memItemLeft" align="right" valign="top">const std::vector&lt; <a class="el" href="classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Engine.html">IO::SDK::Body::Spacecraft::Engine</a> * &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase.html#aefe3f0f907974cf14cdfc091eee871fe">m_engines</a> {}</td></tr>
+<tr class="separator:aefe3f0f907974cf14cdfc091eee871fe inherit pro_attribs_classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aca1853fe97aeda8d435912cefa5cc485 inherit pro_attribs_classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase"><td class="memItemLeft" align="right" valign="top">std::unique_ptr&lt; <a class="el" href="classIO_1_1SDK_1_1Time_1_1TDB.html">IO::SDK::Time::TDB</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase.html#aca1853fe97aeda8d435912cefa5cc485">m_minimumEpoch</a> {}</td></tr>
 <tr class="separator:aca1853fe97aeda8d435912cefa5cc485 inherit pro_attribs_classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:adeef4a3da2ed3145cc30d12c1e2101d5 inherit pro_attribs_classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase.html">ManeuverBase</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase.html#adeef4a3da2ed3145cc30d12c1e2101d5">m_nextManeuver</a> {}</td></tr>
@@ -205,8 +205,8 @@ Additional Inherited Members</h2></td></tr>
 <tr class="separator:aa6daf0173ab368b0a90eebd402700804 inherit pro_attribs_classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
-<a id="a0f2bc2830a7c71fb5f102ac9608960cb" name="a0f2bc2830a7c71fb5f102ac9608960cb"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a0f2bc2830a7c71fb5f102ac9608960cb">&#9670;&nbsp;</a></span>CombinedManeuver() <span class="overload">[1/2]</span></h2>
+<a id="a0a13db037df238426af5e5420ab4e9bc" name="a0a13db037df238426af5e5420ab4e9bc"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0a13db037df238426af5e5420ab4e9bc">&#9670;&nbsp;</a></span>CombinedManeuver() <span class="overload">[1/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -214,7 +214,7 @@ Additional Inherited Members</h2></td></tr>
         <tr>
           <td class="memname">IO::SDK::Maneuvers::CombinedManeuver::CombinedManeuver </td>
           <td>(</td>
-          <td class="paramtype">const std::vector&lt; <a class="el" href="classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Engine.html">IO::SDK::Body::Spacecraft::Engine</a> &gt; &amp;&#160;</td>
+          <td class="paramtype">std::vector&lt; <a class="el" href="classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Engine.html">IO::SDK::Body::Spacecraft::Engine</a> * &gt;&#160;</td>
           <td class="paramname"><em>engines</em>, </td>
         </tr>
         <tr>
@@ -226,13 +226,13 @@ Additional Inherited Members</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const double&#160;</td>
+          <td class="paramtype">double&#160;</td>
           <td class="paramname"><em>inclination</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const double&#160;</td>
+          <td class="paramtype">double&#160;</td>
           <td class="paramname"><em>perigeeRadius</em>&#160;</td>
         </tr>
         <tr>
@@ -247,8 +247,8 @@ Additional Inherited Members</h2></td></tr>
 
 </div>
 </div>
-<a id="a62a4e20f9503b1dd4e9126a524f8746b" name="a62a4e20f9503b1dd4e9126a524f8746b"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a62a4e20f9503b1dd4e9126a524f8746b">&#9670;&nbsp;</a></span>CombinedManeuver() <span class="overload">[2/2]</span></h2>
+<a id="adfa5327bad14e5fd161982ea99620ed0" name="adfa5327bad14e5fd161982ea99620ed0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#adfa5327bad14e5fd161982ea99620ed0">&#9670;&nbsp;</a></span>CombinedManeuver() <span class="overload">[2/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -256,7 +256,7 @@ Additional Inherited Members</h2></td></tr>
         <tr>
           <td class="memname">IO::SDK::Maneuvers::CombinedManeuver::CombinedManeuver </td>
           <td>(</td>
-          <td class="paramtype">const std::vector&lt; <a class="el" href="classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Engine.html">IO::SDK::Body::Spacecraft::Engine</a> &gt; &amp;&#160;</td>
+          <td class="paramtype">std::vector&lt; <a class="el" href="classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Engine.html">IO::SDK::Body::Spacecraft::Engine</a> * &gt;&#160;</td>
           <td class="paramname"><em>engines</em>, </td>
         </tr>
         <tr>
@@ -268,13 +268,13 @@ Additional Inherited Members</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const double&#160;</td>
+          <td class="paramtype">double&#160;</td>
           <td class="paramname"><em>inclination</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const double&#160;</td>
+          <td class="paramtype">double&#160;</td>
           <td class="paramname"><em>perigeeRadius</em>, </td>
         </tr>
         <tr>

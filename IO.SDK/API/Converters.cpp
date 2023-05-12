@@ -9,13 +9,27 @@
 #include <Quaternion.h>
 #include <QuaternionDTO.h>
 
-static IO::SDK::Time::Window<IO::SDK::Time::UTC> ToWindow(IO::SDK::API::DTO::WindowDTO &window)
+static IO::SDK::Time::Window<IO::SDK::Time::UTC> ToUTCWindow(IO::SDK::API::DTO::WindowDTO &window)
 {
     return IO::SDK::Time::Window<IO::SDK::Time::UTC>{IO::SDK::Time::UTC(std::chrono::duration<double>(window.start)),
                                                      IO::SDK::Time::UTC(std::chrono::duration<double>(window.end))};
 }
 
-static IO::SDK::API::DTO::WindowDTO ToWindowDTO(IO::SDK::Time::Window<IO::SDK::Time::UTC> &window)
+static IO::SDK::Time::Window<IO::SDK::Time::TDB> ToTDBWindow(IO::SDK::API::DTO::WindowDTO &window)
+{
+    return IO::SDK::Time::Window<IO::SDK::Time::TDB>{IO::SDK::Time::TDB(std::chrono::duration<double>(window.start)),
+                                                     IO::SDK::Time::TDB(std::chrono::duration<double>(window.end))};
+}
+
+static IO::SDK::API::DTO::WindowDTO ToWindowDTO(const IO::SDK::Time::Window<IO::SDK::Time::UTC> &window)
+{
+    IO::SDK::API::DTO::WindowDTO dto{};
+    dto.start = window.GetStartDate().GetSecondsFromJ2000().count();
+    dto.end = window.GetEndDate().GetSecondsFromJ2000().count();
+    return dto;
+}
+
+static IO::SDK::API::DTO::WindowDTO ToWindowDTO(const IO::SDK::Time::Window<IO::SDK::Time::TDB> &window)
 {
     IO::SDK::API::DTO::WindowDTO dto{};
     dto.start = window.GetStartDate().GetSecondsFromJ2000().count();
@@ -59,10 +73,7 @@ static IO::SDK::Coordinates::Geodetic ToGeodetic(IO::SDK::API::DTO::GeodeticDTO 
 
 static IO::SDK::API::DTO::GeodeticDTO ToGeodeticDTO(IO::SDK::Coordinates::Geodetic &geodetic)
 {
-    IO::SDK::API::DTO::GeodeticDTO dto{};
-    dto.latitude = geodetic.GetLatitude();
-    dto.longitude = geodetic.GetLongitude();
-    dto.altitude = geodetic.GetAltitude();
+    IO::SDK::API::DTO::GeodeticDTO dto(geodetic.GetLongitude(),geodetic.GetLatitude(),geodetic.GetAltitude());
     return dto;
 
 }

@@ -12,6 +12,7 @@
 #include <TimeSpan.h>
 #include <InertialFrames.h>
 #include <TDB.h>
+#include "TestParameters.h"
 
 using namespace std::chrono_literals;
 
@@ -27,7 +28,7 @@ TEST(NadirAttitude, GetOrientation) {
                                                                                                                                                       "2021-01-01T13:00:00"),
                                                                                                                                               IO::SDK::Frames::InertialFrames::GetICRF());
 
-    IO::SDK::Body::Spacecraft::Spacecraft s{-1, "maneuverTest", 1000.0, 3000.0, "mt01", std::move(orbitalParams1)};
+    IO::SDK::Body::Spacecraft::Spacecraft s{-1, "maneuverTest", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams1)};
 
     IO::SDK::Integrators::VVIntegrator integrator(IO::SDK::Time::TimeSpan(1.0s));
 
@@ -38,8 +39,8 @@ TEST(NadirAttitude, GetOrientation) {
 
     auto engine1 = s.GetEngine("sn1");
 
-    std::vector<IO::SDK::Body::Spacecraft::Engine> engines;
-    engines.push_back(*engine1);
+    std::vector<IO::SDK::Body::Spacecraft::Engine*> engines;
+    engines.push_back(const_cast<IO::SDK::Body::Spacecraft::Engine*>(engine1));
 
     IO::SDK::Maneuvers::Attitudes::NadirAttitude nadir(engines, prop, IO::SDK::Time::TimeSpan(10s));
     prop.SetStandbyManeuver(&nadir);
@@ -70,7 +71,7 @@ TEST(NadirAttitude, GetOrientationMinimumEpoch) {
                                                                                                                                                       "2021-01-01T13:00:00"),
                                                                                                                                               IO::SDK::Frames::InertialFrames::GetICRF());
 
-    IO::SDK::Body::Spacecraft::Spacecraft s{-1, "maneuverTest", 1000.0, 3000.0, "mt01", std::move(orbitalParams1)};
+    IO::SDK::Body::Spacecraft::Spacecraft s{-1, "maneuverTest", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams1)};
 
     IO::SDK::Integrators::VVIntegrator integrator(IO::SDK::Time::TimeSpan(1.0s));
 
@@ -81,8 +82,8 @@ TEST(NadirAttitude, GetOrientationMinimumEpoch) {
 
     auto engine1 = s.GetEngine("sn1");
 
-    std::vector<IO::SDK::Body::Spacecraft::Engine> engines;
-    engines.push_back(*engine1);
+    std::vector<IO::SDK::Body::Spacecraft::Engine*> engines;
+    engines.push_back(const_cast<IO::SDK::Body::Spacecraft::Engine*>(engine1));
 
     IO::SDK::Maneuvers::Attitudes::NadirAttitude nadir(engines, prop, IO::SDK::Time::TDB("2021-01-01T13:00:10"), IO::SDK::Time::TimeSpan(10s));
     prop.SetStandbyManeuver(&nadir);

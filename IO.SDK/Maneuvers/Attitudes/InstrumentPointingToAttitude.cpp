@@ -1,38 +1,38 @@
 #include <InstrumentPointingToAttitude.h>
+#include "InertialFrames.h"
 
-
-IO::SDK::Maneuvers::Attitudes::InstrumentPointingToAttitude::InstrumentPointingToAttitude(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines,
+IO::SDK::Maneuvers::Attitudes::InstrumentPointingToAttitude::InstrumentPointingToAttitude(std::vector<IO::SDK::Body::Spacecraft::Engine*> engines,
                                                                                           IO::SDK::Propagators::Propagator &propagator,
                                                                                           const IO::SDK::Time::TimeSpan &attitudeHoldDuration,
                                                                                           const IO::SDK::Instruments::Instrument &instrument, const IO::SDK::Body::Body &targetBody)
-        : IO::SDK::Maneuvers::ManeuverBase(engines, propagator, attitudeHoldDuration), m_targetBody{&targetBody},m_instrument{instrument}
+        : IO::SDK::Maneuvers::ManeuverBase(std::move(engines), propagator, attitudeHoldDuration), m_targetBody{&targetBody},m_instrument{instrument}
 {
 
 }
 
-IO::SDK::Maneuvers::Attitudes::InstrumentPointingToAttitude::InstrumentPointingToAttitude(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines,
+IO::SDK::Maneuvers::Attitudes::InstrumentPointingToAttitude::InstrumentPointingToAttitude(std::vector<IO::SDK::Body::Spacecraft::Engine*> engines,
                                                                                           IO::SDK::Propagators::Propagator &propagator,
                                                                                           const IO::SDK::Time::TimeSpan &attitudeHoldDuration,
                                                                                           const IO::SDK::Instruments::Instrument &instrument, const IO::SDK::Sites::Site &targetSite)
-        : IO::SDK::Maneuvers::ManeuverBase(engines, propagator, attitudeHoldDuration), m_targetSite{&targetSite}, m_instrument{instrument}
+        : IO::SDK::Maneuvers::ManeuverBase(std::move(engines), propagator, attitudeHoldDuration), m_targetSite{&targetSite}, m_instrument{instrument}
 {
 
 }
 
-IO::SDK::Maneuvers::Attitudes::InstrumentPointingToAttitude::InstrumentPointingToAttitude(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines,
+IO::SDK::Maneuvers::Attitudes::InstrumentPointingToAttitude::InstrumentPointingToAttitude(std::vector<IO::SDK::Body::Spacecraft::Engine*> engines,
                                                                                           IO::SDK::Propagators::Propagator &propagator, const IO::SDK::Time::TDB &minimumEpoch,
                                                                                           const IO::SDK::Time::TimeSpan &attitudeHoldDuration,
                                                                                           const IO::SDK::Instruments::Instrument &instrument, const IO::SDK::Body::Body &targetBody)
-        : IO::SDK::Maneuvers::ManeuverBase(engines, propagator, minimumEpoch, attitudeHoldDuration), m_targetBody{&targetBody}, m_instrument{instrument}
+        : IO::SDK::Maneuvers::ManeuverBase(std::move(engines), propagator, minimumEpoch, attitudeHoldDuration), m_targetBody{&targetBody}, m_instrument{instrument}
 {
 
 }
 
-IO::SDK::Maneuvers::Attitudes::InstrumentPointingToAttitude::InstrumentPointingToAttitude(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines,
+IO::SDK::Maneuvers::Attitudes::InstrumentPointingToAttitude::InstrumentPointingToAttitude(std::vector<IO::SDK::Body::Spacecraft::Engine*> engines,
                                                                                           IO::SDK::Propagators::Propagator &propagator, const IO::SDK::Time::TDB &minimumEpoch,
                                                                                           const IO::SDK::Time::TimeSpan &attitudeHoldDuration,
                                                                                           const IO::SDK::Instruments::Instrument &instrument, const IO::SDK::Sites::Site &targetSite)
-        : IO::SDK::Maneuvers::ManeuverBase(engines, propagator, minimumEpoch, attitudeHoldDuration), m_targetSite{&targetSite}, m_instrument{instrument}
+        : IO::SDK::Maneuvers::ManeuverBase(std::move(engines), propagator, minimumEpoch, attitudeHoldDuration), m_targetSite{&targetSite}, m_instrument{instrument}
 {
 
 }

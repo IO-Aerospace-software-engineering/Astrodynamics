@@ -12,46 +12,65 @@ Class used to read raw data pool.
 \doxysubsection*{Public Member Functions}
 \begin{DoxyCompactItemize}
 \item 
-std\+::vector$<$ std\+::string $>$ \mbox{\hyperlink{classIO_1_1SDK_1_1DataPoolMonitoring_ab7c8232fc6ee21aaba316e16c909c37d}{Get\+String\+Property}} (const std\+::string \&property\+Name, const int nb\+Values\+Expected) const
+\mbox{\hyperlink{classIO_1_1SDK_1_1DataPoolMonitoring_a1bc000caa03530d4930b9dbc75f1fb5b}{Data\+Pool\+Monitoring}} (const \mbox{\hyperlink{classIO_1_1SDK_1_1DataPoolMonitoring}{Data\+Pool\+Monitoring}} \&)=delete
 \item 
-std\+::vector$<$ int $>$ \mbox{\hyperlink{classIO_1_1SDK_1_1DataPoolMonitoring_a6412e244a2448b0cf95ff98115c311fc}{Get\+Integer\+Property}} (const std\+::string \&property\+Name, const int nb\+Values\+Expected) const
-\item 
-std\+::vector$<$ double $>$ \mbox{\hyperlink{classIO_1_1SDK_1_1DataPoolMonitoring_ab54ea0711b1f1213201bd7fef07a77cb}{Get\+Double\+Property}} (const std\+::string \&property\+Name, const int nb\+Values\+Expected) const
+\mbox{\hyperlink{classIO_1_1SDK_1_1DataPoolMonitoring}{Data\+Pool\+Monitoring}} \& \mbox{\hyperlink{classIO_1_1SDK_1_1DataPoolMonitoring_a73e443a27abb583baaae4b26df678c70}{operator=}} (const \mbox{\hyperlink{classIO_1_1SDK_1_1DataPoolMonitoring}{Data\+Pool\+Monitoring}} \&)=delete
 \end{DoxyCompactItemize}
 \doxysubsection*{Static Public Member Functions}
 \begin{DoxyCompactItemize}
 \item 
 static \mbox{\hyperlink{classIO_1_1SDK_1_1DataPoolMonitoring}{Data\+Pool\+Monitoring}} \& \mbox{\hyperlink{classIO_1_1SDK_1_1DataPoolMonitoring_a5c8471b0348d6bbeb90b1d8948090a3e}{Instance}} ()
+\item 
+static std\+::vector$<$ std\+::string $>$ \mbox{\hyperlink{classIO_1_1SDK_1_1DataPoolMonitoring_a8992ba9a6e8e039db742a6a3ae8f1673}{Get\+String\+Property}} (const std\+::string \&property\+Name, int nb\+Values\+Expected)
+\item 
+static std\+::vector$<$ int $>$ \mbox{\hyperlink{classIO_1_1SDK_1_1DataPoolMonitoring_a0873d0496c157b0d29996201ab6a1af2}{Get\+Integer\+Property}} (const std\+::string \&property\+Name, int nb\+Values\+Expected)
+\item 
+static std\+::vector$<$ double $>$ \mbox{\hyperlink{classIO_1_1SDK_1_1DataPoolMonitoring_a58f67b03f5b2ea6ffd0f67322502efb9}{Get\+Double\+Property}} (const std\+::string \&property\+Name, int nb\+Values\+Expected)
 \end{DoxyCompactItemize}
 
 
 \doxysubsection{Detailed Description}
 Class used to read raw data pool. 
 
+\doxysubsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1DataPoolMonitoring_a1bc000caa03530d4930b9dbc75f1fb5b}\label{classIO_1_1SDK_1_1DataPoolMonitoring_a1bc000caa03530d4930b9dbc75f1fb5b}} 
+\index{IO::SDK::DataPoolMonitoring@{IO::SDK::DataPoolMonitoring}!DataPoolMonitoring@{DataPoolMonitoring}}
+\index{DataPoolMonitoring@{DataPoolMonitoring}!IO::SDK::DataPoolMonitoring@{IO::SDK::DataPoolMonitoring}}
+\doxysubsubsection{\texorpdfstring{DataPoolMonitoring()}{DataPoolMonitoring()}}
+{\footnotesize\ttfamily IO\+::\+SDK\+::\+Data\+Pool\+Monitoring\+::\+Data\+Pool\+Monitoring (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1DataPoolMonitoring}{Data\+Pool\+Monitoring}} \&}]{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [delete]}}
+
+
+
 \doxysubsection{Member Function Documentation}
-\mbox{\Hypertarget{classIO_1_1SDK_1_1DataPoolMonitoring_ab54ea0711b1f1213201bd7fef07a77cb}\label{classIO_1_1SDK_1_1DataPoolMonitoring_ab54ea0711b1f1213201bd7fef07a77cb}} 
+\mbox{\Hypertarget{classIO_1_1SDK_1_1DataPoolMonitoring_a58f67b03f5b2ea6ffd0f67322502efb9}\label{classIO_1_1SDK_1_1DataPoolMonitoring_a58f67b03f5b2ea6ffd0f67322502efb9}} 
 \index{IO::SDK::DataPoolMonitoring@{IO::SDK::DataPoolMonitoring}!GetDoubleProperty@{GetDoubleProperty}}
 \index{GetDoubleProperty@{GetDoubleProperty}!IO::SDK::DataPoolMonitoring@{IO::SDK::DataPoolMonitoring}}
 \doxysubsubsection{\texorpdfstring{GetDoubleProperty()}{GetDoubleProperty()}}
-{\footnotesize\ttfamily std\+::vector$<$ double $>$ IO\+::\+SDK\+::\+Data\+Pool\+Monitoring\+::\+Get\+Double\+Property (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{property\+Name,  }\item[{const int}]{nb\+Values\+Expected }\end{DoxyParamCaption}) const}
+{\footnotesize\ttfamily std\+::vector$<$ double $>$ IO\+::\+SDK\+::\+Data\+Pool\+Monitoring\+::\+Get\+Double\+Property (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{property\+Name,  }\item[{int}]{nb\+Values\+Expected }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
 
-\mbox{\Hypertarget{classIO_1_1SDK_1_1DataPoolMonitoring_a6412e244a2448b0cf95ff98115c311fc}\label{classIO_1_1SDK_1_1DataPoolMonitoring_a6412e244a2448b0cf95ff98115c311fc}} 
+\mbox{\Hypertarget{classIO_1_1SDK_1_1DataPoolMonitoring_a0873d0496c157b0d29996201ab6a1af2}\label{classIO_1_1SDK_1_1DataPoolMonitoring_a0873d0496c157b0d29996201ab6a1af2}} 
 \index{IO::SDK::DataPoolMonitoring@{IO::SDK::DataPoolMonitoring}!GetIntegerProperty@{GetIntegerProperty}}
 \index{GetIntegerProperty@{GetIntegerProperty}!IO::SDK::DataPoolMonitoring@{IO::SDK::DataPoolMonitoring}}
 \doxysubsubsection{\texorpdfstring{GetIntegerProperty()}{GetIntegerProperty()}}
-{\footnotesize\ttfamily std\+::vector$<$ int $>$ IO\+::\+SDK\+::\+Data\+Pool\+Monitoring\+::\+Get\+Integer\+Property (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{property\+Name,  }\item[{const int}]{nb\+Values\+Expected }\end{DoxyParamCaption}) const}
+{\footnotesize\ttfamily std\+::vector$<$ int $>$ IO\+::\+SDK\+::\+Data\+Pool\+Monitoring\+::\+Get\+Integer\+Property (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{property\+Name,  }\item[{int}]{nb\+Values\+Expected }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
 
-\mbox{\Hypertarget{classIO_1_1SDK_1_1DataPoolMonitoring_ab7c8232fc6ee21aaba316e16c909c37d}\label{classIO_1_1SDK_1_1DataPoolMonitoring_ab7c8232fc6ee21aaba316e16c909c37d}} 
+\mbox{\Hypertarget{classIO_1_1SDK_1_1DataPoolMonitoring_a8992ba9a6e8e039db742a6a3ae8f1673}\label{classIO_1_1SDK_1_1DataPoolMonitoring_a8992ba9a6e8e039db742a6a3ae8f1673}} 
 \index{IO::SDK::DataPoolMonitoring@{IO::SDK::DataPoolMonitoring}!GetStringProperty@{GetStringProperty}}
 \index{GetStringProperty@{GetStringProperty}!IO::SDK::DataPoolMonitoring@{IO::SDK::DataPoolMonitoring}}
 \doxysubsubsection{\texorpdfstring{GetStringProperty()}{GetStringProperty()}}
-{\footnotesize\ttfamily std\+::vector$<$ std\+::string $>$ IO\+::\+SDK\+::\+Data\+Pool\+Monitoring\+::\+Get\+String\+Property (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{property\+Name,  }\item[{const int}]{nb\+Values\+Expected }\end{DoxyParamCaption}) const}
+{\footnotesize\ttfamily std\+::vector$<$ std\+::string $>$ IO\+::\+SDK\+::\+Data\+Pool\+Monitoring\+::\+Get\+String\+Property (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{property\+Name,  }\item[{int}]{nb\+Values\+Expected }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
 
 \mbox{\Hypertarget{classIO_1_1SDK_1_1DataPoolMonitoring_a5c8471b0348d6bbeb90b1d8948090a3e}\label{classIO_1_1SDK_1_1DataPoolMonitoring_a5c8471b0348d6bbeb90b1d8948090a3e}} 
 \index{IO::SDK::DataPoolMonitoring@{IO::SDK::DataPoolMonitoring}!Instance@{Instance}}
 \index{Instance@{Instance}!IO::SDK::DataPoolMonitoring@{IO::SDK::DataPoolMonitoring}}
 \doxysubsubsection{\texorpdfstring{Instance()}{Instance()}}
 {\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1SDK_1_1DataPoolMonitoring}{IO\+::\+SDK\+::\+Data\+Pool\+Monitoring}} \& IO\+::\+SDK\+::\+Data\+Pool\+Monitoring\+::\+Instance (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+\mbox{\Hypertarget{classIO_1_1SDK_1_1DataPoolMonitoring_a73e443a27abb583baaae4b26df678c70}\label{classIO_1_1SDK_1_1DataPoolMonitoring_a73e443a27abb583baaae4b26df678c70}} 
+\index{IO::SDK::DataPoolMonitoring@{IO::SDK::DataPoolMonitoring}!operator=@{operator=}}
+\index{operator=@{operator=}!IO::SDK::DataPoolMonitoring@{IO::SDK::DataPoolMonitoring}}
+\doxysubsubsection{\texorpdfstring{operator=()}{operator=()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1SDK_1_1DataPoolMonitoring}{Data\+Pool\+Monitoring}} \& IO\+::\+SDK\+::\+Data\+Pool\+Monitoring\+::operator= (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1DataPoolMonitoring}{Data\+Pool\+Monitoring}} \&}]{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [delete]}}
 
 
 

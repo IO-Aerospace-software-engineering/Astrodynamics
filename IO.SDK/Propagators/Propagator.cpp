@@ -2,7 +2,7 @@
  * @file Propagator.cpp
  * @author Sylvain Guillet (sylvain.guillet@live.com)
  * @brief 
- * @version 0.1
+ * @version 0.x
  * @date 2021-06-11
  * 
  * @copyright Copyright (c) 2021
@@ -34,12 +34,12 @@ void IO::SDK::Propagators::Propagator::Propagate()
     IO::SDK::OrbitalParameters::StateVector stateVector{m_spacecraft.GetOrbitalParametersAtEpoch()->GetStateVector(m_window.GetStartDate())};
     m_stateVectors.push_back(stateVector);
 
-    // Initial alignment, spacecraft back points toward the center of motion
+    // Initial alignment, Spacecraft back points toward the center of motion
     IO::SDK::OrbitalParameters::StateOrientation attitude(stateVector.GetPosition().Normalize().To(m_spacecraft.Front), IO::SDK::Math::Vector3D(0.0, 0.0, 0.0),
                                                           stateVector.GetEpoch(), stateVector.GetFrame());
     AddStateOrientation(attitude);
 
-    //Update spacecraft orbital parameters
+    //Update Spacecraft orbital parameters
     while (stateVector.GetEpoch() < m_window.GetEndDate())
     {
         if (m_standbyManeuver)

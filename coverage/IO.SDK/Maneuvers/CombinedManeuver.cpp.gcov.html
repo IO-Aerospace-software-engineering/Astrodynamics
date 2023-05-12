@@ -64,7 +64,7 @@
 <a name="2"><span class="lineNum">       2 </span>            :  * @file CombinedManeuver.cpp</a>
 <a name="3"><span class="lineNum">       3 </span>            :  * @author Sylvain Guillet (sylvain.guillet@live.com)</a>
 <a name="4"><span class="lineNum">       4 </span>            :  * @brief </a>
-<a name="5"><span class="lineNum">       5 </span>            :  * @version 0.1</a>
+<a name="5"><span class="lineNum">       5 </span>            :  * @version 0.x</a>
 <a name="6"><span class="lineNum">       6 </span>            :  * @date 2021-07-03</a>
 <a name="7"><span class="lineNum">       7 </span>            :  * </a>
 <a name="8"><span class="lineNum">       8 </span>            :  * @copyright Copyright (c) 2021</a>
@@ -138,7 +138,7 @@
 <a name="76"><span class="lineNum">      76 </span>            :     //Ascending node vector</a>
 <a name="77"><span class="lineNum">      77 </span><span class="lineCov">         10 :     auto ANVector = stateVector.GetAscendingNodeVector();</span></a>
 <a name="78"><span class="lineNum">      78 </span>            : </a>
-<a name="79"><span class="lineNum">      79 </span>            :     //Angle between AN and spacecraft</a>
+<a name="79"><span class="lineNum">      79 </span>            :     //Angle between AN and Spacecraft</a>
 <a name="80"><span class="lineNum">      80 </span><span class="lineCov">         10 :     double dp = ANVector.DotProduct(stateVector.GetSpecificAngularMomentum().Normalize().CrossProduct(stateVector.GetPosition().Normalize()));</span></a>
 <a name="81"><span class="lineNum">      81 </span>            : </a>
 <a name="82"><span class="lineNum">      82 </span>            :     //if &lt; 90° we're in inbound sector</a>

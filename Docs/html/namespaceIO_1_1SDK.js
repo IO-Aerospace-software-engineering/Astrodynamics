@@ -1,5 +1,6 @@
 var namespaceIO_1_1SDK =
 [
+    [ "API", "namespaceIO_1_1SDK_1_1API.html", "namespaceIO_1_1SDK_1_1API" ],
     [ "Body", "namespaceIO_1_1SDK_1_1Body.html", "namespaceIO_1_1SDK_1_1Body" ],
     [ "Constants", "namespaceIO_1_1SDK_1_1Constants.html", [
       [ "_2PI", "namespaceIO_1_1SDK_1_1Constants.html#ab3681102d523b3f738565e4a47d1314f", null ],
@@ -35,17 +36,14 @@ var namespaceIO_1_1SDK =
       [ "CommentAreaSize", "namespaceIO_1_1SDK_1_1Parameters.html#a444b6401a92e31ac6f7c39338a49a57c", null ],
       [ "IntersectDetectionAccuraccy", "namespaceIO_1_1SDK_1_1Parameters.html#a1181e43d26068caf60c576ec7a90cca3", null ],
       [ "MaximumEphemerisLagrangePolynomialDegree", "namespaceIO_1_1SDK_1_1Parameters.html#af0adfe53d18f101abb6434d392c44bec", null ],
-      [ "MaximumOrientationLagrangePolynomialDegree", "namespaceIO_1_1SDK_1_1Parameters.html#a3e6f60370082b8f58457f73cb74db605", null ],
-      [ "NodeDetectionAccuraccy", "namespaceIO_1_1SDK_1_1Parameters.html#afb6663fa378276d38946b2183ba2fc5f", null ],
-      [ "SitePath", "namespaceIO_1_1SDK_1_1Parameters.html#a59216b2c5e88c1f0f5ed2587e99ca35d", null ],
-      [ "SolarSystemKernelPath", "namespaceIO_1_1SDK_1_1Parameters.html#ac26f7f4e0d89acae0ec56ef49aada4e0", null ],
-      [ "SpacecraftPath", "namespaceIO_1_1SDK_1_1Parameters.html#a7e3d270c79b30212bcc45e587cb44117", null ]
+      [ "MaximumEphemerisLagrangePolynomialDegreeEvenSpaced", "namespaceIO_1_1SDK_1_1Parameters.html#a7f6cf3f43d214a0b3253ae515f2df848", null ],
+      [ "NodeDetectionAccuraccy", "namespaceIO_1_1SDK_1_1Parameters.html#afb6663fa378276d38946b2183ba2fc5f", null ]
     ] ],
     [ "Propagators", "namespaceIO_1_1SDK_1_1Propagators.html", "namespaceIO_1_1SDK_1_1Propagators" ],
     [ "Sites", "namespaceIO_1_1SDK_1_1Sites.html", "namespaceIO_1_1SDK_1_1Sites" ],
     [ "Spice", "namespaceIO_1_1SDK_1_1Spice.html", "namespaceIO_1_1SDK_1_1Spice" ],
     [ "Time", "namespaceIO_1_1SDK_1_1Time.html", "namespaceIO_1_1SDK_1_1Time" ],
-    [ "Aberrations", "classIO_1_1SDK_1_1Aberrations.html", "classIO_1_1SDK_1_1Aberrations" ],
+    [ "Aberrations", "classIO_1_1SDK_1_1Aberrations.html", null ],
     [ "Coordinate", "classIO_1_1SDK_1_1Coordinate.html", "classIO_1_1SDK_1_1Coordinate" ],
     [ "CoordinateSystem", "classIO_1_1SDK_1_1CoordinateSystem.html", "classIO_1_1SDK_1_1CoordinateSystem" ],
     [ "DataPoolMonitoring", "classIO_1_1SDK_1_1DataPoolMonitoring.html", "classIO_1_1SDK_1_1DataPoolMonitoring" ],

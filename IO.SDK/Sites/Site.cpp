@@ -2,7 +2,7 @@
  * @file Site.cpp
  * @author Sylvain Guillet (sylvain.guillet@live.com)
  * @brief 
- * @version 0.1
+ * @version 0.x
  * @date 2021-06-11
  * 
  * @copyright Copyright (c) 2021
@@ -13,24 +13,36 @@
 #include <Builder.h>
 #include <Parameters.h>
 #include <Constants.h>
+
+#include <utility>
+
 #include "CoordinateSystem.h"
 #include "Coordinate.h"
+#include "InertialFrames.h"
+#include <GeometryFinder.h>
+#include <algorithm>
 
 using namespace std::chrono_literals;
 
-IO::SDK::Sites::Site::Site(const int id, const std::string &name, const IO::SDK::Coordinates::Geodetic &coordinates,
-                           std::shared_ptr<IO::SDK::Body::CelestialBody> &body) : m_id{id},
-                                                                                  m_name{name},
-                                                                                  m_coordinates{coordinates},
-                                                                                  m_filePath{std::string(IO::SDK::Parameters::SitePath) + "/" + name},
-                                                                                  m_ephemerisKernel{std::make_unique<IO::SDK::Kernels::EphemerisKernel>(*this)},
-                                                                                  m_body{body},
-                                                                                  m_frame{std::make_unique<IO::SDK::Frames::SiteFrameFile>(*this)}
+IO::SDK::Sites::Site::Site(const int id, std::string name, const IO::SDK::Coordinates::Geodetic &coordinates,
+                           std::shared_ptr<IO::SDK::Body::CelestialBody> body, std::string directoryPath) : m_id{id},
+                                                                                                            m_name{std::move(name)},
+                                                                                                            m_coordinates{coordinates},
+                                                                                                            m_filesPath{std::move(directoryPath) + "/" + m_name},
+                                                                                                            m_ephemerisKernel{std::make_unique<IO::SDK::Kernels::EphemerisKernel>(
+                                                                                                                    m_filesPath + "/Ephemeris/" + m_name + ".spk", this->m_id)},
+                                                                                                            m_body{std::move(body)},
+                                                                                                            m_frame{std::make_unique<IO::SDK::Frames::SiteFrameFile>(*this)}
 {
+    if (id < 199000 || id > 899999)
+    {
+        throw SDK::Exception::SDKException(
+                "Invalid site id. Site id must be composed by the site body id and the site number. Ex. The site 232 on earth (399) must have the id 399232.");
+    }
 }
 
 IO::SDK::OrbitalParameters::StateVector
-IO::SDK::Sites::Site::GetStateVector(const IO::SDK::Frames::Frames& frame, const IO::SDK::Time::TDB &epoch) const
+IO::SDK::Sites::Site::GetStateVector(const IO::SDK::Frames::Frames &frame, const IO::SDK::Time::TDB &epoch) const
 {
     auto radius = m_body->GetRadius() * 1000.0;
     SpiceDouble bodyFixedLocation[3];
@@ -105,7 +117,7 @@ IO::SDK::Sites::Site::FindDayWindows(const IO::SDK::Time::Window<IO::SDK::Time::
 {
     IO::SDK::Body::CelestialBody sun(10);
     return FindWindowsOnIlluminationConstraint(searchWindow, sun, IO::SDK::IlluminationAngle::Incidence(),
-                                               IO::SDK::Constraints::Constraint::LowerThan(), IO::SDK::Constants::PI2 - twilight);
+                                               IO::SDK::Constraints::RelationalOperator::LowerThan(), IO::SDK::Constants::PI2 - twilight);
 }
 
 std::vector<IO::SDK::Time::Window<IO::SDK::Time::UTC>>
@@ -114,49 +126,36 @@ IO::SDK::Sites::Site::FindNightWindows(const IO::SDK::Time::Window<IO::SDK::Time
 {
     IO::SDK::Body::CelestialBody sun(10);
     return FindWindowsOnIlluminationConstraint(searchWindow, sun, IO::SDK::IlluminationAngle::Incidence(),
-                                               IO::SDK::Constraints::Constraint::GreaterThan(), IO::SDK::Constants::PI2 - twilight);
+                                               IO::SDK::Constraints::RelationalOperator::GreaterThan(), IO::SDK::Constants::PI2 - twilight);
 }
 
 std::vector<IO::SDK::Time::Window<IO::SDK::Time::UTC>>
 IO::SDK::Sites::Site::FindWindowsOnIlluminationConstraint(const IO::SDK::Time::Window<IO::SDK::Time::UTC> &searchWindow,
                                                           const IO::SDK::Body::Body &observerBody,
-                                                          const IO::SDK::IlluminationAngle &illuminationAgngle,
-                                                          const IO::SDK::Constraints::Constraint &constraint,
+                                                          const IO::SDK::IlluminationAngle &illuminationAngle,
+                                                          const IO::SDK::Constraints::RelationalOperator &constraint,
                                                           const double value) const
 {
+    IO::SDK::Time::Window<IO::SDK::Time::TDB> tdbWindow(searchWindow.GetStartDate().ToTDB(), searchWindow.GetEndDate().ToTDB());
     std::vector<IO::SDK::Time::Window<IO::SDK::Time::UTC>> windows;
     SpiceDouble bodyFixedLocation[3];
     georec_c(m_coordinates.GetLongitude(), m_coordinates.GetLatitude(), m_coordinates.GetAltitude(),
              m_body->GetRadius().GetX(), m_body->GetFlattening(), bodyFixedLocation);
 
-    SpiceDouble windowStart;
-    SpiceDouble windowEnd;
 
-    const SpiceInt MAXIVL{1000};
-    const SpiceInt MAXWIN{2000};
+    auto res= IO::SDK::Constraints::GeometryFinder::FindWindowsOnIlluminationConstraint(tdbWindow, observerBody.GetId(), "Sun", m_body->GetId(), m_body->GetBodyFixedFrame().GetName(),
+                                                                              bodyFixedLocation, illuminationAngle, constraint, value, 0.0,
+                                                                              IO::SDK::AberrationsEnum::CNS, IO::SDK::Time::TimeSpan(std::chrono::duration<double>(4.5 * 60 * 60)),
+                                                                              "Ellipsoid");
 
-    SpiceDouble SPICE_CELL_A[SPICE_CELL_CTRLSZ + MAXWIN];
-    SpiceCell cnfine = IO::SDK::Spice::Builder::CreateDoubleCell(MAXWIN, SPICE_CELL_A);
+    std::vector<IO::SDK::Time::Window<Time::UTC>> utcWindows;
+    utcWindows.reserve(res.size());
 
-    SpiceDouble SPICE_CELL_B[SPICE_CELL_CTRLSZ + MAXWIN];
-    SpiceCell results = IO::SDK::Spice::Builder::CreateDoubleCell(MAXWIN, SPICE_CELL_B);
+    std::for_each(res.begin(), res.end(), [&utcWindows](Time::Window<Time::TDB> &x) { utcWindows.emplace_back(x.GetStartDate().ToUTC(), x.GetEndDate().ToUTC()); });
 
-    wninsd_c(searchWindow.GetStartDate().ToTDB().GetSecondsFromJ2000().count(),
-             searchWindow.GetEndDate().ToTDB().GetSecondsFromJ2000().count(), &cnfine);
+    return utcWindows;
 
-    gfilum_c("Ellipsoid", illuminationAgngle.ToCharArray(), std::to_string(m_body->GetId()).c_str(), "Sun",
-             m_body->GetBodyFixedFrame().GetName().c_str(), IO::SDK::Aberrations::ToString(IO::SDK::AberrationsEnum::CNS).c_str(),
-             observerBody.GetName().c_str(), bodyFixedLocation, constraint.ToCharArray(), value, 0.0, 4.5 * 60 * 60,
-             MAXIVL, &cnfine, &results);
 
-    for (int i = 0; i < wncard_c(&results); i++)
-    {
-        wnfetd_c(&results, i, &windowStart, &windowEnd);
-        windows.emplace_back(
-                IO::SDK::Time::TDB(std::chrono::duration<double>(windowStart)).ToUTC(),
-                IO::SDK::Time::TDB(std::chrono::duration<double>(windowEnd)).ToUTC());
-    }
-    return windows;
 }
 
 IO::SDK::Coordinates::HorizontalCoordinates IO::SDK::Sites::Site::GetHorizontalCoordinates(const IO::SDK::Body::Body &body, const IO::SDK::AberrationsEnum aberrationCorrection,
@@ -178,7 +177,7 @@ IO::SDK::Coordinates::HorizontalCoordinates IO::SDK::Sites::Site::GetHorizontalC
 }
 
 IO::SDK::OrbitalParameters::StateVector
-IO::SDK::Sites::Site::GetStateVector(const IO::SDK::Body::Body &body, const IO::SDK::Frames::Frames& frame,
+IO::SDK::Sites::Site::GetStateVector(const IO::SDK::Body::Body &body, const IO::SDK::Frames::Frames &frame,
                                      IO::SDK::AberrationsEnum aberrationCorrection,
                                      const IO::SDK::Time::TDB &epoch) const
 {
@@ -196,32 +195,18 @@ IO::SDK::Sites::Site::FindBodyVisibilityWindows(const IO::SDK::Body::Body &body,
                                                 const IO::SDK::Time::Window<IO::SDK::Time::UTC> &searchWindow,
                                                 const IO::SDK::AberrationsEnum aberrationCorrection) const
 {
-    std::vector<IO::SDK::Time::Window<IO::SDK::Time::UTC>> windows;
-    SpiceDouble windowStart;
-    SpiceDouble windowEnd;
+    IO::SDK::Time::Window<IO::SDK::Time::TDB> tdbWindow(searchWindow.GetStartDate().ToTDB(), searchWindow.GetEndDate().ToTDB());
 
-    const SpiceInt NINTVL{10000};
-    const SpiceInt MAXWIN{20000};
+    auto res = IO::SDK::Constraints::GeometryFinder::FindWindowsOnCoordinateConstraint(tdbWindow, m_id, body.GetId(), m_frame->GetName(),
+                                                                                       IO::SDK::CoordinateSystem::Latitudinal(), IO::SDK::Coordinate::Latitude(),
+                                                                                       Constraints::RelationalOperator::GreaterThan(), 0.0, 0.0, aberrationCorrection,
+                                                                                       IO::SDK::Time::TimeSpan(std::chrono::duration<double>(60.0)));
+    std::vector<IO::SDK::Time::Window<Time::UTC>> utcWindows;
+    utcWindows.reserve(res.size());
 
-    SpiceDouble SPICE_CELL_OCCLT[SPICE_CELL_CTRLSZ + MAXWIN];
-    SpiceCell cnfine = IO::SDK::Spice::Builder::CreateDoubleCell(MAXWIN, SPICE_CELL_OCCLT);
+    std::for_each(res.begin(), res.end(), [&utcWindows](Time::Window<Time::TDB> &x) { utcWindows.emplace_back(x.GetStartDate().ToUTC(), x.GetEndDate().ToUTC()); });
 
-    SpiceDouble SPICE_CELL_OCCLT_RESULT[SPICE_CELL_CTRLSZ + MAXWIN];
-    SpiceCell results = IO::SDK::Spice::Builder::CreateDoubleCell(MAXWIN, SPICE_CELL_OCCLT_RESULT);
-
-    wninsd_c(searchWindow.GetStartDate().ToTDB().GetSecondsFromJ2000().count(), searchWindow.GetEndDate().ToTDB().GetSecondsFromJ2000().count(), &cnfine);
-
-    gfposc_c(std::to_string(body.GetId()).c_str(), m_frame->GetName().c_str(), IO::SDK::Aberrations::ToString(aberrationCorrection).c_str(), std::to_string(m_id).c_str(),
-             IO::SDK::CoordinateSystem::Latitudinal().ToCharArray(), IO::SDK::Coordinate::Latitude().ToCharArray(), ">", 0.0, 0.0, 60.0, NINTVL, &cnfine, &results);
-
-    for (int i = 0; i < wncard_c(&results); i++)
-    {
-        wnfetd_c(&results, i, &windowStart, &windowEnd);
-        windows.emplace_back(
-                IO::SDK::Time::TDB(std::chrono::duration<double>(windowStart)).ToUTC(),
-                IO::SDK::Time::TDB(std::chrono::duration<double>(windowEnd)).ToUTC());
-    }
-    return windows;
+    return utcWindows;
 }
 
 void IO::SDK::Sites::Site::WriteEphemeris(const std::vector<OrbitalParameters::StateVector> &states) const

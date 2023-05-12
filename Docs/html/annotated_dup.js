@@ -2,6 +2,43 @@ var annotated_dup =
 [
     [ "IO", "namespaceIO.html", [
       [ "SDK", "namespaceIO_1_1SDK.html", [
+        [ "API", "namespaceIO_1_1SDK_1_1API.html", [
+          [ "DTO", "namespaceIO_1_1SDK_1_1API_1_1DTO.html", [
+            [ "ApogeeHeightChangingManeuverDTO", "structIO_1_1SDK_1_1API_1_1DTO_1_1ApogeeHeightChangingManeuverDTO.html", "structIO_1_1SDK_1_1API_1_1DTO_1_1ApogeeHeightChangingManeuverDTO" ],
+            [ "ApsidalAlignmentManeuverDTO", "structIO_1_1SDK_1_1API_1_1DTO_1_1ApsidalAlignmentManeuverDTO.html", "structIO_1_1SDK_1_1API_1_1DTO_1_1ApsidalAlignmentManeuverDTO" ],
+            [ "AzimuthRangeDTO", "structIO_1_1SDK_1_1API_1_1DTO_1_1AzimuthRangeDTO.html", "structIO_1_1SDK_1_1API_1_1DTO_1_1AzimuthRangeDTO" ],
+            [ "BodyVisibilityFromSiteConstraintDTO", "structIO_1_1SDK_1_1API_1_1DTO_1_1BodyVisibilityFromSiteConstraintDTO.html", "structIO_1_1SDK_1_1API_1_1DTO_1_1BodyVisibilityFromSiteConstraintDTO" ],
+            [ "ByDayConstraintDTO", "structIO_1_1SDK_1_1API_1_1DTO_1_1ByDayConstraintDTO.html", "structIO_1_1SDK_1_1API_1_1DTO_1_1ByDayConstraintDTO" ],
+            [ "ByNightConstraintDTO", "structIO_1_1SDK_1_1API_1_1DTO_1_1ByNightConstraintDTO.html", "structIO_1_1SDK_1_1API_1_1DTO_1_1ByNightConstraintDTO" ],
+            [ "CelestialBodyDTO", "structIO_1_1SDK_1_1API_1_1DTO_1_1CelestialBodyDTO.html", "structIO_1_1SDK_1_1API_1_1DTO_1_1CelestialBodyDTO" ],
+            [ "CombinedManeuverDTO", "structIO_1_1SDK_1_1API_1_1DTO_1_1CombinedManeuverDTO.html", "structIO_1_1SDK_1_1API_1_1DTO_1_1CombinedManeuverDTO" ],
+            [ "DistanceConstraintDTO", "structIO_1_1SDK_1_1API_1_1DTO_1_1DistanceConstraintDTO.html", "structIO_1_1SDK_1_1API_1_1DTO_1_1DistanceConstraintDTO" ],
+            [ "EngineDTO", "structIO_1_1SDK_1_1API_1_1DTO_1_1EngineDTO.html", "structIO_1_1SDK_1_1API_1_1DTO_1_1EngineDTO" ],
+            [ "FuelTankDTO", "structIO_1_1SDK_1_1API_1_1DTO_1_1FuelTankDTO.html", "structIO_1_1SDK_1_1API_1_1DTO_1_1FuelTankDTO" ],
+            [ "GeodeticDTO", "structIO_1_1SDK_1_1API_1_1DTO_1_1GeodeticDTO.html", "structIO_1_1SDK_1_1API_1_1DTO_1_1GeodeticDTO" ],
+            [ "InFieldOfViewConstraintDTO", "structIO_1_1SDK_1_1API_1_1DTO_1_1InFieldOfViewConstraintDTO.html", "structIO_1_1SDK_1_1API_1_1DTO_1_1InFieldOfViewConstraintDTO" ],
+            [ "InstrumentDTO", "structIO_1_1SDK_1_1API_1_1DTO_1_1InstrumentDTO.html", "structIO_1_1SDK_1_1API_1_1DTO_1_1InstrumentDTO" ],
+            [ "InstrumentPointingToAttitudeDTO", "structIO_1_1SDK_1_1API_1_1DTO_1_1InstrumentPointingToAttitudeDTO.html", "structIO_1_1SDK_1_1API_1_1DTO_1_1InstrumentPointingToAttitudeDTO" ],
+            [ "LaunchDTO", "structIO_1_1SDK_1_1API_1_1DTO_1_1LaunchDTO.html", "structIO_1_1SDK_1_1API_1_1DTO_1_1LaunchDTO" ],
+            [ "NadirAttitudeDTO", "structIO_1_1SDK_1_1API_1_1DTO_1_1NadirAttitudeDTO.html", "structIO_1_1SDK_1_1API_1_1DTO_1_1NadirAttitudeDTO" ],
+            [ "OccultationConstraintDTO", "structIO_1_1SDK_1_1API_1_1DTO_1_1OccultationConstraintDTO.html", "structIO_1_1SDK_1_1API_1_1DTO_1_1OccultationConstraintDTO" ],
+            [ "OrbitalPlaneChangingManeuverDTO", "structIO_1_1SDK_1_1API_1_1DTO_1_1OrbitalPlaneChangingManeuverDTO.html", "structIO_1_1SDK_1_1API_1_1DTO_1_1OrbitalPlaneChangingManeuverDTO" ],
+            [ "PayloadDTO", "structIO_1_1SDK_1_1API_1_1DTO_1_1PayloadDTO.html", "structIO_1_1SDK_1_1API_1_1DTO_1_1PayloadDTO" ],
+            [ "PerigeeHeightChangingManeuverDTO", "structIO_1_1SDK_1_1API_1_1DTO_1_1PerigeeHeightChangingManeuverDTO.html", "structIO_1_1SDK_1_1API_1_1DTO_1_1PerigeeHeightChangingManeuverDTO" ],
+            [ "PhasingManeuverDTO", "structIO_1_1SDK_1_1API_1_1DTO_1_1PhasingManeuverDTO.html", "structIO_1_1SDK_1_1API_1_1DTO_1_1PhasingManeuverDTO" ],
+            [ "ProgradeAttitudeDTO", "structIO_1_1SDK_1_1API_1_1DTO_1_1ProgradeAttitudeDTO.html", "structIO_1_1SDK_1_1API_1_1DTO_1_1ProgradeAttitudeDTO" ],
+            [ "QuaternionDTO", "structIO_1_1SDK_1_1API_1_1DTO_1_1QuaternionDTO.html", "structIO_1_1SDK_1_1API_1_1DTO_1_1QuaternionDTO" ],
+            [ "RetrogradeAttitudeDTO", "structIO_1_1SDK_1_1API_1_1DTO_1_1RetrogradeAttitudeDTO.html", "structIO_1_1SDK_1_1API_1_1DTO_1_1RetrogradeAttitudeDTO" ],
+            [ "ScenarioDTO", "structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO.html", "structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO" ],
+            [ "SiteDTO", "structIO_1_1SDK_1_1API_1_1DTO_1_1SiteDTO.html", "structIO_1_1SDK_1_1API_1_1DTO_1_1SiteDTO" ],
+            [ "SpacecraftDTO", "structIO_1_1SDK_1_1API_1_1DTO_1_1SpacecraftDTO.html", "structIO_1_1SDK_1_1API_1_1DTO_1_1SpacecraftDTO" ],
+            [ "StateOrientationDTO", "structIO_1_1SDK_1_1API_1_1DTO_1_1StateOrientationDTO.html", "structIO_1_1SDK_1_1API_1_1DTO_1_1StateOrientationDTO" ],
+            [ "StateVectorDTO", "structIO_1_1SDK_1_1API_1_1DTO_1_1StateVectorDTO.html", "structIO_1_1SDK_1_1API_1_1DTO_1_1StateVectorDTO" ],
+            [ "Vector3DDTO", "structIO_1_1SDK_1_1API_1_1DTO_1_1Vector3DDTO.html", "structIO_1_1SDK_1_1API_1_1DTO_1_1Vector3DDTO" ],
+            [ "WindowDTO", "structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO.html", "structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO" ],
+            [ "ZenithAttitudeDTO", "structIO_1_1SDK_1_1API_1_1DTO_1_1ZenithAttitudeDTO.html", "structIO_1_1SDK_1_1API_1_1DTO_1_1ZenithAttitudeDTO" ]
+          ] ]
+        ] ],
         [ "Body", "namespaceIO_1_1SDK_1_1Body.html", [
           [ "Spacecraft", "namespaceIO_1_1SDK_1_1Body_1_1Spacecraft.html", [
             [ "Engine", "classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Engine.html", "classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Engine" ],
@@ -13,16 +50,8 @@ var annotated_dup =
           [ "CelestialBody", "classIO_1_1SDK_1_1Body_1_1CelestialBody.html", "classIO_1_1SDK_1_1Body_1_1CelestialBody" ]
         ] ],
         [ "Constraints", "namespaceIO_1_1SDK_1_1Constraints.html", [
-          [ "Parameters", "namespaceIO_1_1SDK_1_1Constraints_1_1Parameters.html", [
-            [ "BodyVisibilityFromSiteParameters", "classIO_1_1SDK_1_1Constraints_1_1Parameters_1_1BodyVisibilityFromSiteParameters.html", "classIO_1_1SDK_1_1Constraints_1_1Parameters_1_1BodyVisibilityFromSiteParameters" ],
-            [ "ByDayParameters", "classIO_1_1SDK_1_1Constraints_1_1Parameters_1_1ByDayParameters.html", "classIO_1_1SDK_1_1Constraints_1_1Parameters_1_1ByDayParameters" ],
-            [ "ByNightParameters", "classIO_1_1SDK_1_1Constraints_1_1Parameters_1_1ByNightParameters.html", "classIO_1_1SDK_1_1Constraints_1_1Parameters_1_1ByNightParameters" ],
-            [ "DistanceParameters", "classIO_1_1SDK_1_1Constraints_1_1Parameters_1_1DistanceParameters.html", "classIO_1_1SDK_1_1Constraints_1_1Parameters_1_1DistanceParameters" ],
-            [ "InFieldOfViewParameters", "classIO_1_1SDK_1_1Constraints_1_1Parameters_1_1InFieldOfViewParameters.html", "classIO_1_1SDK_1_1Constraints_1_1Parameters_1_1InFieldOfViewParameters" ],
-            [ "LaunchParameters", "classIO_1_1SDK_1_1Constraints_1_1Parameters_1_1LaunchParameters.html", "classIO_1_1SDK_1_1Constraints_1_1Parameters_1_1LaunchParameters" ],
-            [ "OccultationParameters", "classIO_1_1SDK_1_1Constraints_1_1Parameters_1_1OccultationParameters.html", "classIO_1_1SDK_1_1Constraints_1_1Parameters_1_1OccultationParameters" ]
-          ] ],
-          [ "Constraint", "classIO_1_1SDK_1_1Constraints_1_1Constraint.html", "classIO_1_1SDK_1_1Constraints_1_1Constraint" ]
+          [ "GeometryFinder", "classIO_1_1SDK_1_1Constraints_1_1GeometryFinder.html", null ],
+          [ "RelationalOperator", "classIO_1_1SDK_1_1Constraints_1_1RelationalOperator.html", "classIO_1_1SDK_1_1Constraints_1_1RelationalOperator" ]
         ] ],
         [ "Coordinates", "namespaceIO_1_1SDK_1_1Coordinates.html", [
           [ "AzimuthRange", "classIO_1_1SDK_1_1Coordinates_1_1AzimuthRange.html", "classIO_1_1SDK_1_1Coordinates_1_1AzimuthRange" ],
@@ -56,7 +85,7 @@ var annotated_dup =
           [ "Illumination", "classIO_1_1SDK_1_1Illumination_1_1Illumination.html", "classIO_1_1SDK_1_1Illumination_1_1Illumination" ]
         ] ],
         [ "Instruments", "namespaceIO_1_1SDK_1_1Instruments.html", [
-          [ "FOVShapes", "classIO_1_1SDK_1_1Instruments_1_1FOVShapes.html", "classIO_1_1SDK_1_1Instruments_1_1FOVShapes" ],
+          [ "FOVShapes", "classIO_1_1SDK_1_1Instruments_1_1FOVShapes.html", null ],
           [ "Instrument", "classIO_1_1SDK_1_1Instruments_1_1Instrument.html", "classIO_1_1SDK_1_1Instruments_1_1Instrument" ]
         ] ],
         [ "Integrators", "namespaceIO_1_1SDK_1_1Integrators.html", [
@@ -74,9 +103,9 @@ var annotated_dup =
           [ "EphemerisKernel", "classIO_1_1SDK_1_1Kernels_1_1EphemerisKernel.html", "classIO_1_1SDK_1_1Kernels_1_1EphemerisKernel" ],
           [ "InstrumentKernel", "classIO_1_1SDK_1_1Kernels_1_1InstrumentKernel.html", "classIO_1_1SDK_1_1Kernels_1_1InstrumentKernel" ],
           [ "Kernel", "classIO_1_1SDK_1_1Kernels_1_1Kernel.html", "classIO_1_1SDK_1_1Kernels_1_1Kernel" ],
+          [ "KernelsLoader", "classIO_1_1SDK_1_1Kernels_1_1KernelsLoader.html", null ],
           [ "OrientationKernel", "classIO_1_1SDK_1_1Kernels_1_1OrientationKernel.html", "classIO_1_1SDK_1_1Kernels_1_1OrientationKernel" ],
           [ "RectangularInstrumentKernel", "classIO_1_1SDK_1_1Kernels_1_1RectangularInstrumentKernel.html", "classIO_1_1SDK_1_1Kernels_1_1RectangularInstrumentKernel" ],
-          [ "SolarSystemKernelsLoader", "classIO_1_1SDK_1_1Kernels_1_1SolarSystemKernelsLoader.html", null ],
           [ "SpacecraftClockKernel", "classIO_1_1SDK_1_1Kernels_1_1SpacecraftClockKernel.html", "classIO_1_1SDK_1_1Kernels_1_1SpacecraftClockKernel" ]
         ] ],
         [ "Maneuvers", "namespaceIO_1_1SDK_1_1Maneuvers.html", [
@@ -130,7 +159,7 @@ var annotated_dup =
           [ "UTC", "classIO_1_1SDK_1_1Time_1_1UTC.html", "classIO_1_1SDK_1_1Time_1_1UTC" ],
           [ "Window", "classIO_1_1SDK_1_1Time_1_1Window.html", "classIO_1_1SDK_1_1Time_1_1Window" ]
         ] ],
-        [ "Aberrations", "classIO_1_1SDK_1_1Aberrations.html", "classIO_1_1SDK_1_1Aberrations" ],
+        [ "Aberrations", "classIO_1_1SDK_1_1Aberrations.html", null ],
         [ "Coordinate", "classIO_1_1SDK_1_1Coordinate.html", "classIO_1_1SDK_1_1Coordinate" ],
         [ "CoordinateSystem", "classIO_1_1SDK_1_1CoordinateSystem.html", "classIO_1_1SDK_1_1CoordinateSystem" ],
         [ "DataPoolMonitoring", "classIO_1_1SDK_1_1DataPoolMonitoring.html", "classIO_1_1SDK_1_1DataPoolMonitoring" ],

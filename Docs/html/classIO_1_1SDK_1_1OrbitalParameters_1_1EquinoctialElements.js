@@ -1,7 +1,7 @@
 var classIO_1_1SDK_1_1OrbitalParameters_1_1EquinoctialElements =
 [
-    [ "EquinoctialElements", "classIO_1_1SDK_1_1OrbitalParameters_1_1EquinoctialElements.html#ab004b0ad7f91f4fa90c2f599da12d997", null ],
-    [ "EquinoctialElements", "classIO_1_1SDK_1_1OrbitalParameters_1_1EquinoctialElements.html#aca89dabed6bae24a016c1892203ede48", null ],
+    [ "EquinoctialElements", "classIO_1_1SDK_1_1OrbitalParameters_1_1EquinoctialElements.html#a928bfab34766334a4854084302cb6740", null ],
+    [ "EquinoctialElements", "classIO_1_1SDK_1_1OrbitalParameters_1_1EquinoctialElements.html#a271f87dbf0e0463260d169bb2a3ebc1b", null ],
     [ "GetAscendingNodeLongitudeRate", "classIO_1_1SDK_1_1OrbitalParameters_1_1EquinoctialElements.html#a162b2a35fed4ad9f5bd93e2a2ae91ab5", null ],
     [ "GetDeclinationOfPole", "classIO_1_1SDK_1_1OrbitalParameters_1_1EquinoctialElements.html#a0b46d7c67acdede1f39468b129768c78", null ],
     [ "GetEccentricity", "classIO_1_1SDK_1_1OrbitalParameters_1_1EquinoctialElements.html#a7ed78ead27001fac3bf3a3c5324dae46", null ],
@@ -11,7 +11,7 @@ var classIO_1_1SDK_1_1OrbitalParameters_1_1EquinoctialElements =
     [ "GetL", "classIO_1_1SDK_1_1OrbitalParameters_1_1EquinoctialElements.html#afe1661429411d442d8aea81aaac978bf", null ],
     [ "GetMeanAnomaly", "classIO_1_1SDK_1_1OrbitalParameters_1_1EquinoctialElements.html#aeceb57243465000ee0181eac2064c71a", null ],
     [ "GetMeanAnomaly", "classIO_1_1SDK_1_1OrbitalParameters_1_1EquinoctialElements.html#a9e4f6d8c88e77a9698d089566c5e1f05", null ],
-    [ "GetMeanAnomaly", "classIO_1_1SDK_1_1OrbitalParameters_1_1EquinoctialElements.html#a12e369c8d941d3d43a66aa9d1eecdae6", null ],
+    [ "GetMeanAnomaly", "classIO_1_1SDK_1_1OrbitalParameters_1_1EquinoctialElements.html#ab967f8a4c030b6025121a13d242ea1e2", null ],
     [ "GetMeanAnomalyRate", "classIO_1_1SDK_1_1OrbitalParameters_1_1EquinoctialElements.html#a1a7a27feb85b225a85fa94a102208b54", null ],
     [ "GetP", "classIO_1_1SDK_1_1OrbitalParameters_1_1EquinoctialElements.html#a8b0615db786371fea9c096e497cebc24", null ],
     [ "GetPeriapsisArgument", "classIO_1_1SDK_1_1OrbitalParameters_1_1EquinoctialElements.html#a93d9d1d2345acf1c7c7842e7da901c80", null ],
@@ -20,7 +20,7 @@ var classIO_1_1SDK_1_1OrbitalParameters_1_1EquinoctialElements =
     [ "GetQ", "classIO_1_1SDK_1_1OrbitalParameters_1_1EquinoctialElements.html#a5127c7b1c2373041393561f0b8cfa2b1", null ],
     [ "GetRightAscendingNodeLongitude", "classIO_1_1SDK_1_1OrbitalParameters_1_1EquinoctialElements.html#aec4a6860d367eb8e42ed6710a6fd8f39", null ],
     [ "GetRightAscensionOfPole", "classIO_1_1SDK_1_1OrbitalParameters_1_1EquinoctialElements.html#a50cecd9837e570033cdfec34d5928814", null ],
-    [ "GetSemiMajorAxis", "classIO_1_1SDK_1_1OrbitalParameters_1_1EquinoctialElements.html#a319d4554834b4c263ed2ed4b8fbaa730", null ],
+    [ "GetSemiMajorAxis", "classIO_1_1SDK_1_1OrbitalParameters_1_1EquinoctialElements.html#a55e498d89c69d8270b5b3d1d4aca9d12", null ],
     [ "GetSpecificAngularMomentum", "classIO_1_1SDK_1_1OrbitalParameters_1_1EquinoctialElements.html#aa3235e081c22bde5fdf14ccf94923d1d", null ],
     [ "GetSpecificOrbitalEnergy", "classIO_1_1SDK_1_1OrbitalParameters_1_1EquinoctialElements.html#a24332bf58abea75de039c3d93132643d", null ],
     [ "GetStateVector", "classIO_1_1SDK_1_1OrbitalParameters_1_1EquinoctialElements.html#a7b3569d6b9b5a04669ce89ff38b230c5", null ]

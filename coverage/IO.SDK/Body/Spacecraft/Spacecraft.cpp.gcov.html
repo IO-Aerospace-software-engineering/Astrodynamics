@@ -64,7 +64,7 @@
 <a name="2"><span class="lineNum">       2 </span>            :  * @file Spacecraft.cpp</a>
 <a name="3"><span class="lineNum">       3 </span>            :  * @author Sylvain Guillet (sylvain.guillet@live.com)</a>
 <a name="4"><span class="lineNum">       4 </span>            :  * @brief </a>
-<a name="5"><span class="lineNum">       5 </span>            :  * @version 0.1</a>
+<a name="5"><span class="lineNum">       5 </span>            :  * @version 0.x</a>
 <a name="6"><span class="lineNum">       6 </span>            :  * @date 2021-06-11</a>
 <a name="7"><span class="lineNum">       7 </span>            :  * </a>
 <a name="8"><span class="lineNum">       8 </span>            :  * @copyright Copyright (c) 2021</a>
@@ -81,7 +81,7 @@
 <a name="19"><span class="lineNum">      19 </span><span class="lineCov">        115 : IO::SDK::Body::Spacecraft::Spacecraft::Spacecraft(const int id, const std::string &amp;name, const double dryOperatingMass, const double maximumOperatingMass, const std::string &amp;missionPrefix, std::unique_ptr&lt;IO::SDK::OrbitalParameters::OrbitalParameters&gt; orbitalParametersAtEpoch)</span></a>
 <a name="20"><span class="lineNum">      20 </span><span class="lineCov">          1 :         : IO::SDK::Body::Body((id &gt;= 0 ? throw SDK::Exception::SDKException(&quot;Spacecraft must have negative id&quot;) : id), name, dryOperatingMass, std::move(orbitalParametersAtEpoch)),</span></a>
 <a name="21"><span class="lineNum">      21 </span><span class="lineCov">        114 :           m_missionPrefix{IO::SDK::StringHelpers::ToUpper(missionPrefix)},</span></a>
-<a name="22"><span class="lineNum">      22 </span><span class="lineCov">        228 :           m_filesPath{std::string(IO::SDK::Parameters::SpacecraftPath) + &quot;/&quot; + IO::SDK::StringHelpers::ToUpper(name) + &quot;_&quot; + IO::SDK::StringHelpers::ToUpper(m_missionPrefix)},</span></a>
+<a name="22"><span class="lineNum">      22 </span><span class="lineCov">        228 :           m_directoryPath{std::string(IO::SDK::Parameters::SpacecraftPath) + &quot;/&quot; + IO::SDK::StringHelpers::ToUpper(name) + &quot;_&quot; + IO::SDK::StringHelpers::ToUpper(m_missionPrefix)},</span></a>
 <a name="23"><span class="lineNum">      23 </span><span class="lineCov">        114 :           m_frame(new IO::SDK::Frames::SpacecraftFrameFile(*this)),</span></a>
 <a name="24"><span class="lineNum">      24 </span><span class="lineCov">        114 :           m_clockKernel(new IO::SDK::Kernels::SpacecraftClockKernel(*this, 16)),</span></a>
 <a name="25"><span class="lineNum">      25 </span><span class="lineCov">        114 :           m_orientationKernel(new IO::SDK::Kernels::OrientationKernel(*this)),</span></a>
@@ -95,9 +95,9 @@
 <a name="33"><span class="lineNum">      33 </span><span class="lineCov">          1 :         return m_missionPrefix;</span></a>
 <a name="34"><span class="lineNum">      34 </span>            : }</a>
 <a name="35"><span class="lineNum">      35 </span>            : </a>
-<a name="36"><span class="lineNum">      36 </span><span class="lineCov">        476 : std::string IO::SDK::Body::Spacecraft::Spacecraft::GetFilesPath() const</span></a>
+<a name="36"><span class="lineNum">      36 </span><span class="lineCov">        476 : std::string IO::SDK::Body::Spacecraft::Spacecraft::GetDirectoryPath() const</span></a>
 <a name="37"><span class="lineNum">      37 </span>            : {</a>
-<a name="38"><span class="lineNum">      38 </span><span class="lineCov">        476 :         return m_filesPath;</span></a>
+<a name="38"><span class="lineNum">      38 </span><span class="lineCov">        476 :         return m_directoryPath;</span></a>
 <a name="39"><span class="lineNum">      39 </span>            : }</a>
 <a name="40"><span class="lineNum">      40 </span>            : </a>
 <a name="41"><span class="lineNum">      41 </span><span class="lineCov">         23 : void IO::SDK::Body::Spacecraft::Spacecraft::WriteOrientations(const std::vector&lt;std::vector&lt;IO::SDK::OrbitalParameters::StateOrientation&gt;&gt; &amp;orientations) const</span></a>

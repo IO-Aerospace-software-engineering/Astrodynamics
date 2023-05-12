@@ -2,7 +2,7 @@
  * @file GravityForce.cpp
  * @author Sylvain Guillet (sylvain.guillet@live.com)
  * @brief 
- * @version 0.1
+ * @version 0.x
  * @date 2021-07-03
  * 
  * @copyright Copyright (c) 2021
@@ -26,14 +26,13 @@ IO::SDK::Math::Vector3D IO::SDK::Integrators::Forces::GravityForce::Apply(const 
     IO::SDK::Math::Vector3D force{ComputeForce(stateVector.GetCenterOfMotion()->GetMass(), bodyMass, position.Magnitude(), position.Normalize())};
 
     //Each body is under sphere of influence of his major body
-    //So spacecraft is influenced by his center of motion and his parents
+    //So Spacecraft is influenced by his center of motion and his parents
     //Eg. Sun->Earth->Moon->Spacecraft
     std::shared_ptr<IO::SDK::Body::Body> currentBody = stateVector.GetCenterOfMotion();
     while (currentBody->GetOrbitalParametersAtEpoch()) {
         //Compute vector state
-        position = position + currentBody->ReadEphemeris(stateVector.GetFrame(), AberrationsEnum::None, stateVector.GetEpoch(),
-                                                         *currentBody->GetOrbitalParametersAtEpoch()->GetCenterOfMotion()).GetPosition();
-
+        position=position+ currentBody->ReadEphemeris(stateVector.GetFrame(), AberrationsEnum::None, stateVector.GetEpoch(),
+                                            *currentBody->GetOrbitalParametersAtEpoch()->GetCenterOfMotion()).GetPosition();
         //Compute force
         force = force + ComputeForce(currentBody->GetOrbitalParametersAtEpoch()->GetCenterOfMotion()->GetMass(), bodyMass, position.Magnitude(), position.Normalize());
 

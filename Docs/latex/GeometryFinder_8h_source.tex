@@ -1,0 +1,72 @@
+\hypertarget{GeometryFinder_8h_source}{}\doxysection{Geometry\+Finder.\+h}
+\label{GeometryFinder_8h_source}\index{IO.SDK/Constraints/GeometryFinder.h@{IO.SDK/Constraints/GeometryFinder.h}}
+\mbox{\hyperlink{GeometryFinder_8h}{Go to the documentation of this file.}}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{1 \textcolor{comment}{//}}
+\DoxyCodeLine{2 \textcolor{comment}{// Created by s.guillet on 20/04/2023.}}
+\DoxyCodeLine{3 \textcolor{comment}{//}}
+\DoxyCodeLine{4 }
+\DoxyCodeLine{5 \textcolor{preprocessor}{\#ifndef IOSDK\_GEOMETRYFINDER\_H}}
+\DoxyCodeLine{6 \textcolor{preprocessor}{\#define IOSDK\_GEOMETRYFINDER\_H}}
+\DoxyCodeLine{7 }
+\DoxyCodeLine{8 }
+\DoxyCodeLine{9 \textcolor{preprocessor}{\#include <vector>}}
+\DoxyCodeLine{10 }
+\DoxyCodeLine{11 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{Aberrations_8h}{Aberrations.h}}>}}
+\DoxyCodeLine{12 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{RelationalOperator_8h}{RelationalOperator.h}}>}}
+\DoxyCodeLine{13 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{Window_8h}{Window.h}}>}}
+\DoxyCodeLine{14 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{OccultationType_8h}{OccultationType.h}}>}}
+\DoxyCodeLine{15 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{CoordinateSystem_8h}{CoordinateSystem.h}}>}}
+\DoxyCodeLine{16 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{Coordinate_8h}{Coordinate.h}}>}}
+\DoxyCodeLine{17 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{Geodetic_8h}{Geodetic.h}}>}}
+\DoxyCodeLine{18 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{Illumination_8h}{Illumination.h}}>}}
+\DoxyCodeLine{19 \textcolor{preprocessor}{\#include "{}\mbox{\hyperlink{IlluminationAngle_8h}{IlluminationAngle.h}}"{}}}
+\DoxyCodeLine{20 }
+\DoxyCodeLine{21 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1SDK_1_1Constraints}{IO::SDK::Constraints}}}
+\DoxyCodeLine{22 \{}
+\DoxyCodeLine{23 }
+\DoxyCodeLine{24     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1SDK_1_1Constraints_1_1GeometryFinder}{GeometryFinder}}}
+\DoxyCodeLine{25     \{}
+\DoxyCodeLine{26     \textcolor{keyword}{public}:}
+\DoxyCodeLine{27         \textcolor{keyword}{static} std::vector<Time::Window<Time::TDB>>}
+\DoxyCodeLine{28         \mbox{\hyperlink{classIO_1_1SDK_1_1Constraints_1_1GeometryFinder_abc774cd3714ca7ec81f729f250f625f3}{FindWindowsOnDistanceConstraint}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO::SDK::Time::Window<IO::SDK::Time::TDB>}} \&searchWindow, \textcolor{keywordtype}{int} observerId, \textcolor{keywordtype}{int} targetId,}
+\DoxyCodeLine{29                                         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Constraints_1_1RelationalOperator}{Constraints::RelationalOperator}} \&constraint, \textcolor{keywordtype}{double} value, \mbox{\hyperlink{namespaceIO_1_1SDK_abbb4827ec6a24ad346d9a60473ad3b81}{IO::SDK::AberrationsEnum}} aberration,}
+\DoxyCodeLine{30                                         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{Time::TimeSpan}} \&stepSize);}
+\DoxyCodeLine{31 }
+\DoxyCodeLine{32         \textcolor{keyword}{static} std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>>}
+\DoxyCodeLine{33         \mbox{\hyperlink{classIO_1_1SDK_1_1Constraints_1_1GeometryFinder_a95bfae8177b0f34bfb5b67103dc4f662}{FindWindowsOnOccultationConstraint}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO::SDK::Time::Window<IO::SDK::Time::TDB>}} \&searchWindow, \textcolor{keywordtype}{int} observerId,}
+\DoxyCodeLine{34                                            \textcolor{keywordtype}{int} targetId, \textcolor{keyword}{const} std::string \&targetFrame,}
+\DoxyCodeLine{35                                            \textcolor{keyword}{const} std::string \&targetShape,}
+\DoxyCodeLine{36                                            \textcolor{keywordtype}{int} frontBodyId, \textcolor{keyword}{const} std::string \&frontFrame, \textcolor{keyword}{const} std::string \&frontShape,}
+\DoxyCodeLine{37                                            \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1OccultationType}{IO::SDK::OccultationType}} \&occultationType,}
+\DoxyCodeLine{38                                            \mbox{\hyperlink{namespaceIO_1_1SDK_abbb4827ec6a24ad346d9a60473ad3b81}{IO::SDK::AberrationsEnum}} aberration, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO::SDK::Time::TimeSpan}} \&stepSize);}
+\DoxyCodeLine{39 }
+\DoxyCodeLine{40         \textcolor{keyword}{static} std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>>}
+\DoxyCodeLine{41         \mbox{\hyperlink{classIO_1_1SDK_1_1Constraints_1_1GeometryFinder_a7740de5b5ba3514e729acfa38aa2dfd1}{FindWindowsOnCoordinateConstraint}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO::SDK::Time::Window<IO::SDK::Time::TDB>}} \&searchWindow, \textcolor{keywordtype}{int} observerId,}
+\DoxyCodeLine{42                                           \textcolor{keywordtype}{int} targetId, \textcolor{keyword}{const} std::string \&frame, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1CoordinateSystem}{IO::SDK::CoordinateSystem}} \&coordinateSystem,}
+\DoxyCodeLine{43                                           \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinate}{IO::SDK::Coordinate}} \&coordinate, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Constraints_1_1RelationalOperator}{IO::SDK::Constraints::RelationalOperator}} \&relationalOperator,}
+\DoxyCodeLine{44                                           \textcolor{keywordtype}{double} value, \textcolor{keywordtype}{double} adjustValue, \mbox{\hyperlink{namespaceIO_1_1SDK_abbb4827ec6a24ad346d9a60473ad3b81}{IO::SDK::AberrationsEnum}} aberration,}
+\DoxyCodeLine{45                                           \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO::SDK::Time::TimeSpan}} \&stepSize);}
+\DoxyCodeLine{46 }
+\DoxyCodeLine{47         \textcolor{keyword}{static} std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>>}
+\DoxyCodeLine{48         \mbox{\hyperlink{classIO_1_1SDK_1_1Constraints_1_1GeometryFinder_a40e650c5a06420b8112144d04666f8ad}{FindWindowsOnIlluminationConstraint}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO::SDK::Time::Window<IO::SDK::Time::TDB>}} \&searchWindow, \textcolor{keywordtype}{int} observerId,}
+\DoxyCodeLine{49                                             \textcolor{keyword}{const} std::string \&illuminationSource, \textcolor{keywordtype}{int} targetBody, \textcolor{keyword}{const} std::string \&fixedFrame,}
+\DoxyCodeLine{50                                             \textcolor{keyword}{const} \textcolor{keywordtype}{double} coordinates[3], \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1IlluminationAngle}{IlluminationAngle}} \&illuminationType,}
+\DoxyCodeLine{51                                             \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Constraints_1_1RelationalOperator}{IO::SDK::Constraints::RelationalOperator}} \&relationalOperator, \textcolor{keywordtype}{double} value, \textcolor{keywordtype}{double} adjustValue,}
+\DoxyCodeLine{52                                             \mbox{\hyperlink{namespaceIO_1_1SDK_abbb4827ec6a24ad346d9a60473ad3b81}{IO::SDK::AberrationsEnum}} aberration, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO::SDK::Time::TimeSpan}} \&stepSize,}
+\DoxyCodeLine{53                                             \textcolor{keyword}{const} std::string \&method}
+\DoxyCodeLine{54         );}
+\DoxyCodeLine{55 }
+\DoxyCodeLine{56         \textcolor{keyword}{static} std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>>}
+\DoxyCodeLine{57         \mbox{\hyperlink{classIO_1_1SDK_1_1Constraints_1_1GeometryFinder_a53beaa5bf900df9f50859832e4287aef}{FindWindowsInFieldOfViewConstraint}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO::SDK::Time::Window<IO::SDK::Time::TDB>}} \&searchWindow, \textcolor{keywordtype}{int} observerId,\textcolor{keywordtype}{int} instrumentId,}
+\DoxyCodeLine{58                                            \textcolor{keywordtype}{int} targetId, \textcolor{keyword}{const} std::string \&targetFrame,}
+\DoxyCodeLine{59                                            \textcolor{keyword}{const} std::string \&targetShape,}
+\DoxyCodeLine{60                                            \mbox{\hyperlink{namespaceIO_1_1SDK_abbb4827ec6a24ad346d9a60473ad3b81}{IO::SDK::AberrationsEnum}} aberration, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO::SDK::Time::TimeSpan}} \&stepSize);}
+\DoxyCodeLine{61 }
+\DoxyCodeLine{62     \};}
+\DoxyCodeLine{63 }
+\DoxyCodeLine{64 \}}
+\DoxyCodeLine{65 }
+\DoxyCodeLine{66 \textcolor{preprocessor}{\#endif }\textcolor{comment}{//IOSDK\_GEOMETRYFINDER\_H}}
+
+\end{DoxyCode}

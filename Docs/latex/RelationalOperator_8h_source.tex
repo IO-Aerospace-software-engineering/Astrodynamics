@@ -1,0 +1,54 @@
+\hypertarget{RelationalOperator_8h_source}{}\doxysection{Relational\+Operator.\+h}
+\label{RelationalOperator_8h_source}\index{IO.SDK/Constraints/RelationalOperator.h@{IO.SDK/Constraints/RelationalOperator.h}}
+\mbox{\hyperlink{RelationalOperator_8h}{Go to the documentation of this file.}}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{1 }
+\DoxyCodeLine{11 \textcolor{preprocessor}{\#ifndef CONSTRAINT\_H}}
+\DoxyCodeLine{12 \textcolor{preprocessor}{\#define CONSTRAINT\_H}}
+\DoxyCodeLine{13 }
+\DoxyCodeLine{14 \textcolor{preprocessor}{\#include <string>}}
+\DoxyCodeLine{15 }
+\DoxyCodeLine{16 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1SDK_1_1Constraints}{IO::SDK::Constraints}}}
+\DoxyCodeLine{17 \{}
+\DoxyCodeLine{18     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1SDK_1_1Constraints_1_1RelationalOperator}{RelationalOperator}}}
+\DoxyCodeLine{19     \{}
+\DoxyCodeLine{20     \textcolor{keyword}{private}:}
+\DoxyCodeLine{21         \textcolor{keyword}{const} std::string m\_name;}
+\DoxyCodeLine{22         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1SDK_1_1Constraints_1_1RelationalOperator}{RelationalOperator}} mGreaterThan;}
+\DoxyCodeLine{23         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1SDK_1_1Constraints_1_1RelationalOperator}{RelationalOperator}} mLowerThan;}
+\DoxyCodeLine{24         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1SDK_1_1Constraints_1_1RelationalOperator}{RelationalOperator}} mEqual;}
+\DoxyCodeLine{25         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1SDK_1_1Constraints_1_1RelationalOperator}{RelationalOperator}} mAbsMin;}
+\DoxyCodeLine{26         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1SDK_1_1Constraints_1_1RelationalOperator}{RelationalOperator}} mAbsMax;}
+\DoxyCodeLine{27         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1SDK_1_1Constraints_1_1RelationalOperator}{RelationalOperator}} mLocalMin;}
+\DoxyCodeLine{28         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1SDK_1_1Constraints_1_1RelationalOperator}{RelationalOperator}} mLocalMax;}
+\DoxyCodeLine{29 }
+\DoxyCodeLine{30     \textcolor{keyword}{public}:}
+\DoxyCodeLine{36         \textcolor{keyword}{explicit} \mbox{\hyperlink{classIO_1_1SDK_1_1Constraints_1_1RelationalOperator_a56391a84d48df03d2f602200f947416e}{RelationalOperator}}(std::string name);}
+\DoxyCodeLine{37 }
+\DoxyCodeLine{38         \mbox{\hyperlink{classIO_1_1SDK_1_1Constraints_1_1RelationalOperator_a6649fef9667a270d718427fa888e8b3f}{RelationalOperator}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Constraints_1_1RelationalOperator}{RelationalOperator}} \&relationalOperator) = \textcolor{keywordflow}{default};}
+\DoxyCodeLine{39         \mbox{\hyperlink{classIO_1_1SDK_1_1Constraints_1_1RelationalOperator}{IO::SDK::Constraints::RelationalOperator}} \&\mbox{\hyperlink{classIO_1_1SDK_1_1Constraints_1_1RelationalOperator_a337943cb9e3d4003199a749a15e72299}{operator=}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Constraints_1_1RelationalOperator}{RelationalOperator}} \&other);}
+\DoxyCodeLine{40 }
+\DoxyCodeLine{46         [[nodiscard]] \textcolor{keyword}{const} \textcolor{keywordtype}{char} *\mbox{\hyperlink{classIO_1_1SDK_1_1Constraints_1_1RelationalOperator_a081e42179dfc93cf57cf66c3245f00dd}{ToCharArray}}() \textcolor{keyword}{const};}
+\DoxyCodeLine{47 }
+\DoxyCodeLine{48         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1SDK_1_1Constraints_1_1RelationalOperator}{IO::SDK::Constraints::RelationalOperator}} \&\mbox{\hyperlink{classIO_1_1SDK_1_1Constraints_1_1RelationalOperator_a5b9eee5451b892b782d826200b2582d9}{GreaterThan}}();}
+\DoxyCodeLine{49 }
+\DoxyCodeLine{50         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1SDK_1_1Constraints_1_1RelationalOperator}{IO::SDK::Constraints::RelationalOperator}} \&\mbox{\hyperlink{classIO_1_1SDK_1_1Constraints_1_1RelationalOperator_a9c7cc90f25bf874d26e8758e1fbf86a2}{LowerThan}}();}
+\DoxyCodeLine{51 }
+\DoxyCodeLine{52         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1SDK_1_1Constraints_1_1RelationalOperator}{IO::SDK::Constraints::RelationalOperator}} \&\mbox{\hyperlink{classIO_1_1SDK_1_1Constraints_1_1RelationalOperator_a0cf37d8f3eda3c59e095ff55cc286b3f}{Equal}}();}
+\DoxyCodeLine{53 }
+\DoxyCodeLine{54         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1SDK_1_1Constraints_1_1RelationalOperator}{IO::SDK::Constraints::RelationalOperator}} \&\mbox{\hyperlink{classIO_1_1SDK_1_1Constraints_1_1RelationalOperator_a48a0983ed1c8c1ec49db7959361fbf0b}{AbsMin}}();}
+\DoxyCodeLine{55 }
+\DoxyCodeLine{56         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1SDK_1_1Constraints_1_1RelationalOperator}{IO::SDK::Constraints::RelationalOperator}} \&\mbox{\hyperlink{classIO_1_1SDK_1_1Constraints_1_1RelationalOperator_a8f8f9f5e6af09366b6da4c9de0d54d38}{AbsMax}}();}
+\DoxyCodeLine{57 }
+\DoxyCodeLine{58         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1SDK_1_1Constraints_1_1RelationalOperator}{IO::SDK::Constraints::RelationalOperator}} \&\mbox{\hyperlink{classIO_1_1SDK_1_1Constraints_1_1RelationalOperator_a98270848c092c5ac22be2d15beabfc39}{LocalMin}}();}
+\DoxyCodeLine{59 }
+\DoxyCodeLine{60         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1SDK_1_1Constraints_1_1RelationalOperator}{IO::SDK::Constraints::RelationalOperator}} \&\mbox{\hyperlink{classIO_1_1SDK_1_1Constraints_1_1RelationalOperator_a7d729cbae445c0905f5be5e4a21df484}{LocalMax}}();}
+\DoxyCodeLine{61 }
+\DoxyCodeLine{62         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1SDK_1_1Constraints_1_1RelationalOperator}{IO::SDK::Constraints::RelationalOperator}} \mbox{\hyperlink{classIO_1_1SDK_1_1Constraints_1_1RelationalOperator_adb10c967111f0cac0e5be8077a08835b}{ToRelationalOperator}}(\textcolor{keyword}{const} std::string \&relationalOperator);}
+\DoxyCodeLine{63     \};}
+\DoxyCodeLine{64 }
+\DoxyCodeLine{65 \} \textcolor{comment}{// namespace IO::SDK}}
+\DoxyCodeLine{66 }
+\DoxyCodeLine{67 \textcolor{preprocessor}{\#endif}}
+
+\end{DoxyCode}

@@ -64,7 +64,7 @@
 <a name="2"><span class="lineNum">       2 </span>            :  * @file FuelTank.cpp</a>
 <a name="3"><span class="lineNum">       3 </span>            :  * @author Sylvain Guillet (sylvain.guillet@live.com)</a>
 <a name="4"><span class="lineNum">       4 </span>            :  * @brief </a>
-<a name="5"><span class="lineNum">       5 </span>            :  * @version 0.1</a>
+<a name="5"><span class="lineNum">       5 </span>            :  * @version 0.x</a>
 <a name="6"><span class="lineNum">       6 </span>            :  * @date 2021-07-03</a>
 <a name="7"><span class="lineNum">       7 </span>            :  * </a>
 <a name="8"><span class="lineNum">       8 </span>            :  * @copyright Copyright (c) 2021</a>
@@ -73,7 +73,7 @@
 <a name="11"><span class="lineNum">      11 </span>            : #include &lt;FuelTank.h&gt;</a>
 <a name="12"><span class="lineNum">      12 </span>            : #include &lt;InvalidArgumentException.h&gt;</a>
 <a name="13"><span class="lineNum">      13 </span>            : </a>
-<a name="14"><span class="lineNum">      14 </span><span class="lineCov">         84 : IO::SDK::Body::Spacecraft::FuelTank::FuelTank(const std::string &amp;serialNumber, const IO::SDK::Body::Spacecraft::Spacecraft &amp;spacecraft, const double capacity, const double quantity) : m_spacecraft{spacecraft}</span></a>
+<a name="14"><span class="lineNum">      14 </span><span class="lineCov">         84 : IO::SDK::Body::Spacecraft::FuelTank::FuelTank(const std::string &amp;serialNumber, const IO::SDK::Body::Spacecraft::Spacecraft &amp;Spacecraft, const double capacity, const double quantity) : m_spacecraft{Spacecraft}</span></a>
 <a name="15"><span class="lineNum">      15 </span>            : {</a>
 <a name="16"><span class="lineNum">      16 </span><span class="lineCov">         75 :     if (serialNumber.empty())</span></a>
 <a name="17"><span class="lineNum">      17 </span>            :     {</a>

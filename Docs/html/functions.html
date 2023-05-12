@@ -25,7 +25,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">IO-SDK<span id="projectnumber">&#160;0.4.x</span>
+   <div id="projectname">IO-SDK<span id="projectnumber">&#160;0.5.x</span>
    </div>
    <div id="projectbrief">Astrodynamics framework</div>
   </td>
@@ -86,38 +86,46 @@ $(document).ready(function(){initNavTree('functions.html',''); initResizable(); 
 <div class="textblock">Here is a list of all class members with links to the classes they belong to:</div>
 
 <h3><a id="index_a" name="index_a"></a>- a -</h3><ul>
-<li>AbsMax&#160;:&#160;<a class="el" href="classIO_1_1SDK_1_1Constraints_1_1Constraint.html#aa605cbbcd851f1fca6e889646e150a55">IO::SDK::Constraints::Constraint</a></li>
-<li>AbsMin&#160;:&#160;<a class="el" href="classIO_1_1SDK_1_1Constraints_1_1Constraint.html#a3bccddc9e297c3f1ead6fc4a182bd36e">IO::SDK::Constraints::Constraint</a></li>
+<li>aberration&#160;:&#160;<a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1BodyVisibilityFromSiteConstraintDTO.html#a78fcf8ad6b4a6d5b06c15c48cb8a6cb9">IO::SDK::API::DTO::BodyVisibilityFromSiteConstraintDTO</a>, <a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1DistanceConstraintDTO.html#a674df043923b4a71f257f66783d1a537">IO::SDK::API::DTO::DistanceConstraintDTO</a>, <a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1InFieldOfViewConstraintDTO.html#a1037412dba4ded16d3c5cfb7d1e959f4">IO::SDK::API::DTO::InFieldOfViewConstraintDTO</a></li>
+<li>aberrationId&#160;:&#160;<a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1OccultationConstraintDTO.html#ac4b30af08736ba16a589c704971dba2f">IO::SDK::API::DTO::OccultationConstraintDTO</a></li>
+<li>AbsMax()&#160;:&#160;<a class="el" href="classIO_1_1SDK_1_1Constraints_1_1RelationalOperator.html#a8f8f9f5e6af09366b6da4c9de0d54d38">IO::SDK::Constraints::RelationalOperator</a></li>
+<li>AbsMin()&#160;:&#160;<a class="el" href="classIO_1_1SDK_1_1Constraints_1_1RelationalOperator.html#a48a0983ed1c8c1ec49db7959361fbf0b">IO::SDK::Constraints::RelationalOperator</a></li>
 <li>Add()&#160;:&#160;<a class="el" href="classIO_1_1SDK_1_1Time_1_1TDB.html#aaddf000171e27a5fbd7043211abf3897">IO::SDK::Time::TDB</a>, <a class="el" href="classIO_1_1SDK_1_1Time_1_1UTC.html#a7233ed43dac37bd71e0d2e467ebb1779">IO::SDK::Time::UTC</a></li>
 <li>AddAzimuthLaunchRange()&#160;:&#160;<a class="el" href="classIO_1_1SDK_1_1Sites_1_1LaunchSite.html#ad828c9877d22155bb3d0cee0b5c9bc06">IO::SDK::Sites::LaunchSite</a></li>
 <li>AddBodyVisibilityConstraint()&#160;:&#160;<a class="el" href="classIO_1_1SDK_1_1Scenario.html#a38fb82b4679d789a253bcfa29ef627d4">IO::SDK::Scenario</a></li>
 <li>AddCelestialBody()&#160;:&#160;<a class="el" href="classIO_1_1SDK_1_1Scenario.html#a786a1044cf68de4ecc85aef250f01eba">IO::SDK::Scenario</a></li>
-<li>AddCircularFOVInstrument()&#160;:&#160;<a class="el" href="classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft.html#afc0e77ac6e576b85eca2dc4ebb338889">IO::SDK::Body::Spacecraft::Spacecraft</a></li>
+<li>AddCircularFOVInstrument()&#160;:&#160;<a class="el" href="classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft.html#a2e7a5af4dba119a5b7c6e812572b11ef">IO::SDK::Body::Spacecraft::Spacecraft</a></li>
 <li>AddComment()&#160;:&#160;<a class="el" href="classIO_1_1SDK_1_1Kernels_1_1Kernel.html#a38c3e78ab819b5a1b47ac2d4e0f027aa">IO::SDK::Kernels::Kernel</a></li>
 <li>AddDayConstraint()&#160;:&#160;<a class="el" href="classIO_1_1SDK_1_1Scenario.html#ac87ca28b5c56abea86b626a6067e9e03">IO::SDK::Scenario</a></li>
 <li>AddDistanceConstraint()&#160;:&#160;<a class="el" href="classIO_1_1SDK_1_1Scenario.html#a1edecc4b70536953805561cfcb6f263f">IO::SDK::Scenario</a></li>
-<li>AddEllipticalFOVInstrument()&#160;:&#160;<a class="el" href="classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft.html#a9147f20e685f94f3162a8dbd5a53ba63">IO::SDK::Body::Spacecraft::Spacecraft</a></li>
-<li>AddEngine()&#160;:&#160;<a class="el" href="classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft.html#a997aece06b5dbc2836b58192ec621f86">IO::SDK::Body::Spacecraft::Spacecraft</a></li>
-<li>AddFuelTank()&#160;:&#160;<a class="el" href="classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft.html#aaa86bd057c3011bc8ee6df08201f84e0">IO::SDK::Body::Spacecraft::Spacecraft</a></li>
+<li>AddEllipticalFOVInstrument()&#160;:&#160;<a class="el" href="classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft.html#a59c834e910e1fef6eb6c823f2951efbd">IO::SDK::Body::Spacecraft::Spacecraft</a></li>
+<li>AddEngine()&#160;:&#160;<a class="el" href="classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft.html#ae89f3dfa0e89b231ec534710ca5d1847">IO::SDK::Body::Spacecraft::Spacecraft</a></li>
+<li>AddFuelTank()&#160;:&#160;<a class="el" href="classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft.html#acd8ed617d4aa5a866af8f838467c9af0">IO::SDK::Body::Spacecraft::Spacecraft</a></li>
 <li>AddInFieldOfViewConstraint()&#160;:&#160;<a class="el" href="classIO_1_1SDK_1_1Scenario.html#a0e3cd3bf3d3e6a238cf2c69ced4b922e">IO::SDK::Scenario</a></li>
 <li>AddLaunchConstraint()&#160;:&#160;<a class="el" href="classIO_1_1SDK_1_1Scenario.html#a48c2803d92a0487167a9490dc75c4aac">IO::SDK::Scenario</a></li>
 <li>AddNightConstraint()&#160;:&#160;<a class="el" href="classIO_1_1SDK_1_1Scenario.html#aefd1fe0c77211b597e71599be8f8482a">IO::SDK::Scenario</a></li>
 <li>AddNormal()&#160;:&#160;<a class="el" href="classIO_1_1SDK_1_1Coordinates_1_1SurfaceCoordinates.html#a97ba48e578a9d58be600841c11e68770">IO::SDK::Coordinates::SurfaceCoordinates</a></li>
 <li>AddOccultationConstraint()&#160;:&#160;<a class="el" href="classIO_1_1SDK_1_1Scenario.html#ad90005ecbd0ec3bf596c81e4758023d7">IO::SDK::Scenario</a></li>
-<li>AddPayload()&#160;:&#160;<a class="el" href="classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft.html#a9ca0deb6588f802ab2093f50b90fdecb">IO::SDK::Body::Spacecraft::Spacecraft</a></li>
+<li>AddPayload()&#160;:&#160;<a class="el" href="classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft.html#adbc4340997811720245346db8c884d18">IO::SDK::Body::Spacecraft::Spacecraft</a></li>
 <li>AddPoint()&#160;:&#160;<a class="el" href="classIO_1_1SDK_1_1Coordinates_1_1SurfaceCoordinates.html#adb55f632ea1afa2be90ce2f9fafda3ee">IO::SDK::Coordinates::SurfaceCoordinates</a></li>
-<li>AddRectangularFOVInstrument()&#160;:&#160;<a class="el" href="classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft.html#ab3de25be2b6e681d618453c14ce040c2">IO::SDK::Body::Spacecraft::Spacecraft</a></li>
+<li>AddRectangularFOVInstrument()&#160;:&#160;<a class="el" href="classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft.html#a50ba3b1dba54ef5c702ee45c9ecdf278">IO::SDK::Body::Spacecraft::Spacecraft</a></li>
 <li>AddSite()&#160;:&#160;<a class="el" href="classIO_1_1SDK_1_1Scenario.html#a8468e291b7910ec50fab34035bf1e178">IO::SDK::Scenario</a></li>
-<li>AddSpacecraft()&#160;:&#160;<a class="el" href="classIO_1_1SDK_1_1Scenario.html#a2a1909262f6f1a6064a005b6398c6130">IO::SDK::Scenario</a></li>
 <li>AddStateOrientation()&#160;:&#160;<a class="el" href="classIO_1_1SDK_1_1Propagators_1_1Propagator.html#ac06526963ad40390734ce5dae54a320d">IO::SDK::Propagators::Propagator</a></li>
 <li>AddStateVector()&#160;:&#160;<a class="el" href="classIO_1_1SDK_1_1Propagators_1_1Propagator.html#aecaf8d7bae8ec2f023900c1ca6ad5e94">IO::SDK::Propagators::Propagator</a></li>
+<li>altitude&#160;:&#160;<a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1GeodeticDTO.html#afc777b02d72a59a11a5cb2dca0e1ae5d">IO::SDK::API::DTO::GeodeticDTO</a></li>
 <li>Altitude()&#160;:&#160;<a class="el" href="classIO_1_1SDK_1_1Coordinate.html#aad8028bfcd79dfe41fccaec9b2ec0120">IO::SDK::Coordinate</a></li>
+<li>angularVelocity&#160;:&#160;<a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1StateOrientationDTO.html#a2f8782518a4d67c681d06bed2a4ca2d1">IO::SDK::API::DTO::StateOrientationDTO</a></li>
 <li>Annular()&#160;:&#160;<a class="el" href="classIO_1_1SDK_1_1OccultationType.html#a20766cf15d2293dbcb76f882b3b5306b">IO::SDK::OccultationType</a></li>
 <li>Any()&#160;:&#160;<a class="el" href="classIO_1_1SDK_1_1OccultationType.html#aade6bbdae5ec2a1d901505432d456b14">IO::SDK::OccultationType</a></li>
-<li>ApogeeHeightChangingManeuver()&#160;:&#160;<a class="el" href="classIO_1_1SDK_1_1Maneuvers_1_1ApogeeHeightChangingManeuver.html#aca860262e1b863b3f8f5047d2ee93770">IO::SDK::Maneuvers::ApogeeHeightChangingManeuver</a></li>
+<li>ApogeeHeightChangingManeuver()&#160;:&#160;<a class="el" href="classIO_1_1SDK_1_1Maneuvers_1_1ApogeeHeightChangingManeuver.html#a7dc28e58ad3ead83d02123ab533f08b7">IO::SDK::Maneuvers::ApogeeHeightChangingManeuver</a></li>
+<li>apogeeHeightChangingManeuvers&#160;:&#160;<a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1SpacecraftDTO.html#a8004ff4afe34111b0597d58c8a01a871">IO::SDK::API::DTO::SpacecraftDTO</a></li>
 <li>Apply()&#160;:&#160;<a class="el" href="classIO_1_1SDK_1_1Integrators_1_1Forces_1_1Force.html#a92c0d714231cdd9fd0b78153110d4c26">IO::SDK::Integrators::Forces::Force</a>, <a class="el" href="classIO_1_1SDK_1_1Integrators_1_1Forces_1_1GravityForce.html#a1ac748566967ca9f2585587648acc5eb">IO::SDK::Integrators::Forces::GravityForce</a></li>
-<li>ApsidalAlignmentManeuver()&#160;:&#160;<a class="el" href="classIO_1_1SDK_1_1Maneuvers_1_1ApsidalAlignmentManeuver.html#a0cdd488a6ba91c3ed9b9071fa16f2e72">IO::SDK::Maneuvers::ApsidalAlignmentManeuver</a></li>
-<li>AzimuthRange()&#160;:&#160;<a class="el" href="classIO_1_1SDK_1_1Coordinates_1_1AzimuthRange.html#a269c3b3d8bc727cad334abe3fb40c739">IO::SDK::Coordinates::AzimuthRange</a></li>
+<li>ApsidalAlignmentManeuver()&#160;:&#160;<a class="el" href="classIO_1_1SDK_1_1Maneuvers_1_1ApsidalAlignmentManeuver.html#a890bce99b466ce884be3ce665fa95b04">IO::SDK::Maneuvers::ApsidalAlignmentManeuver</a></li>
+<li>apsidalAlignmentManeuvers&#160;:&#160;<a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1SpacecraftDTO.html#a9ba66571f69267ccca65dcb18d9b133e">IO::SDK::API::DTO::SpacecraftDTO</a></li>
+<li>AttachSpacecraft()&#160;:&#160;<a class="el" href="classIO_1_1SDK_1_1Scenario.html#ade87552a4da5e253547c5cb44e22ea69">IO::SDK::Scenario</a></li>
+<li>attitudeHoldDuration&#160;:&#160;<a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1ApogeeHeightChangingManeuverDTO.html#ae67c490c8093b1499c557b3cbec19f1a">IO::SDK::API::DTO::ApogeeHeightChangingManeuverDTO</a>, <a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1ApsidalAlignmentManeuverDTO.html#a5f860f157b46a9bd9bbc3d007f16dbba">IO::SDK::API::DTO::ApsidalAlignmentManeuverDTO</a>, <a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1CombinedManeuverDTO.html#adabf32a12a74f7f8c0368bd7f0ecff45">IO::SDK::API::DTO::CombinedManeuverDTO</a>, <a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1InstrumentPointingToAttitudeDTO.html#ad4e289b5d35ee4978d3f4d4000fd29de">IO::SDK::API::DTO::InstrumentPointingToAttitudeDTO</a>, <a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1NadirAttitudeDTO.html#aa165ae933683f10b3bf4a846dca48c77">IO::SDK::API::DTO::NadirAttitudeDTO</a>, <a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1OrbitalPlaneChangingManeuverDTO.html#ae949350a0a86deccbc35378e75a73e80">IO::SDK::API::DTO::OrbitalPlaneChangingManeuverDTO</a>, <a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1PerigeeHeightChangingManeuverDTO.html#a2c44b0951ccd5bf004c5f4f7355e31ff">IO::SDK::API::DTO::PerigeeHeightChangingManeuverDTO</a>, <a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1PhasingManeuverDTO.html#ad0983abd599c7b99b4ca2736c4c20447">IO::SDK::API::DTO::PhasingManeuverDTO</a>, <a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1ProgradeAttitudeDTO.html#a6e11583a1b2b4fa482cb182fff198309">IO::SDK::API::DTO::ProgradeAttitudeDTO</a>, <a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1RetrogradeAttitudeDTO.html#a1679287ea58cee1d0b63155b995d9e56">IO::SDK::API::DTO::RetrogradeAttitudeDTO</a>, <a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1ZenithAttitudeDTO.html#a37a8b89b1d2a4acf51022011b61e196e">IO::SDK::API::DTO::ZenithAttitudeDTO</a></li>
+<li>attitudeWindow&#160;:&#160;<a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1ApogeeHeightChangingManeuverDTO.html#a9900cbf97a61b1b429ef4b1abca859a9">IO::SDK::API::DTO::ApogeeHeightChangingManeuverDTO</a>, <a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1ApsidalAlignmentManeuverDTO.html#a4ee1a56243eb25f081f745567dd1d467">IO::SDK::API::DTO::ApsidalAlignmentManeuverDTO</a>, <a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1CombinedManeuverDTO.html#af7a92ffa125e62f4daefbfd0ed9ca0ea">IO::SDK::API::DTO::CombinedManeuverDTO</a>, <a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1OrbitalPlaneChangingManeuverDTO.html#a7695f7621ce2077a11e4f0c2b87a859d">IO::SDK::API::DTO::OrbitalPlaneChangingManeuverDTO</a>, <a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1PerigeeHeightChangingManeuverDTO.html#a646da63804328a6d8cdf11c8996e19f5">IO::SDK::API::DTO::PerigeeHeightChangingManeuverDTO</a>, <a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1PhasingManeuverDTO.html#a582f11dcf2863339caa3025aade38ed5">IO::SDK::API::DTO::PhasingManeuverDTO</a></li>
+<li>AzimuthRange()&#160;:&#160;<a class="el" href="classIO_1_1SDK_1_1Coordinates_1_1AzimuthRange.html#a66750c2a0b209a1cb0df9c282faa0107">IO::SDK::Coordinates::AzimuthRange</a></li>
 </ul>
 </div><!-- contents -->
 </div><!-- doc-content -->

@@ -9,6 +9,7 @@
 #include <TimeSpan.h>
 #include <memory>
 #include<InertialFrames.h>
+#include "TestParameters.h"
 
 using namespace std::chrono_literals;
 
@@ -17,7 +18,7 @@ TEST(Engine, Initialization)
 	auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
 	std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth, IO::SDK::Math::Vector3D(1.0, 2.0, 3.0), IO::SDK::Math::Vector3D(4.0, 5.0, 6.0), IO::SDK::Time::TDB(100.0s), IO::SDK::Frames::InertialFrames::GetICRF());
 	IO::SDK::OrbitalParameters::StateOrientation attitude(IO::SDK::Time::TDB(100.0s),IO::SDK::Frames::InertialFrames::GetICRF());
-	IO::SDK::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, "ms01", std::move(orbitalParams)};
+	IO::SDK::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams)};
 	s.AddFuelTank("ft1", 1000.0, 900.0);
 	s.AddEngine("sn1", "eng1", "ft1", {1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}, 450.0, 50.0);
 	auto eng = s.GetEngine("sn1");

@@ -2,7 +2,7 @@
  * @file SpacecraftClockKernel.h
  * @author Sylvain Guillet (sylvain.guillet@live.com)
  * @brief 
- * @version 0.1
+ * @version 0.x
  * @date 2021-07-02
  * 
  * @copyright Copyright (c) 2021
@@ -68,7 +68,7 @@ namespace IO::SDK::Kernels
 		[[nodiscard]] IO::SDK::Time::TDB ConvertToTDB(double encodedClock) const;
 
 		/**
-		 * @brief Convert to spacecraft clock
+		 * @brief Convert to Spacecraft clock
 		 * 
 		 * @param epoch 
 		 * @return std::string 
@@ -82,6 +82,7 @@ namespace IO::SDK::Kernels
 		 * @return double 
 		 */
 		[[nodiscard]] double ConvertToEncodedClock(const IO::SDK::Time::TDB &epoch) const;
+		[[nodiscard]] static double ConvertToEncodedClock(int spacecraftId, const IO::SDK::Time::TDB &epoch);
 
 		/**
 		 * @brief Get the Resolution

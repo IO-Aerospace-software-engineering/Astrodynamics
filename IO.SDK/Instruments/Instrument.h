@@ -2,7 +2,7 @@
  * @file Instrument.h
  * @author Sylvain Guillet (sylvain.guillet@live.com)
  * @brief 
- * @version 0.1
+ * @version 0.x
  * @date 2021-02-23
  * 
  * @copyright Copyright (c) 2021
@@ -15,6 +15,7 @@
 #include <Spacecraft.h>
 #include <FOVShapes.h>
 #include <InstrumentKernel.h>
+#include <Site.h>
 
 namespace IO::SDK::Body::Spacecraft
 {
@@ -164,8 +165,24 @@ namespace IO::SDK::Instruments
         FindWindowsWhereInFieldOfView(const IO::SDK::Time::Window<IO::SDK::Time::TDB> &searchWindow, const IO::SDK::Body::Body &targetBody,
                                       const IO::SDK::AberrationsEnum &aberration, const IO::SDK::Time::TimeSpan &stepSize) const;
 
+
         /**
-         * Compute boresight in spacecraft frame
+         * Find windows where a site is in field of vien
+         * @param searchWindow
+         * @param site
+         * @param aberration
+         * @param stepSize
+         * @return
+         */
+        [[nodiscard]] std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>>
+        FindWindowsWhereInFieldOfView(
+                const IO::SDK::Time::Window<IO::SDK::Time::TDB> &searchWindow, const IO::SDK::Sites::Site &site,
+                const IO::SDK::AberrationsEnum &aberration,
+                const IO::SDK::Time::TimeSpan &stepSize
+        ) const;
+
+        /**
+         * Compute boresight in Spacecraft frame
          * @return
          */
         [[nodiscard]] IO::SDK::Math::Vector3D GetBoresightInSpacecraftFrame() const;

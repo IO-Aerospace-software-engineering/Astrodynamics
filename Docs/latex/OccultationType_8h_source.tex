@@ -5,33 +5,49 @@
 \DoxyCodeLine{1 }
 \DoxyCodeLine{11 \textcolor{preprocessor}{\#ifndef OCCULTATION\_TYPE\_H}}
 \DoxyCodeLine{12 \textcolor{preprocessor}{\#define OCCULTATION\_TYPE\_H}}
-\DoxyCodeLine{13 \textcolor{preprocessor}{\#include<string>}}
-\DoxyCodeLine{14 }
-\DoxyCodeLine{15 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1SDK}{IO::SDK}}}
-\DoxyCodeLine{16 \{}
-\DoxyCodeLine{17     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1SDK_1_1OccultationType}{OccultationType}}}
-\DoxyCodeLine{18     \{}
-\DoxyCodeLine{19     \textcolor{keyword}{private}:}
-\DoxyCodeLine{20         \textcolor{keyword}{const} std::string m\_name;}
-\DoxyCodeLine{21         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1SDK_1_1OccultationType}{OccultationType}} \_Full;}
-\DoxyCodeLine{22         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1SDK_1_1OccultationType}{OccultationType}} \_Annular;}
-\DoxyCodeLine{23         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1SDK_1_1OccultationType}{OccultationType}} \_Partial;}
-\DoxyCodeLine{24         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1SDK_1_1OccultationType}{OccultationType}} \_Any;}
-\DoxyCodeLine{25     \textcolor{keyword}{public}:}
-\DoxyCodeLine{31         \mbox{\hyperlink{classIO_1_1SDK_1_1OccultationType_a5d423badcc7c38d09546aa2e38744825}{OccultationType}}(\textcolor{keyword}{const} std::string \&name);}
-\DoxyCodeLine{32 }
-\DoxyCodeLine{38         \textcolor{keyword}{const} \textcolor{keywordtype}{char} *\mbox{\hyperlink{classIO_1_1SDK_1_1OccultationType_afaf8c0768506ac30dfbe5c3fc7345ff8}{ToCharArray}}() \textcolor{keyword}{const};}
-\DoxyCodeLine{39 }
-\DoxyCodeLine{40         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1SDK_1_1OccultationType}{IO::SDK::OccultationType}}\& \mbox{\hyperlink{classIO_1_1SDK_1_1OccultationType_a76bb5c166b468c1af58275ec4a6ebb67}{Full}}();}
-\DoxyCodeLine{41         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1SDK_1_1OccultationType}{IO::SDK::OccultationType}}\& \mbox{\hyperlink{classIO_1_1SDK_1_1OccultationType_a20766cf15d2293dbcb76f882b3b5306b}{Annular}}();}
-\DoxyCodeLine{42         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1SDK_1_1OccultationType}{IO::SDK::OccultationType}}\& \mbox{\hyperlink{classIO_1_1SDK_1_1OccultationType_a71e739db73583d8d705f60659df111d3}{Partial}}();}
-\DoxyCodeLine{43         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1SDK_1_1OccultationType}{IO::SDK::OccultationType}}\& \mbox{\hyperlink{classIO_1_1SDK_1_1OccultationType_aade6bbdae5ec2a1d901505432d456b14}{Any}}();}
-\DoxyCodeLine{44     \};}
-\DoxyCodeLine{45     }
-\DoxyCodeLine{46 }
-\DoxyCodeLine{47     }
-\DoxyCodeLine{48 \} \textcolor{comment}{// namespace IO::SDK}}
-\DoxyCodeLine{49 }
-\DoxyCodeLine{50 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{13 }
+\DoxyCodeLine{14 \textcolor{preprocessor}{\#include<string>}}
+\DoxyCodeLine{15 }
+\DoxyCodeLine{16 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1SDK}{IO::SDK}}}
+\DoxyCodeLine{17 \{}
+\DoxyCodeLine{18     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1SDK_1_1OccultationType}{OccultationType}}}
+\DoxyCodeLine{19     \{}
+\DoxyCodeLine{20     \textcolor{keyword}{private}:}
+\DoxyCodeLine{21         \textcolor{keyword}{const} std::string m\_name;}
+\DoxyCodeLine{22         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1SDK_1_1OccultationType}{OccultationType}} mFull;}
+\DoxyCodeLine{23         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1SDK_1_1OccultationType}{OccultationType}} mAnnular;}
+\DoxyCodeLine{24         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1SDK_1_1OccultationType}{OccultationType}} mPartial;}
+\DoxyCodeLine{25         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1SDK_1_1OccultationType}{OccultationType}} mAny;}
+\DoxyCodeLine{26     \textcolor{keyword}{public}:}
+\DoxyCodeLine{32         \textcolor{keyword}{explicit} \mbox{\hyperlink{classIO_1_1SDK_1_1OccultationType_abcff45b9e44239b1de62e360a8ac212c}{OccultationType}}(std::string name);}
+\DoxyCodeLine{33 }
+\DoxyCodeLine{34         \mbox{\hyperlink{classIO_1_1SDK_1_1OccultationType_ad7eaf19b3e109cd7419725e03906c112}{\string~OccultationType}}() = \textcolor{keywordflow}{default};}
+\DoxyCodeLine{35 }
+\DoxyCodeLine{36         \mbox{\hyperlink{classIO_1_1SDK_1_1OccultationType}{OccultationType}} \&\mbox{\hyperlink{classIO_1_1SDK_1_1OccultationType_a8412c3fa171dab72445d444d2deb317f}{operator=}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1OccultationType}{OccultationType}} \&other)}
+\DoxyCodeLine{37         \{}
+\DoxyCodeLine{38             \textcolor{keywordflow}{if} (\textcolor{keyword}{this} == \&other)}
+\DoxyCodeLine{39                 \textcolor{keywordflow}{return} *\textcolor{keyword}{this};}
+\DoxyCodeLine{40 }
+\DoxyCodeLine{41             \textcolor{keyword}{const\_cast<}std::string \&\textcolor{keyword}{>}(m\_name) = other.m\_name;}
+\DoxyCodeLine{42             \textcolor{keywordflow}{return} *\textcolor{keyword}{this};}
+\DoxyCodeLine{43         \}}
+\DoxyCodeLine{44 }
+\DoxyCodeLine{50         [[nodiscard]] \textcolor{keyword}{const} \textcolor{keywordtype}{char} *\mbox{\hyperlink{classIO_1_1SDK_1_1OccultationType_afaf8c0768506ac30dfbe5c3fc7345ff8}{ToCharArray}}() \textcolor{keyword}{const};}
+\DoxyCodeLine{51 }
+\DoxyCodeLine{52         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1SDK_1_1OccultationType}{IO::SDK::OccultationType}} \&\mbox{\hyperlink{classIO_1_1SDK_1_1OccultationType_a76bb5c166b468c1af58275ec4a6ebb67}{Full}}();}
+\DoxyCodeLine{53 }
+\DoxyCodeLine{54         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1SDK_1_1OccultationType}{IO::SDK::OccultationType}} \&\mbox{\hyperlink{classIO_1_1SDK_1_1OccultationType_a20766cf15d2293dbcb76f882b3b5306b}{Annular}}();}
+\DoxyCodeLine{55 }
+\DoxyCodeLine{56         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1SDK_1_1OccultationType}{IO::SDK::OccultationType}} \&\mbox{\hyperlink{classIO_1_1SDK_1_1OccultationType_a71e739db73583d8d705f60659df111d3}{Partial}}();}
+\DoxyCodeLine{57 }
+\DoxyCodeLine{58         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1SDK_1_1OccultationType}{IO::SDK::OccultationType}} \&\mbox{\hyperlink{classIO_1_1SDK_1_1OccultationType_aade6bbdae5ec2a1d901505432d456b14}{Any}}();}
+\DoxyCodeLine{59 }
+\DoxyCodeLine{60         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1SDK_1_1OccultationType}{IO::SDK::OccultationType}} \mbox{\hyperlink{classIO_1_1SDK_1_1OccultationType_ac3d3c15dfacdc1e8d6c63ce662da70e3}{ToOccultationType}}(\textcolor{keyword}{const} std::string \&occultationType) ;}
+\DoxyCodeLine{61     \};}
+\DoxyCodeLine{62 }
+\DoxyCodeLine{63 }
+\DoxyCodeLine{64 \} \textcolor{comment}{// namespace IO::SDK}}
+\DoxyCodeLine{65 }
+\DoxyCodeLine{66 \textcolor{preprocessor}{\#endif}}
 
 \end{DoxyCode}

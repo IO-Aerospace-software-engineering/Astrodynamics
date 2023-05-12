@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['type_5fcpp_0',['TYPE_CPP',['../Type_8cpp.html#a5e9710efedc9673392595c38c8e45625',1,'Type.cpp']]]
+  ['module_5fapi_0',['MODULE_API',['../Proxy_8h.html#a283b8fd63f96d196027ef6ad48c4cb85',1,'Proxy.h']]]
 ];

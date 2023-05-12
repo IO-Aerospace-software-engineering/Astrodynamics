@@ -2,7 +2,7 @@
  * @file CoordinateSystem.h
  * @author Sylvain Guillet (sylvain.guillet@live.com)
  * @brief 
- * @version 0.1
+ * @version 0.x
  * @date 2021-06-07
  * 
  * @copyright Copyright (c) 2021
@@ -35,6 +35,17 @@ namespace IO::SDK
          */
         explicit CoordinateSystem(const std::string &name);
 
+        ~CoordinateSystem() = default;
+
+        CoordinateSystem &operator=(const CoordinateSystem &other)
+        {
+            if (this == &other)
+                return *this;
+
+            const_cast<std::string &>(m_name) = other.m_name;
+            return *this;
+        }
+
         /**
          * @brief Get char array coordinate system
          * 
@@ -49,6 +60,7 @@ namespace IO::SDK
         static CoordinateSystem& Cylindrical();
         static CoordinateSystem& Geodetic();
         static CoordinateSystem& Planetographic();
+        static CoordinateSystem ToCoordinateSystemType(const std::string &coordinateSystemType) ;
     };
 
 } // namespace IO::SDK

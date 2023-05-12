@@ -2,7 +2,7 @@
  * @file TimeSpan.cpp
  * @author Sylvain Guillet (sylvain.guillet@live.com)
  * @brief 
- * @version 0.1
+ * @version 0.x
  * @date 2021-07-03
  * 
  * @copyright Copyright (c) 2021
@@ -15,6 +15,11 @@ IO::SDK::Time::TimeSpan::TimeSpan()
 
 IO::SDK::Time::TimeSpan::TimeSpan(const std::chrono::duration<double> seconds) : m_seconds{seconds}
 {
+}
+
+IO::SDK::Time::TimeSpan::TimeSpan(double period) : TimeSpan(std::chrono::duration<double>(period))
+{
+
 }
 
 std::chrono::duration<double, std::nano> IO::SDK::Time::TimeSpan::GetNanoseconds() const
@@ -101,3 +106,5 @@ bool IO::SDK::Time::TimeSpan::operator<=(const IO::SDK::Time::TimeSpan &ts) cons
 {
     return m_seconds <= ts.m_seconds;
 }
+
+

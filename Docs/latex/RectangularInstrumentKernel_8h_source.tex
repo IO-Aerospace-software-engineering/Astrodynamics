@@ -6,31 +6,29 @@
 \DoxyCodeLine{11 \textcolor{preprocessor}{\#ifndef RECTANGULAR\_INSTRUMENT\_KERNEL\_H}}
 \DoxyCodeLine{12 \textcolor{preprocessor}{\#define RECTANGULAR\_INSTRUMENT\_KERNEL\_H}}
 \DoxyCodeLine{13 }
-\DoxyCodeLine{14 \textcolor{preprocessor}{\#include<\mbox{\hyperlink{InstrumentKernel_8h}{InstrumentKernel.h}}>}}
-\DoxyCodeLine{15 \textcolor{preprocessor}{\#include<\mbox{\hyperlink{Instrument_8h}{Instrument.h}}>}}
-\DoxyCodeLine{16 \textcolor{preprocessor}{\#include<\mbox{\hyperlink{Vector3D_8h}{Vector3D.h}}>}}
-\DoxyCodeLine{17 }
-\DoxyCodeLine{18 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1SDK_1_1Instruments}{IO::SDK::Instruments}}}
-\DoxyCodeLine{19 \{}
-\DoxyCodeLine{20     \textcolor{keyword}{class }Instrument;}
-\DoxyCodeLine{21 \}}
-\DoxyCodeLine{22 }
-\DoxyCodeLine{23 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1SDK_1_1Kernels}{IO::SDK::Kernels}}}
-\DoxyCodeLine{24 \{}
-\DoxyCodeLine{25     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1SDK_1_1Kernels_1_1RectangularInstrumentKernel}{RectangularInstrumentKernel}} final :\textcolor{keyword}{public} \mbox{\hyperlink{classIO_1_1SDK_1_1Kernels_1_1InstrumentKernel}{IO::SDK::Kernels::InstrumentKernel}}}
-\DoxyCodeLine{26     \{}
-\DoxyCodeLine{27     \textcolor{keyword}{private}:}
-\DoxyCodeLine{28         \textcolor{keywordtype}{double} m\_crossAngle\{\};}
-\DoxyCodeLine{29         }
-\DoxyCodeLine{30     \textcolor{keyword}{protected}:}
-\DoxyCodeLine{35         \textcolor{keywordtype}{void} \mbox{\hyperlink{classIO_1_1SDK_1_1Kernels_1_1RectangularInstrumentKernel_a2c5bb67ff61d5ac585b575628637fc92}{BuildKernel}}() \textcolor{keyword}{override};}
-\DoxyCodeLine{36 }
-\DoxyCodeLine{37     \textcolor{keyword}{public}:}
-\DoxyCodeLine{47         \mbox{\hyperlink{classIO_1_1SDK_1_1Kernels_1_1RectangularInstrumentKernel_a62e08e8f36c61f351e9373b61e476ab9}{RectangularInstrumentKernel}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Instruments_1_1Instrument}{IO::SDK::Instruments::Instrument}}\& instrument, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO::SDK::Math::Vector3D}}\& boresight, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO::SDK::Math::Vector3D}}\& refVector, \textcolor{keyword}{const} \textcolor{keywordtype}{double} angle, \textcolor{keyword}{const} \textcolor{keywordtype}{double} crossAngle);}
-\DoxyCodeLine{48         \textcolor{keyword}{virtual} \mbox{\hyperlink{classIO_1_1SDK_1_1Kernels_1_1RectangularInstrumentKernel_a0ae5d784c1f6924c0fa6d03ebef0fbe2}{\string~RectangularInstrumentKernel}}() = \textcolor{keywordflow}{default};}
-\DoxyCodeLine{49     \};}
-\DoxyCodeLine{50 \}}
-\DoxyCodeLine{51 }
-\DoxyCodeLine{52 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{14 \textcolor{preprocessor}{\#include<\mbox{\hyperlink{Instrument_8h}{Instrument.h}}>}}
+\DoxyCodeLine{15 }
+\DoxyCodeLine{16 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1SDK_1_1Instruments}{IO::SDK::Instruments}}}
+\DoxyCodeLine{17 \{}
+\DoxyCodeLine{18     \textcolor{keyword}{class }Instrument;}
+\DoxyCodeLine{19 \}}
+\DoxyCodeLine{20 }
+\DoxyCodeLine{21 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1SDK_1_1Kernels}{IO::SDK::Kernels}}}
+\DoxyCodeLine{22 \{}
+\DoxyCodeLine{23     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1SDK_1_1Kernels_1_1RectangularInstrumentKernel}{RectangularInstrumentKernel}} final :\textcolor{keyword}{public} \mbox{\hyperlink{classIO_1_1SDK_1_1Kernels_1_1InstrumentKernel}{IO::SDK::Kernels::InstrumentKernel}}}
+\DoxyCodeLine{24     \{}
+\DoxyCodeLine{25     \textcolor{keyword}{private}:}
+\DoxyCodeLine{26         \textcolor{keywordtype}{double} m\_crossAngle\{\};}
+\DoxyCodeLine{27         }
+\DoxyCodeLine{28     \textcolor{keyword}{protected}:}
+\DoxyCodeLine{33         \textcolor{keywordtype}{void} \mbox{\hyperlink{classIO_1_1SDK_1_1Kernels_1_1RectangularInstrumentKernel_a2c5bb67ff61d5ac585b575628637fc92}{BuildKernel}}() \textcolor{keyword}{override};}
+\DoxyCodeLine{34 }
+\DoxyCodeLine{35     \textcolor{keyword}{public}:}
+\DoxyCodeLine{45         \mbox{\hyperlink{classIO_1_1SDK_1_1Kernels_1_1RectangularInstrumentKernel_ab9809483de3c11e4c935bf70724884da}{RectangularInstrumentKernel}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Instruments_1_1Instrument}{IO::SDK::Instruments::Instrument}}\& instrument, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO::SDK::Math::Vector3D}}\& boresight, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO::SDK::Math::Vector3D}}\& refVector, \textcolor{keywordtype}{double} angle, \textcolor{keywordtype}{double} crossAngle);}
+\DoxyCodeLine{46         \mbox{\hyperlink{classIO_1_1SDK_1_1Kernels_1_1RectangularInstrumentKernel_ab53867e477f9cd642a4709ee6c57d141}{\string~RectangularInstrumentKernel}}() \textcolor{keyword}{override} = \textcolor{keywordflow}{default};}
+\DoxyCodeLine{47     \};}
+\DoxyCodeLine{48 \}}
+\DoxyCodeLine{49 }
+\DoxyCodeLine{50 \textcolor{preprocessor}{\#endif}}
 
 \end{DoxyCode}

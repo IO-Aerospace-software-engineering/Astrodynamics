@@ -2,7 +2,7 @@
  * @file Instrument.cpp
  * @author Sylvain Guillet (sylvain.guillet@live.com)
  * @brief 
- * @version 0.1
+ * @version 0.x
  * @date 2021-07-03
  * 
  * @copyright Copyright (c) 2021
@@ -18,6 +18,7 @@
 #include <SpiceUsr.h>
 #include <Builder.h>
 #include <StringHelpers.h>
+#include <GeometryFinder.h>
 
 std::string IO::SDK::Instruments::Instrument::GetFilesPath() const
 {
@@ -154,40 +155,20 @@ IO::SDK::Instruments::Instrument::FindWindowsWhereInFieldOfView(
         frame = celestialBody->GetBodyFixedFrame().GetName();
     }
 
-    std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>> windows;
-    SpiceDouble windowStart;
-    SpiceDouble windowEnd;
+    return IO::SDK::Constraints::GeometryFinder::FindWindowsInFieldOfViewConstraint(searchWindow, m_spacecraft.GetId(), m_id, targetBody.GetId(), frame, shape, aberration, stepSize);
+}
 
-    const SpiceInt MAXWIN{20000};
+std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>>
+IO::SDK::Instruments::Instrument::FindWindowsWhereInFieldOfView(
+        const IO::SDK::Time::Window<IO::SDK::Time::TDB> &searchWindow, const IO::SDK::Sites::Site &site,
+        const IO::SDK::AberrationsEnum &aberration,
+        const IO::SDK::Time::TimeSpan &stepSize
+) const
+{
+    std::string shape{"POINT"};
+    std::string frame;
 
-    SpiceDouble SPICE_CELL_OCCLT[SPICE_CELL_CTRLSZ + MAXWIN];
-    SpiceCell cnfine = IO::SDK::Spice::Builder::CreateDoubleCell(MAXWIN, SPICE_CELL_OCCLT);
-
-    SpiceDouble SPICE_CELL_OCCLT_RESULT[SPICE_CELL_CTRLSZ + MAXWIN];
-    SpiceCell results = IO::SDK::Spice::Builder::CreateDoubleCell(MAXWIN, SPICE_CELL_OCCLT_RESULT);
-
-    wninsd_c(searchWindow.GetStartDate().GetSecondsFromJ2000().count(),
-             searchWindow.GetEndDate().GetSecondsFromJ2000().count(), &cnfine
-
-    );
-
-    gftfov_c(std::to_string(m_id).c_str(), targetBody.GetName().c_str(), shape.c_str(), frame.c_str(), IO::SDK::Aberrations::ToString(aberration).c_str(),
-             m_spacecraft.GetName().c_str(), stepSize.GetSeconds().count(), &cnfine, &results
-    );
-
-    for (
-            int i = 0;
-            i < wncard_c(&results); i++)
-    {
-        wnfetd_c(&results, i, &windowStart, &windowEnd
-        );
-        windows.emplace_back(
-                IO::SDK::Time::TDB(std::chrono::duration<double>(windowStart)),
-                IO::SDK::Time::TDB(std::chrono::duration<double>(windowEnd)));
-
-    }
-    return
-            windows;
+    return IO::SDK::Constraints::GeometryFinder::FindWindowsInFieldOfViewConstraint(searchWindow, m_spacecraft.GetId(), m_id, site.GetId(), frame, shape, aberration, stepSize);
 }
 
 IO::SDK::Math::Vector3D IO::SDK::Instruments::Instrument::GetBoresight(const IO::SDK::Frames::Frames &frame,

@@ -1,16 +1,8 @@
-#include <vector>
-#include <chrono>
-
 #include <gtest/gtest.h>
 #include <ApogeeHeightChangingManeuver.h>
-#include <Spacecraft.h>
-#include <Engine.h>
-#include <Propagator.h>
 #include <VVIntegrator.h>
-#include <TimeSpan.h>
-#include <TDB.h>
-#include <OrbitalParameters.h>
-#include <StateVector.h>
+#include "InertialFrames.h"
+#include "TestParameters.h"
 
 using namespace std::chrono_literals;
 
@@ -19,7 +11,7 @@ TEST(ApogeeHeightChangingManeuverTests, CanExecute)
     auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399); //GEOPHYSICAL PROPERTIES provided by JPL
 
     std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams1 = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth, IO::SDK::Math::Vector3D(6800000.0, 0.0, 0.0), IO::SDK::Math::Vector3D(0.0, 9000.0, 0.0), IO::SDK::Time::TDB(100.0s), IO::SDK::Frames::InertialFrames::GetICRF());
-    IO::SDK::Body::Spacecraft::Spacecraft s{-1, "maneuverTest", 1000.0, 3000.0, "mt01", std::move(orbitalParams1)};
+    IO::SDK::Body::Spacecraft::Spacecraft s{-1, "maneuverTest", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams1)};
     IO::SDK::Integrators::VVIntegrator integrator(IO::SDK::Time::TimeSpan(1.0s));
     IO::SDK::Propagators::Propagator prop(s, integrator, IO::SDK::Time::Window(IO::SDK::Time::TDB(100.0s), IO::SDK::Time::TDB(200.0s)));
 
@@ -28,8 +20,8 @@ TEST(ApogeeHeightChangingManeuverTests, CanExecute)
 
     auto engine1 = s.GetEngine("sn1");
 
-    std::vector<IO::SDK::Body::Spacecraft::Engine> engines;
-    engines.push_back(*engine1);
+    std::vector<IO::SDK::Body::Spacecraft::Engine*> engines;
+    engines.push_back(const_cast<IO::SDK::Body::Spacecraft::Engine*>(engine1));
     IO::SDK::Maneuvers::ApogeeHeightChangingManeuver acm(engines, prop, 8000000.0);
 
     //Initialize CanExecute
@@ -50,7 +42,7 @@ TEST(ApogeeHeightChangingManeuverTests, IncreaseApogeeHeight)
     auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399); //GEOPHYSICAL PROPERTIES provided by JPL
 
     std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams1 = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth, IO::SDK::Math::Vector3D(6678000.0, 0.0, 0.0), IO::SDK::Math::Vector3D(0.0, 7727.0, 0.0), IO::SDK::Time::TDB(100.0s), IO::SDK::Frames::InertialFrames::GetICRF());
-    IO::SDK::Body::Spacecraft::Spacecraft s{-1, "maneuverTest", 1000.0, 3000.0, "mt01", std::move(orbitalParams1)};
+    IO::SDK::Body::Spacecraft::Spacecraft s{-1, "maneuverTest", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams1)};
     IO::SDK::Integrators::VVIntegrator integrator(IO::SDK::Time::TimeSpan(1.0s));
     IO::SDK::Propagators::Propagator prop(s, integrator, IO::SDK::Time::Window(IO::SDK::Time::TDB(100.0s), IO::SDK::Time::TDB(200.0s)));
 
@@ -61,8 +53,8 @@ TEST(ApogeeHeightChangingManeuverTests, IncreaseApogeeHeight)
 
     //Add fictive data because it executed outside propagator
     prop.AddStateVector(IO::SDK::OrbitalParameters::StateVector(earth, IO::SDK::Math::Vector3D(1.0, 2.0, 3.0), IO::SDK::Math::Vector3D(4.0, 5.0, 6.0), IO::SDK::Time::TDB(80.0s), IO::SDK::Frames::InertialFrames::GetICRF()));
-    std::vector<IO::SDK::Body::Spacecraft::Engine> engines;
-    engines.push_back(*engine1);
+    std::vector<IO::SDK::Body::Spacecraft::Engine*> engines;
+    engines.push_back(const_cast<IO::SDK::Body::Spacecraft::Engine*>(engine1));
     IO::SDK::Maneuvers::ApogeeHeightChangingManeuver acm(engines, prop, 42164000.0);
 
     acm.CanExecute(s.GetOrbitalParametersAtEpoch()->GetStateVector(IO::SDK::Time::TDB(80.0s)));
@@ -80,7 +72,7 @@ TEST(ApogeeHeightChangingManeuverTests, DecreaseApogeeHeight)
     auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399); //GEOPHYSICAL PROPERTIES provided by JPL
 
     std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams1 = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth, IO::SDK::Math::Vector3D(42164000.0, 0.0, 0.0), IO::SDK::Math::Vector3D(0.0, 3075.035, 0.0), IO::SDK::Time::TDB(100.0s), IO::SDK::Frames::InertialFrames::GetICRF());
-    IO::SDK::Body::Spacecraft::Spacecraft s{-1, "maneuverTest", 1000.0, 3000.0, "mt01", std::move(orbitalParams1)};
+    IO::SDK::Body::Spacecraft::Spacecraft s{-1, "maneuverTest", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams1)};
     IO::SDK::Integrators::VVIntegrator integrator(IO::SDK::Time::TimeSpan(1.0s));
     IO::SDK::Propagators::Propagator prop(s, integrator, IO::SDK::Time::Window(IO::SDK::Time::TDB(100.0s), IO::SDK::Time::TDB(200.0s)));
 
@@ -91,8 +83,8 @@ TEST(ApogeeHeightChangingManeuverTests, DecreaseApogeeHeight)
 
     //Add fictive data because it executed outside propagator
     prop.AddStateVector(IO::SDK::OrbitalParameters::StateVector(earth, IO::SDK::Math::Vector3D(1.0, 2.0, 3.0), IO::SDK::Math::Vector3D(4.0, 5.0, 6.0), IO::SDK::Time::TDB(80.0s), IO::SDK::Frames::InertialFrames::GetICRF()));
-    std::vector<IO::SDK::Body::Spacecraft::Engine> engines;
-    engines.push_back(*engine1);
+    std::vector<IO::SDK::Body::Spacecraft::Engine*> engines;
+    engines.push_back(const_cast<IO::SDK::Body::Spacecraft::Engine*>(engine1));
     IO::SDK::Maneuvers::ApogeeHeightChangingManeuver acm(engines, prop, 6678000.0);
 
     acm.CanExecute(s.GetOrbitalParametersAtEpoch()->GetStateVector(IO::SDK::Time::TDB(80.0s)));

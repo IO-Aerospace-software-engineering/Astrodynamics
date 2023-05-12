@@ -21,7 +21,9 @@ Inheritance diagram for IO\+::SDK\+::Integrators\+::Forces\+::Force\+:\begin{fig
 \mbox{\hyperlink{classIO_1_1SDK_1_1Integrators_1_1Forces_1_1Force_a7656d94c375a0c716d98538af1913460}{Force}} ()
 \begin{DoxyCompactList}\small\item\em Construct a new \mbox{\hyperlink{classIO_1_1SDK_1_1Integrators_1_1Forces_1_1Force}{Force}} object. \end{DoxyCompactList}\item 
 virtual \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO\+::\+SDK\+::\+Math\+::\+Vector3D}} \mbox{\hyperlink{classIO_1_1SDK_1_1Integrators_1_1Forces_1_1Force_a92c0d714231cdd9fd0b78153110d4c26}{Apply}} (const \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body}{IO\+::\+SDK\+::\+Body\+::\+Body}} \&body, const \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+State\+Vector}} \&state\+Vector)=0
-\begin{DoxyCompactList}\small\item\em Apply force to body. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\begin{DoxyCompactList}\small\item\em Apply force to body. \end{DoxyCompactList}\item 
+virtual \mbox{\hyperlink{classIO_1_1SDK_1_1Integrators_1_1Forces_1_1Force_afb7b891094d9f9858af152959d659848}{$\sim$\+Force}} ()=default
+\end{DoxyCompactItemize}
 
 
 \doxysubsection{Detailed Description}
@@ -32,11 +34,17 @@ virtual \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO\+::\+SDK\+::\+Ma
 \index{IO::SDK::Integrators::Forces::Force@{IO::SDK::Integrators::Forces::Force}!Force@{Force}}
 \index{Force@{Force}!IO::SDK::Integrators::Forces::Force@{IO::SDK::Integrators::Forces::Force}}
 \doxysubsubsection{\texorpdfstring{Force()}{Force()}}
-{\footnotesize\ttfamily IO\+::\+SDK\+::\+Integrators\+::\+Forces\+::\+Force\+::\+Force (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+{\footnotesize\ttfamily IO\+::\+SDK\+::\+Integrators\+::\+Forces\+::\+Force\+::\+Force (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [default]}}
 
 
 
 Construct a new \mbox{\hyperlink{classIO_1_1SDK_1_1Integrators_1_1Forces_1_1Force}{Force}} object. 
+
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Integrators_1_1Forces_1_1Force_afb7b891094d9f9858af152959d659848}\label{classIO_1_1SDK_1_1Integrators_1_1Forces_1_1Force_afb7b891094d9f9858af152959d659848}} 
+\index{IO::SDK::Integrators::Forces::Force@{IO::SDK::Integrators::Forces::Force}!````~Force@{$\sim$Force}}
+\index{````~Force@{$\sim$Force}!IO::SDK::Integrators::Forces::Force@{IO::SDK::Integrators::Forces::Force}}
+\doxysubsubsection{\texorpdfstring{$\sim$Force()}{~Force()}}
+{\footnotesize\ttfamily virtual IO\+::\+SDK\+::\+Integrators\+::\+Forces\+::\+Force\+::$\sim$\+Force (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}, {\ttfamily [default]}}
 
 
 

@@ -9,6 +9,7 @@
 #include <Propagator.h>
 #include <VVIntegrator.h>
 #include <memory>
+#include "TestParameters.h"
 
 using namespace std::chrono_literals;
 
@@ -18,7 +19,7 @@ TEST(Maneuvers, Initialization)
     const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
     std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth, IO::SDK::Math::Vector3D(1.0, 2.0, 3.0), IO::SDK::Math::Vector3D(4.0, 5.0, 6.0), IO::SDK::Time::TDB(100.0s),IO::SDK::Frames::InertialFrames::GetICRF());
     IO::SDK::OrbitalParameters::StateOrientation attitude(IO::SDK::Time::TDB(100.0s),IO::SDK::Frames::InertialFrames::GetICRF());
-    IO::SDK::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, "ms01", std::move(orbitalParams)};
+    IO::SDK::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams)};
 
     IO::SDK::Integrators::VVIntegrator integrator(IO::SDK::Time::TimeSpan(1.0s));
     IO::SDK::Propagators::Propagator prop(s, integrator, IO::SDK::Time::Window(IO::SDK::Time::TDB(100.0s), IO::SDK::Time::TDB(200.0s)));
@@ -28,8 +29,8 @@ TEST(Maneuvers, Initialization)
 
     auto engine1 = s.GetEngine("sn1");
 
-    std::vector<IO::SDK::Body::Spacecraft::Engine> engines;
-    engines.push_back(*engine1);
+    std::vector<IO::SDK::Body::Spacecraft::Engine*> engines;
+    engines.push_back(const_cast<IO::SDK::Body::Spacecraft::Engine*>(engine1));
 
     TestManeuver m_first(engines, prop);
 
@@ -40,7 +41,7 @@ TEST(Maneuvers, Execute)
 {
     const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
     std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth, IO::SDK::Math::Vector3D(1.0, 2.0, 3.0), IO::SDK::Math::Vector3D(4.0, 5.0, 6.0), IO::SDK::Time::TDB(100.0s),IO::SDK::Frames::InertialFrames::GetICRF());
-    IO::SDK::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, "ms01", std::move(orbitalParams)};
+    IO::SDK::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams)};
 
     IO::SDK::Integrators::VVIntegrator integrator(IO::SDK::Time::TimeSpan(1.0s));
     IO::SDK::Propagators::Propagator pro(s, integrator, IO::SDK::Time::Window(IO::SDK::Time::TDB(100.0s), IO::SDK::Time::TDB(300.0s)));
@@ -65,10 +66,11 @@ TEST(Maneuvers, Execute)
     auto engine2 = s.GetEngine("sn2");
     auto engine3 = s.GetEngine("sn3");
 
-    std::vector<IO::SDK::Body::Spacecraft::Engine> engines;
-    engines.push_back(*engine1);
-    engines.push_back(*engine2);
-    engines.push_back(*engine3);
+    std::vector<IO::SDK::Body::Spacecraft::Engine*> engines;
+    engines.push_back(const_cast<IO::SDK::Body::Spacecraft::Engine*>(engine1));
+    engines.push_back(const_cast<IO::SDK::Body::Spacecraft::Engine*>(engine2));
+    engines.push_back(const_cast<IO::SDK::Body::Spacecraft::Engine*>(engine3));
+
 
     TestManeuver maneuver(engines, pro);
 
@@ -95,7 +97,7 @@ TEST(Maneuvers, Execute)
     ASSERT_EQ(IO::SDK::Time::TDB(122.92577932661605s), pro.GetStateVectors()[3].GetEpoch());
     ASSERT_EQ(IO::SDK::Time::TDB(122.92577932661605s + 14.148441346767905s), pro.GetStateVectors()[4].GetEpoch());
 
-    //Check spacecraft
+    //Check Spacecraft
     auto totalMass = s.GetMass();
     ASSERT_DOUBLE_EQ(2700.0 - 1331.8753077414322, totalMass);
 }

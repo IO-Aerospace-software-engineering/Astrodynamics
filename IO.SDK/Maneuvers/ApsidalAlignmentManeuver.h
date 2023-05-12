@@ -2,7 +2,7 @@
  * @file ApsidalAlignmentManeuver.h
  * @author Sylvain Guillet (sylvain.guillet@live.com)
  * @brief 
- * @version 0.1
+ * @version 0.x
  * @date 2021-04-26
  * 
  * @copyright Copyright (c) 2021
@@ -12,19 +12,8 @@
 #ifndef APSIDAL_ALIGNMENT_MANEUVER_H
 #define APSIDAL_ALIGNMENT_MANEUVER_H
 
-#include <vector>
 #include <memory>
-#include <map>
-#include <string>
-
-#include <Spacecraft.h>
-#include <Engine.h>
-#include <Propagator.h>
-#include <OrbitalParameters.h>
 #include <ManeuverBase.h>
-#include <TDB.h>
-#include <StateVector.h>
-#include <StateOrientation.h>
 
 namespace IO::SDK::Maneuvers
 {
@@ -47,7 +36,7 @@ namespace IO::SDK::Maneuvers
         [[nodiscard]] double GetQTargetTrueAnomaly(const IO::SDK::OrbitalParameters::StateVector &sv) const;
         [[nodiscard]] IO::SDK::Math::Vector3D GetDeltaV(const IO::SDK::OrbitalParameters::StateVector &sv) const;
 
-        IO::SDK::OrbitalParameters::OrbitalParameters *m_targetOrbit{nullptr};
+        std::shared_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> m_targetOrbit;
 
     protected:
         /**
@@ -66,8 +55,8 @@ namespace IO::SDK::Maneuvers
         IO::SDK::OrbitalParameters::StateOrientation ComputeOrientation(const IO::SDK::OrbitalParameters::OrbitalParameters &maneuverPoint) override;
 
     public:
-        ApsidalAlignmentManeuver(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator, IO::SDK::OrbitalParameters::OrbitalParameters *targetOrbit);
-        ApsidalAlignmentManeuver(const std::vector<IO::SDK::Body::Spacecraft::Engine> &engines, IO::SDK::Propagators::Propagator &propagator, IO::SDK::OrbitalParameters::OrbitalParameters *targetOrbit, const IO::SDK::Time::TDB &minimumEpoch);
+        ApsidalAlignmentManeuver(std::vector<IO::SDK::Body::Spacecraft::Engine*> engines, IO::SDK::Propagators::Propagator &propagator, std::shared_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> targetOrbit);
+        ApsidalAlignmentManeuver(std::vector<IO::SDK::Body::Spacecraft::Engine*> engines, IO::SDK::Propagators::Propagator &propagator, std::shared_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> targetOrbit, const IO::SDK::Time::TDB &minimumEpoch);
 
         using IO::SDK::Maneuvers::ManeuverBase::GetDeltaV;
 

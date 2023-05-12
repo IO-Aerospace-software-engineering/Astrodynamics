@@ -10,6 +10,7 @@
 #include<TimeSpan.h>
 #include<CelestialBody.h>
 #include<memory>
+#include "TestParameters.h"
 
 using namespace std::chrono_literals;
 
@@ -18,7 +19,7 @@ TEST(OrientationKernel, WriteData)
 	const auto earth=std::make_shared<IO::SDK::Body::CelestialBody>(399);
 	std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth, IO::SDK::Math::Vector3D(1.0, 2.0, 3.0), IO::SDK::Math::Vector3D(4.0, 5.0, 6.0), IO::SDK::Time::TDB(100.0s),IO::SDK::Frames::InertialFrames::GetICRF());
 	IO::SDK::OrbitalParameters::StateOrientation attitude(IO::SDK::Time::TDB(100.0s),IO::SDK::Frames::InertialFrames::GetICRF());
-	IO::SDK::Body::Spacecraft::Spacecraft s(-150, "Spacecraft150", 500.0,3000.0, "MissionTest",std::move(orbitalParams));
+	IO::SDK::Body::Spacecraft::Spacecraft s(-150, "Spacecraft150", 500.0,3000.0, std::string(SpacecraftPath),std::move(orbitalParams));
 
 	std::vector<std::vector<IO::SDK::OrbitalParameters::StateOrientation>> data;
 	std::vector<IO::SDK::OrbitalParameters::StateOrientation> interval;
@@ -106,7 +107,7 @@ TEST(OrientationKernel, GetCoverage)
 	const auto earth=std::make_shared<IO::SDK::Body::CelestialBody>(399);
 	std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth, IO::SDK::Math::Vector3D(1.0, 2.0, 3.0), IO::SDK::Math::Vector3D(4.0, 5.0, 6.0), IO::SDK::Time::TDB(100.0s),IO::SDK::Frames::InertialFrames::GetICRF());
 	IO::SDK::OrbitalParameters::StateOrientation attitude(IO::SDK::Time::TDB(100.0s),IO::SDK::Frames::InertialFrames::GetICRF());
-	IO::SDK::Body::Spacecraft::Spacecraft s(-150, "Spacecraft150", 500.0,3000.0, "MissionTest",std::move(orbitalParams));
+	IO::SDK::Body::Spacecraft::Spacecraft s(-150, "Spacecraft150", 500.0,3000.0, std::string(SpacecraftPath),std::move(orbitalParams));
 
 	std::vector<std::vector<IO::SDK::OrbitalParameters::StateOrientation>> data;
 	std::vector<IO::SDK::OrbitalParameters::StateOrientation> interval;
@@ -139,7 +140,7 @@ TEST(OrientationKernel, WriteComment)
 	const auto earth=std::make_shared<IO::SDK::Body::CelestialBody>(399);
 	std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth, IO::SDK::Math::Vector3D(1.0, 2.0, 3.0), IO::SDK::Math::Vector3D(4.0, 5.0, 6.0), IO::SDK::Time::TDB(100.0s),IO::SDK::Frames::InertialFrames::GetICRF());
 	IO::SDK::OrbitalParameters::StateOrientation attitude(IO::SDK::Time::TDB(100.0s),IO::SDK::Frames::InertialFrames::GetICRF());
-	IO::SDK::Body::Spacecraft::Spacecraft s(-150, "Spacecraft150", 500.0,3000.0, "MissionTest",std::move(orbitalParams));
+	IO::SDK::Body::Spacecraft::Spacecraft s(-150, "Spacecraft150", 500.0,3000.0, std::string(SpacecraftPath),std::move(orbitalParams));
 
 	std::vector<std::vector<IO::SDK::OrbitalParameters::StateOrientation>> data;
 	std::vector<IO::SDK::OrbitalParameters::StateOrientation> interval;

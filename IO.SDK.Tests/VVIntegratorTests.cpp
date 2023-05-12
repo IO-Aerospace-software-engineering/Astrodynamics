@@ -7,6 +7,7 @@
 #include <InertialFrames.h>
 #include <Spacecraft.h>
 #include <StateOrientation.h>
+#include "TestParameters.h"
 
 using namespace std::chrono_literals;
 
@@ -32,7 +33,7 @@ TEST(VVIntegrator, IntegrateGravity)
     auto moon = std::make_shared<IO::SDK::Body::CelestialBody>(301, earth);
     std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth, IO::SDK::Math::Vector3D(6800000.0, 0.0, 0.0), IO::SDK::Math::Vector3D(0.0, 8000.0, 0.0), epoch, IO::SDK::Frames::InertialFrames::GetICRF());
     IO::SDK::OrbitalParameters::StateOrientation attitude(IO::SDK::Time::TDB(100.0s), IO::SDK::Frames::InertialFrames::GetICRF());
-    IO::SDK::Body::Spacecraft::Spacecraft spc(-12, "spc12", 1000.0, 3000.0, "missGravity", std::move(orbitalParams));
+    IO::SDK::Body::Spacecraft::Spacecraft spc(-12, "spc12", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams));
 
 #ifdef DEBUG
     auto t1 = std::chrono::high_resolution_clock::now();

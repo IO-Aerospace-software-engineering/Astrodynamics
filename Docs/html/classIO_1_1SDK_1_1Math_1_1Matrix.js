@@ -7,8 +7,8 @@ var classIO_1_1SDK_1_1Math_1_1Matrix =
     [ "GetColumsSize", "classIO_1_1SDK_1_1Math_1_1Matrix.html#a23e36eacf01a07a1a0cff6910c316ee5", null ],
     [ "GetRawData", "classIO_1_1SDK_1_1Math_1_1Matrix.html#a8047f31f1639ae3a665a09b3687475a5", null ],
     [ "GetRowsSize", "classIO_1_1SDK_1_1Math_1_1Matrix.html#a3252003659d0450c811f655ef4a34fd2", null ],
-    [ "GetValue", "classIO_1_1SDK_1_1Math_1_1Matrix.html#a5715abe199ab48d05026b6e6f28f7298", null ],
+    [ "GetValue", "classIO_1_1SDK_1_1Math_1_1Matrix.html#afc70d75fec9264628f549b680dd176bc", null ],
     [ "Multiply", "classIO_1_1SDK_1_1Math_1_1Matrix.html#adaf69eafeefd8208cfcbbeabf44c1b94", null ],
-    [ "SetValue", "classIO_1_1SDK_1_1Math_1_1Matrix.html#a2751a8ae7ceb444179f7c490f222a7b4", null ],
+    [ "SetValue", "classIO_1_1SDK_1_1Math_1_1Matrix.html#a95dc6676a532e10870833b42b4727fa8", null ],
     [ "Transpose", "classIO_1_1SDK_1_1Math_1_1Matrix.html#a97ca6c1edeae30a316e26dd1cd43f738", null ]
 ];

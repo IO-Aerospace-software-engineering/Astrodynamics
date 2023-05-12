@@ -64,7 +64,7 @@
 <a name="2"><span class="lineNum">       2 </span>            :  * @file PerigeeHeightChangingManeuver.cpp</a>
 <a name="3"><span class="lineNum">       3 </span>            :  * @author Sylvain Guillet (sylvain.guillet@live.com)</a>
 <a name="4"><span class="lineNum">       4 </span>            :  * @brief </a>
-<a name="5"><span class="lineNum">       5 </span>            :  * @version 0.1</a>
+<a name="5"><span class="lineNum">       5 </span>            :  * @version 0.x</a>
 <a name="6"><span class="lineNum">       6 </span>            :  * @date 2021-07-03</a>
 <a name="7"><span class="lineNum">       7 </span>            :  * </a>
 <a name="8"><span class="lineNum">       8 </span>            :  * @copyright Copyright (c) 2021</a>
@@ -136,7 +136,7 @@
 <a name="74"><span class="lineNum">      74 </span>            : </a>
 <a name="75"><span class="lineNum">      75 </span><span class="lineCov">          4 : bool IO::SDK::Maneuvers::PerigeeHeightChangingManeuver::IsApproachingApogee(const IO::SDK::OrbitalParameters::StateVector &amp;stateVector) const</span></a>
 <a name="76"><span class="lineNum">      76 </span>            : {</a>
-<a name="77"><span class="lineNum">      77 </span>            :     //Angle between apogee vector and spacecraft velocity</a>
+<a name="77"><span class="lineNum">      77 </span>            :     //Angle between apogee vector and Spacecraft velocity</a>
 <a name="78"><span class="lineNum">      78 </span><span class="lineCov">          4 :     double dp = stateVector.GetApogeeVector().DotProduct(stateVector.GetVelocity());</span></a>
 <a name="79"><span class="lineNum">      79 </span>            : </a>
 <a name="80"><span class="lineNum">      80 </span>            :     //if &lt; 90° we're in inbound sector</a>

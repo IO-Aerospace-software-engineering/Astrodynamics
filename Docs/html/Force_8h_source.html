@@ -25,7 +25,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">IO-SDK<span id="projectnumber">&#160;0.4.x</span>
+   <div id="projectname">IO-SDK<span id="projectnumber">&#160;0.5.x</span>
    </div>
    <div id="projectbrief">Astrodynamics framework</div>
   </td>
@@ -94,16 +94,16 @@ $(document).ready(function(){initNavTree('Force_8h_source.html',''); initResizab
 <div class="line"><a id="l00015" name="l00015"></a><span class="lineno">   15</span><span class="preprocessor">#include &lt;<a class="code" href="Body_8h.html">Body.h</a>&gt;</span></div>
 <div class="line"><a id="l00016" name="l00016"></a><span class="lineno">   16</span><span class="preprocessor">#include &lt;<a class="code" href="StateVector_8h.html">StateVector.h</a>&gt;</span></div>
 <div class="line"><a id="l00017" name="l00017"></a><span class="lineno">   17</span> </div>
-<div class="line"><a id="l00018" name="l00018"></a><span class="lineno"><a class="line" href="namespaceIO_1_1SDK_1_1Integrators.html">   18</a></span><span class="keyword">namespace </span><a class="code hl_namespace" href="namespaceIO_1_1SDK_1_1Integrators_1_1Forces.html">IO::SDK::Integrators::Forces</a></div>
-<div class="line"><a id="l00019" name="l00019"></a><span class="lineno">   19</span>{</div>
-<div class="line"><a id="l00024" name="l00024"></a><span class="lineno"><a class="line" href="classIO_1_1SDK_1_1Integrators_1_1Forces_1_1Force.html">   24</a></span>    <span class="keyword">class </span><a class="code hl_class" href="classIO_1_1SDK_1_1Integrators_1_1Forces_1_1Force.html">Force</a></div>
-<div class="line"><a id="l00025" name="l00025"></a><span class="lineno">   25</span>    {</div>
-<div class="line"><a id="l00026" name="l00026"></a><span class="lineno">   26</span>    <span class="keyword">private</span>:</div>
-<div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span>        <span class="comment">/* data */</span></div>
-<div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span>    <span class="keyword">public</span>:</div>
-<div class="line"><a id="l00033" name="l00033"></a><span class="lineno">   33</span>        <a class="code hl_function" href="classIO_1_1SDK_1_1Integrators_1_1Forces_1_1Force.html#a7656d94c375a0c716d98538af1913460">Force</a>();</div>
-<div class="line"><a id="l00034" name="l00034"></a><span class="lineno">   34</span> </div>
-<div class="line"><a id="l00042" name="l00042"></a><span class="lineno"><a class="line" href="classIO_1_1SDK_1_1Integrators_1_1Forces_1_1Force.html#a92c0d714231cdd9fd0b78153110d4c26">   42</a></span>        <span class="keyword">virtual</span> <a class="code hl_class" href="classIO_1_1SDK_1_1Math_1_1Vector3D.html">IO::SDK::Math::Vector3D</a> <a class="code hl_function" href="classIO_1_1SDK_1_1Integrators_1_1Forces_1_1Force.html#a92c0d714231cdd9fd0b78153110d4c26">Apply</a>(<span class="keyword">const</span> <a class="code hl_class" href="classIO_1_1SDK_1_1Body_1_1Body.html">IO::SDK::Body::Body</a> &amp;body, <span class="keyword">const</span> <a class="code hl_class" href="classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector.html">IO::SDK::OrbitalParameters::StateVector</a> &amp;stateVector) = 0;</div>
+<div class="line"><a id="l00018" name="l00018"></a><span class="lineno"><a class="line" href="namespaceIO_1_1SDK_1_1Integrators.html">   18</a></span><span class="keyword">namespace </span><a class="code hl_namespace" href="namespaceIO_1_1SDK_1_1Integrators_1_1Forces.html">IO::SDK::Integrators::Forces</a> {</div>
+<div class="line"><a id="l00023" name="l00023"></a><span class="lineno"><a class="line" href="classIO_1_1SDK_1_1Integrators_1_1Forces_1_1Force.html">   23</a></span>    <span class="keyword">class </span><a class="code hl_class" href="classIO_1_1SDK_1_1Integrators_1_1Forces_1_1Force.html">Force</a> {</div>
+<div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span>    <span class="keyword">private</span>:</div>
+<div class="line"><a id="l00025" name="l00025"></a><span class="lineno">   25</span>        <span class="comment">/* data */</span></div>
+<div class="line"><a id="l00026" name="l00026"></a><span class="lineno">   26</span>    <span class="keyword">public</span>:</div>
+<div class="line"><a id="l00031" name="l00031"></a><span class="lineno"><a class="line" href="classIO_1_1SDK_1_1Integrators_1_1Forces_1_1Force.html#a7656d94c375a0c716d98538af1913460">   31</a></span>        <a class="code hl_function" href="classIO_1_1SDK_1_1Integrators_1_1Forces_1_1Force.html#a7656d94c375a0c716d98538af1913460">Force</a>();</div>
+<div class="line"><a id="l00032" name="l00032"></a><span class="lineno">   32</span> </div>
+<div class="line"><a id="l00040" name="l00040"></a><span class="lineno"><a class="line" href="classIO_1_1SDK_1_1Integrators_1_1Forces_1_1Force.html#a92c0d714231cdd9fd0b78153110d4c26">   40</a></span>        <span class="keyword">virtual</span> <a class="code hl_class" href="classIO_1_1SDK_1_1Math_1_1Vector3D.html">IO::SDK::Math::Vector3D</a> <a class="code hl_function" href="classIO_1_1SDK_1_1Integrators_1_1Forces_1_1Force.html#a92c0d714231cdd9fd0b78153110d4c26">Apply</a>(<span class="keyword">const</span> <a class="code hl_class" href="classIO_1_1SDK_1_1Body_1_1Body.html">IO::SDK::Body::Body</a> &amp;body, <span class="keyword">const</span> <a class="code hl_class" href="classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector.html">IO::SDK::OrbitalParameters::StateVector</a> &amp;stateVector) = 0;</div>
+<div class="line"><a id="l00041" name="l00041"></a><span class="lineno">   41</span> </div>
+<div class="line"><a id="l00042" name="l00042"></a><span class="lineno"><a class="line" href="classIO_1_1SDK_1_1Integrators_1_1Forces_1_1Force.html#afb7b891094d9f9858af152959d659848">   42</a></span>        <span class="keyword">virtual</span> <a class="code hl_function" href="classIO_1_1SDK_1_1Integrators_1_1Forces_1_1Force.html#afb7b891094d9f9858af152959d659848">~Force</a>() = <span class="keywordflow">default</span>;</div>
 <div class="line"><a id="l00043" name="l00043"></a><span class="lineno">   43</span>    };</div>
 <div class="line"><a id="l00044" name="l00044"></a><span class="lineno">   44</span> </div>
 <div class="line"><a id="l00045" name="l00045"></a><span class="lineno">   45</span>}</div>
@@ -112,13 +112,14 @@ $(document).ready(function(){initNavTree('Force_8h_source.html',''); initResizab
 <div class="ttc" id="aBody_8h_html"><div class="ttname"><a href="Body_8h.html">Body.h</a></div></div>
 <div class="ttc" id="aStateVector_8h_html"><div class="ttname"><a href="StateVector_8h.html">StateVector.h</a></div></div>
 <div class="ttc" id="aVector3D_8h_html"><div class="ttname"><a href="Vector3D_8h.html">Vector3D.h</a></div></div>
-<div class="ttc" id="aclassIO_1_1SDK_1_1Body_1_1Body_html"><div class="ttname"><a href="classIO_1_1SDK_1_1Body_1_1Body.html">IO::SDK::Body::Body</a></div><div class="ttdoc">Body class.</div><div class="ttdef"><b>Definition:</b> Body.h:45</div></div>
-<div class="ttc" id="aclassIO_1_1SDK_1_1Integrators_1_1Forces_1_1Force_html"><div class="ttname"><a href="classIO_1_1SDK_1_1Integrators_1_1Forces_1_1Force.html">IO::SDK::Integrators::Forces::Force</a></div><div class="ttdoc">Force.</div><div class="ttdef"><b>Definition:</b> Force.h:25</div></div>
-<div class="ttc" id="aclassIO_1_1SDK_1_1Integrators_1_1Forces_1_1Force_html_a7656d94c375a0c716d98538af1913460"><div class="ttname"><a href="classIO_1_1SDK_1_1Integrators_1_1Forces_1_1Force.html#a7656d94c375a0c716d98538af1913460">IO::SDK::Integrators::Forces::Force::Force</a></div><div class="ttdeci">Force()</div><div class="ttdoc">Construct a new Force object.</div><div class="ttdef"><b>Definition:</b> Force.cpp:13</div></div>
+<div class="ttc" id="aclassIO_1_1SDK_1_1Body_1_1Body_html"><div class="ttname"><a href="classIO_1_1SDK_1_1Body_1_1Body.html">IO::SDK::Body::Body</a></div><div class="ttdoc">Body class.</div><div class="ttdef"><b>Definition:</b> Body.h:38</div></div>
+<div class="ttc" id="aclassIO_1_1SDK_1_1Integrators_1_1Forces_1_1Force_html"><div class="ttname"><a href="classIO_1_1SDK_1_1Integrators_1_1Forces_1_1Force.html">IO::SDK::Integrators::Forces::Force</a></div><div class="ttdoc">Force.</div><div class="ttdef"><b>Definition:</b> Force.h:23</div></div>
+<div class="ttc" id="aclassIO_1_1SDK_1_1Integrators_1_1Forces_1_1Force_html_a7656d94c375a0c716d98538af1913460"><div class="ttname"><a href="classIO_1_1SDK_1_1Integrators_1_1Forces_1_1Force.html#a7656d94c375a0c716d98538af1913460">IO::SDK::Integrators::Forces::Force::Force</a></div><div class="ttdeci">Force()</div><div class="ttdoc">Construct a new Force object.</div></div>
 <div class="ttc" id="aclassIO_1_1SDK_1_1Integrators_1_1Forces_1_1Force_html_a92c0d714231cdd9fd0b78153110d4c26"><div class="ttname"><a href="classIO_1_1SDK_1_1Integrators_1_1Forces_1_1Force.html#a92c0d714231cdd9fd0b78153110d4c26">IO::SDK::Integrators::Forces::Force::Apply</a></div><div class="ttdeci">virtual IO::SDK::Math::Vector3D Apply(const IO::SDK::Body::Body &amp;body, const IO::SDK::OrbitalParameters::StateVector &amp;stateVector)=0</div><div class="ttdoc">Apply force to body.</div></div>
-<div class="ttc" id="aclassIO_1_1SDK_1_1Math_1_1Vector3D_html"><div class="ttname"><a href="classIO_1_1SDK_1_1Math_1_1Vector3D.html">IO::SDK::Math::Vector3D</a></div><div class="ttdef"><b>Definition:</b> Vector3D.h:19</div></div>
-<div class="ttc" id="aclassIO_1_1SDK_1_1OrbitalParameters_1_1StateVector_html"><div class="ttname"><a href="classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector.html">IO::SDK::OrbitalParameters::StateVector</a></div><div class="ttdoc">State vector class.</div><div class="ttdef"><b>Definition:</b> StateVector.h:37</div></div>
-<div class="ttc" id="anamespaceIO_1_1SDK_1_1Integrators_1_1Forces_html"><div class="ttname"><a href="namespaceIO_1_1SDK_1_1Integrators_1_1Forces.html">IO::SDK::Integrators::Forces</a></div><div class="ttdef"><b>Definition:</b> Force.h:19</div></div>
+<div class="ttc" id="aclassIO_1_1SDK_1_1Integrators_1_1Forces_1_1Force_html_afb7b891094d9f9858af152959d659848"><div class="ttname"><a href="classIO_1_1SDK_1_1Integrators_1_1Forces_1_1Force.html#afb7b891094d9f9858af152959d659848">IO::SDK::Integrators::Forces::Force::~Force</a></div><div class="ttdeci">virtual ~Force()=default</div></div>
+<div class="ttc" id="aclassIO_1_1SDK_1_1Math_1_1Vector3D_html"><div class="ttname"><a href="classIO_1_1SDK_1_1Math_1_1Vector3D.html">IO::SDK::Math::Vector3D</a></div><div class="ttdef"><b>Definition:</b> Vector3D.h:17</div></div>
+<div class="ttc" id="aclassIO_1_1SDK_1_1OrbitalParameters_1_1StateVector_html"><div class="ttname"><a href="classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector.html">IO::SDK::OrbitalParameters::StateVector</a></div><div class="ttdoc">State vector class.</div><div class="ttdef"><b>Definition:</b> StateVector.h:25</div></div>
+<div class="ttc" id="anamespaceIO_1_1SDK_1_1Integrators_1_1Forces_html"><div class="ttname"><a href="namespaceIO_1_1SDK_1_1Integrators_1_1Forces.html">IO::SDK::Integrators::Forces</a></div><div class="ttdef"><b>Definition:</b> Force.h:18</div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->

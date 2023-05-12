@@ -20,7 +20,7 @@
 \DoxyCodeLine{25 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1SDK_1_1OrbitalParameters}{IO::SDK::OrbitalParameters}}}
 \DoxyCodeLine{26 \{}
 \DoxyCodeLine{27     \textcolor{comment}{// class StateVector;}}
-\DoxyCodeLine{31 \textcolor{comment}{}    \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1ConicOrbitalElements}{ConicOrbitalElements}} final :\textcolor{keyword}{public} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters}{IO::SDK::OrbitalParameters::OrbitalParameters}}}
+\DoxyCodeLine{31 \textcolor{comment}{}    \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1ConicOrbitalElements}{ConicOrbitalElements}} final : \textcolor{keyword}{public} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters}{IO::SDK::OrbitalParameters::OrbitalParameters}}}
 \DoxyCodeLine{32     \{}
 \DoxyCodeLine{33     \textcolor{keyword}{private}:}
 \DoxyCodeLine{34         \textcolor{keywordtype}{double} m\_perifocalDistance\{\};}
@@ -32,61 +32,64 @@
 \DoxyCodeLine{40         \textcolor{keywordtype}{double} m\_trueAnomaly\{\};}
 \DoxyCodeLine{41         \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO::SDK::Time::TimeSpan}} m\_orbitalPeriod;}
 \DoxyCodeLine{42         \textcolor{keywordtype}{double} m\_semiMajorAxis\{\};}
-\DoxyCodeLine{43         }
+\DoxyCodeLine{43 }
 \DoxyCodeLine{44 }
 \DoxyCodeLine{45     \textcolor{keyword}{public}:}
-\DoxyCodeLine{46         }
-\DoxyCodeLine{47         \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1ConicOrbitalElements_a1fbf7411d3372a10d6df935a31dbbc21}{ConicOrbitalElements}}(}
-\DoxyCodeLine{48             \textcolor{keyword}{const} std::shared\_ptr<IO::SDK::Body::CelestialBody>\& centerOfMotion,}
-\DoxyCodeLine{49             \textcolor{keyword}{const} \textcolor{keywordtype}{double} perifocalDistance,}
-\DoxyCodeLine{50             \textcolor{keyword}{const} \textcolor{keywordtype}{double} eccentricity,}
-\DoxyCodeLine{51             \textcolor{keyword}{const} \textcolor{keywordtype}{double} inclination,}
-\DoxyCodeLine{52             \textcolor{keyword}{const} \textcolor{keywordtype}{double} ascendingNodeLongitude,}
-\DoxyCodeLine{53             \textcolor{keyword}{const} \textcolor{keywordtype}{double} periapsisArgument,}
-\DoxyCodeLine{54             \textcolor{keyword}{const} \textcolor{keywordtype}{double} meanAnomaly,}
-\DoxyCodeLine{55             \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO::SDK::Time::TDB}}\& epoch, }
-\DoxyCodeLine{56             \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1Frames}{IO::SDK::Frames::Frames}}\& frame);}
+\DoxyCodeLine{46 }
+\DoxyCodeLine{47         \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1ConicOrbitalElements_ae34c8091c3c8df0ed716b936fcee7ff4}{ConicOrbitalElements}}(}
+\DoxyCodeLine{48                 \textcolor{keyword}{const} std::shared\_ptr<IO::SDK::Body::CelestialBody> \&centerOfMotion,}
+\DoxyCodeLine{49                 \textcolor{keywordtype}{double} perifocalDistance,}
+\DoxyCodeLine{50                 \textcolor{keywordtype}{double} eccentricity,}
+\DoxyCodeLine{51                 \textcolor{keywordtype}{double} inclination,}
+\DoxyCodeLine{52                 \textcolor{keywordtype}{double} ascendingNodeLongitude,}
+\DoxyCodeLine{53                 \textcolor{keywordtype}{double} periapsisArgument,}
+\DoxyCodeLine{54                 \textcolor{keywordtype}{double} meanAnomaly,}
+\DoxyCodeLine{55                 \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO::SDK::Time::TDB}} \&epoch,}
+\DoxyCodeLine{56                 \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1Frames}{IO::SDK::Frames::Frames}} \&frame);}
 \DoxyCodeLine{57 }
-\DoxyCodeLine{63         \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1ConicOrbitalElements_a1fbf7411d3372a10d6df935a31dbbc21}{ConicOrbitalElements}}(\textcolor{keyword}{const} std::shared\_ptr<IO::SDK::Body::CelestialBody>\& centerOfMotion, \textcolor{keyword}{const} \textcolor{keywordtype}{double} spiceElements[SPICE\_OSCLTX\_NELTS], \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1Frames}{IO::SDK::Frames::Frames}}\& frame);}
-\DoxyCodeLine{64 }
-\DoxyCodeLine{65         \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1ConicOrbitalElements_a1fbf7411d3372a10d6df935a31dbbc21}{ConicOrbitalElements}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{IO::SDK::OrbitalParameters::StateVector}}\& stateVector);}
-\DoxyCodeLine{66 }
-\DoxyCodeLine{67         \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1ConicOrbitalElements_aa36f5024ffcf3b7295b4380cc35a35c6}{ConicOrbitalElements}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1ConicOrbitalElements}{ConicOrbitalElements}}\& conicOrbitalElements) = \textcolor{keywordflow}{default};}
-\DoxyCodeLine{68 }
-\DoxyCodeLine{69         \textcolor{keyword}{virtual} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1ConicOrbitalElements_a2a67282931a59fdb9da837497e5b63a0}{\string~ConicOrbitalElements}}() = \textcolor{keywordflow}{default};}
-\DoxyCodeLine{70 }
-\DoxyCodeLine{75         \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1ConicOrbitalElements_a6944ee54f9dfadf15f5eaef90782c7bc}{GetPerifocalDistance}}() \textcolor{keyword}{const};}
-\DoxyCodeLine{76 }
-\DoxyCodeLine{81         \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1ConicOrbitalElements_ac0d7dd1a8b22c7e5c5fd8c4ddd797ea4}{GetEccentricity}}() \textcolor{keyword}{const override};}
-\DoxyCodeLine{82 }
-\DoxyCodeLine{87         \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1ConicOrbitalElements_a03e4e603cb1d00811a754e3acaf78345}{GetInclination}}() \textcolor{keyword}{const override};}
-\DoxyCodeLine{88 }
-\DoxyCodeLine{93         \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1ConicOrbitalElements_acd3334bb0f7b3bd5420f2ab5fe35dcf4}{GetRightAscendingNodeLongitude}}() \textcolor{keyword}{const override};}
-\DoxyCodeLine{94 }
-\DoxyCodeLine{99         \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1ConicOrbitalElements_a2f23c8278b6675dc5115776c2319697a}{GetPeriapsisArgument}}() \textcolor{keyword}{const override};}
-\DoxyCodeLine{100 }
-\DoxyCodeLine{101         \textcolor{comment}{//Get non pure virtual function accessible}}
-\DoxyCodeLine{102         \textcolor{keyword}{using }\mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters_af9aebe2ea0a10ef3adbda48c4c4dc1c3}{OrbitalParameters::GetMeanAnomaly}};}
-\DoxyCodeLine{107         \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1ConicOrbitalElements_aa188f69859616a46876a85b167716c37}{GetMeanAnomaly}}() \textcolor{keyword}{const override};}
-\DoxyCodeLine{108 }
-\DoxyCodeLine{109         \textcolor{comment}{//Get non pure virtual function accessible}}
-\DoxyCodeLine{110         \textcolor{keyword}{using }\mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters_a20b8e8626b722022cbd5598d6998d430}{OrbitalParameters::GetTrueAnomaly}};}
-\DoxyCodeLine{115         \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1ConicOrbitalElements_a5acfe7e998e3770fbda4cfbcca1625c9}{GetTrueAnomaly}}() \textcolor{keyword}{const override};}
-\DoxyCodeLine{116 }
-\DoxyCodeLine{121         \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1ConicOrbitalElements_a526410fffb876ae33fee8be8decd77e7}{GetSemiMajorAxis}}() \textcolor{keyword}{const override};}
-\DoxyCodeLine{122 }
-\DoxyCodeLine{127         \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO::SDK::Time::TimeSpan}} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1ConicOrbitalElements_a5fe1ec26a1e0551acb4e7f0a3046a253}{GetPeriod}}() \textcolor{keyword}{const override};}
-\DoxyCodeLine{128 }
-\DoxyCodeLine{134         \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{IO::SDK::OrbitalParameters::StateVector}} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters_aa43c591349045654575f38b5a027149b}{GetStateVector}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO::SDK::Time::TDB}}\& epoch) \textcolor{keyword}{const override};}
-\DoxyCodeLine{135 }
-\DoxyCodeLine{140         \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO::SDK::Math::Vector3D}} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1ConicOrbitalElements_a5d9910600a7129741d6eb64f7a4f8a75}{GetSpecificAngularMomentum}}() \textcolor{keyword}{const override};}
-\DoxyCodeLine{141 }
-\DoxyCodeLine{146         \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1ConicOrbitalElements_a93c3abcfededa1296e803c9617b1b76a}{GetSpecificOrbitalEnergy}}() \textcolor{keyword}{const override};}
-\DoxyCodeLine{147 }
-\DoxyCodeLine{148         \textcolor{keyword}{using }\mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters_aa43c591349045654575f38b5a027149b}{IO::SDK::OrbitalParameters::OrbitalParameters::GetStateVector}};}
-\DoxyCodeLine{149     \};}
-\DoxyCodeLine{150 \}}
-\DoxyCodeLine{151 \textcolor{preprocessor}{\#endif}}
-\DoxyCodeLine{152 }
+\DoxyCodeLine{63         \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1ConicOrbitalElements_ae34c8091c3c8df0ed716b936fcee7ff4}{ConicOrbitalElements}}(\textcolor{keyword}{const} std::shared\_ptr<IO::SDK::Body::CelestialBody> \&centerOfMotion, \textcolor{keyword}{const} \textcolor{keywordtype}{double} spiceElements[SPICE\_OSCLTX\_NELTS],}
+\DoxyCodeLine{64                              \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1Frames}{IO::SDK::Frames::Frames}} \&frame);}
+\DoxyCodeLine{65 }
+\DoxyCodeLine{66         \textcolor{keyword}{explicit} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1ConicOrbitalElements_ae34c8091c3c8df0ed716b936fcee7ff4}{ConicOrbitalElements}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{IO::SDK::OrbitalParameters::StateVector}} \&stateVector);}
+\DoxyCodeLine{67 }
+\DoxyCodeLine{68         \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1ConicOrbitalElements_aa36f5024ffcf3b7295b4380cc35a35c6}{ConicOrbitalElements}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1ConicOrbitalElements}{ConicOrbitalElements}} \&conicOrbitalElements) = \textcolor{keywordflow}{default};}
+\DoxyCodeLine{69 }
+\DoxyCodeLine{70         \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1ConicOrbitalElements_aa2beb833038a5b9322a1241ecc63015a}{\string~ConicOrbitalElements}}() \textcolor{keyword}{override} = \textcolor{keywordflow}{default};}
+\DoxyCodeLine{71 }
+\DoxyCodeLine{76         [[nodiscard]] \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1ConicOrbitalElements_a6944ee54f9dfadf15f5eaef90782c7bc}{GetPerifocalDistance}}() \textcolor{keyword}{const};}
+\DoxyCodeLine{77 }
+\DoxyCodeLine{82         [[nodiscard]] \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1ConicOrbitalElements_ac0d7dd1a8b22c7e5c5fd8c4ddd797ea4}{GetEccentricity}}() \textcolor{keyword}{const override};}
+\DoxyCodeLine{83 }
+\DoxyCodeLine{88         [[nodiscard]] \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1ConicOrbitalElements_a03e4e603cb1d00811a754e3acaf78345}{GetInclination}}() \textcolor{keyword}{const override};}
+\DoxyCodeLine{89 }
+\DoxyCodeLine{94         [[nodiscard]] \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1ConicOrbitalElements_acd3334bb0f7b3bd5420f2ab5fe35dcf4}{GetRightAscendingNodeLongitude}}() \textcolor{keyword}{const override};}
+\DoxyCodeLine{95 }
+\DoxyCodeLine{100         [[nodiscard]] \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1ConicOrbitalElements_a2f23c8278b6675dc5115776c2319697a}{GetPeriapsisArgument}}() \textcolor{keyword}{const override};}
+\DoxyCodeLine{101 }
+\DoxyCodeLine{102         \textcolor{comment}{//Get non pure virtual function accessible}}
+\DoxyCodeLine{103         \textcolor{keyword}{using }\mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters_af9aebe2ea0a10ef3adbda48c4c4dc1c3}{OrbitalParameters::GetMeanAnomaly}};}
+\DoxyCodeLine{104 }
+\DoxyCodeLine{109         [[nodiscard]] \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1ConicOrbitalElements_aa188f69859616a46876a85b167716c37}{GetMeanAnomaly}}() \textcolor{keyword}{const override};}
+\DoxyCodeLine{110 }
+\DoxyCodeLine{111         \textcolor{comment}{//Get non pure virtual function accessible}}
+\DoxyCodeLine{112         \textcolor{keyword}{using }\mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters_a20b8e8626b722022cbd5598d6998d430}{OrbitalParameters::GetTrueAnomaly}};}
+\DoxyCodeLine{113 }
+\DoxyCodeLine{118         [[nodiscard]] \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1ConicOrbitalElements_a5acfe7e998e3770fbda4cfbcca1625c9}{GetTrueAnomaly}}() \textcolor{keyword}{const override};}
+\DoxyCodeLine{119 }
+\DoxyCodeLine{124         [[nodiscard]] \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1ConicOrbitalElements_a526410fffb876ae33fee8be8decd77e7}{GetSemiMajorAxis}}() \textcolor{keyword}{const override};}
+\DoxyCodeLine{125 }
+\DoxyCodeLine{130         [[nodiscard]] \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO::SDK::Time::TimeSpan}} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1ConicOrbitalElements_a5fe1ec26a1e0551acb4e7f0a3046a253}{GetPeriod}}() \textcolor{keyword}{const override};}
+\DoxyCodeLine{131 }
+\DoxyCodeLine{137         [[nodiscard]] \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{IO::SDK::OrbitalParameters::StateVector}} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters_aa43c591349045654575f38b5a027149b}{GetStateVector}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO::SDK::Time::TDB}} \&epoch) \textcolor{keyword}{const override};}
+\DoxyCodeLine{138 }
+\DoxyCodeLine{143         [[nodiscard]] \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO::SDK::Math::Vector3D}} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1ConicOrbitalElements_a5d9910600a7129741d6eb64f7a4f8a75}{GetSpecificAngularMomentum}}() \textcolor{keyword}{const override};}
+\DoxyCodeLine{144 }
+\DoxyCodeLine{149         [[nodiscard]] \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1ConicOrbitalElements_a93c3abcfededa1296e803c9617b1b76a}{GetSpecificOrbitalEnergy}}() \textcolor{keyword}{const override};}
+\DoxyCodeLine{150 }
+\DoxyCodeLine{151         \textcolor{keyword}{using }\mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters_aa43c591349045654575f38b5a027149b}{IO::SDK::OrbitalParameters::OrbitalParameters::GetStateVector}};}
+\DoxyCodeLine{152     \};}
+\DoxyCodeLine{153 \}}
+\DoxyCodeLine{154 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{155 }
 
 \end{DoxyCode}

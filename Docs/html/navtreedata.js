@@ -25,6 +25,7 @@
 var NAVTREE =
 [
   [ "IO-SDK", "index.html", [
+    [ "todo", "md_IO_SDK_API_todo.html", null ],
     [ "Namespaces", "namespaces.html", [
       [ "Namespace List", "namespaces.html", "namespaces_dup" ],
       [ "Namespace Members", "namespacemembers.html", [
@@ -41,7 +42,7 @@ var NAVTREE =
       [ "Class Members", "functions.html", [
         [ "All", "functions.html", "functions_dup" ],
         [ "Functions", "functions_func.html", "functions_func" ],
-        [ "Variables", "functions_vars.html", null ],
+        [ "Variables", "functions_vars.html", "functions_vars" ],
         [ "Related Functions", "functions_rela.html", null ]
       ] ]
     ] ],
@@ -49,6 +50,7 @@ var NAVTREE =
       [ "File List", "files.html", "files_dup" ],
       [ "File Members", "globals.html", [
         [ "All", "globals.html", null ],
+        [ "Functions", "globals_func.html", null ],
         [ "Variables", "globals_vars.html", null ],
         [ "Macros", "globals_defs.html", null ]
       ] ]
@@ -59,14 +61,17 @@ var NAVTREE =
 var NAVTREEINDEX =
 [
 "Aberrations_8cpp.html",
-"SDKException_8cpp.html",
-"classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft.html#a3da063e2993be78c8f584eba90ea0e1a",
-"classIO_1_1SDK_1_1Coordinates_1_1Spherical.html#acbd4f6070fb66574d24b8e782fefb34a",
-"classIO_1_1SDK_1_1Kernels_1_1InstrumentKernel.html#a3a2ede777155a55120fb5a1f9d152f1f",
-"classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase.html#a2b3d8dedb5f9299a3d8798bdb3f50b9a",
-"classIO_1_1SDK_1_1OrbitalParameters_1_1EquinoctialElements.html#a36393b0eaf7a941985812f063df28abd",
-"classIO_1_1SDK_1_1Propagators_1_1Propagator.html#af56312404623a188b322098bae61fef9",
-"classIO_1_1SDK_1_1Time_1_1Window.html#a0759e406234c65bcf39eaa4aba5a8a29"
+"Planetographic_8h.html",
+"classIO_1_1SDK_1_1Body_1_1Body.html#ae7189b7328abc3991ad4ee4581eeceb5",
+"classIO_1_1SDK_1_1Coordinates_1_1HorizontalCoordinates.html#a29494e94ec44700c5b4faf2ed48949be",
+"classIO_1_1SDK_1_1Integrators_1_1IntegratorBase.html#a43de978b2a55657caf364534548ac2e8",
+"classIO_1_1SDK_1_1Maneuvers_1_1CombinedManeuver.html#a8e0b5838b45f0ab7abb381214eba5159",
+"classIO_1_1SDK_1_1OccultationType.html#afaf8c0768506ac30dfbe5c3fc7345ff8",
+"classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector.html#af828475071cab0ed417f496a33874d28",
+"classIO_1_1SDK_1_1Time_1_1TimeSpan.html#a49a3b0088840aaaf0b94c74218de5ba8",
+"namespacemembers_enum.html",
+"structIO_1_1SDK_1_1API_1_1DTO_1_1OccultationConstraintDTO.html#abf0fd90caae60a2a05ded980aa8aa859",
+"structIO_1_1SDK_1_1Maneuvers_1_1ManeuverResult.html"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';

@@ -13,13 +13,15 @@ Inheritance diagram for IO\+::SDK\+::Kernels\+::Orientation\+Kernel\+:\begin{fig
 \doxysubsection*{Public Member Functions}
 \begin{DoxyCompactItemize}
 \item 
-virtual \mbox{\hyperlink{classIO_1_1SDK_1_1Kernels_1_1OrientationKernel_a33bf97d909b938bc4ab468f9d7549803}{$\sim$\+Orientation\+Kernel}} ()
+\mbox{\hyperlink{classIO_1_1SDK_1_1Kernels_1_1OrientationKernel_a080287e95053970174c8316ca8b60cf3}{Orientation\+Kernel}} (std\+::string file\+Path, int spacecraft\+Id, int spacecraft\+Frame\+Id)
+\begin{DoxyCompactList}\small\item\em Construct a new Orientation \mbox{\hyperlink{classIO_1_1SDK_1_1Kernels_1_1Kernel}{Kernel}} object. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classIO_1_1SDK_1_1Kernels_1_1OrientationKernel_a5e0bce0f0bd914da50270119009497cd}{$\sim$\+Orientation\+Kernel}} () override
 \item 
 void \mbox{\hyperlink{classIO_1_1SDK_1_1Kernels_1_1OrientationKernel_a3568dbf0fceb125a7e77e1558c099ffb}{Write\+Orientations}} (const std\+::vector$<$ std\+::vector$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateOrientation}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+State\+Orientation}} $>$ $>$ \&orientations) const
 \begin{DoxyCompactList}\small\item\em Write orientations data. \end{DoxyCompactList}\item 
 \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO\+::\+SDK\+::\+Time\+::\+Window}}$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} $>$ \mbox{\hyperlink{classIO_1_1SDK_1_1Kernels_1_1OrientationKernel_af7592ed80174ff3a2c085e988bc0c284}{Get\+Coverage\+Window}} () const override
 \begin{DoxyCompactList}\small\item\em Get the Coverage Window. \end{DoxyCompactList}\item 
-\mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateOrientation}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+State\+Orientation}} \mbox{\hyperlink{classIO_1_1SDK_1_1Kernels_1_1OrientationKernel_ad26fba84edc70cc60800cf028fbdaf97}{Read\+State\+Orientation}} (const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} \&epoch, const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO\+::\+SDK\+::\+Time\+::\+Time\+Span}} \&tolerance, const \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1Frames}{IO\+::\+SDK\+::\+Frames\+::\+Frames}} \&frame) const
+\mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateOrientation}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+State\+Orientation}} \mbox{\hyperlink{classIO_1_1SDK_1_1Kernels_1_1OrientationKernel_a5854748fd6dcc51f0c9ad3eee31c0a46}{Read\+State\+Orientation}} (const \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft}{Body\+::\+Spacecraft\+::\+Spacecraft}} \&spacecraft, const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} \&epoch, const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO\+::\+SDK\+::\+Time\+::\+Time\+Span}} \&tolerance, const \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1Frames}{IO\+::\+SDK\+::\+Frames\+::\+Frames}} \&frame) const
 \begin{DoxyCompactList}\small\item\em Read state orientations. \end{DoxyCompactList}\end{DoxyCompactItemize}
 \doxysubsection*{Friends}
 \begin{DoxyCompactItemize}
@@ -30,11 +32,26 @@ class \mbox{\hyperlink{classIO_1_1SDK_1_1Kernels_1_1OrientationKernel_a1ba9c39cf
 
 
 \doxysubsection{Constructor \& Destructor Documentation}
-\mbox{\Hypertarget{classIO_1_1SDK_1_1Kernels_1_1OrientationKernel_a33bf97d909b938bc4ab468f9d7549803}\label{classIO_1_1SDK_1_1Kernels_1_1OrientationKernel_a33bf97d909b938bc4ab468f9d7549803}} 
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Kernels_1_1OrientationKernel_a080287e95053970174c8316ca8b60cf3}\label{classIO_1_1SDK_1_1Kernels_1_1OrientationKernel_a080287e95053970174c8316ca8b60cf3}} 
+\index{IO::SDK::Kernels::OrientationKernel@{IO::SDK::Kernels::OrientationKernel}!OrientationKernel@{OrientationKernel}}
+\index{OrientationKernel@{OrientationKernel}!IO::SDK::Kernels::OrientationKernel@{IO::SDK::Kernels::OrientationKernel}}
+\doxysubsubsection{\texorpdfstring{OrientationKernel()}{OrientationKernel()}}
+{\footnotesize\ttfamily IO\+::\+SDK\+::\+Kernels\+::\+Orientation\+Kernel\+::\+Orientation\+Kernel (\begin{DoxyParamCaption}\item[{std\+::string}]{file\+Path,  }\item[{int}]{spacecraft\+Id,  }\item[{int}]{spacecraft\+Frame\+Id }\end{DoxyParamCaption})}
+
+
+
+Construct a new Orientation \mbox{\hyperlink{classIO_1_1SDK_1_1Kernels_1_1Kernel}{Kernel}} object. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em spacecraft} & \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Kernels_1_1OrientationKernel_a5e0bce0f0bd914da50270119009497cd}\label{classIO_1_1SDK_1_1Kernels_1_1OrientationKernel_a5e0bce0f0bd914da50270119009497cd}} 
 \index{IO::SDK::Kernels::OrientationKernel@{IO::SDK::Kernels::OrientationKernel}!````~OrientationKernel@{$\sim$OrientationKernel}}
 \index{````~OrientationKernel@{$\sim$OrientationKernel}!IO::SDK::Kernels::OrientationKernel@{IO::SDK::Kernels::OrientationKernel}}
 \doxysubsubsection{\texorpdfstring{$\sim$OrientationKernel()}{~OrientationKernel()}}
-{\footnotesize\ttfamily IO\+::\+SDK\+::\+Kernels\+::\+Orientation\+Kernel\+::$\sim$\+Orientation\+Kernel (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+{\footnotesize\ttfamily IO\+::\+SDK\+::\+Kernels\+::\+Orientation\+Kernel\+::$\sim$\+Orientation\+Kernel (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [default]}}
 
 
 
@@ -56,11 +73,11 @@ IO\+::\+SDK\+::\+Time\+::\+Window$<$\+IO\+::\+SDK\+::\+Time\+::\+TDB$>$
 
 Implements \mbox{\hyperlink{classIO_1_1SDK_1_1Kernels_1_1Kernel_a752d5b214ec50307c47fb63daa89f749}{IO\+::\+SDK\+::\+Kernels\+::\+Kernel}}.
 
-\mbox{\Hypertarget{classIO_1_1SDK_1_1Kernels_1_1OrientationKernel_ad26fba84edc70cc60800cf028fbdaf97}\label{classIO_1_1SDK_1_1Kernels_1_1OrientationKernel_ad26fba84edc70cc60800cf028fbdaf97}} 
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Kernels_1_1OrientationKernel_a5854748fd6dcc51f0c9ad3eee31c0a46}\label{classIO_1_1SDK_1_1Kernels_1_1OrientationKernel_a5854748fd6dcc51f0c9ad3eee31c0a46}} 
 \index{IO::SDK::Kernels::OrientationKernel@{IO::SDK::Kernels::OrientationKernel}!ReadStateOrientation@{ReadStateOrientation}}
 \index{ReadStateOrientation@{ReadStateOrientation}!IO::SDK::Kernels::OrientationKernel@{IO::SDK::Kernels::OrientationKernel}}
 \doxysubsubsection{\texorpdfstring{ReadStateOrientation()}{ReadStateOrientation()}}
-{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateOrientation}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+State\+Orientation}} IO\+::\+SDK\+::\+Kernels\+::\+Orientation\+Kernel\+::\+Read\+State\+Orientation (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} \&}]{epoch,  }\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO\+::\+SDK\+::\+Time\+::\+Time\+Span}} \&}]{tolerance,  }\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1Frames}{IO\+::\+SDK\+::\+Frames\+::\+Frames}} \&}]{frame }\end{DoxyParamCaption}) const}
+{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateOrientation}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+State\+Orientation}} IO\+::\+SDK\+::\+Kernels\+::\+Orientation\+Kernel\+::\+Read\+State\+Orientation (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft}{Body\+::\+Spacecraft\+::\+Spacecraft}} \&}]{spacecraft,  }\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} \&}]{epoch,  }\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO\+::\+SDK\+::\+Time\+::\+Time\+Span}} \&}]{tolerance,  }\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1Frames}{IO\+::\+SDK\+::\+Frames\+::\+Frames}} \&}]{frame }\end{DoxyParamCaption}) const}
 
 
 

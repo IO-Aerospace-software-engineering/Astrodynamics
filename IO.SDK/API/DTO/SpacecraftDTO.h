@@ -6,7 +6,6 @@
 #include <PayloadDTO.h>
 #include <StateVectorDTO.h>
 #include <StateOrientationDTO.h>
-#include <AttitudeDTO.h>
 #include <InstrumentPointingToAttitudeDTO.h>
 #include <ApogeeHeightChangingManeuverDTO.h>
 #include <PerigeeHeightChangingManeuverDTO.h>
@@ -14,7 +13,11 @@
 #include <OrbitalPlaneChangingManeuverDTO.h>
 #include <PhasingManeuverDTO.h>
 #include <ApsidalAlignmentManeuverDTO.h>
-#include "LaunchDTO.h"
+#include <LaunchDTO.h>
+#include <ProgradeAttitudeDTO.h>
+#include <RetrogradeAttitudeDTO.h>
+#include <NadirAttitudeDTO.h>
+#include <ZenithAttitudeDTO.h>
 
 namespace IO::SDK::API::DTO
 {
@@ -26,13 +29,18 @@ namespace IO::SDK::API::DTO
         double dryOperatingMass{};
         double maximumOperatingMass{};
         StateVectorDTO initialOrbitalParameter;
+        const char *directoryPath{};
+
         FuelTankDTO fuelTank[5]{};
         EngineDTO engines[5]{};
         InstrumentDTO instruments[5];
         PayloadDTO payloads[5];
 
         //Spacecraft attitudes
-        AttitudeDTO attitudes[50];
+        ProgradeAttitudeDTO progradeAttitudes[10];
+        RetrogradeAttitudeDTO retrogradeAttitudes[10];
+        ZenithAttitudeDTO zenithAttitudes[10];
+        NadirAttitudeDTO nadirAttitudes[10];
         InstrumentPointingToAttitudeDTO pointingToAttitudes[10];
 
         //Spacecraft maneuvers
@@ -42,10 +50,5 @@ namespace IO::SDK::API::DTO
         CombinedManeuverDTO combinedManeuvers[10];
         ApsidalAlignmentManeuverDTO apsidalAlignmentManeuvers[10];
         PhasingManeuverDTO phasingManeuverDto[10];
-        LaunchDTO launches;
-
-        //Spacecraft states
-        StateVectorDTO stateVectors[10000];
-        StateOrientationDTO stateOrientations[1000];
     };
 }

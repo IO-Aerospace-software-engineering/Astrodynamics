@@ -25,7 +25,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">IO-SDK<span id="projectnumber">&#160;0.4.x</span>
+   <div id="projectname">IO-SDK<span id="projectnumber">&#160;0.5.x</span>
    </div>
    <div id="projectbrief">Astrodynamics framework</div>
   </td>
@@ -85,6 +85,7 @@ $(document).ready(function(){initNavTree('classIO_1_1SDK_1_1Body_1_1Body.html','
 <div class="header">
   <div class="summary">
 <a href="#pub-methods">Public Member Functions</a> &#124;
+<a href="#pub-static-methods">Static Public Member Functions</a> &#124;
 <a href="#pro-attribs">Protected Attributes</a> &#124;
 <a href="classIO_1_1SDK_1_1Body_1_1Body-members.html">List of all members</a>  </div>
   <div class="headertitle"><div class="title">IO::SDK::Body::Body Class Reference</div></div>
@@ -108,15 +109,15 @@ Inheritance diagram for IO::SDK::Body::Body:</div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:abf78b47d57db466a75d08405b17286db"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Body_1_1Body.html#abf78b47d57db466a75d08405b17286db">Body</a> (const int id, const std::string &amp;name, const double mass)</td></tr>
-<tr class="memdesc:abf78b47d57db466a75d08405b17286db"><td class="mdescLeft">&#160;</td><td class="mdescRight">Construct a new <a class="el" href="classIO_1_1SDK_1_1Body_1_1Body.html" title="Body class.">Body</a> object.  <a href="classIO_1_1SDK_1_1Body_1_1Body.html#abf78b47d57db466a75d08405b17286db">More...</a><br /></td></tr>
-<tr class="separator:abf78b47d57db466a75d08405b17286db"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:adb5054417552bd6e4c504255aaa6f6e3"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Body_1_1Body.html#adb5054417552bd6e4c504255aaa6f6e3">Body</a> (const int id, const std::string &amp;name, const double mass, std::unique_ptr&lt; <a class="el" href="classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters.html">IO::SDK::OrbitalParameters::OrbitalParameters</a> &gt; orbitalParametersAtEpoch)</td></tr>
-<tr class="memdesc:adb5054417552bd6e4c504255aaa6f6e3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Construct a new <a class="el" href="classIO_1_1SDK_1_1Body_1_1Body.html" title="Body class.">Body</a> object.  <a href="classIO_1_1SDK_1_1Body_1_1Body.html#adb5054417552bd6e4c504255aaa6f6e3">More...</a><br /></td></tr>
-<tr class="separator:adb5054417552bd6e4c504255aaa6f6e3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a44463544d8d738a11e61f780b224ee83"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Body_1_1Body.html#a44463544d8d738a11e61f780b224ee83">Body</a> (const int id, const std::string &amp;name, const double mass, std::shared_ptr&lt; <a class="el" href="classIO_1_1SDK_1_1Body_1_1CelestialBody.html">IO::SDK::Body::CelestialBody</a> &gt; &amp;centerOfMotion)</td></tr>
-<tr class="memdesc:a44463544d8d738a11e61f780b224ee83"><td class="mdescLeft">&#160;</td><td class="mdescRight">Construct a new <a class="el" href="classIO_1_1SDK_1_1Body_1_1Body.html" title="Body class.">Body</a> object.  <a href="classIO_1_1SDK_1_1Body_1_1Body.html#a44463544d8d738a11e61f780b224ee83">More...</a><br /></td></tr>
-<tr class="separator:a44463544d8d738a11e61f780b224ee83"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5bb5783ce846c94b7cfc3cce1e516b6e"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Body_1_1Body.html#a5bb5783ce846c94b7cfc3cce1e516b6e">Body</a> (int id, const std::string &amp;name, double mass)</td></tr>
+<tr class="memdesc:a5bb5783ce846c94b7cfc3cce1e516b6e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Construct a new <a class="el" href="classIO_1_1SDK_1_1Body_1_1Body.html" title="Body class.">Body</a> object.  <a href="classIO_1_1SDK_1_1Body_1_1Body.html#a5bb5783ce846c94b7cfc3cce1e516b6e">More...</a><br /></td></tr>
+<tr class="separator:a5bb5783ce846c94b7cfc3cce1e516b6e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7608b5d026cf14fff528b26c44fb2448"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Body_1_1Body.html#a7608b5d026cf14fff528b26c44fb2448">Body</a> (int id, const std::string &amp;name, double mass, std::unique_ptr&lt; <a class="el" href="classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters.html">IO::SDK::OrbitalParameters::OrbitalParameters</a> &gt; orbitalParametersAtEpoch)</td></tr>
+<tr class="memdesc:a7608b5d026cf14fff528b26c44fb2448"><td class="mdescLeft">&#160;</td><td class="mdescRight">Construct a new <a class="el" href="classIO_1_1SDK_1_1Body_1_1Body.html" title="Body class.">Body</a> object.  <a href="classIO_1_1SDK_1_1Body_1_1Body.html#a7608b5d026cf14fff528b26c44fb2448">More...</a><br /></td></tr>
+<tr class="separator:a7608b5d026cf14fff528b26c44fb2448"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af48206ca4f2f88a2e62a8d01b3700af3"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Body_1_1Body.html#af48206ca4f2f88a2e62a8d01b3700af3">Body</a> (int id, const std::string &amp;name, double mass, std::shared_ptr&lt; <a class="el" href="classIO_1_1SDK_1_1Body_1_1CelestialBody.html">IO::SDK::Body::CelestialBody</a> &gt; &amp;centerOfMotion)</td></tr>
+<tr class="memdesc:af48206ca4f2f88a2e62a8d01b3700af3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Construct a new <a class="el" href="classIO_1_1SDK_1_1Body_1_1Body.html" title="Body class.">Body</a> object.  <a href="classIO_1_1SDK_1_1Body_1_1Body.html#af48206ca4f2f88a2e62a8d01b3700af3">More...</a><br /></td></tr>
+<tr class="separator:af48206ca4f2f88a2e62a8d01b3700af3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:adbd7d95ef089471f11cade9facce1a8c"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Body_1_1Body.html#adbd7d95ef089471f11cade9facce1a8c">Body</a> (const <a class="el" href="classIO_1_1SDK_1_1Body_1_1Body.html">Body</a> &amp;body)</td></tr>
 <tr class="separator:adbd7d95ef089471f11cade9facce1a8c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a362cb5e31756fe29a43f44be9f87c436"><td class="memItemLeft" align="right" valign="top">virtual&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Body_1_1Body.html#a362cb5e31756fe29a43f44be9f87c436">~Body</a> ()=default</td></tr>
@@ -124,9 +125,9 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a27ba6eb9d8f5d669d79375214990a4e8"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Body_1_1Body.html#a27ba6eb9d8f5d669d79375214990a4e8">GetId</a> () const</td></tr>
 <tr class="memdesc:a27ba6eb9d8f5d669d79375214990a4e8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the body identifier.  <a href="classIO_1_1SDK_1_1Body_1_1Body.html#a27ba6eb9d8f5d669d79375214990a4e8">More...</a><br /></td></tr>
 <tr class="separator:a27ba6eb9d8f5d669d79375214990a4e8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aee9998a34d69e84d7b576a63d6f505a7"><td class="memItemLeft" align="right" valign="top">const std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Body_1_1Body.html#aee9998a34d69e84d7b576a63d6f505a7">GetName</a> () const</td></tr>
-<tr class="memdesc:aee9998a34d69e84d7b576a63d6f505a7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the body name.  <a href="classIO_1_1SDK_1_1Body_1_1Body.html#aee9998a34d69e84d7b576a63d6f505a7">More...</a><br /></td></tr>
-<tr class="separator:aee9998a34d69e84d7b576a63d6f505a7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aab6038f9760ba8b22255c8d042a0aef2"><td class="memItemLeft" align="right" valign="top">std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Body_1_1Body.html#aab6038f9760ba8b22255c8d042a0aef2">GetName</a> () const</td></tr>
+<tr class="memdesc:aab6038f9760ba8b22255c8d042a0aef2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the body name.  <a href="classIO_1_1SDK_1_1Body_1_1Body.html#aab6038f9760ba8b22255c8d042a0aef2">More...</a><br /></td></tr>
+<tr class="separator:aab6038f9760ba8b22255c8d042a0aef2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a166ce7048ed87d61f6f40b51e5d4f609"><td class="memItemLeft" align="right" valign="top">virtual double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Body_1_1Body.html#a166ce7048ed87d61f6f40b51e5d4f609">GetMass</a> () const</td></tr>
 <tr class="memdesc:a166ce7048ed87d61f6f40b51e5d4f609"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the Mass.  <a href="classIO_1_1SDK_1_1Body_1_1Body.html#a166ce7048ed87d61f6f40b51e5d4f609">More...</a><br /></td></tr>
 <tr class="separator:a166ce7048ed87d61f6f40b51e5d4f609"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -139,30 +140,33 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a73ca24c3037cb7b41f0ac6a88d372f28"><td class="memItemLeft" align="right" valign="top">const std::vector&lt; <a class="el" href="classIO_1_1SDK_1_1Body_1_1Body.html">IO::SDK::Body::Body</a> * &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Body_1_1Body.html#a73ca24c3037cb7b41f0ac6a88d372f28">GetSatellites</a> () const</td></tr>
 <tr class="memdesc:a73ca24c3037cb7b41f0ac6a88d372f28"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the Satellites.  <a href="classIO_1_1SDK_1_1Body_1_1Body.html#a73ca24c3037cb7b41f0ac6a88d372f28">More...</a><br /></td></tr>
 <tr class="separator:a73ca24c3037cb7b41f0ac6a88d372f28"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:adc2f216ec2fd970876a40f69ca32bfbb"><td class="memItemLeft" align="right" valign="top">virtual <a class="el" href="classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector.html">IO::SDK::OrbitalParameters::StateVector</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Body_1_1Body.html#adc2f216ec2fd970876a40f69ca32bfbb">ReadEphemeris</a> (const <a class="el" href="classIO_1_1SDK_1_1Frames_1_1Frames.html">IO::SDK::Frames::Frames</a> &amp;frame, const <a class="el" href="namespaceIO_1_1SDK.html#abbb4827ec6a24ad346d9a60473ad3b81">IO::SDK::AberrationsEnum</a> aberration, const <a class="el" href="classIO_1_1SDK_1_1Time_1_1TDB.html">IO::SDK::Time::TDB</a> &amp;epoch) const</td></tr>
-<tr class="memdesc:adc2f216ec2fd970876a40f69ca32bfbb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the State Vector relative to its center of motion.  <a href="classIO_1_1SDK_1_1Body_1_1Body.html#adc2f216ec2fd970876a40f69ca32bfbb">More...</a><br /></td></tr>
-<tr class="separator:adc2f216ec2fd970876a40f69ca32bfbb"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4585506e3bf57bbeb1652bb1bb45b19a"><td class="memItemLeft" align="right" valign="top">virtual <a class="el" href="classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector.html">IO::SDK::OrbitalParameters::StateVector</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Body_1_1Body.html#a4585506e3bf57bbeb1652bb1bb45b19a">ReadEphemeris</a> (const <a class="el" href="classIO_1_1SDK_1_1Frames_1_1Frames.html">IO::SDK::Frames::Frames</a> &amp;frame, const <a class="el" href="namespaceIO_1_1SDK.html#abbb4827ec6a24ad346d9a60473ad3b81">IO::SDK::AberrationsEnum</a> aberration, const <a class="el" href="classIO_1_1SDK_1_1Time_1_1TDB.html">IO::SDK::Time::TDB</a> &amp;epoch, const <a class="el" href="classIO_1_1SDK_1_1Body_1_1CelestialBody.html">IO::SDK::Body::CelestialBody</a> &amp;relativeTo) const</td></tr>
-<tr class="memdesc:a4585506e3bf57bbeb1652bb1bb45b19a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get state vector from ephemeris relative to another body.  <a href="classIO_1_1SDK_1_1Body_1_1Body.html#a4585506e3bf57bbeb1652bb1bb45b19a">More...</a><br /></td></tr>
-<tr class="separator:a4585506e3bf57bbeb1652bb1bb45b19a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae7189b7328abc3991ad4ee4581eeceb5"><td class="memItemLeft" align="right" valign="top">virtual <a class="el" href="classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector.html">IO::SDK::OrbitalParameters::StateVector</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Body_1_1Body.html#ae7189b7328abc3991ad4ee4581eeceb5">ReadEphemeris</a> (const <a class="el" href="classIO_1_1SDK_1_1Frames_1_1Frames.html">IO::SDK::Frames::Frames</a> &amp;frame, <a class="el" href="namespaceIO_1_1SDK.html#abbb4827ec6a24ad346d9a60473ad3b81">IO::SDK::AberrationsEnum</a> aberration, const <a class="el" href="classIO_1_1SDK_1_1Time_1_1TDB.html">IO::SDK::Time::TDB</a> &amp;epoch) const</td></tr>
+<tr class="memdesc:ae7189b7328abc3991ad4ee4581eeceb5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the State Vector relative to its center of motion.  <a href="classIO_1_1SDK_1_1Body_1_1Body.html#ae7189b7328abc3991ad4ee4581eeceb5">More...</a><br /></td></tr>
+<tr class="separator:ae7189b7328abc3991ad4ee4581eeceb5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a96174b1cbddd7f4754cab3ebd1288591"><td class="memItemLeft" align="right" valign="top">virtual <a class="el" href="classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector.html">IO::SDK::OrbitalParameters::StateVector</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Body_1_1Body.html#a96174b1cbddd7f4754cab3ebd1288591">ReadEphemeris</a> (const <a class="el" href="classIO_1_1SDK_1_1Frames_1_1Frames.html">IO::SDK::Frames::Frames</a> &amp;frame, <a class="el" href="namespaceIO_1_1SDK.html#abbb4827ec6a24ad346d9a60473ad3b81">IO::SDK::AberrationsEnum</a> aberration, const <a class="el" href="classIO_1_1SDK_1_1Time_1_1TDB.html">IO::SDK::Time::TDB</a> &amp;epoch, const <a class="el" href="classIO_1_1SDK_1_1Body_1_1CelestialBody.html">IO::SDK::Body::CelestialBody</a> &amp;relativeTo) const</td></tr>
+<tr class="memdesc:a96174b1cbddd7f4754cab3ebd1288591"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get state vector from ephemeris relative to another body.  <a href="classIO_1_1SDK_1_1Body_1_1Body.html#a96174b1cbddd7f4754cab3ebd1288591">More...</a><br /></td></tr>
+<tr class="separator:a96174b1cbddd7f4754cab3ebd1288591"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:affb081c56bb7b2ec50c5fd44c880bc0b"><td class="memItemLeft" align="right" valign="top">virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Body_1_1Body.html#affb081c56bb7b2ec50c5fd44c880bc0b">operator==</a> (const <a class="el" href="classIO_1_1SDK_1_1Body_1_1Body.html">IO::SDK::Body::Body</a> &amp;rhs) const</td></tr>
 <tr class="separator:affb081c56bb7b2ec50c5fd44c880bc0b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3c80e9b62cbd50a3fefea0337ee81cd9"><td class="memItemLeft" align="right" valign="top">virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Body_1_1Body.html#a3c80e9b62cbd50a3fefea0337ee81cd9">operator!=</a> (const <a class="el" href="classIO_1_1SDK_1_1Body_1_1Body.html">IO::SDK::Body::Body</a> &amp;rhs) const</td></tr>
 <tr class="separator:a3c80e9b62cbd50a3fefea0337ee81cd9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9bba6ae2bc97ca5345d9a9ff545184fd"><td class="memItemLeft" align="right" valign="top">std::shared_ptr&lt; <a class="el" href="classIO_1_1SDK_1_1Body_1_1Body.html">IO::SDK::Body::Body</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Body_1_1Body.html#a9bba6ae2bc97ca5345d9a9ff545184fd">GetSharedPointer</a> ()</td></tr>
 <tr class="separator:a9bba6ae2bc97ca5345d9a9ff545184fd"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:afd45a30150eb5899b52254ae25fc7936"><td class="memItemLeft" align="right" valign="top">std::vector&lt; <a class="el" href="classIO_1_1SDK_1_1Time_1_1Window.html">IO::SDK::Time::Window</a>&lt; <a class="el" href="classIO_1_1SDK_1_1Time_1_1TDB.html">IO::SDK::Time::TDB</a> &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Body_1_1Body.html#afd45a30150eb5899b52254ae25fc7936">FindWindowsOnDistanceConstraint</a> (const <a class="el" href="classIO_1_1SDK_1_1Time_1_1Window.html">IO::SDK::Time::Window</a>&lt; <a class="el" href="classIO_1_1SDK_1_1Time_1_1TDB.html">IO::SDK::Time::TDB</a> &gt; searchWindow, const <a class="el" href="classIO_1_1SDK_1_1Body_1_1Body.html">Body</a> &amp;targetBody, const <a class="el" href="classIO_1_1SDK_1_1Body_1_1Body.html">Body</a> &amp;observer, const <a class="el" href="classIO_1_1SDK_1_1Constraints_1_1Constraint.html">IO::SDK::Constraints::Constraint</a> &amp;constraint, const <a class="el" href="namespaceIO_1_1SDK.html#abbb4827ec6a24ad346d9a60473ad3b81">IO::SDK::AberrationsEnum</a> aberration, const double value, const <a class="el" href="classIO_1_1SDK_1_1Time_1_1TimeSpan.html">IO::SDK::Time::TimeSpan</a> &amp;step) const</td></tr>
-<tr class="memdesc:afd45a30150eb5899b52254ae25fc7936"><td class="mdescLeft">&#160;</td><td class="mdescRight">Find windows when distance constraint occurs.  <a href="classIO_1_1SDK_1_1Body_1_1Body.html#afd45a30150eb5899b52254ae25fc7936">More...</a><br /></td></tr>
-<tr class="separator:afd45a30150eb5899b52254ae25fc7936"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad107e43f20a3c03aba27e1216f943185"><td class="memItemLeft" align="right" valign="top">std::vector&lt; <a class="el" href="classIO_1_1SDK_1_1Time_1_1Window.html">IO::SDK::Time::Window</a>&lt; <a class="el" href="classIO_1_1SDK_1_1Time_1_1TDB.html">IO::SDK::Time::TDB</a> &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Body_1_1Body.html#ad107e43f20a3c03aba27e1216f943185">FindWindowsOnOccultationConstraint</a> (const <a class="el" href="classIO_1_1SDK_1_1Time_1_1Window.html">IO::SDK::Time::Window</a>&lt; <a class="el" href="classIO_1_1SDK_1_1Time_1_1TDB.html">IO::SDK::Time::TDB</a> &gt; searchWindow, const <a class="el" href="classIO_1_1SDK_1_1Body_1_1Body.html">IO::SDK::Body::Body</a> &amp;targetBody, const <a class="el" href="classIO_1_1SDK_1_1Body_1_1CelestialBody.html">IO::SDK::Body::CelestialBody</a> &amp;frontBody, const <a class="el" href="classIO_1_1SDK_1_1OccultationType.html">IO::SDK::OccultationType</a> &amp;occultationType, const <a class="el" href="namespaceIO_1_1SDK.html#abbb4827ec6a24ad346d9a60473ad3b81">IO::SDK::AberrationsEnum</a> aberration, const <a class="el" href="classIO_1_1SDK_1_1Time_1_1TimeSpan.html">IO::SDK::Time::TimeSpan</a> &amp;stepSize) const</td></tr>
-<tr class="memdesc:ad107e43f20a3c03aba27e1216f943185"><td class="mdescLeft">&#160;</td><td class="mdescRight">Find windows when occultation occurs.  <a href="classIO_1_1SDK_1_1Body_1_1Body.html#ad107e43f20a3c03aba27e1216f943185">More...</a><br /></td></tr>
-<tr class="separator:ad107e43f20a3c03aba27e1216f943185"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2bcf92ebfa83f35e3f17b70d3bf38c18"><td class="memItemLeft" align="right" valign="top">std::vector&lt; <a class="el" href="classIO_1_1SDK_1_1Time_1_1Window.html">IO::SDK::Time::Window</a>&lt; <a class="el" href="classIO_1_1SDK_1_1Time_1_1TDB.html">IO::SDK::Time::TDB</a> &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Body_1_1Body.html#a2bcf92ebfa83f35e3f17b70d3bf38c18">FindWindowsOnOccultationConstraint</a> (const <a class="el" href="classIO_1_1SDK_1_1Time_1_1Window.html">IO::SDK::Time::Window</a>&lt; <a class="el" href="classIO_1_1SDK_1_1Time_1_1TDB.html">IO::SDK::Time::TDB</a> &gt; &amp;searchWindow, const <a class="el" href="classIO_1_1SDK_1_1Body_1_1Body.html">IO::SDK::Body::Body</a> &amp;targetBody, const <a class="el" href="classIO_1_1SDK_1_1Body_1_1CelestialBody.html">IO::SDK::Body::CelestialBody</a> &amp;frontBody, const <a class="el" href="classIO_1_1SDK_1_1OccultationType.html">IO::SDK::OccultationType</a> &amp;occultationType, <a class="el" href="namespaceIO_1_1SDK.html#abbb4827ec6a24ad346d9a60473ad3b81">IO::SDK::AberrationsEnum</a> aberration, const <a class="el" href="classIO_1_1SDK_1_1Time_1_1TimeSpan.html">IO::SDK::Time::TimeSpan</a> &amp;stepSize) const</td></tr>
+<tr class="memdesc:a2bcf92ebfa83f35e3f17b70d3bf38c18"><td class="mdescLeft">&#160;</td><td class="mdescRight">Find windows when occultation occurs.  <a href="classIO_1_1SDK_1_1Body_1_1Body.html#a2bcf92ebfa83f35e3f17b70d3bf38c18">More...</a><br /></td></tr>
+<tr class="separator:a2bcf92ebfa83f35e3f17b70d3bf38c18"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa22fd3b03a98e72b145002a180baf428"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classIO_1_1SDK_1_1Coordinates_1_1Planetographic.html">IO::SDK::Coordinates::Planetographic</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Body_1_1Body.html#aa22fd3b03a98e72b145002a180baf428">GetSubObserverPoint</a> (const <a class="el" href="classIO_1_1SDK_1_1Body_1_1CelestialBody.html">IO::SDK::Body::CelestialBody</a> &amp;targetBody, const <a class="el" href="namespaceIO_1_1SDK.html#abbb4827ec6a24ad346d9a60473ad3b81">IO::SDK::AberrationsEnum</a> &amp;aberration, const <a class="el" href="classIO_1_1SDK_1_1Time_1_1DateTime.html">IO::SDK::Time::DateTime</a> &amp;epoch) const</td></tr>
 <tr class="memdesc:aa22fd3b03a98e72b145002a180baf428"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the Sub Observer Point observed from this body.  <a href="classIO_1_1SDK_1_1Body_1_1Body.html#aa22fd3b03a98e72b145002a180baf428">More...</a><br /></td></tr>
 <tr class="separator:aa22fd3b03a98e72b145002a180baf428"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a48957dac85ead026cb6c736c79e155e3"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classIO_1_1SDK_1_1Coordinates_1_1Planetographic.html">IO::SDK::Coordinates::Planetographic</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Body_1_1Body.html#a48957dac85ead026cb6c736c79e155e3">GetSubSolarPoint</a> (const <a class="el" href="classIO_1_1SDK_1_1Body_1_1CelestialBody.html">IO::SDK::Body::CelestialBody</a> &amp;targetBody, const <a class="el" href="namespaceIO_1_1SDK.html#abbb4827ec6a24ad346d9a60473ad3b81">IO::SDK::AberrationsEnum</a> aberration, const <a class="el" href="classIO_1_1SDK_1_1Time_1_1TDB.html">IO::SDK::Time::TDB</a> &amp;epoch) const</td></tr>
-<tr class="memdesc:a48957dac85ead026cb6c736c79e155e3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the Sub Solar Point observed from this body.  <a href="classIO_1_1SDK_1_1Body_1_1Body.html#a48957dac85ead026cb6c736c79e155e3">More...</a><br /></td></tr>
-<tr class="separator:a48957dac85ead026cb6c736c79e155e3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a018f89071ab60df2c208f67250ed23cb"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classIO_1_1SDK_1_1Coordinates_1_1Planetographic.html">IO::SDK::Coordinates::Planetographic</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Body_1_1Body.html#a018f89071ab60df2c208f67250ed23cb">GetSubSolarPoint</a> (const <a class="el" href="classIO_1_1SDK_1_1Body_1_1CelestialBody.html">IO::SDK::Body::CelestialBody</a> &amp;targetBody, <a class="el" href="namespaceIO_1_1SDK.html#abbb4827ec6a24ad346d9a60473ad3b81">IO::SDK::AberrationsEnum</a> aberration, const <a class="el" href="classIO_1_1SDK_1_1Time_1_1TDB.html">IO::SDK::Time::TDB</a> &amp;epoch) const</td></tr>
+<tr class="memdesc:a018f89071ab60df2c208f67250ed23cb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the Sub Solar Point observed from this body.  <a href="classIO_1_1SDK_1_1Body_1_1Body.html#a018f89071ab60df2c208f67250ed23cb">More...</a><br /></td></tr>
+<tr class="separator:a018f89071ab60df2c208f67250ed23cb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-static-methods" name="pub-static-methods"></a>
+Static Public Member Functions</h2></td></tr>
+<tr class="memitem:aafbe9ac9808c8b20f6527fa12b760a84"><td class="memItemLeft" align="right" valign="top">static std::vector&lt; <a class="el" href="classIO_1_1SDK_1_1Time_1_1Window.html">IO::SDK::Time::Window</a>&lt; <a class="el" href="classIO_1_1SDK_1_1Time_1_1TDB.html">IO::SDK::Time::TDB</a> &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Body_1_1Body.html#aafbe9ac9808c8b20f6527fa12b760a84">FindWindowsOnDistanceConstraint</a> (const <a class="el" href="classIO_1_1SDK_1_1Time_1_1Window.html">IO::SDK::Time::Window</a>&lt; <a class="el" href="classIO_1_1SDK_1_1Time_1_1TDB.html">IO::SDK::Time::TDB</a> &gt; &amp;searchWindow, const <a class="el" href="classIO_1_1SDK_1_1Body_1_1Body.html">Body</a> &amp;targetBody, const <a class="el" href="classIO_1_1SDK_1_1Body_1_1Body.html">Body</a> &amp;observer, const <a class="el" href="classIO_1_1SDK_1_1Constraints_1_1RelationalOperator.html">IO::SDK::Constraints::RelationalOperator</a> &amp;constraint, <a class="el" href="namespaceIO_1_1SDK.html#abbb4827ec6a24ad346d9a60473ad3b81">IO::SDK::AberrationsEnum</a> aberration, double value, const <a class="el" href="classIO_1_1SDK_1_1Time_1_1TimeSpan.html">IO::SDK::Time::TimeSpan</a> &amp;step)</td></tr>
+<tr class="memdesc:aafbe9ac9808c8b20f6527fa12b760a84"><td class="mdescLeft">&#160;</td><td class="mdescRight">Find windows when distance constraint occurs.  <a href="classIO_1_1SDK_1_1Body_1_1Body.html#aafbe9ac9808c8b20f6527fa12b760a84">More...</a><br /></td></tr>
+<tr class="separator:aafbe9ac9808c8b20f6527fa12b760a84"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pro-attribs" name="pro-attribs"></a>
 Protected Attributes</h2></td></tr>
@@ -182,8 +186,8 @@ Protected Attributes</h2></td></tr>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p ><a class="el" href="classIO_1_1SDK_1_1Body_1_1Body.html" title="Body class.">Body</a> class. </p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
-<a id="abf78b47d57db466a75d08405b17286db" name="abf78b47d57db466a75d08405b17286db"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#abf78b47d57db466a75d08405b17286db">&#9670;&nbsp;</a></span>Body() <span class="overload">[1/4]</span></h2>
+<a id="a5bb5783ce846c94b7cfc3cce1e516b6e" name="a5bb5783ce846c94b7cfc3cce1e516b6e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5bb5783ce846c94b7cfc3cce1e516b6e">&#9670;&nbsp;</a></span>Body() <span class="overload">[1/4]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -191,7 +195,7 @@ Protected Attributes</h2></td></tr>
         <tr>
           <td class="memname">IO::SDK::Body::Body::Body </td>
           <td>(</td>
-          <td class="paramtype">const int&#160;</td>
+          <td class="paramtype">int&#160;</td>
           <td class="paramname"><em>id</em>, </td>
         </tr>
         <tr>
@@ -203,7 +207,7 @@ Protected Attributes</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const double&#160;</td>
+          <td class="paramtype">double&#160;</td>
           <td class="paramname"><em>mass</em>&#160;</td>
         </tr>
         <tr>
@@ -226,8 +230,8 @@ Protected Attributes</h2></td></tr>
 
 </div>
 </div>
-<a id="adb5054417552bd6e4c504255aaa6f6e3" name="adb5054417552bd6e4c504255aaa6f6e3"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#adb5054417552bd6e4c504255aaa6f6e3">&#9670;&nbsp;</a></span>Body() <span class="overload">[2/4]</span></h2>
+<a id="a7608b5d026cf14fff528b26c44fb2448" name="a7608b5d026cf14fff528b26c44fb2448"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7608b5d026cf14fff528b26c44fb2448">&#9670;&nbsp;</a></span>Body() <span class="overload">[2/4]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -235,7 +239,7 @@ Protected Attributes</h2></td></tr>
         <tr>
           <td class="memname">IO::SDK::Body::Body::Body </td>
           <td>(</td>
-          <td class="paramtype">const int&#160;</td>
+          <td class="paramtype">int&#160;</td>
           <td class="paramname"><em>id</em>, </td>
         </tr>
         <tr>
@@ -247,7 +251,7 @@ Protected Attributes</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const double&#160;</td>
+          <td class="paramtype">double&#160;</td>
           <td class="paramname"><em>mass</em>, </td>
         </tr>
         <tr>
@@ -277,8 +281,8 @@ Protected Attributes</h2></td></tr>
 
 </div>
 </div>
-<a id="a44463544d8d738a11e61f780b224ee83" name="a44463544d8d738a11e61f780b224ee83"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a44463544d8d738a11e61f780b224ee83">&#9670;&nbsp;</a></span>Body() <span class="overload">[3/4]</span></h2>
+<a id="af48206ca4f2f88a2e62a8d01b3700af3" name="af48206ca4f2f88a2e62a8d01b3700af3"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af48206ca4f2f88a2e62a8d01b3700af3">&#9670;&nbsp;</a></span>Body() <span class="overload">[3/4]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -286,7 +290,7 @@ Protected Attributes</h2></td></tr>
         <tr>
           <td class="memname">IO::SDK::Body::Body::Body </td>
           <td>(</td>
-          <td class="paramtype">const int&#160;</td>
+          <td class="paramtype">int&#160;</td>
           <td class="paramname"><em>id</em>, </td>
         </tr>
         <tr>
@@ -298,7 +302,7 @@ Protected Attributes</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const double&#160;</td>
+          <td class="paramtype">double&#160;</td>
           <td class="paramname"><em>mass</em>, </td>
         </tr>
         <tr>
@@ -372,16 +376,19 @@ Protected Attributes</h2></td></tr>
 </div>
 </div>
 <h2 class="groupheader">Member Function Documentation</h2>
-<a id="afd45a30150eb5899b52254ae25fc7936" name="afd45a30150eb5899b52254ae25fc7936"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#afd45a30150eb5899b52254ae25fc7936">&#9670;&nbsp;</a></span>FindWindowsOnDistanceConstraint()</h2>
+<a id="aafbe9ac9808c8b20f6527fa12b760a84" name="aafbe9ac9808c8b20f6527fa12b760a84"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aafbe9ac9808c8b20f6527fa12b760a84">&#9670;&nbsp;</a></span>FindWindowsOnDistanceConstraint()</h2>
 
 <div class="memitem">
 <div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
       <table class="memname">
         <tr>
           <td class="memname">std::vector&lt; <a class="el" href="classIO_1_1SDK_1_1Time_1_1Window.html">IO::SDK::Time::Window</a>&lt; <a class="el" href="classIO_1_1SDK_1_1Time_1_1TDB.html">IO::SDK::Time::TDB</a> &gt; &gt; IO::SDK::Body::Body::FindWindowsOnDistanceConstraint </td>
           <td>(</td>
-          <td class="paramtype">const <a class="el" href="classIO_1_1SDK_1_1Time_1_1Window.html">IO::SDK::Time::Window</a>&lt; <a class="el" href="classIO_1_1SDK_1_1Time_1_1TDB.html">IO::SDK::Time::TDB</a> &gt;&#160;</td>
+          <td class="paramtype">const <a class="el" href="classIO_1_1SDK_1_1Time_1_1Window.html">IO::SDK::Time::Window</a>&lt; <a class="el" href="classIO_1_1SDK_1_1Time_1_1TDB.html">IO::SDK::Time::TDB</a> &gt; &amp;&#160;</td>
           <td class="paramname"><em>searchWindow</em>, </td>
         </tr>
         <tr>
@@ -399,19 +406,19 @@ Protected Attributes</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const <a class="el" href="classIO_1_1SDK_1_1Constraints_1_1Constraint.html">IO::SDK::Constraints::Constraint</a> &amp;&#160;</td>
+          <td class="paramtype">const <a class="el" href="classIO_1_1SDK_1_1Constraints_1_1RelationalOperator.html">IO::SDK::Constraints::RelationalOperator</a> &amp;&#160;</td>
           <td class="paramname"><em>constraint</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const <a class="el" href="namespaceIO_1_1SDK.html#abbb4827ec6a24ad346d9a60473ad3b81">IO::SDK::AberrationsEnum</a>&#160;</td>
+          <td class="paramtype"><a class="el" href="namespaceIO_1_1SDK.html#abbb4827ec6a24ad346d9a60473ad3b81">IO::SDK::AberrationsEnum</a>&#160;</td>
           <td class="paramname"><em>aberration</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const double&#160;</td>
+          <td class="paramtype">double&#160;</td>
           <td class="paramname"><em>value</em>, </td>
         </tr>
         <tr>
@@ -423,9 +430,14 @@ Protected Attributes</h2></td></tr>
         <tr>
           <td></td>
           <td>)</td>
-          <td></td><td> const</td>
+          <td></td><td></td>
         </tr>
       </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
 </div><div class="memdoc">
 
 <p>Find windows when distance constraint occurs. </p>
@@ -433,7 +445,7 @@ Protected Attributes</h2></td></tr>
   <table class="params">
     <tr><td class="paramname">targetBody</td><td>Target body </td></tr>
     <tr><td class="paramname">observer</td><td>Observer </td></tr>
-    <tr><td class="paramname">constraint</td><td>Constraint operator </td></tr>
+    <tr><td class="paramname">constraint</td><td>RelationalOperator operator </td></tr>
     <tr><td class="paramname">aberration</td><td>Aberration </td></tr>
     <tr><td class="paramname">value</td><td>Target value </td></tr>
     <tr><td class="paramname">searchWindow</td><td><a class="el" href="namespaceIO_1_1SDK_1_1Time.html">Time</a> window where constraint is evaluated </td></tr>
@@ -445,8 +457,8 @@ Protected Attributes</h2></td></tr>
 
 </div>
 </div>
-<a id="ad107e43f20a3c03aba27e1216f943185" name="ad107e43f20a3c03aba27e1216f943185"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ad107e43f20a3c03aba27e1216f943185">&#9670;&nbsp;</a></span>FindWindowsOnOccultationConstraint()</h2>
+<a id="a2bcf92ebfa83f35e3f17b70d3bf38c18" name="a2bcf92ebfa83f35e3f17b70d3bf38c18"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2bcf92ebfa83f35e3f17b70d3bf38c18">&#9670;&nbsp;</a></span>FindWindowsOnOccultationConstraint()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -454,7 +466,7 @@ Protected Attributes</h2></td></tr>
         <tr>
           <td class="memname">std::vector&lt; <a class="el" href="classIO_1_1SDK_1_1Time_1_1Window.html">IO::SDK::Time::Window</a>&lt; <a class="el" href="classIO_1_1SDK_1_1Time_1_1TDB.html">IO::SDK::Time::TDB</a> &gt; &gt; IO::SDK::Body::Body::FindWindowsOnOccultationConstraint </td>
           <td>(</td>
-          <td class="paramtype">const <a class="el" href="classIO_1_1SDK_1_1Time_1_1Window.html">IO::SDK::Time::Window</a>&lt; <a class="el" href="classIO_1_1SDK_1_1Time_1_1TDB.html">IO::SDK::Time::TDB</a> &gt;&#160;</td>
+          <td class="paramtype">const <a class="el" href="classIO_1_1SDK_1_1Time_1_1Window.html">IO::SDK::Time::Window</a>&lt; <a class="el" href="classIO_1_1SDK_1_1Time_1_1TDB.html">IO::SDK::Time::TDB</a> &gt; &amp;&#160;</td>
           <td class="paramname"><em>searchWindow</em>, </td>
         </tr>
         <tr>
@@ -478,7 +490,7 @@ Protected Attributes</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const <a class="el" href="namespaceIO_1_1SDK.html#abbb4827ec6a24ad346d9a60473ad3b81">IO::SDK::AberrationsEnum</a>&#160;</td>
+          <td class="paramtype"><a class="el" href="namespaceIO_1_1SDK.html#abbb4827ec6a24ad346d9a60473ad3b81">IO::SDK::AberrationsEnum</a>&#160;</td>
           <td class="paramname"><em>aberration</em>, </td>
         </tr>
         <tr>
@@ -581,14 +593,14 @@ Protected Attributes</h2></td></tr>
 
 </div>
 </div>
-<a id="aee9998a34d69e84d7b576a63d6f505a7" name="aee9998a34d69e84d7b576a63d6f505a7"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aee9998a34d69e84d7b576a63d6f505a7">&#9670;&nbsp;</a></span>GetName()</h2>
+<a id="aab6038f9760ba8b22255c8d042a0aef2" name="aab6038f9760ba8b22255c8d042a0aef2"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aab6038f9760ba8b22255c8d042a0aef2">&#9670;&nbsp;</a></span>GetName()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">const std::string IO::SDK::Body::Body::GetName </td>
+          <td class="memname">std::string IO::SDK::Body::Body::GetName </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td> const</td>
@@ -703,8 +715,8 @@ Protected Attributes</h2></td></tr>
 
 </div>
 </div>
-<a id="a48957dac85ead026cb6c736c79e155e3" name="a48957dac85ead026cb6c736c79e155e3"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a48957dac85ead026cb6c736c79e155e3">&#9670;&nbsp;</a></span>GetSubSolarPoint()</h2>
+<a id="a018f89071ab60df2c208f67250ed23cb" name="a018f89071ab60df2c208f67250ed23cb"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a018f89071ab60df2c208f67250ed23cb">&#9670;&nbsp;</a></span>GetSubSolarPoint()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -718,7 +730,7 @@ Protected Attributes</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const <a class="el" href="namespaceIO_1_1SDK.html#abbb4827ec6a24ad346d9a60473ad3b81">IO::SDK::AberrationsEnum</a>&#160;</td>
+          <td class="paramtype"><a class="el" href="namespaceIO_1_1SDK.html#abbb4827ec6a24ad346d9a60473ad3b81">IO::SDK::AberrationsEnum</a>&#160;</td>
           <td class="paramname"><em>aberration</em>, </td>
         </tr>
         <tr>
@@ -800,8 +812,8 @@ Protected Attributes</h2></td></tr>
 
 </div>
 </div>
-<a id="adc2f216ec2fd970876a40f69ca32bfbb" name="adc2f216ec2fd970876a40f69ca32bfbb"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#adc2f216ec2fd970876a40f69ca32bfbb">&#9670;&nbsp;</a></span>ReadEphemeris() <span class="overload">[1/2]</span></h2>
+<a id="ae7189b7328abc3991ad4ee4581eeceb5" name="ae7189b7328abc3991ad4ee4581eeceb5"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae7189b7328abc3991ad4ee4581eeceb5">&#9670;&nbsp;</a></span>ReadEphemeris() <span class="overload">[1/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -818,7 +830,7 @@ Protected Attributes</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const <a class="el" href="namespaceIO_1_1SDK.html#abbb4827ec6a24ad346d9a60473ad3b81">IO::SDK::AberrationsEnum</a>&#160;</td>
+          <td class="paramtype"><a class="el" href="namespaceIO_1_1SDK.html#abbb4827ec6a24ad346d9a60473ad3b81">IO::SDK::AberrationsEnum</a>&#160;</td>
           <td class="paramname"><em>aberration</em>, </td>
         </tr>
         <tr>
@@ -853,8 +865,8 @@ Protected Attributes</h2></td></tr>
 
 </div>
 </div>
-<a id="a4585506e3bf57bbeb1652bb1bb45b19a" name="a4585506e3bf57bbeb1652bb1bb45b19a"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a4585506e3bf57bbeb1652bb1bb45b19a">&#9670;&nbsp;</a></span>ReadEphemeris() <span class="overload">[2/2]</span></h2>
+<a id="a96174b1cbddd7f4754cab3ebd1288591" name="a96174b1cbddd7f4754cab3ebd1288591"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a96174b1cbddd7f4754cab3ebd1288591">&#9670;&nbsp;</a></span>ReadEphemeris() <span class="overload">[2/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -871,7 +883,7 @@ Protected Attributes</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const <a class="el" href="namespaceIO_1_1SDK.html#abbb4827ec6a24ad346d9a60473ad3b81">IO::SDK::AberrationsEnum</a>&#160;</td>
+          <td class="paramtype"><a class="el" href="namespaceIO_1_1SDK.html#abbb4827ec6a24ad346d9a60473ad3b81">IO::SDK::AberrationsEnum</a>&#160;</td>
           <td class="paramname"><em>aberration</em>, </td>
         </tr>
         <tr>
@@ -908,7 +920,7 @@ Protected Attributes</h2></td></tr>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd><a class="el" href="classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector.html" title="State vector class.">IO::SDK::OrbitalParameters::StateVector</a> </dd></dl>
 
-<p>Reimplemented in <a class="el" href="classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft.html#aa1174159add9f4bcbb281a90ed99acf1">IO::SDK::Body::Spacecraft::Spacecraft</a>.</p>
+<p>Reimplemented in <a class="el" href="classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft.html#ad061367c27a97a86d76d670b0bfdad02">IO::SDK::Body::Spacecraft::Spacecraft</a>.</p>
 
 </div>
 </div>

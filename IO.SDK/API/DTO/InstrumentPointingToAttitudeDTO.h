@@ -10,10 +10,10 @@ namespace IO::SDK::API::DTO
     struct InstrumentPointingToAttitudeDTO
     {
         int instrumentId{0};
-        int targetBodyId{0};
-        int targetSiteId{0};
-        int maneuverOrder{0};
-        int engines[10]{};
+        int targetBodyId{-1};
+        int targetSiteId{-1};
+        int maneuverOrder{-1};
+        char* engines[5]{};
         double attitudeHoldDuration{0.0};
         double minimumEpoch{0.0};
         IO::SDK::API::DTO::WindowDTO window{};

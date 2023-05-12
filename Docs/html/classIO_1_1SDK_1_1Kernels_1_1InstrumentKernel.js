@@ -1,7 +1,7 @@
 var classIO_1_1SDK_1_1Kernels_1_1InstrumentKernel =
 [
-    [ "InstrumentKernel", "classIO_1_1SDK_1_1Kernels_1_1InstrumentKernel.html#a901ed69aa42bba81bf4a31738b4119f1", null ],
-    [ "~InstrumentKernel", "classIO_1_1SDK_1_1Kernels_1_1InstrumentKernel.html#a0de64dc4f560fc0a357e5ed30af85ec8", null ],
+    [ "InstrumentKernel", "classIO_1_1SDK_1_1Kernels_1_1InstrumentKernel.html#af7eff78ed10f87aa6d7a27cdb0a56fb8", null ],
+    [ "~InstrumentKernel", "classIO_1_1SDK_1_1Kernels_1_1InstrumentKernel.html#ab0a8d2b77a08e6dd896fb7254a685bde", null ],
     [ "BuildKernel", "classIO_1_1SDK_1_1Kernels_1_1InstrumentKernel.html#a3a2ede777155a55120fb5a1f9d152f1f", null ],
     [ "GetCoverageWindow", "classIO_1_1SDK_1_1Kernels_1_1InstrumentKernel.html#a006ae1f485f4be36580068766d3c714b", null ],
     [ "IO::SDK::Instruments::Instrument", "classIO_1_1SDK_1_1Kernels_1_1InstrumentKernel.html#a74e3feb848371e72b4b3218b43dedf1a", null ],

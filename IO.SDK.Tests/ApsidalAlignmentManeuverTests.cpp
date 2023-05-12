@@ -12,6 +12,7 @@
 #include <VVIntegrator.h>
 #include <Engine.h>
 #include <TDB.h>
+#include "TestParameters.h"
 
 using namespace std::chrono_literals;
 
@@ -21,7 +22,7 @@ TEST(ApsidalAlignmentManeuver, CanExecute)
     std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams1 = std::make_unique<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth, 10000000.0, 0.333333, 0.0, 0.0, 0.0, 0.0, IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::GetICRF());
     std::shared_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams2 = std::make_shared<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth, 9000000.0, 0.5, 0.0, 0.0, 30.0 * IO::SDK::Constants::DEG_RAD, 0.0, IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::GetICRF());
 
-    IO::SDK::Body::Spacecraft::Spacecraft s{-105, "szptest", 1000.0, 3000.0, "ms01", std::move(orbitalParams1)};
+    IO::SDK::Body::Spacecraft::Spacecraft s{-105, "szptest", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams1)};
 
     IO::SDK::Integrators::VVIntegrator integrator(IO::SDK::Time::TimeSpan(1.0s));
     IO::SDK::Propagators::Propagator prop(s, integrator, IO::SDK::Time::Window(IO::SDK::Time::TDB(100.0s), IO::SDK::Time::TDB(200.0s)));
@@ -31,10 +32,10 @@ TEST(ApsidalAlignmentManeuver, CanExecute)
 
     auto engine1 = s.GetEngine("sn1");
 
-    std::vector<IO::SDK::Body::Spacecraft::Engine> engines;
-    engines.push_back(*engine1);
+    std::vector<IO::SDK::Body::Spacecraft::Engine*> engines;
+    engines.push_back(const_cast<IO::SDK::Body::Spacecraft::Engine*>(engine1));
 
-    IO::SDK::Maneuvers::ApsidalAlignmentManeuver maneuver(engines, prop, orbitalParams2.get());
+    IO::SDK::Maneuvers::ApsidalAlignmentManeuver maneuver(engines, prop, orbitalParams2);
 
     //Initialize
     ASSERT_FALSE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()->GetStateVector(150.0 * IO::SDK::Constants::DEG_RAD)));
@@ -62,9 +63,9 @@ TEST(ApsidalAlignmentManeuver, ExecuteQ)
 {
     const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
     std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams1 = std::make_unique<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth, 10000000.0, 0.333333, 0.0, 0.0, 0.0, 0.0, IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::GetICRF());
-    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams2 = std::make_unique<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth, 9000000.0, 0.5, 0.0, 0.0, 30.0 * IO::SDK::Constants::DEG_RAD, 0.0, IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::GetICRF());
+    std::shared_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams2 = std::make_shared<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth, 9000000.0, 0.5, 0.0, 0.0, 30.0 * IO::SDK::Constants::DEG_RAD, 0.0, IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::GetICRF());
 
-    IO::SDK::Body::Spacecraft::Spacecraft s{-109, "sqtest", 1000.0, 3000.0, "ms0109", std::move(orbitalParams1)};
+    IO::SDK::Body::Spacecraft::Spacecraft s{-109, "sqtest", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams1)};
 
     std::vector<IO::SDK::Integrators::Forces::Force *> forces{};
     IO::SDK::Integrators::Forces::GravityForce gravityForce;
@@ -77,10 +78,10 @@ TEST(ApsidalAlignmentManeuver, ExecuteQ)
 
     auto engine1 = s.GetEngine("sn1");
 
-    std::vector<IO::SDK::Body::Spacecraft::Engine> engines;
-    engines.push_back(*engine1);
+    std::vector<IO::SDK::Body::Spacecraft::Engine*> engines;
+    engines.push_back(const_cast<IO::SDK::Body::Spacecraft::Engine*>(engine1));
 
-    IO::SDK::Maneuvers::ApsidalAlignmentManeuver maneuver(engines, prop, orbitalParams2.get());
+    IO::SDK::Maneuvers::ApsidalAlignmentManeuver maneuver(engines, prop, orbitalParams2);
 
     //Initialize
     maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()->GetStateVector(340.0 * IO::SDK::Constants::DEG_RAD));
@@ -115,7 +116,7 @@ TEST(ApsidalAlignmentManeuver, ExecuteP)
     std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams1 = std::make_unique<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth, 10000000.0, 0.333333, 0.0, 0.0, 0.0, 0.0, IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::GetICRF());
     std::shared_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams2 = std::make_shared<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth, 9000000.0, 0.5, 0.0, 0.0, 30.0 * IO::SDK::Constants::DEG_RAD, 0.0, IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::GetICRF());
 
-    IO::SDK::Body::Spacecraft::Spacecraft s{-107, "sptest", 1000.0, 3000.0, "ms01", std::move(orbitalParams1)};
+    IO::SDK::Body::Spacecraft::Spacecraft s{-107, "sptest", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams1)};
 
     IO::SDK::Integrators::VVIntegrator integrator(IO::SDK::Time::TimeSpan(1.0s));
     IO::SDK::Propagators::Propagator prop(s, integrator, IO::SDK::Time::Window(IO::SDK::Time::TDB(100.0s), IO::SDK::Time::TDB(200.0s)));
@@ -125,10 +126,10 @@ TEST(ApsidalAlignmentManeuver, ExecuteP)
 
     auto engine1 = s.GetEngine("sn1");
 
-    std::vector<IO::SDK::Body::Spacecraft::Engine> engines;
-    engines.push_back(*engine1);
+    std::vector<IO::SDK::Body::Spacecraft::Engine*> engines;
+    engines.push_back(const_cast<IO::SDK::Body::Spacecraft::Engine*>(engine1));
 
-    IO::SDK::Maneuvers::ApsidalAlignmentManeuver maneuver(engines, prop, orbitalParams2.get());
+    IO::SDK::Maneuvers::ApsidalAlignmentManeuver maneuver(engines, prop, orbitalParams2);
 
     //Initialize
     maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()->GetStateVector(155.0 * IO::SDK::Constants::DEG_RAD));
@@ -165,13 +166,13 @@ TEST(ApsidalAlignmentManeuver, CheckOrbitalParams)
     IO::SDK::Time::TDB endEpoch("2021-06-03T00:00:00");
 
     std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams1 = std::make_unique<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth, 10000000.0, 0.333333, 0.0, 0.0, 0.0, 0.0, startEpoch, IO::SDK::Frames::InertialFrames::GetICRF());
-    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams2 = std::make_unique<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth, 9000000.0, 0.5, 0.0, 0.0, 30.0 * IO::SDK::Constants::DEG_RAD, 0.0, startEpoch, IO::SDK::Frames::InertialFrames::GetICRF());
+    std::shared_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams2 = std::make_shared<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth, 9000000.0, 0.5, 0.0, 0.0, 30.0 * IO::SDK::Constants::DEG_RAD, 0.0, startEpoch, IO::SDK::Frames::InertialFrames::GetICRF());
 
     std::vector<IO::SDK::Integrators::Forces::Force *> forces{};
 
     IO::SDK::Integrators::Forces::GravityForce gravityForce;
     forces.push_back(&gravityForce);
-    IO::SDK::Body::Spacecraft::Spacecraft s{-111, "aptest", 1000.0, 3000.0, "ms111", std::move(orbitalParams1)};
+    IO::SDK::Body::Spacecraft::Spacecraft s{-111, "aptest", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams1)};
 
     IO::SDK::Integrators::VVIntegrator integrator(IO::SDK::Time::TimeSpan(1.0s), forces);
 
@@ -182,10 +183,10 @@ TEST(ApsidalAlignmentManeuver, CheckOrbitalParams)
 
     auto engine1 = s.GetEngine("sn1");
 
-    std::vector<IO::SDK::Body::Spacecraft::Engine> engines;
-    engines.push_back(*engine1);
+    std::vector<IO::SDK::Body::Spacecraft::Engine*> engines;
+    engines.push_back(const_cast<IO::SDK::Body::Spacecraft::Engine*>(engine1));
 
-    IO::SDK::Maneuvers::ApsidalAlignmentManeuver maneuver(engines, prop, orbitalParams2.get());
+    IO::SDK::Maneuvers::ApsidalAlignmentManeuver maneuver(engines, prop, orbitalParams2);
 
     prop.SetStandbyManeuver(&maneuver);
 

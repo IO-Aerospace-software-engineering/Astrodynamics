@@ -2,7 +2,7 @@
  * @file Site.h
  * @author Sylvain Guillet (sylvain.guillet@live.com)
  * @brief 
- * @version 0.1
+ * @version 0.x
  * @date 2021-05-06
  * 
  * @copyright Copyright (c) 2021
@@ -37,7 +37,7 @@ namespace IO::SDK::Sites
         const int m_id;
         const std::string m_name;
         const IO::SDK::Coordinates::Geodetic m_coordinates;
-        const std::string m_filePath;
+        const std::string m_filesPath;
         const std::unique_ptr<IO::SDK::Kernels::EphemerisKernel> m_ephemerisKernel;
 
         const std::shared_ptr<IO::SDK::Body::CelestialBody> m_body;
@@ -55,8 +55,8 @@ namespace IO::SDK::Sites
          * @param name 
          * @param coordinates 
          */
-        Site(int id, const std::string &name, const IO::SDK::Coordinates::Geodetic &coordinates,
-             std::shared_ptr<IO::SDK::Body::CelestialBody> &body);
+        Site(int id, std::string name, const IO::SDK::Coordinates::Geodetic &coordinates,
+             std::shared_ptr<IO::SDK::Body::CelestialBody> body, std::string directoryPath);
 
         virtual ~Site() = default;
 
@@ -166,7 +166,7 @@ namespace IO::SDK::Sites
          */
         [[nodiscard]] std::vector<IO::SDK::Time::Window<IO::SDK::Time::UTC>>
         FindWindowsOnIlluminationConstraint(const IO::SDK::Time::Window<IO::SDK::Time::UTC> &searchWindow, const IO::SDK::Body::Body &observerBody,
-                                            const IO::SDK::IlluminationAngle &illuminationAngle, const IO::SDK::Constraints::Constraint &constraint, double value) const;
+                                            const IO::SDK::IlluminationAngle &illuminationAngle, const IO::SDK::Constraints::RelationalOperator &constraint, double value) const;
 
         /**
          * @brief Get the Horizontal Coordinates to the target body
@@ -208,7 +208,7 @@ namespace IO::SDK::Sites
          * @return
          */
         [[nodiscard]] inline std::string GetFilesPath() const
-        { return m_filePath; }
+        { return m_filesPath; }
 
 
 
