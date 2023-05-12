@@ -6,116 +6,104 @@
 \DoxyCodeLine{12 \textcolor{preprocessor}{\#ifndef SITE\_H}}
 \DoxyCodeLine{13 \textcolor{preprocessor}{\#define SITE\_H}}
 \DoxyCodeLine{14 }
-\DoxyCodeLine{15 \textcolor{preprocessor}{\#include <string>}}
-\DoxyCodeLine{16 \textcolor{preprocessor}{\#include <memory>}}
-\DoxyCodeLine{17 \textcolor{preprocessor}{\#include <vector>}}
-\DoxyCodeLine{18 }
-\DoxyCodeLine{19 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{Geodetic_8h}{Geodetic.h}}>}}
-\DoxyCodeLine{20 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{UTC_8h}{UTC.h}}>}}
-\DoxyCodeLine{21 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{CelestialBody_8h}{CelestialBody.h}}>}}
-\DoxyCodeLine{22 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{RADec_8h}{RADec.h}}>}}
-\DoxyCodeLine{23 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{Illumination_8h}{Illumination.h}}>}}
-\DoxyCodeLine{24 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{Aberrations_8h}{Aberrations.h}}>}}
-\DoxyCodeLine{25 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{Window_8h}{Window.h}}>}}
-\DoxyCodeLine{26 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{SiteFrameFile_8h}{SiteFrameFile.h}}>}}
-\DoxyCodeLine{27 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{HorizontalCoordinates_8h}{HorizontalCoordinates.h}}>}}
-\DoxyCodeLine{28 \textcolor{preprocessor}{\#include "{}\mbox{\hyperlink{Constraint_8h}{Constraints/Constraint.h}}"{}}}
-\DoxyCodeLine{29 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{CoordinateSystem_8h}{CoordinateSystem.h}}>}}
-\DoxyCodeLine{30 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{Coordinate_8h}{Coordinate.h}}>}}
-\DoxyCodeLine{31 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{IlluminationAngle_8h}{IlluminationAngle.h}}>}}
-\DoxyCodeLine{32 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{EphemerisKernel_8h}{EphemerisKernel.h}}>}}
-\DoxyCodeLine{33 }
-\DoxyCodeLine{34 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1SDK_1_1Kernels}{IO::SDK::Kernels}}}
-\DoxyCodeLine{35 \{}
-\DoxyCodeLine{36     \textcolor{keyword}{class }EphemerisKernel;}
-\DoxyCodeLine{37 \}}
-\DoxyCodeLine{38 }
-\DoxyCodeLine{39 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1SDK_1_1Sites}{IO::SDK::Sites}}}
-\DoxyCodeLine{40 \{}
-\DoxyCodeLine{45     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site}{Site}}}
-\DoxyCodeLine{46     \{}
-\DoxyCodeLine{47     \textcolor{keyword}{protected}:}
-\DoxyCodeLine{48         \textcolor{keyword}{const} \textcolor{keywordtype}{int} \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_ab94fe43caaedefea3b0c5760be92bed7}{m\_id}};}
-\DoxyCodeLine{49         \textcolor{keyword}{const} std::string \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_ad63a9c05d45bd8c44f7655484d9bf1c7}{m\_name}};}
-\DoxyCodeLine{50         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1Geodetic}{IO::SDK::Coordinates::Geodetic}} \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_af31b76b84e0a3cc2ac1ba7791485075c}{m\_coordinates}};}
-\DoxyCodeLine{51         \textcolor{keyword}{const} std::string \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_a13bec2d631713b168bc4aec94542e4d3}{m\_filePath}};}
-\DoxyCodeLine{52         \textcolor{keyword}{const} std::unique\_ptr<IO::SDK::Kernels::EphemerisKernel> \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_ac027514ca28c242cee08222fd01883b6}{m\_ephemerisKernel}};}
-\DoxyCodeLine{53 }
-\DoxyCodeLine{54         \textcolor{keyword}{const} std::shared\_ptr<IO::SDK::Body::CelestialBody> \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_aab32c263be6d18a1225767c8bc688079}{m\_body}};}
-\DoxyCodeLine{55         \textcolor{keyword}{const} std::unique\_ptr<IO::SDK::Frames::SiteFrameFile> \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_a34e6665bff147b05d9785df1a07e071f}{m\_frame}};}
-\DoxyCodeLine{56         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Aberrations}{IO::SDK::Aberrations}} \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_aa67602d2c26ac352b86cfb7f54b72743}{m\_aberrationHelper}}\{\};}
-\DoxyCodeLine{61         \textcolor{keywordtype}{void} \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_afd7cd0a5bd88c097f84e68360015a6f4}{WriteEphemeris}}(\textcolor{keyword}{const} std::vector<OrbitalParameters::StateVector> \&states) \textcolor{keyword}{const};}
+\DoxyCodeLine{15 }
+\DoxyCodeLine{16 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{Geodetic_8h}{Geodetic.h}}>}}
+\DoxyCodeLine{17 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{Illumination_8h}{Illumination.h}}>}}
+\DoxyCodeLine{18 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{SiteFrameFile_8h}{SiteFrameFile.h}}>}}
+\DoxyCodeLine{19 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{HorizontalCoordinates_8h}{HorizontalCoordinates.h}}>}}
+\DoxyCodeLine{20 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{IlluminationAngle_8h}{IlluminationAngle.h}}>}}
+\DoxyCodeLine{21 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{EphemerisKernel_8h}{EphemerisKernel.h}}>}}
+\DoxyCodeLine{22 }
+\DoxyCodeLine{23 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1SDK_1_1Kernels}{IO::SDK::Kernels}}}
+\DoxyCodeLine{24 \{}
+\DoxyCodeLine{25     \textcolor{keyword}{class }EphemerisKernel;}
+\DoxyCodeLine{26 \}}
+\DoxyCodeLine{27 }
+\DoxyCodeLine{28 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1SDK_1_1Sites}{IO::SDK::Sites}}}
+\DoxyCodeLine{29 \{}
+\DoxyCodeLine{34     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site}{Site}}}
+\DoxyCodeLine{35     \{}
+\DoxyCodeLine{36     \textcolor{keyword}{protected}:}
+\DoxyCodeLine{37         \textcolor{keyword}{const} \textcolor{keywordtype}{int} \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_ab94fe43caaedefea3b0c5760be92bed7}{m\_id}};}
+\DoxyCodeLine{38         \textcolor{keyword}{const} std::string \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_ad63a9c05d45bd8c44f7655484d9bf1c7}{m\_name}};}
+\DoxyCodeLine{39         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1Geodetic}{IO::SDK::Coordinates::Geodetic}} \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_af31b76b84e0a3cc2ac1ba7791485075c}{m\_coordinates}};}
+\DoxyCodeLine{40         \textcolor{keyword}{const} std::string \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_a048ea5ef3ba05cc0174b35d51d831849}{m\_filesPath}};}
+\DoxyCodeLine{41         \textcolor{keyword}{const} std::unique\_ptr<IO::SDK::Kernels::EphemerisKernel> \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_ac027514ca28c242cee08222fd01883b6}{m\_ephemerisKernel}};}
+\DoxyCodeLine{42 }
+\DoxyCodeLine{43         \textcolor{keyword}{const} std::shared\_ptr<IO::SDK::Body::CelestialBody> \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_aab32c263be6d18a1225767c8bc688079}{m\_body}};}
+\DoxyCodeLine{44         \textcolor{keyword}{const} std::unique\_ptr<IO::SDK::Frames::SiteFrameFile> \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_a34e6665bff147b05d9785df1a07e071f}{m\_frame}};}
+\DoxyCodeLine{49         \textcolor{keywordtype}{void} \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_afd7cd0a5bd88c097f84e68360015a6f4}{WriteEphemeris}}(\textcolor{keyword}{const} std::vector<OrbitalParameters::StateVector> \&states) \textcolor{keyword}{const};}
+\DoxyCodeLine{50 }
+\DoxyCodeLine{51     \textcolor{keyword}{public}:}
+\DoxyCodeLine{58         \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_a463f193ac980dd30ca9e95023862e063}{Site}}(\textcolor{keywordtype}{int} \textcolor{keywordtype}{id}, std::string name, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1Geodetic}{IO::SDK::Coordinates::Geodetic}} \&coordinates,}
+\DoxyCodeLine{59              std::shared\_ptr<IO::SDK::Body::CelestialBody> body, std::string directoryPath);}
+\DoxyCodeLine{60 }
+\DoxyCodeLine{61         \textcolor{keyword}{virtual} \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_a3e6aebec0fe50d8705d262dcd9f3209a}{\string~Site}}() = \textcolor{keywordflow}{default};}
 \DoxyCodeLine{62 }
-\DoxyCodeLine{63     \textcolor{keyword}{public}:}
-\DoxyCodeLine{70         \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_a8cdf5b1b03b9afaf4eaa33747f7c0445}{Site}}(\textcolor{keyword}{const} \textcolor{keywordtype}{int} \textcolor{keywordtype}{id}, \textcolor{keyword}{const} std::string \&name, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1Geodetic}{IO::SDK::Coordinates::Geodetic}} \&coordinates,}
-\DoxyCodeLine{71              std::shared\_ptr<IO::SDK::Body::CelestialBody> \&body);}
-\DoxyCodeLine{72 }
-\DoxyCodeLine{73         \textcolor{keyword}{virtual} \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_a3e6aebec0fe50d8705d262dcd9f3209a}{\string~Site}}() = \textcolor{keywordflow}{default};}
-\DoxyCodeLine{74 }
-\DoxyCodeLine{80         \textcolor{keywordtype}{int} \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_a28a013a4a1d28604c291df89853a996f}{GetId}}()\textcolor{keyword}{ const}}
-\DoxyCodeLine{81 \textcolor{keyword}{        }\{ \textcolor{keywordflow}{return} \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_ab94fe43caaedefea3b0c5760be92bed7}{m\_id}}; \}}
-\DoxyCodeLine{82 }
-\DoxyCodeLine{88         std::string \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_a9078603afed9946645c6546dba1b139a}{GetName}}()\textcolor{keyword}{ const}}
-\DoxyCodeLine{89 \textcolor{keyword}{        }\{ \textcolor{keywordflow}{return} \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_ad63a9c05d45bd8c44f7655484d9bf1c7}{m\_name}}; \}}
-\DoxyCodeLine{90 }
-\DoxyCodeLine{96         \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1Geodetic}{IO::SDK::Coordinates::Geodetic}} \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_a87b8550acd86a6809885c84236c3855a}{GetCoordinates}}()\textcolor{keyword}{ const}}
-\DoxyCodeLine{97 \textcolor{keyword}{        }\{ \textcolor{keywordflow}{return} \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_af31b76b84e0a3cc2ac1ba7791485075c}{m\_coordinates}}; \}}
-\DoxyCodeLine{98 }
-\DoxyCodeLine{104         std::shared\_ptr<IO::SDK::Body::CelestialBody> \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_a9ec6961014a7e44b4a70035dbadea015}{GetBody}}()\textcolor{keyword}{ const}}
-\DoxyCodeLine{105 \textcolor{keyword}{        }\{ \textcolor{keywordflow}{return} \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_aab32c263be6d18a1225767c8bc688079}{m\_body}}; \}}
-\DoxyCodeLine{106 }
-\DoxyCodeLine{114         \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1RADec}{IO::SDK::Coordinates::RADec}} \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_a16715975f67576334937bfb31a8c1f54}{GetRADec}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body}{IO::SDK::Body::Body}} \&body, \textcolor{keyword}{const} \mbox{\hyperlink{namespaceIO_1_1SDK_abbb4827ec6a24ad346d9a60473ad3b81}{IO::SDK::AberrationsEnum}} aberrationCorrection, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO::SDK::Time::TDB}} \&epoch) \textcolor{keyword}{const};}
-\DoxyCodeLine{115 }
-\DoxyCodeLine{121         \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{IO::SDK::OrbitalParameters::StateVector}} \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_a21c1093a89493fd9b18bbfeff1947ac6}{GetStateVector}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1Frames}{IO::SDK::Frames::Frames}} frame, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO::SDK::Time::TDB}} \&epoch) \textcolor{keyword}{const};}
-\DoxyCodeLine{122 }
-\DoxyCodeLine{130         \mbox{\hyperlink{classIO_1_1SDK_1_1Illumination_1_1Illumination}{IO::SDK::Illumination::Illumination}} \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_a01948f8738997106de15647caad84909}{GetIllumination}}(\textcolor{keyword}{const} \mbox{\hyperlink{namespaceIO_1_1SDK_abbb4827ec6a24ad346d9a60473ad3b81}{IO::SDK::AberrationsEnum}} aberrationCorrection, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO::SDK::Time::TDB}} \&epoch) \textcolor{keyword}{const};}
-\DoxyCodeLine{131 }
-\DoxyCodeLine{139         \textcolor{keywordtype}{bool} \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_aca8ccfee4fe3971268c45c2c58c3bac2}{IsDay}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO::SDK::Time::TDB}} \&epoch, \textcolor{keyword}{const} \textcolor{keywordtype}{double} twilight) \textcolor{keyword}{const};}
-\DoxyCodeLine{140 }
-\DoxyCodeLine{148         \textcolor{keywordtype}{bool} \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_a91eea4b24fba72bc5f5a846079a94b19}{IsNight}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO::SDK::Time::TDB}} \&epoch, \textcolor{keyword}{const} \textcolor{keywordtype}{double} twilight) \textcolor{keyword}{const};}
-\DoxyCodeLine{149 }
-\DoxyCodeLine{157         std::vector<IO::SDK::Time::Window<IO::SDK::Time::UTC>> \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_a56d6be12b94d4b10d9f1434e02b29955}{FindDayWindows}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO::SDK::Time::Window<IO::SDK::Time::UTC>}} \&searchWindow, \textcolor{keyword}{const} \textcolor{keywordtype}{double} twilight) \textcolor{keyword}{const};}
-\DoxyCodeLine{158 }
-\DoxyCodeLine{166         std::vector<IO::SDK::Time::Window<IO::SDK::Time::UTC>> \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_acb323aa6647b0066a7767775d9e31b5a}{FindNightWindows}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO::SDK::Time::Window<IO::SDK::Time::UTC>}} \&searchWindow, \textcolor{keyword}{const} \textcolor{keywordtype}{double} twilight) \textcolor{keyword}{const};}
-\DoxyCodeLine{167 }
-\DoxyCodeLine{179         std::vector<IO::SDK::Time::Window<IO::SDK::Time::UTC>>}
-\DoxyCodeLine{180         \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_af937f2298104652727ebecaf10b0d19e}{FindWindowsOnIlluminationConstraint}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO::SDK::Time::Window<IO::SDK::Time::UTC>}} \&searchWindow, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body}{IO::SDK::Body::Body}} \&observerBody,}
-\DoxyCodeLine{181                                             \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1IlluminationAngle}{IO::SDK::IlluminationAngle}} \&illuminationAngle, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Constraints_1_1Constraint}{IO::SDK::Constraints::Constraint}} \&constraint, \textcolor{keyword}{const} \textcolor{keywordtype}{double} value) \textcolor{keyword}{const};}
-\DoxyCodeLine{182 }
-\DoxyCodeLine{190         \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1HorizontalCoordinates}{IO::SDK::Coordinates::HorizontalCoordinates}}}
-\DoxyCodeLine{191         \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_a551acf961b448cf2857ee02212bdfa1b}{GetHorizontalCoordinates}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body}{IO::SDK::Body::Body}} \&body, \textcolor{keyword}{const} \mbox{\hyperlink{namespaceIO_1_1SDK_abbb4827ec6a24ad346d9a60473ad3b81}{IO::SDK::AberrationsEnum}} aberrationCorrection, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO::SDK::Time::TDB}} \&epoch) \textcolor{keyword}{const};}
-\DoxyCodeLine{192 }
+\DoxyCodeLine{68         [[nodiscard]] \textcolor{keyword}{inline} \textcolor{keywordtype}{int} \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_a28a013a4a1d28604c291df89853a996f}{GetId}}()\textcolor{keyword}{ const}}
+\DoxyCodeLine{69 \textcolor{keyword}{        }\{ \textcolor{keywordflow}{return} \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_ab94fe43caaedefea3b0c5760be92bed7}{m\_id}}; \}}
+\DoxyCodeLine{70 }
+\DoxyCodeLine{76         [[nodiscard]] \textcolor{keyword}{inline} std::string \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_a9078603afed9946645c6546dba1b139a}{GetName}}()\textcolor{keyword}{ const}}
+\DoxyCodeLine{77 \textcolor{keyword}{        }\{ \textcolor{keywordflow}{return} \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_ad63a9c05d45bd8c44f7655484d9bf1c7}{m\_name}}; \}}
+\DoxyCodeLine{78 }
+\DoxyCodeLine{84         [[nodiscard]] \textcolor{keyword}{inline} \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1Geodetic}{IO::SDK::Coordinates::Geodetic}} \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_a87b8550acd86a6809885c84236c3855a}{GetCoordinates}}()\textcolor{keyword}{ const}}
+\DoxyCodeLine{85 \textcolor{keyword}{        }\{ \textcolor{keywordflow}{return} \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_af31b76b84e0a3cc2ac1ba7791485075c}{m\_coordinates}}; \}}
+\DoxyCodeLine{86 }
+\DoxyCodeLine{92         [[nodiscard]] \textcolor{keyword}{inline} std::shared\_ptr<IO::SDK::Body::CelestialBody> \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_a9ec6961014a7e44b4a70035dbadea015}{GetBody}}()\textcolor{keyword}{ const}}
+\DoxyCodeLine{93 \textcolor{keyword}{        }\{ \textcolor{keywordflow}{return} \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_aab32c263be6d18a1225767c8bc688079}{m\_body}}; \}}
+\DoxyCodeLine{94 }
+\DoxyCodeLine{102         [[nodiscard]] \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1RADec}{IO::SDK::Coordinates::RADec}} \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_ad0968e8b52c47b093c67ca81579a68a5}{GetRADec}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body}{IO::SDK::Body::Body}} \&body, \mbox{\hyperlink{namespaceIO_1_1SDK_abbb4827ec6a24ad346d9a60473ad3b81}{IO::SDK::AberrationsEnum}} aberrationCorrection, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO::SDK::Time::TDB}} \&epoch) \textcolor{keyword}{const};}
+\DoxyCodeLine{103 }
+\DoxyCodeLine{109         [[nodiscard]] \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{IO::SDK::OrbitalParameters::StateVector}} \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_a335d8c7834930c92631389c042e3e280}{GetStateVector}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1Frames}{IO::SDK::Frames::Frames}}\& frame, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO::SDK::Time::TDB}} \&epoch) \textcolor{keyword}{const};}
+\DoxyCodeLine{110 }
+\DoxyCodeLine{118         [[nodiscard]] \mbox{\hyperlink{classIO_1_1SDK_1_1Illumination_1_1Illumination}{IO::SDK::Illumination::Illumination}} \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_a2ee48b444fea67e62cdc02f1a69aa619}{GetIllumination}}(\mbox{\hyperlink{namespaceIO_1_1SDK_abbb4827ec6a24ad346d9a60473ad3b81}{IO::SDK::AberrationsEnum}} aberrationCorrection, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO::SDK::Time::TDB}} \&epoch) \textcolor{keyword}{const};}
+\DoxyCodeLine{119 }
+\DoxyCodeLine{127         [[nodiscard]] \textcolor{keywordtype}{bool} \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_aa88d270584a457e08b86443f31a26044}{IsDay}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO::SDK::Time::TDB}} \&epoch, \textcolor{keywordtype}{double} twilight) \textcolor{keyword}{const};}
+\DoxyCodeLine{128 }
+\DoxyCodeLine{136         [[nodiscard]] \textcolor{keywordtype}{bool} \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_aeb453693fdc48490996d8500ec21b263}{IsNight}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO::SDK::Time::TDB}} \&epoch, \textcolor{keywordtype}{double} twilight) \textcolor{keyword}{const};}
+\DoxyCodeLine{137 }
+\DoxyCodeLine{145         [[nodiscard]] std::vector<IO::SDK::Time::Window<IO::SDK::Time::UTC>> \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_a0eb4079ce265bfcb70556ed051557ffa}{FindDayWindows}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO::SDK::Time::Window<IO::SDK::Time::UTC>}} \&searchWindow, \textcolor{keywordtype}{double} twilight) \textcolor{keyword}{const};}
+\DoxyCodeLine{146 }
+\DoxyCodeLine{154         [[nodiscard]] std::vector<IO::SDK::Time::Window<IO::SDK::Time::UTC>> \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_a9e039cb1d160ef2e0e31e5b752d40e31}{FindNightWindows}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO::SDK::Time::Window<IO::SDK::Time::UTC>}} \&searchWindow, \textcolor{keywordtype}{double} twilight) \textcolor{keyword}{const};}
+\DoxyCodeLine{155 }
+\DoxyCodeLine{167         [[nodiscard]] std::vector<IO::SDK::Time::Window<IO::SDK::Time::UTC>>}
+\DoxyCodeLine{168         \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_abf90275fd37bb35d963acf7eaafcaab7}{FindWindowsOnIlluminationConstraint}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO::SDK::Time::Window<IO::SDK::Time::UTC>}} \&searchWindow, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body}{IO::SDK::Body::Body}} \&observerBody,}
+\DoxyCodeLine{169                                             \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1IlluminationAngle}{IO::SDK::IlluminationAngle}} \&illuminationAngle, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Constraints_1_1RelationalOperator}{IO::SDK::Constraints::RelationalOperator}} \&constraint, \textcolor{keywordtype}{double} value) \textcolor{keyword}{const};}
+\DoxyCodeLine{170 }
+\DoxyCodeLine{178         [[nodiscard]] \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1HorizontalCoordinates}{IO::SDK::Coordinates::HorizontalCoordinates}}}
+\DoxyCodeLine{179         \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_a057532dcf2c25a427f1935e4c6108297}{GetHorizontalCoordinates}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body}{IO::SDK::Body::Body}} \&body, \mbox{\hyperlink{namespaceIO_1_1SDK_abbb4827ec6a24ad346d9a60473ad3b81}{IO::SDK::AberrationsEnum}} aberrationCorrection, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO::SDK::Time::TDB}} \&epoch) \textcolor{keyword}{const};}
+\DoxyCodeLine{180 }
+\DoxyCodeLine{181 }
+\DoxyCodeLine{190         [[nodiscard]] \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{IO::SDK::OrbitalParameters::StateVector}}}
+\DoxyCodeLine{191         \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_a335d8c7834930c92631389c042e3e280}{GetStateVector}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body}{IO::SDK::Body::Body}} \&body, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1Frames}{IO::SDK::Frames::Frames}}\& frame, \mbox{\hyperlink{namespaceIO_1_1SDK_abbb4827ec6a24ad346d9a60473ad3b81}{IO::SDK::AberrationsEnum}} aberrationCorrection,}
+\DoxyCodeLine{192                        \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO::SDK::Time::TDB}} \&epoch) \textcolor{keyword}{const};}
 \DoxyCodeLine{193 }
-\DoxyCodeLine{202         \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{IO::SDK::OrbitalParameters::StateVector}}}
-\DoxyCodeLine{203         \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_a21c1093a89493fd9b18bbfeff1947ac6}{GetStateVector}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body}{IO::SDK::Body::Body}} \&body, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1Frames}{IO::SDK::Frames::Frames}} frame, \textcolor{keyword}{const} \mbox{\hyperlink{namespaceIO_1_1SDK_abbb4827ec6a24ad346d9a60473ad3b81}{IO::SDK::AberrationsEnum}} aberrationCorrection,}
-\DoxyCodeLine{204                        \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO::SDK::Time::TDB}} \&epoch) \textcolor{keyword}{const};}
+\DoxyCodeLine{194 }
+\DoxyCodeLine{195         [[nodiscard]] std::vector<IO::SDK::Time::Window<IO::SDK::Time::UTC>>}
+\DoxyCodeLine{196         \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_a8401edeb2d436a5ddc75ae787dfacb6f}{FindBodyVisibilityWindows}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body}{IO::SDK::Body::Body}} \&body, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO::SDK::Time::Window<IO::SDK::Time::UTC>}} \&searchWindow,}
+\DoxyCodeLine{197                                   \mbox{\hyperlink{namespaceIO_1_1SDK_abbb4827ec6a24ad346d9a60473ad3b81}{IO::SDK::AberrationsEnum}} aberrationCorrection) \textcolor{keyword}{const};}
+\DoxyCodeLine{198 }
+\DoxyCodeLine{203         [[nodiscard]] \textcolor{keyword}{inline} \textcolor{keyword}{const} std::unique\_ptr<IO::SDK::Frames::SiteFrameFile> \&\mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_ab39517b6c983d54c6ce8db8bfb440e8d}{GetFrame}}()\textcolor{keyword}{ const}}
+\DoxyCodeLine{204 \textcolor{keyword}{        }\{ \textcolor{keywordflow}{return} \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_a34e6665bff147b05d9785df1a07e071f}{m\_frame}}; \}}
 \DoxyCodeLine{205 }
-\DoxyCodeLine{206 }
-\DoxyCodeLine{207         std::vector<IO::SDK::Time::Window<IO::SDK::Time::UTC>>}
-\DoxyCodeLine{208         \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_a404c6ec68879eb7926fa301e59ba44fa}{FindBodyVisibilityWindows}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body}{IO::SDK::Body::Body}} \&body, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO::SDK::Time::Window<IO::SDK::Time::UTC>}} \&searchWindow,}
-\DoxyCodeLine{209                                   \textcolor{keyword}{const} \mbox{\hyperlink{namespaceIO_1_1SDK_abbb4827ec6a24ad346d9a60473ad3b81}{IO::SDK::AberrationsEnum}} aberrationCorrection) \textcolor{keyword}{const};}
-\DoxyCodeLine{210 }
-\DoxyCodeLine{215         \textcolor{keyword}{inline} \textcolor{keyword}{const} std::unique\_ptr<IO::SDK::Frames::SiteFrameFile> \&\mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_ab39517b6c983d54c6ce8db8bfb440e8d}{GetFrame}}()\textcolor{keyword}{ const}}
-\DoxyCodeLine{216 \textcolor{keyword}{        }\{ \textcolor{keywordflow}{return} \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_a34e6665bff147b05d9785df1a07e071f}{m\_frame}}; \}}
-\DoxyCodeLine{217 }
-\DoxyCodeLine{222         \textcolor{keyword}{inline} \textcolor{keyword}{const} std::string \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_ab30557b04599d469876047d9ac6c3587}{GetDirectoryPath}}()\textcolor{keyword}{ const}}
-\DoxyCodeLine{223 \textcolor{keyword}{        }\{ \textcolor{keywordflow}{return} \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_a13bec2d631713b168bc4aec94542e4d3}{m\_filePath}}; \}}
-\DoxyCodeLine{224 }
-\DoxyCodeLine{225 }
-\DoxyCodeLine{226 }
-\DoxyCodeLine{231         \textcolor{keywordtype}{void} \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_a00a4b10eb729acb50f04d1bc56801152}{BuildAndWriteEphemeris}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO::SDK::Time::Window<IO::SDK::Time::UTC>}} \&searchWindow) \textcolor{keyword}{const};}
-\DoxyCodeLine{232 }
-\DoxyCodeLine{241         \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{OrbitalParameters::StateVector}}}
-\DoxyCodeLine{242         \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_ac1701ec2bfbc8298f77b58184c8403d7}{ReadEphemeris}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1Frames}{Frames::Frames}} \&frame, \textcolor{keyword}{const} \mbox{\hyperlink{namespaceIO_1_1SDK_abbb4827ec6a24ad346d9a60473ad3b81}{AberrationsEnum}} aberration, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{Time::TDB}} \&epoch, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1CelestialBody}{Body::CelestialBody}} \&observer) \textcolor{keyword}{const};}
+\DoxyCodeLine{210         [[nodiscard]] \textcolor{keyword}{inline} std::string \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_a3563627759043d1dc2eb28006d230642}{GetFilesPath}}()\textcolor{keyword}{ const}}
+\DoxyCodeLine{211 \textcolor{keyword}{        }\{ \textcolor{keywordflow}{return} \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_a048ea5ef3ba05cc0174b35d51d831849}{m\_filesPath}}; \}}
+\DoxyCodeLine{212 }
+\DoxyCodeLine{213 }
+\DoxyCodeLine{214 }
+\DoxyCodeLine{219         \textcolor{keywordtype}{void} \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_a00a4b10eb729acb50f04d1bc56801152}{BuildAndWriteEphemeris}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO::SDK::Time::Window<IO::SDK::Time::UTC>}} \&searchWindow) \textcolor{keyword}{const};}
+\DoxyCodeLine{220 }
+\DoxyCodeLine{229         [[nodiscard]] \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{OrbitalParameters::StateVector}}}
+\DoxyCodeLine{230         \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_ac2f05101b5973273c0e2a297b066ba7d}{ReadEphemeris}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1Frames}{Frames::Frames}} \&frame, \mbox{\hyperlink{namespaceIO_1_1SDK_abbb4827ec6a24ad346d9a60473ad3b81}{AberrationsEnum}} aberration, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{Time::TDB}} \&epoch, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1CelestialBody}{Body::CelestialBody}} \&observer) \textcolor{keyword}{const};}
+\DoxyCodeLine{231 }
+\DoxyCodeLine{236         [[nodiscard]] \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{Time::Window<IO::SDK::Time::TDB>}} \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_a99128f1aea970dfb4c5b6a6dcf39a63c}{GetEphemerisCoverageWindow}}() \textcolor{keyword}{const};}
+\DoxyCodeLine{237 }
+\DoxyCodeLine{242         \textcolor{keywordtype}{void} \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_aa8c1fdc55eaa275d594bb30b99f11582}{WriteEphemerisKernelComment}}(\textcolor{keyword}{const} std::string \&comment) \textcolor{keyword}{const};}
 \DoxyCodeLine{243 }
-\DoxyCodeLine{248         \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{Time::Window<IO::SDK::Time::TDB>}} \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_a99128f1aea970dfb4c5b6a6dcf39a63c}{GetEphemerisCoverageWindow}}() \textcolor{keyword}{const};}
-\DoxyCodeLine{249 }
-\DoxyCodeLine{254         \textcolor{keywordtype}{void} \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_aa8c1fdc55eaa275d594bb30b99f11582}{WriteEphemerisKernelComment}}(\textcolor{keyword}{const} std::string \&comment) \textcolor{keyword}{const};}
-\DoxyCodeLine{255 }
-\DoxyCodeLine{260         std::string \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_abddbfa11d39410da5b01052ba2f3837f}{ReadEphemerisKernelComment}}() \textcolor{keyword}{const};}
-\DoxyCodeLine{261     \};}
-\DoxyCodeLine{262 \}}
-\DoxyCodeLine{263 }
-\DoxyCodeLine{264 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{248         [[nodiscard]] std::string \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site_abddbfa11d39410da5b01052ba2f3837f}{ReadEphemerisKernelComment}}() \textcolor{keyword}{const};}
+\DoxyCodeLine{249     \};}
+\DoxyCodeLine{250 \}}
+\DoxyCodeLine{251 }
+\DoxyCodeLine{252 \textcolor{preprocessor}{\#endif}}
 
 \end{DoxyCode}

@@ -25,7 +25,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">IO-SDK<span id="projectnumber">&#160;0.4.x</span>
+   <div id="projectname">IO-SDK<span id="projectnumber">&#160;0.5.x</span>
    </div>
    <div id="projectbrief">Astrodynamics framework</div>
   </td>
@@ -108,9 +108,9 @@ Inheritance diagram for IO::SDK::Sites::Site:</div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a8cdf5b1b03b9afaf4eaa33747f7c0445"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Sites_1_1Site.html#a8cdf5b1b03b9afaf4eaa33747f7c0445">Site</a> (const int id, const std::string &amp;name, const <a class="el" href="classIO_1_1SDK_1_1Coordinates_1_1Geodetic.html">IO::SDK::Coordinates::Geodetic</a> &amp;coordinates, std::shared_ptr&lt; <a class="el" href="classIO_1_1SDK_1_1Body_1_1CelestialBody.html">IO::SDK::Body::CelestialBody</a> &gt; &amp;body)</td></tr>
-<tr class="memdesc:a8cdf5b1b03b9afaf4eaa33747f7c0445"><td class="mdescLeft">&#160;</td><td class="mdescRight">Construct a new <a class="el" href="classIO_1_1SDK_1_1Sites_1_1Site.html" title="Site class.">Site</a> object.  <a href="classIO_1_1SDK_1_1Sites_1_1Site.html#a8cdf5b1b03b9afaf4eaa33747f7c0445">More...</a><br /></td></tr>
-<tr class="separator:a8cdf5b1b03b9afaf4eaa33747f7c0445"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a463f193ac980dd30ca9e95023862e063"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Sites_1_1Site.html#a463f193ac980dd30ca9e95023862e063">Site</a> (int id, std::string name, const <a class="el" href="classIO_1_1SDK_1_1Coordinates_1_1Geodetic.html">IO::SDK::Coordinates::Geodetic</a> &amp;coordinates, std::shared_ptr&lt; <a class="el" href="classIO_1_1SDK_1_1Body_1_1CelestialBody.html">IO::SDK::Body::CelestialBody</a> &gt; body, std::string directoryPath)</td></tr>
+<tr class="memdesc:a463f193ac980dd30ca9e95023862e063"><td class="mdescLeft">&#160;</td><td class="mdescRight">Construct a new <a class="el" href="classIO_1_1SDK_1_1Sites_1_1Site.html" title="Site class.">Site</a> object.  <a href="classIO_1_1SDK_1_1Sites_1_1Site.html#a463f193ac980dd30ca9e95023862e063">More...</a><br /></td></tr>
+<tr class="separator:a463f193ac980dd30ca9e95023862e063"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3e6aebec0fe50d8705d262dcd9f3209a"><td class="memItemLeft" align="right" valign="top">virtual&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Sites_1_1Site.html#a3e6aebec0fe50d8705d262dcd9f3209a">~Site</a> ()=default</td></tr>
 <tr class="separator:a3e6aebec0fe50d8705d262dcd9f3209a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a28a013a4a1d28604c291df89853a996f"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Sites_1_1Site.html#a28a013a4a1d28604c291df89853a996f">GetId</a> () const</td></tr>
@@ -125,46 +125,46 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a9ec6961014a7e44b4a70035dbadea015"><td class="memItemLeft" align="right" valign="top">std::shared_ptr&lt; <a class="el" href="classIO_1_1SDK_1_1Body_1_1CelestialBody.html">IO::SDK::Body::CelestialBody</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Sites_1_1Site.html#a9ec6961014a7e44b4a70035dbadea015">GetBody</a> () const</td></tr>
 <tr class="memdesc:a9ec6961014a7e44b4a70035dbadea015"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the <a class="el" href="namespaceIO_1_1SDK_1_1Body.html">Body</a>.  <a href="classIO_1_1SDK_1_1Sites_1_1Site.html#a9ec6961014a7e44b4a70035dbadea015">More...</a><br /></td></tr>
 <tr class="separator:a9ec6961014a7e44b4a70035dbadea015"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a16715975f67576334937bfb31a8c1f54"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classIO_1_1SDK_1_1Coordinates_1_1RADec.html">IO::SDK::Coordinates::RADec</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Sites_1_1Site.html#a16715975f67576334937bfb31a8c1f54">GetRADec</a> (const <a class="el" href="classIO_1_1SDK_1_1Body_1_1Body.html">IO::SDK::Body::Body</a> &amp;body, const <a class="el" href="namespaceIO_1_1SDK.html#abbb4827ec6a24ad346d9a60473ad3b81">IO::SDK::AberrationsEnum</a> aberrationCorrection, const <a class="el" href="classIO_1_1SDK_1_1Time_1_1TDB.html">IO::SDK::Time::TDB</a> &amp;epoch) const</td></tr>
-<tr class="memdesc:a16715975f67576334937bfb31a8c1f54"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get Right ascension, declination and range.  <a href="classIO_1_1SDK_1_1Sites_1_1Site.html#a16715975f67576334937bfb31a8c1f54">More...</a><br /></td></tr>
-<tr class="separator:a16715975f67576334937bfb31a8c1f54"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a21c1093a89493fd9b18bbfeff1947ac6"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector.html">IO::SDK::OrbitalParameters::StateVector</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Sites_1_1Site.html#a21c1093a89493fd9b18bbfeff1947ac6">GetStateVector</a> (const <a class="el" href="classIO_1_1SDK_1_1Frames_1_1Frames.html">IO::SDK::Frames::Frames</a> frame, const <a class="el" href="classIO_1_1SDK_1_1Time_1_1TDB.html">IO::SDK::Time::TDB</a> &amp;epoch) const</td></tr>
-<tr class="memdesc:a21c1093a89493fd9b18bbfeff1947ac6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get rectangular position.  <a href="classIO_1_1SDK_1_1Sites_1_1Site.html#a21c1093a89493fd9b18bbfeff1947ac6">More...</a><br /></td></tr>
-<tr class="separator:a21c1093a89493fd9b18bbfeff1947ac6"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a01948f8738997106de15647caad84909"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classIO_1_1SDK_1_1Illumination_1_1Illumination.html">IO::SDK::Illumination::Illumination</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Sites_1_1Site.html#a01948f8738997106de15647caad84909">GetIllumination</a> (const <a class="el" href="namespaceIO_1_1SDK.html#abbb4827ec6a24ad346d9a60473ad3b81">IO::SDK::AberrationsEnum</a> aberrationCorrection, const <a class="el" href="classIO_1_1SDK_1_1Time_1_1TDB.html">IO::SDK::Time::TDB</a> &amp;epoch) const</td></tr>
-<tr class="memdesc:a01948f8738997106de15647caad84909"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the <a class="el" href="namespaceIO_1_1SDK_1_1Illumination.html">Illumination</a>.  <a href="classIO_1_1SDK_1_1Sites_1_1Site.html#a01948f8738997106de15647caad84909">More...</a><br /></td></tr>
-<tr class="separator:a01948f8738997106de15647caad84909"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aca8ccfee4fe3971268c45c2c58c3bac2"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Sites_1_1Site.html#aca8ccfee4fe3971268c45c2c58c3bac2">IsDay</a> (const <a class="el" href="classIO_1_1SDK_1_1Time_1_1TDB.html">IO::SDK::Time::TDB</a> &amp;epoch, const double twilight) const</td></tr>
-<tr class="memdesc:aca8ccfee4fe3971268c45c2c58c3bac2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Know if it's day.  <a href="classIO_1_1SDK_1_1Sites_1_1Site.html#aca8ccfee4fe3971268c45c2c58c3bac2">More...</a><br /></td></tr>
-<tr class="separator:aca8ccfee4fe3971268c45c2c58c3bac2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a91eea4b24fba72bc5f5a846079a94b19"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Sites_1_1Site.html#a91eea4b24fba72bc5f5a846079a94b19">IsNight</a> (const <a class="el" href="classIO_1_1SDK_1_1Time_1_1TDB.html">IO::SDK::Time::TDB</a> &amp;epoch, const double twilight) const</td></tr>
-<tr class="memdesc:a91eea4b24fba72bc5f5a846079a94b19"><td class="mdescLeft">&#160;</td><td class="mdescRight">Know if it's night.  <a href="classIO_1_1SDK_1_1Sites_1_1Site.html#a91eea4b24fba72bc5f5a846079a94b19">More...</a><br /></td></tr>
-<tr class="separator:a91eea4b24fba72bc5f5a846079a94b19"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a56d6be12b94d4b10d9f1434e02b29955"><td class="memItemLeft" align="right" valign="top">std::vector&lt; <a class="el" href="classIO_1_1SDK_1_1Time_1_1Window.html">IO::SDK::Time::Window</a>&lt; <a class="el" href="classIO_1_1SDK_1_1Time_1_1UTC.html">IO::SDK::Time::UTC</a> &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Sites_1_1Site.html#a56d6be12b94d4b10d9f1434e02b29955">FindDayWindows</a> (const <a class="el" href="classIO_1_1SDK_1_1Time_1_1Window.html">IO::SDK::Time::Window</a>&lt; <a class="el" href="classIO_1_1SDK_1_1Time_1_1UTC.html">IO::SDK::Time::UTC</a> &gt; &amp;searchWindow, const double twilight) const</td></tr>
-<tr class="memdesc:a56d6be12b94d4b10d9f1434e02b29955"><td class="mdescLeft">&#160;</td><td class="mdescRight">Find day windows.  <a href="classIO_1_1SDK_1_1Sites_1_1Site.html#a56d6be12b94d4b10d9f1434e02b29955">More...</a><br /></td></tr>
-<tr class="separator:a56d6be12b94d4b10d9f1434e02b29955"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:acb323aa6647b0066a7767775d9e31b5a"><td class="memItemLeft" align="right" valign="top">std::vector&lt; <a class="el" href="classIO_1_1SDK_1_1Time_1_1Window.html">IO::SDK::Time::Window</a>&lt; <a class="el" href="classIO_1_1SDK_1_1Time_1_1UTC.html">IO::SDK::Time::UTC</a> &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Sites_1_1Site.html#acb323aa6647b0066a7767775d9e31b5a">FindNightWindows</a> (const <a class="el" href="classIO_1_1SDK_1_1Time_1_1Window.html">IO::SDK::Time::Window</a>&lt; <a class="el" href="classIO_1_1SDK_1_1Time_1_1UTC.html">IO::SDK::Time::UTC</a> &gt; &amp;searchWindow, const double twilight) const</td></tr>
-<tr class="memdesc:acb323aa6647b0066a7767775d9e31b5a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Find night windows.  <a href="classIO_1_1SDK_1_1Sites_1_1Site.html#acb323aa6647b0066a7767775d9e31b5a">More...</a><br /></td></tr>
-<tr class="separator:acb323aa6647b0066a7767775d9e31b5a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af937f2298104652727ebecaf10b0d19e"><td class="memItemLeft" align="right" valign="top">std::vector&lt; <a class="el" href="classIO_1_1SDK_1_1Time_1_1Window.html">IO::SDK::Time::Window</a>&lt; <a class="el" href="classIO_1_1SDK_1_1Time_1_1UTC.html">IO::SDK::Time::UTC</a> &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Sites_1_1Site.html#af937f2298104652727ebecaf10b0d19e">FindWindowsOnIlluminationConstraint</a> (const <a class="el" href="classIO_1_1SDK_1_1Time_1_1Window.html">IO::SDK::Time::Window</a>&lt; <a class="el" href="classIO_1_1SDK_1_1Time_1_1UTC.html">IO::SDK::Time::UTC</a> &gt; &amp;searchWindow, const <a class="el" href="classIO_1_1SDK_1_1Body_1_1Body.html">IO::SDK::Body::Body</a> &amp;observerBody, const <a class="el" href="classIO_1_1SDK_1_1IlluminationAngle.html">IO::SDK::IlluminationAngle</a> &amp;illuminationAngle, const <a class="el" href="classIO_1_1SDK_1_1Constraints_1_1Constraint.html">IO::SDK::Constraints::Constraint</a> &amp;constraint, const double value) const</td></tr>
-<tr class="memdesc:af937f2298104652727ebecaf10b0d19e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Find windows where illumination constraint is satisfied.  <a href="classIO_1_1SDK_1_1Sites_1_1Site.html#af937f2298104652727ebecaf10b0d19e">More...</a><br /></td></tr>
-<tr class="separator:af937f2298104652727ebecaf10b0d19e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a551acf961b448cf2857ee02212bdfa1b"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classIO_1_1SDK_1_1Coordinates_1_1HorizontalCoordinates.html">IO::SDK::Coordinates::HorizontalCoordinates</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Sites_1_1Site.html#a551acf961b448cf2857ee02212bdfa1b">GetHorizontalCoordinates</a> (const <a class="el" href="classIO_1_1SDK_1_1Body_1_1Body.html">IO::SDK::Body::Body</a> &amp;body, const <a class="el" href="namespaceIO_1_1SDK.html#abbb4827ec6a24ad346d9a60473ad3b81">IO::SDK::AberrationsEnum</a> aberrationCorrection, const <a class="el" href="classIO_1_1SDK_1_1Time_1_1TDB.html">IO::SDK::Time::TDB</a> &amp;epoch) const</td></tr>
-<tr class="memdesc:a551acf961b448cf2857ee02212bdfa1b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the Horizontal <a class="el" href="namespaceIO_1_1SDK_1_1Coordinates.html">Coordinates</a> to the target body.  <a href="classIO_1_1SDK_1_1Sites_1_1Site.html#a551acf961b448cf2857ee02212bdfa1b">More...</a><br /></td></tr>
-<tr class="separator:a551acf961b448cf2857ee02212bdfa1b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af29c8570c7b36f0c074f3c9b6637957a"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector.html">IO::SDK::OrbitalParameters::StateVector</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Sites_1_1Site.html#af29c8570c7b36f0c074f3c9b6637957a">GetStateVector</a> (const <a class="el" href="classIO_1_1SDK_1_1Body_1_1Body.html">IO::SDK::Body::Body</a> &amp;body, const <a class="el" href="classIO_1_1SDK_1_1Frames_1_1Frames.html">IO::SDK::Frames::Frames</a> frame, const <a class="el" href="namespaceIO_1_1SDK.html#abbb4827ec6a24ad346d9a60473ad3b81">IO::SDK::AberrationsEnum</a> aberrationCorrection, const <a class="el" href="classIO_1_1SDK_1_1Time_1_1TDB.html">IO::SDK::Time::TDB</a> &amp;epoch) const</td></tr>
-<tr class="memdesc:af29c8570c7b36f0c074f3c9b6637957a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the State Vector to target body.  <a href="classIO_1_1SDK_1_1Sites_1_1Site.html#af29c8570c7b36f0c074f3c9b6637957a">More...</a><br /></td></tr>
-<tr class="separator:af29c8570c7b36f0c074f3c9b6637957a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a404c6ec68879eb7926fa301e59ba44fa"><td class="memItemLeft" align="right" valign="top">std::vector&lt; <a class="el" href="classIO_1_1SDK_1_1Time_1_1Window.html">IO::SDK::Time::Window</a>&lt; <a class="el" href="classIO_1_1SDK_1_1Time_1_1UTC.html">IO::SDK::Time::UTC</a> &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Sites_1_1Site.html#a404c6ec68879eb7926fa301e59ba44fa">FindBodyVisibilityWindows</a> (const <a class="el" href="classIO_1_1SDK_1_1Body_1_1Body.html">IO::SDK::Body::Body</a> &amp;body, const <a class="el" href="classIO_1_1SDK_1_1Time_1_1Window.html">IO::SDK::Time::Window</a>&lt; <a class="el" href="classIO_1_1SDK_1_1Time_1_1UTC.html">IO::SDK::Time::UTC</a> &gt; &amp;searchWindow, const <a class="el" href="namespaceIO_1_1SDK.html#abbb4827ec6a24ad346d9a60473ad3b81">IO::SDK::AberrationsEnum</a> aberrationCorrection) const</td></tr>
-<tr class="separator:a404c6ec68879eb7926fa301e59ba44fa"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad0968e8b52c47b093c67ca81579a68a5"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classIO_1_1SDK_1_1Coordinates_1_1RADec.html">IO::SDK::Coordinates::RADec</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Sites_1_1Site.html#ad0968e8b52c47b093c67ca81579a68a5">GetRADec</a> (const <a class="el" href="classIO_1_1SDK_1_1Body_1_1Body.html">IO::SDK::Body::Body</a> &amp;body, <a class="el" href="namespaceIO_1_1SDK.html#abbb4827ec6a24ad346d9a60473ad3b81">IO::SDK::AberrationsEnum</a> aberrationCorrection, const <a class="el" href="classIO_1_1SDK_1_1Time_1_1TDB.html">IO::SDK::Time::TDB</a> &amp;epoch) const</td></tr>
+<tr class="memdesc:ad0968e8b52c47b093c67ca81579a68a5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get Right ascension, declination and range.  <a href="classIO_1_1SDK_1_1Sites_1_1Site.html#ad0968e8b52c47b093c67ca81579a68a5">More...</a><br /></td></tr>
+<tr class="separator:ad0968e8b52c47b093c67ca81579a68a5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a335d8c7834930c92631389c042e3e280"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector.html">IO::SDK::OrbitalParameters::StateVector</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Sites_1_1Site.html#a335d8c7834930c92631389c042e3e280">GetStateVector</a> (const <a class="el" href="classIO_1_1SDK_1_1Frames_1_1Frames.html">IO::SDK::Frames::Frames</a> &amp;frame, const <a class="el" href="classIO_1_1SDK_1_1Time_1_1TDB.html">IO::SDK::Time::TDB</a> &amp;epoch) const</td></tr>
+<tr class="memdesc:a335d8c7834930c92631389c042e3e280"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get rectangular position.  <a href="classIO_1_1SDK_1_1Sites_1_1Site.html#a335d8c7834930c92631389c042e3e280">More...</a><br /></td></tr>
+<tr class="separator:a335d8c7834930c92631389c042e3e280"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2ee48b444fea67e62cdc02f1a69aa619"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classIO_1_1SDK_1_1Illumination_1_1Illumination.html">IO::SDK::Illumination::Illumination</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Sites_1_1Site.html#a2ee48b444fea67e62cdc02f1a69aa619">GetIllumination</a> (<a class="el" href="namespaceIO_1_1SDK.html#abbb4827ec6a24ad346d9a60473ad3b81">IO::SDK::AberrationsEnum</a> aberrationCorrection, const <a class="el" href="classIO_1_1SDK_1_1Time_1_1TDB.html">IO::SDK::Time::TDB</a> &amp;epoch) const</td></tr>
+<tr class="memdesc:a2ee48b444fea67e62cdc02f1a69aa619"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the <a class="el" href="namespaceIO_1_1SDK_1_1Illumination.html">Illumination</a>.  <a href="classIO_1_1SDK_1_1Sites_1_1Site.html#a2ee48b444fea67e62cdc02f1a69aa619">More...</a><br /></td></tr>
+<tr class="separator:a2ee48b444fea67e62cdc02f1a69aa619"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa88d270584a457e08b86443f31a26044"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Sites_1_1Site.html#aa88d270584a457e08b86443f31a26044">IsDay</a> (const <a class="el" href="classIO_1_1SDK_1_1Time_1_1TDB.html">IO::SDK::Time::TDB</a> &amp;epoch, double twilight) const</td></tr>
+<tr class="memdesc:aa88d270584a457e08b86443f31a26044"><td class="mdescLeft">&#160;</td><td class="mdescRight">Know if it's day.  <a href="classIO_1_1SDK_1_1Sites_1_1Site.html#aa88d270584a457e08b86443f31a26044">More...</a><br /></td></tr>
+<tr class="separator:aa88d270584a457e08b86443f31a26044"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aeb453693fdc48490996d8500ec21b263"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Sites_1_1Site.html#aeb453693fdc48490996d8500ec21b263">IsNight</a> (const <a class="el" href="classIO_1_1SDK_1_1Time_1_1TDB.html">IO::SDK::Time::TDB</a> &amp;epoch, double twilight) const</td></tr>
+<tr class="memdesc:aeb453693fdc48490996d8500ec21b263"><td class="mdescLeft">&#160;</td><td class="mdescRight">Know if it's night.  <a href="classIO_1_1SDK_1_1Sites_1_1Site.html#aeb453693fdc48490996d8500ec21b263">More...</a><br /></td></tr>
+<tr class="separator:aeb453693fdc48490996d8500ec21b263"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0eb4079ce265bfcb70556ed051557ffa"><td class="memItemLeft" align="right" valign="top">std::vector&lt; <a class="el" href="classIO_1_1SDK_1_1Time_1_1Window.html">IO::SDK::Time::Window</a>&lt; <a class="el" href="classIO_1_1SDK_1_1Time_1_1UTC.html">IO::SDK::Time::UTC</a> &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Sites_1_1Site.html#a0eb4079ce265bfcb70556ed051557ffa">FindDayWindows</a> (const <a class="el" href="classIO_1_1SDK_1_1Time_1_1Window.html">IO::SDK::Time::Window</a>&lt; <a class="el" href="classIO_1_1SDK_1_1Time_1_1UTC.html">IO::SDK::Time::UTC</a> &gt; &amp;searchWindow, double twilight) const</td></tr>
+<tr class="memdesc:a0eb4079ce265bfcb70556ed051557ffa"><td class="mdescLeft">&#160;</td><td class="mdescRight">Find day windows.  <a href="classIO_1_1SDK_1_1Sites_1_1Site.html#a0eb4079ce265bfcb70556ed051557ffa">More...</a><br /></td></tr>
+<tr class="separator:a0eb4079ce265bfcb70556ed051557ffa"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9e039cb1d160ef2e0e31e5b752d40e31"><td class="memItemLeft" align="right" valign="top">std::vector&lt; <a class="el" href="classIO_1_1SDK_1_1Time_1_1Window.html">IO::SDK::Time::Window</a>&lt; <a class="el" href="classIO_1_1SDK_1_1Time_1_1UTC.html">IO::SDK::Time::UTC</a> &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Sites_1_1Site.html#a9e039cb1d160ef2e0e31e5b752d40e31">FindNightWindows</a> (const <a class="el" href="classIO_1_1SDK_1_1Time_1_1Window.html">IO::SDK::Time::Window</a>&lt; <a class="el" href="classIO_1_1SDK_1_1Time_1_1UTC.html">IO::SDK::Time::UTC</a> &gt; &amp;searchWindow, double twilight) const</td></tr>
+<tr class="memdesc:a9e039cb1d160ef2e0e31e5b752d40e31"><td class="mdescLeft">&#160;</td><td class="mdescRight">Find night windows.  <a href="classIO_1_1SDK_1_1Sites_1_1Site.html#a9e039cb1d160ef2e0e31e5b752d40e31">More...</a><br /></td></tr>
+<tr class="separator:a9e039cb1d160ef2e0e31e5b752d40e31"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abf90275fd37bb35d963acf7eaafcaab7"><td class="memItemLeft" align="right" valign="top">std::vector&lt; <a class="el" href="classIO_1_1SDK_1_1Time_1_1Window.html">IO::SDK::Time::Window</a>&lt; <a class="el" href="classIO_1_1SDK_1_1Time_1_1UTC.html">IO::SDK::Time::UTC</a> &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Sites_1_1Site.html#abf90275fd37bb35d963acf7eaafcaab7">FindWindowsOnIlluminationConstraint</a> (const <a class="el" href="classIO_1_1SDK_1_1Time_1_1Window.html">IO::SDK::Time::Window</a>&lt; <a class="el" href="classIO_1_1SDK_1_1Time_1_1UTC.html">IO::SDK::Time::UTC</a> &gt; &amp;searchWindow, const <a class="el" href="classIO_1_1SDK_1_1Body_1_1Body.html">IO::SDK::Body::Body</a> &amp;observerBody, const <a class="el" href="classIO_1_1SDK_1_1IlluminationAngle.html">IO::SDK::IlluminationAngle</a> &amp;illuminationAngle, const <a class="el" href="classIO_1_1SDK_1_1Constraints_1_1RelationalOperator.html">IO::SDK::Constraints::RelationalOperator</a> &amp;constraint, double value) const</td></tr>
+<tr class="memdesc:abf90275fd37bb35d963acf7eaafcaab7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Find windows where illumination constraint is satisfied.  <a href="classIO_1_1SDK_1_1Sites_1_1Site.html#abf90275fd37bb35d963acf7eaafcaab7">More...</a><br /></td></tr>
+<tr class="separator:abf90275fd37bb35d963acf7eaafcaab7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a057532dcf2c25a427f1935e4c6108297"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classIO_1_1SDK_1_1Coordinates_1_1HorizontalCoordinates.html">IO::SDK::Coordinates::HorizontalCoordinates</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Sites_1_1Site.html#a057532dcf2c25a427f1935e4c6108297">GetHorizontalCoordinates</a> (const <a class="el" href="classIO_1_1SDK_1_1Body_1_1Body.html">IO::SDK::Body::Body</a> &amp;body, <a class="el" href="namespaceIO_1_1SDK.html#abbb4827ec6a24ad346d9a60473ad3b81">IO::SDK::AberrationsEnum</a> aberrationCorrection, const <a class="el" href="classIO_1_1SDK_1_1Time_1_1TDB.html">IO::SDK::Time::TDB</a> &amp;epoch) const</td></tr>
+<tr class="memdesc:a057532dcf2c25a427f1935e4c6108297"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the Horizontal <a class="el" href="namespaceIO_1_1SDK_1_1Coordinates.html">Coordinates</a> to the target body.  <a href="classIO_1_1SDK_1_1Sites_1_1Site.html#a057532dcf2c25a427f1935e4c6108297">More...</a><br /></td></tr>
+<tr class="separator:a057532dcf2c25a427f1935e4c6108297"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a122e8c54214f83c813a41d0d41b485aa"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector.html">IO::SDK::OrbitalParameters::StateVector</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Sites_1_1Site.html#a122e8c54214f83c813a41d0d41b485aa">GetStateVector</a> (const <a class="el" href="classIO_1_1SDK_1_1Body_1_1Body.html">IO::SDK::Body::Body</a> &amp;body, const <a class="el" href="classIO_1_1SDK_1_1Frames_1_1Frames.html">IO::SDK::Frames::Frames</a> &amp;frame, <a class="el" href="namespaceIO_1_1SDK.html#abbb4827ec6a24ad346d9a60473ad3b81">IO::SDK::AberrationsEnum</a> aberrationCorrection, const <a class="el" href="classIO_1_1SDK_1_1Time_1_1TDB.html">IO::SDK::Time::TDB</a> &amp;epoch) const</td></tr>
+<tr class="memdesc:a122e8c54214f83c813a41d0d41b485aa"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the State Vector to target body.  <a href="classIO_1_1SDK_1_1Sites_1_1Site.html#a122e8c54214f83c813a41d0d41b485aa">More...</a><br /></td></tr>
+<tr class="separator:a122e8c54214f83c813a41d0d41b485aa"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8401edeb2d436a5ddc75ae787dfacb6f"><td class="memItemLeft" align="right" valign="top">std::vector&lt; <a class="el" href="classIO_1_1SDK_1_1Time_1_1Window.html">IO::SDK::Time::Window</a>&lt; <a class="el" href="classIO_1_1SDK_1_1Time_1_1UTC.html">IO::SDK::Time::UTC</a> &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Sites_1_1Site.html#a8401edeb2d436a5ddc75ae787dfacb6f">FindBodyVisibilityWindows</a> (const <a class="el" href="classIO_1_1SDK_1_1Body_1_1Body.html">IO::SDK::Body::Body</a> &amp;body, const <a class="el" href="classIO_1_1SDK_1_1Time_1_1Window.html">IO::SDK::Time::Window</a>&lt; <a class="el" href="classIO_1_1SDK_1_1Time_1_1UTC.html">IO::SDK::Time::UTC</a> &gt; &amp;searchWindow, <a class="el" href="namespaceIO_1_1SDK.html#abbb4827ec6a24ad346d9a60473ad3b81">IO::SDK::AberrationsEnum</a> aberrationCorrection) const</td></tr>
+<tr class="separator:a8401edeb2d436a5ddc75ae787dfacb6f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab39517b6c983d54c6ce8db8bfb440e8d"><td class="memItemLeft" align="right" valign="top">const std::unique_ptr&lt; <a class="el" href="classIO_1_1SDK_1_1Frames_1_1SiteFrameFile.html">IO::SDK::Frames::SiteFrameFile</a> &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Sites_1_1Site.html#ab39517b6c983d54c6ce8db8bfb440e8d">GetFrame</a> () const</td></tr>
 <tr class="separator:ab39517b6c983d54c6ce8db8bfb440e8d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab30557b04599d469876047d9ac6c3587"><td class="memItemLeft" align="right" valign="top">const std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Sites_1_1Site.html#ab30557b04599d469876047d9ac6c3587">GetDirectoryPath</a> () const</td></tr>
-<tr class="separator:ab30557b04599d469876047d9ac6c3587"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3563627759043d1dc2eb28006d230642"><td class="memItemLeft" align="right" valign="top">std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Sites_1_1Site.html#a3563627759043d1dc2eb28006d230642">GetFilesPath</a> () const</td></tr>
+<tr class="separator:a3563627759043d1dc2eb28006d230642"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a00a4b10eb729acb50f04d1bc56801152"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Sites_1_1Site.html#a00a4b10eb729acb50f04d1bc56801152">BuildAndWriteEphemeris</a> (const <a class="el" href="classIO_1_1SDK_1_1Time_1_1Window.html">IO::SDK::Time::Window</a>&lt; <a class="el" href="classIO_1_1SDK_1_1Time_1_1UTC.html">IO::SDK::Time::UTC</a> &gt; &amp;searchWindow) const</td></tr>
 <tr class="separator:a00a4b10eb729acb50f04d1bc56801152"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac1701ec2bfbc8298f77b58184c8403d7"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector.html">OrbitalParameters::StateVector</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Sites_1_1Site.html#ac1701ec2bfbc8298f77b58184c8403d7">ReadEphemeris</a> (const <a class="el" href="classIO_1_1SDK_1_1Frames_1_1Frames.html">Frames::Frames</a> &amp;frame, const <a class="el" href="namespaceIO_1_1SDK.html#abbb4827ec6a24ad346d9a60473ad3b81">AberrationsEnum</a> aberration, const <a class="el" href="classIO_1_1SDK_1_1Time_1_1TDB.html">Time::TDB</a> &amp;epoch, const <a class="el" href="classIO_1_1SDK_1_1Body_1_1CelestialBody.html">Body::CelestialBody</a> &amp;observer) const</td></tr>
-<tr class="separator:ac1701ec2bfbc8298f77b58184c8403d7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac2f05101b5973273c0e2a297b066ba7d"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector.html">OrbitalParameters::StateVector</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Sites_1_1Site.html#ac2f05101b5973273c0e2a297b066ba7d">ReadEphemeris</a> (const <a class="el" href="classIO_1_1SDK_1_1Frames_1_1Frames.html">Frames::Frames</a> &amp;frame, <a class="el" href="namespaceIO_1_1SDK.html#abbb4827ec6a24ad346d9a60473ad3b81">AberrationsEnum</a> aberration, const <a class="el" href="classIO_1_1SDK_1_1Time_1_1TDB.html">Time::TDB</a> &amp;epoch, const <a class="el" href="classIO_1_1SDK_1_1Body_1_1CelestialBody.html">Body::CelestialBody</a> &amp;observer) const</td></tr>
+<tr class="separator:ac2f05101b5973273c0e2a297b066ba7d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a99128f1aea970dfb4c5b6a6dcf39a63c"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classIO_1_1SDK_1_1Time_1_1Window.html">Time::Window</a>&lt; <a class="el" href="classIO_1_1SDK_1_1Time_1_1TDB.html">IO::SDK::Time::TDB</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Sites_1_1Site.html#a99128f1aea970dfb4c5b6a6dcf39a63c">GetEphemerisCoverageWindow</a> () const</td></tr>
 <tr class="separator:a99128f1aea970dfb4c5b6a6dcf39a63c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa8c1fdc55eaa275d594bb30b99f11582"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Sites_1_1Site.html#aa8c1fdc55eaa275d594bb30b99f11582">WriteEphemerisKernelComment</a> (const std::string &amp;comment) const</td></tr>
@@ -185,22 +185,20 @@ Protected Attributes</h2></td></tr>
 <tr class="separator:ad63a9c05d45bd8c44f7655484d9bf1c7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af31b76b84e0a3cc2ac1ba7791485075c"><td class="memItemLeft" align="right" valign="top">const <a class="el" href="classIO_1_1SDK_1_1Coordinates_1_1Geodetic.html">IO::SDK::Coordinates::Geodetic</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Sites_1_1Site.html#af31b76b84e0a3cc2ac1ba7791485075c">m_coordinates</a></td></tr>
 <tr class="separator:af31b76b84e0a3cc2ac1ba7791485075c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a13bec2d631713b168bc4aec94542e4d3"><td class="memItemLeft" align="right" valign="top">const std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Sites_1_1Site.html#a13bec2d631713b168bc4aec94542e4d3">m_filePath</a></td></tr>
-<tr class="separator:a13bec2d631713b168bc4aec94542e4d3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a048ea5ef3ba05cc0174b35d51d831849"><td class="memItemLeft" align="right" valign="top">const std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Sites_1_1Site.html#a048ea5ef3ba05cc0174b35d51d831849">m_filesPath</a></td></tr>
+<tr class="separator:a048ea5ef3ba05cc0174b35d51d831849"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac027514ca28c242cee08222fd01883b6"><td class="memItemLeft" align="right" valign="top">const std::unique_ptr&lt; <a class="el" href="classIO_1_1SDK_1_1Kernels_1_1EphemerisKernel.html">IO::SDK::Kernels::EphemerisKernel</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Sites_1_1Site.html#ac027514ca28c242cee08222fd01883b6">m_ephemerisKernel</a></td></tr>
 <tr class="separator:ac027514ca28c242cee08222fd01883b6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aab32c263be6d18a1225767c8bc688079"><td class="memItemLeft" align="right" valign="top">const std::shared_ptr&lt; <a class="el" href="classIO_1_1SDK_1_1Body_1_1CelestialBody.html">IO::SDK::Body::CelestialBody</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Sites_1_1Site.html#aab32c263be6d18a1225767c8bc688079">m_body</a></td></tr>
 <tr class="separator:aab32c263be6d18a1225767c8bc688079"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a34e6665bff147b05d9785df1a07e071f"><td class="memItemLeft" align="right" valign="top">const std::unique_ptr&lt; <a class="el" href="classIO_1_1SDK_1_1Frames_1_1SiteFrameFile.html">IO::SDK::Frames::SiteFrameFile</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Sites_1_1Site.html#a34e6665bff147b05d9785df1a07e071f">m_frame</a></td></tr>
 <tr class="separator:a34e6665bff147b05d9785df1a07e071f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa67602d2c26ac352b86cfb7f54b72743"><td class="memItemLeft" align="right" valign="top">const <a class="el" href="classIO_1_1SDK_1_1Aberrations.html">IO::SDK::Aberrations</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Sites_1_1Site.html#aa67602d2c26ac352b86cfb7f54b72743">m_aberrationHelper</a> {}</td></tr>
-<tr class="separator:aa67602d2c26ac352b86cfb7f54b72743"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p ><a class="el" href="classIO_1_1SDK_1_1Sites_1_1Site.html" title="Site class.">Site</a> class. </p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
-<a id="a8cdf5b1b03b9afaf4eaa33747f7c0445" name="a8cdf5b1b03b9afaf4eaa33747f7c0445"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a8cdf5b1b03b9afaf4eaa33747f7c0445">&#9670;&nbsp;</a></span>Site()</h2>
+<a id="a463f193ac980dd30ca9e95023862e063" name="a463f193ac980dd30ca9e95023862e063"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a463f193ac980dd30ca9e95023862e063">&#9670;&nbsp;</a></span>Site()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -208,13 +206,13 @@ Protected Attributes</h2></td></tr>
         <tr>
           <td class="memname">IO::SDK::Sites::Site::Site </td>
           <td>(</td>
-          <td class="paramtype">const int&#160;</td>
+          <td class="paramtype">int&#160;</td>
           <td class="paramname"><em>id</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramtype">std::string&#160;</td>
           <td class="paramname"><em>name</em>, </td>
         </tr>
         <tr>
@@ -226,8 +224,14 @@ Protected Attributes</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">std::shared_ptr&lt; <a class="el" href="classIO_1_1SDK_1_1Body_1_1CelestialBody.html">IO::SDK::Body::CelestialBody</a> &gt; &amp;&#160;</td>
-          <td class="paramname"><em>body</em>&#160;</td>
+          <td class="paramtype">std::shared_ptr&lt; <a class="el" href="classIO_1_1SDK_1_1Body_1_1CelestialBody.html">IO::SDK::Body::CelestialBody</a> &gt;&#160;</td>
+          <td class="paramname"><em>body</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::string&#160;</td>
+          <td class="paramname"><em>directoryPath</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -298,8 +302,8 @@ Protected Attributes</h2></td></tr>
 
 </div>
 </div>
-<a id="a404c6ec68879eb7926fa301e59ba44fa" name="a404c6ec68879eb7926fa301e59ba44fa"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a404c6ec68879eb7926fa301e59ba44fa">&#9670;&nbsp;</a></span>FindBodyVisibilityWindows()</h2>
+<a id="a8401edeb2d436a5ddc75ae787dfacb6f" name="a8401edeb2d436a5ddc75ae787dfacb6f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8401edeb2d436a5ddc75ae787dfacb6f">&#9670;&nbsp;</a></span>FindBodyVisibilityWindows()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -319,7 +323,7 @@ Protected Attributes</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const <a class="el" href="namespaceIO_1_1SDK.html#abbb4827ec6a24ad346d9a60473ad3b81">IO::SDK::AberrationsEnum</a>&#160;</td>
+          <td class="paramtype"><a class="el" href="namespaceIO_1_1SDK.html#abbb4827ec6a24ad346d9a60473ad3b81">IO::SDK::AberrationsEnum</a>&#160;</td>
           <td class="paramname"><em>aberrationCorrection</em>&#160;</td>
         </tr>
         <tr>
@@ -332,8 +336,8 @@ Protected Attributes</h2></td></tr>
 
 </div>
 </div>
-<a id="a56d6be12b94d4b10d9f1434e02b29955" name="a56d6be12b94d4b10d9f1434e02b29955"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a56d6be12b94d4b10d9f1434e02b29955">&#9670;&nbsp;</a></span>FindDayWindows()</h2>
+<a id="a0eb4079ce265bfcb70556ed051557ffa" name="a0eb4079ce265bfcb70556ed051557ffa"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0eb4079ce265bfcb70556ed051557ffa">&#9670;&nbsp;</a></span>FindDayWindows()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -347,7 +351,7 @@ Protected Attributes</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const double&#160;</td>
+          <td class="paramtype">double&#160;</td>
           <td class="paramname"><em>twilight</em>&#160;</td>
         </tr>
         <tr>
@@ -370,8 +374,8 @@ Protected Attributes</h2></td></tr>
 
 </div>
 </div>
-<a id="acb323aa6647b0066a7767775d9e31b5a" name="acb323aa6647b0066a7767775d9e31b5a"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#acb323aa6647b0066a7767775d9e31b5a">&#9670;&nbsp;</a></span>FindNightWindows()</h2>
+<a id="a9e039cb1d160ef2e0e31e5b752d40e31" name="a9e039cb1d160ef2e0e31e5b752d40e31"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9e039cb1d160ef2e0e31e5b752d40e31">&#9670;&nbsp;</a></span>FindNightWindows()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -385,7 +389,7 @@ Protected Attributes</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const double&#160;</td>
+          <td class="paramtype">double&#160;</td>
           <td class="paramname"><em>twilight</em>&#160;</td>
         </tr>
         <tr>
@@ -408,8 +412,8 @@ Protected Attributes</h2></td></tr>
 
 </div>
 </div>
-<a id="af937f2298104652727ebecaf10b0d19e" name="af937f2298104652727ebecaf10b0d19e"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#af937f2298104652727ebecaf10b0d19e">&#9670;&nbsp;</a></span>FindWindowsOnIlluminationConstraint()</h2>
+<a id="abf90275fd37bb35d963acf7eaafcaab7" name="abf90275fd37bb35d963acf7eaafcaab7"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#abf90275fd37bb35d963acf7eaafcaab7">&#9670;&nbsp;</a></span>FindWindowsOnIlluminationConstraint()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -435,13 +439,13 @@ Protected Attributes</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const <a class="el" href="classIO_1_1SDK_1_1Constraints_1_1Constraint.html">IO::SDK::Constraints::Constraint</a> &amp;&#160;</td>
+          <td class="paramtype">const <a class="el" href="classIO_1_1SDK_1_1Constraints_1_1RelationalOperator.html">IO::SDK::Constraints::RelationalOperator</a> &amp;&#160;</td>
           <td class="paramname"><em>constraint</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const double&#160;</td>
+          <td class="paramtype">double&#160;</td>
           <td class="paramname"><em>value</em>&#160;</td>
         </tr>
         <tr>
@@ -542,8 +546,8 @@ Protected Attributes</h2></td></tr>
 
 </div>
 </div>
-<a id="ab30557b04599d469876047d9ac6c3587" name="ab30557b04599d469876047d9ac6c3587"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ab30557b04599d469876047d9ac6c3587">&#9670;&nbsp;</a></span>GetDirectoryPath()</h2>
+<a id="a3563627759043d1dc2eb28006d230642" name="a3563627759043d1dc2eb28006d230642"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3563627759043d1dc2eb28006d230642">&#9670;&nbsp;</a></span>GetFilesPath()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -552,7 +556,7 @@ Protected Attributes</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">const std::string IO::SDK::Sites::Site::GetDirectoryPath </td>
+          <td class="memname">std::string IO::SDK::Sites::Site::GetFilesPath </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td> const</td>
@@ -594,8 +598,8 @@ Protected Attributes</h2></td></tr>
 
 </div>
 </div>
-<a id="a551acf961b448cf2857ee02212bdfa1b" name="a551acf961b448cf2857ee02212bdfa1b"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a551acf961b448cf2857ee02212bdfa1b">&#9670;&nbsp;</a></span>GetHorizontalCoordinates()</h2>
+<a id="a057532dcf2c25a427f1935e4c6108297" name="a057532dcf2c25a427f1935e4c6108297"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a057532dcf2c25a427f1935e4c6108297">&#9670;&nbsp;</a></span>GetHorizontalCoordinates()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -609,7 +613,7 @@ Protected Attributes</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const <a class="el" href="namespaceIO_1_1SDK.html#abbb4827ec6a24ad346d9a60473ad3b81">IO::SDK::AberrationsEnum</a>&#160;</td>
+          <td class="paramtype"><a class="el" href="namespaceIO_1_1SDK.html#abbb4827ec6a24ad346d9a60473ad3b81">IO::SDK::AberrationsEnum</a>&#160;</td>
           <td class="paramname"><em>aberrationCorrection</em>, </td>
         </tr>
         <tr>
@@ -666,8 +670,8 @@ Protected Attributes</h2></td></tr>
 
 </div>
 </div>
-<a id="a01948f8738997106de15647caad84909" name="a01948f8738997106de15647caad84909"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a01948f8738997106de15647caad84909">&#9670;&nbsp;</a></span>GetIllumination()</h2>
+<a id="a2ee48b444fea67e62cdc02f1a69aa619" name="a2ee48b444fea67e62cdc02f1a69aa619"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2ee48b444fea67e62cdc02f1a69aa619">&#9670;&nbsp;</a></span>GetIllumination()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -675,7 +679,7 @@ Protected Attributes</h2></td></tr>
         <tr>
           <td class="memname"><a class="el" href="classIO_1_1SDK_1_1Illumination_1_1Illumination.html">IO::SDK::Illumination::Illumination</a> IO::SDK::Sites::Site::GetIllumination </td>
           <td>(</td>
-          <td class="paramtype">const <a class="el" href="namespaceIO_1_1SDK.html#abbb4827ec6a24ad346d9a60473ad3b81">IO::SDK::AberrationsEnum</a>&#160;</td>
+          <td class="paramtype"><a class="el" href="namespaceIO_1_1SDK.html#abbb4827ec6a24ad346d9a60473ad3b81">IO::SDK::AberrationsEnum</a>&#160;</td>
           <td class="paramname"><em>aberrationCorrection</em>, </td>
         </tr>
         <tr>
@@ -732,8 +736,8 @@ Protected Attributes</h2></td></tr>
 
 </div>
 </div>
-<a id="a16715975f67576334937bfb31a8c1f54" name="a16715975f67576334937bfb31a8c1f54"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a16715975f67576334937bfb31a8c1f54">&#9670;&nbsp;</a></span>GetRADec()</h2>
+<a id="ad0968e8b52c47b093c67ca81579a68a5" name="ad0968e8b52c47b093c67ca81579a68a5"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad0968e8b52c47b093c67ca81579a68a5">&#9670;&nbsp;</a></span>GetRADec()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -747,7 +751,7 @@ Protected Attributes</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const <a class="el" href="namespaceIO_1_1SDK.html#abbb4827ec6a24ad346d9a60473ad3b81">IO::SDK::AberrationsEnum</a>&#160;</td>
+          <td class="paramtype"><a class="el" href="namespaceIO_1_1SDK.html#abbb4827ec6a24ad346d9a60473ad3b81">IO::SDK::AberrationsEnum</a>&#160;</td>
           <td class="paramname"><em>aberrationCorrection</em>, </td>
         </tr>
         <tr>
@@ -776,8 +780,8 @@ Protected Attributes</h2></td></tr>
 
 </div>
 </div>
-<a id="af29c8570c7b36f0c074f3c9b6637957a" name="af29c8570c7b36f0c074f3c9b6637957a"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#af29c8570c7b36f0c074f3c9b6637957a">&#9670;&nbsp;</a></span>GetStateVector() <span class="overload">[1/2]</span></h2>
+<a id="a122e8c54214f83c813a41d0d41b485aa" name="a122e8c54214f83c813a41d0d41b485aa"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a122e8c54214f83c813a41d0d41b485aa">&#9670;&nbsp;</a></span>GetStateVector() <span class="overload">[1/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -791,13 +795,13 @@ Protected Attributes</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const <a class="el" href="classIO_1_1SDK_1_1Frames_1_1Frames.html">IO::SDK::Frames::Frames</a>&#160;</td>
+          <td class="paramtype">const <a class="el" href="classIO_1_1SDK_1_1Frames_1_1Frames.html">IO::SDK::Frames::Frames</a> &amp;&#160;</td>
           <td class="paramname"><em>frame</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const <a class="el" href="namespaceIO_1_1SDK.html#abbb4827ec6a24ad346d9a60473ad3b81">IO::SDK::AberrationsEnum</a>&#160;</td>
+          <td class="paramtype"><a class="el" href="namespaceIO_1_1SDK.html#abbb4827ec6a24ad346d9a60473ad3b81">IO::SDK::AberrationsEnum</a>&#160;</td>
           <td class="paramname"><em>aberrationCorrection</em>, </td>
         </tr>
         <tr>
@@ -827,8 +831,8 @@ Protected Attributes</h2></td></tr>
 
 </div>
 </div>
-<a id="a21c1093a89493fd9b18bbfeff1947ac6" name="a21c1093a89493fd9b18bbfeff1947ac6"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a21c1093a89493fd9b18bbfeff1947ac6">&#9670;&nbsp;</a></span>GetStateVector() <span class="overload">[2/2]</span></h2>
+<a id="a335d8c7834930c92631389c042e3e280" name="a335d8c7834930c92631389c042e3e280"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a335d8c7834930c92631389c042e3e280">&#9670;&nbsp;</a></span>GetStateVector() <span class="overload">[2/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -836,7 +840,7 @@ Protected Attributes</h2></td></tr>
         <tr>
           <td class="memname"><a class="el" href="classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector.html">IO::SDK::OrbitalParameters::StateVector</a> IO::SDK::Sites::Site::GetStateVector </td>
           <td>(</td>
-          <td class="paramtype">const <a class="el" href="classIO_1_1SDK_1_1Frames_1_1Frames.html">IO::SDK::Frames::Frames</a>&#160;</td>
+          <td class="paramtype">const <a class="el" href="classIO_1_1SDK_1_1Frames_1_1Frames.html">IO::SDK::Frames::Frames</a> &amp;&#160;</td>
           <td class="paramname"><em>frame</em>, </td>
         </tr>
         <tr>
@@ -858,8 +862,8 @@ Protected Attributes</h2></td></tr>
 
 </div>
 </div>
-<a id="aca8ccfee4fe3971268c45c2c58c3bac2" name="aca8ccfee4fe3971268c45c2c58c3bac2"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aca8ccfee4fe3971268c45c2c58c3bac2">&#9670;&nbsp;</a></span>IsDay()</h2>
+<a id="aa88d270584a457e08b86443f31a26044" name="aa88d270584a457e08b86443f31a26044"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa88d270584a457e08b86443f31a26044">&#9670;&nbsp;</a></span>IsDay()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -873,7 +877,7 @@ Protected Attributes</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const double&#160;</td>
+          <td class="paramtype">double&#160;</td>
           <td class="paramname"><em>twilight</em>&#160;</td>
         </tr>
         <tr>
@@ -897,8 +901,8 @@ false </dd></dl>
 
 </div>
 </div>
-<a id="a91eea4b24fba72bc5f5a846079a94b19" name="a91eea4b24fba72bc5f5a846079a94b19"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a91eea4b24fba72bc5f5a846079a94b19">&#9670;&nbsp;</a></span>IsNight()</h2>
+<a id="aeb453693fdc48490996d8500ec21b263" name="aeb453693fdc48490996d8500ec21b263"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aeb453693fdc48490996d8500ec21b263">&#9670;&nbsp;</a></span>IsNight()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -912,7 +916,7 @@ false </dd></dl>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const double&#160;</td>
+          <td class="paramtype">double&#160;</td>
           <td class="paramname"><em>twilight</em>&#160;</td>
         </tr>
         <tr>
@@ -936,8 +940,8 @@ false </dd></dl>
 
 </div>
 </div>
-<a id="ac1701ec2bfbc8298f77b58184c8403d7" name="ac1701ec2bfbc8298f77b58184c8403d7"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ac1701ec2bfbc8298f77b58184c8403d7">&#9670;&nbsp;</a></span>ReadEphemeris()</h2>
+<a id="ac2f05101b5973273c0e2a297b066ba7d" name="ac2f05101b5973273c0e2a297b066ba7d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac2f05101b5973273c0e2a297b066ba7d">&#9670;&nbsp;</a></span>ReadEphemeris()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -951,7 +955,7 @@ false </dd></dl>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const <a class="el" href="namespaceIO_1_1SDK.html#abbb4827ec6a24ad346d9a60473ad3b81">AberrationsEnum</a>&#160;</td>
+          <td class="paramtype"><a class="el" href="namespaceIO_1_1SDK.html#abbb4827ec6a24ad346d9a60473ad3b81">AberrationsEnum</a>&#160;</td>
           <td class="paramname"><em>aberration</em>, </td>
         </tr>
         <tr>
@@ -1061,28 +1065,6 @@ false </dd></dl>
 </div>
 </div>
 <h2 class="groupheader">Member Data Documentation</h2>
-<a id="aa67602d2c26ac352b86cfb7f54b72743" name="aa67602d2c26ac352b86cfb7f54b72743"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aa67602d2c26ac352b86cfb7f54b72743">&#9670;&nbsp;</a></span>m_aberrationHelper</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">const <a class="el" href="classIO_1_1SDK_1_1Aberrations.html">IO::SDK::Aberrations</a> IO::SDK::Sites::Site::m_aberrationHelper {}</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-</div>
-</div>
 <a id="aab32c263be6d18a1225767c8bc688079" name="aab32c263be6d18a1225767c8bc688079"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#aab32c263be6d18a1225767c8bc688079">&#9670;&nbsp;</a></span>m_body</h2>
 
@@ -1149,8 +1131,8 @@ false </dd></dl>
 
 </div>
 </div>
-<a id="a13bec2d631713b168bc4aec94542e4d3" name="a13bec2d631713b168bc4aec94542e4d3"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a13bec2d631713b168bc4aec94542e4d3">&#9670;&nbsp;</a></span>m_filePath</h2>
+<a id="a048ea5ef3ba05cc0174b35d51d831849" name="a048ea5ef3ba05cc0174b35d51d831849"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a048ea5ef3ba05cc0174b35d51d831849">&#9670;&nbsp;</a></span>m_filesPath</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1159,7 +1141,7 @@ false </dd></dl>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">const std::string IO::SDK::Sites::Site::m_filePath</td>
+          <td class="memname">const std::string IO::SDK::Sites::Site::m_filesPath</td>
         </tr>
       </table>
   </td>

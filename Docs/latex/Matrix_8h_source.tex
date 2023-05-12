@@ -42,19 +42,19 @@
 \DoxyCodeLine{61         \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Matrix_a6d6373343a1f41b1636caf44f05c01ca}{Matrix}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Matrix}{Matrix}}\& v);}
 \DoxyCodeLine{62         \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Matrix_af75b07f627de187673a062c31ec7f351}{\string~Matrix}}();}
 \DoxyCodeLine{63 }
-\DoxyCodeLine{70         \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Matrix_a5715abe199ab48d05026b6e6f28f7298}{GetValue}}(\textcolor{keyword}{const} std::size\_t rowIdx, \textcolor{keyword}{const} std::size\_t colIdx) \textcolor{keyword}{const};}
+\DoxyCodeLine{70         [[nodiscard]] \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Matrix_afc70d75fec9264628f549b680dd176bc}{GetValue}}(std::size\_t rowIdx, std::size\_t colIdx) \textcolor{keyword}{const};}
 \DoxyCodeLine{71 }
-\DoxyCodeLine{78         \textcolor{keywordtype}{void} \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Matrix_a2751a8ae7ceb444179f7c490f222a7b4}{SetValue}}(\textcolor{keyword}{const} std::size\_t rowIdx, \textcolor{keyword}{const} std::size\_t colIdx, \textcolor{keyword}{const} \textcolor{keywordtype}{double} value);}
+\DoxyCodeLine{78         \textcolor{keywordtype}{void} \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Matrix_a95dc6676a532e10870833b42b4727fa8}{SetValue}}(std::size\_t rowIdx, std::size\_t colIdx, \textcolor{keywordtype}{double} value);}
 \DoxyCodeLine{79 }
-\DoxyCodeLine{84         std::size\_t \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Matrix_a23e36eacf01a07a1a0cff6910c316ee5}{GetColumsSize}}()\textcolor{keyword}{ const }\{ \textcolor{keywordflow}{return} m\_colSize; \}}
+\DoxyCodeLine{84         [[nodiscard]] std::size\_t \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Matrix_a23e36eacf01a07a1a0cff6910c316ee5}{GetColumsSize}}()\textcolor{keyword}{ const }\{ \textcolor{keywordflow}{return} m\_colSize; \}}
 \DoxyCodeLine{85 }
-\DoxyCodeLine{90         std::size\_t \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Matrix_a3252003659d0450c811f655ef4a34fd2}{GetRowsSize}}()\textcolor{keyword}{ const }\{ \textcolor{keywordflow}{return} m\_rowSize; \}}
+\DoxyCodeLine{90         [[nodiscard]] std::size\_t \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Matrix_a3252003659d0450c811f655ef4a34fd2}{GetRowsSize}}()\textcolor{keyword}{ const }\{ \textcolor{keywordflow}{return} m\_rowSize; \}}
 \DoxyCodeLine{91 }
 \DoxyCodeLine{97         \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Matrix}{Matrix}} \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Matrix_adaf69eafeefd8208cfcbbeabf44c1b94}{Multiply}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Matrix}{Matrix}}\& matrix);}
 \DoxyCodeLine{98 }
-\DoxyCodeLine{103         \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Matrix}{Matrix}} \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Matrix_a97ca6c1edeae30a316e26dd1cd43f738}{Transpose}}() \textcolor{keyword}{const};}
+\DoxyCodeLine{103         [[nodiscard]] \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Matrix}{Matrix}} \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Matrix_a97ca6c1edeae30a316e26dd1cd43f738}{Transpose}}() \textcolor{keyword}{const};}
 \DoxyCodeLine{104 }
-\DoxyCodeLine{105         \textcolor{keywordtype}{double}** \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Matrix_a8047f31f1639ae3a665a09b3687475a5}{GetRawData}}() \textcolor{keyword}{const};}
+\DoxyCodeLine{105         [[nodiscard]] \textcolor{keywordtype}{double}** \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Matrix_a8047f31f1639ae3a665a09b3687475a5}{GetRawData}}() \textcolor{keyword}{const};}
 \DoxyCodeLine{106     \};}
 \DoxyCodeLine{107 \}}
 \DoxyCodeLine{108 \textcolor{preprocessor}{\#endif }\textcolor{comment}{// !MATRIX\_H}}

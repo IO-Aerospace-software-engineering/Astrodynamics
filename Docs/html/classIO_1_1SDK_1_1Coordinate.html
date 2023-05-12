@@ -25,7 +25,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">IO-SDK<span id="projectnumber">&#160;0.4.x</span>
+   <div id="projectname">IO-SDK<span id="projectnumber">&#160;0.5.x</span>
    </div>
    <div id="projectbrief">Astrodynamics framework</div>
   </td>
@@ -98,6 +98,10 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a14bc2970fed38a4ef4048cac18b7e716"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Coordinate.html#a14bc2970fed38a4ef4048cac18b7e716">Coordinate</a> (const std::string &amp;name)</td></tr>
 <tr class="memdesc:a14bc2970fed38a4ef4048cac18b7e716"><td class="mdescLeft">&#160;</td><td class="mdescRight">Construct a new <a class="el" href="classIO_1_1SDK_1_1Coordinate.html">Coordinate</a> object.  <a href="classIO_1_1SDK_1_1Coordinate.html#a14bc2970fed38a4ef4048cac18b7e716">More...</a><br /></td></tr>
 <tr class="separator:a14bc2970fed38a4ef4048cac18b7e716"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1d592a91467a7d574105e8e29e8b5172"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Coordinate.html#a1d592a91467a7d574105e8e29e8b5172">~Coordinate</a> ()=default</td></tr>
+<tr class="separator:a1d592a91467a7d574105e8e29e8b5172"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a48d76683e3f820e61293b3b300dd59ac"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classIO_1_1SDK_1_1Coordinate.html">Coordinate</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Coordinate.html#a48d76683e3f820e61293b3b300dd59ac">operator=</a> (const <a class="el" href="classIO_1_1SDK_1_1Coordinate.html">Coordinate</a> &amp;other)</td></tr>
+<tr class="separator:a48d76683e3f820e61293b3b300dd59ac"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5cdb9ede2c0a59dc0f37ea5a44a97a86"><td class="memItemLeft" align="right" valign="top">const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Coordinate.html#a5cdb9ede2c0a59dc0f37ea5a44a97a86">ToCharArray</a> () const</td></tr>
 <tr class="memdesc:a5cdb9ede2c0a59dc0f37ea5a44a97a86"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get char array.  <a href="classIO_1_1SDK_1_1Coordinate.html#a5cdb9ede2c0a59dc0f37ea5a44a97a86">More...</a><br /></td></tr>
 <tr class="separator:a5cdb9ede2c0a59dc0f37ea5a44a97a86"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -126,6 +130,8 @@ Static Public Member Functions</h2></td></tr>
 <tr class="separator:af81aa1a4011d77113f4a1bc713800e50"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab37d853fcae271174696a10c7fb95638"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="classIO_1_1SDK_1_1Coordinate.html">Coordinate</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Coordinate.html#ab37d853fcae271174696a10c7fb95638">Colatitude</a> ()</td></tr>
 <tr class="separator:ab37d853fcae271174696a10c7fb95638"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a76dca689301cabd728d6dd2b35e6f142"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="classIO_1_1SDK_1_1Coordinate.html">Coordinate</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Coordinate.html#a76dca689301cabd728d6dd2b35e6f142">ToCoordinateType</a> (const std::string &amp;coordinateType)</td></tr>
+<tr class="separator:a76dca689301cabd728d6dd2b35e6f142"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="a14bc2970fed38a4ef4048cac18b7e716" name="a14bc2970fed38a4ef4048cac18b7e716"></a>
@@ -133,6 +139,9 @@ Static Public Member Functions</h2></td></tr>
 
 <div class="memitem">
 <div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
       <table class="memname">
         <tr>
           <td class="memname">IO::SDK::Coordinate::Coordinate </td>
@@ -142,6 +151,11 @@ Static Public Member Functions</h2></td></tr>
           <td></td>
         </tr>
       </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">explicit</span></span>  </td>
+  </tr>
+</table>
 </div><div class="memdoc">
 
 <p>Construct a new <a class="el" href="classIO_1_1SDK_1_1Coordinate.html">Coordinate</a> object. </p>
@@ -151,6 +165,31 @@ Static Public Member Functions</h2></td></tr>
   </table>
   </dd>
 </dl>
+
+</div>
+</div>
+<a id="a1d592a91467a7d574105e8e29e8b5172" name="a1d592a91467a7d574105e8e29e8b5172"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1d592a91467a7d574105e8e29e8b5172">&#9670;&nbsp;</a></span>~Coordinate()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">IO::SDK::Coordinate::~Coordinate </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">default</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
 
 </div>
 </div>
@@ -280,6 +319,32 @@ Static Public Member Functions</h2></td></tr>
 
 </div>
 </div>
+<a id="a48d76683e3f820e61293b3b300dd59ac" name="a48d76683e3f820e61293b3b300dd59ac"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a48d76683e3f820e61293b3b300dd59ac">&#9670;&nbsp;</a></span>operator=()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classIO_1_1SDK_1_1Coordinate.html">Coordinate</a> &amp; IO::SDK::Coordinate::operator= </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="classIO_1_1SDK_1_1Coordinate.html">Coordinate</a> &amp;&#160;</td>
+          <td class="paramname"><em>other</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
 <a id="a8398dfe2e1cbd865a0ddd9fcfc52e829" name="a8398dfe2e1cbd865a0ddd9fcfc52e829"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a8398dfe2e1cbd865a0ddd9fcfc52e829">&#9670;&nbsp;</a></span>Radius()</h2>
 
@@ -372,6 +437,32 @@ Static Public Member Functions</h2></td></tr>
 
 <p>Get char array. </p>
 <dl class="section return"><dt>Returns</dt><dd>const char* </dd></dl>
+
+</div>
+</div>
+<a id="a76dca689301cabd728d6dd2b35e6f142" name="a76dca689301cabd728d6dd2b35e6f142"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a76dca689301cabd728d6dd2b35e6f142">&#9670;&nbsp;</a></span>ToCoordinateType()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classIO_1_1SDK_1_1Coordinate.html">IO::SDK::Coordinate</a> IO::SDK::Coordinate::ToCoordinateType </td>
+          <td>(</td>
+          <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramname"><em>coordinateType</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
 
 </div>
 </div>

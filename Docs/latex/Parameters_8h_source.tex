@@ -15,21 +15,19 @@
 \DoxyCodeLine{20 }
 \DoxyCodeLine{21 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1SDK_1_1Parameters}{IO::SDK::Parameters}}}
 \DoxyCodeLine{22 \{}
-\DoxyCodeLine{23     \textcolor{keyword}{inline} \textcolor{keyword}{constexpr} std::string\_view \mbox{\hyperlink{namespaceIO_1_1SDK_1_1Parameters_a7e3d270c79b30212bcc45e587cb44117}{SpacecraftPath}} = \textcolor{stringliteral}{"{}Data/User/Spacecrafts"{}};}
-\DoxyCodeLine{24     \textcolor{keyword}{inline} \textcolor{keyword}{constexpr} std::string\_view \mbox{\hyperlink{namespaceIO_1_1SDK_1_1Parameters_ac26f7f4e0d89acae0ec56ef49aada4e0}{SolarSystemKernelPath}} = \textcolor{stringliteral}{"{}Data/SolarSystem"{}};}
-\DoxyCodeLine{25     \textcolor{keyword}{inline} \textcolor{keyword}{constexpr} std::string\_view \mbox{\hyperlink{namespaceIO_1_1SDK_1_1Parameters_a59216b2c5e88c1f0f5ed2587e99ca35d}{SitePath}} = \textcolor{stringliteral}{"{}Data/User/Sites"{}};}
-\DoxyCodeLine{26     \textcolor{keyword}{inline} \textcolor{keyword}{constexpr} \textcolor{keywordtype}{int} \mbox{\hyperlink{namespaceIO_1_1SDK_1_1Parameters_a444b6401a92e31ac6f7c39338a49a57c}{CommentAreaSize}} = 5000;}
-\DoxyCodeLine{27     \textcolor{keyword}{inline} \textcolor{keyword}{constexpr} \textcolor{keywordtype}{int} \mbox{\hyperlink{namespaceIO_1_1SDK_1_1Parameters_af0adfe53d18f101abb6434d392c44bec}{MaximumEphemerisLagrangePolynomialDegree}} = 27;\textcolor{comment}{//[1-\/23]}}
-\DoxyCodeLine{28     \textcolor{keyword}{inline} \textcolor{keyword}{constexpr} \textcolor{keywordtype}{int} \mbox{\hyperlink{namespaceIO_1_1SDK_1_1Parameters_a3e6f60370082b8f58457f73cb74db605}{MaximumOrientationLagrangePolynomialDegree}} = 23;\textcolor{comment}{//[1-\/23]}}
-\DoxyCodeLine{29 }
-\DoxyCodeLine{30     \textcolor{keyword}{inline} \textcolor{keyword}{constexpr} \textcolor{keywordtype}{double} \mbox{\hyperlink{namespaceIO_1_1SDK_1_1Parameters_afb6663fa378276d38946b2183ba2fc5f}{NodeDetectionAccuraccy}} = 0.0017453;\textcolor{comment}{//0.1°}}
-\DoxyCodeLine{31     \textcolor{keyword}{inline} \textcolor{keyword}{constexpr} \textcolor{keywordtype}{double} \mbox{\hyperlink{namespaceIO_1_1SDK_1_1Parameters_a1181e43d26068caf60c576ec7a90cca3}{IntersectDetectionAccuraccy}} = 0.017453;\textcolor{comment}{//1.0°}}
-\DoxyCodeLine{32     \textcolor{keyword}{inline} \textcolor{keyword}{constexpr} \textcolor{keywordtype}{double} \mbox{\hyperlink{namespaceIO_1_1SDK_1_1Parameters_af3f8e4e755115c9fd070d564cde36241}{CircularEccentricityAccuraccy}} = 1E-\/03;}
-\DoxyCodeLine{33     \textcolor{keyword}{inline} \textcolor{keyword}{constexpr} \textcolor{keywordtype}{double} \mbox{\hyperlink{namespaceIO_1_1SDK_1_1Parameters_a3706cc453e95ad37a010f91469f2fcac}{ClockAccuracy}} = 16.0; \textcolor{comment}{//2\string^n}}
-\DoxyCodeLine{34     \textcolor{keyword}{inline} \textcolor{keyword}{const} \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{Time::TimeSpan}} SitePropagationStep(60s);}
-\DoxyCodeLine{35     \textcolor{keyword}{inline} \textcolor{keyword}{const} \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{Time::TimeSpan}} SpacecraftPropagationStep(1s);}
-\DoxyCodeLine{36 }
-\DoxyCodeLine{37 \}}
-\DoxyCodeLine{38 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{23 }
+\DoxyCodeLine{24     \textcolor{keyword}{inline} \textcolor{keyword}{constexpr} \textcolor{keywordtype}{int} \mbox{\hyperlink{namespaceIO_1_1SDK_1_1Parameters_a444b6401a92e31ac6f7c39338a49a57c}{CommentAreaSize}} = 5000;}
+\DoxyCodeLine{25     \textcolor{keyword}{inline} \textcolor{keyword}{constexpr} \textcolor{keywordtype}{int} \mbox{\hyperlink{namespaceIO_1_1SDK_1_1Parameters_a7f6cf3f43d214a0b3253ae515f2df848}{MaximumEphemerisLagrangePolynomialDegreeEvenSpaced}} = 27;\textcolor{comment}{//[1-\/27]}}
+\DoxyCodeLine{26     \textcolor{keyword}{inline} \textcolor{keyword}{constexpr} \textcolor{keywordtype}{int} \mbox{\hyperlink{namespaceIO_1_1SDK_1_1Parameters_af0adfe53d18f101abb6434d392c44bec}{MaximumEphemerisLagrangePolynomialDegree}} = 15;\textcolor{comment}{//[1-\/27]}}
+\DoxyCodeLine{27 }
+\DoxyCodeLine{28     \textcolor{keyword}{inline} \textcolor{keyword}{constexpr} \textcolor{keywordtype}{double} \mbox{\hyperlink{namespaceIO_1_1SDK_1_1Parameters_afb6663fa378276d38946b2183ba2fc5f}{NodeDetectionAccuraccy}} = 0.0017453;\textcolor{comment}{//0.1°}}
+\DoxyCodeLine{29     \textcolor{keyword}{inline} \textcolor{keyword}{constexpr} \textcolor{keywordtype}{double} \mbox{\hyperlink{namespaceIO_1_1SDK_1_1Parameters_a1181e43d26068caf60c576ec7a90cca3}{IntersectDetectionAccuraccy}} = 0.017453;\textcolor{comment}{//1.0°}}
+\DoxyCodeLine{30     \textcolor{keyword}{inline} \textcolor{keyword}{constexpr} \textcolor{keywordtype}{double} \mbox{\hyperlink{namespaceIO_1_1SDK_1_1Parameters_af3f8e4e755115c9fd070d564cde36241}{CircularEccentricityAccuraccy}} = 1E-\/03;}
+\DoxyCodeLine{31     \textcolor{keyword}{inline} \textcolor{keyword}{constexpr} \textcolor{keywordtype}{double} \mbox{\hyperlink{namespaceIO_1_1SDK_1_1Parameters_a3706cc453e95ad37a010f91469f2fcac}{ClockAccuracy}} = 16.0; \textcolor{comment}{//2\string^n}}
+\DoxyCodeLine{32     \textcolor{keyword}{inline} \textcolor{keyword}{const} \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{Time::TimeSpan}} SitePropagationStep(60s);}
+\DoxyCodeLine{33     \textcolor{keyword}{inline} \textcolor{keyword}{const} \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{Time::TimeSpan}} SpacecraftPropagationStep(1s);}
+\DoxyCodeLine{34 }
+\DoxyCodeLine{35 \}}
+\DoxyCodeLine{36 \textcolor{preprocessor}{\#endif}}
 
 \end{DoxyCode}

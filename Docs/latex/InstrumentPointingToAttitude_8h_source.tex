@@ -6,51 +6,43 @@
 \DoxyCodeLine{11 \textcolor{preprocessor}{\#ifndef INSTRUMENT\_ALIGNED\_TO\_ATTITUDE\_H}}
 \DoxyCodeLine{12 \textcolor{preprocessor}{\#define INSTRUMENT\_ALIGNED\_TO\_ATTITUDE\_H}}
 \DoxyCodeLine{13 }
-\DoxyCodeLine{14 \textcolor{preprocessor}{\#include <vector>}}
-\DoxyCodeLine{15 \textcolor{preprocessor}{\#include <memory>}}
+\DoxyCodeLine{14 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{ManeuverBase_8h}{ManeuverBase.h}}>}}
+\DoxyCodeLine{15 \textcolor{preprocessor}{\#include "{}\mbox{\hyperlink{Site_8h}{Site.h}}"{}}}
 \DoxyCodeLine{16 }
-\DoxyCodeLine{17 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{ManeuverBase_8h}{ManeuverBase.h}}>}}
-\DoxyCodeLine{18 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{OrbitalParameters_8h}{OrbitalParameters.h}}>}}
-\DoxyCodeLine{19 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{Engine_8h}{Engine.h}}>}}
-\DoxyCodeLine{20 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{Propagator_8h}{Propagator.h}}>}}
-\DoxyCodeLine{21 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{Vector3D_8h}{Vector3D.h}}>}}
-\DoxyCodeLine{22 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{Body_8h}{Body.h}}>}}
-\DoxyCodeLine{23 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{Site_8h}{Site.h}}>}}
-\DoxyCodeLine{24 }
-\DoxyCodeLine{25 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1SDK_1_1Maneuvers_1_1Attitudes}{IO::SDK::Maneuvers::Attitudes}}}
-\DoxyCodeLine{26 \{}
-\DoxyCodeLine{27     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1Attitudes_1_1InstrumentPointingToAttitude}{InstrumentPointingToAttitude}} final : \textcolor{keyword}{public} \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase}{IO::SDK::Maneuvers::ManeuverBase}}}
-\DoxyCodeLine{28     \{}
-\DoxyCodeLine{29     \textcolor{keyword}{private}:}
-\DoxyCodeLine{30         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body}{IO::SDK::Body::Body}} *m\_targetBody\{\textcolor{keyword}{nullptr}\};}
-\DoxyCodeLine{31         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site}{IO::SDK::Sites::Site}} *m\_targetSite\{\textcolor{keyword}{nullptr}\};}
-\DoxyCodeLine{32         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Instruments_1_1Instrument}{IO::SDK::Instruments::Instrument}} \&m\_instrument;}
+\DoxyCodeLine{17 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1SDK_1_1Maneuvers_1_1Attitudes}{IO::SDK::Maneuvers::Attitudes}}}
+\DoxyCodeLine{18 \{}
+\DoxyCodeLine{19     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1Attitudes_1_1InstrumentPointingToAttitude}{InstrumentPointingToAttitude}} final : \textcolor{keyword}{public} \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase}{IO::SDK::Maneuvers::ManeuverBase}}}
+\DoxyCodeLine{20     \{}
+\DoxyCodeLine{21     \textcolor{keyword}{private}:}
+\DoxyCodeLine{22         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body}{IO::SDK::Body::Body}} *m\_targetBody\{\textcolor{keyword}{nullptr}\};}
+\DoxyCodeLine{23         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site}{IO::SDK::Sites::Site}} *m\_targetSite\{\textcolor{keyword}{nullptr}\};}
+\DoxyCodeLine{24         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Instruments_1_1Instrument}{IO::SDK::Instruments::Instrument}} \&m\_instrument;}
+\DoxyCodeLine{25 }
+\DoxyCodeLine{26     \textcolor{keyword}{protected}:}
+\DoxyCodeLine{32         \textcolor{keywordtype}{void} \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1Attitudes_1_1InstrumentPointingToAttitude_a63cc6bbb1d175940290cb8ca1c8ef37c}{Compute}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters}{IO::SDK::OrbitalParameters::OrbitalParameters}} \&maneuverPoint) \textcolor{keyword}{override};}
 \DoxyCodeLine{33 }
-\DoxyCodeLine{34     \textcolor{keyword}{protected}:}
-\DoxyCodeLine{40         \textcolor{keywordtype}{void} \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1Attitudes_1_1InstrumentPointingToAttitude_a63cc6bbb1d175940290cb8ca1c8ef37c}{Compute}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters}{IO::SDK::OrbitalParameters::OrbitalParameters}} \&maneuverPoint) \textcolor{keyword}{override};}
+\DoxyCodeLine{40         \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateOrientation}{IO::SDK::OrbitalParameters::StateOrientation}} \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1Attitudes_1_1InstrumentPointingToAttitude_a2002e4077e792a6d328a03696f1e99b8}{ComputeOrientation}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters}{IO::SDK::OrbitalParameters::OrbitalParameters}} \&maneuverPoint) \textcolor{keyword}{override};}
 \DoxyCodeLine{41 }
-\DoxyCodeLine{48         \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateOrientation}{IO::SDK::OrbitalParameters::StateOrientation}} \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1Attitudes_1_1InstrumentPointingToAttitude_a2002e4077e792a6d328a03696f1e99b8}{ComputeOrientation}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters}{IO::SDK::OrbitalParameters::OrbitalParameters}} \&maneuverPoint) \textcolor{keyword}{override};}
-\DoxyCodeLine{49 }
-\DoxyCodeLine{50     \textcolor{keyword}{public}:}
-\DoxyCodeLine{59         \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1Attitudes_1_1InstrumentPointingToAttitude_a41d9eb6bbf23c65a8bab6c5a864ba020}{InstrumentPointingToAttitude}}(\textcolor{keyword}{const} std::vector<IO::SDK::Body::Spacecraft::Engine> \&engines, \mbox{\hyperlink{classIO_1_1SDK_1_1Propagators_1_1Propagator}{IO::SDK::Propagators::Propagator}} \&propagator,}
-\DoxyCodeLine{60                                      \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO::SDK::Time::TimeSpan}} \&attitudeHoldDuration, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Instruments_1_1Instrument}{IO::SDK::Instruments::Instrument}} \&instrument, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body}{IO::SDK::Body::Body}} \&targetBody);}
-\DoxyCodeLine{61 }
-\DoxyCodeLine{70         \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1Attitudes_1_1InstrumentPointingToAttitude_a41d9eb6bbf23c65a8bab6c5a864ba020}{InstrumentPointingToAttitude}}(\textcolor{keyword}{const} std::vector<IO::SDK::Body::Spacecraft::Engine> \&engines, \mbox{\hyperlink{classIO_1_1SDK_1_1Propagators_1_1Propagator}{IO::SDK::Propagators::Propagator}} \&propagator,}
-\DoxyCodeLine{71                                      \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO::SDK::Time::TimeSpan}} \&attitudeHoldDuration, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Instruments_1_1Instrument}{IO::SDK::Instruments::Instrument}} \&instrument,}
-\DoxyCodeLine{72                                      \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site}{IO::SDK::Sites::Site}} \&targetSite);}
-\DoxyCodeLine{73 }
-\DoxyCodeLine{83         \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1Attitudes_1_1InstrumentPointingToAttitude_a41d9eb6bbf23c65a8bab6c5a864ba020}{InstrumentPointingToAttitude}}(\textcolor{keyword}{const} std::vector<IO::SDK::Body::Spacecraft::Engine> \&engines, \mbox{\hyperlink{classIO_1_1SDK_1_1Propagators_1_1Propagator}{IO::SDK::Propagators::Propagator}} \&propagator,}
-\DoxyCodeLine{84                                      \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO::SDK::Time::TDB}} \&minimumEpoch, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO::SDK::Time::TimeSpan}} \&attitudeHoldDuration, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Instruments_1_1Instrument}{IO::SDK::Instruments::Instrument}} \&instrument,}
-\DoxyCodeLine{85                                      \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body}{IO::SDK::Body::Body}} \&targetBody);}
-\DoxyCodeLine{86 }
-\DoxyCodeLine{96         \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1Attitudes_1_1InstrumentPointingToAttitude_a41d9eb6bbf23c65a8bab6c5a864ba020}{InstrumentPointingToAttitude}}(\textcolor{keyword}{const} std::vector<IO::SDK::Body::Spacecraft::Engine> \&engines, \mbox{\hyperlink{classIO_1_1SDK_1_1Propagators_1_1Propagator}{IO::SDK::Propagators::Propagator}} \&propagator,}
-\DoxyCodeLine{97                                      \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO::SDK::Time::TDB}} \&minimumEpoch, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO::SDK::Time::TimeSpan}} \&attitudeHoldDuration, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Instruments_1_1Instrument}{IO::SDK::Instruments::Instrument}} \&instrument,}
-\DoxyCodeLine{98                                      \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site}{IO::SDK::Sites::Site}} \&targetSite);}
-\DoxyCodeLine{99 }
-\DoxyCodeLine{107         \textcolor{keywordtype}{bool} \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1Attitudes_1_1InstrumentPointingToAttitude_a3dd8df1c72035897d32cf7b01e3bf366}{CanExecute}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters}{IO::SDK::OrbitalParameters::OrbitalParameters}} \&orbitalParams) \textcolor{keyword}{override};}
-\DoxyCodeLine{108     \};}
-\DoxyCodeLine{109 \}}
-\DoxyCodeLine{110 }
-\DoxyCodeLine{111 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{42     \textcolor{keyword}{public}:}
+\DoxyCodeLine{51         \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1Attitudes_1_1InstrumentPointingToAttitude_a3ac329f81a7aa3a4f5dfd40d500549b9}{InstrumentPointingToAttitude}}(std::vector<IO::SDK::Body::Spacecraft::Engine*> engines, \mbox{\hyperlink{classIO_1_1SDK_1_1Propagators_1_1Propagator}{IO::SDK::Propagators::Propagator}} \&propagator,}
+\DoxyCodeLine{52                                      \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO::SDK::Time::TimeSpan}} \&attitudeHoldDuration, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Instruments_1_1Instrument}{IO::SDK::Instruments::Instrument}} \&instrument, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body}{IO::SDK::Body::Body}} \&targetBody);}
+\DoxyCodeLine{53 }
+\DoxyCodeLine{62         \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1Attitudes_1_1InstrumentPointingToAttitude_a8a7df8c54c6b19e5b3117e5350c336b8}{InstrumentPointingToAttitude}}(\textcolor{keyword}{const} std::vector<IO::SDK::Body::Spacecraft::Engine*> engines, \mbox{\hyperlink{classIO_1_1SDK_1_1Propagators_1_1Propagator}{IO::SDK::Propagators::Propagator}} \&propagator,}
+\DoxyCodeLine{63                                      \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO::SDK::Time::TimeSpan}} \&attitudeHoldDuration, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Instruments_1_1Instrument}{IO::SDK::Instruments::Instrument}} \&instrument,}
+\DoxyCodeLine{64                                      \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site}{IO::SDK::Sites::Site}} \&targetSite);}
+\DoxyCodeLine{65 }
+\DoxyCodeLine{75         \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1Attitudes_1_1InstrumentPointingToAttitude_a8b251cc79e8c013005e52dff0b3255a5}{InstrumentPointingToAttitude}}(\textcolor{keyword}{const} std::vector<IO::SDK::Body::Spacecraft::Engine*> engines, \mbox{\hyperlink{classIO_1_1SDK_1_1Propagators_1_1Propagator}{IO::SDK::Propagators::Propagator}} \&propagator,}
+\DoxyCodeLine{76                                      \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO::SDK::Time::TDB}} \&minimumEpoch, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO::SDK::Time::TimeSpan}} \&attitudeHoldDuration, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Instruments_1_1Instrument}{IO::SDK::Instruments::Instrument}} \&instrument,}
+\DoxyCodeLine{77                                      \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body}{IO::SDK::Body::Body}} \&targetBody);}
+\DoxyCodeLine{78 }
+\DoxyCodeLine{88         \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1Attitudes_1_1InstrumentPointingToAttitude_a11bd388a3c87fec43e3391669c843aee}{InstrumentPointingToAttitude}}(\textcolor{keyword}{const} std::vector<IO::SDK::Body::Spacecraft::Engine*> engines, \mbox{\hyperlink{classIO_1_1SDK_1_1Propagators_1_1Propagator}{IO::SDK::Propagators::Propagator}} \&propagator,}
+\DoxyCodeLine{89                                      \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO::SDK::Time::TDB}} \&minimumEpoch, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO::SDK::Time::TimeSpan}} \&attitudeHoldDuration, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Instruments_1_1Instrument}{IO::SDK::Instruments::Instrument}} \&instrument,}
+\DoxyCodeLine{90                                      \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site}{IO::SDK::Sites::Site}} \&targetSite);}
+\DoxyCodeLine{91 }
+\DoxyCodeLine{99         \textcolor{keywordtype}{bool} \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1Attitudes_1_1InstrumentPointingToAttitude_a3dd8df1c72035897d32cf7b01e3bf366}{CanExecute}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters}{IO::SDK::OrbitalParameters::OrbitalParameters}} \&orbitalParams) \textcolor{keyword}{override};}
+\DoxyCodeLine{100     \};}
+\DoxyCodeLine{101 \}}
+\DoxyCodeLine{102 }
+\DoxyCodeLine{103 \textcolor{preprocessor}{\#endif}}
 
 \end{DoxyCode}

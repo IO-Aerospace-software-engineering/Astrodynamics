@@ -1,7 +1,7 @@
 var classIO_1_1SDK_1_1Maneuvers_1_1ApsidalAlignmentManeuver =
 [
-    [ "ApsidalAlignmentManeuver", "classIO_1_1SDK_1_1Maneuvers_1_1ApsidalAlignmentManeuver.html#a0cdd488a6ba91c3ed9b9071fa16f2e72", null ],
-    [ "ApsidalAlignmentManeuver", "classIO_1_1SDK_1_1Maneuvers_1_1ApsidalAlignmentManeuver.html#a10db2c8d5f0c552bf83d32003b1c6a47", null ],
+    [ "ApsidalAlignmentManeuver", "classIO_1_1SDK_1_1Maneuvers_1_1ApsidalAlignmentManeuver.html#a890bce99b466ce884be3ce665fa95b04", null ],
+    [ "ApsidalAlignmentManeuver", "classIO_1_1SDK_1_1Maneuvers_1_1ApsidalAlignmentManeuver.html#ab51456b5b55823ad1f5ba7b39b691391", null ],
     [ "CanExecute", "classIO_1_1SDK_1_1Maneuvers_1_1ApsidalAlignmentManeuver.html#abccf6c20c8266615d3d9f0edc424cdf0", null ],
     [ "Compute", "classIO_1_1SDK_1_1Maneuvers_1_1ApsidalAlignmentManeuver.html#a3678b43d7f32de52bca3b97a3c68c046", null ],
     [ "ComputeOrientation", "classIO_1_1SDK_1_1Maneuvers_1_1ApsidalAlignmentManeuver.html#a446d463805067fec8ca3e1926b30553c", null ],

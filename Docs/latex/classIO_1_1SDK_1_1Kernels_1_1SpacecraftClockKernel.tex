@@ -13,16 +13,16 @@ Inheritance diagram for IO\+::SDK\+::Kernels\+::Spacecraft\+Clock\+Kernel\+:\beg
 \doxysubsection*{Public Member Functions}
 \begin{DoxyCompactItemize}
 \item 
-virtual \mbox{\hyperlink{classIO_1_1SDK_1_1Kernels_1_1SpacecraftClockKernel_a33455c8dcfa34ad96eccce881de86162}{$\sim$\+Spacecraft\+Clock\+Kernel}} ()=default
+\mbox{\hyperlink{classIO_1_1SDK_1_1Kernels_1_1SpacecraftClockKernel_a5f61565b8f811d9c2d3c2e14f0518357}{$\sim$\+Spacecraft\+Clock\+Kernel}} () override=default
 \item 
 \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO\+::\+SDK\+::\+Time\+::\+Window}}$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} $>$ \mbox{\hyperlink{classIO_1_1SDK_1_1Kernels_1_1SpacecraftClockKernel_a0caa5d066fdc3084192431c1fe0a4b55}{Get\+Coverage\+Window}} () const override
 \begin{DoxyCompactList}\small\item\em Get the Coverage Window. \end{DoxyCompactList}\item 
 \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} \mbox{\hyperlink{classIO_1_1SDK_1_1Kernels_1_1SpacecraftClockKernel_a9c61a0f733a909d715adc5900a0f8114}{Convert\+To\+TDB}} (const std\+::string \&clock) const
 \begin{DoxyCompactList}\small\item\em Convert to TDB. \end{DoxyCompactList}\item 
-\mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} \mbox{\hyperlink{classIO_1_1SDK_1_1Kernels_1_1SpacecraftClockKernel_a54e4d6898f6be23593d8a38b3a517071}{Convert\+To\+TDB}} (const double encoded\+Clock) const
+\mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} \mbox{\hyperlink{classIO_1_1SDK_1_1Kernels_1_1SpacecraftClockKernel_a8166116a497f3ba7f5b8f9b06ced2554}{Convert\+To\+TDB}} (double encoded\+Clock) const
 \begin{DoxyCompactList}\small\item\em Convert to TDB. \end{DoxyCompactList}\item 
 std\+::string \mbox{\hyperlink{classIO_1_1SDK_1_1Kernels_1_1SpacecraftClockKernel_a98d92e2fffebb77d2ed4ff2c2bcccc69}{Convert\+To\+Clock\+String}} (const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} \&epoch) const
-\begin{DoxyCompactList}\small\item\em Convert to Spacecraft clock. \end{DoxyCompactList}\item
+\begin{DoxyCompactList}\small\item\em Convert to Spacecraft clock. \end{DoxyCompactList}\item 
 double \mbox{\hyperlink{classIO_1_1SDK_1_1Kernels_1_1SpacecraftClockKernel_ad76773371070768a3a3ee65f02f81777}{Convert\+To\+Encoded\+Clock}} (const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} \&epoch) const
 \begin{DoxyCompactList}\small\item\em Convert to enoded clock. \end{DoxyCompactList}\item 
 int \mbox{\hyperlink{classIO_1_1SDK_1_1Kernels_1_1SpacecraftClockKernel_a10ff8310319cd3408905401585e03ba2}{Get\+Resolution}} () const
@@ -31,6 +31,11 @@ int \mbox{\hyperlink{classIO_1_1SDK_1_1Kernels_1_1SpacecraftClockKernel_af8245c8
 \begin{DoxyCompactList}\small\item\em Get the Ticks Per Seconds. \end{DoxyCompactList}\item 
 double \mbox{\hyperlink{classIO_1_1SDK_1_1Kernels_1_1SpacecraftClockKernel_aa2bd1216181c44c2b28e82a8e8af313c}{Get\+Seconds\+Per\+Tick}} () const
 \begin{DoxyCompactList}\small\item\em Get the Seconds Per Tick. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsection*{Static Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+static double \mbox{\hyperlink{classIO_1_1SDK_1_1Kernels_1_1SpacecraftClockKernel_ab4f53e4d4000fee227f2cb6160ccd174}{Convert\+To\+Encoded\+Clock}} (int spacecraft\+Id, const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} \&epoch)
+\end{DoxyCompactItemize}
 \doxysubsection*{Friends}
 \begin{DoxyCompactItemize}
 \item 
@@ -40,11 +45,11 @@ class \mbox{\hyperlink{classIO_1_1SDK_1_1Kernels_1_1SpacecraftClockKernel_a1ba9c
 
 
 \doxysubsection{Constructor \& Destructor Documentation}
-\mbox{\Hypertarget{classIO_1_1SDK_1_1Kernels_1_1SpacecraftClockKernel_a33455c8dcfa34ad96eccce881de86162}\label{classIO_1_1SDK_1_1Kernels_1_1SpacecraftClockKernel_a33455c8dcfa34ad96eccce881de86162}} 
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Kernels_1_1SpacecraftClockKernel_a5f61565b8f811d9c2d3c2e14f0518357}\label{classIO_1_1SDK_1_1Kernels_1_1SpacecraftClockKernel_a5f61565b8f811d9c2d3c2e14f0518357}} 
 \index{IO::SDK::Kernels::SpacecraftClockKernel@{IO::SDK::Kernels::SpacecraftClockKernel}!````~SpacecraftClockKernel@{$\sim$SpacecraftClockKernel}}
 \index{````~SpacecraftClockKernel@{$\sim$SpacecraftClockKernel}!IO::SDK::Kernels::SpacecraftClockKernel@{IO::SDK::Kernels::SpacecraftClockKernel}}
 \doxysubsubsection{\texorpdfstring{$\sim$SpacecraftClockKernel()}{~SpacecraftClockKernel()}}
-{\footnotesize\ttfamily virtual IO\+::\+SDK\+::\+Kernels\+::\+Spacecraft\+Clock\+Kernel\+::$\sim$\+Spacecraft\+Clock\+Kernel (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}, {\ttfamily [default]}}
+{\footnotesize\ttfamily IO\+::\+SDK\+::\+Kernels\+::\+Spacecraft\+Clock\+Kernel\+::$\sim$\+Spacecraft\+Clock\+Kernel (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [default]}}
 
 
 
@@ -57,7 +62,7 @@ class \mbox{\hyperlink{classIO_1_1SDK_1_1Kernels_1_1SpacecraftClockKernel_a1ba9c
 
 
 
-Convert to Spacecraft clock.
+Convert to Spacecraft clock. 
 
 
 \begin{DoxyParams}{Parameters}
@@ -70,7 +75,7 @@ std\+::string
 \mbox{\Hypertarget{classIO_1_1SDK_1_1Kernels_1_1SpacecraftClockKernel_ad76773371070768a3a3ee65f02f81777}\label{classIO_1_1SDK_1_1Kernels_1_1SpacecraftClockKernel_ad76773371070768a3a3ee65f02f81777}} 
 \index{IO::SDK::Kernels::SpacecraftClockKernel@{IO::SDK::Kernels::SpacecraftClockKernel}!ConvertToEncodedClock@{ConvertToEncodedClock}}
 \index{ConvertToEncodedClock@{ConvertToEncodedClock}!IO::SDK::Kernels::SpacecraftClockKernel@{IO::SDK::Kernels::SpacecraftClockKernel}}
-\doxysubsubsection{\texorpdfstring{ConvertToEncodedClock()}{ConvertToEncodedClock()}}
+\doxysubsubsection{\texorpdfstring{ConvertToEncodedClock()}{ConvertToEncodedClock()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
 {\footnotesize\ttfamily double IO\+::\+SDK\+::\+Kernels\+::\+Spacecraft\+Clock\+Kernel\+::\+Convert\+To\+Encoded\+Clock (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} \&}]{epoch }\end{DoxyParamCaption}) const}
 
 
@@ -85,28 +90,16 @@ Convert to enoded clock.
 \begin{DoxyReturn}{Returns}
 double 
 \end{DoxyReturn}
-\mbox{\Hypertarget{classIO_1_1SDK_1_1Kernels_1_1SpacecraftClockKernel_a54e4d6898f6be23593d8a38b3a517071}\label{classIO_1_1SDK_1_1Kernels_1_1SpacecraftClockKernel_a54e4d6898f6be23593d8a38b3a517071}} 
-\index{IO::SDK::Kernels::SpacecraftClockKernel@{IO::SDK::Kernels::SpacecraftClockKernel}!ConvertToTDB@{ConvertToTDB}}
-\index{ConvertToTDB@{ConvertToTDB}!IO::SDK::Kernels::SpacecraftClockKernel@{IO::SDK::Kernels::SpacecraftClockKernel}}
-\doxysubsubsection{\texorpdfstring{ConvertToTDB()}{ConvertToTDB()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
-{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} IO\+::\+SDK\+::\+Kernels\+::\+Spacecraft\+Clock\+Kernel\+::\+Convert\+To\+TDB (\begin{DoxyParamCaption}\item[{const double}]{encoded\+Clock }\end{DoxyParamCaption}) const}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Kernels_1_1SpacecraftClockKernel_ab4f53e4d4000fee227f2cb6160ccd174}\label{classIO_1_1SDK_1_1Kernels_1_1SpacecraftClockKernel_ab4f53e4d4000fee227f2cb6160ccd174}} 
+\index{IO::SDK::Kernels::SpacecraftClockKernel@{IO::SDK::Kernels::SpacecraftClockKernel}!ConvertToEncodedClock@{ConvertToEncodedClock}}
+\index{ConvertToEncodedClock@{ConvertToEncodedClock}!IO::SDK::Kernels::SpacecraftClockKernel@{IO::SDK::Kernels::SpacecraftClockKernel}}
+\doxysubsubsection{\texorpdfstring{ConvertToEncodedClock()}{ConvertToEncodedClock()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily double IO\+::\+SDK\+::\+Kernels\+::\+Spacecraft\+Clock\+Kernel\+::\+Convert\+To\+Encoded\+Clock (\begin{DoxyParamCaption}\item[{int}]{spacecraft\+Id,  }\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} \&}]{epoch }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
 
-
-
-Convert to TDB. 
-
-
-\begin{DoxyParams}{Parameters}
-{\em encoded\+Clock} & \\
-\hline
-\end{DoxyParams}
-\begin{DoxyReturn}{Returns}
-\mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} 
-\end{DoxyReturn}
 \mbox{\Hypertarget{classIO_1_1SDK_1_1Kernels_1_1SpacecraftClockKernel_a9c61a0f733a909d715adc5900a0f8114}\label{classIO_1_1SDK_1_1Kernels_1_1SpacecraftClockKernel_a9c61a0f733a909d715adc5900a0f8114}} 
 \index{IO::SDK::Kernels::SpacecraftClockKernel@{IO::SDK::Kernels::SpacecraftClockKernel}!ConvertToTDB@{ConvertToTDB}}
 \index{ConvertToTDB@{ConvertToTDB}!IO::SDK::Kernels::SpacecraftClockKernel@{IO::SDK::Kernels::SpacecraftClockKernel}}
-\doxysubsubsection{\texorpdfstring{ConvertToTDB()}{ConvertToTDB()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+\doxysubsubsection{\texorpdfstring{ConvertToTDB()}{ConvertToTDB()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
 {\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} IO\+::\+SDK\+::\+Kernels\+::\+Spacecraft\+Clock\+Kernel\+::\+Convert\+To\+TDB (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{clock }\end{DoxyParamCaption}) const}
 
 
@@ -116,6 +109,24 @@ Convert to TDB.
 
 \begin{DoxyParams}{Parameters}
 {\em clock} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+\mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Kernels_1_1SpacecraftClockKernel_a8166116a497f3ba7f5b8f9b06ced2554}\label{classIO_1_1SDK_1_1Kernels_1_1SpacecraftClockKernel_a8166116a497f3ba7f5b8f9b06ced2554}} 
+\index{IO::SDK::Kernels::SpacecraftClockKernel@{IO::SDK::Kernels::SpacecraftClockKernel}!ConvertToTDB@{ConvertToTDB}}
+\index{ConvertToTDB@{ConvertToTDB}!IO::SDK::Kernels::SpacecraftClockKernel@{IO::SDK::Kernels::SpacecraftClockKernel}}
+\doxysubsubsection{\texorpdfstring{ConvertToTDB()}{ConvertToTDB()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} IO\+::\+SDK\+::\+Kernels\+::\+Spacecraft\+Clock\+Kernel\+::\+Convert\+To\+TDB (\begin{DoxyParamCaption}\item[{double}]{encoded\+Clock }\end{DoxyParamCaption}) const}
+
+
+
+Convert to TDB. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em encoded\+Clock} & \\
 \hline
 \end{DoxyParams}
 \begin{DoxyReturn}{Returns}

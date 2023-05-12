@@ -1,9 +1,9 @@
 var classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase =
 [
-    [ "ManeuverBase", "classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase.html#ac2d5c28ab11d271793322af807d211f0", null ],
-    [ "ManeuverBase", "classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase.html#a5c4204bf3e0d5ed1ddd6a5551dfe719a", null ],
-    [ "ManeuverBase", "classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase.html#ada8b39c90cb566efc36747bc767bb32f", null ],
-    [ "ManeuverBase", "classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase.html#ada694e84713b67fee5158f23f6e64e97", null ],
+    [ "ManeuverBase", "classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase.html#ac9fc7e89db7b944668aecd721196ed08", null ],
+    [ "ManeuverBase", "classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase.html#a17f2aba69b45e921909d4c2fb312d825", null ],
+    [ "ManeuverBase", "classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase.html#aee64e6290e8e65a829567262352ceefe", null ],
+    [ "ManeuverBase", "classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase.html#a4818d158556e9e89475addf76f834038", null ],
     [ "CanExecute", "classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase.html#a5aa0c82f84ec1d521b42b46f0f91d40d", null ],
     [ "Compute", "classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase.html#a3d206dbe0f7f5ad8b18e0601f154e873", null ],
     [ "ComputeOrientation", "classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase.html#a2339b5313d34fe2d7bf474f645030bc5", null ],
@@ -18,7 +18,7 @@ var classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase =
     [ "TryExecute", "classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase.html#a0cd50901e65b4dd6aeb53e439f3cbe95", null ],
     [ "m_deltaV", "classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase.html#a2b3d8dedb5f9299a3d8798bdb3f50b9a", null ],
     [ "m_dynamicFuelTanks", "classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase.html#a7d9396c9cbe3b08068e1572f38a5da65", null ],
-    [ "m_engines", "classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase.html#a0dc754420eef8c4d242229ab73cafed4", null ],
+    [ "m_engines", "classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase.html#aefe3f0f907974cf14cdfc091eee871fe", null ],
     [ "m_fuelBurned", "classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase.html#a1b8aa4e7f5899e450c254036483a889c", null ],
     [ "m_fuelTanks", "classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase.html#ac0ed72038fa029fd45cad1b4a0d48a89", null ],
     [ "m_isValid", "classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase.html#a60392c18de221825520fd1040eb1934a", null ],

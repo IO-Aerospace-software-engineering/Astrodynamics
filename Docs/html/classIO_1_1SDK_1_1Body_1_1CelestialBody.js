@@ -1,7 +1,7 @@
 var classIO_1_1SDK_1_1Body_1_1CelestialBody =
 [
-    [ "CelestialBody", "classIO_1_1SDK_1_1Body_1_1CelestialBody.html#af0e6afbfa0fb88772dd1b04c4f981bc2", null ],
-    [ "CelestialBody", "classIO_1_1SDK_1_1Body_1_1CelestialBody.html#a3f5778d7553d6fe50471b14062230705", null ],
+    [ "CelestialBody", "classIO_1_1SDK_1_1Body_1_1CelestialBody.html#abf233cbc7c168f832caf97102d659eab", null ],
+    [ "CelestialBody", "classIO_1_1SDK_1_1Body_1_1CelestialBody.html#acb190f975768374925b1313c9abcee1e", null ],
     [ "GetAngularVelocity", "classIO_1_1SDK_1_1Body_1_1CelestialBody.html#ad1059d6ea728433c0cab02175de9f192", null ],
     [ "GetBodyFixedFrame", "classIO_1_1SDK_1_1Body_1_1CelestialBody.html#a665868c295ba524f8c4791e6492e1d7c", null ],
     [ "GetFlattening", "classIO_1_1SDK_1_1Body_1_1CelestialBody.html#a0b65189fd4b546330ddb76a54b2b4842", null ],

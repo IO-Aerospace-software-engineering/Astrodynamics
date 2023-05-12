@@ -1,7 +1,0 @@
-<map id="IO::SDK::Exception::SDKException" name="IO::SDK::Exception::SDKException">
-<area shape="rect" id="node1" title="IO SDK Exception." alt="" coords="168,71,311,112"/>
-<area shape="rect" id="node3" href="$classIO_1_1SDK_1_1Exception_1_1InvalidArgumentException.html" title="Invalid argument exception." alt="" coords="365,5,567,47"/>
-<area shape="rect" id="node4" href="$classIO_1_1SDK_1_1Exception_1_1PropagatorException.html" title="Propagator exception." alt="" coords="383,71,549,112"/>
-<area shape="rect" id="node5" href="$classIO_1_1SDK_1_1Exception_1_1TooEarlyManeuverException.html" title=" " alt="" coords="359,136,573,177"/>
-<area shape="rect" id="node2" title=" " alt="" coords="5,78,120,105"/>
-</map>

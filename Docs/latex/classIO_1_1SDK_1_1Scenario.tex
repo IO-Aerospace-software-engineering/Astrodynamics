@@ -7,62 +7,50 @@
 \doxysubsection*{Public Member Functions}
 \begin{DoxyCompactItemize}
 \item 
-\mbox{\hyperlink{classIO_1_1SDK_1_1Scenario_af049f0096f34c56785e83d244b0f03c2}{Scenario}} (const std\+::string \&name, const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO\+::\+SDK\+::\+Time\+::\+Window}}$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1UTC}{IO\+::\+SDK\+::\+Time\+::\+UTC}} $>$ \&windows)
+\mbox{\hyperlink{classIO_1_1SDK_1_1Scenario_a7e05864ac61004dab277fe3f9ac263e7}{Scenario}} (std\+::string name, const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO\+::\+SDK\+::\+Time\+::\+Window}}$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1UTC}{IO\+::\+SDK\+::\+Time\+::\+UTC}} $>$ \&windows)
 \item 
 void \mbox{\hyperlink{classIO_1_1SDK_1_1Scenario_a786a1044cf68de4ecc85aef250f01eba}{Add\+Celestial\+Body}} (const \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1CelestialBody}{IO\+::\+SDK\+::\+Body\+::\+Celestial\+Body}} \&celestial\+Body)
 \item 
-void \mbox{\hyperlink{classIO_1_1SDK_1_1Scenario_a2a1909262f6f1a6064a005b6398c6130}{Add\+Spacecraft}} (const \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft}{IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Spacecraft}} \&Spacecraft)
+void \mbox{\hyperlink{classIO_1_1SDK_1_1Scenario_ade87552a4da5e253547c5cb44e22ea69}{Attach\+Spacecraft}} (const \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft}{IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Spacecraft}} \&spacecraft)
 \item 
 void \mbox{\hyperlink{classIO_1_1SDK_1_1Scenario_a8468e291b7910ec50fab34035bf1e178}{Add\+Site}} (const \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site}{IO\+::\+SDK\+::\+Sites\+::\+Site}} \&site)
 \item 
-const std\+::string \mbox{\hyperlink{classIO_1_1SDK_1_1Scenario_a38ec85660bc4947fd1a34a6c41151df1}{Get\+Name}} () const
+std\+::string \mbox{\hyperlink{classIO_1_1SDK_1_1Scenario_ad5481ea666b9fcbb012f0308a9446654}{Get\+Name}} () const
 \item 
 const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO\+::\+SDK\+::\+Time\+::\+Window}}$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1UTC}{IO\+::\+SDK\+::\+Time\+::\+UTC}} $>$ \& \mbox{\hyperlink{classIO_1_1SDK_1_1Scenario_a1865a2b2b635af46f810dda630971b73}{Get\+Window}} () const
 \item 
 const std\+::vector$<$ const \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1CelestialBody}{IO\+::\+SDK\+::\+Body\+::\+Celestial\+Body}} $\ast$ $>$ \& \mbox{\hyperlink{classIO_1_1SDK_1_1Scenario_a6544f3a19931cd174f2f2c811d8fdf4c}{Get\+Celestial\+Bodies}} ()
 \item 
-const std\+::vector$<$ const \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft}{IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Spacecraft}} $\ast$ $>$ \& \mbox{\hyperlink{classIO_1_1SDK_1_1Scenario_a3d7df76d7cf2f49c5d52b56d4b6b0c9e}{Get\+Spacecrafts}} ()
+const \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft}{IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Spacecraft}} $\ast$ \mbox{\hyperlink{classIO_1_1SDK_1_1Scenario_a76eb3dbeb26f0974b491336f2c9d5596}{Get\+Spacecraft}} ()
 \item 
 const std\+::vector$<$ const \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site}{IO\+::\+SDK\+::\+Sites\+::\+Site}} $\ast$ $>$ \& \mbox{\hyperlink{classIO_1_1SDK_1_1Scenario_a10e011d873729fab0bd64bc73904eece}{Get\+Sites}} ()
 \item 
-const std\+::map$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Constraints_1_1Parameters_1_1DistanceParameters}{IO\+::\+SDK\+::\+Constraints\+::\+Parameters\+::\+Distance\+Parameters}} $\ast$, std\+::optional$<$ std\+::vector$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO\+::\+SDK\+::\+Time\+::\+Window}}$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} $>$ $>$ $>$ $>$ \& \mbox{\hyperlink{classIO_1_1SDK_1_1Scenario_a377588b942d6ca6a9d0aa2c10d102ab8}{Get\+Distance\+Constraints}} () const
+\mbox{\hyperlink{classIO_1_1SDK_1_1Propagators_1_1Propagator}{Propagators\+::\+Propagator}} \& \mbox{\hyperlink{classIO_1_1SDK_1_1Scenario_aeee297b71c3a8eeabdf538e24ad7182a}{Get\+Propagator}} ()
 \item 
-const std\+::map$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Constraints_1_1Parameters_1_1OccultationParameters}{IO\+::\+SDK\+::\+Constraints\+::\+Parameters\+::\+Occultation\+Parameters}} $\ast$, std\+::optional$<$ std\+::vector$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO\+::\+SDK\+::\+Time\+::\+Window}}$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} $>$ $>$ $>$ $>$ \& \mbox{\hyperlink{classIO_1_1SDK_1_1Scenario_a33293e19f7c7ebdf3561f877c09d97a9}{Get\+Occultation\+Constraints}} () const
+void \mbox{\hyperlink{classIO_1_1SDK_1_1Scenario_a1edecc4b70536953805561cfcb6f263f}{Add\+Distance\+Constraint}} (Constraints\+::\+Parameters\+::\+Distance\+Parameters $\ast$distance\+Parameters)
 \item 
-const std\+::map$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Constraints_1_1Parameters_1_1ByDayParameters}{IO\+::\+SDK\+::\+Constraints\+::\+Parameters\+::\+By\+Day\+Parameters}} $\ast$, std\+::optional$<$ std\+::vector$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO\+::\+SDK\+::\+Time\+::\+Window}}$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1UTC}{IO\+::\+SDK\+::\+Time\+::\+UTC}} $>$ $>$ $>$ $>$ \& \mbox{\hyperlink{classIO_1_1SDK_1_1Scenario_a1a6e0730fbe228748f885b346ed0323a}{Get\+By\+Days\+Constraints}} () const
+void \mbox{\hyperlink{classIO_1_1SDK_1_1Scenario_ad90005ecbd0ec3bf596c81e4758023d7}{Add\+Occultation\+Constraint}} (IO\+::\+SDK\+::\+Constraints\+::\+Parameters\+::\+Occultation\+Parameters $\ast$occultation\+Parameters)
 \item 
-const std\+::map$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Constraints_1_1Parameters_1_1ByNightParameters}{IO\+::\+SDK\+::\+Constraints\+::\+Parameters\+::\+By\+Night\+Parameters}} $\ast$, std\+::optional$<$ std\+::vector$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO\+::\+SDK\+::\+Time\+::\+Window}}$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1UTC}{IO\+::\+SDK\+::\+Time\+::\+UTC}} $>$ $>$ $>$ $>$ \& \mbox{\hyperlink{classIO_1_1SDK_1_1Scenario_a13e543d02e154e737916f2cd97355ba9}{Get\+By\+Night\+Constraints}} () const
+void \mbox{\hyperlink{classIO_1_1SDK_1_1Scenario_ac87ca28b5c56abea86b626a6067e9e03}{Add\+Day\+Constraint}} (IO\+::\+SDK\+::\+Constraints\+::\+Parameters\+::\+By\+Day\+Parameters $\ast$by\+Day\+Parameters)
 \item 
-const std\+::map$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Constraints_1_1Parameters_1_1BodyVisibilityFromSiteParameters}{IO\+::\+SDK\+::\+Constraints\+::\+Parameters\+::\+Body\+Visibility\+From\+Site\+Parameters}} $\ast$, std\+::optional$<$ std\+::vector$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO\+::\+SDK\+::\+Time\+::\+Window}}$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1UTC}{IO\+::\+SDK\+::\+Time\+::\+UTC}} $>$ $>$ $>$ $>$ \& \mbox{\hyperlink{classIO_1_1SDK_1_1Scenario_a2bdd3863df436bf5d3a8c9c3779bc565}{Get\+Body\+Visibility\+From\+Site\+Constraints}} () const
+void \mbox{\hyperlink{classIO_1_1SDK_1_1Scenario_aefd1fe0c77211b597e71599be8f8482a}{Add\+Night\+Constraint}} (IO\+::\+SDK\+::\+Constraints\+::\+Parameters\+::\+By\+Night\+Parameters $\ast$by\+Night\+Parameters)
 \item 
-const std\+::map$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Constraints_1_1Parameters_1_1InFieldOfViewParameters}{IO\+::\+SDK\+::\+Constraints\+::\+Parameters\+::\+In\+Field\+Of\+View\+Parameters}} $\ast$, std\+::optional$<$ std\+::vector$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO\+::\+SDK\+::\+Time\+::\+Window}}$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} $>$ $>$ $>$ $>$ \& \mbox{\hyperlink{classIO_1_1SDK_1_1Scenario_a3a5a436f9eeb7126e82dd24201242c6c}{Get\+In\+Field\+Of\+View\+Constraints}} () const
+void \mbox{\hyperlink{classIO_1_1SDK_1_1Scenario_a38fb82b4679d789a253bcfa29ef627d4}{Add\+Body\+Visibility\+Constraint}} (IO\+::\+SDK\+::\+Constraints\+::\+Parameters\+::\+Body\+Visibility\+From\+Site\+Parameters $\ast$body\+Visibility\+Parameters)
 \item 
-const std\+::map$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Constraints_1_1Parameters_1_1LaunchParameters}{IO\+::\+SDK\+::\+Constraints\+::\+Parameters\+::\+Launch\+Parameters}} $\ast$, std\+::optional$<$ std\+::vector$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1LaunchWindow}{IO\+::\+SDK\+::\+Maneuvers\+::\+Launch\+Window}} $>$ $>$ $>$ \& \mbox{\hyperlink{classIO_1_1SDK_1_1Scenario_ae84b941d37b49fc9e14166ddb2fa8a85}{Get\+Launch\+Constraints}} () const
+void \mbox{\hyperlink{classIO_1_1SDK_1_1Scenario_a0e3cd3bf3d3e6a238cf2c69ced4b922e}{Add\+In\+Field\+Of\+View\+Constraint}} (IO\+::\+SDK\+::\+Constraints\+::\+Parameters\+::\+In\+Field\+Of\+View\+Parameters $\ast$in\+Field\+Of\+View\+Parameters)
 \item 
-void \mbox{\hyperlink{classIO_1_1SDK_1_1Scenario_a1edecc4b70536953805561cfcb6f263f}{Add\+Distance\+Constraint}} (\mbox{\hyperlink{classIO_1_1SDK_1_1Constraints_1_1Parameters_1_1DistanceParameters}{Constraints\+::\+Parameters\+::\+Distance\+Parameters}} $\ast$distance\+Parameters)
-\item 
-void \mbox{\hyperlink{classIO_1_1SDK_1_1Scenario_ad90005ecbd0ec3bf596c81e4758023d7}{Add\+Occultation\+Constraint}} (\mbox{\hyperlink{classIO_1_1SDK_1_1Constraints_1_1Parameters_1_1OccultationParameters}{IO\+::\+SDK\+::\+Constraints\+::\+Parameters\+::\+Occultation\+Parameters}} $\ast$occultation\+Parameters)
-\item 
-void \mbox{\hyperlink{classIO_1_1SDK_1_1Scenario_ac87ca28b5c56abea86b626a6067e9e03}{Add\+Day\+Constraint}} (\mbox{\hyperlink{classIO_1_1SDK_1_1Constraints_1_1Parameters_1_1ByDayParameters}{IO\+::\+SDK\+::\+Constraints\+::\+Parameters\+::\+By\+Day\+Parameters}} $\ast$by\+Day\+Parameters)
-\item 
-void \mbox{\hyperlink{classIO_1_1SDK_1_1Scenario_aefd1fe0c77211b597e71599be8f8482a}{Add\+Night\+Constraint}} (\mbox{\hyperlink{classIO_1_1SDK_1_1Constraints_1_1Parameters_1_1ByNightParameters}{IO\+::\+SDK\+::\+Constraints\+::\+Parameters\+::\+By\+Night\+Parameters}} $\ast$by\+Night\+Parameters)
-\item 
-void \mbox{\hyperlink{classIO_1_1SDK_1_1Scenario_a38fb82b4679d789a253bcfa29ef627d4}{Add\+Body\+Visibility\+Constraint}} (\mbox{\hyperlink{classIO_1_1SDK_1_1Constraints_1_1Parameters_1_1BodyVisibilityFromSiteParameters}{IO\+::\+SDK\+::\+Constraints\+::\+Parameters\+::\+Body\+Visibility\+From\+Site\+Parameters}} $\ast$body\+Visibility\+Parameters)
-\item 
-void \mbox{\hyperlink{classIO_1_1SDK_1_1Scenario_a0e3cd3bf3d3e6a238cf2c69ced4b922e}{Add\+In\+Field\+Of\+View\+Constraint}} (\mbox{\hyperlink{classIO_1_1SDK_1_1Constraints_1_1Parameters_1_1InFieldOfViewParameters}{IO\+::\+SDK\+::\+Constraints\+::\+Parameters\+::\+In\+Field\+Of\+View\+Parameters}} $\ast$in\+Field\+Of\+View\+Parameters)
-\item 
-void \mbox{\hyperlink{classIO_1_1SDK_1_1Scenario_a48c2803d92a0487167a9490dc75c4aac}{Add\+Launch\+Constraint}} (\mbox{\hyperlink{classIO_1_1SDK_1_1Constraints_1_1Parameters_1_1LaunchParameters}{IO\+::\+SDK\+::\+Constraints\+::\+Parameters\+::\+Launch\+Parameters}} $\ast$launch\+Parameters)
+void \mbox{\hyperlink{classIO_1_1SDK_1_1Scenario_a48c2803d92a0487167a9490dc75c4aac}{Add\+Launch\+Constraint}} (IO\+::\+SDK\+::\+Constraints\+::\+Parameters\+::\+Launch\+Parameters $\ast$launch\+Parameters)
 \item 
 void \mbox{\hyperlink{classIO_1_1SDK_1_1Scenario_a5023a3fec59ef54ca3d1f301d8313d19}{Execute}} ()
 \end{DoxyCompactItemize}
 
 
 \doxysubsection{Constructor \& Destructor Documentation}
-\mbox{\Hypertarget{classIO_1_1SDK_1_1Scenario_af049f0096f34c56785e83d244b0f03c2}\label{classIO_1_1SDK_1_1Scenario_af049f0096f34c56785e83d244b0f03c2}} 
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Scenario_a7e05864ac61004dab277fe3f9ac263e7}\label{classIO_1_1SDK_1_1Scenario_a7e05864ac61004dab277fe3f9ac263e7}} 
 \index{IO::SDK::Scenario@{IO::SDK::Scenario}!Scenario@{Scenario}}
 \index{Scenario@{Scenario}!IO::SDK::Scenario@{IO::SDK::Scenario}}
 \doxysubsubsection{\texorpdfstring{Scenario()}{Scenario()}}
-{\footnotesize\ttfamily IO\+::\+SDK\+::\+Scenario\+::\+Scenario (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{name,  }\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO\+::\+SDK\+::\+Time\+::\+Window}}$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1UTC}{IO\+::\+SDK\+::\+Time\+::\+UTC}} $>$ \&}]{windows }\end{DoxyParamCaption})}
+{\footnotesize\ttfamily IO\+::\+SDK\+::\+Scenario\+::\+Scenario (\begin{DoxyParamCaption}\item[{std\+::string}]{name,  }\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO\+::\+SDK\+::\+Time\+::\+Window}}$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1UTC}{IO\+::\+SDK\+::\+Time\+::\+UTC}} $>$ \&}]{windows }\end{DoxyParamCaption})}
 
 
 
@@ -71,7 +59,7 @@ void \mbox{\hyperlink{classIO_1_1SDK_1_1Scenario_a5023a3fec59ef54ca3d1f301d8313d
 \index{IO::SDK::Scenario@{IO::SDK::Scenario}!AddBodyVisibilityConstraint@{AddBodyVisibilityConstraint}}
 \index{AddBodyVisibilityConstraint@{AddBodyVisibilityConstraint}!IO::SDK::Scenario@{IO::SDK::Scenario}}
 \doxysubsubsection{\texorpdfstring{AddBodyVisibilityConstraint()}{AddBodyVisibilityConstraint()}}
-{\footnotesize\ttfamily void IO\+::\+SDK\+::\+Scenario\+::\+Add\+Body\+Visibility\+Constraint (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classIO_1_1SDK_1_1Constraints_1_1Parameters_1_1BodyVisibilityFromSiteParameters}{IO\+::\+SDK\+::\+Constraints\+::\+Parameters\+::\+Body\+Visibility\+From\+Site\+Parameters}} $\ast$}]{body\+Visibility\+Parameters }\end{DoxyParamCaption})}
+{\footnotesize\ttfamily void IO\+::\+SDK\+::\+Scenario\+::\+Add\+Body\+Visibility\+Constraint (\begin{DoxyParamCaption}\item[{IO\+::\+SDK\+::\+Constraints\+::\+Parameters\+::\+Body\+Visibility\+From\+Site\+Parameters $\ast$}]{body\+Visibility\+Parameters }\end{DoxyParamCaption})}
 
 Add a body visibility constraint 
 \begin{DoxyParams}{Parameters}
@@ -93,7 +81,7 @@ Add celestial body to the scenario
 \index{IO::SDK::Scenario@{IO::SDK::Scenario}!AddDayConstraint@{AddDayConstraint}}
 \index{AddDayConstraint@{AddDayConstraint}!IO::SDK::Scenario@{IO::SDK::Scenario}}
 \doxysubsubsection{\texorpdfstring{AddDayConstraint()}{AddDayConstraint()}}
-{\footnotesize\ttfamily void IO\+::\+SDK\+::\+Scenario\+::\+Add\+Day\+Constraint (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classIO_1_1SDK_1_1Constraints_1_1Parameters_1_1ByDayParameters}{IO\+::\+SDK\+::\+Constraints\+::\+Parameters\+::\+By\+Day\+Parameters}} $\ast$}]{by\+Day\+Parameters }\end{DoxyParamCaption})}
+{\footnotesize\ttfamily void IO\+::\+SDK\+::\+Scenario\+::\+Add\+Day\+Constraint (\begin{DoxyParamCaption}\item[{IO\+::\+SDK\+::\+Constraints\+::\+Parameters\+::\+By\+Day\+Parameters $\ast$}]{by\+Day\+Parameters }\end{DoxyParamCaption})}
 
 Add a day constraint 
 \begin{DoxyParams}{Parameters}
@@ -104,7 +92,7 @@ Add a day constraint
 \index{IO::SDK::Scenario@{IO::SDK::Scenario}!AddDistanceConstraint@{AddDistanceConstraint}}
 \index{AddDistanceConstraint@{AddDistanceConstraint}!IO::SDK::Scenario@{IO::SDK::Scenario}}
 \doxysubsubsection{\texorpdfstring{AddDistanceConstraint()}{AddDistanceConstraint()}}
-{\footnotesize\ttfamily void IO\+::\+SDK\+::\+Scenario\+::\+Add\+Distance\+Constraint (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classIO_1_1SDK_1_1Constraints_1_1Parameters_1_1DistanceParameters}{Constraints\+::\+Parameters\+::\+Distance\+Parameters}} $\ast$}]{distance\+Parameters }\end{DoxyParamCaption})}
+{\footnotesize\ttfamily void IO\+::\+SDK\+::\+Scenario\+::\+Add\+Distance\+Constraint (\begin{DoxyParamCaption}\item[{Constraints\+::\+Parameters\+::\+Distance\+Parameters $\ast$}]{distance\+Parameters }\end{DoxyParamCaption})}
 
 Add a distance constraint 
 \begin{DoxyParams}{Parameters}
@@ -115,7 +103,7 @@ Add a distance constraint
 \index{IO::SDK::Scenario@{IO::SDK::Scenario}!AddInFieldOfViewConstraint@{AddInFieldOfViewConstraint}}
 \index{AddInFieldOfViewConstraint@{AddInFieldOfViewConstraint}!IO::SDK::Scenario@{IO::SDK::Scenario}}
 \doxysubsubsection{\texorpdfstring{AddInFieldOfViewConstraint()}{AddInFieldOfViewConstraint()}}
-{\footnotesize\ttfamily void IO\+::\+SDK\+::\+Scenario\+::\+Add\+In\+Field\+Of\+View\+Constraint (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classIO_1_1SDK_1_1Constraints_1_1Parameters_1_1InFieldOfViewParameters}{IO\+::\+SDK\+::\+Constraints\+::\+Parameters\+::\+In\+Field\+Of\+View\+Parameters}} $\ast$}]{in\+Field\+Of\+View\+Parameters }\end{DoxyParamCaption})}
+{\footnotesize\ttfamily void IO\+::\+SDK\+::\+Scenario\+::\+Add\+In\+Field\+Of\+View\+Constraint (\begin{DoxyParamCaption}\item[{IO\+::\+SDK\+::\+Constraints\+::\+Parameters\+::\+In\+Field\+Of\+View\+Parameters $\ast$}]{in\+Field\+Of\+View\+Parameters }\end{DoxyParamCaption})}
 
 Add a field of view constraint 
 \begin{DoxyParams}{Parameters}
@@ -126,7 +114,7 @@ Add a field of view constraint
 \index{IO::SDK::Scenario@{IO::SDK::Scenario}!AddLaunchConstraint@{AddLaunchConstraint}}
 \index{AddLaunchConstraint@{AddLaunchConstraint}!IO::SDK::Scenario@{IO::SDK::Scenario}}
 \doxysubsubsection{\texorpdfstring{AddLaunchConstraint()}{AddLaunchConstraint()}}
-{\footnotesize\ttfamily void IO\+::\+SDK\+::\+Scenario\+::\+Add\+Launch\+Constraint (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classIO_1_1SDK_1_1Constraints_1_1Parameters_1_1LaunchParameters}{IO\+::\+SDK\+::\+Constraints\+::\+Parameters\+::\+Launch\+Parameters}} $\ast$}]{launch\+Parameters }\end{DoxyParamCaption})}
+{\footnotesize\ttfamily void IO\+::\+SDK\+::\+Scenario\+::\+Add\+Launch\+Constraint (\begin{DoxyParamCaption}\item[{IO\+::\+SDK\+::\+Constraints\+::\+Parameters\+::\+Launch\+Parameters $\ast$}]{launch\+Parameters }\end{DoxyParamCaption})}
 
 Add launch constraint 
 \begin{DoxyParams}{Parameters}
@@ -137,7 +125,7 @@ Add launch constraint
 \index{IO::SDK::Scenario@{IO::SDK::Scenario}!AddNightConstraint@{AddNightConstraint}}
 \index{AddNightConstraint@{AddNightConstraint}!IO::SDK::Scenario@{IO::SDK::Scenario}}
 \doxysubsubsection{\texorpdfstring{AddNightConstraint()}{AddNightConstraint()}}
-{\footnotesize\ttfamily void IO\+::\+SDK\+::\+Scenario\+::\+Add\+Night\+Constraint (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classIO_1_1SDK_1_1Constraints_1_1Parameters_1_1ByNightParameters}{IO\+::\+SDK\+::\+Constraints\+::\+Parameters\+::\+By\+Night\+Parameters}} $\ast$}]{by\+Night\+Parameters }\end{DoxyParamCaption})}
+{\footnotesize\ttfamily void IO\+::\+SDK\+::\+Scenario\+::\+Add\+Night\+Constraint (\begin{DoxyParamCaption}\item[{IO\+::\+SDK\+::\+Constraints\+::\+Parameters\+::\+By\+Night\+Parameters $\ast$}]{by\+Night\+Parameters }\end{DoxyParamCaption})}
 
 Add a night constraint 
 \begin{DoxyParams}{Parameters}
@@ -148,7 +136,7 @@ Add a night constraint
 \index{IO::SDK::Scenario@{IO::SDK::Scenario}!AddOccultationConstraint@{AddOccultationConstraint}}
 \index{AddOccultationConstraint@{AddOccultationConstraint}!IO::SDK::Scenario@{IO::SDK::Scenario}}
 \doxysubsubsection{\texorpdfstring{AddOccultationConstraint()}{AddOccultationConstraint()}}
-{\footnotesize\ttfamily void IO\+::\+SDK\+::\+Scenario\+::\+Add\+Occultation\+Constraint (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classIO_1_1SDK_1_1Constraints_1_1Parameters_1_1OccultationParameters}{IO\+::\+SDK\+::\+Constraints\+::\+Parameters\+::\+Occultation\+Parameters}} $\ast$}]{occultation\+Parameters }\end{DoxyParamCaption})}
+{\footnotesize\ttfamily void IO\+::\+SDK\+::\+Scenario\+::\+Add\+Occultation\+Constraint (\begin{DoxyParamCaption}\item[{IO\+::\+SDK\+::\+Constraints\+::\+Parameters\+::\+Occultation\+Parameters $\ast$}]{occultation\+Parameters }\end{DoxyParamCaption})}
 
 Add an occultation constraint 
 \begin{DoxyParams}{Parameters}
@@ -166,15 +154,15 @@ Add a site to the scenario
 {\em site} & \\
 \hline
 \end{DoxyParams}
-\mbox{\Hypertarget{classIO_1_1SDK_1_1Scenario_a2a1909262f6f1a6064a005b6398c6130}\label{classIO_1_1SDK_1_1Scenario_a2a1909262f6f1a6064a005b6398c6130}} 
-\index{IO::SDK::Scenario@{IO::SDK::Scenario}!AddSpacecraft@{AddSpacecraft}}
-\index{AddSpacecraft@{AddSpacecraft}!IO::SDK::Scenario@{IO::SDK::Scenario}}
-\doxysubsubsection{\texorpdfstring{AddSpacecraft()}{AddSpacecraft()}}
-{\footnotesize\ttfamily void IO\+::\+SDK\+::\+Scenario\+::\+Add\+Spacecraft (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft}{IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Spacecraft}} \&}]{Spacecraft }\end{DoxyParamCaption})}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Scenario_ade87552a4da5e253547c5cb44e22ea69}\label{classIO_1_1SDK_1_1Scenario_ade87552a4da5e253547c5cb44e22ea69}} 
+\index{IO::SDK::Scenario@{IO::SDK::Scenario}!AttachSpacecraft@{AttachSpacecraft}}
+\index{AttachSpacecraft@{AttachSpacecraft}!IO::SDK::Scenario@{IO::SDK::Scenario}}
+\doxysubsubsection{\texorpdfstring{AttachSpacecraft()}{AttachSpacecraft()}}
+{\footnotesize\ttfamily void IO\+::\+SDK\+::\+Scenario\+::\+Attach\+Spacecraft (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft}{IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Spacecraft}} \&}]{spacecraft }\end{DoxyParamCaption})}
 
-Add Spacecraft to the scenario
+Add Spacecraft to the scenario 
 \begin{DoxyParams}{Parameters}
-{\em Spacecraft} & \\
+{\em spacecraft} & \\
 \hline
 \end{DoxyParams}
 \mbox{\Hypertarget{classIO_1_1SDK_1_1Scenario_a5023a3fec59ef54ca3d1f301d8313d19}\label{classIO_1_1SDK_1_1Scenario_a5023a3fec59ef54ca3d1f301d8313d19}} 
@@ -183,34 +171,7 @@ Add Spacecraft to the scenario
 \doxysubsubsection{\texorpdfstring{Execute()}{Execute()}}
 {\footnotesize\ttfamily void IO\+::\+SDK\+::\+Scenario\+::\+Execute (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
 
-Execute scenario, propagate spacecrafts, simulate maneuvers, evaluate constraints \mbox{\Hypertarget{classIO_1_1SDK_1_1Scenario_a2bdd3863df436bf5d3a8c9c3779bc565}\label{classIO_1_1SDK_1_1Scenario_a2bdd3863df436bf5d3a8c9c3779bc565}} 
-\index{IO::SDK::Scenario@{IO::SDK::Scenario}!GetBodyVisibilityFromSiteConstraints@{GetBodyVisibilityFromSiteConstraints}}
-\index{GetBodyVisibilityFromSiteConstraints@{GetBodyVisibilityFromSiteConstraints}!IO::SDK::Scenario@{IO::SDK::Scenario}}
-\doxysubsubsection{\texorpdfstring{GetBodyVisibilityFromSiteConstraints()}{GetBodyVisibilityFromSiteConstraints()}}
-{\footnotesize\ttfamily const std\+::map$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Constraints_1_1Parameters_1_1BodyVisibilityFromSiteParameters}{IO\+::\+SDK\+::\+Constraints\+::\+Parameters\+::\+Body\+Visibility\+From\+Site\+Parameters}} $\ast$, std\+::optional$<$ std\+::vector$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO\+::\+SDK\+::\+Time\+::\+Window}}$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1UTC}{IO\+::\+SDK\+::\+Time\+::\+UTC}} $>$ $>$ $>$ $>$ \& IO\+::\+SDK\+::\+Scenario\+::\+Get\+Body\+Visibility\+From\+Site\+Constraints (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
-
-Get body visibility constraint from site \begin{DoxyReturn}{Returns}
-
-\end{DoxyReturn}
-\mbox{\Hypertarget{classIO_1_1SDK_1_1Scenario_a1a6e0730fbe228748f885b346ed0323a}\label{classIO_1_1SDK_1_1Scenario_a1a6e0730fbe228748f885b346ed0323a}} 
-\index{IO::SDK::Scenario@{IO::SDK::Scenario}!GetByDaysConstraints@{GetByDaysConstraints}}
-\index{GetByDaysConstraints@{GetByDaysConstraints}!IO::SDK::Scenario@{IO::SDK::Scenario}}
-\doxysubsubsection{\texorpdfstring{GetByDaysConstraints()}{GetByDaysConstraints()}}
-{\footnotesize\ttfamily const std\+::map$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Constraints_1_1Parameters_1_1ByDayParameters}{IO\+::\+SDK\+::\+Constraints\+::\+Parameters\+::\+By\+Day\+Parameters}} $\ast$, std\+::optional$<$ std\+::vector$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO\+::\+SDK\+::\+Time\+::\+Window}}$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1UTC}{IO\+::\+SDK\+::\+Time\+::\+UTC}} $>$ $>$ $>$ $>$ \& IO\+::\+SDK\+::\+Scenario\+::\+Get\+By\+Days\+Constraints (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
-
-Get by day constraints of the scenario \begin{DoxyReturn}{Returns}
-
-\end{DoxyReturn}
-\mbox{\Hypertarget{classIO_1_1SDK_1_1Scenario_a13e543d02e154e737916f2cd97355ba9}\label{classIO_1_1SDK_1_1Scenario_a13e543d02e154e737916f2cd97355ba9}} 
-\index{IO::SDK::Scenario@{IO::SDK::Scenario}!GetByNightConstraints@{GetByNightConstraints}}
-\index{GetByNightConstraints@{GetByNightConstraints}!IO::SDK::Scenario@{IO::SDK::Scenario}}
-\doxysubsubsection{\texorpdfstring{GetByNightConstraints()}{GetByNightConstraints()}}
-{\footnotesize\ttfamily const std\+::map$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Constraints_1_1Parameters_1_1ByNightParameters}{IO\+::\+SDK\+::\+Constraints\+::\+Parameters\+::\+By\+Night\+Parameters}} $\ast$, std\+::optional$<$ std\+::vector$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO\+::\+SDK\+::\+Time\+::\+Window}}$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1UTC}{IO\+::\+SDK\+::\+Time\+::\+UTC}} $>$ $>$ $>$ $>$ \& IO\+::\+SDK\+::\+Scenario\+::\+Get\+By\+Night\+Constraints (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
-
-Get by night constraints of the scenario \begin{DoxyReturn}{Returns}
-
-\end{DoxyReturn}
-\mbox{\Hypertarget{classIO_1_1SDK_1_1Scenario_a6544f3a19931cd174f2f2c811d8fdf4c}\label{classIO_1_1SDK_1_1Scenario_a6544f3a19931cd174f2f2c811d8fdf4c}} 
+Execute scenario, propagate spacecrafts, simulate maneuvers, evaluate constraints \mbox{\Hypertarget{classIO_1_1SDK_1_1Scenario_a6544f3a19931cd174f2f2c811d8fdf4c}\label{classIO_1_1SDK_1_1Scenario_a6544f3a19931cd174f2f2c811d8fdf4c}} 
 \index{IO::SDK::Scenario@{IO::SDK::Scenario}!GetCelestialBodies@{GetCelestialBodies}}
 \index{GetCelestialBodies@{GetCelestialBodies}!IO::SDK::Scenario@{IO::SDK::Scenario}}
 \doxysubsubsection{\texorpdfstring{GetCelestialBodies()}{GetCelestialBodies()}}
@@ -219,49 +180,22 @@ Get by night constraints of the scenario \begin{DoxyReturn}{Returns}
 Get celestial bodies of the scenario \begin{DoxyReturn}{Returns}
 
 \end{DoxyReturn}
-\mbox{\Hypertarget{classIO_1_1SDK_1_1Scenario_a377588b942d6ca6a9d0aa2c10d102ab8}\label{classIO_1_1SDK_1_1Scenario_a377588b942d6ca6a9d0aa2c10d102ab8}} 
-\index{IO::SDK::Scenario@{IO::SDK::Scenario}!GetDistanceConstraints@{GetDistanceConstraints}}
-\index{GetDistanceConstraints@{GetDistanceConstraints}!IO::SDK::Scenario@{IO::SDK::Scenario}}
-\doxysubsubsection{\texorpdfstring{GetDistanceConstraints()}{GetDistanceConstraints()}}
-{\footnotesize\ttfamily const std\+::map$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Constraints_1_1Parameters_1_1DistanceParameters}{IO\+::\+SDK\+::\+Constraints\+::\+Parameters\+::\+Distance\+Parameters}} $\ast$, std\+::optional$<$ std\+::vector$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO\+::\+SDK\+::\+Time\+::\+Window}}$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} $>$ $>$ $>$ $>$ \& IO\+::\+SDK\+::\+Scenario\+::\+Get\+Distance\+Constraints (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
-
-Get distance constraints of the scenario \begin{DoxyReturn}{Returns}
-
-\end{DoxyReturn}
-\mbox{\Hypertarget{classIO_1_1SDK_1_1Scenario_a3a5a436f9eeb7126e82dd24201242c6c}\label{classIO_1_1SDK_1_1Scenario_a3a5a436f9eeb7126e82dd24201242c6c}} 
-\index{IO::SDK::Scenario@{IO::SDK::Scenario}!GetInFieldOfViewConstraints@{GetInFieldOfViewConstraints}}
-\index{GetInFieldOfViewConstraints@{GetInFieldOfViewConstraints}!IO::SDK::Scenario@{IO::SDK::Scenario}}
-\doxysubsubsection{\texorpdfstring{GetInFieldOfViewConstraints()}{GetInFieldOfViewConstraints()}}
-{\footnotesize\ttfamily const std\+::map$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Constraints_1_1Parameters_1_1InFieldOfViewParameters}{IO\+::\+SDK\+::\+Constraints\+::\+Parameters\+::\+In\+Field\+Of\+View\+Parameters}} $\ast$, std\+::optional$<$ std\+::vector$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO\+::\+SDK\+::\+Time\+::\+Window}}$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} $>$ $>$ $>$ $>$ \& IO\+::\+SDK\+::\+Scenario\+::\+Get\+In\+Field\+Of\+View\+Constraints (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
-
-Get in field of view constraint parameter \begin{DoxyReturn}{Returns}
-
-\end{DoxyReturn}
-\mbox{\Hypertarget{classIO_1_1SDK_1_1Scenario_ae84b941d37b49fc9e14166ddb2fa8a85}\label{classIO_1_1SDK_1_1Scenario_ae84b941d37b49fc9e14166ddb2fa8a85}} 
-\index{IO::SDK::Scenario@{IO::SDK::Scenario}!GetLaunchConstraints@{GetLaunchConstraints}}
-\index{GetLaunchConstraints@{GetLaunchConstraints}!IO::SDK::Scenario@{IO::SDK::Scenario}}
-\doxysubsubsection{\texorpdfstring{GetLaunchConstraints()}{GetLaunchConstraints()}}
-{\footnotesize\ttfamily const std\+::map$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Constraints_1_1Parameters_1_1LaunchParameters}{IO\+::\+SDK\+::\+Constraints\+::\+Parameters\+::\+Launch\+Parameters}} $\ast$, std\+::optional$<$ std\+::vector$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1LaunchWindow}{IO\+::\+SDK\+::\+Maneuvers\+::\+Launch\+Window}} $>$ $>$ $>$ \& IO\+::\+SDK\+::\+Scenario\+::\+Get\+Launch\+Constraints (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
-
-Get launch constraints \begin{DoxyReturn}{Returns}
-
-\end{DoxyReturn}
-\mbox{\Hypertarget{classIO_1_1SDK_1_1Scenario_a38ec85660bc4947fd1a34a6c41151df1}\label{classIO_1_1SDK_1_1Scenario_a38ec85660bc4947fd1a34a6c41151df1}} 
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Scenario_ad5481ea666b9fcbb012f0308a9446654}\label{classIO_1_1SDK_1_1Scenario_ad5481ea666b9fcbb012f0308a9446654}} 
 \index{IO::SDK::Scenario@{IO::SDK::Scenario}!GetName@{GetName}}
 \index{GetName@{GetName}!IO::SDK::Scenario@{IO::SDK::Scenario}}
 \doxysubsubsection{\texorpdfstring{GetName()}{GetName()}}
-{\footnotesize\ttfamily const std\+::string IO\+::\+SDK\+::\+Scenario\+::\+Get\+Name (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+{\footnotesize\ttfamily std\+::string IO\+::\+SDK\+::\+Scenario\+::\+Get\+Name (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
 
 Get the name of the scenario \begin{DoxyReturn}{Returns}
 
 \end{DoxyReturn}
-\mbox{\Hypertarget{classIO_1_1SDK_1_1Scenario_a33293e19f7c7ebdf3561f877c09d97a9}\label{classIO_1_1SDK_1_1Scenario_a33293e19f7c7ebdf3561f877c09d97a9}} 
-\index{IO::SDK::Scenario@{IO::SDK::Scenario}!GetOccultationConstraints@{GetOccultationConstraints}}
-\index{GetOccultationConstraints@{GetOccultationConstraints}!IO::SDK::Scenario@{IO::SDK::Scenario}}
-\doxysubsubsection{\texorpdfstring{GetOccultationConstraints()}{GetOccultationConstraints()}}
-{\footnotesize\ttfamily const std\+::map$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Constraints_1_1Parameters_1_1OccultationParameters}{IO\+::\+SDK\+::\+Constraints\+::\+Parameters\+::\+Occultation\+Parameters}} $\ast$, std\+::optional$<$ std\+::vector$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO\+::\+SDK\+::\+Time\+::\+Window}}$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} $>$ $>$ $>$ $>$ \& IO\+::\+SDK\+::\+Scenario\+::\+Get\+Occultation\+Constraints (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Scenario_aeee297b71c3a8eeabdf538e24ad7182a}\label{classIO_1_1SDK_1_1Scenario_aeee297b71c3a8eeabdf538e24ad7182a}} 
+\index{IO::SDK::Scenario@{IO::SDK::Scenario}!GetPropagator@{GetPropagator}}
+\index{GetPropagator@{GetPropagator}!IO::SDK::Scenario@{IO::SDK::Scenario}}
+\doxysubsubsection{\texorpdfstring{GetPropagator()}{GetPropagator()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1SDK_1_1Propagators_1_1Propagator}{Propagators\+::\+Propagator}} \& IO\+::\+SDK\+::\+Scenario\+::\+Get\+Propagator (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
 
-Get occultation constraints of the scenario \begin{DoxyReturn}{Returns}
+Return the propagator used by this scenario \begin{DoxyReturn}{Returns}
 
 \end{DoxyReturn}
 \mbox{\Hypertarget{classIO_1_1SDK_1_1Scenario_a10e011d873729fab0bd64bc73904eece}\label{classIO_1_1SDK_1_1Scenario_a10e011d873729fab0bd64bc73904eece}} 
@@ -270,14 +204,14 @@ Get occultation constraints of the scenario \begin{DoxyReturn}{Returns}
 \doxysubsubsection{\texorpdfstring{GetSites()}{GetSites()}}
 {\footnotesize\ttfamily const std\+::vector$<$ const \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site}{IO\+::\+SDK\+::\+Sites\+::\+Site}} $\ast$ $>$ \& IO\+::\+SDK\+::\+Scenario\+::\+Get\+Sites (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
 
-Get the Sites of the scenario \begin{DoxyReturn}{Returns}
+Get the \mbox{\hyperlink{namespaceIO_1_1SDK_1_1Sites}{Sites}} of the scenario \begin{DoxyReturn}{Returns}
 
 \end{DoxyReturn}
-\mbox{\Hypertarget{classIO_1_1SDK_1_1Scenario_a3d7df76d7cf2f49c5d52b56d4b6b0c9e}\label{classIO_1_1SDK_1_1Scenario_a3d7df76d7cf2f49c5d52b56d4b6b0c9e}} 
-\index{IO::SDK::Scenario@{IO::SDK::Scenario}!GetSpacecrafts@{GetSpacecrafts}}
-\index{GetSpacecrafts@{GetSpacecrafts}!IO::SDK::Scenario@{IO::SDK::Scenario}}
-\doxysubsubsection{\texorpdfstring{GetSpacecrafts()}{GetSpacecrafts()}}
-{\footnotesize\ttfamily const std\+::vector$<$ const \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft}{IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Spacecraft}} $\ast$ $>$ \& IO\+::\+SDK\+::\+Scenario\+::\+Get\+Spacecrafts (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Scenario_a76eb3dbeb26f0974b491336f2c9d5596}\label{classIO_1_1SDK_1_1Scenario_a76eb3dbeb26f0974b491336f2c9d5596}} 
+\index{IO::SDK::Scenario@{IO::SDK::Scenario}!GetSpacecraft@{GetSpacecraft}}
+\index{GetSpacecraft@{GetSpacecraft}!IO::SDK::Scenario@{IO::SDK::Scenario}}
+\doxysubsubsection{\texorpdfstring{GetSpacecraft()}{GetSpacecraft()}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft}{IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Spacecraft}} $\ast$ IO\+::\+SDK\+::\+Scenario\+::\+Get\+Spacecraft (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
 
 Get spacecrafts of the scenario \begin{DoxyReturn}{Returns}
 

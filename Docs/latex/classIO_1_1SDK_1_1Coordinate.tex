@@ -9,6 +9,10 @@
 \item 
 \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinate_a14bc2970fed38a4ef4048cac18b7e716}{Coordinate}} (const std\+::string \&name)
 \begin{DoxyCompactList}\small\item\em Construct a new \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinate}{Coordinate}} object. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classIO_1_1SDK_1_1Coordinate_a1d592a91467a7d574105e8e29e8b5172}{$\sim$\+Coordinate}} ()=default
+\item 
+\mbox{\hyperlink{classIO_1_1SDK_1_1Coordinate}{Coordinate}} \& \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinate_a48d76683e3f820e61293b3b300dd59ac}{operator=}} (const \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinate}{Coordinate}} \&other)
+\item 
 const char $\ast$ \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinate_a5cdb9ede2c0a59dc0f37ea5a44a97a86}{To\+Char\+Array}} () const
 \begin{DoxyCompactList}\small\item\em Get char array. \end{DoxyCompactList}\end{DoxyCompactItemize}
 \doxysubsection*{Static Public Member Functions}
@@ -35,6 +39,8 @@ static \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinate}{Coordinate}} \& \mbox{\hyp
 static \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinate}{Coordinate}} \& \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinate_af81aa1a4011d77113f4a1bc713800e50}{Declination}} ()
 \item 
 static \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinate}{Coordinate}} \& \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinate_ab37d853fcae271174696a10c7fb95638}{Colatitude}} ()
+\item 
+static \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinate}{Coordinate}} \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinate_a76dca689301cabd728d6dd2b35e6f142}{To\+Coordinate\+Type}} (const std\+::string \&coordinate\+Type)
 \end{DoxyCompactItemize}
 
 
@@ -43,7 +49,7 @@ static \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinate}{Coordinate}} \& \mbox{\hyp
 \index{IO::SDK::Coordinate@{IO::SDK::Coordinate}!Coordinate@{Coordinate}}
 \index{Coordinate@{Coordinate}!IO::SDK::Coordinate@{IO::SDK::Coordinate}}
 \doxysubsubsection{\texorpdfstring{Coordinate()}{Coordinate()}}
-{\footnotesize\ttfamily IO\+::\+SDK\+::\+Coordinate\+::\+Coordinate (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{name }\end{DoxyParamCaption})}
+{\footnotesize\ttfamily IO\+::\+SDK\+::\+Coordinate\+::\+Coordinate (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{name }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [explicit]}}
 
 
 
@@ -54,6 +60,12 @@ Construct a new \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinate}{Coordinate}} obje
 {\em name} & \\
 \hline
 \end{DoxyParams}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Coordinate_a1d592a91467a7d574105e8e29e8b5172}\label{classIO_1_1SDK_1_1Coordinate_a1d592a91467a7d574105e8e29e8b5172}} 
+\index{IO::SDK::Coordinate@{IO::SDK::Coordinate}!````~Coordinate@{$\sim$Coordinate}}
+\index{````~Coordinate@{$\sim$Coordinate}!IO::SDK::Coordinate@{IO::SDK::Coordinate}}
+\doxysubsubsection{\texorpdfstring{$\sim$Coordinate()}{~Coordinate()}}
+{\footnotesize\ttfamily IO\+::\+SDK\+::\+Coordinate\+::$\sim$\+Coordinate (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [default]}}
+
 
 
 \doxysubsection{Member Function Documentation}
@@ -87,6 +99,12 @@ Construct a new \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinate}{Coordinate}} obje
 \doxysubsubsection{\texorpdfstring{Longitude()}{Longitude()}}
 {\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinate}{IO\+::\+SDK\+::\+Coordinate}} \& IO\+::\+SDK\+::\+Coordinate\+::\+Longitude (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
 
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Coordinate_a48d76683e3f820e61293b3b300dd59ac}\label{classIO_1_1SDK_1_1Coordinate_a48d76683e3f820e61293b3b300dd59ac}} 
+\index{IO::SDK::Coordinate@{IO::SDK::Coordinate}!operator=@{operator=}}
+\index{operator=@{operator=}!IO::SDK::Coordinate@{IO::SDK::Coordinate}}
+\doxysubsubsection{\texorpdfstring{operator=()}{operator=()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinate}{Coordinate}} \& IO\+::\+SDK\+::\+Coordinate\+::operator= (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinate}{Coordinate}} \&}]{other }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
 \mbox{\Hypertarget{classIO_1_1SDK_1_1Coordinate_a8398dfe2e1cbd865a0ddd9fcfc52e829}\label{classIO_1_1SDK_1_1Coordinate_a8398dfe2e1cbd865a0ddd9fcfc52e829}} 
 \index{IO::SDK::Coordinate@{IO::SDK::Coordinate}!Radius@{Radius}}
 \index{Radius@{Radius}!IO::SDK::Coordinate@{IO::SDK::Coordinate}}
@@ -118,6 +136,12 @@ Get char array.
 \begin{DoxyReturn}{Returns}
 const char$\ast$ 
 \end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1Coordinate_a76dca689301cabd728d6dd2b35e6f142}\label{classIO_1_1SDK_1_1Coordinate_a76dca689301cabd728d6dd2b35e6f142}} 
+\index{IO::SDK::Coordinate@{IO::SDK::Coordinate}!ToCoordinateType@{ToCoordinateType}}
+\index{ToCoordinateType@{ToCoordinateType}!IO::SDK::Coordinate@{IO::SDK::Coordinate}}
+\doxysubsubsection{\texorpdfstring{ToCoordinateType()}{ToCoordinateType()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinate}{IO\+::\+SDK\+::\+Coordinate}} IO\+::\+SDK\+::\+Coordinate\+::\+To\+Coordinate\+Type (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{coordinate\+Type }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
 \mbox{\Hypertarget{classIO_1_1SDK_1_1Coordinate_a82a365ac761ad4545091ec584866073d}\label{classIO_1_1SDK_1_1Coordinate_a82a365ac761ad4545091ec584866073d}} 
 \index{IO::SDK::Coordinate@{IO::SDK::Coordinate}!X@{X}}
 \index{X@{X}!IO::SDK::Coordinate@{IO::SDK::Coordinate}}

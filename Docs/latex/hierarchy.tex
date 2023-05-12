@@ -1,12 +1,16 @@
 \doxysection{Class Hierarchy}
 This inheritance list is sorted roughly, but not completely, alphabetically\+:\begin{DoxyCompactList}
 \item \contentsline{section}{IO\+::SDK\+::Aberrations}{\pageref{classIO_1_1SDK_1_1Aberrations}}{}
+\item \contentsline{section}{IO\+::SDK\+::API\+::DTO\+::Apogee\+Height\+Changing\+Maneuver\+DTO}{\pageref{structIO_1_1SDK_1_1API_1_1DTO_1_1ApogeeHeightChangingManeuverDTO}}{}
+\item \contentsline{section}{IO\+::SDK\+::API\+::DTO\+::Apsidal\+Alignment\+Maneuver\+DTO}{\pageref{structIO_1_1SDK_1_1API_1_1DTO_1_1ApsidalAlignmentManeuverDTO}}{}
 \item \contentsline{section}{IO\+::SDK\+::Coordinates\+::Azimuth\+Range}{\pageref{classIO_1_1SDK_1_1Coordinates_1_1AzimuthRange}}{}
-\item \contentsline{section}{IO\+::SDK\+::Constraints\+::Parameters\+::Body\+Visibility\+From\+Site\+Parameters}{\pageref{classIO_1_1SDK_1_1Constraints_1_1Parameters_1_1BodyVisibilityFromSiteParameters}}{}
+\item \contentsline{section}{IO\+::SDK\+::API\+::DTO\+::Azimuth\+Range\+DTO}{\pageref{structIO_1_1SDK_1_1API_1_1DTO_1_1AzimuthRangeDTO}}{}
+\item \contentsline{section}{IO\+::SDK\+::API\+::DTO\+::Body\+Visibility\+From\+Site\+Constraint\+DTO}{\pageref{structIO_1_1SDK_1_1API_1_1DTO_1_1BodyVisibilityFromSiteConstraintDTO}}{}
 \item \contentsline{section}{IO\+::SDK\+::Spice\+::Builder}{\pageref{classIO_1_1SDK_1_1Spice_1_1Builder}}{}
-\item \contentsline{section}{IO\+::SDK\+::Constraints\+::Parameters\+::By\+Day\+Parameters}{\pageref{classIO_1_1SDK_1_1Constraints_1_1Parameters_1_1ByDayParameters}}{}
-\item \contentsline{section}{IO\+::SDK\+::Constraints\+::Parameters\+::By\+Night\+Parameters}{\pageref{classIO_1_1SDK_1_1Constraints_1_1Parameters_1_1ByNightParameters}}{}
-\item \contentsline{section}{IO\+::SDK\+::Constraints\+::Constraint}{\pageref{classIO_1_1SDK_1_1Constraints_1_1Constraint}}{}
+\item \contentsline{section}{IO\+::SDK\+::API\+::DTO\+::By\+Day\+Constraint\+DTO}{\pageref{structIO_1_1SDK_1_1API_1_1DTO_1_1ByDayConstraintDTO}}{}
+\item \contentsline{section}{IO\+::SDK\+::API\+::DTO\+::By\+Night\+Constraint\+DTO}{\pageref{structIO_1_1SDK_1_1API_1_1DTO_1_1ByNightConstraintDTO}}{}
+\item \contentsline{section}{IO\+::SDK\+::API\+::DTO\+::Celestial\+Body\+DTO}{\pageref{structIO_1_1SDK_1_1API_1_1DTO_1_1CelestialBodyDTO}}{}
+\item \contentsline{section}{IO\+::SDK\+::API\+::DTO\+::Combined\+Maneuver\+DTO}{\pageref{structIO_1_1SDK_1_1API_1_1DTO_1_1CombinedManeuverDTO}}{}
 \item \contentsline{section}{IO\+::SDK\+::Coordinate}{\pageref{classIO_1_1SDK_1_1Coordinate}}{}
 \item \contentsline{section}{IO\+::SDK\+::Coordinate\+System}{\pageref{classIO_1_1SDK_1_1CoordinateSystem}}{}
 \item \contentsline{section}{IO\+::SDK\+::Coordinates\+::Cylindrical}{\pageref{classIO_1_1SDK_1_1Coordinates_1_1Cylindrical}}{}
@@ -16,7 +20,7 @@ This inheritance list is sorted roughly, but not completely, alphabetically\+:\b
 \item \contentsline{section}{IO\+::SDK\+::Time\+::TDB}{\pageref{classIO_1_1SDK_1_1Time_1_1TDB}}{}
 \item \contentsline{section}{IO\+::SDK\+::Time\+::UTC}{\pageref{classIO_1_1SDK_1_1Time_1_1UTC}}{}
 \end{DoxyCompactList}
-\item \contentsline{section}{IO\+::SDK\+::Constraints\+::Parameters\+::Distance\+Parameters}{\pageref{classIO_1_1SDK_1_1Constraints_1_1Parameters_1_1DistanceParameters}}{}
+\item \contentsline{section}{IO\+::SDK\+::API\+::DTO\+::Distance\+Constraint\+DTO}{\pageref{structIO_1_1SDK_1_1API_1_1DTO_1_1DistanceConstraintDTO}}{}
 \item \contentsline{section}{IO\+::SDK\+::Maneuvers\+::Dynamic\+Fuel\+Tank}{\pageref{structIO_1_1SDK_1_1Maneuvers_1_1DynamicFuelTank}}{}
 \item std\+::enable\+\_\+shared\+\_\+from\+\_\+this\begin{DoxyCompactList}
 \item \contentsline{section}{IO\+::SDK\+::Body\+::Body}{\pageref{classIO_1_1SDK_1_1Body_1_1Body}}{}
@@ -26,6 +30,7 @@ This inheritance list is sorted roughly, but not completely, alphabetically\+:\b
 \end{DoxyCompactList}
 \end{DoxyCompactList}
 \item \contentsline{section}{IO\+::SDK\+::Body\+::Spacecraft\+::Engine}{\pageref{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Engine}}{}
+\item \contentsline{section}{IO\+::SDK\+::API\+::DTO\+::Engine\+DTO}{\pageref{structIO_1_1SDK_1_1API_1_1DTO_1_1EngineDTO}}{}
 \item std\+::exception\begin{DoxyCompactList}
 \item \contentsline{section}{IO\+::SDK\+::Exception\+::SDKException}{\pageref{classIO_1_1SDK_1_1Exception_1_1SDKException}}{}
 \begin{DoxyCompactList}
@@ -51,12 +56,17 @@ This inheritance list is sorted roughly, but not completely, alphabetically\+:\b
 \item \contentsline{section}{IO\+::SDK\+::Frames\+::Inertial\+Frames}{\pageref{classIO_1_1SDK_1_1Frames_1_1InertialFrames}}{}
 \end{DoxyCompactList}
 \item \contentsline{section}{IO\+::SDK\+::Body\+::Spacecraft\+::Fuel\+Tank}{\pageref{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1FuelTank}}{}
+\item \contentsline{section}{IO\+::SDK\+::API\+::DTO\+::Fuel\+Tank\+DTO}{\pageref{structIO_1_1SDK_1_1API_1_1DTO_1_1FuelTankDTO}}{}
 \item \contentsline{section}{IO\+::SDK\+::Coordinates\+::Geodetic}{\pageref{classIO_1_1SDK_1_1Coordinates_1_1Geodetic}}{}
+\item \contentsline{section}{IO\+::SDK\+::API\+::DTO\+::Geodetic\+DTO}{\pageref{structIO_1_1SDK_1_1API_1_1DTO_1_1GeodeticDTO}}{}
+\item \contentsline{section}{IO\+::SDK\+::Constraints\+::Geometry\+Finder}{\pageref{classIO_1_1SDK_1_1Constraints_1_1GeometryFinder}}{}
 \item \contentsline{section}{IO\+::SDK\+::Coordinates\+::Horizontal\+Coordinates}{\pageref{classIO_1_1SDK_1_1Coordinates_1_1HorizontalCoordinates}}{}
 \item \contentsline{section}{IO\+::SDK\+::Illumination\+::Illumination}{\pageref{classIO_1_1SDK_1_1Illumination_1_1Illumination}}{}
 \item \contentsline{section}{IO\+::SDK\+::Illumination\+Angle}{\pageref{classIO_1_1SDK_1_1IlluminationAngle}}{}
-\item \contentsline{section}{IO\+::SDK\+::Constraints\+::Parameters\+::In\+Field\+Of\+View\+Parameters}{\pageref{classIO_1_1SDK_1_1Constraints_1_1Parameters_1_1InFieldOfViewParameters}}{}
+\item \contentsline{section}{IO\+::SDK\+::API\+::DTO\+::In\+Field\+Of\+View\+Constraint\+DTO}{\pageref{structIO_1_1SDK_1_1API_1_1DTO_1_1InFieldOfViewConstraintDTO}}{}
 \item \contentsline{section}{IO\+::SDK\+::Instruments\+::Instrument}{\pageref{classIO_1_1SDK_1_1Instruments_1_1Instrument}}{}
+\item \contentsline{section}{IO\+::SDK\+::API\+::DTO\+::Instrument\+DTO}{\pageref{structIO_1_1SDK_1_1API_1_1DTO_1_1InstrumentDTO}}{}
+\item \contentsline{section}{IO\+::SDK\+::API\+::DTO\+::Instrument\+Pointing\+To\+Attitude\+DTO}{\pageref{structIO_1_1SDK_1_1API_1_1DTO_1_1InstrumentPointingToAttitudeDTO}}{}
 \item \contentsline{section}{IO\+::SDK\+::Integrators\+::Integrator\+Base}{\pageref{classIO_1_1SDK_1_1Integrators_1_1IntegratorBase}}{}
 \begin{DoxyCompactList}
 \item \contentsline{section}{IO\+::SDK\+::Integrators\+::TLEIntegrator}{\pageref{classIO_1_1SDK_1_1Integrators_1_1TLEIntegrator}}{}
@@ -74,9 +84,10 @@ This inheritance list is sorted roughly, but not completely, alphabetically\+:\b
 \item \contentsline{section}{IO\+::SDK\+::Kernels\+::Orientation\+Kernel}{\pageref{classIO_1_1SDK_1_1Kernels_1_1OrientationKernel}}{}
 \item \contentsline{section}{IO\+::SDK\+::Kernels\+::Spacecraft\+Clock\+Kernel}{\pageref{classIO_1_1SDK_1_1Kernels_1_1SpacecraftClockKernel}}{}
 \end{DoxyCompactList}
+\item \contentsline{section}{IO\+::SDK\+::Kernels\+::Kernels\+Loader}{\pageref{classIO_1_1SDK_1_1Kernels_1_1KernelsLoader}}{}
 \item \contentsline{section}{IO\+::SDK\+::Coordinates\+::Latitudinal}{\pageref{classIO_1_1SDK_1_1Coordinates_1_1Latitudinal}}{}
 \item \contentsline{section}{IO\+::SDK\+::Maneuvers\+::Launch}{\pageref{classIO_1_1SDK_1_1Maneuvers_1_1Launch}}{}
-\item \contentsline{section}{IO\+::SDK\+::Constraints\+::Parameters\+::Launch\+Parameters}{\pageref{classIO_1_1SDK_1_1Constraints_1_1Parameters_1_1LaunchParameters}}{}
+\item \contentsline{section}{IO\+::SDK\+::API\+::DTO\+::Launch\+DTO}{\pageref{structIO_1_1SDK_1_1API_1_1DTO_1_1LaunchDTO}}{}
 \item \contentsline{section}{IO\+::SDK\+::Maneuvers\+::Launch\+Window}{\pageref{classIO_1_1SDK_1_1Maneuvers_1_1LaunchWindow}}{}
 \item \contentsline{section}{IO\+::SDK\+::Maneuvers\+::Maneuver\+Base}{\pageref{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase}}{}
 \begin{DoxyCompactList}
@@ -95,7 +106,8 @@ This inheritance list is sorted roughly, but not completely, alphabetically\+:\b
 \end{DoxyCompactList}
 \item \contentsline{section}{IO\+::SDK\+::Maneuvers\+::Maneuver\+Result}{\pageref{structIO_1_1SDK_1_1Maneuvers_1_1ManeuverResult}}{}
 \item \contentsline{section}{IO\+::SDK\+::Math\+::Matrix}{\pageref{classIO_1_1SDK_1_1Math_1_1Matrix}}{}
-\item \contentsline{section}{IO\+::SDK\+::Constraints\+::Parameters\+::Occultation\+Parameters}{\pageref{classIO_1_1SDK_1_1Constraints_1_1Parameters_1_1OccultationParameters}}{}
+\item \contentsline{section}{IO\+::SDK\+::API\+::DTO\+::Nadir\+Attitude\+DTO}{\pageref{structIO_1_1SDK_1_1API_1_1DTO_1_1NadirAttitudeDTO}}{}
+\item \contentsline{section}{IO\+::SDK\+::API\+::DTO\+::Occultation\+Constraint\+DTO}{\pageref{structIO_1_1SDK_1_1API_1_1DTO_1_1OccultationConstraintDTO}}{}
 \item \contentsline{section}{IO\+::SDK\+::Occultation\+Type}{\pageref{classIO_1_1SDK_1_1OccultationType}}{}
 \item \contentsline{section}{IO\+::SDK\+::Orbital\+Parameters\+::Orbital\+Parameters}{\pageref{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters}}{}
 \begin{DoxyCompactList}
@@ -104,26 +116,41 @@ This inheritance list is sorted roughly, but not completely, alphabetically\+:\b
 \item \contentsline{section}{IO\+::SDK\+::Orbital\+Parameters\+::State\+Vector}{\pageref{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}}{}
 \item \contentsline{section}{IO\+::SDK\+::Orbital\+Parameters\+::TLE}{\pageref{classIO_1_1SDK_1_1OrbitalParameters_1_1TLE}}{}
 \end{DoxyCompactList}
+\item \contentsline{section}{IO\+::SDK\+::API\+::DTO\+::Orbital\+Plane\+Changing\+Maneuver\+DTO}{\pageref{structIO_1_1SDK_1_1API_1_1DTO_1_1OrbitalPlaneChangingManeuverDTO}}{}
 \item \contentsline{section}{IO\+::SDK\+::Body\+::Spacecraft\+::Payload}{\pageref{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Payload}}{}
+\item \contentsline{section}{IO\+::SDK\+::API\+::DTO\+::Payload\+DTO}{\pageref{structIO_1_1SDK_1_1API_1_1DTO_1_1PayloadDTO}}{}
+\item \contentsline{section}{IO\+::SDK\+::API\+::DTO\+::Perigee\+Height\+Changing\+Maneuver\+DTO}{\pageref{structIO_1_1SDK_1_1API_1_1DTO_1_1PerigeeHeightChangingManeuverDTO}}{}
+\item \contentsline{section}{IO\+::SDK\+::API\+::DTO\+::Phasing\+Maneuver\+DTO}{\pageref{structIO_1_1SDK_1_1API_1_1DTO_1_1PhasingManeuverDTO}}{}
 \item \contentsline{section}{IO\+::SDK\+::Coordinates\+::Planetographic}{\pageref{classIO_1_1SDK_1_1Coordinates_1_1Planetographic}}{}
+\item \contentsline{section}{IO\+::SDK\+::API\+::DTO\+::Prograde\+Attitude\+DTO}{\pageref{structIO_1_1SDK_1_1API_1_1DTO_1_1ProgradeAttitudeDTO}}{}
 \item \contentsline{section}{IO\+::SDK\+::Propagators\+::Propagator}{\pageref{classIO_1_1SDK_1_1Propagators_1_1Propagator}}{}
 \item \contentsline{section}{IO\+::SDK\+::Math\+::Quaternion}{\pageref{classIO_1_1SDK_1_1Math_1_1Quaternion}}{}
+\item \contentsline{section}{IO\+::SDK\+::API\+::DTO\+::Quaternion\+DTO}{\pageref{structIO_1_1SDK_1_1API_1_1DTO_1_1QuaternionDTO}}{}
 \item \contentsline{section}{IO\+::SDK\+::Coordinates\+::RADec}{\pageref{classIO_1_1SDK_1_1Coordinates_1_1RADec}}{}
 \item \contentsline{section}{IO\+::SDK\+::Coordinates\+::Rectangular}{\pageref{classIO_1_1SDK_1_1Coordinates_1_1Rectangular}}{}
+\item \contentsline{section}{IO\+::SDK\+::Constraints\+::Relational\+Operator}{\pageref{classIO_1_1SDK_1_1Constraints_1_1RelationalOperator}}{}
+\item \contentsline{section}{IO\+::SDK\+::API\+::DTO\+::Retrograde\+Attitude\+DTO}{\pageref{structIO_1_1SDK_1_1API_1_1DTO_1_1RetrogradeAttitudeDTO}}{}
 \item \contentsline{section}{IO\+::SDK\+::Scenario}{\pageref{classIO_1_1SDK_1_1Scenario}}{}
+\item \contentsline{section}{IO\+::SDK\+::API\+::DTO\+::Scenario\+DTO}{\pageref{structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO}}{}
 \item \contentsline{section}{IO\+::SDK\+::Sites\+::Site}{\pageref{classIO_1_1SDK_1_1Sites_1_1Site}}{}
 \begin{DoxyCompactList}
 \item \contentsline{section}{IO\+::SDK\+::Sites\+::Launch\+Site}{\pageref{classIO_1_1SDK_1_1Sites_1_1LaunchSite}}{}
 \end{DoxyCompactList}
-\item \contentsline{section}{IO\+::SDK\+::Kernels\+::Solar\+System\+Kernels\+Loader}{\pageref{classIO_1_1SDK_1_1Kernels_1_1SolarSystemKernelsLoader}}{}
+\item \contentsline{section}{IO\+::SDK\+::API\+::DTO\+::Site\+DTO}{\pageref{structIO_1_1SDK_1_1API_1_1DTO_1_1SiteDTO}}{}
+\item \contentsline{section}{IO\+::SDK\+::API\+::DTO\+::Spacecraft\+DTO}{\pageref{structIO_1_1SDK_1_1API_1_1DTO_1_1SpacecraftDTO}}{}
 \item \contentsline{section}{IO\+::SDK\+::Coordinates\+::Spherical}{\pageref{classIO_1_1SDK_1_1Coordinates_1_1Spherical}}{}
 \item \contentsline{section}{IO\+::SDK\+::Orbital\+Parameters\+::State\+Orientation}{\pageref{classIO_1_1SDK_1_1OrbitalParameters_1_1StateOrientation}}{}
+\item \contentsline{section}{IO\+::SDK\+::API\+::DTO\+::State\+Orientation\+DTO}{\pageref{structIO_1_1SDK_1_1API_1_1DTO_1_1StateOrientationDTO}}{}
+\item \contentsline{section}{IO\+::SDK\+::API\+::DTO\+::State\+Vector\+DTO}{\pageref{structIO_1_1SDK_1_1API_1_1DTO_1_1StateVectorDTO}}{}
 \item \contentsline{section}{IO\+::SDK\+::String\+Helpers}{\pageref{classIO_1_1SDK_1_1StringHelpers}}{}
 \item \contentsline{section}{IO\+::SDK\+::Coordinates\+::Surface\+Coordinates}{\pageref{classIO_1_1SDK_1_1Coordinates_1_1SurfaceCoordinates}}{}
 \item \contentsline{section}{IO\+::SDK\+::Coordinates\+::Surface\+Intercept\+Point}{\pageref{classIO_1_1SDK_1_1Coordinates_1_1SurfaceInterceptPoint}}{}
 \item \contentsline{section}{IO\+::SDK\+::Time\+::Time\+Span}{\pageref{classIO_1_1SDK_1_1Time_1_1TimeSpan}}{}
 \item \contentsline{section}{IO\+::SDK\+::Math\+::Vector3D}{\pageref{classIO_1_1SDK_1_1Math_1_1Vector3D}}{}
+\item \contentsline{section}{IO\+::SDK\+::API\+::DTO\+::Vector3\+DDTO}{\pageref{structIO_1_1SDK_1_1API_1_1DTO_1_1Vector3DDTO}}{}
 \item \contentsline{section}{IO\+::SDK\+::Time\+::Window\texorpdfstring{$<$}{<} T \texorpdfstring{$>$}{>}}{\pageref{classIO_1_1SDK_1_1Time_1_1Window}}{}
 \item \contentsline{section}{IO\+::SDK\+::Time\+::Window\texorpdfstring{$<$}{<} IO\+::SDK\+::Time\+::TDB \texorpdfstring{$>$}{>}}{\pageref{classIO_1_1SDK_1_1Time_1_1Window}}{}
 \item \contentsline{section}{IO\+::SDK\+::Time\+::Window\texorpdfstring{$<$}{<} IO\+::SDK\+::Time\+::UTC \texorpdfstring{$>$}{>}}{\pageref{classIO_1_1SDK_1_1Time_1_1Window}}{}
+\item \contentsline{section}{IO\+::SDK\+::API\+::DTO\+::Window\+DTO}{\pageref{structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO}}{}
+\item \contentsline{section}{IO\+::SDK\+::API\+::DTO\+::Zenith\+Attitude\+DTO}{\pageref{structIO_1_1SDK_1_1API_1_1DTO_1_1ZenithAttitudeDTO}}{}
 \end{DoxyCompactList}

@@ -1,6 +1,6 @@
 var classIO_1_1SDK_1_1Coordinates_1_1SurfaceCoordinates =
 [
-    [ "SurfaceCoordinates", "classIO_1_1SDK_1_1Coordinates_1_1SurfaceCoordinates.html#a486f3f808bb8837afedc690f3eeaea0a", null ],
+    [ "SurfaceCoordinates", "classIO_1_1SDK_1_1Coordinates_1_1SurfaceCoordinates.html#a6b47d2fdf839b0da4187462a4bb34a00", null ],
     [ "SurfaceCoordinates", "classIO_1_1SDK_1_1Coordinates_1_1SurfaceCoordinates.html#a3e919f03d86a6da92ccadd33c8d69869", null ],
     [ "AddNormal", "classIO_1_1SDK_1_1Coordinates_1_1SurfaceCoordinates.html#a97ba48e578a9d58be600841c11e68770", null ],
     [ "AddPoint", "classIO_1_1SDK_1_1Coordinates_1_1SurfaceCoordinates.html#adb55f632ea1afa2be90ce2f9fafda3ee", null ],

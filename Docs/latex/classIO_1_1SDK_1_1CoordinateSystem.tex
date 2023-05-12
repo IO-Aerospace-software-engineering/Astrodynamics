@@ -9,6 +9,10 @@
 \item 
 \mbox{\hyperlink{classIO_1_1SDK_1_1CoordinateSystem_aa137864ed0c08113f72f8fb4d99e2158}{Coordinate\+System}} (const std\+::string \&name)
 \begin{DoxyCompactList}\small\item\em Construct a new \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinate}{Coordinate}} System object. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classIO_1_1SDK_1_1CoordinateSystem_a466a4147ea415d225a6a8e190e3d010e}{$\sim$\+Coordinate\+System}} ()=default
+\item 
+\mbox{\hyperlink{classIO_1_1SDK_1_1CoordinateSystem}{Coordinate\+System}} \& \mbox{\hyperlink{classIO_1_1SDK_1_1CoordinateSystem_a3b99837af1dbafe9c20ba196306d1d25}{operator=}} (const \mbox{\hyperlink{classIO_1_1SDK_1_1CoordinateSystem}{Coordinate\+System}} \&other)
+\item 
 const char $\ast$ \mbox{\hyperlink{classIO_1_1SDK_1_1CoordinateSystem_ab0f94ebc09d409a7bea4f163c934061a}{To\+Char\+Array}} () const
 \begin{DoxyCompactList}\small\item\em Get char array coordinate system. \end{DoxyCompactList}\end{DoxyCompactItemize}
 \doxysubsection*{Static Public Member Functions}
@@ -27,6 +31,8 @@ static \mbox{\hyperlink{classIO_1_1SDK_1_1CoordinateSystem}{Coordinate\+System}}
 static \mbox{\hyperlink{classIO_1_1SDK_1_1CoordinateSystem}{Coordinate\+System}} \& \mbox{\hyperlink{classIO_1_1SDK_1_1CoordinateSystem_aa4efbd380d728442e022d12ddaf89ec0}{Geodetic}} ()
 \item 
 static \mbox{\hyperlink{classIO_1_1SDK_1_1CoordinateSystem}{Coordinate\+System}} \& \mbox{\hyperlink{classIO_1_1SDK_1_1CoordinateSystem_a4082c2d278598115638764932676208a}{Planetographic}} ()
+\item 
+static \mbox{\hyperlink{classIO_1_1SDK_1_1CoordinateSystem}{Coordinate\+System}} \mbox{\hyperlink{classIO_1_1SDK_1_1CoordinateSystem_aea308e4470863a8cc1567d139118bd7a}{To\+Coordinate\+System\+Type}} (const std\+::string \&coordinate\+System\+Type)
 \end{DoxyCompactItemize}
 
 
@@ -35,7 +41,7 @@ static \mbox{\hyperlink{classIO_1_1SDK_1_1CoordinateSystem}{Coordinate\+System}}
 \index{IO::SDK::CoordinateSystem@{IO::SDK::CoordinateSystem}!CoordinateSystem@{CoordinateSystem}}
 \index{CoordinateSystem@{CoordinateSystem}!IO::SDK::CoordinateSystem@{IO::SDK::CoordinateSystem}}
 \doxysubsubsection{\texorpdfstring{CoordinateSystem()}{CoordinateSystem()}}
-{\footnotesize\ttfamily IO\+::\+SDK\+::\+Coordinate\+System\+::\+Coordinate\+System (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{name }\end{DoxyParamCaption})}
+{\footnotesize\ttfamily IO\+::\+SDK\+::\+Coordinate\+System\+::\+Coordinate\+System (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{name }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [explicit]}}
 
 
 
@@ -46,6 +52,12 @@ Construct a new \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinate}{Coordinate}} Syst
 {\em name} & \\
 \hline
 \end{DoxyParams}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1CoordinateSystem_a466a4147ea415d225a6a8e190e3d010e}\label{classIO_1_1SDK_1_1CoordinateSystem_a466a4147ea415d225a6a8e190e3d010e}} 
+\index{IO::SDK::CoordinateSystem@{IO::SDK::CoordinateSystem}!````~CoordinateSystem@{$\sim$CoordinateSystem}}
+\index{````~CoordinateSystem@{$\sim$CoordinateSystem}!IO::SDK::CoordinateSystem@{IO::SDK::CoordinateSystem}}
+\doxysubsubsection{\texorpdfstring{$\sim$CoordinateSystem()}{~CoordinateSystem()}}
+{\footnotesize\ttfamily IO\+::\+SDK\+::\+Coordinate\+System\+::$\sim$\+Coordinate\+System (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [default]}}
+
 
 
 \doxysubsection{Member Function Documentation}
@@ -66,6 +78,12 @@ Construct a new \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinate}{Coordinate}} Syst
 \index{Latitudinal@{Latitudinal}!IO::SDK::CoordinateSystem@{IO::SDK::CoordinateSystem}}
 \doxysubsubsection{\texorpdfstring{Latitudinal()}{Latitudinal()}}
 {\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1SDK_1_1CoordinateSystem}{IO\+::\+SDK\+::\+Coordinate\+System}} \& IO\+::\+SDK\+::\+Coordinate\+System\+::\+Latitudinal (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+\mbox{\Hypertarget{classIO_1_1SDK_1_1CoordinateSystem_a3b99837af1dbafe9c20ba196306d1d25}\label{classIO_1_1SDK_1_1CoordinateSystem_a3b99837af1dbafe9c20ba196306d1d25}} 
+\index{IO::SDK::CoordinateSystem@{IO::SDK::CoordinateSystem}!operator=@{operator=}}
+\index{operator=@{operator=}!IO::SDK::CoordinateSystem@{IO::SDK::CoordinateSystem}}
+\doxysubsubsection{\texorpdfstring{operator=()}{operator=()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1SDK_1_1CoordinateSystem}{Coordinate\+System}} \& IO\+::\+SDK\+::\+Coordinate\+System\+::operator= (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1CoordinateSystem}{Coordinate\+System}} \&}]{other }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
 
 \mbox{\Hypertarget{classIO_1_1SDK_1_1CoordinateSystem_a4082c2d278598115638764932676208a}\label{classIO_1_1SDK_1_1CoordinateSystem_a4082c2d278598115638764932676208a}} 
 \index{IO::SDK::CoordinateSystem@{IO::SDK::CoordinateSystem}!Planetographic@{Planetographic}}
@@ -104,6 +122,12 @@ Get char array coordinate system.
 \begin{DoxyReturn}{Returns}
 const char$\ast$ 
 \end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1CoordinateSystem_aea308e4470863a8cc1567d139118bd7a}\label{classIO_1_1SDK_1_1CoordinateSystem_aea308e4470863a8cc1567d139118bd7a}} 
+\index{IO::SDK::CoordinateSystem@{IO::SDK::CoordinateSystem}!ToCoordinateSystemType@{ToCoordinateSystemType}}
+\index{ToCoordinateSystemType@{ToCoordinateSystemType}!IO::SDK::CoordinateSystem@{IO::SDK::CoordinateSystem}}
+\doxysubsubsection{\texorpdfstring{ToCoordinateSystemType()}{ToCoordinateSystemType()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1SDK_1_1CoordinateSystem}{IO\+::\+SDK\+::\+Coordinate\+System}} IO\+::\+SDK\+::\+Coordinate\+System\+::\+To\+Coordinate\+System\+Type (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{coordinate\+System\+Type }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
 
 
 The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}

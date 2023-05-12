@@ -5,41 +5,33 @@
 \DoxyCodeLine{1 }
 \DoxyCodeLine{11 \textcolor{preprocessor}{\#ifndef EPHEMERIS\_KERNEL\_H}}
 \DoxyCodeLine{12 \textcolor{preprocessor}{\#define EPHEMERIS\_KERNEL\_H}}
-\DoxyCodeLine{13 \textcolor{preprocessor}{\#include <string>}}
-\DoxyCodeLine{14 \textcolor{preprocessor}{\#include <vector>}}
-\DoxyCodeLine{15 \textcolor{preprocessor}{\#include <memory>}}
-\DoxyCodeLine{16 }
-\DoxyCodeLine{17 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{Kernel_8h}{Kernel.h}}>}}
-\DoxyCodeLine{18 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{StateVector_8h}{StateVector.h}}>}}
-\DoxyCodeLine{19 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{Aberrations_8h}{Aberrations.h}}>}}
-\DoxyCodeLine{20 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{CelestialBody_8h}{CelestialBody.h}}>}}
-\DoxyCodeLine{21 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{TDB_8h}{TDB.h}}>}}
-\DoxyCodeLine{22 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{InertialFrames_8h}{InertialFrames.h}}>}}
-\DoxyCodeLine{23 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{Site_8h}{Site.h}}>}}
-\DoxyCodeLine{24 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{Spacecraft_8h}{Spacecraft.h}}>}}
-\DoxyCodeLine{25 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{Window_8h}{Window.h}}>}}
-\DoxyCodeLine{26 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{InvalidArgumentException_8h}{InvalidArgumentException.h}}>}}
+\DoxyCodeLine{13 }
+\DoxyCodeLine{14 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{Kernel_8h}{Kernel.h}}>}}
+\DoxyCodeLine{15 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{StateVector_8h}{StateVector.h}}>}}
+\DoxyCodeLine{16 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{Spacecraft_8h}{Spacecraft.h}}>}}
+\DoxyCodeLine{17 }
+\DoxyCodeLine{18 }
+\DoxyCodeLine{19 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1SDK_1_1Kernels}{IO::SDK::Kernels}} \{}
+\DoxyCodeLine{24     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1SDK_1_1Kernels_1_1EphemerisKernel}{EphemerisKernel}} final : \textcolor{keyword}{public} \mbox{\hyperlink{classIO_1_1SDK_1_1Kernels_1_1Kernel}{Kernel}} \{}
+\DoxyCodeLine{25     \textcolor{keyword}{private}:}
+\DoxyCodeLine{26         \textcolor{keyword}{const} \textcolor{keywordtype}{int} m\_objectId;}
 \DoxyCodeLine{27 }
-\DoxyCodeLine{28 }
-\DoxyCodeLine{29 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1SDK_1_1Kernels}{IO::SDK::Kernels}}}
-\DoxyCodeLine{30 \{}
-\DoxyCodeLine{35     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1SDK_1_1Kernels_1_1EphemerisKernel}{EphemerisKernel}} final : \textcolor{keyword}{public} \mbox{\hyperlink{classIO_1_1SDK_1_1Kernels_1_1Kernel}{Kernel}}}
-\DoxyCodeLine{36     \{}
-\DoxyCodeLine{37     \textcolor{keyword}{private}:}
-\DoxyCodeLine{38         \textcolor{keyword}{const} \textcolor{keywordtype}{int} m\_objectId;}
-\DoxyCodeLine{39         \textcolor{keywordtype}{bool} IsEvenlySpacedData(\textcolor{keyword}{const} std::vector<OrbitalParameters::StateVector> \&states) \textcolor{keyword}{const};}
-\DoxyCodeLine{40 }
-\DoxyCodeLine{41     \textcolor{keyword}{public}:}
-\DoxyCodeLine{47         \mbox{\hyperlink{classIO_1_1SDK_1_1Kernels_1_1EphemerisKernel_acf34c07a1abc3f3f9a3aeaad823549db}{EphemerisKernel}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft}{IO::SDK::Body::Spacecraft::Spacecraft}} \&Spacecraft);}
-\DoxyCodeLine{48         \mbox{\hyperlink{classIO_1_1SDK_1_1Kernels_1_1EphemerisKernel_acf34c07a1abc3f3f9a3aeaad823549db}{EphemerisKernel}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site}{IO::SDK::Sites::Site}} \&site);}
-\DoxyCodeLine{49         \textcolor{keyword}{virtual} \mbox{\hyperlink{classIO_1_1SDK_1_1Kernels_1_1EphemerisKernel_a46c686505373d02dc1798df419b3d26e}{\string~EphemerisKernel}}() = \textcolor{keywordflow}{default};}
-\DoxyCodeLine{50 }
-\DoxyCodeLine{60         \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{IO::SDK::OrbitalParameters::StateVector}} \mbox{\hyperlink{classIO_1_1SDK_1_1Kernels_1_1EphemerisKernel_ac09746242c43cdafa8acd2175ca3c407}{ReadStateVector}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1CelestialBody}{IO::SDK::Body::CelestialBody}} \&observer, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1Frames}{IO::SDK::Frames::Frames}}\& frame, \textcolor{keyword}{const} \mbox{\hyperlink{namespaceIO_1_1SDK_abbb4827ec6a24ad346d9a60473ad3b81}{IO::SDK::AberrationsEnum}} aberration, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO::SDK::Time::TDB}} \&epoch) \textcolor{keyword}{const};}
-\DoxyCodeLine{66         \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO::SDK::Time::Window<IO::SDK::Time::TDB>}} \mbox{\hyperlink{classIO_1_1SDK_1_1Kernels_1_1EphemerisKernel_a8787db722addf17f38381016593cf83a}{GetCoverageWindow}}() \textcolor{keyword}{const override};}
-\DoxyCodeLine{67 }
-\DoxyCodeLine{73         \textcolor{keywordtype}{void} \mbox{\hyperlink{classIO_1_1SDK_1_1Kernels_1_1EphemerisKernel_a78970ad88a5d18ee8b6db10f060e2c86}{WriteData}}(\textcolor{keyword}{const} std::vector<OrbitalParameters::StateVector> \&states);}
-\DoxyCodeLine{74     \};}
-\DoxyCodeLine{75 \}}
-\DoxyCodeLine{76 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{28         \textcolor{keyword}{static} \textcolor{keywordtype}{bool} IsEvenlySpacedData(\textcolor{keyword}{const} std::vector<OrbitalParameters::StateVector> \&states);}
+\DoxyCodeLine{29 }
+\DoxyCodeLine{30     \textcolor{keyword}{public}:}
+\DoxyCodeLine{36         \textcolor{keyword}{explicit} \mbox{\hyperlink{classIO_1_1SDK_1_1Kernels_1_1EphemerisKernel_a92bc98fbd3bdbeb2256bf80003614412}{EphemerisKernel}}(std::string filePath, \textcolor{keywordtype}{int} objectId);}
+\DoxyCodeLine{37 }
+\DoxyCodeLine{38         \mbox{\hyperlink{classIO_1_1SDK_1_1Kernels_1_1EphemerisKernel_ad6ece1cd87c3c15ef926d0d990184701}{\string~EphemerisKernel}}() \textcolor{keyword}{override} = \textcolor{keywordflow}{default};}
+\DoxyCodeLine{39 }
+\DoxyCodeLine{49         [[nodiscard]] \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{IO::SDK::OrbitalParameters::StateVector}}}
+\DoxyCodeLine{50         \mbox{\hyperlink{classIO_1_1SDK_1_1Kernels_1_1EphemerisKernel_a560587c9576651e786c62b791cb00761}{ReadStateVector}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1CelestialBody}{IO::SDK::Body::CelestialBody}} \&observer, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1Frames}{IO::SDK::Frames::Frames}} \&frame, \mbox{\hyperlink{namespaceIO_1_1SDK_abbb4827ec6a24ad346d9a60473ad3b81}{IO::SDK::AberrationsEnum}} aberration,}
+\DoxyCodeLine{51                         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO::SDK::Time::TDB}} \&epoch) \textcolor{keyword}{const};}
+\DoxyCodeLine{52 }
+\DoxyCodeLine{58         [[nodiscard]] \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO::SDK::Time::Window<IO::SDK::Time::TDB>}} \mbox{\hyperlink{classIO_1_1SDK_1_1Kernels_1_1EphemerisKernel_a8787db722addf17f38381016593cf83a}{GetCoverageWindow}}() \textcolor{keyword}{const override};}
+\DoxyCodeLine{59 }
+\DoxyCodeLine{65         \textcolor{keywordtype}{void} \mbox{\hyperlink{classIO_1_1SDK_1_1Kernels_1_1EphemerisKernel_a78970ad88a5d18ee8b6db10f060e2c86}{WriteData}}(\textcolor{keyword}{const} std::vector<OrbitalParameters::StateVector> \&states);}
+\DoxyCodeLine{66     \};}
+\DoxyCodeLine{67 \}}
+\DoxyCodeLine{68 \textcolor{preprocessor}{\#endif}}
 
 \end{DoxyCode}

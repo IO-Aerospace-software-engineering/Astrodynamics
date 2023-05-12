@@ -7,37 +7,33 @@
 \DoxyCodeLine{12 \textcolor{preprocessor}{\#define ORBITAL\_PLANE\_CHANGING\_MANEUVER\_H}}
 \DoxyCodeLine{13 }
 \DoxyCodeLine{14 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{ManeuverBase_8h}{ManeuverBase.h}}>}}
-\DoxyCodeLine{15 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{Spacecraft_8h}{Spacecraft.h}}>}}
-\DoxyCodeLine{16 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{Propagator_8h}{Propagator.h}}>}}
-\DoxyCodeLine{17 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{OrbitalParameters_8h}{OrbitalParameters.h}}>}}
-\DoxyCodeLine{18 \textcolor{preprocessor}{\#include <memory>}}
-\DoxyCodeLine{19 }
-\DoxyCodeLine{20 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1SDK_1_1Maneuvers}{IO::SDK::Maneuvers}}}
-\DoxyCodeLine{21 \{}
-\DoxyCodeLine{22     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1OrbitalPlaneChangingManeuver}{OrbitalPlaneChangingManeuver}} final : \textcolor{keyword}{public} \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase}{IO::SDK::Maneuvers::ManeuverBase}}}
-\DoxyCodeLine{23     \{}
-\DoxyCodeLine{24     \textcolor{keyword}{private}:}
-\DoxyCodeLine{25         \textcolor{keywordtype}{double} m\_relativeInclination\{\};}
+\DoxyCodeLine{15 }
+\DoxyCodeLine{16 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1SDK_1_1Maneuvers}{IO::SDK::Maneuvers}}}
+\DoxyCodeLine{17 \{}
+\DoxyCodeLine{18     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1OrbitalPlaneChangingManeuver}{OrbitalPlaneChangingManeuver}} final : \textcolor{keyword}{public} \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase}{IO::SDK::Maneuvers::ManeuverBase}}}
+\DoxyCodeLine{19     \{}
+\DoxyCodeLine{20     \textcolor{keyword}{private}:}
+\DoxyCodeLine{21         \textcolor{keywordtype}{double} m\_relativeInclination\{\};}
+\DoxyCodeLine{22 }
+\DoxyCodeLine{23         std::shared\_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> m\_targetOrbit;}
+\DoxyCodeLine{24         \textcolor{keywordtype}{bool} m\_isAscendingNode\{\textcolor{keyword}{false}\};}
+\DoxyCodeLine{25 }
 \DoxyCodeLine{26 }
-\DoxyCodeLine{27         \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters}{IO::SDK::OrbitalParameters::OrbitalParameters}} *m\_targetOrbit\{\textcolor{keyword}{nullptr}\};}
-\DoxyCodeLine{28         \textcolor{keywordtype}{bool} m\_isAscendingNode\{\textcolor{keyword}{false}\};}
-\DoxyCodeLine{29 }
-\DoxyCodeLine{30 }
-\DoxyCodeLine{31     \textcolor{keyword}{public}:}
-\DoxyCodeLine{39         \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1OrbitalPlaneChangingManeuver_a0989a3382965036d46b1703c08eb2d8a}{OrbitalPlaneChangingManeuver}}(\textcolor{keyword}{const} std::vector<IO::SDK::Body::Spacecraft::Engine> \&engines, \mbox{\hyperlink{classIO_1_1SDK_1_1Propagators_1_1Propagator}{IO::SDK::Propagators::Propagator}} \&propagator, \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters}{IO::SDK::OrbitalParameters::OrbitalParameters}} *targetOrbit);}
-\DoxyCodeLine{40         }
-\DoxyCodeLine{49         \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1OrbitalPlaneChangingManeuver_a0989a3382965036d46b1703c08eb2d8a}{OrbitalPlaneChangingManeuver}}(\textcolor{keyword}{const} std::vector<IO::SDK::Body::Spacecraft::Engine> \&engines, \mbox{\hyperlink{classIO_1_1SDK_1_1Propagators_1_1Propagator}{IO::SDK::Propagators::Propagator}} \&propagator, \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters}{IO::SDK::OrbitalParameters::OrbitalParameters}} *targetOrbit, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO::SDK::Time::TDB}} \&minimumEpoch);}
-\DoxyCodeLine{50 }
-\DoxyCodeLine{58         \textcolor{keyword}{virtual} \textcolor{keywordtype}{bool} \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1OrbitalPlaneChangingManeuver_a62c42ad79ae57ceb86a639a4909d8ae5}{CanExecute}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters}{IO::SDK::OrbitalParameters::OrbitalParameters}} \&orbitalParams) \textcolor{keyword}{override};}
-\DoxyCodeLine{59 }
-\DoxyCodeLine{65         \textcolor{keyword}{virtual} \textcolor{keywordtype}{void} \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1OrbitalPlaneChangingManeuver_aceb2eb7b1264d8014e0f05d97962885c}{Compute}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters}{IO::SDK::OrbitalParameters::OrbitalParameters}} \&maneuverPoint) \textcolor{keyword}{override};}
-\DoxyCodeLine{66 }
-\DoxyCodeLine{73         \textcolor{keyword}{virtual} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateOrientation}{IO::SDK::OrbitalParameters::StateOrientation}} \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1OrbitalPlaneChangingManeuver_a7472c24685a1eea73ff6bb7253f084ef}{ComputeOrientation}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters}{IO::SDK::OrbitalParameters::OrbitalParameters}} \&maneuverPoint) \textcolor{keyword}{override};}
-\DoxyCodeLine{74 }
-\DoxyCodeLine{80         \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1OrbitalPlaneChangingManeuver_ae558a4d5c41376d4ca09455504d9ea2e}{GetRelativeInclination}}() \textcolor{keyword}{const};}
-\DoxyCodeLine{81     \};}
-\DoxyCodeLine{82 \}}
-\DoxyCodeLine{83 }
-\DoxyCodeLine{84 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{27     \textcolor{keyword}{public}:}
+\DoxyCodeLine{35         \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1OrbitalPlaneChangingManeuver_a7925596292349d2480a1f828e88d1533}{OrbitalPlaneChangingManeuver}}(std::vector<IO::SDK::Body::Spacecraft::Engine*> engines, \mbox{\hyperlink{classIO_1_1SDK_1_1Propagators_1_1Propagator}{IO::SDK::Propagators::Propagator}} \&propagator, std::shared\_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> targetOrbit);}
+\DoxyCodeLine{36         }
+\DoxyCodeLine{45         \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1OrbitalPlaneChangingManeuver_a7925596292349d2480a1f828e88d1533}{OrbitalPlaneChangingManeuver}}(std::vector<IO::SDK::Body::Spacecraft::Engine*> engines, \mbox{\hyperlink{classIO_1_1SDK_1_1Propagators_1_1Propagator}{IO::SDK::Propagators::Propagator}} \&propagator, std::shared\_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> targetOrbit, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO::SDK::Time::TDB}} \&minimumEpoch);}
+\DoxyCodeLine{46 }
+\DoxyCodeLine{54         \textcolor{keywordtype}{bool} \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1OrbitalPlaneChangingManeuver_a62c42ad79ae57ceb86a639a4909d8ae5}{CanExecute}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters}{IO::SDK::OrbitalParameters::OrbitalParameters}} \&orbitalParams) \textcolor{keyword}{override};}
+\DoxyCodeLine{55 }
+\DoxyCodeLine{61         \textcolor{keywordtype}{void} \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1OrbitalPlaneChangingManeuver_aceb2eb7b1264d8014e0f05d97962885c}{Compute}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters}{IO::SDK::OrbitalParameters::OrbitalParameters}} \&maneuverPoint) \textcolor{keyword}{override};}
+\DoxyCodeLine{62 }
+\DoxyCodeLine{69         \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateOrientation}{IO::SDK::OrbitalParameters::StateOrientation}} \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1OrbitalPlaneChangingManeuver_a7472c24685a1eea73ff6bb7253f084ef}{ComputeOrientation}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters}{IO::SDK::OrbitalParameters::OrbitalParameters}} \&maneuverPoint) \textcolor{keyword}{override};}
+\DoxyCodeLine{70 }
+\DoxyCodeLine{76         [[nodiscard]] \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1OrbitalPlaneChangingManeuver_ae558a4d5c41376d4ca09455504d9ea2e}{GetRelativeInclination}}() \textcolor{keyword}{const};}
+\DoxyCodeLine{77     \};}
+\DoxyCodeLine{78 \}}
+\DoxyCodeLine{79 }
+\DoxyCodeLine{80 \textcolor{preprocessor}{\#endif}}
 
 \end{DoxyCode}
