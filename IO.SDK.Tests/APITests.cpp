@@ -8,26 +8,22 @@
 #include <KernelsLoader.h>
 #include <Converters.cpp>
 
-TEST(API, DTOSize)
-{
+TEST(API, DTOSize) {
     auto size2 = sizeof(IO::SDK::API::DTO::ScenarioDTO);
     ASSERT_EQ(18816, size2);
 }
 
-TEST(API, TDBToString)
-{
+TEST(API, TDBToString) {
     auto res = TDBToStringProxy(0.0);
     ASSERT_STREQ("2000-01-01 12:00:00.000000 (TDB)", res);
 }
 
-TEST(API, UTCToString)
-{
+TEST(API, UTCToString) {
     auto res = UTCToStringProxy(0.0);
     ASSERT_STREQ("2000-01-01 12:00:00.000000 (UTC)", res);
 }
 
-TEST(API, SitePropagation)
-{
+TEST(API, SitePropagation) {
     IO::SDK::API::DTO::ScenarioDTO scenario{};
     scenario.Name = "scenatiosites";
     scenario.Window.start = 668085625.01523638;
@@ -64,8 +60,7 @@ TEST(API, SitePropagation)
     PropagateProxy(scenario);
 }
 
-TEST(API, SpacecraftPropagation)
-{
+TEST(API, SpacecraftPropagation) {
     IO::SDK::API::DTO::ScenarioDTO scenario{};
     scenario.Name = "scenatiosites";
     scenario.Window.start = 668085555.829810;
@@ -123,27 +118,28 @@ TEST(API, SpacecraftPropagation)
 
     PropagateProxy(scenario);
 
-    IO::SDK::Time::TDB tdbStart(std::chrono::duration<double>(scenario.Spacecraft.orbitalPlaneChangingManeuvers[0].thrustWindow.start));
-    IO::SDK::Time::TDB tdbEnd(std::chrono::duration<double>(scenario.Spacecraft.orbitalPlaneChangingManeuvers[0].thrustWindow.end));
+    IO::SDK::Time::TDB tdbStart(
+            std::chrono::duration<double>(scenario.Spacecraft.orbitalPlaneChangingManeuvers[0].thrustWindow.start));
+    IO::SDK::Time::TDB tdbEnd(
+            std::chrono::duration<double>(scenario.Spacecraft.orbitalPlaneChangingManeuvers[0].thrustWindow.end));
     ASSERT_STREQ("2021-03-04 00:31:35.852044 (TDB)", tdbStart.ToString().c_str());
     ASSERT_STREQ("2021-03-04 00:31:44.178429 (TDB)", tdbEnd.ToString().c_str());
 }
 
-TEST(API, FindWindowsOnCoordinateConstraintProxy)
-{
+TEST(API, FindWindowsOnCoordinateConstraintProxy) {
     IO::SDK::API::DTO::WindowDTO windows[1000];
     IO::SDK::API::DTO::WindowDTO searchWindow{};
     searchWindow.start = 730036800.0;
     searchWindow.end = 730123200;
-    FindWindowsOnCoordinateConstraintProxy(searchWindow, 399013, 301, "DSS-13_TOPO", "LATITUDINAL", "LATITUDE", ">", 0.0, 0.0, "NONE", 60.0,
+    FindWindowsOnCoordinateConstraintProxy(searchWindow, 399013, 301, "DSS-13_TOPO", "LATITUDINAL", "LATITUDE", ">",
+                                           0.0, 0.0, "NONE", 60.0,
                                            windows);
 
     ASSERT_STREQ("2023-02-19 14:33:08.918098 (TDB)", ToTDBWindow(windows[0]).GetStartDate().ToString().c_str());
     ASSERT_STREQ("2023-02-19 23:58:50.814787 (UTC)", ToTDBWindow(windows[0]).GetEndDate().ToUTC().ToString().c_str());
 }
 
-TEST(API, FindWindowsOnDistanceConstraintProxy)
-{
+TEST(API, FindWindowsOnDistanceConstraintProxy) {
     IO::SDK::API::DTO::WindowDTO windows[1000];
     IO::SDK::API::DTO::WindowDTO searchWindow{};
     searchWindow.start = IO::SDK::Time::TDB("2007 JAN 1").GetSecondsFromJ2000().count();
@@ -156,8 +152,7 @@ TEST(API, FindWindowsOnDistanceConstraintProxy)
     ASSERT_STREQ("2007-04-01 00:01:05.185654 (TDB)", ToTDBWindow(windows[3]).GetEndDate().ToString().c_str());
 }
 
-TEST(API, FindWindowsOnIlluminationConstraintProxy)
-{
+TEST(API, FindWindowsOnIlluminationConstraintProxy) {
     IO::SDK::API::DTO::WindowDTO windows[1000];
     IO::SDK::API::DTO::WindowDTO searchWindow{};
     searchWindow.start = IO::SDK::Time::TDB("2021-05-17 12:00:00 TDB").GetSecondsFromJ2000().count();
@@ -165,7 +160,8 @@ TEST(API, FindWindowsOnIlluminationConstraintProxy)
     IO::SDK::API::DTO::GeodeticDTO geodetic(2.2 * IO::SDK::Constants::DEG_RAD, 48.0 * IO::SDK::Constants::DEG_RAD, 0.0);
     FindWindowsOnIlluminationConstraintProxy(searchWindow, 10, "SUN", 399, "IAU_EARTH",
                                              geodetic, "INCIDENCE", "<",
-                                             IO::SDK::Constants::PI2 - IO::SDK::Constants::OfficialTwilight, 0.0, "CN+S", 4.5 * 60 * 60, "Ellipsoid", windows);
+                                             IO::SDK::Constants::PI2 - IO::SDK::Constants::OfficialTwilight, 0.0,
+                                             "CN+S", 4.5 * 60 * 60, "Ellipsoid", windows);
 
     ASSERT_STREQ("2021-05-17 12:00:00.000000 (TDB)", ToTDBWindow(windows[0]).GetStartDate().ToString().c_str());
     ASSERT_STREQ("2021-05-17 19:34:33.699813 (UTC)", ToTDBWindow(windows[0]).GetEndDate().ToUTC().ToString().c_str());
@@ -173,39 +169,39 @@ TEST(API, FindWindowsOnIlluminationConstraintProxy)
     ASSERT_STREQ("2021-05-18 12:00:00.000000 (TDB)", ToTDBWindow(windows[1]).GetEndDate().ToString().c_str());
 }
 
-TEST(API, FindWindowsOnOccultationConstraintProxy)
-{
+TEST(API, FindWindowsOnOccultationConstraintProxy) {
     IO::SDK::API::DTO::WindowDTO windows[1000];
     IO::SDK::API::DTO::WindowDTO searchWindow{};
     searchWindow.start = IO::SDK::Time::TDB("2001 DEC 13").GetSecondsFromJ2000().count();
     searchWindow.end = IO::SDK::Time::TDB("2001 DEC 15").GetSecondsFromJ2000().count();
-    FindWindowsOnOccultationConstraintProxy(searchWindow,399,10,"IAU_SUN","ELLIPSOID",301,"IAU_MOON","ELLIPSOID","ANY","LT",3600.0,windows);
+    FindWindowsOnOccultationConstraintProxy(searchWindow, 399, 10, "IAU_SUN", "ELLIPSOID", 301, "IAU_MOON", "ELLIPSOID",
+                                            "ANY", "LT", 3600.0, windows);
 
     ASSERT_STREQ("2001-12-14 20:10:15.410588 (TDB)", ToTDBWindow(windows[0]).GetStartDate().ToString().c_str());
     ASSERT_STREQ("2001-12-14 21:35:49.100520 (TDB)", ToTDBWindow(windows[0]).GetEndDate().ToString().c_str());
 }
 
 
-
-TEST(API, FindWindowsInFieldOfViewConstraintProxy)
-{
+TEST(API, FindWindowsInFieldOfViewConstraintProxy) {
     IO::SDK::Math::Vector3D orientation{1.0, 0.0, 0.0};
     IO::SDK::Math::Vector3D boresight{0.0, 0.0, 1.0};
     IO::SDK::Math::Vector3D fovvector{1.0, 0.0, 0.0};
 
     auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10);
-    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399,sun);
-    auto moon = std::make_shared<IO::SDK::Body::CelestialBody>(301,earth);
+    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, sun);
+    auto moon = std::make_shared<IO::SDK::Body::CelestialBody>(301, earth);
     double a = 6800000.0;
     auto v = std::sqrt(earth->GetMu() / a);
     IO::SDK::Time::TDB epoch("2021-JUN-10 00:00:00.0000 TDB");
 
-    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth,
-                                                                                                                                             IO::SDK::Math::Vector3D(a, 0.0, 0.0),
-                                                                                                                                             IO::SDK::Math::Vector3D(0.0, v, 0.0),
-                                                                                                                                             epoch,
-                                                                                                                                             IO::SDK::Frames::InertialFrames::GetICRF());
-    IO::SDK::Body::Spacecraft::Spacecraft s{-179, "SC179", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams)};
+    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(
+            earth,
+            IO::SDK::Math::Vector3D(a, 0.0, 0.0),
+            IO::SDK::Math::Vector3D(0.0, v, 0.0),
+            epoch,
+            IO::SDK::Frames::InertialFrames::GetICRF());
+    IO::SDK::Body::Spacecraft::Spacecraft s{-179, "SC179", 1000.0, 3000.0, std::string(SpacecraftPath),
+                                            std::move(orbitalParams)};
 
     s.AddCircularFOVInstrument(789, "CAMERA789", orientation, boresight, fovvector, 1.5);
     const IO::SDK::Instruments::Instrument *instrument{s.GetInstrument(789)};
@@ -228,11 +224,22 @@ TEST(API, FindWindowsInFieldOfViewConstraintProxy)
     IO::SDK::API::DTO::WindowDTO searchWindow{};
     searchWindow.start = IO::SDK::Time::TDB("2021-JUN-10 00:00:00.0000 TDB").GetSecondsFromJ2000().count();
     searchWindow.end = IO::SDK::Time::TDB("2021-JUN-10 01:47:27.0000 TDB").GetSecondsFromJ2000().count();
-    FindWindowsInFieldOfViewConstraintProxy(searchWindow,-179,-179789,399,"IAU_EARTH","ELLIPSOID","LT",3600,windows);
+    FindWindowsInFieldOfViewConstraintProxy(searchWindow, -179, -179789, 399, "IAU_EARTH", "ELLIPSOID", "LT", 3600,
+                                            windows);
 
     ASSERT_STREQ("2021-06-10 00:00:00.000000 (TDB)", ToTDBWindow(windows[0]).GetStartDate().ToString().c_str());
     ASSERT_STREQ("2021-06-10 00:30:12.460950 (TDB)", ToTDBWindow(windows[0]).GetEndDate().ToString().c_str());
 
     ASSERT_STREQ("2021-06-10 01:02:53.845054 (TDB)", ToTDBWindow(windows[1]).GetStartDate().ToString().c_str());
     ASSERT_STREQ("2021-06-10 01:47:27.000000 (TDB)", ToTDBWindow(windows[1]).GetEndDate().ToString().c_str());
+}
+
+TEST(API, ReadEphemerisProxy) {
+    IO::SDK::API::DTO::WindowDTO searchWindow{};
+    searchWindow.start = 0.0;
+    searchWindow.end = 100.0;
+
+    IO::SDK::API::DTO::StateVectorDTO sv[100000];
+    ReadEphemerisProxy(searchWindow, 399, 301, "J2000", "LT", 1.0,sv);
+    ASSERT_TRUE(false);
 }
