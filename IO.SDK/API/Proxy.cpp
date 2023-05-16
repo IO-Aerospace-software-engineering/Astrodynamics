@@ -20,8 +20,7 @@
 #include <SpacecraftClockKernel.h>
 
 
-void LaunchProxy(IO::SDK::API::DTO::LaunchDTO &launchDto)
-{
+void LaunchProxy(IO::SDK::API::DTO::LaunchDTO &launchDto) {
     auto celestialBody = std::make_shared<IO::SDK::Body::CelestialBody>(launchDto.recoverySite.bodyId);
     IO::SDK::Sites::LaunchSite ls(launchDto.launchSite.id, launchDto.launchSite.name,
                                   ToGeodetic(launchDto.launchSite.coordinates),
@@ -38,8 +37,7 @@ void LaunchProxy(IO::SDK::API::DTO::LaunchDTO &launchDto)
                                                IO::SDK::Frames::Frames(launchDto.targetOrbit.inertialFrame));
     IO::SDK::Maneuvers::Launch launch(ls, rs, launchDto.launchByDay, sv);
     auto res = launch.GetLaunchWindows(ToUTCWindow(launchDto.window));
-    for (size_t i = 0; i < res.size(); ++i)
-    {
+    for (size_t i = 0; i < res.size(); ++i) {
         launchDto.windows[i] = ToWindowDTO(res[i].GetWindow());
         launchDto.inertialAzimuth = res[i].GetInertialAzimuth();
         launchDto.nonInertialAzimuth = res[i].GetNonInertialAzimuth();
@@ -48,23 +46,19 @@ void LaunchProxy(IO::SDK::API::DTO::LaunchDTO &launchDto)
     }
 }
 
-void PropagateProxy(IO::SDK::API::DTO::ScenarioDTO &scenarioDto)
-{
+void PropagateProxy(IO::SDK::API::DTO::ScenarioDTO &scenarioDto) {
     IO::SDK::Scenario scenario(scenarioDto.Name, ToUTCWindow(scenarioDto.Window));
 
     //==========Build Celestial bodies=============
     std::map<int, std::shared_ptr<IO::SDK::Body::CelestialBody>> celestialBodies = BuildCelestialBodies(scenarioDto);
-    for (auto &celestial: celestialBodies)
-    {
+    for (auto &celestial: celestialBodies) {
         scenario.AddCelestialBody(*celestial.second);
     }
 
 //  ==========Build sites==========
     std::vector<std::shared_ptr<IO::SDK::Sites::Site>> sites;
-    for (auto &siteDto: scenarioDto.Sites)
-    {
-        if (siteDto.id <= 0)
-        {
+    for (auto &siteDto: scenarioDto.Sites) {
+        if (siteDto.id <= 0) {
             break;
         }
         auto site = std::make_shared<IO::SDK::Sites::Site>(siteDto.id, siteDto.name, ToGeodetic(siteDto.coordinates),
@@ -101,16 +95,14 @@ void PropagateProxy(IO::SDK::API::DTO::ScenarioDTO &scenarioDto)
 
     scenario.Execute();
 
-    if (!maneuvers.empty())
-    {
+    if (!maneuvers.empty()) {
         ReadManeuverResults(scenarioDto, maneuvers);
     }
 
 }
 
 void ReadManeuverResults(IO::SDK::API::DTO::ScenarioDTO &scenarioDto,
-                         std::map<int, std::shared_ptr<IO::SDK::Maneuvers::ManeuverBase>> &maneuvers)
-{
+                         std::map<int, std::shared_ptr<IO::SDK::Maneuvers::ManeuverBase>> &maneuvers) {
     ReadApogeeManeuverResult(scenarioDto, maneuvers);
 
     ReadPerigeeManeuverResult(scenarioDto, maneuvers);
@@ -125,12 +117,9 @@ void ReadManeuverResults(IO::SDK::API::DTO::ScenarioDTO &scenarioDto,
 }
 
 void ReadPhasingManeuverResult(IO::SDK::API::DTO::ScenarioDTO &scenarioDto,
-                               std::map<int, std::shared_ptr<IO::SDK::Maneuvers::ManeuverBase>> &maneuvers)
-{
-    for (auto &maneuver: scenarioDto.Spacecraft.phasingManeuverDto)
-    {
-        if (maneuver.maneuverOrder < 0)
-        {
+                               std::map<int, std::shared_ptr<IO::SDK::Maneuvers::ManeuverBase>> &maneuvers) {
+    for (auto &maneuver: scenarioDto.Spacecraft.phasingManeuverDto) {
+        if (maneuver.maneuverOrder < 0) {
             break;
         }
 
@@ -144,12 +133,9 @@ void ReadPhasingManeuverResult(IO::SDK::API::DTO::ScenarioDTO &scenarioDto,
 }
 
 void ReadApsidalAlignmentManeuverResult(IO::SDK::API::DTO::ScenarioDTO &scenarioDto,
-                                        std::map<int, std::shared_ptr<IO::SDK::Maneuvers::ManeuverBase>> &maneuvers)
-{
-    for (auto &maneuver: scenarioDto.Spacecraft.apsidalAlignmentManeuvers)
-    {
-        if (maneuver.maneuverOrder < 0)
-        {
+                                        std::map<int, std::shared_ptr<IO::SDK::Maneuvers::ManeuverBase>> &maneuvers) {
+    for (auto &maneuver: scenarioDto.Spacecraft.apsidalAlignmentManeuvers) {
+        if (maneuver.maneuverOrder < 0) {
             break;
         }
 
@@ -163,12 +149,9 @@ void ReadApsidalAlignmentManeuverResult(IO::SDK::API::DTO::ScenarioDTO &scenario
 }
 
 void ReadCombinedManeuverResult(IO::SDK::API::DTO::ScenarioDTO &scenarioDto,
-                                std::map<int, std::shared_ptr<IO::SDK::Maneuvers::ManeuverBase>> &maneuvers)
-{
-    for (auto &maneuver: scenarioDto.Spacecraft.combinedManeuvers)
-    {
-        if (maneuver.maneuverOrder < 0)
-        {
+                                std::map<int, std::shared_ptr<IO::SDK::Maneuvers::ManeuverBase>> &maneuvers) {
+    for (auto &maneuver: scenarioDto.Spacecraft.combinedManeuvers) {
+        if (maneuver.maneuverOrder < 0) {
             break;
         }
 
@@ -182,12 +165,9 @@ void ReadCombinedManeuverResult(IO::SDK::API::DTO::ScenarioDTO &scenarioDto,
 }
 
 void ReadOrbitalPlaneManeuverResult(IO::SDK::API::DTO::ScenarioDTO &scenarioDto,
-                                    std::map<int, std::shared_ptr<IO::SDK::Maneuvers::ManeuverBase>> &maneuvers)
-{
-    for (auto &maneuver: scenarioDto.Spacecraft.orbitalPlaneChangingManeuvers)
-    {
-        if (maneuver.maneuverOrder < 0)
-        {
+                                    std::map<int, std::shared_ptr<IO::SDK::Maneuvers::ManeuverBase>> &maneuvers) {
+    for (auto &maneuver: scenarioDto.Spacecraft.orbitalPlaneChangingManeuvers) {
+        if (maneuver.maneuverOrder < 0) {
             break;
         }
 
@@ -201,12 +181,9 @@ void ReadOrbitalPlaneManeuverResult(IO::SDK::API::DTO::ScenarioDTO &scenarioDto,
 }
 
 void ReadPerigeeManeuverResult(IO::SDK::API::DTO::ScenarioDTO &scenarioDto,
-                               std::map<int, std::shared_ptr<IO::SDK::Maneuvers::ManeuverBase>> &maneuvers)
-{
-    for (auto &maneuver: scenarioDto.Spacecraft.perigeeHeightChangingManeuvers)
-    {
-        if (maneuver.maneuverOrder < 0)
-        {
+                               std::map<int, std::shared_ptr<IO::SDK::Maneuvers::ManeuverBase>> &maneuvers) {
+    for (auto &maneuver: scenarioDto.Spacecraft.perigeeHeightChangingManeuvers) {
+        if (maneuver.maneuverOrder < 0) {
             break;
         }
 
@@ -220,12 +197,9 @@ void ReadPerigeeManeuverResult(IO::SDK::API::DTO::ScenarioDTO &scenarioDto,
 }
 
 void ReadApogeeManeuverResult(IO::SDK::API::DTO::ScenarioDTO &scenarioDto,
-                              std::map<int, std::shared_ptr<IO::SDK::Maneuvers::ManeuverBase>> &maneuvers)
-{
-    for (auto &maneuver: scenarioDto.Spacecraft.apogeeHeightChangingManeuvers)
-    {
-        if (maneuver.maneuverOrder < 0)
-        {
+                              std::map<int, std::shared_ptr<IO::SDK::Maneuvers::ManeuverBase>> &maneuvers) {
+    for (auto &maneuver: scenarioDto.Spacecraft.apogeeHeightChangingManeuvers) {
+        if (maneuver.maneuverOrder < 0) {
             break;
         }
 
@@ -240,33 +214,26 @@ void ReadApogeeManeuverResult(IO::SDK::API::DTO::ScenarioDTO &scenarioDto,
 
 
 std::map<int, std::shared_ptr<IO::SDK::Body::CelestialBody>>
-BuildCelestialBodies(IO::SDK::API::DTO::ScenarioDTO &scenario)
-{
+BuildCelestialBodies(IO::SDK::API::DTO::ScenarioDTO &scenario) {
     std::map<int, std::shared_ptr<IO::SDK::Body::CelestialBody>> celestialBodies;
 
     // insert sun
-    for (auto &cb: scenario.CelestialBodies)
-    {
-        if (cb.id == -1)
-        {
+    for (auto &cb: scenario.CelestialBodies) {
+        if (cb.id == -1) {
             break;
         }
-        if (IO::SDK::Body::CelestialBody::IsSun(cb.id))
-        {
+        if (IO::SDK::Body::CelestialBody::IsSun(cb.id)) {
             IO::SDK::Body::CelestialBody c(cb.id);
             celestialBodies[cb.id] = std::make_shared<IO::SDK::Body::CelestialBody>(cb.id);
             break;
         }
     }
     //insert planets or asteroids
-    for (auto &cb: scenario.CelestialBodies)
-    {
-        if (cb.id == -1)
-        {
+    for (auto &cb: scenario.CelestialBodies) {
+        if (cb.id == -1) {
             break;
         }
-        if (IO::SDK::Body::CelestialBody::IsAsteroid(cb.id) || IO::SDK::Body::CelestialBody::IsPlanet(cb.id))
-        {
+        if (IO::SDK::Body::CelestialBody::IsAsteroid(cb.id) || IO::SDK::Body::CelestialBody::IsPlanet(cb.id)) {
             IO::SDK::Body::CelestialBody c(cb.id);
             celestialBodies.emplace(cb.id, std::make_shared<IO::SDK::Body::CelestialBody>(cb.id,
                                                                                           celestialBodies[IO::SDK::Body::CelestialBody::FindCenterOfMotionId(
@@ -275,14 +242,11 @@ BuildCelestialBodies(IO::SDK::API::DTO::ScenarioDTO &scenario)
     }
 
     //insert moons
-    for (auto &cb: scenario.CelestialBodies)
-    {
-        if (cb.id == -1)
-        {
+    for (auto &cb: scenario.CelestialBodies) {
+        if (cb.id == -1) {
             break;
         }
-        if (IO::SDK::Body::CelestialBody::IsMoon(cb.id))
-        {
+        if (IO::SDK::Body::CelestialBody::IsMoon(cb.id)) {
             IO::SDK::Body::CelestialBody c(cb.id);
             celestialBodies.emplace(cb.id, std::make_shared<IO::SDK::Body::CelestialBody>(cb.id,
                                                                                           celestialBodies[IO::SDK::Body::CelestialBody::FindCenterOfMotionId(
@@ -294,12 +258,9 @@ BuildCelestialBodies(IO::SDK::API::DTO::ScenarioDTO &scenario)
 }
 
 void BuildPayload(const IO::SDK::API::DTO::ScenarioDTO &scenarioDto,
-                  IO::SDK::Body::Spacecraft::Spacecraft &spacecraft)
-{//Add FuelTank
-    for (auto &payload: scenarioDto.Spacecraft.payloads)
-    {
-        if (payload.serialNumber == nullptr)
-        {
+                  IO::SDK::Body::Spacecraft::Spacecraft &spacecraft) {//Add FuelTank
+    for (auto &payload: scenarioDto.Spacecraft.payloads) {
+        if (payload.serialNumber == nullptr) {
             break;
         }
         spacecraft.AddPayload(payload.serialNumber, payload.name, payload.mass);
@@ -307,12 +268,9 @@ void BuildPayload(const IO::SDK::API::DTO::ScenarioDTO &scenarioDto,
 }
 
 void BuildFuelTank(const IO::SDK::API::DTO::ScenarioDTO &scenarioDto,
-                   IO::SDK::Body::Spacecraft::Spacecraft &spacecraft)
-{//Add FuelTank
-    for (auto &fuelTank: scenarioDto.Spacecraft.fuelTank)
-    {
-        if (fuelTank.id == 0)
-        {
+                   IO::SDK::Body::Spacecraft::Spacecraft &spacecraft) {//Add FuelTank
+    for (auto &fuelTank: scenarioDto.Spacecraft.fuelTank) {
+        if (fuelTank.id == 0) {
             break;
         }
         spacecraft.AddFuelTank(fuelTank.serialNumber, fuelTank.capacity, fuelTank.quantity);
@@ -320,12 +278,9 @@ void BuildFuelTank(const IO::SDK::API::DTO::ScenarioDTO &scenarioDto,
 }
 
 void BuildEngines(const IO::SDK::API::DTO::ScenarioDTO &scenarioDto,
-                  IO::SDK::Body::Spacecraft::Spacecraft &spacecraft)
-{//AddEngine
-    for (auto &engine: scenarioDto.Spacecraft.engines)
-    {
-        if (engine.id == 0)
-        {
+                  IO::SDK::Body::Spacecraft::Spacecraft &spacecraft) {//AddEngine
+    for (auto &engine: scenarioDto.Spacecraft.engines) {
+        if (engine.id == 0) {
             break;
         }
         spacecraft.AddEngine(engine.serialNumber, engine.name, engine.fuelTankSerialNumber,
@@ -335,32 +290,26 @@ void BuildEngines(const IO::SDK::API::DTO::ScenarioDTO &scenarioDto,
 }
 
 void BuildInstruments(const IO::SDK::API::DTO::ScenarioDTO &scenarioDto,
-                      IO::SDK::Body::Spacecraft::Spacecraft &spacecraft)
-{//Add instrument
-    for (auto &instrument: scenarioDto.Spacecraft.instruments)
-    {
-        if (instrument.id <= 0)
-        {
+                      IO::SDK::Body::Spacecraft::Spacecraft &spacecraft) {//Add instrument
+    for (auto &instrument: scenarioDto.Spacecraft.instruments) {
+        if (instrument.id <= 0) {
             break;
         }
 
-        if (strcmp(instrument.shape, "rectangular") == 0)
-        {
+        if (strcmp(instrument.shape, "rectangular") == 0) {
             spacecraft.AddRectangularFOVInstrument(instrument.id, instrument.name, ToVector3D(instrument.orientation),
                                                    ToVector3D(instrument.boresight),
                                                    ToVector3D(instrument.fovRefVector), instrument.fieldOfView,
                                                    instrument.crossAngle);
         }
 
-        if (strcmp(instrument.shape, "circular") == 0)
-        {
+        if (strcmp(instrument.shape, "circular") == 0) {
             spacecraft.AddCircularFOVInstrument(instrument.id, instrument.name, ToVector3D(instrument.orientation),
                                                 ToVector3D(instrument.boresight),
                                                 ToVector3D(instrument.fovRefVector), instrument.fieldOfView);
         }
 
-        if (strcmp(instrument.shape, "elliptical") == 0)
-        {
+        if (strcmp(instrument.shape, "elliptical") == 0) {
             spacecraft.AddEllipticalFOVInstrument(instrument.id, instrument.name, ToVector3D(instrument.orientation),
                                                   ToVector3D(instrument.boresight),
                                                   ToVector3D(instrument.fovRefVector), instrument.fieldOfView,
@@ -372,19 +321,14 @@ void BuildInstruments(const IO::SDK::API::DTO::ScenarioDTO &scenarioDto,
 
 void BuildInstrumentPointingToAttitude(IO::SDK::API::DTO::ScenarioDTO &scenarioDto, IO::SDK::Scenario &scenario,
                                        std::map<int, std::shared_ptr<IO::SDK::Maneuvers::ManeuverBase>> &maneuvers,
-                                       std::map<int, std::shared_ptr<IO::SDK::Body::CelestialBody>> &celestialBodies)
-{
-    for (auto &maneuver: scenarioDto.Spacecraft.pointingToAttitudes)
-    {
-        if (maneuver.maneuverOrder == -1)
-        {
+                                       std::map<int, std::shared_ptr<IO::SDK::Body::CelestialBody>> &celestialBodies) {
+    for (auto &maneuver: scenarioDto.Spacecraft.pointingToAttitudes) {
+        if (maneuver.maneuverOrder == -1) {
             break;
         }
         std::vector<IO::SDK::Body::Spacecraft::Engine *> engines;
-        for (auto engine: maneuver.engines)
-        {
-            if (engine == nullptr)
-            {
+        for (auto engine: maneuver.engines) {
+            if (engine == nullptr) {
                 break;
             }
             engines.push_back(const_cast<IO::SDK::Body::Spacecraft::Engine *>(scenario.GetSpacecraft()->GetEngine(
@@ -393,16 +337,14 @@ void BuildInstrumentPointingToAttitude(IO::SDK::API::DTO::ScenarioDTO &scenarioD
 
         auto instrument = scenario.GetSpacecraft()->GetInstrument(maneuver.instrumentId);
 
-        if (maneuver.targetBodyId > -1)
-        {
+        if (maneuver.targetBodyId > -1) {
             auto targetBody = celestialBodies[maneuver.targetBodyId];
             maneuvers[maneuver.maneuverOrder] = std::make_shared<IO::SDK::Maneuvers::Attitudes::InstrumentPointingToAttitude>(
                     engines, scenario.GetPropagator(), IO::SDK::Time::TDB(
                             std::chrono::duration<double>(maneuver.minimumEpoch)),
                     IO::SDK::Time::TimeSpan(std::chrono::duration<double>(maneuver.attitudeHoldDuration)), *instrument,
                     *targetBody);
-        } else if (maneuver.targetSiteId > -1)
-        {
+        } else if (maneuver.targetSiteId > -1) {
             auto sites = scenario.GetSites();
             auto site = std::find_if(sites.begin(), sites.end(), [&maneuver](const IO::SDK::Sites::Site *site) {
                 return site->GetId() == maneuver.targetSiteId;
@@ -418,8 +360,7 @@ void BuildInstrumentPointingToAttitude(IO::SDK::API::DTO::ScenarioDTO &scenarioD
 
 void BuildManeuvers(IO::SDK::API::DTO::ScenarioDTO &scenarioDto, IO::SDK::Scenario &scenario,
                     std::map<int, std::shared_ptr<IO::SDK::Body::CelestialBody>> &celestialBodies,
-                    std::map<int, std::shared_ptr<IO::SDK::Maneuvers::ManeuverBase>> &maneuvers)
-{
+                    std::map<int, std::shared_ptr<IO::SDK::Maneuvers::ManeuverBase>> &maneuvers) {
     BuildApogeeManeuver(scenarioDto, scenario, maneuvers);
     BuildPerigeeManeuver(scenarioDto, scenario, maneuvers);
     BuildCombinedManeuver(scenarioDto, scenario, maneuvers);
@@ -432,10 +373,8 @@ void BuildManeuvers(IO::SDK::API::DTO::ScenarioDTO &scenarioDto, IO::SDK::Scenar
     BuildNadirAttitude(scenarioDto, scenario, maneuvers);
     BuildInstrumentPointingToAttitude(scenarioDto, scenario, maneuvers, celestialBodies);
 
-    for (auto &maneuver: maneuvers)
-    {
-        if (static_cast<size_t>(maneuver.first) >= maneuvers.size() - 1)
-        {
+    for (auto &maneuver: maneuvers) {
+        if (static_cast<size_t>(maneuver.first) >= maneuvers.size() - 1) {
             continue;
         }
         maneuver.second->SetNextManeuver(*maneuvers[maneuver.first + 1]);
@@ -445,19 +384,14 @@ void BuildManeuvers(IO::SDK::API::DTO::ScenarioDTO &scenarioDto, IO::SDK::Scenar
 }
 
 void BuildApogeeManeuver(IO::SDK::API::DTO::ScenarioDTO &scenarioDto, IO::SDK::Scenario &scenario,
-                         std::map<int, std::shared_ptr<IO::SDK::Maneuvers::ManeuverBase>> &maneuvers)
-{
-    for (auto &maneuver: scenarioDto.Spacecraft.apogeeHeightChangingManeuvers)
-    {
-        if (maneuver.maneuverOrder == -1)
-        {
+                         std::map<int, std::shared_ptr<IO::SDK::Maneuvers::ManeuverBase>> &maneuvers) {
+    for (auto &maneuver: scenarioDto.Spacecraft.apogeeHeightChangingManeuvers) {
+        if (maneuver.maneuverOrder == -1) {
             break;
         }
         std::vector<IO::SDK::Body::Spacecraft::Engine *> engines;
-        for (auto engine: maneuver.engines)
-        {
-            if (engine == nullptr)
-            {
+        for (auto engine: maneuver.engines) {
+            if (engine == nullptr) {
                 break;
             }
             engines.push_back(const_cast<IO::SDK::Body::Spacecraft::Engine *>(scenario.GetSpacecraft()->GetEngine(
@@ -473,19 +407,14 @@ void BuildApogeeManeuver(IO::SDK::API::DTO::ScenarioDTO &scenarioDto, IO::SDK::S
 }
 
 void BuildPerigeeManeuver(IO::SDK::API::DTO::ScenarioDTO &scenarioDto, IO::SDK::Scenario &scenario,
-                          std::map<int, std::shared_ptr<IO::SDK::Maneuvers::ManeuverBase>> &maneuvers)
-{
-    for (auto &maneuver: scenarioDto.Spacecraft.perigeeHeightChangingManeuvers)
-    {
-        if (maneuver.maneuverOrder == -1)
-        {
+                          std::map<int, std::shared_ptr<IO::SDK::Maneuvers::ManeuverBase>> &maneuvers) {
+    for (auto &maneuver: scenarioDto.Spacecraft.perigeeHeightChangingManeuvers) {
+        if (maneuver.maneuverOrder == -1) {
             break;
         }
         std::vector<IO::SDK::Body::Spacecraft::Engine *> engines;
-        for (auto engine: maneuver.engines)
-        {
-            if (engine == nullptr)
-            {
+        for (auto engine: maneuver.engines) {
+            if (engine == nullptr) {
                 break;
             }
             engines.push_back(const_cast<IO::SDK::Body::Spacecraft::Engine *>(scenario.GetSpacecraft()->GetEngine(
@@ -502,19 +431,14 @@ void BuildPerigeeManeuver(IO::SDK::API::DTO::ScenarioDTO &scenarioDto, IO::SDK::
 
 void BuildApsidalManeuver(IO::SDK::API::DTO::ScenarioDTO &scenarioDto, IO::SDK::Scenario &scenario,
                           std::map<int, std::shared_ptr<IO::SDK::Maneuvers::ManeuverBase>> &maneuvers,
-                          std::map<int, std::shared_ptr<IO::SDK::Body::CelestialBody>> &celestialBodies)
-{
-    for (auto &maneuver: scenarioDto.Spacecraft.apsidalAlignmentManeuvers)
-    {
-        if (maneuver.maneuverOrder == -1)
-        {
+                          std::map<int, std::shared_ptr<IO::SDK::Body::CelestialBody>> &celestialBodies) {
+    for (auto &maneuver: scenarioDto.Spacecraft.apsidalAlignmentManeuvers) {
+        if (maneuver.maneuverOrder == -1) {
             break;
         }
         std::vector<IO::SDK::Body::Spacecraft::Engine *> engines;
-        for (auto engine: maneuver.engines)
-        {
-            if (engine == nullptr)
-            {
+        for (auto engine: maneuver.engines) {
+            if (engine == nullptr) {
                 break;
             }
             engines.push_back(const_cast<IO::SDK::Body::Spacecraft::Engine *>(scenario.GetSpacecraft()->GetEngine(
@@ -536,19 +460,14 @@ void BuildApsidalManeuver(IO::SDK::API::DTO::ScenarioDTO &scenarioDto, IO::SDK::
 }
 
 void BuildCombinedManeuver(IO::SDK::API::DTO::ScenarioDTO &scenarioDto, IO::SDK::Scenario &scenario,
-                           std::map<int, std::shared_ptr<IO::SDK::Maneuvers::ManeuverBase>> &maneuvers)
-{
-    for (auto &maneuver: scenarioDto.Spacecraft.combinedManeuvers)
-    {
-        if (maneuver.maneuverOrder == -1)
-        {
+                           std::map<int, std::shared_ptr<IO::SDK::Maneuvers::ManeuverBase>> &maneuvers) {
+    for (auto &maneuver: scenarioDto.Spacecraft.combinedManeuvers) {
+        if (maneuver.maneuverOrder == -1) {
             break;
         }
         std::vector<IO::SDK::Body::Spacecraft::Engine *> engines;
-        for (auto engine: maneuver.engines)
-        {
-            if (engine == nullptr)
-            {
+        for (auto engine: maneuver.engines) {
+            if (engine == nullptr) {
                 break;
             }
             engines.push_back(const_cast<IO::SDK::Body::Spacecraft::Engine *>(scenario.GetSpacecraft()->GetEngine(
@@ -567,19 +486,14 @@ void BuildCombinedManeuver(IO::SDK::API::DTO::ScenarioDTO &scenarioDto, IO::SDK:
 void
 BuildOrbitalPlaneManeuver(IO::SDK::API::DTO::ScenarioDTO &scenarioDto, IO::SDK::Scenario &scenario,
                           std::map<int, std::shared_ptr<IO::SDK::Maneuvers::ManeuverBase>> &maneuvers,
-                          std::map<int, std::shared_ptr<IO::SDK::Body::CelestialBody>> &celestialBodies)
-{
-    for (auto &maneuver: scenarioDto.Spacecraft.orbitalPlaneChangingManeuvers)
-    {
-        if (maneuver.maneuverOrder == -1)
-        {
+                          std::map<int, std::shared_ptr<IO::SDK::Body::CelestialBody>> &celestialBodies) {
+    for (auto &maneuver: scenarioDto.Spacecraft.orbitalPlaneChangingManeuvers) {
+        if (maneuver.maneuverOrder == -1) {
             break;
         }
         std::vector<IO::SDK::Body::Spacecraft::Engine *> engines;
-        for (auto engine: maneuver.engines)
-        {
-            if (engine == nullptr)
-            {
+        for (auto engine: maneuver.engines) {
+            if (engine == nullptr) {
                 break;
             }
             engines.push_back(const_cast<IO::SDK::Body::Spacecraft::Engine *>(scenario.GetSpacecraft()->GetEngine(
@@ -602,19 +516,14 @@ BuildOrbitalPlaneManeuver(IO::SDK::API::DTO::ScenarioDTO &scenarioDto, IO::SDK::
 
 void BuildPhasingManeuver(IO::SDK::API::DTO::ScenarioDTO &scenarioDto, IO::SDK::Scenario &scenario,
                           std::map<int, std::shared_ptr<IO::SDK::Maneuvers::ManeuverBase>> &maneuvers,
-                          std::map<int, std::shared_ptr<IO::SDK::Body::CelestialBody>> &celestialBodies)
-{
-    for (auto &maneuver: scenarioDto.Spacecraft.phasingManeuverDto)
-    {
-        if (maneuver.maneuverOrder == -1)
-        {
+                          std::map<int, std::shared_ptr<IO::SDK::Body::CelestialBody>> &celestialBodies) {
+    for (auto &maneuver: scenarioDto.Spacecraft.phasingManeuverDto) {
+        if (maneuver.maneuverOrder == -1) {
             break;
         }
         std::vector<IO::SDK::Body::Spacecraft::Engine *> engines;
-        for (auto engine: maneuver.engines)
-        {
-            if (engine == nullptr)
-            {
+        for (auto engine: maneuver.engines) {
+            if (engine == nullptr) {
                 break;
             }
             engines.push_back(const_cast<IO::SDK::Body::Spacecraft::Engine *>(scenario.GetSpacecraft()->GetEngine(
@@ -637,19 +546,14 @@ void BuildPhasingManeuver(IO::SDK::API::DTO::ScenarioDTO &scenarioDto, IO::SDK::
 }
 
 void BuildProgradeAttitude(IO::SDK::API::DTO::ScenarioDTO &scenarioDto, IO::SDK::Scenario &scenario,
-                           std::map<int, std::shared_ptr<IO::SDK::Maneuvers::ManeuverBase>> &maneuvers)
-{
-    for (auto &maneuver: scenarioDto.Spacecraft.progradeAttitudes)
-    {
-        if (maneuver.maneuverOrder == -1)
-        {
+                           std::map<int, std::shared_ptr<IO::SDK::Maneuvers::ManeuverBase>> &maneuvers) {
+    for (auto &maneuver: scenarioDto.Spacecraft.progradeAttitudes) {
+        if (maneuver.maneuverOrder == -1) {
             break;
         }
         std::vector<IO::SDK::Body::Spacecraft::Engine *> engines;
-        for (auto engine: maneuver.engines)
-        {
-            if (engine == nullptr)
-            {
+        for (auto engine: maneuver.engines) {
+            if (engine == nullptr) {
                 break;
             }
             engines.push_back(const_cast<IO::SDK::Body::Spacecraft::Engine *>(scenario.GetSpacecraft()->GetEngine(
@@ -665,19 +569,14 @@ void BuildProgradeAttitude(IO::SDK::API::DTO::ScenarioDTO &scenarioDto, IO::SDK:
 }
 
 void BuildRetrogradeAttitude(IO::SDK::API::DTO::ScenarioDTO &scenarioDto, IO::SDK::Scenario &scenario,
-                             std::map<int, std::shared_ptr<IO::SDK::Maneuvers::ManeuverBase>> &maneuvers)
-{
-    for (auto &maneuver: scenarioDto.Spacecraft.retrogradeAttitudes)
-    {
-        if (maneuver.maneuverOrder == -1)
-        {
+                             std::map<int, std::shared_ptr<IO::SDK::Maneuvers::ManeuverBase>> &maneuvers) {
+    for (auto &maneuver: scenarioDto.Spacecraft.retrogradeAttitudes) {
+        if (maneuver.maneuverOrder == -1) {
             break;
         }
         std::vector<IO::SDK::Body::Spacecraft::Engine *> engines;
-        for (auto engine: maneuver.engines)
-        {
-            if (engine == nullptr)
-            {
+        for (auto engine: maneuver.engines) {
+            if (engine == nullptr) {
                 break;
             }
             engines.push_back(const_cast<IO::SDK::Body::Spacecraft::Engine *>(scenario.GetSpacecraft()->GetEngine(
@@ -696,19 +595,14 @@ void BuildRetrogradeAttitude(IO::SDK::API::DTO::ScenarioDTO &scenarioDto, IO::SD
 }
 
 void BuildNadirAttitude(IO::SDK::API::DTO::ScenarioDTO &scenarioDto, IO::SDK::Scenario &scenario,
-                        std::map<int, std::shared_ptr<IO::SDK::Maneuvers::ManeuverBase>> &maneuvers)
-{
-    for (auto &maneuver: scenarioDto.Spacecraft.nadirAttitudes)
-    {
-        if (maneuver.maneuverOrder == -1)
-        {
+                        std::map<int, std::shared_ptr<IO::SDK::Maneuvers::ManeuverBase>> &maneuvers) {
+    for (auto &maneuver: scenarioDto.Spacecraft.nadirAttitudes) {
+        if (maneuver.maneuverOrder == -1) {
             break;
         }
         std::vector<IO::SDK::Body::Spacecraft::Engine *> engines;
-        for (auto engine: maneuver.engines)
-        {
-            if (engine == nullptr)
-            {
+        for (auto engine: maneuver.engines) {
+            if (engine == nullptr) {
                 break;
             }
             engines.push_back(const_cast<IO::SDK::Body::Spacecraft::Engine *>(scenario.GetSpacecraft()->GetEngine(
@@ -727,19 +621,14 @@ void BuildNadirAttitude(IO::SDK::API::DTO::ScenarioDTO &scenarioDto, IO::SDK::Sc
 }
 
 void BuildZenithAttitude(IO::SDK::API::DTO::ScenarioDTO &scenarioDto, IO::SDK::Scenario &scenario,
-                         std::map<int, std::shared_ptr<IO::SDK::Maneuvers::ManeuverBase>> &maneuvers)
-{
-    for (auto &maneuver: scenarioDto.Spacecraft.zenithAttitudes)
-    {
-        if (maneuver.maneuverOrder == -1)
-        {
+                         std::map<int, std::shared_ptr<IO::SDK::Maneuvers::ManeuverBase>> &maneuvers) {
+    for (auto &maneuver: scenarioDto.Spacecraft.zenithAttitudes) {
+        if (maneuver.maneuverOrder == -1) {
             break;
         }
         std::vector<IO::SDK::Body::Spacecraft::Engine *> engines;
-        for (auto engine: maneuver.engines)
-        {
-            if (engine == nullptr)
-            {
+        for (auto engine: maneuver.engines) {
+            if (engine == nullptr) {
                 break;
             }
             engines.push_back(const_cast<IO::SDK::Body::Spacecraft::Engine *>(scenario.GetSpacecraft()->GetEngine(
@@ -758,15 +647,13 @@ void BuildZenithAttitude(IO::SDK::API::DTO::ScenarioDTO &scenarioDto, IO::SDK::S
 }
 
 
-const char *GetSpiceVersionProxy()
-{
+const char *GetSpiceVersionProxy() {
     const char *version;
     version = tkvrsn_c("TOOLKIT");
     return strdup(version);
 }
 
-bool WriteEphemerisProxy(const char *filePath, int objectId, IO::SDK::API::DTO::StateVectorDTO *sv, int size)
-{
+bool WriteEphemerisProxy(const char *filePath, int objectId, IO::SDK::API::DTO::StateVectorDTO *sv, int size) {
     IO::SDK::Kernels::EphemerisKernel kernel(filePath, objectId);
 
     std::vector<IO::SDK::OrbitalParameters::StateVector> states;
@@ -774,10 +661,8 @@ bool WriteEphemerisProxy(const char *filePath, int objectId, IO::SDK::API::DTO::
     std::map<int, std::shared_ptr<IO::SDK::Body::CelestialBody>> celestialBodies;
 
 
-    for (int i = 0; i < size; ++i)
-    {
-        if (celestialBodies.find(sv[0].centerOfMotion.id) == celestialBodies.end())
-        {
+    for (int i = 0; i < size; ++i) {
+        if (celestialBodies.find(sv[0].centerOfMotion.id) == celestialBodies.end()) {
             celestialBodies[sv[i].centerOfMotion.id] = std::make_shared<IO::SDK::Body::CelestialBody>(
                     sv[i].centerOfMotion.id);
         }
@@ -794,13 +679,11 @@ bool WriteEphemerisProxy(const char *filePath, int objectId, IO::SDK::API::DTO::
 
 
 bool WriteOrientationProxy(const char *filePath, int objectId, int spacecraftFrameId,
-                           IO::SDK::API::DTO::StateOrientationDTO *so, int size)
-{
+                           IO::SDK::API::DTO::StateOrientationDTO *so, int size) {
     IO::SDK::Kernels::OrientationKernel kernel(filePath, objectId, spacecraftFrameId);
     std::vector<IO::SDK::OrbitalParameters::StateOrientation> orientations;
     orientations.reserve(size);
-    for (int i = 0; i < size; ++i)
-    {
+    for (int i = 0; i < size; ++i) {
         orientations.emplace_back(ToQuaternion(so[i].orientation), ToVector3D(so[i].angularVelocity),
                                   IO::SDK::Time::TDB(std::chrono::duration<double>(so[i].epoch)),
                                   IO::SDK::Frames::Frames(so[i].frame));
@@ -811,11 +694,11 @@ bool WriteOrientationProxy(const char *filePath, int objectId, int spacecraftFra
     return true;
 }
 
-void ReadOrientationProxy(IO::SDK::API::DTO::WindowDTO searchWindow, int spacecraftId, double tolerance, const char *frame, double stepSize,
-                          IO::SDK::API::DTO::StateOrientationDTO *so)
-{
-    if ((searchWindow.end - searchWindow.start) / stepSize > 10000)
-    {
+void
+ReadOrientationProxy(IO::SDK::API::DTO::WindowDTO searchWindow, int spacecraftId, double tolerance, const char *frame,
+                     double stepSize,
+                     IO::SDK::API::DTO::StateOrientationDTO *so) {
+    if ((searchWindow.end - searchWindow.start) / stepSize > 10000) {
         throw IO::SDK::Exception::InvalidArgumentException(
                 "Step size to small or search window to large. The number of State orientation must be lower than 10000");
     }
@@ -824,10 +707,12 @@ void ReadOrientationProxy(IO::SDK::API::DTO::WindowDTO searchWindow, int spacecr
 
     double epoch = searchWindow.start;
     int idx{0};
-    while (epoch <= searchWindow.end)
-    {
+    while (epoch <= searchWindow.end) {
         //Get encoded clock
-        SpiceDouble sclk = IO::SDK::Kernels::SpacecraftClockKernel::ConvertToEncodedClock(spacecraftId, IO::SDK::Time::TDB(std::chrono::duration<double>(epoch)));
+        SpiceDouble sclk = IO::SDK::Kernels::SpacecraftClockKernel::ConvertToEncodedClock(spacecraftId,
+                                                                                          IO::SDK::Time::TDB(
+                                                                                                  std::chrono::duration<double>(
+                                                                                                          epoch)));
 
         SpiceDouble cmat[3][3];
         SpiceDouble av[3];
@@ -837,23 +722,19 @@ void ReadOrientationProxy(IO::SDK::API::DTO::WindowDTO searchWindow, int spacecr
         //Get orientation and angular velocity
         ckgpav_c(id, sclk, tolerance, frame, cmat, av, &clkout, &found);
 
-        if (!found)
-        {
+        if (!found) {
             throw IO::SDK::Exception::SDKException("No orientation found");
         }
 
         //Build array pointers
         double **arrayCmat;
         arrayCmat = new double *[3];
-        for (int i = 0; i < 3; i++)
-        {
+        for (int i = 0; i < 3; i++) {
             arrayCmat[i] = new double[3]{};
         }
 
-        for (size_t i = 0; i < 3; i++)
-        {
-            for (size_t j = 0; j < 3; j++)
-            {
+        for (size_t i = 0; i < 3; i++) {
+            for (size_t j = 0; j < 3; j++) {
                 arrayCmat[i][j] = cmat[i][j];
             }
         }
@@ -879,20 +760,17 @@ void ReadOrientationProxy(IO::SDK::API::DTO::WindowDTO searchWindow, int spacecr
     }
 }
 
-void LoadKernelsProxy(const char *path)
-{
+void LoadKernelsProxy(const char *path) {
     IO::SDK::Kernels::KernelsLoader::Load(path);
 }
 
-const char *TDBToStringProxy(double secondsFromJ2000)
-{
+const char *TDBToStringProxy(double secondsFromJ2000) {
     IO::SDK::Time::TDB tdb((std::chrono::duration<double>(secondsFromJ2000)));
     std::string str = tdb.ToString();
     return strdup(str.c_str());
 }
 
-const char *UTCToStringProxy(double secondsFromJ2000)
-{
+const char *UTCToStringProxy(double secondsFromJ2000) {
     IO::SDK::Time::UTC utc((std::chrono::duration<double>(secondsFromJ2000)));
     std::string str = utc.ToString();
     return strdup(str.c_str());
@@ -900,17 +778,14 @@ const char *UTCToStringProxy(double secondsFromJ2000)
 
 void ReadEphemerisProxy(IO::SDK::API::DTO::WindowDTO searchWindow, int observerId, int targetId,
                         const char *frame,
-                        const char *aberration, double stepSize, IO::SDK::API::DTO::StateVectorDTO *stateVectors)
-{
-    if ((searchWindow.end - searchWindow.start) / stepSize > 10000)
-    {
+                        const char *aberration, double stepSize, IO::SDK::API::DTO::StateVectorDTO *stateVectors) {
+    if ((searchWindow.end - searchWindow.start) / stepSize > 10000) {
         throw IO::SDK::Exception::InvalidArgumentException(
                 "Step size to small or search window to large. The number of State vector must be lower than 10000");
     }
     int idx = 0;
     double epoch = searchWindow.start;
-    while (epoch <= searchWindow.end)
-    {
+    while (epoch <= searchWindow.end) {
 
         SpiceDouble vs[6];
         SpiceDouble lt;
@@ -922,7 +797,7 @@ void ReadEphemerisProxy(IO::SDK::API::DTO::WindowDTO searchWindow, int observerI
                 observerId);
 
         stateVectors[idx].epoch = epoch;
-        stateVectors[idx].inertialFrame = frame;
+        stateVectors[idx].inertialFrame = strdup(frame);
         stateVectors[idx].position.x = vs[0] * 1000.0;
         stateVectors[idx].position.y = vs[1] * 1000.0;
         stateVectors[idx].position.z = vs[2] * 1000.0;
@@ -938,8 +813,7 @@ void ReadEphemerisProxy(IO::SDK::API::DTO::WindowDTO searchWindow, int observerI
 void
 FindWindowsOnDistanceConstraintProxy(IO::SDK::API::DTO::WindowDTO searchWindow, int observerId, int targetId,
                                      const char *relationalOperator, double value, const char *aberration,
-                                     double stepSize, IO::SDK::API::DTO::WindowDTO windows[1000])
-{
+                                     double stepSize, IO::SDK::API::DTO::WindowDTO windows[1000]) {
     auto relationalOpe = IO::SDK::Constraints::RelationalOperator::ToRelationalOperator(relationalOperator);
     auto abe = IO::SDK::Aberrations::ToEnum(aberration);
 
@@ -947,8 +821,7 @@ FindWindowsOnDistanceConstraintProxy(IO::SDK::API::DTO::WindowDTO searchWindow, 
                                                                                      observerId, targetId,
                                                                                      relationalOpe, value, abe,
                                                                                      IO::SDK::Time::TimeSpan(stepSize));
-    for (size_t i = 0; i < res.size(); ++i)
-    {
+    for (size_t i = 0; i < res.size(); ++i) {
         windows[i] = ToWindowDTO(res[i]);
     }
 }
@@ -958,8 +831,7 @@ FindWindowsOnOccultationConstraintProxy(IO::SDK::API::DTO::WindowDTO searchWindo
                                         const char *targetFrame, const char *targetShape, int frontBodyId,
                                         const char *frontFrame, const char *frontShape, const char *occultationType,
                                         const char *aberration, double stepSize,
-                                        IO::SDK::API::DTO::WindowDTO *windows)
-{
+                                        IO::SDK::API::DTO::WindowDTO *windows) {
     auto abe = IO::SDK::Aberrations::ToEnum(aberration);
     auto res = IO::SDK::Constraints::GeometryFinder::FindWindowsOnOccultationConstraint(ToTDBWindow(searchWindow),
                                                                                         observerId, targetId,
@@ -971,8 +843,7 @@ FindWindowsOnOccultationConstraintProxy(IO::SDK::API::DTO::WindowDTO searchWindo
                                                                                         IO::SDK::Time::TimeSpan(
                                                                                                 stepSize));
 
-    for (size_t i = 0; i < res.size(); ++i)
-    {
+    for (size_t i = 0; i < res.size(); ++i) {
         windows[i] = ToWindowDTO(res[i]);
     }
 }
@@ -983,8 +854,7 @@ FindWindowsOnCoordinateConstraintProxy(IO::SDK::API::DTO::WindowDTO searchWindow
                                        const char *coordinate,
                                        const char *relationalOperator, double value, double adjustValue,
                                        const char *aberration, double stepSize,
-                                       IO::SDK::API::DTO::WindowDTO *windows)
-{
+                                       IO::SDK::API::DTO::WindowDTO *windows) {
     auto abe = IO::SDK::Aberrations::ToEnum(aberration);
     auto systemType = IO::SDK::CoordinateSystem::ToCoordinateSystemType(coordinateSystem);
     auto coordinateType = IO::SDK::Coordinate::ToCoordinateType(coordinate);
@@ -997,8 +867,7 @@ FindWindowsOnCoordinateConstraintProxy(IO::SDK::API::DTO::WindowDTO searchWindow
                                                                                        IO::SDK::Time::TimeSpan(
                                                                                                stepSize));
 
-    for (size_t i = 0; i < res.size(); ++i)
-    {
+    for (size_t i = 0; i < res.size(); ++i) {
         windows[i] = ToWindowDTO(res[i]);
     }
 }
@@ -1009,8 +878,7 @@ void FindWindowsOnIlluminationConstraintProxy(IO::SDK::API::DTO::WindowDTO searc
                                               const char *relationalOperator, double value,
                                               double adjustValue,
                                               const char *aberration, double stepSize, const char *method,
-                                              IO::SDK::API::DTO::WindowDTO *windows)
-{
+                                              IO::SDK::API::DTO::WindowDTO *windows) {
     double coordinates[3] = {geodetic.latitude, geodetic.longitude, geodetic.altitude};
 
     IO::SDK::Body::CelestialBody body(targetBody);
@@ -1028,8 +896,7 @@ void FindWindowsOnIlluminationConstraintProxy(IO::SDK::API::DTO::WindowDTO searc
                                                                                          value, adjustValue, abe,
                                                                                          IO::SDK::Time::TimeSpan(
                                                                                                  stepSize), method);
-    for (size_t i = 0; i < res.size(); ++i)
-    {
+    for (size_t i = 0; i < res.size(); ++i) {
         windows[i] = ToWindowDTO(res[i]);
     }
 }
@@ -1039,8 +906,7 @@ FindWindowsInFieldOfViewConstraintProxy(IO::SDK::API::DTO::WindowDTO searchWindo
                                         int targetId, const char *targetFrame,
                                         const char *targetShape,
                                         const char *aberration, double stepSize,
-                                        IO::SDK::API::DTO::WindowDTO *windows)
-{
+                                        IO::SDK::API::DTO::WindowDTO *windows) {
     auto abe = IO::SDK::Aberrations::ToEnum(aberration);
     auto res = IO::SDK::Constraints::GeometryFinder::FindWindowsInFieldOfViewConstraint(ToTDBWindow(searchWindow),
                                                                                         observerId, instrumentId,
@@ -1048,8 +914,7 @@ FindWindowsInFieldOfViewConstraintProxy(IO::SDK::API::DTO::WindowDTO searchWindo
                                                                                         targetShape,
                                                                                         abe, IO::SDK::Time::TimeSpan(
                     stepSize));
-    for (size_t i = 0; i < res.size(); ++i)
-    {
+    for (size_t i = 0; i < res.size(); ++i) {
         windows[i] = ToWindowDTO(res[i]);
     }
 }
