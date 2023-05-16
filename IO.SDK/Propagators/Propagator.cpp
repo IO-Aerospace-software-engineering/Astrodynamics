@@ -37,6 +37,10 @@ void IO::SDK::Propagators::Propagator::Propagate()
     // Initial alignment, Spacecraft back points toward the center of motion
     IO::SDK::OrbitalParameters::StateOrientation attitude(stateVector.GetPosition().Normalize().To(m_spacecraft.Front), IO::SDK::Math::Vector3D(0.0, 0.0, 0.0),
                                                           stateVector.GetEpoch(), stateVector.GetFrame());
+
+    // Initial alignment, Spacecraft is aligned to ICRF frame
+//    IO::SDK::OrbitalParameters::StateOrientation initialAttitude(IO::SDK::Math::Quaternion(1.0, 0.0, 0.0, 0.0), IO::SDK::Math::Vector3D::Zero, stateVector.GetEpoch(),
+//                                                                 Frames::InertialFrames::GetICRF());
     AddStateOrientation(attitude);
 
     //Update Spacecraft orbital parameters

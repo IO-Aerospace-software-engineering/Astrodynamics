@@ -33,23 +33,6 @@ MODULE_API bool
 WriteEphemerisProxy(const char *filePath, int objectId, IO::SDK::API::DTO::StateVectorDTO sv[100000], int size);
 
 /**
- * Write orientation data into binary file (ck)
- * @param filePath
- * @param objectId
- * @param so
- * @param size
- * @return
- */
-MODULE_API bool
-WriteOrientationProxy(const char *filePath, int objectId, IO::SDK::API::DTO::StateOrientationDTO so[100000], int size);
-
-/**
- * Propagate a scenario
- * @param scenarioDto
- */
-MODULE_API void PropagateProxy(IO::SDK::API::DTO::ScenarioDTO &scenarioDto);
-
-/**
  * Read object ephemeris
  * @param searchWindow
  * @param observerId
@@ -61,7 +44,39 @@ MODULE_API void PropagateProxy(IO::SDK::API::DTO::ScenarioDTO &scenarioDto);
  */
 MODULE_API void
 ReadEphemerisProxy(IO::SDK::API::DTO::WindowDTO searchWindow, int observerId, int targetId, const char *frame,
-                   const char *aberration, double stepSize, IO::SDK::API::DTO::StateVectorDTO stateVectors[100000]);
+                   const char *aberration, double stepSize, IO::SDK::API::DTO::StateVectorDTO stateVectors[10000]);
+
+/**
+ * Write orientation data into binary file (ck)
+ * @param filePath
+ * @param objectId
+ * @param so
+ * @param size
+ * @return
+ */
+MODULE_API bool
+WriteOrientationProxy(const char *filePath, int objectId, IO::SDK::API::DTO::StateOrientationDTO so[10000], int size);
+
+/**
+ * Read spacecraft orientation
+ * @param searchWindow
+ * @param spacecraftId
+ * @param tolerance
+ * @param frame
+ * @param stepSize
+ * @param so
+ */
+MODULE_API void
+ReadOrientationProxy(IO::SDK::API::DTO::WindowDTO searchWindow, int spacecraftId, double tolerance, const char *frame, double stepSize,
+                     IO::SDK::API::DTO::StateOrientationDTO so[10000]);
+
+/**
+ * Propagate a scenario
+ * @param scenarioDto
+ */
+MODULE_API void PropagateProxy(IO::SDK::API::DTO::ScenarioDTO &scenarioDto);
+
+
 
 /**
  * Evaluate launch windows

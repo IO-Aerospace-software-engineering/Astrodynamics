@@ -5,25 +5,30 @@
 #include "Constants.h"
 #include "DataPoolMonitoring.h"
 #include "InertialFrames.h"
+#include "NadirAttitude.h"
 #include <KernelsLoader.h>
 #include <Converters.cpp>
 
-TEST(API, DTOSize) {
+TEST(API, DTOSize)
+{
     auto size2 = sizeof(IO::SDK::API::DTO::ScenarioDTO);
     ASSERT_EQ(18816, size2);
 }
 
-TEST(API, TDBToString) {
+TEST(API, TDBToString)
+{
     auto res = TDBToStringProxy(0.0);
     ASSERT_STREQ("2000-01-01 12:00:00.000000 (TDB)", res);
 }
 
-TEST(API, UTCToString) {
+TEST(API, UTCToString)
+{
     auto res = UTCToStringProxy(0.0);
     ASSERT_STREQ("2000-01-01 12:00:00.000000 (UTC)", res);
 }
 
-TEST(API, SitePropagation) {
+TEST(API, SitePropagation)
+{
     IO::SDK::API::DTO::ScenarioDTO scenario{};
     scenario.Name = "scenatiosites";
     scenario.Window.start = 668085625.01523638;
@@ -60,7 +65,8 @@ TEST(API, SitePropagation) {
     PropagateProxy(scenario);
 }
 
-TEST(API, SpacecraftPropagation) {
+TEST(API, SpacecraftPropagation)
+{
     IO::SDK::API::DTO::ScenarioDTO scenario{};
     scenario.Name = "scenatiosites";
     scenario.Window.start = 668085555.829810;
@@ -126,7 +132,8 @@ TEST(API, SpacecraftPropagation) {
     ASSERT_STREQ("2021-03-04 00:31:44.178429 (TDB)", tdbEnd.ToString().c_str());
 }
 
-TEST(API, FindWindowsOnCoordinateConstraintProxy) {
+TEST(API, FindWindowsOnCoordinateConstraintProxy)
+{
     IO::SDK::API::DTO::WindowDTO windows[1000];
     IO::SDK::API::DTO::WindowDTO searchWindow{};
     searchWindow.start = 730036800.0;
@@ -139,7 +146,8 @@ TEST(API, FindWindowsOnCoordinateConstraintProxy) {
     ASSERT_STREQ("2023-02-19 23:58:50.814787 (UTC)", ToTDBWindow(windows[0]).GetEndDate().ToUTC().ToString().c_str());
 }
 
-TEST(API, FindWindowsOnDistanceConstraintProxy) {
+TEST(API, FindWindowsOnDistanceConstraintProxy)
+{
     IO::SDK::API::DTO::WindowDTO windows[1000];
     IO::SDK::API::DTO::WindowDTO searchWindow{};
     searchWindow.start = IO::SDK::Time::TDB("2007 JAN 1").GetSecondsFromJ2000().count();
@@ -152,7 +160,8 @@ TEST(API, FindWindowsOnDistanceConstraintProxy) {
     ASSERT_STREQ("2007-04-01 00:01:05.185654 (TDB)", ToTDBWindow(windows[3]).GetEndDate().ToString().c_str());
 }
 
-TEST(API, FindWindowsOnIlluminationConstraintProxy) {
+TEST(API, FindWindowsOnIlluminationConstraintProxy)
+{
     IO::SDK::API::DTO::WindowDTO windows[1000];
     IO::SDK::API::DTO::WindowDTO searchWindow{};
     searchWindow.start = IO::SDK::Time::TDB("2021-05-17 12:00:00 TDB").GetSecondsFromJ2000().count();
@@ -169,7 +178,8 @@ TEST(API, FindWindowsOnIlluminationConstraintProxy) {
     ASSERT_STREQ("2021-05-18 12:00:00.000000 (TDB)", ToTDBWindow(windows[1]).GetEndDate().ToString().c_str());
 }
 
-TEST(API, FindWindowsOnOccultationConstraintProxy) {
+TEST(API, FindWindowsOnOccultationConstraintProxy)
+{
     IO::SDK::API::DTO::WindowDTO windows[1000];
     IO::SDK::API::DTO::WindowDTO searchWindow{};
     searchWindow.start = IO::SDK::Time::TDB("2001 DEC 13").GetSecondsFromJ2000().count();
@@ -182,7 +192,8 @@ TEST(API, FindWindowsOnOccultationConstraintProxy) {
 }
 
 
-TEST(API, FindWindowsInFieldOfViewConstraintProxy) {
+TEST(API, FindWindowsInFieldOfViewConstraintProxy)
+{
     IO::SDK::Math::Vector3D orientation{1.0, 0.0, 0.0};
     IO::SDK::Math::Vector3D boresight{0.0, 0.0, 1.0};
     IO::SDK::Math::Vector3D fovvector{1.0, 0.0, 0.0};
@@ -234,12 +245,93 @@ TEST(API, FindWindowsInFieldOfViewConstraintProxy) {
     ASSERT_STREQ("2021-06-10 01:47:27.000000 (TDB)", ToTDBWindow(windows[1]).GetEndDate().ToString().c_str());
 }
 
-TEST(API, ReadEphemerisProxy) {
+TEST(API, ReadEphemerisProxy)
+{
     IO::SDK::API::DTO::WindowDTO searchWindow{};
     searchWindow.start = 0.0;
     searchWindow.end = 100.0;
 
-    IO::SDK::API::DTO::StateVectorDTO sv[100000];
-    ReadEphemerisProxy(searchWindow, 399, 301, "J2000", "LT", 1.0,sv);
-    ASSERT_TRUE(false);
+    IO::SDK::API::DTO::StateVectorDTO sv[10000];
+    ReadEphemerisProxy(searchWindow, 399, 301, "J2000", "LT", 10.0, sv);
+    ASSERT_DOUBLE_EQ(-291569264.48965073, sv[0].position.x);
+    ASSERT_DOUBLE_EQ(-266709187.1624887, sv[0].position.y);
+    ASSERT_DOUBLE_EQ(-76099155.244104564, sv[0].position.z);
+    ASSERT_DOUBLE_EQ(643.53061483971885, sv[0].velocity.x);
+    ASSERT_DOUBLE_EQ(-666.08181440799092, sv[0].velocity.y);
+    ASSERT_DOUBLE_EQ(-301.32283209101018, sv[0].velocity.z);
+    ASSERT_DOUBLE_EQ(399, sv[0].centerOfMotion.id);
+    ASSERT_DOUBLE_EQ(10, sv[0].centerOfMotion.centerOfMotionId);
+    ASSERT_STREQ("J2000", sv[0].inertialFrame);
+    ASSERT_DOUBLE_EQ(0.0, sv[0].epoch);
+}
+
+TEST(API, ReadEphemerisProxyException)
+{
+    IO::SDK::API::DTO::WindowDTO searchWindow{};
+    searchWindow.start = 0.0;
+    searchWindow.end = 10001.0;
+
+    IO::SDK::API::DTO::StateVectorDTO sv[10000];
+    ASSERT_THROW(ReadEphemerisProxy(searchWindow, 399, 301, "J2000", "LT", 1.0, sv), IO::SDK::Exception::InvalidArgumentException);
+}
+
+TEST(API, ReadSpacecraftOrientationProxy)
+{
+    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399); //GEOPHYSICAL PROPERTIES provided by JPL
+
+    auto startDate = IO::SDK::Time::TDB("2021-01-01T13:00:00");
+    auto endDate = IO::SDK::Time::TDB("2021-01-01T13:01:00");
+
+    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams1 = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth,
+                                                                                                                                              IO::SDK::Math::Vector3D(6678000.0,
+                                                                                                                                                                      0.0, 0.0),
+                                                                                                                                              IO::SDK::Math::Vector3D(0.0, 7727.0,
+                                                                                                                                                                      0.0),
+                                                                                                                                              startDate,
+                                                                                                                                              IO::SDK::Frames::InertialFrames::GetICRF());
+
+    IO::SDK::Body::Spacecraft::Spacecraft s{-172, "OrientationSpc", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams1)};
+
+    IO::SDK::Integrators::VVIntegrator integrator(IO::SDK::Time::TimeSpan(1.0s));
+
+    IO::SDK::Propagators::Propagator prop(s, integrator, IO::SDK::Time::Window(startDate, endDate));
+
+    s.AddFuelTank("ft1", 1000.0, 900.0);
+    s.AddEngine("sn1", "eng1", "ft1", {1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}, 450.0, 50.0);
+
+    auto engine1 = s.GetEngine("sn1");
+
+    std::vector<IO::SDK::Body::Spacecraft::Engine *> engines;
+    engines.push_back(const_cast<IO::SDK::Body::Spacecraft::Engine *>(engine1));
+
+    IO::SDK::Maneuvers::Attitudes::NadirAttitude nadir(engines, prop, IO::SDK::Time::TimeSpan(10s));
+    prop.SetStandbyManeuver(&nadir);
+
+    prop.Propagate();
+    IO::SDK::API::DTO::WindowDTO searchWindow{};
+    searchWindow.start = startDate.GetSecondsFromJ2000().count();
+    searchWindow.end = endDate.GetSecondsFromJ2000().count();
+
+    IO::SDK::API::DTO::StateOrientationDTO so[10000];
+    ReadOrientationProxy(searchWindow, -172, 10.0 * std::pow(2.0, ClockAccuracy), "J2000", 10.0, so);
+    ASSERT_DOUBLE_EQ(0.70710678118654757, so[0].orientation.w);
+    ASSERT_DOUBLE_EQ(0.0, so[0].orientation.x);
+    ASSERT_DOUBLE_EQ(0.0, so[0].orientation.y);
+    ASSERT_DOUBLE_EQ(-0.70710678118654746, so[0].orientation.z);
+    ASSERT_DOUBLE_EQ(0.0, so[0].angularVelocity.x);
+    ASSERT_DOUBLE_EQ(0.0, so[0].angularVelocity.y);
+    ASSERT_DOUBLE_EQ(0.0, so[0].angularVelocity.z);
+    ASSERT_DOUBLE_EQ(searchWindow.start, so[0].epoch);
+    ASSERT_STREQ("J2000", so[0].frame);
+
+}
+
+TEST(API, ReadSpacecraftOrientationProxyException)
+{
+    IO::SDK::API::DTO::WindowDTO searchWindow{};
+    searchWindow.start = 0.0;
+    searchWindow.end = 10001.0;
+
+    IO::SDK::API::DTO::StateOrientationDTO so[10000];
+    ASSERT_THROW(ReadOrientationProxy(searchWindow, -172, 10.0 * std::pow(2.0, ClockAccuracy), "J2000", 1.0, so), IO::SDK::Exception::InvalidArgumentException);
 }

@@ -14,10 +14,6 @@
 #include "InvalidArgumentException.h"
 
 
-//IO::SDK::Kernels::OrientationKernel::OrientationKernel(const IO::SDK::Body::Spacecraft::Spacecraft &Spacecraft) : Kernel(
-//        Spacecraft.GetDirectoryPath() + "/Orientations/" + Spacecraft.GetName() + ".ck"), m_spacecraft{Spacecraft} {
-//}
-
 IO::SDK::Kernels::OrientationKernel::OrientationKernel(std::string filePath, int spacecraftId, int spacecraftFrameId) : IO::SDK::Kernels::Kernel(std::move(filePath)),
                                                                                                                         m_spacecraftId{spacecraftId},
                                                                                                                         m_spacecraftFrameId{spacecraftFrameId}
