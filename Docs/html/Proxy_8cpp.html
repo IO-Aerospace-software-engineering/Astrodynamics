@@ -25,7 +25,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">IO-SDK<span id="projectnumber">&#160;0.5.x</span>
+   <div id="projectname">IO-SDK<span id="projectnumber">&#160;0.6.x</span>
    </div>
    <div id="projectbrief">Astrodynamics framework</div>
   </td>
@@ -90,22 +90,23 @@ $(document).ready(function(){initNavTree('Proxy_8cpp.html',''); initResizable();
 <div class="contents">
 <div class="textblock"><code>#include &lt;algorithm&gt;</code><br />
 <code>#include &lt;<a class="el" href="Proxy_8h_source.html">Proxy.h</a>&gt;</code><br />
-<code>#include &quot;<a class="el" href="Converters_8cpp.html">Converters.cpp</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="PerigeeHeightChangingManeuver_8h_source.html">PerigeeHeightChangingManeuver.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="ApsidalAlignmentManeuver_8h_source.html">ApsidalAlignmentManeuver.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="CombinedManeuver_8h_source.html">CombinedManeuver.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="OrbitalPlaneChangingManeuver_8h_source.html">OrbitalPlaneChangingManeuver.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="ProgradeAttitude_8h_source.html">ProgradeAttitude.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="RetrogradeAttitude_8h_source.html">RetrogradeAttitude.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="NadirAttitude_8h_source.html">NadirAttitude.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="ZenithAttitude_8h_source.html">ZenithAttitude.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="InertialFrames_8h_source.html">InertialFrames.h</a>&quot;</code><br />
+<code>#include &lt;<a class="el" href="Converters_8cpp.html">Converters.cpp</a>&gt;</code><br />
+<code>#include &lt;<a class="el" href="PerigeeHeightChangingManeuver_8h_source.html">PerigeeHeightChangingManeuver.h</a>&gt;</code><br />
+<code>#include &lt;<a class="el" href="ApsidalAlignmentManeuver_8h_source.html">ApsidalAlignmentManeuver.h</a>&gt;</code><br />
+<code>#include &lt;<a class="el" href="CombinedManeuver_8h_source.html">CombinedManeuver.h</a>&gt;</code><br />
+<code>#include &lt;<a class="el" href="OrbitalPlaneChangingManeuver_8h_source.html">OrbitalPlaneChangingManeuver.h</a>&gt;</code><br />
+<code>#include &lt;<a class="el" href="ProgradeAttitude_8h_source.html">ProgradeAttitude.h</a>&gt;</code><br />
+<code>#include &lt;<a class="el" href="RetrogradeAttitude_8h_source.html">RetrogradeAttitude.h</a>&gt;</code><br />
+<code>#include &lt;<a class="el" href="NadirAttitude_8h_source.html">NadirAttitude.h</a>&gt;</code><br />
+<code>#include &lt;<a class="el" href="ZenithAttitude_8h_source.html">ZenithAttitude.h</a>&gt;</code><br />
+<code>#include &lt;<a class="el" href="InertialFrames_8h_source.html">InertialFrames.h</a>&gt;</code><br />
 <code>#include &lt;<a class="el" href="ApogeeHeightChangingManeuver_8h_source.html">ApogeeHeightChangingManeuver.h</a>&gt;</code><br />
 <code>#include &lt;<a class="el" href="PhasingManeuver_8h_source.html">PhasingManeuver.h</a>&gt;</code><br />
 <code>#include &lt;<a class="el" href="InstrumentPointingToAttitude_8h_source.html">InstrumentPointingToAttitude.h</a>&gt;</code><br />
 <code>#include &lt;<a class="el" href="Launch_8h_source.html">Launch.h</a>&gt;</code><br />
 <code>#include &lt;<a class="el" href="KernelsLoader_8h_source.html">KernelsLoader.h</a>&gt;</code><br />
 <code>#include &lt;iostream&gt;</code><br />
+<code>#include &lt;<a class="el" href="SpacecraftClockKernel_8h_source.html">SpacecraftClockKernel.h</a>&gt;</code><br />
 </div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
@@ -167,12 +168,16 @@ Functions</h2></td></tr>
 <tr class="separator:a54a9e4a083c0856d060fd0a3daa197d1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1dfd4b544864698af36d7f349d75a682"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="Proxy_8cpp.html#a1dfd4b544864698af36d7f349d75a682">WriteOrientationProxy</a> (const char *filePath, int objectId, int spacecraftFrameId, <a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1StateOrientationDTO.html">IO::SDK::API::DTO::StateOrientationDTO</a> *so, int size)</td></tr>
 <tr class="separator:a1dfd4b544864698af36d7f349d75a682"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a185ec96428eb2855be9209d18f0aa667"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="Proxy_8cpp.html#a185ec96428eb2855be9209d18f0aa667">ReadOrientationProxy</a> (<a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO.html">IO::SDK::API::DTO::WindowDTO</a> searchWindow, int spacecraftId, double tolerance, const char *frame, double stepSize, <a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1StateOrientationDTO.html">IO::SDK::API::DTO::StateOrientationDTO</a> *so)</td></tr>
+<tr class="separator:a185ec96428eb2855be9209d18f0aa667"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a43dae27d944ca86a60f4259fcd7a3ac3"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="Proxy_8cpp.html#a43dae27d944ca86a60f4259fcd7a3ac3">LoadKernelsProxy</a> (const char *path)</td></tr>
 <tr class="separator:a43dae27d944ca86a60f4259fcd7a3ac3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0ea299e073a26b6daf00c819536eae1a"><td class="memItemLeft" align="right" valign="top">const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="Proxy_8cpp.html#a0ea299e073a26b6daf00c819536eae1a">TDBToStringProxy</a> (double secondsFromJ2000)</td></tr>
 <tr class="separator:a0ea299e073a26b6daf00c819536eae1a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af1e6f2f2b5080a1c1fdc85bbe77e1810"><td class="memItemLeft" align="right" valign="top">const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="Proxy_8cpp.html#af1e6f2f2b5080a1c1fdc85bbe77e1810">UTCToStringProxy</a> (double secondsFromJ2000)</td></tr>
 <tr class="separator:af1e6f2f2b5080a1c1fdc85bbe77e1810"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a95a2609c82f64355087f47bac78df473"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="Proxy_8cpp.html#a95a2609c82f64355087f47bac78df473">ReadEphemerisProxy</a> (<a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO.html">IO::SDK::API::DTO::WindowDTO</a> searchWindow, int observerId, int targetId, const char *frame, const char *aberration, double stepSize, <a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1StateVectorDTO.html">IO::SDK::API::DTO::StateVectorDTO</a> *stateVectors)</td></tr>
+<tr class="separator:a95a2609c82f64355087f47bac78df473"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a750f7521b8b7b08bb24f54959ddca8f7"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="Proxy_8cpp.html#a750f7521b8b7b08bb24f54959ddca8f7">FindWindowsOnDistanceConstraintProxy</a> (<a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO.html">IO::SDK::API::DTO::WindowDTO</a> searchWindow, int observerId, int targetId, const char *relationalOperator, double value, const char *aberration, double stepSize, <a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO.html">IO::SDK::API::DTO::WindowDTO</a> windows[1000])</td></tr>
 <tr class="separator:a750f7521b8b7b08bb24f54959ddca8f7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7c977c599130c9d2a181b12f0ebb564d"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="Proxy_8cpp.html#a7c977c599130c9d2a181b12f0ebb564d">FindWindowsOnOccultationConstraintProxy</a> (<a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO.html">IO::SDK::API::DTO::WindowDTO</a> searchWindow, int observerId, int targetId, const char *targetFrame, const char *targetShape, int frontBodyId, const char *frontFrame, const char *frontShape, const char *occultationType, const char *aberration, double stepSize, <a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO.html">IO::SDK::API::DTO::WindowDTO</a> *windows)</td></tr>
@@ -183,6 +188,10 @@ Functions</h2></td></tr>
 <tr class="separator:a19c45f4ab6be6be3cd4c8d45a1106cdb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a37b6c558397b63606bcd50c199a0d2fe"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="Proxy_8cpp.html#a37b6c558397b63606bcd50c199a0d2fe">FindWindowsInFieldOfViewConstraintProxy</a> (<a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO.html">IO::SDK::API::DTO::WindowDTO</a> searchWindow, int observerId, int instrumentId, int targetId, const char *targetFrame, const char *targetShape, const char *aberration, double stepSize, <a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO.html">IO::SDK::API::DTO::WindowDTO</a> *windows)</td></tr>
 <tr class="separator:a37b6c558397b63606bcd50c199a0d2fe"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2fae52dc56d1098cf155b0a49a04cb25"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="Proxy_8cpp.html#a2fae52dc56d1098cf155b0a49a04cb25">ConvertTDBToUTCProxy</a> (double tdb)</td></tr>
+<tr class="separator:a2fae52dc56d1098cf155b0a49a04cb25"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4fca32d3c594d7677fcadc021102a781"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="Proxy_8cpp.html#a4fca32d3c594d7677fcadc021102a781">ConvertUTCToTDBProxy</a> (double utc)</td></tr>
+<tr class="separator:a4fca32d3c594d7677fcadc021102a781"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Function Documentation</h2>
 <a id="a7486ed1a8282bf3a560293bfb277999f" name="a7486ed1a8282bf3a560293bfb277999f"></a>
@@ -750,6 +759,56 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
+
+</div>
+</div>
+<a id="a2fae52dc56d1098cf155b0a49a04cb25" name="a2fae52dc56d1098cf155b0a49a04cb25"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2fae52dc56d1098cf155b0a49a04cb25">&#9670;&nbsp;</a></span>ConvertTDBToUTCProxy()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">double ConvertTDBToUTCProxy </td>
+          <td>(</td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>tdb</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p >Convert elapsed seconds from J2000 to UTC </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">tdb</td><td></td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd></dd></dl>
+
+</div>
+</div>
+<a id="a4fca32d3c594d7677fcadc021102a781" name="a4fca32d3c594d7677fcadc021102a781"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4fca32d3c594d7677fcadc021102a781">&#9670;&nbsp;</a></span>ConvertUTCToTDBProxy()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">double ConvertUTCToTDBProxy </td>
+          <td>(</td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>utc</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p >Convert elapsed seconds from J2000 to tdb </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">utc</td><td></td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd></dd></dl>
 
 </div>
 </div>
@@ -1350,6 +1409,64 @@ Functions</h2></td></tr>
 
 </div>
 </div>
+<a id="a95a2609c82f64355087f47bac78df473" name="a95a2609c82f64355087f47bac78df473"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a95a2609c82f64355087f47bac78df473">&#9670;&nbsp;</a></span>ReadEphemerisProxy()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void ReadEphemerisProxy </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO.html">IO::SDK::API::DTO::WindowDTO</a>&#160;</td>
+          <td class="paramname"><em>searchWindow</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>observerId</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>targetId</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>frame</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>aberration</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>stepSize</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1StateVectorDTO.html">IO::SDK::API::DTO::StateVectorDTO</a> *&#160;</td>
+          <td class="paramname"><em>stateVectors</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
 <a id="a55b5f32b6b7ab7369fe7847e4ebc045b" name="a55b5f32b6b7ab7369fe7847e4ebc045b"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a55b5f32b6b7ab7369fe7847e4ebc045b">&#9670;&nbsp;</a></span>ReadManeuverResults()</h2>
 
@@ -1395,6 +1512,58 @@ Functions</h2></td></tr>
           <td></td>
           <td class="paramtype">std::map&lt; int, std::shared_ptr&lt; <a class="el" href="classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase.html">IO::SDK::Maneuvers::ManeuverBase</a> &gt; &gt; &amp;&#160;</td>
           <td class="paramname"><em>maneuvers</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a185ec96428eb2855be9209d18f0aa667" name="a185ec96428eb2855be9209d18f0aa667"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a185ec96428eb2855be9209d18f0aa667">&#9670;&nbsp;</a></span>ReadOrientationProxy()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void ReadOrientationProxy </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO.html">IO::SDK::API::DTO::WindowDTO</a>&#160;</td>
+          <td class="paramname"><em>searchWindow</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>spacecraftId</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>tolerance</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>frame</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>stepSize</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1StateOrientationDTO.html">IO::SDK::API::DTO::StateOrientationDTO</a> *&#160;</td>
+          <td class="paramname"><em>so</em>&#160;</td>
         </tr>
         <tr>
           <td></td>

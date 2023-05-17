@@ -17,7 +17,11 @@
 \item 
 \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} bool \mbox{\hyperlink{Proxy_8h_a329824aa5cb9474c5ad8ba77ba8ac569}{Write\+Ephemeris\+Proxy}} (const char $\ast$file\+Path, int object\+Id, \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1StateVectorDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+State\+Vector\+DTO}} sv\mbox{[}100000\mbox{]}, int size)
 \item 
-\mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} bool \mbox{\hyperlink{Proxy_8h_af1f0538f2064d29b0a0fa47724106957}{Write\+Orientation\+Proxy}} (const char $\ast$file\+Path, int object\+Id, \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1StateOrientationDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+State\+Orientation\+DTO}} so\mbox{[}100000\mbox{]}, int size)
+\mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} void \mbox{\hyperlink{Proxy_8h_aec8180716b9e86621181f82f38419c8f}{Read\+Ephemeris\+Proxy}} (\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Window\+DTO}} search\+Window, int observer\+Id, int target\+Id, const char $\ast$frame, const char $\ast$aberration, double step\+Size, \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1StateVectorDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+State\+Vector\+DTO}} state\+Vectors\mbox{[}10000\mbox{]})
+\item 
+\mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} bool \mbox{\hyperlink{Proxy_8h_af8fed4e7969e085725224db1cd8f23b7}{Write\+Orientation\+Proxy}} (const char $\ast$file\+Path, int object\+Id, \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1StateOrientationDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+State\+Orientation\+DTO}} so\mbox{[}10000\mbox{]}, int size)
+\item 
+\mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} void \mbox{\hyperlink{Proxy_8h_ad2cb321fd1aa8706954df5b92b3b9a19}{Read\+Orientation\+Proxy}} (\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Window\+DTO}} search\+Window, int spacecraft\+Id, double tolerance, const char $\ast$frame, double step\+Size, \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1StateOrientationDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+State\+Orientation\+DTO}} so\mbox{[}10000\mbox{]})
 \item 
 \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} void \mbox{\hyperlink{Proxy_8h_a53659fe236627b28005a1baae4c072ed}{Propagate\+Proxy}} (\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Scenario\+DTO}} \&scenario\+Dto)
 \item 
@@ -38,6 +42,10 @@
 \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} void \mbox{\hyperlink{Proxy_8h_ab9b8fb854911a9ffea45b39d30047442}{Find\+Windows\+On\+Illumination\+Constraint\+Proxy}} (\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Window\+DTO}} search\+Window, int observer\+Id, const char $\ast$illumination\+Source, int target\+Body, const char $\ast$fixed\+Frame, \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1GeodeticDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Geodetic\+DTO}} geodetic, const char $\ast$illumination\+Type, const char $\ast$relational\+Operator, double value, double adjust\+Value, const char $\ast$aberration, double step\+Size, const char $\ast$method, \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Window\+DTO}} windows\mbox{[}1000\mbox{]})
 \item 
 \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} void \mbox{\hyperlink{Proxy_8h_ad3695568d6bd15b6a4c74d9a10f8ea78}{Find\+Windows\+In\+Field\+Of\+View\+Constraint\+Proxy}} (\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Window\+DTO}} search\+Window, int observer\+Id, int instrument\+Id, int target\+Id, const char $\ast$target\+Frame, const char $\ast$target\+Shape, const char $\ast$aberration, double step\+Size, \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Window\+DTO}} windows\mbox{[}1000\mbox{]})
+\item 
+\mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} double \mbox{\hyperlink{Proxy_8h_a21e5be456b638ec478bbe753d51d4d82}{Convert\+TDBTo\+UTCProxy}} (double tdb)
+\item 
+\mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} double \mbox{\hyperlink{Proxy_8h_ab9c954c87940d8be415c2f8b7696ed15}{Convert\+UTCTo\+TDBProxy}} (double utc)
 \item 
 std\+::map$<$ int, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1CelestialBody}{IO\+::\+SDK\+::\+Body\+::\+Celestial\+Body}} $>$ $>$ \mbox{\hyperlink{Proxy_8h_ad45407eab2a930ba06148832da6fcbd5}{Build\+Celestial\+Bodies}} (\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Scenario\+DTO}} \&scenario)
 \item 
@@ -207,6 +215,34 @@ void \mbox{\hyperlink{Proxy_8h_a55b5f32b6b7ab7369fe7847e4ebc045b}{Read\+Maneuver
 \doxysubsubsection{\texorpdfstring{BuildZenithAttitude()}{BuildZenithAttitude()}}
 {\footnotesize\ttfamily void Build\+Zenith\+Attitude (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Scenario\+DTO}} \&}]{scenario\+Dto,  }\item[{\mbox{\hyperlink{classIO_1_1SDK_1_1Scenario}{IO\+::\+SDK\+::\+Scenario}} \&}]{scenario,  }\item[{std\+::map$<$ int, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase}{IO\+::\+SDK\+::\+Maneuvers\+::\+Maneuver\+Base}} $>$ $>$ \&}]{maneuvers }\end{DoxyParamCaption})}
 
+\mbox{\Hypertarget{Proxy_8h_a21e5be456b638ec478bbe753d51d4d82}\label{Proxy_8h_a21e5be456b638ec478bbe753d51d4d82}} 
+\index{Proxy.h@{Proxy.h}!ConvertTDBToUTCProxy@{ConvertTDBToUTCProxy}}
+\index{ConvertTDBToUTCProxy@{ConvertTDBToUTCProxy}!Proxy.h@{Proxy.h}}
+\doxysubsubsection{\texorpdfstring{ConvertTDBToUTCProxy()}{ConvertTDBToUTCProxy()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} double Convert\+TDBTo\+UTCProxy (\begin{DoxyParamCaption}\item[{double}]{tdb }\end{DoxyParamCaption})}
+
+Convert elapsed seconds from J2000 to UTC 
+\begin{DoxyParams}{Parameters}
+{\em tdb} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+\mbox{\Hypertarget{Proxy_8h_ab9c954c87940d8be415c2f8b7696ed15}\label{Proxy_8h_ab9c954c87940d8be415c2f8b7696ed15}} 
+\index{Proxy.h@{Proxy.h}!ConvertUTCToTDBProxy@{ConvertUTCToTDBProxy}}
+\index{ConvertUTCToTDBProxy@{ConvertUTCToTDBProxy}!Proxy.h@{Proxy.h}}
+\doxysubsubsection{\texorpdfstring{ConvertUTCToTDBProxy()}{ConvertUTCToTDBProxy()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} double Convert\+UTCTo\+TDBProxy (\begin{DoxyParamCaption}\item[{double}]{utc }\end{DoxyParamCaption})}
+
+Convert elapsed seconds from J2000 to tdb 
+\begin{DoxyParams}{Parameters}
+{\em utc} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
 \mbox{\Hypertarget{Proxy_8h_ad3695568d6bd15b6a4c74d9a10f8ea78}\label{Proxy_8h_ad3695568d6bd15b6a4c74d9a10f8ea78}} 
 \index{Proxy.h@{Proxy.h}!FindWindowsInFieldOfViewConstraintProxy@{FindWindowsInFieldOfViewConstraintProxy}}
 \index{FindWindowsInFieldOfViewConstraintProxy@{FindWindowsInFieldOfViewConstraintProxy}!Proxy.h@{Proxy.h}}
@@ -422,6 +458,29 @@ Propagate a scenario
 \doxysubsubsection{\texorpdfstring{ReadCombinedManeuverResult()}{ReadCombinedManeuverResult()}}
 {\footnotesize\ttfamily void Read\+Combined\+Maneuver\+Result (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Scenario\+DTO}} \&}]{scenario\+Dto,  }\item[{std\+::map$<$ int, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase}{IO\+::\+SDK\+::\+Maneuvers\+::\+Maneuver\+Base}} $>$ $>$ \&}]{maneuvers }\end{DoxyParamCaption})}
 
+\mbox{\Hypertarget{Proxy_8h_aec8180716b9e86621181f82f38419c8f}\label{Proxy_8h_aec8180716b9e86621181f82f38419c8f}} 
+\index{Proxy.h@{Proxy.h}!ReadEphemerisProxy@{ReadEphemerisProxy}}
+\index{ReadEphemerisProxy@{ReadEphemerisProxy}!Proxy.h@{Proxy.h}}
+\doxysubsubsection{\texorpdfstring{ReadEphemerisProxy()}{ReadEphemerisProxy()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} void Read\+Ephemeris\+Proxy (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Window\+DTO}}}]{search\+Window,  }\item[{int}]{observer\+Id,  }\item[{int}]{target\+Id,  }\item[{const char $\ast$}]{frame,  }\item[{const char $\ast$}]{aberration,  }\item[{double}]{step\+Size,  }\item[{\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1StateVectorDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+State\+Vector\+DTO}}}]{state\+Vectors\mbox{[}10000\mbox{]} }\end{DoxyParamCaption})}
+
+Read object ephemeris 
+\begin{DoxyParams}{Parameters}
+{\em search\+Window} & \\
+\hline
+{\em observer\+Id} & \\
+\hline
+{\em target\+Id} & \\
+\hline
+{\em frame} & \\
+\hline
+{\em aberration} & \\
+\hline
+{\em step\+Size} & \\
+\hline
+{\em state\+Vectors} & \\
+\hline
+\end{DoxyParams}
 \mbox{\Hypertarget{Proxy_8h_a55b5f32b6b7ab7369fe7847e4ebc045b}\label{Proxy_8h_a55b5f32b6b7ab7369fe7847e4ebc045b}} 
 \index{Proxy.h@{Proxy.h}!ReadManeuverResults@{ReadManeuverResults}}
 \index{ReadManeuverResults@{ReadManeuverResults}!Proxy.h@{Proxy.h}}
@@ -434,6 +493,27 @@ Propagate a scenario
 \doxysubsubsection{\texorpdfstring{ReadOrbitalPlaneManeuverResult()}{ReadOrbitalPlaneManeuverResult()}}
 {\footnotesize\ttfamily void Read\+Orbital\+Plane\+Maneuver\+Result (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Scenario\+DTO}} \&}]{scenario\+Dto,  }\item[{std\+::map$<$ int, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase}{IO\+::\+SDK\+::\+Maneuvers\+::\+Maneuver\+Base}} $>$ $>$ \&}]{maneuvers }\end{DoxyParamCaption})}
 
+\mbox{\Hypertarget{Proxy_8h_ad2cb321fd1aa8706954df5b92b3b9a19}\label{Proxy_8h_ad2cb321fd1aa8706954df5b92b3b9a19}} 
+\index{Proxy.h@{Proxy.h}!ReadOrientationProxy@{ReadOrientationProxy}}
+\index{ReadOrientationProxy@{ReadOrientationProxy}!Proxy.h@{Proxy.h}}
+\doxysubsubsection{\texorpdfstring{ReadOrientationProxy()}{ReadOrientationProxy()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} void Read\+Orientation\+Proxy (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Window\+DTO}}}]{search\+Window,  }\item[{int}]{spacecraft\+Id,  }\item[{double}]{tolerance,  }\item[{const char $\ast$}]{frame,  }\item[{double}]{step\+Size,  }\item[{\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1StateOrientationDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+State\+Orientation\+DTO}}}]{so\mbox{[}10000\mbox{]} }\end{DoxyParamCaption})}
+
+Read spacecraft orientation 
+\begin{DoxyParams}{Parameters}
+{\em search\+Window} & \\
+\hline
+{\em spacecraft\+Id} & \\
+\hline
+{\em tolerance} & \\
+\hline
+{\em frame} & \\
+\hline
+{\em step\+Size} & \\
+\hline
+{\em so} & \\
+\hline
+\end{DoxyParams}
 \mbox{\Hypertarget{Proxy_8h_aa7d09fd7d9d73216a3ee6020565d061e}\label{Proxy_8h_aa7d09fd7d9d73216a3ee6020565d061e}} 
 \index{Proxy.h@{Proxy.h}!ReadPerigeeManeuverResult@{ReadPerigeeManeuverResult}}
 \index{ReadPerigeeManeuverResult@{ReadPerigeeManeuverResult}!Proxy.h@{Proxy.h}}
@@ -494,11 +574,11 @@ Write ephemeris into binary file (spk)
 \begin{DoxyReturn}{Returns}
 
 \end{DoxyReturn}
-\mbox{\Hypertarget{Proxy_8h_af1f0538f2064d29b0a0fa47724106957}\label{Proxy_8h_af1f0538f2064d29b0a0fa47724106957}} 
+\mbox{\Hypertarget{Proxy_8h_af8fed4e7969e085725224db1cd8f23b7}\label{Proxy_8h_af8fed4e7969e085725224db1cd8f23b7}} 
 \index{Proxy.h@{Proxy.h}!WriteOrientationProxy@{WriteOrientationProxy}}
 \index{WriteOrientationProxy@{WriteOrientationProxy}!Proxy.h@{Proxy.h}}
 \doxysubsubsection{\texorpdfstring{WriteOrientationProxy()}{WriteOrientationProxy()}}
-{\footnotesize\ttfamily \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} bool Write\+Orientation\+Proxy (\begin{DoxyParamCaption}\item[{const char $\ast$}]{file\+Path,  }\item[{int}]{object\+Id,  }\item[{\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1StateOrientationDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+State\+Orientation\+DTO}}}]{so\mbox{[}100000\mbox{]},  }\item[{int}]{size }\end{DoxyParamCaption})}
+{\footnotesize\ttfamily \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} bool Write\+Orientation\+Proxy (\begin{DoxyParamCaption}\item[{const char $\ast$}]{file\+Path,  }\item[{int}]{object\+Id,  }\item[{\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1StateOrientationDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+State\+Orientation\+DTO}}}]{so\mbox{[}10000\mbox{]},  }\item[{int}]{size }\end{DoxyParamCaption})}
 
 Write orientation data into binary file (ck) 
 \begin{DoxyParams}{Parameters}
