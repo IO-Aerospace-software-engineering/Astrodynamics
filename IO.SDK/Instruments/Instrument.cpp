@@ -16,7 +16,6 @@
 #include <EllipticalInstrumentKernel.h>
 #include <RectangularInstrumentKernel.h>
 #include <SpiceUsr.h>
-#include <Builder.h>
 #include <StringHelpers.h>
 #include <GeometryFinder.h>
 

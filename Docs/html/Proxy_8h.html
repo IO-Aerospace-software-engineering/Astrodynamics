@@ -25,7 +25,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">IO-SDK<span id="projectnumber">&#160;0.5.x</span>
+   <div id="projectname">IO-SDK<span id="projectnumber">&#160;0.6.x</span>
    </div>
    <div id="projectbrief">Astrodynamics framework</div>
   </td>
@@ -108,8 +108,12 @@ Functions</h2></td></tr>
 <tr class="separator:a762431b7740df9d560ebe822564369f1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a329824aa5cb9474c5ad8ba77ba8ac569"><td class="memItemLeft" align="right" valign="top"><a class="el" href="Proxy_8h.html#a283b8fd63f96d196027ef6ad48c4cb85">MODULE_API</a> bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="Proxy_8h.html#a329824aa5cb9474c5ad8ba77ba8ac569">WriteEphemerisProxy</a> (const char *filePath, int objectId, <a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1StateVectorDTO.html">IO::SDK::API::DTO::StateVectorDTO</a> sv[100000], int size)</td></tr>
 <tr class="separator:a329824aa5cb9474c5ad8ba77ba8ac569"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af1f0538f2064d29b0a0fa47724106957"><td class="memItemLeft" align="right" valign="top"><a class="el" href="Proxy_8h.html#a283b8fd63f96d196027ef6ad48c4cb85">MODULE_API</a> bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="Proxy_8h.html#af1f0538f2064d29b0a0fa47724106957">WriteOrientationProxy</a> (const char *filePath, int objectId, <a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1StateOrientationDTO.html">IO::SDK::API::DTO::StateOrientationDTO</a> so[100000], int size)</td></tr>
-<tr class="separator:af1f0538f2064d29b0a0fa47724106957"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aec8180716b9e86621181f82f38419c8f"><td class="memItemLeft" align="right" valign="top"><a class="el" href="Proxy_8h.html#a283b8fd63f96d196027ef6ad48c4cb85">MODULE_API</a> void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="Proxy_8h.html#aec8180716b9e86621181f82f38419c8f">ReadEphemerisProxy</a> (<a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO.html">IO::SDK::API::DTO::WindowDTO</a> searchWindow, int observerId, int targetId, const char *frame, const char *aberration, double stepSize, <a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1StateVectorDTO.html">IO::SDK::API::DTO::StateVectorDTO</a> stateVectors[10000])</td></tr>
+<tr class="separator:aec8180716b9e86621181f82f38419c8f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af8fed4e7969e085725224db1cd8f23b7"><td class="memItemLeft" align="right" valign="top"><a class="el" href="Proxy_8h.html#a283b8fd63f96d196027ef6ad48c4cb85">MODULE_API</a> bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="Proxy_8h.html#af8fed4e7969e085725224db1cd8f23b7">WriteOrientationProxy</a> (const char *filePath, int objectId, <a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1StateOrientationDTO.html">IO::SDK::API::DTO::StateOrientationDTO</a> so[10000], int size)</td></tr>
+<tr class="separator:af8fed4e7969e085725224db1cd8f23b7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad2cb321fd1aa8706954df5b92b3b9a19"><td class="memItemLeft" align="right" valign="top"><a class="el" href="Proxy_8h.html#a283b8fd63f96d196027ef6ad48c4cb85">MODULE_API</a> void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="Proxy_8h.html#ad2cb321fd1aa8706954df5b92b3b9a19">ReadOrientationProxy</a> (<a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO.html">IO::SDK::API::DTO::WindowDTO</a> searchWindow, int spacecraftId, double tolerance, const char *frame, double stepSize, <a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1StateOrientationDTO.html">IO::SDK::API::DTO::StateOrientationDTO</a> so[10000])</td></tr>
+<tr class="separator:ad2cb321fd1aa8706954df5b92b3b9a19"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a53659fe236627b28005a1baae4c072ed"><td class="memItemLeft" align="right" valign="top"><a class="el" href="Proxy_8h.html#a283b8fd63f96d196027ef6ad48c4cb85">MODULE_API</a> void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="Proxy_8h.html#a53659fe236627b28005a1baae4c072ed">PropagateProxy</a> (<a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO.html">IO::SDK::API::DTO::ScenarioDTO</a> &amp;scenarioDto)</td></tr>
 <tr class="separator:a53659fe236627b28005a1baae4c072ed"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1d806e18515093a7f25ad338020ec56d"><td class="memItemLeft" align="right" valign="top"><a class="el" href="Proxy_8h.html#a283b8fd63f96d196027ef6ad48c4cb85">MODULE_API</a> void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="Proxy_8h.html#a1d806e18515093a7f25ad338020ec56d">LaunchProxy</a> (<a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1LaunchDTO.html">IO::SDK::API::DTO::LaunchDTO</a> &amp;launchDto)</td></tr>
@@ -130,6 +134,10 @@ Functions</h2></td></tr>
 <tr class="separator:ab9b8fb854911a9ffea45b39d30047442"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad3695568d6bd15b6a4c74d9a10f8ea78"><td class="memItemLeft" align="right" valign="top"><a class="el" href="Proxy_8h.html#a283b8fd63f96d196027ef6ad48c4cb85">MODULE_API</a> void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="Proxy_8h.html#ad3695568d6bd15b6a4c74d9a10f8ea78">FindWindowsInFieldOfViewConstraintProxy</a> (<a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO.html">IO::SDK::API::DTO::WindowDTO</a> searchWindow, int observerId, int instrumentId, int targetId, const char *targetFrame, const char *targetShape, const char *aberration, double stepSize, <a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO.html">IO::SDK::API::DTO::WindowDTO</a> windows[1000])</td></tr>
 <tr class="separator:ad3695568d6bd15b6a4c74d9a10f8ea78"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a21e5be456b638ec478bbe753d51d4d82"><td class="memItemLeft" align="right" valign="top"><a class="el" href="Proxy_8h.html#a283b8fd63f96d196027ef6ad48c4cb85">MODULE_API</a> double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="Proxy_8h.html#a21e5be456b638ec478bbe753d51d4d82">ConvertTDBToUTCProxy</a> (double tdb)</td></tr>
+<tr class="separator:a21e5be456b638ec478bbe753d51d4d82"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab9c954c87940d8be415c2f8b7696ed15"><td class="memItemLeft" align="right" valign="top"><a class="el" href="Proxy_8h.html#a283b8fd63f96d196027ef6ad48c4cb85">MODULE_API</a> double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="Proxy_8h.html#ab9c954c87940d8be415c2f8b7696ed15">ConvertUTCToTDBProxy</a> (double utc)</td></tr>
+<tr class="separator:ab9c954c87940d8be415c2f8b7696ed15"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad45407eab2a930ba06148832da6fcbd5"><td class="memItemLeft" align="right" valign="top">std::map&lt; int, std::shared_ptr&lt; <a class="el" href="classIO_1_1SDK_1_1Body_1_1CelestialBody.html">IO::SDK::Body::CelestialBody</a> &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="Proxy_8h.html#ad45407eab2a930ba06148832da6fcbd5">BuildCelestialBodies</a> (<a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO.html">IO::SDK::API::DTO::ScenarioDTO</a> &amp;scenario)</td></tr>
 <tr class="separator:ad45407eab2a930ba06148832da6fcbd5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac6213574be074a2bf1b4f87f2818d76a"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="Proxy_8h.html#ac6213574be074a2bf1b4f87f2818d76a">BuildPayload</a> (const <a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO.html">IO::SDK::API::DTO::ScenarioDTO</a> &amp;scenarioDto, <a class="el" href="classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft.html">IO::SDK::Body::Spacecraft::Spacecraft</a> &amp;spacecraft)</td></tr>
@@ -774,6 +782,56 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
+
+</div>
+</div>
+<a id="a21e5be456b638ec478bbe753d51d4d82" name="a21e5be456b638ec478bbe753d51d4d82"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a21e5be456b638ec478bbe753d51d4d82">&#9670;&nbsp;</a></span>ConvertTDBToUTCProxy()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="Proxy_8h.html#a283b8fd63f96d196027ef6ad48c4cb85">MODULE_API</a> double ConvertTDBToUTCProxy </td>
+          <td>(</td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>tdb</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p >Convert elapsed seconds from J2000 to UTC </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">tdb</td><td></td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd></dd></dl>
+
+</div>
+</div>
+<a id="ab9c954c87940d8be415c2f8b7696ed15" name="ab9c954c87940d8be415c2f8b7696ed15"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab9c954c87940d8be415c2f8b7696ed15">&#9670;&nbsp;</a></span>ConvertUTCToTDBProxy()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="Proxy_8h.html#a283b8fd63f96d196027ef6ad48c4cb85">MODULE_API</a> double ConvertUTCToTDBProxy </td>
+          <td>(</td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>utc</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p >Convert elapsed seconds from J2000 to tdb </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">utc</td><td></td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd></dd></dl>
 
 </div>
 </div>
@@ -1441,6 +1499,76 @@ Functions</h2></td></tr>
 
 </div>
 </div>
+<a id="aec8180716b9e86621181f82f38419c8f" name="aec8180716b9e86621181f82f38419c8f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aec8180716b9e86621181f82f38419c8f">&#9670;&nbsp;</a></span>ReadEphemerisProxy()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="Proxy_8h.html#a283b8fd63f96d196027ef6ad48c4cb85">MODULE_API</a> void ReadEphemerisProxy </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO.html">IO::SDK::API::DTO::WindowDTO</a>&#160;</td>
+          <td class="paramname"><em>searchWindow</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>observerId</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>targetId</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>frame</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>aberration</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>stepSize</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1StateVectorDTO.html">IO::SDK::API::DTO::StateVectorDTO</a>&#160;</td>
+          <td class="paramname"><em>stateVectors</em>[10000]&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p >Read object ephemeris </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">searchWindow</td><td></td></tr>
+    <tr><td class="paramname">observerId</td><td></td></tr>
+    <tr><td class="paramname">targetId</td><td></td></tr>
+    <tr><td class="paramname">frame</td><td></td></tr>
+    <tr><td class="paramname">aberration</td><td></td></tr>
+    <tr><td class="paramname">stepSize</td><td></td></tr>
+    <tr><td class="paramname">stateVectors</td><td></td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
 <a id="a55b5f32b6b7ab7369fe7847e4ebc045b" name="a55b5f32b6b7ab7369fe7847e4ebc045b"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a55b5f32b6b7ab7369fe7847e4ebc045b">&#9670;&nbsp;</a></span>ReadManeuverResults()</h2>
 
@@ -1494,6 +1622,69 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
+
+</div>
+</div>
+<a id="ad2cb321fd1aa8706954df5b92b3b9a19" name="ad2cb321fd1aa8706954df5b92b3b9a19"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad2cb321fd1aa8706954df5b92b3b9a19">&#9670;&nbsp;</a></span>ReadOrientationProxy()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="Proxy_8h.html#a283b8fd63f96d196027ef6ad48c4cb85">MODULE_API</a> void ReadOrientationProxy </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO.html">IO::SDK::API::DTO::WindowDTO</a>&#160;</td>
+          <td class="paramname"><em>searchWindow</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>spacecraftId</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>tolerance</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>frame</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>stepSize</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1StateOrientationDTO.html">IO::SDK::API::DTO::StateOrientationDTO</a>&#160;</td>
+          <td class="paramname"><em>so</em>[10000]&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p >Read spacecraft orientation </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">searchWindow</td><td></td></tr>
+    <tr><td class="paramname">spacecraftId</td><td></td></tr>
+    <tr><td class="paramname">tolerance</td><td></td></tr>
+    <tr><td class="paramname">frame</td><td></td></tr>
+    <tr><td class="paramname">stepSize</td><td></td></tr>
+    <tr><td class="paramname">so</td><td></td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
@@ -1653,8 +1844,8 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="af1f0538f2064d29b0a0fa47724106957" name="af1f0538f2064d29b0a0fa47724106957"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#af1f0538f2064d29b0a0fa47724106957">&#9670;&nbsp;</a></span>WriteOrientationProxy()</h2>
+<a id="af8fed4e7969e085725224db1cd8f23b7" name="af8fed4e7969e085725224db1cd8f23b7"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af8fed4e7969e085725224db1cd8f23b7">&#9670;&nbsp;</a></span>WriteOrientationProxy()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1675,7 +1866,7 @@ Functions</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype"><a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1StateOrientationDTO.html">IO::SDK::API::DTO::StateOrientationDTO</a>&#160;</td>
-          <td class="paramname"><em>so</em>[100000], </td>
+          <td class="paramname"><em>so</em>[10000], </td>
         </tr>
         <tr>
           <td class="paramkey"></td>

@@ -19,6 +19,8 @@ var Proxy_8h =
     [ "BuildProgradeAttitude", "Proxy_8h.html#ad109937e075918a4169dbe2876ac2e30", null ],
     [ "BuildRetrogradeAttitude", "Proxy_8h.html#a85720c91750cd873d1dbf050fa3d2a18", null ],
     [ "BuildZenithAttitude", "Proxy_8h.html#a70191d395a750d5ca92dd638564d35b2", null ],
+    [ "ConvertTDBToUTCProxy", "Proxy_8h.html#a21e5be456b638ec478bbe753d51d4d82", null ],
+    [ "ConvertUTCToTDBProxy", "Proxy_8h.html#ab9c954c87940d8be415c2f8b7696ed15", null ],
     [ "FindWindowsInFieldOfViewConstraintProxy", "Proxy_8h.html#ad3695568d6bd15b6a4c74d9a10f8ea78", null ],
     [ "FindWindowsOnCoordinateConstraintProxy", "Proxy_8h.html#a41859ca381c6d0feef334aea372d8f78", null ],
     [ "FindWindowsOnDistanceConstraintProxy", "Proxy_8h.html#a6ec1cf8afcc6842627d5f3fcab1f83ef", null ],
@@ -31,12 +33,14 @@ var Proxy_8h =
     [ "ReadApogeeManeuverResult", "Proxy_8h.html#a466bec93a33dfabd6a60722c8edf333f", null ],
     [ "ReadApsidalAlignmentManeuverResult", "Proxy_8h.html#a274e1f3865453efe582b74fce0b657a1", null ],
     [ "ReadCombinedManeuverResult", "Proxy_8h.html#a29b830927e678eac49585d2c12370135", null ],
+    [ "ReadEphemerisProxy", "Proxy_8h.html#aec8180716b9e86621181f82f38419c8f", null ],
     [ "ReadManeuverResults", "Proxy_8h.html#a55b5f32b6b7ab7369fe7847e4ebc045b", null ],
     [ "ReadOrbitalPlaneManeuverResult", "Proxy_8h.html#a717c7d3ca5a48e85b637148eb0262df8", null ],
+    [ "ReadOrientationProxy", "Proxy_8h.html#ad2cb321fd1aa8706954df5b92b3b9a19", null ],
     [ "ReadPerigeeManeuverResult", "Proxy_8h.html#aa7d09fd7d9d73216a3ee6020565d061e", null ],
     [ "ReadPhasingManeuverResult", "Proxy_8h.html#a6c39e673976b509ad3fa42613ffa38d7", null ],
     [ "TDBToStringProxy", "Proxy_8h.html#a866cf6da600090959c6dc47000e75cc4", null ],
     [ "UTCToStringProxy", "Proxy_8h.html#a8f3164fd10cfa0827e25add2106a71c7", null ],
     [ "WriteEphemerisProxy", "Proxy_8h.html#a329824aa5cb9474c5ad8ba77ba8ac569", null ],
-    [ "WriteOrientationProxy", "Proxy_8h.html#af1f0538f2064d29b0a0fa47724106957", null ]
+    [ "WriteOrientationProxy", "Proxy_8h.html#af8fed4e7969e085725224db1cd8f23b7", null ]
 ];
