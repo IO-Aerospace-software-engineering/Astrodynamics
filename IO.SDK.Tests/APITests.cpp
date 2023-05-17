@@ -69,8 +69,8 @@ TEST(API, SpacecraftPropagation)
 {
     IO::SDK::API::DTO::ScenarioDTO scenario{};
     scenario.Name = "scenatiosites";
-    scenario.Window.start = 668085555.829810;
-    scenario.Window.end = 668174400.000000;
+    scenario.Window.start = 668085625.015240;
+    scenario.Window.end = 668174469.185440;
     scenario.CelestialBodies[0].id = 10;
     scenario.CelestialBodies[1].id = 399;
     scenario.CelestialBodies[1].centerOfMotionId = 10;
@@ -128,8 +128,8 @@ TEST(API, SpacecraftPropagation)
             std::chrono::duration<double>(scenario.Spacecraft.orbitalPlaneChangingManeuvers[0].thrustWindow.start));
     IO::SDK::Time::TDB tdbEnd(
             std::chrono::duration<double>(scenario.Spacecraft.orbitalPlaneChangingManeuvers[0].thrustWindow.end));
-    ASSERT_STREQ("2021-03-04 00:31:35.852044 (TDB)", tdbStart.ToString().c_str());
-    ASSERT_STREQ("2021-03-04 00:31:44.178429 (TDB)", tdbEnd.ToString().c_str());
+    ASSERT_STREQ("2021-03-04 00:31:35.852047 (TDB)", tdbStart.ToString().c_str());
+    ASSERT_STREQ("2021-03-04 00:31:44.178432 (TDB)", tdbEnd.ToString().c_str());
 }
 
 TEST(API, FindWindowsOnCoordinateConstraintProxy)
@@ -279,8 +279,8 @@ TEST(API, ReadSpacecraftOrientationProxy)
 {
     auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399); //GEOPHYSICAL PROPERTIES provided by JPL
 
-    auto startDate = IO::SDK::Time::TDB("2021-01-01T13:00:00");
-    auto endDate = IO::SDK::Time::TDB("2021-01-01T13:01:00");
+    auto startDate = IO::SDK::Time::TDB("2021-01-01 13:00:00 (TDB)");
+    auto endDate = IO::SDK::Time::TDB("2021-01-01 13:01:00 (TDB)");
 
     std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams1 = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth,
                                                                                                                                               IO::SDK::Math::Vector3D(6678000.0,
@@ -334,4 +334,14 @@ TEST(API, ReadSpacecraftOrientationProxyException)
 
     IO::SDK::API::DTO::StateOrientationDTO so[10000];
     ASSERT_THROW(ReadOrientationProxy(searchWindow, -172, 10.0 * std::pow(2.0, ClockAccuracy), "J2000", 1.0, so), IO::SDK::Exception::InvalidArgumentException);
+}
+
+TEST(API, ToTDB)
+{
+    ASSERT_DOUBLE_EQ(64.183927284669423, ConvertUTCToTDBProxy(0.0));
+}
+
+TEST(API, ToUTC)
+{
+    ASSERT_DOUBLE_EQ(-64.183927263223808, ConvertTDBToUTCProxy(0.0));
 }

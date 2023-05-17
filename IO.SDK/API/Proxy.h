@@ -208,6 +208,19 @@ FindWindowsInFieldOfViewConstraintProxy(IO::SDK::API::DTO::WindowDTO searchWindo
                                         int targetId, const char *targetFrame, const char *targetShape,
                                         const char *aberration, double stepSize,
                                         IO::SDK::API::DTO::WindowDTO windows[1000]);
+/**
+ * Convert elapsed seconds from J2000 to UTC
+ * @param tdb
+ * @return
+ */
+MODULE_API double ConvertTDBToUTCProxy(double tdb);
+
+/**
+ * Convert elapsed seconds from J2000 to tdb
+ * @param utc
+ * @return
+ */
+MODULE_API double ConvertUTCToTDBProxy(double utc);
 #ifdef __cplusplus
 }
 #endif
