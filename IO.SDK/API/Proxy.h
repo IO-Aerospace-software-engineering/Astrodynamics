@@ -3,6 +3,7 @@
 #include "ManeuverBase.h"
 #include "Scenario.h"
 
+#pragma region Proxy
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -224,6 +225,7 @@ MODULE_API double ConvertUTCToTDBProxy(double utc);
 #ifdef __cplusplus
 }
 #endif
+#pragma endregion
 
 #ifndef PROXY_H
 #define PROXY_H
