@@ -106,7 +106,6 @@ $(document).ready(function(){initNavTree('Proxy_8cpp.html',''); initResizable();
 <code>#include &lt;<a class="el" href="Launch_8h_source.html">Launch.h</a>&gt;</code><br />
 <code>#include &lt;<a class="el" href="KernelsLoader_8h_source.html">KernelsLoader.h</a>&gt;</code><br />
 <code>#include &lt;iostream&gt;</code><br />
-<code>#include &lt;<a class="el" href="SpacecraftClockKernel_8h_source.html">SpacecraftClockKernel.h</a>&gt;</code><br />
 </div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
@@ -114,6 +113,34 @@ Functions</h2></td></tr>
 <tr class="separator:a971a5440d542fbeee8d215f22dc2e9d8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2781544b349f67f689bb0b6b9e643193"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="Proxy_8cpp.html#a2781544b349f67f689bb0b6b9e643193">PropagateProxy</a> (<a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO.html">IO::SDK::API::DTO::ScenarioDTO</a> &amp;scenarioDto)</td></tr>
 <tr class="separator:a2781544b349f67f689bb0b6b9e643193"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1bd1683bf72804ee2be2dfe91e4bb337"><td class="memItemLeft" align="right" valign="top">const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="Proxy_8cpp.html#a1bd1683bf72804ee2be2dfe91e4bb337">GetSpiceVersionProxy</a> ()</td></tr>
+<tr class="separator:a1bd1683bf72804ee2be2dfe91e4bb337"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a54a9e4a083c0856d060fd0a3daa197d1"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="Proxy_8cpp.html#a54a9e4a083c0856d060fd0a3daa197d1">WriteEphemerisProxy</a> (const char *filePath, int objectId, <a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1StateVectorDTO.html">IO::SDK::API::DTO::StateVectorDTO</a> *sv, int size)</td></tr>
+<tr class="separator:a54a9e4a083c0856d060fd0a3daa197d1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a185ec96428eb2855be9209d18f0aa667"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="Proxy_8cpp.html#a185ec96428eb2855be9209d18f0aa667">ReadOrientationProxy</a> (<a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO.html">IO::SDK::API::DTO::WindowDTO</a> searchWindow, int spacecraftId, double tolerance, const char *frame, double stepSize, <a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1StateOrientationDTO.html">IO::SDK::API::DTO::StateOrientationDTO</a> *so)</td></tr>
+<tr class="separator:a185ec96428eb2855be9209d18f0aa667"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a43dae27d944ca86a60f4259fcd7a3ac3"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="Proxy_8cpp.html#a43dae27d944ca86a60f4259fcd7a3ac3">LoadKernelsProxy</a> (const char *path)</td></tr>
+<tr class="separator:a43dae27d944ca86a60f4259fcd7a3ac3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0ea299e073a26b6daf00c819536eae1a"><td class="memItemLeft" align="right" valign="top">const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="Proxy_8cpp.html#a0ea299e073a26b6daf00c819536eae1a">TDBToStringProxy</a> (double secondsFromJ2000)</td></tr>
+<tr class="separator:a0ea299e073a26b6daf00c819536eae1a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af1e6f2f2b5080a1c1fdc85bbe77e1810"><td class="memItemLeft" align="right" valign="top">const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="Proxy_8cpp.html#af1e6f2f2b5080a1c1fdc85bbe77e1810">UTCToStringProxy</a> (double secondsFromJ2000)</td></tr>
+<tr class="separator:af1e6f2f2b5080a1c1fdc85bbe77e1810"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a95a2609c82f64355087f47bac78df473"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="Proxy_8cpp.html#a95a2609c82f64355087f47bac78df473">ReadEphemerisProxy</a> (<a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO.html">IO::SDK::API::DTO::WindowDTO</a> searchWindow, int observerId, int targetId, const char *frame, const char *aberration, double stepSize, <a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1StateVectorDTO.html">IO::SDK::API::DTO::StateVectorDTO</a> *stateVectors)</td></tr>
+<tr class="separator:a95a2609c82f64355087f47bac78df473"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a750f7521b8b7b08bb24f54959ddca8f7"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="Proxy_8cpp.html#a750f7521b8b7b08bb24f54959ddca8f7">FindWindowsOnDistanceConstraintProxy</a> (<a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO.html">IO::SDK::API::DTO::WindowDTO</a> searchWindow, int observerId, int targetId, const char *relationalOperator, double value, const char *aberration, double stepSize, <a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO.html">IO::SDK::API::DTO::WindowDTO</a> windows[1000])</td></tr>
+<tr class="separator:a750f7521b8b7b08bb24f54959ddca8f7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7c977c599130c9d2a181b12f0ebb564d"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="Proxy_8cpp.html#a7c977c599130c9d2a181b12f0ebb564d">FindWindowsOnOccultationConstraintProxy</a> (<a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO.html">IO::SDK::API::DTO::WindowDTO</a> searchWindow, int observerId, int targetId, const char *targetFrame, const char *targetShape, int frontBodyId, const char *frontFrame, const char *frontShape, const char *occultationType, const char *aberration, double stepSize, <a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO.html">IO::SDK::API::DTO::WindowDTO</a> *windows)</td></tr>
+<tr class="separator:a7c977c599130c9d2a181b12f0ebb564d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8019b2f5a5e726c750887a14d6897bba"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="Proxy_8cpp.html#a8019b2f5a5e726c750887a14d6897bba">FindWindowsOnCoordinateConstraintProxy</a> (<a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO.html">IO::SDK::API::DTO::WindowDTO</a> searchWindow, int observerId, int targetId, const char *frame, const char *coordinateSystem, const char *coordinate, const char *relationalOperator, double value, double adjustValue, const char *aberration, double stepSize, <a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO.html">IO::SDK::API::DTO::WindowDTO</a> *windows)</td></tr>
+<tr class="separator:a8019b2f5a5e726c750887a14d6897bba"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a19c45f4ab6be6be3cd4c8d45a1106cdb"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="Proxy_8cpp.html#a19c45f4ab6be6be3cd4c8d45a1106cdb">FindWindowsOnIlluminationConstraintProxy</a> (<a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO.html">IO::SDK::API::DTO::WindowDTO</a> searchWindow, int observerId, const char *illuminationSource, int targetBody, const char *fixedFrame, <a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1GeodeticDTO.html">IO::SDK::API::DTO::GeodeticDTO</a> geodetic, const char *illuminationType, const char *relationalOperator, double value, double adjustValue, const char *aberration, double stepSize, const char *method, <a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO.html">IO::SDK::API::DTO::WindowDTO</a> *windows)</td></tr>
+<tr class="separator:a19c45f4ab6be6be3cd4c8d45a1106cdb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a37b6c558397b63606bcd50c199a0d2fe"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="Proxy_8cpp.html#a37b6c558397b63606bcd50c199a0d2fe">FindWindowsInFieldOfViewConstraintProxy</a> (<a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO.html">IO::SDK::API::DTO::WindowDTO</a> searchWindow, int observerId, int instrumentId, int targetId, const char *targetFrame, const char *targetShape, const char *aberration, double stepSize, <a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO.html">IO::SDK::API::DTO::WindowDTO</a> *windows)</td></tr>
+<tr class="separator:a37b6c558397b63606bcd50c199a0d2fe"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2fae52dc56d1098cf155b0a49a04cb25"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="Proxy_8cpp.html#a2fae52dc56d1098cf155b0a49a04cb25">ConvertTDBToUTCProxy</a> (double tdb)</td></tr>
+<tr class="separator:a2fae52dc56d1098cf155b0a49a04cb25"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4fca32d3c594d7677fcadc021102a781"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="Proxy_8cpp.html#a4fca32d3c594d7677fcadc021102a781">ConvertUTCToTDBProxy</a> (double utc)</td></tr>
+<tr class="separator:a4fca32d3c594d7677fcadc021102a781"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a55b5f32b6b7ab7369fe7847e4ebc045b"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="Proxy_8cpp.html#a55b5f32b6b7ab7369fe7847e4ebc045b">ReadManeuverResults</a> (<a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO.html">IO::SDK::API::DTO::ScenarioDTO</a> &amp;scenarioDto, std::map&lt; int, std::shared_ptr&lt; <a class="el" href="classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase.html">IO::SDK::Maneuvers::ManeuverBase</a> &gt; &gt; &amp;maneuvers)</td></tr>
 <tr class="separator:a55b5f32b6b7ab7369fe7847e4ebc045b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6c39e673976b509ad3fa42613ffa38d7"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="Proxy_8cpp.html#a6c39e673976b509ad3fa42613ffa38d7">ReadPhasingManeuverResult</a> (<a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO.html">IO::SDK::API::DTO::ScenarioDTO</a> &amp;scenarioDto, std::map&lt; int, std::shared_ptr&lt; <a class="el" href="classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase.html">IO::SDK::Maneuvers::ManeuverBase</a> &gt; &gt; &amp;maneuvers)</td></tr>
@@ -162,36 +189,6 @@ Functions</h2></td></tr>
 <tr class="separator:a389131e56e754d5a3578f009c8bbab91"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a70191d395a750d5ca92dd638564d35b2"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="Proxy_8cpp.html#a70191d395a750d5ca92dd638564d35b2">BuildZenithAttitude</a> (<a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO.html">IO::SDK::API::DTO::ScenarioDTO</a> &amp;scenarioDto, <a class="el" href="classIO_1_1SDK_1_1Scenario.html">IO::SDK::Scenario</a> &amp;scenario, std::map&lt; int, std::shared_ptr&lt; <a class="el" href="classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase.html">IO::SDK::Maneuvers::ManeuverBase</a> &gt; &gt; &amp;maneuvers)</td></tr>
 <tr class="separator:a70191d395a750d5ca92dd638564d35b2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1bd1683bf72804ee2be2dfe91e4bb337"><td class="memItemLeft" align="right" valign="top">const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="Proxy_8cpp.html#a1bd1683bf72804ee2be2dfe91e4bb337">GetSpiceVersionProxy</a> ()</td></tr>
-<tr class="separator:a1bd1683bf72804ee2be2dfe91e4bb337"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a54a9e4a083c0856d060fd0a3daa197d1"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="Proxy_8cpp.html#a54a9e4a083c0856d060fd0a3daa197d1">WriteEphemerisProxy</a> (const char *filePath, int objectId, <a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1StateVectorDTO.html">IO::SDK::API::DTO::StateVectorDTO</a> *sv, int size)</td></tr>
-<tr class="separator:a54a9e4a083c0856d060fd0a3daa197d1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1dfd4b544864698af36d7f349d75a682"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="Proxy_8cpp.html#a1dfd4b544864698af36d7f349d75a682">WriteOrientationProxy</a> (const char *filePath, int objectId, int spacecraftFrameId, <a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1StateOrientationDTO.html">IO::SDK::API::DTO::StateOrientationDTO</a> *so, int size)</td></tr>
-<tr class="separator:a1dfd4b544864698af36d7f349d75a682"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a185ec96428eb2855be9209d18f0aa667"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="Proxy_8cpp.html#a185ec96428eb2855be9209d18f0aa667">ReadOrientationProxy</a> (<a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO.html">IO::SDK::API::DTO::WindowDTO</a> searchWindow, int spacecraftId, double tolerance, const char *frame, double stepSize, <a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1StateOrientationDTO.html">IO::SDK::API::DTO::StateOrientationDTO</a> *so)</td></tr>
-<tr class="separator:a185ec96428eb2855be9209d18f0aa667"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a43dae27d944ca86a60f4259fcd7a3ac3"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="Proxy_8cpp.html#a43dae27d944ca86a60f4259fcd7a3ac3">LoadKernelsProxy</a> (const char *path)</td></tr>
-<tr class="separator:a43dae27d944ca86a60f4259fcd7a3ac3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0ea299e073a26b6daf00c819536eae1a"><td class="memItemLeft" align="right" valign="top">const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="Proxy_8cpp.html#a0ea299e073a26b6daf00c819536eae1a">TDBToStringProxy</a> (double secondsFromJ2000)</td></tr>
-<tr class="separator:a0ea299e073a26b6daf00c819536eae1a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af1e6f2f2b5080a1c1fdc85bbe77e1810"><td class="memItemLeft" align="right" valign="top">const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="Proxy_8cpp.html#af1e6f2f2b5080a1c1fdc85bbe77e1810">UTCToStringProxy</a> (double secondsFromJ2000)</td></tr>
-<tr class="separator:af1e6f2f2b5080a1c1fdc85bbe77e1810"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a95a2609c82f64355087f47bac78df473"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="Proxy_8cpp.html#a95a2609c82f64355087f47bac78df473">ReadEphemerisProxy</a> (<a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO.html">IO::SDK::API::DTO::WindowDTO</a> searchWindow, int observerId, int targetId, const char *frame, const char *aberration, double stepSize, <a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1StateVectorDTO.html">IO::SDK::API::DTO::StateVectorDTO</a> *stateVectors)</td></tr>
-<tr class="separator:a95a2609c82f64355087f47bac78df473"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a750f7521b8b7b08bb24f54959ddca8f7"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="Proxy_8cpp.html#a750f7521b8b7b08bb24f54959ddca8f7">FindWindowsOnDistanceConstraintProxy</a> (<a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO.html">IO::SDK::API::DTO::WindowDTO</a> searchWindow, int observerId, int targetId, const char *relationalOperator, double value, const char *aberration, double stepSize, <a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO.html">IO::SDK::API::DTO::WindowDTO</a> windows[1000])</td></tr>
-<tr class="separator:a750f7521b8b7b08bb24f54959ddca8f7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7c977c599130c9d2a181b12f0ebb564d"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="Proxy_8cpp.html#a7c977c599130c9d2a181b12f0ebb564d">FindWindowsOnOccultationConstraintProxy</a> (<a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO.html">IO::SDK::API::DTO::WindowDTO</a> searchWindow, int observerId, int targetId, const char *targetFrame, const char *targetShape, int frontBodyId, const char *frontFrame, const char *frontShape, const char *occultationType, const char *aberration, double stepSize, <a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO.html">IO::SDK::API::DTO::WindowDTO</a> *windows)</td></tr>
-<tr class="separator:a7c977c599130c9d2a181b12f0ebb564d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8019b2f5a5e726c750887a14d6897bba"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="Proxy_8cpp.html#a8019b2f5a5e726c750887a14d6897bba">FindWindowsOnCoordinateConstraintProxy</a> (<a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO.html">IO::SDK::API::DTO::WindowDTO</a> searchWindow, int observerId, int targetId, const char *frame, const char *coordinateSystem, const char *coordinate, const char *relationalOperator, double value, double adjustValue, const char *aberration, double stepSize, <a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO.html">IO::SDK::API::DTO::WindowDTO</a> *windows)</td></tr>
-<tr class="separator:a8019b2f5a5e726c750887a14d6897bba"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a19c45f4ab6be6be3cd4c8d45a1106cdb"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="Proxy_8cpp.html#a19c45f4ab6be6be3cd4c8d45a1106cdb">FindWindowsOnIlluminationConstraintProxy</a> (<a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO.html">IO::SDK::API::DTO::WindowDTO</a> searchWindow, int observerId, const char *illuminationSource, int targetBody, const char *fixedFrame, <a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1GeodeticDTO.html">IO::SDK::API::DTO::GeodeticDTO</a> geodetic, const char *illuminationType, const char *relationalOperator, double value, double adjustValue, const char *aberration, double stepSize, const char *method, <a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO.html">IO::SDK::API::DTO::WindowDTO</a> *windows)</td></tr>
-<tr class="separator:a19c45f4ab6be6be3cd4c8d45a1106cdb"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a37b6c558397b63606bcd50c199a0d2fe"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="Proxy_8cpp.html#a37b6c558397b63606bcd50c199a0d2fe">FindWindowsInFieldOfViewConstraintProxy</a> (<a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO.html">IO::SDK::API::DTO::WindowDTO</a> searchWindow, int observerId, int instrumentId, int targetId, const char *targetFrame, const char *targetShape, const char *aberration, double stepSize, <a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO.html">IO::SDK::API::DTO::WindowDTO</a> *windows)</td></tr>
-<tr class="separator:a37b6c558397b63606bcd50c199a0d2fe"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2fae52dc56d1098cf155b0a49a04cb25"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="Proxy_8cpp.html#a2fae52dc56d1098cf155b0a49a04cb25">ConvertTDBToUTCProxy</a> (double tdb)</td></tr>
-<tr class="separator:a2fae52dc56d1098cf155b0a49a04cb25"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4fca32d3c594d7677fcadc021102a781"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="Proxy_8cpp.html#a4fca32d3c594d7677fcadc021102a781">ConvertUTCToTDBProxy</a> (double utc)</td></tr>
-<tr class="separator:a4fca32d3c594d7677fcadc021102a781"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Function Documentation</h2>
 <a id="a7486ed1a8282bf3a560293bfb277999f" name="a7486ed1a8282bf3a560293bfb277999f"></a>
@@ -1704,52 +1701,6 @@ Functions</h2></td></tr>
           <td></td>
           <td class="paramtype"><a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1StateVectorDTO.html">IO::SDK::API::DTO::StateVectorDTO</a> *&#160;</td>
           <td class="paramname"><em>sv</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>size</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a id="a1dfd4b544864698af36d7f349d75a682" name="a1dfd4b544864698af36d7f349d75a682"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a1dfd4b544864698af36d7f349d75a682">&#9670;&nbsp;</a></span>WriteOrientationProxy()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">bool WriteOrientationProxy </td>
-          <td>(</td>
-          <td class="paramtype">const char *&#160;</td>
-          <td class="paramname"><em>filePath</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>objectId</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>spacecraftFrameId</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1StateOrientationDTO.html">IO::SDK::API::DTO::StateOrientationDTO</a> *&#160;</td>
-          <td class="paramname"><em>so</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>

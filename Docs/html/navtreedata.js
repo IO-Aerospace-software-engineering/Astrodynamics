@@ -61,16 +61,16 @@ var NAVTREEINDEX =
 [
 "Aberrations_8cpp.html",
 "Planetographic_8h.html",
-"classIO_1_1SDK_1_1Body_1_1Body.html#ac1a1633c2de78a5065ba1704481fff64",
-"classIO_1_1SDK_1_1Coordinates_1_1Geodetic.html#affec48604350a8b668114863fed0a0bd",
-"classIO_1_1SDK_1_1Integrators_1_1Forces_1_1GravityForce.html#a3831b3d7ce915098948cc1f82e856b77",
-"classIO_1_1SDK_1_1Maneuvers_1_1Attitudes_1_1ZenithAttitude.html#adb59be8151c3be823650ed5a0f1d16f4",
-"classIO_1_1SDK_1_1OccultationType.html",
-"classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector.html#aedc2e70d87ac57d7b06af5dacdd5d94e",
-"classIO_1_1SDK_1_1Time_1_1TimeSpan.html#a0434c0503c27689232b456c1de6524ae",
-"namespaceIO_1_1SDK_1_1Parameters.html#af3f8e4e755115c9fd070d564cde36241",
-"structIO_1_1SDK_1_1API_1_1DTO_1_1OccultationConstraintDTO.html",
-"structIO_1_1SDK_1_1Maneuvers_1_1DynamicFuelTank.html#a87d749360ab98fd9a1235d16313f258c"
+"classIO_1_1SDK_1_1Body_1_1Body.html#acbd6ec42aef0f45c1538dbf1ade59e41",
+"classIO_1_1SDK_1_1Coordinates_1_1HorizontalCoordinates.html",
+"classIO_1_1SDK_1_1Integrators_1_1Forces_1_1GravityForce.html#a984e9feaa026398c5ccc05489aeba44f",
+"classIO_1_1SDK_1_1Maneuvers_1_1CombinedManeuver.html",
+"classIO_1_1SDK_1_1OccultationType.html#a8412c3fa171dab72445d444d2deb317f",
+"classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector.html#aededa29c887cda753e85527809fe77ab",
+"classIO_1_1SDK_1_1Time_1_1TimeSpan.html#a0c7934079a719479ed8da2902ec383c1",
+"namespaceIO_1_1SDK_1_1Propagators.html",
+"structIO_1_1SDK_1_1API_1_1DTO_1_1OccultationConstraintDTO.html#a2b3c1418a6864c8b7941f22b4f8c6247",
+"structIO_1_1SDK_1_1Maneuvers_1_1DynamicFuelTank.html#a9b78e7a5f340222258908ed245f032f2"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';

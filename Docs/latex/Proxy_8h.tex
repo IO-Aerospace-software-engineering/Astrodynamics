@@ -19,8 +19,6 @@
 \item 
 \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} void \mbox{\hyperlink{Proxy_8h_aec8180716b9e86621181f82f38419c8f}{Read\+Ephemeris\+Proxy}} (\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Window\+DTO}} search\+Window, int observer\+Id, int target\+Id, const char $\ast$frame, const char $\ast$aberration, double step\+Size, \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1StateVectorDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+State\+Vector\+DTO}} state\+Vectors\mbox{[}10000\mbox{]})
 \item 
-\mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} bool \mbox{\hyperlink{Proxy_8h_af8fed4e7969e085725224db1cd8f23b7}{Write\+Orientation\+Proxy}} (const char $\ast$file\+Path, int object\+Id, \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1StateOrientationDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+State\+Orientation\+DTO}} so\mbox{[}10000\mbox{]}, int size)
-\item 
 \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} void \mbox{\hyperlink{Proxy_8h_ad2cb321fd1aa8706954df5b92b3b9a19}{Read\+Orientation\+Proxy}} (\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Window\+DTO}} search\+Window, int spacecraft\+Id, double tolerance, const char $\ast$frame, double step\+Size, \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1StateOrientationDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+State\+Orientation\+DTO}} so\mbox{[}10000\mbox{]})
 \item 
 \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} void \mbox{\hyperlink{Proxy_8h_a53659fe236627b28005a1baae4c072ed}{Propagate\+Proxy}} (\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Scenario\+DTO}} \&scenario\+Dto)
@@ -567,26 +565,6 @@ Write ephemeris into binary file (spk)
 {\em object\+Id} & \\
 \hline
 {\em sv} & \\
-\hline
-{\em size} & \\
-\hline
-\end{DoxyParams}
-\begin{DoxyReturn}{Returns}
-
-\end{DoxyReturn}
-\mbox{\Hypertarget{Proxy_8h_af8fed4e7969e085725224db1cd8f23b7}\label{Proxy_8h_af8fed4e7969e085725224db1cd8f23b7}} 
-\index{Proxy.h@{Proxy.h}!WriteOrientationProxy@{WriteOrientationProxy}}
-\index{WriteOrientationProxy@{WriteOrientationProxy}!Proxy.h@{Proxy.h}}
-\doxysubsubsection{\texorpdfstring{WriteOrientationProxy()}{WriteOrientationProxy()}}
-{\footnotesize\ttfamily \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} bool Write\+Orientation\+Proxy (\begin{DoxyParamCaption}\item[{const char $\ast$}]{file\+Path,  }\item[{int}]{object\+Id,  }\item[{\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1StateOrientationDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+State\+Orientation\+DTO}}}]{so\mbox{[}10000\mbox{]},  }\item[{int}]{size }\end{DoxyParamCaption})}
-
-Write orientation data into binary file (ck) 
-\begin{DoxyParams}{Parameters}
-{\em file\+Path} & \\
-\hline
-{\em object\+Id} & \\
-\hline
-{\em so} & \\
 \hline
 {\em size} & \\
 \hline
