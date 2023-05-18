@@ -368,7 +368,11 @@ TEST(API, WriteEphemeris)
         sv[i].centerOfMotion.centerOfMotionId = 10;
         sv[i].inertialFrame = "J2000";
     }
+
+    //Write ephemeris file
     WriteEphemerisProxy("EphemerisTestFile.spk", -135, sv, size);
+
+    //Load ephemeris file
     LoadKernelsProxy("EphemerisTestFile.spk");
 
     IO::SDK::API::DTO::WindowDTO window{};
@@ -389,5 +393,4 @@ TEST(API, WriteEphemeris)
         ASSERT_DOUBLE_EQ(svresult[i].centerOfMotion.centerOfMotionId, 10);
         ASSERT_STREQ(svresult[i].inertialFrame, "J2000");
     }
-
 }

@@ -143,25 +143,6 @@ bool WriteEphemerisProxy(const char *filePath, int objectId, IO::SDK::API::DTO::
     return true;
 }
 
-
-bool WriteOrientationProxy(const char *filePath, int objectId, int spacecraftFrameId,
-                           IO::SDK::API::DTO::StateOrientationDTO *so, int size)
-{
-    IO::SDK::Kernels::OrientationKernel kernel(filePath, objectId, spacecraftFrameId);
-    std::vector<IO::SDK::OrbitalParameters::StateOrientation> orientations;
-    orientations.reserve(size);
-    for (int i = 0; i < size; ++i)
-    {
-        orientations.emplace_back(ToQuaternion(so[i].orientation), ToVector3D(so[i].angularVelocity),
-                                  IO::SDK::Time::TDB(std::chrono::duration<double>(so[i].epoch)),
-                                  IO::SDK::Frames::Frames(so[i].frame));
-    }
-    std::vector<std::vector<IO::SDK::OrbitalParameters::StateOrientation>> intervals;
-    intervals.push_back(orientations);
-    kernel.WriteOrientations(intervals);
-    return true;
-}
-
 void
 ReadOrientationProxy(IO::SDK::API::DTO::WindowDTO searchWindow, int spacecraftId, double tolerance, const char *frame,
                      double stepSize, IO::SDK::API::DTO::StateOrientationDTO *so)

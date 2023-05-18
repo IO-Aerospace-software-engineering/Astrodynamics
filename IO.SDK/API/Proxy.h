@@ -48,17 +48,6 @@ ReadEphemerisProxy(IO::SDK::API::DTO::WindowDTO searchWindow, int observerId, in
                    const char *aberration, double stepSize, IO::SDK::API::DTO::StateVectorDTO stateVectors[10000]);
 
 /**
- * Write orientation data into binary file (ck)
- * @param filePath
- * @param objectId
- * @param so
- * @param size
- * @return
- */
-MODULE_API bool
-WriteOrientationProxy(const char *filePath, int objectId, IO::SDK::API::DTO::StateOrientationDTO so[10000], int size);
-
-/**
  * Read spacecraft orientation
  * @param searchWindow
  * @param spacecraftId
