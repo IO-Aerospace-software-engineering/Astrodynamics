@@ -41,6 +41,5 @@ var Proxy_8h =
     [ "ReadPhasingManeuverResult", "Proxy_8h.html#a6c39e673976b509ad3fa42613ffa38d7", null ],
     [ "TDBToStringProxy", "Proxy_8h.html#a866cf6da600090959c6dc47000e75cc4", null ],
     [ "UTCToStringProxy", "Proxy_8h.html#a8f3164fd10cfa0827e25add2106a71c7", null ],
-    [ "WriteEphemerisProxy", "Proxy_8h.html#a329824aa5cb9474c5ad8ba77ba8ac569", null ],
-    [ "WriteOrientationProxy", "Proxy_8h.html#af8fed4e7969e085725224db1cd8f23b7", null ]
+    [ "WriteEphemerisProxy", "Proxy_8h.html#a329824aa5cb9474c5ad8ba77ba8ac569", null ]
 ];

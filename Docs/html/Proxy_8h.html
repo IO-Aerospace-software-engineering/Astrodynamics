@@ -110,8 +110,6 @@ Functions</h2></td></tr>
 <tr class="separator:a329824aa5cb9474c5ad8ba77ba8ac569"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aec8180716b9e86621181f82f38419c8f"><td class="memItemLeft" align="right" valign="top"><a class="el" href="Proxy_8h.html#a283b8fd63f96d196027ef6ad48c4cb85">MODULE_API</a> void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="Proxy_8h.html#aec8180716b9e86621181f82f38419c8f">ReadEphemerisProxy</a> (<a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO.html">IO::SDK::API::DTO::WindowDTO</a> searchWindow, int observerId, int targetId, const char *frame, const char *aberration, double stepSize, <a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1StateVectorDTO.html">IO::SDK::API::DTO::StateVectorDTO</a> stateVectors[10000])</td></tr>
 <tr class="separator:aec8180716b9e86621181f82f38419c8f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af8fed4e7969e085725224db1cd8f23b7"><td class="memItemLeft" align="right" valign="top"><a class="el" href="Proxy_8h.html#a283b8fd63f96d196027ef6ad48c4cb85">MODULE_API</a> bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="Proxy_8h.html#af8fed4e7969e085725224db1cd8f23b7">WriteOrientationProxy</a> (const char *filePath, int objectId, <a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1StateOrientationDTO.html">IO::SDK::API::DTO::StateOrientationDTO</a> so[10000], int size)</td></tr>
-<tr class="separator:af8fed4e7969e085725224db1cd8f23b7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad2cb321fd1aa8706954df5b92b3b9a19"><td class="memItemLeft" align="right" valign="top"><a class="el" href="Proxy_8h.html#a283b8fd63f96d196027ef6ad48c4cb85">MODULE_API</a> void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="Proxy_8h.html#ad2cb321fd1aa8706954df5b92b3b9a19">ReadOrientationProxy</a> (<a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO.html">IO::SDK::API::DTO::WindowDTO</a> searchWindow, int spacecraftId, double tolerance, const char *frame, double stepSize, <a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1StateOrientationDTO.html">IO::SDK::API::DTO::StateOrientationDTO</a> so[10000])</td></tr>
 <tr class="separator:ad2cb321fd1aa8706954df5b92b3b9a19"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a53659fe236627b28005a1baae4c072ed"><td class="memItemLeft" align="right" valign="top"><a class="el" href="Proxy_8h.html#a283b8fd63f96d196027ef6ad48c4cb85">MODULE_API</a> void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="Proxy_8h.html#a53659fe236627b28005a1baae4c072ed">PropagateProxy</a> (<a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO.html">IO::SDK::API::DTO::ScenarioDTO</a> &amp;scenarioDto)</td></tr>
@@ -1836,56 +1834,6 @@ Functions</h2></td></tr>
     <tr><td class="paramname">filePath</td><td></td></tr>
     <tr><td class="paramname">objectId</td><td></td></tr>
     <tr><td class="paramname">sv</td><td></td></tr>
-    <tr><td class="paramname">size</td><td></td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd></dd></dl>
-
-</div>
-</div>
-<a id="af8fed4e7969e085725224db1cd8f23b7" name="af8fed4e7969e085725224db1cd8f23b7"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#af8fed4e7969e085725224db1cd8f23b7">&#9670;&nbsp;</a></span>WriteOrientationProxy()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="Proxy_8h.html#a283b8fd63f96d196027ef6ad48c4cb85">MODULE_API</a> bool WriteOrientationProxy </td>
-          <td>(</td>
-          <td class="paramtype">const char *&#160;</td>
-          <td class="paramname"><em>filePath</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>objectId</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1StateOrientationDTO.html">IO::SDK::API::DTO::StateOrientationDTO</a>&#160;</td>
-          <td class="paramname"><em>so</em>[10000], </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>size</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p >Write orientation data into binary file (ck) </p><dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">filePath</td><td></td></tr>
-    <tr><td class="paramname">objectId</td><td></td></tr>
-    <tr><td class="paramname">so</td><td></td></tr>
     <tr><td class="paramname">size</td><td></td></tr>
   </table>
   </dd>

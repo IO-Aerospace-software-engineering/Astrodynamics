@@ -345,3 +345,52 @@ TEST(API, ToUTC)
 {
     ASSERT_DOUBLE_EQ(-64.183927263223808, ConvertTDBToUTCProxy(0.0));
 }
+
+TEST(API, Version)
+{
+    ASSERT_STREQ("CSPICE_N0067", GetSpiceVersionProxy());
+}
+
+TEST(API, WriteEphemeris)
+{
+    const int size = 10;
+    IO::SDK::API::DTO::StateVectorDTO sv[size];
+    for (int i = 0; i < size; ++i)
+    {
+        sv[i].position.x = 6800 + i;
+        sv[i].position.y = i;
+        sv[i].position.z = i;
+        sv[i].velocity.x = i;
+        sv[i].velocity.y = 8.0 + i * 0.001;
+        sv[i].velocity.z = i;
+        sv[i].epoch = i;
+        sv[i].centerOfMotion.id = 399;
+        sv[i].centerOfMotion.centerOfMotionId = 10;
+        sv[i].inertialFrame = "J2000";
+    }
+
+    //Write ephemeris file
+    WriteEphemerisProxy("EphemerisTestFile.spk", -135, sv, size);
+
+    //Load ephemeris file
+    LoadKernelsProxy("EphemerisTestFile.spk");
+
+    IO::SDK::API::DTO::WindowDTO window{};
+    window.start = 0.0;
+    window.end = 9.0;
+    IO::SDK::API::DTO::StateVectorDTO svresult[size];
+    ReadEphemerisProxy(window, 399, -135, "J2000", "NONE", 1.0, svresult);
+    for (int i = 0; i < size; ++i)
+    {
+        ASSERT_DOUBLE_EQ(svresult[i].position.x, 6800 + i);
+        ASSERT_DOUBLE_EQ(svresult[i].position.y, i);
+        ASSERT_DOUBLE_EQ(svresult[i].position.z, i);
+        ASSERT_DOUBLE_EQ(svresult[i].velocity.x, i);
+        ASSERT_DOUBLE_EQ(svresult[i].velocity.y, 8 + i * 0.001);
+        ASSERT_DOUBLE_EQ(svresult[i].velocity.z, i);
+        ASSERT_DOUBLE_EQ(svresult[i].epoch, i);
+        ASSERT_EQ(svresult[i].centerOfMotion.id, 399);
+        ASSERT_DOUBLE_EQ(svresult[i].centerOfMotion.centerOfMotionId, 10);
+        ASSERT_STREQ(svresult[i].inertialFrame, "J2000");
+    }
+}

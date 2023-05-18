@@ -1,7 +1,5 @@
 var NAVTREEINDEX9 =
 {
-"namespaceIO_1_1SDK_1_1Parameters.html#af3f8e4e755115c9fd070d564cde36241":[0,0,0,0,15,0],
-"namespaceIO_1_1SDK_1_1Parameters.html#afb6663fa378276d38946b2183ba2fc5f":[0,0,0,0,15,6],
 "namespaceIO_1_1SDK_1_1Propagators.html":[0,0,0,0,16],
 "namespaceIO_1_1SDK_1_1Sites.html":[0,0,0,0,17],
 "namespaceIO_1_1SDK_1_1Spice.html":[0,0,0,0,18],
@@ -249,5 +247,7 @@ var NAVTREEINDEX9 =
 "structIO_1_1SDK_1_1API_1_1DTO_1_1NadirAttitudeDTO.html#a959ea33417a41815b815005f6cbabb67":[1,0,0,0,0,0,16,3],
 "structIO_1_1SDK_1_1API_1_1DTO_1_1NadirAttitudeDTO.html#a959ea33417a41815b815005f6cbabb67":[0,0,0,0,0,0,16,3],
 "structIO_1_1SDK_1_1API_1_1DTO_1_1NadirAttitudeDTO.html#aa165ae933683f10b3bf4a846dca48c77":[0,0,0,0,0,0,16,0],
-"structIO_1_1SDK_1_1API_1_1DTO_1_1NadirAttitudeDTO.html#aa165ae933683f10b3bf4a846dca48c77":[1,0,0,0,0,0,16,0]
+"structIO_1_1SDK_1_1API_1_1DTO_1_1NadirAttitudeDTO.html#aa165ae933683f10b3bf4a846dca48c77":[1,0,0,0,0,0,16,0],
+"structIO_1_1SDK_1_1API_1_1DTO_1_1OccultationConstraintDTO.html":[0,0,0,0,0,0,17],
+"structIO_1_1SDK_1_1API_1_1DTO_1_1OccultationConstraintDTO.html":[1,0,0,0,0,0,17]
 };

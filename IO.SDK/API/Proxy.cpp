@@ -17,9 +17,8 @@
 #include <Launch.h>
 #include <KernelsLoader.h>
 #include <iostream>
-#include <SpacecraftClockKernel.h>
 
-
+#pragma region Proxy
 void LaunchProxy(IO::SDK::API::DTO::LaunchDTO &launchDto)
 {
     auto celestialBody = std::make_shared<IO::SDK::Body::CelestialBody>(launchDto.recoverySite.bodyId);
@@ -110,6 +109,304 @@ void PropagateProxy(IO::SDK::API::DTO::ScenarioDTO &scenarioDto)
 
 }
 
+const char *GetSpiceVersionProxy()
+{
+    const char *version;
+    version = tkvrsn_c("TOOLKIT");
+    return strdup(version);
+}
+
+bool WriteEphemerisProxy(const char *filePath, int objectId, IO::SDK::API::DTO::StateVectorDTO *sv, int size)
+{
+    IO::SDK::Kernels::EphemerisKernel kernel(filePath, objectId);
+
+    std::vector<IO::SDK::OrbitalParameters::StateVector> states;
+    states.reserve(size);
+    std::map<int, std::shared_ptr<IO::SDK::Body::CelestialBody>> celestialBodies;
+
+
+    for (int i = 0; i < size; ++i)
+    {
+        if (celestialBodies.find(sv[0].centerOfMotion.id) == celestialBodies.end())
+        {
+            celestialBodies[sv[i].centerOfMotion.id] = std::make_shared<IO::SDK::Body::CelestialBody>(
+                    sv[i].centerOfMotion.id);
+        }
+        states.emplace_back(celestialBodies[sv[i].centerOfMotion.id], ToVector3D(sv[i].position),
+                            ToVector3D(sv[i].velocity),
+                            IO::SDK::Time::TDB(std::chrono::duration<double>(sv[i].epoch)),
+                            IO::SDK::Frames::Frames(sv[i].inertialFrame));
+    }
+
+    kernel.WriteData(states);
+
+    return true;
+}
+
+void
+ReadOrientationProxy(IO::SDK::API::DTO::WindowDTO searchWindow, int spacecraftId, double tolerance, const char *frame,
+                     double stepSize, IO::SDK::API::DTO::StateOrientationDTO *so)
+{
+    if ((searchWindow.end - searchWindow.start) / stepSize > 10000)
+    {
+        throw IO::SDK::Exception::InvalidArgumentException(
+                "Step size to small or search window to large. The number of State orientation must be lower than 10000");
+    }
+    //Build platform id
+    SpiceInt id = spacecraftId * 1000;
+
+    double epoch = searchWindow.start;
+    int idx{0};
+    while (epoch <= searchWindow.end)
+    {
+        //Get encoded clock
+        SpiceDouble sclk = IO::SDK::Kernels::SpacecraftClockKernel::ConvertToEncodedClock(spacecraftId,
+                                                                                          IO::SDK::Time::TDB(
+                                                                                                  std::chrono::duration<double>(
+                                                                                                          epoch)));
+
+        SpiceDouble cmat[3][3];
+        SpiceDouble av[3];
+        SpiceDouble clkout;
+        SpiceBoolean found;
+
+        //Get orientation and angular velocity
+        ckgpav_c(id, sclk, tolerance, frame, cmat, av, &clkout, &found);
+
+        if (!found)
+        {
+            throw IO::SDK::Exception::SDKException("No orientation found");
+        }
+
+        //Build array pointers
+        double **arrayCmat;
+        arrayCmat = new double *[3];
+        for (int i = 0; i < 3; i++)
+        {
+            arrayCmat[i] = new double[3]{};
+        }
+
+        for (size_t i = 0; i < 3; i++)
+        {
+            for (size_t j = 0; j < 3; j++)
+            {
+                arrayCmat[i][j] = cmat[i][j];
+            }
+        }
+
+        IO::SDK::Math::Quaternion q(IO::SDK::Math::Matrix(3, 3, arrayCmat));
+
+        //Free memory
+        for (int i = 0; i < 3; i++)
+            delete[] arrayCmat[i];
+        delete[] arrayCmat;
+
+        double correctedEpoch{};
+        sct2e_c(spacecraftId, sclk, &correctedEpoch);
+        so[idx].epoch = correctedEpoch;
+        so[idx].frame = strdup(frame);
+        so[idx].orientation = ToQuaternionDTO(q);
+        so[idx].angularVelocity.x = av[0];
+        so[idx].angularVelocity.y = av[1];
+        so[idx].angularVelocity.z = av[2];
+
+        epoch += stepSize;
+        idx++;
+    }
+}
+
+void LoadKernelsProxy(const char *path)
+{
+    IO::SDK::Kernels::KernelsLoader::Load(path);
+}
+
+const char *TDBToStringProxy(double secondsFromJ2000)
+{
+    IO::SDK::Time::TDB tdb((std::chrono::duration<double>(secondsFromJ2000)));
+    std::string str = tdb.ToString();
+    return strdup(str.c_str());
+}
+
+const char *UTCToStringProxy(double secondsFromJ2000)
+{
+    IO::SDK::Time::UTC utc((std::chrono::duration<double>(secondsFromJ2000)));
+    std::string str = utc.ToString();
+    return strdup(str.c_str());
+}
+
+void ReadEphemerisProxy(IO::SDK::API::DTO::WindowDTO searchWindow, int observerId, int targetId,
+                        const char *frame,
+                        const char *aberration, double stepSize, IO::SDK::API::DTO::StateVectorDTO *stateVectors)
+{
+    if ((searchWindow.end - searchWindow.start) / stepSize > 10000)
+    {
+        throw IO::SDK::Exception::InvalidArgumentException(
+                "Step size to small or search window to large. The number of State vector must be lower than 10000");
+    }
+    int idx = 0;
+    double epoch = searchWindow.start;
+    while (epoch <= searchWindow.end)
+    {
+
+        SpiceDouble vs[6];
+        SpiceDouble lt;
+        spkezr_c(std::to_string(targetId).c_str(), epoch, frame, aberration, std::to_string(observerId).c_str(), vs,
+                 &lt);
+
+        stateVectors[idx].centerOfMotion.id = observerId;
+        stateVectors[idx].centerOfMotion.centerOfMotionId = IO::SDK::Body::CelestialBody::FindCenterOfMotionId(
+                observerId);
+
+        stateVectors[idx].epoch = epoch;
+        stateVectors[idx].inertialFrame = strdup(frame);
+        stateVectors[idx].position.x = vs[0] * 1000.0;
+        stateVectors[idx].position.y = vs[1] * 1000.0;
+        stateVectors[idx].position.z = vs[2] * 1000.0;
+        stateVectors[idx].velocity.x = vs[3] * 1000.0;
+        stateVectors[idx].velocity.y = vs[4] * 1000.0;
+        stateVectors[idx].velocity.z = vs[5] * 1000.0;
+
+        epoch += stepSize;
+        idx++;
+    }
+}
+
+void
+FindWindowsOnDistanceConstraintProxy(IO::SDK::API::DTO::WindowDTO searchWindow, int observerId, int targetId,
+                                     const char *relationalOperator, double value, const char *aberration,
+                                     double stepSize, IO::SDK::API::DTO::WindowDTO windows[1000])
+{
+    auto relationalOpe = IO::SDK::Constraints::RelationalOperator::ToRelationalOperator(relationalOperator);
+    auto abe = IO::SDK::Aberrations::ToEnum(aberration);
+
+    auto res = IO::SDK::Constraints::GeometryFinder::FindWindowsOnDistanceConstraint(ToTDBWindow(searchWindow),
+                                                                                     observerId, targetId,
+                                                                                     relationalOpe, value, abe,
+                                                                                     IO::SDK::Time::TimeSpan(stepSize));
+    for (size_t i = 0; i < res.size(); ++i)
+    {
+        windows[i] = ToWindowDTO(res[i]);
+    }
+}
+
+void
+FindWindowsOnOccultationConstraintProxy(IO::SDK::API::DTO::WindowDTO searchWindow, int observerId, int targetId,
+                                        const char *targetFrame, const char *targetShape, int frontBodyId,
+                                        const char *frontFrame, const char *frontShape, const char *occultationType,
+                                        const char *aberration, double stepSize,
+                                        IO::SDK::API::DTO::WindowDTO *windows)
+{
+    auto abe = IO::SDK::Aberrations::ToEnum(aberration);
+    auto res = IO::SDK::Constraints::GeometryFinder::FindWindowsOnOccultationConstraint(ToTDBWindow(searchWindow),
+                                                                                        observerId, targetId,
+                                                                                        targetFrame, targetShape,
+                                                                                        frontBodyId,
+                                                                                        frontFrame, frontShape,
+                                                                                        IO::SDK::OccultationType::ToOccultationType(
+                                                                                                occultationType), abe,
+                                                                                        IO::SDK::Time::TimeSpan(
+                                                                                                stepSize));
+
+    for (size_t i = 0; i < res.size(); ++i)
+    {
+        windows[i] = ToWindowDTO(res[i]);
+    }
+}
+
+void
+FindWindowsOnCoordinateConstraintProxy(IO::SDK::API::DTO::WindowDTO searchWindow, int observerId, int targetId,
+                                       const char *frame, const char *coordinateSystem,
+                                       const char *coordinate,
+                                       const char *relationalOperator, double value, double adjustValue,
+                                       const char *aberration, double stepSize,
+                                       IO::SDK::API::DTO::WindowDTO *windows)
+{
+    auto abe = IO::SDK::Aberrations::ToEnum(aberration);
+    auto systemType = IO::SDK::CoordinateSystem::ToCoordinateSystemType(coordinateSystem);
+    auto coordinateType = IO::SDK::Coordinate::ToCoordinateType(coordinate);
+    auto relationalOpe = IO::SDK::Constraints::RelationalOperator::ToRelationalOperator(relationalOperator);
+    auto res = IO::SDK::Constraints::GeometryFinder::FindWindowsOnCoordinateConstraint(ToTDBWindow(searchWindow),
+                                                                                       observerId, targetId, frame,
+                                                                                       systemType, coordinateType,
+                                                                                       relationalOpe, value,
+                                                                                       adjustValue, abe,
+                                                                                       IO::SDK::Time::TimeSpan(
+                                                                                               stepSize));
+
+    for (size_t i = 0; i < res.size(); ++i)
+    {
+        windows[i] = ToWindowDTO(res[i]);
+    }
+}
+
+void FindWindowsOnIlluminationConstraintProxy(IO::SDK::API::DTO::WindowDTO searchWindow, int observerId,
+                                              const char *illuminationSource, int targetBody, const char *fixedFrame,
+                                              IO::SDK::API::DTO::GeodeticDTO geodetic, const char *illuminationType,
+                                              const char *relationalOperator, double value,
+                                              double adjustValue,
+                                              const char *aberration, double stepSize, const char *method,
+                                              IO::SDK::API::DTO::WindowDTO *windows)
+{
+    double coordinates[3] = {geodetic.latitude, geodetic.longitude, geodetic.altitude};
+
+    IO::SDK::Body::CelestialBody body(targetBody);
+    SpiceDouble bodyFixedLocation[3];
+    georec_c(geodetic.longitude, geodetic.latitude, geodetic.altitude, body.GetRadius().GetX(), body.GetFlattening(),
+             bodyFixedLocation);
+    auto abe = IO::SDK::Aberrations::ToEnum(aberration);
+    auto illumination = IO::SDK::IlluminationAngle::ToIlluminationAngleType(illuminationType);
+    auto relationalOpe = IO::SDK::Constraints::RelationalOperator::ToRelationalOperator(relationalOperator);
+    auto res = IO::SDK::Constraints::GeometryFinder::FindWindowsOnIlluminationConstraint(ToTDBWindow(searchWindow),
+                                                                                         observerId, illuminationSource,
+                                                                                         targetBody, fixedFrame,
+                                                                                         bodyFixedLocation,
+                                                                                         illumination, relationalOpe,
+                                                                                         value, adjustValue, abe,
+                                                                                         IO::SDK::Time::TimeSpan(
+                                                                                                 stepSize), method);
+    for (size_t i = 0; i < res.size(); ++i)
+    {
+        windows[i] = ToWindowDTO(res[i]);
+    }
+}
+
+void
+FindWindowsInFieldOfViewConstraintProxy(IO::SDK::API::DTO::WindowDTO searchWindow, int observerId, int instrumentId,
+                                        int targetId, const char *targetFrame,
+                                        const char *targetShape,
+                                        const char *aberration, double stepSize,
+                                        IO::SDK::API::DTO::WindowDTO *windows)
+{
+    auto abe = IO::SDK::Aberrations::ToEnum(aberration);
+    auto res = IO::SDK::Constraints::GeometryFinder::FindWindowsInFieldOfViewConstraint(ToTDBWindow(searchWindow),
+                                                                                        observerId, instrumentId,
+                                                                                        targetId, targetFrame,
+                                                                                        targetShape,
+                                                                                        abe, IO::SDK::Time::TimeSpan(
+                    stepSize));
+    for (size_t i = 0; i < res.size(); ++i)
+    {
+        windows[i] = ToWindowDTO(res[i]);
+    }
+}
+
+double ConvertTDBToUTCProxy(double tdb)
+{
+    double delta{};
+    deltet_c(tdb, "et", &delta);
+    return tdb - delta;
+}
+
+double ConvertUTCToTDBProxy(double utc)
+{
+    double delta{};
+    deltet_c(utc, "UTC", &delta);
+    return utc + delta;
+}
+
+#pragma endregion
+
+#pragma region ReadResults
 void ReadManeuverResults(IO::SDK::API::DTO::ScenarioDTO &scenarioDto,
                          std::map<int, std::shared_ptr<IO::SDK::Maneuvers::ManeuverBase>> &maneuvers)
 {
@@ -239,8 +536,9 @@ void ReadApogeeManeuverResult(IO::SDK::API::DTO::ScenarioDTO &scenarioDto,
         maneuver.FuelBurned = value->GetFuelBurned();
     }
 }
+#pragma endregion
 
-
+#pragma region BuildScenario
 std::map<int, std::shared_ptr<IO::SDK::Body::CelestialBody>>
 BuildCelestialBodies(IO::SDK::API::DTO::ScenarioDTO &scenario)
 {
@@ -759,322 +1057,4 @@ void BuildZenithAttitude(IO::SDK::API::DTO::ScenarioDTO &scenarioDto, IO::SDK::S
     }
 }
 
-
-const char *GetSpiceVersionProxy()
-{
-    const char *version;
-    version = tkvrsn_c("TOOLKIT");
-    return strdup(version);
-}
-
-bool WriteEphemerisProxy(const char *filePath, int objectId, IO::SDK::API::DTO::StateVectorDTO *sv, int size)
-{
-    IO::SDK::Kernels::EphemerisKernel kernel(filePath, objectId);
-
-    std::vector<IO::SDK::OrbitalParameters::StateVector> states;
-    states.reserve(size);
-    std::map<int, std::shared_ptr<IO::SDK::Body::CelestialBody>> celestialBodies;
-
-
-    for (int i = 0; i < size; ++i)
-    {
-        if (celestialBodies.find(sv[0].centerOfMotion.id) == celestialBodies.end())
-        {
-            celestialBodies[sv[i].centerOfMotion.id] = std::make_shared<IO::SDK::Body::CelestialBody>(
-                    sv[i].centerOfMotion.id);
-        }
-        states.emplace_back(celestialBodies[sv[i].centerOfMotion.id], ToVector3D(sv[i].position),
-                            ToVector3D(sv[i].velocity),
-                            IO::SDK::Time::TDB(std::chrono::duration<double>(sv[i].epoch)),
-                            IO::SDK::Frames::Frames(sv[i].inertialFrame));
-    }
-
-    kernel.WriteData(states);
-
-    return true;
-}
-
-
-bool WriteOrientationProxy(const char *filePath, int objectId, int spacecraftFrameId,
-                           IO::SDK::API::DTO::StateOrientationDTO *so, int size)
-{
-    IO::SDK::Kernels::OrientationKernel kernel(filePath, objectId, spacecraftFrameId);
-    std::vector<IO::SDK::OrbitalParameters::StateOrientation> orientations;
-    orientations.reserve(size);
-    for (int i = 0; i < size; ++i)
-    {
-        orientations.emplace_back(ToQuaternion(so[i].orientation), ToVector3D(so[i].angularVelocity),
-                                  IO::SDK::Time::TDB(std::chrono::duration<double>(so[i].epoch)),
-                                  IO::SDK::Frames::Frames(so[i].frame));
-    }
-    std::vector<std::vector<IO::SDK::OrbitalParameters::StateOrientation>> intervals;
-    intervals.push_back(orientations);
-    kernel.WriteOrientations(intervals);
-    return true;
-}
-
-void
-ReadOrientationProxy(IO::SDK::API::DTO::WindowDTO searchWindow, int spacecraftId, double tolerance, const char *frame,
-                     double stepSize, IO::SDK::API::DTO::StateOrientationDTO *so)
-{
-    if ((searchWindow.end - searchWindow.start) / stepSize > 10000)
-    {
-        throw IO::SDK::Exception::InvalidArgumentException(
-                "Step size to small or search window to large. The number of State orientation must be lower than 10000");
-    }
-    //Build platform id
-    SpiceInt id = spacecraftId * 1000;
-
-    double epoch = searchWindow.start;
-    int idx{0};
-    while (epoch <= searchWindow.end)
-    {
-        //Get encoded clock
-        SpiceDouble sclk = IO::SDK::Kernels::SpacecraftClockKernel::ConvertToEncodedClock(spacecraftId,
-                                                                                          IO::SDK::Time::TDB(
-                                                                                                  std::chrono::duration<double>(
-                                                                                                          epoch)));
-
-        SpiceDouble cmat[3][3];
-        SpiceDouble av[3];
-        SpiceDouble clkout;
-        SpiceBoolean found;
-
-        //Get orientation and angular velocity
-        ckgpav_c(id, sclk, tolerance, frame, cmat, av, &clkout, &found);
-
-        if (!found)
-        {
-            throw IO::SDK::Exception::SDKException("No orientation found");
-        }
-
-        //Build array pointers
-        double **arrayCmat;
-        arrayCmat = new double *[3];
-        for (int i = 0; i < 3; i++)
-        {
-            arrayCmat[i] = new double[3]{};
-        }
-
-        for (size_t i = 0; i < 3; i++)
-        {
-            for (size_t j = 0; j < 3; j++)
-            {
-                arrayCmat[i][j] = cmat[i][j];
-            }
-        }
-
-        IO::SDK::Math::Quaternion q(IO::SDK::Math::Matrix(3, 3, arrayCmat));
-
-        //Free memory
-        for (int i = 0; i < 3; i++)
-            delete[] arrayCmat[i];
-        delete[] arrayCmat;
-
-        double correctedEpoch{};
-        sct2e_c(spacecraftId, sclk, &correctedEpoch);
-        so[idx].epoch = correctedEpoch;
-        so[idx].frame = strdup(frame);
-        so[idx].orientation = ToQuaternionDTO(q);
-        so[idx].angularVelocity.x = av[0];
-        so[idx].angularVelocity.y = av[1];
-        so[idx].angularVelocity.z = av[2];
-
-        epoch += stepSize;
-        idx++;
-    }
-}
-
-void LoadKernelsProxy(const char *path)
-{
-    IO::SDK::Kernels::KernelsLoader::Load(path);
-}
-
-const char *TDBToStringProxy(double secondsFromJ2000)
-{
-    IO::SDK::Time::TDB tdb((std::chrono::duration<double>(secondsFromJ2000)));
-    std::string str = tdb.ToString();
-    return strdup(str.c_str());
-}
-
-const char *UTCToStringProxy(double secondsFromJ2000)
-{
-    IO::SDK::Time::UTC utc((std::chrono::duration<double>(secondsFromJ2000)));
-    std::string str = utc.ToString();
-    return strdup(str.c_str());
-}
-
-void ReadEphemerisProxy(IO::SDK::API::DTO::WindowDTO searchWindow, int observerId, int targetId,
-                        const char *frame,
-                        const char *aberration, double stepSize, IO::SDK::API::DTO::StateVectorDTO *stateVectors)
-{
-    if ((searchWindow.end - searchWindow.start) / stepSize > 10000)
-    {
-        throw IO::SDK::Exception::InvalidArgumentException(
-                "Step size to small or search window to large. The number of State vector must be lower than 10000");
-    }
-    int idx = 0;
-    double epoch = searchWindow.start;
-    while (epoch <= searchWindow.end)
-    {
-
-        SpiceDouble vs[6];
-        SpiceDouble lt;
-        spkezr_c(std::to_string(targetId).c_str(), epoch, frame, aberration, std::to_string(observerId).c_str(), vs,
-                 &lt);
-
-        stateVectors[idx].centerOfMotion.id = observerId;
-        stateVectors[idx].centerOfMotion.centerOfMotionId = IO::SDK::Body::CelestialBody::FindCenterOfMotionId(
-                observerId);
-
-        stateVectors[idx].epoch = epoch;
-        stateVectors[idx].inertialFrame = strdup(frame);
-        stateVectors[idx].position.x = vs[0] * 1000.0;
-        stateVectors[idx].position.y = vs[1] * 1000.0;
-        stateVectors[idx].position.z = vs[2] * 1000.0;
-        stateVectors[idx].velocity.x = vs[3] * 1000.0;
-        stateVectors[idx].velocity.y = vs[4] * 1000.0;
-        stateVectors[idx].velocity.z = vs[5] * 1000.0;
-
-        epoch += stepSize;
-        idx++;
-    }
-}
-
-void
-FindWindowsOnDistanceConstraintProxy(IO::SDK::API::DTO::WindowDTO searchWindow, int observerId, int targetId,
-                                     const char *relationalOperator, double value, const char *aberration,
-                                     double stepSize, IO::SDK::API::DTO::WindowDTO windows[1000])
-{
-    auto relationalOpe = IO::SDK::Constraints::RelationalOperator::ToRelationalOperator(relationalOperator);
-    auto abe = IO::SDK::Aberrations::ToEnum(aberration);
-
-    auto res = IO::SDK::Constraints::GeometryFinder::FindWindowsOnDistanceConstraint(ToTDBWindow(searchWindow),
-                                                                                     observerId, targetId,
-                                                                                     relationalOpe, value, abe,
-                                                                                     IO::SDK::Time::TimeSpan(stepSize));
-    for (size_t i = 0; i < res.size(); ++i)
-    {
-        windows[i] = ToWindowDTO(res[i]);
-    }
-}
-
-void
-FindWindowsOnOccultationConstraintProxy(IO::SDK::API::DTO::WindowDTO searchWindow, int observerId, int targetId,
-                                        const char *targetFrame, const char *targetShape, int frontBodyId,
-                                        const char *frontFrame, const char *frontShape, const char *occultationType,
-                                        const char *aberration, double stepSize,
-                                        IO::SDK::API::DTO::WindowDTO *windows)
-{
-    auto abe = IO::SDK::Aberrations::ToEnum(aberration);
-    auto res = IO::SDK::Constraints::GeometryFinder::FindWindowsOnOccultationConstraint(ToTDBWindow(searchWindow),
-                                                                                        observerId, targetId,
-                                                                                        targetFrame, targetShape,
-                                                                                        frontBodyId,
-                                                                                        frontFrame, frontShape,
-                                                                                        IO::SDK::OccultationType::ToOccultationType(
-                                                                                                occultationType), abe,
-                                                                                        IO::SDK::Time::TimeSpan(
-                                                                                                stepSize));
-
-    for (size_t i = 0; i < res.size(); ++i)
-    {
-        windows[i] = ToWindowDTO(res[i]);
-    }
-}
-
-void
-FindWindowsOnCoordinateConstraintProxy(IO::SDK::API::DTO::WindowDTO searchWindow, int observerId, int targetId,
-                                       const char *frame, const char *coordinateSystem,
-                                       const char *coordinate,
-                                       const char *relationalOperator, double value, double adjustValue,
-                                       const char *aberration, double stepSize,
-                                       IO::SDK::API::DTO::WindowDTO *windows)
-{
-    auto abe = IO::SDK::Aberrations::ToEnum(aberration);
-    auto systemType = IO::SDK::CoordinateSystem::ToCoordinateSystemType(coordinateSystem);
-    auto coordinateType = IO::SDK::Coordinate::ToCoordinateType(coordinate);
-    auto relationalOpe = IO::SDK::Constraints::RelationalOperator::ToRelationalOperator(relationalOperator);
-    auto res = IO::SDK::Constraints::GeometryFinder::FindWindowsOnCoordinateConstraint(ToTDBWindow(searchWindow),
-                                                                                       observerId, targetId, frame,
-                                                                                       systemType, coordinateType,
-                                                                                       relationalOpe, value,
-                                                                                       adjustValue, abe,
-                                                                                       IO::SDK::Time::TimeSpan(
-                                                                                               stepSize));
-
-    for (size_t i = 0; i < res.size(); ++i)
-    {
-        windows[i] = ToWindowDTO(res[i]);
-    }
-}
-
-void FindWindowsOnIlluminationConstraintProxy(IO::SDK::API::DTO::WindowDTO searchWindow, int observerId,
-                                              const char *illuminationSource, int targetBody, const char *fixedFrame,
-                                              IO::SDK::API::DTO::GeodeticDTO geodetic, const char *illuminationType,
-                                              const char *relationalOperator, double value,
-                                              double adjustValue,
-                                              const char *aberration, double stepSize, const char *method,
-                                              IO::SDK::API::DTO::WindowDTO *windows)
-{
-    double coordinates[3] = {geodetic.latitude, geodetic.longitude, geodetic.altitude};
-
-    IO::SDK::Body::CelestialBody body(targetBody);
-    SpiceDouble bodyFixedLocation[3];
-    georec_c(geodetic.longitude, geodetic.latitude, geodetic.altitude, body.GetRadius().GetX(), body.GetFlattening(),
-             bodyFixedLocation);
-    auto abe = IO::SDK::Aberrations::ToEnum(aberration);
-    auto illumination = IO::SDK::IlluminationAngle::ToIlluminationAngleType(illuminationType);
-    auto relationalOpe = IO::SDK::Constraints::RelationalOperator::ToRelationalOperator(relationalOperator);
-    auto res = IO::SDK::Constraints::GeometryFinder::FindWindowsOnIlluminationConstraint(ToTDBWindow(searchWindow),
-                                                                                         observerId, illuminationSource,
-                                                                                         targetBody, fixedFrame,
-                                                                                         bodyFixedLocation,
-                                                                                         illumination, relationalOpe,
-                                                                                         value, adjustValue, abe,
-                                                                                         IO::SDK::Time::TimeSpan(
-                                                                                                 stepSize), method);
-    for (size_t i = 0; i < res.size(); ++i)
-    {
-        windows[i] = ToWindowDTO(res[i]);
-    }
-}
-
-void
-FindWindowsInFieldOfViewConstraintProxy(IO::SDK::API::DTO::WindowDTO searchWindow, int observerId, int instrumentId,
-                                        int targetId, const char *targetFrame,
-                                        const char *targetShape,
-                                        const char *aberration, double stepSize,
-                                        IO::SDK::API::DTO::WindowDTO *windows)
-{
-    auto abe = IO::SDK::Aberrations::ToEnum(aberration);
-    auto res = IO::SDK::Constraints::GeometryFinder::FindWindowsInFieldOfViewConstraint(ToTDBWindow(searchWindow),
-                                                                                        observerId, instrumentId,
-                                                                                        targetId, targetFrame,
-                                                                                        targetShape,
-                                                                                        abe, IO::SDK::Time::TimeSpan(
-                    stepSize));
-    for (size_t i = 0; i < res.size(); ++i)
-    {
-        windows[i] = ToWindowDTO(res[i]);
-    }
-}
-
-double ConvertTDBToUTCProxy(double tdb)
-{
-    double delta{};
-    deltet_c(tdb, "et", &delta);
-    return tdb - delta;
-}
-
-double ConvertUTCToTDBProxy(double utc)
-{
-    double delta{};
-    deltet_c(utc, "UTC", &delta);
-    return utc + delta;
-}
-
-
-
-
-
+#pragma endregion

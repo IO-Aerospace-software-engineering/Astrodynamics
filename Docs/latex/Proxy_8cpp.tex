@@ -18,13 +18,40 @@
 {\ttfamily \#include $<$Launch.\+h$>$}\newline
 {\ttfamily \#include $<$Kernels\+Loader.\+h$>$}\newline
 {\ttfamily \#include $<$iostream$>$}\newline
-{\ttfamily \#include $<$Spacecraft\+Clock\+Kernel.\+h$>$}\newline
 \doxysubsection*{Functions}
 \begin{DoxyCompactItemize}
 \item 
 void \mbox{\hyperlink{Proxy_8cpp_a971a5440d542fbeee8d215f22dc2e9d8}{Launch\+Proxy}} (\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1LaunchDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Launch\+DTO}} \&launch\+Dto)
 \item 
 void \mbox{\hyperlink{Proxy_8cpp_a2781544b349f67f689bb0b6b9e643193}{Propagate\+Proxy}} (\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Scenario\+DTO}} \&scenario\+Dto)
+\item 
+const char $\ast$ \mbox{\hyperlink{Proxy_8cpp_a1bd1683bf72804ee2be2dfe91e4bb337}{Get\+Spice\+Version\+Proxy}} ()
+\item 
+bool \mbox{\hyperlink{Proxy_8cpp_a54a9e4a083c0856d060fd0a3daa197d1}{Write\+Ephemeris\+Proxy}} (const char $\ast$file\+Path, int object\+Id, \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1StateVectorDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+State\+Vector\+DTO}} $\ast$sv, int size)
+\item 
+void \mbox{\hyperlink{Proxy_8cpp_a185ec96428eb2855be9209d18f0aa667}{Read\+Orientation\+Proxy}} (\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Window\+DTO}} search\+Window, int spacecraft\+Id, double tolerance, const char $\ast$frame, double step\+Size, \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1StateOrientationDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+State\+Orientation\+DTO}} $\ast$so)
+\item 
+void \mbox{\hyperlink{Proxy_8cpp_a43dae27d944ca86a60f4259fcd7a3ac3}{Load\+Kernels\+Proxy}} (const char $\ast$path)
+\item 
+const char $\ast$ \mbox{\hyperlink{Proxy_8cpp_a0ea299e073a26b6daf00c819536eae1a}{TDBTo\+String\+Proxy}} (double seconds\+From\+J2000)
+\item 
+const char $\ast$ \mbox{\hyperlink{Proxy_8cpp_af1e6f2f2b5080a1c1fdc85bbe77e1810}{UTCTo\+String\+Proxy}} (double seconds\+From\+J2000)
+\item 
+void \mbox{\hyperlink{Proxy_8cpp_a95a2609c82f64355087f47bac78df473}{Read\+Ephemeris\+Proxy}} (\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Window\+DTO}} search\+Window, int observer\+Id, int target\+Id, const char $\ast$frame, const char $\ast$aberration, double step\+Size, \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1StateVectorDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+State\+Vector\+DTO}} $\ast$state\+Vectors)
+\item 
+void \mbox{\hyperlink{Proxy_8cpp_a750f7521b8b7b08bb24f54959ddca8f7}{Find\+Windows\+On\+Distance\+Constraint\+Proxy}} (\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Window\+DTO}} search\+Window, int observer\+Id, int target\+Id, const char $\ast$relational\+Operator, double value, const char $\ast$aberration, double step\+Size, \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Window\+DTO}} windows\mbox{[}1000\mbox{]})
+\item 
+void \mbox{\hyperlink{Proxy_8cpp_a7c977c599130c9d2a181b12f0ebb564d}{Find\+Windows\+On\+Occultation\+Constraint\+Proxy}} (\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Window\+DTO}} search\+Window, int observer\+Id, int target\+Id, const char $\ast$target\+Frame, const char $\ast$target\+Shape, int front\+Body\+Id, const char $\ast$front\+Frame, const char $\ast$front\+Shape, const char $\ast$occultation\+Type, const char $\ast$aberration, double step\+Size, \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Window\+DTO}} $\ast$windows)
+\item 
+void \mbox{\hyperlink{Proxy_8cpp_a8019b2f5a5e726c750887a14d6897bba}{Find\+Windows\+On\+Coordinate\+Constraint\+Proxy}} (\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Window\+DTO}} search\+Window, int observer\+Id, int target\+Id, const char $\ast$frame, const char $\ast$coordinate\+System, const char $\ast$coordinate, const char $\ast$relational\+Operator, double value, double adjust\+Value, const char $\ast$aberration, double step\+Size, \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Window\+DTO}} $\ast$windows)
+\item 
+void \mbox{\hyperlink{Proxy_8cpp_a19c45f4ab6be6be3cd4c8d45a1106cdb}{Find\+Windows\+On\+Illumination\+Constraint\+Proxy}} (\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Window\+DTO}} search\+Window, int observer\+Id, const char $\ast$illumination\+Source, int target\+Body, const char $\ast$fixed\+Frame, \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1GeodeticDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Geodetic\+DTO}} geodetic, const char $\ast$illumination\+Type, const char $\ast$relational\+Operator, double value, double adjust\+Value, const char $\ast$aberration, double step\+Size, const char $\ast$method, \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Window\+DTO}} $\ast$windows)
+\item 
+void \mbox{\hyperlink{Proxy_8cpp_a37b6c558397b63606bcd50c199a0d2fe}{Find\+Windows\+In\+Field\+Of\+View\+Constraint\+Proxy}} (\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Window\+DTO}} search\+Window, int observer\+Id, int instrument\+Id, int target\+Id, const char $\ast$target\+Frame, const char $\ast$target\+Shape, const char $\ast$aberration, double step\+Size, \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Window\+DTO}} $\ast$windows)
+\item 
+double \mbox{\hyperlink{Proxy_8cpp_a2fae52dc56d1098cf155b0a49a04cb25}{Convert\+TDBTo\+UTCProxy}} (double tdb)
+\item 
+double \mbox{\hyperlink{Proxy_8cpp_a4fca32d3c594d7677fcadc021102a781}{Convert\+UTCTo\+TDBProxy}} (double utc)
 \item 
 void \mbox{\hyperlink{Proxy_8cpp_a55b5f32b6b7ab7369fe7847e4ebc045b}{Read\+Maneuver\+Results}} (\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Scenario\+DTO}} \&scenario\+Dto, std\+::map$<$ int, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase}{IO\+::\+SDK\+::\+Maneuvers\+::\+Maneuver\+Base}} $>$ $>$ \&maneuvers)
 \item 
@@ -73,36 +100,6 @@ void \mbox{\hyperlink{Proxy_8cpp_a85720c91750cd873d1dbf050fa3d2a18}{Build\+Retro
 void \mbox{\hyperlink{Proxy_8cpp_a389131e56e754d5a3578f009c8bbab91}{Build\+Nadir\+Attitude}} (\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Scenario\+DTO}} \&scenario\+Dto, \mbox{\hyperlink{classIO_1_1SDK_1_1Scenario}{IO\+::\+SDK\+::\+Scenario}} \&scenario, std\+::map$<$ int, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase}{IO\+::\+SDK\+::\+Maneuvers\+::\+Maneuver\+Base}} $>$ $>$ \&maneuvers)
 \item 
 void \mbox{\hyperlink{Proxy_8cpp_a70191d395a750d5ca92dd638564d35b2}{Build\+Zenith\+Attitude}} (\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Scenario\+DTO}} \&scenario\+Dto, \mbox{\hyperlink{classIO_1_1SDK_1_1Scenario}{IO\+::\+SDK\+::\+Scenario}} \&scenario, std\+::map$<$ int, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase}{IO\+::\+SDK\+::\+Maneuvers\+::\+Maneuver\+Base}} $>$ $>$ \&maneuvers)
-\item 
-const char $\ast$ \mbox{\hyperlink{Proxy_8cpp_a1bd1683bf72804ee2be2dfe91e4bb337}{Get\+Spice\+Version\+Proxy}} ()
-\item 
-bool \mbox{\hyperlink{Proxy_8cpp_a54a9e4a083c0856d060fd0a3daa197d1}{Write\+Ephemeris\+Proxy}} (const char $\ast$file\+Path, int object\+Id, \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1StateVectorDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+State\+Vector\+DTO}} $\ast$sv, int size)
-\item 
-bool \mbox{\hyperlink{Proxy_8cpp_a1dfd4b544864698af36d7f349d75a682}{Write\+Orientation\+Proxy}} (const char $\ast$file\+Path, int object\+Id, int spacecraft\+Frame\+Id, \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1StateOrientationDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+State\+Orientation\+DTO}} $\ast$so, int size)
-\item 
-void \mbox{\hyperlink{Proxy_8cpp_a185ec96428eb2855be9209d18f0aa667}{Read\+Orientation\+Proxy}} (\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Window\+DTO}} search\+Window, int spacecraft\+Id, double tolerance, const char $\ast$frame, double step\+Size, \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1StateOrientationDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+State\+Orientation\+DTO}} $\ast$so)
-\item 
-void \mbox{\hyperlink{Proxy_8cpp_a43dae27d944ca86a60f4259fcd7a3ac3}{Load\+Kernels\+Proxy}} (const char $\ast$path)
-\item 
-const char $\ast$ \mbox{\hyperlink{Proxy_8cpp_a0ea299e073a26b6daf00c819536eae1a}{TDBTo\+String\+Proxy}} (double seconds\+From\+J2000)
-\item 
-const char $\ast$ \mbox{\hyperlink{Proxy_8cpp_af1e6f2f2b5080a1c1fdc85bbe77e1810}{UTCTo\+String\+Proxy}} (double seconds\+From\+J2000)
-\item 
-void \mbox{\hyperlink{Proxy_8cpp_a95a2609c82f64355087f47bac78df473}{Read\+Ephemeris\+Proxy}} (\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Window\+DTO}} search\+Window, int observer\+Id, int target\+Id, const char $\ast$frame, const char $\ast$aberration, double step\+Size, \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1StateVectorDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+State\+Vector\+DTO}} $\ast$state\+Vectors)
-\item 
-void \mbox{\hyperlink{Proxy_8cpp_a750f7521b8b7b08bb24f54959ddca8f7}{Find\+Windows\+On\+Distance\+Constraint\+Proxy}} (\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Window\+DTO}} search\+Window, int observer\+Id, int target\+Id, const char $\ast$relational\+Operator, double value, const char $\ast$aberration, double step\+Size, \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Window\+DTO}} windows\mbox{[}1000\mbox{]})
-\item 
-void \mbox{\hyperlink{Proxy_8cpp_a7c977c599130c9d2a181b12f0ebb564d}{Find\+Windows\+On\+Occultation\+Constraint\+Proxy}} (\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Window\+DTO}} search\+Window, int observer\+Id, int target\+Id, const char $\ast$target\+Frame, const char $\ast$target\+Shape, int front\+Body\+Id, const char $\ast$front\+Frame, const char $\ast$front\+Shape, const char $\ast$occultation\+Type, const char $\ast$aberration, double step\+Size, \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Window\+DTO}} $\ast$windows)
-\item 
-void \mbox{\hyperlink{Proxy_8cpp_a8019b2f5a5e726c750887a14d6897bba}{Find\+Windows\+On\+Coordinate\+Constraint\+Proxy}} (\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Window\+DTO}} search\+Window, int observer\+Id, int target\+Id, const char $\ast$frame, const char $\ast$coordinate\+System, const char $\ast$coordinate, const char $\ast$relational\+Operator, double value, double adjust\+Value, const char $\ast$aberration, double step\+Size, \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Window\+DTO}} $\ast$windows)
-\item 
-void \mbox{\hyperlink{Proxy_8cpp_a19c45f4ab6be6be3cd4c8d45a1106cdb}{Find\+Windows\+On\+Illumination\+Constraint\+Proxy}} (\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Window\+DTO}} search\+Window, int observer\+Id, const char $\ast$illumination\+Source, int target\+Body, const char $\ast$fixed\+Frame, \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1GeodeticDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Geodetic\+DTO}} geodetic, const char $\ast$illumination\+Type, const char $\ast$relational\+Operator, double value, double adjust\+Value, const char $\ast$aberration, double step\+Size, const char $\ast$method, \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Window\+DTO}} $\ast$windows)
-\item 
-void \mbox{\hyperlink{Proxy_8cpp_a37b6c558397b63606bcd50c199a0d2fe}{Find\+Windows\+In\+Field\+Of\+View\+Constraint\+Proxy}} (\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Window\+DTO}} search\+Window, int observer\+Id, int instrument\+Id, int target\+Id, const char $\ast$target\+Frame, const char $\ast$target\+Shape, const char $\ast$aberration, double step\+Size, \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Window\+DTO}} $\ast$windows)
-\item 
-double \mbox{\hyperlink{Proxy_8cpp_a2fae52dc56d1098cf155b0a49a04cb25}{Convert\+TDBTo\+UTCProxy}} (double tdb)
-\item 
-double \mbox{\hyperlink{Proxy_8cpp_a4fca32d3c594d7677fcadc021102a781}{Convert\+UTCTo\+TDBProxy}} (double utc)
 \end{DoxyCompactItemize}
 
 
@@ -415,10 +412,4 @@ Convert second\+From\+J2000 to formatted string
 \index{WriteEphemerisProxy@{WriteEphemerisProxy}!Proxy.cpp@{Proxy.cpp}}
 \doxysubsubsection{\texorpdfstring{WriteEphemerisProxy()}{WriteEphemerisProxy()}}
 {\footnotesize\ttfamily bool Write\+Ephemeris\+Proxy (\begin{DoxyParamCaption}\item[{const char $\ast$}]{file\+Path,  }\item[{int}]{object\+Id,  }\item[{\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1StateVectorDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+State\+Vector\+DTO}} $\ast$}]{sv,  }\item[{int}]{size }\end{DoxyParamCaption})}
-
-\mbox{\Hypertarget{Proxy_8cpp_a1dfd4b544864698af36d7f349d75a682}\label{Proxy_8cpp_a1dfd4b544864698af36d7f349d75a682}} 
-\index{Proxy.cpp@{Proxy.cpp}!WriteOrientationProxy@{WriteOrientationProxy}}
-\index{WriteOrientationProxy@{WriteOrientationProxy}!Proxy.cpp@{Proxy.cpp}}
-\doxysubsubsection{\texorpdfstring{WriteOrientationProxy()}{WriteOrientationProxy()}}
-{\footnotesize\ttfamily bool Write\+Orientation\+Proxy (\begin{DoxyParamCaption}\item[{const char $\ast$}]{file\+Path,  }\item[{int}]{object\+Id,  }\item[{int}]{spacecraft\+Frame\+Id,  }\item[{\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1StateOrientationDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+State\+Orientation\+DTO}} $\ast$}]{so,  }\item[{int}]{size }\end{DoxyParamCaption})}
 

@@ -1,7 +1,5 @@
 var NAVTREEINDEX10 =
 {
-"structIO_1_1SDK_1_1API_1_1DTO_1_1OccultationConstraintDTO.html":[0,0,0,0,0,0,17],
-"structIO_1_1SDK_1_1API_1_1DTO_1_1OccultationConstraintDTO.html":[1,0,0,0,0,0,17],
 "structIO_1_1SDK_1_1API_1_1DTO_1_1OccultationConstraintDTO.html#a2b3c1418a6864c8b7941f22b4f8c6247":[1,0,0,0,0,0,17,2],
 "structIO_1_1SDK_1_1API_1_1DTO_1_1OccultationConstraintDTO.html#a2b3c1418a6864c8b7941f22b4f8c6247":[0,0,0,0,0,0,17,2],
 "structIO_1_1SDK_1_1API_1_1DTO_1_1OccultationConstraintDTO.html#a7e470b24f31aa2dd866b5c6e516b9755":[0,0,0,0,0,0,17,6],
@@ -249,5 +247,7 @@ var NAVTREEINDEX10 =
 "structIO_1_1SDK_1_1Maneuvers_1_1DynamicFuelTank.html":[1,0,0,0,10,4],
 "structIO_1_1SDK_1_1Maneuvers_1_1DynamicFuelTank.html":[0,0,0,0,12,4],
 "structIO_1_1SDK_1_1Maneuvers_1_1DynamicFuelTank.html#a44f788206a498c2a48f4438beb17e974":[0,0,0,0,12,4,2],
-"structIO_1_1SDK_1_1Maneuvers_1_1DynamicFuelTank.html#a44f788206a498c2a48f4438beb17e974":[1,0,0,0,10,4,2]
+"structIO_1_1SDK_1_1Maneuvers_1_1DynamicFuelTank.html#a44f788206a498c2a48f4438beb17e974":[1,0,0,0,10,4,2],
+"structIO_1_1SDK_1_1Maneuvers_1_1DynamicFuelTank.html#a87d749360ab98fd9a1235d16313f258c":[0,0,0,0,12,4,3],
+"structIO_1_1SDK_1_1Maneuvers_1_1DynamicFuelTank.html#a87d749360ab98fd9a1235d16313f258c":[1,0,0,0,10,4,3]
 };

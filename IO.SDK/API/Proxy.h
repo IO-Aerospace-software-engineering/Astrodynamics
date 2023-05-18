@@ -3,6 +3,7 @@
 #include "ManeuverBase.h"
 #include "Scenario.h"
 
+#pragma region Proxy
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -45,17 +46,6 @@ WriteEphemerisProxy(const char *filePath, int objectId, IO::SDK::API::DTO::State
 MODULE_API void
 ReadEphemerisProxy(IO::SDK::API::DTO::WindowDTO searchWindow, int observerId, int targetId, const char *frame,
                    const char *aberration, double stepSize, IO::SDK::API::DTO::StateVectorDTO stateVectors[10000]);
-
-/**
- * Write orientation data into binary file (ck)
- * @param filePath
- * @param objectId
- * @param so
- * @param size
- * @return
- */
-MODULE_API bool
-WriteOrientationProxy(const char *filePath, int objectId, IO::SDK::API::DTO::StateOrientationDTO so[10000], int size);
 
 /**
  * Read spacecraft orientation
@@ -224,6 +214,7 @@ MODULE_API double ConvertUTCToTDBProxy(double utc);
 #ifdef __cplusplus
 }
 #endif
+#pragma endregion
 
 #ifndef PROXY_H
 #define PROXY_H
