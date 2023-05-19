@@ -251,7 +251,7 @@ TEST(API, ReadEphemerisProxy)
     searchWindow.start = 0.0;
     searchWindow.end = 100.0;
 
-    IO::SDK::API::DTO::StateVectorDTO sv[10000];
+    IO::SDK::API::DTO::StateVectorDTO sv[5000];
     ReadEphemerisProxy(searchWindow, 399, 301, "J2000", "LT", 10.0, sv);
     ASSERT_DOUBLE_EQ(-291569264.48965073, sv[0].position.x);
     ASSERT_DOUBLE_EQ(-266709187.1624887, sv[0].position.y);
@@ -271,7 +271,7 @@ TEST(API, ReadEphemerisProxyException)
     searchWindow.start = 0.0;
     searchWindow.end = 10001.0;
 
-    IO::SDK::API::DTO::StateVectorDTO sv[10000];
+    IO::SDK::API::DTO::StateVectorDTO sv[5000];
     ASSERT_THROW(ReadEphemerisProxy(searchWindow, 399, 301, "J2000", "LT", 1.0, sv), IO::SDK::Exception::InvalidArgumentException);
 }
 
