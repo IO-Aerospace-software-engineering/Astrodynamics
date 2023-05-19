@@ -104,6 +104,7 @@ namespace IO::SDK::Body
         static bool IsAsteroid(int celestialBodyId);
         static bool IsMoon(int celestialBodyId);
         static int FindCenterOfMotionId(int celestialBodyNaifId);
+        static bool IsBarycenter(int celestialBodyId);
 
 	};
 	/**

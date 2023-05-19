@@ -211,6 +211,8 @@ MODULE_API double ConvertTDBToUTCProxy(double tdb);
  * @return
  */
 MODULE_API double ConvertUTCToTDBProxy(double utc);
+
+MODULE_API IO::SDK::API::DTO::CelestialBodyDTO GetCelestialBodyInfoProxy(int bodyId);
 #ifdef __cplusplus
 }
 #endif
@@ -218,7 +220,8 @@ MODULE_API double ConvertUTCToTDBProxy(double utc);
 
 #ifndef PROXY_H
 #define PROXY_H
-
+#define ERRORMSGLENGTH 1024
+char *HandleError();
 std::map<int, std::shared_ptr<IO::SDK::Body::CelestialBody>>
 BuildCelestialBodies(IO::SDK::API::DTO::ScenarioDTO &scenario);
 
