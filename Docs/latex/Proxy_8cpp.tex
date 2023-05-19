@@ -100,6 +100,10 @@ void \mbox{\hyperlink{Proxy_8cpp_a85720c91750cd873d1dbf050fa3d2a18}{Build\+Retro
 void \mbox{\hyperlink{Proxy_8cpp_a389131e56e754d5a3578f009c8bbab91}{Build\+Nadir\+Attitude}} (\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Scenario\+DTO}} \&scenario\+Dto, \mbox{\hyperlink{classIO_1_1SDK_1_1Scenario}{IO\+::\+SDK\+::\+Scenario}} \&scenario, std\+::map$<$ int, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase}{IO\+::\+SDK\+::\+Maneuvers\+::\+Maneuver\+Base}} $>$ $>$ \&maneuvers)
 \item 
 void \mbox{\hyperlink{Proxy_8cpp_a70191d395a750d5ca92dd638564d35b2}{Build\+Zenith\+Attitude}} (\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Scenario\+DTO}} \&scenario\+Dto, \mbox{\hyperlink{classIO_1_1SDK_1_1Scenario}{IO\+::\+SDK\+::\+Scenario}} \&scenario, std\+::map$<$ int, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase}{IO\+::\+SDK\+::\+Maneuvers\+::\+Maneuver\+Base}} $>$ $>$ \&maneuvers)
+\item 
+\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1CelestialBodyDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Celestial\+Body\+DTO}} \mbox{\hyperlink{Proxy_8cpp_aa8abb0c4718f86f122a29fd992b3e67a}{Get\+Celestial\+Body\+Info\+Proxy}} (int body\+Id)
+\item 
+char $\ast$ \mbox{\hyperlink{Proxy_8cpp_a070706fba8ff9475ca3b778c3bc1e115}{Handle\+Error}} ()
 \end{DoxyCompactItemize}
 
 
@@ -283,6 +287,12 @@ Find time windows witch satisfy distance constraint
 \doxysubsubsection{\texorpdfstring{FindWindowsOnOccultationConstraintProxy()}{FindWindowsOnOccultationConstraintProxy()}}
 {\footnotesize\ttfamily void Find\+Windows\+On\+Occultation\+Constraint\+Proxy (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Window\+DTO}}}]{search\+Window,  }\item[{int}]{observer\+Id,  }\item[{int}]{target\+Id,  }\item[{const char $\ast$}]{target\+Frame,  }\item[{const char $\ast$}]{target\+Shape,  }\item[{int}]{front\+Body\+Id,  }\item[{const char $\ast$}]{front\+Frame,  }\item[{const char $\ast$}]{front\+Shape,  }\item[{const char $\ast$}]{occultation\+Type,  }\item[{const char $\ast$}]{aberration,  }\item[{double}]{step\+Size,  }\item[{\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Window\+DTO}} $\ast$}]{windows }\end{DoxyParamCaption})}
 
+\mbox{\Hypertarget{Proxy_8cpp_aa8abb0c4718f86f122a29fd992b3e67a}\label{Proxy_8cpp_aa8abb0c4718f86f122a29fd992b3e67a}} 
+\index{Proxy.cpp@{Proxy.cpp}!GetCelestialBodyInfoProxy@{GetCelestialBodyInfoProxy}}
+\index{GetCelestialBodyInfoProxy@{GetCelestialBodyInfoProxy}!Proxy.cpp@{Proxy.cpp}}
+\doxysubsubsection{\texorpdfstring{GetCelestialBodyInfoProxy()}{GetCelestialBodyInfoProxy()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1CelestialBodyDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Celestial\+Body\+DTO}} Get\+Celestial\+Body\+Info\+Proxy (\begin{DoxyParamCaption}\item[{int}]{body\+Id }\end{DoxyParamCaption})}
+
 \mbox{\Hypertarget{Proxy_8cpp_a1bd1683bf72804ee2be2dfe91e4bb337}\label{Proxy_8cpp_a1bd1683bf72804ee2be2dfe91e4bb337}} 
 \index{Proxy.cpp@{Proxy.cpp}!GetSpiceVersionProxy@{GetSpiceVersionProxy}}
 \index{GetSpiceVersionProxy@{GetSpiceVersionProxy}!Proxy.cpp@{Proxy.cpp}}
@@ -292,6 +302,12 @@ Find time windows witch satisfy distance constraint
 Get the spice version \begin{DoxyReturn}{Returns}
 version 
 \end{DoxyReturn}
+\mbox{\Hypertarget{Proxy_8cpp_a070706fba8ff9475ca3b778c3bc1e115}\label{Proxy_8cpp_a070706fba8ff9475ca3b778c3bc1e115}} 
+\index{Proxy.cpp@{Proxy.cpp}!HandleError@{HandleError}}
+\index{HandleError@{HandleError}!Proxy.cpp@{Proxy.cpp}}
+\doxysubsubsection{\texorpdfstring{HandleError()}{HandleError()}}
+{\footnotesize\ttfamily char $\ast$ Handle\+Error (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
 \mbox{\Hypertarget{Proxy_8cpp_a971a5440d542fbeee8d215f22dc2e9d8}\label{Proxy_8cpp_a971a5440d542fbeee8d215f22dc2e9d8}} 
 \index{Proxy.cpp@{Proxy.cpp}!LaunchProxy@{LaunchProxy}}
 \index{LaunchProxy@{LaunchProxy}!Proxy.cpp@{Proxy.cpp}}
