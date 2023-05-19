@@ -1,5 +1,6 @@
 var Proxy_8h =
 [
+    [ "ERRORMSGLENGTH", "Proxy_8h.html#a95ef82c0dc2925216e61145c48f63a91", null ],
     [ "MODULE_API", "Proxy_8h.html#a283b8fd63f96d196027ef6ad48c4cb85", null ],
     [ "PROXY_H", "Proxy_8h.html#a96f1aaaa516ec73ec2f412566f9d2ffd", null ],
     [ "BuildApogeeManeuver", "Proxy_8h.html#a7486ed1a8282bf3a560293bfb277999f", null ],
@@ -26,7 +27,9 @@ var Proxy_8h =
     [ "FindWindowsOnDistanceConstraintProxy", "Proxy_8h.html#a6ec1cf8afcc6842627d5f3fcab1f83ef", null ],
     [ "FindWindowsOnIlluminationConstraintProxy", "Proxy_8h.html#ab9b8fb854911a9ffea45b39d30047442", null ],
     [ "FindWindowsOnOccultationConstraintProxy", "Proxy_8h.html#a3f435df4a2572b837892811cd273ad04", null ],
+    [ "GetCelestialBodyInfoProxy", "Proxy_8h.html#aa744385eb805ddd19576c1059d59fd5e", null ],
     [ "GetSpiceVersionProxy", "Proxy_8h.html#a762431b7740df9d560ebe822564369f1", null ],
+    [ "HandleError", "Proxy_8h.html#a070706fba8ff9475ca3b778c3bc1e115", null ],
     [ "LaunchProxy", "Proxy_8h.html#a1d806e18515093a7f25ad338020ec56d", null ],
     [ "LoadKernelsProxy", "Proxy_8h.html#a8e72840432a41c8b143731654b2cef2a", null ],
     [ "PropagateProxy", "Proxy_8h.html#a53659fe236627b28005a1baae4c072ed", null ],

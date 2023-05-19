@@ -78,7 +78,7 @@ void PropagateProxy(IO::SDK::API::DTO::ScenarioDTO &scenarioDto)
     //==========Build Spacecraft===============
     std::map<int, std::shared_ptr<IO::SDK::Maneuvers::ManeuverBase>> maneuvers;
 
-    auto cbody = celestialBodies[scenarioDto.Spacecraft.initialOrbitalParameter.centerOfMotion.id];
+    auto cbody = celestialBodies[scenarioDto.Spacecraft.initialOrbitalParameter.centerOfMotion.Id];
     auto tdb = IO::SDK::Time::TDB(std::chrono::duration<double>(scenarioDto.Spacecraft.initialOrbitalParameter.epoch));
     auto frame = IO::SDK::Frames::InertialFrames(scenarioDto.Spacecraft.initialOrbitalParameter.inertialFrame);
     std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> initialOrbitalParameters = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(
@@ -127,12 +127,12 @@ bool WriteEphemerisProxy(const char *filePath, int objectId, IO::SDK::API::DTO::
 
     for (int i = 0; i < size; ++i)
     {
-        if (celestialBodies.find(sv[0].centerOfMotion.id) == celestialBodies.end())
+        if (celestialBodies.find(sv[0].centerOfMotion.Id) == celestialBodies.end())
         {
-            celestialBodies[sv[i].centerOfMotion.id] = std::make_shared<IO::SDK::Body::CelestialBody>(
-                    sv[i].centerOfMotion.id);
+            celestialBodies[sv[i].centerOfMotion.Id] = std::make_shared<IO::SDK::Body::CelestialBody>(
+                    sv[i].centerOfMotion.Id);
         }
-        states.emplace_back(celestialBodies[sv[i].centerOfMotion.id], ToVector3D(sv[i].position),
+        states.emplace_back(celestialBodies[sv[i].centerOfMotion.Id], ToVector3D(sv[i].position),
                             ToVector3D(sv[i].velocity),
                             IO::SDK::Time::TDB(std::chrono::duration<double>(sv[i].epoch)),
                             IO::SDK::Frames::Frames(sv[i].inertialFrame));
@@ -253,7 +253,7 @@ void ReadEphemerisProxy(IO::SDK::API::DTO::WindowDTO searchWindow, int observerI
         spkezr_c(std::to_string(targetId).c_str(), epoch, frame, aberration, std::to_string(observerId).c_str(), vs,
                  &lt);
 
-        stateVectors[idx].centerOfMotion.id = observerId;
+        stateVectors[idx].centerOfMotion.Id = observerId;
         stateVectors[idx].centerOfMotion.centerOfMotionId = IO::SDK::Body::CelestialBody::FindCenterOfMotionId(
                 observerId);
 
@@ -547,46 +547,46 @@ BuildCelestialBodies(IO::SDK::API::DTO::ScenarioDTO &scenario)
     // insert sun
     for (auto &cb: scenario.CelestialBodies)
     {
-        if (cb.id == -1)
+        if (cb.Id == -1)
         {
             break;
         }
-        if (IO::SDK::Body::CelestialBody::IsSun(cb.id))
+        if (IO::SDK::Body::CelestialBody::IsSun(cb.Id))
         {
-            IO::SDK::Body::CelestialBody c(cb.id);
-            celestialBodies[cb.id] = std::make_shared<IO::SDK::Body::CelestialBody>(cb.id);
+            IO::SDK::Body::CelestialBody c(cb.Id);
+            celestialBodies[cb.Id] = std::make_shared<IO::SDK::Body::CelestialBody>(cb.Id);
             break;
         }
     }
     //insert planets or asteroids
     for (auto &cb: scenario.CelestialBodies)
     {
-        if (cb.id == -1)
+        if (cb.Id == -1)
         {
             break;
         }
-        if (IO::SDK::Body::CelestialBody::IsAsteroid(cb.id) || IO::SDK::Body::CelestialBody::IsPlanet(cb.id))
+        if (IO::SDK::Body::CelestialBody::IsAsteroid(cb.Id) || IO::SDK::Body::CelestialBody::IsPlanet(cb.Id))
         {
-            IO::SDK::Body::CelestialBody c(cb.id);
-            celestialBodies.emplace(cb.id, std::make_shared<IO::SDK::Body::CelestialBody>(cb.id,
+            IO::SDK::Body::CelestialBody c(cb.Id);
+            celestialBodies.emplace(cb.Id, std::make_shared<IO::SDK::Body::CelestialBody>(cb.Id,
                                                                                           celestialBodies[IO::SDK::Body::CelestialBody::FindCenterOfMotionId(
-                                                                                                  cb.id)]));
+                                                                                                  cb.Id)]));
         }
     }
 
     //insert moons
     for (auto &cb: scenario.CelestialBodies)
     {
-        if (cb.id == -1)
+        if (cb.Id == -1)
         {
             break;
         }
-        if (IO::SDK::Body::CelestialBody::IsMoon(cb.id))
+        if (IO::SDK::Body::CelestialBody::IsMoon(cb.Id))
         {
-            IO::SDK::Body::CelestialBody c(cb.id);
-            celestialBodies.emplace(cb.id, std::make_shared<IO::SDK::Body::CelestialBody>(cb.id,
+            IO::SDK::Body::CelestialBody c(cb.Id);
+            celestialBodies.emplace(cb.Id, std::make_shared<IO::SDK::Body::CelestialBody>(cb.Id,
                                                                                           celestialBodies[IO::SDK::Body::CelestialBody::FindCenterOfMotionId(
-                                                                                                  cb.id)]));
+                                                                                                  cb.Id)]));
         }
     }
 
@@ -821,7 +821,7 @@ void BuildApsidalManeuver(IO::SDK::API::DTO::ScenarioDTO &scenarioDto, IO::SDK::
                     strdup(engine))));
         }
         auto targetOrbit = std::make_shared<IO::SDK::OrbitalParameters::StateVector>(
-                celestialBodies[maneuver.targetOrbit.centerOfMotion.id],
+                celestialBodies[maneuver.targetOrbit.centerOfMotion.Id],
                 ToVector3D(maneuver.targetOrbit.position),
                 ToVector3D(maneuver.targetOrbit.velocity),
                 IO::SDK::Time::TDB(std::chrono::duration<double>(maneuver.targetOrbit.epoch)),
@@ -886,7 +886,7 @@ BuildOrbitalPlaneManeuver(IO::SDK::API::DTO::ScenarioDTO &scenarioDto, IO::SDK::
                     strdup(engine))));
         }
         auto targetOrbit = std::make_shared<IO::SDK::OrbitalParameters::StateVector>(
-                celestialBodies[maneuver.targetOrbit.centerOfMotion.id],
+                celestialBodies[maneuver.targetOrbit.centerOfMotion.Id],
                 ToVector3D(maneuver.targetOrbit.position),
                 ToVector3D(maneuver.targetOrbit.velocity),
                 IO::SDK::Time::TDB(std::chrono::duration<double>(maneuver.targetOrbit.epoch)),
@@ -921,7 +921,7 @@ void BuildPhasingManeuver(IO::SDK::API::DTO::ScenarioDTO &scenarioDto, IO::SDK::
                     strdup(engine))));
         }
         auto targetOrbit = std::make_shared<IO::SDK::OrbitalParameters::StateVector>(
-                celestialBodies[maneuver.targetOrbit.centerOfMotion.id],
+                celestialBodies[maneuver.targetOrbit.centerOfMotion.Id],
                 ToVector3D(maneuver.targetOrbit.position),
                 ToVector3D(maneuver.targetOrbit.velocity),
                 IO::SDK::Time::TDB(std::chrono::duration<double>(maneuver.targetOrbit.epoch)),
@@ -1055,6 +1055,79 @@ void BuildZenithAttitude(IO::SDK::API::DTO::ScenarioDTO &scenarioDto, IO::SDK::S
                                                                                                                     std::chrono::duration<double>(
                                                                                                                             maneuver.attitudeHoldDuration)));
     }
+}
+
+IO::SDK::API::DTO::CelestialBodyDTO GetCelestialBodyInfoProxy(int bodyId)
+{
+    SpiceChar errorMode[7] = "RETURN";
+    erract_c("SET", 1024, errorMode);
+    IO::SDK::API::DTO::CelestialBodyDTO res;
+    res.Error = strdup("Not found");
+    SpiceChar name[32];
+    SpiceBoolean found{false};
+
+    bodc2n_c(bodyId, 32, name, &found);
+    if (found)
+    {
+        res.Error = strdup("");
+        res.Id = bodyId;
+        res.Name = strdup(name);
+        res.centerOfMotionId=IO::SDK::Body::CelestialBody::FindCenterOfMotionId(bodyId);
+
+        SpiceInt dim;
+        // Search body's radii
+        if (bodyId >= 10)
+        {
+
+            SpiceDouble radiiRes[3];
+            bodvcd_c(bodyId, "RADII", 3, &dim, radiiRes);
+            if (dim > 0)
+            {
+                res.Radii.x = radiiRes[0];
+                if (dim > 1)
+                {
+                    res.Radii.y = radiiRes[1];
+                    if (dim > 2)
+                    {
+                        res.Radii.z = radiiRes[2];
+                    }
+                }
+            }
+        }
+
+        // Search Body's mass
+        SpiceDouble gmRes{};
+        dim = 0;
+        bodvcd_c(bodyId, "GM", 3, &dim, &gmRes);
+        if (dim == 1)
+        {
+            res.GM = gmRes;
+        }
+
+        // Search
+        SpiceBoolean frameFound{false};
+        SpiceChar frname[33]{};
+        SpiceInt frcode{};
+        cnmfrm_c(name, 33, &frcode, frname, &frameFound);
+        if (frameFound)
+        {
+            res.FrameName = strdup(frname);
+            res.FrameId = frcode;
+        }
+    }
+    if (failed_c())
+    {
+        res.Error = strdup(HandleError());
+    }
+    return res;
+}
+
+char *HandleError()
+{
+    static SpiceChar msg[ERRORMSGLENGTH];
+    getmsg_c("LONG", ERRORMSGLENGTH, msg);
+    reset_c();
+    return msg;
 }
 
 #pragma endregion

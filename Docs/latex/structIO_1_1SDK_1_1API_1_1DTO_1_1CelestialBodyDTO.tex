@@ -7,9 +7,21 @@
 \doxysubsection*{Public Attributes}
 \begin{DoxyCompactItemize}
 \item 
-int \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1CelestialBodyDTO_a60d670a07c638d350d67344c272a9e70}{id}} \{-\/1\}
+int \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1CelestialBodyDTO_a7a2d2b139b6042457cf21457dd304893}{Id}} \{-\/1\}
 \item 
 int \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1CelestialBodyDTO_aa2a4ad33eca57dafa55fb9c0ba1d4dac}{center\+Of\+Motion\+Id}} \{-\/1\}
+\item 
+char $\ast$ \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1CelestialBodyDTO_ac58bd7effed87fb64a593b795a357a03}{Name}} \{\}
+\item 
+\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1Vector3DDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Vector3\+DDTO}} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1CelestialBodyDTO_a09be131402eaa380ad0b9c52527c1b97}{Radii}} \{\}
+\item 
+double \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1CelestialBodyDTO_ac0f5111140d7687c5a4729152281a4f1}{GM}} \{\}
+\item 
+char $\ast$ \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1CelestialBodyDTO_ae2f99558614ed846ba5a7ecac12ace9d}{Frame\+Name}} \{\}
+\item 
+int \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1CelestialBodyDTO_a2f5720669728eabfd91fa6cd36db3f2b}{Frame\+Id}} \{\}
+\item 
+char $\ast$ \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1CelestialBodyDTO_aae2e2aafadb3a86c9a40a155babca4ed}{Error}} \{\}
 \end{DoxyCompactItemize}
 
 
@@ -20,11 +32,47 @@ int \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1CelestialBodyDTO_aa2a4ad33
 \doxysubsubsection{\texorpdfstring{centerOfMotionId}{centerOfMotionId}}
 {\footnotesize\ttfamily int IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Celestial\+Body\+DTO\+::center\+Of\+Motion\+Id \{-\/1\}}
 
-\mbox{\Hypertarget{structIO_1_1SDK_1_1API_1_1DTO_1_1CelestialBodyDTO_a60d670a07c638d350d67344c272a9e70}\label{structIO_1_1SDK_1_1API_1_1DTO_1_1CelestialBodyDTO_a60d670a07c638d350d67344c272a9e70}} 
-\index{IO::SDK::API::DTO::CelestialBodyDTO@{IO::SDK::API::DTO::CelestialBodyDTO}!id@{id}}
-\index{id@{id}!IO::SDK::API::DTO::CelestialBodyDTO@{IO::SDK::API::DTO::CelestialBodyDTO}}
-\doxysubsubsection{\texorpdfstring{id}{id}}
-{\footnotesize\ttfamily int IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Celestial\+Body\+DTO\+::id \{-\/1\}}
+\mbox{\Hypertarget{structIO_1_1SDK_1_1API_1_1DTO_1_1CelestialBodyDTO_aae2e2aafadb3a86c9a40a155babca4ed}\label{structIO_1_1SDK_1_1API_1_1DTO_1_1CelestialBodyDTO_aae2e2aafadb3a86c9a40a155babca4ed}} 
+\index{IO::SDK::API::DTO::CelestialBodyDTO@{IO::SDK::API::DTO::CelestialBodyDTO}!Error@{Error}}
+\index{Error@{Error}!IO::SDK::API::DTO::CelestialBodyDTO@{IO::SDK::API::DTO::CelestialBodyDTO}}
+\doxysubsubsection{\texorpdfstring{Error}{Error}}
+{\footnotesize\ttfamily char$\ast$ IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Celestial\+Body\+DTO\+::\+Error \{\}}
+
+\mbox{\Hypertarget{structIO_1_1SDK_1_1API_1_1DTO_1_1CelestialBodyDTO_a2f5720669728eabfd91fa6cd36db3f2b}\label{structIO_1_1SDK_1_1API_1_1DTO_1_1CelestialBodyDTO_a2f5720669728eabfd91fa6cd36db3f2b}} 
+\index{IO::SDK::API::DTO::CelestialBodyDTO@{IO::SDK::API::DTO::CelestialBodyDTO}!FrameId@{FrameId}}
+\index{FrameId@{FrameId}!IO::SDK::API::DTO::CelestialBodyDTO@{IO::SDK::API::DTO::CelestialBodyDTO}}
+\doxysubsubsection{\texorpdfstring{FrameId}{FrameId}}
+{\footnotesize\ttfamily int IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Celestial\+Body\+DTO\+::\+Frame\+Id \{\}}
+
+\mbox{\Hypertarget{structIO_1_1SDK_1_1API_1_1DTO_1_1CelestialBodyDTO_ae2f99558614ed846ba5a7ecac12ace9d}\label{structIO_1_1SDK_1_1API_1_1DTO_1_1CelestialBodyDTO_ae2f99558614ed846ba5a7ecac12ace9d}} 
+\index{IO::SDK::API::DTO::CelestialBodyDTO@{IO::SDK::API::DTO::CelestialBodyDTO}!FrameName@{FrameName}}
+\index{FrameName@{FrameName}!IO::SDK::API::DTO::CelestialBodyDTO@{IO::SDK::API::DTO::CelestialBodyDTO}}
+\doxysubsubsection{\texorpdfstring{FrameName}{FrameName}}
+{\footnotesize\ttfamily char$\ast$ IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Celestial\+Body\+DTO\+::\+Frame\+Name \{\}}
+
+\mbox{\Hypertarget{structIO_1_1SDK_1_1API_1_1DTO_1_1CelestialBodyDTO_ac0f5111140d7687c5a4729152281a4f1}\label{structIO_1_1SDK_1_1API_1_1DTO_1_1CelestialBodyDTO_ac0f5111140d7687c5a4729152281a4f1}} 
+\index{IO::SDK::API::DTO::CelestialBodyDTO@{IO::SDK::API::DTO::CelestialBodyDTO}!GM@{GM}}
+\index{GM@{GM}!IO::SDK::API::DTO::CelestialBodyDTO@{IO::SDK::API::DTO::CelestialBodyDTO}}
+\doxysubsubsection{\texorpdfstring{GM}{GM}}
+{\footnotesize\ttfamily double IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Celestial\+Body\+DTO\+::\+GM \{\}}
+
+\mbox{\Hypertarget{structIO_1_1SDK_1_1API_1_1DTO_1_1CelestialBodyDTO_a7a2d2b139b6042457cf21457dd304893}\label{structIO_1_1SDK_1_1API_1_1DTO_1_1CelestialBodyDTO_a7a2d2b139b6042457cf21457dd304893}} 
+\index{IO::SDK::API::DTO::CelestialBodyDTO@{IO::SDK::API::DTO::CelestialBodyDTO}!Id@{Id}}
+\index{Id@{Id}!IO::SDK::API::DTO::CelestialBodyDTO@{IO::SDK::API::DTO::CelestialBodyDTO}}
+\doxysubsubsection{\texorpdfstring{Id}{Id}}
+{\footnotesize\ttfamily int IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Celestial\+Body\+DTO\+::\+Id \{-\/1\}}
+
+\mbox{\Hypertarget{structIO_1_1SDK_1_1API_1_1DTO_1_1CelestialBodyDTO_ac58bd7effed87fb64a593b795a357a03}\label{structIO_1_1SDK_1_1API_1_1DTO_1_1CelestialBodyDTO_ac58bd7effed87fb64a593b795a357a03}} 
+\index{IO::SDK::API::DTO::CelestialBodyDTO@{IO::SDK::API::DTO::CelestialBodyDTO}!Name@{Name}}
+\index{Name@{Name}!IO::SDK::API::DTO::CelestialBodyDTO@{IO::SDK::API::DTO::CelestialBodyDTO}}
+\doxysubsubsection{\texorpdfstring{Name}{Name}}
+{\footnotesize\ttfamily char$\ast$ IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Celestial\+Body\+DTO\+::\+Name \{\}}
+
+\mbox{\Hypertarget{structIO_1_1SDK_1_1API_1_1DTO_1_1CelestialBodyDTO_a09be131402eaa380ad0b9c52527c1b97}\label{structIO_1_1SDK_1_1API_1_1DTO_1_1CelestialBodyDTO_a09be131402eaa380ad0b9c52527c1b97}} 
+\index{IO::SDK::API::DTO::CelestialBodyDTO@{IO::SDK::API::DTO::CelestialBodyDTO}!Radii@{Radii}}
+\index{Radii@{Radii}!IO::SDK::API::DTO::CelestialBodyDTO@{IO::SDK::API::DTO::CelestialBodyDTO}}
+\doxysubsubsection{\texorpdfstring{Radii}{Radii}}
+{\footnotesize\ttfamily \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1Vector3DDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Vector3\+DDTO}} IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Celestial\+Body\+DTO\+::\+Radii \{\}}
 
 
 

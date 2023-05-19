@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['module_5fapi_0',['MODULE_API',['../Proxy_8h.html#a283b8fd63f96d196027ef6ad48c4cb85',1,'Proxy.h']]]
+  ['errormsglength_0',['ERRORMSGLENGTH',['../Proxy_8h.html#a95ef82c0dc2925216e61145c48f63a91',1,'Proxy.h']]]
 ];

@@ -12,7 +12,7 @@
 TEST(API, DTOSize)
 {
     auto size2 = sizeof(IO::SDK::API::DTO::ScenarioDTO);
-    ASSERT_EQ(18816, size2);
+    ASSERT_EQ(21440, size2);
 }
 
 TEST(API, TDBToString)
@@ -33,9 +33,9 @@ TEST(API, SitePropagation)
     scenario.Name = "scenatiosites";
     scenario.Window.start = 668085625.01523638;
     scenario.Window.end = 668174330.814560;
-    scenario.CelestialBodies[0].id = 399;
+    scenario.CelestialBodies[0].Id = 399;
     scenario.CelestialBodies[0].centerOfMotionId = 10;
-    scenario.CelestialBodies[1].id = 10;
+    scenario.CelestialBodies[1].Id = 10;
     scenario.Sites[0].id = 399033;
     scenario.Sites[0].name = "S33";
     std::string sitePath(SitePath);
@@ -48,7 +48,7 @@ TEST(API, SitePropagation)
     scenario.Spacecraft.name = "spc1";
     scenario.Spacecraft.dryOperatingMass = 1000.0;
     scenario.Spacecraft.maximumOperatingMass = 3000.0;
-    scenario.Spacecraft.initialOrbitalParameter.centerOfMotion.id = 399;
+    scenario.Spacecraft.initialOrbitalParameter.centerOfMotion.Id = 399;
     scenario.Spacecraft.initialOrbitalParameter.centerOfMotion.centerOfMotionId = 10;
     scenario.Spacecraft.initialOrbitalParameter.epoch = 668085625.01523638;
     scenario.Spacecraft.initialOrbitalParameter.inertialFrame = "J2000";
@@ -71,10 +71,10 @@ TEST(API, SpacecraftPropagation)
     scenario.Name = "scenatiosites";
     scenario.Window.start = 668085625.015240;
     scenario.Window.end = 668174469.185440;
-    scenario.CelestialBodies[0].id = 10;
-    scenario.CelestialBodies[1].id = 399;
+    scenario.CelestialBodies[0].Id = 10;
+    scenario.CelestialBodies[1].Id = 399;
     scenario.CelestialBodies[1].centerOfMotionId = 10;
-    scenario.CelestialBodies[2].id = 301;
+    scenario.CelestialBodies[2].Id = 301;
     scenario.CelestialBodies[2].centerOfMotionId = 399;
     scenario.Spacecraft.id = -1111;
     scenario.Spacecraft.name = "spc1";
@@ -82,7 +82,7 @@ TEST(API, SpacecraftPropagation)
     scenario.Spacecraft.maximumOperatingMass = 10000.0;
     std::string spacecraftPath(SpacecraftPath);
     scenario.Spacecraft.directoryPath = spacecraftPath.c_str();
-    scenario.Spacecraft.initialOrbitalParameter.centerOfMotion.id = 399;
+    scenario.Spacecraft.initialOrbitalParameter.centerOfMotion.Id = 399;
     scenario.Spacecraft.initialOrbitalParameter.centerOfMotion.centerOfMotionId = 10;
     scenario.Spacecraft.initialOrbitalParameter.epoch = 667915269.18539762;
     scenario.Spacecraft.initialOrbitalParameter.inertialFrame = "J2000";
@@ -115,7 +115,7 @@ TEST(API, SpacecraftPropagation)
     scenario.Spacecraft.orbitalPlaneChangingManeuvers[0].targetOrbit.velocity.x = -4979.4693432656513;
     scenario.Spacecraft.orbitalPlaneChangingManeuvers[0].targetOrbit.velocity.y = 3033.2639866911495;
     scenario.Spacecraft.orbitalPlaneChangingManeuvers[0].targetOrbit.velocity.z = 6933.1803797017265;
-    scenario.Spacecraft.orbitalPlaneChangingManeuvers[0].targetOrbit.centerOfMotion.id = 399;
+    scenario.Spacecraft.orbitalPlaneChangingManeuvers[0].targetOrbit.centerOfMotion.Id = 399;
     scenario.Spacecraft.orbitalPlaneChangingManeuvers[0].targetOrbit.centerOfMotion.centerOfMotionId = 10;
     scenario.Spacecraft.orbitalPlaneChangingManeuvers[0].targetOrbit.epoch = 667915269.18539762;
     scenario.Spacecraft.orbitalPlaneChangingManeuvers[0].targetOrbit.inertialFrame = "J2000";
@@ -251,7 +251,7 @@ TEST(API, ReadEphemerisProxy)
     searchWindow.start = 0.0;
     searchWindow.end = 100.0;
 
-    IO::SDK::API::DTO::StateVectorDTO sv[10000];
+    IO::SDK::API::DTO::StateVectorDTO sv[5000];
     ReadEphemerisProxy(searchWindow, 399, 301, "J2000", "LT", 10.0, sv);
     ASSERT_DOUBLE_EQ(-291569264.48965073, sv[0].position.x);
     ASSERT_DOUBLE_EQ(-266709187.1624887, sv[0].position.y);
@@ -259,7 +259,7 @@ TEST(API, ReadEphemerisProxy)
     ASSERT_DOUBLE_EQ(643.53061483971885, sv[0].velocity.x);
     ASSERT_DOUBLE_EQ(-666.08181440799092, sv[0].velocity.y);
     ASSERT_DOUBLE_EQ(-301.32283209101018, sv[0].velocity.z);
-    ASSERT_DOUBLE_EQ(399, sv[0].centerOfMotion.id);
+    ASSERT_DOUBLE_EQ(399, sv[0].centerOfMotion.Id);
     ASSERT_DOUBLE_EQ(10, sv[0].centerOfMotion.centerOfMotionId);
     ASSERT_STREQ("J2000", sv[0].inertialFrame);
     ASSERT_DOUBLE_EQ(0.0, sv[0].epoch);
@@ -271,7 +271,7 @@ TEST(API, ReadEphemerisProxyException)
     searchWindow.start = 0.0;
     searchWindow.end = 10001.0;
 
-    IO::SDK::API::DTO::StateVectorDTO sv[10000];
+    IO::SDK::API::DTO::StateVectorDTO sv[5000];
     ASSERT_THROW(ReadEphemerisProxy(searchWindow, 399, 301, "J2000", "LT", 1.0, sv), IO::SDK::Exception::InvalidArgumentException);
 }
 
@@ -364,7 +364,7 @@ TEST(API, WriteEphemeris)
         sv[i].velocity.y = 8.0 + i * 0.001;
         sv[i].velocity.z = i;
         sv[i].epoch = i;
-        sv[i].centerOfMotion.id = 399;
+        sv[i].centerOfMotion.Id = 399;
         sv[i].centerOfMotion.centerOfMotionId = 10;
         sv[i].inertialFrame = "J2000";
     }
@@ -389,8 +389,30 @@ TEST(API, WriteEphemeris)
         ASSERT_DOUBLE_EQ(svresult[i].velocity.y, 8 + i * 0.001);
         ASSERT_DOUBLE_EQ(svresult[i].velocity.z, i);
         ASSERT_DOUBLE_EQ(svresult[i].epoch, i);
-        ASSERT_EQ(svresult[i].centerOfMotion.id, 399);
+        ASSERT_EQ(svresult[i].centerOfMotion.Id, 399);
         ASSERT_DOUBLE_EQ(svresult[i].centerOfMotion.centerOfMotionId, 10);
         ASSERT_STREQ(svresult[i].inertialFrame, "J2000");
     }
+}
+
+TEST(API, GetBodyInformation)
+{
+    auto res = GetCelestialBodyInfoProxy(399);
+    ASSERT_EQ(399, res.Id);
+    ASSERT_EQ(10, res.centerOfMotionId);
+    ASSERT_STREQ("EARTH", res.Name);
+    ASSERT_STREQ("", res.Error);
+    ASSERT_EQ(13000, res.FrameId);
+    ASSERT_STREQ("ITRF93", res.FrameName);
+    ASSERT_DOUBLE_EQ(398600.43543609593, res.GM);
+    ASSERT_DOUBLE_EQ(6378.1365999999998, res.Radii.x);
+    ASSERT_DOUBLE_EQ(6378.1365999999998, res.Radii.y);
+    ASSERT_DOUBLE_EQ(6356.7519000000002, res.Radii.z);
+}
+
+TEST(API, GetBodyInformationInvalidId)
+{
+    auto res = GetCelestialBodyInfoProxy(398);
+    ASSERT_STREQ("Not found", res.Error);
+
 }

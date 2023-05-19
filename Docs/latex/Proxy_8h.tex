@@ -9,6 +9,8 @@
 \#define \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}}
 \item 
 \#define \mbox{\hyperlink{Proxy_8h_a96f1aaaa516ec73ec2f412566f9d2ffd}{PROXY\+\_\+H}}
+\item 
+\#define \mbox{\hyperlink{Proxy_8h_a95ef82c0dc2925216e61145c48f63a91}{ERRORMSGLENGTH}}~1024
 \end{DoxyCompactItemize}
 \doxysubsection*{Functions}
 \begin{DoxyCompactItemize}
@@ -44,6 +46,10 @@
 \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} double \mbox{\hyperlink{Proxy_8h_a21e5be456b638ec478bbe753d51d4d82}{Convert\+TDBTo\+UTCProxy}} (double tdb)
 \item 
 \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} double \mbox{\hyperlink{Proxy_8h_ab9c954c87940d8be415c2f8b7696ed15}{Convert\+UTCTo\+TDBProxy}} (double utc)
+\item 
+\mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1CelestialBodyDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Celestial\+Body\+DTO}} \mbox{\hyperlink{Proxy_8h_aa744385eb805ddd19576c1059d59fd5e}{Get\+Celestial\+Body\+Info\+Proxy}} (int body\+Id)
+\item 
+char $\ast$ \mbox{\hyperlink{Proxy_8h_a070706fba8ff9475ca3b778c3bc1e115}{Handle\+Error}} ()
 \item 
 std\+::map$<$ int, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1CelestialBody}{IO\+::\+SDK\+::\+Body\+::\+Celestial\+Body}} $>$ $>$ \mbox{\hyperlink{Proxy_8h_ad45407eab2a930ba06148832da6fcbd5}{Build\+Celestial\+Bodies}} (\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Scenario\+DTO}} \&scenario)
 \item 
@@ -96,6 +102,12 @@ void \mbox{\hyperlink{Proxy_8h_a55b5f32b6b7ab7369fe7847e4ebc045b}{Read\+Maneuver
 
 
 \doxysubsection{Macro Definition Documentation}
+\mbox{\Hypertarget{Proxy_8h_a95ef82c0dc2925216e61145c48f63a91}\label{Proxy_8h_a95ef82c0dc2925216e61145c48f63a91}} 
+\index{Proxy.h@{Proxy.h}!ERRORMSGLENGTH@{ERRORMSGLENGTH}}
+\index{ERRORMSGLENGTH@{ERRORMSGLENGTH}!Proxy.h@{Proxy.h}}
+\doxysubsubsection{\texorpdfstring{ERRORMSGLENGTH}{ERRORMSGLENGTH}}
+{\footnotesize\ttfamily \#define ERRORMSGLENGTH~1024}
+
 \mbox{\Hypertarget{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}\label{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}} 
 \index{Proxy.h@{Proxy.h}!MODULE\_API@{MODULE\_API}}
 \index{MODULE\_API@{MODULE\_API}!Proxy.h@{Proxy.h}}
@@ -396,6 +408,12 @@ Find time windows witch satisfy occultation constraint
 {\em windows} & \\
 \hline
 \end{DoxyParams}
+\mbox{\Hypertarget{Proxy_8h_aa744385eb805ddd19576c1059d59fd5e}\label{Proxy_8h_aa744385eb805ddd19576c1059d59fd5e}} 
+\index{Proxy.h@{Proxy.h}!GetCelestialBodyInfoProxy@{GetCelestialBodyInfoProxy}}
+\index{GetCelestialBodyInfoProxy@{GetCelestialBodyInfoProxy}!Proxy.h@{Proxy.h}}
+\doxysubsubsection{\texorpdfstring{GetCelestialBodyInfoProxy()}{GetCelestialBodyInfoProxy()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1CelestialBodyDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Celestial\+Body\+DTO}} Get\+Celestial\+Body\+Info\+Proxy (\begin{DoxyParamCaption}\item[{int}]{body\+Id }\end{DoxyParamCaption})}
+
 \mbox{\Hypertarget{Proxy_8h_a762431b7740df9d560ebe822564369f1}\label{Proxy_8h_a762431b7740df9d560ebe822564369f1}} 
 \index{Proxy.h@{Proxy.h}!GetSpiceVersionProxy@{GetSpiceVersionProxy}}
 \index{GetSpiceVersionProxy@{GetSpiceVersionProxy}!Proxy.h@{Proxy.h}}
@@ -405,6 +423,12 @@ Find time windows witch satisfy occultation constraint
 Get the spice version \begin{DoxyReturn}{Returns}
 version 
 \end{DoxyReturn}
+\mbox{\Hypertarget{Proxy_8h_a070706fba8ff9475ca3b778c3bc1e115}\label{Proxy_8h_a070706fba8ff9475ca3b778c3bc1e115}} 
+\index{Proxy.h@{Proxy.h}!HandleError@{HandleError}}
+\index{HandleError@{HandleError}!Proxy.h@{Proxy.h}}
+\doxysubsubsection{\texorpdfstring{HandleError()}{HandleError()}}
+{\footnotesize\ttfamily char $\ast$ Handle\+Error (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
 \mbox{\Hypertarget{Proxy_8h_a1d806e18515093a7f25ad338020ec56d}\label{Proxy_8h_a1d806e18515093a7f25ad338020ec56d}} 
 \index{Proxy.h@{Proxy.h}!LaunchProxy@{LaunchProxy}}
 \index{LaunchProxy@{LaunchProxy}!Proxy.h@{Proxy.h}}

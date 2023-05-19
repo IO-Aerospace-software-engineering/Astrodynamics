@@ -202,6 +202,8 @@ Static Public Member Functions</h2></td></tr>
 <tr class="separator:ad13cee9329c5ececbe5c1a6652cedc76"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7387c787cf8e1597dbd97a3f8d039037"><td class="memItemLeft" align="right" valign="top">static int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Body_1_1CelestialBody.html#a7387c787cf8e1597dbd97a3f8d039037">FindCenterOfMotionId</a> (int celestialBodyNaifId)</td></tr>
 <tr class="separator:a7387c787cf8e1597dbd97a3f8d039037"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a49b16afff71b1b9d99f99970706cc892"><td class="memItemLeft" align="right" valign="top">static bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Body_1_1CelestialBody.html#a49b16afff71b1b9d99f99970706cc892">IsBarycenter</a> (int celestialBodyId)</td></tr>
+<tr class="separator:a49b16afff71b1b9d99f99970706cc892"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pub_static_methods_classIO_1_1SDK_1_1Body_1_1Body"><td colspan="2" onclick="javascript:toggleInherit('pub_static_methods_classIO_1_1SDK_1_1Body_1_1Body')"><img src="closed.png" alt="-"/>&#160;Static Public Member Functions inherited from <a class="el" href="classIO_1_1SDK_1_1Body_1_1Body.html">IO::SDK::Body::Body</a></td></tr>
 <tr class="memitem:aafbe9ac9808c8b20f6527fa12b760a84 inherit pub_static_methods_classIO_1_1SDK_1_1Body_1_1Body"><td class="memItemLeft" align="right" valign="top">static std::vector&lt; <a class="el" href="classIO_1_1SDK_1_1Time_1_1Window.html">IO::SDK::Time::Window</a>&lt; <a class="el" href="classIO_1_1SDK_1_1Time_1_1TDB.html">IO::SDK::Time::TDB</a> &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Body_1_1Body.html#aafbe9ac9808c8b20f6527fa12b760a84">FindWindowsOnDistanceConstraint</a> (const <a class="el" href="classIO_1_1SDK_1_1Time_1_1Window.html">IO::SDK::Time::Window</a>&lt; <a class="el" href="classIO_1_1SDK_1_1Time_1_1TDB.html">IO::SDK::Time::TDB</a> &gt; &amp;searchWindow, const <a class="el" href="classIO_1_1SDK_1_1Body_1_1Body.html">Body</a> &amp;targetBody, const <a class="el" href="classIO_1_1SDK_1_1Body_1_1Body.html">Body</a> &amp;observer, const <a class="el" href="classIO_1_1SDK_1_1Constraints_1_1RelationalOperator.html">IO::SDK::Constraints::RelationalOperator</a> &amp;constraint, <a class="el" href="namespaceIO_1_1SDK.html#abbb4827ec6a24ad346d9a60473ad3b81">IO::SDK::AberrationsEnum</a> aberration, double value, const <a class="el" href="classIO_1_1SDK_1_1Time_1_1TimeSpan.html">IO::SDK::Time::TimeSpan</a> &amp;step)</td></tr>
 <tr class="memdesc:aafbe9ac9808c8b20f6527fa12b760a84 inherit pub_static_methods_classIO_1_1SDK_1_1Body_1_1Body"><td class="mdescLeft">&#160;</td><td class="mdescRight">Find windows when distance constraint occurs.  <a href="classIO_1_1SDK_1_1Body_1_1Body.html#aafbe9ac9808c8b20f6527fa12b760a84">More...</a><br /></td></tr>
@@ -491,6 +493,32 @@ Additional Inherited Members</h2></td></tr>
       <table class="memname">
         <tr>
           <td class="memname">bool IO::SDK::Body::CelestialBody::IsAsteroid </td>
+          <td>(</td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>celestialBodyId</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a49b16afff71b1b9d99f99970706cc892" name="a49b16afff71b1b9d99f99970706cc892"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a49b16afff71b1b9d99f99970706cc892">&#9670;&nbsp;</a></span>IsBarycenter()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool IO::SDK::Body::CelestialBody::IsBarycenter </td>
           <td>(</td>
           <td class="paramtype">int&#160;</td>
           <td class="paramname"><em>celestialBodyId</em></td><td>)</td>

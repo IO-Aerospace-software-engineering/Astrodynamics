@@ -8,8 +8,14 @@ namespace IO::SDK::API::DTO
 {
     struct CelestialBodyDTO
     {
-        int id{-1};
+        int Id{-1};
         int centerOfMotionId{-1};
+        char *Name{};
+        IO::SDK::API::DTO::Vector3DDTO Radii{};
+        double GM{};
+        char *FrameName{};
+        int FrameId{};
+        char * Error{};
     };
 }
 #endif //IOSDK_CELESTIALBODYDTO_H
