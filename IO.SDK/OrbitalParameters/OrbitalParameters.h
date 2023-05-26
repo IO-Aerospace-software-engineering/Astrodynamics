@@ -46,7 +46,7 @@ namespace IO::SDK::OrbitalParameters
 		 * @param epoch 
 		 * @param frame 
 		 */
-		OrbitalParameters(const std::shared_ptr<IO::SDK::Body::CelestialBody> &centerOfMotion, const IO::SDK::Time::TDB &epoch, const IO::SDK::Frames::Frames &frame);
+		OrbitalParameters(const std::shared_ptr<IO::SDK::Body::CelestialBody> &centerOfMotion, IO::SDK::Time::TDB epoch, IO::SDK::Frames::Frames frame);
 
 		virtual ~OrbitalParameters() = default;
 

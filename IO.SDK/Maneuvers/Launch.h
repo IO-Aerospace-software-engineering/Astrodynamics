@@ -42,7 +42,6 @@ namespace IO::SDK::Maneuvers
         double m_inertialDescendingAzimuthLaunch{std::numeric_limits<double>::quiet_NaN()};
         double m_nonInertialDescendingAzimuthLaunch{std::numeric_limits<double>::quiet_NaN()};
         double m_nonInertialInsertionVelocity{std::numeric_limits<double>::quiet_NaN()};
-        double m_inertialInsertionVelocity{std::numeric_limits<double>::quiet_NaN()};
 
         const double m_deltaL{std::numeric_limits<double>::quiet_NaN()};
         const double m_inclination{std::numeric_limits<double>::quiet_NaN()};

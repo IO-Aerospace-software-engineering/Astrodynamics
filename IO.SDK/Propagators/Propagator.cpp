@@ -10,7 +10,6 @@
  */
 #include <Propagator.h>
 #include <PropagatorException.h>
-#include <algorithm>
 #include <ManeuverBase.h>
 #include <StateOrientation.h>
 

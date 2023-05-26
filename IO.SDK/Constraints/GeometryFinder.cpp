@@ -5,9 +5,7 @@
 #include <GeometryFinder.h>
 #include <SpiceUsr.h>
 #include <Builder.h>
-#include "CelestialBody.h"
 #include "IlluminationAngle.h"
-#include <Helpers/Type.cpp>
 
 std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>>
 IO::SDK::Constraints::GeometryFinder::FindWindowsOnDistanceConstraint(const IO::SDK::Time::Window<IO::SDK::Time::TDB> &searchWindow, int observerId,

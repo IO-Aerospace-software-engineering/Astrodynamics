@@ -11,7 +11,6 @@
 #include "RelationalOperator.h"
 
 #include <utility>
-#include <cstring>
 #include <SDKException.h>
 
 IO::SDK::Constraints::RelationalOperator IO::SDK::Constraints::RelationalOperator::mGreaterThan(std::string(">"));

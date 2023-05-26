@@ -12,15 +12,17 @@
 #include <Constants.h>
 #include <Parameters.h>
 
+#include <utility>
+
 IO::SDK::Maneuvers::PerigeeHeightChangingManeuver::PerigeeHeightChangingManeuver(std::vector<IO::SDK::Body::Spacecraft::Engine*> engines,
                                                                                  IO::SDK::Propagators::Propagator &propagator, double targetHeight)
-        : IO::SDK::Maneuvers::ManeuverBase(engines, propagator), m_targetHeight{targetHeight}
+        : IO::SDK::Maneuvers::ManeuverBase(std::move(engines), propagator), m_targetHeight{targetHeight}
 {
 }
 
 IO::SDK::Maneuvers::PerigeeHeightChangingManeuver::PerigeeHeightChangingManeuver(std::vector<IO::SDK::Body::Spacecraft::Engine*> engines,
                                                                                  IO::SDK::Propagators::Propagator &propagator, double targetHeight,
-                                                                                 const IO::SDK::Time::TDB &minimumEpoch) : IO::SDK::Maneuvers::ManeuverBase(engines, propagator,
+                                                                                 const IO::SDK::Time::TDB &minimumEpoch) : IO::SDK::Maneuvers::ManeuverBase(std::move(engines), propagator,
                                                                                                                                                             minimumEpoch),
                                                                                                                            m_targetHeight{targetHeight}
 {

@@ -10,9 +10,10 @@
  */
 #include <FrameFile.h>
 #include<filesystem>
+#include <utility>
 #include<SpiceUsr.h>
 
-IO::SDK::Frames::FrameFile::FrameFile(const std::string& filePath, const std::string& name) : m_filePath{ filePath }, m_name{ name }
+IO::SDK::Frames::FrameFile::FrameFile(const std::string& filePath, std::string  name) : m_filePath{ filePath }, m_name{std::move( name )}
 {
 	auto directory = std::filesystem::directory_entry(filePath).path();
 	if (directory.has_parent_path())

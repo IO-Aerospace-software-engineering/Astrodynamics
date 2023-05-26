@@ -113,52 +113,8 @@ namespace IO::SDK
         inline Propagators::Propagator &GetPropagator()
         { return *m_propagator; }
 
-
-
         /**
-         * Add a distance constraint
-         * @param distanceParameters
-         */
-        void AddDistanceConstraint(Constraints::Parameters::DistanceParameters *distanceParameters);
-
-        /**
-         * Add an occultation constraint
-         * @param occultationParameters
-         */
-        void AddOccultationConstraint(IO::SDK::Constraints::Parameters::OccultationParameters *occultationParameters);
-
-        /**
-         * Add a day constraint
-         * @param byDayParameters
-         */
-        void AddDayConstraint(IO::SDK::Constraints::Parameters::ByDayParameters *byDayParameters);
-
-        /**
-         * Add a night constraint
-         * @param byNightParameters
-         */
-        void AddNightConstraint(IO::SDK::Constraints::Parameters::ByNightParameters *byNightParameters);
-
-        /**
-         * Add a body visibility constraint
-         * @param bodyVisibilityParameters
-         */
-        void AddBodyVisibilityConstraint(IO::SDK::Constraints::Parameters::BodyVisibilityFromSiteParameters *bodyVisibilityParameters);
-
-        /**
-         * Add a field of view constraint
-         * @param inFieldOfViewParameters
-         */
-        void AddInFieldOfViewConstraint(IO::SDK::Constraints::Parameters::InFieldOfViewParameters *inFieldOfViewParameters);
-
-        /**
-         * Add launch constraint
-         * @param launchParameters
-         */
-        void AddLaunchConstraint(IO::SDK::Constraints::Parameters::LaunchParameters *launchParameters);
-
-        /**
-         * Execute scenario, propagate spacecrafts, simulate maneuvers, evaluate constraints
+         * Execute scenario
          */
         void Execute();
     };

@@ -13,7 +13,9 @@
 #include <InertialFrames.h>
 #include <Parameters.h>
 
-IO::SDK::OrbitalParameters::OrbitalParameters::OrbitalParameters(const std::shared_ptr<IO::SDK::Body::CelestialBody> &centerOfMotion, const IO::SDK::Time::TDB &epoch, const IO::SDK::Frames::Frames &frame) : m_centerOfMotion{centerOfMotion}, m_epoch{epoch}, m_frame{frame}
+#include <utility>
+
+IO::SDK::OrbitalParameters::OrbitalParameters::OrbitalParameters(const std::shared_ptr<IO::SDK::Body::CelestialBody> &centerOfMotion, IO::SDK::Time::TDB epoch, IO::SDK::Frames::Frames frame) : m_centerOfMotion{centerOfMotion}, m_epoch{std::move(epoch)}, m_frame{std::move(frame)}
 {
 }
 

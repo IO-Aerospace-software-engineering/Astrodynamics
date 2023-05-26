@@ -39,7 +39,7 @@ namespace IO::SDK
          * 
          * @param name 
          */
-        explicit Coordinate(const std::string &name);
+        explicit Coordinate(std::string name);
         ~Coordinate() = default;
 
         Coordinate &operator=(const Coordinate &other)
