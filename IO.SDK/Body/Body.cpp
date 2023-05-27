@@ -136,7 +136,7 @@ IO::SDK::Body::Body::FindWindowsOnOccultationConstraint(const IO::SDK::Time::Win
 {
     std::string bshape{"POINT"};
     std::string bframe{};
-    auto selectedOccultation = OccultationType::Any();
+    auto selectedOccultation {OccultationType::Any()};
     if (IO::SDK::Helpers::IsInstanceOf<IO::SDK::Body::CelestialBody>(&targetBody))
     {
         bshape = "ELLIPSOID";

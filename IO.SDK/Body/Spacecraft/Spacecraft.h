@@ -341,7 +341,7 @@ namespace IO::SDK::Body::Spacecraft
          */
         const std::unique_ptr<IO::SDK::Frames::SpacecraftFrameFile> &GetFrame() const;
 
-        inline double GetMaximumOperatingMass()
+        inline double GetMaximumOperatingMass() const
         { return m_maximumOperatingMass; }
     };
 }

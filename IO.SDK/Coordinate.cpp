@@ -9,6 +9,8 @@
  * 
  */
 #include <Coordinate.h>
+
+#include <utility>
 #include "SDKException.h"
 
 IO::SDK::Coordinate IO::SDK::Coordinate::mX(std::string("X"));
@@ -23,7 +25,7 @@ IO::SDK::Coordinate IO::SDK::Coordinate::mRadius(std::string("RADIUS"));
 IO::SDK::Coordinate IO::SDK::Coordinate::mRange(std::string("RANGE"));
 IO::SDK::Coordinate IO::SDK::Coordinate::mRightAscension(std::string("RIGHT ASCENSION"));
 
-IO::SDK::Coordinate::Coordinate(const std::string &name) : m_name{name}
+IO::SDK::Coordinate::Coordinate(std::string name) : m_name{std::move(name)}
 {
 }
 
@@ -87,7 +89,7 @@ IO::SDK::Coordinate &IO::SDK::Coordinate::Colatitude()
     return mColatitude;
 }
 
-IO::SDK::Coordinate IO::SDK::Coordinate::ToCoordinateType(const std::string &coordinateType)
+IO::SDK::Coordinate& IO::SDK::Coordinate::ToCoordinateType(const std::string &coordinateType)
 {
     if (coordinateType == Coordinate::mAltitude.ToCharArray())
     {

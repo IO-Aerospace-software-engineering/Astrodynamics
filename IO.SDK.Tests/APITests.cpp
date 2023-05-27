@@ -102,7 +102,7 @@ TEST(API, SpacecraftPropagation)
     scenario.Spacecraft.engines[0].name = "eng1";
     scenario.Spacecraft.engines[0].serialNumber = "eng1";
     scenario.Spacecraft.engines[0].fuelTankSerialNumber = "ft1";
-    scenario.Spacecraft.engines[0].fuelflow = 50.0;
+    scenario.Spacecraft.engines[0].fuelFlow = 50.0;
     scenario.Spacecraft.engines[0].isp = 450.0;
 
     scenario.Spacecraft.payloads[0].serialNumber = "pl1";
@@ -215,7 +215,6 @@ TEST(API, FindWindowsInFieldOfViewConstraintProxy)
                                             std::move(orbitalParams)};
 
     s.AddCircularFOVInstrument(789, "CAMERA789", orientation, boresight, fovvector, 1.5);
-    const IO::SDK::Instruments::Instrument *instrument{s.GetInstrument(789)};
 
     //==========PROPAGATOR====================
     auto step{IO::SDK::Time::TimeSpan(1.0s)};

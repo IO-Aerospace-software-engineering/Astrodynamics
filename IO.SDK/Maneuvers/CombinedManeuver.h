@@ -30,7 +30,6 @@ namespace IO::SDK::Maneuvers
     class CombinedManeuver final : public IO::SDK::Maneuvers::ManeuverBase
     {
     private:
-        double m_relativeInclination{};
         double m_inclination;
         double m_peregeeRadius;
 

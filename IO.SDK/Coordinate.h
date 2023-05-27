@@ -39,7 +39,7 @@ namespace IO::SDK
          * 
          * @param name 
          */
-        explicit Coordinate(const std::string &name);
+        explicit Coordinate(std::string name);
         ~Coordinate() = default;
 
         Coordinate &operator=(const Coordinate &other)
@@ -70,7 +70,7 @@ namespace IO::SDK
         static Coordinate& RightAscension();
         static Coordinate& Declination();
         static Coordinate& Colatitude();
-        static Coordinate ToCoordinateType(const std::string &coordinateType) ;
+        static Coordinate& ToCoordinateType(const std::string &coordinateType) ;
     };
 
 } // namespace IO::SDK

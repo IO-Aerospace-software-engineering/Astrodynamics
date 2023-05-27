@@ -26,7 +26,7 @@ namespace IO::SDK::Frames
 		const std::string m_filePath{};
 		bool m_fileExists{ false };
 		bool m_isLoaded{ false };
-		FrameFile(const std::string& filePath, const std::string& name);
+		FrameFile(const std::string& filePath, std::string  name);
 		const std::string m_name{};
 
 	public:

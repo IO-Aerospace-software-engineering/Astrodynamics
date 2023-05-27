@@ -1,6 +1,6 @@
 var classIO_1_1SDK_1_1Frames_1_1FrameFile =
 [
-    [ "FrameFile", "classIO_1_1SDK_1_1Frames_1_1FrameFile.html#a7671ea08db5c6c165d75ec5760c0bd23", null ],
+    [ "FrameFile", "classIO_1_1SDK_1_1Frames_1_1FrameFile.html#aa66f02e3afdcd901dafed6661c8a1b28", null ],
     [ "~FrameFile", "classIO_1_1SDK_1_1Frames_1_1FrameFile.html#a750a6ff9d670ffbbae82690f2d2208d4", null ],
     [ "GetName", "classIO_1_1SDK_1_1Frames_1_1FrameFile.html#a6fbe10b5ca7dc1dacea1b36c0c6336c3", null ],
     [ "m_fileExists", "classIO_1_1SDK_1_1Frames_1_1FrameFile.html#aee3f358a8ff43053e026d84c5c999181", null ],

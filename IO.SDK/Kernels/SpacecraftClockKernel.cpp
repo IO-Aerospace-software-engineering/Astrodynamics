@@ -116,7 +116,7 @@ double IO::SDK::Kernels::SpacecraftClockKernel::ConvertToEncodedClock(const IO::
 
 int IO::SDK::Kernels::SpacecraftClockKernel::GetTicksPerSeconds() const
 {
-	return  std::pow(2.0, m_resolution);
+	return  std::pow(2, m_resolution);
 }
 
 double IO::SDK::Kernels::SpacecraftClockKernel::GetSecondsPerTick() const

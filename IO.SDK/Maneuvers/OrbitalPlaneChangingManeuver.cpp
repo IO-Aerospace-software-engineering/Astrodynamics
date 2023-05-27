@@ -17,14 +17,14 @@
 IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver::OrbitalPlaneChangingManeuver(std::vector<IO::SDK::Body::Spacecraft::Engine*> engines,
                                                                                IO::SDK::Propagators::Propagator &propagator,
                                                                                std::shared_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> targetOrbit) : IO::SDK::Maneuvers::ManeuverBase(
-        std::move(engines), propagator), m_targetOrbit{targetOrbit}
+        std::move(engines), propagator), m_targetOrbit{std::move(targetOrbit)}
 {
 }
 
 IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver::OrbitalPlaneChangingManeuver(std::vector<IO::SDK::Body::Spacecraft::Engine*> engines,
                                                                                IO::SDK::Propagators::Propagator &propagator,
                                                                                std::shared_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> targetOrbit, const IO::SDK::Time::TDB &minimumEpoch)
-        : IO::SDK::Maneuvers::ManeuverBase(std::move(engines), propagator, minimumEpoch), m_targetOrbit{targetOrbit}
+        : IO::SDK::Maneuvers::ManeuverBase(std::move(engines), propagator, minimumEpoch), m_targetOrbit{std::move(targetOrbit)}
 {
 }
 

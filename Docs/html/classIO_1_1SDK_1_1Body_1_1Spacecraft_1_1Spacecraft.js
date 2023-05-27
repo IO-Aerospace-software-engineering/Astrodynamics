@@ -19,7 +19,7 @@ var classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft =
     [ "GetFueltank", "classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft.html#a347135bd0b7c9834754e0b5cf366f4de", null ],
     [ "GetInstrument", "classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft.html#afb07d602e067c059ac6ae3a573984fcb", null ],
     [ "GetMass", "classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft.html#ae7354800272662d52d64c5a1f2ade5c0", null ],
-    [ "GetMaximumOperatingMass", "classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft.html#aebe8482d25128fdb0e64466e68c84609", null ],
+    [ "GetMaximumOperatingMass", "classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft.html#ab83dd50751732be26d21cff147fcd548", null ],
     [ "GetOrientation", "classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft.html#ababce78d27520ce4fe4ee9a86ff5049b", null ],
     [ "GetOrientationsCoverageWindow", "classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft.html#a30b054da19d424c78fb2686f40f316d3", null ],
     [ "ReadEphemeris", "classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft.html#ad061367c27a97a86d76d670b0bfdad02", null ],

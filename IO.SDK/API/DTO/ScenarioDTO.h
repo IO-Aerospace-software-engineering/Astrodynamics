@@ -9,7 +9,7 @@ namespace IO::SDK::API::DTO
 {
     struct ScenarioDTO
     {
-        char *Name{};
+        const char *Name{};
         WindowDTO Window{};
         SpacecraftDTO Spacecraft;
         SiteDTO Sites[10];

@@ -216,7 +216,7 @@ MODULE_API IO::SDK::API::DTO::CelestialBodyDTO GetCelestialBodyInfoProxy(int bod
 #ifdef __cplusplus
 }
 #endif
-#pragma endregion
+#pragma endregion Proxy
 
 #ifndef PROXY_H
 #define PROXY_H
