@@ -5,11 +5,11 @@ namespace IO::SDK::API::DTO
     struct EngineDTO
     {
         int id;
-        char * serialNumber;
-        char * fuelTankSerialNumber;
-        char * name;
+        const char * serialNumber;
+        const char * fuelTankSerialNumber;
+        const char * name;
         double isp;
-        double fuelflow;
+        double fuelFlow;
     };
     
 }

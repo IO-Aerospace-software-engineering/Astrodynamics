@@ -89,7 +89,7 @@ IO::SDK::Coordinate &IO::SDK::Coordinate::Colatitude()
     return mColatitude;
 }
 
-IO::SDK::Coordinate IO::SDK::Coordinate::ToCoordinateType(const std::string &coordinateType)
+IO::SDK::Coordinate& IO::SDK::Coordinate::ToCoordinateType(const std::string &coordinateType)
 {
     if (coordinateType == Coordinate::mAltitude.ToCharArray())
     {

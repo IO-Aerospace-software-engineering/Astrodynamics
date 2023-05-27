@@ -630,7 +630,7 @@ void BuildEngines(const IO::SDK::API::DTO::ScenarioDTO &scenarioDto,
         }
         spacecraft.AddEngine(engine.serialNumber, engine.name, engine.fuelTankSerialNumber,
                              IO::SDK::Math::Vector3D::Zero, IO::SDK::Math::Vector3D::Zero, engine.isp,
-                             engine.fuelflow);
+                             engine.fuelFlow);
     }
 }
 

@@ -70,7 +70,7 @@ namespace IO::SDK
         static Coordinate& RightAscension();
         static Coordinate& Declination();
         static Coordinate& Colatitude();
-        static Coordinate ToCoordinateType(const std::string &coordinateType) ;
+        static Coordinate& ToCoordinateType(const std::string &coordinateType) ;
     };
 
 } // namespace IO::SDK
