@@ -34,7 +34,6 @@ TEST(API, SitePropagation)
     scenario.Window.start = 668085625.01523638;
     scenario.Window.end = 668174330.814560;
     scenario.CelestialBodies[0].Id = 399;
-    scenario.CelestialBodies[0].centerOfMotionId = 10;
     scenario.CelestialBodies[1].Id = 10;
     scenario.Sites[0].id = 399033;
     scenario.Sites[0].name = "S33";
@@ -49,7 +48,6 @@ TEST(API, SitePropagation)
     scenario.Spacecraft.dryOperatingMass = 1000.0;
     scenario.Spacecraft.maximumOperatingMass = 3000.0;
     scenario.Spacecraft.initialOrbitalParameter.centerOfMotion.Id = 399;
-    scenario.Spacecraft.initialOrbitalParameter.centerOfMotion.centerOfMotionId = 10;
     scenario.Spacecraft.initialOrbitalParameter.epoch = 668085625.01523638;
     scenario.Spacecraft.initialOrbitalParameter.inertialFrame = "J2000";
     scenario.Spacecraft.initialOrbitalParameter.position.x = 6800.0;
@@ -73,9 +71,7 @@ TEST(API, SpacecraftPropagation)
     scenario.Window.end = 668174469.185440;
     scenario.CelestialBodies[0].Id = 10;
     scenario.CelestialBodies[1].Id = 399;
-    scenario.CelestialBodies[1].centerOfMotionId = 10;
     scenario.CelestialBodies[2].Id = 301;
-    scenario.CelestialBodies[2].centerOfMotionId = 399;
     scenario.Spacecraft.id = -1111;
     scenario.Spacecraft.name = "spc1";
     scenario.Spacecraft.dryOperatingMass = 1000.0;
@@ -83,7 +79,6 @@ TEST(API, SpacecraftPropagation)
     std::string spacecraftPath(SpacecraftPath);
     scenario.Spacecraft.directoryPath = spacecraftPath.c_str();
     scenario.Spacecraft.initialOrbitalParameter.centerOfMotion.Id = 399;
-    scenario.Spacecraft.initialOrbitalParameter.centerOfMotion.centerOfMotionId = 10;
     scenario.Spacecraft.initialOrbitalParameter.epoch = 667915269.18539762;
     scenario.Spacecraft.initialOrbitalParameter.inertialFrame = "J2000";
     scenario.Spacecraft.initialOrbitalParameter.position.x = 5056554.1874925727;
@@ -116,7 +111,6 @@ TEST(API, SpacecraftPropagation)
     scenario.Spacecraft.orbitalPlaneChangingManeuvers[0].targetOrbit.velocity.y = 3033.2639866911495;
     scenario.Spacecraft.orbitalPlaneChangingManeuvers[0].targetOrbit.velocity.z = 6933.1803797017265;
     scenario.Spacecraft.orbitalPlaneChangingManeuvers[0].targetOrbit.centerOfMotion.Id = 399;
-    scenario.Spacecraft.orbitalPlaneChangingManeuvers[0].targetOrbit.centerOfMotion.centerOfMotionId = 10;
     scenario.Spacecraft.orbitalPlaneChangingManeuvers[0].targetOrbit.epoch = 667915269.18539762;
     scenario.Spacecraft.orbitalPlaneChangingManeuvers[0].targetOrbit.inertialFrame = "J2000";
     scenario.Spacecraft.orbitalPlaneChangingManeuvers[0].engines[0] = "eng1";
@@ -364,7 +358,6 @@ TEST(API, WriteEphemeris)
         sv[i].velocity.z = i;
         sv[i].epoch = i;
         sv[i].centerOfMotion.Id = 399;
-        sv[i].centerOfMotion.centerOfMotionId = 10;
         sv[i].inertialFrame = "J2000";
     }
 
