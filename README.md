@@ -163,62 +163,69 @@ In this example we will create a small program based on cmake to compute maneuve
 2. You can create a scenario based on this [Example](https://github.com/IO-Aerospace-software-engineering/SDK/tree/develop/IO.SDK.Scenarios/Program.cpp)
 
 3. When you execute it, you should have this output :
-    ```CMD
-    ========================================Launch Window 0 ========================================
-    Launch epoch :2021-03-03 23:09:15.829809 (UTC)
-    Inertial azimuth :47.0059 °
-    Non inertial azimuth :45.1252 °
-    Inertial insertion velocity :8794.34 m/s
-    Non inertial insertion velocity :8499.73 m/s
+```CMD
+========================================Launch Window 0 ========================================
+Launch epoch :2021-03-03 23:09:15.829809 (UTC)
+Inertial azimuth :47.0059 °
+Non inertial azimuth :45.1252 °
+Inertial insertion velocity :8794.34 m/s
+Non inertial insertion velocity :8499.73 m/s
 
-    ========================================Launch Window 1 ========================================
-    Launch epoch :2021-03-04 23:05:20.139985 (UTC)
-    Inertial azimuth :47.0059 °
-    Non inertial azimuth :45.1252 °
-    Inertial insertion velocity :8794.34 m/s
-    Non inertial insertion velocity :8499.73 m/s
+========================================Launch Window 1 ========================================
+Launch epoch :2021-03-04 23:05:20.139985 (UTC)
+Inertial azimuth :47.0059 °
+Non inertial azimuth :45.1252 °
+Inertial insertion velocity :8794.34 m/s
+Non inertial insertion velocity :8499.73 m/s
 
-    ======================================== Plane alignment ========================================
-    Maneuver window : 2021-03-04 00:33:28.947415 (TDB) => 2021-03-04 00:33:37.083057 (TDB)
-    Thrust window : 2021-03-04 00:33:28.947415 (TDB) => 2021-03-04 00:33:37.083057 (TDB)
-    Thrust duration : 8.13564 s
-    Delta V : 182.335 m/s
-    Spacecraft orientation : X : -0.516358 Y : 0.573323 Z : -0.636141 ( ICRF )
-    Fuel burned :406.782 kg
+======================================== Plane alignment ========================================
+Maneuver window : 2021-03-04 00:31:35.852043 (TDB) => 2021-03-04 00:31:44.178428 (TDB)
+Thrust window : 2021-03-04 00:31:35.852043 (TDB) => 2021-03-04 00:31:44.178428 (TDB)
+Thrust duration : 8.32638 s
+Delta V - X : -96.3101 m/s
+Delta V - Y : 106.947 m/s
+Delta V - Z : -118.929 m/s
+Delta V Magnitude : 186.702 m/s
+Spacecraft orientation : X : -0.515851 Y : 0.572824 Z : -0.637002 ( ICRF )
+Fuel burned :416.319 kg
 
-    ======================================== Aspidal alignment ========================================
-    Maneuver window : 2021-03-04 01:18:24.928793 (TDB) => 2021-03-04 01:18:43.237321 (TDB)
-    Thrust window : 2021-03-04 01:18:24.928793 (TDB) => 2021-03-04 01:18:43.237321 (TDB)
-    Thrust duration : 18.3085 s
-    Delta V : 440.163 m/s
-    Spacecraft orientation : X : -0.844401 Y : -0.286639 Z : 0.452575 ( ICRF )
-    Fuel burned :915.426 kg
+======================================== Aspidal alignment ========================================
+Maneuver window : 2021-03-04 01:14:35.908714 (TDB) => 2021-03-04 01:14:58.448142 (TDB)
+Thrust window : 2021-03-04 01:14:35.908714 (TDB) => 2021-03-04 01:14:58.448142 (TDB)
+Thrust duration : 22.5394 s
+Delta V - X : -465.432 m/s
+Delta V - Y : -170.795 m/s
+Delta V - Z : 235.852 m/s
+Delta V Magnitude : 549.021 m/s
+Spacecraft orientation : X : -0.847749 Y : -0.311089 Z : 0.429586 ( ICRF )
+Fuel burned :1126.97 kg
 
-    ======================================== Phasing ========================================
-    Maneuver window : 2021-03-04 04:34:57.320071 (TDB) => 2021-03-04 08:18:28.240580 (TDB)
-    Thrust window : 2021-03-04 04:34:57.320071 (TDB) => 2021-03-04 04:35:07.154572 (TDB)
-    Thrust duration : 9.8345 s
-    Delta V : 255.907 m/s
-    Spacecraft orientation : X : -0.549214 Y : 0.335374 Z : 0.765434 ( ICRF )
-    Fuel burned :491.725 kg
+======================================== Phasing ========================================
+Maneuver window : 2021-03-04 01:15:06.675929 (TDB) => 2021-03-04 04:58:19.564056 (TDB)
+Thrust window : 2021-03-04 01:15:06.675929 (TDB) => 2021-03-04 01:15:16.220356 (TDB)
+Thrust duration : 9.54443 s
+Delta V - X : -140.066 m/s
+Delta V - Y : 85.2926 m/s
+Delta V - Z : 194.988 m/s
+Delta V Magnitude : 254.782 m/s
+Spacecraft orientation : X : -0.549749 Y : 0.334768 Z : 0.765315 ( ICRF )
+Fuel burned :477.221 kg
 
-    ======================================== Apogee height changing ========================================
-    Maneuver window : 2021-03-04 08:43:16.504286 (TDB) => 2021-03-04 08:43:25.804857 (TDB)
-    Thrust window : 2021-03-04 08:43:16.504286 (TDB) => 2021-03-04 08:43:25.804857 (TDB)
-    Thrust duration : 9.30057 s
-    Delta V : 256.479 m/s
-    Spacecraft orientation : X : 0.549319 Y : -0.335252 Z : -0.765412 ( ICRF )
-    Fuel burned :465.029 kg
+======================================== Apogee height changing ========================================
+Maneuver window : 2021-03-04 05:23:34.930488 (TDB) => 2021-03-04 05:23:43.510224 (TDB)
+Thrust window : 2021-03-04 05:23:34.930488 (TDB) => 2021-03-04 05:23:43.510224 (TDB)
+Thrust duration : 8.57974 s
+Delta V - X : 134.75 m/s
+Delta V - Y : -81.2458 m/s
+Delta V - Z : -184.26 m/s
+Delta V Magnitude : 242.302 m/s
+Spacecraft orientation : X : 0.556124 Y : -0.335308 Z : -0.760457 ( ICRF )
+Fuel burned :428.987 kg
 
-    ======================================== Sun occultations from dragonfly Spacecraft ========================================
-    Occulation start at :2021-03-03 23:20:25.015236 (TDB)
-    Occulation end at :2021-03-03 23:25:08.727103 (TDB)
+======================================== Sun occultations from chaser Spacecraft ========================================
+Occulation start at :2021-03-03 23:20:25.015236 (TDB)
+Occulation end at :2021-03-03 23:25:08.814461 (TDB)
 
-    ======================================== Windows when the moon is in camera's field of view ========================================
-    Opportunity start at :2021-03-03 23:20:25.187133 (TDB)
-    Opportunity end at :2021-03-04 01:15:44.489464 (TDB)
-
-    Opportunity start at :2021-03-04 01:21:23.355170 (TDB)
-    Opportunity end at :2021-03-04 04:33:14.824913 (TDB)
-    ```
+======================================== Windows when the moon is in camera's field of view ========================================
+```
     Remark : If unspecified, all values are expressed in international system of units (meter, second, radian, m/s, ...)
