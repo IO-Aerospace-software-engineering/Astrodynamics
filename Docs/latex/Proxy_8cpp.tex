@@ -27,7 +27,7 @@ void \mbox{\hyperlink{Proxy_8cpp_a2781544b349f67f689bb0b6b9e643193}{Propagate\+P
 \item 
 const char $\ast$ \mbox{\hyperlink{Proxy_8cpp_a1bd1683bf72804ee2be2dfe91e4bb337}{Get\+Spice\+Version\+Proxy}} ()
 \item 
-bool \mbox{\hyperlink{Proxy_8cpp_a54a9e4a083c0856d060fd0a3daa197d1}{Write\+Ephemeris\+Proxy}} (const char $\ast$file\+Path, int object\+Id, \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1StateVectorDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+State\+Vector\+DTO}} $\ast$sv, int size)
+bool \mbox{\hyperlink{Proxy_8cpp_ae67a1b3726ab6e16a800ca1b1ceef00e}{Write\+Ephemeris\+Proxy}} (const char $\ast$file\+Path, int object\+Id, \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1StateVectorDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+State\+Vector\+DTO}} $\ast$sv, unsigned int size)
 \item 
 void \mbox{\hyperlink{Proxy_8cpp_a185ec96428eb2855be9209d18f0aa667}{Read\+Orientation\+Proxy}} (\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Window\+DTO}} search\+Window, int spacecraft\+Id, double tolerance, const char $\ast$frame, double step\+Size, \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1StateOrientationDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+State\+Orientation\+DTO}} $\ast$so)
 \item 
@@ -104,6 +104,8 @@ void \mbox{\hyperlink{Proxy_8cpp_a70191d395a750d5ca92dd638564d35b2}{Build\+Zenit
 \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1CelestialBodyDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Celestial\+Body\+DTO}} \mbox{\hyperlink{Proxy_8cpp_aa8abb0c4718f86f122a29fd992b3e67a}{Get\+Celestial\+Body\+Info\+Proxy}} (int body\+Id)
 \item 
 char $\ast$ \mbox{\hyperlink{Proxy_8cpp_a070706fba8ff9475ca3b778c3bc1e115}{Handle\+Error}} ()
+\item 
+\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1FrameTransformationDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Frame\+Transformation\+DTO}} \mbox{\hyperlink{Proxy_8cpp_a85ec992f6c806bf839c142b5e7064eea}{Transform\+Frame\+Proxy}} (const char $\ast$from\+Frame, const char $\ast$to\+Frame, double epoch)
 \end{DoxyCompactItemize}
 
 
@@ -293,6 +295,14 @@ Find time windows witch satisfy distance constraint
 \doxysubsubsection{\texorpdfstring{GetCelestialBodyInfoProxy()}{GetCelestialBodyInfoProxy()}}
 {\footnotesize\ttfamily \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1CelestialBodyDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Celestial\+Body\+DTO}} Get\+Celestial\+Body\+Info\+Proxy (\begin{DoxyParamCaption}\item[{int}]{body\+Id }\end{DoxyParamCaption})}
 
+Get celestial body information from his id 
+\begin{DoxyParams}{Parameters}
+{\em body\+Id} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
 \mbox{\Hypertarget{Proxy_8cpp_a1bd1683bf72804ee2be2dfe91e4bb337}\label{Proxy_8cpp_a1bd1683bf72804ee2be2dfe91e4bb337}} 
 \index{Proxy.cpp@{Proxy.cpp}!GetSpiceVersionProxy@{GetSpiceVersionProxy}}
 \index{GetSpiceVersionProxy@{GetSpiceVersionProxy}!Proxy.cpp@{Proxy.cpp}}
@@ -409,6 +419,22 @@ Convert second\+From\+J2000 to formatted string
 \begin{DoxyReturn}{Returns}
 
 \end{DoxyReturn}
+\mbox{\Hypertarget{Proxy_8cpp_a85ec992f6c806bf839c142b5e7064eea}\label{Proxy_8cpp_a85ec992f6c806bf839c142b5e7064eea}} 
+\index{Proxy.cpp@{Proxy.cpp}!TransformFrameProxy@{TransformFrameProxy}}
+\index{TransformFrameProxy@{TransformFrameProxy}!Proxy.cpp@{Proxy.cpp}}
+\doxysubsubsection{\texorpdfstring{TransformFrameProxy()}{TransformFrameProxy()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1FrameTransformationDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Frame\+Transformation\+DTO}} Transform\+Frame\+Proxy (\begin{DoxyParamCaption}\item[{const char $\ast$}]{from\+Frame,  }\item[{const char $\ast$}]{to\+Frame,  }\item[{double}]{epoch }\end{DoxyParamCaption})}
+
+Get the transformation from a frame to another frame at given epoch 
+\begin{DoxyParams}{Parameters}
+{\em from\+Frame} & \\
+\hline
+{\em to\+Frame} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
 \mbox{\Hypertarget{Proxy_8cpp_af1e6f2f2b5080a1c1fdc85bbe77e1810}\label{Proxy_8cpp_af1e6f2f2b5080a1c1fdc85bbe77e1810}} 
 \index{Proxy.cpp@{Proxy.cpp}!UTCToStringProxy@{UTCToStringProxy}}
 \index{UTCToStringProxy@{UTCToStringProxy}!Proxy.cpp@{Proxy.cpp}}
@@ -423,9 +449,9 @@ Convert second\+From\+J2000 to formatted string
 \begin{DoxyReturn}{Returns}
 
 \end{DoxyReturn}
-\mbox{\Hypertarget{Proxy_8cpp_a54a9e4a083c0856d060fd0a3daa197d1}\label{Proxy_8cpp_a54a9e4a083c0856d060fd0a3daa197d1}} 
+\mbox{\Hypertarget{Proxy_8cpp_ae67a1b3726ab6e16a800ca1b1ceef00e}\label{Proxy_8cpp_ae67a1b3726ab6e16a800ca1b1ceef00e}} 
 \index{Proxy.cpp@{Proxy.cpp}!WriteEphemerisProxy@{WriteEphemerisProxy}}
 \index{WriteEphemerisProxy@{WriteEphemerisProxy}!Proxy.cpp@{Proxy.cpp}}
 \doxysubsubsection{\texorpdfstring{WriteEphemerisProxy()}{WriteEphemerisProxy()}}
-{\footnotesize\ttfamily bool Write\+Ephemeris\+Proxy (\begin{DoxyParamCaption}\item[{const char $\ast$}]{file\+Path,  }\item[{int}]{object\+Id,  }\item[{\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1StateVectorDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+State\+Vector\+DTO}} $\ast$}]{sv,  }\item[{int}]{size }\end{DoxyParamCaption})}
+{\footnotesize\ttfamily bool Write\+Ephemeris\+Proxy (\begin{DoxyParamCaption}\item[{const char $\ast$}]{file\+Path,  }\item[{int}]{object\+Id,  }\item[{\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1StateVectorDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+State\+Vector\+DTO}} $\ast$}]{sv,  }\item[{unsigned int}]{size }\end{DoxyParamCaption})}
 

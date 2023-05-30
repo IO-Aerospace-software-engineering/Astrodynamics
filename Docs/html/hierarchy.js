@@ -49,6 +49,7 @@ var hierarchy =
       [ "IO::SDK::Frames::BodyFixedFrames", "classIO_1_1SDK_1_1Frames_1_1BodyFixedFrames.html", null ],
       [ "IO::SDK::Frames::InertialFrames", "classIO_1_1SDK_1_1Frames_1_1InertialFrames.html", null ]
     ] ],
+    [ "IO::SDK::API::DTO::FrameTransformationDTO", "structIO_1_1SDK_1_1API_1_1DTO_1_1FrameTransformationDTO.html", null ],
     [ "IO::SDK::Body::Spacecraft::FuelTank", "classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1FuelTank.html", null ],
     [ "IO::SDK::API::DTO::FuelTankDTO", "structIO_1_1SDK_1_1API_1_1DTO_1_1FuelTankDTO.html", null ],
     [ "IO::SDK::Coordinates::Geodetic", "classIO_1_1SDK_1_1Coordinates_1_1Geodetic.html", null ],

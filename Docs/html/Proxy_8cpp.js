@@ -40,6 +40,7 @@ var Proxy_8cpp =
     [ "ReadPerigeeManeuverResult", "Proxy_8cpp.html#aa7d09fd7d9d73216a3ee6020565d061e", null ],
     [ "ReadPhasingManeuverResult", "Proxy_8cpp.html#a6c39e673976b509ad3fa42613ffa38d7", null ],
     [ "TDBToStringProxy", "Proxy_8cpp.html#a0ea299e073a26b6daf00c819536eae1a", null ],
+    [ "TransformFrameProxy", "Proxy_8cpp.html#a85ec992f6c806bf839c142b5e7064eea", null ],
     [ "UTCToStringProxy", "Proxy_8cpp.html#af1e6f2f2b5080a1c1fdc85bbe77e1810", null ],
-    [ "WriteEphemerisProxy", "Proxy_8cpp.html#a54a9e4a083c0856d060fd0a3daa197d1", null ]
+    [ "WriteEphemerisProxy", "Proxy_8cpp.html#ae67a1b3726ab6e16a800ca1b1ceef00e", null ]
 ];

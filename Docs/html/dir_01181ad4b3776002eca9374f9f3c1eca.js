@@ -10,6 +10,7 @@ var dir_01181ad4b3776002eca9374f9f3c1eca =
     [ "CombinedManeuverDTO.h", "CombinedManeuverDTO_8h.html", "CombinedManeuverDTO_8h" ],
     [ "DistanceConstraintDTO.h", "DistanceConstraintDTO_8h.html", "DistanceConstraintDTO_8h" ],
     [ "EngineDTO.h", "EngineDTO_8h.html", "EngineDTO_8h" ],
+    [ "FrameTransformation.h", "FrameTransformation_8h.html", "FrameTransformation_8h" ],
     [ "FuelTankDTO.h", "FuelTankDTO_8h.html", "FuelTankDTO_8h" ],
     [ "GeodeticDTO.h", "GeodeticDTO_8h.html", "GeodeticDTO_8h" ],
     [ "InFieldOfViewConstraintDTO.h", "InFieldOfViewConstraintDTO_8h.html", "InFieldOfViewConstraintDTO_8h" ],

@@ -60,17 +60,17 @@ var NAVTREE =
 var NAVTREEINDEX =
 [
 "Aberrations_8cpp.html",
-"Planetographic_8h.html",
-"classIO_1_1SDK_1_1Body_1_1Body.html#ab77e7f00e8c59a65ed9e9d21fcf04416",
-"classIO_1_1SDK_1_1Coordinates_1_1Geodetic.html#a98cabd25dbca783a9df2f2b8eab1918e",
-"classIO_1_1SDK_1_1Integrators_1_1Forces_1_1GravityForce.html#a1ac748566967ca9f2585587648acc5eb",
-"classIO_1_1SDK_1_1Maneuvers_1_1Attitudes_1_1ZenithAttitude.html#abcc5ebba2edb760cc3d08e8dbc6a9e60",
-"classIO_1_1SDK_1_1Math_1_1Vector3D.html#afc8766317ce16e7b65fff4e2a4399b40",
-"classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector.html#aed24536ab245249515cd97877a0017f0",
-"classIO_1_1SDK_1_1Time_1_1TimeSpan.html#a611e087c6efb0c72249795902de83661",
-"namespaces.html",
-"structIO_1_1SDK_1_1API_1_1DTO_1_1NadirAttitudeDTO.html#aa165ae933683f10b3bf4a846dca48c77",
-"structIO_1_1SDK_1_1Maneuvers_1_1DynamicFuelTank.html#a44f788206a498c2a48f4438beb17e974"
+"PhasingManeuver_8h.html",
+"classIO_1_1SDK_1_1Body_1_1Body.html#aa22fd3b03a98e72b145002a180baf428",
+"classIO_1_1SDK_1_1Coordinates_1_1Geodetic.html#a1eabc04860ce5d8329163236f687a728",
+"classIO_1_1SDK_1_1Integrators_1_1Forces_1_1Force.html#afb7b891094d9f9858af152959d659848",
+"classIO_1_1SDK_1_1Maneuvers_1_1Attitudes_1_1ZenithAttitude.html#a1fd89c8b1e1a85f1b6bad1cdcd72410e",
+"classIO_1_1SDK_1_1Math_1_1Vector3D.html#af1e06addbc7eee37d1f3b71af1c2cc2d",
+"classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector.html#ae69a74c24d1a2f3308f940c2fa3dfed0",
+"classIO_1_1SDK_1_1Time_1_1TimeSpan.html#a49a3b0088840aaaf0b94c74218de5ba8",
+"namespacemembers.html",
+"structIO_1_1SDK_1_1API_1_1DTO_1_1NadirAttitudeDTO.html",
+"structIO_1_1SDK_1_1API_1_1DTO_1_1ZenithAttitudeDTO.html#a751c98976557939a3cc0e124ad08d12a"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';

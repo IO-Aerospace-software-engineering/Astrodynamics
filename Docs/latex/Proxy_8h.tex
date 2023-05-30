@@ -1,8 +1,9 @@
 \hypertarget{Proxy_8h}{}\doxysection{IO.\+SDK/\+API/\+Proxy.h File Reference}
 \label{Proxy_8h}\index{IO.SDK/API/Proxy.h@{IO.SDK/API/Proxy.h}}
 {\ttfamily \#include $<$Scenario\+DTO.\+h$>$}\newline
-{\ttfamily \#include \char`\"{}Maneuver\+Base.\+h\char`\"{}}\newline
-{\ttfamily \#include \char`\"{}Scenario.\+h\char`\"{}}\newline
+{\ttfamily \#include $<$Maneuver\+Base.\+h$>$}\newline
+{\ttfamily \#include $<$Scenario.\+h$>$}\newline
+{\ttfamily \#include $<$Frame\+Transformation.\+h$>$}\newline
 \doxysubsection*{Macros}
 \begin{DoxyCompactItemize}
 \item 
@@ -17,7 +18,7 @@
 \item 
 \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} const char $\ast$ \mbox{\hyperlink{Proxy_8h_a762431b7740df9d560ebe822564369f1}{Get\+Spice\+Version\+Proxy}} ()
 \item 
-\mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} bool \mbox{\hyperlink{Proxy_8h_a329824aa5cb9474c5ad8ba77ba8ac569}{Write\+Ephemeris\+Proxy}} (const char $\ast$file\+Path, int object\+Id, \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1StateVectorDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+State\+Vector\+DTO}} sv\mbox{[}100000\mbox{]}, int size)
+\mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} bool \mbox{\hyperlink{Proxy_8h_a17109cffd6008c59fafb5b67ccf6fe97}{Write\+Ephemeris\+Proxy}} (const char $\ast$file\+Path, int object\+Id, \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1StateVectorDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+State\+Vector\+DTO}} sv\mbox{[}100000\mbox{]}, unsigned int size)
 \item 
 \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} void \mbox{\hyperlink{Proxy_8h_aec8180716b9e86621181f82f38419c8f}{Read\+Ephemeris\+Proxy}} (\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Window\+DTO}} search\+Window, int observer\+Id, int target\+Id, const char $\ast$frame, const char $\ast$aberration, double step\+Size, \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1StateVectorDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+State\+Vector\+DTO}} state\+Vectors\mbox{[}10000\mbox{]})
 \item 
@@ -48,6 +49,8 @@
 \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} double \mbox{\hyperlink{Proxy_8h_ab9c954c87940d8be415c2f8b7696ed15}{Convert\+UTCTo\+TDBProxy}} (double utc)
 \item 
 \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1CelestialBodyDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Celestial\+Body\+DTO}} \mbox{\hyperlink{Proxy_8h_aa744385eb805ddd19576c1059d59fd5e}{Get\+Celestial\+Body\+Info\+Proxy}} (int body\+Id)
+\item 
+\mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1FrameTransformationDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Frame\+Transformation\+DTO}} \mbox{\hyperlink{Proxy_8h_a457712e918b3f71b190c356f7405fec0}{Transform\+Frame\+Proxy}} (const char $\ast$from\+Frame, const char $\ast$to\+Frame, double epoch)
 \item 
 char $\ast$ \mbox{\hyperlink{Proxy_8h_a070706fba8ff9475ca3b778c3bc1e115}{Handle\+Error}} ()
 \item 
@@ -414,6 +417,14 @@ Find time windows witch satisfy occultation constraint
 \doxysubsubsection{\texorpdfstring{GetCelestialBodyInfoProxy()}{GetCelestialBodyInfoProxy()}}
 {\footnotesize\ttfamily \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1CelestialBodyDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Celestial\+Body\+DTO}} Get\+Celestial\+Body\+Info\+Proxy (\begin{DoxyParamCaption}\item[{int}]{body\+Id }\end{DoxyParamCaption})}
 
+Get celestial body information from his id 
+\begin{DoxyParams}{Parameters}
+{\em body\+Id} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
 \mbox{\Hypertarget{Proxy_8h_a762431b7740df9d560ebe822564369f1}\label{Proxy_8h_a762431b7740df9d560ebe822564369f1}} 
 \index{Proxy.h@{Proxy.h}!GetSpiceVersionProxy@{GetSpiceVersionProxy}}
 \index{GetSpiceVersionProxy@{GetSpiceVersionProxy}!Proxy.h@{Proxy.h}}
@@ -562,6 +573,22 @@ Convert second\+From\+J2000 to formatted string
 \begin{DoxyReturn}{Returns}
 
 \end{DoxyReturn}
+\mbox{\Hypertarget{Proxy_8h_a457712e918b3f71b190c356f7405fec0}\label{Proxy_8h_a457712e918b3f71b190c356f7405fec0}} 
+\index{Proxy.h@{Proxy.h}!TransformFrameProxy@{TransformFrameProxy}}
+\index{TransformFrameProxy@{TransformFrameProxy}!Proxy.h@{Proxy.h}}
+\doxysubsubsection{\texorpdfstring{TransformFrameProxy()}{TransformFrameProxy()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1FrameTransformationDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Frame\+Transformation\+DTO}} Transform\+Frame\+Proxy (\begin{DoxyParamCaption}\item[{const char $\ast$}]{from\+Frame,  }\item[{const char $\ast$}]{to\+Frame,  }\item[{double}]{epoch }\end{DoxyParamCaption})}
+
+Get the transformation from a frame to another frame at given epoch 
+\begin{DoxyParams}{Parameters}
+{\em from\+Frame} & \\
+\hline
+{\em to\+Frame} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
 \mbox{\Hypertarget{Proxy_8h_a8f3164fd10cfa0827e25add2106a71c7}\label{Proxy_8h_a8f3164fd10cfa0827e25add2106a71c7}} 
 \index{Proxy.h@{Proxy.h}!UTCToStringProxy@{UTCToStringProxy}}
 \index{UTCToStringProxy@{UTCToStringProxy}!Proxy.h@{Proxy.h}}
@@ -576,11 +603,11 @@ Convert second\+From\+J2000 to formatted string
 \begin{DoxyReturn}{Returns}
 
 \end{DoxyReturn}
-\mbox{\Hypertarget{Proxy_8h_a329824aa5cb9474c5ad8ba77ba8ac569}\label{Proxy_8h_a329824aa5cb9474c5ad8ba77ba8ac569}} 
+\mbox{\Hypertarget{Proxy_8h_a17109cffd6008c59fafb5b67ccf6fe97}\label{Proxy_8h_a17109cffd6008c59fafb5b67ccf6fe97}} 
 \index{Proxy.h@{Proxy.h}!WriteEphemerisProxy@{WriteEphemerisProxy}}
 \index{WriteEphemerisProxy@{WriteEphemerisProxy}!Proxy.h@{Proxy.h}}
 \doxysubsubsection{\texorpdfstring{WriteEphemerisProxy()}{WriteEphemerisProxy()}}
-{\footnotesize\ttfamily \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} bool Write\+Ephemeris\+Proxy (\begin{DoxyParamCaption}\item[{const char $\ast$}]{file\+Path,  }\item[{int}]{object\+Id,  }\item[{\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1StateVectorDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+State\+Vector\+DTO}}}]{sv\mbox{[}100000\mbox{]},  }\item[{int}]{size }\end{DoxyParamCaption})}
+{\footnotesize\ttfamily \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} bool Write\+Ephemeris\+Proxy (\begin{DoxyParamCaption}\item[{const char $\ast$}]{file\+Path,  }\item[{int}]{object\+Id,  }\item[{\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1StateVectorDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+State\+Vector\+DTO}}}]{sv\mbox{[}100000\mbox{]},  }\item[{unsigned int}]{size }\end{DoxyParamCaption})}
 
 Write ephemeris into binary file (spk) 
 \begin{DoxyParams}{Parameters}
