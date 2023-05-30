@@ -1,7 +1,7 @@
 var searchData=
 [
-  ['latitude_0',['latitude',['../structIO_1_1SDK_1_1API_1_1DTO_1_1GeodeticDTO.html#a74869f29287969f17ed4e81cca6e1536',1,'IO::SDK::API::DTO::GeodeticDTO']]],
-  ['latitude_1',['Latitude',['../classIO_1_1SDK_1_1Coordinate.html#a0a31f53ea7d962c8d97e4e4f6b609c6d',1,'IO::SDK::Coordinate']]],
+  ['latitude_0',['Latitude',['../classIO_1_1SDK_1_1Coordinate.html#a0a31f53ea7d962c8d97e4e4f6b609c6d',1,'IO::SDK::Coordinate']]],
+  ['latitude_1',['latitude',['../structIO_1_1SDK_1_1API_1_1DTO_1_1GeodeticDTO.html#a74869f29287969f17ed4e81cca6e1536',1,'IO::SDK::API::DTO::GeodeticDTO']]],
   ['latitudinal_2',['Latitudinal',['../classIO_1_1SDK_1_1Coordinates_1_1Latitudinal.html',1,'IO::SDK::Coordinates::Latitudinal'],['../classIO_1_1SDK_1_1CoordinateSystem.html#aae985b3e116351d0f4915bde5aac57ea',1,'IO::SDK::CoordinateSystem::Latitudinal()'],['../classIO_1_1SDK_1_1Coordinates_1_1Latitudinal.html#a9cfa0678cc58ff3a28871d3100733bca',1,'IO::SDK::Coordinates::Latitudinal::Latitudinal()']]],
   ['latitudinal_2eh_3',['Latitudinal.h',['../Latitudinal_8h.html',1,'']]],
   ['launch_4',['Launch',['../classIO_1_1SDK_1_1Maneuvers_1_1Launch.html',1,'IO::SDK::Maneuvers::Launch'],['../classIO_1_1SDK_1_1Maneuvers_1_1Launch.html#a44abe43d2e13f901b07c20b238d71245',1,'IO::SDK::Maneuvers::Launch::Launch()']]],

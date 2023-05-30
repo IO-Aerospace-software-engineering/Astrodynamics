@@ -19,6 +19,7 @@
 #include <iostream>
 
 #pragma region Proxy
+
 void LaunchProxy(IO::SDK::API::DTO::LaunchDTO &launchDto)
 {
     auto celestialBody = std::make_shared<IO::SDK::Body::CelestialBody>(launchDto.recoverySite.bodyId);
@@ -116,7 +117,7 @@ const char *GetSpiceVersionProxy()
     return strdup(version);
 }
 
-bool WriteEphemerisProxy(const char *filePath, int objectId, IO::SDK::API::DTO::StateVectorDTO *sv, int size)
+bool WriteEphemerisProxy(const char *filePath, int objectId, IO::SDK::API::DTO::StateVectorDTO *sv, unsigned int size)
 {
     IO::SDK::Kernels::EphemerisKernel kernel(filePath, objectId);
 
@@ -407,6 +408,7 @@ double ConvertUTCToTDBProxy(double utc)
 #pragma endregion
 
 #pragma region ReadResults
+
 void ReadManeuverResults(IO::SDK::API::DTO::ScenarioDTO &scenarioDto,
                          std::map<int, std::shared_ptr<IO::SDK::Maneuvers::ManeuverBase>> &maneuvers)
 {
@@ -536,9 +538,11 @@ void ReadApogeeManeuverResult(IO::SDK::API::DTO::ScenarioDTO &scenarioDto,
         maneuver.FuelBurned = value->GetFuelBurned();
     }
 }
+
 #pragma endregion
 
 #pragma region BuildScenario
+
 std::map<int, std::shared_ptr<IO::SDK::Body::CelestialBody>>
 BuildCelestialBodies(IO::SDK::API::DTO::ScenarioDTO &scenario)
 {
@@ -1060,7 +1064,7 @@ void BuildZenithAttitude(IO::SDK::API::DTO::ScenarioDTO &scenarioDto, IO::SDK::S
 IO::SDK::API::DTO::CelestialBodyDTO GetCelestialBodyInfoProxy(int bodyId)
 {
     SpiceChar errorMode[7] = "RETURN";
-    erract_c("SET", 1024, errorMode);
+    erract_c("SET", ERRORMSGLENGTH, errorMode);
     IO::SDK::API::DTO::CelestialBodyDTO res;
     res.Error = strdup("Not found");
     SpiceChar name[32];
@@ -1072,7 +1076,7 @@ IO::SDK::API::DTO::CelestialBodyDTO GetCelestialBodyInfoProxy(int bodyId)
         res.Error = strdup("");
         res.Id = bodyId;
         res.Name = strdup(name);
-        res.centerOfMotionId=IO::SDK::Body::CelestialBody::FindCenterOfMotionId(bodyId);
+        res.centerOfMotionId = IO::SDK::Body::CelestialBody::FindCenterOfMotionId(bodyId);
 
         SpiceInt dim;
         // Search body's radii
@@ -1106,9 +1110,9 @@ IO::SDK::API::DTO::CelestialBodyDTO GetCelestialBodyInfoProxy(int bodyId)
 
         // Search
         SpiceBoolean frameFound{false};
-        SpiceChar frname[33]{};
+        SpiceChar frname[lenout]{};
         SpiceInt frcode{};
-        cnmfrm_c(name, 33, &frcode, frname, &frameFound);
+        cnmfrm_c(name, lenout, &frcode, frname, &frameFound);
         if (frameFound)
         {
             res.FrameName = strdup(frname);
@@ -1128,6 +1132,34 @@ char *HandleError()
     getmsg_c("LONG", ERRORMSGLENGTH, msg);
     reset_c();
     return msg;
+}
+
+IO::SDK::API::DTO::FrameTransformationDTO TransformFrameProxy(const char *fromFrame, const char *toFrame, double epoch)
+{
+    IO::SDK::Frames::Frames from{fromFrame};
+    IO::SDK::Frames::Frames to{toFrame};
+    IO::SDK::Time::TDB tdb((std::chrono::duration<double>(epoch)));
+    auto mtx = from.ToFrame6x6(to, tdb);
+    IO::SDK::Math::Quaternion q(mtx);
+    auto rawData = mtx.GetRawData();
+
+    //Initialize data
+    SpiceDouble rotation[3][3]{};
+    SpiceDouble av[3]{};
+    SpiceDouble convertedMtx[6][6];
+    for (int i = 0; i < 6; ++i)
+    {
+        for (int j = 0; j < 6; ++j)
+        {
+            convertedMtx[i][j] = rawData[i][j];
+        }
+    }
+
+    IO::SDK::API::DTO::FrameTransformationDTO frameTransformationDto;
+    xf2rav_c(convertedMtx, rotation, av);
+    frameTransformationDto.Rotation = ToQuaternionDTO(q);
+    frameTransformationDto.AngularVelocity = ToVector3DDTO(av);
+    return frameTransformationDto;
 }
 
 #pragma endregion

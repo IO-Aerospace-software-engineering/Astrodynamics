@@ -25,7 +25,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">IO-SDK<span id="projectnumber">&#160;0.6.x</span>
+   <div id="projectname">IO-SDK<span id="projectnumber">&#160;0.8.x</span>
    </div>
    <div id="projectbrief">Astrodynamics framework</div>
   </td>
@@ -90,8 +90,9 @@ $(document).ready(function(){initNavTree('Proxy_8h.html',''); initResizable(); }
 </div><!--header-->
 <div class="contents">
 <div class="textblock"><code>#include &lt;<a class="el" href="ScenarioDTO_8h_source.html">ScenarioDTO.h</a>&gt;</code><br />
-<code>#include &quot;<a class="el" href="ManeuverBase_8h_source.html">ManeuverBase.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="Scenario_8h_source.html">Scenario.h</a>&quot;</code><br />
+<code>#include &lt;<a class="el" href="ManeuverBase_8h_source.html">ManeuverBase.h</a>&gt;</code><br />
+<code>#include &lt;<a class="el" href="Scenario_8h_source.html">Scenario.h</a>&gt;</code><br />
+<code>#include &lt;<a class="el" href="FrameTransformation_8h_source.html">FrameTransformation.h</a>&gt;</code><br />
 </div>
 <p><a href="Proxy_8h_source.html">Go to the source code of this file.</a></p>
 <table class="memberdecls">
@@ -108,8 +109,8 @@ Macros</h2></td></tr>
 Functions</h2></td></tr>
 <tr class="memitem:a762431b7740df9d560ebe822564369f1"><td class="memItemLeft" align="right" valign="top"><a class="el" href="Proxy_8h.html#a283b8fd63f96d196027ef6ad48c4cb85">MODULE_API</a> const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="Proxy_8h.html#a762431b7740df9d560ebe822564369f1">GetSpiceVersionProxy</a> ()</td></tr>
 <tr class="separator:a762431b7740df9d560ebe822564369f1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a329824aa5cb9474c5ad8ba77ba8ac569"><td class="memItemLeft" align="right" valign="top"><a class="el" href="Proxy_8h.html#a283b8fd63f96d196027ef6ad48c4cb85">MODULE_API</a> bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="Proxy_8h.html#a329824aa5cb9474c5ad8ba77ba8ac569">WriteEphemerisProxy</a> (const char *filePath, int objectId, <a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1StateVectorDTO.html">IO::SDK::API::DTO::StateVectorDTO</a> sv[100000], int size)</td></tr>
-<tr class="separator:a329824aa5cb9474c5ad8ba77ba8ac569"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a17109cffd6008c59fafb5b67ccf6fe97"><td class="memItemLeft" align="right" valign="top"><a class="el" href="Proxy_8h.html#a283b8fd63f96d196027ef6ad48c4cb85">MODULE_API</a> bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="Proxy_8h.html#a17109cffd6008c59fafb5b67ccf6fe97">WriteEphemerisProxy</a> (const char *filePath, int objectId, <a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1StateVectorDTO.html">IO::SDK::API::DTO::StateVectorDTO</a> sv[100000], unsigned int size)</td></tr>
+<tr class="separator:a17109cffd6008c59fafb5b67ccf6fe97"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aec8180716b9e86621181f82f38419c8f"><td class="memItemLeft" align="right" valign="top"><a class="el" href="Proxy_8h.html#a283b8fd63f96d196027ef6ad48c4cb85">MODULE_API</a> void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="Proxy_8h.html#aec8180716b9e86621181f82f38419c8f">ReadEphemerisProxy</a> (<a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO.html">IO::SDK::API::DTO::WindowDTO</a> searchWindow, int observerId, int targetId, const char *frame, const char *aberration, double stepSize, <a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1StateVectorDTO.html">IO::SDK::API::DTO::StateVectorDTO</a> stateVectors[10000])</td></tr>
 <tr class="separator:aec8180716b9e86621181f82f38419c8f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad2cb321fd1aa8706954df5b92b3b9a19"><td class="memItemLeft" align="right" valign="top"><a class="el" href="Proxy_8h.html#a283b8fd63f96d196027ef6ad48c4cb85">MODULE_API</a> void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="Proxy_8h.html#ad2cb321fd1aa8706954df5b92b3b9a19">ReadOrientationProxy</a> (<a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO.html">IO::SDK::API::DTO::WindowDTO</a> searchWindow, int spacecraftId, double tolerance, const char *frame, double stepSize, <a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1StateOrientationDTO.html">IO::SDK::API::DTO::StateOrientationDTO</a> so[10000])</td></tr>
@@ -140,6 +141,8 @@ Functions</h2></td></tr>
 <tr class="separator:ab9c954c87940d8be415c2f8b7696ed15"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa744385eb805ddd19576c1059d59fd5e"><td class="memItemLeft" align="right" valign="top"><a class="el" href="Proxy_8h.html#a283b8fd63f96d196027ef6ad48c4cb85">MODULE_API</a> <a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1CelestialBodyDTO.html">IO::SDK::API::DTO::CelestialBodyDTO</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="Proxy_8h.html#aa744385eb805ddd19576c1059d59fd5e">GetCelestialBodyInfoProxy</a> (int bodyId)</td></tr>
 <tr class="separator:aa744385eb805ddd19576c1059d59fd5e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a457712e918b3f71b190c356f7405fec0"><td class="memItemLeft" align="right" valign="top"><a class="el" href="Proxy_8h.html#a283b8fd63f96d196027ef6ad48c4cb85">MODULE_API</a> <a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1FrameTransformationDTO.html">IO::SDK::API::DTO::FrameTransformationDTO</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="Proxy_8h.html#a457712e918b3f71b190c356f7405fec0">TransformFrameProxy</a> (const char *fromFrame, const char *toFrame, double epoch)</td></tr>
+<tr class="separator:a457712e918b3f71b190c356f7405fec0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a070706fba8ff9475ca3b778c3bc1e115"><td class="memItemLeft" align="right" valign="top">char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="Proxy_8h.html#a070706fba8ff9475ca3b778c3bc1e115">HandleError</a> ()</td></tr>
 <tr class="separator:a070706fba8ff9475ca3b778c3bc1e115"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad45407eab2a930ba06148832da6fcbd5"><td class="memItemLeft" align="right" valign="top">std::map&lt; int, std::shared_ptr&lt; <a class="el" href="classIO_1_1SDK_1_1Body_1_1CelestialBody.html">IO::SDK::Body::CelestialBody</a> &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="Proxy_8h.html#ad45407eab2a930ba06148832da6fcbd5">BuildCelestialBodies</a> (<a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO.html">IO::SDK::API::DTO::ScenarioDTO</a> &amp;scenario)</td></tr>
@@ -1358,6 +1361,13 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
+<p >Get celestial body information from his id </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">bodyId</td><td></td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd></dd></dl>
 
 </div>
 </div>
@@ -1822,6 +1832,48 @@ Functions</h2></td></tr>
 
 </div>
 </div>
+<a id="a457712e918b3f71b190c356f7405fec0" name="a457712e918b3f71b190c356f7405fec0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a457712e918b3f71b190c356f7405fec0">&#9670;&nbsp;</a></span>TransformFrameProxy()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="Proxy_8h.html#a283b8fd63f96d196027ef6ad48c4cb85">MODULE_API</a> <a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1FrameTransformationDTO.html">IO::SDK::API::DTO::FrameTransformationDTO</a> TransformFrameProxy </td>
+          <td>(</td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>fromFrame</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>toFrame</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>epoch</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p >Get the transformation from a frame to another frame at given epoch </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">fromFrame</td><td></td></tr>
+    <tr><td class="paramname">toFrame</td><td></td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd></dd></dl>
+
+</div>
+</div>
 <a id="a8f3164fd10cfa0827e25add2106a71c7" name="a8f3164fd10cfa0827e25add2106a71c7"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a8f3164fd10cfa0827e25add2106a71c7">&#9670;&nbsp;</a></span>UTCToStringProxy()</h2>
 
@@ -1847,8 +1899,8 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a329824aa5cb9474c5ad8ba77ba8ac569" name="a329824aa5cb9474c5ad8ba77ba8ac569"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a329824aa5cb9474c5ad8ba77ba8ac569">&#9670;&nbsp;</a></span>WriteEphemerisProxy()</h2>
+<a id="a17109cffd6008c59fafb5b67ccf6fe97" name="a17109cffd6008c59fafb5b67ccf6fe97"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a17109cffd6008c59fafb5b67ccf6fe97">&#9670;&nbsp;</a></span>WriteEphemerisProxy()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1874,7 +1926,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">int&#160;</td>
+          <td class="paramtype">unsigned int&#160;</td>
           <td class="paramname"><em>size</em>&#160;</td>
         </tr>
         <tr>

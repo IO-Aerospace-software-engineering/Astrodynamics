@@ -28,7 +28,7 @@ namespace IO::SDK::Math
 	public:
 
 		/// <summary>
-		/// Instanciate sized matix
+		/// Instantiate sized matrix
 		/// </summary>
 		/// <param name="rowSize"></param>
 		/// <param name="colSize"></param>
@@ -43,7 +43,7 @@ namespace IO::SDK::Math
 		}
 
 		/// <summary>
-		/// Instanciate matrix with data
+		/// Instantiate matrix with data
 		/// </summary>
 		/// <param name="rowSize"></param>
 		/// <param name="colSize"></param>

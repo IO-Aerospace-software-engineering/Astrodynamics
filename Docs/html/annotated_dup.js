@@ -14,6 +14,7 @@ var annotated_dup =
             [ "CombinedManeuverDTO", "structIO_1_1SDK_1_1API_1_1DTO_1_1CombinedManeuverDTO.html", "structIO_1_1SDK_1_1API_1_1DTO_1_1CombinedManeuverDTO" ],
             [ "DistanceConstraintDTO", "structIO_1_1SDK_1_1API_1_1DTO_1_1DistanceConstraintDTO.html", "structIO_1_1SDK_1_1API_1_1DTO_1_1DistanceConstraintDTO" ],
             [ "EngineDTO", "structIO_1_1SDK_1_1API_1_1DTO_1_1EngineDTO.html", "structIO_1_1SDK_1_1API_1_1DTO_1_1EngineDTO" ],
+            [ "FrameTransformationDTO", "structIO_1_1SDK_1_1API_1_1DTO_1_1FrameTransformationDTO.html", "structIO_1_1SDK_1_1API_1_1DTO_1_1FrameTransformationDTO" ],
             [ "FuelTankDTO", "structIO_1_1SDK_1_1API_1_1DTO_1_1FuelTankDTO.html", "structIO_1_1SDK_1_1API_1_1DTO_1_1FuelTankDTO" ],
             [ "GeodeticDTO", "structIO_1_1SDK_1_1API_1_1DTO_1_1GeodeticDTO.html", "structIO_1_1SDK_1_1API_1_1DTO_1_1GeodeticDTO" ],
             [ "InFieldOfViewConstraintDTO", "structIO_1_1SDK_1_1API_1_1DTO_1_1InFieldOfViewConstraintDTO.html", "structIO_1_1SDK_1_1API_1_1DTO_1_1InFieldOfViewConstraintDTO" ],
