@@ -423,5 +423,16 @@ TEST(API, GetBodyInformationInvalidId)
 {
     auto res = GetCelestialBodyInfoProxy(398);
     ASSERT_STREQ("Not found", res.Error);
+}
 
+TEST(API, TransformFrame)
+{
+    auto res = TransformFrameProxy(IO::SDK::Frames::InertialFrames::GetICRF().GetName().c_str(), "ITRF93", 0.0);
+    ASSERT_DOUBLE_EQ(0.76713121189662548, res.Rotation.w);
+    ASSERT_DOUBLE_EQ(-1.8618846012434252e-05, res.Rotation.x);
+    ASSERT_DOUBLE_EQ(8.468919252183845e-07, res.Rotation.y);
+    ASSERT_DOUBLE_EQ(0.64149022080358797, res.Rotation.z);
+    ASSERT_DOUBLE_EQ(-1.9637714059853662e-09, res.AngularVelocity.x);
+    ASSERT_DOUBLE_EQ(-2.0389340573814659e-09, res.AngularVelocity.y);
+    ASSERT_DOUBLE_EQ(7.2921150642488516e-05, res.AngularVelocity.z);
 }

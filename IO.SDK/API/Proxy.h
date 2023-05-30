@@ -1,7 +1,8 @@
 
 #include <ScenarioDTO.h>
-#include "ManeuverBase.h"
-#include "Scenario.h"
+#include <ManeuverBase.h>
+#include <Scenario.h>
+#include <FrameTransformation.h>
 
 #pragma region Proxy
 #ifdef __cplusplus
@@ -31,7 +32,7 @@ MODULE_API const char *GetSpiceVersionProxy();
  * @return
  */
 MODULE_API bool
-WriteEphemerisProxy(const char *filePath, int objectId, IO::SDK::API::DTO::StateVectorDTO sv[100000], int size);
+WriteEphemerisProxy(const char *filePath, int objectId, IO::SDK::API::DTO::StateVectorDTO sv[100000], unsigned int size);
 
 /**
  * Read object ephemeris
@@ -212,7 +213,20 @@ MODULE_API double ConvertTDBToUTCProxy(double tdb);
  */
 MODULE_API double ConvertUTCToTDBProxy(double utc);
 
+/**
+ * Get celestial body information from his id
+ * @param bodyId
+ * @return
+ */
 MODULE_API IO::SDK::API::DTO::CelestialBodyDTO GetCelestialBodyInfoProxy(int bodyId);
+
+/**
+ * Get the transformation from a frame to another frame at given epoch
+ * @param fromFrame
+ * @param toFrame
+ * @return
+ */
+MODULE_API IO::SDK::API::DTO::FrameTransformationDTO TransformFrameProxy(const char *fromFrame, const char *toFrame, double epoch);
 #ifdef __cplusplus
 }
 #endif
@@ -221,7 +235,11 @@ MODULE_API IO::SDK::API::DTO::CelestialBodyDTO GetCelestialBodyInfoProxy(int bod
 #ifndef PROXY_H
 #define PROXY_H
 #define ERRORMSGLENGTH 1024
+
+static constexpr const int lenout = 33;
+
 char *HandleError();
+
 std::map<int, std::shared_ptr<IO::SDK::Body::CelestialBody>>
 BuildCelestialBodies(IO::SDK::API::DTO::ScenarioDTO &scenario);
 

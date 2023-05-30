@@ -51,6 +51,15 @@ static IO::SDK::API::DTO::Vector3DDTO ToVector3DDTO(const IO::SDK::Math::Vector3
     return dto;
 }
 
+static IO::SDK::API::DTO::Vector3DDTO ToVector3DDTO(const double data[3])
+{
+    IO::SDK::API::DTO::Vector3DDTO dto{};
+    dto.x = data[0];
+    dto.y = data[1];
+    dto.z = data[2];
+    return dto;
+}
+
 static IO::SDK::Math::Quaternion ToQuaternion(IO::SDK::API::DTO::QuaternionDTO &dto)
 {
     return IO::SDK::Math::Quaternion{dto.w, dto.x, dto.y, dto.z};
@@ -73,7 +82,7 @@ static IO::SDK::Coordinates::Geodetic ToGeodetic(IO::SDK::API::DTO::GeodeticDTO 
 
 static IO::SDK::API::DTO::GeodeticDTO ToGeodeticDTO(IO::SDK::Coordinates::Geodetic &geodetic)
 {
-    IO::SDK::API::DTO::GeodeticDTO dto(geodetic.GetLongitude(),geodetic.GetLatitude(),geodetic.GetAltitude());
+    IO::SDK::API::DTO::GeodeticDTO dto(geodetic.GetLongitude(), geodetic.GetLatitude(), geodetic.GetAltitude());
     return dto;
 
 }
