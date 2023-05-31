@@ -10,12 +10,12 @@ namespace IO::SDK::API::DTO
     {
         int Id{-1};
         int centerOfMotionId{-1};
-        char *Name{};
+        const char *Name{};
         IO::SDK::API::DTO::Vector3DDTO Radii{};
         double GM{};
-        char *FrameName{};
+        const char *FrameName{};
         int FrameId{};
-        char * Error{};
+        const char * Error{};
     };
 }
 #endif //IOSDK_CELESTIALBODYDTO_H

@@ -436,3 +436,96 @@ TEST(API, TransformFrame)
     ASSERT_DOUBLE_EQ(-2.0389340573814659e-09, res.AngularVelocity.y);
     ASSERT_DOUBLE_EQ(7.2921150642488516e-05, res.AngularVelocity.z);
 }
+
+TEST(API, ConvertTLEToStateVectorProxy)
+{
+    IO::SDK::Time::TDB epoch("2021-01-20T18:50:13.663106");
+    auto stateVector = ConvertTLEToStateVectorProxy("1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
+                                                    "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703", epoch.GetSecondsFromJ2000().count());
+    ASSERT_DOUBLE_EQ(4363669.2613373389, stateVector.position.x);
+    ASSERT_DOUBLE_EQ(-3627809.912410662, stateVector.position.y);
+    ASSERT_DOUBLE_EQ(-3747415.4653566754, stateVector.position.z);
+    ASSERT_DOUBLE_EQ(5805.8241824895995, stateVector.velocity.x);
+    ASSERT_DOUBLE_EQ(2575.7226437161635, stateVector.velocity.y);
+    ASSERT_DOUBLE_EQ(4271.5974622410786, stateVector.velocity.z);
+    ASSERT_DOUBLE_EQ(664440682.84760022, stateVector.epoch);
+}
+
+TEST(API, ConvertConicOrbitalElementsToStateVector)
+{
+    //ISS
+    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399); //GEOPHYSICAL PROPERTIES provided by JPL
+    double a = 6.800803544958167E+06;
+    IO::SDK::Time::TimeSpan ts(std::chrono::duration<double>(IO::SDK::Constants::_2PI * std::sqrt((a * a * a) / earth->GetMu())));
+
+    double perifocalDist = std::sqrt(std::pow(-6.116559469556896E+06, 2) + std::pow(-1.546174698676721E+06, 2) + std::pow(2.521950157430313E+06, 2));
+
+    IO::SDK::API::DTO::ConicOrbitalElementsDTO conics;
+    conics.frame = IO::SDK::Frames::InertialFrames::GetICRF().ToCharArray();
+    conics.epoch = 663724800.00001490;//"2021-01-12T11:58:50.816" UTC
+    conics.meanAnomaly = 4.541224977546975E+01 * IO::SDK::Constants::DEG_RAD;
+    conics.periapsisArgument = 1.062574316262159E+02 * IO::SDK::Constants::DEG_RAD;
+    conics.ascendingNodeLongitude = 3.257605322534260E+01 * IO::SDK::Constants::DEG_RAD;
+    conics.inclination = 5.171921958517460E+01 * IO::SDK::Constants::DEG_RAD;
+    conics.eccentricity = 1.353139738203394E-03;
+    conics.perifocalDistance = perifocalDist;
+    conics.centerOfMotionId = 399;
+
+    auto sv = ConvertConicElementsToStateVectorProxy(conics);
+
+    //Low accuracy due to conical propagation
+    ASSERT_NEAR(-6.116559469556896E+06, sv.position.x, 3e3);
+    ASSERT_NEAR(-1.546174698676721E+06, sv.position.y, 3e3);
+    ASSERT_NEAR(2.521950157430313E+06, sv.position.z, 3e3);
+
+    ASSERT_NEAR(-8.078523150700097E+02, sv.velocity.x, 0.2);
+    ASSERT_NEAR(-5.477647950892673E+03, sv.velocity.y, 1.2);
+    ASSERT_NEAR(-5.297615757935174E+03, sv.velocity.z, 1.1);
+    ASSERT_EQ(663724800.00001490, sv.epoch);
+    ASSERT_EQ(399, sv.centerOfMotion.Id);
+    ASSERT_STREQ(IO::SDK::Frames::InertialFrames::GetICRF().ToCharArray(), sv.inertialFrame);
+}
+
+TEST(API, ConvertEquinoctialElementsToStateVector)
+{
+    //keplerian elements
+    double p = 1.0e7;
+    double ecc = 0.1;
+    double a = p / (1. - ecc);
+    double argp = 30.0 * rpd_c();
+    double node = 15.0 * rpd_c();
+    double inc = 10.0 * rpd_c();
+    double m0 = 45.0 * rpd_c();
+    IO::SDK::Time::TDB t0{-100000000.0s};
+
+    //equinoctial elements
+    double h = ecc * sin(argp + node);
+    double k = ecc * cos(argp + node);
+    double p2 = tan(inc / 2.) * sin(node);
+    double q = tan(inc / 2.) * cos(node);
+    double L = m0 + argp + node;
+
+    IO::SDK::API::DTO::EquinoctialElementsDTO eqDTO;
+    eqDTO.frame = IO::SDK::Frames::InertialFrames::GetICRF().ToCharArray();
+    eqDTO.declinationOfThePole = IO::SDK::Constants::PI2;
+    eqDTO.rightAscensionOfThePole = -IO::SDK::Constants::PI2;
+    eqDTO.ascendingNodeLongitudeRate = 0.0;
+    eqDTO.periapsisLongitudeRate = 0.0;
+    eqDTO.h = h;
+    eqDTO.p = p2;
+    eqDTO.semiMajorAxis = a;
+    eqDTO.epoch = t0.GetSecondsFromJ2000().count();
+    eqDTO.centerOfMotionId = 399;
+    eqDTO.L = L;
+    eqDTO.k = k;
+    eqDTO.q = q;
+
+    auto sv = ConvertEquinoctialElementsToStateVectorProxy(eqDTO);
+
+    ASSERT_DOUBLE_EQ(-1557343.2179623565, sv.position.x);
+    ASSERT_DOUBLE_EQ(10112046.56492505, sv.position.y);
+    ASSERT_DOUBLE_EQ(1793343.6111546031, sv.position.z);
+    ASSERT_DOUBLE_EQ(-6369.0795341145204, sv.velocity.x);
+    ASSERT_DOUBLE_EQ(-517.51239201161684, sv.velocity.y);
+    ASSERT_DOUBLE_EQ(202.52220483204573, sv.velocity.z);
+}

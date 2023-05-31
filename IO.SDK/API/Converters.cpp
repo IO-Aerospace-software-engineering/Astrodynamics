@@ -8,6 +8,10 @@
 #include <Geodetic.h>
 #include <Quaternion.h>
 #include <QuaternionDTO.h>
+#include <StateVectorDTO.h>
+#include <StateVector.h>
+#include <ConicOrbitalElementsDTO.h>
+#include <ConicOrbitalElements.h>
 
 static IO::SDK::Time::Window<IO::SDK::Time::UTC> ToUTCWindow(IO::SDK::API::DTO::WindowDTO &window)
 {
@@ -84,5 +88,34 @@ static IO::SDK::API::DTO::GeodeticDTO ToGeodeticDTO(IO::SDK::Coordinates::Geodet
 {
     IO::SDK::API::DTO::GeodeticDTO dto(geodetic.GetLongitude(), geodetic.GetLatitude(), geodetic.GetAltitude());
     return dto;
+}
 
+static IO::SDK::API::DTO::StateVectorDTO ToStateVectorDTO(IO::SDK::OrbitalParameters::StateVector &stateVector)
+{
+    IO::SDK::API::DTO::StateVectorDTO dto{};
+    dto.epoch = stateVector.GetEpoch().GetSecondsFromJ2000().count();
+    dto.inertialFrame = strdup(stateVector.GetFrame().ToCharArray());
+    dto.centerOfMotion.Id = stateVector.GetCenterOfMotion()->GetId();
+    dto.position = ToVector3DDTO(stateVector.GetPosition());
+    dto.velocity = ToVector3DDTO(stateVector.GetVelocity());
+
+    return dto;
+}
+
+static IO::SDK::API::DTO::ConicOrbitalElementsDTO ToConicOrbitalElementDTo(IO::SDK::OrbitalParameters::ConicOrbitalElements &conicOrbitalElements)
+{
+    IO::SDK::API::DTO::ConicOrbitalElementsDTO dto{};
+    dto.epoch = conicOrbitalElements.GetEpoch().GetSecondsFromJ2000().count();
+    dto.centerOfMotionId = conicOrbitalElements.GetCenterOfMotion()->GetId();
+    dto.ascendingNodeLongitude = conicOrbitalElements.GetRightAscendingNodeLongitude();
+    dto.eccentricity = conicOrbitalElements.GetEccentricity();
+    dto.inclination = conicOrbitalElements.GetInclination();
+    dto.meanAnomaly = conicOrbitalElements.GetMeanAnomaly();
+    dto.orbitalPeriod = conicOrbitalElements.GetPeriod().GetSeconds().count();
+    dto.periapsisArgument = conicOrbitalElements.GetPeriapsisArgument();
+    dto.perifocalDistance = conicOrbitalElements.GetPerifocalDistance();
+    dto.semiMajorAxis = conicOrbitalElements.GetSemiMajorAxis();
+    dto.trueAnomaly = conicOrbitalElements.GetTrueAnomaly();
+
+    return dto;
 }

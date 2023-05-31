@@ -3,6 +3,8 @@
 #include <ManeuverBase.h>
 #include <Scenario.h>
 #include <FrameTransformation.h>
+#include <ConicOrbitalElementsDTO.h>
+#include <EquinoctialElementsDTO.h>
 
 #pragma region Proxy
 #ifdef __cplusplus
@@ -227,6 +229,29 @@ MODULE_API IO::SDK::API::DTO::CelestialBodyDTO GetCelestialBodyInfoProxy(int bod
  * @return
  */
 MODULE_API IO::SDK::API::DTO::FrameTransformationDTO TransformFrameProxy(const char *fromFrame, const char *toFrame, double epoch);
+
+/**
+ * Convert Two line elements to state vector
+ * @param L1
+ * @param L2
+ * @param epoch
+ * @return
+ */
+MODULE_API IO::SDK::API::DTO::StateVectorDTO ConvertTLEToStateVectorProxy(const char *L1, const char *L2, double epoch);
+
+/**
+ * Convert conic orbital elements to state vector
+ * @param conicOrbitalElementsDto
+ * @return
+ */
+MODULE_API IO::SDK::API::DTO::StateVectorDTO ConvertConicElementsToStateVectorProxy(IO::SDK::API::DTO::ConicOrbitalElementsDTO conicOrbitalElementsDto);
+
+/**
+ * Convert equinoctial elements to state vector
+ * @param equinoctialElementsDto
+ * @return
+ */
+MODULE_API IO::SDK::API::DTO::StateVectorDTO ConvertEquinoctialElementsToStateVectorProxy(IO::SDK::API::DTO::EquinoctialElementsDTO equinoctialElementsDto);
 #ifdef __cplusplus
 }
 #endif

@@ -1,4 +1,6 @@
 #include <algorithm>
+#include <iostream>
+
 
 #include <Proxy.h>
 #include <Converters.cpp>
@@ -16,7 +18,8 @@
 #include <InstrumentPointingToAttitude.h>
 #include <Launch.h>
 #include <KernelsLoader.h>
-#include <iostream>
+#include <TLE.h>
+#include <EquinoctialElements.h>
 
 #pragma region Proxy
 
@@ -1160,6 +1163,43 @@ IO::SDK::API::DTO::FrameTransformationDTO TransformFrameProxy(const char *fromFr
     frameTransformationDto.Rotation = ToQuaternionDTO(q);
     frameTransformationDto.AngularVelocity = ToVector3DDTO(av);
     return frameTransformationDto;
+}
+
+IO::SDK::API::DTO::StateVectorDTO ConvertTLEToStateVectorProxy(const char *L1, const char *L2, double epoch)
+{
+    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
+    std::string strings[3] = {"ISS", L1, L2};
+    IO::SDK::OrbitalParameters::TLE tle(earth, strings);
+    auto sv = tle.GetStateVector(IO::SDK::Time::TDB(std::chrono::duration<double>(epoch)));
+    return ToStateVectorDTO(sv);
+}
+
+IO::SDK::API::DTO::StateVectorDTO ConvertConicElementsToStateVectorProxy(IO::SDK::API::DTO::ConicOrbitalElementsDTO conicOrbitalElementsDto)
+{
+    auto centerOfMotion = std::make_shared<IO::SDK::Body::CelestialBody>(conicOrbitalElementsDto.centerOfMotionId);
+    IO::SDK::Time::TDB tdb{std::chrono::duration<double>(conicOrbitalElementsDto.epoch)};
+    IO::SDK::Frames::Frames frame{conicOrbitalElementsDto.frame};
+    IO::SDK::OrbitalParameters::ConicOrbitalElements conicOrbitalElements{centerOfMotion, conicOrbitalElementsDto.perifocalDistance, conicOrbitalElementsDto.eccentricity,
+                                                                          conicOrbitalElementsDto.inclination,
+                                                                          conicOrbitalElementsDto.ascendingNodeLongitude, conicOrbitalElementsDto.periapsisArgument,
+                                                                          conicOrbitalElementsDto.meanAnomaly, tdb, frame};
+    auto sv = conicOrbitalElements.GetStateVector();
+    return ToStateVectorDTO(sv);
+}
+
+IO::SDK::API::DTO::StateVectorDTO ConvertEquinoctialElementsToStateVectorProxy(IO::SDK::API::DTO::EquinoctialElementsDTO equinoctialElementsDto)
+{
+    auto centerOfMotion = std::make_shared<IO::SDK::Body::CelestialBody>(equinoctialElementsDto.centerOfMotionId);
+    IO::SDK::Time::TDB tdb{std::chrono::duration<double>(equinoctialElementsDto.epoch)};
+    IO::SDK::Frames::Frames frame{equinoctialElementsDto.frame};
+
+    IO::SDK::OrbitalParameters::EquinoctialElements eq{centerOfMotion, tdb, equinoctialElementsDto.semiMajorAxis, equinoctialElementsDto.h, equinoctialElementsDto.k,
+                                                       equinoctialElementsDto.p, equinoctialElementsDto.q, equinoctialElementsDto.L, equinoctialElementsDto.periapsisLongitudeRate,
+                                                       equinoctialElementsDto.ascendingNodeLongitudeRate, equinoctialElementsDto.rightAscensionOfThePole,
+                                                       equinoctialElementsDto.declinationOfThePole, frame};
+
+    auto sv = eq.GetStateVector();
+    return ToStateVectorDTO(sv);
 }
 
 #pragma endregion
