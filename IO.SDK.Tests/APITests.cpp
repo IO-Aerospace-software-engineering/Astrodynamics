@@ -453,11 +453,6 @@ TEST(API, ConvertTLEToStateVectorProxy)
 
 TEST(API, ConvertConicOrbitalElementsToStateVector)
 {
-    //ISS
-    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399); //GEOPHYSICAL PROPERTIES provided by JPL
-    double a = 6.800803544958167E+06;
-    IO::SDK::Time::TimeSpan ts(std::chrono::duration<double>(IO::SDK::Constants::_2PI * std::sqrt((a * a * a) / earth->GetMu())));
-
     double perifocalDist = std::sqrt(std::pow(-6.116559469556896E+06, 2) + std::pow(-1.546174698676721E+06, 2) + std::pow(2.521950157430313E+06, 2));
 
     IO::SDK::API::DTO::ConicOrbitalElementsDTO conics;
@@ -528,4 +523,6 @@ TEST(API, ConvertEquinoctialElementsToStateVector)
     ASSERT_DOUBLE_EQ(-6369.0795341145204, sv.velocity.x);
     ASSERT_DOUBLE_EQ(-517.51239201161684, sv.velocity.y);
     ASSERT_DOUBLE_EQ(202.52220483204573, sv.velocity.z);
+    ASSERT_EQ(399, sv.centerOfMotion.Id);
+    ASSERT_STREQ(IO::SDK::Frames::InertialFrames::GetICRF().ToCharArray(), sv.inertialFrame);
 }

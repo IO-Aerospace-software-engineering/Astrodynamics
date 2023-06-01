@@ -19,7 +19,7 @@ namespace IO::SDK::API::DTO
         double periapsisArgument{};
         double meanAnomaly{};
         double trueAnomaly{};
-        double orbitalPeriod;
+        double orbitalPeriod{};
         double semiMajorAxis{};
         const char* frame{};
 
