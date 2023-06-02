@@ -41,7 +41,7 @@ namespace IO::SDK::OrbitalParameters
 	public:
 		EquinoctialElements(const std::shared_ptr<IO::SDK::Body::CelestialBody> &centerOfMotion, const IO::SDK::Time::TDB &epoch, double semiMajorAxis, double h, double k, double p, double q, double L, double periapsisLongitudeRate, double ascendingNodeLongitudeRate, double rightAscensionOfThePole, double declinationOfThePole, const IO::SDK::Frames::Frames &frame);
 
-		EquinoctialElements(const std::shared_ptr<IO::SDK::Body::CelestialBody> &centerOfMotion, double semiMajorAxis, double eccentricity, double inclination, double peregeeArgument, double longitudeAN, double meanAnomaly, double periapsisLongitudeRate, double ascendingNodeLongitudeRate, double rightAscensionOfThePole, double declinationOfThePole, const IO::SDK::Time::TDB &epoch, const IO::SDK::Frames::Frames &frame);
+		EquinoctialElements(const std::shared_ptr<IO::SDK::Body::CelestialBody> &centerOfMotion, double semiMajorAxis, double eccentricity, double inclination, double perigeeArgument, double longitudeAN, double meanAnomaly, double periapsisLongitudeRate, double ascendingNodeLongitudeRate, double rightAscensionOfThePole, double declinationOfThePole, const IO::SDK::Time::TDB &epoch, const IO::SDK::Frames::Frames &frame);
 
 		/// <summary>
 		/// Get h coefficient

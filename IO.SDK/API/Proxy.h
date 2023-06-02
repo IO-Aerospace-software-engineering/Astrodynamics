@@ -5,6 +5,7 @@
 #include <FrameTransformation.h>
 #include <ConicOrbitalElementsDTO.h>
 #include <EquinoctialElementsDTO.h>
+#include "RaDecDTO.h"
 
 #pragma region Proxy
 #ifdef __cplusplus
@@ -252,6 +253,13 @@ MODULE_API IO::SDK::API::DTO::StateVectorDTO ConvertConicElementsToStateVectorPr
  * @return
  */
 MODULE_API IO::SDK::API::DTO::StateVectorDTO ConvertEquinoctialElementsToStateVectorProxy(IO::SDK::API::DTO::EquinoctialElementsDTO equinoctialElementsDto);
+
+/**
+ * Convert stateVector to right ascension and declination
+ * @param stateVectorDto
+ * @return
+ */
+MODULE_API IO::SDK::API::DTO::RaDecDTO ConvertToRightAscensionAndDeclinationProxy(IO::SDK::API::DTO::StateVectorDTO stateVectorDto);
 #ifdef __cplusplus
 }
 #endif

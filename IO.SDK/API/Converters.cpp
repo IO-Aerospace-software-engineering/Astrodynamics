@@ -12,42 +12,37 @@
 #include <StateVector.h>
 #include <ConicOrbitalElementsDTO.h>
 #include <ConicOrbitalElements.h>
+#include "RaDecDTO.h"
 
-static IO::SDK::Time::Window<IO::SDK::Time::UTC> ToUTCWindow(IO::SDK::API::DTO::WindowDTO &window)
-{
+static IO::SDK::Time::Window<IO::SDK::Time::UTC> ToUTCWindow(IO::SDK::API::DTO::WindowDTO &window) {
     return IO::SDK::Time::Window<IO::SDK::Time::UTC>{IO::SDK::Time::UTC(std::chrono::duration<double>(window.start)),
                                                      IO::SDK::Time::UTC(std::chrono::duration<double>(window.end))};
 }
 
-static IO::SDK::Time::Window<IO::SDK::Time::TDB> ToTDBWindow(IO::SDK::API::DTO::WindowDTO &window)
-{
+static IO::SDK::Time::Window<IO::SDK::Time::TDB> ToTDBWindow(IO::SDK::API::DTO::WindowDTO &window) {
     return IO::SDK::Time::Window<IO::SDK::Time::TDB>{IO::SDK::Time::TDB(std::chrono::duration<double>(window.start)),
                                                      IO::SDK::Time::TDB(std::chrono::duration<double>(window.end))};
 }
 
-static IO::SDK::API::DTO::WindowDTO ToWindowDTO(const IO::SDK::Time::Window<IO::SDK::Time::UTC> &window)
-{
+static IO::SDK::API::DTO::WindowDTO ToWindowDTO(const IO::SDK::Time::Window<IO::SDK::Time::UTC> &window) {
     IO::SDK::API::DTO::WindowDTO dto{};
     dto.start = window.GetStartDate().GetSecondsFromJ2000().count();
     dto.end = window.GetEndDate().GetSecondsFromJ2000().count();
     return dto;
 }
 
-static IO::SDK::API::DTO::WindowDTO ToWindowDTO(const IO::SDK::Time::Window<IO::SDK::Time::TDB> &window)
-{
+static IO::SDK::API::DTO::WindowDTO ToWindowDTO(const IO::SDK::Time::Window<IO::SDK::Time::TDB> &window) {
     IO::SDK::API::DTO::WindowDTO dto{};
     dto.start = window.GetStartDate().GetSecondsFromJ2000().count();
     dto.end = window.GetEndDate().GetSecondsFromJ2000().count();
     return dto;
 }
 
-static IO::SDK::Math::Vector3D ToVector3D(const IO::SDK::API::DTO::Vector3DDTO &vector)
-{
+static IO::SDK::Math::Vector3D ToVector3D(const IO::SDK::API::DTO::Vector3DDTO &vector) {
     return {vector.x, vector.y, vector.z};
 }
 
-static IO::SDK::API::DTO::Vector3DDTO ToVector3DDTO(const IO::SDK::Math::Vector3D &vector)
-{
+static IO::SDK::API::DTO::Vector3DDTO ToVector3DDTO(const IO::SDK::Math::Vector3D &vector) {
     IO::SDK::API::DTO::Vector3DDTO dto{};
     dto.x = vector.GetX();
     dto.y = vector.GetY();
@@ -55,8 +50,7 @@ static IO::SDK::API::DTO::Vector3DDTO ToVector3DDTO(const IO::SDK::Math::Vector3
     return dto;
 }
 
-static IO::SDK::API::DTO::Vector3DDTO ToVector3DDTO(const double data[3])
-{
+static IO::SDK::API::DTO::Vector3DDTO ToVector3DDTO(const double data[3]) {
     IO::SDK::API::DTO::Vector3DDTO dto{};
     dto.x = data[0];
     dto.y = data[1];
@@ -64,13 +58,11 @@ static IO::SDK::API::DTO::Vector3DDTO ToVector3DDTO(const double data[3])
     return dto;
 }
 
-static IO::SDK::Math::Quaternion ToQuaternion(IO::SDK::API::DTO::QuaternionDTO &dto)
-{
+static IO::SDK::Math::Quaternion ToQuaternion(IO::SDK::API::DTO::QuaternionDTO &dto) {
     return IO::SDK::Math::Quaternion{dto.w, dto.x, dto.y, dto.z};
 }
 
-static IO::SDK::API::DTO::QuaternionDTO ToQuaternionDTO(IO::SDK::Math::Quaternion &quaternion)
-{
+static IO::SDK::API::DTO::QuaternionDTO ToQuaternionDTO(IO::SDK::Math::Quaternion &quaternion) {
     IO::SDK::API::DTO::QuaternionDTO q;
     q.w = quaternion.GetQ0();
     q.x = quaternion.GetQ1();
@@ -79,19 +71,16 @@ static IO::SDK::API::DTO::QuaternionDTO ToQuaternionDTO(IO::SDK::Math::Quaternio
     return q;
 }
 
-static IO::SDK::Coordinates::Geodetic ToGeodetic(IO::SDK::API::DTO::GeodeticDTO &dto)
-{
+static IO::SDK::Coordinates::Geodetic ToGeodetic(IO::SDK::API::DTO::GeodeticDTO &dto) {
     return IO::SDK::Coordinates::Geodetic{dto.longitude, dto.latitude, dto.altitude};
 }
 
-static IO::SDK::API::DTO::GeodeticDTO ToGeodeticDTO(IO::SDK::Coordinates::Geodetic &geodetic)
-{
+static IO::SDK::API::DTO::GeodeticDTO ToGeodeticDTO(IO::SDK::Coordinates::Geodetic &geodetic) {
     IO::SDK::API::DTO::GeodeticDTO dto(geodetic.GetLongitude(), geodetic.GetLatitude(), geodetic.GetAltitude());
     return dto;
 }
 
-static IO::SDK::API::DTO::StateVectorDTO ToStateVectorDTO(IO::SDK::OrbitalParameters::StateVector &stateVector)
-{
+static IO::SDK::API::DTO::StateVectorDTO ToStateVectorDTO(IO::SDK::OrbitalParameters::StateVector &stateVector) {
     IO::SDK::API::DTO::StateVectorDTO dto{};
     dto.epoch = stateVector.GetEpoch().GetSecondsFromJ2000().count();
     dto.inertialFrame = strdup(stateVector.GetFrame().ToCharArray());
@@ -102,8 +91,8 @@ static IO::SDK::API::DTO::StateVectorDTO ToStateVectorDTO(IO::SDK::OrbitalParame
     return dto;
 }
 
-static IO::SDK::API::DTO::ConicOrbitalElementsDTO ToConicOrbitalElementDTo(IO::SDK::OrbitalParameters::ConicOrbitalElements &conicOrbitalElements)
-{
+static IO::SDK::API::DTO::ConicOrbitalElementsDTO
+ToConicOrbitalElementDTo(IO::SDK::OrbitalParameters::ConicOrbitalElements &conicOrbitalElements) {
     IO::SDK::API::DTO::ConicOrbitalElementsDTO dto{};
     dto.epoch = conicOrbitalElements.GetEpoch().GetSecondsFromJ2000().count();
     dto.centerOfMotionId = conicOrbitalElements.GetCenterOfMotion()->GetId();
@@ -118,4 +107,12 @@ static IO::SDK::API::DTO::ConicOrbitalElementsDTO ToConicOrbitalElementDTo(IO::S
     dto.trueAnomaly = conicOrbitalElements.GetTrueAnomaly();
 
     return dto;
+}
+
+static IO::SDK::API::DTO::RaDecDTO ToRaDecDTO(IO::SDK::Coordinates::RADec &raDec) {
+    IO::SDK::API::DTO::RaDecDTO raDecDto;
+    raDecDto.dec = raDec.GetDec();
+    raDecDto.ra = raDec.GetRA();
+    raDecDto.r = raDec.GetRange();
+    return  raDecDto;
 }

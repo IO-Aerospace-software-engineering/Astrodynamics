@@ -9,26 +9,22 @@
 #include <KernelsLoader.h>
 #include <Converters.cpp>
 
-TEST(API, DTOSize)
-{
+TEST(API, DTOSize) {
     auto size2 = sizeof(IO::SDK::API::DTO::ScenarioDTO);
     ASSERT_EQ(21440, size2);
 }
 
-TEST(API, TDBToString)
-{
+TEST(API, TDBToString) {
     auto res = TDBToStringProxy(0.0);
     ASSERT_STREQ("2000-01-01 12:00:00.000000 (TDB)", res);
 }
 
-TEST(API, UTCToString)
-{
+TEST(API, UTCToString) {
     auto res = UTCToStringProxy(0.0);
     ASSERT_STREQ("2000-01-01 12:00:00.000000 (UTC)", res);
 }
 
-TEST(API, SiteAndSpacecraftPropagation)
-{
+TEST(API, SiteAndSpacecraftPropagation) {
     //Configure site
     IO::SDK::API::DTO::ScenarioDTO scenario{};
     scenario.Name = "scenatiosites";
@@ -70,8 +66,7 @@ TEST(API, SiteAndSpacecraftPropagation)
     PropagateProxy(scenario);
 }
 
-TEST(API, SpacecraftPropagation)
-{
+TEST(API, SpacecraftPropagation) {
     //Configure Scenario
     IO::SDK::API::DTO::ScenarioDTO scenario{};
     scenario.Name = "scenatiosites";
@@ -143,8 +138,7 @@ TEST(API, SpacecraftPropagation)
     ASSERT_STREQ("2021-03-04 00:31:44.178432 (TDB)", tdbEnd.ToString().c_str());
 }
 
-TEST(API, FindWindowsOnCoordinateConstraintProxy)
-{
+TEST(API, FindWindowsOnCoordinateConstraintProxy) {
     IO::SDK::API::DTO::WindowDTO windows[1000];
     IO::SDK::API::DTO::WindowDTO searchWindow{};
     searchWindow.start = 730036800.0;
@@ -157,8 +151,7 @@ TEST(API, FindWindowsOnCoordinateConstraintProxy)
     ASSERT_STREQ("2023-02-19 23:58:50.814787 (UTC)", ToTDBWindow(windows[0]).GetEndDate().ToUTC().ToString().c_str());
 }
 
-TEST(API, FindWindowsOnDistanceConstraintProxy)
-{
+TEST(API, FindWindowsOnDistanceConstraintProxy) {
     IO::SDK::API::DTO::WindowDTO windows[1000];
     IO::SDK::API::DTO::WindowDTO searchWindow{};
     searchWindow.start = IO::SDK::Time::TDB("2007 JAN 1").GetSecondsFromJ2000().count();
@@ -171,8 +164,7 @@ TEST(API, FindWindowsOnDistanceConstraintProxy)
     ASSERT_STREQ("2007-04-01 00:01:05.185654 (TDB)", ToTDBWindow(windows[3]).GetEndDate().ToString().c_str());
 }
 
-TEST(API, FindWindowsOnIlluminationConstraintProxy)
-{
+TEST(API, FindWindowsOnIlluminationConstraintProxy) {
     IO::SDK::API::DTO::WindowDTO windows[1000];
     IO::SDK::API::DTO::WindowDTO searchWindow{};
     searchWindow.start = IO::SDK::Time::TDB("2021-05-17 12:00:00 TDB").GetSecondsFromJ2000().count();
@@ -189,8 +181,7 @@ TEST(API, FindWindowsOnIlluminationConstraintProxy)
     ASSERT_STREQ("2021-05-18 12:00:00.000000 (TDB)", ToTDBWindow(windows[1]).GetEndDate().ToString().c_str());
 }
 
-TEST(API, FindWindowsOnOccultationConstraintProxy)
-{
+TEST(API, FindWindowsOnOccultationConstraintProxy) {
     IO::SDK::API::DTO::WindowDTO windows[1000];
     IO::SDK::API::DTO::WindowDTO searchWindow{};
     searchWindow.start = IO::SDK::Time::TDB("2001 DEC 13").GetSecondsFromJ2000().count();
@@ -203,8 +194,7 @@ TEST(API, FindWindowsOnOccultationConstraintProxy)
 }
 
 
-TEST(API, FindWindowsInFieldOfViewConstraintProxy)
-{
+TEST(API, FindWindowsInFieldOfViewConstraintProxy) {
     IO::SDK::Math::Vector3D orientation{1.0, 0.0, 0.0};
     IO::SDK::Math::Vector3D boresight{0.0, 0.0, 1.0};
     IO::SDK::Math::Vector3D fovvector{1.0, 0.0, 0.0};
@@ -255,8 +245,7 @@ TEST(API, FindWindowsInFieldOfViewConstraintProxy)
     ASSERT_STREQ("2021-06-10 01:47:27.000000 (TDB)", ToTDBWindow(windows[1]).GetEndDate().ToString().c_str());
 }
 
-TEST(API, ReadEphemerisProxy)
-{
+TEST(API, ReadEphemerisProxy) {
     IO::SDK::API::DTO::WindowDTO searchWindow{};
     searchWindow.start = 0.0;
     searchWindow.end = 100.0;
@@ -275,32 +264,33 @@ TEST(API, ReadEphemerisProxy)
     ASSERT_DOUBLE_EQ(0.0, sv[0].epoch);
 }
 
-TEST(API, ReadEphemerisProxyException)
-{
+TEST(API, ReadEphemerisProxyException) {
     IO::SDK::API::DTO::WindowDTO searchWindow{};
     searchWindow.start = 0.0;
     searchWindow.end = 10001.0;
 
     IO::SDK::API::DTO::StateVectorDTO sv[5000];
-    ASSERT_THROW(ReadEphemerisProxy(searchWindow, 399, 301, "J2000", "LT", 1.0, sv), IO::SDK::Exception::InvalidArgumentException);
+    ASSERT_THROW(ReadEphemerisProxy(searchWindow, 399, 301, "J2000", "LT", 1.0, sv),
+                 IO::SDK::Exception::InvalidArgumentException);
 }
 
-TEST(API, ReadSpacecraftOrientationProxy)
-{
+TEST(API, ReadSpacecraftOrientationProxy) {
     auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399); //GEOPHYSICAL PROPERTIES provided by JPL
 
     auto startDate = IO::SDK::Time::TDB("2021-01-01 13:00:00 (TDB)");
     auto endDate = IO::SDK::Time::TDB("2021-01-01 13:01:00 (TDB)");
 
-    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams1 = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth,
-                                                                                                                                              IO::SDK::Math::Vector3D(6678000.0,
-                                                                                                                                                                      0.0, 0.0),
-                                                                                                                                              IO::SDK::Math::Vector3D(0.0, 7727.0,
-                                                                                                                                                                      0.0),
-                                                                                                                                              startDate,
-                                                                                                                                              IO::SDK::Frames::InertialFrames::GetICRF());
+    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams1 = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(
+            earth,
+            IO::SDK::Math::Vector3D(6678000.0,
+                                    0.0, 0.0),
+            IO::SDK::Math::Vector3D(0.0, 7727.0,
+                                    0.0),
+            startDate,
+            IO::SDK::Frames::InertialFrames::GetICRF());
 
-    IO::SDK::Body::Spacecraft::Spacecraft s{-172, "OrientationSpc", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams1)};
+    IO::SDK::Body::Spacecraft::Spacecraft s{-172, "OrientationSpc", 1000.0, 3000.0, std::string(SpacecraftPath),
+                                            std::move(orbitalParams1)};
 
     IO::SDK::Integrators::VVIntegrator integrator(IO::SDK::Time::TimeSpan(1.0s));
 
@@ -336,37 +326,32 @@ TEST(API, ReadSpacecraftOrientationProxy)
 
 }
 
-TEST(API, ReadSpacecraftOrientationProxyException)
-{
+TEST(API, ReadSpacecraftOrientationProxyException) {
     IO::SDK::API::DTO::WindowDTO searchWindow{};
     searchWindow.start = 0.0;
     searchWindow.end = 10001.0;
 
     IO::SDK::API::DTO::StateOrientationDTO so[10000];
-    ASSERT_THROW(ReadOrientationProxy(searchWindow, -172, 10.0 * std::pow(2.0, ClockAccuracy), "J2000", 1.0, so), IO::SDK::Exception::InvalidArgumentException);
+    ASSERT_THROW(ReadOrientationProxy(searchWindow, -172, 10.0 * std::pow(2.0, ClockAccuracy), "J2000", 1.0, so),
+                 IO::SDK::Exception::InvalidArgumentException);
 }
 
-TEST(API, ToTDB)
-{
+TEST(API, ToTDB) {
     ASSERT_DOUBLE_EQ(64.183927284669423, ConvertUTCToTDBProxy(0.0));
 }
 
-TEST(API, ToUTC)
-{
+TEST(API, ToUTC) {
     ASSERT_DOUBLE_EQ(-64.183927263223808, ConvertTDBToUTCProxy(0.0));
 }
 
-TEST(API, Version)
-{
+TEST(API, Version) {
     ASSERT_STREQ("CSPICE_N0067", GetSpiceVersionProxy());
 }
 
-TEST(API, WriteEphemeris)
-{
+TEST(API, WriteEphemeris) {
     const int size = 10;
     IO::SDK::API::DTO::StateVectorDTO sv[size];
-    for (int i = 0; i < size; ++i)
-    {
+    for (int i = 0; i < size; ++i) {
         sv[i].position.x = 6800 + i;
         sv[i].position.y = i;
         sv[i].position.z = i;
@@ -389,8 +374,7 @@ TEST(API, WriteEphemeris)
     window.end = 9.0;
     IO::SDK::API::DTO::StateVectorDTO svresult[size];
     ReadEphemerisProxy(window, 399, -135, "J2000", "NONE", 1.0, svresult);
-    for (int i = 0; i < size; ++i)
-    {
+    for (int i = 0; i < size; ++i) {
         ASSERT_DOUBLE_EQ(svresult[i].position.x, 6800 + i);
         ASSERT_DOUBLE_EQ(svresult[i].position.y, i);
         ASSERT_DOUBLE_EQ(svresult[i].position.z, i);
@@ -404,8 +388,7 @@ TEST(API, WriteEphemeris)
     }
 }
 
-TEST(API, GetBodyInformation)
-{
+TEST(API, GetBodyInformation) {
     auto res = GetCelestialBodyInfoProxy(399);
     ASSERT_EQ(399, res.Id);
     ASSERT_EQ(10, res.centerOfMotionId);
@@ -419,14 +402,12 @@ TEST(API, GetBodyInformation)
     ASSERT_DOUBLE_EQ(6356.7519000000002, res.Radii.z);
 }
 
-TEST(API, GetBodyInformationInvalidId)
-{
+TEST(API, GetBodyInformationInvalidId) {
     auto res = GetCelestialBodyInfoProxy(398);
     ASSERT_STREQ("Not found", res.Error);
 }
 
-TEST(API, TransformFrame)
-{
+TEST(API, TransformFrame) {
     auto res = TransformFrameProxy(IO::SDK::Frames::InertialFrames::GetICRF().GetName().c_str(), "ITRF93", 0.0);
     ASSERT_DOUBLE_EQ(0.76713121189662548, res.Rotation.w);
     ASSERT_DOUBLE_EQ(-1.8618846012434252e-05, res.Rotation.x);
@@ -437,11 +418,12 @@ TEST(API, TransformFrame)
     ASSERT_DOUBLE_EQ(7.2921150642488516e-05, res.AngularVelocity.z);
 }
 
-TEST(API, ConvertTLEToStateVectorProxy)
-{
+TEST(API, ConvertTLEToStateVectorProxy) {
     IO::SDK::Time::TDB epoch("2021-01-20T18:50:13.663106");
-    auto stateVector = ConvertTLEToStateVectorProxy("1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
-                                                    "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703", epoch.GetSecondsFromJ2000().count());
+    auto stateVector = ConvertTLEToStateVectorProxy(
+            "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
+            "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703",
+            epoch.GetSecondsFromJ2000().count());
     ASSERT_DOUBLE_EQ(4363669.2613373389, stateVector.position.x);
     ASSERT_DOUBLE_EQ(-3627809.912410662, stateVector.position.y);
     ASSERT_DOUBLE_EQ(-3747415.4653566754, stateVector.position.z);
@@ -451,9 +433,9 @@ TEST(API, ConvertTLEToStateVectorProxy)
     ASSERT_DOUBLE_EQ(664440682.84760022, stateVector.epoch);
 }
 
-TEST(API, ConvertConicOrbitalElementsToStateVector)
-{
-    double perifocalDist = std::sqrt(std::pow(-6.116559469556896E+06, 2) + std::pow(-1.546174698676721E+06, 2) + std::pow(2.521950157430313E+06, 2));
+TEST(API, ConvertConicOrbitalElementsToStateVector) {
+    double perifocalDist = std::sqrt(std::pow(-6.116559469556896E+06, 2) + std::pow(-1.546174698676721E+06, 2) +
+                                     std::pow(2.521950157430313E+06, 2));
 
     IO::SDK::API::DTO::ConicOrbitalElementsDTO conics;
     conics.frame = IO::SDK::Frames::InertialFrames::GetICRF().ToCharArray();
@@ -481,8 +463,7 @@ TEST(API, ConvertConicOrbitalElementsToStateVector)
     ASSERT_STREQ(IO::SDK::Frames::InertialFrames::GetICRF().ToCharArray(), sv.inertialFrame);
 }
 
-TEST(API, ConvertEquinoctialElementsToStateVector)
-{
+TEST(API, ConvertEquinoctialElementsToStateVector) {
     //keplerian elements
     double p = 1.0e7;
     double ecc = 0.1;
@@ -525,4 +506,16 @@ TEST(API, ConvertEquinoctialElementsToStateVector)
     ASSERT_DOUBLE_EQ(202.52220483204573, sv.velocity.z);
     ASSERT_EQ(399, sv.centerOfMotion.Id);
     ASSERT_STREQ(IO::SDK::Frames::InertialFrames::GetICRF().ToCharArray(), sv.inertialFrame);
+}
+
+TEST(API, ConvertToRaDec) {
+    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
+    auto moon = std::make_shared<IO::SDK::Body::CelestialBody>(301, earth);
+    auto sv = moon->GetOrbitalParametersAtEpoch()->GetStateVector();
+
+    auto svDTO = ToStateVectorDTO(sv);
+    auto ra = ConvertToRightAscensionAndDeclinationProxy(svDTO);
+    ASSERT_DOUBLE_EQ(222.44729949955743, ra.ra * IO::SDK::Constants::RAD_DEG);
+    ASSERT_DOUBLE_EQ(-10.900186051699617, ra.dec * IO::SDK::Constants::RAD_DEG);
+    ASSERT_DOUBLE_EQ(402448639.88732731, ra.r);
 }
