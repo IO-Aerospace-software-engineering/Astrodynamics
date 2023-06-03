@@ -84,7 +84,7 @@ static IO::SDK::API::DTO::StateVectorDTO ToStateVectorDTO(IO::SDK::OrbitalParame
     IO::SDK::API::DTO::StateVectorDTO dto{};
     dto.epoch = stateVector.GetEpoch().GetSecondsFromJ2000().count();
     dto.inertialFrame = strdup(stateVector.GetFrame().ToCharArray());
-    dto.centerOfMotion.Id = stateVector.GetCenterOfMotion()->GetId();
+    dto.centerOfMotionId = stateVector.GetCenterOfMotion()->GetId();
     dto.position = ToVector3DDTO(stateVector.GetPosition());
     dto.velocity = ToVector3DDTO(stateVector.GetVelocity());
 

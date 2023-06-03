@@ -11,7 +11,7 @@
 
 TEST(API, DTOSize) {
     auto size2 = sizeof(IO::SDK::API::DTO::ScenarioDTO);
-    ASSERT_EQ(21440, size2);
+    ASSERT_EQ(19456, size2);
 }
 
 TEST(API, TDBToString) {
@@ -50,7 +50,7 @@ TEST(API, SiteAndSpacecraftPropagation) {
     scenario.Spacecraft.name = "spc1";
     scenario.Spacecraft.dryOperatingMass = 1000.0;
     scenario.Spacecraft.maximumOperatingMass = 3000.0;
-    scenario.Spacecraft.initialOrbitalParameter.centerOfMotion.Id = 399;
+    scenario.Spacecraft.initialOrbitalParameter.centerOfMotionId = 399;
     scenario.Spacecraft.initialOrbitalParameter.epoch = 668085625.01523638;
     scenario.Spacecraft.initialOrbitalParameter.inertialFrame = "J2000";
     scenario.Spacecraft.initialOrbitalParameter.position.x = 6800.0;
@@ -85,7 +85,7 @@ TEST(API, SpacecraftPropagation) {
     scenario.Spacecraft.maximumOperatingMass = 10000.0;
     std::string spacecraftPath(SpacecraftPath);
     scenario.Spacecraft.directoryPath = spacecraftPath.c_str();
-    scenario.Spacecraft.initialOrbitalParameter.centerOfMotion.Id = 399;
+    scenario.Spacecraft.initialOrbitalParameter.centerOfMotionId = 399;
     scenario.Spacecraft.initialOrbitalParameter.epoch = 667915269.18539762;
     scenario.Spacecraft.initialOrbitalParameter.inertialFrame = IO::SDK::Frames::InertialFrames::GetICRF().ToCharArray();
     scenario.Spacecraft.initialOrbitalParameter.position.x = 5056554.1874925727;
@@ -121,7 +121,7 @@ TEST(API, SpacecraftPropagation) {
     scenario.Spacecraft.orbitalPlaneChangingManeuvers[0].targetOrbit.velocity.x = -4979.4693432656513;
     scenario.Spacecraft.orbitalPlaneChangingManeuvers[0].targetOrbit.velocity.y = 3033.2639866911495;
     scenario.Spacecraft.orbitalPlaneChangingManeuvers[0].targetOrbit.velocity.z = 6933.1803797017265;
-    scenario.Spacecraft.orbitalPlaneChangingManeuvers[0].targetOrbit.centerOfMotion.Id = 399;
+    scenario.Spacecraft.orbitalPlaneChangingManeuvers[0].targetOrbit.centerOfMotionId = 399;
     scenario.Spacecraft.orbitalPlaneChangingManeuvers[0].targetOrbit.epoch = 667915269.18539762;
     scenario.Spacecraft.orbitalPlaneChangingManeuvers[0].targetOrbit.inertialFrame = IO::SDK::Frames::InertialFrames::GetICRF().ToCharArray();
     scenario.Spacecraft.orbitalPlaneChangingManeuvers[0].engines[0] = "eng1";
@@ -155,7 +155,7 @@ TEST(API, FindWindowsOnDistanceConstraintProxy) {
     IO::SDK::API::DTO::WindowDTO windows[1000];
     IO::SDK::API::DTO::WindowDTO searchWindow{};
     searchWindow.start = IO::SDK::Time::TDB("2007 JAN 1").GetSecondsFromJ2000().count();
-    searchWindow.end = IO::SDK::Time::TDB("2007 APR 1").GetSecondsFromJ2000().count();;
+    searchWindow.end = IO::SDK::Time::TDB("2007 APR 1").GetSecondsFromJ2000().count();
     FindWindowsOnDistanceConstraintProxy(searchWindow, 399, 301, ">", 400000000, "NONE", 86400.0, windows);
 
     ASSERT_STREQ("2007-01-08 00:11:07.628591 (TDB)", ToTDBWindow(windows[0]).GetStartDate().ToString().c_str());
@@ -258,8 +258,7 @@ TEST(API, ReadEphemerisProxy) {
     ASSERT_DOUBLE_EQ(643.53061483971885, sv[0].velocity.x);
     ASSERT_DOUBLE_EQ(-666.08181440799092, sv[0].velocity.y);
     ASSERT_DOUBLE_EQ(-301.32283209101018, sv[0].velocity.z);
-    ASSERT_DOUBLE_EQ(399, sv[0].centerOfMotion.Id);
-    ASSERT_DOUBLE_EQ(10, sv[0].centerOfMotion.centerOfMotionId);
+    ASSERT_DOUBLE_EQ(399, sv[0].centerOfMotionId);
     ASSERT_STREQ("J2000", sv[0].inertialFrame);
     ASSERT_DOUBLE_EQ(0.0, sv[0].epoch);
 }
@@ -359,7 +358,7 @@ TEST(API, WriteEphemeris) {
         sv[i].velocity.y = 8.0 + i * 0.001;
         sv[i].velocity.z = i;
         sv[i].epoch = i;
-        sv[i].centerOfMotion.Id = 399;
+        sv[i].centerOfMotionId = 399;
         sv[i].inertialFrame = "J2000";
     }
 
@@ -382,8 +381,7 @@ TEST(API, WriteEphemeris) {
         ASSERT_DOUBLE_EQ(svresult[i].velocity.y, 8 + i * 0.001);
         ASSERT_DOUBLE_EQ(svresult[i].velocity.z, i);
         ASSERT_DOUBLE_EQ(svresult[i].epoch, i);
-        ASSERT_EQ(svresult[i].centerOfMotion.Id, 399);
-        ASSERT_DOUBLE_EQ(svresult[i].centerOfMotion.centerOfMotionId, 10);
+        ASSERT_EQ(svresult[i].centerOfMotionId, 399);
         ASSERT_STREQ(svresult[i].inertialFrame, "J2000");
     }
 }
@@ -459,7 +457,7 @@ TEST(API, ConvertConicOrbitalElementsToStateVector) {
     ASSERT_NEAR(-5.477647950892673E+03, sv.velocity.y, 1.2);
     ASSERT_NEAR(-5.297615757935174E+03, sv.velocity.z, 1.1);
     ASSERT_EQ(663724800.00001490, sv.epoch);
-    ASSERT_EQ(399, sv.centerOfMotion.Id);
+    ASSERT_EQ(399, sv.centerOfMotionId);
     ASSERT_STREQ(IO::SDK::Frames::InertialFrames::GetICRF().ToCharArray(), sv.inertialFrame);
 }
 
@@ -504,7 +502,7 @@ TEST(API, ConvertEquinoctialElementsToStateVector) {
     ASSERT_DOUBLE_EQ(-6369.0795341145204, sv.velocity.x);
     ASSERT_DOUBLE_EQ(-517.51239201161684, sv.velocity.y);
     ASSERT_DOUBLE_EQ(202.52220483204573, sv.velocity.z);
-    ASSERT_EQ(399, sv.centerOfMotion.Id);
+    ASSERT_EQ(399, sv.centerOfMotionId);
     ASSERT_STREQ(IO::SDK::Frames::InertialFrames::GetICRF().ToCharArray(), sv.inertialFrame);
 }
 

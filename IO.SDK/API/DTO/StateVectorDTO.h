@@ -9,7 +9,7 @@ namespace IO::SDK::API::DTO
         double epoch{0.0};
         IO::SDK::API::DTO::Vector3DDTO position{};
         IO::SDK::API::DTO::Vector3DDTO velocity{};
-        CelestialBodyDTO centerOfMotion;
+        int centerOfMotionId;
         const char* inertialFrame{};
     };
 }

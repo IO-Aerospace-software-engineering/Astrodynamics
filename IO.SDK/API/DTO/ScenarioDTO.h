@@ -14,9 +14,6 @@ namespace IO::SDK::API::DTO
         SpacecraftDTO Spacecraft;
         SiteDTO Sites[10];
 
-//        DistanceConstraintDTO distances[5];
-//        OccultationConstraintDTO occultations[5];
-
         CelestialBodyDTO CelestialBodies[10];
     };
 }

@@ -79,7 +79,7 @@ void PropagateProxy(IO::SDK::API::DTO::ScenarioDTO &scenarioDto) {
     //==========Build Spacecraft===============
     std::map<int, std::shared_ptr<IO::SDK::Maneuvers::ManeuverBase>> maneuvers;
 
-    auto cbody = celestialBodies[scenarioDto.Spacecraft.initialOrbitalParameter.centerOfMotion.Id];
+    auto cbody = celestialBodies[scenarioDto.Spacecraft.initialOrbitalParameter.centerOfMotionId];
     auto tdb = IO::SDK::Time::TDB(std::chrono::duration<double>(scenarioDto.Spacecraft.initialOrbitalParameter.epoch));
     auto frame = IO::SDK::Frames::InertialFrames(scenarioDto.Spacecraft.initialOrbitalParameter.inertialFrame);
     std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> initialOrbitalParameters = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(
@@ -124,11 +124,11 @@ bool WriteEphemerisProxy(const char *filePath, int objectId, IO::SDK::API::DTO::
 
 
     for (int i = 0; i < size; ++i) {
-        if (celestialBodies.find(sv[0].centerOfMotion.Id) == celestialBodies.end()) {
-            celestialBodies[sv[i].centerOfMotion.Id] = std::make_shared<IO::SDK::Body::CelestialBody>(
-                    sv[i].centerOfMotion.Id);
+        if (celestialBodies.find(sv[0].centerOfMotionId) == celestialBodies.end()) {
+            celestialBodies[sv[i].centerOfMotionId] = std::make_shared<IO::SDK::Body::CelestialBody>(
+                    sv[i].centerOfMotionId);
         }
-        states.emplace_back(celestialBodies[sv[i].centerOfMotion.Id], ToVector3D(sv[i].position),
+        states.emplace_back(celestialBodies[sv[i].centerOfMotionId], ToVector3D(sv[i].position),
                             ToVector3D(sv[i].velocity),
                             IO::SDK::Time::TDB(std::chrono::duration<double>(sv[i].epoch)),
                             IO::SDK::Frames::Frames(sv[i].inertialFrame));
@@ -236,9 +236,7 @@ void ReadEphemerisProxy(IO::SDK::API::DTO::WindowDTO searchWindow, int observerI
         spkezr_c(std::to_string(targetId).c_str(), epoch, frame, aberration, std::to_string(observerId).c_str(), vs,
                  &lt);
 
-        stateVectors[idx].centerOfMotion.Id = observerId;
-        stateVectors[idx].centerOfMotion.centerOfMotionId = IO::SDK::Body::CelestialBody::FindCenterOfMotionId(
-                observerId);
+        stateVectors[idx].centerOfMotionId = observerId;
 
         stateVectors[idx].epoch = epoch;
         stateVectors[idx].inertialFrame = strdup(frame);
@@ -726,7 +724,7 @@ void BuildApsidalManeuver(IO::SDK::API::DTO::ScenarioDTO &scenarioDto, IO::SDK::
                     strdup(engine))));
         }
         auto targetOrbit = std::make_shared<IO::SDK::OrbitalParameters::StateVector>(
-                celestialBodies[maneuver.targetOrbit.centerOfMotion.Id],
+                celestialBodies[maneuver.targetOrbit.centerOfMotionId],
                 ToVector3D(maneuver.targetOrbit.position),
                 ToVector3D(maneuver.targetOrbit.velocity),
                 IO::SDK::Time::TDB(std::chrono::duration<double>(maneuver.targetOrbit.epoch)),
@@ -781,7 +779,7 @@ BuildOrbitalPlaneManeuver(IO::SDK::API::DTO::ScenarioDTO &scenarioDto, IO::SDK::
                     strdup(engine))));
         }
         auto targetOrbit = std::make_shared<IO::SDK::OrbitalParameters::StateVector>(
-                celestialBodies[maneuver.targetOrbit.centerOfMotion.Id],
+                celestialBodies[maneuver.targetOrbit.centerOfMotionId],
                 ToVector3D(maneuver.targetOrbit.position),
                 ToVector3D(maneuver.targetOrbit.velocity),
                 IO::SDK::Time::TDB(std::chrono::duration<double>(maneuver.targetOrbit.epoch)),
@@ -811,7 +809,7 @@ void BuildPhasingManeuver(IO::SDK::API::DTO::ScenarioDTO &scenarioDto, IO::SDK::
                     strdup(engine))));
         }
         auto targetOrbit = std::make_shared<IO::SDK::OrbitalParameters::StateVector>(
-                celestialBodies[maneuver.targetOrbit.centerOfMotion.Id],
+                celestialBodies[maneuver.targetOrbit.centerOfMotionId],
                 ToVector3D(maneuver.targetOrbit.position),
                 ToVector3D(maneuver.targetOrbit.velocity),
                 IO::SDK::Time::TDB(std::chrono::duration<double>(maneuver.targetOrbit.epoch)),
@@ -1062,7 +1060,7 @@ ConvertEquinoctialElementsToStateVectorProxy(IO::SDK::API::DTO::EquinoctialEleme
 
 IO::SDK::API::DTO::RaDecDTO
 ConvertToRightAscensionAndDeclinationProxy(IO::SDK::API::DTO::StateVectorDTO stateVectorDto) {
-    auto centerOfMotion = std::make_shared<IO::SDK::Body::CelestialBody>(stateVectorDto.centerOfMotion.Id);
+    auto centerOfMotion = std::make_shared<IO::SDK::Body::CelestialBody>(stateVectorDto.centerOfMotionId);
     IO::SDK::Time::TDB tdb{std::chrono::duration<double>(stateVectorDto.epoch)};
     IO::SDK::Frames::Frames frame{stateVectorDto.inertialFrame};
     IO::SDK::OrbitalParameters::StateVector sv{centerOfMotion, ToVector3D(stateVectorDto.position),
