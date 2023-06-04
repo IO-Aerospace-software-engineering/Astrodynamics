@@ -104,55 +104,55 @@
 <a name="42"><span class="lineNum">      42 </span><span class="lineCov">          1 :     auto timeToTrueAnomalyDN = s.GetOrbitalParametersAtEpoch()-&gt;GetTimeToTrueAnomaly(2.197937654);</span></a>
 <a name="43"><span class="lineNum">      43 </span><span class="lineCov">          1 :     auto timeToTrueAnomalyAN = s.GetOrbitalParametersAtEpoch()-&gt;GetTimeToTrueAnomaly(2.197937654 + IO::SDK::Constants::PI);</span></a>
 <a name="44"><span class="lineNum">      44 </span>            :     //Initialize</a>
-<a name="45"><span class="lineNum">      45 </span><span class="lineCov">          1 :     ASSERT_FALSE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()-&gt;GetStateVector()));</span></a>
+<a name="45"><span class="lineNum">      45 </span><span class="lineCov">          1 :     ASSERT_FALSE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()-&gt;ToStateVector()));</span></a>
 <a name="46"><span class="lineNum">      46 </span>            : </a>
 <a name="47"><span class="lineNum">      47 </span>            :     //Can't execute, too early</a>
-<a name="48"><span class="lineNum">      48 </span><span class="lineCov">          1 :     ASSERT_FALSE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()-&gt;GetStateVector(timeToTrueAnomalyDN - IO::SDK::Time::TimeSpan(10s))));</span></a>
+<a name="48"><span class="lineNum">      48 </span><span class="lineCov">          1 :     ASSERT_FALSE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()-&gt;ToStateVector(timeToTrueAnomalyDN - IO::SDK::Time::TimeSpan(10s))));</span></a>
 <a name="49"><span class="lineNum">      49 </span>            : </a>
 <a name="50"><span class="lineNum">      50 </span>            :     //Must execute at 125.93° == t+6600s</a>
-<a name="51"><span class="lineNum">      51 </span><span class="lineCov">          1 :     ASSERT_TRUE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()-&gt;GetStateVector(timeToTrueAnomalyDN + IO::SDK::Time::TimeSpan(10s))));</span></a>
+<a name="51"><span class="lineNum">      51 </span><span class="lineCov">          1 :     ASSERT_TRUE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()-&gt;ToStateVector(timeToTrueAnomalyDN + IO::SDK::Time::TimeSpan(10s))));</span></a>
 <a name="52"><span class="lineNum">      52 </span>            : </a>
 <a name="53"><span class="lineNum">      53 </span>            :     //Can't execute because node is behind</a>
-<a name="54"><span class="lineNum">      54 </span><span class="lineCov">          1 :     ASSERT_FALSE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()-&gt;GetStateVector(timeToTrueAnomalyDN + IO::SDK::Time::TimeSpan(30s))));</span></a>
+<a name="54"><span class="lineNum">      54 </span><span class="lineCov">          1 :     ASSERT_FALSE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()-&gt;ToStateVector(timeToTrueAnomalyDN + IO::SDK::Time::TimeSpan(30s))));</span></a>
 <a name="55"><span class="lineNum">      55 </span>            : </a>
 <a name="56"><span class="lineNum">      56 </span>            :     //==============</a>
 <a name="57"><span class="lineNum">      57 </span>            :     //!!NEXT NODE!!</a>
 <a name="58"><span class="lineNum">      58 </span>            :     //==============</a>
 <a name="59"><span class="lineNum">      59 </span>            : </a>
 <a name="60"><span class="lineNum">      60 </span>            :     //Can't execute, too far</a>
-<a name="61"><span class="lineNum">      61 </span><span class="lineCov">          1 :     ASSERT_FALSE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()-&gt;GetStateVector(timeToTrueAnomalyAN - IO::SDK::Time::TimeSpan(10s))));</span></a>
+<a name="61"><span class="lineNum">      61 </span><span class="lineCov">          1 :     ASSERT_FALSE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()-&gt;ToStateVector(timeToTrueAnomalyAN - IO::SDK::Time::TimeSpan(10s))));</span></a>
 <a name="62"><span class="lineNum">      62 </span>            : </a>
 <a name="63"><span class="lineNum">      63 </span>            :     //Must execute at 125.93°+180° == t+32959</a>
-<a name="64"><span class="lineNum">      64 </span><span class="lineCov">          1 :     ASSERT_TRUE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()-&gt;GetStateVector(timeToTrueAnomalyAN + IO::SDK::Time::TimeSpan(10s))));</span></a>
+<a name="64"><span class="lineNum">      64 </span><span class="lineCov">          1 :     ASSERT_TRUE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()-&gt;ToStateVector(timeToTrueAnomalyAN + IO::SDK::Time::TimeSpan(10s))));</span></a>
 <a name="65"><span class="lineNum">      65 </span>            : </a>
 <a name="66"><span class="lineNum">      66 </span>            :     //Can't execute because node is behind</a>
-<a name="67"><span class="lineNum">      67 </span><span class="lineCov">          1 :     ASSERT_FALSE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()-&gt;GetStateVector(timeToTrueAnomalyAN + IO::SDK::Time::TimeSpan(30s))));</span></a>
+<a name="67"><span class="lineNum">      67 </span><span class="lineCov">          1 :     ASSERT_FALSE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()-&gt;ToStateVector(timeToTrueAnomalyAN + IO::SDK::Time::TimeSpan(30s))));</span></a>
 <a name="68"><span class="lineNum">      68 </span>            : </a>
 <a name="69"><span class="lineNum">      69 </span>            :     //==============</a>
 <a name="70"><span class="lineNum">      70 </span>            :     //Test another lap to validate switching between node inbound and outbound</a>
 <a name="71"><span class="lineNum">      71 </span>            :     //==============</a>
 <a name="72"><span class="lineNum">      72 </span>            : </a>
 <a name="73"><span class="lineNum">      73 </span>            :     //Can't execute, too early</a>
-<a name="74"><span class="lineNum">      74 </span><span class="lineCov">          1 :     ASSERT_FALSE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()-&gt;GetStateVector(timeToTrueAnomalyDN - IO::SDK::Time::TimeSpan(10s) + s.GetOrbitalParametersAtEpoch()-&gt;GetPeriod())));</span></a>
+<a name="74"><span class="lineNum">      74 </span><span class="lineCov">          1 :     ASSERT_FALSE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()-&gt;ToStateVector(timeToTrueAnomalyDN - IO::SDK::Time::TimeSpan(10s) + s.GetOrbitalParametersAtEpoch()-&gt;GetPeriod())));</span></a>
 <a name="75"><span class="lineNum">      75 </span>            : </a>
 <a name="76"><span class="lineNum">      76 </span>            :     //Must execute at 125.93° == t+6600s+Orbital Period</a>
-<a name="77"><span class="lineNum">      77 </span><span class="lineCov">          1 :     ASSERT_TRUE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()-&gt;GetStateVector(timeToTrueAnomalyDN + IO::SDK::Time::TimeSpan(10s) + s.GetOrbitalParametersAtEpoch()-&gt;GetPeriod())));</span></a>
+<a name="77"><span class="lineNum">      77 </span><span class="lineCov">          1 :     ASSERT_TRUE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()-&gt;ToStateVector(timeToTrueAnomalyDN + IO::SDK::Time::TimeSpan(10s) + s.GetOrbitalParametersAtEpoch()-&gt;GetPeriod())));</span></a>
 <a name="78"><span class="lineNum">      78 </span>            : </a>
 <a name="79"><span class="lineNum">      79 </span>            :     //Can't execute because node is behind</a>
-<a name="80"><span class="lineNum">      80 </span><span class="lineCov">          1 :     ASSERT_FALSE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()-&gt;GetStateVector(timeToTrueAnomalyDN + IO::SDK::Time::TimeSpan(30s) + s.GetOrbitalParametersAtEpoch()-&gt;GetPeriod())));</span></a>
+<a name="80"><span class="lineNum">      80 </span><span class="lineCov">          1 :     ASSERT_FALSE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()-&gt;ToStateVector(timeToTrueAnomalyDN + IO::SDK::Time::TimeSpan(30s) + s.GetOrbitalParametersAtEpoch()-&gt;GetPeriod())));</span></a>
 <a name="81"><span class="lineNum">      81 </span>            : </a>
 <a name="82"><span class="lineNum">      82 </span>            :     //==============</a>
 <a name="83"><span class="lineNum">      83 </span>            :     //!!NEXT NODE!!</a>
 <a name="84"><span class="lineNum">      84 </span>            :     //==============</a>
 <a name="85"><span class="lineNum">      85 </span>            : </a>
 <a name="86"><span class="lineNum">      86 </span>            :     //Can't execute, too far</a>
-<a name="87"><span class="lineNum">      87 </span><span class="lineCov">          1 :     ASSERT_FALSE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()-&gt;GetStateVector(timeToTrueAnomalyAN - IO::SDK::Time::TimeSpan(10s) + s.GetOrbitalParametersAtEpoch()-&gt;GetPeriod())));</span></a>
+<a name="87"><span class="lineNum">      87 </span><span class="lineCov">          1 :     ASSERT_FALSE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()-&gt;ToStateVector(timeToTrueAnomalyAN - IO::SDK::Time::TimeSpan(10s) + s.GetOrbitalParametersAtEpoch()-&gt;GetPeriod())));</span></a>
 <a name="88"><span class="lineNum">      88 </span>            : </a>
 <a name="89"><span class="lineNum">      89 </span>            :     //Must execute at 125.93°+180° == t+32959+Orbital Period</a>
-<a name="90"><span class="lineNum">      90 </span><span class="lineCov">          1 :     ASSERT_TRUE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()-&gt;GetStateVector(timeToTrueAnomalyAN + IO::SDK::Time::TimeSpan(10s) + s.GetOrbitalParametersAtEpoch()-&gt;GetPeriod())));</span></a>
+<a name="90"><span class="lineNum">      90 </span><span class="lineCov">          1 :     ASSERT_TRUE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()-&gt;ToStateVector(timeToTrueAnomalyAN + IO::SDK::Time::TimeSpan(10s) + s.GetOrbitalParametersAtEpoch()-&gt;GetPeriod())));</span></a>
 <a name="91"><span class="lineNum">      91 </span>            : </a>
 <a name="92"><span class="lineNum">      92 </span>            :     //Can't execute because node is behind</a>
-<a name="93"><span class="lineNum">      93 </span><span class="lineCov">          1 :     ASSERT_FALSE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()-&gt;GetStateVector(timeToTrueAnomalyAN + IO::SDK::Time::TimeSpan(30s) + s.GetOrbitalParametersAtEpoch()-&gt;GetPeriod())));</span></a>
+<a name="93"><span class="lineNum">      93 </span><span class="lineCov">          1 :     ASSERT_FALSE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()-&gt;ToStateVector(timeToTrueAnomalyAN + IO::SDK::Time::TimeSpan(30s) + s.GetOrbitalParametersAtEpoch()-&gt;GetPeriod())));</span></a>
 <a name="94"><span class="lineNum">      94 </span>            : }</a>
 <a name="95"><span class="lineNum">      95 </span>            : </a>
 <a name="96"><span class="lineNum">      96 </span><span class="lineCov">          4 : TEST(PlaneChangingManeuver, IdentifyNode)</span></a>
@@ -180,8 +180,8 @@
 <a name="118"><span class="lineNum">     118 </span><span class="lineCov">          1 :     auto timeToTrueAnomalyAN = s.GetOrbitalParametersAtEpoch()-&gt;GetTimeToTrueAnomaly(2.197893 + IO::SDK::Constants::PI);</span></a>
 <a name="119"><span class="lineNum">     119 </span>            : </a>
 <a name="120"><span class="lineNum">     120 </span>            :     //Initialize</a>
-<a name="121"><span class="lineNum">     121 </span><span class="lineCov">          1 :     ASSERT_FALSE(maneuver.IsAscendingNode(s.GetOrbitalParametersAtEpoch()-&gt;GetStateVector(timeToTrueAnomalyDN)));</span></a>
-<a name="122"><span class="lineNum">     122 </span><span class="lineCov">          1 :     ASSERT_TRUE(maneuver.IsAscendingNode(s.GetOrbitalParametersAtEpoch()-&gt;GetStateVector(timeToTrueAnomalyAN)));</span></a>
+<a name="121"><span class="lineNum">     121 </span><span class="lineCov">          1 :     ASSERT_FALSE(maneuver.IsAscendingNode(s.GetOrbitalParametersAtEpoch()-&gt;ToStateVector(timeToTrueAnomalyDN)));</span></a>
+<a name="122"><span class="lineNum">     122 </span><span class="lineCov">          1 :     ASSERT_TRUE(maneuver.IsAscendingNode(s.GetOrbitalParametersAtEpoch()-&gt;ToStateVector(timeToTrueAnomalyAN)));</span></a>
 <a name="123"><span class="lineNum">     123 </span>            : }</a>
 <a name="124"><span class="lineNum">     124 </span>            : </a>
 <a name="125"><span class="lineNum">     125 </span><span class="lineCov">          4 : TEST(PlaneChangingManeuver, IdentifyNode2)</span></a>
@@ -209,8 +209,8 @@
 <a name="147"><span class="lineNum">     147 </span><span class="lineCov">          1 :     auto timeToTrueAnomalyAN = s.GetOrbitalParametersAtEpoch()-&gt;GetTimeToTrueAnomaly(5.4677 - IO::SDK::Constants::PI);</span></a>
 <a name="148"><span class="lineNum">     148 </span>            : </a>
 <a name="149"><span class="lineNum">     149 </span>            :     //Initialize</a>
-<a name="150"><span class="lineNum">     150 </span><span class="lineCov">          1 :     ASSERT_FALSE(maneuver.IsAscendingNode(s.GetOrbitalParametersAtEpoch()-&gt;GetStateVector(timeToTrueAnomalyDN)));</span></a>
-<a name="151"><span class="lineNum">     151 </span><span class="lineCov">          1 :     ASSERT_TRUE(maneuver.IsAscendingNode(s.GetOrbitalParametersAtEpoch()-&gt;GetStateVector(timeToTrueAnomalyAN)));</span></a>
+<a name="150"><span class="lineNum">     150 </span><span class="lineCov">          1 :     ASSERT_FALSE(maneuver.IsAscendingNode(s.GetOrbitalParametersAtEpoch()-&gt;ToStateVector(timeToTrueAnomalyDN)));</span></a>
+<a name="151"><span class="lineNum">     151 </span><span class="lineCov">          1 :     ASSERT_TRUE(maneuver.IsAscendingNode(s.GetOrbitalParametersAtEpoch()-&gt;ToStateVector(timeToTrueAnomalyAN)));</span></a>
 <a name="152"><span class="lineNum">     152 </span>            : }</a>
 <a name="153"><span class="lineNum">     153 </span>            : </a>
 <a name="154"><span class="lineNum">     154 </span><span class="lineCov">          4 : TEST(PlaneChangingManeuver, IdentifyNode3)</span></a>
@@ -238,8 +238,8 @@
 <a name="176"><span class="lineNum">     176 </span><span class="lineCov">          1 :     auto timeToTrueAnomalyAN = s.GetOrbitalParametersAtEpoch()-&gt;GetTimeToTrueAnomaly(6.24 - IO::SDK::Constants::PI);</span></a>
 <a name="177"><span class="lineNum">     177 </span>            : </a>
 <a name="178"><span class="lineNum">     178 </span>            :     //Initialize</a>
-<a name="179"><span class="lineNum">     179 </span><span class="lineCov">          1 :     ASSERT_FALSE(maneuver.IsAscendingNode(s.GetOrbitalParametersAtEpoch()-&gt;GetStateVector(timeToTrueAnomalyDN)));</span></a>
-<a name="180"><span class="lineNum">     180 </span><span class="lineCov">          1 :     ASSERT_TRUE(maneuver.IsAscendingNode(s.GetOrbitalParametersAtEpoch()-&gt;GetStateVector(timeToTrueAnomalyAN)));</span></a>
+<a name="179"><span class="lineNum">     179 </span><span class="lineCov">          1 :     ASSERT_FALSE(maneuver.IsAscendingNode(s.GetOrbitalParametersAtEpoch()-&gt;ToStateVector(timeToTrueAnomalyDN)));</span></a>
+<a name="180"><span class="lineNum">     180 </span><span class="lineCov">          1 :     ASSERT_TRUE(maneuver.IsAscendingNode(s.GetOrbitalParametersAtEpoch()-&gt;ToStateVector(timeToTrueAnomalyAN)));</span></a>
 <a name="181"><span class="lineNum">     181 </span>            : }</a>
 <a name="182"><span class="lineNum">     182 </span>            : </a>
 <a name="183"><span class="lineNum">     183 </span><span class="lineCov">          4 : TEST(PlaneChangingManeuver, ExecuteInsuffisantDeltaV)</span></a>
@@ -269,10 +269,10 @@
 <a name="207"><span class="lineNum">     207 </span>            : </a>
 <a name="208"><span class="lineNum">     208 </span>            :     //To detect if we're passing through the node we need at least two</a>
 <a name="209"><span class="lineNum">     209 </span>            :     //This canExecute will evaluate a first point</a>
-<a name="210"><span class="lineNum">     210 </span><span class="lineCov">          1 :     maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()-&gt;GetStateVector(timeToTrueAnomalyDN - IO::SDK::Time::TimeSpan(10.0s)));</span></a>
+<a name="210"><span class="lineNum">     210 </span><span class="lineCov">          1 :     maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()-&gt;ToStateVector(timeToTrueAnomalyDN - IO::SDK::Time::TimeSpan(10.0s)));</span></a>
 <a name="211"><span class="lineNum">     211 </span>            : </a>
 <a name="212"><span class="lineNum">     212 </span>            :     //The &quot;TryExecute&quot; will evaluate a second time &quot;CanExecute&quot;, so it will be able to check the passage of the node</a>
-<a name="213"><span class="lineNum">     213 </span><span class="lineCov">          1 :     auto res = maneuver.TryExecute(s.GetOrbitalParametersAtEpoch()-&gt;GetStateVector(timeToTrueAnomalyDN));</span></a>
+<a name="213"><span class="lineNum">     213 </span><span class="lineCov">          1 :     auto res = maneuver.TryExecute(s.GetOrbitalParametersAtEpoch()-&gt;ToStateVector(timeToTrueAnomalyDN));</span></a>
 <a name="214"><span class="lineNum">     214 </span>            : </a>
 <a name="215"><span class="lineNum">     215 </span><span class="lineCov">          1 :     ASSERT_FALSE(res.IsValid());</span></a>
 <a name="216"><span class="lineNum">     216 </span><span class="lineCov">          1 :     ASSERT_DOUBLE_EQ(3849.8575175874462, maneuver.GetDeltaV().Magnitude());</span></a>
@@ -307,10 +307,10 @@
 <a name="245"><span class="lineNum">     245 </span>            : </a>
 <a name="246"><span class="lineNum">     246 </span>            :     //To detect if we're passing through the node we need at least two</a>
 <a name="247"><span class="lineNum">     247 </span>            :     //This canExecute will evaluate a first point</a>
-<a name="248"><span class="lineNum">     248 </span><span class="lineCov">          1 :     maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()-&gt;GetStateVector(timeToTrueAnomalyDN - IO::SDK::Time::TimeSpan(10.0s)));</span></a>
+<a name="248"><span class="lineNum">     248 </span><span class="lineCov">          1 :     maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()-&gt;ToStateVector(timeToTrueAnomalyDN - IO::SDK::Time::TimeSpan(10.0s)));</span></a>
 <a name="249"><span class="lineNum">     249 </span>            : </a>
 <a name="250"><span class="lineNum">     250 </span>            :     //The &quot;TryExecute&quot; will evaluate a second time &quot;CanExecute&quot;, so it will be able to check the passage of the node</a>
-<a name="251"><span class="lineNum">     251 </span><span class="lineCov">          1 :     auto res = maneuver.TryExecute(s.GetOrbitalParametersAtEpoch()-&gt;GetStateVector(timeToTrueAnomalyDN));</span></a>
+<a name="251"><span class="lineNum">     251 </span><span class="lineCov">          1 :     auto res = maneuver.TryExecute(s.GetOrbitalParametersAtEpoch()-&gt;ToStateVector(timeToTrueAnomalyDN));</span></a>
 <a name="252"><span class="lineNum">     252 </span>            : </a>
 <a name="253"><span class="lineNum">     253 </span><span class="lineCov">          1 :     ASSERT_TRUE(res.IsValid());</span></a>
 <a name="254"><span class="lineNum">     254 </span>            : </a>
@@ -369,10 +369,10 @@
 <a name="307"><span class="lineNum">     307 </span>            : </a>
 <a name="308"><span class="lineNum">     308 </span>            :     //To detect if we're passing through the node we need at least two</a>
 <a name="309"><span class="lineNum">     309 </span>            :     //This canExecute will evaluate a first point</a>
-<a name="310"><span class="lineNum">     310 </span><span class="lineCov">          1 :     maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()-&gt;GetStateVector(timeToTrueAnomalyAN - IO::SDK::Time::TimeSpan(10.0s)));</span></a>
+<a name="310"><span class="lineNum">     310 </span><span class="lineCov">          1 :     maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()-&gt;ToStateVector(timeToTrueAnomalyAN - IO::SDK::Time::TimeSpan(10.0s)));</span></a>
 <a name="311"><span class="lineNum">     311 </span>            : </a>
 <a name="312"><span class="lineNum">     312 </span>            :     //The &quot;TryExecute&quot; will evaluate a second time &quot;CanExecute&quot;, so it will be able to check the passage of the node</a>
-<a name="313"><span class="lineNum">     313 </span><span class="lineCov">          1 :     auto res = maneuver.TryExecute(s.GetOrbitalParametersAtEpoch()-&gt;GetStateVector(timeToTrueAnomalyAN));</span></a>
+<a name="313"><span class="lineNum">     313 </span><span class="lineCov">          1 :     auto res = maneuver.TryExecute(s.GetOrbitalParametersAtEpoch()-&gt;ToStateVector(timeToTrueAnomalyAN));</span></a>
 <a name="314"><span class="lineNum">     314 </span>            : </a>
 <a name="315"><span class="lineNum">     315 </span><span class="lineCov">          1 :     ASSERT_TRUE(res.IsValid());</span></a>
 <a name="316"><span class="lineNum">     316 </span>            : </a>

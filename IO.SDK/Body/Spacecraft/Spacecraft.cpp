@@ -1,18 +1,11 @@
-/**
- * @file Spacecraft.cpp
- * @author Sylvain Guillet (sylvain.guillet@live.com)
- * @brief 
- * @version 0.x
- * @date 2021-06-11
- * 
- * @copyright Copyright (c) 2021
- * 
+/*
+ Copyright (c) 2021-2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
  */
 #include <Spacecraft.h>
 #include <numeric>
 #include <StringHelpers.h>
-#include "Parameters.h"
-#include "InvalidArgumentException.h"
+#include <Parameters.h>
+#include <InvalidArgumentException.h>
 
 IO::SDK::Body::Spacecraft::Spacecraft::Spacecraft(const int id, const std::string &name, const double dryOperatingMass, const double maximumOperatingMass,
                                                   const std::string &directoryPath, std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParametersAtEpoch)

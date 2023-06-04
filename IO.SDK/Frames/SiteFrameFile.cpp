@@ -1,12 +1,5 @@
-/**
- * @file SiteFrameFile.cpp
- * @author Sylvain Guillet (sylvain.guillet@live.com)
- * @brief 
- * @version 0.x
- * @date 2021-07-03
- * 
- * @copyright Copyright (c) 2021
- * 
+/*
+ Copyright (c) 2021-2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
  */
 
 #include <filesystem>
@@ -15,7 +8,7 @@
 #include <Site.h>
 #include <Templates/Templates.cpp>
 #include <StringHelpers.h>
-#include "Constants.h"
+#include <Constants.h>
 
 IO::SDK::Frames::SiteFrameFile::SiteFrameFile(const IO::SDK::Sites::Site& site) : FrameFile(site.GetFilesPath() + "/Frame/" + site.GetName() + ".tf", site.GetName() + "_TOPO"),
                                                                                   m_site{site} {

@@ -1,3 +1,7 @@
+/*
+ Copyright (c) 2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
+ */
+
 #pragma once
 
 #include <SpacecraftDTO.h>
@@ -13,9 +17,6 @@ namespace IO::SDK::API::DTO
         WindowDTO Window{};
         SpacecraftDTO Spacecraft;
         SiteDTO Sites[10];
-
-//        DistanceConstraintDTO distances[5];
-//        OccultationConstraintDTO occultations[5];
 
         CelestialBodyDTO CelestialBodies[10];
     };

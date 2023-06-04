@@ -194,7 +194,7 @@
 <a name="132"><span class="lineNum">     132 </span>            :                 /// &lt;/summary&gt;</a>
 <a name="133"><span class="lineNum">     133 </span>            :                 /// &lt;param name=&quot;epoch&quot;&gt;&lt;/param&gt;</a>
 <a name="134"><span class="lineNum">     134 </span>            :                 /// &lt;returns&gt;&lt;/returns&gt;</a>
-<a name="135"><span class="lineNum">     135 </span>            :                 IO::SDK::OrbitalParameters::StateVector GetStateVector(const IO::SDK::Time::TDB&amp; epoch) const override;</a>
+<a name="135"><span class="lineNum">     135 </span>            :                 IO::SDK::OrbitalParameters::StateVector ToStateVector(const IO::SDK::Time::TDB&amp; epoch) const override;</a>
 <a name="136"><span class="lineNum">     136 </span>            : </a>
 <a name="137"><span class="lineNum">     137 </span>            :                 /// &lt;summary&gt;</a>
 <a name="138"><span class="lineNum">     138 </span>            :                 /// Get the specific angular momentum</a>
@@ -208,7 +208,7 @@
 <a name="146"><span class="lineNum">     146 </span>            :                 /// &lt;returns&gt;&lt;/returns&gt;</a>
 <a name="147"><span class="lineNum">     147 </span>            :                 double GetSpecificOrbitalEnergy() const override;</a>
 <a name="148"><span class="lineNum">     148 </span>            : </a>
-<a name="149"><span class="lineNum">     149 </span>            :                 using IO::SDK::OrbitalParameters::OrbitalParameters::GetStateVector;</a>
+<a name="149"><span class="lineNum">     149 </span>            :                 using IO::SDK::OrbitalParameters::OrbitalParameters::ToStateVector;</a>
 <a name="150"><span class="lineNum">     150 </span>            :         };</a>
 <a name="151"><span class="lineNum">     151 </span>            : }</a>
 <a name="152"><span class="lineNum">     152 </span>            : #endif</a>

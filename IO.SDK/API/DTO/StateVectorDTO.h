@@ -1,3 +1,7 @@
+/*
+ Copyright (c) 2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
+ */
+
 #pragma once
 
 #include <Vector3DDTO.h>
@@ -9,7 +13,7 @@ namespace IO::SDK::API::DTO
         double epoch{0.0};
         IO::SDK::API::DTO::Vector3DDTO position{};
         IO::SDK::API::DTO::Vector3DDTO velocity{};
-        CelestialBodyDTO centerOfMotion;
+        int centerOfMotionId;
         const char* inertialFrame{};
     };
 }

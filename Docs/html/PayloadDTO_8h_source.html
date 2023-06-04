@@ -25,7 +25,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">IO-SDK<span id="projectnumber">&#160;0.8.x</span>
+   <div id="projectname">IO-SDK<span id="projectnumber">&#160;0.9.x</span>
    </div>
    <div id="projectbrief">Astrodynamics framework</div>
   </td>
@@ -86,27 +86,31 @@ $(document).ready(function(){initNavTree('PayloadDTO_8h_source.html',''); initRe
   <div class="headertitle"><div class="title">PayloadDTO.h</div></div>
 </div><!--header-->
 <div class="contents">
-<a href="PayloadDTO_8h.html">Go to the documentation of this file.</a><div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span><span class="comment">//</span></div>
-<div class="line"><a id="l00002" name="l00002"></a><span class="lineno">    2</span><span class="comment">// Created by spacer on 3/25/23.</span></div>
-<div class="line"><a id="l00003" name="l00003"></a><span class="lineno">    3</span><span class="comment">//</span></div>
+<a href="PayloadDTO_8h.html">Go to the documentation of this file.</a><div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span><span class="comment">/*</span></div>
+<div class="line"><a id="l00002" name="l00002"></a><span class="lineno">    2</span><span class="comment"> Copyright (c) 2023. Sylvain Guillet (sylvain.guillet@tutamail.com)</span></div>
+<div class="line"><a id="l00003" name="l00003"></a><span class="lineno">    3</span><span class="comment"> */</span></div>
 <div class="line"><a id="l00004" name="l00004"></a><span class="lineno">    4</span> </div>
-<div class="line"><a id="l00005" name="l00005"></a><span class="lineno">    5</span><span class="preprocessor">#ifndef IOSDK_PAYLOADDTO_H</span></div>
-<div class="line"><a id="l00006" name="l00006"></a><span class="lineno">    6</span><span class="preprocessor">#define IOSDK_PAYLOADDTO_H</span></div>
-<div class="line"><a id="l00007" name="l00007"></a><span class="lineno">    7</span><span class="keyword">namespace </span><a class="code hl_namespace" href="namespaceIO_1_1SDK_1_1API_1_1DTO.html">IO::SDK::API::DTO</a></div>
-<div class="line"><a id="l00008" name="l00008"></a><span class="lineno">    8</span>{</div>
-<div class="line"><a id="l00009" name="l00009"></a><span class="lineno"><a class="line" href="structIO_1_1SDK_1_1API_1_1DTO_1_1PayloadDTO.html">    9</a></span>    <span class="keyword">struct </span><a class="code hl_struct" href="structIO_1_1SDK_1_1API_1_1DTO_1_1PayloadDTO.html">PayloadDTO</a></div>
-<div class="line"><a id="l00010" name="l00010"></a><span class="lineno">   10</span>    {</div>
-<div class="line"><a id="l00011" name="l00011"></a><span class="lineno"><a class="line" href="structIO_1_1SDK_1_1API_1_1DTO_1_1PayloadDTO.html#a6988822d486060497a50d5c5072f33de">   11</a></span>        <span class="keyword">const</span> <span class="keywordtype">char</span> * <a class="code hl_variable" href="structIO_1_1SDK_1_1API_1_1DTO_1_1PayloadDTO.html#a6988822d486060497a50d5c5072f33de">serialNumber</a>{};</div>
-<div class="line"><a id="l00012" name="l00012"></a><span class="lineno"><a class="line" href="structIO_1_1SDK_1_1API_1_1DTO_1_1PayloadDTO.html#a12cf53527bd7a399ea89f515df58d517">   12</a></span>        <span class="keyword">const</span> <span class="keywordtype">char</span> * <a class="code hl_variable" href="structIO_1_1SDK_1_1API_1_1DTO_1_1PayloadDTO.html#a12cf53527bd7a399ea89f515df58d517">name</a>{};</div>
-<div class="line"><a id="l00013" name="l00013"></a><span class="lineno"><a class="line" href="structIO_1_1SDK_1_1API_1_1DTO_1_1PayloadDTO.html#a4701f552ce16e088751b1e78124ecef0">   13</a></span>        <span class="keywordtype">double</span> <a class="code hl_variable" href="structIO_1_1SDK_1_1API_1_1DTO_1_1PayloadDTO.html#a4701f552ce16e088751b1e78124ecef0">mass</a>{};</div>
-<div class="line"><a id="l00014" name="l00014"></a><span class="lineno">   14</span>    };</div>
-<div class="line"><a id="l00015" name="l00015"></a><span class="lineno">   15</span>}</div>
-<div class="line"><a id="l00016" name="l00016"></a><span class="lineno">   16</span><span class="preprocessor">#endif </span><span class="comment">//IOSDK_PAYLOADDTO_H</span></div>
+<div class="line"><a id="l00005" name="l00005"></a><span class="lineno">    5</span><span class="comment">//</span></div>
+<div class="line"><a id="l00006" name="l00006"></a><span class="lineno">    6</span><span class="comment">// Created by spacer on 3/25/23.</span></div>
+<div class="line"><a id="l00007" name="l00007"></a><span class="lineno">    7</span><span class="comment">//</span></div>
+<div class="line"><a id="l00008" name="l00008"></a><span class="lineno">    8</span> </div>
+<div class="line"><a id="l00009" name="l00009"></a><span class="lineno">    9</span><span class="preprocessor">#ifndef IOSDK_PAYLOADDTO_H</span></div>
+<div class="line"><a id="l00010" name="l00010"></a><span class="lineno">   10</span><span class="preprocessor">#define IOSDK_PAYLOADDTO_H</span></div>
+<div class="line"><a id="l00011" name="l00011"></a><span class="lineno">   11</span><span class="keyword">namespace </span><a class="code hl_namespace" href="namespaceIO_1_1SDK_1_1API_1_1DTO.html">IO::SDK::API::DTO</a></div>
+<div class="line"><a id="l00012" name="l00012"></a><span class="lineno">   12</span>{</div>
+<div class="line"><a id="l00013" name="l00013"></a><span class="lineno"><a class="line" href="structIO_1_1SDK_1_1API_1_1DTO_1_1PayloadDTO.html">   13</a></span>    <span class="keyword">struct </span><a class="code hl_struct" href="structIO_1_1SDK_1_1API_1_1DTO_1_1PayloadDTO.html">PayloadDTO</a></div>
+<div class="line"><a id="l00014" name="l00014"></a><span class="lineno">   14</span>    {</div>
+<div class="line"><a id="l00015" name="l00015"></a><span class="lineno"><a class="line" href="structIO_1_1SDK_1_1API_1_1DTO_1_1PayloadDTO.html#a6988822d486060497a50d5c5072f33de">   15</a></span>        <span class="keyword">const</span> <span class="keywordtype">char</span> * <a class="code hl_variable" href="structIO_1_1SDK_1_1API_1_1DTO_1_1PayloadDTO.html#a6988822d486060497a50d5c5072f33de">serialNumber</a>{};</div>
+<div class="line"><a id="l00016" name="l00016"></a><span class="lineno"><a class="line" href="structIO_1_1SDK_1_1API_1_1DTO_1_1PayloadDTO.html#a12cf53527bd7a399ea89f515df58d517">   16</a></span>        <span class="keyword">const</span> <span class="keywordtype">char</span> * <a class="code hl_variable" href="structIO_1_1SDK_1_1API_1_1DTO_1_1PayloadDTO.html#a12cf53527bd7a399ea89f515df58d517">name</a>{};</div>
+<div class="line"><a id="l00017" name="l00017"></a><span class="lineno"><a class="line" href="structIO_1_1SDK_1_1API_1_1DTO_1_1PayloadDTO.html#a4701f552ce16e088751b1e78124ecef0">   17</a></span>        <span class="keywordtype">double</span> <a class="code hl_variable" href="structIO_1_1SDK_1_1API_1_1DTO_1_1PayloadDTO.html#a4701f552ce16e088751b1e78124ecef0">mass</a>{};</div>
+<div class="line"><a id="l00018" name="l00018"></a><span class="lineno">   18</span>    };</div>
+<div class="line"><a id="l00019" name="l00019"></a><span class="lineno">   19</span>}</div>
+<div class="line"><a id="l00020" name="l00020"></a><span class="lineno">   20</span><span class="preprocessor">#endif </span><span class="comment">//IOSDK_PAYLOADDTO_H</span></div>
 <div class="ttc" id="anamespaceIO_1_1SDK_1_1API_1_1DTO_html"><div class="ttname"><a href="namespaceIO_1_1SDK_1_1API_1_1DTO.html">IO::SDK::API::DTO</a></div><div class="ttdef"><b>Definition:</b> ApogeeHeightChangingManeuverDTO.h:11</div></div>
-<div class="ttc" id="astructIO_1_1SDK_1_1API_1_1DTO_1_1PayloadDTO_html"><div class="ttname"><a href="structIO_1_1SDK_1_1API_1_1DTO_1_1PayloadDTO.html">IO::SDK::API::DTO::PayloadDTO</a></div><div class="ttdef"><b>Definition:</b> PayloadDTO.h:10</div></div>
-<div class="ttc" id="astructIO_1_1SDK_1_1API_1_1DTO_1_1PayloadDTO_html_a12cf53527bd7a399ea89f515df58d517"><div class="ttname"><a href="structIO_1_1SDK_1_1API_1_1DTO_1_1PayloadDTO.html#a12cf53527bd7a399ea89f515df58d517">IO::SDK::API::DTO::PayloadDTO::name</a></div><div class="ttdeci">const char * name</div><div class="ttdef"><b>Definition:</b> PayloadDTO.h:12</div></div>
-<div class="ttc" id="astructIO_1_1SDK_1_1API_1_1DTO_1_1PayloadDTO_html_a4701f552ce16e088751b1e78124ecef0"><div class="ttname"><a href="structIO_1_1SDK_1_1API_1_1DTO_1_1PayloadDTO.html#a4701f552ce16e088751b1e78124ecef0">IO::SDK::API::DTO::PayloadDTO::mass</a></div><div class="ttdeci">double mass</div><div class="ttdef"><b>Definition:</b> PayloadDTO.h:13</div></div>
-<div class="ttc" id="astructIO_1_1SDK_1_1API_1_1DTO_1_1PayloadDTO_html_a6988822d486060497a50d5c5072f33de"><div class="ttname"><a href="structIO_1_1SDK_1_1API_1_1DTO_1_1PayloadDTO.html#a6988822d486060497a50d5c5072f33de">IO::SDK::API::DTO::PayloadDTO::serialNumber</a></div><div class="ttdeci">const char * serialNumber</div><div class="ttdef"><b>Definition:</b> PayloadDTO.h:11</div></div>
+<div class="ttc" id="astructIO_1_1SDK_1_1API_1_1DTO_1_1PayloadDTO_html"><div class="ttname"><a href="structIO_1_1SDK_1_1API_1_1DTO_1_1PayloadDTO.html">IO::SDK::API::DTO::PayloadDTO</a></div><div class="ttdef"><b>Definition:</b> PayloadDTO.h:14</div></div>
+<div class="ttc" id="astructIO_1_1SDK_1_1API_1_1DTO_1_1PayloadDTO_html_a12cf53527bd7a399ea89f515df58d517"><div class="ttname"><a href="structIO_1_1SDK_1_1API_1_1DTO_1_1PayloadDTO.html#a12cf53527bd7a399ea89f515df58d517">IO::SDK::API::DTO::PayloadDTO::name</a></div><div class="ttdeci">const char * name</div><div class="ttdef"><b>Definition:</b> PayloadDTO.h:16</div></div>
+<div class="ttc" id="astructIO_1_1SDK_1_1API_1_1DTO_1_1PayloadDTO_html_a4701f552ce16e088751b1e78124ecef0"><div class="ttname"><a href="structIO_1_1SDK_1_1API_1_1DTO_1_1PayloadDTO.html#a4701f552ce16e088751b1e78124ecef0">IO::SDK::API::DTO::PayloadDTO::mass</a></div><div class="ttdeci">double mass</div><div class="ttdef"><b>Definition:</b> PayloadDTO.h:17</div></div>
+<div class="ttc" id="astructIO_1_1SDK_1_1API_1_1DTO_1_1PayloadDTO_html_a6988822d486060497a50d5c5072f33de"><div class="ttname"><a href="structIO_1_1SDK_1_1API_1_1DTO_1_1PayloadDTO.html#a6988822d486060497a50d5c5072f33de">IO::SDK::API::DTO::PayloadDTO::serialNumber</a></div><div class="ttdeci">const char * serialNumber</div><div class="ttdef"><b>Definition:</b> PayloadDTO.h:15</div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->

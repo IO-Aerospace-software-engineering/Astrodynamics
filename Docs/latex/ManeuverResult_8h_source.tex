@@ -2,60 +2,62 @@
 \label{ManeuverResult_8h_source}\index{IO.SDK/Maneuvers/ManeuverResult.h@{IO.SDK/Maneuvers/ManeuverResult.h}}
 \mbox{\hyperlink{ManeuverResult_8h}{Go to the documentation of this file.}}
 \begin{DoxyCode}{0}
-\DoxyCodeLine{1 }
-\DoxyCodeLine{11 \textcolor{preprocessor}{\#ifndef MANEUVER\_RESULT\_H}}
-\DoxyCodeLine{12 \textcolor{preprocessor}{\#define MANEUVER\_RESULT\_H}}
-\DoxyCodeLine{13 }
-\DoxyCodeLine{14 \textcolor{preprocessor}{\#include <string>}}
-\DoxyCodeLine{15 }
-\DoxyCodeLine{16 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1SDK_1_1Maneuvers}{IO::SDK::Maneuvers}}}
-\DoxyCodeLine{17 \{}
-\DoxyCodeLine{22     \textcolor{keyword}{struct }\mbox{\hyperlink{structIO_1_1SDK_1_1Maneuvers_1_1ManeuverResult}{ManeuverResult}}}
-\DoxyCodeLine{23     \{}
-\DoxyCodeLine{24     \textcolor{keyword}{private}:}
-\DoxyCodeLine{25         \textcolor{keywordtype}{bool} \_isValid\{\textcolor{keyword}{false}\};}
-\DoxyCodeLine{26         std::string \_message\{\};}
-\DoxyCodeLine{27         \textcolor{keywordtype}{bool} \_tooEarly\{\textcolor{keyword}{false}\};}
-\DoxyCodeLine{28         \textcolor{keywordtype}{bool} \_canRetryLater\{\textcolor{keyword}{false}\};}
+\DoxyCodeLine{1 \textcolor{comment}{/*}}
+\DoxyCodeLine{2 \textcolor{comment}{ Copyright (c) 2021-\/2023. Sylvain Guillet (sylvain.guillet@tutamail.com)}}
+\DoxyCodeLine{3 \textcolor{comment}{ */}}
+\DoxyCodeLine{4 \textcolor{preprocessor}{\#ifndef MANEUVER\_RESULT\_H}}
+\DoxyCodeLine{5 \textcolor{preprocessor}{\#define MANEUVER\_RESULT\_H}}
+\DoxyCodeLine{6 }
+\DoxyCodeLine{7 \textcolor{preprocessor}{\#include <string>}}
+\DoxyCodeLine{8 }
+\DoxyCodeLine{9 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1SDK_1_1Maneuvers}{IO::SDK::Maneuvers}}}
+\DoxyCodeLine{10 \{}
+\DoxyCodeLine{15     \textcolor{keyword}{struct }\mbox{\hyperlink{structIO_1_1SDK_1_1Maneuvers_1_1ManeuverResult}{ManeuverResult}}}
+\DoxyCodeLine{16     \{}
+\DoxyCodeLine{17     \textcolor{keyword}{private}:}
+\DoxyCodeLine{18         \textcolor{keywordtype}{bool} \_isValid\{\textcolor{keyword}{false}\};}
+\DoxyCodeLine{19         std::string \_message\{\};}
+\DoxyCodeLine{20         \textcolor{keywordtype}{bool} \_tooEarly\{\textcolor{keyword}{false}\};}
+\DoxyCodeLine{21         \textcolor{keywordtype}{bool} \_canRetryLater\{\textcolor{keyword}{false}\};}
+\DoxyCodeLine{22 }
+\DoxyCodeLine{23     \textcolor{keyword}{public}:}
+\DoxyCodeLine{28         \mbox{\hyperlink{structIO_1_1SDK_1_1Maneuvers_1_1ManeuverResult_a3efae2dd496ee2ee38a213c1a5b9a227}{ManeuverResult}}()= \textcolor{keywordflow}{default};}
 \DoxyCodeLine{29 }
-\DoxyCodeLine{30     \textcolor{keyword}{public}:}
-\DoxyCodeLine{35         \mbox{\hyperlink{structIO_1_1SDK_1_1Maneuvers_1_1ManeuverResult_a3efae2dd496ee2ee38a213c1a5b9a227}{ManeuverResult}}()= \textcolor{keywordflow}{default};}
-\DoxyCodeLine{36 }
-\DoxyCodeLine{43         \mbox{\hyperlink{structIO_1_1SDK_1_1Maneuvers_1_1ManeuverResult_a07c4a1e7f2fff1976f4f8f58c61d03ed}{ManeuverResult}}(\textcolor{keywordtype}{bool} isValid, std::string\& message) : \_isValid\{isValid\}, \_message\{message\} \{\};}
-\DoxyCodeLine{44 }
-\DoxyCodeLine{50         \textcolor{keywordtype}{void} \mbox{\hyperlink{structIO_1_1SDK_1_1Maneuvers_1_1ManeuverResult_a47be9658ad59edc16d77f8c5473ff2f2}{SetValid}}(\textcolor{keyword}{const} std::string \&message)}
-\DoxyCodeLine{51         \{}
-\DoxyCodeLine{52             \_message = message;}
-\DoxyCodeLine{53             \_isValid = \textcolor{keyword}{true};}
-\DoxyCodeLine{54         \}}
-\DoxyCodeLine{55 }
-\DoxyCodeLine{61         \textcolor{keywordtype}{void} \mbox{\hyperlink{structIO_1_1SDK_1_1Maneuvers_1_1ManeuverResult_acb6d04c912ab69a72145a54c8ea340ee}{SetInvalid}}(\textcolor{keyword}{const} std::string \&message)}
-\DoxyCodeLine{62         \{}
-\DoxyCodeLine{63             \_message = message;}
-\DoxyCodeLine{64             \_isValid = \textcolor{keyword}{false};}
-\DoxyCodeLine{65         \}}
-\DoxyCodeLine{66 }
-\DoxyCodeLine{73         [[nodiscard]] \textcolor{keywordtype}{bool} \mbox{\hyperlink{structIO_1_1SDK_1_1Maneuvers_1_1ManeuverResult_a6b44d036ce712a82c916458c383a190e}{IsValid}}()\textcolor{keyword}{ const }\{ \textcolor{keywordflow}{return} \_isValid; \}}
-\DoxyCodeLine{74 }
-\DoxyCodeLine{81         [[nodiscard]] \textcolor{keywordtype}{bool} \mbox{\hyperlink{structIO_1_1SDK_1_1Maneuvers_1_1ManeuverResult_a734266e97690bb241a5c2109ccf0ce07}{CanRetryLater}}()\textcolor{keyword}{ const}}
-\DoxyCodeLine{82 \textcolor{keyword}{        }\{}
-\DoxyCodeLine{83             \textcolor{keywordflow}{return} \_canRetryLater;}
-\DoxyCodeLine{84         \}}
-\DoxyCodeLine{85 }
-\DoxyCodeLine{92         [[nodiscard]] \textcolor{keywordtype}{bool} \mbox{\hyperlink{structIO_1_1SDK_1_1Maneuvers_1_1ManeuverResult_a7e862057bad457f43382432f82d6df8e}{IsExecutedTooEarly}}()\textcolor{keyword}{ const }\{ \textcolor{keywordflow}{return} \_tooEarly; \}}
+\DoxyCodeLine{36         \mbox{\hyperlink{structIO_1_1SDK_1_1Maneuvers_1_1ManeuverResult_a07c4a1e7f2fff1976f4f8f58c61d03ed}{ManeuverResult}}(\textcolor{keywordtype}{bool} isValid, std::string\& message) : \_isValid\{isValid\}, \_message\{message\} \{\};}
+\DoxyCodeLine{37 }
+\DoxyCodeLine{43         \textcolor{keywordtype}{void} \mbox{\hyperlink{structIO_1_1SDK_1_1Maneuvers_1_1ManeuverResult_a47be9658ad59edc16d77f8c5473ff2f2}{SetValid}}(\textcolor{keyword}{const} std::string \&message)}
+\DoxyCodeLine{44         \{}
+\DoxyCodeLine{45             \_message = message;}
+\DoxyCodeLine{46             \_isValid = \textcolor{keyword}{true};}
+\DoxyCodeLine{47         \}}
+\DoxyCodeLine{48 }
+\DoxyCodeLine{54         \textcolor{keywordtype}{void} \mbox{\hyperlink{structIO_1_1SDK_1_1Maneuvers_1_1ManeuverResult_acb6d04c912ab69a72145a54c8ea340ee}{SetInvalid}}(\textcolor{keyword}{const} std::string \&message)}
+\DoxyCodeLine{55         \{}
+\DoxyCodeLine{56             \_message = message;}
+\DoxyCodeLine{57             \_isValid = \textcolor{keyword}{false};}
+\DoxyCodeLine{58         \}}
+\DoxyCodeLine{59 }
+\DoxyCodeLine{66         [[nodiscard]] \textcolor{keywordtype}{bool} \mbox{\hyperlink{structIO_1_1SDK_1_1Maneuvers_1_1ManeuverResult_a6b44d036ce712a82c916458c383a190e}{IsValid}}()\textcolor{keyword}{ const }\{ \textcolor{keywordflow}{return} \_isValid; \}}
+\DoxyCodeLine{67 }
+\DoxyCodeLine{74         [[nodiscard]] \textcolor{keywordtype}{bool} \mbox{\hyperlink{structIO_1_1SDK_1_1Maneuvers_1_1ManeuverResult_a734266e97690bb241a5c2109ccf0ce07}{CanRetryLater}}()\textcolor{keyword}{ const}}
+\DoxyCodeLine{75 \textcolor{keyword}{        }\{}
+\DoxyCodeLine{76             \textcolor{keywordflow}{return} \_canRetryLater;}
+\DoxyCodeLine{77         \}}
+\DoxyCodeLine{78 }
+\DoxyCodeLine{85         [[nodiscard]] \textcolor{keywordtype}{bool} \mbox{\hyperlink{structIO_1_1SDK_1_1Maneuvers_1_1ManeuverResult_a7e862057bad457f43382432f82d6df8e}{IsExecutedTooEarly}}()\textcolor{keyword}{ const }\{ \textcolor{keywordflow}{return} \_tooEarly; \}}
+\DoxyCodeLine{86 }
+\DoxyCodeLine{87         \textcolor{keywordtype}{void} \mbox{\hyperlink{structIO_1_1SDK_1_1Maneuvers_1_1ManeuverResult_abd83aeb9d2745a8a5856d2336fde4a9c}{SetTooEarly}}()}
+\DoxyCodeLine{88         \{}
+\DoxyCodeLine{89             \_message = \textcolor{stringliteral}{"{}Maneuver executed too early"{}};}
+\DoxyCodeLine{90             \_isValid = \textcolor{keyword}{false};}
+\DoxyCodeLine{91             \_canRetryLater = \textcolor{keyword}{true};}
+\DoxyCodeLine{92         \}}
 \DoxyCodeLine{93 }
-\DoxyCodeLine{94         \textcolor{keywordtype}{void} \mbox{\hyperlink{structIO_1_1SDK_1_1Maneuvers_1_1ManeuverResult_abd83aeb9d2745a8a5856d2336fde4a9c}{SetTooEarly}}()}
-\DoxyCodeLine{95         \{}
-\DoxyCodeLine{96             \_message = \textcolor{stringliteral}{"{}Maneuver executed too early"{}};}
-\DoxyCodeLine{97             \_isValid = \textcolor{keyword}{false};}
-\DoxyCodeLine{98             \_canRetryLater = \textcolor{keyword}{true};}
-\DoxyCodeLine{99         \}}
-\DoxyCodeLine{100 }
-\DoxyCodeLine{106         std::string \mbox{\hyperlink{structIO_1_1SDK_1_1Maneuvers_1_1ManeuverResult_a98329d673cba63504a28d6861e584fb3}{GetMessage}}() \{ \textcolor{keywordflow}{return} \_message; \}}
-\DoxyCodeLine{107     \};}
-\DoxyCodeLine{108 }
-\DoxyCodeLine{109 \}}
-\DoxyCodeLine{110 }
-\DoxyCodeLine{111 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{99         std::string \mbox{\hyperlink{structIO_1_1SDK_1_1Maneuvers_1_1ManeuverResult_a98329d673cba63504a28d6861e584fb3}{GetMessage}}() \{ \textcolor{keywordflow}{return} \_message; \}}
+\DoxyCodeLine{100     \};}
+\DoxyCodeLine{101 }
+\DoxyCodeLine{102 \}}
+\DoxyCodeLine{103 }
+\DoxyCodeLine{104 \textcolor{preprocessor}{\#endif}}
 
 \end{DoxyCode}

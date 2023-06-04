@@ -2,55 +2,58 @@
 \label{ApsidalAlignmentManeuver_8h_source}\index{IO.SDK/Maneuvers/ApsidalAlignmentManeuver.h@{IO.SDK/Maneuvers/ApsidalAlignmentManeuver.h}}
 \mbox{\hyperlink{ApsidalAlignmentManeuver_8h}{Go to the documentation of this file.}}
 \begin{DoxyCode}{0}
-\DoxyCodeLine{1 }
-\DoxyCodeLine{12 \textcolor{preprocessor}{\#ifndef APSIDAL\_ALIGNMENT\_MANEUVER\_H}}
-\DoxyCodeLine{13 \textcolor{preprocessor}{\#define APSIDAL\_ALIGNMENT\_MANEUVER\_H}}
-\DoxyCodeLine{14 }
-\DoxyCodeLine{15 \textcolor{preprocessor}{\#include <memory>}}
-\DoxyCodeLine{16 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{ManeuverBase_8h}{ManeuverBase.h}}>}}
-\DoxyCodeLine{17 }
-\DoxyCodeLine{18 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1SDK_1_1Maneuvers}{IO::SDK::Maneuvers}}}
-\DoxyCodeLine{19 \{}
-\DoxyCodeLine{20     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ApsidalAlignmentManeuver}{ApsidalAlignmentManeuver}} final : \textcolor{keyword}{public} \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase}{IO::SDK::Maneuvers::ManeuverBase}}}
-\DoxyCodeLine{21     \{}
-\DoxyCodeLine{22     \textcolor{keyword}{private}:}
-\DoxyCodeLine{23         \textcolor{keywordtype}{double} m\_theta\{\};}
-\DoxyCodeLine{24         \textcolor{keywordtype}{bool} m\_isIntersectP\{\textcolor{keyword}{false}\};}
-\DoxyCodeLine{25         \textcolor{keywordtype}{bool} m\_isIntersectQ\{\textcolor{keyword}{false}\};}
-\DoxyCodeLine{26 }
-\DoxyCodeLine{27         [[nodiscard]] \textcolor{keywordtype}{bool} IsIntersectP(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{IO::SDK::OrbitalParameters::StateVector}} \&stateVector) \textcolor{keyword}{const};}
-\DoxyCodeLine{28         [[nodiscard]] \textcolor{keywordtype}{bool} IsIntersectQ(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{IO::SDK::OrbitalParameters::StateVector}} \&stateVector) \textcolor{keyword}{const};}
-\DoxyCodeLine{29 }
-\DoxyCodeLine{30         [[nodiscard]] std::map<std::string, double> GetCoefficients(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{IO::SDK::OrbitalParameters::StateVector}} \&stateVector) \textcolor{keyword}{const};}
+\DoxyCodeLine{1 \textcolor{comment}{/*}}
+\DoxyCodeLine{2 \textcolor{comment}{ Copyright (c) 2021-\/2023. Sylvain Guillet (sylvain.guillet@tutamail.com)}}
+\DoxyCodeLine{3 \textcolor{comment}{ */}}
+\DoxyCodeLine{4 }
+\DoxyCodeLine{5 \textcolor{preprocessor}{\#ifndef APSIDAL\_ALIGNMENT\_MANEUVER\_H}}
+\DoxyCodeLine{6 \textcolor{preprocessor}{\#define APSIDAL\_ALIGNMENT\_MANEUVER\_H}}
+\DoxyCodeLine{7 }
+\DoxyCodeLine{8 \textcolor{preprocessor}{\#include <memory>}}
+\DoxyCodeLine{9 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{ManeuverBase_8h}{ManeuverBase.h}}>}}
+\DoxyCodeLine{10 }
+\DoxyCodeLine{11 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1SDK_1_1Maneuvers}{IO::SDK::Maneuvers}}}
+\DoxyCodeLine{12 \{}
+\DoxyCodeLine{13     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ApsidalAlignmentManeuver}{ApsidalAlignmentManeuver}} final : \textcolor{keyword}{public} \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase}{IO::SDK::Maneuvers::ManeuverBase}}}
+\DoxyCodeLine{14     \{}
+\DoxyCodeLine{15     \textcolor{keyword}{private}:}
+\DoxyCodeLine{16         \textcolor{keywordtype}{double} m\_theta\{\};}
+\DoxyCodeLine{17         \textcolor{keywordtype}{bool} m\_isIntersectP\{\textcolor{keyword}{false}\};}
+\DoxyCodeLine{18         \textcolor{keywordtype}{bool} m\_isIntersectQ\{\textcolor{keyword}{false}\};}
+\DoxyCodeLine{19 }
+\DoxyCodeLine{20         [[nodiscard]] \textcolor{keywordtype}{bool} IsIntersectP(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{IO::SDK::OrbitalParameters::StateVector}} \&stateVector) \textcolor{keyword}{const};}
+\DoxyCodeLine{21         [[nodiscard]] \textcolor{keywordtype}{bool} IsIntersectQ(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{IO::SDK::OrbitalParameters::StateVector}} \&stateVector) \textcolor{keyword}{const};}
+\DoxyCodeLine{22 }
+\DoxyCodeLine{23         [[nodiscard]] std::map<std::string, double> GetCoefficients(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{IO::SDK::OrbitalParameters::StateVector}} \&stateVector) \textcolor{keyword}{const};}
+\DoxyCodeLine{24 }
+\DoxyCodeLine{25         [[nodiscard]] \textcolor{keywordtype}{double} GetPTrueAnomaly(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{IO::SDK::OrbitalParameters::StateVector}} \&sv) \textcolor{keyword}{const};}
+\DoxyCodeLine{26         [[nodiscard]] \textcolor{keywordtype}{double} GetQTrueAnomaly(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{IO::SDK::OrbitalParameters::StateVector}} \&sv) \textcolor{keyword}{const};}
+\DoxyCodeLine{27 }
+\DoxyCodeLine{28         [[nodiscard]] \textcolor{keywordtype}{double} GetPTargetTrueAnomaly(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{IO::SDK::OrbitalParameters::StateVector}} \&sv) \textcolor{keyword}{const};}
+\DoxyCodeLine{29         [[nodiscard]] \textcolor{keywordtype}{double} GetQTargetTrueAnomaly(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{IO::SDK::OrbitalParameters::StateVector}} \&sv) \textcolor{keyword}{const};}
+\DoxyCodeLine{30         [[nodiscard]] \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO::SDK::Math::Vector3D}} \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase_afa17b51d0c2bb7bd8f5abd2645664be8}{GetDeltaV}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{IO::SDK::OrbitalParameters::StateVector}} \&sv) \textcolor{keyword}{const};}
 \DoxyCodeLine{31 }
-\DoxyCodeLine{32         [[nodiscard]] \textcolor{keywordtype}{double} GetPTrueAnomaly(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{IO::SDK::OrbitalParameters::StateVector}} \&sv) \textcolor{keyword}{const};}
-\DoxyCodeLine{33         [[nodiscard]] \textcolor{keywordtype}{double} GetQTrueAnomaly(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{IO::SDK::OrbitalParameters::StateVector}} \&sv) \textcolor{keyword}{const};}
-\DoxyCodeLine{34 }
-\DoxyCodeLine{35         [[nodiscard]] \textcolor{keywordtype}{double} GetPTargetTrueAnomaly(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{IO::SDK::OrbitalParameters::StateVector}} \&sv) \textcolor{keyword}{const};}
-\DoxyCodeLine{36         [[nodiscard]] \textcolor{keywordtype}{double} GetQTargetTrueAnomaly(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{IO::SDK::OrbitalParameters::StateVector}} \&sv) \textcolor{keyword}{const};}
-\DoxyCodeLine{37         [[nodiscard]] \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO::SDK::Math::Vector3D}} \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase_afa17b51d0c2bb7bd8f5abd2645664be8}{GetDeltaV}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{IO::SDK::OrbitalParameters::StateVector}} \&sv) \textcolor{keyword}{const};}
-\DoxyCodeLine{38 }
-\DoxyCodeLine{39         std::shared\_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> m\_targetOrbit;}
-\DoxyCodeLine{40 }
-\DoxyCodeLine{41     \textcolor{keyword}{protected}:}
-\DoxyCodeLine{47         \textcolor{keywordtype}{void} \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ApsidalAlignmentManeuver_a3678b43d7f32de52bca3b97a3c68c046}{Compute}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters}{IO::SDK::OrbitalParameters::OrbitalParameters}} \&maneuverPoint) \textcolor{keyword}{override};}
-\DoxyCodeLine{48 }
-\DoxyCodeLine{55         \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateOrientation}{IO::SDK::OrbitalParameters::StateOrientation}} \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ApsidalAlignmentManeuver_a446d463805067fec8ca3e1926b30553c}{ComputeOrientation}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters}{IO::SDK::OrbitalParameters::OrbitalParameters}} \&maneuverPoint) \textcolor{keyword}{override};}
-\DoxyCodeLine{56 }
-\DoxyCodeLine{57     \textcolor{keyword}{public}:}
-\DoxyCodeLine{58         \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ApsidalAlignmentManeuver_a890bce99b466ce884be3ce665fa95b04}{ApsidalAlignmentManeuver}}(std::vector<IO::SDK::Body::Spacecraft::Engine*> engines, \mbox{\hyperlink{classIO_1_1SDK_1_1Propagators_1_1Propagator}{IO::SDK::Propagators::Propagator}} \&propagator, std::shared\_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> targetOrbit);}
-\DoxyCodeLine{59         \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ApsidalAlignmentManeuver_a890bce99b466ce884be3ce665fa95b04}{ApsidalAlignmentManeuver}}(std::vector<IO::SDK::Body::Spacecraft::Engine*> engines, \mbox{\hyperlink{classIO_1_1SDK_1_1Propagators_1_1Propagator}{IO::SDK::Propagators::Propagator}} \&propagator, std::shared\_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> targetOrbit, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO::SDK::Time::TDB}} \&minimumEpoch);}
-\DoxyCodeLine{60 }
-\DoxyCodeLine{61         \textcolor{keyword}{using }\mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase_afa17b51d0c2bb7bd8f5abd2645664be8}{IO::SDK::Maneuvers::ManeuverBase::GetDeltaV}};}
-\DoxyCodeLine{62 }
-\DoxyCodeLine{70         \textcolor{keywordtype}{bool} \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ApsidalAlignmentManeuver_abccf6c20c8266615d3d9f0edc424cdf0}{CanExecute}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters}{IO::SDK::OrbitalParameters::OrbitalParameters}} \&orbitalParams) \textcolor{keyword}{override};}
+\DoxyCodeLine{32         std::shared\_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> m\_targetOrbit;}
+\DoxyCodeLine{33 }
+\DoxyCodeLine{34     \textcolor{keyword}{protected}:}
+\DoxyCodeLine{40         \textcolor{keywordtype}{void} \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ApsidalAlignmentManeuver_a3678b43d7f32de52bca3b97a3c68c046}{Compute}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters}{IO::SDK::OrbitalParameters::OrbitalParameters}} \&maneuverPoint) \textcolor{keyword}{override};}
+\DoxyCodeLine{41 }
+\DoxyCodeLine{48         \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateOrientation}{IO::SDK::OrbitalParameters::StateOrientation}} \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ApsidalAlignmentManeuver_a446d463805067fec8ca3e1926b30553c}{ComputeOrientation}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters}{IO::SDK::OrbitalParameters::OrbitalParameters}} \&maneuverPoint) \textcolor{keyword}{override};}
+\DoxyCodeLine{49 }
+\DoxyCodeLine{50     \textcolor{keyword}{public}:}
+\DoxyCodeLine{51         \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ApsidalAlignmentManeuver_a890bce99b466ce884be3ce665fa95b04}{ApsidalAlignmentManeuver}}(std::vector<IO::SDK::Body::Spacecraft::Engine*> engines, \mbox{\hyperlink{classIO_1_1SDK_1_1Propagators_1_1Propagator}{IO::SDK::Propagators::Propagator}} \&propagator, std::shared\_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> targetOrbit);}
+\DoxyCodeLine{52         \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ApsidalAlignmentManeuver_a890bce99b466ce884be3ce665fa95b04}{ApsidalAlignmentManeuver}}(std::vector<IO::SDK::Body::Spacecraft::Engine*> engines, \mbox{\hyperlink{classIO_1_1SDK_1_1Propagators_1_1Propagator}{IO::SDK::Propagators::Propagator}} \&propagator, std::shared\_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> targetOrbit, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO::SDK::Time::TDB}} \&minimumEpoch);}
+\DoxyCodeLine{53 }
+\DoxyCodeLine{54         \textcolor{keyword}{using }\mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase_afa17b51d0c2bb7bd8f5abd2645664be8}{IO::SDK::Maneuvers::ManeuverBase::GetDeltaV}};}
+\DoxyCodeLine{55 }
+\DoxyCodeLine{63         \textcolor{keywordtype}{bool} \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ApsidalAlignmentManeuver_abccf6c20c8266615d3d9f0edc424cdf0}{CanExecute}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters}{IO::SDK::OrbitalParameters::OrbitalParameters}} \&orbitalParams) \textcolor{keyword}{override};}
+\DoxyCodeLine{64 }
+\DoxyCodeLine{70         [[nodiscard]] \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ApsidalAlignmentManeuver_ac7bcd06f49af20d58a945eb4044b766d}{GetTheta}}() \textcolor{keyword}{const};}
 \DoxyCodeLine{71 }
-\DoxyCodeLine{77         [[nodiscard]] \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ApsidalAlignmentManeuver_ac7bcd06f49af20d58a945eb4044b766d}{GetTheta}}() \textcolor{keyword}{const};}
-\DoxyCodeLine{78 }
-\DoxyCodeLine{85         [[nodiscard]] \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ApsidalAlignmentManeuver_ac7bcd06f49af20d58a945eb4044b766d}{GetTheta}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{IO::SDK::OrbitalParameters::StateVector}} \&stateVector) \textcolor{keyword}{const};}
-\DoxyCodeLine{86     \};}
-\DoxyCodeLine{87 \}}
-\DoxyCodeLine{88 }
-\DoxyCodeLine{89 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{78         [[nodiscard]] \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ApsidalAlignmentManeuver_ac7bcd06f49af20d58a945eb4044b766d}{GetTheta}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{IO::SDK::OrbitalParameters::StateVector}} \&stateVector) \textcolor{keyword}{const};}
+\DoxyCodeLine{79     \};}
+\DoxyCodeLine{80 \}}
+\DoxyCodeLine{81 }
+\DoxyCodeLine{82 \textcolor{preprocessor}{\#endif}}
 
 \end{DoxyCode}

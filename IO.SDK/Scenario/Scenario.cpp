@@ -1,3 +1,7 @@
+/*
+ Copyright (c) 2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
+ */
+
 //
 // Created by s.guillet on 23/02/2023.
 //
@@ -5,7 +9,7 @@
 #include <Scenario.h>
 #include <Launch.h>
 
-#include "Parameters.h"
+#include <Parameters.h>
 
 IO::SDK::Scenario::Scenario(std::string name, const IO::SDK::Time::Window<IO::SDK::Time::UTC> &windows) : m_name{std::move(name)}, m_windows{windows},
                                                                                                           m_integrator(IO::SDK::Parameters::SpacecraftPropagationStep,

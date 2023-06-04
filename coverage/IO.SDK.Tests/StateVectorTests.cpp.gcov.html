@@ -355,15 +355,15 @@
 <a name="293"><span class="lineNum">     293 </span><span class="lineCov">          1 :         auto earth = std::make_shared&lt;IO::SDK::Body::CelestialBody&gt;(399, &quot;earth&quot;); //GEOPHYSICAL PROPERTIES provided by JPL</span></a>
 <a name="294"><span class="lineNum">     294 </span><span class="lineCov">          1 :         const IO::SDK::OrbitalParameters::StateVector sv(earth, IO::SDK::Math::Vector3D(6800000.0, 0.0, 0.0), IO::SDK::Math::Vector3D(0.0, 9000.0, 0.0), IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::GetICRF());</span></a>
 <a name="295"><span class="lineNum">     295 </span>            : </a>
-<a name="296"><span class="lineNum">     296 </span><span class="lineCov">          1 :         auto newSv = sv.GetStateVector(1.57);</span></a>
+<a name="296"><span class="lineNum">     296 </span><span class="lineCov">          1 :         auto newSv = sv.ToStateVector(1.57);</span></a>
 <a name="297"><span class="lineNum">     297 </span>            : </a>
 <a name="298"><span class="lineNum">     298 </span><span class="lineCov">          1 :         ASSERT_DOUBLE_EQ(1.57, newSv.GetPosition().Normalize().GetAngle(newSv.GetPerigeeVector().Normalize()));</span></a>
 <a name="299"><span class="lineNum">     299 </span>            : </a>
-<a name="300"><span class="lineNum">     300 </span><span class="lineCov">          1 :         newSv = sv.GetStateVector(IO::SDK::Constants::PI);</span></a>
+<a name="300"><span class="lineNum">     300 </span><span class="lineCov">          1 :         newSv = sv.ToStateVector(IO::SDK::Constants::PI);</span></a>
 <a name="301"><span class="lineNum">     301 </span>            : </a>
 <a name="302"><span class="lineNum">     302 </span><span class="lineCov">          1 :         ASSERT_DOUBLE_EQ(IO::SDK::Constants::PI, newSv.GetPosition().Normalize().GetAngle(newSv.GetPerigeeVector().Normalize()));</span></a>
 <a name="303"><span class="lineNum">     303 </span>            : </a>
-<a name="304"><span class="lineNum">     304 </span><span class="lineCov">          1 :         newSv = sv.GetStateVector(IO::SDK::Constants::PI + IO::SDK::Constants::PI2);</span></a>
+<a name="304"><span class="lineNum">     304 </span><span class="lineCov">          1 :         newSv = sv.ToStateVector(IO::SDK::Constants::PI + IO::SDK::Constants::PI2);</span></a>
 <a name="305"><span class="lineNum">     305 </span><span class="lineCov">          1 :         ASSERT_DOUBLE_EQ(IO::SDK::Constants::PI2, newSv.GetPosition().Normalize().GetAngle(newSv.GetPerigeeVector().Normalize()));</span></a>
 <a name="306"><span class="lineNum">     306 </span>            : }</a>
 <a name="307"><span class="lineNum">     307 </span>            : </a>

@@ -36,7 +36,7 @@ const \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO\+::\+SDK\+::\+Math
 \begin{DoxyCompactList}\small\item\em Get the Specific Angular Momentum. \end{DoxyCompactList}\item 
 \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO\+::\+SDK\+::\+Time\+::\+Time\+Span}} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector_a19caa3a0f0be196737c8641cd02acdb7}{Get\+Period}} () const override
 \begin{DoxyCompactList}\small\item\em Get the Period. \end{DoxyCompactList}\item 
-\mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{State\+Vector}} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector_a0e073ec02f166e2a0e73d45bb0b51ad4}{Get\+State\+Vector}} (const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} \&epoch) const override
+\mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{State\+Vector}} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector_acc56eee441dc57a43d3852a86073415d}{To\+State\+Vector}} (const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} \&epoch) const override
 \begin{DoxyCompactList}\small\item\em Get the State Vector. \end{DoxyCompactList}\item 
 double \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector_a8fb2bef17490a0c42ecae35d603089a7}{Get\+Semi\+Major\+Axis}} () const override
 \begin{DoxyCompactList}\small\item\em Get the Semi Major Axis. \end{DoxyCompactList}\item 
@@ -58,7 +58,7 @@ bool \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector_a06eb54
 \begin{DoxyCompactList}\small\item\em Compare two state vectors. \end{DoxyCompactList}\item 
 \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+State\+Vector}} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector_aa78bddcbeb0f84aff55c9f15f7243c36}{Check\+And\+Update\+Center\+Of\+Motion}} () const
 \begin{DoxyCompactList}\small\item\em Check and update if another body becomes the center of motion. If condition occurs the state vector is updated and returned. \end{DoxyCompactList}\item 
-\mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{State\+Vector}} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector_af16ab93bd4df9c37c1714d2c9b24838b}{Get\+State\+Vector}} () const override
+\mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{State\+Vector}} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector_af38f58ff8a0fde8c627b17db8d60a01c}{To\+State\+Vector}} () const override
 \begin{DoxyCompactList}\small\item\em Get state vector. \end{DoxyCompactList}\item 
 \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{State\+Vector}} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector_af20e223332efca079e0a3b22b4152be7}{To\+Frame}} (const \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1Frames}{IO\+::\+SDK\+::\+Frames\+::\+Frames}} \&frame) const
 \begin{DoxyCompactList}\small\item\em Get this state vector relative to another frame. \end{DoxyCompactList}\item 
@@ -314,45 +314,6 @@ double
 
 Implements \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters_a3502c1fc377791192f0b7d25c3adbafc}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}}.
 
-\mbox{\Hypertarget{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector_af16ab93bd4df9c37c1714d2c9b24838b}\label{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector_af16ab93bd4df9c37c1714d2c9b24838b}} 
-\index{IO::SDK::OrbitalParameters::StateVector@{IO::SDK::OrbitalParameters::StateVector}!GetStateVector@{GetStateVector}}
-\index{GetStateVector@{GetStateVector}!IO::SDK::OrbitalParameters::StateVector@{IO::SDK::OrbitalParameters::StateVector}}
-\doxysubsubsection{\texorpdfstring{GetStateVector()}{GetStateVector()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
-{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+State\+Vector}} IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+State\+Vector\+::\+Get\+State\+Vector (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
-
-
-
-Get state vector. 
-
-\begin{DoxyReturn}{Returns}
-\mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{State\+Vector}} 
-\end{DoxyReturn}
-
-
-Reimplemented from \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters_aa43c591349045654575f38b5a027149b}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}}.
-
-\mbox{\Hypertarget{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector_a0e073ec02f166e2a0e73d45bb0b51ad4}\label{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector_a0e073ec02f166e2a0e73d45bb0b51ad4}} 
-\index{IO::SDK::OrbitalParameters::StateVector@{IO::SDK::OrbitalParameters::StateVector}!GetStateVector@{GetStateVector}}
-\index{GetStateVector@{GetStateVector}!IO::SDK::OrbitalParameters::StateVector@{IO::SDK::OrbitalParameters::StateVector}}
-\doxysubsubsection{\texorpdfstring{GetStateVector()}{GetStateVector()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
-{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+State\+Vector}} IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+State\+Vector\+::\+Get\+State\+Vector (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} \&}]{epoch }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
-
-
-
-Get the State Vector. 
-
-
-\begin{DoxyParams}{Parameters}
-{\em epoch} & \\
-\hline
-\end{DoxyParams}
-\begin{DoxyReturn}{Returns}
-\mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{State\+Vector}} 
-\end{DoxyReturn}
-
-
-Implements \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters_abe7428eb3270c7ad6e911d3387c08d9e}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}}.
-
 \mbox{\Hypertarget{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector_ae617df6db320e743a6ef1ba6bcb52ba0}\label{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector_ae617df6db320e743a6ef1ba6bcb52ba0}} 
 \index{IO::SDK::OrbitalParameters::StateVector@{IO::SDK::OrbitalParameters::StateVector}!GetTrueAnomaly@{GetTrueAnomaly}}
 \index{GetTrueAnomaly@{GetTrueAnomaly}!IO::SDK::OrbitalParameters::StateVector@{IO::SDK::OrbitalParameters::StateVector}}
@@ -440,6 +401,45 @@ Get this state vector relative to another frame.
 \begin{DoxyReturn}{Returns}
 \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{State\+Vector}} 
 \end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector_af38f58ff8a0fde8c627b17db8d60a01c}\label{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector_af38f58ff8a0fde8c627b17db8d60a01c}} 
+\index{IO::SDK::OrbitalParameters::StateVector@{IO::SDK::OrbitalParameters::StateVector}!ToStateVector@{ToStateVector}}
+\index{ToStateVector@{ToStateVector}!IO::SDK::OrbitalParameters::StateVector@{IO::SDK::OrbitalParameters::StateVector}}
+\doxysubsubsection{\texorpdfstring{ToStateVector()}{ToStateVector()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+State\+Vector}} IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+State\+Vector\+::\+To\+State\+Vector (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Get state vector. 
+
+\begin{DoxyReturn}{Returns}
+\mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{State\+Vector}} 
+\end{DoxyReturn}
+
+
+Reimplemented from \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters_aeb970c8c962cf4eec1e2a08b0b1f3cb2}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}}.
+
+\mbox{\Hypertarget{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector_acc56eee441dc57a43d3852a86073415d}\label{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector_acc56eee441dc57a43d3852a86073415d}} 
+\index{IO::SDK::OrbitalParameters::StateVector@{IO::SDK::OrbitalParameters::StateVector}!ToStateVector@{ToStateVector}}
+\index{ToStateVector@{ToStateVector}!IO::SDK::OrbitalParameters::StateVector@{IO::SDK::OrbitalParameters::StateVector}}
+\doxysubsubsection{\texorpdfstring{ToStateVector()}{ToStateVector()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+State\+Vector}} IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+State\+Vector\+::\+To\+State\+Vector (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} \&}]{epoch }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Get the State Vector. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em epoch} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+\mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{State\+Vector}} 
+\end{DoxyReturn}
+
+
+Implements \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters_ac514b5a61f573d2a21091a47bad05677}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}}.
+
 
 
 The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}

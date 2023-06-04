@@ -1,14 +1,7 @@
-/**
- * @file DataPoolMonitoring.cpp
- * @author Sylvain Guillet (sylvain.guillet@live.com)
- * @brief 
- * @version 0.x
- * @date 2021-07-03
- * 
- * @copyright Copyright (c) 2021
- * 
+/*
+ Copyright (c) 2021-2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
  */
-#include "DataPoolMonitoring.h"
+#include <DataPoolMonitoring.h>
 #include <SpiceUsr.h>
 
 IO::SDK::DataPoolMonitoring IO::SDK::DataPoolMonitoring::m_instance;

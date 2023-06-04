@@ -1,12 +1,5 @@
-/**
- * @file CombinedManeuver.cpp
- * @author Sylvain Guillet (sylvain.guillet@live.com)
- * @brief 
- * @version 0.x
- * @date 2021-07-03
- * 
- * @copyright Copyright (c) 2021
- * 
+/*
+ Copyright (c) 2021-2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
  */
 #include <CombinedManeuver.h>
 #include <ConicOrbitalElements.h>
@@ -45,12 +38,12 @@ bool IO::SDK::Maneuvers::CombinedManeuver::CanExecute(const IO::SDK::OrbitalPara
 void IO::SDK::Maneuvers::CombinedManeuver::Compute(const IO::SDK::OrbitalParameters::OrbitalParameters &orbitalParams)
 {
     //Compute delta V vector
-    m_deltaV = std::make_unique<IO::SDK::Math::Vector3D>(GetDeltaV(orbitalParams.GetStateVector()));
+    m_deltaV = std::make_unique<IO::SDK::Math::Vector3D>(GetDeltaV(orbitalParams.ToStateVector()));
 }
 
 IO::SDK::OrbitalParameters::StateOrientation IO::SDK::Maneuvers::CombinedManeuver::ComputeOrientation(const IO::SDK::OrbitalParameters::OrbitalParameters &maneuverPoint)
 {
-    auto maneuverVelocity = GetDeltaV(maneuverPoint.GetStateVector());
+    auto maneuverVelocity = GetDeltaV(maneuverPoint.ToStateVector());
 
     return IO::SDK::OrbitalParameters::StateOrientation{maneuverVelocity.Normalize().To(m_spacecraft.Front), IO::SDK::Math::Vector3D(0.0, 0.0, 0.0), maneuverPoint.GetEpoch(), maneuverPoint.GetFrame()};
 }
@@ -80,5 +73,5 @@ IO::SDK::Math::Vector3D IO::SDK::Maneuvers::CombinedManeuver::GetDeltaV(const IO
 
     auto targetOrbit = IO::SDK::OrbitalParameters::ConicOrbitalElements(sv.GetCenterOfMotion(), rp, e, m_inclination, 0.0, periapsisArgument, 0.0, sv.GetEpoch(), sv.GetFrame());
 
-    return targetOrbit.GetStateVector(meanAnomaly).GetVelocity() - sv.GetVelocity();
+    return targetOrbit.ToStateVector(meanAnomaly).GetVelocity() - sv.GetVelocity();
 }

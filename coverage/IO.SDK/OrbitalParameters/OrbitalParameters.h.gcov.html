@@ -173,14 +173,14 @@
 <a name="111"><span class="lineNum">     111 </span>            :                  * @param epoch </a>
 <a name="112"><span class="lineNum">     112 </span>            :                  * @return StateVector </a>
 <a name="113"><span class="lineNum">     113 </span>            :                  */</a>
-<a name="114"><span class="lineNum">     114 </span>            :                 virtual StateVector GetStateVector(const IO::SDK::Time::TDB &amp;epoch) const = 0;</a>
+<a name="114"><span class="lineNum">     114 </span>            :                 virtual StateVector ToStateVector(const IO::SDK::Time::TDB &amp;epoch) const = 0;</a>
 <a name="115"><span class="lineNum">     115 </span>            : </a>
 <a name="116"><span class="lineNum">     116 </span>            :                 /**</a>
 <a name="117"><span class="lineNum">     117 </span>            :                  * @brief Get the State Vector at epoch</a>
 <a name="118"><span class="lineNum">     118 </span>            :                  * </a>
 <a name="119"><span class="lineNum">     119 </span>            :                  * @return StateVector </a>
 <a name="120"><span class="lineNum">     120 </span>            :                  */</a>
-<a name="121"><span class="lineNum">     121 </span>            :                 virtual StateVector GetStateVector() const;</a>
+<a name="121"><span class="lineNum">     121 </span>            :                 virtual StateVector ToStateVector() const;</a>
 <a name="122"><span class="lineNum">     122 </span>            : </a>
 <a name="123"><span class="lineNum">     123 </span>            :                 /**</a>
 <a name="124"><span class="lineNum">     124 </span>            :                  * @brief Is elliptical ?</a>
@@ -328,7 +328,7 @@
 <a name="266"><span class="lineNum">     266 </span>            :                  * @param trueAnomalie </a>
 <a name="267"><span class="lineNum">     267 </span>            :                  * @return StateVector </a>
 <a name="268"><span class="lineNum">     268 </span>            :                  */</a>
-<a name="269"><span class="lineNum">     269 </span>            :                 virtual IO::SDK::OrbitalParameters::StateVector GetStateVector(const double trueAnomalie) const;</a>
+<a name="269"><span class="lineNum">     269 </span>            :                 virtual IO::SDK::OrbitalParameters::StateVector ToStateVector(const double trueAnomalie) const;</a>
 <a name="270"><span class="lineNum">     270 </span>            : </a>
 <a name="271"><span class="lineNum">     271 </span>            :                 /**</a>
 <a name="272"><span class="lineNum">     272 </span>            :                  * @brief Get the Ascending Node Vector</a>

@@ -1,12 +1,5 @@
-/**
- * @file EquinoctialElements.h
- * @author Sylvain Guillet (sylvain.guillet@live.com)
- * @brief 
- * @version 0.x
- * @date 2021-07-03
- * 
- * @copyright Copyright (c) 2021
- * 
+/*
+ Copyright (c) 2021-2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
  */
 #ifndef EQUINOCTIAL_ELEMENTS_H
 #define EQUINOCTIAL_ELEMENTS_H
@@ -41,7 +34,7 @@ namespace IO::SDK::OrbitalParameters
 	public:
 		EquinoctialElements(const std::shared_ptr<IO::SDK::Body::CelestialBody> &centerOfMotion, const IO::SDK::Time::TDB &epoch, double semiMajorAxis, double h, double k, double p, double q, double L, double periapsisLongitudeRate, double ascendingNodeLongitudeRate, double rightAscensionOfThePole, double declinationOfThePole, const IO::SDK::Frames::Frames &frame);
 
-		EquinoctialElements(const std::shared_ptr<IO::SDK::Body::CelestialBody> &centerOfMotion, double semiMajorAxis, double eccentricity, double inclination, double peregeeArgument, double longitudeAN, double meanAnomaly, double periapsisLongitudeRate, double ascendingNodeLongitudeRate, double rightAscensionOfThePole, double declinationOfThePole, const IO::SDK::Time::TDB &epoch, const IO::SDK::Frames::Frames &frame);
+		EquinoctialElements(const std::shared_ptr<IO::SDK::Body::CelestialBody> &centerOfMotion, double semiMajorAxis, double eccentricity, double inclination, double perigeeArgument, double longitudeAN, double meanAnomaly, double periapsisLongitudeRate, double ascendingNodeLongitudeRate, double rightAscensionOfThePole, double declinationOfThePole, const IO::SDK::Time::TDB &epoch, const IO::SDK::Frames::Frames &frame);
 
 		/// <summary>
 		/// Get h coefficient
@@ -117,7 +110,7 @@ namespace IO::SDK::OrbitalParameters
 		/// </summary>
 		/// <param name="epoch"></param>
 		/// <returns></returns>
-		[[nodiscard]] StateVector GetStateVector(const IO::SDK::Time::TDB &epoch) const override;
+		[[nodiscard]] StateVector ToStateVector(const IO::SDK::Time::TDB &epoch) const override;
 
 		/// <summary>
 		/// Get eccentricity
@@ -163,7 +156,7 @@ namespace IO::SDK::OrbitalParameters
 		/// <returns></returns>
 		[[nodiscard]] double GetSpecificOrbitalEnergy() const override;
 
-		using IO::SDK::OrbitalParameters::OrbitalParameters::GetStateVector;
+		using IO::SDK::OrbitalParameters::OrbitalParameters::ToStateVector;
 	};
 }
 #endif

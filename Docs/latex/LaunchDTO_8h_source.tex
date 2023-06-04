@@ -2,35 +2,34 @@
 \label{LaunchDTO_8h_source}\index{IO.SDK/API/DTO/LaunchDTO.h@{IO.SDK/API/DTO/LaunchDTO.h}}
 \mbox{\hyperlink{LaunchDTO_8h}{Go to the documentation of this file.}}
 \begin{DoxyCode}{0}
-\DoxyCodeLine{1 \textcolor{comment}{//}}
-\DoxyCodeLine{2 \textcolor{comment}{// Created by spacer on 3/25/23.}}
-\DoxyCodeLine{3 \textcolor{comment}{//}}
+\DoxyCodeLine{1 \textcolor{comment}{/*}}
+\DoxyCodeLine{2 \textcolor{comment}{ Copyright (c) 2023. Sylvain Guillet (sylvain.guillet@tutamail.com)}}
+\DoxyCodeLine{3 \textcolor{comment}{ */}}
 \DoxyCodeLine{4 }
 \DoxyCodeLine{5 \textcolor{preprocessor}{\#ifndef IOSDK\_LAUNCHDTO\_H}}
 \DoxyCodeLine{6 \textcolor{preprocessor}{\#define IOSDK\_LAUNCHDTO\_H}}
-\DoxyCodeLine{7 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{WindowDTO_8h}{WindowDTO.h}}>}}
-\DoxyCodeLine{8 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{StateVectorDTO_8h}{StateVectorDTO.h}}>}}
-\DoxyCodeLine{9 \textcolor{preprocessor}{\#include "{}\mbox{\hyperlink{SiteDTO_8h}{SiteDTO.h}}"{}}}
-\DoxyCodeLine{10 }
-\DoxyCodeLine{11 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1SDK_1_1API_1_1DTO}{IO::SDK::API::DTO}}}
-\DoxyCodeLine{12 \{}
-\DoxyCodeLine{13     \textcolor{keyword}{struct }\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1LaunchDTO}{LaunchDTO}}}
-\DoxyCodeLine{14     \{}
-\DoxyCodeLine{15         \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO}{IO::SDK::API::DTO::WindowDTO}} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1LaunchDTO_aeb865218d8e2be41a4e52c9a34e57816}{window}}\{\};}
-\DoxyCodeLine{16         \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1SiteDTO}{SiteDTO}} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1LaunchDTO_ae190f76f7b6f14e9f0333632a78bd82b}{launchSite}};}
-\DoxyCodeLine{17         \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1SiteDTO}{SiteDTO}} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1LaunchDTO_aed869cdadad64257b67b2198a6927d72}{recoverySite}};}
-\DoxyCodeLine{18         \textcolor{keywordtype}{bool} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1LaunchDTO_a04201dad76b865ca5fd9a82b1e5ed761}{launchByDay}}\{\};}
-\DoxyCodeLine{19         \textcolor{keywordtype}{double} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1LaunchDTO_a252e7a97c859a613bcdd1362777b898b}{initialStepSize}}\{1.0\};}
-\DoxyCodeLine{20         \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1StateVectorDTO}{IO::SDK::API::DTO::StateVectorDTO}} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1LaunchDTO_a29c2d1c68be7de083149bd7b43a896fc}{targetOrbit}};}
-\DoxyCodeLine{21         \textcolor{keywordtype}{double} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1LaunchDTO_a263ac7c4247295d5f88069172f469541}{inertialAzimuth}}\{0.0\};}
-\DoxyCodeLine{22         \textcolor{keywordtype}{double} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1LaunchDTO_a211ca52c4538c98461138364414c8969}{nonInertialAzimuth}}\{0.0\};}
-\DoxyCodeLine{23 }
-\DoxyCodeLine{24         \textcolor{keywordtype}{double} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1LaunchDTO_a52f634f1d5391acc3357ba6405eeb37f}{nonInertialInsertionVelocity}}\{0.0\};}
-\DoxyCodeLine{25         \textcolor{keywordtype}{double} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1LaunchDTO_ae82b4aaac73f352ae3a18532a74509f0}{inertialInsertionVelocity}}\{0.0\};}
-\DoxyCodeLine{26 }
-\DoxyCodeLine{27         \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO}{IO::SDK::API::DTO::WindowDTO}} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1LaunchDTO_ac97d2f13c17936c7249d8eeda81d73e0}{windows}}[100]\{\};}
-\DoxyCodeLine{28     \};}
-\DoxyCodeLine{29 \}}
-\DoxyCodeLine{30 \textcolor{preprocessor}{\#endif }\textcolor{comment}{//IOSDK\_LAUNCHDTO\_H}}
+\DoxyCodeLine{7 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{StateVectorDTO_8h}{StateVectorDTO.h}}>}}
+\DoxyCodeLine{8 \textcolor{preprocessor}{\#include "{}\mbox{\hyperlink{SiteDTO_8h}{SiteDTO.h}}"{}}}
+\DoxyCodeLine{9 }
+\DoxyCodeLine{10 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1SDK_1_1API_1_1DTO}{IO::SDK::API::DTO}}}
+\DoxyCodeLine{11 \{}
+\DoxyCodeLine{12     \textcolor{keyword}{struct }\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1LaunchDTO}{LaunchDTO}}}
+\DoxyCodeLine{13     \{}
+\DoxyCodeLine{14         \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO}{IO::SDK::API::DTO::WindowDTO}} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1LaunchDTO_aeb865218d8e2be41a4e52c9a34e57816}{window}}\{\};}
+\DoxyCodeLine{15         \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1SiteDTO}{SiteDTO}} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1LaunchDTO_ae190f76f7b6f14e9f0333632a78bd82b}{launchSite}};}
+\DoxyCodeLine{16         \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1SiteDTO}{SiteDTO}} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1LaunchDTO_aed869cdadad64257b67b2198a6927d72}{recoverySite}};}
+\DoxyCodeLine{17         \textcolor{keywordtype}{bool} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1LaunchDTO_a04201dad76b865ca5fd9a82b1e5ed761}{launchByDay}}\{\};}
+\DoxyCodeLine{18         \textcolor{keywordtype}{double} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1LaunchDTO_a252e7a97c859a613bcdd1362777b898b}{initialStepSize}}\{1.0\};}
+\DoxyCodeLine{19         \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1StateVectorDTO}{IO::SDK::API::DTO::StateVectorDTO}} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1LaunchDTO_a29c2d1c68be7de083149bd7b43a896fc}{targetOrbit}};}
+\DoxyCodeLine{20         \textcolor{keywordtype}{double} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1LaunchDTO_a263ac7c4247295d5f88069172f469541}{inertialAzimuth}}\{0.0\};}
+\DoxyCodeLine{21         \textcolor{keywordtype}{double} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1LaunchDTO_a211ca52c4538c98461138364414c8969}{nonInertialAzimuth}}\{0.0\};}
+\DoxyCodeLine{22 }
+\DoxyCodeLine{23         \textcolor{keywordtype}{double} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1LaunchDTO_a52f634f1d5391acc3357ba6405eeb37f}{nonInertialInsertionVelocity}}\{0.0\};}
+\DoxyCodeLine{24         \textcolor{keywordtype}{double} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1LaunchDTO_ae82b4aaac73f352ae3a18532a74509f0}{inertialInsertionVelocity}}\{0.0\};}
+\DoxyCodeLine{25 }
+\DoxyCodeLine{26         \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO}{IO::SDK::API::DTO::WindowDTO}} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1LaunchDTO_ac97d2f13c17936c7249d8eeda81d73e0}{windows}}[100]\{\};}
+\DoxyCodeLine{27     \};}
+\DoxyCodeLine{28 \}}
+\DoxyCodeLine{29 \textcolor{preprocessor}{\#endif }\textcolor{comment}{//IOSDK\_LAUNCHDTO\_H}}
 
 \end{DoxyCode}

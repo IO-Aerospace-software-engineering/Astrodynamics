@@ -1,6 +1,6 @@
-//
-// Created by sylvain guillet on 3/27/23.
-//
+/*
+ Copyright (c) 2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
+ */
 
 #ifndef IOSDK_NADIRATTITUDEDTO_H
 #define IOSDK_NADIRATTITUDEDTO_H

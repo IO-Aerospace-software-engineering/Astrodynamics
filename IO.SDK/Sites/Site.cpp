@@ -1,25 +1,12 @@
-/**
- * @file Site.cpp
- * @author Sylvain Guillet (sylvain.guillet@live.com)
- * @brief 
- * @version 0.x
- * @date 2021-06-11
- * 
- * @copyright Copyright (c) 2021
- * 
+/*
+ Copyright (c) 2021-2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
  */
 
 #include <Site.h>
-#include <Builder.h>
 #include <Parameters.h>
 #include <Constants.h>
 
-#include <utility>
-
-#include "CoordinateSystem.h"
-#include "Coordinate.h"
-#include "InertialFrames.h"
-#include <GeometryFinder.h>
+#include <InertialFrames.h>
 #include <algorithm>
 
 using namespace std::chrono_literals;
@@ -57,7 +44,7 @@ IO::SDK::Sites::Site::GetStateVector(const IO::SDK::Frames::Frames &frame, const
     return siteVectorState.ToFrame(frame);
 }
 
-IO::SDK::Coordinates::RADec
+IO::SDK::Coordinates::Equatorial
 IO::SDK::Sites::Site::GetRADec(const IO::SDK::Body::Body &body, const IO::SDK::AberrationsEnum aberrationCorrection,
                                const IO::SDK::Time::TDB &epoch) const
 {
@@ -73,7 +60,7 @@ IO::SDK::Sites::Site::GetRADec(const IO::SDK::Body::Body &body, const IO::SDK::A
     double r, ra, dec;
     recrad_c(rectan, &r, &ra, &dec);
 
-    return IO::SDK::Coordinates::RADec{ra, dec, r};
+    return IO::SDK::Coordinates::Equatorial{ra, dec, r};
 }
 
 IO::SDK::Illumination::Illumination

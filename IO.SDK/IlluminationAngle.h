@@ -1,12 +1,5 @@
-/**
- * @file IlluminationAngle.h
- * @author Sylvain Guillet (sylvain.guillet@live.com)
- * @brief 
- * @version 0.x
- * @date 2021-06-08
- * 
- * @copyright Copyright (c) 2021
- * 
+/*
+ Copyright (c) 2021-2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
  */
 #ifndef ILLUMINATION_ANGLE_H
 #define ILLUMINATION_ANGLE_H

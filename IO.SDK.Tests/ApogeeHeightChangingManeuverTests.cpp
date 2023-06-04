@@ -25,16 +25,16 @@ TEST(ApogeeHeightChangingManeuverTests, CanExecute)
     IO::SDK::Maneuvers::ApogeeHeightChangingManeuver acm(engines, prop, 8000000.0);
 
     //Initialize CanExecute
-    ASSERT_FALSE(acm.CanExecute(s.GetOrbitalParametersAtEpoch()->GetStateVector(IO::SDK::Time::TDB(80.0s))));
+    ASSERT_FALSE(acm.CanExecute(s.GetOrbitalParametersAtEpoch()->ToStateVector(IO::SDK::Time::TDB(80.0s))));
 
     //Evaluate 3s before
-    ASSERT_FALSE(acm.CanExecute(s.GetOrbitalParametersAtEpoch()->GetStateVector(IO::SDK::Time::TDB(97.0s))));
+    ASSERT_FALSE(acm.CanExecute(s.GetOrbitalParametersAtEpoch()->ToStateVector(IO::SDK::Time::TDB(97.0s))));
 
     //Evaluate 3s after and must execute
-    ASSERT_TRUE(acm.CanExecute(s.GetOrbitalParametersAtEpoch()->GetStateVector(IO::SDK::Time::TDB(103.0s))));
+    ASSERT_TRUE(acm.CanExecute(s.GetOrbitalParametersAtEpoch()->ToStateVector(IO::SDK::Time::TDB(103.0s))));
 
     //Evaluate 10s after
-    ASSERT_FALSE(acm.CanExecute(s.GetOrbitalParametersAtEpoch()->GetStateVector(IO::SDK::Time::TDB(110.0s))));
+    ASSERT_FALSE(acm.CanExecute(s.GetOrbitalParametersAtEpoch()->ToStateVector(IO::SDK::Time::TDB(110.0s))));
 }
 
 TEST(ApogeeHeightChangingManeuverTests, IncreaseApogeeHeight)
@@ -57,8 +57,8 @@ TEST(ApogeeHeightChangingManeuverTests, IncreaseApogeeHeight)
     engines.push_back(const_cast<IO::SDK::Body::Spacecraft::Engine*>(engine1));
     IO::SDK::Maneuvers::ApogeeHeightChangingManeuver acm(engines, prop, 42164000.0);
 
-    acm.CanExecute(s.GetOrbitalParametersAtEpoch()->GetStateVector(IO::SDK::Time::TDB(80.0s)));
-    auto res = acm.TryExecute(s.GetOrbitalParametersAtEpoch()->GetStateVector(IO::SDK::Time::TDB(100.1s)));
+    acm.CanExecute(s.GetOrbitalParametersAtEpoch()->ToStateVector(IO::SDK::Time::TDB(80.0s)));
+    auto res = acm.TryExecute(s.GetOrbitalParametersAtEpoch()->ToStateVector(IO::SDK::Time::TDB(100.1s)));
 
     ASSERT_TRUE(res.IsValid());
     ASSERT_DOUBLE_EQ(2424.6084264204073, acm.GetDeltaV().Magnitude());
@@ -87,8 +87,8 @@ TEST(ApogeeHeightChangingManeuverTests, DecreaseApogeeHeight)
     engines.push_back(const_cast<IO::SDK::Body::Spacecraft::Engine*>(engine1));
     IO::SDK::Maneuvers::ApogeeHeightChangingManeuver acm(engines, prop, 6678000.0);
 
-    acm.CanExecute(s.GetOrbitalParametersAtEpoch()->GetStateVector(IO::SDK::Time::TDB(80.0s)));
-    auto res = acm.TryExecute(s.GetOrbitalParametersAtEpoch()->GetStateVector(IO::SDK::Time::TDB(100.1s)));
+    acm.CanExecute(s.GetOrbitalParametersAtEpoch()->ToStateVector(IO::SDK::Time::TDB(80.0s)));
+    auto res = acm.TryExecute(s.GetOrbitalParametersAtEpoch()->ToStateVector(IO::SDK::Time::TDB(100.1s)));
 
     ASSERT_TRUE(res.IsValid());
     ASSERT_DOUBLE_EQ(1467.2074439917321, acm.GetDeltaV().Magnitude());

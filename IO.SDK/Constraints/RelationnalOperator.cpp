@@ -1,16 +1,7 @@
-/**
- * @file RelationalOperator.cpp
- * @author Sylvain Guillet (sylvain.guillet@live.com)
- * @brief 
- * @version 0.x
- * @date 2021-07-03
- * 
- * @copyright Copyright (c) 2021
- * 
+/*
+ Copyright (c) 2021-2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
  */
-#include "RelationalOperator.h"
-
-#include <utility>
+#include <RelationalOperator.h>
 #include <SDKException.h>
 
 IO::SDK::Constraints::RelationalOperator IO::SDK::Constraints::RelationalOperator::mGreaterThan(std::string(">"));

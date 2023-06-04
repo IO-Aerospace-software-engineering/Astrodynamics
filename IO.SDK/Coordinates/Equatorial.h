@@ -1,12 +1,5 @@
-/**
- * @file RADec.h
- * @author Sylvain Guillet (sylvain.guillet@live.com)
- * @brief 
- * @version 0.x
- * @date 2021-07-02
- * 
- * @copyright Copyright (c) 2021
- * 
+/*
+ Copyright (c) 2021-2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
  */
 #ifndef RADEC_H
 #define RADEC_H
@@ -16,7 +9,7 @@ namespace IO::SDK::Coordinates
 	 * @brief Right ascending and declination coordinate
 	 * 
 	 */
-	class RADec
+	class Equatorial
 	{
 	private:
 		const double _range, _ra, _dec;
@@ -24,13 +17,13 @@ namespace IO::SDK::Coordinates
 	public:
 
 		/**
-		 * @brief Construct a new RADec object
+		 * @brief Construct a new Equatorial object
 		 * 
 		 * @param ra 
 		 * @param dec 
 		 * @param range 
 		 */
-		RADec( double ra, double dec, double range) :_range{ range }, _ra{ ra }, _dec{ dec }
+		Equatorial(double ra, double dec, double range) : _range{range }, _ra{ra }, _dec{dec }
 		{
 
 		}

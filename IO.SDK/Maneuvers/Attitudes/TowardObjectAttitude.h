@@ -1,24 +1,10 @@
-/**
- * @file TowardObjectAttitude.h
- * @author Sylvain Guillet (sylvain.guillet@live.com)
- * @brief 
- * @version 0.x
- * @date 2021-06-18
- * 
- * @copyright Copyright (c) 2021
- * 
+/*
+ Copyright (c) 2021-2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
  */
 #ifndef TOWARD_OBJECT_ATTITUDE_H
 #define TOWARD_OBJECT_ATTITUDE_H
-#include <vector>
-#include <memory>
 
 #include <ManeuverBase.h>
-#include <OrbitalParameters.h>
-#include <Engine.h>
-#include <Propagator.h>
-#include <Vector3D.h>
-#include <Body.h>
 
 namespace IO::SDK::Maneuvers::Attitudes
 {

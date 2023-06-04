@@ -25,7 +25,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">IO-SDK<span id="projectnumber">&#160;0.8.x</span>
+   <div id="projectname">IO-SDK<span id="projectnumber">&#160;0.9.x</span>
    </div>
    <div id="projectbrief">Astrodynamics framework</div>
   </td>
@@ -89,6 +89,7 @@ $(document).ready(function(){initNavTree('Proxy_8cpp.html',''); initResizable();
 </div><!--header-->
 <div class="contents">
 <div class="textblock"><code>#include &lt;algorithm&gt;</code><br />
+<code>#include &lt;iostream&gt;</code><br />
 <code>#include &lt;<a class="el" href="Proxy_8h_source.html">Proxy.h</a>&gt;</code><br />
 <code>#include &lt;<a class="el" href="Converters_8cpp.html">Converters.cpp</a>&gt;</code><br />
 <code>#include &lt;<a class="el" href="PerigeeHeightChangingManeuver_8h_source.html">PerigeeHeightChangingManeuver.h</a>&gt;</code><br />
@@ -105,7 +106,8 @@ $(document).ready(function(){initNavTree('Proxy_8cpp.html',''); initResizable();
 <code>#include &lt;<a class="el" href="InstrumentPointingToAttitude_8h_source.html">InstrumentPointingToAttitude.h</a>&gt;</code><br />
 <code>#include &lt;<a class="el" href="Launch_8h_source.html">Launch.h</a>&gt;</code><br />
 <code>#include &lt;<a class="el" href="KernelsLoader_8h_source.html">KernelsLoader.h</a>&gt;</code><br />
-<code>#include &lt;iostream&gt;</code><br />
+<code>#include &lt;<a class="el" href="TLE_8h_source.html">TLE.h</a>&gt;</code><br />
+<code>#include &lt;<a class="el" href="EquinoctialElements_8h_source.html">EquinoctialElements.h</a>&gt;</code><br />
 </div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
@@ -195,6 +197,14 @@ Functions</h2></td></tr>
 <tr class="separator:a070706fba8ff9475ca3b778c3bc1e115"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a85ec992f6c806bf839c142b5e7064eea"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1FrameTransformationDTO.html">IO::SDK::API::DTO::FrameTransformationDTO</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="Proxy_8cpp.html#a85ec992f6c806bf839c142b5e7064eea">TransformFrameProxy</a> (const char *fromFrame, const char *toFrame, double epoch)</td></tr>
 <tr class="separator:a85ec992f6c806bf839c142b5e7064eea"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7e387a04f07211fa95610535933f93cd"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1StateVectorDTO.html">IO::SDK::API::DTO::StateVectorDTO</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="Proxy_8cpp.html#a7e387a04f07211fa95610535933f93cd">ConvertTLEToStateVectorProxy</a> (const char *L1, const char *L2, double epoch)</td></tr>
+<tr class="separator:a7e387a04f07211fa95610535933f93cd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aeb12baab4448a9a18397d9c01ce3da5d"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1StateVectorDTO.html">IO::SDK::API::DTO::StateVectorDTO</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="Proxy_8cpp.html#aeb12baab4448a9a18397d9c01ce3da5d">ConvertConicElementsToStateVectorProxy</a> (<a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1ConicOrbitalElementsDTO.html">IO::SDK::API::DTO::ConicOrbitalElementsDTO</a> conicOrbitalElementsDto)</td></tr>
+<tr class="separator:aeb12baab4448a9a18397d9c01ce3da5d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adfd0b324746b1633f9f07b85d8cbfd82"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1StateVectorDTO.html">IO::SDK::API::DTO::StateVectorDTO</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="Proxy_8cpp.html#adfd0b324746b1633f9f07b85d8cbfd82">ConvertEquinoctialElementsToStateVectorProxy</a> (<a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1EquinoctialElementsDTO.html">IO::SDK::API::DTO::EquinoctialElementsDTO</a> equinoctialElementsDto)</td></tr>
+<tr class="separator:adfd0b324746b1633f9f07b85d8cbfd82"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a65acf322e1ed7cc0dd45003cc2afc869"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1RaDecDTO.html">IO::SDK::API::DTO::RaDecDTO</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="Proxy_8cpp.html#a65acf322e1ed7cc0dd45003cc2afc869">ConvertToRightAscensionAndDeclinationProxy</a> (<a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1StateVectorDTO.html">IO::SDK::API::DTO::StateVectorDTO</a> stateVectorDto)</td></tr>
+<tr class="separator:a65acf322e1ed7cc0dd45003cc2afc869"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Function Documentation</h2>
 <a id="a7486ed1a8282bf3a560293bfb277999f" name="a7486ed1a8282bf3a560293bfb277999f"></a>
@@ -765,6 +775,56 @@ Functions</h2></td></tr>
 
 </div>
 </div>
+<a id="aeb12baab4448a9a18397d9c01ce3da5d" name="aeb12baab4448a9a18397d9c01ce3da5d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aeb12baab4448a9a18397d9c01ce3da5d">&#9670;&nbsp;</a></span>ConvertConicElementsToStateVectorProxy()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1StateVectorDTO.html">IO::SDK::API::DTO::StateVectorDTO</a> ConvertConicElementsToStateVectorProxy </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1ConicOrbitalElementsDTO.html">IO::SDK::API::DTO::ConicOrbitalElementsDTO</a>&#160;</td>
+          <td class="paramname"><em>conicOrbitalElementsDto</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p >Convert conic orbital elements to state vector </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">conicOrbitalElementsDto</td><td></td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd></dd></dl>
+
+</div>
+</div>
+<a id="adfd0b324746b1633f9f07b85d8cbfd82" name="adfd0b324746b1633f9f07b85d8cbfd82"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#adfd0b324746b1633f9f07b85d8cbfd82">&#9670;&nbsp;</a></span>ConvertEquinoctialElementsToStateVectorProxy()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1StateVectorDTO.html">IO::SDK::API::DTO::StateVectorDTO</a> ConvertEquinoctialElementsToStateVectorProxy </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1EquinoctialElementsDTO.html">IO::SDK::API::DTO::EquinoctialElementsDTO</a>&#160;</td>
+          <td class="paramname"><em>equinoctialElementsDto</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p >Convert equinoctial elements to state vector </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">equinoctialElementsDto</td><td></td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd></dd></dl>
+
+</div>
+</div>
 <a id="a2fae52dc56d1098cf155b0a49a04cb25" name="a2fae52dc56d1098cf155b0a49a04cb25"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a2fae52dc56d1098cf155b0a49a04cb25">&#9670;&nbsp;</a></span>ConvertTDBToUTCProxy()</h2>
 
@@ -783,6 +843,74 @@ Functions</h2></td></tr>
 <p >Convert elapsed seconds from J2000 to UTC </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">tdb</td><td></td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd></dd></dl>
+
+</div>
+</div>
+<a id="a7e387a04f07211fa95610535933f93cd" name="a7e387a04f07211fa95610535933f93cd"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7e387a04f07211fa95610535933f93cd">&#9670;&nbsp;</a></span>ConvertTLEToStateVectorProxy()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1StateVectorDTO.html">IO::SDK::API::DTO::StateVectorDTO</a> ConvertTLEToStateVectorProxy </td>
+          <td>(</td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>L1</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>L2</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>epoch</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p >Convert Two line elements to state vector </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">L1</td><td></td></tr>
+    <tr><td class="paramname">L2</td><td></td></tr>
+    <tr><td class="paramname">epoch</td><td></td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd></dd></dl>
+
+</div>
+</div>
+<a id="a65acf322e1ed7cc0dd45003cc2afc869" name="a65acf322e1ed7cc0dd45003cc2afc869"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a65acf322e1ed7cc0dd45003cc2afc869">&#9670;&nbsp;</a></span>ConvertToRightAscensionAndDeclinationProxy()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1RaDecDTO.html">IO::SDK::API::DTO::RaDecDTO</a> ConvertToRightAscensionAndDeclinationProxy </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="structIO_1_1SDK_1_1API_1_1DTO_1_1StateVectorDTO.html">IO::SDK::API::DTO::StateVectorDTO</a>&#160;</td>
+          <td class="paramname"><em>stateVectorDto</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p >Convert stateVector to right ascension and declination </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">stateVectorDto</td><td></td></tr>
   </table>
   </dd>
 </dl>

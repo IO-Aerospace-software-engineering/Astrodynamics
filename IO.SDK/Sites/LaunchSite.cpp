@@ -1,18 +1,9 @@
-/**
- * @file LaunchSite.cpp
- * @author Sylvain Guillet (sylvain.guillet@live.com)
- * @brief 
- * @version 0.x
- * @date 2021-06-11
- * 
- * @copyright Copyright (c) 2021
- * 
+/*
+ Copyright (c) 2021-2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
  */
 
-#include <iterator>
 #include <LaunchSite.h>
 #include <algorithm>
-#include <utility>
 
 IO::SDK::Sites::LaunchSite::LaunchSite(const int id, const std::string &name, const IO::SDK::Coordinates::Geodetic &coordinates,
                                        std::shared_ptr<IO::SDK::Body::CelestialBody> body, std::string directoryPath) : Site(id, name, coordinates, std::move(body), std::move(directoryPath))

@@ -1,3 +1,7 @@
+/*
+ Copyright (c) 2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
+ */
+
 //
 // Created by spacer on 3/27/23.
 //
@@ -6,7 +10,6 @@
 #define IOSDK_PHASINGMANEUVERDTO_H
 
 #include <WindowDTO.h>
-#include <Vector3DDTO.h>
 #include <StateVectorDTO.h>
 
 namespace IO::SDK::API::DTO

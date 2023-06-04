@@ -20,12 +20,12 @@ TEST(TLEIntegrator, Integrate)
     IO::SDK::Integrators::TLEIntegrator integrator(*localTLE, IO::SDK::Time::TimeSpan(60s));
 
     //Just to activate cache and evaluate optimized integration
-    auto sv = spc.GetOrbitalParametersAtEpoch()->GetStateVector();
+    auto sv = spc.GetOrbitalParametersAtEpoch()->ToStateVector();
 
 #ifdef DEBUG
     auto t1 = std::chrono::high_resolution_clock::now();
 #endif
-    auto stateVector = integrator.Integrate(spc, spc.GetOrbitalParametersAtEpoch()->GetStateVector()); //2021-04-06 10:32:32.385783 TDB
+    auto stateVector = integrator.Integrate(spc, spc.GetOrbitalParametersAtEpoch()->ToStateVector()); //2021-04-06 10:32:32.385783 TDB
 #ifdef DEBUG
     auto t2 = std::chrono::high_resolution_clock::now();
 

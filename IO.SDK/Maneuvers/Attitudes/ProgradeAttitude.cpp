@@ -1,12 +1,5 @@
-/**
- * @file ProgradeAttitude.cpp
- * @author Sylvain Guillet (sylvain.guillet@live.com)
- * @brief 
- * @version 0.x
- * @date 2021-07-03
- * 
- * @copyright Copyright (c) 2021
- * 
+/*
+ Copyright (c) 2021-2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
  */
 #include<ProgradeAttitude.h>
 
@@ -29,7 +22,7 @@ void IO::SDK::Maneuvers::Attitudes::ProgradeAttitude::Compute([[maybe_unused]]co
 
 IO::SDK::OrbitalParameters::StateOrientation IO::SDK::Maneuvers::Attitudes::ProgradeAttitude::ComputeOrientation(const IO::SDK::OrbitalParameters::OrbitalParameters &maneuverPoint)
 {
-    return IO::SDK::OrbitalParameters::StateOrientation{maneuverPoint.GetStateVector().GetVelocity().Normalize().To(m_spacecraft.Front), IO::SDK::Math::Vector3D(0.0, 0.0, 0.0),
+    return IO::SDK::OrbitalParameters::StateOrientation{maneuverPoint.ToStateVector().GetVelocity().Normalize().To(m_spacecraft.Front), IO::SDK::Math::Vector3D(0.0, 0.0, 0.0),
                                                         maneuverPoint.GetEpoch(), maneuverPoint.GetFrame()};
 }
 

@@ -1,6 +1,6 @@
-//
-// Created by sylvain guillet on 30-MAY-2023.
-//
+/*
+ Copyright (c) 2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
+ */
 
 #ifndef IOSDK_FRAMETRANSFORMATION_H
 #define IOSDK_FRAMETRANSFORMATION_H

@@ -1,12 +1,5 @@
-/**
- * @file PerigeeHeightChangingManeuver.cpp
- * @author Sylvain Guillet (sylvain.guillet@live.com)
- * @brief 
- * @version 0.x
- * @date 2021-07-03
- * 
- * @copyright Copyright (c) 2021
- * 
+/*
+ Copyright (c) 2021-2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
  */
 #include <PerigeeHeightChangingManeuver.h>
 #include <Constants.h>
@@ -30,7 +23,7 @@ IO::SDK::Maneuvers::PerigeeHeightChangingManeuver::PerigeeHeightChangingManeuver
 
 void IO::SDK::Maneuvers::PerigeeHeightChangingManeuver::Compute(const IO::SDK::OrbitalParameters::OrbitalParameters &maneuverPoint)
 {
-    double vInit = maneuverPoint.GetStateVector().GetVelocity().Magnitude();
+    double vInit = maneuverPoint.ToStateVector().GetVelocity().Magnitude();
     double vFinal = std::sqrt(maneuverPoint.GetCenterOfMotion()->GetMu() *
                               ((2.0 / maneuverPoint.GetApogeeVector().Magnitude()) - (1.0 / ((maneuverPoint.GetApogeeVector().Magnitude() + m_targetHeight) / 2.0))));
     m_deltaV = std::make_unique<IO::SDK::Math::Vector3D>(
@@ -41,7 +34,7 @@ IO::SDK::OrbitalParameters::StateOrientation
 IO::SDK::Maneuvers::PerigeeHeightChangingManeuver::ComputeOrientation(const IO::SDK::OrbitalParameters::OrbitalParameters &maneuverPoint)
 {
     double deltaH = m_targetHeight - maneuverPoint.GetPerigeeVector().Magnitude();
-    auto velocityVector = maneuverPoint.GetStateVector().GetVelocity().Normalize();
+    auto velocityVector = maneuverPoint.ToStateVector().GetVelocity().Normalize();
 
     //Check if it's a retrograde burn
     if (deltaH < 0.0)

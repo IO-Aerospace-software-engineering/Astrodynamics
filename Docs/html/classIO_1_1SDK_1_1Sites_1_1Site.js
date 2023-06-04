@@ -16,7 +16,7 @@ var classIO_1_1SDK_1_1Sites_1_1Site =
     [ "GetId", "classIO_1_1SDK_1_1Sites_1_1Site.html#a28a013a4a1d28604c291df89853a996f", null ],
     [ "GetIllumination", "classIO_1_1SDK_1_1Sites_1_1Site.html#a2ee48b444fea67e62cdc02f1a69aa619", null ],
     [ "GetName", "classIO_1_1SDK_1_1Sites_1_1Site.html#a9078603afed9946645c6546dba1b139a", null ],
-    [ "GetRADec", "classIO_1_1SDK_1_1Sites_1_1Site.html#ad0968e8b52c47b093c67ca81579a68a5", null ],
+    [ "GetRADec", "classIO_1_1SDK_1_1Sites_1_1Site.html#abf32196e28dbaa2b994b4f6e6041db1d", null ],
     [ "GetStateVector", "classIO_1_1SDK_1_1Sites_1_1Site.html#a122e8c54214f83c813a41d0d41b485aa", null ],
     [ "GetStateVector", "classIO_1_1SDK_1_1Sites_1_1Site.html#a335d8c7834930c92631389c042e3e280", null ],
     [ "IsDay", "classIO_1_1SDK_1_1Sites_1_1Site.html#aa88d270584a457e08b86443f31a26044", null ],

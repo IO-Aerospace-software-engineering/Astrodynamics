@@ -2,37 +2,40 @@
 \label{PhasingManeuverDTO_8h_source}\index{IO.SDK/API/DTO/PhasingManeuverDTO.h@{IO.SDK/API/DTO/PhasingManeuverDTO.h}}
 \mbox{\hyperlink{PhasingManeuverDTO_8h}{Go to the documentation of this file.}}
 \begin{DoxyCode}{0}
-\DoxyCodeLine{1 \textcolor{comment}{//}}
-\DoxyCodeLine{2 \textcolor{comment}{// Created by spacer on 3/27/23.}}
-\DoxyCodeLine{3 \textcolor{comment}{//}}
+\DoxyCodeLine{1 \textcolor{comment}{/*}}
+\DoxyCodeLine{2 \textcolor{comment}{ Copyright (c) 2023. Sylvain Guillet (sylvain.guillet@tutamail.com)}}
+\DoxyCodeLine{3 \textcolor{comment}{ */}}
 \DoxyCodeLine{4 }
-\DoxyCodeLine{5 \textcolor{preprocessor}{\#ifndef IOSDK\_PHASINGMANEUVERDTO\_H}}
-\DoxyCodeLine{6 \textcolor{preprocessor}{\#define IOSDK\_PHASINGMANEUVERDTO\_H}}
-\DoxyCodeLine{7 }
-\DoxyCodeLine{8 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{WindowDTO_8h}{WindowDTO.h}}>}}
-\DoxyCodeLine{9 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{Vector3DDTO_8h}{Vector3DDTO.h}}>}}
-\DoxyCodeLine{10 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{StateVectorDTO_8h}{StateVectorDTO.h}}>}}
+\DoxyCodeLine{5 \textcolor{comment}{//}}
+\DoxyCodeLine{6 \textcolor{comment}{// Created by spacer on 3/27/23.}}
+\DoxyCodeLine{7 \textcolor{comment}{//}}
+\DoxyCodeLine{8 }
+\DoxyCodeLine{9 \textcolor{preprocessor}{\#ifndef IOSDK\_PHASINGMANEUVERDTO\_H}}
+\DoxyCodeLine{10 \textcolor{preprocessor}{\#define IOSDK\_PHASINGMANEUVERDTO\_H}}
 \DoxyCodeLine{11 }
-\DoxyCodeLine{12 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1SDK_1_1API_1_1DTO}{IO::SDK::API::DTO}}}
-\DoxyCodeLine{13 \{}
-\DoxyCodeLine{14     \textcolor{keyword}{struct }\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1PhasingManeuverDTO}{PhasingManeuverDTO}}}
-\DoxyCodeLine{15     \{}
-\DoxyCodeLine{16         \textcolor{keywordtype}{int} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1PhasingManeuverDTO_a8946c24d73e71bed59a35615b0de22a5}{maneuverOrder}}\{-\/1\};}
-\DoxyCodeLine{17         \textcolor{keywordtype}{char} *\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1PhasingManeuverDTO_a92d5227832edfce5a8394b919d80fd3d}{engines}}[5]\{\};}
-\DoxyCodeLine{18         \textcolor{keywordtype}{double} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1PhasingManeuverDTO_ad0983abd599c7b99b4ca2736c4c20447}{attitudeHoldDuration}}\{0.0\};}
-\DoxyCodeLine{19         \textcolor{keywordtype}{double} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1PhasingManeuverDTO_ace6eb304bc731a26b3e8f9a9f149b547}{minimumEpoch}}\{0.0\};}
-\DoxyCodeLine{20 }
-\DoxyCodeLine{21         \textcolor{keywordtype}{int} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1PhasingManeuverDTO_a95d80c87bb0a88a6681b0d759d983081}{numberRevolutions}}\{\};}
-\DoxyCodeLine{22         \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1StateVectorDTO}{StateVectorDTO}} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1PhasingManeuverDTO_abc0848f1dd315d23f5157353552fb815}{targetOrbit}};}
+\DoxyCodeLine{12 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{WindowDTO_8h}{WindowDTO.h}}>}}
+\DoxyCodeLine{13 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{StateVectorDTO_8h}{StateVectorDTO.h}}>}}
+\DoxyCodeLine{14 }
+\DoxyCodeLine{15 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1SDK_1_1API_1_1DTO}{IO::SDK::API::DTO}}}
+\DoxyCodeLine{16 \{}
+\DoxyCodeLine{17     \textcolor{keyword}{struct }\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1PhasingManeuverDTO}{PhasingManeuverDTO}}}
+\DoxyCodeLine{18     \{}
+\DoxyCodeLine{19         \textcolor{keywordtype}{int} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1PhasingManeuverDTO_a8946c24d73e71bed59a35615b0de22a5}{maneuverOrder}}\{-\/1\};}
+\DoxyCodeLine{20         \textcolor{keywordtype}{char} *\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1PhasingManeuverDTO_a92d5227832edfce5a8394b919d80fd3d}{engines}}[5]\{\};}
+\DoxyCodeLine{21         \textcolor{keywordtype}{double} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1PhasingManeuverDTO_ad0983abd599c7b99b4ca2736c4c20447}{attitudeHoldDuration}}\{0.0\};}
+\DoxyCodeLine{22         \textcolor{keywordtype}{double} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1PhasingManeuverDTO_ace6eb304bc731a26b3e8f9a9f149b547}{minimumEpoch}}\{0.0\};}
 \DoxyCodeLine{23 }
-\DoxyCodeLine{24         \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO}{WindowDTO}} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1PhasingManeuverDTO_a468edd5395a56b95ffa856e236132f3d}{maneuverWindow}}\{\};}
-\DoxyCodeLine{25         \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO}{WindowDTO}} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1PhasingManeuverDTO_a148fa1e148564f1497a4860463d1dda9}{thrustWindow}}\{\};}
-\DoxyCodeLine{26         \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO}{WindowDTO}} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1PhasingManeuverDTO_a582f11dcf2863339caa3025aade38ed5}{attitudeWindow}}\{\};}
-\DoxyCodeLine{27         \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1Vector3DDTO}{Vector3DDTO}} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1PhasingManeuverDTO_ada0c1b221e858bba94d1f99efa8e4534}{deltaV}}\{\};}
-\DoxyCodeLine{28         \textcolor{keywordtype}{double} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1PhasingManeuverDTO_ad03ad48b95e083ac8b694766ff80d1b0}{FuelBurned}}\{0.0\};}
-\DoxyCodeLine{29     \};}
-\DoxyCodeLine{30 \}}
-\DoxyCodeLine{31 }
-\DoxyCodeLine{32 \textcolor{preprocessor}{\#endif }\textcolor{comment}{//IOSDK\_PHASINGMANEUVERDTO\_H}}
+\DoxyCodeLine{24         \textcolor{keywordtype}{int} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1PhasingManeuverDTO_a95d80c87bb0a88a6681b0d759d983081}{numberRevolutions}}\{\};}
+\DoxyCodeLine{25         \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1StateVectorDTO}{StateVectorDTO}} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1PhasingManeuverDTO_abc0848f1dd315d23f5157353552fb815}{targetOrbit}};}
+\DoxyCodeLine{26 }
+\DoxyCodeLine{27         \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO}{WindowDTO}} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1PhasingManeuverDTO_a468edd5395a56b95ffa856e236132f3d}{maneuverWindow}}\{\};}
+\DoxyCodeLine{28         \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO}{WindowDTO}} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1PhasingManeuverDTO_a148fa1e148564f1497a4860463d1dda9}{thrustWindow}}\{\};}
+\DoxyCodeLine{29         \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO}{WindowDTO}} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1PhasingManeuverDTO_a582f11dcf2863339caa3025aade38ed5}{attitudeWindow}}\{\};}
+\DoxyCodeLine{30         \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1Vector3DDTO}{Vector3DDTO}} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1PhasingManeuverDTO_ada0c1b221e858bba94d1f99efa8e4534}{deltaV}}\{\};}
+\DoxyCodeLine{31         \textcolor{keywordtype}{double} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1PhasingManeuverDTO_ad03ad48b95e083ac8b694766ff80d1b0}{FuelBurned}}\{0.0\};}
+\DoxyCodeLine{32     \};}
+\DoxyCodeLine{33 \}}
+\DoxyCodeLine{34 }
+\DoxyCodeLine{35 \textcolor{preprocessor}{\#endif }\textcolor{comment}{//IOSDK\_PHASINGMANEUVERDTO\_H}}
 
 \end{DoxyCode}

@@ -25,7 +25,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">IO-SDK<span id="projectnumber">&#160;0.8.x</span>
+   <div id="projectname">IO-SDK<span id="projectnumber">&#160;0.9.x</span>
    </div>
    <div id="projectbrief">Astrodynamics framework</div>
   </td>
@@ -86,38 +86,40 @@ $(document).ready(function(){initNavTree('Rectangular_8h_source.html',''); initR
   <div class="headertitle"><div class="title">Rectangular.h</div></div>
 </div><!--header-->
 <div class="contents">
-<a href="Rectangular_8h.html">Go to the documentation of this file.</a><div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span> </div>
-<div class="line"><a id="l00011" name="l00011"></a><span class="lineno">   11</span><span class="preprocessor">#ifndef RECTANGULAR_H</span></div>
-<div class="line"><a id="l00012" name="l00012"></a><span class="lineno">   12</span><span class="preprocessor">#define RECTANGULAR_H</span></div>
-<div class="line"><a id="l00013" name="l00013"></a><span class="lineno">   13</span><span class="keyword">namespace </span><a class="code hl_namespace" href="namespaceIO_1_1SDK_1_1Coordinates.html">IO::SDK::Coordinates</a></div>
-<div class="line"><a id="l00014" name="l00014"></a><span class="lineno">   14</span>{</div>
-<div class="line"><a id="l00019" name="l00019"></a><span class="lineno"><a class="line" href="classIO_1_1SDK_1_1Coordinates_1_1Rectangular.html">   19</a></span>    <span class="keyword">class </span><a class="code hl_class" href="classIO_1_1SDK_1_1Coordinates_1_1Rectangular.html">Rectangular</a></div>
-<div class="line"><a id="l00020" name="l00020"></a><span class="lineno">   20</span>    {</div>
-<div class="line"><a id="l00021" name="l00021"></a><span class="lineno">   21</span>    <span class="keyword">private</span>:</div>
-<div class="line"><a id="l00022" name="l00022"></a><span class="lineno">   22</span>        <span class="keyword">const</span> <span class="keywordtype">double</span> m_x, m_y, m_z;</div>
-<div class="line"><a id="l00023" name="l00023"></a><span class="lineno">   23</span> </div>
-<div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span>    <span class="keyword">public</span>:</div>
-<div class="line"><a id="l00032" name="l00032"></a><span class="lineno"><a class="line" href="classIO_1_1SDK_1_1Coordinates_1_1Rectangular.html#a9bba75958ebf27099234d78c48701aef">   32</a></span>        <a class="code hl_function" href="classIO_1_1SDK_1_1Coordinates_1_1Rectangular.html#a9bba75958ebf27099234d78c48701aef">Rectangular</a>(<span class="keywordtype">double</span> x, <span class="keywordtype">double</span> y,<span class="keywordtype">double</span> z) :m_x{ x }, m_y{ y }, m_z{ z }</div>
-<div class="line"><a id="l00033" name="l00033"></a><span class="lineno">   33</span>        {</div>
-<div class="line"><a id="l00034" name="l00034"></a><span class="lineno">   34</span> </div>
-<div class="line"><a id="l00035" name="l00035"></a><span class="lineno">   35</span>        }</div>
+<a href="Rectangular_8h.html">Go to the documentation of this file.</a><div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span><span class="comment">/*</span></div>
+<div class="line"><a id="l00002" name="l00002"></a><span class="lineno">    2</span><span class="comment"> Copyright (c) 2021-2023. Sylvain Guillet (sylvain.guillet@tutamail.com)</span></div>
+<div class="line"><a id="l00003" name="l00003"></a><span class="lineno">    3</span><span class="comment"> */</span></div>
+<div class="line"><a id="l00004" name="l00004"></a><span class="lineno">    4</span><span class="preprocessor">#ifndef RECTANGULAR_H</span></div>
+<div class="line"><a id="l00005" name="l00005"></a><span class="lineno">    5</span><span class="preprocessor">#define RECTANGULAR_H</span></div>
+<div class="line"><a id="l00006" name="l00006"></a><span class="lineno">    6</span><span class="keyword">namespace </span><a class="code hl_namespace" href="namespaceIO_1_1SDK_1_1Coordinates.html">IO::SDK::Coordinates</a></div>
+<div class="line"><a id="l00007" name="l00007"></a><span class="lineno">    7</span>{</div>
+<div class="line"><a id="l00012" name="l00012"></a><span class="lineno"><a class="line" href="classIO_1_1SDK_1_1Coordinates_1_1Rectangular.html">   12</a></span>    <span class="keyword">class </span><a class="code hl_class" href="classIO_1_1SDK_1_1Coordinates_1_1Rectangular.html">Rectangular</a></div>
+<div class="line"><a id="l00013" name="l00013"></a><span class="lineno">   13</span>    {</div>
+<div class="line"><a id="l00014" name="l00014"></a><span class="lineno">   14</span>    <span class="keyword">private</span>:</div>
+<div class="line"><a id="l00015" name="l00015"></a><span class="lineno">   15</span>        <span class="keyword">const</span> <span class="keywordtype">double</span> m_x, m_y, m_z;</div>
+<div class="line"><a id="l00016" name="l00016"></a><span class="lineno">   16</span> </div>
+<div class="line"><a id="l00017" name="l00017"></a><span class="lineno">   17</span>    <span class="keyword">public</span>:</div>
+<div class="line"><a id="l00025" name="l00025"></a><span class="lineno"><a class="line" href="classIO_1_1SDK_1_1Coordinates_1_1Rectangular.html#a9bba75958ebf27099234d78c48701aef">   25</a></span>        <a class="code hl_function" href="classIO_1_1SDK_1_1Coordinates_1_1Rectangular.html#a9bba75958ebf27099234d78c48701aef">Rectangular</a>(<span class="keywordtype">double</span> x, <span class="keywordtype">double</span> y,<span class="keywordtype">double</span> z) :m_x{ x }, m_y{ y }, m_z{ z }</div>
+<div class="line"><a id="l00026" name="l00026"></a><span class="lineno">   26</span>        {</div>
+<div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span> </div>
+<div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span>        }</div>
+<div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span> </div>
+<div class="line"><a id="l00035" name="l00035"></a><span class="lineno"><a class="line" href="classIO_1_1SDK_1_1Coordinates_1_1Rectangular.html#a5a5a5034ab5640dcf468960e1ca3de12">   35</a></span>        [[nodiscard]] <span class="keyword">inline</span> <span class="keywordtype">double</span> <a class="code hl_function" href="classIO_1_1SDK_1_1Coordinates_1_1Rectangular.html#a5a5a5034ab5640dcf468960e1ca3de12">GetX</a>()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> this-&gt;m_x; }</div>
 <div class="line"><a id="l00036" name="l00036"></a><span class="lineno">   36</span> </div>
-<div class="line"><a id="l00042" name="l00042"></a><span class="lineno"><a class="line" href="classIO_1_1SDK_1_1Coordinates_1_1Rectangular.html#a5a5a5034ab5640dcf468960e1ca3de12">   42</a></span>        [[nodiscard]] <span class="keyword">inline</span> <span class="keywordtype">double</span> <a class="code hl_function" href="classIO_1_1SDK_1_1Coordinates_1_1Rectangular.html#a5a5a5034ab5640dcf468960e1ca3de12">GetX</a>()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> this-&gt;m_x; }</div>
+<div class="line"><a id="l00042" name="l00042"></a><span class="lineno"><a class="line" href="classIO_1_1SDK_1_1Coordinates_1_1Rectangular.html#a3a65bdbb6e4e2b1bc98ebb04f99a14e5">   42</a></span>        [[nodiscard]] <span class="keyword">inline</span> <span class="keywordtype">double</span> <a class="code hl_function" href="classIO_1_1SDK_1_1Coordinates_1_1Rectangular.html#a3a65bdbb6e4e2b1bc98ebb04f99a14e5">GetY</a>()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> this-&gt;m_y; }</div>
 <div class="line"><a id="l00043" name="l00043"></a><span class="lineno">   43</span> </div>
-<div class="line"><a id="l00049" name="l00049"></a><span class="lineno"><a class="line" href="classIO_1_1SDK_1_1Coordinates_1_1Rectangular.html#a3a65bdbb6e4e2b1bc98ebb04f99a14e5">   49</a></span>        [[nodiscard]] <span class="keyword">inline</span> <span class="keywordtype">double</span> <a class="code hl_function" href="classIO_1_1SDK_1_1Coordinates_1_1Rectangular.html#a3a65bdbb6e4e2b1bc98ebb04f99a14e5">GetY</a>()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> this-&gt;m_y; }</div>
-<div class="line"><a id="l00050" name="l00050"></a><span class="lineno">   50</span> </div>
-<div class="line"><a id="l00056" name="l00056"></a><span class="lineno"><a class="line" href="classIO_1_1SDK_1_1Coordinates_1_1Rectangular.html#aab976c01f28865beba4560cae4b2e6c8">   56</a></span>        [[nodiscard]] <span class="keyword">inline</span> <span class="keywordtype">double</span> <a class="code hl_function" href="classIO_1_1SDK_1_1Coordinates_1_1Rectangular.html#aab976c01f28865beba4560cae4b2e6c8">GetZ</a>()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> this-&gt;m_z; }</div>
-<div class="line"><a id="l00057" name="l00057"></a><span class="lineno">   57</span>    };</div>
-<div class="line"><a id="l00058" name="l00058"></a><span class="lineno">   58</span>}</div>
-<div class="line"><a id="l00059" name="l00059"></a><span class="lineno">   59</span><span class="preprocessor">#endif </span><span class="comment">// !RECTANGULAR_H</span></div>
-<div class="line"><a id="l00060" name="l00060"></a><span class="lineno">   60</span> </div>
-<div class="line"><a id="l00061" name="l00061"></a><span class="lineno">   61</span> </div>
-<div class="ttc" id="aclassIO_1_1SDK_1_1Coordinates_1_1Rectangular_html"><div class="ttname"><a href="classIO_1_1SDK_1_1Coordinates_1_1Rectangular.html">IO::SDK::Coordinates::Rectangular</a></div><div class="ttdoc">Rectangular coordinates.</div><div class="ttdef"><b>Definition:</b> Rectangular.h:20</div></div>
-<div class="ttc" id="aclassIO_1_1SDK_1_1Coordinates_1_1Rectangular_html_a3a65bdbb6e4e2b1bc98ebb04f99a14e5"><div class="ttname"><a href="classIO_1_1SDK_1_1Coordinates_1_1Rectangular.html#a3a65bdbb6e4e2b1bc98ebb04f99a14e5">IO::SDK::Coordinates::Rectangular::GetY</a></div><div class="ttdeci">double GetY() const</div><div class="ttdoc">Get Y.</div><div class="ttdef"><b>Definition:</b> Rectangular.h:49</div></div>
-<div class="ttc" id="aclassIO_1_1SDK_1_1Coordinates_1_1Rectangular_html_a5a5a5034ab5640dcf468960e1ca3de12"><div class="ttname"><a href="classIO_1_1SDK_1_1Coordinates_1_1Rectangular.html#a5a5a5034ab5640dcf468960e1ca3de12">IO::SDK::Coordinates::Rectangular::GetX</a></div><div class="ttdeci">double GetX() const</div><div class="ttdoc">Get X.</div><div class="ttdef"><b>Definition:</b> Rectangular.h:42</div></div>
-<div class="ttc" id="aclassIO_1_1SDK_1_1Coordinates_1_1Rectangular_html_a9bba75958ebf27099234d78c48701aef"><div class="ttname"><a href="classIO_1_1SDK_1_1Coordinates_1_1Rectangular.html#a9bba75958ebf27099234d78c48701aef">IO::SDK::Coordinates::Rectangular::Rectangular</a></div><div class="ttdeci">Rectangular(double x, double y, double z)</div><div class="ttdoc">Construct a new Rectangular object.</div><div class="ttdef"><b>Definition:</b> Rectangular.h:32</div></div>
-<div class="ttc" id="aclassIO_1_1SDK_1_1Coordinates_1_1Rectangular_html_aab976c01f28865beba4560cae4b2e6c8"><div class="ttname"><a href="classIO_1_1SDK_1_1Coordinates_1_1Rectangular.html#aab976c01f28865beba4560cae4b2e6c8">IO::SDK::Coordinates::Rectangular::GetZ</a></div><div class="ttdeci">double GetZ() const</div><div class="ttdoc">Get Z.</div><div class="ttdef"><b>Definition:</b> Rectangular.h:56</div></div>
-<div class="ttc" id="anamespaceIO_1_1SDK_1_1Coordinates_html"><div class="ttname"><a href="namespaceIO_1_1SDK_1_1Coordinates.html">IO::SDK::Coordinates</a></div><div class="ttdef"><b>Definition:</b> AzimuthRange.h:15</div></div>
+<div class="line"><a id="l00049" name="l00049"></a><span class="lineno"><a class="line" href="classIO_1_1SDK_1_1Coordinates_1_1Rectangular.html#aab976c01f28865beba4560cae4b2e6c8">   49</a></span>        [[nodiscard]] <span class="keyword">inline</span> <span class="keywordtype">double</span> <a class="code hl_function" href="classIO_1_1SDK_1_1Coordinates_1_1Rectangular.html#aab976c01f28865beba4560cae4b2e6c8">GetZ</a>()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> this-&gt;m_z; }</div>
+<div class="line"><a id="l00050" name="l00050"></a><span class="lineno">   50</span>    };</div>
+<div class="line"><a id="l00051" name="l00051"></a><span class="lineno">   51</span>}</div>
+<div class="line"><a id="l00052" name="l00052"></a><span class="lineno">   52</span><span class="preprocessor">#endif </span><span class="comment">// !RECTANGULAR_H</span></div>
+<div class="line"><a id="l00053" name="l00053"></a><span class="lineno">   53</span> </div>
+<div class="line"><a id="l00054" name="l00054"></a><span class="lineno">   54</span> </div>
+<div class="ttc" id="aclassIO_1_1SDK_1_1Coordinates_1_1Rectangular_html"><div class="ttname"><a href="classIO_1_1SDK_1_1Coordinates_1_1Rectangular.html">IO::SDK::Coordinates::Rectangular</a></div><div class="ttdoc">Rectangular coordinates.</div><div class="ttdef"><b>Definition:</b> Rectangular.h:13</div></div>
+<div class="ttc" id="aclassIO_1_1SDK_1_1Coordinates_1_1Rectangular_html_a3a65bdbb6e4e2b1bc98ebb04f99a14e5"><div class="ttname"><a href="classIO_1_1SDK_1_1Coordinates_1_1Rectangular.html#a3a65bdbb6e4e2b1bc98ebb04f99a14e5">IO::SDK::Coordinates::Rectangular::GetY</a></div><div class="ttdeci">double GetY() const</div><div class="ttdoc">Get Y.</div><div class="ttdef"><b>Definition:</b> Rectangular.h:42</div></div>
+<div class="ttc" id="aclassIO_1_1SDK_1_1Coordinates_1_1Rectangular_html_a5a5a5034ab5640dcf468960e1ca3de12"><div class="ttname"><a href="classIO_1_1SDK_1_1Coordinates_1_1Rectangular.html#a5a5a5034ab5640dcf468960e1ca3de12">IO::SDK::Coordinates::Rectangular::GetX</a></div><div class="ttdeci">double GetX() const</div><div class="ttdoc">Get X.</div><div class="ttdef"><b>Definition:</b> Rectangular.h:35</div></div>
+<div class="ttc" id="aclassIO_1_1SDK_1_1Coordinates_1_1Rectangular_html_a9bba75958ebf27099234d78c48701aef"><div class="ttname"><a href="classIO_1_1SDK_1_1Coordinates_1_1Rectangular.html#a9bba75958ebf27099234d78c48701aef">IO::SDK::Coordinates::Rectangular::Rectangular</a></div><div class="ttdeci">Rectangular(double x, double y, double z)</div><div class="ttdoc">Construct a new Rectangular object.</div><div class="ttdef"><b>Definition:</b> Rectangular.h:25</div></div>
+<div class="ttc" id="aclassIO_1_1SDK_1_1Coordinates_1_1Rectangular_html_aab976c01f28865beba4560cae4b2e6c8"><div class="ttname"><a href="classIO_1_1SDK_1_1Coordinates_1_1Rectangular.html#aab976c01f28865beba4560cae4b2e6c8">IO::SDK::Coordinates::Rectangular::GetZ</a></div><div class="ttdeci">double GetZ() const</div><div class="ttdoc">Get Z.</div><div class="ttdef"><b>Definition:</b> Rectangular.h:49</div></div>
+<div class="ttc" id="anamespaceIO_1_1SDK_1_1Coordinates_html"><div class="ttname"><a href="namespaceIO_1_1SDK_1_1Coordinates.html">IO::SDK::Coordinates</a></div><div class="ttdef"><b>Definition:</b> AzimuthRange.h:8</div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->

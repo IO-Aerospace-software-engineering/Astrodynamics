@@ -234,7 +234,7 @@ TEST(TLE, GetStateVectorAtEpoch)
 	IO::SDK::OrbitalParameters::TLE tle(earth, lines);
 	IO::SDK::Time::TDB epoch("2021-01-20T18:50:13.663106"); //utc
 
-	auto stateVector = tle.GetStateVector(epoch); //2021-Jan-20 18:51:22.8476
+	auto stateVector = tle.ToStateVector(epoch); //2021-Jan-20 18:51:22.8476
 	ASSERT_DOUBLE_EQ(4363669.2613373389, stateVector.GetPosition().GetX());
 	ASSERT_DOUBLE_EQ(-3627809.912410662, stateVector.GetPosition().GetY());
 	ASSERT_DOUBLE_EQ(-3747415.4653566754, stateVector.GetPosition().GetZ());

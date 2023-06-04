@@ -2,53 +2,55 @@
 \label{Quaternion_8h_source}\index{IO.SDK/Math/Quaternion.h@{IO.SDK/Math/Quaternion.h}}
 \mbox{\hyperlink{Quaternion_8h}{Go to the documentation of this file.}}
 \begin{DoxyCode}{0}
-\DoxyCodeLine{1 }
-\DoxyCodeLine{11 \textcolor{preprocessor}{\#ifndef QUATERNION\_H}}
-\DoxyCodeLine{12 \textcolor{preprocessor}{\#define QUATERNION\_H}}
-\DoxyCodeLine{13 }
-\DoxyCodeLine{14 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{Matrix_8h}{Matrix.h}}>}}
-\DoxyCodeLine{15 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{Vector3D_8h}{Vector3D.h}}>}}
+\DoxyCodeLine{1 \textcolor{comment}{/*}}
+\DoxyCodeLine{2 \textcolor{comment}{ Copyright (c) 2021-\/2023. Sylvain Guillet (sylvain.guillet@tutamail.com)}}
+\DoxyCodeLine{3 \textcolor{comment}{ */}}
+\DoxyCodeLine{4 \textcolor{preprocessor}{\#ifndef QUATERNION\_H}}
+\DoxyCodeLine{5 \textcolor{preprocessor}{\#define QUATERNION\_H}}
+\DoxyCodeLine{6 }
+\DoxyCodeLine{7 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{Matrix_8h}{Matrix.h}}>}}
+\DoxyCodeLine{8 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{Vector3D_8h}{Vector3D.h}}>}}
+\DoxyCodeLine{9 }
+\DoxyCodeLine{10 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1SDK_1_1Math}{IO::SDK::Math}}}
+\DoxyCodeLine{11 \{}
+\DoxyCodeLine{12     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Quaternion}{Quaternion}}}
+\DoxyCodeLine{13     \{}
+\DoxyCodeLine{14     \textcolor{keyword}{private}:}
+\DoxyCodeLine{15         \textcolor{keyword}{const} \textcolor{keywordtype}{double} m\_q0\{\}, m\_q1\{\}, m\_q2\{\}, m\_q3\{\};}
 \DoxyCodeLine{16 }
-\DoxyCodeLine{17 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1SDK_1_1Math}{IO::SDK::Math}}}
-\DoxyCodeLine{18 \{}
-\DoxyCodeLine{19     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Quaternion}{Quaternion}}}
-\DoxyCodeLine{20     \{}
-\DoxyCodeLine{21     \textcolor{keyword}{private}:}
-\DoxyCodeLine{22         \textcolor{keyword}{const} \textcolor{keywordtype}{double} m\_q0\{\}, m\_q1\{\}, m\_q2\{\}, m\_q3\{\};}
+\DoxyCodeLine{17     \textcolor{keyword}{public}:}
+\DoxyCodeLine{22         \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Quaternion_a95f689be6d7ca35cb322b57a284ae9e5}{Quaternion}}();}
 \DoxyCodeLine{23 }
-\DoxyCodeLine{24     \textcolor{keyword}{public}:}
-\DoxyCodeLine{29         \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Quaternion_a95f689be6d7ca35cb322b57a284ae9e5}{Quaternion}}();}
-\DoxyCodeLine{30 }
-\DoxyCodeLine{39         \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Quaternion_a95f689be6d7ca35cb322b57a284ae9e5}{Quaternion}}(\textcolor{keywordtype}{double} q0, \textcolor{keywordtype}{double} q1, \textcolor{keywordtype}{double} q2, \textcolor{keywordtype}{double} q3);}
-\DoxyCodeLine{40 }
-\DoxyCodeLine{47         \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Quaternion_a95f689be6d7ca35cb322b57a284ae9e5}{Quaternion}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO::SDK::Math::Vector3D}} \&axis, \textcolor{keywordtype}{double} angle);}
+\DoxyCodeLine{32         \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Quaternion_a95f689be6d7ca35cb322b57a284ae9e5}{Quaternion}}(\textcolor{keywordtype}{double} q0, \textcolor{keywordtype}{double} q1, \textcolor{keywordtype}{double} q2, \textcolor{keywordtype}{double} q3);}
+\DoxyCodeLine{33 }
+\DoxyCodeLine{40         \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Quaternion_a95f689be6d7ca35cb322b57a284ae9e5}{Quaternion}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO::SDK::Math::Vector3D}} \&axis, \textcolor{keywordtype}{double} angle);}
+\DoxyCodeLine{41 }
+\DoxyCodeLine{47         \textcolor{keyword}{explicit} \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Quaternion_a95f689be6d7ca35cb322b57a284ae9e5}{Quaternion}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Matrix}{IO::SDK::Math::Matrix}} \&mtx);}
 \DoxyCodeLine{48 }
-\DoxyCodeLine{54         \textcolor{keyword}{explicit} \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Quaternion_a95f689be6d7ca35cb322b57a284ae9e5}{Quaternion}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Matrix}{IO::SDK::Math::Matrix}} \&mtx);}
-\DoxyCodeLine{55 }
-\DoxyCodeLine{61         \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Quaternion_a95f689be6d7ca35cb322b57a284ae9e5}{Quaternion}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Quaternion}{Quaternion}} \&quaternion);}
-\DoxyCodeLine{62         }
-\DoxyCodeLine{63 }
+\DoxyCodeLine{54         \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Quaternion_a95f689be6d7ca35cb322b57a284ae9e5}{Quaternion}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Quaternion}{Quaternion}} \&quaternion);}
+\DoxyCodeLine{55         }
+\DoxyCodeLine{56 }
+\DoxyCodeLine{57 }
+\DoxyCodeLine{58         \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Quaternion}{Quaternion}} \&\mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Quaternion_ae59d55058521c5d03f78fe5d1feba1b0}{operator=}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Quaternion}{Quaternion}} \&quaternion);}
+\DoxyCodeLine{59 }
+\DoxyCodeLine{60         [[nodiscard]] \textcolor{keyword}{inline} \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Quaternion_aee90e93b8055151bd2701d1ff6190368}{GetQ0}}()\textcolor{keyword}{ const }\{ \textcolor{keywordflow}{return} m\_q0; \}}
+\DoxyCodeLine{61         [[nodiscard]] \textcolor{keyword}{inline} \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Quaternion_a9c1681461c2216e31229a4ceb8e9784c}{GetQ1}}()\textcolor{keyword}{ const }\{ \textcolor{keywordflow}{return} m\_q1; \}}
+\DoxyCodeLine{62         [[nodiscard]] \textcolor{keyword}{inline} \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Quaternion_a1de23898c4069fbfed3dc275b36ac857}{GetQ2}}()\textcolor{keyword}{ const }\{ \textcolor{keywordflow}{return} m\_q2; \}}
+\DoxyCodeLine{63         [[nodiscard]] \textcolor{keyword}{inline} \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Quaternion_a63504a38c3a7443e61777ccb2f32351c}{GetQ3}}()\textcolor{keyword}{ const }\{ \textcolor{keywordflow}{return} m\_q3; \}}
 \DoxyCodeLine{64 }
-\DoxyCodeLine{65         \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Quaternion}{Quaternion}} \&\mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Quaternion_ae59d55058521c5d03f78fe5d1feba1b0}{operator=}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Quaternion}{Quaternion}} \&quaternion);}
-\DoxyCodeLine{66 }
-\DoxyCodeLine{67         [[nodiscard]] \textcolor{keyword}{inline} \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Quaternion_aee90e93b8055151bd2701d1ff6190368}{GetQ0}}()\textcolor{keyword}{ const }\{ \textcolor{keywordflow}{return} m\_q0; \}}
-\DoxyCodeLine{68         [[nodiscard]] \textcolor{keyword}{inline} \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Quaternion_a9c1681461c2216e31229a4ceb8e9784c}{GetQ1}}()\textcolor{keyword}{ const }\{ \textcolor{keywordflow}{return} m\_q1; \}}
-\DoxyCodeLine{69         [[nodiscard]] \textcolor{keyword}{inline} \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Quaternion_a1de23898c4069fbfed3dc275b36ac857}{GetQ2}}()\textcolor{keyword}{ const }\{ \textcolor{keywordflow}{return} m\_q2; \}}
-\DoxyCodeLine{70         [[nodiscard]] \textcolor{keyword}{inline} \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Quaternion_a63504a38c3a7443e61777ccb2f32351c}{GetQ3}}()\textcolor{keyword}{ const }\{ \textcolor{keywordflow}{return} m\_q3; \}}
-\DoxyCodeLine{71 }
-\DoxyCodeLine{78         [[nodiscard]] \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Quaternion}{IO::SDK::Math::Quaternion}} \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Quaternion_a4d1d1aa368eeb9332b0725fabd2e9c06}{Multiply}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Quaternion}{Quaternion}} \&quaternion) \textcolor{keyword}{const};}
-\DoxyCodeLine{79 }
-\DoxyCodeLine{86         \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Quaternion}{IO::SDK::Math::Quaternion}} \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Quaternion_a523d3c591c5c944a1cf924d1a1b9843b}{operator*}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Quaternion}{Quaternion}} \&quaternion) \textcolor{keyword}{const};}
+\DoxyCodeLine{71         [[nodiscard]] \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Quaternion}{IO::SDK::Math::Quaternion}} \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Quaternion_a4d1d1aa368eeb9332b0725fabd2e9c06}{Multiply}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Quaternion}{Quaternion}} \&quaternion) \textcolor{keyword}{const};}
+\DoxyCodeLine{72 }
+\DoxyCodeLine{79         \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Quaternion}{IO::SDK::Math::Quaternion}} \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Quaternion_a523d3c591c5c944a1cf924d1a1b9843b}{operator*}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Quaternion}{Quaternion}} \&quaternion) \textcolor{keyword}{const};}
+\DoxyCodeLine{80 }
+\DoxyCodeLine{86         [[nodiscard]] \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Matrix}{IO::SDK::Math::Matrix}} \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Quaternion_aa390ea618eb9086ad2be5844ff52023e}{GetMatrix}}() \textcolor{keyword}{const};}
 \DoxyCodeLine{87 }
-\DoxyCodeLine{93         [[nodiscard]] \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Matrix}{IO::SDK::Math::Matrix}} \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Quaternion_aa390ea618eb9086ad2be5844ff52023e}{GetMatrix}}() \textcolor{keyword}{const};}
+\DoxyCodeLine{93         [[nodiscard]] \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Quaternion_aeacd14768f5d2df97236d1c66dd3ea42}{Magnitude}}() \textcolor{keyword}{const};}
 \DoxyCodeLine{94 }
-\DoxyCodeLine{100         [[nodiscard]] \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Quaternion_aeacd14768f5d2df97236d1c66dd3ea42}{Magnitude}}() \textcolor{keyword}{const};}
+\DoxyCodeLine{100         [[nodiscard]] \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Quaternion}{Quaternion}} \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Quaternion_ae251cdfb0eef0b1a7b224b6246f7c1eb}{Normalize}}() \textcolor{keyword}{const};}
 \DoxyCodeLine{101 }
-\DoxyCodeLine{107         [[nodiscard]] \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Quaternion}{Quaternion}} \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Quaternion_ae251cdfb0eef0b1a7b224b6246f7c1eb}{Normalize}}() \textcolor{keyword}{const};}
-\DoxyCodeLine{108 }
-\DoxyCodeLine{113         [[nodiscard]] \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Quaternion}{Quaternion}} \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Quaternion_ad860eb5afc90d22a9824a66556428834}{Conjugate}}() \textcolor{keyword}{const};}
-\DoxyCodeLine{114     \};}
-\DoxyCodeLine{115 \}}
-\DoxyCodeLine{116 \textcolor{preprocessor}{\#endif }\textcolor{comment}{// !QUATERNION\_H}}
+\DoxyCodeLine{106         [[nodiscard]] \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Quaternion}{Quaternion}} \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Quaternion_ad860eb5afc90d22a9824a66556428834}{Conjugate}}() \textcolor{keyword}{const};}
+\DoxyCodeLine{107     \};}
+\DoxyCodeLine{108 \}}
+\DoxyCodeLine{109 \textcolor{preprocessor}{\#endif }\textcolor{comment}{// !QUATERNION\_H}}
 
 \end{DoxyCode}

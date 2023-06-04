@@ -1,18 +1,10 @@
-/**
- * @file ManeuverBase.cpp
- * @author Sylvain Guillet (sylvain.guillet@live.com)
- * @brief 
- * @version 0.x
- * @date 2021-07-03
- * 
- * @copyright Copyright (c) 2021
- * 
+/*
+ Copyright (c) 2021-2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
  */
 #include <ManeuverBase.h>
 #include <Constants.h>
 
-#include <utility>
-#include "TooEarlyManeuverException.h"
+#include <TooEarlyManeuverException.h>
 
 using namespace std::literals::chrono_literals;
 
@@ -172,7 +164,7 @@ void IO::SDK::Maneuvers::ManeuverBase::ExecuteAt(const IO::SDK::OrbitalParameter
     }
 
     //propagate from the nearest value up to begin epoch
-    auto beginState = nearestLowerState->GetStateVector(m_attitudeWindow->GetStartDate());
+    auto beginState = nearestLowerState->ToStateVector(m_attitudeWindow->GetStartDate());
 
     //Compute orientation at beginning
     auto orientationBeginning = ComputeOrientation(beginState);
@@ -182,8 +174,8 @@ void IO::SDK::Maneuvers::ManeuverBase::ExecuteAt(const IO::SDK::OrbitalParameter
 
     //Find position at maneuver end
     //Add deltaV vector to maneuver point
-    IO::SDK::OrbitalParameters::StateVector newManeuverState(maneuverPoint.GetCenterOfMotion(), maneuverPoint.GetStateVector().GetPosition(),
-                                                             maneuverPoint.GetStateVector().GetVelocity() + *m_deltaV, maneuverPoint.GetEpoch(), maneuverPoint.GetFrame());
+    IO::SDK::OrbitalParameters::StateVector newManeuverState(maneuverPoint.GetCenterOfMotion(), maneuverPoint.ToStateVector().GetPosition(),
+                                                             maneuverPoint.ToStateVector().GetVelocity() + *m_deltaV, maneuverPoint.GetEpoch(), maneuverPoint.GetFrame());
 
     //Write Data in propagator
     //Erase unnecessary vector states
@@ -203,7 +195,7 @@ void IO::SDK::Maneuvers::ManeuverBase::ExecuteAt(const IO::SDK::OrbitalParameter
         {
             IO::SDK::Time::TimeSpan ts(std::chrono::duration<double>(i * stepSize));
             //Propagate from new maneuver point up to end maneuver epoch
-            auto intermediateState = newManeuverState.GetStateVector(maneuverPoint.GetEpoch().Add(ts));
+            auto intermediateState = newManeuverState.ToStateVector(maneuverPoint.GetEpoch().Add(ts));
 
             // Compute orientation at end
             auto intermediateOrientation = ComputeOrientation(intermediateState);
@@ -216,7 +208,7 @@ void IO::SDK::Maneuvers::ManeuverBase::ExecuteAt(const IO::SDK::OrbitalParameter
         }
 
         //Propagate from new maneuver point up to end maneuver epoch
-        auto endState = newManeuverState.GetStateVector(m_attitudeWindow->GetEndDate());
+        auto endState = newManeuverState.ToStateVector(m_attitudeWindow->GetEndDate());
 
         // Compute orientation at end
         auto orientationEnd = ComputeOrientation(endState);

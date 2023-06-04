@@ -143,7 +143,7 @@ TEST(EquinoctialElements, GetStateVector) {
                                                        IO::SDK::Frames::InertialFrames::GetICRF());
 
     IO::SDK::Time::TimeSpan et = t0.Subtract(IO::SDK::Time::TDB(10000.0s));
-    auto sv = eq.GetStateVector(IO::SDK::Time::TDB(et.GetSeconds() + 250s));
+    auto sv = eq.ToStateVector(IO::SDK::Time::TDB(et.GetSeconds() + 250s));
 
     ASSERT_DOUBLE_EQ(-10732167.450808318, sv.GetPosition().GetX());
     ASSERT_DOUBLE_EQ(3902505.7550668186, sv.GetPosition().GetY());
@@ -151,6 +151,39 @@ TEST(EquinoctialElements, GetStateVector) {
     ASSERT_DOUBLE_EQ(-2540.7668779537798, sv.GetVelocity().GetX());
     ASSERT_DOUBLE_EQ(-5152.2692064337361, sv.GetVelocity().GetY());
     ASSERT_DOUBLE_EQ(-761.57580784783909, sv.GetVelocity().GetZ());
+}
+
+TEST(EquinoctialElements, GetStateVectorAtEpoch) {
+    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
+
+    //keplerian elements
+    double p = 1.0e7;
+    double ecc = 0.1;
+    double a = p / (1. - ecc);
+    double argp = 30.0 * rpd_c();
+    double node = 15.0 * rpd_c();
+    double inc = 10.0 * rpd_c();
+    double m0 = 45.0 * rpd_c();
+    IO::SDK::Time::TDB t0{-100000000.0s};
+
+    //equinoctial elements
+    double h = ecc * sin(argp + node);
+    double k = ecc * cos(argp + node);
+    double p2 = tan(inc / 2.) * sin(node);
+    double q = tan(inc / 2.) * cos(node);
+    double L = m0 + argp + node;
+
+    IO::SDK::OrbitalParameters::EquinoctialElements eq(earth, t0, a, h, k, p2, q, L, 0.0, 0.0, -IO::SDK::Constants::PI2, IO::SDK::Constants::PI2,
+                                                       IO::SDK::Frames::InertialFrames::GetICRF());
+
+    auto sv = eq.ToStateVector(t0);
+
+    ASSERT_DOUBLE_EQ(-1557343.2179623565, sv.GetPosition().GetX());
+    ASSERT_DOUBLE_EQ(10112046.56492505, sv.GetPosition().GetY());
+    ASSERT_DOUBLE_EQ(1793343.6111546031, sv.GetPosition().GetZ());
+    ASSERT_DOUBLE_EQ(-6369.0795341145204, sv.GetVelocity().GetX());
+    ASSERT_DOUBLE_EQ(-517.51239201161684, sv.GetVelocity().GetY());
+    ASSERT_DOUBLE_EQ(202.52220483204573, sv.GetVelocity().GetZ());
 }
 
 TEST(EquinoctialElements, GetStateVectorFromKeplerian) {
@@ -169,7 +202,7 @@ TEST(EquinoctialElements, GetStateVectorFromKeplerian) {
     IO::SDK::OrbitalParameters::EquinoctialElements eq(earth, a, ecc, inc, argp, node, m0, 0.0, 0.0, -IO::SDK::Constants::PI2, IO::SDK::Constants::PI2, t0,
                                                        IO::SDK::Frames::InertialFrames::GetICRF());
 
-    auto sv = eq.GetStateVector(t0);
+    auto sv = eq.ToStateVector(t0);
 
     ASSERT_DOUBLE_EQ(1.0e7, sv.GetPosition().GetX());
     ASSERT_DOUBLE_EQ(6.1232339957367665e-10, sv.GetPosition().GetY());

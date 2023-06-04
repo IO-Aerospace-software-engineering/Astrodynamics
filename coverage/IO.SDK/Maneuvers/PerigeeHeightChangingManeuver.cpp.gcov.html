@@ -85,7 +85,7 @@
 <a name="23"><span class="lineNum">      23 </span>            : </a>
 <a name="24"><span class="lineNum">      24 </span><span class="lineCov">          2 : void IO::SDK::Maneuvers::PerigeeHeightChangingManeuver::Compute(const IO::SDK::OrbitalParameters::OrbitalParameters &amp;maneuverPoint)</span></a>
 <a name="25"><span class="lineNum">      25 </span>            : {</a>
-<a name="26"><span class="lineNum">      26 </span><span class="lineCov">          2 :     double vInit = maneuverPoint.GetStateVector().GetVelocity().Magnitude();</span></a>
+<a name="26"><span class="lineNum">      26 </span><span class="lineCov">          2 :     double vInit = maneuverPoint.ToStateVector().GetVelocity().Magnitude();</span></a>
 <a name="27"><span class="lineNum">      27 </span><span class="lineCov">          2 :     double vFinal = std::sqrt(maneuverPoint.GetCenterOfMotion()-&gt;GetMu() * ((2.0 / maneuverPoint.GetApogeeVector().Magnitude()) - (1.0 / ((maneuverPoint.GetApogeeVector().Magnitude() + m_targetHeight) / 2.0))));</span></a>
 <a name="28"><span class="lineNum">      28 </span><span class="lineCov">          2 :     m_deltaV = std::make_unique&lt;IO::SDK::Math::Vector3D&gt;(m_spacecraft.Front.Rotate(ComputeOrientation(maneuverPoint).GetQuaternion()).Normalize() * std::abs(vFinal - vInit));</span></a>
 <a name="29"><span class="lineNum">      29 </span><span class="lineCov">          2 : }</span></a>
@@ -93,7 +93,7 @@
 <a name="31"><span class="lineNum">      31 </span><span class="lineCov">          6 : IO::SDK::OrbitalParameters::StateOrientation IO::SDK::Maneuvers::PerigeeHeightChangingManeuver::ComputeOrientation(const IO::SDK::OrbitalParameters::OrbitalParameters &amp;maneuverPoint)</span></a>
 <a name="32"><span class="lineNum">      32 </span>            : {</a>
 <a name="33"><span class="lineNum">      33 </span><span class="lineCov">          6 :     double deltaH = m_targetHeight - maneuverPoint.GetPerigeeVector().Magnitude();</span></a>
-<a name="34"><span class="lineNum">      34 </span><span class="lineCov">          6 :     auto velocityVector = maneuverPoint.GetStateVector().GetVelocity().Normalize();</span></a>
+<a name="34"><span class="lineNum">      34 </span><span class="lineCov">          6 :     auto velocityVector = maneuverPoint.ToStateVector().GetVelocity().Normalize();</span></a>
 <a name="35"><span class="lineNum">      35 </span>            : </a>
 <a name="36"><span class="lineNum">      36 </span>            :     //Check if it's a retrograde burn</a>
 <a name="37"><span class="lineNum">      37 </span><span class="lineCov">          6 :     if (deltaH &lt; 0.0)</span></a>
@@ -111,7 +111,7 @@
 <a name="49"><span class="lineNum">      49 </span><span class="lineCov">          2 :         return true;</span></a>
 <a name="50"><span class="lineNum">      50 </span>            :     }</a>
 <a name="51"><span class="lineNum">      51 </span>            : </a>
-<a name="52"><span class="lineNum">      52 </span><span class="lineCov">          4 :     bool isApproachingApogee = IsApproachingApogee(orbitalParams.GetStateVector());</span></a>
+<a name="52"><span class="lineNum">      52 </span><span class="lineCov">          4 :     bool isApproachingApogee = IsApproachingApogee(orbitalParams.ToStateVector());</span></a>
 <a name="53"><span class="lineNum">      53 </span>            : </a>
 <a name="54"><span class="lineNum">      54 </span>            :     //If approaching is not initialized</a>
 <a name="55"><span class="lineNum">      55 </span><span class="lineCov">          4 :     if (!m_isApproachingApogee)</span></a>

@@ -1,17 +1,8 @@
-/**
- * @file Propagator.cpp
- * @author Sylvain Guillet (sylvain.guillet@live.com)
- * @brief 
- * @version 0.x
- * @date 2021-06-11
- * 
- * @copyright Copyright (c) 2021
- * 
+/*
+ Copyright (c) 2021-2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
  */
-#include <Propagator.h>
 #include <PropagatorException.h>
 #include <ManeuverBase.h>
-#include <StateOrientation.h>
 
 using namespace std::chrono_literals;
 
@@ -30,7 +21,7 @@ void IO::SDK::Propagators::Propagator::SetStandbyManeuver(IO::SDK::Maneuvers::Ma
 void IO::SDK::Propagators::Propagator::Propagate()
 {
     //Initialize state vector
-    IO::SDK::OrbitalParameters::StateVector stateVector{m_spacecraft.GetOrbitalParametersAtEpoch()->GetStateVector(m_window.GetStartDate())};
+    IO::SDK::OrbitalParameters::StateVector stateVector{m_spacecraft.GetOrbitalParametersAtEpoch()->ToStateVector(m_window.GetStartDate())};
     m_stateVectors.push_back(stateVector);
 
     // Initial alignment, Spacecraft back points toward the center of motion

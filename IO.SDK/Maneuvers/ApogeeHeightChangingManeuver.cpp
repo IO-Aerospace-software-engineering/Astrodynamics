@@ -1,12 +1,5 @@
-/**
- * @file ApogeeHeightChangingManeuver.cpp
- * @author Sylvain Guillet (sylvain.guillet@live.com)
- * @brief 
- * @version 0.x
- * @date 2021-07-03
- * 
- * @copyright Copyright (c) 2021
- * 
+/*
+ Copyright (c) 2021-2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
  */
 #include <ApogeeHeightChangingManeuver.h>
 #include <cmath>
@@ -23,15 +16,15 @@ IO::SDK::Maneuvers::ApogeeHeightChangingManeuver::ApogeeHeightChangingManeuver(s
 
 void IO::SDK::Maneuvers::ApogeeHeightChangingManeuver::Compute(const IO::SDK::OrbitalParameters::OrbitalParameters &maneuverPoint)
 {
-    double vInit = maneuverPoint.GetStateVector().GetVelocity().Magnitude();
+    double vInit = maneuverPoint.ToStateVector().GetVelocity().Magnitude();
     double vFinal = std::sqrt(maneuverPoint.GetCenterOfMotion()->GetMu() * ((2.0 / maneuverPoint.GetPerigeeVector().Magnitude()) - (1.0 / ((maneuverPoint.GetPerigeeVector().Magnitude() + m_targetHeight) / 2.0))));
-    m_deltaV = std::make_unique<IO::SDK::Math::Vector3D>(maneuverPoint.GetStateVector().GetVelocity().Normalize() * (vFinal - vInit));
+    m_deltaV = std::make_unique<IO::SDK::Math::Vector3D>(maneuverPoint.ToStateVector().GetVelocity().Normalize() * (vFinal - vInit));
 }
 
 IO::SDK::OrbitalParameters::StateOrientation IO::SDK::Maneuvers::ApogeeHeightChangingManeuver::ComputeOrientation(const IO::SDK::OrbitalParameters::OrbitalParameters &maneuverPoint)
 {
     double deltaH = m_targetHeight - maneuverPoint.GetApogeeVector().Magnitude();
-    auto velocityVector = maneuverPoint.GetStateVector().GetVelocity().Normalize();
+    auto velocityVector = maneuverPoint.ToStateVector().GetVelocity().Normalize();
 
     //Check if it's a retrograde burn
     if (deltaH < 0.0)

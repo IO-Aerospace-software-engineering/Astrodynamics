@@ -7,6 +7,8 @@ var searchData=
   ['enginedto_2eh_4',['EngineDTO.h',['../EngineDTO_8h.html',1,'']]],
   ['ephemeriskernel_2ecpp_5',['EphemerisKernel.cpp',['../EphemerisKernel_8cpp.html',1,'']]],
   ['ephemeriskernel_2eh_6',['EphemerisKernel.h',['../EphemerisKernel_8h.html',1,'']]],
-  ['equinoctialelements_2ecpp_7',['EquinoctialElements.cpp',['../EquinoctialElements_8cpp.html',1,'']]],
-  ['equinoctialelements_2eh_8',['EquinoctialElements.h',['../EquinoctialElements_8h.html',1,'']]]
+  ['equatorial_2eh_7',['Equatorial.h',['../Equatorial_8h.html',1,'']]],
+  ['equinoctialelements_2ecpp_8',['EquinoctialElements.cpp',['../EquinoctialElements_8cpp.html',1,'']]],
+  ['equinoctialelements_2eh_9',['EquinoctialElements.h',['../EquinoctialElements_8h.html',1,'']]],
+  ['equinoctialelementsdto_2eh_10',['EquinoctialElementsDTO.h',['../EquinoctialElementsDTO_8h.html',1,'']]]
 ];

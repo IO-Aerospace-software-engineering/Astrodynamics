@@ -120,10 +120,10 @@
 <a name="58"><span class="lineNum">      58 </span>            : </a>
 <a name="59"><span class="lineNum">      59 </span><span class="lineCov">          4 : IO::SDK::Math::Vector3D IO::SDK::OrbitalParameters::EquinoctialElements::GetSpecificAngularMomentum() const</span></a>
 <a name="60"><span class="lineNum">      60 </span>            : {</a>
-<a name="61"><span class="lineNum">      61 </span><span class="lineCov">          4 :         return GetStateVector(m_epoch).GetSpecificAngularMomentum();</span></a>
+<a name="61"><span class="lineNum">      61 </span><span class="lineCov">          4 :         return ToStateVector(m_epoch).GetSpecificAngularMomentum();</span></a>
 <a name="62"><span class="lineNum">      62 </span>            : }</a>
 <a name="63"><span class="lineNum">      63 </span>            : </a>
-<a name="64"><span class="lineNum">      64 </span><span class="lineCov">         15 : IO::SDK::OrbitalParameters::StateVector IO::SDK::OrbitalParameters::EquinoctialElements::GetStateVector(const IO::SDK::Time::TDB &amp;epoch) const</span></a>
+<a name="64"><span class="lineNum">      64 </span><span class="lineCov">         15 : IO::SDK::OrbitalParameters::StateVector IO::SDK::OrbitalParameters::EquinoctialElements::ToStateVector(const IO::SDK::Time::TDB &amp;epoch) const</span></a>
 <a name="65"><span class="lineNum">      65 </span>            : {</a>
 <a name="66"><span class="lineNum">      66 </span><span class="lineCov">         15 :         double state[6]{};</span></a>
 <a name="67"><span class="lineNum">      67 </span><span class="lineCov">         15 :         eqncpv_c(epoch.GetSecondsFromJ2000().count(), m_epoch.GetSecondsFromJ2000().count(), m_elements, m_rightAscensionOfThePole, m_declinationOfThePole, state);</span></a>
@@ -157,7 +157,7 @@
 <a name="95"><span class="lineNum">      95 </span>            : </a>
 <a name="96"><span class="lineNum">      96 </span><span class="lineCov">          1 : double IO::SDK::OrbitalParameters::EquinoctialElements::GetSpecificOrbitalEnergy() const</span></a>
 <a name="97"><span class="lineNum">      97 </span>            : {</a>
-<a name="98"><span class="lineNum">      98 </span><span class="lineCov">          1 :         return GetStateVector(m_epoch).GetSpecificOrbitalEnergy();</span></a>
+<a name="98"><span class="lineNum">      98 </span><span class="lineCov">          1 :         return ToStateVector(m_epoch).GetSpecificOrbitalEnergy();</span></a>
 <a name="99"><span class="lineNum">      99 </span>            : }</a>
 </pre>
       </td>

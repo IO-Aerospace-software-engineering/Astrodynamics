@@ -2,90 +2,94 @@
 \label{Scenario_8h_source}\index{IO.SDK/Scenario/Scenario.h@{IO.SDK/Scenario/Scenario.h}}
 \mbox{\hyperlink{Scenario_8h}{Go to the documentation of this file.}}
 \begin{DoxyCode}{0}
-\DoxyCodeLine{1 \textcolor{comment}{//}}
-\DoxyCodeLine{2 \textcolor{comment}{// Created by s.guillet on 23/02/2023.}}
-\DoxyCodeLine{3 \textcolor{comment}{//}}
+\DoxyCodeLine{1 \textcolor{comment}{/*}}
+\DoxyCodeLine{2 \textcolor{comment}{ Copyright (c) 2023. Sylvain Guillet (sylvain.guillet@tutamail.com)}}
+\DoxyCodeLine{3 \textcolor{comment}{ */}}
 \DoxyCodeLine{4 }
-\DoxyCodeLine{5 \textcolor{preprocessor}{\#ifndef IOSDK\_SCENARIO\_H}}
-\DoxyCodeLine{6 \textcolor{preprocessor}{\#define IOSDK\_SCENARIO\_H}}
-\DoxyCodeLine{7 }
-\DoxyCodeLine{8 \textcolor{preprocessor}{\#include <map>}}
-\DoxyCodeLine{9 }
-\DoxyCodeLine{10 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{VVIntegrator_8h}{VVIntegrator.h}}>}}
-\DoxyCodeLine{11 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{LaunchWindow_8h}{LaunchWindow.h}}>}}
-\DoxyCodeLine{12 \textcolor{preprocessor}{\#include "{}\mbox{\hyperlink{Propagator_8h}{Propagator.h}}"{}}}
+\DoxyCodeLine{5 \textcolor{comment}{//}}
+\DoxyCodeLine{6 \textcolor{comment}{// Created by s.guillet on 23/02/2023.}}
+\DoxyCodeLine{7 \textcolor{comment}{//}}
+\DoxyCodeLine{8 }
+\DoxyCodeLine{9 \textcolor{preprocessor}{\#ifndef IOSDK\_SCENARIO\_H}}
+\DoxyCodeLine{10 \textcolor{preprocessor}{\#define IOSDK\_SCENARIO\_H}}
+\DoxyCodeLine{11 }
+\DoxyCodeLine{12 \textcolor{preprocessor}{\#include <map>}}
 \DoxyCodeLine{13 }
-\DoxyCodeLine{14 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1SDK_1_1Integrators}{IO::SDK::Integrators}}}
-\DoxyCodeLine{15 \{}
-\DoxyCodeLine{16     \textcolor{keyword}{class }VVIntegrator;}
-\DoxyCodeLine{17 \}}
-\DoxyCodeLine{18 }
-\DoxyCodeLine{19 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1SDK_1_1Constraints_1_1Parameters}{IO::SDK::Constraints::Parameters}}}
-\DoxyCodeLine{20 \{}
-\DoxyCodeLine{21     \textcolor{keyword}{class }ByDayParameters;}
+\DoxyCodeLine{14 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{VVIntegrator_8h}{VVIntegrator.h}}>}}
+\DoxyCodeLine{15 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{LaunchWindow_8h}{LaunchWindow.h}}>}}
+\DoxyCodeLine{16 \textcolor{preprocessor}{\#include "{}\mbox{\hyperlink{Propagator_8h}{Propagator.h}}"{}}}
+\DoxyCodeLine{17 }
+\DoxyCodeLine{18 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1SDK_1_1Integrators}{IO::SDK::Integrators}}}
+\DoxyCodeLine{19 \{}
+\DoxyCodeLine{20     \textcolor{keyword}{class }VVIntegrator;}
+\DoxyCodeLine{21 \}}
 \DoxyCodeLine{22 }
-\DoxyCodeLine{23     \textcolor{keyword}{class }ByNightParameters;}
-\DoxyCodeLine{24 }
-\DoxyCodeLine{25     \textcolor{keyword}{class }BodyVisibilityFromSiteParameters;}
+\DoxyCodeLine{23 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1SDK_1_1Constraints_1_1Parameters}{IO::SDK::Constraints::Parameters}}}
+\DoxyCodeLine{24 \{}
+\DoxyCodeLine{25     \textcolor{keyword}{class }ByDayParameters;}
 \DoxyCodeLine{26 }
-\DoxyCodeLine{27     \textcolor{keyword}{class }OccultationParameters;}
+\DoxyCodeLine{27     \textcolor{keyword}{class }ByNightParameters;}
 \DoxyCodeLine{28 }
-\DoxyCodeLine{29     \textcolor{keyword}{class }DistanceParameters;}
+\DoxyCodeLine{29     \textcolor{keyword}{class }BodyVisibilityFromSiteParameters;}
 \DoxyCodeLine{30 }
-\DoxyCodeLine{31     \textcolor{keyword}{class }InFieldOfViewParameters;}
+\DoxyCodeLine{31     \textcolor{keyword}{class }OccultationParameters;}
 \DoxyCodeLine{32 }
-\DoxyCodeLine{33     \textcolor{keyword}{class }LaunchParameters;}
-\DoxyCodeLine{34 \}}
-\DoxyCodeLine{35 }
-\DoxyCodeLine{36 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1SDK}{IO::SDK}}}
-\DoxyCodeLine{37 \{}
-\DoxyCodeLine{38     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1SDK_1_1Scenario}{Scenario}}}
-\DoxyCodeLine{39     \{}
-\DoxyCodeLine{40     \textcolor{keyword}{private}:}
-\DoxyCodeLine{41         \textcolor{keyword}{const} std::string m\_name;}
-\DoxyCodeLine{42         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO::SDK::Time::Window<IO::SDK::Time::UTC>}} m\_windows;}
-\DoxyCodeLine{43         std::vector<const IO::SDK::Body::CelestialBody *> m\_celestialBodies;}
-\DoxyCodeLine{44         std::vector<const IO::SDK::Sites::Site *> m\_sites;}
-\DoxyCodeLine{45 }
-\DoxyCodeLine{46         \mbox{\hyperlink{classIO_1_1SDK_1_1Integrators_1_1Forces_1_1GravityForce}{IO::SDK::Integrators::Forces::GravityForce}} m\_gravityForce;}
-\DoxyCodeLine{47         std::vector<IO::SDK::Integrators::Forces::Force *> m\_forces\{\&m\_gravityForce\};}
-\DoxyCodeLine{48         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Integrators_1_1VVIntegrator}{IO::SDK::Integrators::VVIntegrator}} m\_integrator;}
+\DoxyCodeLine{33     \textcolor{keyword}{class }DistanceParameters;}
+\DoxyCodeLine{34 }
+\DoxyCodeLine{35     \textcolor{keyword}{class }InFieldOfViewParameters;}
+\DoxyCodeLine{36 }
+\DoxyCodeLine{37     \textcolor{keyword}{class }LaunchParameters;}
+\DoxyCodeLine{38 \}}
+\DoxyCodeLine{39 }
+\DoxyCodeLine{40 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1SDK}{IO::SDK}}}
+\DoxyCodeLine{41 \{}
+\DoxyCodeLine{42     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1SDK_1_1Scenario}{Scenario}}}
+\DoxyCodeLine{43     \{}
+\DoxyCodeLine{44     \textcolor{keyword}{private}:}
+\DoxyCodeLine{45         \textcolor{keyword}{const} std::string m\_name;}
+\DoxyCodeLine{46         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO::SDK::Time::Window<IO::SDK::Time::UTC>}} m\_windows;}
+\DoxyCodeLine{47         std::vector<const IO::SDK::Body::CelestialBody *> m\_celestialBodies;}
+\DoxyCodeLine{48         std::vector<const IO::SDK::Sites::Site *> m\_sites;}
 \DoxyCodeLine{49 }
-\DoxyCodeLine{50         std::unique\_ptr<Propagators::Propagator> m\_propagator;}
-\DoxyCodeLine{51         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft}{Body::Spacecraft::Spacecraft}} *m\_spacecraft\{\textcolor{keyword}{nullptr}\};}
-\DoxyCodeLine{52 }
-\DoxyCodeLine{53     \textcolor{keyword}{public}:}
-\DoxyCodeLine{54         \mbox{\hyperlink{classIO_1_1SDK_1_1Scenario_a7e05864ac61004dab277fe3f9ac263e7}{Scenario}}(std::string name, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO::SDK::Time::Window<IO::SDK::Time::UTC>}} \&windows);}
-\DoxyCodeLine{55 }
-\DoxyCodeLine{60         \textcolor{keywordtype}{void} \mbox{\hyperlink{classIO_1_1SDK_1_1Scenario_a786a1044cf68de4ecc85aef250f01eba}{AddCelestialBody}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1CelestialBody}{IO::SDK::Body::CelestialBody}} \&celestialBody);}
-\DoxyCodeLine{61 }
-\DoxyCodeLine{66         \textcolor{keywordtype}{void} \mbox{\hyperlink{classIO_1_1SDK_1_1Scenario_ade87552a4da5e253547c5cb44e22ea69}{AttachSpacecraft}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft}{IO::SDK::Body::Spacecraft::Spacecraft}} \&spacecraft);}
-\DoxyCodeLine{67 }
-\DoxyCodeLine{72         \textcolor{keywordtype}{void} \mbox{\hyperlink{classIO_1_1SDK_1_1Scenario_a8468e291b7910ec50fab34035bf1e178}{AddSite}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site}{IO::SDK::Sites::Site}} \&site);}
-\DoxyCodeLine{73 }
-\DoxyCodeLine{78         [[nodiscard]] \textcolor{keyword}{inline} std::string \mbox{\hyperlink{classIO_1_1SDK_1_1Scenario_ad5481ea666b9fcbb012f0308a9446654}{GetName}}()\textcolor{keyword}{ const}}
-\DoxyCodeLine{79 \textcolor{keyword}{        }\{ \textcolor{keywordflow}{return} m\_name; \}}
-\DoxyCodeLine{80 }
-\DoxyCodeLine{85         [[nodiscard]] \textcolor{keyword}{inline} \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO::SDK::Time::Window<IO::SDK::Time::UTC>}} \&\mbox{\hyperlink{classIO_1_1SDK_1_1Scenario_a1865a2b2b635af46f810dda630971b73}{GetWindow}}()\textcolor{keyword}{ const}}
-\DoxyCodeLine{86 \textcolor{keyword}{        }\{ \textcolor{keywordflow}{return} m\_windows; \}}
-\DoxyCodeLine{87 }
-\DoxyCodeLine{92         \textcolor{keyword}{inline} \textcolor{keyword}{const} std::vector<const IO::SDK::Body::CelestialBody *> \&\mbox{\hyperlink{classIO_1_1SDK_1_1Scenario_a6544f3a19931cd174f2f2c811d8fdf4c}{GetCelestialBodies}}()}
-\DoxyCodeLine{93         \{ \textcolor{keywordflow}{return} m\_celestialBodies; \}}
-\DoxyCodeLine{94 }
-\DoxyCodeLine{99         \textcolor{keyword}{inline} \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft}{IO::SDK::Body::Spacecraft::Spacecraft}} *\mbox{\hyperlink{classIO_1_1SDK_1_1Scenario_a76eb3dbeb26f0974b491336f2c9d5596}{GetSpacecraft}}()}
-\DoxyCodeLine{100         \{ \textcolor{keywordflow}{return} m\_spacecraft; \}}
-\DoxyCodeLine{101 }
-\DoxyCodeLine{106         \textcolor{keyword}{inline} \textcolor{keyword}{const} std::vector<const IO::SDK::Sites::Site *> \&\mbox{\hyperlink{classIO_1_1SDK_1_1Scenario_a10e011d873729fab0bd64bc73904eece}{GetSites}}()}
-\DoxyCodeLine{107         \{ \textcolor{keywordflow}{return} m\_sites; \}}
-\DoxyCodeLine{108 }
-\DoxyCodeLine{113         \textcolor{keyword}{inline} \mbox{\hyperlink{classIO_1_1SDK_1_1Propagators_1_1Propagator}{Propagators::Propagator}} \&\mbox{\hyperlink{classIO_1_1SDK_1_1Scenario_aeee297b71c3a8eeabdf538e24ad7182a}{GetPropagator}}()}
-\DoxyCodeLine{114         \{ \textcolor{keywordflow}{return} *m\_propagator; \}}
-\DoxyCodeLine{115 }
-\DoxyCodeLine{119         \textcolor{keywordtype}{void} \mbox{\hyperlink{classIO_1_1SDK_1_1Scenario_a5023a3fec59ef54ca3d1f301d8313d19}{Execute}}();}
-\DoxyCodeLine{120     \};}
-\DoxyCodeLine{121 }
-\DoxyCodeLine{122 \} \textcolor{comment}{// IO::SDK}}
-\DoxyCodeLine{123 }
-\DoxyCodeLine{124 \textcolor{preprocessor}{\#endif }\textcolor{comment}{//IOSDK\_SCENARIO\_H}}
+\DoxyCodeLine{50         \mbox{\hyperlink{classIO_1_1SDK_1_1Integrators_1_1Forces_1_1GravityForce}{IO::SDK::Integrators::Forces::GravityForce}} m\_gravityForce;}
+\DoxyCodeLine{51         std::vector<IO::SDK::Integrators::Forces::Force *> m\_forces\{\&m\_gravityForce\};}
+\DoxyCodeLine{52         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Integrators_1_1VVIntegrator}{IO::SDK::Integrators::VVIntegrator}} m\_integrator;}
+\DoxyCodeLine{53 }
+\DoxyCodeLine{54         std::unique\_ptr<Propagators::Propagator> m\_propagator;}
+\DoxyCodeLine{55         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft}{Body::Spacecraft::Spacecraft}} *m\_spacecraft\{\textcolor{keyword}{nullptr}\};}
+\DoxyCodeLine{56 }
+\DoxyCodeLine{57     \textcolor{keyword}{public}:}
+\DoxyCodeLine{58         \mbox{\hyperlink{classIO_1_1SDK_1_1Scenario_a7e05864ac61004dab277fe3f9ac263e7}{Scenario}}(std::string name, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO::SDK::Time::Window<IO::SDK::Time::UTC>}} \&windows);}
+\DoxyCodeLine{59 }
+\DoxyCodeLine{64         \textcolor{keywordtype}{void} \mbox{\hyperlink{classIO_1_1SDK_1_1Scenario_a786a1044cf68de4ecc85aef250f01eba}{AddCelestialBody}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1CelestialBody}{IO::SDK::Body::CelestialBody}} \&celestialBody);}
+\DoxyCodeLine{65 }
+\DoxyCodeLine{70         \textcolor{keywordtype}{void} \mbox{\hyperlink{classIO_1_1SDK_1_1Scenario_ade87552a4da5e253547c5cb44e22ea69}{AttachSpacecraft}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft}{IO::SDK::Body::Spacecraft::Spacecraft}} \&spacecraft);}
+\DoxyCodeLine{71 }
+\DoxyCodeLine{76         \textcolor{keywordtype}{void} \mbox{\hyperlink{classIO_1_1SDK_1_1Scenario_a8468e291b7910ec50fab34035bf1e178}{AddSite}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site}{IO::SDK::Sites::Site}} \&site);}
+\DoxyCodeLine{77 }
+\DoxyCodeLine{82         [[nodiscard]] \textcolor{keyword}{inline} std::string \mbox{\hyperlink{classIO_1_1SDK_1_1Scenario_ad5481ea666b9fcbb012f0308a9446654}{GetName}}()\textcolor{keyword}{ const}}
+\DoxyCodeLine{83 \textcolor{keyword}{        }\{ \textcolor{keywordflow}{return} m\_name; \}}
+\DoxyCodeLine{84 }
+\DoxyCodeLine{89         [[nodiscard]] \textcolor{keyword}{inline} \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO::SDK::Time::Window<IO::SDK::Time::UTC>}} \&\mbox{\hyperlink{classIO_1_1SDK_1_1Scenario_a1865a2b2b635af46f810dda630971b73}{GetWindow}}()\textcolor{keyword}{ const}}
+\DoxyCodeLine{90 \textcolor{keyword}{        }\{ \textcolor{keywordflow}{return} m\_windows; \}}
+\DoxyCodeLine{91 }
+\DoxyCodeLine{96         \textcolor{keyword}{inline} \textcolor{keyword}{const} std::vector<const IO::SDK::Body::CelestialBody *> \&\mbox{\hyperlink{classIO_1_1SDK_1_1Scenario_a6544f3a19931cd174f2f2c811d8fdf4c}{GetCelestialBodies}}()}
+\DoxyCodeLine{97         \{ \textcolor{keywordflow}{return} m\_celestialBodies; \}}
+\DoxyCodeLine{98 }
+\DoxyCodeLine{103         \textcolor{keyword}{inline} \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft}{IO::SDK::Body::Spacecraft::Spacecraft}} *\mbox{\hyperlink{classIO_1_1SDK_1_1Scenario_a76eb3dbeb26f0974b491336f2c9d5596}{GetSpacecraft}}()}
+\DoxyCodeLine{104         \{ \textcolor{keywordflow}{return} m\_spacecraft; \}}
+\DoxyCodeLine{105 }
+\DoxyCodeLine{110         \textcolor{keyword}{inline} \textcolor{keyword}{const} std::vector<const IO::SDK::Sites::Site *> \&\mbox{\hyperlink{classIO_1_1SDK_1_1Scenario_a10e011d873729fab0bd64bc73904eece}{GetSites}}()}
+\DoxyCodeLine{111         \{ \textcolor{keywordflow}{return} m\_sites; \}}
+\DoxyCodeLine{112 }
+\DoxyCodeLine{117         \textcolor{keyword}{inline} \mbox{\hyperlink{classIO_1_1SDK_1_1Propagators_1_1Propagator}{Propagators::Propagator}} \&\mbox{\hyperlink{classIO_1_1SDK_1_1Scenario_aeee297b71c3a8eeabdf538e24ad7182a}{GetPropagator}}()}
+\DoxyCodeLine{118         \{ \textcolor{keywordflow}{return} *m\_propagator; \}}
+\DoxyCodeLine{119 }
+\DoxyCodeLine{123         \textcolor{keywordtype}{void} \mbox{\hyperlink{classIO_1_1SDK_1_1Scenario_a5023a3fec59ef54ca3d1f301d8313d19}{Execute}}();}
+\DoxyCodeLine{124     \};}
+\DoxyCodeLine{125 }
+\DoxyCodeLine{126 \} \textcolor{comment}{// IO::SDK}}
+\DoxyCodeLine{127 }
+\DoxyCodeLine{128 \textcolor{preprocessor}{\#endif }\textcolor{comment}{//IOSDK\_SCENARIO\_H}}
 
 \end{DoxyCode}

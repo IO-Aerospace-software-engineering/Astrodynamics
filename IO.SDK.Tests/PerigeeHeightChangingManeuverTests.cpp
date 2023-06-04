@@ -37,16 +37,16 @@ TEST(PerigeeHeightChangingManeuverTests, CanExecute)
     auto apogeeEpoch{s.GetOrbitalParametersAtEpoch()->GetEpoch() + s.GetOrbitalParametersAtEpoch()->GetPeriod() / 2.0};
 
     //Initialize CanExecute
-    ASSERT_FALSE(pcm.CanExecute(s.GetOrbitalParametersAtEpoch()->GetStateVector(apogeeEpoch - IO::SDK::Time::TimeSpan(10.0s))));
+    ASSERT_FALSE(pcm.CanExecute(s.GetOrbitalParametersAtEpoch()->ToStateVector(apogeeEpoch - IO::SDK::Time::TimeSpan(10.0s))));
 
     //Evaluate 3s before
-    ASSERT_FALSE(pcm.CanExecute(s.GetOrbitalParametersAtEpoch()->GetStateVector(apogeeEpoch - IO::SDK::Time::TimeSpan(3.0s))));
+    ASSERT_FALSE(pcm.CanExecute(s.GetOrbitalParametersAtEpoch()->ToStateVector(apogeeEpoch - IO::SDK::Time::TimeSpan(3.0s))));
 
     //Evaluate 3s after and must execute
-    ASSERT_TRUE(pcm.CanExecute(s.GetOrbitalParametersAtEpoch()->GetStateVector(apogeeEpoch + IO::SDK::Time::TimeSpan(3.0s))));
+    ASSERT_TRUE(pcm.CanExecute(s.GetOrbitalParametersAtEpoch()->ToStateVector(apogeeEpoch + IO::SDK::Time::TimeSpan(3.0s))));
 
     //Evaluate 10s after
-    ASSERT_FALSE(pcm.CanExecute(s.GetOrbitalParametersAtEpoch()->GetStateVector(apogeeEpoch + IO::SDK::Time::TimeSpan(10.0s))));
+    ASSERT_FALSE(pcm.CanExecute(s.GetOrbitalParametersAtEpoch()->ToStateVector(apogeeEpoch + IO::SDK::Time::TimeSpan(10.0s))));
 }
 
 TEST(PerigeeHeightChangingManeuverTests, IncreasePerigeeHeight)
@@ -70,7 +70,7 @@ TEST(PerigeeHeightChangingManeuverTests, IncreasePerigeeHeight)
     IO::SDK::Maneuvers::PerigeeHeightChangingManeuver pcm(engines, prop, 42164000.0);
     auto apogeeEpoch{s.GetOrbitalParametersAtEpoch()->GetEpoch() + s.GetOrbitalParametersAtEpoch()->GetPeriod() / 2.0};
 
-    auto res = pcm.TryExecute(s.GetOrbitalParametersAtEpoch()->GetStateVector(apogeeEpoch + IO::SDK::Time::TimeSpan(0.1s)));
+    auto res = pcm.TryExecute(s.GetOrbitalParametersAtEpoch()->ToStateVector(apogeeEpoch + IO::SDK::Time::TimeSpan(0.1s)));
 
     ASSERT_TRUE(res.IsValid());
     ASSERT_DOUBLE_EQ(2425.7836521643781, pcm.GetDeltaV().Magnitude());
@@ -101,7 +101,7 @@ TEST(PerigeeHeightChangingManeuverTests, DecreasePerigeeHeight)
 
     auto apogeeEpoch{s.GetOrbitalParametersAtEpoch()->GetEpoch() + s.GetOrbitalParametersAtEpoch()->GetPeriod() / 2.0};
 
-    auto res = pcm.TryExecute(s.GetOrbitalParametersAtEpoch()->GetStateVector(apogeeEpoch + IO::SDK::Time::TimeSpan(0.1s)));
+    auto res = pcm.TryExecute(s.GetOrbitalParametersAtEpoch()->ToStateVector(apogeeEpoch + IO::SDK::Time::TimeSpan(0.1s)));
 
     ASSERT_TRUE(res.IsValid());
     ASSERT_DOUBLE_EQ(1466.4510337589829, pcm.GetDeltaV().Magnitude());

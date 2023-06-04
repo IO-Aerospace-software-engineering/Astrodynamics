@@ -2,29 +2,31 @@
 \label{InertialFrames_8h_source}\index{IO.SDK/Frames/InertialFrames.h@{IO.SDK/Frames/InertialFrames.h}}
 \mbox{\hyperlink{InertialFrames_8h}{Go to the documentation of this file.}}
 \begin{DoxyCode}{0}
-\DoxyCodeLine{1 }
-\DoxyCodeLine{11 \textcolor{preprocessor}{\#ifndef INERTIAL\_FRAMES\_H}}
-\DoxyCodeLine{12 \textcolor{preprocessor}{\#define INERTIAL\_FRAMES\_H}}
-\DoxyCodeLine{13 \textcolor{preprocessor}{\#include <string>}}
-\DoxyCodeLine{14 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{Frames_8h}{Frames.h}}>}}
-\DoxyCodeLine{15 }
-\DoxyCodeLine{16 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1SDK_1_1Frames}{IO::SDK::Frames}}}
-\DoxyCodeLine{17 \{}
-\DoxyCodeLine{22     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1InertialFrames}{InertialFrames}} final : \textcolor{keyword}{public} \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1Frames}{IO::SDK::Frames::Frames}}}
-\DoxyCodeLine{23     \{}
-\DoxyCodeLine{24 }
-\DoxyCodeLine{25     \textcolor{keyword}{private}:}
-\DoxyCodeLine{26         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1InertialFrames}{InertialFrames}} mICRF;}
-\DoxyCodeLine{27         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1InertialFrames}{InertialFrames}} mECLIPTIC;}
-\DoxyCodeLine{28         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1InertialFrames}{InertialFrames}} mGALACTIC;}
-\DoxyCodeLine{29     \textcolor{keyword}{public}:}
-\DoxyCodeLine{35         \textcolor{keyword}{explicit} \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1InertialFrames_a9bb8318906230fdaa9bdf4c333bfad48}{InertialFrames}}(\textcolor{keyword}{const} std::string \&name);}
-\DoxyCodeLine{36 }
-\DoxyCodeLine{37         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1InertialFrames}{IO::SDK::Frames::InertialFrames}}\& \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1InertialFrames_adbe2a8f6faa19b05a4e1ff3441286074}{GetICRF}}();}
-\DoxyCodeLine{38         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1InertialFrames}{IO::SDK::Frames::InertialFrames}}\& \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1InertialFrames_a92006a7170bd0e5514f5567f7feaa838}{Galactic}}();}
-\DoxyCodeLine{39         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1InertialFrames}{IO::SDK::Frames::InertialFrames}}\& \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1InertialFrames_a16c4ea501f371229e4f2d7b2ac97a96a}{Ecliptic}}();}
-\DoxyCodeLine{40     \};}
-\DoxyCodeLine{41 \}}
-\DoxyCodeLine{42 \textcolor{preprocessor}{\#endif }\textcolor{comment}{// ! INERTIAL\_FRAMES\_H}}
+\DoxyCodeLine{1 \textcolor{comment}{/*}}
+\DoxyCodeLine{2 \textcolor{comment}{ Copyright (c) 2021-\/2023. Sylvain Guillet (sylvain.guillet@tutamail.com)}}
+\DoxyCodeLine{3 \textcolor{comment}{ */}}
+\DoxyCodeLine{4 \textcolor{preprocessor}{\#ifndef INERTIAL\_FRAMES\_H}}
+\DoxyCodeLine{5 \textcolor{preprocessor}{\#define INERTIAL\_FRAMES\_H}}
+\DoxyCodeLine{6 \textcolor{preprocessor}{\#include <string>}}
+\DoxyCodeLine{7 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{Frames_8h}{Frames.h}}>}}
+\DoxyCodeLine{8 }
+\DoxyCodeLine{9 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1SDK_1_1Frames}{IO::SDK::Frames}}}
+\DoxyCodeLine{10 \{}
+\DoxyCodeLine{15     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1InertialFrames}{InertialFrames}} final : \textcolor{keyword}{public} \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1Frames}{IO::SDK::Frames::Frames}}}
+\DoxyCodeLine{16     \{}
+\DoxyCodeLine{17 }
+\DoxyCodeLine{18     \textcolor{keyword}{private}:}
+\DoxyCodeLine{19         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1InertialFrames}{InertialFrames}} mICRF;}
+\DoxyCodeLine{20         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1InertialFrames}{InertialFrames}} mECLIPTIC;}
+\DoxyCodeLine{21         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1InertialFrames}{InertialFrames}} mGALACTIC;}
+\DoxyCodeLine{22     \textcolor{keyword}{public}:}
+\DoxyCodeLine{28         \textcolor{keyword}{explicit} \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1InertialFrames_a9bb8318906230fdaa9bdf4c333bfad48}{InertialFrames}}(\textcolor{keyword}{const} std::string \&name);}
+\DoxyCodeLine{29 }
+\DoxyCodeLine{30         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1InertialFrames}{IO::SDK::Frames::InertialFrames}}\& \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1InertialFrames_adbe2a8f6faa19b05a4e1ff3441286074}{GetICRF}}();}
+\DoxyCodeLine{31         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1InertialFrames}{IO::SDK::Frames::InertialFrames}}\& \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1InertialFrames_a92006a7170bd0e5514f5567f7feaa838}{Galactic}}();}
+\DoxyCodeLine{32         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1InertialFrames}{IO::SDK::Frames::InertialFrames}}\& \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1InertialFrames_a16c4ea501f371229e4f2d7b2ac97a96a}{Ecliptic}}();}
+\DoxyCodeLine{33     \};}
+\DoxyCodeLine{34 \}}
+\DoxyCodeLine{35 \textcolor{preprocessor}{\#endif }\textcolor{comment}{// ! INERTIAL\_FRAMES\_H}}
 
 \end{DoxyCode}

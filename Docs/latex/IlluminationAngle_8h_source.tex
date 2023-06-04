@@ -2,45 +2,47 @@
 \label{IlluminationAngle_8h_source}\index{IO.SDK/IlluminationAngle.h@{IO.SDK/IlluminationAngle.h}}
 \mbox{\hyperlink{IlluminationAngle_8h}{Go to the documentation of this file.}}
 \begin{DoxyCode}{0}
-\DoxyCodeLine{1 }
-\DoxyCodeLine{11 \textcolor{preprocessor}{\#ifndef ILLUMINATION\_ANGLE\_H}}
-\DoxyCodeLine{12 \textcolor{preprocessor}{\#define ILLUMINATION\_ANGLE\_H}}
-\DoxyCodeLine{13 \textcolor{preprocessor}{\#include <string>}}
+\DoxyCodeLine{1 \textcolor{comment}{/*}}
+\DoxyCodeLine{2 \textcolor{comment}{ Copyright (c) 2021-\/2023. Sylvain Guillet (sylvain.guillet@tutamail.com)}}
+\DoxyCodeLine{3 \textcolor{comment}{ */}}
+\DoxyCodeLine{4 \textcolor{preprocessor}{\#ifndef ILLUMINATION\_ANGLE\_H}}
+\DoxyCodeLine{5 \textcolor{preprocessor}{\#define ILLUMINATION\_ANGLE\_H}}
+\DoxyCodeLine{6 \textcolor{preprocessor}{\#include <string>}}
+\DoxyCodeLine{7 }
+\DoxyCodeLine{8 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1SDK}{IO::SDK}}}
+\DoxyCodeLine{9 \{}
+\DoxyCodeLine{10     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1SDK_1_1IlluminationAngle}{IlluminationAngle}}}
+\DoxyCodeLine{11     \{}
+\DoxyCodeLine{12     \textcolor{keyword}{private}:}
+\DoxyCodeLine{13         \textcolor{keyword}{const} std::string m\_name;}
 \DoxyCodeLine{14 }
-\DoxyCodeLine{15 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1SDK}{IO::SDK}}}
-\DoxyCodeLine{16 \{}
-\DoxyCodeLine{17     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1SDK_1_1IlluminationAngle}{IlluminationAngle}}}
-\DoxyCodeLine{18     \{}
-\DoxyCodeLine{19     \textcolor{keyword}{private}:}
-\DoxyCodeLine{20         \textcolor{keyword}{const} std::string m\_name;}
-\DoxyCodeLine{21 }
-\DoxyCodeLine{22         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1SDK_1_1IlluminationAngle}{IlluminationAngle}} mPhase;}
-\DoxyCodeLine{23         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1SDK_1_1IlluminationAngle}{IlluminationAngle}} mIncidence;}
-\DoxyCodeLine{24         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1SDK_1_1IlluminationAngle}{IlluminationAngle}} mEmission;}
-\DoxyCodeLine{25 }
-\DoxyCodeLine{26     \textcolor{keyword}{public}:}
-\DoxyCodeLine{27         \textcolor{keyword}{explicit} \mbox{\hyperlink{classIO_1_1SDK_1_1IlluminationAngle_a204352c20e7a1a0ee3cbaa56a036893f}{IlluminationAngle}}(std::string name);}
-\DoxyCodeLine{28         \mbox{\hyperlink{classIO_1_1SDK_1_1IlluminationAngle_a35e7e4948ff22141693b48d0ccd2d71d}{\string~IlluminationAngle}}() = \textcolor{keywordflow}{default};}
-\DoxyCodeLine{29 }
-\DoxyCodeLine{30         \mbox{\hyperlink{classIO_1_1SDK_1_1IlluminationAngle}{IlluminationAngle}} \&\mbox{\hyperlink{classIO_1_1SDK_1_1IlluminationAngle_a0471f04e4f42cd3d17ac244d4a157aa7}{operator=}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1IlluminationAngle}{IlluminationAngle}} \&other)}
-\DoxyCodeLine{31         \{}
-\DoxyCodeLine{32             \textcolor{keywordflow}{if} (\textcolor{keyword}{this} == \&other)}
-\DoxyCodeLine{33                 \textcolor{keywordflow}{return} *\textcolor{keyword}{this};}
-\DoxyCodeLine{34 }
-\DoxyCodeLine{35             \textcolor{keyword}{const\_cast<}std::string \&\textcolor{keyword}{>}(m\_name) = other.m\_name;}
-\DoxyCodeLine{36             \textcolor{keywordflow}{return} *\textcolor{keyword}{this};}
-\DoxyCodeLine{37         \}}
-\DoxyCodeLine{38 }
-\DoxyCodeLine{39         [[nodiscard]] \textcolor{keyword}{const} \textcolor{keywordtype}{char} *\mbox{\hyperlink{classIO_1_1SDK_1_1IlluminationAngle_adde3a384fe4867ecebf139705d0a2be1}{ToCharArray}}() \textcolor{keyword}{const};}
-\DoxyCodeLine{40 }
-\DoxyCodeLine{41         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1SDK_1_1IlluminationAngle}{IlluminationAngle}}\& \mbox{\hyperlink{classIO_1_1SDK_1_1IlluminationAngle_abf4a7adffb6a84434fe279cf2f7f1585}{Phase}}();}
-\DoxyCodeLine{42         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1SDK_1_1IlluminationAngle}{IlluminationAngle}}\& \mbox{\hyperlink{classIO_1_1SDK_1_1IlluminationAngle_a7379459cdfb4c26e6ed8654695caf5d5}{Incidence}}();}
-\DoxyCodeLine{43         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1SDK_1_1IlluminationAngle}{IlluminationAngle}}\& \mbox{\hyperlink{classIO_1_1SDK_1_1IlluminationAngle_ab08d26dd9c692ffaad70b87cd7b11e42}{Emission}}();}
-\DoxyCodeLine{44         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1SDK_1_1IlluminationAngle}{IlluminationAngle}} \mbox{\hyperlink{classIO_1_1SDK_1_1IlluminationAngle_a96b587c417757e3c0605b859f871bb3f}{ToIlluminationAngleType}}(\textcolor{keyword}{const} std::string \&illuminationAngleType) ;}
-\DoxyCodeLine{45     \};}
-\DoxyCodeLine{46 }
-\DoxyCodeLine{47 \} \textcolor{comment}{// namespace IO::SDK}}
-\DoxyCodeLine{48 }
-\DoxyCodeLine{49 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{15         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1SDK_1_1IlluminationAngle}{IlluminationAngle}} mPhase;}
+\DoxyCodeLine{16         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1SDK_1_1IlluminationAngle}{IlluminationAngle}} mIncidence;}
+\DoxyCodeLine{17         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1SDK_1_1IlluminationAngle}{IlluminationAngle}} mEmission;}
+\DoxyCodeLine{18 }
+\DoxyCodeLine{19     \textcolor{keyword}{public}:}
+\DoxyCodeLine{20         \textcolor{keyword}{explicit} \mbox{\hyperlink{classIO_1_1SDK_1_1IlluminationAngle_a204352c20e7a1a0ee3cbaa56a036893f}{IlluminationAngle}}(std::string name);}
+\DoxyCodeLine{21         \mbox{\hyperlink{classIO_1_1SDK_1_1IlluminationAngle_a35e7e4948ff22141693b48d0ccd2d71d}{\string~IlluminationAngle}}() = \textcolor{keywordflow}{default};}
+\DoxyCodeLine{22 }
+\DoxyCodeLine{23         \mbox{\hyperlink{classIO_1_1SDK_1_1IlluminationAngle}{IlluminationAngle}} \&\mbox{\hyperlink{classIO_1_1SDK_1_1IlluminationAngle_a0471f04e4f42cd3d17ac244d4a157aa7}{operator=}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1IlluminationAngle}{IlluminationAngle}} \&other)}
+\DoxyCodeLine{24         \{}
+\DoxyCodeLine{25             \textcolor{keywordflow}{if} (\textcolor{keyword}{this} == \&other)}
+\DoxyCodeLine{26                 \textcolor{keywordflow}{return} *\textcolor{keyword}{this};}
+\DoxyCodeLine{27 }
+\DoxyCodeLine{28             \textcolor{keyword}{const\_cast<}std::string \&\textcolor{keyword}{>}(m\_name) = other.m\_name;}
+\DoxyCodeLine{29             \textcolor{keywordflow}{return} *\textcolor{keyword}{this};}
+\DoxyCodeLine{30         \}}
+\DoxyCodeLine{31 }
+\DoxyCodeLine{32         [[nodiscard]] \textcolor{keyword}{const} \textcolor{keywordtype}{char} *\mbox{\hyperlink{classIO_1_1SDK_1_1IlluminationAngle_adde3a384fe4867ecebf139705d0a2be1}{ToCharArray}}() \textcolor{keyword}{const};}
+\DoxyCodeLine{33 }
+\DoxyCodeLine{34         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1SDK_1_1IlluminationAngle}{IlluminationAngle}}\& \mbox{\hyperlink{classIO_1_1SDK_1_1IlluminationAngle_abf4a7adffb6a84434fe279cf2f7f1585}{Phase}}();}
+\DoxyCodeLine{35         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1SDK_1_1IlluminationAngle}{IlluminationAngle}}\& \mbox{\hyperlink{classIO_1_1SDK_1_1IlluminationAngle_a7379459cdfb4c26e6ed8654695caf5d5}{Incidence}}();}
+\DoxyCodeLine{36         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1SDK_1_1IlluminationAngle}{IlluminationAngle}}\& \mbox{\hyperlink{classIO_1_1SDK_1_1IlluminationAngle_ab08d26dd9c692ffaad70b87cd7b11e42}{Emission}}();}
+\DoxyCodeLine{37         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1SDK_1_1IlluminationAngle}{IlluminationAngle}} \mbox{\hyperlink{classIO_1_1SDK_1_1IlluminationAngle_a96b587c417757e3c0605b859f871bb3f}{ToIlluminationAngleType}}(\textcolor{keyword}{const} std::string \&illuminationAngleType) ;}
+\DoxyCodeLine{38     \};}
+\DoxyCodeLine{39 }
+\DoxyCodeLine{40 \} \textcolor{comment}{// namespace IO::SDK}}
+\DoxyCodeLine{41 }
+\DoxyCodeLine{42 \textcolor{preprocessor}{\#endif}}
 
 \end{DoxyCode}

@@ -287,15 +287,15 @@ TEST(StateVector, FromTrueAnomaly)
 	auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399); //GEOPHYSICAL PROPERTIES provided by JPL
 	const IO::SDK::OrbitalParameters::StateVector sv(earth, IO::SDK::Math::Vector3D(6800000.0, 0.0, 0.0), IO::SDK::Math::Vector3D(0.0, 9000.0, 0.0), IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::GetICRF());
 
-	auto newSv = sv.GetStateVector(1.57);
+	auto newSv = sv.ToStateVector(1.57);
 
 	ASSERT_DOUBLE_EQ(1.57, newSv.GetPosition().Normalize().GetAngle(newSv.GetPerigeeVector().Normalize()));
 
-	newSv = sv.GetStateVector(IO::SDK::Constants::PI);
+	newSv = sv.ToStateVector(IO::SDK::Constants::PI);
 
 	ASSERT_DOUBLE_EQ(IO::SDK::Constants::PI, newSv.GetPosition().Normalize().GetAngle(newSv.GetPerigeeVector().Normalize()));
 
-	newSv = sv.GetStateVector(IO::SDK::Constants::PI + IO::SDK::Constants::PI2);
+	newSv = sv.ToStateVector(IO::SDK::Constants::PI + IO::SDK::Constants::PI2);
 	ASSERT_DOUBLE_EQ(IO::SDK::Constants::PI2, newSv.GetPosition().Normalize().GetAngle(newSv.GetPerigeeVector().Normalize()));
 }
 

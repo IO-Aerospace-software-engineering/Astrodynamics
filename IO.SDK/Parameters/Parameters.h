@@ -1,19 +1,9 @@
-/**
- * @file Parameters.h
- * @author Sylvain Guillet (sylvain.guillet@live.com)
- * @brief 
- * @version 0.x
- * @date 2021-07-03
- * 
- * @copyright Copyright (c) 2021
- * 
+/*
+ Copyright (c) 2021-2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
  */
 #ifndef PARAMETERS_H
 #define PARAMETERS_H
 
-#include<string>
-#include <chrono>
-#include <chrono>
 #include <TimeSpan.h>
 
 using namespace std::chrono_literals;

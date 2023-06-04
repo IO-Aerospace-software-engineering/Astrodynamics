@@ -1,3 +1,7 @@
+/*
+ Copyright (c) 2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
+ */
+
 #ifndef STRING_HELPERS_H
 #define STRING_HELPERS_H
 #include <string>

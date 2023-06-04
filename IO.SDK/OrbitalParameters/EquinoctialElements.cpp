@@ -1,16 +1,8 @@
-/**
- * @file EquinoctialElements.cpp
- * @author Sylvain Guillet (sylvain.guillet@live.com)
- * @brief 
- * @version 0.x
- * @date 2021-07-03
- * 
- * @copyright Copyright (c) 2021
- * 
+/*
+ Copyright (c) 2021-2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
  */
-#include "EquinoctialElements.h"
-#include "Constants.h"
-#include <chrono>
+#include <EquinoctialElements.h>
+#include <Constants.h>
 
 IO::SDK::OrbitalParameters::EquinoctialElements::EquinoctialElements(const std::shared_ptr<IO::SDK::Body::CelestialBody> &centerOfMotion, const IO::SDK::Time::TDB &epoch,
                                                                      const double semiMajorAxis, const double h, const double k, const double p, const double q, const double L,
@@ -68,10 +60,10 @@ IO::SDK::Time::TimeSpan IO::SDK::OrbitalParameters::EquinoctialElements::GetPeri
 }
 
 IO::SDK::Math::Vector3D IO::SDK::OrbitalParameters::EquinoctialElements::GetSpecificAngularMomentum() const {
-    return GetStateVector(m_epoch).GetSpecificAngularMomentum();
+    return ToStateVector(m_epoch).GetSpecificAngularMomentum();
 }
 
-IO::SDK::OrbitalParameters::StateVector IO::SDK::OrbitalParameters::EquinoctialElements::GetStateVector(const IO::SDK::Time::TDB &epoch) const {
+IO::SDK::OrbitalParameters::StateVector IO::SDK::OrbitalParameters::EquinoctialElements::ToStateVector(const IO::SDK::Time::TDB &epoch) const {
     double state[6]{};
     eqncpv_c(epoch.GetSecondsFromJ2000().count(), m_epoch.GetSecondsFromJ2000().count(), m_elements, m_rightAscensionOfThePole, m_declinationOfThePole, state);
     return StateVector{m_centerOfMotion, IO::SDK::Math::Vector3D(state[0], state[1], state[2]), IO::SDK::Math::Vector3D(state[3], state[4], state[5]), epoch, m_frame};
@@ -98,5 +90,5 @@ double IO::SDK::OrbitalParameters::EquinoctialElements::GetMeanAnomaly() const {
 }
 
 double IO::SDK::OrbitalParameters::EquinoctialElements::GetSpecificOrbitalEnergy() const {
-    return GetStateVector(m_epoch).GetSpecificOrbitalEnergy();
+    return ToStateVector(m_epoch).GetSpecificOrbitalEnergy();
 }

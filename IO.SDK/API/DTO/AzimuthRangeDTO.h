@@ -1,6 +1,8 @@
-//
-// Created by spacer on 3/23/23.
-//
+
+
+/*
+ Copyright (c) 2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
+ */
 
 #ifndef IOSDK_AZIMUTHRANGEDTO_H
 #define IOSDK_AZIMUTHRANGEDTO_H

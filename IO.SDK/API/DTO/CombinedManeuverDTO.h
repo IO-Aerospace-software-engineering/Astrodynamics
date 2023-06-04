@@ -1,6 +1,7 @@
-//
-// Created by spacer on 3/28/23.
-//
+
+/*
+ Copyright (c) 2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
+ */
 
 #ifndef IOSDK_COMBINEDMANEUVERDTO_H
 #define IOSDK_COMBINEDMANEUVERDTO_H

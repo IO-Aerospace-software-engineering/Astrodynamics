@@ -1,15 +1,8 @@
-/**
- * @file StateVector.cpp
- * @author Sylvain Guillet (sylvain.guillet@live.com)
- * @brief 
- * @version 0.x
- * @date 2021-06-12
- * 
- * @copyright Copyright (c) 2021
- * 
+/*
+ Copyright (c) 2021-2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
  */
 #include <GravityForce.h>
-#include "Helpers/Type.cpp"
+#include <Type.h>
 
 IO::SDK::OrbitalParameters::StateVector::StateVector(const std::shared_ptr<IO::SDK::Body::CelestialBody> &centerOfMotion, const IO::SDK::Math::Vector3D &position,
                                                      const IO::SDK::Math::Vector3D &velocity, const IO::SDK::Time::TDB &epoch, const IO::SDK::Frames::Frames &frame)
@@ -92,7 +85,7 @@ double IO::SDK::OrbitalParameters::StateVector::GetTrueAnomaly() const
     return m_osculatingElements[8];
 }
 
-IO::SDK::OrbitalParameters::StateVector IO::SDK::OrbitalParameters::StateVector::GetStateVector(const IO::SDK::Time::TDB &epoch) const
+IO::SDK::OrbitalParameters::StateVector IO::SDK::OrbitalParameters::StateVector::ToStateVector(const IO::SDK::Time::TDB &epoch) const
 {
     SpiceDouble state[6]{m_position.GetX(), m_position.GetY(), m_position.GetZ(), m_velocity.GetX(), m_velocity.GetY(), m_velocity.GetZ()};
     SpiceDouble stateProp[6]{};
@@ -220,7 +213,7 @@ IO::SDK::OrbitalParameters::StateVector IO::SDK::OrbitalParameters::StateVector:
     return ToFrame(m_centerOfMotion->GetBodyFixedFrame());
 }
 
-IO::SDK::OrbitalParameters::StateVector IO::SDK::OrbitalParameters::StateVector::GetStateVector() const
+IO::SDK::OrbitalParameters::StateVector IO::SDK::OrbitalParameters::StateVector::ToStateVector() const
 {
     return *this;
 }

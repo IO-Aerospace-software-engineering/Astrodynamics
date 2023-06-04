@@ -84,12 +84,12 @@
 <a name="22"><span class="lineNum">      22 </span><span class="lineCov">          1 :     IO::SDK::Integrators::TLEIntegrator integrator(*localTLE, IO::SDK::Time::TimeSpan(60s));</span></a>
 <a name="23"><span class="lineNum">      23 </span>            : </a>
 <a name="24"><span class="lineNum">      24 </span>            :     //Just to activate cache and evaluate optimized integration</a>
-<a name="25"><span class="lineNum">      25 </span><span class="lineCov">          1 :     auto sv = spc.GetOrbitalParametersAtEpoch()-&gt;GetStateVector();</span></a>
+<a name="25"><span class="lineNum">      25 </span><span class="lineCov">          1 :     auto sv = spc.GetOrbitalParametersAtEpoch()-&gt;ToStateVector();</span></a>
 <a name="26"><span class="lineNum">      26 </span>            : </a>
 <a name="27"><span class="lineNum">      27 </span>            : #ifdef DEBUG</a>
 <a name="28"><span class="lineNum">      28 </span>            :     auto t1 = std::chrono::high_resolution_clock::now();</a>
 <a name="29"><span class="lineNum">      29 </span>            : #endif</a>
-<a name="30"><span class="lineNum">      30 </span><span class="lineCov">          1 :     auto stateVector = integrator.Integrate(spc, spc.GetOrbitalParametersAtEpoch()-&gt;GetStateVector()); //2021-04-06 10:32:32.385783 TDB</span></a>
+<a name="30"><span class="lineNum">      30 </span><span class="lineCov">          1 :     auto stateVector = integrator.Integrate(spc, spc.GetOrbitalParametersAtEpoch()-&gt;ToStateVector()); //2021-04-06 10:32:32.385783 TDB</span></a>
 <a name="31"><span class="lineNum">      31 </span>            : #ifdef DEBUG</a>
 <a name="32"><span class="lineNum">      32 </span>            :     auto t2 = std::chrono::high_resolution_clock::now();</a>
 <a name="33"><span class="lineNum">      33 </span>            : </a>

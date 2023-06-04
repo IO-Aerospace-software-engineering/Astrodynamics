@@ -1,12 +1,5 @@
-/**
- * @file StateVector.h
- * @author Sylvain Guillet (sylvain.guillet@live.com)
- * @brief 
- * @version 0.x
- * @date 2021-07-03
- * 
- * @copyright Copyright (c) 2021
- * 
+/*
+ Copyright (c) 2021-2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
  */
 #ifndef STATE_VECTOR_H
 #define STATE_VECTOR_H
@@ -112,7 +105,7 @@ namespace IO::SDK::OrbitalParameters
          * @param epoch
          * @return StateVector
          */
-        [[nodiscard]] StateVector GetStateVector(const IO::SDK::Time::TDB &epoch) const override;
+        [[nodiscard]] StateVector ToStateVector(const IO::SDK::Time::TDB &epoch) const override;
 
         /**
          * @brief Get the Semi Major Axis
@@ -187,14 +180,14 @@ namespace IO::SDK::OrbitalParameters
          */
         [[nodiscard]] IO::SDK::OrbitalParameters::StateVector CheckAndUpdateCenterOfMotion() const;
 
-        using IO::SDK::OrbitalParameters::OrbitalParameters::GetStateVector;
+        using IO::SDK::OrbitalParameters::OrbitalParameters::ToStateVector;
 
         /**
          * @brief Get state vector
          *
          * @return StateVector
          */
-        [[nodiscard]] StateVector GetStateVector() const override;
+        [[nodiscard]] StateVector ToStateVector() const override;
 
         /**
          * @brief Get this state vector relative to another frame

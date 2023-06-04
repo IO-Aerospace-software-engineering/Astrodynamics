@@ -41,20 +41,20 @@ TEST(PhasingManeuver, CanExecute)
     IO::SDK::Maneuvers::PhasingManeuver maneuver(engines, prop, 3, orbitalParams2);
 
     //Initialize CanExecute
-    ASSERT_FALSE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()->GetStateVector(358.0 * IO::SDK::Constants::DEG_RAD)));
+    ASSERT_FALSE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()->ToStateVector(358.0 * IO::SDK::Constants::DEG_RAD)));
 
     //Evaluate 1° before
-    ASSERT_FALSE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()->GetStateVector(359.0 * IO::SDK::Constants::DEG_RAD)));
+    ASSERT_FALSE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()->ToStateVector(359.0 * IO::SDK::Constants::DEG_RAD)));
 
     //Evaluate 1°s after and must execute
-    ASSERT_TRUE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()->GetStateVector(0.001 * IO::SDK::Constants::DEG_RAD)));
+    ASSERT_TRUE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()->ToStateVector(0.001 * IO::SDK::Constants::DEG_RAD)));
 
     //Evaluate 2° after
-    ASSERT_FALSE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()->GetStateVector(2.0 * IO::SDK::Constants::DEG_RAD)));
+    ASSERT_FALSE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()->ToStateVector(2.0 * IO::SDK::Constants::DEG_RAD)));
 
     //Evaluate at apogee
-    ASSERT_FALSE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()->GetStateVector(179.0 * IO::SDK::Constants::DEG_RAD)));
-    ASSERT_FALSE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()->GetStateVector(181.0 * IO::SDK::Constants::DEG_RAD)));
+    ASSERT_FALSE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()->ToStateVector(179.0 * IO::SDK::Constants::DEG_RAD)));
+    ASSERT_FALSE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()->ToStateVector(181.0 * IO::SDK::Constants::DEG_RAD)));
 }
 
 TEST(PhasingManeuver, TryExecuteOnGeostationary)
@@ -80,7 +80,7 @@ TEST(PhasingManeuver, TryExecuteOnGeostationary)
 
     prop.AddStateVector(IO::SDK::OrbitalParameters::StateVector(earth, IO::SDK::Math::Vector3D(1.0, 2.0, 3.0), IO::SDK::Math::Vector3D(4.0, 5.0, 6.0), IO::SDK::Time::TDB(-10.0s), IO::SDK::Frames::InertialFrames::GetICRF()));
 
-    auto res = maneuver.TryExecute(s.GetOrbitalParametersAtEpoch()->GetStateVector(0.0001));
+    auto res = maneuver.TryExecute(s.GetOrbitalParametersAtEpoch()->ToStateVector(0.0001));
 
     ASSERT_TRUE(res.IsValid());
 #ifdef _WIN32
@@ -159,20 +159,21 @@ TEST(PhasingManeuver, CheckOrbitalParameters)
     ASSERT_DOUBLE_EQ(0.0, sv.GetInclination() * IO::SDK::Constants::RAD_DEG);
     ASSERT_DOUBLE_EQ(0.0, sv.GetRightAscendingNodeLongitude() * IO::SDK::Constants::RAD_DEG);
 
-    auto sv2=orbitalParams2->GetStateVector(finalManeuver.GetManeuverWindow()->GetEndDate());
-    ASSERT_NEAR(279.02559168459368, sv.GetStateVector(finalManeuver.GetManeuverWindow()->GetEndDate()).GetPeriapsisArgument() * IO::SDK::Constants::RAD_DEG, 1E-06);
-    ASSERT_DOUBLE_EQ(80.991621690861436, sv.GetStateVector(finalManeuver.GetManeuverWindow()->GetEndDate()).GetMeanAnomaly() * IO::SDK::Constants::RAD_DEG);
+    auto sv2= orbitalParams2->ToStateVector(finalManeuver.GetManeuverWindow()->GetEndDate());
+    ASSERT_NEAR(279.02559168459368, sv.ToStateVector(finalManeuver.GetManeuverWindow()->GetEndDate()).GetPeriapsisArgument() * IO::SDK::Constants::RAD_DEG, 1E-06);
+    ASSERT_DOUBLE_EQ(80.991621690861436, sv.ToStateVector(finalManeuver.GetManeuverWindow()->GetEndDate()).GetMeanAnomaly() * IO::SDK::Constants::RAD_DEG);
 
-    ASSERT_DOUBLE_EQ(90.017226571823784, orbitalParams2->GetStateVector(finalManeuver.GetManeuverWindow()->GetEndDate()).GetPeriapsisArgument() * IO::SDK::Constants::RAD_DEG);
-    ASSERT_DOUBLE_EQ(270.0, orbitalParams2->GetStateVector(finalManeuver.GetManeuverWindow()->GetEndDate()).GetMeanAnomaly() * IO::SDK::Constants::RAD_DEG);
+    ASSERT_DOUBLE_EQ(90.017226571823784, orbitalParams2->ToStateVector(finalManeuver.GetManeuverWindow()->GetEndDate()).GetPeriapsisArgument() * IO::SDK::Constants::RAD_DEG);
+    ASSERT_DOUBLE_EQ(270.0, orbitalParams2->ToStateVector(finalManeuver.GetManeuverWindow()->GetEndDate()).GetMeanAnomaly() * IO::SDK::Constants::RAD_DEG);
 
-    double longitude1 = sv.GetPeriapsisArgument() + sv.GetStateVector(finalManeuver.GetManeuverWindow()->GetEndDate()).GetMeanAnomaly();
+    double longitude1 = sv.GetPeriapsisArgument() + sv.ToStateVector(finalManeuver.GetManeuverWindow()->GetEndDate()).GetMeanAnomaly();
     if (longitude1 > IO::SDK::Constants::_2PI)
     {
         longitude1 -= IO::SDK::Constants::_2PI;
     }
 
-    double longitude2 = orbitalParams2->GetStateVector(finalManeuver.GetManeuverWindow()->GetEndDate()).GetPeriapsisArgument() + orbitalParams2->GetStateVector(finalManeuver.GetManeuverWindow()->GetEndDate()).GetMeanAnomaly();
+    double longitude2 = orbitalParams2->ToStateVector(finalManeuver.GetManeuverWindow()->GetEndDate()).GetPeriapsisArgument() +
+                        orbitalParams2->ToStateVector(finalManeuver.GetManeuverWindow()->GetEndDate()).GetMeanAnomaly();
     if (longitude2 > IO::SDK::Constants::_2PI)
     {
         longitude2 -= IO::SDK::Constants::_2PI;
@@ -182,5 +183,6 @@ TEST(PhasingManeuver, CheckOrbitalParameters)
     ASSERT_NEAR(longitude1, longitude2, 1E-6);
 
     //Check distance between two objects lower than 2m
-    ASSERT_NEAR(0.0, (sv.GetStateVector(finalManeuver.GetManeuverWindow()->GetEndDate()).GetPosition() - orbitalParams2->GetStateVector(finalManeuver.GetManeuverWindow()->GetEndDate()).GetPosition()).Magnitude(),2.0);
+    ASSERT_NEAR(0.0, (sv.ToStateVector(finalManeuver.GetManeuverWindow()->GetEndDate()).GetPosition() -
+                      orbitalParams2->ToStateVector(finalManeuver.GetManeuverWindow()->GetEndDate()).GetPosition()).Magnitude(), 2.0);
 }

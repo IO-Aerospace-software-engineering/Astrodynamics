@@ -2,30 +2,32 @@
 \label{IntegratorBase_8h_source}\index{IO.SDK/Integrators/IntegratorBase.h@{IO.SDK/Integrators/IntegratorBase.h}}
 \mbox{\hyperlink{IntegratorBase_8h}{Go to the documentation of this file.}}
 \begin{DoxyCode}{0}
-\DoxyCodeLine{1 }
-\DoxyCodeLine{11 \textcolor{preprocessor}{\#ifndef INTEGRATOR\_BASE\_H}}
-\DoxyCodeLine{12 \textcolor{preprocessor}{\#define INTEGRATOR\_BASE\_H}}
-\DoxyCodeLine{13 }
-\DoxyCodeLine{14 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{StateVector_8h}{StateVector.h}}>}}
-\DoxyCodeLine{15 }
-\DoxyCodeLine{16 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1SDK_1_1Integrators}{IO::SDK::Integrators}}}
-\DoxyCodeLine{17 \{}
-\DoxyCodeLine{22     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1SDK_1_1Integrators_1_1IntegratorBase}{IntegratorBase}}}
-\DoxyCodeLine{23     \{}
-\DoxyCodeLine{24     \textcolor{keyword}{private}:}
-\DoxyCodeLine{25     \textcolor{keyword}{protected}:}
-\DoxyCodeLine{26         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO::SDK::Time::TimeSpan}} \mbox{\hyperlink{classIO_1_1SDK_1_1Integrators_1_1IntegratorBase_a7ff999173b99ae75fa9c14e837c4238f}{m\_stepDuration}}\{\};}
-\DoxyCodeLine{27         \textcolor{keyword}{const} \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1SDK_1_1Integrators_1_1IntegratorBase_ad2f70d988ae993c1aaf005140014e5da}{m\_h}}\{\};}
-\DoxyCodeLine{28         \textcolor{keyword}{const} \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1SDK_1_1Integrators_1_1IntegratorBase_a8e044079072dd5521083fc9ad104198b}{m\_half\_h}}\{\};}
-\DoxyCodeLine{29 }
-\DoxyCodeLine{30     \textcolor{keyword}{public}:}
-\DoxyCodeLine{36         \textcolor{keyword}{explicit} \mbox{\hyperlink{classIO_1_1SDK_1_1Integrators_1_1IntegratorBase_a43de978b2a55657caf364534548ac2e8}{IntegratorBase}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO::SDK::Time::TimeSpan}} \&stepDuration);}
-\DoxyCodeLine{37 }
-\DoxyCodeLine{44         \textcolor{keyword}{virtual} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{IO::SDK::OrbitalParameters::StateVector}} \mbox{\hyperlink{classIO_1_1SDK_1_1Integrators_1_1IntegratorBase_a1eeddc2c7a1f2cbb6cfbd33a6c6cecd1}{Integrate}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body}{IO::SDK::Body::Body}} \&body, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{IO::SDK::OrbitalParameters::StateVector}} \&stateVector) = 0;}
-\DoxyCodeLine{45     \};}
-\DoxyCodeLine{46 }
-\DoxyCodeLine{47 \} \textcolor{comment}{// namespace IO::SDK::Propagators}}
-\DoxyCodeLine{48 }
-\DoxyCodeLine{49 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{1 \textcolor{comment}{/*}}
+\DoxyCodeLine{2 \textcolor{comment}{ Copyright (c) 2021-\/2023. Sylvain Guillet (sylvain.guillet@tutamail.com)}}
+\DoxyCodeLine{3 \textcolor{comment}{ */}}
+\DoxyCodeLine{4 \textcolor{preprocessor}{\#ifndef INTEGRATOR\_BASE\_H}}
+\DoxyCodeLine{5 \textcolor{preprocessor}{\#define INTEGRATOR\_BASE\_H}}
+\DoxyCodeLine{6 }
+\DoxyCodeLine{7 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{StateVector_8h}{StateVector.h}}>}}
+\DoxyCodeLine{8 }
+\DoxyCodeLine{9 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1SDK_1_1Integrators}{IO::SDK::Integrators}}}
+\DoxyCodeLine{10 \{}
+\DoxyCodeLine{15     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1SDK_1_1Integrators_1_1IntegratorBase}{IntegratorBase}}}
+\DoxyCodeLine{16     \{}
+\DoxyCodeLine{17     \textcolor{keyword}{private}:}
+\DoxyCodeLine{18     \textcolor{keyword}{protected}:}
+\DoxyCodeLine{19         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO::SDK::Time::TimeSpan}} \mbox{\hyperlink{classIO_1_1SDK_1_1Integrators_1_1IntegratorBase_a7ff999173b99ae75fa9c14e837c4238f}{m\_stepDuration}}\{\};}
+\DoxyCodeLine{20         \textcolor{keyword}{const} \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1SDK_1_1Integrators_1_1IntegratorBase_ad2f70d988ae993c1aaf005140014e5da}{m\_h}}\{\};}
+\DoxyCodeLine{21         \textcolor{keyword}{const} \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1SDK_1_1Integrators_1_1IntegratorBase_a8e044079072dd5521083fc9ad104198b}{m\_half\_h}}\{\};}
+\DoxyCodeLine{22 }
+\DoxyCodeLine{23     \textcolor{keyword}{public}:}
+\DoxyCodeLine{29         \textcolor{keyword}{explicit} \mbox{\hyperlink{classIO_1_1SDK_1_1Integrators_1_1IntegratorBase_a43de978b2a55657caf364534548ac2e8}{IntegratorBase}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO::SDK::Time::TimeSpan}} \&stepDuration);}
+\DoxyCodeLine{30 }
+\DoxyCodeLine{37         \textcolor{keyword}{virtual} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{IO::SDK::OrbitalParameters::StateVector}} \mbox{\hyperlink{classIO_1_1SDK_1_1Integrators_1_1IntegratorBase_a1eeddc2c7a1f2cbb6cfbd33a6c6cecd1}{Integrate}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body}{IO::SDK::Body::Body}} \&body, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{IO::SDK::OrbitalParameters::StateVector}} \&stateVector) = 0;}
+\DoxyCodeLine{38     \};}
+\DoxyCodeLine{39 }
+\DoxyCodeLine{40 \} \textcolor{comment}{// namespace IO::SDK::Propagators}}
+\DoxyCodeLine{41 }
+\DoxyCodeLine{42 \textcolor{preprocessor}{\#endif}}
 
 \end{DoxyCode}

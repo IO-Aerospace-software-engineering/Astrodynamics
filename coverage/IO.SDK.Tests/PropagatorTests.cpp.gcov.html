@@ -261,7 +261,7 @@
 <a name="199"><span class="lineNum">     199 </span>            : </a>
 <a name="200"><span class="lineNum">     200 </span><span class="lineCov">          1 :     const std::vector&lt;IO::SDK::OrbitalParameters::StateVector&gt; &amp;propagationResults = pro.GetStateVectors();</span></a>
 <a name="201"><span class="lineNum">     201 </span><span class="lineCov">          1 :     auto propagationResult = propagationResults[duration.GetSeconds().count() / step.GetSeconds().count()];</span></a>
-<a name="202"><span class="lineNum">     202 </span><span class="lineCov">          1 :     auto keplerResults = localOrbitalparams-&gt;GetStateVector(epoch + duration);</span></a>
+<a name="202"><span class="lineNum">     202 </span><span class="lineCov">          1 :     auto keplerResults = localOrbitalparams-&gt;ToStateVector(epoch + duration);</span></a>
 <a name="203"><span class="lineNum">     203 </span>            : </a>
 <a name="204"><span class="lineNum">     204 </span><span class="lineCov">          1 :     std::cout &lt;&lt; &quot;Delta dX : &quot; &lt;&lt; std::abs(keplerResults.GetPosition().GetX() - propagationResult.GetPosition().GetX()) &lt;&lt; &quot; m&quot; &lt;&lt; std::endl;</span></a>
 <a name="205"><span class="lineNum">     205 </span><span class="lineCov">          1 :     std::cout &lt;&lt; &quot;Delta dY : &quot; &lt;&lt; std::abs(keplerResults.GetPosition().GetY() - propagationResult.GetPosition().GetY()) &lt;&lt; &quot; m&quot; &lt;&lt; std::endl;</span></a>
@@ -351,7 +351,7 @@
 <a name="289"><span class="lineNum">     289 </span>            : </a>
 <a name="290"><span class="lineNum">     290 </span><span class="lineCov">          1 :     const std::vector&lt;IO::SDK::OrbitalParameters::StateVector&gt; &amp;propagationResults = pro.GetStateVectors();</span></a>
 <a name="291"><span class="lineNum">     291 </span><span class="lineCov">          1 :     auto propagationResult = propagationResults.back();</span></a>
-<a name="292"><span class="lineNum">     292 </span><span class="lineCov">          1 :     auto keplerResults = localOrbitalparams-&gt;GetStateVector(endEpoch);</span></a>
+<a name="292"><span class="lineNum">     292 </span><span class="lineCov">          1 :     auto keplerResults = localOrbitalparams-&gt;ToStateVector(endEpoch);</span></a>
 <a name="293"><span class="lineNum">     293 </span>            : </a>
 <a name="294"><span class="lineNum">     294 </span><span class="lineCov">          1 :     std::cout &lt;&lt; &quot;Delta dX : &quot; &lt;&lt; std::abs(keplerResults.GetPosition().GetX() - propagationResult.GetPosition().GetX()) &lt;&lt; &quot; m&quot; &lt;&lt; std::endl;</span></a>
 <a name="295"><span class="lineNum">     295 </span><span class="lineCov">          1 :     std::cout &lt;&lt; &quot;Delta dY : &quot; &lt;&lt; std::abs(keplerResults.GetPosition().GetY() - propagationResult.GetPosition().GetY()) &lt;&lt; &quot; m&quot; &lt;&lt; std::endl;</span></a>

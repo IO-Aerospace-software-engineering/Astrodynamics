@@ -229,7 +229,7 @@
 <a name="167"><span class="lineNum">     167 </span>            :     }</a>
 <a name="168"><span class="lineNum">     168 </span>            : </a>
 <a name="169"><span class="lineNum">     169 </span>            :     //propagate from nearest value up to begin epoch</a>
-<a name="170"><span class="lineNum">     170 </span><span class="lineCov">         54 :     auto beginState = nearestLowerState-&gt;GetStateVector(m_attitudeWindow-&gt;GetStartDate());</span></a>
+<a name="170"><span class="lineNum">     170 </span><span class="lineCov">         54 :     auto beginState = nearestLowerState-&gt;ToStateVector(m_attitudeWindow-&gt;GetStartDate());</span></a>
 <a name="171"><span class="lineNum">     171 </span>            : </a>
 <a name="172"><span class="lineNum">     172 </span>            :     //Compute oriention at begining</a>
 <a name="173"><span class="lineNum">     173 </span><span class="lineCov">         54 :     auto orientationBegining = ComputeOrientation(beginState);</span></a>
@@ -239,7 +239,7 @@
 <a name="177"><span class="lineNum">     177 </span>            : </a>
 <a name="178"><span class="lineNum">     178 </span>            :     //Find position at maneuver end</a>
 <a name="179"><span class="lineNum">     179 </span>            :     //Add deltaV vector to maneuver point</a>
-<a name="180"><span class="lineNum">     180 </span><span class="lineCov">         81 :     IO::SDK::OrbitalParameters::StateVector newManeuverState(maneuverPoint.GetCenterOfMotion(), maneuverPoint.GetStateVector().GetPosition(), maneuverPoint.GetStateVector().GetVelocity() + *m_deltaV, maneuverPoint.GetEpoch(), maneuverPoint.GetFrame());</span></a>
+<a name="180"><span class="lineNum">     180 </span><span class="lineCov">         81 :     IO::SDK::OrbitalParameters::StateVector newManeuverState(maneuverPoint.GetCenterOfMotion(), maneuverPoint.ToStateVector().GetPosition(), maneuverPoint.ToStateVector().GetVelocity() + *m_deltaV, maneuverPoint.GetEpoch(), maneuverPoint.GetFrame());</span></a>
 <a name="181"><span class="lineNum">     181 </span>            : </a>
 <a name="182"><span class="lineNum">     182 </span>            :     //Write Data in propagator</a>
 <a name="183"><span class="lineNum">     183 </span>            :     //Erase unecessary vector states</a>
@@ -252,7 +252,7 @@
 <a name="190"><span class="lineNum">     190 </span><span class="lineCov">         27 :     if (m_attitudeWindow-&gt;GetLength().GetSeconds().count() &gt; 0.0)</span></a>
 <a name="191"><span class="lineNum">     191 </span>            :     {</a>
 <a name="192"><span class="lineNum">     192 </span>            :         //Propagate from new maneuver point up to end maneuver epoch</a>
-<a name="193"><span class="lineNum">     193 </span><span class="lineCov">         54 :         auto endState = newManeuverState.GetStateVector(m_attitudeWindow-&gt;GetEndDate());</span></a>
+<a name="193"><span class="lineNum">     193 </span><span class="lineCov">         54 :         auto endState = newManeuverState.ToStateVector(m_attitudeWindow-&gt;GetEndDate());</span></a>
 <a name="194"><span class="lineNum">     194 </span>            : </a>
 <a name="195"><span class="lineNum">     195 </span>            :         // Compute oriention at end</a>
 <a name="196"><span class="lineNum">     196 </span><span class="lineCov">         54 :         auto orientationEnd = ComputeOrientation(endState);</span></a>

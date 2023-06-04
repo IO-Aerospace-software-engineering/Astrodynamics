@@ -1,15 +1,9 @@
-/**
- * @file CoordinateSystem.cpp
- * @author Sylvain Guillet (sylvain.guillet@live.com)
- * @brief 
- * @version 0.x
- * @date 2021-07-03
- * 
- * @copyright Copyright (c) 2021
- * 
+/*
+ Copyright (c) 2021-2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
  */
 #include <CoordinateSystem.h>
-#include "SDKException.h"
+
+#include <SDKException.h>
 
 IO::SDK::CoordinateSystem IO::SDK::CoordinateSystem::mRectangular(std::string("RECTANGULAR"));
 IO::SDK::CoordinateSystem IO::SDK::CoordinateSystem::mLatitudinal(std::string("LATITUDINAL"));
@@ -19,7 +13,7 @@ IO::SDK::CoordinateSystem IO::SDK::CoordinateSystem::mCylindrical(std::string("C
 IO::SDK::CoordinateSystem IO::SDK::CoordinateSystem::mGeodetic(std::string("GEODETIC"));
 IO::SDK::CoordinateSystem IO::SDK::CoordinateSystem::mPlanetographic(std::string("PLANETOGRAPHIC"));
 
-IO::SDK::CoordinateSystem::CoordinateSystem(const std::string &name) : m_name{name}
+IO::SDK::CoordinateSystem::CoordinateSystem(std::string name) : m_name{std::move(name)}
 {
 }
 

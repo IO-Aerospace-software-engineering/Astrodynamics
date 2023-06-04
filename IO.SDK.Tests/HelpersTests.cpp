@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 #include <CelestialBody.h>
-#include "../IO.SDK/Helpers/Type.cpp"
+#include "../IO.SDK/Helpers/Type.h"
 
 TEST(Helpers, TypeOf)
 {

@@ -11,6 +11,7 @@ var hierarchy =
     [ "IO::SDK::API::DTO::ByNightConstraintDTO", "structIO_1_1SDK_1_1API_1_1DTO_1_1ByNightConstraintDTO.html", null ],
     [ "IO::SDK::API::DTO::CelestialBodyDTO", "structIO_1_1SDK_1_1API_1_1DTO_1_1CelestialBodyDTO.html", null ],
     [ "IO::SDK::API::DTO::CombinedManeuverDTO", "structIO_1_1SDK_1_1API_1_1DTO_1_1CombinedManeuverDTO.html", null ],
+    [ "IO::SDK::API::DTO::ConicOrbitalElementsDTO", "structIO_1_1SDK_1_1API_1_1DTO_1_1ConicOrbitalElementsDTO.html", null ],
     [ "IO::SDK::Coordinate", "classIO_1_1SDK_1_1Coordinate.html", null ],
     [ "IO::SDK::CoordinateSystem", "classIO_1_1SDK_1_1CoordinateSystem.html", null ],
     [ "IO::SDK::Coordinates::Cylindrical", "classIO_1_1SDK_1_1Coordinates_1_1Cylindrical.html", null ],
@@ -29,6 +30,8 @@ var hierarchy =
     ] ],
     [ "IO::SDK::Body::Spacecraft::Engine", "classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Engine.html", null ],
     [ "IO::SDK::API::DTO::EngineDTO", "structIO_1_1SDK_1_1API_1_1DTO_1_1EngineDTO.html", null ],
+    [ "IO::SDK::Coordinates::Equatorial", "classIO_1_1SDK_1_1Coordinates_1_1Equatorial.html", null ],
+    [ "IO::SDK::API::DTO::EquinoctialElementsDTO", "structIO_1_1SDK_1_1API_1_1DTO_1_1EquinoctialElementsDTO.html", null ],
     [ "std::exception", null, [
       [ "IO::SDK::Exception::SDKException", "classIO_1_1SDK_1_1Exception_1_1SDKException.html", [
         [ "IO::SDK::Exception::InvalidArgumentException", "classIO_1_1SDK_1_1Exception_1_1InvalidArgumentException.html", null ],
@@ -116,7 +119,7 @@ var hierarchy =
     [ "IO::SDK::Propagators::Propagator", "classIO_1_1SDK_1_1Propagators_1_1Propagator.html", null ],
     [ "IO::SDK::Math::Quaternion", "classIO_1_1SDK_1_1Math_1_1Quaternion.html", null ],
     [ "IO::SDK::API::DTO::QuaternionDTO", "structIO_1_1SDK_1_1API_1_1DTO_1_1QuaternionDTO.html", null ],
-    [ "IO::SDK::Coordinates::RADec", "classIO_1_1SDK_1_1Coordinates_1_1RADec.html", null ],
+    [ "IO::SDK::API::DTO::RaDecDTO", "structIO_1_1SDK_1_1API_1_1DTO_1_1RaDecDTO.html", null ],
     [ "IO::SDK::Coordinates::Rectangular", "classIO_1_1SDK_1_1Coordinates_1_1Rectangular.html", null ],
     [ "IO::SDK::Constraints::RelationalOperator", "classIO_1_1SDK_1_1Constraints_1_1RelationalOperator.html", null ],
     [ "IO::SDK::API::DTO::RetrogradeAttitudeDTO", "structIO_1_1SDK_1_1API_1_1DTO_1_1RetrogradeAttitudeDTO.html", null ],

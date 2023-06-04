@@ -1,11 +1,13 @@
+/*
+ Copyright (c) 2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
+ */
+
 //
 // Created by s.guillet on 20/04/2023.
 //
 
 #include <GeometryFinder.h>
-#include <SpiceUsr.h>
 #include <Builder.h>
-#include "IlluminationAngle.h"
 
 std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>>
 IO::SDK::Constraints::GeometryFinder::FindWindowsOnDistanceConstraint(const IO::SDK::Time::Window<IO::SDK::Time::TDB> &searchWindow, int observerId,

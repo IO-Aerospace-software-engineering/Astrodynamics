@@ -1,17 +1,10 @@
-/**
- * @file Coordinate.cpp
- * @author Sylvain Guillet (sylvain.guillet@live.com)
- * @brief 
- * @version 0.x
- * @date 2021-07-03
- * 
- * @copyright Copyright (c) 2021
- * 
+/*
+ Copyright (c) 2021-2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
  */
 #include <Coordinate.h>
 
 #include <utility>
-#include "SDKException.h"
+#include <SDKException.h>
 
 IO::SDK::Coordinate IO::SDK::Coordinate::mX(std::string("X"));
 IO::SDK::Coordinate IO::SDK::Coordinate::mY(std::string("Y"));

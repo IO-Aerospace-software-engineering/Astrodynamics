@@ -41,7 +41,7 @@ TEST(RetrogradeAttitude, GetOrientation)
 
     prop.Propagate();
 
-    //auto res = nadir.TryExecute(s.GetOrbitalParametersAtEpoch()->GetStateVector(IO::SDK::Time::TDB(100.1s)));
+    //auto res = nadir.TryExecute(s.GetOrbitalParametersAtEpoch()->ToStateVector(IO::SDK::Time::TDB(100.1s)));
     auto orientation = s.GetOrientation(IO::SDK::Time::TDB("2021-01-01T13:00:00"), IO::SDK::Time::TimeSpan(10s), IO::SDK::Frames::InertialFrames::GetICRF());
 
     ASSERT_DOUBLE_EQ(0.0, retrograde.GetDeltaV().Magnitude());

@@ -1,26 +1,11 @@
-/**
- * @file ConicOrbitalElements.h
- * @author Sylvain Guillet (sylvain.guillet@live.com)
- * @brief 
- * @version 0.x
- * @date 2021-07-03
- * 
- * @copyright Copyright (c) 2021
- * 
+/*
+ Copyright (c) 2021-2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
  */
 #ifndef CONIC_ORBITAL_ELEMENTS_H
 #define CONIC_ORBITAL_ELEMENTS_H
 
-#include<memory>
-#include<cmath>
-#include<OrbitalParameters.h>
-#include<CelestialBody.h>
 #include<Constants.h>
-#include<TimeSpan.h>
-#include<chrono>
-#include<TDB.h>
 #include<StateVector.h>
-#include<Frames.h>
 
 namespace IO::SDK::OrbitalParameters
 {
@@ -134,7 +119,7 @@ namespace IO::SDK::OrbitalParameters
         /// </summary>
         /// <param name="epoch"></param>
         /// <returns></returns>
-        [[nodiscard]] IO::SDK::OrbitalParameters::StateVector GetStateVector(const IO::SDK::Time::TDB &epoch) const override;
+        [[nodiscard]] IO::SDK::OrbitalParameters::StateVector ToStateVector(const IO::SDK::Time::TDB &epoch) const override;
 
         /// <summary>
         /// Get the specific angular momentum
@@ -148,7 +133,7 @@ namespace IO::SDK::OrbitalParameters
         /// <returns></returns>
         [[nodiscard]] double GetSpecificOrbitalEnergy() const override;
 
-        using IO::SDK::OrbitalParameters::OrbitalParameters::GetStateVector;
+        using IO::SDK::OrbitalParameters::OrbitalParameters::ToStateVector;
     };
 }
 #endif

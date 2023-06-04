@@ -159,7 +159,7 @@
 <a name="97"><span class="lineNum">      97 </span>            :          * </a>
 <a name="98"><span class="lineNum">      98 </span>            :          * @return IO::SDK::Math::Vector3D </a>
 <a name="99"><span class="lineNum">      99 </span>            :          */</a>
-<a name="100"><span class="lineNum">     100 </span>            :         IO::SDK::OrbitalParameters::StateVector GetStateVector(const IO::SDK::Frames::Frames frame, const IO::SDK::Time::TDB &amp;epoch) const;</a>
+<a name="100"><span class="lineNum">     100 </span>            :         IO::SDK::OrbitalParameters::StateVector ToStateVector(const IO::SDK::Frames::Frames frame, const IO::SDK::Time::TDB &amp;epoch) const;</a>
 <a name="101"><span class="lineNum">     101 </span>            : </a>
 <a name="102"><span class="lineNum">     102 </span>            :         /**</a>
 <a name="103"><span class="lineNum">     103 </span>            :          * @brief Get the Illumination</a>
@@ -236,7 +236,7 @@
 <a name="174"><span class="lineNum">     174 </span>            :          * @param epoch </a>
 <a name="175"><span class="lineNum">     175 </span>            :          * @return IO::SDK::OrbitalParameters::StateVector </a>
 <a name="176"><span class="lineNum">     176 </span>            :          */</a>
-<a name="177"><span class="lineNum">     177 </span>            :         IO::SDK::OrbitalParameters::StateVector GetStateVector(const IO::SDK::Body::Body &amp;body, const IO::SDK::Frames::Frames frame, const IO::SDK::AberrationsEnum aberrationCorrection, const IO::SDK::Time::TDB &amp;epoch) const;</a>
+<a name="177"><span class="lineNum">     177 </span>            :         IO::SDK::OrbitalParameters::StateVector ToStateVector(const IO::SDK::Body::Body &amp;body, const IO::SDK::Frames::Frames frame, const IO::SDK::AberrationsEnum aberrationCorrection, const IO::SDK::Time::TDB &amp;epoch) const;</a>
 <a name="178"><span class="lineNum">     178 </span>            :     };</a>
 <a name="179"><span class="lineNum">     179 </span>            : }</a>
 <a name="180"><span class="lineNum">     180 </span>            : </a>

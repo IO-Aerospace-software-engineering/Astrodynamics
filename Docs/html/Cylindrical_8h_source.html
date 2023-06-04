@@ -25,7 +25,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">IO-SDK<span id="projectnumber">&#160;0.8.x</span>
+   <div id="projectname">IO-SDK<span id="projectnumber">&#160;0.9.x</span>
    </div>
    <div id="projectbrief">Astrodynamics framework</div>
   </td>
@@ -86,35 +86,37 @@ $(document).ready(function(){initNavTree('Cylindrical_8h_source.html',''); initR
   <div class="headertitle"><div class="title">Cylindrical.h</div></div>
 </div><!--header-->
 <div class="contents">
-<a href="Cylindrical_8h.html">Go to the documentation of this file.</a><div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span> </div>
-<div class="line"><a id="l00011" name="l00011"></a><span class="lineno">   11</span><span class="preprocessor">#ifndef CYLINDRICAL_H</span></div>
-<div class="line"><a id="l00012" name="l00012"></a><span class="lineno">   12</span><span class="preprocessor">#define CYLINDRICAL_H</span></div>
-<div class="line"><a id="l00013" name="l00013"></a><span class="lineno">   13</span><span class="keyword">namespace </span><a class="code hl_namespace" href="namespaceIO_1_1SDK_1_1Coordinates.html">IO::SDK::Coordinates</a></div>
-<div class="line"><a id="l00014" name="l00014"></a><span class="lineno">   14</span>{</div>
-<div class="line"><a id="l00019" name="l00019"></a><span class="lineno"><a class="line" href="classIO_1_1SDK_1_1Coordinates_1_1Cylindrical.html">   19</a></span>    <span class="keyword">class </span><a class="code hl_class" href="classIO_1_1SDK_1_1Coordinates_1_1Cylindrical.html">Cylindrical</a></div>
-<div class="line"><a id="l00020" name="l00020"></a><span class="lineno">   20</span>    {</div>
-<div class="line"><a id="l00021" name="l00021"></a><span class="lineno">   21</span>    <span class="keyword">private</span>:</div>
-<div class="line"><a id="l00022" name="l00022"></a><span class="lineno">   22</span>        <span class="keyword">const</span> <span class="keywordtype">double</span> _radius, _longitude, _z;</div>
-<div class="line"><a id="l00023" name="l00023"></a><span class="lineno">   23</span> </div>
-<div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span>    <span class="keyword">public</span>:</div>
-<div class="line"><a id="l00032" name="l00032"></a><span class="lineno"><a class="line" href="classIO_1_1SDK_1_1Coordinates_1_1Cylindrical.html#a299316c14615539126a3d74019d09b60">   32</a></span>        <a class="code hl_function" href="classIO_1_1SDK_1_1Coordinates_1_1Cylindrical.html#a299316c14615539126a3d74019d09b60">Cylindrical</a>(<span class="keyword">const</span> <span class="keywordtype">double</span> radius, <span class="keyword">const</span> <span class="keywordtype">double</span> longitude, <span class="keyword">const</span> <span class="keywordtype">double</span> z) : _radius{radius}, _longitude{longitude}, _z{z}</div>
-<div class="line"><a id="l00033" name="l00033"></a><span class="lineno">   33</span>        {</div>
-<div class="line"><a id="l00034" name="l00034"></a><span class="lineno">   34</span>        }</div>
+<a href="Cylindrical_8h.html">Go to the documentation of this file.</a><div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span><span class="comment">/*</span></div>
+<div class="line"><a id="l00002" name="l00002"></a><span class="lineno">    2</span><span class="comment"> Copyright (c) 2021-2023. Sylvain Guillet (sylvain.guillet@tutamail.com)</span></div>
+<div class="line"><a id="l00003" name="l00003"></a><span class="lineno">    3</span><span class="comment"> */</span></div>
+<div class="line"><a id="l00004" name="l00004"></a><span class="lineno">    4</span><span class="preprocessor">#ifndef CYLINDRICAL_H</span></div>
+<div class="line"><a id="l00005" name="l00005"></a><span class="lineno">    5</span><span class="preprocessor">#define CYLINDRICAL_H</span></div>
+<div class="line"><a id="l00006" name="l00006"></a><span class="lineno">    6</span><span class="keyword">namespace </span><a class="code hl_namespace" href="namespaceIO_1_1SDK_1_1Coordinates.html">IO::SDK::Coordinates</a></div>
+<div class="line"><a id="l00007" name="l00007"></a><span class="lineno">    7</span>{</div>
+<div class="line"><a id="l00012" name="l00012"></a><span class="lineno"><a class="line" href="classIO_1_1SDK_1_1Coordinates_1_1Cylindrical.html">   12</a></span>    <span class="keyword">class </span><a class="code hl_class" href="classIO_1_1SDK_1_1Coordinates_1_1Cylindrical.html">Cylindrical</a></div>
+<div class="line"><a id="l00013" name="l00013"></a><span class="lineno">   13</span>    {</div>
+<div class="line"><a id="l00014" name="l00014"></a><span class="lineno">   14</span>    <span class="keyword">private</span>:</div>
+<div class="line"><a id="l00015" name="l00015"></a><span class="lineno">   15</span>        <span class="keyword">const</span> <span class="keywordtype">double</span> _radius, _longitude, _z;</div>
+<div class="line"><a id="l00016" name="l00016"></a><span class="lineno">   16</span> </div>
+<div class="line"><a id="l00017" name="l00017"></a><span class="lineno">   17</span>    <span class="keyword">public</span>:</div>
+<div class="line"><a id="l00025" name="l00025"></a><span class="lineno"><a class="line" href="classIO_1_1SDK_1_1Coordinates_1_1Cylindrical.html#a299316c14615539126a3d74019d09b60">   25</a></span>        <a class="code hl_function" href="classIO_1_1SDK_1_1Coordinates_1_1Cylindrical.html#a299316c14615539126a3d74019d09b60">Cylindrical</a>(<span class="keyword">const</span> <span class="keywordtype">double</span> radius, <span class="keyword">const</span> <span class="keywordtype">double</span> longitude, <span class="keyword">const</span> <span class="keywordtype">double</span> z) : _radius{radius}, _longitude{longitude}, _z{z}</div>
+<div class="line"><a id="l00026" name="l00026"></a><span class="lineno">   26</span>        {</div>
+<div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span>        }</div>
+<div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span> </div>
+<div class="line"><a id="l00034" name="l00034"></a><span class="lineno"><a class="line" href="classIO_1_1SDK_1_1Coordinates_1_1Cylindrical.html#ae3cf12c70683eb28f8c46c3b701636e9">   34</a></span>        [[nodiscard]] <span class="keywordtype">double</span> <a class="code hl_function" href="classIO_1_1SDK_1_1Coordinates_1_1Cylindrical.html#ae3cf12c70683eb28f8c46c3b701636e9">GetRadius</a>()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> this-&gt;_radius; }</div>
 <div class="line"><a id="l00035" name="l00035"></a><span class="lineno">   35</span> </div>
-<div class="line"><a id="l00041" name="l00041"></a><span class="lineno"><a class="line" href="classIO_1_1SDK_1_1Coordinates_1_1Cylindrical.html#ae3cf12c70683eb28f8c46c3b701636e9">   41</a></span>        [[nodiscard]] <span class="keywordtype">double</span> <a class="code hl_function" href="classIO_1_1SDK_1_1Coordinates_1_1Cylindrical.html#ae3cf12c70683eb28f8c46c3b701636e9">GetRadius</a>()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> this-&gt;_radius; }</div>
+<div class="line"><a id="l00041" name="l00041"></a><span class="lineno"><a class="line" href="classIO_1_1SDK_1_1Coordinates_1_1Cylindrical.html#a343aeb8f0bc2f00fd875bf07014097ec">   41</a></span>        [[nodiscard]] <span class="keywordtype">double</span> <a class="code hl_function" href="classIO_1_1SDK_1_1Coordinates_1_1Cylindrical.html#a343aeb8f0bc2f00fd875bf07014097ec">GetLongitude</a>()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> this-&gt;_longitude; }</div>
 <div class="line"><a id="l00042" name="l00042"></a><span class="lineno">   42</span> </div>
-<div class="line"><a id="l00048" name="l00048"></a><span class="lineno"><a class="line" href="classIO_1_1SDK_1_1Coordinates_1_1Cylindrical.html#a343aeb8f0bc2f00fd875bf07014097ec">   48</a></span>        [[nodiscard]] <span class="keywordtype">double</span> <a class="code hl_function" href="classIO_1_1SDK_1_1Coordinates_1_1Cylindrical.html#a343aeb8f0bc2f00fd875bf07014097ec">GetLongitude</a>()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> this-&gt;_longitude; }</div>
-<div class="line"><a id="l00049" name="l00049"></a><span class="lineno">   49</span> </div>
-<div class="line"><a id="l00055" name="l00055"></a><span class="lineno"><a class="line" href="classIO_1_1SDK_1_1Coordinates_1_1Cylindrical.html#a0635099316db70880f80cadbb268fea8">   55</a></span>        [[nodiscard]] <span class="keywordtype">double</span> <a class="code hl_function" href="classIO_1_1SDK_1_1Coordinates_1_1Cylindrical.html#a0635099316db70880f80cadbb268fea8">GetZ</a>()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> this-&gt;_z; }</div>
-<div class="line"><a id="l00056" name="l00056"></a><span class="lineno">   56</span>    };</div>
-<div class="line"><a id="l00057" name="l00057"></a><span class="lineno">   57</span>}</div>
-<div class="line"><a id="l00058" name="l00058"></a><span class="lineno">   58</span><span class="preprocessor">#endif </span><span class="comment">// !CYLINDRICAL_H</span></div>
-<div class="ttc" id="aclassIO_1_1SDK_1_1Coordinates_1_1Cylindrical_html"><div class="ttname"><a href="classIO_1_1SDK_1_1Coordinates_1_1Cylindrical.html">IO::SDK::Coordinates::Cylindrical</a></div><div class="ttdef"><b>Definition:</b> Cylindrical.h:20</div></div>
-<div class="ttc" id="aclassIO_1_1SDK_1_1Coordinates_1_1Cylindrical_html_a0635099316db70880f80cadbb268fea8"><div class="ttname"><a href="classIO_1_1SDK_1_1Coordinates_1_1Cylindrical.html#a0635099316db70880f80cadbb268fea8">IO::SDK::Coordinates::Cylindrical::GetZ</a></div><div class="ttdeci">double GetZ() const</div><div class="ttdef"><b>Definition:</b> Cylindrical.h:55</div></div>
-<div class="ttc" id="aclassIO_1_1SDK_1_1Coordinates_1_1Cylindrical_html_a299316c14615539126a3d74019d09b60"><div class="ttname"><a href="classIO_1_1SDK_1_1Coordinates_1_1Cylindrical.html#a299316c14615539126a3d74019d09b60">IO::SDK::Coordinates::Cylindrical::Cylindrical</a></div><div class="ttdeci">Cylindrical(const double radius, const double longitude, const double z)</div><div class="ttdoc">Construct a new Cylindrical object.</div><div class="ttdef"><b>Definition:</b> Cylindrical.h:32</div></div>
-<div class="ttc" id="aclassIO_1_1SDK_1_1Coordinates_1_1Cylindrical_html_a343aeb8f0bc2f00fd875bf07014097ec"><div class="ttname"><a href="classIO_1_1SDK_1_1Coordinates_1_1Cylindrical.html#a343aeb8f0bc2f00fd875bf07014097ec">IO::SDK::Coordinates::Cylindrical::GetLongitude</a></div><div class="ttdeci">double GetLongitude() const</div><div class="ttdoc">Get the Longitude.</div><div class="ttdef"><b>Definition:</b> Cylindrical.h:48</div></div>
-<div class="ttc" id="aclassIO_1_1SDK_1_1Coordinates_1_1Cylindrical_html_ae3cf12c70683eb28f8c46c3b701636e9"><div class="ttname"><a href="classIO_1_1SDK_1_1Coordinates_1_1Cylindrical.html#ae3cf12c70683eb28f8c46c3b701636e9">IO::SDK::Coordinates::Cylindrical::GetRadius</a></div><div class="ttdeci">double GetRadius() const</div><div class="ttdoc">Get the Radius.</div><div class="ttdef"><b>Definition:</b> Cylindrical.h:41</div></div>
-<div class="ttc" id="anamespaceIO_1_1SDK_1_1Coordinates_html"><div class="ttname"><a href="namespaceIO_1_1SDK_1_1Coordinates.html">IO::SDK::Coordinates</a></div><div class="ttdef"><b>Definition:</b> AzimuthRange.h:15</div></div>
+<div class="line"><a id="l00048" name="l00048"></a><span class="lineno"><a class="line" href="classIO_1_1SDK_1_1Coordinates_1_1Cylindrical.html#a0635099316db70880f80cadbb268fea8">   48</a></span>        [[nodiscard]] <span class="keywordtype">double</span> <a class="code hl_function" href="classIO_1_1SDK_1_1Coordinates_1_1Cylindrical.html#a0635099316db70880f80cadbb268fea8">GetZ</a>()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> this-&gt;_z; }</div>
+<div class="line"><a id="l00049" name="l00049"></a><span class="lineno">   49</span>    };</div>
+<div class="line"><a id="l00050" name="l00050"></a><span class="lineno">   50</span>}</div>
+<div class="line"><a id="l00051" name="l00051"></a><span class="lineno">   51</span><span class="preprocessor">#endif </span><span class="comment">// !CYLINDRICAL_H</span></div>
+<div class="ttc" id="aclassIO_1_1SDK_1_1Coordinates_1_1Cylindrical_html"><div class="ttname"><a href="classIO_1_1SDK_1_1Coordinates_1_1Cylindrical.html">IO::SDK::Coordinates::Cylindrical</a></div><div class="ttdef"><b>Definition:</b> Cylindrical.h:13</div></div>
+<div class="ttc" id="aclassIO_1_1SDK_1_1Coordinates_1_1Cylindrical_html_a0635099316db70880f80cadbb268fea8"><div class="ttname"><a href="classIO_1_1SDK_1_1Coordinates_1_1Cylindrical.html#a0635099316db70880f80cadbb268fea8">IO::SDK::Coordinates::Cylindrical::GetZ</a></div><div class="ttdeci">double GetZ() const</div><div class="ttdef"><b>Definition:</b> Cylindrical.h:48</div></div>
+<div class="ttc" id="aclassIO_1_1SDK_1_1Coordinates_1_1Cylindrical_html_a299316c14615539126a3d74019d09b60"><div class="ttname"><a href="classIO_1_1SDK_1_1Coordinates_1_1Cylindrical.html#a299316c14615539126a3d74019d09b60">IO::SDK::Coordinates::Cylindrical::Cylindrical</a></div><div class="ttdeci">Cylindrical(const double radius, const double longitude, const double z)</div><div class="ttdoc">Construct a new Cylindrical object.</div><div class="ttdef"><b>Definition:</b> Cylindrical.h:25</div></div>
+<div class="ttc" id="aclassIO_1_1SDK_1_1Coordinates_1_1Cylindrical_html_a343aeb8f0bc2f00fd875bf07014097ec"><div class="ttname"><a href="classIO_1_1SDK_1_1Coordinates_1_1Cylindrical.html#a343aeb8f0bc2f00fd875bf07014097ec">IO::SDK::Coordinates::Cylindrical::GetLongitude</a></div><div class="ttdeci">double GetLongitude() const</div><div class="ttdoc">Get the Longitude.</div><div class="ttdef"><b>Definition:</b> Cylindrical.h:41</div></div>
+<div class="ttc" id="aclassIO_1_1SDK_1_1Coordinates_1_1Cylindrical_html_ae3cf12c70683eb28f8c46c3b701636e9"><div class="ttname"><a href="classIO_1_1SDK_1_1Coordinates_1_1Cylindrical.html#ae3cf12c70683eb28f8c46c3b701636e9">IO::SDK::Coordinates::Cylindrical::GetRadius</a></div><div class="ttdeci">double GetRadius() const</div><div class="ttdoc">Get the Radius.</div><div class="ttdef"><b>Definition:</b> Cylindrical.h:34</div></div>
+<div class="ttc" id="anamespaceIO_1_1SDK_1_1Coordinates_html"><div class="ttname"><a href="namespaceIO_1_1SDK_1_1Coordinates.html">IO::SDK::Coordinates</a></div><div class="ttdef"><b>Definition:</b> AzimuthRange.h:8</div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->

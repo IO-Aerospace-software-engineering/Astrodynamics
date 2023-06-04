@@ -1,11 +1,9 @@
 var searchData=
 [
-  ['nadirattitudes_0',['nadirAttitudes',['../structIO_1_1SDK_1_1API_1_1DTO_1_1SpacecraftDTO.html#a0a22f82f050fa489da9d3b28b89fbc21',1,'IO::SDK::API::DTO::SpacecraftDTO']]],
-  ['name_1',['name',['../structIO_1_1SDK_1_1API_1_1DTO_1_1EngineDTO.html#afba82457c3dba1f96881de6c7f96c6fc',1,'IO::SDK::API::DTO::EngineDTO::name()'],['../structIO_1_1SDK_1_1API_1_1DTO_1_1InstrumentDTO.html#ae1085834008351e68b8c291e192ee64d',1,'IO::SDK::API::DTO::InstrumentDTO::name()'],['../structIO_1_1SDK_1_1API_1_1DTO_1_1PayloadDTO.html#a12cf53527bd7a399ea89f515df58d517',1,'IO::SDK::API::DTO::PayloadDTO::name()'],['../structIO_1_1SDK_1_1API_1_1DTO_1_1SiteDTO.html#aff19f9ee62d2d1d3b306626c3585cf6a',1,'IO::SDK::API::DTO::SiteDTO::name()'],['../structIO_1_1SDK_1_1API_1_1DTO_1_1SpacecraftDTO.html#a1feb00c8c91a2af0c47591e572351b79',1,'IO::SDK::API::DTO::SpacecraftDTO::name()']]],
-  ['name_2',['Name',['../structIO_1_1SDK_1_1API_1_1DTO_1_1CelestialBodyDTO.html#ac58bd7effed87fb64a593b795a357a03',1,'IO::SDK::API::DTO::CelestialBodyDTO::Name()'],['../structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO.html#a19b9d3b85ddcc93df6029ea267ab1a85',1,'IO::SDK::API::DTO::ScenarioDTO::Name()']]],
-  ['nauticaltwilight_3',['NauticalTwilight',['../namespaceIO_1_1SDK_1_1Constants.html#a934c3fc0b60243bb14a32f797ec41329',1,'IO::SDK::Constants']]],
-  ['nodedetectionaccuraccy_4',['NodeDetectionAccuraccy',['../namespaceIO_1_1SDK_1_1Parameters.html#afb6663fa378276d38946b2183ba2fc5f',1,'IO::SDK::Parameters']]],
-  ['noninertialazimuth_5',['nonInertialAzimuth',['../structIO_1_1SDK_1_1API_1_1DTO_1_1LaunchDTO.html#a211ca52c4538c98461138364414c8969',1,'IO::SDK::API::DTO::LaunchDTO']]],
-  ['noninertialinsertionvelocity_6',['nonInertialInsertionVelocity',['../structIO_1_1SDK_1_1API_1_1DTO_1_1LaunchDTO.html#a52f634f1d5391acc3357ba6405eeb37f',1,'IO::SDK::API::DTO::LaunchDTO']]],
-  ['numberrevolutions_7',['numberRevolutions',['../structIO_1_1SDK_1_1API_1_1DTO_1_1PhasingManeuverDTO.html#a95d80c87bb0a88a6681b0d759d983081',1,'IO::SDK::API::DTO::PhasingManeuverDTO']]]
+  ['l_0',['L',['../structIO_1_1SDK_1_1API_1_1DTO_1_1EquinoctialElementsDTO.html#a0bed96ce10d0a06a52f6e64a61ff1828',1,'IO::SDK::API::DTO::EquinoctialElementsDTO']]],
+  ['latitude_1',['latitude',['../structIO_1_1SDK_1_1API_1_1DTO_1_1GeodeticDTO.html#a74869f29287969f17ed4e81cca6e1536',1,'IO::SDK::API::DTO::GeodeticDTO']]],
+  ['launchbyday_2',['launchByDay',['../structIO_1_1SDK_1_1API_1_1DTO_1_1LaunchDTO.html#a04201dad76b865ca5fd9a82b1e5ed761',1,'IO::SDK::API::DTO::LaunchDTO']]],
+  ['launchsite_3',['launchSite',['../structIO_1_1SDK_1_1API_1_1DTO_1_1LaunchDTO.html#ae190f76f7b6f14e9f0333632a78bd82b',1,'IO::SDK::API::DTO::LaunchDTO']]],
+  ['left_4',['Left',['../classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft.html#a98a070475cc95330e8fa585e1e5dda26',1,'IO::SDK::Body::Spacecraft::Spacecraft']]],
+  ['longitude_5',['longitude',['../structIO_1_1SDK_1_1API_1_1DTO_1_1GeodeticDTO.html#a0a5a64a07a3b51c24c5c48e803872c70',1,'IO::SDK::API::DTO::GeodeticDTO']]]
 ];

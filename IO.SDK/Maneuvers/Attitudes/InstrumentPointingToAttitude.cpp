@@ -1,5 +1,9 @@
+/*
+ Copyright (c) 2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
+ */
+
 #include <InstrumentPointingToAttitude.h>
-#include "InertialFrames.h"
+#include <InertialFrames.h>
 
 IO::SDK::Maneuvers::Attitudes::InstrumentPointingToAttitude::InstrumentPointingToAttitude(std::vector<IO::SDK::Body::Spacecraft::Engine*> engines,
                                                                                           IO::SDK::Propagators::Propagator &propagator,
@@ -51,7 +55,7 @@ IO::SDK::OrbitalParameters::StateOrientation
 IO::SDK::Maneuvers::Attitudes::InstrumentPointingToAttitude::ComputeOrientation(const IO::SDK::OrbitalParameters::OrbitalParameters &maneuverPoint)
 {
     IO::SDK::Math::Vector3D targetPosition;
-    IO::SDK::Math::Vector3D spacecraftPosition = maneuverPoint.GetStateVector().ToFrame(IO::SDK::Frames::InertialFrames::GetICRF()).GetPosition();
+    IO::SDK::Math::Vector3D spacecraftPosition = maneuverPoint.ToStateVector().ToFrame(IO::SDK::Frames::InertialFrames::GetICRF()).GetPosition();
     if (m_targetBody)
     {
         targetPosition = m_targetBody->ReadEphemeris(maneuverPoint.GetFrame(), AberrationsEnum::LTS, maneuverPoint.GetEpoch(),
