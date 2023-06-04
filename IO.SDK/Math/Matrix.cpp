@@ -1,15 +1,7 @@
-/**
- * @file Matrix.cpp
- * @author Sylvain Guillet (sylvain.guillet@live.com)
- * @brief 
- * @version 0.x
- * @date 2021-07-03
- * 
- * @copyright Copyright (c) 2021
- * 
+/*
+ Copyright (c) 2021-2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
  */
-#include "Matrix.h"
-#include <SDKException.h>
+#include <Matrix.h>
 #include <InvalidArgumentException.h>
 
 IO::SDK::Math::Matrix::Matrix(const Matrix &v) : Matrix(v.m_rowSize, v.m_colSize)

@@ -1,17 +1,8 @@
-/**
- * @file TLE.cpp
- * @author Sylvain Guillet (sylvain.guillet@live.com)
- * @brief 
- * @version 0.x
- * @date 2021-07-03
- * 
- * @copyright Copyright (c) 2021
- * 
+/*
+ Copyright (c) 2021-2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
  */
-#include "TLE.h"
+#include <TLE.h>
 #include <algorithm>
-#include <SpiceUsr.h>
-#include <Constants.h>
 #include <InertialFrames.h>
 
 IO::SDK::OrbitalParameters::TLE::TLE(const std::shared_ptr<IO::SDK::Body::CelestialBody> &centerOfmotion, std::string lines[3]) : OrbitalParameters(centerOfmotion,
@@ -38,7 +29,7 @@ IO::SDK::OrbitalParameters::TLE::TLE(const std::shared_ptr<IO::SDK::Body::Celest
     m_period = IO::SDK::Time::TimeSpan(std::chrono::duration<double>(IO::SDK::Constants::_2PI / (m_elements[8] / 60.0)));
 
     //Set stateVector
-    m_stateVector = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(GetStateVector(m_epoch));
+    m_stateVector = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(ToStateVector(m_epoch));
 
     // Set conical elements
     m_conicOrbitalElements = std::make_unique<IO::SDK::OrbitalParameters::ConicOrbitalElements>(*m_stateVector);
@@ -74,7 +65,7 @@ IO::SDK::Math::Vector3D IO::SDK::OrbitalParameters::TLE::GetSpecificAngularMomen
     return m_stateVector->GetSpecificAngularMomentum();
 }
 
-IO::SDK::OrbitalParameters::StateVector IO::SDK::OrbitalParameters::TLE::GetStateVector(const IO::SDK::Time::TDB &epoch) const
+IO::SDK::OrbitalParameters::StateVector IO::SDK::OrbitalParameters::TLE::ToStateVector(const IO::SDK::Time::TDB &epoch) const
 {
     SpiceDouble stateVector[6];
 

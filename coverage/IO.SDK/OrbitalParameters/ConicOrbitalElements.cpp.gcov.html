@@ -104,7 +104,7 @@
 <a name="42"><span class="lineNum">      42 </span><span class="lineCov">         32 :         m_semiMajorAxis = elts[9];</span></a>
 <a name="43"><span class="lineNum">      43 </span><span class="lineCov">         32 : }</span></a>
 <a name="44"><span class="lineNum">      44 </span>            : </a>
-<a name="45"><span class="lineNum">      45 </span><span class="lineCov">     113722 : IO::SDK::OrbitalParameters::StateVector IO::SDK::OrbitalParameters::ConicOrbitalElements::GetStateVector(const IO::SDK::Time::TDB &amp;epoch) const</span></a>
+<a name="45"><span class="lineNum">      45 </span><span class="lineCov">     113722 : IO::SDK::OrbitalParameters::StateVector IO::SDK::OrbitalParameters::ConicOrbitalElements::ToStateVector(const IO::SDK::Time::TDB &amp;epoch) const</span></a>
 <a name="46"><span class="lineNum">      46 </span>            : {</a>
 <a name="47"><span class="lineNum">      47 </span><span class="lineCov">     113722 :         ConstSpiceDouble elts[8] = {m_perifocalDistance, m_eccentricity, m_inclination, m_ascendingNodeLongitude, m_periapsisArgument, m_meanAnomaly, m_epoch.GetSecondsFromJ2000().count(), m_centerOfMotion-&gt;GetMu()};</span></a>
 <a name="48"><span class="lineNum">      48 </span><span class="lineCov">     113722 :         SpiceDouble state[6] = {};</span></a>
@@ -116,12 +116,12 @@
 <a name="54"><span class="lineNum">      54 </span>            : </a>
 <a name="55"><span class="lineNum">      55 </span><span class="lineCov">      99641 : IO::SDK::Math::Vector3D IO::SDK::OrbitalParameters::ConicOrbitalElements::GetSpecificAngularMomentum() const</span></a>
 <a name="56"><span class="lineNum">      56 </span>            : {</a>
-<a name="57"><span class="lineNum">      57 </span><span class="lineCov">      99641 :         return GetStateVector(m_epoch).GetSpecificAngularMomentum();</span></a>
+<a name="57"><span class="lineNum">      57 </span><span class="lineCov">      99641 :         return ToStateVector(m_epoch).GetSpecificAngularMomentum();</span></a>
 <a name="58"><span class="lineNum">      58 </span>            : }</a>
 <a name="59"><span class="lineNum">      59 </span>            : </a>
 <a name="60"><span class="lineNum">      60 </span><span class="lineCov">         61 : double IO::SDK::OrbitalParameters::ConicOrbitalElements::GetSpecificOrbitalEnergy() const</span></a>
 <a name="61"><span class="lineNum">      61 </span>            : {</a>
-<a name="62"><span class="lineNum">      62 </span><span class="lineCov">         61 :         return GetStateVector(m_epoch).GetSpecificOrbitalEnergy();</span></a>
+<a name="62"><span class="lineNum">      62 </span><span class="lineCov">         61 :         return ToStateVector(m_epoch).GetSpecificOrbitalEnergy();</span></a>
 <a name="63"><span class="lineNum">      63 </span>            : }</a>
 <a name="64"><span class="lineNum">      64 </span>            : </a>
 <a name="65"><span class="lineNum">      65 </span><span class="lineCov">          2 : double IO::SDK::OrbitalParameters::ConicOrbitalElements::GetPerifocalDistance() const</span></a>

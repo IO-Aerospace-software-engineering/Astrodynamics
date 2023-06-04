@@ -1,3 +1,7 @@
+/*
+ Copyright (c) 2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
+ */
+
 #include <algorithm>
 #include <iostream>
 
@@ -123,7 +127,7 @@ bool WriteEphemerisProxy(const char *filePath, int objectId, IO::SDK::API::DTO::
     std::map<int, std::shared_ptr<IO::SDK::Body::CelestialBody>> celestialBodies;
 
 
-    for (int i = 0; i < size; ++i) {
+    for (unsigned int i = 0; i < size; ++i) {
         if (celestialBodies.find(sv[0].centerOfMotionId) == celestialBodies.end()) {
             celestialBodies[sv[i].centerOfMotionId] = std::make_shared<IO::SDK::Body::CelestialBody>(
                     sv[i].centerOfMotionId);
@@ -1018,7 +1022,7 @@ IO::SDK::API::DTO::StateVectorDTO ConvertTLEToStateVectorProxy(const char *L1, c
     auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
     std::string strings[3] = {"ISS", L1, L2};
     IO::SDK::OrbitalParameters::TLE tle(earth, strings);
-    auto sv = tle.GetStateVector(IO::SDK::Time::TDB(std::chrono::duration<double>(epoch)));
+    auto sv = tle.ToStateVector(IO::SDK::Time::TDB(std::chrono::duration<double>(epoch)));
     return ToStateVectorDTO(sv);
 }
 
@@ -1035,7 +1039,7 @@ ConvertConicElementsToStateVectorProxy(IO::SDK::API::DTO::ConicOrbitalElementsDT
                                                                           conicOrbitalElementsDto.periapsisArgument,
                                                                           conicOrbitalElementsDto.meanAnomaly, tdb,
                                                                           frame};
-    auto sv = conicOrbitalElements.GetStateVector();
+    auto sv = conicOrbitalElements.ToStateVector();
     return ToStateVectorDTO(sv);
 }
 
@@ -1054,7 +1058,7 @@ ConvertEquinoctialElementsToStateVectorProxy(IO::SDK::API::DTO::EquinoctialEleme
                                                        equinoctialElementsDto.rightAscensionOfThePole,
                                                        equinoctialElementsDto.declinationOfThePole, frame};
 
-    auto sv = eq.GetStateVector();
+    auto sv = eq.ToStateVector();
     return ToStateVectorDTO(sv);
 }
 
@@ -1065,8 +1069,8 @@ ConvertToRightAscensionAndDeclinationProxy(IO::SDK::API::DTO::StateVectorDTO sta
     IO::SDK::Frames::Frames frame{stateVectorDto.inertialFrame};
     IO::SDK::OrbitalParameters::StateVector sv{centerOfMotion, ToVector3D(stateVectorDto.position),
                                                ToVector3D(stateVectorDto.velocity), tdb, frame};
-    auto raDec = sv.GetRADec();
-    return ToRaDecDTO(raDec);
+    auto raDec = sv.ToEquatorialCoordinates();
+    return ToEquatorialDTO(raDec);
 }
 
 #pragma endregion

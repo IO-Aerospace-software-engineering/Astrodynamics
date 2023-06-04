@@ -1,23 +1,10 @@
-/**
- * @file Body.h
- * @author Sylvain Guillet (sylvain.guillet@live.com)
- * @brief 
- * @version 0.x
- * @date 2021-03-22
- * 
- * @copyright Copyright (c) 2021
- * 
+/*
+ Copyright (c) 2021-2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
  */
 #ifndef BODY_H
 #define BODY_H
 
-#include <vector>
-
 #include <OrbitalParameters.h>
-#include <Aberrations.h>
-#include <Window.h>
-#include "Constraints/RelationalOperator.h"
-#include <OccultationType.h>
 #include <Planetographic.h>
 #include <GeometryFinder.h>
 

@@ -1,12 +1,5 @@
-/**
- * @file OrbitalPlaneChangingManeuver.cpp
- * @author Sylvain Guillet (sylvain.guillet@live.com)
- * @brief 
- * @version 0.x
- * @date 2021-07-03
- * 
- * @copyright Copyright (c) 2021
- * 
+/*
+ Copyright (c) 2021-2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
  */
 #include <OrbitalPlaneChangingManeuver.h>
 #include <Constants.h>
@@ -30,7 +23,7 @@ IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver::OrbitalPlaneChangingManeuver(s
 
 bool IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver::CanExecute(const IO::SDK::OrbitalParameters::OrbitalParameters &orbitalParams)
 {
-    auto spacecraftSv = orbitalParams.GetStateVector();
+    auto spacecraftSv = orbitalParams.ToStateVector();
 
     if (std::abs(spacecraftSv.GetPosition().GetAngle(m_targetOrbit->GetSpecificAngularMomentum().CrossProduct(orbitalParams.GetSpecificAngularMomentum()))) <
         Parameters::NodeDetectionAccuraccy)
@@ -50,7 +43,7 @@ bool IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver::CanExecute(const IO::SDK:
 
 void IO::SDK::Maneuvers::OrbitalPlaneChangingManeuver::Compute(const IO::SDK::OrbitalParameters::OrbitalParameters &orbitalParams)
 {
-    auto currentvectorState = orbitalParams.GetStateVector();
+    auto currentvectorState = orbitalParams.ToStateVector();
 
     const IO::SDK::Math::Vector3D& vel = currentvectorState.GetVelocity();
     const IO::SDK::Math::Vector3D& pos = currentvectorState.GetPosition();

@@ -1,12 +1,5 @@
-/**
- * @file IntegratorBase.h
- * @author Sylvain Guillet (sylvain.guillet@live.com)
- * @brief 
- * @version 0.x
- * @date 2021-03-17
- * 
- * @copyright Copyright (c) 2021
- * 
+/*
+ Copyright (c) 2021-2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
  */
 #ifndef INTEGRATOR_BASE_H
 #define INTEGRATOR_BASE_H

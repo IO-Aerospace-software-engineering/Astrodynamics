@@ -1,6 +1,6 @@
-//
-// Created by spacer on 5/31/23.
-//
+/*
+ Copyright (c) 2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
+ */
 
 #ifndef IOSDK_EQUINOCTIALELEMENTSDTO_H
 #define IOSDK_EQUINOCTIALELEMENTSDTO_H
@@ -23,7 +23,7 @@ namespace IO::SDK::API::DTO
         double rightAscensionOfThePole{};
         double declinationOfThePole{};
         double ascendingNodeLongitudeRate{};
-        double period;
+        double period{};
     };
 }
 

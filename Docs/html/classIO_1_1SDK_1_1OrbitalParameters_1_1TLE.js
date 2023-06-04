@@ -17,5 +17,5 @@ var classIO_1_1SDK_1_1OrbitalParameters_1_1TLE =
     [ "GetSemiMajorAxis", "classIO_1_1SDK_1_1OrbitalParameters_1_1TLE.html#ad02bc037aae9d931f138285fdb49e483", null ],
     [ "GetSpecificAngularMomentum", "classIO_1_1SDK_1_1OrbitalParameters_1_1TLE.html#a72c15ec42964f9bc2511f9279bf1ffbb", null ],
     [ "GetSpecificOrbitalEnergy", "classIO_1_1SDK_1_1OrbitalParameters_1_1TLE.html#ad499a14a42e8345dbd92615667a01e13", null ],
-    [ "GetStateVector", "classIO_1_1SDK_1_1OrbitalParameters_1_1TLE.html#a7c59c0341b55a7ec60022142b3a3aec9", null ]
+    [ "ToStateVector", "classIO_1_1SDK_1_1OrbitalParameters_1_1TLE.html#a50d7fdbef283e552f6b88ba8afac8d42", null ]
 ];

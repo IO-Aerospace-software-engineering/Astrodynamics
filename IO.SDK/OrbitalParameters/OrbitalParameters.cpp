@@ -1,12 +1,5 @@
-/**
- * @file OrbitalParameters.cpp
- * @author Sylvain Guillet (sylvain.guillet@live.com)
- * @brief 
- * @version 0.x
- * @date 2021-07-03
- * 
- * @copyright Copyright (c) 2021
- * 
+/*
+ Copyright (c) 2021-2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
  */
 #include <Constants.h>
 #include <StateVector.h>
@@ -123,9 +116,9 @@ double IO::SDK::OrbitalParameters::OrbitalParameters::GetTrueAnomaly() const
 	return GetTrueAnomaly(m_epoch);
 }
 
-IO::SDK::OrbitalParameters::StateVector IO::SDK::OrbitalParameters::OrbitalParameters::GetStateVector() const
+IO::SDK::OrbitalParameters::StateVector IO::SDK::OrbitalParameters::OrbitalParameters::ToStateVector() const
 {
-	return GetStateVector(m_epoch);
+	return ToStateVector(m_epoch);
 }
 
 IO::SDK::Time::TDB IO::SDK::OrbitalParameters::OrbitalParameters::GetEpoch() const
@@ -140,7 +133,7 @@ const IO::SDK::Frames::Frames &IO::SDK::OrbitalParameters::OrbitalParameters::Ge
 
 IO::SDK::Math::Vector3D IO::SDK::OrbitalParameters::OrbitalParameters::GetEccentricityVector() const
 {
-	auto sv = GetStateVector();
+	auto sv = ToStateVector();
 	return (sv.GetVelocity().CrossProduct(GetSpecificAngularMomentum()) / m_centerOfMotion->GetMu()) - (sv.GetPosition() / sv.GetPosition().Magnitude());
 }
 
@@ -154,9 +147,9 @@ IO::SDK::Math::Vector3D IO::SDK::OrbitalParameters::OrbitalParameters::GetApogee
 	return GetEccentricityVector().Normalize().Reverse() * (GetSemiMajorAxis() * (1.0 + GetEccentricity()));
 }
 
-IO::SDK::OrbitalParameters::StateVector IO::SDK::OrbitalParameters::OrbitalParameters::GetStateVector(double trueAnomalie) const
+IO::SDK::OrbitalParameters::StateVector IO::SDK::OrbitalParameters::OrbitalParameters::ToStateVector(double trueAnomaly) const
 {
-	return GetStateVector(GetTimeToTrueAnomaly(trueAnomalie));
+	return ToStateVector(GetTimeToTrueAnomaly(trueAnomaly));
 }
 
 IO::SDK::Math::Vector3D IO::SDK::OrbitalParameters::OrbitalParameters::GetAscendingNodeVector() const
@@ -168,9 +161,9 @@ IO::SDK::Math::Vector3D IO::SDK::OrbitalParameters::OrbitalParameters::GetAscend
 	return m_centerOfMotion->GetBodyFixedFrame().TransformVector(m_frame, v, m_epoch).Normalize();
 }
 
-IO::SDK::Coordinates::RADec IO::SDK::OrbitalParameters::OrbitalParameters::GetRADec() const
+IO::SDK::Coordinates::Equatorial IO::SDK::OrbitalParameters::OrbitalParameters::ToEquatorialCoordinates() const
 {
-	auto sv = GetStateVector();
+	auto sv = ToStateVector();
 	if (sv.GetFrame() != IO::SDK::Frames::InertialFrames::GetICRF())
 	{
 		sv = sv.ToFrame(IO::SDK::Frames::InertialFrames::GetICRF());
@@ -180,17 +173,17 @@ IO::SDK::Coordinates::RADec IO::SDK::OrbitalParameters::OrbitalParameters::GetRA
 	double r, ra, dec;
 	recrad_c(rectan, &r, &ra, &dec);
 
-	return IO::SDK::Coordinates::RADec{ra, dec, r};
+	return IO::SDK::Coordinates::Equatorial{ra, dec, r};
 }
 
 double IO::SDK::OrbitalParameters::OrbitalParameters::GetVelocityAtPerigee() const
 {
-	return GetStateVector(0.0).GetVelocity().Magnitude();
+	return ToStateVector(0.0).GetVelocity().Magnitude();
 }
 
 double IO::SDK::OrbitalParameters::OrbitalParameters::GetVelocityAtApogee() const
 {
-	return GetStateVector(IO::SDK::Constants::PI).GetVelocity().Magnitude();
+	return ToStateVector(IO::SDK::Constants::PI).GetVelocity().Magnitude();
 }
 
 double IO::SDK::OrbitalParameters::OrbitalParameters::GetTrueLongitude() const

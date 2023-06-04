@@ -43,10 +43,10 @@ TEST(CombinedManeuver, CanExecute)
 
     IO::SDK::Maneuvers::CombinedManeuver maneuver(engines, prop, 20.0 * IO::SDK::Constants::DEG_RAD, 12000000.0);
 
-    ASSERT_FALSE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()->GetStateVector(178.0 * IO::SDK::Constants::DEG_RAD)));
-    ASSERT_FALSE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()->GetStateVector(179.0 * IO::SDK::Constants::DEG_RAD)));
-    ASSERT_TRUE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()->GetStateVector(180.0 * IO::SDK::Constants::DEG_RAD)));
-    ASSERT_FALSE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()->GetStateVector(182.0 * IO::SDK::Constants::DEG_RAD)));
+    ASSERT_FALSE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()->ToStateVector(178.0 * IO::SDK::Constants::DEG_RAD)));
+    ASSERT_FALSE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()->ToStateVector(179.0 * IO::SDK::Constants::DEG_RAD)));
+    ASSERT_TRUE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()->ToStateVector(180.0 * IO::SDK::Constants::DEG_RAD)));
+    ASSERT_FALSE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()->ToStateVector(182.0 * IO::SDK::Constants::DEG_RAD)));
 }
 
 TEST(CombinedManeuver, TryExecuteWithPeregeeHigherThanApogee)
@@ -75,13 +75,13 @@ TEST(CombinedManeuver, TryExecuteWithPeregeeHigherThanApogee)
     IO::SDK::Maneuvers::CombinedManeuver maneuver(engines, prop, 0.0, 42164000.0);
 
     //Initialize
-    maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()->GetStateVector(178.0 * IO::SDK::Constants::DEG_RAD));
-    maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()->GetStateVector(179.0 * IO::SDK::Constants::DEG_RAD));
+    maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()->ToStateVector(178.0 * IO::SDK::Constants::DEG_RAD));
+    maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()->ToStateVector(179.0 * IO::SDK::Constants::DEG_RAD));
 
     //Add fictive data because it executed outside propagator
-    prop.AddStateVector(s.GetOrbitalParametersAtEpoch()->GetStateVector(179.0 * IO::SDK::Constants::DEG_RAD));
+    prop.AddStateVector(s.GetOrbitalParametersAtEpoch()->ToStateVector(179.0 * IO::SDK::Constants::DEG_RAD));
 
-    auto res = maneuver.TryExecute(s.GetOrbitalParametersAtEpoch()->GetStateVector(180.01 * IO::SDK::Constants::DEG_RAD));
+    auto res = maneuver.TryExecute(s.GetOrbitalParametersAtEpoch()->ToStateVector(180.01 * IO::SDK::Constants::DEG_RAD));
     ASSERT_TRUE(res.IsValid());
     ASSERT_DOUBLE_EQ(1830.2350336445459, maneuver.GetDeltaV().Magnitude());
     ASSERT_DOUBLE_EQ(-1.0262043727361105, maneuver.GetDeltaV().GetX());
@@ -115,13 +115,13 @@ TEST(CombinedManeuver, TryExecuteWithPeregeeLowerThanApogee)
     IO::SDK::Maneuvers::CombinedManeuver maneuver(engines, prop, 0.0, 42164000.0);
 
     //Initialize
-    maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()->GetStateVector(178.0 * IO::SDK::Constants::DEG_RAD));
-    maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()->GetStateVector(179.0 * IO::SDK::Constants::DEG_RAD));
+    maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()->ToStateVector(178.0 * IO::SDK::Constants::DEG_RAD));
+    maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()->ToStateVector(179.0 * IO::SDK::Constants::DEG_RAD));
 
     //Add fictive data because it executed outside propagator
-    prop.AddStateVector(s.GetOrbitalParametersAtEpoch()->GetStateVector(179.0 * IO::SDK::Constants::DEG_RAD));
+    prop.AddStateVector(s.GetOrbitalParametersAtEpoch()->ToStateVector(179.0 * IO::SDK::Constants::DEG_RAD));
 
-    auto res = maneuver.TryExecute(s.GetOrbitalParametersAtEpoch()->GetStateVector(180.01 * IO::SDK::Constants::DEG_RAD));
+    auto res = maneuver.TryExecute(s.GetOrbitalParametersAtEpoch()->ToStateVector(180.01 * IO::SDK::Constants::DEG_RAD));
     ASSERT_TRUE(res.IsValid());
     ASSERT_DOUBLE_EQ(1829.9651453364793, maneuver.GetDeltaV().Magnitude());
     ASSERT_DOUBLE_EQ(-1.0261885721047042, maneuver.GetDeltaV().GetX());

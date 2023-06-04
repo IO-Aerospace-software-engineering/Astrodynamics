@@ -2,59 +2,63 @@
 \label{SpacecraftDTO_8h_source}\index{IO.SDK/API/DTO/SpacecraftDTO.h@{IO.SDK/API/DTO/SpacecraftDTO.h}}
 \mbox{\hyperlink{SpacecraftDTO_8h}{Go to the documentation of this file.}}
 \begin{DoxyCode}{0}
-\DoxyCodeLine{1 \textcolor{preprocessor}{\#pragma once}}
-\DoxyCodeLine{2 \textcolor{preprocessor}{\#include <string>}}
-\DoxyCodeLine{3 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{FuelTankDTO_8h}{FuelTankDTO.h}}>}}
-\DoxyCodeLine{4 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{EngineDTO_8h}{EngineDTO.h}}>}}
-\DoxyCodeLine{5 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{InstrumentDTO_8h}{InstrumentDTO.h}}>}}
-\DoxyCodeLine{6 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{PayloadDTO_8h}{PayloadDTO.h}}>}}
-\DoxyCodeLine{7 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{StateVectorDTO_8h}{StateVectorDTO.h}}>}}
-\DoxyCodeLine{8 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{StateOrientationDTO_8h}{StateOrientationDTO.h}}>}}
-\DoxyCodeLine{9 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{InstrumentPointingToAttitudeDTO_8h}{InstrumentPointingToAttitudeDTO.h}}>}}
-\DoxyCodeLine{10 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{ApogeeHeightChangingManeuverDTO_8h}{ApogeeHeightChangingManeuverDTO.h}}>}}
-\DoxyCodeLine{11 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{PerigeeHeightChangingManeuverDTO_8h}{PerigeeHeightChangingManeuverDTO.h}}>}}
-\DoxyCodeLine{12 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{CombinedManeuverDTO_8h}{CombinedManeuverDTO.h}}>}}
-\DoxyCodeLine{13 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{OrbitalPlaneChangingManeuverDTO_8h}{OrbitalPlaneChangingManeuverDTO.h}}>}}
-\DoxyCodeLine{14 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{PhasingManeuverDTO_8h}{PhasingManeuverDTO.h}}>}}
-\DoxyCodeLine{15 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{ApsidalAlignmentManeuverDTO_8h}{ApsidalAlignmentManeuverDTO.h}}>}}
-\DoxyCodeLine{16 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{LaunchDTO_8h}{LaunchDTO.h}}>}}
-\DoxyCodeLine{17 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{ProgradeAttitudeDTO_8h}{ProgradeAttitudeDTO.h}}>}}
-\DoxyCodeLine{18 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{RetrogradeAttitudeDTO_8h}{RetrogradeAttitudeDTO.h}}>}}
-\DoxyCodeLine{19 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{NadirAttitudeDTO_8h}{NadirAttitudeDTO.h}}>}}
-\DoxyCodeLine{20 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{ZenithAttitudeDTO_8h}{ZenithAttitudeDTO.h}}>}}
-\DoxyCodeLine{21 }
-\DoxyCodeLine{22 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1SDK_1_1API_1_1DTO}{IO::SDK::API::DTO}}}
-\DoxyCodeLine{23 \{}
-\DoxyCodeLine{24     \textcolor{keyword}{struct }\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1SpacecraftDTO}{SpacecraftDTO}}}
-\DoxyCodeLine{25     \{}
-\DoxyCodeLine{26         \textcolor{comment}{//Spacecraft structure}}
-\DoxyCodeLine{27         \textcolor{keywordtype}{int} \textcolor{keywordtype}{id}\{0\};}
-\DoxyCodeLine{28         \textcolor{keyword}{const} \textcolor{keywordtype}{char}* \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1SpacecraftDTO_a1feb00c8c91a2af0c47591e572351b79}{name}}\{\};}
-\DoxyCodeLine{29         \textcolor{keywordtype}{double} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1SpacecraftDTO_a0b46bcc2bf2e0f9e85937ef2be7c5cad}{dryOperatingMass}}\{\};}
-\DoxyCodeLine{30         \textcolor{keywordtype}{double} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1SpacecraftDTO_aaee17c79cbfdf63fa036b88a43b3bf07}{maximumOperatingMass}}\{\};}
-\DoxyCodeLine{31         \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1StateVectorDTO}{StateVectorDTO}} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1SpacecraftDTO_ab3c963072fb7cd87b82779027540102c}{initialOrbitalParameter}};}
-\DoxyCodeLine{32         \textcolor{keyword}{const} \textcolor{keywordtype}{char} *\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1SpacecraftDTO_ad1752b112d2526aaa2c63af3a1c36d75}{directoryPath}}\{\};}
-\DoxyCodeLine{33 }
-\DoxyCodeLine{34         \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1FuelTankDTO}{FuelTankDTO}} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1SpacecraftDTO_a7c3c88fedad4ae7b86aec25197ced31a}{fuelTank}}[5]\{\};}
-\DoxyCodeLine{35         \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1EngineDTO}{EngineDTO}} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1SpacecraftDTO_a21e148299573ab74369c3ab0bb745b1c}{engines}}[5]\{\};}
-\DoxyCodeLine{36         \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1InstrumentDTO}{InstrumentDTO}} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1SpacecraftDTO_ac86dcde7676a591c592497b58d489253}{instruments}}[5];}
-\DoxyCodeLine{37         \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1PayloadDTO}{PayloadDTO}} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1SpacecraftDTO_a14e8b5a4acb1c8d2556c22233ed1ac4f}{payloads}}[5];}
-\DoxyCodeLine{38 }
-\DoxyCodeLine{39         \textcolor{comment}{//Spacecraft attitudes}}
-\DoxyCodeLine{40         \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ProgradeAttitudeDTO}{ProgradeAttitudeDTO}} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1SpacecraftDTO_a2ba5b12260158176e62b5b7123d607a1}{progradeAttitudes}}[10];}
-\DoxyCodeLine{41         \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1RetrogradeAttitudeDTO}{RetrogradeAttitudeDTO}} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1SpacecraftDTO_a630e257f87024f6a18062c3a8456a0bf}{retrogradeAttitudes}}[10];}
-\DoxyCodeLine{42         \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ZenithAttitudeDTO}{ZenithAttitudeDTO}} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1SpacecraftDTO_a1a44fe3fa621c0ec037a88ae74d937f1}{zenithAttitudes}}[10];}
-\DoxyCodeLine{43         \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1NadirAttitudeDTO}{NadirAttitudeDTO}} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1SpacecraftDTO_a0a22f82f050fa489da9d3b28b89fbc21}{nadirAttitudes}}[10];}
-\DoxyCodeLine{44         \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1InstrumentPointingToAttitudeDTO}{InstrumentPointingToAttitudeDTO}} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1SpacecraftDTO_a6ead8b0085d4b2ad7279410ba2207de0}{pointingToAttitudes}}[10];}
-\DoxyCodeLine{45 }
-\DoxyCodeLine{46         \textcolor{comment}{//Spacecraft maneuvers}}
-\DoxyCodeLine{47         \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1PerigeeHeightChangingManeuverDTO}{PerigeeHeightChangingManeuverDTO}} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1SpacecraftDTO_a3eef02c14d49a2ab4d17db1a650da891}{perigeeHeightChangingManeuvers}}[10];}
-\DoxyCodeLine{48         \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ApogeeHeightChangingManeuverDTO}{ApogeeHeightChangingManeuverDTO}} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1SpacecraftDTO_a8004ff4afe34111b0597d58c8a01a871}{apogeeHeightChangingManeuvers}}[10];}
-\DoxyCodeLine{49         \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1OrbitalPlaneChangingManeuverDTO}{OrbitalPlaneChangingManeuverDTO}} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1SpacecraftDTO_a77edbc38f87503ab19dd08e0e4a4383b}{orbitalPlaneChangingManeuvers}}[10];}
-\DoxyCodeLine{50         \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1CombinedManeuverDTO}{CombinedManeuverDTO}} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1SpacecraftDTO_aa9ca9561e8d6988947f8448c8fee62f8}{combinedManeuvers}}[10];}
-\DoxyCodeLine{51         \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ApsidalAlignmentManeuverDTO}{ApsidalAlignmentManeuverDTO}} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1SpacecraftDTO_a9ba66571f69267ccca65dcb18d9b133e}{apsidalAlignmentManeuvers}}[10];}
-\DoxyCodeLine{52         \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1PhasingManeuverDTO}{PhasingManeuverDTO}} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1SpacecraftDTO_a7e31e30752643ba228b2653682a9dc35}{phasingManeuverDto}}[10];}
-\DoxyCodeLine{53     \};}
-\DoxyCodeLine{54 \}}
+\DoxyCodeLine{1 \textcolor{comment}{/*}}
+\DoxyCodeLine{2 \textcolor{comment}{ Copyright (c) 2023. Sylvain Guillet (sylvain.guillet@tutamail.com)}}
+\DoxyCodeLine{3 \textcolor{comment}{ */}}
+\DoxyCodeLine{4 }
+\DoxyCodeLine{5 \textcolor{preprocessor}{\#pragma once}}
+\DoxyCodeLine{6 \textcolor{preprocessor}{\#include <string>}}
+\DoxyCodeLine{7 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{FuelTankDTO_8h}{FuelTankDTO.h}}>}}
+\DoxyCodeLine{8 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{EngineDTO_8h}{EngineDTO.h}}>}}
+\DoxyCodeLine{9 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{InstrumentDTO_8h}{InstrumentDTO.h}}>}}
+\DoxyCodeLine{10 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{PayloadDTO_8h}{PayloadDTO.h}}>}}
+\DoxyCodeLine{11 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{StateVectorDTO_8h}{StateVectorDTO.h}}>}}
+\DoxyCodeLine{12 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{StateOrientationDTO_8h}{StateOrientationDTO.h}}>}}
+\DoxyCodeLine{13 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{InstrumentPointingToAttitudeDTO_8h}{InstrumentPointingToAttitudeDTO.h}}>}}
+\DoxyCodeLine{14 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{ApogeeHeightChangingManeuverDTO_8h}{ApogeeHeightChangingManeuverDTO.h}}>}}
+\DoxyCodeLine{15 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{PerigeeHeightChangingManeuverDTO_8h}{PerigeeHeightChangingManeuverDTO.h}}>}}
+\DoxyCodeLine{16 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{CombinedManeuverDTO_8h}{CombinedManeuverDTO.h}}>}}
+\DoxyCodeLine{17 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{OrbitalPlaneChangingManeuverDTO_8h}{OrbitalPlaneChangingManeuverDTO.h}}>}}
+\DoxyCodeLine{18 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{PhasingManeuverDTO_8h}{PhasingManeuverDTO.h}}>}}
+\DoxyCodeLine{19 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{ApsidalAlignmentManeuverDTO_8h}{ApsidalAlignmentManeuverDTO.h}}>}}
+\DoxyCodeLine{20 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{LaunchDTO_8h}{LaunchDTO.h}}>}}
+\DoxyCodeLine{21 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{ProgradeAttitudeDTO_8h}{ProgradeAttitudeDTO.h}}>}}
+\DoxyCodeLine{22 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{RetrogradeAttitudeDTO_8h}{RetrogradeAttitudeDTO.h}}>}}
+\DoxyCodeLine{23 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{NadirAttitudeDTO_8h}{NadirAttitudeDTO.h}}>}}
+\DoxyCodeLine{24 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{ZenithAttitudeDTO_8h}{ZenithAttitudeDTO.h}}>}}
+\DoxyCodeLine{25 }
+\DoxyCodeLine{26 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1SDK_1_1API_1_1DTO}{IO::SDK::API::DTO}}}
+\DoxyCodeLine{27 \{}
+\DoxyCodeLine{28     \textcolor{keyword}{struct }\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1SpacecraftDTO}{SpacecraftDTO}}}
+\DoxyCodeLine{29     \{}
+\DoxyCodeLine{30         \textcolor{comment}{//Spacecraft structure}}
+\DoxyCodeLine{31         \textcolor{keywordtype}{int} \textcolor{keywordtype}{id}\{0\};}
+\DoxyCodeLine{32         \textcolor{keyword}{const} \textcolor{keywordtype}{char}* \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1SpacecraftDTO_a1feb00c8c91a2af0c47591e572351b79}{name}}\{\};}
+\DoxyCodeLine{33         \textcolor{keywordtype}{double} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1SpacecraftDTO_a0b46bcc2bf2e0f9e85937ef2be7c5cad}{dryOperatingMass}}\{\};}
+\DoxyCodeLine{34         \textcolor{keywordtype}{double} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1SpacecraftDTO_aaee17c79cbfdf63fa036b88a43b3bf07}{maximumOperatingMass}}\{\};}
+\DoxyCodeLine{35         \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1StateVectorDTO}{StateVectorDTO}} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1SpacecraftDTO_ab3c963072fb7cd87b82779027540102c}{initialOrbitalParameter}};}
+\DoxyCodeLine{36         \textcolor{keyword}{const} \textcolor{keywordtype}{char} *\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1SpacecraftDTO_ad1752b112d2526aaa2c63af3a1c36d75}{directoryPath}}\{\};}
+\DoxyCodeLine{37 }
+\DoxyCodeLine{38         \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1FuelTankDTO}{FuelTankDTO}} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1SpacecraftDTO_a7c3c88fedad4ae7b86aec25197ced31a}{fuelTank}}[5]\{\};}
+\DoxyCodeLine{39         \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1EngineDTO}{EngineDTO}} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1SpacecraftDTO_a21e148299573ab74369c3ab0bb745b1c}{engines}}[5]\{\};}
+\DoxyCodeLine{40         \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1InstrumentDTO}{InstrumentDTO}} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1SpacecraftDTO_ac86dcde7676a591c592497b58d489253}{instruments}}[5];}
+\DoxyCodeLine{41         \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1PayloadDTO}{PayloadDTO}} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1SpacecraftDTO_a14e8b5a4acb1c8d2556c22233ed1ac4f}{payloads}}[5];}
+\DoxyCodeLine{42 }
+\DoxyCodeLine{43         \textcolor{comment}{//Spacecraft attitudes}}
+\DoxyCodeLine{44         \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ProgradeAttitudeDTO}{ProgradeAttitudeDTO}} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1SpacecraftDTO_a2ba5b12260158176e62b5b7123d607a1}{progradeAttitudes}}[10];}
+\DoxyCodeLine{45         \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1RetrogradeAttitudeDTO}{RetrogradeAttitudeDTO}} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1SpacecraftDTO_a630e257f87024f6a18062c3a8456a0bf}{retrogradeAttitudes}}[10];}
+\DoxyCodeLine{46         \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ZenithAttitudeDTO}{ZenithAttitudeDTO}} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1SpacecraftDTO_a1a44fe3fa621c0ec037a88ae74d937f1}{zenithAttitudes}}[10];}
+\DoxyCodeLine{47         \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1NadirAttitudeDTO}{NadirAttitudeDTO}} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1SpacecraftDTO_a0a22f82f050fa489da9d3b28b89fbc21}{nadirAttitudes}}[10];}
+\DoxyCodeLine{48         \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1InstrumentPointingToAttitudeDTO}{InstrumentPointingToAttitudeDTO}} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1SpacecraftDTO_a6ead8b0085d4b2ad7279410ba2207de0}{pointingToAttitudes}}[10];}
+\DoxyCodeLine{49 }
+\DoxyCodeLine{50         \textcolor{comment}{//Spacecraft maneuvers}}
+\DoxyCodeLine{51         \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1PerigeeHeightChangingManeuverDTO}{PerigeeHeightChangingManeuverDTO}} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1SpacecraftDTO_a3eef02c14d49a2ab4d17db1a650da891}{perigeeHeightChangingManeuvers}}[10];}
+\DoxyCodeLine{52         \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ApogeeHeightChangingManeuverDTO}{ApogeeHeightChangingManeuverDTO}} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1SpacecraftDTO_a8004ff4afe34111b0597d58c8a01a871}{apogeeHeightChangingManeuvers}}[10];}
+\DoxyCodeLine{53         \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1OrbitalPlaneChangingManeuverDTO}{OrbitalPlaneChangingManeuverDTO}} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1SpacecraftDTO_a77edbc38f87503ab19dd08e0e4a4383b}{orbitalPlaneChangingManeuvers}}[10];}
+\DoxyCodeLine{54         \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1CombinedManeuverDTO}{CombinedManeuverDTO}} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1SpacecraftDTO_aa9ca9561e8d6988947f8448c8fee62f8}{combinedManeuvers}}[10];}
+\DoxyCodeLine{55         \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ApsidalAlignmentManeuverDTO}{ApsidalAlignmentManeuverDTO}} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1SpacecraftDTO_a9ba66571f69267ccca65dcb18d9b133e}{apsidalAlignmentManeuvers}}[10];}
+\DoxyCodeLine{56         \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1PhasingManeuverDTO}{PhasingManeuverDTO}} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1SpacecraftDTO_a7e31e30752643ba228b2653682a9dc35}{phasingManeuverDto}}[10];}
+\DoxyCodeLine{57     \};}
+\DoxyCodeLine{58 \}}
 
 \end{DoxyCode}

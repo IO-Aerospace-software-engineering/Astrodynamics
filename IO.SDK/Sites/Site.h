@@ -1,12 +1,5 @@
-/**
- * @file Site.h
- * @author Sylvain Guillet (sylvain.guillet@live.com)
- * @brief 
- * @version 0.x
- * @date 2021-05-06
- * 
- * @copyright Copyright (c) 2021
- * 
+/*
+ Copyright (c) 2021-2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
  */
 
 #ifndef SITE_H
@@ -97,9 +90,9 @@ namespace IO::SDK::Sites
          * 
          * @param body Target body
          * @param epoch 
-         * @return IO::SDK::Coordinates::RADec 
+         * @return IO::SDK::Coordinates::Equatorial
          */
-        [[nodiscard]] IO::SDK::Coordinates::RADec GetRADec(const IO::SDK::Body::Body &body, IO::SDK::AberrationsEnum aberrationCorrection, const IO::SDK::Time::TDB &epoch) const;
+        [[nodiscard]] IO::SDK::Coordinates::Equatorial GetRADec(const IO::SDK::Body::Body &body, IO::SDK::AberrationsEnum aberrationCorrection, const IO::SDK::Time::TDB &epoch) const;
 
         /**
          * @brief Get rectangular position

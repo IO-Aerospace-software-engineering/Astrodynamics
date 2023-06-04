@@ -1,3 +1,7 @@
+/*
+ Copyright (c) 2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
+ */
+
 //
 // Created by famille on 02/06/23.
 //
@@ -8,7 +12,7 @@
 namespace IO::SDK::API::DTO {
 
     struct RaDecDTO {
-        double ra = 0.0, dec = 0.0, r = 0.0;
+        double rightAscension = 0.0, declination = 0.0, range = 0.0;
     };
 
 } // DTO

@@ -1,12 +1,5 @@
-/**
- * @file NadirAttitude.cpp
- * @author Sylvain Guillet (sylvain.guillet@live.com)
- * @brief 
- * @version 0.x
- * @date 2021-07-03
- * 
- * @copyright Copyright (c) 2021
- * 
+/*
+ Copyright (c) 2021-2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
  */
 #include <NadirAttitude.h>
 
@@ -29,7 +22,7 @@ void IO::SDK::Maneuvers::Attitudes::NadirAttitude::Compute([[maybe_unused]] cons
 
 IO::SDK::OrbitalParameters::StateOrientation IO::SDK::Maneuvers::Attitudes::NadirAttitude::ComputeOrientation(const IO::SDK::OrbitalParameters::OrbitalParameters &maneuverPoint)
 {
-    return IO::SDK::OrbitalParameters::StateOrientation{maneuverPoint.GetStateVector().GetPosition().Normalize().Reverse().To(m_spacecraft.Front),
+    return IO::SDK::OrbitalParameters::StateOrientation{maneuverPoint.ToStateVector().GetPosition().Normalize().Reverse().To(m_spacecraft.Front),
                                                         IO::SDK::Math::Vector3D(0.0, 0.0, 0.0), maneuverPoint.GetEpoch(), maneuverPoint.GetFrame()};
 }
 

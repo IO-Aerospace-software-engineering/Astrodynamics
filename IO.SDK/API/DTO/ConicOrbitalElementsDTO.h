@@ -1,6 +1,6 @@
-//
-// Created by spacer on 5/31/23.
-//
+/*
+ Copyright (c) 2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
+ */
 
 #ifndef IOSDK_CONICORBITALELEMENTSDTO_H
 #define IOSDK_CONICORBITALELEMENTSDTO_H

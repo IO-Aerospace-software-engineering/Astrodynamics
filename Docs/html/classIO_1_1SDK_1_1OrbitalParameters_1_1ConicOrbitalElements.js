@@ -17,8 +17,8 @@ var classIO_1_1SDK_1_1OrbitalParameters_1_1ConicOrbitalElements =
     [ "GetSemiMajorAxis", "classIO_1_1SDK_1_1OrbitalParameters_1_1ConicOrbitalElements.html#a526410fffb876ae33fee8be8decd77e7", null ],
     [ "GetSpecificAngularMomentum", "classIO_1_1SDK_1_1OrbitalParameters_1_1ConicOrbitalElements.html#a5d9910600a7129741d6eb64f7a4f8a75", null ],
     [ "GetSpecificOrbitalEnergy", "classIO_1_1SDK_1_1OrbitalParameters_1_1ConicOrbitalElements.html#a93c3abcfededa1296e803c9617b1b76a", null ],
-    [ "GetStateVector", "classIO_1_1SDK_1_1OrbitalParameters_1_1ConicOrbitalElements.html#ad8ccc9563d436f1232c915d25db67b54", null ],
     [ "GetTrueAnomaly", "classIO_1_1SDK_1_1OrbitalParameters_1_1ConicOrbitalElements.html#a20b8e8626b722022cbd5598d6998d430", null ],
     [ "GetTrueAnomaly", "classIO_1_1SDK_1_1OrbitalParameters_1_1ConicOrbitalElements.html#a5acfe7e998e3770fbda4cfbcca1625c9", null ],
-    [ "GetTrueAnomaly", "classIO_1_1SDK_1_1OrbitalParameters_1_1ConicOrbitalElements.html#ac861b9d40ef731e610de2613a31a2831", null ]
+    [ "GetTrueAnomaly", "classIO_1_1SDK_1_1OrbitalParameters_1_1ConicOrbitalElements.html#ac861b9d40ef731e610de2613a31a2831", null ],
+    [ "ToStateVector", "classIO_1_1SDK_1_1OrbitalParameters_1_1ConicOrbitalElements.html#a089d6ea2dbbc63a97027cfe792937779", null ]
 ];

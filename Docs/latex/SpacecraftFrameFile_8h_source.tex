@@ -2,33 +2,35 @@
 \label{SpacecraftFrameFile_8h_source}\index{IO.SDK/Frames/SpacecraftFrameFile.h@{IO.SDK/Frames/SpacecraftFrameFile.h}}
 \mbox{\hyperlink{SpacecraftFrameFile_8h}{Go to the documentation of this file.}}
 \begin{DoxyCode}{0}
-\DoxyCodeLine{1 }
-\DoxyCodeLine{11 \textcolor{preprocessor}{\#ifndef SPACECRAFT\_FRAME\_H}}
-\DoxyCodeLine{12 \textcolor{preprocessor}{\#define SPACECRAFT\_FRAME\_H}}
+\DoxyCodeLine{1 \textcolor{comment}{/*}}
+\DoxyCodeLine{2 \textcolor{comment}{ Copyright (c) 2021-\/2023. Sylvain Guillet (sylvain.guillet@tutamail.com)}}
+\DoxyCodeLine{3 \textcolor{comment}{ */}}
+\DoxyCodeLine{4 \textcolor{preprocessor}{\#ifndef SPACECRAFT\_FRAME\_H}}
+\DoxyCodeLine{5 \textcolor{preprocessor}{\#define SPACECRAFT\_FRAME\_H}}
+\DoxyCodeLine{6 }
+\DoxyCodeLine{7 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{FrameFile_8h}{FrameFile.h}}>}}
+\DoxyCodeLine{8 }
+\DoxyCodeLine{9 \textcolor{comment}{//Forward declaration}}
+\DoxyCodeLine{10 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1SDK_1_1Body_1_1Spacecraft}{IO::SDK::Body::Spacecraft}} \{}
+\DoxyCodeLine{11     \textcolor{keyword}{class }Spacecraft;}
+\DoxyCodeLine{12 \}}
 \DoxyCodeLine{13 }
-\DoxyCodeLine{14 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{FrameFile_8h}{FrameFile.h}}>}}
-\DoxyCodeLine{15 }
-\DoxyCodeLine{16 \textcolor{comment}{//Forward declaration}}
-\DoxyCodeLine{17 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1SDK_1_1Body_1_1Spacecraft}{IO::SDK::Body::Spacecraft}} \{}
-\DoxyCodeLine{18     \textcolor{keyword}{class }Spacecraft;}
-\DoxyCodeLine{19 \}}
-\DoxyCodeLine{20 }
-\DoxyCodeLine{21 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1SDK_1_1Frames}{IO::SDK::Frames}} \{}
-\DoxyCodeLine{26     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1SpacecraftFrameFile}{SpacecraftFrameFile}} final : \textcolor{keyword}{public} \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1FrameFile}{IO::SDK::Frames::FrameFile}} \{}
-\DoxyCodeLine{27     \textcolor{keyword}{private}:}
-\DoxyCodeLine{28         \textcolor{keyword}{const} \textcolor{keywordtype}{int} m\_id;}
-\DoxyCodeLine{29         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft}{IO::SDK::Body::Spacecraft::Spacecraft}} \&m\_spacecraft;}
-\DoxyCodeLine{30 }
-\DoxyCodeLine{31         \textcolor{keywordtype}{void} BuildFrame();}
+\DoxyCodeLine{14 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1SDK_1_1Frames}{IO::SDK::Frames}} \{}
+\DoxyCodeLine{19     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1SpacecraftFrameFile}{SpacecraftFrameFile}} final : \textcolor{keyword}{public} \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1FrameFile}{IO::SDK::Frames::FrameFile}} \{}
+\DoxyCodeLine{20     \textcolor{keyword}{private}:}
+\DoxyCodeLine{21         \textcolor{keyword}{const} \textcolor{keywordtype}{int} m\_id;}
+\DoxyCodeLine{22         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft}{IO::SDK::Body::Spacecraft::Spacecraft}} \&m\_spacecraft;}
+\DoxyCodeLine{23 }
+\DoxyCodeLine{24         \textcolor{keywordtype}{void} BuildFrame();}
+\DoxyCodeLine{25 }
+\DoxyCodeLine{31         \textcolor{keyword}{explicit} \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1SpacecraftFrameFile}{SpacecraftFrameFile}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft}{IO::SDK::Body::Spacecraft::Spacecraft}} \&spacecraft);}
 \DoxyCodeLine{32 }
-\DoxyCodeLine{38         \textcolor{keyword}{explicit} \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1SpacecraftFrameFile}{SpacecraftFrameFile}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft}{IO::SDK::Body::Spacecraft::Spacecraft}} \&spacecraft);}
-\DoxyCodeLine{39 }
-\DoxyCodeLine{40     \textcolor{keyword}{public}:}
-\DoxyCodeLine{41         \textcolor{keyword}{friend} \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft}{IO::SDK::Body::Spacecraft::Spacecraft}};}
-\DoxyCodeLine{42 }
-\DoxyCodeLine{43         [[nodiscard]] \textcolor{keyword}{inline} \textcolor{keywordtype}{int} \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1SpacecraftFrameFile_a578c8dc8d9b0d7fdb2039c8d592e1004}{GetId}}()\textcolor{keyword}{ const }\{ \textcolor{keywordflow}{return} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body_acbd6ec42aef0f45c1538dbf1ade59e41}{m\_id}}; \}}
-\DoxyCodeLine{44     \};}
-\DoxyCodeLine{45 \}}
-\DoxyCodeLine{46 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{33     \textcolor{keyword}{public}:}
+\DoxyCodeLine{34         \textcolor{keyword}{friend} \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft}{IO::SDK::Body::Spacecraft::Spacecraft}};}
+\DoxyCodeLine{35 }
+\DoxyCodeLine{36         [[nodiscard]] \textcolor{keyword}{inline} \textcolor{keywordtype}{int} \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1SpacecraftFrameFile_a578c8dc8d9b0d7fdb2039c8d592e1004}{GetId}}()\textcolor{keyword}{ const }\{ \textcolor{keywordflow}{return} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body_acbd6ec42aef0f45c1538dbf1ade59e41}{m\_id}}; \}}
+\DoxyCodeLine{37     \};}
+\DoxyCodeLine{38 \}}
+\DoxyCodeLine{39 \textcolor{preprocessor}{\#endif}}
 
 \end{DoxyCode}

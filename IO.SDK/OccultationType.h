@@ -1,12 +1,5 @@
-/**
- * @file OccultationType.h
- * @author Sylvain Guillet (sylvain.guillet@live.com)
- * @brief 
- * @version 0.x
- * @date 2021-06-08
- * 
- * @copyright Copyright (c) 2021
- * 
+/*
+ Copyright (c) 2021-2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
  */
 #ifndef OCCULTATION_TYPE_H
 #define OCCULTATION_TYPE_H

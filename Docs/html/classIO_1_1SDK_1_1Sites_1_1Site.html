@@ -25,7 +25,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">IO-SDK<span id="projectnumber">&#160;0.8.x</span>
+   <div id="projectname">IO-SDK<span id="projectnumber">&#160;0.9.x</span>
    </div>
    <div id="projectbrief">Astrodynamics framework</div>
   </td>
@@ -125,9 +125,9 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a9ec6961014a7e44b4a70035dbadea015"><td class="memItemLeft" align="right" valign="top">std::shared_ptr&lt; <a class="el" href="classIO_1_1SDK_1_1Body_1_1CelestialBody.html">IO::SDK::Body::CelestialBody</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Sites_1_1Site.html#a9ec6961014a7e44b4a70035dbadea015">GetBody</a> () const</td></tr>
 <tr class="memdesc:a9ec6961014a7e44b4a70035dbadea015"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the <a class="el" href="namespaceIO_1_1SDK_1_1Body.html">Body</a>.  <a href="classIO_1_1SDK_1_1Sites_1_1Site.html#a9ec6961014a7e44b4a70035dbadea015">More...</a><br /></td></tr>
 <tr class="separator:a9ec6961014a7e44b4a70035dbadea015"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad0968e8b52c47b093c67ca81579a68a5"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classIO_1_1SDK_1_1Coordinates_1_1RADec.html">IO::SDK::Coordinates::RADec</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Sites_1_1Site.html#ad0968e8b52c47b093c67ca81579a68a5">GetRADec</a> (const <a class="el" href="classIO_1_1SDK_1_1Body_1_1Body.html">IO::SDK::Body::Body</a> &amp;body, <a class="el" href="namespaceIO_1_1SDK.html#abbb4827ec6a24ad346d9a60473ad3b81">IO::SDK::AberrationsEnum</a> aberrationCorrection, const <a class="el" href="classIO_1_1SDK_1_1Time_1_1TDB.html">IO::SDK::Time::TDB</a> &amp;epoch) const</td></tr>
-<tr class="memdesc:ad0968e8b52c47b093c67ca81579a68a5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get Right ascension, declination and range.  <a href="classIO_1_1SDK_1_1Sites_1_1Site.html#ad0968e8b52c47b093c67ca81579a68a5">More...</a><br /></td></tr>
-<tr class="separator:ad0968e8b52c47b093c67ca81579a68a5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abf32196e28dbaa2b994b4f6e6041db1d"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classIO_1_1SDK_1_1Coordinates_1_1Equatorial.html">IO::SDK::Coordinates::Equatorial</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Sites_1_1Site.html#abf32196e28dbaa2b994b4f6e6041db1d">GetRADec</a> (const <a class="el" href="classIO_1_1SDK_1_1Body_1_1Body.html">IO::SDK::Body::Body</a> &amp;body, <a class="el" href="namespaceIO_1_1SDK.html#abbb4827ec6a24ad346d9a60473ad3b81">IO::SDK::AberrationsEnum</a> aberrationCorrection, const <a class="el" href="classIO_1_1SDK_1_1Time_1_1TDB.html">IO::SDK::Time::TDB</a> &amp;epoch) const</td></tr>
+<tr class="memdesc:abf32196e28dbaa2b994b4f6e6041db1d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get Right ascension, declination and range.  <a href="classIO_1_1SDK_1_1Sites_1_1Site.html#abf32196e28dbaa2b994b4f6e6041db1d">More...</a><br /></td></tr>
+<tr class="separator:abf32196e28dbaa2b994b4f6e6041db1d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a335d8c7834930c92631389c042e3e280"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector.html">IO::SDK::OrbitalParameters::StateVector</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1SDK_1_1Sites_1_1Site.html#a335d8c7834930c92631389c042e3e280">GetStateVector</a> (const <a class="el" href="classIO_1_1SDK_1_1Frames_1_1Frames.html">IO::SDK::Frames::Frames</a> &amp;frame, const <a class="el" href="classIO_1_1SDK_1_1Time_1_1TDB.html">IO::SDK::Time::TDB</a> &amp;epoch) const</td></tr>
 <tr class="memdesc:a335d8c7834930c92631389c042e3e280"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get rectangular position.  <a href="classIO_1_1SDK_1_1Sites_1_1Site.html#a335d8c7834930c92631389c042e3e280">More...</a><br /></td></tr>
 <tr class="separator:a335d8c7834930c92631389c042e3e280"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -736,14 +736,14 @@ Protected Attributes</h2></td></tr>
 
 </div>
 </div>
-<a id="ad0968e8b52c47b093c67ca81579a68a5" name="ad0968e8b52c47b093c67ca81579a68a5"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ad0968e8b52c47b093c67ca81579a68a5">&#9670;&nbsp;</a></span>GetRADec()</h2>
+<a id="abf32196e28dbaa2b994b4f6e6041db1d" name="abf32196e28dbaa2b994b4f6e6041db1d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#abf32196e28dbaa2b994b4f6e6041db1d">&#9670;&nbsp;</a></span>GetRADec()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="classIO_1_1SDK_1_1Coordinates_1_1RADec.html">IO::SDK::Coordinates::RADec</a> IO::SDK::Sites::Site::GetRADec </td>
+          <td class="memname"><a class="el" href="classIO_1_1SDK_1_1Coordinates_1_1Equatorial.html">IO::SDK::Coordinates::Equatorial</a> IO::SDK::Sites::Site::GetRADec </td>
           <td>(</td>
           <td class="paramtype">const <a class="el" href="classIO_1_1SDK_1_1Body_1_1Body.html">IO::SDK::Body::Body</a> &amp;&#160;</td>
           <td class="paramname"><em>body</em>, </td>
@@ -776,7 +776,7 @@ Protected Attributes</h2></td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd><a class="el" href="classIO_1_1SDK_1_1Coordinates_1_1RADec.html" title="Right ascending and declination coordinate.">IO::SDK::Coordinates::RADec</a> </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd><a class="el" href="classIO_1_1SDK_1_1Coordinates_1_1Equatorial.html" title="Right ascending and declination coordinate.">IO::SDK::Coordinates::Equatorial</a> </dd></dl>
 
 </div>
 </div>

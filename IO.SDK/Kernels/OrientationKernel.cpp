@@ -1,17 +1,10 @@
-/**
- * @file OrientationKernel.cpp
- * @author Sylvain Guillet (sylvain.guillet@live.com)
- * @brief 
- * @version 0.x
- * @date 2021-07-02
- * 
- * @copyright Copyright (c) 2021
- * 
+/*
+ Copyright (c) 2021-2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
  */
 #include <filesystem>
 #include <Spacecraft.h>
 #include <Builder.h>
-#include "InvalidArgumentException.h"
+#include <InvalidArgumentException.h>
 
 
 IO::SDK::Kernels::OrientationKernel::OrientationKernel(std::string filePath, int spacecraftId, int spacecraftFrameId) : IO::SDK::Kernels::Kernel(std::move(filePath)),

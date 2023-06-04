@@ -201,7 +201,7 @@ TEST(Propagator, PropagatorVsKepler)
 
     const std::vector<IO::SDK::OrbitalParameters::StateVector> &propagationResults = pro.GetStateVectors();
     auto propagationResult = propagationResults[duration.GetSeconds().count() / step.GetSeconds().count()];
-    auto keplerResults = localOrbitalparams->GetStateVector(epoch + duration);
+    auto keplerResults = localOrbitalparams->ToStateVector(epoch + duration);
 
     //Check epoch
     ASSERT_EQ(keplerResults.GetEpoch(), propagationResult.GetEpoch());
@@ -281,7 +281,7 @@ TEST(Propagator, PropagatorVsKepler2)
 
     const std::vector<IO::SDK::OrbitalParameters::StateVector> &propagationResults = pro.GetStateVectors();
     auto propagationResult = propagationResults.back();
-    auto keplerResults = localOrbitalparams->GetStateVector(endEpoch);
+    auto keplerResults = localOrbitalparams->ToStateVector(endEpoch);
 
     //Check epoch
     ASSERT_EQ(keplerResults.GetEpoch(), propagationResult.GetEpoch());

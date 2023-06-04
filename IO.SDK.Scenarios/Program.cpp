@@ -128,8 +128,8 @@ int main()
                                                                                           0.0,
                                                                                           startEpoch,
                                                                                           IO::SDK::Frames::InertialFrames::GetICRF());
-    auto pk = parkingOrbit->GetStateVector();
-    auto tb = targetOrbit->GetStateVector();
+    auto pk = parkingOrbit->ToStateVector();
+    auto tb = targetOrbit->ToStateVector();
     //Compute launch windows, to launch by day on launch site and recovery site when the launch site crosses the parking orbital plane
     IO::SDK::Maneuvers::Launch launch(*launchSite, *recoverySite, true, *parkingOrbit);
     auto launchWindows = launch.GetLaunchWindows(IO::SDK::Time::Window<IO::SDK::Time::UTC>(startEpoch.ToUTC(), endEpoch.ToUTC()));
@@ -216,7 +216,7 @@ int main()
 //    auto epoch = finalApogeeChanging.GetManeuverWindow()->GetEndDate();
 //
 //    auto ephemeris = Spacecraft.ReadEphemeris(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::AberrationsEnum::None, epoch, *earth);
-//    auto e = targetOrbit->GetStateVector().GetEccentricity();
+//    auto e = targetOrbit->ToStateVector().GetEccentricity();
 //    auto ti = targetOrbit->GetInclination() * IO::SDK::Constants::RAD_DEG;
 //    auto si = ephemeris.GetInclination() * IO::SDK::Constants::RAD_DEG;
 //
@@ -226,25 +226,25 @@ int main()
 //    auto tecc = targetOrbit->GetEccentricity();
 //    auto secc = ephemeris.GetEccentricity();
 //
-//    auto tw = targetOrbit->GetStateVector(epoch).GetPeriapsisArgument() * IO::SDK::Constants::RAD_DEG;
+//    auto tw = targetOrbit->ToStateVector(epoch).GetPeriapsisArgument() * IO::SDK::Constants::RAD_DEG;
 //    auto sw = ephemeris.GetPeriapsisArgument() * IO::SDK::Constants::RAD_DEG;
 //
-//    auto tq = targetOrbit->GetStateVector(epoch).GetPerigeeVector().Magnitude();
+//    auto tq = targetOrbit->ToStateVector(epoch).GetPerigeeVector().Magnitude();
 //    auto sq = ephemeris.GetPerigeeVector().Magnitude();
 //
-//    auto tm = targetOrbit->GetStateVector(epoch).GetMeanLongitude() * IO::SDK::Constants::RAD_DEG;
+//    auto tm = targetOrbit->ToStateVector(epoch).GetMeanLongitude() * IO::SDK::Constants::RAD_DEG;
 //    auto sm = ephemeris.GetMeanLongitude() * IO::SDK::Constants::RAD_DEG;
 //
-//    auto tv = targetOrbit->GetStateVector(epoch).GetTrueLongitude() * IO::SDK::Constants::RAD_DEG;
+//    auto tv = targetOrbit->ToStateVector(epoch).GetTrueLongitude() * IO::SDK::Constants::RAD_DEG;
 //    auto sv = ephemeris.GetTrueLongitude() * IO::SDK::Constants::RAD_DEG;
 //
-//    auto tp = targetOrbit->GetStateVector(epoch).GetPeriod().GetHours().count();
+//    auto tp = targetOrbit->ToStateVector(epoch).GetPeriod().GetHours().count();
 //    auto sp = ephemeris.GetPeriod().GetHours().count();
 //
-//    auto ta = targetOrbit->GetStateVector(epoch).GetSemiMajorAxis();
+//    auto ta = targetOrbit->ToStateVector(epoch).GetSemiMajorAxis();
 //    auto sa = ephemeris.GetSemiMajorAxis();
 //
-//    double dpos = (ephemeris.GetPosition() - targetOrbit->GetStateVector(epoch).GetPosition()).Magnitude();
+//    double dpos = (ephemeris.GetPosition() - targetOrbit->ToStateVector(epoch).GetPosition()).Magnitude();
 //    double period = ephemeris.GetPeriod().GetHours().count();
 
     DisplayManeuverSummary(&planeAlignment, "Plane alignment");

@@ -1,18 +1,7 @@
-/**
- * @file ConicOrbitalElements.cpp
- * @author Sylvain Guillet (sylvain.guillet@live.com)
- * @brief 
- * @version 0.x
- * @date 2021-07-03
- * 
- * @copyright Copyright (c) 2021
- * 
+/*
+ Copyright (c) 2021-2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
  */
 #include <ConicOrbitalElements.h>
-#include <cmath>
-#include <Vector3D.h>
-#include <SpiceUsr.h>
-#include <chrono>
 
 IO::SDK::OrbitalParameters::ConicOrbitalElements::ConicOrbitalElements(const std::shared_ptr<IO::SDK::Body::CelestialBody> &centerOfMotion, const double perifocalDistance, const double eccentricity, const double inclination, const double ascendingNodeLongitude, const double periapsisArgument, const double meanAnomaly, const IO::SDK::Time::TDB &epoch, const IO::SDK::Frames::Frames &frame) : OrbitalParameters(centerOfMotion, epoch, frame), m_perifocalDistance{perifocalDistance}, m_eccentricity{eccentricity}, m_inclination{inclination}, m_ascendingNodeLongitude{ascendingNodeLongitude}, m_periapsisArgument{periapsisArgument}, m_meanAnomaly{meanAnomaly}
 {
@@ -41,7 +30,7 @@ IO::SDK::OrbitalParameters::ConicOrbitalElements::ConicOrbitalElements(const IO:
 	m_semiMajorAxis = elts[9];
 }
 
-IO::SDK::OrbitalParameters::StateVector IO::SDK::OrbitalParameters::ConicOrbitalElements::GetStateVector(const IO::SDK::Time::TDB &epoch) const
+IO::SDK::OrbitalParameters::StateVector IO::SDK::OrbitalParameters::ConicOrbitalElements::ToStateVector(const IO::SDK::Time::TDB &epoch) const
 {
 	ConstSpiceDouble elts[8] = {m_perifocalDistance, m_eccentricity, m_inclination, m_ascendingNodeLongitude, m_periapsisArgument, m_meanAnomaly, m_epoch.GetSecondsFromJ2000().count(), m_centerOfMotion->GetMu()};
 	SpiceDouble state[6] = {};
@@ -53,12 +42,12 @@ IO::SDK::OrbitalParameters::StateVector IO::SDK::OrbitalParameters::ConicOrbital
 
 IO::SDK::Math::Vector3D IO::SDK::OrbitalParameters::ConicOrbitalElements::GetSpecificAngularMomentum() const
 {
-	return GetStateVector(m_epoch).GetSpecificAngularMomentum();
+	return ToStateVector(m_epoch).GetSpecificAngularMomentum();
 }
 
 double IO::SDK::OrbitalParameters::ConicOrbitalElements::GetSpecificOrbitalEnergy() const
 {
-	return GetStateVector(m_epoch).GetSpecificOrbitalEnergy();
+	return ToStateVector(m_epoch).GetSpecificOrbitalEnergy();
 }
 
 double IO::SDK::OrbitalParameters::ConicOrbitalElements::GetPerifocalDistance() const

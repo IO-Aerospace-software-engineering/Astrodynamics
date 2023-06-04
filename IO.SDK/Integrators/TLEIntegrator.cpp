@@ -1,12 +1,5 @@
-/**
- * @file TLEIntegrator.cpp
- * @author Sylvain Guillet (sylvain.guillet@live.com)
- * @brief 
- * @version 0.x
- * @date 2021-07-03
- * 
- * @copyright Copyright (c) 2021
- * 
+/*
+ Copyright (c) 2021-2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
  */
 #include <TLEIntegrator.h>
 
@@ -20,5 +13,5 @@ IO::SDK::Integrators::TLEIntegrator::~TLEIntegrator()
 
 IO::SDK::OrbitalParameters::StateVector IO::SDK::Integrators::TLEIntegrator::Integrate([[maybe_unused]]const IO::SDK::Body::Body &body, const IO::SDK::OrbitalParameters::StateVector &stateVector)
 {
-    return m_tle.GetStateVector(stateVector.GetEpoch() + this->m_stepDuration);
+    return m_tle.ToStateVector(stateVector.GetEpoch() + this->m_stepDuration);
 }

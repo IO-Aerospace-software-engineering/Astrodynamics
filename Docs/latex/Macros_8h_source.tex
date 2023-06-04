@@ -2,10 +2,14 @@
 \label{Macros_8h_source}\index{IO.SDK/Macros.h@{IO.SDK/Macros.h}}
 \mbox{\hyperlink{Macros_8h}{Go to the documentation of this file.}}
 \begin{DoxyCode}{0}
-\DoxyCodeLine{1 \textcolor{preprocessor}{\#if defined(WIN32) || defined(\_WIN32)}}
-\DoxyCodeLine{2 \textcolor{preprocessor}{\#define UNUSED(x)}}
-\DoxyCodeLine{3 \textcolor{preprocessor}{\#else}}
-\DoxyCodeLine{4 \textcolor{preprocessor}{\#define UNUSED(x) x \_\_attribute\_\_((unused))}}
-\DoxyCodeLine{5 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{1 \textcolor{comment}{/*}}
+\DoxyCodeLine{2 \textcolor{comment}{ Copyright (c) 2023. Sylvain Guillet (sylvain.guillet@tutamail.com)}}
+\DoxyCodeLine{3 \textcolor{comment}{ */}}
+\DoxyCodeLine{4 }
+\DoxyCodeLine{5 \textcolor{preprocessor}{\#if defined(WIN32) || defined(\_WIN32)}}
+\DoxyCodeLine{6 \textcolor{preprocessor}{\#define UNUSED(x)}}
+\DoxyCodeLine{7 \textcolor{preprocessor}{\#else}}
+\DoxyCodeLine{8 \textcolor{preprocessor}{\#define UNUSED(x) x \_\_attribute\_\_((unused))}}
+\DoxyCodeLine{9 \textcolor{preprocessor}{\#endif}}
 
 \end{DoxyCode}

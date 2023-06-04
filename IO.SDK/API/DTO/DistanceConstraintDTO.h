@@ -1,6 +1,6 @@
-//
-// Created by spacer on 3/25/23.
-//
+/*
+ Copyright (c) 2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
+ */
 
 #ifndef IOSDK_DISTANCECONSTRAINTDTO_H
 #define IOSDK_DISTANCECONSTRAINTDTO_H

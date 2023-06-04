@@ -38,25 +38,25 @@ TEST(ApsidalAlignmentManeuver, CanExecute)
     IO::SDK::Maneuvers::ApsidalAlignmentManeuver maneuver(engines, prop, orbitalParams2);
 
     //Initialize
-    ASSERT_FALSE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()->GetStateVector(150.0 * IO::SDK::Constants::DEG_RAD)));
+    ASSERT_FALSE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()->ToStateVector(150.0 * IO::SDK::Constants::DEG_RAD)));
 
     //Can't execute, too early
-    ASSERT_FALSE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()->GetStateVector(155.0 * IO::SDK::Constants::DEG_RAD)));
+    ASSERT_FALSE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()->ToStateVector(155.0 * IO::SDK::Constants::DEG_RAD)));
 
     //Must execute at 156.41° tolerance = 0.1°
-    ASSERT_TRUE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()->GetStateVector(156.5 * IO::SDK::Constants::DEG_RAD)));
+    ASSERT_TRUE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()->ToStateVector(156.5 * IO::SDK::Constants::DEG_RAD)));
 
     //Can't execute because point p is behind
-    ASSERT_FALSE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()->GetStateVector(158.0 * IO::SDK::Constants::DEG_RAD)));
+    ASSERT_FALSE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()->ToStateVector(158.0 * IO::SDK::Constants::DEG_RAD)));
 
     //Before Q point
-    ASSERT_FALSE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()->GetStateVector(341.0 * IO::SDK::Constants::DEG_RAD)));
+    ASSERT_FALSE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()->ToStateVector(341.0 * IO::SDK::Constants::DEG_RAD)));
 
     //Must execute at 341.77° tolerance = 0.1°
-    ASSERT_TRUE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()->GetStateVector(341.8 * IO::SDK::Constants::DEG_RAD)));
+    ASSERT_TRUE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()->ToStateVector(341.8 * IO::SDK::Constants::DEG_RAD)));
 
     //Can't execute because pont q is behind
-    ASSERT_FALSE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()->GetStateVector(345.0 * IO::SDK::Constants::DEG_RAD)));
+    ASSERT_FALSE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()->ToStateVector(345.0 * IO::SDK::Constants::DEG_RAD)));
 }
 
 TEST(ApsidalAlignmentManeuver, ExecuteQ)
@@ -84,14 +84,14 @@ TEST(ApsidalAlignmentManeuver, ExecuteQ)
     IO::SDK::Maneuvers::ApsidalAlignmentManeuver maneuver(engines, prop, orbitalParams2);
 
     //Initialize
-    maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()->GetStateVector(340.0 * IO::SDK::Constants::DEG_RAD));
-    maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()->GetStateVector(341.0 * IO::SDK::Constants::DEG_RAD));
+    maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()->ToStateVector(340.0 * IO::SDK::Constants::DEG_RAD));
+    maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()->ToStateVector(341.0 * IO::SDK::Constants::DEG_RAD));
 
     //Add fictive data because it executed outside propagator
     prop.AddStateVector(IO::SDK::OrbitalParameters::StateVector(earth, IO::SDK::Math::Vector3D(1.0, 2.0, 3.0), IO::SDK::Math::Vector3D(4.0, 5.0, 6.0), IO::SDK::Time::TDB(10.0s), IO::SDK::Frames::InertialFrames::GetICRF()));
 
     //try execute at Q
-    auto res = maneuver.TryExecute(s.GetOrbitalParametersAtEpoch()->GetStateVector(341.77 * IO::SDK::Constants::DEG_RAD));
+    auto res = maneuver.TryExecute(s.GetOrbitalParametersAtEpoch()->ToStateVector(341.77 * IO::SDK::Constants::DEG_RAD));
 
     //Can't execute, too early
     ASSERT_TRUE(res.IsValid());
@@ -132,14 +132,14 @@ TEST(ApsidalAlignmentManeuver, ExecuteP)
     IO::SDK::Maneuvers::ApsidalAlignmentManeuver maneuver(engines, prop, orbitalParams2);
 
     //Initialize
-    maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()->GetStateVector(155.0 * IO::SDK::Constants::DEG_RAD));
-    maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()->GetStateVector(156.0 * IO::SDK::Constants::DEG_RAD));
+    maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()->ToStateVector(155.0 * IO::SDK::Constants::DEG_RAD));
+    maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()->ToStateVector(156.0 * IO::SDK::Constants::DEG_RAD));
 
     //Add fictive data because it executed outside propagator
     prop.AddStateVector(IO::SDK::OrbitalParameters::StateVector(earth, IO::SDK::Math::Vector3D(1.0, 2.0, 3.0), IO::SDK::Math::Vector3D(4.0, 5.0, 6.0), IO::SDK::Time::TDB(10.0s), IO::SDK::Frames::InertialFrames::GetICRF()));
 
     //try execute at P
-    auto res = maneuver.TryExecute(s.GetOrbitalParametersAtEpoch()->GetStateVector(156.5 * IO::SDK::Constants::DEG_RAD));
+    auto res = maneuver.TryExecute(s.GetOrbitalParametersAtEpoch()->ToStateVector(156.5 * IO::SDK::Constants::DEG_RAD));
 
     //Can't execute, too early
     ASSERT_TRUE(res.IsValid());

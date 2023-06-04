@@ -1,6 +1,6 @@
 var searchData=
 [
-  ['radec_0',['RADec',['../classIO_1_1SDK_1_1Coordinates_1_1RADec.html',1,'IO::SDK::Coordinates']]],
+  ['radecdto_0',['RaDecDTO',['../structIO_1_1SDK_1_1API_1_1DTO_1_1RaDecDTO.html',1,'IO::SDK::API::DTO']]],
   ['rectangular_1',['Rectangular',['../classIO_1_1SDK_1_1Coordinates_1_1Rectangular.html',1,'IO::SDK::Coordinates']]],
   ['rectangularinstrumentkernel_2',['RectangularInstrumentKernel',['../classIO_1_1SDK_1_1Kernels_1_1RectangularInstrumentKernel.html',1,'IO::SDK::Kernels']]],
   ['relationaloperator_3',['RelationalOperator',['../classIO_1_1SDK_1_1Constraints_1_1RelationalOperator.html',1,'IO::SDK::Constraints']]],

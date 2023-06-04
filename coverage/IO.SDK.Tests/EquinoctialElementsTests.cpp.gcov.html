@@ -181,7 +181,7 @@
 <a name="119"><span class="lineNum">     119 </span><span class="lineCov">          1 :         ASSERT_DOUBLE_EQ(11655.937761769412, eq.GetPeriod().GetSeconds().count());</span></a>
 <a name="120"><span class="lineNum">     120 </span>            : }</a>
 <a name="121"><span class="lineNum">     121 </span>            : </a>
-<a name="122"><span class="lineNum">     122 </span><span class="lineCov">          4 : TEST(EquinoctialElements, GetStateVector)</span></a>
+<a name="122"><span class="lineNum">     122 </span><span class="lineCov">          4 : TEST(EquinoctialElements, ToStateVector)</span></a>
 <a name="123"><span class="lineNum">     123 </span>            : {</a>
 <a name="124"><span class="lineNum">     124 </span><span class="lineCov">          1 :         const auto earth = std::make_shared&lt;IO::SDK::Body::CelestialBody&gt;(399, &quot;earth&quot;);</span></a>
 <a name="125"><span class="lineNum">     125 </span>            : </a>
@@ -205,7 +205,7 @@
 <a name="143"><span class="lineNum">     143 </span><span class="lineCov">          1 :         IO::SDK::OrbitalParameters::EquinoctialElements eq(earth, t0, a, h, k, p2, q, L, 0.0, 0.0, -IO::SDK::Constants::PI2, IO::SDK::Constants::PI2, IO::SDK::Frames::InertialFrames::GetICRF());</span></a>
 <a name="144"><span class="lineNum">     144 </span>            : </a>
 <a name="145"><span class="lineNum">     145 </span><span class="lineCov">          1 :         IO::SDK::Time::TimeSpan et = t0.Substract(IO::SDK::Time::TDB(10000.0s));</span></a>
-<a name="146"><span class="lineNum">     146 </span><span class="lineCov">          1 :         auto sv = eq.GetStateVector(IO::SDK::Time::TDB(et.GetSeconds() + 250s));</span></a>
+<a name="146"><span class="lineNum">     146 </span><span class="lineCov">          1 :         auto sv = eq.ToStateVector(IO::SDK::Time::TDB(et.GetSeconds() + 250s));</span></a>
 <a name="147"><span class="lineNum">     147 </span>            : </a>
 <a name="148"><span class="lineNum">     148 </span><span class="lineCov">          1 :         ASSERT_DOUBLE_EQ(-10732167.450808318, sv.GetPosition().GetX());</span></a>
 <a name="149"><span class="lineNum">     149 </span><span class="lineCov">          1 :         ASSERT_DOUBLE_EQ(3902505.7550668186, sv.GetPosition().GetY());</span></a>
@@ -231,7 +231,7 @@
 <a name="169"><span class="lineNum">     169 </span>            : </a>
 <a name="170"><span class="lineNum">     170 </span><span class="lineCov">          1 :         IO::SDK::OrbitalParameters::EquinoctialElements eq(earth, a, ecc, inc, argp, node, m0, 0.0, 0.0, -IO::SDK::Constants::PI2, IO::SDK::Constants::PI2, t0, IO::SDK::Frames::InertialFrames::GetICRF());</span></a>
 <a name="171"><span class="lineNum">     171 </span>            : </a>
-<a name="172"><span class="lineNum">     172 </span><span class="lineCov">          1 :         auto sv = eq.GetStateVector(t0);</span></a>
+<a name="172"><span class="lineNum">     172 </span><span class="lineCov">          1 :         auto sv = eq.ToStateVector(t0);</span></a>
 <a name="173"><span class="lineNum">     173 </span>            : </a>
 <a name="174"><span class="lineNum">     174 </span><span class="lineCov">          1 :         ASSERT_DOUBLE_EQ(1.0e7, sv.GetPosition().GetX());</span></a>
 <a name="175"><span class="lineNum">     175 </span><span class="lineCov">          1 :         ASSERT_DOUBLE_EQ(6.1232339957367665e-10, sv.GetPosition().GetY());</span></a>
@@ -262,7 +262,7 @@
 <a name="200"><span class="lineNum">     200 </span>            :         {</a>
 <a name="201"><span class="lineNum">     201 </span><span class="lineCov">        360 :                 auto v = eq.GetTrueAnomaly(IO::SDK::Time::TDB(std::chrono::duration&lt;double&gt;(eq.GetPeriod().GetSeconds().count() / 360 * i)));</span></a>
 <a name="202"><span class="lineNum">     202 </span><span class="lineCov">        360 :                 std::cout &lt;&lt; i &lt;&lt; &quot; : &quot; &lt;&lt; v * IO::SDK::Constants::RAD_DEG &lt;&lt; std::endl;</span></a>
-<a name="203"><span class="lineNum">     203 </span>            :                 //std::cout &lt;&lt; i &lt;&lt; &quot; : &quot; &lt;&lt; eq.GetStateVector(i * IO::SDK::Constants::DEG_RAD).GetTrueAnomaly() * IO::SDK::Constants::RAD_DEG &lt;&lt; std::endl;</a>
+<a name="203"><span class="lineNum">     203 </span>            :                 //std::cout &lt;&lt; i &lt;&lt; &quot; : &quot; &lt;&lt; eq.ToStateVector(i * IO::SDK::Constants::DEG_RAD).GetTrueAnomaly() * IO::SDK::Constants::RAD_DEG &lt;&lt; std::endl;</a>
 <a name="204"><span class="lineNum">     204 </span>            :         }</a>
 <a name="205"><span class="lineNum">     205 </span><span class="lineCov">          1 : }</span></a>
 <a name="206"><span class="lineNum">     206 </span>            : </a>

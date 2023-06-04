@@ -2,37 +2,39 @@
 \label{PhasingManeuver_8h_source}\index{IO.SDK/Maneuvers/PhasingManeuver.h@{IO.SDK/Maneuvers/PhasingManeuver.h}}
 \mbox{\hyperlink{PhasingManeuver_8h}{Go to the documentation of this file.}}
 \begin{DoxyCode}{0}
-\DoxyCodeLine{1 }
-\DoxyCodeLine{11 \textcolor{preprocessor}{\#ifndef PHASING\_MANEUVER\_H}}
-\DoxyCodeLine{12 \textcolor{preprocessor}{\#define PHASING\_MANEUVER\_H}}
-\DoxyCodeLine{13 }
-\DoxyCodeLine{14 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{ManeuverBase_8h}{ManeuverBase.h}}>}}
-\DoxyCodeLine{15 }
-\DoxyCodeLine{16 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1SDK_1_1Maneuvers}{IO::SDK::Maneuvers}}}
-\DoxyCodeLine{17 \{}
-\DoxyCodeLine{18     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1PhasingManeuver}{PhasingManeuver}} final : \textcolor{keyword}{public} \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase}{IO::SDK::Maneuvers::ManeuverBase}}}
-\DoxyCodeLine{19     \{}
-\DoxyCodeLine{20     \textcolor{keyword}{private}:}
-\DoxyCodeLine{21         \textcolor{keyword}{const} \textcolor{keywordtype}{unsigned} \textcolor{keywordtype}{int} m\_revolutionsNumber;}
-\DoxyCodeLine{22         std::shared\_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> m\_targetOrbit;}
-\DoxyCodeLine{23 }
-\DoxyCodeLine{24     \textcolor{keyword}{protected}:}
-\DoxyCodeLine{30         \textcolor{keywordtype}{void} \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1PhasingManeuver_a355d84f389b2632194c0c75963a6bd3b}{Compute}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters}{IO::SDK::OrbitalParameters::OrbitalParameters}} \&maneuverPoint) \textcolor{keyword}{override};}
-\DoxyCodeLine{31 }
-\DoxyCodeLine{38         \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateOrientation}{IO::SDK::OrbitalParameters::StateOrientation}} \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1PhasingManeuver_a67e84783cd78806ceb55385e53828841}{ComputeOrientation}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters}{IO::SDK::OrbitalParameters::OrbitalParameters}} \&maneuverPoint) \textcolor{keyword}{override};}
-\DoxyCodeLine{39         \textcolor{comment}{/* data */}}
-\DoxyCodeLine{40     \textcolor{keyword}{public}:}
-\DoxyCodeLine{41         \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1PhasingManeuver_a9404edc86ecebf5a785f9659edf2af56}{PhasingManeuver}}(std::vector<IO::SDK::Body::Spacecraft::Engine*> engines, \mbox{\hyperlink{classIO_1_1SDK_1_1Propagators_1_1Propagator}{IO::SDK::Propagators::Propagator}} \&propagator, \textcolor{keywordtype}{unsigned} revolutionNumber,}
-\DoxyCodeLine{42                         std::shared\_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> targetOrbit);}
-\DoxyCodeLine{43 }
-\DoxyCodeLine{44         \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1PhasingManeuver_a9404edc86ecebf5a785f9659edf2af56}{PhasingManeuver}}(std::vector<IO::SDK::Body::Spacecraft::Engine*> engines, \mbox{\hyperlink{classIO_1_1SDK_1_1Propagators_1_1Propagator}{IO::SDK::Propagators::Propagator}} \&propagator, \textcolor{keywordtype}{unsigned} revolutionNumber,}
-\DoxyCodeLine{45                         std::shared\_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> targetOrbit, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO::SDK::Time::TDB}} \&minimumEpoch);}
-\DoxyCodeLine{46 }
-\DoxyCodeLine{54         \textcolor{keywordtype}{bool} \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1PhasingManeuver_afc6d51d3f4236c3774ec6a3a4da38d7a}{CanExecute}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters}{IO::SDK::OrbitalParameters::OrbitalParameters}} \&orbitalParams) \textcolor{keyword}{override};}
-\DoxyCodeLine{55     \};}
-\DoxyCodeLine{56 }
-\DoxyCodeLine{57 \} \textcolor{comment}{// namespace IO::SDK::Maneuvers}}
-\DoxyCodeLine{58 }
-\DoxyCodeLine{59 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{1 \textcolor{comment}{/*}}
+\DoxyCodeLine{2 \textcolor{comment}{ Copyright (c) 2021-\/2023. Sylvain Guillet (sylvain.guillet@tutamail.com)}}
+\DoxyCodeLine{3 \textcolor{comment}{ */}}
+\DoxyCodeLine{4 \textcolor{preprocessor}{\#ifndef PHASING\_MANEUVER\_H}}
+\DoxyCodeLine{5 \textcolor{preprocessor}{\#define PHASING\_MANEUVER\_H}}
+\DoxyCodeLine{6 }
+\DoxyCodeLine{7 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{ManeuverBase_8h}{ManeuverBase.h}}>}}
+\DoxyCodeLine{8 }
+\DoxyCodeLine{9 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1SDK_1_1Maneuvers}{IO::SDK::Maneuvers}}}
+\DoxyCodeLine{10 \{}
+\DoxyCodeLine{11     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1PhasingManeuver}{PhasingManeuver}} final : \textcolor{keyword}{public} \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase}{IO::SDK::Maneuvers::ManeuverBase}}}
+\DoxyCodeLine{12     \{}
+\DoxyCodeLine{13     \textcolor{keyword}{private}:}
+\DoxyCodeLine{14         \textcolor{keyword}{const} \textcolor{keywordtype}{unsigned} \textcolor{keywordtype}{int} m\_revolutionsNumber;}
+\DoxyCodeLine{15         std::shared\_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> m\_targetOrbit;}
+\DoxyCodeLine{16 }
+\DoxyCodeLine{17     \textcolor{keyword}{protected}:}
+\DoxyCodeLine{23         \textcolor{keywordtype}{void} \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1PhasingManeuver_a355d84f389b2632194c0c75963a6bd3b}{Compute}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters}{IO::SDK::OrbitalParameters::OrbitalParameters}} \&maneuverPoint) \textcolor{keyword}{override};}
+\DoxyCodeLine{24 }
+\DoxyCodeLine{31         \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateOrientation}{IO::SDK::OrbitalParameters::StateOrientation}} \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1PhasingManeuver_a67e84783cd78806ceb55385e53828841}{ComputeOrientation}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters}{IO::SDK::OrbitalParameters::OrbitalParameters}} \&maneuverPoint) \textcolor{keyword}{override};}
+\DoxyCodeLine{32         \textcolor{comment}{/* data */}}
+\DoxyCodeLine{33     \textcolor{keyword}{public}:}
+\DoxyCodeLine{34         \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1PhasingManeuver_a9404edc86ecebf5a785f9659edf2af56}{PhasingManeuver}}(std::vector<IO::SDK::Body::Spacecraft::Engine*> engines, \mbox{\hyperlink{classIO_1_1SDK_1_1Propagators_1_1Propagator}{IO::SDK::Propagators::Propagator}} \&propagator, \textcolor{keywordtype}{unsigned} revolutionNumber,}
+\DoxyCodeLine{35                         std::shared\_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> targetOrbit);}
+\DoxyCodeLine{36 }
+\DoxyCodeLine{37         \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1PhasingManeuver_a9404edc86ecebf5a785f9659edf2af56}{PhasingManeuver}}(std::vector<IO::SDK::Body::Spacecraft::Engine*> engines, \mbox{\hyperlink{classIO_1_1SDK_1_1Propagators_1_1Propagator}{IO::SDK::Propagators::Propagator}} \&propagator, \textcolor{keywordtype}{unsigned} revolutionNumber,}
+\DoxyCodeLine{38                         std::shared\_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> targetOrbit, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO::SDK::Time::TDB}} \&minimumEpoch);}
+\DoxyCodeLine{39 }
+\DoxyCodeLine{47         \textcolor{keywordtype}{bool} \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1PhasingManeuver_afc6d51d3f4236c3774ec6a3a4da38d7a}{CanExecute}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters}{IO::SDK::OrbitalParameters::OrbitalParameters}} \&orbitalParams) \textcolor{keyword}{override};}
+\DoxyCodeLine{48     \};}
+\DoxyCodeLine{49 }
+\DoxyCodeLine{50 \} \textcolor{comment}{// namespace IO::SDK::Maneuvers}}
+\DoxyCodeLine{51 }
+\DoxyCodeLine{52 \textcolor{preprocessor}{\#endif}}
 
 \end{DoxyCode}

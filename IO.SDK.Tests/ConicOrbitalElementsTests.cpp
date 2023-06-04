@@ -127,7 +127,7 @@ TEST(ConicOrbitalElements, GetTimeToTrueAnomaly)
 	ASSERT_NEAR(14874.064525876782, epoch.GetSecondsFromJ2000().count(), IO::SDK::Test::Constants::TIME_ACCURACY);
 }
 
-TEST(ConicOrbitalElements, GetStateVector)
+TEST(ConicOrbitalElements, ToStateVector)
 {
 	//ISS
 	auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399); //GEOPHYSICAL PROPERTIES provided by JPL
@@ -146,7 +146,7 @@ TEST(ConicOrbitalElements, GetStateVector)
 		4.541224977546975E+01 * IO::SDK::Constants::DEG_RAD,
 		IO::SDK::Time::TDB(663724800.00001490s), IO::SDK::Frames::InertialFrames::GetICRF()); //"2021-01-12T11:58:50.816" UTC
 
-	IO::SDK::OrbitalParameters::StateVector sv = conic.GetStateVector(IO::SDK::Time::TDB(663724800.00001490s));
+	IO::SDK::OrbitalParameters::StateVector sv = conic.ToStateVector(IO::SDK::Time::TDB(663724800.00001490s));
 
 	//Low accuracy due to conical propagation
 	ASSERT_NEAR(-6.116559469556896E+06, sv.GetPosition().GetX(), 3e3);
@@ -172,7 +172,7 @@ TEST(ConicOrbitalElements, GetStateVectorFromToConic)
                                                                                            IO::SDK::Time::TDB("2021-03-02T00:00:00"),
                                                                                            IO::SDK::Frames::InertialFrames::GetICRF());
 
-    IO::SDK::OrbitalParameters::StateVector sv = parkingOrbit->GetStateVector();
+    IO::SDK::OrbitalParameters::StateVector sv = parkingOrbit->ToStateVector();
 
     //Low accuracy due to conical propagation
     ASSERT_DOUBLE_EQ(6700000.0, sv.GetPerigeeVector().Magnitude());
@@ -250,7 +250,7 @@ TEST(ConicOrbitalElements, GetRADec)
 	// IO::SDK::Time::TDB epoch("2021-Jan-01 00:00:00.0000 TDB");
 	auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, sun);
 
-	auto radec = earth->GetOrbitalParametersAtEpoch()->GetRADec();
+	auto radec = earth->GetOrbitalParametersAtEpoch()->ToEquatorialCoordinates();
 
 	ASSERT_DOUBLE_EQ(1.7678119732568962,radec.GetRA());
 	ASSERT_DOUBLE_EQ(0.40200709658915335,radec.GetDec());

@@ -1,20 +1,10 @@
-/**
- * @file Engine.h
- * @author Sylvain Guillet (sylvain.guillet@live.com)
- * @brief 
- * @version 0.x
- * @date 2021-03-04
- * 
- * @copyright Copyright (c) 2021
- * 
+/*
+ Copyright (c) 2021-2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
  */
 
 #ifndef ENGINE_H
 #define ENGINE_H
 
-#include<chrono>
-
-#include <string>
 #include <Vector3D.h>
 #include <FuelTank.h>
 #include <TimeSpan.h>

@@ -223,7 +223,7 @@ TEST(Site, FindBodyVisibilityWindows)
     IO::SDK::Time::TDB endDate("2023-02-20 02:00:00 TDB");
     s.BuildAndWriteEphemeris(IO::SDK::Time::Window<IO::SDK::Time::UTC>(startDate.ToUTC(), endDate.ToUTC()));
 
-//    auto res = s.GetStateVector(*moon, IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::AberrationsEnum::None, IO::SDK::Time::TDB("2023-02-19 00:00:00 TDB"));
+//    auto res = s.ToStateVector(*moon, IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::AberrationsEnum::None, IO::SDK::Time::TDB("2023-02-19 00:00:00 TDB"));
 
     auto windows = s.FindBodyVisibilityWindows(*moon, IO::SDK::Time::Window<IO::SDK::Time::UTC>(IO::SDK::Time::TDB("2023-02-19 00:00:00 TDB").ToUTC(),
                                                                                                 IO::SDK::Time::TDB("2023-02-20 00:00:00 TDB").ToUTC()),

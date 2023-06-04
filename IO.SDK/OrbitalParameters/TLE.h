@@ -1,12 +1,5 @@
-/**
- * @file TLE.h
- * @author Sylvain Guillet (sylvain.guillet@live.com)
- * @brief 
- * @version 0.x
- * @date 2021-06-12
- * 
- * @copyright Copyright (c) 2021
- * 
+/*
+ Copyright (c) 2021-2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
  */
 #ifndef TLE_H
 #define TLE_H
@@ -75,7 +68,7 @@ namespace IO::SDK::OrbitalParameters
 		/// </summary>
 		/// <param name="epoch"></param>
 		/// <returns></returns>
-		[[nodiscard]] IO::SDK::OrbitalParameters::StateVector GetStateVector(const IO::SDK::Time::TDB &epoch) const override;
+		[[nodiscard]] IO::SDK::OrbitalParameters::StateVector ToStateVector(const IO::SDK::Time::TDB &epoch) const override;
 
 		/// <summary>
 		/// Get orbital eccentricity

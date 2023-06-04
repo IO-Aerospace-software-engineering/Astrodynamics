@@ -1,22 +1,15 @@
-/**
- * @file Launch.cpp
- * @author Sylvain Guillet (sylvain.guillet@live.com)
- * @brief 
- * @version 0.x
- * @date 2021-07-03
- * 
- * @copyright Copyright (c) 2021
- * 
+/*
+ Copyright (c) 2021-2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
  */
 #include <Launch.h>
 #include <Constants.h>
-#include "InertialFrames.h"
+#include <InertialFrames.h>
 
 IO::SDK::Maneuvers::Launch::Launch(const IO::SDK::Sites::LaunchSite &launchSite, const IO::SDK::Sites::Site &recoverySite, bool launchByDay,
                                    const IO::SDK::OrbitalParameters::OrbitalParameters &targetOrbit) : m_launchSite{launchSite}, m_recoverySite{recoverySite},
                                                                                                        m_launchByDay{launchByDay}, m_targetOrbit{targetOrbit}
 {
-    const_cast<double &>(m_inclination) = m_targetOrbit.GetStateVector().ToFrame(IO::SDK::Frames::InertialFrames::GetICRF()).GetSpecificAngularMomentum().GetAngle(
+    const_cast<double &>(m_inclination) = m_targetOrbit.ToStateVector().ToFrame(IO::SDK::Frames::InertialFrames::GetICRF()).GetSpecificAngularMomentum().GetAngle(
             m_launchSite.GetBody()->GetBodyFixedFrame().TransformVector(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::Math::Vector3D::VectorZ,
                                                                         IO::SDK::Time::TDB(std::chrono::duration<double>(0.0))));
 
@@ -57,7 +50,7 @@ double IO::SDK::Maneuvers::Launch::GetInertialAscendingAzimuthLaunch()
     if (std::isnan(m_inertialAscendingAzimuthLaunch))
     {
         m_inertialAscendingAzimuthLaunch = std::asin(std::cos(
-                m_targetOrbit.GetStateVector().ToFrame(IO::SDK::Frames::InertialFrames::GetICRF()).GetSpecificAngularMomentum().GetAngle(
+                m_targetOrbit.ToStateVector().ToFrame(IO::SDK::Frames::InertialFrames::GetICRF()).GetSpecificAngularMomentum().GetAngle(
                         m_launchSite.GetBody()->GetBodyFixedFrame().TransformVector(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::Math::Vector3D::VectorZ,
                                                                                     IO::SDK::Time::TDB(std::chrono::duration<double>(0.0))))) /
                                                      std::cos(m_launchSite.GetCoordinates().GetLatitude()));
@@ -169,7 +162,7 @@ std::vector<IO::SDK::Maneuvers::LaunchWindow> IO::SDK::Maneuvers::Launch::FindLa
     auto step = windowToSearch.GetLength() * 0.5;
 
     //Define crossing plane inbound status
-    bool isInboundPlaneCrossing = m_targetOrbit.GetStateVector().ToFrame(IO::SDK::Frames::InertialFrames::GetICRF()).GetSpecificAngularMomentum().DotProduct(
+    bool isInboundPlaneCrossing = m_targetOrbit.ToStateVector().ToFrame(IO::SDK::Frames::InertialFrames::GetICRF()).GetSpecificAngularMomentum().DotProduct(
             m_launchSite.GetStateVector(IO::SDK::Frames::InertialFrames::GetICRF(), date.ToTDB()).GetPosition()) > 0.0;
 
     std::vector<LaunchWindow> launchWindows;
@@ -180,7 +173,7 @@ std::vector<IO::SDK::Maneuvers::LaunchWindow> IO::SDK::Maneuvers::Launch::FindLa
         date = date + step;
 
         //Compute crossing plane inbound status
-        bool isInbound = m_targetOrbit.GetStateVector().ToFrame(IO::SDK::Frames::InertialFrames::GetICRF()).GetSpecificAngularMomentum().DotProduct(
+        bool isInbound = m_targetOrbit.ToStateVector().ToFrame(IO::SDK::Frames::InertialFrames::GetICRF()).GetSpecificAngularMomentum().DotProduct(
                 m_launchSite.GetStateVector(IO::SDK::Frames::InertialFrames::GetICRF(), date.ToTDB()).GetPosition()) > 0.0;
 
         //If inbound status has changed, we passed through orbital plane
@@ -206,7 +199,7 @@ std::vector<IO::SDK::Maneuvers::LaunchWindow> IO::SDK::Maneuvers::Launch::FindLa
             //Define if launch will be northly or southerly and set azimuths
             bool isAscending{};
             if (m_launchSite.GetStateVector(IO::SDK::Frames::InertialFrames::GetICRF(), date.ToTDB()).GetPosition().DotProduct(
-                    m_targetOrbit.GetStateVector().ToFrame(IO::SDK::Frames::InertialFrames::GetICRF()).GetAscendingNodeVector()) > 0.0)
+                    m_targetOrbit.ToStateVector().ToFrame(IO::SDK::Frames::InertialFrames::GetICRF()).GetAscendingNodeVector()) > 0.0)
             {
                 inertialAzimuthLaunch = GetInertialAscendingAzimuthLaunch();
                 nonInertialAzimuthLaunch = GetNonInertialAscendingAzimuthLaunch();

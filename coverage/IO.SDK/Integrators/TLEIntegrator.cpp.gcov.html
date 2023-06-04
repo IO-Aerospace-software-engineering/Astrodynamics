@@ -83,7 +83,7 @@
 <a name="21"><span class="lineNum">      21 </span>            : </a>
 <a name="22"><span class="lineNum">      22 </span><span class="lineCov">        101 : IO::SDK::OrbitalParameters::StateVector IO::SDK::Integrators::TLEIntegrator::Integrate(const IO::SDK::Body::Body &amp;body, const IO::SDK::OrbitalParameters::StateVector &amp;stateVector)</span></a>
 <a name="23"><span class="lineNum">      23 </span>            : {</a>
-<a name="24"><span class="lineNum">      24 </span><span class="lineCov">        202 :     return m_tle.GetStateVector(stateVector.GetEpoch() + this-&gt;m_stepDuration);</span></a>
+<a name="24"><span class="lineNum">      24 </span><span class="lineCov">        202 :     return m_tle.ToStateVector(stateVector.GetEpoch() + this-&gt;m_stepDuration);</span></a>
 <a name="25"><span class="lineNum">      25 </span>            : }</a>
 </pre>
       </td>

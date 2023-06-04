@@ -1,19 +1,12 @@
-/**
- * @file OrbitalParameters.h
- * @author Sylvain Guillet (sylvain.guillet@live.com)
- * @brief 
- * @version 0.x
- * @date 2021-04-09
- * 
- * @copyright Copyright (c) 2021
- * 
+/*
+ Copyright (c) 2021-2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
  */
 #ifndef ORBITAL_PARAMETERS_H
 #define ORBITAL_PARAMETERS_H
 
 #include <memory>
 #include <Frames.h>
-#include <RADec.h>
+#include <Equatorial.h>
 
 namespace IO::SDK::Body
 {
@@ -107,14 +100,22 @@ namespace IO::SDK::OrbitalParameters
 		 * @param epoch 
 		 * @return StateVector 
 		 */
-		[[nodiscard]] virtual StateVector GetStateVector(const IO::SDK::Time::TDB &epoch) const = 0;
+		[[nodiscard]] virtual StateVector ToStateVector(const IO::SDK::Time::TDB &epoch) const = 0;
 
 		/**
 		 * @brief Get the State Vector at epoch
 		 * 
 		 * @return StateVector 
 		 */
-		[[nodiscard]] virtual StateVector GetStateVector() const;
+		[[nodiscard]] virtual StateVector ToStateVector() const;
+
+        /**
+		 * @brief Get the State Vector from true anomaly
+		 *
+		 * @param trueAnomaly
+		 * @return StateVector
+		 */
+        [[nodiscard]] virtual IO::SDK::OrbitalParameters::StateVector ToStateVector(double trueAnomaly) const;
 
 		/**
 		 * @brief Is elliptical ?
@@ -256,13 +257,7 @@ namespace IO::SDK::OrbitalParameters
 		 */
 		[[nodiscard]] IO::SDK::Math::Vector3D GetApogeeVector() const;
 
-		/**
-		 * @brief Get the State Vector from true anomalie
-		 * 
-		 * @param trueAnomalie 
-		 * @return StateVector 
-		 */
-		[[nodiscard]] virtual IO::SDK::OrbitalParameters::StateVector GetStateVector(double trueAnomalie) const;
+
 
 		/**
 		 * @brief Get the Ascending Node Vector
@@ -274,9 +269,9 @@ namespace IO::SDK::OrbitalParameters
 		/**
 		 * @brief Get right ascension and declination
 		 * 
-		 * @return IO::SDK::Coordinates::RADec 
+		 * @return IO::SDK::Coordinates::Equatorial
 		 */
-		[[nodiscard]] IO::SDK::Coordinates::RADec GetRADec() const;
+		[[nodiscard]] IO::SDK::Coordinates::Equatorial ToEquatorialCoordinates() const;
 
 		/**
 		 * @brief Get the Velocity at Perigee

@@ -2,28 +2,30 @@
 \label{Cylindrical_8h_source}\index{IO.SDK/Coordinates/Cylindrical.h@{IO.SDK/Coordinates/Cylindrical.h}}
 \mbox{\hyperlink{Cylindrical_8h}{Go to the documentation of this file.}}
 \begin{DoxyCode}{0}
-\DoxyCodeLine{1 }
-\DoxyCodeLine{11 \textcolor{preprocessor}{\#ifndef CYLINDRICAL\_H}}
-\DoxyCodeLine{12 \textcolor{preprocessor}{\#define CYLINDRICAL\_H}}
-\DoxyCodeLine{13 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1SDK_1_1Coordinates}{IO::SDK::Coordinates}}}
-\DoxyCodeLine{14 \{}
-\DoxyCodeLine{19     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1Cylindrical}{Cylindrical}}}
-\DoxyCodeLine{20     \{}
-\DoxyCodeLine{21     \textcolor{keyword}{private}:}
-\DoxyCodeLine{22         \textcolor{keyword}{const} \textcolor{keywordtype}{double} \_radius, \_longitude, \_z;}
-\DoxyCodeLine{23 }
-\DoxyCodeLine{24     \textcolor{keyword}{public}:}
-\DoxyCodeLine{32         \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1Cylindrical_a299316c14615539126a3d74019d09b60}{Cylindrical}}(\textcolor{keyword}{const} \textcolor{keywordtype}{double} radius, \textcolor{keyword}{const} \textcolor{keywordtype}{double} longitude, \textcolor{keyword}{const} \textcolor{keywordtype}{double} z) : \_radius\{radius\}, \_longitude\{longitude\}, \_z\{z\}}
-\DoxyCodeLine{33         \{}
-\DoxyCodeLine{34         \}}
+\DoxyCodeLine{1 \textcolor{comment}{/*}}
+\DoxyCodeLine{2 \textcolor{comment}{ Copyright (c) 2021-\/2023. Sylvain Guillet (sylvain.guillet@tutamail.com)}}
+\DoxyCodeLine{3 \textcolor{comment}{ */}}
+\DoxyCodeLine{4 \textcolor{preprocessor}{\#ifndef CYLINDRICAL\_H}}
+\DoxyCodeLine{5 \textcolor{preprocessor}{\#define CYLINDRICAL\_H}}
+\DoxyCodeLine{6 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1SDK_1_1Coordinates}{IO::SDK::Coordinates}}}
+\DoxyCodeLine{7 \{}
+\DoxyCodeLine{12     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1Cylindrical}{Cylindrical}}}
+\DoxyCodeLine{13     \{}
+\DoxyCodeLine{14     \textcolor{keyword}{private}:}
+\DoxyCodeLine{15         \textcolor{keyword}{const} \textcolor{keywordtype}{double} \_radius, \_longitude, \_z;}
+\DoxyCodeLine{16 }
+\DoxyCodeLine{17     \textcolor{keyword}{public}:}
+\DoxyCodeLine{25         \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1Cylindrical_a299316c14615539126a3d74019d09b60}{Cylindrical}}(\textcolor{keyword}{const} \textcolor{keywordtype}{double} radius, \textcolor{keyword}{const} \textcolor{keywordtype}{double} longitude, \textcolor{keyword}{const} \textcolor{keywordtype}{double} z) : \_radius\{radius\}, \_longitude\{longitude\}, \_z\{z\}}
+\DoxyCodeLine{26         \{}
+\DoxyCodeLine{27         \}}
+\DoxyCodeLine{28 }
+\DoxyCodeLine{34         [[nodiscard]] \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1Cylindrical_ae3cf12c70683eb28f8c46c3b701636e9}{GetRadius}}()\textcolor{keyword}{ const }\{ \textcolor{keywordflow}{return} this-\/>\_radius; \}}
 \DoxyCodeLine{35 }
-\DoxyCodeLine{41         [[nodiscard]] \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1Cylindrical_ae3cf12c70683eb28f8c46c3b701636e9}{GetRadius}}()\textcolor{keyword}{ const }\{ \textcolor{keywordflow}{return} this-\/>\_radius; \}}
+\DoxyCodeLine{41         [[nodiscard]] \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1Cylindrical_a343aeb8f0bc2f00fd875bf07014097ec}{GetLongitude}}()\textcolor{keyword}{ const }\{ \textcolor{keywordflow}{return} this-\/>\_longitude; \}}
 \DoxyCodeLine{42 }
-\DoxyCodeLine{48         [[nodiscard]] \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1Cylindrical_a343aeb8f0bc2f00fd875bf07014097ec}{GetLongitude}}()\textcolor{keyword}{ const }\{ \textcolor{keywordflow}{return} this-\/>\_longitude; \}}
-\DoxyCodeLine{49 }
-\DoxyCodeLine{55         [[nodiscard]] \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1Cylindrical_a0635099316db70880f80cadbb268fea8}{GetZ}}()\textcolor{keyword}{ const }\{ \textcolor{keywordflow}{return} this-\/>\_z; \}}
-\DoxyCodeLine{56     \};}
-\DoxyCodeLine{57 \}}
-\DoxyCodeLine{58 \textcolor{preprocessor}{\#endif }\textcolor{comment}{// !CYLINDRICAL\_H}}
+\DoxyCodeLine{48         [[nodiscard]] \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1Cylindrical_a0635099316db70880f80cadbb268fea8}{GetZ}}()\textcolor{keyword}{ const }\{ \textcolor{keywordflow}{return} this-\/>\_z; \}}
+\DoxyCodeLine{49     \};}
+\DoxyCodeLine{50 \}}
+\DoxyCodeLine{51 \textcolor{preprocessor}{\#endif }\textcolor{comment}{// !CYLINDRICAL\_H}}
 
 \end{DoxyCode}

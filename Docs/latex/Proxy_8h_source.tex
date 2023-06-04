@@ -3,179 +3,194 @@
 \mbox{\hyperlink{Proxy_8h}{Go to the documentation of this file.}}
 \begin{DoxyCode}{0}
 \DoxyCodeLine{1 }
-\DoxyCodeLine{2 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{ScenarioDTO_8h}{ScenarioDTO.h}}>}}
-\DoxyCodeLine{3 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{ManeuverBase_8h}{ManeuverBase.h}}>}}
-\DoxyCodeLine{4 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{Scenario_8h}{Scenario.h}}>}}
-\DoxyCodeLine{5 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{FrameTransformation_8h}{FrameTransformation.h}}>}}
-\DoxyCodeLine{6 }
-\DoxyCodeLine{7 \textcolor{preprocessor}{\#pragma region Proxy}}
-\DoxyCodeLine{8 \textcolor{preprocessor}{\#ifdef \_\_cplusplus}}
-\DoxyCodeLine{9 \textcolor{keyword}{extern} \textcolor{stringliteral}{"{}C"{}} \{}
-\DoxyCodeLine{10 \textcolor{preprocessor}{\#endif}}
-\DoxyCodeLine{11 \textcolor{preprocessor}{\#ifdef \_WIN32}}
-\DoxyCodeLine{12 \textcolor{preprocessor}{\#  ifdef MODULE\_API\_EXPORTS}}
-\DoxyCodeLine{13 \textcolor{preprocessor}{\#    define MODULE\_API \_\_declspec(dllexport)}}
-\DoxyCodeLine{14 \textcolor{preprocessor}{\#  else}}
-\DoxyCodeLine{15 \textcolor{preprocessor}{\#    define MODULE\_API \_\_declspec(dllimport)}}
-\DoxyCodeLine{16 \textcolor{preprocessor}{\#  endif}}
-\DoxyCodeLine{17 \textcolor{preprocessor}{\#else}}
-\DoxyCodeLine{18 \textcolor{preprocessor}{\#  define MODULE\_API}}
-\DoxyCodeLine{19 \textcolor{preprocessor}{\#endif}}
-\DoxyCodeLine{24 \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\_API}} \textcolor{keyword}{const} \textcolor{keywordtype}{char} *\mbox{\hyperlink{Proxy_8h_a762431b7740df9d560ebe822564369f1}{GetSpiceVersionProxy}}();}
-\DoxyCodeLine{25 }
-\DoxyCodeLine{34 \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\_API}} \textcolor{keywordtype}{bool}}
-\DoxyCodeLine{35 \mbox{\hyperlink{Proxy_8h_a17109cffd6008c59fafb5b67ccf6fe97}{WriteEphemerisProxy}}(\textcolor{keyword}{const} \textcolor{keywordtype}{char} *filePath, \textcolor{keywordtype}{int} objectId, \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1StateVectorDTO}{IO::SDK::API::DTO::StateVectorDTO}} sv[100000], \textcolor{keywordtype}{unsigned} \textcolor{keywordtype}{int} size);}
-\DoxyCodeLine{36 }
-\DoxyCodeLine{47 \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\_API}} \textcolor{keywordtype}{void}}
-\DoxyCodeLine{48 \mbox{\hyperlink{Proxy_8h_aec8180716b9e86621181f82f38419c8f}{ReadEphemerisProxy}}(\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO}{IO::SDK::API::DTO::WindowDTO}} searchWindow, \textcolor{keywordtype}{int} observerId, \textcolor{keywordtype}{int} targetId, \textcolor{keyword}{const} \textcolor{keywordtype}{char} *frame,}
-\DoxyCodeLine{49                    \textcolor{keyword}{const} \textcolor{keywordtype}{char} *aberration, \textcolor{keywordtype}{double} stepSize, \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1StateVectorDTO}{IO::SDK::API::DTO::StateVectorDTO}} stateVectors[10000]);}
-\DoxyCodeLine{50 }
-\DoxyCodeLine{60 \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\_API}} \textcolor{keywordtype}{void}}
-\DoxyCodeLine{61 \mbox{\hyperlink{Proxy_8h_ad2cb321fd1aa8706954df5b92b3b9a19}{ReadOrientationProxy}}(\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO}{IO::SDK::API::DTO::WindowDTO}} searchWindow, \textcolor{keywordtype}{int} spacecraftId, \textcolor{keywordtype}{double} tolerance, \textcolor{keyword}{const} \textcolor{keywordtype}{char} *frame, \textcolor{keywordtype}{double} stepSize,}
-\DoxyCodeLine{62                      \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1StateOrientationDTO}{IO::SDK::API::DTO::StateOrientationDTO}} so[10000]);}
-\DoxyCodeLine{63 }
-\DoxyCodeLine{68 \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\_API}} \textcolor{keywordtype}{void} \mbox{\hyperlink{Proxy_8h_a53659fe236627b28005a1baae4c072ed}{PropagateProxy}}(\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO}{IO::SDK::API::DTO::ScenarioDTO}} \&scenarioDto);}
-\DoxyCodeLine{69 }
+\DoxyCodeLine{2 \textcolor{comment}{/*}}
+\DoxyCodeLine{3 \textcolor{comment}{ Copyright (c) 2023. Sylvain Guillet (sylvain.guillet@tutamail.com)}}
+\DoxyCodeLine{4 \textcolor{comment}{ */}}
+\DoxyCodeLine{5 }
+\DoxyCodeLine{6 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{ScenarioDTO_8h}{ScenarioDTO.h}}>}}
+\DoxyCodeLine{7 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{ManeuverBase_8h}{ManeuverBase.h}}>}}
+\DoxyCodeLine{8 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{Scenario_8h}{Scenario.h}}>}}
+\DoxyCodeLine{9 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{FrameTransformation_8h}{FrameTransformation.h}}>}}
+\DoxyCodeLine{10 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{ConicOrbitalElementsDTO_8h}{ConicOrbitalElementsDTO.h}}>}}
+\DoxyCodeLine{11 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{EquinoctialElementsDTO_8h}{EquinoctialElementsDTO.h}}>}}
+\DoxyCodeLine{12 \textcolor{preprocessor}{\#include "{}\mbox{\hyperlink{RaDecDTO_8h}{RaDecDTO.h}}"{}}}
+\DoxyCodeLine{13 }
+\DoxyCodeLine{14 \textcolor{preprocessor}{\#pragma region Proxy}}
+\DoxyCodeLine{15 \textcolor{preprocessor}{\#ifdef \_\_cplusplus}}
+\DoxyCodeLine{16 \textcolor{keyword}{extern} \textcolor{stringliteral}{"{}C"{}} \{}
+\DoxyCodeLine{17 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{18 \textcolor{preprocessor}{\#ifdef \_WIN32}}
+\DoxyCodeLine{19 \textcolor{preprocessor}{\#  ifdef MODULE\_API\_EXPORTS}}
+\DoxyCodeLine{20 \textcolor{preprocessor}{\#    define MODULE\_API \_\_declspec(dllexport)}}
+\DoxyCodeLine{21 \textcolor{preprocessor}{\#  else}}
+\DoxyCodeLine{22 \textcolor{preprocessor}{\#    define MODULE\_API \_\_declspec(dllimport)}}
+\DoxyCodeLine{23 \textcolor{preprocessor}{\#  endif}}
+\DoxyCodeLine{24 \textcolor{preprocessor}{\#else}}
+\DoxyCodeLine{25 \textcolor{preprocessor}{\#  define MODULE\_API}}
+\DoxyCodeLine{26 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{31 \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\_API}} \textcolor{keyword}{const} \textcolor{keywordtype}{char} *\mbox{\hyperlink{Proxy_8h_a762431b7740df9d560ebe822564369f1}{GetSpiceVersionProxy}}();}
+\DoxyCodeLine{32 }
+\DoxyCodeLine{41 \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\_API}} \textcolor{keywordtype}{bool}}
+\DoxyCodeLine{42 \mbox{\hyperlink{Proxy_8h_a17109cffd6008c59fafb5b67ccf6fe97}{WriteEphemerisProxy}}(\textcolor{keyword}{const} \textcolor{keywordtype}{char} *filePath, \textcolor{keywordtype}{int} objectId, \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1StateVectorDTO}{IO::SDK::API::DTO::StateVectorDTO}} sv[100000], \textcolor{keywordtype}{unsigned} \textcolor{keywordtype}{int} size);}
+\DoxyCodeLine{43 }
+\DoxyCodeLine{54 \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\_API}} \textcolor{keywordtype}{void}}
+\DoxyCodeLine{55 \mbox{\hyperlink{Proxy_8h_aec8180716b9e86621181f82f38419c8f}{ReadEphemerisProxy}}(\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO}{IO::SDK::API::DTO::WindowDTO}} searchWindow, \textcolor{keywordtype}{int} observerId, \textcolor{keywordtype}{int} targetId, \textcolor{keyword}{const} \textcolor{keywordtype}{char} *frame,}
+\DoxyCodeLine{56                    \textcolor{keyword}{const} \textcolor{keywordtype}{char} *aberration, \textcolor{keywordtype}{double} stepSize, \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1StateVectorDTO}{IO::SDK::API::DTO::StateVectorDTO}} stateVectors[10000]);}
+\DoxyCodeLine{57 }
+\DoxyCodeLine{67 \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\_API}} \textcolor{keywordtype}{void}}
+\DoxyCodeLine{68 \mbox{\hyperlink{Proxy_8h_ad2cb321fd1aa8706954df5b92b3b9a19}{ReadOrientationProxy}}(\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO}{IO::SDK::API::DTO::WindowDTO}} searchWindow, \textcolor{keywordtype}{int} spacecraftId, \textcolor{keywordtype}{double} tolerance, \textcolor{keyword}{const} \textcolor{keywordtype}{char} *frame, \textcolor{keywordtype}{double} stepSize,}
+\DoxyCodeLine{69                      \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1StateOrientationDTO}{IO::SDK::API::DTO::StateOrientationDTO}} so[10000]);}
 \DoxyCodeLine{70 }
-\DoxyCodeLine{71 }
-\DoxyCodeLine{76 \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\_API}} \textcolor{keywordtype}{void} \mbox{\hyperlink{Proxy_8h_a1d806e18515093a7f25ad338020ec56d}{LaunchProxy}}(\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1LaunchDTO}{IO::SDK::API::DTO::LaunchDTO}} \&launchDto);}
+\DoxyCodeLine{75 \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\_API}} \textcolor{keywordtype}{void} \mbox{\hyperlink{Proxy_8h_a53659fe236627b28005a1baae4c072ed}{PropagateProxy}}(\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO}{IO::SDK::API::DTO::ScenarioDTO}} \&scenarioDto);}
+\DoxyCodeLine{76 }
 \DoxyCodeLine{77 }
-\DoxyCodeLine{82 \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\_API}} \textcolor{keywordtype}{void} \mbox{\hyperlink{Proxy_8h_a8e72840432a41c8b143731654b2cef2a}{LoadKernelsProxy}}(\textcolor{keyword}{const} \textcolor{keywordtype}{char} *path);}
-\DoxyCodeLine{83 }
-\DoxyCodeLine{89 \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\_API}} \textcolor{keyword}{const} \textcolor{keywordtype}{char} *\mbox{\hyperlink{Proxy_8h_a866cf6da600090959c6dc47000e75cc4}{TDBToStringProxy}}(\textcolor{keywordtype}{double} secondsFromJ2000);}
+\DoxyCodeLine{78 }
+\DoxyCodeLine{83 \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\_API}} \textcolor{keywordtype}{void} \mbox{\hyperlink{Proxy_8h_a1d806e18515093a7f25ad338020ec56d}{LaunchProxy}}(\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1LaunchDTO}{IO::SDK::API::DTO::LaunchDTO}} \&launchDto);}
+\DoxyCodeLine{84 }
+\DoxyCodeLine{89 \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\_API}} \textcolor{keywordtype}{void} \mbox{\hyperlink{Proxy_8h_a8e72840432a41c8b143731654b2cef2a}{LoadKernelsProxy}}(\textcolor{keyword}{const} \textcolor{keywordtype}{char} *path);}
 \DoxyCodeLine{90 }
-\DoxyCodeLine{96 \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\_API}} \textcolor{keyword}{const} \textcolor{keywordtype}{char} *\mbox{\hyperlink{Proxy_8h_a8f3164fd10cfa0827e25add2106a71c7}{UTCToStringProxy}}(\textcolor{keywordtype}{double} secondsFromJ2000);}
+\DoxyCodeLine{96 \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\_API}} \textcolor{keyword}{const} \textcolor{keywordtype}{char} *\mbox{\hyperlink{Proxy_8h_a866cf6da600090959c6dc47000e75cc4}{TDBToStringProxy}}(\textcolor{keywordtype}{double} secondsFromJ2000);}
 \DoxyCodeLine{97 }
-\DoxyCodeLine{109 \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\_API}} \textcolor{keywordtype}{void}}
-\DoxyCodeLine{110 \mbox{\hyperlink{Proxy_8h_a6ec1cf8afcc6842627d5f3fcab1f83ef}{FindWindowsOnDistanceConstraintProxy}}(\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO}{IO::SDK::API::DTO::WindowDTO}} searchWindow, \textcolor{keywordtype}{int} observerId, \textcolor{keywordtype}{int} targetId,}
-\DoxyCodeLine{111                                      \textcolor{keyword}{const} \textcolor{keywordtype}{char} *relationalOperator, \textcolor{keywordtype}{double} value, \textcolor{keyword}{const} \textcolor{keywordtype}{char} *aberration,}
-\DoxyCodeLine{112                                      \textcolor{keywordtype}{double} stepSize, \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO}{IO::SDK::API::DTO::WindowDTO}} windows[1000]);}
-\DoxyCodeLine{113 }
-\DoxyCodeLine{129 \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\_API}} \textcolor{keywordtype}{void} \mbox{\hyperlink{Proxy_8h_a3f435df4a2572b837892811cd273ad04}{FindWindowsOnOccultationConstraintProxy}}(\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO}{IO::SDK::API::DTO::WindowDTO}} searchWindow, \textcolor{keywordtype}{int} observerId,}
-\DoxyCodeLine{130                                                         \textcolor{keywordtype}{int} targetId, \textcolor{keyword}{const} \textcolor{keywordtype}{char} *targetFrame,}
-\DoxyCodeLine{131                                                         \textcolor{keyword}{const} \textcolor{keywordtype}{char} *targetShape,}
-\DoxyCodeLine{132                                                         \textcolor{keywordtype}{int} frontBodyId, \textcolor{keyword}{const} \textcolor{keywordtype}{char} *frontFrame, \textcolor{keyword}{const} \textcolor{keywordtype}{char} *frontShape,}
-\DoxyCodeLine{133                                                         \textcolor{keyword}{const} \textcolor{keywordtype}{char} *occultationType,}
-\DoxyCodeLine{134                                                         \textcolor{keyword}{const} \textcolor{keywordtype}{char} *aberration, \textcolor{keywordtype}{double} stepSize,}
-\DoxyCodeLine{135                                                         \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO}{IO::SDK::API::DTO::WindowDTO}} windows[1000]);}
-\DoxyCodeLine{136 }
-\DoxyCodeLine{152 \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\_API}} \textcolor{keywordtype}{void} \mbox{\hyperlink{Proxy_8h_a41859ca381c6d0feef334aea372d8f78}{FindWindowsOnCoordinateConstraintProxy}}(\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO}{IO::SDK::API::DTO::WindowDTO}} searchWindow, \textcolor{keywordtype}{int} observerId,}
-\DoxyCodeLine{153                                                        \textcolor{keywordtype}{int} targetId, \textcolor{keyword}{const} \textcolor{keywordtype}{char} *frame, \textcolor{keyword}{const} \textcolor{keywordtype}{char} *coordinateSystem,}
-\DoxyCodeLine{154                                                        \textcolor{keyword}{const} \textcolor{keywordtype}{char} *coordinate, \textcolor{keyword}{const} \textcolor{keywordtype}{char} *relationalOperator,}
-\DoxyCodeLine{155                                                        \textcolor{keywordtype}{double} value, \textcolor{keywordtype}{double} adjustValue, \textcolor{keyword}{const} \textcolor{keywordtype}{char} *aberration,}
-\DoxyCodeLine{156                                                        \textcolor{keywordtype}{double} stepSize, \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO}{IO::SDK::API::DTO::WindowDTO}} windows[1000]);}
-\DoxyCodeLine{157 }
-\DoxyCodeLine{175 \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\_API}} \textcolor{keywordtype}{void} \mbox{\hyperlink{Proxy_8h_ab9b8fb854911a9ffea45b39d30047442}{FindWindowsOnIlluminationConstraintProxy}}(\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO}{IO::SDK::API::DTO::WindowDTO}} searchWindow, \textcolor{keywordtype}{int} observerId,}
-\DoxyCodeLine{176                                                          \textcolor{keyword}{const} \textcolor{keywordtype}{char} *illuminationSource, \textcolor{keywordtype}{int} targetBody,}
-\DoxyCodeLine{177                                                          \textcolor{keyword}{const} \textcolor{keywordtype}{char} *fixedFrame,}
-\DoxyCodeLine{178                                                          \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1GeodeticDTO}{IO::SDK::API::DTO::GeodeticDTO}} geodetic,}
-\DoxyCodeLine{179                                                          \textcolor{keyword}{const} \textcolor{keywordtype}{char} *illuminationType,}
-\DoxyCodeLine{180                                                          \textcolor{keyword}{const} \textcolor{keywordtype}{char} *relationalOperator, \textcolor{keywordtype}{double} value,}
-\DoxyCodeLine{181                                                          \textcolor{keywordtype}{double} adjustValue,}
-\DoxyCodeLine{182                                                          \textcolor{keyword}{const} \textcolor{keywordtype}{char} *aberration, \textcolor{keywordtype}{double} stepSize, \textcolor{keyword}{const} \textcolor{keywordtype}{char} *method,}
-\DoxyCodeLine{183                                                          \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO}{IO::SDK::API::DTO::WindowDTO}} windows[1000]);}
-\DoxyCodeLine{184 }
-\DoxyCodeLine{197 \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\_API}} \textcolor{keywordtype}{void}}
-\DoxyCodeLine{198 \mbox{\hyperlink{Proxy_8h_ad3695568d6bd15b6a4c74d9a10f8ea78}{FindWindowsInFieldOfViewConstraintProxy}}(\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO}{IO::SDK::API::DTO::WindowDTO}} searchWindow, \textcolor{keywordtype}{int} observerId, \textcolor{keywordtype}{int} instrumentId,}
-\DoxyCodeLine{199                                         \textcolor{keywordtype}{int} targetId, \textcolor{keyword}{const} \textcolor{keywordtype}{char} *targetFrame, \textcolor{keyword}{const} \textcolor{keywordtype}{char} *targetShape,}
-\DoxyCodeLine{200                                         \textcolor{keyword}{const} \textcolor{keywordtype}{char} *aberration, \textcolor{keywordtype}{double} stepSize,}
-\DoxyCodeLine{201                                         \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO}{IO::SDK::API::DTO::WindowDTO}} windows[1000]);}
-\DoxyCodeLine{207 \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\_API}} \textcolor{keywordtype}{double} \mbox{\hyperlink{Proxy_8h_a21e5be456b638ec478bbe753d51d4d82}{ConvertTDBToUTCProxy}}(\textcolor{keywordtype}{double} tdb);}
-\DoxyCodeLine{208 }
-\DoxyCodeLine{214 \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\_API}} \textcolor{keywordtype}{double} \mbox{\hyperlink{Proxy_8h_ab9c954c87940d8be415c2f8b7696ed15}{ConvertUTCToTDBProxy}}(\textcolor{keywordtype}{double} utc);}
+\DoxyCodeLine{103 \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\_API}} \textcolor{keyword}{const} \textcolor{keywordtype}{char} *\mbox{\hyperlink{Proxy_8h_a8f3164fd10cfa0827e25add2106a71c7}{UTCToStringProxy}}(\textcolor{keywordtype}{double} secondsFromJ2000);}
+\DoxyCodeLine{104 }
+\DoxyCodeLine{116 \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\_API}} \textcolor{keywordtype}{void}}
+\DoxyCodeLine{117 \mbox{\hyperlink{Proxy_8h_a6ec1cf8afcc6842627d5f3fcab1f83ef}{FindWindowsOnDistanceConstraintProxy}}(\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO}{IO::SDK::API::DTO::WindowDTO}} searchWindow, \textcolor{keywordtype}{int} observerId, \textcolor{keywordtype}{int} targetId,}
+\DoxyCodeLine{118                                      \textcolor{keyword}{const} \textcolor{keywordtype}{char} *relationalOperator, \textcolor{keywordtype}{double} value, \textcolor{keyword}{const} \textcolor{keywordtype}{char} *aberration,}
+\DoxyCodeLine{119                                      \textcolor{keywordtype}{double} stepSize, \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO}{IO::SDK::API::DTO::WindowDTO}} windows[1000]);}
+\DoxyCodeLine{120 }
+\DoxyCodeLine{136 \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\_API}} \textcolor{keywordtype}{void} \mbox{\hyperlink{Proxy_8h_a3f435df4a2572b837892811cd273ad04}{FindWindowsOnOccultationConstraintProxy}}(\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO}{IO::SDK::API::DTO::WindowDTO}} searchWindow, \textcolor{keywordtype}{int} observerId,}
+\DoxyCodeLine{137                                                         \textcolor{keywordtype}{int} targetId, \textcolor{keyword}{const} \textcolor{keywordtype}{char} *targetFrame,}
+\DoxyCodeLine{138                                                         \textcolor{keyword}{const} \textcolor{keywordtype}{char} *targetShape,}
+\DoxyCodeLine{139                                                         \textcolor{keywordtype}{int} frontBodyId, \textcolor{keyword}{const} \textcolor{keywordtype}{char} *frontFrame, \textcolor{keyword}{const} \textcolor{keywordtype}{char} *frontShape,}
+\DoxyCodeLine{140                                                         \textcolor{keyword}{const} \textcolor{keywordtype}{char} *occultationType,}
+\DoxyCodeLine{141                                                         \textcolor{keyword}{const} \textcolor{keywordtype}{char} *aberration, \textcolor{keywordtype}{double} stepSize,}
+\DoxyCodeLine{142                                                         \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO}{IO::SDK::API::DTO::WindowDTO}} windows[1000]);}
+\DoxyCodeLine{143 }
+\DoxyCodeLine{159 \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\_API}} \textcolor{keywordtype}{void} \mbox{\hyperlink{Proxy_8h_a41859ca381c6d0feef334aea372d8f78}{FindWindowsOnCoordinateConstraintProxy}}(\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO}{IO::SDK::API::DTO::WindowDTO}} searchWindow, \textcolor{keywordtype}{int} observerId,}
+\DoxyCodeLine{160                                                        \textcolor{keywordtype}{int} targetId, \textcolor{keyword}{const} \textcolor{keywordtype}{char} *frame, \textcolor{keyword}{const} \textcolor{keywordtype}{char} *coordinateSystem,}
+\DoxyCodeLine{161                                                        \textcolor{keyword}{const} \textcolor{keywordtype}{char} *coordinate, \textcolor{keyword}{const} \textcolor{keywordtype}{char} *relationalOperator,}
+\DoxyCodeLine{162                                                        \textcolor{keywordtype}{double} value, \textcolor{keywordtype}{double} adjustValue, \textcolor{keyword}{const} \textcolor{keywordtype}{char} *aberration,}
+\DoxyCodeLine{163                                                        \textcolor{keywordtype}{double} stepSize, \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO}{IO::SDK::API::DTO::WindowDTO}} windows[1000]);}
+\DoxyCodeLine{164 }
+\DoxyCodeLine{182 \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\_API}} \textcolor{keywordtype}{void} \mbox{\hyperlink{Proxy_8h_ab9b8fb854911a9ffea45b39d30047442}{FindWindowsOnIlluminationConstraintProxy}}(\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO}{IO::SDK::API::DTO::WindowDTO}} searchWindow, \textcolor{keywordtype}{int} observerId,}
+\DoxyCodeLine{183                                                          \textcolor{keyword}{const} \textcolor{keywordtype}{char} *illuminationSource, \textcolor{keywordtype}{int} targetBody,}
+\DoxyCodeLine{184                                                          \textcolor{keyword}{const} \textcolor{keywordtype}{char} *fixedFrame,}
+\DoxyCodeLine{185                                                          \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1GeodeticDTO}{IO::SDK::API::DTO::GeodeticDTO}} geodetic,}
+\DoxyCodeLine{186                                                          \textcolor{keyword}{const} \textcolor{keywordtype}{char} *illuminationType,}
+\DoxyCodeLine{187                                                          \textcolor{keyword}{const} \textcolor{keywordtype}{char} *relationalOperator, \textcolor{keywordtype}{double} value,}
+\DoxyCodeLine{188                                                          \textcolor{keywordtype}{double} adjustValue,}
+\DoxyCodeLine{189                                                          \textcolor{keyword}{const} \textcolor{keywordtype}{char} *aberration, \textcolor{keywordtype}{double} stepSize, \textcolor{keyword}{const} \textcolor{keywordtype}{char} *method,}
+\DoxyCodeLine{190                                                          \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO}{IO::SDK::API::DTO::WindowDTO}} windows[1000]);}
+\DoxyCodeLine{191 }
+\DoxyCodeLine{204 \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\_API}} \textcolor{keywordtype}{void}}
+\DoxyCodeLine{205 \mbox{\hyperlink{Proxy_8h_ad3695568d6bd15b6a4c74d9a10f8ea78}{FindWindowsInFieldOfViewConstraintProxy}}(\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO}{IO::SDK::API::DTO::WindowDTO}} searchWindow, \textcolor{keywordtype}{int} observerId, \textcolor{keywordtype}{int} instrumentId,}
+\DoxyCodeLine{206                                         \textcolor{keywordtype}{int} targetId, \textcolor{keyword}{const} \textcolor{keywordtype}{char} *targetFrame, \textcolor{keyword}{const} \textcolor{keywordtype}{char} *targetShape,}
+\DoxyCodeLine{207                                         \textcolor{keyword}{const} \textcolor{keywordtype}{char} *aberration, \textcolor{keywordtype}{double} stepSize,}
+\DoxyCodeLine{208                                         \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO}{IO::SDK::API::DTO::WindowDTO}} windows[1000]);}
+\DoxyCodeLine{214 \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\_API}} \textcolor{keywordtype}{double} \mbox{\hyperlink{Proxy_8h_a21e5be456b638ec478bbe753d51d4d82}{ConvertTDBToUTCProxy}}(\textcolor{keywordtype}{double} tdb);}
 \DoxyCodeLine{215 }
-\DoxyCodeLine{221 \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\_API}} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1CelestialBodyDTO}{IO::SDK::API::DTO::CelestialBodyDTO}} \mbox{\hyperlink{Proxy_8h_aa744385eb805ddd19576c1059d59fd5e}{GetCelestialBodyInfoProxy}}(\textcolor{keywordtype}{int} bodyId);}
+\DoxyCodeLine{221 \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\_API}} \textcolor{keywordtype}{double} \mbox{\hyperlink{Proxy_8h_ab9c954c87940d8be415c2f8b7696ed15}{ConvertUTCToTDBProxy}}(\textcolor{keywordtype}{double} utc);}
 \DoxyCodeLine{222 }
-\DoxyCodeLine{229 \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\_API}} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1FrameTransformationDTO}{IO::SDK::API::DTO::FrameTransformationDTO}} \mbox{\hyperlink{Proxy_8h_a457712e918b3f71b190c356f7405fec0}{TransformFrameProxy}}(\textcolor{keyword}{const} \textcolor{keywordtype}{char} *fromFrame, \textcolor{keyword}{const} \textcolor{keywordtype}{char} *toFrame, \textcolor{keywordtype}{double} epoch);}
-\DoxyCodeLine{230 \textcolor{preprocessor}{\#ifdef \_\_cplusplus}}
-\DoxyCodeLine{231 \}}
-\DoxyCodeLine{232 \textcolor{preprocessor}{\#endif}}
-\DoxyCodeLine{233 \textcolor{preprocessor}{\#pragma endregion Proxy}}
-\DoxyCodeLine{234 }
-\DoxyCodeLine{235 \textcolor{preprocessor}{\#ifndef PROXY\_H}}
-\DoxyCodeLine{236 \textcolor{preprocessor}{\#define PROXY\_H}}
-\DoxyCodeLine{237 \textcolor{preprocessor}{\#define ERRORMSGLENGTH 1024}}
-\DoxyCodeLine{238 }
-\DoxyCodeLine{239 \textcolor{keyword}{static} \textcolor{keyword}{constexpr} \textcolor{keyword}{const} \textcolor{keywordtype}{int} lenout = 33;}
-\DoxyCodeLine{240 }
-\DoxyCodeLine{241 \textcolor{keywordtype}{char} *\mbox{\hyperlink{Proxy_8h_a070706fba8ff9475ca3b778c3bc1e115}{HandleError}}();}
-\DoxyCodeLine{242 }
-\DoxyCodeLine{243 std::map<int, std::shared\_ptr<IO::SDK::Body::CelestialBody>>}
-\DoxyCodeLine{244 \mbox{\hyperlink{Proxy_8h_ad45407eab2a930ba06148832da6fcbd5}{BuildCelestialBodies}}(\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO}{IO::SDK::API::DTO::ScenarioDTO}} \&scenario);}
-\DoxyCodeLine{245 }
-\DoxyCodeLine{246 \textcolor{keywordtype}{void} \mbox{\hyperlink{Proxy_8h_ac6213574be074a2bf1b4f87f2818d76a}{BuildPayload}}(\textcolor{keyword}{const} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO}{IO::SDK::API::DTO::ScenarioDTO}} \&scenarioDto, \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft}{IO::SDK::Body::Spacecraft::Spacecraft}} \&spacecraft);}
-\DoxyCodeLine{247 }
-\DoxyCodeLine{248 \textcolor{keywordtype}{void}}
-\DoxyCodeLine{249 \mbox{\hyperlink{Proxy_8h_a4ed0bdca1f06eded1b33477141a77ff4}{BuildInstruments}}(\textcolor{keyword}{const} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO}{IO::SDK::API::DTO::ScenarioDTO}} \&scenarioDTO, \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft}{IO::SDK::Body::Spacecraft::Spacecraft}} \&spacecraft);}
-\DoxyCodeLine{250 }
-\DoxyCodeLine{251 \textcolor{keywordtype}{void} \mbox{\hyperlink{Proxy_8h_a88f9374e58b0d18eae74c7b7af4d1988}{BuildEngines}}(\textcolor{keyword}{const} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO}{IO::SDK::API::DTO::ScenarioDTO}} \&scenarioDTO, \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft}{IO::SDK::Body::Spacecraft::Spacecraft}} \&spacecraft);}
-\DoxyCodeLine{252 }
-\DoxyCodeLine{253 \textcolor{keywordtype}{void}}
-\DoxyCodeLine{254 \mbox{\hyperlink{Proxy_8h_a444759ce742846c2f1f52befdbb211be}{BuildFuelTank}}(\textcolor{keyword}{const} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO}{IO::SDK::API::DTO::ScenarioDTO}} \&scenarioDTO, \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft}{IO::SDK::Body::Spacecraft::Spacecraft}} \&spacecraft);}
-\DoxyCodeLine{255 }
-\DoxyCodeLine{256 \textcolor{keywordtype}{void} \mbox{\hyperlink{Proxy_8h_a7486ed1a8282bf3a560293bfb277999f}{BuildApogeeManeuver}}(\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO}{IO::SDK::API::DTO::ScenarioDTO}} \&scenarioDto, \mbox{\hyperlink{classIO_1_1SDK_1_1Scenario}{IO::SDK::Scenario}} \&scenario,}
-\DoxyCodeLine{257                          std::map<\textcolor{keywordtype}{int}, std::shared\_ptr<IO::SDK::Maneuvers::ManeuverBase>> \&maneuvers);}
-\DoxyCodeLine{258 }
-\DoxyCodeLine{259 \textcolor{keywordtype}{void} \mbox{\hyperlink{Proxy_8h_a566ad9c1f30ae8c312dddd06bfbced01}{BuildPerigeeManeuver}}(\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO}{IO::SDK::API::DTO::ScenarioDTO}} \&scenarioDto, \mbox{\hyperlink{classIO_1_1SDK_1_1Scenario}{IO::SDK::Scenario}} \&scenario,}
-\DoxyCodeLine{260                           std::map<\textcolor{keywordtype}{int}, std::shared\_ptr<IO::SDK::Maneuvers::ManeuverBase>> \&maneuvers);}
-\DoxyCodeLine{261 }
-\DoxyCodeLine{262 \textcolor{keywordtype}{void} \mbox{\hyperlink{Proxy_8h_a6f1de3af5690e1feed42099f39919d30}{BuildApsidalManeuver}}(\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO}{IO::SDK::API::DTO::ScenarioDTO}} \&scenarioDto, \mbox{\hyperlink{classIO_1_1SDK_1_1Scenario}{IO::SDK::Scenario}} \&scenario,}
-\DoxyCodeLine{263                           std::map<\textcolor{keywordtype}{int}, std::shared\_ptr<IO::SDK::Maneuvers::ManeuverBase>> \&maneuvers,}
-\DoxyCodeLine{264                           std::map<\textcolor{keywordtype}{int}, std::shared\_ptr<IO::SDK::Body::CelestialBody>> \&celestialBodies);}
-\DoxyCodeLine{265 }
-\DoxyCodeLine{266 \textcolor{keywordtype}{void} \mbox{\hyperlink{Proxy_8h_a92c53c4d657938e271d054a5d9cf1723}{BuildCombinedManeuver}}(\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO}{IO::SDK::API::DTO::ScenarioDTO}} \&scenarioDto, \mbox{\hyperlink{classIO_1_1SDK_1_1Scenario}{IO::SDK::Scenario}} \&scenario,}
-\DoxyCodeLine{267                            std::map<\textcolor{keywordtype}{int}, std::shared\_ptr<IO::SDK::Maneuvers::ManeuverBase>> \&maneuvers);}
-\DoxyCodeLine{268 }
-\DoxyCodeLine{269 \textcolor{keywordtype}{void}}
-\DoxyCodeLine{270 \mbox{\hyperlink{Proxy_8h_a296f11ad5c2d250c0b15cd9894df78d7}{BuildOrbitalPlaneManeuver}}(\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO}{IO::SDK::API::DTO::ScenarioDTO}} \&scenarioDto, \mbox{\hyperlink{classIO_1_1SDK_1_1Scenario}{IO::SDK::Scenario}} \&scenario,}
-\DoxyCodeLine{271                           std::map<\textcolor{keywordtype}{int}, std::shared\_ptr<IO::SDK::Maneuvers::ManeuverBase>> \&maneuvers,}
-\DoxyCodeLine{272                           std::map<\textcolor{keywordtype}{int}, std::shared\_ptr<IO::SDK::Body::CelestialBody>> \&celestialBodies);}
-\DoxyCodeLine{273 }
-\DoxyCodeLine{274 \textcolor{keywordtype}{void} \mbox{\hyperlink{Proxy_8h_a122e6a78b5bcdc264eb9e74ad7c8c437}{BuildPhasingManeuver}}(\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO}{IO::SDK::API::DTO::ScenarioDTO}} \&scenarioDto, \mbox{\hyperlink{classIO_1_1SDK_1_1Scenario}{IO::SDK::Scenario}} \&scenario,}
-\DoxyCodeLine{275                           std::map<\textcolor{keywordtype}{int}, std::shared\_ptr<IO::SDK::Maneuvers::ManeuverBase>> \&maneuvers,}
-\DoxyCodeLine{276                           std::map<\textcolor{keywordtype}{int}, std::shared\_ptr<IO::SDK::Body::CelestialBody>> \&celestialBodies);}
+\DoxyCodeLine{228 \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\_API}} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1CelestialBodyDTO}{IO::SDK::API::DTO::CelestialBodyDTO}} \mbox{\hyperlink{Proxy_8h_aa744385eb805ddd19576c1059d59fd5e}{GetCelestialBodyInfoProxy}}(\textcolor{keywordtype}{int} bodyId);}
+\DoxyCodeLine{229 }
+\DoxyCodeLine{236 \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\_API}} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1FrameTransformationDTO}{IO::SDK::API::DTO::FrameTransformationDTO}} \mbox{\hyperlink{Proxy_8h_a457712e918b3f71b190c356f7405fec0}{TransformFrameProxy}}(\textcolor{keyword}{const} \textcolor{keywordtype}{char} *fromFrame, \textcolor{keyword}{const} \textcolor{keywordtype}{char} *toFrame, \textcolor{keywordtype}{double} epoch);}
+\DoxyCodeLine{237 }
+\DoxyCodeLine{245 \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\_API}} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1StateVectorDTO}{IO::SDK::API::DTO::StateVectorDTO}} \mbox{\hyperlink{Proxy_8h_a7a6fe201473578cb00eedbb51f97eed9}{ConvertTLEToStateVectorProxy}}(\textcolor{keyword}{const} \textcolor{keywordtype}{char} *L1, \textcolor{keyword}{const} \textcolor{keywordtype}{char} *L2, \textcolor{keywordtype}{double} epoch);}
+\DoxyCodeLine{246 }
+\DoxyCodeLine{252 \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\_API}} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1StateVectorDTO}{IO::SDK::API::DTO::StateVectorDTO}} \mbox{\hyperlink{Proxy_8h_a5efe448e24b1e8c09c664e98ee8954e8}{ConvertConicElementsToStateVectorProxy}}(\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ConicOrbitalElementsDTO}{IO::SDK::API::DTO::ConicOrbitalElementsDTO}} conicOrbitalElementsDto);}
+\DoxyCodeLine{253 }
+\DoxyCodeLine{259 \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\_API}} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1StateVectorDTO}{IO::SDK::API::DTO::StateVectorDTO}} \mbox{\hyperlink{Proxy_8h_a3b53127d6db476fc18315e1fd222c211}{ConvertEquinoctialElementsToStateVectorProxy}}(\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1EquinoctialElementsDTO}{IO::SDK::API::DTO::EquinoctialElementsDTO}} equinoctialElementsDto);}
+\DoxyCodeLine{260 }
+\DoxyCodeLine{266 \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\_API}} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1RaDecDTO}{IO::SDK::API::DTO::RaDecDTO}} \mbox{\hyperlink{Proxy_8h_ac1f282b1ec8f01f4ba8ecb7bf26dbbeb}{ConvertToRightAscensionAndDeclinationProxy}}(\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1StateVectorDTO}{IO::SDK::API::DTO::StateVectorDTO}} stateVectorDto);}
+\DoxyCodeLine{267 \textcolor{preprocessor}{\#ifdef \_\_cplusplus}}
+\DoxyCodeLine{268 \}}
+\DoxyCodeLine{269 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{270 \textcolor{preprocessor}{\#pragma endregion Proxy}}
+\DoxyCodeLine{271 }
+\DoxyCodeLine{272 \textcolor{preprocessor}{\#ifndef PROXY\_H}}
+\DoxyCodeLine{273 \textcolor{preprocessor}{\#define PROXY\_H}}
+\DoxyCodeLine{274 \textcolor{preprocessor}{\#define ERRORMSGLENGTH 1024}}
+\DoxyCodeLine{275 }
+\DoxyCodeLine{276 \textcolor{keyword}{static} \textcolor{keyword}{constexpr} \textcolor{keyword}{const} \textcolor{keywordtype}{int} lenout = 33;}
 \DoxyCodeLine{277 }
-\DoxyCodeLine{278 \textcolor{keywordtype}{void} \mbox{\hyperlink{Proxy_8h_abb049e2c0f71131a987bf56c3f4fbcf3}{BuildManeuvers}}(\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO}{IO::SDK::API::DTO::ScenarioDTO}} \&scenarioDto, \mbox{\hyperlink{classIO_1_1SDK_1_1Scenario}{IO::SDK::Scenario}} \&scenario,}
-\DoxyCodeLine{279                     std::map<\textcolor{keywordtype}{int}, std::shared\_ptr<IO::SDK::Body::CelestialBody>> \&celestialBodies,}
-\DoxyCodeLine{280                     std::map<\textcolor{keywordtype}{int}, std::shared\_ptr<IO::SDK::Maneuvers::ManeuverBase>> \&maneuvers);}
-\DoxyCodeLine{281 }
-\DoxyCodeLine{282 \textcolor{keywordtype}{void} \mbox{\hyperlink{Proxy_8h_ad109937e075918a4169dbe2876ac2e30}{BuildProgradeAttitude}}(\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO}{IO::SDK::API::DTO::ScenarioDTO}} \&scenarioDto, \mbox{\hyperlink{classIO_1_1SDK_1_1Scenario}{IO::SDK::Scenario}} \&scenario,}
-\DoxyCodeLine{283                            std::map<\textcolor{keywordtype}{int}, std::shared\_ptr<IO::SDK::Maneuvers::ManeuverBase>> \&maneuvers);}
+\DoxyCodeLine{278 \textcolor{keywordtype}{char} *\mbox{\hyperlink{Proxy_8h_a070706fba8ff9475ca3b778c3bc1e115}{HandleError}}();}
+\DoxyCodeLine{279 }
+\DoxyCodeLine{280 std::map<int, std::shared\_ptr<IO::SDK::Body::CelestialBody>>}
+\DoxyCodeLine{281 \mbox{\hyperlink{Proxy_8h_ad45407eab2a930ba06148832da6fcbd5}{BuildCelestialBodies}}(\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO}{IO::SDK::API::DTO::ScenarioDTO}} \&scenario);}
+\DoxyCodeLine{282 }
+\DoxyCodeLine{283 \textcolor{keywordtype}{void} \mbox{\hyperlink{Proxy_8h_ac6213574be074a2bf1b4f87f2818d76a}{BuildPayload}}(\textcolor{keyword}{const} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO}{IO::SDK::API::DTO::ScenarioDTO}} \&scenarioDto, \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft}{IO::SDK::Body::Spacecraft::Spacecraft}} \&spacecraft);}
 \DoxyCodeLine{284 }
-\DoxyCodeLine{285 \textcolor{keywordtype}{void} \mbox{\hyperlink{Proxy_8h_a85720c91750cd873d1dbf050fa3d2a18}{BuildRetrogradeAttitude}}(\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO}{IO::SDK::API::DTO::ScenarioDTO}} \&scenarioDto, \mbox{\hyperlink{classIO_1_1SDK_1_1Scenario}{IO::SDK::Scenario}} \&scenario,}
-\DoxyCodeLine{286                              std::map<\textcolor{keywordtype}{int}, std::shared\_ptr<IO::SDK::Maneuvers::ManeuverBase>> \&maneuvers);}
+\DoxyCodeLine{285 \textcolor{keywordtype}{void}}
+\DoxyCodeLine{286 \mbox{\hyperlink{Proxy_8h_a4ed0bdca1f06eded1b33477141a77ff4}{BuildInstruments}}(\textcolor{keyword}{const} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO}{IO::SDK::API::DTO::ScenarioDTO}} \&scenarioDTO, \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft}{IO::SDK::Body::Spacecraft::Spacecraft}} \&spacecraft);}
 \DoxyCodeLine{287 }
-\DoxyCodeLine{288 \textcolor{keywordtype}{void} \mbox{\hyperlink{Proxy_8h_a70191d395a750d5ca92dd638564d35b2}{BuildZenithAttitude}}(\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO}{IO::SDK::API::DTO::ScenarioDTO}} \&scenarioDto, \mbox{\hyperlink{classIO_1_1SDK_1_1Scenario}{IO::SDK::Scenario}} \&scenario,}
-\DoxyCodeLine{289                          std::map<\textcolor{keywordtype}{int}, std::shared\_ptr<IO::SDK::Maneuvers::ManeuverBase>> \&maneuvers);}
-\DoxyCodeLine{290 }
-\DoxyCodeLine{291 \textcolor{keywordtype}{void} \mbox{\hyperlink{Proxy_8h_a389131e56e754d5a3578f009c8bbab91}{BuildNadirAttitude}}(\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO}{IO::SDK::API::DTO::ScenarioDTO}} \&scenarioDto, \mbox{\hyperlink{classIO_1_1SDK_1_1Scenario}{IO::SDK::Scenario}} \&scenario,}
-\DoxyCodeLine{292                         std::map<\textcolor{keywordtype}{int}, std::shared\_ptr<IO::SDK::Maneuvers::ManeuverBase>> \&maneuvers);}
-\DoxyCodeLine{293 }
-\DoxyCodeLine{294 \textcolor{keywordtype}{void} \mbox{\hyperlink{Proxy_8h_a820df7ddc7223c06513f52b0845db89e}{BuildInstrumentPointingToAttitude}}(\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO}{IO::SDK::API::DTO::ScenarioDTO}} \&scenarioDto, \mbox{\hyperlink{classIO_1_1SDK_1_1Scenario}{IO::SDK::Scenario}} \&scenario,}
-\DoxyCodeLine{295                                        std::map<\textcolor{keywordtype}{int}, std::shared\_ptr<IO::SDK::Maneuvers::ManeuverBase>> \&maneuvers,}
-\DoxyCodeLine{296                                        std::map<\textcolor{keywordtype}{int}, std::shared\_ptr<IO::SDK::Body::CelestialBody>> \&celestialBodies);}
-\DoxyCodeLine{297 }
-\DoxyCodeLine{298 \textcolor{keywordtype}{void} \mbox{\hyperlink{Proxy_8h_a466bec93a33dfabd6a60722c8edf333f}{ReadApogeeManeuverResult}}(\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO}{IO::SDK::API::DTO::ScenarioDTO}} \&scenarioDto,}
-\DoxyCodeLine{299                               std::map<\textcolor{keywordtype}{int}, std::shared\_ptr<IO::SDK::Maneuvers::ManeuverBase>> \&maneuvers);}
-\DoxyCodeLine{300 }
-\DoxyCodeLine{301 \textcolor{keywordtype}{void} \mbox{\hyperlink{Proxy_8h_aa7d09fd7d9d73216a3ee6020565d061e}{ReadPerigeeManeuverResult}}(\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO}{IO::SDK::API::DTO::ScenarioDTO}} \&scenarioDto,}
-\DoxyCodeLine{302                                std::map<\textcolor{keywordtype}{int}, std::shared\_ptr<IO::SDK::Maneuvers::ManeuverBase>> \&maneuvers);}
-\DoxyCodeLine{303 }
-\DoxyCodeLine{304 \textcolor{keywordtype}{void} \mbox{\hyperlink{Proxy_8h_a717c7d3ca5a48e85b637148eb0262df8}{ReadOrbitalPlaneManeuverResult}}(\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO}{IO::SDK::API::DTO::ScenarioDTO}} \&scenarioDto,}
-\DoxyCodeLine{305                                     std::map<\textcolor{keywordtype}{int}, std::shared\_ptr<IO::SDK::Maneuvers::ManeuverBase>> \&maneuvers);}
-\DoxyCodeLine{306 }
-\DoxyCodeLine{307 \textcolor{keywordtype}{void} \mbox{\hyperlink{Proxy_8h_a29b830927e678eac49585d2c12370135}{ReadCombinedManeuverResult}}(\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO}{IO::SDK::API::DTO::ScenarioDTO}} \&scenarioDto,}
-\DoxyCodeLine{308                                 std::map<\textcolor{keywordtype}{int}, std::shared\_ptr<IO::SDK::Maneuvers::ManeuverBase>> \&maneuvers);}
-\DoxyCodeLine{309 }
-\DoxyCodeLine{310 \textcolor{keywordtype}{void} \mbox{\hyperlink{Proxy_8h_a274e1f3865453efe582b74fce0b657a1}{ReadApsidalAlignmentManeuverResult}}(\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO}{IO::SDK::API::DTO::ScenarioDTO}} \&scenarioDto,}
-\DoxyCodeLine{311                                         std::map<\textcolor{keywordtype}{int}, std::shared\_ptr<IO::SDK::Maneuvers::ManeuverBase>> \&maneuvers);}
-\DoxyCodeLine{312 }
-\DoxyCodeLine{313 \textcolor{keywordtype}{void} \mbox{\hyperlink{Proxy_8h_a6c39e673976b509ad3fa42613ffa38d7}{ReadPhasingManeuverResult}}(\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO}{IO::SDK::API::DTO::ScenarioDTO}} \&scenarioDto,}
-\DoxyCodeLine{314                                std::map<\textcolor{keywordtype}{int}, std::shared\_ptr<IO::SDK::Maneuvers::ManeuverBase>> \&maneuvers);}
-\DoxyCodeLine{315 }
-\DoxyCodeLine{316 \textcolor{keywordtype}{void} \mbox{\hyperlink{Proxy_8h_a55b5f32b6b7ab7369fe7847e4ebc045b}{ReadManeuverResults}}(\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO}{IO::SDK::API::DTO::ScenarioDTO}} \&scenarioDto,}
-\DoxyCodeLine{317                          std::map<\textcolor{keywordtype}{int}, std::shared\_ptr<IO::SDK::Maneuvers::ManeuverBase>> \&maneuvers);}
+\DoxyCodeLine{288 \textcolor{keywordtype}{void} \mbox{\hyperlink{Proxy_8h_a88f9374e58b0d18eae74c7b7af4d1988}{BuildEngines}}(\textcolor{keyword}{const} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO}{IO::SDK::API::DTO::ScenarioDTO}} \&scenarioDTO, \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft}{IO::SDK::Body::Spacecraft::Spacecraft}} \&spacecraft);}
+\DoxyCodeLine{289 }
+\DoxyCodeLine{290 \textcolor{keywordtype}{void}}
+\DoxyCodeLine{291 \mbox{\hyperlink{Proxy_8h_a444759ce742846c2f1f52befdbb211be}{BuildFuelTank}}(\textcolor{keyword}{const} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO}{IO::SDK::API::DTO::ScenarioDTO}} \&scenarioDTO, \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft}{IO::SDK::Body::Spacecraft::Spacecraft}} \&spacecraft);}
+\DoxyCodeLine{292 }
+\DoxyCodeLine{293 \textcolor{keywordtype}{void} \mbox{\hyperlink{Proxy_8h_a7486ed1a8282bf3a560293bfb277999f}{BuildApogeeManeuver}}(\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO}{IO::SDK::API::DTO::ScenarioDTO}} \&scenarioDto, \mbox{\hyperlink{classIO_1_1SDK_1_1Scenario}{IO::SDK::Scenario}} \&scenario,}
+\DoxyCodeLine{294                          std::map<\textcolor{keywordtype}{int}, std::shared\_ptr<IO::SDK::Maneuvers::ManeuverBase>> \&maneuvers);}
+\DoxyCodeLine{295 }
+\DoxyCodeLine{296 \textcolor{keywordtype}{void} \mbox{\hyperlink{Proxy_8h_a566ad9c1f30ae8c312dddd06bfbced01}{BuildPerigeeManeuver}}(\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO}{IO::SDK::API::DTO::ScenarioDTO}} \&scenarioDto, \mbox{\hyperlink{classIO_1_1SDK_1_1Scenario}{IO::SDK::Scenario}} \&scenario,}
+\DoxyCodeLine{297                           std::map<\textcolor{keywordtype}{int}, std::shared\_ptr<IO::SDK::Maneuvers::ManeuverBase>> \&maneuvers);}
+\DoxyCodeLine{298 }
+\DoxyCodeLine{299 \textcolor{keywordtype}{void} \mbox{\hyperlink{Proxy_8h_a6f1de3af5690e1feed42099f39919d30}{BuildApsidalManeuver}}(\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO}{IO::SDK::API::DTO::ScenarioDTO}} \&scenarioDto, \mbox{\hyperlink{classIO_1_1SDK_1_1Scenario}{IO::SDK::Scenario}} \&scenario,}
+\DoxyCodeLine{300                           std::map<\textcolor{keywordtype}{int}, std::shared\_ptr<IO::SDK::Maneuvers::ManeuverBase>> \&maneuvers,}
+\DoxyCodeLine{301                           std::map<\textcolor{keywordtype}{int}, std::shared\_ptr<IO::SDK::Body::CelestialBody>> \&celestialBodies);}
+\DoxyCodeLine{302 }
+\DoxyCodeLine{303 \textcolor{keywordtype}{void} \mbox{\hyperlink{Proxy_8h_a92c53c4d657938e271d054a5d9cf1723}{BuildCombinedManeuver}}(\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO}{IO::SDK::API::DTO::ScenarioDTO}} \&scenarioDto, \mbox{\hyperlink{classIO_1_1SDK_1_1Scenario}{IO::SDK::Scenario}} \&scenario,}
+\DoxyCodeLine{304                            std::map<\textcolor{keywordtype}{int}, std::shared\_ptr<IO::SDK::Maneuvers::ManeuverBase>> \&maneuvers);}
+\DoxyCodeLine{305 }
+\DoxyCodeLine{306 \textcolor{keywordtype}{void}}
+\DoxyCodeLine{307 \mbox{\hyperlink{Proxy_8h_a296f11ad5c2d250c0b15cd9894df78d7}{BuildOrbitalPlaneManeuver}}(\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO}{IO::SDK::API::DTO::ScenarioDTO}} \&scenarioDto, \mbox{\hyperlink{classIO_1_1SDK_1_1Scenario}{IO::SDK::Scenario}} \&scenario,}
+\DoxyCodeLine{308                           std::map<\textcolor{keywordtype}{int}, std::shared\_ptr<IO::SDK::Maneuvers::ManeuverBase>> \&maneuvers,}
+\DoxyCodeLine{309                           std::map<\textcolor{keywordtype}{int}, std::shared\_ptr<IO::SDK::Body::CelestialBody>> \&celestialBodies);}
+\DoxyCodeLine{310 }
+\DoxyCodeLine{311 \textcolor{keywordtype}{void} \mbox{\hyperlink{Proxy_8h_a122e6a78b5bcdc264eb9e74ad7c8c437}{BuildPhasingManeuver}}(\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO}{IO::SDK::API::DTO::ScenarioDTO}} \&scenarioDto, \mbox{\hyperlink{classIO_1_1SDK_1_1Scenario}{IO::SDK::Scenario}} \&scenario,}
+\DoxyCodeLine{312                           std::map<\textcolor{keywordtype}{int}, std::shared\_ptr<IO::SDK::Maneuvers::ManeuverBase>> \&maneuvers,}
+\DoxyCodeLine{313                           std::map<\textcolor{keywordtype}{int}, std::shared\_ptr<IO::SDK::Body::CelestialBody>> \&celestialBodies);}
+\DoxyCodeLine{314 }
+\DoxyCodeLine{315 \textcolor{keywordtype}{void} \mbox{\hyperlink{Proxy_8h_abb049e2c0f71131a987bf56c3f4fbcf3}{BuildManeuvers}}(\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO}{IO::SDK::API::DTO::ScenarioDTO}} \&scenarioDto, \mbox{\hyperlink{classIO_1_1SDK_1_1Scenario}{IO::SDK::Scenario}} \&scenario,}
+\DoxyCodeLine{316                     std::map<\textcolor{keywordtype}{int}, std::shared\_ptr<IO::SDK::Body::CelestialBody>> \&celestialBodies,}
+\DoxyCodeLine{317                     std::map<\textcolor{keywordtype}{int}, std::shared\_ptr<IO::SDK::Maneuvers::ManeuverBase>> \&maneuvers);}
 \DoxyCodeLine{318 }
-\DoxyCodeLine{319 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{319 \textcolor{keywordtype}{void} \mbox{\hyperlink{Proxy_8h_ad109937e075918a4169dbe2876ac2e30}{BuildProgradeAttitude}}(\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO}{IO::SDK::API::DTO::ScenarioDTO}} \&scenarioDto, \mbox{\hyperlink{classIO_1_1SDK_1_1Scenario}{IO::SDK::Scenario}} \&scenario,}
+\DoxyCodeLine{320                            std::map<\textcolor{keywordtype}{int}, std::shared\_ptr<IO::SDK::Maneuvers::ManeuverBase>> \&maneuvers);}
+\DoxyCodeLine{321 }
+\DoxyCodeLine{322 \textcolor{keywordtype}{void} \mbox{\hyperlink{Proxy_8h_a85720c91750cd873d1dbf050fa3d2a18}{BuildRetrogradeAttitude}}(\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO}{IO::SDK::API::DTO::ScenarioDTO}} \&scenarioDto, \mbox{\hyperlink{classIO_1_1SDK_1_1Scenario}{IO::SDK::Scenario}} \&scenario,}
+\DoxyCodeLine{323                              std::map<\textcolor{keywordtype}{int}, std::shared\_ptr<IO::SDK::Maneuvers::ManeuverBase>> \&maneuvers);}
+\DoxyCodeLine{324 }
+\DoxyCodeLine{325 \textcolor{keywordtype}{void} \mbox{\hyperlink{Proxy_8h_a70191d395a750d5ca92dd638564d35b2}{BuildZenithAttitude}}(\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO}{IO::SDK::API::DTO::ScenarioDTO}} \&scenarioDto, \mbox{\hyperlink{classIO_1_1SDK_1_1Scenario}{IO::SDK::Scenario}} \&scenario,}
+\DoxyCodeLine{326                          std::map<\textcolor{keywordtype}{int}, std::shared\_ptr<IO::SDK::Maneuvers::ManeuverBase>> \&maneuvers);}
+\DoxyCodeLine{327 }
+\DoxyCodeLine{328 \textcolor{keywordtype}{void} \mbox{\hyperlink{Proxy_8h_a389131e56e754d5a3578f009c8bbab91}{BuildNadirAttitude}}(\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO}{IO::SDK::API::DTO::ScenarioDTO}} \&scenarioDto, \mbox{\hyperlink{classIO_1_1SDK_1_1Scenario}{IO::SDK::Scenario}} \&scenario,}
+\DoxyCodeLine{329                         std::map<\textcolor{keywordtype}{int}, std::shared\_ptr<IO::SDK::Maneuvers::ManeuverBase>> \&maneuvers);}
+\DoxyCodeLine{330 }
+\DoxyCodeLine{331 \textcolor{keywordtype}{void} \mbox{\hyperlink{Proxy_8h_a820df7ddc7223c06513f52b0845db89e}{BuildInstrumentPointingToAttitude}}(\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO}{IO::SDK::API::DTO::ScenarioDTO}} \&scenarioDto, \mbox{\hyperlink{classIO_1_1SDK_1_1Scenario}{IO::SDK::Scenario}} \&scenario,}
+\DoxyCodeLine{332                                        std::map<\textcolor{keywordtype}{int}, std::shared\_ptr<IO::SDK::Maneuvers::ManeuverBase>> \&maneuvers,}
+\DoxyCodeLine{333                                        std::map<\textcolor{keywordtype}{int}, std::shared\_ptr<IO::SDK::Body::CelestialBody>> \&celestialBodies);}
+\DoxyCodeLine{334 }
+\DoxyCodeLine{335 \textcolor{keywordtype}{void} \mbox{\hyperlink{Proxy_8h_a466bec93a33dfabd6a60722c8edf333f}{ReadApogeeManeuverResult}}(\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO}{IO::SDK::API::DTO::ScenarioDTO}} \&scenarioDto,}
+\DoxyCodeLine{336                               std::map<\textcolor{keywordtype}{int}, std::shared\_ptr<IO::SDK::Maneuvers::ManeuverBase>> \&maneuvers);}
+\DoxyCodeLine{337 }
+\DoxyCodeLine{338 \textcolor{keywordtype}{void} \mbox{\hyperlink{Proxy_8h_aa7d09fd7d9d73216a3ee6020565d061e}{ReadPerigeeManeuverResult}}(\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO}{IO::SDK::API::DTO::ScenarioDTO}} \&scenarioDto,}
+\DoxyCodeLine{339                                std::map<\textcolor{keywordtype}{int}, std::shared\_ptr<IO::SDK::Maneuvers::ManeuverBase>> \&maneuvers);}
+\DoxyCodeLine{340 }
+\DoxyCodeLine{341 \textcolor{keywordtype}{void} \mbox{\hyperlink{Proxy_8h_a717c7d3ca5a48e85b637148eb0262df8}{ReadOrbitalPlaneManeuverResult}}(\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO}{IO::SDK::API::DTO::ScenarioDTO}} \&scenarioDto,}
+\DoxyCodeLine{342                                     std::map<\textcolor{keywordtype}{int}, std::shared\_ptr<IO::SDK::Maneuvers::ManeuverBase>> \&maneuvers);}
+\DoxyCodeLine{343 }
+\DoxyCodeLine{344 \textcolor{keywordtype}{void} \mbox{\hyperlink{Proxy_8h_a29b830927e678eac49585d2c12370135}{ReadCombinedManeuverResult}}(\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO}{IO::SDK::API::DTO::ScenarioDTO}} \&scenarioDto,}
+\DoxyCodeLine{345                                 std::map<\textcolor{keywordtype}{int}, std::shared\_ptr<IO::SDK::Maneuvers::ManeuverBase>> \&maneuvers);}
+\DoxyCodeLine{346 }
+\DoxyCodeLine{347 \textcolor{keywordtype}{void} \mbox{\hyperlink{Proxy_8h_a274e1f3865453efe582b74fce0b657a1}{ReadApsidalAlignmentManeuverResult}}(\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO}{IO::SDK::API::DTO::ScenarioDTO}} \&scenarioDto,}
+\DoxyCodeLine{348                                         std::map<\textcolor{keywordtype}{int}, std::shared\_ptr<IO::SDK::Maneuvers::ManeuverBase>> \&maneuvers);}
+\DoxyCodeLine{349 }
+\DoxyCodeLine{350 \textcolor{keywordtype}{void} \mbox{\hyperlink{Proxy_8h_a6c39e673976b509ad3fa42613ffa38d7}{ReadPhasingManeuverResult}}(\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO}{IO::SDK::API::DTO::ScenarioDTO}} \&scenarioDto,}
+\DoxyCodeLine{351                                std::map<\textcolor{keywordtype}{int}, std::shared\_ptr<IO::SDK::Maneuvers::ManeuverBase>> \&maneuvers);}
+\DoxyCodeLine{352 }
+\DoxyCodeLine{353 \textcolor{keywordtype}{void} \mbox{\hyperlink{Proxy_8h_a55b5f32b6b7ab7369fe7847e4ebc045b}{ReadManeuverResults}}(\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO}{IO::SDK::API::DTO::ScenarioDTO}} \&scenarioDto,}
+\DoxyCodeLine{354                          std::map<\textcolor{keywordtype}{int}, std::shared\_ptr<IO::SDK::Maneuvers::ManeuverBase>> \&maneuvers);}
+\DoxyCodeLine{355 }
+\DoxyCodeLine{356 \textcolor{preprocessor}{\#endif}}
 
 \end{DoxyCode}

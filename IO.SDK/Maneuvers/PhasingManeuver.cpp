@@ -1,12 +1,5 @@
-/**
- * @file PhasingManeuver.cpp
- * @author Sylvain Guillet (sylvain.guillet@live.com)
- * @brief 
- * @version 0.x
- * @date 2021-07-03
- * 
- * @copyright Copyright (c) 2021
- * 
+/*
+ Copyright (c) 2021-2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
  */
 #include <PhasingManeuver.h>
 #include <ConicOrbitalElements.h>
@@ -67,7 +60,7 @@ void IO::SDK::Maneuvers::PhasingManeuver::Compute(const IO::SDK::OrbitalParamete
 IO::SDK::OrbitalParameters::StateOrientation IO::SDK::Maneuvers::PhasingManeuver::ComputeOrientation(const IO::SDK::OrbitalParameters::OrbitalParameters &maneuverPoint)
 {
 
-    auto velocityVector = maneuverPoint.GetStateVector().GetVelocity().Normalize();
+    auto velocityVector = maneuverPoint.ToStateVector().GetVelocity().Normalize();
 
     return IO::SDK::OrbitalParameters::StateOrientation{m_spacecraft.Front.To(velocityVector), IO::SDK::Math::Vector3D(0.0, 0.0, 0.0), maneuverPoint.GetEpoch(),
                                                         maneuverPoint.GetFrame()};

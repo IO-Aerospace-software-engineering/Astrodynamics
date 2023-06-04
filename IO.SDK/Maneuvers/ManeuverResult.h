@@ -1,12 +1,5 @@
-/**
- * @file ManeuverResult.h
- * @author Sylvain Guillet (sylvain.guillet@live.com)
- * @brief 
- * @version 0.x
- * @date 2021-03-05
- * 
- * @copyright Copyright (c) 2021
- * 
+/*
+ Copyright (c) 2021-2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
  */
 #ifndef MANEUVER_RESULT_H
 #define MANEUVER_RESULT_H

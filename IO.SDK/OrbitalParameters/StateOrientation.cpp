@@ -1,14 +1,7 @@
-/**
- * @file StateOrientation.cpp
- * @author Sylvain Guillet (sylvain.guillet@live.com)
- * @brief 
- * @version 0.x
- * @date 2021-07-03
- * 
- * @copyright Copyright (c) 2021
- * 
+/*
+ Copyright (c) 2021-2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
  */
-#include "StateOrientation.h"
+#include <StateOrientation.h>
 
 IO::SDK::OrbitalParameters::StateOrientation::StateOrientation(IO::SDK::Time::TDB epoch, IO::SDK::Frames::Frames frame) : m_epoch{std::move(epoch)}, m_frame{std::move(frame)}
 {

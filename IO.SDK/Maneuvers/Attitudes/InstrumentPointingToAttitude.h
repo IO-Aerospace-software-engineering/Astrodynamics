@@ -1,18 +1,10 @@
-/**
- * @file InstrumentPointingToAttitude.h
- * @author Sylvain Guillet (sylvain.guillet@live.com)
- * @brief 
- * @version 0.x
- * @date 2023-02-09
- * 
- * @copyright Copyright (c) 2021
- * 
+/*
+ Copyright (c) 2021-2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
  */
 #ifndef INSTRUMENT_ALIGNED_TO_ATTITUDE_H
 #define INSTRUMENT_ALIGNED_TO_ATTITUDE_H
 
 #include <ManeuverBase.h>
-#include "Site.h"
 
 namespace IO::SDK::Maneuvers::Attitudes
 {

@@ -2,53 +2,54 @@
 \label{FuelTank_8h_source}\index{IO.SDK/Body/Spacecraft/FuelTank.h@{IO.SDK/Body/Spacecraft/FuelTank.h}}
 \mbox{\hyperlink{FuelTank_8h}{Go to the documentation of this file.}}
 \begin{DoxyCode}{0}
-\DoxyCodeLine{1 }
-\DoxyCodeLine{12 \textcolor{preprocessor}{\#ifndef FUEL\_TANK\_H}}
-\DoxyCodeLine{13 \textcolor{preprocessor}{\#define FUEL\_TANK\_H}}
-\DoxyCodeLine{14 }
-\DoxyCodeLine{15 \textcolor{preprocessor}{\#include <memory>}}
-\DoxyCodeLine{16 \textcolor{preprocessor}{\#include <vector>}}
-\DoxyCodeLine{17 \textcolor{preprocessor}{\#include <string>}}
-\DoxyCodeLine{18 }
-\DoxyCodeLine{19 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1SDK_1_1Body_1_1Spacecraft}{IO::SDK::Body::Spacecraft}}}
-\DoxyCodeLine{20 \{}
-\DoxyCodeLine{21     \textcolor{keyword}{class }Spacecraft;}
-\DoxyCodeLine{26     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1FuelTank}{FuelTank}} final}
-\DoxyCodeLine{27     \{}
-\DoxyCodeLine{28     \textcolor{keyword}{private}:}
-\DoxyCodeLine{29         \textcolor{keyword}{const} std::string m\_serialNumber\{\};}
-\DoxyCodeLine{30         \textcolor{keyword}{const} \textcolor{keywordtype}{double} m\_capacity\{\};}
-\DoxyCodeLine{31         \textcolor{keyword}{const} \textcolor{keywordtype}{double} m\_initialQuantity\{\};}
-\DoxyCodeLine{32         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft}{IO::SDK::Body::Spacecraft::Spacecraft}} \&m\_spacecraft;}
-\DoxyCodeLine{33 }
-\DoxyCodeLine{34         \textcolor{keywordtype}{double} m\_quantity\{\};}
-\DoxyCodeLine{35 }
-\DoxyCodeLine{36     \textcolor{keyword}{public}:}
-\DoxyCodeLine{44         \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1FuelTank_a11ad235454283f347e98971750963637}{FuelTank}}(\textcolor{keyword}{const} std::string \&serialNumber, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft}{IO::SDK::Body::Spacecraft::Spacecraft}} \&spacecraft, \textcolor{keywordtype}{double} capacity, \textcolor{keywordtype}{double} quantity);}
-\DoxyCodeLine{45         }
-\DoxyCodeLine{51         [[nodiscard]] \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft}{IO::SDK::Body::Spacecraft::Spacecraft}} \&\mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1FuelTank_a13a869368c2792ef02f5f65f798119b5}{GetSpacecraft}}() \textcolor{keyword}{const};}
-\DoxyCodeLine{52 }
-\DoxyCodeLine{58         [[nodiscard]] std::string \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1FuelTank_a40d4003aae9afa549671fbff40d06963}{GetSerialNumber}}() \textcolor{keyword}{const};}
-\DoxyCodeLine{59 }
-\DoxyCodeLine{65         [[nodiscard]] \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1FuelTank_a1b3504beb90cae5904dc4ceca3ba9b86}{GetQuantity}}() \textcolor{keyword}{const};}
-\DoxyCodeLine{66 }
-\DoxyCodeLine{72         [[nodiscard]] \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1FuelTank_a9bc6cb4f96a5cdedc0d3d287501776b5}{GetInitialQuantity}}() \textcolor{keyword}{const};}
-\DoxyCodeLine{73 }
-\DoxyCodeLine{79         [[nodiscard]] \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1FuelTank_a9c4d6c03861a135b7d15f6fd61da06ed}{GetCapacity}}() \textcolor{keyword}{const};}
-\DoxyCodeLine{80 }
-\DoxyCodeLine{87         [[nodiscard]] \textcolor{keywordtype}{bool} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1FuelTank_ae43750d8d4bda63b19723ef7268e7287}{IsEmpty}}() \textcolor{keyword}{const};}
-\DoxyCodeLine{88 }
-\DoxyCodeLine{94         \textcolor{keywordtype}{void} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1FuelTank_ae5f847b891689d16b253311e60e59f92}{UpdateFuelQuantity}}(\textcolor{keywordtype}{double} quantityToAdd);}
-\DoxyCodeLine{95         }
-\DoxyCodeLine{96         \textcolor{keywordtype}{bool} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1FuelTank_a956b54cb8f6e629917be33abca071f34}{operator==}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1FuelTank}{IO::SDK::Body::Spacecraft::FuelTank}} \&other)\textcolor{keyword}{ const }\{ \textcolor{keywordflow}{return} m\_serialNumber == other.m\_serialNumber; \}}
-\DoxyCodeLine{97         \textcolor{keywordtype}{bool} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1FuelTank_ac08ea54febe03a4e1001971a37917e44}{operator!=}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1FuelTank}{IO::SDK::Body::Spacecraft::FuelTank}} \&other)\textcolor{keyword}{ const }\{ \textcolor{keywordflow}{return} !(m\_serialNumber == other.m\_serialNumber); \}}
-\DoxyCodeLine{98         \textcolor{keywordtype}{bool} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1FuelTank_ae490aaf93d9582abddde24f79a6ccab2}{operator<}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1FuelTank}{IO::SDK::Body::Spacecraft::FuelTank}} \&other)\textcolor{keyword}{ const }\{ \textcolor{keywordflow}{return} m\_serialNumber < other.m\_serialNumber; \}}
-\DoxyCodeLine{99         \textcolor{keywordtype}{bool} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1FuelTank_a214080f19830f88d166d4c35dd80694b}{operator<=}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1FuelTank}{IO::SDK::Body::Spacecraft::FuelTank}} \&other)\textcolor{keyword}{ const }\{ \textcolor{keywordflow}{return} m\_serialNumber <= other.m\_serialNumber; \}}
-\DoxyCodeLine{100         \textcolor{keywordtype}{bool} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1FuelTank_acfcb2095f030dccb0d2cb65e8e0b3bad}{operator>}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1FuelTank}{IO::SDK::Body::Spacecraft::FuelTank}} \&other)\textcolor{keyword}{ const }\{ \textcolor{keywordflow}{return} m\_serialNumber > other.m\_serialNumber; \}}
-\DoxyCodeLine{101         \textcolor{keywordtype}{bool} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1FuelTank_aa9b3287bf8f9abe388f78e7329bbaa22}{operator>=}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1FuelTank}{IO::SDK::Body::Spacecraft::FuelTank}} \&other)\textcolor{keyword}{ const }\{ \textcolor{keywordflow}{return} m\_serialNumber >= other.m\_serialNumber; \}}
-\DoxyCodeLine{102     \};}
-\DoxyCodeLine{103 \}}
-\DoxyCodeLine{104 }
-\DoxyCodeLine{105 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{1 \textcolor{comment}{/*}}
+\DoxyCodeLine{2 \textcolor{comment}{ Copyright (c) 2021-\/2023. Sylvain Guillet (sylvain.guillet@tutamail.com)}}
+\DoxyCodeLine{3 \textcolor{comment}{ */}}
+\DoxyCodeLine{4 }
+\DoxyCodeLine{5 \textcolor{preprocessor}{\#ifndef FUEL\_TANK\_H}}
+\DoxyCodeLine{6 \textcolor{preprocessor}{\#define FUEL\_TANK\_H}}
+\DoxyCodeLine{7 }
+\DoxyCodeLine{8 \textcolor{preprocessor}{\#include <string>}}
+\DoxyCodeLine{9 }
+\DoxyCodeLine{10 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1SDK_1_1Body_1_1Spacecraft}{IO::SDK::Body::Spacecraft}}}
+\DoxyCodeLine{11 \{}
+\DoxyCodeLine{12     \textcolor{keyword}{class }Spacecraft;}
+\DoxyCodeLine{17     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1FuelTank}{FuelTank}} final}
+\DoxyCodeLine{18     \{}
+\DoxyCodeLine{19     \textcolor{keyword}{private}:}
+\DoxyCodeLine{20         \textcolor{keyword}{const} std::string m\_serialNumber\{\};}
+\DoxyCodeLine{21         \textcolor{keyword}{const} \textcolor{keywordtype}{double} m\_capacity\{\};}
+\DoxyCodeLine{22         \textcolor{keyword}{const} \textcolor{keywordtype}{double} m\_initialQuantity\{\};}
+\DoxyCodeLine{23         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft}{IO::SDK::Body::Spacecraft::Spacecraft}} \&m\_spacecraft;}
+\DoxyCodeLine{24 }
+\DoxyCodeLine{25         \textcolor{keywordtype}{double} m\_quantity\{\};}
+\DoxyCodeLine{26 }
+\DoxyCodeLine{27     \textcolor{keyword}{public}:}
+\DoxyCodeLine{35         \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1FuelTank_a11ad235454283f347e98971750963637}{FuelTank}}(\textcolor{keyword}{const} std::string \&serialNumber, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft}{IO::SDK::Body::Spacecraft::Spacecraft}} \&spacecraft, \textcolor{keywordtype}{double} capacity, \textcolor{keywordtype}{double} quantity);}
+\DoxyCodeLine{36         }
+\DoxyCodeLine{42         [[nodiscard]] \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft}{IO::SDK::Body::Spacecraft::Spacecraft}} \&\mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1FuelTank_a13a869368c2792ef02f5f65f798119b5}{GetSpacecraft}}() \textcolor{keyword}{const};}
+\DoxyCodeLine{43 }
+\DoxyCodeLine{49         [[nodiscard]] std::string \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1FuelTank_a40d4003aae9afa549671fbff40d06963}{GetSerialNumber}}() \textcolor{keyword}{const};}
+\DoxyCodeLine{50 }
+\DoxyCodeLine{56         [[nodiscard]] \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1FuelTank_a1b3504beb90cae5904dc4ceca3ba9b86}{GetQuantity}}() \textcolor{keyword}{const};}
+\DoxyCodeLine{57 }
+\DoxyCodeLine{63         [[nodiscard]] \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1FuelTank_a9bc6cb4f96a5cdedc0d3d287501776b5}{GetInitialQuantity}}() \textcolor{keyword}{const};}
+\DoxyCodeLine{64 }
+\DoxyCodeLine{70         [[nodiscard]] \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1FuelTank_a9c4d6c03861a135b7d15f6fd61da06ed}{GetCapacity}}() \textcolor{keyword}{const};}
+\DoxyCodeLine{71 }
+\DoxyCodeLine{78         [[nodiscard]] \textcolor{keywordtype}{bool} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1FuelTank_ae43750d8d4bda63b19723ef7268e7287}{IsEmpty}}() \textcolor{keyword}{const};}
+\DoxyCodeLine{79 }
+\DoxyCodeLine{85         \textcolor{keywordtype}{void} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1FuelTank_ae5f847b891689d16b253311e60e59f92}{UpdateFuelQuantity}}(\textcolor{keywordtype}{double} quantityToAdd);}
+\DoxyCodeLine{86         }
+\DoxyCodeLine{87         \textcolor{keywordtype}{bool} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1FuelTank_a956b54cb8f6e629917be33abca071f34}{operator==}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1FuelTank}{IO::SDK::Body::Spacecraft::FuelTank}} \&other)\textcolor{keyword}{ const }\{ \textcolor{keywordflow}{return} m\_serialNumber == other.m\_serialNumber; \}}
+\DoxyCodeLine{88         \textcolor{keywordtype}{bool} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1FuelTank_ac08ea54febe03a4e1001971a37917e44}{operator!=}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1FuelTank}{IO::SDK::Body::Spacecraft::FuelTank}} \&other)\textcolor{keyword}{ const }\{ \textcolor{keywordflow}{return} !(m\_serialNumber == other.m\_serialNumber); \}}
+\DoxyCodeLine{89         \textcolor{keywordtype}{bool} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1FuelTank_ae490aaf93d9582abddde24f79a6ccab2}{operator<}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1FuelTank}{IO::SDK::Body::Spacecraft::FuelTank}} \&other)\textcolor{keyword}{ const }\{ \textcolor{keywordflow}{return} m\_serialNumber < other.m\_serialNumber; \}}
+\DoxyCodeLine{90         \textcolor{keywordtype}{bool} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1FuelTank_a214080f19830f88d166d4c35dd80694b}{operator<=}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1FuelTank}{IO::SDK::Body::Spacecraft::FuelTank}} \&other)\textcolor{keyword}{ const }\{ \textcolor{keywordflow}{return} m\_serialNumber <= other.m\_serialNumber; \}}
+\DoxyCodeLine{91         \textcolor{keywordtype}{bool} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1FuelTank_acfcb2095f030dccb0d2cb65e8e0b3bad}{operator>}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1FuelTank}{IO::SDK::Body::Spacecraft::FuelTank}} \&other)\textcolor{keyword}{ const }\{ \textcolor{keywordflow}{return} m\_serialNumber > other.m\_serialNumber; \}}
+\DoxyCodeLine{92         \textcolor{keywordtype}{bool} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1FuelTank_aa9b3287bf8f9abe388f78e7329bbaa22}{operator>=}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1FuelTank}{IO::SDK::Body::Spacecraft::FuelTank}} \&other)\textcolor{keyword}{ const }\{ \textcolor{keywordflow}{return} m\_serialNumber >= other.m\_serialNumber; \}}
+\DoxyCodeLine{93     \};}
+\DoxyCodeLine{94 \}}
+\DoxyCodeLine{95 }
+\DoxyCodeLine{96 \textcolor{preprocessor}{\#endif}}
 
 \end{DoxyCode}

@@ -2,33 +2,37 @@
 \label{PerigeeHeightChangingManeuverDTO_8h_source}\index{IO.SDK/API/DTO/PerigeeHeightChangingManeuverDTO.h@{IO.SDK/API/DTO/PerigeeHeightChangingManeuverDTO.h}}
 \mbox{\hyperlink{PerigeeHeightChangingManeuverDTO_8h}{Go to the documentation of this file.}}
 \begin{DoxyCode}{0}
-\DoxyCodeLine{1 \textcolor{comment}{//}}
-\DoxyCodeLine{2 \textcolor{comment}{// Created by spacer on 3/27/23.}}
-\DoxyCodeLine{3 \textcolor{comment}{//}}
+\DoxyCodeLine{1 \textcolor{comment}{/*}}
+\DoxyCodeLine{2 \textcolor{comment}{ Copyright (c) 2023. Sylvain Guillet (sylvain.guillet@tutamail.com)}}
+\DoxyCodeLine{3 \textcolor{comment}{ */}}
 \DoxyCodeLine{4 }
-\DoxyCodeLine{5 \textcolor{preprocessor}{\#ifndef IOSDK\_PERIGEEHEIGHTCHANGINGMANEUVERDTO\_H}}
-\DoxyCodeLine{6 \textcolor{preprocessor}{\#define IOSDK\_PERIGEEHEIGHTCHANGINGMANEUVERDTO\_H}}
-\DoxyCodeLine{7 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{WindowDTO_8h}{WindowDTO.h}}>}}
-\DoxyCodeLine{8 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{Vector3DDTO_8h}{Vector3DDTO.h}}>}}
-\DoxyCodeLine{9 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1SDK_1_1API_1_1DTO}{IO::SDK::API::DTO}}}
-\DoxyCodeLine{10 \{}
-\DoxyCodeLine{11     \textcolor{keyword}{struct }\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1PerigeeHeightChangingManeuverDTO}{PerigeeHeightChangingManeuverDTO}}}
-\DoxyCodeLine{12     \{}
-\DoxyCodeLine{13         \textcolor{keywordtype}{int} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1PerigeeHeightChangingManeuverDTO_ad6b15715665f7f8ebc79a42df91dfb73}{maneuverOrder}}\{-\/1\};}
-\DoxyCodeLine{14         \textcolor{keywordtype}{char}* \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1PerigeeHeightChangingManeuverDTO_a1d60ebdd7b0635fc5d885f4bfded0bf6}{engines}}[5]\{\};}
-\DoxyCodeLine{15         \textcolor{keywordtype}{double} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1PerigeeHeightChangingManeuverDTO_a2c44b0951ccd5bf004c5f4f7355e31ff}{attitudeHoldDuration}}\{0.0\};}
-\DoxyCodeLine{16         \textcolor{keywordtype}{double} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1PerigeeHeightChangingManeuverDTO_a73c1d240cbfd4813af9f07a494dda9b3}{minimumEpoch}}\{0.0\};}
-\DoxyCodeLine{17 }
-\DoxyCodeLine{18         \textcolor{keywordtype}{double} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1PerigeeHeightChangingManeuverDTO_a38bf7019deb2a4acbc9d5f3101255ea4}{targetHeight}}\{0.0\};}
-\DoxyCodeLine{19 }
-\DoxyCodeLine{20         \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO}{IO::SDK::API::DTO::WindowDTO}} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1PerigeeHeightChangingManeuverDTO_aa27a93f946623f910e1c6db48740af6f}{maneuverWindow}}\{\};}
-\DoxyCodeLine{21         \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO}{IO::SDK::API::DTO::WindowDTO}} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1PerigeeHeightChangingManeuverDTO_a96bdd54eba23fdbb9f7fa143d806a407}{thrustWindow}}\{\};}
-\DoxyCodeLine{22         \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO}{IO::SDK::API::DTO::WindowDTO}} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1PerigeeHeightChangingManeuverDTO_a646da63804328a6d8cdf11c8996e19f5}{attitudeWindow}}\{\};}
-\DoxyCodeLine{23         \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1Vector3DDTO}{IO::SDK::API::DTO::Vector3DDTO}} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1PerigeeHeightChangingManeuverDTO_abfda520d50bbb411e6df27a37997a359}{deltaV}}\{\};}
-\DoxyCodeLine{24         \textcolor{keywordtype}{double} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1PerigeeHeightChangingManeuverDTO_ad7bca93488b4b6fea2c18a7feddf4d79}{FuelBurned}}\{0.0\};}
-\DoxyCodeLine{25     \};}
-\DoxyCodeLine{26 \}}
-\DoxyCodeLine{27 }
-\DoxyCodeLine{28 \textcolor{preprocessor}{\#endif }\textcolor{comment}{//IOSDK\_PERIGEEHEIGHTCHANGINGMANEUVERDTO\_H}}
+\DoxyCodeLine{5 \textcolor{comment}{//}}
+\DoxyCodeLine{6 \textcolor{comment}{// Created by spacer on 3/27/23.}}
+\DoxyCodeLine{7 \textcolor{comment}{//}}
+\DoxyCodeLine{8 }
+\DoxyCodeLine{9 \textcolor{preprocessor}{\#ifndef IOSDK\_PERIGEEHEIGHTCHANGINGMANEUVERDTO\_H}}
+\DoxyCodeLine{10 \textcolor{preprocessor}{\#define IOSDK\_PERIGEEHEIGHTCHANGINGMANEUVERDTO\_H}}
+\DoxyCodeLine{11 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{WindowDTO_8h}{WindowDTO.h}}>}}
+\DoxyCodeLine{12 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{Vector3DDTO_8h}{Vector3DDTO.h}}>}}
+\DoxyCodeLine{13 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1SDK_1_1API_1_1DTO}{IO::SDK::API::DTO}}}
+\DoxyCodeLine{14 \{}
+\DoxyCodeLine{15     \textcolor{keyword}{struct }\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1PerigeeHeightChangingManeuverDTO}{PerigeeHeightChangingManeuverDTO}}}
+\DoxyCodeLine{16     \{}
+\DoxyCodeLine{17         \textcolor{keywordtype}{int} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1PerigeeHeightChangingManeuverDTO_ad6b15715665f7f8ebc79a42df91dfb73}{maneuverOrder}}\{-\/1\};}
+\DoxyCodeLine{18         \textcolor{keywordtype}{char}* \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1PerigeeHeightChangingManeuverDTO_a1d60ebdd7b0635fc5d885f4bfded0bf6}{engines}}[5]\{\};}
+\DoxyCodeLine{19         \textcolor{keywordtype}{double} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1PerigeeHeightChangingManeuverDTO_a2c44b0951ccd5bf004c5f4f7355e31ff}{attitudeHoldDuration}}\{0.0\};}
+\DoxyCodeLine{20         \textcolor{keywordtype}{double} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1PerigeeHeightChangingManeuverDTO_a73c1d240cbfd4813af9f07a494dda9b3}{minimumEpoch}}\{0.0\};}
+\DoxyCodeLine{21 }
+\DoxyCodeLine{22         \textcolor{keywordtype}{double} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1PerigeeHeightChangingManeuverDTO_a38bf7019deb2a4acbc9d5f3101255ea4}{targetHeight}}\{0.0\};}
+\DoxyCodeLine{23 }
+\DoxyCodeLine{24         \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO}{IO::SDK::API::DTO::WindowDTO}} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1PerigeeHeightChangingManeuverDTO_aa27a93f946623f910e1c6db48740af6f}{maneuverWindow}}\{\};}
+\DoxyCodeLine{25         \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO}{IO::SDK::API::DTO::WindowDTO}} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1PerigeeHeightChangingManeuverDTO_a96bdd54eba23fdbb9f7fa143d806a407}{thrustWindow}}\{\};}
+\DoxyCodeLine{26         \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO}{IO::SDK::API::DTO::WindowDTO}} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1PerigeeHeightChangingManeuverDTO_a646da63804328a6d8cdf11c8996e19f5}{attitudeWindow}}\{\};}
+\DoxyCodeLine{27         \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1Vector3DDTO}{IO::SDK::API::DTO::Vector3DDTO}} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1PerigeeHeightChangingManeuverDTO_abfda520d50bbb411e6df27a37997a359}{deltaV}}\{\};}
+\DoxyCodeLine{28         \textcolor{keywordtype}{double} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1PerigeeHeightChangingManeuverDTO_ad7bca93488b4b6fea2c18a7feddf4d79}{FuelBurned}}\{0.0\};}
+\DoxyCodeLine{29     \};}
+\DoxyCodeLine{30 \}}
+\DoxyCodeLine{31 }
+\DoxyCodeLine{32 \textcolor{preprocessor}{\#endif }\textcolor{comment}{//IOSDK\_PERIGEEHEIGHTCHANGINGMANEUVERDTO\_H}}
 
 \end{DoxyCode}

@@ -1,12 +1,5 @@
-/**
- * @file ApsidalAlignmentManeuver.cpp
- * @author Sylvain Guillet (sylvain.guillet@live.com)
- * @brief 
- * @version 0.x
- * @date 2021-07-03
- * 
- * @copyright Copyright (c) 2021
- * 
+/*
+ Copyright (c) 2021-2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
  */
 #include <ApsidalAlignmentManeuver.h>
 #include <ConicOrbitalElements.h>
@@ -30,8 +23,8 @@ IO::SDK::Maneuvers::ApsidalAlignmentManeuver::ApsidalAlignmentManeuver(
 
 bool IO::SDK::Maneuvers::ApsidalAlignmentManeuver::CanExecute(
         const IO::SDK::OrbitalParameters::OrbitalParameters &orbitalParams) {
-    double pv = GetPTrueAnomaly(orbitalParams.GetStateVector());
-    double qv = GetQTrueAnomaly(orbitalParams.GetStateVector());
+    double pv = GetPTrueAnomaly(orbitalParams.ToStateVector());
+    double qv = GetQTrueAnomaly(orbitalParams.ToStateVector());
     double v = orbitalParams.GetTrueAnomaly();
     double vRelativeToP = v - pv;
     double vRelativeToQ = v - qv;
@@ -57,13 +50,13 @@ bool IO::SDK::Maneuvers::ApsidalAlignmentManeuver::CanExecute(
 
 void IO::SDK::Maneuvers::ApsidalAlignmentManeuver::Compute(
         const IO::SDK::OrbitalParameters::OrbitalParameters &orbitalParams) {
-    m_deltaV = std::make_unique<IO::SDK::Math::Vector3D>(GetDeltaV(orbitalParams.GetStateVector()));
-    m_theta = GetTheta(orbitalParams.GetStateVector());
+    m_deltaV = std::make_unique<IO::SDK::Math::Vector3D>(GetDeltaV(orbitalParams.ToStateVector()));
+    m_theta = GetTheta(orbitalParams.ToStateVector());
 }
 
 IO::SDK::OrbitalParameters::StateOrientation IO::SDK::Maneuvers::ApsidalAlignmentManeuver::ComputeOrientation(
         const IO::SDK::OrbitalParameters::OrbitalParameters &maneuverPoint) {
-    IO::SDK::Math::Vector3D resVector = GetDeltaV(maneuverPoint.GetStateVector());
+    IO::SDK::Math::Vector3D resVector = GetDeltaV(maneuverPoint.ToStateVector());
 
     return IO::SDK::OrbitalParameters::StateOrientation{resVector.Normalize().To(m_spacecraft.Front),
                                                         IO::SDK::Math::Vector3D(0.0, 0.0, 0.0),
@@ -74,7 +67,7 @@ bool IO::SDK::Maneuvers::ApsidalAlignmentManeuver::IsIntersectP(
         const IO::SDK::OrbitalParameters::StateVector &stateVector) const {
     double v = GetPTrueAnomaly(stateVector);
 
-    auto v_vector = stateVector.GetStateVector(v).GetPosition();
+    auto v_vector = stateVector.ToStateVector(v).GetPosition();
     if (v_vector.GetAngle(stateVector.GetPosition()) < IO::SDK::Parameters::IntersectDetectionAccuraccy) {
         return true;
     }
@@ -86,7 +79,7 @@ bool IO::SDK::Maneuvers::ApsidalAlignmentManeuver::IsIntersectQ(
         const IO::SDK::OrbitalParameters::StateVector &stateVector) const {
     double v = GetQTrueAnomaly(stateVector);
 
-    auto v_vector = stateVector.GetStateVector(v).GetPosition();
+    auto v_vector = stateVector.ToStateVector(v).GetPosition();
     if (v_vector.GetAngle(stateVector.GetPosition()) < IO::SDK::Parameters::IntersectDetectionAccuraccy) {
         return true;
     }
@@ -164,9 +157,9 @@ IO::SDK::Maneuvers::ApsidalAlignmentManeuver::GetDeltaV(const IO::SDK::OrbitalPa
 
     IO::SDK::Math::Vector3D resVector;
     if (m_isIntersectP) {
-        resVector = m_targetOrbit->GetStateVector(GetPTargetTrueAnomaly(sv)).GetVelocity() - sv.GetVelocity();
+        resVector = m_targetOrbit->ToStateVector(GetPTargetTrueAnomaly(sv)).GetVelocity() - sv.GetVelocity();
     } else if (m_isIntersectQ) {
-        resVector = m_targetOrbit->GetStateVector(GetQTargetTrueAnomaly(sv)).GetVelocity() - sv.GetVelocity();
+        resVector = m_targetOrbit->ToStateVector(GetQTargetTrueAnomaly(sv)).GetVelocity() - sv.GetVelocity();
     } else {
         throw IO::SDK::Exception::InvalidArgumentException(
                 "To compute orientation, maneuver point must be at orbits intersection");

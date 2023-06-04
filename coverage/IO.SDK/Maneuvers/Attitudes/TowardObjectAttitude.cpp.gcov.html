@@ -89,7 +89,7 @@
 <a name="27"><span class="lineNum">      27 </span><span class="lineCov">          4 : IO::SDK::OrbitalParameters::StateOrientation IO::SDK::Maneuvers::Attitudes::TowardObjectAttitude::ComputeOrientation(const IO::SDK::OrbitalParameters::OrbitalParameters &amp;maneuverPoint)</span></a>
 <a name="28"><span class="lineNum">      28 </span>            : {</a>
 <a name="29"><span class="lineNum">      29 </span><span class="lineCov">          4 :     auto targetStateVector = m_targetBody.ReadEphemeris(m_spacecraft.GetOrbitalParametersAtEpoch()-&gt;GetFrame(), IO::SDK::AberrationsEnum::LTS, maneuverPoint.GetEpoch());</span></a>
-<a name="30"><span class="lineNum">      30 </span><span class="lineCov">          4 :     auto relativeStatevector = targetStateVector.GetPosition() - maneuverPoint.GetStateVector().GetPosition();</span></a>
+<a name="30"><span class="lineNum">      30 </span><span class="lineCov">          4 :     auto relativeStatevector = targetStateVector.GetPosition() - maneuverPoint.ToStateVector().GetPosition();</span></a>
 <a name="31"><span class="lineNum">      31 </span><span class="lineCov">         12 :     return IO::SDK::OrbitalParameters::StateOrientation(m_spacecraft.Front.To(relativeStatevector.Normalize()), IO::SDK::Math::Vector3D(0.0, 0.0, 0.0), maneuverPoint.GetEpoch(), maneuverPoint.GetFrame());</span></a>
 <a name="32"><span class="lineNum">      32 </span>            : }</a>
 <a name="33"><span class="lineNum">      33 </span>            : </a>

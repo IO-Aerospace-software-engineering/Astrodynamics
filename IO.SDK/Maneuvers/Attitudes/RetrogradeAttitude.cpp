@@ -1,12 +1,5 @@
-/**
- * @file RetrogradeAttitude.cpp
- * @author Sylvain Guillet (sylvain.guillet@live.com)
- * @brief 
- * @version 0.x
- * @date 2021-07-03
- * 
- * @copyright Copyright (c) 2021
- * 
+/*
+ Copyright (c) 2021-2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
  */
 #include<RetrogradeAttitude.h>
 
@@ -25,7 +18,7 @@ void IO::SDK::Maneuvers::Attitudes::RetrogradeAttitude::Compute([[maybe_unused]]
 
 IO::SDK::OrbitalParameters::StateOrientation  IO::SDK::Maneuvers::Attitudes::RetrogradeAttitude::ComputeOrientation(const IO::SDK::OrbitalParameters::OrbitalParameters &maneuverPoint)
 {
-    return IO::SDK::OrbitalParameters::StateOrientation{maneuverPoint.GetStateVector().GetVelocity().Normalize().Reverse().To(m_spacecraft.Front), IO::SDK::Math::Vector3D(0.0, 0.0, 0.0), maneuverPoint.GetEpoch(), maneuverPoint.GetFrame()};
+    return IO::SDK::OrbitalParameters::StateOrientation{maneuverPoint.ToStateVector().GetVelocity().Normalize().Reverse().To(m_spacecraft.Front), IO::SDK::Math::Vector3D(0.0, 0.0, 0.0), maneuverPoint.GetEpoch(), maneuverPoint.GetFrame()};
 }
 
 bool  IO::SDK::Maneuvers::Attitudes::RetrogradeAttitude::CanExecute([[maybe_unused]]const IO::SDK::OrbitalParameters::OrbitalParameters &orbitalParams)

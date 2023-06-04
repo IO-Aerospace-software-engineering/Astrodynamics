@@ -1,12 +1,10 @@
-//
-// Created by spacer on 3/24/23.
-//
+/*
+ Copyright (c) 2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
+ */
 
 #ifndef IOSDK_INSTRUMENTDTO_H
 #define IOSDK_INSTRUMENTDTO_H
 #include <Vector3DDTO.h>
-#include <ostream>
-#include "InFieldOfViewConstraintDTO.h"
 
 namespace IO::SDK::API::DTO
 {

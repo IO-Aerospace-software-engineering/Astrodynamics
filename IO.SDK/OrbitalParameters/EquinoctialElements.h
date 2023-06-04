@@ -1,12 +1,5 @@
-/**
- * @file EquinoctialElements.h
- * @author Sylvain Guillet (sylvain.guillet@live.com)
- * @brief 
- * @version 0.x
- * @date 2021-07-03
- * 
- * @copyright Copyright (c) 2021
- * 
+/*
+ Copyright (c) 2021-2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
  */
 #ifndef EQUINOCTIAL_ELEMENTS_H
 #define EQUINOCTIAL_ELEMENTS_H
@@ -117,7 +110,7 @@ namespace IO::SDK::OrbitalParameters
 		/// </summary>
 		/// <param name="epoch"></param>
 		/// <returns></returns>
-		[[nodiscard]] StateVector GetStateVector(const IO::SDK::Time::TDB &epoch) const override;
+		[[nodiscard]] StateVector ToStateVector(const IO::SDK::Time::TDB &epoch) const override;
 
 		/// <summary>
 		/// Get eccentricity
@@ -163,7 +156,7 @@ namespace IO::SDK::OrbitalParameters
 		/// <returns></returns>
 		[[nodiscard]] double GetSpecificOrbitalEnergy() const override;
 
-		using IO::SDK::OrbitalParameters::OrbitalParameters::GetStateVector;
+		using IO::SDK::OrbitalParameters::OrbitalParameters::ToStateVector;
 	};
 }
 #endif

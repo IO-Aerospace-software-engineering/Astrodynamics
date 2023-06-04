@@ -99,25 +99,25 @@
 <a name="37"><span class="lineNum">      37 </span><span class="lineCov">          1 :     IO::SDK::Maneuvers::ApsidalAlignmentManeuver maneuver(engines, prop, orbitalParams2.get());</span></a>
 <a name="38"><span class="lineNum">      38 </span>            : </a>
 <a name="39"><span class="lineNum">      39 </span>            :     //Initialize</a>
-<a name="40"><span class="lineNum">      40 </span><span class="lineCov">          1 :     ASSERT_FALSE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()-&gt;GetStateVector(150.0 * IO::SDK::Constants::DEG_RAD)));</span></a>
+<a name="40"><span class="lineNum">      40 </span><span class="lineCov">          1 :     ASSERT_FALSE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()-&gt;ToStateVector(150.0 * IO::SDK::Constants::DEG_RAD)));</span></a>
 <a name="41"><span class="lineNum">      41 </span>            : </a>
 <a name="42"><span class="lineNum">      42 </span>            :     //Can't execute, too early</a>
-<a name="43"><span class="lineNum">      43 </span><span class="lineCov">          1 :     ASSERT_FALSE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()-&gt;GetStateVector(155.0 * IO::SDK::Constants::DEG_RAD)));</span></a>
+<a name="43"><span class="lineNum">      43 </span><span class="lineCov">          1 :     ASSERT_FALSE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()-&gt;ToStateVector(155.0 * IO::SDK::Constants::DEG_RAD)));</span></a>
 <a name="44"><span class="lineNum">      44 </span>            : </a>
 <a name="45"><span class="lineNum">      45 </span>            :     //Must execute at 156.41° tolerance = 0.1°</a>
-<a name="46"><span class="lineNum">      46 </span><span class="lineCov">          1 :     ASSERT_TRUE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()-&gt;GetStateVector(156.5 * IO::SDK::Constants::DEG_RAD)));</span></a>
+<a name="46"><span class="lineNum">      46 </span><span class="lineCov">          1 :     ASSERT_TRUE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()-&gt;ToStateVector(156.5 * IO::SDK::Constants::DEG_RAD)));</span></a>
 <a name="47"><span class="lineNum">      47 </span>            : </a>
 <a name="48"><span class="lineNum">      48 </span>            :     //Can't execute because point p is behind</a>
-<a name="49"><span class="lineNum">      49 </span><span class="lineCov">          1 :     ASSERT_FALSE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()-&gt;GetStateVector(158.0 * IO::SDK::Constants::DEG_RAD)));</span></a>
+<a name="49"><span class="lineNum">      49 </span><span class="lineCov">          1 :     ASSERT_FALSE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()-&gt;ToStateVector(158.0 * IO::SDK::Constants::DEG_RAD)));</span></a>
 <a name="50"><span class="lineNum">      50 </span>            : </a>
 <a name="51"><span class="lineNum">      51 </span>            :     //Before Q point</a>
-<a name="52"><span class="lineNum">      52 </span><span class="lineCov">          1 :     ASSERT_FALSE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()-&gt;GetStateVector(341.0 * IO::SDK::Constants::DEG_RAD)));</span></a>
+<a name="52"><span class="lineNum">      52 </span><span class="lineCov">          1 :     ASSERT_FALSE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()-&gt;ToStateVector(341.0 * IO::SDK::Constants::DEG_RAD)));</span></a>
 <a name="53"><span class="lineNum">      53 </span>            : </a>
 <a name="54"><span class="lineNum">      54 </span>            :     //Must execute at 341.77° tolerance = 0.1°</a>
-<a name="55"><span class="lineNum">      55 </span><span class="lineCov">          1 :     ASSERT_TRUE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()-&gt;GetStateVector(341.8 * IO::SDK::Constants::DEG_RAD)));</span></a>
+<a name="55"><span class="lineNum">      55 </span><span class="lineCov">          1 :     ASSERT_TRUE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()-&gt;ToStateVector(341.8 * IO::SDK::Constants::DEG_RAD)));</span></a>
 <a name="56"><span class="lineNum">      56 </span>            : </a>
 <a name="57"><span class="lineNum">      57 </span>            :     //Can't execute because pont q is behind</a>
-<a name="58"><span class="lineNum">      58 </span><span class="lineCov">          1 :     ASSERT_FALSE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()-&gt;GetStateVector(345.0 * IO::SDK::Constants::DEG_RAD)));</span></a>
+<a name="58"><span class="lineNum">      58 </span><span class="lineCov">          1 :     ASSERT_FALSE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()-&gt;ToStateVector(345.0 * IO::SDK::Constants::DEG_RAD)));</span></a>
 <a name="59"><span class="lineNum">      59 </span>            : }</a>
 <a name="60"><span class="lineNum">      60 </span>            : </a>
 <a name="61"><span class="lineNum">      61 </span>            : </a>
@@ -146,14 +146,14 @@
 <a name="84"><span class="lineNum">      84 </span><span class="lineCov">          1 :     IO::SDK::Maneuvers::ApsidalAlignmentManeuver maneuver(engines, prop, orbitalParams2.get());</span></a>
 <a name="85"><span class="lineNum">      85 </span>            : </a>
 <a name="86"><span class="lineNum">      86 </span>            :     //Initialize</a>
-<a name="87"><span class="lineNum">      87 </span><span class="lineCov">          1 :     maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()-&gt;GetStateVector(340.0 * IO::SDK::Constants::DEG_RAD));</span></a>
-<a name="88"><span class="lineNum">      88 </span><span class="lineCov">          1 :     maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()-&gt;GetStateVector(341.0 * IO::SDK::Constants::DEG_RAD));</span></a>
+<a name="87"><span class="lineNum">      87 </span><span class="lineCov">          1 :     maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()-&gt;ToStateVector(340.0 * IO::SDK::Constants::DEG_RAD));</span></a>
+<a name="88"><span class="lineNum">      88 </span><span class="lineCov">          1 :     maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()-&gt;ToStateVector(341.0 * IO::SDK::Constants::DEG_RAD));</span></a>
 <a name="89"><span class="lineNum">      89 </span>            : </a>
 <a name="90"><span class="lineNum">      90 </span>            :     //Add fictive data because it executed outside propagator</a>
 <a name="91"><span class="lineNum">      91 </span><span class="lineCov">          1 :     prop.AddStateVector(IO::SDK::OrbitalParameters::StateVector(earth, IO::SDK::Math::Vector3D(1.0, 2.0, 3.0), IO::SDK::Math::Vector3D(4.0, 5.0, 6.0), IO::SDK::Time::TDB(10.0s), IO::SDK::Frames::InertialFrames::GetICRF()));</span></a>
 <a name="92"><span class="lineNum">      92 </span>            : </a>
 <a name="93"><span class="lineNum">      93 </span>            :     //try execute at Q</a>
-<a name="94"><span class="lineNum">      94 </span><span class="lineCov">          1 :     auto res = maneuver.TryExecute(s.GetOrbitalParametersAtEpoch()-&gt;GetStateVector(342.0 * IO::SDK::Constants::DEG_RAD));</span></a>
+<a name="94"><span class="lineNum">      94 </span><span class="lineCov">          1 :     auto res = maneuver.TryExecute(s.GetOrbitalParametersAtEpoch()-&gt;ToStateVector(342.0 * IO::SDK::Constants::DEG_RAD));</span></a>
 <a name="95"><span class="lineNum">      95 </span>            : </a>
 <a name="96"><span class="lineNum">      96 </span><span class="lineCov">          1 :     std::cout&lt;&lt;res.GetMessage()&lt;&lt;std::endl;</span></a>
 <a name="97"><span class="lineNum">      97 </span>            :     //Can't execute, too early</a>
@@ -195,14 +195,14 @@
 <a name="133"><span class="lineNum">     133 </span><span class="lineCov">          1 :     IO::SDK::Maneuvers::ApsidalAlignmentManeuver maneuver(engines, prop, orbitalParams2.get());</span></a>
 <a name="134"><span class="lineNum">     134 </span>            : </a>
 <a name="135"><span class="lineNum">     135 </span>            :     //Initialize</a>
-<a name="136"><span class="lineNum">     136 </span><span class="lineCov">          1 :     maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()-&gt;GetStateVector(155.0 * IO::SDK::Constants::DEG_RAD));</span></a>
-<a name="137"><span class="lineNum">     137 </span><span class="lineCov">          1 :     maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()-&gt;GetStateVector(156.0 * IO::SDK::Constants::DEG_RAD));</span></a>
+<a name="136"><span class="lineNum">     136 </span><span class="lineCov">          1 :     maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()-&gt;ToStateVector(155.0 * IO::SDK::Constants::DEG_RAD));</span></a>
+<a name="137"><span class="lineNum">     137 </span><span class="lineCov">          1 :     maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()-&gt;ToStateVector(156.0 * IO::SDK::Constants::DEG_RAD));</span></a>
 <a name="138"><span class="lineNum">     138 </span>            : </a>
 <a name="139"><span class="lineNum">     139 </span>            :     //Add fictive data because it executed outside propagator</a>
 <a name="140"><span class="lineNum">     140 </span><span class="lineCov">          1 :     prop.AddStateVector(IO::SDK::OrbitalParameters::StateVector(earth, IO::SDK::Math::Vector3D(1.0, 2.0, 3.0), IO::SDK::Math::Vector3D(4.0, 5.0, 6.0), IO::SDK::Time::TDB(10.0s), IO::SDK::Frames::InertialFrames::GetICRF()));</span></a>
 <a name="141"><span class="lineNum">     141 </span>            : </a>
 <a name="142"><span class="lineNum">     142 </span>            :     //try execute at P</a>
-<a name="143"><span class="lineNum">     143 </span><span class="lineCov">          1 :     auto res = maneuver.TryExecute(s.GetOrbitalParametersAtEpoch()-&gt;GetStateVector(156.5 * IO::SDK::Constants::DEG_RAD));</span></a>
+<a name="143"><span class="lineNum">     143 </span><span class="lineCov">          1 :     auto res = maneuver.TryExecute(s.GetOrbitalParametersAtEpoch()-&gt;ToStateVector(156.5 * IO::SDK::Constants::DEG_RAD));</span></a>
 <a name="144"><span class="lineNum">     144 </span>            : </a>
 <a name="145"><span class="lineNum">     145 </span>            :     //Can't execute, too early</a>
 <a name="146"><span class="lineNum">     146 </span><span class="lineCov">          1 :     ASSERT_TRUE(res.IsValid());</span></a>

@@ -25,7 +25,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">IO-SDK<span id="projectnumber">&#160;0.8.x</span>
+   <div id="projectname">IO-SDK<span id="projectnumber">&#160;0.9.x</span>
    </div>
    <div id="projectbrief">Astrodynamics framework</div>
   </td>
@@ -86,25 +86,29 @@ $(document).ready(function(){initNavTree('FuelTankDTO_8h_source.html',''); initR
   <div class="headertitle"><div class="title">FuelTankDTO.h</div></div>
 </div><!--header-->
 <div class="contents">
-<a href="FuelTankDTO_8h.html">Go to the documentation of this file.</a><div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span><span class="preprocessor">#pragma once</span></div>
-<div class="line"><a id="l00002" name="l00002"></a><span class="lineno">    2</span> </div>
-<div class="line"><a id="l00003" name="l00003"></a><span class="lineno">    3</span><span class="keyword">namespace </span><a class="code hl_namespace" href="namespaceIO_1_1SDK_1_1API_1_1DTO.html">IO::SDK::API::DTO</a></div>
-<div class="line"><a id="l00004" name="l00004"></a><span class="lineno">    4</span>{</div>
-<div class="line"><a id="l00005" name="l00005"></a><span class="lineno"><a class="line" href="structIO_1_1SDK_1_1API_1_1DTO_1_1FuelTankDTO.html">    5</a></span>    <span class="keyword">struct </span><a class="code hl_struct" href="structIO_1_1SDK_1_1API_1_1DTO_1_1FuelTankDTO.html">FuelTankDTO</a></div>
-<div class="line"><a id="l00006" name="l00006"></a><span class="lineno">    6</span>    {</div>
-<div class="line"><a id="l00007" name="l00007"></a><span class="lineno"><a class="line" href="structIO_1_1SDK_1_1API_1_1DTO_1_1FuelTankDTO.html#ad511fe1e6898cc0280b0069f1f44207e">    7</a></span>        <span class="keywordtype">int</span> <a class="code hl_variable" href="structIO_1_1SDK_1_1API_1_1DTO_1_1FuelTankDTO.html#ad511fe1e6898cc0280b0069f1f44207e">id</a>;</div>
-<div class="line"><a id="l00008" name="l00008"></a><span class="lineno"><a class="line" href="structIO_1_1SDK_1_1API_1_1DTO_1_1FuelTankDTO.html#a52f3d0b45205f9b3e84f0bce316abe91">    8</a></span>        <span class="keyword">const</span> <span class="keywordtype">char</span> * <a class="code hl_variable" href="structIO_1_1SDK_1_1API_1_1DTO_1_1FuelTankDTO.html#a52f3d0b45205f9b3e84f0bce316abe91">serialNumber</a>;</div>
-<div class="line"><a id="l00009" name="l00009"></a><span class="lineno">    9</span> </div>
-<div class="line"><a id="l00010" name="l00010"></a><span class="lineno"><a class="line" href="structIO_1_1SDK_1_1API_1_1DTO_1_1FuelTankDTO.html#aa8d92790c4185a373b2c013a2bb816ed">   10</a></span>        <span class="keywordtype">double</span> <a class="code hl_variable" href="structIO_1_1SDK_1_1API_1_1DTO_1_1FuelTankDTO.html#aa8d92790c4185a373b2c013a2bb816ed">capacity</a>;</div>
-<div class="line"><a id="l00011" name="l00011"></a><span class="lineno"><a class="line" href="structIO_1_1SDK_1_1API_1_1DTO_1_1FuelTankDTO.html#a2e18763910cc002dfaccd86b1f23ef2e">   11</a></span>        <span class="keywordtype">double</span> <a class="code hl_variable" href="structIO_1_1SDK_1_1API_1_1DTO_1_1FuelTankDTO.html#a2e18763910cc002dfaccd86b1f23ef2e">quantity</a>;</div>
-<div class="line"><a id="l00012" name="l00012"></a><span class="lineno">   12</span>    };</div>
-<div class="line"><a id="l00013" name="l00013"></a><span class="lineno">   13</span>}</div>
+<a href="FuelTankDTO_8h.html">Go to the documentation of this file.</a><div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span><span class="comment">/*</span></div>
+<div class="line"><a id="l00002" name="l00002"></a><span class="lineno">    2</span><span class="comment"> Copyright (c) 2023. Sylvain Guillet (sylvain.guillet@tutamail.com)</span></div>
+<div class="line"><a id="l00003" name="l00003"></a><span class="lineno">    3</span><span class="comment"> */</span></div>
+<div class="line"><a id="l00004" name="l00004"></a><span class="lineno">    4</span> </div>
+<div class="line"><a id="l00005" name="l00005"></a><span class="lineno">    5</span><span class="preprocessor">#pragma once</span></div>
+<div class="line"><a id="l00006" name="l00006"></a><span class="lineno">    6</span> </div>
+<div class="line"><a id="l00007" name="l00007"></a><span class="lineno">    7</span><span class="keyword">namespace </span><a class="code hl_namespace" href="namespaceIO_1_1SDK_1_1API_1_1DTO.html">IO::SDK::API::DTO</a></div>
+<div class="line"><a id="l00008" name="l00008"></a><span class="lineno">    8</span>{</div>
+<div class="line"><a id="l00009" name="l00009"></a><span class="lineno"><a class="line" href="structIO_1_1SDK_1_1API_1_1DTO_1_1FuelTankDTO.html">    9</a></span>    <span class="keyword">struct </span><a class="code hl_struct" href="structIO_1_1SDK_1_1API_1_1DTO_1_1FuelTankDTO.html">FuelTankDTO</a></div>
+<div class="line"><a id="l00010" name="l00010"></a><span class="lineno">   10</span>    {</div>
+<div class="line"><a id="l00011" name="l00011"></a><span class="lineno"><a class="line" href="structIO_1_1SDK_1_1API_1_1DTO_1_1FuelTankDTO.html#ad511fe1e6898cc0280b0069f1f44207e">   11</a></span>        <span class="keywordtype">int</span> <a class="code hl_variable" href="structIO_1_1SDK_1_1API_1_1DTO_1_1FuelTankDTO.html#ad511fe1e6898cc0280b0069f1f44207e">id</a>;</div>
+<div class="line"><a id="l00012" name="l00012"></a><span class="lineno"><a class="line" href="structIO_1_1SDK_1_1API_1_1DTO_1_1FuelTankDTO.html#a52f3d0b45205f9b3e84f0bce316abe91">   12</a></span>        <span class="keyword">const</span> <span class="keywordtype">char</span> * <a class="code hl_variable" href="structIO_1_1SDK_1_1API_1_1DTO_1_1FuelTankDTO.html#a52f3d0b45205f9b3e84f0bce316abe91">serialNumber</a>;</div>
+<div class="line"><a id="l00013" name="l00013"></a><span class="lineno">   13</span> </div>
+<div class="line"><a id="l00014" name="l00014"></a><span class="lineno"><a class="line" href="structIO_1_1SDK_1_1API_1_1DTO_1_1FuelTankDTO.html#aa8d92790c4185a373b2c013a2bb816ed">   14</a></span>        <span class="keywordtype">double</span> <a class="code hl_variable" href="structIO_1_1SDK_1_1API_1_1DTO_1_1FuelTankDTO.html#aa8d92790c4185a373b2c013a2bb816ed">capacity</a>;</div>
+<div class="line"><a id="l00015" name="l00015"></a><span class="lineno"><a class="line" href="structIO_1_1SDK_1_1API_1_1DTO_1_1FuelTankDTO.html#a2e18763910cc002dfaccd86b1f23ef2e">   15</a></span>        <span class="keywordtype">double</span> <a class="code hl_variable" href="structIO_1_1SDK_1_1API_1_1DTO_1_1FuelTankDTO.html#a2e18763910cc002dfaccd86b1f23ef2e">quantity</a>;</div>
+<div class="line"><a id="l00016" name="l00016"></a><span class="lineno">   16</span>    };</div>
+<div class="line"><a id="l00017" name="l00017"></a><span class="lineno">   17</span>}</div>
 <div class="ttc" id="anamespaceIO_1_1SDK_1_1API_1_1DTO_html"><div class="ttname"><a href="namespaceIO_1_1SDK_1_1API_1_1DTO.html">IO::SDK::API::DTO</a></div><div class="ttdef"><b>Definition:</b> ApogeeHeightChangingManeuverDTO.h:11</div></div>
-<div class="ttc" id="astructIO_1_1SDK_1_1API_1_1DTO_1_1FuelTankDTO_html"><div class="ttname"><a href="structIO_1_1SDK_1_1API_1_1DTO_1_1FuelTankDTO.html">IO::SDK::API::DTO::FuelTankDTO</a></div><div class="ttdef"><b>Definition:</b> FuelTankDTO.h:6</div></div>
-<div class="ttc" id="astructIO_1_1SDK_1_1API_1_1DTO_1_1FuelTankDTO_html_a2e18763910cc002dfaccd86b1f23ef2e"><div class="ttname"><a href="structIO_1_1SDK_1_1API_1_1DTO_1_1FuelTankDTO.html#a2e18763910cc002dfaccd86b1f23ef2e">IO::SDK::API::DTO::FuelTankDTO::quantity</a></div><div class="ttdeci">double quantity</div><div class="ttdef"><b>Definition:</b> FuelTankDTO.h:11</div></div>
-<div class="ttc" id="astructIO_1_1SDK_1_1API_1_1DTO_1_1FuelTankDTO_html_a52f3d0b45205f9b3e84f0bce316abe91"><div class="ttname"><a href="structIO_1_1SDK_1_1API_1_1DTO_1_1FuelTankDTO.html#a52f3d0b45205f9b3e84f0bce316abe91">IO::SDK::API::DTO::FuelTankDTO::serialNumber</a></div><div class="ttdeci">const char * serialNumber</div><div class="ttdef"><b>Definition:</b> FuelTankDTO.h:8</div></div>
-<div class="ttc" id="astructIO_1_1SDK_1_1API_1_1DTO_1_1FuelTankDTO_html_aa8d92790c4185a373b2c013a2bb816ed"><div class="ttname"><a href="structIO_1_1SDK_1_1API_1_1DTO_1_1FuelTankDTO.html#aa8d92790c4185a373b2c013a2bb816ed">IO::SDK::API::DTO::FuelTankDTO::capacity</a></div><div class="ttdeci">double capacity</div><div class="ttdef"><b>Definition:</b> FuelTankDTO.h:10</div></div>
-<div class="ttc" id="astructIO_1_1SDK_1_1API_1_1DTO_1_1FuelTankDTO_html_ad511fe1e6898cc0280b0069f1f44207e"><div class="ttname"><a href="structIO_1_1SDK_1_1API_1_1DTO_1_1FuelTankDTO.html#ad511fe1e6898cc0280b0069f1f44207e">IO::SDK::API::DTO::FuelTankDTO::id</a></div><div class="ttdeci">int id</div><div class="ttdef"><b>Definition:</b> FuelTankDTO.h:7</div></div>
+<div class="ttc" id="astructIO_1_1SDK_1_1API_1_1DTO_1_1FuelTankDTO_html"><div class="ttname"><a href="structIO_1_1SDK_1_1API_1_1DTO_1_1FuelTankDTO.html">IO::SDK::API::DTO::FuelTankDTO</a></div><div class="ttdef"><b>Definition:</b> FuelTankDTO.h:10</div></div>
+<div class="ttc" id="astructIO_1_1SDK_1_1API_1_1DTO_1_1FuelTankDTO_html_a2e18763910cc002dfaccd86b1f23ef2e"><div class="ttname"><a href="structIO_1_1SDK_1_1API_1_1DTO_1_1FuelTankDTO.html#a2e18763910cc002dfaccd86b1f23ef2e">IO::SDK::API::DTO::FuelTankDTO::quantity</a></div><div class="ttdeci">double quantity</div><div class="ttdef"><b>Definition:</b> FuelTankDTO.h:15</div></div>
+<div class="ttc" id="astructIO_1_1SDK_1_1API_1_1DTO_1_1FuelTankDTO_html_a52f3d0b45205f9b3e84f0bce316abe91"><div class="ttname"><a href="structIO_1_1SDK_1_1API_1_1DTO_1_1FuelTankDTO.html#a52f3d0b45205f9b3e84f0bce316abe91">IO::SDK::API::DTO::FuelTankDTO::serialNumber</a></div><div class="ttdeci">const char * serialNumber</div><div class="ttdef"><b>Definition:</b> FuelTankDTO.h:12</div></div>
+<div class="ttc" id="astructIO_1_1SDK_1_1API_1_1DTO_1_1FuelTankDTO_html_aa8d92790c4185a373b2c013a2bb816ed"><div class="ttname"><a href="structIO_1_1SDK_1_1API_1_1DTO_1_1FuelTankDTO.html#aa8d92790c4185a373b2c013a2bb816ed">IO::SDK::API::DTO::FuelTankDTO::capacity</a></div><div class="ttdeci">double capacity</div><div class="ttdef"><b>Definition:</b> FuelTankDTO.h:14</div></div>
+<div class="ttc" id="astructIO_1_1SDK_1_1API_1_1DTO_1_1FuelTankDTO_html_ad511fe1e6898cc0280b0069f1f44207e"><div class="ttname"><a href="structIO_1_1SDK_1_1API_1_1DTO_1_1FuelTankDTO.html#ad511fe1e6898cc0280b0069f1f44207e">IO::SDK::API::DTO::FuelTankDTO::id</a></div><div class="ttdeci">int id</div><div class="ttdef"><b>Definition:</b> FuelTankDTO.h:11</div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->

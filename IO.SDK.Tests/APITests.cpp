@@ -1,12 +1,8 @@
 #include<gtest/gtest.h>
-#include<ScenarioDTO.h>
 #include "TestParameters.h"
 #include "Proxy.h"
-#include "Constants.h"
-#include "DataPoolMonitoring.h"
 #include "InertialFrames.h"
 #include "NadirAttitude.h"
-#include <KernelsLoader.h>
 #include <Converters.cpp>
 
 TEST(API, DTOSize) {
@@ -509,11 +505,11 @@ TEST(API, ConvertEquinoctialElementsToStateVector) {
 TEST(API, ConvertToRaDec) {
     auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
     auto moon = std::make_shared<IO::SDK::Body::CelestialBody>(301, earth);
-    auto sv = moon->GetOrbitalParametersAtEpoch()->GetStateVector();
+    auto sv = moon->GetOrbitalParametersAtEpoch()->ToStateVector();
 
     auto svDTO = ToStateVectorDTO(sv);
     auto ra = ConvertToRightAscensionAndDeclinationProxy(svDTO);
-    ASSERT_DOUBLE_EQ(222.44729949955743, ra.ra * IO::SDK::Constants::RAD_DEG);
-    ASSERT_DOUBLE_EQ(-10.900186051699617, ra.dec * IO::SDK::Constants::RAD_DEG);
-    ASSERT_DOUBLE_EQ(402448639.88732731, ra.r);
+    ASSERT_DOUBLE_EQ(222.44729949955743, ra.rightAscension * IO::SDK::Constants::RAD_DEG);
+    ASSERT_DOUBLE_EQ(-10.900186051699617, ra.declination * IO::SDK::Constants::RAD_DEG);
+    ASSERT_DOUBLE_EQ(402448639.88732731, ra.range);
 }

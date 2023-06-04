@@ -1,17 +1,10 @@
-/**
- * @file CelestialBody.cpp
- * @author Sylvain Guillet (sylvain.guillet@live.com)
- * @brief 
- * @version 0.x
- * @date 2021-07-03
- * 
- * @copyright Copyright (c) 2021
- * 
+/*
+ Copyright (c) 2021-2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
  */
 #include <limits>
 #include <chrono>
 
-#include "CelestialBody.h"
+#include <CelestialBody.h>
 #include <StateVector.h>
 #include <SpiceUsr.h>
 #include <Constants.h>

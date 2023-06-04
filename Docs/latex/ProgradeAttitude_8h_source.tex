@@ -2,40 +2,35 @@
 \label{ProgradeAttitude_8h_source}\index{IO.SDK/Maneuvers/Attitudes/ProgradeAttitude.h@{IO.SDK/Maneuvers/Attitudes/ProgradeAttitude.h}}
 \mbox{\hyperlink{ProgradeAttitude_8h}{Go to the documentation of this file.}}
 \begin{DoxyCode}{0}
-\DoxyCodeLine{1 }
-\DoxyCodeLine{11 \textcolor{preprocessor}{\#ifndef PROGRADE\_ATTITUDE\_H}}
-\DoxyCodeLine{12 \textcolor{preprocessor}{\#define PROGRADE\_ATTITUDE\_H}}
-\DoxyCodeLine{13 }
-\DoxyCodeLine{14 \textcolor{preprocessor}{\#include <vector>}}
-\DoxyCodeLine{15 \textcolor{preprocessor}{\#include <memory>}}
-\DoxyCodeLine{16 }
-\DoxyCodeLine{17 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{ManeuverBase_8h}{ManeuverBase.h}}>}}
-\DoxyCodeLine{18 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{OrbitalParameters_8h}{OrbitalParameters.h}}>}}
-\DoxyCodeLine{19 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{Engine_8h}{Engine.h}}>}}
-\DoxyCodeLine{20 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{Propagator_8h}{Propagator.h}}>}}
-\DoxyCodeLine{21 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{Vector3D_8h}{Vector3D.h}}>}}
-\DoxyCodeLine{22 }
-\DoxyCodeLine{23 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1SDK_1_1Maneuvers_1_1Attitudes}{IO::SDK::Maneuvers::Attitudes}}}
-\DoxyCodeLine{24 \{}
-\DoxyCodeLine{25     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1Attitudes_1_1ProgradeAttitude}{ProgradeAttitude}} final : \textcolor{keyword}{public} \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase}{IO::SDK::Maneuvers::ManeuverBase}}}
-\DoxyCodeLine{26     \{}
-\DoxyCodeLine{27     \textcolor{keyword}{private}:}
-\DoxyCodeLine{28         \textcolor{comment}{/* data */}}
-\DoxyCodeLine{29 }
-\DoxyCodeLine{30     \textcolor{keyword}{protected}:}
-\DoxyCodeLine{36         \textcolor{keywordtype}{void} \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1Attitudes_1_1ProgradeAttitude_a225c851079cdcaa986ba9eb715c2994c}{Compute}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters}{IO::SDK::OrbitalParameters::OrbitalParameters}} \&maneuverPoint) \textcolor{keyword}{override};}
-\DoxyCodeLine{37 }
-\DoxyCodeLine{44         \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateOrientation}{IO::SDK::OrbitalParameters::StateOrientation}} \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1Attitudes_1_1ProgradeAttitude_a794ab49935a4feced62692674ea8109d}{ComputeOrientation}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters}{IO::SDK::OrbitalParameters::OrbitalParameters}} \&maneuverPoint) \textcolor{keyword}{override};}
-\DoxyCodeLine{45 }
-\DoxyCodeLine{46     \textcolor{keyword}{public}:}
-\DoxyCodeLine{53         \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1Attitudes_1_1ProgradeAttitude_a73af1392368d15c48ee2f892eef72f34}{ProgradeAttitude}}(\textcolor{keyword}{const} std::vector<IO::SDK::Body::Spacecraft::Engine*>\& engines, \mbox{\hyperlink{classIO_1_1SDK_1_1Propagators_1_1Propagator}{IO::SDK::Propagators::Propagator}} \&propagator,\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO::SDK::Time::TimeSpan}}\& attitudeHoldDuration);}
-\DoxyCodeLine{54 }
-\DoxyCodeLine{62         \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1Attitudes_1_1ProgradeAttitude_a73af1392368d15c48ee2f892eef72f34}{ProgradeAttitude}}(\textcolor{keyword}{const} std::vector<IO::SDK::Body::Spacecraft::Engine*>\& engines, \mbox{\hyperlink{classIO_1_1SDK_1_1Propagators_1_1Propagator}{IO::SDK::Propagators::Propagator}} \&propagator, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO::SDK::Time::TDB}} \&minimumEpoch,\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO::SDK::Time::TimeSpan}}\& attitudeHoldDuration);}
-\DoxyCodeLine{63 }
-\DoxyCodeLine{71         \textcolor{keywordtype}{bool} \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1Attitudes_1_1ProgradeAttitude_acc05df379c165ce5052799888f9e3719}{CanExecute}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters}{IO::SDK::OrbitalParameters::OrbitalParameters}} \&orbitalParams) \textcolor{keyword}{override};}
-\DoxyCodeLine{72     \};}
-\DoxyCodeLine{73 \}}
-\DoxyCodeLine{74 }
-\DoxyCodeLine{75 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{1 \textcolor{comment}{/*}}
+\DoxyCodeLine{2 \textcolor{comment}{ Copyright (c) 2021-\/2023. Sylvain Guillet (sylvain.guillet@tutamail.com)}}
+\DoxyCodeLine{3 \textcolor{comment}{ */}}
+\DoxyCodeLine{4 \textcolor{preprocessor}{\#ifndef PROGRADE\_ATTITUDE\_H}}
+\DoxyCodeLine{5 \textcolor{preprocessor}{\#define PROGRADE\_ATTITUDE\_H}}
+\DoxyCodeLine{6 }
+\DoxyCodeLine{7 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{ManeuverBase_8h}{ManeuverBase.h}}>}}
+\DoxyCodeLine{8 }
+\DoxyCodeLine{9 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1SDK_1_1Maneuvers_1_1Attitudes}{IO::SDK::Maneuvers::Attitudes}}}
+\DoxyCodeLine{10 \{}
+\DoxyCodeLine{11     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1Attitudes_1_1ProgradeAttitude}{ProgradeAttitude}} final : \textcolor{keyword}{public} \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase}{IO::SDK::Maneuvers::ManeuverBase}}}
+\DoxyCodeLine{12     \{}
+\DoxyCodeLine{13     \textcolor{keyword}{private}:}
+\DoxyCodeLine{14         \textcolor{comment}{/* data */}}
+\DoxyCodeLine{15 }
+\DoxyCodeLine{16     \textcolor{keyword}{protected}:}
+\DoxyCodeLine{22         \textcolor{keywordtype}{void} \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1Attitudes_1_1ProgradeAttitude_a225c851079cdcaa986ba9eb715c2994c}{Compute}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters}{IO::SDK::OrbitalParameters::OrbitalParameters}} \&maneuverPoint) \textcolor{keyword}{override};}
+\DoxyCodeLine{23 }
+\DoxyCodeLine{30         \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateOrientation}{IO::SDK::OrbitalParameters::StateOrientation}} \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1Attitudes_1_1ProgradeAttitude_a794ab49935a4feced62692674ea8109d}{ComputeOrientation}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters}{IO::SDK::OrbitalParameters::OrbitalParameters}} \&maneuverPoint) \textcolor{keyword}{override};}
+\DoxyCodeLine{31 }
+\DoxyCodeLine{32     \textcolor{keyword}{public}:}
+\DoxyCodeLine{39         \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1Attitudes_1_1ProgradeAttitude_a73af1392368d15c48ee2f892eef72f34}{ProgradeAttitude}}(\textcolor{keyword}{const} std::vector<IO::SDK::Body::Spacecraft::Engine*>\& engines, \mbox{\hyperlink{classIO_1_1SDK_1_1Propagators_1_1Propagator}{IO::SDK::Propagators::Propagator}} \&propagator,\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO::SDK::Time::TimeSpan}}\& attitudeHoldDuration);}
+\DoxyCodeLine{40 }
+\DoxyCodeLine{48         \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1Attitudes_1_1ProgradeAttitude_a73af1392368d15c48ee2f892eef72f34}{ProgradeAttitude}}(\textcolor{keyword}{const} std::vector<IO::SDK::Body::Spacecraft::Engine*>\& engines, \mbox{\hyperlink{classIO_1_1SDK_1_1Propagators_1_1Propagator}{IO::SDK::Propagators::Propagator}} \&propagator, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO::SDK::Time::TDB}} \&minimumEpoch,\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO::SDK::Time::TimeSpan}}\& attitudeHoldDuration);}
+\DoxyCodeLine{49 }
+\DoxyCodeLine{57         \textcolor{keywordtype}{bool} \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1Attitudes_1_1ProgradeAttitude_acc05df379c165ce5052799888f9e3719}{CanExecute}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters}{IO::SDK::OrbitalParameters::OrbitalParameters}} \&orbitalParams) \textcolor{keyword}{override};}
+\DoxyCodeLine{58     \};}
+\DoxyCodeLine{59 \}}
+\DoxyCodeLine{60 }
+\DoxyCodeLine{61 \textcolor{preprocessor}{\#endif}}
 
 \end{DoxyCode}

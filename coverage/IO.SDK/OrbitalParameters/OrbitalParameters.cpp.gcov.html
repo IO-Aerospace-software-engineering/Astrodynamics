@@ -190,9 +190,9 @@
 <a name="128"><span class="lineNum">     128 </span><span class="lineCov">          2 :         return GetTrueAnomaly(m_epoch);</span></a>
 <a name="129"><span class="lineNum">     129 </span>            : }</a>
 <a name="130"><span class="lineNum">     130 </span>            : </a>
-<a name="131"><span class="lineNum">     131 </span><span class="lineCov">      14075 : IO::SDK::OrbitalParameters::StateVector IO::SDK::OrbitalParameters::OrbitalParameters::GetStateVector() const</span></a>
+<a name="131"><span class="lineNum">     131 </span><span class="lineCov">      14075 : IO::SDK::OrbitalParameters::StateVector IO::SDK::OrbitalParameters::OrbitalParameters::ToStateVector() const</span></a>
 <a name="132"><span class="lineNum">     132 </span>            : {</a>
-<a name="133"><span class="lineNum">     133 </span><span class="lineCov">      14075 :         return GetStateVector(m_epoch);</span></a>
+<a name="133"><span class="lineNum">     133 </span><span class="lineCov">      14075 :         return ToStateVector(m_epoch);</span></a>
 <a name="134"><span class="lineNum">     134 </span>            : }</a>
 <a name="135"><span class="lineNum">     135 </span>            : </a>
 <a name="136"><span class="lineNum">     136 </span><span class="lineCov">    2123980 : IO::SDK::Time::TDB IO::SDK::OrbitalParameters::OrbitalParameters::GetEpoch() const</span></a>
@@ -207,7 +207,7 @@
 <a name="145"><span class="lineNum">     145 </span>            : </a>
 <a name="146"><span class="lineNum">     146 </span><span class="lineCov">     290000 : IO::SDK::Math::Vector3D IO::SDK::OrbitalParameters::OrbitalParameters::GetEccentricityVector() const</span></a>
 <a name="147"><span class="lineNum">     147 </span>            : {</a>
-<a name="148"><span class="lineNum">     148 </span><span class="lineCov">     290000 :         auto sv = GetStateVector();</span></a>
+<a name="148"><span class="lineNum">     148 </span><span class="lineCov">     290000 :         auto sv = ToStateVector();</span></a>
 <a name="149"><span class="lineNum">     149 </span><span class="lineCov">     870000 :         return (sv.GetVelocity().CrossProduct(GetSpecificAngularMomentum()) / m_centerOfMotion-&gt;GetMu()) - (sv.GetPosition() / sv.GetPosition().Magnitude());</span></a>
 <a name="150"><span class="lineNum">     150 </span>            : }</a>
 <a name="151"><span class="lineNum">     151 </span>            : </a>
@@ -221,9 +221,9 @@
 <a name="159"><span class="lineNum">     159 </span><span class="lineCov">         86 :         return GetEccentricityVector().Normalize().Reverse() * (GetSemiMajorAxis() * (1.0 + GetEccentricity()));</span></a>
 <a name="160"><span class="lineNum">     160 </span>            : }</a>
 <a name="161"><span class="lineNum">     161 </span>            : </a>
-<a name="162"><span class="lineNum">     162 </span><span class="lineCov">      13991 : IO::SDK::OrbitalParameters::StateVector IO::SDK::OrbitalParameters::OrbitalParameters::GetStateVector(const double trueAnomalie) const</span></a>
+<a name="162"><span class="lineNum">     162 </span><span class="lineCov">      13991 : IO::SDK::OrbitalParameters::StateVector IO::SDK::OrbitalParameters::OrbitalParameters::ToStateVector(const double trueAnomalie) const</span></a>
 <a name="163"><span class="lineNum">     163 </span>            : {</a>
-<a name="164"><span class="lineNum">     164 </span><span class="lineCov">      27982 :         return GetStateVector(GetTimeToTrueAnomaly(trueAnomalie));</span></a>
+<a name="164"><span class="lineNum">     164 </span><span class="lineCov">      27982 :         return ToStateVector(GetTimeToTrueAnomaly(trueAnomalie));</span></a>
 <a name="165"><span class="lineNum">     165 </span>            : }</a>
 <a name="166"><span class="lineNum">     166 </span>            : </a>
 <a name="167"><span class="lineNum">     167 </span><span class="lineCov">         26 : IO::SDK::Math::Vector3D IO::SDK::OrbitalParameters::OrbitalParameters::GetAscendingNodeVector() const</span></a>
@@ -237,7 +237,7 @@
 <a name="175"><span class="lineNum">     175 </span>            : </a>
 <a name="176"><span class="lineNum">     176 </span><span class="lineCov">          1 : IO::SDK::Coordinates::RADec IO::SDK::OrbitalParameters::OrbitalParameters::GetRADec() const</span></a>
 <a name="177"><span class="lineNum">     177 </span>            : {</a>
-<a name="178"><span class="lineNum">     178 </span><span class="lineCov">          2 :         auto sv = GetStateVector();</span></a>
+<a name="178"><span class="lineNum">     178 </span><span class="lineCov">          2 :         auto sv = ToStateVector();</span></a>
 <a name="179"><span class="lineNum">     179 </span><span class="lineCov">          1 :         if (sv.GetFrame() != IO::SDK::Frames::InertialFrames::GetICRF())</span></a>
 <a name="180"><span class="lineNum">     180 </span>            :         {</a>
 <a name="181"><span class="lineNum">     181 </span><span class="lineNoCov">          0 :                 sv = sv.ToFrame(IO::SDK::Frames::InertialFrames::GetICRF());</span></a>
@@ -252,12 +252,12 @@
 <a name="190"><span class="lineNum">     190 </span>            : </a>
 <a name="191"><span class="lineNum">     191 </span><span class="lineCov">         37 : double IO::SDK::OrbitalParameters::OrbitalParameters::GetVelocityAtPerigee() const</span></a>
 <a name="192"><span class="lineNum">     192 </span>            : {</a>
-<a name="193"><span class="lineNum">     193 </span><span class="lineCov">         37 :         return GetStateVector(0.0).GetVelocity().Magnitude();</span></a>
+<a name="193"><span class="lineNum">     193 </span><span class="lineCov">         37 :         return ToStateVector(0.0).GetVelocity().Magnitude();</span></a>
 <a name="194"><span class="lineNum">     194 </span>            : }</a>
 <a name="195"><span class="lineNum">     195 </span>            : </a>
 <a name="196"><span class="lineNum">     196 </span><span class="lineNoCov">          0 : double IO::SDK::OrbitalParameters::OrbitalParameters::GetVelocityAtApogee() const</span></a>
 <a name="197"><span class="lineNum">     197 </span>            : {</a>
-<a name="198"><span class="lineNum">     198 </span><span class="lineNoCov">          0 :         return GetStateVector(IO::SDK::Constants::PI).GetVelocity().Magnitude();</span></a>
+<a name="198"><span class="lineNum">     198 </span><span class="lineNoCov">          0 :         return ToStateVector(IO::SDK::Constants::PI).GetVelocity().Magnitude();</span></a>
 <a name="199"><span class="lineNum">     199 </span>            : }</a>
 <a name="200"><span class="lineNum">     200 </span>            : </a>
 <a name="201"><span class="lineNum">     201 </span><span class="lineCov">          2 : double IO::SDK::OrbitalParameters::OrbitalParameters::GetTrueLongitude() const</span></a>

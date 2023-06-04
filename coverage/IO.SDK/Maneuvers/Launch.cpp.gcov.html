@@ -75,7 +75,7 @@
 <a name="13"><span class="lineNum">      13 </span>            : </a>
 <a name="14"><span class="lineNum">      14 </span><span class="lineCov">         15 : IO::SDK::Maneuvers::Launch::Launch(const std::shared_ptr&lt;IO::SDK::Sites::LaunchSite&gt; launchSite, const std::shared_ptr&lt;IO::SDK::Sites::LaunchSite&gt; recoverySite, bool launchByDay, const IO::SDK::OrbitalParameters::OrbitalParameters &amp;targetOrbit) : m_launchSite{launchSite}, m_recoverySite{recoverySite}, m_launchByDay{launchByDay}, m_targetOrbit{targetOrbit}</span></a>
 <a name="15"><span class="lineNum">      15 </span>            : {</a>
-<a name="16"><span class="lineNum">      16 </span><span class="lineCov">         15 :     const_cast&lt;double &amp;&gt;(m_inclination) = m_targetOrbit.GetStateVector().ToFrame(IO::SDK::Frames::InertialFrames::GetICRF()).GetSpecificAngularMomentum().GetAngle(m_launchSite-&gt;GetBody()-&gt;GetBodyFixedFrame().TransformVector(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::Math::Vector3D::VectorZ, IO::SDK::Time::TDB(std::chrono::duration&lt;double&gt;(0.0))));</span></a>
+<a name="16"><span class="lineNum">      16 </span><span class="lineCov">         15 :     const_cast&lt;double &amp;&gt;(m_inclination) = m_targetOrbit.ToStateVector().ToFrame(IO::SDK::Frames::InertialFrames::GetICRF()).GetSpecificAngularMomentum().GetAngle(m_launchSite-&gt;GetBody()-&gt;GetBodyFixedFrame().TransformVector(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::Math::Vector3D::VectorZ, IO::SDK::Time::TDB(std::chrono::duration&lt;double&gt;(0.0))));</span></a>
 <a name="17"><span class="lineNum">      17 </span>            : </a>
 <a name="18"><span class="lineNum">      18 </span><span class="lineCov">         15 :     const_cast&lt;double &amp;&gt;(m_deltaL) = std::asin(std::tan(m_launchSite-&gt;GetCoordinates().GetLatitude()) / std::tan(m_inclination));</span></a>
 <a name="19"><span class="lineNum">      19 </span><span class="lineCov">         15 : }</span></a>
@@ -84,7 +84,7 @@
 <a name="22"><span class="lineNum">      22 </span>            : {</a>
 <a name="23"><span class="lineNum">      23 </span><span class="lineCov">         10 :     if (std::isnan(m_nonInertialAscendingAzimuthLaunch))</span></a>
 <a name="24"><span class="lineNum">      24 </span>            :     {</a>
-<a name="25"><span class="lineNum">      25 </span><span class="lineCov">          8 :         double vrotx = GetInertialInsertionVelocity() * std::sin(GetInertialAscendingAzimuthLaunch()) - m_launchSite-&gt;GetStateVector(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::Time::TDB(std::chrono::duration&lt;double&gt;(0.0))).GetVelocity().Magnitude();</span></a>
+<a name="25"><span class="lineNum">      25 </span><span class="lineCov">          8 :         double vrotx = GetInertialInsertionVelocity() * std::sin(GetInertialAscendingAzimuthLaunch()) - m_launchSite-&gt;ToStateVector(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::Time::TDB(std::chrono::duration&lt;double&gt;(0.0))).GetVelocity().Magnitude();</span></a>
 <a name="26"><span class="lineNum">      26 </span><span class="lineCov">          8 :         double vroty = GetInertialInsertionVelocity() * std::cos(GetInertialAscendingAzimuthLaunch());</span></a>
 <a name="27"><span class="lineNum">      27 </span><span class="lineCov">          8 :         m_nonInertialAscendingAzimuthLaunch = std::atan(vrotx / vroty);</span></a>
 <a name="28"><span class="lineNum">      28 </span><span class="lineCov">          8 :         if (m_nonInertialAscendingAzimuthLaunch &lt; 0.0)</span></a>
@@ -112,7 +112,7 @@
 <a name="50"><span class="lineNum">      50 </span>            : {</a>
 <a name="51"><span class="lineNum">      51 </span><span class="lineCov">         40 :     if (std::isnan(m_inertialAscendingAzimuthLaunch))</span></a>
 <a name="52"><span class="lineNum">      52 </span>            :     {</a>
-<a name="53"><span class="lineNum">      53 </span><span class="lineCov">         13 :         m_inertialAscendingAzimuthLaunch = std::asin(std::cos(m_targetOrbit.GetStateVector().ToFrame(IO::SDK::Frames::InertialFrames::GetICRF()).GetSpecificAngularMomentum().GetAngle(m_launchSite-&gt;GetBody()-&gt;GetBodyFixedFrame().TransformVector(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::Math::Vector3D::VectorZ, IO::SDK::Time::TDB(std::chrono::duration&lt;double&gt;(0.0))))) / std::cos(m_launchSite-&gt;GetCoordinates().GetLatitude()));</span></a>
+<a name="53"><span class="lineNum">      53 </span><span class="lineCov">         13 :         m_inertialAscendingAzimuthLaunch = std::asin(std::cos(m_targetOrbit.ToStateVector().ToFrame(IO::SDK::Frames::InertialFrames::GetICRF()).GetSpecificAngularMomentum().GetAngle(m_launchSite-&gt;GetBody()-&gt;GetBodyFixedFrame().TransformVector(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::Math::Vector3D::VectorZ, IO::SDK::Time::TDB(std::chrono::duration&lt;double&gt;(0.0))))) / std::cos(m_launchSite-&gt;GetCoordinates().GetLatitude()));</span></a>
 <a name="54"><span class="lineNum">      54 </span><span class="lineCov">         13 :         if (m_inertialAscendingAzimuthLaunch &lt; 0.0)</span></a>
 <a name="55"><span class="lineNum">      55 </span>            :         {</a>
 <a name="56"><span class="lineNum">      56 </span><span class="lineCov">          3 :             m_inertialAscendingAzimuthLaunch += IO::SDK::Constants::_2PI;</span></a>
@@ -138,7 +138,7 @@
 <a name="76"><span class="lineNum">      76 </span>            : {</a>
 <a name="77"><span class="lineNum">      77 </span><span class="lineCov">          7 :     if (std::isnan(m_nonInertialInsertionVelocity))</span></a>
 <a name="78"><span class="lineNum">      78 </span>            :     {</a>
-<a name="79"><span class="lineNum">      79 </span><span class="lineCov">          7 :         double vrotx = GetInertialInsertionVelocity() * std::sin(GetInertialAscendingAzimuthLaunch()) - m_launchSite-&gt;GetStateVector(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::Time::TDB(std::chrono::duration&lt;double&gt;(0.0))).GetVelocity().Magnitude();</span></a>
+<a name="79"><span class="lineNum">      79 </span><span class="lineCov">          7 :         double vrotx = GetInertialInsertionVelocity() * std::sin(GetInertialAscendingAzimuthLaunch()) - m_launchSite-&gt;ToStateVector(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::Time::TDB(std::chrono::duration&lt;double&gt;(0.0))).GetVelocity().Magnitude();</span></a>
 <a name="80"><span class="lineNum">      80 </span><span class="lineCov">          7 :         double vroty = GetInertialInsertionVelocity() * std::cos(GetInertialAscendingAzimuthLaunch());</span></a>
 <a name="81"><span class="lineNum">      81 </span><span class="lineCov">          7 :         m_nonInertialInsertionVelocity = std::sqrt(vrotx * vrotx + vroty * vroty);</span></a>
 <a name="82"><span class="lineNum">      82 </span>            :     }</a>
@@ -213,7 +213,7 @@
 <a name="151"><span class="lineNum">     151 </span><span class="lineCov">          7 :     auto step = windowToSearch.GetLength() * 0.5;</span></a>
 <a name="152"><span class="lineNum">     152 </span>            : </a>
 <a name="153"><span class="lineNum">     153 </span>            :     //Define crossing plane inbound status</a>
-<a name="154"><span class="lineNum">     154 </span><span class="lineCov">          7 :     bool isInboundPlaneCrossing = m_targetOrbit.GetStateVector().ToFrame(IO::SDK::Frames::InertialFrames::GetICRF()).GetSpecificAngularMomentum().DotProduct(m_launchSite-&gt;GetStateVector(IO::SDK::Frames::InertialFrames::GetICRF(), date.ToTDB()).GetPosition()) &gt; 0.0;</span></a>
+<a name="154"><span class="lineNum">     154 </span><span class="lineCov">          7 :     bool isInboundPlaneCrossing = m_targetOrbit.ToStateVector().ToFrame(IO::SDK::Frames::InertialFrames::GetICRF()).GetSpecificAngularMomentum().DotProduct(m_launchSite-&gt;ToStateVector(IO::SDK::Frames::InertialFrames::GetICRF(), date.ToTDB()).GetPosition()) &gt; 0.0;</span></a>
 <a name="155"><span class="lineNum">     155 </span>            : </a>
 <a name="156"><span class="lineNum">     156 </span><span class="lineCov">          7 :     std::vector&lt;LaunchWindow&gt; launchWindows;</span></a>
 <a name="157"><span class="lineNum">     157 </span>            : </a>
@@ -223,7 +223,7 @@
 <a name="161"><span class="lineNum">     161 </span><span class="lineCov">        112 :         date = date + step;</span></a>
 <a name="162"><span class="lineNum">     162 </span>            : </a>
 <a name="163"><span class="lineNum">     163 </span>            :         //Compute crossing plane inbound status</a>
-<a name="164"><span class="lineNum">     164 </span><span class="lineCov">        112 :         bool isInbound = m_targetOrbit.GetStateVector().ToFrame(IO::SDK::Frames::InertialFrames::GetICRF()).GetSpecificAngularMomentum().DotProduct(m_launchSite-&gt;GetStateVector(IO::SDK::Frames::InertialFrames::GetICRF(), date.ToTDB()).GetPosition()) &gt; 0.0;</span></a>
+<a name="164"><span class="lineNum">     164 </span><span class="lineCov">        112 :         bool isInbound = m_targetOrbit.ToStateVector().ToFrame(IO::SDK::Frames::InertialFrames::GetICRF()).GetSpecificAngularMomentum().DotProduct(m_launchSite-&gt;ToStateVector(IO::SDK::Frames::InertialFrames::GetICRF(), date.ToTDB()).GetPosition()) &gt; 0.0;</span></a>
 <a name="165"><span class="lineNum">     165 </span>            : </a>
 <a name="166"><span class="lineNum">     166 </span>            :         //If inbound status has changed, we passed through orbital plane</a>
 <a name="167"><span class="lineNum">     167 </span><span class="lineCov">        112 :         if (isInbound != isInboundPlaneCrossing)</span></a>
@@ -247,7 +247,7 @@
 <a name="185"><span class="lineNum">     185 </span>            : </a>
 <a name="186"><span class="lineNum">     186 </span>            :             //Define if launch will be northly or southerly and set azimuths</a>
 <a name="187"><span class="lineNum">     187 </span><span class="lineCov">          5 :             bool isAscending{};</span></a>
-<a name="188"><span class="lineNum">     188 </span><span class="lineCov">          5 :             if (m_launchSite-&gt;GetStateVector(IO::SDK::Frames::InertialFrames::GetICRF(), date.ToTDB()).GetPosition().DotProduct(m_targetOrbit.GetStateVector().ToFrame(IO::SDK::Frames::InertialFrames::GetICRF()).GetAscendingNodeVector()) &gt; 0.0)</span></a>
+<a name="188"><span class="lineNum">     188 </span><span class="lineCov">          5 :             if (m_launchSite-&gt;ToStateVector(IO::SDK::Frames::InertialFrames::GetICRF(), date.ToTDB()).GetPosition().DotProduct(m_targetOrbit.ToStateVector().ToFrame(IO::SDK::Frames::InertialFrames::GetICRF()).GetAscendingNodeVector()) &gt; 0.0)</span></a>
 <a name="189"><span class="lineNum">     189 </span>            :             {</a>
 <a name="190"><span class="lineNum">     190 </span><span class="lineCov">          3 :                 inertialAzimuthLaunch = GetInertialAscendingAzimuthLaunch();</span></a>
 <a name="191"><span class="lineNum">     191 </span><span class="lineCov">          3 :                 nonInertialAzimuthLaunch = GetNonInertialAscendingAzimuthLaunch();</span></a>

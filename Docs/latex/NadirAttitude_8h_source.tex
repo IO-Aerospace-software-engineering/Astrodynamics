@@ -2,41 +2,35 @@
 \label{NadirAttitude_8h_source}\index{IO.SDK/Maneuvers/Attitudes/NadirAttitude.h@{IO.SDK/Maneuvers/Attitudes/NadirAttitude.h}}
 \mbox{\hyperlink{NadirAttitude_8h}{Go to the documentation of this file.}}
 \begin{DoxyCode}{0}
-\DoxyCodeLine{1 }
-\DoxyCodeLine{11 \textcolor{preprocessor}{\#ifndef NADIR\_ATTITUDE\_H}}
-\DoxyCodeLine{12 \textcolor{preprocessor}{\#define NADIR\_ATTITUDE\_H}}
-\DoxyCodeLine{13 }
-\DoxyCodeLine{14 \textcolor{preprocessor}{\#include <vector>}}
-\DoxyCodeLine{15 \textcolor{preprocessor}{\#include <memory>}}
-\DoxyCodeLine{16 }
-\DoxyCodeLine{17 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{ManeuverBase_8h}{ManeuverBase.h}}>}}
-\DoxyCodeLine{18 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{OrbitalParameters_8h}{OrbitalParameters.h}}>}}
-\DoxyCodeLine{19 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{Engine_8h}{Engine.h}}>}}
-\DoxyCodeLine{20 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{Propagator_8h}{Propagator.h}}>}}
-\DoxyCodeLine{21 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{Vector3D_8h}{Vector3D.h}}>}}
-\DoxyCodeLine{22 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{StateOrientation_8h}{StateOrientation.h}}>}}
+\DoxyCodeLine{1 \textcolor{comment}{/*}}
+\DoxyCodeLine{2 \textcolor{comment}{ Copyright (c) 2021-\/2023. Sylvain Guillet (sylvain.guillet@tutamail.com)}}
+\DoxyCodeLine{3 \textcolor{comment}{ */}}
+\DoxyCodeLine{4 \textcolor{preprocessor}{\#ifndef NADIR\_ATTITUDE\_H}}
+\DoxyCodeLine{5 \textcolor{preprocessor}{\#define NADIR\_ATTITUDE\_H}}
+\DoxyCodeLine{6 }
+\DoxyCodeLine{7 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{ManeuverBase_8h}{ManeuverBase.h}}>}}
+\DoxyCodeLine{8 }
+\DoxyCodeLine{9 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1SDK_1_1Maneuvers_1_1Attitudes}{IO::SDK::Maneuvers::Attitudes}}}
+\DoxyCodeLine{10 \{}
+\DoxyCodeLine{11     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1Attitudes_1_1NadirAttitude}{NadirAttitude}} final : \textcolor{keyword}{public} \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase}{IO::SDK::Maneuvers::ManeuverBase}}}
+\DoxyCodeLine{12     \{}
+\DoxyCodeLine{13     \textcolor{keyword}{private}:}
+\DoxyCodeLine{14         \textcolor{comment}{/* data */}}
+\DoxyCodeLine{15 }
+\DoxyCodeLine{16     \textcolor{keyword}{protected}:}
+\DoxyCodeLine{22         \textcolor{keywordtype}{void} \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1Attitudes_1_1NadirAttitude_a4001fc23a9f67eb3be581b0322e5907c}{Compute}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters}{IO::SDK::OrbitalParameters::OrbitalParameters}} \&maneuverPoint) \textcolor{keyword}{override};}
 \DoxyCodeLine{23 }
-\DoxyCodeLine{24 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1SDK_1_1Maneuvers_1_1Attitudes}{IO::SDK::Maneuvers::Attitudes}}}
-\DoxyCodeLine{25 \{}
-\DoxyCodeLine{26     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1Attitudes_1_1NadirAttitude}{NadirAttitude}} final : \textcolor{keyword}{public} \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase}{IO::SDK::Maneuvers::ManeuverBase}}}
-\DoxyCodeLine{27     \{}
-\DoxyCodeLine{28     \textcolor{keyword}{private}:}
-\DoxyCodeLine{29         \textcolor{comment}{/* data */}}
-\DoxyCodeLine{30 }
-\DoxyCodeLine{31     \textcolor{keyword}{protected}:}
-\DoxyCodeLine{37         \textcolor{keywordtype}{void} \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1Attitudes_1_1NadirAttitude_a4001fc23a9f67eb3be581b0322e5907c}{Compute}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters}{IO::SDK::OrbitalParameters::OrbitalParameters}} \&maneuverPoint) \textcolor{keyword}{override};}
-\DoxyCodeLine{38 }
-\DoxyCodeLine{45         \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateOrientation}{IO::SDK::OrbitalParameters::StateOrientation}} \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1Attitudes_1_1NadirAttitude_ad6c8b02e0d98d55a3f047a67638261cd}{ComputeOrientation}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters}{IO::SDK::OrbitalParameters::OrbitalParameters}} \&maneuverPoint) \textcolor{keyword}{override};}
-\DoxyCodeLine{46 }
-\DoxyCodeLine{47     \textcolor{keyword}{public}:}
-\DoxyCodeLine{54         \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1Attitudes_1_1NadirAttitude_a19100017abcc10cbc88c768ad3d83c8c}{NadirAttitude}}(\textcolor{keyword}{const} std::vector<IO::SDK::Body::Spacecraft::Engine*>\& engines, \mbox{\hyperlink{classIO_1_1SDK_1_1Propagators_1_1Propagator}{IO::SDK::Propagators::Propagator}} \&propagator,\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO::SDK::Time::TimeSpan}}\& attitudeHoldDuration);}
-\DoxyCodeLine{55 }
-\DoxyCodeLine{63         \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1Attitudes_1_1NadirAttitude_a19100017abcc10cbc88c768ad3d83c8c}{NadirAttitude}}(\textcolor{keyword}{const} std::vector<IO::SDK::Body::Spacecraft::Engine*>\& engines, \mbox{\hyperlink{classIO_1_1SDK_1_1Propagators_1_1Propagator}{IO::SDK::Propagators::Propagator}} \&propagator, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO::SDK::Time::TDB}} \&minimumEpoch,\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO::SDK::Time::TimeSpan}}\& attitudeHoldDuration);}
-\DoxyCodeLine{64 }
-\DoxyCodeLine{72         \textcolor{keywordtype}{bool} \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1Attitudes_1_1NadirAttitude_a9f7b6b754fcf56017f44c1499a3decb1}{CanExecute}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters}{IO::SDK::OrbitalParameters::OrbitalParameters}} \&orbitalParams) \textcolor{keyword}{override};}
-\DoxyCodeLine{73     \};}
-\DoxyCodeLine{74 \}}
-\DoxyCodeLine{75 }
-\DoxyCodeLine{76 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{30         \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateOrientation}{IO::SDK::OrbitalParameters::StateOrientation}} \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1Attitudes_1_1NadirAttitude_ad6c8b02e0d98d55a3f047a67638261cd}{ComputeOrientation}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters}{IO::SDK::OrbitalParameters::OrbitalParameters}} \&maneuverPoint) \textcolor{keyword}{override};}
+\DoxyCodeLine{31 }
+\DoxyCodeLine{32     \textcolor{keyword}{public}:}
+\DoxyCodeLine{39         \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1Attitudes_1_1NadirAttitude_a19100017abcc10cbc88c768ad3d83c8c}{NadirAttitude}}(\textcolor{keyword}{const} std::vector<IO::SDK::Body::Spacecraft::Engine*>\& engines, \mbox{\hyperlink{classIO_1_1SDK_1_1Propagators_1_1Propagator}{IO::SDK::Propagators::Propagator}} \&propagator,\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO::SDK::Time::TimeSpan}}\& attitudeHoldDuration);}
+\DoxyCodeLine{40 }
+\DoxyCodeLine{48         \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1Attitudes_1_1NadirAttitude_a19100017abcc10cbc88c768ad3d83c8c}{NadirAttitude}}(\textcolor{keyword}{const} std::vector<IO::SDK::Body::Spacecraft::Engine*>\& engines, \mbox{\hyperlink{classIO_1_1SDK_1_1Propagators_1_1Propagator}{IO::SDK::Propagators::Propagator}} \&propagator, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO::SDK::Time::TDB}} \&minimumEpoch,\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO::SDK::Time::TimeSpan}}\& attitudeHoldDuration);}
+\DoxyCodeLine{49 }
+\DoxyCodeLine{57         \textcolor{keywordtype}{bool} \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1Attitudes_1_1NadirAttitude_a9f7b6b754fcf56017f44c1499a3decb1}{CanExecute}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters}{IO::SDK::OrbitalParameters::OrbitalParameters}} \&orbitalParams) \textcolor{keyword}{override};}
+\DoxyCodeLine{58     \};}
+\DoxyCodeLine{59 \}}
+\DoxyCodeLine{60 }
+\DoxyCodeLine{61 \textcolor{preprocessor}{\#endif}}
 
 \end{DoxyCode}

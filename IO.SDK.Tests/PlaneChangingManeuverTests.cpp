@@ -58,29 +58,29 @@ TEST(PlaneChangingManeuver, CanExecute)
     auto timeToTrueAnomalyDN = s.GetOrbitalParametersAtEpoch()->GetTimeToTrueAnomaly(2.197937654);
     auto timeToTrueAnomalyAN = s.GetOrbitalParametersAtEpoch()->GetTimeToTrueAnomaly(2.197937654 + IO::SDK::Constants::PI);
     //Initialize
-    ASSERT_FALSE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()->GetStateVector()));
+    ASSERT_FALSE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()->ToStateVector()));
 
     //Can't execute, too early
-    ASSERT_FALSE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()->GetStateVector(timeToTrueAnomalyDN - IO::SDK::Time::TimeSpan(100s))));
+    ASSERT_FALSE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()->ToStateVector(timeToTrueAnomalyDN - IO::SDK::Time::TimeSpan(100s))));
 
     //Must execute at 125.93° == t+6600s
-    ASSERT_TRUE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()->GetStateVector(timeToTrueAnomalyDN + IO::SDK::Time::TimeSpan(10s))));
+    ASSERT_TRUE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()->ToStateVector(timeToTrueAnomalyDN + IO::SDK::Time::TimeSpan(10s))));
 
     //Can't execute because node is behind
-    ASSERT_FALSE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()->GetStateVector(timeToTrueAnomalyDN + IO::SDK::Time::TimeSpan(30s))));
+    ASSERT_FALSE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()->ToStateVector(timeToTrueAnomalyDN + IO::SDK::Time::TimeSpan(30s))));
 
     //==============
     //!!NEXT NODE!!
     //==============
 
     //Can't execute, too far
-    ASSERT_FALSE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()->GetStateVector(timeToTrueAnomalyAN - IO::SDK::Time::TimeSpan(10s))));
+    ASSERT_FALSE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()->ToStateVector(timeToTrueAnomalyAN - IO::SDK::Time::TimeSpan(10s))));
 
     //Must execute at 125.93°+180° == t+32959
-    ASSERT_TRUE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()->GetStateVector(timeToTrueAnomalyAN + IO::SDK::Time::TimeSpan(1s))));
+    ASSERT_TRUE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()->ToStateVector(timeToTrueAnomalyAN + IO::SDK::Time::TimeSpan(1s))));
 
     //Can't execute because node is behind
-    ASSERT_FALSE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()->GetStateVector(timeToTrueAnomalyAN + IO::SDK::Time::TimeSpan(30s))));
+    ASSERT_FALSE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()->ToStateVector(timeToTrueAnomalyAN + IO::SDK::Time::TimeSpan(30s))));
 
     //==============
     //Test another lap to validate switching between node inbound and outbound
@@ -88,15 +88,15 @@ TEST(PlaneChangingManeuver, CanExecute)
 
     //Can't execute, too early
     ASSERT_FALSE(maneuver.CanExecute(
-            s.GetOrbitalParametersAtEpoch()->GetStateVector(timeToTrueAnomalyDN - IO::SDK::Time::TimeSpan(100s) + s.GetOrbitalParametersAtEpoch()->GetPeriod())));
+            s.GetOrbitalParametersAtEpoch()->ToStateVector(timeToTrueAnomalyDN - IO::SDK::Time::TimeSpan(100s) + s.GetOrbitalParametersAtEpoch()->GetPeriod())));
 
     //Must execute at 125.93° == t+6600s+Orbital Period
     ASSERT_TRUE(maneuver.CanExecute(
-            s.GetOrbitalParametersAtEpoch()->GetStateVector(timeToTrueAnomalyDN + IO::SDK::Time::TimeSpan(10s) + s.GetOrbitalParametersAtEpoch()->GetPeriod())));
+            s.GetOrbitalParametersAtEpoch()->ToStateVector(timeToTrueAnomalyDN + IO::SDK::Time::TimeSpan(10s) + s.GetOrbitalParametersAtEpoch()->GetPeriod())));
 
     //Can't execute because node is behind
     ASSERT_FALSE(maneuver.CanExecute(
-            s.GetOrbitalParametersAtEpoch()->GetStateVector(timeToTrueAnomalyDN + IO::SDK::Time::TimeSpan(30s) + s.GetOrbitalParametersAtEpoch()->GetPeriod())));
+            s.GetOrbitalParametersAtEpoch()->ToStateVector(timeToTrueAnomalyDN + IO::SDK::Time::TimeSpan(30s) + s.GetOrbitalParametersAtEpoch()->GetPeriod())));
 
     //==============
     //!!NEXT NODE!!
@@ -104,15 +104,15 @@ TEST(PlaneChangingManeuver, CanExecute)
 
     //Can't execute, too far
     ASSERT_FALSE(maneuver.CanExecute(
-            s.GetOrbitalParametersAtEpoch()->GetStateVector(timeToTrueAnomalyAN - IO::SDK::Time::TimeSpan(10s) + s.GetOrbitalParametersAtEpoch()->GetPeriod())));
+            s.GetOrbitalParametersAtEpoch()->ToStateVector(timeToTrueAnomalyAN - IO::SDK::Time::TimeSpan(10s) + s.GetOrbitalParametersAtEpoch()->GetPeriod())));
 
     //Must execute at 125.93°+180° == t+32959+Orbital Period
     ASSERT_TRUE(
-            maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()->GetStateVector(timeToTrueAnomalyAN + IO::SDK::Time::TimeSpan(1s) + s.GetOrbitalParametersAtEpoch()->GetPeriod())));
+            maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()->ToStateVector(timeToTrueAnomalyAN + IO::SDK::Time::TimeSpan(1s) + s.GetOrbitalParametersAtEpoch()->GetPeriod())));
 
     //Can't execute because node is behind
     ASSERT_FALSE(maneuver.CanExecute(
-            s.GetOrbitalParametersAtEpoch()->GetStateVector(timeToTrueAnomalyAN + IO::SDK::Time::TimeSpan(30s) + s.GetOrbitalParametersAtEpoch()->GetPeriod())));
+            s.GetOrbitalParametersAtEpoch()->ToStateVector(timeToTrueAnomalyAN + IO::SDK::Time::TimeSpan(30s) + s.GetOrbitalParametersAtEpoch()->GetPeriod())));
 }
 
 // TEST(PlaneChangingManeuver, IdentifyNode)
@@ -140,8 +140,8 @@ TEST(PlaneChangingManeuver, CanExecute)
 //     auto timeToTrueAnomalyAN = s.GetOrbitalParametersAtEpoch()->GetTimeToTrueAnomaly(2.197893 + IO::SDK::Constants::PI);
 
 //     //Initialize
-//     ASSERT_FALSE(maneuver.IsAscendingNode(s.GetOrbitalParametersAtEpoch()->GetStateVector(timeToTrueAnomalyDN)));
-//     ASSERT_TRUE(maneuver.IsAscendingNode(s.GetOrbitalParametersAtEpoch()->GetStateVector(timeToTrueAnomalyAN)));
+//     ASSERT_FALSE(maneuver.IsAscendingNode(s.GetOrbitalParametersAtEpoch()->ToStateVector(timeToTrueAnomalyDN)));
+//     ASSERT_TRUE(maneuver.IsAscendingNode(s.GetOrbitalParametersAtEpoch()->ToStateVector(timeToTrueAnomalyAN)));
 // }
 
 // TEST(PlaneChangingManeuver, IdentifyNode2)
@@ -169,8 +169,8 @@ TEST(PlaneChangingManeuver, CanExecute)
 //     auto timeToTrueAnomalyAN = s.GetOrbitalParametersAtEpoch()->GetTimeToTrueAnomaly(5.4677 - IO::SDK::Constants::PI);
 
 //     //Initialize
-//     ASSERT_FALSE(maneuver.IsAscendingNode(s.GetOrbitalParametersAtEpoch()->GetStateVector(timeToTrueAnomalyDN)));
-//     ASSERT_TRUE(maneuver.IsAscendingNode(s.GetOrbitalParametersAtEpoch()->GetStateVector(timeToTrueAnomalyAN)));
+//     ASSERT_FALSE(maneuver.IsAscendingNode(s.GetOrbitalParametersAtEpoch()->ToStateVector(timeToTrueAnomalyDN)));
+//     ASSERT_TRUE(maneuver.IsAscendingNode(s.GetOrbitalParametersAtEpoch()->ToStateVector(timeToTrueAnomalyAN)));
 // }
 
 // TEST(PlaneChangingManeuver, IdentifyNode3)
@@ -198,8 +198,8 @@ TEST(PlaneChangingManeuver, CanExecute)
 //     auto timeToTrueAnomalyAN = s.GetOrbitalParametersAtEpoch()->GetTimeToTrueAnomaly(6.24 - IO::SDK::Constants::PI);
 
 //     //Initialize
-//     ASSERT_FALSE(maneuver.IsAscendingNode(s.GetOrbitalParametersAtEpoch()->GetStateVector(timeToTrueAnomalyDN)));
-//     ASSERT_TRUE(maneuver.IsAscendingNode(s.GetOrbitalParametersAtEpoch()->GetStateVector(timeToTrueAnomalyAN)));
+//     ASSERT_FALSE(maneuver.IsAscendingNode(s.GetOrbitalParametersAtEpoch()->ToStateVector(timeToTrueAnomalyDN)));
+//     ASSERT_TRUE(maneuver.IsAscendingNode(s.GetOrbitalParametersAtEpoch()->ToStateVector(timeToTrueAnomalyAN)));
 // }
 
 TEST(PlaneChangingManeuver, ExecuteInsuffisantDeltaV)
@@ -243,10 +243,10 @@ TEST(PlaneChangingManeuver, ExecuteInsuffisantDeltaV)
 
     //To detect if we're passing through the node we need at least two
     //This canExecute will evaluate a first point
-    maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()->GetStateVector(timeToTrueAnomalyDN - IO::SDK::Time::TimeSpan(10.0s)));
+    maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()->ToStateVector(timeToTrueAnomalyDN - IO::SDK::Time::TimeSpan(10.0s)));
 
     //The "TryExecute" will evaluate a second time "CanExecute", so it will be able to check the passage of the node
-    auto res = maneuver.TryExecute(s.GetOrbitalParametersAtEpoch()->GetStateVector(timeToTrueAnomalyDN));
+    auto res = maneuver.TryExecute(s.GetOrbitalParametersAtEpoch()->ToStateVector(timeToTrueAnomalyDN));
 
     ASSERT_FALSE(res.IsValid());
 #ifdef _WIN32
@@ -300,10 +300,10 @@ TEST(PlaneChangingManeuver, ExecuteDN)
 
     //To detect if we're passing through the node we need at least two
     //This canExecute will evaluate a first point
-    maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()->GetStateVector(timeToTrueAnomalyDN - IO::SDK::Time::TimeSpan(10.0s)));
+    maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()->ToStateVector(timeToTrueAnomalyDN - IO::SDK::Time::TimeSpan(10.0s)));
 
     //The "TryExecute" will evaluate a second time "CanExecute", so it will be able to check the passage of the node
-    auto res = maneuver.TryExecute(s.GetOrbitalParametersAtEpoch()->GetStateVector(timeToTrueAnomalyDN));
+    auto res = maneuver.TryExecute(s.GetOrbitalParametersAtEpoch()->ToStateVector(timeToTrueAnomalyDN));
 
     ASSERT_TRUE(res.IsValid());
 
@@ -378,10 +378,10 @@ TEST(PlaneChangingManeuver, ExecuteAN)
 
     //To detect if we're passing through the node we need at least two
     //This canExecute will evaluate a first point
-    maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()->GetStateVector(timeToTrueAnomalyAN - IO::SDK::Time::TimeSpan(10.0s)));
+    maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()->ToStateVector(timeToTrueAnomalyAN - IO::SDK::Time::TimeSpan(10.0s)));
 
     //The "TryExecute" will evaluate a second time "CanExecute", so it will be able to check the passage of the node
-    auto res = maneuver.TryExecute(s.GetOrbitalParametersAtEpoch()->GetStateVector(timeToTrueAnomalyAN));
+    auto res = maneuver.TryExecute(s.GetOrbitalParametersAtEpoch()->ToStateVector(timeToTrueAnomalyAN));
 
     ASSERT_TRUE(res.IsValid());
 

@@ -15,7 +15,7 @@ Inheritance diagram for IO\+::SDK\+::Orbital\+Parameters\+::Equinoctial\+Element
 \item 
 \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1EquinoctialElements_a928bfab34766334a4854084302cb6740}{Equinoctial\+Elements}} (const std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1CelestialBody}{IO\+::\+SDK\+::\+Body\+::\+Celestial\+Body}} $>$ \&center\+Of\+Motion, const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} \&epoch, double semi\+Major\+Axis, double h, double k, double p, double q, double L, double periapsis\+Longitude\+Rate, double ascending\+Node\+Longitude\+Rate, double right\+Ascension\+Of\+The\+Pole, double declination\+Of\+The\+Pole, const \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1Frames}{IO\+::\+SDK\+::\+Frames\+::\+Frames}} \&frame)
 \item 
-\mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1EquinoctialElements_a271f87dbf0e0463260d169bb2a3ebc1b}{Equinoctial\+Elements}} (const std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1CelestialBody}{IO\+::\+SDK\+::\+Body\+::\+Celestial\+Body}} $>$ \&center\+Of\+Motion, double semi\+Major\+Axis, double eccentricity, double inclination, double peregee\+Argument, double longitude\+AN, double mean\+Anomaly, double periapsis\+Longitude\+Rate, double ascending\+Node\+Longitude\+Rate, double right\+Ascension\+Of\+The\+Pole, double declination\+Of\+The\+Pole, const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} \&epoch, const \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1Frames}{IO\+::\+SDK\+::\+Frames\+::\+Frames}} \&frame)
+\mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1EquinoctialElements_a2e9fd0bc5463da6a386222fc3b326272}{Equinoctial\+Elements}} (const std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1CelestialBody}{IO\+::\+SDK\+::\+Body\+::\+Celestial\+Body}} $>$ \&center\+Of\+Motion, double semi\+Major\+Axis, double eccentricity, double inclination, double perigee\+Argument, double longitude\+AN, double mean\+Anomaly, double periapsis\+Longitude\+Rate, double ascending\+Node\+Longitude\+Rate, double right\+Ascension\+Of\+The\+Pole, double declination\+Of\+The\+Pole, const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} \&epoch, const \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1Frames}{IO\+::\+SDK\+::\+Frames\+::\+Frames}} \&frame)
 \item 
 double \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1EquinoctialElements_ae7955994f64f85a21fcf2e7da670d8ed}{GetH}} () const
 \begin{DoxyCompactList}\small\item\em Get h coefficient \end{DoxyCompactList}\item 
@@ -41,7 +41,7 @@ double \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1EquinoctialElemen
 \begin{DoxyCompactList}\small\item\em Get the Period. \end{DoxyCompactList}\item 
 \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO\+::\+SDK\+::\+Math\+::\+Vector3D}} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1EquinoctialElements_aa3235e081c22bde5fdf14ccf94923d1d}{Get\+Specific\+Angular\+Momentum}} () const override
 \begin{DoxyCompactList}\small\item\em Get specific angular moment \end{DoxyCompactList}\item 
-\mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{State\+Vector}} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1EquinoctialElements_a7b3569d6b9b5a04669ce89ff38b230c5}{Get\+State\+Vector}} (const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} \&epoch) const override
+\mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{State\+Vector}} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1EquinoctialElements_a97d6afb84c696cefaa3da734b61e7b64}{To\+State\+Vector}} (const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} \&epoch) const override
 \begin{DoxyCompactList}\small\item\em Get state vector \end{DoxyCompactList}\item 
 double \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1EquinoctialElements_a7ed78ead27001fac3bf3a3c5324dae46}{Get\+Eccentricity}} () const override
 \begin{DoxyCompactList}\small\item\em Get eccentricity \end{DoxyCompactList}\item 
@@ -71,11 +71,11 @@ virtual double \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1Equinocti
 \doxysubsubsection{\texorpdfstring{EquinoctialElements()}{EquinoctialElements()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
 {\footnotesize\ttfamily IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+Equinoctial\+Elements\+::\+Equinoctial\+Elements (\begin{DoxyParamCaption}\item[{const std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1CelestialBody}{IO\+::\+SDK\+::\+Body\+::\+Celestial\+Body}} $>$ \&}]{center\+Of\+Motion,  }\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} \&}]{epoch,  }\item[{double}]{semi\+Major\+Axis,  }\item[{double}]{h,  }\item[{double}]{k,  }\item[{double}]{p,  }\item[{double}]{q,  }\item[{double}]{L,  }\item[{double}]{periapsis\+Longitude\+Rate,  }\item[{double}]{ascending\+Node\+Longitude\+Rate,  }\item[{double}]{right\+Ascension\+Of\+The\+Pole,  }\item[{double}]{declination\+Of\+The\+Pole,  }\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1Frames}{IO\+::\+SDK\+::\+Frames\+::\+Frames}} \&}]{frame }\end{DoxyParamCaption})}
 
-\mbox{\Hypertarget{classIO_1_1SDK_1_1OrbitalParameters_1_1EquinoctialElements_a271f87dbf0e0463260d169bb2a3ebc1b}\label{classIO_1_1SDK_1_1OrbitalParameters_1_1EquinoctialElements_a271f87dbf0e0463260d169bb2a3ebc1b}} 
+\mbox{\Hypertarget{classIO_1_1SDK_1_1OrbitalParameters_1_1EquinoctialElements_a2e9fd0bc5463da6a386222fc3b326272}\label{classIO_1_1SDK_1_1OrbitalParameters_1_1EquinoctialElements_a2e9fd0bc5463da6a386222fc3b326272}} 
 \index{IO::SDK::OrbitalParameters::EquinoctialElements@{IO::SDK::OrbitalParameters::EquinoctialElements}!EquinoctialElements@{EquinoctialElements}}
 \index{EquinoctialElements@{EquinoctialElements}!IO::SDK::OrbitalParameters::EquinoctialElements@{IO::SDK::OrbitalParameters::EquinoctialElements}}
 \doxysubsubsection{\texorpdfstring{EquinoctialElements()}{EquinoctialElements()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
-{\footnotesize\ttfamily IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+Equinoctial\+Elements\+::\+Equinoctial\+Elements (\begin{DoxyParamCaption}\item[{const std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1CelestialBody}{IO\+::\+SDK\+::\+Body\+::\+Celestial\+Body}} $>$ \&}]{center\+Of\+Motion,  }\item[{double}]{semi\+Major\+Axis,  }\item[{double}]{eccentricity,  }\item[{double}]{inclination,  }\item[{double}]{peregee\+Argument,  }\item[{double}]{longitude\+AN,  }\item[{double}]{mean\+Anomaly,  }\item[{double}]{periapsis\+Longitude\+Rate,  }\item[{double}]{ascending\+Node\+Longitude\+Rate,  }\item[{double}]{right\+Ascension\+Of\+The\+Pole,  }\item[{double}]{declination\+Of\+The\+Pole,  }\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} \&}]{epoch,  }\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1Frames}{IO\+::\+SDK\+::\+Frames\+::\+Frames}} \&}]{frame }\end{DoxyParamCaption})}
+{\footnotesize\ttfamily IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+Equinoctial\+Elements\+::\+Equinoctial\+Elements (\begin{DoxyParamCaption}\item[{const std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1CelestialBody}{IO\+::\+SDK\+::\+Body\+::\+Celestial\+Body}} $>$ \&}]{center\+Of\+Motion,  }\item[{double}]{semi\+Major\+Axis,  }\item[{double}]{eccentricity,  }\item[{double}]{inclination,  }\item[{double}]{perigee\+Argument,  }\item[{double}]{longitude\+AN,  }\item[{double}]{mean\+Anomaly,  }\item[{double}]{periapsis\+Longitude\+Rate,  }\item[{double}]{ascending\+Node\+Longitude\+Rate,  }\item[{double}]{right\+Ascension\+Of\+The\+Pole,  }\item[{double}]{declination\+Of\+The\+Pole,  }\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} \&}]{epoch,  }\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1Frames}{IO\+::\+SDK\+::\+Frames\+::\+Frames}} \&}]{frame }\end{DoxyParamCaption})}
 
 
 
@@ -402,11 +402,11 @@ Get specific orbital energy
 
 Implements \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters_a3502c1fc377791192f0b7d25c3adbafc}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}}.
 
-\mbox{\Hypertarget{classIO_1_1SDK_1_1OrbitalParameters_1_1EquinoctialElements_a7b3569d6b9b5a04669ce89ff38b230c5}\label{classIO_1_1SDK_1_1OrbitalParameters_1_1EquinoctialElements_a7b3569d6b9b5a04669ce89ff38b230c5}} 
-\index{IO::SDK::OrbitalParameters::EquinoctialElements@{IO::SDK::OrbitalParameters::EquinoctialElements}!GetStateVector@{GetStateVector}}
-\index{GetStateVector@{GetStateVector}!IO::SDK::OrbitalParameters::EquinoctialElements@{IO::SDK::OrbitalParameters::EquinoctialElements}}
-\doxysubsubsection{\texorpdfstring{GetStateVector()}{GetStateVector()}}
-{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+State\+Vector}} IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+Equinoctial\+Elements\+::\+Get\+State\+Vector (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} \&}]{epoch }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+\mbox{\Hypertarget{classIO_1_1SDK_1_1OrbitalParameters_1_1EquinoctialElements_a97d6afb84c696cefaa3da734b61e7b64}\label{classIO_1_1SDK_1_1OrbitalParameters_1_1EquinoctialElements_a97d6afb84c696cefaa3da734b61e7b64}} 
+\index{IO::SDK::OrbitalParameters::EquinoctialElements@{IO::SDK::OrbitalParameters::EquinoctialElements}!ToStateVector@{ToStateVector}}
+\index{ToStateVector@{ToStateVector}!IO::SDK::OrbitalParameters::EquinoctialElements@{IO::SDK::OrbitalParameters::EquinoctialElements}}
+\doxysubsubsection{\texorpdfstring{ToStateVector()}{ToStateVector()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+State\+Vector}} IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+Equinoctial\+Elements\+::\+To\+State\+Vector (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} \&}]{epoch }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
 
 
 
@@ -422,7 +422,7 @@ Get state vector
 \end{DoxyReturn}
 
 
-Implements \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters_abe7428eb3270c7ad6e911d3387c08d9e}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}}.
+Implements \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters_ac514b5a61f573d2a21091a47bad05677}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}}.
 
 
 

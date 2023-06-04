@@ -46,7 +46,7 @@ double \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1ConicOrbitalEleme
 \begin{DoxyCompactList}\small\item\em Get the orbital semi major axis \end{DoxyCompactList}\item 
 \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO\+::\+SDK\+::\+Time\+::\+Time\+Span}} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1ConicOrbitalElements_a5fe1ec26a1e0551acb4e7f0a3046a253}{Get\+Period}} () const override
 \begin{DoxyCompactList}\small\item\em Get the orbital period \end{DoxyCompactList}\item 
-\mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+State\+Vector}} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1ConicOrbitalElements_ad8ccc9563d436f1232c915d25db67b54}{Get\+State\+Vector}} (const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} \&epoch) const override
+\mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+State\+Vector}} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1ConicOrbitalElements_a089d6ea2dbbc63a97027cfe792937779}{To\+State\+Vector}} (const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} \&epoch) const override
 \begin{DoxyCompactList}\small\item\em Get the state vector at epoch \end{DoxyCompactList}\item 
 \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO\+::\+SDK\+::\+Math\+::\+Vector3D}} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1ConicOrbitalElements_a5d9910600a7129741d6eb64f7a4f8a75}{Get\+Specific\+Angular\+Momentum}} () const override
 \begin{DoxyCompactList}\small\item\em Get the specific angular momentum \end{DoxyCompactList}\item 
@@ -316,28 +316,6 @@ Get specific orbital energy
 
 Implements \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters_a3502c1fc377791192f0b7d25c3adbafc}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}}.
 
-\mbox{\Hypertarget{classIO_1_1SDK_1_1OrbitalParameters_1_1ConicOrbitalElements_ad8ccc9563d436f1232c915d25db67b54}\label{classIO_1_1SDK_1_1OrbitalParameters_1_1ConicOrbitalElements_ad8ccc9563d436f1232c915d25db67b54}} 
-\index{IO::SDK::OrbitalParameters::ConicOrbitalElements@{IO::SDK::OrbitalParameters::ConicOrbitalElements}!GetStateVector@{GetStateVector}}
-\index{GetStateVector@{GetStateVector}!IO::SDK::OrbitalParameters::ConicOrbitalElements@{IO::SDK::OrbitalParameters::ConicOrbitalElements}}
-\doxysubsubsection{\texorpdfstring{GetStateVector()}{GetStateVector()}}
-{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+State\+Vector}} IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+Conic\+Orbital\+Elements\+::\+Get\+State\+Vector (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} \&}]{epoch }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
-
-
-
-Get the state vector at epoch 
-
-
-\begin{DoxyParams}{Parameters}
-{\em epoch} & \\
-\hline
-\end{DoxyParams}
-\begin{DoxyReturn}{Returns}
-
-\end{DoxyReturn}
-
-
-Implements \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters_abe7428eb3270c7ad6e911d3387c08d9e}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}}.
-
 \mbox{\Hypertarget{classIO_1_1SDK_1_1OrbitalParameters_1_1ConicOrbitalElements_a20b8e8626b722022cbd5598d6998d430}\label{classIO_1_1SDK_1_1OrbitalParameters_1_1ConicOrbitalElements_a20b8e8626b722022cbd5598d6998d430}} 
 \index{IO::SDK::OrbitalParameters::ConicOrbitalElements@{IO::SDK::OrbitalParameters::ConicOrbitalElements}!GetTrueAnomaly@{GetTrueAnomaly}}
 \index{GetTrueAnomaly@{GetTrueAnomaly}!IO::SDK::OrbitalParameters::ConicOrbitalElements@{IO::SDK::OrbitalParameters::ConicOrbitalElements}}
@@ -393,6 +371,28 @@ double
 
 
 Reimplemented from \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters_ac861b9d40ef731e610de2613a31a2831}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}}.
+
+\mbox{\Hypertarget{classIO_1_1SDK_1_1OrbitalParameters_1_1ConicOrbitalElements_a089d6ea2dbbc63a97027cfe792937779}\label{classIO_1_1SDK_1_1OrbitalParameters_1_1ConicOrbitalElements_a089d6ea2dbbc63a97027cfe792937779}} 
+\index{IO::SDK::OrbitalParameters::ConicOrbitalElements@{IO::SDK::OrbitalParameters::ConicOrbitalElements}!ToStateVector@{ToStateVector}}
+\index{ToStateVector@{ToStateVector}!IO::SDK::OrbitalParameters::ConicOrbitalElements@{IO::SDK::OrbitalParameters::ConicOrbitalElements}}
+\doxysubsubsection{\texorpdfstring{ToStateVector()}{ToStateVector()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+State\+Vector}} IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+Conic\+Orbital\+Elements\+::\+To\+State\+Vector (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO\+::\+SDK\+::\+Time\+::\+TDB}} \&}]{epoch }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Get the state vector at epoch 
+
+
+\begin{DoxyParams}{Parameters}
+{\em epoch} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+
+
+Implements \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters_ac514b5a61f573d2a21091a47bad05677}{IO\+::\+SDK\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}}.
 
 
 

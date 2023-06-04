@@ -99,7 +99,7 @@
 <a name="37"><span class="lineNum">      37 </span><span class="lineCov">          1 :         ASSERT_DOUBLE_EQ(std::numeric_limits&lt;double&gt;::infinity(), sun-&gt;GetHillSphere());</span></a>
 <a name="38"><span class="lineNum">      38 </span>            : }</a>
 <a name="39"><span class="lineNum">      39 </span>            : </a>
-<a name="40"><span class="lineNum">      40 </span><span class="lineCov">          4 : TEST(CelestialBody, GetStateVector)</span></a>
+<a name="40"><span class="lineNum">      40 </span><span class="lineCov">          4 : TEST(CelestialBody, ToStateVector)</span></a>
 <a name="41"><span class="lineNum">      41 </span>            : {</a>
 <a name="42"><span class="lineNum">      42 </span><span class="lineCov">          1 :         auto sun = std::make_shared&lt;IO::SDK::Body::CelestialBody&gt;(10, &quot;sun&quot;);</span></a>
 <a name="43"><span class="lineNum">      43 </span><span class="lineCov">          2 :         IO::SDK::Time::TDB epoch(&quot;2021-Jan-01 00:00:00.0000 TDB&quot;);</span></a>

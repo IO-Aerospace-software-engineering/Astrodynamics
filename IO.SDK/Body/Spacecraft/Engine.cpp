@@ -1,18 +1,8 @@
-/**
- * @file Engine.cpp
- * @author Sylvain Guillet (sylvain.guillet@live.com)
- * @brief 
- * @version 0.x
- * @date 2021-07-03
- * 
- * @copyright Copyright (c) 2021
- * 
+/*
+ Copyright (c) 2021-2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
  */
-#include <Engine.h>
 #include <InvalidArgumentException.h>
 #include <Constants.h>
-#include <cmath>
-#include <FuelTank.h>
 #include <Spacecraft.h>
 
 IO::SDK::Body::Spacecraft::Engine::Engine(const std::string &serialNumber, const std::string &name, const IO::SDK::Body::Spacecraft::FuelTank &fueltank, const Math::Vector3D &position, const Math::Vector3D &orientation, const double isp, const double fuelFlow)

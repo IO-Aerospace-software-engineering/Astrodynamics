@@ -15,12 +15,12 @@ var classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector =
     [ "GetSemiMajorAxis", "classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector.html#a8fb2bef17490a0c42ecae35d603089a7", null ],
     [ "GetSpecificAngularMomentum", "classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector.html#a7fa8add2591a9e1cf4efdc77076e2536", null ],
     [ "GetSpecificOrbitalEnergy", "classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector.html#aec6fcd6a6b41ba41f1e0c60b8e947afe", null ],
-    [ "GetStateVector", "classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector.html#af16ab93bd4df9c37c1714d2c9b24838b", null ],
-    [ "GetStateVector", "classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector.html#a0e073ec02f166e2a0e73d45bb0b51ad4", null ],
     [ "GetTrueAnomaly", "classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector.html#ae617df6db320e743a6ef1ba6bcb52ba0", null ],
     [ "GetVelocity", "classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector.html#a332de9de9dc18d3dfd4a0923e8879884", null ],
     [ "operator=", "classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector.html#a07af50c26b29e4a4aadba8c3a5436301", null ],
     [ "operator==", "classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector.html#a06eb54dff8bb899eb10ede7f2c645860", null ],
     [ "ToBodyFixedFrame", "classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector.html#a54b0a18c9f0a8207ae7c92f1bea52d8f", null ],
-    [ "ToFrame", "classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector.html#af20e223332efca079e0a3b22b4152be7", null ]
+    [ "ToFrame", "classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector.html#af20e223332efca079e0a3b22b4152be7", null ],
+    [ "ToStateVector", "classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector.html#af38f58ff8a0fde8c627b17db8d60a01c", null ],
+    [ "ToStateVector", "classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector.html#acc56eee441dc57a43d3852a86073415d", null ]
 ];

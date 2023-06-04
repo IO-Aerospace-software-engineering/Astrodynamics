@@ -1,6 +1,7 @@
 \hypertarget{Proxy_8cpp}{}\doxysection{IO.\+SDK/\+API/\+Proxy.cpp File Reference}
 \label{Proxy_8cpp}\index{IO.SDK/API/Proxy.cpp@{IO.SDK/API/Proxy.cpp}}
 {\ttfamily \#include $<$algorithm$>$}\newline
+{\ttfamily \#include $<$iostream$>$}\newline
 {\ttfamily \#include $<$Proxy.\+h$>$}\newline
 {\ttfamily \#include $<$Converters.\+cpp$>$}\newline
 {\ttfamily \#include $<$Perigee\+Height\+Changing\+Maneuver.\+h$>$}\newline
@@ -17,7 +18,8 @@
 {\ttfamily \#include $<$Instrument\+Pointing\+To\+Attitude.\+h$>$}\newline
 {\ttfamily \#include $<$Launch.\+h$>$}\newline
 {\ttfamily \#include $<$Kernels\+Loader.\+h$>$}\newline
-{\ttfamily \#include $<$iostream$>$}\newline
+{\ttfamily \#include $<$TLE.\+h$>$}\newline
+{\ttfamily \#include $<$Equinoctial\+Elements.\+h$>$}\newline
 \doxysubsection*{Functions}
 \begin{DoxyCompactItemize}
 \item 
@@ -106,6 +108,14 @@ void \mbox{\hyperlink{Proxy_8cpp_a70191d395a750d5ca92dd638564d35b2}{Build\+Zenit
 char $\ast$ \mbox{\hyperlink{Proxy_8cpp_a070706fba8ff9475ca3b778c3bc1e115}{Handle\+Error}} ()
 \item 
 \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1FrameTransformationDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Frame\+Transformation\+DTO}} \mbox{\hyperlink{Proxy_8cpp_a85ec992f6c806bf839c142b5e7064eea}{Transform\+Frame\+Proxy}} (const char $\ast$from\+Frame, const char $\ast$to\+Frame, double epoch)
+\item 
+\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1StateVectorDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+State\+Vector\+DTO}} \mbox{\hyperlink{Proxy_8cpp_a7e387a04f07211fa95610535933f93cd}{Convert\+TLETo\+State\+Vector\+Proxy}} (const char $\ast$L1, const char $\ast$L2, double epoch)
+\item 
+\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1StateVectorDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+State\+Vector\+DTO}} \mbox{\hyperlink{Proxy_8cpp_aeb12baab4448a9a18397d9c01ce3da5d}{Convert\+Conic\+Elements\+To\+State\+Vector\+Proxy}} (\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ConicOrbitalElementsDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Conic\+Orbital\+Elements\+DTO}} conic\+Orbital\+Elements\+Dto)
+\item 
+\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1StateVectorDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+State\+Vector\+DTO}} \mbox{\hyperlink{Proxy_8cpp_adfd0b324746b1633f9f07b85d8cbfd82}{Convert\+Equinoctial\+Elements\+To\+State\+Vector\+Proxy}} (\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1EquinoctialElementsDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Equinoctial\+Elements\+DTO}} equinoctial\+Elements\+Dto)
+\item 
+\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1RaDecDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Ra\+Dec\+DTO}} \mbox{\hyperlink{Proxy_8cpp_a65acf322e1ed7cc0dd45003cc2afc869}{Convert\+To\+Right\+Ascension\+And\+Declination\+Proxy}} (\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1StateVectorDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+State\+Vector\+DTO}} state\+Vector\+Dto)
 \end{DoxyCompactItemize}
 
 
@@ -212,6 +222,34 @@ char $\ast$ \mbox{\hyperlink{Proxy_8cpp_a070706fba8ff9475ca3b778c3bc1e115}{Handl
 \doxysubsubsection{\texorpdfstring{BuildZenithAttitude()}{BuildZenithAttitude()}}
 {\footnotesize\ttfamily void Build\+Zenith\+Attitude (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Scenario\+DTO}} \&}]{scenario\+Dto,  }\item[{\mbox{\hyperlink{classIO_1_1SDK_1_1Scenario}{IO\+::\+SDK\+::\+Scenario}} \&}]{scenario,  }\item[{std\+::map$<$ int, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase}{IO\+::\+SDK\+::\+Maneuvers\+::\+Maneuver\+Base}} $>$ $>$ \&}]{maneuvers }\end{DoxyParamCaption})}
 
+\mbox{\Hypertarget{Proxy_8cpp_aeb12baab4448a9a18397d9c01ce3da5d}\label{Proxy_8cpp_aeb12baab4448a9a18397d9c01ce3da5d}} 
+\index{Proxy.cpp@{Proxy.cpp}!ConvertConicElementsToStateVectorProxy@{ConvertConicElementsToStateVectorProxy}}
+\index{ConvertConicElementsToStateVectorProxy@{ConvertConicElementsToStateVectorProxy}!Proxy.cpp@{Proxy.cpp}}
+\doxysubsubsection{\texorpdfstring{ConvertConicElementsToStateVectorProxy()}{ConvertConicElementsToStateVectorProxy()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1StateVectorDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+State\+Vector\+DTO}} Convert\+Conic\+Elements\+To\+State\+Vector\+Proxy (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ConicOrbitalElementsDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Conic\+Orbital\+Elements\+DTO}}}]{conic\+Orbital\+Elements\+Dto }\end{DoxyParamCaption})}
+
+Convert conic orbital elements to state vector 
+\begin{DoxyParams}{Parameters}
+{\em conic\+Orbital\+Elements\+Dto} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+\mbox{\Hypertarget{Proxy_8cpp_adfd0b324746b1633f9f07b85d8cbfd82}\label{Proxy_8cpp_adfd0b324746b1633f9f07b85d8cbfd82}} 
+\index{Proxy.cpp@{Proxy.cpp}!ConvertEquinoctialElementsToStateVectorProxy@{ConvertEquinoctialElementsToStateVectorProxy}}
+\index{ConvertEquinoctialElementsToStateVectorProxy@{ConvertEquinoctialElementsToStateVectorProxy}!Proxy.cpp@{Proxy.cpp}}
+\doxysubsubsection{\texorpdfstring{ConvertEquinoctialElementsToStateVectorProxy()}{ConvertEquinoctialElementsToStateVectorProxy()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1StateVectorDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+State\+Vector\+DTO}} Convert\+Equinoctial\+Elements\+To\+State\+Vector\+Proxy (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1EquinoctialElementsDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Equinoctial\+Elements\+DTO}}}]{equinoctial\+Elements\+Dto }\end{DoxyParamCaption})}
+
+Convert equinoctial elements to state vector 
+\begin{DoxyParams}{Parameters}
+{\em equinoctial\+Elements\+Dto} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
 \mbox{\Hypertarget{Proxy_8cpp_a2fae52dc56d1098cf155b0a49a04cb25}\label{Proxy_8cpp_a2fae52dc56d1098cf155b0a49a04cb25}} 
 \index{Proxy.cpp@{Proxy.cpp}!ConvertTDBToUTCProxy@{ConvertTDBToUTCProxy}}
 \index{ConvertTDBToUTCProxy@{ConvertTDBToUTCProxy}!Proxy.cpp@{Proxy.cpp}}
@@ -221,6 +259,38 @@ char $\ast$ \mbox{\hyperlink{Proxy_8cpp_a070706fba8ff9475ca3b778c3bc1e115}{Handl
 Convert elapsed seconds from J2000 to UTC 
 \begin{DoxyParams}{Parameters}
 {\em tdb} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+\mbox{\Hypertarget{Proxy_8cpp_a7e387a04f07211fa95610535933f93cd}\label{Proxy_8cpp_a7e387a04f07211fa95610535933f93cd}} 
+\index{Proxy.cpp@{Proxy.cpp}!ConvertTLEToStateVectorProxy@{ConvertTLEToStateVectorProxy}}
+\index{ConvertTLEToStateVectorProxy@{ConvertTLEToStateVectorProxy}!Proxy.cpp@{Proxy.cpp}}
+\doxysubsubsection{\texorpdfstring{ConvertTLEToStateVectorProxy()}{ConvertTLEToStateVectorProxy()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1StateVectorDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+State\+Vector\+DTO}} Convert\+TLETo\+State\+Vector\+Proxy (\begin{DoxyParamCaption}\item[{const char $\ast$}]{L1,  }\item[{const char $\ast$}]{L2,  }\item[{double}]{epoch }\end{DoxyParamCaption})}
+
+Convert Two line elements to state vector 
+\begin{DoxyParams}{Parameters}
+{\em L1} & \\
+\hline
+{\em L2} & \\
+\hline
+{\em epoch} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+\mbox{\Hypertarget{Proxy_8cpp_a65acf322e1ed7cc0dd45003cc2afc869}\label{Proxy_8cpp_a65acf322e1ed7cc0dd45003cc2afc869}} 
+\index{Proxy.cpp@{Proxy.cpp}!ConvertToRightAscensionAndDeclinationProxy@{ConvertToRightAscensionAndDeclinationProxy}}
+\index{ConvertToRightAscensionAndDeclinationProxy@{ConvertToRightAscensionAndDeclinationProxy}!Proxy.cpp@{Proxy.cpp}}
+\doxysubsubsection{\texorpdfstring{ConvertToRightAscensionAndDeclinationProxy()}{ConvertToRightAscensionAndDeclinationProxy()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1RaDecDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Ra\+Dec\+DTO}} Convert\+To\+Right\+Ascension\+And\+Declination\+Proxy (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1StateVectorDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+State\+Vector\+DTO}}}]{state\+Vector\+Dto }\end{DoxyParamCaption})}
+
+Convert state\+Vector to right ascension and declination 
+\begin{DoxyParams}{Parameters}
+{\em state\+Vector\+Dto} & \\
 \hline
 \end{DoxyParams}
 \begin{DoxyReturn}{Returns}

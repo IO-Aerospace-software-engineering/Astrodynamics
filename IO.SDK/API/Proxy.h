@@ -1,4 +1,8 @@
 
+/*
+ Copyright (c) 2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
+ */
+
 #include <ScenarioDTO.h>
 #include <ManeuverBase.h>
 #include <Scenario.h>

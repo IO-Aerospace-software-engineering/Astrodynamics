@@ -143,7 +143,7 @@ TEST(EquinoctialElements, GetStateVector) {
                                                        IO::SDK::Frames::InertialFrames::GetICRF());
 
     IO::SDK::Time::TimeSpan et = t0.Subtract(IO::SDK::Time::TDB(10000.0s));
-    auto sv = eq.GetStateVector(IO::SDK::Time::TDB(et.GetSeconds() + 250s));
+    auto sv = eq.ToStateVector(IO::SDK::Time::TDB(et.GetSeconds() + 250s));
 
     ASSERT_DOUBLE_EQ(-10732167.450808318, sv.GetPosition().GetX());
     ASSERT_DOUBLE_EQ(3902505.7550668186, sv.GetPosition().GetY());
@@ -176,7 +176,7 @@ TEST(EquinoctialElements, GetStateVectorAtEpoch) {
     IO::SDK::OrbitalParameters::EquinoctialElements eq(earth, t0, a, h, k, p2, q, L, 0.0, 0.0, -IO::SDK::Constants::PI2, IO::SDK::Constants::PI2,
                                                        IO::SDK::Frames::InertialFrames::GetICRF());
 
-    auto sv = eq.GetStateVector(t0);
+    auto sv = eq.ToStateVector(t0);
 
     ASSERT_DOUBLE_EQ(-1557343.2179623565, sv.GetPosition().GetX());
     ASSERT_DOUBLE_EQ(10112046.56492505, sv.GetPosition().GetY());
@@ -202,7 +202,7 @@ TEST(EquinoctialElements, GetStateVectorFromKeplerian) {
     IO::SDK::OrbitalParameters::EquinoctialElements eq(earth, a, ecc, inc, argp, node, m0, 0.0, 0.0, -IO::SDK::Constants::PI2, IO::SDK::Constants::PI2, t0,
                                                        IO::SDK::Frames::InertialFrames::GetICRF());
 
-    auto sv = eq.GetStateVector(t0);
+    auto sv = eq.ToStateVector(t0);
 
     ASSERT_DOUBLE_EQ(1.0e7, sv.GetPosition().GetX());
     ASSERT_DOUBLE_EQ(6.1232339957367665e-10, sv.GetPosition().GetY());
