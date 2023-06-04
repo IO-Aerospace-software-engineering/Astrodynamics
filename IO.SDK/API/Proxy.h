@@ -263,7 +263,7 @@ MODULE_API IO::SDK::API::DTO::StateVectorDTO ConvertEquinoctialElementsToStateVe
  * @param stateVectorDto
  * @return
  */
-MODULE_API IO::SDK::API::DTO::RaDecDTO ConvertToRightAscensionAndDeclinationProxy(IO::SDK::API::DTO::StateVectorDTO stateVectorDto);
+MODULE_API IO::SDK::API::DTO::RaDecDTO ConvertStateVectorToEquatorialCoordinatesProxy(IO::SDK::API::DTO::StateVectorDTO stateVectorDto);
 #ifdef __cplusplus
 }
 #endif

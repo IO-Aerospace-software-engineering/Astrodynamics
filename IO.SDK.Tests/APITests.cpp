@@ -1,3 +1,7 @@
+/*
+ Copyright (c) 2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
+ */
+
 #include<gtest/gtest.h>
 #include "TestParameters.h"
 #include "Proxy.h"
@@ -508,7 +512,7 @@ TEST(API, ConvertToRaDec) {
     auto sv = moon->GetOrbitalParametersAtEpoch()->ToStateVector();
 
     auto svDTO = ToStateVectorDTO(sv);
-    auto ra = ConvertToRightAscensionAndDeclinationProxy(svDTO);
+    auto ra = ConvertStateVectorToEquatorialCoordinatesProxy(svDTO);
     ASSERT_DOUBLE_EQ(222.44729949955743, ra.rightAscension * IO::SDK::Constants::RAD_DEG);
     ASSERT_DOUBLE_EQ(-10.900186051699617, ra.declination * IO::SDK::Constants::RAD_DEG);
     ASSERT_DOUBLE_EQ(402448639.88732731, ra.range);
