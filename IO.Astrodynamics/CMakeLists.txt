@@ -1,5 +1,5 @@
 ﻿cmake_minimum_required(VERSION 3.18)
-set(This IO.SDK)
+set(This IO.Astrodynamics)
 message(STATUS "Tests Projet source: ${PROJECT_SOURCE_DIR}")
 message(STATUS "Tests CMake source dir: ${CMAKE_SOURCE_DIR}")
 message(STATUS "Tests CMake current source dir: ${CMAKE_CURRENT_SOURCE_DIR}")

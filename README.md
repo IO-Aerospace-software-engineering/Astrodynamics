@@ -89,20 +89,20 @@ cmake -DCMAKE_BUILD_TYPE=Release ..
 
 #Build project
 #-j 4 option is used to define how many threads could be used to compile project, is this example will use 4 threads
-cmake --build . --config Release --target IO.SDK -j 4
+cmake --build . --config Release --target IO.Astrodynamics -j 4
 
 #Install libraries and includes
 #This command must be executed with admin rights
-cmake --install IO.SDK
+cmake --install IO.Astrodynamics
 
 #When you create a project that will use the SDK, don't forget to import **Data** into your build directory.
-#We suggest you to use Data from IO.SDK.Tests project because these data have been used to approved software
+#We suggest you to use Data from IO.Astrodynamics.Tests project because these data have been used to approved software
 #You could use one of these scripts to copy data folder:
 #========Windows user======== : 
-cp ../IO.SDK.Tests/Data/Windows/ <your build path>
+cp ../IO.Astrodynamics.Tests/Data/Windows/ <your build path>
 
 #========Linux user======== : 
-cp ../IO.SDK.Tests/Data/Linux/ <your build path>
+cp ../IO.Astrodynamics.Tests/Data/Linux/ <your build path>
 
 ```
 
@@ -152,7 +152,7 @@ In this example we will create a small program based on cmake to compute maneuve
 
     if (MSVC)
         include_directories(${CMAKE_SOURCE_DIR}/Includes)
-        target_link_libraries(MyApp IO.SDK.dll)
+        target_link_libraries(MyApp IO.Astrodynamics.dll)
     elseif(UNIX)
         include_directories(/usr/local/include/IO)
         find_library(IO_SDK_LIB NAMES libIO.SDK.so)
