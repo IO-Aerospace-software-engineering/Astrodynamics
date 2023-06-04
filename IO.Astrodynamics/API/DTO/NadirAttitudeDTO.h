@@ -5,7 +5,7 @@
 #ifndef IOSDK_NADIRATTITUDEDTO_H
 #define IOSDK_NADIRATTITUDEDTO_H
 #include <WindowDTO.h>
-namespace IO::SDK::API::DTO
+namespace IO::Astrodynamics::API::DTO
 {
     struct NadirAttitudeDTO
     {
@@ -13,7 +13,7 @@ namespace IO::SDK::API::DTO
         char* engines[5]{};
         double attitudeHoldDuration{0.0};
         double minimumEpoch{0.0};
-        IO::SDK::API::DTO::WindowDTO window{};
+        IO::Astrodynamics::API::DTO::WindowDTO window{};
     };
 }
 

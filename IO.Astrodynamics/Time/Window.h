@@ -11,7 +11,7 @@
 #include <UTC.h>
 #include <TDB.h>
 
-namespace IO::SDK::Time
+namespace IO::Astrodynamics::Time
 {
 
     template<typename T>
@@ -65,7 +65,7 @@ namespace IO::SDK::Time
         {
             if (!Intersects(window))
             {
-                throw IO::SDK::Exception::SDKException("Windows don't intersect");
+                throw IO::Astrodynamics::Exception::SDKException("Windows don't intersect");
             }
 
             T min = m_start > window.m_start ? m_start : window.m_start;
@@ -88,7 +88,7 @@ namespace IO::SDK::Time
 
             const_cast<T &>(m_start) = window.m_start;
             const_cast<T &>(m_end) = window.m_end;
-            const_cast<IO::SDK::Time::TimeSpan &>(m_length) = window.m_length;
+            const_cast<IO::Astrodynamics::Time::TimeSpan &>(m_length) = window.m_length;
             return *this;
         }
     };

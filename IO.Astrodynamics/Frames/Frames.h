@@ -9,7 +9,7 @@
 #include <TDB.h>
 #include <Vector3D.h>
 
-namespace IO::SDK::Frames
+namespace IO::Astrodynamics::Frames
 {
     /**
      * @brief Frames base class
@@ -42,7 +42,7 @@ namespace IO::SDK::Frames
          * @return true 
          * @return false 
          */
-        bool operator==(const IO::SDK::Frames::Frames &frame) const;
+        bool operator==(const IO::Astrodynamics::Frames::Frames &frame) const;
 
         /**
          * @brief Equality comparer
@@ -51,7 +51,7 @@ namespace IO::SDK::Frames
          * @return true 
          * @return false 
          */
-        bool operator!=(const IO::SDK::Frames::Frames &frame) const;
+        bool operator!=(const IO::Astrodynamics::Frames::Frames &frame) const;
 
         /**
          * @brief Equality comparer
@@ -60,7 +60,7 @@ namespace IO::SDK::Frames
          * @return true 
          * @return false 
          */
-        bool operator==(IO::SDK::Frames::Frames &frame) const;
+        bool operator==(IO::Astrodynamics::Frames::Frames &frame) const;
 
         /**
          * @brief Equality comparer
@@ -69,7 +69,7 @@ namespace IO::SDK::Frames
          * @return true 
          * @return false 
          */
-        bool operator!=(IO::SDK::Frames::Frames &frame) const;
+        bool operator!=(IO::Astrodynamics::Frames::Frames &frame) const;
 
         /**
          * @brief Get the Name
@@ -83,18 +83,18 @@ namespace IO::SDK::Frames
          * 
          * @param frame 
          * @param epoch 
-         * @return IO::SDK::Math::Matrix 
+         * @return IO::Astrodynamics::Math::Matrix
          */
-        [[nodiscard]] IO::SDK::Math::Matrix ToFrame6x6(const Frames &frame, const IO::SDK::Time::TDB &epoch) const;
+        [[nodiscard]] IO::Astrodynamics::Math::Matrix ToFrame6x6(const Frames &frame, const IO::Astrodynamics::Time::TDB &epoch) const;
 
         /**
          * @brief Get the 3x3 matrix to transform frame to another
          * 
          * @param frame 
          * @param epoch 
-         * @return IO::SDK::Math::Matrix 
+         * @return IO::Astrodynamics::Math::Matrix
          */
-        [[nodiscard]] IO::SDK::Math::Matrix ToFrame3x3(const Frames &frame, const IO::SDK::Time::TDB &epoch) const;
+        [[nodiscard]] IO::Astrodynamics::Math::Matrix ToFrame3x3(const Frames &frame, const IO::Astrodynamics::Time::TDB &epoch) const;
 
         /**
          * @brief Transform vector from frame to another
@@ -102,9 +102,9 @@ namespace IO::SDK::Frames
          * @param from 
          * @param to 
          * @param vector 
-         * @return IO::SDK::Math::Vector3D 
+         * @return IO::Astrodynamics::Math::Vector3D
          */
-        [[nodiscard]] IO::SDK::Math::Vector3D TransformVector(const Frames &to, const IO::SDK::Math::Vector3D &vector, const IO::SDK::Time::TDB &epoch) const;
+        [[nodiscard]] IO::Astrodynamics::Math::Vector3D TransformVector(const Frames &to, const IO::Astrodynamics::Math::Vector3D &vector, const IO::Astrodynamics::Time::TDB &epoch) const;
     };
 }
 #endif

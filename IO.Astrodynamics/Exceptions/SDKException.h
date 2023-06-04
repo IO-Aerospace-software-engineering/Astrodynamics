@@ -6,7 +6,7 @@
 
 #include <string>
 
-namespace IO::SDK::Exception
+namespace IO::Astrodynamics::Exception
 {
 	/**
 	 * @brief IO SDK Exception 

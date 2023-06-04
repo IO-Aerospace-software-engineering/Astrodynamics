@@ -6,22 +6,22 @@
 #include <utility>
 #include <Parameters.h>
 
-IO::SDK::Maneuvers::ApogeeHeightChangingManeuver::ApogeeHeightChangingManeuver(std::vector<IO::SDK::Body::Spacecraft::Engine*> engines, IO::SDK::Propagators::Propagator &propagator, const double targetHeight) : IO::SDK::Maneuvers::ManeuverBase(std::move(engines), propagator), m_targetHeight{targetHeight}
+IO::Astrodynamics::Maneuvers::ApogeeHeightChangingManeuver::ApogeeHeightChangingManeuver(std::vector<IO::Astrodynamics::Body::Spacecraft::Engine*> engines, IO::Astrodynamics::Propagators::Propagator &propagator, const double targetHeight) : IO::Astrodynamics::Maneuvers::ManeuverBase(std::move(engines), propagator), m_targetHeight{targetHeight}
 {
 }
 
-IO::SDK::Maneuvers::ApogeeHeightChangingManeuver::ApogeeHeightChangingManeuver(std::vector<IO::SDK::Body::Spacecraft::Engine*> engines, IO::SDK::Propagators::Propagator &propagator, const double targetHeight, const IO::SDK::Time::TDB &minimumEpoch) : IO::SDK::Maneuvers::ManeuverBase(std::move(engines), propagator, minimumEpoch), m_targetHeight{targetHeight}
+IO::Astrodynamics::Maneuvers::ApogeeHeightChangingManeuver::ApogeeHeightChangingManeuver(std::vector<IO::Astrodynamics::Body::Spacecraft::Engine*> engines, IO::Astrodynamics::Propagators::Propagator &propagator, const double targetHeight, const IO::Astrodynamics::Time::TDB &minimumEpoch) : IO::Astrodynamics::Maneuvers::ManeuverBase(std::move(engines), propagator, minimumEpoch), m_targetHeight{targetHeight}
 {
 }
 
-void IO::SDK::Maneuvers::ApogeeHeightChangingManeuver::Compute(const IO::SDK::OrbitalParameters::OrbitalParameters &maneuverPoint)
+void IO::Astrodynamics::Maneuvers::ApogeeHeightChangingManeuver::Compute(const IO::Astrodynamics::OrbitalParameters::OrbitalParameters &maneuverPoint)
 {
     double vInit = maneuverPoint.ToStateVector().GetVelocity().Magnitude();
     double vFinal = std::sqrt(maneuverPoint.GetCenterOfMotion()->GetMu() * ((2.0 / maneuverPoint.GetPerigeeVector().Magnitude()) - (1.0 / ((maneuverPoint.GetPerigeeVector().Magnitude() + m_targetHeight) / 2.0))));
-    m_deltaV = std::make_unique<IO::SDK::Math::Vector3D>(maneuverPoint.ToStateVector().GetVelocity().Normalize() * (vFinal - vInit));
+    m_deltaV = std::make_unique<IO::Astrodynamics::Math::Vector3D>(maneuverPoint.ToStateVector().GetVelocity().Normalize() * (vFinal - vInit));
 }
 
-IO::SDK::OrbitalParameters::StateOrientation IO::SDK::Maneuvers::ApogeeHeightChangingManeuver::ComputeOrientation(const IO::SDK::OrbitalParameters::OrbitalParameters &maneuverPoint)
+IO::Astrodynamics::OrbitalParameters::StateOrientation IO::Astrodynamics::Maneuvers::ApogeeHeightChangingManeuver::ComputeOrientation(const IO::Astrodynamics::OrbitalParameters::OrbitalParameters &maneuverPoint)
 {
     double deltaH = m_targetHeight - maneuverPoint.GetApogeeVector().Magnitude();
     auto velocityVector = maneuverPoint.ToStateVector().GetVelocity().Normalize();
@@ -32,10 +32,10 @@ IO::SDK::OrbitalParameters::StateOrientation IO::SDK::Maneuvers::ApogeeHeightCha
         velocityVector = velocityVector.Reverse();
     }
 
-    return IO::SDK::OrbitalParameters::StateOrientation{velocityVector.To(m_spacecraft.Front), IO::SDK::Math::Vector3D(0.0, 0.0, 0.0), maneuverPoint.GetEpoch(), maneuverPoint.GetFrame()};
+    return IO::Astrodynamics::OrbitalParameters::StateOrientation{velocityVector.To(m_spacecraft.Front), IO::Astrodynamics::Math::Vector3D(0.0, 0.0, 0.0), maneuverPoint.GetEpoch(), maneuverPoint.GetFrame()};
 }
 
-bool IO::SDK::Maneuvers::ApogeeHeightChangingManeuver::CanExecute(const IO::SDK::OrbitalParameters::OrbitalParameters &orbitalParams)
+bool IO::Astrodynamics::Maneuvers::ApogeeHeightChangingManeuver::CanExecute(const IO::Astrodynamics::OrbitalParameters::OrbitalParameters &orbitalParams)
 {
     if (orbitalParams.IsCircular() || orbitalParams.GetMeanAnomaly()<=Parameters::NodeDetectionAccuraccy)
     {
@@ -45,7 +45,7 @@ bool IO::SDK::Maneuvers::ApogeeHeightChangingManeuver::CanExecute(const IO::SDK:
     return false;
 }
 
-// bool IO::SDK::Maneuvers::ApogeeHeightChangingManeuver::IsApproachingPerigee(const IO::SDK::OrbitalParameters::StateVector &stateVector) const
+// bool IO::Astrodynamics::Maneuvers::ApogeeHeightChangingManeuver::IsApproachingPerigee(const IO::Astrodynamics::OrbitalParameters::StateVector &stateVector) const
 // {
 //     //Angle between perigee vector and Spacecraft velocity
 //     double dp = stateVector.GetPerigeeVector().DotProduct(stateVector.GetVelocity());

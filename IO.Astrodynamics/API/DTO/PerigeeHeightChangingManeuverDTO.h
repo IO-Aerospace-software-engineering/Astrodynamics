@@ -10,7 +10,7 @@
 #define IOSDK_PERIGEEHEIGHTCHANGINGMANEUVERDTO_H
 #include <WindowDTO.h>
 #include <Vector3DDTO.h>
-namespace IO::SDK::API::DTO
+namespace IO::Astrodynamics::API::DTO
 {
     struct PerigeeHeightChangingManeuverDTO
     {
@@ -21,10 +21,10 @@ namespace IO::SDK::API::DTO
 
         double targetHeight{0.0};
 
-        IO::SDK::API::DTO::WindowDTO maneuverWindow{};
-        IO::SDK::API::DTO::WindowDTO thrustWindow{};
-        IO::SDK::API::DTO::WindowDTO attitudeWindow{};
-        IO::SDK::API::DTO::Vector3DDTO deltaV{};
+        IO::Astrodynamics::API::DTO::WindowDTO maneuverWindow{};
+        IO::Astrodynamics::API::DTO::WindowDTO thrustWindow{};
+        IO::Astrodynamics::API::DTO::WindowDTO attitudeWindow{};
+        IO::Astrodynamics::API::DTO::Vector3DDTO deltaV{};
         double FuelBurned{0.0};
     };
 }

@@ -7,7 +7,7 @@
 #include <Templates/Templates.cpp>
 #include <Spacecraft.h>
 
-IO::SDK::Frames::SpacecraftFrameFile::SpacecraftFrameFile(const IO::SDK::Body::Spacecraft::Spacecraft &spacecraft) : FrameFile(
+IO::Astrodynamics::Frames::SpacecraftFrameFile::SpacecraftFrameFile(const IO::Astrodynamics::Body::Spacecraft::Spacecraft &spacecraft) : FrameFile(
         spacecraft.GetFilesPath() + "/Frames/" + spacecraft.GetName() + ".tf", spacecraft.GetName()), m_id{spacecraft.GetId() * 1000}, m_spacecraft{spacecraft}
 {
 	if (!m_fileExists)
@@ -18,7 +18,7 @@ IO::SDK::Frames::SpacecraftFrameFile::SpacecraftFrameFile(const IO::SDK::Body::S
 	}
 }
 
-void IO::SDK::Frames::SpacecraftFrameFile::BuildFrame()
+void IO::Astrodynamics::Frames::SpacecraftFrameFile::BuildFrame()
 {
 	if (std::filesystem::exists(m_filePath))
 	{

@@ -3,24 +3,24 @@
  */
 #include <InertialFrames.h>
 
-IO::SDK::Frames::InertialFrames IO::SDK::Frames::InertialFrames::mICRF(std::string("J2000"));
-IO::SDK::Frames::InertialFrames IO::SDK::Frames::InertialFrames::mECLIPTIC(std::string("ECLIPJ2000"));
-IO::SDK::Frames::InertialFrames IO::SDK::Frames::InertialFrames::mGALACTIC(std::string("GALACTIC"));
-IO::SDK::Frames::InertialFrames::InertialFrames(const std::string &name) : IO::SDK::Frames::Frames::Frames(name)
+IO::Astrodynamics::Frames::InertialFrames IO::Astrodynamics::Frames::InertialFrames::mICRF(std::string("J2000"));
+IO::Astrodynamics::Frames::InertialFrames IO::Astrodynamics::Frames::InertialFrames::mECLIPTIC(std::string("ECLIPJ2000"));
+IO::Astrodynamics::Frames::InertialFrames IO::Astrodynamics::Frames::InertialFrames::mGALACTIC(std::string("GALACTIC"));
+IO::Astrodynamics::Frames::InertialFrames::InertialFrames(const std::string &name) : IO::Astrodynamics::Frames::Frames::Frames(name)
 {
 }
 
-IO::SDK::Frames::InertialFrames& IO::SDK::Frames::InertialFrames::GetICRF()
+IO::Astrodynamics::Frames::InertialFrames& IO::Astrodynamics::Frames::InertialFrames::GetICRF()
 {
-    return IO::SDK::Frames::InertialFrames::mICRF;
+    return IO::Astrodynamics::Frames::InertialFrames::mICRF;
 }
 
-IO::SDK::Frames::InertialFrames& IO::SDK::Frames::InertialFrames::Galactic()
+IO::Astrodynamics::Frames::InertialFrames& IO::Astrodynamics::Frames::InertialFrames::Galactic()
 {
-    return IO::SDK::Frames::InertialFrames::mGALACTIC;
+    return IO::Astrodynamics::Frames::InertialFrames::mGALACTIC;
 }
 
-IO::SDK::Frames::InertialFrames& IO::SDK::Frames::InertialFrames::Ecliptic()
+IO::Astrodynamics::Frames::InertialFrames& IO::Astrodynamics::Frames::InertialFrames::Ecliptic()
 {
-    return IO::SDK::Frames::InertialFrames::mECLIPTIC;
+    return IO::Astrodynamics::Frames::InertialFrames::mECLIPTIC;
 }

@@ -6,13 +6,13 @@
 #include <string>
 #include <Frames.h>
 
-namespace IO::SDK::Frames
+namespace IO::Astrodynamics::Frames
 {
     /**
      * @brief Body fixed frames
      * 
      */
-    class BodyFixedFrames final : public IO::SDK::Frames::Frames
+    class BodyFixedFrames final : public IO::Astrodynamics::Frames::Frames
     {
 
     private:

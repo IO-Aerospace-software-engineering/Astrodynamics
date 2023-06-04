@@ -8,12 +8,12 @@
 #include <Vector3DDTO.h>
 #include <QuaternionDTO.h>
 
-namespace IO::SDK::API::DTO
+namespace IO::Astrodynamics::API::DTO
 {
     struct FrameTransformationDTO
     {
-        IO::SDK::API::DTO::QuaternionDTO Rotation{};
-        IO::SDK::API::DTO::Vector3DDTO AngularVelocity{};
+        IO::Astrodynamics::API::DTO::QuaternionDTO Rotation{};
+        IO::Astrodynamics::API::DTO::Vector3DDTO AngularVelocity{};
     };
 }
 

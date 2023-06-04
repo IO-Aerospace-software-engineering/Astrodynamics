@@ -7,7 +7,7 @@
 #include <fstream>
 #include <Templates/Templates.cpp>
 
-void IO::SDK::Kernels::RectangularInstrumentKernel::BuildKernel()
+void IO::Astrodynamics::Kernels::RectangularInstrumentKernel::BuildKernel()
 {
 	if (std::filesystem::exists(m_filePath))
 	{
@@ -96,7 +96,7 @@ void IO::SDK::Kernels::RectangularInstrumentKernel::BuildKernel()
 	}
 }
 
-IO::SDK::Kernels::RectangularInstrumentKernel::RectangularInstrumentKernel(const IO::SDK::Instruments::Instrument& instrument, const IO::SDK::Math::Vector3D& boresight, const IO::SDK::Math::Vector3D& refVector, const double angle, const double crossAngle)
+IO::Astrodynamics::Kernels::RectangularInstrumentKernel::RectangularInstrumentKernel(const IO::Astrodynamics::Instruments::Instrument& instrument, const IO::Astrodynamics::Math::Vector3D& boresight, const IO::Astrodynamics::Math::Vector3D& refVector, const double angle, const double crossAngle)
 	:InstrumentKernel(instrument, boresight, refVector, angle), m_crossAngle{ crossAngle }
 {
 	BuildKernel();

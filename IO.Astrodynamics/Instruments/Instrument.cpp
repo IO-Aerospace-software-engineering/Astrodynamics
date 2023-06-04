@@ -12,105 +12,105 @@
 #include <StringHelpers.h>
 #include <GeometryFinder.h>
 
-std::string IO::SDK::Instruments::Instrument::GetFilesPath() const
+std::string IO::Astrodynamics::Instruments::Instrument::GetFilesPath() const
 {
     return m_filesPath;
 }
 
-std::string IO::SDK::Instruments::Instrument::GetName() const
+std::string IO::Astrodynamics::Instruments::Instrument::GetName() const
 {
     return m_name;
 }
 
-int IO::SDK::Instruments::Instrument::GetId() const
+int IO::Astrodynamics::Instruments::Instrument::GetId() const
 {
     return m_id;
 }
 
-const IO::SDK::Body::Spacecraft::Spacecraft &IO::SDK::Instruments::Instrument::GetSpacecraft() const
+const IO::Astrodynamics::Body::Spacecraft::Spacecraft &IO::Astrodynamics::Instruments::Instrument::GetSpacecraft() const
 {
     return m_spacecraft;
 }
 
-const std::unique_ptr<IO::SDK::Frames::InstrumentFrameFile> &IO::SDK::Instruments::Instrument::GetFrame() const
+const std::unique_ptr<IO::Astrodynamics::Frames::InstrumentFrameFile> &IO::Astrodynamics::Instruments::Instrument::GetFrame() const
 {
     return m_frame;
 }
 
-IO::SDK::Instruments::Instrument::Instrument(const IO::SDK::Body::Spacecraft::Spacecraft &spacecraft,
+IO::Astrodynamics::Instruments::Instrument::Instrument(const IO::Astrodynamics::Body::Spacecraft::Spacecraft &spacecraft,
                                              const unsigned short id, const std::string &name,
-                                             const IO::SDK::Math::Vector3D &orientation,
-                                             const IO::SDK::Math::Vector3D &boresight,
-                                             const IO::SDK::Math::Vector3D &fovRefVector,
+                                             const IO::Astrodynamics::Math::Vector3D &orientation,
+                                             const IO::Astrodynamics::Math::Vector3D &boresight,
+                                             const IO::Astrodynamics::Math::Vector3D &fovRefVector,
                                              const double fovAngle) : m_spacecraft{spacecraft},
                                                                       m_id{id < 1000 ? spacecraft.GetId() * 1000 - id
-                                                                                     : throw IO::SDK::Exception::InvalidArgumentException(
+                                                                                     : throw IO::Astrodynamics::Exception::InvalidArgumentException(
                                                                                       "Instrument Id must be a positive number < 1000")},
-                                                                      m_name{IO::SDK::StringHelpers::ToUpper(name)},
+                                                                      m_name{IO::Astrodynamics::StringHelpers::ToUpper(name)},
                                                                       m_filesPath{spacecraft.GetFilesPath() +
                                                                                   "/Instruments/" +
-                                                                                  IO::SDK::StringHelpers::ToUpper(
+                                                                                  IO::Astrodynamics::StringHelpers::ToUpper(
                                                                                           name)},
-                                                                      m_frame(new IO::SDK::Frames::InstrumentFrameFile(
+                                                                      m_frame(new IO::Astrodynamics::Frames::InstrumentFrameFile(
                                                                               *this, orientation)),
                                                                       m_orientation{orientation},
                                                                       m_fovShape{
-                                                                              IO::SDK::Instruments::FOVShapeEnum::Circular},
+                                                                              IO::Astrodynamics::Instruments::FOVShapeEnum::Circular},
                                                                       m_boresight{boresight},
                                                                       m_fovRefVector{fovRefVector}
 {
 
-    const_cast<std::unique_ptr<IO::SDK::Kernels::InstrumentKernel> &>(m_kernel).reset(
-            new IO::SDK::Kernels::CircularInstrumentKernel(*this, boresight, fovRefVector, fovAngle));
+    const_cast<std::unique_ptr<IO::Astrodynamics::Kernels::InstrumentKernel> &>(m_kernel).reset(
+            new IO::Astrodynamics::Kernels::CircularInstrumentKernel(*this, boresight, fovRefVector, fovAngle));
 }
 
-IO::SDK::Instruments::Instrument::Instrument(const IO::SDK::Body::Spacecraft::Spacecraft &spacecraft,
+IO::Astrodynamics::Instruments::Instrument::Instrument(const IO::Astrodynamics::Body::Spacecraft::Spacecraft &spacecraft,
                                              const unsigned short id, const std::string &name,
-                                             const IO::SDK::Math::Vector3D &orientation,
-                                             const IO::SDK::Instruments::FOVShapeEnum fovShape,
-                                             const IO::SDK::Math::Vector3D &boresight,
-                                             const IO::SDK::Math::Vector3D &fovRefVector, const double fovAngle,
+                                             const IO::Astrodynamics::Math::Vector3D &orientation,
+                                             const IO::Astrodynamics::Instruments::FOVShapeEnum fovShape,
+                                             const IO::Astrodynamics::Math::Vector3D &boresight,
+                                             const IO::Astrodynamics::Math::Vector3D &fovRefVector, const double fovAngle,
                                              const double crossAngle)
         : m_spacecraft{spacecraft},
-          m_id{id < 1000 ? spacecraft.GetId() * 1000 - id : throw IO::SDK::Exception::InvalidArgumentException(
+          m_id{id < 1000 ? spacecraft.GetId() * 1000 - id : throw IO::Astrodynamics::Exception::InvalidArgumentException(
                   "Instrument Id must be a positive number < 1000")},
-          m_name{IO::SDK::StringHelpers::ToUpper(name)},
-          m_filesPath{spacecraft.GetFilesPath() + "/Instruments/" + IO::SDK::StringHelpers::ToUpper(name)},
-          m_frame(new IO::SDK::Frames::InstrumentFrameFile(*this, orientation)),
+          m_name{IO::Astrodynamics::StringHelpers::ToUpper(name)},
+          m_filesPath{spacecraft.GetFilesPath() + "/Instruments/" + IO::Astrodynamics::StringHelpers::ToUpper(name)},
+          m_frame(new IO::Astrodynamics::Frames::InstrumentFrameFile(*this, orientation)),
           m_orientation{orientation},
           m_fovShape{fovShape},
           m_boresight{boresight},
           m_fovRefVector{fovRefVector}
 {
 
-    if (fovShape == IO::SDK::Instruments::FOVShapeEnum::Circular)
+    if (fovShape == IO::Astrodynamics::Instruments::FOVShapeEnum::Circular)
     {
-        throw IO::SDK::Exception::SDKException("This constructor can't be used with circular field of view instrument");
+        throw IO::Astrodynamics::Exception::SDKException("This constructor can't be used with circular field of view instrument");
     }
 
-    if (fovShape == IO::SDK::Instruments::FOVShapeEnum::Rectangular)
+    if (fovShape == IO::Astrodynamics::Instruments::FOVShapeEnum::Rectangular)
     {
-        const_cast<std::unique_ptr<IO::SDK::Kernels::InstrumentKernel> &>(m_kernel).reset(
-                new IO::SDK::Kernels::RectangularInstrumentKernel(*this, boresight, fovRefVector, fovAngle,
+        const_cast<std::unique_ptr<IO::Astrodynamics::Kernels::InstrumentKernel> &>(m_kernel).reset(
+                new IO::Astrodynamics::Kernels::RectangularInstrumentKernel(*this, boresight, fovRefVector, fovAngle,
                                                                   crossAngle));
-    } else if (fovShape == IO::SDK::Instruments::FOVShapeEnum::Elliptical)
+    } else if (fovShape == IO::Astrodynamics::Instruments::FOVShapeEnum::Elliptical)
     {
-        const_cast<std::unique_ptr<IO::SDK::Kernels::InstrumentKernel> &>(m_kernel).reset(
-                new IO::SDK::Kernels::EllipticalInstrumentKernel(*this, boresight, fovRefVector, fovAngle, crossAngle));
+        const_cast<std::unique_ptr<IO::Astrodynamics::Kernels::InstrumentKernel> &>(m_kernel).reset(
+                new IO::Astrodynamics::Kernels::EllipticalInstrumentKernel(*this, boresight, fovRefVector, fovAngle, crossAngle));
     }
 }
 
-IO::SDK::Math::Vector3D IO::SDK::Instruments::Instrument::GetBoresight() const
+IO::Astrodynamics::Math::Vector3D IO::Astrodynamics::Instruments::Instrument::GetBoresight() const
 {
     return m_boresight;
 }
 
-IO::SDK::Instruments::FOVShapeEnum IO::SDK::Instruments::Instrument::GetFOVShape() const
+IO::Astrodynamics::Instruments::FOVShapeEnum IO::Astrodynamics::Instruments::Instrument::GetFOVShape() const
 {
     return m_fovShape;
 }
 
-std::vector<IO::SDK::Math::Vector3D> IO::SDK::Instruments::Instrument::GetFOVBoundaries() const
+std::vector<IO::Astrodynamics::Math::Vector3D> IO::Astrodynamics::Instruments::Instrument::GetFOVBoundaries() const
 {
     SpiceChar shape[20];
     SpiceChar frame[50];
@@ -120,7 +120,7 @@ std::vector<IO::SDK::Math::Vector3D> IO::SDK::Instruments::Instrument::GetFOVBou
 
     getfov_c(m_id, 4, 20, 50, shape, frame, boresight, &n, bounds);
 
-    std::vector<IO::SDK::Math::Vector3D> res;
+    std::vector<IO::Astrodynamics::Math::Vector3D> res;
     res.reserve(n);
     for (int i = 0; i < n; i++)
     {
@@ -130,41 +130,41 @@ std::vector<IO::SDK::Math::Vector3D> IO::SDK::Instruments::Instrument::GetFOVBou
     return res;
 }
 
-std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>>
-IO::SDK::Instruments::Instrument::FindWindowsWhereInFieldOfView(
-        const IO::SDK::Time::Window<IO::SDK::Time::TDB> &searchWindow, const IO::SDK::Body::Body &targetBody,
-        const IO::SDK::AberrationsEnum &aberration,
-        const IO::SDK::Time::TimeSpan &stepSize
+std::vector<IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB>>
+IO::Astrodynamics::Instruments::Instrument::FindWindowsWhereInFieldOfView(
+        const IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB> &searchWindow, const IO::Astrodynamics::Body::Body &targetBody,
+        const IO::Astrodynamics::AberrationsEnum &aberration,
+        const IO::Astrodynamics::Time::TimeSpan &stepSize
 ) const
 {
     std::string shape{"POINT"};
     std::string frame;
 
-    auto celestialBody = dynamic_cast<const IO::SDK::Body::CelestialBody *>(&targetBody);
+    auto celestialBody = dynamic_cast<const IO::Astrodynamics::Body::CelestialBody *>(&targetBody);
     if (celestialBody)
     {
         shape = "ELLIPSOID";
         frame = celestialBody->GetBodyFixedFrame().GetName();
     }
 
-    return IO::SDK::Constraints::GeometryFinder::FindWindowsInFieldOfViewConstraint(searchWindow, m_spacecraft.GetId(), m_id, targetBody.GetId(), frame, shape, aberration, stepSize);
+    return IO::Astrodynamics::Constraints::GeometryFinder::FindWindowsInFieldOfViewConstraint(searchWindow, m_spacecraft.GetId(), m_id, targetBody.GetId(), frame, shape, aberration, stepSize);
 }
 
-std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>>
-IO::SDK::Instruments::Instrument::FindWindowsWhereInFieldOfView(
-        const IO::SDK::Time::Window<IO::SDK::Time::TDB> &searchWindow, const IO::SDK::Sites::Site &site,
-        const IO::SDK::AberrationsEnum &aberration,
-        const IO::SDK::Time::TimeSpan &stepSize
+std::vector<IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB>>
+IO::Astrodynamics::Instruments::Instrument::FindWindowsWhereInFieldOfView(
+        const IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB> &searchWindow, const IO::Astrodynamics::Sites::Site &site,
+        const IO::Astrodynamics::AberrationsEnum &aberration,
+        const IO::Astrodynamics::Time::TimeSpan &stepSize
 ) const
 {
     std::string shape{"POINT"};
     std::string frame;
 
-    return IO::SDK::Constraints::GeometryFinder::FindWindowsInFieldOfViewConstraint(searchWindow, m_spacecraft.GetId(), m_id, site.GetId(), frame, shape, aberration, stepSize);
+    return IO::Astrodynamics::Constraints::GeometryFinder::FindWindowsInFieldOfViewConstraint(searchWindow, m_spacecraft.GetId(), m_id, site.GetId(), frame, shape, aberration, stepSize);
 }
 
-IO::SDK::Math::Vector3D IO::SDK::Instruments::Instrument::GetBoresight(const IO::SDK::Frames::Frames &frame,
-                                                                       const IO::SDK::Time::TDB &epoch) const
+IO::Astrodynamics::Math::Vector3D IO::Astrodynamics::Instruments::Instrument::GetBoresight(const IO::Astrodynamics::Frames::Frames &frame,
+                                                                       const IO::Astrodynamics::Time::TDB &epoch) const
 {
 
     double encodedClock = m_spacecraft.GetClock().ConvertToEncodedClock(epoch);
@@ -177,18 +177,18 @@ IO::SDK::Math::Vector3D IO::SDK::Instruments::Instrument::GetBoresight(const IO:
 
     if (!found)
     {
-        throw IO::SDK::Exception::SDKException("Insufficient data to compute boresight in frame at give epoch");
+        throw IO::Astrodynamics::Exception::SDKException("Insufficient data to compute boresight in frame at give epoch");
     }
 
     auto boresightInFrame = GetBoresightInSpacecraftFrame().Normalize();
     SpiceDouble localBoresight[3] = {boresightInFrame.GetX(), boresightInFrame.GetY(), boresightInFrame.GetZ()};
     SpiceDouble boresight[3];
     mtxv_c(cmat, localBoresight, boresight);
-    return IO::SDK::Math::Vector3D{boresight[0], boresight[1], boresight[2]};
+    return IO::Astrodynamics::Math::Vector3D{boresight[0], boresight[1], boresight[2]};
 }
 
-IO::SDK::Math::Vector3D IO::SDK::Instruments::Instrument::GetBoresightInSpacecraftFrame() const
+IO::Astrodynamics::Math::Vector3D IO::Astrodynamics::Instruments::Instrument::GetBoresightInSpacecraftFrame() const
 {
-    auto q = IO::SDK::Math::Quaternion(m_orientation.Normalize(), m_orientation.Magnitude());
+    auto q = IO::Astrodynamics::Math::Quaternion(m_orientation.Normalize(), m_orientation.Magnitude());
     return m_boresight.Rotate(q);
 }

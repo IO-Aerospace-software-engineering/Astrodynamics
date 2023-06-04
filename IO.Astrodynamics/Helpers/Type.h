@@ -4,7 +4,7 @@
 #ifndef TYPE_CPP
 #define TYPE_CPP
 
-namespace IO::SDK::Helpers
+namespace IO::Astrodynamics::Helpers
 {
     template <typename T, typename Base>
     inline bool IsInstanceOf(const Base * src)

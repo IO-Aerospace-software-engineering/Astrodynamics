@@ -4,10 +4,10 @@
 #include <SDKException.h>
 
 #include <utility>
-IO::SDK::Exception::SDKException::SDKException(std::string msg) : std::exception(), m_msg{std::move(msg)}
+IO::Astrodynamics::Exception::SDKException::SDKException(std::string msg) : std::exception(), m_msg{std::move(msg)}
 {
 }
-const char *IO::SDK::Exception::SDKException::what() const noexcept
+const char *IO::Astrodynamics::Exception::SDKException::what() const noexcept
 {
 	return m_msg.c_str();
 }

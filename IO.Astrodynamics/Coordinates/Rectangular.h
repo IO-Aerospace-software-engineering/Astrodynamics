@@ -3,7 +3,7 @@
  */
 #ifndef RECTANGULAR_H
 #define RECTANGULAR_H
-namespace IO::SDK::Coordinates
+namespace IO::Astrodynamics::Coordinates
 {
 	/**
 	 * @brief Rectangular coordinates

@@ -4,7 +4,7 @@
 #include <Matrix.h>
 #include <InvalidArgumentException.h>
 
-IO::SDK::Math::Matrix::Matrix(const Matrix &v) : Matrix(v.m_rowSize, v.m_colSize)
+IO::Astrodynamics::Math::Matrix::Matrix(const Matrix &v) : Matrix(v.m_rowSize, v.m_colSize)
 {
     if(v.m_data== nullptr)
     {
@@ -19,7 +19,7 @@ IO::SDK::Math::Matrix::Matrix(const Matrix &v) : Matrix(v.m_rowSize, v.m_colSize
 	}
 }
 
-IO::SDK::Math::Matrix::~Matrix()
+IO::Astrodynamics::Math::Matrix::~Matrix()
 {
 	for (std::size_t i = 0; i < m_rowSize; i++)
 		delete[] this->m_data[i];
@@ -27,38 +27,38 @@ IO::SDK::Math::Matrix::~Matrix()
 	delete[] m_data;
 }
 
-double IO::SDK::Math::Matrix::GetValue(const size_t rowIdx, const size_t colIdx) const
+double IO::Astrodynamics::Math::Matrix::GetValue(const size_t rowIdx, const size_t colIdx) const
 {
 	if (rowIdx >= m_rowSize)
 	{
-		throw IO::SDK::Exception::SDKException("Row index is out of range");
+		throw IO::Astrodynamics::Exception::SDKException("Row index is out of range");
 	}
 	else if (colIdx >= m_colSize)
 	{
-		throw IO::SDK::Exception::SDKException("Column index is out of range");
+		throw IO::Astrodynamics::Exception::SDKException("Column index is out of range");
 	}
 
 	return this->m_data[rowIdx][colIdx];
 }
 
-void IO::SDK::Math::Matrix::SetValue(const size_t rowIdx, const size_t colIdx, double value)
+void IO::Astrodynamics::Math::Matrix::SetValue(const size_t rowIdx, const size_t colIdx, double value)
 {
 	if (rowIdx >= m_rowSize)
 	{
-		throw IO::SDK::Exception::SDKException("Row index is out of range");
+		throw IO::Astrodynamics::Exception::SDKException("Row index is out of range");
 	}
 	else if (colIdx >= m_colSize)
 	{
-		throw IO::SDK::Exception::SDKException("Column index is out of range");
+		throw IO::Astrodynamics::Exception::SDKException("Column index is out of range");
 	}
 	this->m_data[rowIdx][colIdx] = value;
 }
 
-IO::SDK::Math::Matrix IO::SDK::Math::Matrix::Multiply(const Matrix &matrix)
+IO::Astrodynamics::Math::Matrix IO::Astrodynamics::Math::Matrix::Multiply(const Matrix &matrix)
 {
 	if (m_colSize != matrix.m_rowSize)
 	{
-		throw IO::SDK::Exception::SDKException("Matrixes with incompatible size");
+		throw IO::Astrodynamics::Exception::SDKException("Matrixes with incompatible size");
 	}
 
 	Matrix res(m_rowSize, matrix.m_colSize);
@@ -79,7 +79,7 @@ IO::SDK::Math::Matrix IO::SDK::Math::Matrix::Multiply(const Matrix &matrix)
 	return res;
 }
 
-IO::SDK::Math::Matrix IO::SDK::Math::Matrix::Transpose() const
+IO::Astrodynamics::Math::Matrix IO::Astrodynamics::Math::Matrix::Transpose() const
 {
 	//Row and columns size are switched
 	Matrix res(m_colSize, m_rowSize);
@@ -95,7 +95,7 @@ IO::SDK::Math::Matrix IO::SDK::Math::Matrix::Transpose() const
 	return res;
 }
 
-double **IO::SDK::Math::Matrix::GetRawData() const
+double **IO::Astrodynamics::Math::Matrix::GetRawData() const
 {
 	return m_data;
 }

@@ -6,7 +6,7 @@
 
 #include<string>
 
-namespace IO::SDK
+namespace IO::Astrodynamics
 {
     class OccultationType
     {
@@ -42,18 +42,18 @@ namespace IO::SDK
          */
         [[nodiscard]] const char *ToCharArray() const;
 
-        static IO::SDK::OccultationType &Full();
+        static IO::Astrodynamics::OccultationType &Full();
 
-        static IO::SDK::OccultationType &Annular();
+        static IO::Astrodynamics::OccultationType &Annular();
 
-        static IO::SDK::OccultationType &Partial();
+        static IO::Astrodynamics::OccultationType &Partial();
 
-        static IO::SDK::OccultationType &Any();
+        static IO::Astrodynamics::OccultationType &Any();
 
-        static IO::SDK::OccultationType ToOccultationType(const std::string &occultationType) ;
+        static IO::Astrodynamics::OccultationType ToOccultationType(const std::string &occultationType) ;
     };
 
 
-} // namespace IO::SDK
+} // namespace IO::Astrodynamics
 
 #endif

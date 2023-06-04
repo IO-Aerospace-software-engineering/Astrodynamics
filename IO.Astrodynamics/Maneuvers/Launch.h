@@ -20,16 +20,16 @@
 #include <Window.h>
 #include <LaunchWindow.h>
 
-namespace IO::SDK::Maneuvers
+namespace IO::Astrodynamics::Maneuvers
 {
     class Launch final
     {
     private:
         
-        const IO::SDK::Sites::LaunchSite& m_launchSite;
-        const IO::SDK::Sites::Site& m_recoverySite;
+        const IO::Astrodynamics::Sites::LaunchSite& m_launchSite;
+        const IO::Astrodynamics::Sites::Site& m_recoverySite;
         const bool m_launchByDay;
-        const IO::SDK::OrbitalParameters::OrbitalParameters &m_targetOrbit;
+        const IO::Astrodynamics::OrbitalParameters::OrbitalParameters &m_targetOrbit;
         double m_nonInertialAscendingAzimuthLaunch{std::numeric_limits<double>::quiet_NaN()};
         double m_inertialAscendingAzimuthLaunch{std::numeric_limits<double>::quiet_NaN()};
         double m_inertialDescendingAzimuthLaunch{std::numeric_limits<double>::quiet_NaN()};
@@ -39,7 +39,7 @@ namespace IO::SDK::Maneuvers
         const double m_deltaL{std::numeric_limits<double>::quiet_NaN()};
         const double m_inclination{std::numeric_limits<double>::quiet_NaN()};
 
-        std::vector<LaunchWindow> FindLaunchWindows(const IO::SDK::Time::Window<IO::SDK::Time::UTC> &windowToSearch);
+        std::vector<LaunchWindow> FindLaunchWindows(const IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::UTC> &windowToSearch);
 
     public:
         /**
@@ -51,7 +51,7 @@ namespace IO::SDK::Maneuvers
          * @param targetOrbit 
          * @param spacecraft 
          */
-        Launch(const IO::SDK::Sites::LaunchSite& launchSite, const IO::SDK::Sites::Site& recoverySite, bool launchByDay, const IO::SDK::OrbitalParameters::OrbitalParameters &targetOrbit);
+        Launch(const IO::Astrodynamics::Sites::LaunchSite& launchSite, const IO::Astrodynamics::Sites::Site& recoverySite, bool launchByDay, const IO::Astrodynamics::OrbitalParameters::OrbitalParameters &targetOrbit);
 
         /**
          * @brief Get the Non Inertial Ascending Azimuth Launch
@@ -99,11 +99,11 @@ namespace IO::SDK::Maneuvers
          * @brief Get the Launch Windows
          * 
          * @param searchWindow 
-         * @return std::vector<IO::SDK::Time::Window<IO::SDK::Time::UTC>> 
+         * @return std::vector<IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::UTC>>
          */
-        std::vector<LaunchWindow> GetLaunchWindows(const IO::SDK::Time::Window<IO::SDK::Time::UTC> &searchWindow);
+        std::vector<LaunchWindow> GetLaunchWindows(const IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::UTC> &searchWindow);
     };
 
-} // namespace IO::SDK::Maneuvers
+} // namespace IO::Astrodynamics::Maneuvers
 
 #endif // LAUNCH_MANEUVER_H

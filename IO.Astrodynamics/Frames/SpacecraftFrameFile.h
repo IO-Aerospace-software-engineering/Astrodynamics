@@ -7,19 +7,19 @@
 #include <FrameFile.h>
 
 //Forward declaration
-namespace IO::SDK::Body::Spacecraft {
+namespace IO::Astrodynamics::Body::Spacecraft {
     class Spacecraft;
 }
 
-namespace IO::SDK::Frames {
+namespace IO::Astrodynamics::Frames {
     /**
      * @brief Spacecraft frame file
      *
      */
-    class SpacecraftFrameFile final : public IO::SDK::Frames::FrameFile {
+    class SpacecraftFrameFile final : public IO::Astrodynamics::Frames::FrameFile {
     private:
         const int m_id;
-        const IO::SDK::Body::Spacecraft::Spacecraft &m_spacecraft;
+        const IO::Astrodynamics::Body::Spacecraft::Spacecraft &m_spacecraft;
 
         void BuildFrame();
 
@@ -28,10 +28,10 @@ namespace IO::SDK::Frames {
          *
          * @param spacecraft
          */
-        explicit SpacecraftFrameFile(const IO::SDK::Body::Spacecraft::Spacecraft &spacecraft);
+        explicit SpacecraftFrameFile(const IO::Astrodynamics::Body::Spacecraft::Spacecraft &spacecraft);
 
     public:
-        friend class IO::SDK::Body::Spacecraft::Spacecraft;
+        friend class IO::Astrodynamics::Body::Spacecraft::Spacecraft;
 
         [[nodiscard]] inline int GetId() const { return m_id; }
     };

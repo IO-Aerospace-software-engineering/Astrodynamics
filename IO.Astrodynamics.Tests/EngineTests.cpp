@@ -15,10 +15,10 @@ using namespace std::chrono_literals;
 
 TEST(Engine, Initialization)
 {
-	auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
-	std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(earth, IO::SDK::Math::Vector3D(1.0, 2.0, 3.0), IO::SDK::Math::Vector3D(4.0, 5.0, 6.0), IO::SDK::Time::TDB(100.0s), IO::SDK::Frames::InertialFrames::GetICRF());
-	IO::SDK::OrbitalParameters::StateOrientation attitude(IO::SDK::Time::TDB(100.0s),IO::SDK::Frames::InertialFrames::GetICRF());
-	IO::SDK::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams)};
+	auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399);
+	std::unique_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::Astrodynamics::OrbitalParameters::StateVector>(earth, IO::Astrodynamics::Math::Vector3D(1.0, 2.0, 3.0), IO::Astrodynamics::Math::Vector3D(4.0, 5.0, 6.0), IO::Astrodynamics::Time::TDB(100.0s), IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+	IO::Astrodynamics::OrbitalParameters::StateOrientation attitude(IO::Astrodynamics::Time::TDB(100.0s),IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+	IO::Astrodynamics::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams)};
 	s.AddFuelTank("ft1", 1000.0, 900.0);
 	s.AddEngine("sn1", "eng1", "ft1", {1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}, 450.0, 50.0);
 	auto eng = s.GetEngine("sn1");
@@ -38,19 +38,19 @@ TEST(Engine, Initialization)
 
 TEST(Engine, DeltaV)
 {
-	double deltaV = IO::SDK::Body::Spacecraft::Engine::ComputeDeltaV(300.0, 3000.0, 2000.0);
+	double deltaV = IO::Astrodynamics::Body::Spacecraft::Engine::ComputeDeltaV(300.0, 3000.0, 2000.0);
 
 	ASSERT_DOUBLE_EQ(1192.876320728679, deltaV);
 }
 
 TEST(Engine, DeltaT)
 {
-	IO::SDK::Time::TimeSpan deltaT = IO::SDK::Body::Spacecraft::Engine::ComputeDeltaT(300.0, 3000.0, 100, 1192.876320728679);
-	ASSERT_DOUBLE_EQ(IO::SDK::Time::TimeSpan(10.0s).GetSeconds().count(), deltaT.GetSeconds().count());
+	IO::Astrodynamics::Time::TimeSpan deltaT = IO::Astrodynamics::Body::Spacecraft::Engine::ComputeDeltaT(300.0, 3000.0, 100, 1192.876320728679);
+	ASSERT_DOUBLE_EQ(IO::Astrodynamics::Time::TimeSpan(10.0s).GetSeconds().count(), deltaT.GetSeconds().count());
 }
 
 TEST(Engine, DeltaM)
 {
-	double deltaM = IO::SDK::Body::Spacecraft::Engine::ComputeDeltaM(300.0, 3000.0, 1192.876320728679);
+	double deltaM = IO::Astrodynamics::Body::Spacecraft::Engine::ComputeDeltaM(300.0, 3000.0, 1192.876320728679);
 	ASSERT_DOUBLE_EQ(1000.0, deltaM);
 }

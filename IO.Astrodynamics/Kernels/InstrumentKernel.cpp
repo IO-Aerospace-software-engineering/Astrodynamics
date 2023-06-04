@@ -7,8 +7,8 @@
 #include <InstrumentFrameFile.h>
 #include <Templates/Templates.cpp>
 
-IO::SDK::Kernels::InstrumentKernel::InstrumentKernel(const IO::SDK::Instruments::Instrument &instrument, const IO::SDK::Math::Vector3D &boresight,
-                                                     const IO::SDK::Math::Vector3D &refVector, const double angle) : Kernel(
+IO::Astrodynamics::Kernels::InstrumentKernel::InstrumentKernel(const IO::Astrodynamics::Instruments::Instrument &instrument, const IO::Astrodynamics::Math::Vector3D &boresight,
+                                                     const IO::Astrodynamics::Math::Vector3D &refVector, const double angle) : Kernel(
         instrument.GetFilesPath() + "/Kernels/" + instrument.GetName() + ".ti"),
                                                                                                                      m_instrument{instrument},
                                                                                                                      m_boresight{boresight},
@@ -17,12 +17,12 @@ IO::SDK::Kernels::InstrumentKernel::InstrumentKernel(const IO::SDK::Instruments:
 {
 }
 
-IO::SDK::Time::Window<IO::SDK::Time::TDB> IO::SDK::Kernels::InstrumentKernel::GetCoverageWindow() const
+IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB> IO::Astrodynamics::Kernels::InstrumentKernel::GetCoverageWindow() const
 {
     return m_instrument.GetSpacecraft().GetOrientationsCoverageWindow();
 }
 
-void IO::SDK::Kernels::InstrumentKernel::BuildKernel()
+void IO::Astrodynamics::Kernels::InstrumentKernel::BuildKernel()
 {
     if (std::filesystem::exists(m_filePath))
     {

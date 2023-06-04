@@ -4,24 +4,24 @@
 #include <VVIntegrator.h>
 #include <InvalidArgumentException.h>
 
-IO::SDK::Integrators::VVIntegrator::VVIntegrator(const IO::SDK::Time::TimeSpan &stepDuration) : IO::SDK::Integrators::IntegratorBase(stepDuration) {
+IO::Astrodynamics::Integrators::VVIntegrator::VVIntegrator(const IO::Astrodynamics::Time::TimeSpan &stepDuration) : IO::Astrodynamics::Integrators::IntegratorBase(stepDuration) {
     if (stepDuration.GetSeconds().count() <= 0) {
-        throw IO::SDK::Exception::InvalidArgumentException("Step duration must be a positive number");
+        throw IO::Astrodynamics::Exception::InvalidArgumentException("Step duration must be a positive number");
     }
 }
 
-IO::SDK::Integrators::VVIntegrator::VVIntegrator(const IO::SDK::Time::TimeSpan &stepDuration, std::vector<IO::SDK::Integrators::Forces::Force *> &forces) : VVIntegrator(
+IO::Astrodynamics::Integrators::VVIntegrator::VVIntegrator(const IO::Astrodynamics::Time::TimeSpan &stepDuration, std::vector<IO::Astrodynamics::Integrators::Forces::Force *> &forces) : VVIntegrator(
         stepDuration) {
     if (forces.empty()) {
-        throw IO::SDK::Exception::InvalidArgumentException("Forces must have one force at least");
+        throw IO::Astrodynamics::Exception::InvalidArgumentException("Forces must have one force at least");
     }
     m_forces = forces;
 }
 
-IO::SDK::Integrators::VVIntegrator::~VVIntegrator()
+IO::Astrodynamics::Integrators::VVIntegrator::~VVIntegrator()
 = default;
 
-IO::SDK::OrbitalParameters::StateVector IO::SDK::Integrators::VVIntegrator::Integrate(const IO::SDK::Body::Body &body, const IO::SDK::OrbitalParameters::StateVector &stateVector) {
+IO::Astrodynamics::OrbitalParameters::StateVector IO::Astrodynamics::Integrators::VVIntegrator::Integrate(const IO::Astrodynamics::Body::Body &body, const IO::Astrodynamics::OrbitalParameters::StateVector &stateVector) {
     //Set initial parameters
     auto position = stateVector.GetPosition();
     auto velocity = stateVector.GetVelocity();
@@ -35,12 +35,12 @@ IO::SDK::OrbitalParameters::StateVector IO::SDK::Integrators::VVIntegrator::Inte
 
     position = position + velocity * m_h;
 
-    m_acceleration = ComputeAcceleration(body, IO::SDK::OrbitalParameters::StateVector(stateVector.GetCenterOfMotion(), position, velocity, nextEpoch, stateVector.GetFrame()));
+    m_acceleration = ComputeAcceleration(body, IO::Astrodynamics::OrbitalParameters::StateVector(stateVector.GetCenterOfMotion(), position, velocity, nextEpoch, stateVector.GetFrame()));
 
     velocity = velocity + (*m_acceleration * m_half_h);
 
     //Create new state vector
-    auto newSV = IO::SDK::OrbitalParameters::StateVector(stateVector.GetCenterOfMotion(), position, velocity, nextEpoch, stateVector.GetFrame());
+    auto newSV = IO::Astrodynamics::OrbitalParameters::StateVector(stateVector.GetCenterOfMotion(), position, velocity, nextEpoch, stateVector.GetFrame());
 
     //Check if center of motion has changed
     if (newSV.GetPosition().Magnitude() > newSV.GetCenterOfMotion()->GetHillSphere())
@@ -51,8 +51,8 @@ IO::SDK::OrbitalParameters::StateVector IO::SDK::Integrators::VVIntegrator::Inte
     return newSV;
 }
 
-IO::SDK::Math::Vector3D IO::SDK::Integrators::VVIntegrator::ComputeAcceleration(const IO::SDK::Body::Body &body, const IO::SDK::OrbitalParameters::StateVector &stateVector) const {
-    IO::SDK::Math::Vector3D forceVector{};
+IO::Astrodynamics::Math::Vector3D IO::Astrodynamics::Integrators::VVIntegrator::ComputeAcceleration(const IO::Astrodynamics::Body::Body &body, const IO::Astrodynamics::OrbitalParameters::StateVector &stateVector) const {
+    IO::Astrodynamics::Math::Vector3D forceVector{};
     for (auto force: m_forces) {
         forceVector = forceVector + force->Apply(body, stateVector);
     }

@@ -3,7 +3,7 @@
  */
 #ifndef GEODETIC_H
 #define GEODETIC_H
-namespace IO::SDK::Coordinates
+namespace IO::Astrodynamics::Coordinates
 {
 	/**
 	 * @brief Geodetic coordinate

@@ -6,16 +6,16 @@
 #include <utility>
 #include <SDKException.h>
 
-IO::SDK::IlluminationAngle IO::SDK::IlluminationAngle::mPhase(std::string("PHASE"));
-IO::SDK::IlluminationAngle IO::SDK::IlluminationAngle::mIncidence(std::string("INCIDENCE"));
-IO::SDK::IlluminationAngle IO::SDK::IlluminationAngle::mEmission(std::string("EMISSION"));
+IO::Astrodynamics::IlluminationAngle IO::Astrodynamics::IlluminationAngle::mPhase(std::string("PHASE"));
+IO::Astrodynamics::IlluminationAngle IO::Astrodynamics::IlluminationAngle::mIncidence(std::string("INCIDENCE"));
+IO::Astrodynamics::IlluminationAngle IO::Astrodynamics::IlluminationAngle::mEmission(std::string("EMISSION"));
 
 /**
- * @brief Construct a new IO::SDK::IlluminationAngle::IlluminationAngle object
+ * @brief Construct a new IO::Astrodynamics::IlluminationAngle::IlluminationAngle object
  * 
  * @param name 
  */
-IO::SDK::IlluminationAngle::IlluminationAngle(std::string  name):m_name{std::move(name)}
+IO::Astrodynamics::IlluminationAngle::IlluminationAngle(std::string  name):m_name{std::move(name)}
 {
 
 }
@@ -25,25 +25,25 @@ IO::SDK::IlluminationAngle::IlluminationAngle(std::string  name):m_name{std::mov
  * 
  * @return const char* 
  */
-const char *IO::SDK::IlluminationAngle::ToCharArray() const
+const char *IO::Astrodynamics::IlluminationAngle::ToCharArray() const
 {
     return m_name.c_str();
 }
 
-IO::SDK::IlluminationAngle& IO::SDK::IlluminationAngle::Phase()
+IO::Astrodynamics::IlluminationAngle& IO::Astrodynamics::IlluminationAngle::Phase()
 {
     return mPhase;
 }
-IO::SDK::IlluminationAngle& IO::SDK::IlluminationAngle::Incidence()
+IO::Astrodynamics::IlluminationAngle& IO::Astrodynamics::IlluminationAngle::Incidence()
 {
     return mIncidence;
 }
-IO::SDK::IlluminationAngle& IO::SDK::IlluminationAngle::Emission()
+IO::Astrodynamics::IlluminationAngle& IO::Astrodynamics::IlluminationAngle::Emission()
 {
     return mEmission;
 }
 
-IO::SDK::IlluminationAngle IO::SDK::IlluminationAngle::ToIlluminationAngleType(const std::string &illuminationAngleType)
+IO::Astrodynamics::IlluminationAngle IO::Astrodynamics::IlluminationAngle::ToIlluminationAngleType(const std::string &illuminationAngleType)
 {
     if (illuminationAngleType == IlluminationAngle::mPhase.ToCharArray())
     {
@@ -56,5 +56,5 @@ IO::SDK::IlluminationAngle IO::SDK::IlluminationAngle::ToIlluminationAngleType(c
         return mEmission;
     }
 
-    throw IO::SDK::Exception::SDKException("Invalid illumination type : " + illuminationAngleType);
+    throw IO::Astrodynamics::Exception::SDKException("Invalid illumination type : " + illuminationAngleType);
 }

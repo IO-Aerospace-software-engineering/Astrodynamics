@@ -9,15 +9,15 @@ using namespace std::chrono_literals;
 TEST(TLEIntegrator, Integrate)
 {
 
-    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
+    auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399);
 
     std::string lines[3]{"ISS (ZARYA)", "1 25544U 98067A   21096.43776852  .00000912  00000-0  24825-4 0  9997", "2 25544  51.6463 337.6022 0002945 188.9422 344.4138 15.48860043277477"}; //2021-04-06 10:31:32.385783 TDB
-    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> tle = std::make_unique<IO::SDK::OrbitalParameters::TLE>(earth, lines);
+    std::unique_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> tle = std::make_unique<IO::Astrodynamics::OrbitalParameters::TLE>(earth, lines);
     auto str = tle->GetEpoch().ToString();
-    auto localTLE = dynamic_cast<IO::SDK::OrbitalParameters::TLE *>(tle.get());
-    IO::SDK::OrbitalParameters::StateOrientation attitude(IO::SDK::Time::TDB(100.0s), IO::SDK::Frames::InertialFrames::GetICRF());
-    IO::SDK::Body::Spacecraft::Spacecraft spc(-12, "spc12", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(tle));
-    IO::SDK::Integrators::TLEIntegrator integrator(*localTLE, IO::SDK::Time::TimeSpan(60s));
+    auto localTLE = dynamic_cast<IO::Astrodynamics::OrbitalParameters::TLE *>(tle.get());
+    IO::Astrodynamics::OrbitalParameters::StateOrientation attitude(IO::Astrodynamics::Time::TDB(100.0s), IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+    IO::Astrodynamics::Body::Spacecraft::Spacecraft spc(-12, "spc12", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(tle));
+    IO::Astrodynamics::Integrators::TLEIntegrator integrator(*localTLE, IO::Astrodynamics::Time::TimeSpan(60s));
 
     //Just to activate cache and evaluate optimized integration
     auto sv = spc.GetOrbitalParametersAtEpoch()->ToStateVector();
@@ -40,6 +40,6 @@ TEST(TLEIntegrator, Integrate)
     ASSERT_DOUBLE_EQ(-4250.1793473001053, stateVector.GetVelocity().GetY());
     ASSERT_DOUBLE_EQ(-6003.797568963455, stateVector.GetVelocity().GetZ());
 
-    IO::SDK::Time::TDB epoch(670977152.38578331s);
+    IO::Astrodynamics::Time::TDB epoch(670977152.38578331s);
     ASSERT_EQ(epoch, stateVector.GetEpoch());
 }

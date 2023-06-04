@@ -6,10 +6,10 @@
 
 #include <DateTime.h>
 
-namespace IO::SDK::Time
+namespace IO::Astrodynamics::Time
 {
 	class UTC;
-	class TDB final : public IO::SDK::Time::DateTime
+	class TDB final : public IO::Astrodynamics::Time::DateTime
 	{
 	private:
 	public:
@@ -38,33 +38,33 @@ namespace IO::SDK::Time
 		 * @brief Add TimeSpan to datetime
 		 * 
 		 * @param timespan 
-		 * @return IO::SDK::Time::TDB 
+		 * @return IO::Astrodynamics::Time::TDB
 		 */
-		[[nodiscard]] IO::SDK::Time::TDB Add(const IO::SDK::Time::TimeSpan &timespan) const;
+		[[nodiscard]] IO::Astrodynamics::Time::TDB Add(const IO::Astrodynamics::Time::TimeSpan &timespan) const;
 
 		/**
 		 * @brief Add TimeSpan to DateTime
 		 * 
 		 * @param timespan 
-		 * @return IO::SDK::Time::TDB 
+		 * @return IO::Astrodynamics::Time::TDB
 		 */
-		IO::SDK::Time::TDB operator+(const IO::SDK::Time::TimeSpan &timespan) const;
+		IO::Astrodynamics::Time::TDB operator+(const IO::Astrodynamics::Time::TimeSpan &timespan) const;
 
 		/**
 		 * @brief Substract TimeSpan
 		 * 
 		 * @param other 
-		 * @return IO::SDK::Time::TDB 
+		 * @return IO::Astrodynamics::Time::TDB
 		 */
-		IO::SDK::Time::TDB operator-(const IO::SDK::Time::TimeSpan &other) const;
+		IO::Astrodynamics::Time::TDB operator-(const IO::Astrodynamics::Time::TimeSpan &other) const;
 
 		/**
 		 * @brief Substract DateTime
 		 * 
 		 * @param other 
-		 * @return IO::SDK::Time::TimeSpan 
+		 * @return IO::Astrodynamics::Time::TimeSpan
 		 */
-		IO::SDK::Time::TimeSpan operator-(const IO::SDK::Time::TDB &other) const;
+		IO::Astrodynamics::Time::TimeSpan operator-(const IO::Astrodynamics::Time::TDB &other) const;
 
 		/**
 		 * @brief Convert to UTC

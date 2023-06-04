@@ -3,6 +3,6 @@
  */
 #include <BodyFixedFrames.h>
 
-IO::SDK::Frames::BodyFixedFrames::BodyFixedFrames(const std::string &name) : IO::SDK::Frames::Frames::Frames(name)
+IO::Astrodynamics::Frames::BodyFixedFrames::BodyFixedFrames(const std::string &name) : IO::Astrodynamics::Frames::Frames::Frames(name)
 {
 }

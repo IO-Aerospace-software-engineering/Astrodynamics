@@ -21,64 +21,64 @@ using namespace std::chrono_literals;
 
 TEST(PhasingManeuver, CanExecute)
 {
-    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
-    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams1 = std::make_unique<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth, 6800000.0, 0.5, 0.0, 0.0, 0.0, 0.0, IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::GetICRF());
-    std::shared_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams2 = std::make_shared<IO::SDK::OrbitalParameters::ConicOrbitalElements>(earth, 6800000.0, 0.5, 0.0, 0.0, 30.0 * IO::SDK::Constants::DEG_RAD, 0.0, IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::GetICRF());
+    const auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399);
+    std::unique_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParams1 = std::make_unique<IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements>(earth, 6800000.0, 0.5, 0.0, 0.0, 0.0, 0.0, IO::Astrodynamics::Time::TDB(0.0s), IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+    std::shared_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParams2 = std::make_shared<IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements>(earth, 6800000.0, 0.5, 0.0, 0.0, 30.0 * IO::Astrodynamics::Constants::DEG_RAD, 0.0, IO::Astrodynamics::Time::TDB(0.0s), IO::Astrodynamics::Frames::InertialFrames::GetICRF());
 
-    IO::SDK::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams1)};
+    IO::Astrodynamics::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams1)};
 
-    IO::SDK::Integrators::VVIntegrator integrator(IO::SDK::Time::TimeSpan(1.0s));
-    IO::SDK::Propagators::Propagator prop(s, integrator, IO::SDK::Time::Window(IO::SDK::Time::TDB(100.0s), IO::SDK::Time::TDB(200.0s)));
+    IO::Astrodynamics::Integrators::VVIntegrator integrator(IO::Astrodynamics::Time::TimeSpan(1.0s));
+    IO::Astrodynamics::Propagators::Propagator prop(s, integrator, IO::Astrodynamics::Time::Window(IO::Astrodynamics::Time::TDB(100.0s), IO::Astrodynamics::Time::TDB(200.0s)));
 
     s.AddFuelTank("ft1", 1000.0, 900.0);
     s.AddEngine("sn1", "eng1", "ft1", {1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}, 450.0, 50.0);
 
     auto engine1 = s.GetEngine("sn1");
 
-    std::vector<IO::SDK::Body::Spacecraft::Engine*> engines;
-    engines.push_back(const_cast<IO::SDK::Body::Spacecraft::Engine*>(engine1));
+    std::vector<IO::Astrodynamics::Body::Spacecraft::Engine*> engines;
+    engines.push_back(const_cast<IO::Astrodynamics::Body::Spacecraft::Engine*>(engine1));
 
-    IO::SDK::Maneuvers::PhasingManeuver maneuver(engines, prop, 3, orbitalParams2);
+    IO::Astrodynamics::Maneuvers::PhasingManeuver maneuver(engines, prop, 3, orbitalParams2);
 
     //Initialize CanExecute
-    ASSERT_FALSE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()->ToStateVector(358.0 * IO::SDK::Constants::DEG_RAD)));
+    ASSERT_FALSE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()->ToStateVector(358.0 * IO::Astrodynamics::Constants::DEG_RAD)));
 
     //Evaluate 1° before
-    ASSERT_FALSE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()->ToStateVector(359.0 * IO::SDK::Constants::DEG_RAD)));
+    ASSERT_FALSE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()->ToStateVector(359.0 * IO::Astrodynamics::Constants::DEG_RAD)));
 
     //Evaluate 1°s after and must execute
-    ASSERT_TRUE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()->ToStateVector(0.001 * IO::SDK::Constants::DEG_RAD)));
+    ASSERT_TRUE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()->ToStateVector(0.001 * IO::Astrodynamics::Constants::DEG_RAD)));
 
     //Evaluate 2° after
-    ASSERT_FALSE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()->ToStateVector(2.0 * IO::SDK::Constants::DEG_RAD)));
+    ASSERT_FALSE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()->ToStateVector(2.0 * IO::Astrodynamics::Constants::DEG_RAD)));
 
     //Evaluate at apogee
-    ASSERT_FALSE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()->ToStateVector(179.0 * IO::SDK::Constants::DEG_RAD)));
-    ASSERT_FALSE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()->ToStateVector(181.0 * IO::SDK::Constants::DEG_RAD)));
+    ASSERT_FALSE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()->ToStateVector(179.0 * IO::Astrodynamics::Constants::DEG_RAD)));
+    ASSERT_FALSE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()->ToStateVector(181.0 * IO::Astrodynamics::Constants::DEG_RAD)));
 }
 
 TEST(PhasingManeuver, TryExecuteOnGeostationary)
 {
-    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
-    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams1 = std::make_unique<IO::SDK::OrbitalParameters::EquinoctialElements>(earth, 42164000.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -IO::SDK::Constants::PI2, IO::SDK::Constants::PI2, IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::GetICRF());
-    std::shared_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams2 = std::make_shared<IO::SDK::OrbitalParameters::EquinoctialElements>(earth, 42164000.0, 0.0, 0.0, 0.0, 0.0, 345.0 * IO::SDK::Constants::DEG_RAD, 0.0, 0.0, -IO::SDK::Constants::PI2, IO::SDK::Constants::PI2, IO::SDK::Time::TDB(0.0s), IO::SDK::Frames::InertialFrames::GetICRF());
+    const auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399);
+    std::unique_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParams1 = std::make_unique<IO::Astrodynamics::OrbitalParameters::EquinoctialElements>(earth, 42164000.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -IO::Astrodynamics::Constants::PI2, IO::Astrodynamics::Constants::PI2, IO::Astrodynamics::Time::TDB(0.0s), IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+    std::shared_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParams2 = std::make_shared<IO::Astrodynamics::OrbitalParameters::EquinoctialElements>(earth, 42164000.0, 0.0, 0.0, 0.0, 0.0, 345.0 * IO::Astrodynamics::Constants::DEG_RAD, 0.0, 0.0, -IO::Astrodynamics::Constants::PI2, IO::Astrodynamics::Constants::PI2, IO::Astrodynamics::Time::TDB(0.0s), IO::Astrodynamics::Frames::InertialFrames::GetICRF());
 
-    IO::SDK::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams1)};
+    IO::Astrodynamics::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams1)};
 
-    IO::SDK::Integrators::VVIntegrator integrator(IO::SDK::Time::TimeSpan(1.0s));
-    IO::SDK::Propagators::Propagator prop(s, integrator, IO::SDK::Time::Window(IO::SDK::Time::TDB(100.0s), IO::SDK::Time::TDB(200.0s)));
+    IO::Astrodynamics::Integrators::VVIntegrator integrator(IO::Astrodynamics::Time::TimeSpan(1.0s));
+    IO::Astrodynamics::Propagators::Propagator prop(s, integrator, IO::Astrodynamics::Time::Window(IO::Astrodynamics::Time::TDB(100.0s), IO::Astrodynamics::Time::TDB(200.0s)));
 
     s.AddFuelTank("ft1", 1000.0, 900.0);
     s.AddEngine("sn1", "eng1", "ft1", {1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}, 450.0, 50.0);
 
     auto engine1 = s.GetEngine("sn1");
 
-    std::vector<IO::SDK::Body::Spacecraft::Engine*> engines;
-    engines.push_back(const_cast<IO::SDK::Body::Spacecraft::Engine*>(engine1));
+    std::vector<IO::Astrodynamics::Body::Spacecraft::Engine*> engines;
+    engines.push_back(const_cast<IO::Astrodynamics::Body::Spacecraft::Engine*>(engine1));
 
-    IO::SDK::Maneuvers::PhasingManeuver maneuver(engines, prop, 3, orbitalParams2);
+    IO::Astrodynamics::Maneuvers::PhasingManeuver maneuver(engines, prop, 3, orbitalParams2);
 
-    prop.AddStateVector(IO::SDK::OrbitalParameters::StateVector(earth, IO::SDK::Math::Vector3D(1.0, 2.0, 3.0), IO::SDK::Math::Vector3D(4.0, 5.0, 6.0), IO::SDK::Time::TDB(-10.0s), IO::SDK::Frames::InertialFrames::GetICRF()));
+    prop.AddStateVector(IO::Astrodynamics::OrbitalParameters::StateVector(earth, IO::Astrodynamics::Math::Vector3D(1.0, 2.0, 3.0), IO::Astrodynamics::Math::Vector3D(4.0, 5.0, 6.0), IO::Astrodynamics::Time::TDB(-10.0s), IO::Astrodynamics::Frames::InertialFrames::GetICRF()));
 
     auto res = maneuver.TryExecute(s.GetOrbitalParametersAtEpoch()->ToStateVector(0.0001));
 
@@ -90,7 +90,7 @@ TEST(PhasingManeuver, TryExecuteOnGeostationary)
     ASSERT_DOUBLE_EQ(8.5968783017332277e-16, maneuver.GetDeltaV().GetZ());
     ASSERT_DOUBLE_EQ(6.0351723087866187, maneuver.GetFuelBurned());
     ASSERT_DOUBLE_EQ(0.12070344617573237, maneuver.GetThrustDuration().GetSeconds().count());
-    ASSERT_EQ(IO::SDK::Time::Window<IO::SDK::Time::TDB>(IO::SDK::Time::TDB(1.3109841010206913s), IO::SDK::Time::TDB(1.4316875471964237s)), *maneuver.GetThrustWindow());
+    ASSERT_EQ(IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB>(IO::Astrodynamics::Time::TDB(1.3109841010206913s), IO::Astrodynamics::Time::TDB(1.4316875471964237s)), *maneuver.GetThrustWindow());
 
 #else
 
@@ -100,7 +100,7 @@ TEST(PhasingManeuver, TryExecuteOnGeostationary)
     ASSERT_DOUBLE_EQ(8.5968783017332277e-16, maneuver.GetDeltaV().GetZ());
     ASSERT_DOUBLE_EQ(6.0351723087866187, maneuver.GetFuelBurned());
     ASSERT_DOUBLE_EQ(0.12070344617573237, maneuver.GetThrustDuration().GetSeconds().count());
-    ASSERT_EQ(IO::SDK::Time::Window<IO::SDK::Time::TDB>(IO::SDK::Time::TDB(1.3109841010206913s), IO::SDK::Time::TDB(1.4316875471964237s)), *maneuver.GetThrustWindow());
+    ASSERT_EQ(IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB>(IO::Astrodynamics::Time::TDB(1.3109841010206913s), IO::Astrodynamics::Time::TDB(1.4316875471964237s)), *maneuver.GetThrustWindow());
 
 #endif
 
@@ -118,33 +118,33 @@ TEST(PhasingManeuver, TryExecuteOnGeostationary)
 
 TEST(PhasingManeuver, CheckOrbitalParameters)
 {
-    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
-    IO::SDK::Time::TDB startEpoch("2021-01-01T00:00:00");
-    IO::SDK::Time::TDB endEpoch("2021-01-04T01:00:00");
+    const auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399);
+    IO::Astrodynamics::Time::TDB startEpoch("2021-01-01T00:00:00");
+    IO::Astrodynamics::Time::TDB endEpoch("2021-01-04T01:00:00");
 
-    std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams1 = std::make_unique<IO::SDK::OrbitalParameters::EquinoctialElements>(earth, 42164000.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -IO::SDK::Constants::PI2, IO::SDK::Constants::PI2, startEpoch, IO::SDK::Frames::InertialFrames::GetICRF());
-    std::shared_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParams2 = std::make_shared<IO::SDK::OrbitalParameters::EquinoctialElements>(earth, 42164000.0, 0.0, 0.0, 0.0, 0.0, 345.0 * IO::SDK::Constants::DEG_RAD, 0.0, 0.0, -IO::SDK::Constants::PI2, IO::SDK::Constants::PI2, startEpoch, IO::SDK::Frames::InertialFrames::GetICRF());
+    std::unique_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParams1 = std::make_unique<IO::Astrodynamics::OrbitalParameters::EquinoctialElements>(earth, 42164000.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -IO::Astrodynamics::Constants::PI2, IO::Astrodynamics::Constants::PI2, startEpoch, IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+    std::shared_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParams2 = std::make_shared<IO::Astrodynamics::OrbitalParameters::EquinoctialElements>(earth, 42164000.0, 0.0, 0.0, 0.0, 0.0, 345.0 * IO::Astrodynamics::Constants::DEG_RAD, 0.0, 0.0, -IO::Astrodynamics::Constants::PI2, IO::Astrodynamics::Constants::PI2, startEpoch, IO::Astrodynamics::Frames::InertialFrames::GetICRF());
 
-    IO::SDK::Body::Spacecraft::Spacecraft s{-189, "189test", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams1)};
+    IO::Astrodynamics::Body::Spacecraft::Spacecraft s{-189, "189test", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams1)};
 
     //Add gravity to forces model
-    std::vector<IO::SDK::Integrators::Forces::Force *> forces{};
-    IO::SDK::Integrators::Forces::GravityForce gravityForce;
+    std::vector<IO::Astrodynamics::Integrators::Forces::Force *> forces{};
+    IO::Astrodynamics::Integrators::Forces::GravityForce gravityForce;
     forces.push_back(&gravityForce);
 
-    IO::SDK::Integrators::VVIntegrator integrator(IO::SDK::Time::TimeSpan(1.0s), forces);
-    IO::SDK::Propagators::Propagator prop(s, integrator, IO::SDK::Time::Window(startEpoch, endEpoch));
+    IO::Astrodynamics::Integrators::VVIntegrator integrator(IO::Astrodynamics::Time::TimeSpan(1.0s), forces);
+    IO::Astrodynamics::Propagators::Propagator prop(s, integrator, IO::Astrodynamics::Time::Window(startEpoch, endEpoch));
 
     s.AddFuelTank("ft1", 1000.0, 900.0);
     s.AddEngine("sn1", "eng1", "ft1", {1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}, 450.0, 50.0);
 
     auto engine1 = s.GetEngine("sn1");
 
-    std::vector<IO::SDK::Body::Spacecraft::Engine*> engines;
-    engines.push_back(const_cast<IO::SDK::Body::Spacecraft::Engine*>(engine1));
+    std::vector<IO::Astrodynamics::Body::Spacecraft::Engine*> engines;
+    engines.push_back(const_cast<IO::Astrodynamics::Body::Spacecraft::Engine*>(engine1));
 
-    IO::SDK::Maneuvers::PhasingManeuver phasingManeuver(engines, prop, 3, orbitalParams2);
-    IO::SDK::Maneuvers::ApogeeHeightChangingManeuver finalManeuver(engines, prop, orbitalParams2->GetApogeeVector().Magnitude());
+    IO::Astrodynamics::Maneuvers::PhasingManeuver phasingManeuver(engines, prop, 3, orbitalParams2);
+    IO::Astrodynamics::Maneuvers::ApogeeHeightChangingManeuver finalManeuver(engines, prop, orbitalParams2->GetApogeeVector().Magnitude());
     phasingManeuver.SetNextManeuver(finalManeuver);
 
     prop.SetStandbyManeuver(&phasingManeuver);
@@ -156,27 +156,27 @@ TEST(PhasingManeuver, CheckOrbitalParameters)
     auto sv = prop.GetStateVectors().back();
     ASSERT_NEAR(42164000.0, sv.GetPerigeeVector().Magnitude(), 6);
     ASSERT_NEAR(0.0, sv.GetEccentricity(), 1E-06);
-    ASSERT_DOUBLE_EQ(0.0, sv.GetInclination() * IO::SDK::Constants::RAD_DEG);
-    ASSERT_DOUBLE_EQ(0.0, sv.GetRightAscendingNodeLongitude() * IO::SDK::Constants::RAD_DEG);
+    ASSERT_DOUBLE_EQ(0.0, sv.GetInclination() * IO::Astrodynamics::Constants::RAD_DEG);
+    ASSERT_DOUBLE_EQ(0.0, sv.GetRightAscendingNodeLongitude() * IO::Astrodynamics::Constants::RAD_DEG);
 
     auto sv2= orbitalParams2->ToStateVector(finalManeuver.GetManeuverWindow()->GetEndDate());
-    ASSERT_NEAR(279.02559168459368, sv.ToStateVector(finalManeuver.GetManeuverWindow()->GetEndDate()).GetPeriapsisArgument() * IO::SDK::Constants::RAD_DEG, 1E-06);
-    ASSERT_DOUBLE_EQ(80.991621690861436, sv.ToStateVector(finalManeuver.GetManeuverWindow()->GetEndDate()).GetMeanAnomaly() * IO::SDK::Constants::RAD_DEG);
+    ASSERT_NEAR(279.02559168459368, sv.ToStateVector(finalManeuver.GetManeuverWindow()->GetEndDate()).GetPeriapsisArgument() * IO::Astrodynamics::Constants::RAD_DEG, 1E-06);
+    ASSERT_DOUBLE_EQ(80.991621690861436, sv.ToStateVector(finalManeuver.GetManeuverWindow()->GetEndDate()).GetMeanAnomaly() * IO::Astrodynamics::Constants::RAD_DEG);
 
-    ASSERT_DOUBLE_EQ(90.017226571823784, orbitalParams2->ToStateVector(finalManeuver.GetManeuverWindow()->GetEndDate()).GetPeriapsisArgument() * IO::SDK::Constants::RAD_DEG);
-    ASSERT_DOUBLE_EQ(270.0, orbitalParams2->ToStateVector(finalManeuver.GetManeuverWindow()->GetEndDate()).GetMeanAnomaly() * IO::SDK::Constants::RAD_DEG);
+    ASSERT_DOUBLE_EQ(90.017226571823784, orbitalParams2->ToStateVector(finalManeuver.GetManeuverWindow()->GetEndDate()).GetPeriapsisArgument() * IO::Astrodynamics::Constants::RAD_DEG);
+    ASSERT_DOUBLE_EQ(270.0, orbitalParams2->ToStateVector(finalManeuver.GetManeuverWindow()->GetEndDate()).GetMeanAnomaly() * IO::Astrodynamics::Constants::RAD_DEG);
 
     double longitude1 = sv.GetPeriapsisArgument() + sv.ToStateVector(finalManeuver.GetManeuverWindow()->GetEndDate()).GetMeanAnomaly();
-    if (longitude1 > IO::SDK::Constants::_2PI)
+    if (longitude1 > IO::Astrodynamics::Constants::_2PI)
     {
-        longitude1 -= IO::SDK::Constants::_2PI;
+        longitude1 -= IO::Astrodynamics::Constants::_2PI;
     }
 
     double longitude2 = orbitalParams2->ToStateVector(finalManeuver.GetManeuverWindow()->GetEndDate()).GetPeriapsisArgument() +
                         orbitalParams2->ToStateVector(finalManeuver.GetManeuverWindow()->GetEndDate()).GetMeanAnomaly();
-    if (longitude2 > IO::SDK::Constants::_2PI)
+    if (longitude2 > IO::Astrodynamics::Constants::_2PI)
     {
-        longitude2 -= IO::SDK::Constants::_2PI;
+        longitude2 -= IO::Astrodynamics::Constants::_2PI;
     }
 
     //At the end of maneuver two bodies are exactly at the same place w1+m1 = w2+m2 (all others parameters are equal)

@@ -9,7 +9,7 @@
 #include <Spacecraft.h>
 
 
-namespace IO::SDK::Kernels {
+namespace IO::Astrodynamics::Kernels {
     /**
      * @brief Ephemeris kernel
      *
@@ -37,18 +37,18 @@ namespace IO::SDK::Kernels {
          * @param frame
          * @param aberration
          * @param epoch
-         * @return IO::SDK::OrbitalParameters::StateVector
+         * @return IO::Astrodynamics::OrbitalParameters::StateVector
          */
-        [[nodiscard]] IO::SDK::OrbitalParameters::StateVector
-        ReadStateVector(const IO::SDK::Body::CelestialBody &observer, const IO::SDK::Frames::Frames &frame, IO::SDK::AberrationsEnum aberration,
-                        const IO::SDK::Time::TDB &epoch) const;
+        [[nodiscard]] IO::Astrodynamics::OrbitalParameters::StateVector
+        ReadStateVector(const IO::Astrodynamics::Body::CelestialBody &observer, const IO::Astrodynamics::Frames::Frames &frame, IO::Astrodynamics::AberrationsEnum aberration,
+                        const IO::Astrodynamics::Time::TDB &epoch) const;
 
         /**
          * @brief Get the Coverage Window
          *
-         * @return IO::SDK::Time::Window<IO::SDK::Time::TDB>
+         * @return IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB>
          */
-        [[nodiscard]] IO::SDK::Time::Window<IO::SDK::Time::TDB> GetCoverageWindow() const override;
+        [[nodiscard]] IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB> GetCoverageWindow() const override;
 
         /**
          * @brief Write date to ephemeris file

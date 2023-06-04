@@ -6,18 +6,18 @@
 
 #include <FrameFile.h>
 
-namespace IO::SDK::Sites {
+namespace IO::Astrodynamics::Sites {
     class Site;
 }
 
-namespace IO::SDK::Frames {
+namespace IO::Astrodynamics::Frames {
     /**
      * @brief Site frame file
      * 
      */
     class SiteFrameFile final : public FrameFile {
     private:
-        const IO::SDK::Sites::Site &m_site;
+        const IO::Astrodynamics::Sites::Site &m_site;
 
         void BuildFrame();
 
@@ -27,7 +27,7 @@ namespace IO::SDK::Frames {
          * 
          * @param site 
          */
-        explicit SiteFrameFile(const IO::SDK::Sites::Site &site);
+        explicit SiteFrameFile(const IO::Astrodynamics::Sites::Site &site);
     };
 }
 

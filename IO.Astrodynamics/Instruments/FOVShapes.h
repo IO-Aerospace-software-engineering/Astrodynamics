@@ -6,7 +6,7 @@
 
 #include <string>
 
-namespace IO::SDK::Instruments
+namespace IO::Astrodynamics::Instruments
 {
 	enum class FOVShapeEnum
 	{

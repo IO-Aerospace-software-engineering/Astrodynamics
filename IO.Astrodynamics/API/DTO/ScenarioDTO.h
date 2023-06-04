@@ -9,7 +9,7 @@
 #include <OccultationConstraintDTO.h>
 #include <DistanceConstraintDTO.h>
 
-namespace IO::SDK::API::DTO
+namespace IO::Astrodynamics::API::DTO
 {
     struct ScenarioDTO
     {

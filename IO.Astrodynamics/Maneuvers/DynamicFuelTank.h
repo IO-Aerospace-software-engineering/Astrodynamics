@@ -8,7 +8,7 @@
 #ifndef DYNAMIC_FUELTANK_H
 #define DYNAMIC_FUELTANK_H
 
-namespace IO::SDK::Maneuvers {
+namespace IO::Astrodynamics::Maneuvers {
     struct DynamicFuelTank {
         double EquivalentFuelFlow{};
 
@@ -18,8 +18,8 @@ namespace IO::SDK::Maneuvers {
             EquivalentFuelFlow = equivalentFuelFlow;
         }
 
-        [[nodiscard]] IO::SDK::Time::TimeSpan GetRemainingT(const double remainingFuel) const {
-            return IO::SDK::Time::TimeSpan{std::chrono::duration<double>(remainingFuel / EquivalentFuelFlow)};
+        [[nodiscard]] IO::Astrodynamics::Time::TimeSpan GetRemainingT(const double remainingFuel) const {
+            return IO::Astrodynamics::Time::TimeSpan{std::chrono::duration<double>(remainingFuel / EquivalentFuelFlow)};
         }
 
     };

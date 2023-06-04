@@ -7,7 +7,7 @@
 #include <string>
 #include <algorithm>
 
-namespace IO::SDK
+namespace IO::Astrodynamics
 {
     class StringHelpers
     {

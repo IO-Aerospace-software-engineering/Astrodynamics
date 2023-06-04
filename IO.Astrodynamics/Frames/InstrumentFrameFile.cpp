@@ -7,7 +7,7 @@
 #include<sstream>
 #include<Templates/Templates.cpp>
 
-IO::SDK::Frames::InstrumentFrameFile::InstrumentFrameFile(const IO::SDK::Instruments::Instrument& instrument, const IO::SDK::Math::Vector3D& orientation) :FrameFile(instrument.GetFilesPath() + "/Frames/" + instrument.GetName() + ".tf", instrument.GetSpacecraft().GetName() + "_" + instrument.GetName()), m_instrument{ instrument }, m_orientation{ orientation }
+IO::Astrodynamics::Frames::InstrumentFrameFile::InstrumentFrameFile(const IO::Astrodynamics::Instruments::Instrument& instrument, const IO::Astrodynamics::Math::Vector3D& orientation) :FrameFile(instrument.GetFilesPath() + "/Frames/" + instrument.GetName() + ".tf", instrument.GetSpacecraft().GetName() + "_" + instrument.GetName()), m_instrument{ instrument }, m_orientation{ orientation }
 {
 	if (!m_fileExists)
 	{
@@ -17,7 +17,7 @@ IO::SDK::Frames::InstrumentFrameFile::InstrumentFrameFile(const IO::SDK::Instrum
 	}
 }
 
-void IO::SDK::Frames::InstrumentFrameFile::BuildFrame()
+void IO::Astrodynamics::Frames::InstrumentFrameFile::BuildFrame()
 {
 	if (std::filesystem::exists(m_filePath))
 	{

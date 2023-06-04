@@ -8,7 +8,7 @@
 #include <Body.h>
 #include <StateVector.h>
 
-namespace IO::SDK::Integrators::Forces {
+namespace IO::Astrodynamics::Integrators::Forces {
     /**
      * @brief Force
      * 
@@ -28,9 +28,9 @@ namespace IO::SDK::Integrators::Forces {
          * 
          * @param body 
          * @param stateVector 
-         * @return IO::SDK::Math::Vector3D 
+         * @return IO::Astrodynamics::Math::Vector3D
          */
-        virtual IO::SDK::Math::Vector3D Apply(const IO::SDK::Body::Body &body, const IO::SDK::OrbitalParameters::StateVector &stateVector) = 0;
+        virtual IO::Astrodynamics::Math::Vector3D Apply(const IO::Astrodynamics::Body::Body &body, const IO::Astrodynamics::OrbitalParameters::StateVector &stateVector) = 0;
 
         virtual ~Force() = default;
     };

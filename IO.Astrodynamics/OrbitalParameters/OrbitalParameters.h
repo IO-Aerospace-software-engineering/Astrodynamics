@@ -8,13 +8,13 @@
 #include <Frames.h>
 #include <Equatorial.h>
 
-namespace IO::SDK::Body
+namespace IO::Astrodynamics::Body
 {
 	//Forward declaration
 	class CelestialBody;
 }
 
-namespace IO::SDK::OrbitalParameters
+namespace IO::Astrodynamics::OrbitalParameters
 {
 	//Forward declaration
 	class StateVector;
@@ -27,9 +27,9 @@ namespace IO::SDK::OrbitalParameters
 	{
 
 	protected:
-		const std::shared_ptr<IO::SDK::Body::CelestialBody> m_centerOfMotion;
-		const IO::SDK::Time::TDB m_epoch;
-		const IO::SDK::Frames::Frames m_frame;
+		const std::shared_ptr<IO::Astrodynamics::Body::CelestialBody> m_centerOfMotion;
+		const IO::Astrodynamics::Time::TDB m_epoch;
+		const IO::Astrodynamics::Frames::Frames m_frame;
 
 	public:
 		/**
@@ -39,46 +39,46 @@ namespace IO::SDK::OrbitalParameters
 		 * @param epoch 
 		 * @param frame 
 		 */
-		OrbitalParameters(const std::shared_ptr<IO::SDK::Body::CelestialBody> &centerOfMotion, IO::SDK::Time::TDB epoch, IO::SDK::Frames::Frames frame);
+		OrbitalParameters(const std::shared_ptr<IO::Astrodynamics::Body::CelestialBody> &centerOfMotion, IO::Astrodynamics::Time::TDB epoch, IO::Astrodynamics::Frames::Frames frame);
 
 		virtual ~OrbitalParameters() = default;
 
 		/**
 		 * @brief Get the Center Of Motion
 		 * 
-		 * @return const std::shared_ptr<IO::SDK::Body::CelestialBody>& 
+		 * @return const std::shared_ptr<IO::Astrodynamics::Body::CelestialBody>&
 		 */
-		[[nodiscard]] const std::shared_ptr<IO::SDK::Body::CelestialBody> &GetCenterOfMotion() const;
+		[[nodiscard]] const std::shared_ptr<IO::Astrodynamics::Body::CelestialBody> &GetCenterOfMotion() const;
 
 		/**
 		 * @brief Get the Epoch
 		 * 
-		 * @return IO::SDK::Time::TDB 
+		 * @return IO::Astrodynamics::Time::TDB
 		 */
-		[[nodiscard]] IO::SDK::Time::TDB GetEpoch() const;
+		[[nodiscard]] IO::Astrodynamics::Time::TDB GetEpoch() const;
 
 		/**
 		 * @brief Get the Period
 		 * 
-		 * @return IO::SDK::Time::TimeSpan 
+		 * @return IO::Astrodynamics::Time::TimeSpan
 		 */
-		[[nodiscard]] virtual IO::SDK::Time::TimeSpan GetPeriod() const = 0;
+		[[nodiscard]] virtual IO::Astrodynamics::Time::TimeSpan GetPeriod() const = 0;
 
 		/**
 		 * @brief Get the Time To True Anomaly
 		 * 
 		 * @param trueAnomalyTarget True anomaly targeted
-		 * @return IO::SDK::Time::TDB 
+		 * @return IO::Astrodynamics::Time::TDB
 		 */
-		[[nodiscard]] virtual IO::SDK::Time::TDB GetTimeToTrueAnomaly(double trueAnomalyTarget) const;
+		[[nodiscard]] virtual IO::Astrodynamics::Time::TDB GetTimeToTrueAnomaly(double trueAnomalyTarget) const;
 
 		/**
 		 * @brief Get the Time To Mean Anomaly
 		 * 
 		 * @param meanAnomalyTarget 
-		 * @return IO::SDK::Time::TDB 
+		 * @return IO::Astrodynamics::Time::TDB
 		 */
-		[[nodiscard]] virtual IO::SDK::Time::TDB GetTimeToMeanAnomaly(double meanAnomalyTarget) const;
+		[[nodiscard]] virtual IO::Astrodynamics::Time::TDB GetTimeToMeanAnomaly(double meanAnomalyTarget) const;
 
 		/**
 		 * @brief Get the Mean Motion
@@ -90,9 +90,9 @@ namespace IO::SDK::OrbitalParameters
 		/**
 		 * @brief Get the Specific Angular Momentum
 		 * 
-		 * @return IO::SDK::Math::Vector3D 
+		 * @return IO::Astrodynamics::Math::Vector3D
 		 */
-		[[nodiscard]] virtual IO::SDK::Math::Vector3D GetSpecificAngularMomentum() const = 0;
+		[[nodiscard]] virtual IO::Astrodynamics::Math::Vector3D GetSpecificAngularMomentum() const = 0;
 
 		/**
 		 * @brief Get the State Vector at given epoch
@@ -100,7 +100,7 @@ namespace IO::SDK::OrbitalParameters
 		 * @param epoch 
 		 * @return StateVector 
 		 */
-		[[nodiscard]] virtual StateVector ToStateVector(const IO::SDK::Time::TDB &epoch) const = 0;
+		[[nodiscard]] virtual StateVector ToStateVector(const IO::Astrodynamics::Time::TDB &epoch) const = 0;
 
 		/**
 		 * @brief Get the State Vector at epoch
@@ -115,7 +115,7 @@ namespace IO::SDK::OrbitalParameters
 		 * @param trueAnomaly
 		 * @return StateVector
 		 */
-        [[nodiscard]] virtual IO::SDK::OrbitalParameters::StateVector ToStateVector(double trueAnomaly) const;
+        [[nodiscard]] virtual IO::Astrodynamics::OrbitalParameters::StateVector ToStateVector(double trueAnomaly) const;
 
 		/**
 		 * @brief Is elliptical ?
@@ -211,7 +211,7 @@ namespace IO::SDK::OrbitalParameters
 		 * @param epoch 
 		 * @return double 
 		 */
-		[[nodiscard]] virtual double GetEccentricAnomaly(const IO::SDK::Time::TDB& epoch) const;
+		[[nodiscard]] virtual double GetEccentricAnomaly(const IO::Astrodynamics::Time::TDB& epoch) const;
 
 		/**
 		 * @brief Get the Mean Anomaly
@@ -219,7 +219,7 @@ namespace IO::SDK::OrbitalParameters
 		 * @param epoch 
 		 * @return double 
 		 */
-		[[nodiscard]] virtual double GetMeanAnomaly(const IO::SDK::Time::TDB& epoch) const;
+		[[nodiscard]] virtual double GetMeanAnomaly(const IO::Astrodynamics::Time::TDB& epoch) const;
 
 		/**
 		 * @brief Get the True Anomaly
@@ -227,51 +227,51 @@ namespace IO::SDK::OrbitalParameters
 		 * @param epoch 
 		 * @return double 
 		 */
-		[[nodiscard]] virtual double GetTrueAnomaly(const IO::SDK::Time::TDB& epoch) const;
+		[[nodiscard]] virtual double GetTrueAnomaly(const IO::Astrodynamics::Time::TDB& epoch) const;
 
 		/**
 		 * @brief Get the Frame
 		 * 
-		 * @return const IO::SDK::Frames::Frames& 
+		 * @return const IO::Astrodynamics::Frames::Frames&
 		 */
-		[[nodiscard]] const IO::SDK::Frames::Frames &GetFrame() const;
+		[[nodiscard]] const IO::Astrodynamics::Frames::Frames &GetFrame() const;
 
 		/**
 		 * @brief Get the Eccentricity Vector
 		 * 
-		 * @return IO::SDK::Math::Vector3D 
+		 * @return IO::Astrodynamics::Math::Vector3D
 		 */
-		[[nodiscard]] IO::SDK::Math::Vector3D GetEccentricityVector() const;
+		[[nodiscard]] IO::Astrodynamics::Math::Vector3D GetEccentricityVector() const;
 
 		/**
 		 * @brief Get the Perigee Vector
 		 * 
-		 * @return IO::SDK::Math::Vector3D 
+		 * @return IO::Astrodynamics::Math::Vector3D
 		 */
-		[[nodiscard]] IO::SDK::Math::Vector3D GetPerigeeVector() const;
+		[[nodiscard]] IO::Astrodynamics::Math::Vector3D GetPerigeeVector() const;
 
 		/**
 		 * @brief Get the Apogee Vector
 		 * 
-		 * @return IO::SDK::Math::Vector3D 
+		 * @return IO::Astrodynamics::Math::Vector3D
 		 */
-		[[nodiscard]] IO::SDK::Math::Vector3D GetApogeeVector() const;
+		[[nodiscard]] IO::Astrodynamics::Math::Vector3D GetApogeeVector() const;
 
 
 
 		/**
 		 * @brief Get the Ascending Node Vector
 		 * 
-		 * @return IO::SDK::Math::Vector3D 
+		 * @return IO::Astrodynamics::Math::Vector3D
 		 */
-		[[nodiscard]] IO::SDK::Math::Vector3D GetAscendingNodeVector() const;
+		[[nodiscard]] IO::Astrodynamics::Math::Vector3D GetAscendingNodeVector() const;
 
 		/**
 		 * @brief Get right ascension and declination
 		 * 
-		 * @return IO::SDK::Coordinates::Equatorial
+		 * @return IO::Astrodynamics::Coordinates::Equatorial
 		 */
-		[[nodiscard]] IO::SDK::Coordinates::Equatorial ToEquatorialCoordinates() const;
+		[[nodiscard]] IO::Astrodynamics::Coordinates::Equatorial ToEquatorialCoordinates() const;
 
 		/**
 		 * @brief Get the Velocity at Perigee
@@ -307,7 +307,7 @@ namespace IO::SDK::OrbitalParameters
 		 * @param epoch 
 		 * @return double 
 		 */
-		[[nodiscard]] double GetMeanLongitude(const IO::SDK::Time::TDB& epoch) const;
+		[[nodiscard]] double GetMeanLongitude(const IO::Astrodynamics::Time::TDB& epoch) const;
 
 		/**
 		 * @brief Get the True Longitude at epoch
@@ -315,7 +315,7 @@ namespace IO::SDK::OrbitalParameters
 		 * @param epoch 
 		 * @return double 
 		 */
-		[[nodiscard]] double GetTrueLongitude(const IO::SDK::Time::TDB& epoch) const;
+		[[nodiscard]] double GetTrueLongitude(const IO::Astrodynamics::Time::TDB& epoch) const;
 		
 	};
 }

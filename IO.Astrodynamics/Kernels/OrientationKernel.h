@@ -9,14 +9,14 @@
 #include<StateOrientation.h>
 
 //Forward declaration
-namespace IO::SDK::Body::Spacecraft
+namespace IO::Astrodynamics::Body::Spacecraft
 {
     class Spacecraft;
 }
 
-namespace IO::SDK::Kernels
+namespace IO::Astrodynamics::Kernels
 {
-    class OrientationKernel final : public IO::SDK::Kernels::Kernel
+    class OrientationKernel final : public IO::Astrodynamics::Kernels::Kernel
     {
     private:
         int m_spacecraftId{};
@@ -38,14 +38,14 @@ namespace IO::SDK::Kernels
          *
          * @param orientations
          */
-        void WriteOrientations(const std::vector<std::vector<IO::SDK::OrbitalParameters::StateOrientation>> &orientations) const;
+        void WriteOrientations(const std::vector<std::vector<IO::Astrodynamics::OrbitalParameters::StateOrientation>> &orientations) const;
 
         /**
          * @brief Get the Coverage Window
          *
-         * @return IO::SDK::Time::Window<IO::SDK::Time::TDB>
+         * @return IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB>
          */
-        [[nodiscard]] IO::SDK::Time::Window<IO::SDK::Time::TDB> GetCoverageWindow() const override;
+        [[nodiscard]] IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB> GetCoverageWindow() const override;
 
         /**
          * @brief Read state orientations
@@ -53,13 +53,13 @@ namespace IO::SDK::Kernels
          * @param epoch
          * @param tolerance
          * @param frame
-         * @return IO::SDK::OrbitalParameters::StateOrientation
+         * @return IO::Astrodynamics::OrbitalParameters::StateOrientation
          */
-        [[nodiscard]] IO::SDK::OrbitalParameters::StateOrientation
-        ReadStateOrientation(const Body::Spacecraft::Spacecraft &spacecraft, const IO::SDK::Time::TDB &epoch, const IO::SDK::Time::TimeSpan &tolerance,
-                             const IO::SDK::Frames::Frames &frame) const;
+        [[nodiscard]] IO::Astrodynamics::OrbitalParameters::StateOrientation
+        ReadStateOrientation(const Body::Spacecraft::Spacecraft &spacecraft, const IO::Astrodynamics::Time::TDB &epoch, const IO::Astrodynamics::Time::TimeSpan &tolerance,
+                             const IO::Astrodynamics::Frames::Frames &frame) const;
 
-        friend class IO::SDK::Body::Spacecraft::Spacecraft;
+        friend class IO::Astrodynamics::Body::Spacecraft::Spacecraft;
     };
 }
 #endif // !ORIENTATION_KERNEL_H

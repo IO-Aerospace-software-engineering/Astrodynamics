@@ -6,13 +6,13 @@
 
 #include <ManeuverBase.h>
 
-namespace IO::SDK::Maneuvers
+namespace IO::Astrodynamics::Maneuvers
 {
-    class PhasingManeuver final : public IO::SDK::Maneuvers::ManeuverBase
+    class PhasingManeuver final : public IO::Astrodynamics::Maneuvers::ManeuverBase
     {
     private:
         const unsigned int m_revolutionsNumber;
-        std::shared_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> m_targetOrbit;
+        std::shared_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> m_targetOrbit;
 
     protected:
         /**
@@ -20,22 +20,22 @@ namespace IO::SDK::Maneuvers
          * 
          * @param maneuverPoint 
          */
-        void Compute(const IO::SDK::OrbitalParameters::OrbitalParameters &maneuverPoint) override;
+        void Compute(const IO::Astrodynamics::OrbitalParameters::OrbitalParameters &maneuverPoint) override;
 
         /**
          * @brief Compute orientation
          * 
          * @param maneuverPoint 
-         * @return IO::SDK::OrbitalParameters::StateOrientation 
+         * @return IO::Astrodynamics::OrbitalParameters::StateOrientation
          */
-        IO::SDK::OrbitalParameters::StateOrientation ComputeOrientation(const IO::SDK::OrbitalParameters::OrbitalParameters &maneuverPoint) override;
+        IO::Astrodynamics::OrbitalParameters::StateOrientation ComputeOrientation(const IO::Astrodynamics::OrbitalParameters::OrbitalParameters &maneuverPoint) override;
         /* data */
     public:
-        PhasingManeuver(std::vector<IO::SDK::Body::Spacecraft::Engine*> engines, IO::SDK::Propagators::Propagator &propagator, unsigned revolutionNumber,
-                        std::shared_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> targetOrbit);
+        PhasingManeuver(std::vector<IO::Astrodynamics::Body::Spacecraft::Engine*> engines, IO::Astrodynamics::Propagators::Propagator &propagator, unsigned revolutionNumber,
+                        std::shared_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> targetOrbit);
 
-        PhasingManeuver(std::vector<IO::SDK::Body::Spacecraft::Engine*> engines, IO::SDK::Propagators::Propagator &propagator, unsigned revolutionNumber,
-                        std::shared_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> targetOrbit, const IO::SDK::Time::TDB &minimumEpoch);
+        PhasingManeuver(std::vector<IO::Astrodynamics::Body::Spacecraft::Engine*> engines, IO::Astrodynamics::Propagators::Propagator &propagator, unsigned revolutionNumber,
+                        std::shared_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> targetOrbit, const IO::Astrodynamics::Time::TDB &minimumEpoch);
 
         /**
          * @brief Evaluate if maneuver can occurs
@@ -44,9 +44,9 @@ namespace IO::SDK::Maneuvers
          * @return true 
          * @return false 
          */
-        bool CanExecute(const IO::SDK::OrbitalParameters::OrbitalParameters &orbitalParams) override;
+        bool CanExecute(const IO::Astrodynamics::OrbitalParameters::OrbitalParameters &orbitalParams) override;
     };
 
-} // namespace IO::SDK::Maneuvers
+} // namespace IO::Astrodynamics::Maneuvers
 
 #endif

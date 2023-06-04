@@ -5,7 +5,7 @@
 #ifndef IOSDK_CONICORBITALELEMENTSDTO_H
 #define IOSDK_CONICORBITALELEMENTSDTO_H
 
-namespace IO::SDK::API::DTO
+namespace IO::Astrodynamics::API::DTO
 {
 
     struct ConicOrbitalElementsDTO

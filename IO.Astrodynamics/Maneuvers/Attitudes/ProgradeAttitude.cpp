@@ -3,30 +3,30 @@
  */
 #include<ProgradeAttitude.h>
 
-IO::SDK::Maneuvers::Attitudes::ProgradeAttitude::ProgradeAttitude(const std::vector<IO::SDK::Body::Spacecraft::Engine*>& engines, IO::SDK::Propagators::Propagator &propagator,
-                                                                  const IO::SDK::Time::TimeSpan &attitudeHoldDuration) : IO::SDK::Maneuvers::ManeuverBase(engines, propagator,
+IO::Astrodynamics::Maneuvers::Attitudes::ProgradeAttitude::ProgradeAttitude(const std::vector<IO::Astrodynamics::Body::Spacecraft::Engine*>& engines, IO::Astrodynamics::Propagators::Propagator &propagator,
+                                                                  const IO::Astrodynamics::Time::TimeSpan &attitudeHoldDuration) : IO::Astrodynamics::Maneuvers::ManeuverBase(engines, propagator,
                                                                                                                                                           attitudeHoldDuration)
 {
 }
 
-IO::SDK::Maneuvers::Attitudes::ProgradeAttitude::ProgradeAttitude(const std::vector<IO::SDK::Body::Spacecraft::Engine*>& engines, IO::SDK::Propagators::Propagator &propagator,
-                                                                  const IO::SDK::Time::TDB &minimumEpoch, const IO::SDK::Time::TimeSpan &attitudeHoldDuration)
-        : IO::SDK::Maneuvers::ManeuverBase(engines, propagator, minimumEpoch, attitudeHoldDuration)
+IO::Astrodynamics::Maneuvers::Attitudes::ProgradeAttitude::ProgradeAttitude(const std::vector<IO::Astrodynamics::Body::Spacecraft::Engine*>& engines, IO::Astrodynamics::Propagators::Propagator &propagator,
+                                                                  const IO::Astrodynamics::Time::TDB &minimumEpoch, const IO::Astrodynamics::Time::TimeSpan &attitudeHoldDuration)
+        : IO::Astrodynamics::Maneuvers::ManeuverBase(engines, propagator, minimumEpoch, attitudeHoldDuration)
 {
 }
 
-void IO::SDK::Maneuvers::Attitudes::ProgradeAttitude::Compute([[maybe_unused]]const IO::SDK::OrbitalParameters::OrbitalParameters &maneuverPoint)
+void IO::Astrodynamics::Maneuvers::Attitudes::ProgradeAttitude::Compute([[maybe_unused]]const IO::Astrodynamics::OrbitalParameters::OrbitalParameters &maneuverPoint)
 {
-    m_deltaV = std::make_unique<IO::SDK::Math::Vector3D>();
+    m_deltaV = std::make_unique<IO::Astrodynamics::Math::Vector3D>();
 }
 
-IO::SDK::OrbitalParameters::StateOrientation IO::SDK::Maneuvers::Attitudes::ProgradeAttitude::ComputeOrientation(const IO::SDK::OrbitalParameters::OrbitalParameters &maneuverPoint)
+IO::Astrodynamics::OrbitalParameters::StateOrientation IO::Astrodynamics::Maneuvers::Attitudes::ProgradeAttitude::ComputeOrientation(const IO::Astrodynamics::OrbitalParameters::OrbitalParameters &maneuverPoint)
 {
-    return IO::SDK::OrbitalParameters::StateOrientation{maneuverPoint.ToStateVector().GetVelocity().Normalize().To(m_spacecraft.Front), IO::SDK::Math::Vector3D(0.0, 0.0, 0.0),
+    return IO::Astrodynamics::OrbitalParameters::StateOrientation{maneuverPoint.ToStateVector().GetVelocity().Normalize().To(m_spacecraft.Front), IO::Astrodynamics::Math::Vector3D(0.0, 0.0, 0.0),
                                                         maneuverPoint.GetEpoch(), maneuverPoint.GetFrame()};
 }
 
-bool IO::SDK::Maneuvers::Attitudes::ProgradeAttitude::CanExecute([[maybe_unused]] const IO::SDK::OrbitalParameters::OrbitalParameters &orbitalParams)
+bool IO::Astrodynamics::Maneuvers::Attitudes::ProgradeAttitude::CanExecute([[maybe_unused]] const IO::Astrodynamics::OrbitalParameters::OrbitalParameters &orbitalParams)
 {
     return true;
 }

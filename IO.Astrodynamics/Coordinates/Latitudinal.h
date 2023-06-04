@@ -3,7 +3,7 @@
  */
 #ifndef LATITUDINAL_H
 #define LATITUDINAL_H
-namespace IO::SDK::Coordinates
+namespace IO::Astrodynamics::Coordinates
 {
 	/**
 	 * @brief 

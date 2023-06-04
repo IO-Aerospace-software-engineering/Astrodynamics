@@ -7,16 +7,16 @@
 #include <Site.h>
 #include <AzimuthRange.h>
 
-namespace IO::SDK::Sites
+namespace IO::Astrodynamics::Sites
 {
     /**
      * @brief Lauch site class
      * 
      */
-    class LaunchSite final : public IO::SDK::Sites::Site
+    class LaunchSite final : public IO::Astrodynamics::Sites::Site
     {
     private:
-        std::vector<IO::SDK::Coordinates::AzimuthRange> m_azimuthRanges;
+        std::vector<IO::Astrodynamics::Coordinates::AzimuthRange> m_azimuthRanges;
 
     public:
         /**
@@ -27,15 +27,15 @@ namespace IO::SDK::Sites
          * @param coordinates 
          * @param body 
          */
-        LaunchSite(int id, const std::string& name, const IO::SDK::Coordinates::Geodetic& coordinates,
-                   std::shared_ptr<IO::SDK::Body::CelestialBody> body,std::string directoryPath);
+        LaunchSite(int id, const std::string& name, const IO::Astrodynamics::Coordinates::Geodetic& coordinates,
+                   std::shared_ptr<IO::Astrodynamics::Body::CelestialBody> body,std::string directoryPath);
 
         /**
          * @brief Add an azimuth range
          * 
          * @param azimuthRange 
          */
-        void AddAzimuthLaunchRange(IO::SDK::Coordinates::AzimuthRange &azimuthRange);
+        void AddAzimuthLaunchRange(IO::Astrodynamics::Coordinates::AzimuthRange &azimuthRange);
 
         /**
          * @brief Clear all azimuth ranges
@@ -53,6 +53,6 @@ namespace IO::SDK::Sites
         [[nodiscard]] bool IsAzimuthLaunchAllowed(double azimuth) const;
     };
 
-} // namespace IO::SDK::Sites
+} // namespace IO::Astrodynamics::Sites
 
 #endif

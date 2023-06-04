@@ -4,11 +4,11 @@
 
 TEST(Helpers, TypeOf)
 {
-    IO::SDK::Body::CelestialBody cb(301);
-    auto res = IO::SDK::Helpers::IsInstanceOf<IO::SDK::Body::CelestialBody>(&cb);
+    IO::Astrodynamics::Body::CelestialBody cb(301);
+    auto res = IO::Astrodynamics::Helpers::IsInstanceOf<IO::Astrodynamics::Body::CelestialBody>(&cb);
     ASSERT_TRUE(res);
 
-    IO::SDK::Body::Body *body = &cb;
-    res = IO::SDK::Helpers::IsInstanceOf<IO::SDK::Body::CelestialBody>(body);
+    IO::Astrodynamics::Body::Body *body = &cb;
+    res = IO::Astrodynamics::Helpers::IsInstanceOf<IO::Astrodynamics::Body::CelestialBody>(body);
     ASSERT_TRUE(res);
 }

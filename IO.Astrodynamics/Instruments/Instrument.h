@@ -10,17 +10,17 @@
 #include <InstrumentKernel.h>
 #include <Site.h>
 
-namespace IO::SDK::Body::Spacecraft
+namespace IO::Astrodynamics::Body::Spacecraft
 {
     class Spacecraft;
 }
 
-namespace IO::SDK::Frames
+namespace IO::Astrodynamics::Frames
 {
     class InstrumentFrameFile;
 }
 
-namespace IO::SDK::Kernels
+namespace IO::Astrodynamics::Kernels
 {
 
     class CircularInstrumentKernel;
@@ -32,21 +32,21 @@ namespace IO::SDK::Kernels
     class InstrumentKernel;
 }
 
-namespace IO::SDK::Instruments
+namespace IO::Astrodynamics::Instruments
 {
     class Instrument
     {
     private:
-        const IO::SDK::Body::Spacecraft::Spacecraft &m_spacecraft;
+        const IO::Astrodynamics::Body::Spacecraft::Spacecraft &m_spacecraft;
         const int m_id{};
         const std::string m_name;
         const std::string m_filesPath;
-        const std::unique_ptr<IO::SDK::Frames::InstrumentFrameFile> m_frame{nullptr};
-        const IO::SDK::Math::Vector3D m_orientation{};
-        const IO::SDK::Instruments::FOVShapeEnum m_fovShape{};
-        const IO::SDK::Math::Vector3D m_boresight{};
-        const IO::SDK::Math::Vector3D m_fovRefVector{};
-        const std::unique_ptr<IO::SDK::Kernels::InstrumentKernel> m_kernel{nullptr};
+        const std::unique_ptr<IO::Astrodynamics::Frames::InstrumentFrameFile> m_frame{nullptr};
+        const IO::Astrodynamics::Math::Vector3D m_orientation{};
+        const IO::Astrodynamics::Instruments::FOVShapeEnum m_fovShape{};
+        const IO::Astrodynamics::Math::Vector3D m_boresight{};
+        const IO::Astrodynamics::Math::Vector3D m_fovRefVector{};
+        const std::unique_ptr<IO::Astrodynamics::Kernels::InstrumentKernel> m_kernel{nullptr};
 
         /**
          * @brief Construct a new circular instrument object
@@ -59,8 +59,8 @@ namespace IO::SDK::Instruments
          * @param fovRefVector
          * @param fovAngle
          */
-        Instrument(const IO::SDK::Body::Spacecraft::Spacecraft &spacecraft, unsigned short id, const std::string &name, const IO::SDK::Math::Vector3D &orientation,
-                   const IO::SDK::Math::Vector3D &boresight, const IO::SDK::Math::Vector3D &fovRefVector, double fovAngle);
+        Instrument(const IO::Astrodynamics::Body::Spacecraft::Spacecraft &spacecraft, unsigned short id, const std::string &name, const IO::Astrodynamics::Math::Vector3D &orientation,
+                   const IO::Astrodynamics::Math::Vector3D &boresight, const IO::Astrodynamics::Math::Vector3D &fovRefVector, double fovAngle);
 
         /**
          * @brief Construct a new rectangular or elliptical instrument object
@@ -75,8 +75,8 @@ namespace IO::SDK::Instruments
          * @param fovAngle
          * @param crossAngle
          */
-        Instrument(const IO::SDK::Body::Spacecraft::Spacecraft &spacecraft, unsigned short id, const std::string &name, const IO::SDK::Math::Vector3D &orientation,
-                   IO::SDK::Instruments::FOVShapeEnum fovShape, const IO::SDK::Math::Vector3D &boresight, const IO::SDK::Math::Vector3D &fovRefVector, double fovAngle,
+        Instrument(const IO::Astrodynamics::Body::Spacecraft::Spacecraft &spacecraft, unsigned short id, const std::string &name, const IO::Astrodynamics::Math::Vector3D &orientation,
+                   IO::Astrodynamics::Instruments::FOVShapeEnum fovShape, const IO::Astrodynamics::Math::Vector3D &boresight, const IO::Astrodynamics::Math::Vector3D &fovRefVector, double fovAngle,
                    double crossAngle);
 
     public:
@@ -106,45 +106,45 @@ namespace IO::SDK::Instruments
         /**
          * @brief Get the Spacecraft object
          *
-         * @return const IO::SDK::Body::Spacecraft&
+         * @return const IO::Astrodynamics::Body::Spacecraft&
          */
-        [[nodiscard]] const IO::SDK::Body::Spacecraft::Spacecraft &GetSpacecraft() const;
+        [[nodiscard]] const IO::Astrodynamics::Body::Spacecraft::Spacecraft &GetSpacecraft() const;
 
         /**
          * @brief Get the Frame object
          *
-         * @return const std::unique_ptr<IO::SDK::Frames::InstrumentFrame>&
+         * @return const std::unique_ptr<IO::Astrodynamics::Frames::InstrumentFrame>&
          */
-        [[nodiscard]] const std::unique_ptr<IO::SDK::Frames::InstrumentFrameFile> &GetFrame() const;
+        [[nodiscard]] const std::unique_ptr<IO::Astrodynamics::Frames::InstrumentFrameFile> &GetFrame() const;
 
         /**
          * @brief Get the Boresight vector
          *
-         * @return IO::SDK::Math::Vector3D
+         * @return IO::Astrodynamics::Math::Vector3D
          */
-        [[nodiscard]] IO::SDK::Math::Vector3D GetBoresight() const;
+        [[nodiscard]] IO::Astrodynamics::Math::Vector3D GetBoresight() const;
 
         /**
          * Get the boresight vector at specified epoch in a given frame
          * @param frame
          * @param epoch
-         * @return IO::SDK::Math::Vector3D
+         * @return IO::Astrodynamics::Math::Vector3D
          */
-        [[nodiscard]] IO::SDK::Math::Vector3D GetBoresight(const IO::SDK::Frames::Frames &frame, const IO::SDK::Time::TDB &epoch) const;
+        [[nodiscard]] IO::Astrodynamics::Math::Vector3D GetBoresight(const IO::Astrodynamics::Frames::Frames &frame, const IO::Astrodynamics::Time::TDB &epoch) const;
 
         /**
          * @brief Get the FOV shape
          *
-         * @return IO::SDK::Instruments::FOVShapeEnum
+         * @return IO::Astrodynamics::Instruments::FOVShapeEnum
          */
-        [[nodiscard]] IO::SDK::Instruments::FOVShapeEnum GetFOVShape() const;
+        [[nodiscard]] IO::Astrodynamics::Instruments::FOVShapeEnum GetFOVShape() const;
 
         /**
          * @brief Get the FOV boundaries
          *
-         * @return std::vector<IO::SDK::Math::Vector3D>
+         * @return std::vector<IO::Astrodynamics::Math::Vector3D>
          */
-        [[nodiscard]] std::vector<IO::SDK::Math::Vector3D> GetFOVBoundaries() const;
+        [[nodiscard]] std::vector<IO::Astrodynamics::Math::Vector3D> GetFOVBoundaries() const;
 
         /**
          * @brief Find window where target body is in field of view
@@ -152,11 +152,11 @@ namespace IO::SDK::Instruments
          * @param searchWindow
          * @param targetBody
          * @param stepSize
-         * @return std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>>
+         * @return std::vector<IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB>>
          */
-        [[nodiscard]] std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>>
-        FindWindowsWhereInFieldOfView(const IO::SDK::Time::Window<IO::SDK::Time::TDB> &searchWindow, const IO::SDK::Body::Body &targetBody,
-                                      const IO::SDK::AberrationsEnum &aberration, const IO::SDK::Time::TimeSpan &stepSize) const;
+        [[nodiscard]] std::vector<IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB>>
+        FindWindowsWhereInFieldOfView(const IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB> &searchWindow, const IO::Astrodynamics::Body::Body &targetBody,
+                                      const IO::Astrodynamics::AberrationsEnum &aberration, const IO::Astrodynamics::Time::TimeSpan &stepSize) const;
 
 
         /**
@@ -167,20 +167,20 @@ namespace IO::SDK::Instruments
          * @param stepSize
          * @return
          */
-        [[nodiscard]] std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>>
+        [[nodiscard]] std::vector<IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB>>
         FindWindowsWhereInFieldOfView(
-                const IO::SDK::Time::Window<IO::SDK::Time::TDB> &searchWindow, const IO::SDK::Sites::Site &site,
-                const IO::SDK::AberrationsEnum &aberration,
-                const IO::SDK::Time::TimeSpan &stepSize
+                const IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB> &searchWindow, const IO::Astrodynamics::Sites::Site &site,
+                const IO::Astrodynamics::AberrationsEnum &aberration,
+                const IO::Astrodynamics::Time::TimeSpan &stepSize
         ) const;
 
         /**
          * Compute boresight in Spacecraft frame
          * @return
          */
-        [[nodiscard]] IO::SDK::Math::Vector3D GetBoresightInSpacecraftFrame() const;
+        [[nodiscard]] IO::Astrodynamics::Math::Vector3D GetBoresightInSpacecraftFrame() const;
 
-        friend class IO::SDK::Body::Spacecraft::Spacecraft;
+        friend class IO::Astrodynamics::Body::Spacecraft::Spacecraft;
     };
 }
 

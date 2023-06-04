@@ -3,73 +3,73 @@
  */
 #include <DateTime.h>
 
-IO::SDK::Time::DateTime::DateTime()
+IO::Astrodynamics::Time::DateTime::DateTime()
 = default;
 
-IO::SDK::Time::DateTime::DateTime(const std::chrono::duration<double>& secondsFromJ2000) : m_secondsFromJ2000{secondsFromJ2000}
+IO::Astrodynamics::Time::DateTime::DateTime(const std::chrono::duration<double>& secondsFromJ2000) : m_secondsFromJ2000{secondsFromJ2000}
 {
 }
 
-IO::SDK::Time::DateTime::DateTime(const IO::SDK::Time::DateTime &datetime) : DateTime(datetime.m_secondsFromJ2000)
+IO::Astrodynamics::Time::DateTime::DateTime(const IO::Astrodynamics::Time::DateTime &datetime) : DateTime(datetime.m_secondsFromJ2000)
 {
 }
 
-std::chrono::duration<double> IO::SDK::Time::DateTime::GetSecondsFromJ2000() const
+std::chrono::duration<double> IO::Astrodynamics::Time::DateTime::GetSecondsFromJ2000() const
 {
 	return m_secondsFromJ2000;
 }
 
-IO::SDK::Time::TimeSpan IO::SDK::Time::DateTime::Subtract(const IO::SDK::Time::DateTime &other) const
+IO::Astrodynamics::Time::TimeSpan IO::Astrodynamics::Time::DateTime::Subtract(const IO::Astrodynamics::Time::DateTime &other) const
 {
-	return IO::SDK::Time::TimeSpan{m_secondsFromJ2000 - other.m_secondsFromJ2000};
+	return IO::Astrodynamics::Time::TimeSpan{m_secondsFromJ2000 - other.m_secondsFromJ2000};
 }
 
-IO::SDK::Time::TimeSpan IO::SDK::Time::DateTime::operator-(const IO::SDK::Time::DateTime &other) const
+IO::Astrodynamics::Time::TimeSpan IO::Astrodynamics::Time::DateTime::operator-(const IO::Astrodynamics::Time::DateTime &other) const
 {
 	return Subtract(other);
 }
 
-bool IO::SDK::Time::DateTime::operator==(const IO::SDK::Time::DateTime &other) const
+bool IO::Astrodynamics::Time::DateTime::operator==(const IO::Astrodynamics::Time::DateTime &other) const
 {
 	return m_secondsFromJ2000 == other.m_secondsFromJ2000;
 }
 
-bool IO::SDK::Time::DateTime::operator!=(const IO::SDK::Time::DateTime &other) const
+bool IO::Astrodynamics::Time::DateTime::operator!=(const IO::Astrodynamics::Time::DateTime &other) const
 {
 	return !(*this == other);
 }
 
-bool IO::SDK::Time::DateTime::operator>(const IO::SDK::Time::DateTime &other) const
+bool IO::Astrodynamics::Time::DateTime::operator>(const IO::Astrodynamics::Time::DateTime &other) const
 {
 	return this->m_secondsFromJ2000 > other.m_secondsFromJ2000;
 }
 
-bool IO::SDK::Time::DateTime::operator>=(const IO::SDK::Time::DateTime &other) const
+bool IO::Astrodynamics::Time::DateTime::operator>=(const IO::Astrodynamics::Time::DateTime &other) const
 {
 	return this->m_secondsFromJ2000 >= other.m_secondsFromJ2000;
 }
 
-bool IO::SDK::Time::DateTime::operator<(const IO::SDK::Time::DateTime &other) const
+bool IO::Astrodynamics::Time::DateTime::operator<(const IO::Astrodynamics::Time::DateTime &other) const
 {
 	return this->m_secondsFromJ2000 < other.m_secondsFromJ2000;
 }
 
-bool IO::SDK::Time::DateTime::operator<=(const IO::SDK::Time::DateTime &other) const
+bool IO::Astrodynamics::Time::DateTime::operator<=(const IO::Astrodynamics::Time::DateTime &other) const
 {
 	return this->m_secondsFromJ2000 <= other.m_secondsFromJ2000;
 }
 
-double IO::SDK::Time::DateTime::ToJulian() const
+double IO::Astrodynamics::Time::DateTime::ToJulian() const
 {
 	return j2000_c() + m_secondsFromJ2000.count() / spd_c();
 }
 
-double IO::SDK::Time::DateTime::CenturiesFromJ2000() const
+double IO::Astrodynamics::Time::DateTime::CenturiesFromJ2000() const
 {
 	return (ToJulian() - 2451545.0) / 36525;
 }
 
-IO::SDK::Time::DateTime &IO::SDK::Time::DateTime::operator=(const DateTime &datetime)
+IO::Astrodynamics::Time::DateTime &IO::Astrodynamics::Time::DateTime::operator=(const DateTime &datetime)
 {
 	// Guard self assignment
 	if (this == &datetime)

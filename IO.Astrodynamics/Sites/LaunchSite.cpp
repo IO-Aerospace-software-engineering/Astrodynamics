@@ -5,18 +5,18 @@
 #include <LaunchSite.h>
 #include <algorithm>
 
-IO::SDK::Sites::LaunchSite::LaunchSite(const int id, const std::string &name, const IO::SDK::Coordinates::Geodetic &coordinates,
-                                       std::shared_ptr<IO::SDK::Body::CelestialBody> body, std::string directoryPath) : Site(id, name, coordinates, std::move(body), std::move(directoryPath))
+IO::Astrodynamics::Sites::LaunchSite::LaunchSite(const int id, const std::string &name, const IO::Astrodynamics::Coordinates::Geodetic &coordinates,
+                                       std::shared_ptr<IO::Astrodynamics::Body::CelestialBody> body, std::string directoryPath) : Site(id, name, coordinates, std::move(body), std::move(directoryPath))
 {
 }
 
-void IO::SDK::Sites::LaunchSite::AddAzimuthLaunchRange(IO::SDK::Coordinates::AzimuthRange &azimuthRange)
+void IO::Astrodynamics::Sites::LaunchSite::AddAzimuthLaunchRange(IO::Astrodynamics::Coordinates::AzimuthRange &azimuthRange)
 {
     for (auto &&az: m_azimuthRanges)
     {
         if (az.IsIntersected(azimuthRange))
         {
-            throw IO::SDK::Exception::SDKException("Azimuth range overlap an existing azimuth range for this site");
+            throw IO::Astrodynamics::Exception::SDKException("Azimuth range overlap an existing azimuth range for this site");
         }
     }
 
@@ -24,12 +24,12 @@ void IO::SDK::Sites::LaunchSite::AddAzimuthLaunchRange(IO::SDK::Coordinates::Azi
 
 }
 
-void IO::SDK::Sites::LaunchSite::ClearAzimuthLaunchRanges()
+void IO::Astrodynamics::Sites::LaunchSite::ClearAzimuthLaunchRanges()
 {
     m_azimuthRanges.clear();
 }
 
-bool IO::SDK::Sites::LaunchSite::IsAzimuthLaunchAllowed(const double azimuth) const
+bool IO::Astrodynamics::Sites::LaunchSite::IsAzimuthLaunchAllowed(const double azimuth) const
 {
-    return std::any_of(m_azimuthRanges.cbegin(), m_azimuthRanges.cend(), [&azimuth](IO::SDK::Coordinates::AzimuthRange az) { return az.IsInRange(azimuth); });
+    return std::any_of(m_azimuthRanges.cbegin(), m_azimuthRanges.cend(), [&azimuth](IO::Astrodynamics::Coordinates::AzimuthRange az) { return az.IsInRange(azimuth); });
 }

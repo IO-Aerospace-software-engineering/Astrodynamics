@@ -9,7 +9,7 @@
 #include <FuelTank.h>
 #include <TimeSpan.h>
 
-namespace IO::SDK::Body::Spacecraft
+namespace IO::Astrodynamics::Body::Spacecraft
 {
 	class Spacecraft;
 	/**
@@ -20,9 +20,9 @@ namespace IO::SDK::Body::Spacecraft
 	{
 	private:
 		const std::string m_name{};
-		const IO::SDK::Body::Spacecraft::FuelTank &m_fuelTank;
-		const IO::SDK::Math::Vector3D m_position;
-		const IO::SDK::Math::Vector3D m_orientation;
+		const IO::Astrodynamics::Body::Spacecraft::FuelTank &m_fuelTank;
+		const IO::Astrodynamics::Math::Vector3D m_position;
+		const IO::Astrodynamics::Math::Vector3D m_orientation;
 		const double m_isp{};
 		const double m_fuelFlow{};
 		const std::string m_serialNumber{};
@@ -41,7 +41,7 @@ namespace IO::SDK::Body::Spacecraft
 		 * @param isp s
 		 * @param fuelFlow kg/s
 		 */
-		Engine(const std::string &serialNumber, const std::string &name, const IO::SDK::Body::Spacecraft::FuelTank &fueltank, const Math::Vector3D &position, const Math::Vector3D &orientation, double isp, double fuelFlow);
+		Engine(const std::string &serialNumber, const std::string &name, const IO::Astrodynamics::Body::Spacecraft::FuelTank &fueltank, const Math::Vector3D &position, const Math::Vector3D &orientation, double isp, double fuelFlow);
 		/**
 		 * @brief Get the Name object
 		 * 
@@ -94,9 +94,9 @@ namespace IO::SDK::Body::Spacecraft
 		/**
 		 * @brief Get the Fuel Tank object
 		 * 
-		 * @return const IO::SDK::Body::Spacecraft::FuelTank& 
+		 * @return const IO::Astrodynamics::Body::Spacecraft::FuelTank&
 		 */
-		[[nodiscard]] const IO::SDK::Body::Spacecraft::FuelTank &GetFuelTank() const;
+		[[nodiscard]] const IO::Astrodynamics::Body::Spacecraft::FuelTank &GetFuelTank() const;
 
 		/**
 		 * @brief Get the Thrust
@@ -111,10 +111,10 @@ namespace IO::SDK::Body::Spacecraft
 		 * @param duration 
 		 * @return double 
 		 */
-		double Burn(const IO::SDK::Time::TimeSpan& duration);
+		double Burn(const IO::Astrodynamics::Time::TimeSpan& duration);
 
-		bool operator==(const IO::SDK::Body::Spacecraft::Engine &other) const;
-		bool operator!=(const IO::SDK::Body::Spacecraft::Engine &other) const;
+		bool operator==(const IO::Astrodynamics::Body::Spacecraft::Engine &other) const;
+		bool operator!=(const IO::Astrodynamics::Body::Spacecraft::Engine &other) const;
 
 		/**
 		 * @brief Comptue Delta V from mass changing
@@ -133,9 +133,9 @@ namespace IO::SDK::Body::Spacecraft
 		 * @param initialMass Spacecraft initial mass
 		 * @param fuelFlow Engine fuel flow
 		 * @param deltaV Delat V
-		 * @return IO::SDK::Time::TimeSpan 
+		 * @return IO::Astrodynamics::Time::TimeSpan
 		 */
-		static IO::SDK::Time::TimeSpan ComputeDeltaT(double isp, double initialMass, double fuelFlow, double deltaV);
+		static IO::Astrodynamics::Time::TimeSpan ComputeDeltaT(double isp, double initialMass, double fuelFlow, double deltaV);
 
 		/**
 		 * @brief Compute fuel mass required to reach Delta V

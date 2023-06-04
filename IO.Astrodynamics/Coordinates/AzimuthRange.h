@@ -4,7 +4,7 @@
 #ifndef AZIMUTH_RANGE_H
 #define AZIMUTH_RANGE_H
 
-namespace IO::SDK::Coordinates
+namespace IO::Astrodynamics::Coordinates
 {
     class AzimuthRange
     {

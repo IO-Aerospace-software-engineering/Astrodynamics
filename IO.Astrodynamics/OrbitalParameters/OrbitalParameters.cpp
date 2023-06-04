@@ -8,81 +8,81 @@
 
 #include <utility>
 
-IO::SDK::OrbitalParameters::OrbitalParameters::OrbitalParameters(const std::shared_ptr<IO::SDK::Body::CelestialBody> &centerOfMotion, IO::SDK::Time::TDB epoch, IO::SDK::Frames::Frames frame) : m_centerOfMotion{centerOfMotion}, m_epoch{std::move(epoch)}, m_frame{std::move(frame)}
+IO::Astrodynamics::OrbitalParameters::OrbitalParameters::OrbitalParameters(const std::shared_ptr<IO::Astrodynamics::Body::CelestialBody> &centerOfMotion, IO::Astrodynamics::Time::TDB epoch, IO::Astrodynamics::Frames::Frames frame) : m_centerOfMotion{centerOfMotion}, m_epoch{std::move(epoch)}, m_frame{std::move(frame)}
 {
 }
 
-const std::shared_ptr<IO::SDK::Body::CelestialBody> &IO::SDK::OrbitalParameters::OrbitalParameters::GetCenterOfMotion() const
+const std::shared_ptr<IO::Astrodynamics::Body::CelestialBody> &IO::Astrodynamics::OrbitalParameters::OrbitalParameters::GetCenterOfMotion() const
 {
 	return m_centerOfMotion;
 }
 
-bool IO::SDK::OrbitalParameters::OrbitalParameters::IsElliptical() const
+bool IO::Astrodynamics::OrbitalParameters::OrbitalParameters::IsElliptical() const
 {
 	return GetEccentricity() < 1;
 }
 
-bool IO::SDK::OrbitalParameters::OrbitalParameters::IsParabolic() const
+bool IO::Astrodynamics::OrbitalParameters::OrbitalParameters::IsParabolic() const
 {
 	return GetEccentricity() == 1;
 }
 
-bool IO::SDK::OrbitalParameters::OrbitalParameters::IsHyperbolic() const
+bool IO::Astrodynamics::OrbitalParameters::OrbitalParameters::IsHyperbolic() const
 {
 	return GetEccentricity() > 1;
 }
 
-bool IO::SDK::OrbitalParameters::OrbitalParameters::IsCircular() const
+bool IO::Astrodynamics::OrbitalParameters::OrbitalParameters::IsCircular() const
 {
-	return GetEccentricity() < IO::SDK::Parameters::CircularEccentricityAccuraccy;
+	return GetEccentricity() < IO::Astrodynamics::Parameters::CircularEccentricityAccuraccy;
 }
 
-double IO::SDK::OrbitalParameters::OrbitalParameters::GetMeanMotion() const
+double IO::Astrodynamics::OrbitalParameters::OrbitalParameters::GetMeanMotion() const
 {
 	if (this->IsHyperbolic())
 	{
 		return std::numeric_limits<double>::infinity();
 	}
 
-	return IO::SDK::Constants::_2PI / GetPeriod().GetSeconds().count();
+	return IO::Astrodynamics::Constants::_2PI / GetPeriod().GetSeconds().count();
 }
 
-IO::SDK::Time::TDB IO::SDK::OrbitalParameters::OrbitalParameters::GetTimeToMeanAnomaly(double meanAnomalyTarget) const
+IO::Astrodynamics::Time::TDB IO::Astrodynamics::OrbitalParameters::OrbitalParameters::GetTimeToMeanAnomaly(double meanAnomalyTarget) const
 {
 	double delta{meanAnomalyTarget - GetMeanAnomaly()};
 	while (delta < 0.0)
 	{
-		delta += IO::SDK::Constants::_2PI;
+		delta += IO::Astrodynamics::Constants::_2PI;
 	}
-	return IO::SDK::Time::TDB{std::chrono::duration<double>(m_epoch.GetSecondsFromJ2000().count() + std::fmod(delta, IO::SDK::Constants::_2PI) / GetMeanMotion())};
+	return IO::Astrodynamics::Time::TDB{std::chrono::duration<double>(m_epoch.GetSecondsFromJ2000().count() + std::fmod(delta, IO::Astrodynamics::Constants::_2PI) / GetMeanMotion())};
 }
 
-IO::SDK::Time::TDB IO::SDK::OrbitalParameters::OrbitalParameters::GetTimeToTrueAnomaly(double trueAnomalyTarget) const
+IO::Astrodynamics::Time::TDB IO::Astrodynamics::OrbitalParameters::OrbitalParameters::GetTimeToTrueAnomaly(double trueAnomalyTarget) const
 {
 	if (trueAnomalyTarget < 0.0)
 	{
-		trueAnomalyTarget += IO::SDK::Constants::_2PI;
+		trueAnomalyTarget += IO::Astrodynamics::Constants::_2PI;
 	}
 	//X = cos E
 	double X = (GetEccentricity() + std::cos(trueAnomalyTarget)) / (1 + GetEccentricity() * std::cos(trueAnomalyTarget));
 	double E = std::acos(X);
 	double M = E - GetEccentricity() * std::sin(E);
 
-	if (trueAnomalyTarget > IO::SDK::Constants::PI)
+	if (trueAnomalyTarget > IO::Astrodynamics::Constants::PI)
 	{
-		M = IO::SDK::Constants::_2PI - M;
+		M = IO::Astrodynamics::Constants::_2PI - M;
 	}
 
 	return GetTimeToMeanAnomaly(M);
 }
 
-double IO::SDK::OrbitalParameters::OrbitalParameters::GetEccentricAnomaly(const IO::SDK::Time::TDB& epoch) const
+double IO::Astrodynamics::OrbitalParameters::OrbitalParameters::GetEccentricAnomaly(const IO::Astrodynamics::Time::TDB& epoch) const
 {
 	double M{this->GetMeanAnomaly(epoch)};
 	double tmpE{M};
 	double E{};
 
-	while (std::abs(tmpE - E) > IO::SDK::Constants::ECCENTRIC_ANOMALY_ACCURACY)
+	while (std::abs(tmpE - E) > IO::Astrodynamics::Constants::ECCENTRIC_ANOMALY_ACCURACY)
 	{
 		E = tmpE;
 		tmpE = M + GetEccentricity() * std::sin(E);
@@ -90,143 +90,143 @@ double IO::SDK::OrbitalParameters::OrbitalParameters::GetEccentricAnomaly(const 
 	return E;
 }
 
-double IO::SDK::OrbitalParameters::OrbitalParameters::GetMeanAnomaly(const IO::SDK::Time::TDB& epoch) const
+double IO::Astrodynamics::OrbitalParameters::OrbitalParameters::GetMeanAnomaly(const IO::Astrodynamics::Time::TDB& epoch) const
 {
 	double M{GetMeanAnomaly() + GetMeanMotion() * (epoch - m_epoch).GetSeconds().count()};
 	while (M < 0.0)
 	{
-		M += IO::SDK::Constants::_2PI;
+		M += IO::Astrodynamics::Constants::_2PI;
 	}
-	return std::fmod(M, IO::SDK::Constants::_2PI);
+	return std::fmod(M, IO::Astrodynamics::Constants::_2PI);
 }
 
-double IO::SDK::OrbitalParameters::OrbitalParameters::GetTrueAnomaly(const IO::SDK::Time::TDB& epoch) const
+double IO::Astrodynamics::OrbitalParameters::OrbitalParameters::GetTrueAnomaly(const IO::Astrodynamics::Time::TDB& epoch) const
 {
 	double E{this->GetEccentricAnomaly(epoch)};
-	double v = fmod(atan2(sqrt(1 - pow(GetEccentricity(), 2)) * sin(E), cos(E) - GetEccentricity()), IO::SDK::Constants::_2PI);
+	double v = fmod(atan2(sqrt(1 - pow(GetEccentricity(), 2)) * sin(E), cos(E) - GetEccentricity()), IO::Astrodynamics::Constants::_2PI);
 	while (v < 0.0)
 	{
-		v += IO::SDK::Constants::_2PI;
+		v += IO::Astrodynamics::Constants::_2PI;
 	}
-	return std::fmod(v, IO::SDK::Constants::_2PI);
+	return std::fmod(v, IO::Astrodynamics::Constants::_2PI);
 }
 
-double IO::SDK::OrbitalParameters::OrbitalParameters::GetTrueAnomaly() const
+double IO::Astrodynamics::OrbitalParameters::OrbitalParameters::GetTrueAnomaly() const
 {
 	return GetTrueAnomaly(m_epoch);
 }
 
-IO::SDK::OrbitalParameters::StateVector IO::SDK::OrbitalParameters::OrbitalParameters::ToStateVector() const
+IO::Astrodynamics::OrbitalParameters::StateVector IO::Astrodynamics::OrbitalParameters::OrbitalParameters::ToStateVector() const
 {
 	return ToStateVector(m_epoch);
 }
 
-IO::SDK::Time::TDB IO::SDK::OrbitalParameters::OrbitalParameters::GetEpoch() const
+IO::Astrodynamics::Time::TDB IO::Astrodynamics::OrbitalParameters::OrbitalParameters::GetEpoch() const
 {
 	return m_epoch;
 }
 
-const IO::SDK::Frames::Frames &IO::SDK::OrbitalParameters::OrbitalParameters::GetFrame() const
+const IO::Astrodynamics::Frames::Frames &IO::Astrodynamics::OrbitalParameters::OrbitalParameters::GetFrame() const
 {
 	return m_frame;
 }
 
-IO::SDK::Math::Vector3D IO::SDK::OrbitalParameters::OrbitalParameters::GetEccentricityVector() const
+IO::Astrodynamics::Math::Vector3D IO::Astrodynamics::OrbitalParameters::OrbitalParameters::GetEccentricityVector() const
 {
 	auto sv = ToStateVector();
 	return (sv.GetVelocity().CrossProduct(GetSpecificAngularMomentum()) / m_centerOfMotion->GetMu()) - (sv.GetPosition() / sv.GetPosition().Magnitude());
 }
 
-IO::SDK::Math::Vector3D IO::SDK::OrbitalParameters::OrbitalParameters::GetPerigeeVector() const
+IO::Astrodynamics::Math::Vector3D IO::Astrodynamics::OrbitalParameters::OrbitalParameters::GetPerigeeVector() const
 {
 	return GetEccentricityVector().Normalize() * (GetSemiMajorAxis() * (1.0 - GetEccentricity()));
 }
 
-IO::SDK::Math::Vector3D IO::SDK::OrbitalParameters::OrbitalParameters::GetApogeeVector() const
+IO::Astrodynamics::Math::Vector3D IO::Astrodynamics::OrbitalParameters::OrbitalParameters::GetApogeeVector() const
 {
 	return GetEccentricityVector().Normalize().Reverse() * (GetSemiMajorAxis() * (1.0 + GetEccentricity()));
 }
 
-IO::SDK::OrbitalParameters::StateVector IO::SDK::OrbitalParameters::OrbitalParameters::ToStateVector(double trueAnomaly) const
+IO::Astrodynamics::OrbitalParameters::StateVector IO::Astrodynamics::OrbitalParameters::OrbitalParameters::ToStateVector(double trueAnomaly) const
 {
 	return ToStateVector(GetTimeToTrueAnomaly(trueAnomaly));
 }
 
-IO::SDK::Math::Vector3D IO::SDK::OrbitalParameters::OrbitalParameters::GetAscendingNodeVector() const
+IO::Astrodynamics::Math::Vector3D IO::Astrodynamics::OrbitalParameters::OrbitalParameters::GetAscendingNodeVector() const
 {
 	//Compute asending node vector relative to body fixed
-	auto v = IO::SDK::Math::Vector3D::VectorZ.CrossProduct(m_frame.TransformVector(m_centerOfMotion->GetBodyFixedFrame(), GetSpecificAngularMomentum(), m_epoch));
+	auto v = IO::Astrodynamics::Math::Vector3D::VectorZ.CrossProduct(m_frame.TransformVector(m_centerOfMotion->GetBodyFixedFrame(), GetSpecificAngularMomentum(), m_epoch));
 
 	//Transform ascending node vector to original orbital parameter frame
 	return m_centerOfMotion->GetBodyFixedFrame().TransformVector(m_frame, v, m_epoch).Normalize();
 }
 
-IO::SDK::Coordinates::Equatorial IO::SDK::OrbitalParameters::OrbitalParameters::ToEquatorialCoordinates() const
+IO::Astrodynamics::Coordinates::Equatorial IO::Astrodynamics::OrbitalParameters::OrbitalParameters::ToEquatorialCoordinates() const
 {
 	auto sv = ToStateVector();
-	if (sv.GetFrame() != IO::SDK::Frames::InertialFrames::GetICRF())
+	if (sv.GetFrame() != IO::Astrodynamics::Frames::InertialFrames::GetICRF())
 	{
-		sv = sv.ToFrame(IO::SDK::Frames::InertialFrames::GetICRF());
+		sv = sv.ToFrame(IO::Astrodynamics::Frames::InertialFrames::GetICRF());
 	}
 
 	ConstSpiceDouble rectan[3]{sv.GetPosition().GetX(), sv.GetPosition().GetY(), sv.GetPosition().GetZ()};
 	double r, ra, dec;
 	recrad_c(rectan, &r, &ra, &dec);
 
-	return IO::SDK::Coordinates::Equatorial{ra, dec, r};
+	return IO::Astrodynamics::Coordinates::Equatorial{ra, dec, r};
 }
 
-double IO::SDK::OrbitalParameters::OrbitalParameters::GetVelocityAtPerigee() const
+double IO::Astrodynamics::OrbitalParameters::OrbitalParameters::GetVelocityAtPerigee() const
 {
 	return ToStateVector(0.0).GetVelocity().Magnitude();
 }
 
-double IO::SDK::OrbitalParameters::OrbitalParameters::GetVelocityAtApogee() const
+double IO::Astrodynamics::OrbitalParameters::OrbitalParameters::GetVelocityAtApogee() const
 {
-	return ToStateVector(IO::SDK::Constants::PI).GetVelocity().Magnitude();
+	return ToStateVector(IO::Astrodynamics::Constants::PI).GetVelocity().Magnitude();
 }
 
-double IO::SDK::OrbitalParameters::OrbitalParameters::GetTrueLongitude() const
+double IO::Astrodynamics::OrbitalParameters::OrbitalParameters::GetTrueLongitude() const
 {
 	double res = this->GetRightAscendingNodeLongitude() + this->GetPeriapsisArgument() + this->GetTrueAnomaly();
-	while (res > IO::SDK::Constants::_2PI)
+	while (res > IO::Astrodynamics::Constants::_2PI)
 	{
-		res -= IO::SDK::Constants::_2PI;
+		res -= IO::Astrodynamics::Constants::_2PI;
 	}
 
 	return res;
 }
 
-double IO::SDK::OrbitalParameters::OrbitalParameters::GetMeanLongitude() const
+double IO::Astrodynamics::OrbitalParameters::OrbitalParameters::GetMeanLongitude() const
 {
 	double res = this->GetRightAscendingNodeLongitude() + this->GetPeriapsisArgument() + this->GetMeanAnomaly();
-	while (res > IO::SDK::Constants::_2PI)
+	while (res > IO::Astrodynamics::Constants::_2PI)
 	{
-		res -= IO::SDK::Constants::_2PI;
+		res -= IO::Astrodynamics::Constants::_2PI;
 	}
 
 	return res;
 }
 
-double IO::SDK::OrbitalParameters::OrbitalParameters::GetTrueLongitude(const IO::SDK::Time::TDB &epoch) const
+double IO::Astrodynamics::OrbitalParameters::OrbitalParameters::GetTrueLongitude(const IO::Astrodynamics::Time::TDB &epoch) const
 {
 	double res = this->GetRightAscendingNodeLongitude() + this->GetPeriapsisArgument() + this->GetTrueAnomaly(epoch);
 
-	while (res > IO::SDK::Constants::_2PI)
+	while (res > IO::Astrodynamics::Constants::_2PI)
 	{
-		res -= IO::SDK::Constants::_2PI;
+		res -= IO::Astrodynamics::Constants::_2PI;
 	}
 
 	return res;
 }
 
-double IO::SDK::OrbitalParameters::OrbitalParameters::GetMeanLongitude(const IO::SDK::Time::TDB &epoch) const
+double IO::Astrodynamics::OrbitalParameters::OrbitalParameters::GetMeanLongitude(const IO::Astrodynamics::Time::TDB &epoch) const
 {
 	double res = this->GetRightAscendingNodeLongitude() + this->GetPeriapsisArgument() + this->GetMeanAnomaly(epoch);
 
-	while (res > IO::SDK::Constants::_2PI)
+	while (res > IO::Astrodynamics::Constants::_2PI)
 	{
-		res -= IO::SDK::Constants::_2PI;
+		res -= IO::Astrodynamics::Constants::_2PI;
 	}
 
 	return res;

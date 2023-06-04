@@ -7,7 +7,7 @@
 #include<vector>
 #include<string>
 
-namespace IO::SDK
+namespace IO::Astrodynamics
 {
 	/**
 	 * @brief Class used to read raw data pool

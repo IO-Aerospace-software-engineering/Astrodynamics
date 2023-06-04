@@ -4,13 +4,13 @@
 #include <Aberrations.h>
 #include <SDKException.h>
 
-std::string IO::SDK::Aberrations::ToString(const AberrationsEnum e)
+std::string IO::Astrodynamics::Aberrations::ToString(const AberrationsEnum e)
 {
-    auto it = IO::SDK::Aberrations::AberrationStrings.find(e);
-    return it == IO::SDK::Aberrations::AberrationStrings.end() ? std::string("Out of range") : std::string(it->second);
+    auto it = IO::Astrodynamics::Aberrations::AberrationStrings.find(e);
+    return it == IO::Astrodynamics::Aberrations::AberrationStrings.end() ? std::string("Out of range") : std::string(it->second);
 }
 
-IO::SDK::AberrationsEnum IO::SDK::Aberrations::ToEnum(const std::string& e)
+IO::Astrodynamics::AberrationsEnum IO::Astrodynamics::Aberrations::ToEnum(const std::string& e)
 {
     for (auto& abe: AberrationStrings)
     {
@@ -20,5 +20,5 @@ IO::SDK::AberrationsEnum IO::SDK::Aberrations::ToEnum(const std::string& e)
         }
     }
 
-    throw IO::SDK::Exception::SDKException("Invalid aberration name : " + e);
+    throw IO::Astrodynamics::Exception::SDKException("Invalid aberration name : " + e);
 }

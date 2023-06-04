@@ -8,28 +8,28 @@
 #include <memory>
 #include <ManeuverBase.h>
 
-namespace IO::SDK::Maneuvers
+namespace IO::Astrodynamics::Maneuvers
 {
-    class ApsidalAlignmentManeuver final : public IO::SDK::Maneuvers::ManeuverBase
+    class ApsidalAlignmentManeuver final : public IO::Astrodynamics::Maneuvers::ManeuverBase
     {
     private:
         double m_theta{};
         bool m_isIntersectP{false};
         bool m_isIntersectQ{false};
 
-        [[nodiscard]] bool IsIntersectP(const IO::SDK::OrbitalParameters::StateVector &stateVector) const;
-        [[nodiscard]] bool IsIntersectQ(const IO::SDK::OrbitalParameters::StateVector &stateVector) const;
+        [[nodiscard]] bool IsIntersectP(const IO::Astrodynamics::OrbitalParameters::StateVector &stateVector) const;
+        [[nodiscard]] bool IsIntersectQ(const IO::Astrodynamics::OrbitalParameters::StateVector &stateVector) const;
 
-        [[nodiscard]] std::map<std::string, double> GetCoefficients(const IO::SDK::OrbitalParameters::StateVector &stateVector) const;
+        [[nodiscard]] std::map<std::string, double> GetCoefficients(const IO::Astrodynamics::OrbitalParameters::StateVector &stateVector) const;
 
-        [[nodiscard]] double GetPTrueAnomaly(const IO::SDK::OrbitalParameters::StateVector &sv) const;
-        [[nodiscard]] double GetQTrueAnomaly(const IO::SDK::OrbitalParameters::StateVector &sv) const;
+        [[nodiscard]] double GetPTrueAnomaly(const IO::Astrodynamics::OrbitalParameters::StateVector &sv) const;
+        [[nodiscard]] double GetQTrueAnomaly(const IO::Astrodynamics::OrbitalParameters::StateVector &sv) const;
 
-        [[nodiscard]] double GetPTargetTrueAnomaly(const IO::SDK::OrbitalParameters::StateVector &sv) const;
-        [[nodiscard]] double GetQTargetTrueAnomaly(const IO::SDK::OrbitalParameters::StateVector &sv) const;
-        [[nodiscard]] IO::SDK::Math::Vector3D GetDeltaV(const IO::SDK::OrbitalParameters::StateVector &sv) const;
+        [[nodiscard]] double GetPTargetTrueAnomaly(const IO::Astrodynamics::OrbitalParameters::StateVector &sv) const;
+        [[nodiscard]] double GetQTargetTrueAnomaly(const IO::Astrodynamics::OrbitalParameters::StateVector &sv) const;
+        [[nodiscard]] IO::Astrodynamics::Math::Vector3D GetDeltaV(const IO::Astrodynamics::OrbitalParameters::StateVector &sv) const;
 
-        std::shared_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> m_targetOrbit;
+        std::shared_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> m_targetOrbit;
 
     protected:
         /**
@@ -37,21 +37,21 @@ namespace IO::SDK::Maneuvers
          * 
          * @param maneuverPoint 
          */
-        void Compute(const IO::SDK::OrbitalParameters::OrbitalParameters &maneuverPoint) override;
+        void Compute(const IO::Astrodynamics::OrbitalParameters::OrbitalParameters &maneuverPoint) override;
 
         /**
          * @brief 
          * 
          * @param maneuverPoint 
-         * @return IO::SDK::OrbitalParameters::StateOrientation 
+         * @return IO::Astrodynamics::OrbitalParameters::StateOrientation
          */
-        IO::SDK::OrbitalParameters::StateOrientation ComputeOrientation(const IO::SDK::OrbitalParameters::OrbitalParameters &maneuverPoint) override;
+        IO::Astrodynamics::OrbitalParameters::StateOrientation ComputeOrientation(const IO::Astrodynamics::OrbitalParameters::OrbitalParameters &maneuverPoint) override;
 
     public:
-        ApsidalAlignmentManeuver(std::vector<IO::SDK::Body::Spacecraft::Engine*> engines, IO::SDK::Propagators::Propagator &propagator, std::shared_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> targetOrbit);
-        ApsidalAlignmentManeuver(std::vector<IO::SDK::Body::Spacecraft::Engine*> engines, IO::SDK::Propagators::Propagator &propagator, std::shared_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> targetOrbit, const IO::SDK::Time::TDB &minimumEpoch);
+        ApsidalAlignmentManeuver(std::vector<IO::Astrodynamics::Body::Spacecraft::Engine*> engines, IO::Astrodynamics::Propagators::Propagator &propagator, std::shared_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> targetOrbit);
+        ApsidalAlignmentManeuver(std::vector<IO::Astrodynamics::Body::Spacecraft::Engine*> engines, IO::Astrodynamics::Propagators::Propagator &propagator, std::shared_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> targetOrbit, const IO::Astrodynamics::Time::TDB &minimumEpoch);
 
-        using IO::SDK::Maneuvers::ManeuverBase::GetDeltaV;
+        using IO::Astrodynamics::Maneuvers::ManeuverBase::GetDeltaV;
 
         /**
          * @brief Define maneuver execution condition
@@ -60,7 +60,7 @@ namespace IO::SDK::Maneuvers
          * @return true 
          * @return false 
          */
-        bool CanExecute(const IO::SDK::OrbitalParameters::OrbitalParameters &orbitalParams) override;
+        bool CanExecute(const IO::Astrodynamics::OrbitalParameters::OrbitalParameters &orbitalParams) override;
 
         /**
          * @brief Get the theta angle
@@ -75,7 +75,7 @@ namespace IO::SDK::Maneuvers
          * @param stateVector 
          * @return double 
          */
-        [[nodiscard]] double GetTheta(const IO::SDK::OrbitalParameters::StateVector &stateVector) const;
+        [[nodiscard]] double GetTheta(const IO::Astrodynamics::OrbitalParameters::StateVector &stateVector) const;
     };
 }
 

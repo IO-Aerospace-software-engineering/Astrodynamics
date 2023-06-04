@@ -3,14 +3,14 @@
  */
 #include <SurfaceCoordinates.h>
 
-IO::SDK::Coordinates::SurfaceCoordinates::SurfaceCoordinates(const size_t longitudeSpan, const size_t latitudeSpan)
+IO::Astrodynamics::Coordinates::SurfaceCoordinates::SurfaceCoordinates(const size_t longitudeSpan, const size_t latitudeSpan)
 {
 	size_t n = longitudeSpan * latitudeSpan;
 	m_surfacePoints.reserve(n);
 	m_surfaceNormals.reserve(n);
 }
 
-IO::SDK::Coordinates::SurfaceCoordinates::SurfaceCoordinates(const SurfaceCoordinates &surfaceCoordinates)
+IO::Astrodynamics::Coordinates::SurfaceCoordinates::SurfaceCoordinates(const SurfaceCoordinates &surfaceCoordinates)
 {
 	m_surfaceNormals.reserve(surfaceCoordinates.m_surfaceNormals.size());
 	m_surfacePoints.reserve(surfaceCoordinates.m_surfacePoints.size());
@@ -26,7 +26,7 @@ IO::SDK::Coordinates::SurfaceCoordinates::SurfaceCoordinates(const SurfaceCoordi
 	}
 }
 
-IO::SDK::Coordinates::SurfaceCoordinates &IO::SDK::Coordinates::SurfaceCoordinates::operator=(const SurfaceCoordinates &surfaceCoordinates)
+IO::Astrodynamics::Coordinates::SurfaceCoordinates &IO::Astrodynamics::Coordinates::SurfaceCoordinates::operator=(const SurfaceCoordinates &surfaceCoordinates)
 {
 	if (&surfaceCoordinates == this)
 	{
@@ -52,12 +52,12 @@ IO::SDK::Coordinates::SurfaceCoordinates &IO::SDK::Coordinates::SurfaceCoordinat
 	return *this;
 }
 
-void IO::SDK::Coordinates::SurfaceCoordinates::AddPoint(const IO::SDK::Math::Vector3D &point)
+void IO::Astrodynamics::Coordinates::SurfaceCoordinates::AddPoint(const IO::Astrodynamics::Math::Vector3D &point)
 {
-	m_surfacePoints.push_back(std::make_unique<IO::SDK::Math::Vector3D>(point.GetX(), point.GetY(), point.GetZ()));
+	m_surfacePoints.push_back(std::make_unique<IO::Astrodynamics::Math::Vector3D>(point.GetX(), point.GetY(), point.GetZ()));
 }
 
-void IO::SDK::Coordinates::SurfaceCoordinates::AddNormal(const IO::SDK::Math::Vector3D &normal)
+void IO::Astrodynamics::Coordinates::SurfaceCoordinates::AddNormal(const IO::Astrodynamics::Math::Vector3D &normal)
 {
-	m_surfaceNormals.push_back(std::make_unique<IO::SDK::Math::Vector3D>(normal.GetX(), normal.GetY(), normal.GetZ()));
+	m_surfaceNormals.push_back(std::make_unique<IO::Astrodynamics::Math::Vector3D>(normal.GetX(), normal.GetY(), normal.GetZ()));
 }

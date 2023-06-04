@@ -1,7 +1,7 @@
 #ifndef TESTS_CONSTANTS_H
 #define TESTS_CONSTANTS_H
 
-namespace IO::SDK::Test::Constants
+namespace IO::Astrodynamics::Test::Constants
 {
 	inline constexpr double ANGULAR_ACCURACY{ 1E-09 };
 	inline constexpr double DISTANCE_ACCURACY{ 4E+02 };

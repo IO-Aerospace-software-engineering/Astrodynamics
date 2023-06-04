@@ -6,13 +6,13 @@
 
 #include <LaunchSite.h>
 
-namespace IO::SDK::Maneuvers
+namespace IO::Astrodynamics::Maneuvers
 {
     class LaunchWindow final
     {
     private:
-        const IO::SDK::Sites::LaunchSite& m_launchSite;
-        const IO::SDK::Time::Window<IO::SDK::Time::UTC> m_window;
+        const IO::Astrodynamics::Sites::LaunchSite& m_launchSite;
+        const IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::UTC> m_window;
         const double m_inertialAzimuth;
         const double m_nonInertialAzimuth;
         
@@ -30,23 +30,23 @@ namespace IO::SDK::Maneuvers
          * @param inertialInsertionVelocity 
          * @param nonInertialInsertionVelocity 
          */
-        LaunchWindow(const IO::SDK::Sites::LaunchSite &launchSite, const IO::SDK::Time::Window<IO::SDK::Time::UTC> &window, double inertialAzimuth, double nonInertialAzimuth, double inertialInsertionVelocity, double nonInertialInsertionVelocity);
+        LaunchWindow(const IO::Astrodynamics::Sites::LaunchSite &launchSite, const IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::UTC> &window, double inertialAzimuth, double nonInertialAzimuth, double inertialInsertionVelocity, double nonInertialInsertionVelocity);
 
 //        LaunchWindow& operator=(const LaunchWindow& lw);
 
         /**
          * @brief Get the Launch Site
          * 
-         * @return const std::shared_ptr<IO::SDK::Sites::LaunchSite>& 
+         * @return const std::shared_ptr<IO::Astrodynamics::Sites::LaunchSite>&
          */
-        [[nodiscard]] const IO::SDK::Sites::LaunchSite& GetLaunchSite() const;
+        [[nodiscard]] const IO::Astrodynamics::Sites::LaunchSite& GetLaunchSite() const;
         
         /**
          * @brief Get the Window
          * 
-         * @return const IO::SDK::Time::Window<IO::SDK::Time::UTC>& 
+         * @return const IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::UTC>&
          */
-        [[nodiscard]] const IO::SDK::Time::Window<IO::SDK::Time::UTC>& GetWindow() const;
+        [[nodiscard]] const IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::UTC>& GetWindow() const;
         
         /**
          * @brief Get the Inertial Azimuth
@@ -78,6 +78,6 @@ namespace IO::SDK::Maneuvers
 
     };
 
-} // namespace IO::SDK::Maneuvers
+} // namespace IO::Astrodynamics::Maneuvers
 
 #endif

@@ -7,7 +7,7 @@
 
 #include <string>
 
-namespace IO::SDK::Body::Spacecraft
+namespace IO::Astrodynamics::Body::Spacecraft
 {
 	/**
 	 * @brief Payload class
@@ -51,8 +51,8 @@ namespace IO::SDK::Body::Spacecraft
 		 */
 		[[nodiscard]] std::string GetSerialNumber() const;
 
-		bool operator==(const IO::SDK::Body::Spacecraft::Payload &other) const { return m_serialNumber == other.m_serialNumber; };
-        bool operator!=(const IO::SDK::Body::Spacecraft::Payload &other) const { return !(m_serialNumber == other.m_serialNumber); };
+		bool operator==(const IO::Astrodynamics::Body::Spacecraft::Payload &other) const { return m_serialNumber == other.m_serialNumber; };
+        bool operator!=(const IO::Astrodynamics::Body::Spacecraft::Payload &other) const { return !(m_serialNumber == other.m_serialNumber); };
 	};
 }
 #endif

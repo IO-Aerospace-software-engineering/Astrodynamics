@@ -13,19 +13,19 @@
 #include <TDB.h>
 #include <Planetographic.h>
 
-namespace IO::SDK::Body
+namespace IO::Astrodynamics::Body
 {
-	class CelestialBody final : public IO::SDK::Body::Body
+	class CelestialBody final : public IO::Astrodynamics::Body::Body
     {
 	private:
 		
 		const double m_sphereOfInfluence{};		
 		const double m_hillSphere{};
-		const IO::SDK::Frames::BodyFixedFrames m_BodyFixedFrame;
+		const IO::Astrodynamics::Frames::BodyFixedFrames m_BodyFixedFrame;
 		static double ReadGM(int id);
 
 	public:
-		CelestialBody(int id, std::shared_ptr<IO::SDK::Body::CelestialBody> &centerOfMotion);
+		CelestialBody(int id, std::shared_ptr<IO::Astrodynamics::Body::CelestialBody> &centerOfMotion);
 		explicit CelestialBody(int id);
 		double GetSphereOfInfluence() const;
 		double GetHillSphere() const;
@@ -33,9 +33,9 @@ namespace IO::SDK::Body
 		 * @brief Get the Relative Statevector from this celestial body to a given target
 		 * 
 		 * @param targetStateVector 
-		 * @return IO::SDK::OrbitalParameters::StateVector 
+		 * @return IO::Astrodynamics::OrbitalParameters::StateVector
 		 */
-		IO::SDK::OrbitalParameters::StateVector GetRelativeStatevector(const IO::SDK::OrbitalParameters::StateVector &targetStateVector) const;
+		IO::Astrodynamics::OrbitalParameters::StateVector GetRelativeStatevector(const IO::Astrodynamics::OrbitalParameters::StateVector &targetStateVector) const;
 
 		/**
 		 * @brief Know if a target is in sphere of influence
@@ -44,7 +44,7 @@ namespace IO::SDK::Body
 		 * @return true 
 		 * @return false 
 		 */
-		bool IsInSphereOfInfluence(const IO::SDK::OrbitalParameters::StateVector &targetStateVector) const;
+		bool IsInSphereOfInfluence(const IO::Astrodynamics::OrbitalParameters::StateVector &targetStateVector) const;
 
 		/**
 		 * @brief Know if a target is in hill sphere
@@ -53,21 +53,21 @@ namespace IO::SDK::Body
 		 * @return true 
 		 * @return false 
 		 */
-		bool IsInHillSphere(const IO::SDK::OrbitalParameters::StateVector &targetStateVector) const;
+		bool IsInHillSphere(const IO::Astrodynamics::OrbitalParameters::StateVector &targetStateVector) const;
 
 		/**
 		 * @brief Get the Body Fixed Frame
 		 * 
-		 * @return const IO::SDK::Frames::BodyFixedFrames& 
+		 * @return const IO::Astrodynamics::Frames::BodyFixedFrames&
 		 */
-		const IO::SDK::Frames::BodyFixedFrames &GetBodyFixedFrame() const;
+		const IO::Astrodynamics::Frames::BodyFixedFrames &GetBodyFixedFrame() const;
 
 		/**
 		 * @brief Get the Radius
 		 * 
-		 * @return IO::SDK::Math::Vector3D 
+		 * @return IO::Astrodynamics::Math::Vector3D
 		 */
-		IO::SDK::Math::Vector3D GetRadius() const;
+		IO::Astrodynamics::Math::Vector3D GetRadius() const;
 
 		/**
 		 * @brief Get the Flattening
@@ -82,15 +82,15 @@ namespace IO::SDK::Body
 		 * @param epoch 
 		 * @return double 
 		 */
-		double GetAngularVelocity(const IO::SDK::Time::TDB &epoch) const;
+		double GetAngularVelocity(const IO::Astrodynamics::Time::TDB &epoch) const;
 
 		/**
 		 * @brief Get the Sideral Rotation Period
 		 * 
 		 * @param epoch 
-		 * @return IO::SDK::Time::TimeSpan 
+		 * @return IO::Astrodynamics::Time::TimeSpan
 		 */
-		IO::SDK::Time::TimeSpan GetSideralRotationPeriod(const IO::SDK::Time::TDB &epoch) const;
+		IO::Astrodynamics::Time::TimeSpan GetSideralRotationPeriod(const IO::Astrodynamics::Time::TDB &epoch) const;
 
         static bool IsSun(int celestialBodyId);
         static bool IsPlanet(int celestialBodyId);

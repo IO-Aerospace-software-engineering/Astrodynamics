@@ -5,7 +5,7 @@
 #ifndef IOSDK_GEODETICDTO_H
 #define IOSDK_GEODETICDTO_H
 
-namespace IO::SDK::API::DTO
+namespace IO::Astrodynamics::API::DTO
 {
     struct GeodeticDTO
     {

@@ -3,7 +3,7 @@
  */
 #ifndef HORIZONTAL_COORDINATES_H
 #define HORIZONTAL_COORDINATES_H
-namespace IO::SDK::Coordinates {
+namespace IO::Astrodynamics::Coordinates {
     /**
      * @brief Horizontal coordinates class
      *

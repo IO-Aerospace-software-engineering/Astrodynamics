@@ -10,7 +10,7 @@
 #define IOSDK_STATEORIENTATION_H
 #include <QuaternionDTO.h>
 #include <Vector3DDTO.h>
-namespace IO::SDK::API::DTO
+namespace IO::Astrodynamics::API::DTO
 {
     struct StateOrientationDTO
     {

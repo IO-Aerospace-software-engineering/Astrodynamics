@@ -17,13 +17,13 @@ using namespace std::chrono_literals;
 
 TEST(LaunchWindow, Initialize)
 {
-    auto sun = std::make_shared<IO::SDK::Body::CelestialBody>(10);
-    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399, sun);
-    auto ls = IO::SDK::Sites::LaunchSite(399001, "S1", IO::SDK::Coordinates::Geodetic(81.0 * IO::SDK::Constants::DEG_RAD, 28.5 * IO::SDK::Constants::DEG_RAD, 0.0),
+    auto sun = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(10);
+    auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399, sun);
+    auto ls = IO::Astrodynamics::Sites::LaunchSite(399001, "S1", IO::Astrodynamics::Coordinates::Geodetic(81.0 * IO::Astrodynamics::Constants::DEG_RAD, 28.5 * IO::Astrodynamics::Constants::DEG_RAD, 0.0),
                                                            earth,std::string(SitePath));
-    IO::SDK::Maneuvers::LaunchWindow lw(ls, IO::SDK::Time::Window<IO::SDK::Time::UTC>(IO::SDK::Time::UTC(10.0s), IO::SDK::Time::UTC(20.0s)), 1.0, 2.0, 3.0, 4.0);
+    IO::Astrodynamics::Maneuvers::LaunchWindow lw(ls, IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::UTC>(IO::Astrodynamics::Time::UTC(10.0s), IO::Astrodynamics::Time::UTC(20.0s)), 1.0, 2.0, 3.0, 4.0);
     ASSERT_EQ(399001, lw.GetLaunchSite().GetId());
-    ASSERT_EQ(IO::SDK::Time::Window<IO::SDK::Time::UTC>(IO::SDK::Time::UTC(10.0s), IO::SDK::Time::UTC(20.0s)), lw.GetWindow());
+    ASSERT_EQ(IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::UTC>(IO::Astrodynamics::Time::UTC(10.0s), IO::Astrodynamics::Time::UTC(20.0s)), lw.GetWindow());
     ASSERT_DOUBLE_EQ(1.0, lw.GetInertialAzimuth());
     ASSERT_DOUBLE_EQ(2.0, lw.GetNonInertialAzimuth());
     ASSERT_DOUBLE_EQ(3.0, lw.GetInertialInsertionVelocity());

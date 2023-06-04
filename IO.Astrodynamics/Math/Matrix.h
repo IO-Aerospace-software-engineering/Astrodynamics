@@ -6,7 +6,7 @@
 #include<cstddef>
 #include<cstring>
 
-namespace IO::SDK::Math
+namespace IO::Astrodynamics::Math
 {
 	/// <summary>
 	/// Matrix

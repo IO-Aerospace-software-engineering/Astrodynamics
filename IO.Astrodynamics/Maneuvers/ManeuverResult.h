@@ -6,7 +6,7 @@
 
 #include <string>
 
-namespace IO::SDK::Maneuvers
+namespace IO::Astrodynamics::Maneuvers
 {
     /**
      * @brief Result from maneuver

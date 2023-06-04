@@ -6,14 +6,14 @@
 
 #include <ManeuverBase.h>
 
-namespace IO::SDK::Maneuvers::Attitudes
+namespace IO::Astrodynamics::Maneuvers::Attitudes
 {
-    class InstrumentPointingToAttitude final : public IO::SDK::Maneuvers::ManeuverBase
+    class InstrumentPointingToAttitude final : public IO::Astrodynamics::Maneuvers::ManeuverBase
     {
     private:
-        const IO::SDK::Body::Body *m_targetBody{nullptr};
-        const IO::SDK::Sites::Site *m_targetSite{nullptr};
-        const IO::SDK::Instruments::Instrument &m_instrument;
+        const IO::Astrodynamics::Body::Body *m_targetBody{nullptr};
+        const IO::Astrodynamics::Sites::Site *m_targetSite{nullptr};
+        const IO::Astrodynamics::Instruments::Instrument &m_instrument;
 
     protected:
         /**
@@ -21,15 +21,15 @@ namespace IO::SDK::Maneuvers::Attitudes
          * 
          * @param maneuverPoint 
          */
-        void Compute(const IO::SDK::OrbitalParameters::OrbitalParameters &maneuverPoint) override;
+        void Compute(const IO::Astrodynamics::OrbitalParameters::OrbitalParameters &maneuverPoint) override;
 
         /**
          * @brief Compute orientation
          * 
          * @param maneuverPoint 
-         * @return IO::SDK::OrbitalParameters::StateOrientation 
+         * @return IO::Astrodynamics::OrbitalParameters::StateOrientation
          */
-        IO::SDK::OrbitalParameters::StateOrientation ComputeOrientation(const IO::SDK::OrbitalParameters::OrbitalParameters &maneuverPoint) override;
+        IO::Astrodynamics::OrbitalParameters::StateOrientation ComputeOrientation(const IO::Astrodynamics::OrbitalParameters::OrbitalParameters &maneuverPoint) override;
 
     public:
         /**
@@ -40,8 +40,8 @@ namespace IO::SDK::Maneuvers::Attitudes
          * @instrument instrument
          * @param targetBody
          */
-        InstrumentPointingToAttitude(std::vector<IO::SDK::Body::Spacecraft::Engine*> engines, IO::SDK::Propagators::Propagator &propagator,
-                                     const IO::SDK::Time::TimeSpan &attitudeHoldDuration, const IO::SDK::Instruments::Instrument &instrument, const IO::SDK::Body::Body &targetBody);
+        InstrumentPointingToAttitude(std::vector<IO::Astrodynamics::Body::Spacecraft::Engine*> engines, IO::Astrodynamics::Propagators::Propagator &propagator,
+                                     const IO::Astrodynamics::Time::TimeSpan &attitudeHoldDuration, const IO::Astrodynamics::Instruments::Instrument &instrument, const IO::Astrodynamics::Body::Body &targetBody);
 
         /**
          * Construct a new instrument aligned to object
@@ -51,9 +51,9 @@ namespace IO::SDK::Maneuvers::Attitudes
          * @instrument instrument
          * @param targetSite
          */
-        InstrumentPointingToAttitude(const std::vector<IO::SDK::Body::Spacecraft::Engine*> engines, IO::SDK::Propagators::Propagator &propagator,
-                                     const IO::SDK::Time::TimeSpan &attitudeHoldDuration, const IO::SDK::Instruments::Instrument &instrument,
-                                     const IO::SDK::Sites::Site &targetSite);
+        InstrumentPointingToAttitude(const std::vector<IO::Astrodynamics::Body::Spacecraft::Engine*> engines, IO::Astrodynamics::Propagators::Propagator &propagator,
+                                     const IO::Astrodynamics::Time::TimeSpan &attitudeHoldDuration, const IO::Astrodynamics::Instruments::Instrument &instrument,
+                                     const IO::Astrodynamics::Sites::Site &targetSite);
 
         /**
          * Construct a new instrument aligned to object
@@ -64,9 +64,9 @@ namespace IO::SDK::Maneuvers::Attitudes
          * @instrument instrument
          * @param targetBody 
          */
-        InstrumentPointingToAttitude(const std::vector<IO::SDK::Body::Spacecraft::Engine*> engines, IO::SDK::Propagators::Propagator &propagator,
-                                     const IO::SDK::Time::TDB &minimumEpoch, const IO::SDK::Time::TimeSpan &attitudeHoldDuration, const IO::SDK::Instruments::Instrument &instrument,
-                                     const IO::SDK::Body::Body &targetBody);
+        InstrumentPointingToAttitude(const std::vector<IO::Astrodynamics::Body::Spacecraft::Engine*> engines, IO::Astrodynamics::Propagators::Propagator &propagator,
+                                     const IO::Astrodynamics::Time::TDB &minimumEpoch, const IO::Astrodynamics::Time::TimeSpan &attitudeHoldDuration, const IO::Astrodynamics::Instruments::Instrument &instrument,
+                                     const IO::Astrodynamics::Body::Body &targetBody);
 
         /**
          * Construct a new instrument aligned to object
@@ -77,9 +77,9 @@ namespace IO::SDK::Maneuvers::Attitudes
          * @instrument instrument
          * @param targetSite
          */
-        InstrumentPointingToAttitude(const std::vector<IO::SDK::Body::Spacecraft::Engine*> engines, IO::SDK::Propagators::Propagator &propagator,
-                                     const IO::SDK::Time::TDB &minimumEpoch, const IO::SDK::Time::TimeSpan &attitudeHoldDuration, const IO::SDK::Instruments::Instrument &instrument,
-                                     const IO::SDK::Sites::Site &targetSite);
+        InstrumentPointingToAttitude(const std::vector<IO::Astrodynamics::Body::Spacecraft::Engine*> engines, IO::Astrodynamics::Propagators::Propagator &propagator,
+                                     const IO::Astrodynamics::Time::TDB &minimumEpoch, const IO::Astrodynamics::Time::TimeSpan &attitudeHoldDuration, const IO::Astrodynamics::Instruments::Instrument &instrument,
+                                     const IO::Astrodynamics::Sites::Site &targetSite);
 
         /**
          * @brief Evaluate if maneuver can occurs
@@ -88,7 +88,7 @@ namespace IO::SDK::Maneuvers::Attitudes
          * @return true 
          * @return false 
          */
-        bool CanExecute(const IO::SDK::OrbitalParameters::OrbitalParameters &orbitalParams) override;
+        bool CanExecute(const IO::Astrodynamics::OrbitalParameters::OrbitalParameters &orbitalParams) override;
     };
 }
 

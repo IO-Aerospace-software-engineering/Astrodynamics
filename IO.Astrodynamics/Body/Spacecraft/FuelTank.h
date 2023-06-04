@@ -7,7 +7,7 @@
 
 #include <string>
 
-namespace IO::SDK::Body::Spacecraft
+namespace IO::Astrodynamics::Body::Spacecraft
 {
     class Spacecraft;
     /**
@@ -20,7 +20,7 @@ namespace IO::SDK::Body::Spacecraft
         const std::string m_serialNumber{};
         const double m_capacity{};
         const double m_initialQuantity{};
-        const IO::SDK::Body::Spacecraft::Spacecraft &m_spacecraft;
+        const IO::Astrodynamics::Body::Spacecraft::Spacecraft &m_spacecraft;
 
         double m_quantity{};
 
@@ -32,14 +32,14 @@ namespace IO::SDK::Body::Spacecraft
          * @param capacity 
          * @param quantity 
          */
-        FuelTank(const std::string &serialNumber, const IO::SDK::Body::Spacecraft::Spacecraft &spacecraft, double capacity, double quantity);
+        FuelTank(const std::string &serialNumber, const IO::Astrodynamics::Body::Spacecraft::Spacecraft &spacecraft, double capacity, double quantity);
         
         /**
          * @brief Get the associated Spacecraft
          * 
-         * @return const IO::SDK::Body::Spacecraft::Spacecraft& 
+         * @return const IO::Astrodynamics::Body::Spacecraft::Spacecraft&
          */
-        [[nodiscard]] const IO::SDK::Body::Spacecraft::Spacecraft &GetSpacecraft() const;
+        [[nodiscard]] const IO::Astrodynamics::Body::Spacecraft::Spacecraft &GetSpacecraft() const;
 
         /**
          * @brief Get the fuel tank serial number
@@ -84,12 +84,12 @@ namespace IO::SDK::Body::Spacecraft
          */
         void UpdateFuelQuantity(double quantityToAdd);
         
-        bool operator==(const IO::SDK::Body::Spacecraft::FuelTank &other) const { return m_serialNumber == other.m_serialNumber; }
-        bool operator!=(const IO::SDK::Body::Spacecraft::FuelTank &other) const { return !(m_serialNumber == other.m_serialNumber); }
-        bool operator<(const IO::SDK::Body::Spacecraft::FuelTank &other) const { return m_serialNumber < other.m_serialNumber; }
-        bool operator<=(const IO::SDK::Body::Spacecraft::FuelTank &other) const { return m_serialNumber <= other.m_serialNumber; }
-        bool operator>(const IO::SDK::Body::Spacecraft::FuelTank &other) const { return m_serialNumber > other.m_serialNumber; }
-        bool operator>=(const IO::SDK::Body::Spacecraft::FuelTank &other) const { return m_serialNumber >= other.m_serialNumber; }
+        bool operator==(const IO::Astrodynamics::Body::Spacecraft::FuelTank &other) const { return m_serialNumber == other.m_serialNumber; }
+        bool operator!=(const IO::Astrodynamics::Body::Spacecraft::FuelTank &other) const { return !(m_serialNumber == other.m_serialNumber); }
+        bool operator<(const IO::Astrodynamics::Body::Spacecraft::FuelTank &other) const { return m_serialNumber < other.m_serialNumber; }
+        bool operator<=(const IO::Astrodynamics::Body::Spacecraft::FuelTank &other) const { return m_serialNumber <= other.m_serialNumber; }
+        bool operator>(const IO::Astrodynamics::Body::Spacecraft::FuelTank &other) const { return m_serialNumber > other.m_serialNumber; }
+        bool operator>=(const IO::Astrodynamics::Body::Spacecraft::FuelTank &other) const { return m_serialNumber >= other.m_serialNumber; }
     };
 }
 

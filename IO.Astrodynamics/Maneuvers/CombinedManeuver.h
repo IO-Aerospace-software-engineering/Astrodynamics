@@ -18,15 +18,15 @@
 #include <StateVector.h>
 #include <StateOrientation.h>
 
-namespace IO::SDK::Maneuvers
+namespace IO::Astrodynamics::Maneuvers
 {
-    class CombinedManeuver final : public IO::SDK::Maneuvers::ManeuverBase
+    class CombinedManeuver final : public IO::Astrodynamics::Maneuvers::ManeuverBase
     {
     private:
         double m_inclination;
         double m_peregeeRadius;
 
-        [[nodiscard]] IO::SDK::Math::Vector3D GetDeltaV(const IO::SDK::OrbitalParameters::StateVector& sv) const;
+        [[nodiscard]] IO::Astrodynamics::Math::Vector3D GetDeltaV(const IO::Astrodynamics::OrbitalParameters::StateVector& sv) const;
 
     protected:
         /**
@@ -34,24 +34,24 @@ namespace IO::SDK::Maneuvers
          * 
          * @param maneuverPoint 
          */
-        void Compute(const IO::SDK::OrbitalParameters::OrbitalParameters &maneuverPoint) override;
+        void Compute(const IO::Astrodynamics::OrbitalParameters::OrbitalParameters &maneuverPoint) override;
 
         /**
          * @brief Compute orientation
          * 
          * @param maneuverPoint 
-         * @return IO::SDK::OrbitalParameters::StateOrientation 
+         * @return IO::Astrodynamics::OrbitalParameters::StateOrientation
          */
-        IO::SDK::OrbitalParameters::StateOrientation ComputeOrientation(const IO::SDK::OrbitalParameters::OrbitalParameters &maneuverPoint) override;
+        IO::Astrodynamics::OrbitalParameters::StateOrientation ComputeOrientation(const IO::Astrodynamics::OrbitalParameters::OrbitalParameters &maneuverPoint) override;
 
     public:
         /**
          * @brief Construct a new Combined Maneuver object
          * 
          */
-        CombinedManeuver(std::vector<IO::SDK::Body::Spacecraft::Engine*> engines, IO::SDK::Propagators::Propagator &propagator, double inclination, double perigeeRadius);
+        CombinedManeuver(std::vector<IO::Astrodynamics::Body::Spacecraft::Engine*> engines, IO::Astrodynamics::Propagators::Propagator &propagator, double inclination, double perigeeRadius);
 
-        CombinedManeuver(std::vector<IO::SDK::Body::Spacecraft::Engine*> engines, IO::SDK::Propagators::Propagator &propagator, double inclination, double perigeeRadius, const IO::SDK::Time::TDB &minimumEpoch);
+        CombinedManeuver(std::vector<IO::Astrodynamics::Body::Spacecraft::Engine*> engines, IO::Astrodynamics::Propagators::Propagator &propagator, double inclination, double perigeeRadius, const IO::Astrodynamics::Time::TDB &minimumEpoch);
 
         /**
          * @brief Evaluate if maneuver can occurs
@@ -60,9 +60,9 @@ namespace IO::SDK::Maneuvers
          * @return true 
          * @return false 
          */
-        bool CanExecute(const IO::SDK::OrbitalParameters::OrbitalParameters &orbitalParams) override;
+        bool CanExecute(const IO::Astrodynamics::OrbitalParameters::OrbitalParameters &orbitalParams) override;
 
-        using IO::SDK::Maneuvers::ManeuverBase::GetDeltaV;
+        using IO::Astrodynamics::Maneuvers::ManeuverBase::GetDeltaV;
     };
 }
 

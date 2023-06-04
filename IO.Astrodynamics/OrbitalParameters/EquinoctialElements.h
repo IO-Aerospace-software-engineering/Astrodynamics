@@ -11,7 +11,7 @@
 #include <cmath>
 #include <memory>
 
-namespace IO::SDK::OrbitalParameters
+namespace IO::Astrodynamics::OrbitalParameters
 {
 	class EquinoctialElements final : public OrbitalParameters
 	{
@@ -28,13 +28,13 @@ namespace IO::SDK::OrbitalParameters
 		const double m_declinationOfThePole{};
 		const double m_ascendingNodeLongitudeRate{};	
 
-		IO::SDK::Time::TimeSpan m_period;
+		IO::Astrodynamics::Time::TimeSpan m_period;
 		double m_elements[9]{};
 
 	public:
-		EquinoctialElements(const std::shared_ptr<IO::SDK::Body::CelestialBody> &centerOfMotion, const IO::SDK::Time::TDB &epoch, double semiMajorAxis, double h, double k, double p, double q, double L, double periapsisLongitudeRate, double ascendingNodeLongitudeRate, double rightAscensionOfThePole, double declinationOfThePole, const IO::SDK::Frames::Frames &frame);
+		EquinoctialElements(const std::shared_ptr<IO::Astrodynamics::Body::CelestialBody> &centerOfMotion, const IO::Astrodynamics::Time::TDB &epoch, double semiMajorAxis, double h, double k, double p, double q, double L, double periapsisLongitudeRate, double ascendingNodeLongitudeRate, double rightAscensionOfThePole, double declinationOfThePole, const IO::Astrodynamics::Frames::Frames &frame);
 
-		EquinoctialElements(const std::shared_ptr<IO::SDK::Body::CelestialBody> &centerOfMotion, double semiMajorAxis, double eccentricity, double inclination, double perigeeArgument, double longitudeAN, double meanAnomaly, double periapsisLongitudeRate, double ascendingNodeLongitudeRate, double rightAscensionOfThePole, double declinationOfThePole, const IO::SDK::Time::TDB &epoch, const IO::SDK::Frames::Frames &frame);
+		EquinoctialElements(const std::shared_ptr<IO::Astrodynamics::Body::CelestialBody> &centerOfMotion, double semiMajorAxis, double eccentricity, double inclination, double perigeeArgument, double longitudeAN, double meanAnomaly, double periapsisLongitudeRate, double ascendingNodeLongitudeRate, double rightAscensionOfThePole, double declinationOfThePole, const IO::Astrodynamics::Time::TDB &epoch, const IO::Astrodynamics::Frames::Frames &frame);
 
 		/// <summary>
 		/// Get h coefficient
@@ -97,20 +97,20 @@ namespace IO::SDK::OrbitalParameters
 		[[nodiscard]] inline double GetDeclinationOfPole() const { return m_declinationOfThePole; }
 
 		// Inherited via OrbitalParameters
-		[[nodiscard]] IO::SDK::Time::TimeSpan GetPeriod() const override;
+		[[nodiscard]] IO::Astrodynamics::Time::TimeSpan GetPeriod() const override;
 
 		/// <summary>
 		/// Get specific angular moment
 		/// </summary>
 		/// <returns></returns>
-		[[nodiscard]] IO::SDK::Math::Vector3D GetSpecificAngularMomentum() const override;
+		[[nodiscard]] IO::Astrodynamics::Math::Vector3D GetSpecificAngularMomentum() const override;
 
 		/// <summary>
 		/// Get state vector
 		/// </summary>
 		/// <param name="epoch"></param>
 		/// <returns></returns>
-		[[nodiscard]] StateVector ToStateVector(const IO::SDK::Time::TDB &epoch) const override;
+		[[nodiscard]] StateVector ToStateVector(const IO::Astrodynamics::Time::TDB &epoch) const override;
 
 		/// <summary>
 		/// Get eccentricity
@@ -156,7 +156,7 @@ namespace IO::SDK::OrbitalParameters
 		/// <returns></returns>
 		[[nodiscard]] double GetSpecificOrbitalEnergy() const override;
 
-		using IO::SDK::OrbitalParameters::OrbitalParameters::ToStateVector;
+		using IO::Astrodynamics::OrbitalParameters::OrbitalParameters::ToStateVector;
 	};
 }
 #endif

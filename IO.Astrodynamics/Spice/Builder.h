@@ -5,7 +5,7 @@
 #define BUILDER_H
 #include <SpiceUsr.h>
 
-namespace IO::SDK::Spice
+namespace IO::Astrodynamics::Spice
 {
     class Builder
     {
@@ -22,6 +22,6 @@ namespace IO::SDK::Spice
         static SpiceCell CreateDoubleCell(int size, double *SPICE_CELL);
     };
 
-} // namespace IO::SDK::Spice
+} // namespace IO::Astrodynamics::Spice
 
 #endif

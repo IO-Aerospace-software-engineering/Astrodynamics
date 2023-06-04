@@ -6,7 +6,7 @@
 #include <utility>
 #include<SpiceUsr.h>
 
-IO::SDK::Frames::FrameFile::FrameFile(const std::string& filePath, std::string  name) : m_filePath{ filePath }, m_name{std::move( name )}
+IO::Astrodynamics::Frames::FrameFile::FrameFile(const std::string& filePath, std::string  name) : m_filePath{ filePath }, m_name{std::move( name )}
 {
 	auto directory = std::filesystem::directory_entry(filePath).path();
 	if (directory.has_parent_path())
@@ -25,12 +25,12 @@ IO::SDK::Frames::FrameFile::FrameFile(const std::string& filePath, std::string  
 	}
 }
 
-IO::SDK::Frames::FrameFile::~FrameFile()
+IO::Astrodynamics::Frames::FrameFile::~FrameFile()
 {
 	unload_c(m_filePath.c_str());
 }
 
-std::string IO::SDK::Frames::FrameFile::GetName() const
+std::string IO::Astrodynamics::Frames::FrameFile::GetName() const
 {
 	return m_name;
 }

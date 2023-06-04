@@ -8,7 +8,7 @@
 
 #ifndef IOSDK_PAYLOADDTO_H
 #define IOSDK_PAYLOADDTO_H
-namespace IO::SDK::API::DTO
+namespace IO::Astrodynamics::API::DTO
 {
     struct PayloadDTO
     {

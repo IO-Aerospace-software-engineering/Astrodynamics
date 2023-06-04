@@ -9,18 +9,18 @@
 #include <Vector3D.h>
 #include <string>
 
-namespace IO::SDK::Instruments
+namespace IO::Astrodynamics::Instruments
 {
 	class Instrument;
 }
 
-namespace IO::SDK::Kernels
+namespace IO::Astrodynamics::Kernels
 {
 	/**
 	 * @brief Elliptical instrument kernel
 	 * 
 	 */
-	class EllipticalInstrumentKernel final : public IO::SDK::Kernels::InstrumentKernel
+	class EllipticalInstrumentKernel final : public IO::Astrodynamics::Kernels::InstrumentKernel
 	{
 	private:
 		double m_crossAngle{};
@@ -42,7 +42,7 @@ namespace IO::SDK::Kernels
 		 * @param angle 
 		 * @param crossAngle 
 		 */
-		EllipticalInstrumentKernel(const IO::SDK::Instruments::Instrument &instrument, const IO::SDK::Math::Vector3D &boresight, const IO::SDK::Math::Vector3D &refVector, double angle, double crossAngle);
+		EllipticalInstrumentKernel(const IO::Astrodynamics::Instruments::Instrument &instrument, const IO::Astrodynamics::Math::Vector3D &boresight, const IO::Astrodynamics::Math::Vector3D &refVector, double angle, double crossAngle);
 		~EllipticalInstrumentKernel() override = default;
 	};
 }

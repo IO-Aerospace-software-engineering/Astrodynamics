@@ -5,7 +5,7 @@
 #define ILLUMINATION_ANGLE_H
 #include <string>
 
-namespace IO::SDK
+namespace IO::Astrodynamics
 {
     class IlluminationAngle
     {
@@ -37,6 +37,6 @@ namespace IO::SDK
         static IlluminationAngle ToIlluminationAngleType(const std::string &illuminationAngleType) ;
     };
 
-} // namespace IO::SDK
+} // namespace IO::Astrodynamics
 
 #endif

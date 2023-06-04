@@ -7,7 +7,7 @@
 #include <SDKException.h>
 #include <string>
 
-namespace IO::SDK::Exception
+namespace IO::Astrodynamics::Exception
 {
     /**
      * @brief Invalid argument exception
@@ -21,6 +21,6 @@ namespace IO::SDK::Exception
         explicit InvalidArgumentException(const std::string &message);
     };
 
-} // namespace IO::SDK::Exception
+} // namespace IO::Astrodynamics::Exception
 
 #endif //INVALID_ARGUMENT_EXCEPTION

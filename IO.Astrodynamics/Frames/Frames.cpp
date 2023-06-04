@@ -6,41 +6,41 @@
 
 #include <utility>
 
-IO::SDK::Frames::Frames::Frames(std::string strView) : m_name{std::move(strView)}
+IO::Astrodynamics::Frames::Frames::Frames(std::string strView) : m_name{std::move(strView)}
 {
 }
 
-const char *IO::SDK::Frames::Frames::ToCharArray() const
+const char *IO::Astrodynamics::Frames::Frames::ToCharArray() const
 {
     return m_name.c_str();
 }
 
-bool IO::SDK::Frames::Frames::operator==(const IO::SDK::Frames::Frames &frame) const
+bool IO::Astrodynamics::Frames::Frames::operator==(const IO::Astrodynamics::Frames::Frames &frame) const
 {
     return m_name == frame.m_name;
 }
 
-bool IO::SDK::Frames::Frames::operator!=(const IO::SDK::Frames::Frames &frame) const
+bool IO::Astrodynamics::Frames::Frames::operator!=(const IO::Astrodynamics::Frames::Frames &frame) const
 {
     return !(m_name == frame.m_name);
 }
 
-bool IO::SDK::Frames::Frames::operator==(IO::SDK::Frames::Frames &frame) const
+bool IO::Astrodynamics::Frames::Frames::operator==(IO::Astrodynamics::Frames::Frames &frame) const
 {
     return m_name == frame.m_name;
 }
 
-bool IO::SDK::Frames::Frames::operator!=(IO::SDK::Frames::Frames &frame) const
+bool IO::Astrodynamics::Frames::Frames::operator!=(IO::Astrodynamics::Frames::Frames &frame) const
 {
     return !(m_name == frame.m_name);
 }
 
-std::string IO::SDK::Frames::Frames::GetName() const
+std::string IO::Astrodynamics::Frames::Frames::GetName() const
 {
     return m_name;
 }
 
-IO::SDK::Math::Matrix IO::SDK::Frames::Frames::ToFrame6x6(const Frames &frame, const IO::SDK::Time::TDB &epoch) const
+IO::Astrodynamics::Math::Matrix IO::Astrodynamics::Frames::Frames::ToFrame6x6(const Frames &frame, const IO::Astrodynamics::Time::TDB &epoch) const
 {
     SpiceDouble sform[6][6];
     sxform_c(this->m_name.c_str(), frame.m_name.c_str(), epoch.GetSecondsFromJ2000().count(), sform);
@@ -61,7 +61,7 @@ IO::SDK::Math::Matrix IO::SDK::Frames::Frames::ToFrame6x6(const Frames &frame, c
         }
     }
 
-    IO::SDK::Math::Matrix mtx(6, 6, xform);
+    IO::Astrodynamics::Math::Matrix mtx(6, 6, xform);
 
     for (int i = 0; i < 6; ++i)
     {
@@ -73,7 +73,7 @@ IO::SDK::Math::Matrix IO::SDK::Frames::Frames::ToFrame6x6(const Frames &frame, c
     return mtx;
 }
 
-IO::SDK::Math::Matrix IO::SDK::Frames::Frames::ToFrame3x3(const Frames &frame, const IO::SDK::Time::TDB &epoch) const
+IO::Astrodynamics::Math::Matrix IO::Astrodynamics::Frames::Frames::ToFrame3x3(const Frames &frame, const IO::Astrodynamics::Time::TDB &epoch) const
 {
     SpiceDouble sform[3][3];
     pxform_c(this->m_name.c_str(), frame.m_name.c_str(), epoch.GetSecondsFromJ2000().count(), sform);
@@ -94,7 +94,7 @@ IO::SDK::Math::Matrix IO::SDK::Frames::Frames::ToFrame3x3(const Frames &frame, c
         }
     }
 
-    IO::SDK::Math::Matrix mtx(3, 3, xform);
+    IO::Astrodynamics::Math::Matrix mtx(3, 3, xform);
 
     for (int i = 0; i < 3; ++i)
     {
@@ -106,7 +106,7 @@ IO::SDK::Math::Matrix IO::SDK::Frames::Frames::ToFrame3x3(const Frames &frame, c
     return mtx;
 }
 
-IO::SDK::Math::Vector3D IO::SDK::Frames::Frames::TransformVector(const Frames &to, const IO::SDK::Math::Vector3D &vector,const IO::SDK::Time::TDB &epoch) const
+IO::Astrodynamics::Math::Vector3D IO::Astrodynamics::Frames::Frames::TransformVector(const Frames &to, const IO::Astrodynamics::Math::Vector3D &vector,const IO::Astrodynamics::Time::TDB &epoch) const
 {
     auto mtx = ToFrame3x3(to, epoch);
     double v[3];
@@ -126,5 +126,5 @@ IO::SDK::Math::Vector3D IO::SDK::Frames::Frames::TransformVector(const Frames &t
     double nstate[3];
     mxv_c(convertedMtx, v, nstate);
 
-    return IO::SDK::Math::Vector3D{nstate[0], nstate[1], nstate[2]};
+    return IO::Astrodynamics::Math::Vector3D{nstate[0], nstate[1], nstate[2]};
 }

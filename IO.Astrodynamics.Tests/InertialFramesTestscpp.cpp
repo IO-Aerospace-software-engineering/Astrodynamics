@@ -10,31 +10,31 @@ using namespace std::chrono_literals;
 
 TEST(InertialFrames, ToString)
 {
-	ASSERT_STREQ("J2000", IO::SDK::Frames::InertialFrames::GetICRF().ToCharArray());
-	ASSERT_STREQ("ECLIPJ2000", IO::SDK::Frames::InertialFrames::Ecliptic().ToCharArray());
-	ASSERT_STREQ("GALACTIC", IO::SDK::Frames::InertialFrames::Galactic().ToCharArray());
+	ASSERT_STREQ("J2000", IO::Astrodynamics::Frames::InertialFrames::GetICRF().ToCharArray());
+	ASSERT_STREQ("ECLIPJ2000", IO::Astrodynamics::Frames::InertialFrames::Ecliptic().ToCharArray());
+	ASSERT_STREQ("GALACTIC", IO::Astrodynamics::Frames::InertialFrames::Galactic().ToCharArray());
 }
 
 TEST(InertialFrames, GetName)
 {
-	ASSERT_STREQ("J2000", IO::SDK::Frames::InertialFrames::GetICRF().GetName().c_str());
-	ASSERT_STREQ("ECLIPJ2000", IO::SDK::Frames::InertialFrames::Ecliptic().GetName().c_str());
-	ASSERT_STREQ("GALACTIC", IO::SDK::Frames::InertialFrames::Galactic().GetName().c_str());
+	ASSERT_STREQ("J2000", IO::Astrodynamics::Frames::InertialFrames::GetICRF().GetName().c_str());
+	ASSERT_STREQ("ECLIPJ2000", IO::Astrodynamics::Frames::InertialFrames::Ecliptic().GetName().c_str());
+	ASSERT_STREQ("GALACTIC", IO::Astrodynamics::Frames::InertialFrames::Galactic().GetName().c_str());
 }
 
 TEST(InertialFrames, Equal)
 {
-	ASSERT_EQ(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::Frames::InertialFrames::GetICRF());
+	ASSERT_EQ(IO::Astrodynamics::Frames::InertialFrames::GetICRF(), IO::Astrodynamics::Frames::InertialFrames::GetICRF());
 }
 
 TEST(InertialFrames, NotEqual)
 {
-	ASSERT_NE(IO::SDK::Frames::InertialFrames::GetICRF(), IO::SDK::Frames::InertialFrames::Galactic());
+	ASSERT_NE(IO::Astrodynamics::Frames::InertialFrames::GetICRF(), IO::Astrodynamics::Frames::InertialFrames::Galactic());
 }
 
 TEST(InertialFrames, ToFrame6x6)
 {
-	auto mtx = IO::SDK::Frames::InertialFrames::GetICRF().ToFrame6x6(IO::SDK::Frames::InertialFrames::Ecliptic(), IO::SDK::Time::TDB(0.0s));
+	auto mtx = IO::Astrodynamics::Frames::InertialFrames::GetICRF().ToFrame6x6(IO::Astrodynamics::Frames::InertialFrames::Ecliptic(), IO::Astrodynamics::Time::TDB(0.0s));
 
 	ASSERT_DOUBLE_EQ(1.0, mtx.GetValue(0, 0));
 	ASSERT_DOUBLE_EQ(0.0, mtx.GetValue(0, 1));
@@ -81,12 +81,12 @@ TEST(InertialFrames, ToFrame6x6)
 
 TEST(InertialFrames, TransformVector)
 {
-	IO::SDK::Math::Vector3D vector{1.0, 0.0, 0.0};
-	IO::SDK::Frames::BodyFixedFrames earthFrame("IAU_EARTH");
-	auto bodyFixedVector = IO::SDK::Frames::InertialFrames::GetICRF().TransformVector(IO::SDK::Frames::BodyFixedFrames("IAU_EARTH"), vector, IO::SDK::Time::TDB(0.0s));
+	IO::Astrodynamics::Math::Vector3D vector{1.0, 0.0, 0.0};
+	IO::Astrodynamics::Frames::BodyFixedFrames earthFrame("IAU_EARTH");
+	auto bodyFixedVector = IO::Astrodynamics::Frames::InertialFrames::GetICRF().TransformVector(IO::Astrodynamics::Frames::BodyFixedFrames("IAU_EARTH"), vector, IO::Astrodynamics::Time::TDB(0.0s));
 
 	//Must go back to original vector
-	auto ICRFVector = earthFrame.TransformVector(IO::SDK::Frames::InertialFrames::GetICRF(), bodyFixedVector, IO::SDK::Time::TDB(0.0s));
+	auto ICRFVector = earthFrame.TransformVector(IO::Astrodynamics::Frames::InertialFrames::GetICRF(), bodyFixedVector, IO::Astrodynamics::Time::TDB(0.0s));
 
 	ASSERT_DOUBLE_EQ(vector.GetX(), ICRFVector.GetX());
 	ASSERT_DOUBLE_EQ(vector.GetY(), ICRFVector.GetY());

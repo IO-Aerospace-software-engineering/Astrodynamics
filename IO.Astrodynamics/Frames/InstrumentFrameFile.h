@@ -8,18 +8,18 @@
 #include<Instrument.h>
 #include<Vector3D.h>
 
-namespace IO::SDK::Instruments
+namespace IO::Astrodynamics::Instruments
 {
 	class Instrument;
 }
 
-namespace IO::SDK::Frames
+namespace IO::Astrodynamics::Frames
 {
 	/**
 	 * @brief Instrument file frame
 	 * 
 	 */
-	class InstrumentFrameFile final :public IO::SDK::Frames::FrameFile
+	class InstrumentFrameFile final :public IO::Astrodynamics::Frames::FrameFile
 	{
 
 	private:
@@ -29,14 +29,14 @@ namespace IO::SDK::Frames
 		 * @param instrument 
 		 * @param orientation 
 		 */
-		InstrumentFrameFile(const IO::SDK::Instruments::Instrument& instrument, const IO::SDK::Math::Vector3D& orientation);
-		const IO::SDK::Instruments::Instrument& m_instrument;
-		const IO::SDK::Math::Vector3D m_orientation{};
+		InstrumentFrameFile(const IO::Astrodynamics::Instruments::Instrument& instrument, const IO::Astrodynamics::Math::Vector3D& orientation);
+		const IO::Astrodynamics::Instruments::Instrument& m_instrument;
+		const IO::Astrodynamics::Math::Vector3D m_orientation{};
 
 		void BuildFrame();
 
 	public:
-		friend class IO::SDK::Instruments::Instrument;
+		friend class IO::Astrodynamics::Instruments::Instrument;
 
 	};
 }

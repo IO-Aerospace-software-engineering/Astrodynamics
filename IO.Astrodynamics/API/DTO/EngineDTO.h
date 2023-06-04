@@ -4,7 +4,7 @@
 
 #pragma once
 
-namespace IO::SDK::API::DTO
+namespace IO::Astrodynamics::API::DTO
 {
     struct EngineDTO
     {

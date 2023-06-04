@@ -4,7 +4,7 @@
 #ifndef VECTOR3D_H
 #define VECTOR3D_H
 
-namespace IO::SDK::Math {
+namespace IO::Astrodynamics::Math {
     class Quaternion;
 
     class Vector3D {
@@ -108,7 +108,7 @@ namespace IO::SDK::Math {
          * @param quaternion
          * @return Vector3D
          */
-        [[nodiscard]] Vector3D Rotate(const IO::SDK::Math::Quaternion &quaternion) const;
+        [[nodiscard]] Vector3D Rotate(const IO::Astrodynamics::Math::Quaternion &quaternion) const;
 
         /**
          * @brief Return the quaternion to rotate vector to another

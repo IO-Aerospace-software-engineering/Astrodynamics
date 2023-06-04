@@ -4,7 +4,7 @@
 #ifndef CONSTANTS_H
 #define CONSTANTS_H
 
-namespace IO::SDK::Constants
+namespace IO::Astrodynamics::Constants
 {
     inline constexpr double G{6.67430e-11};
     inline constexpr double ECCENTRIC_ANOMALY_ACCURACY{1e-9};

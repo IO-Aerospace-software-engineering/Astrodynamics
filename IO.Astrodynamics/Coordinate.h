@@ -6,7 +6,7 @@
 
 #include <string>
 
-namespace IO::SDK
+namespace IO::Astrodynamics
 {
     class Coordinate
     {
@@ -66,6 +66,6 @@ namespace IO::SDK
         static Coordinate& ToCoordinateType(const std::string &coordinateType) ;
     };
 
-} // namespace IO::SDK
+} // namespace IO::Astrodynamics
 
 #endif

@@ -6,9 +6,9 @@
 
 #include <ConicOrbitalElements.h>
 
-namespace IO::SDK::OrbitalParameters
+namespace IO::Astrodynamics::OrbitalParameters
 {
-	class TLE final : public IO::SDK::OrbitalParameters::OrbitalParameters
+	class TLE final : public IO::Astrodynamics::OrbitalParameters::OrbitalParameters
 	{
 	private:
 		SpiceChar m_lines[2][70]{};
@@ -18,13 +18,13 @@ namespace IO::SDK::OrbitalParameters
 		const std::string m_satelliteName{};
 		std::unique_ptr<ConicOrbitalElements> m_conicOrbitalElements{nullptr};
 		std::unique_ptr<StateVector> m_stateVector{nullptr};
-		IO::SDK::Time::TimeSpan m_period;
+		IO::Astrodynamics::Time::TimeSpan m_period;
 
 		//J2 J3 J4 KE QO SO ER AE
 		inline constexpr static SpiceDouble m_geophysics[]{1.082616e-3, -2.53881e-6, -1.65597e-6, 7.43669161e-2, 120.0, 78.0, 6378.135, 1.0};
 
 	public:
-		TLE(const std::shared_ptr<IO::SDK::Body::CelestialBody> &centerOfmotion, std::string lines[3]);
+		TLE(const std::shared_ptr<IO::Astrodynamics::Body::CelestialBody> &centerOfmotion, std::string lines[3]);
 		~TLE() override = default;
 
 		/// <summary>
@@ -55,20 +55,20 @@ namespace IO::SDK::OrbitalParameters
 		/// Get orbital period
 		/// </summary>
 		/// <returns></returns>
-		[[nodiscard]] IO::SDK::Time::TimeSpan GetPeriod() const override;
+		[[nodiscard]] IO::Astrodynamics::Time::TimeSpan GetPeriod() const override;
 
 		/// <summary>
 		/// Get specific angular momentum
 		/// </summary>
 		/// <returns></returns>
-		[[nodiscard]] IO::SDK::Math::Vector3D GetSpecificAngularMomentum() const override;
+		[[nodiscard]] IO::Astrodynamics::Math::Vector3D GetSpecificAngularMomentum() const override;
 
 		/// <summary>
 		/// Get State Vector at epoch
 		/// </summary>
 		/// <param name="epoch"></param>
 		/// <returns></returns>
-		[[nodiscard]] IO::SDK::OrbitalParameters::StateVector ToStateVector(const IO::SDK::Time::TDB &epoch) const override;
+		[[nodiscard]] IO::Astrodynamics::OrbitalParameters::StateVector ToStateVector(const IO::Astrodynamics::Time::TDB &epoch) const override;
 
 		/// <summary>
 		/// Get orbital eccentricity

@@ -6,12 +6,12 @@
 
 #include<Instrument.h>
 
-namespace IO::SDK::Instruments
+namespace IO::Astrodynamics::Instruments
 {
 	class Instrument;
 }
 
-namespace IO::SDK::Kernels
+namespace IO::Astrodynamics::Kernels
 {
 	/**
 	 * @brief Instrument kernel
@@ -32,10 +32,10 @@ namespace IO::SDK::Kernels
 		 * @param angle 
 		 * @param templateName 
 		 */
-		InstrumentKernel(const IO::SDK::Instruments::Instrument& instrument, const IO::SDK::Math::Vector3D& boresight, const IO::SDK::Math::Vector3D& refVector, double angle);
-		const IO::SDK::Instruments::Instrument& m_instrument;
-		const IO::SDK::Math::Vector3D m_boresight{};
-		const IO::SDK::Math::Vector3D m_refVector{};
+		InstrumentKernel(const IO::Astrodynamics::Instruments::Instrument& instrument, const IO::Astrodynamics::Math::Vector3D& boresight, const IO::Astrodynamics::Math::Vector3D& refVector, double angle);
+		const IO::Astrodynamics::Instruments::Instrument& m_instrument;
+		const IO::Astrodynamics::Math::Vector3D m_boresight{};
+		const IO::Astrodynamics::Math::Vector3D m_refVector{};
 		const double m_angle{};
 
 		/**
@@ -51,11 +51,11 @@ namespace IO::SDK::Kernels
 		/**
 		 * @brief Get the Coverage Window
 		 * 
-		 * @return IO::SDK::Time::Window<IO::SDK::Time::TDB> 
+		 * @return IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB>
 		 */
-		[[nodiscard]] IO::SDK::Time::Window<IO::SDK::Time::TDB> GetCoverageWindow() const override;
+		[[nodiscard]] IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB> GetCoverageWindow() const override;
 
-		friend class IO::SDK::Instruments::Instrument;
+		friend class IO::Astrodynamics::Instruments::Instrument;
 
 	};
 }

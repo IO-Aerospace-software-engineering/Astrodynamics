@@ -11,48 +11,48 @@
 
 using namespace std::chrono_literals;
 
-IO::SDK::Sites::Site::Site(const int id, std::string name, const IO::SDK::Coordinates::Geodetic &coordinates,
-                           std::shared_ptr<IO::SDK::Body::CelestialBody> body, std::string directoryPath) : m_id{id},
+IO::Astrodynamics::Sites::Site::Site(const int id, std::string name, const IO::Astrodynamics::Coordinates::Geodetic &coordinates,
+                           std::shared_ptr<IO::Astrodynamics::Body::CelestialBody> body, std::string directoryPath) : m_id{id},
                                                                                                             m_name{std::move(name)},
                                                                                                             m_coordinates{coordinates},
                                                                                                             m_filesPath{std::move(directoryPath) + "/" + m_name},
-                                                                                                            m_ephemerisKernel{std::make_unique<IO::SDK::Kernels::EphemerisKernel>(
+                                                                                                            m_ephemerisKernel{std::make_unique<IO::Astrodynamics::Kernels::EphemerisKernel>(
                                                                                                                     m_filesPath + "/Ephemeris/" + m_name + ".spk", this->m_id)},
                                                                                                             m_body{std::move(body)},
-                                                                                                            m_frame{std::make_unique<IO::SDK::Frames::SiteFrameFile>(*this)}
+                                                                                                            m_frame{std::make_unique<IO::Astrodynamics::Frames::SiteFrameFile>(*this)}
 {
     if (id < 199000 || id > 899999)
     {
-        throw SDK::Exception::SDKException(
+        throw IO::Astrodynamics::Exception::SDKException(
                 "Invalid site id. Site id must be composed by the site body id and the site number. Ex. The site 232 on earth (399) must have the id 399232.");
     }
 }
 
-IO::SDK::OrbitalParameters::StateVector
-IO::SDK::Sites::Site::GetStateVector(const IO::SDK::Frames::Frames &frame, const IO::SDK::Time::TDB &epoch) const
+IO::Astrodynamics::OrbitalParameters::StateVector
+IO::Astrodynamics::Sites::Site::GetStateVector(const IO::Astrodynamics::Frames::Frames &frame, const IO::Astrodynamics::Time::TDB &epoch) const
 {
     auto radius = m_body->GetRadius() * 1000.0;
     SpiceDouble bodyFixedLocation[3];
     georec_c(m_coordinates.GetLongitude(), m_coordinates.GetLatitude(), m_coordinates.GetAltitude(), radius.GetX(),
              m_body->GetFlattening(), bodyFixedLocation);
-    IO::SDK::OrbitalParameters::StateVector siteVectorState{m_body, IO::SDK::Math::Vector3D(bodyFixedLocation[0],
+    IO::Astrodynamics::OrbitalParameters::StateVector siteVectorState{m_body, IO::Astrodynamics::Math::Vector3D(bodyFixedLocation[0],
                                                                                             bodyFixedLocation[1],
                                                                                             bodyFixedLocation[2]),
-                                                            IO::SDK::Math::Vector3D(), epoch,
+                                                            IO::Astrodynamics::Math::Vector3D(), epoch,
                                                             m_body->GetBodyFixedFrame()};
 
     return siteVectorState.ToFrame(frame);
 }
 
-IO::SDK::Coordinates::Equatorial
-IO::SDK::Sites::Site::GetRADec(const IO::SDK::Body::Body &body, const IO::SDK::AberrationsEnum aberrationCorrection,
-                               const IO::SDK::Time::TDB &epoch) const
+IO::Astrodynamics::Coordinates::Equatorial
+IO::Astrodynamics::Sites::Site::GetRADec(const IO::Astrodynamics::Body::Body &body, const IO::Astrodynamics::AberrationsEnum aberrationCorrection,
+                               const IO::Astrodynamics::Time::TDB &epoch) const
 {
     auto radius = m_body->GetRadius();
-    auto bodiesSv = body.ReadEphemeris(IO::SDK::Frames::InertialFrames::GetICRF(), aberrationCorrection, epoch,
+    auto bodiesSv = body.ReadEphemeris(IO::Astrodynamics::Frames::InertialFrames::GetICRF(), aberrationCorrection, epoch,
                                        *m_body);
 
-    auto siteVector = GetStateVector(IO::SDK::Frames::InertialFrames::GetICRF(), epoch);
+    auto siteVector = GetStateVector(IO::Astrodynamics::Frames::InertialFrames::GetICRF(), epoch);
 
     auto resultSv = bodiesSv.GetPosition() - siteVector.GetPosition();
 
@@ -60,12 +60,12 @@ IO::SDK::Sites::Site::GetRADec(const IO::SDK::Body::Body &body, const IO::SDK::A
     double r, ra, dec;
     recrad_c(rectan, &r, &ra, &dec);
 
-    return IO::SDK::Coordinates::Equatorial{ra, dec, r};
+    return IO::Astrodynamics::Coordinates::Equatorial{ra, dec, r};
 }
 
-IO::SDK::Illumination::Illumination
-IO::SDK::Sites::Site::GetIllumination(const IO::SDK::AberrationsEnum aberrationCorrection,
-                                      const IO::SDK::Time::TDB &epoch) const
+IO::Astrodynamics::Illumination::Illumination
+IO::Astrodynamics::Sites::Site::GetIllumination(const IO::Astrodynamics::AberrationsEnum aberrationCorrection,
+                                      const IO::Astrodynamics::Time::TDB &epoch) const
 {
     SpiceDouble bodyFixedLocation[3];
     georec_c(m_coordinates.GetLongitude(), m_coordinates.GetLatitude(), m_coordinates.GetAltitude(),
@@ -83,59 +83,59 @@ IO::SDK::Sites::Site::GetIllumination(const IO::SDK::AberrationsEnum aberrationC
              m_body->GetBodyFixedFrame().GetName().c_str(), abe.ToString(aberrationCorrection).c_str(), "10",
              bodyFixedLocation, &srfEpoch, srfvec, &pha, &inc, &emi);
 
-    return IO::SDK::Illumination::Illumination{
-            IO::SDK::Math::Vector3D(srfvec[0] * 1000.0, srfvec[1] * 1000.0, srfvec[2] * 1000.0), pha, inc, emi,
-            IO::SDK::Time::TDB(std::chrono::duration<double>(srfEpoch))};
+    return IO::Astrodynamics::Illumination::Illumination{
+            IO::Astrodynamics::Math::Vector3D(srfvec[0] * 1000.0, srfvec[1] * 1000.0, srfvec[2] * 1000.0), pha, inc, emi,
+            IO::Astrodynamics::Time::TDB(std::chrono::duration<double>(srfEpoch))};
 }
 
-bool IO::SDK::Sites::Site::IsDay(const IO::SDK::Time::TDB &epoch, const double twilight) const
+bool IO::Astrodynamics::Sites::Site::IsDay(const IO::Astrodynamics::Time::TDB &epoch, const double twilight) const
 {
-    return GetIllumination(AberrationsEnum::CNS, epoch).GetIncidence() < IO::SDK::Constants::PI2 - twilight;
+    return GetIllumination(AberrationsEnum::CNS, epoch).GetIncidence() < IO::Astrodynamics::Constants::PI2 - twilight;
 }
 
-bool IO::SDK::Sites::Site::IsNight(const IO::SDK::Time::TDB &epoch, const double twilight) const
+bool IO::Astrodynamics::Sites::Site::IsNight(const IO::Astrodynamics::Time::TDB &epoch, const double twilight) const
 {
-    return GetIllumination(AberrationsEnum::CNS, epoch).GetIncidence() >= IO::SDK::Constants::PI2 - twilight;
+    return GetIllumination(AberrationsEnum::CNS, epoch).GetIncidence() >= IO::Astrodynamics::Constants::PI2 - twilight;
 }
 
-std::vector<IO::SDK::Time::Window<IO::SDK::Time::UTC>>
-IO::SDK::Sites::Site::FindDayWindows(const IO::SDK::Time::Window<IO::SDK::Time::UTC> &searchWindow,
+std::vector<IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::UTC>>
+IO::Astrodynamics::Sites::Site::FindDayWindows(const IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::UTC> &searchWindow,
                                      const double twilight) const
 {
-    IO::SDK::Body::CelestialBody sun(10);
-    return FindWindowsOnIlluminationConstraint(searchWindow, sun, IO::SDK::IlluminationAngle::Incidence(),
-                                               IO::SDK::Constraints::RelationalOperator::LowerThan(), IO::SDK::Constants::PI2 - twilight);
+    IO::Astrodynamics::Body::CelestialBody sun(10);
+    return FindWindowsOnIlluminationConstraint(searchWindow, sun, IO::Astrodynamics::IlluminationAngle::Incidence(),
+                                               IO::Astrodynamics::Constraints::RelationalOperator::LowerThan(), IO::Astrodynamics::Constants::PI2 - twilight);
 }
 
-std::vector<IO::SDK::Time::Window<IO::SDK::Time::UTC>>
-IO::SDK::Sites::Site::FindNightWindows(const IO::SDK::Time::Window<IO::SDK::Time::UTC> &searchWindow,
+std::vector<IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::UTC>>
+IO::Astrodynamics::Sites::Site::FindNightWindows(const IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::UTC> &searchWindow,
                                        const double twilight) const
 {
-    IO::SDK::Body::CelestialBody sun(10);
-    return FindWindowsOnIlluminationConstraint(searchWindow, sun, IO::SDK::IlluminationAngle::Incidence(),
-                                               IO::SDK::Constraints::RelationalOperator::GreaterThan(), IO::SDK::Constants::PI2 - twilight);
+    IO::Astrodynamics::Body::CelestialBody sun(10);
+    return FindWindowsOnIlluminationConstraint(searchWindow, sun, IO::Astrodynamics::IlluminationAngle::Incidence(),
+                                               IO::Astrodynamics::Constraints::RelationalOperator::GreaterThan(), IO::Astrodynamics::Constants::PI2 - twilight);
 }
 
-std::vector<IO::SDK::Time::Window<IO::SDK::Time::UTC>>
-IO::SDK::Sites::Site::FindWindowsOnIlluminationConstraint(const IO::SDK::Time::Window<IO::SDK::Time::UTC> &searchWindow,
-                                                          const IO::SDK::Body::Body &observerBody,
-                                                          const IO::SDK::IlluminationAngle &illuminationAngle,
-                                                          const IO::SDK::Constraints::RelationalOperator &constraint,
+std::vector<IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::UTC>>
+IO::Astrodynamics::Sites::Site::FindWindowsOnIlluminationConstraint(const IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::UTC> &searchWindow,
+                                                          const IO::Astrodynamics::Body::Body &observerBody,
+                                                          const IO::Astrodynamics::IlluminationAngle &illuminationAngle,
+                                                          const IO::Astrodynamics::Constraints::RelationalOperator &constraint,
                                                           const double value) const
 {
-    IO::SDK::Time::Window<IO::SDK::Time::TDB> tdbWindow(searchWindow.GetStartDate().ToTDB(), searchWindow.GetEndDate().ToTDB());
-    std::vector<IO::SDK::Time::Window<IO::SDK::Time::UTC>> windows;
+    IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB> tdbWindow(searchWindow.GetStartDate().ToTDB(), searchWindow.GetEndDate().ToTDB());
+    std::vector<IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::UTC>> windows;
     SpiceDouble bodyFixedLocation[3];
     georec_c(m_coordinates.GetLongitude(), m_coordinates.GetLatitude(), m_coordinates.GetAltitude(),
              m_body->GetRadius().GetX(), m_body->GetFlattening(), bodyFixedLocation);
 
 
-    auto res= IO::SDK::Constraints::GeometryFinder::FindWindowsOnIlluminationConstraint(tdbWindow, observerBody.GetId(), "Sun", m_body->GetId(), m_body->GetBodyFixedFrame().GetName(),
+    auto res= IO::Astrodynamics::Constraints::GeometryFinder::FindWindowsOnIlluminationConstraint(tdbWindow, observerBody.GetId(), "Sun", m_body->GetId(), m_body->GetBodyFixedFrame().GetName(),
                                                                               bodyFixedLocation, illuminationAngle, constraint, value, 0.0,
-                                                                              IO::SDK::AberrationsEnum::CNS, IO::SDK::Time::TimeSpan(std::chrono::duration<double>(4.5 * 60 * 60)),
+                                                                              IO::Astrodynamics::AberrationsEnum::CNS, IO::Astrodynamics::Time::TimeSpan(std::chrono::duration<double>(4.5 * 60 * 60)),
                                                                               "Ellipsoid");
 
-    std::vector<IO::SDK::Time::Window<Time::UTC>> utcWindows;
+    std::vector<IO::Astrodynamics::Time::Window<Time::UTC>> utcWindows;
     utcWindows.reserve(res.size());
 
     std::for_each(res.begin(), res.end(), [&utcWindows](Time::Window<Time::TDB> &x) { utcWindows.emplace_back(x.GetStartDate().ToUTC(), x.GetEndDate().ToUTC()); });
@@ -145,8 +145,8 @@ IO::SDK::Sites::Site::FindWindowsOnIlluminationConstraint(const IO::SDK::Time::W
 
 }
 
-IO::SDK::Coordinates::HorizontalCoordinates IO::SDK::Sites::Site::GetHorizontalCoordinates(const IO::SDK::Body::Body &body, const IO::SDK::AberrationsEnum aberrationCorrection,
-                                                                                           const IO::SDK::Time::TDB &epoch) const
+IO::Astrodynamics::Coordinates::HorizontalCoordinates IO::Astrodynamics::Sites::Site::GetHorizontalCoordinates(const IO::Astrodynamics::Body::Body &body, const IO::Astrodynamics::AberrationsEnum aberrationCorrection,
+                                                                                           const IO::Astrodynamics::Time::TDB &epoch) const
 {
     auto radius = m_body->GetRadius();
     SpiceDouble bodyFixedLocation[3];
@@ -156,39 +156,39 @@ IO::SDK::Coordinates::HorizontalCoordinates IO::SDK::Sites::Site::GetHorizontalC
     SpiceDouble res[6];
     SpiceDouble lt;
     azlcpo_c("ELLIPSOID", std::to_string(body.GetId()).c_str(), epoch.GetSecondsFromJ2000().count(),
-             IO::SDK::Aberrations::ToString(aberrationCorrection).c_str(), false, true, bodyFixedLocation,
+             IO::Astrodynamics::Aberrations::ToString(aberrationCorrection).c_str(), false, true, bodyFixedLocation,
              std::to_string(m_body->GetId()).c_str(),
              m_body->GetBodyFixedFrame().GetName().c_str(), res, &lt);
 
-    return IO::SDK::Coordinates::HorizontalCoordinates{res[1], res[2], res[0] * 1000.0};
+    return IO::Astrodynamics::Coordinates::HorizontalCoordinates{res[1], res[2], res[0] * 1000.0};
 }
 
-IO::SDK::OrbitalParameters::StateVector
-IO::SDK::Sites::Site::GetStateVector(const IO::SDK::Body::Body &body, const IO::SDK::Frames::Frames &frame,
-                                     IO::SDK::AberrationsEnum aberrationCorrection,
-                                     const IO::SDK::Time::TDB &epoch) const
+IO::Astrodynamics::OrbitalParameters::StateVector
+IO::Astrodynamics::Sites::Site::GetStateVector(const IO::Astrodynamics::Body::Body &body, const IO::Astrodynamics::Frames::Frames &frame,
+                                     IO::Astrodynamics::AberrationsEnum aberrationCorrection,
+                                     const IO::Astrodynamics::Time::TDB &epoch) const
 {
     auto radius = m_body->GetRadius();
     auto bodiesSv = body.ReadEphemeris(frame, aberrationCorrection, epoch, *m_body);
 
     auto siteVector = GetStateVector(frame, epoch);
 
-    return IO::SDK::OrbitalParameters::StateVector{m_body, bodiesSv.GetPosition() - siteVector.GetPosition(),
+    return IO::Astrodynamics::OrbitalParameters::StateVector{m_body, bodiesSv.GetPosition() - siteVector.GetPosition(),
                                                    bodiesSv.GetVelocity() - siteVector.GetVelocity(), epoch, frame};
 }
 
-std::vector<IO::SDK::Time::Window<IO::SDK::Time::UTC>>
-IO::SDK::Sites::Site::FindBodyVisibilityWindows(const IO::SDK::Body::Body &body,
-                                                const IO::SDK::Time::Window<IO::SDK::Time::UTC> &searchWindow,
-                                                const IO::SDK::AberrationsEnum aberrationCorrection) const
+std::vector<IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::UTC>>
+IO::Astrodynamics::Sites::Site::FindBodyVisibilityWindows(const IO::Astrodynamics::Body::Body &body,
+                                                const IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::UTC> &searchWindow,
+                                                const IO::Astrodynamics::AberrationsEnum aberrationCorrection) const
 {
-    IO::SDK::Time::Window<IO::SDK::Time::TDB> tdbWindow(searchWindow.GetStartDate().ToTDB(), searchWindow.GetEndDate().ToTDB());
+    IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB> tdbWindow(searchWindow.GetStartDate().ToTDB(), searchWindow.GetEndDate().ToTDB());
 
-    auto res = IO::SDK::Constraints::GeometryFinder::FindWindowsOnCoordinateConstraint(tdbWindow, m_id, body.GetId(), m_frame->GetName(),
-                                                                                       IO::SDK::CoordinateSystem::Latitudinal(), IO::SDK::Coordinate::Latitude(),
+    auto res = IO::Astrodynamics::Constraints::GeometryFinder::FindWindowsOnCoordinateConstraint(tdbWindow, m_id, body.GetId(), m_frame->GetName(),
+                                                                                       IO::Astrodynamics::CoordinateSystem::Latitudinal(), IO::Astrodynamics::Coordinate::Latitude(),
                                                                                        Constraints::RelationalOperator::GreaterThan(), 0.0, 0.0, aberrationCorrection,
-                                                                                       IO::SDK::Time::TimeSpan(std::chrono::duration<double>(60.0)));
-    std::vector<IO::SDK::Time::Window<Time::UTC>> utcWindows;
+                                                                                       IO::Astrodynamics::Time::TimeSpan(std::chrono::duration<double>(60.0)));
+    std::vector<IO::Astrodynamics::Time::Window<Time::UTC>> utcWindows;
     utcWindows.reserve(res.size());
 
     std::for_each(res.begin(), res.end(), [&utcWindows](Time::Window<Time::TDB> &x) { utcWindows.emplace_back(x.GetStartDate().ToUTC(), x.GetEndDate().ToUTC()); });
@@ -196,47 +196,47 @@ IO::SDK::Sites::Site::FindBodyVisibilityWindows(const IO::SDK::Body::Body &body,
     return utcWindows;
 }
 
-void IO::SDK::Sites::Site::WriteEphemeris(const std::vector<OrbitalParameters::StateVector> &states) const
+void IO::Astrodynamics::Sites::Site::WriteEphemeris(const std::vector<OrbitalParameters::StateVector> &states) const
 {
     return this->m_ephemerisKernel->WriteData(states);
 }
 
-IO::SDK::OrbitalParameters::StateVector IO::SDK::Sites::Site::ReadEphemeris(const IO::SDK::Frames::Frames &frame,
-                                                                            const IO::SDK::AberrationsEnum aberration,
-                                                                            const IO::SDK::Time::TDB &epoch,
-                                                                            const IO::SDK::Body::CelestialBody &observer) const
+IO::Astrodynamics::OrbitalParameters::StateVector IO::Astrodynamics::Sites::Site::ReadEphemeris(const IO::Astrodynamics::Frames::Frames &frame,
+                                                                            const IO::Astrodynamics::AberrationsEnum aberration,
+                                                                            const IO::Astrodynamics::Time::TDB &epoch,
+                                                                            const IO::Astrodynamics::Body::CelestialBody &observer) const
 {
     return this->m_ephemerisKernel->ReadStateVector(observer, frame, aberration, epoch);
 }
 
-IO::SDK::Time::Window<IO::SDK::Time::TDB> IO::SDK::Sites::Site::GetEphemerisCoverageWindow() const
+IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB> IO::Astrodynamics::Sites::Site::GetEphemerisCoverageWindow() const
 {
     return this->m_ephemerisKernel->GetCoverageWindow();
 }
 
-void IO::SDK::Sites::Site::WriteEphemerisKernelComment(const std::string &comment) const
+void IO::Astrodynamics::Sites::Site::WriteEphemerisKernelComment(const std::string &comment) const
 {
     this->m_ephemerisKernel->AddComment(comment);
 }
 
-std::string IO::SDK::Sites::Site::ReadEphemerisKernelComment() const
+std::string IO::Astrodynamics::Sites::Site::ReadEphemerisKernelComment() const
 {
     return this->m_ephemerisKernel->ReadComment();
 }
 
-void IO::SDK::Sites::Site::BuildAndWriteEphemeris(const IO::SDK::Time::Window<IO::SDK::Time::UTC> &searchWindow) const
+void IO::Astrodynamics::Sites::Site::BuildAndWriteEphemeris(const IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::UTC> &searchWindow) const
 {
-    std::vector<IO::SDK::OrbitalParameters::StateVector> svector;
-    for (auto epoch = searchWindow.GetStartDate().ToTDB(); epoch <= searchWindow.GetEndDate().ToTDB(); epoch = epoch + IO::SDK::Parameters::SitePropagationStep)
+    std::vector<IO::Astrodynamics::OrbitalParameters::StateVector> svector;
+    for (auto epoch = searchWindow.GetStartDate().ToTDB(); epoch <= searchWindow.GetEndDate().ToTDB(); epoch = epoch + IO::Astrodynamics::Parameters::SitePropagationStep)
     {
-        auto sv = GetStateVector(IO::SDK::Frames::InertialFrames::GetICRF(), epoch);
+        auto sv = GetStateVector(IO::Astrodynamics::Frames::InertialFrames::GetICRF(), epoch);
         svector.push_back(sv);
     }
 
     //Add latest value
     if (svector.back().GetEpoch() < searchWindow.GetEndDate().ToTDB())
     {
-        auto sv = GetStateVector(IO::SDK::Frames::InertialFrames::GetICRF(), searchWindow.GetEndDate().ToTDB());
+        auto sv = GetStateVector(IO::Astrodynamics::Frames::InertialFrames::GetICRF(), searchWindow.GetEndDate().ToTDB());
         svector.push_back(sv);
     }
 

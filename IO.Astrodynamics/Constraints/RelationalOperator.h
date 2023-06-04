@@ -6,7 +6,7 @@
 
 #include <string>
 
-namespace IO::SDK::Constraints
+namespace IO::Astrodynamics::Constraints
 {
     class RelationalOperator
     {
@@ -29,7 +29,7 @@ namespace IO::SDK::Constraints
         explicit RelationalOperator(std::string name);
 
         RelationalOperator(const RelationalOperator &relationalOperator) = default;
-        IO::SDK::Constraints::RelationalOperator &operator=(const RelationalOperator &other);
+        IO::Astrodynamics::Constraints::RelationalOperator &operator=(const RelationalOperator &other);
 
         /**
          * @brief Get char array constraint name
@@ -38,23 +38,23 @@ namespace IO::SDK::Constraints
          */
         [[nodiscard]] const char *ToCharArray() const;
 
-        static IO::SDK::Constraints::RelationalOperator &GreaterThan();
+        static IO::Astrodynamics::Constraints::RelationalOperator &GreaterThan();
 
-        static IO::SDK::Constraints::RelationalOperator &LowerThan();
+        static IO::Astrodynamics::Constraints::RelationalOperator &LowerThan();
 
-        static IO::SDK::Constraints::RelationalOperator &Equal();
+        static IO::Astrodynamics::Constraints::RelationalOperator &Equal();
 
-        static IO::SDK::Constraints::RelationalOperator &AbsMin();
+        static IO::Astrodynamics::Constraints::RelationalOperator &AbsMin();
 
-        static IO::SDK::Constraints::RelationalOperator &AbsMax();
+        static IO::Astrodynamics::Constraints::RelationalOperator &AbsMax();
 
-        static IO::SDK::Constraints::RelationalOperator &LocalMin();
+        static IO::Astrodynamics::Constraints::RelationalOperator &LocalMin();
 
-        static IO::SDK::Constraints::RelationalOperator &LocalMax();
+        static IO::Astrodynamics::Constraints::RelationalOperator &LocalMax();
 
-        static IO::SDK::Constraints::RelationalOperator ToRelationalOperator(const std::string &relationalOperator);
+        static IO::Astrodynamics::Constraints::RelationalOperator ToRelationalOperator(const std::string &relationalOperator);
     };
 
-} // namespace IO::SDK
+} // namespace IO::Astrodynamics
 
 #endif

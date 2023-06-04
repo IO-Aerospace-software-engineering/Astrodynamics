@@ -9,7 +9,7 @@
 #include <chrono>
 #include <SpiceUsr.h>
 
-namespace IO::SDK::Time
+namespace IO::Astrodynamics::Time
 {
 	class DateTime
 	{
@@ -45,21 +45,21 @@ namespace IO::SDK::Time
 		/// </summary>
 		/// <param name="datetime">Substracted this datetime</param>
 		/// <returns></returns>
-		[[nodiscard]] IO::SDK::Time::TimeSpan Subtract(const IO::SDK::Time::DateTime &datetime) const;
+		[[nodiscard]] IO::Astrodynamics::Time::TimeSpan Subtract(const IO::Astrodynamics::Time::DateTime &datetime) const;
 
 		/// <summary>
 		/// Substract two DateTimes
 		/// </summary>
 		/// <param name="other">Substracted this datetime</param>
 		/// <returns></returns>
-		IO::SDK::Time::TimeSpan operator-(const IO::SDK::Time::DateTime &other) const;
+		IO::Astrodynamics::Time::TimeSpan operator-(const IO::Astrodynamics::Time::DateTime &other) const;
 
-		bool operator==(const IO::SDK::Time::DateTime &other) const;
-		bool operator!=(const IO::SDK::Time::DateTime &other) const;
-		bool operator>(const IO::SDK::Time::DateTime &other) const;
-		bool operator>=(const IO::SDK::Time::DateTime &other) const;
-		bool operator<(const IO::SDK::Time::DateTime &other) const;
-		bool operator<=(const IO::SDK::Time::DateTime &other) const;
+		bool operator==(const IO::Astrodynamics::Time::DateTime &other) const;
+		bool operator!=(const IO::Astrodynamics::Time::DateTime &other) const;
+		bool operator>(const IO::Astrodynamics::Time::DateTime &other) const;
+		bool operator>=(const IO::Astrodynamics::Time::DateTime &other) const;
+		bool operator<(const IO::Astrodynamics::Time::DateTime &other) const;
+		bool operator<=(const IO::Astrodynamics::Time::DateTime &other) const;
 
 		[[nodiscard]] virtual double ToJulian() const;
 

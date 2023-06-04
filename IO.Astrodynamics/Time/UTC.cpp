@@ -6,11 +6,11 @@
 #include <SDKException.h>
 #include <TDB.h>
 
-IO::SDK::Time::UTC::UTC(const std::chrono::duration<double> ellapsedSecondsFromJ2000) : IO::SDK::Time::DateTime(ellapsedSecondsFromJ2000)
+IO::Astrodynamics::Time::UTC::UTC(const std::chrono::duration<double> ellapsedSecondsFromJ2000) : IO::Astrodynamics::Time::DateTime(ellapsedSecondsFromJ2000)
 {
 }
 
-IO::SDK::Time::UTC::UTC(const std::string& string)
+IO::Astrodynamics::Time::UTC::UTC(const std::string& string)
 {
     SpiceDouble utc;
     SpiceChar errMsg[100];
@@ -18,13 +18,13 @@ IO::SDK::Time::UTC::UTC(const std::string& string)
 
     if (*errMsg != '\000')
     {
-        throw IO::SDK::Exception::SDKException(std::string(errMsg));
+        throw IO::Astrodynamics::Exception::SDKException(std::string(errMsg));
     }
 
     const_cast<std::chrono::duration<double>&>(m_secondsFromJ2000) = std::chrono::duration<double>(utc);
 }
 
-std::string IO::SDK::Time::UTC::ToString() const
+std::string IO::Astrodynamics::Time::UTC::ToString() const
 {
     SpiceChar str[51];
     SpiceDouble delta;
@@ -33,19 +33,19 @@ std::string IO::SDK::Time::UTC::ToString() const
     return std::string{str};
 }
 
-IO::SDK::Time::TDB IO::SDK::Time::UTC::ToTDB() const
+IO::Astrodynamics::Time::TDB IO::Astrodynamics::Time::UTC::ToTDB() const
 {
     double delta{};
     deltet_c(m_secondsFromJ2000.count(), "UTC", &delta);
     return TDB(m_secondsFromJ2000 + std::chrono::duration<double>(delta));
 }
 
-IO::SDK::Time::UTC IO::SDK::Time::UTC::Add(const IO::SDK::Time::TimeSpan &timespan) const
+IO::Astrodynamics::Time::UTC IO::Astrodynamics::Time::UTC::Add(const IO::Astrodynamics::Time::TimeSpan &timespan) const
 {
-    return IO::SDK::Time::UTC{m_secondsFromJ2000 + timespan.GetSeconds()};
+    return IO::Astrodynamics::Time::UTC{m_secondsFromJ2000 + timespan.GetSeconds()};
 }
 
-IO::SDK::Time::UTC IO::SDK::Time::UTC::operator+(const IO::SDK::Time::TimeSpan &timespan) const
+IO::Astrodynamics::Time::UTC IO::Astrodynamics::Time::UTC::operator+(const IO::Astrodynamics::Time::TimeSpan &timespan) const
 {
     return Add(timespan);
 }

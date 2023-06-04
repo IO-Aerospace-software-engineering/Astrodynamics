@@ -18,21 +18,21 @@
 #include <CelestialBody.h>
 #include <optional>
 
-//namespace IO::SDK::Integrators::Forces
+//namespace IO::Astrodynamics::Integrators::Forces
 //{
 //    class Force;
 //    class GravityForce;
 //}
 
-namespace IO::SDK::Integrators
+namespace IO::Astrodynamics::Integrators
 {
-    class VVIntegrator final : public IO::SDK::Integrators::IntegratorBase
+    class VVIntegrator final : public IO::Astrodynamics::Integrators::IntegratorBase
     {
     private:
-        std::vector<IO::SDK::Integrators::Forces::Force *> m_forces{};
-        std::optional<IO::SDK::Math::Vector3D> m_acceleration{std::nullopt};
+        std::vector<IO::Astrodynamics::Integrators::Forces::Force *> m_forces{};
+        std::optional<IO::Astrodynamics::Math::Vector3D> m_acceleration{std::nullopt};
 
-        [[nodiscard]] IO::SDK::Math::Vector3D ComputeAcceleration(const IO::SDK::Body::Body &body, const IO::SDK::OrbitalParameters::StateVector &stateVector) const;
+        [[nodiscard]] IO::Astrodynamics::Math::Vector3D ComputeAcceleration(const IO::Astrodynamics::Body::Body &body, const IO::Astrodynamics::OrbitalParameters::StateVector &stateVector) const;
 
     public:
         /**
@@ -40,7 +40,7 @@ namespace IO::SDK::Integrators
          * 
          * @param stepDuration 
          */
-        explicit VVIntegrator(const IO::SDK::Time::TimeSpan &stepDuration);
+        explicit VVIntegrator(const IO::Astrodynamics::Time::TimeSpan &stepDuration);
 
         /**
          * @brief Construct a new VVIntegrator object
@@ -48,7 +48,7 @@ namespace IO::SDK::Integrators
          * @param stepDuration 
          * @param forces 
          */
-        VVIntegrator(const IO::SDK::Time::TimeSpan &stepDuration, std::vector<IO::SDK::Integrators::Forces::Force *>& forces);
+        VVIntegrator(const IO::Astrodynamics::Time::TimeSpan &stepDuration, std::vector<IO::Astrodynamics::Integrators::Forces::Force *>& forces);
 
         /**
          * @brief Destroy the VVIntegrator object
@@ -61,9 +61,9 @@ namespace IO::SDK::Integrators
          * 
          * @param body 
          * @param stateVector 
-         * @return IO::SDK::OrbitalParameters::StateVector 
+         * @return IO::Astrodynamics::OrbitalParameters::StateVector
          */
-        IO::SDK::OrbitalParameters::StateVector Integrate(const IO::SDK::Body::Body &body, const IO::SDK::OrbitalParameters::StateVector &stateVector) override;
+        IO::Astrodynamics::OrbitalParameters::StateVector Integrate(const IO::Astrodynamics::Body::Body &body, const IO::Astrodynamics::OrbitalParameters::StateVector &stateVector) override;
     };
 
 }

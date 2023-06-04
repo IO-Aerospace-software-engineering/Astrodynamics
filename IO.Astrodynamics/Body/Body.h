@@ -8,25 +8,25 @@
 #include <Planetographic.h>
 #include <GeometryFinder.h>
 
-namespace IO::SDK::OrbitalParameters
+namespace IO::Astrodynamics::OrbitalParameters
 {
     class OrbitalParameters;
 
     class StateVector;
 }
 
-namespace IO::SDK::Body
+namespace IO::Astrodynamics::Body
 {
     /**
      * @brief Body class
      *
      */
-    class Body : public std::enable_shared_from_this<IO::SDK::Body::Body>
+    class Body : public std::enable_shared_from_this<IO::Astrodynamics::Body::Body>
     {
     private:
     protected:
-        std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> m_orbitalParametersAtEpoch{};
-        std::vector<IO::SDK::Body::Body *> m_satellites{};
+        std::unique_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> m_orbitalParametersAtEpoch{};
+        std::vector<IO::Astrodynamics::Body::Body *> m_satellites{};
         const int m_id{};
         const std::string m_name{};
         double m_mass{};
@@ -50,7 +50,7 @@ namespace IO::SDK::Body
          * @param mass kg
          * @param orbitalParameters
          */
-        Body(int id, const std::string &name, double mass, std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParametersAtEpoch);
+        Body(int id, const std::string &name, double mass, std::unique_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParametersAtEpoch);
 
         /**
          * @brief Construct a new Body object
@@ -60,7 +60,7 @@ namespace IO::SDK::Body
          * @param mass
          * @param centerOfMotion
          */
-        Body(int id, const std::string &name, double mass, std::shared_ptr<IO::SDK::Body::CelestialBody> &centerOfMotion);
+        Body(int id, const std::string &name, double mass, std::shared_ptr<IO::Astrodynamics::Body::CelestialBody> &centerOfMotion);
 
         Body(const Body &body);
 
@@ -97,16 +97,16 @@ namespace IO::SDK::Body
         /**
          * @brief Get body orbital parameters
          *
-         * @return std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters>
+         * @return std::unique_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters>
          */
-        const std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> &GetOrbitalParametersAtEpoch() const;
+        const std::unique_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> &GetOrbitalParametersAtEpoch() const;
 
         /**
          * @brief Get the Satellites
          *
-         * @return const std::vector<IO::SDK::Body::Body*>&
+         * @return const std::vector<IO::Astrodynamics::Body::Body*>&
          */
-        const std::vector<IO::SDK::Body::Body *> &GetSatellites() const;
+        const std::vector<IO::Astrodynamics::Body::Body *> &GetSatellites() const;
 
         /**
          * @brief Get the State Vector relative to its center of motion
@@ -114,25 +114,25 @@ namespace IO::SDK::Body
          * @param frame
          * @param aberration
          * @param epoch
-         * @return IO::SDK::OrbitalParameters::StateVector
+         * @return IO::Astrodynamics::OrbitalParameters::StateVector
          */
-        virtual IO::SDK::OrbitalParameters::StateVector
-        ReadEphemeris(const IO::SDK::Frames::Frames &frame, IO::SDK::AberrationsEnum aberration, const IO::SDK::Time::TDB &epoch) const;
+        virtual IO::Astrodynamics::OrbitalParameters::StateVector
+        ReadEphemeris(const IO::Astrodynamics::Frames::Frames &frame, IO::Astrodynamics::AberrationsEnum aberration, const IO::Astrodynamics::Time::TDB &epoch) const;
 
         /**
          * @brief Get state vector from ephemeris relative to another body
          *
          * @param epoch
-         * @return IO::SDK::OrbitalParameters::StateVector
+         * @return IO::Astrodynamics::OrbitalParameters::StateVector
          */
-        virtual IO::SDK::OrbitalParameters::StateVector ReadEphemeris(const IO::SDK::Frames::Frames &frame, IO::SDK::AberrationsEnum aberration, const IO::SDK::Time::TDB &epoch,
-                                                                      const IO::SDK::Body::CelestialBody &relativeTo) const;
+        virtual IO::Astrodynamics::OrbitalParameters::StateVector ReadEphemeris(const IO::Astrodynamics::Frames::Frames &frame, IO::Astrodynamics::AberrationsEnum aberration, const IO::Astrodynamics::Time::TDB &epoch,
+                                                                      const IO::Astrodynamics::Body::CelestialBody &relativeTo) const;
 
-        virtual bool operator==(const IO::SDK::Body::Body &rhs) const;
+        virtual bool operator==(const IO::Astrodynamics::Body::Body &rhs) const;
 
-        virtual bool operator!=(const IO::SDK::Body::Body &rhs) const;
+        virtual bool operator!=(const IO::Astrodynamics::Body::Body &rhs) const;
 
-        std::shared_ptr<IO::SDK::Body::Body> GetSharedPointer();
+        std::shared_ptr<IO::Astrodynamics::Body::Body> GetSharedPointer();
 
         /**
          * @brief Find windows when distance constraint occurs
@@ -144,11 +144,11 @@ namespace IO::SDK::Body
          * @param value Target value
          * @param searchWindow Time window where constraint is evaluated
          * @param step Step size (should be shorter than the shortest of these intervals. WARNING : A short step size could increase compute time)
-         * @return std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>>
+         * @return std::vector<IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB>>
          */
-        static std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>>
-        FindWindowsOnDistanceConstraint(const IO::SDK::Time::Window<IO::SDK::Time::TDB> &searchWindow, const Body &targetBody, const Body &observer,
-                                        const IO::SDK::Constraints::RelationalOperator &constraint, IO::SDK::AberrationsEnum aberration, double value, const IO::SDK::Time::TimeSpan &step);
+        static std::vector<IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB>>
+        FindWindowsOnDistanceConstraint(const IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB> &searchWindow, const Body &targetBody, const Body &observer,
+                                        const IO::Astrodynamics::Constraints::RelationalOperator &constraint, IO::Astrodynamics::AberrationsEnum aberration, double value, const IO::Astrodynamics::Time::TimeSpan &step);
 
         /**
          * @brief Find windows when occultation occurs
@@ -159,12 +159,12 @@ namespace IO::SDK::Body
          * @param occultationType Full-Annular-Partial-Any
          * @param aberration Aberration correction
          * @param stepSize Step size (should be shorter than the shortest of these intervals. WARNING : A short step size could increase compute time)
-         * @return std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>>
+         * @return std::vector<IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB>>
          */
-        std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>>
-        FindWindowsOnOccultationConstraint(const IO::SDK::Time::Window<IO::SDK::Time::TDB> &searchWindow, const IO::SDK::Body::Body &targetBody,
-                                           const IO::SDK::Body::CelestialBody &frontBody, const IO::SDK::OccultationType &occultationType, IO::SDK::AberrationsEnum aberration,
-                                           const IO::SDK::Time::TimeSpan &stepSize) const;
+        std::vector<IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB>>
+        FindWindowsOnOccultationConstraint(const IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB> &searchWindow, const IO::Astrodynamics::Body::Body &targetBody,
+                                           const IO::Astrodynamics::Body::CelestialBody &frontBody, const IO::Astrodynamics::OccultationType &occultationType, IO::Astrodynamics::AberrationsEnum aberration,
+                                           const IO::Astrodynamics::Time::TimeSpan &stepSize) const;
 
         /**
          * @brief Get the Sub Observer Point observed from this body
@@ -172,10 +172,10 @@ namespace IO::SDK::Body
          * @param targetBody
          * @param aberration
          * @param epoch
-         * @return IO::SDK::Coordinates::Planetographic
+         * @return IO::Astrodynamics::Coordinates::Planetographic
          */
-        IO::SDK::Coordinates::Planetographic
-        GetSubObserverPoint(const IO::SDK::Body::CelestialBody &targetBody, const IO::SDK::AberrationsEnum &aberration, const IO::SDK::Time::DateTime &epoch) const;
+        IO::Astrodynamics::Coordinates::Planetographic
+        GetSubObserverPoint(const IO::Astrodynamics::Body::CelestialBody &targetBody, const IO::Astrodynamics::AberrationsEnum &aberration, const IO::Astrodynamics::Time::DateTime &epoch) const;
 
         /**
          * @brief Get the Sub Solar Point observed from this body
@@ -183,10 +183,10 @@ namespace IO::SDK::Body
          * @param targetBody
          * @param abberation
          * @param epoch
-         * @return IO::SDK::Coordinates::Planetographic
+         * @return IO::Astrodynamics::Coordinates::Planetographic
          */
-        IO::SDK::Coordinates::Planetographic
-        GetSubSolarPoint(const IO::SDK::Body::CelestialBody &targetBody, IO::SDK::AberrationsEnum aberration, const IO::SDK::Time::TDB &epoch) const;
+        IO::Astrodynamics::Coordinates::Planetographic
+        GetSubSolarPoint(const IO::Astrodynamics::Body::CelestialBody &targetBody, IO::Astrodynamics::AberrationsEnum aberration, const IO::Astrodynamics::Time::TDB &epoch) const;
     };
 }
 #endif

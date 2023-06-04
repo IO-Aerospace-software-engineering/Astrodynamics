@@ -4,14 +4,14 @@
 #include <TLEIntegrator.h>
 
 
-IO::SDK::Integrators::TLEIntegrator::TLEIntegrator(const IO::SDK::OrbitalParameters::TLE &tle, const IO::SDK::Time::TimeSpan &stepDuration) : IO::SDK::Integrators::IntegratorBase(stepDuration), m_tle{tle}
+IO::Astrodynamics::Integrators::TLEIntegrator::TLEIntegrator(const IO::Astrodynamics::OrbitalParameters::TLE &tle, const IO::Astrodynamics::Time::TimeSpan &stepDuration) : IO::Astrodynamics::Integrators::IntegratorBase(stepDuration), m_tle{tle}
 {
 }
 
-IO::SDK::Integrators::TLEIntegrator::~TLEIntegrator()
+IO::Astrodynamics::Integrators::TLEIntegrator::~TLEIntegrator()
 = default;
 
-IO::SDK::OrbitalParameters::StateVector IO::SDK::Integrators::TLEIntegrator::Integrate([[maybe_unused]]const IO::SDK::Body::Body &body, const IO::SDK::OrbitalParameters::StateVector &stateVector)
+IO::Astrodynamics::OrbitalParameters::StateVector IO::Astrodynamics::Integrators::TLEIntegrator::Integrate([[maybe_unused]]const IO::Astrodynamics::Body::Body &body, const IO::Astrodynamics::OrbitalParameters::StateVector &stateVector)
 {
     return m_tle.ToStateVector(stateVector.GetEpoch() + this->m_stepDuration);
 }

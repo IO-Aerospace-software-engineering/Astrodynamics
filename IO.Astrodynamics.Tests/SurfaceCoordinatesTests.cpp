@@ -6,15 +6,15 @@
 
 TEST(SurfaceCoordinates, Initialization)
 {
-	IO::SDK::Coordinates::SurfaceCoordinates sf(5, 2);
+	IO::Astrodynamics::Coordinates::SurfaceCoordinates sf(5, 2);
 	ASSERT_EQ(10, sf.GetSurfaceNormals().capacity());
 	ASSERT_EQ(10, sf.GetSurfacePoints().capacity());
 }
 
 TEST(SurfaceCoordinates, Add)
 {
-	IO::SDK::Coordinates::SurfaceCoordinates sf(5, 2);
-	IO::SDK::Math::Vector3D point(1.0, 2.0, 3.0);
+	IO::Astrodynamics::Coordinates::SurfaceCoordinates sf(5, 2);
+	IO::Astrodynamics::Math::Vector3D point(1.0, 2.0, 3.0);
 
 	sf.AddPoint(point);
 
@@ -22,7 +22,7 @@ TEST(SurfaceCoordinates, Add)
 	ASSERT_EQ(2.0, sf.GetSurfacePoints()[0]->GetY());
 	ASSERT_EQ(3.0, sf.GetSurfacePoints()[0]->GetZ());
 
-	IO::SDK::Math::Vector3D normal(10.0, 20.0, 30.0);
+	IO::Astrodynamics::Math::Vector3D normal(10.0, 20.0, 30.0);
 
 	sf.AddNormal(normal);
 
@@ -33,13 +33,13 @@ TEST(SurfaceCoordinates, Add)
 
 TEST(SurfaceCoordinates, Copy)
 {
-	IO::SDK::Coordinates::SurfaceCoordinates sfFilledCopy(0,0);
+	IO::Astrodynamics::Coordinates::SurfaceCoordinates sfFilledCopy(0,0);
 
 	{
-		IO::SDK::Coordinates::SurfaceCoordinates sf(5, 2);
-		IO::SDK::Coordinates::SurfaceCoordinates sfCopy(sf);
+		IO::Astrodynamics::Coordinates::SurfaceCoordinates sf(5, 2);
+		IO::Astrodynamics::Coordinates::SurfaceCoordinates sfCopy(sf);
 
-		IO::SDK::Math::Vector3D point(1.0, 2.0, 3.0);
+		IO::Astrodynamics::Math::Vector3D point(1.0, 2.0, 3.0);
 
 		sf.AddPoint(point);
 
@@ -47,7 +47,7 @@ TEST(SurfaceCoordinates, Copy)
 		ASSERT_EQ(2.0, sf.GetSurfacePoints()[0]->GetY());
 		ASSERT_EQ(3.0, sf.GetSurfacePoints()[0]->GetZ());
 
-		IO::SDK::Math::Vector3D normal(10.0, 20.0, 30.0);
+		IO::Astrodynamics::Math::Vector3D normal(10.0, 20.0, 30.0);
 
 		sf.AddNormal(normal);
 

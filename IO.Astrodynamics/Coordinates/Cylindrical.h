@@ -3,7 +3,7 @@
  */
 #ifndef CYLINDRICAL_H
 #define CYLINDRICAL_H
-namespace IO::SDK::Coordinates
+namespace IO::Astrodynamics::Coordinates
 {
 	/**
 	 * @brief 

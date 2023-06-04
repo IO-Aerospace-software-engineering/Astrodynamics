@@ -4,21 +4,21 @@
 #include <Payload.h>
 #include <InvalidArgumentException.h>
 
-IO::SDK::Body::Spacecraft::Payload::Payload(const std::string &serialNumber, const std::string &name, const double mass)
+IO::Astrodynamics::Body::Spacecraft::Payload::Payload(const std::string &serialNumber, const std::string &name, const double mass)
 {
     if (name.empty())
     {
-        throw IO::SDK::Exception::InvalidArgumentException("Payload must have a name");
+        throw IO::Astrodynamics::Exception::InvalidArgumentException("Payload must have a name");
     }
 
     if (serialNumber.empty())
     {
-        throw IO::SDK::Exception::InvalidArgumentException("Payload must have a serial number");
+        throw IO::Astrodynamics::Exception::InvalidArgumentException("Payload must have a serial number");
     }
 
     if (mass <= 0)
     {
-        throw IO::SDK::Exception::InvalidArgumentException("Payload must have a positive mass");
+        throw IO::Astrodynamics::Exception::InvalidArgumentException("Payload must have a positive mass");
     }
     
     const_cast<std::string &>(m_name) = name;
@@ -26,17 +26,17 @@ IO::SDK::Body::Spacecraft::Payload::Payload(const std::string &serialNumber, con
     const_cast<double &>(m_mass) = mass;
 }
 
-double IO::SDK::Body::Spacecraft::Payload::GetMass() const
+double IO::Astrodynamics::Body::Spacecraft::Payload::GetMass() const
 {
     return m_mass;
 }
 
-std::string IO::SDK::Body::Spacecraft::Payload::GetName() const
+std::string IO::Astrodynamics::Body::Spacecraft::Payload::GetName() const
 {
     return m_name;
 }
 
-std::string IO::SDK::Body::Spacecraft::Payload::GetSerialNumber() const
+std::string IO::Astrodynamics::Body::Spacecraft::Payload::GetSerialNumber() const
 {
     return m_serialNumber;
 }

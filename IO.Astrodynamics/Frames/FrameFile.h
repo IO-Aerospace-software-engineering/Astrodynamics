@@ -6,7 +6,7 @@
 
 #include<string>
 
-namespace IO::SDK::Frames
+namespace IO::Astrodynamics::Frames
 {
 	/**
 	 * @brief Frame file

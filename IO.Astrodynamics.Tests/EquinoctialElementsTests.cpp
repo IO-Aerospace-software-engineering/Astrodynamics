@@ -13,7 +13,7 @@
 
 using namespace std::chrono_literals;
 TEST(EquinoctialElements, Initialization) {
-    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
+    const auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399);
 
     //keplerian elements
     double p = 1.0e7;
@@ -33,11 +33,11 @@ TEST(EquinoctialElements, Initialization) {
     double q = tan(inc / 2.) * cos(node);
     double L = m0 + argp + node;
 
-    IO::SDK::OrbitalParameters::EquinoctialElements eq(earth, IO::SDK::Time::TDB(120.0s), a, h, k, p2, q, L, 2.0, 3.0, -IO::SDK::Constants::PI2, IO::SDK::Constants::PI2,
-                                                       IO::SDK::Frames::InertialFrames::GetICRF());
+    IO::Astrodynamics::OrbitalParameters::EquinoctialElements eq(earth, IO::Astrodynamics::Time::TDB(120.0s), a, h, k, p2, q, L, 2.0, 3.0, -IO::Astrodynamics::Constants::PI2, IO::Astrodynamics::Constants::PI2,
+                                                       IO::Astrodynamics::Frames::InertialFrames::GetICRF());
 
     ASSERT_DOUBLE_EQ(3.0, eq.GetAscendingNodeLongitudeRate());
-    ASSERT_DOUBLE_EQ(IO::SDK::Constants::PI2, eq.GetDeclinationOfPole());
+    ASSERT_DOUBLE_EQ(IO::Astrodynamics::Constants::PI2, eq.GetDeclinationOfPole());
     ASSERT_DOUBLE_EQ(120.0, eq.GetEpoch().GetSecondsFromJ2000().count());
     ASSERT_DOUBLE_EQ(h, eq.GetH());
     ASSERT_DOUBLE_EQ(k, eq.GetK());
@@ -46,13 +46,13 @@ TEST(EquinoctialElements, Initialization) {
     ASSERT_DOUBLE_EQ(L, eq.GetL());
     ASSERT_DOUBLE_EQ(n, eq.GetMeanAnomalyRate());
     ASSERT_DOUBLE_EQ(2.0, eq.GetPeriapsisLongitudeRate());
-    ASSERT_DOUBLE_EQ(-IO::SDK::Constants::PI2, eq.GetRightAscensionOfPole());
+    ASSERT_DOUBLE_EQ(-IO::Astrodynamics::Constants::PI2, eq.GetRightAscensionOfPole());
     ASSERT_DOUBLE_EQ(a, eq.GetSemiMajorAxis());
     ASSERT_EQ(earth.get(), eq.GetCenterOfMotion().get());
 }
 
 TEST(EquinoctialElements, InitializationFromKeplerian) {
-    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
+    const auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399);
 
     //keplerian elements
     double p = 6.780E+06;
@@ -72,11 +72,11 @@ TEST(EquinoctialElements, InitializationFromKeplerian) {
     double q = tan(inc / 2.) * cos(node);
     double L = m0 + argp + node;
 
-    IO::SDK::OrbitalParameters::EquinoctialElements eq(earth, a, ecc, inc, argp, node, m0, 2.0, 3.0, -IO::SDK::Constants::PI2, IO::SDK::Constants::PI2, IO::SDK::Time::TDB(120.0s),
-                                                       IO::SDK::Frames::InertialFrames::GetICRF());
+    IO::Astrodynamics::OrbitalParameters::EquinoctialElements eq(earth, a, ecc, inc, argp, node, m0, 2.0, 3.0, -IO::Astrodynamics::Constants::PI2, IO::Astrodynamics::Constants::PI2, IO::Astrodynamics::Time::TDB(120.0s),
+                                                       IO::Astrodynamics::Frames::InertialFrames::GetICRF());
 
     ASSERT_DOUBLE_EQ(3.0, eq.GetAscendingNodeLongitudeRate());
-    ASSERT_DOUBLE_EQ(IO::SDK::Constants::PI2, eq.GetDeclinationOfPole());
+    ASSERT_DOUBLE_EQ(IO::Astrodynamics::Constants::PI2, eq.GetDeclinationOfPole());
     ASSERT_DOUBLE_EQ(120.0, eq.GetEpoch().GetSecondsFromJ2000().count());
     ASSERT_DOUBLE_EQ(h, eq.GetH());
     ASSERT_DOUBLE_EQ(k, eq.GetK());
@@ -85,7 +85,7 @@ TEST(EquinoctialElements, InitializationFromKeplerian) {
     ASSERT_DOUBLE_EQ(L, eq.GetL());
     ASSERT_DOUBLE_EQ(n, eq.GetMeanAnomalyRate());
     ASSERT_DOUBLE_EQ(2.0, eq.GetPeriapsisLongitudeRate());
-    ASSERT_DOUBLE_EQ(-IO::SDK::Constants::PI2, eq.GetRightAscensionOfPole());
+    ASSERT_DOUBLE_EQ(-IO::Astrodynamics::Constants::PI2, eq.GetRightAscensionOfPole());
     ASSERT_DOUBLE_EQ(a, eq.GetSemiMajorAxis());
     ASSERT_EQ(earth.get(), eq.GetCenterOfMotion().get());
     ASSERT_DOUBLE_EQ(ecc, eq.GetEccentricity());
@@ -95,7 +95,7 @@ TEST(EquinoctialElements, InitializationFromKeplerian) {
 }
 
 TEST(EquinoctialElements, GetPeriod) {
-    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
+    const auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399);
 
     //keplerian elements
     double p = 1.0e7;
@@ -113,14 +113,14 @@ TEST(EquinoctialElements, GetPeriod) {
     double q = tan(inc / 2.) * cos(node);
     double L = m0 + argp + node;
 
-    IO::SDK::OrbitalParameters::EquinoctialElements eq(earth, IO::SDK::Time::TDB(120.0s), a, h, k, p2, q, L, 2.0, 3.0, -IO::SDK::Constants::PI2, IO::SDK::Constants::PI2,
-                                                       IO::SDK::Frames::InertialFrames::GetICRF());
+    IO::Astrodynamics::OrbitalParameters::EquinoctialElements eq(earth, IO::Astrodynamics::Time::TDB(120.0s), a, h, k, p2, q, L, 2.0, 3.0, -IO::Astrodynamics::Constants::PI2, IO::Astrodynamics::Constants::PI2,
+                                                       IO::Astrodynamics::Frames::InertialFrames::GetICRF());
 
     ASSERT_DOUBLE_EQ(11655.937761769412, eq.GetPeriod().GetSeconds().count());
 }
 
 TEST(EquinoctialElements, GetStateVector) {
-    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
+    const auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399);
 
     //keplerian elements
     double p = 1.0e7;
@@ -130,7 +130,7 @@ TEST(EquinoctialElements, GetStateVector) {
     double node = 15.0 * rpd_c();
     double inc = 10.0 * rpd_c();
     double m0 = 45.0 * rpd_c();
-    IO::SDK::Time::TDB t0{-100000000.0s};
+    IO::Astrodynamics::Time::TDB t0{-100000000.0s};
 
     //equinoctial elements
     double h = ecc * sin(argp + node);
@@ -139,11 +139,11 @@ TEST(EquinoctialElements, GetStateVector) {
     double q = tan(inc / 2.) * cos(node);
     double L = m0 + argp + node;
 
-    IO::SDK::OrbitalParameters::EquinoctialElements eq(earth, t0, a, h, k, p2, q, L, 0.0, 0.0, -IO::SDK::Constants::PI2, IO::SDK::Constants::PI2,
-                                                       IO::SDK::Frames::InertialFrames::GetICRF());
+    IO::Astrodynamics::OrbitalParameters::EquinoctialElements eq(earth, t0, a, h, k, p2, q, L, 0.0, 0.0, -IO::Astrodynamics::Constants::PI2, IO::Astrodynamics::Constants::PI2,
+                                                       IO::Astrodynamics::Frames::InertialFrames::GetICRF());
 
-    IO::SDK::Time::TimeSpan et = t0.Subtract(IO::SDK::Time::TDB(10000.0s));
-    auto sv = eq.ToStateVector(IO::SDK::Time::TDB(et.GetSeconds() + 250s));
+    IO::Astrodynamics::Time::TimeSpan et = t0.Subtract(IO::Astrodynamics::Time::TDB(10000.0s));
+    auto sv = eq.ToStateVector(IO::Astrodynamics::Time::TDB(et.GetSeconds() + 250s));
 
     ASSERT_DOUBLE_EQ(-10732167.450808318, sv.GetPosition().GetX());
     ASSERT_DOUBLE_EQ(3902505.7550668186, sv.GetPosition().GetY());
@@ -154,7 +154,7 @@ TEST(EquinoctialElements, GetStateVector) {
 }
 
 TEST(EquinoctialElements, GetStateVectorAtEpoch) {
-    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
+    const auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399);
 
     //keplerian elements
     double p = 1.0e7;
@@ -164,7 +164,7 @@ TEST(EquinoctialElements, GetStateVectorAtEpoch) {
     double node = 15.0 * rpd_c();
     double inc = 10.0 * rpd_c();
     double m0 = 45.0 * rpd_c();
-    IO::SDK::Time::TDB t0{-100000000.0s};
+    IO::Astrodynamics::Time::TDB t0{-100000000.0s};
 
     //equinoctial elements
     double h = ecc * sin(argp + node);
@@ -173,8 +173,8 @@ TEST(EquinoctialElements, GetStateVectorAtEpoch) {
     double q = tan(inc / 2.) * cos(node);
     double L = m0 + argp + node;
 
-    IO::SDK::OrbitalParameters::EquinoctialElements eq(earth, t0, a, h, k, p2, q, L, 0.0, 0.0, -IO::SDK::Constants::PI2, IO::SDK::Constants::PI2,
-                                                       IO::SDK::Frames::InertialFrames::GetICRF());
+    IO::Astrodynamics::OrbitalParameters::EquinoctialElements eq(earth, t0, a, h, k, p2, q, L, 0.0, 0.0, -IO::Astrodynamics::Constants::PI2, IO::Astrodynamics::Constants::PI2,
+                                                       IO::Astrodynamics::Frames::InertialFrames::GetICRF());
 
     auto sv = eq.ToStateVector(t0);
 
@@ -187,7 +187,7 @@ TEST(EquinoctialElements, GetStateVectorAtEpoch) {
 }
 
 TEST(EquinoctialElements, GetStateVectorFromKeplerian) {
-    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
+    const auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399);
 
     //keplerian elements
     double p = 1.0e7;
@@ -197,10 +197,10 @@ TEST(EquinoctialElements, GetStateVectorFromKeplerian) {
     double node = 0.0 * rpd_c();
     double inc = 0.0 * rpd_c();
     double m0 = 0.0 * rpd_c();
-    IO::SDK::Time::TDB t0{0.0s};
+    IO::Astrodynamics::Time::TDB t0{0.0s};
 
-    IO::SDK::OrbitalParameters::EquinoctialElements eq(earth, a, ecc, inc, argp, node, m0, 0.0, 0.0, -IO::SDK::Constants::PI2, IO::SDK::Constants::PI2, t0,
-                                                       IO::SDK::Frames::InertialFrames::GetICRF());
+    IO::Astrodynamics::OrbitalParameters::EquinoctialElements eq(earth, a, ecc, inc, argp, node, m0, 0.0, 0.0, -IO::Astrodynamics::Constants::PI2, IO::Astrodynamics::Constants::PI2, t0,
+                                                       IO::Astrodynamics::Frames::InertialFrames::GetICRF());
 
     auto sv = eq.ToStateVector(t0);
 
@@ -214,7 +214,7 @@ TEST(EquinoctialElements, GetStateVectorFromKeplerian) {
 }
 
 TEST(EquinoctialElements, GetStateVectorFrom0Eccentricity) {
-    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
+    const auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399);
 
     //keplerian elements
     double p = 1.0e7;
@@ -224,19 +224,19 @@ TEST(EquinoctialElements, GetStateVectorFrom0Eccentricity) {
     double node = 0.0 * rpd_c();
     double inc = 0.0 * rpd_c();
     double m0 = 0.0 * rpd_c();
-    IO::SDK::Time::TDB t0{0.0s};
+    IO::Astrodynamics::Time::TDB t0{0.0s};
 
-    IO::SDK::OrbitalParameters::EquinoctialElements eq(earth, a, ecc, inc, argp, node, m0, 0.0, 0.0, -IO::SDK::Constants::PI2, IO::SDK::Constants::PI2, t0,
-                                                       IO::SDK::Frames::InertialFrames::GetICRF());
+    IO::Astrodynamics::OrbitalParameters::EquinoctialElements eq(earth, a, ecc, inc, argp, node, m0, 0.0, 0.0, -IO::Astrodynamics::Constants::PI2, IO::Astrodynamics::Constants::PI2, t0,
+                                                       IO::Astrodynamics::Frames::InertialFrames::GetICRF());
 
     for (size_t i = 0; i < 360; i++) {
-        auto v = eq.GetTrueAnomaly(IO::SDK::Time::TDB(std::chrono::duration<double>(eq.GetPeriod().GetSeconds().count() / 360 * i)));
-        ASSERT_DOUBLE_EQ(i, v * IO::SDK::Constants::RAD_DEG);
+        auto v = eq.GetTrueAnomaly(IO::Astrodynamics::Time::TDB(std::chrono::duration<double>(eq.GetPeriod().GetSeconds().count() / 360 * i)));
+        ASSERT_DOUBLE_EQ(i, v * IO::Astrodynamics::Constants::RAD_DEG);
     }
 }
 
 TEST(EquinoctialElements, GetEccentricity) {
-    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
+    const auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399);
 
     //keplerian elements
     double p = 1.0e7;
@@ -246,7 +246,7 @@ TEST(EquinoctialElements, GetEccentricity) {
     double node = 15.0 * rpd_c();
     double inc = 10.0 * rpd_c();
     double m0 = 45.0 * rpd_c();
-    IO::SDK::Time::TDB t0{-100000000.0s};
+    IO::Astrodynamics::Time::TDB t0{-100000000.0s};
 
     //equinoctial elements
     double h = ecc * sin(argp + node);       //g
@@ -255,8 +255,8 @@ TEST(EquinoctialElements, GetEccentricity) {
     double q = tan(inc / 2.) * cos(node);  //h
     double L = m0 + argp + node;
 
-    IO::SDK::OrbitalParameters::EquinoctialElements eq(earth, t0, a, h, k, p2, q, L, 0.0, 0.0, -IO::SDK::Constants::PI2, IO::SDK::Constants::PI2,
-                                                       IO::SDK::Frames::InertialFrames::GetICRF());
+    IO::Astrodynamics::OrbitalParameters::EquinoctialElements eq(earth, t0, a, h, k, p2, q, L, 0.0, 0.0, -IO::Astrodynamics::Constants::PI2, IO::Astrodynamics::Constants::PI2,
+                                                       IO::Astrodynamics::Frames::InertialFrames::GetICRF());
 
     auto e = eq.GetEccentricity();
 
@@ -264,7 +264,7 @@ TEST(EquinoctialElements, GetEccentricity) {
 }
 
 TEST(EquinoctialElements, GetInclination) {
-    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
+    const auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399);
 
     //keplerian elements
     double p = 1.0e7;
@@ -272,9 +272,9 @@ TEST(EquinoctialElements, GetInclination) {
     double a = p / (1. - ecc);
     double argp = 30.0 * rpd_c();
     double node = 15.0 * rpd_c();
-    double inc = 10.0 * IO::SDK::Constants::DEG_RAD;
+    double inc = 10.0 * IO::Astrodynamics::Constants::DEG_RAD;
     double m0 = 45.0 * rpd_c();
-    IO::SDK::Time::TDB t0{-100000000.0s};
+    IO::Astrodynamics::Time::TDB t0{-100000000.0s};
 
     //equinoctial elements
     double h = ecc * sin(argp + node);       //g
@@ -283,16 +283,16 @@ TEST(EquinoctialElements, GetInclination) {
     double q = tan(inc / 2.) * cos(node);  //h
     double L = m0 + argp + node;
 
-    IO::SDK::OrbitalParameters::EquinoctialElements eq(earth, t0, a, h, k, p2, q, L, 0.0, 0.0, -IO::SDK::Constants::PI2, IO::SDK::Constants::PI2,
-                                                       IO::SDK::Frames::InertialFrames::GetICRF());
+    IO::Astrodynamics::OrbitalParameters::EquinoctialElements eq(earth, t0, a, h, k, p2, q, L, 0.0, 0.0, -IO::Astrodynamics::Constants::PI2, IO::Astrodynamics::Constants::PI2,
+                                                       IO::Astrodynamics::Frames::InertialFrames::GetICRF());
 
     auto i = eq.GetInclination();
 
-    ASSERT_DOUBLE_EQ(10.0 * IO::SDK::Constants::DEG_RAD, i);
+    ASSERT_DOUBLE_EQ(10.0 * IO::Astrodynamics::Constants::DEG_RAD, i);
 }
 
 TEST(EquinoctialElements, GetPeriapsisArgument) {
-    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
+    const auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399);
 
     //keplerian elements
     double p = 1.0e7;
@@ -300,9 +300,9 @@ TEST(EquinoctialElements, GetPeriapsisArgument) {
     double a = p / (1. - ecc);
     double argp = 30.0 * rpd_c();
     double node = 15.0 * rpd_c();
-    double inc = 10.0 * IO::SDK::Constants::DEG_RAD;
+    double inc = 10.0 * IO::Astrodynamics::Constants::DEG_RAD;
     double m0 = 45.0 * rpd_c();
-    IO::SDK::Time::TDB t0{-100000000.0s};
+    IO::Astrodynamics::Time::TDB t0{-100000000.0s};
 
     //equinoctial elements
     double h = ecc * sin(argp + node);       //g
@@ -311,16 +311,16 @@ TEST(EquinoctialElements, GetPeriapsisArgument) {
     double q = tan(inc / 2.) * cos(node);  //h
     double L = m0 + argp + node;
 
-    IO::SDK::OrbitalParameters::EquinoctialElements eq(earth, t0, a, h, k, p2, q, L, 0.0, 0.0, -IO::SDK::Constants::PI2, IO::SDK::Constants::PI2,
-                                                       IO::SDK::Frames::InertialFrames::GetICRF());
+    IO::Astrodynamics::OrbitalParameters::EquinoctialElements eq(earth, t0, a, h, k, p2, q, L, 0.0, 0.0, -IO::Astrodynamics::Constants::PI2, IO::Astrodynamics::Constants::PI2,
+                                                       IO::Astrodynamics::Frames::InertialFrames::GetICRF());
 
     auto w = eq.GetPeriapsisArgument();
 
-    ASSERT_DOUBLE_EQ(30.0 * IO::SDK::Constants::DEG_RAD, w);
+    ASSERT_DOUBLE_EQ(30.0 * IO::Astrodynamics::Constants::DEG_RAD, w);
 }
 
 TEST(EquinoctialElements, GetRightAscendingNode) {
-    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
+    const auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399);
 
     //keplerian elements
     double p = 1.0e7;
@@ -328,9 +328,9 @@ TEST(EquinoctialElements, GetRightAscendingNode) {
     double a = p / (1. - ecc);
     double argp = 30.0 * rpd_c();
     double node = 15.0 * rpd_c();
-    double inc = 10.0 * IO::SDK::Constants::DEG_RAD;
+    double inc = 10.0 * IO::Astrodynamics::Constants::DEG_RAD;
     double m0 = 45.0 * rpd_c();
-    IO::SDK::Time::TDB t0{-100000000.0s};
+    IO::Astrodynamics::Time::TDB t0{-100000000.0s};
 
     //equinoctial elements
     double h = ecc * sin(argp + node);       //g
@@ -339,16 +339,16 @@ TEST(EquinoctialElements, GetRightAscendingNode) {
     double q = tan(inc / 2.) * cos(node);  //h
     double L = m0 + argp + node;
 
-    IO::SDK::OrbitalParameters::EquinoctialElements eq(earth, t0, a, h, k, p2, q, L, 0.0, 0.0, -IO::SDK::Constants::PI2, IO::SDK::Constants::PI2,
-                                                       IO::SDK::Frames::InertialFrames::GetICRF());
+    IO::Astrodynamics::OrbitalParameters::EquinoctialElements eq(earth, t0, a, h, k, p2, q, L, 0.0, 0.0, -IO::Astrodynamics::Constants::PI2, IO::Astrodynamics::Constants::PI2,
+                                                       IO::Astrodynamics::Frames::InertialFrames::GetICRF());
 
     auto o = eq.GetRightAscendingNodeLongitude();
 
-    ASSERT_DOUBLE_EQ(15.0 * IO::SDK::Constants::DEG_RAD, o);
+    ASSERT_DOUBLE_EQ(15.0 * IO::Astrodynamics::Constants::DEG_RAD, o);
 }
 
 TEST(EquinoctialElements, GetMeanAnomalyAtEpoch) {
-    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
+    const auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399);
 
     //keplerian elements
     double p = 1.0e7;
@@ -356,9 +356,9 @@ TEST(EquinoctialElements, GetMeanAnomalyAtEpoch) {
     double a = p / (1. - ecc);
     double argp = 30.0 * rpd_c();
     double node = 15.0 * rpd_c();
-    double inc = 10.0 * IO::SDK::Constants::DEG_RAD;
+    double inc = 10.0 * IO::Astrodynamics::Constants::DEG_RAD;
     double m0 = 45.0 * rpd_c();
-    IO::SDK::Time::TDB t0{-100000000.0s};
+    IO::Astrodynamics::Time::TDB t0{-100000000.0s};
 
     //equinoctial elements
     double h = ecc * sin(argp + node);       //g
@@ -367,16 +367,16 @@ TEST(EquinoctialElements, GetMeanAnomalyAtEpoch) {
     double q = tan(inc / 2.) * cos(node);  //h
     double L = m0 + argp + node;
 
-    IO::SDK::OrbitalParameters::EquinoctialElements eq(earth, t0, a, h, k, p2, q, L, 0.0, 0.0, -IO::SDK::Constants::PI2, IO::SDK::Constants::PI2,
-                                                       IO::SDK::Frames::InertialFrames::GetICRF());
+    IO::Astrodynamics::OrbitalParameters::EquinoctialElements eq(earth, t0, a, h, k, p2, q, L, 0.0, 0.0, -IO::Astrodynamics::Constants::PI2, IO::Astrodynamics::Constants::PI2,
+                                                       IO::Astrodynamics::Frames::InertialFrames::GetICRF());
 
     auto m0Res = eq.GetMeanAnomaly();
 
-    ASSERT_DOUBLE_EQ(45.0 * IO::SDK::Constants::DEG_RAD, m0Res);
+    ASSERT_DOUBLE_EQ(45.0 * IO::Astrodynamics::Constants::DEG_RAD, m0Res);
 }
 
 TEST(EquinoctialElements, GetSpecificOrbitalEnergy) {
-    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
+    const auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399);
 
     //ISS keplerian elements
     //double p = 1.0e7;
@@ -384,9 +384,9 @@ TEST(EquinoctialElements, GetSpecificOrbitalEnergy) {
     double a = 6.797371275322830E+06;
     double argp = 9.311325640521339E+01 * rpd_c();
     double node = 9.542543898089574E+00 * rpd_c();
-    double inc = 5.167235936552875E+01 * IO::SDK::Constants::DEG_RAD;
+    double inc = 5.167235936552875E+01 * IO::Astrodynamics::Constants::DEG_RAD;
     double m0 = 2.989409852022806E+02 * rpd_c();
-    IO::SDK::Time::TDB t0{626417577.764200s};
+    IO::Astrodynamics::Time::TDB t0{626417577.764200s};
 
     //equinoctial elements
     double h = ecc * sin(argp + node);       //g
@@ -395,8 +395,8 @@ TEST(EquinoctialElements, GetSpecificOrbitalEnergy) {
     double q = tan(inc / 2.) * cos(node);  //h
     double L = m0 + argp + node;
 
-    IO::SDK::OrbitalParameters::EquinoctialElements eq(earth, t0, a, h, k, p2, q, L, 0.0, 0.0, -IO::SDK::Constants::PI2, IO::SDK::Constants::PI2,
-                                                       IO::SDK::Frames::InertialFrames::GetICRF());
+    IO::Astrodynamics::OrbitalParameters::EquinoctialElements eq(earth, t0, a, h, k, p2, q, L, 0.0, 0.0, -IO::Astrodynamics::Constants::PI2, IO::Astrodynamics::Constants::PI2,
+                                                       IO::Astrodynamics::Frames::InertialFrames::GetICRF());
 
     auto j = eq.GetSpecificOrbitalEnergy();
 
@@ -404,16 +404,16 @@ TEST(EquinoctialElements, GetSpecificOrbitalEnergy) {
 }
 
 TEST(EquinoctialElements, GetSpecificAngularMomentum) {
-    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
+    const auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399);
 
     //ISS keplerian elements
     double ecc = 8.258860265483704E-04;
     double a = 6.797371275322830E+06;
     double argp = 9.311325640521339E+01 * rpd_c();
     double node = 9.542543898089574E+00 * rpd_c();
-    double inc = 5.167235936552875E+01 * IO::SDK::Constants::DEG_RAD;
+    double inc = 5.167235936552875E+01 * IO::Astrodynamics::Constants::DEG_RAD;
     double m0 = 2.989409852022806E+02 * rpd_c();
-    IO::SDK::Time::TDB t0{626417577.764200s};
+    IO::Astrodynamics::Time::TDB t0{626417577.764200s};
 
     //equinoctial elements
     double h = ecc * sin(argp + node);       //g
@@ -422,8 +422,8 @@ TEST(EquinoctialElements, GetSpecificAngularMomentum) {
     double q = tan(inc / 2.) * cos(node);  //h
     double L = m0 + argp + node;
 
-    IO::SDK::OrbitalParameters::EquinoctialElements eq(earth, t0, a, h, k, p2, q, L, 0.0, 0.0, -IO::SDK::Constants::PI2, IO::SDK::Constants::PI2,
-                                                       IO::SDK::Frames::InertialFrames::GetICRF());
+    IO::Astrodynamics::OrbitalParameters::EquinoctialElements eq(earth, t0, a, h, k, p2, q, L, 0.0, 0.0, -IO::Astrodynamics::Constants::PI2, IO::Astrodynamics::Constants::PI2,
+                                                       IO::Astrodynamics::Frames::InertialFrames::GetICRF());
 
     auto mom = eq.GetSpecificAngularMomentum();
 
@@ -431,16 +431,16 @@ TEST(EquinoctialElements, GetSpecificAngularMomentum) {
 }
 
 TEST(EquinoctialElements, GetTrueAnomalyAtEpoch) {
-    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
+    const auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399);
 
     //ISS keplerian elements
     double ecc = 8.258860265483704E-04;
     double a = 6.797371275322830E+06;
     double argp = 9.311325640521339E+01 * rpd_c();
     double node = 9.542543898089574E+00 * rpd_c();
-    double inc = 5.167235936552875E+01 * IO::SDK::Constants::DEG_RAD;
+    double inc = 5.167235936552875E+01 * IO::Astrodynamics::Constants::DEG_RAD;
     double m0 = 2.989409852022806E+02 * rpd_c();
-    IO::SDK::Time::TDB t0{626417577.764200s};
+    IO::Astrodynamics::Time::TDB t0{626417577.764200s};
 
     //equinoctial elements
     double h = ecc * sin(argp + node);       //g
@@ -449,8 +449,8 @@ TEST(EquinoctialElements, GetTrueAnomalyAtEpoch) {
     double q = tan(inc / 2.) * cos(node);  //h
     double L = m0 + argp + node;
 
-    IO::SDK::OrbitalParameters::EquinoctialElements eq(earth, t0, a, h, k, p2, q, L, 0.0, 0.0, -IO::SDK::Constants::PI2, IO::SDK::Constants::PI2,
-                                                       IO::SDK::Frames::InertialFrames::GetICRF());
+    IO::Astrodynamics::OrbitalParameters::EquinoctialElements eq(earth, t0, a, h, k, p2, q, L, 0.0, 0.0, -IO::Astrodynamics::Constants::PI2, IO::Astrodynamics::Constants::PI2,
+                                                       IO::Astrodynamics::Frames::InertialFrames::GetICRF());
 
     auto v = eq.GetTrueAnomaly();
 
@@ -458,16 +458,16 @@ TEST(EquinoctialElements, GetTrueAnomalyAtEpoch) {
 }
 
 TEST(EquinoctialElements, GetISSMeanAnomaly) {
-    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
+    const auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399);
 
     //keplerian elements
     double ecc = 8.258860265483704E-04;
     double a = 6.797371275322830E+06;
     double argp = 9.311325640521339E+01 * rpd_c();
     double node = 9.542543898089574E+00 * rpd_c();
-    double inc = 5.167235936552875E+01 * IO::SDK::Constants::DEG_RAD;
+    double inc = 5.167235936552875E+01 * IO::Astrodynamics::Constants::DEG_RAD;
     double m0 = 2.989409852022806E+02 * rpd_c();
-    IO::SDK::Time::TDB t0{626417577.764200s};
+    IO::Astrodynamics::Time::TDB t0{626417577.764200s};
 
     //equinoctial elements
     double h = ecc * sin(argp + node);        //g
@@ -476,8 +476,8 @@ TEST(EquinoctialElements, GetISSMeanAnomaly) {
     double q = tan(inc / 2.0) * cos(node);    //h
     double L = m0 + argp + node;
 
-    IO::SDK::OrbitalParameters::EquinoctialElements eq(earth, t0, a, h, k, p2, q, L, 0.0, 0.0, -IO::SDK::Constants::PI2, IO::SDK::Constants::PI2,
-                                                       IO::SDK::Frames::InertialFrames::GetICRF());
+    IO::Astrodynamics::OrbitalParameters::EquinoctialElements eq(earth, t0, a, h, k, p2, q, L, 0.0, 0.0, -IO::Astrodynamics::Constants::PI2, IO::Astrodynamics::Constants::PI2,
+                                                       IO::Astrodynamics::Frames::InertialFrames::GetICRF());
 
     auto m0Res = eq.GetMeanAnomaly();
 
@@ -485,16 +485,16 @@ TEST(EquinoctialElements, GetISSMeanAnomaly) {
 }
 
 TEST(EquinoctialElements, GetSemiMajorAxis) {
-    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
+    const auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399);
 
     //keplerian elements
     double ecc = 8.258860265483704E-04;
     double a = 6.797371275322830E+06;
     double argp = 9.311325640521339E+01 * rpd_c();
     double node = 9.542543898089574E+00 * rpd_c();
-    double inc = 5.167235936552875E+01 * IO::SDK::Constants::DEG_RAD;
+    double inc = 5.167235936552875E+01 * IO::Astrodynamics::Constants::DEG_RAD;
     double m0 = 2.989409852022806E+02 * rpd_c();
-    IO::SDK::Time::TDB t0{626417577.764200s};
+    IO::Astrodynamics::Time::TDB t0{626417577.764200s};
 
     //equinoctial elements
     double h = ecc * sin(argp + node);        //g
@@ -503,8 +503,8 @@ TEST(EquinoctialElements, GetSemiMajorAxis) {
     double q = tan(inc / 2.0) * cos(node);    //h
     double L = m0 + argp + node;
 
-    IO::SDK::OrbitalParameters::EquinoctialElements eq(earth, t0, a, h, k, p2, q, L, 0.0, 0.0, -IO::SDK::Constants::PI2, IO::SDK::Constants::PI2,
-                                                       IO::SDK::Frames::InertialFrames::GetICRF());
+    IO::Astrodynamics::OrbitalParameters::EquinoctialElements eq(earth, t0, a, h, k, p2, q, L, 0.0, 0.0, -IO::Astrodynamics::Constants::PI2, IO::Astrodynamics::Constants::PI2,
+                                                       IO::Astrodynamics::Frames::InertialFrames::GetICRF());
 
     auto semiMajorAxis = eq.GetSemiMajorAxis();
 
@@ -512,16 +512,16 @@ TEST(EquinoctialElements, GetSemiMajorAxis) {
 }
 
 TEST(EquinoctialElements, GetTimeToMeanAnomaly) {
-    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
+    const auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399);
 
     //keplerian elements
     double ecc = 0.5;
     double a = 7136635.456;
     double argp = 20.0 * rpd_c();
     double node = 45.0 * rpd_c();
-    double inc = 60.0 * IO::SDK::Constants::DEG_RAD;
+    double inc = 60.0 * IO::Astrodynamics::Constants::DEG_RAD;
     double m0 = 10.0 * rpd_c();
-    IO::SDK::Time::TDB t0{60000000.0s};
+    IO::Astrodynamics::Time::TDB t0{60000000.0s};
 
     //equinoctial elements
     double h = ecc * sin(argp + node);        //g
@@ -530,25 +530,25 @@ TEST(EquinoctialElements, GetTimeToMeanAnomaly) {
     double q = tan(inc / 2.0) * cos(node);    //h
     double L = m0 + argp + node;
 
-    IO::SDK::OrbitalParameters::EquinoctialElements eq(earth, t0, a, h, k, p2, q, L, 0.0, 0.0, -IO::SDK::Constants::PI2, IO::SDK::Constants::PI2,
-                                                       IO::SDK::Frames::InertialFrames::GetICRF());
+    IO::Astrodynamics::OrbitalParameters::EquinoctialElements eq(earth, t0, a, h, k, p2, q, L, 0.0, 0.0, -IO::Astrodynamics::Constants::PI2, IO::Astrodynamics::Constants::PI2,
+                                                       IO::Astrodynamics::Frames::InertialFrames::GetICRF());
 
-    auto epoch = eq.GetTimeToMeanAnomaly(IO::SDK::Constants::PI2);
+    auto epoch = eq.GetTimeToMeanAnomaly(IO::Astrodynamics::Constants::PI2);
 
     ASSERT_DOUBLE_EQ(60001333.333344065, epoch.GetSecondsFromJ2000().count());
 }
 
 TEST(EquinoctialElements, GetMeanAnomalyForEpoch) {
-    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
+    const auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399);
 
     //keplerian elements
     double ecc = 0.5;
     double a = 7136635.456;
     double argp = 20.0 * rpd_c();
     double node = 45.0 * rpd_c();
-    double inc = 60.0 * IO::SDK::Constants::DEG_RAD;
+    double inc = 60.0 * IO::Astrodynamics::Constants::DEG_RAD;
     double m0 = 10.0 * rpd_c();
-    IO::SDK::Time::TDB t0{60000000.0s};
+    IO::Astrodynamics::Time::TDB t0{60000000.0s};
 
     //equinoctial elements
     double h = ecc * sin(argp + node);        //g
@@ -557,25 +557,25 @@ TEST(EquinoctialElements, GetMeanAnomalyForEpoch) {
     double q = tan(inc / 2.0) * cos(node);    //h
     double L = m0 + argp + node;
 
-    IO::SDK::OrbitalParameters::EquinoctialElements eq(earth, t0, a, h, k, p2, q, L, 0.0, 0.0, -IO::SDK::Constants::PI2, IO::SDK::Constants::PI2,
-                                                       IO::SDK::Frames::InertialFrames::GetICRF());
+    IO::Astrodynamics::OrbitalParameters::EquinoctialElements eq(earth, t0, a, h, k, p2, q, L, 0.0, 0.0, -IO::Astrodynamics::Constants::PI2, IO::Astrodynamics::Constants::PI2,
+                                                       IO::Astrodynamics::Frames::InertialFrames::GetICRF());
 
-    auto meanAnomaly = eq.GetMeanAnomaly(IO::SDK::Time::TDB(60001333.333344065s)); //=90� mean anomaly;
+    auto meanAnomaly = eq.GetMeanAnomaly(IO::Astrodynamics::Time::TDB(60001333.333344065s)); //=90� mean anomaly;
 
-    ASSERT_NEAR(IO::SDK::Constants::PI2, meanAnomaly, IO::SDK::Test::Constants::ANGULAR_ACCURACY);
+    ASSERT_NEAR(IO::Astrodynamics::Constants::PI2, meanAnomaly, IO::Astrodynamics::Test::Constants::ANGULAR_ACCURACY);
 }
 
 TEST(EquinoctialElements, GetTimeToTrueAnomaly) {
-    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
+    const auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399);
 
     //keplerian elements
     double ecc = 0.5;
     double a = 7136635.456;
     double argp = 20.0 * rpd_c();
     double node = 45.0 * rpd_c();
-    double inc = 60.0 * IO::SDK::Constants::DEG_RAD;
+    double inc = 60.0 * IO::Astrodynamics::Constants::DEG_RAD;
     double m0 = 10.0 * rpd_c();
-    IO::SDK::Time::TDB t0{60000000.0s};
+    IO::Astrodynamics::Time::TDB t0{60000000.0s};
 
     //equinoctial elements
     double h = ecc * sin(argp + node);        //g
@@ -584,8 +584,8 @@ TEST(EquinoctialElements, GetTimeToTrueAnomaly) {
     double q = tan(inc / 2.0) * cos(node);    //h
     double L = m0 + argp + node;
 
-    IO::SDK::OrbitalParameters::EquinoctialElements eq(earth, t0, a, h, k, p2, q, L, 0.0, 0.0, -IO::SDK::Constants::PI2, IO::SDK::Constants::PI2,
-                                                       IO::SDK::Frames::InertialFrames::GetICRF());
+    IO::Astrodynamics::OrbitalParameters::EquinoctialElements eq(earth, t0, a, h, k, p2, q, L, 0.0, 0.0, -IO::Astrodynamics::Constants::PI2, IO::Astrodynamics::Constants::PI2,
+                                                       IO::Astrodynamics::Frames::InertialFrames::GetICRF());
 
     auto epoch = eq.GetTimeToTrueAnomaly(2.446560878); //=90� mean anomaly;
 
@@ -593,16 +593,16 @@ TEST(EquinoctialElements, GetTimeToTrueAnomaly) {
 }
 
 TEST(EquinoctialElements, GetTrueAnomalyForEpoch) {
-    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
+    const auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399);
 
     //keplerian elements
     double ecc = 0.5;
     double a = 7136635.456;
     double argp = 20.0 * rpd_c();
     double node = 45.0 * rpd_c();
-    double inc = 60.0 * IO::SDK::Constants::DEG_RAD;
+    double inc = 60.0 * IO::Astrodynamics::Constants::DEG_RAD;
     double m0 = 10.0 * rpd_c();
-    IO::SDK::Time::TDB t0{60000000.0s};
+    IO::Astrodynamics::Time::TDB t0{60000000.0s};
 
     //equinoctial elements
     double h = ecc * sin(argp + node);        //g
@@ -611,25 +611,25 @@ TEST(EquinoctialElements, GetTrueAnomalyForEpoch) {
     double q = tan(inc / 2.0) * cos(node);    //h
     double L = m0 + argp + node;
 
-    IO::SDK::OrbitalParameters::EquinoctialElements eq(earth, t0, a, h, k, p2, q, L, 0.0, 0.0, -IO::SDK::Constants::PI2, IO::SDK::Constants::PI2,
-                                                       IO::SDK::Frames::InertialFrames::GetICRF());
+    IO::Astrodynamics::OrbitalParameters::EquinoctialElements eq(earth, t0, a, h, k, p2, q, L, 0.0, 0.0, -IO::Astrodynamics::Constants::PI2, IO::Astrodynamics::Constants::PI2,
+                                                       IO::Astrodynamics::Frames::InertialFrames::GetICRF());
 
-    auto trueAnomaly = eq.GetTrueAnomaly(IO::SDK::Time::TDB(60001333.333344109s)); //=90� mean anomaly;
+    auto trueAnomaly = eq.GetTrueAnomaly(IO::Astrodynamics::Time::TDB(60001333.333344109s)); //=90� mean anomaly;
 
     ASSERT_DOUBLE_EQ(2.4465608784128867, trueAnomaly);
 }
 
 TEST(EquinoctialElements, TrajectoryType) {
-    const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
+    const auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399);
 
     //keplerian elements
     double ecc = 0.5;
     double a = 7136635.456;
     double argp = 20.0 * rpd_c();
     double node = 45.0 * rpd_c();
-    double inc = 60.0 * IO::SDK::Constants::DEG_RAD;
+    double inc = 60.0 * IO::Astrodynamics::Constants::DEG_RAD;
     double m0 = 10.0 * rpd_c();
-    IO::SDK::Time::TDB t0{60000000.0s};
+    IO::Astrodynamics::Time::TDB t0{60000000.0s};
 
     //equinoctial elements
     double h = ecc * sin(argp + node);        //g
@@ -638,8 +638,8 @@ TEST(EquinoctialElements, TrajectoryType) {
     double q = tan(inc / 2.0) * cos(node);    //h
     double L = m0 + argp + node;
 
-    IO::SDK::OrbitalParameters::EquinoctialElements eq(earth, t0, a, h, k, p2, q, L, 0.0, 0.0, -IO::SDK::Constants::PI2, IO::SDK::Constants::PI2,
-                                                       IO::SDK::Frames::InertialFrames::GetICRF());
+    IO::Astrodynamics::OrbitalParameters::EquinoctialElements eq(earth, t0, a, h, k, p2, q, L, 0.0, 0.0, -IO::Astrodynamics::Constants::PI2, IO::Astrodynamics::Constants::PI2,
+                                                       IO::Astrodynamics::Frames::InertialFrames::GetICRF());
 
     ASSERT_TRUE(eq.IsElliptical());
     ASSERT_FALSE(eq.IsParabolic());

@@ -6,7 +6,7 @@
 
 #include <StateVector.h>
 
-namespace IO::SDK::Integrators
+namespace IO::Astrodynamics::Integrators
 {
     /**
      * @brief Integrator base
@@ -16,7 +16,7 @@ namespace IO::SDK::Integrators
     {
     private:
     protected:
-        const IO::SDK::Time::TimeSpan m_stepDuration{};
+        const IO::Astrodynamics::Time::TimeSpan m_stepDuration{};
         const double m_h{};
         const double m_half_h{};
 
@@ -26,17 +26,17 @@ namespace IO::SDK::Integrators
          * 
          * @param deltat Step duration
          */
-        explicit IntegratorBase(const IO::SDK::Time::TimeSpan &stepDuration);
+        explicit IntegratorBase(const IO::Astrodynamics::Time::TimeSpan &stepDuration);
 
         /**
          * @brief Integrate forces
          * 
          * @param spacecraft Vessel on which integration occurs
-         * @return IO::SDK::OrbitalParameters::StateVector 
+         * @return IO::Astrodynamics::OrbitalParameters::StateVector
          */
-        virtual IO::SDK::OrbitalParameters::StateVector Integrate(const IO::SDK::Body::Body &body, const IO::SDK::OrbitalParameters::StateVector &stateVector) = 0;
+        virtual IO::Astrodynamics::OrbitalParameters::StateVector Integrate(const IO::Astrodynamics::Body::Body &body, const IO::Astrodynamics::OrbitalParameters::StateVector &stateVector) = 0;
     };
 
-} // namespace IO::SDK::Propagators
+} // namespace IO::Astrodynamics::Propagators
 
 #endif

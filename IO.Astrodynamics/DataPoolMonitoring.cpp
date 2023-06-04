@@ -4,14 +4,14 @@
 #include <DataPoolMonitoring.h>
 #include <SpiceUsr.h>
 
-IO::SDK::DataPoolMonitoring IO::SDK::DataPoolMonitoring::m_instance;
+IO::Astrodynamics::DataPoolMonitoring IO::Astrodynamics::DataPoolMonitoring::m_instance;
 
-IO::SDK::DataPoolMonitoring &IO::SDK::DataPoolMonitoring::Instance()
+IO::Astrodynamics::DataPoolMonitoring &IO::Astrodynamics::DataPoolMonitoring::Instance()
 {
     return m_instance;
 }
 
-std::vector<std::string> IO::SDK::DataPoolMonitoring::GetStringProperty(const std::string &propertyName, int nbValuesExpected)
+std::vector<std::string> IO::Astrodynamics::DataPoolMonitoring::GetStringProperty(const std::string &propertyName, int nbValuesExpected)
 {
     SpiceInt n{};
     SpiceChar values[10][100];
@@ -32,7 +32,7 @@ std::vector<std::string> IO::SDK::DataPoolMonitoring::GetStringProperty(const st
     return res;
 }
 
-std::vector<int> IO::SDK::DataPoolMonitoring::GetIntegerProperty(const std::string &propertyName, int nbValuesExpected)
+std::vector<int> IO::Astrodynamics::DataPoolMonitoring::GetIntegerProperty(const std::string &propertyName, int nbValuesExpected)
 {
     SpiceInt n{};
     auto values = new SpiceInt[nbValuesExpected];
@@ -52,7 +52,7 @@ std::vector<int> IO::SDK::DataPoolMonitoring::GetIntegerProperty(const std::stri
     return res;
 }
 
-std::vector<double> IO::SDK::DataPoolMonitoring::GetDoubleProperty(const std::string &propertyName, int nbValuesExpected)
+std::vector<double> IO::Astrodynamics::DataPoolMonitoring::GetDoubleProperty(const std::string &propertyName, int nbValuesExpected)
 {
     SpiceInt n{};
     auto values = new SpiceDouble[nbValuesExpected];

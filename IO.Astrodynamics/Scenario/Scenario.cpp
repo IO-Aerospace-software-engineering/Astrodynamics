@@ -11,31 +11,31 @@
 
 #include <Parameters.h>
 
-IO::SDK::Scenario::Scenario(std::string name, const IO::SDK::Time::Window<IO::SDK::Time::UTC> &windows) : m_name{std::move(name)}, m_windows{windows},
-                                                                                                          m_integrator(IO::SDK::Parameters::SpacecraftPropagationStep,
+IO::Astrodynamics::Scenario::Scenario(std::string name, const IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::UTC> &windows) : m_name{std::move(name)}, m_windows{windows},
+                                                                                                          m_integrator(IO::Astrodynamics::Parameters::SpacecraftPropagationStep,
                                                                                                                        m_forces)
 {
 
 }
 
-void IO::SDK::Scenario::AddSite(const IO::SDK::Sites::Site &site)
+void IO::Astrodynamics::Scenario::AddSite(const IO::Astrodynamics::Sites::Site &site)
 {
     m_sites.push_back(&site);
 }
 
-void IO::SDK::Scenario::AttachSpacecraft(const IO::SDK::Body::Spacecraft::Spacecraft &spacecraft)
+void IO::Astrodynamics::Scenario::AttachSpacecraft(const IO::Astrodynamics::Body::Spacecraft::Spacecraft &spacecraft)
 {
     m_spacecraft = &spacecraft;
     m_propagator = std::make_unique<Propagators::Propagator>(*m_spacecraft, m_integrator,
-                                                             IO::SDK::Time::Window<Time::TDB>(m_windows.GetStartDate().ToTDB(), m_windows.GetEndDate().ToTDB()));
+                                                             IO::Astrodynamics::Time::Window<Time::TDB>(m_windows.GetStartDate().ToTDB(), m_windows.GetEndDate().ToTDB()));
 }
 
-void IO::SDK::Scenario::AddCelestialBody(const IO::SDK::Body::CelestialBody &celestialBody)
+void IO::Astrodynamics::Scenario::AddCelestialBody(const IO::Astrodynamics::Body::CelestialBody &celestialBody)
 {
     m_celestialBodies.push_back(&celestialBody);
 }
 
-void IO::SDK::Scenario::Execute()
+void IO::Astrodynamics::Scenario::Execute()
 {
     // Run Sites propagation
     for (auto site: m_sites)
@@ -43,7 +43,7 @@ void IO::SDK::Scenario::Execute()
         site->BuildAndWriteEphemeris(this->m_windows);
     }
 
-    auto tdb = IO::SDK::Time::Window<IO::SDK::Time::TDB>(m_windows.GetStartDate().ToTDB(), m_windows.GetEndDate().ToTDB());
+    auto tdb = IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB>(m_windows.GetStartDate().ToTDB(), m_windows.GetEndDate().ToTDB());
     //Run bodies propagation
     if (m_spacecraft)
     {

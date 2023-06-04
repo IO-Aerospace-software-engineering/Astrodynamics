@@ -7,7 +7,7 @@
 #include <string>
 #include <map>
 
-namespace IO::SDK
+namespace IO::Astrodynamics
 {
     enum class AberrationsEnum
     {

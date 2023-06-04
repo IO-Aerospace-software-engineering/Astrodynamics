@@ -7,7 +7,7 @@
 
 constexpr size_t COMLENGTH = 80;
 
-IO::SDK::Kernels::Kernel::Kernel(std::string filePath) : m_filePath{std::move(filePath)}
+IO::Astrodynamics::Kernels::Kernel::Kernel(std::string filePath) : m_filePath{std::move(filePath)}
 {
 
     auto directory = std::filesystem::directory_entry(m_filePath).path();
@@ -28,26 +28,26 @@ IO::SDK::Kernels::Kernel::Kernel(std::string filePath) : m_filePath{std::move(fi
 
 }
 
-IO::SDK::Kernels::Kernel::~Kernel()
+IO::Astrodynamics::Kernels::Kernel::~Kernel()
 {
     unload_c(m_filePath.c_str());
 }
 
-std::string IO::SDK::Kernels::Kernel::GetPath() const
+std::string IO::Astrodynamics::Kernels::Kernel::GetPath() const
 {
     return m_filePath;
 }
 
-bool IO::SDK::Kernels::Kernel::IsLoaded() const
+bool IO::Astrodynamics::Kernels::Kernel::IsLoaded() const
 {
     return m_isLoaded;
 }
 
-void IO::SDK::Kernels::Kernel::AddComment(const std::string &comment) const
+void IO::Astrodynamics::Kernels::Kernel::AddComment(const std::string &comment) const
 {
     if (comment.size() >= COMLENGTH)
     {
-        throw IO::SDK::Exception::SDKException("Comment size must be lower than " + std::to_string(COMLENGTH) + " chars");
+        throw IO::Astrodynamics::Exception::SDKException("Comment size must be lower than " + std::to_string(COMLENGTH) + " chars");
     }
 
     SpiceInt handle;
@@ -66,7 +66,7 @@ void IO::SDK::Kernels::Kernel::AddComment(const std::string &comment) const
     furnsh_c(m_filePath.c_str());
 }
 
-std::string IO::SDK::Kernels::Kernel::ReadComment() const
+std::string IO::Astrodynamics::Kernels::Kernel::ReadComment() const
 {
     SpiceInt handle;
     SpiceInt n;
@@ -80,14 +80,14 @@ std::string IO::SDK::Kernels::Kernel::ReadComment() const
     return std::string{buffer[0]};
 }
 
-int IO::SDK::Kernels::Kernel::DefinePolynomialDegree(const int dataSize, const int maximumDegree)
+int IO::Astrodynamics::Kernels::Kernel::DefinePolynomialDegree(const int dataSize, const int maximumDegree)
 {
     //min size used to define polynomial degree
     int degree{dataSize - 1};
 
     if (degree < 1)
     {
-        throw IO::SDK::Exception::SDKException("Insuffisant data provided. 2 data are required at least");
+        throw IO::Astrodynamics::Exception::SDKException("Insuffisant data provided. 2 data are required at least");
     }
 
     if (degree > maximumDegree)

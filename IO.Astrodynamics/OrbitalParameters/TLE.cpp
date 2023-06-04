@@ -5,10 +5,10 @@
 #include <algorithm>
 #include <InertialFrames.h>
 
-IO::SDK::OrbitalParameters::TLE::TLE(const std::shared_ptr<IO::SDK::Body::CelestialBody> &centerOfmotion, std::string lines[3]) : OrbitalParameters(centerOfmotion,
+IO::Astrodynamics::OrbitalParameters::TLE::TLE(const std::shared_ptr<IO::Astrodynamics::Body::CelestialBody> &centerOfmotion, std::string lines[3]) : OrbitalParameters(centerOfmotion,
                                                                                                                                                     Time::TDB(std::chrono::duration<double>(
                                                                                                                                                             0.0)),
-                                                                                                                                                    IO::SDK::Frames::InertialFrames::GetICRF()),
+                                                                                                                                                    IO::Astrodynamics::Frames::InertialFrames::GetICRF()),
                                                                                                                                   m_satelliteName{lines[0]}
 {
     //Build lines
@@ -23,49 +23,49 @@ IO::SDK::OrbitalParameters::TLE::TLE(const std::shared_ptr<IO::SDK::Body::Celest
     SpiceDouble epoch;
     getelm_c(m_firstYear, length + 1, m_lines, &epoch, m_elements);
 
-    const_cast<IO::SDK::Time::TDB &>(m_epoch) = Time::TDB(std::chrono::duration<double>(epoch));
+    const_cast<IO::Astrodynamics::Time::TDB &>(m_epoch) = Time::TDB(std::chrono::duration<double>(epoch));
 
     //Set period
-    m_period = IO::SDK::Time::TimeSpan(std::chrono::duration<double>(IO::SDK::Constants::_2PI / (m_elements[8] / 60.0)));
+    m_period = IO::Astrodynamics::Time::TimeSpan(std::chrono::duration<double>(IO::Astrodynamics::Constants::_2PI / (m_elements[8] / 60.0)));
 
     //Set stateVector
-    m_stateVector = std::make_unique<IO::SDK::OrbitalParameters::StateVector>(ToStateVector(m_epoch));
+    m_stateVector = std::make_unique<IO::Astrodynamics::OrbitalParameters::StateVector>(ToStateVector(m_epoch));
 
     // Set conical elements
-    m_conicOrbitalElements = std::make_unique<IO::SDK::OrbitalParameters::ConicOrbitalElements>(*m_stateVector);
+    m_conicOrbitalElements = std::make_unique<IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements>(*m_stateVector);
 }
 
-std::string IO::SDK::OrbitalParameters::TLE::GetSatelliteName() const
+std::string IO::Astrodynamics::OrbitalParameters::TLE::GetSatelliteName() const
 {
     return m_satelliteName;
 }
 
-double IO::SDK::OrbitalParameters::TLE::GetBalisticCoefficient() const
+double IO::Astrodynamics::OrbitalParameters::TLE::GetBalisticCoefficient() const
 {
     return m_elements[0];
 }
 
-double IO::SDK::OrbitalParameters::TLE::GetSecondDerivativeOfMeanMotion() const
+double IO::Astrodynamics::OrbitalParameters::TLE::GetSecondDerivativeOfMeanMotion() const
 {
     return m_elements[1];
 }
 
-double IO::SDK::OrbitalParameters::TLE::GetDragTerm() const
+double IO::Astrodynamics::OrbitalParameters::TLE::GetDragTerm() const
 {
     return m_elements[2];
 }
 
-IO::SDK::Time::TimeSpan IO::SDK::OrbitalParameters::TLE::GetPeriod() const
+IO::Astrodynamics::Time::TimeSpan IO::Astrodynamics::OrbitalParameters::TLE::GetPeriod() const
 {
     return m_period;
 }
 
-IO::SDK::Math::Vector3D IO::SDK::OrbitalParameters::TLE::GetSpecificAngularMomentum() const
+IO::Astrodynamics::Math::Vector3D IO::Astrodynamics::OrbitalParameters::TLE::GetSpecificAngularMomentum() const
 {
     return m_stateVector->GetSpecificAngularMomentum();
 }
 
-IO::SDK::OrbitalParameters::StateVector IO::SDK::OrbitalParameters::TLE::ToStateVector(const IO::SDK::Time::TDB &epoch) const
+IO::Astrodynamics::OrbitalParameters::StateVector IO::Astrodynamics::OrbitalParameters::TLE::ToStateVector(const IO::Astrodynamics::Time::TDB &epoch) const
 {
     SpiceDouble stateVector[6];
 
@@ -80,37 +80,37 @@ IO::SDK::OrbitalParameters::StateVector IO::SDK::OrbitalParameters::TLE::ToState
     return StateVector{m_centerOfMotion, stateVector, epoch, m_frame};
 }
 
-double IO::SDK::OrbitalParameters::TLE::GetEccentricity() const
+double IO::Astrodynamics::OrbitalParameters::TLE::GetEccentricity() const
 {
     return m_elements[5];
 }
 
-double IO::SDK::OrbitalParameters::TLE::GetSemiMajorAxis() const
+double IO::Astrodynamics::OrbitalParameters::TLE::GetSemiMajorAxis() const
 {
     return m_conicOrbitalElements->GetSemiMajorAxis();
 }
 
-double IO::SDK::OrbitalParameters::TLE::GetInclination() const
+double IO::Astrodynamics::OrbitalParameters::TLE::GetInclination() const
 {
     return m_elements[3];
 }
 
-double IO::SDK::OrbitalParameters::TLE::GetPeriapsisArgument() const
+double IO::Astrodynamics::OrbitalParameters::TLE::GetPeriapsisArgument() const
 {
     return m_elements[6];
 }
 
-double IO::SDK::OrbitalParameters::TLE::GetRightAscendingNodeLongitude() const
+double IO::Astrodynamics::OrbitalParameters::TLE::GetRightAscendingNodeLongitude() const
 {
     return m_elements[4];
 }
 
-double IO::SDK::OrbitalParameters::TLE::GetMeanAnomaly() const
+double IO::Astrodynamics::OrbitalParameters::TLE::GetMeanAnomaly() const
 {
     return m_elements[7];
 }
 
-double IO::SDK::OrbitalParameters::TLE::GetSpecificOrbitalEnergy() const
+double IO::Astrodynamics::OrbitalParameters::TLE::GetSpecificOrbitalEnergy() const
 {
     return m_stateVector->GetSpecificOrbitalEnergy();
 }

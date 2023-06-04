@@ -9,7 +9,7 @@
 #ifndef IOSDK_RADECDTO_H
 #define IOSDK_RADECDTO_H
 
-namespace IO::SDK::API::DTO {
+namespace IO::Astrodynamics::API::DTO {
 
     struct RaDecDTO {
         double rightAscension = 0.0, declination = 0.0, range = 0.0;

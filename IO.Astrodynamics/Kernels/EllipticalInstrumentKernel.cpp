@@ -7,7 +7,7 @@
 #include<sstream>
 #include <Templates/Templates.cpp>
 
-void IO::SDK::Kernels::EllipticalInstrumentKernel::BuildKernel()
+void IO::Astrodynamics::Kernels::EllipticalInstrumentKernel::BuildKernel()
 {
     if (std::filesystem::exists(m_filePath))
     {
@@ -97,9 +97,9 @@ void IO::SDK::Kernels::EllipticalInstrumentKernel::BuildKernel()
 }
 
 
-IO::SDK::Kernels::EllipticalInstrumentKernel::EllipticalInstrumentKernel(
-        const IO::SDK::Instruments::Instrument &instrument, const IO::SDK::Math::Vector3D &boresight,
-        const IO::SDK::Math::Vector3D &refVector, const double angle, const double crossAngle)
+IO::Astrodynamics::Kernels::EllipticalInstrumentKernel::EllipticalInstrumentKernel(
+        const IO::Astrodynamics::Instruments::Instrument &instrument, const IO::Astrodynamics::Math::Vector3D &boresight,
+        const IO::Astrodynamics::Math::Vector3D &refVector, const double angle, const double crossAngle)
         : InstrumentKernel(instrument, boresight, refVector, angle), m_crossAngle{crossAngle}
 {
     BuildKernel();

@@ -8,15 +8,15 @@
 
 #include <utility>
 
-IO::SDK::Maneuvers::CombinedManeuver::CombinedManeuver(std::vector<IO::SDK::Body::Spacecraft::Engine*> engines, IO::SDK::Propagators::Propagator &propagator, const double inclination, const double perigeeRadius) : IO::SDK::Maneuvers::ManeuverBase(std::move(engines), propagator), m_inclination{inclination}, m_peregeeRadius{perigeeRadius}
+IO::Astrodynamics::Maneuvers::CombinedManeuver::CombinedManeuver(std::vector<IO::Astrodynamics::Body::Spacecraft::Engine*> engines, IO::Astrodynamics::Propagators::Propagator &propagator, const double inclination, const double perigeeRadius) : IO::Astrodynamics::Maneuvers::ManeuverBase(std::move(engines), propagator), m_inclination{inclination}, m_peregeeRadius{perigeeRadius}
 {
 }
 
-IO::SDK::Maneuvers::CombinedManeuver::CombinedManeuver(std::vector<IO::SDK::Body::Spacecraft::Engine*> engines, IO::SDK::Propagators::Propagator &propagator, const double inclination, const double perigeeRadius, const IO::SDK::Time::TDB &minimumEpoch) : IO::SDK::Maneuvers::ManeuverBase(std::move(engines), propagator, minimumEpoch), m_inclination{inclination}, m_peregeeRadius{perigeeRadius}
+IO::Astrodynamics::Maneuvers::CombinedManeuver::CombinedManeuver(std::vector<IO::Astrodynamics::Body::Spacecraft::Engine*> engines, IO::Astrodynamics::Propagators::Propagator &propagator, const double inclination, const double perigeeRadius, const IO::Astrodynamics::Time::TDB &minimumEpoch) : IO::Astrodynamics::Maneuvers::ManeuverBase(std::move(engines), propagator, minimumEpoch), m_inclination{inclination}, m_peregeeRadius{perigeeRadius}
 {
 }
 
-bool IO::SDK::Maneuvers::CombinedManeuver::CanExecute(const IO::SDK::OrbitalParameters::OrbitalParameters &orbitalParams)
+bool IO::Astrodynamics::Maneuvers::CombinedManeuver::CanExecute(const IO::Astrodynamics::OrbitalParameters::OrbitalParameters &orbitalParams)
 {
     //Check apsidal apogee vector and node line are aligned
     auto ANVectorDirection = orbitalParams.GetAscendingNodeVector().Normalize();
@@ -35,24 +35,24 @@ bool IO::SDK::Maneuvers::CombinedManeuver::CanExecute(const IO::SDK::OrbitalPara
     return false;
 }
 
-void IO::SDK::Maneuvers::CombinedManeuver::Compute(const IO::SDK::OrbitalParameters::OrbitalParameters &orbitalParams)
+void IO::Astrodynamics::Maneuvers::CombinedManeuver::Compute(const IO::Astrodynamics::OrbitalParameters::OrbitalParameters &orbitalParams)
 {
     //Compute delta V vector
-    m_deltaV = std::make_unique<IO::SDK::Math::Vector3D>(GetDeltaV(orbitalParams.ToStateVector()));
+    m_deltaV = std::make_unique<IO::Astrodynamics::Math::Vector3D>(GetDeltaV(orbitalParams.ToStateVector()));
 }
 
-IO::SDK::OrbitalParameters::StateOrientation IO::SDK::Maneuvers::CombinedManeuver::ComputeOrientation(const IO::SDK::OrbitalParameters::OrbitalParameters &maneuverPoint)
+IO::Astrodynamics::OrbitalParameters::StateOrientation IO::Astrodynamics::Maneuvers::CombinedManeuver::ComputeOrientation(const IO::Astrodynamics::OrbitalParameters::OrbitalParameters &maneuverPoint)
 {
     auto maneuverVelocity = GetDeltaV(maneuverPoint.ToStateVector());
 
-    return IO::SDK::OrbitalParameters::StateOrientation{maneuverVelocity.Normalize().To(m_spacecraft.Front), IO::SDK::Math::Vector3D(0.0, 0.0, 0.0), maneuverPoint.GetEpoch(), maneuverPoint.GetFrame()};
+    return IO::Astrodynamics::OrbitalParameters::StateOrientation{maneuverVelocity.Normalize().To(m_spacecraft.Front), IO::Astrodynamics::Math::Vector3D(0.0, 0.0, 0.0), maneuverPoint.GetEpoch(), maneuverPoint.GetFrame()};
 }
 
-IO::SDK::Math::Vector3D IO::SDK::Maneuvers::CombinedManeuver::GetDeltaV(const IO::SDK::OrbitalParameters::StateVector &sv) const
+IO::Astrodynamics::Math::Vector3D IO::Astrodynamics::Maneuvers::CombinedManeuver::GetDeltaV(const IO::Astrodynamics::OrbitalParameters::StateVector &sv) const
 {
     double e{};
     double rp{};
-    double meanAnomaly = IO::SDK::Constants::PI;
+    double meanAnomaly = IO::Astrodynamics::Constants::PI;
     double periapsisArgument = sv.GetPeriapsisArgument();
 
     //If target perigee is higher than current apogee
@@ -63,7 +63,7 @@ IO::SDK::Math::Vector3D IO::SDK::Maneuvers::CombinedManeuver::GetDeltaV(const IO
 
         //Periapse argument will turn by 180°
         meanAnomaly = 0.0;
-        periapsisArgument += IO::SDK::Constants::PI;
+        periapsisArgument += IO::Astrodynamics::Constants::PI;
     }
     else
     {
@@ -71,7 +71,7 @@ IO::SDK::Math::Vector3D IO::SDK::Maneuvers::CombinedManeuver::GetDeltaV(const IO
         e = 1 - (2 / ((sv.GetApogeeVector().Magnitude() / rp) + 1));
     }
 
-    auto targetOrbit = IO::SDK::OrbitalParameters::ConicOrbitalElements(sv.GetCenterOfMotion(), rp, e, m_inclination, 0.0, periapsisArgument, 0.0, sv.GetEpoch(), sv.GetFrame());
+    auto targetOrbit = IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements(sv.GetCenterOfMotion(), rp, e, m_inclination, 0.0, periapsisArgument, 0.0, sv.GetEpoch(), sv.GetFrame());
 
     return targetOrbit.ToStateVector(meanAnomaly).GetVelocity() - sv.GetVelocity();
 }

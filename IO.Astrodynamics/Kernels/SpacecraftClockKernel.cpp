@@ -10,7 +10,7 @@
 
 using namespace std::chrono_literals;
 
-IO::SDK::Kernels::SpacecraftClockKernel::SpacecraftClockKernel(const IO::SDK::Body::Spacecraft::Spacecraft& spacecraft, const int resolution) : Kernel(
+IO::Astrodynamics::Kernels::SpacecraftClockKernel::SpacecraftClockKernel(const IO::Astrodynamics::Body::Spacecraft::Spacecraft& spacecraft, const int resolution) : Kernel(
         spacecraft.GetFilesPath() + "/Clocks/" + spacecraft.GetName() + ".tsc"), m_spacecraft{spacecraft }, m_resolution{resolution }
 {
 	if (!m_fileExists)
@@ -21,7 +21,7 @@ IO::SDK::Kernels::SpacecraftClockKernel::SpacecraftClockKernel(const IO::SDK::Bo
 	}
 }
 
-IO::SDK::Time::Window<IO::SDK::Time::TDB> IO::SDK::Kernels::SpacecraftClockKernel::GetCoverageWindow() const
+IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB> IO::Astrodynamics::Kernels::SpacecraftClockKernel::GetCoverageWindow() const
 {
 	SpiceDouble pstart[1];
 	SpiceDouble pstop[1];
@@ -36,31 +36,31 @@ IO::SDK::Time::Window<IO::SDK::Time::TDB> IO::SDK::Kernels::SpacecraftClockKerne
 	sct2e_c(m_spacecraft.GetId(), pstart[0], &tdbStart);
 	sct2e_c(m_spacecraft.GetId(), pstop[0], &tdbEnd);
 
-	return IO::SDK::Time::Window<IO::SDK::Time::TDB>{IO::SDK::Time::TDB(std::chrono::duration<double>(tdbStart)), IO::SDK::Time::TDB(std::chrono::duration<double>(tdbEnd))};
+	return IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB>{IO::Astrodynamics::Time::TDB(std::chrono::duration<double>(tdbStart)), IO::Astrodynamics::Time::TDB(std::chrono::duration<double>(tdbEnd))};
 }
 
-IO::SDK::Time::TDB IO::SDK::Kernels::SpacecraftClockKernel::ConvertToTDB(const std::string& clock) const
+IO::Astrodynamics::Time::TDB IO::Astrodynamics::Kernels::SpacecraftClockKernel::ConvertToTDB(const std::string& clock) const
 {
 	double et;
 	scs2e_c(m_spacecraft.GetId(), clock.c_str(), &et);
-	return IO::SDK::Time::TDB{std::chrono::duration<double>(et)};
+	return IO::Astrodynamics::Time::TDB{std::chrono::duration<double>(et)};
 }
 
-IO::SDK::Time::TDB IO::SDK::Kernels::SpacecraftClockKernel::ConvertToTDB(const double encodedClock) const
+IO::Astrodynamics::Time::TDB IO::Astrodynamics::Kernels::SpacecraftClockKernel::ConvertToTDB(const double encodedClock) const
 {
 	double et{};
 	sct2e_c(m_spacecraft.GetId(), encodedClock, &et);
-	return IO::SDK::Time::TDB{std::chrono::duration<double>(et)};
+	return IO::Astrodynamics::Time::TDB{std::chrono::duration<double>(et)};
 }
 
-std::string IO::SDK::Kernels::SpacecraftClockKernel::ConvertToClockString(const IO::SDK::Time::TDB& epoch) const
+std::string IO::Astrodynamics::Kernels::SpacecraftClockKernel::ConvertToClockString(const IO::Astrodynamics::Time::TDB& epoch) const
 {
 	SpiceChar sclk[30];
 	sce2s_c(m_spacecraft.GetId(), epoch.GetSecondsFromJ2000().count(), 30, sclk);
 	return sclk;
 }
 
-void IO::SDK::Kernels::SpacecraftClockKernel::BuildGenericClockKernel()
+void IO::Astrodynamics::Kernels::SpacecraftClockKernel::BuildGenericClockKernel()
 {
 	if (std::filesystem::exists(m_filePath))
 	{
@@ -102,22 +102,22 @@ void IO::SDK::Kernels::SpacecraftClockKernel::BuildGenericClockKernel()
     m_fileExists= true;
 }
 
-double IO::SDK::Kernels::SpacecraftClockKernel::ConvertToEncodedClock(const IO::SDK::Time::TDB& tdb) const
+double IO::Astrodynamics::Kernels::SpacecraftClockKernel::ConvertToEncodedClock(const IO::Astrodynamics::Time::TDB& tdb) const
 {
     return ConvertToEncodedClock(m_spacecraft.GetId(),tdb);
 }
 
-int IO::SDK::Kernels::SpacecraftClockKernel::GetTicksPerSeconds() const
+int IO::Astrodynamics::Kernels::SpacecraftClockKernel::GetTicksPerSeconds() const
 {
 	return  std::pow(2, m_resolution);
 }
 
-double IO::SDK::Kernels::SpacecraftClockKernel::GetSecondsPerTick() const
+double IO::Astrodynamics::Kernels::SpacecraftClockKernel::GetSecondsPerTick() const
 {
 	return 1.0 / GetTicksPerSeconds();
 }
 
-double IO::SDK::Kernels::SpacecraftClockKernel::ConvertToEncodedClock(int spacecraftId, const IO::SDK::Time::TDB &epoch)
+double IO::Astrodynamics::Kernels::SpacecraftClockKernel::ConvertToEncodedClock(int spacecraftId, const IO::Astrodynamics::Time::TDB &epoch)
 {
     double enc{};
     sce2c_c(spacecraftId, epoch.GetSecondsFromJ2000().count(), &enc);

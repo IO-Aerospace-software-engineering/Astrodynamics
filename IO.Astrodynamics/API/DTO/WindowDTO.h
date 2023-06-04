@@ -5,7 +5,7 @@
 #pragma once
 #include<limits>
 
-namespace IO::SDK::API::DTO
+namespace IO::Astrodynamics::API::DTO
 {
     struct WindowDTO
     {

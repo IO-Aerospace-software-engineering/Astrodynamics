@@ -15,9 +15,9 @@
 #include <StateVector.h>
 #include <StateOrientation.h>
 
-namespace IO::SDK::Maneuvers
+namespace IO::Astrodynamics::Maneuvers
 {
-    class ApogeeHeightChangingManeuver final : public IO::SDK::Maneuvers::ManeuverBase
+    class ApogeeHeightChangingManeuver final : public IO::Astrodynamics::Maneuvers::ManeuverBase
     {
     private:
         const double m_targetHeight;
@@ -28,19 +28,19 @@ namespace IO::SDK::Maneuvers
          * 
          * @param maneuverPoint 
          */
-        void Compute(const IO::SDK::OrbitalParameters::OrbitalParameters &maneuverPoint) override;
+        void Compute(const IO::Astrodynamics::OrbitalParameters::OrbitalParameters &maneuverPoint) override;
 
         /**
          * @brief Compute orientation
          * 
          * @param maneuverPoint 
-         * @return IO::SDK::OrbitalParameters::StateOrientation 
+         * @return IO::Astrodynamics::OrbitalParameters::StateOrientation
          */
-        IO::SDK::OrbitalParameters::StateOrientation ComputeOrientation(const IO::SDK::OrbitalParameters::OrbitalParameters &maneuverPoint) override;
+        IO::Astrodynamics::OrbitalParameters::StateOrientation ComputeOrientation(const IO::Astrodynamics::OrbitalParameters::OrbitalParameters &maneuverPoint) override;
         /* data */
     public:
-        ApogeeHeightChangingManeuver(std::vector<IO::SDK::Body::Spacecraft::Engine*> engines, IO::SDK::Propagators::Propagator &propagator, double targetHeight);
-        ApogeeHeightChangingManeuver(std::vector<IO::SDK::Body::Spacecraft::Engine*> engines, IO::SDK::Propagators::Propagator &propagator, double targetHeight, const IO::SDK::Time::TDB &minimumEpoch);
+        ApogeeHeightChangingManeuver(std::vector<IO::Astrodynamics::Body::Spacecraft::Engine*> engines, IO::Astrodynamics::Propagators::Propagator &propagator, double targetHeight);
+        ApogeeHeightChangingManeuver(std::vector<IO::Astrodynamics::Body::Spacecraft::Engine*> engines, IO::Astrodynamics::Propagators::Propagator &propagator, double targetHeight, const IO::Astrodynamics::Time::TDB &minimumEpoch);
 
         /**
          * @brief Evaluate if maneuver can occurs
@@ -49,7 +49,7 @@ namespace IO::SDK::Maneuvers
          * @return true 
          * @return false 
          */
-        bool CanExecute(const IO::SDK::OrbitalParameters::OrbitalParameters &orbitalParams) override;
+        bool CanExecute(const IO::Astrodynamics::OrbitalParameters::OrbitalParameters &orbitalParams) override;
     };
 }
 

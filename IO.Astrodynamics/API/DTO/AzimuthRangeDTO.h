@@ -6,7 +6,7 @@
 
 #ifndef IOSDK_AZIMUTHRANGEDTO_H
 #define IOSDK_AZIMUTHRANGEDTO_H
-namespace IO::SDK::API::DTO
+namespace IO::Astrodynamics::API::DTO
 {
     struct AzimuthRangeDTO
     {

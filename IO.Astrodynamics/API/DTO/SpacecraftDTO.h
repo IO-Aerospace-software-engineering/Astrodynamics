@@ -23,7 +23,7 @@
 #include <NadirAttitudeDTO.h>
 #include <ZenithAttitudeDTO.h>
 
-namespace IO::SDK::API::DTO
+namespace IO::Astrodynamics::API::DTO
 {
     struct SpacecraftDTO
     {

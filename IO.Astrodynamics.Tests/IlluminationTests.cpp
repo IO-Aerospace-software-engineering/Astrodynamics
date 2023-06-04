@@ -8,9 +8,9 @@
 using namespace std::chrono_literals;
 TEST(Illumination, Initialization)
 {
-	IO::SDK::Math::Vector3D v(1.0, 2.0, 3.0);
-	IO::SDK::Time::TDB tdb(789.3s);
-	IO::SDK::Illumination::Illumination ill(v, 5.0, 6.0, 7.0, tdb);
+	IO::Astrodynamics::Math::Vector3D v(1.0, 2.0, 3.0);
+	IO::Astrodynamics::Time::TDB tdb(789.3s);
+	IO::Astrodynamics::Illumination::Illumination ill(v, 5.0, 6.0, 7.0, tdb);
 	ASSERT_EQ(1.0, ill.GetObserverToSurfacePoint().GetX());
 	ASSERT_EQ(2.0, ill.GetObserverToSurfacePoint().GetY());
 	ASSERT_EQ(3.0, ill.GetObserverToSurfacePoint().GetZ());
@@ -22,10 +22,10 @@ TEST(Illumination, Initialization)
 
 TEST(Illumination, Copy)
 {
-	IO::SDK::Time::TDB tdb(789.3s);
-	IO::SDK::Math::Vector3D v(1.0, 2.0, 3.0);
-	IO::SDK::Illumination::Illumination ill(v, 5.0, 6.0, 7.0, tdb);
-	IO::SDK::Illumination::Illumination illCopy = ill;
+	IO::Astrodynamics::Time::TDB tdb(789.3s);
+	IO::Astrodynamics::Math::Vector3D v(1.0, 2.0, 3.0);
+	IO::Astrodynamics::Illumination::Illumination ill(v, 5.0, 6.0, 7.0, tdb);
+	IO::Astrodynamics::Illumination::Illumination illCopy = ill;
 
 	ASSERT_NE(&(ill.GetObserverToSurfacePoint()), &(illCopy.GetObserverToSurfacePoint()));
 	ASSERT_EQ(1.0, illCopy.GetObserverToSurfacePoint().GetX());
@@ -39,7 +39,7 @@ TEST(Illumination, Copy)
 
 TEST(Illumination, Types)
 {
-	ASSERT_STREQ("EMISSION", IO::SDK::IlluminationAngle::Emission().ToCharArray());
-	ASSERT_STREQ("PHASE", IO::SDK::IlluminationAngle::Phase().ToCharArray());
-	ASSERT_STREQ("INCIDENCE", IO::SDK::IlluminationAngle::Incidence().ToCharArray());
+	ASSERT_STREQ("EMISSION", IO::Astrodynamics::IlluminationAngle::Emission().ToCharArray());
+	ASSERT_STREQ("PHASE", IO::Astrodynamics::IlluminationAngle::Phase().ToCharArray());
+	ASSERT_STREQ("INCIDENCE", IO::Astrodynamics::IlluminationAngle::Incidence().ToCharArray());
 }

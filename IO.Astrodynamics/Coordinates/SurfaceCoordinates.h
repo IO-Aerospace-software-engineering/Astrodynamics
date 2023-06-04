@@ -7,7 +7,7 @@
 #include <vector>
 #include <memory>
 
-namespace IO::SDK::Coordinates
+namespace IO::Astrodynamics::Coordinates
 {
 	/**
 	 * @brief Surface coordinates
@@ -16,8 +16,8 @@ namespace IO::SDK::Coordinates
 	class SurfaceCoordinates
 	{
 	private:
-		std::vector<std::unique_ptr<IO::SDK::Math::Vector3D>> m_surfacePoints;
-		std::vector<std::unique_ptr<IO::SDK::Math::Vector3D>> m_surfaceNormals;
+		std::vector<std::unique_ptr<IO::Astrodynamics::Math::Vector3D>> m_surfacePoints;
+		std::vector<std::unique_ptr<IO::Astrodynamics::Math::Vector3D>> m_surfaceNormals;
 
 	public:
 		/**
@@ -41,9 +41,9 @@ namespace IO::SDK::Coordinates
 		/**
 		 * @brief Get the Surface Points
 		 * 
-		 * @return const std::vector<std::unique_ptr<IO::SDK::Math::Vector3D>>& 
+		 * @return const std::vector<std::unique_ptr<IO::Astrodynamics::Math::Vector3D>>&
 		 */
-		[[nodiscard]] const std::vector<std::unique_ptr<IO::SDK::Math::Vector3D>>& GetSurfacePoints() const
+		[[nodiscard]] const std::vector<std::unique_ptr<IO::Astrodynamics::Math::Vector3D>>& GetSurfacePoints() const
 		{
 			return m_surfacePoints;
 		}
@@ -51,9 +51,9 @@ namespace IO::SDK::Coordinates
 		/**
 		 * @brief Get the Surface Normals
 		 * 
-		 * @return const std::vector<std::unique_ptr<IO::SDK::Math::Vector3D>>& 
+		 * @return const std::vector<std::unique_ptr<IO::Astrodynamics::Math::Vector3D>>&
 		 */
-		[[nodiscard]] const std::vector<std::unique_ptr<IO::SDK::Math::Vector3D>>& GetSurfaceNormals() const
+		[[nodiscard]] const std::vector<std::unique_ptr<IO::Astrodynamics::Math::Vector3D>>& GetSurfaceNormals() const
 		{
 			return m_surfaceNormals;
 		}
@@ -63,14 +63,14 @@ namespace IO::SDK::Coordinates
 		 * 
 		 * @param point 
 		 */
-		void AddPoint(const IO::SDK::Math::Vector3D& point);
+		void AddPoint(const IO::Astrodynamics::Math::Vector3D& point);
 
 		/**
 		 * @brief Add normal vector
 		 * 
 		 * @param normal 
 		 */
-		void AddNormal(const IO::SDK::Math::Vector3D& normal);
+		void AddNormal(const IO::Astrodynamics::Math::Vector3D& normal);
 	};
 }
 #endif

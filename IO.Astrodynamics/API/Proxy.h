@@ -39,7 +39,7 @@ MODULE_API const char *GetSpiceVersionProxy();
  * @return
  */
 MODULE_API bool
-WriteEphemerisProxy(const char *filePath, int objectId, IO::SDK::API::DTO::StateVectorDTO sv[100000], unsigned int size);
+WriteEphemerisProxy(const char *filePath, int objectId, IO::Astrodynamics::API::DTO::StateVectorDTO sv[100000], unsigned int size);
 
 /**
  * Read object ephemeris
@@ -52,8 +52,8 @@ WriteEphemerisProxy(const char *filePath, int objectId, IO::SDK::API::DTO::State
  * @param stateVectors
  */
 MODULE_API void
-ReadEphemerisProxy(IO::SDK::API::DTO::WindowDTO searchWindow, int observerId, int targetId, const char *frame,
-                   const char *aberration, double stepSize, IO::SDK::API::DTO::StateVectorDTO stateVectors[10000]);
+ReadEphemerisProxy(IO::Astrodynamics::API::DTO::WindowDTO searchWindow, int observerId, int targetId, const char *frame,
+                   const char *aberration, double stepSize, IO::Astrodynamics::API::DTO::StateVectorDTO stateVectors[10000]);
 
 /**
  * Read spacecraft orientation
@@ -65,14 +65,14 @@ ReadEphemerisProxy(IO::SDK::API::DTO::WindowDTO searchWindow, int observerId, in
  * @param so
  */
 MODULE_API void
-ReadOrientationProxy(IO::SDK::API::DTO::WindowDTO searchWindow, int spacecraftId, double tolerance, const char *frame, double stepSize,
-                     IO::SDK::API::DTO::StateOrientationDTO so[10000]);
+ReadOrientationProxy(IO::Astrodynamics::API::DTO::WindowDTO searchWindow, int spacecraftId, double tolerance, const char *frame, double stepSize,
+                     IO::Astrodynamics::API::DTO::StateOrientationDTO so[10000]);
 
 /**
  * Propagate a scenario
  * @param scenarioDto
  */
-MODULE_API void PropagateProxy(IO::SDK::API::DTO::ScenarioDTO &scenarioDto);
+MODULE_API void PropagateProxy(IO::Astrodynamics::API::DTO::ScenarioDTO &scenarioDto);
 
 
 
@@ -80,7 +80,7 @@ MODULE_API void PropagateProxy(IO::SDK::API::DTO::ScenarioDTO &scenarioDto);
  * Evaluate launch windows
  * @param launchDto
  */
-MODULE_API void LaunchProxy(IO::SDK::API::DTO::LaunchDTO &launchDto);
+MODULE_API void LaunchProxy(IO::Astrodynamics::API::DTO::LaunchDTO &launchDto);
 
 /**
  * Load generic kernels
@@ -114,9 +114,9 @@ MODULE_API const char *UTCToStringProxy(double secondsFromJ2000);
  * @param windows
  */
 MODULE_API void
-FindWindowsOnDistanceConstraintProxy(IO::SDK::API::DTO::WindowDTO searchWindow, int observerId, int targetId,
+FindWindowsOnDistanceConstraintProxy(IO::Astrodynamics::API::DTO::WindowDTO searchWindow, int observerId, int targetId,
                                      const char *relationalOperator, double value, const char *aberration,
-                                     double stepSize, IO::SDK::API::DTO::WindowDTO windows[1000]);
+                                     double stepSize, IO::Astrodynamics::API::DTO::WindowDTO windows[1000]);
 
 /**
  * Find time windows witch satisfy occultation constraint
@@ -133,13 +133,13 @@ FindWindowsOnDistanceConstraintProxy(IO::SDK::API::DTO::WindowDTO searchWindow, 
  * @param stepSize
  * @param windows
  */
-MODULE_API void FindWindowsOnOccultationConstraintProxy(IO::SDK::API::DTO::WindowDTO searchWindow, int observerId,
+MODULE_API void FindWindowsOnOccultationConstraintProxy(IO::Astrodynamics::API::DTO::WindowDTO searchWindow, int observerId,
                                                         int targetId, const char *targetFrame,
                                                         const char *targetShape,
                                                         int frontBodyId, const char *frontFrame, const char *frontShape,
                                                         const char *occultationType,
                                                         const char *aberration, double stepSize,
-                                                        IO::SDK::API::DTO::WindowDTO windows[1000]);
+                                                        IO::Astrodynamics::API::DTO::WindowDTO windows[1000]);
 
 /**
  * Find time windows witch satisfy coordinate constraint
@@ -156,11 +156,11 @@ MODULE_API void FindWindowsOnOccultationConstraintProxy(IO::SDK::API::DTO::Windo
  * @param stepSize
  * @param windows
  */
-MODULE_API void FindWindowsOnCoordinateConstraintProxy(IO::SDK::API::DTO::WindowDTO searchWindow, int observerId,
+MODULE_API void FindWindowsOnCoordinateConstraintProxy(IO::Astrodynamics::API::DTO::WindowDTO searchWindow, int observerId,
                                                        int targetId, const char *frame, const char *coordinateSystem,
                                                        const char *coordinate, const char *relationalOperator,
                                                        double value, double adjustValue, const char *aberration,
-                                                       double stepSize, IO::SDK::API::DTO::WindowDTO windows[1000]);
+                                                       double stepSize, IO::Astrodynamics::API::DTO::WindowDTO windows[1000]);
 
 /**
  * Find time windows witch satisfy illumination constraint
@@ -179,15 +179,15 @@ MODULE_API void FindWindowsOnCoordinateConstraintProxy(IO::SDK::API::DTO::Window
  * @param method
  * @param windows
  */
-MODULE_API void FindWindowsOnIlluminationConstraintProxy(IO::SDK::API::DTO::WindowDTO searchWindow, int observerId,
+MODULE_API void FindWindowsOnIlluminationConstraintProxy(IO::Astrodynamics::API::DTO::WindowDTO searchWindow, int observerId,
                                                          const char *illuminationSource, int targetBody,
                                                          const char *fixedFrame,
-                                                         IO::SDK::API::DTO::GeodeticDTO geodetic,
+                                                         IO::Astrodynamics::API::DTO::GeodeticDTO geodetic,
                                                          const char *illuminationType,
                                                          const char *relationalOperator, double value,
                                                          double adjustValue,
                                                          const char *aberration, double stepSize, const char *method,
-                                                         IO::SDK::API::DTO::WindowDTO windows[1000]);
+                                                         IO::Astrodynamics::API::DTO::WindowDTO windows[1000]);
 
 /**
  * Find time windows witch satisfy in field of view constraint
@@ -202,10 +202,10 @@ MODULE_API void FindWindowsOnIlluminationConstraintProxy(IO::SDK::API::DTO::Wind
  * @param windows
  */
 MODULE_API void
-FindWindowsInFieldOfViewConstraintProxy(IO::SDK::API::DTO::WindowDTO searchWindow, int observerId, int instrumentId,
+FindWindowsInFieldOfViewConstraintProxy(IO::Astrodynamics::API::DTO::WindowDTO searchWindow, int observerId, int instrumentId,
                                         int targetId, const char *targetFrame, const char *targetShape,
                                         const char *aberration, double stepSize,
-                                        IO::SDK::API::DTO::WindowDTO windows[1000]);
+                                        IO::Astrodynamics::API::DTO::WindowDTO windows[1000]);
 /**
  * Convert elapsed seconds from J2000 to UTC
  * @param tdb
@@ -225,7 +225,7 @@ MODULE_API double ConvertUTCToTDBProxy(double utc);
  * @param bodyId
  * @return
  */
-MODULE_API IO::SDK::API::DTO::CelestialBodyDTO GetCelestialBodyInfoProxy(int bodyId);
+MODULE_API IO::Astrodynamics::API::DTO::CelestialBodyDTO GetCelestialBodyInfoProxy(int bodyId);
 
 /**
  * Get the transformation from a frame to another frame at given epoch
@@ -233,7 +233,7 @@ MODULE_API IO::SDK::API::DTO::CelestialBodyDTO GetCelestialBodyInfoProxy(int bod
  * @param toFrame
  * @return
  */
-MODULE_API IO::SDK::API::DTO::FrameTransformationDTO TransformFrameProxy(const char *fromFrame, const char *toFrame, double epoch);
+MODULE_API IO::Astrodynamics::API::DTO::FrameTransformationDTO TransformFrameProxy(const char *fromFrame, const char *toFrame, double epoch);
 
 /**
  * Convert Two line elements to state vector
@@ -242,28 +242,28 @@ MODULE_API IO::SDK::API::DTO::FrameTransformationDTO TransformFrameProxy(const c
  * @param epoch
  * @return
  */
-MODULE_API IO::SDK::API::DTO::StateVectorDTO ConvertTLEToStateVectorProxy(const char *L1, const char *L2, double epoch);
+MODULE_API IO::Astrodynamics::API::DTO::StateVectorDTO ConvertTLEToStateVectorProxy(const char *L1, const char *L2, double epoch);
 
 /**
  * Convert conic orbital elements to state vector
  * @param conicOrbitalElementsDto
  * @return
  */
-MODULE_API IO::SDK::API::DTO::StateVectorDTO ConvertConicElementsToStateVectorProxy(IO::SDK::API::DTO::ConicOrbitalElementsDTO conicOrbitalElementsDto);
+MODULE_API IO::Astrodynamics::API::DTO::StateVectorDTO ConvertConicElementsToStateVectorProxy(IO::Astrodynamics::API::DTO::ConicOrbitalElementsDTO conicOrbitalElementsDto);
 
 /**
  * Convert equinoctial elements to state vector
  * @param equinoctialElementsDto
  * @return
  */
-MODULE_API IO::SDK::API::DTO::StateVectorDTO ConvertEquinoctialElementsToStateVectorProxy(IO::SDK::API::DTO::EquinoctialElementsDTO equinoctialElementsDto);
+MODULE_API IO::Astrodynamics::API::DTO::StateVectorDTO ConvertEquinoctialElementsToStateVectorProxy(IO::Astrodynamics::API::DTO::EquinoctialElementsDTO equinoctialElementsDto);
 
 /**
  * Convert stateVector to right ascension and declination
  * @param stateVectorDto
  * @return
  */
-MODULE_API IO::SDK::API::DTO::RaDecDTO ConvertStateVectorToEquatorialCoordinatesProxy(IO::SDK::API::DTO::StateVectorDTO stateVectorDto);
+MODULE_API IO::Astrodynamics::API::DTO::RaDecDTO ConvertStateVectorToEquatorialCoordinatesProxy(IO::Astrodynamics::API::DTO::StateVectorDTO stateVectorDto);
 #ifdef __cplusplus
 }
 #endif
@@ -277,80 +277,80 @@ static constexpr const int lenout = 33;
 
 char *HandleError();
 
-std::map<int, std::shared_ptr<IO::SDK::Body::CelestialBody>>
-BuildCelestialBodies(IO::SDK::API::DTO::ScenarioDTO &scenario);
+std::map<int, std::shared_ptr<IO::Astrodynamics::Body::CelestialBody>>
+BuildCelestialBodies(IO::Astrodynamics::API::DTO::ScenarioDTO &scenario);
 
-void BuildPayload(const IO::SDK::API::DTO::ScenarioDTO &scenarioDto, IO::SDK::Body::Spacecraft::Spacecraft &spacecraft);
-
-void
-BuildInstruments(const IO::SDK::API::DTO::ScenarioDTO &scenarioDTO, IO::SDK::Body::Spacecraft::Spacecraft &spacecraft);
-
-void BuildEngines(const IO::SDK::API::DTO::ScenarioDTO &scenarioDTO, IO::SDK::Body::Spacecraft::Spacecraft &spacecraft);
+void BuildPayload(const IO::Astrodynamics::API::DTO::ScenarioDTO &scenarioDto, IO::Astrodynamics::Body::Spacecraft::Spacecraft &spacecraft);
 
 void
-BuildFuelTank(const IO::SDK::API::DTO::ScenarioDTO &scenarioDTO, IO::SDK::Body::Spacecraft::Spacecraft &spacecraft);
+BuildInstruments(const IO::Astrodynamics::API::DTO::ScenarioDTO &scenarioDTO, IO::Astrodynamics::Body::Spacecraft::Spacecraft &spacecraft);
 
-void BuildApogeeManeuver(IO::SDK::API::DTO::ScenarioDTO &scenarioDto, IO::SDK::Scenario &scenario,
-                         std::map<int, std::shared_ptr<IO::SDK::Maneuvers::ManeuverBase>> &maneuvers);
-
-void BuildPerigeeManeuver(IO::SDK::API::DTO::ScenarioDTO &scenarioDto, IO::SDK::Scenario &scenario,
-                          std::map<int, std::shared_ptr<IO::SDK::Maneuvers::ManeuverBase>> &maneuvers);
-
-void BuildApsidalManeuver(IO::SDK::API::DTO::ScenarioDTO &scenarioDto, IO::SDK::Scenario &scenario,
-                          std::map<int, std::shared_ptr<IO::SDK::Maneuvers::ManeuverBase>> &maneuvers,
-                          std::map<int, std::shared_ptr<IO::SDK::Body::CelestialBody>> &celestialBodies);
-
-void BuildCombinedManeuver(IO::SDK::API::DTO::ScenarioDTO &scenarioDto, IO::SDK::Scenario &scenario,
-                           std::map<int, std::shared_ptr<IO::SDK::Maneuvers::ManeuverBase>> &maneuvers);
+void BuildEngines(const IO::Astrodynamics::API::DTO::ScenarioDTO &scenarioDTO, IO::Astrodynamics::Body::Spacecraft::Spacecraft &spacecraft);
 
 void
-BuildOrbitalPlaneManeuver(IO::SDK::API::DTO::ScenarioDTO &scenarioDto, IO::SDK::Scenario &scenario,
-                          std::map<int, std::shared_ptr<IO::SDK::Maneuvers::ManeuverBase>> &maneuvers,
-                          std::map<int, std::shared_ptr<IO::SDK::Body::CelestialBody>> &celestialBodies);
+BuildFuelTank(const IO::Astrodynamics::API::DTO::ScenarioDTO &scenarioDTO, IO::Astrodynamics::Body::Spacecraft::Spacecraft &spacecraft);
 
-void BuildPhasingManeuver(IO::SDK::API::DTO::ScenarioDTO &scenarioDto, IO::SDK::Scenario &scenario,
-                          std::map<int, std::shared_ptr<IO::SDK::Maneuvers::ManeuverBase>> &maneuvers,
-                          std::map<int, std::shared_ptr<IO::SDK::Body::CelestialBody>> &celestialBodies);
+void BuildApogeeManeuver(IO::Astrodynamics::API::DTO::ScenarioDTO &scenarioDto, IO::Astrodynamics::Scenario &scenario,
+                         std::map<int, std::shared_ptr<IO::Astrodynamics::Maneuvers::ManeuverBase>> &maneuvers);
 
-void BuildManeuvers(IO::SDK::API::DTO::ScenarioDTO &scenarioDto, IO::SDK::Scenario &scenario,
-                    std::map<int, std::shared_ptr<IO::SDK::Body::CelestialBody>> &celestialBodies,
-                    std::map<int, std::shared_ptr<IO::SDK::Maneuvers::ManeuverBase>> &maneuvers);
+void BuildPerigeeManeuver(IO::Astrodynamics::API::DTO::ScenarioDTO &scenarioDto, IO::Astrodynamics::Scenario &scenario,
+                          std::map<int, std::shared_ptr<IO::Astrodynamics::Maneuvers::ManeuverBase>> &maneuvers);
 
-void BuildProgradeAttitude(IO::SDK::API::DTO::ScenarioDTO &scenarioDto, IO::SDK::Scenario &scenario,
-                           std::map<int, std::shared_ptr<IO::SDK::Maneuvers::ManeuverBase>> &maneuvers);
+void BuildApsidalManeuver(IO::Astrodynamics::API::DTO::ScenarioDTO &scenarioDto, IO::Astrodynamics::Scenario &scenario,
+                          std::map<int, std::shared_ptr<IO::Astrodynamics::Maneuvers::ManeuverBase>> &maneuvers,
+                          std::map<int, std::shared_ptr<IO::Astrodynamics::Body::CelestialBody>> &celestialBodies);
 
-void BuildRetrogradeAttitude(IO::SDK::API::DTO::ScenarioDTO &scenarioDto, IO::SDK::Scenario &scenario,
-                             std::map<int, std::shared_ptr<IO::SDK::Maneuvers::ManeuverBase>> &maneuvers);
+void BuildCombinedManeuver(IO::Astrodynamics::API::DTO::ScenarioDTO &scenarioDto, IO::Astrodynamics::Scenario &scenario,
+                           std::map<int, std::shared_ptr<IO::Astrodynamics::Maneuvers::ManeuverBase>> &maneuvers);
 
-void BuildZenithAttitude(IO::SDK::API::DTO::ScenarioDTO &scenarioDto, IO::SDK::Scenario &scenario,
-                         std::map<int, std::shared_ptr<IO::SDK::Maneuvers::ManeuverBase>> &maneuvers);
+void
+BuildOrbitalPlaneManeuver(IO::Astrodynamics::API::DTO::ScenarioDTO &scenarioDto, IO::Astrodynamics::Scenario &scenario,
+                          std::map<int, std::shared_ptr<IO::Astrodynamics::Maneuvers::ManeuverBase>> &maneuvers,
+                          std::map<int, std::shared_ptr<IO::Astrodynamics::Body::CelestialBody>> &celestialBodies);
 
-void BuildNadirAttitude(IO::SDK::API::DTO::ScenarioDTO &scenarioDto, IO::SDK::Scenario &scenario,
-                        std::map<int, std::shared_ptr<IO::SDK::Maneuvers::ManeuverBase>> &maneuvers);
+void BuildPhasingManeuver(IO::Astrodynamics::API::DTO::ScenarioDTO &scenarioDto, IO::Astrodynamics::Scenario &scenario,
+                          std::map<int, std::shared_ptr<IO::Astrodynamics::Maneuvers::ManeuverBase>> &maneuvers,
+                          std::map<int, std::shared_ptr<IO::Astrodynamics::Body::CelestialBody>> &celestialBodies);
 
-void BuildInstrumentPointingToAttitude(IO::SDK::API::DTO::ScenarioDTO &scenarioDto, IO::SDK::Scenario &scenario,
-                                       std::map<int, std::shared_ptr<IO::SDK::Maneuvers::ManeuverBase>> &maneuvers,
-                                       std::map<int, std::shared_ptr<IO::SDK::Body::CelestialBody>> &celestialBodies);
+void BuildManeuvers(IO::Astrodynamics::API::DTO::ScenarioDTO &scenarioDto, IO::Astrodynamics::Scenario &scenario,
+                    std::map<int, std::shared_ptr<IO::Astrodynamics::Body::CelestialBody>> &celestialBodies,
+                    std::map<int, std::shared_ptr<IO::Astrodynamics::Maneuvers::ManeuverBase>> &maneuvers);
 
-void ReadApogeeManeuverResult(IO::SDK::API::DTO::ScenarioDTO &scenarioDto,
-                              std::map<int, std::shared_ptr<IO::SDK::Maneuvers::ManeuverBase>> &maneuvers);
+void BuildProgradeAttitude(IO::Astrodynamics::API::DTO::ScenarioDTO &scenarioDto, IO::Astrodynamics::Scenario &scenario,
+                           std::map<int, std::shared_ptr<IO::Astrodynamics::Maneuvers::ManeuverBase>> &maneuvers);
 
-void ReadPerigeeManeuverResult(IO::SDK::API::DTO::ScenarioDTO &scenarioDto,
-                               std::map<int, std::shared_ptr<IO::SDK::Maneuvers::ManeuverBase>> &maneuvers);
+void BuildRetrogradeAttitude(IO::Astrodynamics::API::DTO::ScenarioDTO &scenarioDto, IO::Astrodynamics::Scenario &scenario,
+                             std::map<int, std::shared_ptr<IO::Astrodynamics::Maneuvers::ManeuverBase>> &maneuvers);
 
-void ReadOrbitalPlaneManeuverResult(IO::SDK::API::DTO::ScenarioDTO &scenarioDto,
-                                    std::map<int, std::shared_ptr<IO::SDK::Maneuvers::ManeuverBase>> &maneuvers);
+void BuildZenithAttitude(IO::Astrodynamics::API::DTO::ScenarioDTO &scenarioDto, IO::Astrodynamics::Scenario &scenario,
+                         std::map<int, std::shared_ptr<IO::Astrodynamics::Maneuvers::ManeuverBase>> &maneuvers);
 
-void ReadCombinedManeuverResult(IO::SDK::API::DTO::ScenarioDTO &scenarioDto,
-                                std::map<int, std::shared_ptr<IO::SDK::Maneuvers::ManeuverBase>> &maneuvers);
+void BuildNadirAttitude(IO::Astrodynamics::API::DTO::ScenarioDTO &scenarioDto, IO::Astrodynamics::Scenario &scenario,
+                        std::map<int, std::shared_ptr<IO::Astrodynamics::Maneuvers::ManeuverBase>> &maneuvers);
 
-void ReadApsidalAlignmentManeuverResult(IO::SDK::API::DTO::ScenarioDTO &scenarioDto,
-                                        std::map<int, std::shared_ptr<IO::SDK::Maneuvers::ManeuverBase>> &maneuvers);
+void BuildInstrumentPointingToAttitude(IO::Astrodynamics::API::DTO::ScenarioDTO &scenarioDto, IO::Astrodynamics::Scenario &scenario,
+                                       std::map<int, std::shared_ptr<IO::Astrodynamics::Maneuvers::ManeuverBase>> &maneuvers,
+                                       std::map<int, std::shared_ptr<IO::Astrodynamics::Body::CelestialBody>> &celestialBodies);
 
-void ReadPhasingManeuverResult(IO::SDK::API::DTO::ScenarioDTO &scenarioDto,
-                               std::map<int, std::shared_ptr<IO::SDK::Maneuvers::ManeuverBase>> &maneuvers);
+void ReadApogeeManeuverResult(IO::Astrodynamics::API::DTO::ScenarioDTO &scenarioDto,
+                              std::map<int, std::shared_ptr<IO::Astrodynamics::Maneuvers::ManeuverBase>> &maneuvers);
 
-void ReadManeuverResults(IO::SDK::API::DTO::ScenarioDTO &scenarioDto,
-                         std::map<int, std::shared_ptr<IO::SDK::Maneuvers::ManeuverBase>> &maneuvers);
+void ReadPerigeeManeuverResult(IO::Astrodynamics::API::DTO::ScenarioDTO &scenarioDto,
+                               std::map<int, std::shared_ptr<IO::Astrodynamics::Maneuvers::ManeuverBase>> &maneuvers);
+
+void ReadOrbitalPlaneManeuverResult(IO::Astrodynamics::API::DTO::ScenarioDTO &scenarioDto,
+                                    std::map<int, std::shared_ptr<IO::Astrodynamics::Maneuvers::ManeuverBase>> &maneuvers);
+
+void ReadCombinedManeuverResult(IO::Astrodynamics::API::DTO::ScenarioDTO &scenarioDto,
+                                std::map<int, std::shared_ptr<IO::Astrodynamics::Maneuvers::ManeuverBase>> &maneuvers);
+
+void ReadApsidalAlignmentManeuverResult(IO::Astrodynamics::API::DTO::ScenarioDTO &scenarioDto,
+                                        std::map<int, std::shared_ptr<IO::Astrodynamics::Maneuvers::ManeuverBase>> &maneuvers);
+
+void ReadPhasingManeuverResult(IO::Astrodynamics::API::DTO::ScenarioDTO &scenarioDto,
+                               std::map<int, std::shared_ptr<IO::Astrodynamics::Maneuvers::ManeuverBase>> &maneuvers);
+
+void ReadManeuverResults(IO::Astrodynamics::API::DTO::ScenarioDTO &scenarioDto,
+                         std::map<int, std::shared_ptr<IO::Astrodynamics::Maneuvers::ManeuverBase>> &maneuvers);
 
 #endif

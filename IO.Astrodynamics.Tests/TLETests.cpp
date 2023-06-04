@@ -10,52 +10,52 @@
 using namespace std::chrono_literals;
 TEST(TLE, Initialization)
 {
-	const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
+	const auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399);
 	std::string lines[3]{"ISS", "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054", "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703"};
-	IO::SDK::OrbitalParameters::TLE tle(earth, lines);
+	IO::Astrodynamics::OrbitalParameters::TLE tle(earth, lines);
 }
 
 TEST(TLE, GetSatelliteName)
 {
-	const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
+	const auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399);
 	std::string lines[3]{"ISS", "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054", "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703"};
-	IO::SDK::OrbitalParameters::TLE tle(earth, lines);
+	IO::Astrodynamics::OrbitalParameters::TLE tle(earth, lines);
 
 	ASSERT_STREQ("ISS", tle.GetSatelliteName().data());
 }
 
 TEST(TLE, GetBalisticCoefficient)
 {
-	const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
+	const auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399);
 	std::string lines[3]{"ISS", "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054", "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703"};
-	IO::SDK::OrbitalParameters::TLE tle(earth, lines);
+	IO::Astrodynamics::OrbitalParameters::TLE tle(earth, lines);
 
 	ASSERT_DOUBLE_EQ(5.0653939419425700e-10, tle.GetBalisticCoefficient());
 }
 
 TEST(TLE, GetSecondDerivativeOfMeanMotion)
 {
-	const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
+	const auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399);
 	std::string lines[3]{"ISS", "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054", "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703"};
-	IO::SDK::OrbitalParameters::TLE tle(earth, lines);
+	IO::Astrodynamics::OrbitalParameters::TLE tle(earth, lines);
 
 	ASSERT_DOUBLE_EQ(0.0, tle.GetSecondDerivativeOfMeanMotion());
 }
 
 TEST(TLE, GetDragTerm)
 {
-	const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
+	const auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399);
 	std::string lines[3]{"ISS", "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054", "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703"};
-	IO::SDK::OrbitalParameters::TLE tle(earth, lines);
+	IO::Astrodynamics::OrbitalParameters::TLE tle(earth, lines);
 
 	ASSERT_DOUBLE_EQ(0.1027e-3, tle.GetDragTerm());
 }
 
 TEST(TLE, GetPeriod)
 {
-	const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
+	const auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399);
 	std::string lines[3]{"ISS", "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054", "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703"};
-	IO::SDK::OrbitalParameters::TLE tle(earth, lines);
+	IO::Astrodynamics::OrbitalParameters::TLE tle(earth, lines);
 
 	auto period = tle.GetPeriod().GetSeconds().count();
 
@@ -64,9 +64,9 @@ TEST(TLE, GetPeriod)
 
 TEST(TLE, GetCenterOfMotion)
 {
-	const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
+	const auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399);
 	std::string lines[3]{"ISS", "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054", "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703"};
-	IO::SDK::OrbitalParameters::TLE tle(earth, lines);
+	IO::Astrodynamics::OrbitalParameters::TLE tle(earth, lines);
 
 	const auto res = tle.GetCenterOfMotion();
 
@@ -75,9 +75,9 @@ TEST(TLE, GetCenterOfMotion)
 
 TEST(TLE, GetEccentricity)
 {
-	const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
+	const auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399);
 	std::string lines[3]{"ISS", "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054", "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703"};
-	IO::SDK::OrbitalParameters::TLE tle(earth, lines);
+	IO::Astrodynamics::OrbitalParameters::TLE tle(earth, lines);
 
 	double res = tle.GetEccentricity();
 
@@ -86,20 +86,20 @@ TEST(TLE, GetEccentricity)
 
 TEST(TLE, GetEpoch)
 {
-	const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
+	const auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399);
 	std::string lines[3]{"ISS", "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054", "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703"};
-	IO::SDK::OrbitalParameters::TLE tle(earth, lines);
+	IO::Astrodynamics::OrbitalParameters::TLE tle(earth, lines);
 
-	IO::SDK::Time::TDB res = tle.GetEpoch();
+	IO::Astrodynamics::Time::TDB res = tle.GetEpoch();
 
 	ASSERT_DOUBLE_EQ(664419082.84759140, res.GetSecondsFromJ2000().count());
 }
 
 TEST(TLE, GetInclination)
 {
-	const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
+	const auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399);
 	std::string lines[3]{"ISS", "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054", "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703"};
-	IO::SDK::OrbitalParameters::TLE tle(earth, lines);
+	IO::Astrodynamics::OrbitalParameters::TLE tle(earth, lines);
 
 	double res = tle.GetInclination();
 
@@ -108,9 +108,9 @@ TEST(TLE, GetInclination)
 
 TEST(TLE, GetMeanAnomaly)
 {
-	const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
+	const auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399);
 	std::string lines[3]{"ISS", "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054", "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703"};
-	IO::SDK::OrbitalParameters::TLE tle(earth, lines);
+	IO::Astrodynamics::OrbitalParameters::TLE tle(earth, lines);
 
 	double res = tle.GetMeanAnomaly();
 
@@ -119,9 +119,9 @@ TEST(TLE, GetMeanAnomaly)
 
 TEST(TLE, GetMeanMotion)
 {
-	const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
+	const auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399);
 	std::string lines[3]{"ISS", "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054", "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703"};
-	IO::SDK::OrbitalParameters::TLE tle(earth, lines);
+	IO::Astrodynamics::OrbitalParameters::TLE tle(earth, lines);
 
 	double res = tle.GetMeanMotion();
 
@@ -130,9 +130,9 @@ TEST(TLE, GetMeanMotion)
 
 TEST(TLE, GetPeriapsisArgument)
 {
-	const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
+	const auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399);
 	std::string lines[3]{"ISS", "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054", "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703"};
-	IO::SDK::OrbitalParameters::TLE tle(earth, lines);
+	IO::Astrodynamics::OrbitalParameters::TLE tle(earth, lines);
 
 	double res = tle.GetPeriapsisArgument();
 
@@ -141,9 +141,9 @@ TEST(TLE, GetPeriapsisArgument)
 
 TEST(TLE, GetRightAscendingNodeLongitude)
 {
-	const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
+	const auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399);
 	std::string lines[3]{"ISS", "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054", "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703"};
-	IO::SDK::OrbitalParameters::TLE tle(earth, lines);
+	IO::Astrodynamics::OrbitalParameters::TLE tle(earth, lines);
 
 	double res = tle.GetRightAscendingNodeLongitude();
 
@@ -152,9 +152,9 @@ TEST(TLE, GetRightAscendingNodeLongitude)
 
 TEST(TLE, GetSemiMajorAxis)
 {
-	const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
+	const auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399);
 	std::string lines[3]{"ISS", "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054", "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703"};
-	IO::SDK::OrbitalParameters::TLE tle(earth, lines);
+	IO::Astrodynamics::OrbitalParameters::TLE tle(earth, lines);
 
 	double res = tle.GetSemiMajorAxis();
 
@@ -163,31 +163,31 @@ TEST(TLE, GetSemiMajorAxis)
 
 TEST(TLE, GetTimeToMeanAnomaly)
 {
-	const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
+	const auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399);
 	std::string lines[3]{"ISS", "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054", "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703"};
-	IO::SDK::OrbitalParameters::TLE tle(earth, lines);
+	IO::Astrodynamics::OrbitalParameters::TLE tle(earth, lines);
 
-	IO::SDK::Time::TDB res = tle.GetTimeToMeanAnomaly(IO::SDK::Constants::PI2);
+	IO::Astrodynamics::Time::TDB res = tle.GetTimeToMeanAnomaly(IO::Astrodynamics::Constants::PI2);
 
 	ASSERT_DOUBLE_EQ(664419869.22117305, res.GetSecondsFromJ2000().count());
 }
 
 TEST(TLE, GetTimeToTrueAnomaly)
 {
-	const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
+	const auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399);
 	std::string lines[3]{"ISS", "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054", "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703"};
-	IO::SDK::OrbitalParameters::TLE tle(earth, lines);
+	IO::Astrodynamics::OrbitalParameters::TLE tle(earth, lines);
 
-	IO::SDK::Time::TDB res = tle.GetTimeToTrueAnomaly(IO::SDK::Constants::PI2);
+	IO::Astrodynamics::Time::TDB res = tle.GetTimeToTrueAnomaly(IO::Astrodynamics::Constants::PI2);
 
 	ASSERT_DOUBLE_EQ(664419869.13365996, res.GetSecondsFromJ2000().count());
 }
 
 TEST(TLE, GetTrueAnomaly)
 {
-	const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
+	const auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399);
 	std::string lines[3]{"ISS", "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054", "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703"};
-	IO::SDK::OrbitalParameters::TLE tle(earth, lines);
+	IO::Astrodynamics::OrbitalParameters::TLE tle(earth, lines);
 
 	double res = tle.GetTrueAnomaly();
 
@@ -196,31 +196,31 @@ TEST(TLE, GetTrueAnomaly)
 
 TEST(TLE, GetTrueAnomalyAtEpoch)
 {
-	const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
+	const auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399);
 	std::string lines[3]{"ISS", "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054", "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703"};
-	IO::SDK::OrbitalParameters::TLE tle(earth, lines);
+	IO::Astrodynamics::OrbitalParameters::TLE tle(earth, lines);
 
-	double res = tle.GetTrueAnomaly(IO::SDK::Time::TDB(664419869.13365996s));
+	double res = tle.GetTrueAnomaly(IO::Astrodynamics::Time::TDB(664419869.13365996s));
 
-	ASSERT_NEAR(IO::SDK::Constants::PI2, res, IO::SDK::Test::Constants::ANGULAR_ACCURACY);
+	ASSERT_NEAR(IO::Astrodynamics::Constants::PI2, res, IO::Astrodynamics::Test::Constants::ANGULAR_ACCURACY);
 }
 
 TEST(TLE, GetMeanAnomalyAtEpoch)
 {
-	const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
+	const auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399);
 	std::string lines[3]{"ISS", "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054", "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703"};
-	IO::SDK::OrbitalParameters::TLE tle(earth, lines);
+	IO::Astrodynamics::OrbitalParameters::TLE tle(earth, lines);
 
-	double res = tle.GetMeanAnomaly(IO::SDK::Time::TDB(664419869.22117305s));
+	double res = tle.GetMeanAnomaly(IO::Astrodynamics::Time::TDB(664419869.22117305s));
 
-	ASSERT_NEAR(IO::SDK::Constants::PI2, res, IO::SDK::Test::Constants::ANGULAR_ACCURACY);
+	ASSERT_NEAR(IO::Astrodynamics::Constants::PI2, res, IO::Astrodynamics::Test::Constants::ANGULAR_ACCURACY);
 }
 
 TEST(TLE, TrajectoryType)
 {
-	const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
+	const auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399);
 	std::string lines[3]{"ISS", "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054", "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703"};
-	IO::SDK::OrbitalParameters::TLE tle(earth, lines);
+	IO::Astrodynamics::OrbitalParameters::TLE tle(earth, lines);
 
 	ASSERT_TRUE(tle.IsElliptical());
 	ASSERT_FALSE(tle.IsParabolic());
@@ -229,10 +229,10 @@ TEST(TLE, TrajectoryType)
 
 TEST(TLE, GetStateVectorAtEpoch)
 {
-	const auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
+	const auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399);
 	std::string lines[3]{"ISS", "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054", "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703"};
-	IO::SDK::OrbitalParameters::TLE tle(earth, lines);
-	IO::SDK::Time::TDB epoch("2021-01-20T18:50:13.663106"); //utc
+	IO::Astrodynamics::OrbitalParameters::TLE tle(earth, lines);
+	IO::Astrodynamics::Time::TDB epoch("2021-01-20T18:50:13.663106"); //utc
 
 	auto stateVector = tle.ToStateVector(epoch); //2021-Jan-20 18:51:22.8476
 	ASSERT_DOUBLE_EQ(4363669.2613373389, stateVector.GetPosition().GetX());

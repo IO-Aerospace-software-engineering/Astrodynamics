@@ -6,83 +6,83 @@
 #include <utility>
 #include <SDKException.h>
 
-IO::SDK::Coordinate IO::SDK::Coordinate::mX(std::string("X"));
-IO::SDK::Coordinate IO::SDK::Coordinate::mY(std::string("Y"));
-IO::SDK::Coordinate IO::SDK::Coordinate::mZ(std::string("Z"));
-IO::SDK::Coordinate IO::SDK::Coordinate::mAltitude(std::string("ALTITUDE"));
-IO::SDK::Coordinate IO::SDK::Coordinate::mColatitude(std::string("COLATITUDE"));
-IO::SDK::Coordinate IO::SDK::Coordinate::mDeclination(std::string("DECLINATION"));
-IO::SDK::Coordinate IO::SDK::Coordinate::mLatitude(std::string("LATITUDE"));
-IO::SDK::Coordinate IO::SDK::Coordinate::mLongitude(std::string("LONGITUDE"));
-IO::SDK::Coordinate IO::SDK::Coordinate::mRadius(std::string("RADIUS"));
-IO::SDK::Coordinate IO::SDK::Coordinate::mRange(std::string("RANGE"));
-IO::SDK::Coordinate IO::SDK::Coordinate::mRightAscension(std::string("RIGHT ASCENSION"));
+IO::Astrodynamics::Coordinate IO::Astrodynamics::Coordinate::mX(std::string("X"));
+IO::Astrodynamics::Coordinate IO::Astrodynamics::Coordinate::mY(std::string("Y"));
+IO::Astrodynamics::Coordinate IO::Astrodynamics::Coordinate::mZ(std::string("Z"));
+IO::Astrodynamics::Coordinate IO::Astrodynamics::Coordinate::mAltitude(std::string("ALTITUDE"));
+IO::Astrodynamics::Coordinate IO::Astrodynamics::Coordinate::mColatitude(std::string("COLATITUDE"));
+IO::Astrodynamics::Coordinate IO::Astrodynamics::Coordinate::mDeclination(std::string("DECLINATION"));
+IO::Astrodynamics::Coordinate IO::Astrodynamics::Coordinate::mLatitude(std::string("LATITUDE"));
+IO::Astrodynamics::Coordinate IO::Astrodynamics::Coordinate::mLongitude(std::string("LONGITUDE"));
+IO::Astrodynamics::Coordinate IO::Astrodynamics::Coordinate::mRadius(std::string("RADIUS"));
+IO::Astrodynamics::Coordinate IO::Astrodynamics::Coordinate::mRange(std::string("RANGE"));
+IO::Astrodynamics::Coordinate IO::Astrodynamics::Coordinate::mRightAscension(std::string("RIGHT ASCENSION"));
 
-IO::SDK::Coordinate::Coordinate(std::string name) : m_name{std::move(name)}
+IO::Astrodynamics::Coordinate::Coordinate(std::string name) : m_name{std::move(name)}
 {
 }
 
-const char *IO::SDK::Coordinate::ToCharArray() const
+const char *IO::Astrodynamics::Coordinate::ToCharArray() const
 {
     return m_name.c_str();
 }
 
-IO::SDK::Coordinate &IO::SDK::Coordinate::Altitude()
+IO::Astrodynamics::Coordinate &IO::Astrodynamics::Coordinate::Altitude()
 {
     return mAltitude;
 }
 
-IO::SDK::Coordinate &IO::SDK::Coordinate::X()
+IO::Astrodynamics::Coordinate &IO::Astrodynamics::Coordinate::X()
 {
     return mX;
 }
 
-IO::SDK::Coordinate &IO::SDK::Coordinate::Y()
+IO::Astrodynamics::Coordinate &IO::Astrodynamics::Coordinate::Y()
 {
     return mY;
 }
 
-IO::SDK::Coordinate &IO::SDK::Coordinate::Z()
+IO::Astrodynamics::Coordinate &IO::Astrodynamics::Coordinate::Z()
 {
     return mZ;
 }
 
-IO::SDK::Coordinate &IO::SDK::Coordinate::Longitude()
+IO::Astrodynamics::Coordinate &IO::Astrodynamics::Coordinate::Longitude()
 {
     return mLongitude;
 }
 
-IO::SDK::Coordinate &IO::SDK::Coordinate::Latitude()
+IO::Astrodynamics::Coordinate &IO::Astrodynamics::Coordinate::Latitude()
 {
     return mLatitude;
 }
 
-IO::SDK::Coordinate &IO::SDK::Coordinate::Radius()
+IO::Astrodynamics::Coordinate &IO::Astrodynamics::Coordinate::Radius()
 {
     return mRadius;
 }
 
-IO::SDK::Coordinate &IO::SDK::Coordinate::Range()
+IO::Astrodynamics::Coordinate &IO::Astrodynamics::Coordinate::Range()
 {
     return mRange;
 }
 
-IO::SDK::Coordinate &IO::SDK::Coordinate::RightAscension()
+IO::Astrodynamics::Coordinate &IO::Astrodynamics::Coordinate::RightAscension()
 {
     return mRightAscension;
 }
 
-IO::SDK::Coordinate &IO::SDK::Coordinate::Declination()
+IO::Astrodynamics::Coordinate &IO::Astrodynamics::Coordinate::Declination()
 {
     return mDeclination;
 }
 
-IO::SDK::Coordinate &IO::SDK::Coordinate::Colatitude()
+IO::Astrodynamics::Coordinate &IO::Astrodynamics::Coordinate::Colatitude()
 {
     return mColatitude;
 }
 
-IO::SDK::Coordinate& IO::SDK::Coordinate::ToCoordinateType(const std::string &coordinateType)
+IO::Astrodynamics::Coordinate& IO::Astrodynamics::Coordinate::ToCoordinateType(const std::string &coordinateType)
 {
     if (coordinateType == Coordinate::mAltitude.ToCharArray())
     {
@@ -119,5 +119,5 @@ IO::SDK::Coordinate& IO::SDK::Coordinate::ToCoordinateType(const std::string &co
         return mColatitude;
     }
 
-    throw IO::SDK::Exception::SDKException("Invalid coordinate type : " + coordinateType);
+    throw IO::Astrodynamics::Exception::SDKException("Invalid coordinate type : " + coordinateType);
 }

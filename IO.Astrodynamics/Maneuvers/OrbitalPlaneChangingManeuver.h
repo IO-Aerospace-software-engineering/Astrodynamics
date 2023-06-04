@@ -6,14 +6,14 @@
 
 #include <ManeuverBase.h>
 
-namespace IO::SDK::Maneuvers
+namespace IO::Astrodynamics::Maneuvers
 {
-    class OrbitalPlaneChangingManeuver final : public IO::SDK::Maneuvers::ManeuverBase
+    class OrbitalPlaneChangingManeuver final : public IO::Astrodynamics::Maneuvers::ManeuverBase
     {
     private:
         double m_relativeInclination{};
 
-        std::shared_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> m_targetOrbit;
+        std::shared_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> m_targetOrbit;
         bool m_isAscendingNode{false};
 
 
@@ -25,7 +25,7 @@ namespace IO::SDK::Maneuvers
          * @param propagator 
          * @param targetOrbit 
          */
-        OrbitalPlaneChangingManeuver(std::vector<IO::SDK::Body::Spacecraft::Engine*> engines, IO::SDK::Propagators::Propagator &propagator, std::shared_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> targetOrbit);
+        OrbitalPlaneChangingManeuver(std::vector<IO::Astrodynamics::Body::Spacecraft::Engine*> engines, IO::Astrodynamics::Propagators::Propagator &propagator, std::shared_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> targetOrbit);
         
         /**
          * @brief Construct a new Orbital Plane Changing Maneuver object
@@ -35,7 +35,7 @@ namespace IO::SDK::Maneuvers
          * @param targetOrbit 
          * @param minimumEpoch 
          */
-        OrbitalPlaneChangingManeuver(std::vector<IO::SDK::Body::Spacecraft::Engine*> engines, IO::SDK::Propagators::Propagator &propagator, std::shared_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> targetOrbit, const IO::SDK::Time::TDB &minimumEpoch);
+        OrbitalPlaneChangingManeuver(std::vector<IO::Astrodynamics::Body::Spacecraft::Engine*> engines, IO::Astrodynamics::Propagators::Propagator &propagator, std::shared_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> targetOrbit, const IO::Astrodynamics::Time::TDB &minimumEpoch);
 
         /**
          * @brief Define maneuver execution condition
@@ -44,22 +44,22 @@ namespace IO::SDK::Maneuvers
          * @return true 
          * @return false 
          */
-        bool CanExecute(const IO::SDK::OrbitalParameters::OrbitalParameters &orbitalParams) override;
+        bool CanExecute(const IO::Astrodynamics::OrbitalParameters::OrbitalParameters &orbitalParams) override;
 
         /**
          * @brief Compute impulsive maneuver
          * 
          * @param maneuverPoint 
          */
-        void Compute(const IO::SDK::OrbitalParameters::OrbitalParameters &maneuverPoint) override;
+        void Compute(const IO::Astrodynamics::OrbitalParameters::OrbitalParameters &maneuverPoint) override;
 
         /**
          * @brief 
          * 
          * @param maneuverPoint 
-         * @return IO::SDK::OrbitalParameters::StateOrientation 
+         * @return IO::Astrodynamics::OrbitalParameters::StateOrientation
          */
-        IO::SDK::OrbitalParameters::StateOrientation ComputeOrientation(const IO::SDK::OrbitalParameters::OrbitalParameters &maneuverPoint) override;
+        IO::Astrodynamics::OrbitalParameters::StateOrientation ComputeOrientation(const IO::Astrodynamics::OrbitalParameters::OrbitalParameters &maneuverPoint) override;
 
         /**
          * @brief Get the Relative Inclination

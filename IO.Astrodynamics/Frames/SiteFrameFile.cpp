@@ -10,7 +10,7 @@
 #include <StringHelpers.h>
 #include <Constants.h>
 
-IO::SDK::Frames::SiteFrameFile::SiteFrameFile(const IO::SDK::Sites::Site& site) : FrameFile(site.GetFilesPath() + "/Frame/" + site.GetName() + ".tf", site.GetName() + "_TOPO"),
+IO::Astrodynamics::Frames::SiteFrameFile::SiteFrameFile(const IO::Astrodynamics::Sites::Site& site) : FrameFile(site.GetFilesPath() + "/Frame/" + site.GetName() + ".tf", site.GetName() + "_TOPO"),
                                                                                   m_site{site} {
     if (!m_fileExists) {
         BuildFrame();
@@ -19,7 +19,7 @@ IO::SDK::Frames::SiteFrameFile::SiteFrameFile(const IO::SDK::Sites::Site& site) 
     }
 }
 
-void IO::SDK::Frames::SiteFrameFile::BuildFrame() {
+void IO::Astrodynamics::Frames::SiteFrameFile::BuildFrame() {
     if (std::filesystem::exists(m_filePath)) {
         unload_c(m_filePath.c_str());
         std::filesystem::remove(m_filePath);
@@ -60,7 +60,7 @@ void IO::SDK::Frames::SiteFrameFile::BuildFrame() {
 
             auto posframename = readout.find("{fixedframe}");
             if (posframename != std::string::npos) {
-                readout = readout.replace(posframename, 12, IO::SDK::StringHelpers::ToUpper(m_site.GetBody()->GetBodyFixedFrame().GetName()));
+                readout = readout.replace(posframename, 12, IO::Astrodynamics::StringHelpers::ToUpper(m_site.GetBody()->GetBodyFixedFrame().GetName()));
             }
 
             auto poslong = readout.find("{long}");
@@ -70,7 +70,7 @@ void IO::SDK::Frames::SiteFrameFile::BuildFrame() {
 
             auto poscolat = readout.find("{colat}");
             if (poscolat != std::string::npos) {
-                readout = readout.replace(poscolat, 7, std::to_string(-(IO::SDK::Constants::PI2 - m_site.GetCoordinates().GetLatitude())));
+                readout = readout.replace(poscolat, 7, std::to_string(-(IO::Astrodynamics::Constants::PI2 - m_site.GetCoordinates().GetLatitude())));
             }
 
             outFile << readout << std::endl;

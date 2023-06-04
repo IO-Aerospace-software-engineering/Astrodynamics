@@ -3,37 +3,37 @@
  */
 #include <TowardObjectAttitude.h>
 
-IO::SDK::Maneuvers::Attitudes::TowardObjectAttitude::TowardObjectAttitude(const std::vector<IO::SDK::Body::Spacecraft::Engine*>& engines,
-                                                                          IO::SDK::Propagators::Propagator &propagator, const IO::SDK::Time::TimeSpan &attitudeHoldDuration,
-                                                                          const IO::SDK::Body::Body &targetBody) : IO::SDK::Maneuvers::ManeuverBase(engines, propagator,
+IO::Astrodynamics::Maneuvers::Attitudes::TowardObjectAttitude::TowardObjectAttitude(const std::vector<IO::Astrodynamics::Body::Spacecraft::Engine*>& engines,
+                                                                          IO::Astrodynamics::Propagators::Propagator &propagator, const IO::Astrodynamics::Time::TimeSpan &attitudeHoldDuration,
+                                                                          const IO::Astrodynamics::Body::Body &targetBody) : IO::Astrodynamics::Maneuvers::ManeuverBase(engines, propagator,
                                                                                                                                                     attitudeHoldDuration),
                                                                                                                    m_targetBody{targetBody}
 {
 }
 
-IO::SDK::Maneuvers::Attitudes::TowardObjectAttitude::TowardObjectAttitude(const std::vector<IO::SDK::Body::Spacecraft::Engine*>& engines,
-                                                                          IO::SDK::Propagators::Propagator &propagator, const IO::SDK::Time::TDB &minimumEpoch,
-                                                                          const IO::SDK::Time::TimeSpan &attitudeHoldDuration, const IO::SDK::Body::Body &targetBody)
-        : IO::SDK::Maneuvers::ManeuverBase(engines, propagator, minimumEpoch, attitudeHoldDuration), m_targetBody{targetBody}
+IO::Astrodynamics::Maneuvers::Attitudes::TowardObjectAttitude::TowardObjectAttitude(const std::vector<IO::Astrodynamics::Body::Spacecraft::Engine*>& engines,
+                                                                          IO::Astrodynamics::Propagators::Propagator &propagator, const IO::Astrodynamics::Time::TDB &minimumEpoch,
+                                                                          const IO::Astrodynamics::Time::TimeSpan &attitudeHoldDuration, const IO::Astrodynamics::Body::Body &targetBody)
+        : IO::Astrodynamics::Maneuvers::ManeuverBase(engines, propagator, minimumEpoch, attitudeHoldDuration), m_targetBody{targetBody}
 {
 }
 
-void IO::SDK::Maneuvers::Attitudes::TowardObjectAttitude::Compute([[maybe_unused]]const IO::SDK::OrbitalParameters::OrbitalParameters &maneuverPoint)
+void IO::Astrodynamics::Maneuvers::Attitudes::TowardObjectAttitude::Compute([[maybe_unused]]const IO::Astrodynamics::OrbitalParameters::OrbitalParameters &maneuverPoint)
 {
-    m_deltaV = std::make_unique<IO::SDK::Math::Vector3D>();
+    m_deltaV = std::make_unique<IO::Astrodynamics::Math::Vector3D>();
 }
 
-IO::SDK::OrbitalParameters::StateOrientation
-IO::SDK::Maneuvers::Attitudes::TowardObjectAttitude::ComputeOrientation(const IO::SDK::OrbitalParameters::OrbitalParameters &maneuverPoint)
+IO::Astrodynamics::OrbitalParameters::StateOrientation
+IO::Astrodynamics::Maneuvers::Attitudes::TowardObjectAttitude::ComputeOrientation(const IO::Astrodynamics::OrbitalParameters::OrbitalParameters &maneuverPoint)
 {
-    auto targetStateVector = m_targetBody.ReadEphemeris(m_spacecraft.GetOrbitalParametersAtEpoch()->GetFrame(), IO::SDK::AberrationsEnum::LTS, maneuverPoint.GetEpoch(),
+    auto targetStateVector = m_targetBody.ReadEphemeris(m_spacecraft.GetOrbitalParametersAtEpoch()->GetFrame(), IO::Astrodynamics::AberrationsEnum::LTS, maneuverPoint.GetEpoch(),
                                                         *maneuverPoint.GetCenterOfMotion());
     auto relativeStateVector = targetStateVector.GetPosition() - maneuverPoint.ToStateVector().GetPosition();
-    return IO::SDK::OrbitalParameters::StateOrientation{relativeStateVector.Normalize().To(m_spacecraft.Front), IO::SDK::Math::Vector3D(0.0, 0.0, 0.0), maneuverPoint.GetEpoch(),
+    return IO::Astrodynamics::OrbitalParameters::StateOrientation{relativeStateVector.Normalize().To(m_spacecraft.Front), IO::Astrodynamics::Math::Vector3D(0.0, 0.0, 0.0), maneuverPoint.GetEpoch(),
                                                         maneuverPoint.GetFrame()};
 }
 
-bool IO::SDK::Maneuvers::Attitudes::TowardObjectAttitude::CanExecute([[maybe_unused]]const IO::SDK::OrbitalParameters::OrbitalParameters &orbitalParams)
+bool IO::Astrodynamics::Maneuvers::Attitudes::TowardObjectAttitude::CanExecute([[maybe_unused]]const IO::Astrodynamics::OrbitalParameters::OrbitalParameters &orbitalParams)
 {
     return true;
 }

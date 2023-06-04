@@ -14,12 +14,12 @@
 
 using namespace std::chrono_literals;
 
-namespace IO::SDK::Propagators
+namespace IO::Astrodynamics::Propagators
 {
     class Propagator;
 }
 
-namespace IO::SDK::Maneuvers
+namespace IO::Astrodynamics::Maneuvers
 {
     /**
      * @brief Maneuverbase class used by concrete maneuvers
@@ -47,7 +47,7 @@ namespace IO::SDK::Maneuvers
          * 
          * @return double 
          */
-        IO::SDK::Time::TimeSpan GetMinimumRemainingThrustDuration();
+        IO::Astrodynamics::Time::TimeSpan GetMinimumRemainingThrustDuration();
 
         /**
          * @brief Burn fuel form fuels tanks
@@ -55,7 +55,7 @@ namespace IO::SDK::Maneuvers
          * @param duration 
          * @return Fuel burned quantity in kg
          */
-        double Burn(const IO::SDK::Time::TimeSpan &duration);
+        double Burn(const IO::Astrodynamics::Time::TimeSpan &duration);
 
         /**
          * @brief Check if computed maneuver is valid
@@ -63,7 +63,7 @@ namespace IO::SDK::Maneuvers
          * @return true 
          * @return false 
          */
-        IO::SDK::Maneuvers::ManeuverResult Validate();
+        IO::Astrodynamics::Maneuvers::ManeuverResult Validate();
 
         /**
          * @brief Check if computed maneuver can be executed
@@ -77,7 +77,7 @@ namespace IO::SDK::Maneuvers
          * @brief Execute maneuver and write data in propagator
          * 
          */
-        void ExecuteAt(const IO::SDK::OrbitalParameters::OrbitalParameters &maneuverPoint);
+        void ExecuteAt(const IO::Astrodynamics::OrbitalParameters::OrbitalParameters &maneuverPoint);
 
         /**
          * @brief Spread the duration of thrust
@@ -85,33 +85,33 @@ namespace IO::SDK::Maneuvers
          */
         void SpreadThrust();
 
-        const IO::SDK::Time::TimeSpan m_attitudeHoldDuration;
-        std::unique_ptr<IO::SDK::Time::Window<IO::SDK::Time::TDB>> m_attitudeWindow{};
+        const IO::Astrodynamics::Time::TimeSpan m_attitudeHoldDuration;
+        std::unique_ptr<IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB>> m_attitudeWindow{};
 
-        std::unique_ptr<IO::SDK::Time::Window<IO::SDK::Time::TDB>> m_maneuverWindow{};
+        std::unique_ptr<IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB>> m_maneuverWindow{};
 
     protected:
-        std::unique_ptr<IO::SDK::Time::Window<IO::SDK::Time::TDB>> m_thrustWindow{};
-        std::unique_ptr<IO::SDK::Math::Vector3D> m_deltaV{};
-        IO::SDK::Time::TimeSpan m_thrustDuration{0.0s};
+        std::unique_ptr<IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB>> m_thrustWindow{};
+        std::unique_ptr<IO::Astrodynamics::Math::Vector3D> m_deltaV{};
+        IO::Astrodynamics::Time::TimeSpan m_thrustDuration{0.0s};
         double m_fuelBurned{};
-        const std::vector<IO::SDK::Body::Spacecraft::Engine*> m_engines{};
-        std::unique_ptr<IO::SDK::Time::TDB> m_minimumEpoch{};
+        const std::vector<IO::Astrodynamics::Body::Spacecraft::Engine*> m_engines{};
+        std::unique_ptr<IO::Astrodynamics::Time::TDB> m_minimumEpoch{};
         ManeuverBase *m_nextManeuver{};
         bool m_isValid{false};
-        const IO::SDK::Body::Spacecraft::Spacecraft &m_spacecraft;
-        IO::SDK::Propagators::Propagator &m_propagator;
+        const IO::Astrodynamics::Body::Spacecraft::Spacecraft &m_spacecraft;
+        IO::Astrodynamics::Propagators::Propagator &m_propagator;
         std::vector<ManeuverBase *> m_subManeuvers{};
-        std::set<const IO::SDK::Body::Spacecraft::FuelTank *> m_fuelTanks;
-        std::map<const IO::SDK::Body::Spacecraft::FuelTank *, IO::SDK::Maneuvers::DynamicFuelTank> m_dynamicFuelTanks;
-        IO::SDK::Time::TimeSpan m_maneuverHoldDuration{0.0s};
+        std::set<const IO::Astrodynamics::Body::Spacecraft::FuelTank *> m_fuelTanks;
+        std::map<const IO::Astrodynamics::Body::Spacecraft::FuelTank *, IO::Astrodynamics::Maneuvers::DynamicFuelTank> m_dynamicFuelTanks;
+        IO::Astrodynamics::Time::TimeSpan m_maneuverHoldDuration{0.0s};
 
         /**
          * @brief Construct a new Maneuver Base object
          * 
          * @param engines Used by maneuver
          */
-        ManeuverBase(std::vector<IO::SDK::Body::Spacecraft::Engine*> engines, IO::SDK::Propagators::Propagator &propagator);
+        ManeuverBase(std::vector<IO::Astrodynamics::Body::Spacecraft::Engine*> engines, IO::Astrodynamics::Propagators::Propagator &propagator);
 
         /**
          * @brief Construct a new Maneuver Base object
@@ -119,7 +119,7 @@ namespace IO::SDK::Maneuvers
          * @param engines Used by maneuver
          * @param minimumEpoch No maneuver execution before this epoch
          */
-        ManeuverBase(std::vector<IO::SDK::Body::Spacecraft::Engine*> engines, IO::SDK::Propagators::Propagator &propagator, const IO::SDK::Time::TDB &minimumEpoch);
+        ManeuverBase(std::vector<IO::Astrodynamics::Body::Spacecraft::Engine*> engines, IO::Astrodynamics::Propagators::Propagator &propagator, const IO::Astrodynamics::Time::TDB &minimumEpoch);
 
         /**
          * @brief Construct a new Maneuver Base object
@@ -128,8 +128,8 @@ namespace IO::SDK::Maneuvers
          * @param propagator 
          * @param attitudeHoldDuration 
          */
-        ManeuverBase(std::vector<IO::SDK::Body::Spacecraft::Engine*> engines, IO::SDK::Propagators::Propagator &propagator,
-                     const IO::SDK::Time::TimeSpan &attitudeHoldDuration);
+        ManeuverBase(std::vector<IO::Astrodynamics::Body::Spacecraft::Engine*> engines, IO::Astrodynamics::Propagators::Propagator &propagator,
+                     const IO::Astrodynamics::Time::TimeSpan &attitudeHoldDuration);
 
         /**
          * @brief Construct a new Maneuver Base object
@@ -139,23 +139,23 @@ namespace IO::SDK::Maneuvers
          * @param minimumEpoch 
          * @param attitudeHoldDuration 
          */
-        ManeuverBase(std::vector<IO::SDK::Body::Spacecraft::Engine*> engines, IO::SDK::Propagators::Propagator &propagator, const IO::SDK::Time::TDB &minimumEpoch,
-                     const IO::SDK::Time::TimeSpan &attitudeHoldDuration);
+        ManeuverBase(std::vector<IO::Astrodynamics::Body::Spacecraft::Engine*> engines, IO::Astrodynamics::Propagators::Propagator &propagator, const IO::Astrodynamics::Time::TDB &minimumEpoch,
+                     const IO::Astrodynamics::Time::TimeSpan &attitudeHoldDuration);
 
         /**
          * @brief Compute impulsive maneuver
          * 
          * @param maneuverPoint 
          */
-        virtual void Compute(const IO::SDK::OrbitalParameters::OrbitalParameters &maneuverPoint) = 0;
+        virtual void Compute(const IO::Astrodynamics::OrbitalParameters::OrbitalParameters &maneuverPoint) = 0;
 
         /**
          * @brief Compute orientation
          * 
          * @param maneuverPoint 
-         * @return IO::SDK::OrbitalParameters::StateOrientation 
+         * @return IO::Astrodynamics::OrbitalParameters::StateOrientation
          */
-        virtual IO::SDK::OrbitalParameters::StateOrientation ComputeOrientation(const IO::SDK::OrbitalParameters::OrbitalParameters &maneuverPoint) = 0;
+        virtual IO::Astrodynamics::OrbitalParameters::StateOrientation ComputeOrientation(const IO::Astrodynamics::OrbitalParameters::OrbitalParameters &maneuverPoint) = 0;
 
     public:
         /**
@@ -163,7 +163,7 @@ namespace IO::SDK::Maneuvers
          * 
          * @param notBeforeEpoch Maneuver must not start before this epoch
          */
-        void Handle(const IO::SDK::Time::TDB &notBeforeEpoch);
+        void Handle(const IO::Astrodynamics::Time::TDB &notBeforeEpoch);
 
         /**
          * @brief Evaluate if maneuver can occurs
@@ -172,36 +172,36 @@ namespace IO::SDK::Maneuvers
          * @return true 
          * @return false 
          */
-        virtual bool CanExecute(const IO::SDK::OrbitalParameters::OrbitalParameters &maneuverPoint) = 0;
+        virtual bool CanExecute(const IO::Astrodynamics::OrbitalParameters::OrbitalParameters &maneuverPoint) = 0;
 
         /**
          * @brief Try to execute maneuver at maneuver point
          * 
          * @param maneuverPoint Maneuver point if it was impulsive
          */
-        IO::SDK::Maneuvers::ManeuverResult TryExecute(const IO::SDK::OrbitalParameters::OrbitalParameters &maneuverPoint);
+        IO::Astrodynamics::Maneuvers::ManeuverResult TryExecute(const IO::Astrodynamics::OrbitalParameters::OrbitalParameters &maneuverPoint);
 
         /**
          * @brief Get the thrust window
          * 
-         * @return IO::SDK::Time::Window<IO::SDK::Time::TDB>* 
+         * @return IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB>*
          */
-        [[nodiscard]] IO::SDK::Time::Window<IO::SDK::Time::TDB> *GetThrustWindow() const;
+        [[nodiscard]] IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB> *GetThrustWindow() const;
 
         /**
          * @brief Get the attitude window
          * 
-         * @return IO::SDK::Time::Window<IO::SDK::Time::TDB>* 
+         * @return IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB>*
          */
-        [[nodiscard]] IO::SDK::Time::Window<IO::SDK::Time::TDB> *GetAttitudeWindow() const;
+        [[nodiscard]] IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB> *GetAttitudeWindow() const;
 
         /**
          * @brief Get the maneuver window.
          * Maneuver window start at burn and end when the maneuver is completed. 
          * 
-         * @return IO::SDK::Time::Window<IO::SDK::Time::TDB>* 
+         * @return IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB>*
          */
-        [[nodiscard]] IO::SDK::Time::Window<IO::SDK::Time::TDB> *GetManeuverWindow() const;
+        [[nodiscard]] IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB> *GetManeuverWindow() const;
 
         /**
          * @brief Get the Fuel Burned in kg
@@ -213,24 +213,24 @@ namespace IO::SDK::Maneuvers
         /**
          * @brief Get the Thrust duration 
          * 
-         * @return IO::SDK::Time::TimeSpan 
+         * @return IO::Astrodynamics::Time::TimeSpan
          */
-        [[nodiscard]] IO::SDK::Time::TimeSpan GetThrustDuration() const;
+        [[nodiscard]] IO::Astrodynamics::Time::TimeSpan GetThrustDuration() const;
 
         /**
          * @brief Get the maneuver delta V
          * 
-         * @return IO::SDK::Math::Vector3D 
+         * @return IO::Astrodynamics::Math::Vector3D
          */
-        [[nodiscard]] IO::SDK::Math::Vector3D GetDeltaV() const;
+        [[nodiscard]] IO::Astrodynamics::Math::Vector3D GetDeltaV() const;
 
         /**
          * @brief Set the Next Maneuver object
          * 
          * @param maneuver 
-         * @return IO::SDK::Maneuvers::ManeuverBase& 
+         * @return IO::Astrodynamics::Maneuvers::ManeuverBase&
          */
-        virtual IO::SDK::Maneuvers::ManeuverBase &SetNextManeuver(IO::SDK::Maneuvers::ManeuverBase &maneuver);
+        virtual IO::Astrodynamics::Maneuvers::ManeuverBase &SetNextManeuver(IO::Astrodynamics::Maneuvers::ManeuverBase &maneuver);
     };
 }
 

@@ -3,7 +3,7 @@
  */
 #ifndef PLANETOGRAPHIC_H
 #define PLANETOGRAPHIC_H
-namespace IO::SDK::Coordinates
+namespace IO::Astrodynamics::Coordinates
 {
 	/**
 	 * @brief Planetographic coordinate

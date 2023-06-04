@@ -4,42 +4,42 @@
 #include<OccultationType.h>
 #include <SDKException.h>
 
-IO::SDK::OccultationType IO::SDK::OccultationType::mFull(std::string("FULL"));
-IO::SDK::OccultationType IO::SDK::OccultationType::mAnnular(std::string("ANNULAR"));
-IO::SDK::OccultationType IO::SDK::OccultationType::mPartial(std::string("PARTIAL"));
-IO::SDK::OccultationType IO::SDK::OccultationType::mAny(std::string("ANY"));
+IO::Astrodynamics::OccultationType IO::Astrodynamics::OccultationType::mFull(std::string("FULL"));
+IO::Astrodynamics::OccultationType IO::Astrodynamics::OccultationType::mAnnular(std::string("ANNULAR"));
+IO::Astrodynamics::OccultationType IO::Astrodynamics::OccultationType::mPartial(std::string("PARTIAL"));
+IO::Astrodynamics::OccultationType IO::Astrodynamics::OccultationType::mAny(std::string("ANY"));
 
-IO::SDK::OccultationType::OccultationType(std::string name) : m_name{std::move(name)}
+IO::Astrodynamics::OccultationType::OccultationType(std::string name) : m_name{std::move(name)}
 {
 
 }
 
-const char *IO::SDK::OccultationType::ToCharArray() const
+const char *IO::Astrodynamics::OccultationType::ToCharArray() const
 {
     return m_name.c_str();
 }
 
-IO::SDK::OccultationType &IO::SDK::OccultationType::Full()
+IO::Astrodynamics::OccultationType &IO::Astrodynamics::OccultationType::Full()
 {
     return mFull;
 }
 
-IO::SDK::OccultationType &IO::SDK::OccultationType::Annular()
+IO::Astrodynamics::OccultationType &IO::Astrodynamics::OccultationType::Annular()
 {
     return mAnnular;
 }
 
-IO::SDK::OccultationType &IO::SDK::OccultationType::Partial()
+IO::Astrodynamics::OccultationType &IO::Astrodynamics::OccultationType::Partial()
 {
     return mPartial;
 }
 
-IO::SDK::OccultationType &IO::SDK::OccultationType::Any()
+IO::Astrodynamics::OccultationType &IO::Astrodynamics::OccultationType::Any()
 {
     return mAny;
 }
 
-IO::SDK::OccultationType IO::SDK::OccultationType::ToOccultationType(const std::string &occultationType)
+IO::Astrodynamics::OccultationType IO::Astrodynamics::OccultationType::ToOccultationType(const std::string &occultationType)
 {
     if (occultationType == OccultationType::mAnnular.ToCharArray())
     {
@@ -55,5 +55,5 @@ IO::SDK::OccultationType IO::SDK::OccultationType::ToOccultationType(const std::
         return mPartial;
     }
 
-    throw IO::SDK::Exception::SDKException("Invalid occultation type : " + occultationType);
+    throw IO::Astrodynamics::Exception::SDKException("Invalid occultation type : " + occultationType);
 }

@@ -3,7 +3,7 @@
  */
 #include<PropagatorException.h>
 
-IO::SDK::Exception::PropagatorException::PropagatorException(const std::string& message):IO::SDK::Exception::SDKException(message)
+IO::Astrodynamics::Exception::PropagatorException::PropagatorException(const std::string& message):IO::Astrodynamics::Exception::SDKException(message)
 {
 
 }

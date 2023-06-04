@@ -7,14 +7,14 @@
 #include <Kernel.h>
 #include <Spacecraft.h>
 
-namespace IO::SDK::Body::Spacecraft
+namespace IO::Astrodynamics::Body::Spacecraft
 {
 	class Spacecraft;
 }
 
-namespace IO::SDK::Kernels
+namespace IO::Astrodynamics::Kernels
 {
-	class SpacecraftClockKernel final : public IO::SDK::Kernels::Kernel
+	class SpacecraftClockKernel final : public IO::Astrodynamics::Kernels::Kernel
 	{
 	private:
 		/**
@@ -22,7 +22,7 @@ namespace IO::SDK::Kernels
 		 * 
 		 */
 		void BuildGenericClockKernel();
-		const IO::SDK::Body::Spacecraft::Spacecraft &m_spacecraft;
+		const IO::Astrodynamics::Body::Spacecraft::Spacecraft &m_spacecraft;
 		const int m_resolution{};
 
 		/**
@@ -32,7 +32,7 @@ namespace IO::SDK::Kernels
 		 * @param resolution in bit 2^n
 		 *
 		 */
-		SpacecraftClockKernel(const IO::SDK::Body::Spacecraft::Spacecraft &spacecraft, int resolution);
+		SpacecraftClockKernel(const IO::Astrodynamics::Body::Spacecraft::Spacecraft &spacecraft, int resolution);
 
 	public:
 		~SpacecraftClockKernel() override = default;
@@ -40,25 +40,25 @@ namespace IO::SDK::Kernels
 		/**
 		 * @brief Get the Coverage Window
 		 * 
-		 * @return IO::SDK::Time::Window<IO::SDK::Time::TDB> 
+		 * @return IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB>
 		 */
-		[[nodiscard]] IO::SDK::Time::Window<IO::SDK::Time::TDB> GetCoverageWindow() const override;
+		[[nodiscard]] IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB> GetCoverageWindow() const override;
 
 		/**
 		 * @brief Convert to TDB
 		 * 
 		 * @param clock 
-		 * @return IO::SDK::Time::TDB 
+		 * @return IO::Astrodynamics::Time::TDB
 		 */
-		[[nodiscard]] IO::SDK::Time::TDB ConvertToTDB(const std::string &clock) const;
+		[[nodiscard]] IO::Astrodynamics::Time::TDB ConvertToTDB(const std::string &clock) const;
 
 		/**
 		 * @brief Convert to TDB
 		 * 
 		 * @param encodedClock 
-		 * @return IO::SDK::Time::TDB 
+		 * @return IO::Astrodynamics::Time::TDB
 		 */
-		[[nodiscard]] IO::SDK::Time::TDB ConvertToTDB(double encodedClock) const;
+		[[nodiscard]] IO::Astrodynamics::Time::TDB ConvertToTDB(double encodedClock) const;
 
 		/**
 		 * @brief Convert to Spacecraft clock
@@ -66,7 +66,7 @@ namespace IO::SDK::Kernels
 		 * @param epoch 
 		 * @return std::string 
 		 */
-		[[nodiscard]] std::string ConvertToClockString(const IO::SDK::Time::TDB &epoch) const;
+		[[nodiscard]] std::string ConvertToClockString(const IO::Astrodynamics::Time::TDB &epoch) const;
 
 		/**
 		 * @brief Convert to enoded clock
@@ -74,8 +74,8 @@ namespace IO::SDK::Kernels
 		 * @param epoch 
 		 * @return double 
 		 */
-		[[nodiscard]] double ConvertToEncodedClock(const IO::SDK::Time::TDB &epoch) const;
-		[[nodiscard]] static double ConvertToEncodedClock(int spacecraftId, const IO::SDK::Time::TDB &epoch);
+		[[nodiscard]] double ConvertToEncodedClock(const IO::Astrodynamics::Time::TDB &epoch) const;
+		[[nodiscard]] static double ConvertToEncodedClock(int spacecraftId, const IO::Astrodynamics::Time::TDB &epoch);
 
 		/**
 		 * @brief Get the Resolution
@@ -103,7 +103,7 @@ namespace IO::SDK::Kernels
 
 
 
-		friend class IO::SDK::Body::Spacecraft::Spacecraft;
+		friend class IO::Astrodynamics::Body::Spacecraft::Spacecraft;
 	};
 }
 

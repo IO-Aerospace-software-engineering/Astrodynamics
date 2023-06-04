@@ -7,7 +7,7 @@
 
 #include <WindowDTO.h>
 
-namespace IO::SDK::API::DTO
+namespace IO::Astrodynamics::API::DTO
 {
     struct DistanceConstraintDTO
     {
@@ -17,7 +17,7 @@ namespace IO::SDK::API::DTO
         double value{0.0};
         const char *aberration{};
         double initialStepSize{0.0};
-        IO::SDK::API::DTO::WindowDTO windows[1000]{};
+        IO::Astrodynamics::API::DTO::WindowDTO windows[1000]{};
     };
 }
 #endif //IOSDK_DISTANCECONSTRAINTDTO_H

@@ -8,13 +8,13 @@
 #include <CelestialBody.h>
 #include <StateVector.h>
 
-namespace IO::SDK::Integrators::Forces
+namespace IO::Astrodynamics::Integrators::Forces
 {
     /**
      * @brief Gravity force
      * 
      */
-    class GravityForce : public IO::SDK::Integrators::Forces::Force
+    class GravityForce : public IO::Astrodynamics::Integrators::Forces::Force
     {
     private:
         /* data */
@@ -31,9 +31,9 @@ namespace IO::SDK::Integrators::Forces
          * 
          * @param body 
          * @param stateVector 
-         * @return IO::SDK::Math::Vector3D 
+         * @return IO::Astrodynamics::Math::Vector3D
          */
-        IO::SDK::Math::Vector3D Apply(const IO::SDK::Body::Body &body, const IO::SDK::OrbitalParameters::StateVector &stateVector) override;
+        IO::Astrodynamics::Math::Vector3D Apply(const IO::Astrodynamics::Body::Body &body, const IO::Astrodynamics::OrbitalParameters::StateVector &stateVector) override;
     };
     /**
      * @brief 
@@ -42,9 +42,9 @@ namespace IO::SDK::Integrators::Forces
      * @param m2 
      * @param distance 
      * @param u12 
-     * @return IO::SDK::Math::Vector3D 
+     * @return IO::Astrodynamics::Math::Vector3D
      */
-    IO::SDK::Math::Vector3D ComputeForce(double m1, double m2, double distance, const IO::SDK::Math::Vector3D &u12);
+    IO::Astrodynamics::Math::Vector3D ComputeForce(double m1, double m2, double distance, const IO::Astrodynamics::Math::Vector3D &u12);
 
 }
 

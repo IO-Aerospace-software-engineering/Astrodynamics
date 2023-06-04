@@ -7,10 +7,10 @@
 
 #include <DateTime.h>
 
-namespace IO::SDK::Time
+namespace IO::Astrodynamics::Time
 {
     class TDB;
-    class UTC final: public IO::SDK::Time::DateTime
+    class UTC final: public IO::Astrodynamics::Time::DateTime
     {
     private:
         /* data */
@@ -20,15 +20,15 @@ namespace IO::SDK::Time
         explicit UTC(const std::string& string);
         ~UTC() override = default;
 
-        [[nodiscard]] IO::SDK::Time::UTC Add(const IO::SDK::Time::TimeSpan &timespan) const;
+        [[nodiscard]] IO::Astrodynamics::Time::UTC Add(const IO::Astrodynamics::Time::TimeSpan &timespan) const;
 
         /**
          * @brief 
          * 
          * @param timespan 
-         * @return IO::SDK::Time::UTC 
+         * @return IO::Astrodynamics::Time::UTC
          */
-        IO::SDK::Time::UTC operator+(const IO::SDK::Time::TimeSpan &timespan) const;
+        IO::Astrodynamics::Time::UTC operator+(const IO::Astrodynamics::Time::TimeSpan &timespan) const;
 
         /**
          * @brief Get UTC string
@@ -40,6 +40,6 @@ namespace IO::SDK::Time
         [[nodiscard]] TDB ToTDB() const;
     };
 
-} // namespace IO::SDK::Time
+} // namespace IO::Astrodynamics::Time
 
 #endif

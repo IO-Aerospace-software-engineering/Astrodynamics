@@ -6,7 +6,7 @@
 #define IOSDK_INSTRUMENTDTO_H
 #include <Vector3DDTO.h>
 
-namespace IO::SDK::API::DTO
+namespace IO::Astrodynamics::API::DTO
 {
     struct InstrumentDTO
     {
@@ -26,7 +26,7 @@ namespace IO::SDK::API::DTO
 
         double fieldOfView{};
         double crossAngle{};
-//        IO::SDK::API::DTO::InFieldOfViewConstraintDTO inFieldOfViews[10];
+//        IO::Astrodynamics::API::DTO::InFieldOfViewConstraintDTO inFieldOfViews[10];
     };
 
 }

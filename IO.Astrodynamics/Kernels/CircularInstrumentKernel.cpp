@@ -3,7 +3,7 @@
  */
 #include <CircularInstrumentKernel.h>
 
-IO::SDK::Kernels::CircularInstrumentKernel::CircularInstrumentKernel(const IO::SDK::Instruments::Instrument& instrument, const IO::SDK::Math::Vector3D& boresight, const IO::SDK::Math::Vector3D& refVector, const double angle)
+IO::Astrodynamics::Kernels::CircularInstrumentKernel::CircularInstrumentKernel(const IO::Astrodynamics::Instruments::Instrument& instrument, const IO::Astrodynamics::Math::Vector3D& boresight, const IO::Astrodynamics::Math::Vector3D& refVector, const double angle)
 	:InstrumentKernel(instrument, boresight, refVector, angle)
 {
 	BuildKernel();

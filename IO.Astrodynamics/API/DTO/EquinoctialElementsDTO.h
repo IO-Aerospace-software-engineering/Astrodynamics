@@ -6,7 +6,7 @@
 #define IOSDK_EQUINOCTIALELEMENTSDTO_H
 
 
-namespace IO::SDK::API::DTO
+namespace IO::Astrodynamics::API::DTO
 {
     struct EquinoctialElementsDTO
     {

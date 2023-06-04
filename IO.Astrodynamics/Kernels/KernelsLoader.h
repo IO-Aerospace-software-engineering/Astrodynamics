@@ -6,7 +6,7 @@
 
 #include <string>
 
-namespace IO::SDK::Kernels
+namespace IO::Astrodynamics::Kernels
 {
 	/**
 	 * @brief 

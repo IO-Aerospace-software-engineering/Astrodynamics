@@ -6,30 +6,30 @@
 
 using namespace std::chrono_literals;
 
-IO::SDK::Propagators::Propagator::Propagator(const IO::SDK::Body::Spacecraft::Spacecraft &spacecraft, const IO::SDK::Integrators::IntegratorBase &integrator,
-                                             const IO::SDK::Time::Window<IO::SDK::Time::TDB> &window)
-        : m_spacecraft{spacecraft}, m_integrator{const_cast<IO::SDK::Integrators::IntegratorBase &>(integrator)}, m_window{window}
+IO::Astrodynamics::Propagators::Propagator::Propagator(const IO::Astrodynamics::Body::Spacecraft::Spacecraft &spacecraft, const IO::Astrodynamics::Integrators::IntegratorBase &integrator,
+                                             const IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB> &window)
+        : m_spacecraft{spacecraft}, m_integrator{const_cast<IO::Astrodynamics::Integrators::IntegratorBase &>(integrator)}, m_window{window}
 {
     m_StateOrientations.emplace_back();
 }
 
-void IO::SDK::Propagators::Propagator::SetStandbyManeuver(IO::SDK::Maneuvers::ManeuverBase *standbyManeuver)
+void IO::Astrodynamics::Propagators::Propagator::SetStandbyManeuver(IO::Astrodynamics::Maneuvers::ManeuverBase *standbyManeuver)
 {
     m_standbyManeuver = standbyManeuver;
 }
 
-void IO::SDK::Propagators::Propagator::Propagate()
+void IO::Astrodynamics::Propagators::Propagator::Propagate()
 {
     //Initialize state vector
-    IO::SDK::OrbitalParameters::StateVector stateVector{m_spacecraft.GetOrbitalParametersAtEpoch()->ToStateVector(m_window.GetStartDate())};
+    IO::Astrodynamics::OrbitalParameters::StateVector stateVector{m_spacecraft.GetOrbitalParametersAtEpoch()->ToStateVector(m_window.GetStartDate())};
     m_stateVectors.push_back(stateVector);
 
     // Initial alignment, Spacecraft back points toward the center of motion
-    IO::SDK::OrbitalParameters::StateOrientation attitude(stateVector.GetPosition().Normalize().To(m_spacecraft.Front), IO::SDK::Math::Vector3D(0.0, 0.0, 0.0),
+    IO::Astrodynamics::OrbitalParameters::StateOrientation attitude(stateVector.GetPosition().Normalize().To(m_spacecraft.Front), IO::Astrodynamics::Math::Vector3D(0.0, 0.0, 0.0),
                                                           stateVector.GetEpoch(), stateVector.GetFrame());
 
     // Initial alignment, Spacecraft is aligned to ICRF frame
-//    IO::SDK::OrbitalParameters::StateOrientation initialAttitude(IO::SDK::Math::Quaternion(1.0, 0.0, 0.0, 0.0), IO::SDK::Math::Vector3D::Zero, stateVector.GetEpoch(),
+//    IO::Astrodynamics::OrbitalParameters::StateOrientation initialAttitude(IO::Astrodynamics::Math::Quaternion(1.0, 0.0, 0.0, 0.0), IO::Astrodynamics::Math::Vector3D::Zero, stateVector.GetEpoch(),
 //                                                                 Frames::InertialFrames::GetICRF());
     AddStateOrientation(attitude);
 
@@ -42,7 +42,7 @@ void IO::SDK::Propagators::Propagator::Propagate()
             auto result = m_standbyManeuver->TryExecute(stateVector);
             if (!result.IsValid() && !result.CanRetryLater())
             {
-                throw IO::SDK::Exception::PropagatorException("Maneuver can't be executed for this reason : " + result.GetMessage());
+                throw IO::Astrodynamics::Exception::PropagatorException("Maneuver can't be executed for this reason : " + result.GetMessage());
             }
         }
 
@@ -58,11 +58,11 @@ void IO::SDK::Propagators::Propagator::Propagate()
     //Add the latest known orientation at the end of kernel
     auto latestAttitude = m_StateOrientations.back().back();
     AddStateOrientation(
-            IO::SDK::OrbitalParameters::StateOrientation(latestAttitude.GetQuaternion(), IO::SDK::Math::Vector3D::Zero, m_window.GetEndDate(), latestAttitude.GetFrame()));
+            IO::Astrodynamics::OrbitalParameters::StateOrientation(latestAttitude.GetQuaternion(), IO::Astrodynamics::Math::Vector3D::Zero, m_window.GetEndDate(), latestAttitude.GetFrame()));
     m_spacecraft.WriteOrientations(m_StateOrientations);
 }
 
-const IO::SDK::OrbitalParameters::StateVector *IO::SDK::Propagators::Propagator::FindNearestLowerStateVector(const IO::SDK::Time::TDB &epoch) const
+const IO::Astrodynamics::OrbitalParameters::StateVector *IO::Astrodynamics::Propagators::Propagator::FindNearestLowerStateVector(const IO::Astrodynamics::Time::TDB &epoch) const
 {
     if (m_stateVectors.empty())
     {
@@ -82,7 +82,7 @@ const IO::SDK::OrbitalParameters::StateVector *IO::SDK::Propagators::Propagator:
     return &(*it);
 }
 
-void IO::SDK::Propagators::Propagator::AddStateVector(const IO::SDK::OrbitalParameters::StateVector &sv)
+void IO::Astrodynamics::Propagators::Propagator::AddStateVector(const IO::Astrodynamics::OrbitalParameters::StateVector &sv)
 {
     //Check if state vector to add is after previous state vector
     if (m_stateVectors.empty() || m_stateVectors.back().GetEpoch() < sv.GetEpoch())
@@ -91,7 +91,7 @@ void IO::SDK::Propagators::Propagator::AddStateVector(const IO::SDK::OrbitalPara
     }
 }
 
-void IO::SDK::Propagators::Propagator::AddStateOrientation(const IO::SDK::OrbitalParameters::StateOrientation &so)
+void IO::Astrodynamics::Propagators::Propagator::AddStateOrientation(const IO::Astrodynamics::OrbitalParameters::StateOrientation &so)
 {
     if (!m_StateOrientations.empty() && !m_StateOrientations.back().empty() && m_StateOrientations.back().back().GetEpoch() >= so.GetEpoch())
     {
@@ -101,7 +101,7 @@ void IO::SDK::Propagators::Propagator::AddStateOrientation(const IO::SDK::Orbita
     m_StateOrientations.back().push_back(so);
 }
 
-void IO::SDK::Propagators::Propagator::EraseDataFromEpochToEnd(const IO::SDK::Time::DateTime &epoch)
+void IO::Astrodynamics::Propagators::Propagator::EraseDataFromEpochToEnd(const IO::Astrodynamics::Time::DateTime &epoch)
 {
     if (m_stateVectors.empty())
     {
@@ -118,12 +118,12 @@ void IO::SDK::Propagators::Propagator::EraseDataFromEpochToEnd(const IO::SDK::Ti
     }
 }
 
-const std::vector<IO::SDK::OrbitalParameters::StateVector> &IO::SDK::Propagators::Propagator::GetStateVectors() const
+const std::vector<IO::Astrodynamics::OrbitalParameters::StateVector> &IO::Astrodynamics::Propagators::Propagator::GetStateVectors() const
 {
     return m_stateVectors;
 }
 
-const IO::SDK::OrbitalParameters::StateOrientation *IO::SDK::Propagators::Propagator::GetLatestStateOrientation() const
+const IO::Astrodynamics::OrbitalParameters::StateOrientation *IO::Astrodynamics::Propagators::Propagator::GetLatestStateOrientation() const
 {
     if (m_StateOrientations.empty() || m_StateOrientations.back().empty())
     {
@@ -133,12 +133,12 @@ const IO::SDK::OrbitalParameters::StateOrientation *IO::SDK::Propagators::Propag
     return &m_StateOrientations.back().back();
 }
 
-const std::vector<std::vector<IO::SDK::OrbitalParameters::StateOrientation>> &IO::SDK::Propagators::Propagator::GetStateOrientations() const
+const std::vector<std::vector<IO::Astrodynamics::OrbitalParameters::StateOrientation>> &IO::Astrodynamics::Propagators::Propagator::GetStateOrientations() const
 {
     return m_StateOrientations;
 }
 
-void IO::SDK::Propagators::Propagator::ClearStateOrientations()
+void IO::Astrodynamics::Propagators::Propagator::ClearStateOrientations()
 {
     for (auto so: m_StateOrientations)
     {

@@ -5,53 +5,53 @@
 
 #include <SDKException.h>
 
-IO::SDK::CoordinateSystem IO::SDK::CoordinateSystem::mRectangular(std::string("RECTANGULAR"));
-IO::SDK::CoordinateSystem IO::SDK::CoordinateSystem::mLatitudinal(std::string("LATITUDINAL"));
-IO::SDK::CoordinateSystem IO::SDK::CoordinateSystem::mRA_DEC(std::string("RA/DEC"));
-IO::SDK::CoordinateSystem IO::SDK::CoordinateSystem::mSpherical(std::string("SPHERICAL"));
-IO::SDK::CoordinateSystem IO::SDK::CoordinateSystem::mCylindrical(std::string("CYLINDRICAL"));
-IO::SDK::CoordinateSystem IO::SDK::CoordinateSystem::mGeodetic(std::string("GEODETIC"));
-IO::SDK::CoordinateSystem IO::SDK::CoordinateSystem::mPlanetographic(std::string("PLANETOGRAPHIC"));
+IO::Astrodynamics::CoordinateSystem IO::Astrodynamics::CoordinateSystem::mRectangular(std::string("RECTANGULAR"));
+IO::Astrodynamics::CoordinateSystem IO::Astrodynamics::CoordinateSystem::mLatitudinal(std::string("LATITUDINAL"));
+IO::Astrodynamics::CoordinateSystem IO::Astrodynamics::CoordinateSystem::mRA_DEC(std::string("RA/DEC"));
+IO::Astrodynamics::CoordinateSystem IO::Astrodynamics::CoordinateSystem::mSpherical(std::string("SPHERICAL"));
+IO::Astrodynamics::CoordinateSystem IO::Astrodynamics::CoordinateSystem::mCylindrical(std::string("CYLINDRICAL"));
+IO::Astrodynamics::CoordinateSystem IO::Astrodynamics::CoordinateSystem::mGeodetic(std::string("GEODETIC"));
+IO::Astrodynamics::CoordinateSystem IO::Astrodynamics::CoordinateSystem::mPlanetographic(std::string("PLANETOGRAPHIC"));
 
-IO::SDK::CoordinateSystem::CoordinateSystem(std::string name) : m_name{std::move(name)}
+IO::Astrodynamics::CoordinateSystem::CoordinateSystem(std::string name) : m_name{std::move(name)}
 {
 }
 
-const char *IO::SDK::CoordinateSystem::ToCharArray() const
+const char *IO::Astrodynamics::CoordinateSystem::ToCharArray() const
 {
     return m_name.c_str();
 }
 
-IO::SDK::CoordinateSystem &IO::SDK::CoordinateSystem::Rectangular()
+IO::Astrodynamics::CoordinateSystem &IO::Astrodynamics::CoordinateSystem::Rectangular()
 {
     return mRectangular;
 }
-IO::SDK::CoordinateSystem &IO::SDK::CoordinateSystem::Latitudinal()
+IO::Astrodynamics::CoordinateSystem &IO::Astrodynamics::CoordinateSystem::Latitudinal()
 {
     return mLatitudinal;
 }
-IO::SDK::CoordinateSystem &IO::SDK::CoordinateSystem::RA_DEC()
+IO::Astrodynamics::CoordinateSystem &IO::Astrodynamics::CoordinateSystem::RA_DEC()
 {
     return mRA_DEC;
 }
-IO::SDK::CoordinateSystem &IO::SDK::CoordinateSystem::Spherical()
+IO::Astrodynamics::CoordinateSystem &IO::Astrodynamics::CoordinateSystem::Spherical()
 {
     return mSpherical;
 }
-IO::SDK::CoordinateSystem &IO::SDK::CoordinateSystem::Cylindrical()
+IO::Astrodynamics::CoordinateSystem &IO::Astrodynamics::CoordinateSystem::Cylindrical()
 {
     return mCylindrical;
 }
-IO::SDK::CoordinateSystem &IO::SDK::CoordinateSystem::Geodetic()
+IO::Astrodynamics::CoordinateSystem &IO::Astrodynamics::CoordinateSystem::Geodetic()
 {
     return mGeodetic;
 }
-IO::SDK::CoordinateSystem &IO::SDK::CoordinateSystem::Planetographic()
+IO::Astrodynamics::CoordinateSystem &IO::Astrodynamics::CoordinateSystem::Planetographic()
 {
     return mPlanetographic;
 }
 
-IO::SDK::CoordinateSystem IO::SDK::CoordinateSystem::ToCoordinateSystemType(const std::string &coordinateSystemType)
+IO::Astrodynamics::CoordinateSystem IO::Astrodynamics::CoordinateSystem::ToCoordinateSystemType(const std::string &coordinateSystemType)
 {
     if (coordinateSystemType == CoordinateSystem::mCylindrical.ToCharArray())
     {
@@ -76,5 +76,5 @@ IO::SDK::CoordinateSystem IO::SDK::CoordinateSystem::ToCoordinateSystemType(cons
         return mRA_DEC;
     }
 
-    throw IO::SDK::Exception::SDKException("Invalid coordinate system type : " + coordinateSystemType);
+    throw IO::Astrodynamics::Exception::SDKException("Invalid coordinate system type : " + coordinateSystemType);
 }

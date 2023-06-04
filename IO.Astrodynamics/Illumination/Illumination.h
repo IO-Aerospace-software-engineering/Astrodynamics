@@ -9,17 +9,17 @@
 
 #include <utility>
 
-namespace IO::SDK::Illumination
+namespace IO::Astrodynamics::Illumination
 {
 	class Illumination final
 	{
 	private:
 		
-		const IO::SDK::Math::Vector3D m_observerToSurfacePoint{};
+		const IO::Astrodynamics::Math::Vector3D m_observerToSurfacePoint{};
 		const double m_phaseAngle{};
 		const double m_incidence{};
 		const double m_emission{};
-		const IO::SDK::Time::TDB m_targetEpoch;
+		const IO::Astrodynamics::Time::TDB m_targetEpoch;
 
 	public:
 		/**
@@ -31,15 +31,15 @@ namespace IO::SDK::Illumination
 		 * @param emission 
 		 * @param targetEpoch 
 		 */
-		Illumination(const IO::SDK::Math::Vector3D& observerToSurfacePoint, double phaseAngle, double incidence, double emission, IO::SDK::Time::TDB  targetEpoch)
+		Illumination(const IO::Astrodynamics::Math::Vector3D& observerToSurfacePoint, double phaseAngle, double incidence, double emission, IO::Astrodynamics::Time::TDB  targetEpoch)
 			:m_observerToSurfacePoint{ observerToSurfacePoint }, m_phaseAngle{ phaseAngle }, m_incidence{ incidence }, m_emission{ emission }, m_targetEpoch{std::move( targetEpoch )} {};
 
 		/**
 		 * @brief Get the Epoch
 		 * 
-		 * @return IO::SDK::Time::TDB 
+		 * @return IO::Astrodynamics::Time::TDB
 		 */
-		[[nodiscard]] inline IO::SDK::Time::TDB GetEpoch() const
+		[[nodiscard]] inline IO::Astrodynamics::Time::TDB GetEpoch() const
 		{
 			return m_targetEpoch;
 		}
@@ -47,9 +47,9 @@ namespace IO::SDK::Illumination
 		/**
 		 * @brief Get the Observer To Surface Point
 		 * 
-		 * @return const IO::SDK::Math::Vector3D& 
+		 * @return const IO::Astrodynamics::Math::Vector3D&
 		 */
-		[[nodiscard]] inline const IO::SDK::Math::Vector3D& GetObserverToSurfacePoint() const
+		[[nodiscard]] inline const IO::Astrodynamics::Math::Vector3D& GetObserverToSurfacePoint() const
 		{
 			return m_observerToSurfacePoint;
 		}

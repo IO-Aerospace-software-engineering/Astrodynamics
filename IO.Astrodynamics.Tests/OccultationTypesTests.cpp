@@ -4,8 +4,8 @@
 TEST(OccultationTypes, Values)
 {
     
-    ASSERT_STREQ("ANNULAR", IO::SDK::OccultationType::Annular().ToCharArray());
-    ASSERT_STREQ("PARTIAL", IO::SDK::OccultationType::Partial().ToCharArray());
-    ASSERT_STREQ("FULL", IO::SDK::OccultationType::Full().ToCharArray());
-    ASSERT_STREQ("ANY", IO::SDK::OccultationType::Any().ToCharArray());
+    ASSERT_STREQ("ANNULAR", IO::Astrodynamics::OccultationType::Annular().ToCharArray());
+    ASSERT_STREQ("PARTIAL", IO::Astrodynamics::OccultationType::Partial().ToCharArray());
+    ASSERT_STREQ("FULL", IO::Astrodynamics::OccultationType::Full().ToCharArray());
+    ASSERT_STREQ("ANY", IO::Astrodynamics::OccultationType::Any().ToCharArray());
 }

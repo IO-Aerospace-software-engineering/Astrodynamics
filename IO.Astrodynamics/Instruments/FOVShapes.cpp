@@ -4,9 +4,9 @@
 #include <FOVShapes.h>
 #include <map>
 
-std::string IO::SDK::Instruments::FOVShapes::ToString(const FOVShapeEnum e)
+std::string IO::Astrodynamics::Instruments::FOVShapes::ToString(const FOVShapeEnum e)
 {
-    const std::map<IO::SDK::Instruments::FOVShapeEnum, const char *> FOVStrings{
+    const std::map<IO::Astrodynamics::Instruments::FOVShapeEnum, const char *> FOVStrings{
             {FOVShapeEnum::Circular,    "CIRCLE"},
             {FOVShapeEnum::Elliptical,  "ELLIPSE"},
             {FOVShapeEnum::Rectangular, "RECTANGLE"}

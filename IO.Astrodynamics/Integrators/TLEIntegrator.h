@@ -10,16 +10,16 @@
 #include <Body.h>
 #include<Macros.h>
 
-namespace IO::SDK::Integrators
+namespace IO::Astrodynamics::Integrators
 {
     /**
      * @brief 
      * 
      */
-    class TLEIntegrator final : public IO::SDK::Integrators::IntegratorBase
+    class TLEIntegrator final : public IO::Astrodynamics::Integrators::IntegratorBase
     {
     private:
-        const IO::SDK::OrbitalParameters::TLE &m_tle;
+        const IO::Astrodynamics::OrbitalParameters::TLE &m_tle;
 
     public:
         /**
@@ -28,7 +28,7 @@ namespace IO::SDK::Integrators
          * @param tle 
          * @param stepDuration 
          */
-        TLEIntegrator(const IO::SDK::OrbitalParameters::TLE &tle, const IO::SDK::Time::TimeSpan &stepDuration);
+        TLEIntegrator(const IO::Astrodynamics::OrbitalParameters::TLE &tle, const IO::Astrodynamics::Time::TimeSpan &stepDuration);
         ~TLEIntegrator();
 
         /**
@@ -36,9 +36,9 @@ namespace IO::SDK::Integrators
          * 
          * @param body 
          * @param stateVector 
-         * @return IO::SDK::OrbitalParameters::StateVector 
+         * @return IO::Astrodynamics::OrbitalParameters::StateVector
          */
-        IO::SDK::OrbitalParameters::StateVector Integrate(const IO::SDK::Body::Body &body, const IO::SDK::OrbitalParameters::StateVector &stateVector) override;
+        IO::Astrodynamics::OrbitalParameters::StateVector Integrate(const IO::Astrodynamics::Body::Body &body, const IO::Astrodynamics::OrbitalParameters::StateVector &stateVector) override;
     };
 
 }

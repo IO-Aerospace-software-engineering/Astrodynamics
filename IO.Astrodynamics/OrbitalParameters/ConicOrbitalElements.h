@@ -7,13 +7,13 @@
 #include<Constants.h>
 #include<StateVector.h>
 
-namespace IO::SDK::OrbitalParameters
+namespace IO::Astrodynamics::OrbitalParameters
 {
     // class StateVector;
     /// <summary>
     /// Conic orbital elements
     /// </summary>
-    class ConicOrbitalElements final : public IO::SDK::OrbitalParameters::OrbitalParameters
+    class ConicOrbitalElements final : public IO::Astrodynamics::OrbitalParameters::OrbitalParameters
     {
     private:
         double m_perifocalDistance{};
@@ -23,32 +23,32 @@ namespace IO::SDK::OrbitalParameters
         double m_periapsisArgument{};
         double m_meanAnomaly{};
         double m_trueAnomaly{};
-        IO::SDK::Time::TimeSpan m_orbitalPeriod;
+        IO::Astrodynamics::Time::TimeSpan m_orbitalPeriod;
         double m_semiMajorAxis{};
 
 
     public:
 
         ConicOrbitalElements(
-                const std::shared_ptr<IO::SDK::Body::CelestialBody> &centerOfMotion,
+                const std::shared_ptr<IO::Astrodynamics::Body::CelestialBody> &centerOfMotion,
                 double perifocalDistance,
                 double eccentricity,
                 double inclination,
                 double ascendingNodeLongitude,
                 double periapsisArgument,
                 double meanAnomaly,
-                const IO::SDK::Time::TDB &epoch,
-                const IO::SDK::Frames::Frames &frame);
+                const IO::Astrodynamics::Time::TDB &epoch,
+                const IO::Astrodynamics::Frames::Frames &frame);
 
         /// <summary>
         /// Instanciate conical elements from spice elements
         /// </summary>
         /// <param name="centerOfMotion"></param>
         /// <param name="spiceElements"></param>
-        ConicOrbitalElements(const std::shared_ptr<IO::SDK::Body::CelestialBody> &centerOfMotion, const double spiceElements[SPICE_OSCLTX_NELTS],
-                             const IO::SDK::Frames::Frames &frame);
+        ConicOrbitalElements(const std::shared_ptr<IO::Astrodynamics::Body::CelestialBody> &centerOfMotion, const double spiceElements[SPICE_OSCLTX_NELTS],
+                             const IO::Astrodynamics::Frames::Frames &frame);
 
-        explicit ConicOrbitalElements(const IO::SDK::OrbitalParameters::StateVector &stateVector);
+        explicit ConicOrbitalElements(const IO::Astrodynamics::OrbitalParameters::StateVector &stateVector);
 
         ConicOrbitalElements(const ConicOrbitalElements &conicOrbitalElements) = default;
 
@@ -112,20 +112,20 @@ namespace IO::SDK::OrbitalParameters
         /// Get the orbital period
         /// </summary>
         /// <returns></returns>
-        [[nodiscard]] IO::SDK::Time::TimeSpan GetPeriod() const override;
+        [[nodiscard]] IO::Astrodynamics::Time::TimeSpan GetPeriod() const override;
 
         /// <summary>
         /// Get the state vector at epoch
         /// </summary>
         /// <param name="epoch"></param>
         /// <returns></returns>
-        [[nodiscard]] IO::SDK::OrbitalParameters::StateVector ToStateVector(const IO::SDK::Time::TDB &epoch) const override;
+        [[nodiscard]] IO::Astrodynamics::OrbitalParameters::StateVector ToStateVector(const IO::Astrodynamics::Time::TDB &epoch) const override;
 
         /// <summary>
         /// Get the specific angular momentum
         /// </summary>
         /// <returns></returns>
-        [[nodiscard]] IO::SDK::Math::Vector3D GetSpecificAngularMomentum() const override;
+        [[nodiscard]] IO::Astrodynamics::Math::Vector3D GetSpecificAngularMomentum() const override;
 
         /// <summary>
         /// Get specific orbital energy
@@ -133,7 +133,7 @@ namespace IO::SDK::OrbitalParameters
         /// <returns></returns>
         [[nodiscard]] double GetSpecificOrbitalEnergy() const override;
 
-        using IO::SDK::OrbitalParameters::OrbitalParameters::ToStateVector;
+        using IO::Astrodynamics::OrbitalParameters::OrbitalParameters::ToStateVector;
     };
 }
 #endif

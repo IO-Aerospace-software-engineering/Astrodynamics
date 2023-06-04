@@ -7,7 +7,7 @@
 #include <SDKException.h>
 #include <string>
 
-namespace IO::SDK::Exception
+namespace IO::Astrodynamics::Exception
 {
     /**
      * @brief 
@@ -21,6 +21,6 @@ namespace IO::SDK::Exception
         explicit TooEarlyManeuverException(const std::string &message);
     };
 
-} // namespace IO::SDK::Exception
+} // namespace IO::Astrodynamics::Exception
 
 #endif //TOO_EARLY_MANEUEVR_EXCEPTION

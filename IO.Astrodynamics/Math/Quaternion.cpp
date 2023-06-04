@@ -5,14 +5,14 @@
 #include <cmath>
 #include <SpiceUsr.h>
 
-IO::SDK::Math::Quaternion::Quaternion()
+IO::Astrodynamics::Math::Quaternion::Quaternion()
 = default;
 
-IO::SDK::Math::Quaternion::Quaternion(double q0, double q1, double q2, double q3) : m_q0{q0}, m_q1{q1}, m_q2{q2}, m_q3{q3}
+IO::Astrodynamics::Math::Quaternion::Quaternion(double q0, double q1, double q2, double q3) : m_q0{q0}, m_q1{q1}, m_q2{q2}, m_q3{q3}
 {
 }
 
-IO::SDK::Math::Quaternion::Quaternion(const IO::SDK::Math::Vector3D &axis, const double angle)
+IO::Astrodynamics::Math::Quaternion::Quaternion(const IO::Astrodynamics::Math::Vector3D &axis, const double angle)
 {
 	double c{std::cos(angle / 2)};
 	double s{std::sin(angle / 2)};
@@ -22,7 +22,7 @@ IO::SDK::Math::Quaternion::Quaternion(const IO::SDK::Math::Vector3D &axis, const
 	const_cast<double &>(m_q3) = s * axis.GetZ();
 }
 
-IO::SDK::Math::Quaternion::Quaternion(const IO::SDK::Math::Matrix &mtx)
+IO::Astrodynamics::Math::Quaternion::Quaternion(const IO::Astrodynamics::Math::Matrix &mtx)
 {
 	SpiceDouble m[3][3]{};
 
@@ -43,17 +43,17 @@ IO::SDK::Math::Quaternion::Quaternion(const IO::SDK::Math::Matrix &mtx)
 	const_cast<double &>(m_q3) = q[3];
 }
 
-IO::SDK::Math::Quaternion::Quaternion(const IO::SDK::Math::Quaternion &quaternion):Quaternion(quaternion.GetQ0(),quaternion.GetQ1(),quaternion.GetQ2(),quaternion.GetQ3())
+IO::Astrodynamics::Math::Quaternion::Quaternion(const IO::Astrodynamics::Math::Quaternion &quaternion):Quaternion(quaternion.GetQ0(),quaternion.GetQ1(),quaternion.GetQ2(),quaternion.GetQ3())
 {
 
 }
 
-IO::SDK::Math::Quaternion IO::SDK::Math::Quaternion::Multiply(const Quaternion &quaternion) const
+IO::Astrodynamics::Math::Quaternion IO::Astrodynamics::Math::Quaternion::Multiply(const Quaternion &quaternion) const
 {
 	return *this * quaternion;
 }
 
-IO::SDK::Math::Quaternion IO::SDK::Math::Quaternion::operator*(const Quaternion &quaternion) const
+IO::Astrodynamics::Math::Quaternion IO::Astrodynamics::Math::Quaternion::operator*(const Quaternion &quaternion) const
 {
 	ConstSpiceDouble _this[4] = {m_q0, m_q1, m_q2, m_q3};
 	ConstSpiceDouble other[4] = {quaternion.m_q0, quaternion.m_q1, quaternion.m_q2, quaternion.m_q3};
@@ -62,7 +62,7 @@ IO::SDK::Math::Quaternion IO::SDK::Math::Quaternion::operator*(const Quaternion 
 	return Quaternion{res[0], res[1], res[2], res[3]};
 }
 
-IO::SDK::Math::Matrix IO::SDK::Math::Quaternion::GetMatrix() const
+IO::Astrodynamics::Math::Matrix IO::Astrodynamics::Math::Quaternion::GetMatrix() const
 {
 	SpiceDouble mtx[3][3];
 	ConstSpiceDouble q[4] = {m_q0, m_q1, m_q2, m_q3};
@@ -82,26 +82,26 @@ IO::SDK::Math::Matrix IO::SDK::Math::Quaternion::GetMatrix() const
 		}
 	}
 
-	return IO::SDK::Math::Matrix{3, 3, exportMtx};
+	return IO::Astrodynamics::Math::Matrix{3, 3, exportMtx};
 }
 
-double IO::SDK::Math::Quaternion::Magnitude() const
+double IO::Astrodynamics::Math::Quaternion::Magnitude() const
 {
 	return std::sqrt(m_q0 * m_q0 + m_q1 * m_q1 + m_q2 * m_q2 + m_q3 * m_q3);
 }
 
-IO::SDK::Math::Quaternion IO::SDK::Math::Quaternion::Normalize() const
+IO::Astrodynamics::Math::Quaternion IO::Astrodynamics::Math::Quaternion::Normalize() const
 {
 	auto magnitude = Magnitude();
-	return IO::SDK::Math::Quaternion{m_q0 / magnitude, m_q1 / magnitude, m_q2 / magnitude, m_q3 / magnitude};
+	return IO::Astrodynamics::Math::Quaternion{m_q0 / magnitude, m_q1 / magnitude, m_q2 / magnitude, m_q3 / magnitude};
 }
 
-IO::SDK::Math::Quaternion IO::SDK::Math::Quaternion::Conjugate() const
+IO::Astrodynamics::Math::Quaternion IO::Astrodynamics::Math::Quaternion::Conjugate() const
 {
-	return IO::SDK::Math::Quaternion{m_q0, -m_q1, -m_q2, -m_q3};
+	return IO::Astrodynamics::Math::Quaternion{m_q0, -m_q1, -m_q2, -m_q3};
 }
 
-IO::SDK::Math::Quaternion &IO::SDK::Math::Quaternion::operator=(const IO::SDK::Math::Quaternion &quaternion)
+IO::Astrodynamics::Math::Quaternion &IO::Astrodynamics::Math::Quaternion::operator=(const IO::Astrodynamics::Math::Quaternion &quaternion)
 {
 	if (this != &quaternion) // not a self-assignment
 	{

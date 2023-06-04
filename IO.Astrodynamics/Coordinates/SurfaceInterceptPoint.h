@@ -7,7 +7,7 @@
 #include<Vector3D.h>
 #include<TDB.h>
 
-namespace IO::SDK::Coordinates
+namespace IO::Astrodynamics::Coordinates
 {
 	/**
 	 * @brief Surface intercept point
@@ -16,9 +16,9 @@ namespace IO::SDK::Coordinates
 	class SurfaceInterceptPoint
 	{
 	private:
-		const IO::SDK::Math::Vector3D m_interceptPoint;
-		const IO::SDK::Math::Vector3D m_observerToInterceptPointVector;
-		const IO::SDK::Time::TDB m_interceptEpoch;
+		const IO::Astrodynamics::Math::Vector3D m_interceptPoint;
+		const IO::Astrodynamics::Math::Vector3D m_observerToInterceptPointVector;
+		const IO::Astrodynamics::Time::TDB m_interceptEpoch;
 		
 
 	public:
@@ -29,7 +29,7 @@ namespace IO::SDK::Coordinates
 		 * @param observerToInterceptPoint 
 		 * @param interceptEpoch 
 		 */
-		SurfaceInterceptPoint(const IO::SDK::Math::Vector3D& interceptPoint, const IO::SDK::Math::Vector3D& observerToInterceptPoint, IO::SDK::Time::TDB  interceptEpoch)
+		SurfaceInterceptPoint(const IO::Astrodynamics::Math::Vector3D& interceptPoint, const IO::Astrodynamics::Math::Vector3D& observerToInterceptPoint, IO::Astrodynamics::Time::TDB  interceptEpoch)
 			:m_interceptPoint{ interceptPoint }, m_observerToInterceptPointVector{ observerToInterceptPoint }, m_interceptEpoch{std::move( interceptEpoch )}
 		{};
 		SurfaceInterceptPoint(const SurfaceInterceptPoint& surfaceInterceptPoint) = default;
@@ -37,9 +37,9 @@ namespace IO::SDK::Coordinates
 		/**
 		 * @brief Get the Intercept Point
 		 * 
-		 * @return const IO::SDK::Math::Vector3D& 
+		 * @return const IO::Astrodynamics::Math::Vector3D&
 		 */
-		[[nodiscard]] const IO::SDK::Math::Vector3D& GetInterceptPoint() const
+		[[nodiscard]] const IO::Astrodynamics::Math::Vector3D& GetInterceptPoint() const
 		{
 			return m_interceptPoint;
 		}
@@ -47,9 +47,9 @@ namespace IO::SDK::Coordinates
 		/**
 		 * @brief Get the Observer Intercept Point Vector
 		 * 
-		 * @return const IO::SDK::Math::Vector3D& 
+		 * @return const IO::Astrodynamics::Math::Vector3D&
 		 */
-		[[nodiscard]] const IO::SDK::Math::Vector3D& GetObserverInterceptPointVector() const
+		[[nodiscard]] const IO::Astrodynamics::Math::Vector3D& GetObserverInterceptPointVector() const
 		{
 			return m_observerToInterceptPointVector;
 		}
@@ -57,9 +57,9 @@ namespace IO::SDK::Coordinates
 		/**
 		 * @brief Get the Intercept Epoch
 		 * 
-		 * @return IO::SDK::Time::TDB 
+		 * @return IO::Astrodynamics::Time::TDB
 		 */
-		[[nodiscard]] IO::SDK::Time::TDB GetInterceptEpoch() const
+		[[nodiscard]] IO::Astrodynamics::Time::TDB GetInterceptEpoch() const
 		{
 			return m_interceptEpoch;
 		}

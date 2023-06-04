@@ -6,7 +6,7 @@
 
 TEST(APIConverters, WindowUTC)
 {
-    IO::SDK::API::DTO::WindowDTO window{};
+    IO::Astrodynamics::API::DTO::WindowDTO window{};
     window.start = 10.0;
     window.end = 20.0;
 
@@ -22,7 +22,7 @@ TEST(APIConverters, WindowUTC)
 
 TEST(APIConverters, WindowTDB)
 {
-    IO::SDK::API::DTO::WindowDTO window{};
+    IO::Astrodynamics::API::DTO::WindowDTO window{};
     window.start = 10.0;
     window.end = 20.0;
 
@@ -38,7 +38,7 @@ TEST(APIConverters, WindowTDB)
 
 TEST(APIConverters, Vector)
 {
-    IO::SDK::API::DTO::Vector3DDTO vector3Ddto{};
+    IO::Astrodynamics::API::DTO::Vector3DDTO vector3Ddto{};
     vector3Ddto.x = 1.0;
     vector3Ddto.y = 2.0;
     vector3Ddto.z = 3.0;
@@ -56,7 +56,7 @@ TEST(APIConverters, Vector)
 
 TEST(APIConverters, Quaternion)
 {
-    IO::SDK::Math::Quaternion q(1.0, 2.0, 3.0, 4.0);
+    IO::Astrodynamics::Math::Quaternion q(1.0, 2.0, 3.0, 4.0);
     auto dto = ToQuaternionDTO(q);
     ASSERT_DOUBLE_EQ(1.0, dto.w);
     ASSERT_DOUBLE_EQ(2.0, dto.x);
@@ -72,7 +72,7 @@ TEST(APIConverters, Quaternion)
 
 TEST(APIConverters, Geodetic)
 {
-    IO::SDK::API::DTO::GeodeticDTO geodeticDTO(2.0, 1.0, 3.0);
+    IO::Astrodynamics::API::DTO::GeodeticDTO geodeticDTO(2.0, 1.0, 3.0);
 
     auto geodetic = ToGeodetic(geodeticDTO);
     ASSERT_DOUBLE_EQ(1.0, geodetic.GetLatitude());
@@ -87,8 +87,8 @@ TEST(APIConverters, Geodetic)
 
 TEST (APIConverters, StateVector)
 {
-    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
-    auto moon = std::make_shared<IO::SDK::Body::CelestialBody>(301, earth);
+    auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399);
+    auto moon = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(301, earth);
     auto sv = moon->GetOrbitalParametersAtEpoch()->ToStateVector();
 
     auto svDto = ToStateVectorDTO(sv);
@@ -104,10 +104,10 @@ TEST (APIConverters, StateVector)
 
 TEST (APIConverters, ConicOrbitalElement)
 {
-    auto earth = std::make_shared<IO::SDK::Body::CelestialBody>(399);
-    IO::SDK::Time::TDB tdb{std::chrono::duration<double>(1000.0)};
-    IO::SDK::Frames::Frames frame{"J2000"};
-    IO::SDK::OrbitalParameters::ConicOrbitalElements conics{earth, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, tdb, frame};
+    auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399);
+    IO::Astrodynamics::Time::TDB tdb{std::chrono::duration<double>(1000.0)};
+    IO::Astrodynamics::Frames::Frames frame{"J2000"};
+    IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements conics{earth, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, tdb, frame};
 
     auto conicsDto = ToConicOrbitalElementDTo(conics);
     ASSERT_DOUBLE_EQ(conics.GetPerifocalDistance(),conicsDto.perifocalDistance);
@@ -122,7 +122,7 @@ TEST (APIConverters, ConicOrbitalElement)
 
 TEST (APIConverters,EquatorialCoordinates)
 {
-    IO::SDK::Coordinates::Equatorial equatorial{1.0,2.0,3.0};
+    IO::Astrodynamics::Coordinates::Equatorial equatorial{1.0,2.0,3.0};
     auto equatorialDTO= ToEquatorialDTO(equatorial);
 
     ASSERT_DOUBLE_EQ(equatorial.GetRA(),equatorialDTO.rightAscension);

@@ -6,13 +6,13 @@
 #include <string>
 #include <Frames.h>
 
-namespace IO::SDK::Frames
+namespace IO::Astrodynamics::Frames
 {
 	/**
 	 * @brief Inertial frame
 	 * 
 	 */
-	class InertialFrames final : public IO::SDK::Frames::Frames
+	class InertialFrames final : public IO::Astrodynamics::Frames::Frames
 	{
 
 	private:
@@ -27,9 +27,9 @@ namespace IO::SDK::Frames
 		 */
 		explicit InertialFrames(const std::string &name);
 
-		static IO::SDK::Frames::InertialFrames& GetICRF();
-		static IO::SDK::Frames::InertialFrames& Galactic();
-		static IO::SDK::Frames::InertialFrames& Ecliptic();
+		static IO::Astrodynamics::Frames::InertialFrames& GetICRF();
+		static IO::Astrodynamics::Frames::InertialFrames& Galactic();
+		static IO::Astrodynamics::Frames::InertialFrames& Ecliptic();
 	};
 }
 #endif // ! INERTIAL_FRAMES_H

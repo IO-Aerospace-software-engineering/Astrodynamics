@@ -6,7 +6,7 @@
 
 #include <SDKException.h>
 
-namespace IO::SDK::Exception
+namespace IO::Astrodynamics::Exception
 {
     /**
      * @brief Propagator exception
@@ -20,6 +20,6 @@ namespace IO::SDK::Exception
         explicit PropagatorException(const std::string &message);
     };
 
-} // namespace IO::SDK::Exception
+} // namespace IO::Astrodynamics::Exception
 
 #endif //PROPAGATOR_EXCEPTION

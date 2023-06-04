@@ -6,14 +6,14 @@
 
 #include<Instrument.h>
 
-namespace IO::SDK::Instruments
+namespace IO::Astrodynamics::Instruments
 {
 	class Instrument;
 }
 
-namespace IO::SDK::Kernels
+namespace IO::Astrodynamics::Kernels
 {
-	class RectangularInstrumentKernel final :public IO::SDK::Kernels::InstrumentKernel
+	class RectangularInstrumentKernel final :public IO::Astrodynamics::Kernels::InstrumentKernel
 	{
 	private:
 		double m_crossAngle{};
@@ -35,7 +35,7 @@ namespace IO::SDK::Kernels
 		 * @param angle 
 		 * @param crossAngle 
 		 */
-		RectangularInstrumentKernel(const IO::SDK::Instruments::Instrument& instrument, const IO::SDK::Math::Vector3D& boresight, const IO::SDK::Math::Vector3D& refVector, double angle, double crossAngle);
+		RectangularInstrumentKernel(const IO::Astrodynamics::Instruments::Instrument& instrument, const IO::Astrodynamics::Math::Vector3D& boresight, const IO::Astrodynamics::Math::Vector3D& refVector, double angle, double crossAngle);
 		~RectangularInstrumentKernel() override = default;
 	};
 }

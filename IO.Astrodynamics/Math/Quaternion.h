@@ -7,7 +7,7 @@
 #include <Matrix.h>
 #include <Vector3D.h>
 
-namespace IO::SDK::Math
+namespace IO::Astrodynamics::Math
 {
 	class Quaternion
 	{
@@ -37,14 +37,14 @@ namespace IO::SDK::Math
 		 * @param axis 
 		 * @param angle 
 		 */
-		Quaternion(const IO::SDK::Math::Vector3D &axis, double angle);
+		Quaternion(const IO::Astrodynamics::Math::Vector3D &axis, double angle);
 
 		/**
 		 * @brief Construct a new Quaternion object
 		 * 
 		 * @param mtx 
 		 */
-		explicit Quaternion(const IO::SDK::Math::Matrix &mtx);
+		explicit Quaternion(const IO::Astrodynamics::Math::Matrix &mtx);
 
 		/**
 		 * @brief Construct a new Quaternion object
@@ -66,24 +66,24 @@ namespace IO::SDK::Math
 		 * @brief Multiply quaternion
 		 * 
 		 * @param quaternion 
-		 * @return IO::SDK::Math::Quaternion 
+		 * @return IO::Astrodynamics::Math::Quaternion
 		 */
-		[[nodiscard]] IO::SDK::Math::Quaternion Multiply(const Quaternion &quaternion) const;
+		[[nodiscard]] IO::Astrodynamics::Math::Quaternion Multiply(const Quaternion &quaternion) const;
 
 		/**
 		 * @brief Multiply quaternion
 		 * 
 		 * @param quaternion 
-		 * @return IO::SDK::Math::Quaternion 
+		 * @return IO::Astrodynamics::Math::Quaternion
 		 */
-		IO::SDK::Math::Quaternion operator*(const Quaternion &quaternion) const;
+		IO::Astrodynamics::Math::Quaternion operator*(const Quaternion &quaternion) const;
 
 		/**
 		 * @brief Get the rotation matrix
 		 * 
-		 * @return IO::SDK::Math::Matrix 
+		 * @return IO::Astrodynamics::Math::Matrix
 		 */
-		[[nodiscard]] IO::SDK::Math::Matrix GetMatrix() const;
+		[[nodiscard]] IO::Astrodynamics::Math::Matrix GetMatrix() const;
 
 		/**
 		 * @brief Get the magnitude of the quaternion

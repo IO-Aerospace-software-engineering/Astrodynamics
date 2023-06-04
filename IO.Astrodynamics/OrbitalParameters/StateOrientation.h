@@ -9,15 +9,15 @@
 #include <Quaternion.h>
 #include <Frames.h>
 
-namespace IO::SDK::OrbitalParameters
+namespace IO::Astrodynamics::OrbitalParameters
 {
 	class StateOrientation final
 	{
 	private:
-		const IO::SDK::Math::Quaternion m_quaternion{};
-		const IO::SDK::Math::Vector3D m_angularVelocity{};
-		const IO::SDK::Time::TDB m_epoch;
-		const IO::SDK::Frames::Frames m_frame;
+		const IO::Astrodynamics::Math::Quaternion m_quaternion{};
+		const IO::Astrodynamics::Math::Vector3D m_angularVelocity{};
+		const IO::Astrodynamics::Time::TDB m_epoch;
+		const IO::Astrodynamics::Frames::Frames m_frame;
 		
 		
 
@@ -28,7 +28,7 @@ namespace IO::SDK::OrbitalParameters
 		 * @param epoch 
 		 * @param frame 
 		 */
-		StateOrientation(IO::SDK::Time::TDB epoch, IO::SDK::Frames::Frames frame);
+		StateOrientation(IO::Astrodynamics::Time::TDB epoch, IO::Astrodynamics::Frames::Frames frame);
 
 		/**
 		 * @brief Construct a new State Orientation object
@@ -39,7 +39,7 @@ namespace IO::SDK::OrbitalParameters
 		 * @param epoch 
 		 * @param frame 
 		 */
-		StateOrientation(const IO::SDK::Math::Vector3D &axis, double angle, const IO::SDK::Math::Vector3D &angularVelocity, IO::SDK::Time::TDB epoch, IO::SDK::Frames::Frames frame);
+		StateOrientation(const IO::Astrodynamics::Math::Vector3D &axis, double angle, const IO::Astrodynamics::Math::Vector3D &angularVelocity, IO::Astrodynamics::Time::TDB epoch, IO::Astrodynamics::Frames::Frames frame);
 
 		/**
 		 * @brief Construct a new State Orientation object
@@ -54,7 +54,7 @@ namespace IO::SDK::OrbitalParameters
 		 * @param epoch 
 		 * @param frame 
 		 */
-		StateOrientation(double q0, double q1, double q2, double q3, double v0, double v1, double v2, IO::SDK::Time::TDB epoch, IO::SDK::Frames::Frames frame);
+		StateOrientation(double q0, double q1, double q2, double q3, double v0, double v1, double v2, IO::Astrodynamics::Time::TDB epoch, IO::Astrodynamics::Frames::Frames frame);
 
 		/**
 		 * @brief Construct a new State Orientation object
@@ -64,7 +64,7 @@ namespace IO::SDK::OrbitalParameters
 		 * @param epoch 
 		 * @param frame 
 		 */
-		StateOrientation(const IO::SDK::Math::Quaternion &quaternion, const IO::SDK::Math::Vector3D &angularVelocity, IO::SDK::Time::TDB epoch, IO::SDK::Frames::Frames frame);
+		StateOrientation(const IO::Astrodynamics::Math::Quaternion &quaternion, const IO::Astrodynamics::Math::Vector3D &angularVelocity, IO::Astrodynamics::Time::TDB epoch, IO::Astrodynamics::Frames::Frames frame);
 
 		/**
 		 * @brief Assignment operator
@@ -84,30 +84,30 @@ namespace IO::SDK::OrbitalParameters
 		/**
 		 * @brief Get the Epoch
 		 * 
-		 * @return IO::SDK::Time::TDB 
+		 * @return IO::Astrodynamics::Time::TDB
 		 */
-		[[nodiscard]] IO::SDK::Time::TDB GetEpoch() const;
+		[[nodiscard]] IO::Astrodynamics::Time::TDB GetEpoch() const;
 
 		/**
 		 * @brief Get the Quaternion
 		 * 
-		 * @return IO::SDK::Math::Quaternion 
+		 * @return IO::Astrodynamics::Math::Quaternion
 		 */
-		[[nodiscard]] IO::SDK::Math::Quaternion GetQuaternion() const;
+		[[nodiscard]] IO::Astrodynamics::Math::Quaternion GetQuaternion() const;
 
 		/**
 		 * @brief Get the Angular Velocity
 		 * 
-		 * @return IO::SDK::Math::Vector3D 
+		 * @return IO::Astrodynamics::Math::Vector3D
 		 */
-		[[nodiscard]] IO::SDK::Math::Vector3D GetAngularVelocity() const;
+		[[nodiscard]] IO::Astrodynamics::Math::Vector3D GetAngularVelocity() const;
 
 		/**
 		 * @brief Get the Frame
 		 * 
-		 * @return IO::SDK::Frames::Frames 
+		 * @return IO::Astrodynamics::Frames::Frames
 		 */
-		[[nodiscard]] IO::SDK::Frames::Frames GetFrame() const;
+		[[nodiscard]] IO::Astrodynamics::Frames::Frames GetFrame() const;
 	};
 }
 #endif // !StateOrientation_H

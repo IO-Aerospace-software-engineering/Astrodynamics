@@ -9,7 +9,7 @@
 #include <WindowDTO.h>
 #include <Vector3DDTO.h>
 
-namespace IO::SDK::API::DTO
+namespace IO::Astrodynamics::API::DTO
 {
     struct CombinedManeuverDTO
     {

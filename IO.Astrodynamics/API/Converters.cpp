@@ -11,65 +11,65 @@
 #include <ConicOrbitalElements.h>
 #include <RaDecDTO.h>
 
-static IO::SDK::Time::Window<IO::SDK::Time::UTC> ToUTCWindow(IO::SDK::API::DTO::WindowDTO &window)
+static IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::UTC> ToUTCWindow(IO::Astrodynamics::API::DTO::WindowDTO &window)
 {
-    return IO::SDK::Time::Window<IO::SDK::Time::UTC>{IO::SDK::Time::UTC(std::chrono::duration<double>(window.start)),
-                                                     IO::SDK::Time::UTC(std::chrono::duration<double>(window.end))};
+    return IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::UTC>{IO::Astrodynamics::Time::UTC(std::chrono::duration<double>(window.start)),
+                                                     IO::Astrodynamics::Time::UTC(std::chrono::duration<double>(window.end))};
 }
 
-static IO::SDK::Time::Window<IO::SDK::Time::TDB> ToTDBWindow(IO::SDK::API::DTO::WindowDTO &window)
+static IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB> ToTDBWindow(IO::Astrodynamics::API::DTO::WindowDTO &window)
 {
-    return IO::SDK::Time::Window<IO::SDK::Time::TDB>{IO::SDK::Time::TDB(std::chrono::duration<double>(window.start)),
-                                                     IO::SDK::Time::TDB(std::chrono::duration<double>(window.end))};
+    return IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB>{IO::Astrodynamics::Time::TDB(std::chrono::duration<double>(window.start)),
+                                                     IO::Astrodynamics::Time::TDB(std::chrono::duration<double>(window.end))};
 }
 
-static IO::SDK::API::DTO::WindowDTO ToWindowDTO(const IO::SDK::Time::Window<IO::SDK::Time::UTC> &window)
+static IO::Astrodynamics::API::DTO::WindowDTO ToWindowDTO(const IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::UTC> &window)
 {
-    IO::SDK::API::DTO::WindowDTO dto{};
+    IO::Astrodynamics::API::DTO::WindowDTO dto{};
     dto.start = window.GetStartDate().GetSecondsFromJ2000().count();
     dto.end = window.GetEndDate().GetSecondsFromJ2000().count();
     return dto;
 }
 
-static IO::SDK::API::DTO::WindowDTO ToWindowDTO(const IO::SDK::Time::Window<IO::SDK::Time::TDB> &window)
+static IO::Astrodynamics::API::DTO::WindowDTO ToWindowDTO(const IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB> &window)
 {
-    IO::SDK::API::DTO::WindowDTO dto{};
+    IO::Astrodynamics::API::DTO::WindowDTO dto{};
     dto.start = window.GetStartDate().GetSecondsFromJ2000().count();
     dto.end = window.GetEndDate().GetSecondsFromJ2000().count();
     return dto;
 }
 
-static IO::SDK::Math::Vector3D ToVector3D(const IO::SDK::API::DTO::Vector3DDTO &vector)
+static IO::Astrodynamics::Math::Vector3D ToVector3D(const IO::Astrodynamics::API::DTO::Vector3DDTO &vector)
 {
     return {vector.x, vector.y, vector.z};
 }
 
-static IO::SDK::API::DTO::Vector3DDTO ToVector3DDTO(const IO::SDK::Math::Vector3D &vector)
+static IO::Astrodynamics::API::DTO::Vector3DDTO ToVector3DDTO(const IO::Astrodynamics::Math::Vector3D &vector)
 {
-    IO::SDK::API::DTO::Vector3DDTO dto{};
+    IO::Astrodynamics::API::DTO::Vector3DDTO dto{};
     dto.x = vector.GetX();
     dto.y = vector.GetY();
     dto.z = vector.GetZ();
     return dto;
 }
 
-static IO::SDK::API::DTO::Vector3DDTO ToVector3DDTO(const double data[3])
+static IO::Astrodynamics::API::DTO::Vector3DDTO ToVector3DDTO(const double data[3])
 {
-    IO::SDK::API::DTO::Vector3DDTO dto{};
+    IO::Astrodynamics::API::DTO::Vector3DDTO dto{};
     dto.x = data[0];
     dto.y = data[1];
     dto.z = data[2];
     return dto;
 }
 
-static IO::SDK::Math::Quaternion ToQuaternion(IO::SDK::API::DTO::QuaternionDTO &dto)
+static IO::Astrodynamics::Math::Quaternion ToQuaternion(IO::Astrodynamics::API::DTO::QuaternionDTO &dto)
 {
-    return IO::SDK::Math::Quaternion{dto.w, dto.x, dto.y, dto.z};
+    return IO::Astrodynamics::Math::Quaternion{dto.w, dto.x, dto.y, dto.z};
 }
 
-static IO::SDK::API::DTO::QuaternionDTO ToQuaternionDTO(IO::SDK::Math::Quaternion &quaternion)
+static IO::Astrodynamics::API::DTO::QuaternionDTO ToQuaternionDTO(IO::Astrodynamics::Math::Quaternion &quaternion)
 {
-    IO::SDK::API::DTO::QuaternionDTO q;
+    IO::Astrodynamics::API::DTO::QuaternionDTO q;
     q.w = quaternion.GetQ0();
     q.x = quaternion.GetQ1();
     q.y = quaternion.GetQ2();
@@ -77,20 +77,20 @@ static IO::SDK::API::DTO::QuaternionDTO ToQuaternionDTO(IO::SDK::Math::Quaternio
     return q;
 }
 
-static IO::SDK::Coordinates::Geodetic ToGeodetic(IO::SDK::API::DTO::GeodeticDTO &dto)
+static IO::Astrodynamics::Coordinates::Geodetic ToGeodetic(IO::Astrodynamics::API::DTO::GeodeticDTO &dto)
 {
-    return IO::SDK::Coordinates::Geodetic{dto.longitude, dto.latitude, dto.altitude};
+    return IO::Astrodynamics::Coordinates::Geodetic{dto.longitude, dto.latitude, dto.altitude};
 }
 
-static IO::SDK::API::DTO::GeodeticDTO ToGeodeticDTO(IO::SDK::Coordinates::Geodetic &geodetic)
+static IO::Astrodynamics::API::DTO::GeodeticDTO ToGeodeticDTO(IO::Astrodynamics::Coordinates::Geodetic &geodetic)
 {
-    IO::SDK::API::DTO::GeodeticDTO dto(geodetic.GetLongitude(), geodetic.GetLatitude(), geodetic.GetAltitude());
+    IO::Astrodynamics::API::DTO::GeodeticDTO dto(geodetic.GetLongitude(), geodetic.GetLatitude(), geodetic.GetAltitude());
     return dto;
 }
 
-static IO::SDK::API::DTO::StateVectorDTO ToStateVectorDTO(IO::SDK::OrbitalParameters::StateVector &stateVector)
+static IO::Astrodynamics::API::DTO::StateVectorDTO ToStateVectorDTO(IO::Astrodynamics::OrbitalParameters::StateVector &stateVector)
 {
-    IO::SDK::API::DTO::StateVectorDTO dto{};
+    IO::Astrodynamics::API::DTO::StateVectorDTO dto{};
     dto.epoch = stateVector.GetEpoch().GetSecondsFromJ2000().count();
     dto.inertialFrame = strdup(stateVector.GetFrame().ToCharArray());
     dto.centerOfMotionId = stateVector.GetCenterOfMotion()->GetId();
@@ -100,10 +100,10 @@ static IO::SDK::API::DTO::StateVectorDTO ToStateVectorDTO(IO::SDK::OrbitalParame
     return dto;
 }
 
-static IO::SDK::API::DTO::ConicOrbitalElementsDTO
-ToConicOrbitalElementDTo(IO::SDK::OrbitalParameters::ConicOrbitalElements &conicOrbitalElements)
+static IO::Astrodynamics::API::DTO::ConicOrbitalElementsDTO
+ToConicOrbitalElementDTo(IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements &conicOrbitalElements)
 {
-    IO::SDK::API::DTO::ConicOrbitalElementsDTO dto{};
+    IO::Astrodynamics::API::DTO::ConicOrbitalElementsDTO dto{};
     dto.epoch = conicOrbitalElements.GetEpoch().GetSecondsFromJ2000().count();
     dto.centerOfMotionId = conicOrbitalElements.GetCenterOfMotion()->GetId();
     dto.ascendingNodeLongitude = conicOrbitalElements.GetRightAscendingNodeLongitude();
@@ -119,9 +119,9 @@ ToConicOrbitalElementDTo(IO::SDK::OrbitalParameters::ConicOrbitalElements &conic
     return dto;
 }
 
-static IO::SDK::API::DTO::RaDecDTO ToEquatorialDTO(IO::SDK::Coordinates::Equatorial &raDec)
+static IO::Astrodynamics::API::DTO::RaDecDTO ToEquatorialDTO(IO::Astrodynamics::Coordinates::Equatorial &raDec)
 {
-    IO::SDK::API::DTO::RaDecDTO raDecDto;
+    IO::Astrodynamics::API::DTO::RaDecDTO raDecDto;
     raDecDto.declination = raDec.GetDec();
     raDecDto.rightAscension = raDec.GetRA();
     raDecDto.range = raDec.GetRange();

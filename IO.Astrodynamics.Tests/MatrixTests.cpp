@@ -4,7 +4,7 @@
 
 TEST(Matrix, Initialization)
 {
-	IO::SDK::Math::Matrix mat(3, 4);
+	IO::Astrodynamics::Math::Matrix mat(3, 4);
 	ASSERT_EQ(3, mat.GetRowsSize());
 	ASSERT_EQ(4, mat.GetColumsSize());
 	ASSERT_EQ(0.0, mat.GetValue(0, 0));
@@ -26,7 +26,7 @@ TEST(Matrix, Initialization)
 		}
 	}
 
-	IO::SDK::Math::Matrix matFromArr(3, 3, arrayCmat);
+	IO::Astrodynamics::Math::Matrix matFromArr(3, 3, arrayCmat);
 
 	for (size_t i = 0; i < 3; i++)
 	{
@@ -39,7 +39,7 @@ TEST(Matrix, Initialization)
 
 TEST(Matrix, SetValue)
 {
-	IO::SDK::Math::Matrix mat(3, 4);
+	IO::Astrodynamics::Math::Matrix mat(3, 4);
 	mat.SetValue(1, 2, 54.0);
 	ASSERT_EQ(54.0, mat.GetValue(1, 2));
 
@@ -47,17 +47,17 @@ TEST(Matrix, SetValue)
 
 TEST(Matrix, OutOfrange)
 {
-	IO::SDK::Math::Matrix mat(3, 4);
-	ASSERT_THROW(mat.SetValue(3, 2, 3.0), IO::SDK::Exception::SDKException);
-	ASSERT_THROW(mat.SetValue(2, 4, 5.0), IO::SDK::Exception::SDKException);
-	ASSERT_THROW(mat.GetValue(3, 2), IO::SDK::Exception::SDKException);
-	ASSERT_THROW(mat.GetValue(2, 4), IO::SDK::Exception::SDKException);
+	IO::Astrodynamics::Math::Matrix mat(3, 4);
+	ASSERT_THROW(mat.SetValue(3, 2, 3.0), IO::Astrodynamics::Exception::SDKException);
+	ASSERT_THROW(mat.SetValue(2, 4, 5.0), IO::Astrodynamics::Exception::SDKException);
+	ASSERT_THROW(mat.GetValue(3, 2), IO::Astrodynamics::Exception::SDKException);
+	ASSERT_THROW(mat.GetValue(2, 4), IO::Astrodynamics::Exception::SDKException);
 }
 
 TEST(Matrix, Multiply)
 {
-	IO::SDK::Math::Matrix mat(2, 2);
-	IO::SDK::Math::Matrix mat2(2, 2);
+	IO::Astrodynamics::Math::Matrix mat(2, 2);
+	IO::Astrodynamics::Math::Matrix mat2(2, 2);
 	mat.SetValue(0, 0, 2.0);
 	mat.SetValue(0, 1, 3.0);
 	mat.SetValue(1, 0, 4.0);
@@ -79,7 +79,7 @@ TEST(Matrix, Multiply)
 
 TEST(Matrix, Transpose)
 {
-	IO::SDK::Math::Matrix mat(2, 2);
+	IO::Astrodynamics::Math::Matrix mat(2, 2);
 	mat.SetValue(0, 0, 2.0);
 	mat.SetValue(0, 1, 3.0);
 	mat.SetValue(1, 0, 4.0);
@@ -96,13 +96,13 @@ TEST(Matrix, Transpose)
 
 TEST(Matrix, Copy)
 {
-	IO::SDK::Math::Matrix mat(2, 2);
+	IO::Astrodynamics::Math::Matrix mat(2, 2);
 	mat.SetValue(0, 0, 2.0);
 	mat.SetValue(0, 1, 3.0);
 	mat.SetValue(1, 0, 4.0);
 	mat.SetValue(1, 1, 5.0);
 
-	IO::SDK::Math::Matrix mat2(mat);
+	IO::Astrodynamics::Math::Matrix mat2(mat);
 
 	auto raw=mat.GetRawData();
 	auto raw2=mat2.GetRawData();

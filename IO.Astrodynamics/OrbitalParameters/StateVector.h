@@ -8,18 +8,18 @@
 
 #include <CelestialBody.h>
 
-namespace IO::SDK::OrbitalParameters
+namespace IO::Astrodynamics::OrbitalParameters
 {
     /**
      * @brief State vector class
      *
      */
-    class StateVector final : public IO::SDK::OrbitalParameters::OrbitalParameters
+    class StateVector final : public IO::Astrodynamics::OrbitalParameters::OrbitalParameters
     {
     private:
-        const IO::SDK::Math::Vector3D m_position{};
-        const IO::SDK::Math::Vector3D m_velocity{};
-        const IO::SDK::Math::Vector3D m_momentum{};
+        const IO::Astrodynamics::Math::Vector3D m_position{};
+        const IO::Astrodynamics::Math::Vector3D m_velocity{};
+        const IO::Astrodynamics::Math::Vector3D m_momentum{};
         std::array<SpiceDouble, SPICE_OSCLTX_NELTS> m_osculatingElements{std::numeric_limits<double>::quiet_NaN()};
 
     public:
@@ -32,8 +32,8 @@ namespace IO::SDK::OrbitalParameters
          * @param epoch
          * @param frame
          */
-        StateVector(const std::shared_ptr<IO::SDK::Body::CelestialBody> &centerOfMotion, const IO::SDK::Math::Vector3D &position, const IO::SDK::Math::Vector3D &velocity,
-                    const IO::SDK::Time::TDB &epoch, const IO::SDK::Frames::Frames &frame);
+        StateVector(const std::shared_ptr<IO::Astrodynamics::Body::CelestialBody> &centerOfMotion, const IO::Astrodynamics::Math::Vector3D &position, const IO::Astrodynamics::Math::Vector3D &velocity,
+                    const IO::Astrodynamics::Time::TDB &epoch, const IO::Astrodynamics::Frames::Frames &frame);
 
         // /**
         //  * @brief Construct a new State Vector object without
@@ -42,7 +42,7 @@ namespace IO::SDK::OrbitalParameters
         //  * @param position
         //  * @param epoch
         //  */
-        // StateVector(const std::shared_ptr<IO::SDK::Body::CelestialBody> &centerOfMotion, const IO::SDK::Math::Vector3D& position, const IO::SDK::Time::TDB &epoch);
+        // StateVector(const std::shared_ptr<IO::Astrodynamics::Body::CelestialBody> &centerOfMotion, const IO::Astrodynamics::Math::Vector3D& position, const IO::Astrodynamics::Time::TDB &epoch);
 
         /**
          * @brief Construct a new State Vector object
@@ -52,8 +52,8 @@ namespace IO::SDK::OrbitalParameters
          * @param epoch
          * @param frame
          */
-        StateVector(const std::shared_ptr<IO::SDK::Body::CelestialBody> &centerOfMotion, double spiceState[6], const IO::SDK::Time::TDB &epoch,
-                    const IO::SDK::Frames::Frames &frame);
+        StateVector(const std::shared_ptr<IO::Astrodynamics::Body::CelestialBody> &centerOfMotion, double spiceState[6], const IO::Astrodynamics::Time::TDB &epoch,
+                    const IO::Astrodynamics::Frames::Frames &frame);
 
         ~StateVector() override = default;
 
@@ -65,9 +65,9 @@ namespace IO::SDK::OrbitalParameters
         /**
          * @brief Get the Position
          *
-         * @return const IO::SDK::Math::Vector3D&
+         * @return const IO::Astrodynamics::Math::Vector3D&
          */
-        [[nodiscard]] const IO::SDK::Math::Vector3D &GetPosition() const
+        [[nodiscard]] const IO::Astrodynamics::Math::Vector3D &GetPosition() const
         {
             return m_position;
         }
@@ -75,9 +75,9 @@ namespace IO::SDK::OrbitalParameters
         /**
          * @brief Get the Velocity
          *
-         * @return const IO::SDK::Math::Vector3D&
+         * @return const IO::Astrodynamics::Math::Vector3D&
          */
-        [[nodiscard]] const IO::SDK::Math::Vector3D &GetVelocity() const
+        [[nodiscard]] const IO::Astrodynamics::Math::Vector3D &GetVelocity() const
         {
             return m_velocity;
         }
@@ -85,9 +85,9 @@ namespace IO::SDK::OrbitalParameters
         /**
          * @brief Get the Specific Angular Momentum
          *
-         * @return IO::SDK::Math::Vector3D
+         * @return IO::Astrodynamics::Math::Vector3D
          */
-        [[nodiscard]] IO::SDK::Math::Vector3D GetSpecificAngularMomentum() const override
+        [[nodiscard]] IO::Astrodynamics::Math::Vector3D GetSpecificAngularMomentum() const override
         {
             return m_momentum;
         }
@@ -95,9 +95,9 @@ namespace IO::SDK::OrbitalParameters
         /**
          * @brief Get the Period
          *
-         * @return IO::SDK::Time::TimeSpan
+         * @return IO::Astrodynamics::Time::TimeSpan
          */
-        [[nodiscard]] IO::SDK::Time::TimeSpan GetPeriod() const override;
+        [[nodiscard]] IO::Astrodynamics::Time::TimeSpan GetPeriod() const override;
 
         /**
          * @brief Get the State Vector
@@ -105,7 +105,7 @@ namespace IO::SDK::OrbitalParameters
          * @param epoch
          * @return StateVector
          */
-        [[nodiscard]] StateVector ToStateVector(const IO::SDK::Time::TDB &epoch) const override;
+        [[nodiscard]] StateVector ToStateVector(const IO::Astrodynamics::Time::TDB &epoch) const override;
 
         /**
          * @brief Get the Semi Major Axis
@@ -176,11 +176,11 @@ namespace IO::SDK::OrbitalParameters
          * @brief Check and update if another body becomes the center of motion. If condition occurs the state vector is updated and returned
          * 
          * @param stateVector 
-         * @return IO::SDK::OrbitalParameters::StateVector 
+         * @return IO::Astrodynamics::OrbitalParameters::StateVector
          */
-        [[nodiscard]] IO::SDK::OrbitalParameters::StateVector CheckAndUpdateCenterOfMotion() const;
+        [[nodiscard]] IO::Astrodynamics::OrbitalParameters::StateVector CheckAndUpdateCenterOfMotion() const;
 
-        using IO::SDK::OrbitalParameters::OrbitalParameters::ToStateVector;
+        using IO::Astrodynamics::OrbitalParameters::OrbitalParameters::ToStateVector;
 
         /**
          * @brief Get state vector
@@ -195,7 +195,7 @@ namespace IO::SDK::OrbitalParameters
          * @param frame
          * @return StateVector
          */
-        [[nodiscard]] StateVector ToFrame(const IO::SDK::Frames::Frames &frame) const;
+        [[nodiscard]] StateVector ToFrame(const IO::Astrodynamics::Frames::Frames &frame) const;
 
         /**
          * @brief Convert state vector to body fixed frame

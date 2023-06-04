@@ -4,59 +4,59 @@
 #include <RelationalOperator.h>
 #include <SDKException.h>
 
-IO::SDK::Constraints::RelationalOperator IO::SDK::Constraints::RelationalOperator::mGreaterThan(std::string(">"));
-IO::SDK::Constraints::RelationalOperator IO::SDK::Constraints::RelationalOperator::mLowerThan(std::string("<"));
-IO::SDK::Constraints::RelationalOperator IO::SDK::Constraints::RelationalOperator::mEqual(std::string("="));
-IO::SDK::Constraints::RelationalOperator IO::SDK::Constraints::RelationalOperator::mAbsMin(std::string("ABSMIN"));
-IO::SDK::Constraints::RelationalOperator IO::SDK::Constraints::RelationalOperator::mAbsMax(std::string("ABSMAX"));
-IO::SDK::Constraints::RelationalOperator IO::SDK::Constraints::RelationalOperator::mLocalMin(std::string("LOCMIN"));
-IO::SDK::Constraints::RelationalOperator IO::SDK::Constraints::RelationalOperator::mLocalMax(std::string("LOCMAX"));
+IO::Astrodynamics::Constraints::RelationalOperator IO::Astrodynamics::Constraints::RelationalOperator::mGreaterThan(std::string(">"));
+IO::Astrodynamics::Constraints::RelationalOperator IO::Astrodynamics::Constraints::RelationalOperator::mLowerThan(std::string("<"));
+IO::Astrodynamics::Constraints::RelationalOperator IO::Astrodynamics::Constraints::RelationalOperator::mEqual(std::string("="));
+IO::Astrodynamics::Constraints::RelationalOperator IO::Astrodynamics::Constraints::RelationalOperator::mAbsMin(std::string("ABSMIN"));
+IO::Astrodynamics::Constraints::RelationalOperator IO::Astrodynamics::Constraints::RelationalOperator::mAbsMax(std::string("ABSMAX"));
+IO::Astrodynamics::Constraints::RelationalOperator IO::Astrodynamics::Constraints::RelationalOperator::mLocalMin(std::string("LOCMIN"));
+IO::Astrodynamics::Constraints::RelationalOperator IO::Astrodynamics::Constraints::RelationalOperator::mLocalMax(std::string("LOCMAX"));
 
-IO::SDK::Constraints::RelationalOperator::RelationalOperator(std::string name) : m_name{std::move(name)}
+IO::Astrodynamics::Constraints::RelationalOperator::RelationalOperator(std::string name) : m_name{std::move(name)}
 {
 }
 
-const char *IO::SDK::Constraints::RelationalOperator::ToCharArray() const
+const char *IO::Astrodynamics::Constraints::RelationalOperator::ToCharArray() const
 {
     return m_name.c_str();
 }
 
-IO::SDK::Constraints::RelationalOperator &IO::SDK::Constraints::RelationalOperator::GreaterThan()
+IO::Astrodynamics::Constraints::RelationalOperator &IO::Astrodynamics::Constraints::RelationalOperator::GreaterThan()
 {
     return mGreaterThan;
 }
 
-IO::SDK::Constraints::RelationalOperator &IO::SDK::Constraints::RelationalOperator::LowerThan()
+IO::Astrodynamics::Constraints::RelationalOperator &IO::Astrodynamics::Constraints::RelationalOperator::LowerThan()
 {
     return mLowerThan;
 }
 
-IO::SDK::Constraints::RelationalOperator &IO::SDK::Constraints::RelationalOperator::Equal()
+IO::Astrodynamics::Constraints::RelationalOperator &IO::Astrodynamics::Constraints::RelationalOperator::Equal()
 {
     return mEqual;
 }
 
-IO::SDK::Constraints::RelationalOperator &IO::SDK::Constraints::RelationalOperator::AbsMin()
+IO::Astrodynamics::Constraints::RelationalOperator &IO::Astrodynamics::Constraints::RelationalOperator::AbsMin()
 {
     return mAbsMin;
 }
 
-IO::SDK::Constraints::RelationalOperator &IO::SDK::Constraints::RelationalOperator::AbsMax()
+IO::Astrodynamics::Constraints::RelationalOperator &IO::Astrodynamics::Constraints::RelationalOperator::AbsMax()
 {
     return mAbsMax;
 }
 
-IO::SDK::Constraints::RelationalOperator &IO::SDK::Constraints::RelationalOperator::LocalMin()
+IO::Astrodynamics::Constraints::RelationalOperator &IO::Astrodynamics::Constraints::RelationalOperator::LocalMin()
 {
     return mLocalMin;
 }
 
-IO::SDK::Constraints::RelationalOperator &IO::SDK::Constraints::RelationalOperator::LocalMax()
+IO::Astrodynamics::Constraints::RelationalOperator &IO::Astrodynamics::Constraints::RelationalOperator::LocalMax()
 {
     return mLocalMax;
 }
 
-IO::SDK::Constraints::RelationalOperator &IO::SDK::Constraints::RelationalOperator::operator=(const RelationalOperator &other)
+IO::Astrodynamics::Constraints::RelationalOperator &IO::Astrodynamics::Constraints::RelationalOperator::operator=(const RelationalOperator &other)
 {
     if (this == &other)
         return *this;
@@ -64,30 +64,30 @@ IO::SDK::Constraints::RelationalOperator &IO::SDK::Constraints::RelationalOperat
     return *this;
 }
 
-IO::SDK::Constraints::RelationalOperator IO::SDK::Constraints::RelationalOperator::ToRelationalOperator(const std::string &relationalOperator)
+IO::Astrodynamics::Constraints::RelationalOperator IO::Astrodynamics::Constraints::RelationalOperator::ToRelationalOperator(const std::string &relationalOperator)
 {
-    if (relationalOperator == IO::SDK::Constraints::RelationalOperator::Equal().ToCharArray())
+    if (relationalOperator == IO::Astrodynamics::Constraints::RelationalOperator::Equal().ToCharArray())
     {
-        return IO::SDK::Constraints::RelationalOperator::Equal();
-    } else if (relationalOperator == IO::SDK::Constraints::RelationalOperator::LowerThan().ToCharArray())
+        return IO::Astrodynamics::Constraints::RelationalOperator::Equal();
+    } else if (relationalOperator == IO::Astrodynamics::Constraints::RelationalOperator::LowerThan().ToCharArray())
     {
-        return IO::SDK::Constraints::RelationalOperator::LowerThan();
-    } else if (relationalOperator == IO::SDK::Constraints::RelationalOperator::GreaterThan().ToCharArray())
+        return IO::Astrodynamics::Constraints::RelationalOperator::LowerThan();
+    } else if (relationalOperator == IO::Astrodynamics::Constraints::RelationalOperator::GreaterThan().ToCharArray())
     {
-        return IO::SDK::Constraints::RelationalOperator::GreaterThan();
-    } else if (relationalOperator == IO::SDK::Constraints::RelationalOperator::AbsMin().ToCharArray())
+        return IO::Astrodynamics::Constraints::RelationalOperator::GreaterThan();
+    } else if (relationalOperator == IO::Astrodynamics::Constraints::RelationalOperator::AbsMin().ToCharArray())
     {
-        return IO::SDK::Constraints::RelationalOperator::AbsMin();
-    } else if (relationalOperator == IO::SDK::Constraints::RelationalOperator::AbsMax().ToCharArray())
+        return IO::Astrodynamics::Constraints::RelationalOperator::AbsMin();
+    } else if (relationalOperator == IO::Astrodynamics::Constraints::RelationalOperator::AbsMax().ToCharArray())
     {
-        return IO::SDK::Constraints::RelationalOperator::AbsMax();
-    } else if (relationalOperator == IO::SDK::Constraints::RelationalOperator::LocalMin().ToCharArray())
+        return IO::Astrodynamics::Constraints::RelationalOperator::AbsMax();
+    } else if (relationalOperator == IO::Astrodynamics::Constraints::RelationalOperator::LocalMin().ToCharArray())
     {
-        return IO::SDK::Constraints::RelationalOperator::LocalMin();
-    } else if (relationalOperator == IO::SDK::Constraints::RelationalOperator::LocalMax().ToCharArray())
+        return IO::Astrodynamics::Constraints::RelationalOperator::LocalMin();
+    } else if (relationalOperator == IO::Astrodynamics::Constraints::RelationalOperator::LocalMax().ToCharArray())
     {
-        return IO::SDK::Constraints::RelationalOperator::LocalMax();
+        return IO::Astrodynamics::Constraints::RelationalOperator::LocalMax();
     }
 
-    throw IO::SDK::Exception::SDKException("Invalid relational operator : " + relationalOperator);
+    throw IO::Astrodynamics::Exception::SDKException("Invalid relational operator : " + relationalOperator);
 }

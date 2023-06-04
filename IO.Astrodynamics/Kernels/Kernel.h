@@ -5,7 +5,7 @@
 #define KERNEL_H
 #include <Window.h>
 
-namespace IO::SDK::Kernels
+namespace IO::Astrodynamics::Kernels
 {
 	class Kernel
 	{
@@ -38,9 +38,9 @@ namespace IO::SDK::Kernels
 		/**
 		 * @brief Get the Coverage Window
 		 * 
-		 * @return IO::SDK::Time::Window<IO::SDK::Time::TDB> 
+		 * @return IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB>
 		 */
-		[[nodiscard]] virtual IO::SDK::Time::Window<IO::SDK::Time::TDB> GetCoverageWindow() const = 0;
+		[[nodiscard]] virtual IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB> GetCoverageWindow() const = 0;
 
 		/**
 		 * @brief Add comment to kernel

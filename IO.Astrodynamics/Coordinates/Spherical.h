@@ -3,7 +3,7 @@
  */
 #ifndef SPHERICAL_H
 #define SPHERICAL_H
-namespace IO::SDK::Coordinates
+namespace IO::Astrodynamics::Coordinates
 {
 	/**
 	 * @brief Get spherical coordinate

@@ -8,7 +8,7 @@
 
 using namespace std::chrono_literals;
 
-namespace IO::SDK::Parameters
+namespace IO::Astrodynamics::Parameters
 {
 
     inline constexpr int CommentAreaSize = 5000;

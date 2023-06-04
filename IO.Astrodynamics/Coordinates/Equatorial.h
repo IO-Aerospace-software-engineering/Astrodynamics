@@ -3,7 +3,7 @@
  */
 #ifndef RADEC_H
 #define RADEC_H
-namespace IO::SDK::Coordinates
+namespace IO::Astrodynamics::Coordinates
 {
 	/**
 	 * @brief Right ascending and declination coordinate

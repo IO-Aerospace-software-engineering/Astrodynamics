@@ -6,7 +6,7 @@
 
 #include <ostream>
 
-namespace IO::SDK::API::DTO
+namespace IO::Astrodynamics::API::DTO
 {
     struct Vector3DDTO
     {

@@ -13,17 +13,17 @@
 #include <InstrumentFrameFile.h>
 
 //Forward declaration
-namespace IO::SDK::Instruments
+namespace IO::Astrodynamics::Instruments
 {
     class Instrument;
 }
 
-namespace IO::SDK::Frames
+namespace IO::Astrodynamics::Frames
 {
     class SpacecraftFrameFile;
 }
 
-namespace IO::SDK::Kernels
+namespace IO::Astrodynamics::Kernels
 {
     class SpacecraftClockKernel;
 
@@ -32,7 +32,7 @@ namespace IO::SDK::Kernels
     class EphemerisKernel;
 }
 
-namespace IO::SDK::Body::Spacecraft
+namespace IO::Astrodynamics::Body::Spacecraft
 {
     class Engine;
 
@@ -44,14 +44,14 @@ namespace IO::SDK::Body::Spacecraft
     {
     private:
         const std::string m_filesPath{};
-        const std::unique_ptr<IO::SDK::Frames::SpacecraftFrameFile> m_frame;
-        const std::unique_ptr<IO::SDK::Kernels::SpacecraftClockKernel> m_clockKernel;
-        const std::unique_ptr<IO::SDK::Kernels::OrientationKernel> m_orientationKernel;
-        const std::unique_ptr<IO::SDK::Kernels::EphemerisKernel> m_ephemerisKernel;
-        std::vector<std::unique_ptr<IO::SDK::Instruments::Instrument>> m_instruments{};
-        std::vector<std::unique_ptr<IO::SDK::Body::Spacecraft::FuelTank>> m_fuelTanks{};
-        std::vector<std::unique_ptr<IO::SDK::Body::Spacecraft::Engine>> m_engines{};
-        std::vector<std::unique_ptr<IO::SDK::Body::Spacecraft::Payload>> m_payloads{};
+        const std::unique_ptr<IO::Astrodynamics::Frames::SpacecraftFrameFile> m_frame;
+        const std::unique_ptr<IO::Astrodynamics::Kernels::SpacecraftClockKernel> m_clockKernel;
+        const std::unique_ptr<IO::Astrodynamics::Kernels::OrientationKernel> m_orientationKernel;
+        const std::unique_ptr<IO::Astrodynamics::Kernels::EphemerisKernel> m_ephemerisKernel;
+        std::vector<std::unique_ptr<IO::Astrodynamics::Instruments::Instrument>> m_instruments{};
+        std::vector<std::unique_ptr<IO::Astrodynamics::Body::Spacecraft::FuelTank>> m_fuelTanks{};
+        std::vector<std::unique_ptr<IO::Astrodynamics::Body::Spacecraft::Engine>> m_engines{};
+        std::vector<std::unique_ptr<IO::Astrodynamics::Body::Spacecraft::Payload>> m_payloads{};
 
         bool HasInstrument(unsigned short id);
 
@@ -59,12 +59,12 @@ namespace IO::SDK::Body::Spacecraft
 
     public:
 
-        const IO::SDK::Math::Vector3D Top;
-        const IO::SDK::Math::Vector3D Front;
-        const IO::SDK::Math::Vector3D Right;
-        const IO::SDK::Math::Vector3D Bottom;
-        const IO::SDK::Math::Vector3D Back;
-        const IO::SDK::Math::Vector3D Left;
+        const IO::Astrodynamics::Math::Vector3D Top;
+        const IO::Astrodynamics::Math::Vector3D Front;
+        const IO::Astrodynamics::Math::Vector3D Right;
+        const IO::Astrodynamics::Math::Vector3D Bottom;
+        const IO::Astrodynamics::Math::Vector3D Back;
+        const IO::Astrodynamics::Math::Vector3D Left;
 
         /**
          * @brief Construct a new Spacecraft object
@@ -79,7 +79,7 @@ namespace IO::SDK::Body::Spacecraft
          */
         Spacecraft(int id, const std::string &name, double dryOperatingMass, double maximumOperatingMass,
                    const std::string &directoryPath,
-                   std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParametersAtEpoch);
+                   std::unique_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParametersAtEpoch);
 
         /**
          * Construct a new Spacecraft object
@@ -94,8 +94,8 @@ namespace IO::SDK::Body::Spacecraft
          */
         Spacecraft(int id, const std::string &name, double dryOperatingMass, double maximumOperatingMass,
                    std::string directoryPath,
-                   std::unique_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParametersAtEpoch, const IO::SDK::Math::Vector3D &front,
-                   const IO::SDK::Math::Vector3D &top);
+                   std::unique_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParametersAtEpoch, const IO::Astrodynamics::Math::Vector3D &front,
+                   const IO::Astrodynamics::Math::Vector3D &top);
 
         Spacecraft(const Spacecraft &spacecraft) = delete;
 
@@ -115,7 +115,7 @@ namespace IO::SDK::Body::Spacecraft
          * @param orientations
          */
         void WriteOrientations(
-                const std::vector<std::vector<IO::SDK::OrbitalParameters::StateOrientation>> &orientations) const;
+                const std::vector<std::vector<IO::Astrodynamics::OrbitalParameters::StateOrientation>> &orientations) const;
 
         /**
          * @brief Get the Orientation object
@@ -123,11 +123,11 @@ namespace IO::SDK::Body::Spacecraft
          * @param epoch Orientation at epoch
          * @param tolerance Tolerance after and before epoch
          * @param frame Frame in wich orienation will be returned
-         * @return IO::SDK::OrbitalParameters::StateOrientation
+         * @return IO::Astrodynamics::OrbitalParameters::StateOrientation
          */
-        IO::SDK::OrbitalParameters::StateOrientation
-        GetOrientation(const IO::SDK::Time::TDB &epoch, const IO::SDK::Time::TimeSpan &tolerance,
-                       const IO::SDK::Frames::Frames &frame) const;
+        IO::Astrodynamics::OrbitalParameters::StateOrientation
+        GetOrientation(const IO::Astrodynamics::Time::TDB &epoch, const IO::Astrodynamics::Time::TimeSpan &tolerance,
+                       const IO::Astrodynamics::Frames::Frames &frame) const;
 
         /**
          * @brief Write comment in orientation kernel
@@ -146,16 +146,16 @@ namespace IO::SDK::Body::Spacecraft
         /**
          * @brief Get the Orientations Coverage Window object
          *
-         * @return IO::SDK::Time::Window<IO::SDK::Time::TDB>
+         * @return IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB>
          */
-        IO::SDK::Time::Window<IO::SDK::Time::TDB> GetOrientationsCoverageWindow() const;
+        IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB> GetOrientationsCoverageWindow() const;
 
         /**
          * @brief Get the Clock object
          *
-         * @return const IO::SDK::Kernels::SpacecraftClockKernel&
+         * @return const IO::Astrodynamics::Kernels::SpacecraftClockKernel&
          */
-        const IO::SDK::Kernels::SpacecraftClockKernel &GetClock() const;
+        const IO::Astrodynamics::Kernels::SpacecraftClockKernel &GetClock() const;
 
         /**
          * @brief Write ephemeris data
@@ -172,18 +172,18 @@ namespace IO::SDK::Body::Spacecraft
          * @param frame
          * @param aberration
          * @param tdb
-         * @return IO::SDK::OrbitalParameters::StateVector
+         * @return IO::Astrodynamics::OrbitalParameters::StateVector
          */
-        IO::SDK::OrbitalParameters::StateVector
-        ReadEphemeris(const IO::SDK::Frames::Frames &frame, IO::SDK::AberrationsEnum aberration,
-                      const IO::SDK::Time::TDB &tdb, const IO::SDK::Body::CelestialBody &observer) const override;
+        IO::Astrodynamics::OrbitalParameters::StateVector
+        ReadEphemeris(const IO::Astrodynamics::Frames::Frames &frame, IO::Astrodynamics::AberrationsEnum aberration,
+                      const IO::Astrodynamics::Time::TDB &tdb, const IO::Astrodynamics::Body::CelestialBody &observer) const override;
 
         /**
          * @brief Get the Ephemeris Coverage Window object
          *
-         * @return IO::SDK::Time::Window<IO::SDK::Time::TDB>
+         * @return IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB>
          */
-        IO::SDK::Time::Window<IO::SDK::Time::TDB> GetEphemerisCoverageWindow() const;
+        IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB> GetEphemerisCoverageWindow() const;
 
         /**
          * @brief Write a comment in ephemeris kernel
@@ -210,9 +210,9 @@ namespace IO::SDK::Body::Spacecraft
          * @param fovAngle
          */
         void AddCircularFOVInstrument(unsigned short id, const std::string &name,
-                                      const IO::SDK::Math::Vector3D &orientation,
-                                      const IO::SDK::Math::Vector3D &boresight,
-                                      const IO::SDK::Math::Vector3D &fovRefVector, double fovAngle);
+                                      const IO::Astrodynamics::Math::Vector3D &orientation,
+                                      const IO::Astrodynamics::Math::Vector3D &boresight,
+                                      const IO::Astrodynamics::Math::Vector3D &fovRefVector, double fovAngle);
 
         /**
          * @brief Add an instrument with a rectangular field of view
@@ -226,9 +226,9 @@ namespace IO::SDK::Body::Spacecraft
          * @param crossAngle
          */
         void AddRectangularFOVInstrument(unsigned short id, const std::string &name,
-                                         const IO::SDK::Math::Vector3D &orientation,
-                                         const IO::SDK::Math::Vector3D &boresight,
-                                         const IO::SDK::Math::Vector3D &fovRefVector, double fovAngle,
+                                         const IO::Astrodynamics::Math::Vector3D &orientation,
+                                         const IO::Astrodynamics::Math::Vector3D &boresight,
+                                         const IO::Astrodynamics::Math::Vector3D &fovRefVector, double fovAngle,
                                          double crossAngle);
 
         /**
@@ -243,18 +243,18 @@ namespace IO::SDK::Body::Spacecraft
          * @param crossAngle
          */
         void AddEllipticalFOVInstrument(unsigned short id, const std::string &name,
-                                        const IO::SDK::Math::Vector3D &orientation,
-                                        const IO::SDK::Math::Vector3D &boresight,
-                                        const IO::SDK::Math::Vector3D &fovRefVector, double fovAngle,
+                                        const IO::Astrodynamics::Math::Vector3D &orientation,
+                                        const IO::Astrodynamics::Math::Vector3D &boresight,
+                                        const IO::Astrodynamics::Math::Vector3D &fovRefVector, double fovAngle,
                                         double crossAngle);
 
         /**
          * @brief Get the Instrument object
          *
          * @param id
-         * @return const IO::SDK::Instruments::Instrument*
+         * @return const IO::Astrodynamics::Instruments::Instrument*
          */
-        const IO::SDK::Instruments::Instrument *GetInstrument(int id) const;
+        const IO::Astrodynamics::Instruments::Instrument *GetInstrument(int id) const;
 
         /**
          * @brief Add a fuel tank
@@ -302,17 +302,17 @@ namespace IO::SDK::Body::Spacecraft
          * @brief Get the Engine object
          *
          * @param serialNumber
-         * @return IO::SDK::Body::Spacecraft::Engine*
+         * @return IO::Astrodynamics::Body::Spacecraft::Engine*
          */
-        const IO::SDK::Body::Spacecraft::Engine *GetEngine(const std::string &serialNumber) const;
+        const IO::Astrodynamics::Body::Spacecraft::Engine *GetEngine(const std::string &serialNumber) const;
 
         /**
          * @brief Get the Fueltank object
          *
          * @param serialNumber
-         * @return IO::SDK::Body::Spacecraft::FuelTank*
+         * @return IO::Astrodynamics::Body::Spacecraft::FuelTank*
          */
-        IO::SDK::Body::Spacecraft::FuelTank *GetFueltank(const std::string &serialNumber) const;
+        IO::Astrodynamics::Body::Spacecraft::FuelTank *GetFueltank(const std::string &serialNumber) const;
 
         /**
          * @brief Release a payload
@@ -332,7 +332,7 @@ namespace IO::SDK::Body::Spacecraft
          * Get associated frame
          * @return frame
          */
-        const std::unique_ptr<IO::SDK::Frames::SpacecraftFrameFile> &GetFrame() const;
+        const std::unique_ptr<IO::Astrodynamics::Frames::SpacecraftFrameFile> &GetFrame() const;
 
         inline double GetMaximumOperatingMass() const
         { return m_maximumOperatingMass; }
