@@ -18,6 +18,6 @@ namespace IO::Astrodynamics::API::DTO
         SpacecraftDTO Spacecraft;
         SiteDTO Sites[10];
 
-        CelestialBodyDTO CelestialBodies[10];
+        int CelestialBodiesId[10]{};
     };
 }

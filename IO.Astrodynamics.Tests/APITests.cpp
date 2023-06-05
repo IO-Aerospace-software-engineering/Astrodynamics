@@ -11,7 +11,7 @@
 
 TEST(API, DTOSize) {
     auto size2 = sizeof(IO::Astrodynamics::API::DTO::ScenarioDTO);
-    ASSERT_EQ(19456, size2);
+    ASSERT_EQ(18776, size2);
 }
 
 TEST(API, TDBToString) {
@@ -32,8 +32,8 @@ TEST(API, SiteAndSpacecraftPropagation) {
     scenario.Window.end = 668174330.814560;
 
     //Define celestial body involved in the propagation
-    scenario.CelestialBodies[0].Id = 399;
-    scenario.CelestialBodies[1].Id = 10;
+    scenario.CelestialBodiesId[0] = 399;
+    scenario.CelestialBodiesId[1] = 10;
 
     //Configure site
     scenario.Sites[0].id = 399033;
@@ -74,9 +74,9 @@ TEST(API, SpacecraftPropagation) {
     scenario.Window.end = 668174469.185440;
 
     //Add involved celestia bodies
-    scenario.CelestialBodies[0].Id = 10;
-    scenario.CelestialBodies[1].Id = 399;
-    scenario.CelestialBodies[2].Id = 301;
+    scenario.CelestialBodiesId[0] = 10;
+    scenario.CelestialBodiesId[1] = 399;
+    scenario.CelestialBodiesId[2] = 301;
 
     //Add and configure spacecraft
     scenario.Spacecraft.id = -1111;
