@@ -1,5 +1,5 @@
 \hypertarget{Body_8h_source}{}\doxysection{Body.\+h}
-\label{Body_8h_source}\index{IO.SDK/Body/Body.h@{IO.SDK/Body/Body.h}}
+\label{Body_8h_source}\index{IO.Astrodynamics/Body/Body.h@{IO.Astrodynamics/Body/Body.h}}
 \mbox{\hyperlink{Body_8h}{Go to the documentation of this file.}}
 \begin{DoxyCode}{0}
 \DoxyCodeLine{1 \textcolor{comment}{/*}}
@@ -12,75 +12,75 @@
 \DoxyCodeLine{8 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{Planetographic_8h}{Planetographic.h}}>}}
 \DoxyCodeLine{9 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{GeometryFinder_8h}{GeometryFinder.h}}>}}
 \DoxyCodeLine{10 }
-\DoxyCodeLine{11 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1SDK_1_1OrbitalParameters}{IO::SDK::OrbitalParameters}}}
+\DoxyCodeLine{11 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1OrbitalParameters}{IO::Astrodynamics::OrbitalParameters}}}
 \DoxyCodeLine{12 \{}
-\DoxyCodeLine{13     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters}{OrbitalParameters}};}
+\DoxyCodeLine{13     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters}{OrbitalParameters}};}
 \DoxyCodeLine{14 }
-\DoxyCodeLine{15     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{StateVector}};}
+\DoxyCodeLine{15     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}{StateVector}};}
 \DoxyCodeLine{16 \}}
 \DoxyCodeLine{17 }
-\DoxyCodeLine{18 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1SDK_1_1Body}{IO::SDK::Body}}}
+\DoxyCodeLine{18 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Body}{IO::Astrodynamics::Body}}}
 \DoxyCodeLine{19 \{}
-\DoxyCodeLine{24     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body}{Body}} : \textcolor{keyword}{public} std::enable\_shared\_from\_this<IO::SDK::Body::Body>}
+\DoxyCodeLine{24     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Body}{Body}} : \textcolor{keyword}{public} std::enable\_shared\_from\_this<IO::Astrodynamics::Body::Body>}
 \DoxyCodeLine{25     \{}
 \DoxyCodeLine{26     \textcolor{keyword}{private}:}
 \DoxyCodeLine{27     \textcolor{keyword}{protected}:}
-\DoxyCodeLine{28         std::unique\_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body_a998dfa70fdc885068e0ffd549a219513}{m\_orbitalParametersAtEpoch}}\{\};}
-\DoxyCodeLine{29         std::vector<IO::SDK::Body::Body *> \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body_ab77e7f00e8c59a65ed9e9d21fcf04416}{m\_satellites}}\{\};}
-\DoxyCodeLine{30         \textcolor{keyword}{const} \textcolor{keywordtype}{int} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body_acbd6ec42aef0f45c1538dbf1ade59e41}{m\_id}}\{\};}
-\DoxyCodeLine{31         \textcolor{keyword}{const} std::string \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body_ac1a1633c2de78a5065ba1704481fff64}{m\_name}}\{\};}
-\DoxyCodeLine{32         \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body_a7cf8e554d98023c8ea4d9e6876b5f7e4}{m\_mass}}\{\};}
-\DoxyCodeLine{33         \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body_a94666bb0eea716788c8bc4f02201a939}{m\_mu}}\{\};}
+\DoxyCodeLine{28         std::unique\_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Body_a1fbbe55e8df571ad15581f09d8f7eaa8}{m\_orbitalParametersAtEpoch}}\{\};}
+\DoxyCodeLine{29         std::vector<IO::Astrodynamics::Body::Body *> \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Body_ad10321ad2ff4b4c3ca8cb37d6b2d776e}{m\_satellites}}\{\};}
+\DoxyCodeLine{30         \textcolor{keyword}{const} \textcolor{keywordtype}{int} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Body_a6554a14f17d74606aaf82fa66eeefd68}{m\_id}}\{\};}
+\DoxyCodeLine{31         \textcolor{keyword}{const} std::string \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Body_aff272569baf4fb09726c3f4c64eee0e3}{m\_name}}\{\};}
+\DoxyCodeLine{32         \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Body_a9746518b766a6378dd7fa94d9bde5206}{m\_mass}}\{\};}
+\DoxyCodeLine{33         \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Body_a19dd207ffe3b08114b33a78f8a11df5a}{m\_mu}}\{\};}
 \DoxyCodeLine{34 }
 \DoxyCodeLine{35     \textcolor{keyword}{public}:}
-\DoxyCodeLine{43         \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body_a5bb5783ce846c94b7cfc3cce1e516b6e}{Body}}(\textcolor{keywordtype}{int} \textcolor{keywordtype}{id}, \textcolor{keyword}{const} std::string \&name, \textcolor{keywordtype}{double} mass);}
+\DoxyCodeLine{43         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Body_a29d0581441e64455245726d3884350b3}{Body}}(\textcolor{keywordtype}{int} \textcolor{keywordtype}{id}, \textcolor{keyword}{const} std::string \&name, \textcolor{keywordtype}{double} mass);}
 \DoxyCodeLine{44 }
-\DoxyCodeLine{53         \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body_a5bb5783ce846c94b7cfc3cce1e516b6e}{Body}}(\textcolor{keywordtype}{int} \textcolor{keywordtype}{id}, \textcolor{keyword}{const} std::string \&name, \textcolor{keywordtype}{double} mass, std::unique\_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> orbitalParametersAtEpoch);}
+\DoxyCodeLine{53         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Body_a29d0581441e64455245726d3884350b3}{Body}}(\textcolor{keywordtype}{int} \textcolor{keywordtype}{id}, \textcolor{keyword}{const} std::string \&name, \textcolor{keywordtype}{double} mass, std::unique\_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParametersAtEpoch);}
 \DoxyCodeLine{54 }
-\DoxyCodeLine{63         \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body_a5bb5783ce846c94b7cfc3cce1e516b6e}{Body}}(\textcolor{keywordtype}{int} \textcolor{keywordtype}{id}, \textcolor{keyword}{const} std::string \&name, \textcolor{keywordtype}{double} mass, std::shared\_ptr<IO::SDK::Body::CelestialBody> \&centerOfMotion);}
+\DoxyCodeLine{63         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Body_a29d0581441e64455245726d3884350b3}{Body}}(\textcolor{keywordtype}{int} \textcolor{keywordtype}{id}, \textcolor{keyword}{const} std::string \&name, \textcolor{keywordtype}{double} mass, std::shared\_ptr<IO::Astrodynamics::Body::CelestialBody> \&centerOfMotion);}
 \DoxyCodeLine{64 }
-\DoxyCodeLine{65         \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body_a5bb5783ce846c94b7cfc3cce1e516b6e}{Body}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body}{Body}} \&body);}
+\DoxyCodeLine{65         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Body_a29d0581441e64455245726d3884350b3}{Body}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Body}{Body}} \&body);}
 \DoxyCodeLine{66 }
-\DoxyCodeLine{67         \textcolor{keyword}{virtual} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body_a362cb5e31756fe29a43f44be9f87c436}{\string~Body}}() = \textcolor{keywordflow}{default};}
+\DoxyCodeLine{67         \textcolor{keyword}{virtual} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Body_ae83a2c6e788f51c0167a5e21bc3a432e}{\string~Body}}() = \textcolor{keywordflow}{default};}
 \DoxyCodeLine{68 }
-\DoxyCodeLine{74         \textcolor{keywordtype}{int} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body_a27ba6eb9d8f5d669d79375214990a4e8}{GetId}}() \textcolor{keyword}{const};}
+\DoxyCodeLine{74         \textcolor{keywordtype}{int} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Body_a68a2f579897d49f07a59524a36089d6c}{GetId}}() \textcolor{keyword}{const};}
 \DoxyCodeLine{75 }
-\DoxyCodeLine{81         std::string \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body_aab6038f9760ba8b22255c8d042a0aef2}{GetName}}() \textcolor{keyword}{const};}
+\DoxyCodeLine{81         std::string \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Body_a642fd7ba5f237b983d5ab16bb13a470f}{GetName}}() \textcolor{keyword}{const};}
 \DoxyCodeLine{82 }
-\DoxyCodeLine{88         \textcolor{keyword}{virtual} \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body_a166ce7048ed87d61f6f40b51e5d4f609}{GetMass}}() \textcolor{keyword}{const};}
+\DoxyCodeLine{88         \textcolor{keyword}{virtual} \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Body_a6c0d7c72b88c723b8136e2c67003dc17}{GetMass}}() \textcolor{keyword}{const};}
 \DoxyCodeLine{89 }
-\DoxyCodeLine{95         \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body_ad51f2046539bf713d175b95b13f5065f}{GetMu}}() \textcolor{keyword}{const};}
+\DoxyCodeLine{95         \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Body_a1dcaa1faf9e96cd05e211d7454170ac5}{GetMu}}() \textcolor{keyword}{const};}
 \DoxyCodeLine{96 }
-\DoxyCodeLine{102         \textcolor{keyword}{const} std::unique\_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> \&\mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body_a36ed19b97197ccc246f2b640f12a7b94}{GetOrbitalParametersAtEpoch}}() \textcolor{keyword}{const};}
+\DoxyCodeLine{102         \textcolor{keyword}{const} std::unique\_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> \&\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Body_ae14b255a4979a4d03ed03f0546faf774}{GetOrbitalParametersAtEpoch}}() \textcolor{keyword}{const};}
 \DoxyCodeLine{103 }
-\DoxyCodeLine{109         \textcolor{keyword}{const} std::vector<IO::SDK::Body::Body *> \&\mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body_a73ca24c3037cb7b41f0ac6a88d372f28}{GetSatellites}}() \textcolor{keyword}{const};}
+\DoxyCodeLine{109         \textcolor{keyword}{const} std::vector<IO::Astrodynamics::Body::Body *> \&\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Body_a724f4fc8c0b541edfeeb9d937dfb54b6}{GetSatellites}}() \textcolor{keyword}{const};}
 \DoxyCodeLine{110 }
-\DoxyCodeLine{119         \textcolor{keyword}{virtual} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{IO::SDK::OrbitalParameters::StateVector}}}
-\DoxyCodeLine{120         \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body_ae7189b7328abc3991ad4ee4581eeceb5}{ReadEphemeris}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1Frames}{IO::SDK::Frames::Frames}} \&frame, \mbox{\hyperlink{namespaceIO_1_1SDK_abbb4827ec6a24ad346d9a60473ad3b81}{IO::SDK::AberrationsEnum}} aberration, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO::SDK::Time::TDB}} \&epoch) \textcolor{keyword}{const};}
+\DoxyCodeLine{119         \textcolor{keyword}{virtual} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}{IO::Astrodynamics::OrbitalParameters::StateVector}}}
+\DoxyCodeLine{120         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Body_a4104e0b5848858531b9ef95078878c85}{ReadEphemeris}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Frames_1_1Frames}{IO::Astrodynamics::Frames::Frames}} \&frame, \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_af0023a81d12385b73d78bd82e4b96ce3}{IO::Astrodynamics::AberrationsEnum}} aberration, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO::Astrodynamics::Time::TDB}} \&epoch) \textcolor{keyword}{const};}
 \DoxyCodeLine{121 }
-\DoxyCodeLine{128         \textcolor{keyword}{virtual} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{IO::SDK::OrbitalParameters::StateVector}} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body_ae7189b7328abc3991ad4ee4581eeceb5}{ReadEphemeris}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1Frames}{IO::SDK::Frames::Frames}} \&frame, \mbox{\hyperlink{namespaceIO_1_1SDK_abbb4827ec6a24ad346d9a60473ad3b81}{IO::SDK::AberrationsEnum}} aberration, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO::SDK::Time::TDB}} \&epoch,}
-\DoxyCodeLine{129                                                                       \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1CelestialBody}{IO::SDK::Body::CelestialBody}} \&relativeTo) \textcolor{keyword}{const};}
+\DoxyCodeLine{128         \textcolor{keyword}{virtual} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}{IO::Astrodynamics::OrbitalParameters::StateVector}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Body_a4104e0b5848858531b9ef95078878c85}{ReadEphemeris}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Frames_1_1Frames}{IO::Astrodynamics::Frames::Frames}} \&frame, \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_af0023a81d12385b73d78bd82e4b96ce3}{IO::Astrodynamics::AberrationsEnum}} aberration, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO::Astrodynamics::Time::TDB}} \&epoch,}
+\DoxyCodeLine{129                                                                       \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody}{IO::Astrodynamics::Body::CelestialBody}} \&relativeTo) \textcolor{keyword}{const};}
 \DoxyCodeLine{130 }
-\DoxyCodeLine{131         \textcolor{keyword}{virtual} \textcolor{keywordtype}{bool} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body_affb081c56bb7b2ec50c5fd44c880bc0b}{operator==}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body}{IO::SDK::Body::Body}} \&rhs) \textcolor{keyword}{const};}
+\DoxyCodeLine{131         \textcolor{keyword}{virtual} \textcolor{keywordtype}{bool} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Body_a16c549d68280f795f8c8a4806e0bc6fd}{operator==}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Body}{IO::Astrodynamics::Body::Body}} \&rhs) \textcolor{keyword}{const};}
 \DoxyCodeLine{132 }
-\DoxyCodeLine{133         \textcolor{keyword}{virtual} \textcolor{keywordtype}{bool} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body_a3c80e9b62cbd50a3fefea0337ee81cd9}{operator!=}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body}{IO::SDK::Body::Body}} \&rhs) \textcolor{keyword}{const};}
+\DoxyCodeLine{133         \textcolor{keyword}{virtual} \textcolor{keywordtype}{bool} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Body_aa51018d424f9cd03b5476a4377b16a67}{operator!=}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Body}{IO::Astrodynamics::Body::Body}} \&rhs) \textcolor{keyword}{const};}
 \DoxyCodeLine{134 }
-\DoxyCodeLine{135         std::shared\_ptr<IO::SDK::Body::Body> \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body_a9bba6ae2bc97ca5345d9a9ff545184fd}{GetSharedPointer}}();}
+\DoxyCodeLine{135         std::shared\_ptr<IO::Astrodynamics::Body::Body> \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Body_a48f8ab15e69f963bc556c005035529d9}{GetSharedPointer}}();}
 \DoxyCodeLine{136 }
-\DoxyCodeLine{149         \textcolor{keyword}{static} std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>>}
-\DoxyCodeLine{150         \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body_aafbe9ac9808c8b20f6527fa12b760a84}{FindWindowsOnDistanceConstraint}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO::SDK::Time::Window<IO::SDK::Time::TDB>}} \&searchWindow, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body}{Body}} \&targetBody, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body}{Body}} \&observer,}
-\DoxyCodeLine{151                                         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Constraints_1_1RelationalOperator}{IO::SDK::Constraints::RelationalOperator}} \&constraint, \mbox{\hyperlink{namespaceIO_1_1SDK_abbb4827ec6a24ad346d9a60473ad3b81}{IO::SDK::AberrationsEnum}} aberration, \textcolor{keywordtype}{double} value, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO::SDK::Time::TimeSpan}} \&step);}
+\DoxyCodeLine{149         \textcolor{keyword}{static} std::vector<IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB>>}
+\DoxyCodeLine{150         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Body_a54c8584ca661a1b1811bd0ce3c751178}{FindWindowsOnDistanceConstraint}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB>}} \&searchWindow, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Body}{Body}} \&targetBody, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Body}{Body}} \&observer,}
+\DoxyCodeLine{151                                         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Constraints_1_1RelationalOperator}{IO::Astrodynamics::Constraints::RelationalOperator}} \&constraint, \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_af0023a81d12385b73d78bd82e4b96ce3}{IO::Astrodynamics::AberrationsEnum}} aberration, \textcolor{keywordtype}{double} value, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO::Astrodynamics::Time::TimeSpan}} \&step);}
 \DoxyCodeLine{152 }
-\DoxyCodeLine{164         std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>>}
-\DoxyCodeLine{165         \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body_a2bcf92ebfa83f35e3f17b70d3bf38c18}{FindWindowsOnOccultationConstraint}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO::SDK::Time::Window<IO::SDK::Time::TDB>}} \&searchWindow, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body}{IO::SDK::Body::Body}} \&targetBody,}
-\DoxyCodeLine{166                                            \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1CelestialBody}{IO::SDK::Body::CelestialBody}} \&frontBody, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1OccultationType}{IO::SDK::OccultationType}} \&occultationType, \mbox{\hyperlink{namespaceIO_1_1SDK_abbb4827ec6a24ad346d9a60473ad3b81}{IO::SDK::AberrationsEnum}} aberration,}
-\DoxyCodeLine{167                                            \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO::SDK::Time::TimeSpan}} \&stepSize) \textcolor{keyword}{const};}
+\DoxyCodeLine{164         std::vector<IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB>>}
+\DoxyCodeLine{165         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Body_a19e71ba6f4cf90469bdd6351e5d61ed8}{FindWindowsOnOccultationConstraint}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB>}} \&searchWindow, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Body}{IO::Astrodynamics::Body::Body}} \&targetBody,}
+\DoxyCodeLine{166                                            \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody}{IO::Astrodynamics::Body::CelestialBody}} \&frontBody, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OccultationType}{IO::Astrodynamics::OccultationType}} \&occultationType, \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_af0023a81d12385b73d78bd82e4b96ce3}{IO::Astrodynamics::AberrationsEnum}} aberration,}
+\DoxyCodeLine{167                                            \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO::Astrodynamics::Time::TimeSpan}} \&stepSize) \textcolor{keyword}{const};}
 \DoxyCodeLine{168 }
-\DoxyCodeLine{177         \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1Planetographic}{IO::SDK::Coordinates::Planetographic}}}
-\DoxyCodeLine{178         \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body_aa22fd3b03a98e72b145002a180baf428}{GetSubObserverPoint}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1CelestialBody}{IO::SDK::Body::CelestialBody}} \&targetBody, \textcolor{keyword}{const} \mbox{\hyperlink{namespaceIO_1_1SDK_abbb4827ec6a24ad346d9a60473ad3b81}{IO::SDK::AberrationsEnum}} \&aberration, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1DateTime}{IO::SDK::Time::DateTime}} \&epoch) \textcolor{keyword}{const};}
+\DoxyCodeLine{177         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1Planetographic}{IO::Astrodynamics::Coordinates::Planetographic}}}
+\DoxyCodeLine{178         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Body_a1f6561de87fd8500b232ecbb0f4beac2}{GetSubObserverPoint}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody}{IO::Astrodynamics::Body::CelestialBody}} \&targetBody, \textcolor{keyword}{const} \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_af0023a81d12385b73d78bd82e4b96ce3}{IO::Astrodynamics::AberrationsEnum}} \&aberration, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1DateTime}{IO::Astrodynamics::Time::DateTime}} \&epoch) \textcolor{keyword}{const};}
 \DoxyCodeLine{179 }
-\DoxyCodeLine{188         \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1Planetographic}{IO::SDK::Coordinates::Planetographic}}}
-\DoxyCodeLine{189         \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body_a018f89071ab60df2c208f67250ed23cb}{GetSubSolarPoint}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1CelestialBody}{IO::SDK::Body::CelestialBody}} \&targetBody, \mbox{\hyperlink{namespaceIO_1_1SDK_abbb4827ec6a24ad346d9a60473ad3b81}{IO::SDK::AberrationsEnum}} aberration, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO::SDK::Time::TDB}} \&epoch) \textcolor{keyword}{const};}
+\DoxyCodeLine{188         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1Planetographic}{IO::Astrodynamics::Coordinates::Planetographic}}}
+\DoxyCodeLine{189         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Body_af992e48737e8f6866d0f633b0ff521e8}{GetSubSolarPoint}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody}{IO::Astrodynamics::Body::CelestialBody}} \&targetBody, \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_af0023a81d12385b73d78bd82e4b96ce3}{IO::Astrodynamics::AberrationsEnum}} aberration, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO::Astrodynamics::Time::TDB}} \&epoch) \textcolor{keyword}{const};}
 \DoxyCodeLine{190     \};}
 \DoxyCodeLine{191 \}}
 \DoxyCodeLine{192 \textcolor{preprocessor}{\#endif}}

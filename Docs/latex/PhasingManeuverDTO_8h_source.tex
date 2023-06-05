@@ -1,5 +1,5 @@
 \hypertarget{PhasingManeuverDTO_8h_source}{}\doxysection{Phasing\+Maneuver\+DTO.\+h}
-\label{PhasingManeuverDTO_8h_source}\index{IO.SDK/API/DTO/PhasingManeuverDTO.h@{IO.SDK/API/DTO/PhasingManeuverDTO.h}}
+\label{PhasingManeuverDTO_8h_source}\index{IO.Astrodynamics/API/DTO/PhasingManeuverDTO.h@{IO.Astrodynamics/API/DTO/PhasingManeuverDTO.h}}
 \mbox{\hyperlink{PhasingManeuverDTO_8h}{Go to the documentation of this file.}}
 \begin{DoxyCode}{0}
 \DoxyCodeLine{1 \textcolor{comment}{/*}}
@@ -16,23 +16,23 @@
 \DoxyCodeLine{12 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{WindowDTO_8h}{WindowDTO.h}}>}}
 \DoxyCodeLine{13 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{StateVectorDTO_8h}{StateVectorDTO.h}}>}}
 \DoxyCodeLine{14 }
-\DoxyCodeLine{15 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1SDK_1_1API_1_1DTO}{IO::SDK::API::DTO}}}
+\DoxyCodeLine{15 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1API_1_1DTO}{IO::Astrodynamics::API::DTO}}}
 \DoxyCodeLine{16 \{}
-\DoxyCodeLine{17     \textcolor{keyword}{struct }\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1PhasingManeuverDTO}{PhasingManeuverDTO}}}
+\DoxyCodeLine{17     \textcolor{keyword}{struct }\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1PhasingManeuverDTO}{PhasingManeuverDTO}}}
 \DoxyCodeLine{18     \{}
-\DoxyCodeLine{19         \textcolor{keywordtype}{int} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1PhasingManeuverDTO_a8946c24d73e71bed59a35615b0de22a5}{maneuverOrder}}\{-\/1\};}
-\DoxyCodeLine{20         \textcolor{keywordtype}{char} *\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1PhasingManeuverDTO_a92d5227832edfce5a8394b919d80fd3d}{engines}}[5]\{\};}
-\DoxyCodeLine{21         \textcolor{keywordtype}{double} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1PhasingManeuverDTO_ad0983abd599c7b99b4ca2736c4c20447}{attitudeHoldDuration}}\{0.0\};}
-\DoxyCodeLine{22         \textcolor{keywordtype}{double} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1PhasingManeuverDTO_ace6eb304bc731a26b3e8f9a9f149b547}{minimumEpoch}}\{0.0\};}
+\DoxyCodeLine{19         \textcolor{keywordtype}{int} \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1PhasingManeuverDTO_a877e47bc303eb558391f22c7666cc290}{maneuverOrder}}\{-\/1\};}
+\DoxyCodeLine{20         \textcolor{keywordtype}{char} *\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1PhasingManeuverDTO_a7bbed9a1c01a3739bd5626d43b1fe5b4}{engines}}[5]\{\};}
+\DoxyCodeLine{21         \textcolor{keywordtype}{double} \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1PhasingManeuverDTO_a8348ae866db78722abf81378fa06cd4d}{attitudeHoldDuration}}\{0.0\};}
+\DoxyCodeLine{22         \textcolor{keywordtype}{double} \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1PhasingManeuverDTO_ac8c70fb359c002fb16db2c109c71a83b}{minimumEpoch}}\{0.0\};}
 \DoxyCodeLine{23 }
-\DoxyCodeLine{24         \textcolor{keywordtype}{int} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1PhasingManeuverDTO_a95d80c87bb0a88a6681b0d759d983081}{numberRevolutions}}\{\};}
-\DoxyCodeLine{25         \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1StateVectorDTO}{StateVectorDTO}} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1PhasingManeuverDTO_abc0848f1dd315d23f5157353552fb815}{targetOrbit}};}
+\DoxyCodeLine{24         \textcolor{keywordtype}{int} \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1PhasingManeuverDTO_ac2f35edf19b93e7bc5218220bae145ee}{numberRevolutions}}\{\};}
+\DoxyCodeLine{25         \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1StateVectorDTO}{StateVectorDTO}} \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1PhasingManeuverDTO_ab7a78daff95a5295a415436801c73199}{targetOrbit}};}
 \DoxyCodeLine{26 }
-\DoxyCodeLine{27         \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO}{WindowDTO}} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1PhasingManeuverDTO_a468edd5395a56b95ffa856e236132f3d}{maneuverWindow}}\{\};}
-\DoxyCodeLine{28         \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO}{WindowDTO}} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1PhasingManeuverDTO_a148fa1e148564f1497a4860463d1dda9}{thrustWindow}}\{\};}
-\DoxyCodeLine{29         \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO}{WindowDTO}} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1PhasingManeuverDTO_a582f11dcf2863339caa3025aade38ed5}{attitudeWindow}}\{\};}
-\DoxyCodeLine{30         \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1Vector3DDTO}{Vector3DDTO}} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1PhasingManeuverDTO_ada0c1b221e858bba94d1f99efa8e4534}{deltaV}}\{\};}
-\DoxyCodeLine{31         \textcolor{keywordtype}{double} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1PhasingManeuverDTO_ad03ad48b95e083ac8b694766ff80d1b0}{FuelBurned}}\{0.0\};}
+\DoxyCodeLine{27         \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1WindowDTO}{WindowDTO}} \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1PhasingManeuverDTO_adc138c7375d41477f4a9af55719a7aca}{maneuverWindow}}\{\};}
+\DoxyCodeLine{28         \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1WindowDTO}{WindowDTO}} \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1PhasingManeuverDTO_ac2dc4589887d5dc70385e84875b71a67}{thrustWindow}}\{\};}
+\DoxyCodeLine{29         \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1WindowDTO}{WindowDTO}} \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1PhasingManeuverDTO_a92504582c56b9087edcb2b78dc51c522}{attitudeWindow}}\{\};}
+\DoxyCodeLine{30         \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1Vector3DDTO}{Vector3DDTO}} \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1PhasingManeuverDTO_a23194484e6b33d835c42237a06f72c5e}{deltaV}}\{\};}
+\DoxyCodeLine{31         \textcolor{keywordtype}{double} \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1PhasingManeuverDTO_a0d497a0d9f108da5a2f72e8eead27a46}{FuelBurned}}\{0.0\};}
 \DoxyCodeLine{32     \};}
 \DoxyCodeLine{33 \}}
 \DoxyCodeLine{34 }

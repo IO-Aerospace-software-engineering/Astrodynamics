@@ -1,5 +1,5 @@
 \hypertarget{LaunchSite_8h_source}{}\doxysection{Launch\+Site.\+h}
-\label{LaunchSite_8h_source}\index{IO.SDK/Sites/LaunchSite.h@{IO.SDK/Sites/LaunchSite.h}}
+\label{LaunchSite_8h_source}\index{IO.Astrodynamics/Sites/LaunchSite.h@{IO.Astrodynamics/Sites/LaunchSite.h}}
 \mbox{\hyperlink{LaunchSite_8h}{Go to the documentation of this file.}}
 \begin{DoxyCode}{0}
 \DoxyCodeLine{1 \textcolor{comment}{/*}}
@@ -11,25 +11,25 @@
 \DoxyCodeLine{7 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{Site_8h}{Site.h}}>}}
 \DoxyCodeLine{8 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{AzimuthRange_8h}{AzimuthRange.h}}>}}
 \DoxyCodeLine{9 }
-\DoxyCodeLine{10 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1SDK_1_1Sites}{IO::SDK::Sites}}}
+\DoxyCodeLine{10 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Sites}{IO::Astrodynamics::Sites}}}
 \DoxyCodeLine{11 \{}
-\DoxyCodeLine{16     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1LaunchSite}{LaunchSite}} final : \textcolor{keyword}{public} \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site}{IO::SDK::Sites::Site}}}
+\DoxyCodeLine{16     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1LaunchSite}{LaunchSite}} final : \textcolor{keyword}{public} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1Site}{IO::Astrodynamics::Sites::Site}}}
 \DoxyCodeLine{17     \{}
 \DoxyCodeLine{18     \textcolor{keyword}{private}:}
-\DoxyCodeLine{19         std::vector<IO::SDK::Coordinates::AzimuthRange> m\_azimuthRanges;}
+\DoxyCodeLine{19         std::vector<IO::Astrodynamics::Coordinates::AzimuthRange> m\_azimuthRanges;}
 \DoxyCodeLine{20 }
 \DoxyCodeLine{21     \textcolor{keyword}{public}:}
-\DoxyCodeLine{30         \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1LaunchSite_abd11ded2df13281c0f4f92ddd958e48c}{LaunchSite}}(\textcolor{keywordtype}{int} \textcolor{keywordtype}{id}, \textcolor{keyword}{const} std::string\& name, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1Geodetic}{IO::SDK::Coordinates::Geodetic}}\& coordinates,}
-\DoxyCodeLine{31                    std::shared\_ptr<IO::SDK::Body::CelestialBody> body,std::string directoryPath);}
+\DoxyCodeLine{30         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1LaunchSite_ac46f2b48e900de81c90b08d40ecc25ff}{LaunchSite}}(\textcolor{keywordtype}{int} \textcolor{keywordtype}{id}, \textcolor{keyword}{const} std::string\& name, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1Geodetic}{IO::Astrodynamics::Coordinates::Geodetic}}\& coordinates,}
+\DoxyCodeLine{31                    std::shared\_ptr<IO::Astrodynamics::Body::CelestialBody> body,std::string directoryPath);}
 \DoxyCodeLine{32 }
-\DoxyCodeLine{38         \textcolor{keywordtype}{void} \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1LaunchSite_ad828c9877d22155bb3d0cee0b5c9bc06}{AddAzimuthLaunchRange}}(\mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1AzimuthRange}{IO::SDK::Coordinates::AzimuthRange}} \&azimuthRange);}
+\DoxyCodeLine{38         \textcolor{keywordtype}{void} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1LaunchSite_a1b84cbc34bc2621e453f63bba7a5fc3e}{AddAzimuthLaunchRange}}(\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1AzimuthRange}{IO::Astrodynamics::Coordinates::AzimuthRange}} \&azimuthRange);}
 \DoxyCodeLine{39 }
-\DoxyCodeLine{44         \textcolor{keywordtype}{void} \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1LaunchSite_a06774cb6d482c4357f89055a1ce8831e}{ClearAzimuthLaunchRanges}}();}
+\DoxyCodeLine{44         \textcolor{keywordtype}{void} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1LaunchSite_aa3416413745cef22ec787cd34d14b88e}{ClearAzimuthLaunchRanges}}();}
 \DoxyCodeLine{45 }
-\DoxyCodeLine{53         [[nodiscard]] \textcolor{keywordtype}{bool} \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1LaunchSite_a4f0f13af4de3a53f629bba4e857dbd7b}{IsAzimuthLaunchAllowed}}(\textcolor{keywordtype}{double} azimuth) \textcolor{keyword}{const};}
+\DoxyCodeLine{53         [[nodiscard]] \textcolor{keywordtype}{bool} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1LaunchSite_a791e09ad1716efc180a1bc79244bdb98}{IsAzimuthLaunchAllowed}}(\textcolor{keywordtype}{double} azimuth) \textcolor{keyword}{const};}
 \DoxyCodeLine{54     \};}
 \DoxyCodeLine{55 }
-\DoxyCodeLine{56 \} \textcolor{comment}{// namespace IO::SDK::Sites}}
+\DoxyCodeLine{56 \} \textcolor{comment}{// namespace IO::Astrodynamics::Sites}}
 \DoxyCodeLine{57 }
 \DoxyCodeLine{58 \textcolor{preprocessor}{\#endif}}
 

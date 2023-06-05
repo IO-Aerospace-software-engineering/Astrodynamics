@@ -1,0 +1,451 @@
+\hypertarget{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase}{}\doxysection{IO\+::Astrodynamics\+::Maneuvers\+::Maneuver\+Base Class Reference}
+\label{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase}\index{IO::Astrodynamics::Maneuvers::ManeuverBase@{IO::Astrodynamics::Maneuvers::ManeuverBase}}
+
+
+Maneuverbase class used by concrete maneuvers.  
+
+
+
+
+{\ttfamily \#include $<$Maneuver\+Base.\+h$>$}
+
+Inheritance diagram for IO\+::Astrodynamics\+::Maneuvers\+::Maneuver\+Base\+:\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=8.878049cm]{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase}
+\end{center}
+\end{figure}
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+void \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_a402b2cba078061f515b00e63c8179858}{Handle}} (const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} \&not\+Before\+Epoch)
+\begin{DoxyCompactList}\small\item\em Handle maneuver by propagator. \end{DoxyCompactList}\item 
+virtual bool \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_a9bc46694a197868297955930c9edd531}{Can\+Execute}} (const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}} \&maneuver\+Point)=0
+\begin{DoxyCompactList}\small\item\em Evaluate if maneuver can occurs. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverResult}{IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Maneuver\+Result}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_a5d34d331d703837ccc1ed54e506671d1}{Try\+Execute}} (const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}} \&maneuver\+Point)
+\begin{DoxyCompactList}\small\item\em Try to execute maneuver at maneuver point. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{IO\+::\+Astrodynamics\+::\+Time\+::\+Window}}$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} $>$ $\ast$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_af40a795082bf5b39573f9ce23495d6a7}{Get\+Thrust\+Window}} () const
+\begin{DoxyCompactList}\small\item\em Get the thrust window. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{IO\+::\+Astrodynamics\+::\+Time\+::\+Window}}$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} $>$ $\ast$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_a478e08783afb471c4f7fdaa74c3ea355}{Get\+Attitude\+Window}} () const
+\begin{DoxyCompactList}\small\item\em Get the attitude window. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{IO\+::\+Astrodynamics\+::\+Time\+::\+Window}}$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} $>$ $\ast$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_accf195d53d09b805b5ffacc9a153c099}{Get\+Maneuver\+Window}} () const
+\begin{DoxyCompactList}\small\item\em Get the maneuver window. Maneuver window start at burn and end when the maneuver is completed. \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_a2ce52d7031bc50826e44f6737e6b2366}{Get\+Fuel\+Burned}} () const
+\begin{DoxyCompactList}\small\item\em Get the Fuel Burned in kg. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO\+::\+Astrodynamics\+::\+Time\+::\+Time\+Span}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_a820003d88c46c172a09c513a1aeda102}{Get\+Thrust\+Duration}} () const
+\begin{DoxyCompactList}\small\item\em Get the Thrust duration. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO\+::\+Astrodynamics\+::\+Math\+::\+Vector3D}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_ac0bbc086eb0ec39c6e085e524ef0622c}{Get\+DeltaV}} () const
+\begin{DoxyCompactList}\small\item\em Get the maneuver delta V. \end{DoxyCompactList}\item 
+virtual \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase}{IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Maneuver\+Base}} \& \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_a27a97352fcc9ad6fb5592f9f76f19a01}{Set\+Next\+Maneuver}} (\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase}{IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Maneuver\+Base}} \&maneuver)
+\begin{DoxyCompactList}\small\item\em Set the Next Maneuver object. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsection*{Protected Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_aa15287e13d3ac642ad0756ea63e9db47}{Maneuver\+Base}} (std\+::vector$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Engine}{IO\+::\+Astrodynamics\+::\+Body\+::\+Spacecraft\+::\+Engine}} $\ast$ $>$ engines, \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Propagators_1_1Propagator}{IO\+::\+Astrodynamics\+::\+Propagators\+::\+Propagator}} \&propagator)
+\begin{DoxyCompactList}\small\item\em Construct a new Maneuver Base object. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_a9d0db8def5c0882380e923587a189597}{Maneuver\+Base}} (std\+::vector$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Engine}{IO\+::\+Astrodynamics\+::\+Body\+::\+Spacecraft\+::\+Engine}} $\ast$ $>$ engines, \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Propagators_1_1Propagator}{IO\+::\+Astrodynamics\+::\+Propagators\+::\+Propagator}} \&propagator, const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} \&minimum\+Epoch)
+\begin{DoxyCompactList}\small\item\em Construct a new Maneuver Base object. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_a230b592c03e448e8fbece33703076d78}{Maneuver\+Base}} (std\+::vector$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Engine}{IO\+::\+Astrodynamics\+::\+Body\+::\+Spacecraft\+::\+Engine}} $\ast$ $>$ engines, \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Propagators_1_1Propagator}{IO\+::\+Astrodynamics\+::\+Propagators\+::\+Propagator}} \&propagator, const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO\+::\+Astrodynamics\+::\+Time\+::\+Time\+Span}} \&attitude\+Hold\+Duration)
+\begin{DoxyCompactList}\small\item\em Construct a new Maneuver Base object. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_ae6d95a5645392e7af34279baeb7aa6a2}{Maneuver\+Base}} (std\+::vector$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Engine}{IO\+::\+Astrodynamics\+::\+Body\+::\+Spacecraft\+::\+Engine}} $\ast$ $>$ engines, \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Propagators_1_1Propagator}{IO\+::\+Astrodynamics\+::\+Propagators\+::\+Propagator}} \&propagator, const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} \&minimum\+Epoch, const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO\+::\+Astrodynamics\+::\+Time\+::\+Time\+Span}} \&attitude\+Hold\+Duration)
+\begin{DoxyCompactList}\small\item\em Construct a new Maneuver Base object. \end{DoxyCompactList}\item 
+virtual void \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_a1df25da25e0f4c14744f9b37f29dad90}{Compute}} (const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}} \&maneuver\+Point)=0
+\begin{DoxyCompactList}\small\item\em Compute impulsive maneuver. \end{DoxyCompactList}\item 
+virtual \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateOrientation}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+State\+Orientation}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_a9f13935c641a5c447000e5e8cbe54f19}{Compute\+Orientation}} (const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}} \&maneuver\+Point)=0
+\begin{DoxyCompactList}\small\item\em Compute orientation. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsection*{Protected Attributes}
+\begin{DoxyCompactItemize}
+\item 
+std\+::unique\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{IO\+::\+Astrodynamics\+::\+Time\+::\+Window}}$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} $>$ $>$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_ab332981af61592a313c2d457336aecef}{m\+\_\+thrust\+Window}} \{\}
+\item 
+std\+::unique\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO\+::\+Astrodynamics\+::\+Math\+::\+Vector3D}} $>$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_aa03c493048a065510bf4a7b4b2a660a2}{m\+\_\+deltaV}} \{\}
+\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO\+::\+Astrodynamics\+::\+Time\+::\+Time\+Span}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_a5a9181858407c946e75c8880d978be29}{m\+\_\+thrust\+Duration}} \{0.\+0s\}
+\item 
+double \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_a554d750635d630c62d3e52930d92a7d2}{m\+\_\+fuel\+Burned}} \{\}
+\item 
+const std\+::vector$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Engine}{IO\+::\+Astrodynamics\+::\+Body\+::\+Spacecraft\+::\+Engine}} $\ast$ $>$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_aeba2ea76c45031a6b5b590c29ab9ce6f}{m\+\_\+engines}} \{\}
+\item 
+std\+::unique\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} $>$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_a201eb8bc90f6f6bb85aa355a25d86c1f}{m\+\_\+minimum\+Epoch}} \{\}
+\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase}{Maneuver\+Base}} $\ast$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_a9396a43a23f13217db06250486991248}{m\+\_\+next\+Maneuver}} \{\}
+\item 
+bool \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_a4aa7c13c2dbfdb354cf9af76f82d938e}{m\+\_\+is\+Valid}} \{false\}
+\item 
+const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft}{IO\+::\+Astrodynamics\+::\+Body\+::\+Spacecraft\+::\+Spacecraft}} \& \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_a148ef8f914319909a7803f4cda03777b}{m\+\_\+spacecraft}}
+\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Propagators_1_1Propagator}{IO\+::\+Astrodynamics\+::\+Propagators\+::\+Propagator}} \& \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_a870a8a9ce9bf4bc2807ef3dd2028a28a}{m\+\_\+propagator}}
+\item 
+std\+::vector$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase}{Maneuver\+Base}} $\ast$ $>$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_a4fbbbdf3979a324a4ef9cb77fe66e78a}{m\+\_\+sub\+Maneuvers}} \{\}
+\item 
+std\+::set$<$ const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1FuelTank}{IO\+::\+Astrodynamics\+::\+Body\+::\+Spacecraft\+::\+Fuel\+Tank}} $\ast$ $>$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_ab04ebb42df11298a6cf9d6571c60a6ab}{m\+\_\+fuel\+Tanks}}
+\item 
+std\+::map$<$ const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1FuelTank}{IO\+::\+Astrodynamics\+::\+Body\+::\+Spacecraft\+::\+Fuel\+Tank}} $\ast$, \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1Maneuvers_1_1DynamicFuelTank}{IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Dynamic\+Fuel\+Tank}} $>$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_a8458f00212105adca3b9860f08beb69f}{m\+\_\+dynamic\+Fuel\+Tanks}}
+\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO\+::\+Astrodynamics\+::\+Time\+::\+Time\+Span}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_a8efadf4d0f2b08935bc6c95deaa793b1}{m\+\_\+maneuver\+Hold\+Duration}} \{0.\+0s\}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+Maneuverbase class used by concrete maneuvers. 
+
+\doxysubsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_aa15287e13d3ac642ad0756ea63e9db47}\label{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_aa15287e13d3ac642ad0756ea63e9db47}} 
+\index{IO::Astrodynamics::Maneuvers::ManeuverBase@{IO::Astrodynamics::Maneuvers::ManeuverBase}!ManeuverBase@{ManeuverBase}}
+\index{ManeuverBase@{ManeuverBase}!IO::Astrodynamics::Maneuvers::ManeuverBase@{IO::Astrodynamics::Maneuvers::ManeuverBase}}
+\doxysubsubsection{\texorpdfstring{ManeuverBase()}{ManeuverBase()}\hspace{0.1cm}{\footnotesize\ttfamily [1/4]}}
+{\footnotesize\ttfamily IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Maneuver\+Base\+::\+Maneuver\+Base (\begin{DoxyParamCaption}\item[{std\+::vector$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Engine}{IO\+::\+Astrodynamics\+::\+Body\+::\+Spacecraft\+::\+Engine}} $\ast$ $>$}]{engines,  }\item[{\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Propagators_1_1Propagator}{IO\+::\+Astrodynamics\+::\+Propagators\+::\+Propagator}} \&}]{propagator }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Construct a new Maneuver Base object. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em engines} & Used by maneuver \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_a9d0db8def5c0882380e923587a189597}\label{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_a9d0db8def5c0882380e923587a189597}} 
+\index{IO::Astrodynamics::Maneuvers::ManeuverBase@{IO::Astrodynamics::Maneuvers::ManeuverBase}!ManeuverBase@{ManeuverBase}}
+\index{ManeuverBase@{ManeuverBase}!IO::Astrodynamics::Maneuvers::ManeuverBase@{IO::Astrodynamics::Maneuvers::ManeuverBase}}
+\doxysubsubsection{\texorpdfstring{ManeuverBase()}{ManeuverBase()}\hspace{0.1cm}{\footnotesize\ttfamily [2/4]}}
+{\footnotesize\ttfamily IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Maneuver\+Base\+::\+Maneuver\+Base (\begin{DoxyParamCaption}\item[{std\+::vector$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Engine}{IO\+::\+Astrodynamics\+::\+Body\+::\+Spacecraft\+::\+Engine}} $\ast$ $>$}]{engines,  }\item[{\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Propagators_1_1Propagator}{IO\+::\+Astrodynamics\+::\+Propagators\+::\+Propagator}} \&}]{propagator,  }\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} \&}]{minimum\+Epoch }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Construct a new Maneuver Base object. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em engines} & Used by maneuver \\
+\hline
+{\em minimum\+Epoch} & No maneuver execution before this epoch \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_a230b592c03e448e8fbece33703076d78}\label{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_a230b592c03e448e8fbece33703076d78}} 
+\index{IO::Astrodynamics::Maneuvers::ManeuverBase@{IO::Astrodynamics::Maneuvers::ManeuverBase}!ManeuverBase@{ManeuverBase}}
+\index{ManeuverBase@{ManeuverBase}!IO::Astrodynamics::Maneuvers::ManeuverBase@{IO::Astrodynamics::Maneuvers::ManeuverBase}}
+\doxysubsubsection{\texorpdfstring{ManeuverBase()}{ManeuverBase()}\hspace{0.1cm}{\footnotesize\ttfamily [3/4]}}
+{\footnotesize\ttfamily IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Maneuver\+Base\+::\+Maneuver\+Base (\begin{DoxyParamCaption}\item[{std\+::vector$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Engine}{IO\+::\+Astrodynamics\+::\+Body\+::\+Spacecraft\+::\+Engine}} $\ast$ $>$}]{engines,  }\item[{\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Propagators_1_1Propagator}{IO\+::\+Astrodynamics\+::\+Propagators\+::\+Propagator}} \&}]{propagator,  }\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO\+::\+Astrodynamics\+::\+Time\+::\+Time\+Span}} \&}]{attitude\+Hold\+Duration }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Construct a new Maneuver Base object. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em engines} & \\
+\hline
+{\em propagator} & \\
+\hline
+{\em attitude\+Hold\+Duration} & \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_ae6d95a5645392e7af34279baeb7aa6a2}\label{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_ae6d95a5645392e7af34279baeb7aa6a2}} 
+\index{IO::Astrodynamics::Maneuvers::ManeuverBase@{IO::Astrodynamics::Maneuvers::ManeuverBase}!ManeuverBase@{ManeuverBase}}
+\index{ManeuverBase@{ManeuverBase}!IO::Astrodynamics::Maneuvers::ManeuverBase@{IO::Astrodynamics::Maneuvers::ManeuverBase}}
+\doxysubsubsection{\texorpdfstring{ManeuverBase()}{ManeuverBase()}\hspace{0.1cm}{\footnotesize\ttfamily [4/4]}}
+{\footnotesize\ttfamily IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Maneuver\+Base\+::\+Maneuver\+Base (\begin{DoxyParamCaption}\item[{std\+::vector$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Engine}{IO\+::\+Astrodynamics\+::\+Body\+::\+Spacecraft\+::\+Engine}} $\ast$ $>$}]{engines,  }\item[{\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Propagators_1_1Propagator}{IO\+::\+Astrodynamics\+::\+Propagators\+::\+Propagator}} \&}]{propagator,  }\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} \&}]{minimum\+Epoch,  }\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO\+::\+Astrodynamics\+::\+Time\+::\+Time\+Span}} \&}]{attitude\+Hold\+Duration }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Construct a new Maneuver Base object. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em engines} & \\
+\hline
+{\em propagator} & \\
+\hline
+{\em minimum\+Epoch} & \\
+\hline
+{\em attitude\+Hold\+Duration} & \\
+\hline
+\end{DoxyParams}
+
+
+\doxysubsection{Member Function Documentation}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_a9bc46694a197868297955930c9edd531}\label{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_a9bc46694a197868297955930c9edd531}} 
+\index{IO::Astrodynamics::Maneuvers::ManeuverBase@{IO::Astrodynamics::Maneuvers::ManeuverBase}!CanExecute@{CanExecute}}
+\index{CanExecute@{CanExecute}!IO::Astrodynamics::Maneuvers::ManeuverBase@{IO::Astrodynamics::Maneuvers::ManeuverBase}}
+\doxysubsubsection{\texorpdfstring{CanExecute()}{CanExecute()}}
+{\footnotesize\ttfamily virtual bool IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Maneuver\+Base\+::\+Can\+Execute (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}} \&}]{maneuver\+Point }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [pure virtual]}}
+
+
+
+Evaluate if maneuver can occurs. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em state\+Vector} & Evaluated to check if condition is satisfied \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+true 
+
+false 
+\end{DoxyReturn}
+
+
+Implemented in \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ApogeeHeightChangingManeuver_a4aed2172237387da555ed1554d225f44}{IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Apogee\+Height\+Changing\+Maneuver}}, \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ApsidalAlignmentManeuver_af049c47733664e9ce51ef25fbad441a7}{IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Apsidal\+Alignment\+Maneuver}}, \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1Attitudes_1_1InstrumentPointingToAttitude_a9c5494982736ee0bb8c52077c2e7b56d}{IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Attitudes\+::\+Instrument\+Pointing\+To\+Attitude}}, \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1Attitudes_1_1NadirAttitude_a6a704c45d3b521eccd8f6605b0fbceb6}{IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Attitudes\+::\+Nadir\+Attitude}}, \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1Attitudes_1_1ProgradeAttitude_a3a8e097f737c8b104399c0c1655f2511}{IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Attitudes\+::\+Prograde\+Attitude}}, \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1Attitudes_1_1RetrogradeAttitude_aaa8f062ba2bd21d517941782e93c517d}{IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Attitudes\+::\+Retrograde\+Attitude}}, \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1Attitudes_1_1TowardObjectAttitude_ace336a39b232fa8efe9ba32422e58ef0}{IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Attitudes\+::\+Toward\+Object\+Attitude}}, \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1Attitudes_1_1ZenithAttitude_a53f11548918b93356818fa1e3c41e082}{IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Attitudes\+::\+Zenith\+Attitude}}, \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1CombinedManeuver_ad810f5f13f786d88075bba38c69746f3}{IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Combined\+Maneuver}}, \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1OrbitalPlaneChangingManeuver_a30238c92afd57b323eb275ca7c58b5c8}{IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Orbital\+Plane\+Changing\+Maneuver}}, \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1PerigeeHeightChangingManeuver_a31852c10ca63d3d41845b4336306a0f9}{IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Perigee\+Height\+Changing\+Maneuver}}, and \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1PhasingManeuver_a0c63523846d3667f1febcf875e012855}{IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Phasing\+Maneuver}}.
+
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_a1df25da25e0f4c14744f9b37f29dad90}\label{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_a1df25da25e0f4c14744f9b37f29dad90}} 
+\index{IO::Astrodynamics::Maneuvers::ManeuverBase@{IO::Astrodynamics::Maneuvers::ManeuverBase}!Compute@{Compute}}
+\index{Compute@{Compute}!IO::Astrodynamics::Maneuvers::ManeuverBase@{IO::Astrodynamics::Maneuvers::ManeuverBase}}
+\doxysubsubsection{\texorpdfstring{Compute()}{Compute()}}
+{\footnotesize\ttfamily virtual void IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Maneuver\+Base\+::\+Compute (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}} \&}]{maneuver\+Point }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}, {\ttfamily [pure virtual]}}
+
+
+
+Compute impulsive maneuver. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em maneuver\+Point} & \\
+\hline
+\end{DoxyParams}
+
+
+Implemented in \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ApogeeHeightChangingManeuver_afd6b5cc561063f02e8b9302714b53be4}{IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Apogee\+Height\+Changing\+Maneuver}}, \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ApsidalAlignmentManeuver_ad659871396bae7baa05b8c77a57e2223}{IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Apsidal\+Alignment\+Maneuver}}, \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1Attitudes_1_1InstrumentPointingToAttitude_a0ca1521fec09bfee0653d3bdc94b4853}{IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Attitudes\+::\+Instrument\+Pointing\+To\+Attitude}}, \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1Attitudes_1_1NadirAttitude_a12664674c1c64e71517e8443e8b8bc5b}{IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Attitudes\+::\+Nadir\+Attitude}}, \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1Attitudes_1_1ProgradeAttitude_ad1a6f0735f319c366bce5eb17e0efd66}{IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Attitudes\+::\+Prograde\+Attitude}}, \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1Attitudes_1_1RetrogradeAttitude_a141cb79dd21a28c0963125e8a77ad99b}{IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Attitudes\+::\+Retrograde\+Attitude}}, \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1Attitudes_1_1TowardObjectAttitude_aca72da7d266a91c486ed680ba09dd3b8}{IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Attitudes\+::\+Toward\+Object\+Attitude}}, \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1Attitudes_1_1ZenithAttitude_a6a2f2398b52dce767399e97919ce6a7f}{IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Attitudes\+::\+Zenith\+Attitude}}, \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1CombinedManeuver_a042ab24d82afb2df9e8c0836f33bf01e}{IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Combined\+Maneuver}}, \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1OrbitalPlaneChangingManeuver_a68ffeecef26c991db04899af1aa5551e}{IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Orbital\+Plane\+Changing\+Maneuver}}, \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1PerigeeHeightChangingManeuver_a8eb3c7a76cfce41fbab182353418af87}{IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Perigee\+Height\+Changing\+Maneuver}}, and \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1PhasingManeuver_a7c95a9236ef873d443db3c0887d09d3a}{IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Phasing\+Maneuver}}.
+
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_a9f13935c641a5c447000e5e8cbe54f19}\label{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_a9f13935c641a5c447000e5e8cbe54f19}} 
+\index{IO::Astrodynamics::Maneuvers::ManeuverBase@{IO::Astrodynamics::Maneuvers::ManeuverBase}!ComputeOrientation@{ComputeOrientation}}
+\index{ComputeOrientation@{ComputeOrientation}!IO::Astrodynamics::Maneuvers::ManeuverBase@{IO::Astrodynamics::Maneuvers::ManeuverBase}}
+\doxysubsubsection{\texorpdfstring{ComputeOrientation()}{ComputeOrientation()}}
+{\footnotesize\ttfamily virtual \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateOrientation}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+State\+Orientation}} IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Maneuver\+Base\+::\+Compute\+Orientation (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}} \&}]{maneuver\+Point }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}, {\ttfamily [pure virtual]}}
+
+
+
+Compute orientation. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em maneuver\+Point} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateOrientation}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+State\+Orientation}} 
+\end{DoxyReturn}
+
+
+Implemented in \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ApogeeHeightChangingManeuver_ac132f5ddf892a25cbd481df444e27ecc}{IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Apogee\+Height\+Changing\+Maneuver}}, \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ApsidalAlignmentManeuver_a0a68938145f2d68966431f3e92a41d90}{IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Apsidal\+Alignment\+Maneuver}}, \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1Attitudes_1_1InstrumentPointingToAttitude_accaf664446adae6410a798e4ece329b1}{IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Attitudes\+::\+Instrument\+Pointing\+To\+Attitude}}, \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1Attitudes_1_1NadirAttitude_aee3e3a092945d95f405fe93da3aa9e0f}{IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Attitudes\+::\+Nadir\+Attitude}}, \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1Attitudes_1_1ProgradeAttitude_a4029d880c1c9af102b55e300c4f27c65}{IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Attitudes\+::\+Prograde\+Attitude}}, \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1Attitudes_1_1RetrogradeAttitude_a5a6948fbff6fbddafddfedf2eb5a3936}{IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Attitudes\+::\+Retrograde\+Attitude}}, \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1Attitudes_1_1TowardObjectAttitude_ad4f71f43a9e23de4f434b946f9d5573d}{IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Attitudes\+::\+Toward\+Object\+Attitude}}, \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1Attitudes_1_1ZenithAttitude_a19b96da1b2d229fdd43441e9e58e23bd}{IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Attitudes\+::\+Zenith\+Attitude}}, \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1CombinedManeuver_ae5f94eb6da49623b4bc1a19e450305ca}{IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Combined\+Maneuver}}, \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1OrbitalPlaneChangingManeuver_ad2b00b81df810210c39d7ed37e730f41}{IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Orbital\+Plane\+Changing\+Maneuver}}, \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1PerigeeHeightChangingManeuver_a7e03dd80b85a900e22034458713484dd}{IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Perigee\+Height\+Changing\+Maneuver}}, and \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1PhasingManeuver_ad8b9d5eec6c249f4511ee0dd5c3b9a6e}{IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Phasing\+Maneuver}}.
+
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_a478e08783afb471c4f7fdaa74c3ea355}\label{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_a478e08783afb471c4f7fdaa74c3ea355}} 
+\index{IO::Astrodynamics::Maneuvers::ManeuverBase@{IO::Astrodynamics::Maneuvers::ManeuverBase}!GetAttitudeWindow@{GetAttitudeWindow}}
+\index{GetAttitudeWindow@{GetAttitudeWindow}!IO::Astrodynamics::Maneuvers::ManeuverBase@{IO::Astrodynamics::Maneuvers::ManeuverBase}}
+\doxysubsubsection{\texorpdfstring{GetAttitudeWindow()}{GetAttitudeWindow()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{IO\+::\+Astrodynamics\+::\+Time\+::\+Window}}$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} $>$ $\ast$ IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Maneuver\+Base\+::\+Get\+Attitude\+Window (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+
+
+Get the attitude window. 
+
+\begin{DoxyReturn}{Returns}
+IO\+::\+Astrodynamics\+::\+Time\+::\+Window$<$\+IO\+::\+Astrodynamics\+::\+Time\+::\+TDB$>$$\ast$ 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_ac0bbc086eb0ec39c6e085e524ef0622c}\label{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_ac0bbc086eb0ec39c6e085e524ef0622c}} 
+\index{IO::Astrodynamics::Maneuvers::ManeuverBase@{IO::Astrodynamics::Maneuvers::ManeuverBase}!GetDeltaV@{GetDeltaV}}
+\index{GetDeltaV@{GetDeltaV}!IO::Astrodynamics::Maneuvers::ManeuverBase@{IO::Astrodynamics::Maneuvers::ManeuverBase}}
+\doxysubsubsection{\texorpdfstring{GetDeltaV()}{GetDeltaV()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO\+::\+Astrodynamics\+::\+Math\+::\+Vector3D}} IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Maneuver\+Base\+::\+Get\+DeltaV (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+
+
+Get the maneuver delta V. 
+
+\begin{DoxyReturn}{Returns}
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO\+::\+Astrodynamics\+::\+Math\+::\+Vector3D}} 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_a2ce52d7031bc50826e44f6737e6b2366}\label{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_a2ce52d7031bc50826e44f6737e6b2366}} 
+\index{IO::Astrodynamics::Maneuvers::ManeuverBase@{IO::Astrodynamics::Maneuvers::ManeuverBase}!GetFuelBurned@{GetFuelBurned}}
+\index{GetFuelBurned@{GetFuelBurned}!IO::Astrodynamics::Maneuvers::ManeuverBase@{IO::Astrodynamics::Maneuvers::ManeuverBase}}
+\doxysubsubsection{\texorpdfstring{GetFuelBurned()}{GetFuelBurned()}}
+{\footnotesize\ttfamily double IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Maneuver\+Base\+::\+Get\+Fuel\+Burned (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+
+
+Get the Fuel Burned in kg. 
+
+\begin{DoxyReturn}{Returns}
+double 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_accf195d53d09b805b5ffacc9a153c099}\label{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_accf195d53d09b805b5ffacc9a153c099}} 
+\index{IO::Astrodynamics::Maneuvers::ManeuverBase@{IO::Astrodynamics::Maneuvers::ManeuverBase}!GetManeuverWindow@{GetManeuverWindow}}
+\index{GetManeuverWindow@{GetManeuverWindow}!IO::Astrodynamics::Maneuvers::ManeuverBase@{IO::Astrodynamics::Maneuvers::ManeuverBase}}
+\doxysubsubsection{\texorpdfstring{GetManeuverWindow()}{GetManeuverWindow()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{IO\+::\+Astrodynamics\+::\+Time\+::\+Window}}$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} $>$ $\ast$ IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Maneuver\+Base\+::\+Get\+Maneuver\+Window (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+
+
+Get the maneuver window. Maneuver window start at burn and end when the maneuver is completed. 
+
+\begin{DoxyReturn}{Returns}
+IO\+::\+Astrodynamics\+::\+Time\+::\+Window$<$\+IO\+::\+Astrodynamics\+::\+Time\+::\+TDB$>$$\ast$ 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_a820003d88c46c172a09c513a1aeda102}\label{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_a820003d88c46c172a09c513a1aeda102}} 
+\index{IO::Astrodynamics::Maneuvers::ManeuverBase@{IO::Astrodynamics::Maneuvers::ManeuverBase}!GetThrustDuration@{GetThrustDuration}}
+\index{GetThrustDuration@{GetThrustDuration}!IO::Astrodynamics::Maneuvers::ManeuverBase@{IO::Astrodynamics::Maneuvers::ManeuverBase}}
+\doxysubsubsection{\texorpdfstring{GetThrustDuration()}{GetThrustDuration()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO\+::\+Astrodynamics\+::\+Time\+::\+Time\+Span}} IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Maneuver\+Base\+::\+Get\+Thrust\+Duration (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+
+
+Get the Thrust duration. 
+
+\begin{DoxyReturn}{Returns}
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO\+::\+Astrodynamics\+::\+Time\+::\+Time\+Span}} 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_af40a795082bf5b39573f9ce23495d6a7}\label{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_af40a795082bf5b39573f9ce23495d6a7}} 
+\index{IO::Astrodynamics::Maneuvers::ManeuverBase@{IO::Astrodynamics::Maneuvers::ManeuverBase}!GetThrustWindow@{GetThrustWindow}}
+\index{GetThrustWindow@{GetThrustWindow}!IO::Astrodynamics::Maneuvers::ManeuverBase@{IO::Astrodynamics::Maneuvers::ManeuverBase}}
+\doxysubsubsection{\texorpdfstring{GetThrustWindow()}{GetThrustWindow()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{IO\+::\+Astrodynamics\+::\+Time\+::\+Window}}$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} $>$ $\ast$ IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Maneuver\+Base\+::\+Get\+Thrust\+Window (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+
+
+Get the thrust window. 
+
+\begin{DoxyReturn}{Returns}
+IO\+::\+Astrodynamics\+::\+Time\+::\+Window$<$\+IO\+::\+Astrodynamics\+::\+Time\+::\+TDB$>$$\ast$ 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_a402b2cba078061f515b00e63c8179858}\label{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_a402b2cba078061f515b00e63c8179858}} 
+\index{IO::Astrodynamics::Maneuvers::ManeuverBase@{IO::Astrodynamics::Maneuvers::ManeuverBase}!Handle@{Handle}}
+\index{Handle@{Handle}!IO::Astrodynamics::Maneuvers::ManeuverBase@{IO::Astrodynamics::Maneuvers::ManeuverBase}}
+\doxysubsubsection{\texorpdfstring{Handle()}{Handle()}}
+{\footnotesize\ttfamily void IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Maneuver\+Base\+::\+Handle (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} \&}]{not\+Before\+Epoch }\end{DoxyParamCaption})}
+
+
+
+Handle maneuver by propagator. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em not\+Before\+Epoch} & Maneuver must not start before this epoch \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_a27a97352fcc9ad6fb5592f9f76f19a01}\label{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_a27a97352fcc9ad6fb5592f9f76f19a01}} 
+\index{IO::Astrodynamics::Maneuvers::ManeuverBase@{IO::Astrodynamics::Maneuvers::ManeuverBase}!SetNextManeuver@{SetNextManeuver}}
+\index{SetNextManeuver@{SetNextManeuver}!IO::Astrodynamics::Maneuvers::ManeuverBase@{IO::Astrodynamics::Maneuvers::ManeuverBase}}
+\doxysubsubsection{\texorpdfstring{SetNextManeuver()}{SetNextManeuver()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase}{IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Maneuver\+Base}} \& IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Maneuver\+Base\+::\+Set\+Next\+Maneuver (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase}{IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Maneuver\+Base}} \&}]{maneuver }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+
+Set the Next Maneuver object. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em maneuver} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase}{IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Maneuver\+Base}}\& 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_a5d34d331d703837ccc1ed54e506671d1}\label{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_a5d34d331d703837ccc1ed54e506671d1}} 
+\index{IO::Astrodynamics::Maneuvers::ManeuverBase@{IO::Astrodynamics::Maneuvers::ManeuverBase}!TryExecute@{TryExecute}}
+\index{TryExecute@{TryExecute}!IO::Astrodynamics::Maneuvers::ManeuverBase@{IO::Astrodynamics::Maneuvers::ManeuverBase}}
+\doxysubsubsection{\texorpdfstring{TryExecute()}{TryExecute()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverResult}{IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Maneuver\+Result}} IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Maneuver\+Base\+::\+Try\+Execute (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}} \&}]{maneuver\+Point }\end{DoxyParamCaption})}
+
+
+
+Try to execute maneuver at maneuver point. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em maneuver\+Point} & Maneuver point if it was impulsive \\
+\hline
+\end{DoxyParams}
+
+
+\doxysubsection{Member Data Documentation}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_aa03c493048a065510bf4a7b4b2a660a2}\label{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_aa03c493048a065510bf4a7b4b2a660a2}} 
+\index{IO::Astrodynamics::Maneuvers::ManeuverBase@{IO::Astrodynamics::Maneuvers::ManeuverBase}!m\_deltaV@{m\_deltaV}}
+\index{m\_deltaV@{m\_deltaV}!IO::Astrodynamics::Maneuvers::ManeuverBase@{IO::Astrodynamics::Maneuvers::ManeuverBase}}
+\doxysubsubsection{\texorpdfstring{m\_deltaV}{m\_deltaV}}
+{\footnotesize\ttfamily std\+::unique\+\_\+ptr$<$\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO\+::\+Astrodynamics\+::\+Math\+::\+Vector3D}}$>$ IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Maneuver\+Base\+::m\+\_\+deltaV \{\}\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_a8458f00212105adca3b9860f08beb69f}\label{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_a8458f00212105adca3b9860f08beb69f}} 
+\index{IO::Astrodynamics::Maneuvers::ManeuverBase@{IO::Astrodynamics::Maneuvers::ManeuverBase}!m\_dynamicFuelTanks@{m\_dynamicFuelTanks}}
+\index{m\_dynamicFuelTanks@{m\_dynamicFuelTanks}!IO::Astrodynamics::Maneuvers::ManeuverBase@{IO::Astrodynamics::Maneuvers::ManeuverBase}}
+\doxysubsubsection{\texorpdfstring{m\_dynamicFuelTanks}{m\_dynamicFuelTanks}}
+{\footnotesize\ttfamily std\+::map$<$const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1FuelTank}{IO\+::\+Astrodynamics\+::\+Body\+::\+Spacecraft\+::\+Fuel\+Tank}} $\ast$, \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1Maneuvers_1_1DynamicFuelTank}{IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Dynamic\+Fuel\+Tank}}$>$ IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Maneuver\+Base\+::m\+\_\+dynamic\+Fuel\+Tanks\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_aeba2ea76c45031a6b5b590c29ab9ce6f}\label{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_aeba2ea76c45031a6b5b590c29ab9ce6f}} 
+\index{IO::Astrodynamics::Maneuvers::ManeuverBase@{IO::Astrodynamics::Maneuvers::ManeuverBase}!m\_engines@{m\_engines}}
+\index{m\_engines@{m\_engines}!IO::Astrodynamics::Maneuvers::ManeuverBase@{IO::Astrodynamics::Maneuvers::ManeuverBase}}
+\doxysubsubsection{\texorpdfstring{m\_engines}{m\_engines}}
+{\footnotesize\ttfamily const std\+::vector$<$\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Engine}{IO\+::\+Astrodynamics\+::\+Body\+::\+Spacecraft\+::\+Engine}}$\ast$$>$ IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Maneuver\+Base\+::m\+\_\+engines \{\}\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_a554d750635d630c62d3e52930d92a7d2}\label{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_a554d750635d630c62d3e52930d92a7d2}} 
+\index{IO::Astrodynamics::Maneuvers::ManeuverBase@{IO::Astrodynamics::Maneuvers::ManeuverBase}!m\_fuelBurned@{m\_fuelBurned}}
+\index{m\_fuelBurned@{m\_fuelBurned}!IO::Astrodynamics::Maneuvers::ManeuverBase@{IO::Astrodynamics::Maneuvers::ManeuverBase}}
+\doxysubsubsection{\texorpdfstring{m\_fuelBurned}{m\_fuelBurned}}
+{\footnotesize\ttfamily double IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Maneuver\+Base\+::m\+\_\+fuel\+Burned \{\}\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_ab04ebb42df11298a6cf9d6571c60a6ab}\label{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_ab04ebb42df11298a6cf9d6571c60a6ab}} 
+\index{IO::Astrodynamics::Maneuvers::ManeuverBase@{IO::Astrodynamics::Maneuvers::ManeuverBase}!m\_fuelTanks@{m\_fuelTanks}}
+\index{m\_fuelTanks@{m\_fuelTanks}!IO::Astrodynamics::Maneuvers::ManeuverBase@{IO::Astrodynamics::Maneuvers::ManeuverBase}}
+\doxysubsubsection{\texorpdfstring{m\_fuelTanks}{m\_fuelTanks}}
+{\footnotesize\ttfamily std\+::set$<$const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1FuelTank}{IO\+::\+Astrodynamics\+::\+Body\+::\+Spacecraft\+::\+Fuel\+Tank}} $\ast$$>$ IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Maneuver\+Base\+::m\+\_\+fuel\+Tanks\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_a4aa7c13c2dbfdb354cf9af76f82d938e}\label{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_a4aa7c13c2dbfdb354cf9af76f82d938e}} 
+\index{IO::Astrodynamics::Maneuvers::ManeuverBase@{IO::Astrodynamics::Maneuvers::ManeuverBase}!m\_isValid@{m\_isValid}}
+\index{m\_isValid@{m\_isValid}!IO::Astrodynamics::Maneuvers::ManeuverBase@{IO::Astrodynamics::Maneuvers::ManeuverBase}}
+\doxysubsubsection{\texorpdfstring{m\_isValid}{m\_isValid}}
+{\footnotesize\ttfamily bool IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Maneuver\+Base\+::m\+\_\+is\+Valid \{false\}\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_a8efadf4d0f2b08935bc6c95deaa793b1}\label{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_a8efadf4d0f2b08935bc6c95deaa793b1}} 
+\index{IO::Astrodynamics::Maneuvers::ManeuverBase@{IO::Astrodynamics::Maneuvers::ManeuverBase}!m\_maneuverHoldDuration@{m\_maneuverHoldDuration}}
+\index{m\_maneuverHoldDuration@{m\_maneuverHoldDuration}!IO::Astrodynamics::Maneuvers::ManeuverBase@{IO::Astrodynamics::Maneuvers::ManeuverBase}}
+\doxysubsubsection{\texorpdfstring{m\_maneuverHoldDuration}{m\_maneuverHoldDuration}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO\+::\+Astrodynamics\+::\+Time\+::\+Time\+Span}} IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Maneuver\+Base\+::m\+\_\+maneuver\+Hold\+Duration \{0.\+0s\}\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_a201eb8bc90f6f6bb85aa355a25d86c1f}\label{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_a201eb8bc90f6f6bb85aa355a25d86c1f}} 
+\index{IO::Astrodynamics::Maneuvers::ManeuverBase@{IO::Astrodynamics::Maneuvers::ManeuverBase}!m\_minimumEpoch@{m\_minimumEpoch}}
+\index{m\_minimumEpoch@{m\_minimumEpoch}!IO::Astrodynamics::Maneuvers::ManeuverBase@{IO::Astrodynamics::Maneuvers::ManeuverBase}}
+\doxysubsubsection{\texorpdfstring{m\_minimumEpoch}{m\_minimumEpoch}}
+{\footnotesize\ttfamily std\+::unique\+\_\+ptr$<$\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}}$>$ IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Maneuver\+Base\+::m\+\_\+minimum\+Epoch \{\}\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_a9396a43a23f13217db06250486991248}\label{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_a9396a43a23f13217db06250486991248}} 
+\index{IO::Astrodynamics::Maneuvers::ManeuverBase@{IO::Astrodynamics::Maneuvers::ManeuverBase}!m\_nextManeuver@{m\_nextManeuver}}
+\index{m\_nextManeuver@{m\_nextManeuver}!IO::Astrodynamics::Maneuvers::ManeuverBase@{IO::Astrodynamics::Maneuvers::ManeuverBase}}
+\doxysubsubsection{\texorpdfstring{m\_nextManeuver}{m\_nextManeuver}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase}{Maneuver\+Base}}$\ast$ IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Maneuver\+Base\+::m\+\_\+next\+Maneuver \{\}\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_a870a8a9ce9bf4bc2807ef3dd2028a28a}\label{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_a870a8a9ce9bf4bc2807ef3dd2028a28a}} 
+\index{IO::Astrodynamics::Maneuvers::ManeuverBase@{IO::Astrodynamics::Maneuvers::ManeuverBase}!m\_propagator@{m\_propagator}}
+\index{m\_propagator@{m\_propagator}!IO::Astrodynamics::Maneuvers::ManeuverBase@{IO::Astrodynamics::Maneuvers::ManeuverBase}}
+\doxysubsubsection{\texorpdfstring{m\_propagator}{m\_propagator}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Propagators_1_1Propagator}{IO\+::\+Astrodynamics\+::\+Propagators\+::\+Propagator}}\& IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Maneuver\+Base\+::m\+\_\+propagator\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_a148ef8f914319909a7803f4cda03777b}\label{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_a148ef8f914319909a7803f4cda03777b}} 
+\index{IO::Astrodynamics::Maneuvers::ManeuverBase@{IO::Astrodynamics::Maneuvers::ManeuverBase}!m\_spacecraft@{m\_spacecraft}}
+\index{m\_spacecraft@{m\_spacecraft}!IO::Astrodynamics::Maneuvers::ManeuverBase@{IO::Astrodynamics::Maneuvers::ManeuverBase}}
+\doxysubsubsection{\texorpdfstring{m\_spacecraft}{m\_spacecraft}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft}{IO\+::\+Astrodynamics\+::\+Body\+::\+Spacecraft\+::\+Spacecraft}}\& IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Maneuver\+Base\+::m\+\_\+spacecraft\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_a4fbbbdf3979a324a4ef9cb77fe66e78a}\label{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_a4fbbbdf3979a324a4ef9cb77fe66e78a}} 
+\index{IO::Astrodynamics::Maneuvers::ManeuverBase@{IO::Astrodynamics::Maneuvers::ManeuverBase}!m\_subManeuvers@{m\_subManeuvers}}
+\index{m\_subManeuvers@{m\_subManeuvers}!IO::Astrodynamics::Maneuvers::ManeuverBase@{IO::Astrodynamics::Maneuvers::ManeuverBase}}
+\doxysubsubsection{\texorpdfstring{m\_subManeuvers}{m\_subManeuvers}}
+{\footnotesize\ttfamily std\+::vector$<$\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase}{Maneuver\+Base}} $\ast$$>$ IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Maneuver\+Base\+::m\+\_\+sub\+Maneuvers \{\}\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_a5a9181858407c946e75c8880d978be29}\label{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_a5a9181858407c946e75c8880d978be29}} 
+\index{IO::Astrodynamics::Maneuvers::ManeuverBase@{IO::Astrodynamics::Maneuvers::ManeuverBase}!m\_thrustDuration@{m\_thrustDuration}}
+\index{m\_thrustDuration@{m\_thrustDuration}!IO::Astrodynamics::Maneuvers::ManeuverBase@{IO::Astrodynamics::Maneuvers::ManeuverBase}}
+\doxysubsubsection{\texorpdfstring{m\_thrustDuration}{m\_thrustDuration}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO\+::\+Astrodynamics\+::\+Time\+::\+Time\+Span}} IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Maneuver\+Base\+::m\+\_\+thrust\+Duration \{0.\+0s\}\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_ab332981af61592a313c2d457336aecef}\label{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_ab332981af61592a313c2d457336aecef}} 
+\index{IO::Astrodynamics::Maneuvers::ManeuverBase@{IO::Astrodynamics::Maneuvers::ManeuverBase}!m\_thrustWindow@{m\_thrustWindow}}
+\index{m\_thrustWindow@{m\_thrustWindow}!IO::Astrodynamics::Maneuvers::ManeuverBase@{IO::Astrodynamics::Maneuvers::ManeuverBase}}
+\doxysubsubsection{\texorpdfstring{m\_thrustWindow}{m\_thrustWindow}}
+{\footnotesize\ttfamily std\+::unique\+\_\+ptr$<$\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{IO\+::\+Astrodynamics\+::\+Time\+::\+Window}}$<$\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}}$>$ $>$ IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Maneuver\+Base\+::m\+\_\+thrust\+Window \{\}\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+IO.\+Astrodynamics/\+Maneuvers/\mbox{\hyperlink{ManeuverBase_8h}{Maneuver\+Base.\+h}}\item 
+IO.\+Astrodynamics/\+Maneuvers/\mbox{\hyperlink{ManeuverBase_8cpp}{Maneuver\+Base.\+cpp}}\end{DoxyCompactItemize}

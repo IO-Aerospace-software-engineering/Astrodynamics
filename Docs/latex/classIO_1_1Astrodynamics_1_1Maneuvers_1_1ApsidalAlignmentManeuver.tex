@@ -1,0 +1,149 @@
+\hypertarget{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ApsidalAlignmentManeuver}{}\doxysection{IO\+::Astrodynamics\+::Maneuvers\+::Apsidal\+Alignment\+Maneuver Class Reference}
+\label{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ApsidalAlignmentManeuver}\index{IO::Astrodynamics::Maneuvers::ApsidalAlignmentManeuver@{IO::Astrodynamics::Maneuvers::ApsidalAlignmentManeuver}}
+
+
+{\ttfamily \#include $<$Apsidal\+Alignment\+Maneuver.\+h$>$}
+
+Inheritance diagram for IO\+::Astrodynamics\+::Maneuvers\+::Apsidal\+Alignment\+Maneuver\+:\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=2.000000cm]{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ApsidalAlignmentManeuver}
+\end{center}
+\end{figure}
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ApsidalAlignmentManeuver_a90d97abb737968b1b827b4a2060a66ba}{Apsidal\+Alignment\+Maneuver}} (std\+::vector$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Engine}{IO\+::\+Astrodynamics\+::\+Body\+::\+Spacecraft\+::\+Engine}} $\ast$ $>$ engines, \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Propagators_1_1Propagator}{IO\+::\+Astrodynamics\+::\+Propagators\+::\+Propagator}} \&propagator, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}} $>$ target\+Orbit)
+\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ApsidalAlignmentManeuver_a8c2eecd4615ee19278a14b6f33b95f76}{Apsidal\+Alignment\+Maneuver}} (std\+::vector$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Engine}{IO\+::\+Astrodynamics\+::\+Body\+::\+Spacecraft\+::\+Engine}} $\ast$ $>$ engines, \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Propagators_1_1Propagator}{IO\+::\+Astrodynamics\+::\+Propagators\+::\+Propagator}} \&propagator, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}} $>$ target\+Orbit, const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} \&minimum\+Epoch)
+\item 
+bool \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ApsidalAlignmentManeuver_af049c47733664e9ce51ef25fbad441a7}{Can\+Execute}} (const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}} \&orbital\+Params) override
+\begin{DoxyCompactList}\small\item\em Define maneuver execution condition. \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ApsidalAlignmentManeuver_aa47af7f2bcac06f772fcdca00fd820bb}{Get\+Theta}} () const
+\begin{DoxyCompactList}\small\item\em Get the theta angle. \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ApsidalAlignmentManeuver_a128d9ecf08937bc903dab7e5d70d67e1}{Get\+Theta}} (const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+State\+Vector}} \&state\+Vector) const
+\begin{DoxyCompactList}\small\item\em Get the Theta. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsection*{Protected Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+void \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ApsidalAlignmentManeuver_ad659871396bae7baa05b8c77a57e2223}{Compute}} (const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}} \&maneuver\+Point) override
+\begin{DoxyCompactList}\small\item\em Compute impulsive maneuver. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateOrientation}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+State\+Orientation}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ApsidalAlignmentManeuver_a0a68938145f2d68966431f3e92a41d90}{Compute\+Orientation}} (const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}} \&maneuver\+Point) override
+\end{DoxyCompactItemize}
+\doxysubsection*{Additional Inherited Members}
+
+
+\doxysubsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ApsidalAlignmentManeuver_a90d97abb737968b1b827b4a2060a66ba}\label{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ApsidalAlignmentManeuver_a90d97abb737968b1b827b4a2060a66ba}} 
+\index{IO::Astrodynamics::Maneuvers::ApsidalAlignmentManeuver@{IO::Astrodynamics::Maneuvers::ApsidalAlignmentManeuver}!ApsidalAlignmentManeuver@{ApsidalAlignmentManeuver}}
+\index{ApsidalAlignmentManeuver@{ApsidalAlignmentManeuver}!IO::Astrodynamics::Maneuvers::ApsidalAlignmentManeuver@{IO::Astrodynamics::Maneuvers::ApsidalAlignmentManeuver}}
+\doxysubsubsection{\texorpdfstring{ApsidalAlignmentManeuver()}{ApsidalAlignmentManeuver()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Apsidal\+Alignment\+Maneuver\+::\+Apsidal\+Alignment\+Maneuver (\begin{DoxyParamCaption}\item[{std\+::vector$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Engine}{IO\+::\+Astrodynamics\+::\+Body\+::\+Spacecraft\+::\+Engine}} $\ast$ $>$}]{engines,  }\item[{\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Propagators_1_1Propagator}{IO\+::\+Astrodynamics\+::\+Propagators\+::\+Propagator}} \&}]{propagator,  }\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}} $>$}]{target\+Orbit }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ApsidalAlignmentManeuver_a8c2eecd4615ee19278a14b6f33b95f76}\label{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ApsidalAlignmentManeuver_a8c2eecd4615ee19278a14b6f33b95f76}} 
+\index{IO::Astrodynamics::Maneuvers::ApsidalAlignmentManeuver@{IO::Astrodynamics::Maneuvers::ApsidalAlignmentManeuver}!ApsidalAlignmentManeuver@{ApsidalAlignmentManeuver}}
+\index{ApsidalAlignmentManeuver@{ApsidalAlignmentManeuver}!IO::Astrodynamics::Maneuvers::ApsidalAlignmentManeuver@{IO::Astrodynamics::Maneuvers::ApsidalAlignmentManeuver}}
+\doxysubsubsection{\texorpdfstring{ApsidalAlignmentManeuver()}{ApsidalAlignmentManeuver()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Apsidal\+Alignment\+Maneuver\+::\+Apsidal\+Alignment\+Maneuver (\begin{DoxyParamCaption}\item[{std\+::vector$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Engine}{IO\+::\+Astrodynamics\+::\+Body\+::\+Spacecraft\+::\+Engine}} $\ast$ $>$}]{engines,  }\item[{\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Propagators_1_1Propagator}{IO\+::\+Astrodynamics\+::\+Propagators\+::\+Propagator}} \&}]{propagator,  }\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}} $>$}]{target\+Orbit,  }\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} \&}]{minimum\+Epoch }\end{DoxyParamCaption})}
+
+
+
+\doxysubsection{Member Function Documentation}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ApsidalAlignmentManeuver_af049c47733664e9ce51ef25fbad441a7}\label{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ApsidalAlignmentManeuver_af049c47733664e9ce51ef25fbad441a7}} 
+\index{IO::Astrodynamics::Maneuvers::ApsidalAlignmentManeuver@{IO::Astrodynamics::Maneuvers::ApsidalAlignmentManeuver}!CanExecute@{CanExecute}}
+\index{CanExecute@{CanExecute}!IO::Astrodynamics::Maneuvers::ApsidalAlignmentManeuver@{IO::Astrodynamics::Maneuvers::ApsidalAlignmentManeuver}}
+\doxysubsubsection{\texorpdfstring{CanExecute()}{CanExecute()}}
+{\footnotesize\ttfamily bool IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Apsidal\+Alignment\+Maneuver\+::\+Can\+Execute (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}} \&}]{orbital\+Params }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Define maneuver execution condition. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em state\+Vector} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+true 
+
+false 
+\end{DoxyReturn}
+
+
+Implements \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_a9bc46694a197868297955930c9edd531}{IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Maneuver\+Base}}.
+
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ApsidalAlignmentManeuver_ad659871396bae7baa05b8c77a57e2223}\label{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ApsidalAlignmentManeuver_ad659871396bae7baa05b8c77a57e2223}} 
+\index{IO::Astrodynamics::Maneuvers::ApsidalAlignmentManeuver@{IO::Astrodynamics::Maneuvers::ApsidalAlignmentManeuver}!Compute@{Compute}}
+\index{Compute@{Compute}!IO::Astrodynamics::Maneuvers::ApsidalAlignmentManeuver@{IO::Astrodynamics::Maneuvers::ApsidalAlignmentManeuver}}
+\doxysubsubsection{\texorpdfstring{Compute()}{Compute()}}
+{\footnotesize\ttfamily void IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Apsidal\+Alignment\+Maneuver\+::\+Compute (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}} \&}]{maneuver\+Point }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [protected]}, {\ttfamily [virtual]}}
+
+
+
+Compute impulsive maneuver. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em maneuver\+Point} & \\
+\hline
+\end{DoxyParams}
+
+
+Implements \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_a1df25da25e0f4c14744f9b37f29dad90}{IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Maneuver\+Base}}.
+
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ApsidalAlignmentManeuver_a0a68938145f2d68966431f3e92a41d90}\label{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ApsidalAlignmentManeuver_a0a68938145f2d68966431f3e92a41d90}} 
+\index{IO::Astrodynamics::Maneuvers::ApsidalAlignmentManeuver@{IO::Astrodynamics::Maneuvers::ApsidalAlignmentManeuver}!ComputeOrientation@{ComputeOrientation}}
+\index{ComputeOrientation@{ComputeOrientation}!IO::Astrodynamics::Maneuvers::ApsidalAlignmentManeuver@{IO::Astrodynamics::Maneuvers::ApsidalAlignmentManeuver}}
+\doxysubsubsection{\texorpdfstring{ComputeOrientation()}{ComputeOrientation()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateOrientation}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+State\+Orientation}} IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Apsidal\+Alignment\+Maneuver\+::\+Compute\+Orientation (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}} \&}]{maneuver\+Point }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [protected]}, {\ttfamily [virtual]}}
+
+
+\begin{DoxyParams}{Parameters}
+{\em maneuver\+Point} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateOrientation}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+State\+Orientation}} 
+\end{DoxyReturn}
+
+
+Implements \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_a9f13935c641a5c447000e5e8cbe54f19}{IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Maneuver\+Base}}.
+
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ApsidalAlignmentManeuver_aa47af7f2bcac06f772fcdca00fd820bb}\label{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ApsidalAlignmentManeuver_aa47af7f2bcac06f772fcdca00fd820bb}} 
+\index{IO::Astrodynamics::Maneuvers::ApsidalAlignmentManeuver@{IO::Astrodynamics::Maneuvers::ApsidalAlignmentManeuver}!GetTheta@{GetTheta}}
+\index{GetTheta@{GetTheta}!IO::Astrodynamics::Maneuvers::ApsidalAlignmentManeuver@{IO::Astrodynamics::Maneuvers::ApsidalAlignmentManeuver}}
+\doxysubsubsection{\texorpdfstring{GetTheta()}{GetTheta()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily double IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Apsidal\+Alignment\+Maneuver\+::\+Get\+Theta (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+
+
+Get the theta angle. 
+
+\begin{DoxyReturn}{Returns}
+double 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ApsidalAlignmentManeuver_a128d9ecf08937bc903dab7e5d70d67e1}\label{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ApsidalAlignmentManeuver_a128d9ecf08937bc903dab7e5d70d67e1}} 
+\index{IO::Astrodynamics::Maneuvers::ApsidalAlignmentManeuver@{IO::Astrodynamics::Maneuvers::ApsidalAlignmentManeuver}!GetTheta@{GetTheta}}
+\index{GetTheta@{GetTheta}!IO::Astrodynamics::Maneuvers::ApsidalAlignmentManeuver@{IO::Astrodynamics::Maneuvers::ApsidalAlignmentManeuver}}
+\doxysubsubsection{\texorpdfstring{GetTheta()}{GetTheta()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily double IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Apsidal\+Alignment\+Maneuver\+::\+Get\+Theta (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+State\+Vector}} \&}]{state\+Vector }\end{DoxyParamCaption}) const}
+
+
+
+Get the Theta. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em state\+Vector} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+double 
+\end{DoxyReturn}
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+IO.\+Astrodynamics/\+Maneuvers/\mbox{\hyperlink{ApsidalAlignmentManeuver_8h}{Apsidal\+Alignment\+Maneuver.\+h}}\item 
+IO.\+Astrodynamics/\+Maneuvers/\mbox{\hyperlink{ApsidalAlignmentManeuver_8cpp}{Apsidal\+Alignment\+Maneuver.\+cpp}}\end{DoxyCompactItemize}

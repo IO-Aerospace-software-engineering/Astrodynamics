@@ -1,5 +1,5 @@
 \hypertarget{ManeuverBase_8h_source}{}\doxysection{Maneuver\+Base.\+h}
-\label{ManeuverBase_8h_source}\index{IO.SDK/Maneuvers/ManeuverBase.h@{IO.SDK/Maneuvers/ManeuverBase.h}}
+\label{ManeuverBase_8h_source}\index{IO.Astrodynamics/Maneuvers/ManeuverBase.h@{IO.Astrodynamics/Maneuvers/ManeuverBase.h}}
 \mbox{\hyperlink{ManeuverBase_8h}{Go to the documentation of this file.}}
 \begin{DoxyCode}{0}
 \DoxyCodeLine{1 \textcolor{comment}{/*}}
@@ -18,87 +18,87 @@
 \DoxyCodeLine{14 }
 \DoxyCodeLine{15 \textcolor{keyword}{using namespace }std::chrono\_literals;}
 \DoxyCodeLine{16 }
-\DoxyCodeLine{17 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1SDK_1_1Propagators}{IO::SDK::Propagators}}}
+\DoxyCodeLine{17 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Propagators}{IO::Astrodynamics::Propagators}}}
 \DoxyCodeLine{18 \{}
-\DoxyCodeLine{19     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1SDK_1_1Propagators_1_1Propagator}{Propagator}};}
+\DoxyCodeLine{19     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Propagators_1_1Propagator}{Propagator}};}
 \DoxyCodeLine{20 \}}
 \DoxyCodeLine{21 }
-\DoxyCodeLine{22 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1SDK_1_1Maneuvers}{IO::SDK::Maneuvers}}}
+\DoxyCodeLine{22 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Maneuvers}{IO::Astrodynamics::Maneuvers}}}
 \DoxyCodeLine{23 \{}
-\DoxyCodeLine{28     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase}{ManeuverBase}}}
+\DoxyCodeLine{28     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase}{ManeuverBase}}}
 \DoxyCodeLine{29     \{}
 \DoxyCodeLine{30     \textcolor{keyword}{private}:}
 \DoxyCodeLine{36         \textcolor{keywordtype}{double} GetRemainingAvgFuelFlow();}
 \DoxyCodeLine{37 }
 \DoxyCodeLine{43         \textcolor{keywordtype}{double} GetRemainingAvgISP();}
 \DoxyCodeLine{44 }
-\DoxyCodeLine{50         \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO::SDK::Time::TimeSpan}} GetMinimumRemainingThrustDuration();}
+\DoxyCodeLine{50         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO::Astrodynamics::Time::TimeSpan}} GetMinimumRemainingThrustDuration();}
 \DoxyCodeLine{51 }
-\DoxyCodeLine{58         \textcolor{keywordtype}{double} Burn(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO::SDK::Time::TimeSpan}} \&duration);}
+\DoxyCodeLine{58         \textcolor{keywordtype}{double} Burn(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO::Astrodynamics::Time::TimeSpan}} \&duration);}
 \DoxyCodeLine{59 }
-\DoxyCodeLine{66         \mbox{\hyperlink{structIO_1_1SDK_1_1Maneuvers_1_1ManeuverResult}{IO::SDK::Maneuvers::ManeuverResult}} Validate();}
+\DoxyCodeLine{66         \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverResult}{IO::Astrodynamics::Maneuvers::ManeuverResult}} Validate();}
 \DoxyCodeLine{67 }
 \DoxyCodeLine{74         [[nodiscard]] \textcolor{keywordtype}{bool} IsValid() \textcolor{keyword}{const};}
 \DoxyCodeLine{75 }
-\DoxyCodeLine{80         \textcolor{keywordtype}{void} ExecuteAt(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters}{IO::SDK::OrbitalParameters::OrbitalParameters}} \&maneuverPoint);}
+\DoxyCodeLine{80         \textcolor{keywordtype}{void} ExecuteAt(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters}{IO::Astrodynamics::OrbitalParameters::OrbitalParameters}} \&maneuverPoint);}
 \DoxyCodeLine{81 }
 \DoxyCodeLine{86         \textcolor{keywordtype}{void} SpreadThrust();}
 \DoxyCodeLine{87 }
-\DoxyCodeLine{88         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO::SDK::Time::TimeSpan}} m\_attitudeHoldDuration;}
-\DoxyCodeLine{89         std::unique\_ptr<IO::SDK::Time::Window<IO::SDK::Time::TDB>> m\_attitudeWindow\{\};}
+\DoxyCodeLine{88         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO::Astrodynamics::Time::TimeSpan}} m\_attitudeHoldDuration;}
+\DoxyCodeLine{89         std::unique\_ptr<IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB>> m\_attitudeWindow\{\};}
 \DoxyCodeLine{90 }
-\DoxyCodeLine{91         std::unique\_ptr<IO::SDK::Time::Window<IO::SDK::Time::TDB>> m\_maneuverWindow\{\};}
+\DoxyCodeLine{91         std::unique\_ptr<IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB>> m\_maneuverWindow\{\};}
 \DoxyCodeLine{92 }
 \DoxyCodeLine{93     \textcolor{keyword}{protected}:}
-\DoxyCodeLine{94         std::unique\_ptr<IO::SDK::Time::Window<IO::SDK::Time::TDB>> \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase_a0d4d098d2db1b3396258202f12939eae}{m\_thrustWindow}}\{\};}
-\DoxyCodeLine{95         std::unique\_ptr<IO::SDK::Math::Vector3D> \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase_a2b3d8dedb5f9299a3d8798bdb3f50b9a}{m\_deltaV}}\{\};}
-\DoxyCodeLine{96         \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO::SDK::Time::TimeSpan}} \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase_ab67455f45086e468ae07ba9d3c65f81a}{m\_thrustDuration}}\{0.0s\};}
-\DoxyCodeLine{97         \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase_a1b8aa4e7f5899e450c254036483a889c}{m\_fuelBurned}}\{\};}
-\DoxyCodeLine{98         \textcolor{keyword}{const} std::vector<IO::SDK::Body::Spacecraft::Engine*> \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase_aefe3f0f907974cf14cdfc091eee871fe}{m\_engines}}\{\};}
-\DoxyCodeLine{99         std::unique\_ptr<IO::SDK::Time::TDB> \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase_aca1853fe97aeda8d435912cefa5cc485}{m\_minimumEpoch}}\{\};}
-\DoxyCodeLine{100         \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase}{ManeuverBase}} *\mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase_adeef4a3da2ed3145cc30d12c1e2101d5}{m\_nextManeuver}}\{\};}
-\DoxyCodeLine{101         \textcolor{keywordtype}{bool} \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase_a60392c18de221825520fd1040eb1934a}{m\_isValid}}\{\textcolor{keyword}{false}\};}
-\DoxyCodeLine{102         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft}{IO::SDK::Body::Spacecraft::Spacecraft}} \&\mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase_a5c8f0c9e0ee5e22b8034085dee40f1d0}{m\_spacecraft}};}
-\DoxyCodeLine{103         \mbox{\hyperlink{classIO_1_1SDK_1_1Propagators_1_1Propagator}{IO::SDK::Propagators::Propagator}} \&\mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase_a87752af3fdfb1e6c94ebfac8fbcef118}{m\_propagator}};}
-\DoxyCodeLine{104         std::vector<ManeuverBase *> \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase_a1e306dcf4aebf7a7f7ab08fc5dea3242}{m\_subManeuvers}}\{\};}
-\DoxyCodeLine{105         std::set<const IO::SDK::Body::Spacecraft::FuelTank *> \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase_ac0ed72038fa029fd45cad1b4a0d48a89}{m\_fuelTanks}};}
-\DoxyCodeLine{106         std::map<const IO::SDK::Body::Spacecraft::FuelTank *, IO::SDK::Maneuvers::DynamicFuelTank> \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase_a7d9396c9cbe3b08068e1572f38a5da65}{m\_dynamicFuelTanks}};}
-\DoxyCodeLine{107         \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO::SDK::Time::TimeSpan}} \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase_aa6daf0173ab368b0a90eebd402700804}{m\_maneuverHoldDuration}}\{0.0s\};}
+\DoxyCodeLine{94         std::unique\_ptr<IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB>> \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_ab332981af61592a313c2d457336aecef}{m\_thrustWindow}}\{\};}
+\DoxyCodeLine{95         std::unique\_ptr<IO::Astrodynamics::Math::Vector3D> \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_aa03c493048a065510bf4a7b4b2a660a2}{m\_deltaV}}\{\};}
+\DoxyCodeLine{96         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO::Astrodynamics::Time::TimeSpan}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_a5a9181858407c946e75c8880d978be29}{m\_thrustDuration}}\{0.0s\};}
+\DoxyCodeLine{97         \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_a554d750635d630c62d3e52930d92a7d2}{m\_fuelBurned}}\{\};}
+\DoxyCodeLine{98         \textcolor{keyword}{const} std::vector<IO::Astrodynamics::Body::Spacecraft::Engine*> \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_aeba2ea76c45031a6b5b590c29ab9ce6f}{m\_engines}}\{\};}
+\DoxyCodeLine{99         std::unique\_ptr<IO::Astrodynamics::Time::TDB> \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_a201eb8bc90f6f6bb85aa355a25d86c1f}{m\_minimumEpoch}}\{\};}
+\DoxyCodeLine{100         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase}{ManeuverBase}} *\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_a9396a43a23f13217db06250486991248}{m\_nextManeuver}}\{\};}
+\DoxyCodeLine{101         \textcolor{keywordtype}{bool} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_a4aa7c13c2dbfdb354cf9af76f82d938e}{m\_isValid}}\{\textcolor{keyword}{false}\};}
+\DoxyCodeLine{102         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft}{IO::Astrodynamics::Body::Spacecraft::Spacecraft}} \&\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_a148ef8f914319909a7803f4cda03777b}{m\_spacecraft}};}
+\DoxyCodeLine{103         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Propagators_1_1Propagator}{IO::Astrodynamics::Propagators::Propagator}} \&\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_a870a8a9ce9bf4bc2807ef3dd2028a28a}{m\_propagator}};}
+\DoxyCodeLine{104         std::vector<ManeuverBase *> \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_a4fbbbdf3979a324a4ef9cb77fe66e78a}{m\_subManeuvers}}\{\};}
+\DoxyCodeLine{105         std::set<const IO::Astrodynamics::Body::Spacecraft::FuelTank *> \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_ab04ebb42df11298a6cf9d6571c60a6ab}{m\_fuelTanks}};}
+\DoxyCodeLine{106         std::map<const IO::Astrodynamics::Body::Spacecraft::FuelTank *, IO::Astrodynamics::Maneuvers::DynamicFuelTank> \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_a8458f00212105adca3b9860f08beb69f}{m\_dynamicFuelTanks}};}
+\DoxyCodeLine{107         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO::Astrodynamics::Time::TimeSpan}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_a8efadf4d0f2b08935bc6c95deaa793b1}{m\_maneuverHoldDuration}}\{0.0s\};}
 \DoxyCodeLine{108 }
-\DoxyCodeLine{114         \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase_ac9fc7e89db7b944668aecd721196ed08}{ManeuverBase}}(std::vector<IO::SDK::Body::Spacecraft::Engine*> engines, \mbox{\hyperlink{classIO_1_1SDK_1_1Propagators_1_1Propagator}{IO::SDK::Propagators::Propagator}} \&propagator);}
+\DoxyCodeLine{114         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_aa15287e13d3ac642ad0756ea63e9db47}{ManeuverBase}}(std::vector<IO::Astrodynamics::Body::Spacecraft::Engine*> engines, \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Propagators_1_1Propagator}{IO::Astrodynamics::Propagators::Propagator}} \&propagator);}
 \DoxyCodeLine{115 }
-\DoxyCodeLine{122         \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase_ac9fc7e89db7b944668aecd721196ed08}{ManeuverBase}}(std::vector<IO::SDK::Body::Spacecraft::Engine*> engines, \mbox{\hyperlink{classIO_1_1SDK_1_1Propagators_1_1Propagator}{IO::SDK::Propagators::Propagator}} \&propagator, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO::SDK::Time::TDB}} \&minimumEpoch);}
+\DoxyCodeLine{122         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_aa15287e13d3ac642ad0756ea63e9db47}{ManeuverBase}}(std::vector<IO::Astrodynamics::Body::Spacecraft::Engine*> engines, \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Propagators_1_1Propagator}{IO::Astrodynamics::Propagators::Propagator}} \&propagator, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO::Astrodynamics::Time::TDB}} \&minimumEpoch);}
 \DoxyCodeLine{123 }
-\DoxyCodeLine{131         \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase_ac9fc7e89db7b944668aecd721196ed08}{ManeuverBase}}(std::vector<IO::SDK::Body::Spacecraft::Engine*> engines, \mbox{\hyperlink{classIO_1_1SDK_1_1Propagators_1_1Propagator}{IO::SDK::Propagators::Propagator}} \&propagator,}
-\DoxyCodeLine{132                      \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO::SDK::Time::TimeSpan}} \&attitudeHoldDuration);}
+\DoxyCodeLine{131         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_aa15287e13d3ac642ad0756ea63e9db47}{ManeuverBase}}(std::vector<IO::Astrodynamics::Body::Spacecraft::Engine*> engines, \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Propagators_1_1Propagator}{IO::Astrodynamics::Propagators::Propagator}} \&propagator,}
+\DoxyCodeLine{132                      \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO::Astrodynamics::Time::TimeSpan}} \&attitudeHoldDuration);}
 \DoxyCodeLine{133 }
-\DoxyCodeLine{142         \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase_ac9fc7e89db7b944668aecd721196ed08}{ManeuverBase}}(std::vector<IO::SDK::Body::Spacecraft::Engine*> engines, \mbox{\hyperlink{classIO_1_1SDK_1_1Propagators_1_1Propagator}{IO::SDK::Propagators::Propagator}} \&propagator, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO::SDK::Time::TDB}} \&minimumEpoch,}
-\DoxyCodeLine{143                      \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO::SDK::Time::TimeSpan}} \&attitudeHoldDuration);}
+\DoxyCodeLine{142         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_aa15287e13d3ac642ad0756ea63e9db47}{ManeuverBase}}(std::vector<IO::Astrodynamics::Body::Spacecraft::Engine*> engines, \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Propagators_1_1Propagator}{IO::Astrodynamics::Propagators::Propagator}} \&propagator, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO::Astrodynamics::Time::TDB}} \&minimumEpoch,}
+\DoxyCodeLine{143                      \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO::Astrodynamics::Time::TimeSpan}} \&attitudeHoldDuration);}
 \DoxyCodeLine{144 }
-\DoxyCodeLine{150         \textcolor{keyword}{virtual} \textcolor{keywordtype}{void} \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase_a3d206dbe0f7f5ad8b18e0601f154e873}{Compute}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters}{IO::SDK::OrbitalParameters::OrbitalParameters}} \&maneuverPoint) = 0;}
+\DoxyCodeLine{150         \textcolor{keyword}{virtual} \textcolor{keywordtype}{void} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_a1df25da25e0f4c14744f9b37f29dad90}{Compute}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters}{IO::Astrodynamics::OrbitalParameters::OrbitalParameters}} \&maneuverPoint) = 0;}
 \DoxyCodeLine{151 }
-\DoxyCodeLine{158         \textcolor{keyword}{virtual} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateOrientation}{IO::SDK::OrbitalParameters::StateOrientation}} \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase_a2339b5313d34fe2d7bf474f645030bc5}{ComputeOrientation}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters}{IO::SDK::OrbitalParameters::OrbitalParameters}} \&maneuverPoint) = 0;}
+\DoxyCodeLine{158         \textcolor{keyword}{virtual} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateOrientation}{IO::Astrodynamics::OrbitalParameters::StateOrientation}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_a9f13935c641a5c447000e5e8cbe54f19}{ComputeOrientation}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters}{IO::Astrodynamics::OrbitalParameters::OrbitalParameters}} \&maneuverPoint) = 0;}
 \DoxyCodeLine{159 }
 \DoxyCodeLine{160     \textcolor{keyword}{public}:}
-\DoxyCodeLine{166         \textcolor{keywordtype}{void} \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase_a7e88f75acde86f4992d4238d781b4c94}{Handle}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO::SDK::Time::TDB}} \&notBeforeEpoch);}
+\DoxyCodeLine{166         \textcolor{keywordtype}{void} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_a402b2cba078061f515b00e63c8179858}{Handle}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO::Astrodynamics::Time::TDB}} \&notBeforeEpoch);}
 \DoxyCodeLine{167 }
-\DoxyCodeLine{175         \textcolor{keyword}{virtual} \textcolor{keywordtype}{bool} \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase_a5aa0c82f84ec1d521b42b46f0f91d40d}{CanExecute}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters}{IO::SDK::OrbitalParameters::OrbitalParameters}} \&maneuverPoint) = 0;}
+\DoxyCodeLine{175         \textcolor{keyword}{virtual} \textcolor{keywordtype}{bool} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_a9bc46694a197868297955930c9edd531}{CanExecute}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters}{IO::Astrodynamics::OrbitalParameters::OrbitalParameters}} \&maneuverPoint) = 0;}
 \DoxyCodeLine{176 }
-\DoxyCodeLine{182         \mbox{\hyperlink{structIO_1_1SDK_1_1Maneuvers_1_1ManeuverResult}{IO::SDK::Maneuvers::ManeuverResult}} \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase_a0cd50901e65b4dd6aeb53e439f3cbe95}{TryExecute}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters}{IO::SDK::OrbitalParameters::OrbitalParameters}} \&maneuverPoint);}
+\DoxyCodeLine{182         \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverResult}{IO::Astrodynamics::Maneuvers::ManeuverResult}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_a5d34d331d703837ccc1ed54e506671d1}{TryExecute}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters}{IO::Astrodynamics::OrbitalParameters::OrbitalParameters}} \&maneuverPoint);}
 \DoxyCodeLine{183 }
-\DoxyCodeLine{189         [[nodiscard]] \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO::SDK::Time::Window<IO::SDK::Time::TDB>}} *\mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase_ac2f09cb89dda1eca99e730403db94211}{GetThrustWindow}}() \textcolor{keyword}{const};}
+\DoxyCodeLine{189         [[nodiscard]] \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB>}} *\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_af40a795082bf5b39573f9ce23495d6a7}{GetThrustWindow}}() \textcolor{keyword}{const};}
 \DoxyCodeLine{190 }
-\DoxyCodeLine{196         [[nodiscard]] \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO::SDK::Time::Window<IO::SDK::Time::TDB>}} *\mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase_a1c30f26398b3d43de365b5f91cac150d}{GetAttitudeWindow}}() \textcolor{keyword}{const};}
+\DoxyCodeLine{196         [[nodiscard]] \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB>}} *\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_a478e08783afb471c4f7fdaa74c3ea355}{GetAttitudeWindow}}() \textcolor{keyword}{const};}
 \DoxyCodeLine{197 }
-\DoxyCodeLine{204         [[nodiscard]] \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO::SDK::Time::Window<IO::SDK::Time::TDB>}} *\mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase_aebd09e68febba286a736389c09c0d819}{GetManeuverWindow}}() \textcolor{keyword}{const};}
+\DoxyCodeLine{204         [[nodiscard]] \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB>}} *\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_accf195d53d09b805b5ffacc9a153c099}{GetManeuverWindow}}() \textcolor{keyword}{const};}
 \DoxyCodeLine{205 }
-\DoxyCodeLine{211         [[nodiscard]] \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase_a5101aadb6cde34bd57057ff3561cbe6c}{GetFuelBurned}}() \textcolor{keyword}{const};}
+\DoxyCodeLine{211         [[nodiscard]] \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_a2ce52d7031bc50826e44f6737e6b2366}{GetFuelBurned}}() \textcolor{keyword}{const};}
 \DoxyCodeLine{212 }
-\DoxyCodeLine{218         [[nodiscard]] \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO::SDK::Time::TimeSpan}} \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase_ae0f12c4f4bfe674582064c5d1b81e641}{GetThrustDuration}}() \textcolor{keyword}{const};}
+\DoxyCodeLine{218         [[nodiscard]] \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO::Astrodynamics::Time::TimeSpan}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_a820003d88c46c172a09c513a1aeda102}{GetThrustDuration}}() \textcolor{keyword}{const};}
 \DoxyCodeLine{219 }
-\DoxyCodeLine{225         [[nodiscard]] \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO::SDK::Math::Vector3D}} \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase_afa17b51d0c2bb7bd8f5abd2645664be8}{GetDeltaV}}() \textcolor{keyword}{const};}
+\DoxyCodeLine{225         [[nodiscard]] \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO::Astrodynamics::Math::Vector3D}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_ac0bbc086eb0ec39c6e085e524ef0622c}{GetDeltaV}}() \textcolor{keyword}{const};}
 \DoxyCodeLine{226 }
-\DoxyCodeLine{233         \textcolor{keyword}{virtual} \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase}{IO::SDK::Maneuvers::ManeuverBase}} \&\mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase_a691f1a798e4cb01b9a0bb3dac42452f8}{SetNextManeuver}}(\mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase}{IO::SDK::Maneuvers::ManeuverBase}} \&maneuver);}
+\DoxyCodeLine{233         \textcolor{keyword}{virtual} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase}{IO::Astrodynamics::Maneuvers::ManeuverBase}} \&\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_a27a97352fcc9ad6fb5592f9f76f19a01}{SetNextManeuver}}(\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase}{IO::Astrodynamics::Maneuvers::ManeuverBase}} \&maneuver);}
 \DoxyCodeLine{234     \};}
 \DoxyCodeLine{235 \}}
 \DoxyCodeLine{236 }

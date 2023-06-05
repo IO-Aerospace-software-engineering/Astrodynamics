@@ -1,0 +1,106 @@
+\hypertarget{classIO_1_1Astrodynamics_1_1Integrators_1_1IntegratorBase}{}\doxysection{IO\+::Astrodynamics\+::Integrators\+::Integrator\+Base Class Reference}
+\label{classIO_1_1Astrodynamics_1_1Integrators_1_1IntegratorBase}\index{IO::Astrodynamics::Integrators::IntegratorBase@{IO::Astrodynamics::Integrators::IntegratorBase}}
+
+
+Integrator base.  
+
+
+
+
+{\ttfamily \#include $<$Integrator\+Base.\+h$>$}
+
+Inheritance diagram for IO\+::Astrodynamics\+::Integrators\+::Integrator\+Base\+:\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=2.000000cm]{classIO_1_1Astrodynamics_1_1Integrators_1_1IntegratorBase}
+\end{center}
+\end{figure}
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Integrators_1_1IntegratorBase_a434e9e308de56c2903ca8568e29af579}{Integrator\+Base}} (const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO\+::\+Astrodynamics\+::\+Time\+::\+Time\+Span}} \&step\+Duration)
+\begin{DoxyCompactList}\small\item\em Construct a new Integrator Base. \end{DoxyCompactList}\item 
+virtual \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+State\+Vector}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Integrators_1_1IntegratorBase_a2a2265c779fee68297534c1e9a4e388d}{Integrate}} (const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Body}{IO\+::\+Astrodynamics\+::\+Body\+::\+Body}} \&body, const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+State\+Vector}} \&state\+Vector)=0
+\begin{DoxyCompactList}\small\item\em Integrate forces. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsection*{Protected Attributes}
+\begin{DoxyCompactItemize}
+\item 
+const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO\+::\+Astrodynamics\+::\+Time\+::\+Time\+Span}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Integrators_1_1IntegratorBase_a59d1c31a72485523994a47b7f19f1f84}{m\+\_\+step\+Duration}} \{\}
+\item 
+const double \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Integrators_1_1IntegratorBase_a08a1c4dda21bde34aa66fe0469c57d1f}{m\+\_\+h}} \{\}
+\item 
+const double \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Integrators_1_1IntegratorBase_adc87f8f34a9fc3426dd46b8dcfb91588}{m\+\_\+half\+\_\+h}} \{\}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+Integrator base. 
+
+\doxysubsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Integrators_1_1IntegratorBase_a434e9e308de56c2903ca8568e29af579}\label{classIO_1_1Astrodynamics_1_1Integrators_1_1IntegratorBase_a434e9e308de56c2903ca8568e29af579}} 
+\index{IO::Astrodynamics::Integrators::IntegratorBase@{IO::Astrodynamics::Integrators::IntegratorBase}!IntegratorBase@{IntegratorBase}}
+\index{IntegratorBase@{IntegratorBase}!IO::Astrodynamics::Integrators::IntegratorBase@{IO::Astrodynamics::Integrators::IntegratorBase}}
+\doxysubsubsection{\texorpdfstring{IntegratorBase()}{IntegratorBase()}}
+{\footnotesize\ttfamily IO\+::\+Astrodynamics\+::\+Integrators\+::\+Integrator\+Base\+::\+Integrator\+Base (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO\+::\+Astrodynamics\+::\+Time\+::\+Time\+Span}} \&}]{step\+Duration }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [explicit]}}
+
+
+
+Construct a new Integrator Base. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em deltat} & Step duration \\
+\hline
+\end{DoxyParams}
+
+
+\doxysubsection{Member Function Documentation}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Integrators_1_1IntegratorBase_a2a2265c779fee68297534c1e9a4e388d}\label{classIO_1_1Astrodynamics_1_1Integrators_1_1IntegratorBase_a2a2265c779fee68297534c1e9a4e388d}} 
+\index{IO::Astrodynamics::Integrators::IntegratorBase@{IO::Astrodynamics::Integrators::IntegratorBase}!Integrate@{Integrate}}
+\index{Integrate@{Integrate}!IO::Astrodynamics::Integrators::IntegratorBase@{IO::Astrodynamics::Integrators::IntegratorBase}}
+\doxysubsubsection{\texorpdfstring{Integrate()}{Integrate()}}
+{\footnotesize\ttfamily virtual \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+State\+Vector}} IO\+::\+Astrodynamics\+::\+Integrators\+::\+Integrator\+Base\+::\+Integrate (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Body}{IO\+::\+Astrodynamics\+::\+Body\+::\+Body}} \&}]{body,  }\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+State\+Vector}} \&}]{state\+Vector }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [pure virtual]}}
+
+
+
+Integrate forces. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em spacecraft} & Vessel on which integration occurs \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+State\+Vector}} 
+\end{DoxyReturn}
+
+
+Implemented in \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Integrators_1_1TLEIntegrator_ad0131c413ec4e5b92b94ba5229c600ea}{IO\+::\+Astrodynamics\+::\+Integrators\+::\+TLEIntegrator}}, and \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Integrators_1_1VVIntegrator_adbd4a187190f7c07f5817c34e2062faa}{IO\+::\+Astrodynamics\+::\+Integrators\+::\+VVIntegrator}}.
+
+
+
+\doxysubsection{Member Data Documentation}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Integrators_1_1IntegratorBase_a08a1c4dda21bde34aa66fe0469c57d1f}\label{classIO_1_1Astrodynamics_1_1Integrators_1_1IntegratorBase_a08a1c4dda21bde34aa66fe0469c57d1f}} 
+\index{IO::Astrodynamics::Integrators::IntegratorBase@{IO::Astrodynamics::Integrators::IntegratorBase}!m\_h@{m\_h}}
+\index{m\_h@{m\_h}!IO::Astrodynamics::Integrators::IntegratorBase@{IO::Astrodynamics::Integrators::IntegratorBase}}
+\doxysubsubsection{\texorpdfstring{m\_h}{m\_h}}
+{\footnotesize\ttfamily const double IO\+::\+Astrodynamics\+::\+Integrators\+::\+Integrator\+Base\+::m\+\_\+h \{\}\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Integrators_1_1IntegratorBase_adc87f8f34a9fc3426dd46b8dcfb91588}\label{classIO_1_1Astrodynamics_1_1Integrators_1_1IntegratorBase_adc87f8f34a9fc3426dd46b8dcfb91588}} 
+\index{IO::Astrodynamics::Integrators::IntegratorBase@{IO::Astrodynamics::Integrators::IntegratorBase}!m\_half\_h@{m\_half\_h}}
+\index{m\_half\_h@{m\_half\_h}!IO::Astrodynamics::Integrators::IntegratorBase@{IO::Astrodynamics::Integrators::IntegratorBase}}
+\doxysubsubsection{\texorpdfstring{m\_half\_h}{m\_half\_h}}
+{\footnotesize\ttfamily const double IO\+::\+Astrodynamics\+::\+Integrators\+::\+Integrator\+Base\+::m\+\_\+half\+\_\+h \{\}\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Integrators_1_1IntegratorBase_a59d1c31a72485523994a47b7f19f1f84}\label{classIO_1_1Astrodynamics_1_1Integrators_1_1IntegratorBase_a59d1c31a72485523994a47b7f19f1f84}} 
+\index{IO::Astrodynamics::Integrators::IntegratorBase@{IO::Astrodynamics::Integrators::IntegratorBase}!m\_stepDuration@{m\_stepDuration}}
+\index{m\_stepDuration@{m\_stepDuration}!IO::Astrodynamics::Integrators::IntegratorBase@{IO::Astrodynamics::Integrators::IntegratorBase}}
+\doxysubsubsection{\texorpdfstring{m\_stepDuration}{m\_stepDuration}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO\+::\+Astrodynamics\+::\+Time\+::\+Time\+Span}} IO\+::\+Astrodynamics\+::\+Integrators\+::\+Integrator\+Base\+::m\+\_\+step\+Duration \{\}\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+IO.\+Astrodynamics/\+Integrators/\mbox{\hyperlink{IntegratorBase_8h}{Integrator\+Base.\+h}}\item 
+IO.\+Astrodynamics/\+Integrators/\mbox{\hyperlink{IntegratorBase_8cpp}{Integrator\+Base.\+cpp}}\end{DoxyCompactItemize}

@@ -1,0 +1,176 @@
+\hypertarget{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{}\doxysection{IO\+::Astrodynamics\+::Time\+::TDB Class Reference}
+\label{classIO_1_1Astrodynamics_1_1Time_1_1TDB}\index{IO::Astrodynamics::Time::TDB@{IO::Astrodynamics::Time::TDB}}
+
+
+{\ttfamily \#include $<$TDB.\+h$>$}
+
+Inheritance diagram for IO\+::Astrodynamics\+::Time\+::TDB\+:\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=2.000000cm]{classIO_1_1Astrodynamics_1_1Time_1_1TDB}
+\end{center}
+\end{figure}
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB_a22ccb7cb94685150b8b06a2d917065aa}{TDB}} (std\+::chrono\+::duration$<$ double $>$ ellapsed\+Seconds\+From\+J2000)
+\begin{DoxyCompactList}\small\item\em Construct a new \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{TDB}} object. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB_a70178a96a4047fe14380e4b2c950912e}{TDB}} (const std\+::string \&string)
+\begin{DoxyCompactList}\small\item\em Construct a new \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{TDB}} object. \end{DoxyCompactList}\item 
+std\+::string \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB_a4799dce71489691a49acf69fc9ca26c9}{To\+String}} () const override
+\begin{DoxyCompactList}\small\item\em Get string representation. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB_a389229d7a65bc3aa2e4c43f43c93281e}{Add}} (const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO\+::\+Astrodynamics\+::\+Time\+::\+Time\+Span}} \&timespan) const
+\begin{DoxyCompactList}\small\item\em Add \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{Time\+Span}} to datetime. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB_a47f6387453a2c747ac8459d832f4b210}{operator+}} (const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO\+::\+Astrodynamics\+::\+Time\+::\+Time\+Span}} \&timespan) const
+\begin{DoxyCompactList}\small\item\em Add \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{Time\+Span}} to \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1DateTime}{Date\+Time}}. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB_a99c6fbf941baedd1bb55d975500136b4}{operator-\/}} (const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO\+::\+Astrodynamics\+::\+Time\+::\+Time\+Span}} \&other) const
+\begin{DoxyCompactList}\small\item\em Substract \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{Time\+Span}}. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO\+::\+Astrodynamics\+::\+Time\+::\+Time\+Span}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB_a1ef9cf34541587501ae559b1ba54b34c}{operator-\/}} (const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} \&other) const
+\begin{DoxyCompactList}\small\item\em Substract \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1DateTime}{Date\+Time}}. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1UTC}{UTC}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB_ac82a4dbde5ca2e2d54427ef98572880e}{To\+UTC}} () const
+\begin{DoxyCompactList}\small\item\em Convert to \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1UTC}{UTC}}. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsection*{Additional Inherited Members}
+
+
+\doxysubsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Time_1_1TDB_a22ccb7cb94685150b8b06a2d917065aa}\label{classIO_1_1Astrodynamics_1_1Time_1_1TDB_a22ccb7cb94685150b8b06a2d917065aa}} 
+\index{IO::Astrodynamics::Time::TDB@{IO::Astrodynamics::Time::TDB}!TDB@{TDB}}
+\index{TDB@{TDB}!IO::Astrodynamics::Time::TDB@{IO::Astrodynamics::Time::TDB}}
+\doxysubsubsection{\texorpdfstring{TDB()}{TDB()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily IO\+::\+Astrodynamics\+::\+Time\+::\+TDB\+::\+TDB (\begin{DoxyParamCaption}\item[{std\+::chrono\+::duration$<$ double $>$}]{ellapsed\+Seconds\+From\+J2000 }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [explicit]}}
+
+
+
+Construct a new \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{TDB}} object. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em ellapsed\+Seconds\+From\+J2000} & \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Time_1_1TDB_a70178a96a4047fe14380e4b2c950912e}\label{classIO_1_1Astrodynamics_1_1Time_1_1TDB_a70178a96a4047fe14380e4b2c950912e}} 
+\index{IO::Astrodynamics::Time::TDB@{IO::Astrodynamics::Time::TDB}!TDB@{TDB}}
+\index{TDB@{TDB}!IO::Astrodynamics::Time::TDB@{IO::Astrodynamics::Time::TDB}}
+\doxysubsubsection{\texorpdfstring{TDB()}{TDB()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily IO\+::\+Astrodynamics\+::\+Time\+::\+TDB\+::\+TDB (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{string }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [explicit]}}
+
+
+
+Construct a new \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{TDB}} object. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em string} & \\
+\hline
+\end{DoxyParams}
+
+
+\doxysubsection{Member Function Documentation}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Time_1_1TDB_a389229d7a65bc3aa2e4c43f43c93281e}\label{classIO_1_1Astrodynamics_1_1Time_1_1TDB_a389229d7a65bc3aa2e4c43f43c93281e}} 
+\index{IO::Astrodynamics::Time::TDB@{IO::Astrodynamics::Time::TDB}!Add@{Add}}
+\index{Add@{Add}!IO::Astrodynamics::Time::TDB@{IO::Astrodynamics::Time::TDB}}
+\doxysubsubsection{\texorpdfstring{Add()}{Add()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} IO\+::\+Astrodynamics\+::\+Time\+::\+TDB\+::\+Add (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO\+::\+Astrodynamics\+::\+Time\+::\+Time\+Span}} \&}]{timespan }\end{DoxyParamCaption}) const}
+
+
+
+Add \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{Time\+Span}} to datetime. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em timespan} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Time_1_1TDB_a47f6387453a2c747ac8459d832f4b210}\label{classIO_1_1Astrodynamics_1_1Time_1_1TDB_a47f6387453a2c747ac8459d832f4b210}} 
+\index{IO::Astrodynamics::Time::TDB@{IO::Astrodynamics::Time::TDB}!operator+@{operator+}}
+\index{operator+@{operator+}!IO::Astrodynamics::Time::TDB@{IO::Astrodynamics::Time::TDB}}
+\doxysubsubsection{\texorpdfstring{operator+()}{operator+()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} IO\+::\+Astrodynamics\+::\+Time\+::\+TDB\+::operator+ (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO\+::\+Astrodynamics\+::\+Time\+::\+Time\+Span}} \&}]{timespan }\end{DoxyParamCaption}) const}
+
+
+
+Add \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{Time\+Span}} to \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1DateTime}{Date\+Time}}. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em timespan} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Time_1_1TDB_a1ef9cf34541587501ae559b1ba54b34c}\label{classIO_1_1Astrodynamics_1_1Time_1_1TDB_a1ef9cf34541587501ae559b1ba54b34c}} 
+\index{IO::Astrodynamics::Time::TDB@{IO::Astrodynamics::Time::TDB}!operator-\/@{operator-\/}}
+\index{operator-\/@{operator-\/}!IO::Astrodynamics::Time::TDB@{IO::Astrodynamics::Time::TDB}}
+\doxysubsubsection{\texorpdfstring{operator-\/()}{operator-()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO\+::\+Astrodynamics\+::\+Time\+::\+Time\+Span}} IO\+::\+Astrodynamics\+::\+Time\+::\+TDB\+::operator-\/ (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} \&}]{other }\end{DoxyParamCaption}) const}
+
+
+
+Substract \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1DateTime}{Date\+Time}}. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em other} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO\+::\+Astrodynamics\+::\+Time\+::\+Time\+Span}} 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Time_1_1TDB_a99c6fbf941baedd1bb55d975500136b4}\label{classIO_1_1Astrodynamics_1_1Time_1_1TDB_a99c6fbf941baedd1bb55d975500136b4}} 
+\index{IO::Astrodynamics::Time::TDB@{IO::Astrodynamics::Time::TDB}!operator-\/@{operator-\/}}
+\index{operator-\/@{operator-\/}!IO::Astrodynamics::Time::TDB@{IO::Astrodynamics::Time::TDB}}
+\doxysubsubsection{\texorpdfstring{operator-\/()}{operator-()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} IO\+::\+Astrodynamics\+::\+Time\+::\+TDB\+::operator-\/ (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO\+::\+Astrodynamics\+::\+Time\+::\+Time\+Span}} \&}]{other }\end{DoxyParamCaption}) const}
+
+
+
+Substract \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{Time\+Span}}. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em other} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Time_1_1TDB_a4799dce71489691a49acf69fc9ca26c9}\label{classIO_1_1Astrodynamics_1_1Time_1_1TDB_a4799dce71489691a49acf69fc9ca26c9}} 
+\index{IO::Astrodynamics::Time::TDB@{IO::Astrodynamics::Time::TDB}!ToString@{ToString}}
+\index{ToString@{ToString}!IO::Astrodynamics::Time::TDB@{IO::Astrodynamics::Time::TDB}}
+\doxysubsubsection{\texorpdfstring{ToString()}{ToString()}}
+{\footnotesize\ttfamily std\+::string IO\+::\+Astrodynamics\+::\+Time\+::\+TDB\+::\+To\+String (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Get string representation. 
+
+\begin{DoxyReturn}{Returns}
+std\+::string 
+\end{DoxyReturn}
+
+
+Implements \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1DateTime_ade049fa7911b1eeaf9b853631ff121b4}{IO\+::\+Astrodynamics\+::\+Time\+::\+Date\+Time}}.
+
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Time_1_1TDB_ac82a4dbde5ca2e2d54427ef98572880e}\label{classIO_1_1Astrodynamics_1_1Time_1_1TDB_ac82a4dbde5ca2e2d54427ef98572880e}} 
+\index{IO::Astrodynamics::Time::TDB@{IO::Astrodynamics::Time::TDB}!ToUTC@{ToUTC}}
+\index{ToUTC@{ToUTC}!IO::Astrodynamics::Time::TDB@{IO::Astrodynamics::Time::TDB}}
+\doxysubsubsection{\texorpdfstring{ToUTC()}{ToUTC()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1UTC}{IO\+::\+Astrodynamics\+::\+Time\+::\+UTC}} IO\+::\+Astrodynamics\+::\+Time\+::\+TDB\+::\+To\+UTC (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+
+
+Convert to \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1UTC}{UTC}}. 
+
+\begin{DoxyReturn}{Returns}
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1UTC}{UTC}} 
+\end{DoxyReturn}
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+IO.\+Astrodynamics/\+Time/\mbox{\hyperlink{TDB_8h}{TDB.\+h}}\item 
+IO.\+Astrodynamics/\+Time/\mbox{\hyperlink{TDB_8cpp}{TDB.\+cpp}}\end{DoxyCompactItemize}

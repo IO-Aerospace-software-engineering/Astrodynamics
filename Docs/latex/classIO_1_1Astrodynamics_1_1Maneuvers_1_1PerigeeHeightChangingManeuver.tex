@@ -1,0 +1,146 @@
+\hypertarget{classIO_1_1Astrodynamics_1_1Maneuvers_1_1PerigeeHeightChangingManeuver}{}\doxysection{IO\+::Astrodynamics\+::Maneuvers\+::Perigee\+Height\+Changing\+Maneuver Class Reference}
+\label{classIO_1_1Astrodynamics_1_1Maneuvers_1_1PerigeeHeightChangingManeuver}\index{IO::Astrodynamics::Maneuvers::PerigeeHeightChangingManeuver@{IO::Astrodynamics::Maneuvers::PerigeeHeightChangingManeuver}}
+
+
+{\ttfamily \#include $<$Perigee\+Height\+Changing\+Maneuver.\+h$>$}
+
+Inheritance diagram for IO\+::Astrodynamics\+::Maneuvers\+::Perigee\+Height\+Changing\+Maneuver\+:\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=2.000000cm]{classIO_1_1Astrodynamics_1_1Maneuvers_1_1PerigeeHeightChangingManeuver}
+\end{center}
+\end{figure}
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1PerigeeHeightChangingManeuver_a805f41aff9f496134bf50d1a60fd30fe}{Perigee\+Height\+Changing\+Maneuver}} (std\+::vector$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Engine}{IO\+::\+Astrodynamics\+::\+Body\+::\+Spacecraft\+::\+Engine}} $\ast$ $>$ engines, \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Propagators_1_1Propagator}{IO\+::\+Astrodynamics\+::\+Propagators\+::\+Propagator}} \&propagator, double target\+Height)
+\begin{DoxyCompactList}\small\item\em Construct a new Perigee Height Changing Maneuver object. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1PerigeeHeightChangingManeuver_a9e4cafd832be956fa6281cac209771ec}{Perigee\+Height\+Changing\+Maneuver}} (std\+::vector$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Engine}{IO\+::\+Astrodynamics\+::\+Body\+::\+Spacecraft\+::\+Engine}} $\ast$ $>$ engines, \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Propagators_1_1Propagator}{IO\+::\+Astrodynamics\+::\+Propagators\+::\+Propagator}} \&propagator, double target\+Height, const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} \&minimum\+Epoch)
+\begin{DoxyCompactList}\small\item\em Construct a new Perigee Height Changing Maneuver object. \end{DoxyCompactList}\item 
+bool \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1PerigeeHeightChangingManeuver_a31852c10ca63d3d41845b4336306a0f9}{Can\+Execute}} (const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}} \&orbital\+Params) override
+\begin{DoxyCompactList}\small\item\em Evaluate if maneuver can occurs. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsection*{Protected Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+void \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1PerigeeHeightChangingManeuver_a8eb3c7a76cfce41fbab182353418af87}{Compute}} (const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}} \&maneuver\+Point) override
+\begin{DoxyCompactList}\small\item\em Compute impulsive maneuver. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateOrientation}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+State\+Orientation}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1PerigeeHeightChangingManeuver_a7e03dd80b85a900e22034458713484dd}{Compute\+Orientation}} (const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}} \&maneuver\+Point) override
+\begin{DoxyCompactList}\small\item\em Compute orientation. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsection*{Additional Inherited Members}
+
+
+\doxysubsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Maneuvers_1_1PerigeeHeightChangingManeuver_a805f41aff9f496134bf50d1a60fd30fe}\label{classIO_1_1Astrodynamics_1_1Maneuvers_1_1PerigeeHeightChangingManeuver_a805f41aff9f496134bf50d1a60fd30fe}} 
+\index{IO::Astrodynamics::Maneuvers::PerigeeHeightChangingManeuver@{IO::Astrodynamics::Maneuvers::PerigeeHeightChangingManeuver}!PerigeeHeightChangingManeuver@{PerigeeHeightChangingManeuver}}
+\index{PerigeeHeightChangingManeuver@{PerigeeHeightChangingManeuver}!IO::Astrodynamics::Maneuvers::PerigeeHeightChangingManeuver@{IO::Astrodynamics::Maneuvers::PerigeeHeightChangingManeuver}}
+\doxysubsubsection{\texorpdfstring{PerigeeHeightChangingManeuver()}{PerigeeHeightChangingManeuver()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Perigee\+Height\+Changing\+Maneuver\+::\+Perigee\+Height\+Changing\+Maneuver (\begin{DoxyParamCaption}\item[{std\+::vector$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Engine}{IO\+::\+Astrodynamics\+::\+Body\+::\+Spacecraft\+::\+Engine}} $\ast$ $>$}]{engines,  }\item[{\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Propagators_1_1Propagator}{IO\+::\+Astrodynamics\+::\+Propagators\+::\+Propagator}} \&}]{propagator,  }\item[{double}]{target\+Height }\end{DoxyParamCaption})}
+
+
+
+Construct a new Perigee Height Changing Maneuver object. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em engines} & \\
+\hline
+{\em propagator} & \\
+\hline
+{\em target\+Height} & \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Maneuvers_1_1PerigeeHeightChangingManeuver_a9e4cafd832be956fa6281cac209771ec}\label{classIO_1_1Astrodynamics_1_1Maneuvers_1_1PerigeeHeightChangingManeuver_a9e4cafd832be956fa6281cac209771ec}} 
+\index{IO::Astrodynamics::Maneuvers::PerigeeHeightChangingManeuver@{IO::Astrodynamics::Maneuvers::PerigeeHeightChangingManeuver}!PerigeeHeightChangingManeuver@{PerigeeHeightChangingManeuver}}
+\index{PerigeeHeightChangingManeuver@{PerigeeHeightChangingManeuver}!IO::Astrodynamics::Maneuvers::PerigeeHeightChangingManeuver@{IO::Astrodynamics::Maneuvers::PerigeeHeightChangingManeuver}}
+\doxysubsubsection{\texorpdfstring{PerigeeHeightChangingManeuver()}{PerigeeHeightChangingManeuver()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Perigee\+Height\+Changing\+Maneuver\+::\+Perigee\+Height\+Changing\+Maneuver (\begin{DoxyParamCaption}\item[{std\+::vector$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Engine}{IO\+::\+Astrodynamics\+::\+Body\+::\+Spacecraft\+::\+Engine}} $\ast$ $>$}]{engines,  }\item[{\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Propagators_1_1Propagator}{IO\+::\+Astrodynamics\+::\+Propagators\+::\+Propagator}} \&}]{propagator,  }\item[{double}]{target\+Height,  }\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} \&}]{minimum\+Epoch }\end{DoxyParamCaption})}
+
+
+
+Construct a new Perigee Height Changing Maneuver object. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em engines} & \\
+\hline
+{\em propagator} & \\
+\hline
+{\em target\+Height} & \\
+\hline
+{\em minimum\+Epoch} & \\
+\hline
+\end{DoxyParams}
+
+
+\doxysubsection{Member Function Documentation}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Maneuvers_1_1PerigeeHeightChangingManeuver_a31852c10ca63d3d41845b4336306a0f9}\label{classIO_1_1Astrodynamics_1_1Maneuvers_1_1PerigeeHeightChangingManeuver_a31852c10ca63d3d41845b4336306a0f9}} 
+\index{IO::Astrodynamics::Maneuvers::PerigeeHeightChangingManeuver@{IO::Astrodynamics::Maneuvers::PerigeeHeightChangingManeuver}!CanExecute@{CanExecute}}
+\index{CanExecute@{CanExecute}!IO::Astrodynamics::Maneuvers::PerigeeHeightChangingManeuver@{IO::Astrodynamics::Maneuvers::PerigeeHeightChangingManeuver}}
+\doxysubsubsection{\texorpdfstring{CanExecute()}{CanExecute()}}
+{\footnotesize\ttfamily bool IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Perigee\+Height\+Changing\+Maneuver\+::\+Can\+Execute (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}} \&}]{orbital\+Params }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Evaluate if maneuver can occurs. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em state\+Vector} & Evaluated to check if condition is satisfied \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+true 
+
+false 
+\end{DoxyReturn}
+
+
+Implements \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_a9bc46694a197868297955930c9edd531}{IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Maneuver\+Base}}.
+
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Maneuvers_1_1PerigeeHeightChangingManeuver_a8eb3c7a76cfce41fbab182353418af87}\label{classIO_1_1Astrodynamics_1_1Maneuvers_1_1PerigeeHeightChangingManeuver_a8eb3c7a76cfce41fbab182353418af87}} 
+\index{IO::Astrodynamics::Maneuvers::PerigeeHeightChangingManeuver@{IO::Astrodynamics::Maneuvers::PerigeeHeightChangingManeuver}!Compute@{Compute}}
+\index{Compute@{Compute}!IO::Astrodynamics::Maneuvers::PerigeeHeightChangingManeuver@{IO::Astrodynamics::Maneuvers::PerigeeHeightChangingManeuver}}
+\doxysubsubsection{\texorpdfstring{Compute()}{Compute()}}
+{\footnotesize\ttfamily void IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Perigee\+Height\+Changing\+Maneuver\+::\+Compute (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}} \&}]{maneuver\+Point }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [protected]}, {\ttfamily [virtual]}}
+
+
+
+Compute impulsive maneuver. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em maneuver\+Point} & \\
+\hline
+\end{DoxyParams}
+
+
+Implements \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_a1df25da25e0f4c14744f9b37f29dad90}{IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Maneuver\+Base}}.
+
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Maneuvers_1_1PerigeeHeightChangingManeuver_a7e03dd80b85a900e22034458713484dd}\label{classIO_1_1Astrodynamics_1_1Maneuvers_1_1PerigeeHeightChangingManeuver_a7e03dd80b85a900e22034458713484dd}} 
+\index{IO::Astrodynamics::Maneuvers::PerigeeHeightChangingManeuver@{IO::Astrodynamics::Maneuvers::PerigeeHeightChangingManeuver}!ComputeOrientation@{ComputeOrientation}}
+\index{ComputeOrientation@{ComputeOrientation}!IO::Astrodynamics::Maneuvers::PerigeeHeightChangingManeuver@{IO::Astrodynamics::Maneuvers::PerigeeHeightChangingManeuver}}
+\doxysubsubsection{\texorpdfstring{ComputeOrientation()}{ComputeOrientation()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateOrientation}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+State\+Orientation}} IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Perigee\+Height\+Changing\+Maneuver\+::\+Compute\+Orientation (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}} \&}]{maneuver\+Point }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [protected]}, {\ttfamily [virtual]}}
+
+
+
+Compute orientation. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em maneuver\+Point} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateOrientation}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+State\+Orientation}} 
+\end{DoxyReturn}
+
+
+Implements \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_a9f13935c641a5c447000e5e8cbe54f19}{IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Maneuver\+Base}}.
+
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+IO.\+Astrodynamics/\+Maneuvers/\mbox{\hyperlink{PerigeeHeightChangingManeuver_8h}{Perigee\+Height\+Changing\+Maneuver.\+h}}\item 
+IO.\+Astrodynamics/\+Maneuvers/\mbox{\hyperlink{PerigeeHeightChangingManeuver_8cpp}{Perigee\+Height\+Changing\+Maneuver.\+cpp}}\end{DoxyCompactItemize}

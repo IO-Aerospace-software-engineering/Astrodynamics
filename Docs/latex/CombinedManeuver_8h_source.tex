@@ -1,5 +1,5 @@
 \hypertarget{CombinedManeuver_8h_source}{}\doxysection{Combined\+Maneuver.\+h}
-\label{CombinedManeuver_8h_source}\index{IO.SDK/Maneuvers/CombinedManeuver.h@{IO.SDK/Maneuvers/CombinedManeuver.h}}
+\label{CombinedManeuver_8h_source}\index{IO.Astrodynamics/Maneuvers/CombinedManeuver.h@{IO.Astrodynamics/Maneuvers/CombinedManeuver.h}}
 \mbox{\hyperlink{CombinedManeuver_8h}{Go to the documentation of this file.}}
 \begin{DoxyCode}{0}
 \DoxyCodeLine{1 \textcolor{comment}{/*}}
@@ -22,29 +22,29 @@
 \DoxyCodeLine{18 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{StateVector_8h}{StateVector.h}}>}}
 \DoxyCodeLine{19 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{StateOrientation_8h}{StateOrientation.h}}>}}
 \DoxyCodeLine{20 }
-\DoxyCodeLine{21 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1SDK_1_1Maneuvers}{IO::SDK::Maneuvers}}}
+\DoxyCodeLine{21 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Maneuvers}{IO::Astrodynamics::Maneuvers}}}
 \DoxyCodeLine{22 \{}
-\DoxyCodeLine{23     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1CombinedManeuver}{CombinedManeuver}} final : \textcolor{keyword}{public} \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase}{IO::SDK::Maneuvers::ManeuverBase}}}
+\DoxyCodeLine{23     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1CombinedManeuver}{CombinedManeuver}} final : \textcolor{keyword}{public} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase}{IO::Astrodynamics::Maneuvers::ManeuverBase}}}
 \DoxyCodeLine{24     \{}
 \DoxyCodeLine{25     \textcolor{keyword}{private}:}
 \DoxyCodeLine{26         \textcolor{keywordtype}{double} m\_inclination;}
 \DoxyCodeLine{27         \textcolor{keywordtype}{double} m\_peregeeRadius;}
 \DoxyCodeLine{28 }
-\DoxyCodeLine{29         [[nodiscard]] \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO::SDK::Math::Vector3D}} \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase_afa17b51d0c2bb7bd8f5abd2645664be8}{GetDeltaV}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{IO::SDK::OrbitalParameters::StateVector}}\& sv) \textcolor{keyword}{const};}
+\DoxyCodeLine{29         [[nodiscard]] \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO::Astrodynamics::Math::Vector3D}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_ac0bbc086eb0ec39c6e085e524ef0622c}{GetDeltaV}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}{IO::Astrodynamics::OrbitalParameters::StateVector}}\& sv) \textcolor{keyword}{const};}
 \DoxyCodeLine{30 }
 \DoxyCodeLine{31     \textcolor{keyword}{protected}:}
-\DoxyCodeLine{37         \textcolor{keywordtype}{void} \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1CombinedManeuver_a40963ff9fa4aff926dcbbe5e3b96e946}{Compute}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters}{IO::SDK::OrbitalParameters::OrbitalParameters}} \&maneuverPoint) \textcolor{keyword}{override};}
+\DoxyCodeLine{37         \textcolor{keywordtype}{void} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1CombinedManeuver_a042ab24d82afb2df9e8c0836f33bf01e}{Compute}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters}{IO::Astrodynamics::OrbitalParameters::OrbitalParameters}} \&maneuverPoint) \textcolor{keyword}{override};}
 \DoxyCodeLine{38 }
-\DoxyCodeLine{45         \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateOrientation}{IO::SDK::OrbitalParameters::StateOrientation}} \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1CombinedManeuver_aa1430b3b1b33863ce6c7082dc8cb294f}{ComputeOrientation}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters}{IO::SDK::OrbitalParameters::OrbitalParameters}} \&maneuverPoint) \textcolor{keyword}{override};}
+\DoxyCodeLine{45         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateOrientation}{IO::Astrodynamics::OrbitalParameters::StateOrientation}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1CombinedManeuver_ae5f94eb6da49623b4bc1a19e450305ca}{ComputeOrientation}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters}{IO::Astrodynamics::OrbitalParameters::OrbitalParameters}} \&maneuverPoint) \textcolor{keyword}{override};}
 \DoxyCodeLine{46 }
 \DoxyCodeLine{47     \textcolor{keyword}{public}:}
-\DoxyCodeLine{52         \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1CombinedManeuver_a0a13db037df238426af5e5420ab4e9bc}{CombinedManeuver}}(std::vector<IO::SDK::Body::Spacecraft::Engine*> engines, \mbox{\hyperlink{classIO_1_1SDK_1_1Propagators_1_1Propagator}{IO::SDK::Propagators::Propagator}} \&propagator, \textcolor{keywordtype}{double} inclination, \textcolor{keywordtype}{double} perigeeRadius);}
+\DoxyCodeLine{52         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1CombinedManeuver_a52af97639792cbdb34b9d08c5a9b7578}{CombinedManeuver}}(std::vector<IO::Astrodynamics::Body::Spacecraft::Engine*> engines, \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Propagators_1_1Propagator}{IO::Astrodynamics::Propagators::Propagator}} \&propagator, \textcolor{keywordtype}{double} inclination, \textcolor{keywordtype}{double} perigeeRadius);}
 \DoxyCodeLine{53 }
-\DoxyCodeLine{54         \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1CombinedManeuver_a0a13db037df238426af5e5420ab4e9bc}{CombinedManeuver}}(std::vector<IO::SDK::Body::Spacecraft::Engine*> engines, \mbox{\hyperlink{classIO_1_1SDK_1_1Propagators_1_1Propagator}{IO::SDK::Propagators::Propagator}} \&propagator, \textcolor{keywordtype}{double} inclination, \textcolor{keywordtype}{double} perigeeRadius, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO::SDK::Time::TDB}} \&minimumEpoch);}
+\DoxyCodeLine{54         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1CombinedManeuver_a52af97639792cbdb34b9d08c5a9b7578}{CombinedManeuver}}(std::vector<IO::Astrodynamics::Body::Spacecraft::Engine*> engines, \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Propagators_1_1Propagator}{IO::Astrodynamics::Propagators::Propagator}} \&propagator, \textcolor{keywordtype}{double} inclination, \textcolor{keywordtype}{double} perigeeRadius, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO::Astrodynamics::Time::TDB}} \&minimumEpoch);}
 \DoxyCodeLine{55 }
-\DoxyCodeLine{63         \textcolor{keywordtype}{bool} \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1CombinedManeuver_a8e0b5838b45f0ab7abb381214eba5159}{CanExecute}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters}{IO::SDK::OrbitalParameters::OrbitalParameters}} \&orbitalParams) \textcolor{keyword}{override};}
+\DoxyCodeLine{63         \textcolor{keywordtype}{bool} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1CombinedManeuver_ad810f5f13f786d88075bba38c69746f3}{CanExecute}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters}{IO::Astrodynamics::OrbitalParameters::OrbitalParameters}} \&orbitalParams) \textcolor{keyword}{override};}
 \DoxyCodeLine{64 }
-\DoxyCodeLine{65         \textcolor{keyword}{using }\mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase_afa17b51d0c2bb7bd8f5abd2645664be8}{IO::SDK::Maneuvers::ManeuverBase::GetDeltaV}};}
+\DoxyCodeLine{65         \textcolor{keyword}{using} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_ac0bbc086eb0ec39c6e085e524ef0622c}{IO::Astrodynamics::Maneuvers::ManeuverBase::GetDeltaV}};}
 \DoxyCodeLine{66     \};}
 \DoxyCodeLine{67 \}}
 \DoxyCodeLine{68 }

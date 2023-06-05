@@ -1,5 +1,5 @@
 \hypertarget{StateOrientation_8h_source}{}\doxysection{State\+Orientation.\+h}
-\label{StateOrientation_8h_source}\index{IO.SDK/OrbitalParameters/StateOrientation.h@{IO.SDK/OrbitalParameters/StateOrientation.h}}
+\label{StateOrientation_8h_source}\index{IO.Astrodynamics/OrbitalParameters/StateOrientation.h@{IO.Astrodynamics/OrbitalParameters/StateOrientation.h}}
 \mbox{\hyperlink{StateOrientation_8h}{Go to the documentation of this file.}}
 \begin{DoxyCode}{0}
 \DoxyCodeLine{1 }
@@ -13,38 +13,38 @@
 \DoxyCodeLine{9 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{Quaternion_8h}{Quaternion.h}}>}}
 \DoxyCodeLine{10 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{Frames_8h}{Frames.h}}>}}
 \DoxyCodeLine{11 }
-\DoxyCodeLine{12 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1SDK_1_1OrbitalParameters}{IO::SDK::OrbitalParameters}}}
+\DoxyCodeLine{12 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1OrbitalParameters}{IO::Astrodynamics::OrbitalParameters}}}
 \DoxyCodeLine{13 \{}
-\DoxyCodeLine{14     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateOrientation}{StateOrientation}} final}
+\DoxyCodeLine{14     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateOrientation}{StateOrientation}} final}
 \DoxyCodeLine{15     \{}
 \DoxyCodeLine{16     \textcolor{keyword}{private}:}
-\DoxyCodeLine{17         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Quaternion}{IO::SDK::Math::Quaternion}} m\_quaternion\{\};}
-\DoxyCodeLine{18         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO::SDK::Math::Vector3D}} m\_angularVelocity\{\};}
-\DoxyCodeLine{19         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO::SDK::Time::TDB}} m\_epoch;}
-\DoxyCodeLine{20         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1Frames}{IO::SDK::Frames::Frames}} m\_frame;}
+\DoxyCodeLine{17         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Quaternion}{IO::Astrodynamics::Math::Quaternion}} m\_quaternion\{\};}
+\DoxyCodeLine{18         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO::Astrodynamics::Math::Vector3D}} m\_angularVelocity\{\};}
+\DoxyCodeLine{19         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO::Astrodynamics::Time::TDB}} m\_epoch;}
+\DoxyCodeLine{20         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Frames_1_1Frames}{IO::Astrodynamics::Frames::Frames}} m\_frame;}
 \DoxyCodeLine{21         }
 \DoxyCodeLine{22         }
 \DoxyCodeLine{23 }
 \DoxyCodeLine{24     \textcolor{keyword}{public}:}
-\DoxyCodeLine{31         \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateOrientation_a9bc0dbaa2d2c94e69e603ba2c3e6c52d}{StateOrientation}}(\mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO::SDK::Time::TDB}} epoch, \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1Frames}{IO::SDK::Frames::Frames}} frame);}
+\DoxyCodeLine{31         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateOrientation_a9246409ddb3821c9c38dace707649832}{StateOrientation}}(\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO::Astrodynamics::Time::TDB}} epoch, \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Frames_1_1Frames}{IO::Astrodynamics::Frames::Frames}} frame);}
 \DoxyCodeLine{32 }
-\DoxyCodeLine{42         \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateOrientation_a9bc0dbaa2d2c94e69e603ba2c3e6c52d}{StateOrientation}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO::SDK::Math::Vector3D}} \&axis, \textcolor{keywordtype}{double} angle, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO::SDK::Math::Vector3D}} \&angularVelocity, \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO::SDK::Time::TDB}} epoch, \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1Frames}{IO::SDK::Frames::Frames}} frame);}
+\DoxyCodeLine{42         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateOrientation_a9246409ddb3821c9c38dace707649832}{StateOrientation}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO::Astrodynamics::Math::Vector3D}} \&axis, \textcolor{keywordtype}{double} angle, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO::Astrodynamics::Math::Vector3D}} \&angularVelocity, \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO::Astrodynamics::Time::TDB}} epoch, \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Frames_1_1Frames}{IO::Astrodynamics::Frames::Frames}} frame);}
 \DoxyCodeLine{43 }
-\DoxyCodeLine{57         \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateOrientation_a9bc0dbaa2d2c94e69e603ba2c3e6c52d}{StateOrientation}}(\textcolor{keywordtype}{double} q0, \textcolor{keywordtype}{double} q1, \textcolor{keywordtype}{double} q2, \textcolor{keywordtype}{double} q3, \textcolor{keywordtype}{double} v0, \textcolor{keywordtype}{double} v1, \textcolor{keywordtype}{double} v2, \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO::SDK::Time::TDB}} epoch, \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1Frames}{IO::SDK::Frames::Frames}} frame);}
+\DoxyCodeLine{57         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateOrientation_a9246409ddb3821c9c38dace707649832}{StateOrientation}}(\textcolor{keywordtype}{double} q0, \textcolor{keywordtype}{double} q1, \textcolor{keywordtype}{double} q2, \textcolor{keywordtype}{double} q3, \textcolor{keywordtype}{double} v0, \textcolor{keywordtype}{double} v1, \textcolor{keywordtype}{double} v2, \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO::Astrodynamics::Time::TDB}} epoch, \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Frames_1_1Frames}{IO::Astrodynamics::Frames::Frames}} frame);}
 \DoxyCodeLine{58 }
-\DoxyCodeLine{67         \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateOrientation_a9bc0dbaa2d2c94e69e603ba2c3e6c52d}{StateOrientation}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Quaternion}{IO::SDK::Math::Quaternion}} \&quaternion, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO::SDK::Math::Vector3D}} \&angularVelocity, \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO::SDK::Time::TDB}} epoch, \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1Frames}{IO::SDK::Frames::Frames}} frame);}
+\DoxyCodeLine{67         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateOrientation_a9246409ddb3821c9c38dace707649832}{StateOrientation}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Quaternion}{IO::Astrodynamics::Math::Quaternion}} \&quaternion, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO::Astrodynamics::Math::Vector3D}} \&angularVelocity, \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO::Astrodynamics::Time::TDB}} epoch, \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Frames_1_1Frames}{IO::Astrodynamics::Frames::Frames}} frame);}
 \DoxyCodeLine{68 }
-\DoxyCodeLine{75         \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateOrientation}{StateOrientation}} \&\mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateOrientation_a966d1965d178cce8ce49d93f58231ddf}{operator=}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateOrientation}{StateOrientation}} \&rhs);}
+\DoxyCodeLine{75         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateOrientation}{StateOrientation}} \&\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateOrientation_a5de1fcacb3b10ff4c3e0818dbd33af35}{operator=}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateOrientation}{StateOrientation}} \&rhs);}
 \DoxyCodeLine{76 }
-\DoxyCodeLine{82         \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateOrientation_a7bdbee4004c4b3893ecb12ed29a79cad}{StateOrientation}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateOrientation}{StateOrientation}}\& stateOrientation);}
+\DoxyCodeLine{82         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateOrientation_aa50da35236d87275ea90365d1c92aa2b}{StateOrientation}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateOrientation}{StateOrientation}}\& stateOrientation);}
 \DoxyCodeLine{83 }
-\DoxyCodeLine{89         [[nodiscard]] \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO::SDK::Time::TDB}} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateOrientation_af0f4e245ca88ca9b9a1c3afd8b8c29d6}{GetEpoch}}() \textcolor{keyword}{const};}
+\DoxyCodeLine{89         [[nodiscard]] \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO::Astrodynamics::Time::TDB}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateOrientation_a345feaa9463aca70fdea3d78c299c018}{GetEpoch}}() \textcolor{keyword}{const};}
 \DoxyCodeLine{90 }
-\DoxyCodeLine{96         [[nodiscard]] \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Quaternion}{IO::SDK::Math::Quaternion}} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateOrientation_ae82f1f16ccd6fc4492711ab4015007a7}{GetQuaternion}}() \textcolor{keyword}{const};}
+\DoxyCodeLine{96         [[nodiscard]] \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Quaternion}{IO::Astrodynamics::Math::Quaternion}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateOrientation_a6ca2e3a55c8bbcd842573c1c6b350cac}{GetQuaternion}}() \textcolor{keyword}{const};}
 \DoxyCodeLine{97 }
-\DoxyCodeLine{103         [[nodiscard]] \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO::SDK::Math::Vector3D}} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateOrientation_a95b75e98a3b40803083983c1a6375751}{GetAngularVelocity}}() \textcolor{keyword}{const};}
+\DoxyCodeLine{103         [[nodiscard]] \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO::Astrodynamics::Math::Vector3D}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateOrientation_aad6b3bde5dcc4c1ad66f41a80a52338a}{GetAngularVelocity}}() \textcolor{keyword}{const};}
 \DoxyCodeLine{104 }
-\DoxyCodeLine{110         [[nodiscard]] \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1Frames}{IO::SDK::Frames::Frames}} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateOrientation_a01cd5f8127a96bf212ecbd8b3280c86c}{GetFrame}}() \textcolor{keyword}{const};}
+\DoxyCodeLine{110         [[nodiscard]] \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Frames_1_1Frames}{IO::Astrodynamics::Frames::Frames}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateOrientation_acaebc3446698625f7ae038e75c5be818}{GetFrame}}() \textcolor{keyword}{const};}
 \DoxyCodeLine{111     \};}
 \DoxyCodeLine{112 \}}
 \DoxyCodeLine{113 \textcolor{preprocessor}{\#endif }\textcolor{comment}{// !StateOrientation\_H}}

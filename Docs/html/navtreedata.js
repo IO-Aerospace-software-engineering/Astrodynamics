@@ -24,7 +24,7 @@
 */
 var NAVTREE =
 [
-  [ "IO-SDK", "index.html", [
+  [ "IO-Astrodynamics", "index.html", [
     [ "Namespaces", "namespaces.html", [
       [ "Namespace List", "namespaces.html", "namespaces_dup" ],
       [ "Namespace Members", "namespacemembers.html", [
@@ -61,16 +61,16 @@ var NAVTREEINDEX =
 [
 "Aberrations_8cpp.html",
 "PerigeeHeightChangingManeuver_8cpp.html",
-"classIO_1_1SDK_1_1Body_1_1Body.html#a73ca24c3037cb7b41f0ac6a88d372f28",
-"classIO_1_1SDK_1_1Coordinates_1_1AzimuthRange.html#af5f14096e4dce0522ea0971fb0a039d7",
-"classIO_1_1SDK_1_1Instruments_1_1Instrument.html#aca5febfb1c5504420a977e73516f34bb",
-"classIO_1_1SDK_1_1Maneuvers_1_1Attitudes_1_1TowardObjectAttitude.html#a2296926c7cc97c3d118181b802f3720c",
-"classIO_1_1SDK_1_1Math_1_1Vector3D.html#a8590c628e986768134b20a86e5af305d",
-"classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector.html#a7fa8add2591a9e1cf4efdc77076e2536",
-"classIO_1_1SDK_1_1Time_1_1TDB.html#ae65119a6899dcedbb87f4d177393af1d",
-"namespaceIO_1_1SDK_1_1Maneuvers.html",
-"structIO_1_1SDK_1_1API_1_1DTO_1_1InFieldOfViewConstraintDTO.html",
-"structIO_1_1SDK_1_1API_1_1DTO_1_1SpacecraftDTO.html#a14e8b5a4acb1c8d2556c22233ed1ac4f"
+"classIO_1_1Astrodynamics_1_1Body_1_1Body.html#a48f8ab15e69f963bc556c005035529d9",
+"classIO_1_1Astrodynamics_1_1Coordinates_1_1AzimuthRange.html#af4f3ee2d5c0cb71bd5f5f8ed1cb2c36f",
+"classIO_1_1Astrodynamics_1_1Instruments_1_1Instrument.html#ac44aaa6f406753af1b2538af846732ba",
+"classIO_1_1Astrodynamics_1_1Maneuvers_1_1Attitudes_1_1TowardObjectAttitude.html#a8c12ef51a36c52d3c96ce8f3298c967b",
+"classIO_1_1Astrodynamics_1_1Math_1_1Vector3D.html#a96c23c3e1212f0fe4a8162c45a72df3a",
+"classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector.html#a4ac060072106f3fcf31f666e267c21cd",
+"classIO_1_1Astrodynamics_1_1Time_1_1TDB.html#ac82a4dbde5ca2e2d54427ef98572880e",
+"namespaceIO_1_1Astrodynamics_1_1Maneuvers.html",
+"structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1InFieldOfViewConstraintDTO.html",
+"structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1SpacecraftDTO.html#a285255ef7a9bfadd990a73c69694140c"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';

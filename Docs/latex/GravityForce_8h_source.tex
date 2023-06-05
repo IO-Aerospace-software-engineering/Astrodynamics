@@ -1,5 +1,5 @@
 \hypertarget{GravityForce_8h_source}{}\doxysection{Gravity\+Force.\+h}
-\label{GravityForce_8h_source}\index{IO.SDK/Integrators/Forces/GravityForce.h@{IO.SDK/Integrators/Forces/GravityForce.h}}
+\label{GravityForce_8h_source}\index{IO.Astrodynamics/Integrators/Forces/GravityForce.h@{IO.Astrodynamics/Integrators/Forces/GravityForce.h}}
 \mbox{\hyperlink{GravityForce_8h}{Go to the documentation of this file.}}
 \begin{DoxyCode}{0}
 \DoxyCodeLine{1 \textcolor{comment}{/*}}
@@ -12,19 +12,19 @@
 \DoxyCodeLine{8 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{CelestialBody_8h}{CelestialBody.h}}>}}
 \DoxyCodeLine{9 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{StateVector_8h}{StateVector.h}}>}}
 \DoxyCodeLine{10 }
-\DoxyCodeLine{11 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1SDK_1_1Integrators_1_1Forces}{IO::SDK::Integrators::Forces}}}
+\DoxyCodeLine{11 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Integrators_1_1Forces}{IO::Astrodynamics::Integrators::Forces}}}
 \DoxyCodeLine{12 \{}
-\DoxyCodeLine{17     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1SDK_1_1Integrators_1_1Forces_1_1GravityForce}{GravityForce}} : \textcolor{keyword}{public} \mbox{\hyperlink{classIO_1_1SDK_1_1Integrators_1_1Forces_1_1Force}{IO::SDK::Integrators::Forces::Force}}}
+\DoxyCodeLine{17     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Integrators_1_1Forces_1_1GravityForce}{GravityForce}} : \textcolor{keyword}{public} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Integrators_1_1Forces_1_1Force}{IO::Astrodynamics::Integrators::Forces::Force}}}
 \DoxyCodeLine{18     \{}
 \DoxyCodeLine{19     \textcolor{keyword}{private}:}
 \DoxyCodeLine{20         \textcolor{comment}{/* data */}}
 \DoxyCodeLine{21     \textcolor{keyword}{public}:}
-\DoxyCodeLine{26         \mbox{\hyperlink{classIO_1_1SDK_1_1Integrators_1_1Forces_1_1GravityForce_a3831b3d7ce915098948cc1f82e856b77}{GravityForce}}();}
-\DoxyCodeLine{27         \mbox{\hyperlink{classIO_1_1SDK_1_1Integrators_1_1Forces_1_1GravityForce_a984e9feaa026398c5ccc05489aeba44f}{\string~GravityForce}}() \textcolor{keyword}{override};}
+\DoxyCodeLine{26         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Integrators_1_1Forces_1_1GravityForce_a630f7a9f9387ea26f9a89b0408a5cc91}{GravityForce}}();}
+\DoxyCodeLine{27         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Integrators_1_1Forces_1_1GravityForce_ab67d86f1a05c84e6f080c41a48137f47}{\string~GravityForce}}() \textcolor{keyword}{override};}
 \DoxyCodeLine{28 }
-\DoxyCodeLine{36         \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO::SDK::Math::Vector3D}} \mbox{\hyperlink{classIO_1_1SDK_1_1Integrators_1_1Forces_1_1GravityForce_a1ac748566967ca9f2585587648acc5eb}{Apply}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body}{IO::SDK::Body::Body}} \&body, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector}{IO::SDK::OrbitalParameters::StateVector}} \&stateVector) \textcolor{keyword}{override};}
+\DoxyCodeLine{36         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO::Astrodynamics::Math::Vector3D}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Integrators_1_1Forces_1_1GravityForce_a946121e1dd732447fdc710de63bafa64}{Apply}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Body}{IO::Astrodynamics::Body::Body}} \&body, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}{IO::Astrodynamics::OrbitalParameters::StateVector}} \&stateVector) \textcolor{keyword}{override};}
 \DoxyCodeLine{37     \};}
-\DoxyCodeLine{47     \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO::SDK::Math::Vector3D}} \mbox{\hyperlink{namespaceIO_1_1SDK_1_1Integrators_1_1Forces_a4f437a8b1ecc597f791908b3e2876a17}{ComputeForce}}(\textcolor{keywordtype}{double} m1, \textcolor{keywordtype}{double} m2, \textcolor{keywordtype}{double} distance, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO::SDK::Math::Vector3D}} \&u12);}
+\DoxyCodeLine{47     \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO::Astrodynamics::Math::Vector3D}} \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Integrators_1_1Forces_aba079c7288450b4321db56e8faf170e6}{ComputeForce}}(\textcolor{keywordtype}{double} m1, \textcolor{keywordtype}{double} m2, \textcolor{keywordtype}{double} distance, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO::Astrodynamics::Math::Vector3D}} \&u12);}
 \DoxyCodeLine{48 }
 \DoxyCodeLine{49 \}}
 \DoxyCodeLine{50 }

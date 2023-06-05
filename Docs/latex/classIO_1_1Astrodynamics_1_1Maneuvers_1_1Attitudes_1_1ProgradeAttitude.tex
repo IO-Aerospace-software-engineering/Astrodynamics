@@ -1,0 +1,142 @@
+\hypertarget{classIO_1_1Astrodynamics_1_1Maneuvers_1_1Attitudes_1_1ProgradeAttitude}{}\doxysection{IO\+::Astrodynamics\+::Maneuvers\+::Attitudes\+::Prograde\+Attitude Class Reference}
+\label{classIO_1_1Astrodynamics_1_1Maneuvers_1_1Attitudes_1_1ProgradeAttitude}\index{IO::Astrodynamics::Maneuvers::Attitudes::ProgradeAttitude@{IO::Astrodynamics::Maneuvers::Attitudes::ProgradeAttitude}}
+
+
+{\ttfamily \#include $<$Prograde\+Attitude.\+h$>$}
+
+Inheritance diagram for IO\+::Astrodynamics\+::Maneuvers\+::Attitudes\+::Prograde\+Attitude\+:\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=2.000000cm]{classIO_1_1Astrodynamics_1_1Maneuvers_1_1Attitudes_1_1ProgradeAttitude}
+\end{center}
+\end{figure}
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1Attitudes_1_1ProgradeAttitude_ae2dfe056b245ca4f82da1dfc16d42864}{Prograde\+Attitude}} (const std\+::vector$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Engine}{IO\+::\+Astrodynamics\+::\+Body\+::\+Spacecraft\+::\+Engine}} $\ast$ $>$ \&engines, \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Propagators_1_1Propagator}{IO\+::\+Astrodynamics\+::\+Propagators\+::\+Propagator}} \&propagator, const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO\+::\+Astrodynamics\+::\+Time\+::\+Time\+Span}} \&attitude\+Hold\+Duration)
+\begin{DoxyCompactList}\small\item\em Construct a new Prograde Attitude object. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1Attitudes_1_1ProgradeAttitude_ac718cc10d5cd07cacc38666177f1022d}{Prograde\+Attitude}} (const std\+::vector$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Engine}{IO\+::\+Astrodynamics\+::\+Body\+::\+Spacecraft\+::\+Engine}} $\ast$ $>$ \&engines, \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Propagators_1_1Propagator}{IO\+::\+Astrodynamics\+::\+Propagators\+::\+Propagator}} \&propagator, const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} \&minimum\+Epoch, const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO\+::\+Astrodynamics\+::\+Time\+::\+Time\+Span}} \&attitude\+Hold\+Duration)
+\begin{DoxyCompactList}\small\item\em Construct a new Prograde Attitude object. \end{DoxyCompactList}\item 
+bool \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1Attitudes_1_1ProgradeAttitude_a3a8e097f737c8b104399c0c1655f2511}{Can\+Execute}} (const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}} \&orbital\+Params) override
+\begin{DoxyCompactList}\small\item\em Evaluate if maneuver can occurs. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsection*{Protected Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+void \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1Attitudes_1_1ProgradeAttitude_ad1a6f0735f319c366bce5eb17e0efd66}{Compute}} (const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}} \&maneuver\+Point) override
+\begin{DoxyCompactList}\small\item\em Compute impulsive maneuver. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateOrientation}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+State\+Orientation}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1Attitudes_1_1ProgradeAttitude_a4029d880c1c9af102b55e300c4f27c65}{Compute\+Orientation}} (const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}} \&maneuver\+Point) override
+\begin{DoxyCompactList}\small\item\em Compute orientation. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsection*{Additional Inherited Members}
+
+
+\doxysubsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Maneuvers_1_1Attitudes_1_1ProgradeAttitude_ae2dfe056b245ca4f82da1dfc16d42864}\label{classIO_1_1Astrodynamics_1_1Maneuvers_1_1Attitudes_1_1ProgradeAttitude_ae2dfe056b245ca4f82da1dfc16d42864}} 
+\index{IO::Astrodynamics::Maneuvers::Attitudes::ProgradeAttitude@{IO::Astrodynamics::Maneuvers::Attitudes::ProgradeAttitude}!ProgradeAttitude@{ProgradeAttitude}}
+\index{ProgradeAttitude@{ProgradeAttitude}!IO::Astrodynamics::Maneuvers::Attitudes::ProgradeAttitude@{IO::Astrodynamics::Maneuvers::Attitudes::ProgradeAttitude}}
+\doxysubsubsection{\texorpdfstring{ProgradeAttitude()}{ProgradeAttitude()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Attitudes\+::\+Prograde\+Attitude\+::\+Prograde\+Attitude (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Engine}{IO\+::\+Astrodynamics\+::\+Body\+::\+Spacecraft\+::\+Engine}} $\ast$ $>$ \&}]{engines,  }\item[{\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Propagators_1_1Propagator}{IO\+::\+Astrodynamics\+::\+Propagators\+::\+Propagator}} \&}]{propagator,  }\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO\+::\+Astrodynamics\+::\+Time\+::\+Time\+Span}} \&}]{attitude\+Hold\+Duration }\end{DoxyParamCaption})}
+
+
+
+Construct a new Prograde Attitude object. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em engines} & \\
+\hline
+{\em propagator} & \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Maneuvers_1_1Attitudes_1_1ProgradeAttitude_ac718cc10d5cd07cacc38666177f1022d}\label{classIO_1_1Astrodynamics_1_1Maneuvers_1_1Attitudes_1_1ProgradeAttitude_ac718cc10d5cd07cacc38666177f1022d}} 
+\index{IO::Astrodynamics::Maneuvers::Attitudes::ProgradeAttitude@{IO::Astrodynamics::Maneuvers::Attitudes::ProgradeAttitude}!ProgradeAttitude@{ProgradeAttitude}}
+\index{ProgradeAttitude@{ProgradeAttitude}!IO::Astrodynamics::Maneuvers::Attitudes::ProgradeAttitude@{IO::Astrodynamics::Maneuvers::Attitudes::ProgradeAttitude}}
+\doxysubsubsection{\texorpdfstring{ProgradeAttitude()}{ProgradeAttitude()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Attitudes\+::\+Prograde\+Attitude\+::\+Prograde\+Attitude (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Engine}{IO\+::\+Astrodynamics\+::\+Body\+::\+Spacecraft\+::\+Engine}} $\ast$ $>$ \&}]{engines,  }\item[{\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Propagators_1_1Propagator}{IO\+::\+Astrodynamics\+::\+Propagators\+::\+Propagator}} \&}]{propagator,  }\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} \&}]{minimum\+Epoch,  }\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO\+::\+Astrodynamics\+::\+Time\+::\+Time\+Span}} \&}]{attitude\+Hold\+Duration }\end{DoxyParamCaption})}
+
+
+
+Construct a new Prograde Attitude object. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em engines} & \\
+\hline
+{\em propagator} & \\
+\hline
+{\em minimum\+Epoch} & \\
+\hline
+\end{DoxyParams}
+
+
+\doxysubsection{Member Function Documentation}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Maneuvers_1_1Attitudes_1_1ProgradeAttitude_a3a8e097f737c8b104399c0c1655f2511}\label{classIO_1_1Astrodynamics_1_1Maneuvers_1_1Attitudes_1_1ProgradeAttitude_a3a8e097f737c8b104399c0c1655f2511}} 
+\index{IO::Astrodynamics::Maneuvers::Attitudes::ProgradeAttitude@{IO::Astrodynamics::Maneuvers::Attitudes::ProgradeAttitude}!CanExecute@{CanExecute}}
+\index{CanExecute@{CanExecute}!IO::Astrodynamics::Maneuvers::Attitudes::ProgradeAttitude@{IO::Astrodynamics::Maneuvers::Attitudes::ProgradeAttitude}}
+\doxysubsubsection{\texorpdfstring{CanExecute()}{CanExecute()}}
+{\footnotesize\ttfamily bool IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Attitudes\+::\+Prograde\+Attitude\+::\+Can\+Execute (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}} \&}]{orbital\+Params }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Evaluate if maneuver can occurs. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em state\+Vector} & Evaluated to check if condition is satisfied \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+true 
+
+false 
+\end{DoxyReturn}
+
+
+Implements \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_a9bc46694a197868297955930c9edd531}{IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Maneuver\+Base}}.
+
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Maneuvers_1_1Attitudes_1_1ProgradeAttitude_ad1a6f0735f319c366bce5eb17e0efd66}\label{classIO_1_1Astrodynamics_1_1Maneuvers_1_1Attitudes_1_1ProgradeAttitude_ad1a6f0735f319c366bce5eb17e0efd66}} 
+\index{IO::Astrodynamics::Maneuvers::Attitudes::ProgradeAttitude@{IO::Astrodynamics::Maneuvers::Attitudes::ProgradeAttitude}!Compute@{Compute}}
+\index{Compute@{Compute}!IO::Astrodynamics::Maneuvers::Attitudes::ProgradeAttitude@{IO::Astrodynamics::Maneuvers::Attitudes::ProgradeAttitude}}
+\doxysubsubsection{\texorpdfstring{Compute()}{Compute()}}
+{\footnotesize\ttfamily void IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Attitudes\+::\+Prograde\+Attitude\+::\+Compute (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}} \&}]{maneuver\+Point }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [protected]}, {\ttfamily [virtual]}}
+
+
+
+Compute impulsive maneuver. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em maneuver\+Point} & \\
+\hline
+\end{DoxyParams}
+
+
+Implements \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_a1df25da25e0f4c14744f9b37f29dad90}{IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Maneuver\+Base}}.
+
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Maneuvers_1_1Attitudes_1_1ProgradeAttitude_a4029d880c1c9af102b55e300c4f27c65}\label{classIO_1_1Astrodynamics_1_1Maneuvers_1_1Attitudes_1_1ProgradeAttitude_a4029d880c1c9af102b55e300c4f27c65}} 
+\index{IO::Astrodynamics::Maneuvers::Attitudes::ProgradeAttitude@{IO::Astrodynamics::Maneuvers::Attitudes::ProgradeAttitude}!ComputeOrientation@{ComputeOrientation}}
+\index{ComputeOrientation@{ComputeOrientation}!IO::Astrodynamics::Maneuvers::Attitudes::ProgradeAttitude@{IO::Astrodynamics::Maneuvers::Attitudes::ProgradeAttitude}}
+\doxysubsubsection{\texorpdfstring{ComputeOrientation()}{ComputeOrientation()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateOrientation}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+State\+Orientation}} IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Attitudes\+::\+Prograde\+Attitude\+::\+Compute\+Orientation (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}} \&}]{maneuver\+Point }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [protected]}, {\ttfamily [virtual]}}
+
+
+
+Compute orientation. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em maneuver\+Point} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateOrientation}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+State\+Orientation}} 
+\end{DoxyReturn}
+
+
+Implements \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_a9f13935c641a5c447000e5e8cbe54f19}{IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Maneuver\+Base}}.
+
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+IO.\+Astrodynamics/\+Maneuvers/\+Attitudes/\mbox{\hyperlink{ProgradeAttitude_8h}{Prograde\+Attitude.\+h}}\item 
+IO.\+Astrodynamics/\+Maneuvers/\+Attitudes/\mbox{\hyperlink{ProgradeAttitude_8cpp}{Prograde\+Attitude.\+cpp}}\end{DoxyCompactItemize}

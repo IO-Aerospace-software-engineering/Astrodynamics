@@ -1,5 +1,5 @@
-\hypertarget{Proxy_8h}{}\doxysection{IO.\+SDK/\+API/\+Proxy.h File Reference}
-\label{Proxy_8h}\index{IO.SDK/API/Proxy.h@{IO.SDK/API/Proxy.h}}
+\hypertarget{Proxy_8h}{}\doxysection{IO.\+Astrodynamics/\+API/\+Proxy.h File Reference}
+\label{Proxy_8h}\index{IO.Astrodynamics/API/Proxy.h@{IO.Astrodynamics/API/Proxy.h}}
 {\ttfamily \#include $<$Scenario\+DTO.\+h$>$}\newline
 {\ttfamily \#include $<$Maneuver\+Base.\+h$>$}\newline
 {\ttfamily \#include $<$Scenario.\+h$>$}\newline
@@ -21,15 +21,15 @@
 \item 
 \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} const char $\ast$ \mbox{\hyperlink{Proxy_8h_a762431b7740df9d560ebe822564369f1}{Get\+Spice\+Version\+Proxy}} ()
 \item 
-\mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} bool \mbox{\hyperlink{Proxy_8h_a17109cffd6008c59fafb5b67ccf6fe97}{Write\+Ephemeris\+Proxy}} (const char $\ast$file\+Path, int object\+Id, \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1StateVectorDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+State\+Vector\+DTO}} sv\mbox{[}100000\mbox{]}, unsigned int size)
+\mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} bool \mbox{\hyperlink{Proxy_8h_ad909cf62335144449521f43a7985c569}{Write\+Ephemeris\+Proxy}} (const char $\ast$file\+Path, int object\+Id, \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1StateVectorDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+State\+Vector\+DTO}} sv\mbox{[}100000\mbox{]}, unsigned int size)
 \item 
-\mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} void \mbox{\hyperlink{Proxy_8h_aec8180716b9e86621181f82f38419c8f}{Read\+Ephemeris\+Proxy}} (\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Window\+DTO}} search\+Window, int observer\+Id, int target\+Id, const char $\ast$frame, const char $\ast$aberration, double step\+Size, \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1StateVectorDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+State\+Vector\+DTO}} state\+Vectors\mbox{[}10000\mbox{]})
+\mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} void \mbox{\hyperlink{Proxy_8h_a4167d00080decf1912e155d1704bce08}{Read\+Ephemeris\+Proxy}} (\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1WindowDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Window\+DTO}} search\+Window, int observer\+Id, int target\+Id, const char $\ast$frame, const char $\ast$aberration, double step\+Size, \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1StateVectorDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+State\+Vector\+DTO}} state\+Vectors\mbox{[}10000\mbox{]})
 \item 
-\mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} void \mbox{\hyperlink{Proxy_8h_ad2cb321fd1aa8706954df5b92b3b9a19}{Read\+Orientation\+Proxy}} (\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Window\+DTO}} search\+Window, int spacecraft\+Id, double tolerance, const char $\ast$frame, double step\+Size, \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1StateOrientationDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+State\+Orientation\+DTO}} so\mbox{[}10000\mbox{]})
+\mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} void \mbox{\hyperlink{Proxy_8h_acabfceb565c4e897f2d0c0afc36643b2}{Read\+Orientation\+Proxy}} (\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1WindowDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Window\+DTO}} search\+Window, int spacecraft\+Id, double tolerance, const char $\ast$frame, double step\+Size, \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1StateOrientationDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+State\+Orientation\+DTO}} so\mbox{[}10000\mbox{]})
 \item 
-\mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} void \mbox{\hyperlink{Proxy_8h_a53659fe236627b28005a1baae4c072ed}{Propagate\+Proxy}} (\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Scenario\+DTO}} \&scenario\+Dto)
+\mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} void \mbox{\hyperlink{Proxy_8h_a8b247d6485a00deb09237cfa0afdffc4}{Propagate\+Proxy}} (\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ScenarioDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Scenario\+DTO}} \&scenario\+Dto)
 \item 
-\mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} void \mbox{\hyperlink{Proxy_8h_a1d806e18515093a7f25ad338020ec56d}{Launch\+Proxy}} (\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1LaunchDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Launch\+DTO}} \&launch\+Dto)
+\mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} void \mbox{\hyperlink{Proxy_8h_a589163156d2c405e61220e8f04b914a8}{Launch\+Proxy}} (\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1LaunchDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Launch\+DTO}} \&launch\+Dto)
 \item 
 \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} void \mbox{\hyperlink{Proxy_8h_a8e72840432a41c8b143731654b2cef2a}{Load\+Kernels\+Proxy}} (const char $\ast$path)
 \item 
@@ -37,81 +37,81 @@
 \item 
 \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} const char $\ast$ \mbox{\hyperlink{Proxy_8h_a8f3164fd10cfa0827e25add2106a71c7}{UTCTo\+String\+Proxy}} (double seconds\+From\+J2000)
 \item 
-\mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} void \mbox{\hyperlink{Proxy_8h_a6ec1cf8afcc6842627d5f3fcab1f83ef}{Find\+Windows\+On\+Distance\+Constraint\+Proxy}} (\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Window\+DTO}} search\+Window, int observer\+Id, int target\+Id, const char $\ast$relational\+Operator, double value, const char $\ast$aberration, double step\+Size, \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Window\+DTO}} windows\mbox{[}1000\mbox{]})
+\mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} void \mbox{\hyperlink{Proxy_8h_a1830cc8624c1ffdd8d3fab23db7598e1}{Find\+Windows\+On\+Distance\+Constraint\+Proxy}} (\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1WindowDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Window\+DTO}} search\+Window, int observer\+Id, int target\+Id, const char $\ast$relational\+Operator, double value, const char $\ast$aberration, double step\+Size, \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1WindowDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Window\+DTO}} windows\mbox{[}1000\mbox{]})
 \item 
-\mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} void \mbox{\hyperlink{Proxy_8h_a3f435df4a2572b837892811cd273ad04}{Find\+Windows\+On\+Occultation\+Constraint\+Proxy}} (\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Window\+DTO}} search\+Window, int observer\+Id, int target\+Id, const char $\ast$target\+Frame, const char $\ast$target\+Shape, int front\+Body\+Id, const char $\ast$front\+Frame, const char $\ast$front\+Shape, const char $\ast$occultation\+Type, const char $\ast$aberration, double step\+Size, \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Window\+DTO}} windows\mbox{[}1000\mbox{]})
+\mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} void \mbox{\hyperlink{Proxy_8h_af61eee5e996932b041c02d6a3e494aac}{Find\+Windows\+On\+Occultation\+Constraint\+Proxy}} (\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1WindowDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Window\+DTO}} search\+Window, int observer\+Id, int target\+Id, const char $\ast$target\+Frame, const char $\ast$target\+Shape, int front\+Body\+Id, const char $\ast$front\+Frame, const char $\ast$front\+Shape, const char $\ast$occultation\+Type, const char $\ast$aberration, double step\+Size, \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1WindowDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Window\+DTO}} windows\mbox{[}1000\mbox{]})
 \item 
-\mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} void \mbox{\hyperlink{Proxy_8h_a41859ca381c6d0feef334aea372d8f78}{Find\+Windows\+On\+Coordinate\+Constraint\+Proxy}} (\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Window\+DTO}} search\+Window, int observer\+Id, int target\+Id, const char $\ast$frame, const char $\ast$coordinate\+System, const char $\ast$coordinate, const char $\ast$relational\+Operator, double value, double adjust\+Value, const char $\ast$aberration, double step\+Size, \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Window\+DTO}} windows\mbox{[}1000\mbox{]})
+\mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} void \mbox{\hyperlink{Proxy_8h_a6207bfab3f39d7fe0caae4b483df9d48}{Find\+Windows\+On\+Coordinate\+Constraint\+Proxy}} (\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1WindowDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Window\+DTO}} search\+Window, int observer\+Id, int target\+Id, const char $\ast$frame, const char $\ast$coordinate\+System, const char $\ast$coordinate, const char $\ast$relational\+Operator, double value, double adjust\+Value, const char $\ast$aberration, double step\+Size, \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1WindowDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Window\+DTO}} windows\mbox{[}1000\mbox{]})
 \item 
-\mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} void \mbox{\hyperlink{Proxy_8h_ab9b8fb854911a9ffea45b39d30047442}{Find\+Windows\+On\+Illumination\+Constraint\+Proxy}} (\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Window\+DTO}} search\+Window, int observer\+Id, const char $\ast$illumination\+Source, int target\+Body, const char $\ast$fixed\+Frame, \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1GeodeticDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Geodetic\+DTO}} geodetic, const char $\ast$illumination\+Type, const char $\ast$relational\+Operator, double value, double adjust\+Value, const char $\ast$aberration, double step\+Size, const char $\ast$method, \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Window\+DTO}} windows\mbox{[}1000\mbox{]})
+\mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} void \mbox{\hyperlink{Proxy_8h_ad62d6bba43525b4e409286b630e8a869}{Find\+Windows\+On\+Illumination\+Constraint\+Proxy}} (\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1WindowDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Window\+DTO}} search\+Window, int observer\+Id, const char $\ast$illumination\+Source, int target\+Body, const char $\ast$fixed\+Frame, \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1GeodeticDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Geodetic\+DTO}} geodetic, const char $\ast$illumination\+Type, const char $\ast$relational\+Operator, double value, double adjust\+Value, const char $\ast$aberration, double step\+Size, const char $\ast$method, \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1WindowDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Window\+DTO}} windows\mbox{[}1000\mbox{]})
 \item 
-\mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} void \mbox{\hyperlink{Proxy_8h_ad3695568d6bd15b6a4c74d9a10f8ea78}{Find\+Windows\+In\+Field\+Of\+View\+Constraint\+Proxy}} (\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Window\+DTO}} search\+Window, int observer\+Id, int instrument\+Id, int target\+Id, const char $\ast$target\+Frame, const char $\ast$target\+Shape, const char $\ast$aberration, double step\+Size, \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Window\+DTO}} windows\mbox{[}1000\mbox{]})
+\mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} void \mbox{\hyperlink{Proxy_8h_a937e7c2e12b5beeb29690b6d5e859d25}{Find\+Windows\+In\+Field\+Of\+View\+Constraint\+Proxy}} (\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1WindowDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Window\+DTO}} search\+Window, int observer\+Id, int instrument\+Id, int target\+Id, const char $\ast$target\+Frame, const char $\ast$target\+Shape, const char $\ast$aberration, double step\+Size, \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1WindowDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Window\+DTO}} windows\mbox{[}1000\mbox{]})
 \item 
 \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} double \mbox{\hyperlink{Proxy_8h_a21e5be456b638ec478bbe753d51d4d82}{Convert\+TDBTo\+UTCProxy}} (double tdb)
 \item 
 \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} double \mbox{\hyperlink{Proxy_8h_ab9c954c87940d8be415c2f8b7696ed15}{Convert\+UTCTo\+TDBProxy}} (double utc)
 \item 
-\mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1CelestialBodyDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Celestial\+Body\+DTO}} \mbox{\hyperlink{Proxy_8h_aa744385eb805ddd19576c1059d59fd5e}{Get\+Celestial\+Body\+Info\+Proxy}} (int body\+Id)
+\mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1CelestialBodyDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Celestial\+Body\+DTO}} \mbox{\hyperlink{Proxy_8h_a5cd3821092c4905163bd9fda786ee831}{Get\+Celestial\+Body\+Info\+Proxy}} (int body\+Id)
 \item 
-\mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1FrameTransformationDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Frame\+Transformation\+DTO}} \mbox{\hyperlink{Proxy_8h_a457712e918b3f71b190c356f7405fec0}{Transform\+Frame\+Proxy}} (const char $\ast$from\+Frame, const char $\ast$to\+Frame, double epoch)
+\mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1FrameTransformationDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Frame\+Transformation\+DTO}} \mbox{\hyperlink{Proxy_8h_a119f255f7f7f5f965123d79ead91d46c}{Transform\+Frame\+Proxy}} (const char $\ast$from\+Frame, const char $\ast$to\+Frame, double epoch)
 \item 
-\mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1StateVectorDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+State\+Vector\+DTO}} \mbox{\hyperlink{Proxy_8h_a7a6fe201473578cb00eedbb51f97eed9}{Convert\+TLETo\+State\+Vector\+Proxy}} (const char $\ast$L1, const char $\ast$L2, double epoch)
+\mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1StateVectorDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+State\+Vector\+DTO}} \mbox{\hyperlink{Proxy_8h_a23393a0d8630513797e7c70849ea3f3d}{Convert\+TLETo\+State\+Vector\+Proxy}} (const char $\ast$L1, const char $\ast$L2, double epoch)
 \item 
-\mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1StateVectorDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+State\+Vector\+DTO}} \mbox{\hyperlink{Proxy_8h_a5efe448e24b1e8c09c664e98ee8954e8}{Convert\+Conic\+Elements\+To\+State\+Vector\+Proxy}} (\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ConicOrbitalElementsDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Conic\+Orbital\+Elements\+DTO}} conic\+Orbital\+Elements\+Dto)
+\mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1StateVectorDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+State\+Vector\+DTO}} \mbox{\hyperlink{Proxy_8h_adeff6dad2759bd230e7e2982af4cc803}{Convert\+Conic\+Elements\+To\+State\+Vector\+Proxy}} (\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ConicOrbitalElementsDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Conic\+Orbital\+Elements\+DTO}} conic\+Orbital\+Elements\+Dto)
 \item 
-\mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1StateVectorDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+State\+Vector\+DTO}} \mbox{\hyperlink{Proxy_8h_a3b53127d6db476fc18315e1fd222c211}{Convert\+Equinoctial\+Elements\+To\+State\+Vector\+Proxy}} (\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1EquinoctialElementsDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Equinoctial\+Elements\+DTO}} equinoctial\+Elements\+Dto)
+\mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1StateVectorDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+State\+Vector\+DTO}} \mbox{\hyperlink{Proxy_8h_aef5adebc10af8b63a346df5a2a8364d0}{Convert\+Equinoctial\+Elements\+To\+State\+Vector\+Proxy}} (\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1EquinoctialElementsDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Equinoctial\+Elements\+DTO}} equinoctial\+Elements\+Dto)
 \item 
-\mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1RaDecDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Ra\+Dec\+DTO}} \mbox{\hyperlink{Proxy_8h_ac1f282b1ec8f01f4ba8ecb7bf26dbbeb}{Convert\+To\+Right\+Ascension\+And\+Declination\+Proxy}} (\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1StateVectorDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+State\+Vector\+DTO}} state\+Vector\+Dto)
+\mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1RaDecDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Ra\+Dec\+DTO}} \mbox{\hyperlink{Proxy_8h_ac91b73da531d42796dfdaceded511d75}{Convert\+State\+Vector\+To\+Equatorial\+Coordinates\+Proxy}} (\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1StateVectorDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+State\+Vector\+DTO}} state\+Vector\+Dto)
 \item 
 char $\ast$ \mbox{\hyperlink{Proxy_8h_a070706fba8ff9475ca3b778c3bc1e115}{Handle\+Error}} ()
 \item 
-std\+::map$<$ int, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1CelestialBody}{IO\+::\+SDK\+::\+Body\+::\+Celestial\+Body}} $>$ $>$ \mbox{\hyperlink{Proxy_8h_ad45407eab2a930ba06148832da6fcbd5}{Build\+Celestial\+Bodies}} (\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Scenario\+DTO}} \&scenario)
+std\+::map$<$ int, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody}{IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Body}} $>$ $>$ \mbox{\hyperlink{Proxy_8h_a8bab14a288b25f44aff3d6ae43a650b3}{Build\+Celestial\+Bodies}} (\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ScenarioDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Scenario\+DTO}} \&scenario)
 \item 
-void \mbox{\hyperlink{Proxy_8h_ac6213574be074a2bf1b4f87f2818d76a}{Build\+Payload}} (const \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Scenario\+DTO}} \&scenario\+Dto, \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft}{IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Spacecraft}} \&spacecraft)
+void \mbox{\hyperlink{Proxy_8h_a3381f05bb7e186b70fb2cae2909690a6}{Build\+Payload}} (const \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ScenarioDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Scenario\+DTO}} \&scenario\+Dto, \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft}{IO\+::\+Astrodynamics\+::\+Body\+::\+Spacecraft\+::\+Spacecraft}} \&spacecraft)
 \item 
-void \mbox{\hyperlink{Proxy_8h_a4ed0bdca1f06eded1b33477141a77ff4}{Build\+Instruments}} (const \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Scenario\+DTO}} \&scenario\+DTO, \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft}{IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Spacecraft}} \&spacecraft)
+void \mbox{\hyperlink{Proxy_8h_a75167eed7ac3eefb3a10af1291eb49c3}{Build\+Instruments}} (const \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ScenarioDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Scenario\+DTO}} \&scenario\+DTO, \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft}{IO\+::\+Astrodynamics\+::\+Body\+::\+Spacecraft\+::\+Spacecraft}} \&spacecraft)
 \item 
-void \mbox{\hyperlink{Proxy_8h_a88f9374e58b0d18eae74c7b7af4d1988}{Build\+Engines}} (const \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Scenario\+DTO}} \&scenario\+DTO, \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft}{IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Spacecraft}} \&spacecraft)
+void \mbox{\hyperlink{Proxy_8h_aced6fd9be76ec4687db680b5b560a927}{Build\+Engines}} (const \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ScenarioDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Scenario\+DTO}} \&scenario\+DTO, \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft}{IO\+::\+Astrodynamics\+::\+Body\+::\+Spacecraft\+::\+Spacecraft}} \&spacecraft)
 \item 
-void \mbox{\hyperlink{Proxy_8h_a444759ce742846c2f1f52befdbb211be}{Build\+Fuel\+Tank}} (const \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Scenario\+DTO}} \&scenario\+DTO, \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft}{IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Spacecraft}} \&spacecraft)
+void \mbox{\hyperlink{Proxy_8h_a9963486ce69bfacb5ebef8ee05389ecb}{Build\+Fuel\+Tank}} (const \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ScenarioDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Scenario\+DTO}} \&scenario\+DTO, \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft}{IO\+::\+Astrodynamics\+::\+Body\+::\+Spacecraft\+::\+Spacecraft}} \&spacecraft)
 \item 
-void \mbox{\hyperlink{Proxy_8h_a7486ed1a8282bf3a560293bfb277999f}{Build\+Apogee\+Maneuver}} (\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Scenario\+DTO}} \&scenario\+Dto, \mbox{\hyperlink{classIO_1_1SDK_1_1Scenario}{IO\+::\+SDK\+::\+Scenario}} \&scenario, std\+::map$<$ int, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase}{IO\+::\+SDK\+::\+Maneuvers\+::\+Maneuver\+Base}} $>$ $>$ \&maneuvers)
+void \mbox{\hyperlink{Proxy_8h_a0a53ea3098ce61da5c5d396bfb1f6468}{Build\+Apogee\+Maneuver}} (\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ScenarioDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Scenario\+DTO}} \&scenario\+Dto, \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Scenario}{IO\+::\+Astrodynamics\+::\+Scenario}} \&scenario, std\+::map$<$ int, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase}{IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Maneuver\+Base}} $>$ $>$ \&maneuvers)
 \item 
-void \mbox{\hyperlink{Proxy_8h_a566ad9c1f30ae8c312dddd06bfbced01}{Build\+Perigee\+Maneuver}} (\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Scenario\+DTO}} \&scenario\+Dto, \mbox{\hyperlink{classIO_1_1SDK_1_1Scenario}{IO\+::\+SDK\+::\+Scenario}} \&scenario, std\+::map$<$ int, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase}{IO\+::\+SDK\+::\+Maneuvers\+::\+Maneuver\+Base}} $>$ $>$ \&maneuvers)
+void \mbox{\hyperlink{Proxy_8h_a07d04305cf10fa0fc87183895f9af4c0}{Build\+Perigee\+Maneuver}} (\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ScenarioDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Scenario\+DTO}} \&scenario\+Dto, \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Scenario}{IO\+::\+Astrodynamics\+::\+Scenario}} \&scenario, std\+::map$<$ int, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase}{IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Maneuver\+Base}} $>$ $>$ \&maneuvers)
 \item 
-void \mbox{\hyperlink{Proxy_8h_a6f1de3af5690e1feed42099f39919d30}{Build\+Apsidal\+Maneuver}} (\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Scenario\+DTO}} \&scenario\+Dto, \mbox{\hyperlink{classIO_1_1SDK_1_1Scenario}{IO\+::\+SDK\+::\+Scenario}} \&scenario, std\+::map$<$ int, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase}{IO\+::\+SDK\+::\+Maneuvers\+::\+Maneuver\+Base}} $>$ $>$ \&maneuvers, std\+::map$<$ int, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1CelestialBody}{IO\+::\+SDK\+::\+Body\+::\+Celestial\+Body}} $>$ $>$ \&celestial\+Bodies)
+void \mbox{\hyperlink{Proxy_8h_ad1238418f22962872f57d1070059f299}{Build\+Apsidal\+Maneuver}} (\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ScenarioDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Scenario\+DTO}} \&scenario\+Dto, \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Scenario}{IO\+::\+Astrodynamics\+::\+Scenario}} \&scenario, std\+::map$<$ int, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase}{IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Maneuver\+Base}} $>$ $>$ \&maneuvers, std\+::map$<$ int, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody}{IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Body}} $>$ $>$ \&celestial\+Bodies)
 \item 
-void \mbox{\hyperlink{Proxy_8h_a92c53c4d657938e271d054a5d9cf1723}{Build\+Combined\+Maneuver}} (\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Scenario\+DTO}} \&scenario\+Dto, \mbox{\hyperlink{classIO_1_1SDK_1_1Scenario}{IO\+::\+SDK\+::\+Scenario}} \&scenario, std\+::map$<$ int, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase}{IO\+::\+SDK\+::\+Maneuvers\+::\+Maneuver\+Base}} $>$ $>$ \&maneuvers)
+void \mbox{\hyperlink{Proxy_8h_af4b1ac607f0f8be86ccadf1e7b8487bf}{Build\+Combined\+Maneuver}} (\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ScenarioDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Scenario\+DTO}} \&scenario\+Dto, \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Scenario}{IO\+::\+Astrodynamics\+::\+Scenario}} \&scenario, std\+::map$<$ int, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase}{IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Maneuver\+Base}} $>$ $>$ \&maneuvers)
 \item 
-void \mbox{\hyperlink{Proxy_8h_a296f11ad5c2d250c0b15cd9894df78d7}{Build\+Orbital\+Plane\+Maneuver}} (\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Scenario\+DTO}} \&scenario\+Dto, \mbox{\hyperlink{classIO_1_1SDK_1_1Scenario}{IO\+::\+SDK\+::\+Scenario}} \&scenario, std\+::map$<$ int, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase}{IO\+::\+SDK\+::\+Maneuvers\+::\+Maneuver\+Base}} $>$ $>$ \&maneuvers, std\+::map$<$ int, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1CelestialBody}{IO\+::\+SDK\+::\+Body\+::\+Celestial\+Body}} $>$ $>$ \&celestial\+Bodies)
+void \mbox{\hyperlink{Proxy_8h_a58840ba4cba973c7eae8fd09b589ff2b}{Build\+Orbital\+Plane\+Maneuver}} (\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ScenarioDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Scenario\+DTO}} \&scenario\+Dto, \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Scenario}{IO\+::\+Astrodynamics\+::\+Scenario}} \&scenario, std\+::map$<$ int, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase}{IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Maneuver\+Base}} $>$ $>$ \&maneuvers, std\+::map$<$ int, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody}{IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Body}} $>$ $>$ \&celestial\+Bodies)
 \item 
-void \mbox{\hyperlink{Proxy_8h_a122e6a78b5bcdc264eb9e74ad7c8c437}{Build\+Phasing\+Maneuver}} (\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Scenario\+DTO}} \&scenario\+Dto, \mbox{\hyperlink{classIO_1_1SDK_1_1Scenario}{IO\+::\+SDK\+::\+Scenario}} \&scenario, std\+::map$<$ int, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase}{IO\+::\+SDK\+::\+Maneuvers\+::\+Maneuver\+Base}} $>$ $>$ \&maneuvers, std\+::map$<$ int, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1CelestialBody}{IO\+::\+SDK\+::\+Body\+::\+Celestial\+Body}} $>$ $>$ \&celestial\+Bodies)
+void \mbox{\hyperlink{Proxy_8h_acde78c31b8c1264a9771279641d1f5c9}{Build\+Phasing\+Maneuver}} (\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ScenarioDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Scenario\+DTO}} \&scenario\+Dto, \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Scenario}{IO\+::\+Astrodynamics\+::\+Scenario}} \&scenario, std\+::map$<$ int, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase}{IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Maneuver\+Base}} $>$ $>$ \&maneuvers, std\+::map$<$ int, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody}{IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Body}} $>$ $>$ \&celestial\+Bodies)
 \item 
-void \mbox{\hyperlink{Proxy_8h_abb049e2c0f71131a987bf56c3f4fbcf3}{Build\+Maneuvers}} (\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Scenario\+DTO}} \&scenario\+Dto, \mbox{\hyperlink{classIO_1_1SDK_1_1Scenario}{IO\+::\+SDK\+::\+Scenario}} \&scenario, std\+::map$<$ int, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1CelestialBody}{IO\+::\+SDK\+::\+Body\+::\+Celestial\+Body}} $>$ $>$ \&celestial\+Bodies, std\+::map$<$ int, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase}{IO\+::\+SDK\+::\+Maneuvers\+::\+Maneuver\+Base}} $>$ $>$ \&maneuvers)
+void \mbox{\hyperlink{Proxy_8h_a3e7244f13a3231cc66f5030473c4355a}{Build\+Maneuvers}} (\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ScenarioDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Scenario\+DTO}} \&scenario\+Dto, \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Scenario}{IO\+::\+Astrodynamics\+::\+Scenario}} \&scenario, std\+::map$<$ int, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody}{IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Body}} $>$ $>$ \&celestial\+Bodies, std\+::map$<$ int, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase}{IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Maneuver\+Base}} $>$ $>$ \&maneuvers)
 \item 
-void \mbox{\hyperlink{Proxy_8h_ad109937e075918a4169dbe2876ac2e30}{Build\+Prograde\+Attitude}} (\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Scenario\+DTO}} \&scenario\+Dto, \mbox{\hyperlink{classIO_1_1SDK_1_1Scenario}{IO\+::\+SDK\+::\+Scenario}} \&scenario, std\+::map$<$ int, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase}{IO\+::\+SDK\+::\+Maneuvers\+::\+Maneuver\+Base}} $>$ $>$ \&maneuvers)
+void \mbox{\hyperlink{Proxy_8h_a4be6d2e53581fcd0a7d04f9468dd8f7a}{Build\+Prograde\+Attitude}} (\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ScenarioDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Scenario\+DTO}} \&scenario\+Dto, \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Scenario}{IO\+::\+Astrodynamics\+::\+Scenario}} \&scenario, std\+::map$<$ int, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase}{IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Maneuver\+Base}} $>$ $>$ \&maneuvers)
 \item 
-void \mbox{\hyperlink{Proxy_8h_a85720c91750cd873d1dbf050fa3d2a18}{Build\+Retrograde\+Attitude}} (\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Scenario\+DTO}} \&scenario\+Dto, \mbox{\hyperlink{classIO_1_1SDK_1_1Scenario}{IO\+::\+SDK\+::\+Scenario}} \&scenario, std\+::map$<$ int, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase}{IO\+::\+SDK\+::\+Maneuvers\+::\+Maneuver\+Base}} $>$ $>$ \&maneuvers)
+void \mbox{\hyperlink{Proxy_8h_af25ecc6fa940fddb7de7d24006eb4e52}{Build\+Retrograde\+Attitude}} (\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ScenarioDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Scenario\+DTO}} \&scenario\+Dto, \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Scenario}{IO\+::\+Astrodynamics\+::\+Scenario}} \&scenario, std\+::map$<$ int, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase}{IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Maneuver\+Base}} $>$ $>$ \&maneuvers)
 \item 
-void \mbox{\hyperlink{Proxy_8h_a70191d395a750d5ca92dd638564d35b2}{Build\+Zenith\+Attitude}} (\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Scenario\+DTO}} \&scenario\+Dto, \mbox{\hyperlink{classIO_1_1SDK_1_1Scenario}{IO\+::\+SDK\+::\+Scenario}} \&scenario, std\+::map$<$ int, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase}{IO\+::\+SDK\+::\+Maneuvers\+::\+Maneuver\+Base}} $>$ $>$ \&maneuvers)
+void \mbox{\hyperlink{Proxy_8h_a05aeed13dc37c32021ed8c152cb85769}{Build\+Zenith\+Attitude}} (\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ScenarioDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Scenario\+DTO}} \&scenario\+Dto, \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Scenario}{IO\+::\+Astrodynamics\+::\+Scenario}} \&scenario, std\+::map$<$ int, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase}{IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Maneuver\+Base}} $>$ $>$ \&maneuvers)
 \item 
-void \mbox{\hyperlink{Proxy_8h_a389131e56e754d5a3578f009c8bbab91}{Build\+Nadir\+Attitude}} (\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Scenario\+DTO}} \&scenario\+Dto, \mbox{\hyperlink{classIO_1_1SDK_1_1Scenario}{IO\+::\+SDK\+::\+Scenario}} \&scenario, std\+::map$<$ int, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase}{IO\+::\+SDK\+::\+Maneuvers\+::\+Maneuver\+Base}} $>$ $>$ \&maneuvers)
+void \mbox{\hyperlink{Proxy_8h_aef32d6763d14534132d56ba720f59480}{Build\+Nadir\+Attitude}} (\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ScenarioDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Scenario\+DTO}} \&scenario\+Dto, \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Scenario}{IO\+::\+Astrodynamics\+::\+Scenario}} \&scenario, std\+::map$<$ int, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase}{IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Maneuver\+Base}} $>$ $>$ \&maneuvers)
 \item 
-void \mbox{\hyperlink{Proxy_8h_a820df7ddc7223c06513f52b0845db89e}{Build\+Instrument\+Pointing\+To\+Attitude}} (\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Scenario\+DTO}} \&scenario\+Dto, \mbox{\hyperlink{classIO_1_1SDK_1_1Scenario}{IO\+::\+SDK\+::\+Scenario}} \&scenario, std\+::map$<$ int, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase}{IO\+::\+SDK\+::\+Maneuvers\+::\+Maneuver\+Base}} $>$ $>$ \&maneuvers, std\+::map$<$ int, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1CelestialBody}{IO\+::\+SDK\+::\+Body\+::\+Celestial\+Body}} $>$ $>$ \&celestial\+Bodies)
+void \mbox{\hyperlink{Proxy_8h_ac96702bdbd8a30e8f399361f556d99d1}{Build\+Instrument\+Pointing\+To\+Attitude}} (\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ScenarioDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Scenario\+DTO}} \&scenario\+Dto, \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Scenario}{IO\+::\+Astrodynamics\+::\+Scenario}} \&scenario, std\+::map$<$ int, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase}{IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Maneuver\+Base}} $>$ $>$ \&maneuvers, std\+::map$<$ int, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody}{IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Body}} $>$ $>$ \&celestial\+Bodies)
 \item 
-void \mbox{\hyperlink{Proxy_8h_a466bec93a33dfabd6a60722c8edf333f}{Read\+Apogee\+Maneuver\+Result}} (\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Scenario\+DTO}} \&scenario\+Dto, std\+::map$<$ int, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase}{IO\+::\+SDK\+::\+Maneuvers\+::\+Maneuver\+Base}} $>$ $>$ \&maneuvers)
+void \mbox{\hyperlink{Proxy_8h_afa98d3a0838bfd56c2b11111589bbbb5}{Read\+Apogee\+Maneuver\+Result}} (\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ScenarioDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Scenario\+DTO}} \&scenario\+Dto, std\+::map$<$ int, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase}{IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Maneuver\+Base}} $>$ $>$ \&maneuvers)
 \item 
-void \mbox{\hyperlink{Proxy_8h_aa7d09fd7d9d73216a3ee6020565d061e}{Read\+Perigee\+Maneuver\+Result}} (\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Scenario\+DTO}} \&scenario\+Dto, std\+::map$<$ int, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase}{IO\+::\+SDK\+::\+Maneuvers\+::\+Maneuver\+Base}} $>$ $>$ \&maneuvers)
+void \mbox{\hyperlink{Proxy_8h_acc147c42e49856002cd1d52ceea60600}{Read\+Perigee\+Maneuver\+Result}} (\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ScenarioDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Scenario\+DTO}} \&scenario\+Dto, std\+::map$<$ int, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase}{IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Maneuver\+Base}} $>$ $>$ \&maneuvers)
 \item 
-void \mbox{\hyperlink{Proxy_8h_a717c7d3ca5a48e85b637148eb0262df8}{Read\+Orbital\+Plane\+Maneuver\+Result}} (\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Scenario\+DTO}} \&scenario\+Dto, std\+::map$<$ int, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase}{IO\+::\+SDK\+::\+Maneuvers\+::\+Maneuver\+Base}} $>$ $>$ \&maneuvers)
+void \mbox{\hyperlink{Proxy_8h_afd6fa2c901ae128e5594f523a35c4ccb}{Read\+Orbital\+Plane\+Maneuver\+Result}} (\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ScenarioDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Scenario\+DTO}} \&scenario\+Dto, std\+::map$<$ int, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase}{IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Maneuver\+Base}} $>$ $>$ \&maneuvers)
 \item 
-void \mbox{\hyperlink{Proxy_8h_a29b830927e678eac49585d2c12370135}{Read\+Combined\+Maneuver\+Result}} (\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Scenario\+DTO}} \&scenario\+Dto, std\+::map$<$ int, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase}{IO\+::\+SDK\+::\+Maneuvers\+::\+Maneuver\+Base}} $>$ $>$ \&maneuvers)
+void \mbox{\hyperlink{Proxy_8h_a960b64ba392ac5304caed39184676fc5}{Read\+Combined\+Maneuver\+Result}} (\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ScenarioDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Scenario\+DTO}} \&scenario\+Dto, std\+::map$<$ int, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase}{IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Maneuver\+Base}} $>$ $>$ \&maneuvers)
 \item 
-void \mbox{\hyperlink{Proxy_8h_a274e1f3865453efe582b74fce0b657a1}{Read\+Apsidal\+Alignment\+Maneuver\+Result}} (\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Scenario\+DTO}} \&scenario\+Dto, std\+::map$<$ int, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase}{IO\+::\+SDK\+::\+Maneuvers\+::\+Maneuver\+Base}} $>$ $>$ \&maneuvers)
+void \mbox{\hyperlink{Proxy_8h_a4844c879c6033d6d11cb7f28a1a514f7}{Read\+Apsidal\+Alignment\+Maneuver\+Result}} (\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ScenarioDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Scenario\+DTO}} \&scenario\+Dto, std\+::map$<$ int, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase}{IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Maneuver\+Base}} $>$ $>$ \&maneuvers)
 \item 
-void \mbox{\hyperlink{Proxy_8h_a6c39e673976b509ad3fa42613ffa38d7}{Read\+Phasing\+Maneuver\+Result}} (\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Scenario\+DTO}} \&scenario\+Dto, std\+::map$<$ int, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase}{IO\+::\+SDK\+::\+Maneuvers\+::\+Maneuver\+Base}} $>$ $>$ \&maneuvers)
+void \mbox{\hyperlink{Proxy_8h_adb84f00576e8bbe39ff1883f62cd8b81}{Read\+Phasing\+Maneuver\+Result}} (\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ScenarioDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Scenario\+DTO}} \&scenario\+Dto, std\+::map$<$ int, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase}{IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Maneuver\+Base}} $>$ $>$ \&maneuvers)
 \item 
-void \mbox{\hyperlink{Proxy_8h_a55b5f32b6b7ab7369fe7847e4ebc045b}{Read\+Maneuver\+Results}} (\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Scenario\+DTO}} \&scenario\+Dto, std\+::map$<$ int, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase}{IO\+::\+SDK\+::\+Maneuvers\+::\+Maneuver\+Base}} $>$ $>$ \&maneuvers)
+void \mbox{\hyperlink{Proxy_8h_a3eb1d8fdac1088947285a663760ab3a6}{Read\+Maneuver\+Results}} (\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ScenarioDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Scenario\+DTO}} \&scenario\+Dto, std\+::map$<$ int, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase}{IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Maneuver\+Base}} $>$ $>$ \&maneuvers)
 \end{DoxyCompactItemize}
 
 
@@ -137,113 +137,113 @@ void \mbox{\hyperlink{Proxy_8h_a55b5f32b6b7ab7369fe7847e4ebc045b}{Read\+Maneuver
 
 
 \doxysubsection{Function Documentation}
-\mbox{\Hypertarget{Proxy_8h_a7486ed1a8282bf3a560293bfb277999f}\label{Proxy_8h_a7486ed1a8282bf3a560293bfb277999f}} 
+\mbox{\Hypertarget{Proxy_8h_a0a53ea3098ce61da5c5d396bfb1f6468}\label{Proxy_8h_a0a53ea3098ce61da5c5d396bfb1f6468}} 
 \index{Proxy.h@{Proxy.h}!BuildApogeeManeuver@{BuildApogeeManeuver}}
 \index{BuildApogeeManeuver@{BuildApogeeManeuver}!Proxy.h@{Proxy.h}}
 \doxysubsubsection{\texorpdfstring{BuildApogeeManeuver()}{BuildApogeeManeuver()}}
-{\footnotesize\ttfamily void Build\+Apogee\+Maneuver (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Scenario\+DTO}} \&}]{scenario\+Dto,  }\item[{\mbox{\hyperlink{classIO_1_1SDK_1_1Scenario}{IO\+::\+SDK\+::\+Scenario}} \&}]{scenario,  }\item[{std\+::map$<$ int, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase}{IO\+::\+SDK\+::\+Maneuvers\+::\+Maneuver\+Base}} $>$ $>$ \&}]{maneuvers }\end{DoxyParamCaption})}
+{\footnotesize\ttfamily void Build\+Apogee\+Maneuver (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ScenarioDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Scenario\+DTO}} \&}]{scenario\+Dto,  }\item[{\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Scenario}{IO\+::\+Astrodynamics\+::\+Scenario}} \&}]{scenario,  }\item[{std\+::map$<$ int, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase}{IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Maneuver\+Base}} $>$ $>$ \&}]{maneuvers }\end{DoxyParamCaption})}
 
-\mbox{\Hypertarget{Proxy_8h_a6f1de3af5690e1feed42099f39919d30}\label{Proxy_8h_a6f1de3af5690e1feed42099f39919d30}} 
+\mbox{\Hypertarget{Proxy_8h_ad1238418f22962872f57d1070059f299}\label{Proxy_8h_ad1238418f22962872f57d1070059f299}} 
 \index{Proxy.h@{Proxy.h}!BuildApsidalManeuver@{BuildApsidalManeuver}}
 \index{BuildApsidalManeuver@{BuildApsidalManeuver}!Proxy.h@{Proxy.h}}
 \doxysubsubsection{\texorpdfstring{BuildApsidalManeuver()}{BuildApsidalManeuver()}}
-{\footnotesize\ttfamily void Build\+Apsidal\+Maneuver (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Scenario\+DTO}} \&}]{scenario\+Dto,  }\item[{\mbox{\hyperlink{classIO_1_1SDK_1_1Scenario}{IO\+::\+SDK\+::\+Scenario}} \&}]{scenario,  }\item[{std\+::map$<$ int, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase}{IO\+::\+SDK\+::\+Maneuvers\+::\+Maneuver\+Base}} $>$ $>$ \&}]{maneuvers,  }\item[{std\+::map$<$ int, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1CelestialBody}{IO\+::\+SDK\+::\+Body\+::\+Celestial\+Body}} $>$ $>$ \&}]{celestial\+Bodies }\end{DoxyParamCaption})}
+{\footnotesize\ttfamily void Build\+Apsidal\+Maneuver (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ScenarioDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Scenario\+DTO}} \&}]{scenario\+Dto,  }\item[{\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Scenario}{IO\+::\+Astrodynamics\+::\+Scenario}} \&}]{scenario,  }\item[{std\+::map$<$ int, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase}{IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Maneuver\+Base}} $>$ $>$ \&}]{maneuvers,  }\item[{std\+::map$<$ int, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody}{IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Body}} $>$ $>$ \&}]{celestial\+Bodies }\end{DoxyParamCaption})}
 
-\mbox{\Hypertarget{Proxy_8h_ad45407eab2a930ba06148832da6fcbd5}\label{Proxy_8h_ad45407eab2a930ba06148832da6fcbd5}} 
+\mbox{\Hypertarget{Proxy_8h_a8bab14a288b25f44aff3d6ae43a650b3}\label{Proxy_8h_a8bab14a288b25f44aff3d6ae43a650b3}} 
 \index{Proxy.h@{Proxy.h}!BuildCelestialBodies@{BuildCelestialBodies}}
 \index{BuildCelestialBodies@{BuildCelestialBodies}!Proxy.h@{Proxy.h}}
 \doxysubsubsection{\texorpdfstring{BuildCelestialBodies()}{BuildCelestialBodies()}}
-{\footnotesize\ttfamily std\+::map$<$ int, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1CelestialBody}{IO\+::\+SDK\+::\+Body\+::\+Celestial\+Body}} $>$ $>$ Build\+Celestial\+Bodies (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Scenario\+DTO}} \&}]{scenario }\end{DoxyParamCaption})}
+{\footnotesize\ttfamily std\+::map$<$ int, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody}{IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Body}} $>$ $>$ Build\+Celestial\+Bodies (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ScenarioDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Scenario\+DTO}} \&}]{scenario }\end{DoxyParamCaption})}
 
-\mbox{\Hypertarget{Proxy_8h_a92c53c4d657938e271d054a5d9cf1723}\label{Proxy_8h_a92c53c4d657938e271d054a5d9cf1723}} 
+\mbox{\Hypertarget{Proxy_8h_af4b1ac607f0f8be86ccadf1e7b8487bf}\label{Proxy_8h_af4b1ac607f0f8be86ccadf1e7b8487bf}} 
 \index{Proxy.h@{Proxy.h}!BuildCombinedManeuver@{BuildCombinedManeuver}}
 \index{BuildCombinedManeuver@{BuildCombinedManeuver}!Proxy.h@{Proxy.h}}
 \doxysubsubsection{\texorpdfstring{BuildCombinedManeuver()}{BuildCombinedManeuver()}}
-{\footnotesize\ttfamily void Build\+Combined\+Maneuver (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Scenario\+DTO}} \&}]{scenario\+Dto,  }\item[{\mbox{\hyperlink{classIO_1_1SDK_1_1Scenario}{IO\+::\+SDK\+::\+Scenario}} \&}]{scenario,  }\item[{std\+::map$<$ int, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase}{IO\+::\+SDK\+::\+Maneuvers\+::\+Maneuver\+Base}} $>$ $>$ \&}]{maneuvers }\end{DoxyParamCaption})}
+{\footnotesize\ttfamily void Build\+Combined\+Maneuver (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ScenarioDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Scenario\+DTO}} \&}]{scenario\+Dto,  }\item[{\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Scenario}{IO\+::\+Astrodynamics\+::\+Scenario}} \&}]{scenario,  }\item[{std\+::map$<$ int, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase}{IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Maneuver\+Base}} $>$ $>$ \&}]{maneuvers }\end{DoxyParamCaption})}
 
-\mbox{\Hypertarget{Proxy_8h_a88f9374e58b0d18eae74c7b7af4d1988}\label{Proxy_8h_a88f9374e58b0d18eae74c7b7af4d1988}} 
+\mbox{\Hypertarget{Proxy_8h_aced6fd9be76ec4687db680b5b560a927}\label{Proxy_8h_aced6fd9be76ec4687db680b5b560a927}} 
 \index{Proxy.h@{Proxy.h}!BuildEngines@{BuildEngines}}
 \index{BuildEngines@{BuildEngines}!Proxy.h@{Proxy.h}}
 \doxysubsubsection{\texorpdfstring{BuildEngines()}{BuildEngines()}}
-{\footnotesize\ttfamily void Build\+Engines (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Scenario\+DTO}} \&}]{scenario\+DTO,  }\item[{\mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft}{IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Spacecraft}} \&}]{spacecraft }\end{DoxyParamCaption})}
+{\footnotesize\ttfamily void Build\+Engines (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ScenarioDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Scenario\+DTO}} \&}]{scenario\+DTO,  }\item[{\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft}{IO\+::\+Astrodynamics\+::\+Body\+::\+Spacecraft\+::\+Spacecraft}} \&}]{spacecraft }\end{DoxyParamCaption})}
 
-\mbox{\Hypertarget{Proxy_8h_a444759ce742846c2f1f52befdbb211be}\label{Proxy_8h_a444759ce742846c2f1f52befdbb211be}} 
+\mbox{\Hypertarget{Proxy_8h_a9963486ce69bfacb5ebef8ee05389ecb}\label{Proxy_8h_a9963486ce69bfacb5ebef8ee05389ecb}} 
 \index{Proxy.h@{Proxy.h}!BuildFuelTank@{BuildFuelTank}}
 \index{BuildFuelTank@{BuildFuelTank}!Proxy.h@{Proxy.h}}
 \doxysubsubsection{\texorpdfstring{BuildFuelTank()}{BuildFuelTank()}}
-{\footnotesize\ttfamily void Build\+Fuel\+Tank (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Scenario\+DTO}} \&}]{scenario\+DTO,  }\item[{\mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft}{IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Spacecraft}} \&}]{spacecraft }\end{DoxyParamCaption})}
+{\footnotesize\ttfamily void Build\+Fuel\+Tank (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ScenarioDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Scenario\+DTO}} \&}]{scenario\+DTO,  }\item[{\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft}{IO\+::\+Astrodynamics\+::\+Body\+::\+Spacecraft\+::\+Spacecraft}} \&}]{spacecraft }\end{DoxyParamCaption})}
 
-\mbox{\Hypertarget{Proxy_8h_a820df7ddc7223c06513f52b0845db89e}\label{Proxy_8h_a820df7ddc7223c06513f52b0845db89e}} 
+\mbox{\Hypertarget{Proxy_8h_ac96702bdbd8a30e8f399361f556d99d1}\label{Proxy_8h_ac96702bdbd8a30e8f399361f556d99d1}} 
 \index{Proxy.h@{Proxy.h}!BuildInstrumentPointingToAttitude@{BuildInstrumentPointingToAttitude}}
 \index{BuildInstrumentPointingToAttitude@{BuildInstrumentPointingToAttitude}!Proxy.h@{Proxy.h}}
 \doxysubsubsection{\texorpdfstring{BuildInstrumentPointingToAttitude()}{BuildInstrumentPointingToAttitude()}}
-{\footnotesize\ttfamily void Build\+Instrument\+Pointing\+To\+Attitude (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Scenario\+DTO}} \&}]{scenario\+Dto,  }\item[{\mbox{\hyperlink{classIO_1_1SDK_1_1Scenario}{IO\+::\+SDK\+::\+Scenario}} \&}]{scenario,  }\item[{std\+::map$<$ int, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase}{IO\+::\+SDK\+::\+Maneuvers\+::\+Maneuver\+Base}} $>$ $>$ \&}]{maneuvers,  }\item[{std\+::map$<$ int, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1CelestialBody}{IO\+::\+SDK\+::\+Body\+::\+Celestial\+Body}} $>$ $>$ \&}]{celestial\+Bodies }\end{DoxyParamCaption})}
+{\footnotesize\ttfamily void Build\+Instrument\+Pointing\+To\+Attitude (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ScenarioDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Scenario\+DTO}} \&}]{scenario\+Dto,  }\item[{\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Scenario}{IO\+::\+Astrodynamics\+::\+Scenario}} \&}]{scenario,  }\item[{std\+::map$<$ int, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase}{IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Maneuver\+Base}} $>$ $>$ \&}]{maneuvers,  }\item[{std\+::map$<$ int, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody}{IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Body}} $>$ $>$ \&}]{celestial\+Bodies }\end{DoxyParamCaption})}
 
-\mbox{\Hypertarget{Proxy_8h_a4ed0bdca1f06eded1b33477141a77ff4}\label{Proxy_8h_a4ed0bdca1f06eded1b33477141a77ff4}} 
+\mbox{\Hypertarget{Proxy_8h_a75167eed7ac3eefb3a10af1291eb49c3}\label{Proxy_8h_a75167eed7ac3eefb3a10af1291eb49c3}} 
 \index{Proxy.h@{Proxy.h}!BuildInstruments@{BuildInstruments}}
 \index{BuildInstruments@{BuildInstruments}!Proxy.h@{Proxy.h}}
 \doxysubsubsection{\texorpdfstring{BuildInstruments()}{BuildInstruments()}}
-{\footnotesize\ttfamily void Build\+Instruments (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Scenario\+DTO}} \&}]{scenario\+DTO,  }\item[{\mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft}{IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Spacecraft}} \&}]{spacecraft }\end{DoxyParamCaption})}
+{\footnotesize\ttfamily void Build\+Instruments (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ScenarioDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Scenario\+DTO}} \&}]{scenario\+DTO,  }\item[{\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft}{IO\+::\+Astrodynamics\+::\+Body\+::\+Spacecraft\+::\+Spacecraft}} \&}]{spacecraft }\end{DoxyParamCaption})}
 
-\mbox{\Hypertarget{Proxy_8h_abb049e2c0f71131a987bf56c3f4fbcf3}\label{Proxy_8h_abb049e2c0f71131a987bf56c3f4fbcf3}} 
+\mbox{\Hypertarget{Proxy_8h_a3e7244f13a3231cc66f5030473c4355a}\label{Proxy_8h_a3e7244f13a3231cc66f5030473c4355a}} 
 \index{Proxy.h@{Proxy.h}!BuildManeuvers@{BuildManeuvers}}
 \index{BuildManeuvers@{BuildManeuvers}!Proxy.h@{Proxy.h}}
 \doxysubsubsection{\texorpdfstring{BuildManeuvers()}{BuildManeuvers()}}
-{\footnotesize\ttfamily void Build\+Maneuvers (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Scenario\+DTO}} \&}]{scenario\+Dto,  }\item[{\mbox{\hyperlink{classIO_1_1SDK_1_1Scenario}{IO\+::\+SDK\+::\+Scenario}} \&}]{scenario,  }\item[{std\+::map$<$ int, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1CelestialBody}{IO\+::\+SDK\+::\+Body\+::\+Celestial\+Body}} $>$ $>$ \&}]{celestial\+Bodies,  }\item[{std\+::map$<$ int, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase}{IO\+::\+SDK\+::\+Maneuvers\+::\+Maneuver\+Base}} $>$ $>$ \&}]{maneuvers }\end{DoxyParamCaption})}
+{\footnotesize\ttfamily void Build\+Maneuvers (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ScenarioDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Scenario\+DTO}} \&}]{scenario\+Dto,  }\item[{\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Scenario}{IO\+::\+Astrodynamics\+::\+Scenario}} \&}]{scenario,  }\item[{std\+::map$<$ int, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody}{IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Body}} $>$ $>$ \&}]{celestial\+Bodies,  }\item[{std\+::map$<$ int, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase}{IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Maneuver\+Base}} $>$ $>$ \&}]{maneuvers }\end{DoxyParamCaption})}
 
-\mbox{\Hypertarget{Proxy_8h_a389131e56e754d5a3578f009c8bbab91}\label{Proxy_8h_a389131e56e754d5a3578f009c8bbab91}} 
+\mbox{\Hypertarget{Proxy_8h_aef32d6763d14534132d56ba720f59480}\label{Proxy_8h_aef32d6763d14534132d56ba720f59480}} 
 \index{Proxy.h@{Proxy.h}!BuildNadirAttitude@{BuildNadirAttitude}}
 \index{BuildNadirAttitude@{BuildNadirAttitude}!Proxy.h@{Proxy.h}}
 \doxysubsubsection{\texorpdfstring{BuildNadirAttitude()}{BuildNadirAttitude()}}
-{\footnotesize\ttfamily void Build\+Nadir\+Attitude (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Scenario\+DTO}} \&}]{scenario\+Dto,  }\item[{\mbox{\hyperlink{classIO_1_1SDK_1_1Scenario}{IO\+::\+SDK\+::\+Scenario}} \&}]{scenario,  }\item[{std\+::map$<$ int, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase}{IO\+::\+SDK\+::\+Maneuvers\+::\+Maneuver\+Base}} $>$ $>$ \&}]{maneuvers }\end{DoxyParamCaption})}
+{\footnotesize\ttfamily void Build\+Nadir\+Attitude (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ScenarioDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Scenario\+DTO}} \&}]{scenario\+Dto,  }\item[{\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Scenario}{IO\+::\+Astrodynamics\+::\+Scenario}} \&}]{scenario,  }\item[{std\+::map$<$ int, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase}{IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Maneuver\+Base}} $>$ $>$ \&}]{maneuvers }\end{DoxyParamCaption})}
 
-\mbox{\Hypertarget{Proxy_8h_a296f11ad5c2d250c0b15cd9894df78d7}\label{Proxy_8h_a296f11ad5c2d250c0b15cd9894df78d7}} 
+\mbox{\Hypertarget{Proxy_8h_a58840ba4cba973c7eae8fd09b589ff2b}\label{Proxy_8h_a58840ba4cba973c7eae8fd09b589ff2b}} 
 \index{Proxy.h@{Proxy.h}!BuildOrbitalPlaneManeuver@{BuildOrbitalPlaneManeuver}}
 \index{BuildOrbitalPlaneManeuver@{BuildOrbitalPlaneManeuver}!Proxy.h@{Proxy.h}}
 \doxysubsubsection{\texorpdfstring{BuildOrbitalPlaneManeuver()}{BuildOrbitalPlaneManeuver()}}
-{\footnotesize\ttfamily void Build\+Orbital\+Plane\+Maneuver (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Scenario\+DTO}} \&}]{scenario\+Dto,  }\item[{\mbox{\hyperlink{classIO_1_1SDK_1_1Scenario}{IO\+::\+SDK\+::\+Scenario}} \&}]{scenario,  }\item[{std\+::map$<$ int, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase}{IO\+::\+SDK\+::\+Maneuvers\+::\+Maneuver\+Base}} $>$ $>$ \&}]{maneuvers,  }\item[{std\+::map$<$ int, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1CelestialBody}{IO\+::\+SDK\+::\+Body\+::\+Celestial\+Body}} $>$ $>$ \&}]{celestial\+Bodies }\end{DoxyParamCaption})}
+{\footnotesize\ttfamily void Build\+Orbital\+Plane\+Maneuver (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ScenarioDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Scenario\+DTO}} \&}]{scenario\+Dto,  }\item[{\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Scenario}{IO\+::\+Astrodynamics\+::\+Scenario}} \&}]{scenario,  }\item[{std\+::map$<$ int, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase}{IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Maneuver\+Base}} $>$ $>$ \&}]{maneuvers,  }\item[{std\+::map$<$ int, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody}{IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Body}} $>$ $>$ \&}]{celestial\+Bodies }\end{DoxyParamCaption})}
 
-\mbox{\Hypertarget{Proxy_8h_ac6213574be074a2bf1b4f87f2818d76a}\label{Proxy_8h_ac6213574be074a2bf1b4f87f2818d76a}} 
+\mbox{\Hypertarget{Proxy_8h_a3381f05bb7e186b70fb2cae2909690a6}\label{Proxy_8h_a3381f05bb7e186b70fb2cae2909690a6}} 
 \index{Proxy.h@{Proxy.h}!BuildPayload@{BuildPayload}}
 \index{BuildPayload@{BuildPayload}!Proxy.h@{Proxy.h}}
 \doxysubsubsection{\texorpdfstring{BuildPayload()}{BuildPayload()}}
-{\footnotesize\ttfamily void Build\+Payload (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Scenario\+DTO}} \&}]{scenario\+Dto,  }\item[{\mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft}{IO\+::\+SDK\+::\+Body\+::\+Spacecraft\+::\+Spacecraft}} \&}]{spacecraft }\end{DoxyParamCaption})}
+{\footnotesize\ttfamily void Build\+Payload (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ScenarioDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Scenario\+DTO}} \&}]{scenario\+Dto,  }\item[{\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft}{IO\+::\+Astrodynamics\+::\+Body\+::\+Spacecraft\+::\+Spacecraft}} \&}]{spacecraft }\end{DoxyParamCaption})}
 
-\mbox{\Hypertarget{Proxy_8h_a566ad9c1f30ae8c312dddd06bfbced01}\label{Proxy_8h_a566ad9c1f30ae8c312dddd06bfbced01}} 
+\mbox{\Hypertarget{Proxy_8h_a07d04305cf10fa0fc87183895f9af4c0}\label{Proxy_8h_a07d04305cf10fa0fc87183895f9af4c0}} 
 \index{Proxy.h@{Proxy.h}!BuildPerigeeManeuver@{BuildPerigeeManeuver}}
 \index{BuildPerigeeManeuver@{BuildPerigeeManeuver}!Proxy.h@{Proxy.h}}
 \doxysubsubsection{\texorpdfstring{BuildPerigeeManeuver()}{BuildPerigeeManeuver()}}
-{\footnotesize\ttfamily void Build\+Perigee\+Maneuver (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Scenario\+DTO}} \&}]{scenario\+Dto,  }\item[{\mbox{\hyperlink{classIO_1_1SDK_1_1Scenario}{IO\+::\+SDK\+::\+Scenario}} \&}]{scenario,  }\item[{std\+::map$<$ int, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase}{IO\+::\+SDK\+::\+Maneuvers\+::\+Maneuver\+Base}} $>$ $>$ \&}]{maneuvers }\end{DoxyParamCaption})}
+{\footnotesize\ttfamily void Build\+Perigee\+Maneuver (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ScenarioDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Scenario\+DTO}} \&}]{scenario\+Dto,  }\item[{\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Scenario}{IO\+::\+Astrodynamics\+::\+Scenario}} \&}]{scenario,  }\item[{std\+::map$<$ int, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase}{IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Maneuver\+Base}} $>$ $>$ \&}]{maneuvers }\end{DoxyParamCaption})}
 
-\mbox{\Hypertarget{Proxy_8h_a122e6a78b5bcdc264eb9e74ad7c8c437}\label{Proxy_8h_a122e6a78b5bcdc264eb9e74ad7c8c437}} 
+\mbox{\Hypertarget{Proxy_8h_acde78c31b8c1264a9771279641d1f5c9}\label{Proxy_8h_acde78c31b8c1264a9771279641d1f5c9}} 
 \index{Proxy.h@{Proxy.h}!BuildPhasingManeuver@{BuildPhasingManeuver}}
 \index{BuildPhasingManeuver@{BuildPhasingManeuver}!Proxy.h@{Proxy.h}}
 \doxysubsubsection{\texorpdfstring{BuildPhasingManeuver()}{BuildPhasingManeuver()}}
-{\footnotesize\ttfamily void Build\+Phasing\+Maneuver (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Scenario\+DTO}} \&}]{scenario\+Dto,  }\item[{\mbox{\hyperlink{classIO_1_1SDK_1_1Scenario}{IO\+::\+SDK\+::\+Scenario}} \&}]{scenario,  }\item[{std\+::map$<$ int, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase}{IO\+::\+SDK\+::\+Maneuvers\+::\+Maneuver\+Base}} $>$ $>$ \&}]{maneuvers,  }\item[{std\+::map$<$ int, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1CelestialBody}{IO\+::\+SDK\+::\+Body\+::\+Celestial\+Body}} $>$ $>$ \&}]{celestial\+Bodies }\end{DoxyParamCaption})}
+{\footnotesize\ttfamily void Build\+Phasing\+Maneuver (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ScenarioDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Scenario\+DTO}} \&}]{scenario\+Dto,  }\item[{\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Scenario}{IO\+::\+Astrodynamics\+::\+Scenario}} \&}]{scenario,  }\item[{std\+::map$<$ int, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase}{IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Maneuver\+Base}} $>$ $>$ \&}]{maneuvers,  }\item[{std\+::map$<$ int, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody}{IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Body}} $>$ $>$ \&}]{celestial\+Bodies }\end{DoxyParamCaption})}
 
-\mbox{\Hypertarget{Proxy_8h_ad109937e075918a4169dbe2876ac2e30}\label{Proxy_8h_ad109937e075918a4169dbe2876ac2e30}} 
+\mbox{\Hypertarget{Proxy_8h_a4be6d2e53581fcd0a7d04f9468dd8f7a}\label{Proxy_8h_a4be6d2e53581fcd0a7d04f9468dd8f7a}} 
 \index{Proxy.h@{Proxy.h}!BuildProgradeAttitude@{BuildProgradeAttitude}}
 \index{BuildProgradeAttitude@{BuildProgradeAttitude}!Proxy.h@{Proxy.h}}
 \doxysubsubsection{\texorpdfstring{BuildProgradeAttitude()}{BuildProgradeAttitude()}}
-{\footnotesize\ttfamily void Build\+Prograde\+Attitude (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Scenario\+DTO}} \&}]{scenario\+Dto,  }\item[{\mbox{\hyperlink{classIO_1_1SDK_1_1Scenario}{IO\+::\+SDK\+::\+Scenario}} \&}]{scenario,  }\item[{std\+::map$<$ int, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase}{IO\+::\+SDK\+::\+Maneuvers\+::\+Maneuver\+Base}} $>$ $>$ \&}]{maneuvers }\end{DoxyParamCaption})}
+{\footnotesize\ttfamily void Build\+Prograde\+Attitude (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ScenarioDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Scenario\+DTO}} \&}]{scenario\+Dto,  }\item[{\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Scenario}{IO\+::\+Astrodynamics\+::\+Scenario}} \&}]{scenario,  }\item[{std\+::map$<$ int, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase}{IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Maneuver\+Base}} $>$ $>$ \&}]{maneuvers }\end{DoxyParamCaption})}
 
-\mbox{\Hypertarget{Proxy_8h_a85720c91750cd873d1dbf050fa3d2a18}\label{Proxy_8h_a85720c91750cd873d1dbf050fa3d2a18}} 
+\mbox{\Hypertarget{Proxy_8h_af25ecc6fa940fddb7de7d24006eb4e52}\label{Proxy_8h_af25ecc6fa940fddb7de7d24006eb4e52}} 
 \index{Proxy.h@{Proxy.h}!BuildRetrogradeAttitude@{BuildRetrogradeAttitude}}
 \index{BuildRetrogradeAttitude@{BuildRetrogradeAttitude}!Proxy.h@{Proxy.h}}
 \doxysubsubsection{\texorpdfstring{BuildRetrogradeAttitude()}{BuildRetrogradeAttitude()}}
-{\footnotesize\ttfamily void Build\+Retrograde\+Attitude (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Scenario\+DTO}} \&}]{scenario\+Dto,  }\item[{\mbox{\hyperlink{classIO_1_1SDK_1_1Scenario}{IO\+::\+SDK\+::\+Scenario}} \&}]{scenario,  }\item[{std\+::map$<$ int, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase}{IO\+::\+SDK\+::\+Maneuvers\+::\+Maneuver\+Base}} $>$ $>$ \&}]{maneuvers }\end{DoxyParamCaption})}
+{\footnotesize\ttfamily void Build\+Retrograde\+Attitude (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ScenarioDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Scenario\+DTO}} \&}]{scenario\+Dto,  }\item[{\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Scenario}{IO\+::\+Astrodynamics\+::\+Scenario}} \&}]{scenario,  }\item[{std\+::map$<$ int, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase}{IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Maneuver\+Base}} $>$ $>$ \&}]{maneuvers }\end{DoxyParamCaption})}
 
-\mbox{\Hypertarget{Proxy_8h_a70191d395a750d5ca92dd638564d35b2}\label{Proxy_8h_a70191d395a750d5ca92dd638564d35b2}} 
+\mbox{\Hypertarget{Proxy_8h_a05aeed13dc37c32021ed8c152cb85769}\label{Proxy_8h_a05aeed13dc37c32021ed8c152cb85769}} 
 \index{Proxy.h@{Proxy.h}!BuildZenithAttitude@{BuildZenithAttitude}}
 \index{BuildZenithAttitude@{BuildZenithAttitude}!Proxy.h@{Proxy.h}}
 \doxysubsubsection{\texorpdfstring{BuildZenithAttitude()}{BuildZenithAttitude()}}
-{\footnotesize\ttfamily void Build\+Zenith\+Attitude (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Scenario\+DTO}} \&}]{scenario\+Dto,  }\item[{\mbox{\hyperlink{classIO_1_1SDK_1_1Scenario}{IO\+::\+SDK\+::\+Scenario}} \&}]{scenario,  }\item[{std\+::map$<$ int, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase}{IO\+::\+SDK\+::\+Maneuvers\+::\+Maneuver\+Base}} $>$ $>$ \&}]{maneuvers }\end{DoxyParamCaption})}
+{\footnotesize\ttfamily void Build\+Zenith\+Attitude (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ScenarioDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Scenario\+DTO}} \&}]{scenario\+Dto,  }\item[{\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Scenario}{IO\+::\+Astrodynamics\+::\+Scenario}} \&}]{scenario,  }\item[{std\+::map$<$ int, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase}{IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Maneuver\+Base}} $>$ $>$ \&}]{maneuvers }\end{DoxyParamCaption})}
 
-\mbox{\Hypertarget{Proxy_8h_a5efe448e24b1e8c09c664e98ee8954e8}\label{Proxy_8h_a5efe448e24b1e8c09c664e98ee8954e8}} 
+\mbox{\Hypertarget{Proxy_8h_adeff6dad2759bd230e7e2982af4cc803}\label{Proxy_8h_adeff6dad2759bd230e7e2982af4cc803}} 
 \index{Proxy.h@{Proxy.h}!ConvertConicElementsToStateVectorProxy@{ConvertConicElementsToStateVectorProxy}}
 \index{ConvertConicElementsToStateVectorProxy@{ConvertConicElementsToStateVectorProxy}!Proxy.h@{Proxy.h}}
 \doxysubsubsection{\texorpdfstring{ConvertConicElementsToStateVectorProxy()}{ConvertConicElementsToStateVectorProxy()}}
-{\footnotesize\ttfamily \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1StateVectorDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+State\+Vector\+DTO}} Convert\+Conic\+Elements\+To\+State\+Vector\+Proxy (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ConicOrbitalElementsDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Conic\+Orbital\+Elements\+DTO}}}]{conic\+Orbital\+Elements\+Dto }\end{DoxyParamCaption})}
+{\footnotesize\ttfamily \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1StateVectorDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+State\+Vector\+DTO}} Convert\+Conic\+Elements\+To\+State\+Vector\+Proxy (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ConicOrbitalElementsDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Conic\+Orbital\+Elements\+DTO}}}]{conic\+Orbital\+Elements\+Dto }\end{DoxyParamCaption})}
 
 Convert conic orbital elements to state vector 
 \begin{DoxyParams}{Parameters}
@@ -253,15 +253,29 @@ Convert conic orbital elements to state vector
 \begin{DoxyReturn}{Returns}
 
 \end{DoxyReturn}
-\mbox{\Hypertarget{Proxy_8h_a3b53127d6db476fc18315e1fd222c211}\label{Proxy_8h_a3b53127d6db476fc18315e1fd222c211}} 
+\mbox{\Hypertarget{Proxy_8h_aef5adebc10af8b63a346df5a2a8364d0}\label{Proxy_8h_aef5adebc10af8b63a346df5a2a8364d0}} 
 \index{Proxy.h@{Proxy.h}!ConvertEquinoctialElementsToStateVectorProxy@{ConvertEquinoctialElementsToStateVectorProxy}}
 \index{ConvertEquinoctialElementsToStateVectorProxy@{ConvertEquinoctialElementsToStateVectorProxy}!Proxy.h@{Proxy.h}}
 \doxysubsubsection{\texorpdfstring{ConvertEquinoctialElementsToStateVectorProxy()}{ConvertEquinoctialElementsToStateVectorProxy()}}
-{\footnotesize\ttfamily \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1StateVectorDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+State\+Vector\+DTO}} Convert\+Equinoctial\+Elements\+To\+State\+Vector\+Proxy (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1EquinoctialElementsDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Equinoctial\+Elements\+DTO}}}]{equinoctial\+Elements\+Dto }\end{DoxyParamCaption})}
+{\footnotesize\ttfamily \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1StateVectorDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+State\+Vector\+DTO}} Convert\+Equinoctial\+Elements\+To\+State\+Vector\+Proxy (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1EquinoctialElementsDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Equinoctial\+Elements\+DTO}}}]{equinoctial\+Elements\+Dto }\end{DoxyParamCaption})}
 
 Convert equinoctial elements to state vector 
 \begin{DoxyParams}{Parameters}
 {\em equinoctial\+Elements\+Dto} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+\mbox{\Hypertarget{Proxy_8h_ac91b73da531d42796dfdaceded511d75}\label{Proxy_8h_ac91b73da531d42796dfdaceded511d75}} 
+\index{Proxy.h@{Proxy.h}!ConvertStateVectorToEquatorialCoordinatesProxy@{ConvertStateVectorToEquatorialCoordinatesProxy}}
+\index{ConvertStateVectorToEquatorialCoordinatesProxy@{ConvertStateVectorToEquatorialCoordinatesProxy}!Proxy.h@{Proxy.h}}
+\doxysubsubsection{\texorpdfstring{ConvertStateVectorToEquatorialCoordinatesProxy()}{ConvertStateVectorToEquatorialCoordinatesProxy()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1RaDecDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Ra\+Dec\+DTO}} Convert\+State\+Vector\+To\+Equatorial\+Coordinates\+Proxy (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1StateVectorDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+State\+Vector\+DTO}}}]{state\+Vector\+Dto }\end{DoxyParamCaption})}
+
+Convert state\+Vector to right ascension and declination 
+\begin{DoxyParams}{Parameters}
+{\em state\+Vector\+Dto} & \\
 \hline
 \end{DoxyParams}
 \begin{DoxyReturn}{Returns}
@@ -281,11 +295,11 @@ Convert elapsed seconds from J2000 to UTC
 \begin{DoxyReturn}{Returns}
 
 \end{DoxyReturn}
-\mbox{\Hypertarget{Proxy_8h_a7a6fe201473578cb00eedbb51f97eed9}\label{Proxy_8h_a7a6fe201473578cb00eedbb51f97eed9}} 
+\mbox{\Hypertarget{Proxy_8h_a23393a0d8630513797e7c70849ea3f3d}\label{Proxy_8h_a23393a0d8630513797e7c70849ea3f3d}} 
 \index{Proxy.h@{Proxy.h}!ConvertTLEToStateVectorProxy@{ConvertTLEToStateVectorProxy}}
 \index{ConvertTLEToStateVectorProxy@{ConvertTLEToStateVectorProxy}!Proxy.h@{Proxy.h}}
 \doxysubsubsection{\texorpdfstring{ConvertTLEToStateVectorProxy()}{ConvertTLEToStateVectorProxy()}}
-{\footnotesize\ttfamily \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1StateVectorDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+State\+Vector\+DTO}} Convert\+TLETo\+State\+Vector\+Proxy (\begin{DoxyParamCaption}\item[{const char $\ast$}]{L1,  }\item[{const char $\ast$}]{L2,  }\item[{double}]{epoch }\end{DoxyParamCaption})}
+{\footnotesize\ttfamily \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1StateVectorDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+State\+Vector\+DTO}} Convert\+TLETo\+State\+Vector\+Proxy (\begin{DoxyParamCaption}\item[{const char $\ast$}]{L1,  }\item[{const char $\ast$}]{L2,  }\item[{double}]{epoch }\end{DoxyParamCaption})}
 
 Convert Two line elements to state vector 
 \begin{DoxyParams}{Parameters}
@@ -294,20 +308,6 @@ Convert Two line elements to state vector
 {\em L2} & \\
 \hline
 {\em epoch} & \\
-\hline
-\end{DoxyParams}
-\begin{DoxyReturn}{Returns}
-
-\end{DoxyReturn}
-\mbox{\Hypertarget{Proxy_8h_ac1f282b1ec8f01f4ba8ecb7bf26dbbeb}\label{Proxy_8h_ac1f282b1ec8f01f4ba8ecb7bf26dbbeb}} 
-\index{Proxy.h@{Proxy.h}!ConvertToRightAscensionAndDeclinationProxy@{ConvertToRightAscensionAndDeclinationProxy}}
-\index{ConvertToRightAscensionAndDeclinationProxy@{ConvertToRightAscensionAndDeclinationProxy}!Proxy.h@{Proxy.h}}
-\doxysubsubsection{\texorpdfstring{ConvertToRightAscensionAndDeclinationProxy()}{ConvertToRightAscensionAndDeclinationProxy()}}
-{\footnotesize\ttfamily \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1RaDecDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Ra\+Dec\+DTO}} Convert\+To\+Right\+Ascension\+And\+Declination\+Proxy (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1StateVectorDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+State\+Vector\+DTO}}}]{state\+Vector\+Dto }\end{DoxyParamCaption})}
-
-Convert state\+Vector to right ascension and declination 
-\begin{DoxyParams}{Parameters}
-{\em state\+Vector\+Dto} & \\
 \hline
 \end{DoxyParams}
 \begin{DoxyReturn}{Returns}
@@ -327,11 +327,11 @@ Convert elapsed seconds from J2000 to tdb
 \begin{DoxyReturn}{Returns}
 
 \end{DoxyReturn}
-\mbox{\Hypertarget{Proxy_8h_ad3695568d6bd15b6a4c74d9a10f8ea78}\label{Proxy_8h_ad3695568d6bd15b6a4c74d9a10f8ea78}} 
+\mbox{\Hypertarget{Proxy_8h_a937e7c2e12b5beeb29690b6d5e859d25}\label{Proxy_8h_a937e7c2e12b5beeb29690b6d5e859d25}} 
 \index{Proxy.h@{Proxy.h}!FindWindowsInFieldOfViewConstraintProxy@{FindWindowsInFieldOfViewConstraintProxy}}
 \index{FindWindowsInFieldOfViewConstraintProxy@{FindWindowsInFieldOfViewConstraintProxy}!Proxy.h@{Proxy.h}}
 \doxysubsubsection{\texorpdfstring{FindWindowsInFieldOfViewConstraintProxy()}{FindWindowsInFieldOfViewConstraintProxy()}}
-{\footnotesize\ttfamily \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} void Find\+Windows\+In\+Field\+Of\+View\+Constraint\+Proxy (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Window\+DTO}}}]{search\+Window,  }\item[{int}]{observer\+Id,  }\item[{int}]{instrument\+Id,  }\item[{int}]{target\+Id,  }\item[{const char $\ast$}]{target\+Frame,  }\item[{const char $\ast$}]{target\+Shape,  }\item[{const char $\ast$}]{aberration,  }\item[{double}]{step\+Size,  }\item[{\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Window\+DTO}}}]{windows\mbox{[}1000\mbox{]} }\end{DoxyParamCaption})}
+{\footnotesize\ttfamily \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} void Find\+Windows\+In\+Field\+Of\+View\+Constraint\+Proxy (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1WindowDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Window\+DTO}}}]{search\+Window,  }\item[{int}]{observer\+Id,  }\item[{int}]{instrument\+Id,  }\item[{int}]{target\+Id,  }\item[{const char $\ast$}]{target\+Frame,  }\item[{const char $\ast$}]{target\+Shape,  }\item[{const char $\ast$}]{aberration,  }\item[{double}]{step\+Size,  }\item[{\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1WindowDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Window\+DTO}}}]{windows\mbox{[}1000\mbox{]} }\end{DoxyParamCaption})}
 
 Find time windows witch satisfy in field of view constraint 
 \begin{DoxyParams}{Parameters}
@@ -354,11 +354,11 @@ Find time windows witch satisfy in field of view constraint
 {\em windows} & \\
 \hline
 \end{DoxyParams}
-\mbox{\Hypertarget{Proxy_8h_a41859ca381c6d0feef334aea372d8f78}\label{Proxy_8h_a41859ca381c6d0feef334aea372d8f78}} 
+\mbox{\Hypertarget{Proxy_8h_a6207bfab3f39d7fe0caae4b483df9d48}\label{Proxy_8h_a6207bfab3f39d7fe0caae4b483df9d48}} 
 \index{Proxy.h@{Proxy.h}!FindWindowsOnCoordinateConstraintProxy@{FindWindowsOnCoordinateConstraintProxy}}
 \index{FindWindowsOnCoordinateConstraintProxy@{FindWindowsOnCoordinateConstraintProxy}!Proxy.h@{Proxy.h}}
 \doxysubsubsection{\texorpdfstring{FindWindowsOnCoordinateConstraintProxy()}{FindWindowsOnCoordinateConstraintProxy()}}
-{\footnotesize\ttfamily \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} void Find\+Windows\+On\+Coordinate\+Constraint\+Proxy (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Window\+DTO}}}]{search\+Window,  }\item[{int}]{observer\+Id,  }\item[{int}]{target\+Id,  }\item[{const char $\ast$}]{frame,  }\item[{const char $\ast$}]{coordinate\+System,  }\item[{const char $\ast$}]{coordinate,  }\item[{const char $\ast$}]{relational\+Operator,  }\item[{double}]{value,  }\item[{double}]{adjust\+Value,  }\item[{const char $\ast$}]{aberration,  }\item[{double}]{step\+Size,  }\item[{\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Window\+DTO}}}]{windows\mbox{[}1000\mbox{]} }\end{DoxyParamCaption})}
+{\footnotesize\ttfamily \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} void Find\+Windows\+On\+Coordinate\+Constraint\+Proxy (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1WindowDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Window\+DTO}}}]{search\+Window,  }\item[{int}]{observer\+Id,  }\item[{int}]{target\+Id,  }\item[{const char $\ast$}]{frame,  }\item[{const char $\ast$}]{coordinate\+System,  }\item[{const char $\ast$}]{coordinate,  }\item[{const char $\ast$}]{relational\+Operator,  }\item[{double}]{value,  }\item[{double}]{adjust\+Value,  }\item[{const char $\ast$}]{aberration,  }\item[{double}]{step\+Size,  }\item[{\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1WindowDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Window\+DTO}}}]{windows\mbox{[}1000\mbox{]} }\end{DoxyParamCaption})}
 
 Find time windows witch satisfy coordinate constraint 
 \begin{DoxyParams}{Parameters}
@@ -387,11 +387,11 @@ Find time windows witch satisfy coordinate constraint
 {\em windows} & \\
 \hline
 \end{DoxyParams}
-\mbox{\Hypertarget{Proxy_8h_a6ec1cf8afcc6842627d5f3fcab1f83ef}\label{Proxy_8h_a6ec1cf8afcc6842627d5f3fcab1f83ef}} 
+\mbox{\Hypertarget{Proxy_8h_a1830cc8624c1ffdd8d3fab23db7598e1}\label{Proxy_8h_a1830cc8624c1ffdd8d3fab23db7598e1}} 
 \index{Proxy.h@{Proxy.h}!FindWindowsOnDistanceConstraintProxy@{FindWindowsOnDistanceConstraintProxy}}
 \index{FindWindowsOnDistanceConstraintProxy@{FindWindowsOnDistanceConstraintProxy}!Proxy.h@{Proxy.h}}
 \doxysubsubsection{\texorpdfstring{FindWindowsOnDistanceConstraintProxy()}{FindWindowsOnDistanceConstraintProxy()}}
-{\footnotesize\ttfamily \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} void Find\+Windows\+On\+Distance\+Constraint\+Proxy (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Window\+DTO}}}]{search\+Window,  }\item[{int}]{observer\+Id,  }\item[{int}]{target\+Id,  }\item[{const char $\ast$}]{relational\+Operator,  }\item[{double}]{value,  }\item[{const char $\ast$}]{aberration,  }\item[{double}]{step\+Size,  }\item[{\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Window\+DTO}}}]{windows\mbox{[}1000\mbox{]} }\end{DoxyParamCaption})}
+{\footnotesize\ttfamily \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} void Find\+Windows\+On\+Distance\+Constraint\+Proxy (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1WindowDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Window\+DTO}}}]{search\+Window,  }\item[{int}]{observer\+Id,  }\item[{int}]{target\+Id,  }\item[{const char $\ast$}]{relational\+Operator,  }\item[{double}]{value,  }\item[{const char $\ast$}]{aberration,  }\item[{double}]{step\+Size,  }\item[{\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1WindowDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Window\+DTO}}}]{windows\mbox{[}1000\mbox{]} }\end{DoxyParamCaption})}
 
 Find time windows witch satisfy distance constraint 
 \begin{DoxyParams}{Parameters}
@@ -412,11 +412,11 @@ Find time windows witch satisfy distance constraint
 {\em windows} & \\
 \hline
 \end{DoxyParams}
-\mbox{\Hypertarget{Proxy_8h_ab9b8fb854911a9ffea45b39d30047442}\label{Proxy_8h_ab9b8fb854911a9ffea45b39d30047442}} 
+\mbox{\Hypertarget{Proxy_8h_ad62d6bba43525b4e409286b630e8a869}\label{Proxy_8h_ad62d6bba43525b4e409286b630e8a869}} 
 \index{Proxy.h@{Proxy.h}!FindWindowsOnIlluminationConstraintProxy@{FindWindowsOnIlluminationConstraintProxy}}
 \index{FindWindowsOnIlluminationConstraintProxy@{FindWindowsOnIlluminationConstraintProxy}!Proxy.h@{Proxy.h}}
 \doxysubsubsection{\texorpdfstring{FindWindowsOnIlluminationConstraintProxy()}{FindWindowsOnIlluminationConstraintProxy()}}
-{\footnotesize\ttfamily \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} void Find\+Windows\+On\+Illumination\+Constraint\+Proxy (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Window\+DTO}}}]{search\+Window,  }\item[{int}]{observer\+Id,  }\item[{const char $\ast$}]{illumination\+Source,  }\item[{int}]{target\+Body,  }\item[{const char $\ast$}]{fixed\+Frame,  }\item[{\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1GeodeticDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Geodetic\+DTO}}}]{geodetic,  }\item[{const char $\ast$}]{illumination\+Type,  }\item[{const char $\ast$}]{relational\+Operator,  }\item[{double}]{value,  }\item[{double}]{adjust\+Value,  }\item[{const char $\ast$}]{aberration,  }\item[{double}]{step\+Size,  }\item[{const char $\ast$}]{method,  }\item[{\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Window\+DTO}}}]{windows\mbox{[}1000\mbox{]} }\end{DoxyParamCaption})}
+{\footnotesize\ttfamily \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} void Find\+Windows\+On\+Illumination\+Constraint\+Proxy (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1WindowDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Window\+DTO}}}]{search\+Window,  }\item[{int}]{observer\+Id,  }\item[{const char $\ast$}]{illumination\+Source,  }\item[{int}]{target\+Body,  }\item[{const char $\ast$}]{fixed\+Frame,  }\item[{\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1GeodeticDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Geodetic\+DTO}}}]{geodetic,  }\item[{const char $\ast$}]{illumination\+Type,  }\item[{const char $\ast$}]{relational\+Operator,  }\item[{double}]{value,  }\item[{double}]{adjust\+Value,  }\item[{const char $\ast$}]{aberration,  }\item[{double}]{step\+Size,  }\item[{const char $\ast$}]{method,  }\item[{\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1WindowDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Window\+DTO}}}]{windows\mbox{[}1000\mbox{]} }\end{DoxyParamCaption})}
 
 Find time windows witch satisfy illumination constraint 
 \begin{DoxyParams}{Parameters}
@@ -449,11 +449,11 @@ Find time windows witch satisfy illumination constraint
 {\em windows} & \\
 \hline
 \end{DoxyParams}
-\mbox{\Hypertarget{Proxy_8h_a3f435df4a2572b837892811cd273ad04}\label{Proxy_8h_a3f435df4a2572b837892811cd273ad04}} 
+\mbox{\Hypertarget{Proxy_8h_af61eee5e996932b041c02d6a3e494aac}\label{Proxy_8h_af61eee5e996932b041c02d6a3e494aac}} 
 \index{Proxy.h@{Proxy.h}!FindWindowsOnOccultationConstraintProxy@{FindWindowsOnOccultationConstraintProxy}}
 \index{FindWindowsOnOccultationConstraintProxy@{FindWindowsOnOccultationConstraintProxy}!Proxy.h@{Proxy.h}}
 \doxysubsubsection{\texorpdfstring{FindWindowsOnOccultationConstraintProxy()}{FindWindowsOnOccultationConstraintProxy()}}
-{\footnotesize\ttfamily \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} void Find\+Windows\+On\+Occultation\+Constraint\+Proxy (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Window\+DTO}}}]{search\+Window,  }\item[{int}]{observer\+Id,  }\item[{int}]{target\+Id,  }\item[{const char $\ast$}]{target\+Frame,  }\item[{const char $\ast$}]{target\+Shape,  }\item[{int}]{front\+Body\+Id,  }\item[{const char $\ast$}]{front\+Frame,  }\item[{const char $\ast$}]{front\+Shape,  }\item[{const char $\ast$}]{occultation\+Type,  }\item[{const char $\ast$}]{aberration,  }\item[{double}]{step\+Size,  }\item[{\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Window\+DTO}}}]{windows\mbox{[}1000\mbox{]} }\end{DoxyParamCaption})}
+{\footnotesize\ttfamily \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} void Find\+Windows\+On\+Occultation\+Constraint\+Proxy (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1WindowDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Window\+DTO}}}]{search\+Window,  }\item[{int}]{observer\+Id,  }\item[{int}]{target\+Id,  }\item[{const char $\ast$}]{target\+Frame,  }\item[{const char $\ast$}]{target\+Shape,  }\item[{int}]{front\+Body\+Id,  }\item[{const char $\ast$}]{front\+Frame,  }\item[{const char $\ast$}]{front\+Shape,  }\item[{const char $\ast$}]{occultation\+Type,  }\item[{const char $\ast$}]{aberration,  }\item[{double}]{step\+Size,  }\item[{\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1WindowDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Window\+DTO}}}]{windows\mbox{[}1000\mbox{]} }\end{DoxyParamCaption})}
 
 Find time windows witch satisfy occultation constraint 
 \begin{DoxyParams}{Parameters}
@@ -482,11 +482,11 @@ Find time windows witch satisfy occultation constraint
 {\em windows} & \\
 \hline
 \end{DoxyParams}
-\mbox{\Hypertarget{Proxy_8h_aa744385eb805ddd19576c1059d59fd5e}\label{Proxy_8h_aa744385eb805ddd19576c1059d59fd5e}} 
+\mbox{\Hypertarget{Proxy_8h_a5cd3821092c4905163bd9fda786ee831}\label{Proxy_8h_a5cd3821092c4905163bd9fda786ee831}} 
 \index{Proxy.h@{Proxy.h}!GetCelestialBodyInfoProxy@{GetCelestialBodyInfoProxy}}
 \index{GetCelestialBodyInfoProxy@{GetCelestialBodyInfoProxy}!Proxy.h@{Proxy.h}}
 \doxysubsubsection{\texorpdfstring{GetCelestialBodyInfoProxy()}{GetCelestialBodyInfoProxy()}}
-{\footnotesize\ttfamily \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1CelestialBodyDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Celestial\+Body\+DTO}} Get\+Celestial\+Body\+Info\+Proxy (\begin{DoxyParamCaption}\item[{int}]{body\+Id }\end{DoxyParamCaption})}
+{\footnotesize\ttfamily \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1CelestialBodyDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Celestial\+Body\+DTO}} Get\+Celestial\+Body\+Info\+Proxy (\begin{DoxyParamCaption}\item[{int}]{body\+Id }\end{DoxyParamCaption})}
 
 Get celestial body information from his id 
 \begin{DoxyParams}{Parameters}
@@ -511,11 +511,11 @@ version
 \doxysubsubsection{\texorpdfstring{HandleError()}{HandleError()}}
 {\footnotesize\ttfamily char $\ast$ Handle\+Error (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
 
-\mbox{\Hypertarget{Proxy_8h_a1d806e18515093a7f25ad338020ec56d}\label{Proxy_8h_a1d806e18515093a7f25ad338020ec56d}} 
+\mbox{\Hypertarget{Proxy_8h_a589163156d2c405e61220e8f04b914a8}\label{Proxy_8h_a589163156d2c405e61220e8f04b914a8}} 
 \index{Proxy.h@{Proxy.h}!LaunchProxy@{LaunchProxy}}
 \index{LaunchProxy@{LaunchProxy}!Proxy.h@{Proxy.h}}
 \doxysubsubsection{\texorpdfstring{LaunchProxy()}{LaunchProxy()}}
-{\footnotesize\ttfamily \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} void Launch\+Proxy (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1LaunchDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Launch\+DTO}} \&}]{launch\+Dto }\end{DoxyParamCaption})}
+{\footnotesize\ttfamily \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} void Launch\+Proxy (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1LaunchDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Launch\+DTO}} \&}]{launch\+Dto }\end{DoxyParamCaption})}
 
 Evaluate launch windows 
 \begin{DoxyParams}{Parameters}
@@ -533,40 +533,40 @@ Load generic kernels
 {\em directory\+Path} & \\
 \hline
 \end{DoxyParams}
-\mbox{\Hypertarget{Proxy_8h_a53659fe236627b28005a1baae4c072ed}\label{Proxy_8h_a53659fe236627b28005a1baae4c072ed}} 
+\mbox{\Hypertarget{Proxy_8h_a8b247d6485a00deb09237cfa0afdffc4}\label{Proxy_8h_a8b247d6485a00deb09237cfa0afdffc4}} 
 \index{Proxy.h@{Proxy.h}!PropagateProxy@{PropagateProxy}}
 \index{PropagateProxy@{PropagateProxy}!Proxy.h@{Proxy.h}}
 \doxysubsubsection{\texorpdfstring{PropagateProxy()}{PropagateProxy()}}
-{\footnotesize\ttfamily \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} void Propagate\+Proxy (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Scenario\+DTO}} \&}]{scenario\+Dto }\end{DoxyParamCaption})}
+{\footnotesize\ttfamily \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} void Propagate\+Proxy (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ScenarioDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Scenario\+DTO}} \&}]{scenario\+Dto }\end{DoxyParamCaption})}
 
 Propagate a scenario 
 \begin{DoxyParams}{Parameters}
 {\em scenario\+Dto} & \\
 \hline
 \end{DoxyParams}
-\mbox{\Hypertarget{Proxy_8h_a466bec93a33dfabd6a60722c8edf333f}\label{Proxy_8h_a466bec93a33dfabd6a60722c8edf333f}} 
+\mbox{\Hypertarget{Proxy_8h_afa98d3a0838bfd56c2b11111589bbbb5}\label{Proxy_8h_afa98d3a0838bfd56c2b11111589bbbb5}} 
 \index{Proxy.h@{Proxy.h}!ReadApogeeManeuverResult@{ReadApogeeManeuverResult}}
 \index{ReadApogeeManeuverResult@{ReadApogeeManeuverResult}!Proxy.h@{Proxy.h}}
 \doxysubsubsection{\texorpdfstring{ReadApogeeManeuverResult()}{ReadApogeeManeuverResult()}}
-{\footnotesize\ttfamily void Read\+Apogee\+Maneuver\+Result (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Scenario\+DTO}} \&}]{scenario\+Dto,  }\item[{std\+::map$<$ int, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase}{IO\+::\+SDK\+::\+Maneuvers\+::\+Maneuver\+Base}} $>$ $>$ \&}]{maneuvers }\end{DoxyParamCaption})}
+{\footnotesize\ttfamily void Read\+Apogee\+Maneuver\+Result (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ScenarioDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Scenario\+DTO}} \&}]{scenario\+Dto,  }\item[{std\+::map$<$ int, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase}{IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Maneuver\+Base}} $>$ $>$ \&}]{maneuvers }\end{DoxyParamCaption})}
 
-\mbox{\Hypertarget{Proxy_8h_a274e1f3865453efe582b74fce0b657a1}\label{Proxy_8h_a274e1f3865453efe582b74fce0b657a1}} 
+\mbox{\Hypertarget{Proxy_8h_a4844c879c6033d6d11cb7f28a1a514f7}\label{Proxy_8h_a4844c879c6033d6d11cb7f28a1a514f7}} 
 \index{Proxy.h@{Proxy.h}!ReadApsidalAlignmentManeuverResult@{ReadApsidalAlignmentManeuverResult}}
 \index{ReadApsidalAlignmentManeuverResult@{ReadApsidalAlignmentManeuverResult}!Proxy.h@{Proxy.h}}
 \doxysubsubsection{\texorpdfstring{ReadApsidalAlignmentManeuverResult()}{ReadApsidalAlignmentManeuverResult()}}
-{\footnotesize\ttfamily void Read\+Apsidal\+Alignment\+Maneuver\+Result (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Scenario\+DTO}} \&}]{scenario\+Dto,  }\item[{std\+::map$<$ int, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase}{IO\+::\+SDK\+::\+Maneuvers\+::\+Maneuver\+Base}} $>$ $>$ \&}]{maneuvers }\end{DoxyParamCaption})}
+{\footnotesize\ttfamily void Read\+Apsidal\+Alignment\+Maneuver\+Result (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ScenarioDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Scenario\+DTO}} \&}]{scenario\+Dto,  }\item[{std\+::map$<$ int, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase}{IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Maneuver\+Base}} $>$ $>$ \&}]{maneuvers }\end{DoxyParamCaption})}
 
-\mbox{\Hypertarget{Proxy_8h_a29b830927e678eac49585d2c12370135}\label{Proxy_8h_a29b830927e678eac49585d2c12370135}} 
+\mbox{\Hypertarget{Proxy_8h_a960b64ba392ac5304caed39184676fc5}\label{Proxy_8h_a960b64ba392ac5304caed39184676fc5}} 
 \index{Proxy.h@{Proxy.h}!ReadCombinedManeuverResult@{ReadCombinedManeuverResult}}
 \index{ReadCombinedManeuverResult@{ReadCombinedManeuverResult}!Proxy.h@{Proxy.h}}
 \doxysubsubsection{\texorpdfstring{ReadCombinedManeuverResult()}{ReadCombinedManeuverResult()}}
-{\footnotesize\ttfamily void Read\+Combined\+Maneuver\+Result (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Scenario\+DTO}} \&}]{scenario\+Dto,  }\item[{std\+::map$<$ int, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase}{IO\+::\+SDK\+::\+Maneuvers\+::\+Maneuver\+Base}} $>$ $>$ \&}]{maneuvers }\end{DoxyParamCaption})}
+{\footnotesize\ttfamily void Read\+Combined\+Maneuver\+Result (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ScenarioDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Scenario\+DTO}} \&}]{scenario\+Dto,  }\item[{std\+::map$<$ int, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase}{IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Maneuver\+Base}} $>$ $>$ \&}]{maneuvers }\end{DoxyParamCaption})}
 
-\mbox{\Hypertarget{Proxy_8h_aec8180716b9e86621181f82f38419c8f}\label{Proxy_8h_aec8180716b9e86621181f82f38419c8f}} 
+\mbox{\Hypertarget{Proxy_8h_a4167d00080decf1912e155d1704bce08}\label{Proxy_8h_a4167d00080decf1912e155d1704bce08}} 
 \index{Proxy.h@{Proxy.h}!ReadEphemerisProxy@{ReadEphemerisProxy}}
 \index{ReadEphemerisProxy@{ReadEphemerisProxy}!Proxy.h@{Proxy.h}}
 \doxysubsubsection{\texorpdfstring{ReadEphemerisProxy()}{ReadEphemerisProxy()}}
-{\footnotesize\ttfamily \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} void Read\+Ephemeris\+Proxy (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Window\+DTO}}}]{search\+Window,  }\item[{int}]{observer\+Id,  }\item[{int}]{target\+Id,  }\item[{const char $\ast$}]{frame,  }\item[{const char $\ast$}]{aberration,  }\item[{double}]{step\+Size,  }\item[{\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1StateVectorDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+State\+Vector\+DTO}}}]{state\+Vectors\mbox{[}10000\mbox{]} }\end{DoxyParamCaption})}
+{\footnotesize\ttfamily \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} void Read\+Ephemeris\+Proxy (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1WindowDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Window\+DTO}}}]{search\+Window,  }\item[{int}]{observer\+Id,  }\item[{int}]{target\+Id,  }\item[{const char $\ast$}]{frame,  }\item[{const char $\ast$}]{aberration,  }\item[{double}]{step\+Size,  }\item[{\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1StateVectorDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+State\+Vector\+DTO}}}]{state\+Vectors\mbox{[}10000\mbox{]} }\end{DoxyParamCaption})}
 
 Read object ephemeris 
 \begin{DoxyParams}{Parameters}
@@ -585,23 +585,23 @@ Read object ephemeris
 {\em state\+Vectors} & \\
 \hline
 \end{DoxyParams}
-\mbox{\Hypertarget{Proxy_8h_a55b5f32b6b7ab7369fe7847e4ebc045b}\label{Proxy_8h_a55b5f32b6b7ab7369fe7847e4ebc045b}} 
+\mbox{\Hypertarget{Proxy_8h_a3eb1d8fdac1088947285a663760ab3a6}\label{Proxy_8h_a3eb1d8fdac1088947285a663760ab3a6}} 
 \index{Proxy.h@{Proxy.h}!ReadManeuverResults@{ReadManeuverResults}}
 \index{ReadManeuverResults@{ReadManeuverResults}!Proxy.h@{Proxy.h}}
 \doxysubsubsection{\texorpdfstring{ReadManeuverResults()}{ReadManeuverResults()}}
-{\footnotesize\ttfamily void Read\+Maneuver\+Results (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Scenario\+DTO}} \&}]{scenario\+Dto,  }\item[{std\+::map$<$ int, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase}{IO\+::\+SDK\+::\+Maneuvers\+::\+Maneuver\+Base}} $>$ $>$ \&}]{maneuvers }\end{DoxyParamCaption})}
+{\footnotesize\ttfamily void Read\+Maneuver\+Results (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ScenarioDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Scenario\+DTO}} \&}]{scenario\+Dto,  }\item[{std\+::map$<$ int, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase}{IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Maneuver\+Base}} $>$ $>$ \&}]{maneuvers }\end{DoxyParamCaption})}
 
-\mbox{\Hypertarget{Proxy_8h_a717c7d3ca5a48e85b637148eb0262df8}\label{Proxy_8h_a717c7d3ca5a48e85b637148eb0262df8}} 
+\mbox{\Hypertarget{Proxy_8h_afd6fa2c901ae128e5594f523a35c4ccb}\label{Proxy_8h_afd6fa2c901ae128e5594f523a35c4ccb}} 
 \index{Proxy.h@{Proxy.h}!ReadOrbitalPlaneManeuverResult@{ReadOrbitalPlaneManeuverResult}}
 \index{ReadOrbitalPlaneManeuverResult@{ReadOrbitalPlaneManeuverResult}!Proxy.h@{Proxy.h}}
 \doxysubsubsection{\texorpdfstring{ReadOrbitalPlaneManeuverResult()}{ReadOrbitalPlaneManeuverResult()}}
-{\footnotesize\ttfamily void Read\+Orbital\+Plane\+Maneuver\+Result (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Scenario\+DTO}} \&}]{scenario\+Dto,  }\item[{std\+::map$<$ int, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase}{IO\+::\+SDK\+::\+Maneuvers\+::\+Maneuver\+Base}} $>$ $>$ \&}]{maneuvers }\end{DoxyParamCaption})}
+{\footnotesize\ttfamily void Read\+Orbital\+Plane\+Maneuver\+Result (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ScenarioDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Scenario\+DTO}} \&}]{scenario\+Dto,  }\item[{std\+::map$<$ int, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase}{IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Maneuver\+Base}} $>$ $>$ \&}]{maneuvers }\end{DoxyParamCaption})}
 
-\mbox{\Hypertarget{Proxy_8h_ad2cb321fd1aa8706954df5b92b3b9a19}\label{Proxy_8h_ad2cb321fd1aa8706954df5b92b3b9a19}} 
+\mbox{\Hypertarget{Proxy_8h_acabfceb565c4e897f2d0c0afc36643b2}\label{Proxy_8h_acabfceb565c4e897f2d0c0afc36643b2}} 
 \index{Proxy.h@{Proxy.h}!ReadOrientationProxy@{ReadOrientationProxy}}
 \index{ReadOrientationProxy@{ReadOrientationProxy}!Proxy.h@{Proxy.h}}
 \doxysubsubsection{\texorpdfstring{ReadOrientationProxy()}{ReadOrientationProxy()}}
-{\footnotesize\ttfamily \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} void Read\+Orientation\+Proxy (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1WindowDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Window\+DTO}}}]{search\+Window,  }\item[{int}]{spacecraft\+Id,  }\item[{double}]{tolerance,  }\item[{const char $\ast$}]{frame,  }\item[{double}]{step\+Size,  }\item[{\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1StateOrientationDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+State\+Orientation\+DTO}}}]{so\mbox{[}10000\mbox{]} }\end{DoxyParamCaption})}
+{\footnotesize\ttfamily \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} void Read\+Orientation\+Proxy (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1WindowDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Window\+DTO}}}]{search\+Window,  }\item[{int}]{spacecraft\+Id,  }\item[{double}]{tolerance,  }\item[{const char $\ast$}]{frame,  }\item[{double}]{step\+Size,  }\item[{\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1StateOrientationDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+State\+Orientation\+DTO}}}]{so\mbox{[}10000\mbox{]} }\end{DoxyParamCaption})}
 
 Read spacecraft orientation 
 \begin{DoxyParams}{Parameters}
@@ -618,17 +618,17 @@ Read spacecraft orientation
 {\em so} & \\
 \hline
 \end{DoxyParams}
-\mbox{\Hypertarget{Proxy_8h_aa7d09fd7d9d73216a3ee6020565d061e}\label{Proxy_8h_aa7d09fd7d9d73216a3ee6020565d061e}} 
+\mbox{\Hypertarget{Proxy_8h_acc147c42e49856002cd1d52ceea60600}\label{Proxy_8h_acc147c42e49856002cd1d52ceea60600}} 
 \index{Proxy.h@{Proxy.h}!ReadPerigeeManeuverResult@{ReadPerigeeManeuverResult}}
 \index{ReadPerigeeManeuverResult@{ReadPerigeeManeuverResult}!Proxy.h@{Proxy.h}}
 \doxysubsubsection{\texorpdfstring{ReadPerigeeManeuverResult()}{ReadPerigeeManeuverResult()}}
-{\footnotesize\ttfamily void Read\+Perigee\+Maneuver\+Result (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Scenario\+DTO}} \&}]{scenario\+Dto,  }\item[{std\+::map$<$ int, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase}{IO\+::\+SDK\+::\+Maneuvers\+::\+Maneuver\+Base}} $>$ $>$ \&}]{maneuvers }\end{DoxyParamCaption})}
+{\footnotesize\ttfamily void Read\+Perigee\+Maneuver\+Result (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ScenarioDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Scenario\+DTO}} \&}]{scenario\+Dto,  }\item[{std\+::map$<$ int, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase}{IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Maneuver\+Base}} $>$ $>$ \&}]{maneuvers }\end{DoxyParamCaption})}
 
-\mbox{\Hypertarget{Proxy_8h_a6c39e673976b509ad3fa42613ffa38d7}\label{Proxy_8h_a6c39e673976b509ad3fa42613ffa38d7}} 
+\mbox{\Hypertarget{Proxy_8h_adb84f00576e8bbe39ff1883f62cd8b81}\label{Proxy_8h_adb84f00576e8bbe39ff1883f62cd8b81}} 
 \index{Proxy.h@{Proxy.h}!ReadPhasingManeuverResult@{ReadPhasingManeuverResult}}
 \index{ReadPhasingManeuverResult@{ReadPhasingManeuverResult}!Proxy.h@{Proxy.h}}
 \doxysubsubsection{\texorpdfstring{ReadPhasingManeuverResult()}{ReadPhasingManeuverResult()}}
-{\footnotesize\ttfamily void Read\+Phasing\+Maneuver\+Result (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1ScenarioDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Scenario\+DTO}} \&}]{scenario\+Dto,  }\item[{std\+::map$<$ int, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase}{IO\+::\+SDK\+::\+Maneuvers\+::\+Maneuver\+Base}} $>$ $>$ \&}]{maneuvers }\end{DoxyParamCaption})}
+{\footnotesize\ttfamily void Read\+Phasing\+Maneuver\+Result (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ScenarioDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Scenario\+DTO}} \&}]{scenario\+Dto,  }\item[{std\+::map$<$ int, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase}{IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Maneuver\+Base}} $>$ $>$ \&}]{maneuvers }\end{DoxyParamCaption})}
 
 \mbox{\Hypertarget{Proxy_8h_a866cf6da600090959c6dc47000e75cc4}\label{Proxy_8h_a866cf6da600090959c6dc47000e75cc4}} 
 \index{Proxy.h@{Proxy.h}!TDBToStringProxy@{TDBToStringProxy}}
@@ -644,11 +644,11 @@ Convert second\+From\+J2000 to formatted string
 \begin{DoxyReturn}{Returns}
 
 \end{DoxyReturn}
-\mbox{\Hypertarget{Proxy_8h_a457712e918b3f71b190c356f7405fec0}\label{Proxy_8h_a457712e918b3f71b190c356f7405fec0}} 
+\mbox{\Hypertarget{Proxy_8h_a119f255f7f7f5f965123d79ead91d46c}\label{Proxy_8h_a119f255f7f7f5f965123d79ead91d46c}} 
 \index{Proxy.h@{Proxy.h}!TransformFrameProxy@{TransformFrameProxy}}
 \index{TransformFrameProxy@{TransformFrameProxy}!Proxy.h@{Proxy.h}}
 \doxysubsubsection{\texorpdfstring{TransformFrameProxy()}{TransformFrameProxy()}}
-{\footnotesize\ttfamily \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} \mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1FrameTransformationDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+Frame\+Transformation\+DTO}} Transform\+Frame\+Proxy (\begin{DoxyParamCaption}\item[{const char $\ast$}]{from\+Frame,  }\item[{const char $\ast$}]{to\+Frame,  }\item[{double}]{epoch }\end{DoxyParamCaption})}
+{\footnotesize\ttfamily \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1FrameTransformationDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Frame\+Transformation\+DTO}} Transform\+Frame\+Proxy (\begin{DoxyParamCaption}\item[{const char $\ast$}]{from\+Frame,  }\item[{const char $\ast$}]{to\+Frame,  }\item[{double}]{epoch }\end{DoxyParamCaption})}
 
 Get the transformation from a frame to another frame at given epoch 
 \begin{DoxyParams}{Parameters}
@@ -674,11 +674,11 @@ Convert second\+From\+J2000 to formatted string
 \begin{DoxyReturn}{Returns}
 
 \end{DoxyReturn}
-\mbox{\Hypertarget{Proxy_8h_a17109cffd6008c59fafb5b67ccf6fe97}\label{Proxy_8h_a17109cffd6008c59fafb5b67ccf6fe97}} 
+\mbox{\Hypertarget{Proxy_8h_ad909cf62335144449521f43a7985c569}\label{Proxy_8h_ad909cf62335144449521f43a7985c569}} 
 \index{Proxy.h@{Proxy.h}!WriteEphemerisProxy@{WriteEphemerisProxy}}
 \index{WriteEphemerisProxy@{WriteEphemerisProxy}!Proxy.h@{Proxy.h}}
 \doxysubsubsection{\texorpdfstring{WriteEphemerisProxy()}{WriteEphemerisProxy()}}
-{\footnotesize\ttfamily \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} bool Write\+Ephemeris\+Proxy (\begin{DoxyParamCaption}\item[{const char $\ast$}]{file\+Path,  }\item[{int}]{object\+Id,  }\item[{\mbox{\hyperlink{structIO_1_1SDK_1_1API_1_1DTO_1_1StateVectorDTO}{IO\+::\+SDK\+::\+API\+::\+DTO\+::\+State\+Vector\+DTO}}}]{sv\mbox{[}100000\mbox{]},  }\item[{unsigned int}]{size }\end{DoxyParamCaption})}
+{\footnotesize\ttfamily \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} bool Write\+Ephemeris\+Proxy (\begin{DoxyParamCaption}\item[{const char $\ast$}]{file\+Path,  }\item[{int}]{object\+Id,  }\item[{\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1StateVectorDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+State\+Vector\+DTO}}}]{sv\mbox{[}100000\mbox{]},  }\item[{unsigned int}]{size }\end{DoxyParamCaption})}
 
 Write ephemeris into binary file (spk) 
 \begin{DoxyParams}{Parameters}

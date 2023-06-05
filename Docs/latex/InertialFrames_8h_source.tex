@@ -1,5 +1,5 @@
 \hypertarget{InertialFrames_8h_source}{}\doxysection{Inertial\+Frames.\+h}
-\label{InertialFrames_8h_source}\index{IO.SDK/Frames/InertialFrames.h@{IO.SDK/Frames/InertialFrames.h}}
+\label{InertialFrames_8h_source}\index{IO.Astrodynamics/Frames/InertialFrames.h@{IO.Astrodynamics/Frames/InertialFrames.h}}
 \mbox{\hyperlink{InertialFrames_8h}{Go to the documentation of this file.}}
 \begin{DoxyCode}{0}
 \DoxyCodeLine{1 \textcolor{comment}{/*}}
@@ -10,21 +10,21 @@
 \DoxyCodeLine{6 \textcolor{preprocessor}{\#include <string>}}
 \DoxyCodeLine{7 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{Frames_8h}{Frames.h}}>}}
 \DoxyCodeLine{8 }
-\DoxyCodeLine{9 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1SDK_1_1Frames}{IO::SDK::Frames}}}
+\DoxyCodeLine{9 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Frames}{IO::Astrodynamics::Frames}}}
 \DoxyCodeLine{10 \{}
-\DoxyCodeLine{15     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1InertialFrames}{InertialFrames}} final : \textcolor{keyword}{public} \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1Frames}{IO::SDK::Frames::Frames}}}
+\DoxyCodeLine{15     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Frames_1_1InertialFrames}{InertialFrames}} final : \textcolor{keyword}{public} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Frames_1_1Frames}{IO::Astrodynamics::Frames::Frames}}}
 \DoxyCodeLine{16     \{}
 \DoxyCodeLine{17 }
 \DoxyCodeLine{18     \textcolor{keyword}{private}:}
-\DoxyCodeLine{19         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1InertialFrames}{InertialFrames}} mICRF;}
-\DoxyCodeLine{20         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1InertialFrames}{InertialFrames}} mECLIPTIC;}
-\DoxyCodeLine{21         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1InertialFrames}{InertialFrames}} mGALACTIC;}
+\DoxyCodeLine{19         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Frames_1_1InertialFrames}{InertialFrames}} mICRF;}
+\DoxyCodeLine{20         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Frames_1_1InertialFrames}{InertialFrames}} mECLIPTIC;}
+\DoxyCodeLine{21         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Frames_1_1InertialFrames}{InertialFrames}} mGALACTIC;}
 \DoxyCodeLine{22     \textcolor{keyword}{public}:}
-\DoxyCodeLine{28         \textcolor{keyword}{explicit} \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1InertialFrames_a9bb8318906230fdaa9bdf4c333bfad48}{InertialFrames}}(\textcolor{keyword}{const} std::string \&name);}
+\DoxyCodeLine{28         \textcolor{keyword}{explicit} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Frames_1_1InertialFrames_a56ed8afca198f8f55ac765bee95e6ced}{InertialFrames}}(\textcolor{keyword}{const} std::string \&name);}
 \DoxyCodeLine{29 }
-\DoxyCodeLine{30         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1InertialFrames}{IO::SDK::Frames::InertialFrames}}\& \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1InertialFrames_adbe2a8f6faa19b05a4e1ff3441286074}{GetICRF}}();}
-\DoxyCodeLine{31         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1InertialFrames}{IO::SDK::Frames::InertialFrames}}\& \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1InertialFrames_a92006a7170bd0e5514f5567f7feaa838}{Galactic}}();}
-\DoxyCodeLine{32         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1InertialFrames}{IO::SDK::Frames::InertialFrames}}\& \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1InertialFrames_a16c4ea501f371229e4f2d7b2ac97a96a}{Ecliptic}}();}
+\DoxyCodeLine{30         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Frames_1_1InertialFrames}{IO::Astrodynamics::Frames::InertialFrames}}\& \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Frames_1_1InertialFrames_a7601d11328e8744e308ee1af1e41a9a8}{GetICRF}}();}
+\DoxyCodeLine{31         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Frames_1_1InertialFrames}{IO::Astrodynamics::Frames::InertialFrames}}\& \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Frames_1_1InertialFrames_a684b6595afcaa969502e665f59d2e525}{Galactic}}();}
+\DoxyCodeLine{32         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Frames_1_1InertialFrames}{IO::Astrodynamics::Frames::InertialFrames}}\& \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Frames_1_1InertialFrames_a5ca7a845ab2397674cc869d21b66d9be}{Ecliptic}}();}
 \DoxyCodeLine{33     \};}
 \DoxyCodeLine{34 \}}
 \DoxyCodeLine{35 \textcolor{preprocessor}{\#endif }\textcolor{comment}{// ! INERTIAL\_FRAMES\_H}}

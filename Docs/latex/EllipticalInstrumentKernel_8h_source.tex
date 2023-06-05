@@ -1,5 +1,5 @@
 \hypertarget{EllipticalInstrumentKernel_8h_source}{}\doxysection{Elliptical\+Instrument\+Kernel.\+h}
-\label{EllipticalInstrumentKernel_8h_source}\index{IO.SDK/Kernels/EllipticalInstrumentKernel.h@{IO.SDK/Kernels/EllipticalInstrumentKernel.h}}
+\label{EllipticalInstrumentKernel_8h_source}\index{IO.Astrodynamics/Kernels/EllipticalInstrumentKernel.h@{IO.Astrodynamics/Kernels/EllipticalInstrumentKernel.h}}
 \mbox{\hyperlink{EllipticalInstrumentKernel_8h}{Go to the documentation of this file.}}
 \begin{DoxyCode}{0}
 \DoxyCodeLine{1 \textcolor{comment}{/*}}
@@ -13,24 +13,24 @@
 \DoxyCodeLine{9 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{Vector3D_8h}{Vector3D.h}}>}}
 \DoxyCodeLine{10 \textcolor{preprocessor}{\#include <string>}}
 \DoxyCodeLine{11 }
-\DoxyCodeLine{12 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1SDK_1_1Instruments}{IO::SDK::Instruments}}}
+\DoxyCodeLine{12 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Instruments}{IO::Astrodynamics::Instruments}}}
 \DoxyCodeLine{13 \{}
 \DoxyCodeLine{14     \textcolor{keyword}{class }Instrument;}
 \DoxyCodeLine{15 \}}
 \DoxyCodeLine{16 }
-\DoxyCodeLine{17 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1SDK_1_1Kernels}{IO::SDK::Kernels}}}
+\DoxyCodeLine{17 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Kernels}{IO::Astrodynamics::Kernels}}}
 \DoxyCodeLine{18 \{}
-\DoxyCodeLine{23     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1SDK_1_1Kernels_1_1EllipticalInstrumentKernel}{EllipticalInstrumentKernel}} final : \textcolor{keyword}{public} \mbox{\hyperlink{classIO_1_1SDK_1_1Kernels_1_1InstrumentKernel}{IO::SDK::Kernels::InstrumentKernel}}}
+\DoxyCodeLine{23     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1EllipticalInstrumentKernel}{EllipticalInstrumentKernel}} final : \textcolor{keyword}{public} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1InstrumentKernel}{IO::Astrodynamics::Kernels::InstrumentKernel}}}
 \DoxyCodeLine{24     \{}
 \DoxyCodeLine{25     \textcolor{keyword}{private}:}
 \DoxyCodeLine{26         \textcolor{keywordtype}{double} m\_crossAngle\{\};}
 \DoxyCodeLine{27 }
 \DoxyCodeLine{28     \textcolor{keyword}{protected}:}
-\DoxyCodeLine{33         \textcolor{keywordtype}{void} \mbox{\hyperlink{classIO_1_1SDK_1_1Kernels_1_1EllipticalInstrumentKernel_a9a251dcba2ed732f3fd3b5c0df7dad9c}{BuildKernel}}() \textcolor{keyword}{override};}
+\DoxyCodeLine{33         \textcolor{keywordtype}{void} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1EllipticalInstrumentKernel_a48052a5f5684c516130d33a953a7aea0}{BuildKernel}}() \textcolor{keyword}{override};}
 \DoxyCodeLine{34 }
 \DoxyCodeLine{35     \textcolor{keyword}{public}:}
-\DoxyCodeLine{45         \mbox{\hyperlink{classIO_1_1SDK_1_1Kernels_1_1EllipticalInstrumentKernel_a74d98557d0de07f31cb83bcecb6e5ec1}{EllipticalInstrumentKernel}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Instruments_1_1Instrument}{IO::SDK::Instruments::Instrument}} \&instrument, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO::SDK::Math::Vector3D}} \&boresight, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO::SDK::Math::Vector3D}} \&refVector, \textcolor{keywordtype}{double} angle, \textcolor{keywordtype}{double} crossAngle);}
-\DoxyCodeLine{46         \mbox{\hyperlink{classIO_1_1SDK_1_1Kernels_1_1EllipticalInstrumentKernel_a9dcc226ef64deecd2c4d2ec3d1509776}{\string~EllipticalInstrumentKernel}}() \textcolor{keyword}{override} = \textcolor{keywordflow}{default};}
+\DoxyCodeLine{45         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1EllipticalInstrumentKernel_ab52000fe7cabfe4aa6578f7314eafd20}{EllipticalInstrumentKernel}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Instruments_1_1Instrument}{IO::Astrodynamics::Instruments::Instrument}} \&instrument, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO::Astrodynamics::Math::Vector3D}} \&boresight, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO::Astrodynamics::Math::Vector3D}} \&refVector, \textcolor{keywordtype}{double} angle, \textcolor{keywordtype}{double} crossAngle);}
+\DoxyCodeLine{46         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1EllipticalInstrumentKernel_a7d78f43b36bf8c7a0080fd6324be6874}{\string~EllipticalInstrumentKernel}}() \textcolor{keyword}{override} = \textcolor{keywordflow}{default};}
 \DoxyCodeLine{47     \};}
 \DoxyCodeLine{48 \}}
 \DoxyCodeLine{49 }

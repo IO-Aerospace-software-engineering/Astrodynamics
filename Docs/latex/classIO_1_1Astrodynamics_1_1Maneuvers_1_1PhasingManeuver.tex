@@ -1,0 +1,118 @@
+\hypertarget{classIO_1_1Astrodynamics_1_1Maneuvers_1_1PhasingManeuver}{}\doxysection{IO\+::Astrodynamics\+::Maneuvers\+::Phasing\+Maneuver Class Reference}
+\label{classIO_1_1Astrodynamics_1_1Maneuvers_1_1PhasingManeuver}\index{IO::Astrodynamics::Maneuvers::PhasingManeuver@{IO::Astrodynamics::Maneuvers::PhasingManeuver}}
+
+
+{\ttfamily \#include $<$Phasing\+Maneuver.\+h$>$}
+
+Inheritance diagram for IO\+::Astrodynamics\+::Maneuvers\+::Phasing\+Maneuver\+:\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=2.000000cm]{classIO_1_1Astrodynamics_1_1Maneuvers_1_1PhasingManeuver}
+\end{center}
+\end{figure}
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1PhasingManeuver_ae28e019fba43f9211af5c9fbccb0c769}{Phasing\+Maneuver}} (std\+::vector$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Engine}{IO\+::\+Astrodynamics\+::\+Body\+::\+Spacecraft\+::\+Engine}} $\ast$ $>$ engines, \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Propagators_1_1Propagator}{IO\+::\+Astrodynamics\+::\+Propagators\+::\+Propagator}} \&propagator, unsigned revolution\+Number, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}} $>$ target\+Orbit)
+\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1PhasingManeuver_af7aced67e5b640edab7dfbba4e715098}{Phasing\+Maneuver}} (std\+::vector$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Engine}{IO\+::\+Astrodynamics\+::\+Body\+::\+Spacecraft\+::\+Engine}} $\ast$ $>$ engines, \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Propagators_1_1Propagator}{IO\+::\+Astrodynamics\+::\+Propagators\+::\+Propagator}} \&propagator, unsigned revolution\+Number, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}} $>$ target\+Orbit, const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} \&minimum\+Epoch)
+\item 
+bool \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1PhasingManeuver_a0c63523846d3667f1febcf875e012855}{Can\+Execute}} (const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}} \&orbital\+Params) override
+\begin{DoxyCompactList}\small\item\em Evaluate if maneuver can occurs. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsection*{Protected Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+void \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1PhasingManeuver_a7c95a9236ef873d443db3c0887d09d3a}{Compute}} (const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}} \&maneuver\+Point) override
+\begin{DoxyCompactList}\small\item\em Compute impulsive maneuver. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateOrientation}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+State\+Orientation}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1PhasingManeuver_ad8b9d5eec6c249f4511ee0dd5c3b9a6e}{Compute\+Orientation}} (const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}} \&maneuver\+Point) override
+\begin{DoxyCompactList}\small\item\em Compute orientation. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsection*{Additional Inherited Members}
+
+
+\doxysubsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Maneuvers_1_1PhasingManeuver_ae28e019fba43f9211af5c9fbccb0c769}\label{classIO_1_1Astrodynamics_1_1Maneuvers_1_1PhasingManeuver_ae28e019fba43f9211af5c9fbccb0c769}} 
+\index{IO::Astrodynamics::Maneuvers::PhasingManeuver@{IO::Astrodynamics::Maneuvers::PhasingManeuver}!PhasingManeuver@{PhasingManeuver}}
+\index{PhasingManeuver@{PhasingManeuver}!IO::Astrodynamics::Maneuvers::PhasingManeuver@{IO::Astrodynamics::Maneuvers::PhasingManeuver}}
+\doxysubsubsection{\texorpdfstring{PhasingManeuver()}{PhasingManeuver()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Phasing\+Maneuver\+::\+Phasing\+Maneuver (\begin{DoxyParamCaption}\item[{std\+::vector$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Engine}{IO\+::\+Astrodynamics\+::\+Body\+::\+Spacecraft\+::\+Engine}} $\ast$ $>$}]{engines,  }\item[{\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Propagators_1_1Propagator}{IO\+::\+Astrodynamics\+::\+Propagators\+::\+Propagator}} \&}]{propagator,  }\item[{unsigned}]{revolution\+Number,  }\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}} $>$}]{target\+Orbit }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Maneuvers_1_1PhasingManeuver_af7aced67e5b640edab7dfbba4e715098}\label{classIO_1_1Astrodynamics_1_1Maneuvers_1_1PhasingManeuver_af7aced67e5b640edab7dfbba4e715098}} 
+\index{IO::Astrodynamics::Maneuvers::PhasingManeuver@{IO::Astrodynamics::Maneuvers::PhasingManeuver}!PhasingManeuver@{PhasingManeuver}}
+\index{PhasingManeuver@{PhasingManeuver}!IO::Astrodynamics::Maneuvers::PhasingManeuver@{IO::Astrodynamics::Maneuvers::PhasingManeuver}}
+\doxysubsubsection{\texorpdfstring{PhasingManeuver()}{PhasingManeuver()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Phasing\+Maneuver\+::\+Phasing\+Maneuver (\begin{DoxyParamCaption}\item[{std\+::vector$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Engine}{IO\+::\+Astrodynamics\+::\+Body\+::\+Spacecraft\+::\+Engine}} $\ast$ $>$}]{engines,  }\item[{\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Propagators_1_1Propagator}{IO\+::\+Astrodynamics\+::\+Propagators\+::\+Propagator}} \&}]{propagator,  }\item[{unsigned}]{revolution\+Number,  }\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}} $>$}]{target\+Orbit,  }\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} \&}]{minimum\+Epoch }\end{DoxyParamCaption})}
+
+
+
+\doxysubsection{Member Function Documentation}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Maneuvers_1_1PhasingManeuver_a0c63523846d3667f1febcf875e012855}\label{classIO_1_1Astrodynamics_1_1Maneuvers_1_1PhasingManeuver_a0c63523846d3667f1febcf875e012855}} 
+\index{IO::Astrodynamics::Maneuvers::PhasingManeuver@{IO::Astrodynamics::Maneuvers::PhasingManeuver}!CanExecute@{CanExecute}}
+\index{CanExecute@{CanExecute}!IO::Astrodynamics::Maneuvers::PhasingManeuver@{IO::Astrodynamics::Maneuvers::PhasingManeuver}}
+\doxysubsubsection{\texorpdfstring{CanExecute()}{CanExecute()}}
+{\footnotesize\ttfamily bool IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Phasing\+Maneuver\+::\+Can\+Execute (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}} \&}]{orbital\+Params }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Evaluate if maneuver can occurs. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em state\+Vector} & Evaluated to check if condition is satisfied \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+true 
+
+false 
+\end{DoxyReturn}
+
+
+Implements \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_a9bc46694a197868297955930c9edd531}{IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Maneuver\+Base}}.
+
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Maneuvers_1_1PhasingManeuver_a7c95a9236ef873d443db3c0887d09d3a}\label{classIO_1_1Astrodynamics_1_1Maneuvers_1_1PhasingManeuver_a7c95a9236ef873d443db3c0887d09d3a}} 
+\index{IO::Astrodynamics::Maneuvers::PhasingManeuver@{IO::Astrodynamics::Maneuvers::PhasingManeuver}!Compute@{Compute}}
+\index{Compute@{Compute}!IO::Astrodynamics::Maneuvers::PhasingManeuver@{IO::Astrodynamics::Maneuvers::PhasingManeuver}}
+\doxysubsubsection{\texorpdfstring{Compute()}{Compute()}}
+{\footnotesize\ttfamily void IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Phasing\+Maneuver\+::\+Compute (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}} \&}]{maneuver\+Point }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [protected]}, {\ttfamily [virtual]}}
+
+
+
+Compute impulsive maneuver. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em maneuver\+Point} & \\
+\hline
+\end{DoxyParams}
+
+
+Implements \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_a1df25da25e0f4c14744f9b37f29dad90}{IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Maneuver\+Base}}.
+
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Maneuvers_1_1PhasingManeuver_ad8b9d5eec6c249f4511ee0dd5c3b9a6e}\label{classIO_1_1Astrodynamics_1_1Maneuvers_1_1PhasingManeuver_ad8b9d5eec6c249f4511ee0dd5c3b9a6e}} 
+\index{IO::Astrodynamics::Maneuvers::PhasingManeuver@{IO::Astrodynamics::Maneuvers::PhasingManeuver}!ComputeOrientation@{ComputeOrientation}}
+\index{ComputeOrientation@{ComputeOrientation}!IO::Astrodynamics::Maneuvers::PhasingManeuver@{IO::Astrodynamics::Maneuvers::PhasingManeuver}}
+\doxysubsubsection{\texorpdfstring{ComputeOrientation()}{ComputeOrientation()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateOrientation}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+State\+Orientation}} IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Phasing\+Maneuver\+::\+Compute\+Orientation (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}} \&}]{maneuver\+Point }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [protected]}, {\ttfamily [virtual]}}
+
+
+
+Compute orientation. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em maneuver\+Point} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateOrientation}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+State\+Orientation}} 
+\end{DoxyReturn}
+
+
+Implements \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_a9f13935c641a5c447000e5e8cbe54f19}{IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Maneuver\+Base}}.
+
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+IO.\+Astrodynamics/\+Maneuvers/\mbox{\hyperlink{PhasingManeuver_8h}{Phasing\+Maneuver.\+h}}\item 
+IO.\+Astrodynamics/\+Maneuvers/\mbox{\hyperlink{PhasingManeuver_8cpp}{Phasing\+Maneuver.\+cpp}}\end{DoxyCompactItemize}

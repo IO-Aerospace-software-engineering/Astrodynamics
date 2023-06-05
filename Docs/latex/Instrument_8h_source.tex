@@ -1,5 +1,5 @@
 \hypertarget{Instrument_8h_source}{}\doxysection{Instrument.\+h}
-\label{Instrument_8h_source}\index{IO.SDK/Instruments/Instrument.h@{IO.SDK/Instruments/Instrument.h}}
+\label{Instrument_8h_source}\index{IO.Astrodynamics/Instruments/Instrument.h@{IO.Astrodynamics/Instruments/Instrument.h}}
 \mbox{\hyperlink{Instrument_8h}{Go to the documentation of this file.}}
 \begin{DoxyCode}{0}
 \DoxyCodeLine{1 \textcolor{comment}{/*}}
@@ -14,17 +14,17 @@
 \DoxyCodeLine{10 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{InstrumentKernel_8h}{InstrumentKernel.h}}>}}
 \DoxyCodeLine{11 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{Site_8h}{Site.h}}>}}
 \DoxyCodeLine{12 }
-\DoxyCodeLine{13 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1SDK_1_1Body_1_1Spacecraft}{IO::SDK::Body::Spacecraft}}}
+\DoxyCodeLine{13 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Body_1_1Spacecraft}{IO::Astrodynamics::Body::Spacecraft}}}
 \DoxyCodeLine{14 \{}
 \DoxyCodeLine{15     \textcolor{keyword}{class }Spacecraft;}
 \DoxyCodeLine{16 \}}
 \DoxyCodeLine{17 }
-\DoxyCodeLine{18 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1SDK_1_1Frames}{IO::SDK::Frames}}}
+\DoxyCodeLine{18 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Frames}{IO::Astrodynamics::Frames}}}
 \DoxyCodeLine{19 \{}
 \DoxyCodeLine{20     \textcolor{keyword}{class }InstrumentFrameFile;}
 \DoxyCodeLine{21 \}}
 \DoxyCodeLine{22 }
-\DoxyCodeLine{23 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1SDK_1_1Kernels}{IO::SDK::Kernels}}}
+\DoxyCodeLine{23 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Kernels}{IO::Astrodynamics::Kernels}}}
 \DoxyCodeLine{24 \{}
 \DoxyCodeLine{25 }
 \DoxyCodeLine{26     \textcolor{keyword}{class }CircularInstrumentKernel;}
@@ -36,65 +36,65 @@
 \DoxyCodeLine{32     \textcolor{keyword}{class }InstrumentKernel;}
 \DoxyCodeLine{33 \}}
 \DoxyCodeLine{34 }
-\DoxyCodeLine{35 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1SDK_1_1Instruments}{IO::SDK::Instruments}}}
+\DoxyCodeLine{35 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Instruments}{IO::Astrodynamics::Instruments}}}
 \DoxyCodeLine{36 \{}
-\DoxyCodeLine{37     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1SDK_1_1Instruments_1_1Instrument}{Instrument}}}
+\DoxyCodeLine{37     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Instruments_1_1Instrument}{Instrument}}}
 \DoxyCodeLine{38     \{}
 \DoxyCodeLine{39     \textcolor{keyword}{private}:}
-\DoxyCodeLine{40         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft}{IO::SDK::Body::Spacecraft::Spacecraft}} \&m\_spacecraft;}
+\DoxyCodeLine{40         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft}{IO::Astrodynamics::Body::Spacecraft::Spacecraft}} \&m\_spacecraft;}
 \DoxyCodeLine{41         \textcolor{keyword}{const} \textcolor{keywordtype}{int} m\_id\{\};}
 \DoxyCodeLine{42         \textcolor{keyword}{const} std::string m\_name;}
 \DoxyCodeLine{43         \textcolor{keyword}{const} std::string m\_filesPath;}
-\DoxyCodeLine{44         \textcolor{keyword}{const} std::unique\_ptr<IO::SDK::Frames::InstrumentFrameFile> m\_frame\{\textcolor{keyword}{nullptr}\};}
-\DoxyCodeLine{45         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO::SDK::Math::Vector3D}} m\_orientation\{\};}
-\DoxyCodeLine{46         \textcolor{keyword}{const} \mbox{\hyperlink{namespaceIO_1_1SDK_1_1Instruments_a9f6ec163810e86690573e4d0dfec1b9a}{IO::SDK::Instruments::FOVShapeEnum}} m\_fovShape\{\};}
-\DoxyCodeLine{47         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO::SDK::Math::Vector3D}} m\_boresight\{\};}
-\DoxyCodeLine{48         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO::SDK::Math::Vector3D}} m\_fovRefVector\{\};}
-\DoxyCodeLine{49         \textcolor{keyword}{const} std::unique\_ptr<IO::SDK::Kernels::InstrumentKernel> m\_kernel\{\textcolor{keyword}{nullptr}\};}
+\DoxyCodeLine{44         \textcolor{keyword}{const} std::unique\_ptr<IO::Astrodynamics::Frames::InstrumentFrameFile> m\_frame\{\textcolor{keyword}{nullptr}\};}
+\DoxyCodeLine{45         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO::Astrodynamics::Math::Vector3D}} m\_orientation\{\};}
+\DoxyCodeLine{46         \textcolor{keyword}{const} \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Instruments_a0fd4dd367af85a15bb1461db611b365b}{IO::Astrodynamics::Instruments::FOVShapeEnum}} m\_fovShape\{\};}
+\DoxyCodeLine{47         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO::Astrodynamics::Math::Vector3D}} m\_boresight\{\};}
+\DoxyCodeLine{48         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO::Astrodynamics::Math::Vector3D}} m\_fovRefVector\{\};}
+\DoxyCodeLine{49         \textcolor{keyword}{const} std::unique\_ptr<IO::Astrodynamics::Kernels::InstrumentKernel> m\_kernel\{\textcolor{keyword}{nullptr}\};}
 \DoxyCodeLine{50 }
-\DoxyCodeLine{62         \mbox{\hyperlink{classIO_1_1SDK_1_1Instruments_1_1Instrument}{Instrument}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft}{IO::SDK::Body::Spacecraft::Spacecraft}} \&spacecraft, \textcolor{keywordtype}{unsigned} \textcolor{keywordtype}{short} \textcolor{keywordtype}{id}, \textcolor{keyword}{const} std::string \&name, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO::SDK::Math::Vector3D}} \&orientation,}
-\DoxyCodeLine{63                    \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO::SDK::Math::Vector3D}} \&boresight, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO::SDK::Math::Vector3D}} \&fovRefVector, \textcolor{keywordtype}{double} fovAngle);}
+\DoxyCodeLine{62         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Instruments_1_1Instrument}{Instrument}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft}{IO::Astrodynamics::Body::Spacecraft::Spacecraft}} \&spacecraft, \textcolor{keywordtype}{unsigned} \textcolor{keywordtype}{short} \textcolor{keywordtype}{id}, \textcolor{keyword}{const} std::string \&name, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO::Astrodynamics::Math::Vector3D}} \&orientation,}
+\DoxyCodeLine{63                    \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO::Astrodynamics::Math::Vector3D}} \&boresight, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO::Astrodynamics::Math::Vector3D}} \&fovRefVector, \textcolor{keywordtype}{double} fovAngle);}
 \DoxyCodeLine{64 }
-\DoxyCodeLine{78         \mbox{\hyperlink{classIO_1_1SDK_1_1Instruments_1_1Instrument}{Instrument}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft}{IO::SDK::Body::Spacecraft::Spacecraft}} \&spacecraft, \textcolor{keywordtype}{unsigned} \textcolor{keywordtype}{short} \textcolor{keywordtype}{id}, \textcolor{keyword}{const} std::string \&name, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO::SDK::Math::Vector3D}} \&orientation,}
-\DoxyCodeLine{79                    \mbox{\hyperlink{namespaceIO_1_1SDK_1_1Instruments_a9f6ec163810e86690573e4d0dfec1b9a}{IO::SDK::Instruments::FOVShapeEnum}} fovShape, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO::SDK::Math::Vector3D}} \&boresight, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO::SDK::Math::Vector3D}} \&fovRefVector, \textcolor{keywordtype}{double} fovAngle,}
+\DoxyCodeLine{78         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Instruments_1_1Instrument}{Instrument}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft}{IO::Astrodynamics::Body::Spacecraft::Spacecraft}} \&spacecraft, \textcolor{keywordtype}{unsigned} \textcolor{keywordtype}{short} \textcolor{keywordtype}{id}, \textcolor{keyword}{const} std::string \&name, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO::Astrodynamics::Math::Vector3D}} \&orientation,}
+\DoxyCodeLine{79                    \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Instruments_a0fd4dd367af85a15bb1461db611b365b}{IO::Astrodynamics::Instruments::FOVShapeEnum}} fovShape, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO::Astrodynamics::Math::Vector3D}} \&boresight, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO::Astrodynamics::Math::Vector3D}} \&fovRefVector, \textcolor{keywordtype}{double} fovAngle,}
 \DoxyCodeLine{80                    \textcolor{keywordtype}{double} crossAngle);}
 \DoxyCodeLine{81 }
 \DoxyCodeLine{82     \textcolor{keyword}{public}:}
-\DoxyCodeLine{83         \mbox{\hyperlink{classIO_1_1SDK_1_1Instruments_1_1Instrument_ac678c301ad82154dddccbf4ddcb2a45b}{\string~Instrument}}() = \textcolor{keywordflow}{default};}
+\DoxyCodeLine{83         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Instruments_1_1Instrument_a5549c506f822d75498fc5a86b1dd79de}{\string~Instrument}}() = \textcolor{keywordflow}{default};}
 \DoxyCodeLine{84 }
-\DoxyCodeLine{90         [[nodiscard]] std::string \mbox{\hyperlink{classIO_1_1SDK_1_1Instruments_1_1Instrument_ad48012eb7fe85f98520127fed4dfcc83}{GetFilesPath}}() \textcolor{keyword}{const};}
+\DoxyCodeLine{90         [[nodiscard]] std::string \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Instruments_1_1Instrument_adb572d71a9891e447b94de2d59d5ea47}{GetFilesPath}}() \textcolor{keyword}{const};}
 \DoxyCodeLine{91 }
-\DoxyCodeLine{97         [[nodiscard]] std::string \mbox{\hyperlink{classIO_1_1SDK_1_1Instruments_1_1Instrument_aa33eae21a590349a69d5fa120c586249}{GetName}}() \textcolor{keyword}{const};}
+\DoxyCodeLine{97         [[nodiscard]] std::string \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Instruments_1_1Instrument_af2a9cd2a34a94ab166a479938cebdf67}{GetName}}() \textcolor{keyword}{const};}
 \DoxyCodeLine{98 }
-\DoxyCodeLine{104         [[nodiscard]] \textcolor{keywordtype}{int} \mbox{\hyperlink{classIO_1_1SDK_1_1Instruments_1_1Instrument_af75a9a634ec6a2982976fdf336726d92}{GetId}}() \textcolor{keyword}{const};}
+\DoxyCodeLine{104         [[nodiscard]] \textcolor{keywordtype}{int} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Instruments_1_1Instrument_a67cf5001b0392d7c32de0b8ab8da7d6a}{GetId}}() \textcolor{keyword}{const};}
 \DoxyCodeLine{105 }
-\DoxyCodeLine{111         [[nodiscard]] \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft}{IO::SDK::Body::Spacecraft::Spacecraft}} \&\mbox{\hyperlink{classIO_1_1SDK_1_1Instruments_1_1Instrument_a853610ef36cfe48496957d7fb0cf7267}{GetSpacecraft}}() \textcolor{keyword}{const};}
+\DoxyCodeLine{111         [[nodiscard]] \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft}{IO::Astrodynamics::Body::Spacecraft::Spacecraft}} \&\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Instruments_1_1Instrument_a446669e4ddfefcafe427e5aa78884170}{GetSpacecraft}}() \textcolor{keyword}{const};}
 \DoxyCodeLine{112 }
-\DoxyCodeLine{118         [[nodiscard]] \textcolor{keyword}{const} std::unique\_ptr<IO::SDK::Frames::InstrumentFrameFile> \&\mbox{\hyperlink{classIO_1_1SDK_1_1Instruments_1_1Instrument_a507debd3d58ec879bc46a09fe34ec5b6}{GetFrame}}() \textcolor{keyword}{const};}
+\DoxyCodeLine{118         [[nodiscard]] \textcolor{keyword}{const} std::unique\_ptr<IO::Astrodynamics::Frames::InstrumentFrameFile> \&\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Instruments_1_1Instrument_a866845d533c655fc250faa42d0ce5cbc}{GetFrame}}() \textcolor{keyword}{const};}
 \DoxyCodeLine{119 }
-\DoxyCodeLine{125         [[nodiscard]] \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO::SDK::Math::Vector3D}} \mbox{\hyperlink{classIO_1_1SDK_1_1Instruments_1_1Instrument_aa6f77570a793a4f4312c9b16fe571d66}{GetBoresight}}() \textcolor{keyword}{const};}
+\DoxyCodeLine{125         [[nodiscard]] \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO::Astrodynamics::Math::Vector3D}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Instruments_1_1Instrument_a5beca512d43f5873e7705ba190f2f116}{GetBoresight}}() \textcolor{keyword}{const};}
 \DoxyCodeLine{126 }
-\DoxyCodeLine{133         [[nodiscard]] \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO::SDK::Math::Vector3D}} \mbox{\hyperlink{classIO_1_1SDK_1_1Instruments_1_1Instrument_aa6f77570a793a4f4312c9b16fe571d66}{GetBoresight}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Frames_1_1Frames}{IO::SDK::Frames::Frames}} \&frame, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO::SDK::Time::TDB}} \&epoch) \textcolor{keyword}{const};}
+\DoxyCodeLine{133         [[nodiscard]] \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO::Astrodynamics::Math::Vector3D}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Instruments_1_1Instrument_a5beca512d43f5873e7705ba190f2f116}{GetBoresight}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Frames_1_1Frames}{IO::Astrodynamics::Frames::Frames}} \&frame, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO::Astrodynamics::Time::TDB}} \&epoch) \textcolor{keyword}{const};}
 \DoxyCodeLine{134 }
-\DoxyCodeLine{140         [[nodiscard]] \mbox{\hyperlink{namespaceIO_1_1SDK_1_1Instruments_a9f6ec163810e86690573e4d0dfec1b9a}{IO::SDK::Instruments::FOVShapeEnum}} \mbox{\hyperlink{classIO_1_1SDK_1_1Instruments_1_1Instrument_a0057e7de1e5f8c090bc9dc513a09cca3}{GetFOVShape}}() \textcolor{keyword}{const};}
+\DoxyCodeLine{140         [[nodiscard]] \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Instruments_a0fd4dd367af85a15bb1461db611b365b}{IO::Astrodynamics::Instruments::FOVShapeEnum}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Instruments_1_1Instrument_a977f64c22ecdb747027332818e91b7de}{GetFOVShape}}() \textcolor{keyword}{const};}
 \DoxyCodeLine{141 }
-\DoxyCodeLine{147         [[nodiscard]] std::vector<IO::SDK::Math::Vector3D> \mbox{\hyperlink{classIO_1_1SDK_1_1Instruments_1_1Instrument_ae295a6c847553a08b9ebb87004b9594e}{GetFOVBoundaries}}() \textcolor{keyword}{const};}
+\DoxyCodeLine{147         [[nodiscard]] std::vector<IO::Astrodynamics::Math::Vector3D> \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Instruments_1_1Instrument_aca8c8e00a5023d9a8fa7bee6776ec0bd}{GetFOVBoundaries}}() \textcolor{keyword}{const};}
 \DoxyCodeLine{148 }
-\DoxyCodeLine{157         [[nodiscard]] std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>>}
-\DoxyCodeLine{158         \mbox{\hyperlink{classIO_1_1SDK_1_1Instruments_1_1Instrument_a6c4116675100fb79d598889b2465fb9a}{FindWindowsWhereInFieldOfView}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO::SDK::Time::Window<IO::SDK::Time::TDB>}} \&searchWindow, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body}{IO::SDK::Body::Body}} \&targetBody,}
-\DoxyCodeLine{159                                       \textcolor{keyword}{const} \mbox{\hyperlink{namespaceIO_1_1SDK_abbb4827ec6a24ad346d9a60473ad3b81}{IO::SDK::AberrationsEnum}} \&aberration, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO::SDK::Time::TimeSpan}} \&stepSize) \textcolor{keyword}{const};}
+\DoxyCodeLine{157         [[nodiscard]] std::vector<IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB>>}
+\DoxyCodeLine{158         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Instruments_1_1Instrument_ac44aaa6f406753af1b2538af846732ba}{FindWindowsWhereInFieldOfView}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB>}} \&searchWindow, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Body}{IO::Astrodynamics::Body::Body}} \&targetBody,}
+\DoxyCodeLine{159                                       \textcolor{keyword}{const} \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_af0023a81d12385b73d78bd82e4b96ce3}{IO::Astrodynamics::AberrationsEnum}} \&aberration, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO::Astrodynamics::Time::TimeSpan}} \&stepSize) \textcolor{keyword}{const};}
 \DoxyCodeLine{160 }
 \DoxyCodeLine{161 }
-\DoxyCodeLine{170         [[nodiscard]] std::vector<IO::SDK::Time::Window<IO::SDK::Time::TDB>>}
-\DoxyCodeLine{171         \mbox{\hyperlink{classIO_1_1SDK_1_1Instruments_1_1Instrument_a6c4116675100fb79d598889b2465fb9a}{FindWindowsWhereInFieldOfView}}(}
-\DoxyCodeLine{172                 \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO::SDK::Time::Window<IO::SDK::Time::TDB>}} \&searchWindow, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site}{IO::SDK::Sites::Site}} \&site,}
-\DoxyCodeLine{173                 \textcolor{keyword}{const} \mbox{\hyperlink{namespaceIO_1_1SDK_abbb4827ec6a24ad346d9a60473ad3b81}{IO::SDK::AberrationsEnum}} \&aberration,}
-\DoxyCodeLine{174                 \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO::SDK::Time::TimeSpan}} \&stepSize}
+\DoxyCodeLine{170         [[nodiscard]] std::vector<IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB>>}
+\DoxyCodeLine{171         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Instruments_1_1Instrument_ac44aaa6f406753af1b2538af846732ba}{FindWindowsWhereInFieldOfView}}(}
+\DoxyCodeLine{172                 \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB>}} \&searchWindow, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1Site}{IO::Astrodynamics::Sites::Site}} \&site,}
+\DoxyCodeLine{173                 \textcolor{keyword}{const} \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_af0023a81d12385b73d78bd82e4b96ce3}{IO::Astrodynamics::AberrationsEnum}} \&aberration,}
+\DoxyCodeLine{174                 \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO::Astrodynamics::Time::TimeSpan}} \&stepSize}
 \DoxyCodeLine{175         ) \textcolor{keyword}{const};}
 \DoxyCodeLine{176 }
-\DoxyCodeLine{181         [[nodiscard]] \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO::SDK::Math::Vector3D}} \mbox{\hyperlink{classIO_1_1SDK_1_1Instruments_1_1Instrument_a9a43beaf8232330372883951ac8bc176}{GetBoresightInSpacecraftFrame}}() \textcolor{keyword}{const};}
+\DoxyCodeLine{181         [[nodiscard]] \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO::Astrodynamics::Math::Vector3D}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Instruments_1_1Instrument_a9d7cf888a7cc6d88272927acda4c9c65}{GetBoresightInSpacecraftFrame}}() \textcolor{keyword}{const};}
 \DoxyCodeLine{182 }
-\DoxyCodeLine{183         \textcolor{keyword}{friend} \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Spacecraft_1_1Spacecraft}{IO::SDK::Body::Spacecraft::Spacecraft}};}
+\DoxyCodeLine{183         \textcolor{keyword}{friend} \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft}{IO::Astrodynamics::Body::Spacecraft::Spacecraft}};}
 \DoxyCodeLine{184     \};}
 \DoxyCodeLine{185 \}}
 \DoxyCodeLine{186 }

@@ -1,5 +1,5 @@
 \hypertarget{Illumination_8h_source}{}\doxysection{Illumination.\+h}
-\label{Illumination_8h_source}\index{IO.SDK/Illumination/Illumination.h@{IO.SDK/Illumination/Illumination.h}}
+\label{Illumination_8h_source}\index{IO.Astrodynamics/Illumination/Illumination.h@{IO.Astrodynamics/Illumination/Illumination.h}}
 \mbox{\hyperlink{Illumination_8h}{Go to the documentation of this file.}}
 \begin{DoxyCode}{0}
 \DoxyCodeLine{1 \textcolor{comment}{/*}}
@@ -13,43 +13,43 @@
 \DoxyCodeLine{9 }
 \DoxyCodeLine{10 \textcolor{preprocessor}{\#include <utility>}}
 \DoxyCodeLine{11 }
-\DoxyCodeLine{12 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1SDK_1_1Illumination}{IO::SDK::Illumination}}}
+\DoxyCodeLine{12 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Illumination}{IO::Astrodynamics::Illumination}}}
 \DoxyCodeLine{13 \{}
-\DoxyCodeLine{14     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1SDK_1_1Illumination_1_1Illumination}{Illumination}} final}
+\DoxyCodeLine{14     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Illumination_1_1Illumination}{Illumination}} final}
 \DoxyCodeLine{15     \{}
 \DoxyCodeLine{16     \textcolor{keyword}{private}:}
 \DoxyCodeLine{17         }
-\DoxyCodeLine{18         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO::SDK::Math::Vector3D}} m\_observerToSurfacePoint\{\};}
+\DoxyCodeLine{18         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO::Astrodynamics::Math::Vector3D}} m\_observerToSurfacePoint\{\};}
 \DoxyCodeLine{19         \textcolor{keyword}{const} \textcolor{keywordtype}{double} m\_phaseAngle\{\};}
 \DoxyCodeLine{20         \textcolor{keyword}{const} \textcolor{keywordtype}{double} m\_incidence\{\};}
 \DoxyCodeLine{21         \textcolor{keyword}{const} \textcolor{keywordtype}{double} m\_emission\{\};}
-\DoxyCodeLine{22         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO::SDK::Time::TDB}} m\_targetEpoch;}
+\DoxyCodeLine{22         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO::Astrodynamics::Time::TDB}} m\_targetEpoch;}
 \DoxyCodeLine{23 }
 \DoxyCodeLine{24     \textcolor{keyword}{public}:}
-\DoxyCodeLine{34         \mbox{\hyperlink{classIO_1_1SDK_1_1Illumination_1_1Illumination_a55f48940ef83a1647c8b3b7d472db910}{Illumination}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO::SDK::Math::Vector3D}}\& observerToSurfacePoint, \textcolor{keywordtype}{double} phaseAngle, \textcolor{keywordtype}{double} incidence, \textcolor{keywordtype}{double} emission, \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO::SDK::Time::TDB}}  targetEpoch)}
+\DoxyCodeLine{34         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Illumination_1_1Illumination_a244695b6f2b9501d69772f0965cf64d6}{Illumination}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO::Astrodynamics::Math::Vector3D}}\& observerToSurfacePoint, \textcolor{keywordtype}{double} phaseAngle, \textcolor{keywordtype}{double} incidence, \textcolor{keywordtype}{double} emission, \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO::Astrodynamics::Time::TDB}}  targetEpoch)}
 \DoxyCodeLine{35             :m\_observerToSurfacePoint\{ observerToSurfacePoint \}, m\_phaseAngle\{ phaseAngle \}, m\_incidence\{ incidence \}, m\_emission\{ emission \}, m\_targetEpoch\{std::move( targetEpoch )\} \{\};}
 \DoxyCodeLine{36 }
-\DoxyCodeLine{42         [[nodiscard]] \textcolor{keyword}{inline} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO::SDK::Time::TDB}} \mbox{\hyperlink{classIO_1_1SDK_1_1Illumination_1_1Illumination_a311e6b9c9b245b99f4ff566aaef6c242}{GetEpoch}}()\textcolor{keyword}{ const}}
+\DoxyCodeLine{42         [[nodiscard]] \textcolor{keyword}{inline} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO::Astrodynamics::Time::TDB}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Illumination_1_1Illumination_a888939ad70f0a717d1229fe865c7e40e}{GetEpoch}}()\textcolor{keyword}{ const}}
 \DoxyCodeLine{43 \textcolor{keyword}{        }\{}
 \DoxyCodeLine{44             \textcolor{keywordflow}{return} m\_targetEpoch;}
 \DoxyCodeLine{45         \}}
 \DoxyCodeLine{46 }
-\DoxyCodeLine{52         [[nodiscard]] \textcolor{keyword}{inline} \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Math_1_1Vector3D}{IO::SDK::Math::Vector3D}}\& \mbox{\hyperlink{classIO_1_1SDK_1_1Illumination_1_1Illumination_aa588c6799139400c905e5812a1527168}{GetObserverToSurfacePoint}}()\textcolor{keyword}{ const}}
+\DoxyCodeLine{52         [[nodiscard]] \textcolor{keyword}{inline} \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO::Astrodynamics::Math::Vector3D}}\& \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Illumination_1_1Illumination_a19c3a23a12c6be6f0e7b699deec9932a}{GetObserverToSurfacePoint}}()\textcolor{keyword}{ const}}
 \DoxyCodeLine{53 \textcolor{keyword}{        }\{}
 \DoxyCodeLine{54             \textcolor{keywordflow}{return} m\_observerToSurfacePoint;}
 \DoxyCodeLine{55         \}}
 \DoxyCodeLine{56 }
-\DoxyCodeLine{62         [[nodiscard]] \textcolor{keyword}{inline} \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1SDK_1_1Illumination_1_1Illumination_ad7d155af319dbfa35d84252ca9369490}{GetPhaseAngle}}()\textcolor{keyword}{ const}}
+\DoxyCodeLine{62         [[nodiscard]] \textcolor{keyword}{inline} \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Illumination_1_1Illumination_ac083c64921235154f604e8a229f8f6b8}{GetPhaseAngle}}()\textcolor{keyword}{ const}}
 \DoxyCodeLine{63 \textcolor{keyword}{        }\{}
 \DoxyCodeLine{64             \textcolor{keywordflow}{return} m\_phaseAngle;}
 \DoxyCodeLine{65         \}}
 \DoxyCodeLine{66 }
-\DoxyCodeLine{72         [[nodiscard]] \textcolor{keyword}{inline} \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1SDK_1_1Illumination_1_1Illumination_a12daed0ef126144148280c15e0815e33}{GetIncidence}}()\textcolor{keyword}{ const}}
+\DoxyCodeLine{72         [[nodiscard]] \textcolor{keyword}{inline} \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Illumination_1_1Illumination_a9d190b9e888eb14da6c10966782f362f}{GetIncidence}}()\textcolor{keyword}{ const}}
 \DoxyCodeLine{73 \textcolor{keyword}{        }\{}
 \DoxyCodeLine{74             \textcolor{keywordflow}{return} m\_incidence;}
 \DoxyCodeLine{75         \}}
 \DoxyCodeLine{76 }
-\DoxyCodeLine{82         [[nodiscard]] \textcolor{keyword}{inline} \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1SDK_1_1Illumination_1_1Illumination_abe16720e67957eb04fc78fbb134ed889}{GetEmission}}()\textcolor{keyword}{ const}}
+\DoxyCodeLine{82         [[nodiscard]] \textcolor{keyword}{inline} \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Illumination_1_1Illumination_a0fc150fbc8776fc8ba2ce6842c6d67ec}{GetEmission}}()\textcolor{keyword}{ const}}
 \DoxyCodeLine{83 \textcolor{keyword}{        }\{}
 \DoxyCodeLine{84             \textcolor{keywordflow}{return} m\_emission;}
 \DoxyCodeLine{85         \}}
