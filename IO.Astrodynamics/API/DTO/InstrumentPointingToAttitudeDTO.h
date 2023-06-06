@@ -14,8 +14,7 @@ namespace IO::Astrodynamics::API::DTO
     struct InstrumentPointingToAttitudeDTO
     {
         int instrumentId{0};
-        int targetBodyId{-1};
-        int targetSiteId{-1};
+        int targetId{-1};
         int maneuverOrder{-1};
         char* engines[5]{};
         double attitudeHoldDuration{0.0};

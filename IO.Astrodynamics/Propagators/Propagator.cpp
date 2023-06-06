@@ -28,9 +28,10 @@ void IO::Astrodynamics::Propagators::Propagator::Propagate()
     IO::Astrodynamics::OrbitalParameters::StateOrientation attitude(stateVector.GetPosition().Normalize().To(m_spacecraft.Front), IO::Astrodynamics::Math::Vector3D(0.0, 0.0, 0.0),
                                                           stateVector.GetEpoch(), stateVector.GetFrame());
 
+    //TODO
     // Initial alignment, Spacecraft is aligned to ICRF frame
-//    IO::Astrodynamics::OrbitalParameters::StateOrientation initialAttitude(IO::Astrodynamics::Math::Quaternion(1.0, 0.0, 0.0, 0.0), IO::Astrodynamics::Math::Vector3D::Zero, stateVector.GetEpoch(),
-//                                                                 Frames::InertialFrames::GetICRF());
+    //    IO::Astrodynamics::OrbitalParameters::StateOrientation initialAttitude(IO::Astrodynamics::Math::Quaternion(1.0, 0.0, 0.0, 0.0), IO::Astrodynamics::Math::Vector3D::Zero, stateVector.GetEpoch(),
+    //                                                                 Frames::InertialFrames::GetICRF());
     AddStateOrientation(attitude);
 
     //Update Spacecraft orbital parameters
