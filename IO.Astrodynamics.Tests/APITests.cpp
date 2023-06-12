@@ -9,22 +9,26 @@
 #include "NadirAttitude.h"
 #include <Converters.cpp>
 
-TEST(API, DTOSize) {
+TEST(API, DTOSize)
+{
     auto size2 = sizeof(IO::Astrodynamics::API::DTO::ScenarioDTO);
     ASSERT_EQ(18776, size2);
 }
 
-TEST(API, TDBToString) {
+TEST(API, TDBToString)
+{
     auto res = TDBToStringProxy(0.0);
     ASSERT_STREQ("2000-01-01 12:00:00.000000 (TDB)", res);
 }
 
-TEST(API, UTCToString) {
+TEST(API, UTCToString)
+{
     auto res = UTCToStringProxy(0.0);
     ASSERT_STREQ("2000-01-01 12:00:00.000000 (UTC)", res);
 }
 
-TEST(API, SiteAndSpacecraftPropagation) {
+TEST(API, SiteAndSpacecraftPropagation)
+{
     //Configure site
     IO::Astrodynamics::API::DTO::ScenarioDTO scenario{};
     scenario.Name = "scenatiosites";
@@ -193,7 +197,9 @@ TEST(API, FindWindowsOnOccultationConstraintProxy) {
     ASSERT_STREQ("2001-12-14 21:35:49.100520 (TDB)", ToTDBWindow(windows[0]).GetEndDate().ToString().c_str());
 }
 
-TEST(API, FindWindowsInFieldOfViewConstraintProxy) {
+
+TEST(API, FindWindowsInFieldOfViewConstraintProxy)
+{
     IO::Astrodynamics::Math::Vector3D orientation{1.0, 0.0, 0.0};
     IO::Astrodynamics::Math::Vector3D boresight{0.0, 0.0, 1.0};
     IO::Astrodynamics::Math::Vector3D fovvector{1.0, 0.0, 0.0};

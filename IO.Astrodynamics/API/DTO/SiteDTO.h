@@ -24,9 +24,6 @@ namespace IO::Astrodynamics::API::DTO
         IO::Astrodynamics::API::DTO::GeodeticDTO coordinates{};
         IO::Astrodynamics::API::DTO::AzimuthRangeDTO ranges[10]{};
         const char *directoryPath{};
-//        IO::Astrodynamics::API::DTO::BodyVisibilityFromSiteConstraintDTO bodyVisibilityFromSites[10];
-//        IO::Astrodynamics::API::DTO::ByDayConstraintDTO byDay;
-//        IO::Astrodynamics::API::DTO::ByNightConstraintDTO byNight;
     };
 }
 #endif //IOSDK_SITEDTO_H
