@@ -55,12 +55,13 @@ void LaunchProxy(IO::Astrodynamics::API::DTO::LaunchDTO &launchDto)
     for (size_t i = 0; i < res.size(); ++i)
     {
         launchDto.windows[i] = ToWindowDTO(res[i].GetWindow());
-        launchDto.inertialAzimuth = res[i].GetInertialAzimuth();
-        launchDto.nonInertialAzimuth = res[i].GetNonInertialAzimuth();
-        launchDto.inertialInsertionVelocity = res[i].GetInertialInsertionVelocity();
-        launchDto.nonInertialInsertionVelocity = res[i].GetNonInertialInsertionVelocity();
+        launchDto.inertialAzimuth[i] = res[i].GetInertialAzimuth();
+        launchDto.nonInertialAzimuth[i] = res[i].GetNonInertialAzimuth();
+        launchDto.inertialInsertionVelocity[i] = res[i].GetInertialInsertionVelocity();
+        launchDto.nonInertialInsertionVelocity[i] = res[i].GetNonInertialInsertionVelocity();
     }
 }
+
 
 void PropagateProxy(IO::Astrodynamics::API::DTO::ScenarioDTO &scenarioDto)
 {

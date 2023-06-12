@@ -75,7 +75,6 @@ ReadOrientationProxy(IO::Astrodynamics::API::DTO::WindowDTO searchWindow, int sp
 MODULE_API void PropagateProxy(IO::Astrodynamics::API::DTO::ScenarioDTO &scenarioDto);
 
 
-
 /**
  * Evaluate launch windows
  * @param launchDto

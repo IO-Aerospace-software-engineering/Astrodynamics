@@ -4,6 +4,7 @@
 
 #ifndef IOSDK_LAUNCHDTO_H
 #define IOSDK_LAUNCHDTO_H
+
 #include <StateVectorDTO.h>
 #include "SiteDTO.h"
 
@@ -17,11 +18,11 @@ namespace IO::Astrodynamics::API::DTO
         bool launchByDay{};
         double initialStepSize{1.0};
         IO::Astrodynamics::API::DTO::StateVectorDTO targetOrbit;
-        double inertialAzimuth{0.0};
-        double nonInertialAzimuth{0.0};
+        double inertialAzimuth[100]{};
+        double nonInertialAzimuth[100]{};
 
-        double nonInertialInsertionVelocity{0.0};
-        double inertialInsertionVelocity{0.0};
+        double nonInertialInsertionVelocity[100]{};
+        double inertialInsertionVelocity[100]{};
 
         IO::Astrodynamics::API::DTO::WindowDTO windows[100]{};
     };

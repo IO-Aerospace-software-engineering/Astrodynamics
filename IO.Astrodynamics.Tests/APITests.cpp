@@ -193,7 +193,6 @@ TEST(API, FindWindowsOnOccultationConstraintProxy) {
     ASSERT_STREQ("2001-12-14 21:35:49.100520 (TDB)", ToTDBWindow(windows[0]).GetEndDate().ToString().c_str());
 }
 
-
 TEST(API, FindWindowsInFieldOfViewConstraintProxy) {
     IO::Astrodynamics::Math::Vector3D orientation{1.0, 0.0, 0.0};
     IO::Astrodynamics::Math::Vector3D boresight{0.0, 0.0, 1.0};
