@@ -3,11 +3,13 @@
  */
 #include <PropagatorException.h>
 #include <ManeuverBase.h>
+#include <InertialFrames.h>
 
 using namespace std::chrono_literals;
 
-IO::Astrodynamics::Propagators::Propagator::Propagator(const IO::Astrodynamics::Body::Spacecraft::Spacecraft &spacecraft, const IO::Astrodynamics::Integrators::IntegratorBase &integrator,
-                                             const IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB> &window)
+IO::Astrodynamics::Propagators::Propagator::Propagator(const IO::Astrodynamics::Body::Spacecraft::Spacecraft &spacecraft,
+                                                       const IO::Astrodynamics::Integrators::IntegratorBase &integrator,
+                                                       const IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB> &window)
         : m_spacecraft{spacecraft}, m_integrator{const_cast<IO::Astrodynamics::Integrators::IntegratorBase &>(integrator)}, m_window{window}
 {
     m_StateOrientations.emplace_back();
@@ -24,15 +26,15 @@ void IO::Astrodynamics::Propagators::Propagator::Propagate()
     IO::Astrodynamics::OrbitalParameters::StateVector stateVector{m_spacecraft.GetOrbitalParametersAtEpoch()->ToStateVector(m_window.GetStartDate())};
     m_stateVectors.push_back(stateVector);
 
-    // Initial alignment, Spacecraft back points toward the center of motion
-    IO::Astrodynamics::OrbitalParameters::StateOrientation attitude(stateVector.GetPosition().Normalize().To(m_spacecraft.Front), IO::Astrodynamics::Math::Vector3D(0.0, 0.0, 0.0),
-                                                          stateVector.GetEpoch(), stateVector.GetFrame());
+//    // Initial alignment, Spacecraft back points toward the center of motion
+//    IO::Astrodynamics::OrbitalParameters::StateOrientation attitude(m_spacecraft.Front.To(stateVector.GetPosition().Normalize()), IO::Astrodynamics::Math::Vector3D(0.0, 0.0, 0.0),
+//                                                          stateVector.GetEpoch(), stateVector.GetFrame());
 
     //TODO
-    // Initial alignment, Spacecraft is aligned to ICRF frame
-    //    IO::Astrodynamics::OrbitalParameters::StateOrientation initialAttitude(IO::Astrodynamics::Math::Quaternion(1.0, 0.0, 0.0, 0.0), IO::Astrodynamics::Math::Vector3D::Zero, stateVector.GetEpoch(),
-    //                                                                 Frames::InertialFrames::GetICRF());
-    AddStateOrientation(attitude);
+    //Initial alignment, Spacecraft is aligned to ICRF frame
+    IO::Astrodynamics::OrbitalParameters::StateOrientation initialAttitude(IO::Astrodynamics::Math::Quaternion(1.0, 0.0, 0.0, 0.0), IO::Astrodynamics::Math::Vector3D::Zero,
+                                                                           stateVector.GetEpoch(), Frames::InertialFrames::GetICRF());
+    AddStateOrientation(initialAttitude);
 
     //Update Spacecraft orbital parameters
     while (stateVector.GetEpoch() < m_window.GetEndDate())
@@ -59,7 +61,8 @@ void IO::Astrodynamics::Propagators::Propagator::Propagate()
     //Add the latest known orientation at the end of kernel
     auto latestAttitude = m_StateOrientations.back().back();
     AddStateOrientation(
-            IO::Astrodynamics::OrbitalParameters::StateOrientation(latestAttitude.GetQuaternion(), IO::Astrodynamics::Math::Vector3D::Zero, m_window.GetEndDate(), latestAttitude.GetFrame()));
+            IO::Astrodynamics::OrbitalParameters::StateOrientation(latestAttitude.GetQuaternion(), IO::Astrodynamics::Math::Vector3D::Zero, m_window.GetEndDate(),
+                                                                   latestAttitude.GetFrame()));
     m_spacecraft.WriteOrientations(m_StateOrientations);
 }
 

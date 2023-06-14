@@ -259,9 +259,7 @@ const char *UTCToStringProxy(double secondsFromJ2000)
     return strdup(str.c_str());
 }
 
-void ReadEphemerisProxy(IO::Astrodynamics::API::DTO::WindowDTO searchWindow, int observerId, int targetId,
-                        const char *frame,
-                        const char *aberration, double stepSize,
+void ReadEphemerisProxy(IO::Astrodynamics::API::DTO::WindowDTO searchWindow, int observerId, int targetId, const char *frame, const char *aberration, double stepSize,
                         IO::Astrodynamics::API::DTO::StateVectorDTO *stateVectors)
 {
     if ((searchWindow.end - searchWindow.start) / stepSize > 10000)
@@ -274,22 +272,7 @@ void ReadEphemerisProxy(IO::Astrodynamics::API::DTO::WindowDTO searchWindow, int
     while (epoch <= searchWindow.end)
     {
 
-        SpiceDouble vs[6];
-        SpiceDouble lt;
-        spkezr_c(std::to_string(targetId).c_str(), epoch, frame, aberration, std::to_string(observerId).c_str(), vs,
-                 &lt);
-
-        stateVectors[idx].centerOfMotionId = observerId;
-
-        stateVectors[idx].epoch = epoch;
-        stateVectors[idx].inertialFrame = strdup(frame);
-        stateVectors[idx].position.x = vs[0] * 1000.0;
-        stateVectors[idx].position.y = vs[1] * 1000.0;
-        stateVectors[idx].position.z = vs[2] * 1000.0;
-        stateVectors[idx].velocity.x = vs[3] * 1000.0;
-        stateVectors[idx].velocity.y = vs[4] * 1000.0;
-        stateVectors[idx].velocity.z = vs[5] * 1000.0;
-
+        stateVectors[idx] = ReadEphemerisAtGivenEpochProxy(epoch, observerId, targetId, frame, aberration);
         epoch += stepSize;
         idx++;
     }
@@ -1282,6 +1265,27 @@ void BuildZenithAttitude(IO::Astrodynamics::API::DTO::ScenarioDTO &scenarioDto, 
                         std::chrono::duration<double>(
                                 maneuver.attitudeHoldDuration)));
     }
+}
+
+IO::Astrodynamics::API::DTO::StateVectorDTO ReadEphemerisAtGivenEpochProxy(double epoch, int observerId, int targetId, const char *frame, const char *aberration)
+{
+
+    IO::Astrodynamics::API::DTO::StateVectorDTO stateVectorDto;
+    SpiceDouble sv[6];
+    SpiceDouble lt;
+    spkezr_c(std::to_string(targetId).c_str(), epoch, frame, aberration, std::to_string(observerId).c_str(), sv, &lt);
+
+    stateVectorDto.centerOfMotionId = observerId;
+
+    stateVectorDto.epoch = epoch;
+    stateVectorDto.inertialFrame = strdup(frame);
+    stateVectorDto.position.x = sv[0] * 1000.0;
+    stateVectorDto.position.y = sv[1] * 1000.0;
+    stateVectorDto.position.z = sv[2] * 1000.0;
+    stateVectorDto.velocity.x = sv[3] * 1000.0;
+    stateVectorDto.velocity.y = sv[4] * 1000.0;
+    stateVectorDto.velocity.z = sv[5] * 1000.0;
+    return stateVectorDto;
 }
 
 

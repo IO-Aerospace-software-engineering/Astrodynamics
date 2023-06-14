@@ -189,6 +189,6 @@ IO::Astrodynamics::Math::Vector3D IO::Astrodynamics::Instruments::Instrument::Ge
 
 IO::Astrodynamics::Math::Vector3D IO::Astrodynamics::Instruments::Instrument::GetBoresightInSpacecraftFrame() const
 {
-    auto q = IO::Astrodynamics::Math::Quaternion(m_orientation.Normalize(), m_orientation.Magnitude());
+    auto q = m_boresight.To(m_orientation);
     return m_boresight.Rotate(q);
 }

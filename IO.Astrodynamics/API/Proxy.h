@@ -55,6 +55,8 @@ MODULE_API void
 ReadEphemerisProxy(IO::Astrodynamics::API::DTO::WindowDTO searchWindow, int observerId, int targetId, const char *frame,
                    const char *aberration, double stepSize, IO::Astrodynamics::API::DTO::StateVectorDTO stateVectors[10000]);
 
+MODULE_API IO::Astrodynamics::API::DTO::StateVectorDTO ReadEphemerisAtGivenEpochProxy(double epoch, int observerId, int targetId, const char *frame, const char *aberration);
+
 /**
  * Read spacecraft orientation
  * @param searchWindow
