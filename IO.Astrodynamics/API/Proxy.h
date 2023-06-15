@@ -9,7 +9,8 @@
 #include <FrameTransformation.h>
 #include <ConicOrbitalElementsDTO.h>
 #include <EquinoctialElementsDTO.h>
-#include "RaDecDTO.h"
+#include <RaDecDTO.h>
+#include <HorizontalDTO.h>
 
 #pragma region Proxy
 #ifdef __cplusplus
@@ -265,6 +266,7 @@ MODULE_API IO::Astrodynamics::API::DTO::StateVectorDTO ConvertEquinoctialElement
  * @return
  */
 MODULE_API IO::Astrodynamics::API::DTO::RaDecDTO ConvertStateVectorToEquatorialCoordinatesProxy(IO::Astrodynamics::API::DTO::StateVectorDTO stateVectorDto);
+MODULE_API IO::Astrodynamics::API::DTO::HorizontalDTO GetHorizontalCoordinates(IO::Astrodynamics::API::DTO::StateVectorDTO stateVectorDto);
 #ifdef __cplusplus
 }
 #endif
