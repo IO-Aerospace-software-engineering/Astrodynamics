@@ -177,7 +177,8 @@ IO::Astrodynamics::Constraints::GeometryFinder::FindWindowsInFieldOfViewConstrai
                                                                                    const IO::Astrodynamics::Time::TimeSpan &stepSize)
 {
     std::vector<IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB>> windows;
-
+    SpiceDouble windowStart;
+    SpiceDouble windowEnd;
 
     const SpiceInt MAXWIN{20000};
 
@@ -197,18 +198,13 @@ IO::Astrodynamics::Constraints::GeometryFinder::FindWindowsInFieldOfViewConstrai
              std::to_string(observerId).c_str(), stepSize.GetSeconds().count(), &cnfine, &results
     );
 
-    auto n = wncard_c(&results);
-    for (int i = 0; i < n; i++)
+    for (int i = 0; i < wncard_c(&results); i++)
     {
-        SpiceDouble windowStart;
-        SpiceDouble windowEnd;
-        wnfetd_c(&results, i, &windowStart, &windowEnd
-        );
+        wnfetd_c(&results, i, &windowStart, &windowEnd);
         windows.emplace_back(
                 IO::Astrodynamics::Time::TDB(std::chrono::duration<double>(windowStart)),
                 IO::Astrodynamics::Time::TDB(std::chrono::duration<double>(windowEnd)));
 
     }
-    return
-            windows;
+    return windows;
 }

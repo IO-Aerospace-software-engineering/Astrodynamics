@@ -205,7 +205,7 @@ TEST(API, FindWindowsOnOccultationConstraintProxy)
 
 TEST(API, FindWindowsInFieldOfViewConstraintProxy)
 {
-    IO::Astrodynamics::Math::Vector3D orientation{1.0, 0.0, 0.0};
+    IO::Astrodynamics::Math::Vector3D orientation{0.0, -IO::Astrodynamics::Constants::PI2, 0.0};
     IO::Astrodynamics::Math::Vector3D boresight{0.0, 0.0, 1.0};
     IO::Astrodynamics::Math::Vector3D refvector{0.0, 1.0, 0.0};
 
@@ -241,20 +241,19 @@ TEST(API, FindWindowsInFieldOfViewConstraintProxy)
 
     pro.Propagate();
 
+    auto spcframe = s.GetInstrument(789)->GetBoresightInSpacecraftFrame();
+    auto ICRFframe = s.GetInstrument(789)->GetBoresight(IO::Astrodynamics::Frames::InertialFrames::GetICRF(), epoch);
+
     IO::Astrodynamics::API::DTO::WindowDTO windows[1000];
     IO::Astrodynamics::API::DTO::WindowDTO searchWindow{};
     searchWindow.start = IO::Astrodynamics::Time::TDB("2021-JUN-10 00:00:00.0000 TDB").GetSecondsFromJ2000().count();
     searchWindow.end = IO::Astrodynamics::Time::TDB("2021-JUN-10 01:47:27.0000 TDB").GetSecondsFromJ2000().count();
     FindWindowsInFieldOfViewConstraintProxy(searchWindow, -179, -179789, 399, "IAU_EARTH", "ELLIPSOID", "LT", 360, windows);
-    auto p = s.GetOrientation(IO::Astrodynamics::Time::TDB("2021-JUN-10 00:00:00.0000 TDB"), IO::Astrodynamics::Time::TimeSpan(1.0),
-                              IO::Astrodynamics::Frames::InertialFrames::GetICRF());
-
-    auto sv=s.ReadEphemeris(IO::Astrodynamics::Frames::InertialFrames::GetICRF(),IO::Astrodynamics::AberrationsEnum::LT,IO::Astrodynamics::Time::TDB("2021-JUN-10 00:00:01.0000 TDB"),*earth);
 
     ASSERT_STREQ("2021-06-10 00:00:00.000000 (TDB)", ToTDBWindow(windows[0]).GetStartDate().ToString().c_str());
-    ASSERT_STREQ("2021-06-10 00:53:35.962134 (TDB)", ToTDBWindow(windows[0]).GetEndDate().ToString().c_str());
+    ASSERT_STREQ("2021-06-10 00:29:03.324572 (TDB)", ToTDBWindow(windows[0]).GetEndDate().ToString().c_str());
 
-    ASSERT_STREQ("2021-06-10 01:25:34.260013 (TDB)", ToTDBWindow(windows[1]).GetStartDate().ToString().c_str());
+    ASSERT_STREQ("2021-06-10 01:04:03.521650 (TDB)", ToTDBWindow(windows[1]).GetStartDate().ToString().c_str());
     ASSERT_STREQ("2021-06-10 01:47:27.000000 (TDB)", ToTDBWindow(windows[1]).GetEndDate().ToString().c_str());
 }
 

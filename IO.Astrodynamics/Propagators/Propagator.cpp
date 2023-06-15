@@ -26,8 +26,8 @@ void IO::Astrodynamics::Propagators::Propagator::Propagate()
     IO::Astrodynamics::OrbitalParameters::StateVector stateVector{m_spacecraft.GetOrbitalParametersAtEpoch()->ToStateVector(m_window.GetStartDate())};
     m_stateVectors.push_back(stateVector);
 
-//    // Initial alignment, Spacecraft back points toward the center of motion
-//    IO::Astrodynamics::OrbitalParameters::StateOrientation attitude(m_spacecraft.Front.To(stateVector.GetPosition().Normalize()), IO::Astrodynamics::Math::Vector3D(0.0, 0.0, 0.0),
+    // Initial alignment, Spacecraft back points toward the center of motion
+//    IO::Astrodynamics::OrbitalParameters::StateOrientation initialAttitude(m_spacecraft.Front.To(stateVector.GetVelocity().Normalize()), IO::Astrodynamics::Math::Vector3D(0.0, 0.0, 0.0),
 //                                                          stateVector.GetEpoch(), stateVector.GetFrame());
 
     //TODO
