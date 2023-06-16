@@ -32,9 +32,9 @@ TEST(InstrumentPointingToAttitude, GetOrientation)
 
     s.AddFuelTank("ft1", 1000.0, 900.0);
     s.AddEngine("sn1", "eng1", "ft1", {1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}, 450.0, 50.0);
-    s.AddCircularFOVInstrument(550, "inst550", IO::Astrodynamics::Math::Vector3D(-IO::Astrodynamics::Constants::PI2, 0.0, 0.0), IO::Astrodynamics::Tests::VectorZ, IO::Astrodynamics::Tests::VectorY,
+    s.AddCircularFOVInstrument(-544550, "inst550", IO::Astrodynamics::Math::Vector3D(-IO::Astrodynamics::Constants::PI2, 0.0, 0.0), IO::Astrodynamics::Tests::VectorZ, IO::Astrodynamics::Tests::VectorY,
                                IO::Astrodynamics::Constants::PI2);
-    auto instrument = s.GetInstrument(550);
+    auto instrument = s.GetInstrument(-544550);
 
     auto engine1 = s.GetEngine("sn1");
 
@@ -82,9 +82,9 @@ TEST(InstrumentPointingToSiteAttitude, GetOrientation)
 
     s.AddFuelTank("ft1", 1000.0, 900.0);
     s.AddEngine("sn1", "eng1", "ft1", {1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}, 450.0, 50.0);
-    s.AddCircularFOVInstrument(550, "inst550", IO::Astrodynamics::Math::Vector3D(-IO::Astrodynamics::Constants::PI2, 0.0, 0.0), IO::Astrodynamics::Tests::VectorZ, IO::Astrodynamics::Tests::VectorY,
+    s.AddCircularFOVInstrument(-544550, "inst550", IO::Astrodynamics::Math::Vector3D(-IO::Astrodynamics::Constants::PI2, 0.0, 0.0), IO::Astrodynamics::Tests::VectorZ, IO::Astrodynamics::Tests::VectorY,
                                IO::Astrodynamics::Constants::PI2);
-    auto instrument = s.GetInstrument(550);
+    auto instrument = s.GetInstrument(-544550);
 
     auto engine1 = s.GetEngine("sn1");
 
@@ -131,9 +131,9 @@ TEST(InstrumentPointingToSiteAttitude2, GetOrientation)
 
     s.AddFuelTank("ft1", 1000.0, 900.0);
     s.AddEngine("sn1", "eng1", "ft1", {1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}, 450.0, 50.0);
-    s.AddCircularFOVInstrument(550, "inst550", IO::Astrodynamics::Math::Vector3D(-IO::Astrodynamics::Constants::PI2, 0.0, 0.0), IO::Astrodynamics::Tests::VectorZ, IO::Astrodynamics::Tests::VectorY,
+    s.AddCircularFOVInstrument(-544550, "inst550", IO::Astrodynamics::Math::Vector3D(-IO::Astrodynamics::Constants::PI2, 0.0, 0.0), IO::Astrodynamics::Tests::VectorZ, IO::Astrodynamics::Tests::VectorY,
                                IO::Astrodynamics::Constants::PI2);
-    auto instrument = s.GetInstrument(550);
+    auto instrument = s.GetInstrument(-544550);
 
     auto engine1 = s.GetEngine("sn1");
 
@@ -177,9 +177,9 @@ TEST(InstrumentPointingTotAttitude, GetOrientationNotBeforeEpoch)
 
     s.AddFuelTank("ft1", 1000.0, 900.0);
     s.AddEngine("sn1", "eng1", "ft1", {1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}, 450.0, 50.0);
-    s.AddCircularFOVInstrument(550, "inst550", IO::Astrodynamics::Math::Vector3D(-IO::Astrodynamics::Constants::PI2, 0.0, 0.0), IO::Astrodynamics::Tests::VectorZ, IO::Astrodynamics::Tests::VectorY,
+    s.AddCircularFOVInstrument(-544550, "inst550", IO::Astrodynamics::Math::Vector3D(-IO::Astrodynamics::Constants::PI2, 0.0, 0.0), IO::Astrodynamics::Tests::VectorZ, IO::Astrodynamics::Tests::VectorY,
                                IO::Astrodynamics::Constants::PI2);
-    auto instrument = s.GetInstrument(550);
+    auto instrument = s.GetInstrument(-544550);
 
     auto engine1 = s.GetEngine("sn1");
 

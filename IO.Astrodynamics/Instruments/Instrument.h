@@ -59,7 +59,7 @@ namespace IO::Astrodynamics::Instruments
          * @param fovRefVector
          * @param fovAngle
          */
-        Instrument(const IO::Astrodynamics::Body::Spacecraft::Spacecraft &spacecraft, unsigned short id, const std::string &name, const IO::Astrodynamics::Math::Vector3D &orientation,
+        Instrument(const IO::Astrodynamics::Body::Spacecraft::Spacecraft &spacecraft, int id, const std::string &name, const IO::Astrodynamics::Math::Vector3D &orientation,
                    const IO::Astrodynamics::Math::Vector3D &boresight, const IO::Astrodynamics::Math::Vector3D &fovRefVector, double fovAngle);
 
         /**
@@ -75,7 +75,7 @@ namespace IO::Astrodynamics::Instruments
          * @param fovAngle
          * @param crossAngle
          */
-        Instrument(const IO::Astrodynamics::Body::Spacecraft::Spacecraft &spacecraft, unsigned short id, const std::string &name, const IO::Astrodynamics::Math::Vector3D &orientation,
+        Instrument(const IO::Astrodynamics::Body::Spacecraft::Spacecraft &spacecraft, int id, const std::string &name, const IO::Astrodynamics::Math::Vector3D &orientation,
                    IO::Astrodynamics::Instruments::FOVShapeEnum fovShape, const IO::Astrodynamics::Math::Vector3D &boresight, const IO::Astrodynamics::Math::Vector3D &fovRefVector, double fovAngle,
                    double crossAngle);
 

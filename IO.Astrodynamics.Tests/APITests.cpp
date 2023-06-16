@@ -225,7 +225,7 @@ TEST(API, FindWindowsInFieldOfViewConstraintProxy)
     IO::Astrodynamics::Body::Spacecraft::Spacecraft s{-179, "SC179", 1000.0, 3000.0, std::string(SpacecraftPath),
                                                       std::move(orbitalParams)};
 
-    s.AddCircularFOVInstrument(789, "CAMERA789", orientation, boresight, refvector, 1.5);
+    s.AddCircularFOVInstrument(-179789, "CAMERA789", orientation, boresight, refvector, 1.5);
 
     //==========PROPAGATOR====================
     auto step{IO::Astrodynamics::Time::TimeSpan(1.0s)};
@@ -241,8 +241,8 @@ TEST(API, FindWindowsInFieldOfViewConstraintProxy)
 
     pro.Propagate();
 
-    auto spcframe = s.GetInstrument(789)->GetBoresightInSpacecraftFrame();
-    auto ICRFframe = s.GetInstrument(789)->GetBoresight(IO::Astrodynamics::Frames::InertialFrames::GetICRF(), epoch);
+    auto spcframe = s.GetInstrument(-179789)->GetBoresightInSpacecraftFrame();
+    auto ICRFframe = s.GetInstrument(-179789)->GetBoresight(IO::Astrodynamics::Frames::InertialFrames::GetICRF(), epoch);
 
     IO::Astrodynamics::API::DTO::WindowDTO windows[1000];
     IO::Astrodynamics::API::DTO::WindowDTO searchWindow{};

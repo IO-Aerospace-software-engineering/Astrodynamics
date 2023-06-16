@@ -850,7 +850,7 @@ void BuildInstruments(const IO::Astrodynamics::API::DTO::ScenarioDTO &scenarioDt
 {//Add instrument
     for (auto &instrument: scenarioDto.Spacecraft.instruments)
     {
-        if (instrument.id <= 0)
+        if (instrument.id >= 0)
         {
             break;
         }

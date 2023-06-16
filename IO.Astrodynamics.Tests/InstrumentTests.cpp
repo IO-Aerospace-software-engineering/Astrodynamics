@@ -44,8 +44,8 @@ TEST(Instrument, Initialization)
     IO::Astrodynamics::OrbitalParameters::StateOrientation attitude(IO::Astrodynamics::Time::TDB(100.0s), IO::Astrodynamics::Frames::InertialFrames::GetICRF());
     IO::Astrodynamics::Body::Spacecraft::Spacecraft s{-17, "sc17", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams)};
 
-    s.AddCircularFOVInstrument(200, "Camera200", orientation, boresight, fovvector, 1.5);
-    const IO::Astrodynamics::Instruments::Instrument *instrument{s.GetInstrument(200)};
+    s.AddCircularFOVInstrument(-17200, "Camera200", orientation, boresight, fovvector, 1.5);
+    const IO::Astrodynamics::Instruments::Instrument *instrument{s.GetInstrument(-17200)};
 
     ASSERT_TRUE(std::filesystem::exists(filepath));
     ASSERT_GT(std::filesystem::file_size(filepath), 0.0);
@@ -72,9 +72,9 @@ TEST(Instrument, Frame)
                                                                                                                                              IO::Astrodynamics::Time::TDB(100.0s),
                                                                                                                                              IO::Astrodynamics::Frames::InertialFrames::GetICRF());
     IO::Astrodynamics::OrbitalParameters::StateOrientation attitude(IO::Astrodynamics::Time::TDB(100.0s), IO::Astrodynamics::Frames::InertialFrames::GetICRF());
-    IO::Astrodynamics::Body::Spacecraft::Spacecraft s{-17, "sc17", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams)};
+    IO::Astrodynamics::Body::Spacecraft::Spacecraft s{-17200, "sc17", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams)};
 
-    s.AddCircularFOVInstrument(200, "Camera200", orientation, boresight, fovvector, 1.5);
+    s.AddCircularFOVInstrument(-17200, "Camera200", orientation, boresight, fovvector, 1.5);
 
     auto id = IO::Astrodynamics::DataPoolMonitoring::Instance().GetIntegerProperty("FRAME_SC17_CAMERA200", 1);
     ASSERT_EQ(-17200, id[0]);
@@ -89,7 +89,7 @@ TEST(Instrument, Frame)
     ASSERT_EQ(-17200, classid[0]);
 
     auto centerid = IO::Astrodynamics::DataPoolMonitoring::Instance().GetIntegerProperty("FRAME_-17200_CENTER", 1);
-    ASSERT_EQ(-17, centerid[0]);
+    ASSERT_EQ(-17200, centerid[0]);
 
     auto spec = IO::Astrodynamics::DataPoolMonitoring::Instance().GetStringProperty("TKFRAME_-17200_SPEC", 1);
     ASSERT_STREQ("ANGLES", spec[0].c_str());
@@ -128,7 +128,7 @@ TEST(Instrument, CircularKernel)
                                                                                                                                              IO::Astrodynamics::Frames::InertialFrames::GetICRF());
     IO::Astrodynamics::OrbitalParameters::StateOrientation attitude(IO::Astrodynamics::Time::TDB(100.0s), IO::Astrodynamics::Frames::InertialFrames::GetICRF());
     IO::Astrodynamics::Body::Spacecraft::Spacecraft s{-17, "sc17", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams)};
-    s.AddCircularFOVInstrument(200, "Camera200", orientation, boresight, fovvector, 1.5);
+    s.AddCircularFOVInstrument(-17200, "Camera200", orientation, boresight, fovvector, 1.5);
 
     auto classSpec = IO::Astrodynamics::DataPoolMonitoring::Instance().GetStringProperty("INS-17200_FOV_CLASS_SPEC", 1);
     ASSERT_STREQ("ANGLES", classSpec[0].c_str());
@@ -176,7 +176,7 @@ TEST(Instrument, RectangularKernel)
                                                                                                                                              IO::Astrodynamics::Frames::InertialFrames::GetICRF());
     IO::Astrodynamics::OrbitalParameters::StateOrientation attitude(IO::Astrodynamics::Time::TDB(100.0s), IO::Astrodynamics::Frames::InertialFrames::GetICRF());
     IO::Astrodynamics::Body::Spacecraft::Spacecraft s{-17, "sc17", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams)};
-    s.AddRectangularFOVInstrument(300, "Camera300", orientation, boresight, fovvector, 1.5, IO::Astrodynamics::Constants::PI2);
+    s.AddRectangularFOVInstrument(-17300, "Camera300", orientation, boresight, fovvector, 1.5, IO::Astrodynamics::Constants::PI2);
 
     auto classSpec = IO::Astrodynamics::DataPoolMonitoring::Instance().GetStringProperty("INS-17300_FOV_CLASS_SPEC", 1);
     ASSERT_STREQ("ANGLES", classSpec[0].c_str());
@@ -224,7 +224,7 @@ TEST(Instrument, EllipticalKernel)
                                                                                                                                              IO::Astrodynamics::Frames::InertialFrames::GetICRF());
     IO::Astrodynamics::OrbitalParameters::StateOrientation attitude(IO::Astrodynamics::Time::TDB(100.0s), IO::Astrodynamics::Frames::InertialFrames::GetICRF());
     IO::Astrodynamics::Body::Spacecraft::Spacecraft s{-17, "sc17", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams)};
-    s.AddEllipticalFOVInstrument(400, "Camera400", orientation, boresight, fovvector, 1.5, IO::Astrodynamics::Constants::PI2);
+    s.AddEllipticalFOVInstrument(-17400, "Camera400", orientation, boresight, fovvector, 1.5, IO::Astrodynamics::Constants::PI2);
 
     auto classSpec = IO::Astrodynamics::DataPoolMonitoring::Instance().GetStringProperty("INS-17400_FOV_CLASS_SPEC", 1);
     ASSERT_STREQ("ANGLES", classSpec[0].c_str());
@@ -272,9 +272,9 @@ TEST(Instrument, Boundaries)
                                                                                                                                              IO::Astrodynamics::Frames::InertialFrames::GetICRF());
     IO::Astrodynamics::OrbitalParameters::StateOrientation attitude(IO::Astrodynamics::Time::TDB(100.0s), IO::Astrodynamics::Frames::InertialFrames::GetICRF());
     IO::Astrodynamics::Body::Spacecraft::Spacecraft s{-17, "sc17", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams)};
-    s.AddCircularFOVInstrument(200, "Camera200", orientation, boresight, fovvector, 5 * IO::Astrodynamics::Constants::DEG_RAD);
+    s.AddCircularFOVInstrument(-17200, "Camera200", orientation, boresight, fovvector, 5 * IO::Astrodynamics::Constants::DEG_RAD);
 
-    const IO::Astrodynamics::Instruments::Instrument *instrument{s.GetInstrument(200)};
+    const IO::Astrodynamics::Instruments::Instrument *instrument{s.GetInstrument(-17200)};
 
     auto boundaries = instrument->GetFOVBoundaries();
 
@@ -303,9 +303,9 @@ TEST(Instrument, Boresight)
                                                                                                                                              IO::Astrodynamics::Frames::InertialFrames::GetICRF());
     IO::Astrodynamics::OrbitalParameters::StateOrientation attitude(IO::Astrodynamics::Time::TDB(100.0s), IO::Astrodynamics::Frames::InertialFrames::GetICRF());
     IO::Astrodynamics::Body::Spacecraft::Spacecraft s{-17, "sc17", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams)};
-    s.AddCircularFOVInstrument(200, "Camera200", orientation, boresight, fovvector, 5 * IO::Astrodynamics::Constants::DEG_RAD);
+    s.AddCircularFOVInstrument(-17200, "Camera200", orientation, boresight, fovvector, 5 * IO::Astrodynamics::Constants::DEG_RAD);
 
-    const IO::Astrodynamics::Instruments::Instrument *instrument{s.GetInstrument(200)};
+    const IO::Astrodynamics::Instruments::Instrument *instrument{s.GetInstrument(-17200)};
 
     auto boresightRes = instrument->GetBoresight();
 
@@ -334,9 +334,9 @@ TEST(Instrument, FOVShape)
                                                                                                                                              IO::Astrodynamics::Frames::InertialFrames::GetICRF());
     IO::Astrodynamics::OrbitalParameters::StateOrientation attitude(IO::Astrodynamics::Time::TDB(100.0s), IO::Astrodynamics::Frames::InertialFrames::GetICRF());
     IO::Astrodynamics::Body::Spacecraft::Spacecraft s{-17, "sc17", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams)};
-    s.AddCircularFOVInstrument(200, "Camera200", orientation, boresight, fovvector, 5 * IO::Astrodynamics::Constants::DEG_RAD);
+    s.AddCircularFOVInstrument(-17200, "Camera200", orientation, boresight, fovvector, 5 * IO::Astrodynamics::Constants::DEG_RAD);
 
-    const IO::Astrodynamics::Instruments::Instrument *instrument{s.GetInstrument(200)};
+    const IO::Astrodynamics::Instruments::Instrument *instrument{s.GetInstrument(-17200)};
 
     auto shape = instrument->GetFOVShape();
 
@@ -363,7 +363,7 @@ TEST(Instrument, GetBadId)
                                                                                                                                              IO::Astrodynamics::Frames::InertialFrames::GetICRF());
     IO::Astrodynamics::OrbitalParameters::StateOrientation attitude(IO::Astrodynamics::Time::TDB(100.0s), IO::Astrodynamics::Frames::InertialFrames::GetICRF());
     IO::Astrodynamics::Body::Spacecraft::Spacecraft s{-17, "sc17", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams)};
-    s.AddCircularFOVInstrument(200, "Camera200", orientation, boresight, fovvector, 5 * IO::Astrodynamics::Constants::DEG_RAD);
+    s.AddCircularFOVInstrument(-17200, "Camera200", orientation, boresight, fovvector, 5 * IO::Astrodynamics::Constants::DEG_RAD);
 
     //Id doesn't exist
     ASSERT_FALSE(s.GetInstrument(1234));
@@ -390,7 +390,7 @@ TEST(Instrument, CreateBadId)
     IO::Astrodynamics::OrbitalParameters::StateOrientation attitude(IO::Astrodynamics::Time::TDB(100.0s), IO::Astrodynamics::Frames::InertialFrames::GetICRF());
     IO::Astrodynamics::Body::Spacecraft::Spacecraft s{-17, "sc17", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams)};
 
-    //Id must be < 1000
+
     ASSERT_THROW(s.AddCircularFOVInstrument(1200, "Camera200", orientation, boresight, fovvector, 5 * IO::Astrodynamics::Constants::DEG_RAD), IO::Astrodynamics::Exception::InvalidArgumentException);
 }
 
@@ -415,8 +415,8 @@ TEST(Instrument, AlreadyExists)
     IO::Astrodynamics::OrbitalParameters::StateOrientation attitude(IO::Astrodynamics::Time::TDB(100.0s), IO::Astrodynamics::Frames::InertialFrames::GetICRF());
     IO::Astrodynamics::Body::Spacecraft::Spacecraft s{-17, "sc17", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams)};
 
-    s.AddCircularFOVInstrument(200, "Camera200", orientation, boresight, fovvector, 5 * IO::Astrodynamics::Constants::DEG_RAD);
-    ASSERT_THROW(s.AddCircularFOVInstrument(200, "Camera200", orientation, boresight, fovvector, 5 * IO::Astrodynamics::Constants::DEG_RAD), IO::Astrodynamics::Exception::InvalidArgumentException);
+    s.AddCircularFOVInstrument(-17200, "Camera200", orientation, boresight, fovvector, 5 * IO::Astrodynamics::Constants::DEG_RAD);
+    ASSERT_THROW(s.AddCircularFOVInstrument(-17200, "Camera200", orientation, boresight, fovvector, 5 * IO::Astrodynamics::Constants::DEG_RAD), IO::Astrodynamics::Exception::InvalidArgumentException);
 }
 
 TEST(Instrument, FindWindowFieldOfView)
@@ -445,8 +445,8 @@ TEST(Instrument, FindWindowFieldOfView)
                                                                                                                                              IO::Astrodynamics::Frames::InertialFrames::GetICRF());
     IO::Astrodynamics::Body::Spacecraft::Spacecraft s{-179, "SC179", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams)};
 
-    s.AddCircularFOVInstrument(789, "CAMERA789", orientation, boresight, fovvector, 1.5);
-    const IO::Astrodynamics::Instruments::Instrument *instrument{s.GetInstrument(789)};
+    s.AddCircularFOVInstrument(-179789, "CAMERA789", orientation, boresight, fovvector, 1.5);
+    const IO::Astrodynamics::Instruments::Instrument *instrument{s.GetInstrument(-179789)};
 
     //==========PROPAGATOR====================
     auto step{IO::Astrodynamics::Time::TimeSpan(1.0s)};
@@ -528,8 +528,8 @@ TEST(Instrument, GetBoresightAtEpoch)
                                                                                                                                              IO::Astrodynamics::Frames::InertialFrames::GetICRF());
     IO::Astrodynamics::Body::Spacecraft::Spacecraft s{-179, "SC179", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams)};
 
-    s.AddCircularFOVInstrument(789, "CAMERA789", orientation, boresight, fovvector, 1.5);
-    const IO::Astrodynamics::Instruments::Instrument *instrument{s.GetInstrument(789)};
+    s.AddCircularFOVInstrument(-179789, "CAMERA789", orientation, boresight, fovvector, 1.5);
+    const IO::Astrodynamics::Instruments::Instrument *instrument{s.GetInstrument(-179789)};
 
     //==========PROPAGATOR====================
     auto step{IO::Astrodynamics::Time::TimeSpan(1.0s)};
@@ -594,8 +594,8 @@ TEST(Instrument, GetBoresightInSpacecraftFrame)
     IO::Astrodynamics::OrbitalParameters::StateOrientation attitude(IO::Astrodynamics::Time::TDB(100.0s), IO::Astrodynamics::Frames::InertialFrames::GetICRF());
     IO::Astrodynamics::Body::Spacecraft::Spacecraft s{-17, "sc17", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams)};
 
-    s.AddCircularFOVInstrument(200, "Camera200", orientation, boresight, fovvector, 1.5);
-    const IO::Astrodynamics::Instruments::Instrument *instrument{s.GetInstrument(200)};
+    s.AddCircularFOVInstrument(-17200, "Camera200", orientation, boresight, fovvector, 1.5);
+    const IO::Astrodynamics::Instruments::Instrument *instrument{s.GetInstrument(-17200)};
     ASSERT_EQ(s.Top, instrument->GetBoresightInSpacecraftFrame());
 }
 
@@ -620,8 +620,8 @@ TEST(Instrument, GetBoresightInSpacecraftFrame2)
     IO::Astrodynamics::OrbitalParameters::StateOrientation attitude(IO::Astrodynamics::Time::TDB(100.0s), IO::Astrodynamics::Frames::InertialFrames::GetICRF());
     IO::Astrodynamics::Body::Spacecraft::Spacecraft s{-17, "sc17", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams)};
 
-    s.AddCircularFOVInstrument(200, "Camera200", orientation, boresight, fovvector, 1.5);
-    const IO::Astrodynamics::Instruments::Instrument *instrument{s.GetInstrument(200)};
+    s.AddCircularFOVInstrument(-17200, "Camera200", orientation, boresight, fovvector, 1.5);
+    const IO::Astrodynamics::Instruments::Instrument *instrument{s.GetInstrument(-17200)};
     auto vRes{instrument->GetBoresightInSpacecraftFrame()};
     ASSERT_NEAR(s.Back.GetX(), vRes.GetX(), 1E-09);
     ASSERT_NEAR(s.Back.GetY(), vRes.GetY(), 1E-07);

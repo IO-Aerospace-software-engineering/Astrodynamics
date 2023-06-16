@@ -53,7 +53,7 @@ namespace IO::Astrodynamics::Body::Spacecraft
         std::vector<std::unique_ptr<IO::Astrodynamics::Body::Spacecraft::Engine>> m_engines{};
         std::vector<std::unique_ptr<IO::Astrodynamics::Body::Spacecraft::Payload>> m_payloads{};
 
-        bool HasInstrument(unsigned short id);
+        bool HasInstrument(int id);
 
         const double m_maximumOperatingMass;
 
@@ -209,7 +209,7 @@ namespace IO::Astrodynamics::Body::Spacecraft
          * @param fovRefVector
          * @param fovAngle
          */
-        void AddCircularFOVInstrument(unsigned short id, const std::string &name,
+        void AddCircularFOVInstrument(int id, const std::string &name,
                                       const IO::Astrodynamics::Math::Vector3D &orientation,
                                       const IO::Astrodynamics::Math::Vector3D &boresight,
                                       const IO::Astrodynamics::Math::Vector3D &fovRefVector, double fovAngle);
@@ -225,7 +225,7 @@ namespace IO::Astrodynamics::Body::Spacecraft
          * @param fovAngle
          * @param crossAngle
          */
-        void AddRectangularFOVInstrument(unsigned short id, const std::string &name,
+        void AddRectangularFOVInstrument(int id, const std::string &name,
                                          const IO::Astrodynamics::Math::Vector3D &orientation,
                                          const IO::Astrodynamics::Math::Vector3D &boresight,
                                          const IO::Astrodynamics::Math::Vector3D &fovRefVector, double fovAngle,
@@ -242,7 +242,7 @@ namespace IO::Astrodynamics::Body::Spacecraft
          * @param fovAngle
          * @param crossAngle
          */
-        void AddEllipticalFOVInstrument(unsigned short id, const std::string &name,
+        void AddEllipticalFOVInstrument(int id, const std::string &name,
                                         const IO::Astrodynamics::Math::Vector3D &orientation,
                                         const IO::Astrodynamics::Math::Vector3D &boresight,
                                         const IO::Astrodynamics::Math::Vector3D &fovRefVector, double fovAngle,

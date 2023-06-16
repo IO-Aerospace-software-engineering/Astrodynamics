@@ -38,14 +38,13 @@ const std::unique_ptr<IO::Astrodynamics::Frames::InstrumentFrameFile> &IO::Astro
 }
 
 IO::Astrodynamics::Instruments::Instrument::Instrument(const IO::Astrodynamics::Body::Spacecraft::Spacecraft &spacecraft,
-                                             const unsigned short id, const std::string &name,
+                                             const int id, const std::string &name,
                                              const IO::Astrodynamics::Math::Vector3D &orientation,
                                              const IO::Astrodynamics::Math::Vector3D &boresight,
                                              const IO::Astrodynamics::Math::Vector3D &fovRefVector,
                                              const double fovAngle) : m_spacecraft{spacecraft},
-                                                                      m_id{id < 1000 ? spacecraft.GetId() * 1000 - id
-                                                                                     : throw IO::Astrodynamics::Exception::InvalidArgumentException(
-                                                                                      "Instrument Id must be a positive number < 1000")},
+                                                                      m_id{id < 0 ? id: throw IO::Astrodynamics::Exception::InvalidArgumentException(
+                                                                                      "Instrument Id must be a negative number")},
                                                                       m_name{IO::Astrodynamics::StringHelpers::ToUpper(name)},
                                                                       m_filesPath{spacecraft.GetFilesPath() +
                                                                                   "/Instruments/" +
@@ -65,15 +64,15 @@ IO::Astrodynamics::Instruments::Instrument::Instrument(const IO::Astrodynamics::
 }
 
 IO::Astrodynamics::Instruments::Instrument::Instrument(const IO::Astrodynamics::Body::Spacecraft::Spacecraft &spacecraft,
-                                             const unsigned short id, const std::string &name,
+                                             const int id, const std::string &name,
                                              const IO::Astrodynamics::Math::Vector3D &orientation,
                                              const IO::Astrodynamics::Instruments::FOVShapeEnum fovShape,
                                              const IO::Astrodynamics::Math::Vector3D &boresight,
                                              const IO::Astrodynamics::Math::Vector3D &fovRefVector, const double fovAngle,
                                              const double crossAngle)
         : m_spacecraft{spacecraft},
-          m_id{id < 1000 ? spacecraft.GetId() * 1000 - id : throw IO::Astrodynamics::Exception::InvalidArgumentException(
-                  "Instrument Id must be a positive number < 1000")},
+          m_id{id < 0 ? id : throw IO::Astrodynamics::Exception::InvalidArgumentException(
+                  "Instrument Id must be a negative number")},
           m_name{IO::Astrodynamics::StringHelpers::ToUpper(name)},
           m_filesPath{spacecraft.GetFilesPath() + "/Instruments/" + IO::Astrodynamics::StringHelpers::ToUpper(name)},
           m_frame(new IO::Astrodynamics::Frames::InstrumentFrameFile(*this, orientation)),

@@ -106,7 +106,7 @@ std::string IO::Astrodynamics::Body::Spacecraft::Spacecraft::ReadEphemerisKernel
     return this->m_ephemerisKernel->ReadComment();
 }
 
-void IO::Astrodynamics::Body::Spacecraft::Spacecraft::AddCircularFOVInstrument(const unsigned short id, const std::string &name,
+void IO::Astrodynamics::Body::Spacecraft::Spacecraft::AddCircularFOVInstrument(const int id, const std::string &name,
                                                                      const IO::Astrodynamics::Math::Vector3D &orientation,
                                                                      const IO::Astrodynamics::Math::Vector3D &boresight,
                                                                      const IO::Astrodynamics::Math::Vector3D &fovRefVector,
@@ -121,7 +121,7 @@ void IO::Astrodynamics::Body::Spacecraft::Spacecraft::AddCircularFOVInstrument(c
 }
 
 void
-IO::Astrodynamics::Body::Spacecraft::Spacecraft::AddRectangularFOVInstrument(const unsigned short id, const std::string &name,
+IO::Astrodynamics::Body::Spacecraft::Spacecraft::AddRectangularFOVInstrument(const int id, const std::string &name,
                                                                    const IO::Astrodynamics::Math::Vector3D &orientation,
                                                                    const IO::Astrodynamics::Math::Vector3D &boresight,
                                                                    const IO::Astrodynamics::Math::Vector3D &fovRefVector,
@@ -137,7 +137,7 @@ IO::Astrodynamics::Body::Spacecraft::Spacecraft::AddRectangularFOVInstrument(con
                                                  fovRefVector, fovAngle, crossAngle)));
 }
 
-void IO::Astrodynamics::Body::Spacecraft::Spacecraft::AddEllipticalFOVInstrument(const unsigned short id, const std::string &name,
+void IO::Astrodynamics::Body::Spacecraft::Spacecraft::AddEllipticalFOVInstrument(const int id, const std::string &name,
                                                                        const IO::Astrodynamics::Math::Vector3D &orientation,
                                                                        const IO::Astrodynamics::Math::Vector3D &boresight,
                                                                        const IO::Astrodynamics::Math::Vector3D &fovRefVector,
@@ -158,7 +158,7 @@ const IO::Astrodynamics::Instruments::Instrument *IO::Astrodynamics::Body::Space
 
     auto it = std::find_if(std::begin(m_instruments), std::end(m_instruments),
                            [&](const std::unique_ptr<IO::Astrodynamics::Instruments::Instrument> &i) {
-                               return i->GetId() == GetId() * 1000 - id;
+                               return i->GetId() == id;
                            });
 
     if (it == m_instruments.end())
@@ -169,11 +169,11 @@ const IO::Astrodynamics::Instruments::Instrument *IO::Astrodynamics::Body::Space
     return it->get();
 }
 
-bool IO::Astrodynamics::Body::Spacecraft::Spacecraft::HasInstrument(unsigned short id)
+bool IO::Astrodynamics::Body::Spacecraft::Spacecraft::HasInstrument(int id)
 {
     for (auto &i: m_instruments)
     {
-        if (i->GetId() == GetId() * 1000 - id)
+        if (i->GetId() == id)
         {
             return true;
         }
