@@ -465,13 +465,13 @@ IO::Astrodynamics::API::DTO::CelestialBodyDTO GetCelestialBodyInfoProxy(int body
             bodvcd_c(bodyId, "RADII", 3, &dim, radiiRes);
             if (dim > 0)
             {
-                res.Radii.x = radiiRes[0];
+                res.Radii.x = radiiRes[0] * 1000.0;
                 if (dim > 1)
                 {
-                    res.Radii.y = radiiRes[1];
+                    res.Radii.y = radiiRes[1] * 1000.0;
                     if (dim > 2)
                     {
-                        res.Radii.z = radiiRes[2];
+                        res.Radii.z = radiiRes[2] * 1000.0;
                     }
                 }
             }
@@ -483,7 +483,7 @@ IO::Astrodynamics::API::DTO::CelestialBodyDTO GetCelestialBodyInfoProxy(int body
         bodvcd_c(bodyId, "GM", 3, &dim, &gmRes);
         if (dim == 1)
         {
-            res.GM = gmRes;
+            res.GM = gmRes * 1E+09;
         }
 
         // Search
