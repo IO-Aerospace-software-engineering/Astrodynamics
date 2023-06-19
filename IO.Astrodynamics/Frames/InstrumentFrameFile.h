@@ -33,7 +33,7 @@ namespace IO::Astrodynamics::Frames
 		const IO::Astrodynamics::Instruments::Instrument& m_instrument;
 		const IO::Astrodynamics::Math::Vector3D m_orientation{};
 
-		void BuildFrame();
+		void BuildFrame() override;
 
 	public:
 		friend class IO::Astrodynamics::Instruments::Instrument;

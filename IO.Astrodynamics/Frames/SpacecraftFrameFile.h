@@ -21,7 +21,7 @@ namespace IO::Astrodynamics::Frames {
         const int m_id;
         const IO::Astrodynamics::Body::Spacecraft::Spacecraft &m_spacecraft;
 
-        void BuildFrame();
+        void BuildFrame() override;
 
         /**
          * @brief Construct a new Spacecraft Frame File object

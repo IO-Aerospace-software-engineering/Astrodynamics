@@ -24,3 +24,4 @@ IO::Astrodynamics::Frames::InertialFrames& IO::Astrodynamics::Frames::InertialFr
 {
     return IO::Astrodynamics::Frames::InertialFrames::mECLIPTIC;
 }
+

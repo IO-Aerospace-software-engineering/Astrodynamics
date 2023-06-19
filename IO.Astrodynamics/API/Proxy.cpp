@@ -31,7 +31,7 @@ std::mutex g_i_mutex;
 
 void LaunchProxy(IO::Astrodynamics::API::DTO::LaunchDTO &launchDto)
 {
-    const std::lock_guard<std::mutex> lock(g_i_mutex);
+
     auto celestialBody = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(launchDto.recoverySite.bodyId);
     IO::Astrodynamics::Sites::LaunchSite ls(launchDto.launchSite.id, launchDto.launchSite.name,
                                             ToGeodetic(launchDto.launchSite.coordinates),
@@ -68,6 +68,7 @@ void LaunchProxy(IO::Astrodynamics::API::DTO::LaunchDTO &launchDto)
 
 void PropagateProxy(IO::Astrodynamics::API::DTO::ScenarioDTO &scenarioDto)
 {
+
     const std::lock_guard<std::mutex> lock(g_i_mutex);
     auto tdbWindow = ToTDBWindow(scenarioDto.Window);
     IO::Astrodynamics::Scenario scenario(scenarioDto.Name,
@@ -138,7 +139,7 @@ void PropagateProxy(IO::Astrodynamics::API::DTO::ScenarioDTO &scenarioDto)
 
 const char *GetSpiceVersionProxy()
 {
-    const std::lock_guard<std::mutex> lock(g_i_mutex);
+
     const char *version;
     version = tkvrsn_c("TOOLKIT");
     return strdup(version);
@@ -147,7 +148,7 @@ const char *GetSpiceVersionProxy()
 bool WriteEphemerisProxy(const char *filePath, int objectId, IO::Astrodynamics::API::DTO::StateVectorDTO *sv,
                          unsigned int size)
 {
-    const std::lock_guard<std::mutex> lock(g_i_mutex);
+
     IO::Astrodynamics::Kernels::EphemerisKernel kernel(filePath, objectId);
 
     std::vector<IO::Astrodynamics::OrbitalParameters::StateVector> states;
@@ -178,7 +179,7 @@ ReadOrientationProxy(IO::Astrodynamics::API::DTO::WindowDTO searchWindow, int sp
                      const char *frame,
                      double stepSize, IO::Astrodynamics::API::DTO::StateOrientationDTO *so)
 {
-    const std::lock_guard<std::mutex> lock(g_i_mutex);
+
     if ((searchWindow.end - searchWindow.start) / stepSize > 10000)
     {
         throw IO::Astrodynamics::Exception::InvalidArgumentException(
@@ -249,13 +250,13 @@ ReadOrientationProxy(IO::Astrodynamics::API::DTO::WindowDTO searchWindow, int sp
 
 void LoadKernelsProxy(const char *path)
 {
-    const std::lock_guard<std::mutex> lock(g_i_mutex);
+
     IO::Astrodynamics::Kernels::KernelsLoader::Load(path);
 }
 
 const char *TDBToStringProxy(double secondsFromJ2000)
 {
-    const std::lock_guard<std::mutex> lock(g_i_mutex);
+
     IO::Astrodynamics::Time::TDB tdb((std::chrono::duration<double>(secondsFromJ2000)));
     std::string str = tdb.ToString();
     return strdup(str.c_str());
@@ -263,7 +264,7 @@ const char *TDBToStringProxy(double secondsFromJ2000)
 
 const char *UTCToStringProxy(double secondsFromJ2000)
 {
-    const std::lock_guard<std::mutex> lock(g_i_mutex);
+
     IO::Astrodynamics::Time::UTC utc((std::chrono::duration<double>(secondsFromJ2000)));
     std::string str = utc.ToString();
     return strdup(str.c_str());
@@ -272,7 +273,7 @@ const char *UTCToStringProxy(double secondsFromJ2000)
 void ReadEphemerisProxy(IO::Astrodynamics::API::DTO::WindowDTO searchWindow, int observerId, int targetId, const char *frame, const char *aberration, double stepSize,
                         IO::Astrodynamics::API::DTO::StateVectorDTO *stateVectors)
 {
-    const std::lock_guard<std::mutex> lock(g_i_mutex);
+
     if ((searchWindow.end - searchWindow.start) / stepSize > 10000)
     {
         throw IO::Astrodynamics::Exception::InvalidArgumentException(
@@ -294,7 +295,7 @@ FindWindowsOnDistanceConstraintProxy(IO::Astrodynamics::API::DTO::WindowDTO sear
                                      const char *relationalOperator, double value, const char *aberration,
                                      double stepSize, IO::Astrodynamics::API::DTO::WindowDTO windows[1000])
 {
-    const std::lock_guard<std::mutex> lock(g_i_mutex);
+
     auto relationalOpe = IO::Astrodynamics::Constraints::RelationalOperator::ToRelationalOperator(relationalOperator);
     auto abe = IO::Astrodynamics::Aberrations::ToEnum(aberration);
 
@@ -317,7 +318,7 @@ FindWindowsOnOccultationConstraintProxy(IO::Astrodynamics::API::DTO::WindowDTO s
                                         const char *aberration, double stepSize,
                                         IO::Astrodynamics::API::DTO::WindowDTO *windows)
 {
-    const std::lock_guard<std::mutex> lock(g_i_mutex);
+
     auto abe = IO::Astrodynamics::Aberrations::ToEnum(aberration);
     auto res = IO::Astrodynamics::Constraints::GeometryFinder::FindWindowsOnOccultationConstraint(
             ToTDBWindow(searchWindow),
@@ -345,7 +346,7 @@ FindWindowsOnCoordinateConstraintProxy(IO::Astrodynamics::API::DTO::WindowDTO se
                                        const char *aberration, double stepSize,
                                        IO::Astrodynamics::API::DTO::WindowDTO *windows)
 {
-    const std::lock_guard<std::mutex> lock(g_i_mutex);
+
     auto abe = IO::Astrodynamics::Aberrations::ToEnum(aberration);
     auto systemType = IO::Astrodynamics::CoordinateSystem::ToCoordinateSystemType(coordinateSystem);
     auto coordinateType = IO::Astrodynamics::Coordinate::ToCoordinateType(coordinate);
@@ -374,7 +375,7 @@ void FindWindowsOnIlluminationConstraintProxy(IO::Astrodynamics::API::DTO::Windo
                                               const char *aberration, double stepSize, const char *method,
                                               IO::Astrodynamics::API::DTO::WindowDTO *windows)
 {
-    const std::lock_guard<std::mutex> lock(g_i_mutex);
+
     double coordinates[3] = {geodetic.latitude, geodetic.longitude, geodetic.altitude};
 
     IO::Astrodynamics::Body::CelestialBody body(targetBody);
@@ -407,7 +408,7 @@ FindWindowsInFieldOfViewConstraintProxy(IO::Astrodynamics::API::DTO::WindowDTO s
                                         const char *aberration, double stepSize,
                                         IO::Astrodynamics::API::DTO::WindowDTO *windows)
 {
-    const std::lock_guard<std::mutex> lock(g_i_mutex);
+
     auto abe = IO::Astrodynamics::Aberrations::ToEnum(aberration);
     auto res = IO::Astrodynamics::Constraints::GeometryFinder::FindWindowsInFieldOfViewConstraint(
             ToTDBWindow(searchWindow),
@@ -424,7 +425,7 @@ FindWindowsInFieldOfViewConstraintProxy(IO::Astrodynamics::API::DTO::WindowDTO s
 
 double ConvertTDBToUTCProxy(double tdb)
 {
-    const std::lock_guard<std::mutex> lock(g_i_mutex);
+
     double delta{};
     deltet_c(tdb, "et", &delta);
     return tdb - delta;
@@ -432,7 +433,7 @@ double ConvertTDBToUTCProxy(double tdb)
 
 double ConvertUTCToTDBProxy(double utc)
 {
-    const std::lock_guard<std::mutex> lock(g_i_mutex);
+
     double delta{};
     deltet_c(utc, "UTC", &delta);
     return utc + delta;
@@ -440,7 +441,7 @@ double ConvertUTCToTDBProxy(double utc)
 
 IO::Astrodynamics::API::DTO::CelestialBodyDTO GetCelestialBodyInfoProxy(int bodyId)
 {
-    const std::lock_guard<std::mutex> lock(g_i_mutex);
+
     SpiceChar errorMode[7] = "RETURN";
     erract_c("SET", ERRORMSGLENGTH, errorMode);
     IO::Astrodynamics::API::DTO::CelestialBodyDTO res;
@@ -515,7 +516,7 @@ char *HandleError()
 IO::Astrodynamics::API::DTO::FrameTransformationDTO
 TransformFrameProxy(const char *fromFrame, const char *toFrame, double epoch)
 {
-    const std::lock_guard<std::mutex> lock(g_i_mutex);
+
     IO::Astrodynamics::Frames::Frames from{fromFrame};
     IO::Astrodynamics::Frames::Frames to{toFrame};
     IO::Astrodynamics::Time::TDB tdb((std::chrono::duration<double>(epoch)));
@@ -544,7 +545,7 @@ TransformFrameProxy(const char *fromFrame, const char *toFrame, double epoch)
 
 IO::Astrodynamics::API::DTO::StateVectorDTO ConvertTLEToStateVectorProxy(const char *L1, const char *L2, double epoch)
 {
-    const std::lock_guard<std::mutex> lock(g_i_mutex);
+
     auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399);
     std::string strings[3] = {"ISS", L1, L2};
     IO::Astrodynamics::OrbitalParameters::TLE tle(earth, strings);
@@ -555,7 +556,7 @@ IO::Astrodynamics::API::DTO::StateVectorDTO ConvertTLEToStateVectorProxy(const c
 IO::Astrodynamics::API::DTO::StateVectorDTO
 ConvertConicElementsToStateVectorProxy(IO::Astrodynamics::API::DTO::ConicOrbitalElementsDTO conicOrbitalElementsDto)
 {
-    const std::lock_guard<std::mutex> lock(g_i_mutex);
+
     auto centerOfMotion = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(
             conicOrbitalElementsDto.centerOfMotionId);
     IO::Astrodynamics::Time::TDB tdb{std::chrono::duration<double>(conicOrbitalElementsDto.epoch)};
@@ -577,7 +578,7 @@ IO::Astrodynamics::API::DTO::StateVectorDTO
 ConvertEquinoctialElementsToStateVectorProxy(
         IO::Astrodynamics::API::DTO::EquinoctialElementsDTO equinoctialElementsDto)
 {
-    const std::lock_guard<std::mutex> lock(g_i_mutex);
+
     auto centerOfMotion = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(
             equinoctialElementsDto.centerOfMotionId);
     IO::Astrodynamics::Time::TDB tdb{std::chrono::duration<double>(equinoctialElementsDto.epoch)};
@@ -600,7 +601,7 @@ ConvertEquinoctialElementsToStateVectorProxy(
 IO::Astrodynamics::API::DTO::RaDecDTO
 ConvertStateVectorToEquatorialCoordinatesProxy(IO::Astrodynamics::API::DTO::StateVectorDTO stateVectorDto)
 {
-    const std::lock_guard<std::mutex> lock(g_i_mutex);
+
     auto centerOfMotion = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(stateVectorDto.centerOfMotionId);
     IO::Astrodynamics::Time::TDB tdb{std::chrono::duration<double>(stateVectorDto.epoch)};
     IO::Astrodynamics::Frames::Frames frame{stateVectorDto.inertialFrame};

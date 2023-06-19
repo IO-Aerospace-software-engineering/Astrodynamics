@@ -19,9 +19,7 @@ IO::Astrodynamics::Frames::FrameFile::FrameFile(const std::string& filePath, std
 
 	if (std::filesystem::is_block_file(m_filePath) && std::filesystem::exists(m_filePath))
 	{
-		m_fileExists = true;
-		furnsh_c(m_filePath.c_str());
-		m_isLoaded = true;
+        std::filesystem::remove(m_filePath);
 	}
 }
 

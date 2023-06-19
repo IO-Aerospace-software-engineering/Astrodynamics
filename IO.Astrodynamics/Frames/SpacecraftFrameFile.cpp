@@ -6,26 +6,16 @@
 #include <filesystem>
 #include <Templates/Templates.cpp>
 #include <Spacecraft.h>
+#include <iostream>
 
 IO::Astrodynamics::Frames::SpacecraftFrameFile::SpacecraftFrameFile(const IO::Astrodynamics::Body::Spacecraft::Spacecraft &spacecraft) : FrameFile(
         spacecraft.GetFilesPath() + "/Frames/" + spacecraft.GetName() + ".tf", spacecraft.GetName()), m_id{spacecraft.GetId() * 1000}, m_spacecraft{spacecraft}
 {
-	if (!m_fileExists)
-	{
-		BuildFrame();
-		furnsh_c(m_filePath.c_str());
-		m_isLoaded = true;
-	}
+    BuildFrame();
 }
 
 void IO::Astrodynamics::Frames::SpacecraftFrameFile::BuildFrame()
 {
-	if (std::filesystem::exists(m_filePath))
-	{
-		unload_c(m_filePath.c_str());
-		std::filesystem::remove(m_filePath);
-	}
-
 	std::ofstream outFile(m_filePath);
     std::istringstream readTemplate(ckTemplate);
 	std::string readout;
@@ -74,7 +64,5 @@ void IO::Astrodynamics::Frames::SpacecraftFrameFile::BuildFrame()
 	outFile.flush();
 	outFile.close();
 
-//	readTemplate.close();
-
-	m_fileExists = true;
+    furnsh_c(m_filePath.c_str());
 }
