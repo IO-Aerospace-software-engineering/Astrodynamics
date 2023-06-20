@@ -19,7 +19,7 @@ namespace IO::Astrodynamics::Frames {
     private:
         const IO::Astrodynamics::Sites::Site &m_site;
 
-        void BuildFrame() override;
+        void BuildFrame();
 
     public:
         /**

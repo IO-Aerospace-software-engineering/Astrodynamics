@@ -9,11 +9,22 @@
 
 IO::Astrodynamics::Frames::InstrumentFrameFile::InstrumentFrameFile(const IO::Astrodynamics::Instruments::Instrument& instrument, const IO::Astrodynamics::Math::Vector3D& orientation) :FrameFile(instrument.GetFilesPath() + "/Frames/" + instrument.GetName() + ".tf", instrument.GetSpacecraft().GetName() + "_" + instrument.GetName()), m_instrument{ instrument }, m_orientation{ orientation }
 {
-    BuildFrame();
+	if (!m_fileExists)
+	{
+		BuildFrame();
+		furnsh_c(m_filePath.c_str());
+		m_isLoaded = true;
+	}
 }
 
 void IO::Astrodynamics::Frames::InstrumentFrameFile::BuildFrame()
 {
+	if (std::filesystem::exists(m_filePath))
+	{
+		unload_c(m_filePath.c_str());
+		std::filesystem::remove(m_filePath);
+	}
+
 	std::ofstream outFile(m_filePath);
 	std::stringstream readTemplate(Tk);
 	std::string readout;
@@ -86,5 +97,5 @@ void IO::Astrodynamics::Frames::InstrumentFrameFile::BuildFrame()
 	outFile.flush();
 	outFile.close();
 
-    furnsh_c(m_filePath.c_str());
+	m_fileExists = true;
 }

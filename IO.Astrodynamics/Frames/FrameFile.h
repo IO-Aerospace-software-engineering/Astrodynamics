@@ -17,21 +17,20 @@ namespace IO::Astrodynamics::Frames
 	private:
 	protected:
 		const std::string m_filePath{};
-//		bool m_fileExists{ false };
-//		bool m_isLoaded{ false };
+		bool m_fileExists{ false };
+		bool m_isLoaded{ false };
 		FrameFile(const std::string& filePath, std::string  name);
 		const std::string m_name{};
-        virtual void BuildFrame()=0;
 
 	public:
 		virtual ~FrameFile();
+
 		/**
 		 * @brief Get the frame name
 		 * 
 		 * @return std::string 
 		 */
 		[[nodiscard]] std::string GetName() const;
-
 	};
 }
 #endif
