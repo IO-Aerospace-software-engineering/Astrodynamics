@@ -8,12 +8,12 @@
 #include <Templates/Templates.cpp>
 
 IO::Astrodynamics::Kernels::InstrumentKernel::InstrumentKernel(const IO::Astrodynamics::Instruments::Instrument &instrument, const IO::Astrodynamics::Math::Vector3D &boresight,
-                                                     const IO::Astrodynamics::Math::Vector3D &refVector, const double angle) : Kernel(
+                                                               const IO::Astrodynamics::Math::Vector3D &refVector, const double angle) : Kernel(
         instrument.GetFilesPath() + "/Kernels/" + instrument.GetName() + ".ti"),
-                                                                                                                     m_instrument{instrument},
-                                                                                                                     m_boresight{boresight},
-                                                                                                                     m_refVector{refVector},
-                                                                                                                     m_angle{angle}
+                                                                                                                                         m_instrument{instrument},
+                                                                                                                                         m_boresight{boresight},
+                                                                                                                                         m_refVector{refVector},
+                                                                                                                                         m_angle{angle}
 {
 }
 
@@ -24,10 +24,11 @@ IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB> IO::Astrodynamics:
 
 void IO::Astrodynamics::Kernels::InstrumentKernel::BuildKernel()
 {
-    if (std::filesystem::exists(m_filePath))
-    {
+    if (std::filesystem::exists(m_filePath)) {
         unload_c(m_filePath.c_str());
+        m_isLoaded = false;
         std::filesystem::remove(m_filePath);
+        m_fileExists = false;
     }
 
     std::ofstream outFile(m_filePath);
@@ -36,67 +37,55 @@ void IO::Astrodynamics::Kernels::InstrumentKernel::BuildKernel()
     std::string search;
     std::string replace;
 
-    if (readTemplate.good() && outFile.good())
-    {
-        while (std::getline(readTemplate, readout))
-        {
+    if (readTemplate.good() && outFile.good()) {
+        while (std::getline(readTemplate, readout)) {
             auto posinstid = readout.find("{instrumentid}");
-            if (posinstid != std::string::npos)
-            {
+            if (posinstid != std::string::npos) {
                 readout = readout.replace(posinstid, 14, std::to_string(m_instrument.GetId()));
             }
 
             auto posframename = readout.find("{framename}");
-            if (posframename != std::string::npos)
-            {
+            if (posframename != std::string::npos) {
                 readout = readout.replace(posframename, 11, m_instrument.GetFrame()->GetName());
             }
 
             auto posspid = readout.find("{spacecraftid}");
-            if (posspid != std::string::npos)
-            {
+            if (posspid != std::string::npos) {
                 readout = readout.replace(posspid, 14, std::to_string(m_instrument.GetSpacecraft().GetId()));
             }
 
             auto posbx = readout.find("{bx}");
-            if (posbx != std::string::npos)
-            {
+            if (posbx != std::string::npos) {
                 readout = readout.replace(posbx, 4, std::to_string(m_boresight.GetX()));
             }
 
             auto posby = readout.find("{by}");
-            if (posby != std::string::npos)
-            {
+            if (posby != std::string::npos) {
                 readout = readout.replace(posby, 4, std::to_string(m_boresight.GetY()));
             }
 
             auto posbz = readout.find("{bz}");
-            if (posbz != std::string::npos)
-            {
+            if (posbz != std::string::npos) {
                 readout = readout.replace(posbz, 4, std::to_string(m_boresight.GetZ()));
             }
 
             auto posrx = readout.find("{rx}");
-            if (posrx != std::string::npos)
-            {
+            if (posrx != std::string::npos) {
                 readout = readout.replace(posrx, 4, std::to_string(m_refVector.GetX()));
             }
 
             auto posry = readout.find("{ry}");
-            if (posry != std::string::npos)
-            {
+            if (posry != std::string::npos) {
                 readout = readout.replace(posry, 4, std::to_string(m_refVector.GetY()));
             }
 
             auto posrz = readout.find("{rz}");
-            if (posrz != std::string::npos)
-            {
+            if (posrz != std::string::npos) {
                 readout = readout.replace(posrz, 4, std::to_string(m_refVector.GetZ()));
             }
 
             auto posangle = readout.find("{angle}");
-            if (posangle != std::string::npos)
-            {
+            if (posangle != std::string::npos) {
                 readout = readout.replace(posangle, 7, std::to_string(m_angle * 0.5));
             }
 

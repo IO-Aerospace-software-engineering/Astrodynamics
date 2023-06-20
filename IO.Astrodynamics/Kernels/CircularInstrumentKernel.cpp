@@ -10,3 +10,8 @@ IO::Astrodynamics::Kernels::CircularInstrumentKernel::CircularInstrumentKernel(c
 	furnsh_c(m_filePath.c_str());
 	m_isLoaded = true;
 }
+
+void IO::Astrodynamics::Kernels::CircularInstrumentKernel::BuildKernel()
+{
+    InstrumentKernel::BuildKernel();
+}

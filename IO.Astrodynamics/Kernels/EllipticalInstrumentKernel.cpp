@@ -7,12 +7,24 @@
 #include<sstream>
 #include <Templates/Templates.cpp>
 
+IO::Astrodynamics::Kernels::EllipticalInstrumentKernel::EllipticalInstrumentKernel(
+        const IO::Astrodynamics::Instruments::Instrument &instrument, const IO::Astrodynamics::Math::Vector3D &boresight,
+        const IO::Astrodynamics::Math::Vector3D &refVector, const double angle, const double crossAngle)
+        : InstrumentKernel(instrument, boresight, refVector, angle), m_crossAngle{crossAngle}
+{
+    BuildKernel();
+    furnsh_c(m_filePath.c_str());
+    m_isLoaded = true;
+}
+
 void IO::Astrodynamics::Kernels::EllipticalInstrumentKernel::BuildKernel()
 {
     if (std::filesystem::exists(m_filePath))
     {
         unload_c(m_filePath.c_str());
+        m_isLoaded= false;
         std::filesystem::remove(m_filePath);
+        m_fileExists= false;
     }
 
     std::ofstream outFile(m_filePath);
@@ -93,16 +105,9 @@ void IO::Astrodynamics::Kernels::EllipticalInstrumentKernel::BuildKernel()
 
             outFile << readout << std::endl;
         }
+        m_fileExists= true;
     }
 }
 
 
-IO::Astrodynamics::Kernels::EllipticalInstrumentKernel::EllipticalInstrumentKernel(
-        const IO::Astrodynamics::Instruments::Instrument &instrument, const IO::Astrodynamics::Math::Vector3D &boresight,
-        const IO::Astrodynamics::Math::Vector3D &refVector, const double angle, const double crossAngle)
-        : InstrumentKernel(instrument, boresight, refVector, angle), m_crossAngle{crossAngle}
-{
-    BuildKernel();
-    furnsh_c(m_filePath.c_str());
-    m_isLoaded = true;
-}
+

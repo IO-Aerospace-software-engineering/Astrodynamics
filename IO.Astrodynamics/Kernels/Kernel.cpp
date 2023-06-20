@@ -18,14 +18,6 @@ IO::Astrodynamics::Kernels::Kernel::Kernel(std::string filePath) : m_filePath{st
             std::filesystem::create_directories(directory.parent_path());
         }
     }
-
-    if (std::filesystem::is_block_file(m_filePath) && std::filesystem::exists(m_filePath))
-    {
-        m_fileExists = true;
-        furnsh_c(m_filePath.c_str());
-        m_isLoaded = true;
-    }
-
 }
 
 IO::Astrodynamics::Kernels::Kernel::~Kernel()

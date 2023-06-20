@@ -38,7 +38,7 @@ namespace IO::Astrodynamics::Kernels
          *
          * @param orientations
          */
-        void WriteOrientations(const std::vector<std::vector<IO::Astrodynamics::OrbitalParameters::StateOrientation>> &orientations) const;
+        void WriteOrientations(const std::vector<std::vector<IO::Astrodynamics::OrbitalParameters::StateOrientation>> &orientations);
 
         /**
          * @brief Get the Coverage Window

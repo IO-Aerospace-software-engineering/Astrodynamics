@@ -18,8 +18,10 @@ namespace IO::Astrodynamics::Kernels
 	class CircularInstrumentKernel final :public IO::Astrodynamics::Kernels::InstrumentKernel
 	{
 	private:
+    protected:
+        void BuildKernel() override;
 
-	public:
+    public:
 		/**
 		 * @brief Construct a new Circular Instrument Kernel object
 		 * 

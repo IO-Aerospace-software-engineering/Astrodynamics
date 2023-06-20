@@ -7,29 +7,30 @@
 #include <InvalidArgumentException.h>
 
 
-IO::Astrodynamics::Kernels::OrientationKernel::OrientationKernel(std::string filePath, int spacecraftId, int spacecraftFrameId) : IO::Astrodynamics::Kernels::Kernel(std::move(filePath)),
-                                                                                                                        m_spacecraftId{spacecraftId},
-                                                                                                                        m_spacecraftFrameId{spacecraftFrameId}
+IO::Astrodynamics::Kernels::OrientationKernel::OrientationKernel(std::string filePath, int spacecraftId, int spacecraftFrameId) : IO::Astrodynamics::Kernels::Kernel(
+        std::move(filePath)),
+                                                                                                                                  m_spacecraftId{spacecraftId},
+                                                                                                                                  m_spacecraftFrameId{spacecraftFrameId}
 {
-
+    if (std::filesystem::exists(m_filePath)) {
+        m_fileExists = true;
+        furnsh_c(m_filePath.c_str());
+        m_isLoaded = true;
+    }
 }
 
 IO::Astrodynamics::Kernels::OrientationKernel::~OrientationKernel() = default;
 
-void IO::Astrodynamics::Kernels::OrientationKernel::WriteOrientations(const std::vector<std::vector<IO::Astrodynamics::OrbitalParameters::StateOrientation>> &orientations) const
+void IO::Astrodynamics::Kernels::OrientationKernel::WriteOrientations(const std::vector<std::vector<IO::Astrodynamics::OrbitalParameters::StateOrientation>> &orientations)
 {
-    if (orientations.empty())
-    {
+    if (orientations.empty()) {
         throw IO::Astrodynamics::Exception::SDKException("Orientations array is empty");
     }
 
     auto frame = orientations.front().front().GetFrame();
-    for (auto &&orientation: orientations)
-    {
-        for (auto &&orientationPart: orientation)
-        {
-            if (orientationPart.GetFrame() != frame)
-            {
+    for (auto &&orientation: orientations) {
+        for (auto &&orientationPart: orientation) {
+            if (orientationPart.GetFrame() != frame) {
                 throw IO::Astrodynamics::Exception::InvalidArgumentException(
                         "Orientations collection contains data with different frames : " + frame.GetName() + " - " + orientationPart.GetFrame().GetName() +
                         ". All orientations must have the same frame. ");
@@ -64,10 +65,8 @@ void IO::Astrodynamics::Kernels::OrientationKernel::WriteOrientations(const std:
     //Used to define polynomial degree
     size_t minSize{std::numeric_limits<size_t>::max()};
 
-    for (auto &interval: orientations)
-    {
-        if (interval.empty())
-        {
+    for (auto &interval: orientations) {
+        if (interval.empty()) {
             throw IO::Astrodynamics::Exception::InvalidArgumentException("Orientation array is empty");
         }
 
@@ -77,13 +76,11 @@ void IO::Astrodynamics::Kernels::OrientationKernel::WriteOrientations(const std:
         //Number of data
         size_t intervalSize = interval.size();
 
-        if (intervalSize < minSize)
-        {
+        if (intervalSize < minSize) {
             minSize = intervalSize;
         }
         n += intervalSize;
-        for (auto &orientation: interval)
-        {
+        for (auto &orientation: interval) {
             //Add encoded clock
             sclks.push_back(SpacecraftClockKernel::ConvertToEncodedClock(m_spacecraftId, orientation.GetEpoch()));
 
@@ -93,8 +90,7 @@ void IO::Astrodynamics::Kernels::OrientationKernel::WriteOrientations(const std:
         }
     }
 
-    if (std::filesystem::exists(m_filePath))
-    {
+    if (std::filesystem::exists(m_filePath)) {
         unload_c(m_filePath.c_str());
         std::filesystem::remove(m_filePath);
     }
@@ -104,12 +100,14 @@ void IO::Astrodynamics::Kernels::OrientationKernel::WriteOrientations(const std:
     ckopn_c(m_filePath.c_str(), "CK_file", 5000, &handle);
     ckw03_c(handle, begtime, endtime, m_spacecraftFrameId, frame.ToCharArray(), true, "Seg1", n, &sclks[0], &quats[0], &av[0], nbIntervals, &intervalsStarts[0]);
     ckcls_c(handle);
-
+    m_fileExists = true;
     furnsh_c(m_filePath.c_str());
+    m_isLoaded = true;
 }
 
 IO::Astrodynamics::OrbitalParameters::StateOrientation
-IO::Astrodynamics::Kernels::OrientationKernel::ReadStateOrientation(const Body::Spacecraft::Spacecraft& spacecraft, const IO::Astrodynamics::Time::TDB &epoch, const IO::Astrodynamics::Time::TimeSpan &tolerance, const IO::Astrodynamics::Frames::Frames &frame) const
+IO::Astrodynamics::Kernels::OrientationKernel::ReadStateOrientation(const Body::Spacecraft::Spacecraft &spacecraft, const IO::Astrodynamics::Time::TDB &epoch,
+                                                                    const IO::Astrodynamics::Time::TimeSpan &tolerance, const IO::Astrodynamics::Frames::Frames &frame) const
 {
     //Build plateform id
     SpiceInt id = m_spacecraftId * 1000;
@@ -128,23 +126,19 @@ IO::Astrodynamics::Kernels::OrientationKernel::ReadStateOrientation(const Body::
     //Get orientation and angular velocity
     ckgpav_c(id, sclk, tol, frame.ToCharArray(), cmat, av, &clkout, &found);
 
-    if (!found)
-    {
+    if (!found) {
         throw IO::Astrodynamics::Exception::SDKException("No orientation found");
     }
 
     //Build array pointers
     double **arrayCmat;
     arrayCmat = new double *[3];
-    for (int i = 0; i < 3; i++)
-    {
+    for (int i = 0; i < 3; i++) {
         arrayCmat[i] = new double[3]{};
     }
 
-    for (size_t i = 0; i < 3; i++)
-    {
-        for (size_t j = 0; j < 3; j++)
-        {
+    for (size_t i = 0; i < 3; i++) {
+        for (size_t j = 0; j < 3; j++) {
             arrayCmat[i][j] = cmat[i][j];
         }
     }
@@ -175,7 +169,8 @@ IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB> IO::Astrodynamics:
 
     wnfetd_c(&cnfine, 0, &start, &end);
 
-    return IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB>{IO::Astrodynamics::Time::TDB(std::chrono::duration<double>(start)), IO::Astrodynamics::Time::TDB(std::chrono::duration<double>(end))};
+    return IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB>{IO::Astrodynamics::Time::TDB(std::chrono::duration<double>(start)),
+                                                                         IO::Astrodynamics::Time::TDB(std::chrono::duration<double>(end))};
 }
 
 
