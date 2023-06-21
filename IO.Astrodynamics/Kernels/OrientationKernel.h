@@ -31,7 +31,7 @@ namespace IO::Astrodynamics::Kernels
          */
         OrientationKernel(std::string filePath, int spacecraftId, int spacecraftFrameId);
 
-        ~OrientationKernel() override;
+        ~OrientationKernel() override = default;
 
         /**
          * @brief Write orientations data

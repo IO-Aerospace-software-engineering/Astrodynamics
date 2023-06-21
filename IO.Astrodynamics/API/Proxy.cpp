@@ -67,7 +67,6 @@ void LaunchProxy(IO::Astrodynamics::API::DTO::LaunchDTO &launchDto)
 
 void PropagateProxy(IO::Astrodynamics::API::DTO::ScenarioDTO &scenarioDto)
 {
-
     auto tdbWindow = ToTDBWindow(scenarioDto.Window);
     IO::Astrodynamics::Scenario scenario(scenarioDto.Name,
                                          IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::UTC>(
@@ -132,7 +131,6 @@ void PropagateProxy(IO::Astrodynamics::API::DTO::ScenarioDTO &scenarioDto)
     {
         ReadManeuverResults(scenarioDto, maneuvers);
     }
-
 }
 
 const char *GetSpiceVersionProxy()
@@ -172,8 +170,7 @@ bool WriteEphemerisProxy(const char *filePath, int objectId, IO::Astrodynamics::
     return true;
 }
 
-void
-ReadOrientationProxy(IO::Astrodynamics::API::DTO::WindowDTO searchWindow, int spacecraftId, double tolerance,
+void ReadOrientationProxy(IO::Astrodynamics::API::DTO::WindowDTO searchWindow, int spacecraftId, double tolerance,
                      const char *frame,
                      double stepSize, IO::Astrodynamics::API::DTO::StateOrientationDTO *so)
 {
@@ -250,6 +247,12 @@ void LoadKernelsProxy(const char *path)
 {
 
     IO::Astrodynamics::Kernels::KernelsLoader::Load(path);
+}
+
+void UnloadKernelsProxy(const char *path)
+{
+
+    IO::Astrodynamics::Kernels::KernelsLoader::Unload(path);
 }
 
 const char *TDBToStringProxy(double secondsFromJ2000)

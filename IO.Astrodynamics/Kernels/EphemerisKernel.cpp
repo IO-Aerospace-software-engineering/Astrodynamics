@@ -115,7 +115,7 @@ void IO::Astrodynamics::Kernels::EphemerisKernel::WriteData(const std::vector<Or
     spkcls_c(handle);
     m_fileExists = true;
     furnsh_c(m_filePath.c_str());
-    m_isLoaded = false;
+    m_isLoaded = true;
     delete[] statesArray;
 }
 

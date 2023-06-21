@@ -19,7 +19,7 @@ IO::Astrodynamics::Kernels::OrientationKernel::OrientationKernel(std::string fil
     }
 }
 
-IO::Astrodynamics::Kernels::OrientationKernel::~OrientationKernel() = default;
+
 
 void IO::Astrodynamics::Kernels::OrientationKernel::WriteOrientations(const std::vector<std::vector<IO::Astrodynamics::OrbitalParameters::StateOrientation>> &orientations)
 {
@@ -92,7 +92,9 @@ void IO::Astrodynamics::Kernels::OrientationKernel::WriteOrientations(const std:
 
     if (std::filesystem::exists(m_filePath)) {
         unload_c(m_filePath.c_str());
+        m_isLoaded = false;
         std::filesystem::remove(m_filePath);
+        m_fileExists = false;
     }
 
     //Write data

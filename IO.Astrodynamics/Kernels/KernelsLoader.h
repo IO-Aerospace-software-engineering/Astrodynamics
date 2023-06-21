@@ -17,6 +17,7 @@ namespace IO::Astrodynamics::Kernels
     private:
     public :
         static void Load(const std::string& path);
+        static void Unload(const std::string& path);
 	};
 }
 

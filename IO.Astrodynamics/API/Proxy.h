@@ -85,10 +85,16 @@ MODULE_API void PropagateProxy(IO::Astrodynamics::API::DTO::ScenarioDTO &scenari
 MODULE_API void LaunchProxy(IO::Astrodynamics::API::DTO::LaunchDTO &launchDto);
 
 /**
- * Load generic kernels
+ * Load kernels
  * @param directoryPath
  */
 MODULE_API void LoadKernelsProxy(const char *path);
+
+/**
+ * Unload kernels
+ * @param directoryPath
+ */
+MODULE_API void UnloadKernelsProxy(const char *path);
 
 /**
  * Convert secondFromJ2000 to formatted string
