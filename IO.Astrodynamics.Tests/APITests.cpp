@@ -415,7 +415,6 @@ TEST(API, GetBodyInformation)
     ASSERT_EQ(399, res.Id);
     ASSERT_EQ(10, res.centerOfMotionId);
     ASSERT_STREQ("EARTH", res.Name);
-    ASSERT_STREQ("", res.Error);
     ASSERT_EQ(13000, res.FrameId);
     ASSERT_STREQ("ITRF93", res.FrameName);
     ASSERT_DOUBLE_EQ(398600435436095.94, res.GM);
@@ -427,7 +426,6 @@ TEST(API, GetBodyInformation)
 TEST(API, GetBodyInformationInvalidId)
 {
     auto res = GetCelestialBodyInfoProxy(398);
-    ASSERT_STREQ("Not found", res.Error);
 }
 
 TEST(API, TransformFrame)

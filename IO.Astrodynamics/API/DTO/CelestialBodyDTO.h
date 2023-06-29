@@ -15,7 +15,6 @@ namespace IO::Astrodynamics::API::DTO
         double GM{};
         const char *FrameName{};
         int FrameId{};
-        const char * Error{};
     };
 }
 #endif //IOSDK_CELESTIALBODYDTO_H

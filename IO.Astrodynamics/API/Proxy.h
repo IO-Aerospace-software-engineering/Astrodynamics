@@ -25,6 +25,8 @@ extern "C" {
 #else
 #  define MODULE_API
 #endif
+
+
 /**
  * Get the spice version
  * @return version
@@ -284,7 +286,8 @@ MODULE_API IO::Astrodynamics::API::DTO::HorizontalDTO GetHorizontalCoordinates(I
 
 static constexpr const int lenout = 33;
 
-char *HandleError();
+void HandleError();
+void ActivateErrorManagement();
 
 std::map<int, std::shared_ptr<IO::Astrodynamics::Body::CelestialBody>>
 BuildCelestialBodies(IO::Astrodynamics::API::DTO::ScenarioDTO &scenario);
