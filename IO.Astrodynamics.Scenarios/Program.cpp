@@ -1,3 +1,7 @@
+/*
+ Copyright (c) 2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
+ */
+
 #include <iostream>
 #include <TLE.h>
 #include <Launch.h>
@@ -147,10 +151,10 @@ int main()
     spacecraft.AddPayload("PAY01", "Payload 01", 50.0);                                                           //We add a 50 kg payload to the Spacecraft
 
     //We add an instrument with a circular field of view  aligned with the Spacecraft Z axis
-    IO::Astrodynamics::Math::Vector3D orientation{1.0, 0.0, 0.0};
+    IO::Astrodynamics::Math::Vector3D orientation{IO::Astrodynamics::Constants::PI, 0.0, 0.0};
     IO::Astrodynamics::Math::Vector3D boresight{0.0, 0.0, 1.0};
     IO::Astrodynamics::Math::Vector3D fovvector{1.0, 0.0, 0.0};
-    spacecraft.AddCircularFOVInstrument(600, "CAM600", orientation, boresight, fovvector, 80.0 * IO::Astrodynamics::Constants::DEG_RAD);
+    spacecraft.AddCircularFOVInstrument(-178600, "CAM600", orientation, boresight, fovvector, 20.0 * IO::Astrodynamics::Constants::DEG_RAD);
 
     //Target
     IO::Astrodynamics::Body::Spacecraft::Spacecraft spacecraftTarget{-179, "TARGET", 1000.0, 10000.0, "MIS01",
@@ -208,7 +212,7 @@ int main()
                                                                             IO::Astrodynamics::OccultationType::Any(), IO::Astrodynamics::AberrationsEnum::None, IO::Astrodynamics::Time::TimeSpan(30s));
 
     //Find when moon will be in instrument field of view
-    auto fovWindows = spacecraft.GetInstrument(600)->FindWindowsWhereInFieldOfView(
+    auto fovWindows = spacecraft.GetInstrument(-178600)->FindWindowsWhereInFieldOfView(
             IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB>(startDatePropagator, spacecraft.GetOrientationsCoverageWindow().GetEndDate()), *moon, IO::Astrodynamics::AberrationsEnum::LT,
             IO::Astrodynamics::Time::TimeSpan(300s));
 
