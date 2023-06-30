@@ -6,7 +6,8 @@
 {\ttfamily \#include $<$Frame\+Transformation.\+h$>$}\newline
 {\ttfamily \#include $<$Conic\+Orbital\+Elements\+DTO.\+h$>$}\newline
 {\ttfamily \#include $<$Equinoctial\+Elements\+DTO.\+h$>$}\newline
-{\ttfamily \#include \char`\"{}Ra\+Dec\+DTO.\+h\char`\"{}}\newline
+{\ttfamily \#include $<$Ra\+Dec\+DTO.\+h$>$}\newline
+{\ttfamily \#include $<$Horizontal\+DTO.\+h$>$}\newline
 \doxysubsection*{Macros}
 \begin{DoxyCompactItemize}
 \item 
@@ -25,13 +26,17 @@
 \item 
 \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} void \mbox{\hyperlink{Proxy_8h_a4167d00080decf1912e155d1704bce08}{Read\+Ephemeris\+Proxy}} (\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1WindowDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Window\+DTO}} search\+Window, int observer\+Id, int target\+Id, const char $\ast$frame, const char $\ast$aberration, double step\+Size, \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1StateVectorDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+State\+Vector\+DTO}} state\+Vectors\mbox{[}10000\mbox{]})
 \item 
+\mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1StateVectorDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+State\+Vector\+DTO}} \mbox{\hyperlink{Proxy_8h_a8c66e3fd210a4a4d185538a8ec69a8c9}{Read\+Ephemeris\+At\+Given\+Epoch\+Proxy}} (double epoch, int observer\+Id, int target\+Id, const char $\ast$frame, const char $\ast$aberration)
+\item 
 \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} void \mbox{\hyperlink{Proxy_8h_acabfceb565c4e897f2d0c0afc36643b2}{Read\+Orientation\+Proxy}} (\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1WindowDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Window\+DTO}} search\+Window, int spacecraft\+Id, double tolerance, const char $\ast$frame, double step\+Size, \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1StateOrientationDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+State\+Orientation\+DTO}} so\mbox{[}10000\mbox{]})
 \item 
 \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} void \mbox{\hyperlink{Proxy_8h_a8b247d6485a00deb09237cfa0afdffc4}{Propagate\+Proxy}} (\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ScenarioDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Scenario\+DTO}} \&scenario\+Dto)
 \item 
 \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} void \mbox{\hyperlink{Proxy_8h_a589163156d2c405e61220e8f04b914a8}{Launch\+Proxy}} (\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1LaunchDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Launch\+DTO}} \&launch\+Dto)
 \item 
-\mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} void \mbox{\hyperlink{Proxy_8h_a8e72840432a41c8b143731654b2cef2a}{Load\+Kernels\+Proxy}} (const char $\ast$path)
+\mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} bool \mbox{\hyperlink{Proxy_8h_af05f045e002fb697be0ff9531e5ce29d}{Load\+Kernels\+Proxy}} (const char $\ast$path)
+\item 
+\mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} bool \mbox{\hyperlink{Proxy_8h_a3b1dfb96463e087e516d2bd1c48b33e8}{Unload\+Kernels\+Proxy}} (const char $\ast$path)
 \item 
 \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} const char $\ast$ \mbox{\hyperlink{Proxy_8h_a866cf6da600090959c6dc47000e75cc4}{TDBTo\+String\+Proxy}} (double seconds\+From\+J2000)
 \item 
@@ -63,7 +68,11 @@
 \item 
 \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1RaDecDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Ra\+Dec\+DTO}} \mbox{\hyperlink{Proxy_8h_ac91b73da531d42796dfdaceded511d75}{Convert\+State\+Vector\+To\+Equatorial\+Coordinates\+Proxy}} (\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1StateVectorDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+State\+Vector\+DTO}} state\+Vector\+Dto)
 \item 
+\mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1HorizontalDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Horizontal\+DTO}} \mbox{\hyperlink{Proxy_8h_a5c27a3837900966cebc882c248ea09fa}{Get\+Horizontal\+Coordinates}} (\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1StateVectorDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+State\+Vector\+DTO}} state\+Vector\+Dto)
+\item 
 char $\ast$ \mbox{\hyperlink{Proxy_8h_a070706fba8ff9475ca3b778c3bc1e115}{Handle\+Error}} ()
+\item 
+void \mbox{\hyperlink{Proxy_8h_a10b4e1afbe694c70385138fa39d88fa4}{Activate\+Error\+Management}} ()
 \item 
 std\+::map$<$ int, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody}{IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Body}} $>$ $>$ \mbox{\hyperlink{Proxy_8h_a8bab14a288b25f44aff3d6ae43a650b3}{Build\+Celestial\+Bodies}} (\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ScenarioDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Scenario\+DTO}} \&scenario)
 \item 
@@ -137,6 +146,12 @@ void \mbox{\hyperlink{Proxy_8h_a3eb1d8fdac1088947285a663760ab3a6}{Read\+Maneuver
 
 
 \doxysubsection{Function Documentation}
+\mbox{\Hypertarget{Proxy_8h_a10b4e1afbe694c70385138fa39d88fa4}\label{Proxy_8h_a10b4e1afbe694c70385138fa39d88fa4}} 
+\index{Proxy.h@{Proxy.h}!ActivateErrorManagement@{ActivateErrorManagement}}
+\index{ActivateErrorManagement@{ActivateErrorManagement}!Proxy.h@{Proxy.h}}
+\doxysubsubsection{\texorpdfstring{ActivateErrorManagement()}{ActivateErrorManagement()}}
+{\footnotesize\ttfamily void Activate\+Error\+Management (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
 \mbox{\Hypertarget{Proxy_8h_a0a53ea3098ce61da5c5d396bfb1f6468}\label{Proxy_8h_a0a53ea3098ce61da5c5d396bfb1f6468}} 
 \index{Proxy.h@{Proxy.h}!BuildApogeeManeuver@{BuildApogeeManeuver}}
 \index{BuildApogeeManeuver@{BuildApogeeManeuver}!Proxy.h@{Proxy.h}}
@@ -496,6 +511,12 @@ Get celestial body information from his id
 \begin{DoxyReturn}{Returns}
 
 \end{DoxyReturn}
+\mbox{\Hypertarget{Proxy_8h_a5c27a3837900966cebc882c248ea09fa}\label{Proxy_8h_a5c27a3837900966cebc882c248ea09fa}} 
+\index{Proxy.h@{Proxy.h}!GetHorizontalCoordinates@{GetHorizontalCoordinates}}
+\index{GetHorizontalCoordinates@{GetHorizontalCoordinates}!Proxy.h@{Proxy.h}}
+\doxysubsubsection{\texorpdfstring{GetHorizontalCoordinates()}{GetHorizontalCoordinates()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1HorizontalDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Horizontal\+DTO}} Get\+Horizontal\+Coordinates (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1StateVectorDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+State\+Vector\+DTO}}}]{state\+Vector\+Dto }\end{DoxyParamCaption})}
+
 \mbox{\Hypertarget{Proxy_8h_a762431b7740df9d560ebe822564369f1}\label{Proxy_8h_a762431b7740df9d560ebe822564369f1}} 
 \index{Proxy.h@{Proxy.h}!GetSpiceVersionProxy@{GetSpiceVersionProxy}}
 \index{GetSpiceVersionProxy@{GetSpiceVersionProxy}!Proxy.h@{Proxy.h}}
@@ -522,13 +543,13 @@ Evaluate launch windows
 {\em launch\+Dto} & \\
 \hline
 \end{DoxyParams}
-\mbox{\Hypertarget{Proxy_8h_a8e72840432a41c8b143731654b2cef2a}\label{Proxy_8h_a8e72840432a41c8b143731654b2cef2a}} 
+\mbox{\Hypertarget{Proxy_8h_af05f045e002fb697be0ff9531e5ce29d}\label{Proxy_8h_af05f045e002fb697be0ff9531e5ce29d}} 
 \index{Proxy.h@{Proxy.h}!LoadKernelsProxy@{LoadKernelsProxy}}
 \index{LoadKernelsProxy@{LoadKernelsProxy}!Proxy.h@{Proxy.h}}
 \doxysubsubsection{\texorpdfstring{LoadKernelsProxy()}{LoadKernelsProxy()}}
-{\footnotesize\ttfamily \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} void Load\+Kernels\+Proxy (\begin{DoxyParamCaption}\item[{const char $\ast$}]{path }\end{DoxyParamCaption})}
+{\footnotesize\ttfamily \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} bool Load\+Kernels\+Proxy (\begin{DoxyParamCaption}\item[{const char $\ast$}]{path }\end{DoxyParamCaption})}
 
-Load generic kernels 
+Load kernels 
 \begin{DoxyParams}{Parameters}
 {\em directory\+Path} & \\
 \hline
@@ -561,6 +582,12 @@ Propagate a scenario
 \index{ReadCombinedManeuverResult@{ReadCombinedManeuverResult}!Proxy.h@{Proxy.h}}
 \doxysubsubsection{\texorpdfstring{ReadCombinedManeuverResult()}{ReadCombinedManeuverResult()}}
 {\footnotesize\ttfamily void Read\+Combined\+Maneuver\+Result (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ScenarioDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Scenario\+DTO}} \&}]{scenario\+Dto,  }\item[{std\+::map$<$ int, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase}{IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Maneuver\+Base}} $>$ $>$ \&}]{maneuvers }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{Proxy_8h_a8c66e3fd210a4a4d185538a8ec69a8c9}\label{Proxy_8h_a8c66e3fd210a4a4d185538a8ec69a8c9}} 
+\index{Proxy.h@{Proxy.h}!ReadEphemerisAtGivenEpochProxy@{ReadEphemerisAtGivenEpochProxy}}
+\index{ReadEphemerisAtGivenEpochProxy@{ReadEphemerisAtGivenEpochProxy}!Proxy.h@{Proxy.h}}
+\doxysubsubsection{\texorpdfstring{ReadEphemerisAtGivenEpochProxy()}{ReadEphemerisAtGivenEpochProxy()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1StateVectorDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+State\+Vector\+DTO}} Read\+Ephemeris\+At\+Given\+Epoch\+Proxy (\begin{DoxyParamCaption}\item[{double}]{epoch,  }\item[{int}]{observer\+Id,  }\item[{int}]{target\+Id,  }\item[{const char $\ast$}]{frame,  }\item[{const char $\ast$}]{aberration }\end{DoxyParamCaption})}
 
 \mbox{\Hypertarget{Proxy_8h_a4167d00080decf1912e155d1704bce08}\label{Proxy_8h_a4167d00080decf1912e155d1704bce08}} 
 \index{Proxy.h@{Proxy.h}!ReadEphemerisProxy@{ReadEphemerisProxy}}
@@ -660,6 +687,17 @@ Get the transformation from a frame to another frame at given epoch
 \begin{DoxyReturn}{Returns}
 
 \end{DoxyReturn}
+\mbox{\Hypertarget{Proxy_8h_a3b1dfb96463e087e516d2bd1c48b33e8}\label{Proxy_8h_a3b1dfb96463e087e516d2bd1c48b33e8}} 
+\index{Proxy.h@{Proxy.h}!UnloadKernelsProxy@{UnloadKernelsProxy}}
+\index{UnloadKernelsProxy@{UnloadKernelsProxy}!Proxy.h@{Proxy.h}}
+\doxysubsubsection{\texorpdfstring{UnloadKernelsProxy()}{UnloadKernelsProxy()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} bool Unload\+Kernels\+Proxy (\begin{DoxyParamCaption}\item[{const char $\ast$}]{path }\end{DoxyParamCaption})}
+
+Unload kernels 
+\begin{DoxyParams}{Parameters}
+{\em directory\+Path} & \\
+\hline
+\end{DoxyParams}
 \mbox{\Hypertarget{Proxy_8h_a8f3164fd10cfa0827e25add2106a71c7}\label{Proxy_8h_a8f3164fd10cfa0827e25add2106a71c7}} 
 \index{Proxy.h@{Proxy.h}!UTCToStringProxy@{UTCToStringProxy}}
 \index{UTCToStringProxy@{UTCToStringProxy}!Proxy.h@{Proxy.h}}

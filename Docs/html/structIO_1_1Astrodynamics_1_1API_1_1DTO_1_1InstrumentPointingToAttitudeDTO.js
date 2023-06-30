@@ -5,7 +5,6 @@ var structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1InstrumentPointingToAttitudeDTO =
     [ "instrumentId", "structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1InstrumentPointingToAttitudeDTO.html#af5f8de4f9937b8f5bcf56930965d68a3", null ],
     [ "maneuverOrder", "structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1InstrumentPointingToAttitudeDTO.html#ad5f62fbda04c5f8e73c4b7134cd9728c", null ],
     [ "minimumEpoch", "structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1InstrumentPointingToAttitudeDTO.html#afdb7ab7e76aa4b5a6b820544f3b16b92", null ],
-    [ "targetBodyId", "structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1InstrumentPointingToAttitudeDTO.html#a0e2124b4bf5e6cc5d81492f15c12d631", null ],
-    [ "targetSiteId", "structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1InstrumentPointingToAttitudeDTO.html#aa87d341010b464d965c24a802a61af50", null ],
+    [ "targetId", "structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1InstrumentPointingToAttitudeDTO.html#a3b064fb6fbc70353e2c5d479adf62f24", null ],
     [ "window", "structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1InstrumentPointingToAttitudeDTO.html#aa8a2e51842e3d9c25414d91b48ec307a", null ]
 ];

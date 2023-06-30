@@ -25,6 +25,7 @@ namespace IO::Astrodynamics::API::DTO
         double inertialInsertionVelocity[100]{};
 
         IO::Astrodynamics::API::DTO::WindowDTO windows[100]{};
+        const char * Error{};
     };
 }
 #endif //IOSDK_LAUNCHDTO_H

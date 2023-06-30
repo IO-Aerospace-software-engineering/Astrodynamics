@@ -14,6 +14,7 @@ namespace IO::Astrodynamics::API::DTO
     {
         IO::Astrodynamics::API::DTO::QuaternionDTO Rotation{};
         IO::Astrodynamics::API::DTO::Vector3DDTO AngularVelocity{};
+        const char* Error{};
     };
 }
 

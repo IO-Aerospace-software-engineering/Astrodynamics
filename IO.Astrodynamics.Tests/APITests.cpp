@@ -12,7 +12,7 @@
 TEST(API, DTOSize)
 {
     auto size2 = sizeof(IO::Astrodynamics::API::DTO::ScenarioDTO);
-    ASSERT_EQ(18776, size2);
+    ASSERT_EQ(19032, size2);
 }
 
 TEST(API, TDBToString)

@@ -37,7 +37,6 @@ bool IO::Astrodynamics::Maneuvers::ApsidalAlignmentManeuver::CanExecute(
     vRelativeToP = std::fmod(vRelativeToP, Constants::_2PI);
     vRelativeToQ = std::fmod(vRelativeToQ, Constants::_2PI);
 
-    //TODO:manage case where pv or pq == 359° and Tolerance + 2° (that does mean uppervalue ==361°)
     if (vRelativeToP < Parameters::NodeDetectionAccuraccy) {
         m_isIntersectP = true;
         return true;

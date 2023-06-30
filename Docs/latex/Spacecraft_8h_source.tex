@@ -53,7 +53,7 @@
 \DoxyCodeLine{53         std::vector<std::unique\_ptr<IO::Astrodynamics::Body::Spacecraft::Engine>> m\_engines\{\};}
 \DoxyCodeLine{54         std::vector<std::unique\_ptr<IO::Astrodynamics::Body::Spacecraft::Payload>> m\_payloads\{\};}
 \DoxyCodeLine{55 }
-\DoxyCodeLine{56         \textcolor{keywordtype}{bool} HasInstrument(\textcolor{keywordtype}{unsigned} \textcolor{keywordtype}{short} \textcolor{keywordtype}{id});}
+\DoxyCodeLine{56         \textcolor{keywordtype}{bool} HasInstrument(\textcolor{keywordtype}{int} \textcolor{keywordtype}{id});}
 \DoxyCodeLine{57 }
 \DoxyCodeLine{58         \textcolor{keyword}{const} \textcolor{keywordtype}{double} m\_maximumOperatingMass;}
 \DoxyCodeLine{59 }
@@ -109,18 +109,18 @@
 \DoxyCodeLine{194 }
 \DoxyCodeLine{200         std::string \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft_a993e77ffe0029364ed3988f9af5074b3}{ReadEphemerisKernelComment}}() \textcolor{keyword}{const};}
 \DoxyCodeLine{201 }
-\DoxyCodeLine{212         \textcolor{keywordtype}{void} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft_a0f791ee097815445f1441e17218303e1}{AddCircularFOVInstrument}}(\textcolor{keywordtype}{unsigned} \textcolor{keywordtype}{short} \textcolor{keywordtype}{id}, \textcolor{keyword}{const} std::string \&name,}
+\DoxyCodeLine{212         \textcolor{keywordtype}{void} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft_a1c96da554ac2a7a4f18df580ccb2c32e}{AddCircularFOVInstrument}}(\textcolor{keywordtype}{int} \textcolor{keywordtype}{id}, \textcolor{keyword}{const} std::string \&name,}
 \DoxyCodeLine{213                                       \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO::Astrodynamics::Math::Vector3D}} \&orientation,}
 \DoxyCodeLine{214                                       \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO::Astrodynamics::Math::Vector3D}} \&boresight,}
 \DoxyCodeLine{215                                       \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO::Astrodynamics::Math::Vector3D}} \&fovRefVector, \textcolor{keywordtype}{double} fovAngle);}
 \DoxyCodeLine{216 }
-\DoxyCodeLine{228         \textcolor{keywordtype}{void} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft_a9939f4d5daea5e95a97581f0a2d76681}{AddRectangularFOVInstrument}}(\textcolor{keywordtype}{unsigned} \textcolor{keywordtype}{short} \textcolor{keywordtype}{id}, \textcolor{keyword}{const} std::string \&name,}
+\DoxyCodeLine{228         \textcolor{keywordtype}{void} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft_a57fb2aa421010f8b5863c91c9a160496}{AddRectangularFOVInstrument}}(\textcolor{keywordtype}{int} \textcolor{keywordtype}{id}, \textcolor{keyword}{const} std::string \&name,}
 \DoxyCodeLine{229                                          \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO::Astrodynamics::Math::Vector3D}} \&orientation,}
 \DoxyCodeLine{230                                          \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO::Astrodynamics::Math::Vector3D}} \&boresight,}
 \DoxyCodeLine{231                                          \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO::Astrodynamics::Math::Vector3D}} \&fovRefVector, \textcolor{keywordtype}{double} fovAngle,}
 \DoxyCodeLine{232                                          \textcolor{keywordtype}{double} crossAngle);}
 \DoxyCodeLine{233 }
-\DoxyCodeLine{245         \textcolor{keywordtype}{void} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft_af654be0e8c0ad550d88f85a1de1b5c47}{AddEllipticalFOVInstrument}}(\textcolor{keywordtype}{unsigned} \textcolor{keywordtype}{short} \textcolor{keywordtype}{id}, \textcolor{keyword}{const} std::string \&name,}
+\DoxyCodeLine{245         \textcolor{keywordtype}{void} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft_a14966eddc9bd5f722509e4bcb141a25f}{AddEllipticalFOVInstrument}}(\textcolor{keywordtype}{int} \textcolor{keywordtype}{id}, \textcolor{keyword}{const} std::string \&name,}
 \DoxyCodeLine{246                                         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO::Astrodynamics::Math::Vector3D}} \&orientation,}
 \DoxyCodeLine{247                                         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO::Astrodynamics::Math::Vector3D}} \&boresight,}
 \DoxyCodeLine{248                                         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO::Astrodynamics::Math::Vector3D}} \&fovRefVector, \textcolor{keywordtype}{double} fovAngle,}

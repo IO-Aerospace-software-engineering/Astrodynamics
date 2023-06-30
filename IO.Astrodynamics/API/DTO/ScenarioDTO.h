@@ -19,5 +19,6 @@ namespace IO::Astrodynamics::API::DTO
         SiteDTO Sites[10];
 
         int CelestialBodiesId[10]{};
+        const char *Error{};
     };
 }

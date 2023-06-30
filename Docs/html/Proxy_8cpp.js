@@ -1,5 +1,6 @@
 var Proxy_8cpp =
 [
+    [ "ActivateErrorManagement", "Proxy_8cpp.html#a10b4e1afbe694c70385138fa39d88fa4", null ],
     [ "BuildApogeeManeuver", "Proxy_8cpp.html#a0a53ea3098ce61da5c5d396bfb1f6468", null ],
     [ "BuildApsidalManeuver", "Proxy_8cpp.html#ad1238418f22962872f57d1070059f299", null ],
     [ "BuildCelestialBodies", "Proxy_8cpp.html#a8bab14a288b25f44aff3d6ae43a650b3", null ],
@@ -32,11 +33,12 @@ var Proxy_8cpp =
     [ "GetSpiceVersionProxy", "Proxy_8cpp.html#a1bd1683bf72804ee2be2dfe91e4bb337", null ],
     [ "HandleError", "Proxy_8cpp.html#a070706fba8ff9475ca3b778c3bc1e115", null ],
     [ "LaunchProxy", "Proxy_8cpp.html#a4ac35a4adf61ac9e78d8ad32a4f5557c", null ],
-    [ "LoadKernelsProxy", "Proxy_8cpp.html#a43dae27d944ca86a60f4259fcd7a3ac3", null ],
+    [ "LoadKernelsProxy", "Proxy_8cpp.html#ab439d94eae3243647e016305e642dc77", null ],
     [ "PropagateProxy", "Proxy_8cpp.html#a891b925a6ede57f797d77896bc78f581", null ],
     [ "ReadApogeeManeuverResult", "Proxy_8cpp.html#afa98d3a0838bfd56c2b11111589bbbb5", null ],
     [ "ReadApsidalAlignmentManeuverResult", "Proxy_8cpp.html#a4844c879c6033d6d11cb7f28a1a514f7", null ],
     [ "ReadCombinedManeuverResult", "Proxy_8cpp.html#a960b64ba392ac5304caed39184676fc5", null ],
+    [ "ReadEphemerisAtGivenEpochProxy", "Proxy_8cpp.html#a27aded6a6983e77dadb9ae356d14179b", null ],
     [ "ReadEphemerisProxy", "Proxy_8cpp.html#a346c324fb8ba9a69de59738e70abd743", null ],
     [ "ReadManeuverResults", "Proxy_8cpp.html#a3eb1d8fdac1088947285a663760ab3a6", null ],
     [ "ReadOrbitalPlaneManeuverResult", "Proxy_8cpp.html#afd6fa2c901ae128e5594f523a35c4ccb", null ],
@@ -45,6 +47,7 @@ var Proxy_8cpp =
     [ "ReadPhasingManeuverResult", "Proxy_8cpp.html#adb84f00576e8bbe39ff1883f62cd8b81", null ],
     [ "TDBToStringProxy", "Proxy_8cpp.html#a0ea299e073a26b6daf00c819536eae1a", null ],
     [ "TransformFrameProxy", "Proxy_8cpp.html#a9d700dc33f42104bae19e22c96a55aa1", null ],
+    [ "UnloadKernelsProxy", "Proxy_8cpp.html#a04cf08f304ed8d069399c098e8f20dd3", null ],
     [ "UTCToStringProxy", "Proxy_8cpp.html#af1e6f2f2b5080a1c1fdc85bbe77e1810", null ],
     [ "WriteEphemerisProxy", "Proxy_8cpp.html#aa3d92e4ca3c8c03645145078f0c2af1f", null ]
 ];

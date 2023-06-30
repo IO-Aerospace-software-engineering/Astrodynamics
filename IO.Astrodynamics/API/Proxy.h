@@ -90,13 +90,13 @@ MODULE_API void LaunchProxy(IO::Astrodynamics::API::DTO::LaunchDTO &launchDto);
  * Load kernels
  * @param directoryPath
  */
-MODULE_API void LoadKernelsProxy(const char *path);
+MODULE_API bool LoadKernelsProxy(const char *path);
 
 /**
  * Unload kernels
  * @param directoryPath
  */
-MODULE_API void UnloadKernelsProxy(const char *path);
+MODULE_API bool UnloadKernelsProxy(const char *path);
 
 /**
  * Convert secondFromJ2000 to formatted string
@@ -286,7 +286,7 @@ MODULE_API IO::Astrodynamics::API::DTO::HorizontalDTO GetHorizontalCoordinates(I
 
 static constexpr const int lenout = 33;
 
-void HandleError();
+char * HandleError();
 void ActivateErrorManagement();
 
 std::map<int, std::shared_ptr<IO::Astrodynamics::Body::CelestialBody>>

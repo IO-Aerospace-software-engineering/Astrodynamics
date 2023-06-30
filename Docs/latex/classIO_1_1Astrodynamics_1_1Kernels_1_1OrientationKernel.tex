@@ -15,9 +15,9 @@ Inheritance diagram for IO\+::Astrodynamics\+::Kernels\+::Orientation\+Kernel\+:
 \item 
 \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1OrientationKernel_a1c96a75956ec36afd07e5a6d2c8168ce}{Orientation\+Kernel}} (std\+::string file\+Path, int spacecraft\+Id, int spacecraft\+Frame\+Id)
 \begin{DoxyCompactList}\small\item\em Construct a new Orientation \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1Kernel}{Kernel}} object. \end{DoxyCompactList}\item 
-\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1OrientationKernel_a036bad30111f005c1bed0259485cfb63}{$\sim$\+Orientation\+Kernel}} () override
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1OrientationKernel_a198b2ac2bd86abd364b4b9b65438ed8d}{$\sim$\+Orientation\+Kernel}} () override=default
 \item 
-void \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1OrientationKernel_a0bbd8ab57be3b5e9b9d17473ce72d0c3}{Write\+Orientations}} (const std\+::vector$<$ std\+::vector$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateOrientation}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+State\+Orientation}} $>$ $>$ \&orientations) const
+void \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1OrientationKernel_a56c7cf23c8cb891ff0700f326a57a8fa}{Write\+Orientations}} (const std\+::vector$<$ std\+::vector$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateOrientation}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+State\+Orientation}} $>$ $>$ \&orientations)
 \begin{DoxyCompactList}\small\item\em Write orientations data. \end{DoxyCompactList}\item 
 \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{IO\+::\+Astrodynamics\+::\+Time\+::\+Window}}$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} $>$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1OrientationKernel_a4ff5bea010061c7a8dfb38329314648c}{Get\+Coverage\+Window}} () const override
 \begin{DoxyCompactList}\small\item\em Get the Coverage Window. \end{DoxyCompactList}\item 
@@ -47,7 +47,7 @@ Construct a new Orientation \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels
 {\em spacecraft} & \\
 \hline
 \end{DoxyParams}
-\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Kernels_1_1OrientationKernel_a036bad30111f005c1bed0259485cfb63}\label{classIO_1_1Astrodynamics_1_1Kernels_1_1OrientationKernel_a036bad30111f005c1bed0259485cfb63}} 
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Kernels_1_1OrientationKernel_a198b2ac2bd86abd364b4b9b65438ed8d}\label{classIO_1_1Astrodynamics_1_1Kernels_1_1OrientationKernel_a198b2ac2bd86abd364b4b9b65438ed8d}} 
 \index{IO::Astrodynamics::Kernels::OrientationKernel@{IO::Astrodynamics::Kernels::OrientationKernel}!````~OrientationKernel@{$\sim$OrientationKernel}}
 \index{````~OrientationKernel@{$\sim$OrientationKernel}!IO::Astrodynamics::Kernels::OrientationKernel@{IO::Astrodynamics::Kernels::OrientationKernel}}
 \doxysubsubsection{\texorpdfstring{$\sim$OrientationKernel()}{~OrientationKernel()}}
@@ -95,11 +95,11 @@ Read state orientations.
 \begin{DoxyReturn}{Returns}
 \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateOrientation}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+State\+Orientation}} 
 \end{DoxyReturn}
-\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Kernels_1_1OrientationKernel_a0bbd8ab57be3b5e9b9d17473ce72d0c3}\label{classIO_1_1Astrodynamics_1_1Kernels_1_1OrientationKernel_a0bbd8ab57be3b5e9b9d17473ce72d0c3}} 
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Kernels_1_1OrientationKernel_a56c7cf23c8cb891ff0700f326a57a8fa}\label{classIO_1_1Astrodynamics_1_1Kernels_1_1OrientationKernel_a56c7cf23c8cb891ff0700f326a57a8fa}} 
 \index{IO::Astrodynamics::Kernels::OrientationKernel@{IO::Astrodynamics::Kernels::OrientationKernel}!WriteOrientations@{WriteOrientations}}
 \index{WriteOrientations@{WriteOrientations}!IO::Astrodynamics::Kernels::OrientationKernel@{IO::Astrodynamics::Kernels::OrientationKernel}}
 \doxysubsubsection{\texorpdfstring{WriteOrientations()}{WriteOrientations()}}
-{\footnotesize\ttfamily void IO\+::\+Astrodynamics\+::\+Kernels\+::\+Orientation\+Kernel\+::\+Write\+Orientations (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ std\+::vector$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateOrientation}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+State\+Orientation}} $>$ $>$ \&}]{orientations }\end{DoxyParamCaption}) const}
+{\footnotesize\ttfamily void IO\+::\+Astrodynamics\+::\+Kernels\+::\+Orientation\+Kernel\+::\+Write\+Orientations (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ std\+::vector$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateOrientation}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+State\+Orientation}} $>$ $>$ \&}]{orientations }\end{DoxyParamCaption})}
 
 
 

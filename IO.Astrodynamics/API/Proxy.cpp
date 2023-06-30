@@ -64,7 +64,7 @@ void LaunchProxy(IO::Astrodynamics::API::DTO::LaunchDTO &launchDto)
     }
     if (failed_c())
     {
-        HandleError();
+        launchDto.Error = strdup(HandleError());
     }
 }
 
@@ -138,7 +138,7 @@ void PropagateProxy(IO::Astrodynamics::API::DTO::ScenarioDTO &scenarioDto)
     }
     if (failed_c())
     {
-        HandleError();
+        scenarioDto.Error = strdup(HandleError());
     }
 }
 
@@ -182,6 +182,7 @@ bool WriteEphemerisProxy(const char *filePath, int objectId, IO::Astrodynamics::
     if (failed_c())
     {
         HandleError();
+        return false;
     }
     return true;
 }
@@ -263,24 +264,28 @@ void ReadOrientationProxy(IO::Astrodynamics::API::DTO::WindowDTO searchWindow, i
     }
 }
 
-void LoadKernelsProxy(const char *path)
+bool LoadKernelsProxy(const char *path)
 {
     ActivateErrorManagement();
     IO::Astrodynamics::Kernels::KernelsLoader::Load(path);
     if (failed_c())
     {
+        return false;
         HandleError();
     }
+    return true;
 }
 
-void UnloadKernelsProxy(const char *path)
+bool UnloadKernelsProxy(const char *path)
 {
     ActivateErrorManagement();
     IO::Astrodynamics::Kernels::KernelsLoader::Unload(path);
     if (failed_c())
     {
         HandleError();
+        return false;
     }
+    return true;
 }
 
 const char *TDBToStringProxy(double secondsFromJ2000)
@@ -290,7 +295,7 @@ const char *TDBToStringProxy(double secondsFromJ2000)
     std::string str = tdb.ToString();
     if (failed_c())
     {
-        HandleError();
+        return strdup(HandleError());
     }
     return strdup(str.c_str());
 
@@ -303,7 +308,7 @@ const char *UTCToStringProxy(double secondsFromJ2000)
     std::string str = utc.ToString();
     if (failed_c())
     {
-        HandleError();
+        return strdup(HandleError());
     }
     return strdup(str.c_str());
 }
@@ -332,10 +337,9 @@ void ReadEphemerisProxy(IO::Astrodynamics::API::DTO::WindowDTO searchWindow, int
     }
 }
 
-void
-FindWindowsOnDistanceConstraintProxy(IO::Astrodynamics::API::DTO::WindowDTO searchWindow, int observerId, int targetId,
-                                     const char *relationalOperator, double value, const char *aberration,
-                                     double stepSize, IO::Astrodynamics::API::DTO::WindowDTO windows[1000])
+void FindWindowsOnDistanceConstraintProxy(IO::Astrodynamics::API::DTO::WindowDTO searchWindow, int observerId, int targetId,
+                                          const char *relationalOperator, double value, const char *aberration,
+                                          double stepSize, IO::Astrodynamics::API::DTO::WindowDTO windows[1000])
 {
     ActivateErrorManagement();
     auto relationalOpe = IO::Astrodynamics::Constraints::RelationalOperator::ToRelationalOperator(relationalOperator);
@@ -493,6 +497,7 @@ double ConvertTDBToUTCProxy(double tdb)
     if (failed_c())
     {
         HandleError();
+        return std::numeric_limits<double>::quiet_NaN();
     }
     return tdb - delta;
 }
@@ -505,6 +510,7 @@ double ConvertUTCToTDBProxy(double utc)
     if (failed_c())
     {
         HandleError();
+        return std::numeric_limits<double>::quiet_NaN();
     }
     return utc + delta;
 }
@@ -517,6 +523,7 @@ IO::Astrodynamics::API::DTO::CelestialBodyDTO GetCelestialBodyInfoProxy(int body
     SpiceBoolean found{false};
 
     bodc2n_c(bodyId, 32, name, &found);
+    res.Error = strdup("Body not found");
     if (found)
     {
         res.Id = bodyId;
@@ -527,7 +534,6 @@ IO::Astrodynamics::API::DTO::CelestialBodyDTO GetCelestialBodyInfoProxy(int body
         // Search body's radii
         if (bodyId >= 10)
         {
-
             SpiceDouble radiiRes[3];
             bodvcd_c(bodyId, "RADII", 3, &dim, radiiRes);
             if (dim > 0)
@@ -563,10 +569,11 @@ IO::Astrodynamics::API::DTO::CelestialBodyDTO GetCelestialBodyInfoProxy(int body
             res.FrameName = strdup(frname);
             res.FrameId = frcode;
         }
+        res.Error = strdup("");
     }
     if (failed_c())
     {
-        HandleError();
+        res.Error = strdup(HandleError());
     }
     return res;
 }
@@ -577,12 +584,12 @@ void ActivateErrorManagement()
     erract_c("SET", ERRORMSGLENGTH, errorMode);
 }
 
-void HandleError()
+char *HandleError()
 {
     static SpiceChar msg[ERRORMSGLENGTH];
     getmsg_c("LONG", ERRORMSGLENGTH, msg);
     reset_c();
-    std::cerr << msg << std::endl;
+    return msg;
 }
 
 IO::Astrodynamics::API::DTO::FrameTransformationDTO
@@ -611,13 +618,13 @@ TransformFrameProxy(const char *fromFrame, const char *toFrame, double epoch)
 
     IO::Astrodynamics::API::DTO::FrameTransformationDTO frameTransformationDto;
     xf2rav_c(convertedMtx, rotation, av);
-    frameTransformationDto.Rotation = ToQuaternionDTO(q);
-    frameTransformationDto.AngularVelocity = ToVector3DDTO(av);
     if (failed_c())
     {
-        HandleError();
+        frameTransformationDto.Error = strdup(HandleError());
+        return frameTransformationDto;
     }
-
+    frameTransformationDto.Rotation = ToQuaternionDTO(q);
+    frameTransformationDto.AngularVelocity = ToVector3DDTO(av);
     return frameTransformationDto;
 }
 
@@ -628,12 +635,13 @@ IO::Astrodynamics::API::DTO::StateVectorDTO ConvertTLEToStateVectorProxy(const c
     std::string strings[3] = {"ISS", L1, L2};
     IO::Astrodynamics::OrbitalParameters::TLE tle(earth, strings);
     auto sv = tle.ToStateVector(IO::Astrodynamics::Time::TDB(std::chrono::duration<double>(epoch)));
+    auto svDTO = ToStateVectorDTO(sv);
     if (failed_c())
     {
-        HandleError();
+        svDTO.Error = strdup(HandleError());
     }
 
-    return ToStateVectorDTO(sv);
+    return svDTO;
 }
 
 IO::Astrodynamics::API::DTO::StateVectorDTO
@@ -655,11 +663,12 @@ ConvertConicElementsToStateVectorProxy(IO::Astrodynamics::API::DTO::ConicOrbital
                                                                                     tdb,
                                                                                     frame};
     auto sv = conicOrbitalElements.ToStateVector();
+    auto svDTO = ToStateVectorDTO(sv);
     if (failed_c())
     {
-        HandleError();
+        svDTO.Error = strdup(HandleError());
     }
-    return ToStateVectorDTO(sv);
+    return svDTO;
 }
 
 IO::Astrodynamics::API::DTO::StateVectorDTO
@@ -683,11 +692,12 @@ ConvertEquinoctialElementsToStateVectorProxy(
                                                                  equinoctialElementsDto.declinationOfThePole, frame};
 
     auto sv = eq.ToStateVector();
+    auto svDTO = ToStateVectorDTO(sv);
     if (failed_c())
     {
-        HandleError();
+        svDTO.Error = strdup(HandleError());
     }
-    return ToStateVectorDTO(sv);
+    return svDTO;
 }
 
 IO::Astrodynamics::API::DTO::RaDecDTO
@@ -728,7 +738,7 @@ IO::Astrodynamics::API::DTO::StateVectorDTO ReadEphemerisAtGivenEpochProxy(doubl
 
     if (failed_c())
     {
-        HandleError();
+        stateVectorDto.Error = strdup(HandleError());
     }
     return stateVectorDto;
 }
@@ -1413,8 +1423,6 @@ void BuildZenithAttitude(IO::Astrodynamics::API::DTO::ScenarioDTO &scenarioDto, 
                                 maneuver.attitudeHoldDuration)));
     }
 }
-
-
 
 
 #pragma endregion

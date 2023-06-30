@@ -1,7 +1,7 @@
 var searchData=
 [
   ['capacity_0',['capacity',['../structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1FuelTankDTO.html#a9edfcc50b7e612349c43372c6cb84bac',1,'IO::Astrodynamics::API::DTO::FuelTankDTO']]],
-  ['celestialbodies_1',['CelestialBodies',['../structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ScenarioDTO.html#a52e0cb68eb16038ee868a0df1b4a1dcd',1,'IO::Astrodynamics::API::DTO::ScenarioDTO']]],
+  ['celestialbodiesid_1',['CelestialBodiesId',['../structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ScenarioDTO.html#aec6102230f64c1f8d8985b227d63ee43',1,'IO::Astrodynamics::API::DTO::ScenarioDTO']]],
   ['centerofmotionid_2',['centerOfMotionId',['../structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1CelestialBodyDTO.html#a324d393efa1279b5c9730d9cca75235f',1,'IO::Astrodynamics::API::DTO::CelestialBodyDTO::centerOfMotionId()'],['../structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ConicOrbitalElementsDTO.html#abc621a20a7fa0bdea673975f5a857838',1,'IO::Astrodynamics::API::DTO::ConicOrbitalElementsDTO::centerOfMotionId()'],['../structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1EquinoctialElementsDTO.html#a4c122ca782de1699eb1d6cc8ef76e4ad',1,'IO::Astrodynamics::API::DTO::EquinoctialElementsDTO::centerOfMotionId()'],['../structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1StateVectorDTO.html#a3247aea37bed3cf5a33509e632a70da9',1,'IO::Astrodynamics::API::DTO::StateVectorDTO::centerOfMotionId()']]],
   ['circulareccentricityaccuraccy_3',['CircularEccentricityAccuraccy',['../namespaceIO_1_1Astrodynamics_1_1Parameters.html#aeaf7b5ec930099fa6553588edfb82cea',1,'IO::Astrodynamics::Parameters']]],
   ['civiltwilight_4',['CivilTwilight',['../namespaceIO_1_1Astrodynamics_1_1Constants.html#ace6cdf6d1a245323a23b8e0b42b8b03d',1,'IO::Astrodynamics::Constants']]],

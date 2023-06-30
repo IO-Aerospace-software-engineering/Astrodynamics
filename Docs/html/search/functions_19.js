@@ -17,7 +17,7 @@ var searchData=
   ['_7ematrix_14',['~Matrix',['../classIO_1_1Astrodynamics_1_1Math_1_1Matrix.html#ad1893571b0b344ddc79413710b939b48',1,'IO::Astrodynamics::Math::Matrix']]],
   ['_7eoccultationtype_15',['~OccultationType',['../classIO_1_1Astrodynamics_1_1OccultationType.html#a8b76979f00cc905604c532ddc68c90de',1,'IO::Astrodynamics::OccultationType']]],
   ['_7eorbitalparameters_16',['~OrbitalParameters',['../classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters.html#a8e994e49254e0b187799f194f0de8b43',1,'IO::Astrodynamics::OrbitalParameters::OrbitalParameters']]],
-  ['_7eorientationkernel_17',['~OrientationKernel',['../classIO_1_1Astrodynamics_1_1Kernels_1_1OrientationKernel.html#a036bad30111f005c1bed0259485cfb63',1,'IO::Astrodynamics::Kernels::OrientationKernel']]],
+  ['_7eorientationkernel_17',['~OrientationKernel',['../classIO_1_1Astrodynamics_1_1Kernels_1_1OrientationKernel.html#a198b2ac2bd86abd364b4b9b65438ed8d',1,'IO::Astrodynamics::Kernels::OrientationKernel']]],
   ['_7erectangularinstrumentkernel_18',['~RectangularInstrumentKernel',['../classIO_1_1Astrodynamics_1_1Kernels_1_1RectangularInstrumentKernel.html#a5c293cf1303b2a49127641f7384fba2a',1,'IO::Astrodynamics::Kernels::RectangularInstrumentKernel']]],
   ['_7esite_19',['~Site',['../classIO_1_1Astrodynamics_1_1Sites_1_1Site.html#a71366fcfe7e06122ed44177dd833f8c8',1,'IO::Astrodynamics::Sites::Site']]],
   ['_7espacecraft_20',['~Spacecraft',['../classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft.html#a388b429c444a48683df5c97fff04d33a',1,'IO::Astrodynamics::Body::Spacecraft::Spacecraft']]],

@@ -7,7 +7,7 @@ var searchData=
   ['launchsite_4',['LaunchSite',['../classIO_1_1Astrodynamics_1_1Sites_1_1LaunchSite.html#ac46f2b48e900de81c90b08d40ecc25ff',1,'IO::Astrodynamics::Sites::LaunchSite']]],
   ['launchwindow_5',['LaunchWindow',['../classIO_1_1Astrodynamics_1_1Maneuvers_1_1LaunchWindow.html#ab7e6a2bd848e5e5d8d8b691395d65633',1,'IO::Astrodynamics::Maneuvers::LaunchWindow']]],
   ['load_6',['Load',['../classIO_1_1Astrodynamics_1_1Kernels_1_1KernelsLoader.html#a9f6dd635ef692b0bc9ff9cf2615234b8',1,'IO::Astrodynamics::Kernels::KernelsLoader']]],
-  ['loadkernelsproxy_7',['LoadKernelsProxy',['../Proxy_8cpp.html#a43dae27d944ca86a60f4259fcd7a3ac3',1,'LoadKernelsProxy(const char *path):&#160;Proxy.cpp'],['../Proxy_8h.html#a8e72840432a41c8b143731654b2cef2a',1,'LoadKernelsProxy(const char *path):&#160;Proxy.cpp']]],
+  ['loadkernelsproxy_7',['LoadKernelsProxy',['../Proxy_8cpp.html#ab439d94eae3243647e016305e642dc77',1,'LoadKernelsProxy(const char *path):&#160;Proxy.cpp'],['../Proxy_8h.html#af05f045e002fb697be0ff9531e5ce29d',1,'LoadKernelsProxy(const char *path):&#160;Proxy.cpp']]],
   ['localmax_8',['LocalMax',['../classIO_1_1Astrodynamics_1_1Constraints_1_1RelationalOperator.html#af7cd2371fa9e25d2ea81f2dd165fe04d',1,'IO::Astrodynamics::Constraints::RelationalOperator']]],
   ['localmin_9',['LocalMin',['../classIO_1_1Astrodynamics_1_1Constraints_1_1RelationalOperator.html#a22320b627621ee6eeea58a9fae7d57ec',1,'IO::Astrodynamics::Constraints::RelationalOperator']]],
   ['longitude_10',['Longitude',['../classIO_1_1Astrodynamics_1_1Coordinate.html#a3ece23896ae5d61df311ad3d4325778b',1,'IO::Astrodynamics::Coordinate']]],

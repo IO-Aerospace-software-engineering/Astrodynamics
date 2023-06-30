@@ -59,6 +59,7 @@ var hierarchy =
     [ "IO::Astrodynamics::API::DTO::GeodeticDTO", "structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1GeodeticDTO.html", null ],
     [ "IO::Astrodynamics::Constraints::GeometryFinder", "classIO_1_1Astrodynamics_1_1Constraints_1_1GeometryFinder.html", null ],
     [ "IO::Astrodynamics::Coordinates::HorizontalCoordinates", "classIO_1_1Astrodynamics_1_1Coordinates_1_1HorizontalCoordinates.html", null ],
+    [ "IO::Astrodynamics::API::DTO::HorizontalDTO", "structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1HorizontalDTO.html", null ],
     [ "IO::Astrodynamics::Illumination::Illumination", "classIO_1_1Astrodynamics_1_1Illumination_1_1Illumination.html", null ],
     [ "IO::Astrodynamics::IlluminationAngle", "classIO_1_1Astrodynamics_1_1IlluminationAngle.html", null ],
     [ "IO::Astrodynamics::API::DTO::InFieldOfViewConstraintDTO", "structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1InFieldOfViewConstraintDTO.html", null ],

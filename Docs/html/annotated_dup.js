@@ -19,6 +19,7 @@ var annotated_dup =
             [ "FrameTransformationDTO", "structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1FrameTransformationDTO.html", "structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1FrameTransformationDTO" ],
             [ "FuelTankDTO", "structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1FuelTankDTO.html", "structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1FuelTankDTO" ],
             [ "GeodeticDTO", "structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1GeodeticDTO.html", "structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1GeodeticDTO" ],
+            [ "HorizontalDTO", "structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1HorizontalDTO.html", "structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1HorizontalDTO" ],
             [ "InFieldOfViewConstraintDTO", "structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1InFieldOfViewConstraintDTO.html", "structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1InFieldOfViewConstraintDTO" ],
             [ "InstrumentDTO", "structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1InstrumentDTO.html", "structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1InstrumentDTO" ],
             [ "InstrumentPointingToAttitudeDTO", "structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1InstrumentPointingToAttitudeDTO.html", "structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1InstrumentPointingToAttitudeDTO" ],
