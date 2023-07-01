@@ -1,5 +1,5 @@
 \hypertarget{TowardObjectAttitude_8h_source}{}\doxysection{Toward\+Object\+Attitude.\+h}
-\label{TowardObjectAttitude_8h_source}\index{IO.SDK/Maneuvers/Attitudes/TowardObjectAttitude.h@{IO.SDK/Maneuvers/Attitudes/TowardObjectAttitude.h}}
+\label{TowardObjectAttitude_8h_source}\index{IO.Astrodynamics/Maneuvers/Attitudes/TowardObjectAttitude.h@{IO.Astrodynamics/Maneuvers/Attitudes/TowardObjectAttitude.h}}
 \mbox{\hyperlink{TowardObjectAttitude_8h}{Go to the documentation of this file.}}
 \begin{DoxyCode}{0}
 \DoxyCodeLine{1 \textcolor{comment}{/*}}
@@ -10,24 +10,24 @@
 \DoxyCodeLine{6 }
 \DoxyCodeLine{7 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{ManeuverBase_8h}{ManeuverBase.h}}>}}
 \DoxyCodeLine{8 }
-\DoxyCodeLine{9 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1SDK_1_1Maneuvers_1_1Attitudes}{IO::SDK::Maneuvers::Attitudes}}}
+\DoxyCodeLine{9 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Maneuvers_1_1Attitudes}{IO::Astrodynamics::Maneuvers::Attitudes}}}
 \DoxyCodeLine{10 \{}
-\DoxyCodeLine{11     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1Attitudes_1_1TowardObjectAttitude}{TowardObjectAttitude}} final : \textcolor{keyword}{public} \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase}{IO::SDK::Maneuvers::ManeuverBase}}}
+\DoxyCodeLine{11     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1Attitudes_1_1TowardObjectAttitude}{TowardObjectAttitude}} final : \textcolor{keyword}{public} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase}{IO::Astrodynamics::Maneuvers::ManeuverBase}}}
 \DoxyCodeLine{12     \{}
 \DoxyCodeLine{13     \textcolor{keyword}{private}:}
-\DoxyCodeLine{14         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body}{IO::SDK::Body::Body}} \&m\_targetBody;}
+\DoxyCodeLine{14         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Body}{IO::Astrodynamics::Body::Body}} \&m\_targetBody;}
 \DoxyCodeLine{15 }
 \DoxyCodeLine{16     \textcolor{keyword}{protected}:}
-\DoxyCodeLine{22         \textcolor{keywordtype}{void} \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1Attitudes_1_1TowardObjectAttitude_aa434bb37713a5a45791625ecff25fe90}{Compute}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters}{IO::SDK::OrbitalParameters::OrbitalParameters}} \&maneuverPoint) \textcolor{keyword}{override};}
+\DoxyCodeLine{22         \textcolor{keywordtype}{void} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1Attitudes_1_1TowardObjectAttitude_aca72da7d266a91c486ed680ba09dd3b8}{Compute}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters}{IO::Astrodynamics::OrbitalParameters::OrbitalParameters}} \&maneuverPoint) \textcolor{keyword}{override};}
 \DoxyCodeLine{23 }
-\DoxyCodeLine{30         \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateOrientation}{IO::SDK::OrbitalParameters::StateOrientation}} \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1Attitudes_1_1TowardObjectAttitude_a2296926c7cc97c3d118181b802f3720c}{ComputeOrientation}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters}{IO::SDK::OrbitalParameters::OrbitalParameters}} \&maneuverPoint) \textcolor{keyword}{override};}
+\DoxyCodeLine{30         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateOrientation}{IO::Astrodynamics::OrbitalParameters::StateOrientation}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1Attitudes_1_1TowardObjectAttitude_ad4f71f43a9e23de4f434b946f9d5573d}{ComputeOrientation}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters}{IO::Astrodynamics::OrbitalParameters::OrbitalParameters}} \&maneuverPoint) \textcolor{keyword}{override};}
 \DoxyCodeLine{31 }
 \DoxyCodeLine{32     \textcolor{keyword}{public}:}
-\DoxyCodeLine{40         \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1Attitudes_1_1TowardObjectAttitude_a6a1d2837006c792f1416441e4311c3ce}{TowardObjectAttitude}}(\textcolor{keyword}{const} std::vector<IO::SDK::Body::Spacecraft::Engine*>\& engines, \mbox{\hyperlink{classIO_1_1SDK_1_1Propagators_1_1Propagator}{IO::SDK::Propagators::Propagator}} \&propagator,\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO::SDK::Time::TimeSpan}}\& attitudeHoldDuration, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body}{IO::SDK::Body::Body}} \&targetBody);}
+\DoxyCodeLine{40         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1Attitudes_1_1TowardObjectAttitude_a8c12ef51a36c52d3c96ce8f3298c967b}{TowardObjectAttitude}}(\textcolor{keyword}{const} std::vector<IO::Astrodynamics::Body::Spacecraft::Engine*>\& engines, \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Propagators_1_1Propagator}{IO::Astrodynamics::Propagators::Propagator}} \&propagator,\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO::Astrodynamics::Time::TimeSpan}}\& attitudeHoldDuration, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Body}{IO::Astrodynamics::Body::Body}} \&targetBody);}
 \DoxyCodeLine{41 }
-\DoxyCodeLine{50         \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1Attitudes_1_1TowardObjectAttitude_a6a1d2837006c792f1416441e4311c3ce}{TowardObjectAttitude}}(\textcolor{keyword}{const} std::vector<IO::SDK::Body::Spacecraft::Engine*>\& engines, \mbox{\hyperlink{classIO_1_1SDK_1_1Propagators_1_1Propagator}{IO::SDK::Propagators::Propagator}} \&propagator, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO::SDK::Time::TDB}} \&minimumEpoch,\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO::SDK::Time::TimeSpan}}\& attitudeHoldDuration, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Body_1_1Body}{IO::SDK::Body::Body}} \&targetBody);}
+\DoxyCodeLine{50         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1Attitudes_1_1TowardObjectAttitude_a8c12ef51a36c52d3c96ce8f3298c967b}{TowardObjectAttitude}}(\textcolor{keyword}{const} std::vector<IO::Astrodynamics::Body::Spacecraft::Engine*>\& engines, \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Propagators_1_1Propagator}{IO::Astrodynamics::Propagators::Propagator}} \&propagator, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO::Astrodynamics::Time::TDB}} \&minimumEpoch,\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO::Astrodynamics::Time::TimeSpan}}\& attitudeHoldDuration, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Body}{IO::Astrodynamics::Body::Body}} \&targetBody);}
 \DoxyCodeLine{51 }
-\DoxyCodeLine{59         \textcolor{keywordtype}{bool} \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1Attitudes_1_1TowardObjectAttitude_a8d3620611d4b1983dfc2a15fbb9b1128}{CanExecute}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters}{IO::SDK::OrbitalParameters::OrbitalParameters}} \&orbitalParams) \textcolor{keyword}{override};}
+\DoxyCodeLine{59         \textcolor{keywordtype}{bool} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1Attitudes_1_1TowardObjectAttitude_ace336a39b232fa8efe9ba32422e58ef0}{CanExecute}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters}{IO::Astrodynamics::OrbitalParameters::OrbitalParameters}} \&orbitalParams) \textcolor{keyword}{override};}
 \DoxyCodeLine{60     \};}
 \DoxyCodeLine{61 \}}
 \DoxyCodeLine{62 }

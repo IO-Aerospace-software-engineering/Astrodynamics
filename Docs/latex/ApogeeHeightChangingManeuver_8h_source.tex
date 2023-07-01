@@ -1,5 +1,5 @@
 \hypertarget{ApogeeHeightChangingManeuver_8h_source}{}\doxysection{Apogee\+Height\+Changing\+Maneuver.\+h}
-\label{ApogeeHeightChangingManeuver_8h_source}\index{IO.SDK/Maneuvers/ApogeeHeightChangingManeuver.h@{IO.SDK/Maneuvers/ApogeeHeightChangingManeuver.h}}
+\label{ApogeeHeightChangingManeuver_8h_source}\index{IO.Astrodynamics/Maneuvers/ApogeeHeightChangingManeuver.h@{IO.Astrodynamics/Maneuvers/ApogeeHeightChangingManeuver.h}}
 \mbox{\hyperlink{ApogeeHeightChangingManeuver_8h}{Go to the documentation of this file.}}
 \begin{DoxyCode}{0}
 \DoxyCodeLine{1 \textcolor{comment}{/*}}
@@ -19,23 +19,23 @@
 \DoxyCodeLine{15 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{StateVector_8h}{StateVector.h}}>}}
 \DoxyCodeLine{16 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{StateOrientation_8h}{StateOrientation.h}}>}}
 \DoxyCodeLine{17 }
-\DoxyCodeLine{18 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1SDK_1_1Maneuvers}{IO::SDK::Maneuvers}}}
+\DoxyCodeLine{18 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Maneuvers}{IO::Astrodynamics::Maneuvers}}}
 \DoxyCodeLine{19 \{}
-\DoxyCodeLine{20     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ApogeeHeightChangingManeuver}{ApogeeHeightChangingManeuver}} final : \textcolor{keyword}{public} \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase}{IO::SDK::Maneuvers::ManeuverBase}}}
+\DoxyCodeLine{20     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ApogeeHeightChangingManeuver}{ApogeeHeightChangingManeuver}} final : \textcolor{keyword}{public} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase}{IO::Astrodynamics::Maneuvers::ManeuverBase}}}
 \DoxyCodeLine{21     \{}
 \DoxyCodeLine{22     \textcolor{keyword}{private}:}
 \DoxyCodeLine{23         \textcolor{keyword}{const} \textcolor{keywordtype}{double} m\_targetHeight;}
 \DoxyCodeLine{24 }
 \DoxyCodeLine{25     \textcolor{keyword}{protected}:}
-\DoxyCodeLine{31         \textcolor{keywordtype}{void} \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ApogeeHeightChangingManeuver_ace55130cf9da0835630d59876d160d77}{Compute}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters}{IO::SDK::OrbitalParameters::OrbitalParameters}} \&maneuverPoint) \textcolor{keyword}{override};}
+\DoxyCodeLine{31         \textcolor{keywordtype}{void} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ApogeeHeightChangingManeuver_afd6b5cc561063f02e8b9302714b53be4}{Compute}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters}{IO::Astrodynamics::OrbitalParameters::OrbitalParameters}} \&maneuverPoint) \textcolor{keyword}{override};}
 \DoxyCodeLine{32 }
-\DoxyCodeLine{39         \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateOrientation}{IO::SDK::OrbitalParameters::StateOrientation}} \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ApogeeHeightChangingManeuver_a0420e3c596bf0950af745dc8ffc2dd83}{ComputeOrientation}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters}{IO::SDK::OrbitalParameters::OrbitalParameters}} \&maneuverPoint) \textcolor{keyword}{override};}
+\DoxyCodeLine{39         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateOrientation}{IO::Astrodynamics::OrbitalParameters::StateOrientation}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ApogeeHeightChangingManeuver_ac132f5ddf892a25cbd481df444e27ecc}{ComputeOrientation}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters}{IO::Astrodynamics::OrbitalParameters::OrbitalParameters}} \&maneuverPoint) \textcolor{keyword}{override};}
 \DoxyCodeLine{40         \textcolor{comment}{/* data */}}
 \DoxyCodeLine{41     \textcolor{keyword}{public}:}
-\DoxyCodeLine{42         \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ApogeeHeightChangingManeuver_a7dc28e58ad3ead83d02123ab533f08b7}{ApogeeHeightChangingManeuver}}(std::vector<IO::SDK::Body::Spacecraft::Engine*> engines, \mbox{\hyperlink{classIO_1_1SDK_1_1Propagators_1_1Propagator}{IO::SDK::Propagators::Propagator}} \&propagator, \textcolor{keywordtype}{double} targetHeight);}
-\DoxyCodeLine{43         \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ApogeeHeightChangingManeuver_a7dc28e58ad3ead83d02123ab533f08b7}{ApogeeHeightChangingManeuver}}(std::vector<IO::SDK::Body::Spacecraft::Engine*> engines, \mbox{\hyperlink{classIO_1_1SDK_1_1Propagators_1_1Propagator}{IO::SDK::Propagators::Propagator}} \&propagator, \textcolor{keywordtype}{double} targetHeight, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO::SDK::Time::TDB}} \&minimumEpoch);}
+\DoxyCodeLine{42         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ApogeeHeightChangingManeuver_a92960ffaf702a70b95ba28fb1c87e987}{ApogeeHeightChangingManeuver}}(std::vector<IO::Astrodynamics::Body::Spacecraft::Engine*> engines, \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Propagators_1_1Propagator}{IO::Astrodynamics::Propagators::Propagator}} \&propagator, \textcolor{keywordtype}{double} targetHeight);}
+\DoxyCodeLine{43         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ApogeeHeightChangingManeuver_a92960ffaf702a70b95ba28fb1c87e987}{ApogeeHeightChangingManeuver}}(std::vector<IO::Astrodynamics::Body::Spacecraft::Engine*> engines, \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Propagators_1_1Propagator}{IO::Astrodynamics::Propagators::Propagator}} \&propagator, \textcolor{keywordtype}{double} targetHeight, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO::Astrodynamics::Time::TDB}} \&minimumEpoch);}
 \DoxyCodeLine{44 }
-\DoxyCodeLine{52         \textcolor{keywordtype}{bool} \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ApogeeHeightChangingManeuver_a9ea7346a9c11f2ede41982a0f6761705}{CanExecute}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters}{IO::SDK::OrbitalParameters::OrbitalParameters}} \&orbitalParams) \textcolor{keyword}{override};}
+\DoxyCodeLine{52         \textcolor{keywordtype}{bool} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ApogeeHeightChangingManeuver_a4aed2172237387da555ed1554d225f44}{CanExecute}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters}{IO::Astrodynamics::OrbitalParameters::OrbitalParameters}} \&orbitalParams) \textcolor{keyword}{override};}
 \DoxyCodeLine{53     \};}
 \DoxyCodeLine{54 \}}
 \DoxyCodeLine{55 }

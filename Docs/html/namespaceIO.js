@@ -1,4 +1,4 @@
 var namespaceIO =
 [
-    [ "SDK", "namespaceIO_1_1SDK.html", "namespaceIO_1_1SDK" ]
+    [ "Astrodynamics", "namespaceIO_1_1Astrodynamics.html", "namespaceIO_1_1Astrodynamics" ]
 ];

@@ -1,5 +1,5 @@
 \hypertarget{Launch_8h_source}{}\doxysection{Launch.\+h}
-\label{Launch_8h_source}\index{IO.SDK/Maneuvers/Launch.h@{IO.SDK/Maneuvers/Launch.h}}
+\label{Launch_8h_source}\index{IO.Astrodynamics/Maneuvers/Launch.h@{IO.Astrodynamics/Maneuvers/Launch.h}}
 \mbox{\hyperlink{Launch_8h}{Go to the documentation of this file.}}
 \begin{DoxyCode}{0}
 \DoxyCodeLine{1 \textcolor{comment}{/*}}
@@ -24,16 +24,16 @@
 \DoxyCodeLine{20 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{Window_8h}{Window.h}}>}}
 \DoxyCodeLine{21 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{LaunchWindow_8h}{LaunchWindow.h}}>}}
 \DoxyCodeLine{22 }
-\DoxyCodeLine{23 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1SDK_1_1Maneuvers}{IO::SDK::Maneuvers}}}
+\DoxyCodeLine{23 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Maneuvers}{IO::Astrodynamics::Maneuvers}}}
 \DoxyCodeLine{24 \{}
-\DoxyCodeLine{25     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1Launch}{Launch}} final}
+\DoxyCodeLine{25     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1Launch}{Launch}} final}
 \DoxyCodeLine{26     \{}
 \DoxyCodeLine{27     \textcolor{keyword}{private}:}
 \DoxyCodeLine{28         }
-\DoxyCodeLine{29         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1LaunchSite}{IO::SDK::Sites::LaunchSite}}\& m\_launchSite;}
-\DoxyCodeLine{30         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site}{IO::SDK::Sites::Site}}\& m\_recoverySite;}
+\DoxyCodeLine{29         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1LaunchSite}{IO::Astrodynamics::Sites::LaunchSite}}\& m\_launchSite;}
+\DoxyCodeLine{30         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1Site}{IO::Astrodynamics::Sites::Site}}\& m\_recoverySite;}
 \DoxyCodeLine{31         \textcolor{keyword}{const} \textcolor{keywordtype}{bool} m\_launchByDay;}
-\DoxyCodeLine{32         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters}{IO::SDK::OrbitalParameters::OrbitalParameters}} \&m\_targetOrbit;}
+\DoxyCodeLine{32         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters}{IO::Astrodynamics::OrbitalParameters::OrbitalParameters}} \&m\_targetOrbit;}
 \DoxyCodeLine{33         \textcolor{keywordtype}{double} m\_nonInertialAscendingAzimuthLaunch\{std::numeric\_limits<double>::quiet\_NaN()\};}
 \DoxyCodeLine{34         \textcolor{keywordtype}{double} m\_inertialAscendingAzimuthLaunch\{std::numeric\_limits<double>::quiet\_NaN()\};}
 \DoxyCodeLine{35         \textcolor{keywordtype}{double} m\_inertialDescendingAzimuthLaunch\{std::numeric\_limits<double>::quiet\_NaN()\};}
@@ -43,27 +43,27 @@
 \DoxyCodeLine{39         \textcolor{keyword}{const} \textcolor{keywordtype}{double} m\_deltaL\{std::numeric\_limits<double>::quiet\_NaN()\};}
 \DoxyCodeLine{40         \textcolor{keyword}{const} \textcolor{keywordtype}{double} m\_inclination\{std::numeric\_limits<double>::quiet\_NaN()\};}
 \DoxyCodeLine{41 }
-\DoxyCodeLine{42         std::vector<LaunchWindow> FindLaunchWindows(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO::SDK::Time::Window<IO::SDK::Time::UTC>}} \&windowToSearch);}
+\DoxyCodeLine{42         std::vector<LaunchWindow> FindLaunchWindows(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::UTC>}} \&windowToSearch);}
 \DoxyCodeLine{43 }
 \DoxyCodeLine{44     \textcolor{keyword}{public}:}
-\DoxyCodeLine{54         \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1Launch_a44abe43d2e13f901b07c20b238d71245}{Launch}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1LaunchSite}{IO::SDK::Sites::LaunchSite}}\& launchSite, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Sites_1_1Site}{IO::SDK::Sites::Site}}\& recoverySite, \textcolor{keywordtype}{bool} launchByDay, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters}{IO::SDK::OrbitalParameters::OrbitalParameters}} \&targetOrbit);}
+\DoxyCodeLine{54         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1Launch_a161fc0c65917fa2aa78fa0eef26f53aa}{Launch}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1LaunchSite}{IO::Astrodynamics::Sites::LaunchSite}}\& launchSite, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1Site}{IO::Astrodynamics::Sites::Site}}\& recoverySite, \textcolor{keywordtype}{bool} launchByDay, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters}{IO::Astrodynamics::OrbitalParameters::OrbitalParameters}} \&targetOrbit);}
 \DoxyCodeLine{55 }
-\DoxyCodeLine{61         \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1Launch_a2b6de32c8b88fc9b9d008a8cb326b06c}{GetNonInertialAscendingAzimuthLaunch}}();}
+\DoxyCodeLine{61         \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1Launch_a6294a47d1b68b6b8fcb852f569c3eade}{GetNonInertialAscendingAzimuthLaunch}}();}
 \DoxyCodeLine{62 }
-\DoxyCodeLine{68         \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1Launch_afb342ed1b11689e56fc87b416bdaab19}{GetNonInertialDescendingAzimuthLaunch}}();}
+\DoxyCodeLine{68         \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1Launch_ab5a7abe81a3cab2ea7a9f687ff7484dd}{GetNonInertialDescendingAzimuthLaunch}}();}
 \DoxyCodeLine{69 }
-\DoxyCodeLine{75         \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1Launch_a863826f45930d2f02b4a1f982f254de6}{GetInertialAscendingAzimuthLaunch}}();}
+\DoxyCodeLine{75         \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1Launch_a47d63a17e985f80435c3d17917ed1556}{GetInertialAscendingAzimuthLaunch}}();}
 \DoxyCodeLine{76 }
-\DoxyCodeLine{82         \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1Launch_a5eebdf15afcf84c0ca0a627c7900fabd}{GetInertialDescendingAzimuthLaunch}}();}
+\DoxyCodeLine{82         \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1Launch_a1e3b775488b20d2767e60d4454f782b5}{GetInertialDescendingAzimuthLaunch}}();}
 \DoxyCodeLine{83 }
-\DoxyCodeLine{89         \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1Launch_a3a5a1efda97ebe4f84149dc9db4a1e09}{GetNonInertialInsertionVelocity}}();}
+\DoxyCodeLine{89         \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1Launch_a72799a88b3bb37ca018258fa60cfdf92}{GetNonInertialInsertionVelocity}}();}
 \DoxyCodeLine{90 }
-\DoxyCodeLine{96         \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1Launch_ac3ea597eb088b047a8c3a847d689180a}{GetInertialInsertionVelocity}}();}
+\DoxyCodeLine{96         \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1Launch_a12cd31f76eb6cc55717fa850568a0a50}{GetInertialInsertionVelocity}}();}
 \DoxyCodeLine{97 }
-\DoxyCodeLine{104         std::vector<LaunchWindow> \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1Launch_a31298d41044193869b6ba40fc898617c}{GetLaunchWindows}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1Window}{IO::SDK::Time::Window<IO::SDK::Time::UTC>}} \&searchWindow);}
+\DoxyCodeLine{104         std::vector<LaunchWindow> \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1Launch_a8167ee1c731a75ec33752399e1752ebe}{GetLaunchWindows}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::UTC>}} \&searchWindow);}
 \DoxyCodeLine{105     \};}
 \DoxyCodeLine{106 }
-\DoxyCodeLine{107 \} \textcolor{comment}{// namespace IO::SDK::Maneuvers}}
+\DoxyCodeLine{107 \} \textcolor{comment}{// namespace IO::Astrodynamics::Maneuvers}}
 \DoxyCodeLine{108 }
 \DoxyCodeLine{109 \textcolor{preprocessor}{\#endif }\textcolor{comment}{// LAUNCH\_MANEUVER\_H}}
 

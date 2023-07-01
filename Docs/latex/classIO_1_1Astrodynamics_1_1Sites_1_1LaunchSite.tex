@@ -1,0 +1,110 @@
+\hypertarget{classIO_1_1Astrodynamics_1_1Sites_1_1LaunchSite}{}\doxysection{IO\+::Astrodynamics\+::Sites\+::Launch\+Site Class Reference}
+\label{classIO_1_1Astrodynamics_1_1Sites_1_1LaunchSite}\index{IO::Astrodynamics::Sites::LaunchSite@{IO::Astrodynamics::Sites::LaunchSite}}
+
+
+Lauch site class.  
+
+
+
+
+{\ttfamily \#include $<$Launch\+Site.\+h$>$}
+
+Inheritance diagram for IO\+::Astrodynamics\+::Sites\+::Launch\+Site\+:\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=2.000000cm]{classIO_1_1Astrodynamics_1_1Sites_1_1LaunchSite}
+\end{center}
+\end{figure}
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1LaunchSite_ac46f2b48e900de81c90b08d40ecc25ff}{Launch\+Site}} (int id, const std\+::string \&name, const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1Geodetic}{IO\+::\+Astrodynamics\+::\+Coordinates\+::\+Geodetic}} \&coordinates, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody}{IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Body}} $>$ body, std\+::string directory\+Path)
+\begin{DoxyCompactList}\small\item\em Construct a new Launch \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1Site}{Site}} object. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1LaunchSite_a1b84cbc34bc2621e453f63bba7a5fc3e}{Add\+Azimuth\+Launch\+Range}} (\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1AzimuthRange}{IO\+::\+Astrodynamics\+::\+Coordinates\+::\+Azimuth\+Range}} \&azimuth\+Range)
+\begin{DoxyCompactList}\small\item\em Add an azimuth range. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1LaunchSite_aa3416413745cef22ec787cd34d14b88e}{Clear\+Azimuth\+Launch\+Ranges}} ()
+\begin{DoxyCompactList}\small\item\em Clear all azimuth ranges. \end{DoxyCompactList}\item 
+bool \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1LaunchSite_a791e09ad1716efc180a1bc79244bdb98}{Is\+Azimuth\+Launch\+Allowed}} (double azimuth) const
+\begin{DoxyCompactList}\small\item\em Know if an azimuth launch is allowed. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsection*{Additional Inherited Members}
+
+
+\doxysubsection{Detailed Description}
+Lauch site class. 
+
+\doxysubsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Sites_1_1LaunchSite_ac46f2b48e900de81c90b08d40ecc25ff}\label{classIO_1_1Astrodynamics_1_1Sites_1_1LaunchSite_ac46f2b48e900de81c90b08d40ecc25ff}} 
+\index{IO::Astrodynamics::Sites::LaunchSite@{IO::Astrodynamics::Sites::LaunchSite}!LaunchSite@{LaunchSite}}
+\index{LaunchSite@{LaunchSite}!IO::Astrodynamics::Sites::LaunchSite@{IO::Astrodynamics::Sites::LaunchSite}}
+\doxysubsubsection{\texorpdfstring{LaunchSite()}{LaunchSite()}}
+{\footnotesize\ttfamily IO\+::\+Astrodynamics\+::\+Sites\+::\+Launch\+Site\+::\+Launch\+Site (\begin{DoxyParamCaption}\item[{int}]{id,  }\item[{const std\+::string \&}]{name,  }\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1Geodetic}{IO\+::\+Astrodynamics\+::\+Coordinates\+::\+Geodetic}} \&}]{coordinates,  }\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody}{IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Body}} $>$}]{body,  }\item[{std\+::string}]{directory\+Path }\end{DoxyParamCaption})}
+
+
+
+Construct a new Launch \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1Site}{Site}} object. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em id} & \\
+\hline
+{\em name} & \\
+\hline
+{\em coordinates} & \\
+\hline
+{\em body} & \\
+\hline
+\end{DoxyParams}
+
+
+\doxysubsection{Member Function Documentation}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Sites_1_1LaunchSite_a1b84cbc34bc2621e453f63bba7a5fc3e}\label{classIO_1_1Astrodynamics_1_1Sites_1_1LaunchSite_a1b84cbc34bc2621e453f63bba7a5fc3e}} 
+\index{IO::Astrodynamics::Sites::LaunchSite@{IO::Astrodynamics::Sites::LaunchSite}!AddAzimuthLaunchRange@{AddAzimuthLaunchRange}}
+\index{AddAzimuthLaunchRange@{AddAzimuthLaunchRange}!IO::Astrodynamics::Sites::LaunchSite@{IO::Astrodynamics::Sites::LaunchSite}}
+\doxysubsubsection{\texorpdfstring{AddAzimuthLaunchRange()}{AddAzimuthLaunchRange()}}
+{\footnotesize\ttfamily void IO\+::\+Astrodynamics\+::\+Sites\+::\+Launch\+Site\+::\+Add\+Azimuth\+Launch\+Range (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1AzimuthRange}{IO\+::\+Astrodynamics\+::\+Coordinates\+::\+Azimuth\+Range}} \&}]{azimuth\+Range }\end{DoxyParamCaption})}
+
+
+
+Add an azimuth range. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em azimuth\+Range} & \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Sites_1_1LaunchSite_aa3416413745cef22ec787cd34d14b88e}\label{classIO_1_1Astrodynamics_1_1Sites_1_1LaunchSite_aa3416413745cef22ec787cd34d14b88e}} 
+\index{IO::Astrodynamics::Sites::LaunchSite@{IO::Astrodynamics::Sites::LaunchSite}!ClearAzimuthLaunchRanges@{ClearAzimuthLaunchRanges}}
+\index{ClearAzimuthLaunchRanges@{ClearAzimuthLaunchRanges}!IO::Astrodynamics::Sites::LaunchSite@{IO::Astrodynamics::Sites::LaunchSite}}
+\doxysubsubsection{\texorpdfstring{ClearAzimuthLaunchRanges()}{ClearAzimuthLaunchRanges()}}
+{\footnotesize\ttfamily void IO\+::\+Astrodynamics\+::\+Sites\+::\+Launch\+Site\+::\+Clear\+Azimuth\+Launch\+Ranges (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+Clear all azimuth ranges. 
+
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Sites_1_1LaunchSite_a791e09ad1716efc180a1bc79244bdb98}\label{classIO_1_1Astrodynamics_1_1Sites_1_1LaunchSite_a791e09ad1716efc180a1bc79244bdb98}} 
+\index{IO::Astrodynamics::Sites::LaunchSite@{IO::Astrodynamics::Sites::LaunchSite}!IsAzimuthLaunchAllowed@{IsAzimuthLaunchAllowed}}
+\index{IsAzimuthLaunchAllowed@{IsAzimuthLaunchAllowed}!IO::Astrodynamics::Sites::LaunchSite@{IO::Astrodynamics::Sites::LaunchSite}}
+\doxysubsubsection{\texorpdfstring{IsAzimuthLaunchAllowed()}{IsAzimuthLaunchAllowed()}}
+{\footnotesize\ttfamily bool IO\+::\+Astrodynamics\+::\+Sites\+::\+Launch\+Site\+::\+Is\+Azimuth\+Launch\+Allowed (\begin{DoxyParamCaption}\item[{double}]{azimuth }\end{DoxyParamCaption}) const}
+
+
+
+Know if an azimuth launch is allowed. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em azimuth} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+true 
+
+false 
+\end{DoxyReturn}
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+IO.\+Astrodynamics/\+Sites/\mbox{\hyperlink{LaunchSite_8h}{Launch\+Site.\+h}}\item 
+IO.\+Astrodynamics/\+Sites/\mbox{\hyperlink{LaunchSite_8cpp}{Launch\+Site.\+cpp}}\end{DoxyCompactItemize}

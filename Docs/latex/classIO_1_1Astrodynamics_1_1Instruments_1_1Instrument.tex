@@ -1,0 +1,238 @@
+\hypertarget{classIO_1_1Astrodynamics_1_1Instruments_1_1Instrument}{}\doxysection{IO\+::Astrodynamics\+::Instruments\+::Instrument Class Reference}
+\label{classIO_1_1Astrodynamics_1_1Instruments_1_1Instrument}\index{IO::Astrodynamics::Instruments::Instrument@{IO::Astrodynamics::Instruments::Instrument}}
+
+
+{\ttfamily \#include $<$Instrument.\+h$>$}
+
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Instruments_1_1Instrument_a5549c506f822d75498fc5a86b1dd79de}{$\sim$\+Instrument}} ()=default
+\item 
+std\+::string \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Instruments_1_1Instrument_adb572d71a9891e447b94de2d59d5ea47}{Get\+Files\+Path}} () const
+\begin{DoxyCompactList}\small\item\em Get the Files Path object. \end{DoxyCompactList}\item 
+std\+::string \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Instruments_1_1Instrument_af2a9cd2a34a94ab166a479938cebdf67}{Get\+Name}} () const
+\begin{DoxyCompactList}\small\item\em Get the Name object. \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Instruments_1_1Instrument_a67cf5001b0392d7c32de0b8ab8da7d6a}{Get\+Id}} () const
+\begin{DoxyCompactList}\small\item\em Get the Id object. \end{DoxyCompactList}\item 
+const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft}{IO\+::\+Astrodynamics\+::\+Body\+::\+Spacecraft\+::\+Spacecraft}} \& \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Instruments_1_1Instrument_a446669e4ddfefcafe427e5aa78884170}{Get\+Spacecraft}} () const
+\begin{DoxyCompactList}\small\item\em Get the Spacecraft object. \end{DoxyCompactList}\item 
+const std\+::unique\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Frames_1_1InstrumentFrameFile}{IO\+::\+Astrodynamics\+::\+Frames\+::\+Instrument\+Frame\+File}} $>$ \& \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Instruments_1_1Instrument_a866845d533c655fc250faa42d0ce5cbc}{Get\+Frame}} () const
+\begin{DoxyCompactList}\small\item\em Get the Frame object. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO\+::\+Astrodynamics\+::\+Math\+::\+Vector3D}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Instruments_1_1Instrument_a5beca512d43f5873e7705ba190f2f116}{Get\+Boresight}} () const
+\begin{DoxyCompactList}\small\item\em Get the Boresight vector. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO\+::\+Astrodynamics\+::\+Math\+::\+Vector3D}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Instruments_1_1Instrument_a534e2bf77c3008e2e56dee24aa2fbb7d}{Get\+Boresight}} (const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Frames_1_1Frames}{IO\+::\+Astrodynamics\+::\+Frames\+::\+Frames}} \&frame, const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} \&epoch) const
+\item 
+\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Instruments_a0fd4dd367af85a15bb1461db611b365b}{IO\+::\+Astrodynamics\+::\+Instruments\+::\+FOVShape\+Enum}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Instruments_1_1Instrument_a977f64c22ecdb747027332818e91b7de}{Get\+FOVShape}} () const
+\begin{DoxyCompactList}\small\item\em Get the FOV shape. \end{DoxyCompactList}\item 
+std\+::vector$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO\+::\+Astrodynamics\+::\+Math\+::\+Vector3D}} $>$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Instruments_1_1Instrument_aca8c8e00a5023d9a8fa7bee6776ec0bd}{Get\+FOVBoundaries}} () const
+\begin{DoxyCompactList}\small\item\em Get the FOV boundaries. \end{DoxyCompactList}\item 
+std\+::vector$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{IO\+::\+Astrodynamics\+::\+Time\+::\+Window}}$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} $>$ $>$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Instruments_1_1Instrument_ac44aaa6f406753af1b2538af846732ba}{Find\+Windows\+Where\+In\+Field\+Of\+View}} (const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{IO\+::\+Astrodynamics\+::\+Time\+::\+Window}}$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} $>$ \&search\+Window, const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Body}{IO\+::\+Astrodynamics\+::\+Body\+::\+Body}} \&target\+Body, const \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_af0023a81d12385b73d78bd82e4b96ce3}{IO\+::\+Astrodynamics\+::\+Aberrations\+Enum}} \&aberration, const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO\+::\+Astrodynamics\+::\+Time\+::\+Time\+Span}} \&step\+Size) const
+\begin{DoxyCompactList}\small\item\em Find window where target body is in field of view. \end{DoxyCompactList}\item 
+std\+::vector$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{IO\+::\+Astrodynamics\+::\+Time\+::\+Window}}$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} $>$ $>$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Instruments_1_1Instrument_a4ce3307ff8f47bba9f6946242ddcb2f1}{Find\+Windows\+Where\+In\+Field\+Of\+View}} (const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{IO\+::\+Astrodynamics\+::\+Time\+::\+Window}}$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} $>$ \&search\+Window, const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1Site}{IO\+::\+Astrodynamics\+::\+Sites\+::\+Site}} \&site, const \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_af0023a81d12385b73d78bd82e4b96ce3}{IO\+::\+Astrodynamics\+::\+Aberrations\+Enum}} \&aberration, const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO\+::\+Astrodynamics\+::\+Time\+::\+Time\+Span}} \&step\+Size) const
+\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO\+::\+Astrodynamics\+::\+Math\+::\+Vector3D}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Instruments_1_1Instrument_a9d7cf888a7cc6d88272927acda4c9c65}{Get\+Boresight\+In\+Spacecraft\+Frame}} () const
+\end{DoxyCompactItemize}
+\doxysubsection*{Friends}
+\begin{DoxyCompactItemize}
+\item 
+class \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Instruments_1_1Instrument_a7900ba5f1cf425823990193aa636c59a}{IO\+::\+Astrodynamics\+::\+Body\+::\+Spacecraft\+::\+Spacecraft}}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Instruments_1_1Instrument_a5549c506f822d75498fc5a86b1dd79de}\label{classIO_1_1Astrodynamics_1_1Instruments_1_1Instrument_a5549c506f822d75498fc5a86b1dd79de}} 
+\index{IO::Astrodynamics::Instruments::Instrument@{IO::Astrodynamics::Instruments::Instrument}!````~Instrument@{$\sim$Instrument}}
+\index{````~Instrument@{$\sim$Instrument}!IO::Astrodynamics::Instruments::Instrument@{IO::Astrodynamics::Instruments::Instrument}}
+\doxysubsubsection{\texorpdfstring{$\sim$Instrument()}{~Instrument()}}
+{\footnotesize\ttfamily IO\+::\+Astrodynamics\+::\+Instruments\+::\+Instrument\+::$\sim$\+Instrument (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [default]}}
+
+
+
+\doxysubsection{Member Function Documentation}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Instruments_1_1Instrument_ac44aaa6f406753af1b2538af846732ba}\label{classIO_1_1Astrodynamics_1_1Instruments_1_1Instrument_ac44aaa6f406753af1b2538af846732ba}} 
+\index{IO::Astrodynamics::Instruments::Instrument@{IO::Astrodynamics::Instruments::Instrument}!FindWindowsWhereInFieldOfView@{FindWindowsWhereInFieldOfView}}
+\index{FindWindowsWhereInFieldOfView@{FindWindowsWhereInFieldOfView}!IO::Astrodynamics::Instruments::Instrument@{IO::Astrodynamics::Instruments::Instrument}}
+\doxysubsubsection{\texorpdfstring{FindWindowsWhereInFieldOfView()}{FindWindowsWhereInFieldOfView()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily std\+::vector$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{IO\+::\+Astrodynamics\+::\+Time\+::\+Window}}$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} $>$ $>$ IO\+::\+Astrodynamics\+::\+Instruments\+::\+Instrument\+::\+Find\+Windows\+Where\+In\+Field\+Of\+View (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{IO\+::\+Astrodynamics\+::\+Time\+::\+Window}}$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} $>$ \&}]{search\+Window,  }\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Body}{IO\+::\+Astrodynamics\+::\+Body\+::\+Body}} \&}]{target\+Body,  }\item[{const \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_af0023a81d12385b73d78bd82e4b96ce3}{IO\+::\+Astrodynamics\+::\+Aberrations\+Enum}} \&}]{aberration,  }\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO\+::\+Astrodynamics\+::\+Time\+::\+Time\+Span}} \&}]{step\+Size }\end{DoxyParamCaption}) const}
+
+
+
+Find window where target body is in field of view. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em search\+Window} & \\
+\hline
+{\em target\+Body} & \\
+\hline
+{\em step\+Size} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+std\+::vector$<$\+IO\+::\+Astrodynamics\+::\+Time\+::\+Window$<$\+IO\+::\+Astrodynamics\+::\+Time\+::\+TDB$>$$>$ 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Instruments_1_1Instrument_a4ce3307ff8f47bba9f6946242ddcb2f1}\label{classIO_1_1Astrodynamics_1_1Instruments_1_1Instrument_a4ce3307ff8f47bba9f6946242ddcb2f1}} 
+\index{IO::Astrodynamics::Instruments::Instrument@{IO::Astrodynamics::Instruments::Instrument}!FindWindowsWhereInFieldOfView@{FindWindowsWhereInFieldOfView}}
+\index{FindWindowsWhereInFieldOfView@{FindWindowsWhereInFieldOfView}!IO::Astrodynamics::Instruments::Instrument@{IO::Astrodynamics::Instruments::Instrument}}
+\doxysubsubsection{\texorpdfstring{FindWindowsWhereInFieldOfView()}{FindWindowsWhereInFieldOfView()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily std\+::vector$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{IO\+::\+Astrodynamics\+::\+Time\+::\+Window}}$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} $>$ $>$ IO\+::\+Astrodynamics\+::\+Instruments\+::\+Instrument\+::\+Find\+Windows\+Where\+In\+Field\+Of\+View (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{IO\+::\+Astrodynamics\+::\+Time\+::\+Window}}$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} $>$ \&}]{search\+Window,  }\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1Site}{IO\+::\+Astrodynamics\+::\+Sites\+::\+Site}} \&}]{site,  }\item[{const \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_af0023a81d12385b73d78bd82e4b96ce3}{IO\+::\+Astrodynamics\+::\+Aberrations\+Enum}} \&}]{aberration,  }\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO\+::\+Astrodynamics\+::\+Time\+::\+Time\+Span}} \&}]{step\+Size }\end{DoxyParamCaption}) const}
+
+Find windows where a site is in field of vien 
+\begin{DoxyParams}{Parameters}
+{\em search\+Window} & \\
+\hline
+{\em site} & \\
+\hline
+{\em aberration} & \\
+\hline
+{\em step\+Size} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Instruments_1_1Instrument_a5beca512d43f5873e7705ba190f2f116}\label{classIO_1_1Astrodynamics_1_1Instruments_1_1Instrument_a5beca512d43f5873e7705ba190f2f116}} 
+\index{IO::Astrodynamics::Instruments::Instrument@{IO::Astrodynamics::Instruments::Instrument}!GetBoresight@{GetBoresight}}
+\index{GetBoresight@{GetBoresight}!IO::Astrodynamics::Instruments::Instrument@{IO::Astrodynamics::Instruments::Instrument}}
+\doxysubsubsection{\texorpdfstring{GetBoresight()}{GetBoresight()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO\+::\+Astrodynamics\+::\+Math\+::\+Vector3D}} IO\+::\+Astrodynamics\+::\+Instruments\+::\+Instrument\+::\+Get\+Boresight (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+
+
+Get the Boresight vector. 
+
+\begin{DoxyReturn}{Returns}
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO\+::\+Astrodynamics\+::\+Math\+::\+Vector3D}} 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Instruments_1_1Instrument_a534e2bf77c3008e2e56dee24aa2fbb7d}\label{classIO_1_1Astrodynamics_1_1Instruments_1_1Instrument_a534e2bf77c3008e2e56dee24aa2fbb7d}} 
+\index{IO::Astrodynamics::Instruments::Instrument@{IO::Astrodynamics::Instruments::Instrument}!GetBoresight@{GetBoresight}}
+\index{GetBoresight@{GetBoresight}!IO::Astrodynamics::Instruments::Instrument@{IO::Astrodynamics::Instruments::Instrument}}
+\doxysubsubsection{\texorpdfstring{GetBoresight()}{GetBoresight()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO\+::\+Astrodynamics\+::\+Math\+::\+Vector3D}} IO\+::\+Astrodynamics\+::\+Instruments\+::\+Instrument\+::\+Get\+Boresight (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Frames_1_1Frames}{IO\+::\+Astrodynamics\+::\+Frames\+::\+Frames}} \&}]{frame,  }\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} \&}]{epoch }\end{DoxyParamCaption}) const}
+
+Get the boresight vector at specified epoch in a given frame 
+\begin{DoxyParams}{Parameters}
+{\em frame} & \\
+\hline
+{\em epoch} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO\+::\+Astrodynamics\+::\+Math\+::\+Vector3D}} 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Instruments_1_1Instrument_a9d7cf888a7cc6d88272927acda4c9c65}\label{classIO_1_1Astrodynamics_1_1Instruments_1_1Instrument_a9d7cf888a7cc6d88272927acda4c9c65}} 
+\index{IO::Astrodynamics::Instruments::Instrument@{IO::Astrodynamics::Instruments::Instrument}!GetBoresightInSpacecraftFrame@{GetBoresightInSpacecraftFrame}}
+\index{GetBoresightInSpacecraftFrame@{GetBoresightInSpacecraftFrame}!IO::Astrodynamics::Instruments::Instrument@{IO::Astrodynamics::Instruments::Instrument}}
+\doxysubsubsection{\texorpdfstring{GetBoresightInSpacecraftFrame()}{GetBoresightInSpacecraftFrame()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO\+::\+Astrodynamics\+::\+Math\+::\+Vector3D}} IO\+::\+Astrodynamics\+::\+Instruments\+::\+Instrument\+::\+Get\+Boresight\+In\+Spacecraft\+Frame (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+Compute boresight in Spacecraft frame \begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Instruments_1_1Instrument_adb572d71a9891e447b94de2d59d5ea47}\label{classIO_1_1Astrodynamics_1_1Instruments_1_1Instrument_adb572d71a9891e447b94de2d59d5ea47}} 
+\index{IO::Astrodynamics::Instruments::Instrument@{IO::Astrodynamics::Instruments::Instrument}!GetFilesPath@{GetFilesPath}}
+\index{GetFilesPath@{GetFilesPath}!IO::Astrodynamics::Instruments::Instrument@{IO::Astrodynamics::Instruments::Instrument}}
+\doxysubsubsection{\texorpdfstring{GetFilesPath()}{GetFilesPath()}}
+{\footnotesize\ttfamily std\+::string IO\+::\+Astrodynamics\+::\+Instruments\+::\+Instrument\+::\+Get\+Files\+Path (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+
+
+Get the Files Path object. 
+
+\begin{DoxyReturn}{Returns}
+std\+::string 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Instruments_1_1Instrument_aca8c8e00a5023d9a8fa7bee6776ec0bd}\label{classIO_1_1Astrodynamics_1_1Instruments_1_1Instrument_aca8c8e00a5023d9a8fa7bee6776ec0bd}} 
+\index{IO::Astrodynamics::Instruments::Instrument@{IO::Astrodynamics::Instruments::Instrument}!GetFOVBoundaries@{GetFOVBoundaries}}
+\index{GetFOVBoundaries@{GetFOVBoundaries}!IO::Astrodynamics::Instruments::Instrument@{IO::Astrodynamics::Instruments::Instrument}}
+\doxysubsubsection{\texorpdfstring{GetFOVBoundaries()}{GetFOVBoundaries()}}
+{\footnotesize\ttfamily std\+::vector$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO\+::\+Astrodynamics\+::\+Math\+::\+Vector3D}} $>$ IO\+::\+Astrodynamics\+::\+Instruments\+::\+Instrument\+::\+Get\+FOVBoundaries (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+
+
+Get the FOV boundaries. 
+
+\begin{DoxyReturn}{Returns}
+std\+::vector$<$\+IO\+::\+Astrodynamics\+::\+Math\+::\+Vector3\+D$>$ 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Instruments_1_1Instrument_a977f64c22ecdb747027332818e91b7de}\label{classIO_1_1Astrodynamics_1_1Instruments_1_1Instrument_a977f64c22ecdb747027332818e91b7de}} 
+\index{IO::Astrodynamics::Instruments::Instrument@{IO::Astrodynamics::Instruments::Instrument}!GetFOVShape@{GetFOVShape}}
+\index{GetFOVShape@{GetFOVShape}!IO::Astrodynamics::Instruments::Instrument@{IO::Astrodynamics::Instruments::Instrument}}
+\doxysubsubsection{\texorpdfstring{GetFOVShape()}{GetFOVShape()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Instruments_a0fd4dd367af85a15bb1461db611b365b}{IO\+::\+Astrodynamics\+::\+Instruments\+::\+FOVShape\+Enum}} IO\+::\+Astrodynamics\+::\+Instruments\+::\+Instrument\+::\+Get\+FOVShape (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+
+
+Get the FOV shape. 
+
+\begin{DoxyReturn}{Returns}
+\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Instruments_a0fd4dd367af85a15bb1461db611b365b}{IO\+::\+Astrodynamics\+::\+Instruments\+::\+FOVShape\+Enum}} 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Instruments_1_1Instrument_a866845d533c655fc250faa42d0ce5cbc}\label{classIO_1_1Astrodynamics_1_1Instruments_1_1Instrument_a866845d533c655fc250faa42d0ce5cbc}} 
+\index{IO::Astrodynamics::Instruments::Instrument@{IO::Astrodynamics::Instruments::Instrument}!GetFrame@{GetFrame}}
+\index{GetFrame@{GetFrame}!IO::Astrodynamics::Instruments::Instrument@{IO::Astrodynamics::Instruments::Instrument}}
+\doxysubsubsection{\texorpdfstring{GetFrame()}{GetFrame()}}
+{\footnotesize\ttfamily const std\+::unique\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Frames_1_1InstrumentFrameFile}{IO\+::\+Astrodynamics\+::\+Frames\+::\+Instrument\+Frame\+File}} $>$ \& IO\+::\+Astrodynamics\+::\+Instruments\+::\+Instrument\+::\+Get\+Frame (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+
+
+Get the Frame object. 
+
+\begin{DoxyReturn}{Returns}
+const std\+::unique\+\_\+ptr$<$\+IO\+::\+Astrodynamics\+::\+Frames\+::\+Instrument\+Frame$>$\& 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Instruments_1_1Instrument_a67cf5001b0392d7c32de0b8ab8da7d6a}\label{classIO_1_1Astrodynamics_1_1Instruments_1_1Instrument_a67cf5001b0392d7c32de0b8ab8da7d6a}} 
+\index{IO::Astrodynamics::Instruments::Instrument@{IO::Astrodynamics::Instruments::Instrument}!GetId@{GetId}}
+\index{GetId@{GetId}!IO::Astrodynamics::Instruments::Instrument@{IO::Astrodynamics::Instruments::Instrument}}
+\doxysubsubsection{\texorpdfstring{GetId()}{GetId()}}
+{\footnotesize\ttfamily int IO\+::\+Astrodynamics\+::\+Instruments\+::\+Instrument\+::\+Get\+Id (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+
+
+Get the Id object. 
+
+\begin{DoxyReturn}{Returns}
+int 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Instruments_1_1Instrument_af2a9cd2a34a94ab166a479938cebdf67}\label{classIO_1_1Astrodynamics_1_1Instruments_1_1Instrument_af2a9cd2a34a94ab166a479938cebdf67}} 
+\index{IO::Astrodynamics::Instruments::Instrument@{IO::Astrodynamics::Instruments::Instrument}!GetName@{GetName}}
+\index{GetName@{GetName}!IO::Astrodynamics::Instruments::Instrument@{IO::Astrodynamics::Instruments::Instrument}}
+\doxysubsubsection{\texorpdfstring{GetName()}{GetName()}}
+{\footnotesize\ttfamily std\+::string IO\+::\+Astrodynamics\+::\+Instruments\+::\+Instrument\+::\+Get\+Name (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+
+
+Get the Name object. 
+
+\begin{DoxyReturn}{Returns}
+std\+::string 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Instruments_1_1Instrument_a446669e4ddfefcafe427e5aa78884170}\label{classIO_1_1Astrodynamics_1_1Instruments_1_1Instrument_a446669e4ddfefcafe427e5aa78884170}} 
+\index{IO::Astrodynamics::Instruments::Instrument@{IO::Astrodynamics::Instruments::Instrument}!GetSpacecraft@{GetSpacecraft}}
+\index{GetSpacecraft@{GetSpacecraft}!IO::Astrodynamics::Instruments::Instrument@{IO::Astrodynamics::Instruments::Instrument}}
+\doxysubsubsection{\texorpdfstring{GetSpacecraft()}{GetSpacecraft()}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft}{IO\+::\+Astrodynamics\+::\+Body\+::\+Spacecraft\+::\+Spacecraft}} \& IO\+::\+Astrodynamics\+::\+Instruments\+::\+Instrument\+::\+Get\+Spacecraft (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+
+
+Get the Spacecraft object. 
+
+\begin{DoxyReturn}{Returns}
+const \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Body_1_1Spacecraft}{IO\+::\+Astrodynamics\+::\+Body\+::\+Spacecraft}}\& 
+\end{DoxyReturn}
+
+
+\doxysubsection{Friends And Related Function Documentation}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Instruments_1_1Instrument_a7900ba5f1cf425823990193aa636c59a}\label{classIO_1_1Astrodynamics_1_1Instruments_1_1Instrument_a7900ba5f1cf425823990193aa636c59a}} 
+\index{IO::Astrodynamics::Instruments::Instrument@{IO::Astrodynamics::Instruments::Instrument}!IO::Astrodynamics::Body::Spacecraft::Spacecraft@{IO::Astrodynamics::Body::Spacecraft::Spacecraft}}
+\index{IO::Astrodynamics::Body::Spacecraft::Spacecraft@{IO::Astrodynamics::Body::Spacecraft::Spacecraft}!IO::Astrodynamics::Instruments::Instrument@{IO::Astrodynamics::Instruments::Instrument}}
+\doxysubsubsection{\texorpdfstring{IO::Astrodynamics::Body::Spacecraft::Spacecraft}{IO::Astrodynamics::Body::Spacecraft::Spacecraft}}
+{\footnotesize\ttfamily friend class \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft}{IO\+::\+Astrodynamics\+::\+Body\+::\+Spacecraft\+::\+Spacecraft}}\hspace{0.3cm}{\ttfamily [friend]}}
+
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+IO.\+Astrodynamics/\+Instruments/\mbox{\hyperlink{Instrument_8h}{Instrument.\+h}}\item 
+IO.\+Astrodynamics/\+Instruments/\mbox{\hyperlink{Instrument_8cpp}{Instrument.\+cpp}}\end{DoxyCompactItemize}

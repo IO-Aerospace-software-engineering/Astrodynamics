@@ -1,5 +1,5 @@
 \hypertarget{AzimuthRange_8h_source}{}\doxysection{Azimuth\+Range.\+h}
-\label{AzimuthRange_8h_source}\index{IO.SDK/Coordinates/AzimuthRange.h@{IO.SDK/Coordinates/AzimuthRange.h}}
+\label{AzimuthRange_8h_source}\index{IO.Astrodynamics/Coordinates/AzimuthRange.h@{IO.Astrodynamics/Coordinates/AzimuthRange.h}}
 \mbox{\hyperlink{AzimuthRange_8h}{Go to the documentation of this file.}}
 \begin{DoxyCode}{0}
 \DoxyCodeLine{1 \textcolor{comment}{/*}}
@@ -8,9 +8,9 @@
 \DoxyCodeLine{4 \textcolor{preprocessor}{\#ifndef AZIMUTH\_RANGE\_H}}
 \DoxyCodeLine{5 \textcolor{preprocessor}{\#define AZIMUTH\_RANGE\_H}}
 \DoxyCodeLine{6 }
-\DoxyCodeLine{7 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1SDK_1_1Coordinates}{IO::SDK::Coordinates}}}
+\DoxyCodeLine{7 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Coordinates}{IO::Astrodynamics::Coordinates}}}
 \DoxyCodeLine{8 \{}
-\DoxyCodeLine{9     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1AzimuthRange}{AzimuthRange}}}
+\DoxyCodeLine{9     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1AzimuthRange}{AzimuthRange}}}
 \DoxyCodeLine{10     \{}
 \DoxyCodeLine{11     \textcolor{keyword}{private}:}
 \DoxyCodeLine{12         \textcolor{keyword}{const} \textcolor{keywordtype}{double} m\_start;}
@@ -18,17 +18,17 @@
 \DoxyCodeLine{14         \textcolor{keyword}{const} \textcolor{keywordtype}{double} m\_span\{\};}
 \DoxyCodeLine{15 }
 \DoxyCodeLine{16     \textcolor{keyword}{public}:}
-\DoxyCodeLine{23         \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1AzimuthRange_a66750c2a0b209a1cb0df9c282faa0107}{AzimuthRange}}(\textcolor{keywordtype}{double} start, \textcolor{keywordtype}{double} end);}
+\DoxyCodeLine{23         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1AzimuthRange_a8ce5807cf13d95212bd760dd79d1e8eb}{AzimuthRange}}(\textcolor{keywordtype}{double} start, \textcolor{keywordtype}{double} end);}
 \DoxyCodeLine{24 }
-\DoxyCodeLine{32         [[nodiscard]] \textcolor{keywordtype}{bool} \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1AzimuthRange_a3a592147187c703b23083f7c78a46b8b}{IsInRange}}(\textcolor{keywordtype}{double} angle) \textcolor{keyword}{const};}
+\DoxyCodeLine{32         [[nodiscard]] \textcolor{keywordtype}{bool} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1AzimuthRange_abcfc734f530684062e57b71dbd29e428}{IsInRange}}(\textcolor{keywordtype}{double} angle) \textcolor{keyword}{const};}
 \DoxyCodeLine{33 }
-\DoxyCodeLine{39         [[nodiscard]] \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1AzimuthRange_af5f14096e4dce0522ea0971fb0a039d7}{GetStart}}()\textcolor{keyword}{ const }\{ \textcolor{keywordflow}{return} m\_start; \}}
+\DoxyCodeLine{39         [[nodiscard]] \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1AzimuthRange_ad1d087e38b94871ecef6b4a95114359a}{GetStart}}()\textcolor{keyword}{ const }\{ \textcolor{keywordflow}{return} m\_start; \}}
 \DoxyCodeLine{40 }
-\DoxyCodeLine{46         [[nodiscard]] \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1AzimuthRange_a0ce744b64eec268b9d006155a2e24abc}{GetEnd}}()\textcolor{keyword}{ const }\{ \textcolor{keywordflow}{return} m\_end; \}}
+\DoxyCodeLine{46         [[nodiscard]] \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1AzimuthRange_aa0807482c46e9f02d29dd43712612380}{GetEnd}}()\textcolor{keyword}{ const }\{ \textcolor{keywordflow}{return} m\_end; \}}
 \DoxyCodeLine{47 }
-\DoxyCodeLine{53         [[nodiscard]] \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1AzimuthRange_a40680aeb4a4b6db06b322d66cc7f5356}{GetSpan}}()\textcolor{keyword}{ const }\{ \textcolor{keywordflow}{return} m\_span; \}}
+\DoxyCodeLine{53         [[nodiscard]] \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1AzimuthRange_addb1d28876b2d79e7e220155061a9208}{GetSpan}}()\textcolor{keyword}{ const }\{ \textcolor{keywordflow}{return} m\_span; \}}
 \DoxyCodeLine{54 }
-\DoxyCodeLine{62         [[nodiscard]] \textcolor{keywordtype}{bool} \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1AzimuthRange_a07d4c5b33eadc2c4b87935f1612bef91}{IsIntersected}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1AzimuthRange}{AzimuthRange}}\& azimuthRange) \textcolor{keyword}{const};}
+\DoxyCodeLine{62         [[nodiscard]] \textcolor{keywordtype}{bool} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1AzimuthRange_af4f3ee2d5c0cb71bd5f5f8ed1cb2c36f}{IsIntersected}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1AzimuthRange}{AzimuthRange}}\& azimuthRange) \textcolor{keyword}{const};}
 \DoxyCodeLine{63     \};}
 \DoxyCodeLine{64 }
 \DoxyCodeLine{65 \}}

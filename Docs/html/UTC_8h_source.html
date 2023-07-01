@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.4"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>IO-SDK: IO.SDK/Time/UTC.h Source File</title>
+<title>IO-Astrodynamics: IO.Astrodynamics/Time/UTC.h Source File</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -25,7 +25,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">IO-SDK<span id="projectnumber">&#160;0.9.x</span>
+   <div id="projectname">IO-Astrodynamics<span id="projectnumber">&#160;1.0.x</span>
    </div>
    <div id="projectbrief">Astrodynamics framework</div>
   </td>
@@ -95,49 +95,49 @@ $(document).ready(function(){initNavTree('UTC_8h_source.html',''); initResizable
 <div class="line"><a id="l00007" name="l00007"></a><span class="lineno">    7</span> </div>
 <div class="line"><a id="l00008" name="l00008"></a><span class="lineno">    8</span><span class="preprocessor">#include &lt;<a class="code" href="DateTime_8h.html">DateTime.h</a>&gt;</span></div>
 <div class="line"><a id="l00009" name="l00009"></a><span class="lineno">    9</span> </div>
-<div class="line"><a id="l00010" name="l00010"></a><span class="lineno">   10</span><span class="keyword">namespace </span><a class="code hl_namespace" href="namespaceIO_1_1SDK_1_1Time.html">IO::SDK::Time</a></div>
+<div class="line"><a id="l00010" name="l00010"></a><span class="lineno">   10</span><span class="keyword">namespace </span><a class="code hl_namespace" href="namespaceIO_1_1Astrodynamics_1_1Time.html">IO::Astrodynamics::Time</a></div>
 <div class="line"><a id="l00011" name="l00011"></a><span class="lineno">   11</span>{</div>
 <div class="line"><a id="l00012" name="l00012"></a><span class="lineno">   12</span>    <span class="keyword">class </span>TDB;</div>
-<div class="line"><a id="l00013" name="l00013"></a><span class="lineno"><a class="line" href="classIO_1_1SDK_1_1Time_1_1UTC.html">   13</a></span>    <span class="keyword">class </span><a class="code hl_class" href="classIO_1_1SDK_1_1Time_1_1UTC.html">UTC</a> final: <span class="keyword">public</span> <a class="code hl_class" href="classIO_1_1SDK_1_1Time_1_1DateTime.html">IO::SDK::Time::DateTime</a></div>
+<div class="line"><a id="l00013" name="l00013"></a><span class="lineno"><a class="line" href="classIO_1_1Astrodynamics_1_1Time_1_1UTC.html">   13</a></span>    <span class="keyword">class </span><a class="code hl_class" href="classIO_1_1Astrodynamics_1_1Time_1_1UTC.html">UTC</a> final: <span class="keyword">public</span> <a class="code hl_class" href="classIO_1_1Astrodynamics_1_1Time_1_1DateTime.html">IO::Astrodynamics::Time::DateTime</a></div>
 <div class="line"><a id="l00014" name="l00014"></a><span class="lineno">   14</span>    {</div>
 <div class="line"><a id="l00015" name="l00015"></a><span class="lineno">   15</span>    <span class="keyword">private</span>:</div>
 <div class="line"><a id="l00016" name="l00016"></a><span class="lineno">   16</span>        <span class="comment">/* data */</span></div>
 <div class="line"><a id="l00017" name="l00017"></a><span class="lineno">   17</span>    <span class="keyword">public</span>:</div>
-<div class="line"><a id="l00018" name="l00018"></a><span class="lineno">   18</span>        <span class="keyword">explicit</span> <a class="code hl_function" href="classIO_1_1SDK_1_1Time_1_1UTC.html#a273a9b4eeb7721b3062611b9b3d4a449">UTC</a>(std::chrono::duration&lt;double&gt; ellapsedSecondsFromJ2000);</div>
+<div class="line"><a id="l00018" name="l00018"></a><span class="lineno">   18</span>        <span class="keyword">explicit</span> <a class="code hl_function" href="classIO_1_1Astrodynamics_1_1Time_1_1UTC.html#a29dac6b8d159b47fa714ed4599a689fb">UTC</a>(std::chrono::duration&lt;double&gt; ellapsedSecondsFromJ2000);</div>
 <div class="line"><a id="l00019" name="l00019"></a><span class="lineno">   19</span> </div>
-<div class="line"><a id="l00020" name="l00020"></a><span class="lineno">   20</span>        <span class="keyword">explicit</span> <a class="code hl_function" href="classIO_1_1SDK_1_1Time_1_1UTC.html#a273a9b4eeb7721b3062611b9b3d4a449">UTC</a>(<span class="keyword">const</span> std::string&amp; <span class="keywordtype">string</span>);</div>
-<div class="line"><a id="l00021" name="l00021"></a><span class="lineno"><a class="line" href="classIO_1_1SDK_1_1Time_1_1UTC.html#a8ae5a2d871ac5bc2a6aca9e28077f933">   21</a></span>        <a class="code hl_function" href="classIO_1_1SDK_1_1Time_1_1UTC.html#a8ae5a2d871ac5bc2a6aca9e28077f933">~UTC</a>() <span class="keyword">override</span> = <span class="keywordflow">default</span>;</div>
+<div class="line"><a id="l00020" name="l00020"></a><span class="lineno">   20</span>        <span class="keyword">explicit</span> <a class="code hl_function" href="classIO_1_1Astrodynamics_1_1Time_1_1UTC.html#a29dac6b8d159b47fa714ed4599a689fb">UTC</a>(<span class="keyword">const</span> std::string&amp; <span class="keywordtype">string</span>);</div>
+<div class="line"><a id="l00021" name="l00021"></a><span class="lineno"><a class="line" href="classIO_1_1Astrodynamics_1_1Time_1_1UTC.html#a322746d3278f814f73bfe75b87f88285">   21</a></span>        <a class="code hl_function" href="classIO_1_1Astrodynamics_1_1Time_1_1UTC.html#a322746d3278f814f73bfe75b87f88285">~UTC</a>() <span class="keyword">override</span> = <span class="keywordflow">default</span>;</div>
 <div class="line"><a id="l00022" name="l00022"></a><span class="lineno">   22</span> </div>
-<div class="line"><a id="l00023" name="l00023"></a><span class="lineno">   23</span>        [[nodiscard]] <a class="code hl_class" href="classIO_1_1SDK_1_1Time_1_1UTC.html">IO::SDK::Time::UTC</a> <a class="code hl_function" href="classIO_1_1SDK_1_1Time_1_1UTC.html#a7233ed43dac37bd71e0d2e467ebb1779">Add</a>(<span class="keyword">const</span> <a class="code hl_class" href="classIO_1_1SDK_1_1Time_1_1TimeSpan.html">IO::SDK::Time::TimeSpan</a> &amp;timespan) <span class="keyword">const</span>;</div>
+<div class="line"><a id="l00023" name="l00023"></a><span class="lineno">   23</span>        [[nodiscard]] <a class="code hl_class" href="classIO_1_1Astrodynamics_1_1Time_1_1UTC.html">IO::Astrodynamics::Time::UTC</a> <a class="code hl_function" href="classIO_1_1Astrodynamics_1_1Time_1_1UTC.html#a6108a28f4164d6ffb2dd6aa441dc3740">Add</a>(<span class="keyword">const</span> <a class="code hl_class" href="classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan.html">IO::Astrodynamics::Time::TimeSpan</a> &amp;timespan) <span class="keyword">const</span>;</div>
 <div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span> </div>
-<div class="line"><a id="l00031" name="l00031"></a><span class="lineno">   31</span>        <a class="code hl_class" href="classIO_1_1SDK_1_1Time_1_1UTC.html">IO::SDK::Time::UTC</a> <a class="code hl_function" href="classIO_1_1SDK_1_1Time_1_1UTC.html#ac2abb56b858e6c1585e63089b9b19d85">operator+</a>(<span class="keyword">const</span> <a class="code hl_class" href="classIO_1_1SDK_1_1Time_1_1TimeSpan.html">IO::SDK::Time::TimeSpan</a> &amp;timespan) <span class="keyword">const</span>;</div>
+<div class="line"><a id="l00031" name="l00031"></a><span class="lineno">   31</span>        <a class="code hl_class" href="classIO_1_1Astrodynamics_1_1Time_1_1UTC.html">IO::Astrodynamics::Time::UTC</a> <a class="code hl_function" href="classIO_1_1Astrodynamics_1_1Time_1_1UTC.html#ab742bb0791ca847c561e398c79be48b8">operator+</a>(<span class="keyword">const</span> <a class="code hl_class" href="classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan.html">IO::Astrodynamics::Time::TimeSpan</a> &amp;timespan) <span class="keyword">const</span>;</div>
 <div class="line"><a id="l00032" name="l00032"></a><span class="lineno">   32</span> </div>
-<div class="line"><a id="l00038" name="l00038"></a><span class="lineno">   38</span>        [[nodiscard]] std::string <a class="code hl_function" href="classIO_1_1SDK_1_1Time_1_1UTC.html#a432137549002510ea01664efd65bde47">ToString</a>() <span class="keyword">const override</span>;</div>
+<div class="line"><a id="l00038" name="l00038"></a><span class="lineno">   38</span>        [[nodiscard]] std::string <a class="code hl_function" href="classIO_1_1Astrodynamics_1_1Time_1_1UTC.html#a41daea6857b53e136eeddb1dc34dced3">ToString</a>() <span class="keyword">const override</span>;</div>
 <div class="line"><a id="l00039" name="l00039"></a><span class="lineno">   39</span> </div>
-<div class="line"><a id="l00040" name="l00040"></a><span class="lineno">   40</span>        [[nodiscard]] <a class="code hl_class" href="classIO_1_1SDK_1_1Time_1_1TDB.html">TDB</a> <a class="code hl_function" href="classIO_1_1SDK_1_1Time_1_1UTC.html#aef747ab46ab36ef7398e4dc840d69a9a">ToTDB</a>() <span class="keyword">const</span>;</div>
+<div class="line"><a id="l00040" name="l00040"></a><span class="lineno">   40</span>        [[nodiscard]] <a class="code hl_class" href="classIO_1_1Astrodynamics_1_1Time_1_1TDB.html">TDB</a> <a class="code hl_function" href="classIO_1_1Astrodynamics_1_1Time_1_1UTC.html#a87373d1a38f3f05fc5dfa61252f07f5a">ToTDB</a>() <span class="keyword">const</span>;</div>
 <div class="line"><a id="l00041" name="l00041"></a><span class="lineno">   41</span>    };</div>
 <div class="line"><a id="l00042" name="l00042"></a><span class="lineno">   42</span> </div>
-<div class="line"><a id="l00043" name="l00043"></a><span class="lineno">   43</span>} <span class="comment">// namespace IO::SDK::Time</span></div>
+<div class="line"><a id="l00043" name="l00043"></a><span class="lineno">   43</span>} <span class="comment">// namespace IO::Astrodynamics::Time</span></div>
 <div class="line"><a id="l00044" name="l00044"></a><span class="lineno">   44</span> </div>
 <div class="line"><a id="l00045" name="l00045"></a><span class="lineno">   45</span><span class="preprocessor">#endif</span></div>
 <div class="ttc" id="aDateTime_8h_html"><div class="ttname"><a href="DateTime_8h.html">DateTime.h</a></div></div>
-<div class="ttc" id="aclassIO_1_1SDK_1_1Time_1_1DateTime_html"><div class="ttname"><a href="classIO_1_1SDK_1_1Time_1_1DateTime.html">IO::SDK::Time::DateTime</a></div><div class="ttdef"><b>Definition:</b> DateTime.h:15</div></div>
-<div class="ttc" id="aclassIO_1_1SDK_1_1Time_1_1TDB_html"><div class="ttname"><a href="classIO_1_1SDK_1_1Time_1_1TDB.html">IO::SDK::Time::TDB</a></div><div class="ttdef"><b>Definition:</b> TDB.h:13</div></div>
-<div class="ttc" id="aclassIO_1_1SDK_1_1Time_1_1TimeSpan_html"><div class="ttname"><a href="classIO_1_1SDK_1_1Time_1_1TimeSpan.html">IO::SDK::Time::TimeSpan</a></div><div class="ttdef"><b>Definition:</b> TimeSpan.h:12</div></div>
-<div class="ttc" id="aclassIO_1_1SDK_1_1Time_1_1UTC_html"><div class="ttname"><a href="classIO_1_1SDK_1_1Time_1_1UTC.html">IO::SDK::Time::UTC</a></div><div class="ttdef"><b>Definition:</b> UTC.h:14</div></div>
-<div class="ttc" id="aclassIO_1_1SDK_1_1Time_1_1UTC_html_a273a9b4eeb7721b3062611b9b3d4a449"><div class="ttname"><a href="classIO_1_1SDK_1_1Time_1_1UTC.html#a273a9b4eeb7721b3062611b9b3d4a449">IO::SDK::Time::UTC::UTC</a></div><div class="ttdeci">UTC(std::chrono::duration&lt; double &gt; ellapsedSecondsFromJ2000)</div><div class="ttdef"><b>Definition:</b> UTC.cpp:9</div></div>
-<div class="ttc" id="aclassIO_1_1SDK_1_1Time_1_1UTC_html_a432137549002510ea01664efd65bde47"><div class="ttname"><a href="classIO_1_1SDK_1_1Time_1_1UTC.html#a432137549002510ea01664efd65bde47">IO::SDK::Time::UTC::ToString</a></div><div class="ttdeci">std::string ToString() const override</div><div class="ttdoc">Get UTC string.</div><div class="ttdef"><b>Definition:</b> UTC.cpp:27</div></div>
-<div class="ttc" id="aclassIO_1_1SDK_1_1Time_1_1UTC_html_a7233ed43dac37bd71e0d2e467ebb1779"><div class="ttname"><a href="classIO_1_1SDK_1_1Time_1_1UTC.html#a7233ed43dac37bd71e0d2e467ebb1779">IO::SDK::Time::UTC::Add</a></div><div class="ttdeci">IO::SDK::Time::UTC Add(const IO::SDK::Time::TimeSpan &amp;timespan) const</div><div class="ttdef"><b>Definition:</b> UTC.cpp:43</div></div>
-<div class="ttc" id="aclassIO_1_1SDK_1_1Time_1_1UTC_html_a8ae5a2d871ac5bc2a6aca9e28077f933"><div class="ttname"><a href="classIO_1_1SDK_1_1Time_1_1UTC.html#a8ae5a2d871ac5bc2a6aca9e28077f933">IO::SDK::Time::UTC::~UTC</a></div><div class="ttdeci">~UTC() override=default</div></div>
-<div class="ttc" id="aclassIO_1_1SDK_1_1Time_1_1UTC_html_ac2abb56b858e6c1585e63089b9b19d85"><div class="ttname"><a href="classIO_1_1SDK_1_1Time_1_1UTC.html#ac2abb56b858e6c1585e63089b9b19d85">IO::SDK::Time::UTC::operator+</a></div><div class="ttdeci">IO::SDK::Time::UTC operator+(const IO::SDK::Time::TimeSpan &amp;timespan) const</div><div class="ttdef"><b>Definition:</b> UTC.cpp:48</div></div>
-<div class="ttc" id="aclassIO_1_1SDK_1_1Time_1_1UTC_html_aef747ab46ab36ef7398e4dc840d69a9a"><div class="ttname"><a href="classIO_1_1SDK_1_1Time_1_1UTC.html#aef747ab46ab36ef7398e4dc840d69a9a">IO::SDK::Time::UTC::ToTDB</a></div><div class="ttdeci">TDB ToTDB() const</div><div class="ttdef"><b>Definition:</b> UTC.cpp:36</div></div>
-<div class="ttc" id="anamespaceIO_1_1SDK_1_1Time_html"><div class="ttname"><a href="namespaceIO_1_1SDK_1_1Time.html">IO::SDK::Time</a></div><div class="ttdef"><b>Definition:</b> DateTime.h:13</div></div>
+<div class="ttc" id="aclassIO_1_1Astrodynamics_1_1Time_1_1DateTime_html"><div class="ttname"><a href="classIO_1_1Astrodynamics_1_1Time_1_1DateTime.html">IO::Astrodynamics::Time::DateTime</a></div><div class="ttdef"><b>Definition:</b> DateTime.h:15</div></div>
+<div class="ttc" id="aclassIO_1_1Astrodynamics_1_1Time_1_1TDB_html"><div class="ttname"><a href="classIO_1_1Astrodynamics_1_1Time_1_1TDB.html">IO::Astrodynamics::Time::TDB</a></div><div class="ttdef"><b>Definition:</b> TDB.h:13</div></div>
+<div class="ttc" id="aclassIO_1_1Astrodynamics_1_1Time_1_1TimeSpan_html"><div class="ttname"><a href="classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan.html">IO::Astrodynamics::Time::TimeSpan</a></div><div class="ttdef"><b>Definition:</b> TimeSpan.h:12</div></div>
+<div class="ttc" id="aclassIO_1_1Astrodynamics_1_1Time_1_1UTC_html"><div class="ttname"><a href="classIO_1_1Astrodynamics_1_1Time_1_1UTC.html">IO::Astrodynamics::Time::UTC</a></div><div class="ttdef"><b>Definition:</b> UTC.h:14</div></div>
+<div class="ttc" id="aclassIO_1_1Astrodynamics_1_1Time_1_1UTC_html_a29dac6b8d159b47fa714ed4599a689fb"><div class="ttname"><a href="classIO_1_1Astrodynamics_1_1Time_1_1UTC.html#a29dac6b8d159b47fa714ed4599a689fb">IO::Astrodynamics::Time::UTC::UTC</a></div><div class="ttdeci">UTC(std::chrono::duration&lt; double &gt; ellapsedSecondsFromJ2000)</div><div class="ttdef"><b>Definition:</b> UTC.cpp:9</div></div>
+<div class="ttc" id="aclassIO_1_1Astrodynamics_1_1Time_1_1UTC_html_a322746d3278f814f73bfe75b87f88285"><div class="ttname"><a href="classIO_1_1Astrodynamics_1_1Time_1_1UTC.html#a322746d3278f814f73bfe75b87f88285">IO::Astrodynamics::Time::UTC::~UTC</a></div><div class="ttdeci">~UTC() override=default</div></div>
+<div class="ttc" id="aclassIO_1_1Astrodynamics_1_1Time_1_1UTC_html_a41daea6857b53e136eeddb1dc34dced3"><div class="ttname"><a href="classIO_1_1Astrodynamics_1_1Time_1_1UTC.html#a41daea6857b53e136eeddb1dc34dced3">IO::Astrodynamics::Time::UTC::ToString</a></div><div class="ttdeci">std::string ToString() const override</div><div class="ttdoc">Get UTC string.</div><div class="ttdef"><b>Definition:</b> UTC.cpp:27</div></div>
+<div class="ttc" id="aclassIO_1_1Astrodynamics_1_1Time_1_1UTC_html_a6108a28f4164d6ffb2dd6aa441dc3740"><div class="ttname"><a href="classIO_1_1Astrodynamics_1_1Time_1_1UTC.html#a6108a28f4164d6ffb2dd6aa441dc3740">IO::Astrodynamics::Time::UTC::Add</a></div><div class="ttdeci">IO::Astrodynamics::Time::UTC Add(const IO::Astrodynamics::Time::TimeSpan &amp;timespan) const</div><div class="ttdef"><b>Definition:</b> UTC.cpp:43</div></div>
+<div class="ttc" id="aclassIO_1_1Astrodynamics_1_1Time_1_1UTC_html_a87373d1a38f3f05fc5dfa61252f07f5a"><div class="ttname"><a href="classIO_1_1Astrodynamics_1_1Time_1_1UTC.html#a87373d1a38f3f05fc5dfa61252f07f5a">IO::Astrodynamics::Time::UTC::ToTDB</a></div><div class="ttdeci">TDB ToTDB() const</div><div class="ttdef"><b>Definition:</b> UTC.cpp:36</div></div>
+<div class="ttc" id="aclassIO_1_1Astrodynamics_1_1Time_1_1UTC_html_ab742bb0791ca847c561e398c79be48b8"><div class="ttname"><a href="classIO_1_1Astrodynamics_1_1Time_1_1UTC.html#ab742bb0791ca847c561e398c79be48b8">IO::Astrodynamics::Time::UTC::operator+</a></div><div class="ttdeci">IO::Astrodynamics::Time::UTC operator+(const IO::Astrodynamics::Time::TimeSpan &amp;timespan) const</div><div class="ttdef"><b>Definition:</b> UTC.cpp:48</div></div>
+<div class="ttc" id="anamespaceIO_1_1Astrodynamics_1_1Time_html"><div class="ttname"><a href="namespaceIO_1_1Astrodynamics_1_1Time.html">IO::Astrodynamics::Time</a></div><div class="ttdef"><b>Definition:</b> DateTime.h:13</div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="navelem"><a class="el" href="dir_5778ee96be26b2d80033eace8b85837e.html">IO.SDK</a></li><li class="navelem"><a class="el" href="dir_f5484ecb79d1136e426354a0968a29d0.html">Time</a></li><li class="navelem"><a class="el" href="UTC_8h.html">UTC.h</a></li>
+    <li class="navelem"><a class="el" href="dir_8b53906265ec8f6b685b3ec9d9930ef2.html">IO.Astrodynamics</a></li><li class="navelem"><a class="el" href="dir_9230ce8e6a400b4a0110ff1d1370189f.html">Time</a></li><li class="navelem"><a class="el" href="UTC_8h.html">UTC.h</a></li>
     <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.4 </li>
   </ul>
 </div>

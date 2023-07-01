@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['x_0',['X',['../classIO_1_1SDK_1_1Coordinate.html#a82a365ac761ad4545091ec584866073d',1,'IO::SDK::Coordinate']]]
+  ['x_0',['X',['../classIO_1_1Astrodynamics_1_1Coordinate.html#a6a84c095818e1012b09e78de83490daf',1,'IO::Astrodynamics::Coordinate']]]
 ];

@@ -1,5 +1,5 @@
 \hypertarget{Parameters_8h_source}{}\doxysection{Parameters.\+h}
-\label{Parameters_8h_source}\index{IO.SDK/Parameters/Parameters.h@{IO.SDK/Parameters/Parameters.h}}
+\label{Parameters_8h_source}\index{IO.Astrodynamics/Parameters/Parameters.h@{IO.Astrodynamics/Parameters/Parameters.h}}
 \mbox{\hyperlink{Parameters_8h}{Go to the documentation of this file.}}
 \begin{DoxyCode}{0}
 \DoxyCodeLine{1 \textcolor{comment}{/*}}
@@ -12,19 +12,19 @@
 \DoxyCodeLine{8 }
 \DoxyCodeLine{9 \textcolor{keyword}{using namespace }std::chrono\_literals;}
 \DoxyCodeLine{10 }
-\DoxyCodeLine{11 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1SDK_1_1Parameters}{IO::SDK::Parameters}}}
+\DoxyCodeLine{11 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Parameters}{IO::Astrodynamics::Parameters}}}
 \DoxyCodeLine{12 \{}
 \DoxyCodeLine{13 }
-\DoxyCodeLine{14     \textcolor{keyword}{inline} \textcolor{keyword}{constexpr} \textcolor{keywordtype}{int} \mbox{\hyperlink{namespaceIO_1_1SDK_1_1Parameters_a444b6401a92e31ac6f7c39338a49a57c}{CommentAreaSize}} = 5000;}
-\DoxyCodeLine{15     \textcolor{keyword}{inline} \textcolor{keyword}{constexpr} \textcolor{keywordtype}{int} \mbox{\hyperlink{namespaceIO_1_1SDK_1_1Parameters_a7f6cf3f43d214a0b3253ae515f2df848}{MaximumEphemerisLagrangePolynomialDegreeEvenSpaced}} = 27;\textcolor{comment}{//[1-\/27]}}
-\DoxyCodeLine{16     \textcolor{keyword}{inline} \textcolor{keyword}{constexpr} \textcolor{keywordtype}{int} \mbox{\hyperlink{namespaceIO_1_1SDK_1_1Parameters_af0adfe53d18f101abb6434d392c44bec}{MaximumEphemerisLagrangePolynomialDegree}} = 15;\textcolor{comment}{//[1-\/27]}}
+\DoxyCodeLine{14     \textcolor{keyword}{inline} \textcolor{keyword}{constexpr} \textcolor{keywordtype}{int} \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Parameters_aa3b05f9462c357a22f67011281c91017}{CommentAreaSize}} = 5000;}
+\DoxyCodeLine{15     \textcolor{keyword}{inline} \textcolor{keyword}{constexpr} \textcolor{keywordtype}{int} \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Parameters_aea7d63a4361591bc697bf63407ed0838}{MaximumEphemerisLagrangePolynomialDegreeEvenSpaced}} = 27;\textcolor{comment}{//[1-\/27]}}
+\DoxyCodeLine{16     \textcolor{keyword}{inline} \textcolor{keyword}{constexpr} \textcolor{keywordtype}{int} \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Parameters_acd5107583bd93f14ab205ee2945c430e}{MaximumEphemerisLagrangePolynomialDegree}} = 15;\textcolor{comment}{//[1-\/27]}}
 \DoxyCodeLine{17 }
-\DoxyCodeLine{18     \textcolor{keyword}{inline} \textcolor{keyword}{constexpr} \textcolor{keywordtype}{double} \mbox{\hyperlink{namespaceIO_1_1SDK_1_1Parameters_afb6663fa378276d38946b2183ba2fc5f}{NodeDetectionAccuraccy}} = 0.0017453;\textcolor{comment}{//0.1°}}
-\DoxyCodeLine{19     \textcolor{keyword}{inline} \textcolor{keyword}{constexpr} \textcolor{keywordtype}{double} \mbox{\hyperlink{namespaceIO_1_1SDK_1_1Parameters_a1181e43d26068caf60c576ec7a90cca3}{IntersectDetectionAccuraccy}} = 0.017453;\textcolor{comment}{//1.0°}}
-\DoxyCodeLine{20     \textcolor{keyword}{inline} \textcolor{keyword}{constexpr} \textcolor{keywordtype}{double} \mbox{\hyperlink{namespaceIO_1_1SDK_1_1Parameters_af3f8e4e755115c9fd070d564cde36241}{CircularEccentricityAccuraccy}} = 1E-\/03;}
-\DoxyCodeLine{21     \textcolor{keyword}{inline} \textcolor{keyword}{constexpr} \textcolor{keywordtype}{double} \mbox{\hyperlink{namespaceIO_1_1SDK_1_1Parameters_a3706cc453e95ad37a010f91469f2fcac}{ClockAccuracy}} = 16.0; \textcolor{comment}{//2\string^n}}
-\DoxyCodeLine{22     \textcolor{keyword}{inline} \textcolor{keyword}{const} \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{Time::TimeSpan}} SitePropagationStep(60s);}
-\DoxyCodeLine{23     \textcolor{keyword}{inline} \textcolor{keyword}{const} \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{Time::TimeSpan}} SpacecraftPropagationStep(1s);}
+\DoxyCodeLine{18     \textcolor{keyword}{inline} \textcolor{keyword}{constexpr} \textcolor{keywordtype}{double} \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Parameters_a9f3f7e858285a71d576cd6c7d9e11033}{NodeDetectionAccuraccy}} = 0.0017453;\textcolor{comment}{//0.1°}}
+\DoxyCodeLine{19     \textcolor{keyword}{inline} \textcolor{keyword}{constexpr} \textcolor{keywordtype}{double} \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Parameters_abf99da01b5d6f114cab74f561c6db5c3}{IntersectDetectionAccuraccy}} = 0.017453;\textcolor{comment}{//1.0°}}
+\DoxyCodeLine{20     \textcolor{keyword}{inline} \textcolor{keyword}{constexpr} \textcolor{keywordtype}{double} \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Parameters_aeaf7b5ec930099fa6553588edfb82cea}{CircularEccentricityAccuraccy}} = 1E-\/03;}
+\DoxyCodeLine{21     \textcolor{keyword}{inline} \textcolor{keyword}{constexpr} \textcolor{keywordtype}{double} \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Parameters_a5c34396a1fea4089d6fc5bf892140d1f}{ClockAccuracy}} = 16.0; \textcolor{comment}{//2\string^n}}
+\DoxyCodeLine{22     \textcolor{keyword}{inline} \textcolor{keyword}{const} \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{Time::TimeSpan}} SitePropagationStep(60s);}
+\DoxyCodeLine{23     \textcolor{keyword}{inline} \textcolor{keyword}{const} \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{Time::TimeSpan}} SpacecraftPropagationStep(1s);}
 \DoxyCodeLine{24 }
 \DoxyCodeLine{25 \}}
 \DoxyCodeLine{26 \textcolor{preprocessor}{\#endif}}

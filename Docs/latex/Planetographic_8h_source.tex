@@ -1,5 +1,5 @@
 \hypertarget{Planetographic_8h_source}{}\doxysection{Planetographic.\+h}
-\label{Planetographic_8h_source}\index{IO.SDK/Coordinates/Planetographic.h@{IO.SDK/Coordinates/Planetographic.h}}
+\label{Planetographic_8h_source}\index{IO.Astrodynamics/Coordinates/Planetographic.h@{IO.Astrodynamics/Coordinates/Planetographic.h}}
 \mbox{\hyperlink{Planetographic_8h}{Go to the documentation of this file.}}
 \begin{DoxyCode}{0}
 \DoxyCodeLine{1 \textcolor{comment}{/*}}
@@ -7,23 +7,23 @@
 \DoxyCodeLine{3 \textcolor{comment}{ */}}
 \DoxyCodeLine{4 \textcolor{preprocessor}{\#ifndef PLANETOGRAPHIC\_H}}
 \DoxyCodeLine{5 \textcolor{preprocessor}{\#define PLANETOGRAPHIC\_H}}
-\DoxyCodeLine{6 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1SDK_1_1Coordinates}{IO::SDK::Coordinates}}}
+\DoxyCodeLine{6 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Coordinates}{IO::Astrodynamics::Coordinates}}}
 \DoxyCodeLine{7 \{}
-\DoxyCodeLine{12     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1Planetographic}{Planetographic}}}
+\DoxyCodeLine{12     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1Planetographic}{Planetographic}}}
 \DoxyCodeLine{13     \{}
 \DoxyCodeLine{14     \textcolor{keyword}{private}:}
 \DoxyCodeLine{15         \textcolor{keyword}{const} \textcolor{keywordtype}{double} \_altitude, \_longitude, \_latitude;}
 \DoxyCodeLine{16 }
 \DoxyCodeLine{17     \textcolor{keyword}{public}:}
-\DoxyCodeLine{25         \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1Planetographic_ac03e22c1f70edba061e650064ac61b95}{Planetographic}}(\textcolor{keywordtype}{double} longitude, \textcolor{keywordtype}{double} latitude, \textcolor{keywordtype}{double} altitude) :\_altitude\{ altitude \}, \_longitude\{ longitude \}, \_latitude\{ latitude \}}
+\DoxyCodeLine{25         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1Planetographic_a40452d27db5017e50f960086f2c85b94}{Planetographic}}(\textcolor{keywordtype}{double} longitude, \textcolor{keywordtype}{double} latitude, \textcolor{keywordtype}{double} altitude) :\_altitude\{ altitude \}, \_longitude\{ longitude \}, \_latitude\{ latitude \}}
 \DoxyCodeLine{26         \{}
 \DoxyCodeLine{27 }
 \DoxyCodeLine{28         \}}
-\DoxyCodeLine{34         [[nodiscard]] \textcolor{keyword}{inline} \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1Planetographic_a23f252d372d7fc5246dbba617e33f0a7}{GetAltitude}}()\textcolor{keyword}{ const }\{ \textcolor{keywordflow}{return} this-\/>\_altitude; \}}
+\DoxyCodeLine{34         [[nodiscard]] \textcolor{keyword}{inline} \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1Planetographic_abeaab00e9007fb6871f386bd40883839}{GetAltitude}}()\textcolor{keyword}{ const }\{ \textcolor{keywordflow}{return} this-\/>\_altitude; \}}
 \DoxyCodeLine{35 }
-\DoxyCodeLine{41         [[nodiscard]] \textcolor{keyword}{inline} \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1Planetographic_a5917ed9f3dd21d8b543793219d0a6dbc}{GetLongitude}}()\textcolor{keyword}{ const }\{ \textcolor{keywordflow}{return} this-\/>\_longitude; \}}
+\DoxyCodeLine{41         [[nodiscard]] \textcolor{keyword}{inline} \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1Planetographic_a20807fe792773e06ae2f229fbe2c0c85}{GetLongitude}}()\textcolor{keyword}{ const }\{ \textcolor{keywordflow}{return} this-\/>\_longitude; \}}
 \DoxyCodeLine{42 }
-\DoxyCodeLine{48         [[nodiscard]] \textcolor{keyword}{inline} \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1SDK_1_1Coordinates_1_1Planetographic_ab01e3bf4841c5fd00539fdceb90f3e64}{GetLatitude}}()\textcolor{keyword}{ const }\{ \textcolor{keywordflow}{return} this-\/>\_latitude; \}}
+\DoxyCodeLine{48         [[nodiscard]] \textcolor{keyword}{inline} \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1Planetographic_a2b7866ffe7b0f523e88ca3de709a400a}{GetLatitude}}()\textcolor{keyword}{ const }\{ \textcolor{keywordflow}{return} this-\/>\_latitude; \}}
 \DoxyCodeLine{49     \};}
 \DoxyCodeLine{50 \}}
 \DoxyCodeLine{51 \textcolor{preprocessor}{\#endif }\textcolor{comment}{// !PLANETOGRAPHIC\_H}}

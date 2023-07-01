@@ -1,5 +1,5 @@
 \hypertarget{ZenithAttitude_8h_source}{}\doxysection{Zenith\+Attitude.\+h}
-\label{ZenithAttitude_8h_source}\index{IO.SDK/Maneuvers/Attitudes/ZenithAttitude.h@{IO.SDK/Maneuvers/Attitudes/ZenithAttitude.h}}
+\label{ZenithAttitude_8h_source}\index{IO.Astrodynamics/Maneuvers/Attitudes/ZenithAttitude.h@{IO.Astrodynamics/Maneuvers/Attitudes/ZenithAttitude.h}}
 \mbox{\hyperlink{ZenithAttitude_8h}{Go to the documentation of this file.}}
 \begin{DoxyCode}{0}
 \DoxyCodeLine{1 \textcolor{comment}{/*}}
@@ -10,24 +10,24 @@
 \DoxyCodeLine{6 }
 \DoxyCodeLine{7 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{ManeuverBase_8h}{ManeuverBase.h}}>}}
 \DoxyCodeLine{8 }
-\DoxyCodeLine{9 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1SDK_1_1Maneuvers_1_1Attitudes}{IO::SDK::Maneuvers::Attitudes}}}
+\DoxyCodeLine{9 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Maneuvers_1_1Attitudes}{IO::Astrodynamics::Maneuvers::Attitudes}}}
 \DoxyCodeLine{10 \{}
-\DoxyCodeLine{11     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1Attitudes_1_1ZenithAttitude}{ZenithAttitude}} final : \textcolor{keyword}{public} \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase}{IO::SDK::Maneuvers::ManeuverBase}}}
+\DoxyCodeLine{11     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1Attitudes_1_1ZenithAttitude}{ZenithAttitude}} final : \textcolor{keyword}{public} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase}{IO::Astrodynamics::Maneuvers::ManeuverBase}}}
 \DoxyCodeLine{12     \{}
 \DoxyCodeLine{13     \textcolor{keyword}{private}:}
 \DoxyCodeLine{14         \textcolor{comment}{/* data */}}
 \DoxyCodeLine{15 }
 \DoxyCodeLine{16     \textcolor{keyword}{protected}:}
-\DoxyCodeLine{22         \textcolor{keywordtype}{void} \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1Attitudes_1_1ZenithAttitude_abcc5ebba2edb760cc3d08e8dbc6a9e60}{Compute}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters}{IO::SDK::OrbitalParameters::OrbitalParameters}} \&maneuverPoint) \textcolor{keyword}{override};}
+\DoxyCodeLine{22         \textcolor{keywordtype}{void} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1Attitudes_1_1ZenithAttitude_a6a2f2398b52dce767399e97919ce6a7f}{Compute}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters}{IO::Astrodynamics::OrbitalParameters::OrbitalParameters}} \&maneuverPoint) \textcolor{keyword}{override};}
 \DoxyCodeLine{23 }
-\DoxyCodeLine{30         \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateOrientation}{IO::SDK::OrbitalParameters::StateOrientation}} \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1Attitudes_1_1ZenithAttitude_adb59be8151c3be823650ed5a0f1d16f4}{ComputeOrientation}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters}{IO::SDK::OrbitalParameters::OrbitalParameters}} \&maneuverPoint) \textcolor{keyword}{override};}
+\DoxyCodeLine{30         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateOrientation}{IO::Astrodynamics::OrbitalParameters::StateOrientation}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1Attitudes_1_1ZenithAttitude_a19b96da1b2d229fdd43441e9e58e23bd}{ComputeOrientation}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters}{IO::Astrodynamics::OrbitalParameters::OrbitalParameters}} \&maneuverPoint) \textcolor{keyword}{override};}
 \DoxyCodeLine{31 }
 \DoxyCodeLine{32     \textcolor{keyword}{public}:}
-\DoxyCodeLine{39         \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1Attitudes_1_1ZenithAttitude_a75359142c87e83ac94578e3b92242239}{ZenithAttitude}}(\textcolor{keyword}{const} std::vector<IO::SDK::Body::Spacecraft::Engine*>\& engines, \mbox{\hyperlink{classIO_1_1SDK_1_1Propagators_1_1Propagator}{IO::SDK::Propagators::Propagator}} \&propagator, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO::SDK::Time::TimeSpan}} \&attitudeHoldDuration);}
+\DoxyCodeLine{39         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1Attitudes_1_1ZenithAttitude_a9377cacb55f40476b3387bcf548d966f}{ZenithAttitude}}(\textcolor{keyword}{const} std::vector<IO::Astrodynamics::Body::Spacecraft::Engine*>\& engines, \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Propagators_1_1Propagator}{IO::Astrodynamics::Propagators::Propagator}} \&propagator, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO::Astrodynamics::Time::TimeSpan}} \&attitudeHoldDuration);}
 \DoxyCodeLine{40 }
-\DoxyCodeLine{48         \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1Attitudes_1_1ZenithAttitude_a75359142c87e83ac94578e3b92242239}{ZenithAttitude}}(\textcolor{keyword}{const} std::vector<IO::SDK::Body::Spacecraft::Engine*>\& engines, \mbox{\hyperlink{classIO_1_1SDK_1_1Propagators_1_1Propagator}{IO::SDK::Propagators::Propagator}} \&propagator, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO::SDK::Time::TDB}} \&minimumEpoch, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO::SDK::Time::TimeSpan}} \&attitudeHoldDuration);}
+\DoxyCodeLine{48         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1Attitudes_1_1ZenithAttitude_a9377cacb55f40476b3387bcf548d966f}{ZenithAttitude}}(\textcolor{keyword}{const} std::vector<IO::Astrodynamics::Body::Spacecraft::Engine*>\& engines, \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Propagators_1_1Propagator}{IO::Astrodynamics::Propagators::Propagator}} \&propagator, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO::Astrodynamics::Time::TDB}} \&minimumEpoch, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO::Astrodynamics::Time::TimeSpan}} \&attitudeHoldDuration);}
 \DoxyCodeLine{49 }
-\DoxyCodeLine{57         \textcolor{keywordtype}{bool} \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1Attitudes_1_1ZenithAttitude_a02199451b76c086541d3a99f5032ed84}{CanExecute}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters}{IO::SDK::OrbitalParameters::OrbitalParameters}} \&orbitalParams) \textcolor{keyword}{override};}
+\DoxyCodeLine{57         \textcolor{keywordtype}{bool} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1Attitudes_1_1ZenithAttitude_a53f11548918b93356818fa1e3c41e082}{CanExecute}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters}{IO::Astrodynamics::OrbitalParameters::OrbitalParameters}} \&orbitalParams) \textcolor{keyword}{override};}
 \DoxyCodeLine{58     \};}
 \DoxyCodeLine{59 \}}
 \DoxyCodeLine{60 }

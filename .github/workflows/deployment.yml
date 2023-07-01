@@ -1,5 +1,5 @@
 
-name: IO SDK deployment
+name: IO Astrodynamics deployment
 
 on:
   push:
@@ -35,48 +35,48 @@ jobs:
         run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
 
       - name: Tests (Linux)
-        working-directory: ${{github.workspace}}/build/IO.SDK.Tests
+        working-directory: ${{github.workspace}}/build/IO.Astrodynamics.Tests
         # Execute tests defined by the CMake configuration.  
         # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
-        run: ./IO.SDK.Tests
+        run: ./IO.Astrodynamics.Tests
         if: matrix.os == 'ubuntu-latest'
         
       - name: Tests (Windows)
-        working-directory: ${{github.workspace}}\build\IO.SDK.Tests\Release
+        working-directory: ${{github.workspace}}\build\IO.Astrodynamics.Tests\Release
         shell: cmd      
         # Execute tests defined by the CMake configuration.  
         # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
-        run: IO.SDK.Tests.exe      
+        run: IO.Astrodynamics.Tests.exe
         if: matrix.os == 'windows-latest'      
 
       - name: Copy Headers and library (Linux)
         run: |
           mkdir -p Toolkit/Linux/Includes
-          find IO.SDK/ -type f -name "*.h" -exec cp {} Toolkit/Linux/Includes/ \;
+          find IO.Astrodynamics/ -type f -name "*.h" -exec cp {} Toolkit/Linux/Includes/ \;
           find external-lib/includeLinux/ -type f -name "*.h" -exec cp {} Toolkit/Linux/Includes/ \;
-          cp -f build/IO.SDK/libIO.SDK.so Toolkit/Linux/
+          cp -f build/IO.Astrodynamics/libIO.Astrodynamics.so Toolkit/Linux/
         if: matrix.os == 'ubuntu-latest'
 
       - name: Copy Headers and library (Windows)
         run: |
           mkdir -p Toolkit\Windows\Includes
-          Get-ChildItem IO.SDK -recurse -force -filter "*.h" | Copy-Item -Destination Toolkit\Windows\Includes\
+          Get-ChildItem IO.Astrodynamics -recurse -force -filter "*.h" | Copy-Item -Destination Toolkit\Windows\Includes\
           Get-ChildItem external-lib/includeWindows -recurse -force -filter "*.h" | Copy-Item -Destination Toolkit\Windows\Includes\
-          Copy-Item .\build\IO.SDK\Release\IO.SDK.dll Toolkit\Windows\
-          Copy-Item .\build\IO.SDK\Release\IO.SDK.lib Toolkit\Windows\
+          Copy-Item .\build\IO.Astrodynamics\Release\IO.Astrodynamics.dll Toolkit\Windows\
+          Copy-Item .\build\IO.Astrodynamics\Release\IO.Astrodynamics.lib Toolkit\Windows\
         if: matrix.os == 'windows-latest'
 
       - name: Copy solar system data (Linux)
         run: |
           mkdir -p Toolkit/Linux/Data/SolarSystem
-          find build/IO.SDK.Tests/Data/SolarSystem/ -type f -name "*.*" -exec cp {} Toolkit/Linux/Data/SolarSystem \;       
+          find build/IO.Astrodynamics.Tests/Data/SolarSystem/ -type f -name "*.*" -exec cp {} Toolkit/Linux/Data/SolarSystem \;       
           zip -r IO-Toolkit-Linux-${{steps.tag.outputs.tag}}.zip Toolkit/Linux
         if: matrix.os == 'ubuntu-latest'
 
       - name: Copy solar system data (Windows)
         run: |
           mkdir -p Toolkit\Windows\Data\SolarSystem
-          Copy-Item -Path "IO.SDK.Tests\Data\Windows\*" -Destination "Toolkit\Windows" -recurse -Force
+          Copy-Item -Path "IO.Astrodynamics.Tests\Data\Windows\*" -Destination "Toolkit\Windows" -recurse -Force
           Compress-Archive -Path Toolkit\Windows\* -DestinationPath IO-Toolkit-Windows-${{steps.tag.outputs.tag}}.zip -Force
         if: matrix.os == 'windows-latest'
 
@@ -124,28 +124,28 @@ jobs:
         run: cmake --build ${{github.workspace}}/build --config Debug
 
       - name: Tests (Windows)
-        working-directory: ${{github.workspace}}\build\IO.SDK.Tests\Debug
+        working-directory: ${{github.workspace}}\build\IO.Astrodynamics.Tests\Debug
         shell: cmd      
         # Execute tests defined by the CMake configuration.  
         # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
-        run: IO.SDK.Tests.exe      
+        run: IO.Astrodynamics.Tests.exe
         if: matrix.os == 'windows-latest'      
 
       - name: Copy Headers and library (Windows)
         run: |
           mkdir -p Toolkit\Windows\Includes
-          Get-ChildItem IO.SDK -recurse -force -filter "*.h" | Copy-Item -Destination Toolkit\Windows\Includes\
+          Get-ChildItem IO.Astrodynamics -recurse -force -filter "*.h" | Copy-Item -Destination Toolkit\Windows\Includes\
           Get-ChildItem external-lib/includeWindows -recurse -force -filter "*.h" | Copy-Item -Destination Toolkit\Windows\Includes\
-          Copy-Item .\build\IO.SDK\Debug\IO.SDK.dll Toolkit\Windows\
-          Copy-Item .\build\IO.SDK\Debug\IO.SDK.lib Toolkit\Windows\
-          Copy-Item .\build\IO.SDK\Debug\IO.SDK.exp Toolkit\Windows\
-          Copy-Item .\build\IO.SDK\Debug\IO.SDK.pdb Toolkit\Windows\
+          Copy-Item .\build\IO.Astrodynamics\Debug\IO.Astrodynamics.dll Toolkit\Windows\
+          Copy-Item .\build\IO.Astrodynamics\Debug\IO.Astrodynamics.lib Toolkit\Windows\
+          Copy-Item .\build\IO.Astrodynamics\Debug\IO.Astrodynamics.exp Toolkit\Windows\
+          Copy-Item .\build\IO.Astrodynamics\Debug\IO.Astrodynamics.pdb Toolkit\Windows\
         if: matrix.os == 'windows-latest'
 
       - name: Copy solar system data (Windows)
         run: |
           mkdir -p Toolkit\Windows\Data\SolarSystem
-          Copy-Item -Path "IO.SDK.Tests\Data\Windows\*" -Destination "Toolkit\Windows" -recurse -Force
+          Copy-Item -Path "IO.Astrodynamics.Tests\Data\Windows\*" -Destination "Toolkit\Windows" -recurse -Force
           Compress-Archive -Path Toolkit\Windows\* -DestinationPath IO-Toolkit-Windows-${{steps.tag.outputs.tag}}-Debug.zip -Force
         if: matrix.os == 'windows-latest'
 

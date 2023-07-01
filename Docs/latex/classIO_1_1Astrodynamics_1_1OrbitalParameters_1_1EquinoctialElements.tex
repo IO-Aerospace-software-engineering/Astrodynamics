@@ -1,0 +1,432 @@
+\hypertarget{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1EquinoctialElements}{}\doxysection{IO\+::Astrodynamics\+::Orbital\+Parameters\+::Equinoctial\+Elements Class Reference}
+\label{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1EquinoctialElements}\index{IO::Astrodynamics::OrbitalParameters::EquinoctialElements@{IO::Astrodynamics::OrbitalParameters::EquinoctialElements}}
+
+
+{\ttfamily \#include $<$Equinoctial\+Elements.\+h$>$}
+
+Inheritance diagram for IO\+::Astrodynamics\+::Orbital\+Parameters\+::Equinoctial\+Elements\+:\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=2.000000cm]{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1EquinoctialElements}
+\end{center}
+\end{figure}
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1EquinoctialElements_a9210cef375b15b946f4123d20954dd3c}{Equinoctial\+Elements}} (const std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody}{IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Body}} $>$ \&center\+Of\+Motion, const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} \&epoch, double semi\+Major\+Axis, double h, double k, double p, double q, double L, double periapsis\+Longitude\+Rate, double ascending\+Node\+Longitude\+Rate, double right\+Ascension\+Of\+The\+Pole, double declination\+Of\+The\+Pole, const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Frames_1_1Frames}{IO\+::\+Astrodynamics\+::\+Frames\+::\+Frames}} \&frame)
+\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1EquinoctialElements_a1812f1dd41111e134fe202659fe27eeb}{Equinoctial\+Elements}} (const std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody}{IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Body}} $>$ \&center\+Of\+Motion, double semi\+Major\+Axis, double eccentricity, double inclination, double perigee\+Argument, double longitude\+AN, double mean\+Anomaly, double periapsis\+Longitude\+Rate, double ascending\+Node\+Longitude\+Rate, double right\+Ascension\+Of\+The\+Pole, double declination\+Of\+The\+Pole, const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} \&epoch, const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Frames_1_1Frames}{IO\+::\+Astrodynamics\+::\+Frames\+::\+Frames}} \&frame)
+\item 
+double \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1EquinoctialElements_a3d44e15f10040583bef14b229e9e8e44}{GetH}} () const
+\begin{DoxyCompactList}\small\item\em Get h coefficient \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1EquinoctialElements_aa4c49e0910573f733ff468e98e906764}{GetK}} () const
+\begin{DoxyCompactList}\small\item\em Get k coefficient \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1EquinoctialElements_a50bd37a980a2c9df5393e2cc37b03ebb}{GetP}} () const
+\begin{DoxyCompactList}\small\item\em Get p coefficient \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1EquinoctialElements_ae4e855644c131736dfbe0420d308b381}{GetQ}} () const
+\begin{DoxyCompactList}\small\item\em Get q coefficient \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1EquinoctialElements_a6d70936f6e20e125c6b709e794610e82}{GetL}} () const
+\begin{DoxyCompactList}\small\item\em Get longitude coefficient \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1EquinoctialElements_a2c207f153034cd828f3e6721de8bd112}{Get\+Periapsis\+Longitude\+Rate}} () const
+\begin{DoxyCompactList}\small\item\em Get periapsis longitude rate \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1EquinoctialElements_a8137128347654848fa25e8f08db1670c}{Get\+Ascending\+Node\+Longitude\+Rate}} () const
+\begin{DoxyCompactList}\small\item\em Get ascending node longitude rate \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1EquinoctialElements_a21fba6b6c6000ff042c0c7ee511169b6}{Get\+Mean\+Anomaly\+Rate}} () const
+\begin{DoxyCompactList}\small\item\em Get mean anomaly rate \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1EquinoctialElements_a9b028cccb22095c0579a46e9ba70e2c3}{Get\+Right\+Ascension\+Of\+Pole}} () const
+\begin{DoxyCompactList}\small\item\em Get right ascension of the pole of the reference plane \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1EquinoctialElements_adacc4500e695975214f4e65a32daec74}{Get\+Declination\+Of\+Pole}} () const
+\begin{DoxyCompactList}\small\item\em Get declination of the pole of the reference plane \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO\+::\+Astrodynamics\+::\+Time\+::\+Time\+Span}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1EquinoctialElements_a76870005ad5ac6c0561db7fb4a5c1cc7}{Get\+Period}} () const override
+\begin{DoxyCompactList}\small\item\em Get the Period. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO\+::\+Astrodynamics\+::\+Math\+::\+Vector3D}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1EquinoctialElements_a557ceb06853cf7f9cac332019670dece}{Get\+Specific\+Angular\+Momentum}} () const override
+\begin{DoxyCompactList}\small\item\em Get specific angular moment \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}{State\+Vector}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1EquinoctialElements_ac063e5e24b261f58bb124b89c38d797e}{To\+State\+Vector}} (const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} \&epoch) const override
+\begin{DoxyCompactList}\small\item\em Get state vector \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1EquinoctialElements_ac23ccfcfcd873da61d51ce6108e32212}{Get\+Eccentricity}} () const override
+\begin{DoxyCompactList}\small\item\em Get eccentricity \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1EquinoctialElements_afc9ae0422c0a41629cd5a6fd8a266704}{Get\+Semi\+Major\+Axis}} () const override
+\begin{DoxyCompactList}\small\item\em Get semi major axis \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1EquinoctialElements_ac9d4b6f63b2cd16581ed7209678525c1}{Get\+Inclination}} () const override
+\begin{DoxyCompactList}\small\item\em Get inclination \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1EquinoctialElements_ad0a8c51d8cd1f69e8236e675236defa3}{Get\+Periapsis\+Argument}} () const override
+\begin{DoxyCompactList}\small\item\em Get periapsis argument \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1EquinoctialElements_a29f2bf43e689a9466bf3ef806fa6e771}{Get\+Right\+Ascending\+Node\+Longitude}} () const override
+\begin{DoxyCompactList}\small\item\em Get right ascending node longitude \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1EquinoctialElements_a1398984fb1d6b626c39d55f754221c05}{Get\+Mean\+Anomaly}} () const override
+\begin{DoxyCompactList}\small\item\em Get mean anomaly at epoch \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1EquinoctialElements_adbccfe408ce8f8eb952796f6ea88b73c}{Get\+Specific\+Orbital\+Energy}} () const override
+\begin{DoxyCompactList}\small\item\em Get specific orbital energy \end{DoxyCompactList}\item 
+virtual double \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1EquinoctialElements_a681f562be125e29117f788931c17aec9}{Get\+Mean\+Anomaly}} () const=0
+\begin{DoxyCompactList}\small\item\em Get the Mean Anomaly. \end{DoxyCompactList}\item 
+virtual double \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1EquinoctialElements_a325f00472789b08f859285380cc1957c}{Get\+Mean\+Anomaly}} (const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} \&epoch) const
+\begin{DoxyCompactList}\small\item\em Get the Mean Anomaly. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsection*{Additional Inherited Members}
+
+
+\doxysubsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1EquinoctialElements_a9210cef375b15b946f4123d20954dd3c}\label{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1EquinoctialElements_a9210cef375b15b946f4123d20954dd3c}} 
+\index{IO::Astrodynamics::OrbitalParameters::EquinoctialElements@{IO::Astrodynamics::OrbitalParameters::EquinoctialElements}!EquinoctialElements@{EquinoctialElements}}
+\index{EquinoctialElements@{EquinoctialElements}!IO::Astrodynamics::OrbitalParameters::EquinoctialElements@{IO::Astrodynamics::OrbitalParameters::EquinoctialElements}}
+\doxysubsubsection{\texorpdfstring{EquinoctialElements()}{EquinoctialElements()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Equinoctial\+Elements\+::\+Equinoctial\+Elements (\begin{DoxyParamCaption}\item[{const std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody}{IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Body}} $>$ \&}]{center\+Of\+Motion,  }\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} \&}]{epoch,  }\item[{double}]{semi\+Major\+Axis,  }\item[{double}]{h,  }\item[{double}]{k,  }\item[{double}]{p,  }\item[{double}]{q,  }\item[{double}]{L,  }\item[{double}]{periapsis\+Longitude\+Rate,  }\item[{double}]{ascending\+Node\+Longitude\+Rate,  }\item[{double}]{right\+Ascension\+Of\+The\+Pole,  }\item[{double}]{declination\+Of\+The\+Pole,  }\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Frames_1_1Frames}{IO\+::\+Astrodynamics\+::\+Frames\+::\+Frames}} \&}]{frame }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1EquinoctialElements_a1812f1dd41111e134fe202659fe27eeb}\label{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1EquinoctialElements_a1812f1dd41111e134fe202659fe27eeb}} 
+\index{IO::Astrodynamics::OrbitalParameters::EquinoctialElements@{IO::Astrodynamics::OrbitalParameters::EquinoctialElements}!EquinoctialElements@{EquinoctialElements}}
+\index{EquinoctialElements@{EquinoctialElements}!IO::Astrodynamics::OrbitalParameters::EquinoctialElements@{IO::Astrodynamics::OrbitalParameters::EquinoctialElements}}
+\doxysubsubsection{\texorpdfstring{EquinoctialElements()}{EquinoctialElements()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Equinoctial\+Elements\+::\+Equinoctial\+Elements (\begin{DoxyParamCaption}\item[{const std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody}{IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Body}} $>$ \&}]{center\+Of\+Motion,  }\item[{double}]{semi\+Major\+Axis,  }\item[{double}]{eccentricity,  }\item[{double}]{inclination,  }\item[{double}]{perigee\+Argument,  }\item[{double}]{longitude\+AN,  }\item[{double}]{mean\+Anomaly,  }\item[{double}]{periapsis\+Longitude\+Rate,  }\item[{double}]{ascending\+Node\+Longitude\+Rate,  }\item[{double}]{right\+Ascension\+Of\+The\+Pole,  }\item[{double}]{declination\+Of\+The\+Pole,  }\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} \&}]{epoch,  }\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Frames_1_1Frames}{IO\+::\+Astrodynamics\+::\+Frames\+::\+Frames}} \&}]{frame }\end{DoxyParamCaption})}
+
+
+
+\doxysubsection{Member Function Documentation}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1EquinoctialElements_a8137128347654848fa25e8f08db1670c}\label{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1EquinoctialElements_a8137128347654848fa25e8f08db1670c}} 
+\index{IO::Astrodynamics::OrbitalParameters::EquinoctialElements@{IO::Astrodynamics::OrbitalParameters::EquinoctialElements}!GetAscendingNodeLongitudeRate@{GetAscendingNodeLongitudeRate}}
+\index{GetAscendingNodeLongitudeRate@{GetAscendingNodeLongitudeRate}!IO::Astrodynamics::OrbitalParameters::EquinoctialElements@{IO::Astrodynamics::OrbitalParameters::EquinoctialElements}}
+\doxysubsubsection{\texorpdfstring{GetAscendingNodeLongitudeRate()}{GetAscendingNodeLongitudeRate()}}
+{\footnotesize\ttfamily double IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Equinoctial\+Elements\+::\+Get\+Ascending\+Node\+Longitude\+Rate (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Get ascending node longitude rate 
+
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1EquinoctialElements_adacc4500e695975214f4e65a32daec74}\label{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1EquinoctialElements_adacc4500e695975214f4e65a32daec74}} 
+\index{IO::Astrodynamics::OrbitalParameters::EquinoctialElements@{IO::Astrodynamics::OrbitalParameters::EquinoctialElements}!GetDeclinationOfPole@{GetDeclinationOfPole}}
+\index{GetDeclinationOfPole@{GetDeclinationOfPole}!IO::Astrodynamics::OrbitalParameters::EquinoctialElements@{IO::Astrodynamics::OrbitalParameters::EquinoctialElements}}
+\doxysubsubsection{\texorpdfstring{GetDeclinationOfPole()}{GetDeclinationOfPole()}}
+{\footnotesize\ttfamily double IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Equinoctial\+Elements\+::\+Get\+Declination\+Of\+Pole (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Get declination of the pole of the reference plane 
+
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1EquinoctialElements_ac23ccfcfcd873da61d51ce6108e32212}\label{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1EquinoctialElements_ac23ccfcfcd873da61d51ce6108e32212}} 
+\index{IO::Astrodynamics::OrbitalParameters::EquinoctialElements@{IO::Astrodynamics::OrbitalParameters::EquinoctialElements}!GetEccentricity@{GetEccentricity}}
+\index{GetEccentricity@{GetEccentricity}!IO::Astrodynamics::OrbitalParameters::EquinoctialElements@{IO::Astrodynamics::OrbitalParameters::EquinoctialElements}}
+\doxysubsubsection{\texorpdfstring{GetEccentricity()}{GetEccentricity()}}
+{\footnotesize\ttfamily double IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Equinoctial\+Elements\+::\+Get\+Eccentricity (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Get eccentricity 
+
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+
+
+Implements \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_a9942caa62d75cd8ad7486f7966ee7476}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}}.
+
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1EquinoctialElements_a3d44e15f10040583bef14b229e9e8e44}\label{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1EquinoctialElements_a3d44e15f10040583bef14b229e9e8e44}} 
+\index{IO::Astrodynamics::OrbitalParameters::EquinoctialElements@{IO::Astrodynamics::OrbitalParameters::EquinoctialElements}!GetH@{GetH}}
+\index{GetH@{GetH}!IO::Astrodynamics::OrbitalParameters::EquinoctialElements@{IO::Astrodynamics::OrbitalParameters::EquinoctialElements}}
+\doxysubsubsection{\texorpdfstring{GetH()}{GetH()}}
+{\footnotesize\ttfamily double IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Equinoctial\+Elements\+::\+GetH (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Get h coefficient 
+
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1EquinoctialElements_ac9d4b6f63b2cd16581ed7209678525c1}\label{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1EquinoctialElements_ac9d4b6f63b2cd16581ed7209678525c1}} 
+\index{IO::Astrodynamics::OrbitalParameters::EquinoctialElements@{IO::Astrodynamics::OrbitalParameters::EquinoctialElements}!GetInclination@{GetInclination}}
+\index{GetInclination@{GetInclination}!IO::Astrodynamics::OrbitalParameters::EquinoctialElements@{IO::Astrodynamics::OrbitalParameters::EquinoctialElements}}
+\doxysubsubsection{\texorpdfstring{GetInclination()}{GetInclination()}}
+{\footnotesize\ttfamily double IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Equinoctial\+Elements\+::\+Get\+Inclination (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Get inclination 
+
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+
+
+Implements \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_a5ab4864ce7c3d403bc9d6c90b22a41bf}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}}.
+
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1EquinoctialElements_aa4c49e0910573f733ff468e98e906764}\label{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1EquinoctialElements_aa4c49e0910573f733ff468e98e906764}} 
+\index{IO::Astrodynamics::OrbitalParameters::EquinoctialElements@{IO::Astrodynamics::OrbitalParameters::EquinoctialElements}!GetK@{GetK}}
+\index{GetK@{GetK}!IO::Astrodynamics::OrbitalParameters::EquinoctialElements@{IO::Astrodynamics::OrbitalParameters::EquinoctialElements}}
+\doxysubsubsection{\texorpdfstring{GetK()}{GetK()}}
+{\footnotesize\ttfamily double IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Equinoctial\+Elements\+::\+GetK (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Get k coefficient 
+
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1EquinoctialElements_a6d70936f6e20e125c6b709e794610e82}\label{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1EquinoctialElements_a6d70936f6e20e125c6b709e794610e82}} 
+\index{IO::Astrodynamics::OrbitalParameters::EquinoctialElements@{IO::Astrodynamics::OrbitalParameters::EquinoctialElements}!GetL@{GetL}}
+\index{GetL@{GetL}!IO::Astrodynamics::OrbitalParameters::EquinoctialElements@{IO::Astrodynamics::OrbitalParameters::EquinoctialElements}}
+\doxysubsubsection{\texorpdfstring{GetL()}{GetL()}}
+{\footnotesize\ttfamily double IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Equinoctial\+Elements\+::\+GetL (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Get longitude coefficient 
+
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1EquinoctialElements_a1398984fb1d6b626c39d55f754221c05}\label{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1EquinoctialElements_a1398984fb1d6b626c39d55f754221c05}} 
+\index{IO::Astrodynamics::OrbitalParameters::EquinoctialElements@{IO::Astrodynamics::OrbitalParameters::EquinoctialElements}!GetMeanAnomaly@{GetMeanAnomaly}}
+\index{GetMeanAnomaly@{GetMeanAnomaly}!IO::Astrodynamics::OrbitalParameters::EquinoctialElements@{IO::Astrodynamics::OrbitalParameters::EquinoctialElements}}
+\doxysubsubsection{\texorpdfstring{GetMeanAnomaly()}{GetMeanAnomaly()}\hspace{0.1cm}{\footnotesize\ttfamily [1/3]}}
+{\footnotesize\ttfamily double IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Equinoctial\+Elements\+::\+Get\+Mean\+Anomaly (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Get mean anomaly at epoch 
+
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+
+
+Implements \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_ae7c1fd9b84ebf0bd1fa9199717f86e02}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}}.
+
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1EquinoctialElements_a681f562be125e29117f788931c17aec9}\label{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1EquinoctialElements_a681f562be125e29117f788931c17aec9}} 
+\index{IO::Astrodynamics::OrbitalParameters::EquinoctialElements@{IO::Astrodynamics::OrbitalParameters::EquinoctialElements}!GetMeanAnomaly@{GetMeanAnomaly}}
+\index{GetMeanAnomaly@{GetMeanAnomaly}!IO::Astrodynamics::OrbitalParameters::EquinoctialElements@{IO::Astrodynamics::OrbitalParameters::EquinoctialElements}}
+\doxysubsubsection{\texorpdfstring{GetMeanAnomaly()}{GetMeanAnomaly()}\hspace{0.1cm}{\footnotesize\ttfamily [2/3]}}
+{\footnotesize\ttfamily virtual double IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters\+::\+Get\+Mean\+Anomaly (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+
+Get the Mean Anomaly. 
+
+\begin{DoxyReturn}{Returns}
+double 
+\end{DoxyReturn}
+
+
+Implements \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_ae7c1fd9b84ebf0bd1fa9199717f86e02}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}}.
+
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1EquinoctialElements_a325f00472789b08f859285380cc1957c}\label{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1EquinoctialElements_a325f00472789b08f859285380cc1957c}} 
+\index{IO::Astrodynamics::OrbitalParameters::EquinoctialElements@{IO::Astrodynamics::OrbitalParameters::EquinoctialElements}!GetMeanAnomaly@{GetMeanAnomaly}}
+\index{GetMeanAnomaly@{GetMeanAnomaly}!IO::Astrodynamics::OrbitalParameters::EquinoctialElements@{IO::Astrodynamics::OrbitalParameters::EquinoctialElements}}
+\doxysubsubsection{\texorpdfstring{GetMeanAnomaly()}{GetMeanAnomaly()}\hspace{0.1cm}{\footnotesize\ttfamily [3/3]}}
+{\footnotesize\ttfamily double IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters\+::\+Get\+Mean\+Anomaly (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} \&}]{epoch }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+
+Get the Mean Anomaly. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em epoch} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+double 
+\end{DoxyReturn}
+
+
+Reimplemented from \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_a325f00472789b08f859285380cc1957c}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}}.
+
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1EquinoctialElements_a21fba6b6c6000ff042c0c7ee511169b6}\label{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1EquinoctialElements_a21fba6b6c6000ff042c0c7ee511169b6}} 
+\index{IO::Astrodynamics::OrbitalParameters::EquinoctialElements@{IO::Astrodynamics::OrbitalParameters::EquinoctialElements}!GetMeanAnomalyRate@{GetMeanAnomalyRate}}
+\index{GetMeanAnomalyRate@{GetMeanAnomalyRate}!IO::Astrodynamics::OrbitalParameters::EquinoctialElements@{IO::Astrodynamics::OrbitalParameters::EquinoctialElements}}
+\doxysubsubsection{\texorpdfstring{GetMeanAnomalyRate()}{GetMeanAnomalyRate()}}
+{\footnotesize\ttfamily double IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Equinoctial\+Elements\+::\+Get\+Mean\+Anomaly\+Rate (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Get mean anomaly rate 
+
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1EquinoctialElements_a50bd37a980a2c9df5393e2cc37b03ebb}\label{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1EquinoctialElements_a50bd37a980a2c9df5393e2cc37b03ebb}} 
+\index{IO::Astrodynamics::OrbitalParameters::EquinoctialElements@{IO::Astrodynamics::OrbitalParameters::EquinoctialElements}!GetP@{GetP}}
+\index{GetP@{GetP}!IO::Astrodynamics::OrbitalParameters::EquinoctialElements@{IO::Astrodynamics::OrbitalParameters::EquinoctialElements}}
+\doxysubsubsection{\texorpdfstring{GetP()}{GetP()}}
+{\footnotesize\ttfamily double IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Equinoctial\+Elements\+::\+GetP (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Get p coefficient 
+
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1EquinoctialElements_ad0a8c51d8cd1f69e8236e675236defa3}\label{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1EquinoctialElements_ad0a8c51d8cd1f69e8236e675236defa3}} 
+\index{IO::Astrodynamics::OrbitalParameters::EquinoctialElements@{IO::Astrodynamics::OrbitalParameters::EquinoctialElements}!GetPeriapsisArgument@{GetPeriapsisArgument}}
+\index{GetPeriapsisArgument@{GetPeriapsisArgument}!IO::Astrodynamics::OrbitalParameters::EquinoctialElements@{IO::Astrodynamics::OrbitalParameters::EquinoctialElements}}
+\doxysubsubsection{\texorpdfstring{GetPeriapsisArgument()}{GetPeriapsisArgument()}}
+{\footnotesize\ttfamily double IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Equinoctial\+Elements\+::\+Get\+Periapsis\+Argument (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Get periapsis argument 
+
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+
+
+Implements \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_a00c67f791757083550173af2e34fe2c2}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}}.
+
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1EquinoctialElements_a2c207f153034cd828f3e6721de8bd112}\label{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1EquinoctialElements_a2c207f153034cd828f3e6721de8bd112}} 
+\index{IO::Astrodynamics::OrbitalParameters::EquinoctialElements@{IO::Astrodynamics::OrbitalParameters::EquinoctialElements}!GetPeriapsisLongitudeRate@{GetPeriapsisLongitudeRate}}
+\index{GetPeriapsisLongitudeRate@{GetPeriapsisLongitudeRate}!IO::Astrodynamics::OrbitalParameters::EquinoctialElements@{IO::Astrodynamics::OrbitalParameters::EquinoctialElements}}
+\doxysubsubsection{\texorpdfstring{GetPeriapsisLongitudeRate()}{GetPeriapsisLongitudeRate()}}
+{\footnotesize\ttfamily double IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Equinoctial\+Elements\+::\+Get\+Periapsis\+Longitude\+Rate (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Get periapsis longitude rate 
+
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1EquinoctialElements_a76870005ad5ac6c0561db7fb4a5c1cc7}\label{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1EquinoctialElements_a76870005ad5ac6c0561db7fb4a5c1cc7}} 
+\index{IO::Astrodynamics::OrbitalParameters::EquinoctialElements@{IO::Astrodynamics::OrbitalParameters::EquinoctialElements}!GetPeriod@{GetPeriod}}
+\index{GetPeriod@{GetPeriod}!IO::Astrodynamics::OrbitalParameters::EquinoctialElements@{IO::Astrodynamics::OrbitalParameters::EquinoctialElements}}
+\doxysubsubsection{\texorpdfstring{GetPeriod()}{GetPeriod()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO\+::\+Astrodynamics\+::\+Time\+::\+Time\+Span}} IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Equinoctial\+Elements\+::\+Get\+Period (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Get the Period. 
+
+\begin{DoxyReturn}{Returns}
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO\+::\+Astrodynamics\+::\+Time\+::\+Time\+Span}} 
+\end{DoxyReturn}
+
+
+Implements \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_a1586cf10211aea2676395db8e18a610f}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}}.
+
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1EquinoctialElements_ae4e855644c131736dfbe0420d308b381}\label{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1EquinoctialElements_ae4e855644c131736dfbe0420d308b381}} 
+\index{IO::Astrodynamics::OrbitalParameters::EquinoctialElements@{IO::Astrodynamics::OrbitalParameters::EquinoctialElements}!GetQ@{GetQ}}
+\index{GetQ@{GetQ}!IO::Astrodynamics::OrbitalParameters::EquinoctialElements@{IO::Astrodynamics::OrbitalParameters::EquinoctialElements}}
+\doxysubsubsection{\texorpdfstring{GetQ()}{GetQ()}}
+{\footnotesize\ttfamily double IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Equinoctial\+Elements\+::\+GetQ (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Get q coefficient 
+
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1EquinoctialElements_a29f2bf43e689a9466bf3ef806fa6e771}\label{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1EquinoctialElements_a29f2bf43e689a9466bf3ef806fa6e771}} 
+\index{IO::Astrodynamics::OrbitalParameters::EquinoctialElements@{IO::Astrodynamics::OrbitalParameters::EquinoctialElements}!GetRightAscendingNodeLongitude@{GetRightAscendingNodeLongitude}}
+\index{GetRightAscendingNodeLongitude@{GetRightAscendingNodeLongitude}!IO::Astrodynamics::OrbitalParameters::EquinoctialElements@{IO::Astrodynamics::OrbitalParameters::EquinoctialElements}}
+\doxysubsubsection{\texorpdfstring{GetRightAscendingNodeLongitude()}{GetRightAscendingNodeLongitude()}}
+{\footnotesize\ttfamily double IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Equinoctial\+Elements\+::\+Get\+Right\+Ascending\+Node\+Longitude (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Get right ascending node longitude 
+
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+
+
+Implements \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_a90f9d8fdc41955b75cecea179309b177}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}}.
+
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1EquinoctialElements_a9b028cccb22095c0579a46e9ba70e2c3}\label{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1EquinoctialElements_a9b028cccb22095c0579a46e9ba70e2c3}} 
+\index{IO::Astrodynamics::OrbitalParameters::EquinoctialElements@{IO::Astrodynamics::OrbitalParameters::EquinoctialElements}!GetRightAscensionOfPole@{GetRightAscensionOfPole}}
+\index{GetRightAscensionOfPole@{GetRightAscensionOfPole}!IO::Astrodynamics::OrbitalParameters::EquinoctialElements@{IO::Astrodynamics::OrbitalParameters::EquinoctialElements}}
+\doxysubsubsection{\texorpdfstring{GetRightAscensionOfPole()}{GetRightAscensionOfPole()}}
+{\footnotesize\ttfamily double IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Equinoctial\+Elements\+::\+Get\+Right\+Ascension\+Of\+Pole (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Get right ascension of the pole of the reference plane 
+
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1EquinoctialElements_afc9ae0422c0a41629cd5a6fd8a266704}\label{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1EquinoctialElements_afc9ae0422c0a41629cd5a6fd8a266704}} 
+\index{IO::Astrodynamics::OrbitalParameters::EquinoctialElements@{IO::Astrodynamics::OrbitalParameters::EquinoctialElements}!GetSemiMajorAxis@{GetSemiMajorAxis}}
+\index{GetSemiMajorAxis@{GetSemiMajorAxis}!IO::Astrodynamics::OrbitalParameters::EquinoctialElements@{IO::Astrodynamics::OrbitalParameters::EquinoctialElements}}
+\doxysubsubsection{\texorpdfstring{GetSemiMajorAxis()}{GetSemiMajorAxis()}}
+{\footnotesize\ttfamily double IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Equinoctial\+Elements\+::\+Get\+Semi\+Major\+Axis (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Get semi major axis 
+
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+
+
+Implements \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_adf524663b31a263f4a2eda62426d401f}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}}.
+
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1EquinoctialElements_a557ceb06853cf7f9cac332019670dece}\label{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1EquinoctialElements_a557ceb06853cf7f9cac332019670dece}} 
+\index{IO::Astrodynamics::OrbitalParameters::EquinoctialElements@{IO::Astrodynamics::OrbitalParameters::EquinoctialElements}!GetSpecificAngularMomentum@{GetSpecificAngularMomentum}}
+\index{GetSpecificAngularMomentum@{GetSpecificAngularMomentum}!IO::Astrodynamics::OrbitalParameters::EquinoctialElements@{IO::Astrodynamics::OrbitalParameters::EquinoctialElements}}
+\doxysubsubsection{\texorpdfstring{GetSpecificAngularMomentum()}{GetSpecificAngularMomentum()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO\+::\+Astrodynamics\+::\+Math\+::\+Vector3D}} IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Equinoctial\+Elements\+::\+Get\+Specific\+Angular\+Momentum (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Get specific angular moment 
+
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+
+
+Implements \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_aeb82666267d968a5955d77183b53a948}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}}.
+
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1EquinoctialElements_adbccfe408ce8f8eb952796f6ea88b73c}\label{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1EquinoctialElements_adbccfe408ce8f8eb952796f6ea88b73c}} 
+\index{IO::Astrodynamics::OrbitalParameters::EquinoctialElements@{IO::Astrodynamics::OrbitalParameters::EquinoctialElements}!GetSpecificOrbitalEnergy@{GetSpecificOrbitalEnergy}}
+\index{GetSpecificOrbitalEnergy@{GetSpecificOrbitalEnergy}!IO::Astrodynamics::OrbitalParameters::EquinoctialElements@{IO::Astrodynamics::OrbitalParameters::EquinoctialElements}}
+\doxysubsubsection{\texorpdfstring{GetSpecificOrbitalEnergy()}{GetSpecificOrbitalEnergy()}}
+{\footnotesize\ttfamily double IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Equinoctial\+Elements\+::\+Get\+Specific\+Orbital\+Energy (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Get specific orbital energy 
+
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+
+
+Implements \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_a06824ecd8abd7b28b4a1490ba8b963d2}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}}.
+
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1EquinoctialElements_ac063e5e24b261f58bb124b89c38d797e}\label{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1EquinoctialElements_ac063e5e24b261f58bb124b89c38d797e}} 
+\index{IO::Astrodynamics::OrbitalParameters::EquinoctialElements@{IO::Astrodynamics::OrbitalParameters::EquinoctialElements}!ToStateVector@{ToStateVector}}
+\index{ToStateVector@{ToStateVector}!IO::Astrodynamics::OrbitalParameters::EquinoctialElements@{IO::Astrodynamics::OrbitalParameters::EquinoctialElements}}
+\doxysubsubsection{\texorpdfstring{ToStateVector()}{ToStateVector()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+State\+Vector}} IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Equinoctial\+Elements\+::\+To\+State\+Vector (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} \&}]{epoch }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Get state vector 
+
+
+\begin{DoxyParams}{Parameters}
+{\em epoch} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+
+
+Implements \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_af53be7d48c83751f1388721165b5bbb9}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}}.
+
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+IO.\+Astrodynamics/\+Orbital\+Parameters/\mbox{\hyperlink{EquinoctialElements_8h}{Equinoctial\+Elements.\+h}}\item 
+IO.\+Astrodynamics/\+Orbital\+Parameters/\mbox{\hyperlink{EquinoctialElements_8cpp}{Equinoctial\+Elements.\+cpp}}\end{DoxyCompactItemize}

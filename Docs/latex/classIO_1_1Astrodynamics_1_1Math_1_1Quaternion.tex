@@ -1,0 +1,246 @@
+\hypertarget{classIO_1_1Astrodynamics_1_1Math_1_1Quaternion}{}\doxysection{IO\+::Astrodynamics\+::Math\+::Quaternion Class Reference}
+\label{classIO_1_1Astrodynamics_1_1Math_1_1Quaternion}\index{IO::Astrodynamics::Math::Quaternion@{IO::Astrodynamics::Math::Quaternion}}
+
+
+{\ttfamily \#include $<$Quaternion.\+h$>$}
+
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Quaternion_afb3c174377f25ef50aae5bcce6da3e21}{Quaternion}} ()
+\begin{DoxyCompactList}\small\item\em Construct a new \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Quaternion}{Quaternion}} object. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Quaternion_ab76767309042044e375af177c724f572}{Quaternion}} (double q0, double q1, double q2, double q3)
+\begin{DoxyCompactList}\small\item\em Construct a new \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Quaternion}{Quaternion}} object. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Quaternion_a3166a5df95a649865813517210463e8e}{Quaternion}} (const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO\+::\+Astrodynamics\+::\+Math\+::\+Vector3D}} \&axis, double angle)
+\begin{DoxyCompactList}\small\item\em Construct a new \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Quaternion}{Quaternion}} object. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Quaternion_a6cfecd041f22cd29e5066e17f34b51f2}{Quaternion}} (const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Matrix}{IO\+::\+Astrodynamics\+::\+Math\+::\+Matrix}} \&mtx)
+\begin{DoxyCompactList}\small\item\em Construct a new \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Quaternion}{Quaternion}} object. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Quaternion_a40be7a4a6cd459ea900a9e6a99fbb9ba}{Quaternion}} (const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Quaternion}{Quaternion}} \&quaternion)
+\begin{DoxyCompactList}\small\item\em Construct a new \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Quaternion}{Quaternion}} object. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Quaternion}{Quaternion}} \& \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Quaternion_a59626f170b5f259445df5cc78129bc32}{operator=}} (const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Quaternion}{Quaternion}} \&quaternion)
+\item 
+double \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Quaternion_ac672feaf87d0ec2c370f89f3824d6e59}{Get\+Q0}} () const
+\item 
+double \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Quaternion_af3355ac6461512cf12b7b6441fa1a9bd}{Get\+Q1}} () const
+\item 
+double \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Quaternion_a25aa0590c3157af82b914a62e1c1e784}{Get\+Q2}} () const
+\item 
+double \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Quaternion_a17848531026c1922b6e5d332d62f398c}{Get\+Q3}} () const
+\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Quaternion}{IO\+::\+Astrodynamics\+::\+Math\+::\+Quaternion}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Quaternion_a54d11868cfdd5aacbb04b32b52a43b32}{Multiply}} (const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Quaternion}{Quaternion}} \&quaternion) const
+\begin{DoxyCompactList}\small\item\em Multiply quaternion. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Quaternion}{IO\+::\+Astrodynamics\+::\+Math\+::\+Quaternion}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Quaternion_addeb050d82e84777801353c83192848b}{operator$\ast$}} (const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Quaternion}{Quaternion}} \&quaternion) const
+\begin{DoxyCompactList}\small\item\em Multiply quaternion. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Matrix}{IO\+::\+Astrodynamics\+::\+Math\+::\+Matrix}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Quaternion_a23e52df35e2ebea440059a8611e489ff}{Get\+Matrix}} () const
+\begin{DoxyCompactList}\small\item\em Get the rotation matrix. \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Quaternion_a0e94604333055d60b8ed225523b9f4df}{Magnitude}} () const
+\begin{DoxyCompactList}\small\item\em Get the magnitude of the quaternion. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Quaternion}{Quaternion}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Quaternion_a791bae36eef991e8baf36f7556504f14}{Normalize}} () const
+\begin{DoxyCompactList}\small\item\em Normalize the quaternion. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Quaternion}{Quaternion}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Quaternion_ae301d12b89d92b795742735860bceb70}{Conjugate}} () const
+\begin{DoxyCompactList}\small\item\em Conjugate the quaternion. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\doxysubsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Math_1_1Quaternion_afb3c174377f25ef50aae5bcce6da3e21}\label{classIO_1_1Astrodynamics_1_1Math_1_1Quaternion_afb3c174377f25ef50aae5bcce6da3e21}} 
+\index{IO::Astrodynamics::Math::Quaternion@{IO::Astrodynamics::Math::Quaternion}!Quaternion@{Quaternion}}
+\index{Quaternion@{Quaternion}!IO::Astrodynamics::Math::Quaternion@{IO::Astrodynamics::Math::Quaternion}}
+\doxysubsubsection{\texorpdfstring{Quaternion()}{Quaternion()}\hspace{0.1cm}{\footnotesize\ttfamily [1/5]}}
+{\footnotesize\ttfamily IO\+::\+Astrodynamics\+::\+Math\+::\+Quaternion\+::\+Quaternion (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [default]}}
+
+
+
+Construct a new \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Quaternion}{Quaternion}} object. 
+
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Math_1_1Quaternion_ab76767309042044e375af177c724f572}\label{classIO_1_1Astrodynamics_1_1Math_1_1Quaternion_ab76767309042044e375af177c724f572}} 
+\index{IO::Astrodynamics::Math::Quaternion@{IO::Astrodynamics::Math::Quaternion}!Quaternion@{Quaternion}}
+\index{Quaternion@{Quaternion}!IO::Astrodynamics::Math::Quaternion@{IO::Astrodynamics::Math::Quaternion}}
+\doxysubsubsection{\texorpdfstring{Quaternion()}{Quaternion()}\hspace{0.1cm}{\footnotesize\ttfamily [2/5]}}
+{\footnotesize\ttfamily IO\+::\+Astrodynamics\+::\+Math\+::\+Quaternion\+::\+Quaternion (\begin{DoxyParamCaption}\item[{double}]{q0,  }\item[{double}]{q1,  }\item[{double}]{q2,  }\item[{double}]{q3 }\end{DoxyParamCaption})}
+
+
+
+Construct a new \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Quaternion}{Quaternion}} object. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em q0} & \\
+\hline
+{\em q1} & \\
+\hline
+{\em q2} & \\
+\hline
+{\em q3} & \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Math_1_1Quaternion_a3166a5df95a649865813517210463e8e}\label{classIO_1_1Astrodynamics_1_1Math_1_1Quaternion_a3166a5df95a649865813517210463e8e}} 
+\index{IO::Astrodynamics::Math::Quaternion@{IO::Astrodynamics::Math::Quaternion}!Quaternion@{Quaternion}}
+\index{Quaternion@{Quaternion}!IO::Astrodynamics::Math::Quaternion@{IO::Astrodynamics::Math::Quaternion}}
+\doxysubsubsection{\texorpdfstring{Quaternion()}{Quaternion()}\hspace{0.1cm}{\footnotesize\ttfamily [3/5]}}
+{\footnotesize\ttfamily IO\+::\+Astrodynamics\+::\+Math\+::\+Quaternion\+::\+Quaternion (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO\+::\+Astrodynamics\+::\+Math\+::\+Vector3D}} \&}]{axis,  }\item[{double}]{angle }\end{DoxyParamCaption})}
+
+
+
+Construct a new \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Quaternion}{Quaternion}} object. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em axis} & \\
+\hline
+{\em angle} & \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Math_1_1Quaternion_a6cfecd041f22cd29e5066e17f34b51f2}\label{classIO_1_1Astrodynamics_1_1Math_1_1Quaternion_a6cfecd041f22cd29e5066e17f34b51f2}} 
+\index{IO::Astrodynamics::Math::Quaternion@{IO::Astrodynamics::Math::Quaternion}!Quaternion@{Quaternion}}
+\index{Quaternion@{Quaternion}!IO::Astrodynamics::Math::Quaternion@{IO::Astrodynamics::Math::Quaternion}}
+\doxysubsubsection{\texorpdfstring{Quaternion()}{Quaternion()}\hspace{0.1cm}{\footnotesize\ttfamily [4/5]}}
+{\footnotesize\ttfamily IO\+::\+Astrodynamics\+::\+Math\+::\+Quaternion\+::\+Quaternion (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Matrix}{IO\+::\+Astrodynamics\+::\+Math\+::\+Matrix}} \&}]{mtx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [explicit]}}
+
+
+
+Construct a new \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Quaternion}{Quaternion}} object. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em mtx} & \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Math_1_1Quaternion_a40be7a4a6cd459ea900a9e6a99fbb9ba}\label{classIO_1_1Astrodynamics_1_1Math_1_1Quaternion_a40be7a4a6cd459ea900a9e6a99fbb9ba}} 
+\index{IO::Astrodynamics::Math::Quaternion@{IO::Astrodynamics::Math::Quaternion}!Quaternion@{Quaternion}}
+\index{Quaternion@{Quaternion}!IO::Astrodynamics::Math::Quaternion@{IO::Astrodynamics::Math::Quaternion}}
+\doxysubsubsection{\texorpdfstring{Quaternion()}{Quaternion()}\hspace{0.1cm}{\footnotesize\ttfamily [5/5]}}
+{\footnotesize\ttfamily IO\+::\+Astrodynamics\+::\+Math\+::\+Quaternion\+::\+Quaternion (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Quaternion}{Quaternion}} \&}]{quaternion }\end{DoxyParamCaption})}
+
+
+
+Construct a new \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Quaternion}{Quaternion}} object. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em quaternion} & \\
+\hline
+\end{DoxyParams}
+
+
+\doxysubsection{Member Function Documentation}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Math_1_1Quaternion_ae301d12b89d92b795742735860bceb70}\label{classIO_1_1Astrodynamics_1_1Math_1_1Quaternion_ae301d12b89d92b795742735860bceb70}} 
+\index{IO::Astrodynamics::Math::Quaternion@{IO::Astrodynamics::Math::Quaternion}!Conjugate@{Conjugate}}
+\index{Conjugate@{Conjugate}!IO::Astrodynamics::Math::Quaternion@{IO::Astrodynamics::Math::Quaternion}}
+\doxysubsubsection{\texorpdfstring{Conjugate()}{Conjugate()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Quaternion}{IO\+::\+Astrodynamics\+::\+Math\+::\+Quaternion}} IO\+::\+Astrodynamics\+::\+Math\+::\+Quaternion\+::\+Conjugate (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+
+
+Conjugate the quaternion. 
+
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Math_1_1Quaternion_a23e52df35e2ebea440059a8611e489ff}\label{classIO_1_1Astrodynamics_1_1Math_1_1Quaternion_a23e52df35e2ebea440059a8611e489ff}} 
+\index{IO::Astrodynamics::Math::Quaternion@{IO::Astrodynamics::Math::Quaternion}!GetMatrix@{GetMatrix}}
+\index{GetMatrix@{GetMatrix}!IO::Astrodynamics::Math::Quaternion@{IO::Astrodynamics::Math::Quaternion}}
+\doxysubsubsection{\texorpdfstring{GetMatrix()}{GetMatrix()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Matrix}{IO\+::\+Astrodynamics\+::\+Math\+::\+Matrix}} IO\+::\+Astrodynamics\+::\+Math\+::\+Quaternion\+::\+Get\+Matrix (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+
+
+Get the rotation matrix. 
+
+\begin{DoxyReturn}{Returns}
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Matrix}{IO\+::\+Astrodynamics\+::\+Math\+::\+Matrix}} 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Math_1_1Quaternion_ac672feaf87d0ec2c370f89f3824d6e59}\label{classIO_1_1Astrodynamics_1_1Math_1_1Quaternion_ac672feaf87d0ec2c370f89f3824d6e59}} 
+\index{IO::Astrodynamics::Math::Quaternion@{IO::Astrodynamics::Math::Quaternion}!GetQ0@{GetQ0}}
+\index{GetQ0@{GetQ0}!IO::Astrodynamics::Math::Quaternion@{IO::Astrodynamics::Math::Quaternion}}
+\doxysubsubsection{\texorpdfstring{GetQ0()}{GetQ0()}}
+{\footnotesize\ttfamily double IO\+::\+Astrodynamics\+::\+Math\+::\+Quaternion\+::\+Get\+Q0 (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Math_1_1Quaternion_af3355ac6461512cf12b7b6441fa1a9bd}\label{classIO_1_1Astrodynamics_1_1Math_1_1Quaternion_af3355ac6461512cf12b7b6441fa1a9bd}} 
+\index{IO::Astrodynamics::Math::Quaternion@{IO::Astrodynamics::Math::Quaternion}!GetQ1@{GetQ1}}
+\index{GetQ1@{GetQ1}!IO::Astrodynamics::Math::Quaternion@{IO::Astrodynamics::Math::Quaternion}}
+\doxysubsubsection{\texorpdfstring{GetQ1()}{GetQ1()}}
+{\footnotesize\ttfamily double IO\+::\+Astrodynamics\+::\+Math\+::\+Quaternion\+::\+Get\+Q1 (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Math_1_1Quaternion_a25aa0590c3157af82b914a62e1c1e784}\label{classIO_1_1Astrodynamics_1_1Math_1_1Quaternion_a25aa0590c3157af82b914a62e1c1e784}} 
+\index{IO::Astrodynamics::Math::Quaternion@{IO::Astrodynamics::Math::Quaternion}!GetQ2@{GetQ2}}
+\index{GetQ2@{GetQ2}!IO::Astrodynamics::Math::Quaternion@{IO::Astrodynamics::Math::Quaternion}}
+\doxysubsubsection{\texorpdfstring{GetQ2()}{GetQ2()}}
+{\footnotesize\ttfamily double IO\+::\+Astrodynamics\+::\+Math\+::\+Quaternion\+::\+Get\+Q2 (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Math_1_1Quaternion_a17848531026c1922b6e5d332d62f398c}\label{classIO_1_1Astrodynamics_1_1Math_1_1Quaternion_a17848531026c1922b6e5d332d62f398c}} 
+\index{IO::Astrodynamics::Math::Quaternion@{IO::Astrodynamics::Math::Quaternion}!GetQ3@{GetQ3}}
+\index{GetQ3@{GetQ3}!IO::Astrodynamics::Math::Quaternion@{IO::Astrodynamics::Math::Quaternion}}
+\doxysubsubsection{\texorpdfstring{GetQ3()}{GetQ3()}}
+{\footnotesize\ttfamily double IO\+::\+Astrodynamics\+::\+Math\+::\+Quaternion\+::\+Get\+Q3 (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Math_1_1Quaternion_a0e94604333055d60b8ed225523b9f4df}\label{classIO_1_1Astrodynamics_1_1Math_1_1Quaternion_a0e94604333055d60b8ed225523b9f4df}} 
+\index{IO::Astrodynamics::Math::Quaternion@{IO::Astrodynamics::Math::Quaternion}!Magnitude@{Magnitude}}
+\index{Magnitude@{Magnitude}!IO::Astrodynamics::Math::Quaternion@{IO::Astrodynamics::Math::Quaternion}}
+\doxysubsubsection{\texorpdfstring{Magnitude()}{Magnitude()}}
+{\footnotesize\ttfamily double IO\+::\+Astrodynamics\+::\+Math\+::\+Quaternion\+::\+Magnitude (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+
+
+Get the magnitude of the quaternion. 
+
+\begin{DoxyReturn}{Returns}
+double 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Math_1_1Quaternion_a54d11868cfdd5aacbb04b32b52a43b32}\label{classIO_1_1Astrodynamics_1_1Math_1_1Quaternion_a54d11868cfdd5aacbb04b32b52a43b32}} 
+\index{IO::Astrodynamics::Math::Quaternion@{IO::Astrodynamics::Math::Quaternion}!Multiply@{Multiply}}
+\index{Multiply@{Multiply}!IO::Astrodynamics::Math::Quaternion@{IO::Astrodynamics::Math::Quaternion}}
+\doxysubsubsection{\texorpdfstring{Multiply()}{Multiply()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Quaternion}{IO\+::\+Astrodynamics\+::\+Math\+::\+Quaternion}} IO\+::\+Astrodynamics\+::\+Math\+::\+Quaternion\+::\+Multiply (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Quaternion}{Quaternion}} \&}]{quaternion }\end{DoxyParamCaption}) const}
+
+
+
+Multiply quaternion. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em quaternion} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Quaternion}{IO\+::\+Astrodynamics\+::\+Math\+::\+Quaternion}} 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Math_1_1Quaternion_a791bae36eef991e8baf36f7556504f14}\label{classIO_1_1Astrodynamics_1_1Math_1_1Quaternion_a791bae36eef991e8baf36f7556504f14}} 
+\index{IO::Astrodynamics::Math::Quaternion@{IO::Astrodynamics::Math::Quaternion}!Normalize@{Normalize}}
+\index{Normalize@{Normalize}!IO::Astrodynamics::Math::Quaternion@{IO::Astrodynamics::Math::Quaternion}}
+\doxysubsubsection{\texorpdfstring{Normalize()}{Normalize()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Quaternion}{IO\+::\+Astrodynamics\+::\+Math\+::\+Quaternion}} IO\+::\+Astrodynamics\+::\+Math\+::\+Quaternion\+::\+Normalize (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+
+
+Normalize the quaternion. 
+
+\begin{DoxyReturn}{Returns}
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Quaternion}{Quaternion}} 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Math_1_1Quaternion_addeb050d82e84777801353c83192848b}\label{classIO_1_1Astrodynamics_1_1Math_1_1Quaternion_addeb050d82e84777801353c83192848b}} 
+\index{IO::Astrodynamics::Math::Quaternion@{IO::Astrodynamics::Math::Quaternion}!operator$\ast$@{operator$\ast$}}
+\index{operator$\ast$@{operator$\ast$}!IO::Astrodynamics::Math::Quaternion@{IO::Astrodynamics::Math::Quaternion}}
+\doxysubsubsection{\texorpdfstring{operator$\ast$()}{operator*()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Quaternion}{IO\+::\+Astrodynamics\+::\+Math\+::\+Quaternion}} IO\+::\+Astrodynamics\+::\+Math\+::\+Quaternion\+::operator$\ast$ (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Quaternion}{Quaternion}} \&}]{quaternion }\end{DoxyParamCaption}) const}
+
+
+
+Multiply quaternion. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em quaternion} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Quaternion}{IO\+::\+Astrodynamics\+::\+Math\+::\+Quaternion}} 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Math_1_1Quaternion_a59626f170b5f259445df5cc78129bc32}\label{classIO_1_1Astrodynamics_1_1Math_1_1Quaternion_a59626f170b5f259445df5cc78129bc32}} 
+\index{IO::Astrodynamics::Math::Quaternion@{IO::Astrodynamics::Math::Quaternion}!operator=@{operator=}}
+\index{operator=@{operator=}!IO::Astrodynamics::Math::Quaternion@{IO::Astrodynamics::Math::Quaternion}}
+\doxysubsubsection{\texorpdfstring{operator=()}{operator=()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Quaternion}{IO\+::\+Astrodynamics\+::\+Math\+::\+Quaternion}} \& IO\+::\+Astrodynamics\+::\+Math\+::\+Quaternion\+::operator= (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Quaternion}{Quaternion}} \&}]{quaternion }\end{DoxyParamCaption})}
+
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+IO.\+Astrodynamics/\+Math/\mbox{\hyperlink{Quaternion_8h}{Quaternion.\+h}}\item 
+IO.\+Astrodynamics/\+Math/\mbox{\hyperlink{Quaternion_8cpp}{Quaternion.\+cpp}}\end{DoxyCompactItemize}

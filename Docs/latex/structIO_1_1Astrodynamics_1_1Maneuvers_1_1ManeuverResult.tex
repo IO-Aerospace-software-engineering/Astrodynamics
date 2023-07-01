@@ -1,0 +1,167 @@
+\hypertarget{structIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverResult}{}\doxysection{IO\+::Astrodynamics\+::Maneuvers\+::Maneuver\+Result Struct Reference}
+\label{structIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverResult}\index{IO::Astrodynamics::Maneuvers::ManeuverResult@{IO::Astrodynamics::Maneuvers::ManeuverResult}}
+
+
+Result from maneuver.  
+
+
+
+
+{\ttfamily \#include $<$Maneuver\+Result.\+h$>$}
+
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverResult_abe70a7c40bc513557f821b90af9000db}{Maneuver\+Result}} ()=default
+\begin{DoxyCompactList}\small\item\em Construct a new Maneuver Result object. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverResult_af9f74d6444f9cf313170a90832f15aa2}{Maneuver\+Result}} (bool is\+Valid, std\+::string \&message)
+\begin{DoxyCompactList}\small\item\em Construct a new Maneuver Result object. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverResult_a94a17400ff5536a32c5fdf7c2cf164c1}{Set\+Valid}} (const std\+::string \&message)
+\begin{DoxyCompactList}\small\item\em Set maneuver as valid. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverResult_aa72a05c04550f5134a88139acc34e77f}{Set\+Invalid}} (const std\+::string \&message)
+\begin{DoxyCompactList}\small\item\em Set maneuver as invalid. \end{DoxyCompactList}\item 
+bool \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverResult_aebacef47fa1b54044439ef425fd9f127}{Is\+Valid}} () const
+\begin{DoxyCompactList}\small\item\em Know if maneuver is valid. \end{DoxyCompactList}\item 
+bool \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverResult_a85fed79198410874eab9c57bb8f4a1d4}{Can\+Retry\+Later}} () const
+\begin{DoxyCompactList}\small\item\em The current maneuver is not valid new attempt will happen later. \end{DoxyCompactList}\item 
+bool \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverResult_ad0db2d734c822d4c86049529282a469c}{Is\+Executed\+Too\+Early}} () const
+\begin{DoxyCompactList}\small\item\em Maneuver executed too early. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverResult_a8622d0aafc0e260f01b92dfa752e75e1}{Set\+Too\+Early}} ()
+\item 
+std\+::string \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverResult_a860626b8f778749d8189061a3cce4680}{Get\+Message}} ()
+\begin{DoxyCompactList}\small\item\em Get the Message object. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+Result from maneuver. 
+
+\doxysubsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{structIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverResult_abe70a7c40bc513557f821b90af9000db}\label{structIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverResult_abe70a7c40bc513557f821b90af9000db}} 
+\index{IO::Astrodynamics::Maneuvers::ManeuverResult@{IO::Astrodynamics::Maneuvers::ManeuverResult}!ManeuverResult@{ManeuverResult}}
+\index{ManeuverResult@{ManeuverResult}!IO::Astrodynamics::Maneuvers::ManeuverResult@{IO::Astrodynamics::Maneuvers::ManeuverResult}}
+\doxysubsubsection{\texorpdfstring{ManeuverResult()}{ManeuverResult()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Maneuver\+Result\+::\+Maneuver\+Result (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [default]}}
+
+
+
+Construct a new Maneuver Result object. 
+
+\mbox{\Hypertarget{structIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverResult_af9f74d6444f9cf313170a90832f15aa2}\label{structIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverResult_af9f74d6444f9cf313170a90832f15aa2}} 
+\index{IO::Astrodynamics::Maneuvers::ManeuverResult@{IO::Astrodynamics::Maneuvers::ManeuverResult}!ManeuverResult@{ManeuverResult}}
+\index{ManeuverResult@{ManeuverResult}!IO::Astrodynamics::Maneuvers::ManeuverResult@{IO::Astrodynamics::Maneuvers::ManeuverResult}}
+\doxysubsubsection{\texorpdfstring{ManeuverResult()}{ManeuverResult()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Maneuver\+Result\+::\+Maneuver\+Result (\begin{DoxyParamCaption}\item[{bool}]{is\+Valid,  }\item[{std\+::string \&}]{message }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Construct a new Maneuver Result object. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em is\+Valid} & \\
+\hline
+{\em message} & \\
+\hline
+\end{DoxyParams}
+
+
+\doxysubsection{Member Function Documentation}
+\mbox{\Hypertarget{structIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverResult_a85fed79198410874eab9c57bb8f4a1d4}\label{structIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverResult_a85fed79198410874eab9c57bb8f4a1d4}} 
+\index{IO::Astrodynamics::Maneuvers::ManeuverResult@{IO::Astrodynamics::Maneuvers::ManeuverResult}!CanRetryLater@{CanRetryLater}}
+\index{CanRetryLater@{CanRetryLater}!IO::Astrodynamics::Maneuvers::ManeuverResult@{IO::Astrodynamics::Maneuvers::ManeuverResult}}
+\doxysubsubsection{\texorpdfstring{CanRetryLater()}{CanRetryLater()}}
+{\footnotesize\ttfamily bool IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Maneuver\+Result\+::\+Can\+Retry\+Later (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+The current maneuver is not valid new attempt will happen later. 
+
+\begin{DoxyReturn}{Returns}
+true 
+
+false 
+\end{DoxyReturn}
+\mbox{\Hypertarget{structIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverResult_a860626b8f778749d8189061a3cce4680}\label{structIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverResult_a860626b8f778749d8189061a3cce4680}} 
+\index{IO::Astrodynamics::Maneuvers::ManeuverResult@{IO::Astrodynamics::Maneuvers::ManeuverResult}!GetMessage@{GetMessage}}
+\index{GetMessage@{GetMessage}!IO::Astrodynamics::Maneuvers::ManeuverResult@{IO::Astrodynamics::Maneuvers::ManeuverResult}}
+\doxysubsubsection{\texorpdfstring{GetMessage()}{GetMessage()}}
+{\footnotesize\ttfamily std\+::string IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Maneuver\+Result\+::\+Get\+Message (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Get the Message object. 
+
+\begin{DoxyReturn}{Returns}
+std\+::string 
+\end{DoxyReturn}
+\mbox{\Hypertarget{structIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverResult_ad0db2d734c822d4c86049529282a469c}\label{structIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverResult_ad0db2d734c822d4c86049529282a469c}} 
+\index{IO::Astrodynamics::Maneuvers::ManeuverResult@{IO::Astrodynamics::Maneuvers::ManeuverResult}!IsExecutedTooEarly@{IsExecutedTooEarly}}
+\index{IsExecutedTooEarly@{IsExecutedTooEarly}!IO::Astrodynamics::Maneuvers::ManeuverResult@{IO::Astrodynamics::Maneuvers::ManeuverResult}}
+\doxysubsubsection{\texorpdfstring{IsExecutedTooEarly()}{IsExecutedTooEarly()}}
+{\footnotesize\ttfamily bool IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Maneuver\+Result\+::\+Is\+Executed\+Too\+Early (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Maneuver executed too early. 
+
+\begin{DoxyReturn}{Returns}
+true 
+
+false 
+\end{DoxyReturn}
+\mbox{\Hypertarget{structIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverResult_aebacef47fa1b54044439ef425fd9f127}\label{structIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverResult_aebacef47fa1b54044439ef425fd9f127}} 
+\index{IO::Astrodynamics::Maneuvers::ManeuverResult@{IO::Astrodynamics::Maneuvers::ManeuverResult}!IsValid@{IsValid}}
+\index{IsValid@{IsValid}!IO::Astrodynamics::Maneuvers::ManeuverResult@{IO::Astrodynamics::Maneuvers::ManeuverResult}}
+\doxysubsubsection{\texorpdfstring{IsValid()}{IsValid()}}
+{\footnotesize\ttfamily bool IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Maneuver\+Result\+::\+Is\+Valid (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Know if maneuver is valid. 
+
+\begin{DoxyReturn}{Returns}
+true 
+
+false 
+\end{DoxyReturn}
+\mbox{\Hypertarget{structIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverResult_aa72a05c04550f5134a88139acc34e77f}\label{structIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverResult_aa72a05c04550f5134a88139acc34e77f}} 
+\index{IO::Astrodynamics::Maneuvers::ManeuverResult@{IO::Astrodynamics::Maneuvers::ManeuverResult}!SetInvalid@{SetInvalid}}
+\index{SetInvalid@{SetInvalid}!IO::Astrodynamics::Maneuvers::ManeuverResult@{IO::Astrodynamics::Maneuvers::ManeuverResult}}
+\doxysubsubsection{\texorpdfstring{SetInvalid()}{SetInvalid()}}
+{\footnotesize\ttfamily void IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Maneuver\+Result\+::\+Set\+Invalid (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{message }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Set maneuver as invalid. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em message} & \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{structIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverResult_a8622d0aafc0e260f01b92dfa752e75e1}\label{structIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverResult_a8622d0aafc0e260f01b92dfa752e75e1}} 
+\index{IO::Astrodynamics::Maneuvers::ManeuverResult@{IO::Astrodynamics::Maneuvers::ManeuverResult}!SetTooEarly@{SetTooEarly}}
+\index{SetTooEarly@{SetTooEarly}!IO::Astrodynamics::Maneuvers::ManeuverResult@{IO::Astrodynamics::Maneuvers::ManeuverResult}}
+\doxysubsubsection{\texorpdfstring{SetTooEarly()}{SetTooEarly()}}
+{\footnotesize\ttfamily void IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Maneuver\+Result\+::\+Set\+Too\+Early (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{structIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverResult_a94a17400ff5536a32c5fdf7c2cf164c1}\label{structIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverResult_a94a17400ff5536a32c5fdf7c2cf164c1}} 
+\index{IO::Astrodynamics::Maneuvers::ManeuverResult@{IO::Astrodynamics::Maneuvers::ManeuverResult}!SetValid@{SetValid}}
+\index{SetValid@{SetValid}!IO::Astrodynamics::Maneuvers::ManeuverResult@{IO::Astrodynamics::Maneuvers::ManeuverResult}}
+\doxysubsubsection{\texorpdfstring{SetValid()}{SetValid()}}
+{\footnotesize\ttfamily void IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Maneuver\+Result\+::\+Set\+Valid (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{message }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Set maneuver as valid. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em message} & \\
+\hline
+\end{DoxyParams}
+
+
+The documentation for this struct was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+IO.\+Astrodynamics/\+Maneuvers/\mbox{\hyperlink{ManeuverResult_8h}{Maneuver\+Result.\+h}}\end{DoxyCompactItemize}

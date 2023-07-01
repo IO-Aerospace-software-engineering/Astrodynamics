@@ -2,7 +2,7 @@
 # and include sub-projects here.
 #
 cmake_minimum_required (VERSION 3.18)
-set(This IOSDK)
+set(This IO)
 
 project (${This} C CXX)
 
@@ -14,7 +14,7 @@ set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
 SET(CMAKE_CXX_OUTPUT_EXTENSION_REPLACE 1)
 
 if(UNIX)
-    # SET(CMAKE_CXX_FLAGS_DEBUG  "-O0 -g --coverage") Convrage
+    # SET(CMAKE_CXX_FLAGS_DEBUG  "-O0 -g --coverage") Coverage
     SET(CMAKE_CXX_FLAGS_DEBUG  "-O0 -g")
     add_compile_options(-Wall -Wextra -Wpedantic)
 endif ()
@@ -35,6 +35,6 @@ set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
 
 # Include sub-projects.
-add_subdirectory("IO.SDK")
-add_subdirectory("IO.SDK.Tests")
-add_subdirectory("IO.SDK.Scenarios")
+add_subdirectory("IO.Astrodynamics")
+add_subdirectory("IO.Astrodynamics.Tests")
+add_subdirectory("IO.Astrodynamics.Scenarios")

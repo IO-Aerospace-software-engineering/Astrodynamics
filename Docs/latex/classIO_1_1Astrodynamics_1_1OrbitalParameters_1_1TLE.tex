@@ -1,0 +1,342 @@
+\hypertarget{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1TLE}{}\doxysection{IO\+::Astrodynamics\+::Orbital\+Parameters\+::TLE Class Reference}
+\label{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1TLE}\index{IO::Astrodynamics::OrbitalParameters::TLE@{IO::Astrodynamics::OrbitalParameters::TLE}}
+
+
+{\ttfamily \#include $<$TLE.\+h$>$}
+
+Inheritance diagram for IO\+::Astrodynamics\+::Orbital\+Parameters\+::TLE\+:\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=2.000000cm]{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1TLE}
+\end{center}
+\end{figure}
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1TLE_a1ebbd6d1111163c5319622467ecf9e5d}{TLE}} (const std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody}{IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Body}} $>$ \&center\+Ofmotion, std\+::string lines\mbox{[}3\mbox{]})
+\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1TLE_ac19e28388019fd70a4cfaeee1439318c}{$\sim$\+TLE}} () override=default
+\item 
+std\+::string \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1TLE_add49f7c58605ee590cde0394ba1dac0f}{Get\+Satellite\+Name}} () const
+\begin{DoxyCompactList}\small\item\em Get the satellite name \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1TLE_a1f5f8e20937932090a478448aa851c84}{Get\+Balistic\+Coefficient}} () const
+\begin{DoxyCompactList}\small\item\em Get the balistic corfficien in radians/minute$\ast$$\ast$2 \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1TLE_a174c10228f683bfc13056203cc38dc06}{Get\+Second\+Derivative\+Of\+Mean\+Motion}} () const
+\begin{DoxyCompactList}\small\item\em Second derivative of mean motion in radians/minute$\ast$$\ast$3 \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1TLE_a53f657835b826b570f42903cabd4401c}{Get\+Drag\+Term}} () const
+\begin{DoxyCompactList}\small\item\em Return radiation pressure coefficient (or BSTAR) \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO\+::\+Astrodynamics\+::\+Time\+::\+Time\+Span}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1TLE_a9857b07141cb5a4b36d23dd759b61155}{Get\+Period}} () const override
+\begin{DoxyCompactList}\small\item\em Get orbital period \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO\+::\+Astrodynamics\+::\+Math\+::\+Vector3D}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1TLE_ac495762f63af06854f4b227ec9b4d9a0}{Get\+Specific\+Angular\+Momentum}} () const override
+\begin{DoxyCompactList}\small\item\em Get specific angular momentum \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+State\+Vector}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1TLE_a00954d6034873a4d84f13092d153fbed}{To\+State\+Vector}} (const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} \&epoch) const override
+\begin{DoxyCompactList}\small\item\em Get State Vector at epoch \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1TLE_a242ab1a467d2ac0d3d86edbdac93d034}{Get\+Eccentricity}} () const override
+\begin{DoxyCompactList}\small\item\em Get orbital eccentricity \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1TLE_a8e9f05aedca6910fd2bf4300a251fa0c}{Get\+Semi\+Major\+Axis}} () const override
+\begin{DoxyCompactList}\small\item\em Get orbital semi major axis \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1TLE_aa5ff94b4c068ce453988d4f89c3a2f1d}{Get\+Inclination}} () const override
+\begin{DoxyCompactList}\small\item\em Get orbital inclination \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1TLE_ad311422aa46ce67be8088f0caf975007}{Get\+Periapsis\+Argument}} () const override
+\begin{DoxyCompactList}\small\item\em Get orbital periapsis argument \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1TLE_a97a54b914b036534d41c7808c8615323}{Get\+Right\+Ascending\+Node\+Longitude}} () const override
+\begin{DoxyCompactList}\small\item\em Get orbital right ascending node \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1TLE_a2cea4d783ded6c27c657c7b130f76d38}{Get\+Mean\+Anomaly}} () const override
+\begin{DoxyCompactList}\small\item\em Get orbital mean anomaly \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1TLE_a7e3ab4a948e0e6e1182a2a7130b7a356}{Get\+Specific\+Orbital\+Energy}} () const override
+\begin{DoxyCompactList}\small\item\em Get orbital specific energy \end{DoxyCompactList}\item 
+virtual double \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1TLE_a681f562be125e29117f788931c17aec9}{Get\+Mean\+Anomaly}} () const=0
+\begin{DoxyCompactList}\small\item\em Get the Mean Anomaly. \end{DoxyCompactList}\item 
+virtual double \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1TLE_a325f00472789b08f859285380cc1957c}{Get\+Mean\+Anomaly}} (const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} \&epoch) const
+\begin{DoxyCompactList}\small\item\em Get the Mean Anomaly. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsection*{Additional Inherited Members}
+
+
+\doxysubsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1TLE_a1ebbd6d1111163c5319622467ecf9e5d}\label{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1TLE_a1ebbd6d1111163c5319622467ecf9e5d}} 
+\index{IO::Astrodynamics::OrbitalParameters::TLE@{IO::Astrodynamics::OrbitalParameters::TLE}!TLE@{TLE}}
+\index{TLE@{TLE}!IO::Astrodynamics::OrbitalParameters::TLE@{IO::Astrodynamics::OrbitalParameters::TLE}}
+\doxysubsubsection{\texorpdfstring{TLE()}{TLE()}}
+{\footnotesize\ttfamily IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+TLE\+::\+TLE (\begin{DoxyParamCaption}\item[{const std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody}{IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Body}} $>$ \&}]{center\+Ofmotion,  }\item[{std\+::string}]{lines\mbox{[}3\mbox{]} }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1TLE_ac19e28388019fd70a4cfaeee1439318c}\label{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1TLE_ac19e28388019fd70a4cfaeee1439318c}} 
+\index{IO::Astrodynamics::OrbitalParameters::TLE@{IO::Astrodynamics::OrbitalParameters::TLE}!````~TLE@{$\sim$TLE}}
+\index{````~TLE@{$\sim$TLE}!IO::Astrodynamics::OrbitalParameters::TLE@{IO::Astrodynamics::OrbitalParameters::TLE}}
+\doxysubsubsection{\texorpdfstring{$\sim$TLE()}{~TLE()}}
+{\footnotesize\ttfamily IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+TLE\+::$\sim$\+TLE (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [default]}}
+
+
+
+\doxysubsection{Member Function Documentation}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1TLE_a1f5f8e20937932090a478448aa851c84}\label{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1TLE_a1f5f8e20937932090a478448aa851c84}} 
+\index{IO::Astrodynamics::OrbitalParameters::TLE@{IO::Astrodynamics::OrbitalParameters::TLE}!GetBalisticCoefficient@{GetBalisticCoefficient}}
+\index{GetBalisticCoefficient@{GetBalisticCoefficient}!IO::Astrodynamics::OrbitalParameters::TLE@{IO::Astrodynamics::OrbitalParameters::TLE}}
+\doxysubsubsection{\texorpdfstring{GetBalisticCoefficient()}{GetBalisticCoefficient()}}
+{\footnotesize\ttfamily double IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+TLE\+::\+Get\+Balistic\+Coefficient (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+
+
+Get the balistic corfficien in radians/minute$\ast$$\ast$2 
+
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1TLE_a53f657835b826b570f42903cabd4401c}\label{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1TLE_a53f657835b826b570f42903cabd4401c}} 
+\index{IO::Astrodynamics::OrbitalParameters::TLE@{IO::Astrodynamics::OrbitalParameters::TLE}!GetDragTerm@{GetDragTerm}}
+\index{GetDragTerm@{GetDragTerm}!IO::Astrodynamics::OrbitalParameters::TLE@{IO::Astrodynamics::OrbitalParameters::TLE}}
+\doxysubsubsection{\texorpdfstring{GetDragTerm()}{GetDragTerm()}}
+{\footnotesize\ttfamily double IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+TLE\+::\+Get\+Drag\+Term (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+
+
+Return radiation pressure coefficient (or BSTAR) 
+
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1TLE_a242ab1a467d2ac0d3d86edbdac93d034}\label{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1TLE_a242ab1a467d2ac0d3d86edbdac93d034}} 
+\index{IO::Astrodynamics::OrbitalParameters::TLE@{IO::Astrodynamics::OrbitalParameters::TLE}!GetEccentricity@{GetEccentricity}}
+\index{GetEccentricity@{GetEccentricity}!IO::Astrodynamics::OrbitalParameters::TLE@{IO::Astrodynamics::OrbitalParameters::TLE}}
+\doxysubsubsection{\texorpdfstring{GetEccentricity()}{GetEccentricity()}}
+{\footnotesize\ttfamily double IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+TLE\+::\+Get\+Eccentricity (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Get orbital eccentricity 
+
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+
+
+Implements \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_a9942caa62d75cd8ad7486f7966ee7476}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}}.
+
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1TLE_aa5ff94b4c068ce453988d4f89c3a2f1d}\label{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1TLE_aa5ff94b4c068ce453988d4f89c3a2f1d}} 
+\index{IO::Astrodynamics::OrbitalParameters::TLE@{IO::Astrodynamics::OrbitalParameters::TLE}!GetInclination@{GetInclination}}
+\index{GetInclination@{GetInclination}!IO::Astrodynamics::OrbitalParameters::TLE@{IO::Astrodynamics::OrbitalParameters::TLE}}
+\doxysubsubsection{\texorpdfstring{GetInclination()}{GetInclination()}}
+{\footnotesize\ttfamily double IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+TLE\+::\+Get\+Inclination (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Get orbital inclination 
+
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+
+
+Implements \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_a5ab4864ce7c3d403bc9d6c90b22a41bf}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}}.
+
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1TLE_a2cea4d783ded6c27c657c7b130f76d38}\label{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1TLE_a2cea4d783ded6c27c657c7b130f76d38}} 
+\index{IO::Astrodynamics::OrbitalParameters::TLE@{IO::Astrodynamics::OrbitalParameters::TLE}!GetMeanAnomaly@{GetMeanAnomaly}}
+\index{GetMeanAnomaly@{GetMeanAnomaly}!IO::Astrodynamics::OrbitalParameters::TLE@{IO::Astrodynamics::OrbitalParameters::TLE}}
+\doxysubsubsection{\texorpdfstring{GetMeanAnomaly()}{GetMeanAnomaly()}\hspace{0.1cm}{\footnotesize\ttfamily [1/3]}}
+{\footnotesize\ttfamily double IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+TLE\+::\+Get\+Mean\+Anomaly (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Get orbital mean anomaly 
+
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+
+
+Implements \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_ae7c1fd9b84ebf0bd1fa9199717f86e02}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}}.
+
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1TLE_a681f562be125e29117f788931c17aec9}\label{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1TLE_a681f562be125e29117f788931c17aec9}} 
+\index{IO::Astrodynamics::OrbitalParameters::TLE@{IO::Astrodynamics::OrbitalParameters::TLE}!GetMeanAnomaly@{GetMeanAnomaly}}
+\index{GetMeanAnomaly@{GetMeanAnomaly}!IO::Astrodynamics::OrbitalParameters::TLE@{IO::Astrodynamics::OrbitalParameters::TLE}}
+\doxysubsubsection{\texorpdfstring{GetMeanAnomaly()}{GetMeanAnomaly()}\hspace{0.1cm}{\footnotesize\ttfamily [2/3]}}
+{\footnotesize\ttfamily virtual double IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters\+::\+Get\+Mean\+Anomaly (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+
+Get the Mean Anomaly. 
+
+\begin{DoxyReturn}{Returns}
+double 
+\end{DoxyReturn}
+
+
+Implements \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_ae7c1fd9b84ebf0bd1fa9199717f86e02}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}}.
+
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1TLE_a325f00472789b08f859285380cc1957c}\label{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1TLE_a325f00472789b08f859285380cc1957c}} 
+\index{IO::Astrodynamics::OrbitalParameters::TLE@{IO::Astrodynamics::OrbitalParameters::TLE}!GetMeanAnomaly@{GetMeanAnomaly}}
+\index{GetMeanAnomaly@{GetMeanAnomaly}!IO::Astrodynamics::OrbitalParameters::TLE@{IO::Astrodynamics::OrbitalParameters::TLE}}
+\doxysubsubsection{\texorpdfstring{GetMeanAnomaly()}{GetMeanAnomaly()}\hspace{0.1cm}{\footnotesize\ttfamily [3/3]}}
+{\footnotesize\ttfamily double IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters\+::\+Get\+Mean\+Anomaly (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} \&}]{epoch }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+
+Get the Mean Anomaly. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em epoch} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+double 
+\end{DoxyReturn}
+
+
+Reimplemented from \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_a325f00472789b08f859285380cc1957c}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}}.
+
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1TLE_ad311422aa46ce67be8088f0caf975007}\label{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1TLE_ad311422aa46ce67be8088f0caf975007}} 
+\index{IO::Astrodynamics::OrbitalParameters::TLE@{IO::Astrodynamics::OrbitalParameters::TLE}!GetPeriapsisArgument@{GetPeriapsisArgument}}
+\index{GetPeriapsisArgument@{GetPeriapsisArgument}!IO::Astrodynamics::OrbitalParameters::TLE@{IO::Astrodynamics::OrbitalParameters::TLE}}
+\doxysubsubsection{\texorpdfstring{GetPeriapsisArgument()}{GetPeriapsisArgument()}}
+{\footnotesize\ttfamily double IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+TLE\+::\+Get\+Periapsis\+Argument (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Get orbital periapsis argument 
+
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+
+
+Implements \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_a00c67f791757083550173af2e34fe2c2}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}}.
+
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1TLE_a9857b07141cb5a4b36d23dd759b61155}\label{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1TLE_a9857b07141cb5a4b36d23dd759b61155}} 
+\index{IO::Astrodynamics::OrbitalParameters::TLE@{IO::Astrodynamics::OrbitalParameters::TLE}!GetPeriod@{GetPeriod}}
+\index{GetPeriod@{GetPeriod}!IO::Astrodynamics::OrbitalParameters::TLE@{IO::Astrodynamics::OrbitalParameters::TLE}}
+\doxysubsubsection{\texorpdfstring{GetPeriod()}{GetPeriod()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO\+::\+Astrodynamics\+::\+Time\+::\+Time\+Span}} IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+TLE\+::\+Get\+Period (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Get orbital period 
+
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+
+
+Implements \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_a1586cf10211aea2676395db8e18a610f}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}}.
+
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1TLE_a97a54b914b036534d41c7808c8615323}\label{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1TLE_a97a54b914b036534d41c7808c8615323}} 
+\index{IO::Astrodynamics::OrbitalParameters::TLE@{IO::Astrodynamics::OrbitalParameters::TLE}!GetRightAscendingNodeLongitude@{GetRightAscendingNodeLongitude}}
+\index{GetRightAscendingNodeLongitude@{GetRightAscendingNodeLongitude}!IO::Astrodynamics::OrbitalParameters::TLE@{IO::Astrodynamics::OrbitalParameters::TLE}}
+\doxysubsubsection{\texorpdfstring{GetRightAscendingNodeLongitude()}{GetRightAscendingNodeLongitude()}}
+{\footnotesize\ttfamily double IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+TLE\+::\+Get\+Right\+Ascending\+Node\+Longitude (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Get orbital right ascending node 
+
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+
+
+Implements \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_a90f9d8fdc41955b75cecea179309b177}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}}.
+
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1TLE_add49f7c58605ee590cde0394ba1dac0f}\label{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1TLE_add49f7c58605ee590cde0394ba1dac0f}} 
+\index{IO::Astrodynamics::OrbitalParameters::TLE@{IO::Astrodynamics::OrbitalParameters::TLE}!GetSatelliteName@{GetSatelliteName}}
+\index{GetSatelliteName@{GetSatelliteName}!IO::Astrodynamics::OrbitalParameters::TLE@{IO::Astrodynamics::OrbitalParameters::TLE}}
+\doxysubsubsection{\texorpdfstring{GetSatelliteName()}{GetSatelliteName()}}
+{\footnotesize\ttfamily std\+::string IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+TLE\+::\+Get\+Satellite\+Name (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+
+
+Get the satellite name 
+
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1TLE_a174c10228f683bfc13056203cc38dc06}\label{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1TLE_a174c10228f683bfc13056203cc38dc06}} 
+\index{IO::Astrodynamics::OrbitalParameters::TLE@{IO::Astrodynamics::OrbitalParameters::TLE}!GetSecondDerivativeOfMeanMotion@{GetSecondDerivativeOfMeanMotion}}
+\index{GetSecondDerivativeOfMeanMotion@{GetSecondDerivativeOfMeanMotion}!IO::Astrodynamics::OrbitalParameters::TLE@{IO::Astrodynamics::OrbitalParameters::TLE}}
+\doxysubsubsection{\texorpdfstring{GetSecondDerivativeOfMeanMotion()}{GetSecondDerivativeOfMeanMotion()}}
+{\footnotesize\ttfamily double IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+TLE\+::\+Get\+Second\+Derivative\+Of\+Mean\+Motion (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+
+
+Second derivative of mean motion in radians/minute$\ast$$\ast$3 
+
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1TLE_a8e9f05aedca6910fd2bf4300a251fa0c}\label{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1TLE_a8e9f05aedca6910fd2bf4300a251fa0c}} 
+\index{IO::Astrodynamics::OrbitalParameters::TLE@{IO::Astrodynamics::OrbitalParameters::TLE}!GetSemiMajorAxis@{GetSemiMajorAxis}}
+\index{GetSemiMajorAxis@{GetSemiMajorAxis}!IO::Astrodynamics::OrbitalParameters::TLE@{IO::Astrodynamics::OrbitalParameters::TLE}}
+\doxysubsubsection{\texorpdfstring{GetSemiMajorAxis()}{GetSemiMajorAxis()}}
+{\footnotesize\ttfamily double IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+TLE\+::\+Get\+Semi\+Major\+Axis (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Get orbital semi major axis 
+
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+
+
+Implements \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_adf524663b31a263f4a2eda62426d401f}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}}.
+
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1TLE_ac495762f63af06854f4b227ec9b4d9a0}\label{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1TLE_ac495762f63af06854f4b227ec9b4d9a0}} 
+\index{IO::Astrodynamics::OrbitalParameters::TLE@{IO::Astrodynamics::OrbitalParameters::TLE}!GetSpecificAngularMomentum@{GetSpecificAngularMomentum}}
+\index{GetSpecificAngularMomentum@{GetSpecificAngularMomentum}!IO::Astrodynamics::OrbitalParameters::TLE@{IO::Astrodynamics::OrbitalParameters::TLE}}
+\doxysubsubsection{\texorpdfstring{GetSpecificAngularMomentum()}{GetSpecificAngularMomentum()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO\+::\+Astrodynamics\+::\+Math\+::\+Vector3D}} IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+TLE\+::\+Get\+Specific\+Angular\+Momentum (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Get specific angular momentum 
+
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+
+
+Implements \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_aeb82666267d968a5955d77183b53a948}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}}.
+
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1TLE_a7e3ab4a948e0e6e1182a2a7130b7a356}\label{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1TLE_a7e3ab4a948e0e6e1182a2a7130b7a356}} 
+\index{IO::Astrodynamics::OrbitalParameters::TLE@{IO::Astrodynamics::OrbitalParameters::TLE}!GetSpecificOrbitalEnergy@{GetSpecificOrbitalEnergy}}
+\index{GetSpecificOrbitalEnergy@{GetSpecificOrbitalEnergy}!IO::Astrodynamics::OrbitalParameters::TLE@{IO::Astrodynamics::OrbitalParameters::TLE}}
+\doxysubsubsection{\texorpdfstring{GetSpecificOrbitalEnergy()}{GetSpecificOrbitalEnergy()}}
+{\footnotesize\ttfamily double IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+TLE\+::\+Get\+Specific\+Orbital\+Energy (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Get orbital specific energy 
+
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+
+
+Implements \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_a06824ecd8abd7b28b4a1490ba8b963d2}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}}.
+
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1TLE_a00954d6034873a4d84f13092d153fbed}\label{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1TLE_a00954d6034873a4d84f13092d153fbed}} 
+\index{IO::Astrodynamics::OrbitalParameters::TLE@{IO::Astrodynamics::OrbitalParameters::TLE}!ToStateVector@{ToStateVector}}
+\index{ToStateVector@{ToStateVector}!IO::Astrodynamics::OrbitalParameters::TLE@{IO::Astrodynamics::OrbitalParameters::TLE}}
+\doxysubsubsection{\texorpdfstring{ToStateVector()}{ToStateVector()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+State\+Vector}} IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+TLE\+::\+To\+State\+Vector (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} \&}]{epoch }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Get State Vector at epoch 
+
+
+\begin{DoxyParams}{Parameters}
+{\em epoch} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+
+
+Implements \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_af53be7d48c83751f1388721165b5bbb9}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}}.
+
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+IO.\+Astrodynamics/\+Orbital\+Parameters/\mbox{\hyperlink{TLE_8h}{TLE.\+h}}\item 
+IO.\+Astrodynamics/\+Orbital\+Parameters/\mbox{\hyperlink{TLE_8cpp}{TLE.\+cpp}}\end{DoxyCompactItemize}

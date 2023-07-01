@@ -1,5 +1,5 @@
 \hypertarget{OrbitalPlaneChangingManeuver_8h_source}{}\doxysection{Orbital\+Plane\+Changing\+Maneuver.\+h}
-\label{OrbitalPlaneChangingManeuver_8h_source}\index{IO.SDK/Maneuvers/OrbitalPlaneChangingManeuver.h@{IO.SDK/Maneuvers/OrbitalPlaneChangingManeuver.h}}
+\label{OrbitalPlaneChangingManeuver_8h_source}\index{IO.Astrodynamics/Maneuvers/OrbitalPlaneChangingManeuver.h@{IO.Astrodynamics/Maneuvers/OrbitalPlaneChangingManeuver.h}}
 \mbox{\hyperlink{OrbitalPlaneChangingManeuver_8h}{Go to the documentation of this file.}}
 \begin{DoxyCode}{0}
 \DoxyCodeLine{1 \textcolor{comment}{/*}}
@@ -10,29 +10,29 @@
 \DoxyCodeLine{6 }
 \DoxyCodeLine{7 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{ManeuverBase_8h}{ManeuverBase.h}}>}}
 \DoxyCodeLine{8 }
-\DoxyCodeLine{9 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1SDK_1_1Maneuvers}{IO::SDK::Maneuvers}}}
+\DoxyCodeLine{9 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Maneuvers}{IO::Astrodynamics::Maneuvers}}}
 \DoxyCodeLine{10 \{}
-\DoxyCodeLine{11     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1OrbitalPlaneChangingManeuver}{OrbitalPlaneChangingManeuver}} final : \textcolor{keyword}{public} \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1ManeuverBase}{IO::SDK::Maneuvers::ManeuverBase}}}
+\DoxyCodeLine{11     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1OrbitalPlaneChangingManeuver}{OrbitalPlaneChangingManeuver}} final : \textcolor{keyword}{public} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase}{IO::Astrodynamics::Maneuvers::ManeuverBase}}}
 \DoxyCodeLine{12     \{}
 \DoxyCodeLine{13     \textcolor{keyword}{private}:}
 \DoxyCodeLine{14         \textcolor{keywordtype}{double} m\_relativeInclination\{\};}
 \DoxyCodeLine{15 }
-\DoxyCodeLine{16         std::shared\_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> m\_targetOrbit;}
+\DoxyCodeLine{16         std::shared\_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> m\_targetOrbit;}
 \DoxyCodeLine{17         \textcolor{keywordtype}{bool} m\_isAscendingNode\{\textcolor{keyword}{false}\};}
 \DoxyCodeLine{18 }
 \DoxyCodeLine{19 }
 \DoxyCodeLine{20     \textcolor{keyword}{public}:}
-\DoxyCodeLine{28         \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1OrbitalPlaneChangingManeuver_a7925596292349d2480a1f828e88d1533}{OrbitalPlaneChangingManeuver}}(std::vector<IO::SDK::Body::Spacecraft::Engine*> engines, \mbox{\hyperlink{classIO_1_1SDK_1_1Propagators_1_1Propagator}{IO::SDK::Propagators::Propagator}} \&propagator, std::shared\_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> targetOrbit);}
+\DoxyCodeLine{28         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1OrbitalPlaneChangingManeuver_ad642157a97fd44ca1bf1575297b3ecf2}{OrbitalPlaneChangingManeuver}}(std::vector<IO::Astrodynamics::Body::Spacecraft::Engine*> engines, \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Propagators_1_1Propagator}{IO::Astrodynamics::Propagators::Propagator}} \&propagator, std::shared\_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> targetOrbit);}
 \DoxyCodeLine{29         }
-\DoxyCodeLine{38         \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1OrbitalPlaneChangingManeuver_a7925596292349d2480a1f828e88d1533}{OrbitalPlaneChangingManeuver}}(std::vector<IO::SDK::Body::Spacecraft::Engine*> engines, \mbox{\hyperlink{classIO_1_1SDK_1_1Propagators_1_1Propagator}{IO::SDK::Propagators::Propagator}} \&propagator, std::shared\_ptr<IO::SDK::OrbitalParameters::OrbitalParameters> targetOrbit, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO::SDK::Time::TDB}} \&minimumEpoch);}
+\DoxyCodeLine{38         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1OrbitalPlaneChangingManeuver_ad642157a97fd44ca1bf1575297b3ecf2}{OrbitalPlaneChangingManeuver}}(std::vector<IO::Astrodynamics::Body::Spacecraft::Engine*> engines, \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Propagators_1_1Propagator}{IO::Astrodynamics::Propagators::Propagator}} \&propagator, std::shared\_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> targetOrbit, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO::Astrodynamics::Time::TDB}} \&minimumEpoch);}
 \DoxyCodeLine{39 }
-\DoxyCodeLine{47         \textcolor{keywordtype}{bool} \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1OrbitalPlaneChangingManeuver_a62c42ad79ae57ceb86a639a4909d8ae5}{CanExecute}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters}{IO::SDK::OrbitalParameters::OrbitalParameters}} \&orbitalParams) \textcolor{keyword}{override};}
+\DoxyCodeLine{47         \textcolor{keywordtype}{bool} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1OrbitalPlaneChangingManeuver_a30238c92afd57b323eb275ca7c58b5c8}{CanExecute}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters}{IO::Astrodynamics::OrbitalParameters::OrbitalParameters}} \&orbitalParams) \textcolor{keyword}{override};}
 \DoxyCodeLine{48 }
-\DoxyCodeLine{54         \textcolor{keywordtype}{void} \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1OrbitalPlaneChangingManeuver_aceb2eb7b1264d8014e0f05d97962885c}{Compute}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters}{IO::SDK::OrbitalParameters::OrbitalParameters}} \&maneuverPoint) \textcolor{keyword}{override};}
+\DoxyCodeLine{54         \textcolor{keywordtype}{void} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1OrbitalPlaneChangingManeuver_a68ffeecef26c991db04899af1aa5551e}{Compute}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters}{IO::Astrodynamics::OrbitalParameters::OrbitalParameters}} \&maneuverPoint) \textcolor{keyword}{override};}
 \DoxyCodeLine{55 }
-\DoxyCodeLine{62         \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1StateOrientation}{IO::SDK::OrbitalParameters::StateOrientation}} \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1OrbitalPlaneChangingManeuver_a7472c24685a1eea73ff6bb7253f084ef}{ComputeOrientation}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1OrbitalParameters_1_1OrbitalParameters}{IO::SDK::OrbitalParameters::OrbitalParameters}} \&maneuverPoint) \textcolor{keyword}{override};}
+\DoxyCodeLine{62         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateOrientation}{IO::Astrodynamics::OrbitalParameters::StateOrientation}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1OrbitalPlaneChangingManeuver_ad2b00b81df810210c39d7ed37e730f41}{ComputeOrientation}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters}{IO::Astrodynamics::OrbitalParameters::OrbitalParameters}} \&maneuverPoint) \textcolor{keyword}{override};}
 \DoxyCodeLine{63 }
-\DoxyCodeLine{69         [[nodiscard]] \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1SDK_1_1Maneuvers_1_1OrbitalPlaneChangingManeuver_ae558a4d5c41376d4ca09455504d9ea2e}{GetRelativeInclination}}() \textcolor{keyword}{const};}
+\DoxyCodeLine{69         [[nodiscard]] \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1OrbitalPlaneChangingManeuver_a1ac81b1885d07c438a46feb9bb24cc4c}{GetRelativeInclination}}() \textcolor{keyword}{const};}
 \DoxyCodeLine{70     \};}
 \DoxyCodeLine{71 \}}
 \DoxyCodeLine{72 }

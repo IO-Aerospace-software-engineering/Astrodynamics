@@ -1,0 +1,402 @@
+\hypertarget{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1ConicOrbitalElements}{}\doxysection{IO\+::Astrodynamics\+::Orbital\+Parameters\+::Conic\+Orbital\+Elements Class Reference}
+\label{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1ConicOrbitalElements}\index{IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements@{IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements}}
+
+
+Conic orbital elements  
+
+
+
+
+{\ttfamily \#include $<$Conic\+Orbital\+Elements.\+h$>$}
+
+Inheritance diagram for IO\+::Astrodynamics\+::Orbital\+Parameters\+::Conic\+Orbital\+Elements\+:\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=2.000000cm]{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1ConicOrbitalElements}
+\end{center}
+\end{figure}
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1ConicOrbitalElements_ab080b859ad5dda21d76402ce5459262a}{Conic\+Orbital\+Elements}} (const std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody}{IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Body}} $>$ \&center\+Of\+Motion, double perifocal\+Distance, double eccentricity, double inclination, double ascending\+Node\+Longitude, double periapsis\+Argument, double mean\+Anomaly, const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} \&epoch, const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Frames_1_1Frames}{IO\+::\+Astrodynamics\+::\+Frames\+::\+Frames}} \&frame)
+\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1ConicOrbitalElements_aacee833c886a51f59a07b61faa946370}{Conic\+Orbital\+Elements}} (const std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody}{IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Body}} $>$ \&center\+Of\+Motion, const double spice\+Elements\mbox{[}SPICE\+\_\+\+OSCLTX\+\_\+\+NELTS\mbox{]}, const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Frames_1_1Frames}{IO\+::\+Astrodynamics\+::\+Frames\+::\+Frames}} \&frame)
+\begin{DoxyCompactList}\small\item\em Instanciate conical elements from spice elements \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1ConicOrbitalElements_ab598bb7933d1814500148588d5ea639e}{Conic\+Orbital\+Elements}} (const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+State\+Vector}} \&state\+Vector)
+\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1ConicOrbitalElements_a861e2e7955c517945894f981620bf154}{Conic\+Orbital\+Elements}} (const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1ConicOrbitalElements}{Conic\+Orbital\+Elements}} \&conic\+Orbital\+Elements)=default
+\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1ConicOrbitalElements_a6c8854f66bd0877a16cfbc225c0bd1c5}{$\sim$\+Conic\+Orbital\+Elements}} () override=default
+\item 
+double \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1ConicOrbitalElements_a31c3a5603af5487f56264d5d341df435}{Get\+Perifocal\+Distance}} () const
+\begin{DoxyCompactList}\small\item\em Get perifocal distance at orbital parameters epoch \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1ConicOrbitalElements_a5e73ccd1c7849b64b436e2ddef0e3c68}{Get\+Eccentricity}} () const override
+\begin{DoxyCompactList}\small\item\em Get eccentticity \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1ConicOrbitalElements_ad79ee1b1eb59e38bce9bb6de5923159e}{Get\+Inclination}} () const override
+\begin{DoxyCompactList}\small\item\em Get inclination \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1ConicOrbitalElements_ab8b8034e2b43bb0c53e1a30dac842104}{Get\+Right\+Ascending\+Node\+Longitude}} () const override
+\begin{DoxyCompactList}\small\item\em Get ascending node longitude \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1ConicOrbitalElements_a31541cc2345f66c1cb73f99ae0a35b63}{Get\+Periapsis\+Argument}} () const override
+\begin{DoxyCompactList}\small\item\em Get periapsis argument \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1ConicOrbitalElements_aeb2af2d2b38be0a0ce10e5df0c782c97}{Get\+Mean\+Anomaly}} () const override
+\begin{DoxyCompactList}\small\item\em Get mean anomaly at epoch \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1ConicOrbitalElements_ad3ee892439a16ad4eab3adac8787112f}{Get\+True\+Anomaly}} () const override
+\begin{DoxyCompactList}\small\item\em Get true anomaly at epoch \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1ConicOrbitalElements_a6b5a062ea27c89b1ad5fef3b99f5a9ec}{Get\+Semi\+Major\+Axis}} () const override
+\begin{DoxyCompactList}\small\item\em Get the orbital semi major axis \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO\+::\+Astrodynamics\+::\+Time\+::\+Time\+Span}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1ConicOrbitalElements_a8cca90e086c2479d5916c3328ba0508e}{Get\+Period}} () const override
+\begin{DoxyCompactList}\small\item\em Get the orbital period \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+State\+Vector}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1ConicOrbitalElements_a8b05c7e4d20144cbcaa1bdccf3178d12}{To\+State\+Vector}} (const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} \&epoch) const override
+\begin{DoxyCompactList}\small\item\em Get the state vector at epoch \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO\+::\+Astrodynamics\+::\+Math\+::\+Vector3D}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1ConicOrbitalElements_adffa8ef72f2335e65be7824313b43845}{Get\+Specific\+Angular\+Momentum}} () const override
+\begin{DoxyCompactList}\small\item\em Get the specific angular momentum \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1ConicOrbitalElements_af99ac255f79b2a75726c80670399beae}{Get\+Specific\+Orbital\+Energy}} () const override
+\begin{DoxyCompactList}\small\item\em Get specific orbital energy \end{DoxyCompactList}\item 
+virtual double \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1ConicOrbitalElements_a681f562be125e29117f788931c17aec9}{Get\+Mean\+Anomaly}} () const=0
+\begin{DoxyCompactList}\small\item\em Get the Mean Anomaly. \end{DoxyCompactList}\item 
+virtual double \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1ConicOrbitalElements_a325f00472789b08f859285380cc1957c}{Get\+Mean\+Anomaly}} (const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} \&epoch) const
+\begin{DoxyCompactList}\small\item\em Get the Mean Anomaly. \end{DoxyCompactList}\item 
+virtual double \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1ConicOrbitalElements_aea4019e092658b27cdcc12b9dea03ad8}{Get\+True\+Anomaly}} () const
+\begin{DoxyCompactList}\small\item\em Get the True Anomaly. \end{DoxyCompactList}\item 
+virtual double \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1ConicOrbitalElements_af08febfd706f6a0366a98c7fe07ae65a}{Get\+True\+Anomaly}} (const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} \&epoch) const
+\begin{DoxyCompactList}\small\item\em Get the True Anomaly. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsection*{Additional Inherited Members}
+
+
+\doxysubsection{Detailed Description}
+Conic orbital elements 
+
+\doxysubsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1ConicOrbitalElements_ab080b859ad5dda21d76402ce5459262a}\label{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1ConicOrbitalElements_ab080b859ad5dda21d76402ce5459262a}} 
+\index{IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements@{IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements}!ConicOrbitalElements@{ConicOrbitalElements}}
+\index{ConicOrbitalElements@{ConicOrbitalElements}!IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements@{IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements}}
+\doxysubsubsection{\texorpdfstring{ConicOrbitalElements()}{ConicOrbitalElements()}\hspace{0.1cm}{\footnotesize\ttfamily [1/4]}}
+{\footnotesize\ttfamily IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Conic\+Orbital\+Elements\+::\+Conic\+Orbital\+Elements (\begin{DoxyParamCaption}\item[{const std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody}{IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Body}} $>$ \&}]{center\+Of\+Motion,  }\item[{double}]{perifocal\+Distance,  }\item[{double}]{eccentricity,  }\item[{double}]{inclination,  }\item[{double}]{ascending\+Node\+Longitude,  }\item[{double}]{periapsis\+Argument,  }\item[{double}]{mean\+Anomaly,  }\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} \&}]{epoch,  }\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Frames_1_1Frames}{IO\+::\+Astrodynamics\+::\+Frames\+::\+Frames}} \&}]{frame }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1ConicOrbitalElements_aacee833c886a51f59a07b61faa946370}\label{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1ConicOrbitalElements_aacee833c886a51f59a07b61faa946370}} 
+\index{IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements@{IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements}!ConicOrbitalElements@{ConicOrbitalElements}}
+\index{ConicOrbitalElements@{ConicOrbitalElements}!IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements@{IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements}}
+\doxysubsubsection{\texorpdfstring{ConicOrbitalElements()}{ConicOrbitalElements()}\hspace{0.1cm}{\footnotesize\ttfamily [2/4]}}
+{\footnotesize\ttfamily IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Conic\+Orbital\+Elements\+::\+Conic\+Orbital\+Elements (\begin{DoxyParamCaption}\item[{const std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody}{IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Body}} $>$ \&}]{center\+Of\+Motion,  }\item[{const double}]{spice\+Elements\mbox{[}\+SPICE\+\_\+\+OSCLTX\+\_\+\+NELTS\mbox{]},  }\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Frames_1_1Frames}{IO\+::\+Astrodynamics\+::\+Frames\+::\+Frames}} \&}]{frame }\end{DoxyParamCaption})}
+
+
+
+Instanciate conical elements from spice elements 
+
+
+\begin{DoxyParams}{Parameters}
+{\em center\+Of\+Motion} & \\
+\hline
+{\em spice\+Elements} & \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1ConicOrbitalElements_ab598bb7933d1814500148588d5ea639e}\label{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1ConicOrbitalElements_ab598bb7933d1814500148588d5ea639e}} 
+\index{IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements@{IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements}!ConicOrbitalElements@{ConicOrbitalElements}}
+\index{ConicOrbitalElements@{ConicOrbitalElements}!IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements@{IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements}}
+\doxysubsubsection{\texorpdfstring{ConicOrbitalElements()}{ConicOrbitalElements()}\hspace{0.1cm}{\footnotesize\ttfamily [3/4]}}
+{\footnotesize\ttfamily IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Conic\+Orbital\+Elements\+::\+Conic\+Orbital\+Elements (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+State\+Vector}} \&}]{state\+Vector }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [explicit]}}
+
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1ConicOrbitalElements_a861e2e7955c517945894f981620bf154}\label{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1ConicOrbitalElements_a861e2e7955c517945894f981620bf154}} 
+\index{IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements@{IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements}!ConicOrbitalElements@{ConicOrbitalElements}}
+\index{ConicOrbitalElements@{ConicOrbitalElements}!IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements@{IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements}}
+\doxysubsubsection{\texorpdfstring{ConicOrbitalElements()}{ConicOrbitalElements()}\hspace{0.1cm}{\footnotesize\ttfamily [4/4]}}
+{\footnotesize\ttfamily IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Conic\+Orbital\+Elements\+::\+Conic\+Orbital\+Elements (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1ConicOrbitalElements}{Conic\+Orbital\+Elements}} \&}]{conic\+Orbital\+Elements }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [default]}}
+
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1ConicOrbitalElements_a6c8854f66bd0877a16cfbc225c0bd1c5}\label{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1ConicOrbitalElements_a6c8854f66bd0877a16cfbc225c0bd1c5}} 
+\index{IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements@{IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements}!````~ConicOrbitalElements@{$\sim$ConicOrbitalElements}}
+\index{````~ConicOrbitalElements@{$\sim$ConicOrbitalElements}!IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements@{IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements}}
+\doxysubsubsection{\texorpdfstring{$\sim$ConicOrbitalElements()}{~ConicOrbitalElements()}}
+{\footnotesize\ttfamily IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Conic\+Orbital\+Elements\+::$\sim$\+Conic\+Orbital\+Elements (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [default]}}
+
+
+
+\doxysubsection{Member Function Documentation}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1ConicOrbitalElements_a5e73ccd1c7849b64b436e2ddef0e3c68}\label{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1ConicOrbitalElements_a5e73ccd1c7849b64b436e2ddef0e3c68}} 
+\index{IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements@{IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements}!GetEccentricity@{GetEccentricity}}
+\index{GetEccentricity@{GetEccentricity}!IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements@{IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements}}
+\doxysubsubsection{\texorpdfstring{GetEccentricity()}{GetEccentricity()}}
+{\footnotesize\ttfamily double IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Conic\+Orbital\+Elements\+::\+Get\+Eccentricity (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Get eccentticity 
+
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+
+
+Implements \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_a9942caa62d75cd8ad7486f7966ee7476}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}}.
+
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1ConicOrbitalElements_ad79ee1b1eb59e38bce9bb6de5923159e}\label{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1ConicOrbitalElements_ad79ee1b1eb59e38bce9bb6de5923159e}} 
+\index{IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements@{IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements}!GetInclination@{GetInclination}}
+\index{GetInclination@{GetInclination}!IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements@{IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements}}
+\doxysubsubsection{\texorpdfstring{GetInclination()}{GetInclination()}}
+{\footnotesize\ttfamily double IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Conic\+Orbital\+Elements\+::\+Get\+Inclination (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Get inclination 
+
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+
+
+Implements \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_a5ab4864ce7c3d403bc9d6c90b22a41bf}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}}.
+
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1ConicOrbitalElements_aeb2af2d2b38be0a0ce10e5df0c782c97}\label{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1ConicOrbitalElements_aeb2af2d2b38be0a0ce10e5df0c782c97}} 
+\index{IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements@{IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements}!GetMeanAnomaly@{GetMeanAnomaly}}
+\index{GetMeanAnomaly@{GetMeanAnomaly}!IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements@{IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements}}
+\doxysubsubsection{\texorpdfstring{GetMeanAnomaly()}{GetMeanAnomaly()}\hspace{0.1cm}{\footnotesize\ttfamily [1/3]}}
+{\footnotesize\ttfamily double IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Conic\+Orbital\+Elements\+::\+Get\+Mean\+Anomaly (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Get mean anomaly at epoch 
+
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+
+
+Implements \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_ae7c1fd9b84ebf0bd1fa9199717f86e02}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}}.
+
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1ConicOrbitalElements_a681f562be125e29117f788931c17aec9}\label{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1ConicOrbitalElements_a681f562be125e29117f788931c17aec9}} 
+\index{IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements@{IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements}!GetMeanAnomaly@{GetMeanAnomaly}}
+\index{GetMeanAnomaly@{GetMeanAnomaly}!IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements@{IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements}}
+\doxysubsubsection{\texorpdfstring{GetMeanAnomaly()}{GetMeanAnomaly()}\hspace{0.1cm}{\footnotesize\ttfamily [2/3]}}
+{\footnotesize\ttfamily virtual double IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters\+::\+Get\+Mean\+Anomaly (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+
+Get the Mean Anomaly. 
+
+\begin{DoxyReturn}{Returns}
+double 
+\end{DoxyReturn}
+
+
+Implements \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_ae7c1fd9b84ebf0bd1fa9199717f86e02}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}}.
+
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1ConicOrbitalElements_a325f00472789b08f859285380cc1957c}\label{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1ConicOrbitalElements_a325f00472789b08f859285380cc1957c}} 
+\index{IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements@{IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements}!GetMeanAnomaly@{GetMeanAnomaly}}
+\index{GetMeanAnomaly@{GetMeanAnomaly}!IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements@{IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements}}
+\doxysubsubsection{\texorpdfstring{GetMeanAnomaly()}{GetMeanAnomaly()}\hspace{0.1cm}{\footnotesize\ttfamily [3/3]}}
+{\footnotesize\ttfamily double IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters\+::\+Get\+Mean\+Anomaly (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} \&}]{epoch }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+
+Get the Mean Anomaly. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em epoch} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+double 
+\end{DoxyReturn}
+
+
+Reimplemented from \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_a325f00472789b08f859285380cc1957c}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}}.
+
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1ConicOrbitalElements_a31541cc2345f66c1cb73f99ae0a35b63}\label{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1ConicOrbitalElements_a31541cc2345f66c1cb73f99ae0a35b63}} 
+\index{IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements@{IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements}!GetPeriapsisArgument@{GetPeriapsisArgument}}
+\index{GetPeriapsisArgument@{GetPeriapsisArgument}!IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements@{IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements}}
+\doxysubsubsection{\texorpdfstring{GetPeriapsisArgument()}{GetPeriapsisArgument()}}
+{\footnotesize\ttfamily double IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Conic\+Orbital\+Elements\+::\+Get\+Periapsis\+Argument (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Get periapsis argument 
+
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+
+
+Implements \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_a00c67f791757083550173af2e34fe2c2}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}}.
+
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1ConicOrbitalElements_a31c3a5603af5487f56264d5d341df435}\label{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1ConicOrbitalElements_a31c3a5603af5487f56264d5d341df435}} 
+\index{IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements@{IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements}!GetPerifocalDistance@{GetPerifocalDistance}}
+\index{GetPerifocalDistance@{GetPerifocalDistance}!IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements@{IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements}}
+\doxysubsubsection{\texorpdfstring{GetPerifocalDistance()}{GetPerifocalDistance()}}
+{\footnotesize\ttfamily double IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Conic\+Orbital\+Elements\+::\+Get\+Perifocal\+Distance (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+
+
+Get perifocal distance at orbital parameters epoch 
+
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1ConicOrbitalElements_a8cca90e086c2479d5916c3328ba0508e}\label{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1ConicOrbitalElements_a8cca90e086c2479d5916c3328ba0508e}} 
+\index{IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements@{IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements}!GetPeriod@{GetPeriod}}
+\index{GetPeriod@{GetPeriod}!IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements@{IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements}}
+\doxysubsubsection{\texorpdfstring{GetPeriod()}{GetPeriod()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO\+::\+Astrodynamics\+::\+Time\+::\+Time\+Span}} IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Conic\+Orbital\+Elements\+::\+Get\+Period (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Get the orbital period 
+
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+
+
+Implements \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_a1586cf10211aea2676395db8e18a610f}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}}.
+
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1ConicOrbitalElements_ab8b8034e2b43bb0c53e1a30dac842104}\label{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1ConicOrbitalElements_ab8b8034e2b43bb0c53e1a30dac842104}} 
+\index{IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements@{IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements}!GetRightAscendingNodeLongitude@{GetRightAscendingNodeLongitude}}
+\index{GetRightAscendingNodeLongitude@{GetRightAscendingNodeLongitude}!IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements@{IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements}}
+\doxysubsubsection{\texorpdfstring{GetRightAscendingNodeLongitude()}{GetRightAscendingNodeLongitude()}}
+{\footnotesize\ttfamily double IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Conic\+Orbital\+Elements\+::\+Get\+Right\+Ascending\+Node\+Longitude (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Get ascending node longitude 
+
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+
+
+Implements \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_a90f9d8fdc41955b75cecea179309b177}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}}.
+
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1ConicOrbitalElements_a6b5a062ea27c89b1ad5fef3b99f5a9ec}\label{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1ConicOrbitalElements_a6b5a062ea27c89b1ad5fef3b99f5a9ec}} 
+\index{IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements@{IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements}!GetSemiMajorAxis@{GetSemiMajorAxis}}
+\index{GetSemiMajorAxis@{GetSemiMajorAxis}!IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements@{IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements}}
+\doxysubsubsection{\texorpdfstring{GetSemiMajorAxis()}{GetSemiMajorAxis()}}
+{\footnotesize\ttfamily double IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Conic\+Orbital\+Elements\+::\+Get\+Semi\+Major\+Axis (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Get the orbital semi major axis 
+
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+
+
+Implements \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_adf524663b31a263f4a2eda62426d401f}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}}.
+
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1ConicOrbitalElements_adffa8ef72f2335e65be7824313b43845}\label{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1ConicOrbitalElements_adffa8ef72f2335e65be7824313b43845}} 
+\index{IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements@{IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements}!GetSpecificAngularMomentum@{GetSpecificAngularMomentum}}
+\index{GetSpecificAngularMomentum@{GetSpecificAngularMomentum}!IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements@{IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements}}
+\doxysubsubsection{\texorpdfstring{GetSpecificAngularMomentum()}{GetSpecificAngularMomentum()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO\+::\+Astrodynamics\+::\+Math\+::\+Vector3D}} IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Conic\+Orbital\+Elements\+::\+Get\+Specific\+Angular\+Momentum (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Get the specific angular momentum 
+
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+
+
+Implements \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_aeb82666267d968a5955d77183b53a948}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}}.
+
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1ConicOrbitalElements_af99ac255f79b2a75726c80670399beae}\label{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1ConicOrbitalElements_af99ac255f79b2a75726c80670399beae}} 
+\index{IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements@{IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements}!GetSpecificOrbitalEnergy@{GetSpecificOrbitalEnergy}}
+\index{GetSpecificOrbitalEnergy@{GetSpecificOrbitalEnergy}!IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements@{IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements}}
+\doxysubsubsection{\texorpdfstring{GetSpecificOrbitalEnergy()}{GetSpecificOrbitalEnergy()}}
+{\footnotesize\ttfamily double IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Conic\+Orbital\+Elements\+::\+Get\+Specific\+Orbital\+Energy (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Get specific orbital energy 
+
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+
+
+Implements \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_a06824ecd8abd7b28b4a1490ba8b963d2}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}}.
+
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1ConicOrbitalElements_aea4019e092658b27cdcc12b9dea03ad8}\label{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1ConicOrbitalElements_aea4019e092658b27cdcc12b9dea03ad8}} 
+\index{IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements@{IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements}!GetTrueAnomaly@{GetTrueAnomaly}}
+\index{GetTrueAnomaly@{GetTrueAnomaly}!IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements@{IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements}}
+\doxysubsubsection{\texorpdfstring{GetTrueAnomaly()}{GetTrueAnomaly()}\hspace{0.1cm}{\footnotesize\ttfamily [1/3]}}
+{\footnotesize\ttfamily double IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters\+::\+Get\+True\+Anomaly (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+
+Get the True Anomaly. 
+
+\begin{DoxyReturn}{Returns}
+double 
+\end{DoxyReturn}
+
+
+Reimplemented from \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_aea4019e092658b27cdcc12b9dea03ad8}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}}.
+
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1ConicOrbitalElements_ad3ee892439a16ad4eab3adac8787112f}\label{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1ConicOrbitalElements_ad3ee892439a16ad4eab3adac8787112f}} 
+\index{IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements@{IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements}!GetTrueAnomaly@{GetTrueAnomaly}}
+\index{GetTrueAnomaly@{GetTrueAnomaly}!IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements@{IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements}}
+\doxysubsubsection{\texorpdfstring{GetTrueAnomaly()}{GetTrueAnomaly()}\hspace{0.1cm}{\footnotesize\ttfamily [2/3]}}
+{\footnotesize\ttfamily double IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Conic\+Orbital\+Elements\+::\+Get\+True\+Anomaly (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Get true anomaly at epoch 
+
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+
+
+Reimplemented from \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_aea4019e092658b27cdcc12b9dea03ad8}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}}.
+
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1ConicOrbitalElements_af08febfd706f6a0366a98c7fe07ae65a}\label{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1ConicOrbitalElements_af08febfd706f6a0366a98c7fe07ae65a}} 
+\index{IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements@{IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements}!GetTrueAnomaly@{GetTrueAnomaly}}
+\index{GetTrueAnomaly@{GetTrueAnomaly}!IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements@{IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements}}
+\doxysubsubsection{\texorpdfstring{GetTrueAnomaly()}{GetTrueAnomaly()}\hspace{0.1cm}{\footnotesize\ttfamily [3/3]}}
+{\footnotesize\ttfamily double IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters\+::\+Get\+True\+Anomaly (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} \&}]{epoch }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+
+Get the True Anomaly. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em epoch} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+double 
+\end{DoxyReturn}
+
+
+Reimplemented from \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_af08febfd706f6a0366a98c7fe07ae65a}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}}.
+
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1ConicOrbitalElements_a8b05c7e4d20144cbcaa1bdccf3178d12}\label{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1ConicOrbitalElements_a8b05c7e4d20144cbcaa1bdccf3178d12}} 
+\index{IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements@{IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements}!ToStateVector@{ToStateVector}}
+\index{ToStateVector@{ToStateVector}!IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements@{IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements}}
+\doxysubsubsection{\texorpdfstring{ToStateVector()}{ToStateVector()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+State\+Vector}} IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Conic\+Orbital\+Elements\+::\+To\+State\+Vector (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} \&}]{epoch }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Get the state vector at epoch 
+
+
+\begin{DoxyParams}{Parameters}
+{\em epoch} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+
+
+Implements \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_af53be7d48c83751f1388721165b5bbb9}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}}.
+
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+IO.\+Astrodynamics/\+Orbital\+Parameters/\mbox{\hyperlink{ConicOrbitalElements_8h}{Conic\+Orbital\+Elements.\+h}}\item 
+IO.\+Astrodynamics/\+Orbital\+Parameters/\mbox{\hyperlink{ConicOrbitalElements_8cpp}{Conic\+Orbital\+Elements.\+cpp}}\end{DoxyCompactItemize}

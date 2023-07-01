@@ -1,0 +1,159 @@
+\hypertarget{classIO_1_1Astrodynamics_1_1Kernels_1_1InstrumentKernel}{}\doxysection{IO\+::Astrodynamics\+::Kernels\+::Instrument\+Kernel Class Reference}
+\label{classIO_1_1Astrodynamics_1_1Kernels_1_1InstrumentKernel}\index{IO::Astrodynamics::Kernels::InstrumentKernel@{IO::Astrodynamics::Kernels::InstrumentKernel}}
+
+
+Instrument kernel.  
+
+
+
+
+{\ttfamily \#include $<$Instrument\+Kernel.\+h$>$}
+
+Inheritance diagram for IO\+::Astrodynamics\+::Kernels\+::Instrument\+Kernel\+:\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=1.651917cm]{classIO_1_1Astrodynamics_1_1Kernels_1_1InstrumentKernel}
+\end{center}
+\end{figure}
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1InstrumentKernel_a4c6555316d97ed38ab9bfae74609354c}{$\sim$\+Instrument\+Kernel}} () override=default
+\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{IO\+::\+Astrodynamics\+::\+Time\+::\+Window}}$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} $>$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1InstrumentKernel_a75926525e4b8a5e8a62354f0b4cf2d6d}{Get\+Coverage\+Window}} () const override
+\begin{DoxyCompactList}\small\item\em Get the Coverage Window. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsection*{Protected Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1InstrumentKernel_aed5133b243312e712832e7f1e213ebaf}{Instrument\+Kernel}} (const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Instruments_1_1Instrument}{IO\+::\+Astrodynamics\+::\+Instruments\+::\+Instrument}} \&instrument, const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO\+::\+Astrodynamics\+::\+Math\+::\+Vector3D}} \&boresight, const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO\+::\+Astrodynamics\+::\+Math\+::\+Vector3D}} \&ref\+Vector, double angle)
+\begin{DoxyCompactList}\small\item\em Construct a new Instrument \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1Kernel}{Kernel}} object. \end{DoxyCompactList}\item 
+virtual void \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1InstrumentKernel_af37a88f5ea2b0e6574e842a6922618a4}{Build\+Kernel}} ()
+\begin{DoxyCompactList}\small\item\em Build kernel. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsection*{Protected Attributes}
+\begin{DoxyCompactItemize}
+\item 
+const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Instruments_1_1Instrument}{IO\+::\+Astrodynamics\+::\+Instruments\+::\+Instrument}} \& \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1InstrumentKernel_abfeb5322dc27a2b20a0c195a3e109209}{m\+\_\+instrument}}
+\item 
+const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO\+::\+Astrodynamics\+::\+Math\+::\+Vector3D}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1InstrumentKernel_a01fff097aac854f3d8ac8b42c707b75a}{m\+\_\+boresight}} \{\}
+\item 
+const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO\+::\+Astrodynamics\+::\+Math\+::\+Vector3D}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1InstrumentKernel_a5a45ce4fc773ae872f32aff1943f0f31}{m\+\_\+ref\+Vector}} \{\}
+\item 
+const double \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1InstrumentKernel_a8e37fa80e71301b4082d8e42ddb69fee}{m\+\_\+angle}} \{\}
+\end{DoxyCompactItemize}
+\doxysubsection*{Friends}
+\begin{DoxyCompactItemize}
+\item 
+class \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1InstrumentKernel_ae8d86fb0025e18a153dc43fb986bcf47}{IO\+::\+Astrodynamics\+::\+Instruments\+::\+Instrument}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Additional Inherited Members}
+
+
+\doxysubsection{Detailed Description}
+Instrument kernel. 
+
+\doxysubsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Kernels_1_1InstrumentKernel_aed5133b243312e712832e7f1e213ebaf}\label{classIO_1_1Astrodynamics_1_1Kernels_1_1InstrumentKernel_aed5133b243312e712832e7f1e213ebaf}} 
+\index{IO::Astrodynamics::Kernels::InstrumentKernel@{IO::Astrodynamics::Kernels::InstrumentKernel}!InstrumentKernel@{InstrumentKernel}}
+\index{InstrumentKernel@{InstrumentKernel}!IO::Astrodynamics::Kernels::InstrumentKernel@{IO::Astrodynamics::Kernels::InstrumentKernel}}
+\doxysubsubsection{\texorpdfstring{InstrumentKernel()}{InstrumentKernel()}}
+{\footnotesize\ttfamily IO\+::\+Astrodynamics\+::\+Kernels\+::\+Instrument\+Kernel\+::\+Instrument\+Kernel (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Instruments_1_1Instrument}{IO\+::\+Astrodynamics\+::\+Instruments\+::\+Instrument}} \&}]{instrument,  }\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO\+::\+Astrodynamics\+::\+Math\+::\+Vector3D}} \&}]{boresight,  }\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO\+::\+Astrodynamics\+::\+Math\+::\+Vector3D}} \&}]{ref\+Vector,  }\item[{double}]{angle }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Construct a new Instrument \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1Kernel}{Kernel}} object. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em instrument} & \\
+\hline
+{\em boresight} & \\
+\hline
+{\em ref\+Vector} & \\
+\hline
+{\em angle} & \\
+\hline
+{\em template\+Name} & \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Kernels_1_1InstrumentKernel_a4c6555316d97ed38ab9bfae74609354c}\label{classIO_1_1Astrodynamics_1_1Kernels_1_1InstrumentKernel_a4c6555316d97ed38ab9bfae74609354c}} 
+\index{IO::Astrodynamics::Kernels::InstrumentKernel@{IO::Astrodynamics::Kernels::InstrumentKernel}!````~InstrumentKernel@{$\sim$InstrumentKernel}}
+\index{````~InstrumentKernel@{$\sim$InstrumentKernel}!IO::Astrodynamics::Kernels::InstrumentKernel@{IO::Astrodynamics::Kernels::InstrumentKernel}}
+\doxysubsubsection{\texorpdfstring{$\sim$InstrumentKernel()}{~InstrumentKernel()}}
+{\footnotesize\ttfamily IO\+::\+Astrodynamics\+::\+Kernels\+::\+Instrument\+Kernel\+::$\sim$\+Instrument\+Kernel (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [default]}}
+
+
+
+\doxysubsection{Member Function Documentation}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Kernels_1_1InstrumentKernel_af37a88f5ea2b0e6574e842a6922618a4}\label{classIO_1_1Astrodynamics_1_1Kernels_1_1InstrumentKernel_af37a88f5ea2b0e6574e842a6922618a4}} 
+\index{IO::Astrodynamics::Kernels::InstrumentKernel@{IO::Astrodynamics::Kernels::InstrumentKernel}!BuildKernel@{BuildKernel}}
+\index{BuildKernel@{BuildKernel}!IO::Astrodynamics::Kernels::InstrumentKernel@{IO::Astrodynamics::Kernels::InstrumentKernel}}
+\doxysubsubsection{\texorpdfstring{BuildKernel()}{BuildKernel()}}
+{\footnotesize\ttfamily void IO\+::\+Astrodynamics\+::\+Kernels\+::\+Instrument\+Kernel\+::\+Build\+Kernel (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}, {\ttfamily [virtual]}}
+
+
+
+Build kernel. 
+
+
+
+Reimplemented in \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1CircularInstrumentKernel_aee1d2b8282da41d8629a57bdaaeca67d}{IO\+::\+Astrodynamics\+::\+Kernels\+::\+Circular\+Instrument\+Kernel}}, \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1EllipticalInstrumentKernel_a48052a5f5684c516130d33a953a7aea0}{IO\+::\+Astrodynamics\+::\+Kernels\+::\+Elliptical\+Instrument\+Kernel}}, and \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1RectangularInstrumentKernel_abf760c87570981447cce8a5a4621465b}{IO\+::\+Astrodynamics\+::\+Kernels\+::\+Rectangular\+Instrument\+Kernel}}.
+
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Kernels_1_1InstrumentKernel_a75926525e4b8a5e8a62354f0b4cf2d6d}\label{classIO_1_1Astrodynamics_1_1Kernels_1_1InstrumentKernel_a75926525e4b8a5e8a62354f0b4cf2d6d}} 
+\index{IO::Astrodynamics::Kernels::InstrumentKernel@{IO::Astrodynamics::Kernels::InstrumentKernel}!GetCoverageWindow@{GetCoverageWindow}}
+\index{GetCoverageWindow@{GetCoverageWindow}!IO::Astrodynamics::Kernels::InstrumentKernel@{IO::Astrodynamics::Kernels::InstrumentKernel}}
+\doxysubsubsection{\texorpdfstring{GetCoverageWindow()}{GetCoverageWindow()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{IO\+::\+Astrodynamics\+::\+Time\+::\+Window}}$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} $>$ IO\+::\+Astrodynamics\+::\+Kernels\+::\+Instrument\+Kernel\+::\+Get\+Coverage\+Window (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Get the Coverage Window. 
+
+\begin{DoxyReturn}{Returns}
+IO\+::\+Astrodynamics\+::\+Time\+::\+Window$<$\+IO\+::\+Astrodynamics\+::\+Time\+::\+TDB$>$ 
+\end{DoxyReturn}
+
+
+Implements \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1Kernel_a37d56a388d8225557f5c9dbb3414fbba}{IO\+::\+Astrodynamics\+::\+Kernels\+::\+Kernel}}.
+
+
+
+\doxysubsection{Friends And Related Function Documentation}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Kernels_1_1InstrumentKernel_ae8d86fb0025e18a153dc43fb986bcf47}\label{classIO_1_1Astrodynamics_1_1Kernels_1_1InstrumentKernel_ae8d86fb0025e18a153dc43fb986bcf47}} 
+\index{IO::Astrodynamics::Kernels::InstrumentKernel@{IO::Astrodynamics::Kernels::InstrumentKernel}!IO::Astrodynamics::Instruments::Instrument@{IO::Astrodynamics::Instruments::Instrument}}
+\index{IO::Astrodynamics::Instruments::Instrument@{IO::Astrodynamics::Instruments::Instrument}!IO::Astrodynamics::Kernels::InstrumentKernel@{IO::Astrodynamics::Kernels::InstrumentKernel}}
+\doxysubsubsection{\texorpdfstring{IO::Astrodynamics::Instruments::Instrument}{IO::Astrodynamics::Instruments::Instrument}}
+{\footnotesize\ttfamily friend class \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Instruments_1_1Instrument}{IO\+::\+Astrodynamics\+::\+Instruments\+::\+Instrument}}\hspace{0.3cm}{\ttfamily [friend]}}
+
+
+
+\doxysubsection{Member Data Documentation}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Kernels_1_1InstrumentKernel_a8e37fa80e71301b4082d8e42ddb69fee}\label{classIO_1_1Astrodynamics_1_1Kernels_1_1InstrumentKernel_a8e37fa80e71301b4082d8e42ddb69fee}} 
+\index{IO::Astrodynamics::Kernels::InstrumentKernel@{IO::Astrodynamics::Kernels::InstrumentKernel}!m\_angle@{m\_angle}}
+\index{m\_angle@{m\_angle}!IO::Astrodynamics::Kernels::InstrumentKernel@{IO::Astrodynamics::Kernels::InstrumentKernel}}
+\doxysubsubsection{\texorpdfstring{m\_angle}{m\_angle}}
+{\footnotesize\ttfamily const double IO\+::\+Astrodynamics\+::\+Kernels\+::\+Instrument\+Kernel\+::m\+\_\+angle \{\}\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Kernels_1_1InstrumentKernel_a01fff097aac854f3d8ac8b42c707b75a}\label{classIO_1_1Astrodynamics_1_1Kernels_1_1InstrumentKernel_a01fff097aac854f3d8ac8b42c707b75a}} 
+\index{IO::Astrodynamics::Kernels::InstrumentKernel@{IO::Astrodynamics::Kernels::InstrumentKernel}!m\_boresight@{m\_boresight}}
+\index{m\_boresight@{m\_boresight}!IO::Astrodynamics::Kernels::InstrumentKernel@{IO::Astrodynamics::Kernels::InstrumentKernel}}
+\doxysubsubsection{\texorpdfstring{m\_boresight}{m\_boresight}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO\+::\+Astrodynamics\+::\+Math\+::\+Vector3D}} IO\+::\+Astrodynamics\+::\+Kernels\+::\+Instrument\+Kernel\+::m\+\_\+boresight \{\}\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Kernels_1_1InstrumentKernel_abfeb5322dc27a2b20a0c195a3e109209}\label{classIO_1_1Astrodynamics_1_1Kernels_1_1InstrumentKernel_abfeb5322dc27a2b20a0c195a3e109209}} 
+\index{IO::Astrodynamics::Kernels::InstrumentKernel@{IO::Astrodynamics::Kernels::InstrumentKernel}!m\_instrument@{m\_instrument}}
+\index{m\_instrument@{m\_instrument}!IO::Astrodynamics::Kernels::InstrumentKernel@{IO::Astrodynamics::Kernels::InstrumentKernel}}
+\doxysubsubsection{\texorpdfstring{m\_instrument}{m\_instrument}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Instruments_1_1Instrument}{IO\+::\+Astrodynamics\+::\+Instruments\+::\+Instrument}}\& IO\+::\+Astrodynamics\+::\+Kernels\+::\+Instrument\+Kernel\+::m\+\_\+instrument\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Kernels_1_1InstrumentKernel_a5a45ce4fc773ae872f32aff1943f0f31}\label{classIO_1_1Astrodynamics_1_1Kernels_1_1InstrumentKernel_a5a45ce4fc773ae872f32aff1943f0f31}} 
+\index{IO::Astrodynamics::Kernels::InstrumentKernel@{IO::Astrodynamics::Kernels::InstrumentKernel}!m\_refVector@{m\_refVector}}
+\index{m\_refVector@{m\_refVector}!IO::Astrodynamics::Kernels::InstrumentKernel@{IO::Astrodynamics::Kernels::InstrumentKernel}}
+\doxysubsubsection{\texorpdfstring{m\_refVector}{m\_refVector}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO\+::\+Astrodynamics\+::\+Math\+::\+Vector3D}} IO\+::\+Astrodynamics\+::\+Kernels\+::\+Instrument\+Kernel\+::m\+\_\+ref\+Vector \{\}\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+IO.\+Astrodynamics/\+Kernels/\mbox{\hyperlink{InstrumentKernel_8h}{Instrument\+Kernel.\+h}}\item 
+IO.\+Astrodynamics/\+Kernels/\mbox{\hyperlink{InstrumentKernel_8cpp}{Instrument\+Kernel.\+cpp}}\end{DoxyCompactItemize}

@@ -24,7 +24,7 @@
 */
 var NAVTREE =
 [
-  [ "IO-SDK", "index.html", [
+  [ "IO-Astrodynamics", "index.html", [
     [ "Namespaces", "namespaces.html", [
       [ "Namespace List", "namespaces.html", "namespaces_dup" ],
       [ "Namespace Members", "namespacemembers.html", [
@@ -60,17 +60,17 @@ var NAVTREE =
 var NAVTREEINDEX =
 [
 "Aberrations_8cpp.html",
-"PerigeeHeightChangingManeuver_8cpp.html",
-"classIO_1_1SDK_1_1Body_1_1Body.html#a73ca24c3037cb7b41f0ac6a88d372f28",
-"classIO_1_1SDK_1_1Coordinates_1_1AzimuthRange.html#af5f14096e4dce0522ea0971fb0a039d7",
-"classIO_1_1SDK_1_1Instruments_1_1Instrument.html#aca5febfb1c5504420a977e73516f34bb",
-"classIO_1_1SDK_1_1Maneuvers_1_1Attitudes_1_1TowardObjectAttitude.html#a2296926c7cc97c3d118181b802f3720c",
-"classIO_1_1SDK_1_1Math_1_1Vector3D.html#a8590c628e986768134b20a86e5af305d",
-"classIO_1_1SDK_1_1OrbitalParameters_1_1StateVector.html#a7fa8add2591a9e1cf4efdc77076e2536",
-"classIO_1_1SDK_1_1Time_1_1TDB.html#ae65119a6899dcedbb87f4d177393af1d",
-"namespaceIO_1_1SDK_1_1Maneuvers.html",
-"structIO_1_1SDK_1_1API_1_1DTO_1_1InFieldOfViewConstraintDTO.html",
-"structIO_1_1SDK_1_1API_1_1DTO_1_1SpacecraftDTO.html#a14e8b5a4acb1c8d2556c22233ed1ac4f"
+"PerigeeHeightChangingManeuverDTO_8h.html",
+"classIO_1_1Astrodynamics_1_1Body_1_1Body.html#a1dcaa1faf9e96cd05e211d7454170ac5",
+"classIO_1_1Astrodynamics_1_1Coordinates_1_1AzimuthRange.html#a8ce5807cf13d95212bd760dd79d1e8eb",
+"classIO_1_1Astrodynamics_1_1Instruments_1_1Instrument.html#a67cf5001b0392d7c32de0b8ab8da7d6a",
+"classIO_1_1Astrodynamics_1_1Maneuvers_1_1Attitudes_1_1RetrogradeAttitude.html#a141cb79dd21a28c0963125e8a77ad99b",
+"classIO_1_1Astrodynamics_1_1Math_1_1Vector3D.html#a264aef51e01509779e74ee5a7b0c8121",
+"classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector.html#a1f35dfd68c61eb63f3f5f725e0a69880",
+"classIO_1_1Astrodynamics_1_1Time_1_1TDB.html#a22ccb7cb94685150b8b06a2d917065aa",
+"namespaceIO_1_1Astrodynamics_1_1Helpers.html#aca6a4806ed00a21fdfb01f6424088750",
+"structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1FuelTankDTO.html#ad1baaaec80370f33855fad55273aa48d",
+"structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ScenarioDTO.html#ad7817f2ad2404870e8b971530098c1af"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';

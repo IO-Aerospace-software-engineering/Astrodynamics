@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.4"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>IO-SDK: IO.SDK/Exceptions/SDKException.h Source File</title>
+<title>IO-Astrodynamics: IO.Astrodynamics/Exceptions/SDKException.h Source File</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -25,7 +25,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">IO-SDK<span id="projectnumber">&#160;0.9.x</span>
+   <div id="projectname">IO-Astrodynamics<span id="projectnumber">&#160;1.0.x</span>
    </div>
    <div id="projectbrief">Astrodynamics framework</div>
   </td>
@@ -94,32 +94,32 @@ $(document).ready(function(){initNavTree('SDKException_8h_source.html',''); init
 <div class="line"><a id="l00006" name="l00006"></a><span class="lineno">    6</span> </div>
 <div class="line"><a id="l00007" name="l00007"></a><span class="lineno">    7</span><span class="preprocessor">#include &lt;string&gt;</span></div>
 <div class="line"><a id="l00008" name="l00008"></a><span class="lineno">    8</span> </div>
-<div class="line"><a id="l00009" name="l00009"></a><span class="lineno">    9</span><span class="keyword">namespace </span><a class="code hl_namespace" href="namespaceIO_1_1SDK_1_1Exception.html">IO::SDK::Exception</a></div>
+<div class="line"><a id="l00009" name="l00009"></a><span class="lineno">    9</span><span class="keyword">namespace </span><a class="code hl_namespace" href="namespaceIO_1_1Astrodynamics_1_1Exception.html">IO::Astrodynamics::Exception</a></div>
 <div class="line"><a id="l00010" name="l00010"></a><span class="lineno">   10</span>{</div>
-<div class="line"><a id="l00015" name="l00015"></a><span class="lineno"><a class="line" href="classIO_1_1SDK_1_1Exception_1_1SDKException.html">   15</a></span>    <span class="keyword">class </span><a class="code hl_class" href="classIO_1_1SDK_1_1Exception_1_1SDKException.html">SDKException</a> : <span class="keyword">public</span> std::exception</div>
+<div class="line"><a id="l00015" name="l00015"></a><span class="lineno"><a class="line" href="classIO_1_1Astrodynamics_1_1Exception_1_1SDKException.html">   15</a></span>    <span class="keyword">class </span><a class="code hl_class" href="classIO_1_1Astrodynamics_1_1Exception_1_1SDKException.html">SDKException</a> : <span class="keyword">public</span> std::exception</div>
 <div class="line"><a id="l00016" name="l00016"></a><span class="lineno">   16</span>    {</div>
 <div class="line"><a id="l00017" name="l00017"></a><span class="lineno">   17</span> </div>
 <div class="line"><a id="l00018" name="l00018"></a><span class="lineno">   18</span>    <span class="keyword">protected</span>:</div>
-<div class="line"><a id="l00019" name="l00019"></a><span class="lineno"><a class="line" href="classIO_1_1SDK_1_1Exception_1_1SDKException.html#a5dc8e9a07fac1cb80febb41612a2820e">   19</a></span>        <span class="keyword">const</span> std::string <a class="code hl_variable" href="classIO_1_1SDK_1_1Exception_1_1SDKException.html#a5dc8e9a07fac1cb80febb41612a2820e">m_msg</a>;</div>
+<div class="line"><a id="l00019" name="l00019"></a><span class="lineno"><a class="line" href="classIO_1_1Astrodynamics_1_1Exception_1_1SDKException.html#a97f25f9f8fec604724a853217d790f1b">   19</a></span>        <span class="keyword">const</span> std::string <a class="code hl_variable" href="classIO_1_1Astrodynamics_1_1Exception_1_1SDKException.html#a97f25f9f8fec604724a853217d790f1b">m_msg</a>;</div>
 <div class="line"><a id="l00020" name="l00020"></a><span class="lineno">   20</span> </div>
 <div class="line"><a id="l00021" name="l00021"></a><span class="lineno">   21</span>    <span class="keyword">public</span>:</div>
-<div class="line"><a id="l00022" name="l00022"></a><span class="lineno">   22</span>        <span class="keyword">explicit</span> <a class="code hl_function" href="classIO_1_1SDK_1_1Exception_1_1SDKException.html#aa717513ed96fe5eabc4ac4c096548ad2">SDKException</a>(std::string msg);</div>
+<div class="line"><a id="l00022" name="l00022"></a><span class="lineno">   22</span>        <span class="keyword">explicit</span> <a class="code hl_function" href="classIO_1_1Astrodynamics_1_1Exception_1_1SDKException.html#a775a288ece8d62a5e3742428a9be9dd3">SDKException</a>(std::string msg);</div>
 <div class="line"><a id="l00023" name="l00023"></a><span class="lineno">   23</span> </div>
-<div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span>        [[nodiscard]] <span class="keyword">const</span> <span class="keywordtype">char</span> *<a class="code hl_function" href="classIO_1_1SDK_1_1Exception_1_1SDKException.html#ac99d784769289308fedeb575bf2f216b">what</a>() const noexcept override;</div>
+<div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span>        [[nodiscard]] <span class="keyword">const</span> <span class="keywordtype">char</span> *<a class="code hl_function" href="classIO_1_1Astrodynamics_1_1Exception_1_1SDKException.html#a781a54ae8ec017e72a0010632c57254b">what</a>() const noexcept override;</div>
 <div class="line"><a id="l00025" name="l00025"></a><span class="lineno">   25</span>    };</div>
 <div class="line"><a id="l00026" name="l00026"></a><span class="lineno">   26</span>}</div>
 <div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span><span class="preprocessor">#endif </span><span class="comment">// !SDK_EXCEPTION_H</span></div>
-<div class="ttc" id="aclassIO_1_1SDK_1_1Exception_1_1SDKException_html"><div class="ttname"><a href="classIO_1_1SDK_1_1Exception_1_1SDKException.html">IO::SDK::Exception::SDKException</a></div><div class="ttdoc">IO SDK Exception.</div><div class="ttdef"><b>Definition:</b> SDKException.h:16</div></div>
-<div class="ttc" id="aclassIO_1_1SDK_1_1Exception_1_1SDKException_html_a5dc8e9a07fac1cb80febb41612a2820e"><div class="ttname"><a href="classIO_1_1SDK_1_1Exception_1_1SDKException.html#a5dc8e9a07fac1cb80febb41612a2820e">IO::SDK::Exception::SDKException::m_msg</a></div><div class="ttdeci">const std::string m_msg</div><div class="ttdef"><b>Definition:</b> SDKException.h:19</div></div>
-<div class="ttc" id="aclassIO_1_1SDK_1_1Exception_1_1SDKException_html_aa717513ed96fe5eabc4ac4c096548ad2"><div class="ttname"><a href="classIO_1_1SDK_1_1Exception_1_1SDKException.html#aa717513ed96fe5eabc4ac4c096548ad2">IO::SDK::Exception::SDKException::SDKException</a></div><div class="ttdeci">SDKException(std::string msg)</div><div class="ttdef"><b>Definition:</b> SDKException.cpp:7</div></div>
-<div class="ttc" id="aclassIO_1_1SDK_1_1Exception_1_1SDKException_html_ac99d784769289308fedeb575bf2f216b"><div class="ttname"><a href="classIO_1_1SDK_1_1Exception_1_1SDKException.html#ac99d784769289308fedeb575bf2f216b">IO::SDK::Exception::SDKException::what</a></div><div class="ttdeci">const char * what() const noexcept override</div><div class="ttdef"><b>Definition:</b> SDKException.cpp:10</div></div>
-<div class="ttc" id="anamespaceIO_1_1SDK_1_1Exception_html"><div class="ttname"><a href="namespaceIO_1_1SDK_1_1Exception.html">IO::SDK::Exception</a></div><div class="ttdef"><b>Definition:</b> InvalidArgumentException.h:11</div></div>
+<div class="ttc" id="aclassIO_1_1Astrodynamics_1_1Exception_1_1SDKException_html"><div class="ttname"><a href="classIO_1_1Astrodynamics_1_1Exception_1_1SDKException.html">IO::Astrodynamics::Exception::SDKException</a></div><div class="ttdoc">IO SDK Exception.</div><div class="ttdef"><b>Definition:</b> SDKException.h:16</div></div>
+<div class="ttc" id="aclassIO_1_1Astrodynamics_1_1Exception_1_1SDKException_html_a775a288ece8d62a5e3742428a9be9dd3"><div class="ttname"><a href="classIO_1_1Astrodynamics_1_1Exception_1_1SDKException.html#a775a288ece8d62a5e3742428a9be9dd3">IO::Astrodynamics::Exception::SDKException::SDKException</a></div><div class="ttdeci">SDKException(std::string msg)</div><div class="ttdef"><b>Definition:</b> SDKException.cpp:7</div></div>
+<div class="ttc" id="aclassIO_1_1Astrodynamics_1_1Exception_1_1SDKException_html_a781a54ae8ec017e72a0010632c57254b"><div class="ttname"><a href="classIO_1_1Astrodynamics_1_1Exception_1_1SDKException.html#a781a54ae8ec017e72a0010632c57254b">IO::Astrodynamics::Exception::SDKException::what</a></div><div class="ttdeci">const char * what() const noexcept override</div><div class="ttdef"><b>Definition:</b> SDKException.cpp:10</div></div>
+<div class="ttc" id="aclassIO_1_1Astrodynamics_1_1Exception_1_1SDKException_html_a97f25f9f8fec604724a853217d790f1b"><div class="ttname"><a href="classIO_1_1Astrodynamics_1_1Exception_1_1SDKException.html#a97f25f9f8fec604724a853217d790f1b">IO::Astrodynamics::Exception::SDKException::m_msg</a></div><div class="ttdeci">const std::string m_msg</div><div class="ttdef"><b>Definition:</b> SDKException.h:19</div></div>
+<div class="ttc" id="anamespaceIO_1_1Astrodynamics_1_1Exception_html"><div class="ttname"><a href="namespaceIO_1_1Astrodynamics_1_1Exception.html">IO::Astrodynamics::Exception</a></div><div class="ttdef"><b>Definition:</b> InvalidArgumentException.h:11</div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="navelem"><a class="el" href="dir_5778ee96be26b2d80033eace8b85837e.html">IO.SDK</a></li><li class="navelem"><a class="el" href="dir_568fc0acd73538c6ed9734c6f815c982.html">Exceptions</a></li><li class="navelem"><a class="el" href="SDKException_8h.html">SDKException.h</a></li>
+    <li class="navelem"><a class="el" href="dir_8b53906265ec8f6b685b3ec9d9930ef2.html">IO.Astrodynamics</a></li><li class="navelem"><a class="el" href="dir_97f2b6fe1aa6274c435a750c74dccf0b.html">Exceptions</a></li><li class="navelem"><a class="el" href="SDKException_8h.html">SDKException.h</a></li>
     <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.4 </li>
   </ul>
 </div>

@@ -1,5 +1,5 @@
 \hypertarget{TDB_8h_source}{}\doxysection{TDB.\+h}
-\label{TDB_8h_source}\index{IO.SDK/Time/TDB.h@{IO.SDK/Time/TDB.h}}
+\label{TDB_8h_source}\index{IO.Astrodynamics/Time/TDB.h@{IO.Astrodynamics/Time/TDB.h}}
 \mbox{\hyperlink{TDB_8h}{Go to the documentation of this file.}}
 \begin{DoxyCode}{0}
 \DoxyCodeLine{1 \textcolor{comment}{/*}}
@@ -10,28 +10,28 @@
 \DoxyCodeLine{6 }
 \DoxyCodeLine{7 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{DateTime_8h}{DateTime.h}}>}}
 \DoxyCodeLine{8 }
-\DoxyCodeLine{9 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1SDK_1_1Time}{IO::SDK::Time}}}
+\DoxyCodeLine{9 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Time}{IO::Astrodynamics::Time}}}
 \DoxyCodeLine{10 \{}
 \DoxyCodeLine{11     \textcolor{keyword}{class }UTC;}
-\DoxyCodeLine{12     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{TDB}} final : \textcolor{keyword}{public} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1DateTime}{IO::SDK::Time::DateTime}}}
+\DoxyCodeLine{12     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{TDB}} final : \textcolor{keyword}{public} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1DateTime}{IO::Astrodynamics::Time::DateTime}}}
 \DoxyCodeLine{13     \{}
 \DoxyCodeLine{14     \textcolor{keyword}{private}:}
 \DoxyCodeLine{15     \textcolor{keyword}{public}:}
-\DoxyCodeLine{21         \textcolor{keyword}{explicit} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB_aa7242ae7e085eed6c9658d13072eb52f}{TDB}}(std::chrono::duration<double> ellapsedSecondsFromJ2000);}
+\DoxyCodeLine{21         \textcolor{keyword}{explicit} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB_a22ccb7cb94685150b8b06a2d917065aa}{TDB}}(std::chrono::duration<double> ellapsedSecondsFromJ2000);}
 \DoxyCodeLine{22 }
-\DoxyCodeLine{28         \textcolor{keyword}{explicit} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB_aa7242ae7e085eed6c9658d13072eb52f}{TDB}}(\textcolor{keyword}{const} std::string\& \textcolor{keywordtype}{string});}
+\DoxyCodeLine{28         \textcolor{keyword}{explicit} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB_a22ccb7cb94685150b8b06a2d917065aa}{TDB}}(\textcolor{keyword}{const} std::string\& \textcolor{keywordtype}{string});}
 \DoxyCodeLine{29 }
-\DoxyCodeLine{35         [[nodiscard]] std::string \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB_a052c59cf78649300f515a0a590da0e83}{ToString}}() \textcolor{keyword}{const override};}
+\DoxyCodeLine{35         [[nodiscard]] std::string \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB_a4799dce71489691a49acf69fc9ca26c9}{ToString}}() \textcolor{keyword}{const override};}
 \DoxyCodeLine{36 }
-\DoxyCodeLine{43         [[nodiscard]] \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO::SDK::Time::TDB}} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB_aaddf000171e27a5fbd7043211abf3897}{Add}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO::SDK::Time::TimeSpan}} \&timespan) \textcolor{keyword}{const};}
+\DoxyCodeLine{43         [[nodiscard]] \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO::Astrodynamics::Time::TDB}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB_a389229d7a65bc3aa2e4c43f43c93281e}{Add}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO::Astrodynamics::Time::TimeSpan}} \&timespan) \textcolor{keyword}{const};}
 \DoxyCodeLine{44 }
-\DoxyCodeLine{51         \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO::SDK::Time::TDB}} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB_a960ebafc92bdc161094294e9c3ec9bee}{operator+}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO::SDK::Time::TimeSpan}} \&timespan) \textcolor{keyword}{const};}
+\DoxyCodeLine{51         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO::Astrodynamics::Time::TDB}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB_a47f6387453a2c747ac8459d832f4b210}{operator+}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO::Astrodynamics::Time::TimeSpan}} \&timespan) \textcolor{keyword}{const};}
 \DoxyCodeLine{52 }
-\DoxyCodeLine{59         \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO::SDK::Time::TDB}} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB_a825aca4f9584bd63d686dd3ac2f3b9fe}{operator-\/}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO::SDK::Time::TimeSpan}} \&other) \textcolor{keyword}{const};}
+\DoxyCodeLine{59         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO::Astrodynamics::Time::TDB}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB_a99c6fbf941baedd1bb55d975500136b4}{operator-\/}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO::Astrodynamics::Time::TimeSpan}} \&other) \textcolor{keyword}{const};}
 \DoxyCodeLine{60 }
-\DoxyCodeLine{67         \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TimeSpan}{IO::SDK::Time::TimeSpan}} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB_a825aca4f9584bd63d686dd3ac2f3b9fe}{operator-\/}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB}{IO::SDK::Time::TDB}} \&other) \textcolor{keyword}{const};}
+\DoxyCodeLine{67         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO::Astrodynamics::Time::TimeSpan}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB_a99c6fbf941baedd1bb55d975500136b4}{operator-\/}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO::Astrodynamics::Time::TDB}} \&other) \textcolor{keyword}{const};}
 \DoxyCodeLine{68 }
-\DoxyCodeLine{74         [[nodiscard]] \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1UTC}{UTC}} \mbox{\hyperlink{classIO_1_1SDK_1_1Time_1_1TDB_aa5b72eea6c32716a713acf4b4c360de9}{ToUTC}}() \textcolor{keyword}{const};}
+\DoxyCodeLine{74         [[nodiscard]] \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1UTC}{UTC}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB_ac82a4dbde5ca2e2d54427ef98572880e}{ToUTC}}() \textcolor{keyword}{const};}
 \DoxyCodeLine{75     \};}
 \DoxyCodeLine{76 \}}
 \DoxyCodeLine{77 \textcolor{preprocessor}{\#endif }\textcolor{comment}{// !TDB\_H}}

@@ -1,0 +1,142 @@
+\hypertarget{classIO_1_1Astrodynamics_1_1Scenario}{}\doxysection{IO\+::Astrodynamics\+::Scenario Class Reference}
+\label{classIO_1_1Astrodynamics_1_1Scenario}\index{IO::Astrodynamics::Scenario@{IO::Astrodynamics::Scenario}}
+
+
+{\ttfamily \#include $<$Scenario.\+h$>$}
+
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Scenario_a7909e3ac263b91427e7ff9c13c2a6017}{Scenario}} (std\+::string name, const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{IO\+::\+Astrodynamics\+::\+Time\+::\+Window}}$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1UTC}{IO\+::\+Astrodynamics\+::\+Time\+::\+UTC}} $>$ \&windows)
+\item 
+void \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Scenario_aa7583021f9c1d236d9cc47223aa5ba97}{Add\+Celestial\+Body}} (const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody}{IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Body}} \&celestial\+Body)
+\item 
+void \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Scenario_a93c684cb0cd396b741f0bd1ead83f351}{Attach\+Spacecraft}} (const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft}{IO\+::\+Astrodynamics\+::\+Body\+::\+Spacecraft\+::\+Spacecraft}} \&spacecraft)
+\item 
+void \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Scenario_a217c32b8e75ec6f2e4d0f2faa40a343b}{Add\+Site}} (const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1Site}{IO\+::\+Astrodynamics\+::\+Sites\+::\+Site}} \&site)
+\item 
+std\+::string \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Scenario_aee9ec3b05799c7006226a50d54a48452}{Get\+Name}} () const
+\item 
+const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{IO\+::\+Astrodynamics\+::\+Time\+::\+Window}}$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1UTC}{IO\+::\+Astrodynamics\+::\+Time\+::\+UTC}} $>$ \& \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Scenario_af733653fb5fcc5da78248c99f8908fc4}{Get\+Window}} () const
+\item 
+const std\+::vector$<$ const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody}{IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Body}} $\ast$ $>$ \& \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Scenario_a4a243fdc758bf49a0f317b80230e4d72}{Get\+Celestial\+Bodies}} ()
+\item 
+const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft}{IO\+::\+Astrodynamics\+::\+Body\+::\+Spacecraft\+::\+Spacecraft}} $\ast$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Scenario_a7a86d9929640720cca2cf105079b4b34}{Get\+Spacecraft}} ()
+\item 
+const std\+::vector$<$ const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1Site}{IO\+::\+Astrodynamics\+::\+Sites\+::\+Site}} $\ast$ $>$ \& \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Scenario_a9b620f02f8f194b4514c8dc11e0946e8}{Get\+Sites}} ()
+\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Propagators_1_1Propagator}{Propagators\+::\+Propagator}} \& \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Scenario_ab3797158c0ea4490f3817cf4a80f4562}{Get\+Propagator}} ()
+\item 
+void \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Scenario_a981769d9853fa67107b665db9bde2dc9}{Execute}} ()
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Scenario_a7909e3ac263b91427e7ff9c13c2a6017}\label{classIO_1_1Astrodynamics_1_1Scenario_a7909e3ac263b91427e7ff9c13c2a6017}} 
+\index{IO::Astrodynamics::Scenario@{IO::Astrodynamics::Scenario}!Scenario@{Scenario}}
+\index{Scenario@{Scenario}!IO::Astrodynamics::Scenario@{IO::Astrodynamics::Scenario}}
+\doxysubsubsection{\texorpdfstring{Scenario()}{Scenario()}}
+{\footnotesize\ttfamily IO\+::\+Astrodynamics\+::\+Scenario\+::\+Scenario (\begin{DoxyParamCaption}\item[{std\+::string}]{name,  }\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{IO\+::\+Astrodynamics\+::\+Time\+::\+Window}}$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1UTC}{IO\+::\+Astrodynamics\+::\+Time\+::\+UTC}} $>$ \&}]{windows }\end{DoxyParamCaption})}
+
+
+
+\doxysubsection{Member Function Documentation}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Scenario_aa7583021f9c1d236d9cc47223aa5ba97}\label{classIO_1_1Astrodynamics_1_1Scenario_aa7583021f9c1d236d9cc47223aa5ba97}} 
+\index{IO::Astrodynamics::Scenario@{IO::Astrodynamics::Scenario}!AddCelestialBody@{AddCelestialBody}}
+\index{AddCelestialBody@{AddCelestialBody}!IO::Astrodynamics::Scenario@{IO::Astrodynamics::Scenario}}
+\doxysubsubsection{\texorpdfstring{AddCelestialBody()}{AddCelestialBody()}}
+{\footnotesize\ttfamily void IO\+::\+Astrodynamics\+::\+Scenario\+::\+Add\+Celestial\+Body (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody}{IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Body}} \&}]{celestial\+Body }\end{DoxyParamCaption})}
+
+Add celestial body to the scenario 
+\begin{DoxyParams}{Parameters}
+{\em celestial\+Body} & \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Scenario_a217c32b8e75ec6f2e4d0f2faa40a343b}\label{classIO_1_1Astrodynamics_1_1Scenario_a217c32b8e75ec6f2e4d0f2faa40a343b}} 
+\index{IO::Astrodynamics::Scenario@{IO::Astrodynamics::Scenario}!AddSite@{AddSite}}
+\index{AddSite@{AddSite}!IO::Astrodynamics::Scenario@{IO::Astrodynamics::Scenario}}
+\doxysubsubsection{\texorpdfstring{AddSite()}{AddSite()}}
+{\footnotesize\ttfamily void IO\+::\+Astrodynamics\+::\+Scenario\+::\+Add\+Site (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1Site}{IO\+::\+Astrodynamics\+::\+Sites\+::\+Site}} \&}]{site }\end{DoxyParamCaption})}
+
+Add a site to the scenario 
+\begin{DoxyParams}{Parameters}
+{\em site} & \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Scenario_a93c684cb0cd396b741f0bd1ead83f351}\label{classIO_1_1Astrodynamics_1_1Scenario_a93c684cb0cd396b741f0bd1ead83f351}} 
+\index{IO::Astrodynamics::Scenario@{IO::Astrodynamics::Scenario}!AttachSpacecraft@{AttachSpacecraft}}
+\index{AttachSpacecraft@{AttachSpacecraft}!IO::Astrodynamics::Scenario@{IO::Astrodynamics::Scenario}}
+\doxysubsubsection{\texorpdfstring{AttachSpacecraft()}{AttachSpacecraft()}}
+{\footnotesize\ttfamily void IO\+::\+Astrodynamics\+::\+Scenario\+::\+Attach\+Spacecraft (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft}{IO\+::\+Astrodynamics\+::\+Body\+::\+Spacecraft\+::\+Spacecraft}} \&}]{spacecraft }\end{DoxyParamCaption})}
+
+Add Spacecraft to the scenario 
+\begin{DoxyParams}{Parameters}
+{\em spacecraft} & \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Scenario_a981769d9853fa67107b665db9bde2dc9}\label{classIO_1_1Astrodynamics_1_1Scenario_a981769d9853fa67107b665db9bde2dc9}} 
+\index{IO::Astrodynamics::Scenario@{IO::Astrodynamics::Scenario}!Execute@{Execute}}
+\index{Execute@{Execute}!IO::Astrodynamics::Scenario@{IO::Astrodynamics::Scenario}}
+\doxysubsubsection{\texorpdfstring{Execute()}{Execute()}}
+{\footnotesize\ttfamily void IO\+::\+Astrodynamics\+::\+Scenario\+::\+Execute (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+Execute scenario \mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Scenario_a4a243fdc758bf49a0f317b80230e4d72}\label{classIO_1_1Astrodynamics_1_1Scenario_a4a243fdc758bf49a0f317b80230e4d72}} 
+\index{IO::Astrodynamics::Scenario@{IO::Astrodynamics::Scenario}!GetCelestialBodies@{GetCelestialBodies}}
+\index{GetCelestialBodies@{GetCelestialBodies}!IO::Astrodynamics::Scenario@{IO::Astrodynamics::Scenario}}
+\doxysubsubsection{\texorpdfstring{GetCelestialBodies()}{GetCelestialBodies()}}
+{\footnotesize\ttfamily const std\+::vector$<$ const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody}{IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Body}} $\ast$ $>$ \& IO\+::\+Astrodynamics\+::\+Scenario\+::\+Get\+Celestial\+Bodies (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+Get celestial bodies of the scenario \begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Scenario_aee9ec3b05799c7006226a50d54a48452}\label{classIO_1_1Astrodynamics_1_1Scenario_aee9ec3b05799c7006226a50d54a48452}} 
+\index{IO::Astrodynamics::Scenario@{IO::Astrodynamics::Scenario}!GetName@{GetName}}
+\index{GetName@{GetName}!IO::Astrodynamics::Scenario@{IO::Astrodynamics::Scenario}}
+\doxysubsubsection{\texorpdfstring{GetName()}{GetName()}}
+{\footnotesize\ttfamily std\+::string IO\+::\+Astrodynamics\+::\+Scenario\+::\+Get\+Name (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+Get the name of the scenario \begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Scenario_ab3797158c0ea4490f3817cf4a80f4562}\label{classIO_1_1Astrodynamics_1_1Scenario_ab3797158c0ea4490f3817cf4a80f4562}} 
+\index{IO::Astrodynamics::Scenario@{IO::Astrodynamics::Scenario}!GetPropagator@{GetPropagator}}
+\index{GetPropagator@{GetPropagator}!IO::Astrodynamics::Scenario@{IO::Astrodynamics::Scenario}}
+\doxysubsubsection{\texorpdfstring{GetPropagator()}{GetPropagator()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Propagators_1_1Propagator}{Propagators\+::\+Propagator}} \& IO\+::\+Astrodynamics\+::\+Scenario\+::\+Get\+Propagator (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+Return the propagator used by this scenario \begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Scenario_a9b620f02f8f194b4514c8dc11e0946e8}\label{classIO_1_1Astrodynamics_1_1Scenario_a9b620f02f8f194b4514c8dc11e0946e8}} 
+\index{IO::Astrodynamics::Scenario@{IO::Astrodynamics::Scenario}!GetSites@{GetSites}}
+\index{GetSites@{GetSites}!IO::Astrodynamics::Scenario@{IO::Astrodynamics::Scenario}}
+\doxysubsubsection{\texorpdfstring{GetSites()}{GetSites()}}
+{\footnotesize\ttfamily const std\+::vector$<$ const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1Site}{IO\+::\+Astrodynamics\+::\+Sites\+::\+Site}} $\ast$ $>$ \& IO\+::\+Astrodynamics\+::\+Scenario\+::\+Get\+Sites (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+Get the \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Sites}{Sites}} of the scenario \begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Scenario_a7a86d9929640720cca2cf105079b4b34}\label{classIO_1_1Astrodynamics_1_1Scenario_a7a86d9929640720cca2cf105079b4b34}} 
+\index{IO::Astrodynamics::Scenario@{IO::Astrodynamics::Scenario}!GetSpacecraft@{GetSpacecraft}}
+\index{GetSpacecraft@{GetSpacecraft}!IO::Astrodynamics::Scenario@{IO::Astrodynamics::Scenario}}
+\doxysubsubsection{\texorpdfstring{GetSpacecraft()}{GetSpacecraft()}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft}{IO\+::\+Astrodynamics\+::\+Body\+::\+Spacecraft\+::\+Spacecraft}} $\ast$ IO\+::\+Astrodynamics\+::\+Scenario\+::\+Get\+Spacecraft (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+Get spacecrafts of the scenario \begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Scenario_af733653fb5fcc5da78248c99f8908fc4}\label{classIO_1_1Astrodynamics_1_1Scenario_af733653fb5fcc5da78248c99f8908fc4}} 
+\index{IO::Astrodynamics::Scenario@{IO::Astrodynamics::Scenario}!GetWindow@{GetWindow}}
+\index{GetWindow@{GetWindow}!IO::Astrodynamics::Scenario@{IO::Astrodynamics::Scenario}}
+\doxysubsubsection{\texorpdfstring{GetWindow()}{GetWindow()}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{IO\+::\+Astrodynamics\+::\+Time\+::\+Window}}$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1UTC}{IO\+::\+Astrodynamics\+::\+Time\+::\+UTC}} $>$ \& IO\+::\+Astrodynamics\+::\+Scenario\+::\+Get\+Window (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+Get the window of the scenario \begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+IO.\+Astrodynamics/\+Scenario/\mbox{\hyperlink{Scenario_8h}{Scenario.\+h}}\item 
+IO.\+Astrodynamics/\+Scenario/\mbox{\hyperlink{Scenario_8cpp}{Scenario.\+cpp}}\end{DoxyCompactItemize}

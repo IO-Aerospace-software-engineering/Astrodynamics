@@ -1,0 +1,129 @@
+\hypertarget{classIO_1_1Astrodynamics_1_1Coordinates_1_1AzimuthRange}{}\doxysection{IO\+::Astrodynamics\+::Coordinates\+::Azimuth\+Range Class Reference}
+\label{classIO_1_1Astrodynamics_1_1Coordinates_1_1AzimuthRange}\index{IO::Astrodynamics::Coordinates::AzimuthRange@{IO::Astrodynamics::Coordinates::AzimuthRange}}
+
+
+{\ttfamily \#include $<$Azimuth\+Range.\+h$>$}
+
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1AzimuthRange_a8ce5807cf13d95212bd760dd79d1e8eb}{Azimuth\+Range}} (double start, double end)
+\begin{DoxyCompactList}\small\item\em Construct a new Azimuth Range object. \end{DoxyCompactList}\item 
+bool \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1AzimuthRange_abcfc734f530684062e57b71dbd29e428}{Is\+In\+Range}} (double angle) const
+\begin{DoxyCompactList}\small\item\em Know if angle is in range. \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1AzimuthRange_ad1d087e38b94871ecef6b4a95114359a}{Get\+Start}} () const
+\begin{DoxyCompactList}\small\item\em Get the Start. \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1AzimuthRange_aa0807482c46e9f02d29dd43712612380}{Get\+End}} () const
+\begin{DoxyCompactList}\small\item\em Get the End. \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1AzimuthRange_addb1d28876b2d79e7e220155061a9208}{Get\+Span}} () const
+\begin{DoxyCompactList}\small\item\em Get the Span. \end{DoxyCompactList}\item 
+bool \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1AzimuthRange_af4f3ee2d5c0cb71bd5f5f8ed1cb2c36f}{Is\+Intersected}} (const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1AzimuthRange}{Azimuth\+Range}} \&azimuth\+Range) const
+\begin{DoxyCompactList}\small\item\em Know if an azimuth range intersects this azimuth range. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\doxysubsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Coordinates_1_1AzimuthRange_a8ce5807cf13d95212bd760dd79d1e8eb}\label{classIO_1_1Astrodynamics_1_1Coordinates_1_1AzimuthRange_a8ce5807cf13d95212bd760dd79d1e8eb}} 
+\index{IO::Astrodynamics::Coordinates::AzimuthRange@{IO::Astrodynamics::Coordinates::AzimuthRange}!AzimuthRange@{AzimuthRange}}
+\index{AzimuthRange@{AzimuthRange}!IO::Astrodynamics::Coordinates::AzimuthRange@{IO::Astrodynamics::Coordinates::AzimuthRange}}
+\doxysubsubsection{\texorpdfstring{AzimuthRange()}{AzimuthRange()}}
+{\footnotesize\ttfamily IO\+::\+Astrodynamics\+::\+Coordinates\+::\+Azimuth\+Range\+::\+Azimuth\+Range (\begin{DoxyParamCaption}\item[{double}]{start,  }\item[{double}]{end }\end{DoxyParamCaption})}
+
+
+
+Construct a new Azimuth Range object. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em start} & Start range \mbox{[}-\/2pi;2pi\mbox{]} \\
+\hline
+{\em end} & End range \mbox{[}-\/2pi;2pi\mbox{]} \\
+\hline
+\end{DoxyParams}
+
+
+\doxysubsection{Member Function Documentation}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Coordinates_1_1AzimuthRange_aa0807482c46e9f02d29dd43712612380}\label{classIO_1_1Astrodynamics_1_1Coordinates_1_1AzimuthRange_aa0807482c46e9f02d29dd43712612380}} 
+\index{IO::Astrodynamics::Coordinates::AzimuthRange@{IO::Astrodynamics::Coordinates::AzimuthRange}!GetEnd@{GetEnd}}
+\index{GetEnd@{GetEnd}!IO::Astrodynamics::Coordinates::AzimuthRange@{IO::Astrodynamics::Coordinates::AzimuthRange}}
+\doxysubsubsection{\texorpdfstring{GetEnd()}{GetEnd()}}
+{\footnotesize\ttfamily double IO\+::\+Astrodynamics\+::\+Coordinates\+::\+Azimuth\+Range\+::\+Get\+End (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Get the End. 
+
+\begin{DoxyReturn}{Returns}
+double 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Coordinates_1_1AzimuthRange_addb1d28876b2d79e7e220155061a9208}\label{classIO_1_1Astrodynamics_1_1Coordinates_1_1AzimuthRange_addb1d28876b2d79e7e220155061a9208}} 
+\index{IO::Astrodynamics::Coordinates::AzimuthRange@{IO::Astrodynamics::Coordinates::AzimuthRange}!GetSpan@{GetSpan}}
+\index{GetSpan@{GetSpan}!IO::Astrodynamics::Coordinates::AzimuthRange@{IO::Astrodynamics::Coordinates::AzimuthRange}}
+\doxysubsubsection{\texorpdfstring{GetSpan()}{GetSpan()}}
+{\footnotesize\ttfamily double IO\+::\+Astrodynamics\+::\+Coordinates\+::\+Azimuth\+Range\+::\+Get\+Span (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Get the Span. 
+
+\begin{DoxyReturn}{Returns}
+double 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Coordinates_1_1AzimuthRange_ad1d087e38b94871ecef6b4a95114359a}\label{classIO_1_1Astrodynamics_1_1Coordinates_1_1AzimuthRange_ad1d087e38b94871ecef6b4a95114359a}} 
+\index{IO::Astrodynamics::Coordinates::AzimuthRange@{IO::Astrodynamics::Coordinates::AzimuthRange}!GetStart@{GetStart}}
+\index{GetStart@{GetStart}!IO::Astrodynamics::Coordinates::AzimuthRange@{IO::Astrodynamics::Coordinates::AzimuthRange}}
+\doxysubsubsection{\texorpdfstring{GetStart()}{GetStart()}}
+{\footnotesize\ttfamily double IO\+::\+Astrodynamics\+::\+Coordinates\+::\+Azimuth\+Range\+::\+Get\+Start (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Get the Start. 
+
+\begin{DoxyReturn}{Returns}
+double 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Coordinates_1_1AzimuthRange_abcfc734f530684062e57b71dbd29e428}\label{classIO_1_1Astrodynamics_1_1Coordinates_1_1AzimuthRange_abcfc734f530684062e57b71dbd29e428}} 
+\index{IO::Astrodynamics::Coordinates::AzimuthRange@{IO::Astrodynamics::Coordinates::AzimuthRange}!IsInRange@{IsInRange}}
+\index{IsInRange@{IsInRange}!IO::Astrodynamics::Coordinates::AzimuthRange@{IO::Astrodynamics::Coordinates::AzimuthRange}}
+\doxysubsubsection{\texorpdfstring{IsInRange()}{IsInRange()}}
+{\footnotesize\ttfamily bool IO\+::\+Astrodynamics\+::\+Coordinates\+::\+Azimuth\+Range\+::\+Is\+In\+Range (\begin{DoxyParamCaption}\item[{double}]{angle }\end{DoxyParamCaption}) const}
+
+
+
+Know if angle is in range. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em angle} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+true 
+
+false 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Coordinates_1_1AzimuthRange_af4f3ee2d5c0cb71bd5f5f8ed1cb2c36f}\label{classIO_1_1Astrodynamics_1_1Coordinates_1_1AzimuthRange_af4f3ee2d5c0cb71bd5f5f8ed1cb2c36f}} 
+\index{IO::Astrodynamics::Coordinates::AzimuthRange@{IO::Astrodynamics::Coordinates::AzimuthRange}!IsIntersected@{IsIntersected}}
+\index{IsIntersected@{IsIntersected}!IO::Astrodynamics::Coordinates::AzimuthRange@{IO::Astrodynamics::Coordinates::AzimuthRange}}
+\doxysubsubsection{\texorpdfstring{IsIntersected()}{IsIntersected()}}
+{\footnotesize\ttfamily bool IO\+::\+Astrodynamics\+::\+Coordinates\+::\+Azimuth\+Range\+::\+Is\+Intersected (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1AzimuthRange}{Azimuth\+Range}} \&}]{azimuth\+Range }\end{DoxyParamCaption}) const}
+
+
+
+Know if an azimuth range intersects this azimuth range. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em azimuth\+Range} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+true 
+
+false 
+\end{DoxyReturn}
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+IO.\+Astrodynamics/\+Coordinates/\mbox{\hyperlink{AzimuthRange_8h}{Azimuth\+Range.\+h}}\item 
+IO.\+Astrodynamics/\+Coordinates/\mbox{\hyperlink{AzimuthRange_8cpp}{Azimuth\+Range.\+cpp}}\end{DoxyCompactItemize}

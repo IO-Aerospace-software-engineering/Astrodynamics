@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.4"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>IO-SDK: IO.SDK/Frames/InertialFrames.h Source File</title>
+<title>IO-Astrodynamics: IO.Astrodynamics/Frames/InertialFrames.h Source File</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -25,7 +25,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">IO-SDK<span id="projectnumber">&#160;0.9.x</span>
+   <div id="projectname">IO-Astrodynamics<span id="projectnumber">&#160;1.0.x</span>
    </div>
    <div id="projectbrief">Astrodynamics framework</div>
   </td>
@@ -94,38 +94,38 @@ $(document).ready(function(){initNavTree('InertialFrames_8h_source.html',''); in
 <div class="line"><a id="l00006" name="l00006"></a><span class="lineno">    6</span><span class="preprocessor">#include &lt;string&gt;</span></div>
 <div class="line"><a id="l00007" name="l00007"></a><span class="lineno">    7</span><span class="preprocessor">#include &lt;<a class="code" href="Frames_8h.html">Frames.h</a>&gt;</span></div>
 <div class="line"><a id="l00008" name="l00008"></a><span class="lineno">    8</span> </div>
-<div class="line"><a id="l00009" name="l00009"></a><span class="lineno">    9</span><span class="keyword">namespace </span><a class="code hl_namespace" href="namespaceIO_1_1SDK_1_1Frames.html">IO::SDK::Frames</a></div>
+<div class="line"><a id="l00009" name="l00009"></a><span class="lineno">    9</span><span class="keyword">namespace </span><a class="code hl_namespace" href="namespaceIO_1_1Astrodynamics_1_1Frames.html">IO::Astrodynamics::Frames</a></div>
 <div class="line"><a id="l00010" name="l00010"></a><span class="lineno">   10</span>{</div>
-<div class="line"><a id="l00015" name="l00015"></a><span class="lineno"><a class="line" href="classIO_1_1SDK_1_1Frames_1_1InertialFrames.html">   15</a></span>    <span class="keyword">class </span><a class="code hl_class" href="classIO_1_1SDK_1_1Frames_1_1InertialFrames.html">InertialFrames</a> final : <span class="keyword">public</span> <a class="code hl_class" href="classIO_1_1SDK_1_1Frames_1_1Frames.html">IO::SDK::Frames::Frames</a></div>
+<div class="line"><a id="l00015" name="l00015"></a><span class="lineno"><a class="line" href="classIO_1_1Astrodynamics_1_1Frames_1_1InertialFrames.html">   15</a></span>    <span class="keyword">class </span><a class="code hl_class" href="classIO_1_1Astrodynamics_1_1Frames_1_1InertialFrames.html">InertialFrames</a> final : <span class="keyword">public</span> <a class="code hl_class" href="classIO_1_1Astrodynamics_1_1Frames_1_1Frames.html">IO::Astrodynamics::Frames::Frames</a></div>
 <div class="line"><a id="l00016" name="l00016"></a><span class="lineno">   16</span>    {</div>
 <div class="line"><a id="l00017" name="l00017"></a><span class="lineno">   17</span> </div>
 <div class="line"><a id="l00018" name="l00018"></a><span class="lineno">   18</span>    <span class="keyword">private</span>:</div>
-<div class="line"><a id="l00019" name="l00019"></a><span class="lineno">   19</span>        <span class="keyword">static</span> <a class="code hl_class" href="classIO_1_1SDK_1_1Frames_1_1InertialFrames.html">InertialFrames</a> mICRF;</div>
-<div class="line"><a id="l00020" name="l00020"></a><span class="lineno">   20</span>        <span class="keyword">static</span> <a class="code hl_class" href="classIO_1_1SDK_1_1Frames_1_1InertialFrames.html">InertialFrames</a> mECLIPTIC;</div>
-<div class="line"><a id="l00021" name="l00021"></a><span class="lineno">   21</span>        <span class="keyword">static</span> <a class="code hl_class" href="classIO_1_1SDK_1_1Frames_1_1InertialFrames.html">InertialFrames</a> mGALACTIC;</div>
+<div class="line"><a id="l00019" name="l00019"></a><span class="lineno">   19</span>        <span class="keyword">static</span> <a class="code hl_class" href="classIO_1_1Astrodynamics_1_1Frames_1_1InertialFrames.html">InertialFrames</a> mICRF;</div>
+<div class="line"><a id="l00020" name="l00020"></a><span class="lineno">   20</span>        <span class="keyword">static</span> <a class="code hl_class" href="classIO_1_1Astrodynamics_1_1Frames_1_1InertialFrames.html">InertialFrames</a> mECLIPTIC;</div>
+<div class="line"><a id="l00021" name="l00021"></a><span class="lineno">   21</span>        <span class="keyword">static</span> <a class="code hl_class" href="classIO_1_1Astrodynamics_1_1Frames_1_1InertialFrames.html">InertialFrames</a> mGALACTIC;</div>
 <div class="line"><a id="l00022" name="l00022"></a><span class="lineno">   22</span>    <span class="keyword">public</span>:</div>
-<div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span>        <span class="keyword">explicit</span> <a class="code hl_function" href="classIO_1_1SDK_1_1Frames_1_1InertialFrames.html#a9bb8318906230fdaa9bdf4c333bfad48">InertialFrames</a>(<span class="keyword">const</span> std::string &amp;name);</div>
+<div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span>        <span class="keyword">explicit</span> <a class="code hl_function" href="classIO_1_1Astrodynamics_1_1Frames_1_1InertialFrames.html#a56ed8afca198f8f55ac765bee95e6ced">InertialFrames</a>(<span class="keyword">const</span> std::string &amp;name);</div>
 <div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span> </div>
-<div class="line"><a id="l00030" name="l00030"></a><span class="lineno">   30</span>        <span class="keyword">static</span> <a class="code hl_class" href="classIO_1_1SDK_1_1Frames_1_1InertialFrames.html">IO::SDK::Frames::InertialFrames</a>&amp; <a class="code hl_function" href="classIO_1_1SDK_1_1Frames_1_1InertialFrames.html#adbe2a8f6faa19b05a4e1ff3441286074">GetICRF</a>();</div>
-<div class="line"><a id="l00031" name="l00031"></a><span class="lineno">   31</span>        <span class="keyword">static</span> <a class="code hl_class" href="classIO_1_1SDK_1_1Frames_1_1InertialFrames.html">IO::SDK::Frames::InertialFrames</a>&amp; <a class="code hl_function" href="classIO_1_1SDK_1_1Frames_1_1InertialFrames.html#a92006a7170bd0e5514f5567f7feaa838">Galactic</a>();</div>
-<div class="line"><a id="l00032" name="l00032"></a><span class="lineno">   32</span>        <span class="keyword">static</span> <a class="code hl_class" href="classIO_1_1SDK_1_1Frames_1_1InertialFrames.html">IO::SDK::Frames::InertialFrames</a>&amp; <a class="code hl_function" href="classIO_1_1SDK_1_1Frames_1_1InertialFrames.html#a16c4ea501f371229e4f2d7b2ac97a96a">Ecliptic</a>();</div>
+<div class="line"><a id="l00030" name="l00030"></a><span class="lineno">   30</span>        <span class="keyword">static</span> <a class="code hl_class" href="classIO_1_1Astrodynamics_1_1Frames_1_1InertialFrames.html">IO::Astrodynamics::Frames::InertialFrames</a>&amp; <a class="code hl_function" href="classIO_1_1Astrodynamics_1_1Frames_1_1InertialFrames.html#a7601d11328e8744e308ee1af1e41a9a8">GetICRF</a>();</div>
+<div class="line"><a id="l00031" name="l00031"></a><span class="lineno">   31</span>        <span class="keyword">static</span> <a class="code hl_class" href="classIO_1_1Astrodynamics_1_1Frames_1_1InertialFrames.html">IO::Astrodynamics::Frames::InertialFrames</a>&amp; <a class="code hl_function" href="classIO_1_1Astrodynamics_1_1Frames_1_1InertialFrames.html#a684b6595afcaa969502e665f59d2e525">Galactic</a>();</div>
+<div class="line"><a id="l00032" name="l00032"></a><span class="lineno">   32</span>        <span class="keyword">static</span> <a class="code hl_class" href="classIO_1_1Astrodynamics_1_1Frames_1_1InertialFrames.html">IO::Astrodynamics::Frames::InertialFrames</a>&amp; <a class="code hl_function" href="classIO_1_1Astrodynamics_1_1Frames_1_1InertialFrames.html#a5ca7a845ab2397674cc869d21b66d9be">Ecliptic</a>();</div>
 <div class="line"><a id="l00033" name="l00033"></a><span class="lineno">   33</span>    };</div>
 <div class="line"><a id="l00034" name="l00034"></a><span class="lineno">   34</span>}</div>
 <div class="line"><a id="l00035" name="l00035"></a><span class="lineno">   35</span><span class="preprocessor">#endif </span><span class="comment">// ! INERTIAL_FRAMES_H</span></div>
 <div class="ttc" id="aFrames_8h_html"><div class="ttname"><a href="Frames_8h.html">Frames.h</a></div></div>
-<div class="ttc" id="aclassIO_1_1SDK_1_1Frames_1_1Frames_html"><div class="ttname"><a href="classIO_1_1SDK_1_1Frames_1_1Frames.html">IO::SDK::Frames::Frames</a></div><div class="ttdoc">Frames base class.</div><div class="ttdef"><b>Definition:</b> Frames.h:19</div></div>
-<div class="ttc" id="aclassIO_1_1SDK_1_1Frames_1_1InertialFrames_html"><div class="ttname"><a href="classIO_1_1SDK_1_1Frames_1_1InertialFrames.html">IO::SDK::Frames::InertialFrames</a></div><div class="ttdoc">Inertial frame.</div><div class="ttdef"><b>Definition:</b> InertialFrames.h:16</div></div>
-<div class="ttc" id="aclassIO_1_1SDK_1_1Frames_1_1InertialFrames_html_a16c4ea501f371229e4f2d7b2ac97a96a"><div class="ttname"><a href="classIO_1_1SDK_1_1Frames_1_1InertialFrames.html#a16c4ea501f371229e4f2d7b2ac97a96a">IO::SDK::Frames::InertialFrames::Ecliptic</a></div><div class="ttdeci">static IO::SDK::Frames::InertialFrames &amp; Ecliptic()</div><div class="ttdef"><b>Definition:</b> InertialFrames.cpp:23</div></div>
-<div class="ttc" id="aclassIO_1_1SDK_1_1Frames_1_1InertialFrames_html_a92006a7170bd0e5514f5567f7feaa838"><div class="ttname"><a href="classIO_1_1SDK_1_1Frames_1_1InertialFrames.html#a92006a7170bd0e5514f5567f7feaa838">IO::SDK::Frames::InertialFrames::Galactic</a></div><div class="ttdeci">static IO::SDK::Frames::InertialFrames &amp; Galactic()</div><div class="ttdef"><b>Definition:</b> InertialFrames.cpp:18</div></div>
-<div class="ttc" id="aclassIO_1_1SDK_1_1Frames_1_1InertialFrames_html_a9bb8318906230fdaa9bdf4c333bfad48"><div class="ttname"><a href="classIO_1_1SDK_1_1Frames_1_1InertialFrames.html#a9bb8318906230fdaa9bdf4c333bfad48">IO::SDK::Frames::InertialFrames::InertialFrames</a></div><div class="ttdeci">InertialFrames(const std::string &amp;name)</div><div class="ttdoc">Construct a new Inertial Frames object.</div><div class="ttdef"><b>Definition:</b> InertialFrames.cpp:9</div></div>
-<div class="ttc" id="aclassIO_1_1SDK_1_1Frames_1_1InertialFrames_html_adbe2a8f6faa19b05a4e1ff3441286074"><div class="ttname"><a href="classIO_1_1SDK_1_1Frames_1_1InertialFrames.html#adbe2a8f6faa19b05a4e1ff3441286074">IO::SDK::Frames::InertialFrames::GetICRF</a></div><div class="ttdeci">static IO::SDK::Frames::InertialFrames &amp; GetICRF()</div><div class="ttdef"><b>Definition:</b> InertialFrames.cpp:13</div></div>
-<div class="ttc" id="anamespaceIO_1_1SDK_1_1Frames_html"><div class="ttname"><a href="namespaceIO_1_1SDK_1_1Frames.html">IO::SDK::Frames</a></div><div class="ttdef"><b>Definition:</b> Spacecraft.h:22</div></div>
+<div class="ttc" id="aclassIO_1_1Astrodynamics_1_1Frames_1_1Frames_html"><div class="ttname"><a href="classIO_1_1Astrodynamics_1_1Frames_1_1Frames.html">IO::Astrodynamics::Frames::Frames</a></div><div class="ttdoc">Frames base class.</div><div class="ttdef"><b>Definition:</b> Frames.h:19</div></div>
+<div class="ttc" id="aclassIO_1_1Astrodynamics_1_1Frames_1_1InertialFrames_html"><div class="ttname"><a href="classIO_1_1Astrodynamics_1_1Frames_1_1InertialFrames.html">IO::Astrodynamics::Frames::InertialFrames</a></div><div class="ttdoc">Inertial frame.</div><div class="ttdef"><b>Definition:</b> InertialFrames.h:16</div></div>
+<div class="ttc" id="aclassIO_1_1Astrodynamics_1_1Frames_1_1InertialFrames_html_a56ed8afca198f8f55ac765bee95e6ced"><div class="ttname"><a href="classIO_1_1Astrodynamics_1_1Frames_1_1InertialFrames.html#a56ed8afca198f8f55ac765bee95e6ced">IO::Astrodynamics::Frames::InertialFrames::InertialFrames</a></div><div class="ttdeci">InertialFrames(const std::string &amp;name)</div><div class="ttdoc">Construct a new Inertial Frames object.</div><div class="ttdef"><b>Definition:</b> InertialFrames.cpp:9</div></div>
+<div class="ttc" id="aclassIO_1_1Astrodynamics_1_1Frames_1_1InertialFrames_html_a5ca7a845ab2397674cc869d21b66d9be"><div class="ttname"><a href="classIO_1_1Astrodynamics_1_1Frames_1_1InertialFrames.html#a5ca7a845ab2397674cc869d21b66d9be">IO::Astrodynamics::Frames::InertialFrames::Ecliptic</a></div><div class="ttdeci">static IO::Astrodynamics::Frames::InertialFrames &amp; Ecliptic()</div><div class="ttdef"><b>Definition:</b> InertialFrames.cpp:23</div></div>
+<div class="ttc" id="aclassIO_1_1Astrodynamics_1_1Frames_1_1InertialFrames_html_a684b6595afcaa969502e665f59d2e525"><div class="ttname"><a href="classIO_1_1Astrodynamics_1_1Frames_1_1InertialFrames.html#a684b6595afcaa969502e665f59d2e525">IO::Astrodynamics::Frames::InertialFrames::Galactic</a></div><div class="ttdeci">static IO::Astrodynamics::Frames::InertialFrames &amp; Galactic()</div><div class="ttdef"><b>Definition:</b> InertialFrames.cpp:18</div></div>
+<div class="ttc" id="aclassIO_1_1Astrodynamics_1_1Frames_1_1InertialFrames_html_a7601d11328e8744e308ee1af1e41a9a8"><div class="ttname"><a href="classIO_1_1Astrodynamics_1_1Frames_1_1InertialFrames.html#a7601d11328e8744e308ee1af1e41a9a8">IO::Astrodynamics::Frames::InertialFrames::GetICRF</a></div><div class="ttdeci">static IO::Astrodynamics::Frames::InertialFrames &amp; GetICRF()</div><div class="ttdef"><b>Definition:</b> InertialFrames.cpp:13</div></div>
+<div class="ttc" id="anamespaceIO_1_1Astrodynamics_1_1Frames_html"><div class="ttname"><a href="namespaceIO_1_1Astrodynamics_1_1Frames.html">IO::Astrodynamics::Frames</a></div><div class="ttdef"><b>Definition:</b> Spacecraft.h:22</div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="navelem"><a class="el" href="dir_5778ee96be26b2d80033eace8b85837e.html">IO.SDK</a></li><li class="navelem"><a class="el" href="dir_613760c38b17a52fedd4725c331790cb.html">Frames</a></li><li class="navelem"><a class="el" href="InertialFrames_8h.html">InertialFrames.h</a></li>
+    <li class="navelem"><a class="el" href="dir_8b53906265ec8f6b685b3ec9d9930ef2.html">IO.Astrodynamics</a></li><li class="navelem"><a class="el" href="dir_84383a506bcbd4470280a030fe9b1428.html">Frames</a></li><li class="navelem"><a class="el" href="InertialFrames_8h.html">InertialFrames.h</a></li>
     <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.4 </li>
   </ul>
 </div>

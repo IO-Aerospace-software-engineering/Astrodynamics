@@ -1,0 +1,137 @@
+\hypertarget{classIO_1_1Astrodynamics_1_1Coordinates_1_1SurfaceCoordinates}{}\doxysection{IO\+::Astrodynamics\+::Coordinates\+::Surface\+Coordinates Class Reference}
+\label{classIO_1_1Astrodynamics_1_1Coordinates_1_1SurfaceCoordinates}\index{IO::Astrodynamics::Coordinates::SurfaceCoordinates@{IO::Astrodynamics::Coordinates::SurfaceCoordinates}}
+
+
+Surface coordinates.  
+
+
+
+
+{\ttfamily \#include $<$Surface\+Coordinates.\+h$>$}
+
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1SurfaceCoordinates_a29c2dfe69ef3dc17aea7ce8cad6fa87c}{Surface\+Coordinates}} (size\+\_\+t longitude\+Span, size\+\_\+t latitude\+Span)
+\begin{DoxyCompactList}\small\item\em Construct a new Surface \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Coordinates}{Coordinates}} object. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1SurfaceCoordinates_a90ad44fbf170200d8bd370bc26fbff44}{Surface\+Coordinates}} (const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1SurfaceCoordinates}{Surface\+Coordinates}} \&surface\+Coordinates)
+\begin{DoxyCompactList}\small\item\em Construct a new Surface \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Coordinates}{Coordinates}} object. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1SurfaceCoordinates}{Surface\+Coordinates}} \& \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1SurfaceCoordinates_ae0c0551d8c3db86994c96b81c11de881}{operator=}} (const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1SurfaceCoordinates}{Surface\+Coordinates}} \&surface\+Coordinates)
+\item 
+const std\+::vector$<$ std\+::unique\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO\+::\+Astrodynamics\+::\+Math\+::\+Vector3D}} $>$ $>$ \& \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1SurfaceCoordinates_a5da3d0dab875b47e48ff0f5620fa5b41}{Get\+Surface\+Points}} () const
+\begin{DoxyCompactList}\small\item\em Get the Surface Points. \end{DoxyCompactList}\item 
+const std\+::vector$<$ std\+::unique\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO\+::\+Astrodynamics\+::\+Math\+::\+Vector3D}} $>$ $>$ \& \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1SurfaceCoordinates_afed30f75e7a0d2df139e7a046b1a3266}{Get\+Surface\+Normals}} () const
+\begin{DoxyCompactList}\small\item\em Get the Surface Normals. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1SurfaceCoordinates_a9badf3585e3f0b2de2791a678333a6fc}{Add\+Point}} (const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO\+::\+Astrodynamics\+::\+Math\+::\+Vector3D}} \&point)
+\begin{DoxyCompactList}\small\item\em Add a surface point. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1SurfaceCoordinates_a46204d4d7d914892f58d5f724efb77a9}{Add\+Normal}} (const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO\+::\+Astrodynamics\+::\+Math\+::\+Vector3D}} \&normal)
+\begin{DoxyCompactList}\small\item\em Add normal vector. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+Surface coordinates. 
+
+\doxysubsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Coordinates_1_1SurfaceCoordinates_a29c2dfe69ef3dc17aea7ce8cad6fa87c}\label{classIO_1_1Astrodynamics_1_1Coordinates_1_1SurfaceCoordinates_a29c2dfe69ef3dc17aea7ce8cad6fa87c}} 
+\index{IO::Astrodynamics::Coordinates::SurfaceCoordinates@{IO::Astrodynamics::Coordinates::SurfaceCoordinates}!SurfaceCoordinates@{SurfaceCoordinates}}
+\index{SurfaceCoordinates@{SurfaceCoordinates}!IO::Astrodynamics::Coordinates::SurfaceCoordinates@{IO::Astrodynamics::Coordinates::SurfaceCoordinates}}
+\doxysubsubsection{\texorpdfstring{SurfaceCoordinates()}{SurfaceCoordinates()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily IO\+::\+Astrodynamics\+::\+Coordinates\+::\+Surface\+Coordinates\+::\+Surface\+Coordinates (\begin{DoxyParamCaption}\item[{size\+\_\+t}]{longitude\+Span,  }\item[{size\+\_\+t}]{latitude\+Span }\end{DoxyParamCaption})}
+
+
+
+Construct a new Surface \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Coordinates}{Coordinates}} object. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em longitude\+Span} & \\
+\hline
+{\em latitude\+Span} & \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Coordinates_1_1SurfaceCoordinates_a90ad44fbf170200d8bd370bc26fbff44}\label{classIO_1_1Astrodynamics_1_1Coordinates_1_1SurfaceCoordinates_a90ad44fbf170200d8bd370bc26fbff44}} 
+\index{IO::Astrodynamics::Coordinates::SurfaceCoordinates@{IO::Astrodynamics::Coordinates::SurfaceCoordinates}!SurfaceCoordinates@{SurfaceCoordinates}}
+\index{SurfaceCoordinates@{SurfaceCoordinates}!IO::Astrodynamics::Coordinates::SurfaceCoordinates@{IO::Astrodynamics::Coordinates::SurfaceCoordinates}}
+\doxysubsubsection{\texorpdfstring{SurfaceCoordinates()}{SurfaceCoordinates()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily IO\+::\+Astrodynamics\+::\+Coordinates\+::\+Surface\+Coordinates\+::\+Surface\+Coordinates (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1SurfaceCoordinates}{Surface\+Coordinates}} \&}]{surface\+Coordinates }\end{DoxyParamCaption})}
+
+
+
+Construct a new Surface \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Coordinates}{Coordinates}} object. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em surface\+Coordinates} & \\
+\hline
+\end{DoxyParams}
+
+
+\doxysubsection{Member Function Documentation}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Coordinates_1_1SurfaceCoordinates_a46204d4d7d914892f58d5f724efb77a9}\label{classIO_1_1Astrodynamics_1_1Coordinates_1_1SurfaceCoordinates_a46204d4d7d914892f58d5f724efb77a9}} 
+\index{IO::Astrodynamics::Coordinates::SurfaceCoordinates@{IO::Astrodynamics::Coordinates::SurfaceCoordinates}!AddNormal@{AddNormal}}
+\index{AddNormal@{AddNormal}!IO::Astrodynamics::Coordinates::SurfaceCoordinates@{IO::Astrodynamics::Coordinates::SurfaceCoordinates}}
+\doxysubsubsection{\texorpdfstring{AddNormal()}{AddNormal()}}
+{\footnotesize\ttfamily void IO\+::\+Astrodynamics\+::\+Coordinates\+::\+Surface\+Coordinates\+::\+Add\+Normal (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO\+::\+Astrodynamics\+::\+Math\+::\+Vector3D}} \&}]{normal }\end{DoxyParamCaption})}
+
+
+
+Add normal vector. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em normal} & \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Coordinates_1_1SurfaceCoordinates_a9badf3585e3f0b2de2791a678333a6fc}\label{classIO_1_1Astrodynamics_1_1Coordinates_1_1SurfaceCoordinates_a9badf3585e3f0b2de2791a678333a6fc}} 
+\index{IO::Astrodynamics::Coordinates::SurfaceCoordinates@{IO::Astrodynamics::Coordinates::SurfaceCoordinates}!AddPoint@{AddPoint}}
+\index{AddPoint@{AddPoint}!IO::Astrodynamics::Coordinates::SurfaceCoordinates@{IO::Astrodynamics::Coordinates::SurfaceCoordinates}}
+\doxysubsubsection{\texorpdfstring{AddPoint()}{AddPoint()}}
+{\footnotesize\ttfamily void IO\+::\+Astrodynamics\+::\+Coordinates\+::\+Surface\+Coordinates\+::\+Add\+Point (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO\+::\+Astrodynamics\+::\+Math\+::\+Vector3D}} \&}]{point }\end{DoxyParamCaption})}
+
+
+
+Add a surface point. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em point} & \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Coordinates_1_1SurfaceCoordinates_afed30f75e7a0d2df139e7a046b1a3266}\label{classIO_1_1Astrodynamics_1_1Coordinates_1_1SurfaceCoordinates_afed30f75e7a0d2df139e7a046b1a3266}} 
+\index{IO::Astrodynamics::Coordinates::SurfaceCoordinates@{IO::Astrodynamics::Coordinates::SurfaceCoordinates}!GetSurfaceNormals@{GetSurfaceNormals}}
+\index{GetSurfaceNormals@{GetSurfaceNormals}!IO::Astrodynamics::Coordinates::SurfaceCoordinates@{IO::Astrodynamics::Coordinates::SurfaceCoordinates}}
+\doxysubsubsection{\texorpdfstring{GetSurfaceNormals()}{GetSurfaceNormals()}}
+{\footnotesize\ttfamily const std\+::vector$<$ std\+::unique\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO\+::\+Astrodynamics\+::\+Math\+::\+Vector3D}} $>$ $>$ \& IO\+::\+Astrodynamics\+::\+Coordinates\+::\+Surface\+Coordinates\+::\+Get\+Surface\+Normals (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Get the Surface Normals. 
+
+\begin{DoxyReturn}{Returns}
+const std\+::vector$<$std\+::unique\+\_\+ptr$<$\+IO\+::\+Astrodynamics\+::\+Math\+::\+Vector3\+D$>$$>$\& 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Coordinates_1_1SurfaceCoordinates_a5da3d0dab875b47e48ff0f5620fa5b41}\label{classIO_1_1Astrodynamics_1_1Coordinates_1_1SurfaceCoordinates_a5da3d0dab875b47e48ff0f5620fa5b41}} 
+\index{IO::Astrodynamics::Coordinates::SurfaceCoordinates@{IO::Astrodynamics::Coordinates::SurfaceCoordinates}!GetSurfacePoints@{GetSurfacePoints}}
+\index{GetSurfacePoints@{GetSurfacePoints}!IO::Astrodynamics::Coordinates::SurfaceCoordinates@{IO::Astrodynamics::Coordinates::SurfaceCoordinates}}
+\doxysubsubsection{\texorpdfstring{GetSurfacePoints()}{GetSurfacePoints()}}
+{\footnotesize\ttfamily const std\+::vector$<$ std\+::unique\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO\+::\+Astrodynamics\+::\+Math\+::\+Vector3D}} $>$ $>$ \& IO\+::\+Astrodynamics\+::\+Coordinates\+::\+Surface\+Coordinates\+::\+Get\+Surface\+Points (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Get the Surface Points. 
+
+\begin{DoxyReturn}{Returns}
+const std\+::vector$<$std\+::unique\+\_\+ptr$<$\+IO\+::\+Astrodynamics\+::\+Math\+::\+Vector3\+D$>$$>$\& 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Coordinates_1_1SurfaceCoordinates_ae0c0551d8c3db86994c96b81c11de881}\label{classIO_1_1Astrodynamics_1_1Coordinates_1_1SurfaceCoordinates_ae0c0551d8c3db86994c96b81c11de881}} 
+\index{IO::Astrodynamics::Coordinates::SurfaceCoordinates@{IO::Astrodynamics::Coordinates::SurfaceCoordinates}!operator=@{operator=}}
+\index{operator=@{operator=}!IO::Astrodynamics::Coordinates::SurfaceCoordinates@{IO::Astrodynamics::Coordinates::SurfaceCoordinates}}
+\doxysubsubsection{\texorpdfstring{operator=()}{operator=()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1SurfaceCoordinates}{IO\+::\+Astrodynamics\+::\+Coordinates\+::\+Surface\+Coordinates}} \& IO\+::\+Astrodynamics\+::\+Coordinates\+::\+Surface\+Coordinates\+::operator= (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1SurfaceCoordinates}{Surface\+Coordinates}} \&}]{surface\+Coordinates }\end{DoxyParamCaption})}
+
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+IO.\+Astrodynamics/\+Coordinates/\mbox{\hyperlink{SurfaceCoordinates_8h}{Surface\+Coordinates.\+h}}\item 
+IO.\+Astrodynamics/\+Coordinates/\mbox{\hyperlink{SurfaceCoordinates_8cpp}{Surface\+Coordinates.\+cpp}}\end{DoxyCompactItemize}

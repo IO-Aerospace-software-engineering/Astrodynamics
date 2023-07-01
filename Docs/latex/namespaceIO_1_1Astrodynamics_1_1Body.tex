@@ -1,0 +1,68 @@
+\hypertarget{namespaceIO_1_1Astrodynamics_1_1Body}{}\doxysection{IO\+::Astrodynamics\+::Body Namespace Reference}
+\label{namespaceIO_1_1Astrodynamics_1_1Body}\index{IO::Astrodynamics::Body@{IO::Astrodynamics::Body}}
+\doxysubsection*{Namespaces}
+\begin{DoxyCompactItemize}
+\item 
+namespace \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Body_1_1Spacecraft}{Spacecraft}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+class \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Body}{Body}}
+\begin{DoxyCompactList}\small\item\em \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Body}{Body}} class. \end{DoxyCompactList}\item 
+class \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody}{Celestial\+Body}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+double \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Body_a1039362445a9639e6c76d05476712ce0}{Sphere\+Of\+Influence}} (double a, double major\+Mass, double minor\+Mass)
+\begin{DoxyCompactList}\small\item\em Compute sphere of influence radius. \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Body_a35c41c36330fbaba247227f150813453}{Hill\+Sphere}} (double a, double e, double major\+Mass, double minor\+Mass)
+\begin{DoxyCompactList}\small\item\em Compute Hill sphere radius. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{namespaceIO_1_1Astrodynamics_1_1Body_a35c41c36330fbaba247227f150813453}\label{namespaceIO_1_1Astrodynamics_1_1Body_a35c41c36330fbaba247227f150813453}} 
+\index{IO::Astrodynamics::Body@{IO::Astrodynamics::Body}!HillSphere@{HillSphere}}
+\index{HillSphere@{HillSphere}!IO::Astrodynamics::Body@{IO::Astrodynamics::Body}}
+\doxysubsubsection{\texorpdfstring{HillSphere()}{HillSphere()}}
+{\footnotesize\ttfamily double IO\+::\+Astrodynamics\+::\+Body\+::\+Hill\+Sphere (\begin{DoxyParamCaption}\item[{double}]{a,  }\item[{double}]{e,  }\item[{double}]{major\+Mass,  }\item[{double}]{minor\+Mass }\end{DoxyParamCaption})}
+
+
+
+Compute Hill sphere radius. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em a} & Semi major axis \\
+\hline
+{\em major\+Mass} & Major body \\
+\hline
+{\em minor\+Mass} & minor body \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+double 
+\end{DoxyReturn}
+\mbox{\Hypertarget{namespaceIO_1_1Astrodynamics_1_1Body_a1039362445a9639e6c76d05476712ce0}\label{namespaceIO_1_1Astrodynamics_1_1Body_a1039362445a9639e6c76d05476712ce0}} 
+\index{IO::Astrodynamics::Body@{IO::Astrodynamics::Body}!SphereOfInfluence@{SphereOfInfluence}}
+\index{SphereOfInfluence@{SphereOfInfluence}!IO::Astrodynamics::Body@{IO::Astrodynamics::Body}}
+\doxysubsubsection{\texorpdfstring{SphereOfInfluence()}{SphereOfInfluence()}}
+{\footnotesize\ttfamily double IO\+::\+Astrodynamics\+::\+Body\+::\+Sphere\+Of\+Influence (\begin{DoxyParamCaption}\item[{double}]{a,  }\item[{double}]{major\+Mass,  }\item[{double}]{minor\+Mass }\end{DoxyParamCaption})}
+
+
+
+Compute sphere of influence radius. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em a} & Semi major axis \\
+\hline
+{\em major\+Mass} & Major body \\
+\hline
+{\em minor\+Mass} & Minor body \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+double 
+\end{DoxyReturn}

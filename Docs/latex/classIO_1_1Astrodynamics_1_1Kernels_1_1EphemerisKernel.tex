@@ -1,0 +1,119 @@
+\hypertarget{classIO_1_1Astrodynamics_1_1Kernels_1_1EphemerisKernel}{}\doxysection{IO\+::Astrodynamics\+::Kernels\+::Ephemeris\+Kernel Class Reference}
+\label{classIO_1_1Astrodynamics_1_1Kernels_1_1EphemerisKernel}\index{IO::Astrodynamics::Kernels::EphemerisKernel@{IO::Astrodynamics::Kernels::EphemerisKernel}}
+
+
+Ephemeris kernel.  
+
+
+
+
+{\ttfamily \#include $<$Ephemeris\+Kernel.\+h$>$}
+
+Inheritance diagram for IO\+::Astrodynamics\+::Kernels\+::Ephemeris\+Kernel\+:\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=2.000000cm]{classIO_1_1Astrodynamics_1_1Kernels_1_1EphemerisKernel}
+\end{center}
+\end{figure}
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1EphemerisKernel_ab8c109ac35b9b62cff5581766e312212}{Ephemeris\+Kernel}} (std\+::string file\+Path, int object\+Id)
+\begin{DoxyCompactList}\small\item\em Construct a new Ephemeris \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1Kernel}{Kernel}} object. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1EphemerisKernel_a492e0cb0f2b55f2c87d4da9ca8bc2618}{$\sim$\+Ephemeris\+Kernel}} () override=default
+\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+State\+Vector}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1EphemerisKernel_a0cc3b54cc4014365ac399fcf76af4ced}{Read\+State\+Vector}} (const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody}{IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Body}} \&observer, const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Frames_1_1Frames}{IO\+::\+Astrodynamics\+::\+Frames\+::\+Frames}} \&frame, \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_af0023a81d12385b73d78bd82e4b96ce3}{IO\+::\+Astrodynamics\+::\+Aberrations\+Enum}} aberration, const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} \&epoch) const
+\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{IO\+::\+Astrodynamics\+::\+Time\+::\+Window}}$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} $>$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1EphemerisKernel_af73e4dab8030b289c8b3e9a07894d1de}{Get\+Coverage\+Window}} () const override
+\begin{DoxyCompactList}\small\item\em Get the Coverage Window. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1EphemerisKernel_a35701339a0f68ff4767fe10dbebd1ed2}{Write\+Data}} (const std\+::vector$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}{Orbital\+Parameters\+::\+State\+Vector}} $>$ \&states)
+\begin{DoxyCompactList}\small\item\em Write date to ephemeris file. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsection*{Additional Inherited Members}
+
+
+\doxysubsection{Detailed Description}
+Ephemeris kernel. 
+
+\doxysubsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Kernels_1_1EphemerisKernel_ab8c109ac35b9b62cff5581766e312212}\label{classIO_1_1Astrodynamics_1_1Kernels_1_1EphemerisKernel_ab8c109ac35b9b62cff5581766e312212}} 
+\index{IO::Astrodynamics::Kernels::EphemerisKernel@{IO::Astrodynamics::Kernels::EphemerisKernel}!EphemerisKernel@{EphemerisKernel}}
+\index{EphemerisKernel@{EphemerisKernel}!IO::Astrodynamics::Kernels::EphemerisKernel@{IO::Astrodynamics::Kernels::EphemerisKernel}}
+\doxysubsubsection{\texorpdfstring{EphemerisKernel()}{EphemerisKernel()}}
+{\footnotesize\ttfamily IO\+::\+Astrodynamics\+::\+Kernels\+::\+Ephemeris\+Kernel\+::\+Ephemeris\+Kernel (\begin{DoxyParamCaption}\item[{std\+::string}]{file\+Path,  }\item[{int}]{object\+Id }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [explicit]}}
+
+
+
+Construct a new Ephemeris \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1Kernel}{Kernel}} object. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em spacecraft} & \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Kernels_1_1EphemerisKernel_a492e0cb0f2b55f2c87d4da9ca8bc2618}\label{classIO_1_1Astrodynamics_1_1Kernels_1_1EphemerisKernel_a492e0cb0f2b55f2c87d4da9ca8bc2618}} 
+\index{IO::Astrodynamics::Kernels::EphemerisKernel@{IO::Astrodynamics::Kernels::EphemerisKernel}!````~EphemerisKernel@{$\sim$EphemerisKernel}}
+\index{````~EphemerisKernel@{$\sim$EphemerisKernel}!IO::Astrodynamics::Kernels::EphemerisKernel@{IO::Astrodynamics::Kernels::EphemerisKernel}}
+\doxysubsubsection{\texorpdfstring{$\sim$EphemerisKernel()}{~EphemerisKernel()}}
+{\footnotesize\ttfamily IO\+::\+Astrodynamics\+::\+Kernels\+::\+Ephemeris\+Kernel\+::$\sim$\+Ephemeris\+Kernel (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [default]}}
+
+
+
+\doxysubsection{Member Function Documentation}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Kernels_1_1EphemerisKernel_af73e4dab8030b289c8b3e9a07894d1de}\label{classIO_1_1Astrodynamics_1_1Kernels_1_1EphemerisKernel_af73e4dab8030b289c8b3e9a07894d1de}} 
+\index{IO::Astrodynamics::Kernels::EphemerisKernel@{IO::Astrodynamics::Kernels::EphemerisKernel}!GetCoverageWindow@{GetCoverageWindow}}
+\index{GetCoverageWindow@{GetCoverageWindow}!IO::Astrodynamics::Kernels::EphemerisKernel@{IO::Astrodynamics::Kernels::EphemerisKernel}}
+\doxysubsubsection{\texorpdfstring{GetCoverageWindow()}{GetCoverageWindow()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{IO\+::\+Astrodynamics\+::\+Time\+::\+Window}}$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} $>$ IO\+::\+Astrodynamics\+::\+Kernels\+::\+Ephemeris\+Kernel\+::\+Get\+Coverage\+Window (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Get the Coverage Window. 
+
+\begin{DoxyReturn}{Returns}
+IO\+::\+Astrodynamics\+::\+Time\+::\+Window$<$\+IO\+::\+Astrodynamics\+::\+Time\+::\+TDB$>$ 
+\end{DoxyReturn}
+
+
+Implements \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1Kernel_a37d56a388d8225557f5c9dbb3414fbba}{IO\+::\+Astrodynamics\+::\+Kernels\+::\+Kernel}}.
+
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Kernels_1_1EphemerisKernel_a0cc3b54cc4014365ac399fcf76af4ced}\label{classIO_1_1Astrodynamics_1_1Kernels_1_1EphemerisKernel_a0cc3b54cc4014365ac399fcf76af4ced}} 
+\index{IO::Astrodynamics::Kernels::EphemerisKernel@{IO::Astrodynamics::Kernels::EphemerisKernel}!ReadStateVector@{ReadStateVector}}
+\index{ReadStateVector@{ReadStateVector}!IO::Astrodynamics::Kernels::EphemerisKernel@{IO::Astrodynamics::Kernels::EphemerisKernel}}
+\doxysubsubsection{\texorpdfstring{ReadStateVector()}{ReadStateVector()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+State\+Vector}} IO\+::\+Astrodynamics\+::\+Kernels\+::\+Ephemeris\+Kernel\+::\+Read\+State\+Vector (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody}{IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Body}} \&}]{observer,  }\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Frames_1_1Frames}{IO\+::\+Astrodynamics\+::\+Frames\+::\+Frames}} \&}]{frame,  }\item[{\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_af0023a81d12385b73d78bd82e4b96ce3}{IO\+::\+Astrodynamics\+::\+Aberrations\+Enum}}}]{aberration,  }\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} \&}]{epoch }\end{DoxyParamCaption}) const}
+
+
+\begin{DoxyParams}{Parameters}
+{\em observer} & \\
+\hline
+{\em frame} & \\
+\hline
+{\em aberration} & \\
+\hline
+{\em epoch} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+State\+Vector}} 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Kernels_1_1EphemerisKernel_a35701339a0f68ff4767fe10dbebd1ed2}\label{classIO_1_1Astrodynamics_1_1Kernels_1_1EphemerisKernel_a35701339a0f68ff4767fe10dbebd1ed2}} 
+\index{IO::Astrodynamics::Kernels::EphemerisKernel@{IO::Astrodynamics::Kernels::EphemerisKernel}!WriteData@{WriteData}}
+\index{WriteData@{WriteData}!IO::Astrodynamics::Kernels::EphemerisKernel@{IO::Astrodynamics::Kernels::EphemerisKernel}}
+\doxysubsubsection{\texorpdfstring{WriteData()}{WriteData()}}
+{\footnotesize\ttfamily void IO\+::\+Astrodynamics\+::\+Kernels\+::\+Ephemeris\+Kernel\+::\+Write\+Data (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}{Orbital\+Parameters\+::\+State\+Vector}} $>$ \&}]{states }\end{DoxyParamCaption})}
+
+
+
+Write date to ephemeris file. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em states} & \\
+\hline
+\end{DoxyParams}
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+IO.\+Astrodynamics/\+Kernels/\mbox{\hyperlink{EphemerisKernel_8h}{Ephemeris\+Kernel.\+h}}\item 
+IO.\+Astrodynamics/\+Kernels/\mbox{\hyperlink{EphemerisKernel_8cpp}{Ephemeris\+Kernel.\+cpp}}\end{DoxyCompactItemize}

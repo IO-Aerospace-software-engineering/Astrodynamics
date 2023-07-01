@@ -1,0 +1,118 @@
+\hypertarget{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ApogeeHeightChangingManeuver}{}\doxysection{IO\+::Astrodynamics\+::Maneuvers\+::Apogee\+Height\+Changing\+Maneuver Class Reference}
+\label{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ApogeeHeightChangingManeuver}\index{IO::Astrodynamics::Maneuvers::ApogeeHeightChangingManeuver@{IO::Astrodynamics::Maneuvers::ApogeeHeightChangingManeuver}}
+
+
+{\ttfamily \#include $<$Apogee\+Height\+Changing\+Maneuver.\+h$>$}
+
+Inheritance diagram for IO\+::Astrodynamics\+::Maneuvers\+::Apogee\+Height\+Changing\+Maneuver\+:\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=2.000000cm]{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ApogeeHeightChangingManeuver}
+\end{center}
+\end{figure}
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ApogeeHeightChangingManeuver_a92960ffaf702a70b95ba28fb1c87e987}{Apogee\+Height\+Changing\+Maneuver}} (std\+::vector$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Engine}{IO\+::\+Astrodynamics\+::\+Body\+::\+Spacecraft\+::\+Engine}} $\ast$ $>$ engines, \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Propagators_1_1Propagator}{IO\+::\+Astrodynamics\+::\+Propagators\+::\+Propagator}} \&propagator, double target\+Height)
+\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ApogeeHeightChangingManeuver_ac3996cb2f03a08ef9a80f748c528e79e}{Apogee\+Height\+Changing\+Maneuver}} (std\+::vector$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Engine}{IO\+::\+Astrodynamics\+::\+Body\+::\+Spacecraft\+::\+Engine}} $\ast$ $>$ engines, \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Propagators_1_1Propagator}{IO\+::\+Astrodynamics\+::\+Propagators\+::\+Propagator}} \&propagator, double target\+Height, const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} \&minimum\+Epoch)
+\item 
+bool \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ApogeeHeightChangingManeuver_a4aed2172237387da555ed1554d225f44}{Can\+Execute}} (const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}} \&orbital\+Params) override
+\begin{DoxyCompactList}\small\item\em Evaluate if maneuver can occurs. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsection*{Protected Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+void \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ApogeeHeightChangingManeuver_afd6b5cc561063f02e8b9302714b53be4}{Compute}} (const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}} \&maneuver\+Point) override
+\begin{DoxyCompactList}\small\item\em Compute impulsive maneuver. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateOrientation}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+State\+Orientation}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ApogeeHeightChangingManeuver_ac132f5ddf892a25cbd481df444e27ecc}{Compute\+Orientation}} (const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}} \&maneuver\+Point) override
+\begin{DoxyCompactList}\small\item\em Compute orientation. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsection*{Additional Inherited Members}
+
+
+\doxysubsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ApogeeHeightChangingManeuver_a92960ffaf702a70b95ba28fb1c87e987}\label{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ApogeeHeightChangingManeuver_a92960ffaf702a70b95ba28fb1c87e987}} 
+\index{IO::Astrodynamics::Maneuvers::ApogeeHeightChangingManeuver@{IO::Astrodynamics::Maneuvers::ApogeeHeightChangingManeuver}!ApogeeHeightChangingManeuver@{ApogeeHeightChangingManeuver}}
+\index{ApogeeHeightChangingManeuver@{ApogeeHeightChangingManeuver}!IO::Astrodynamics::Maneuvers::ApogeeHeightChangingManeuver@{IO::Astrodynamics::Maneuvers::ApogeeHeightChangingManeuver}}
+\doxysubsubsection{\texorpdfstring{ApogeeHeightChangingManeuver()}{ApogeeHeightChangingManeuver()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Apogee\+Height\+Changing\+Maneuver\+::\+Apogee\+Height\+Changing\+Maneuver (\begin{DoxyParamCaption}\item[{std\+::vector$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Engine}{IO\+::\+Astrodynamics\+::\+Body\+::\+Spacecraft\+::\+Engine}} $\ast$ $>$}]{engines,  }\item[{\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Propagators_1_1Propagator}{IO\+::\+Astrodynamics\+::\+Propagators\+::\+Propagator}} \&}]{propagator,  }\item[{double}]{target\+Height }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ApogeeHeightChangingManeuver_ac3996cb2f03a08ef9a80f748c528e79e}\label{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ApogeeHeightChangingManeuver_ac3996cb2f03a08ef9a80f748c528e79e}} 
+\index{IO::Astrodynamics::Maneuvers::ApogeeHeightChangingManeuver@{IO::Astrodynamics::Maneuvers::ApogeeHeightChangingManeuver}!ApogeeHeightChangingManeuver@{ApogeeHeightChangingManeuver}}
+\index{ApogeeHeightChangingManeuver@{ApogeeHeightChangingManeuver}!IO::Astrodynamics::Maneuvers::ApogeeHeightChangingManeuver@{IO::Astrodynamics::Maneuvers::ApogeeHeightChangingManeuver}}
+\doxysubsubsection{\texorpdfstring{ApogeeHeightChangingManeuver()}{ApogeeHeightChangingManeuver()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Apogee\+Height\+Changing\+Maneuver\+::\+Apogee\+Height\+Changing\+Maneuver (\begin{DoxyParamCaption}\item[{std\+::vector$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Engine}{IO\+::\+Astrodynamics\+::\+Body\+::\+Spacecraft\+::\+Engine}} $\ast$ $>$}]{engines,  }\item[{\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Propagators_1_1Propagator}{IO\+::\+Astrodynamics\+::\+Propagators\+::\+Propagator}} \&}]{propagator,  }\item[{double}]{target\+Height,  }\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} \&}]{minimum\+Epoch }\end{DoxyParamCaption})}
+
+
+
+\doxysubsection{Member Function Documentation}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ApogeeHeightChangingManeuver_a4aed2172237387da555ed1554d225f44}\label{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ApogeeHeightChangingManeuver_a4aed2172237387da555ed1554d225f44}} 
+\index{IO::Astrodynamics::Maneuvers::ApogeeHeightChangingManeuver@{IO::Astrodynamics::Maneuvers::ApogeeHeightChangingManeuver}!CanExecute@{CanExecute}}
+\index{CanExecute@{CanExecute}!IO::Astrodynamics::Maneuvers::ApogeeHeightChangingManeuver@{IO::Astrodynamics::Maneuvers::ApogeeHeightChangingManeuver}}
+\doxysubsubsection{\texorpdfstring{CanExecute()}{CanExecute()}}
+{\footnotesize\ttfamily bool IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Apogee\+Height\+Changing\+Maneuver\+::\+Can\+Execute (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}} \&}]{orbital\+Params }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Evaluate if maneuver can occurs. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em state\+Vector} & Evaluated to check if condition is satisfied \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+true 
+
+false 
+\end{DoxyReturn}
+
+
+Implements \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_a9bc46694a197868297955930c9edd531}{IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Maneuver\+Base}}.
+
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ApogeeHeightChangingManeuver_afd6b5cc561063f02e8b9302714b53be4}\label{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ApogeeHeightChangingManeuver_afd6b5cc561063f02e8b9302714b53be4}} 
+\index{IO::Astrodynamics::Maneuvers::ApogeeHeightChangingManeuver@{IO::Astrodynamics::Maneuvers::ApogeeHeightChangingManeuver}!Compute@{Compute}}
+\index{Compute@{Compute}!IO::Astrodynamics::Maneuvers::ApogeeHeightChangingManeuver@{IO::Astrodynamics::Maneuvers::ApogeeHeightChangingManeuver}}
+\doxysubsubsection{\texorpdfstring{Compute()}{Compute()}}
+{\footnotesize\ttfamily void IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Apogee\+Height\+Changing\+Maneuver\+::\+Compute (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}} \&}]{maneuver\+Point }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [protected]}, {\ttfamily [virtual]}}
+
+
+
+Compute impulsive maneuver. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em maneuver\+Point} & \\
+\hline
+\end{DoxyParams}
+
+
+Implements \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_a1df25da25e0f4c14744f9b37f29dad90}{IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Maneuver\+Base}}.
+
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ApogeeHeightChangingManeuver_ac132f5ddf892a25cbd481df444e27ecc}\label{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ApogeeHeightChangingManeuver_ac132f5ddf892a25cbd481df444e27ecc}} 
+\index{IO::Astrodynamics::Maneuvers::ApogeeHeightChangingManeuver@{IO::Astrodynamics::Maneuvers::ApogeeHeightChangingManeuver}!ComputeOrientation@{ComputeOrientation}}
+\index{ComputeOrientation@{ComputeOrientation}!IO::Astrodynamics::Maneuvers::ApogeeHeightChangingManeuver@{IO::Astrodynamics::Maneuvers::ApogeeHeightChangingManeuver}}
+\doxysubsubsection{\texorpdfstring{ComputeOrientation()}{ComputeOrientation()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateOrientation}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+State\+Orientation}} IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Apogee\+Height\+Changing\+Maneuver\+::\+Compute\+Orientation (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}} \&}]{maneuver\+Point }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [protected]}, {\ttfamily [virtual]}}
+
+
+
+Compute orientation. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em maneuver\+Point} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateOrientation}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+State\+Orientation}} 
+\end{DoxyReturn}
+
+
+Implements \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase_a9f13935c641a5c447000e5e8cbe54f19}{IO\+::\+Astrodynamics\+::\+Maneuvers\+::\+Maneuver\+Base}}.
+
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+IO.\+Astrodynamics/\+Maneuvers/\mbox{\hyperlink{ApogeeHeightChangingManeuver_8h}{Apogee\+Height\+Changing\+Maneuver.\+h}}\item 
+IO.\+Astrodynamics/\+Maneuvers/\mbox{\hyperlink{ApogeeHeightChangingManeuver_8cpp}{Apogee\+Height\+Changing\+Maneuver.\+cpp}}\end{DoxyCompactItemize}
