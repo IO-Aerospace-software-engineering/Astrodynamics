@@ -1,4 +1,4 @@
-name: IO SDK integration
+name: IO Astrodynamics integration
 
 on:
   pull_request:
