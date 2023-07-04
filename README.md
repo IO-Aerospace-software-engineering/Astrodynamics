@@ -46,7 +46,7 @@ In this quick start you have 2 options to install the framework, one from binari
 2. From the dll package you just downloaded
    - Copy **Includes** folder at the root of the project
    - Copy **IO.Astrodynamics.dll** and **IO.Astrodynamics.lib** in the root folder(used to link libraries) and in the build folder(used at runtime).
-   - Copy folder **Data** into your computer. 
+   - Copy **Data** folder into your computer. 
 
     You should have a folder tree like that :
    
