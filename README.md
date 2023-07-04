@@ -37,15 +37,7 @@ In this quick start you have 2 options to install the framework, one from binari
 
 2. Extract **Includes** folder from archive IO-Toolkit-Linux-vx.x.xx-x to folder /usr/local/include/IO/.
 3. Copy **libIO.Astrodynamics.so** to /usr/local/lib/
-
-4. Extract **Data** folder from archive IO-Toolkit-Linux-vx.x.xx-x to your build folder.
-5. You should have :
-    ```
-    YourProject
-        | build
-           | Data
-    ```
-
+4. Extract **Data** folder from archive IO-Toolkit-Linux-vx.x.xx-x into your computer.
 
 ### On Windows
 
@@ -54,15 +46,14 @@ In this quick start you have 2 options to install the framework, one from binari
 2. From the dll package you just downloaded
    - Copy **Includes** folder at the root of the project
    - Copy **IO.Astrodynamics.dll** and **IO.Astrodynamics.lib** in the root folder(used to link libraries) and in the build folder(used at runtime).
-   - Copy folder : **Data** into the build folder\ 
+   - Copy folder **Data** into your computer. 
 
     You should have a folder tree like that :
    
     ```
     YourProject
       | Includes
-      | build
-         | Data
+      | build         
          | IO.Astrodynamics.dll
          | IO.Astrodynamics.lib
       | IO.Astrodynamics.dll
@@ -95,15 +86,6 @@ cmake --build . --config Release --target IO.Astrodynamics -j 4
 #This command must be executed with admin rights
 cmake --install IO.Astrodynamics
 
-#When you create a project that will use the framework, don't forget to import **Data** into your build directory.
-#We suggest you to use Data from IO.Astrodynamics.Tests project because these data have been used to approved software
-#You could use one of these scripts to copy data folder:
-#========Windows user======== : 
-cp ../IO.Astrodynamics.Tests/Data/Windows/ <your build path>
-
-#========Linux user======== : 
-cp ../IO.Astrodynamics.Tests/Data/Linux/ <your build path>
-
 ```
 
 :warning: Windows users :warning:
@@ -115,7 +97,6 @@ Windows users should have a folder tree like that for their project :
  YourProject
    | Includes
    | build_release
-      | Data
       | IO.Astrodynamics.dll
       | IO.Astrodynamics.lib
    | IO.Astrodynamics.dll
@@ -126,7 +107,6 @@ Linux users should have a folder tree like that :
 ```
 YourProject
    | build_release
-      | Data
 ```
     
 ## Use the framework
