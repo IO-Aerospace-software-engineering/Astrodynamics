@@ -140,7 +140,7 @@ In this example we will create a small program based on cmake to compute maneuve
     endif ()
     ```
 
-2. You can create a scenario based on this [Example](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/tree/develop/IO.Astrodynamics.Scenarios/Program.cpp)
+2. You can create a scenario based on this [Example](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/blob/main/IO.Astrodynamics.Scenarios/Program.cpp)
 
 3. When you execute it, you should have this output :
 ```CMD
