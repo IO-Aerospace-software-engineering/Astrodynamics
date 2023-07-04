@@ -443,7 +443,7 @@ TEST(API, TransformFrame)
 TEST(API, ConvertTLEToStateVectorProxy)
 {
     IO::Astrodynamics::Time::TDB epoch("2021-01-20T18:50:13.663106");
-    auto stateVector = ConvertTLEToStateVectorProxy(
+    auto stateVector = ConvertTLEToStateVectorProxy("ISS",
             "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703",
             epoch.GetSecondsFromJ2000().count());
@@ -454,6 +454,23 @@ TEST(API, ConvertTLEToStateVectorProxy)
     ASSERT_DOUBLE_EQ(2575.7226437161635, stateVector.velocity.y);
     ASSERT_DOUBLE_EQ(4271.5974622410786, stateVector.velocity.z);
     ASSERT_DOUBLE_EQ(664440682.84760022, stateVector.epoch);
+}
+
+TEST(API, GetTLEElementsProxy)
+{
+    auto res = GetTLEElementsProxy("ISS",
+                                                    "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
+                                                    "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
+    ASSERT_DOUBLE_EQ(6803376.2171725659, res.A);
+    ASSERT_DOUBLE_EQ(4.9299999999999999e-05, res.E);
+    ASSERT_DOUBLE_EQ(0.9013281683026676, res.I);
+    ASSERT_DOUBLE_EQ(6.1615568022666061, res.O);
+    ASSERT_DOUBLE_EQ(5.6003339639830649, res.W);
+    ASSERT_DOUBLE_EQ(0.68479738531249512, res.M);
+    ASSERT_DOUBLE_EQ(664419082.8475914, res.Epoch);
+    ASSERT_DOUBLE_EQ(5.06539394194257e-10, res.BalisticCoefficient);
+    ASSERT_DOUBLE_EQ(0.0001027, res.DragTerm);
+    ASSERT_DOUBLE_EQ(0.0, res.SecondDerivativeOfMeanMotion);
 }
 
 TEST(API, ConvertConicOrbitalElementsToStateVector)

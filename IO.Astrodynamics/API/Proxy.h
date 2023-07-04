@@ -11,6 +11,7 @@
 #include <EquinoctialElementsDTO.h>
 #include <RaDecDTO.h>
 #include <HorizontalDTO.h>
+#include <TLEElementsDTO.h>
 
 #pragma region Proxy
 #ifdef __cplusplus
@@ -252,7 +253,7 @@ MODULE_API IO::Astrodynamics::API::DTO::FrameTransformationDTO TransformFramePro
  * @param epoch
  * @return
  */
-MODULE_API IO::Astrodynamics::API::DTO::StateVectorDTO ConvertTLEToStateVectorProxy(const char *L1, const char *L2, double epoch);
+MODULE_API IO::Astrodynamics::API::DTO::StateVectorDTO ConvertTLEToStateVectorProxy(const char *L1, const char *L2, const char *L3, double epoch);
 
 /**
  * Convert conic orbital elements to state vector
@@ -275,6 +276,7 @@ MODULE_API IO::Astrodynamics::API::DTO::StateVectorDTO ConvertEquinoctialElement
  */
 MODULE_API IO::Astrodynamics::API::DTO::RaDecDTO ConvertStateVectorToEquatorialCoordinatesProxy(IO::Astrodynamics::API::DTO::StateVectorDTO stateVectorDto);
 MODULE_API IO::Astrodynamics::API::DTO::HorizontalDTO GetHorizontalCoordinates(IO::Astrodynamics::API::DTO::StateVectorDTO stateVectorDto);
+MODULE_API IO::Astrodynamics::API::DTO::TLEElementsDTO GetTLEElementsProxy(const char *L1, const char *L2, const char *L3);
 #ifdef __cplusplus
 }
 #endif
@@ -286,7 +288,8 @@ MODULE_API IO::Astrodynamics::API::DTO::HorizontalDTO GetHorizontalCoordinates(I
 
 static constexpr const int lenout = 33;
 
-char * HandleError();
+char *HandleError();
+
 void ActivateErrorManagement();
 
 std::map<int, std::shared_ptr<IO::Astrodynamics::Body::CelestialBody>>
