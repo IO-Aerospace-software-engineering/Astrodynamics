@@ -37,7 +37,11 @@ In this quick start you have 2 options to install the framework, one from binari
 
 2. Extract **Includes** folder from archive IO-Toolkit-Linux-vx.x.xx-x to folder /usr/local/include/IO/.
 3. Copy **libIO.Astrodynamics.so** to /usr/local/lib/
-4. Extract **Data** folder from archive IO-Toolkit-Linux-vx.x.xx-x into your computer.
+4. Extract **Data** folder from archive IO-Toolkit-Linux-vx.x.xx-x into your computer. This data folder contains main solar system kernels.
+5. You will need to load these data in your program with the following recursive function
+```C++
+IO::Astrodynamics::Kernels::KernelsLoader::Load("Data/SolarSystem");
+```
 
 ### On Windows
 
@@ -46,7 +50,11 @@ In this quick start you have 2 options to install the framework, one from binari
 2. From the dll package you just downloaded
    - Copy **Includes** folder at the root of the project
    - Copy **IO.Astrodynamics.dll** and **IO.Astrodynamics.lib** in the root folder(used to link libraries) and in the build folder(used at runtime).
-   - Copy **Data** folder into your computer. 
+   - Copy **Data** folder into your computer. This data folder contains main solar system kernels.
+3. You will need to load these data in your program with the following recursive function
+```C++
+IO::Astrodynamics::Kernels::KernelsLoader::Load("Data/SolarSystem");
+```
 
     You should have a folder tree like that :
    
