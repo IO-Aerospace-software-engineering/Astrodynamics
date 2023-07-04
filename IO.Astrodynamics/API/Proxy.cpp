@@ -628,11 +628,11 @@ TransformFrameProxy(const char *fromFrame, const char *toFrame, double epoch)
     return frameTransformationDto;
 }
 
-IO::Astrodynamics::API::DTO::StateVectorDTO ConvertTLEToStateVectorProxy(const char *L1, const char *L2, double epoch)
+IO::Astrodynamics::API::DTO::StateVectorDTO ConvertTLEToStateVectorProxy(const char *L1, const char *L2, const char *L3, double epoch)
 {
     ActivateErrorManagement();
     auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399);
-    std::string strings[3] = {"ISS", L1, L2};
+    std::string strings[3] = {L1, L2, L3};
     IO::Astrodynamics::OrbitalParameters::TLE tle(earth, strings);
     auto sv = tle.ToStateVector(IO::Astrodynamics::Time::TDB(std::chrono::duration<double>(epoch)));
     auto svDTO = ToStateVectorDTO(sv);
@@ -741,6 +741,34 @@ IO::Astrodynamics::API::DTO::StateVectorDTO ReadEphemerisAtGivenEpochProxy(doubl
         stateVectorDto.Error = strdup(HandleError());
     }
     return stateVectorDto;
+}
+
+IO::Astrodynamics::API::DTO::TLEElementsDTO GetTLEElementsProxy(const char *L1, const char *L2, const char *L3)
+{
+    ActivateErrorManagement();
+    std::string lines[3]{L1, L2, L3};
+    auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399);
+    IO::Astrodynamics::OrbitalParameters::TLE tle(earth, lines);
+
+    IO::Astrodynamics::API::DTO::TLEElementsDTO tleElementsDto;
+
+    tleElementsDto.A = tle.GetSemiMajorAxis();
+    tleElementsDto.E = tle.GetEccentricity();
+    tleElementsDto.I = tle.GetInclination();
+    tleElementsDto.O = tle.GetRightAscendingNodeLongitude();
+    tleElementsDto.W = tle.GetPeriapsisArgument();
+    tleElementsDto.M = tle.GetMeanAnomaly();
+
+    tleElementsDto.Epoch = tle.GetEpoch().GetSecondsFromJ2000().count();
+
+    tleElementsDto.BalisticCoefficient = tle.GetBalisticCoefficient();
+    tleElementsDto.DragTerm = tle.GetDragTerm();
+    tleElementsDto.SecondDerivativeOfMeanMotion = tle.GetSecondDerivativeOfMeanMotion();
+    if (failed_c())
+    {
+        tleElementsDto.Error = strdup(HandleError());
+    }
+    return tleElementsDto;
 }
 
 #pragma endregion
