@@ -56,17 +56,17 @@ IO::Astrodynamics::Kernels::KernelsLoader::Load("Data/SolarSystem");
 IO::Astrodynamics::Kernels::KernelsLoader::Load("Data/SolarSystem");
 ```
 
-    You should have a folder tree like that :
-   
-    ```
-    YourProject
-      | Includes
-      | build         
-         | IO.Astrodynamics.dll
-         | IO.Astrodynamics.lib
-      | IO.Astrodynamics.dll
-      | IO.Astrodynamics.lib
-    ```
+You should have a folder tree like that :
+
+```
+YourProject
+  | Includes
+  | build         
+     | IO.Astrodynamics.dll
+     | IO.Astrodynamics.lib
+  | IO.Astrodynamics.dll
+  | IO.Astrodynamics.lib
+```
 
 ## Option 2 - Build and install from source code
     
