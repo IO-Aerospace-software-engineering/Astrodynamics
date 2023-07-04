@@ -1,4 +1,4 @@
-# SDK
+# Astrodynamics
 Welcome!
 
 Astrodynamics toolkit can be seen as an extension and a C++ wrapper of cspice toolkit(N 67) developped by the JPL.
@@ -14,21 +14,21 @@ The goal of this project is to :
     
 ## Project status
 
-[![IO SDK Integration](https://github.com/IO-Aerospace-software-engineering/SDK/actions/workflows/cmake.yml/badge.svg?branch=develop)](https://github.com/IO-Aerospace-software-engineering/SDK/actions/workflows/cmake.yml)
+[![IO Astrodynamics Integration](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/actions/workflows/cmake.yml/badge.svg?branch=develop)](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/actions/workflows/cmake.yml)
 
-[![IO SDK Code coverage](https://img.shields.io/badge/Code%20coverage-Passing-Green.svg)](https://htmlpreview.github.io/?https://github.com/IO-Aerospace-software-engineering/SDK/blob/develop/coverage/index.html)
+[![IO Astrodynamics Code coverage](https://img.shields.io/badge/Code%20coverage-Passing-Green.svg)](https://htmlpreview.github.io/?https://github.com/IO-Aerospace-software-engineering/Astrodynamics/blob/develop/coverage/index.html)
 
 # Quick start
-## Download SDK
+## Download Astrodynamics framework
 Download the latest Linux or Windows release :
-[Releases](https://github.com/IO-Aerospace-software-engineering/SDK/releases)
+[Releases](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/releases)
 
 At this stage we assume that you have mastered your development environment but if you need some advises for yours developments we suggest you this approach :
 - [Cross plateform development](https://code.visualstudio.com/docs/cpp/cmake-linux)
 - [Linux development](https://code.visualstudio.com/docs/cpp/config-linux)
 - [Windows development](https://code.visualstudio.com/docs/cpp/config-mingw)
 
-In this quick start you have 2 options to install the SDK, one from binaries another from cmake.
+In this quick start you have 2 options to install the framework, one from binaries another from cmake.
 
 ## Option 1 - Install from binaries
 ### On Linux
@@ -36,7 +36,7 @@ In this quick start you have 2 options to install the SDK, one from binaries ano
 1. Create your C/C++ project folder, in this example we assume your output path will be called "build" but you can use the name of your choice. 
 
 2. Extract **Includes** folder from archive IO-Toolkit-Linux-vx.x.xx-x to folder /usr/local/include/IO/.
-3. Copy **libIO.SDK.so** to /usr/local/lib/
+3. Copy **libIO.Astrodynamics.so** to /usr/local/lib/
 
 4. Extract **Data** folder from archive IO-Toolkit-Linux-vx.x.xx-x to your build folder.
 5. You should have :
@@ -53,7 +53,7 @@ In this quick start you have 2 options to install the SDK, one from binaries ano
 
 2. From the dll package you just downloaded
    - Copy **Includes** folder at the root of the project
-   - Copy **IO.SDK.dll** and **IO.SDK.lib** in the root folder(used to link libraries) and in the build folder(used at runtime).
+   - Copy **IO.Astrodynamics.dll** and **IO.Astrodynamics.lib** in the root folder(used to link libraries) and in the build folder(used at runtime).
    - Copy folder : **Data** into the build folder\ 
 
     You should have a folder tree like that :
@@ -63,20 +63,20 @@ In this quick start you have 2 options to install the SDK, one from binaries ano
       | Includes
       | build
          | Data
-         | IO.SDK.dll
-         | IO.SDK.lib
-      | IO.SDK.dll
-      | IO.SDK.lib
+         | IO.Astrodynamics.dll
+         | IO.Astrodynamics.lib
+      | IO.Astrodynamics.dll
+      | IO.Astrodynamics.lib
     ```
 
 ## Option 2 - Build and install from source code
     
 ```bash
 #Clone project    
-git clone https://github.com/IO-Aerospace-software-engineering/SDK.git
+git clone https://github.com/IO-Aerospace-software-engineering/Astrodynamics.git
 
 #Go into directory
-cd SDK
+cd Astrodynamics
 
 #Create build directory    
 mkdir build_release
@@ -95,7 +95,7 @@ cmake --build . --config Release --target IO.Astrodynamics -j 4
 #This command must be executed with admin rights
 cmake --install IO.Astrodynamics
 
-#When you create a project that will use the SDK, don't forget to import **Data** into your build directory.
+#When you create a project that will use the framework, don't forget to import **Data** into your build directory.
 #We suggest you to use Data from IO.Astrodynamics.Tests project because these data have been used to approved software
 #You could use one of these scripts to copy data folder:
 #========Windows user======== : 
@@ -116,10 +116,10 @@ Windows users should have a folder tree like that for their project :
    | Includes
    | build_release
       | Data
-      | IO.SDK.dll
-      | IO.SDK.lib
-   | IO.SDK.dll
-   | IO.SDK.lib
+      | IO.Astrodynamics.dll
+      | IO.Astrodynamics.lib
+   | IO.Astrodynamics.dll
+   | IO.Astrodynamics.lib
 ```
 
 Linux users should have a folder tree like that :
@@ -129,8 +129,8 @@ YourProject
       | Data
 ```
     
-## Use the SDK
-Before use the SDK, you must install it.
+## Use the framework
+Before use the framework, you must install it.
 
 It can be installed from binaries or cmake, these procedures are described above. 
 
@@ -155,12 +155,12 @@ In this example we will create a small program based on cmake to compute maneuve
         target_link_libraries(MyApp IO.Astrodynamics.dll)
     elseif(UNIX)
         include_directories(/usr/local/include/IO)
-        find_library(IO_SDK_LIB NAMES libIO.SDK.so)
-        target_link_libraries(IOSDKTEST ${IO_SDK_LIB})
+        find_library(IO_Astrodynamics_LIB NAMES libIO.Astrodynamics.so)
+        target_link_libraries(IOAstrodynamicsTEST ${IO_Astrodynamics_LIB})
     endif ()
     ```
 
-2. You can create a scenario based on this [Example](https://github.com/IO-Aerospace-software-engineering/SDK/tree/develop/IO.SDK.Scenarios/Program.cpp)
+2. You can create a scenario based on this [Example](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/tree/develop/IO.Astrodynamics.Scenarios/Program.cpp)
 
 3. When you execute it, you should have this output :
 ```CMD
