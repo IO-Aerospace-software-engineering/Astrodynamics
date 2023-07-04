@@ -12,7 +12,9 @@ The goal of this project is to :
 - Simulate Spacecraft and impulsive maneuvers
 - Evaluate constraints like occultations, body in instrument field of view, ...
 
-This framework has been written in C++ to offer a good performance but if you need a more productive approach you can switch immediatly to the .Net version of this project [here](https://github.com/IO-Aerospace-software-engineering/Astrodynamics.Net).
+This framework has been written in C++ to offer a good performance but if you need a more productive approach you can switch immediately to the .Net version of this project [here](https://github.com/IO-Aerospace-software-engineering/Astrodynamics.Net) and you will get the best of the both worlds :
+
+C++ velocity + .Net productivity = ❤️
     
 ## Project status
 
