@@ -227,5 +227,14 @@ Occulation start at :2021-03-03 23:20:25.015236 (TDB)
 Occulation end at :2021-03-03 23:25:08.814461 (TDB)
 
 ======================================== Windows when the moon is in camera's field of view ========================================
+Opportunity start at :2021-03-04 04:02:39.570545 (TDB)
+Opportunity end at :2021-03-04 12:28:59.250151 (TDB)
+
+Opportunity start at :2021-03-04 13:44:25.914095 (TDB)
+Opportunity end at :2021-03-04 15:35:27.446243 (TDB)
+
+Opportunity start at :2021-03-04 17:49:59.706025 (TDB)
+Opportunity end at :2021-03-04 18:38:37.723206 (TDB)
+
 ```
     Remark : If unspecified, all values are expressed in international system of units (meter, second, radian, m/s, ...)
