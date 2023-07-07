@@ -413,7 +413,7 @@ TEST(API, GetBodyInformation)
 {
     auto res = GetCelestialBodyInfoProxy(399);
     ASSERT_EQ(399, res.Id);
-    ASSERT_EQ(10, res.centerOfMotionId);
+    ASSERT_EQ(10, res.CenterOfMotionId);
     ASSERT_STREQ("EARTH", res.Name);
     ASSERT_EQ(13000, res.FrameId);
     ASSERT_STREQ("ITRF93", res.FrameName);

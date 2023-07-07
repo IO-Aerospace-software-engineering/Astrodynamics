@@ -22,13 +22,14 @@ namespace IO::Astrodynamics::Body
 		const double m_sphereOfInfluence{};		
 		const double m_hillSphere{};
 		const IO::Astrodynamics::Frames::BodyFixedFrames m_BodyFixedFrame;
-		static double ReadGM(int id);
+
 
 	public:
 		CelestialBody(int id, std::shared_ptr<IO::Astrodynamics::Body::CelestialBody> &centerOfMotion);
 		explicit CelestialBody(int id);
 		double GetSphereOfInfluence() const;
 		double GetHillSphere() const;
+        static double ReadGM(int id);
 		/**
 		 * @brief Get the Relative Statevector from this celestial body to a given target
 		 * 

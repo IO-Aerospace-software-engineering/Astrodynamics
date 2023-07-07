@@ -7,6 +7,7 @@
 #include <memory>
 #include <InertialFrames.h>
 #include <Aberrations.h>
+#include <Barycenter.h>
 #include "Constraints/RelationalOperator.h"
 
 using namespace std::chrono_literals;
@@ -153,3 +154,4 @@ TEST(CelestialBody, FindOccultationConstraint)
 	ASSERT_STREQ("2001-12-14 20:10:15.410588 (TDB)", results[0].GetStartDate().ToString().c_str());
 	ASSERT_STREQ("2001-12-14 21:35:49.100520 (TDB)", results[0].GetEndDate().ToString().c_str());
 }
+

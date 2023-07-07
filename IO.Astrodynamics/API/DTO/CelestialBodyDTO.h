@@ -9,7 +9,7 @@ namespace IO::Astrodynamics::API::DTO
     struct CelestialBodyDTO
     {
         int Id{-1};
-        int centerOfMotionId{-1};
+        int CenterOfMotionId{-1};
         const char *Name{};
         IO::Astrodynamics::API::DTO::Vector3DDTO Radii{};
         double GM{};
