@@ -3,7 +3,6 @@
  */
 #include <limits>
 #include <chrono>
-#include <format>
 
 #include <CelestialBody.h>
 #include <StateVector.h>
@@ -178,6 +177,22 @@ bool IO::Astrodynamics::Body::CelestialBody::IsAsteroid(int celestialBodyId)
 bool IO::Astrodynamics::Body::CelestialBody::IsMoon(int celestialBodyId)
 {
     return celestialBodyId > 100 && celestialBodyId < 1000 && (celestialBodyId % 100) != 99;
+}
+
+int IO::Astrodynamics::Body::CelestialBody::FindBarycenterOfMotionId(int celestialBodyNaifId)
+{
+    if (IO::Astrodynamics::Body::CelestialBody::IsSun(celestialBodyNaifId) || IO::Astrodynamics::Body::CelestialBody::IsBarycenter(celestialBodyNaifId) ||
+        IO::Astrodynamics::Body::CelestialBody::IsAsteroid(celestialBodyNaifId))
+    {
+        return 0;
+    }
+
+    if (IO::Astrodynamics::Body::CelestialBody::IsPlanet(celestialBodyNaifId) || IO::Astrodynamics::Body::CelestialBody::IsMoon(celestialBodyNaifId))
+    {
+        return (int)(celestialBodyNaifId / 100);
+    }
+
+    throw IO::Astrodynamics::Exception::InvalidArgumentException(std::string("Invalid Naif Id : ") + std::to_string(celestialBodyNaifId));
 }
 
 int IO::Astrodynamics::Body::CelestialBody::FindCenterOfMotionId(int celestialBodyNaifId)
