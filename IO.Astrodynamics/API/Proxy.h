@@ -193,7 +193,7 @@ MODULE_API void FindWindowsOnCoordinateConstraintProxy(IO::Astrodynamics::API::D
 MODULE_API void FindWindowsOnIlluminationConstraintProxy(IO::Astrodynamics::API::DTO::WindowDTO searchWindow, int observerId,
                                                          const char *illuminationSource, int targetBody,
                                                          const char *fixedFrame,
-                                                         IO::Astrodynamics::API::DTO::GeodeticDTO geodetic,
+                                                         IO::Astrodynamics::API::DTO::PlanetodeticDTO geodetic,
                                                          const char *illuminationType,
                                                          const char *relationalOperator, double value,
                                                          double adjustValue,

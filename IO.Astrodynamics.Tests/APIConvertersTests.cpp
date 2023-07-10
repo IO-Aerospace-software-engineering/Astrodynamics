@@ -1,3 +1,7 @@
+/*
+ Copyright (c) 2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
+ */
+
 //
 // Created by sylvain guillet on 3/29/23.
 //
@@ -72,7 +76,7 @@ TEST(APIConverters, Quaternion)
 
 TEST(APIConverters, Geodetic)
 {
-    IO::Astrodynamics::API::DTO::GeodeticDTO geodeticDTO(2.0, 1.0, 3.0);
+    IO::Astrodynamics::API::DTO::PlanetodeticDTO geodeticDTO(2.0, 1.0, 3.0);
 
     auto geodetic = ToGeodetic(geodeticDTO);
     ASSERT_DOUBLE_EQ(1.0, geodetic.GetLatitude());
