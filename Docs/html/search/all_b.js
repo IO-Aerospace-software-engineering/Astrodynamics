@@ -1,7 +1,7 @@
 var searchData=
 [
   ['l_0',['L',['../structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1EquinoctialElementsDTO.html#ab562480948500da6a150db4ed4e74b6b',1,'IO::Astrodynamics::API::DTO::EquinoctialElementsDTO']]],
-  ['latitude_1',['latitude',['../structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1GeodeticDTO.html#aadcf7b4570fb114fe0391a5858965f5a',1,'IO::Astrodynamics::API::DTO::GeodeticDTO']]],
+  ['latitude_1',['latitude',['../structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1PlanetodeticDTO.html#a6fe55cbbe36da306c95456168709f253',1,'IO::Astrodynamics::API::DTO::PlanetodeticDTO']]],
   ['latitude_2',['Latitude',['../classIO_1_1Astrodynamics_1_1Coordinate.html#a9b8015f8efe884209bc1ff2dcc4d435c',1,'IO::Astrodynamics::Coordinate']]],
   ['latitudinal_3',['Latitudinal',['../classIO_1_1Astrodynamics_1_1Coordinates_1_1Latitudinal.html',1,'IO::Astrodynamics::Coordinates::Latitudinal'],['../classIO_1_1Astrodynamics_1_1CoordinateSystem.html#a3e4fd48a580e61d3712a04156bec2731',1,'IO::Astrodynamics::CoordinateSystem::Latitudinal()'],['../classIO_1_1Astrodynamics_1_1Coordinates_1_1Latitudinal.html#a59616bac0cf1e9ae0a39b91d90a8717f',1,'IO::Astrodynamics::Coordinates::Latitudinal::Latitudinal()']]],
   ['latitudinal_2eh_4',['Latitudinal.h',['../Latitudinal_8h.html',1,'']]],
@@ -25,8 +25,8 @@ var searchData=
   ['loadkernelsproxy_22',['LoadKernelsProxy',['../Proxy_8cpp.html#ab439d94eae3243647e016305e642dc77',1,'LoadKernelsProxy(const char *path):&#160;Proxy.cpp'],['../Proxy_8h.html#af05f045e002fb697be0ff9531e5ce29d',1,'LoadKernelsProxy(const char *path):&#160;Proxy.cpp']]],
   ['localmax_23',['LocalMax',['../classIO_1_1Astrodynamics_1_1Constraints_1_1RelationalOperator.html#af7cd2371fa9e25d2ea81f2dd165fe04d',1,'IO::Astrodynamics::Constraints::RelationalOperator']]],
   ['localmin_24',['LocalMin',['../classIO_1_1Astrodynamics_1_1Constraints_1_1RelationalOperator.html#a22320b627621ee6eeea58a9fae7d57ec',1,'IO::Astrodynamics::Constraints::RelationalOperator']]],
-  ['longitude_25',['longitude',['../structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1GeodeticDTO.html#a3611fe09bb47477ee1f4987b0b6e07f2',1,'IO::Astrodynamics::API::DTO::GeodeticDTO']]],
-  ['longitude_26',['Longitude',['../classIO_1_1Astrodynamics_1_1Coordinate.html#a3ece23896ae5d61df311ad3d4325778b',1,'IO::Astrodynamics::Coordinate']]],
+  ['longitude_25',['Longitude',['../classIO_1_1Astrodynamics_1_1Coordinate.html#a3ece23896ae5d61df311ad3d4325778b',1,'IO::Astrodynamics::Coordinate']]],
+  ['longitude_26',['longitude',['../structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1PlanetodeticDTO.html#ae0045565a0f2988a8b9dd1927ed381cb',1,'IO::Astrodynamics::API::DTO::PlanetodeticDTO']]],
   ['lowerthan_27',['LowerThan',['../classIO_1_1Astrodynamics_1_1Constraints_1_1RelationalOperator.html#aa1859b4691727f0b5b5bbc162717fced',1,'IO::Astrodynamics::Constraints::RelationalOperator']]],
   ['lt_28',['LT',['../namespaceIO_1_1Astrodynamics.html#af0023a81d12385b73d78bd82e4b96ce3ac562607189d77eb9dfb707464c1e7b0b',1,'IO::Astrodynamics']]],
   ['lts_29',['LTS',['../namespaceIO_1_1Astrodynamics.html#af0023a81d12385b73d78bd82e4b96ce3ad73f00aebeafb26d0f4f8869cba3c480',1,'IO::Astrodynamics']]]

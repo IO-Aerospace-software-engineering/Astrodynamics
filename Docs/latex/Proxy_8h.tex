@@ -8,6 +8,7 @@
 {\ttfamily \#include $<$Equinoctial\+Elements\+DTO.\+h$>$}\newline
 {\ttfamily \#include $<$Ra\+Dec\+DTO.\+h$>$}\newline
 {\ttfamily \#include $<$Horizontal\+DTO.\+h$>$}\newline
+{\ttfamily \#include $<$TLEElements\+DTO.\+h$>$}\newline
 \doxysubsection*{Macros}
 \begin{DoxyCompactItemize}
 \item 
@@ -48,7 +49,7 @@
 \item 
 \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} void \mbox{\hyperlink{Proxy_8h_a6207bfab3f39d7fe0caae4b483df9d48}{Find\+Windows\+On\+Coordinate\+Constraint\+Proxy}} (\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1WindowDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Window\+DTO}} search\+Window, int observer\+Id, int target\+Id, const char $\ast$frame, const char $\ast$coordinate\+System, const char $\ast$coordinate, const char $\ast$relational\+Operator, double value, double adjust\+Value, const char $\ast$aberration, double step\+Size, \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1WindowDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Window\+DTO}} windows\mbox{[}1000\mbox{]})
 \item 
-\mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} void \mbox{\hyperlink{Proxy_8h_ad62d6bba43525b4e409286b630e8a869}{Find\+Windows\+On\+Illumination\+Constraint\+Proxy}} (\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1WindowDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Window\+DTO}} search\+Window, int observer\+Id, const char $\ast$illumination\+Source, int target\+Body, const char $\ast$fixed\+Frame, \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1GeodeticDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Geodetic\+DTO}} geodetic, const char $\ast$illumination\+Type, const char $\ast$relational\+Operator, double value, double adjust\+Value, const char $\ast$aberration, double step\+Size, const char $\ast$method, \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1WindowDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Window\+DTO}} windows\mbox{[}1000\mbox{]})
+\mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} void \mbox{\hyperlink{Proxy_8h_ac2775548c2991af260257147d3bcddeb}{Find\+Windows\+On\+Illumination\+Constraint\+Proxy}} (\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1WindowDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Window\+DTO}} search\+Window, int observer\+Id, const char $\ast$illumination\+Source, int target\+Body, const char $\ast$fixed\+Frame, \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1PlanetodeticDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Planetodetic\+DTO}} geodetic, const char $\ast$illumination\+Type, const char $\ast$relational\+Operator, double value, double adjust\+Value, const char $\ast$aberration, double step\+Size, const char $\ast$method, \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1WindowDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Window\+DTO}} windows\mbox{[}1000\mbox{]})
 \item 
 \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} void \mbox{\hyperlink{Proxy_8h_a937e7c2e12b5beeb29690b6d5e859d25}{Find\+Windows\+In\+Field\+Of\+View\+Constraint\+Proxy}} (\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1WindowDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Window\+DTO}} search\+Window, int observer\+Id, int instrument\+Id, int target\+Id, const char $\ast$target\+Frame, const char $\ast$target\+Shape, const char $\ast$aberration, double step\+Size, \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1WindowDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Window\+DTO}} windows\mbox{[}1000\mbox{]})
 \item 
@@ -60,7 +61,7 @@
 \item 
 \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1FrameTransformationDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Frame\+Transformation\+DTO}} \mbox{\hyperlink{Proxy_8h_a119f255f7f7f5f965123d79ead91d46c}{Transform\+Frame\+Proxy}} (const char $\ast$from\+Frame, const char $\ast$to\+Frame, double epoch)
 \item 
-\mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1StateVectorDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+State\+Vector\+DTO}} \mbox{\hyperlink{Proxy_8h_a23393a0d8630513797e7c70849ea3f3d}{Convert\+TLETo\+State\+Vector\+Proxy}} (const char $\ast$L1, const char $\ast$L2, double epoch)
+\mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1StateVectorDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+State\+Vector\+DTO}} \mbox{\hyperlink{Proxy_8h_a0a91a5fad0133860714145259d6d7dca}{Convert\+TLETo\+State\+Vector\+Proxy}} (const char $\ast$L1, const char $\ast$L2, const char $\ast$L3, double epoch)
 \item 
 \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1StateVectorDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+State\+Vector\+DTO}} \mbox{\hyperlink{Proxy_8h_adeff6dad2759bd230e7e2982af4cc803}{Convert\+Conic\+Elements\+To\+State\+Vector\+Proxy}} (\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ConicOrbitalElementsDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Conic\+Orbital\+Elements\+DTO}} conic\+Orbital\+Elements\+Dto)
 \item 
@@ -69,6 +70,8 @@
 \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1RaDecDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Ra\+Dec\+DTO}} \mbox{\hyperlink{Proxy_8h_ac91b73da531d42796dfdaceded511d75}{Convert\+State\+Vector\+To\+Equatorial\+Coordinates\+Proxy}} (\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1StateVectorDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+State\+Vector\+DTO}} state\+Vector\+Dto)
 \item 
 \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1HorizontalDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Horizontal\+DTO}} \mbox{\hyperlink{Proxy_8h_a5c27a3837900966cebc882c248ea09fa}{Get\+Horizontal\+Coordinates}} (\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1StateVectorDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+State\+Vector\+DTO}} state\+Vector\+Dto)
+\item 
+\mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1TLEElementsDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+TLEElements\+DTO}} \mbox{\hyperlink{Proxy_8h_a3e30dc53c8488f6e58d694200f4d7b0b}{Get\+TLEElements\+Proxy}} (const char $\ast$L1, const char $\ast$L2, const char $\ast$L3)
 \item 
 char $\ast$ \mbox{\hyperlink{Proxy_8h_a070706fba8ff9475ca3b778c3bc1e115}{Handle\+Error}} ()
 \item 
@@ -310,11 +313,11 @@ Convert elapsed seconds from J2000 to UTC
 \begin{DoxyReturn}{Returns}
 
 \end{DoxyReturn}
-\mbox{\Hypertarget{Proxy_8h_a23393a0d8630513797e7c70849ea3f3d}\label{Proxy_8h_a23393a0d8630513797e7c70849ea3f3d}} 
+\mbox{\Hypertarget{Proxy_8h_a0a91a5fad0133860714145259d6d7dca}\label{Proxy_8h_a0a91a5fad0133860714145259d6d7dca}} 
 \index{Proxy.h@{Proxy.h}!ConvertTLEToStateVectorProxy@{ConvertTLEToStateVectorProxy}}
 \index{ConvertTLEToStateVectorProxy@{ConvertTLEToStateVectorProxy}!Proxy.h@{Proxy.h}}
 \doxysubsubsection{\texorpdfstring{ConvertTLEToStateVectorProxy()}{ConvertTLEToStateVectorProxy()}}
-{\footnotesize\ttfamily \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1StateVectorDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+State\+Vector\+DTO}} Convert\+TLETo\+State\+Vector\+Proxy (\begin{DoxyParamCaption}\item[{const char $\ast$}]{L1,  }\item[{const char $\ast$}]{L2,  }\item[{double}]{epoch }\end{DoxyParamCaption})}
+{\footnotesize\ttfamily \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1StateVectorDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+State\+Vector\+DTO}} Convert\+TLETo\+State\+Vector\+Proxy (\begin{DoxyParamCaption}\item[{const char $\ast$}]{L1,  }\item[{const char $\ast$}]{L2,  }\item[{const char $\ast$}]{L3,  }\item[{double}]{epoch }\end{DoxyParamCaption})}
 
 Convert Two line elements to state vector 
 \begin{DoxyParams}{Parameters}
@@ -427,11 +430,11 @@ Find time windows witch satisfy distance constraint
 {\em windows} & \\
 \hline
 \end{DoxyParams}
-\mbox{\Hypertarget{Proxy_8h_ad62d6bba43525b4e409286b630e8a869}\label{Proxy_8h_ad62d6bba43525b4e409286b630e8a869}} 
+\mbox{\Hypertarget{Proxy_8h_ac2775548c2991af260257147d3bcddeb}\label{Proxy_8h_ac2775548c2991af260257147d3bcddeb}} 
 \index{Proxy.h@{Proxy.h}!FindWindowsOnIlluminationConstraintProxy@{FindWindowsOnIlluminationConstraintProxy}}
 \index{FindWindowsOnIlluminationConstraintProxy@{FindWindowsOnIlluminationConstraintProxy}!Proxy.h@{Proxy.h}}
 \doxysubsubsection{\texorpdfstring{FindWindowsOnIlluminationConstraintProxy()}{FindWindowsOnIlluminationConstraintProxy()}}
-{\footnotesize\ttfamily \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} void Find\+Windows\+On\+Illumination\+Constraint\+Proxy (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1WindowDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Window\+DTO}}}]{search\+Window,  }\item[{int}]{observer\+Id,  }\item[{const char $\ast$}]{illumination\+Source,  }\item[{int}]{target\+Body,  }\item[{const char $\ast$}]{fixed\+Frame,  }\item[{\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1GeodeticDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Geodetic\+DTO}}}]{geodetic,  }\item[{const char $\ast$}]{illumination\+Type,  }\item[{const char $\ast$}]{relational\+Operator,  }\item[{double}]{value,  }\item[{double}]{adjust\+Value,  }\item[{const char $\ast$}]{aberration,  }\item[{double}]{step\+Size,  }\item[{const char $\ast$}]{method,  }\item[{\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1WindowDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Window\+DTO}}}]{windows\mbox{[}1000\mbox{]} }\end{DoxyParamCaption})}
+{\footnotesize\ttfamily \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} void Find\+Windows\+On\+Illumination\+Constraint\+Proxy (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1WindowDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Window\+DTO}}}]{search\+Window,  }\item[{int}]{observer\+Id,  }\item[{const char $\ast$}]{illumination\+Source,  }\item[{int}]{target\+Body,  }\item[{const char $\ast$}]{fixed\+Frame,  }\item[{\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1PlanetodeticDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Planetodetic\+DTO}}}]{geodetic,  }\item[{const char $\ast$}]{illumination\+Type,  }\item[{const char $\ast$}]{relational\+Operator,  }\item[{double}]{value,  }\item[{double}]{adjust\+Value,  }\item[{const char $\ast$}]{aberration,  }\item[{double}]{step\+Size,  }\item[{const char $\ast$}]{method,  }\item[{\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1WindowDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Window\+DTO}}}]{windows\mbox{[}1000\mbox{]} }\end{DoxyParamCaption})}
 
 Find time windows witch satisfy illumination constraint 
 \begin{DoxyParams}{Parameters}
@@ -526,6 +529,12 @@ Get celestial body information from his id
 Get the spice version \begin{DoxyReturn}{Returns}
 version 
 \end{DoxyReturn}
+\mbox{\Hypertarget{Proxy_8h_a3e30dc53c8488f6e58d694200f4d7b0b}\label{Proxy_8h_a3e30dc53c8488f6e58d694200f4d7b0b}} 
+\index{Proxy.h@{Proxy.h}!GetTLEElementsProxy@{GetTLEElementsProxy}}
+\index{GetTLEElementsProxy@{GetTLEElementsProxy}!Proxy.h@{Proxy.h}}
+\doxysubsubsection{\texorpdfstring{GetTLEElementsProxy()}{GetTLEElementsProxy()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\+\_\+\+API}} \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1TLEElementsDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+TLEElements\+DTO}} Get\+TLEElements\+Proxy (\begin{DoxyParamCaption}\item[{const char $\ast$}]{L1,  }\item[{const char $\ast$}]{L2,  }\item[{const char $\ast$}]{L3 }\end{DoxyParamCaption})}
+
 \mbox{\Hypertarget{Proxy_8h_a070706fba8ff9475ca3b778c3bc1e115}\label{Proxy_8h_a070706fba8ff9475ca3b778c3bc1e115}} 
 \index{Proxy.h@{Proxy.h}!HandleError@{HandleError}}
 \index{HandleError@{HandleError}!Proxy.h@{Proxy.h}}

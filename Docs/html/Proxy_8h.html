@@ -25,7 +25,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">IO-Astrodynamics<span id="projectnumber">&#160;1.0.x</span>
+   <div id="projectname">IO-Astrodynamics<span id="projectnumber">&#160;1.2.x</span>
    </div>
    <div id="projectbrief">Astrodynamics framework</div>
   </td>
@@ -97,6 +97,7 @@ $(document).ready(function(){initNavTree('Proxy_8h.html',''); initResizable(); }
 <code>#include &lt;<a class="el" href="EquinoctialElementsDTO_8h_source.html">EquinoctialElementsDTO.h</a>&gt;</code><br />
 <code>#include &lt;<a class="el" href="RaDecDTO_8h_source.html">RaDecDTO.h</a>&gt;</code><br />
 <code>#include &lt;<a class="el" href="HorizontalDTO_8h_source.html">HorizontalDTO.h</a>&gt;</code><br />
+<code>#include &lt;<a class="el" href="TLEElementsDTO_8h_source.html">TLEElementsDTO.h</a>&gt;</code><br />
 </div>
 <p><a href="Proxy_8h_source.html">Go to the source code of this file.</a></p>
 <table class="memberdecls">
@@ -139,8 +140,8 @@ Functions</h2></td></tr>
 <tr class="separator:af61eee5e996932b041c02d6a3e494aac"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6207bfab3f39d7fe0caae4b483df9d48"><td class="memItemLeft" align="right" valign="top"><a class="el" href="Proxy_8h.html#a283b8fd63f96d196027ef6ad48c4cb85">MODULE_API</a> void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="Proxy_8h.html#a6207bfab3f39d7fe0caae4b483df9d48">FindWindowsOnCoordinateConstraintProxy</a> (<a class="el" href="structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1WindowDTO.html">IO::Astrodynamics::API::DTO::WindowDTO</a> searchWindow, int observerId, int targetId, const char *frame, const char *coordinateSystem, const char *coordinate, const char *relationalOperator, double value, double adjustValue, const char *aberration, double stepSize, <a class="el" href="structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1WindowDTO.html">IO::Astrodynamics::API::DTO::WindowDTO</a> windows[1000])</td></tr>
 <tr class="separator:a6207bfab3f39d7fe0caae4b483df9d48"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad62d6bba43525b4e409286b630e8a869"><td class="memItemLeft" align="right" valign="top"><a class="el" href="Proxy_8h.html#a283b8fd63f96d196027ef6ad48c4cb85">MODULE_API</a> void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="Proxy_8h.html#ad62d6bba43525b4e409286b630e8a869">FindWindowsOnIlluminationConstraintProxy</a> (<a class="el" href="structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1WindowDTO.html">IO::Astrodynamics::API::DTO::WindowDTO</a> searchWindow, int observerId, const char *illuminationSource, int targetBody, const char *fixedFrame, <a class="el" href="structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1GeodeticDTO.html">IO::Astrodynamics::API::DTO::GeodeticDTO</a> geodetic, const char *illuminationType, const char *relationalOperator, double value, double adjustValue, const char *aberration, double stepSize, const char *method, <a class="el" href="structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1WindowDTO.html">IO::Astrodynamics::API::DTO::WindowDTO</a> windows[1000])</td></tr>
-<tr class="separator:ad62d6bba43525b4e409286b630e8a869"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac2775548c2991af260257147d3bcddeb"><td class="memItemLeft" align="right" valign="top"><a class="el" href="Proxy_8h.html#a283b8fd63f96d196027ef6ad48c4cb85">MODULE_API</a> void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="Proxy_8h.html#ac2775548c2991af260257147d3bcddeb">FindWindowsOnIlluminationConstraintProxy</a> (<a class="el" href="structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1WindowDTO.html">IO::Astrodynamics::API::DTO::WindowDTO</a> searchWindow, int observerId, const char *illuminationSource, int targetBody, const char *fixedFrame, <a class="el" href="structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1PlanetodeticDTO.html">IO::Astrodynamics::API::DTO::PlanetodeticDTO</a> geodetic, const char *illuminationType, const char *relationalOperator, double value, double adjustValue, const char *aberration, double stepSize, const char *method, <a class="el" href="structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1WindowDTO.html">IO::Astrodynamics::API::DTO::WindowDTO</a> windows[1000])</td></tr>
+<tr class="separator:ac2775548c2991af260257147d3bcddeb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a937e7c2e12b5beeb29690b6d5e859d25"><td class="memItemLeft" align="right" valign="top"><a class="el" href="Proxy_8h.html#a283b8fd63f96d196027ef6ad48c4cb85">MODULE_API</a> void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="Proxy_8h.html#a937e7c2e12b5beeb29690b6d5e859d25">FindWindowsInFieldOfViewConstraintProxy</a> (<a class="el" href="structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1WindowDTO.html">IO::Astrodynamics::API::DTO::WindowDTO</a> searchWindow, int observerId, int instrumentId, int targetId, const char *targetFrame, const char *targetShape, const char *aberration, double stepSize, <a class="el" href="structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1WindowDTO.html">IO::Astrodynamics::API::DTO::WindowDTO</a> windows[1000])</td></tr>
 <tr class="separator:a937e7c2e12b5beeb29690b6d5e859d25"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a21e5be456b638ec478bbe753d51d4d82"><td class="memItemLeft" align="right" valign="top"><a class="el" href="Proxy_8h.html#a283b8fd63f96d196027ef6ad48c4cb85">MODULE_API</a> double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="Proxy_8h.html#a21e5be456b638ec478bbe753d51d4d82">ConvertTDBToUTCProxy</a> (double tdb)</td></tr>
@@ -151,8 +152,8 @@ Functions</h2></td></tr>
 <tr class="separator:a5cd3821092c4905163bd9fda786ee831"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a119f255f7f7f5f965123d79ead91d46c"><td class="memItemLeft" align="right" valign="top"><a class="el" href="Proxy_8h.html#a283b8fd63f96d196027ef6ad48c4cb85">MODULE_API</a> <a class="el" href="structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1FrameTransformationDTO.html">IO::Astrodynamics::API::DTO::FrameTransformationDTO</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="Proxy_8h.html#a119f255f7f7f5f965123d79ead91d46c">TransformFrameProxy</a> (const char *fromFrame, const char *toFrame, double epoch)</td></tr>
 <tr class="separator:a119f255f7f7f5f965123d79ead91d46c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a23393a0d8630513797e7c70849ea3f3d"><td class="memItemLeft" align="right" valign="top"><a class="el" href="Proxy_8h.html#a283b8fd63f96d196027ef6ad48c4cb85">MODULE_API</a> <a class="el" href="structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1StateVectorDTO.html">IO::Astrodynamics::API::DTO::StateVectorDTO</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="Proxy_8h.html#a23393a0d8630513797e7c70849ea3f3d">ConvertTLEToStateVectorProxy</a> (const char *L1, const char *L2, double epoch)</td></tr>
-<tr class="separator:a23393a0d8630513797e7c70849ea3f3d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0a91a5fad0133860714145259d6d7dca"><td class="memItemLeft" align="right" valign="top"><a class="el" href="Proxy_8h.html#a283b8fd63f96d196027ef6ad48c4cb85">MODULE_API</a> <a class="el" href="structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1StateVectorDTO.html">IO::Astrodynamics::API::DTO::StateVectorDTO</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="Proxy_8h.html#a0a91a5fad0133860714145259d6d7dca">ConvertTLEToStateVectorProxy</a> (const char *L1, const char *L2, const char *L3, double epoch)</td></tr>
+<tr class="separator:a0a91a5fad0133860714145259d6d7dca"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:adeff6dad2759bd230e7e2982af4cc803"><td class="memItemLeft" align="right" valign="top"><a class="el" href="Proxy_8h.html#a283b8fd63f96d196027ef6ad48c4cb85">MODULE_API</a> <a class="el" href="structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1StateVectorDTO.html">IO::Astrodynamics::API::DTO::StateVectorDTO</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="Proxy_8h.html#adeff6dad2759bd230e7e2982af4cc803">ConvertConicElementsToStateVectorProxy</a> (<a class="el" href="structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ConicOrbitalElementsDTO.html">IO::Astrodynamics::API::DTO::ConicOrbitalElementsDTO</a> conicOrbitalElementsDto)</td></tr>
 <tr class="separator:adeff6dad2759bd230e7e2982af4cc803"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aef5adebc10af8b63a346df5a2a8364d0"><td class="memItemLeft" align="right" valign="top"><a class="el" href="Proxy_8h.html#a283b8fd63f96d196027ef6ad48c4cb85">MODULE_API</a> <a class="el" href="structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1StateVectorDTO.html">IO::Astrodynamics::API::DTO::StateVectorDTO</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="Proxy_8h.html#aef5adebc10af8b63a346df5a2a8364d0">ConvertEquinoctialElementsToStateVectorProxy</a> (<a class="el" href="structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1EquinoctialElementsDTO.html">IO::Astrodynamics::API::DTO::EquinoctialElementsDTO</a> equinoctialElementsDto)</td></tr>
@@ -161,6 +162,8 @@ Functions</h2></td></tr>
 <tr class="separator:ac91b73da531d42796dfdaceded511d75"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5c27a3837900966cebc882c248ea09fa"><td class="memItemLeft" align="right" valign="top"><a class="el" href="Proxy_8h.html#a283b8fd63f96d196027ef6ad48c4cb85">MODULE_API</a> <a class="el" href="structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1HorizontalDTO.html">IO::Astrodynamics::API::DTO::HorizontalDTO</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="Proxy_8h.html#a5c27a3837900966cebc882c248ea09fa">GetHorizontalCoordinates</a> (<a class="el" href="structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1StateVectorDTO.html">IO::Astrodynamics::API::DTO::StateVectorDTO</a> stateVectorDto)</td></tr>
 <tr class="separator:a5c27a3837900966cebc882c248ea09fa"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3e30dc53c8488f6e58d694200f4d7b0b"><td class="memItemLeft" align="right" valign="top"><a class="el" href="Proxy_8h.html#a283b8fd63f96d196027ef6ad48c4cb85">MODULE_API</a> <a class="el" href="structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1TLEElementsDTO.html">IO::Astrodynamics::API::DTO::TLEElementsDTO</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="Proxy_8h.html#a3e30dc53c8488f6e58d694200f4d7b0b">GetTLEElementsProxy</a> (const char *L1, const char *L2, const char *L3)</td></tr>
+<tr class="separator:a3e30dc53c8488f6e58d694200f4d7b0b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a070706fba8ff9475ca3b778c3bc1e115"><td class="memItemLeft" align="right" valign="top">char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="Proxy_8h.html#a070706fba8ff9475ca3b778c3bc1e115">HandleError</a> ()</td></tr>
 <tr class="separator:a070706fba8ff9475ca3b778c3bc1e115"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a10b4e1afbe694c70385138fa39d88fa4"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="Proxy_8h.html#a10b4e1afbe694c70385138fa39d88fa4">ActivateErrorManagement</a> ()</td></tr>
@@ -943,8 +946,8 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a23393a0d8630513797e7c70849ea3f3d" name="a23393a0d8630513797e7c70849ea3f3d"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a23393a0d8630513797e7c70849ea3f3d">&#9670;&nbsp;</a></span>ConvertTLEToStateVectorProxy()</h2>
+<a id="a0a91a5fad0133860714145259d6d7dca" name="a0a91a5fad0133860714145259d6d7dca"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0a91a5fad0133860714145259d6d7dca">&#9670;&nbsp;</a></span>ConvertTLEToStateVectorProxy()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -960,6 +963,12 @@ Functions</h2></td></tr>
           <td></td>
           <td class="paramtype">const char *&#160;</td>
           <td class="paramname"><em>L2</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>L3</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -1277,8 +1286,8 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="ad62d6bba43525b4e409286b630e8a869" name="ad62d6bba43525b4e409286b630e8a869"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ad62d6bba43525b4e409286b630e8a869">&#9670;&nbsp;</a></span>FindWindowsOnIlluminationConstraintProxy()</h2>
+<a id="ac2775548c2991af260257147d3bcddeb" name="ac2775548c2991af260257147d3bcddeb"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac2775548c2991af260257147d3bcddeb">&#9670;&nbsp;</a></span>FindWindowsOnIlluminationConstraintProxy()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1316,7 +1325,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1GeodeticDTO.html">IO::Astrodynamics::API::DTO::GeodeticDTO</a>&#160;</td>
+          <td class="paramtype"><a class="el" href="structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1PlanetodeticDTO.html">IO::Astrodynamics::API::DTO::PlanetodeticDTO</a>&#160;</td>
           <td class="paramname"><em>geodetic</em>, </td>
         </tr>
         <tr>
@@ -1559,6 +1568,40 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 <p >Get the spice version </p><dl class="section return"><dt>Returns</dt><dd>version </dd></dl>
+
+</div>
+</div>
+<a id="a3e30dc53c8488f6e58d694200f4d7b0b" name="a3e30dc53c8488f6e58d694200f4d7b0b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3e30dc53c8488f6e58d694200f4d7b0b">&#9670;&nbsp;</a></span>GetTLEElementsProxy()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="Proxy_8h.html#a283b8fd63f96d196027ef6ad48c4cb85">MODULE_API</a> <a class="el" href="structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1TLEElementsDTO.html">IO::Astrodynamics::API::DTO::TLEElementsDTO</a> GetTLEElementsProxy </td>
+          <td>(</td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>L1</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>L2</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>L3</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
 
 </div>
 </div>
