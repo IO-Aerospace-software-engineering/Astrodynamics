@@ -7,11 +7,12 @@ var searchData=
   ['timespan_2eh_4',['TimeSpan.h',['../TimeSpan_8h.html',1,'']]],
   ['tle_2ecpp_5',['TLE.cpp',['../TLE_8cpp.html',1,'']]],
   ['tle_2eh_6',['TLE.h',['../TLE_8h.html',1,'']]],
-  ['tleintegrator_2ecpp_7',['TLEIntegrator.cpp',['../TLEIntegrator_8cpp.html',1,'']]],
-  ['tleintegrator_2eh_8',['TLEIntegrator.h',['../TLEIntegrator_8h.html',1,'']]],
-  ['tooearlymaneuverexception_2ecpp_9',['TooEarlyManeuverException.cpp',['../TooEarlyManeuverException_8cpp.html',1,'']]],
-  ['tooearlymaneuverexception_2eh_10',['TooEarlyManeuverException.h',['../TooEarlyManeuverException_8h.html',1,'']]],
-  ['towardobjectattitude_2ecpp_11',['TowardObjectAttitude.cpp',['../TowardObjectAttitude_8cpp.html',1,'']]],
-  ['towardobjectattitude_2eh_12',['TowardObjectAttitude.h',['../TowardObjectAttitude_8h.html',1,'']]],
-  ['type_2eh_13',['Type.h',['../Type_8h.html',1,'']]]
+  ['tleelementsdto_2eh_7',['TLEElementsDTO.h',['../TLEElementsDTO_8h.html',1,'']]],
+  ['tleintegrator_2ecpp_8',['TLEIntegrator.cpp',['../TLEIntegrator_8cpp.html',1,'']]],
+  ['tleintegrator_2eh_9',['TLEIntegrator.h',['../TLEIntegrator_8h.html',1,'']]],
+  ['tooearlymaneuverexception_2ecpp_10',['TooEarlyManeuverException.cpp',['../TooEarlyManeuverException_8cpp.html',1,'']]],
+  ['tooearlymaneuverexception_2eh_11',['TooEarlyManeuverException.h',['../TooEarlyManeuverException_8h.html',1,'']]],
+  ['towardobjectattitude_2ecpp_12',['TowardObjectAttitude.cpp',['../TowardObjectAttitude_8cpp.html',1,'']]],
+  ['towardobjectattitude_2eh_13',['TowardObjectAttitude.h',['../TowardObjectAttitude_8h.html',1,'']]],
+  ['type_2eh_14',['Type.h',['../Type_8h.html',1,'']]]
 ];

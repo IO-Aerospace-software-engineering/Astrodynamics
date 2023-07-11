@@ -1,6 +1,7 @@
 var structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1CelestialBodyDTO =
 [
-    [ "centerOfMotionId", "structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1CelestialBodyDTO.html#a324d393efa1279b5c9730d9cca75235f", null ],
+    [ "BarycenterOfMotionId", "structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1CelestialBodyDTO.html#aa9fcf9cc797ebd96aeb1fb2cfaeb9a31", null ],
+    [ "CenterOfMotionId", "structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1CelestialBodyDTO.html#a6b3763857d7654e5d7b2b4c3530b9eee", null ],
     [ "Error", "structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1CelestialBodyDTO.html#ac1661cdbc58c5b594ee9ced9e00301a8", null ],
     [ "FrameId", "structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1CelestialBodyDTO.html#ac080b77e3ac748c93514cdb70e957e53", null ],
     [ "FrameName", "structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1CelestialBodyDTO.html#a339900194de4ef2244f22e9678328dc0", null ],

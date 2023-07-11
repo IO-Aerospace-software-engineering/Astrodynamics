@@ -177,7 +177,7 @@ TEST(API, FindWindowsOnIlluminationConstraintProxy)
     IO::Astrodynamics::API::DTO::WindowDTO searchWindow{};
     searchWindow.start = IO::Astrodynamics::Time::TDB("2021-05-17 12:00:00 TDB").GetSecondsFromJ2000().count();
     searchWindow.end = IO::Astrodynamics::Time::TDB("2021-05-18 12:00:00 TDB").GetSecondsFromJ2000().count();
-    IO::Astrodynamics::API::DTO::GeodeticDTO geodetic(2.2 * IO::Astrodynamics::Constants::DEG_RAD, 48.0 * IO::Astrodynamics::Constants::DEG_RAD, 0.0);
+    IO::Astrodynamics::API::DTO::PlanetodeticDTO geodetic(2.2 * IO::Astrodynamics::Constants::DEG_RAD, 48.0 * IO::Astrodynamics::Constants::DEG_RAD, 0.0);
     FindWindowsOnIlluminationConstraintProxy(searchWindow, 10, "SUN", 399, "IAU_EARTH",
                                              geodetic, "INCIDENCE", "<",
                                              IO::Astrodynamics::Constants::PI2 - IO::Astrodynamics::Constants::OfficialTwilight, 0.0,
@@ -413,7 +413,7 @@ TEST(API, GetBodyInformation)
 {
     auto res = GetCelestialBodyInfoProxy(399);
     ASSERT_EQ(399, res.Id);
-    ASSERT_EQ(10, res.centerOfMotionId);
+    ASSERT_EQ(10, res.CenterOfMotionId);
     ASSERT_STREQ("EARTH", res.Name);
     ASSERT_EQ(13000, res.FrameId);
     ASSERT_STREQ("ITRF93", res.FrameName);

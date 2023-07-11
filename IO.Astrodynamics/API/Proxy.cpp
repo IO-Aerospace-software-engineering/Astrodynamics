@@ -426,7 +426,7 @@ FindWindowsOnCoordinateConstraintProxy(IO::Astrodynamics::API::DTO::WindowDTO se
 
 void FindWindowsOnIlluminationConstraintProxy(IO::Astrodynamics::API::DTO::WindowDTO searchWindow, int observerId,
                                               const char *illuminationSource, int targetBody, const char *fixedFrame,
-                                              IO::Astrodynamics::API::DTO::GeodeticDTO geodetic,
+                                              IO::Astrodynamics::API::DTO::PlanetodeticDTO geodetic,
                                               const char *illuminationType,
                                               const char *relationalOperator, double value,
                                               double adjustValue,
@@ -519,16 +519,17 @@ IO::Astrodynamics::API::DTO::CelestialBodyDTO GetCelestialBodyInfoProxy(int body
 {
     ActivateErrorManagement();
     IO::Astrodynamics::API::DTO::CelestialBodyDTO res;
+    res.Error = strdup("Body not found");
+
     SpiceChar name[32];
     SpiceBoolean found{false};
-
     bodc2n_c(bodyId, 32, name, &found);
-    res.Error = strdup("Body not found");
     if (found)
     {
         res.Id = bodyId;
         res.Name = strdup(name);
-        res.centerOfMotionId = IO::Astrodynamics::Body::CelestialBody::FindCenterOfMotionId(bodyId);
+        res.CenterOfMotionId = IO::Astrodynamics::Body::CelestialBody::FindCenterOfMotionId(bodyId);
+        res.BarycenterOfMotionId = IO::Astrodynamics::Body::CelestialBody::FindBarycenterOfMotionId(bodyId);
 
         SpiceInt dim;
         // Search body's radii
@@ -551,23 +552,20 @@ IO::Astrodynamics::API::DTO::CelestialBodyDTO GetCelestialBodyInfoProxy(int body
         }
 
         // Search Body's mass
-        SpiceDouble gmRes{};
-        dim = 0;
-        bodvcd_c(bodyId, "GM", 3, &dim, &gmRes);
-        if (dim == 1)
-        {
-            res.GM = gmRes * 1E+09;
-        }
+        res.GM = IO::Astrodynamics::Body::CelestialBody::ReadGM(bodyId);
 
-        // Search
-        SpiceBoolean frameFound{false};
-        SpiceChar frname[lenout]{};
-        SpiceInt frcode{};
-        cnmfrm_c(name, lenout, &frcode, frname, &frameFound);
-        if (frameFound)
+        // Search frame
+        if (!IO::Astrodynamics::Body::CelestialBody::IsBarycenter(bodyId))
         {
-            res.FrameName = strdup(frname);
-            res.FrameId = frcode;
+            SpiceBoolean frameFound{false};
+            SpiceChar frname[lenout]{};
+            SpiceInt frcode{};
+            cnmfrm_c(name, lenout, &frcode, frname, &frameFound);
+            if (frameFound)
+            {
+                res.FrameName = strdup(frname);
+                res.FrameId = frcode;
+            }
         }
         res.Error = strdup("");
     }
@@ -923,8 +921,7 @@ BuildCelestialBodies(IO::Astrodynamics::API::DTO::ScenarioDTO &scenario)
         }
         if (IO::Astrodynamics::Body::CelestialBody::IsSun(cb))
         {
-            IO::Astrodynamics::Body::CelestialBody c(cb);
-            celestialBodies[cb] = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(cb);
+            celestialBodies.emplace(cb, std::make_shared<IO::Astrodynamics::Body::CelestialBody>(cb));
             break;
         }
     }
@@ -938,7 +935,6 @@ BuildCelestialBodies(IO::Astrodynamics::API::DTO::ScenarioDTO &scenario)
         if (IO::Astrodynamics::Body::CelestialBody::IsAsteroid(cb) ||
             IO::Astrodynamics::Body::CelestialBody::IsPlanet(cb))
         {
-            IO::Astrodynamics::Body::CelestialBody c(cb);
             celestialBodies.emplace(cb, std::make_shared<IO::Astrodynamics::Body::CelestialBody>(cb,
                                                                                                  celestialBodies[IO::Astrodynamics::Body::CelestialBody::FindCenterOfMotionId(
                                                                                                          cb)]));

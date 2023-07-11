@@ -6,9 +6,10 @@ var searchData=
   ['perigeeheightchangingmaneuverdto_3',['PerigeeHeightChangingManeuverDTO',['../structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1PerigeeHeightChangingManeuverDTO.html',1,'IO::Astrodynamics::API::DTO']]],
   ['phasingmaneuver_4',['PhasingManeuver',['../classIO_1_1Astrodynamics_1_1Maneuvers_1_1PhasingManeuver.html',1,'IO::Astrodynamics::Maneuvers']]],
   ['phasingmaneuverdto_5',['PhasingManeuverDTO',['../structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1PhasingManeuverDTO.html',1,'IO::Astrodynamics::API::DTO']]],
-  ['planetographic_6',['Planetographic',['../classIO_1_1Astrodynamics_1_1Coordinates_1_1Planetographic.html',1,'IO::Astrodynamics::Coordinates']]],
-  ['progradeattitude_7',['ProgradeAttitude',['../classIO_1_1Astrodynamics_1_1Maneuvers_1_1Attitudes_1_1ProgradeAttitude.html',1,'IO::Astrodynamics::Maneuvers::Attitudes']]],
-  ['progradeattitudedto_8',['ProgradeAttitudeDTO',['../structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ProgradeAttitudeDTO.html',1,'IO::Astrodynamics::API::DTO']]],
-  ['propagator_9',['Propagator',['../classIO_1_1Astrodynamics_1_1Propagators_1_1Propagator.html',1,'IO::Astrodynamics::Propagators']]],
-  ['propagatorexception_10',['PropagatorException',['../classIO_1_1Astrodynamics_1_1Exception_1_1PropagatorException.html',1,'IO::Astrodynamics::Exception']]]
+  ['planetodeticdto_6',['PlanetodeticDTO',['../structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1PlanetodeticDTO.html',1,'IO::Astrodynamics::API::DTO']]],
+  ['planetographic_7',['Planetographic',['../classIO_1_1Astrodynamics_1_1Coordinates_1_1Planetographic.html',1,'IO::Astrodynamics::Coordinates']]],
+  ['progradeattitude_8',['ProgradeAttitude',['../classIO_1_1Astrodynamics_1_1Maneuvers_1_1Attitudes_1_1ProgradeAttitude.html',1,'IO::Astrodynamics::Maneuvers::Attitudes']]],
+  ['progradeattitudedto_9',['ProgradeAttitudeDTO',['../structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ProgradeAttitudeDTO.html',1,'IO::Astrodynamics::API::DTO']]],
+  ['propagator_10',['Propagator',['../classIO_1_1Astrodynamics_1_1Propagators_1_1Propagator.html',1,'IO::Astrodynamics::Propagators']]],
+  ['propagatorexception_11',['PropagatorException',['../classIO_1_1Astrodynamics_1_1Exception_1_1PropagatorException.html',1,'IO::Astrodynamics::Exception']]]
 ];

@@ -24,6 +24,7 @@ var hierarchy =
     [ "IO::Astrodynamics::Maneuvers::DynamicFuelTank", "structIO_1_1Astrodynamics_1_1Maneuvers_1_1DynamicFuelTank.html", null ],
     [ "std::enable_shared_from_this", null, [
       [ "IO::Astrodynamics::Body::Body", "classIO_1_1Astrodynamics_1_1Body_1_1Body.html", [
+        [ "IO::Astrodynamics::Body::Barycenter", "classIO_1_1Astrodynamics_1_1Body_1_1Barycenter.html", null ],
         [ "IO::Astrodynamics::Body::CelestialBody", "classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody.html", null ],
         [ "IO::Astrodynamics::Body::Spacecraft::Spacecraft", "classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft.html", null ]
       ] ]
@@ -56,7 +57,6 @@ var hierarchy =
     [ "IO::Astrodynamics::Body::Spacecraft::FuelTank", "classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1FuelTank.html", null ],
     [ "IO::Astrodynamics::API::DTO::FuelTankDTO", "structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1FuelTankDTO.html", null ],
     [ "IO::Astrodynamics::Coordinates::Geodetic", "classIO_1_1Astrodynamics_1_1Coordinates_1_1Geodetic.html", null ],
-    [ "IO::Astrodynamics::API::DTO::GeodeticDTO", "structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1GeodeticDTO.html", null ],
     [ "IO::Astrodynamics::Constraints::GeometryFinder", "classIO_1_1Astrodynamics_1_1Constraints_1_1GeometryFinder.html", null ],
     [ "IO::Astrodynamics::Coordinates::HorizontalCoordinates", "classIO_1_1Astrodynamics_1_1Coordinates_1_1HorizontalCoordinates.html", null ],
     [ "IO::Astrodynamics::API::DTO::HorizontalDTO", "structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1HorizontalDTO.html", null ],
@@ -115,6 +115,7 @@ var hierarchy =
     [ "IO::Astrodynamics::API::DTO::PayloadDTO", "structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1PayloadDTO.html", null ],
     [ "IO::Astrodynamics::API::DTO::PerigeeHeightChangingManeuverDTO", "structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1PerigeeHeightChangingManeuverDTO.html", null ],
     [ "IO::Astrodynamics::API::DTO::PhasingManeuverDTO", "structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1PhasingManeuverDTO.html", null ],
+    [ "IO::Astrodynamics::API::DTO::PlanetodeticDTO", "structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1PlanetodeticDTO.html", null ],
     [ "IO::Astrodynamics::Coordinates::Planetographic", "classIO_1_1Astrodynamics_1_1Coordinates_1_1Planetographic.html", null ],
     [ "IO::Astrodynamics::API::DTO::ProgradeAttitudeDTO", "structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ProgradeAttitudeDTO.html", null ],
     [ "IO::Astrodynamics::Propagators::Propagator", "classIO_1_1Astrodynamics_1_1Propagators_1_1Propagator.html", null ],
@@ -139,6 +140,7 @@ var hierarchy =
     [ "IO::Astrodynamics::Coordinates::SurfaceCoordinates", "classIO_1_1Astrodynamics_1_1Coordinates_1_1SurfaceCoordinates.html", null ],
     [ "IO::Astrodynamics::Coordinates::SurfaceInterceptPoint", "classIO_1_1Astrodynamics_1_1Coordinates_1_1SurfaceInterceptPoint.html", null ],
     [ "IO::Astrodynamics::Time::TimeSpan", "classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan.html", null ],
+    [ "IO::Astrodynamics::API::DTO::TLEElementsDTO", "structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1TLEElementsDTO.html", null ],
     [ "IO::Astrodynamics::Math::Vector3D", "classIO_1_1Astrodynamics_1_1Math_1_1Vector3D.html", null ],
     [ "IO::Astrodynamics::API::DTO::Vector3DDTO", "structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1Vector3DDTO.html", null ],
     [ "IO::Astrodynamics::Time::Window< T >", "classIO_1_1Astrodynamics_1_1Time_1_1Window.html", null ],

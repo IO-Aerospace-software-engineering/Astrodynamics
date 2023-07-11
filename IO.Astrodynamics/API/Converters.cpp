@@ -3,7 +3,7 @@
  */
 
 #include <WindowDTO.h>
-#include <GeodeticDTO.h>
+#include <PlanetodeticDTO.h>
 #include <Quaternion.h>
 #include <QuaternionDTO.h>
 #include <StateVectorDTO.h>
@@ -77,14 +77,14 @@ static IO::Astrodynamics::API::DTO::QuaternionDTO ToQuaternionDTO(IO::Astrodynam
     return q;
 }
 
-static IO::Astrodynamics::Coordinates::Geodetic ToGeodetic(IO::Astrodynamics::API::DTO::GeodeticDTO &dto)
+static IO::Astrodynamics::Coordinates::Geodetic ToGeodetic(IO::Astrodynamics::API::DTO::PlanetodeticDTO &dto)
 {
     return IO::Astrodynamics::Coordinates::Geodetic{dto.longitude, dto.latitude, dto.altitude};
 }
 
-static IO::Astrodynamics::API::DTO::GeodeticDTO ToGeodeticDTO(IO::Astrodynamics::Coordinates::Geodetic &geodetic)
+static IO::Astrodynamics::API::DTO::PlanetodeticDTO ToGeodeticDTO(IO::Astrodynamics::Coordinates::Geodetic &geodetic)
 {
-    IO::Astrodynamics::API::DTO::GeodeticDTO dto(geodetic.GetLongitude(), geodetic.GetLatitude(), geodetic.GetAltitude());
+    IO::Astrodynamics::API::DTO::PlanetodeticDTO dto(geodetic.GetLongitude(), geodetic.GetLatitude(), geodetic.GetAltitude());
     return dto;
 }
 

@@ -15,30 +15,45 @@
 using namespace std::chrono_literals;
 
 IO::Astrodynamics::Body::CelestialBody::CelestialBody(const int id, std::shared_ptr<IO::Astrodynamics::Body::CelestialBody> &centerOfMotion) : IO::Astrodynamics::Body::Body(id, "",
-                                                                                                                                               ReadGM(id) /
-                                                                                                                                               IO::Astrodynamics::Constants::G,
-                                                                                                                                               centerOfMotion),
-                                                                                                                           m_BodyFixedFrame{""}
+                                                                                                                                                                             ReadGM(id) /
+                                                                                                                                                                             IO::Astrodynamics::Constants::G,
+                                                                                                                                                                             centerOfMotion),
+                                                                                                                                               m_BodyFixedFrame{""}
 {
     const_cast<double &>(m_sphereOfInfluence) = IO::Astrodynamics::Body::SphereOfInfluence(m_orbitalParametersAtEpoch->GetSemiMajorAxis(),
-                                                                                 m_orbitalParametersAtEpoch->GetCenterOfMotion()->GetMu(), m_mu);
+                                                                                           m_orbitalParametersAtEpoch->GetCenterOfMotion()->GetMu(), m_mu);
     const_cast<double &>(m_hillSphere) = IO::Astrodynamics::Body::HillSphere(m_orbitalParametersAtEpoch->GetSemiMajorAxis(), m_orbitalParametersAtEpoch->GetEccentricity(),
-                                                                   m_orbitalParametersAtEpoch->GetCenterOfMotion()->GetMu(), m_mu);
+                                                                             m_orbitalParametersAtEpoch->GetCenterOfMotion()->GetMu(), m_mu);
     SpiceBoolean found;
     SpiceChar name[32];
     bodc2n_c(id, 32, name, &found);
+    if (!found)
+    {
+        throw IO::Astrodynamics::Exception::SDKException("Body id" + std::to_string(id) + " can't be found");
+    }
+
     const_cast<std::string &>(m_name) = name;
-    const_cast<IO::Astrodynamics::Frames::BodyFixedFrames &>(m_BodyFixedFrame) = IO::Astrodynamics::Frames::BodyFixedFrames("IAU_" + std::string(name));
+    if (IsPlanet(id) || IsMoon(id) || IsSun(id))
+    {
+        const_cast<IO::Astrodynamics::Frames::BodyFixedFrames &>(m_BodyFixedFrame) = IO::Astrodynamics::Frames::BodyFixedFrames("IAU_" + std::string(name));
+    }
 }
 
 IO::Astrodynamics::Body::CelestialBody::CelestialBody(const int id) : IO::Astrodynamics::Body::Body(id, "", ReadGM(id) / IO::Astrodynamics::Constants::G),
-                                                            m_BodyFixedFrame{""}
+                                                                      m_BodyFixedFrame{""}
 {
     SpiceBoolean found;
     SpiceChar name[32];
     bodc2n_c(id, 32, name, &found);
+    if (!found)
+    {
+        throw IO::Astrodynamics::Exception::SDKException("Body id" + std::to_string(id) + " can't be found");
+    }
     const_cast<std::string &>(m_name) = name;
-    const_cast<IO::Astrodynamics::Frames::BodyFixedFrames &>(m_BodyFixedFrame) = IO::Astrodynamics::Frames::BodyFixedFrames("IAU_" + std::string(name));
+    if (IsPlanet(id) || IsMoon(id) || IsSun(id))
+    {
+        const_cast<IO::Astrodynamics::Frames::BodyFixedFrames &>(m_BodyFixedFrame) = IO::Astrodynamics::Frames::BodyFixedFrames("IAU_" + std::string(name));
+    }
     const_cast<double &>(m_sphereOfInfluence) = std::numeric_limits<double>::infinity();
     const_cast<double &>(m_hillSphere) = std::numeric_limits<double>::infinity();
 }
@@ -65,13 +80,23 @@ double IO::Astrodynamics::Body::HillSphere(double a, double e, double majorMass,
 
 double IO::Astrodynamics::Body::CelestialBody::ReadGM(int id)
 {
+    if (id == 0)
+    {
+        double solarSystemGM{};
+        for (int i = 1; i <= 10; ++i)
+        {
+            solarSystemGM += ReadGM(i);
+        }
+        return solarSystemGM;
+    }
     SpiceInt dim;
     SpiceDouble res[1];
     bodvcd_c(id, "GM", 1, &dim, res);
     return res[0] * 1E+09;
 }
 
-IO::Astrodynamics::OrbitalParameters::StateVector IO::Astrodynamics::Body::CelestialBody::GetRelativeStatevector(const IO::Astrodynamics::OrbitalParameters::StateVector &targetStateVector) const
+IO::Astrodynamics::OrbitalParameters::StateVector
+IO::Astrodynamics::Body::CelestialBody::GetRelativeStatevector(const IO::Astrodynamics::OrbitalParameters::StateVector &targetStateVector) const
 {
     if (*targetStateVector.GetCenterOfMotion() == *this)
     {
@@ -81,7 +106,7 @@ IO::Astrodynamics::OrbitalParameters::StateVector IO::Astrodynamics::Body::Celes
     auto sv = ReadEphemeris(targetStateVector.GetFrame(), IO::Astrodynamics::AberrationsEnum::None, targetStateVector.GetEpoch(), *targetStateVector.GetCenterOfMotion());
 
     return IO::Astrodynamics::OrbitalParameters::StateVector{targetStateVector.GetCenterOfMotion(), targetStateVector.GetPosition() - sv.GetPosition(),
-                                                   targetStateVector.GetVelocity() - sv.GetVelocity(), targetStateVector.GetEpoch(), targetStateVector.GetFrame()};
+                                                             targetStateVector.GetVelocity() - sv.GetVelocity(), targetStateVector.GetEpoch(), targetStateVector.GetFrame()};
 }
 
 bool IO::Astrodynamics::Body::CelestialBody::IsInSphereOfInfluence(const IO::Astrodynamics::OrbitalParameters::StateVector &targetStateVector) const
@@ -119,7 +144,8 @@ double IO::Astrodynamics::Body::CelestialBody::GetFlattening() const
 double IO::Astrodynamics::Body::CelestialBody::GetAngularVelocity(const IO::Astrodynamics::Time::TDB &epoch) const
 {
     auto initialVector = m_BodyFixedFrame.TransformVector(IO::Astrodynamics::Frames::InertialFrames::GetICRF(), IO::Astrodynamics::Math::Vector3D::VectorX, epoch);
-    auto finalVector = m_BodyFixedFrame.TransformVector(IO::Astrodynamics::Frames::InertialFrames::GetICRF(), IO::Astrodynamics::Math::Vector3D::VectorX, epoch + IO::Astrodynamics::Time::TimeSpan(1000.0s));
+    auto finalVector = m_BodyFixedFrame.TransformVector(IO::Astrodynamics::Frames::InertialFrames::GetICRF(), IO::Astrodynamics::Math::Vector3D::VectorX,
+                                                        epoch + IO::Astrodynamics::Time::TimeSpan(1000.0s));
     return std::abs(finalVector.GetAngle(initialVector)) / 1000.0;
 }
 
@@ -151,6 +177,22 @@ bool IO::Astrodynamics::Body::CelestialBody::IsAsteroid(int celestialBodyId)
 bool IO::Astrodynamics::Body::CelestialBody::IsMoon(int celestialBodyId)
 {
     return celestialBodyId > 100 && celestialBodyId < 1000 && (celestialBodyId % 100) != 99;
+}
+
+int IO::Astrodynamics::Body::CelestialBody::FindBarycenterOfMotionId(int celestialBodyNaifId)
+{
+    if (IO::Astrodynamics::Body::CelestialBody::IsSun(celestialBodyNaifId) || IO::Astrodynamics::Body::CelestialBody::IsBarycenter(celestialBodyNaifId) ||
+        IO::Astrodynamics::Body::CelestialBody::IsAsteroid(celestialBodyNaifId))
+    {
+        return 0;
+    }
+
+    if (IO::Astrodynamics::Body::CelestialBody::IsPlanet(celestialBodyNaifId) || IO::Astrodynamics::Body::CelestialBody::IsMoon(celestialBodyNaifId))
+    {
+        return (int)(celestialBodyNaifId / 100);
+    }
+
+    throw IO::Astrodynamics::Exception::InvalidArgumentException(std::string("Invalid Naif Id : ") + std::to_string(celestialBodyNaifId));
 }
 
 int IO::Astrodynamics::Body::CelestialBody::FindCenterOfMotionId(int celestialBodyNaifId)

@@ -6,7 +6,7 @@
 // Created by spacer on 3/23/23.
 //
 
-#include <GeodeticDTO.h>
+#include <PlanetodeticDTO.h>
 #include <AzimuthRangeDTO.h>
 #include "BodyVisibilityFromSiteConstraintDTO.h"
 #include "ByDayConstraintDTO.h"
@@ -21,7 +21,7 @@ namespace IO::Astrodynamics::API::DTO
         int id{0};
         const char *name{};
         int bodyId{0};
-        IO::Astrodynamics::API::DTO::GeodeticDTO coordinates{};
+        IO::Astrodynamics::API::DTO::PlanetodeticDTO coordinates{};
         IO::Astrodynamics::API::DTO::AzimuthRangeDTO ranges[10]{};
         const char *directoryPath{};
     };

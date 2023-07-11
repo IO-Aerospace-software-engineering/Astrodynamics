@@ -14,7 +14,6 @@ var dir_f3244a0ec463aae356f3f838b4002156 =
     [ "EquinoctialElementsDTO.h", "EquinoctialElementsDTO_8h.html", "EquinoctialElementsDTO_8h" ],
     [ "FrameTransformation.h", "FrameTransformation_8h.html", "FrameTransformation_8h" ],
     [ "FuelTankDTO.h", "FuelTankDTO_8h.html", "FuelTankDTO_8h" ],
-    [ "GeodeticDTO.h", "GeodeticDTO_8h.html", "GeodeticDTO_8h" ],
     [ "HorizontalDTO.h", "HorizontalDTO_8h.html", "HorizontalDTO_8h" ],
     [ "InFieldOfViewConstraintDTO.h", "InFieldOfViewConstraintDTO_8h.html", "InFieldOfViewConstraintDTO_8h" ],
     [ "InstrumentDTO.h", "InstrumentDTO_8h.html", "InstrumentDTO_8h" ],
@@ -26,6 +25,7 @@ var dir_f3244a0ec463aae356f3f838b4002156 =
     [ "PayloadDTO.h", "PayloadDTO_8h.html", "PayloadDTO_8h" ],
     [ "PerigeeHeightChangingManeuverDTO.h", "PerigeeHeightChangingManeuverDTO_8h.html", "PerigeeHeightChangingManeuverDTO_8h" ],
     [ "PhasingManeuverDTO.h", "PhasingManeuverDTO_8h.html", "PhasingManeuverDTO_8h" ],
+    [ "PlanetodeticDTO.h", "PlanetodeticDTO_8h.html", "PlanetodeticDTO_8h" ],
     [ "ProgradeAttitudeDTO.h", "ProgradeAttitudeDTO_8h.html", "ProgradeAttitudeDTO_8h" ],
     [ "QuaternionDTO.h", "QuaternionDTO_8h.html", "QuaternionDTO_8h" ],
     [ "RaDecDTO.h", "RaDecDTO_8h.html", "RaDecDTO_8h" ],
@@ -35,6 +35,7 @@ var dir_f3244a0ec463aae356f3f838b4002156 =
     [ "SpacecraftDTO.h", "SpacecraftDTO_8h.html", "SpacecraftDTO_8h" ],
     [ "StateOrientationDTO.h", "StateOrientationDTO_8h.html", "StateOrientationDTO_8h" ],
     [ "StateVectorDTO.h", "StateVectorDTO_8h.html", "StateVectorDTO_8h" ],
+    [ "TLEElementsDTO.h", "TLEElementsDTO_8h.html", "TLEElementsDTO_8h" ],
     [ "Vector3DDTO.h", "Vector3DDTO_8h.html", "Vector3DDTO_8h" ],
     [ "WindowDTO.h", "WindowDTO_8h.html", "WindowDTO_8h" ],
     [ "ZenithAttitudeDTO.h", "ZenithAttitudeDTO_8h.html", "ZenithAttitudeDTO_8h" ]
