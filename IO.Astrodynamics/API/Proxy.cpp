@@ -912,13 +912,17 @@ BuildCelestialBodies(IO::Astrodynamics::API::DTO::ScenarioDTO &scenario)
 {
     std::map<int, std::shared_ptr<IO::Astrodynamics::Body::CelestialBody>> celestialBodies;
 
-    // insert sun
-    for (auto &cb: scenario.CelestialBodiesId)
+    std::vector<int> celestialBodyIds;
+    int celestialBodyId = scenario.Spacecraft.initialOrbitalParameter.centerOfMotionId;
+    while (celestialBodyIds.empty() || (celestialBodyIds.back() != 10 && celestialBodyIds.back() != 0))
     {
-        if (cb == -1)
-        {
-            break;
-        }
+        celestialBodyIds.emplace_back(celestialBodyId);
+        celestialBodyId = IO::Astrodynamics::Body::CelestialBody::FindCenterOfMotionId(celestialBodyId);
+    }
+
+    // insert sun
+    for (auto &cb: celestialBodyIds)
+    {
         if (IO::Astrodynamics::Body::CelestialBody::IsSun(cb))
         {
             celestialBodies.emplace(cb, std::make_shared<IO::Astrodynamics::Body::CelestialBody>(cb));
@@ -926,14 +930,9 @@ BuildCelestialBodies(IO::Astrodynamics::API::DTO::ScenarioDTO &scenario)
         }
     }
     //insert planets or asteroids
-    for (auto &cb: scenario.CelestialBodiesId)
+    for (auto &cb: celestialBodyIds)
     {
-        if (cb == -1)
-        {
-            break;
-        }
-        if (IO::Astrodynamics::Body::CelestialBody::IsAsteroid(cb) ||
-            IO::Astrodynamics::Body::CelestialBody::IsPlanet(cb))
+        if (IO::Astrodynamics::Body::CelestialBody::IsAsteroid(cb) || IO::Astrodynamics::Body::CelestialBody::IsPlanet(cb))
         {
             celestialBodies.emplace(cb, std::make_shared<IO::Astrodynamics::Body::CelestialBody>(cb,
                                                                                                  celestialBodies[IO::Astrodynamics::Body::CelestialBody::FindCenterOfMotionId(
@@ -942,7 +941,34 @@ BuildCelestialBodies(IO::Astrodynamics::API::DTO::ScenarioDTO &scenario)
     }
 
     //insert moons
-    for (auto &cb: scenario.CelestialBodiesId)
+    for (auto &cb: celestialBodyIds)
+    {
+        if (IO::Astrodynamics::Body::CelestialBody::IsMoon(cb))
+        {
+            IO::Astrodynamics::Body::CelestialBody c(cb);
+            celestialBodies.emplace(cb, std::make_shared<IO::Astrodynamics::Body::CelestialBody>(cb,
+                                                                                                 celestialBodies[IO::Astrodynamics::Body::CelestialBody::FindCenterOfMotionId(
+                                                                                                         cb)]));
+        }
+    }
+
+    //insert planets or asteroids
+    for (auto &cb: scenario.AdditionalCelestialBodiesId)
+    {
+        if (cb == -1)
+        {
+            break;
+        }
+        if (IO::Astrodynamics::Body::CelestialBody::IsAsteroid(cb) || IO::Astrodynamics::Body::CelestialBody::IsPlanet(cb))
+        {
+            celestialBodies.emplace(cb, std::make_shared<IO::Astrodynamics::Body::CelestialBody>(cb,
+                                                                                                 celestialBodies[IO::Astrodynamics::Body::CelestialBody::FindCenterOfMotionId(
+                                                                                                         cb)]));
+        }
+    }
+
+    //insert moons
+    for (auto &cb: scenario.AdditionalCelestialBodiesId)
     {
         if (cb == -1)
         {

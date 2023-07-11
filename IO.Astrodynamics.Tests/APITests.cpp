@@ -35,10 +35,6 @@ TEST(API, SiteAndSpacecraftPropagation)
     scenario.Window.start = 668085625.01523638;
     scenario.Window.end = 668174330.814560;
 
-    //Define celestial body involved in the propagation
-    scenario.CelestialBodiesId[0] = 399;
-    scenario.CelestialBodiesId[1] = 10;
-
     //Configure site
     scenario.Sites[0].id = 399033;
     scenario.Sites[0].name = "S33";
@@ -78,10 +74,8 @@ TEST(API, SpacecraftPropagation)
     scenario.Window.start = 668085625.015240;
     scenario.Window.end = 668174469.185440;
 
-    //Add involved celestia bodies
-    scenario.CelestialBodiesId[0] = 10;
-    scenario.CelestialBodiesId[1] = 399;
-    scenario.CelestialBodiesId[2] = 301;
+    //Add additional celestial bodies involved
+    scenario.AdditionalCelestialBodiesId[0] = 301;
 
     //Add and configure spacecraft
     scenario.Spacecraft.id = -1111;
