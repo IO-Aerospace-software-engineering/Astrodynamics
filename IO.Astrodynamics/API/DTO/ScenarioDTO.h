@@ -18,7 +18,7 @@ namespace IO::Astrodynamics::API::DTO
         SpacecraftDTO Spacecraft;
         SiteDTO Sites[10];
 
-        int CelestialBodiesId[10]{-1,-1,-1,-1,-1,-1,-1,-1,-1,-1};
+        int AdditionalCelestialBodiesId[10]{-1, -1, -1, -1, -1, -1, -1, -1, -1, -1};
         const char *Error{};
     };
 }
