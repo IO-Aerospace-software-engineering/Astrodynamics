@@ -945,7 +945,6 @@ BuildCelestialBodies(IO::Astrodynamics::API::DTO::ScenarioDTO &scenario)
     {
         if (IO::Astrodynamics::Body::CelestialBody::IsMoon(cb))
         {
-            IO::Astrodynamics::Body::CelestialBody c(cb);
             celestialBodies.emplace(cb, std::make_shared<IO::Astrodynamics::Body::CelestialBody>(cb,
                                                                                                  celestialBodies[IO::Astrodynamics::Body::CelestialBody::FindCenterOfMotionId(
                                                                                                          cb)]));
