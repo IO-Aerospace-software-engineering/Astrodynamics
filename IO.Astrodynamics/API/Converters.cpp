@@ -77,12 +77,12 @@ static IO::Astrodynamics::API::DTO::QuaternionDTO ToQuaternionDTO(IO::Astrodynam
     return q;
 }
 
-static IO::Astrodynamics::Coordinates::Geodetic ToGeodetic(IO::Astrodynamics::API::DTO::PlanetodeticDTO &dto)
+static IO::Astrodynamics::Coordinates::Planetodetic ToPlanetodetic(IO::Astrodynamics::API::DTO::PlanetodeticDTO &dto)
 {
-    return IO::Astrodynamics::Coordinates::Geodetic{dto.longitude, dto.latitude, dto.altitude};
+    return IO::Astrodynamics::Coordinates::Planetodetic{dto.longitude, dto.latitude, dto.altitude};
 }
 
-static IO::Astrodynamics::API::DTO::PlanetodeticDTO ToGeodeticDTO(IO::Astrodynamics::Coordinates::Geodetic &geodetic)
+static IO::Astrodynamics::API::DTO::PlanetodeticDTO ToGeodeticDTO(IO::Astrodynamics::Coordinates::Planetodetic &geodetic)
 {
     IO::Astrodynamics::API::DTO::PlanetodeticDTO dto(geodetic.GetLongitude(), geodetic.GetLatitude(), geodetic.GetAltitude());
     return dto;

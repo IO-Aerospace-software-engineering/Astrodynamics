@@ -27,7 +27,7 @@ namespace IO::Astrodynamics::Sites
          * @param coordinates 
          * @param body 
          */
-        LaunchSite(int id, const std::string& name, const IO::Astrodynamics::Coordinates::Geodetic& coordinates,
+        LaunchSite(int id, const std::string& name, const IO::Astrodynamics::Coordinates::Planetodetic& coordinates,
                    std::shared_ptr<IO::Astrodynamics::Body::CelestialBody> body,std::string directoryPath);
 
         /**

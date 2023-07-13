@@ -102,10 +102,10 @@ int main()
 
     //Define launch site and recovery site
     auto launchSite = std::make_shared<IO::Astrodynamics::Sites::LaunchSite>(399003, "S3",
-                                                                   IO::Astrodynamics::Coordinates::Geodetic(-81.0 * IO::Astrodynamics::Constants::DEG_RAD, 28.5 * IO::Astrodynamics::Constants::DEG_RAD, 0.0),
+                                                                   IO::Astrodynamics::Coordinates::Planetodetic(-81.0 * IO::Astrodynamics::Constants::DEG_RAD, 28.5 * IO::Astrodynamics::Constants::DEG_RAD, 0.0),
                                                                    earth, std::string(SitePath));
     auto recoverySite = std::make_shared<IO::Astrodynamics::Sites::Site>(399004, "S4",
-                                                               IO::Astrodynamics::Coordinates::Geodetic(-80.0 * IO::Astrodynamics::Constants::DEG_RAD, 28.5 * IO::Astrodynamics::Constants::DEG_RAD, 0.0),
+                                                               IO::Astrodynamics::Coordinates::Planetodetic(-80.0 * IO::Astrodynamics::Constants::DEG_RAD, 28.5 * IO::Astrodynamics::Constants::DEG_RAD, 0.0),
                                                                earth, std::string(SitePath));
 
     //Define simulation window. (Warning : When Spacecraft is involved, dates must be greater than 2021-01-01 to be compliant with Spacecraft clock)

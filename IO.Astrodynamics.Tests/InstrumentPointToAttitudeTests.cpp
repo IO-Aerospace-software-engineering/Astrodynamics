@@ -1,3 +1,7 @@
+/*
+ Copyright (c) 2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
+ */
+
 #include <gtest/gtest.h>
 #include <VVIntegrator.h>
 #include <InstrumentPointingToAttitude.h>
@@ -63,7 +67,7 @@ TEST(InstrumentPointingToSiteAttitude, GetOrientation)
     auto moon = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(301, earth);
     //    long 1.1159563818495755
     //    lat 0.0020551285296693113
-    IO::Astrodynamics::Sites::Site site(399001, "targetedSite", IO::Astrodynamics::Coordinates::Geodetic(1.1159563818495755, 0.0020551285296693113, 0.0), earth,std::string(SitePath));
+    IO::Astrodynamics::Sites::Site site(399001, "targetedSite", IO::Astrodynamics::Coordinates::Planetodetic(1.1159563818495755, 0.0020551285296693113, 0.0), earth, std::string(SitePath));
 
     std::unique_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParams1 = std::make_unique<IO::Astrodynamics::OrbitalParameters::StateVector>(earth,
                                                                                                                                               IO::Astrodynamics::Math::Vector3D(6678000.0,
@@ -112,7 +116,7 @@ TEST(InstrumentPointingToSiteAttitude2, GetOrientation)
     auto moon = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(301, earth);
     //    long 1.1159563818495755
     //    lat 0.0020551285296693113
-    IO::Astrodynamics::Sites::Site site(399001, "targetedSite", IO::Astrodynamics::Coordinates::Geodetic(1.1159563818495755, 0.0020551285296693113, 0.0), moon,std::string(SitePath));
+    IO::Astrodynamics::Sites::Site site(399001, "targetedSite", IO::Astrodynamics::Coordinates::Planetodetic(1.1159563818495755, 0.0020551285296693113, 0.0), moon, std::string(SitePath));
 
     std::unique_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParams1 = std::make_unique<IO::Astrodynamics::OrbitalParameters::StateVector>(earth,
                                                                                                                                               IO::Astrodynamics::Math::Vector3D(6678000.0,

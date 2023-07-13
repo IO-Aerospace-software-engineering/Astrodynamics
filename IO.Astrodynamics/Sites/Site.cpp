@@ -11,7 +11,7 @@
 
 using namespace std::chrono_literals;
 
-IO::Astrodynamics::Sites::Site::Site(const int id, std::string name, const IO::Astrodynamics::Coordinates::Geodetic &coordinates,
+IO::Astrodynamics::Sites::Site::Site(const int id, std::string name, const IO::Astrodynamics::Coordinates::Planetodetic &coordinates,
                            std::shared_ptr<IO::Astrodynamics::Body::CelestialBody> body, std::string directoryPath) : m_id{id},
                                                                                                             m_name{std::move(name)},
                                                                                                             m_coordinates{coordinates},

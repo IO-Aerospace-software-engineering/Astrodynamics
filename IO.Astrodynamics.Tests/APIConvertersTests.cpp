@@ -78,7 +78,7 @@ TEST(APIConverters, Geodetic)
 {
     IO::Astrodynamics::API::DTO::PlanetodeticDTO geodeticDTO(2.0, 1.0, 3.0);
 
-    auto geodetic = ToGeodetic(geodeticDTO);
+    auto geodetic = ToPlanetodetic(geodeticDTO);
     ASSERT_DOUBLE_EQ(1.0, geodetic.GetLatitude());
     ASSERT_DOUBLE_EQ(2.0, geodetic.GetLongitude());
     ASSERT_DOUBLE_EQ(3.0, geodetic.GetAltitude());

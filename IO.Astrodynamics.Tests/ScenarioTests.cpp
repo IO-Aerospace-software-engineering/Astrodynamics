@@ -1,3 +1,7 @@
+/*
+ Copyright (c) 2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
+ */
+
 #include<gtest/gtest.h>
 
 #include<TLE.h>
@@ -15,7 +19,7 @@ TEST(Scenario, Initialize)
     auto sun = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(10);
     auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399, sun);
     auto ls = IO::Astrodynamics::Sites::LaunchSite(399003, "S3",
-                                         IO::Astrodynamics::Coordinates::Geodetic(-81.0 * IO::Astrodynamics::Constants::DEG_RAD, 28.5 * IO::Astrodynamics::Constants::DEG_RAD, 0.0),
+                                         IO::Astrodynamics::Coordinates::Planetodetic(-81.0 * IO::Astrodynamics::Constants::DEG_RAD, 28.5 * IO::Astrodynamics::Constants::DEG_RAD, 0.0),
                                          earth,std::string(SitePath));
     std::unique_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::Astrodynamics::OrbitalParameters::StateVector>(
             ls.GetStateVector(IO::Astrodynamics::Frames::InertialFrames::GetICRF(), IO::Astrodynamics::Time::TDB("2021-06-02T00:00:00")));

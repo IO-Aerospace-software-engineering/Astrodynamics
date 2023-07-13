@@ -1,3 +1,7 @@
+/*
+ Copyright (c) 2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
+ */
+
 #include <gtest/gtest.h>
 #include <memory>
 
@@ -19,7 +23,7 @@ TEST(Launch, InertialAscendingAzimuth)
     auto sun = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(10);
     auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399, sun);
     auto ls = IO::Astrodynamics::Sites::LaunchSite(399001, "S1",
-                                         IO::Astrodynamics::Coordinates::Geodetic(-81.0 * IO::Astrodynamics::Constants::DEG_RAD, 28.5 * IO::Astrodynamics::Constants::DEG_RAD, 0.0), earth, std::string(SitePath));
+                                                   IO::Astrodynamics::Coordinates::Planetodetic(-81.0 * IO::Astrodynamics::Constants::DEG_RAD, 28.5 * IO::Astrodynamics::Constants::DEG_RAD, 0.0), earth, std::string(SitePath));
     std::unique_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::Astrodynamics::OrbitalParameters::StateVector>(
             ls.GetStateVector(IO::Astrodynamics::Frames::InertialFrames::GetICRF(), IO::Astrodynamics::Time::TDB("2013-10-14T10:18:00")));
     IO::Astrodynamics::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams)};
@@ -37,7 +41,7 @@ TEST(Launch, InertialDescendingAzimuth)
     auto sun = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(10);
     auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399, sun);
     auto ls = IO::Astrodynamics::Sites::LaunchSite(399001, "S1",
-                                         IO::Astrodynamics::Coordinates::Geodetic(-81.0 * IO::Astrodynamics::Constants::DEG_RAD, 28.5 * IO::Astrodynamics::Constants::DEG_RAD, 0.0),
+                                         IO::Astrodynamics::Coordinates::Planetodetic(-81.0 * IO::Astrodynamics::Constants::DEG_RAD, 28.5 * IO::Astrodynamics::Constants::DEG_RAD, 0.0),
                                          earth, std::string(SitePath));
     std::unique_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::Astrodynamics::OrbitalParameters::StateVector>(
             ls.GetStateVector(IO::Astrodynamics::Frames::InertialFrames::GetICRF(), IO::Astrodynamics::Time::TDB("2013-10-14T10:18:00")));
@@ -56,7 +60,7 @@ TEST(Launch, InertialInsertionVelocity)
     auto sun = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(10);
     auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399, sun);
     auto ls = IO::Astrodynamics::Sites::LaunchSite(399001, "S1",
-                                         IO::Astrodynamics::Coordinates::Geodetic(-81.0 * IO::Astrodynamics::Constants::DEG_RAD, 28.5 * IO::Astrodynamics::Constants::DEG_RAD, 0.0),
+                                         IO::Astrodynamics::Coordinates::Planetodetic(-81.0 * IO::Astrodynamics::Constants::DEG_RAD, 28.5 * IO::Astrodynamics::Constants::DEG_RAD, 0.0),
                                          earth,std::string(SitePath));
     std::unique_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::Astrodynamics::OrbitalParameters::StateVector>(
             ls.GetStateVector(IO::Astrodynamics::Frames::InertialFrames::GetICRF(), IO::Astrodynamics::Time::TDB("2013-10-14T10:18:00")));
@@ -75,7 +79,7 @@ TEST(Launch, NonInertialAscendingAzimuth)
     auto sun = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(10);
     auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399, sun);
     auto ls = IO::Astrodynamics::Sites::LaunchSite(399001, "S1",
-                                         IO::Astrodynamics::Coordinates::Geodetic(-81.0 * IO::Astrodynamics::Constants::DEG_RAD, 28.5 * IO::Astrodynamics::Constants::DEG_RAD, 0.0),
+                                         IO::Astrodynamics::Coordinates::Planetodetic(-81.0 * IO::Astrodynamics::Constants::DEG_RAD, 28.5 * IO::Astrodynamics::Constants::DEG_RAD, 0.0),
                                          earth,std::string(SitePath));
     std::unique_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::Astrodynamics::OrbitalParameters::StateVector>(
             ls.GetStateVector(IO::Astrodynamics::Frames::InertialFrames::GetICRF(), IO::Astrodynamics::Time::TDB("2013-10-14T10:18:00")));
@@ -94,7 +98,7 @@ TEST(Launch, NonInertialDescendingAzimuth)
     auto sun = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(10);
     auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399, sun);
     auto ls = IO::Astrodynamics::Sites::LaunchSite(399001, "S1",
-                                         IO::Astrodynamics::Coordinates::Geodetic(-81.0 * IO::Astrodynamics::Constants::DEG_RAD, 28.5 * IO::Astrodynamics::Constants::DEG_RAD, 0.0),
+                                         IO::Astrodynamics::Coordinates::Planetodetic(-81.0 * IO::Astrodynamics::Constants::DEG_RAD, 28.5 * IO::Astrodynamics::Constants::DEG_RAD, 0.0),
                                          earth,std::string(SitePath));
     std::unique_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::Astrodynamics::OrbitalParameters::StateVector>(
             ls.GetStateVector(IO::Astrodynamics::Frames::InertialFrames::GetICRF(), IO::Astrodynamics::Time::TDB("2013-10-14T10:18:00")));
@@ -113,7 +117,7 @@ TEST(Launch, NonInertialInsertionVelocity)
     auto sun = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(10);
     auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399, sun);
     auto ls = IO::Astrodynamics::Sites::LaunchSite(399001, "S1",
-                                         IO::Astrodynamics::Coordinates::Geodetic(-81.0 * IO::Astrodynamics::Constants::DEG_RAD, 28.5 * IO::Astrodynamics::Constants::DEG_RAD, 0.0),
+                                         IO::Astrodynamics::Coordinates::Planetodetic(-81.0 * IO::Astrodynamics::Constants::DEG_RAD, 28.5 * IO::Astrodynamics::Constants::DEG_RAD, 0.0),
                                          earth,std::string(SitePath));
     std::unique_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::Astrodynamics::OrbitalParameters::StateVector>(
             ls.GetStateVector(IO::Astrodynamics::Frames::InertialFrames::GetICRF(), IO::Astrodynamics::Time::TDB("2013-10-14T10:18:00")));
@@ -132,7 +136,7 @@ TEST(Launch, RetrogradeNonInertialAscendingAzimuth)
     auto sun = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(10);
     auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399, sun);
     auto ls = IO::Astrodynamics::Sites::LaunchSite(399001, "S1",
-                                         IO::Astrodynamics::Coordinates::Geodetic(-81.0 * IO::Astrodynamics::Constants::DEG_RAD, 28.5 * IO::Astrodynamics::Constants::DEG_RAD, 0.0),
+                                         IO::Astrodynamics::Coordinates::Planetodetic(-81.0 * IO::Astrodynamics::Constants::DEG_RAD, 28.5 * IO::Astrodynamics::Constants::DEG_RAD, 0.0),
                                          earth,std::string(SitePath));
     std::unique_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::Astrodynamics::OrbitalParameters::StateVector>(
             ls.GetStateVector(IO::Astrodynamics::Frames::InertialFrames::GetICRF(), IO::Astrodynamics::Time::TDB("2013-10-14T10:18:00")));
@@ -151,7 +155,7 @@ TEST(Launch, RetrogradeInertialAscendingAzimuth)
     auto sun = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(10);
     auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399, sun);
     auto ls = IO::Astrodynamics::Sites::LaunchSite(399001, "S1",
-                                         IO::Astrodynamics::Coordinates::Geodetic(-81.0 * IO::Astrodynamics::Constants::DEG_RAD, 28.5 * IO::Astrodynamics::Constants::DEG_RAD, 0.0),
+                                         IO::Astrodynamics::Coordinates::Planetodetic(-81.0 * IO::Astrodynamics::Constants::DEG_RAD, 28.5 * IO::Astrodynamics::Constants::DEG_RAD, 0.0),
                                          earth,std::string(SitePath));
     std::unique_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::Astrodynamics::OrbitalParameters::StateVector>(
             ls.GetStateVector(IO::Astrodynamics::Frames::InertialFrames::GetICRF(), IO::Astrodynamics::Time::TDB("2013-10-14T10:18:00")));
@@ -170,7 +174,7 @@ TEST(Launch, RetrogradeNonInertialInsertionVelocity)
     auto sun = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(10);
     auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399, sun);
     auto ls = IO::Astrodynamics::Sites::LaunchSite(399001, "S1",
-                                         IO::Astrodynamics::Coordinates::Geodetic(-81.0 * IO::Astrodynamics::Constants::DEG_RAD, 28.5 * IO::Astrodynamics::Constants::DEG_RAD, 0.0),
+                                         IO::Astrodynamics::Coordinates::Planetodetic(-81.0 * IO::Astrodynamics::Constants::DEG_RAD, 28.5 * IO::Astrodynamics::Constants::DEG_RAD, 0.0),
                                          earth,std::string(SitePath));
     std::unique_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::Astrodynamics::OrbitalParameters::StateVector>(
             ls.GetStateVector(IO::Astrodynamics::Frames::InertialFrames::GetICRF(), IO::Astrodynamics::Time::TDB("2013-10-14T10:18:00")));
@@ -189,7 +193,7 @@ TEST(Launch, RetrogradeInertialInsertionVelocity)
     auto sun = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(10);
     auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399, sun);
     auto ls = IO::Astrodynamics::Sites::LaunchSite(399001, "S1",
-                                         IO::Astrodynamics::Coordinates::Geodetic(-81.0 * IO::Astrodynamics::Constants::DEG_RAD, 28.5 * IO::Astrodynamics::Constants::DEG_RAD, 0.0),
+                                         IO::Astrodynamics::Coordinates::Planetodetic(-81.0 * IO::Astrodynamics::Constants::DEG_RAD, 28.5 * IO::Astrodynamics::Constants::DEG_RAD, 0.0),
                                          earth,std::string(SitePath));
     std::unique_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::Astrodynamics::OrbitalParameters::StateVector>(
             ls.GetStateVector(IO::Astrodynamics::Frames::InertialFrames::GetICRF(), IO::Astrodynamics::Time::TDB("2013-10-14T10:18:00")));
@@ -208,7 +212,7 @@ TEST(Launch, GetLaunchWindows)
     auto sun = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(10);
     auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399, sun);
     auto ls = IO::Astrodynamics::Sites::LaunchSite(399001, "S1",
-                                         IO::Astrodynamics::Coordinates::Geodetic(-81.0 * IO::Astrodynamics::Constants::DEG_RAD, 28.5 * IO::Astrodynamics::Constants::DEG_RAD, 0.0),
+                                         IO::Astrodynamics::Coordinates::Planetodetic(-81.0 * IO::Astrodynamics::Constants::DEG_RAD, 28.5 * IO::Astrodynamics::Constants::DEG_RAD, 0.0),
                                          earth,std::string(SitePath));
     std::unique_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::Astrodynamics::OrbitalParameters::StateVector>(
             ls.GetStateVector(IO::Astrodynamics::Frames::InertialFrames::GetICRF(), IO::Astrodynamics::Time::TDB("2021-06-02T00:00:00")));
@@ -248,7 +252,7 @@ TEST(Launch, GetLaunchWindowsByDay)
     auto sun = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(10);
     auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399, sun);
     auto ls = IO::Astrodynamics::Sites::LaunchSite(399003, "S3",
-                                         IO::Astrodynamics::Coordinates::Geodetic(-81.0 * IO::Astrodynamics::Constants::DEG_RAD, 28.5 * IO::Astrodynamics::Constants::DEG_RAD, 0.0),
+                                         IO::Astrodynamics::Coordinates::Planetodetic(-81.0 * IO::Astrodynamics::Constants::DEG_RAD, 28.5 * IO::Astrodynamics::Constants::DEG_RAD, 0.0),
                                          earth,std::string(SitePath));
     std::unique_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::Astrodynamics::OrbitalParameters::StateVector>(
             ls.GetStateVector(IO::Astrodynamics::Frames::InertialFrames::GetICRF(), IO::Astrodynamics::Time::TDB("2021-06-02T00:00:00")));
@@ -280,7 +284,7 @@ TEST(Launch, GetSouthLaunchSiteLaunchWindowsByDay)
     auto sun = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(10);
     auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399, sun);
     auto ls = IO::Astrodynamics::Sites::LaunchSite(399001, "S1",
-                                         IO::Astrodynamics::Coordinates::Geodetic(-104 * IO::Astrodynamics::Constants::DEG_RAD, -41.0 * IO::Astrodynamics::Constants::DEG_RAD, 0.0),
+                                         IO::Astrodynamics::Coordinates::Planetodetic(-104 * IO::Astrodynamics::Constants::DEG_RAD, -41.0 * IO::Astrodynamics::Constants::DEG_RAD, 0.0),
                                          earth,std::string(SitePath));
     std::unique_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::Astrodynamics::OrbitalParameters::StateVector>(
             ls.GetStateVector(IO::Astrodynamics::Frames::InertialFrames::GetICRF(), IO::Astrodynamics::Time::TDB("2021-06-02T00:00:00")));
@@ -311,7 +315,7 @@ TEST(Launch, GetSouthLaunchSiteLaunchWindows)
 {
     auto sun = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(10);
     auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399, sun);
-    auto ls = IO::Astrodynamics::Sites::LaunchSite(399001, "S1", IO::Astrodynamics::Coordinates::Geodetic(-104.0 * IO::Astrodynamics::Constants::DEG_RAD, -41.0 * IO::Astrodynamics::Constants::DEG_RAD, 0.0),
+    auto ls = IO::Astrodynamics::Sites::LaunchSite(399001, "S1", IO::Astrodynamics::Coordinates::Planetodetic(-104.0 * IO::Astrodynamics::Constants::DEG_RAD, -41.0 * IO::Astrodynamics::Constants::DEG_RAD, 0.0),
                                          earth,std::string(SitePath));
     std::unique_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::Astrodynamics::OrbitalParameters::StateVector>(
             ls.GetStateVector(IO::Astrodynamics::Frames::InertialFrames::GetICRF(), IO::Astrodynamics::Time::TDB("2021-06-02T00:00:00")));

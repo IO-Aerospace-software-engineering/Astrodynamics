@@ -79,6 +79,7 @@ ReadOrientationProxy(IO::Astrodynamics::API::DTO::WindowDTO searchWindow, int sp
  * @param scenarioDto
  */
 MODULE_API void PropagateProxy(IO::Astrodynamics::API::DTO::ScenarioDTO &scenarioDto);
+MODULE_API void PropagateSiteProxy(IO::Astrodynamics::API::DTO::WindowDTO windowDto, IO::Astrodynamics::API::DTO::SiteDTO &site);
 
 
 /**

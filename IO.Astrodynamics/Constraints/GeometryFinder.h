@@ -18,7 +18,7 @@
 #include <OccultationType.h>
 #include <CoordinateSystem.h>
 #include <Coordinate.h>
-#include <Geodetic.h>
+#include <Planetodetic.h>
 #include <Illumination.h>
 #include "IlluminationAngle.h"
 

@@ -33,12 +33,12 @@ void LaunchProxy(IO::Astrodynamics::API::DTO::LaunchDTO &launchDto)
     ActivateErrorManagement();
     auto celestialBody = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(launchDto.recoverySite.bodyId);
     IO::Astrodynamics::Sites::LaunchSite ls(launchDto.launchSite.id, launchDto.launchSite.name,
-                                            ToGeodetic(launchDto.launchSite.coordinates),
+                                            ToPlanetodetic(launchDto.launchSite.coordinates),
                                             std::make_shared<IO::Astrodynamics::Body::CelestialBody>(
                                                     launchDto.launchSite.bodyId),
                                             launchDto.launchSite.directoryPath);
     IO::Astrodynamics::Sites::LaunchSite rs(launchDto.recoverySite.id, launchDto.recoverySite.name,
-                                            ToGeodetic(launchDto.recoverySite.coordinates),
+                                            ToPlanetodetic(launchDto.recoverySite.coordinates),
                                             std::make_shared<IO::Astrodynamics::Body::CelestialBody>(
                                                     launchDto.recoverySite.bodyId),
                                             launchDto.launchSite.directoryPath);
@@ -95,7 +95,7 @@ void PropagateProxy(IO::Astrodynamics::API::DTO::ScenarioDTO &scenarioDto)
             break;
         }
         auto site = std::make_shared<IO::Astrodynamics::Sites::Site>(siteDto.id, siteDto.name,
-                                                                     ToGeodetic(siteDto.coordinates),
+                                                                     ToPlanetodetic(siteDto.coordinates),
                                                                      celestialBodies[siteDto.bodyId],
                                                                      siteDto.directoryPath);
         sites.push_back(site);
@@ -1471,6 +1471,13 @@ void BuildZenithAttitude(IO::Astrodynamics::API::DTO::ScenarioDTO &scenarioDto, 
                         std::chrono::duration<double>(
                                 maneuver.attitudeHoldDuration)));
     }
+}
+
+void PropagateSiteProxy(IO::Astrodynamics::API::DTO::WindowDTO windowDto, IO::Astrodynamics::API::DTO::SiteDTO &siteDto)
+{
+    auto celestialBody = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(siteDto.bodyId);
+    IO::Astrodynamics::Sites::Site site(siteDto.id, siteDto.name, ToPlanetodetic(siteDto.coordinates), celestialBody, siteDto.directoryPath);
+    site.BuildAndWriteEphemeris(ToUTCWindow(windowDto));
 }
 
 
