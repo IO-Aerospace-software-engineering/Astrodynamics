@@ -80,6 +80,7 @@ void PropagateSpacecraftProxy(IO::Astrodynamics::API::DTO::ScenarioDTO &scenario
     std::map<int, std::shared_ptr<IO::Astrodynamics::Body::CelestialBody>> celestialBodies = BuildCelestialBodies(
             scenarioDto);
 
+    std::vector<std::shared_ptr<IO::Astrodynamics::Sites::Site>> sites;
     //==========Build sites==========
     for (auto &siteDto: scenarioDto.Sites)
     {
@@ -91,7 +92,9 @@ void PropagateSpacecraftProxy(IO::Astrodynamics::API::DTO::ScenarioDTO &scenario
                                                                      ToPlanetodetic(siteDto.coordinates),
                                                                      celestialBodies[siteDto.bodyId],
                                                                      siteDto.directoryPath);
+        sites.push_back(site);
         scenario.AddSite(*site);
+
     }
 
 

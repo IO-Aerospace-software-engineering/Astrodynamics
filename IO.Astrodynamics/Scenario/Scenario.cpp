@@ -33,6 +33,13 @@ void IO::Astrodynamics::Scenario::AttachSpacecraft(const IO::Astrodynamics::Body
 void IO::Astrodynamics::Scenario::Execute()
 {
     auto tdb = IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB>(m_windows.GetStartDate().ToTDB(), m_windows.GetEndDate().ToTDB());
+
+    // Run Sites propagation
+    for (auto site: m_sites)
+    {
+        site->BuildAndWriteEphemeris(tdb);
+    }
+
     //Run bodies propagation
     if (m_spacecraft)
     {

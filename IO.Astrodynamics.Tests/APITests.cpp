@@ -91,6 +91,16 @@ TEST(API, SpacecraftPropagation)
     //Add additional celestial bodies involved
     scenario.AdditionalCelestialBodiesId[0] = 301;
 
+    std::string sitePath(SitePath);
+
+    scenario.Sites[0].id = 399033;
+    scenario.Sites[0].name = "S33";
+    scenario.Sites[0].directoryPath = sitePath.c_str();
+    scenario.Sites[0].bodyId = 399;
+    scenario.Sites[0].coordinates.longitude = 30 * IO::Astrodynamics::Constants::DEG_RAD;
+    scenario.Sites[0].coordinates.latitude = 10 * IO::Astrodynamics::Constants::DEG_RAD;
+    scenario.Sites[0].coordinates.altitude = 1000.0;
+
     //Add and configure spacecraft
     scenario.Spacecraft.id = -1111;
     scenario.Spacecraft.name = "spc1";
