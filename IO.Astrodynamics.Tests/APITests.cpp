@@ -29,15 +29,11 @@ TEST(API, UTCToString)
 
 TEST(API, SitePropagation)
 {
-    IO::Astrodynamics::Time::UTC start("2000-01-01T12:00:00Z");
-    IO::Astrodynamics::Time::UTC end("2000-01-02T12:00:00Z");
-    IO::Astrodynamics::API::DTO::WindowDTO windowUTCDto{};
-    windowUTCDto.start = start.GetSecondsFromJ2000().count();
-    windowUTCDto.end = end.GetSecondsFromJ2000().count();
-
+    IO::Astrodynamics::Time::TDB start(0.0s);
+    IO::Astrodynamics::Time::TDB end(86400s);
     IO::Astrodynamics::API::DTO::WindowDTO windowTDBDto{};
-    windowTDBDto.start = start.ToTDB().GetSecondsFromJ2000().count();
-    windowTDBDto.end = end.ToTDB().GetSecondsFromJ2000().count();
+    windowTDBDto.start = start.GetSecondsFromJ2000().count();
+    windowTDBDto.end = end.GetSecondsFromJ2000().count();
 
     IO::Astrodynamics::API::DTO::SiteDTO site;
 
@@ -51,7 +47,7 @@ TEST(API, SitePropagation)
     site.coordinates.latitude = 10 * IO::Astrodynamics::Constants::DEG_RAD;
     site.coordinates.altitude = 1000.0;
 
-    PropagateSiteProxy(windowUTCDto, site);
+    PropagateSiteProxy(windowTDBDto, site);
 
     //Load ephemeris file
     LoadKernelsProxy(site.directoryPath);
@@ -59,27 +55,27 @@ TEST(API, SitePropagation)
     IO::Astrodynamics::API::DTO::StateVectorDTO sv[25];
     ReadEphemerisProxy(windowTDBDto, 399, 399033, "J2000", "NONE", 3600, sv);
 
-    ASSERT_DOUBLE_EQ(4077200.716523068, sv[0].position.x);
-    ASSERT_DOUBLE_EQ(-4780250.249453159, sv[0].position.y);
-    ASSERT_DOUBLE_EQ(1100393.5033199689, sv[0].position.z);
+    ASSERT_DOUBLE_EQ(4054782.9648194457, sv[0].position.x);
+    ASSERT_DOUBLE_EQ(-4799280.7521664528, sv[0].position.y);
+    ASSERT_DOUBLE_EQ(1100392.3675019771, sv[0].position.z);
 
-    ASSERT_DOUBLE_EQ(348.57910491432824, sv[0].velocity.x);
-    ASSERT_DOUBLE_EQ(297.31632855396651, sv[0].velocity.y);
-    ASSERT_DOUBLE_EQ(0.017700408870744533, sv[0].velocity.z);
+    ASSERT_DOUBLE_EQ(349.96683107685112, sv[0].velocity.x);
+    ASSERT_DOUBLE_EQ(295.68160031926175, sv[0].velocity.y);
+    ASSERT_DOUBLE_EQ(0.017692125392659522, sv[0].velocity.z);
 
-    ASSERT_DOUBLE_EQ(64.183927284669423, sv[0].epoch);
+    ASSERT_DOUBLE_EQ(0.0, sv[0].epoch);
     ASSERT_EQ(399, sv[0].centerOfMotionId);
     ASSERT_STREQ("J2000", sv[0].inertialFrame);
 
-    ASSERT_DOUBLE_EQ(5662856.1829976384, sv[5].position.x);
-    ASSERT_DOUBLE_EQ(2721371.3729891563, sv[5].position.y);
-    ASSERT_DOUBLE_EQ(1100646.0345281383, sv[5].position.z);
+    ASSERT_DOUBLE_EQ(5675531.269242838, sv[5].position.x);
+    ASSERT_DOUBLE_EQ(2694837.2855253983, sv[5].position.y);
+    ASSERT_DOUBLE_EQ(1100645.6326860497, sv[5].position.z);
 
-    ASSERT_DOUBLE_EQ(-198.44777757040055, sv[5].velocity.x);
-    ASSERT_DOUBLE_EQ(412.94414546784014, sv[5].velocity.y);
-    ASSERT_DOUBLE_EQ(0.0062218886169227786, sv[5].velocity.z);
+    ASSERT_DOUBLE_EQ(-196.51288137429424, sv[5].velocity.x);
+    ASSERT_DOUBLE_EQ(413.86842735799422, sv[5].velocity.y);
+    ASSERT_DOUBLE_EQ(0.0062996686004048149, sv[5].velocity.z);
 
-    ASSERT_DOUBLE_EQ(18064.18392728467, sv[5].epoch);
+    ASSERT_DOUBLE_EQ(18000.0, sv[5].epoch);
     ASSERT_EQ(399, sv[5].centerOfMotionId);
     ASSERT_STREQ("J2000", sv[5].inertialFrame);
 }

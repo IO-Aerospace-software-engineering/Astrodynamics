@@ -224,19 +224,19 @@ std::string IO::Astrodynamics::Sites::Site::ReadEphemerisKernelComment() const
     return this->m_ephemerisKernel->ReadComment();
 }
 
-void IO::Astrodynamics::Sites::Site::BuildAndWriteEphemeris(const IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::UTC> &searchWindow) const
+void IO::Astrodynamics::Sites::Site::BuildAndWriteEphemeris(const IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB> &searchWindow) const
 {
     std::vector<IO::Astrodynamics::OrbitalParameters::StateVector> svector;
-    for (auto epoch = searchWindow.GetStartDate().ToTDB(); epoch <= searchWindow.GetEndDate().ToTDB(); epoch = epoch + IO::Astrodynamics::Parameters::SitePropagationStep)
+    for (auto epoch = searchWindow.GetStartDate(); epoch <= searchWindow.GetEndDate(); epoch = epoch + IO::Astrodynamics::Parameters::SitePropagationStep)
     {
         auto sv = GetStateVector(IO::Astrodynamics::Frames::InertialFrames::GetICRF(), epoch);
         svector.push_back(sv);
     }
 
     //Add latest value
-    if (svector.back().GetEpoch() < searchWindow.GetEndDate().ToTDB())
+    if (svector.back().GetEpoch() < searchWindow.GetEndDate())
     {
-        auto sv = GetStateVector(IO::Astrodynamics::Frames::InertialFrames::GetICRF(), searchWindow.GetEndDate().ToTDB());
+        auto sv = GetStateVector(IO::Astrodynamics::Frames::InertialFrames::GetICRF(), searchWindow.GetEndDate());
         svector.push_back(sv);
     }
 

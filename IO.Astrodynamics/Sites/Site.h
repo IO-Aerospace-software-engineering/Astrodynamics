@@ -209,7 +209,7 @@ namespace IO::Astrodynamics::Sites
          * Build and write ephemeris for a given period
          * @param searchWindow
          */
-        void BuildAndWriteEphemeris(const IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::UTC> &searchWindow) const;
+        void BuildAndWriteEphemeris(const IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB> &searchWindow) const;
 
         /**
          * Read ephemeris from ephemeris file

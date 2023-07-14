@@ -38,10 +38,10 @@ void IO::Astrodynamics::Scenario::AddCelestialBody(const IO::Astrodynamics::Body
 void IO::Astrodynamics::Scenario::Execute()
 {
     // Run Sites propagation
-    for (auto site: m_sites)
-    {
-        site->BuildAndWriteEphemeris(this->m_windows);
-    }
+//    for (auto site: m_sites)
+//    {
+//        site->BuildAndWriteEphemeris(this->m_windows);
+//    }
 
     auto tdb = IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB>(m_windows.GetStartDate().ToTDB(), m_windows.GetEndDate().ToTDB());
     //Run bodies propagation

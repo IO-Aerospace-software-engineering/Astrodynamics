@@ -774,7 +774,7 @@ void PropagateSiteProxy(IO::Astrodynamics::API::DTO::WindowDTO windowDto, IO::As
     ActivateErrorManagement();
     auto celestialBody = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(siteDto.bodyId);
     IO::Astrodynamics::Sites::Site site(siteDto.id, siteDto.name, ToPlanetodetic(siteDto.coordinates), celestialBody, siteDto.directoryPath);
-    site.BuildAndWriteEphemeris(ToUTCWindow(windowDto));
+    site.BuildAndWriteEphemeris(ToTDBWindow(windowDto));
     if (failed_c())
     {
         siteDto.Error = strdup(HandleError());

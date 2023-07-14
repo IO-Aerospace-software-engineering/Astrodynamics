@@ -182,7 +182,7 @@ TEST(Site, WriteEphemeris)
                                      std::string(SitePath)};
     IO::Astrodynamics::Time::TDB startDate("2021-05-17 12:00:00 TDB");
     IO::Astrodynamics::Time::TDB endDate("2021-05-17 12:11:00 TDB");
-    s.BuildAndWriteEphemeris(IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::UTC>(startDate.ToUTC(), endDate.ToUTC()));
+    s.BuildAndWriteEphemeris(IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB>(startDate, endDate));
 
     auto windows = s.GetEphemerisCoverageWindow();
 
@@ -200,7 +200,7 @@ TEST(Site, ReadEphemeris)
 
     IO::Astrodynamics::Time::TDB startDate("2021-05-17 12:00:00 TDB");
     IO::Astrodynamics::Time::TDB endDate("2021-05-17 12:11:00 TDB");
-    s.BuildAndWriteEphemeris(IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::UTC>(startDate.ToUTC(), endDate.ToUTC()));
+    s.BuildAndWriteEphemeris(IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB>(startDate, endDate));
 
     auto startEphemeris = s.ReadEphemeris(IO::Astrodynamics::Frames::InertialFrames::GetICRF(), IO::Astrodynamics::AberrationsEnum::None, startDate, *earth);
 
@@ -225,7 +225,7 @@ TEST(Site, FindBodyVisibilityWindows)
 
     IO::Astrodynamics::Time::TDB startDate("2023-02-18 00:00:00 TDB");
     IO::Astrodynamics::Time::TDB endDate("2023-02-20 02:00:00 TDB");
-    s.BuildAndWriteEphemeris(IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::UTC>(startDate.ToUTC(), endDate.ToUTC()));
+    s.BuildAndWriteEphemeris(IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB>(startDate, endDate));
 
 //    auto res = s.ToStateVector(*moon, IO::Astrodynamics::Frames::InertialFrames::GetICRF(), IO::Astrodynamics::AberrationsEnum::None, IO::Astrodynamics::Time::TDB("2023-02-19 00:00:00 TDB"));
 
