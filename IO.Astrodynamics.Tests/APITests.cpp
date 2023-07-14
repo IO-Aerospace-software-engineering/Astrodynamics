@@ -12,7 +12,7 @@
 TEST(API, DTOSize)
 {
     auto size2 = sizeof(IO::Astrodynamics::API::DTO::ScenarioDTO);
-    ASSERT_EQ(19032, size2);
+    ASSERT_EQ(19112, size2);
 }
 
 TEST(API, TDBToString)
@@ -59,25 +59,25 @@ TEST(API, SitePropagation)
     IO::Astrodynamics::API::DTO::StateVectorDTO sv[25];
     ReadEphemerisProxy(windowTDBDto, 399, 399033, "J2000", "NONE", 3600, sv);
 
-    ASSERT_DOUBLE_EQ(4077200.7188364048, sv[0].position.x);
-    ASSERT_DOUBLE_EQ(-4780250.2474862654, sv[0].position.y);
-    ASSERT_DOUBLE_EQ(1100393.5032929766, sv[0].position.z);
+    ASSERT_DOUBLE_EQ(4077200.716523068, sv[0].position.x);
+    ASSERT_DOUBLE_EQ(-4780250.249453159, sv[0].position.y);
+    ASSERT_DOUBLE_EQ(1100393.5033199689, sv[0].position.z);
 
-    ASSERT_DOUBLE_EQ(348.57910477489389, sv[0].velocity.x);
-    ASSERT_DOUBLE_EQ(297.3163287261105, sv[0].velocity.y);
-    ASSERT_DOUBLE_EQ(0.017700409073560564, sv[0].velocity.z);
+    ASSERT_DOUBLE_EQ(348.57910491432824, sv[0].velocity.x);
+    ASSERT_DOUBLE_EQ(297.31632855396651, sv[0].velocity.y);
+    ASSERT_DOUBLE_EQ(0.017700408870744533, sv[0].velocity.z);
 
     ASSERT_DOUBLE_EQ(64.183927284669423, sv[0].epoch);
     ASSERT_EQ(399, sv[0].centerOfMotionId);
     ASSERT_STREQ("J2000", sv[0].inertialFrame);
 
-    ASSERT_DOUBLE_EQ(5662856.1816485599, sv[5].position.x);
-    ASSERT_DOUBLE_EQ(2721371.3758040075, sv[5].position.y);
-    ASSERT_DOUBLE_EQ(1100646.0345094064, sv[5].position.z);
+    ASSERT_DOUBLE_EQ(5662856.1829976384, sv[5].position.x);
+    ASSERT_DOUBLE_EQ(2721371.3729891563, sv[5].position.y);
+    ASSERT_DOUBLE_EQ(1100646.0345281383, sv[5].position.z);
 
-    ASSERT_DOUBLE_EQ(-198.4477777775744, sv[5].velocity.x);
-    ASSERT_DOUBLE_EQ(412.94414537316788, sv[5].velocity.y);
-    ASSERT_DOUBLE_EQ(0.0062218892845076774, sv[5].velocity.z);
+    ASSERT_DOUBLE_EQ(-198.44777757040055, sv[5].velocity.x);
+    ASSERT_DOUBLE_EQ(412.94414546784014, sv[5].velocity.y);
+    ASSERT_DOUBLE_EQ(0.0062218886169227786, sv[5].velocity.z);
 
     ASSERT_DOUBLE_EQ(18064.18392728467, sv[5].epoch);
     ASSERT_EQ(399, sv[5].centerOfMotionId);
@@ -165,7 +165,7 @@ TEST(API, FindWindowsOnCoordinateConstraintProxy)
                                            0.0, 0.0, "NONE", 60.0,
                                            windows);
 
-    ASSERT_STREQ("2023-02-19 14:33:08.918098 (TDB)", ToTDBWindow(windows[0]).GetStartDate().ToString().c_str());
+    ASSERT_STREQ("2023-02-19 14:33:08.921329 (TDB)", ToTDBWindow(windows[0]).GetStartDate().ToString().c_str());
     ASSERT_STREQ("2023-02-19 23:58:50.814787 (UTC)", ToTDBWindow(windows[0]).GetEndDate().ToUTC().ToString().c_str());
 }
 

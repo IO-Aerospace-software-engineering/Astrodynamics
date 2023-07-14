@@ -1,3 +1,7 @@
+/*
+ Copyright (c) 2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
+ */
+
 #include <gtest/gtest.h>
 #include <CelestialBody.h>
 #include <OrbitalParameters.h>
@@ -112,7 +116,7 @@ TEST(CelestialBody, GetAngularVelocity)
 	auto sun = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(10);
 	IO::Astrodynamics::Time::TDB epoch("2021-Jan-01 00:00:00.0000 TDB");
 	auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399, sun);
-	ASSERT_DOUBLE_EQ(7.2921150187632176e-05, earth->GetAngularVelocity(epoch));
+	ASSERT_DOUBLE_EQ(7.2921151939699377e-05, earth->GetAngularVelocity(epoch));
 }
 
 TEST(CelestialBody, GetSideralRotationPeriod)
@@ -120,7 +124,7 @@ TEST(CelestialBody, GetSideralRotationPeriod)
 	auto sun = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(10);
 	IO::Astrodynamics::Time::TDB epoch("2021-Jan-01 00:00:00.0000 TDB");
 	auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399, sun);
-	ASSERT_DOUBLE_EQ(23.934472337633899, earth->GetSideralRotationPeriod(epoch).GetHours().count());
+	ASSERT_DOUBLE_EQ(23.93447176256339, earth->GetSideralRotationPeriod(epoch).GetHours().count());
 }
 
 TEST(CelestialBody, FindDistanceConstraint)

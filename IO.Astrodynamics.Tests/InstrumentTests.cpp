@@ -1,3 +1,7 @@
+/*
+ Copyright (c) 2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
+ */
+
 #include <gtest/gtest.h>
 #include <Spacecraft.h>
 #include <Instrument.h>
@@ -496,9 +500,9 @@ TEST(Instrument, FindWindowFieldOfView)
 
     ASSERT_EQ(2, results.size());
     ASSERT_STREQ("2021-06-10 00:00:00.000000 (TDB)", results[0].GetStartDate().ToString().c_str());
-    ASSERT_STREQ("2021-06-10 00:53:32.872199 (TDB)", results[0].GetEndDate().ToString().c_str());
+    ASSERT_STREQ("2021-06-10 00:53:32.872147 (TDB)", results[0].GetEndDate().ToString().c_str());
 
-    ASSERT_STREQ("2021-06-10 01:25:58.343786 (TDB)", results[1].GetStartDate().ToString().c_str());
+    ASSERT_STREQ("2021-06-10 01:25:58.343658 (TDB)", results[1].GetStartDate().ToString().c_str());
     ASSERT_STREQ("2021-06-10 01:47:27.000000 (TDB)", results[1].GetEndDate().ToString().c_str());
 }
 

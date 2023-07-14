@@ -44,10 +44,10 @@ TEST(Scenarios, ReachOrbitByDay)
     ASSERT_EQ(1, windows.size());
 
     //first launch window
-    ASSERT_STREQ("2021-06-02 18:08:00.980377 (UTC)", windows[0].GetWindow().GetStartDate().ToString().c_str());
+    ASSERT_STREQ("2021-06-02 18:07:44.336128 (UTC)", windows[0].GetWindow().GetStartDate().ToString().c_str());
     ASSERT_EQ(399003, windows[0].GetLaunchSite().GetId());
-    ASSERT_DOUBLE_EQ(44.906290078823638, windows[0].GetInertialAzimuth() * IO::Astrodynamics::Constants::RAD_DEG);
-    ASSERT_DOUBLE_EQ(42.657119977138009, windows[0].GetNonInertialAzimuth() * IO::Astrodynamics::Constants::RAD_DEG);
+    ASSERT_DOUBLE_EQ(44.905855362930239, windows[0].GetInertialAzimuth() * IO::Astrodynamics::Constants::RAD_DEG);
+    ASSERT_DOUBLE_EQ(42.656671212339546, windows[0].GetNonInertialAzimuth() * IO::Astrodynamics::Constants::RAD_DEG);
     ASSERT_DOUBLE_EQ(7665.2355903714715, windows[0].GetInertialInsertionVelocity());
-    ASSERT_DOUBLE_EQ(7382.1537527826185, windows[0].GetNonInertialInsertionVelocity());
+    ASSERT_DOUBLE_EQ(7382.156305077152, windows[0].GetNonInertialInsertionVelocity());
 }

@@ -103,9 +103,9 @@ TEST(InstrumentPointingToSiteAttitude, GetOrientation)
     ASSERT_DOUBLE_EQ(0.0, pointingManeuver.GetDeltaV().Magnitude());
     auto pointingVector = instrument->GetBoresight(IO::Astrodynamics::Frames::InertialFrames::GetICRF(), IO::Astrodynamics::Time::TDB("2021-01-01T13:00:00"));
 
-    ASSERT_NEAR(-0.99999999985376886, pointingVector.GetX(), 1E-09);
-    ASSERT_NEAR(-0.000015435253205632487, pointingVector.GetY(), 1E-09);
-    ASSERT_NEAR(-0.0000073630780085578658, pointingVector.GetZ(), 1E-09);
+    ASSERT_NEAR(-0.99963872880998339, pointingVector.GetX(), 1E-09);
+    ASSERT_NEAR(0.026869789826543089, pointingVector.GetY(), 1E-09);
+    ASSERT_NEAR(0.00065288424501521673, pointingVector.GetZ(), 1E-09);
 
 }
 

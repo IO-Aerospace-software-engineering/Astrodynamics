@@ -769,6 +769,17 @@ IO::Astrodynamics::API::DTO::TLEElementsDTO GetTLEElementsProxy(const char *L1, 
     return tleElementsDto;
 }
 
+void PropagateSiteProxy(IO::Astrodynamics::API::DTO::WindowDTO windowDto, IO::Astrodynamics::API::DTO::SiteDTO &siteDto)
+{
+    ActivateErrorManagement();
+    auto celestialBody = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(siteDto.bodyId);
+    IO::Astrodynamics::Sites::Site site(siteDto.id, siteDto.name, ToPlanetodetic(siteDto.coordinates), celestialBody, siteDto.directoryPath);
+    site.BuildAndWriteEphemeris(ToUTCWindow(windowDto));
+    if (failed_c())
+    {
+        siteDto.Error = strdup(HandleError());
+    }
+}
 #pragma endregion
 
 #pragma region ReadResults
@@ -1473,12 +1484,7 @@ void BuildZenithAttitude(IO::Astrodynamics::API::DTO::ScenarioDTO &scenarioDto, 
     }
 }
 
-void PropagateSiteProxy(IO::Astrodynamics::API::DTO::WindowDTO windowDto, IO::Astrodynamics::API::DTO::SiteDTO &siteDto)
-{
-    auto celestialBody = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(siteDto.bodyId);
-    IO::Astrodynamics::Sites::Site site(siteDto.id, siteDto.name, ToPlanetodetic(siteDto.coordinates), celestialBody, siteDto.directoryPath);
-    site.BuildAndWriteEphemeris(ToUTCWindow(windowDto));
-}
+
 
 
 #pragma endregion
