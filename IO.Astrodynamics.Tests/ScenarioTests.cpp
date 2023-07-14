@@ -30,16 +30,13 @@ TEST(Scenario, Initialize)
 
     IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::UTC> window(IO::Astrodynamics::Time::UTC("2021-06-02T00:00:00"), IO::Astrodynamics::Time::UTC("2021-06-02T00:00:00"));
     IO::Astrodynamics::Scenario scenario("scenariotest", window);
-    scenario.AddCelestialBody(*earth);
     scenario.AttachSpacecraft(s);
     scenario.AddSite(ls);
 
     ASSERT_STREQ("scenariotest", scenario.GetName().c_str());
     ASSERT_EQ(window, scenario.GetWindow());
-    ASSERT_EQ(1, scenario.GetCelestialBodies().size());
     ASSERT_EQ(1, scenario.GetSites().size());
     ASSERT_EQ(s, *scenario.GetSpacecraft());
-    ASSERT_EQ(*earth, *scenario.GetCelestialBodies().front());
 
     ASSERT_EQ(&ls, dynamic_cast<const IO::Astrodynamics::Sites::LaunchSite *>(scenario.GetSites().front()));
 

@@ -141,7 +141,7 @@ TEST(API, SpacecraftPropagation)
     scenario.Spacecraft.orbitalPlaneChangingManeuvers[0].maneuverOrder = 0;
 
     //Execute propagation
-    PropagateProxy(scenario);
+    PropagateSpacecraftProxy(scenario);
 
     IO::Astrodynamics::Time::TDB tdbStart(
             std::chrono::duration<double>(scenario.Spacecraft.orbitalPlaneChangingManeuvers[0].thrustWindow.start));

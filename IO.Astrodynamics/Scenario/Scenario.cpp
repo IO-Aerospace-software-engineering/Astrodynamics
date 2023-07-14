@@ -30,19 +30,8 @@ void IO::Astrodynamics::Scenario::AttachSpacecraft(const IO::Astrodynamics::Body
                                                              IO::Astrodynamics::Time::Window<Time::TDB>(m_windows.GetStartDate().ToTDB(), m_windows.GetEndDate().ToTDB()));
 }
 
-void IO::Astrodynamics::Scenario::AddCelestialBody(const IO::Astrodynamics::Body::CelestialBody &celestialBody)
-{
-    m_celestialBodies.push_back(&celestialBody);
-}
-
 void IO::Astrodynamics::Scenario::Execute()
 {
-    // Run Sites propagation
-//    for (auto site: m_sites)
-//    {
-//        site->BuildAndWriteEphemeris(this->m_windows);
-//    }
-
     auto tdb = IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB>(m_windows.GetStartDate().ToTDB(), m_windows.GetEndDate().ToTDB());
     //Run bodies propagation
     if (m_spacecraft)

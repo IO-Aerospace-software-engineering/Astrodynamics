@@ -69,25 +69,18 @@ void LaunchProxy(IO::Astrodynamics::API::DTO::LaunchDTO &launchDto)
 }
 
 
-void PropagateProxy(IO::Astrodynamics::API::DTO::ScenarioDTO &scenarioDto)
+void PropagateSpacecraftProxy(IO::Astrodynamics::API::DTO::ScenarioDTO &scenarioDto)
 {
     ActivateErrorManagement();
     auto tdbWindow = ToTDBWindow(scenarioDto.Window);
-    IO::Astrodynamics::Scenario scenario(scenarioDto.Name,
-                                         IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::UTC>(
-                                                 tdbWindow.GetStartDate().ToUTC(),
-                                                 tdbWindow.GetEndDate().ToUTC()));
+    IO::Astrodynamics::Scenario scenario(scenarioDto.Name, IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::UTC>(tdbWindow.GetStartDate().ToUTC(),
+                                                                                                                         tdbWindow.GetEndDate().ToUTC()));
 
     //==========Build Celestial bodies=============
     std::map<int, std::shared_ptr<IO::Astrodynamics::Body::CelestialBody>> celestialBodies = BuildCelestialBodies(
             scenarioDto);
-    for (auto &celestial: celestialBodies)
-    {
-        scenario.AddCelestialBody(*celestial.second);
-    }
 
-//  ==========Build sites==========
-    std::vector<std::shared_ptr<IO::Astrodynamics::Sites::Site>> sites;
+    //==========Build sites==========
     for (auto &siteDto: scenarioDto.Sites)
     {
         if (siteDto.id <= 0)
@@ -98,7 +91,6 @@ void PropagateProxy(IO::Astrodynamics::API::DTO::ScenarioDTO &scenarioDto)
                                                                      ToPlanetodetic(siteDto.coordinates),
                                                                      celestialBodies[siteDto.bodyId],
                                                                      siteDto.directoryPath);
-        sites.push_back(site);
         scenario.AddSite(*site);
     }
 
@@ -126,7 +118,6 @@ void PropagateProxy(IO::Astrodynamics::API::DTO::ScenarioDTO &scenarioDto)
     BuildPayload(scenarioDto, spacecraft);
 
     scenario.AttachSpacecraft(spacecraft);
-
 
     BuildManeuvers(scenarioDto, scenario, celestialBodies, maneuvers);
 
@@ -780,6 +771,7 @@ void PropagateSiteProxy(IO::Astrodynamics::API::DTO::WindowDTO windowDto, IO::As
         siteDto.Error = strdup(HandleError());
     }
 }
+
 #pragma endregion
 
 #pragma region ReadResults
@@ -1483,8 +1475,6 @@ void BuildZenithAttitude(IO::Astrodynamics::API::DTO::ScenarioDTO &scenarioDto, 
                                 maneuver.attitudeHoldDuration)));
     }
 }
-
-
 
 
 #pragma endregion
