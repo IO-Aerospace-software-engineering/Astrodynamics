@@ -150,6 +150,10 @@ TEST(API, SpacecraftPropagation)
     scenario.Spacecraft.orbitalPlaneChangingManeuvers[0].engines[0] = "eng1";
     scenario.Spacecraft.orbitalPlaneChangingManeuvers[0].maneuverOrder = 0;
 
+    scenario.Spacecraft.progradeAttitudes[0].maneuverOrder=1;
+    scenario.Spacecraft.progradeAttitudes[0].engines[0]="eng1";
+
+
     //Execute propagation
     PropagateSpacecraftProxy(scenario);
 

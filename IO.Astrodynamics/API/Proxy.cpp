@@ -793,6 +793,87 @@ void ReadManeuverResults(IO::Astrodynamics::API::DTO::ScenarioDTO &scenarioDto,
     ReadApsidalAlignmentManeuverResult(scenarioDto, maneuvers);
 
     ReadPhasingManeuverResult(scenarioDto, maneuvers);
+
+    ReadNadirAttitudeResult(scenarioDto, maneuvers);
+    ReadZenithAttitudeResult(scenarioDto, maneuvers);
+    ReadProgradeAttitudeResult(scenarioDto, maneuvers);
+    ReadRetrogradeAttitudeResult(scenarioDto, maneuvers);
+    ReadInstrumentTowardTargetAttitudeResult(scenarioDto, maneuvers);
+}
+
+void ReadInstrumentTowardTargetAttitudeResult(IO::Astrodynamics::API::DTO::ScenarioDTO &scenarioDto,
+                                 std::map<int, std::shared_ptr<IO::Astrodynamics::Maneuvers::ManeuverBase>> &maneuvers)
+{
+    for (auto &attitude: scenarioDto.Spacecraft.pointingToAttitudes)
+    {
+        if (attitude.maneuverOrder < 0)
+        {
+            break;
+        }
+
+        auto value = maneuvers[attitude.maneuverOrder];
+        attitude.window = ToWindowDTO(*value->GetManeuverWindow());
+    }
+}
+
+void ReadRetrogradeAttitudeResult(IO::Astrodynamics::API::DTO::ScenarioDTO &scenarioDto,
+                                std::map<int, std::shared_ptr<IO::Astrodynamics::Maneuvers::ManeuverBase>> &maneuvers)
+{
+    for (auto &attitude: scenarioDto.Spacecraft.retrogradeAttitudes)
+    {
+        if (attitude.maneuverOrder < 0)
+        {
+            break;
+        }
+
+        auto value = maneuvers[attitude.maneuverOrder];
+        attitude.window = ToWindowDTO(*value->GetManeuverWindow());
+    }
+}
+
+void ReadProgradeAttitudeResult(IO::Astrodynamics::API::DTO::ScenarioDTO &scenarioDto,
+                              std::map<int, std::shared_ptr<IO::Astrodynamics::Maneuvers::ManeuverBase>> &maneuvers)
+{
+    for (auto &attitude: scenarioDto.Spacecraft.progradeAttitudes)
+    {
+        if (attitude.maneuverOrder < 0)
+        {
+            break;
+        }
+
+        auto value = maneuvers[attitude.maneuverOrder];
+        attitude.window = ToWindowDTO(*value->GetManeuverWindow());
+    }
+}
+
+void ReadZenithAttitudeResult(IO::Astrodynamics::API::DTO::ScenarioDTO &scenarioDto,
+                             std::map<int, std::shared_ptr<IO::Astrodynamics::Maneuvers::ManeuverBase>> &maneuvers)
+{
+    for (auto &attitude: scenarioDto.Spacecraft.zenithAttitudes)
+    {
+        if (attitude.maneuverOrder < 0)
+        {
+            break;
+        }
+
+        auto value = maneuvers[attitude.maneuverOrder];
+        attitude.window = ToWindowDTO(*value->GetManeuverWindow());
+    }
+}
+
+void ReadNadirAttitudeResult(IO::Astrodynamics::API::DTO::ScenarioDTO &scenarioDto,
+                               std::map<int, std::shared_ptr<IO::Astrodynamics::Maneuvers::ManeuverBase>> &maneuvers)
+{
+    for (auto &attitude: scenarioDto.Spacecraft.nadirAttitudes)
+    {
+        if (attitude.maneuverOrder < 0)
+        {
+            break;
+        }
+
+        auto value = maneuvers[attitude.maneuverOrder];
+        attitude.window = ToWindowDTO(*value->GetManeuverWindow());
+    }
 }
 
 void ReadPhasingManeuverResult(IO::Astrodynamics::API::DTO::ScenarioDTO &scenarioDto,
@@ -1372,8 +1453,7 @@ void BuildProgradeAttitude(IO::Astrodynamics::API::DTO::ScenarioDTO &scenarioDto
         }
         IO::Astrodynamics::Time::TDB min(std::chrono::duration<double>(maneuver.minimumEpoch));
         IO::Astrodynamics::Time::TimeSpan hold(std::chrono::duration<double>(maneuver.attitudeHoldDuration));
-        auto prop = scenario.GetPropagator();
-        auto mnv = std::make_shared<IO::Astrodynamics::Maneuvers::Attitudes::ProgradeAttitude>(engines, prop,
+        auto mnv = std::make_shared<IO::Astrodynamics::Maneuvers::Attitudes::ProgradeAttitude>(engines, scenario.GetPropagator(),
                                                                                                min, hold);
         maneuvers[maneuver.maneuverOrder] = mnv;
     }

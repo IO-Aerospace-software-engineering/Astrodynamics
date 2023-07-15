@@ -369,4 +369,19 @@ void ReadPhasingManeuverResult(IO::Astrodynamics::API::DTO::ScenarioDTO &scenari
 void ReadManeuverResults(IO::Astrodynamics::API::DTO::ScenarioDTO &scenarioDto,
                          std::map<int, std::shared_ptr<IO::Astrodynamics::Maneuvers::ManeuverBase>> &maneuvers);
 
+void ReadNadirAttitudeResult(IO::Astrodynamics::API::DTO::ScenarioDTO &scenarioDto,
+                              std::map<int, std::shared_ptr<IO::Astrodynamics::Maneuvers::ManeuverBase>> &maneuvers);
+
+void ReadZenithAttitudeResult(IO::Astrodynamics::API::DTO::ScenarioDTO &scenarioDto,
+                             std::map<int, std::shared_ptr<IO::Astrodynamics::Maneuvers::ManeuverBase>> &maneuvers);
+
+void ReadProgradeAttitudeResult(IO::Astrodynamics::API::DTO::ScenarioDTO &scenarioDto,
+                              std::map<int, std::shared_ptr<IO::Astrodynamics::Maneuvers::ManeuverBase>> &maneuvers);
+
+void ReadRetrogradeAttitudeResult(IO::Astrodynamics::API::DTO::ScenarioDTO &scenarioDto,
+                              std::map<int, std::shared_ptr<IO::Astrodynamics::Maneuvers::ManeuverBase>> &maneuvers);
+
+void ReadInstrumentTowardTargetAttitudeResult(IO::Astrodynamics::API::DTO::ScenarioDTO &scenarioDto,
+                              std::map<int, std::shared_ptr<IO::Astrodynamics::Maneuvers::ManeuverBase>> &maneuvers);
+
 #endif
