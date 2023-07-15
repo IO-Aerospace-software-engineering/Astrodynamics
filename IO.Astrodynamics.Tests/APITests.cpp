@@ -38,8 +38,8 @@ TEST(API, SitePropagation)
     IO::Astrodynamics::API::DTO::SiteDTO site;
 
     //Configure site
-    site.id = 399033;
-    site.name = "S33";
+    site.id = 399034;
+    site.name = "S34";
     std::string sitePath(SitePath);
     site.directoryPath = sitePath.c_str();
     site.bodyId = 399;
@@ -53,7 +53,7 @@ TEST(API, SitePropagation)
     LoadKernelsProxy(site.directoryPath);
 
     IO::Astrodynamics::API::DTO::StateVectorDTO sv[25];
-    ReadEphemerisProxy(windowTDBDto, 399, 399033, "J2000", "NONE", 3600, sv);
+    ReadEphemerisProxy(windowTDBDto, 399, 399034, "J2000", "NONE", 3600, sv);
 
     ASSERT_DOUBLE_EQ(4054782.9648194457, sv[0].position.x);
     ASSERT_DOUBLE_EQ(-4799280.7521664528, sv[0].position.y);
@@ -73,8 +73,12 @@ TEST(API, SitePropagation)
 
     ASSERT_DOUBLE_EQ(-196.51288137429424, sv[5].velocity.x);
     ASSERT_DOUBLE_EQ(413.86842735799422, sv[5].velocity.y);
-    ASSERT_DOUBLE_EQ(0.0062996686004048149, sv[5].velocity.z);
 
+#if _WIN64
+    ASSERT_DOUBLE_EQ(0.0062996686003850494, sv[5].velocity.z);
+#else
+    ASSERT_DOUBLE_EQ(0.0062996686004048149, sv[5].velocity.z);
+#endif
     ASSERT_DOUBLE_EQ(18000.0, sv[5].epoch);
     ASSERT_EQ(399, sv[5].centerOfMotionId);
     ASSERT_STREQ("J2000", sv[5].inertialFrame);
