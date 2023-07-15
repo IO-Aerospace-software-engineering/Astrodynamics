@@ -38,8 +38,8 @@ TEST(API, SitePropagation)
     IO::Astrodynamics::API::DTO::SiteDTO site;
 
     //Configure site
-    site.id = 399034;
-    site.name = "S34";
+    site.id = 399134;
+    site.name = "S134";
     std::string sitePath(SitePath);
     site.directoryPath = sitePath.c_str();
     site.bodyId = 399;
@@ -49,11 +49,12 @@ TEST(API, SitePropagation)
 
     PropagateSiteProxy(windowTDBDto, site);
 
-    //Load ephemeris file
-    LoadKernelsProxy(site.directoryPath);
+    LoadKernelsProxy((sitePath+"/S134").c_str());
+
 
     IO::Astrodynamics::API::DTO::StateVectorDTO sv[25];
-    ReadEphemerisProxy(windowTDBDto, 399, 399034, "J2000", "NONE", 3600, sv);
+    ReadEphemerisProxy(windowTDBDto, 399, 399134, "J2000", "NONE", 3600, sv);
+    UnloadKernelsProxy((sitePath+"/S134").c_str());
 
     ASSERT_DOUBLE_EQ(4054782.9648194457, sv[0].position.x);
     ASSERT_DOUBLE_EQ(-4799280.7521664528, sv[0].position.y);
