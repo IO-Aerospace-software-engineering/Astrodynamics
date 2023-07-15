@@ -25,7 +25,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">IO-Astrodynamics<span id="projectnumber">&#160;1.2.x</span>
+   <div id="projectname">IO-Astrodynamics<span id="projectnumber">&#160;1.3.x</span>
    </div>
    <div id="projectbrief">Astrodynamics framework</div>
   </td>
@@ -113,8 +113,8 @@ $(document).ready(function(){initNavTree('Proxy_8cpp.html',''); initResizable();
 Functions</h2></td></tr>
 <tr class="memitem:a4ac35a4adf61ac9e78d8ad32a4f5557c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="Proxy_8cpp.html#a4ac35a4adf61ac9e78d8ad32a4f5557c">LaunchProxy</a> (<a class="el" href="structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1LaunchDTO.html">IO::Astrodynamics::API::DTO::LaunchDTO</a> &amp;launchDto)</td></tr>
 <tr class="separator:a4ac35a4adf61ac9e78d8ad32a4f5557c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a891b925a6ede57f797d77896bc78f581"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="Proxy_8cpp.html#a891b925a6ede57f797d77896bc78f581">PropagateProxy</a> (<a class="el" href="structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ScenarioDTO.html">IO::Astrodynamics::API::DTO::ScenarioDTO</a> &amp;scenarioDto)</td></tr>
-<tr class="separator:a891b925a6ede57f797d77896bc78f581"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1925627ea47507e26fc9c6c14a5598f2"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="Proxy_8cpp.html#a1925627ea47507e26fc9c6c14a5598f2">PropagateSpacecraftProxy</a> (<a class="el" href="structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ScenarioDTO.html">IO::Astrodynamics::API::DTO::ScenarioDTO</a> &amp;scenarioDto)</td></tr>
+<tr class="separator:a1925627ea47507e26fc9c6c14a5598f2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1bd1683bf72804ee2be2dfe91e4bb337"><td class="memItemLeft" align="right" valign="top">const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="Proxy_8cpp.html#a1bd1683bf72804ee2be2dfe91e4bb337">GetSpiceVersionProxy</a> ()</td></tr>
 <tr class="separator:a1bd1683bf72804ee2be2dfe91e4bb337"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa3d92e4ca3c8c03645145078f0c2af1f"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="Proxy_8cpp.html#aa3d92e4ca3c8c03645145078f0c2af1f">WriteEphemerisProxy</a> (const char *filePath, int objectId, <a class="el" href="structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1StateVectorDTO.html">IO::Astrodynamics::API::DTO::StateVectorDTO</a> *sv, unsigned int size)</td></tr>
@@ -165,8 +165,20 @@ Functions</h2></td></tr>
 <tr class="separator:a27aded6a6983e77dadb9ae356d14179b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0173bba1d1a124914bac47d129a3f2b9"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1TLEElementsDTO.html">IO::Astrodynamics::API::DTO::TLEElementsDTO</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="Proxy_8cpp.html#a0173bba1d1a124914bac47d129a3f2b9">GetTLEElementsProxy</a> (const char *L1, const char *L2, const char *L3)</td></tr>
 <tr class="separator:a0173bba1d1a124914bac47d129a3f2b9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0e1a03521627bfea5e7859a39dfc11fd"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="Proxy_8cpp.html#a0e1a03521627bfea5e7859a39dfc11fd">PropagateSiteProxy</a> (<a class="el" href="structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1WindowDTO.html">IO::Astrodynamics::API::DTO::WindowDTO</a> windowDto, <a class="el" href="structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1SiteDTO.html">IO::Astrodynamics::API::DTO::SiteDTO</a> &amp;siteDto)</td></tr>
+<tr class="separator:a0e1a03521627bfea5e7859a39dfc11fd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3eb1d8fdac1088947285a663760ab3a6"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="Proxy_8cpp.html#a3eb1d8fdac1088947285a663760ab3a6">ReadManeuverResults</a> (<a class="el" href="structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ScenarioDTO.html">IO::Astrodynamics::API::DTO::ScenarioDTO</a> &amp;scenarioDto, std::map&lt; int, std::shared_ptr&lt; <a class="el" href="classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase.html">IO::Astrodynamics::Maneuvers::ManeuverBase</a> &gt; &gt; &amp;maneuvers)</td></tr>
 <tr class="separator:a3eb1d8fdac1088947285a663760ab3a6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aacc620177c6e35a14adb8912896cff33"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="Proxy_8cpp.html#aacc620177c6e35a14adb8912896cff33">ReadInstrumentTowardTargetAttitudeResult</a> (<a class="el" href="structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ScenarioDTO.html">IO::Astrodynamics::API::DTO::ScenarioDTO</a> &amp;scenarioDto, std::map&lt; int, std::shared_ptr&lt; <a class="el" href="classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase.html">IO::Astrodynamics::Maneuvers::ManeuverBase</a> &gt; &gt; &amp;maneuvers)</td></tr>
+<tr class="separator:aacc620177c6e35a14adb8912896cff33"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a774c92a48f56781b19e2a14e47d11849"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="Proxy_8cpp.html#a774c92a48f56781b19e2a14e47d11849">ReadRetrogradeAttitudeResult</a> (<a class="el" href="structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ScenarioDTO.html">IO::Astrodynamics::API::DTO::ScenarioDTO</a> &amp;scenarioDto, std::map&lt; int, std::shared_ptr&lt; <a class="el" href="classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase.html">IO::Astrodynamics::Maneuvers::ManeuverBase</a> &gt; &gt; &amp;maneuvers)</td></tr>
+<tr class="separator:a774c92a48f56781b19e2a14e47d11849"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1f77601604db3985c34b30b965e20838"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="Proxy_8cpp.html#a1f77601604db3985c34b30b965e20838">ReadProgradeAttitudeResult</a> (<a class="el" href="structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ScenarioDTO.html">IO::Astrodynamics::API::DTO::ScenarioDTO</a> &amp;scenarioDto, std::map&lt; int, std::shared_ptr&lt; <a class="el" href="classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase.html">IO::Astrodynamics::Maneuvers::ManeuverBase</a> &gt; &gt; &amp;maneuvers)</td></tr>
+<tr class="separator:a1f77601604db3985c34b30b965e20838"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a89c552535439f5304d8eca580b0e6372"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="Proxy_8cpp.html#a89c552535439f5304d8eca580b0e6372">ReadZenithAttitudeResult</a> (<a class="el" href="structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ScenarioDTO.html">IO::Astrodynamics::API::DTO::ScenarioDTO</a> &amp;scenarioDto, std::map&lt; int, std::shared_ptr&lt; <a class="el" href="classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase.html">IO::Astrodynamics::Maneuvers::ManeuverBase</a> &gt; &gt; &amp;maneuvers)</td></tr>
+<tr class="separator:a89c552535439f5304d8eca580b0e6372"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a27e7a29987862d3693baa6d5e2d88fa3"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="Proxy_8cpp.html#a27e7a29987862d3693baa6d5e2d88fa3">ReadNadirAttitudeResult</a> (<a class="el" href="structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ScenarioDTO.html">IO::Astrodynamics::API::DTO::ScenarioDTO</a> &amp;scenarioDto, std::map&lt; int, std::shared_ptr&lt; <a class="el" href="classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase.html">IO::Astrodynamics::Maneuvers::ManeuverBase</a> &gt; &gt; &amp;maneuvers)</td></tr>
+<tr class="separator:a27e7a29987862d3693baa6d5e2d88fa3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:adb84f00576e8bbe39ff1883f62cd8b81"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="Proxy_8cpp.html#adb84f00576e8bbe39ff1883f62cd8b81">ReadPhasingManeuverResult</a> (<a class="el" href="structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ScenarioDTO.html">IO::Astrodynamics::API::DTO::ScenarioDTO</a> &amp;scenarioDto, std::map&lt; int, std::shared_ptr&lt; <a class="el" href="classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase.html">IO::Astrodynamics::Maneuvers::ManeuverBase</a> &gt; &gt; &amp;maneuvers)</td></tr>
 <tr class="separator:adb84f00576e8bbe39ff1883f62cd8b81"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4844c879c6033d6d11cb7f28a1a514f7"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="Proxy_8cpp.html#a4844c879c6033d6d11cb7f28a1a514f7">ReadApsidalAlignmentManeuverResult</a> (<a class="el" href="structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ScenarioDTO.html">IO::Astrodynamics::API::DTO::ScenarioDTO</a> &amp;scenarioDto, std::map&lt; int, std::shared_ptr&lt; <a class="el" href="classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase.html">IO::Astrodynamics::Maneuvers::ManeuverBase</a> &gt; &gt; &amp;maneuvers)</td></tr>
@@ -1539,14 +1551,42 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a891b925a6ede57f797d77896bc78f581" name="a891b925a6ede57f797d77896bc78f581"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a891b925a6ede57f797d77896bc78f581">&#9670;&nbsp;</a></span>PropagateProxy()</h2>
+<a id="a0e1a03521627bfea5e7859a39dfc11fd" name="a0e1a03521627bfea5e7859a39dfc11fd"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0e1a03521627bfea5e7859a39dfc11fd">&#9670;&nbsp;</a></span>PropagateSiteProxy()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">void PropagateProxy </td>
+          <td class="memname">void PropagateSiteProxy </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1WindowDTO.html">IO::Astrodynamics::API::DTO::WindowDTO</a>&#160;</td>
+          <td class="paramname"><em>windowDto</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1SiteDTO.html">IO::Astrodynamics::API::DTO::SiteDTO</a> &amp;&#160;</td>
+          <td class="paramname"><em>siteDto</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a1925627ea47507e26fc9c6c14a5598f2" name="a1925627ea47507e26fc9c6c14a5598f2"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1925627ea47507e26fc9c6c14a5598f2">&#9670;&nbsp;</a></span>PropagateSpacecraftProxy()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void PropagateSpacecraftProxy </td>
           <td>(</td>
           <td class="paramtype"><a class="el" href="structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ScenarioDTO.html">IO::Astrodynamics::API::DTO::ScenarioDTO</a> &amp;&#160;</td>
           <td class="paramname"><em>scenarioDto</em></td><td>)</td>
@@ -1751,6 +1791,34 @@ Functions</h2></td></tr>
 
 </div>
 </div>
+<a id="aacc620177c6e35a14adb8912896cff33" name="aacc620177c6e35a14adb8912896cff33"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aacc620177c6e35a14adb8912896cff33">&#9670;&nbsp;</a></span>ReadInstrumentTowardTargetAttitudeResult()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void ReadInstrumentTowardTargetAttitudeResult </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ScenarioDTO.html">IO::Astrodynamics::API::DTO::ScenarioDTO</a> &amp;&#160;</td>
+          <td class="paramname"><em>scenarioDto</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::map&lt; int, std::shared_ptr&lt; <a class="el" href="classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase.html">IO::Astrodynamics::Maneuvers::ManeuverBase</a> &gt; &gt; &amp;&#160;</td>
+          <td class="paramname"><em>maneuvers</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
 <a id="a3eb1d8fdac1088947285a663760ab3a6" name="a3eb1d8fdac1088947285a663760ab3a6"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a3eb1d8fdac1088947285a663760ab3a6">&#9670;&nbsp;</a></span>ReadManeuverResults()</h2>
 
@@ -1759,6 +1827,34 @@ Functions</h2></td></tr>
       <table class="memname">
         <tr>
           <td class="memname">void ReadManeuverResults </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ScenarioDTO.html">IO::Astrodynamics::API::DTO::ScenarioDTO</a> &amp;&#160;</td>
+          <td class="paramname"><em>scenarioDto</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::map&lt; int, std::shared_ptr&lt; <a class="el" href="classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase.html">IO::Astrodynamics::Maneuvers::ManeuverBase</a> &gt; &gt; &amp;&#160;</td>
+          <td class="paramname"><em>maneuvers</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a27e7a29987862d3693baa6d5e2d88fa3" name="a27e7a29987862d3693baa6d5e2d88fa3"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a27e7a29987862d3693baa6d5e2d88fa3">&#9670;&nbsp;</a></span>ReadNadirAttitudeResult()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void ReadNadirAttitudeResult </td>
           <td>(</td>
           <td class="paramtype"><a class="el" href="structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ScenarioDTO.html">IO::Astrodynamics::API::DTO::ScenarioDTO</a> &amp;&#160;</td>
           <td class="paramname"><em>scenarioDto</em>, </td>
@@ -1895,6 +1991,90 @@ Functions</h2></td></tr>
       <table class="memname">
         <tr>
           <td class="memname">void ReadPhasingManeuverResult </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ScenarioDTO.html">IO::Astrodynamics::API::DTO::ScenarioDTO</a> &amp;&#160;</td>
+          <td class="paramname"><em>scenarioDto</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::map&lt; int, std::shared_ptr&lt; <a class="el" href="classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase.html">IO::Astrodynamics::Maneuvers::ManeuverBase</a> &gt; &gt; &amp;&#160;</td>
+          <td class="paramname"><em>maneuvers</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a1f77601604db3985c34b30b965e20838" name="a1f77601604db3985c34b30b965e20838"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1f77601604db3985c34b30b965e20838">&#9670;&nbsp;</a></span>ReadProgradeAttitudeResult()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void ReadProgradeAttitudeResult </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ScenarioDTO.html">IO::Astrodynamics::API::DTO::ScenarioDTO</a> &amp;&#160;</td>
+          <td class="paramname"><em>scenarioDto</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::map&lt; int, std::shared_ptr&lt; <a class="el" href="classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase.html">IO::Astrodynamics::Maneuvers::ManeuverBase</a> &gt; &gt; &amp;&#160;</td>
+          <td class="paramname"><em>maneuvers</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a774c92a48f56781b19e2a14e47d11849" name="a774c92a48f56781b19e2a14e47d11849"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a774c92a48f56781b19e2a14e47d11849">&#9670;&nbsp;</a></span>ReadRetrogradeAttitudeResult()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void ReadRetrogradeAttitudeResult </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ScenarioDTO.html">IO::Astrodynamics::API::DTO::ScenarioDTO</a> &amp;&#160;</td>
+          <td class="paramname"><em>scenarioDto</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::map&lt; int, std::shared_ptr&lt; <a class="el" href="classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase.html">IO::Astrodynamics::Maneuvers::ManeuverBase</a> &gt; &gt; &amp;&#160;</td>
+          <td class="paramname"><em>maneuvers</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a89c552535439f5304d8eca580b0e6372" name="a89c552535439f5304d8eca580b0e6372"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a89c552535439f5304d8eca580b0e6372">&#9670;&nbsp;</a></span>ReadZenithAttitudeResult()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void ReadZenithAttitudeResult </td>
           <td>(</td>
           <td class="paramtype"><a class="el" href="structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ScenarioDTO.html">IO::Astrodynamics::API::DTO::ScenarioDTO</a> &amp;&#160;</td>
           <td class="paramname"><em>scenarioDto</em>, </td>

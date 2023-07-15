@@ -9,8 +9,6 @@
 \item 
 \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Scenario_a7909e3ac263b91427e7ff9c13c2a6017}{Scenario}} (std\+::string name, const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{IO\+::\+Astrodynamics\+::\+Time\+::\+Window}}$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1UTC}{IO\+::\+Astrodynamics\+::\+Time\+::\+UTC}} $>$ \&windows)
 \item 
-void \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Scenario_aa7583021f9c1d236d9cc47223aa5ba97}{Add\+Celestial\+Body}} (const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody}{IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Body}} \&celestial\+Body)
-\item 
 void \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Scenario_a93c684cb0cd396b741f0bd1ead83f351}{Attach\+Spacecraft}} (const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft}{IO\+::\+Astrodynamics\+::\+Body\+::\+Spacecraft\+::\+Spacecraft}} \&spacecraft)
 \item 
 void \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Scenario_a217c32b8e75ec6f2e4d0f2faa40a343b}{Add\+Site}} (const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1Site}{IO\+::\+Astrodynamics\+::\+Sites\+::\+Site}} \&site)
@@ -18,8 +16,6 @@ void \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Scenario_a217c32b8e75ec6f2e4d0
 std\+::string \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Scenario_aee9ec3b05799c7006226a50d54a48452}{Get\+Name}} () const
 \item 
 const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{IO\+::\+Astrodynamics\+::\+Time\+::\+Window}}$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1UTC}{IO\+::\+Astrodynamics\+::\+Time\+::\+UTC}} $>$ \& \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Scenario_af733653fb5fcc5da78248c99f8908fc4}{Get\+Window}} () const
-\item 
-const std\+::vector$<$ const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody}{IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Body}} $\ast$ $>$ \& \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Scenario_a4a243fdc758bf49a0f317b80230e4d72}{Get\+Celestial\+Bodies}} ()
 \item 
 const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft}{IO\+::\+Astrodynamics\+::\+Body\+::\+Spacecraft\+::\+Spacecraft}} $\ast$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Scenario_a7a86d9929640720cca2cf105079b4b34}{Get\+Spacecraft}} ()
 \item 
@@ -41,17 +37,6 @@ void \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Scenario_a981769d9853fa67107b6
 
 
 \doxysubsection{Member Function Documentation}
-\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Scenario_aa7583021f9c1d236d9cc47223aa5ba97}\label{classIO_1_1Astrodynamics_1_1Scenario_aa7583021f9c1d236d9cc47223aa5ba97}} 
-\index{IO::Astrodynamics::Scenario@{IO::Astrodynamics::Scenario}!AddCelestialBody@{AddCelestialBody}}
-\index{AddCelestialBody@{AddCelestialBody}!IO::Astrodynamics::Scenario@{IO::Astrodynamics::Scenario}}
-\doxysubsubsection{\texorpdfstring{AddCelestialBody()}{AddCelestialBody()}}
-{\footnotesize\ttfamily void IO\+::\+Astrodynamics\+::\+Scenario\+::\+Add\+Celestial\+Body (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody}{IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Body}} \&}]{celestial\+Body }\end{DoxyParamCaption})}
-
-Add celestial body to the scenario 
-\begin{DoxyParams}{Parameters}
-{\em celestial\+Body} & \\
-\hline
-\end{DoxyParams}
 \mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Scenario_a217c32b8e75ec6f2e4d0f2faa40a343b}\label{classIO_1_1Astrodynamics_1_1Scenario_a217c32b8e75ec6f2e4d0f2faa40a343b}} 
 \index{IO::Astrodynamics::Scenario@{IO::Astrodynamics::Scenario}!AddSite@{AddSite}}
 \index{AddSite@{AddSite}!IO::Astrodynamics::Scenario@{IO::Astrodynamics::Scenario}}
@@ -80,16 +65,7 @@ Add Spacecraft to the scenario
 \doxysubsubsection{\texorpdfstring{Execute()}{Execute()}}
 {\footnotesize\ttfamily void IO\+::\+Astrodynamics\+::\+Scenario\+::\+Execute (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
 
-Execute scenario \mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Scenario_a4a243fdc758bf49a0f317b80230e4d72}\label{classIO_1_1Astrodynamics_1_1Scenario_a4a243fdc758bf49a0f317b80230e4d72}} 
-\index{IO::Astrodynamics::Scenario@{IO::Astrodynamics::Scenario}!GetCelestialBodies@{GetCelestialBodies}}
-\index{GetCelestialBodies@{GetCelestialBodies}!IO::Astrodynamics::Scenario@{IO::Astrodynamics::Scenario}}
-\doxysubsubsection{\texorpdfstring{GetCelestialBodies()}{GetCelestialBodies()}}
-{\footnotesize\ttfamily const std\+::vector$<$ const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody}{IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Body}} $\ast$ $>$ \& IO\+::\+Astrodynamics\+::\+Scenario\+::\+Get\+Celestial\+Bodies (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
-
-Get celestial bodies of the scenario \begin{DoxyReturn}{Returns}
-
-\end{DoxyReturn}
-\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Scenario_aee9ec3b05799c7006226a50d54a48452}\label{classIO_1_1Astrodynamics_1_1Scenario_aee9ec3b05799c7006226a50d54a48452}} 
+Execute scenario \mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Scenario_aee9ec3b05799c7006226a50d54a48452}\label{classIO_1_1Astrodynamics_1_1Scenario_aee9ec3b05799c7006226a50d54a48452}} 
 \index{IO::Astrodynamics::Scenario@{IO::Astrodynamics::Scenario}!GetName@{GetName}}
 \index{GetName@{GetName}!IO::Astrodynamics::Scenario@{IO::Astrodynamics::Scenario}}
 \doxysubsubsection{\texorpdfstring{GetName()}{GetName()}}

@@ -48,48 +48,42 @@
 \DoxyCodeLine{44     \textcolor{keyword}{private}:}
 \DoxyCodeLine{45         \textcolor{keyword}{const} std::string m\_name;}
 \DoxyCodeLine{46         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::UTC>}} m\_windows;}
-\DoxyCodeLine{47         std::vector<const IO::Astrodynamics::Body::CelestialBody *> m\_celestialBodies;}
-\DoxyCodeLine{48         std::vector<const IO::Astrodynamics::Sites::Site *> m\_sites;}
-\DoxyCodeLine{49 }
-\DoxyCodeLine{50         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Integrators_1_1Forces_1_1GravityForce}{IO::Astrodynamics::Integrators::Forces::GravityForce}} m\_gravityForce;}
-\DoxyCodeLine{51         std::vector<IO::Astrodynamics::Integrators::Forces::Force *> m\_forces\{\&m\_gravityForce\};}
-\DoxyCodeLine{52         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Integrators_1_1VVIntegrator}{IO::Astrodynamics::Integrators::VVIntegrator}} m\_integrator;}
-\DoxyCodeLine{53 }
-\DoxyCodeLine{54         std::unique\_ptr<Propagators::Propagator> m\_propagator;}
-\DoxyCodeLine{55         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft}{Body::Spacecraft::Spacecraft}} *m\_spacecraft\{\textcolor{keyword}{nullptr}\};}
-\DoxyCodeLine{56 }
-\DoxyCodeLine{57     \textcolor{keyword}{public}:}
-\DoxyCodeLine{58         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Scenario_a7909e3ac263b91427e7ff9c13c2a6017}{Scenario}}(std::string name, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::UTC>}} \&windows);}
-\DoxyCodeLine{59 }
-\DoxyCodeLine{64         \textcolor{keywordtype}{void} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Scenario_aa7583021f9c1d236d9cc47223aa5ba97}{AddCelestialBody}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody}{IO::Astrodynamics::Body::CelestialBody}} \&celestialBody);}
-\DoxyCodeLine{65 }
-\DoxyCodeLine{70         \textcolor{keywordtype}{void} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Scenario_a93c684cb0cd396b741f0bd1ead83f351}{AttachSpacecraft}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft}{IO::Astrodynamics::Body::Spacecraft::Spacecraft}} \&spacecraft);}
-\DoxyCodeLine{71 }
-\DoxyCodeLine{76         \textcolor{keywordtype}{void} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Scenario_a217c32b8e75ec6f2e4d0f2faa40a343b}{AddSite}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1Site}{IO::Astrodynamics::Sites::Site}} \&site);}
+\DoxyCodeLine{47         std::vector<const IO::Astrodynamics::Sites::Site *> m\_sites;}
+\DoxyCodeLine{48 }
+\DoxyCodeLine{49         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Integrators_1_1Forces_1_1GravityForce}{IO::Astrodynamics::Integrators::Forces::GravityForce}} m\_gravityForce;}
+\DoxyCodeLine{50         std::vector<IO::Astrodynamics::Integrators::Forces::Force *> m\_forces\{\&m\_gravityForce\};}
+\DoxyCodeLine{51         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Integrators_1_1VVIntegrator}{IO::Astrodynamics::Integrators::VVIntegrator}} m\_integrator;}
+\DoxyCodeLine{52 }
+\DoxyCodeLine{53         std::unique\_ptr<Propagators::Propagator> m\_propagator;}
+\DoxyCodeLine{54         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft}{Body::Spacecraft::Spacecraft}} *m\_spacecraft\{\textcolor{keyword}{nullptr}\};}
+\DoxyCodeLine{55 }
+\DoxyCodeLine{56     \textcolor{keyword}{public}:}
+\DoxyCodeLine{57         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Scenario_a7909e3ac263b91427e7ff9c13c2a6017}{Scenario}}(std::string name, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::UTC>}} \&windows);}
+\DoxyCodeLine{58 }
+\DoxyCodeLine{63         \textcolor{keywordtype}{void} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Scenario_a93c684cb0cd396b741f0bd1ead83f351}{AttachSpacecraft}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft}{IO::Astrodynamics::Body::Spacecraft::Spacecraft}} \&spacecraft);}
+\DoxyCodeLine{64 }
+\DoxyCodeLine{69         \textcolor{keywordtype}{void} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Scenario_a217c32b8e75ec6f2e4d0f2faa40a343b}{AddSite}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1Site}{IO::Astrodynamics::Sites::Site}} \&site);}
+\DoxyCodeLine{70 }
+\DoxyCodeLine{75         [[nodiscard]] \textcolor{keyword}{inline} std::string \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Scenario_aee9ec3b05799c7006226a50d54a48452}{GetName}}()\textcolor{keyword}{ const}}
+\DoxyCodeLine{76 \textcolor{keyword}{        }\{ \textcolor{keywordflow}{return} m\_name; \}}
 \DoxyCodeLine{77 }
-\DoxyCodeLine{82         [[nodiscard]] \textcolor{keyword}{inline} std::string \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Scenario_aee9ec3b05799c7006226a50d54a48452}{GetName}}()\textcolor{keyword}{ const}}
-\DoxyCodeLine{83 \textcolor{keyword}{        }\{ \textcolor{keywordflow}{return} m\_name; \}}
+\DoxyCodeLine{82         [[nodiscard]] \textcolor{keyword}{inline} \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::UTC>}} \&\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Scenario_af733653fb5fcc5da78248c99f8908fc4}{GetWindow}}()\textcolor{keyword}{ const}}
+\DoxyCodeLine{83 \textcolor{keyword}{        }\{ \textcolor{keywordflow}{return} m\_windows; \}}
 \DoxyCodeLine{84 }
-\DoxyCodeLine{89         [[nodiscard]] \textcolor{keyword}{inline} \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::UTC>}} \&\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Scenario_af733653fb5fcc5da78248c99f8908fc4}{GetWindow}}()\textcolor{keyword}{ const}}
-\DoxyCodeLine{90 \textcolor{keyword}{        }\{ \textcolor{keywordflow}{return} m\_windows; \}}
+\DoxyCodeLine{89         \textcolor{keyword}{inline} \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft}{IO::Astrodynamics::Body::Spacecraft::Spacecraft}} *\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Scenario_a7a86d9929640720cca2cf105079b4b34}{GetSpacecraft}}()}
+\DoxyCodeLine{90         \{ \textcolor{keywordflow}{return} m\_spacecraft; \}}
 \DoxyCodeLine{91 }
-\DoxyCodeLine{96         \textcolor{keyword}{inline} \textcolor{keyword}{const} std::vector<const IO::Astrodynamics::Body::CelestialBody *> \&\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Scenario_a4a243fdc758bf49a0f317b80230e4d72}{GetCelestialBodies}}()}
-\DoxyCodeLine{97         \{ \textcolor{keywordflow}{return} m\_celestialBodies; \}}
+\DoxyCodeLine{96         \textcolor{keyword}{inline} \textcolor{keyword}{const} std::vector<const IO::Astrodynamics::Sites::Site *> \&\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Scenario_a9b620f02f8f194b4514c8dc11e0946e8}{GetSites}}()}
+\DoxyCodeLine{97         \{ \textcolor{keywordflow}{return} m\_sites; \}}
 \DoxyCodeLine{98 }
-\DoxyCodeLine{103         \textcolor{keyword}{inline} \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft}{IO::Astrodynamics::Body::Spacecraft::Spacecraft}} *\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Scenario_a7a86d9929640720cca2cf105079b4b34}{GetSpacecraft}}()}
-\DoxyCodeLine{104         \{ \textcolor{keywordflow}{return} m\_spacecraft; \}}
+\DoxyCodeLine{103         \textcolor{keyword}{inline} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Propagators_1_1Propagator}{Propagators::Propagator}} \&\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Scenario_ab3797158c0ea4490f3817cf4a80f4562}{GetPropagator}}()}
+\DoxyCodeLine{104         \{ \textcolor{keywordflow}{return} *m\_propagator; \}}
 \DoxyCodeLine{105 }
-\DoxyCodeLine{110         \textcolor{keyword}{inline} \textcolor{keyword}{const} std::vector<const IO::Astrodynamics::Sites::Site *> \&\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Scenario_a9b620f02f8f194b4514c8dc11e0946e8}{GetSites}}()}
-\DoxyCodeLine{111         \{ \textcolor{keywordflow}{return} m\_sites; \}}
-\DoxyCodeLine{112 }
-\DoxyCodeLine{117         \textcolor{keyword}{inline} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Propagators_1_1Propagator}{Propagators::Propagator}} \&\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Scenario_ab3797158c0ea4490f3817cf4a80f4562}{GetPropagator}}()}
-\DoxyCodeLine{118         \{ \textcolor{keywordflow}{return} *m\_propagator; \}}
-\DoxyCodeLine{119 }
-\DoxyCodeLine{123         \textcolor{keywordtype}{void} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Scenario_a981769d9853fa67107b665db9bde2dc9}{Execute}}();}
-\DoxyCodeLine{124     \};}
-\DoxyCodeLine{125 }
-\DoxyCodeLine{126 \} \textcolor{comment}{// IO::Astrodynamics}}
-\DoxyCodeLine{127 }
-\DoxyCodeLine{128 \textcolor{preprocessor}{\#endif }\textcolor{comment}{//IOSDK\_SCENARIO\_H}}
+\DoxyCodeLine{109         \textcolor{keywordtype}{void} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Scenario_a981769d9853fa67107b665db9bde2dc9}{Execute}}();}
+\DoxyCodeLine{110     \};}
+\DoxyCodeLine{111 }
+\DoxyCodeLine{112 \} \textcolor{comment}{// IO::Astrodynamics}}
+\DoxyCodeLine{113 }
+\DoxyCodeLine{114 \textcolor{preprocessor}{\#endif }\textcolor{comment}{//IOSDK\_SCENARIO\_H}}
 
 \end{DoxyCode}

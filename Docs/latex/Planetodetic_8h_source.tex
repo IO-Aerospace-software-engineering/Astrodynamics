@@ -1,0 +1,35 @@
+\hypertarget{Planetodetic_8h_source}{}\doxysection{Planetodetic.\+h}
+\label{Planetodetic_8h_source}\index{IO.Astrodynamics/Coordinates/Planetodetic.h@{IO.Astrodynamics/Coordinates/Planetodetic.h}}
+\mbox{\hyperlink{Planetodetic_8h}{Go to the documentation of this file.}}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{1 \textcolor{comment}{/*}}
+\DoxyCodeLine{2 \textcolor{comment}{ Copyright (c) 2021-\/2023. Sylvain Guillet (sylvain.guillet@tutamail.com)}}
+\DoxyCodeLine{3 \textcolor{comment}{ */}}
+\DoxyCodeLine{4 \textcolor{preprocessor}{\#ifndef GEODETIC\_H}}
+\DoxyCodeLine{5 \textcolor{preprocessor}{\#define GEODETIC\_H}}
+\DoxyCodeLine{6 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Coordinates}{IO::Astrodynamics::Coordinates}}}
+\DoxyCodeLine{7 \{}
+\DoxyCodeLine{12     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1Planetodetic}{Planetodetic}}}
+\DoxyCodeLine{13     \{}
+\DoxyCodeLine{14     \textcolor{keyword}{private}:}
+\DoxyCodeLine{15         \textcolor{keyword}{const} \textcolor{keywordtype}{double} \_altitude, \_longitude, \_latitude;}
+\DoxyCodeLine{16 }
+\DoxyCodeLine{17     \textcolor{keyword}{public}:}
+\DoxyCodeLine{18         }
+\DoxyCodeLine{26         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1Planetodetic_a19f7a3410c26ce76b701a45be1f8e1ed}{Planetodetic}}(\textcolor{keyword}{const} \textcolor{keywordtype}{double} longitude, \textcolor{keyword}{const} \textcolor{keywordtype}{double} latitude, \textcolor{keyword}{const} \textcolor{keywordtype}{double} altitude) : \_altitude\{altitude \}, \_longitude\{longitude \}, \_latitude\{latitude \}}
+\DoxyCodeLine{27         \{}
+\DoxyCodeLine{28 }
+\DoxyCodeLine{29         \}}
+\DoxyCodeLine{30 }
+\DoxyCodeLine{36         [[nodiscard]] \textcolor{keyword}{inline} \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1Planetodetic_a9e6fa7b3c2e3b2b62cb675f861adb734}{GetAltitude}}()\textcolor{keyword}{ const }\{ \textcolor{keywordflow}{return} this-\/>\_altitude; \}}
+\DoxyCodeLine{37 }
+\DoxyCodeLine{43         [[nodiscard]] \textcolor{keyword}{inline} \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1Planetodetic_a326b75c208b5d3e449c49b020ddf8e08}{GetLongitude}}()\textcolor{keyword}{ const }\{ \textcolor{keywordflow}{return} this-\/>\_longitude; \}}
+\DoxyCodeLine{44         }
+\DoxyCodeLine{50         [[nodiscard]] \textcolor{keyword}{inline} \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1Planetodetic_ab4a12c4acc4f5bb17c9fb7641a2a2211}{GetLatitude}}()\textcolor{keyword}{ const }\{ \textcolor{keywordflow}{return} this-\/>\_latitude; \}}
+\DoxyCodeLine{51     \};}
+\DoxyCodeLine{52 \}}
+\DoxyCodeLine{53 \textcolor{preprocessor}{\#endif }\textcolor{comment}{// !GEODETIC\_H}}
+\DoxyCodeLine{54 }
+\DoxyCodeLine{55 }
+
+\end{DoxyCode}
