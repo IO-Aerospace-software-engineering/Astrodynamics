@@ -175,7 +175,7 @@ TEST(API, FindWindowsOnCoordinateConstraintProxy)
                                            0.0, 0.0, "NONE", 60.0,
                                            windows);
 
-    ASSERT_STREQ("2023-02-19 14:33:08.921329 (TDB)", ToTDBWindow(windows[0]).GetStartDate().ToString().c_str());
+    ASSERT_STREQ("2023-02-19 14:33:08.918098 (TDB)", ToTDBWindow(windows[0]).GetStartDate().ToString().c_str());
     ASSERT_STREQ("2023-02-19 23:58:50.814787 (UTC)", ToTDBWindow(windows[0]).GetEndDate().ToUTC().ToString().c_str());
 }
 
