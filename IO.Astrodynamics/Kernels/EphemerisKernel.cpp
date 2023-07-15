@@ -85,12 +85,12 @@ void IO::Astrodynamics::Kernels::EphemerisKernel::WriteData(const std::vector<Or
         Math::Vector3D position = states[i].GetPosition();
         Math::Vector3D velocity = states[i].GetVelocity();
 
-        statesArray[i][0] = position.GetX() / 1000.0;
-        statesArray[i][1] = position.GetY() / 1000.0;
-        statesArray[i][2] = position.GetZ() / 1000.0;
-        statesArray[i][3] = velocity.GetX() / 1000.0;
-        statesArray[i][4] = velocity.GetY() / 1000.0;
-        statesArray[i][5] = velocity.GetZ() / 1000.0;
+        statesArray[i][0] = position.GetX() * 1E-03;
+        statesArray[i][1] = position.GetY() * 1E-03;
+        statesArray[i][2] = position.GetZ() * 1E-03;
+        statesArray[i][3] = velocity.GetX() * 1E-03;
+        statesArray[i][4] = velocity.GetY() * 1E-03;
+        statesArray[i][5] = velocity.GetZ() * 1E-03;
     }
 
     SpiceInt handle{};

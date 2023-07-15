@@ -18,7 +18,7 @@ Inheritance diagram for IO\+::Astrodynamics\+::Sites\+::Site\+:\begin{figure}[H]
 \doxysubsection*{Public Member Functions}
 \begin{DoxyCompactItemize}
 \item 
-\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1Site_a426c93f24e276a9cfe0ab2eeb6c7bdb1}{Site}} (int id, std\+::string name, const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1Geodetic}{IO\+::\+Astrodynamics\+::\+Coordinates\+::\+Geodetic}} \&coordinates, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody}{IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Body}} $>$ body, std\+::string directory\+Path)
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1Site_a4f7407b2ca5c691d934738255d77ad2c}{Site}} (int id, std\+::string name, const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1Planetodetic}{IO\+::\+Astrodynamics\+::\+Coordinates\+::\+Planetodetic}} \&coordinates, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody}{IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Body}} $>$ body, std\+::string directory\+Path)
 \begin{DoxyCompactList}\small\item\em Construct a new \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1Site}{Site}} object. \end{DoxyCompactList}\item 
 virtual \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1Site_a71366fcfe7e06122ed44177dd833f8c8}{$\sim$\+Site}} ()=default
 \item 
@@ -26,7 +26,7 @@ int \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1Site_a99ffea3c53b0dde9
 \begin{DoxyCompactList}\small\item\em Get the Id. \end{DoxyCompactList}\item 
 std\+::string \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1Site_abbbf37dd4e23c22c1f5a7fa1a38541bc}{Get\+Name}} () const
 \begin{DoxyCompactList}\small\item\em Get the Name. \end{DoxyCompactList}\item 
-\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1Geodetic}{IO\+::\+Astrodynamics\+::\+Coordinates\+::\+Geodetic}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1Site_a8a5ccf4d8c9dbf242709a52313f973a2}{Get\+Coordinates}} () const
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1Planetodetic}{IO\+::\+Astrodynamics\+::\+Coordinates\+::\+Planetodetic}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1Site_aaa88952123223124e504299a92f429e4}{Get\+Coordinates}} () const
 \begin{DoxyCompactList}\small\item\em Get the \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Coordinates}{Coordinates}}. \end{DoxyCompactList}\item 
 std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody}{IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Body}} $>$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1Site_ae2742a67574b371f7db16e6fcb365e3d}{Get\+Body}} () const
 \begin{DoxyCompactList}\small\item\em Get the \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Body}{Body}}. \end{DoxyCompactList}\item 
@@ -56,7 +56,7 @@ const std\+::unique\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Fra
 \item 
 std\+::string \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1Site_aab60b3e6eaf64ccfbfa9dd0434cfeacd}{Get\+Files\+Path}} () const
 \item 
-void \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1Site_ae3b56a42e72c7e5cb89776de7ce8fccb}{Build\+And\+Write\+Ephemeris}} (const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{IO\+::\+Astrodynamics\+::\+Time\+::\+Window}}$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1UTC}{IO\+::\+Astrodynamics\+::\+Time\+::\+UTC}} $>$ \&search\+Window) const
+void \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1Site_ad0ac8e4980d15fa7b586d965fb5ec98b}{Build\+And\+Write\+Ephemeris}} (const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{IO\+::\+Astrodynamics\+::\+Time\+::\+Window}}$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} $>$ \&search\+Window) const
 \item 
 \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}{Orbital\+Parameters\+::\+State\+Vector}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1Site_a4d147391866026f4626b7dc712b67172}{Read\+Ephemeris}} (const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Frames_1_1Frames}{Frames\+::\+Frames}} \&frame, \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_af0023a81d12385b73d78bd82e4b96ce3}{Aberrations\+Enum}} aberration, const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{Time\+::\+TDB}} \&epoch, const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody}{Body\+::\+Celestial\+Body}} \&observer) const
 \item 
@@ -78,7 +78,7 @@ const int \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1Site_abd34dac793
 \item 
 const std\+::string \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1Site_abc5b82fb0f61bfa39fbb7223e89af9df}{m\+\_\+name}}
 \item 
-const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1Geodetic}{IO\+::\+Astrodynamics\+::\+Coordinates\+::\+Geodetic}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1Site_a358eb7f502026eb6f3ca05c56ebb0739}{m\+\_\+coordinates}}
+const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1Planetodetic}{IO\+::\+Astrodynamics\+::\+Coordinates\+::\+Planetodetic}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1Site_a5aabd4c4cb411d38bc097bee3d49bae6}{m\+\_\+coordinates}}
 \item 
 const std\+::string \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1Site_ada45b329aad61990405daa34b216374a}{m\+\_\+files\+Path}}
 \item 
@@ -94,11 +94,11 @@ const std\+::unique\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Fra
 \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1Site}{Site}} class. 
 
 \doxysubsection{Constructor \& Destructor Documentation}
-\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Sites_1_1Site_a426c93f24e276a9cfe0ab2eeb6c7bdb1}\label{classIO_1_1Astrodynamics_1_1Sites_1_1Site_a426c93f24e276a9cfe0ab2eeb6c7bdb1}} 
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Sites_1_1Site_a4f7407b2ca5c691d934738255d77ad2c}\label{classIO_1_1Astrodynamics_1_1Sites_1_1Site_a4f7407b2ca5c691d934738255d77ad2c}} 
 \index{IO::Astrodynamics::Sites::Site@{IO::Astrodynamics::Sites::Site}!Site@{Site}}
 \index{Site@{Site}!IO::Astrodynamics::Sites::Site@{IO::Astrodynamics::Sites::Site}}
 \doxysubsubsection{\texorpdfstring{Site()}{Site()}}
-{\footnotesize\ttfamily IO\+::\+Astrodynamics\+::\+Sites\+::\+Site\+::\+Site (\begin{DoxyParamCaption}\item[{int}]{id,  }\item[{std\+::string}]{name,  }\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1Geodetic}{IO\+::\+Astrodynamics\+::\+Coordinates\+::\+Geodetic}} \&}]{coordinates,  }\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody}{IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Body}} $>$}]{body,  }\item[{std\+::string}]{directory\+Path }\end{DoxyParamCaption})}
+{\footnotesize\ttfamily IO\+::\+Astrodynamics\+::\+Sites\+::\+Site\+::\+Site (\begin{DoxyParamCaption}\item[{int}]{id,  }\item[{std\+::string}]{name,  }\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1Planetodetic}{IO\+::\+Astrodynamics\+::\+Coordinates\+::\+Planetodetic}} \&}]{coordinates,  }\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody}{IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Body}} $>$}]{body,  }\item[{std\+::string}]{directory\+Path }\end{DoxyParamCaption})}
 
 
 
@@ -120,11 +120,11 @@ Construct a new \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1Site}{Site
 
 
 \doxysubsection{Member Function Documentation}
-\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Sites_1_1Site_ae3b56a42e72c7e5cb89776de7ce8fccb}\label{classIO_1_1Astrodynamics_1_1Sites_1_1Site_ae3b56a42e72c7e5cb89776de7ce8fccb}} 
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Sites_1_1Site_ad0ac8e4980d15fa7b586d965fb5ec98b}\label{classIO_1_1Astrodynamics_1_1Sites_1_1Site_ad0ac8e4980d15fa7b586d965fb5ec98b}} 
 \index{IO::Astrodynamics::Sites::Site@{IO::Astrodynamics::Sites::Site}!BuildAndWriteEphemeris@{BuildAndWriteEphemeris}}
 \index{BuildAndWriteEphemeris@{BuildAndWriteEphemeris}!IO::Astrodynamics::Sites::Site@{IO::Astrodynamics::Sites::Site}}
 \doxysubsubsection{\texorpdfstring{BuildAndWriteEphemeris()}{BuildAndWriteEphemeris()}}
-{\footnotesize\ttfamily void IO\+::\+Astrodynamics\+::\+Sites\+::\+Site\+::\+Build\+And\+Write\+Ephemeris (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{IO\+::\+Astrodynamics\+::\+Time\+::\+Window}}$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1UTC}{IO\+::\+Astrodynamics\+::\+Time\+::\+UTC}} $>$ \&}]{search\+Window }\end{DoxyParamCaption}) const}
+{\footnotesize\ttfamily void IO\+::\+Astrodynamics\+::\+Sites\+::\+Site\+::\+Build\+And\+Write\+Ephemeris (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{IO\+::\+Astrodynamics\+::\+Time\+::\+Window}}$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} $>$ \&}]{search\+Window }\end{DoxyParamCaption}) const}
 
 Build and write ephemeris for a given period 
 \begin{DoxyParams}{Parameters}
@@ -218,18 +218,18 @@ Get the \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Body}{Body}}.
 \begin{DoxyReturn}{Returns}
 std\+::shared\+\_\+ptr$<$\+IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Body$>$ 
 \end{DoxyReturn}
-\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Sites_1_1Site_a8a5ccf4d8c9dbf242709a52313f973a2}\label{classIO_1_1Astrodynamics_1_1Sites_1_1Site_a8a5ccf4d8c9dbf242709a52313f973a2}} 
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Sites_1_1Site_aaa88952123223124e504299a92f429e4}\label{classIO_1_1Astrodynamics_1_1Sites_1_1Site_aaa88952123223124e504299a92f429e4}} 
 \index{IO::Astrodynamics::Sites::Site@{IO::Astrodynamics::Sites::Site}!GetCoordinates@{GetCoordinates}}
 \index{GetCoordinates@{GetCoordinates}!IO::Astrodynamics::Sites::Site@{IO::Astrodynamics::Sites::Site}}
 \doxysubsubsection{\texorpdfstring{GetCoordinates()}{GetCoordinates()}}
-{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1Geodetic}{IO\+::\+Astrodynamics\+::\+Coordinates\+::\+Geodetic}} IO\+::\+Astrodynamics\+::\+Sites\+::\+Site\+::\+Get\+Coordinates (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1Planetodetic}{IO\+::\+Astrodynamics\+::\+Coordinates\+::\+Planetodetic}} IO\+::\+Astrodynamics\+::\+Sites\+::\+Site\+::\+Get\+Coordinates (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
 
 
 
 Get the \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Coordinates}{Coordinates}}. 
 
 \begin{DoxyReturn}{Returns}
-\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1Geodetic}{IO\+::\+Astrodynamics\+::\+Coordinates\+::\+Geodetic}} 
+IO\+::\+Astrodynamics\+::\+Coordinates\+::\+Geodetic 
 \end{DoxyReturn}
 \mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Sites_1_1Site_abd527d5fbc38a9223415301dc6b08d95}\label{classIO_1_1Astrodynamics_1_1Sites_1_1Site_abd527d5fbc38a9223415301dc6b08d95}} 
 \index{IO::Astrodynamics::Sites::Site@{IO::Astrodynamics::Sites::Site}!GetEphemerisCoverageWindow@{GetEphemerisCoverageWindow}}
@@ -479,11 +479,11 @@ Write a comment into ephemeris file
 \doxysubsubsection{\texorpdfstring{m\_body}{m\_body}}
 {\footnotesize\ttfamily const std\+::shared\+\_\+ptr$<$\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody}{IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Body}}$>$ IO\+::\+Astrodynamics\+::\+Sites\+::\+Site\+::m\+\_\+body\hspace{0.3cm}{\ttfamily [protected]}}
 
-\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Sites_1_1Site_a358eb7f502026eb6f3ca05c56ebb0739}\label{classIO_1_1Astrodynamics_1_1Sites_1_1Site_a358eb7f502026eb6f3ca05c56ebb0739}} 
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Sites_1_1Site_a5aabd4c4cb411d38bc097bee3d49bae6}\label{classIO_1_1Astrodynamics_1_1Sites_1_1Site_a5aabd4c4cb411d38bc097bee3d49bae6}} 
 \index{IO::Astrodynamics::Sites::Site@{IO::Astrodynamics::Sites::Site}!m\_coordinates@{m\_coordinates}}
 \index{m\_coordinates@{m\_coordinates}!IO::Astrodynamics::Sites::Site@{IO::Astrodynamics::Sites::Site}}
 \doxysubsubsection{\texorpdfstring{m\_coordinates}{m\_coordinates}}
-{\footnotesize\ttfamily const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1Geodetic}{IO\+::\+Astrodynamics\+::\+Coordinates\+::\+Geodetic}} IO\+::\+Astrodynamics\+::\+Sites\+::\+Site\+::m\+\_\+coordinates\hspace{0.3cm}{\ttfamily [protected]}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1Planetodetic}{IO\+::\+Astrodynamics\+::\+Coordinates\+::\+Planetodetic}} IO\+::\+Astrodynamics\+::\+Sites\+::\+Site\+::m\+\_\+coordinates\hspace{0.3cm}{\ttfamily [protected]}}
 
 \mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Sites_1_1Site_aa4b02d097272611df84de25505b0d500}\label{classIO_1_1Astrodynamics_1_1Sites_1_1Site_aa4b02d097272611df84de25505b0d500}} 
 \index{IO::Astrodynamics::Sites::Site@{IO::Astrodynamics::Sites::Site}!m\_ephemerisKernel@{m\_ephemerisKernel}}

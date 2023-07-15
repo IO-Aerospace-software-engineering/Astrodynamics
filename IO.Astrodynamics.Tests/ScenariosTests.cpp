@@ -1,3 +1,7 @@
+/*
+ Copyright (c) 2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
+ */
+
 #include<gtest/gtest.h>
 #include<memory>
 #include<string>
@@ -22,7 +26,7 @@ TEST(Scenarios, ReachOrbitByDay)
     auto sun = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(10);
     auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399, sun);
     auto ls = IO::Astrodynamics::Sites::LaunchSite(399003, "S3",
-                                                           IO::Astrodynamics::Coordinates::Geodetic(-81.0 * IO::Astrodynamics::Constants::DEG_RAD, 28.5 * IO::Astrodynamics::Constants::DEG_RAD, 0.0), earth,std::string(SitePath));
+                                                   IO::Astrodynamics::Coordinates::Planetodetic(-81.0 * IO::Astrodynamics::Constants::DEG_RAD, 28.5 * IO::Astrodynamics::Constants::DEG_RAD, 0.0), earth, std::string(SitePath));
     std::unique_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::Astrodynamics::OrbitalParameters::StateVector>(
             ls.GetStateVector(IO::Astrodynamics::Frames::InertialFrames::GetICRF(), IO::Astrodynamics::Time::TDB("2021-06-02T00:00:00")));
     IO::Astrodynamics::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams)};
@@ -40,10 +44,10 @@ TEST(Scenarios, ReachOrbitByDay)
     ASSERT_EQ(1, windows.size());
 
     //first launch window
-    ASSERT_STREQ("2021-06-02 18:08:00.980377 (UTC)", windows[0].GetWindow().GetStartDate().ToString().c_str());
+    ASSERT_STREQ("2021-06-02 18:07:44.336128 (UTC)", windows[0].GetWindow().GetStartDate().ToString().c_str());
     ASSERT_EQ(399003, windows[0].GetLaunchSite().GetId());
-    ASSERT_DOUBLE_EQ(44.906290078823638, windows[0].GetInertialAzimuth() * IO::Astrodynamics::Constants::RAD_DEG);
-    ASSERT_DOUBLE_EQ(42.657119977138009, windows[0].GetNonInertialAzimuth() * IO::Astrodynamics::Constants::RAD_DEG);
+    ASSERT_DOUBLE_EQ(44.905855362930239, windows[0].GetInertialAzimuth() * IO::Astrodynamics::Constants::RAD_DEG);
+    ASSERT_DOUBLE_EQ(42.656671212339546, windows[0].GetNonInertialAzimuth() * IO::Astrodynamics::Constants::RAD_DEG);
     ASSERT_DOUBLE_EQ(7665.2355903714715, windows[0].GetInertialInsertionVelocity());
-    ASSERT_DOUBLE_EQ(7382.1537527826185, windows[0].GetNonInertialInsertionVelocity());
+    ASSERT_DOUBLE_EQ(7382.156305077152, windows[0].GetNonInertialInsertionVelocity());
 }

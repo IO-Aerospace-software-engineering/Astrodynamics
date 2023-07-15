@@ -1,3 +1,7 @@
+/*
+ Copyright (c) 2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
+ */
+
 #include <gtest/gtest.h>
 #include <StateVector.h>
 #include <InertialFrames.h>
@@ -321,7 +325,7 @@ TEST(StateVector, GetAscendingNodeVector)
 
 	auto anv = sv.GetAscendingNodeVector();
 
-	ASSERT_DOUBLE_EQ(1.0,anv.GetX());
-	ASSERT_DOUBLE_EQ(0.0,anv.GetY());
-	ASSERT_DOUBLE_EQ(0.0,anv.GetZ());
+	ASSERT_DOUBLE_EQ(0.9999999739774097,anv.GetX());
+	ASSERT_DOUBLE_EQ(0.00022673879821807146,anv.GetY());
+	ASSERT_DOUBLE_EQ(2.5193199802008394e-05,anv.GetZ());
 }

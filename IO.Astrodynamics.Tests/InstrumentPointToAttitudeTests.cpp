@@ -1,3 +1,7 @@
+/*
+ Copyright (c) 2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
+ */
+
 #include <gtest/gtest.h>
 #include <VVIntegrator.h>
 #include <InstrumentPointingToAttitude.h>
@@ -63,7 +67,7 @@ TEST(InstrumentPointingToSiteAttitude, GetOrientation)
     auto moon = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(301, earth);
     //    long 1.1159563818495755
     //    lat 0.0020551285296693113
-    IO::Astrodynamics::Sites::Site site(399001, "targetedSite", IO::Astrodynamics::Coordinates::Geodetic(1.1159563818495755, 0.0020551285296693113, 0.0), earth,std::string(SitePath));
+    IO::Astrodynamics::Sites::Site site(399001, "targetedSite", IO::Astrodynamics::Coordinates::Planetodetic(1.1159563818495755, 0.0020551285296693113, 0.0), earth, std::string(SitePath));
 
     std::unique_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParams1 = std::make_unique<IO::Astrodynamics::OrbitalParameters::StateVector>(earth,
                                                                                                                                               IO::Astrodynamics::Math::Vector3D(6678000.0,
@@ -99,9 +103,9 @@ TEST(InstrumentPointingToSiteAttitude, GetOrientation)
     ASSERT_DOUBLE_EQ(0.0, pointingManeuver.GetDeltaV().Magnitude());
     auto pointingVector = instrument->GetBoresight(IO::Astrodynamics::Frames::InertialFrames::GetICRF(), IO::Astrodynamics::Time::TDB("2021-01-01T13:00:00"));
 
-    ASSERT_NEAR(-0.99999999985376886, pointingVector.GetX(), 1E-09);
-    ASSERT_NEAR(-0.000015435253205632487, pointingVector.GetY(), 1E-09);
-    ASSERT_NEAR(-0.0000073630780085578658, pointingVector.GetZ(), 1E-09);
+    ASSERT_NEAR(-0.99963872880998339, pointingVector.GetX(), 1E-09);
+    ASSERT_NEAR(0.026869789826543089, pointingVector.GetY(), 1E-09);
+    ASSERT_NEAR(0.00065288424501521673, pointingVector.GetZ(), 1E-09);
 
 }
 
@@ -112,7 +116,7 @@ TEST(InstrumentPointingToSiteAttitude2, GetOrientation)
     auto moon = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(301, earth);
     //    long 1.1159563818495755
     //    lat 0.0020551285296693113
-    IO::Astrodynamics::Sites::Site site(399001, "targetedSite", IO::Astrodynamics::Coordinates::Geodetic(1.1159563818495755, 0.0020551285296693113, 0.0), moon,std::string(SitePath));
+    IO::Astrodynamics::Sites::Site site(399001, "targetedSite", IO::Astrodynamics::Coordinates::Planetodetic(1.1159563818495755, 0.0020551285296693113, 0.0), moon, std::string(SitePath));
 
     std::unique_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParams1 = std::make_unique<IO::Astrodynamics::OrbitalParameters::StateVector>(earth,
                                                                                                                                               IO::Astrodynamics::Math::Vector3D(6678000.0,

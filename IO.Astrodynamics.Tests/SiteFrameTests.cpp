@@ -1,9 +1,13 @@
+/*
+ Copyright (c) 2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
+ */
+
 #include <gtest/gtest.h>
 #include <memory>
 #include <CelestialBody.h>
 #include <Constants.h>
 #include <Site.h>
-#include <Geodetic.h>
+#include <Planetodetic.h>
 #include <DataPoolMonitoring.h>
 #include <SiteFrameFile.h>
 #include "TestParameters.h"
@@ -12,7 +16,7 @@ TEST(SiteFrame, Initialization)
 {
     auto sun = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(10);
     auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399, sun);
-    IO::Astrodynamics::Sites::Site s{399001, "S1", IO::Astrodynamics::Coordinates::Geodetic(2.2 * IO::Astrodynamics::Constants::DEG_RAD, 48.0 * IO::Astrodynamics::Constants::DEG_RAD, 0.0), earth,std::string(SitePath)};
+    IO::Astrodynamics::Sites::Site s{399001, "S1", IO::Astrodynamics::Coordinates::Planetodetic(2.2 * IO::Astrodynamics::Constants::DEG_RAD, 48.0 * IO::Astrodynamics::Constants::DEG_RAD, 0.0), earth, std::string(SitePath)};
     auto id = IO::Astrodynamics::DataPoolMonitoring::Instance().GetIntegerProperty("FRAME_S1_TOPO", 1);
     ASSERT_EQ(1399001, id[0]);
 
@@ -32,7 +36,7 @@ TEST(SiteFrame, Initialization)
     ASSERT_STREQ("ANGLES", spec[0].c_str());
 
     auto relative = IO::Astrodynamics::DataPoolMonitoring::Instance().GetStringProperty("TKFRAME_1399001_RELATIVE", 1);
-    ASSERT_STREQ("IAU_EARTH", relative[0].c_str());
+    ASSERT_STREQ("ITRF93", relative[0].c_str());
 
     auto frameAngles = IO::Astrodynamics::DataPoolMonitoring::Instance().GetDoubleProperty("TKFRAME_1399001_ANGLES", 3);
     ASSERT_DOUBLE_EQ(-0.038397, frameAngles[0]);

@@ -1,3 +1,7 @@
+/*
+ Copyright (c) 2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
+ */
+
 #include <gtest/gtest.h>
 #include <Engine.h>
 #include <Spacecraft.h>
@@ -575,7 +579,7 @@ TEST(PlaneChangingManeuver, CheckOrbitalParametersToLowerInclination)
     auto o = ephemeris.GetRightAscendingNodeLongitude() * IO::Astrodynamics::Constants::RAD_DEG;
     auto w = ephemeris.GetPeriapsisArgument() * IO::Astrodynamics::Constants::RAD_DEG;
 
-    ASSERT_DOUBLE_EQ(6700011.4656982562, p);
+    ASSERT_DOUBLE_EQ(6700011.4656982673, p);
 
     ASSERT_NEAR(0.9, e, 1E-06);
 

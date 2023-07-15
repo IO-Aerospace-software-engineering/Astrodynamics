@@ -33,12 +33,12 @@ void LaunchProxy(IO::Astrodynamics::API::DTO::LaunchDTO &launchDto)
     ActivateErrorManagement();
     auto celestialBody = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(launchDto.recoverySite.bodyId);
     IO::Astrodynamics::Sites::LaunchSite ls(launchDto.launchSite.id, launchDto.launchSite.name,
-                                            ToGeodetic(launchDto.launchSite.coordinates),
+                                            ToPlanetodetic(launchDto.launchSite.coordinates),
                                             std::make_shared<IO::Astrodynamics::Body::CelestialBody>(
                                                     launchDto.launchSite.bodyId),
                                             launchDto.launchSite.directoryPath);
     IO::Astrodynamics::Sites::LaunchSite rs(launchDto.recoverySite.id, launchDto.recoverySite.name,
-                                            ToGeodetic(launchDto.recoverySite.coordinates),
+                                            ToPlanetodetic(launchDto.recoverySite.coordinates),
                                             std::make_shared<IO::Astrodynamics::Body::CelestialBody>(
                                                     launchDto.recoverySite.bodyId),
                                             launchDto.launchSite.directoryPath);
@@ -69,25 +69,19 @@ void LaunchProxy(IO::Astrodynamics::API::DTO::LaunchDTO &launchDto)
 }
 
 
-void PropagateProxy(IO::Astrodynamics::API::DTO::ScenarioDTO &scenarioDto)
+void PropagateSpacecraftProxy(IO::Astrodynamics::API::DTO::ScenarioDTO &scenarioDto)
 {
     ActivateErrorManagement();
     auto tdbWindow = ToTDBWindow(scenarioDto.Window);
-    IO::Astrodynamics::Scenario scenario(scenarioDto.Name,
-                                         IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::UTC>(
-                                                 tdbWindow.GetStartDate().ToUTC(),
-                                                 tdbWindow.GetEndDate().ToUTC()));
+    IO::Astrodynamics::Scenario scenario(scenarioDto.Name, IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::UTC>(tdbWindow.GetStartDate().ToUTC(),
+                                                                                                                         tdbWindow.GetEndDate().ToUTC()));
 
     //==========Build Celestial bodies=============
     std::map<int, std::shared_ptr<IO::Astrodynamics::Body::CelestialBody>> celestialBodies = BuildCelestialBodies(
             scenarioDto);
-    for (auto &celestial: celestialBodies)
-    {
-        scenario.AddCelestialBody(*celestial.second);
-    }
 
-//  ==========Build sites==========
     std::vector<std::shared_ptr<IO::Astrodynamics::Sites::Site>> sites;
+    //==========Build sites==========
     for (auto &siteDto: scenarioDto.Sites)
     {
         if (siteDto.id <= 0)
@@ -95,11 +89,12 @@ void PropagateProxy(IO::Astrodynamics::API::DTO::ScenarioDTO &scenarioDto)
             break;
         }
         auto site = std::make_shared<IO::Astrodynamics::Sites::Site>(siteDto.id, siteDto.name,
-                                                                     ToGeodetic(siteDto.coordinates),
+                                                                     ToPlanetodetic(siteDto.coordinates),
                                                                      celestialBodies[siteDto.bodyId],
                                                                      siteDto.directoryPath);
         sites.push_back(site);
         scenario.AddSite(*site);
+
     }
 
 
@@ -126,7 +121,6 @@ void PropagateProxy(IO::Astrodynamics::API::DTO::ScenarioDTO &scenarioDto)
     BuildPayload(scenarioDto, spacecraft);
 
     scenario.AttachSpacecraft(spacecraft);
-
 
     BuildManeuvers(scenarioDto, scenario, celestialBodies, maneuvers);
 
@@ -769,6 +763,18 @@ IO::Astrodynamics::API::DTO::TLEElementsDTO GetTLEElementsProxy(const char *L1, 
     return tleElementsDto;
 }
 
+void PropagateSiteProxy(IO::Astrodynamics::API::DTO::WindowDTO windowDto, IO::Astrodynamics::API::DTO::SiteDTO &siteDto)
+{
+    ActivateErrorManagement();
+    auto celestialBody = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(siteDto.bodyId);
+    IO::Astrodynamics::Sites::Site site(siteDto.id, siteDto.name, ToPlanetodetic(siteDto.coordinates), celestialBody, siteDto.directoryPath);
+    site.BuildAndWriteEphemeris(ToTDBWindow(windowDto));
+    if (failed_c())
+    {
+        siteDto.Error = strdup(HandleError());
+    }
+}
+
 #pragma endregion
 
 #pragma region ReadResults
@@ -787,6 +793,87 @@ void ReadManeuverResults(IO::Astrodynamics::API::DTO::ScenarioDTO &scenarioDto,
     ReadApsidalAlignmentManeuverResult(scenarioDto, maneuvers);
 
     ReadPhasingManeuverResult(scenarioDto, maneuvers);
+
+    ReadNadirAttitudeResult(scenarioDto, maneuvers);
+    ReadZenithAttitudeResult(scenarioDto, maneuvers);
+    ReadProgradeAttitudeResult(scenarioDto, maneuvers);
+    ReadRetrogradeAttitudeResult(scenarioDto, maneuvers);
+    ReadInstrumentTowardTargetAttitudeResult(scenarioDto, maneuvers);
+}
+
+void ReadInstrumentTowardTargetAttitudeResult(IO::Astrodynamics::API::DTO::ScenarioDTO &scenarioDto,
+                                 std::map<int, std::shared_ptr<IO::Astrodynamics::Maneuvers::ManeuverBase>> &maneuvers)
+{
+    for (auto &attitude: scenarioDto.Spacecraft.pointingToAttitudes)
+    {
+        if (attitude.maneuverOrder < 0)
+        {
+            break;
+        }
+
+        auto value = maneuvers[attitude.maneuverOrder];
+        attitude.window = ToWindowDTO(*value->GetManeuverWindow());
+    }
+}
+
+void ReadRetrogradeAttitudeResult(IO::Astrodynamics::API::DTO::ScenarioDTO &scenarioDto,
+                                std::map<int, std::shared_ptr<IO::Astrodynamics::Maneuvers::ManeuverBase>> &maneuvers)
+{
+    for (auto &attitude: scenarioDto.Spacecraft.retrogradeAttitudes)
+    {
+        if (attitude.maneuverOrder < 0)
+        {
+            break;
+        }
+
+        auto value = maneuvers[attitude.maneuverOrder];
+        attitude.window = ToWindowDTO(*value->GetManeuverWindow());
+    }
+}
+
+void ReadProgradeAttitudeResult(IO::Astrodynamics::API::DTO::ScenarioDTO &scenarioDto,
+                              std::map<int, std::shared_ptr<IO::Astrodynamics::Maneuvers::ManeuverBase>> &maneuvers)
+{
+    for (auto &attitude: scenarioDto.Spacecraft.progradeAttitudes)
+    {
+        if (attitude.maneuverOrder < 0)
+        {
+            break;
+        }
+
+        auto value = maneuvers[attitude.maneuverOrder];
+        attitude.window = ToWindowDTO(*value->GetManeuverWindow());
+    }
+}
+
+void ReadZenithAttitudeResult(IO::Astrodynamics::API::DTO::ScenarioDTO &scenarioDto,
+                             std::map<int, std::shared_ptr<IO::Astrodynamics::Maneuvers::ManeuverBase>> &maneuvers)
+{
+    for (auto &attitude: scenarioDto.Spacecraft.zenithAttitudes)
+    {
+        if (attitude.maneuverOrder < 0)
+        {
+            break;
+        }
+
+        auto value = maneuvers[attitude.maneuverOrder];
+        attitude.window = ToWindowDTO(*value->GetManeuverWindow());
+    }
+}
+
+void ReadNadirAttitudeResult(IO::Astrodynamics::API::DTO::ScenarioDTO &scenarioDto,
+                               std::map<int, std::shared_ptr<IO::Astrodynamics::Maneuvers::ManeuverBase>> &maneuvers)
+{
+    for (auto &attitude: scenarioDto.Spacecraft.nadirAttitudes)
+    {
+        if (attitude.maneuverOrder < 0)
+        {
+            break;
+        }
+
+        auto value = maneuvers[attitude.maneuverOrder];
+        attitude.window = ToWindowDTO(*value->GetManeuverWindow());
+    }
 }
 
 void ReadPhasingManeuverResult(IO::Astrodynamics::API::DTO::ScenarioDTO &scenarioDto,
@@ -1366,8 +1453,7 @@ void BuildProgradeAttitude(IO::Astrodynamics::API::DTO::ScenarioDTO &scenarioDto
         }
         IO::Astrodynamics::Time::TDB min(std::chrono::duration<double>(maneuver.minimumEpoch));
         IO::Astrodynamics::Time::TimeSpan hold(std::chrono::duration<double>(maneuver.attitudeHoldDuration));
-        auto prop = scenario.GetPropagator();
-        auto mnv = std::make_shared<IO::Astrodynamics::Maneuvers::Attitudes::ProgradeAttitude>(engines, prop,
+        auto mnv = std::make_shared<IO::Astrodynamics::Maneuvers::Attitudes::ProgradeAttitude>(engines, scenario.GetPropagator(),
                                                                                                min, hold);
         maneuvers[maneuver.maneuverOrder] = mnv;
     }

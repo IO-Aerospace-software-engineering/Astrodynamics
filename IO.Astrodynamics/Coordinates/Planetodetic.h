@@ -9,7 +9,7 @@ namespace IO::Astrodynamics::Coordinates
 	 * @brief Geodetic coordinate
 	 * 
 	 */
-	class Geodetic
+	class Planetodetic
 	{
 	private:
 		const double _altitude, _longitude, _latitude;
@@ -23,7 +23,7 @@ namespace IO::Astrodynamics::Coordinates
 		 * @param latitude 
 		 * @param altitude 
 		 */
-		Geodetic(const double longitude, const double latitude, const double altitude) :_altitude{ altitude }, _longitude{ longitude }, _latitude{ latitude }
+		Planetodetic(const double longitude, const double latitude, const double altitude) : _altitude{altitude }, _longitude{longitude }, _latitude{latitude }
 		{
 
 		}

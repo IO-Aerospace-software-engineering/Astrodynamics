@@ -11,7 +11,7 @@
 
 using namespace std::chrono_literals;
 
-IO::Astrodynamics::Sites::Site::Site(const int id, std::string name, const IO::Astrodynamics::Coordinates::Geodetic &coordinates,
+IO::Astrodynamics::Sites::Site::Site(const int id, std::string name, const IO::Astrodynamics::Coordinates::Planetodetic &coordinates,
                            std::shared_ptr<IO::Astrodynamics::Body::CelestialBody> body, std::string directoryPath) : m_id{id},
                                                                                                             m_name{std::move(name)},
                                                                                                             m_coordinates{coordinates},
@@ -224,19 +224,19 @@ std::string IO::Astrodynamics::Sites::Site::ReadEphemerisKernelComment() const
     return this->m_ephemerisKernel->ReadComment();
 }
 
-void IO::Astrodynamics::Sites::Site::BuildAndWriteEphemeris(const IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::UTC> &searchWindow) const
+void IO::Astrodynamics::Sites::Site::BuildAndWriteEphemeris(const IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB> &window) const
 {
     std::vector<IO::Astrodynamics::OrbitalParameters::StateVector> svector;
-    for (auto epoch = searchWindow.GetStartDate().ToTDB(); epoch <= searchWindow.GetEndDate().ToTDB(); epoch = epoch + IO::Astrodynamics::Parameters::SitePropagationStep)
+    for (auto epoch = window.GetStartDate(); epoch <= window.GetEndDate(); epoch = epoch + IO::Astrodynamics::Parameters::SitePropagationStep)
     {
         auto sv = GetStateVector(IO::Astrodynamics::Frames::InertialFrames::GetICRF(), epoch);
         svector.push_back(sv);
     }
 
     //Add latest value
-    if (svector.back().GetEpoch() < searchWindow.GetEndDate().ToTDB())
+    if (svector.back().GetEpoch() < window.GetEndDate())
     {
-        auto sv = GetStateVector(IO::Astrodynamics::Frames::InertialFrames::GetICRF(), searchWindow.GetEndDate().ToTDB());
+        auto sv = GetStateVector(IO::Astrodynamics::Frames::InertialFrames::GetICRF(), window.GetEndDate());
         svector.push_back(sv);
     }
 

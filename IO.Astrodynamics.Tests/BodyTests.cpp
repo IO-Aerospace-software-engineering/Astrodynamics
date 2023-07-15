@@ -1,4 +1,8 @@
-﻿#include <gtest/gtest.h>
+﻿/*
+ Copyright (c) 2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
+ */
+
+#include <gtest/gtest.h>
 #include <StateVector.h>
 #include <Constants.h>
 using namespace std::chrono_literals;
@@ -30,8 +34,8 @@ TEST(Body, SubObserverPoint)
     auto moon = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(301, earth);
 
     auto subpoint = moon->GetSubObserverPoint(*earth, IO::Astrodynamics::AberrationsEnum::LT, IO::Astrodynamics::Time::TDB("2021-06-28T00:00:00"));
-    ASSERT_DOUBLE_EQ(0.83233741162176433, subpoint.GetLongitude());
-    ASSERT_DOUBLE_EQ(-0.34238142277532951, subpoint.GetLatitude());
+    ASSERT_DOUBLE_EQ(0.83105109617416528, subpoint.GetLongitude());
+    ASSERT_DOUBLE_EQ(-0.34241340617342592, subpoint.GetLatitude());
     ASSERT_DOUBLE_EQ(1.0586118481814565e-12, subpoint.GetAltitude());
 }
 
@@ -42,7 +46,7 @@ TEST(Body, SubSolarPoint)
     auto moon = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(301, earth);
 
     auto subpoint = moon->GetSubSolarPoint(*earth, IO::Astrodynamics::AberrationsEnum::None, IO::Astrodynamics::Time::TDB("2021-06-28T12:00:00"));
-    ASSERT_DOUBLE_EQ(0.01592876989506849, subpoint.GetLongitude());
-    ASSERT_DOUBLE_EQ(0.40823584501112109, subpoint.GetLatitude());
+    ASSERT_DOUBLE_EQ(0.014631046835596228, subpoint.GetLongitude());
+    ASSERT_DOUBLE_EQ(0.40825241494269437, subpoint.GetLatitude());
     ASSERT_DOUBLE_EQ(0.0, subpoint.GetAltitude());
 }

@@ -44,7 +44,6 @@ namespace IO::Astrodynamics
     private:
         const std::string m_name;
         const IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::UTC> m_windows;
-        std::vector<const IO::Astrodynamics::Body::CelestialBody *> m_celestialBodies;
         std::vector<const IO::Astrodynamics::Sites::Site *> m_sites;
 
         IO::Astrodynamics::Integrators::Forces::GravityForce m_gravityForce;
@@ -56,12 +55,6 @@ namespace IO::Astrodynamics
 
     public:
         Scenario(std::string name, const IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::UTC> &windows);
-
-        /**
-         * Add celestial body to the scenario
-         * @param celestialBody
-         */
-        void AddCelestialBody(const IO::Astrodynamics::Body::CelestialBody &celestialBody);
 
         /**
          * Add Spacecraft to the scenario
@@ -88,13 +81,6 @@ namespace IO::Astrodynamics
          */
         [[nodiscard]] inline const IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::UTC> &GetWindow() const
         { return m_windows; }
-
-        /**
-         * Get celestial bodies of the scenario
-         * @return
-         */
-        inline const std::vector<const IO::Astrodynamics::Body::CelestialBody *> &GetCelestialBodies()
-        { return m_celestialBodies; }
 
         /**
          * Get spacecrafts of the scenario

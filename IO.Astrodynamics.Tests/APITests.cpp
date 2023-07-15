@@ -12,7 +12,7 @@
 TEST(API, DTOSize)
 {
     auto size2 = sizeof(IO::Astrodynamics::API::DTO::ScenarioDTO);
-    ASSERT_EQ(19032, size2);
+    ASSERT_EQ(19112, size2);
 }
 
 TEST(API, TDBToString)
@@ -27,43 +27,62 @@ TEST(API, UTCToString)
     ASSERT_STREQ("2000-01-01 12:00:00.000000 (UTC)", res);
 }
 
-TEST(API, SiteAndSpacecraftPropagation)
+TEST(API, SitePropagation)
 {
-    //Configure site
-    IO::Astrodynamics::API::DTO::ScenarioDTO scenario{};
-    scenario.Name = "scenatiosites";
-    scenario.Window.start = 668085625.01523638;
-    scenario.Window.end = 668174330.814560;
+    IO::Astrodynamics::Time::TDB start(0.0s);
+    IO::Astrodynamics::Time::TDB end(86400s);
+    IO::Astrodynamics::API::DTO::WindowDTO windowTDBDto{};
+    windowTDBDto.start = start.GetSecondsFromJ2000().count();
+    windowTDBDto.end = end.GetSecondsFromJ2000().count();
+
+    IO::Astrodynamics::API::DTO::SiteDTO site;
 
     //Configure site
-    scenario.Sites[0].id = 399033;
-    scenario.Sites[0].name = "S33";
+    site.id = 399134;
+    site.name = "S134";
     std::string sitePath(SitePath);
-    scenario.Sites[0].directoryPath = sitePath.c_str();
-    scenario.Sites[0].bodyId = 399;
-    scenario.Sites[0].coordinates.longitude = -1.4137166941154069;
-    scenario.Sites[0].coordinates.latitude = 0.49741883681838395;
-    scenario.Sites[0].coordinates.altitude = 0.0;
+    site.directoryPath = sitePath.c_str();
+    site.bodyId = 399;
+    site.coordinates.longitude = 30 * IO::Astrodynamics::Constants::DEG_RAD;
+    site.coordinates.latitude = 10 * IO::Astrodynamics::Constants::DEG_RAD;
+    site.coordinates.altitude = 1000.0;
 
-    //Configure spacecraft
-    scenario.Spacecraft.id = -1111;
-    scenario.Spacecraft.name = "spc1";
-    scenario.Spacecraft.dryOperatingMass = 1000.0;
-    scenario.Spacecraft.maximumOperatingMass = 3000.0;
-    scenario.Spacecraft.initialOrbitalParameter.centerOfMotionId = 399;
-    scenario.Spacecraft.initialOrbitalParameter.epoch = 668085625.01523638;
-    scenario.Spacecraft.initialOrbitalParameter.inertialFrame = "J2000";
-    scenario.Spacecraft.initialOrbitalParameter.position.x = 6800.0;
-    scenario.Spacecraft.initialOrbitalParameter.position.y = 0.0;
-    scenario.Spacecraft.initialOrbitalParameter.position.z = 0.0;
-    scenario.Spacecraft.initialOrbitalParameter.velocity.x = 0.0;
-    scenario.Spacecraft.initialOrbitalParameter.velocity.y = 8.0;
-    scenario.Spacecraft.initialOrbitalParameter.velocity.z = 0.0;
+    PropagateSiteProxy(windowTDBDto, site);
 
-    std::string spacecraftPath(SpacecraftPath);
-    scenario.Spacecraft.directoryPath = spacecraftPath.c_str();
+    LoadKernelsProxy((sitePath+"/S134").c_str());
 
-    PropagateProxy(scenario);
+
+    IO::Astrodynamics::API::DTO::StateVectorDTO sv[25];
+    ReadEphemerisProxy(windowTDBDto, 399, 399134, "J2000", "NONE", 3600, sv);
+    UnloadKernelsProxy((sitePath+"/S134").c_str());
+
+    ASSERT_DOUBLE_EQ(4054782.9648194457, sv[0].position.x);
+    ASSERT_DOUBLE_EQ(-4799280.7521664528, sv[0].position.y);
+    ASSERT_DOUBLE_EQ(1100392.3675019771, sv[0].position.z);
+
+    ASSERT_DOUBLE_EQ(349.96683107685112, sv[0].velocity.x);
+    ASSERT_DOUBLE_EQ(295.68160031926175, sv[0].velocity.y);
+    ASSERT_DOUBLE_EQ(0.017692125392659522, sv[0].velocity.z);
+
+    ASSERT_DOUBLE_EQ(0.0, sv[0].epoch);
+    ASSERT_EQ(399, sv[0].centerOfMotionId);
+    ASSERT_STREQ("J2000", sv[0].inertialFrame);
+
+    ASSERT_DOUBLE_EQ(5675531.269242838, sv[5].position.x);
+    ASSERT_DOUBLE_EQ(2694837.2855253983, sv[5].position.y);
+    ASSERT_DOUBLE_EQ(1100645.6326860497, sv[5].position.z);
+
+    ASSERT_DOUBLE_EQ(-196.51288137429424, sv[5].velocity.x);
+    ASSERT_DOUBLE_EQ(413.86842735799422, sv[5].velocity.y);
+
+#if _WIN64
+    ASSERT_DOUBLE_EQ(0.0062996686003850494, sv[5].velocity.z);
+#else
+    ASSERT_DOUBLE_EQ(0.0062996686004048149, sv[5].velocity.z);
+#endif
+    ASSERT_DOUBLE_EQ(18000.0, sv[5].epoch);
+    ASSERT_EQ(399, sv[5].centerOfMotionId);
+    ASSERT_STREQ("J2000", sv[5].inertialFrame);
 }
 
 TEST(API, SpacecraftPropagation)
@@ -76,6 +95,16 @@ TEST(API, SpacecraftPropagation)
 
     //Add additional celestial bodies involved
     scenario.AdditionalCelestialBodiesId[0] = 301;
+
+    std::string sitePath(SitePath);
+
+    scenario.Sites[0].id = 399033;
+    scenario.Sites[0].name = "S33";
+    scenario.Sites[0].directoryPath = sitePath.c_str();
+    scenario.Sites[0].bodyId = 399;
+    scenario.Sites[0].coordinates.longitude = 30 * IO::Astrodynamics::Constants::DEG_RAD;
+    scenario.Sites[0].coordinates.latitude = 10 * IO::Astrodynamics::Constants::DEG_RAD;
+    scenario.Sites[0].coordinates.altitude = 1000.0;
 
     //Add and configure spacecraft
     scenario.Spacecraft.id = -1111;
@@ -126,8 +155,12 @@ TEST(API, SpacecraftPropagation)
     scenario.Spacecraft.orbitalPlaneChangingManeuvers[0].engines[0] = "eng1";
     scenario.Spacecraft.orbitalPlaneChangingManeuvers[0].maneuverOrder = 0;
 
+    scenario.Spacecraft.progradeAttitudes[0].maneuverOrder=1;
+    scenario.Spacecraft.progradeAttitudes[0].engines[0]="eng1";
+
+
     //Execute propagation
-    PropagateProxy(scenario);
+    PropagateSpacecraftProxy(scenario);
 
     IO::Astrodynamics::Time::TDB tdbStart(
             std::chrono::duration<double>(scenario.Spacecraft.orbitalPlaneChangingManeuvers[0].thrustWindow.start));
@@ -438,9 +471,9 @@ TEST(API, ConvertTLEToStateVectorProxy)
 {
     IO::Astrodynamics::Time::TDB epoch("2021-01-20T18:50:13.663106");
     auto stateVector = ConvertTLEToStateVectorProxy("ISS",
-            "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
-            "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703",
-            epoch.GetSecondsFromJ2000().count());
+                                                    "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
+                                                    "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703",
+                                                    epoch.GetSecondsFromJ2000().count());
     ASSERT_DOUBLE_EQ(4363669.2613373389, stateVector.position.x);
     ASSERT_DOUBLE_EQ(-3627809.912410662, stateVector.position.y);
     ASSERT_DOUBLE_EQ(-3747415.4653566754, stateVector.position.z);
@@ -453,8 +486,8 @@ TEST(API, ConvertTLEToStateVectorProxy)
 TEST(API, GetTLEElementsProxy)
 {
     auto res = GetTLEElementsProxy("ISS",
-                                                    "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
-                                                    "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
+                                   "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
+                                   "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
     ASSERT_DOUBLE_EQ(6803376.2171725659, res.A);
     ASSERT_DOUBLE_EQ(4.9299999999999999e-05, res.E);
     ASSERT_DOUBLE_EQ(0.9013281683026676, res.I);

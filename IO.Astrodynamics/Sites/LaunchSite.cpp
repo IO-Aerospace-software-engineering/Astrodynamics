@@ -5,7 +5,7 @@
 #include <LaunchSite.h>
 #include <algorithm>
 
-IO::Astrodynamics::Sites::LaunchSite::LaunchSite(const int id, const std::string &name, const IO::Astrodynamics::Coordinates::Geodetic &coordinates,
+IO::Astrodynamics::Sites::LaunchSite::LaunchSite(const int id, const std::string &name, const IO::Astrodynamics::Coordinates::Planetodetic &coordinates,
                                        std::shared_ptr<IO::Astrodynamics::Body::CelestialBody> body, std::string directoryPath) : Site(id, name, coordinates, std::move(body), std::move(directoryPath))
 {
 }

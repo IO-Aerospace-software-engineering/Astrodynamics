@@ -6,7 +6,7 @@
 #define SITE_H
 
 
-#include <Geodetic.h>
+#include <Planetodetic.h>
 #include <Illumination.h>
 #include <SiteFrameFile.h>
 #include <HorizontalCoordinates.h>
@@ -29,7 +29,7 @@ namespace IO::Astrodynamics::Sites
     protected:
         const int m_id;
         const std::string m_name;
-        const IO::Astrodynamics::Coordinates::Geodetic m_coordinates;
+        const IO::Astrodynamics::Coordinates::Planetodetic m_coordinates;
         const std::string m_filesPath;
         const std::unique_ptr<IO::Astrodynamics::Kernels::EphemerisKernel> m_ephemerisKernel;
 
@@ -48,7 +48,7 @@ namespace IO::Astrodynamics::Sites
          * @param name 
          * @param coordinates 
          */
-        Site(int id, std::string name, const IO::Astrodynamics::Coordinates::Geodetic &coordinates,
+        Site(int id, std::string name, const IO::Astrodynamics::Coordinates::Planetodetic &coordinates,
              std::shared_ptr<IO::Astrodynamics::Body::CelestialBody> body, std::string directoryPath);
 
         virtual ~Site() = default;
@@ -74,7 +74,7 @@ namespace IO::Astrodynamics::Sites
          * 
          * @return IO::Astrodynamics::Coordinates::Geodetic
          */
-        [[nodiscard]] inline IO::Astrodynamics::Coordinates::Geodetic GetCoordinates() const
+        [[nodiscard]] inline IO::Astrodynamics::Coordinates::Planetodetic GetCoordinates() const
         { return m_coordinates; }
 
         /**
@@ -209,7 +209,7 @@ namespace IO::Astrodynamics::Sites
          * Build and write ephemeris for a given period
          * @param searchWindow
          */
-        void BuildAndWriteEphemeris(const IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::UTC> &searchWindow) const;
+        void BuildAndWriteEphemeris(const IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB> &searchWindow) const;
 
         /**
          * Read ephemeris from ephemeris file

@@ -24,6 +24,7 @@ namespace IO::Astrodynamics::API::DTO
         IO::Astrodynamics::API::DTO::PlanetodeticDTO coordinates{};
         IO::Astrodynamics::API::DTO::AzimuthRangeDTO ranges[10]{};
         const char *directoryPath{};
+        const char *Error{};
     };
 }
 #endif //IOSDK_SITEDTO_H

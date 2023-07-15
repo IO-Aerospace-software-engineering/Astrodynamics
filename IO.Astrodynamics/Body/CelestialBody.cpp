@@ -35,7 +35,16 @@ IO::Astrodynamics::Body::CelestialBody::CelestialBody(const int id, std::shared_
     const_cast<std::string &>(m_name) = name;
     if (IsPlanet(id) || IsMoon(id) || IsSun(id))
     {
-        const_cast<IO::Astrodynamics::Frames::BodyFixedFrames &>(m_BodyFixedFrame) = IO::Astrodynamics::Frames::BodyFixedFrames("IAU_" + std::string(name));
+        std::string frame;
+        if (id == 399)
+        {
+            frame = "ITRF93";
+        } else
+        {
+            frame = "IAU_" + std::string(name);
+        }
+
+        const_cast<IO::Astrodynamics::Frames::BodyFixedFrames &>(m_BodyFixedFrame) = IO::Astrodynamics::Frames::BodyFixedFrames(frame);
     }
 }
 
@@ -52,7 +61,16 @@ IO::Astrodynamics::Body::CelestialBody::CelestialBody(const int id) : IO::Astrod
     const_cast<std::string &>(m_name) = name;
     if (IsPlanet(id) || IsMoon(id) || IsSun(id))
     {
-        const_cast<IO::Astrodynamics::Frames::BodyFixedFrames &>(m_BodyFixedFrame) = IO::Astrodynamics::Frames::BodyFixedFrames("IAU_" + std::string(name));
+        std::string frame;
+        if (id == 399)
+        {
+            frame = "ITRF93";
+        } else
+        {
+            frame = "IAU_" + std::string(name);
+        }
+
+        const_cast<IO::Astrodynamics::Frames::BodyFixedFrames &>(m_BodyFixedFrame) = IO::Astrodynamics::Frames::BodyFixedFrames(frame);
     }
     const_cast<double &>(m_sphereOfInfluence) = std::numeric_limits<double>::infinity();
     const_cast<double &>(m_hillSphere) = std::numeric_limits<double>::infinity();
@@ -189,7 +207,7 @@ int IO::Astrodynamics::Body::CelestialBody::FindBarycenterOfMotionId(int celesti
 
     if (IO::Astrodynamics::Body::CelestialBody::IsPlanet(celestialBodyNaifId) || IO::Astrodynamics::Body::CelestialBody::IsMoon(celestialBodyNaifId))
     {
-        return (int)(celestialBodyNaifId / 100);
+        return (int) (celestialBodyNaifId / 100);
     }
 
     throw IO::Astrodynamics::Exception::InvalidArgumentException(std::string("Invalid Naif Id : ") + std::to_string(celestialBodyNaifId));
@@ -197,7 +215,7 @@ int IO::Astrodynamics::Body::CelestialBody::FindBarycenterOfMotionId(int celesti
 
 int IO::Astrodynamics::Body::CelestialBody::FindCenterOfMotionId(int celestialBodyNaifId)
 {
-    if(IO::Astrodynamics::Body::CelestialBody::IsBarycenter(celestialBodyNaifId))
+    if (IO::Astrodynamics::Body::CelestialBody::IsBarycenter(celestialBodyNaifId))
     {
         return 0;
     }
