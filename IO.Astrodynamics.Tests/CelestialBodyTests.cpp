@@ -159,3 +159,24 @@ TEST(CelestialBody, FindOccultationConstraint)
 	ASSERT_STREQ("2001-12-14 21:35:49.100520 (TDB)", results[0].GetEndDate().ToString().c_str());
 }
 
+TEST(CelestialBody, FindCenterOfMotion)
+{
+    ASSERT_EQ(0, IO::Astrodynamics::Body::CelestialBody::FindCenterOfMotionId(0));
+    ASSERT_EQ(10, IO::Astrodynamics::Body::CelestialBody::FindCenterOfMotionId(10));
+    ASSERT_EQ(0, IO::Astrodynamics::Body::CelestialBody::FindCenterOfMotionId(3));
+    ASSERT_EQ(10, IO::Astrodynamics::Body::CelestialBody::FindCenterOfMotionId(399));
+    ASSERT_EQ(399, IO::Astrodynamics::Body::CelestialBody::FindCenterOfMotionId(301));
+    ASSERT_EQ(399, IO::Astrodynamics::Body::CelestialBody::FindCenterOfMotionId(391));
+    ASSERT_EQ(399, IO::Astrodynamics::Body::CelestialBody::FindCenterOfMotionId(394));
+}
+
+TEST(CelestialBody, FindBarycenterOfMotion)
+{
+    ASSERT_EQ(0, IO::Astrodynamics::Body::CelestialBody::FindBarycenterOfMotionId(0));
+    ASSERT_EQ(0, IO::Astrodynamics::Body::CelestialBody::FindBarycenterOfMotionId(10));
+    ASSERT_EQ(0, IO::Astrodynamics::Body::CelestialBody::FindBarycenterOfMotionId(3));
+    ASSERT_EQ(3, IO::Astrodynamics::Body::CelestialBody::FindBarycenterOfMotionId(399));
+    ASSERT_EQ(3, IO::Astrodynamics::Body::CelestialBody::FindBarycenterOfMotionId(301));
+    ASSERT_EQ(3, IO::Astrodynamics::Body::CelestialBody::FindBarycenterOfMotionId(391));
+    ASSERT_EQ(3, IO::Astrodynamics::Body::CelestialBody::FindBarycenterOfMotionId(394));
+}

@@ -210,6 +210,16 @@ int IO::Astrodynamics::Body::CelestialBody::FindBarycenterOfMotionId(int celesti
         return (int) (celestialBodyNaifId / 100);
     }
 
+    if (IO::Astrodynamics::Body::CelestialBody::IsLagrangePoint(celestialBodyNaifId))
+    {
+        if (celestialBodyNaifId == 391 || celestialBodyNaifId == 392)
+        {
+            return (int) (celestialBodyNaifId / 100);
+        }
+
+        return 0;
+    }
+
     throw IO::Astrodynamics::Exception::InvalidArgumentException(std::string("Invalid Naif Id : ") + std::to_string(celestialBodyNaifId));
 }
 
@@ -230,6 +240,21 @@ int IO::Astrodynamics::Body::CelestialBody::FindCenterOfMotionId(int celestialBo
         return celestialBodyNaifId - (celestialBodyNaifId % 100) + 99;
     }
 
+    if (IO::Astrodynamics::Body::CelestialBody::IsLagrangePoint(celestialBodyNaifId))
+    {
+        if (celestialBodyNaifId == 391 || celestialBodyNaifId == 392)
+        {
+            return (int) (celestialBodyNaifId / 100);
+        }
+
+        return 10;
+    }
+
     throw IO::Astrodynamics::Exception::InvalidArgumentException(std::string("Invalid Naif Id : ") + std::to_string(celestialBodyNaifId));
+}
+
+bool IO::Astrodynamics::Body::CelestialBody::IsLagrangePoint(int celestialBodyId)
+{
+    return celestialBodyId == 391 || celestialBodyId == 392 || celestialBodyId == 393 || celestialBodyId == 394;
 }
 
