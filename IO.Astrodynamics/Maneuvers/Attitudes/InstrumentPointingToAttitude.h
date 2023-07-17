@@ -11,7 +11,7 @@ namespace IO::Astrodynamics::Maneuvers::Attitudes
     class InstrumentPointingToAttitude final : public IO::Astrodynamics::Maneuvers::ManeuverBase
     {
     private:
-        const IO::Astrodynamics::Body::Body *m_targetBody{nullptr};
+        const IO::Astrodynamics::Body::CelestialItem *m_targetBody{nullptr};
         const IO::Astrodynamics::Sites::Site *m_targetSite{nullptr};
         const IO::Astrodynamics::Instruments::Instrument &m_instrument;
 
@@ -41,7 +41,7 @@ namespace IO::Astrodynamics::Maneuvers::Attitudes
          * @param targetBody
          */
         InstrumentPointingToAttitude(std::vector<IO::Astrodynamics::Body::Spacecraft::Engine*> engines, IO::Astrodynamics::Propagators::Propagator &propagator,
-                                     const IO::Astrodynamics::Time::TimeSpan &attitudeHoldDuration, const IO::Astrodynamics::Instruments::Instrument &instrument, const IO::Astrodynamics::Body::Body &targetBody);
+                                     const IO::Astrodynamics::Time::TimeSpan &attitudeHoldDuration, const IO::Astrodynamics::Instruments::Instrument &instrument, const IO::Astrodynamics::Body::CelestialItem &targetBody);
 
         /**
          * Construct a new instrument aligned to object
@@ -66,7 +66,7 @@ namespace IO::Astrodynamics::Maneuvers::Attitudes
          */
         InstrumentPointingToAttitude(const std::vector<IO::Astrodynamics::Body::Spacecraft::Engine*> engines, IO::Astrodynamics::Propagators::Propagator &propagator,
                                      const IO::Astrodynamics::Time::TDB &minimumEpoch, const IO::Astrodynamics::Time::TimeSpan &attitudeHoldDuration, const IO::Astrodynamics::Instruments::Instrument &instrument,
-                                     const IO::Astrodynamics::Body::Body &targetBody);
+                                     const IO::Astrodynamics::Body::CelestialItem &targetBody);
 
         /**
          * Construct a new instrument aligned to object

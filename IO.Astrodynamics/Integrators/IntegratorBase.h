@@ -34,7 +34,7 @@ namespace IO::Astrodynamics::Integrators
          * @param spacecraft Vessel on which integration occurs
          * @return IO::Astrodynamics::OrbitalParameters::StateVector
          */
-        virtual IO::Astrodynamics::OrbitalParameters::StateVector Integrate(const IO::Astrodynamics::Body::Body &body, const IO::Astrodynamics::OrbitalParameters::StateVector &stateVector) = 0;
+        virtual IO::Astrodynamics::OrbitalParameters::StateVector Integrate(const IO::Astrodynamics::Body::CelestialItem &body, const IO::Astrodynamics::OrbitalParameters::StateVector &stateVector) = 0;
     };
 
 } // namespace IO::Astrodynamics::Propagators

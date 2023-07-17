@@ -11,7 +11,7 @@ namespace IO::Astrodynamics::Maneuvers::Attitudes
     class TowardObjectAttitude final : public IO::Astrodynamics::Maneuvers::ManeuverBase
     {
     private:
-        const IO::Astrodynamics::Body::Body &m_targetBody;
+        const IO::Astrodynamics::Body::CelestialItem &m_targetBody;
 
     protected:
         /**
@@ -37,7 +37,7 @@ namespace IO::Astrodynamics::Maneuvers::Attitudes
          * @param propagator 
          * @param targetBody 
          */
-        TowardObjectAttitude(const std::vector<IO::Astrodynamics::Body::Spacecraft::Engine*>& engines, IO::Astrodynamics::Propagators::Propagator &propagator,const IO::Astrodynamics::Time::TimeSpan& attitudeHoldDuration, const IO::Astrodynamics::Body::Body &targetBody);
+        TowardObjectAttitude(const std::vector<IO::Astrodynamics::Body::Spacecraft::Engine*>& engines, IO::Astrodynamics::Propagators::Propagator &propagator,const IO::Astrodynamics::Time::TimeSpan& attitudeHoldDuration, const IO::Astrodynamics::Body::CelestialItem &targetBody);
 
         /**
          * @brief Construct a new Toward Object Attitude object
@@ -47,7 +47,7 @@ namespace IO::Astrodynamics::Maneuvers::Attitudes
          * @param minimumEpoch 
          * @param targetBody 
          */
-        TowardObjectAttitude(const std::vector<IO::Astrodynamics::Body::Spacecraft::Engine*>& engines, IO::Astrodynamics::Propagators::Propagator &propagator, const IO::Astrodynamics::Time::TDB &minimumEpoch,const IO::Astrodynamics::Time::TimeSpan& attitudeHoldDuration, const IO::Astrodynamics::Body::Body &targetBody);
+        TowardObjectAttitude(const std::vector<IO::Astrodynamics::Body::Spacecraft::Engine*>& engines, IO::Astrodynamics::Propagators::Propagator &propagator, const IO::Astrodynamics::Time::TDB &minimumEpoch,const IO::Astrodynamics::Time::TimeSpan& attitudeHoldDuration, const IO::Astrodynamics::Body::CelestialItem &targetBody);
 
         /**
          * @brief Evaluate if maneuver can occurs

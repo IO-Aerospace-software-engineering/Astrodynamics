@@ -42,7 +42,7 @@ namespace IO::Astrodynamics::OrbitalParameters
         //  * @param position
         //  * @param epoch
         //  */
-        // StateVector(const std::shared_ptr<IO::Astrodynamics::Body::CelestialBody> &centerOfMotion, const IO::Astrodynamics::Math::Vector3D& position, const IO::Astrodynamics::Time::TDB &epoch);
+        // StateVector(const std::shared_ptr<IO::Astrodynamics::CelestialItem::CelestialBody> &centerOfMotion, const IO::Astrodynamics::Math::Vector3D& position, const IO::Astrodynamics::Time::TDB &epoch);
 
         /**
          * @brief Construct a new State Vector object

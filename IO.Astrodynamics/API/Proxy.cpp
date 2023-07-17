@@ -513,7 +513,7 @@ IO::Astrodynamics::API::DTO::CelestialBodyDTO GetCelestialBodyInfoProxy(int body
 {
     ActivateErrorManagement();
     IO::Astrodynamics::API::DTO::CelestialBodyDTO res;
-    res.Error = strdup("Body not found");
+    res.Error = strdup("CelestialItem not found");
 
     SpiceChar name[32];
     SpiceBoolean found{false};
@@ -545,7 +545,7 @@ IO::Astrodynamics::API::DTO::CelestialBodyDTO GetCelestialBodyInfoProxy(int body
             }
         }
 
-        // Search Body's mass
+        // Search CelestialItem's mass
         res.GM = IO::Astrodynamics::Body::CelestialBody::ReadGM(bodyId);
 
         // Search frame

@@ -5,7 +5,7 @@
 #define FORCE_H
 
 #include <Vector3D.h>
-#include <Body.h>
+#include <CelestialItem.h>
 #include <StateVector.h>
 
 namespace IO::Astrodynamics::Integrators::Forces {
@@ -30,7 +30,7 @@ namespace IO::Astrodynamics::Integrators::Forces {
          * @param stateVector 
          * @return IO::Astrodynamics::Math::Vector3D
          */
-        virtual IO::Astrodynamics::Math::Vector3D Apply(const IO::Astrodynamics::Body::Body &body, const IO::Astrodynamics::OrbitalParameters::StateVector &stateVector) = 0;
+        virtual IO::Astrodynamics::Math::Vector3D Apply(const IO::Astrodynamics::Body::CelestialItem &body, const IO::Astrodynamics::OrbitalParameters::StateVector &stateVector) = 0;
 
         virtual ~Force() = default;
     };

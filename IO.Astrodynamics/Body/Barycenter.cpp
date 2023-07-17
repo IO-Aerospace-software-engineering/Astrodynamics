@@ -6,7 +6,7 @@
 #include "CelestialBody.h"
 #include "Constants.h"
 
-IO::Astrodynamics::Body::Barycenter::Barycenter(int id) : Body(id, "", IO::Astrodynamics::Body::CelestialBody::ReadGM(id)/ IO::Astrodynamics::Constants::G)
+IO::Astrodynamics::Body::Barycenter::Barycenter(int id) : CelestialItem(id, "", IO::Astrodynamics::Body::CelestialBody::ReadGM(id) / IO::Astrodynamics::Constants::G)
 {
     SpiceBoolean found;
     SpiceChar name[32];

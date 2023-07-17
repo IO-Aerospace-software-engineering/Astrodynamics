@@ -40,7 +40,7 @@ namespace IO::Astrodynamics::Body::Spacecraft
      * @brief Spacecraft class
      *
      */
-    class Spacecraft final : public Body
+    class Spacecraft final : public CelestialItem
     {
     private:
         const std::string m_filesPath{};

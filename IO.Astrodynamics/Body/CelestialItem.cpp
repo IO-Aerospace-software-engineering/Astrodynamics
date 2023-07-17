@@ -9,64 +9,64 @@
 
 using namespace std::chrono_literals;
 
-IO::Astrodynamics::Body::Body::Body(const int id, const std::string &name, const double mass)
+IO::Astrodynamics::Body::CelestialItem::CelestialItem(const int id, const std::string &name, const double mass)
         : m_id{id},
           m_name{IO::Astrodynamics::StringHelpers::ToUpper(name)},
-          m_mass{mass > 0 ? mass : throw IO::Astrodynamics::Exception::SDKException("Mass must be a positive value")},
+          m_mass{mass >= 0 ? mass : throw IO::Astrodynamics::Exception::SDKException("Mass must be a positive value")},
           m_mu{mass * IO::Astrodynamics::Constants::G}
 {
 }
 
-IO::Astrodynamics::Body::Body::Body(const int id, const std::string &name, const double mass, std::unique_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParametersAtEpoch) : Body(
+IO::Astrodynamics::Body::CelestialItem::CelestialItem(const int id, const std::string &name, const double mass, std::unique_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParametersAtEpoch) : CelestialItem(
         id, name, mass)
 {
     m_orbitalParametersAtEpoch = std::move(orbitalParametersAtEpoch);
     m_orbitalParametersAtEpoch->GetCenterOfMotion()->m_satellites.push_back(this);
 }
 
-IO::Astrodynamics::Body::Body::Body(const int id, const std::string &name, const double mass, std::shared_ptr<IO::Astrodynamics::Body::CelestialBody> &centerOfMotion) : Body(id, name, mass)
+IO::Astrodynamics::Body::CelestialItem::CelestialItem(const int id, const std::string &name, const double mass, std::shared_ptr<IO::Astrodynamics::Body::CelestialBody> &centerOfMotion) : CelestialItem(id, name, mass)
 {
     m_orbitalParametersAtEpoch = std::make_unique<IO::Astrodynamics::OrbitalParameters::StateVector>(
             this->ReadEphemeris(IO::Astrodynamics::Frames::InertialFrames::GetICRF(), IO::Astrodynamics::AberrationsEnum::None, IO::Astrodynamics::Time::TDB(0s), *centerOfMotion));
     centerOfMotion->m_satellites.push_back(this);
 }
 
-IO::Astrodynamics::Body::Body::Body(const Body &body) : Body(body.m_id, body.m_name, body.m_mass)
+IO::Astrodynamics::Body::CelestialItem::CelestialItem(const CelestialItem &body) : CelestialItem(body.m_id, body.m_name, body.m_mass)
 {}
 
-int IO::Astrodynamics::Body::Body::GetId() const
+int IO::Astrodynamics::Body::CelestialItem::GetId() const
 {
     return m_id;
 }
 
-std::string IO::Astrodynamics::Body::Body::GetName() const
+std::string IO::Astrodynamics::Body::CelestialItem::GetName() const
 {
     return m_name;
 }
 
-double IO::Astrodynamics::Body::Body::GetMass() const
+double IO::Astrodynamics::Body::CelestialItem::GetMass() const
 {
     return m_mass;
 }
 
-double IO::Astrodynamics::Body::Body::GetMu() const
+double IO::Astrodynamics::Body::CelestialItem::GetMu() const
 {
     return m_mu;
 }
 
-const std::unique_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> &IO::Astrodynamics::Body::Body::GetOrbitalParametersAtEpoch() const
+const std::unique_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> &IO::Astrodynamics::Body::CelestialItem::GetOrbitalParametersAtEpoch() const
 {
     return m_orbitalParametersAtEpoch;
 }
 
-const std::vector<IO::Astrodynamics::Body::Body *> &IO::Astrodynamics::Body::Body::GetSatellites() const
+const std::vector<IO::Astrodynamics::Body::CelestialItem *> &IO::Astrodynamics::Body::CelestialItem::GetSatellites() const
 {
     return m_satellites;
 }
 
 IO::Astrodynamics::OrbitalParameters::StateVector
-IO::Astrodynamics::Body::Body::ReadEphemeris(const IO::Astrodynamics::Frames::Frames &frame, const IO::Astrodynamics::AberrationsEnum aberration, const IO::Astrodynamics::Time::TDB &epoch,
-                                   const IO::Astrodynamics::Body::CelestialBody &relativeTo) const
+IO::Astrodynamics::Body::CelestialItem::ReadEphemeris(const IO::Astrodynamics::Frames::Frames &frame, const IO::Astrodynamics::AberrationsEnum aberration, const IO::Astrodynamics::Time::TDB &epoch,
+                                                      const IO::Astrodynamics::Body::CelestialBody &relativeTo) const
 {
     SpiceDouble vs[6];
     SpiceDouble lt;
@@ -83,7 +83,7 @@ IO::Astrodynamics::Body::Body::ReadEphemeris(const IO::Astrodynamics::Frames::Fr
 }
 
 IO::Astrodynamics::OrbitalParameters::StateVector
-IO::Astrodynamics::Body::Body::ReadEphemeris(const IO::Astrodynamics::Frames::Frames &frame, const IO::Astrodynamics::AberrationsEnum aberration, const IO::Astrodynamics::Time::TDB &epoch) const
+IO::Astrodynamics::Body::CelestialItem::ReadEphemeris(const IO::Astrodynamics::Frames::Frames &frame, const IO::Astrodynamics::AberrationsEnum aberration, const IO::Astrodynamics::Time::TDB &epoch) const
 {
     SpiceDouble vs[6];
     SpiceDouble lt;
@@ -97,33 +97,33 @@ IO::Astrodynamics::Body::Body::ReadEphemeris(const IO::Astrodynamics::Frames::Fr
     return IO::Astrodynamics::OrbitalParameters::StateVector{m_orbitalParametersAtEpoch->GetCenterOfMotion(), vs, epoch, frame};
 }
 
-bool IO::Astrodynamics::Body::Body::operator==(const IO::Astrodynamics::Body::Body &rhs) const
+bool IO::Astrodynamics::Body::CelestialItem::operator==(const IO::Astrodynamics::Body::CelestialItem &rhs) const
 {
     return m_id == rhs.m_id;
 }
 
-bool IO::Astrodynamics::Body::Body::operator!=(const IO::Astrodynamics::Body::Body &rhs) const
+bool IO::Astrodynamics::Body::CelestialItem::operator!=(const IO::Astrodynamics::Body::CelestialItem &rhs) const
 {
     return m_id != rhs.m_id;
 }
 
-std::shared_ptr<IO::Astrodynamics::Body::Body> IO::Astrodynamics::Body::Body::GetSharedPointer()
+std::shared_ptr<IO::Astrodynamics::Body::CelestialItem> IO::Astrodynamics::Body::CelestialItem::GetSharedPointer()
 {
     return this->shared_from_this();
 }
 
 std::vector<IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB>>
-IO::Astrodynamics::Body::Body::FindWindowsOnDistanceConstraint(const IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB> &window, const Body &targetBody, const Body &observer,
-                                                     const IO::Astrodynamics::Constraints::RelationalOperator &constraint, const IO::Astrodynamics::AberrationsEnum aberration, const double value,
-                                                     const IO::Astrodynamics::Time::TimeSpan &step)
+IO::Astrodynamics::Body::CelestialItem::FindWindowsOnDistanceConstraint(const IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB> &window, const CelestialItem &targetBody, const CelestialItem &observer,
+                                                                        const IO::Astrodynamics::Constraints::RelationalOperator &constraint, const IO::Astrodynamics::AberrationsEnum aberration, const double value,
+                                                                        const IO::Astrodynamics::Time::TimeSpan &step)
 {
     return IO::Astrodynamics::Constraints::GeometryFinder::FindWindowsOnDistanceConstraint(window, observer.m_id, targetBody.m_id, constraint, value, aberration, step);
 }
 
 std::vector<IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB>>
-IO::Astrodynamics::Body::Body::FindWindowsOnOccultationConstraint(const IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB> &searchWindow, const IO::Astrodynamics::Body::Body &targetBody,
-                                                        const IO::Astrodynamics::Body::CelestialBody &frontBody, const IO::Astrodynamics::OccultationType &occultationType,
-                                                        const IO::Astrodynamics::AberrationsEnum aberration, const IO::Astrodynamics::Time::TimeSpan &stepSize) const
+IO::Astrodynamics::Body::CelestialItem::FindWindowsOnOccultationConstraint(const IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB> &searchWindow, const IO::Astrodynamics::Body::CelestialItem &targetBody,
+                                                                           const IO::Astrodynamics::Body::CelestialBody &frontBody, const IO::Astrodynamics::OccultationType &occultationType,
+                                                                           const IO::Astrodynamics::AberrationsEnum aberration, const IO::Astrodynamics::Time::TimeSpan &stepSize) const
 {
     std::string bshape{"POINT"};
     std::string bframe{};
@@ -140,7 +140,7 @@ IO::Astrodynamics::Body::Body::FindWindowsOnOccultationConstraint(const IO::Astr
 }
 
 IO::Astrodynamics::Coordinates::Planetographic
-IO::Astrodynamics::Body::Body::GetSubObserverPoint(const IO::Astrodynamics::Body::CelestialBody &targetBody, const IO::Astrodynamics::AberrationsEnum &aberration, const IO::Astrodynamics::Time::DateTime &epoch) const
+IO::Astrodynamics::Body::CelestialItem::GetSubObserverPoint(const IO::Astrodynamics::Body::CelestialBody &targetBody, const IO::Astrodynamics::AberrationsEnum &aberration, const IO::Astrodynamics::Time::DateTime &epoch) const
 {
     SpiceDouble spoint[3];
     SpiceDouble srfVector[3];
@@ -154,7 +154,7 @@ IO::Astrodynamics::Body::Body::GetSubObserverPoint(const IO::Astrodynamics::Body
 }
 
 IO::Astrodynamics::Coordinates::Planetographic
-IO::Astrodynamics::Body::Body::GetSubSolarPoint(const IO::Astrodynamics::Body::CelestialBody &targetBody, const IO::Astrodynamics::AberrationsEnum aberration, const IO::Astrodynamics::Time::TDB &epoch) const
+IO::Astrodynamics::Body::CelestialItem::GetSubSolarPoint(const IO::Astrodynamics::Body::CelestialBody &targetBody, const IO::Astrodynamics::AberrationsEnum aberration, const IO::Astrodynamics::Time::TDB &epoch) const
 {
     SpiceDouble spoint[3];
     SpiceDouble srfVector[3];

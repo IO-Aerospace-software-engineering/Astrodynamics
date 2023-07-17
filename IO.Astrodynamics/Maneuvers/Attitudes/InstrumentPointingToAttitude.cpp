@@ -8,7 +8,7 @@
 IO::Astrodynamics::Maneuvers::Attitudes::InstrumentPointingToAttitude::InstrumentPointingToAttitude(std::vector<IO::Astrodynamics::Body::Spacecraft::Engine*> engines,
                                                                                           IO::Astrodynamics::Propagators::Propagator &propagator,
                                                                                           const IO::Astrodynamics::Time::TimeSpan &attitudeHoldDuration,
-                                                                                          const IO::Astrodynamics::Instruments::Instrument &instrument, const IO::Astrodynamics::Body::Body &targetBody)
+                                                                                          const IO::Astrodynamics::Instruments::Instrument &instrument, const IO::Astrodynamics::Body::CelestialItem &targetBody)
         : IO::Astrodynamics::Maneuvers::ManeuverBase(std::move(engines), propagator, attitudeHoldDuration), m_targetBody{&targetBody},m_instrument{instrument}
 {
 
@@ -26,7 +26,7 @@ IO::Astrodynamics::Maneuvers::Attitudes::InstrumentPointingToAttitude::Instrumen
 IO::Astrodynamics::Maneuvers::Attitudes::InstrumentPointingToAttitude::InstrumentPointingToAttitude(std::vector<IO::Astrodynamics::Body::Spacecraft::Engine*> engines,
                                                                                           IO::Astrodynamics::Propagators::Propagator &propagator, const IO::Astrodynamics::Time::TDB &minimumEpoch,
                                                                                           const IO::Astrodynamics::Time::TimeSpan &attitudeHoldDuration,
-                                                                                          const IO::Astrodynamics::Instruments::Instrument &instrument, const IO::Astrodynamics::Body::Body &targetBody)
+                                                                                          const IO::Astrodynamics::Instruments::Instrument &instrument, const IO::Astrodynamics::Body::CelestialItem &targetBody)
         : IO::Astrodynamics::Maneuvers::ManeuverBase(std::move(engines), propagator, minimumEpoch, attitudeHoldDuration), m_targetBody{&targetBody}, m_instrument{instrument}
 {
 

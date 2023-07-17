@@ -8,7 +8,7 @@ TEST(Helpers, TypeOf)
     auto res = IO::Astrodynamics::Helpers::IsInstanceOf<IO::Astrodynamics::Body::CelestialBody>(&cb);
     ASSERT_TRUE(res);
 
-    IO::Astrodynamics::Body::Body *body = &cb;
+    IO::Astrodynamics::Body::CelestialItem *body = &cb;
     res = IO::Astrodynamics::Helpers::IsInstanceOf<IO::Astrodynamics::Body::CelestialBody>(body);
     ASSERT_TRUE(res);
 }

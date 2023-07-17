@@ -20,7 +20,7 @@ IO::Astrodynamics::Body::Spacecraft::Spacecraft::Spacecraft(const int id, const 
                                                   double maximumOperatingMass, std::string directoryPath,
                                                   std::unique_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParametersAtEpoch,
                                                   const IO::Astrodynamics::Math::Vector3D &front,
-                                                  const IO::Astrodynamics::Math::Vector3D &top) : IO::Astrodynamics::Body::Body(
+                                                  const IO::Astrodynamics::Math::Vector3D &top) : IO::Astrodynamics::Body::CelestialItem(
         (id >= 0 ? throw IO::Astrodynamics::Exception::SDKException("Spacecraft must have negative id") : id),
         name, dryOperatingMass, std::move(orbitalParametersAtEpoch)),
                                                                                         m_filesPath{std::move(directoryPath) + "/" + name},
@@ -240,7 +240,7 @@ void IO::Astrodynamics::Body::Spacecraft::Spacecraft::AddPayload(const std::stri
 
 double IO::Astrodynamics::Body::Spacecraft::Spacecraft::GetMass() const
 {
-    auto mass = IO::Astrodynamics::Body::Body::GetMass();
+    auto mass = IO::Astrodynamics::Body::CelestialItem::GetMass();
     return mass + std::accumulate(m_payloads.begin(), m_payloads.end(), 0.0, [](double total,
                                                                                 const std::unique_ptr<IO::Astrodynamics::Body::Spacecraft::Payload> &item) {
         return total + item->GetMass();
@@ -303,7 +303,7 @@ void IO::Astrodynamics::Body::Spacecraft::Spacecraft::ReleasePayload(const std::
 
 double IO::Astrodynamics::Body::Spacecraft::Spacecraft::GetDryOperatingMass() const
 {
-    return IO::Astrodynamics::Body::Body::GetMass();
+    return IO::Astrodynamics::Body::CelestialItem::GetMass();
 }
 
 const std::unique_ptr<IO::Astrodynamics::Frames::SpacecraftFrameFile> &IO::Astrodynamics::Body::Spacecraft::Spacecraft::GetFrame() const

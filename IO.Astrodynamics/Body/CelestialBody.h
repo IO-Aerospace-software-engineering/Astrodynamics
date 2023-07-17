@@ -8,14 +8,14 @@
 #include <string>
 #include <cmath>
 
-#include <Body.h>
+#include <CelestialItem.h>
 #include <BodyFixedFrames.h>
 #include <TDB.h>
 #include <Planetographic.h>
 
 namespace IO::Astrodynamics::Body
 {
-	class CelestialBody final : public IO::Astrodynamics::Body::Body
+	class CelestialBody final : public IO::Astrodynamics::Body::CelestialItem
     {
 	private:
 		
