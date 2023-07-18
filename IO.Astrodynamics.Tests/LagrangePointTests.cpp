@@ -11,7 +11,7 @@ TEST(LagrangePoint, CreateLagrangePoint)
 {
     auto sun = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(10);
     auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399, sun);
-    IO::Astrodynamics::Body::LagrangePoint l1(391, earth);
+    IO::Astrodynamics::Body::LagrangePoint l1(391);
     ASSERT_STREQ("L1", l1.GetName().c_str());
     ASSERT_DOUBLE_EQ(0.0, l1.GetMu());
     ASSERT_EQ(391, l1.GetId());
@@ -20,10 +20,10 @@ TEST(LagrangePoint, CreateLagrangePoint)
 TEST(LagrangePoint, GetEphemeris)
 {
     auto sun = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(10);
-    auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(3, sun);
-    IO::Astrodynamics::Body::LagrangePoint l1(391, earth);
+    auto earthBarycenter = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(3, sun);
+    IO::Astrodynamics::Body::LagrangePoint l1(391);
     IO::Astrodynamics::Time::TDB epoch(std::chrono::duration<double>(0.0));
-    auto res = l1.ReadEphemeris(IO::Astrodynamics::Frames::InertialFrames::Ecliptic(), IO::Astrodynamics::AberrationsEnum::None, epoch);
+    auto res = l1.ReadEphemeris(IO::Astrodynamics::Frames::InertialFrames::Ecliptic(), IO::Astrodynamics::AberrationsEnum::None, epoch, *earthBarycenter);
     ASSERT_DOUBLE_EQ(265316694.670816, res.GetPosition().GetX());
     ASSERT_DOUBLE_EQ(-1448527895.507656, res.GetPosition().GetY());
     ASSERT_DOUBLE_EQ(1706.923545571044, res.GetPosition().GetZ());

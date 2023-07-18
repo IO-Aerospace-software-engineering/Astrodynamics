@@ -1,0 +1,451 @@
+\hypertarget{classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem}{}\doxysection{IO\+::Astrodynamics\+::Body\+::Celestial\+Item Class Reference}
+\label{classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem}\index{IO::Astrodynamics::Body::CelestialItem@{IO::Astrodynamics::Body::CelestialItem}}
+
+
+\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Body}{Body}} class.  
+
+
+
+
+{\ttfamily \#include $<$Celestial\+Item.\+h$>$}
+
+Inheritance diagram for IO\+::Astrodynamics\+::Body\+::Celestial\+Item\+:\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=0.997625cm]{classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem}
+\end{center}
+\end{figure}
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem_a76cdb794f3eab19787b7b991a276aeba}{Celestial\+Item}} (int id, const std\+::string \&name, double mass)
+\begin{DoxyCompactList}\small\item\em Construct a new \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Body}{Body}} object. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem_acaa81f7d41449c656423f2da762b8df9}{Celestial\+Item}} (int id, const std\+::string \&name, double mass, std\+::unique\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}} $>$ orbital\+Parameters\+At\+Epoch)
+\begin{DoxyCompactList}\small\item\em Construct a new \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Body}{Body}} object. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem_a7510735247069cbde284437e84b930fb}{Celestial\+Item}} (int id, const std\+::string \&name, double mass, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody}{IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Body}} $>$ \&center\+Of\+Motion)
+\begin{DoxyCompactList}\small\item\em Construct a new \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Body}{Body}} object. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem_ab818a65331157f9ab2af92180ab1479f}{Celestial\+Item}} (const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem}{Celestial\+Item}} \&body)
+\item 
+virtual \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem_ac9cd60d72501aacfc5763d7041d81e01}{$\sim$\+Celestial\+Item}} ()=default
+\item 
+int \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem_a05875064ca072f8912310fface336086}{Get\+Id}} () const
+\begin{DoxyCompactList}\small\item\em Get the body identifier. \end{DoxyCompactList}\item 
+std\+::string \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem_a47e2d21c853ff4741575906ea7b2c251}{Get\+Name}} () const
+\begin{DoxyCompactList}\small\item\em Get the body name. \end{DoxyCompactList}\item 
+virtual double \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem_a642326d760c0092ff537e0626182746f}{Get\+Mass}} () const
+\begin{DoxyCompactList}\small\item\em Get the Mass. \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem_a714293359c8beb8b09042e7ec67bf1c1}{Get\+Mu}} () const
+\begin{DoxyCompactList}\small\item\em Get the Mu value. \end{DoxyCompactList}\item 
+const std\+::unique\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}} $>$ \& \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem_a59c413813ee242c32e2401b63ca913b9}{Get\+Orbital\+Parameters\+At\+Epoch}} () const
+\begin{DoxyCompactList}\small\item\em Get body orbital parameters. \end{DoxyCompactList}\item 
+const std\+::vector$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem}{IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Item}} $\ast$ $>$ \& \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem_a41f8f9eae44b6265fcf447329a44b742}{Get\+Satellites}} () const
+\begin{DoxyCompactList}\small\item\em Get the Satellites. \end{DoxyCompactList}\item 
+virtual \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+State\+Vector}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem_a6fe60d354fa49102d4b4ce2e6e44c782}{Read\+Ephemeris}} (const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Frames_1_1Frames}{IO\+::\+Astrodynamics\+::\+Frames\+::\+Frames}} \&frame, \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_af0023a81d12385b73d78bd82e4b96ce3}{IO\+::\+Astrodynamics\+::\+Aberrations\+Enum}} aberration, const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} \&epoch) const
+\begin{DoxyCompactList}\small\item\em Get the State Vector relative to its center of motion. \end{DoxyCompactList}\item 
+virtual \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+State\+Vector}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem_af47a0cd4fd3dde912d4b656ba1efe7f8}{Read\+Ephemeris}} (const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Frames_1_1Frames}{IO\+::\+Astrodynamics\+::\+Frames\+::\+Frames}} \&frame, \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_af0023a81d12385b73d78bd82e4b96ce3}{IO\+::\+Astrodynamics\+::\+Aberrations\+Enum}} aberration, const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} \&epoch, const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody}{IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Body}} \&relative\+To) const
+\begin{DoxyCompactList}\small\item\em Get state vector from ephemeris relative to another body. \end{DoxyCompactList}\item 
+virtual bool \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem_a8bc7ae4c80097beb36f4b8466e8aa302}{operator==}} (const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem}{IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Item}} \&rhs) const
+\item 
+virtual bool \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem_a8de979f16138b0a462d0fee0f3621040}{operator!=}} (const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem}{IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Item}} \&rhs) const
+\item 
+std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem}{IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Item}} $>$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem_a65778cc25caacf1bb3abe93903a7b742}{Get\+Shared\+Pointer}} ()
+\item 
+std\+::vector$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{IO\+::\+Astrodynamics\+::\+Time\+::\+Window}}$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} $>$ $>$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem_aee2ef6e63003be3dde86ae47b053a4d5}{Find\+Windows\+On\+Occultation\+Constraint}} (const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{IO\+::\+Astrodynamics\+::\+Time\+::\+Window}}$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} $>$ \&search\+Window, const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem}{IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Item}} \&target\+Body, const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody}{IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Body}} \&front\+Body, const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OccultationType}{IO\+::\+Astrodynamics\+::\+Occultation\+Type}} \&occultation\+Type, \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_af0023a81d12385b73d78bd82e4b96ce3}{IO\+::\+Astrodynamics\+::\+Aberrations\+Enum}} aberration, const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO\+::\+Astrodynamics\+::\+Time\+::\+Time\+Span}} \&step\+Size) const
+\begin{DoxyCompactList}\small\item\em Find windows when occultation occurs. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1Planetographic}{IO\+::\+Astrodynamics\+::\+Coordinates\+::\+Planetographic}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem_a4e0b8a76eacffa7206e808b1aa03722c}{Get\+Sub\+Observer\+Point}} (const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody}{IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Body}} \&target\+Body, const \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_af0023a81d12385b73d78bd82e4b96ce3}{IO\+::\+Astrodynamics\+::\+Aberrations\+Enum}} \&aberration, const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1DateTime}{IO\+::\+Astrodynamics\+::\+Time\+::\+Date\+Time}} \&epoch) const
+\begin{DoxyCompactList}\small\item\em Get the Sub Observer Point observed from this body. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1Planetographic}{IO\+::\+Astrodynamics\+::\+Coordinates\+::\+Planetographic}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem_a9800d724e1dbc2b87b08b698fd0d74f8}{Get\+Sub\+Solar\+Point}} (const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody}{IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Body}} \&target\+Body, \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_af0023a81d12385b73d78bd82e4b96ce3}{IO\+::\+Astrodynamics\+::\+Aberrations\+Enum}} aberration, const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} \&epoch) const
+\begin{DoxyCompactList}\small\item\em Get the Sub Solar Point observed from this body. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsection*{Static Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+static std\+::vector$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{IO\+::\+Astrodynamics\+::\+Time\+::\+Window}}$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} $>$ $>$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem_a1d28a519f36ac405197eebb1015a8e62}{Find\+Windows\+On\+Distance\+Constraint}} (const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{IO\+::\+Astrodynamics\+::\+Time\+::\+Window}}$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} $>$ \&search\+Window, const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem}{Celestial\+Item}} \&target\+Body, const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem}{Celestial\+Item}} \&observer, const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Constraints_1_1RelationalOperator}{IO\+::\+Astrodynamics\+::\+Constraints\+::\+Relational\+Operator}} \&constraint, \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_af0023a81d12385b73d78bd82e4b96ce3}{IO\+::\+Astrodynamics\+::\+Aberrations\+Enum}} aberration, double value, const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO\+::\+Astrodynamics\+::\+Time\+::\+Time\+Span}} \&step)
+\begin{DoxyCompactList}\small\item\em Find windows when distance constraint occurs. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsection*{Protected Attributes}
+\begin{DoxyCompactItemize}
+\item 
+std\+::unique\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}} $>$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem_a1fc5ea1f3cb974971fadf9e8fabfa567}{m\+\_\+orbital\+Parameters\+At\+Epoch}} \{\}
+\item 
+std\+::vector$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem}{IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Item}} $\ast$ $>$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem_ac2258dcb528f86404655315ccf918fcf}{m\+\_\+satellites}} \{\}
+\item 
+const int \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem_a78217dde579e508225733db9b78daad8}{m\+\_\+id}} \{\}
+\item 
+const std\+::string \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem_a202d61c276faf532b012b96d961bf5ae}{m\+\_\+name}} \{\}
+\item 
+double \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem_aef16b19658f9628808f9722a82a46656}{m\+\_\+mass}} \{\}
+\item 
+double \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem_a6461576c12eb014f380674e24f6c6689}{m\+\_\+mu}} \{\}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Body}{Body}} class. 
+
+\doxysubsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem_a76cdb794f3eab19787b7b991a276aeba}\label{classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem_a76cdb794f3eab19787b7b991a276aeba}} 
+\index{IO::Astrodynamics::Body::CelestialItem@{IO::Astrodynamics::Body::CelestialItem}!CelestialItem@{CelestialItem}}
+\index{CelestialItem@{CelestialItem}!IO::Astrodynamics::Body::CelestialItem@{IO::Astrodynamics::Body::CelestialItem}}
+\doxysubsubsection{\texorpdfstring{CelestialItem()}{CelestialItem()}\hspace{0.1cm}{\footnotesize\ttfamily [1/4]}}
+{\footnotesize\ttfamily IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Item\+::\+Celestial\+Item (\begin{DoxyParamCaption}\item[{int}]{id,  }\item[{const std\+::string \&}]{name,  }\item[{double}]{mass }\end{DoxyParamCaption})}
+
+
+
+Construct a new \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Body}{Body}} object. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em id} & \\
+\hline
+{\em name} & \\
+\hline
+{\em mass} & kg \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem_acaa81f7d41449c656423f2da762b8df9}\label{classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem_acaa81f7d41449c656423f2da762b8df9}} 
+\index{IO::Astrodynamics::Body::CelestialItem@{IO::Astrodynamics::Body::CelestialItem}!CelestialItem@{CelestialItem}}
+\index{CelestialItem@{CelestialItem}!IO::Astrodynamics::Body::CelestialItem@{IO::Astrodynamics::Body::CelestialItem}}
+\doxysubsubsection{\texorpdfstring{CelestialItem()}{CelestialItem()}\hspace{0.1cm}{\footnotesize\ttfamily [2/4]}}
+{\footnotesize\ttfamily IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Item\+::\+Celestial\+Item (\begin{DoxyParamCaption}\item[{int}]{id,  }\item[{const std\+::string \&}]{name,  }\item[{double}]{mass,  }\item[{std\+::unique\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}} $>$}]{orbital\+Parameters\+At\+Epoch }\end{DoxyParamCaption})}
+
+
+
+Construct a new \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Body}{Body}} object. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em id} & \\
+\hline
+{\em name} & \\
+\hline
+{\em mass} & kg \\
+\hline
+{\em orbital\+Parameters} & \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem_a7510735247069cbde284437e84b930fb}\label{classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem_a7510735247069cbde284437e84b930fb}} 
+\index{IO::Astrodynamics::Body::CelestialItem@{IO::Astrodynamics::Body::CelestialItem}!CelestialItem@{CelestialItem}}
+\index{CelestialItem@{CelestialItem}!IO::Astrodynamics::Body::CelestialItem@{IO::Astrodynamics::Body::CelestialItem}}
+\doxysubsubsection{\texorpdfstring{CelestialItem()}{CelestialItem()}\hspace{0.1cm}{\footnotesize\ttfamily [3/4]}}
+{\footnotesize\ttfamily IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Item\+::\+Celestial\+Item (\begin{DoxyParamCaption}\item[{int}]{id,  }\item[{const std\+::string \&}]{name,  }\item[{double}]{mass,  }\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody}{IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Body}} $>$ \&}]{center\+Of\+Motion }\end{DoxyParamCaption})}
+
+
+
+Construct a new \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Body}{Body}} object. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em id} & \\
+\hline
+{\em name} & \\
+\hline
+{\em mass} & \\
+\hline
+{\em center\+Of\+Motion} & \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem_ab818a65331157f9ab2af92180ab1479f}\label{classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem_ab818a65331157f9ab2af92180ab1479f}} 
+\index{IO::Astrodynamics::Body::CelestialItem@{IO::Astrodynamics::Body::CelestialItem}!CelestialItem@{CelestialItem}}
+\index{CelestialItem@{CelestialItem}!IO::Astrodynamics::Body::CelestialItem@{IO::Astrodynamics::Body::CelestialItem}}
+\doxysubsubsection{\texorpdfstring{CelestialItem()}{CelestialItem()}\hspace{0.1cm}{\footnotesize\ttfamily [4/4]}}
+{\footnotesize\ttfamily IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Item\+::\+Celestial\+Item (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem}{Celestial\+Item}} \&}]{body }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem_ac9cd60d72501aacfc5763d7041d81e01}\label{classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem_ac9cd60d72501aacfc5763d7041d81e01}} 
+\index{IO::Astrodynamics::Body::CelestialItem@{IO::Astrodynamics::Body::CelestialItem}!````~CelestialItem@{$\sim$CelestialItem}}
+\index{````~CelestialItem@{$\sim$CelestialItem}!IO::Astrodynamics::Body::CelestialItem@{IO::Astrodynamics::Body::CelestialItem}}
+\doxysubsubsection{\texorpdfstring{$\sim$CelestialItem()}{~CelestialItem()}}
+{\footnotesize\ttfamily virtual IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Item\+::$\sim$\+Celestial\+Item (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}, {\ttfamily [default]}}
+
+
+
+\doxysubsection{Member Function Documentation}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem_a1d28a519f36ac405197eebb1015a8e62}\label{classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem_a1d28a519f36ac405197eebb1015a8e62}} 
+\index{IO::Astrodynamics::Body::CelestialItem@{IO::Astrodynamics::Body::CelestialItem}!FindWindowsOnDistanceConstraint@{FindWindowsOnDistanceConstraint}}
+\index{FindWindowsOnDistanceConstraint@{FindWindowsOnDistanceConstraint}!IO::Astrodynamics::Body::CelestialItem@{IO::Astrodynamics::Body::CelestialItem}}
+\doxysubsubsection{\texorpdfstring{FindWindowsOnDistanceConstraint()}{FindWindowsOnDistanceConstraint()}}
+{\footnotesize\ttfamily std\+::vector$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{IO\+::\+Astrodynamics\+::\+Time\+::\+Window}}$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} $>$ $>$ IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Item\+::\+Find\+Windows\+On\+Distance\+Constraint (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{IO\+::\+Astrodynamics\+::\+Time\+::\+Window}}$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} $>$ \&}]{search\+Window,  }\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem}{Celestial\+Item}} \&}]{target\+Body,  }\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem}{Celestial\+Item}} \&}]{observer,  }\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Constraints_1_1RelationalOperator}{IO\+::\+Astrodynamics\+::\+Constraints\+::\+Relational\+Operator}} \&}]{constraint,  }\item[{\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_af0023a81d12385b73d78bd82e4b96ce3}{IO\+::\+Astrodynamics\+::\+Aberrations\+Enum}}}]{aberration,  }\item[{double}]{value,  }\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO\+::\+Astrodynamics\+::\+Time\+::\+Time\+Span}} \&}]{step }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Find windows when distance constraint occurs. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em target\+Body} & Target body \\
+\hline
+{\em observer} & Observer \\
+\hline
+{\em constraint} & Relational\+Operator operator \\
+\hline
+{\em aberration} & Aberration \\
+\hline
+{\em value} & Target value \\
+\hline
+{\em search\+Window} & \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Time}{Time}} window where constraint is evaluated \\
+\hline
+{\em step} & Step size (should be shorter than the shortest of these intervals. WARNING \+: A short step size could increase compute time) \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+std\+::vector$<$\+IO\+::\+Astrodynamics\+::\+Time\+::\+Window$<$\+IO\+::\+Astrodynamics\+::\+Time\+::\+TDB$>$$>$ 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem_aee2ef6e63003be3dde86ae47b053a4d5}\label{classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem_aee2ef6e63003be3dde86ae47b053a4d5}} 
+\index{IO::Astrodynamics::Body::CelestialItem@{IO::Astrodynamics::Body::CelestialItem}!FindWindowsOnOccultationConstraint@{FindWindowsOnOccultationConstraint}}
+\index{FindWindowsOnOccultationConstraint@{FindWindowsOnOccultationConstraint}!IO::Astrodynamics::Body::CelestialItem@{IO::Astrodynamics::Body::CelestialItem}}
+\doxysubsubsection{\texorpdfstring{FindWindowsOnOccultationConstraint()}{FindWindowsOnOccultationConstraint()}}
+{\footnotesize\ttfamily std\+::vector$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{IO\+::\+Astrodynamics\+::\+Time\+::\+Window}}$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} $>$ $>$ IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Item\+::\+Find\+Windows\+On\+Occultation\+Constraint (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{IO\+::\+Astrodynamics\+::\+Time\+::\+Window}}$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} $>$ \&}]{search\+Window,  }\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem}{IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Item}} \&}]{target\+Body,  }\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody}{IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Body}} \&}]{front\+Body,  }\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OccultationType}{IO\+::\+Astrodynamics\+::\+Occultation\+Type}} \&}]{occultation\+Type,  }\item[{\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_af0023a81d12385b73d78bd82e4b96ce3}{IO\+::\+Astrodynamics\+::\+Aberrations\+Enum}}}]{aberration,  }\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO\+::\+Astrodynamics\+::\+Time\+::\+Time\+Span}} \&}]{step\+Size }\end{DoxyParamCaption}) const}
+
+
+
+Find windows when occultation occurs. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em search\+Window} & \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Time}{Time}} window where constraint is evaluated \\
+\hline
+{\em target\+Body} & Target body \\
+\hline
+{\em front\+Body} & Front body between target and observer \\
+\hline
+{\em occultation\+Type} & Full-\/\+Annular-\/\+Partial-\/\+Any \\
+\hline
+{\em aberration} & Aberration correction \\
+\hline
+{\em step\+Size} & Step size (should be shorter than the shortest of these intervals. WARNING \+: A short step size could increase compute time) \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+std\+::vector$<$\+IO\+::\+Astrodynamics\+::\+Time\+::\+Window$<$\+IO\+::\+Astrodynamics\+::\+Time\+::\+TDB$>$$>$ 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem_a05875064ca072f8912310fface336086}\label{classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem_a05875064ca072f8912310fface336086}} 
+\index{IO::Astrodynamics::Body::CelestialItem@{IO::Astrodynamics::Body::CelestialItem}!GetId@{GetId}}
+\index{GetId@{GetId}!IO::Astrodynamics::Body::CelestialItem@{IO::Astrodynamics::Body::CelestialItem}}
+\doxysubsubsection{\texorpdfstring{GetId()}{GetId()}}
+{\footnotesize\ttfamily int IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Item\+::\+Get\+Id (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+
+
+Get the body identifier. 
+
+\begin{DoxyReturn}{Returns}
+const int 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem_a642326d760c0092ff537e0626182746f}\label{classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem_a642326d760c0092ff537e0626182746f}} 
+\index{IO::Astrodynamics::Body::CelestialItem@{IO::Astrodynamics::Body::CelestialItem}!GetMass@{GetMass}}
+\index{GetMass@{GetMass}!IO::Astrodynamics::Body::CelestialItem@{IO::Astrodynamics::Body::CelestialItem}}
+\doxysubsubsection{\texorpdfstring{GetMass()}{GetMass()}}
+{\footnotesize\ttfamily double IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Item\+::\+Get\+Mass (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+
+Get the Mass. 
+
+\begin{DoxyReturn}{Returns}
+double 
+\end{DoxyReturn}
+
+
+Reimplemented in \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft_ac8a2ed52b6d69fcf7eb210c60f5ab6d3}{IO\+::\+Astrodynamics\+::\+Body\+::\+Spacecraft\+::\+Spacecraft}}.
+
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem_a714293359c8beb8b09042e7ec67bf1c1}\label{classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem_a714293359c8beb8b09042e7ec67bf1c1}} 
+\index{IO::Astrodynamics::Body::CelestialItem@{IO::Astrodynamics::Body::CelestialItem}!GetMu@{GetMu}}
+\index{GetMu@{GetMu}!IO::Astrodynamics::Body::CelestialItem@{IO::Astrodynamics::Body::CelestialItem}}
+\doxysubsubsection{\texorpdfstring{GetMu()}{GetMu()}}
+{\footnotesize\ttfamily double IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Item\+::\+Get\+Mu (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+
+
+Get the Mu value. 
+
+\begin{DoxyReturn}{Returns}
+double 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem_a47e2d21c853ff4741575906ea7b2c251}\label{classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem_a47e2d21c853ff4741575906ea7b2c251}} 
+\index{IO::Astrodynamics::Body::CelestialItem@{IO::Astrodynamics::Body::CelestialItem}!GetName@{GetName}}
+\index{GetName@{GetName}!IO::Astrodynamics::Body::CelestialItem@{IO::Astrodynamics::Body::CelestialItem}}
+\doxysubsubsection{\texorpdfstring{GetName()}{GetName()}}
+{\footnotesize\ttfamily std\+::string IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Item\+::\+Get\+Name (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+
+
+Get the body name. 
+
+\begin{DoxyReturn}{Returns}
+const std\+::string 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem_a59c413813ee242c32e2401b63ca913b9}\label{classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem_a59c413813ee242c32e2401b63ca913b9}} 
+\index{IO::Astrodynamics::Body::CelestialItem@{IO::Astrodynamics::Body::CelestialItem}!GetOrbitalParametersAtEpoch@{GetOrbitalParametersAtEpoch}}
+\index{GetOrbitalParametersAtEpoch@{GetOrbitalParametersAtEpoch}!IO::Astrodynamics::Body::CelestialItem@{IO::Astrodynamics::Body::CelestialItem}}
+\doxysubsubsection{\texorpdfstring{GetOrbitalParametersAtEpoch()}{GetOrbitalParametersAtEpoch()}}
+{\footnotesize\ttfamily const std\+::unique\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}} $>$ \& IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Item\+::\+Get\+Orbital\+Parameters\+At\+Epoch (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+
+
+Get body orbital parameters. 
+
+\begin{DoxyReturn}{Returns}
+std\+::unique\+\_\+ptr$<$\+IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters$>$ 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem_a41f8f9eae44b6265fcf447329a44b742}\label{classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem_a41f8f9eae44b6265fcf447329a44b742}} 
+\index{IO::Astrodynamics::Body::CelestialItem@{IO::Astrodynamics::Body::CelestialItem}!GetSatellites@{GetSatellites}}
+\index{GetSatellites@{GetSatellites}!IO::Astrodynamics::Body::CelestialItem@{IO::Astrodynamics::Body::CelestialItem}}
+\doxysubsubsection{\texorpdfstring{GetSatellites()}{GetSatellites()}}
+{\footnotesize\ttfamily const std\+::vector$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem}{IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Item}} $\ast$ $>$ \& IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Item\+::\+Get\+Satellites (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+
+
+Get the Satellites. 
+
+\begin{DoxyReturn}{Returns}
+const std\+::vector$<$\+IO\+::\+Astrodynamics\+::\+Body\+::\+Body$\ast$$>$\& 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem_a65778cc25caacf1bb3abe93903a7b742}\label{classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem_a65778cc25caacf1bb3abe93903a7b742}} 
+\index{IO::Astrodynamics::Body::CelestialItem@{IO::Astrodynamics::Body::CelestialItem}!GetSharedPointer@{GetSharedPointer}}
+\index{GetSharedPointer@{GetSharedPointer}!IO::Astrodynamics::Body::CelestialItem@{IO::Astrodynamics::Body::CelestialItem}}
+\doxysubsubsection{\texorpdfstring{GetSharedPointer()}{GetSharedPointer()}}
+{\footnotesize\ttfamily std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem}{IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Item}} $>$ IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Item\+::\+Get\+Shared\+Pointer (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem_a4e0b8a76eacffa7206e808b1aa03722c}\label{classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem_a4e0b8a76eacffa7206e808b1aa03722c}} 
+\index{IO::Astrodynamics::Body::CelestialItem@{IO::Astrodynamics::Body::CelestialItem}!GetSubObserverPoint@{GetSubObserverPoint}}
+\index{GetSubObserverPoint@{GetSubObserverPoint}!IO::Astrodynamics::Body::CelestialItem@{IO::Astrodynamics::Body::CelestialItem}}
+\doxysubsubsection{\texorpdfstring{GetSubObserverPoint()}{GetSubObserverPoint()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1Planetographic}{IO\+::\+Astrodynamics\+::\+Coordinates\+::\+Planetographic}} IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Item\+::\+Get\+Sub\+Observer\+Point (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody}{IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Body}} \&}]{target\+Body,  }\item[{const \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_af0023a81d12385b73d78bd82e4b96ce3}{IO\+::\+Astrodynamics\+::\+Aberrations\+Enum}} \&}]{aberration,  }\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1DateTime}{IO\+::\+Astrodynamics\+::\+Time\+::\+Date\+Time}} \&}]{epoch }\end{DoxyParamCaption}) const}
+
+
+
+Get the Sub Observer Point observed from this body. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em target\+Body} & \\
+\hline
+{\em aberration} & \\
+\hline
+{\em epoch} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1Planetographic}{IO\+::\+Astrodynamics\+::\+Coordinates\+::\+Planetographic}} 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem_a9800d724e1dbc2b87b08b698fd0d74f8}\label{classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem_a9800d724e1dbc2b87b08b698fd0d74f8}} 
+\index{IO::Astrodynamics::Body::CelestialItem@{IO::Astrodynamics::Body::CelestialItem}!GetSubSolarPoint@{GetSubSolarPoint}}
+\index{GetSubSolarPoint@{GetSubSolarPoint}!IO::Astrodynamics::Body::CelestialItem@{IO::Astrodynamics::Body::CelestialItem}}
+\doxysubsubsection{\texorpdfstring{GetSubSolarPoint()}{GetSubSolarPoint()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1Planetographic}{IO\+::\+Astrodynamics\+::\+Coordinates\+::\+Planetographic}} IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Item\+::\+Get\+Sub\+Solar\+Point (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody}{IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Body}} \&}]{target\+Body,  }\item[{\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_af0023a81d12385b73d78bd82e4b96ce3}{IO\+::\+Astrodynamics\+::\+Aberrations\+Enum}}}]{aberration,  }\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} \&}]{epoch }\end{DoxyParamCaption}) const}
+
+
+
+Get the Sub Solar Point observed from this body. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em target\+Body} & \\
+\hline
+{\em abberation} & \\
+\hline
+{\em epoch} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1Planetographic}{IO\+::\+Astrodynamics\+::\+Coordinates\+::\+Planetographic}} 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem_a8de979f16138b0a462d0fee0f3621040}\label{classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem_a8de979f16138b0a462d0fee0f3621040}} 
+\index{IO::Astrodynamics::Body::CelestialItem@{IO::Astrodynamics::Body::CelestialItem}!operator"!=@{operator"!=}}
+\index{operator"!=@{operator"!=}!IO::Astrodynamics::Body::CelestialItem@{IO::Astrodynamics::Body::CelestialItem}}
+\doxysubsubsection{\texorpdfstring{operator"!=()}{operator!=()}}
+{\footnotesize\ttfamily bool IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Item\+::operator!= (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem}{IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Item}} \&}]{rhs }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [virtual]}}
+
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem_a8bc7ae4c80097beb36f4b8466e8aa302}\label{classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem_a8bc7ae4c80097beb36f4b8466e8aa302}} 
+\index{IO::Astrodynamics::Body::CelestialItem@{IO::Astrodynamics::Body::CelestialItem}!operator==@{operator==}}
+\index{operator==@{operator==}!IO::Astrodynamics::Body::CelestialItem@{IO::Astrodynamics::Body::CelestialItem}}
+\doxysubsubsection{\texorpdfstring{operator==()}{operator==()}}
+{\footnotesize\ttfamily bool IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Item\+::operator== (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem}{IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Item}} \&}]{rhs }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [virtual]}}
+
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem_a6fe60d354fa49102d4b4ce2e6e44c782}\label{classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem_a6fe60d354fa49102d4b4ce2e6e44c782}} 
+\index{IO::Astrodynamics::Body::CelestialItem@{IO::Astrodynamics::Body::CelestialItem}!ReadEphemeris@{ReadEphemeris}}
+\index{ReadEphemeris@{ReadEphemeris}!IO::Astrodynamics::Body::CelestialItem@{IO::Astrodynamics::Body::CelestialItem}}
+\doxysubsubsection{\texorpdfstring{ReadEphemeris()}{ReadEphemeris()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+State\+Vector}} IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Item\+::\+Read\+Ephemeris (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Frames_1_1Frames}{IO\+::\+Astrodynamics\+::\+Frames\+::\+Frames}} \&}]{frame,  }\item[{\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_af0023a81d12385b73d78bd82e4b96ce3}{IO\+::\+Astrodynamics\+::\+Aberrations\+Enum}}}]{aberration,  }\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} \&}]{epoch }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+
+Get the State Vector relative to its center of motion. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em frame} & \\
+\hline
+{\em aberration} & \\
+\hline
+{\em epoch} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+State\+Vector}} 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem_af47a0cd4fd3dde912d4b656ba1efe7f8}\label{classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem_af47a0cd4fd3dde912d4b656ba1efe7f8}} 
+\index{IO::Astrodynamics::Body::CelestialItem@{IO::Astrodynamics::Body::CelestialItem}!ReadEphemeris@{ReadEphemeris}}
+\index{ReadEphemeris@{ReadEphemeris}!IO::Astrodynamics::Body::CelestialItem@{IO::Astrodynamics::Body::CelestialItem}}
+\doxysubsubsection{\texorpdfstring{ReadEphemeris()}{ReadEphemeris()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+State\+Vector}} IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Item\+::\+Read\+Ephemeris (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Frames_1_1Frames}{IO\+::\+Astrodynamics\+::\+Frames\+::\+Frames}} \&}]{frame,  }\item[{\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_af0023a81d12385b73d78bd82e4b96ce3}{IO\+::\+Astrodynamics\+::\+Aberrations\+Enum}}}]{aberration,  }\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} \&}]{epoch,  }\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody}{IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Body}} \&}]{relative\+To }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+
+Get state vector from ephemeris relative to another body. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em epoch} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+State\+Vector}} 
+\end{DoxyReturn}
+
+
+Reimplemented in \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft_a65f8bfa3c1f31967883b4d011ef7934a}{IO\+::\+Astrodynamics\+::\+Body\+::\+Spacecraft\+::\+Spacecraft}}.
+
+
+
+\doxysubsection{Member Data Documentation}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem_a78217dde579e508225733db9b78daad8}\label{classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem_a78217dde579e508225733db9b78daad8}} 
+\index{IO::Astrodynamics::Body::CelestialItem@{IO::Astrodynamics::Body::CelestialItem}!m\_id@{m\_id}}
+\index{m\_id@{m\_id}!IO::Astrodynamics::Body::CelestialItem@{IO::Astrodynamics::Body::CelestialItem}}
+\doxysubsubsection{\texorpdfstring{m\_id}{m\_id}}
+{\footnotesize\ttfamily const int IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Item\+::m\+\_\+id \{\}\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem_aef16b19658f9628808f9722a82a46656}\label{classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem_aef16b19658f9628808f9722a82a46656}} 
+\index{IO::Astrodynamics::Body::CelestialItem@{IO::Astrodynamics::Body::CelestialItem}!m\_mass@{m\_mass}}
+\index{m\_mass@{m\_mass}!IO::Astrodynamics::Body::CelestialItem@{IO::Astrodynamics::Body::CelestialItem}}
+\doxysubsubsection{\texorpdfstring{m\_mass}{m\_mass}}
+{\footnotesize\ttfamily double IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Item\+::m\+\_\+mass \{\}\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem_a6461576c12eb014f380674e24f6c6689}\label{classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem_a6461576c12eb014f380674e24f6c6689}} 
+\index{IO::Astrodynamics::Body::CelestialItem@{IO::Astrodynamics::Body::CelestialItem}!m\_mu@{m\_mu}}
+\index{m\_mu@{m\_mu}!IO::Astrodynamics::Body::CelestialItem@{IO::Astrodynamics::Body::CelestialItem}}
+\doxysubsubsection{\texorpdfstring{m\_mu}{m\_mu}}
+{\footnotesize\ttfamily double IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Item\+::m\+\_\+mu \{\}\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem_a202d61c276faf532b012b96d961bf5ae}\label{classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem_a202d61c276faf532b012b96d961bf5ae}} 
+\index{IO::Astrodynamics::Body::CelestialItem@{IO::Astrodynamics::Body::CelestialItem}!m\_name@{m\_name}}
+\index{m\_name@{m\_name}!IO::Astrodynamics::Body::CelestialItem@{IO::Astrodynamics::Body::CelestialItem}}
+\doxysubsubsection{\texorpdfstring{m\_name}{m\_name}}
+{\footnotesize\ttfamily const std\+::string IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Item\+::m\+\_\+name \{\}\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem_a1fc5ea1f3cb974971fadf9e8fabfa567}\label{classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem_a1fc5ea1f3cb974971fadf9e8fabfa567}} 
+\index{IO::Astrodynamics::Body::CelestialItem@{IO::Astrodynamics::Body::CelestialItem}!m\_orbitalParametersAtEpoch@{m\_orbitalParametersAtEpoch}}
+\index{m\_orbitalParametersAtEpoch@{m\_orbitalParametersAtEpoch}!IO::Astrodynamics::Body::CelestialItem@{IO::Astrodynamics::Body::CelestialItem}}
+\doxysubsubsection{\texorpdfstring{m\_orbitalParametersAtEpoch}{m\_orbitalParametersAtEpoch}}
+{\footnotesize\ttfamily std\+::unique\+\_\+ptr$<$\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}}$>$ IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Item\+::m\+\_\+orbital\+Parameters\+At\+Epoch \{\}\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem_ac2258dcb528f86404655315ccf918fcf}\label{classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem_ac2258dcb528f86404655315ccf918fcf}} 
+\index{IO::Astrodynamics::Body::CelestialItem@{IO::Astrodynamics::Body::CelestialItem}!m\_satellites@{m\_satellites}}
+\index{m\_satellites@{m\_satellites}!IO::Astrodynamics::Body::CelestialItem@{IO::Astrodynamics::Body::CelestialItem}}
+\doxysubsubsection{\texorpdfstring{m\_satellites}{m\_satellites}}
+{\footnotesize\ttfamily std\+::vector$<$\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem}{IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Item}} $\ast$$>$ IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Item\+::m\+\_\+satellites \{\}\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+IO.\+Astrodynamics/\+Body/\mbox{\hyperlink{CelestialItem_8h}{Celestial\+Item.\+h}}\item 
+IO.\+Astrodynamics/\+Body/\mbox{\hyperlink{CelestialItem_8cpp}{Celestial\+Item.\+cpp}}\end{DoxyCompactItemize}
