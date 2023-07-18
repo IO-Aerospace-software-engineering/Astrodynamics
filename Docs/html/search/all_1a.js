@@ -1,6 +1,6 @@
 var searchData=
 [
-  ['_7ebody_0',['~Body',['../classIO_1_1Astrodynamics_1_1Body_1_1Body.html#ae83a2c6e788f51c0167a5e21bc3a432e',1,'IO::Astrodynamics::Body::Body']]],
+  ['_7ecelestialitem_0',['~CelestialItem',['../classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem.html#ac9cd60d72501aacfc5763d7041d81e01',1,'IO::Astrodynamics::Body::CelestialItem']]],
   ['_7econicorbitalelements_1',['~ConicOrbitalElements',['../classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1ConicOrbitalElements.html#a6c8854f66bd0877a16cfbc225c0bd1c5',1,'IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements']]],
   ['_7ecoordinate_2',['~Coordinate',['../classIO_1_1Astrodynamics_1_1Coordinate.html#af132cd11ecc0da396a72084a8c449e33',1,'IO::Astrodynamics::Coordinate']]],
   ['_7ecoordinatesystem_3',['~CoordinateSystem',['../classIO_1_1Astrodynamics_1_1CoordinateSystem.html#a4288decf00dbf9f187543d183d977392',1,'IO::Astrodynamics::CoordinateSystem']]],

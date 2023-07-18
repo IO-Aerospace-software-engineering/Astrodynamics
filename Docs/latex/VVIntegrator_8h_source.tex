@@ -18,7 +18,7 @@
 \DoxyCodeLine{14 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{TimeSpan_8h}{TimeSpan.h}}>}}
 \DoxyCodeLine{15 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{StateVector_8h}{StateVector.h}}>}}
 \DoxyCodeLine{16 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{Vector3D_8h}{Vector3D.h}}>}}
-\DoxyCodeLine{17 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{Body_8h}{Body.h}}>}}
+\DoxyCodeLine{17 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{CelestialItem_8h}{CelestialItem.h}}>}}
 \DoxyCodeLine{18 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{CelestialBody_8h}{CelestialBody.h}}>}}
 \DoxyCodeLine{19 \textcolor{preprocessor}{\#include <optional>}}
 \DoxyCodeLine{20 }
@@ -36,7 +36,7 @@
 \DoxyCodeLine{32         std::vector<IO::Astrodynamics::Integrators::Forces::Force *> m\_forces\{\};}
 \DoxyCodeLine{33         std::optional<IO::Astrodynamics::Math::Vector3D> m\_acceleration\{std::nullopt\};}
 \DoxyCodeLine{34 }
-\DoxyCodeLine{35         [[nodiscard]] \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO::Astrodynamics::Math::Vector3D}} ComputeAcceleration(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Body}{IO::Astrodynamics::Body::Body}} \&body, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}{IO::Astrodynamics::OrbitalParameters::StateVector}} \&stateVector) \textcolor{keyword}{const};}
+\DoxyCodeLine{35         [[nodiscard]] \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO::Astrodynamics::Math::Vector3D}} ComputeAcceleration(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem}{IO::Astrodynamics::Body::CelestialItem}} \&body, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}{IO::Astrodynamics::OrbitalParameters::StateVector}} \&stateVector) \textcolor{keyword}{const};}
 \DoxyCodeLine{36 }
 \DoxyCodeLine{37     \textcolor{keyword}{public}:}
 \DoxyCodeLine{43         \textcolor{keyword}{explicit} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Integrators_1_1VVIntegrator_a4743eda4106946318c1c4761d404f4c8}{VVIntegrator}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO::Astrodynamics::Time::TimeSpan}} \&stepDuration);}
@@ -45,7 +45,7 @@
 \DoxyCodeLine{52 }
 \DoxyCodeLine{57         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Integrators_1_1VVIntegrator_ab2cb6cf40c4e69932f04248f79b252d5}{\string~VVIntegrator}}();}
 \DoxyCodeLine{58 }
-\DoxyCodeLine{66         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}{IO::Astrodynamics::OrbitalParameters::StateVector}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Integrators_1_1VVIntegrator_adbd4a187190f7c07f5817c34e2062faa}{Integrate}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Body}{IO::Astrodynamics::Body::Body}} \&body, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}{IO::Astrodynamics::OrbitalParameters::StateVector}} \&stateVector) \textcolor{keyword}{override};}
+\DoxyCodeLine{66         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}{IO::Astrodynamics::OrbitalParameters::StateVector}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Integrators_1_1VVIntegrator_a7d6e2fa7934999d059adef1a7769feae}{Integrate}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem}{IO::Astrodynamics::Body::CelestialItem}} \&body, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}{IO::Astrodynamics::OrbitalParameters::StateVector}} \&stateVector) \textcolor{keyword}{override};}
 \DoxyCodeLine{67     \};}
 \DoxyCodeLine{68 }
 \DoxyCodeLine{69 \}}

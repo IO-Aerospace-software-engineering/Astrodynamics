@@ -53,8 +53,9 @@ var annotated_dup =
             [ "Spacecraft", "classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft.html", "classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft" ]
           ] ],
           [ "Barycenter", "classIO_1_1Astrodynamics_1_1Body_1_1Barycenter.html", "classIO_1_1Astrodynamics_1_1Body_1_1Barycenter" ],
-          [ "Body", "classIO_1_1Astrodynamics_1_1Body_1_1Body.html", "classIO_1_1Astrodynamics_1_1Body_1_1Body" ],
-          [ "CelestialBody", "classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody.html", "classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody" ]
+          [ "CelestialBody", "classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody.html", "classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody" ],
+          [ "CelestialItem", "classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem.html", "classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem" ],
+          [ "LagrangePoint", "classIO_1_1Astrodynamics_1_1Body_1_1LagrangePoint.html", "classIO_1_1Astrodynamics_1_1Body_1_1LagrangePoint" ]
         ] ],
         [ "Constraints", "namespaceIO_1_1Astrodynamics_1_1Constraints.html", [
           [ "GeometryFinder", "classIO_1_1Astrodynamics_1_1Constraints_1_1GeometryFinder.html", null ],

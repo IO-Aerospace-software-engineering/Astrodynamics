@@ -23,9 +23,10 @@ var hierarchy =
     [ "IO::Astrodynamics::API::DTO::DistanceConstraintDTO", "structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1DistanceConstraintDTO.html", null ],
     [ "IO::Astrodynamics::Maneuvers::DynamicFuelTank", "structIO_1_1Astrodynamics_1_1Maneuvers_1_1DynamicFuelTank.html", null ],
     [ "std::enable_shared_from_this", null, [
-      [ "IO::Astrodynamics::Body::Body", "classIO_1_1Astrodynamics_1_1Body_1_1Body.html", [
+      [ "IO::Astrodynamics::Body::CelestialItem", "classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem.html", [
         [ "IO::Astrodynamics::Body::Barycenter", "classIO_1_1Astrodynamics_1_1Body_1_1Barycenter.html", null ],
         [ "IO::Astrodynamics::Body::CelestialBody", "classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody.html", null ],
+        [ "IO::Astrodynamics::Body::LagrangePoint", "classIO_1_1Astrodynamics_1_1Body_1_1LagrangePoint.html", null ],
         [ "IO::Astrodynamics::Body::Spacecraft::Spacecraft", "classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft.html", null ]
       ] ]
     ] ],

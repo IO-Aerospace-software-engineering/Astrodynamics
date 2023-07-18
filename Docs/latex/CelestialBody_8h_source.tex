@@ -12,14 +12,14 @@
 \DoxyCodeLine{8 \textcolor{preprocessor}{\#include <string>}}
 \DoxyCodeLine{9 \textcolor{preprocessor}{\#include <cmath>}}
 \DoxyCodeLine{10 }
-\DoxyCodeLine{11 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{Body_8h}{Body.h}}>}}
+\DoxyCodeLine{11 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{CelestialItem_8h}{CelestialItem.h}}>}}
 \DoxyCodeLine{12 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{BodyFixedFrames_8h}{BodyFixedFrames.h}}>}}
 \DoxyCodeLine{13 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{TDB_8h}{TDB.h}}>}}
 \DoxyCodeLine{14 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{Planetographic_8h}{Planetographic.h}}>}}
 \DoxyCodeLine{15 }
 \DoxyCodeLine{16 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Body}{IO::Astrodynamics::Body}}}
 \DoxyCodeLine{17 \{}
-\DoxyCodeLine{18     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody}{CelestialBody}} final : \textcolor{keyword}{public} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Body}{IO::Astrodynamics::Body::Body}}}
+\DoxyCodeLine{18     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody}{CelestialBody}} final : \textcolor{keyword}{public} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem}{IO::Astrodynamics::Body::CelestialItem}}}
 \DoxyCodeLine{19     \{}
 \DoxyCodeLine{20     \textcolor{keyword}{private}:}
 \DoxyCodeLine{21         }
@@ -54,18 +54,19 @@
 \DoxyCodeLine{97         \textcolor{keyword}{static} \textcolor{keywordtype}{bool} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_aca23025d98b7647b6c40db4808b191f6}{IsPlanet}}(\textcolor{keywordtype}{int} celestialBodyId);}
 \DoxyCodeLine{98         \textcolor{keyword}{static} \textcolor{keywordtype}{bool} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_a0eb8db92976553739351810ac18ca36f}{IsAsteroid}}(\textcolor{keywordtype}{int} celestialBodyId);}
 \DoxyCodeLine{99         \textcolor{keyword}{static} \textcolor{keywordtype}{bool} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_ae3ead2b441c75c62527040fafde87b96}{IsMoon}}(\textcolor{keywordtype}{int} celestialBodyId);}
-\DoxyCodeLine{100         \textcolor{keyword}{static} \textcolor{keywordtype}{int} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_a1ec220ba85b31d60aef8ee8d255b49c7}{FindCenterOfMotionId}}(\textcolor{keywordtype}{int} celestialBodyNaifId);}
-\DoxyCodeLine{101         \textcolor{keyword}{static} \textcolor{keywordtype}{int} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_ad8b73ac2d7ba5dc642676e88e9b6bdd0}{FindBarycenterOfMotionId}}(\textcolor{keywordtype}{int} celestialBodyNaifId);}
-\DoxyCodeLine{102         \textcolor{keyword}{static} \textcolor{keywordtype}{bool} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_a5dd305b825b4d9d4880d3e27d6f85d9a}{IsBarycenter}}(\textcolor{keywordtype}{int} celestialBodyId);}
-\DoxyCodeLine{103 }
-\DoxyCodeLine{104     \};}
-\DoxyCodeLine{113     \textcolor{keywordtype}{double} \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Body_a1039362445a9639e6c76d05476712ce0}{SphereOfInfluence}}(\textcolor{keywordtype}{double} a, \textcolor{keywordtype}{double} majorMass, \textcolor{keywordtype}{double} minorMass);}
-\DoxyCodeLine{114 }
-\DoxyCodeLine{123     \textcolor{keywordtype}{double} \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Body_a35c41c36330fbaba247227f150813453}{HillSphere}}(\textcolor{keywordtype}{double} a, \textcolor{keywordtype}{double} e, \textcolor{keywordtype}{double} majorMass, \textcolor{keywordtype}{double} minorMass);}
-\DoxyCodeLine{124 }
+\DoxyCodeLine{100         \textcolor{keyword}{static} \textcolor{keywordtype}{bool} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_aed9c03b91b37621fc9a68d369935685e}{IsLagrangePoint}}(\textcolor{keywordtype}{int} celestialBodyId);}
+\DoxyCodeLine{101         \textcolor{keyword}{static} \textcolor{keywordtype}{int} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_a1ec220ba85b31d60aef8ee8d255b49c7}{FindCenterOfMotionId}}(\textcolor{keywordtype}{int} celestialBodyNaifId);}
+\DoxyCodeLine{102         \textcolor{keyword}{static} \textcolor{keywordtype}{int} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_ad8b73ac2d7ba5dc642676e88e9b6bdd0}{FindBarycenterOfMotionId}}(\textcolor{keywordtype}{int} celestialBodyNaifId);}
+\DoxyCodeLine{103         \textcolor{keyword}{static} \textcolor{keywordtype}{bool} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_a5dd305b825b4d9d4880d3e27d6f85d9a}{IsBarycenter}}(\textcolor{keywordtype}{int} celestialBodyId);}
+\DoxyCodeLine{104 }
+\DoxyCodeLine{105     \};}
+\DoxyCodeLine{114     \textcolor{keywordtype}{double} \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Body_a1039362445a9639e6c76d05476712ce0}{SphereOfInfluence}}(\textcolor{keywordtype}{double} a, \textcolor{keywordtype}{double} majorMass, \textcolor{keywordtype}{double} minorMass);}
+\DoxyCodeLine{115 }
+\DoxyCodeLine{124     \textcolor{keywordtype}{double} \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Body_a35c41c36330fbaba247227f150813453}{HillSphere}}(\textcolor{keywordtype}{double} a, \textcolor{keywordtype}{double} e, \textcolor{keywordtype}{double} majorMass, \textcolor{keywordtype}{double} minorMass);}
 \DoxyCodeLine{125 }
 \DoxyCodeLine{126 }
-\DoxyCodeLine{127 \}}
-\DoxyCodeLine{128 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{127 }
+\DoxyCodeLine{128 \}}
+\DoxyCodeLine{129 \textcolor{preprocessor}{\#endif}}
 
 \end{DoxyCode}
