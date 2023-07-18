@@ -12,7 +12,7 @@ namespace IO::Astrodynamics::Body
     class LagrangePoint final : public IO::Astrodynamics::Body::CelestialItem
     {
     public:
-        explicit LagrangePoint(int id);
+        LagrangePoint(int id, std::shared_ptr<IO::Astrodynamics::Body::CelestialBody> centerOfMotion);
     };
 }
 
