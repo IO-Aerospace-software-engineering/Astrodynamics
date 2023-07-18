@@ -11,7 +11,7 @@ IO::Astrodynamics::Integrators::TLEIntegrator::TLEIntegrator(const IO::Astrodyna
 IO::Astrodynamics::Integrators::TLEIntegrator::~TLEIntegrator()
 = default;
 
-IO::Astrodynamics::OrbitalParameters::StateVector IO::Astrodynamics::Integrators::TLEIntegrator::Integrate([[maybe_unused]]const IO::Astrodynamics::Body::Body &body, const IO::Astrodynamics::OrbitalParameters::StateVector &stateVector)
+IO::Astrodynamics::OrbitalParameters::StateVector IO::Astrodynamics::Integrators::TLEIntegrator::Integrate([[maybe_unused]]const IO::Astrodynamics::Body::CelestialItem &body, const IO::Astrodynamics::OrbitalParameters::StateVector &stateVector)
 {
     return m_tle.ToStateVector(stateVector.GetEpoch() + this->m_stepDuration);
 }

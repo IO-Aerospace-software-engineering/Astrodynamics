@@ -131,7 +131,7 @@ std::vector<IO::Astrodynamics::Math::Vector3D> IO::Astrodynamics::Instruments::I
 
 std::vector<IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB>>
 IO::Astrodynamics::Instruments::Instrument::FindWindowsWhereInFieldOfView(
-        const IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB> &searchWindow, const IO::Astrodynamics::Body::Body &targetBody,
+        const IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB> &searchWindow, const IO::Astrodynamics::Body::CelestialItem &targetBody,
         const IO::Astrodynamics::AberrationsEnum &aberration,
         const IO::Astrodynamics::Time::TimeSpan &stepSize
 ) const

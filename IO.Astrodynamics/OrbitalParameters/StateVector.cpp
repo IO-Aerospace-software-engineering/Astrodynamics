@@ -121,7 +121,7 @@ IO::Astrodynamics::OrbitalParameters::StateVector IO::Astrodynamics::OrbitalPara
     //Each body is under sphere of influence of his major body
     //So Spacecraft is influenced by his center of motion and his parents
     //Eg. Sun->Earth->Moon->Spacecraft
-    std::shared_ptr<IO::Astrodynamics::Body::Body> currentBody = GetCenterOfMotion();
+    std::shared_ptr<IO::Astrodynamics::Body::CelestialItem> currentBody = GetCenterOfMotion();
     while (currentBody->GetOrbitalParametersAtEpoch())
     {
         //Compute vector state

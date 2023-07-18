@@ -21,12 +21,12 @@ namespace IO::Astrodynamics::Body
      * @brief Body class
      *
      */
-    class Body : public std::enable_shared_from_this<IO::Astrodynamics::Body::Body>
+    class CelestialItem : public std::enable_shared_from_this<IO::Astrodynamics::Body::CelestialItem>
     {
     private:
     protected:
         std::unique_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> m_orbitalParametersAtEpoch{};
-        std::vector<IO::Astrodynamics::Body::Body *> m_satellites{};
+        std::vector<IO::Astrodynamics::Body::CelestialItem *> m_satellites{};
         const int m_id{};
         const std::string m_name{};
         double m_mass{};
@@ -40,7 +40,7 @@ namespace IO::Astrodynamics::Body
          * @param name
          * @param mass kg
          */
-        Body(int id, const std::string &name, double mass);
+        CelestialItem(int id, const std::string &name, double mass);
 
         /**
          * @brief Construct a new Body object
@@ -50,7 +50,7 @@ namespace IO::Astrodynamics::Body
          * @param mass kg
          * @param orbitalParameters
          */
-        Body(int id, const std::string &name, double mass, std::unique_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParametersAtEpoch);
+        CelestialItem(int id, const std::string &name, double mass, std::unique_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParametersAtEpoch);
 
         /**
          * @brief Construct a new Body object
@@ -60,11 +60,11 @@ namespace IO::Astrodynamics::Body
          * @param mass
          * @param centerOfMotion
          */
-        Body(int id, const std::string &name, double mass, std::shared_ptr<IO::Astrodynamics::Body::CelestialBody> &centerOfMotion);
+        CelestialItem(int id, const std::string &name, double mass, std::shared_ptr<IO::Astrodynamics::Body::CelestialBody> &centerOfMotion);
 
-        Body(const Body &body);
+        CelestialItem(const CelestialItem &body);
 
-        virtual ~Body() = default;
+        virtual ~CelestialItem() = default;
 
         /**
          * @brief Get the body identifier
@@ -106,7 +106,7 @@ namespace IO::Astrodynamics::Body
          *
          * @return const std::vector<IO::Astrodynamics::Body::Body*>&
          */
-        const std::vector<IO::Astrodynamics::Body::Body *> &GetSatellites() const;
+        const std::vector<IO::Astrodynamics::Body::CelestialItem *> &GetSatellites() const;
 
         /**
          * @brief Get the State Vector relative to its center of motion
@@ -128,11 +128,11 @@ namespace IO::Astrodynamics::Body
         virtual IO::Astrodynamics::OrbitalParameters::StateVector ReadEphemeris(const IO::Astrodynamics::Frames::Frames &frame, IO::Astrodynamics::AberrationsEnum aberration, const IO::Astrodynamics::Time::TDB &epoch,
                                                                       const IO::Astrodynamics::Body::CelestialBody &relativeTo) const;
 
-        virtual bool operator==(const IO::Astrodynamics::Body::Body &rhs) const;
+        virtual bool operator==(const IO::Astrodynamics::Body::CelestialItem &rhs) const;
 
-        virtual bool operator!=(const IO::Astrodynamics::Body::Body &rhs) const;
+        virtual bool operator!=(const IO::Astrodynamics::Body::CelestialItem &rhs) const;
 
-        std::shared_ptr<IO::Astrodynamics::Body::Body> GetSharedPointer();
+        std::shared_ptr<IO::Astrodynamics::Body::CelestialItem> GetSharedPointer();
 
         /**
          * @brief Find windows when distance constraint occurs
@@ -147,7 +147,7 @@ namespace IO::Astrodynamics::Body
          * @return std::vector<IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB>>
          */
         static std::vector<IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB>>
-        FindWindowsOnDistanceConstraint(const IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB> &searchWindow, const Body &targetBody, const Body &observer,
+        FindWindowsOnDistanceConstraint(const IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB> &searchWindow, const CelestialItem &targetBody, const CelestialItem &observer,
                                         const IO::Astrodynamics::Constraints::RelationalOperator &constraint, IO::Astrodynamics::AberrationsEnum aberration, double value, const IO::Astrodynamics::Time::TimeSpan &step);
 
         /**
@@ -162,7 +162,7 @@ namespace IO::Astrodynamics::Body
          * @return std::vector<IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB>>
          */
         std::vector<IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB>>
-        FindWindowsOnOccultationConstraint(const IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB> &searchWindow, const IO::Astrodynamics::Body::Body &targetBody,
+        FindWindowsOnOccultationConstraint(const IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB> &searchWindow, const IO::Astrodynamics::Body::CelestialItem &targetBody,
                                            const IO::Astrodynamics::Body::CelestialBody &frontBody, const IO::Astrodynamics::OccultationType &occultationType, IO::Astrodynamics::AberrationsEnum aberration,
                                            const IO::Astrodynamics::Time::TimeSpan &stepSize) const;
 

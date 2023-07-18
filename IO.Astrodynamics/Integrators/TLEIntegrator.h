@@ -7,7 +7,7 @@
 #include <TLE.h>
 #include <TimeSpan.h>
 #include <StateVector.h>
-#include <Body.h>
+#include <CelestialItem.h>
 #include<Macros.h>
 
 namespace IO::Astrodynamics::Integrators
@@ -38,7 +38,7 @@ namespace IO::Astrodynamics::Integrators
          * @param stateVector 
          * @return IO::Astrodynamics::OrbitalParameters::StateVector
          */
-        IO::Astrodynamics::OrbitalParameters::StateVector Integrate(const IO::Astrodynamics::Body::Body &body, const IO::Astrodynamics::OrbitalParameters::StateVector &stateVector) override;
+        IO::Astrodynamics::OrbitalParameters::StateVector Integrate(const IO::Astrodynamics::Body::CelestialItem &body, const IO::Astrodynamics::OrbitalParameters::StateVector &stateVector) override;
     };
 
 }

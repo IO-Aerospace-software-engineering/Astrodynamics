@@ -21,7 +21,7 @@ IO::Astrodynamics::Integrators::VVIntegrator::VVIntegrator(const IO::Astrodynami
 IO::Astrodynamics::Integrators::VVIntegrator::~VVIntegrator()
 = default;
 
-IO::Astrodynamics::OrbitalParameters::StateVector IO::Astrodynamics::Integrators::VVIntegrator::Integrate(const IO::Astrodynamics::Body::Body &body, const IO::Astrodynamics::OrbitalParameters::StateVector &stateVector) {
+IO::Astrodynamics::OrbitalParameters::StateVector IO::Astrodynamics::Integrators::VVIntegrator::Integrate(const IO::Astrodynamics::Body::CelestialItem &body, const IO::Astrodynamics::OrbitalParameters::StateVector &stateVector) {
     //Set initial parameters
     auto position = stateVector.GetPosition();
     auto velocity = stateVector.GetVelocity();
@@ -51,7 +51,7 @@ IO::Astrodynamics::OrbitalParameters::StateVector IO::Astrodynamics::Integrators
     return newSV;
 }
 
-IO::Astrodynamics::Math::Vector3D IO::Astrodynamics::Integrators::VVIntegrator::ComputeAcceleration(const IO::Astrodynamics::Body::Body &body, const IO::Astrodynamics::OrbitalParameters::StateVector &stateVector) const {
+IO::Astrodynamics::Math::Vector3D IO::Astrodynamics::Integrators::VVIntegrator::ComputeAcceleration(const IO::Astrodynamics::Body::CelestialItem &body, const IO::Astrodynamics::OrbitalParameters::StateVector &stateVector) const {
     IO::Astrodynamics::Math::Vector3D forceVector{};
     for (auto force: m_forces) {
         forceVector = forceVector + force->Apply(body, stateVector);

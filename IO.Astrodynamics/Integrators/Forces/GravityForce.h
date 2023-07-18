@@ -33,7 +33,7 @@ namespace IO::Astrodynamics::Integrators::Forces
          * @param stateVector 
          * @return IO::Astrodynamics::Math::Vector3D
          */
-        IO::Astrodynamics::Math::Vector3D Apply(const IO::Astrodynamics::Body::Body &body, const IO::Astrodynamics::OrbitalParameters::StateVector &stateVector) override;
+        IO::Astrodynamics::Math::Vector3D Apply(const IO::Astrodynamics::Body::CelestialItem &body, const IO::Astrodynamics::OrbitalParameters::StateVector &stateVector) override;
     };
     /**
      * @brief 

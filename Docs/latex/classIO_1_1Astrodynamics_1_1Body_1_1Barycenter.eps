@@ -5,7 +5,7 @@
 %%For: 
 %Magnification: 1.00
 %%Orientation: Portrait
-%%BoundingBox: 0 0 500 157.894730
+%%BoundingBox: 0 0 500 142.517822
 %%Pages: 0
 %%BeginSetup
 %%EndSetup
@@ -19,7 +19,7 @@
 /marginwidth 10 def
 /distx 20 def
 /disty 40 def
-/boundaspect 3.166667 def  % aspect ratio of the BoundingBox (width/height)
+/boundaspect 3.508333 def  % aspect ratio of the BoundingBox (width/height)
 /boundx 500 def
 /boundy boundx boundaspect div def
 /xspacing 0 def
@@ -174,8 +174,8 @@
 boxfont setfont
 1 boundaspect scale
 (IO::Astrodynamics::Body::Barycenter) cw
-(IO::Astrodynamics::Body::Body) cw
-(std::enable_shared_from_this< IO::Astrodynamics::Body::Body >) cw
+(IO::Astrodynamics::Body::CelestialItem) cw
+(std::enable_shared_from_this< IO::Astrodynamics::Body::CelestialItem >) cw
 /boxwidth boxwidth marginwidth 2 mul add def
 /xspacing boxwidth distx add def
 /yspacing boxheight disty add def
@@ -188,8 +188,8 @@ boundx scalefactor div boundy scalefactor div scale
 % ----- classes -----
 
  (IO::Astrodynamics::Body::Barycenter) 0.000000 0.000000 box
- (IO::Astrodynamics::Body::Body) 0.000000 1.000000 box
- (std::enable_shared_from_this< IO::Astrodynamics::Body::Body >) 0.000000 2.000000 box
+ (IO::Astrodynamics::Body::CelestialItem) 0.000000 1.000000 box
+ (std::enable_shared_from_this< IO::Astrodynamics::Body::CelestialItem >) 0.000000 2.000000 box
 
 % ----- relations -----
 

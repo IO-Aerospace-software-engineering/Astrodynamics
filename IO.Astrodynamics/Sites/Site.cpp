@@ -45,8 +45,8 @@ IO::Astrodynamics::Sites::Site::GetStateVector(const IO::Astrodynamics::Frames::
 }
 
 IO::Astrodynamics::Coordinates::Equatorial
-IO::Astrodynamics::Sites::Site::GetRADec(const IO::Astrodynamics::Body::Body &body, const IO::Astrodynamics::AberrationsEnum aberrationCorrection,
-                               const IO::Astrodynamics::Time::TDB &epoch) const
+IO::Astrodynamics::Sites::Site::GetRADec(const IO::Astrodynamics::Body::CelestialItem &body, const IO::Astrodynamics::AberrationsEnum aberrationCorrection,
+                                         const IO::Astrodynamics::Time::TDB &epoch) const
 {
     auto radius = m_body->GetRadius();
     auto bodiesSv = body.ReadEphemeris(IO::Astrodynamics::Frames::InertialFrames::GetICRF(), aberrationCorrection, epoch,
@@ -118,7 +118,7 @@ IO::Astrodynamics::Sites::Site::FindNightWindows(const IO::Astrodynamics::Time::
 
 std::vector<IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::UTC>>
 IO::Astrodynamics::Sites::Site::FindWindowsOnIlluminationConstraint(const IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::UTC> &searchWindow,
-                                                          const IO::Astrodynamics::Body::Body &observerBody,
+                                                          const IO::Astrodynamics::Body::CelestialItem &observerBody,
                                                           const IO::Astrodynamics::IlluminationAngle &illuminationAngle,
                                                           const IO::Astrodynamics::Constraints::RelationalOperator &constraint,
                                                           const double value) const
@@ -145,8 +145,8 @@ IO::Astrodynamics::Sites::Site::FindWindowsOnIlluminationConstraint(const IO::As
 
 }
 
-IO::Astrodynamics::Coordinates::HorizontalCoordinates IO::Astrodynamics::Sites::Site::GetHorizontalCoordinates(const IO::Astrodynamics::Body::Body &body, const IO::Astrodynamics::AberrationsEnum aberrationCorrection,
-                                                                                           const IO::Astrodynamics::Time::TDB &epoch) const
+IO::Astrodynamics::Coordinates::HorizontalCoordinates IO::Astrodynamics::Sites::Site::GetHorizontalCoordinates(const IO::Astrodynamics::Body::CelestialItem &body, const IO::Astrodynamics::AberrationsEnum aberrationCorrection,
+                                                                                                               const IO::Astrodynamics::Time::TDB &epoch) const
 {
     auto radius = m_body->GetRadius();
     SpiceDouble bodyFixedLocation[3];
@@ -164,9 +164,9 @@ IO::Astrodynamics::Coordinates::HorizontalCoordinates IO::Astrodynamics::Sites::
 }
 
 IO::Astrodynamics::OrbitalParameters::StateVector
-IO::Astrodynamics::Sites::Site::GetStateVector(const IO::Astrodynamics::Body::Body &body, const IO::Astrodynamics::Frames::Frames &frame,
-                                     IO::Astrodynamics::AberrationsEnum aberrationCorrection,
-                                     const IO::Astrodynamics::Time::TDB &epoch) const
+IO::Astrodynamics::Sites::Site::GetStateVector(const IO::Astrodynamics::Body::CelestialItem &body, const IO::Astrodynamics::Frames::Frames &frame,
+                                               IO::Astrodynamics::AberrationsEnum aberrationCorrection,
+                                               const IO::Astrodynamics::Time::TDB &epoch) const
 {
     auto radius = m_body->GetRadius();
     auto bodiesSv = body.ReadEphemeris(frame, aberrationCorrection, epoch, *m_body);
@@ -178,7 +178,7 @@ IO::Astrodynamics::Sites::Site::GetStateVector(const IO::Astrodynamics::Body::Bo
 }
 
 std::vector<IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::UTC>>
-IO::Astrodynamics::Sites::Site::FindBodyVisibilityWindows(const IO::Astrodynamics::Body::Body &body,
+IO::Astrodynamics::Sites::Site::FindBodyVisibilityWindows(const IO::Astrodynamics::Body::CelestialItem &body,
                                                 const IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::UTC> &searchWindow,
                                                 const IO::Astrodynamics::AberrationsEnum aberrationCorrection) const
 {

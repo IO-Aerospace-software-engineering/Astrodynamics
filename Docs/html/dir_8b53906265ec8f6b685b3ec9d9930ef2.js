@@ -24,15 +24,27 @@ var dir_8b53906265ec8f6b685b3ec9d9930ef2 =
     [ "Aberrations.cpp", "Aberrations_8cpp.html", null ],
     [ "Aberrations.h", "Aberrations_8h.html", "Aberrations_8h" ],
     [ "Coordinate.cpp", "Coordinate_8cpp.html", null ],
-    [ "Coordinate.h", "Coordinate_8h.html", "Coordinate_8h" ],
+    [ "Coordinate.h", "Coordinate_8h.html", [
+      [ "IO::Astrodynamics::Coordinate", "classIO_1_1Astrodynamics_1_1Coordinate.html", "classIO_1_1Astrodynamics_1_1Coordinate" ]
+    ] ],
     [ "CoordinateSystem.cpp", "CoordinateSystem_8cpp.html", null ],
-    [ "CoordinateSystem.h", "CoordinateSystem_8h.html", "CoordinateSystem_8h" ],
+    [ "CoordinateSystem.h", "CoordinateSystem_8h.html", [
+      [ "IO::Astrodynamics::CoordinateSystem", "classIO_1_1Astrodynamics_1_1CoordinateSystem.html", "classIO_1_1Astrodynamics_1_1CoordinateSystem" ]
+    ] ],
     [ "DataPoolMonitoring.cpp", "DataPoolMonitoring_8cpp.html", null ],
-    [ "DataPoolMonitoring.h", "DataPoolMonitoring_8h.html", "DataPoolMonitoring_8h" ],
+    [ "DataPoolMonitoring.h", "DataPoolMonitoring_8h.html", [
+      [ "IO::Astrodynamics::DataPoolMonitoring", "classIO_1_1Astrodynamics_1_1DataPoolMonitoring.html", "classIO_1_1Astrodynamics_1_1DataPoolMonitoring" ]
+    ] ],
     [ "IlluminationAngle.cpp", "IlluminationAngle_8cpp.html", null ],
-    [ "IlluminationAngle.h", "IlluminationAngle_8h.html", "IlluminationAngle_8h" ],
+    [ "IlluminationAngle.h", "IlluminationAngle_8h.html", [
+      [ "IO::Astrodynamics::IlluminationAngle", "classIO_1_1Astrodynamics_1_1IlluminationAngle.html", "classIO_1_1Astrodynamics_1_1IlluminationAngle" ]
+    ] ],
     [ "Macros.h", "Macros_8h.html", "Macros_8h" ],
     [ "OccultationType.cpp", "OccultationType_8cpp.html", null ],
-    [ "OccultationType.h", "OccultationType_8h.html", "OccultationType_8h" ],
-    [ "StringHelpers.h", "StringHelpers_8h.html", "StringHelpers_8h" ]
+    [ "OccultationType.h", "OccultationType_8h.html", [
+      [ "IO::Astrodynamics::OccultationType", "classIO_1_1Astrodynamics_1_1OccultationType.html", "classIO_1_1Astrodynamics_1_1OccultationType" ]
+    ] ],
+    [ "StringHelpers.h", "StringHelpers_8h.html", [
+      [ "IO::Astrodynamics::StringHelpers", "classIO_1_1Astrodynamics_1_1StringHelpers.html", null ]
+    ] ]
 ];

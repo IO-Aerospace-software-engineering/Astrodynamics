@@ -5,15 +5,15 @@
 
 IO::Astrodynamics::Maneuvers::Attitudes::TowardObjectAttitude::TowardObjectAttitude(const std::vector<IO::Astrodynamics::Body::Spacecraft::Engine*>& engines,
                                                                           IO::Astrodynamics::Propagators::Propagator &propagator, const IO::Astrodynamics::Time::TimeSpan &attitudeHoldDuration,
-                                                                          const IO::Astrodynamics::Body::Body &targetBody) : IO::Astrodynamics::Maneuvers::ManeuverBase(engines, propagator,
-                                                                                                                                                    attitudeHoldDuration),
-                                                                                                                   m_targetBody{targetBody}
+                                                                          const IO::Astrodynamics::Body::CelestialItem &targetBody) : IO::Astrodynamics::Maneuvers::ManeuverBase(engines, propagator,
+                                                                                                                                                                                 attitudeHoldDuration),
+                                                                                                                                      m_targetBody{targetBody}
 {
 }
 
 IO::Astrodynamics::Maneuvers::Attitudes::TowardObjectAttitude::TowardObjectAttitude(const std::vector<IO::Astrodynamics::Body::Spacecraft::Engine*>& engines,
                                                                           IO::Astrodynamics::Propagators::Propagator &propagator, const IO::Astrodynamics::Time::TDB &minimumEpoch,
-                                                                          const IO::Astrodynamics::Time::TimeSpan &attitudeHoldDuration, const IO::Astrodynamics::Body::Body &targetBody)
+                                                                          const IO::Astrodynamics::Time::TimeSpan &attitudeHoldDuration, const IO::Astrodynamics::Body::CelestialItem &targetBody)
         : IO::Astrodynamics::Maneuvers::ManeuverBase(engines, propagator, minimumEpoch, attitudeHoldDuration), m_targetBody{targetBody}
 {
 }

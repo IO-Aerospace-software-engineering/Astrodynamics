@@ -121,11 +121,11 @@ TEST(PlaneChangingManeuver, CanExecute)
 
 // TEST(PlaneChangingManeuver, IdentifyNode)
 // {
-//     const auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399, "earth");
+//     const auto earth = std::make_shared<IO::Astrodynamics::CelestialItem::CelestialBody>(399, "earth");
 //     std::unique_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParams1 = std::make_unique<IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements>(earth, 11480000.0, 0.2, 60.0 * IO::Astrodynamics::Constants::DEG_RAD, 10.0 * IO::Astrodynamics::Constants::DEG_RAD, 0.0, 0.0, IO::Astrodynamics::Time::TDB(0.0s), IO::Astrodynamics::Frames::InertialFrames::GetICRF());
 //     std::unique_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParams2 = std::make_unique<IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements>(earth, 11480000.0, 0.2, 45.0 * IO::Astrodynamics::Constants::DEG_RAD, 55.0 * IO::Astrodynamics::Constants::DEG_RAD, 0.0, 0.0, IO::Astrodynamics::Time::TDB(0.0s), IO::Astrodynamics::Frames::InertialFrames::GetICRF());
 //     IO::Astrodynamics::OrbitalParameters::StateOrientation attitude(IO::Astrodynamics::Time::TDB(0.0s), IO::Astrodynamics::Frames::InertialFrames::GetICRF());
-//     IO::Astrodynamics::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams1)};
+//     IO::Astrodynamics::CelestialItem::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams1)};
 
 //     IO::Astrodynamics::Integrators::VVIntegrator integrator(IO::Astrodynamics::Time::TimeSpan(1.0s));
 //     IO::Astrodynamics::Propagators::Propagator prop(s, integrator, IO::Astrodynamics::Time::Window(IO::Astrodynamics::Time::TDB(100.0s), IO::Astrodynamics::Time::TDB(200.0s)));
@@ -135,7 +135,7 @@ TEST(PlaneChangingManeuver, CanExecute)
 
 //     auto engine1 = s.GetEngine("sn1");
 
-//     std::vector<IO::Astrodynamics::Body::Spacecraft::Engine> engines;
+//     std::vector<IO::Astrodynamics::CelestialItem::Spacecraft::Engine> engines;
 //     engines.push_back(*engine1);
 
 //     IO::Astrodynamics::Maneuvers::OrbitalPlaneChangingManeuver maneuver(engines, prop, orbitalParams2.get());
@@ -150,11 +150,11 @@ TEST(PlaneChangingManeuver, CanExecute)
 
 // TEST(PlaneChangingManeuver, IdentifyNode2)
 // {
-//     const auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399, "earth");
+//     const auto earth = std::make_shared<IO::Astrodynamics::CelestialItem::CelestialBody>(399, "earth");
 //     std::unique_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParams1 = std::make_unique<IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements>(earth, 11480000.0, 0.2, 60.0 * IO::Astrodynamics::Constants::DEG_RAD, 220.0 * IO::Astrodynamics::Constants::DEG_RAD, 0.0, 0.0, IO::Astrodynamics::Time::TDB(0.0s), IO::Astrodynamics::Frames::InertialFrames::GetICRF());
 //     std::unique_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParams2 = std::make_unique<IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements>(earth, 11480000.0, 0.2, 130.0 * IO::Astrodynamics::Constants::DEG_RAD, 55.0 * IO::Astrodynamics::Constants::DEG_RAD, 0.0, 0.0, IO::Astrodynamics::Time::TDB(0.0s), IO::Astrodynamics::Frames::InertialFrames::GetICRF());
 //     IO::Astrodynamics::OrbitalParameters::StateOrientation attitude(IO::Astrodynamics::Time::TDB(0.0s), IO::Astrodynamics::Frames::InertialFrames::GetICRF());
-//     IO::Astrodynamics::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams1)};
+//     IO::Astrodynamics::CelestialItem::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams1)};
 
 //     IO::Astrodynamics::Integrators::VVIntegrator integrator(IO::Astrodynamics::Time::TimeSpan(1.0s));
 //     IO::Astrodynamics::Propagators::Propagator prop(s, integrator, IO::Astrodynamics::Time::Window(IO::Astrodynamics::Time::TDB(100.0s), IO::Astrodynamics::Time::TDB(200.0s)));
@@ -164,7 +164,7 @@ TEST(PlaneChangingManeuver, CanExecute)
 
 //     auto engine1 = s.GetEngine("sn1");
 
-//     std::vector<IO::Astrodynamics::Body::Spacecraft::Engine> engines;
+//     std::vector<IO::Astrodynamics::CelestialItem::Spacecraft::Engine> engines;
 //     engines.push_back(*engine1);
 
 //     IO::Astrodynamics::Maneuvers::OrbitalPlaneChangingManeuver maneuver(engines, prop, orbitalParams2.get());
@@ -179,11 +179,11 @@ TEST(PlaneChangingManeuver, CanExecute)
 
 // TEST(PlaneChangingManeuver, IdentifyNode3)
 // {
-//     const auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399, "earth");
+//     const auto earth = std::make_shared<IO::Astrodynamics::CelestialItem::CelestialBody>(399, "earth");
 //     std::unique_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParams1 = std::make_unique<IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements>(earth, 11480000.0, 0.2, 140.0 * IO::Astrodynamics::Constants::DEG_RAD, 220.0 * IO::Astrodynamics::Constants::DEG_RAD, 70.0 * IO::Astrodynamics::Constants::DEG_RAD, 0.0, IO::Astrodynamics::Time::TDB(0.0s), IO::Astrodynamics::Frames::InertialFrames::GetICRF());
 //     std::unique_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParams2 = std::make_unique<IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements>(earth, 11480000.0, 0.2, 130.0 * IO::Astrodynamics::Constants::DEG_RAD, 300.0 * IO::Astrodynamics::Constants::DEG_RAD, 205.0 * IO::Astrodynamics::Constants::DEG_RAD, 0.0, IO::Astrodynamics::Time::TDB(0.0s), IO::Astrodynamics::Frames::InertialFrames::GetICRF());
 //     IO::Astrodynamics::OrbitalParameters::StateOrientation attitude(IO::Astrodynamics::Time::TDB(0.0s), IO::Astrodynamics::Frames::InertialFrames::GetICRF());
-//     IO::Astrodynamics::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams1)};
+//     IO::Astrodynamics::CelestialItem::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams1)};
 
 //     IO::Astrodynamics::Integrators::VVIntegrator integrator(IO::Astrodynamics::Time::TimeSpan(1.0s));
 //     IO::Astrodynamics::Propagators::Propagator prop(s, integrator, IO::Astrodynamics::Time::Window(IO::Astrodynamics::Time::TDB(100.0s), IO::Astrodynamics::Time::TDB(200.0s)));
@@ -193,7 +193,7 @@ TEST(PlaneChangingManeuver, CanExecute)
 
 //     auto engine1 = s.GetEngine("sn1");
 
-//     std::vector<IO::Astrodynamics::Body::Spacecraft::Engine> engines;
+//     std::vector<IO::Astrodynamics::CelestialItem::Spacecraft::Engine> engines;
 //     engines.push_back(*engine1);
 
 //     IO::Astrodynamics::Maneuvers::OrbitalPlaneChangingManeuver maneuver(engines, prop, orbitalParams2.get());
@@ -415,9 +415,9 @@ TEST(PlaneChangingManeuver, ExecuteAN)
 TEST(PlaneChangingManeuver, CheckOrbitalParametersToHigherInclination)
 {
     //=======================Configure universe topology======================================
-    // auto sun = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(10, "sun");
+    // auto sun = std::make_shared<IO::Astrodynamics::CelestialItem::CelestialBody>(10, "sun");
     auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399);
-    // auto moon = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(301, "moon", earth);
+    // auto moon = std::make_shared<IO::Astrodynamics::CelestialItem::CelestialBody>(301, "moon", earth);
 
     //Define parking orbit
     auto parkingOrbit = std::make_shared<IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements>(earth,
@@ -504,9 +504,9 @@ TEST(PlaneChangingManeuver, CheckOrbitalParametersToHigherInclination)
 TEST(PlaneChangingManeuver, CheckOrbitalParametersToLowerInclination)
 {
     //=======================Configure universe topology======================================
-    // auto sun = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(10, "sun");
+    // auto sun = std::make_shared<IO::Astrodynamics::CelestialItem::CelestialBody>(10, "sun");
     auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399);
-    // auto moon = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(301, "moon", earth);
+    // auto moon = std::make_shared<IO::Astrodynamics::CelestialItem::CelestialBody>(301, "moon", earth);
 
     //Define parking orbit
     auto parkingOrbit = std::make_shared<IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements>(earth,

@@ -8,14 +8,14 @@
 #include <string>
 #include <cmath>
 
-#include <Body.h>
+#include <CelestialItem.h>
 #include <BodyFixedFrames.h>
 #include <TDB.h>
 #include <Planetographic.h>
 
 namespace IO::Astrodynamics::Body
 {
-	class CelestialBody final : public IO::Astrodynamics::Body::Body
+	class CelestialBody final : public IO::Astrodynamics::Body::CelestialItem
     {
 	private:
 		
@@ -97,6 +97,7 @@ namespace IO::Astrodynamics::Body
         static bool IsPlanet(int celestialBodyId);
         static bool IsAsteroid(int celestialBodyId);
         static bool IsMoon(int celestialBodyId);
+        static bool IsLagrangePoint(int celestialBodyId);
         static int FindCenterOfMotionId(int celestialBodyNaifId);
         static int FindBarycenterOfMotionId(int celestialBodyNaifId);
         static bool IsBarycenter(int celestialBodyId);

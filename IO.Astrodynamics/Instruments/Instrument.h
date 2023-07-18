@@ -155,7 +155,7 @@ namespace IO::Astrodynamics::Instruments
          * @return std::vector<IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB>>
          */
         [[nodiscard]] std::vector<IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB>>
-        FindWindowsWhereInFieldOfView(const IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB> &searchWindow, const IO::Astrodynamics::Body::Body &targetBody,
+        FindWindowsWhereInFieldOfView(const IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB> &searchWindow, const IO::Astrodynamics::Body::CelestialItem &targetBody,
                                       const IO::Astrodynamics::AberrationsEnum &aberration, const IO::Astrodynamics::Time::TimeSpan &stepSize) const;
 
 

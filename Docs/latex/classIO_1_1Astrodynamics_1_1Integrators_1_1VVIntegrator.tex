@@ -19,7 +19,7 @@ Inheritance diagram for IO\+::Astrodynamics\+::Integrators\+::VVIntegrator\+:\be
 \begin{DoxyCompactList}\small\item\em Construct a new \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Integrators_1_1VVIntegrator}{VVIntegrator}} object. \end{DoxyCompactList}\item 
 \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Integrators_1_1VVIntegrator_ab2cb6cf40c4e69932f04248f79b252d5}{$\sim$\+VVIntegrator}} ()
 \begin{DoxyCompactList}\small\item\em Destroy the \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Integrators_1_1VVIntegrator}{VVIntegrator}} object. \end{DoxyCompactList}\item 
-\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+State\+Vector}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Integrators_1_1VVIntegrator_adbd4a187190f7c07f5817c34e2062faa}{Integrate}} (const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Body}{IO\+::\+Astrodynamics\+::\+Body\+::\+Body}} \&body, const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+State\+Vector}} \&state\+Vector) override
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+State\+Vector}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Integrators_1_1VVIntegrator_a7d6e2fa7934999d059adef1a7769feae}{Integrate}} (const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem}{IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Item}} \&body, const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+State\+Vector}} \&state\+Vector) override
 \begin{DoxyCompactList}\small\item\em Integrate forces. \end{DoxyCompactList}\end{DoxyCompactItemize}
 \doxysubsection*{Additional Inherited Members}
 
@@ -70,11 +70,11 @@ Destroy the \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Integrators_1_1VVIntegr
 
 
 \doxysubsection{Member Function Documentation}
-\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Integrators_1_1VVIntegrator_adbd4a187190f7c07f5817c34e2062faa}\label{classIO_1_1Astrodynamics_1_1Integrators_1_1VVIntegrator_adbd4a187190f7c07f5817c34e2062faa}} 
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Integrators_1_1VVIntegrator_a7d6e2fa7934999d059adef1a7769feae}\label{classIO_1_1Astrodynamics_1_1Integrators_1_1VVIntegrator_a7d6e2fa7934999d059adef1a7769feae}} 
 \index{IO::Astrodynamics::Integrators::VVIntegrator@{IO::Astrodynamics::Integrators::VVIntegrator}!Integrate@{Integrate}}
 \index{Integrate@{Integrate}!IO::Astrodynamics::Integrators::VVIntegrator@{IO::Astrodynamics::Integrators::VVIntegrator}}
 \doxysubsubsection{\texorpdfstring{Integrate()}{Integrate()}}
-{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+State\+Vector}} IO\+::\+Astrodynamics\+::\+Integrators\+::\+VVIntegrator\+::\+Integrate (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Body}{IO\+::\+Astrodynamics\+::\+Body\+::\+Body}} \&}]{body,  }\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+State\+Vector}} \&}]{state\+Vector }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+State\+Vector}} IO\+::\+Astrodynamics\+::\+Integrators\+::\+VVIntegrator\+::\+Integrate (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem}{IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Item}} \&}]{body,  }\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+State\+Vector}} \&}]{state\+Vector }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
 
 
 
@@ -92,7 +92,7 @@ Integrate forces.
 \end{DoxyReturn}
 
 
-Implements \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Integrators_1_1IntegratorBase_a2a2265c779fee68297534c1e9a4e388d}{IO\+::\+Astrodynamics\+::\+Integrators\+::\+Integrator\+Base}}.
+Implements \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Integrators_1_1IntegratorBase_a15bf1f86f0dd4691b833e18fececea8a}{IO\+::\+Astrodynamics\+::\+Integrators\+::\+Integrator\+Base}}.
 
 
 

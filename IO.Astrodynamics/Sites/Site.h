@@ -92,7 +92,7 @@ namespace IO::Astrodynamics::Sites
          * @param epoch 
          * @return IO::Astrodynamics::Coordinates::Equatorial
          */
-        [[nodiscard]] IO::Astrodynamics::Coordinates::Equatorial GetRADec(const IO::Astrodynamics::Body::Body &body, IO::Astrodynamics::AberrationsEnum aberrationCorrection, const IO::Astrodynamics::Time::TDB &epoch) const;
+        [[nodiscard]] IO::Astrodynamics::Coordinates::Equatorial GetRADec(const IO::Astrodynamics::Body::CelestialItem &body, IO::Astrodynamics::AberrationsEnum aberrationCorrection, const IO::Astrodynamics::Time::TDB &epoch) const;
 
         /**
          * @brief Get rectangular position
@@ -158,7 +158,7 @@ namespace IO::Astrodynamics::Sites
          * @return std::vector<IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::UTC>>
          */
         [[nodiscard]] std::vector<IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::UTC>>
-        FindWindowsOnIlluminationConstraint(const IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::UTC> &searchWindow, const IO::Astrodynamics::Body::Body &observerBody,
+        FindWindowsOnIlluminationConstraint(const IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::UTC> &searchWindow, const IO::Astrodynamics::Body::CelestialItem &observerBody,
                                             const IO::Astrodynamics::IlluminationAngle &illuminationAngle, const IO::Astrodynamics::Constraints::RelationalOperator &constraint, double value) const;
 
         /**
@@ -169,7 +169,7 @@ namespace IO::Astrodynamics::Sites
          * @return IO::Astrodynamics::Coordinates::HorizontalCoordinates
          */
         [[nodiscard]] IO::Astrodynamics::Coordinates::HorizontalCoordinates
-        GetHorizontalCoordinates(const IO::Astrodynamics::Body::Body &body, IO::Astrodynamics::AberrationsEnum aberrationCorrection, const IO::Astrodynamics::Time::TDB &epoch) const;
+        GetHorizontalCoordinates(const IO::Astrodynamics::Body::CelestialItem &body, IO::Astrodynamics::AberrationsEnum aberrationCorrection, const IO::Astrodynamics::Time::TDB &epoch) const;
 
 
         /**
@@ -181,12 +181,12 @@ namespace IO::Astrodynamics::Sites
          * @return IO::Astrodynamics::OrbitalParameters::StateVector
          */
         [[nodiscard]] IO::Astrodynamics::OrbitalParameters::StateVector
-        GetStateVector(const IO::Astrodynamics::Body::Body &body, const IO::Astrodynamics::Frames::Frames& frame, IO::Astrodynamics::AberrationsEnum aberrationCorrection,
+        GetStateVector(const IO::Astrodynamics::Body::CelestialItem &body, const IO::Astrodynamics::Frames::Frames& frame, IO::Astrodynamics::AberrationsEnum aberrationCorrection,
                        const IO::Astrodynamics::Time::TDB &epoch) const;
 
 
         [[nodiscard]] std::vector<IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::UTC>>
-        FindBodyVisibilityWindows(const IO::Astrodynamics::Body::Body &body, const IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::UTC> &searchWindow,
+        FindBodyVisibilityWindows(const IO::Astrodynamics::Body::CelestialItem &body, const IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::UTC> &searchWindow,
                                   IO::Astrodynamics::AberrationsEnum aberrationCorrection) const;
 
         /**

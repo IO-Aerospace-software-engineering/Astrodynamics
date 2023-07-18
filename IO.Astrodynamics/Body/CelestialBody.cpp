@@ -14,10 +14,10 @@
 
 using namespace std::chrono_literals;
 
-IO::Astrodynamics::Body::CelestialBody::CelestialBody(const int id, std::shared_ptr<IO::Astrodynamics::Body::CelestialBody> &centerOfMotion) : IO::Astrodynamics::Body::Body(id, "",
+IO::Astrodynamics::Body::CelestialBody::CelestialBody(const int id, std::shared_ptr<IO::Astrodynamics::Body::CelestialBody> &centerOfMotion) : IO::Astrodynamics::Body::CelestialItem(id, "",
                                                                                                                                                                              ReadGM(id) /
                                                                                                                                                                              IO::Astrodynamics::Constants::G,
-                                                                                                                                                                             centerOfMotion),
+                                                                                                                                                                                      centerOfMotion),
                                                                                                                                                m_BodyFixedFrame{""}
 {
     const_cast<double &>(m_sphereOfInfluence) = IO::Astrodynamics::Body::SphereOfInfluence(m_orbitalParametersAtEpoch->GetSemiMajorAxis(),
@@ -29,7 +29,7 @@ IO::Astrodynamics::Body::CelestialBody::CelestialBody(const int id, std::shared_
     bodc2n_c(id, 32, name, &found);
     if (!found)
     {
-        throw IO::Astrodynamics::Exception::SDKException("Body id" + std::to_string(id) + " can't be found");
+        throw IO::Astrodynamics::Exception::SDKException("CelestialItem id" + std::to_string(id) + " can't be found");
     }
 
     const_cast<std::string &>(m_name) = name;
@@ -48,7 +48,7 @@ IO::Astrodynamics::Body::CelestialBody::CelestialBody(const int id, std::shared_
     }
 }
 
-IO::Astrodynamics::Body::CelestialBody::CelestialBody(const int id) : IO::Astrodynamics::Body::Body(id, "", ReadGM(id) / IO::Astrodynamics::Constants::G),
+IO::Astrodynamics::Body::CelestialBody::CelestialBody(const int id) : IO::Astrodynamics::Body::CelestialItem(id, "", ReadGM(id) / IO::Astrodynamics::Constants::G),
                                                                       m_BodyFixedFrame{""}
 {
     SpiceBoolean found;
@@ -56,7 +56,7 @@ IO::Astrodynamics::Body::CelestialBody::CelestialBody(const int id) : IO::Astrod
     bodc2n_c(id, 32, name, &found);
     if (!found)
     {
-        throw IO::Astrodynamics::Exception::SDKException("Body id" + std::to_string(id) + " can't be found");
+        throw IO::Astrodynamics::Exception::SDKException("CelestialItem id" + std::to_string(id) + " can't be found");
     }
     const_cast<std::string &>(m_name) = name;
     if (IsPlanet(id) || IsMoon(id) || IsSun(id))
@@ -210,6 +210,16 @@ int IO::Astrodynamics::Body::CelestialBody::FindBarycenterOfMotionId(int celesti
         return (int) (celestialBodyNaifId / 100);
     }
 
+    if (IO::Astrodynamics::Body::CelestialBody::IsLagrangePoint(celestialBodyNaifId))
+    {
+        if (celestialBodyNaifId == 391 || celestialBodyNaifId == 392)
+        {
+            return (int) (celestialBodyNaifId / 100);
+        }
+
+        return 0;
+    }
+
     throw IO::Astrodynamics::Exception::InvalidArgumentException(std::string("Invalid Naif Id : ") + std::to_string(celestialBodyNaifId));
 }
 
@@ -230,6 +240,21 @@ int IO::Astrodynamics::Body::CelestialBody::FindCenterOfMotionId(int celestialBo
         return celestialBodyNaifId - (celestialBodyNaifId % 100) + 99;
     }
 
+    if (IO::Astrodynamics::Body::CelestialBody::IsLagrangePoint(celestialBodyNaifId))
+    {
+        if (celestialBodyNaifId == 391 || celestialBodyNaifId == 392)
+        {
+            return (int) (celestialBodyNaifId / 100);
+        }
+
+        return 10;
+    }
+
     throw IO::Astrodynamics::Exception::InvalidArgumentException(std::string("Invalid Naif Id : ") + std::to_string(celestialBodyNaifId));
+}
+
+bool IO::Astrodynamics::Body::CelestialBody::IsLagrangePoint(int celestialBodyId)
+{
+    return celestialBodyId == 391 || celestialBodyId == 392 || celestialBodyId == 393 || celestialBodyId == 394;
 }
 

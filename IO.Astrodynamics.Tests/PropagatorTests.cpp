@@ -166,7 +166,7 @@ TEST(Propagator, PropagatorVsKepler)
     IO::Astrodynamics::Integrators::VVIntegrator integrator(step, forces);
 
     IO::Astrodynamics::Time::TDB epoch("2021-Jan-01 00:00:00.0000 TDB");
-    // auto sun = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(10, "sun");
+    // auto sun = std::make_shared<IO::Astrodynamics::CelestialItem::CelestialBody>(10, "sun");
 
     //  2459215.500000000 = A.D. 2021-Jan-01 00:00:00.0000 TDB [del_T=     69.183909 s]
     //  X =-2.679537555216521E+07 Y = 1.327011135216045E+08 Z = 5.752533467064925E+07
@@ -178,7 +178,7 @@ TEST(Propagator, PropagatorVsKepler)
     //  2459215.500000000 = A.D. 2021-Jan-01 00:00:00.0000 TDB [del_T=     69.183909 s]
     //  X =-2.068864826237993E+05 Y = 2.891146390982051E+05 Z = 1.515746884380044E+05
     //  VX=-8.366764389833921E-01 VY=-5.602543663174073E-01 VZ=-1.710459390585548E-01
-    // auto moon = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(301, "moon", earth);
+    // auto moon = std::make_shared<IO::Astrodynamics::CelestialItem::CelestialBody>(301, "moon", earth);
     std::unique_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::Astrodynamics::OrbitalParameters::StateVector>(earth, IO::Astrodynamics::Math::Vector3D(a, 0.0, 0.0), IO::Astrodynamics::Math::Vector3D(0.0, v, 0.0), epoch, IO::Astrodynamics::Frames::InertialFrames::GetICRF());
     auto localOrbitalparams = dynamic_cast<IO::Astrodynamics::OrbitalParameters::StateVector *>(orbitalParams.get());
     IO::Astrodynamics::OrbitalParameters::StateOrientation attitude(IO::Astrodynamics::Time::TDB(100.0s), IO::Astrodynamics::Frames::InertialFrames::GetICRF());
@@ -247,7 +247,7 @@ TEST(Propagator, PropagatorVsKepler2)
 
     IO::Astrodynamics::Time::TDB startEpoch("2021-Jan-01 00:00:00.0000 TDB");
     IO::Astrodynamics::Time::TDB endEpoch("2021-Jan-02 00:00:00.0000 TDB");
-    // auto sun = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(10, "sun");
+    // auto sun = std::make_shared<IO::Astrodynamics::CelestialItem::CelestialBody>(10, "sun");
 
     //  2459215.500000000 = A.D. 2021-Jan-01 00:00:00.0000 TDB [del_T=     69.183909 s]
     //  X =-2.679537555216521E+07 Y = 1.327011135216045E+08 Z = 5.752533467064925E+07
@@ -259,7 +259,7 @@ TEST(Propagator, PropagatorVsKepler2)
     //  2459215.500000000 = A.D. 2021-Jan-01 00:00:00.0000 TDB [del_T=     69.183909 s]
     //  X =-2.068864826237993E+05 Y = 2.891146390982051E+05 Z = 1.515746884380044E+05
     //  VX=-8.366764389833921E-01 VY=-5.602543663174073E-01 VZ=-1.710459390585548E-01
-    // auto moon = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(301, "moon", earth);
+    // auto moon = std::make_shared<IO::Astrodynamics::CelestialItem::CelestialBody>(301, "moon", earth);
     std::unique_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements>(earth, 10000000.0, 0.3, 0.0, 0.0, 0.0, 0.0, startEpoch, IO::Astrodynamics::Frames::InertialFrames::GetICRF());
     auto localOrbitalparams = dynamic_cast<IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements *>(orbitalParams.get());
     IO::Astrodynamics::Body::Spacecraft::Spacecraft spc(-12, "spc12", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams));

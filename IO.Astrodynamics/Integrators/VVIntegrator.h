@@ -14,7 +14,7 @@
 #include <TimeSpan.h>
 #include <StateVector.h>
 #include <Vector3D.h>
-#include <Body.h>
+#include <CelestialItem.h>
 #include <CelestialBody.h>
 #include <optional>
 
@@ -32,7 +32,7 @@ namespace IO::Astrodynamics::Integrators
         std::vector<IO::Astrodynamics::Integrators::Forces::Force *> m_forces{};
         std::optional<IO::Astrodynamics::Math::Vector3D> m_acceleration{std::nullopt};
 
-        [[nodiscard]] IO::Astrodynamics::Math::Vector3D ComputeAcceleration(const IO::Astrodynamics::Body::Body &body, const IO::Astrodynamics::OrbitalParameters::StateVector &stateVector) const;
+        [[nodiscard]] IO::Astrodynamics::Math::Vector3D ComputeAcceleration(const IO::Astrodynamics::Body::CelestialItem &body, const IO::Astrodynamics::OrbitalParameters::StateVector &stateVector) const;
 
     public:
         /**
@@ -63,7 +63,7 @@ namespace IO::Astrodynamics::Integrators
          * @param stateVector 
          * @return IO::Astrodynamics::OrbitalParameters::StateVector
          */
-        IO::Astrodynamics::OrbitalParameters::StateVector Integrate(const IO::Astrodynamics::Body::Body &body, const IO::Astrodynamics::OrbitalParameters::StateVector &stateVector) override;
+        IO::Astrodynamics::OrbitalParameters::StateVector Integrate(const IO::Astrodynamics::Body::CelestialItem &body, const IO::Astrodynamics::OrbitalParameters::StateVector &stateVector) override;
     };
 
 }

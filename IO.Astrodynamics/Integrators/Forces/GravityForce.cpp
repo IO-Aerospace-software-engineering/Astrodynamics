@@ -12,7 +12,7 @@ IO::Astrodynamics::Integrators::Forces::GravityForce::GravityForce(/* args */)
 
 IO::Astrodynamics::Integrators::Forces::GravityForce::~GravityForce() = default;
 
-IO::Astrodynamics::Math::Vector3D IO::Astrodynamics::Integrators::Forces::GravityForce::Apply(const IO::Astrodynamics::Body::Body &body, const IO::Astrodynamics::OrbitalParameters::StateVector &stateVector) {
+IO::Astrodynamics::Math::Vector3D IO::Astrodynamics::Integrators::Forces::GravityForce::Apply(const IO::Astrodynamics::Body::CelestialItem &body, const IO::Astrodynamics::OrbitalParameters::StateVector &stateVector) {
     //Compute force from his major body
     double bodyMass = body.GetMass();
     IO::Astrodynamics::Math::Vector3D position{stateVector.GetPosition()};
@@ -21,7 +21,7 @@ IO::Astrodynamics::Math::Vector3D IO::Astrodynamics::Integrators::Forces::Gravit
     //Each body is under sphere of influence of his major body
     //So Spacecraft is influenced by his center of motion and his parents
     //Eg. Sun->Earth->Moon->Spacecraft
-    std::shared_ptr<IO::Astrodynamics::Body::Body> currentBody = stateVector.GetCenterOfMotion();
+    std::shared_ptr<IO::Astrodynamics::Body::CelestialItem> currentBody = stateVector.GetCenterOfMotion();
     while (currentBody->GetOrbitalParametersAtEpoch()) {
         //Compute vector state
         position=position+ currentBody->ReadEphemeris(stateVector.GetFrame(), AberrationsEnum::None, stateVector.GetEpoch(),
