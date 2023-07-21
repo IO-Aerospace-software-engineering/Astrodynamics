@@ -26,7 +26,6 @@ namespace IO::Astrodynamics::API::DTO
 
         double fieldOfView{};
         double crossAngle{};
-//        IO::Astrodynamics::API::DTO::InFieldOfViewConstraintDTO inFieldOfViews[10];
     };
 
 }

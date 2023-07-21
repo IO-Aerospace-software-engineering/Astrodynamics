@@ -187,7 +187,7 @@ void IO::Astrodynamics::Maneuvers::ManeuverBase::ExecuteAt(const IO::Astrodynami
     //Write end maneuver data only if is not punctual maneuver
     if (m_attitudeWindow->GetLength().GetSeconds().count() > 0.0)
     {
-        const double stepSize{30};
+        const double stepSize{1};
         //Compute attitude until the end every 5 minutes
         auto remainingTime = m_attitudeWindow->GetEndDate() - maneuverPoint.GetEpoch();
         int interval = remainingTime.GetSeconds().count() / stepSize;

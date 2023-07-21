@@ -170,6 +170,94 @@ TEST(API, SpacecraftPropagation)
     ASSERT_STREQ("2021-03-04 00:31:44.178432 (TDB)", tdbEnd.ToString().c_str());
 }
 
+TEST(API, SpacecraftPropagation2)
+{
+    //Configure Scenario
+    IO::Astrodynamics::API::DTO::ScenarioDTO scenario{};
+    scenario.Name = "scenatiosites";
+    scenario.Window.start = 0.0;
+    scenario.Window.end = 86400.0;
+
+    //Add additional celestial bodies involved
+    scenario.AdditionalCelestialBodiesId[0] = 301;
+
+    std::string sitePath(SitePath);
+
+    scenario.Sites[0].id = 399033;
+    scenario.Sites[0].name = "S33";
+    scenario.Sites[0].directoryPath = sitePath.c_str();
+    scenario.Sites[0].bodyId = 399;
+    scenario.Sites[0].coordinates.longitude = 30 * IO::Astrodynamics::Constants::DEG_RAD;
+    scenario.Sites[0].coordinates.latitude = 10 * IO::Astrodynamics::Constants::DEG_RAD;
+    scenario.Sites[0].coordinates.altitude = 1000.0;
+
+    //Add and configure spacecraft
+    scenario.Spacecraft.id = -1112;
+    scenario.Spacecraft.name = "spc12";
+    scenario.Spacecraft.dryOperatingMass = 1000.0;
+    scenario.Spacecraft.maximumOperatingMass = 10000.0;
+    std::string spacecraftPath(SpacecraftPath);
+    scenario.Spacecraft.directoryPath = spacecraftPath.c_str();
+    scenario.Spacecraft.initialOrbitalParameter.centerOfMotionId = 399;
+    scenario.Spacecraft.initialOrbitalParameter.epoch = 0.0;
+    scenario.Spacecraft.initialOrbitalParameter.inertialFrame = IO::Astrodynamics::Frames::InertialFrames::GetICRF().ToCharArray();
+    scenario.Spacecraft.initialOrbitalParameter.position.x = 6800000.0;
+    scenario.Spacecraft.initialOrbitalParameter.position.y = 0.0;
+    scenario.Spacecraft.initialOrbitalParameter.position.z = 0.0;
+    scenario.Spacecraft.initialOrbitalParameter.velocity.x = 0.0;
+    scenario.Spacecraft.initialOrbitalParameter.velocity.y = 8000.0;
+    scenario.Spacecraft.initialOrbitalParameter.velocity.z = 0.0;
+
+    scenario.Spacecraft.instruments[0].id=-1112030;
+    scenario.Spacecraft.instruments[0].name="instru30";
+    scenario.Spacecraft.instruments[0].crossAngle=1;
+    scenario.Spacecraft.instruments[0].fieldOfView=1;
+    scenario.Spacecraft.instruments[0].fovRefVector.x=1;
+    scenario.Spacecraft.instruments[0].fovRefVector.y=0;
+    scenario.Spacecraft.instruments[0].fovRefVector.z=0;
+    scenario.Spacecraft.instruments[0].boresight.x=0;
+    scenario.Spacecraft.instruments[0].boresight.y=0;
+    scenario.Spacecraft.instruments[0].boresight.z=1;
+    scenario.Spacecraft.instruments[0].shape="circular";
+
+    //Add a fuel tank to spacecraft
+    scenario.Spacecraft.fuelTank[0].id = 1;
+    scenario.Spacecraft.fuelTank[0].serialNumber = "ft1";
+    scenario.Spacecraft.fuelTank[0].capacity = 9000;
+    scenario.Spacecraft.fuelTank[0].quantity = 9000;
+
+    //Add engine to spacecraft
+    scenario.Spacecraft.engines[0].id = 1;
+    scenario.Spacecraft.engines[0].name = "eng1";
+    scenario.Spacecraft.engines[0].serialNumber = "eng1";
+    scenario.Spacecraft.engines[0].fuelTankSerialNumber = "ft1";
+    scenario.Spacecraft.engines[0].fuelFlow = 50.0;
+    scenario.Spacecraft.engines[0].isp = 450.0;
+
+    //Add payload to spacecraft
+    scenario.Spacecraft.payloads[0].serialNumber = "pl1";
+    scenario.Spacecraft.payloads[0].name = "pl1";
+    scenario.Spacecraft.payloads[0].mass = 50;
+
+    //Configure orbital maneuver
+    scenario.Spacecraft.pointingToAttitudes[0].maneuverOrder = 0;
+    scenario.Spacecraft.pointingToAttitudes[0].engines[0] = "eng1";
+    scenario.Spacecraft.pointingToAttitudes[0].minimumEpoch = 10.0;
+    scenario.Spacecraft.pointingToAttitudes[0].attitudeHoldDuration = 60.0;
+    scenario.Spacecraft.pointingToAttitudes[0].targetId = 399;
+    scenario.Spacecraft.pointingToAttitudes[0].instrumentId = -1112030;
+
+    //Execute propagation
+    PropagateSpacecraftProxy(scenario);
+
+    IO::Astrodynamics::Time::TDB tdbStart(
+            std::chrono::duration<double>(scenario.Spacecraft.pointingToAttitudes[0].window.start));
+    IO::Astrodynamics::Time::TDB tdbEnd(
+            std::chrono::duration<double>(scenario.Spacecraft.pointingToAttitudes[0].window.end));
+    ASSERT_STREQ("2021-03-04 00:31:35.852047 (TDB)", tdbStart.ToString().c_str());
+    ASSERT_STREQ("2021-03-04 00:31:44.178432 (TDB)", tdbEnd.ToString().c_str());
+}
+
 TEST(API, FindWindowsOnCoordinateConstraintProxy)
 {
     IO::Astrodynamics::API::DTO::WindowDTO windows[1000];
