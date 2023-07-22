@@ -145,3 +145,4 @@ void IO::Astrodynamics::Propagators::Propagator::ClearStateOrientations()
         so.clear();
     }
 }
+
