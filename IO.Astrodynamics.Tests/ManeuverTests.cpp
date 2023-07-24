@@ -1,3 +1,7 @@
+/*
+ Copyright (c) 2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
+ */
+
 #include <gtest/gtest.h>
 #include <Engine.h>
 #include <Spacecraft.h>
@@ -90,12 +94,13 @@ TEST(Maneuvers, Execute)
     ASSERT_EQ(IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB>(IO::Astrodynamics::Time::TDB(122.92577932661605s), IO::Astrodynamics::Time::TimeSpan(14.148441346767905s)), *maneuver.GetThrustWindow());
 
     //Check maneuver actions on propagator
-    ASSERT_EQ(5, pro.GetStateVectors().size());
+    ASSERT_EQ(13, pro.GetStateVectors().size());
     ASSERT_EQ(IO::Astrodynamics::Time::TDB(100.0s), pro.GetStateVectors()[0].GetEpoch());
     ASSERT_EQ(IO::Astrodynamics::Time::TDB(110.0s), pro.GetStateVectors()[1].GetEpoch());
     ASSERT_EQ(IO::Astrodynamics::Time::TDB(120.0s), pro.GetStateVectors()[2].GetEpoch());
-    ASSERT_EQ(IO::Astrodynamics::Time::TDB(122.92577932661605s), pro.GetStateVectors()[3].GetEpoch());
-    ASSERT_EQ(IO::Astrodynamics::Time::TDB(122.92577932661605s + 14.148441346767905s), pro.GetStateVectors()[4].GetEpoch());
+    ASSERT_EQ(IO::Astrodynamics::Time::TDB(122.92577932661605s), pro.GetStateVectors()[3].GetEpoch());//epoch at maneuver start point
+    ASSERT_EQ(IO::Astrodynamics::Time::TDB(130s).GetSecondsFromJ2000().count(), pro.GetStateVectors()[4].GetEpoch().GetSecondsFromJ2000().count());//epoch at maneuver point
+    ASSERT_EQ(IO::Astrodynamics::Time::TDB(131s).GetSecondsFromJ2000().count(), pro.GetStateVectors()[5].GetEpoch().GetSecondsFromJ2000().count());// epoch 1s after maneuver point
 
     //Check Spacecraft
     auto totalMass = s.GetMass();

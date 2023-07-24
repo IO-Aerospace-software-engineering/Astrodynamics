@@ -29,31 +29,38 @@
 \DoxyCodeLine{25         std::vector<std::vector<IO::Astrodynamics::OrbitalParameters::StateOrientation>> m\_StateOrientations\{\};}
 \DoxyCodeLine{26 }
 \DoxyCodeLine{27     \textcolor{keyword}{public}:}
-\DoxyCodeLine{35         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Propagators_1_1Propagator_aec2ac1ddf80cc759abc86e208add954a}{Propagator}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft}{IO::Astrodynamics::Body::Spacecraft::Spacecraft}} \&spacecraft, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Integrators_1_1IntegratorBase}{IO::Astrodynamics::Integrators::IntegratorBase}} \&integrator, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB>}} \&window);}
-\DoxyCodeLine{36 }
-\DoxyCodeLine{42         \textcolor{keywordtype}{void} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Propagators_1_1Propagator_acb37ae36eeffaf245fd6b249ffb4c854}{SetStandbyManeuver}}(\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase}{IO::Astrodynamics::Maneuvers::ManeuverBase}} *standbyManeuver);}
-\DoxyCodeLine{43 }
-\DoxyCodeLine{48         \textcolor{keywordtype}{void} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Propagators_1_1Propagator_ada4ed9e74a064ea16ff264dc7159254a}{Propagate}}();}
-\DoxyCodeLine{49 }
-\DoxyCodeLine{56         [[nodiscard]] \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}{IO::Astrodynamics::OrbitalParameters::StateVector}} *\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Propagators_1_1Propagator_a233c976488761d5e3b22bd3ebb31a164}{FindNearestLowerStateVector}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO::Astrodynamics::Time::TDB}} \&epoch) \textcolor{keyword}{const};}
-\DoxyCodeLine{57 }
-\DoxyCodeLine{63         \textcolor{keywordtype}{void} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Propagators_1_1Propagator_a4c65ecdbdf5b049d5c08c8564e9a7ac7}{AddStateVector}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}{IO::Astrodynamics::OrbitalParameters::StateVector}} \&sv);}
-\DoxyCodeLine{64 }
-\DoxyCodeLine{70         \textcolor{keywordtype}{void} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Propagators_1_1Propagator_a48c75610ecaa35ae079b0686e1c8ba3a}{AddStateOrientation}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateOrientation}{IO::Astrodynamics::OrbitalParameters::StateOrientation}} \&so);}
-\DoxyCodeLine{71 }
-\DoxyCodeLine{77         \textcolor{keywordtype}{void} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Propagators_1_1Propagator_a142c4a8e2e10d774a1ecd2144aa34f2c}{EraseDataFromEpochToEnd}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1DateTime}{IO::Astrodynamics::Time::DateTime}} \&epoch);}
-\DoxyCodeLine{78 }
-\DoxyCodeLine{84         [[nodiscard]] \textcolor{keyword}{const} std::vector<IO::Astrodynamics::OrbitalParameters::StateVector> \&\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Propagators_1_1Propagator_a23c4c43654b37de7cc7a6a87dd250243}{GetStateVectors}}() \textcolor{keyword}{const};}
-\DoxyCodeLine{85 }
-\DoxyCodeLine{89         \textcolor{keywordtype}{void} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Propagators_1_1Propagator_a0aa5f3fef4cb44a5c54a235cd85ec2a3}{ClearStateOrientations}}();}
-\DoxyCodeLine{90 }
-\DoxyCodeLine{95         [[nodiscard]] \textcolor{keyword}{const} std::vector<std::vector<IO::Astrodynamics::OrbitalParameters::StateOrientation>>\& \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Propagators_1_1Propagator_a6efe99e4bd43eb44bbe9ea11e1ef9ea4}{GetStateOrientations}}() \textcolor{keyword}{const};}
-\DoxyCodeLine{96 }
-\DoxyCodeLine{102         [[nodiscard]] \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateOrientation}{IO::Astrodynamics::OrbitalParameters::StateOrientation}}* \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Propagators_1_1Propagator_a2292d3b1f1ce6446f067777348dd2bb4}{GetLatestStateOrientation}}() \textcolor{keyword}{const};}
-\DoxyCodeLine{103     \};}
+\DoxyCodeLine{35         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Propagators_1_1Propagator_aec2ac1ddf80cc759abc86e208add954a}{Propagator}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft}{IO::Astrodynamics::Body::Spacecraft::Spacecraft}} \&spacecraft, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Integrators_1_1IntegratorBase}{IO::Astrodynamics::Integrators::IntegratorBase}} \&integrator,}
+\DoxyCodeLine{36                    \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB>}} \&window);}
+\DoxyCodeLine{37 }
+\DoxyCodeLine{43         \textcolor{keywordtype}{void} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Propagators_1_1Propagator_acb37ae36eeffaf245fd6b249ffb4c854}{SetStandbyManeuver}}(\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverBase}{IO::Astrodynamics::Maneuvers::ManeuverBase}} *standbyManeuver);}
+\DoxyCodeLine{44 }
+\DoxyCodeLine{49         \textcolor{keywordtype}{void} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Propagators_1_1Propagator_ada4ed9e74a064ea16ff264dc7159254a}{Propagate}}();}
+\DoxyCodeLine{50 }
+\DoxyCodeLine{57         [[nodiscard]] \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}{IO::Astrodynamics::OrbitalParameters::StateVector}} *\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Propagators_1_1Propagator_a233c976488761d5e3b22bd3ebb31a164}{FindNearestLowerStateVector}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO::Astrodynamics::Time::TDB}} \&epoch) \textcolor{keyword}{const};}
+\DoxyCodeLine{58 }
+\DoxyCodeLine{64         \textcolor{keywordtype}{void} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Propagators_1_1Propagator_a4c65ecdbdf5b049d5c08c8564e9a7ac7}{AddStateVector}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}{IO::Astrodynamics::OrbitalParameters::StateVector}} \&sv);}
+\DoxyCodeLine{65 }
+\DoxyCodeLine{71         \textcolor{keywordtype}{void} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Propagators_1_1Propagator_a48c75610ecaa35ae079b0686e1c8ba3a}{AddStateOrientation}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateOrientation}{IO::Astrodynamics::OrbitalParameters::StateOrientation}} \&so);}
+\DoxyCodeLine{72 }
+\DoxyCodeLine{78         \textcolor{keywordtype}{void} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Propagators_1_1Propagator_a142c4a8e2e10d774a1ecd2144aa34f2c}{EraseDataFromEpochToEnd}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1DateTime}{IO::Astrodynamics::Time::DateTime}} \&epoch);}
+\DoxyCodeLine{79 }
+\DoxyCodeLine{85         [[nodiscard]] \textcolor{keyword}{const} std::vector<IO::Astrodynamics::OrbitalParameters::StateVector> \&\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Propagators_1_1Propagator_a23c4c43654b37de7cc7a6a87dd250243}{GetStateVectors}}() \textcolor{keyword}{const};}
+\DoxyCodeLine{86 }
+\DoxyCodeLine{90         \textcolor{keywordtype}{void} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Propagators_1_1Propagator_a0aa5f3fef4cb44a5c54a235cd85ec2a3}{ClearStateOrientations}}();}
+\DoxyCodeLine{91 }
+\DoxyCodeLine{96         [[nodiscard]] \textcolor{keyword}{const} std::vector<std::vector<IO::Astrodynamics::OrbitalParameters::StateOrientation>> \&\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Propagators_1_1Propagator_a6efe99e4bd43eb44bbe9ea11e1ef9ea4}{GetStateOrientations}}() \textcolor{keyword}{const};}
+\DoxyCodeLine{97 }
+\DoxyCodeLine{103         [[nodiscard]] \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateOrientation}{IO::Astrodynamics::OrbitalParameters::StateOrientation}} *\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Propagators_1_1Propagator_a2292d3b1f1ce6446f067777348dd2bb4}{GetLatestStateOrientation}}() \textcolor{keyword}{const};}
 \DoxyCodeLine{104 }
-\DoxyCodeLine{105 \} \textcolor{comment}{// namespace IO::Astrodynamics::Propagators}}
-\DoxyCodeLine{106 }
-\DoxyCodeLine{107 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{109         \textcolor{keyword}{inline} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Integrators_1_1IntegratorBase}{IO::Astrodynamics::Integrators::IntegratorBase}} \&\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Propagators_1_1Propagator_a98aca54b402705df00adb5989a908a34}{GetIntegrator}}()}
+\DoxyCodeLine{110         \{ \textcolor{keywordflow}{return} m\_integrator; \}}
+\DoxyCodeLine{111 }
+\DoxyCodeLine{116         \textcolor{keyword}{inline} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}{IO::Astrodynamics::OrbitalParameters::StateVector}} \&\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Propagators_1_1Propagator_aaf07a3fb9e2923cbb92eb83fc51c6358}{GetLatestStateVector}}()}
+\DoxyCodeLine{117         \{ \textcolor{keywordflow}{return} m\_stateVectors.back(); \}}
+\DoxyCodeLine{118     \};}
+\DoxyCodeLine{119 }
+\DoxyCodeLine{120 \} \textcolor{comment}{// namespace IO::Astrodynamics::Propagators}}
+\DoxyCodeLine{121 }
+\DoxyCodeLine{122 \textcolor{preprocessor}{\#endif}}
 
 \end{DoxyCode}

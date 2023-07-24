@@ -490,9 +490,9 @@ TEST(PlaneChangingManeuver, CheckOrbitalParametersToHigherInclination)
     auto o = ephemeris.GetRightAscendingNodeLongitude() * IO::Astrodynamics::Constants::RAD_DEG;
     auto w = ephemeris.GetPeriapsisArgument() * IO::Astrodynamics::Constants::RAD_DEG;
 
-    ASSERT_DOUBLE_EQ(6700001.3177750772, p);
+    ASSERT_DOUBLE_EQ(6700000.7529702652, p);
 
-    ASSERT_NEAR(0.10001034044290764, e, 1e-05);
+    ASSERT_NEAR(0.0999998763780134, e, 1e-05);
 
     ASSERT_NEAR(55.0, i, 1E-03);
 
@@ -579,7 +579,7 @@ TEST(PlaneChangingManeuver, CheckOrbitalParametersToLowerInclination)
     auto o = ephemeris.GetRightAscendingNodeLongitude() * IO::Astrodynamics::Constants::RAD_DEG;
     auto w = ephemeris.GetPeriapsisArgument() * IO::Astrodynamics::Constants::RAD_DEG;
 
-    ASSERT_DOUBLE_EQ(6700011.4656982673, p);
+    ASSERT_DOUBLE_EQ(6699999.9279154707, p);
 
     ASSERT_NEAR(0.9, e, 1E-06);
 

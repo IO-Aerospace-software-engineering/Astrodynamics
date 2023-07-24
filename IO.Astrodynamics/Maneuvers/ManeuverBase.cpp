@@ -163,8 +163,12 @@ void IO::Astrodynamics::Maneuvers::ManeuverBase::ExecuteAt(const IO::Astrodynami
         nearestLowerState = &maneuverPoint;
     }
 
+    //From now, we'll compute maneuver start point then we'll compute the new state vector at maneuver point then we'll resume propagation after maneuver point
+
     //propagate from the nearest value up to begin epoch
     auto beginState = nearestLowerState->ToStateVector(m_attitudeWindow->GetStartDate());
+
+
 
     //Compute orientation at beginning
     auto orientationBeginning = ComputeOrientation(beginState);
@@ -177,25 +181,28 @@ void IO::Astrodynamics::Maneuvers::ManeuverBase::ExecuteAt(const IO::Astrodynami
     IO::Astrodynamics::OrbitalParameters::StateVector newManeuverState(maneuverPoint.GetCenterOfMotion(), maneuverPoint.ToStateVector().GetPosition(),
                                                              maneuverPoint.ToStateVector().GetVelocity() + *m_deltaV, maneuverPoint.GetEpoch(), maneuverPoint.GetFrame());
 
+
     //Write Data in propagator
     //Erase unnecessary vector states
     m_propagator.EraseDataFromEpochToEnd(beginState.GetEpoch());
 
-    //Write vector states at maneuver begin and end;
+    //Write vector states at maneuver begin;
     m_propagator.AddStateVector(beginState);
+    m_propagator.AddStateVector(newManeuverState);
 
     //Write end maneuver data only if is not punctual maneuver
     if (m_attitudeWindow->GetLength().GetSeconds().count() > 0.0)
     {
-        const double stepSize{30};
-        //Compute attitude until the end every 5 minutes
+        const double stepSize{1.0};
+
         auto remainingTime = m_attitudeWindow->GetEndDate() - maneuverPoint.GetEpoch();
         int interval = remainingTime.GetSeconds().count() / stepSize;
         for (int i = 1; i <= interval; ++i)
         {
             IO::Astrodynamics::Time::TimeSpan ts(std::chrono::duration<double>(i * stepSize));
+
             //Propagate from new maneuver point up to end maneuver epoch
-            auto intermediateState = newManeuverState.ToStateVector(maneuverPoint.GetEpoch().Add(ts));
+            auto intermediateState = m_propagator.GetIntegrator().Integrate(m_spacecraft,m_propagator.GetLatestStateVector());
 
             // Compute orientation at end
             auto intermediateOrientation = ComputeOrientation(intermediateState);
@@ -208,7 +215,7 @@ void IO::Astrodynamics::Maneuvers::ManeuverBase::ExecuteAt(const IO::Astrodynami
         }
 
         //Propagate from new maneuver point up to end maneuver epoch
-        auto endState = newManeuverState.ToStateVector(m_attitudeWindow->GetEndDate());
+        auto endState = m_propagator.GetIntegrator().Integrate(m_spacecraft,m_propagator.GetLatestStateVector());
 
         // Compute orientation at end
         auto orientationEnd = ComputeOrientation(endState);

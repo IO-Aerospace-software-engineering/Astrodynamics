@@ -1,3 +1,7 @@
+/*
+ Copyright (c) 2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
+ */
+
 #include <gtest/gtest.h>
 #include <memory>
 
@@ -19,8 +23,24 @@ using namespace std::chrono_literals;
 TEST(ApsidalAlignmentManeuver, CanExecute)
 {
     const auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399);
-    std::unique_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParams1 = std::make_unique<IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements>(earth, 10000000.0, 0.333333, 0.0, 0.0, 0.0, 0.0, IO::Astrodynamics::Time::TDB(0.0s), IO::Astrodynamics::Frames::InertialFrames::GetICRF());
-    std::shared_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParams2 = std::make_shared<IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements>(earth, 9000000.0, 0.5, 0.0, 0.0, 30.0 * IO::Astrodynamics::Constants::DEG_RAD, 0.0, IO::Astrodynamics::Time::TDB(0.0s), IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+    std::unique_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParams1 = std::make_unique<IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements>(earth,
+                                                                                                                                                                           10000000.0,
+                                                                                                                                                                           0.333333,
+                                                                                                                                                                           0.0, 0.0,
+                                                                                                                                                                           0.0, 0.0,
+                                                                                                                                                                           IO::Astrodynamics::Time::TDB(
+                                                                                                                                                                                   0.0s),
+                                                                                                                                                                           IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+    std::shared_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParams2 = std::make_shared<IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements>(earth,
+                                                                                                                                                                           9000000.0,
+                                                                                                                                                                           0.5, 0.0,
+                                                                                                                                                                           0.0,
+                                                                                                                                                                           30.0 *
+                                                                                                                                                                           IO::Astrodynamics::Constants::DEG_RAD,
+                                                                                                                                                                           0.0,
+                                                                                                                                                                           IO::Astrodynamics::Time::TDB(
+                                                                                                                                                                                   0.0s),
+                                                                                                                                                                           IO::Astrodynamics::Frames::InertialFrames::GetICRF());
 
     IO::Astrodynamics::Body::Spacecraft::Spacecraft s{-105, "szptest", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams1)};
 
@@ -32,8 +52,8 @@ TEST(ApsidalAlignmentManeuver, CanExecute)
 
     auto engine1 = s.GetEngine("sn1");
 
-    std::vector<IO::Astrodynamics::Body::Spacecraft::Engine*> engines;
-    engines.push_back(const_cast<IO::Astrodynamics::Body::Spacecraft::Engine*>(engine1));
+    std::vector<IO::Astrodynamics::Body::Spacecraft::Engine *> engines;
+    engines.push_back(const_cast<IO::Astrodynamics::Body::Spacecraft::Engine *>(engine1));
 
     IO::Astrodynamics::Maneuvers::ApsidalAlignmentManeuver maneuver(engines, prop, orbitalParams2);
 
@@ -62,8 +82,24 @@ TEST(ApsidalAlignmentManeuver, CanExecute)
 TEST(ApsidalAlignmentManeuver, ExecuteQ)
 {
     const auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399);
-    std::unique_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParams1 = std::make_unique<IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements>(earth, 10000000.0, 0.333333, 0.0, 0.0, 0.0, 0.0, IO::Astrodynamics::Time::TDB(0.0s), IO::Astrodynamics::Frames::InertialFrames::GetICRF());
-    std::shared_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParams2 = std::make_shared<IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements>(earth, 9000000.0, 0.5, 0.0, 0.0, 30.0 * IO::Astrodynamics::Constants::DEG_RAD, 0.0, IO::Astrodynamics::Time::TDB(0.0s), IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+    std::unique_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParams1 = std::make_unique<IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements>(earth,
+                                                                                                                                                                           10000000.0,
+                                                                                                                                                                           0.333333,
+                                                                                                                                                                           0.0, 0.0,
+                                                                                                                                                                           0.0, 0.0,
+                                                                                                                                                                           IO::Astrodynamics::Time::TDB(
+                                                                                                                                                                                   0.0s),
+                                                                                                                                                                           IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+    std::shared_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParams2 = std::make_shared<IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements>(earth,
+                                                                                                                                                                           9000000.0,
+                                                                                                                                                                           0.5, 0.0,
+                                                                                                                                                                           0.0,
+                                                                                                                                                                           30.0 *
+                                                                                                                                                                           IO::Astrodynamics::Constants::DEG_RAD,
+                                                                                                                                                                           0.0,
+                                                                                                                                                                           IO::Astrodynamics::Time::TDB(
+                                                                                                                                                                                   0.0s),
+                                                                                                                                                                           IO::Astrodynamics::Frames::InertialFrames::GetICRF());
 
     IO::Astrodynamics::Body::Spacecraft::Spacecraft s{-109, "sqtest", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams1)};
 
@@ -78,8 +114,8 @@ TEST(ApsidalAlignmentManeuver, ExecuteQ)
 
     auto engine1 = s.GetEngine("sn1");
 
-    std::vector<IO::Astrodynamics::Body::Spacecraft::Engine*> engines;
-    engines.push_back(const_cast<IO::Astrodynamics::Body::Spacecraft::Engine*>(engine1));
+    std::vector<IO::Astrodynamics::Body::Spacecraft::Engine *> engines;
+    engines.push_back(const_cast<IO::Astrodynamics::Body::Spacecraft::Engine *>(engine1));
 
     IO::Astrodynamics::Maneuvers::ApsidalAlignmentManeuver maneuver(engines, prop, orbitalParams2);
 
@@ -88,7 +124,9 @@ TEST(ApsidalAlignmentManeuver, ExecuteQ)
     maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()->ToStateVector(341.0 * IO::Astrodynamics::Constants::DEG_RAD));
 
     //Add fictive data because it executed outside propagator
-    prop.AddStateVector(IO::Astrodynamics::OrbitalParameters::StateVector(earth, IO::Astrodynamics::Math::Vector3D(1.0, 2.0, 3.0), IO::Astrodynamics::Math::Vector3D(4.0, 5.0, 6.0), IO::Astrodynamics::Time::TDB(10.0s), IO::Astrodynamics::Frames::InertialFrames::GetICRF()));
+    prop.AddStateVector(
+            IO::Astrodynamics::OrbitalParameters::StateVector(earth, IO::Astrodynamics::Math::Vector3D(6800000.0, 0.0, 0.0), IO::Astrodynamics::Math::Vector3D(0.0, 8000.0, 0.0),
+                                                              IO::Astrodynamics::Time::TDB(10.0s), IO::Astrodynamics::Frames::InertialFrames::GetICRF()));
 
     //try execute at Q
     auto res = maneuver.TryExecute(s.GetOrbitalParametersAtEpoch()->ToStateVector(341.77 * IO::Astrodynamics::Constants::DEG_RAD));
@@ -113,8 +151,24 @@ TEST(ApsidalAlignmentManeuver, ExecuteQ)
 TEST(ApsidalAlignmentManeuver, ExecuteP)
 {
     const auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399);
-    std::unique_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParams1 = std::make_unique<IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements>(earth, 10000000.0, 0.333333, 0.0, 0.0, 0.0, 0.0, IO::Astrodynamics::Time::TDB(0.0s), IO::Astrodynamics::Frames::InertialFrames::GetICRF());
-    std::shared_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParams2 = std::make_shared<IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements>(earth, 9000000.0, 0.5, 0.0, 0.0, 30.0 * IO::Astrodynamics::Constants::DEG_RAD, 0.0, IO::Astrodynamics::Time::TDB(0.0s), IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+    std::unique_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParams1 = std::make_unique<IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements>(earth,
+                                                                                                                                                                           10000000.0,
+                                                                                                                                                                           0.333333,
+                                                                                                                                                                           0.0, 0.0,
+                                                                                                                                                                           0.0, 0.0,
+                                                                                                                                                                           IO::Astrodynamics::Time::TDB(
+                                                                                                                                                                                   0.0s),
+                                                                                                                                                                           IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+    std::shared_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParams2 = std::make_shared<IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements>(earth,
+                                                                                                                                                                           9000000.0,
+                                                                                                                                                                           0.5, 0.0,
+                                                                                                                                                                           0.0,
+                                                                                                                                                                           30.0 *
+                                                                                                                                                                           IO::Astrodynamics::Constants::DEG_RAD,
+                                                                                                                                                                           0.0,
+                                                                                                                                                                           IO::Astrodynamics::Time::TDB(
+                                                                                                                                                                                   0.0s),
+                                                                                                                                                                           IO::Astrodynamics::Frames::InertialFrames::GetICRF());
 
     IO::Astrodynamics::Body::Spacecraft::Spacecraft s{-107, "sptest", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams1)};
 
@@ -126,8 +180,8 @@ TEST(ApsidalAlignmentManeuver, ExecuteP)
 
     auto engine1 = s.GetEngine("sn1");
 
-    std::vector<IO::Astrodynamics::Body::Spacecraft::Engine*> engines;
-    engines.push_back(const_cast<IO::Astrodynamics::Body::Spacecraft::Engine*>(engine1));
+    std::vector<IO::Astrodynamics::Body::Spacecraft::Engine *> engines;
+    engines.push_back(const_cast<IO::Astrodynamics::Body::Spacecraft::Engine *>(engine1));
 
     IO::Astrodynamics::Maneuvers::ApsidalAlignmentManeuver maneuver(engines, prop, orbitalParams2);
 
@@ -136,7 +190,9 @@ TEST(ApsidalAlignmentManeuver, ExecuteP)
     maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()->ToStateVector(156.0 * IO::Astrodynamics::Constants::DEG_RAD));
 
     //Add fictive data because it executed outside propagator
-    prop.AddStateVector(IO::Astrodynamics::OrbitalParameters::StateVector(earth, IO::Astrodynamics::Math::Vector3D(1.0, 2.0, 3.0), IO::Astrodynamics::Math::Vector3D(4.0, 5.0, 6.0), IO::Astrodynamics::Time::TDB(10.0s), IO::Astrodynamics::Frames::InertialFrames::GetICRF()));
+    prop.AddStateVector(
+            IO::Astrodynamics::OrbitalParameters::StateVector(earth, IO::Astrodynamics::Math::Vector3D(6800000.0, 0.0, 0.0), IO::Astrodynamics::Math::Vector3D(0.0, 8000.0, 0.0),
+                                                              IO::Astrodynamics::Time::TDB(10.0s), IO::Astrodynamics::Frames::InertialFrames::GetICRF()));
 
     //try execute at P
     auto res = maneuver.TryExecute(s.GetOrbitalParametersAtEpoch()->ToStateVector(156.5 * IO::Astrodynamics::Constants::DEG_RAD));
@@ -165,8 +221,22 @@ TEST(ApsidalAlignmentManeuver, CheckOrbitalParams)
     IO::Astrodynamics::Time::TDB startEpoch("2021-06-02T00:00:00");
     IO::Astrodynamics::Time::TDB endEpoch("2021-06-03T00:00:00");
 
-    std::unique_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParams1 = std::make_unique<IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements>(earth, 10000000.0, 0.333333, 0.0, 0.0, 0.0, 0.0, startEpoch, IO::Astrodynamics::Frames::InertialFrames::GetICRF());
-    std::shared_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParams2 = std::make_shared<IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements>(earth, 9000000.0, 0.5, 0.0, 0.0, 30.0 * IO::Astrodynamics::Constants::DEG_RAD, 0.0, startEpoch, IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+    std::unique_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParams1 = std::make_unique<IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements>(earth,
+                                                                                                                                                                           10000000.0,
+                                                                                                                                                                           0.333333,
+                                                                                                                                                                           0.0, 0.0,
+                                                                                                                                                                           0.0, 0.0,
+                                                                                                                                                                           startEpoch,
+                                                                                                                                                                           IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+    std::shared_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParams2 = std::make_shared<IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements>(earth,
+                                                                                                                                                                           9000000.0,
+                                                                                                                                                                           0.5, 0.0,
+                                                                                                                                                                           0.0,
+                                                                                                                                                                           30.0 *
+                                                                                                                                                                           IO::Astrodynamics::Constants::DEG_RAD,
+                                                                                                                                                                           0.0,
+                                                                                                                                                                           startEpoch,
+                                                                                                                                                                           IO::Astrodynamics::Frames::InertialFrames::GetICRF());
 
     std::vector<IO::Astrodynamics::Integrators::Forces::Force *> forces{};
 
@@ -183,8 +253,8 @@ TEST(ApsidalAlignmentManeuver, CheckOrbitalParams)
 
     auto engine1 = s.GetEngine("sn1");
 
-    std::vector<IO::Astrodynamics::Body::Spacecraft::Engine*> engines;
-    engines.push_back(const_cast<IO::Astrodynamics::Body::Spacecraft::Engine*>(engine1));
+    std::vector<IO::Astrodynamics::Body::Spacecraft::Engine *> engines;
+    engines.push_back(const_cast<IO::Astrodynamics::Body::Spacecraft::Engine *>(engine1));
 
     IO::Astrodynamics::Maneuvers::ApsidalAlignmentManeuver maneuver(engines, prop, orbitalParams2);
 
@@ -194,9 +264,9 @@ TEST(ApsidalAlignmentManeuver, CheckOrbitalParams)
 
     auto propagationResult = prop.GetStateVectors().back();
 
-    ASSERT_DOUBLE_EQ(8999398.6360428147, propagationResult.GetPerigeeVector().Magnitude());
-    ASSERT_DOUBLE_EQ(0.50004260870488881, propagationResult.GetEccentricity());
+    ASSERT_DOUBLE_EQ(8999394.8805827294, propagationResult.GetPerigeeVector().Magnitude());
+    ASSERT_DOUBLE_EQ(0.50004278305339278, propagationResult.GetEccentricity());
     ASSERT_DOUBLE_EQ(0.0, propagationResult.GetInclination());
     ASSERT_DOUBLE_EQ(0.0, propagationResult.GetRightAscendingNodeLongitude());
-    ASSERT_DOUBLE_EQ(0.52362753017983721, propagationResult.GetPeriapsisArgument());
+    ASSERT_DOUBLE_EQ(0.52362726179285946, propagationResult.GetPeriapsisArgument());
 }

@@ -1,3 +1,7 @@
+/*
+ Copyright (c) 2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
+ */
+
 #include <gtest/gtest.h>
 #include <vector>
 #include <memory>
@@ -54,8 +58,10 @@ TEST(NadirAttitude, GetOrientation) {
     auto newVector = s.Front.Rotate(orientation.GetQuaternion().Conjugate());
     ASSERT_EQ(IO::Astrodynamics::Math::Vector3D(-1.0, 2.2204460492503131e-16, 0.0), newVector);
     ASSERT_EQ(IO::Astrodynamics::Time::TimeSpan(60s), s.GetOrientationsCoverageWindow().GetLength());
-    ASSERT_EQ(IO::Astrodynamics::Time::TDB("2021-01-01T13:00:00"), s.GetOrientationsCoverageWindow().GetStartDate());
-    ASSERT_EQ(IO::Astrodynamics::Time::TDB("2021-01-01T13:01:00"), s.GetOrientationsCoverageWindow().GetEndDate());
+    auto str=s.GetOrientationsCoverageWindow().GetStartDate().GetSecondsFromJ2000();
+    auto str2=IO::Astrodynamics::Time::TDB("2021-01-01T13:00:00").GetSecondsFromJ2000();
+    ASSERT_DOUBLE_EQ(IO::Astrodynamics::Time::TDB("2021-01-01T13:00:00").GetSecondsFromJ2000().count(), s.GetOrientationsCoverageWindow().GetStartDate().GetSecondsFromJ2000().count());
+    ASSERT_DOUBLE_EQ(IO::Astrodynamics::Time::TDB("2021-01-01T13:01:00").GetSecondsFromJ2000().count(), s.GetOrientationsCoverageWindow().GetEndDate().GetSecondsFromJ2000().count());
 
 }
 
@@ -98,8 +104,8 @@ TEST(NadirAttitude, GetOrientationMinimumEpoch) {
     ASSERT_NEAR(-0.99993306467241017, newVector.GetX(), 1E-12);
     ASSERT_NEAR(-0.011570055092428977, newVector.GetY(), 1E-12);
     ASSERT_NEAR(0.0, newVector.GetZ(), 1E-12);
-    ASSERT_EQ(IO::Astrodynamics::Time::TDB("2021-01-01T13:00:00"), s.GetOrientationsCoverageWindow().GetStartDate());
-    ASSERT_EQ(IO::Astrodynamics::Time::TDB("2021-01-01T13:01:00"), s.GetOrientationsCoverageWindow().GetEndDate());
+    ASSERT_DOUBLE_EQ(IO::Astrodynamics::Time::TDB("2021-01-01T13:00:00").GetSecondsFromJ2000().count(), s.GetOrientationsCoverageWindow().GetStartDate().GetSecondsFromJ2000().count());
+    ASSERT_DOUBLE_EQ(IO::Astrodynamics::Time::TDB("2021-01-01T13:01:00").GetSecondsFromJ2000().count(), s.GetOrientationsCoverageWindow().GetEndDate().GetSecondsFromJ2000().count());
     ASSERT_EQ(IO::Astrodynamics::Time::TimeSpan(60s).GetSeconds().count(), s.GetOrientationsCoverageWindow().GetLength().GetSeconds().count());
 
 

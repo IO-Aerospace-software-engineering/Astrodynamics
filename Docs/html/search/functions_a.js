@@ -1,6 +1,6 @@
 var searchData=
 [
-  ['lagrangepoint_0',['LagrangePoint',['../classIO_1_1Astrodynamics_1_1Body_1_1LagrangePoint.html#aec8734d69d9c788466b1df5e0de4b6fa',1,'IO::Astrodynamics::Body::LagrangePoint']]],
+  ['lagrangepoint_0',['LagrangePoint',['../classIO_1_1Astrodynamics_1_1Body_1_1LagrangePoint.html#a2dd55b09753257a0374d593fbe0b731a',1,'IO::Astrodynamics::Body::LagrangePoint']]],
   ['latitude_1',['Latitude',['../classIO_1_1Astrodynamics_1_1Coordinate.html#a9b8015f8efe884209bc1ff2dcc4d435c',1,'IO::Astrodynamics::Coordinate']]],
   ['latitudinal_2',['Latitudinal',['../classIO_1_1Astrodynamics_1_1Coordinates_1_1Latitudinal.html#a59616bac0cf1e9ae0a39b91d90a8717f',1,'IO::Astrodynamics::Coordinates::Latitudinal::Latitudinal()'],['../classIO_1_1Astrodynamics_1_1CoordinateSystem.html#a3e4fd48a580e61d3712a04156bec2731',1,'IO::Astrodynamics::CoordinateSystem::Latitudinal()']]],
   ['launch_3',['Launch',['../classIO_1_1Astrodynamics_1_1Maneuvers_1_1Launch.html#a161fc0c65917fa2aa78fa0eef26f53aa',1,'IO::Astrodynamics::Maneuvers::Launch']]],

@@ -64,12 +64,12 @@ static const std::string IKRectangular =
 "\\begintext\n";
 
 //Generic clock used only in pre mission design
-//It's generated as 2021-01-01/00:00:00.0 UTC and is equal to 6.6273126918393E+08 TDB past seconds
+//It's generated as 1957-01-01/00:00:00.0 TDB and is equal to -1.3569552000000E+09 TDB past seconds
 //Resolution : 15.259 us
 static const std::string Sclk =
 "KPL/SCLK\n"
 "\\begindata\n"
-"SCLK_KERNEL_ID           = ( @2021-01-01/00:00:00.0 )\n"
+"SCLK_KERNEL_ID           = ( @1957-01-01/00:00:00.0 )\n"
 "SCLK_DATA_TYPE_{id}        = ( 1 )\n"
 "SCLK01_TIME_SYSTEM_{id}    = ( 1 )\n"
 "SCLK01_N_FIELDS_{id}       = ( 2 )\n"
@@ -78,7 +78,7 @@ static const std::string Sclk =
 "SCLK01_OUTPUT_DELIM_{id}   = ( 2 )\n"
 "SCLK_PARTITION_START_{id}  = ( 0.0000000000000E+00 )\n"
 "SCLK_PARTITION_END_{id}    = ( 2.8147497671065E+14 )\n"
-"SCLK01_COEFFICIENTS_{id}   = ( 0.0000000000000E+00     6.62731200000000E+08     1.0000000000000E+00 )\n"
+"SCLK01_COEFFICIENTS_{id}   = ( 0.0000000000000E+00     -1.3569552000000E+09     1.0000000000000E+00 )\n"
 "\\begintext\n";
 
 static const std::string Tk =
