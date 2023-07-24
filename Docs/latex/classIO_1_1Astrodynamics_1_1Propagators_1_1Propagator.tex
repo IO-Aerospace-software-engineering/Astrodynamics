@@ -28,7 +28,11 @@ void \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Propagators_1_1Propagator_a0aa
 const std\+::vector$<$ std\+::vector$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateOrientation}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+State\+Orientation}} $>$ $>$ \& \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Propagators_1_1Propagator_a6efe99e4bd43eb44bbe9ea11e1ef9ea4}{Get\+State\+Orientations}} () const
 \item 
 const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateOrientation}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+State\+Orientation}} $\ast$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Propagators_1_1Propagator_a2292d3b1f1ce6446f067777348dd2bb4}{Get\+Latest\+State\+Orientation}} () const
-\begin{DoxyCompactList}\small\item\em Get the Latest State Orientation. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\begin{DoxyCompactList}\small\item\em Get the Latest State Orientation. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Integrators_1_1IntegratorBase}{IO\+::\+Astrodynamics\+::\+Integrators\+::\+Integrator\+Base}} \& \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Propagators_1_1Propagator_a98aca54b402705df00adb5989a908a34}{Get\+Integrator}} ()
+\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+State\+Vector}} \& \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Propagators_1_1Propagator_aaf07a3fb9e2923cbb92eb83fc51c6358}{Get\+Latest\+State\+Vector}} ()
+\end{DoxyCompactItemize}
 
 
 \doxysubsection{Constructor \& Destructor Documentation}
@@ -123,6 +127,15 @@ Find the nearest lower state vector from an epoch.
 \begin{DoxyReturn}{Returns}
 const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+State\+Vector}}$\ast$ 
 \end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Propagators_1_1Propagator_a98aca54b402705df00adb5989a908a34}\label{classIO_1_1Astrodynamics_1_1Propagators_1_1Propagator_a98aca54b402705df00adb5989a908a34}} 
+\index{IO::Astrodynamics::Propagators::Propagator@{IO::Astrodynamics::Propagators::Propagator}!GetIntegrator@{GetIntegrator}}
+\index{GetIntegrator@{GetIntegrator}!IO::Astrodynamics::Propagators::Propagator@{IO::Astrodynamics::Propagators::Propagator}}
+\doxysubsubsection{\texorpdfstring{GetIntegrator()}{GetIntegrator()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Integrators_1_1IntegratorBase}{IO\+::\+Astrodynamics\+::\+Integrators\+::\+Integrator\+Base}} \& IO\+::\+Astrodynamics\+::\+Propagators\+::\+Propagator\+::\+Get\+Integrator (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+Get a reference to integrator \begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
 \mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Propagators_1_1Propagator_a2292d3b1f1ce6446f067777348dd2bb4}\label{classIO_1_1Astrodynamics_1_1Propagators_1_1Propagator_a2292d3b1f1ce6446f067777348dd2bb4}} 
 \index{IO::Astrodynamics::Propagators::Propagator@{IO::Astrodynamics::Propagators::Propagator}!GetLatestStateOrientation@{GetLatestStateOrientation}}
 \index{GetLatestStateOrientation@{GetLatestStateOrientation}!IO::Astrodynamics::Propagators::Propagator@{IO::Astrodynamics::Propagators::Propagator}}
@@ -135,6 +148,15 @@ Get the Latest State Orientation.
 
 \begin{DoxyReturn}{Returns}
 \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateOrientation}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+State\+Orientation}}$\ast$ 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Propagators_1_1Propagator_aaf07a3fb9e2923cbb92eb83fc51c6358}\label{classIO_1_1Astrodynamics_1_1Propagators_1_1Propagator_aaf07a3fb9e2923cbb92eb83fc51c6358}} 
+\index{IO::Astrodynamics::Propagators::Propagator@{IO::Astrodynamics::Propagators::Propagator}!GetLatestStateVector@{GetLatestStateVector}}
+\index{GetLatestStateVector@{GetLatestStateVector}!IO::Astrodynamics::Propagators::Propagator@{IO::Astrodynamics::Propagators::Propagator}}
+\doxysubsubsection{\texorpdfstring{GetLatestStateVector()}{GetLatestStateVector()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+State\+Vector}} \& IO\+::\+Astrodynamics\+::\+Propagators\+::\+Propagator\+::\+Get\+Latest\+State\+Vector (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+Get latest state vector \begin{DoxyReturn}{Returns}
+
 \end{DoxyReturn}
 \mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Propagators_1_1Propagator_a6efe99e4bd43eb44bbe9ea11e1ef9ea4}\label{classIO_1_1Astrodynamics_1_1Propagators_1_1Propagator_a6efe99e4bd43eb44bbe9ea11e1ef9ea4}} 
 \index{IO::Astrodynamics::Propagators::Propagator@{IO::Astrodynamics::Propagators::Propagator}!GetStateOrientations@{GetStateOrientations}}
