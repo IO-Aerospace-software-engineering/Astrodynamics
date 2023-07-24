@@ -1,3 +1,7 @@
+/*
+ Copyright (c) 2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
+ */
+
 #include <gtest/gtest.h>
 #include <vector>
 #include <memory>
@@ -81,7 +85,7 @@ TEST(RetrogradeAttitude, GetOrientationNotBeforeEpoch)
     ASSERT_EQ(IO::Astrodynamics::Frames::InertialFrames::GetICRF(), orientation.GetFrame());
     auto newVector = s.Front.Rotate(orientation.GetQuaternion());
     ASSERT_EQ(IO::Astrodynamics::Math::Vector3D(0.0, -1.0, 0.0), newVector);
-    ASSERT_EQ(IO::Astrodynamics::Time::TDB("2021-01-01T13:00:00"), s.GetOrientationsCoverageWindow().GetStartDate());
-    ASSERT_EQ(IO::Astrodynamics::Time::TDB("2021-01-01T13:01:00"), s.GetOrientationsCoverageWindow().GetEndDate());
+    ASSERT_DOUBLE_EQ(IO::Astrodynamics::Time::TDB("2021-01-01T13:00:00").GetSecondsFromJ2000().count(), s.GetOrientationsCoverageWindow().GetStartDate().GetSecondsFromJ2000().count());
+    ASSERT_DOUBLE_EQ(IO::Astrodynamics::Time::TDB("2021-01-01T13:01:00").GetSecondsFromJ2000().count(), s.GetOrientationsCoverageWindow().GetEndDate().GetSecondsFromJ2000().count());
     ASSERT_EQ(IO::Astrodynamics::Time::TimeSpan(60s).GetSeconds().count(), s.GetOrientationsCoverageWindow().GetLength().GetSeconds().count());
 }

@@ -1,3 +1,7 @@
+/*
+ Copyright (c) 2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
+ */
+
 #include<gtest/gtest.h>
 #include<Spacecraft.h>
 #include<OrientationKernel.h>
@@ -53,7 +57,7 @@ TEST(OrientationKernel, WriteData)
 	ASSERT_DOUBLE_EQ(0.0, orientation.GetAngularVelocity().GetY());
 	ASSERT_DOUBLE_EQ(0.0, orientation.GetAngularVelocity().GetZ());
 
-	ASSERT_EQ(e0, orientation.GetEpoch());
+	ASSERT_DOUBLE_EQ(e0.GetSecondsFromJ2000().count(), orientation.GetEpoch().GetSecondsFromJ2000().count());
 
 	//Read middle known orientation - 60deg
 	auto e1 = IO::Astrodynamics::Time::TDB("2021-01-01T12:01:10");
@@ -68,7 +72,7 @@ TEST(OrientationKernel, WriteData)
 	ASSERT_DOUBLE_EQ(0.0, orientation1.GetAngularVelocity().GetY());
 	ASSERT_DOUBLE_EQ(0.0, orientation1.GetAngularVelocity().GetZ());
 
-	ASSERT_EQ(e1, orientation1.GetEpoch());
+	ASSERT_DOUBLE_EQ(e1.GetSecondsFromJ2000().count(), orientation1.GetEpoch().GetSecondsFromJ2000().count());
 
 	//Read end known orientation - 200deg
 	auto e2 = IO::Astrodynamics::Time::TDB("2021-01-01T12:03:20");
