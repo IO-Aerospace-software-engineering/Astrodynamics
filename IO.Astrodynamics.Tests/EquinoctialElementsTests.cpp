@@ -34,7 +34,7 @@ TEST(EquinoctialElements, Initialization) {
     double L = m0 + argp + node;
 
     IO::Astrodynamics::OrbitalParameters::EquinoctialElements eq(earth, IO::Astrodynamics::Time::TDB(120.0s), a, h, k, p2, q, L, 2.0, 3.0, -IO::Astrodynamics::Constants::PI2, IO::Astrodynamics::Constants::PI2,
-                                                       IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+                                                                 IO::Astrodynamics::Frames::InertialFrames::ICRF());
 
     ASSERT_DOUBLE_EQ(3.0, eq.GetAscendingNodeLongitudeRate());
     ASSERT_DOUBLE_EQ(IO::Astrodynamics::Constants::PI2, eq.GetDeclinationOfPole());
@@ -73,7 +73,7 @@ TEST(EquinoctialElements, InitializationFromKeplerian) {
     double L = m0 + argp + node;
 
     IO::Astrodynamics::OrbitalParameters::EquinoctialElements eq(earth, a, ecc, inc, argp, node, m0, 2.0, 3.0, -IO::Astrodynamics::Constants::PI2, IO::Astrodynamics::Constants::PI2, IO::Astrodynamics::Time::TDB(120.0s),
-                                                       IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+                                                                 IO::Astrodynamics::Frames::InertialFrames::ICRF());
 
     ASSERT_DOUBLE_EQ(3.0, eq.GetAscendingNodeLongitudeRate());
     ASSERT_DOUBLE_EQ(IO::Astrodynamics::Constants::PI2, eq.GetDeclinationOfPole());
@@ -114,7 +114,7 @@ TEST(EquinoctialElements, GetPeriod) {
     double L = m0 + argp + node;
 
     IO::Astrodynamics::OrbitalParameters::EquinoctialElements eq(earth, IO::Astrodynamics::Time::TDB(120.0s), a, h, k, p2, q, L, 2.0, 3.0, -IO::Astrodynamics::Constants::PI2, IO::Astrodynamics::Constants::PI2,
-                                                       IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+                                                                 IO::Astrodynamics::Frames::InertialFrames::ICRF());
 
     ASSERT_DOUBLE_EQ(11655.937761769412, eq.GetPeriod().GetSeconds().count());
 }
@@ -140,7 +140,7 @@ TEST(EquinoctialElements, GetStateVector) {
     double L = m0 + argp + node;
 
     IO::Astrodynamics::OrbitalParameters::EquinoctialElements eq(earth, t0, a, h, k, p2, q, L, 0.0, 0.0, -IO::Astrodynamics::Constants::PI2, IO::Astrodynamics::Constants::PI2,
-                                                       IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+                                                                 IO::Astrodynamics::Frames::InertialFrames::ICRF());
 
     IO::Astrodynamics::Time::TimeSpan et = t0.Subtract(IO::Astrodynamics::Time::TDB(10000.0s));
     auto sv = eq.ToStateVector(IO::Astrodynamics::Time::TDB(et.GetSeconds() + 250s));
@@ -174,7 +174,7 @@ TEST(EquinoctialElements, GetStateVectorAtEpoch) {
     double L = m0 + argp + node;
 
     IO::Astrodynamics::OrbitalParameters::EquinoctialElements eq(earth, t0, a, h, k, p2, q, L, 0.0, 0.0, -IO::Astrodynamics::Constants::PI2, IO::Astrodynamics::Constants::PI2,
-                                                       IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+                                                                 IO::Astrodynamics::Frames::InertialFrames::ICRF());
 
     auto sv = eq.ToStateVector(t0);
 
@@ -200,7 +200,7 @@ TEST(EquinoctialElements, GetStateVectorFromKeplerian) {
     IO::Astrodynamics::Time::TDB t0{0.0s};
 
     IO::Astrodynamics::OrbitalParameters::EquinoctialElements eq(earth, a, ecc, inc, argp, node, m0, 0.0, 0.0, -IO::Astrodynamics::Constants::PI2, IO::Astrodynamics::Constants::PI2, t0,
-                                                       IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+                                                                 IO::Astrodynamics::Frames::InertialFrames::ICRF());
 
     auto sv = eq.ToStateVector(t0);
 
@@ -227,7 +227,7 @@ TEST(EquinoctialElements, GetStateVectorFrom0Eccentricity) {
     IO::Astrodynamics::Time::TDB t0{0.0s};
 
     IO::Astrodynamics::OrbitalParameters::EquinoctialElements eq(earth, a, ecc, inc, argp, node, m0, 0.0, 0.0, -IO::Astrodynamics::Constants::PI2, IO::Astrodynamics::Constants::PI2, t0,
-                                                       IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+                                                                 IO::Astrodynamics::Frames::InertialFrames::ICRF());
 
     for (size_t i = 0; i < 360; i++) {
         auto v = eq.GetTrueAnomaly(IO::Astrodynamics::Time::TDB(std::chrono::duration<double>(eq.GetPeriod().GetSeconds().count() / 360 * i)));
@@ -256,7 +256,7 @@ TEST(EquinoctialElements, GetEccentricity) {
     double L = m0 + argp + node;
 
     IO::Astrodynamics::OrbitalParameters::EquinoctialElements eq(earth, t0, a, h, k, p2, q, L, 0.0, 0.0, -IO::Astrodynamics::Constants::PI2, IO::Astrodynamics::Constants::PI2,
-                                                       IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+                                                                 IO::Astrodynamics::Frames::InertialFrames::ICRF());
 
     auto e = eq.GetEccentricity();
 
@@ -284,7 +284,7 @@ TEST(EquinoctialElements, GetInclination) {
     double L = m0 + argp + node;
 
     IO::Astrodynamics::OrbitalParameters::EquinoctialElements eq(earth, t0, a, h, k, p2, q, L, 0.0, 0.0, -IO::Astrodynamics::Constants::PI2, IO::Astrodynamics::Constants::PI2,
-                                                       IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+                                                                 IO::Astrodynamics::Frames::InertialFrames::ICRF());
 
     auto i = eq.GetInclination();
 
@@ -312,7 +312,7 @@ TEST(EquinoctialElements, GetPeriapsisArgument) {
     double L = m0 + argp + node;
 
     IO::Astrodynamics::OrbitalParameters::EquinoctialElements eq(earth, t0, a, h, k, p2, q, L, 0.0, 0.0, -IO::Astrodynamics::Constants::PI2, IO::Astrodynamics::Constants::PI2,
-                                                       IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+                                                                 IO::Astrodynamics::Frames::InertialFrames::ICRF());
 
     auto w = eq.GetPeriapsisArgument();
 
@@ -340,7 +340,7 @@ TEST(EquinoctialElements, GetRightAscendingNode) {
     double L = m0 + argp + node;
 
     IO::Astrodynamics::OrbitalParameters::EquinoctialElements eq(earth, t0, a, h, k, p2, q, L, 0.0, 0.0, -IO::Astrodynamics::Constants::PI2, IO::Astrodynamics::Constants::PI2,
-                                                       IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+                                                                 IO::Astrodynamics::Frames::InertialFrames::ICRF());
 
     auto o = eq.GetRightAscendingNodeLongitude();
 
@@ -368,7 +368,7 @@ TEST(EquinoctialElements, GetMeanAnomalyAtEpoch) {
     double L = m0 + argp + node;
 
     IO::Astrodynamics::OrbitalParameters::EquinoctialElements eq(earth, t0, a, h, k, p2, q, L, 0.0, 0.0, -IO::Astrodynamics::Constants::PI2, IO::Astrodynamics::Constants::PI2,
-                                                       IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+                                                                 IO::Astrodynamics::Frames::InertialFrames::ICRF());
 
     auto m0Res = eq.GetMeanAnomaly();
 
@@ -396,7 +396,7 @@ TEST(EquinoctialElements, GetSpecificOrbitalEnergy) {
     double L = m0 + argp + node;
 
     IO::Astrodynamics::OrbitalParameters::EquinoctialElements eq(earth, t0, a, h, k, p2, q, L, 0.0, 0.0, -IO::Astrodynamics::Constants::PI2, IO::Astrodynamics::Constants::PI2,
-                                                       IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+                                                                 IO::Astrodynamics::Frames::InertialFrames::ICRF());
 
     auto j = eq.GetSpecificOrbitalEnergy();
 
@@ -423,7 +423,7 @@ TEST(EquinoctialElements, GetSpecificAngularMomentum) {
     double L = m0 + argp + node;
 
     IO::Astrodynamics::OrbitalParameters::EquinoctialElements eq(earth, t0, a, h, k, p2, q, L, 0.0, 0.0, -IO::Astrodynamics::Constants::PI2, IO::Astrodynamics::Constants::PI2,
-                                                       IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+                                                                 IO::Astrodynamics::Frames::InertialFrames::ICRF());
 
     auto mom = eq.GetSpecificAngularMomentum();
 
@@ -450,7 +450,7 @@ TEST(EquinoctialElements, GetTrueAnomalyAtEpoch) {
     double L = m0 + argp + node;
 
     IO::Astrodynamics::OrbitalParameters::EquinoctialElements eq(earth, t0, a, h, k, p2, q, L, 0.0, 0.0, -IO::Astrodynamics::Constants::PI2, IO::Astrodynamics::Constants::PI2,
-                                                       IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+                                                                 IO::Astrodynamics::Frames::InertialFrames::ICRF());
 
     auto v = eq.GetTrueAnomaly();
 
@@ -477,7 +477,7 @@ TEST(EquinoctialElements, GetISSMeanAnomaly) {
     double L = m0 + argp + node;
 
     IO::Astrodynamics::OrbitalParameters::EquinoctialElements eq(earth, t0, a, h, k, p2, q, L, 0.0, 0.0, -IO::Astrodynamics::Constants::PI2, IO::Astrodynamics::Constants::PI2,
-                                                       IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+                                                                 IO::Astrodynamics::Frames::InertialFrames::ICRF());
 
     auto m0Res = eq.GetMeanAnomaly();
 
@@ -504,7 +504,7 @@ TEST(EquinoctialElements, GetSemiMajorAxis) {
     double L = m0 + argp + node;
 
     IO::Astrodynamics::OrbitalParameters::EquinoctialElements eq(earth, t0, a, h, k, p2, q, L, 0.0, 0.0, -IO::Astrodynamics::Constants::PI2, IO::Astrodynamics::Constants::PI2,
-                                                       IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+                                                                 IO::Astrodynamics::Frames::InertialFrames::ICRF());
 
     auto semiMajorAxis = eq.GetSemiMajorAxis();
 
@@ -531,7 +531,7 @@ TEST(EquinoctialElements, GetTimeToMeanAnomaly) {
     double L = m0 + argp + node;
 
     IO::Astrodynamics::OrbitalParameters::EquinoctialElements eq(earth, t0, a, h, k, p2, q, L, 0.0, 0.0, -IO::Astrodynamics::Constants::PI2, IO::Astrodynamics::Constants::PI2,
-                                                       IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+                                                                 IO::Astrodynamics::Frames::InertialFrames::ICRF());
 
     auto epoch = eq.GetTimeToMeanAnomaly(IO::Astrodynamics::Constants::PI2);
 
@@ -558,7 +558,7 @@ TEST(EquinoctialElements, GetMeanAnomalyForEpoch) {
     double L = m0 + argp + node;
 
     IO::Astrodynamics::OrbitalParameters::EquinoctialElements eq(earth, t0, a, h, k, p2, q, L, 0.0, 0.0, -IO::Astrodynamics::Constants::PI2, IO::Astrodynamics::Constants::PI2,
-                                                       IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+                                                                 IO::Astrodynamics::Frames::InertialFrames::ICRF());
 
     auto meanAnomaly = eq.GetMeanAnomaly(IO::Astrodynamics::Time::TDB(60001333.333344065s)); //=90� mean anomaly;
 
@@ -585,7 +585,7 @@ TEST(EquinoctialElements, GetTimeToTrueAnomaly) {
     double L = m0 + argp + node;
 
     IO::Astrodynamics::OrbitalParameters::EquinoctialElements eq(earth, t0, a, h, k, p2, q, L, 0.0, 0.0, -IO::Astrodynamics::Constants::PI2, IO::Astrodynamics::Constants::PI2,
-                                                       IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+                                                                 IO::Astrodynamics::Frames::InertialFrames::ICRF());
 
     auto epoch = eq.GetTimeToTrueAnomaly(2.446560878); //=90� mean anomaly;
 
@@ -612,7 +612,7 @@ TEST(EquinoctialElements, GetTrueAnomalyForEpoch) {
     double L = m0 + argp + node;
 
     IO::Astrodynamics::OrbitalParameters::EquinoctialElements eq(earth, t0, a, h, k, p2, q, L, 0.0, 0.0, -IO::Astrodynamics::Constants::PI2, IO::Astrodynamics::Constants::PI2,
-                                                       IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+                                                                 IO::Astrodynamics::Frames::InertialFrames::ICRF());
 
     auto trueAnomaly = eq.GetTrueAnomaly(IO::Astrodynamics::Time::TDB(60001333.333344109s)); //=90� mean anomaly;
 
@@ -639,7 +639,7 @@ TEST(EquinoctialElements, TrajectoryType) {
     double L = m0 + argp + node;
 
     IO::Astrodynamics::OrbitalParameters::EquinoctialElements eq(earth, t0, a, h, k, p2, q, L, 0.0, 0.0, -IO::Astrodynamics::Constants::PI2, IO::Astrodynamics::Constants::PI2,
-                                                       IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+                                                                 IO::Astrodynamics::Frames::InertialFrames::ICRF());
 
     ASSERT_TRUE(eq.IsElliptical());
     ASSERT_FALSE(eq.IsParabolic());

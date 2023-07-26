@@ -9,8 +9,8 @@ IO::Astrodynamics::Maneuvers::Launch::Launch(const IO::Astrodynamics::Sites::Lau
                                    const IO::Astrodynamics::OrbitalParameters::OrbitalParameters &targetOrbit) : m_launchSite{launchSite}, m_recoverySite{recoverySite},
                                                                                                        m_launchByDay{launchByDay}, m_targetOrbit{targetOrbit}
 {
-    const_cast<double &>(m_inclination) = m_targetOrbit.ToStateVector().ToFrame(IO::Astrodynamics::Frames::InertialFrames::GetICRF()).GetSpecificAngularMomentum().GetAngle(
-            m_launchSite.GetBody()->GetBodyFixedFrame().TransformVector(IO::Astrodynamics::Frames::InertialFrames::GetICRF(), IO::Astrodynamics::Math::Vector3D::VectorZ,
+    const_cast<double &>(m_inclination) = m_targetOrbit.ToStateVector().ToFrame(IO::Astrodynamics::Frames::InertialFrames::ICRF()).GetSpecificAngularMomentum().GetAngle(
+            m_launchSite.GetBody()->GetBodyFixedFrame().TransformVector(IO::Astrodynamics::Frames::InertialFrames::ICRF(), IO::Astrodynamics::Math::Vector3D::VectorZ,
                                                                         IO::Astrodynamics::Time::TDB(std::chrono::duration<double>(0.0))));
 
     const_cast<double &>(m_deltaL) = std::asin(std::tan(m_launchSite.GetCoordinates().GetLatitude()) / std::tan(m_inclination));
@@ -21,7 +21,7 @@ double IO::Astrodynamics::Maneuvers::Launch::GetNonInertialAscendingAzimuthLaunc
     if (std::isnan(m_nonInertialAscendingAzimuthLaunch))
     {
         double vrotx = GetInertialInsertionVelocity() * std::sin(GetInertialAscendingAzimuthLaunch()) -
-                       m_launchSite.GetStateVector(IO::Astrodynamics::Frames::InertialFrames::GetICRF(), IO::Astrodynamics::Time::TDB(std::chrono::duration<double>(0.0))).GetVelocity().Magnitude();
+                       m_launchSite.GetStateVector(IO::Astrodynamics::Frames::InertialFrames::ICRF(), IO::Astrodynamics::Time::TDB(std::chrono::duration<double>(0.0))).GetVelocity().Magnitude();
         double vroty = GetInertialInsertionVelocity() * std::cos(GetInertialAscendingAzimuthLaunch());
         m_nonInertialAscendingAzimuthLaunch = std::atan(vrotx / vroty);
         if (m_nonInertialAscendingAzimuthLaunch < 0.0)
@@ -50,8 +50,8 @@ double IO::Astrodynamics::Maneuvers::Launch::GetInertialAscendingAzimuthLaunch()
     if (std::isnan(m_inertialAscendingAzimuthLaunch))
     {
         m_inertialAscendingAzimuthLaunch = std::asin(std::cos(
-                m_targetOrbit.ToStateVector().ToFrame(IO::Astrodynamics::Frames::InertialFrames::GetICRF()).GetSpecificAngularMomentum().GetAngle(
-                        m_launchSite.GetBody()->GetBodyFixedFrame().TransformVector(IO::Astrodynamics::Frames::InertialFrames::GetICRF(), IO::Astrodynamics::Math::Vector3D::VectorZ,
+                m_targetOrbit.ToStateVector().ToFrame(IO::Astrodynamics::Frames::InertialFrames::ICRF()).GetSpecificAngularMomentum().GetAngle(
+                        m_launchSite.GetBody()->GetBodyFixedFrame().TransformVector(IO::Astrodynamics::Frames::InertialFrames::ICRF(), IO::Astrodynamics::Math::Vector3D::VectorZ,
                                                                                     IO::Astrodynamics::Time::TDB(std::chrono::duration<double>(0.0))))) /
                                                      std::cos(m_launchSite.GetCoordinates().GetLatitude()));
         if (m_inertialAscendingAzimuthLaunch < 0.0)
@@ -80,7 +80,7 @@ double IO::Astrodynamics::Maneuvers::Launch::GetNonInertialInsertionVelocity()
     if (std::isnan(m_nonInertialInsertionVelocity))
     {
         double vrotx = GetInertialInsertionVelocity() * std::sin(GetInertialAscendingAzimuthLaunch()) -
-                       m_launchSite.GetStateVector(IO::Astrodynamics::Frames::InertialFrames::GetICRF(), IO::Astrodynamics::Time::TDB(std::chrono::duration<double>(0.0))).GetVelocity().Magnitude();
+                       m_launchSite.GetStateVector(IO::Astrodynamics::Frames::InertialFrames::ICRF(), IO::Astrodynamics::Time::TDB(std::chrono::duration<double>(0.0))).GetVelocity().Magnitude();
         double vroty = GetInertialInsertionVelocity() * std::cos(GetInertialAscendingAzimuthLaunch());
         m_nonInertialInsertionVelocity = std::sqrt(vrotx * vrotx + vroty * vroty);
     }
@@ -162,8 +162,8 @@ std::vector<IO::Astrodynamics::Maneuvers::LaunchWindow> IO::Astrodynamics::Maneu
     auto step = windowToSearch.GetLength() * 0.5;
 
     //Define crossing plane inbound status
-    bool isInboundPlaneCrossing = m_targetOrbit.ToStateVector().ToFrame(IO::Astrodynamics::Frames::InertialFrames::GetICRF()).GetSpecificAngularMomentum().DotProduct(
-            m_launchSite.GetStateVector(IO::Astrodynamics::Frames::InertialFrames::GetICRF(), date.ToTDB()).GetPosition()) > 0.0;
+    bool isInboundPlaneCrossing = m_targetOrbit.ToStateVector().ToFrame(IO::Astrodynamics::Frames::InertialFrames::ICRF()).GetSpecificAngularMomentum().DotProduct(
+            m_launchSite.GetStateVector(IO::Astrodynamics::Frames::InertialFrames::ICRF(), date.ToTDB()).GetPosition()) > 0.0;
 
     std::vector<LaunchWindow> launchWindows;
 
@@ -173,8 +173,8 @@ std::vector<IO::Astrodynamics::Maneuvers::LaunchWindow> IO::Astrodynamics::Maneu
         date = date + step;
 
         //Compute crossing plane inbound status
-        bool isInbound = m_targetOrbit.ToStateVector().ToFrame(IO::Astrodynamics::Frames::InertialFrames::GetICRF()).GetSpecificAngularMomentum().DotProduct(
-                m_launchSite.GetStateVector(IO::Astrodynamics::Frames::InertialFrames::GetICRF(), date.ToTDB()).GetPosition()) > 0.0;
+        bool isInbound = m_targetOrbit.ToStateVector().ToFrame(IO::Astrodynamics::Frames::InertialFrames::ICRF()).GetSpecificAngularMomentum().DotProduct(
+                m_launchSite.GetStateVector(IO::Astrodynamics::Frames::InertialFrames::ICRF(), date.ToTDB()).GetPosition()) > 0.0;
 
         //If inbound status has changed, we passed through orbital plane
         if (isInbound != isInboundPlaneCrossing)
@@ -198,8 +198,8 @@ std::vector<IO::Astrodynamics::Maneuvers::LaunchWindow> IO::Astrodynamics::Maneu
 
             //Define if launch will be northly or southerly and set azimuths
             bool isAscending{};
-            if (m_launchSite.GetStateVector(IO::Astrodynamics::Frames::InertialFrames::GetICRF(), date.ToTDB()).GetPosition().DotProduct(
-                    m_targetOrbit.ToStateVector().ToFrame(IO::Astrodynamics::Frames::InertialFrames::GetICRF()).GetAscendingNodeVector()) > 0.0)
+            if (m_launchSite.GetStateVector(IO::Astrodynamics::Frames::InertialFrames::ICRF(), date.ToTDB()).GetPosition().DotProduct(
+                    m_targetOrbit.ToStateVector().ToFrame(IO::Astrodynamics::Frames::InertialFrames::ICRF()).GetAscendingNodeVector()) > 0.0)
             {
                 inertialAzimuthLaunch = GetInertialAscendingAzimuthLaunch();
                 nonInertialAzimuthLaunch = GetNonInertialAscendingAzimuthLaunch();

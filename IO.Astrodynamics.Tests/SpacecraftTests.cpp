@@ -15,7 +15,7 @@ TEST(Spacecraft, Initialization) {
                                                                                                                                              IO::Astrodynamics::Math::Vector3D(1.0, 2.0, 3.0),
                                                                                                                                              IO::Astrodynamics::Math::Vector3D(4.0, 5.0, 6.0),
                                                                                                                                              IO::Astrodynamics::Time::TDB(100.0s),
-                                                                                                                                             IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+                                                                                                                                                                 IO::Astrodynamics::Frames::InertialFrames::ICRF());
     IO::Astrodynamics::Body::Spacecraft::Spacecraft spc(-1, "Spacecraft1", 1000.0, 3000.0,  std::string(SpacecraftPath), std::move(orbitalParams));
     ASSERT_EQ(-1, spc.GetId());
     ASSERT_STREQ("SPACECRAFT1", spc.GetName().c_str());
@@ -30,7 +30,7 @@ TEST(Spacecraft, InvalidId) {
                                                                                                                                              IO::Astrodynamics::Math::Vector3D(1.0, 2.0, 3.0),
                                                                                                                                              IO::Astrodynamics::Math::Vector3D(4.0, 5.0, 6.0),
                                                                                                                                              IO::Astrodynamics::Time::TDB(100.0s),
-                                                                                                                                             IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+                                                                                                                                                                 IO::Astrodynamics::Frames::InertialFrames::ICRF());
     ASSERT_THROW(IO::Astrodynamics::Body::Spacecraft::Spacecraft spc(1, "Spacecraft1", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams)), IO::Astrodynamics::Exception::SDKException);
 }
 
@@ -40,7 +40,7 @@ TEST(Spacecraft, AddPayload) {
                                                                                                                                              IO::Astrodynamics::Math::Vector3D(1.0, 2.0, 3.0),
                                                                                                                                              IO::Astrodynamics::Math::Vector3D(4.0, 5.0, 6.0),
                                                                                                                                              IO::Astrodynamics::Time::TDB(100.0s),
-                                                                                                                                             IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+                                                                                                                                                                 IO::Astrodynamics::Frames::InertialFrames::ICRF());
     IO::Astrodynamics::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams)};
     s.AddFuelTank("ft1", 1000.0, 900.0);
     s.AddEngine("sn1", "eng1", "ft1", {1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}, 450.0, 50.0);
@@ -54,7 +54,7 @@ TEST(Spacecraft, ReleasePayload) {
                                                                                                                                              IO::Astrodynamics::Math::Vector3D(1.0, 2.0, 3.0),
                                                                                                                                              IO::Astrodynamics::Math::Vector3D(4.0, 5.0, 6.0),
                                                                                                                                              IO::Astrodynamics::Time::TDB(100.0s),
-                                                                                                                                             IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+                                                                                                                                                                 IO::Astrodynamics::Frames::InertialFrames::ICRF());
     IO::Astrodynamics::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams)};
     s.AddFuelTank("ft1", 1000.0, 900.0);
     s.AddEngine("sn1", "eng1", "ft1", {1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}, 450.0, 50.0);
@@ -69,7 +69,7 @@ TEST(Spacecraft, ReleaseInvalidPayload) {
                                                                                                                                              IO::Astrodynamics::Math::Vector3D(1.0, 2.0, 3.0),
                                                                                                                                              IO::Astrodynamics::Math::Vector3D(4.0, 5.0, 6.0),
                                                                                                                                              IO::Astrodynamics::Time::TDB(100.0s),
-                                                                                                                                             IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+                                                                                                                                                                 IO::Astrodynamics::Frames::InertialFrames::ICRF());
     IO::Astrodynamics::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams)};
     s.AddFuelTank("ft1", 1000.0, 900.0);
     s.AddEngine("sn1", "eng1", "ft1", {1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}, 450.0, 50.0);
@@ -85,7 +85,7 @@ TEST(Spacecraft, EngineInvalidISP) {
                                                                                                                                              IO::Astrodynamics::Math::Vector3D(1.0, 2.0, 3.0),
                                                                                                                                              IO::Astrodynamics::Math::Vector3D(4.0, 5.0, 6.0),
                                                                                                                                              IO::Astrodynamics::Time::TDB(100.0s),
-                                                                                                                                             IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+                                                                                                                                                                 IO::Astrodynamics::Frames::InertialFrames::ICRF());
     IO::Astrodynamics::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams)};
     s.AddFuelTank("ft1", 1000.0, 900.0);
     ASSERT_THROW(s.AddEngine("sn1", "eng1", "ft1", {1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}, -450.0, 50.0), IO::Astrodynamics::Exception::InvalidArgumentException);
@@ -97,7 +97,7 @@ TEST(Spacecraft, EngineInvalidFuelFlow) {
                                                                                                                                              IO::Astrodynamics::Math::Vector3D(1.0, 2.0, 3.0),
                                                                                                                                              IO::Astrodynamics::Math::Vector3D(4.0, 5.0, 6.0),
                                                                                                                                              IO::Astrodynamics::Time::TDB(100.0s),
-                                                                                                                                             IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+                                                                                                                                                                 IO::Astrodynamics::Frames::InertialFrames::ICRF());
     IO::Astrodynamics::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams)};
     s.AddFuelTank("ft1", 1000.0, 900.0);
     ASSERT_THROW(s.AddEngine("sn1", "eng1", "ft1", {1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}, 450.0, -50.0), IO::Astrodynamics::Exception::InvalidArgumentException);
@@ -109,7 +109,7 @@ TEST(Spacecraft, GetFuelTank) {
                                                                                                                                              IO::Astrodynamics::Math::Vector3D(1.0, 2.0, 3.0),
                                                                                                                                              IO::Astrodynamics::Math::Vector3D(4.0, 5.0, 6.0),
                                                                                                                                              IO::Astrodynamics::Time::TDB(100.0s),
-                                                                                                                                             IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+                                                                                                                                                                 IO::Astrodynamics::Frames::InertialFrames::ICRF());
     IO::Astrodynamics::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams)};
     s.AddFuelTank("ft1", 1000.0, 900.0);
     auto fueltank = s.GetFueltank("ft1");
@@ -122,7 +122,7 @@ TEST(Spacecraft, EngineInvalidSerialNumber) {
                                                                                                                                              IO::Astrodynamics::Math::Vector3D(1.0, 2.0, 3.0),
                                                                                                                                              IO::Astrodynamics::Math::Vector3D(4.0, 5.0, 6.0),
                                                                                                                                              IO::Astrodynamics::Time::TDB(100.0s),
-                                                                                                                                             IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+                                                                                                                                                                 IO::Astrodynamics::Frames::InertialFrames::ICRF());
     IO::Astrodynamics::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams)};
     s.AddFuelTank("ft1", 1000.0, 900.0);
     ASSERT_THROW(s.AddEngine("", "eng1", "ft1", {1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}, 450.0, 50.0), IO::Astrodynamics::Exception::InvalidArgumentException);
@@ -134,7 +134,7 @@ TEST(Spacecraft, FuelTankOverQuantity) {
                                                                                                                                              IO::Astrodynamics::Math::Vector3D(1.0, 2.0, 3.0),
                                                                                                                                              IO::Astrodynamics::Math::Vector3D(4.0, 5.0, 6.0),
                                                                                                                                              IO::Astrodynamics::Time::TDB(100.0s),
-                                                                                                                                             IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+                                                                                                                                                                 IO::Astrodynamics::Frames::InertialFrames::ICRF());
     IO::Astrodynamics::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams)};
     ASSERT_THROW(s.AddFuelTank("ft1", 500.0, 600.0), IO::Astrodynamics::Exception::InvalidArgumentException);
 }
@@ -145,7 +145,7 @@ TEST(Spacecraft, FuelTankEmptySerialNumber) {
                                                                                                                                              IO::Astrodynamics::Math::Vector3D(1.0, 2.0, 3.0),
                                                                                                                                              IO::Astrodynamics::Math::Vector3D(4.0, 5.0, 6.0),
                                                                                                                                              IO::Astrodynamics::Time::TDB(100.0s),
-                                                                                                                                             IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+                                                                                                                                                                 IO::Astrodynamics::Frames::InertialFrames::ICRF());
     IO::Astrodynamics::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams)};
     ASSERT_THROW(s.AddFuelTank("", 1500.0, 600.0), IO::Astrodynamics::Exception::InvalidArgumentException);
 }
@@ -156,7 +156,7 @@ TEST(Spacecraft, FuelTankInvalidCapacity) {
                                                                                                                                              IO::Astrodynamics::Math::Vector3D(1.0, 2.0, 3.0),
                                                                                                                                              IO::Astrodynamics::Math::Vector3D(4.0, 5.0, 6.0),
                                                                                                                                              IO::Astrodynamics::Time::TDB(100.0s),
-                                                                                                                                             IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+                                                                                                                                                                 IO::Astrodynamics::Frames::InertialFrames::ICRF());
     IO::Astrodynamics::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams)};
     ASSERT_THROW(s.AddFuelTank("", -300.0, 600.0), IO::Astrodynamics::Exception::InvalidArgumentException);
 }
@@ -167,7 +167,7 @@ TEST(Spacecraft, FuelTankInvalidQuantity) {
                                                                                                                                              IO::Astrodynamics::Math::Vector3D(1.0, 2.0, 3.0),
                                                                                                                                              IO::Astrodynamics::Math::Vector3D(4.0, 5.0, 6.0),
                                                                                                                                              IO::Astrodynamics::Time::TDB(100.0s),
-                                                                                                                                             IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+                                                                                                                                                                 IO::Astrodynamics::Frames::InertialFrames::ICRF());
     IO::Astrodynamics::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams)};
     ASSERT_THROW(s.AddFuelTank("", 300.0, -600.0), IO::Astrodynamics::Exception::InvalidArgumentException);
 }
@@ -178,7 +178,7 @@ TEST(Spacecraft, FuelTankInvalidName) {
                                                                                                                                              IO::Astrodynamics::Math::Vector3D(1.0, 2.0, 3.0),
                                                                                                                                              IO::Astrodynamics::Math::Vector3D(4.0, 5.0, 6.0),
                                                                                                                                              IO::Astrodynamics::Time::TDB(100.0s),
-                                                                                                                                             IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+                                                                                                                                                                 IO::Astrodynamics::Frames::InertialFrames::ICRF());
     IO::Astrodynamics::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams)};
     ASSERT_THROW(s.AddFuelTank("", 300.0, -600.0), IO::Astrodynamics::Exception::InvalidArgumentException);
 }
@@ -189,7 +189,7 @@ TEST(Spacecraft, GetEngine) {
                                                                                                                                              IO::Astrodynamics::Math::Vector3D(1.0, 2.0, 3.0),
                                                                                                                                              IO::Astrodynamics::Math::Vector3D(4.0, 5.0, 6.0),
                                                                                                                                              IO::Astrodynamics::Time::TDB(100.0s),
-                                                                                                                                             IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+                                                                                                                                                                 IO::Astrodynamics::Frames::InertialFrames::ICRF());
     IO::Astrodynamics::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams)};
     s.AddFuelTank("ft1", 1000.0, 900.0);
     s.AddEngine("sn1", "eng1", "ft1", {1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}, 450.0, 50.0);
@@ -203,7 +203,7 @@ TEST(Spacecraft, Orientation) {
                                                                                                                                              IO::Astrodynamics::Math::Vector3D(1.0, 2.0, 3.0),
                                                                                                                                              IO::Astrodynamics::Math::Vector3D(4.0, 5.0, 6.0),
                                                                                                                                              IO::Astrodynamics::Time::TDB(100.0s),
-                                                                                                                                             IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+                                                                                                                                                                 IO::Astrodynamics::Frames::InertialFrames::ICRF());
     IO::Astrodynamics::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams)};
 
     ASSERT_EQ(IO::Astrodynamics::Tests::VectorY, s.Front);
@@ -222,7 +222,7 @@ TEST(Spacecraft, Orientation2) {
                                                                                                                                              IO::Astrodynamics::Math::Vector3D(1.0, 2.0, 3.0),
                                                                                                                                              IO::Astrodynamics::Math::Vector3D(4.0, 5.0, 6.0),
                                                                                                                                              IO::Astrodynamics::Time::TDB(100.0s),
-                                                                                                                                             IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+                                                                                                                                                                 IO::Astrodynamics::Frames::InertialFrames::ICRF());
     IO::Astrodynamics::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams), IO::Astrodynamics::Tests::VectorX, IO::Astrodynamics::Tests::VectorY};
 
     ASSERT_EQ(IO::Astrodynamics::Tests::VectorX, s.Front);

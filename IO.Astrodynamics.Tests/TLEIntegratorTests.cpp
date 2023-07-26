@@ -15,7 +15,7 @@ TEST(TLEIntegrator, Integrate)
     std::unique_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> tle = std::make_unique<IO::Astrodynamics::OrbitalParameters::TLE>(earth, lines);
     auto str = tle->GetEpoch().ToString();
     auto localTLE = dynamic_cast<IO::Astrodynamics::OrbitalParameters::TLE *>(tle.get());
-    IO::Astrodynamics::OrbitalParameters::StateOrientation attitude(IO::Astrodynamics::Time::TDB(100.0s), IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+    IO::Astrodynamics::OrbitalParameters::StateOrientation attitude(IO::Astrodynamics::Time::TDB(100.0s), IO::Astrodynamics::Frames::InertialFrames::ICRF());
     IO::Astrodynamics::Body::Spacecraft::Spacecraft spc(-12, "spc12", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(tle));
     IO::Astrodynamics::Integrators::TLEIntegrator integrator(*localTLE, IO::Astrodynamics::Time::TimeSpan(60s));
 

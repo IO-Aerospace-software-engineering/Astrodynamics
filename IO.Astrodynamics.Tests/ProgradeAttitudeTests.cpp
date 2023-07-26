@@ -24,7 +24,8 @@ TEST(ProgradeAttitude, GetOrientation)
 {
     auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399); //GEOPHYSICAL PROPERTIES provided by JPL
 
-    std::unique_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParams1 = std::make_unique<IO::Astrodynamics::OrbitalParameters::StateVector>(earth, IO::Astrodynamics::Math::Vector3D(6678000.0, 0.0, 0.0), IO::Astrodynamics::Math::Vector3D(0.0, 7727.0, 0.0), IO::Astrodynamics::Time::TDB("2021-01-01T13:00:00"), IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+    std::unique_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParams1 = std::make_unique<IO::Astrodynamics::OrbitalParameters::StateVector>(earth, IO::Astrodynamics::Math::Vector3D(6678000.0, 0.0, 0.0), IO::Astrodynamics::Math::Vector3D(0.0, 7727.0, 0.0), IO::Astrodynamics::Time::TDB("2021-01-01T13:00:00"),
+                                                                                                                                                                  IO::Astrodynamics::Frames::InertialFrames::ICRF());
 
     IO::Astrodynamics::Body::Spacecraft::Spacecraft s{-1, "maneuverTest", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams1)};
 
@@ -46,10 +47,11 @@ TEST(ProgradeAttitude, GetOrientation)
     prop.Propagate();
 
     //auto res = nadir.TryExecute(s.GetOrbitalParametersAtEpoch()->ToStateVector(IO::Astrodynamics::Time::TDB(100.1s)));
-    auto orientation = s.GetOrientation(IO::Astrodynamics::Time::TDB("2021-01-01T13:00:00"), IO::Astrodynamics::Time::TimeSpan(10s), IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+    auto orientation = s.GetOrientation(IO::Astrodynamics::Time::TDB("2021-01-01T13:00:00"), IO::Astrodynamics::Time::TimeSpan(10s),
+                                        IO::Astrodynamics::Frames::InertialFrames::ICRF());
 
     ASSERT_DOUBLE_EQ(0.0, prograde.GetDeltaV().Magnitude());
-    ASSERT_EQ(IO::Astrodynamics::Frames::InertialFrames::GetICRF(), orientation.GetFrame());
+    ASSERT_EQ(IO::Astrodynamics::Frames::InertialFrames::ICRF(), orientation.GetFrame());
     auto newVector = s.Front.Rotate(orientation.GetQuaternion());
     ASSERT_EQ(IO::Astrodynamics::Math::Vector3D(0.0, 1.0, 0.0), newVector);
 }
@@ -58,7 +60,8 @@ TEST(ProgradeAttitude, GetOrientationMinimumEpoch)
 {
     auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399); //GEOPHYSICAL PROPERTIES provided by JPL
 
-    std::unique_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParams1 = std::make_unique<IO::Astrodynamics::OrbitalParameters::StateVector>(earth, IO::Astrodynamics::Math::Vector3D(6678000.0, 0.0, 0.0), IO::Astrodynamics::Math::Vector3D(0.0, 7727.0, 0.0), IO::Astrodynamics::Time::TDB("2021-01-01T13:00:00"), IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+    std::unique_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParams1 = std::make_unique<IO::Astrodynamics::OrbitalParameters::StateVector>(earth, IO::Astrodynamics::Math::Vector3D(6678000.0, 0.0, 0.0), IO::Astrodynamics::Math::Vector3D(0.0, 7727.0, 0.0), IO::Astrodynamics::Time::TDB("2021-01-01T13:00:00"),
+                                                                                                                                                                  IO::Astrodynamics::Frames::InertialFrames::ICRF());
 
     IO::Astrodynamics::Body::Spacecraft::Spacecraft s{-1, "maneuverTest", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams1)};
 
@@ -79,10 +82,11 @@ TEST(ProgradeAttitude, GetOrientationMinimumEpoch)
 
     prop.Propagate();
 
-    auto orientation = s.GetOrientation(IO::Astrodynamics::Time::TDB("2021-01-01T13:00:10"), IO::Astrodynamics::Time::TimeSpan(10s), IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+    auto orientation = s.GetOrientation(IO::Astrodynamics::Time::TDB("2021-01-01T13:00:10"), IO::Astrodynamics::Time::TimeSpan(10s),
+                                        IO::Astrodynamics::Frames::InertialFrames::ICRF());
 
     ASSERT_DOUBLE_EQ(0.0, prograde.GetDeltaV().Magnitude());
-    ASSERT_EQ(IO::Astrodynamics::Frames::InertialFrames::GetICRF(), orientation.GetFrame());
+    ASSERT_EQ(IO::Astrodynamics::Frames::InertialFrames::ICRF(), orientation.GetFrame());
     auto newVector = s.Front.Rotate(orientation.GetQuaternion());
     ASSERT_EQ(IO::Astrodynamics::Math::Vector3D(0.0, 1.0, 0.0), newVector);
     ASSERT_DOUBLE_EQ(IO::Astrodynamics::Time::TDB("2021-01-01T13:00:00").GetSecondsFromJ2000().count(), s.GetOrientationsCoverageWindow().GetStartDate().GetSecondsFromJ2000().count());

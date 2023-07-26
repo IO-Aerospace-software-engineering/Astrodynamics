@@ -14,7 +14,8 @@ using namespace std::chrono_literals;
 TEST(ConicOrbitalElements, Initialization)
 {
 	auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399);
-	IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements conic(earth, 7000000.0, 0.5, 2.0, 3.0, 1.0, 1.57, IO::Astrodynamics::Time::TDB(100.0s), IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+	IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements conic(earth, 7000000.0, 0.5, 2.0, 3.0, 1.0, 1.57, IO::Astrodynamics::Time::TDB(100.0s),
+                                                                     IO::Astrodynamics::Frames::InertialFrames::ICRF());
 
 	ASSERT_EQ(earth.get(), conic.GetCenterOfMotion().get());
 	ASSERT_DOUBLE_EQ(7000000.0, conic.GetPerifocalDistance());
@@ -30,7 +31,7 @@ TEST(ConicOrbitalElements, Initialization)
 	ASSERT_DOUBLE_EQ(16485.534686666488, conic.GetPeriod().GetSeconds().count());
 
 	double elts[11]{6794349.7510811854, 1.353139738203394E-03, 5.171921958517460E+01, 3.257605322534260E+01, 1.062574316262159E+02, 4.541224977546975E+01, 663724800.00001490, 3.986004418e14, 4.552280986634524E+01, 6.800803544958167E+06, 5581.5051305524184};
-	IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements conicFromArray(earth, elts, IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+	IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements conicFromArray(earth, elts, IO::Astrodynamics::Frames::InertialFrames::ICRF());
 	ASSERT_EQ(earth.get(), conicFromArray.GetCenterOfMotion().get());
 	ASSERT_EQ(6794349.7510811854, conicFromArray.GetPerifocalDistance());
 	ASSERT_EQ(1.353139738203394E-03, conicFromArray.GetEccentricity());
@@ -47,7 +48,8 @@ TEST(ConicOrbitalElements, Initialization)
 TEST(ConicOrbitalElements, GetMeanAnomaly)
 {
 	auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399);
-	IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements conic(earth, 7136635.417, 0.0, 0.0, 0.0, 0.0, 0.0, IO::Astrodynamics::Time::TDB(100.0s), IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+	IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements conic(earth, 7136635.417, 0.0, 0.0, 0.0, 0.0, 0.0, IO::Astrodynamics::Time::TDB(100.0s),
+                                                                     IO::Astrodynamics::Frames::InertialFrames::ICRF());
 
 	//180deg
 	ASSERT_NEAR(IO::Astrodynamics::Constants::PI, conic.GetMeanAnomaly(IO::Astrodynamics::Time::TDB(3100.0s)), IO::Astrodynamics::Test::Constants::ANGULAR_ACCURACY);
@@ -62,7 +64,8 @@ TEST(ConicOrbitalElements, GetMeanAnomaly)
 
 	ASSERT_NEAR(-IO::Astrodynamics::Constants::PI2 + IO::Astrodynamics::Constants::_2PI, conic.GetMeanAnomaly(IO::Astrodynamics::Time::TDB(-1400.0s)), IO::Astrodynamics::Test::Constants::ANGULAR_ACCURACY);
 
-	IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements orbitalParams1(earth, 42164000.0, 0.0, 0.0, 0.0, 0.0, 0.0, IO::Astrodynamics::Time::TDB(0.0s), IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+	IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements orbitalParams1(earth, 42164000.0, 0.0, 0.0, 0.0, 0.0, 0.0, IO::Astrodynamics::Time::TDB(0.0s),
+                                                                              IO::Astrodynamics::Frames::InertialFrames::ICRF());
 
 	ASSERT_DOUBLE_EQ(7.2921598035841106e-05, orbitalParams1.GetMeanMotion());
 }
@@ -70,7 +73,8 @@ TEST(ConicOrbitalElements, GetMeanAnomaly)
 TEST(ConicOrbitalElements, GetEccentricAnomaly)
 {
 	auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399);
-	IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements conic(earth, 7000000.0, 0.5, 0.0, 0.0, 0.0, 0.0, IO::Astrodynamics::Time::TDB(100.0s), IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+	IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements conic(earth, 7000000.0, 0.5, 0.0, 0.0, 0.0, 0.0, IO::Astrodynamics::Time::TDB(100.0s),
+                                                                     IO::Astrodynamics::Frames::InertialFrames::ICRF());
 
 	double eccentricAnomaly = conic.GetEccentricAnomaly(IO::Astrodynamics::Time::TDB(374.7589113s));
 	ASSERT_NEAR(0.2079441345897452, eccentricAnomaly, IO::Astrodynamics::Test::Constants::ANGULAR_ACCURACY); //11.914321389deg
@@ -85,7 +89,8 @@ TEST(ConicOrbitalElements, GetEccentricAnomaly)
 TEST(ConicOrbitalElements, GetTrueAnomaly)
 {
 	auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399);
-	IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements conic(earth, 7000000.0, 0.5, 2.0, 3.0, 4.0, 0.0, IO::Astrodynamics::Time::TDB(100.0s), IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+	IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements conic(earth, 7000000.0, 0.5, 2.0, 3.0, 4.0, 0.0, IO::Astrodynamics::Time::TDB(100.0s),
+                                                                     IO::Astrodynamics::Frames::InertialFrames::ICRF());
 
 	double trueAnomaly = conic.GetTrueAnomaly(IO::Astrodynamics::Time::TDB(374.7589113s));
 	ASSERT_NEAR(0.35761273441580932, trueAnomaly, IO::Astrodynamics::Test::Constants::ANGULAR_ACCURACY); //20.489700557�
@@ -100,7 +105,8 @@ TEST(ConicOrbitalElements, GetTrueAnomaly)
 TEST(ConicOrbitalElements, GetTimeToMeanAnomaly)
 {
 	auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399);
-	IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements conic(earth, 7000000.0, 0.5, 2.0, 3.0, 4.0, 0.0, IO::Astrodynamics::Time::TDB(100.0s), IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+	IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements conic(earth, 7000000.0, 0.5, 2.0, 3.0, 4.0, 0.0, IO::Astrodynamics::Time::TDB(100.0s),
+                                                                     IO::Astrodynamics::Frames::InertialFrames::ICRF());
 
 	IO::Astrodynamics::Time::TDB epoch = conic.GetTimeToMeanAnomaly(IO::Astrodynamics::Constants::PI2); // to 90 �
 	ASSERT_NEAR(4221.3836716666292, epoch.GetSecondsFromJ2000().count(), IO::Astrodynamics::Test::Constants::TIME_ACCURACY);
@@ -112,7 +118,8 @@ TEST(ConicOrbitalElements, GetTimeToMeanAnomaly)
 TEST(ConicOrbitalElements, GetTimeToTrueAnomaly)
 {
 	auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399);
-	IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements conic(earth, 7000000.0, 0.5, 2.0, 3.0, 4.0, 0.0, IO::Astrodynamics::Time::TDB(0.0s), IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+	IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements conic(earth, 7000000.0, 0.5, 2.0, 3.0, 4.0, 0.0, IO::Astrodynamics::Time::TDB(0.0s),
+                                                                     IO::Astrodynamics::Frames::InertialFrames::ICRF());
 
 	IO::Astrodynamics::Time::TDB epoch = conic.GetTimeToTrueAnomaly(IO::Astrodynamics::Constants::PI); // to 180 d
 	ASSERT_NEAR(8242.7673433332584, epoch.GetSecondsFromJ2000().count(), IO::Astrodynamics::Test::Constants::TIME_ACCURACY);
@@ -144,7 +151,7 @@ TEST(ConicOrbitalElements, ToStateVector)
 		3.257605322534260E+01 * IO::Astrodynamics::Constants::DEG_RAD,
 		1.062574316262159E+02 * IO::Astrodynamics::Constants::DEG_RAD,
 		4.541224977546975E+01 * IO::Astrodynamics::Constants::DEG_RAD,
-		IO::Astrodynamics::Time::TDB(663724800.00001490s), IO::Astrodynamics::Frames::InertialFrames::GetICRF()); //"2021-01-12T11:58:50.816" UTC
+		IO::Astrodynamics::Time::TDB(663724800.00001490s), IO::Astrodynamics::Frames::InertialFrames::ICRF()); //"2021-01-12T11:58:50.816" UTC
 
 	IO::Astrodynamics::OrbitalParameters::StateVector sv = conic.ToStateVector(IO::Astrodynamics::Time::TDB(663724800.00001490s));
 
@@ -170,7 +177,7 @@ TEST(ConicOrbitalElements, GetStateVectorFromToConic)
                                                                                            0.0 * IO::Astrodynamics::Constants::DEG_RAD,
                                                                                            0.0,
                                                                                            IO::Astrodynamics::Time::TDB("2021-03-02T00:00:00"),
-                                                                                           IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+                                                                                                     IO::Astrodynamics::Frames::InertialFrames::ICRF());
 
     IO::Astrodynamics::OrbitalParameters::StateVector sv = parkingOrbit->ToStateVector();
 
@@ -191,7 +198,8 @@ TEST(ConicOrbitalElements, IsElliptical)
 {
 	auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399); //GEOPHYSICAL PROPERTIES provided by JPL
 	IO::Astrodynamics::Time::TimeSpan ts(6000.0s);
-	IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements conic(earth, 1.0, 0.5, 2.0, 3.0, 4.0, 0.0, IO::Astrodynamics::Time::TDB(0.0s), IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+	IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements conic(earth, 1.0, 0.5, 2.0, 3.0, 4.0, 0.0, IO::Astrodynamics::Time::TDB(0.0s),
+                                                                     IO::Astrodynamics::Frames::InertialFrames::ICRF());
 
 	ASSERT_TRUE(conic.IsElliptical());
 }
@@ -200,7 +208,8 @@ TEST(ConicOrbitalElements, IsHyperbolic)
 {
 	auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399); //GEOPHYSICAL PROPERTIES provided by JPL
 	IO::Astrodynamics::Time::TimeSpan ts(0.0s);
-	IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements conic(earth, 1.0, 1.5, 2.0, 3.0, 4.0, 0.0, IO::Astrodynamics::Time::TDB(0.0s), IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+	IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements conic(earth, 1.0, 1.5, 2.0, 3.0, 4.0, 0.0, IO::Astrodynamics::Time::TDB(0.0s),
+                                                                     IO::Astrodynamics::Frames::InertialFrames::ICRF());
 
 	ASSERT_TRUE(conic.IsHyperbolic());
 }
@@ -209,7 +218,8 @@ TEST(ConicOrbitalElements, IsParabolic)
 {
 	auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399); //GEOPHYSICAL PROPERTIES provided by JPL
 	IO::Astrodynamics::Time::TimeSpan ts(0.0s);
-	IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements conic(earth, 1.0, 1.0, 2.0, 3.0, 4.0, 0.0, IO::Astrodynamics::Time::TDB(0.0s), IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+	IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements conic(earth, 1.0, 1.0, 2.0, 3.0, 4.0, 0.0, IO::Astrodynamics::Time::TDB(0.0s),
+                                                                     IO::Astrodynamics::Frames::InertialFrames::ICRF());
 
 	ASSERT_TRUE(conic.IsParabolic());
 }
@@ -218,10 +228,11 @@ TEST(ConicOrbitalElements, GetMeanMotion)
 {
 	auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399); //GEOPHYSICAL PROPERTIES provided by JPL
 	double elts[11]{6794349.7510811854, 1.353139738203394E-03, 5.171921958517460E+01, 3.257605322534260E+01, 1.062574316262159E+02, 4.541224977546975E+01, 663724800.00001490, 3.986004418e14, 4.552280986634524E+01, 6.800803544958167E+06, 5581.5051305524184};
-	IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements conicFromArray(earth, elts, IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+	IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements conicFromArray(earth, elts, IO::Astrodynamics::Frames::InertialFrames::ICRF());
 	ASSERT_DOUBLE_EQ(0.0011257152255914383, conicFromArray.GetMeanMotion());
 
-	IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements orbitalParams1(earth, 42164000.0, 0.0, 0.0, 0.0, 0.0, 0.0, IO::Astrodynamics::Time::TDB(0.0s), IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+	IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements orbitalParams1(earth, 42164000.0, 0.0, 0.0, 0.0, 0.0, 0.0, IO::Astrodynamics::Time::TDB(0.0s),
+                                                                              IO::Astrodynamics::Frames::InertialFrames::ICRF());
 
 	ASSERT_DOUBLE_EQ(7.2921598035841106e-05, orbitalParams1.GetMeanMotion());
 }
@@ -230,7 +241,7 @@ TEST(ConicOrbitalElements, GetSpecificOrbitalEnergy)
 {
 	auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399); //GEOPHYSICAL PROPERTIES provided by JPL
 	double elts[11]{6794349.7510811854, 1.353139738203394E-03, 5.171921958517460E+01, 3.257605322534260E+01, 1.062574316262159E+02, 4.541224977546975E+01, 663724800.00001490, 3.986004418e14, 4.552280986634524E+01, 6.800803544958167E+06, 5581.5051305524184};
-	IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements conicFromArray(earth, elts, IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+	IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements conicFromArray(earth, elts, IO::Astrodynamics::Frames::InertialFrames::ICRF());
 
 	ASSERT_DOUBLE_EQ(-29293537.125013251, conicFromArray.GetSpecificOrbitalEnergy()); //iss energy
 }
@@ -239,7 +250,7 @@ TEST(ConicOrbitalElements, GetSpecificAngularMomentum)
 {
 	auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399); //GEOPHYSICAL PROPERTIES provided by JPL
 	double elts[11]{6794349.7510811854, 1.353139738203394E-03, 5.171921958517460E+01, 3.257605322534260E+01, 1.062574316262159E+02, 4.541224977546975E+01, 663724800.00001490, 3.986004418e14, 4.552280986634524E+01, 6.800803544958167E+06, 5581.5051305524184};
-	IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements conicFromArray(earth, elts, IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+	IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements conicFromArray(earth, elts, IO::Astrodynamics::Frames::InertialFrames::ICRF());
 
 	ASSERT_DOUBLE_EQ(52075861816.778732, conicFromArray.GetSpecificAngularMomentum().Magnitude());
 }

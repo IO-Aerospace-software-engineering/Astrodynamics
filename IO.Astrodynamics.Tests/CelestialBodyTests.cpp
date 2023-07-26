@@ -49,12 +49,12 @@ TEST(CelestialBody, GetStateVector)
 	auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399, sun);
 
 	double expectedData[6]{-2.6795375379297768E+10, 1.3270111352322429E+11, 5.7525334752378304E+10, -29765.580095900841, -5075.3399173890839, -2200.9299676732885};
-	auto sv = earth->ReadEphemeris( IO::Astrodynamics::Frames::InertialFrames::GetICRF(), IO::Astrodynamics::AberrationsEnum::None, epoch,*sun);
-	ASSERT_EQ(IO::Astrodynamics::OrbitalParameters::StateVector(sun, expectedData, epoch, IO::Astrodynamics::Frames::InertialFrames::GetICRF()), sv);
+	auto sv = earth->ReadEphemeris(IO::Astrodynamics::Frames::InertialFrames::ICRF(), IO::Astrodynamics::AberrationsEnum::None, epoch, *sun);
+	ASSERT_EQ(IO::Astrodynamics::OrbitalParameters::StateVector(sun, expectedData, epoch, IO::Astrodynamics::Frames::InertialFrames::ICRF()), sv);
 
 	//second overload
-	auto sv2 = earth->ReadEphemeris(IO::Astrodynamics::Frames::InertialFrames::GetICRF(), IO::Astrodynamics::AberrationsEnum::None, epoch);
-	ASSERT_EQ(IO::Astrodynamics::OrbitalParameters::StateVector(sun, expectedData, epoch, IO::Astrodynamics::Frames::InertialFrames::GetICRF()), sv2);
+	auto sv2 = earth->ReadEphemeris(IO::Astrodynamics::Frames::InertialFrames::ICRF(), IO::Astrodynamics::AberrationsEnum::None, epoch);
+	ASSERT_EQ(IO::Astrodynamics::OrbitalParameters::StateVector(sun, expectedData, epoch, IO::Astrodynamics::Frames::InertialFrames::ICRF()), sv2);
 }
 
 TEST(CelestialBody, GetRelativeStateVector)
@@ -65,8 +65,8 @@ TEST(CelestialBody, GetRelativeStateVector)
 	auto marsBarycenter = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(4, sun);
 
 	double expectedData[6]{1.1967701118722568E+11, 5.5305597076056137E+10, 2.6202720828289268E+10, 8.5989974247898281E+03, 1.5803131615538015E+04, 7.6926453157571395E+03};
-	auto sv = earth->GetRelativeStatevector(marsBarycenter->ReadEphemeris( IO::Astrodynamics::Frames::InertialFrames::GetICRF(), IO::Astrodynamics::AberrationsEnum::None, epoch,*sun));
-	ASSERT_EQ(IO::Astrodynamics::OrbitalParameters::StateVector(earth, expectedData, epoch, IO::Astrodynamics::Frames::InertialFrames::GetICRF()), sv);
+	auto sv = earth->GetRelativeStatevector(marsBarycenter->ReadEphemeris(IO::Astrodynamics::Frames::InertialFrames::ICRF(), IO::Astrodynamics::AberrationsEnum::None, epoch, *sun));
+	ASSERT_EQ(IO::Astrodynamics::OrbitalParameters::StateVector(earth, expectedData, epoch, IO::Astrodynamics::Frames::InertialFrames::ICRF()), sv);
 }
 
 TEST(CelestialBody, IsInSphereOfInfluence)
@@ -76,9 +76,10 @@ TEST(CelestialBody, IsInSphereOfInfluence)
 	auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399, sun);
 	auto marsBarycenter = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(4, sun);
 
-	ASSERT_FALSE(earth->IsInSphereOfInfluence(marsBarycenter->ReadEphemeris(IO::Astrodynamics::Frames::InertialFrames::GetICRF(), IO::Astrodynamics::AberrationsEnum::None, epoch,*sun)));
+	ASSERT_FALSE(earth->IsInSphereOfInfluence(marsBarycenter->ReadEphemeris(IO::Astrodynamics::Frames::InertialFrames::ICRF(), IO::Astrodynamics::AberrationsEnum::None, epoch, *sun)));
 
-	auto fictiveBody = IO::Astrodynamics::OrbitalParameters::StateVector(earth, IO::Astrodynamics::Math::Vector3D(900000000.0, 0.0, 0.0), IO::Astrodynamics::Math::Vector3D(0.0, 1000.0, 0.0), epoch, IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+	auto fictiveBody = IO::Astrodynamics::OrbitalParameters::StateVector(earth, IO::Astrodynamics::Math::Vector3D(900000000.0, 0.0, 0.0), IO::Astrodynamics::Math::Vector3D(0.0, 1000.0, 0.0), epoch,
+                                                                         IO::Astrodynamics::Frames::InertialFrames::ICRF());
 	ASSERT_TRUE(earth->IsInSphereOfInfluence(fictiveBody));
 }
 
@@ -89,9 +90,10 @@ TEST(CelestialBody, IsInHillSphere)
 	auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399, sun);
 	auto marsBarycenter = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(4, sun);
 
-	ASSERT_FALSE(earth->IsInHillSphere(marsBarycenter->ReadEphemeris(IO::Astrodynamics::Frames::InertialFrames::GetICRF(), IO::Astrodynamics::AberrationsEnum::None, epoch,*sun)));
+	ASSERT_FALSE(earth->IsInHillSphere(marsBarycenter->ReadEphemeris(IO::Astrodynamics::Frames::InertialFrames::ICRF(), IO::Astrodynamics::AberrationsEnum::None, epoch, *sun)));
 
-	auto fictiveBody = IO::Astrodynamics::OrbitalParameters::StateVector(earth, IO::Astrodynamics::Math::Vector3D(1400000000.0, 0.0, 0.0), IO::Astrodynamics::Math::Vector3D(0.0, 1000.0, 0.0), epoch, IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+	auto fictiveBody = IO::Astrodynamics::OrbitalParameters::StateVector(earth, IO::Astrodynamics::Math::Vector3D(1400000000.0, 0.0, 0.0), IO::Astrodynamics::Math::Vector3D(0.0, 1000.0, 0.0), epoch,
+                                                                         IO::Astrodynamics::Frames::InertialFrames::ICRF());
 	ASSERT_TRUE(earth->IsInHillSphere(fictiveBody));
 }
 

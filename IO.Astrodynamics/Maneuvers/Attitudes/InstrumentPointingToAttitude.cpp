@@ -55,14 +55,14 @@ IO::Astrodynamics::OrbitalParameters::StateOrientation
 IO::Astrodynamics::Maneuvers::Attitudes::InstrumentPointingToAttitude::ComputeOrientation(const IO::Astrodynamics::OrbitalParameters::OrbitalParameters &maneuverPoint)
 {
     IO::Astrodynamics::Math::Vector3D targetPosition;
-    IO::Astrodynamics::Math::Vector3D spacecraftPosition = maneuverPoint.ToStateVector().ToFrame(IO::Astrodynamics::Frames::InertialFrames::GetICRF()).GetPosition();
+    IO::Astrodynamics::Math::Vector3D spacecraftPosition = maneuverPoint.ToStateVector().ToFrame(IO::Astrodynamics::Frames::InertialFrames::ICRF()).GetPosition();
     if (m_targetBody)
     {
         targetPosition = m_targetBody->ReadEphemeris(maneuverPoint.GetFrame(), AberrationsEnum::LTS, maneuverPoint.GetEpoch(),
                                                      *maneuverPoint.GetCenterOfMotion()).GetPosition();
     } else if (m_targetSite)
     {
-        targetPosition = m_targetSite->GetStateVector(IO::Astrodynamics::Frames::InertialFrames::GetICRF(), maneuverPoint.GetEpoch()).GetPosition();
+        targetPosition = m_targetSite->GetStateVector(IO::Astrodynamics::Frames::InertialFrames::ICRF(), maneuverPoint.GetEpoch()).GetPosition();
         if (maneuverPoint.GetCenterOfMotion() != m_targetSite->GetBody())
         {
             targetPosition = targetPosition + m_targetSite->GetBody()->ReadEphemeris(maneuverPoint.GetFrame(), AberrationsEnum::LTS, maneuverPoint.GetEpoch(),

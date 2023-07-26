@@ -26,8 +26,8 @@ TEST(SpacecraftClockKernel, BuildGenericKernel)
                                                                                                                                                                          6.0),
                                                                                                                                                                  IO::Astrodynamics::Time::TDB(
                                                                                                                                                                          100.0s),
-                                                                                                                                                                 IO::Astrodynamics::Frames::InertialFrames::GetICRF());
-    IO::Astrodynamics::OrbitalParameters::StateOrientation attitude(IO::Astrodynamics::Time::TDB(100.0s), IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+                                                                                                                                                                 IO::Astrodynamics::Frames::InertialFrames::ICRF());
+    IO::Astrodynamics::OrbitalParameters::StateOrientation attitude(IO::Astrodynamics::Time::TDB(100.0s), IO::Astrodynamics::Frames::InertialFrames::ICRF());
     IO::Astrodynamics::Body::Spacecraft::Spacecraft s(-456, "sc456", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams));
     std::string filepath = s.GetFilesPath() + "/Clocks/" + s.GetName() + ".tsc";
 
@@ -48,8 +48,8 @@ TEST(SpacecraftClockKernel, GetCoverage)
                                                                                                                                                                          6.0),
                                                                                                                                                                  IO::Astrodynamics::Time::TDB(
                                                                                                                                                                          100.0s),
-                                                                                                                                                                 IO::Astrodynamics::Frames::InertialFrames::GetICRF());
-    IO::Astrodynamics::OrbitalParameters::StateOrientation attitude(IO::Astrodynamics::Time::TDB(100.0s), IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+                                                                                                                                                                 IO::Astrodynamics::Frames::InertialFrames::ICRF());
+    IO::Astrodynamics::OrbitalParameters::StateOrientation attitude(IO::Astrodynamics::Time::TDB(100.0s), IO::Astrodynamics::Frames::InertialFrames::ICRF());
     IO::Astrodynamics::Body::Spacecraft::Spacecraft s(-456, "sc456", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams));
     std::string filepath = s.GetFilesPath() + "/Clocks/" + s.GetName() + ".tsc";
 
@@ -71,8 +71,8 @@ TEST(SpacecraftClockKernel, ConvertToTDB)
                                                                                                                                                                          6.0),
                                                                                                                                                                  IO::Astrodynamics::Time::TDB(
                                                                                                                                                                          100.0s),
-                                                                                                                                                                 IO::Astrodynamics::Frames::InertialFrames::GetICRF());
-    IO::Astrodynamics::OrbitalParameters::StateOrientation attitude(IO::Astrodynamics::Time::TDB(100.0s), IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+                                                                                                                                                                 IO::Astrodynamics::Frames::InertialFrames::ICRF());
+    IO::Astrodynamics::OrbitalParameters::StateOrientation attitude(IO::Astrodynamics::Time::TDB(100.0s), IO::Astrodynamics::Frames::InertialFrames::ICRF());
     IO::Astrodynamics::Body::Spacecraft::Spacecraft s(-456, "sc456", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams));
     std::string filepath = s.GetFilesPath() + "/Clocks/" + s.GetName() + ".tsc";
 
@@ -92,8 +92,8 @@ TEST(SpacecraftClockKernel, ConvertToClock)
                                                                                                                                                                          6.0),
                                                                                                                                                                  IO::Astrodynamics::Time::TDB(
                                                                                                                                                                          100.0s),
-                                                                                                                                                                 IO::Astrodynamics::Frames::InertialFrames::GetICRF());
-    IO::Astrodynamics::OrbitalParameters::StateOrientation attitude(IO::Astrodynamics::Time::TDB(100.0s), IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+                                                                                                                                                                 IO::Astrodynamics::Frames::InertialFrames::ICRF());
+    IO::Astrodynamics::OrbitalParameters::StateOrientation attitude(IO::Astrodynamics::Time::TDB(100.0s), IO::Astrodynamics::Frames::InertialFrames::ICRF());
     IO::Astrodynamics::Body::Spacecraft::Spacecraft s(-456, "sc456", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams));
     std::string filepath = s.GetFilesPath() + "/Clocks/" + s.GetName() + ".tsc";
 
@@ -113,8 +113,8 @@ TEST(SpacecraftClockKernel, ConvertToEncodedClock)
                                                                                                                                                                          6.0),
                                                                                                                                                                  IO::Astrodynamics::Time::TDB(
                                                                                                                                                                          100.0s),
-                                                                                                                                                                 IO::Astrodynamics::Frames::InertialFrames::GetICRF());
-    IO::Astrodynamics::OrbitalParameters::StateOrientation attitude(IO::Astrodynamics::Time::TDB(100.0s), IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+                                                                                                                                                                 IO::Astrodynamics::Frames::InertialFrames::ICRF());
+    IO::Astrodynamics::OrbitalParameters::StateOrientation attitude(IO::Astrodynamics::Time::TDB(100.0s), IO::Astrodynamics::Frames::InertialFrames::ICRF());
     IO::Astrodynamics::Body::Spacecraft::Spacecraft s(-456, "sc456", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams));
     std::string filepath = s.GetFilesPath() + "/Clocks/" + s.GetName() + ".tsc";
 
@@ -136,8 +136,8 @@ TEST(SpacecraftClockKernel, GetResolution)
                                                                                                                                                                          6.0),
                                                                                                                                                                  IO::Astrodynamics::Time::TDB(
                                                                                                                                                                          100.0s),
-                                                                                                                                                                 IO::Astrodynamics::Frames::InertialFrames::GetICRF());
-    IO::Astrodynamics::OrbitalParameters::StateOrientation attitude(IO::Astrodynamics::Time::TDB(100.0s), IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+                                                                                                                                                                 IO::Astrodynamics::Frames::InertialFrames::ICRF());
+    IO::Astrodynamics::OrbitalParameters::StateOrientation attitude(IO::Astrodynamics::Time::TDB(100.0s), IO::Astrodynamics::Frames::InertialFrames::ICRF());
     IO::Astrodynamics::Body::Spacecraft::Spacecraft s(-456, "sc456", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams));
     std::string filepath = s.GetFilesPath() + "/Clocks/" + s.GetName() + ".tsc";
 
@@ -158,8 +158,8 @@ TEST(SpacecraftClockKernel, GetSecondsPerTick)
                                                                                                                                                                          6.0),
                                                                                                                                                                  IO::Astrodynamics::Time::TDB(
                                                                                                                                                                          100.0s),
-                                                                                                                                                                 IO::Astrodynamics::Frames::InertialFrames::GetICRF());
-    IO::Astrodynamics::OrbitalParameters::StateOrientation attitude(IO::Astrodynamics::Time::TDB(100.0s), IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+                                                                                                                                                                 IO::Astrodynamics::Frames::InertialFrames::ICRF());
+    IO::Astrodynamics::OrbitalParameters::StateOrientation attitude(IO::Astrodynamics::Time::TDB(100.0s), IO::Astrodynamics::Frames::InertialFrames::ICRF());
     IO::Astrodynamics::Body::Spacecraft::Spacecraft s(-456, "sc456", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams));
     std::string filepath = s.GetFilesPath() + "/Clocks/" + s.GetName() + ".tsc";
 
@@ -180,8 +180,8 @@ TEST(SpacecraftClockKernel, GetTicksPerSeconds)
                                                                                                                                                                          6.0),
                                                                                                                                                                  IO::Astrodynamics::Time::TDB(
                                                                                                                                                                          100.0s),
-                                                                                                                                                                 IO::Astrodynamics::Frames::InertialFrames::GetICRF());
-    IO::Astrodynamics::OrbitalParameters::StateOrientation attitude(IO::Astrodynamics::Time::TDB(100.0s), IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+                                                                                                                                                                 IO::Astrodynamics::Frames::InertialFrames::ICRF());
+    IO::Astrodynamics::OrbitalParameters::StateOrientation attitude(IO::Astrodynamics::Time::TDB(100.0s), IO::Astrodynamics::Frames::InertialFrames::ICRF());
     IO::Astrodynamics::Body::Spacecraft::Spacecraft s(-456, "sc456", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams));
     std::string filepath = s.GetFilesPath() + "/Clocks/" + s.GetName() + ".tsc";
 

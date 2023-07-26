@@ -26,8 +26,10 @@ using namespace std::chrono_literals;
 TEST(PhasingManeuver, CanExecute)
 {
     const auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399);
-    std::unique_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParams1 = std::make_unique<IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements>(earth, 6800000.0, 0.5, 0.0, 0.0, 0.0, 0.0, IO::Astrodynamics::Time::TDB(0.0s), IO::Astrodynamics::Frames::InertialFrames::GetICRF());
-    std::shared_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParams2 = std::make_shared<IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements>(earth, 6800000.0, 0.5, 0.0, 0.0, 30.0 * IO::Astrodynamics::Constants::DEG_RAD, 0.0, IO::Astrodynamics::Time::TDB(0.0s), IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+    std::unique_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParams1 = std::make_unique<IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements>(earth, 6800000.0, 0.5, 0.0, 0.0, 0.0, 0.0, IO::Astrodynamics::Time::TDB(0.0s),
+                                                                                                                                                                           IO::Astrodynamics::Frames::InertialFrames::ICRF());
+    std::shared_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParams2 = std::make_shared<IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements>(earth, 6800000.0, 0.5, 0.0, 0.0, 30.0 * IO::Astrodynamics::Constants::DEG_RAD, 0.0, IO::Astrodynamics::Time::TDB(0.0s),
+                                                                                                                                                                           IO::Astrodynamics::Frames::InertialFrames::ICRF());
 
     IO::Astrodynamics::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams1)};
 
@@ -64,8 +66,10 @@ TEST(PhasingManeuver, CanExecute)
 TEST(PhasingManeuver, TryExecuteOnGeostationary)
 {
     const auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399);
-    std::unique_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParams1 = std::make_unique<IO::Astrodynamics::OrbitalParameters::EquinoctialElements>(earth, 42164000.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -IO::Astrodynamics::Constants::PI2, IO::Astrodynamics::Constants::PI2, IO::Astrodynamics::Time::TDB(0.0s), IO::Astrodynamics::Frames::InertialFrames::GetICRF());
-    std::shared_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParams2 = std::make_shared<IO::Astrodynamics::OrbitalParameters::EquinoctialElements>(earth, 42164000.0, 0.0, 0.0, 0.0, 0.0, 345.0 * IO::Astrodynamics::Constants::DEG_RAD, 0.0, 0.0, -IO::Astrodynamics::Constants::PI2, IO::Astrodynamics::Constants::PI2, IO::Astrodynamics::Time::TDB(0.0s), IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+    std::unique_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParams1 = std::make_unique<IO::Astrodynamics::OrbitalParameters::EquinoctialElements>(earth, 42164000.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -IO::Astrodynamics::Constants::PI2, IO::Astrodynamics::Constants::PI2, IO::Astrodynamics::Time::TDB(0.0s),
+                                                                                                                                                                          IO::Astrodynamics::Frames::InertialFrames::ICRF());
+    std::shared_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParams2 = std::make_shared<IO::Astrodynamics::OrbitalParameters::EquinoctialElements>(earth, 42164000.0, 0.0, 0.0, 0.0, 0.0, 345.0 * IO::Astrodynamics::Constants::DEG_RAD, 0.0, 0.0, -IO::Astrodynamics::Constants::PI2, IO::Astrodynamics::Constants::PI2, IO::Astrodynamics::Time::TDB(0.0s),
+                                                                                                                                                                          IO::Astrodynamics::Frames::InertialFrames::ICRF());
 
     IO::Astrodynamics::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams1)};
 
@@ -82,7 +86,8 @@ TEST(PhasingManeuver, TryExecuteOnGeostationary)
 
     IO::Astrodynamics::Maneuvers::PhasingManeuver maneuver(engines, prop, 3, orbitalParams2);
 
-    prop.AddStateVector(IO::Astrodynamics::OrbitalParameters::StateVector(earth, IO::Astrodynamics::Math::Vector3D(1.0, 2.0, 3.0), IO::Astrodynamics::Math::Vector3D(4.0, 5.0, 6.0), IO::Astrodynamics::Time::TDB(-10.0s), IO::Astrodynamics::Frames::InertialFrames::GetICRF()));
+    prop.AddStateVector(IO::Astrodynamics::OrbitalParameters::StateVector(earth, IO::Astrodynamics::Math::Vector3D(1.0, 2.0, 3.0), IO::Astrodynamics::Math::Vector3D(4.0, 5.0, 6.0), IO::Astrodynamics::Time::TDB(-10.0s),
+                                                                          IO::Astrodynamics::Frames::InertialFrames::ICRF()));
 
     auto res = maneuver.TryExecute(s.GetOrbitalParametersAtEpoch()->ToStateVector(0.0001));
 
@@ -126,8 +131,10 @@ TEST(PhasingManeuver, CheckOrbitalParameters)
     IO::Astrodynamics::Time::TDB startEpoch("2021-01-01T00:00:00");
     IO::Astrodynamics::Time::TDB endEpoch("2021-01-04T01:00:00");
 
-    std::unique_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParams1 = std::make_unique<IO::Astrodynamics::OrbitalParameters::EquinoctialElements>(earth, 42164000.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -IO::Astrodynamics::Constants::PI2, IO::Astrodynamics::Constants::PI2, startEpoch, IO::Astrodynamics::Frames::InertialFrames::GetICRF());
-    std::shared_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParams2 = std::make_shared<IO::Astrodynamics::OrbitalParameters::EquinoctialElements>(earth, 42164000.0, 0.0, 0.0, 0.0, 0.0, 345.0 * IO::Astrodynamics::Constants::DEG_RAD, 0.0, 0.0, -IO::Astrodynamics::Constants::PI2, IO::Astrodynamics::Constants::PI2, startEpoch, IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+    std::unique_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParams1 = std::make_unique<IO::Astrodynamics::OrbitalParameters::EquinoctialElements>(earth, 42164000.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -IO::Astrodynamics::Constants::PI2, IO::Astrodynamics::Constants::PI2, startEpoch,
+                                                                                                                                                                          IO::Astrodynamics::Frames::InertialFrames::ICRF());
+    std::shared_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParams2 = std::make_shared<IO::Astrodynamics::OrbitalParameters::EquinoctialElements>(earth, 42164000.0, 0.0, 0.0, 0.0, 0.0, 345.0 * IO::Astrodynamics::Constants::DEG_RAD, 0.0, 0.0, -IO::Astrodynamics::Constants::PI2, IO::Astrodynamics::Constants::PI2, startEpoch,
+                                                                                                                                                                          IO::Astrodynamics::Frames::InertialFrames::ICRF());
 
     IO::Astrodynamics::Body::Spacecraft::Spacecraft s{-189, "189test", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams1)};
 

@@ -27,7 +27,7 @@ namespace IO::Astrodynamics::Frames
 		 */
 		explicit InertialFrames(const std::string &name);
 
-		static IO::Astrodynamics::Frames::InertialFrames& GetICRF();
+		static IO::Astrodynamics::Frames::InertialFrames& ICRF();
 		static IO::Astrodynamics::Frames::InertialFrames& Galactic();
 		static IO::Astrodynamics::Frames::InertialFrames& Ecliptic();
 	};

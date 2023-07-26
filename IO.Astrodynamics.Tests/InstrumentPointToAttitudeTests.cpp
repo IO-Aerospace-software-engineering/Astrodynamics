@@ -26,7 +26,7 @@ TEST(InstrumentPointingToAttitude, GetOrientation)
                                                                                                                                                                       0.0),
                                                                                                                                               IO::Astrodynamics::Time::TDB(
                                                                                                                                                       "2021-01-01T13:00:00"),
-                                                                                                                                              IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+                                                                                                                                                                  IO::Astrodynamics::Frames::InertialFrames::ICRF());
 
     IO::Astrodynamics::Body::Spacecraft::Spacecraft s{-544, "instPointing", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams1)};
 
@@ -51,7 +51,7 @@ TEST(InstrumentPointingToAttitude, GetOrientation)
     prop.Propagate();
 
     ASSERT_DOUBLE_EQ(0.0, pointingManeuver.GetDeltaV().Magnitude());
-    auto pointingVector = instrument->GetBoresight(IO::Astrodynamics::Frames::InertialFrames::GetICRF(), IO::Astrodynamics::Time::TDB("2021-01-01T13:00:00"));
+    auto pointingVector = instrument->GetBoresight(IO::Astrodynamics::Frames::InertialFrames::ICRF(), IO::Astrodynamics::Time::TDB("2021-01-01T13:00:00"));
 
     ASSERT_NEAR(-0.64548856398372612, pointingVector.GetX(), 1E-09);
     ASSERT_NEAR(0.67028530475051784, pointingVector.GetY(), 1E-09);
@@ -76,7 +76,7 @@ TEST(InstrumentPointingToSiteAttitude, GetOrientation)
                                                                                                                                                                       0.0),
                                                                                                                                               IO::Astrodynamics::Time::TDB(
                                                                                                                                                       "2021-01-01T13:00:00"),
-                                                                                                                                              IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+                                                                                                                                                                  IO::Astrodynamics::Frames::InertialFrames::ICRF());
 
     IO::Astrodynamics::Body::Spacecraft::Spacecraft s{-544, "instPointing", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams1)};
 
@@ -101,7 +101,7 @@ TEST(InstrumentPointingToSiteAttitude, GetOrientation)
     prop.Propagate();
 
     ASSERT_DOUBLE_EQ(0.0, pointingManeuver.GetDeltaV().Magnitude());
-    auto pointingVector = instrument->GetBoresight(IO::Astrodynamics::Frames::InertialFrames::GetICRF(), IO::Astrodynamics::Time::TDB("2021-01-01T13:00:00"));
+    auto pointingVector = instrument->GetBoresight(IO::Astrodynamics::Frames::InertialFrames::ICRF(), IO::Astrodynamics::Time::TDB("2021-01-01T13:00:00"));
 
     ASSERT_NEAR(-0.99963872880998339, pointingVector.GetX(), 1E-09);
     ASSERT_NEAR(0.026869789826543089, pointingVector.GetY(), 1E-09);
@@ -125,7 +125,7 @@ TEST(InstrumentPointingToSiteAttitude2, GetOrientation)
                                                                                                                                                                       0.0),
                                                                                                                                               IO::Astrodynamics::Time::TDB(
                                                                                                                                                       "2021-01-01T13:00:00"),
-                                                                                                                                              IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+                                                                                                                                                                  IO::Astrodynamics::Frames::InertialFrames::ICRF());
 
     IO::Astrodynamics::Body::Spacecraft::Spacecraft s{-544, "instPointing", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams1)};
 
@@ -150,7 +150,7 @@ TEST(InstrumentPointingToSiteAttitude2, GetOrientation)
     prop.Propagate();
 
     ASSERT_DOUBLE_EQ(0.0, pointingManeuver.GetDeltaV().Magnitude());
-    auto pointingVector = instrument->GetBoresight(IO::Astrodynamics::Frames::InertialFrames::GetICRF(), IO::Astrodynamics::Time::TDB("2021-01-01T13:00:00"));
+    auto pointingVector = instrument->GetBoresight(IO::Astrodynamics::Frames::InertialFrames::ICRF(), IO::Astrodynamics::Time::TDB("2021-01-01T13:00:00"));
 
     ASSERT_NEAR(-0.64230280628076275, pointingVector.GetX(), 1E-09);
     ASSERT_NEAR(0.67264626995439025, pointingVector.GetY(), 1E-09);
@@ -171,7 +171,7 @@ TEST(InstrumentPointingTotAttitude, GetOrientationNotBeforeEpoch)
                                                                                                                                                                       0.0),
                                                                                                                                               IO::Astrodynamics::Time::TDB(
                                                                                                                                                       "2021-01-01T13:00:00"),
-                                                                                                                                              IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+                                                                                                                                                                  IO::Astrodynamics::Frames::InertialFrames::ICRF());
 
     IO::Astrodynamics::Body::Spacecraft::Spacecraft s{-544, "instPointing", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams1)};
 
@@ -197,7 +197,7 @@ TEST(InstrumentPointingTotAttitude, GetOrientationNotBeforeEpoch)
     prop.Propagate();
 
     ASSERT_DOUBLE_EQ(0.0, pointingManeuver.GetDeltaV().Magnitude());
-    auto pointingVector = instrument->GetBoresight(IO::Astrodynamics::Frames::InertialFrames::GetICRF(), IO::Astrodynamics::Time::TDB("2021-01-01T13:00:00"));
+    auto pointingVector = instrument->GetBoresight(IO::Astrodynamics::Frames::InertialFrames::ICRF(), IO::Astrodynamics::Time::TDB("2021-01-01T13:00:00"));
 
     ASSERT_NEAR(-0.64548856398372612, pointingVector.GetX(), 1E-09);
     ASSERT_NEAR(0.67028530475051784, pointingVector.GetY(), 1E-09);

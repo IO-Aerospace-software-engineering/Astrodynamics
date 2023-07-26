@@ -10,7 +10,7 @@ IO::Astrodynamics::Frames::InertialFrames::InertialFrames(const std::string &nam
 {
 }
 
-IO::Astrodynamics::Frames::InertialFrames& IO::Astrodynamics::Frames::InertialFrames::GetICRF()
+IO::Astrodynamics::Frames::InertialFrames& IO::Astrodynamics::Frames::InertialFrames::ICRF()
 {
     return IO::Astrodynamics::Frames::InertialFrames::mICRF;
 }
