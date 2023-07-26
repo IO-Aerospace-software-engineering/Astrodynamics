@@ -1,3 +1,7 @@
+/*
+ Copyright (c) 2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
+ */
+
 //
 // Created by s.guillet on 26/07/2023.
 //
@@ -15,11 +19,11 @@ namespace IO::Astrodynamics::Time
     class JulianDate final : public IO::Astrodynamics::Time::DateTime
     {
     private:
-        const std::chrono::duration<double> m_julianDate{};
+        const std::chrono::duration<double, std::ratio<86400>> m_julianDate{};
     public:
-        explicit JulianDate(std::chrono::duration<double> julianDate);
+        explicit JulianDate(std::chrono::duration<double, std::ratio<86400>> julianDate);
 
-        [[nodiscard]] inline std::chrono::duration<double> GetJulianDate() const
+        [[nodiscard]] inline std::chrono::duration<double, std::ratio<86400>> GetJulianDate() const
         { return m_julianDate; }
 
         /**
@@ -67,6 +71,7 @@ namespace IO::Astrodynamics::Time
          * @return UTC
          */
         [[nodiscard]] IO::Astrodynamics::Time::UTC ToUTC() const;
+
         [[nodiscard]] IO::Astrodynamics::Time::TDB ToTDB() const;
     };
 }
