@@ -49,10 +49,10 @@ IO::Astrodynamics::Sites::Site::GetRADec(const IO::Astrodynamics::Body::Celestia
                                          const IO::Astrodynamics::Time::TDB &epoch) const
 {
     auto radius = m_body->GetRadius();
-    auto bodiesSv = body.ReadEphemeris(IO::Astrodynamics::Frames::InertialFrames::GetICRF(), aberrationCorrection, epoch,
+    auto bodiesSv = body.ReadEphemeris(IO::Astrodynamics::Frames::InertialFrames::ICRF(), aberrationCorrection, epoch,
                                        *m_body);
 
-    auto siteVector = GetStateVector(IO::Astrodynamics::Frames::InertialFrames::GetICRF(), epoch);
+    auto siteVector = GetStateVector(IO::Astrodynamics::Frames::InertialFrames::ICRF(), epoch);
 
     auto resultSv = bodiesSv.GetPosition() - siteVector.GetPosition();
 
@@ -229,14 +229,14 @@ void IO::Astrodynamics::Sites::Site::BuildAndWriteEphemeris(const IO::Astrodynam
     std::vector<IO::Astrodynamics::OrbitalParameters::StateVector> svector;
     for (auto epoch = window.GetStartDate(); epoch <= window.GetEndDate(); epoch = epoch + IO::Astrodynamics::Parameters::SitePropagationStep)
     {
-        auto sv = GetStateVector(IO::Astrodynamics::Frames::InertialFrames::GetICRF(), epoch);
+        auto sv = GetStateVector(IO::Astrodynamics::Frames::InertialFrames::ICRF(), epoch);
         svector.push_back(sv);
     }
 
     //Add latest value
     if (svector.back().GetEpoch() < window.GetEndDate())
     {
-        auto sv = GetStateVector(IO::Astrodynamics::Frames::InertialFrames::GetICRF(), window.GetEndDate());
+        auto sv = GetStateVector(IO::Astrodynamics::Frames::InertialFrames::ICRF(), window.GetEndDate());
         svector.push_back(sv);
     }
 

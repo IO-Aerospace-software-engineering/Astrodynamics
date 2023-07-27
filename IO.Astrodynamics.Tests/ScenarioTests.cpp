@@ -22,7 +22,7 @@ TEST(Scenario, Initialize)
                                          IO::Astrodynamics::Coordinates::Planetodetic(-81.0 * IO::Astrodynamics::Constants::DEG_RAD, 28.5 * IO::Astrodynamics::Constants::DEG_RAD, 0.0),
                                          earth,std::string(SitePath));
     std::unique_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::Astrodynamics::OrbitalParameters::StateVector>(
-            ls.GetStateVector(IO::Astrodynamics::Frames::InertialFrames::GetICRF(), IO::Astrodynamics::Time::TDB("2021-06-02T00:00:00")));
+            ls.GetStateVector(IO::Astrodynamics::Frames::InertialFrames::ICRF(), IO::Astrodynamics::Time::TDB("2021-06-02T00:00:00")));
     IO::Astrodynamics::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams)};
     s.AddFuelTank("ft1", 1000.0, 900.0);
     s.AddEngine("sn1", "eng1", "ft1", {1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}, 450.0, 50.0);

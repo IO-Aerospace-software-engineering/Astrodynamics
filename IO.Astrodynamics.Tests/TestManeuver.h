@@ -55,7 +55,7 @@ void TestManeuver::Compute([[maybe_unused]]const IO::Astrodynamics::OrbitalParam
 
 IO::Astrodynamics::OrbitalParameters::StateOrientation TestManeuver::ComputeOrientation(const IO::Astrodynamics::OrbitalParameters::OrbitalParameters &maneuverPoint)
 {
-    return IO::Astrodynamics::OrbitalParameters::StateOrientation{maneuverPoint.GetEpoch(), IO::Astrodynamics::Frames::InertialFrames::GetICRF()};
+    return IO::Astrodynamics::OrbitalParameters::StateOrientation{maneuverPoint.GetEpoch(), IO::Astrodynamics::Frames::InertialFrames::ICRF()};
 }
 
 bool TestManeuver::CanExecute([[maybe_unused]]const IO::Astrodynamics::OrbitalParameters::OrbitalParameters &maneuverPoint)

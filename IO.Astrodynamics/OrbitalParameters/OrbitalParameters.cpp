@@ -164,9 +164,9 @@ IO::Astrodynamics::Math::Vector3D IO::Astrodynamics::OrbitalParameters::OrbitalP
 IO::Astrodynamics::Coordinates::Equatorial IO::Astrodynamics::OrbitalParameters::OrbitalParameters::ToEquatorialCoordinates() const
 {
 	auto sv = ToStateVector();
-	if (sv.GetFrame() != IO::Astrodynamics::Frames::InertialFrames::GetICRF())
+	if (sv.GetFrame() != IO::Astrodynamics::Frames::InertialFrames::ICRF())
 	{
-		sv = sv.ToFrame(IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+		sv = sv.ToFrame(IO::Astrodynamics::Frames::InertialFrames::ICRF());
 	}
 
 	ConstSpiceDouble rectan[3]{sv.GetPosition().GetX(), sv.GetPosition().GetY(), sv.GetPosition().GetZ()};

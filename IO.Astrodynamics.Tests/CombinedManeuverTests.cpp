@@ -26,7 +26,7 @@ TEST(CombinedManeuver, CanExecute)
                                                                                                                                                        IO::Astrodynamics::Constants::DEG_RAD,
                                                                                                                                                        0.0, 0.0, 0.0,
                                                                                                                                                        IO::Astrodynamics::Time::TDB(0.0s),
-                                                                                                                                                       IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+                                                                                                                                                                           IO::Astrodynamics::Frames::InertialFrames::ICRF());
 
     IO::Astrodynamics::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams1)};
 
@@ -57,7 +57,7 @@ TEST(CombinedManeuver, TryExecuteWithPeregeeHigherThanApogee)
                                                                                                                                                                     IO::Astrodynamics::Constants::DEG_RAD,
                                                                                                                                                        0.0, 0.0, 0.0,
                                                                                                                                                        IO::Astrodynamics::Time::TDB(0.0s),
-                                                                                                                                                       IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+                                                                                                                                                                           IO::Astrodynamics::Frames::InertialFrames::ICRF());
 
     IO::Astrodynamics::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 10000.0, std::string(SpacecraftPath), std::move(orbitalParams1)};
 
@@ -97,7 +97,7 @@ TEST(CombinedManeuver, TryExecuteWithPeregeeLowerThanApogee)
                                                                                                                                                        IO::Astrodynamics::Constants::DEG_RAD,
                                                                                                                                                        0.0, 0.0, 0.0,
                                                                                                                                                        IO::Astrodynamics::Time::TDB(0.0s),
-                                                                                                                                                       IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+                                                                                                                                                                           IO::Astrodynamics::Frames::InertialFrames::ICRF());
 
     IO::Astrodynamics::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 10000.0, std::string(SpacecraftPath), std::move(orbitalParams1)};
 

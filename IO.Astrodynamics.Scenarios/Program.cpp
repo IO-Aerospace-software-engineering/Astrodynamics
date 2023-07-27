@@ -120,7 +120,7 @@ int main()
                                                                                            0.0 * IO::Astrodynamics::Constants::DEG_RAD,
                                                                                            0.0,
                                                                                            startEpoch,
-                                                                                           IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+                                                                                                     IO::Astrodynamics::Frames::InertialFrames::ICRF());
 
     //Define orbit of the target
     auto targetOrbit = std::make_shared<IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements>(earth,
@@ -131,7 +131,7 @@ int main()
                                                                                           10.0 * IO::Astrodynamics::Constants::DEG_RAD,
                                                                                           0.0,
                                                                                           startEpoch,
-                                                                                          IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+                                                                                                    IO::Astrodynamics::Frames::InertialFrames::ICRF());
     auto pk = parkingOrbit->ToStateVector();
     auto tb = targetOrbit->ToStateVector();
     //Compute launch windows, to launch by day on launch site and recovery site when the launch site crosses the parking orbital plane

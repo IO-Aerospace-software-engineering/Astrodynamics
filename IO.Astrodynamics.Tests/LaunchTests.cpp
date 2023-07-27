@@ -25,13 +25,14 @@ TEST(Launch, InertialAscendingAzimuth)
     auto ls = IO::Astrodynamics::Sites::LaunchSite(399001, "S1",
                                                    IO::Astrodynamics::Coordinates::Planetodetic(-81.0 * IO::Astrodynamics::Constants::DEG_RAD, 28.5 * IO::Astrodynamics::Constants::DEG_RAD, 0.0), earth, std::string(SitePath));
     std::unique_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::Astrodynamics::OrbitalParameters::StateVector>(
-            ls.GetStateVector(IO::Astrodynamics::Frames::InertialFrames::GetICRF(), IO::Astrodynamics::Time::TDB("2013-10-14T10:18:00")));
+            ls.GetStateVector(IO::Astrodynamics::Frames::InertialFrames::ICRF(), IO::Astrodynamics::Time::TDB("2013-10-14T10:18:00")));
     IO::Astrodynamics::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams)};
     s.AddFuelTank("ft1", 1000.0, 900.0);
     s.AddEngine("sn1", "eng1", "ft1", {1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}, 450.0, 50.0);
 
     auto targetOrbit = std::make_shared<IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements>(earth, 6728137, 0.0, 51.6494 * IO::Astrodynamics::Constants::DEG_RAD, 0.0, 0.0, 0.0,
-                                                                                          IO::Astrodynamics::Time::TDB("2013-10-14T10:18:00"), IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+                                                                                          IO::Astrodynamics::Time::TDB("2013-10-14T10:18:00"),
+                                                                                                    IO::Astrodynamics::Frames::InertialFrames::ICRF());
     IO::Astrodynamics::Maneuvers::Launch launch(ls, ls, false, *targetOrbit);
     ASSERT_DOUBLE_EQ(44.914856362726589, launch.GetInertialAscendingAzimuthLaunch() * IO::Astrodynamics::Constants::RAD_DEG);
 }
@@ -44,13 +45,14 @@ TEST(Launch, InertialDescendingAzimuth)
                                          IO::Astrodynamics::Coordinates::Planetodetic(-81.0 * IO::Astrodynamics::Constants::DEG_RAD, 28.5 * IO::Astrodynamics::Constants::DEG_RAD, 0.0),
                                          earth, std::string(SitePath));
     std::unique_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::Astrodynamics::OrbitalParameters::StateVector>(
-            ls.GetStateVector(IO::Astrodynamics::Frames::InertialFrames::GetICRF(), IO::Astrodynamics::Time::TDB("2013-10-14T10:18:00")));
+            ls.GetStateVector(IO::Astrodynamics::Frames::InertialFrames::ICRF(), IO::Astrodynamics::Time::TDB("2013-10-14T10:18:00")));
     IO::Astrodynamics::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams)};
     s.AddFuelTank("ft1", 1000.0, 900.0);
     s.AddEngine("sn1", "eng1", "ft1", {1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}, 450.0, 50.0);
 
     auto targetOrbit = std::make_shared<IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements>(earth, 6728137, 0.0, 51.6494 * IO::Astrodynamics::Constants::DEG_RAD, 0.0, 0.0, 0.0,
-                                                                                          IO::Astrodynamics::Time::TDB("2013-10-14T10:18:00"), IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+                                                                                          IO::Astrodynamics::Time::TDB("2013-10-14T10:18:00"),
+                                                                                                    IO::Astrodynamics::Frames::InertialFrames::ICRF());
     IO::Astrodynamics::Maneuvers::Launch launch(ls, ls, false, *targetOrbit);
     ASSERT_DOUBLE_EQ(135.0851436372734, launch.GetInertialDescendingAzimuthLaunch() * IO::Astrodynamics::Constants::RAD_DEG);
 }
@@ -63,13 +65,14 @@ TEST(Launch, InertialInsertionVelocity)
                                          IO::Astrodynamics::Coordinates::Planetodetic(-81.0 * IO::Astrodynamics::Constants::DEG_RAD, 28.5 * IO::Astrodynamics::Constants::DEG_RAD, 0.0),
                                          earth,std::string(SitePath));
     std::unique_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::Astrodynamics::OrbitalParameters::StateVector>(
-            ls.GetStateVector(IO::Astrodynamics::Frames::InertialFrames::GetICRF(), IO::Astrodynamics::Time::TDB("2013-10-14T10:18:00")));
+            ls.GetStateVector(IO::Astrodynamics::Frames::InertialFrames::ICRF(), IO::Astrodynamics::Time::TDB("2013-10-14T10:18:00")));
     IO::Astrodynamics::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams)};
     s.AddFuelTank("ft1", 1000.0, 900.0);
     s.AddEngine("sn1", "eng1", "ft1", {1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}, 450.0, 50.0);
 
     auto targetOrbit = std::make_shared<IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements>(earth, 6728137.0, 0.0, 51.6494 * IO::Astrodynamics::Constants::DEG_RAD, 0.0, 0.0, 0.0,
-                                                                                          IO::Astrodynamics::Time::TDB("2013-10-14T10:18:00"), IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+                                                                                          IO::Astrodynamics::Time::TDB("2013-10-14T10:18:00"),
+                                                                                                    IO::Astrodynamics::Frames::InertialFrames::ICRF());
     IO::Astrodynamics::Maneuvers::Launch launch(ls, ls, false, *targetOrbit);
     ASSERT_DOUBLE_EQ(7696.9997304533663, launch.GetInertialInsertionVelocity());
 }
@@ -82,13 +85,14 @@ TEST(Launch, NonInertialAscendingAzimuth)
                                          IO::Astrodynamics::Coordinates::Planetodetic(-81.0 * IO::Astrodynamics::Constants::DEG_RAD, 28.5 * IO::Astrodynamics::Constants::DEG_RAD, 0.0),
                                          earth,std::string(SitePath));
     std::unique_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::Astrodynamics::OrbitalParameters::StateVector>(
-            ls.GetStateVector(IO::Astrodynamics::Frames::InertialFrames::GetICRF(), IO::Astrodynamics::Time::TDB("2013-10-14T10:18:00")));
+            ls.GetStateVector(IO::Astrodynamics::Frames::InertialFrames::ICRF(), IO::Astrodynamics::Time::TDB("2013-10-14T10:18:00")));
     IO::Astrodynamics::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams)};
     s.AddFuelTank("ft1", 1000.0, 900.0);
     s.AddEngine("sn1", "eng1", "ft1", {1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}, 450.0, 50.0);
 
     auto targetOrbit = std::make_shared<IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements>(earth, 6728137, 0.0, 51.6494 * IO::Astrodynamics::Constants::DEG_RAD, 0.0, 0.0, 0.0,
-                                                                                          IO::Astrodynamics::Time::TDB("2013-10-14T10:18:00"), IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+                                                                                          IO::Astrodynamics::Time::TDB("2013-10-14T10:18:00"),
+                                                                                                    IO::Astrodynamics::Frames::InertialFrames::ICRF());
     IO::Astrodynamics::Maneuvers::Launch launch(ls, ls, false, *targetOrbit);
     ASSERT_DOUBLE_EQ(42.675642756467454, launch.GetNonInertialAscendingAzimuthLaunch() * IO::Astrodynamics::Constants::RAD_DEG);
 }
@@ -101,13 +105,14 @@ TEST(Launch, NonInertialDescendingAzimuth)
                                          IO::Astrodynamics::Coordinates::Planetodetic(-81.0 * IO::Astrodynamics::Constants::DEG_RAD, 28.5 * IO::Astrodynamics::Constants::DEG_RAD, 0.0),
                                          earth,std::string(SitePath));
     std::unique_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::Astrodynamics::OrbitalParameters::StateVector>(
-            ls.GetStateVector(IO::Astrodynamics::Frames::InertialFrames::GetICRF(), IO::Astrodynamics::Time::TDB("2013-10-14T10:18:00")));
+            ls.GetStateVector(IO::Astrodynamics::Frames::InertialFrames::ICRF(), IO::Astrodynamics::Time::TDB("2013-10-14T10:18:00")));
     IO::Astrodynamics::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams)};
     s.AddFuelTank("ft1", 1000.0, 900.0);
     s.AddEngine("sn1", "eng1", "ft1", {1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}, 450.0, 50.0);
 
     auto targetOrbit = std::make_shared<IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements>(earth, 6728137, 0.0, 51.6494 * IO::Astrodynamics::Constants::DEG_RAD, 0.0, 0.0, 0.0,
-                                                                                          IO::Astrodynamics::Time::TDB("2013-10-14T10:18:00"), IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+                                                                                          IO::Astrodynamics::Time::TDB("2013-10-14T10:18:00"),
+                                                                                                    IO::Astrodynamics::Frames::InertialFrames::ICRF());
     IO::Astrodynamics::Maneuvers::Launch launch(ls, ls, false, *targetOrbit);
     ASSERT_DOUBLE_EQ(137.32435724353255, launch.GetNonInertialDescendingAzimuthLaunch() * IO::Astrodynamics::Constants::RAD_DEG);
 }
@@ -120,13 +125,14 @@ TEST(Launch, NonInertialInsertionVelocity)
                                          IO::Astrodynamics::Coordinates::Planetodetic(-81.0 * IO::Astrodynamics::Constants::DEG_RAD, 28.5 * IO::Astrodynamics::Constants::DEG_RAD, 0.0),
                                          earth,std::string(SitePath));
     std::unique_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::Astrodynamics::OrbitalParameters::StateVector>(
-            ls.GetStateVector(IO::Astrodynamics::Frames::InertialFrames::GetICRF(), IO::Astrodynamics::Time::TDB("2013-10-14T10:18:00")));
+            ls.GetStateVector(IO::Astrodynamics::Frames::InertialFrames::ICRF(), IO::Astrodynamics::Time::TDB("2013-10-14T10:18:00")));
     IO::Astrodynamics::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams)};
     s.AddFuelTank("ft1", 1000.0, 900.0);
     s.AddEngine("sn1", "eng1", "ft1", {1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}, 450.0, 50.0);
 
     auto targetOrbit = std::make_shared<IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements>(earth, 6728137, 0.0, 51.6494 * IO::Astrodynamics::Constants::DEG_RAD, 0.0, 0.0, 0.0,
-                                                                                          IO::Astrodynamics::Time::TDB("2013-10-14T10:18:00"), IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+                                                                                          IO::Astrodynamics::Time::TDB("2013-10-14T10:18:00"),
+                                                                                                    IO::Astrodynamics::Frames::InertialFrames::ICRF());
     IO::Astrodynamics::Maneuvers::Launch launch(ls, ls, false, *targetOrbit);
     ASSERT_DOUBLE_EQ(7413.8488305949077, launch.GetNonInertialInsertionVelocity());
 }
@@ -139,13 +145,14 @@ TEST(Launch, RetrogradeNonInertialAscendingAzimuth)
                                          IO::Astrodynamics::Coordinates::Planetodetic(-81.0 * IO::Astrodynamics::Constants::DEG_RAD, 28.5 * IO::Astrodynamics::Constants::DEG_RAD, 0.0),
                                          earth,std::string(SitePath));
     std::unique_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::Astrodynamics::OrbitalParameters::StateVector>(
-            ls.GetStateVector(IO::Astrodynamics::Frames::InertialFrames::GetICRF(), IO::Astrodynamics::Time::TDB("2013-10-14T10:18:00")));
+            ls.GetStateVector(IO::Astrodynamics::Frames::InertialFrames::ICRF(), IO::Astrodynamics::Time::TDB("2013-10-14T10:18:00")));
     IO::Astrodynamics::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams)};
     s.AddFuelTank("ft1", 1000.0, 900.0);
     s.AddEngine("sn1", "eng1", "ft1", {1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}, 450.0, 50.0);
 
     auto targetOrbit = std::make_shared<IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements>(earth, 6728137, 0.0, 110.0 * IO::Astrodynamics::Constants::DEG_RAD, 0.0, 0.0, 0.0,
-                                                                                          IO::Astrodynamics::Time::TDB("2013-10-14T10:18:00"), IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+                                                                                          IO::Astrodynamics::Time::TDB("2013-10-14T10:18:00"),
+                                                                                                    IO::Astrodynamics::Frames::InertialFrames::ICRF());
     IO::Astrodynamics::Maneuvers::Launch launch(ls, ls, false, *targetOrbit);
     ASSERT_DOUBLE_EQ(334.35221985722086, launch.GetNonInertialAscendingAzimuthLaunch() * IO::Astrodynamics::Constants::RAD_DEG);
 }
@@ -158,13 +165,14 @@ TEST(Launch, RetrogradeInertialAscendingAzimuth)
                                          IO::Astrodynamics::Coordinates::Planetodetic(-81.0 * IO::Astrodynamics::Constants::DEG_RAD, 28.5 * IO::Astrodynamics::Constants::DEG_RAD, 0.0),
                                          earth,std::string(SitePath));
     std::unique_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::Astrodynamics::OrbitalParameters::StateVector>(
-            ls.GetStateVector(IO::Astrodynamics::Frames::InertialFrames::GetICRF(), IO::Astrodynamics::Time::TDB("2013-10-14T10:18:00")));
+            ls.GetStateVector(IO::Astrodynamics::Frames::InertialFrames::ICRF(), IO::Astrodynamics::Time::TDB("2013-10-14T10:18:00")));
     IO::Astrodynamics::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams)};
     s.AddFuelTank("ft1", 1000.0, 900.0);
     s.AddEngine("sn1", "eng1", "ft1", {1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}, 450.0, 50.0);
 
     auto targetOrbit = std::make_shared<IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements>(earth, 6728137, 0.0, 110.0 * IO::Astrodynamics::Constants::DEG_RAD, 0.0, 0.0, 0.0,
-                                                                                          IO::Astrodynamics::Time::TDB("2013-10-14T10:18:00"), IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+                                                                                          IO::Astrodynamics::Time::TDB("2013-10-14T10:18:00"),
+                                                                                                    IO::Astrodynamics::Frames::InertialFrames::ICRF());
     IO::Astrodynamics::Maneuvers::Launch launch(ls, ls, false, *targetOrbit);
     ASSERT_DOUBLE_EQ(337.09819280713128, launch.GetInertialAscendingAzimuthLaunch() * IO::Astrodynamics::Constants::RAD_DEG);
 }
@@ -177,13 +185,14 @@ TEST(Launch, RetrogradeNonInertialInsertionVelocity)
                                          IO::Astrodynamics::Coordinates::Planetodetic(-81.0 * IO::Astrodynamics::Constants::DEG_RAD, 28.5 * IO::Astrodynamics::Constants::DEG_RAD, 0.0),
                                          earth,std::string(SitePath));
     std::unique_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::Astrodynamics::OrbitalParameters::StateVector>(
-            ls.GetStateVector(IO::Astrodynamics::Frames::InertialFrames::GetICRF(), IO::Astrodynamics::Time::TDB("2013-10-14T10:18:00")));
+            ls.GetStateVector(IO::Astrodynamics::Frames::InertialFrames::ICRF(), IO::Astrodynamics::Time::TDB("2013-10-14T10:18:00")));
     IO::Astrodynamics::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams)};
     s.AddFuelTank("ft1", 1000.0, 900.0);
     s.AddEngine("sn1", "eng1", "ft1", {1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}, 450.0, 50.0);
 
     auto targetOrbit = std::make_shared<IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements>(earth, 6728137, 0.0, 140.0 * IO::Astrodynamics::Constants::DEG_RAD, 0.0, 0.0, 0.0,
-                                                                                          IO::Astrodynamics::Time::TDB("2013-10-14T10:18:00"), IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+                                                                                          IO::Astrodynamics::Time::TDB("2013-10-14T10:18:00"),
+                                                                                                    IO::Astrodynamics::Frames::InertialFrames::ICRF());
     IO::Astrodynamics::Maneuvers::Launch launch(ls, ls, false, *targetOrbit);
     ASSERT_DOUBLE_EQ(8056.0460649659399, launch.GetNonInertialInsertionVelocity());
 }
@@ -196,13 +205,14 @@ TEST(Launch, RetrogradeInertialInsertionVelocity)
                                          IO::Astrodynamics::Coordinates::Planetodetic(-81.0 * IO::Astrodynamics::Constants::DEG_RAD, 28.5 * IO::Astrodynamics::Constants::DEG_RAD, 0.0),
                                          earth,std::string(SitePath));
     std::unique_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::Astrodynamics::OrbitalParameters::StateVector>(
-            ls.GetStateVector(IO::Astrodynamics::Frames::InertialFrames::GetICRF(), IO::Astrodynamics::Time::TDB("2013-10-14T10:18:00")));
+            ls.GetStateVector(IO::Astrodynamics::Frames::InertialFrames::ICRF(), IO::Astrodynamics::Time::TDB("2013-10-14T10:18:00")));
     IO::Astrodynamics::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams)};
     s.AddFuelTank("ft1", 1000.0, 900.0);
     s.AddEngine("sn1", "eng1", "ft1", {1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}, 450.0, 50.0);
 
     auto targetOrbit = std::make_shared<IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements>(earth, 6728137, 0.0, 140.0 * IO::Astrodynamics::Constants::DEG_RAD, 0.0, 0.0, 0.0,
-                                                                                          IO::Astrodynamics::Time::TDB("2013-10-14T10:18:00"), IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+                                                                                          IO::Astrodynamics::Time::TDB("2013-10-14T10:18:00"),
+                                                                                                    IO::Astrodynamics::Frames::InertialFrames::ICRF());
     IO::Astrodynamics::Maneuvers::Launch launch(ls, ls, false, *targetOrbit);
     ASSERT_DOUBLE_EQ(7696.9997304533663, launch.GetInertialInsertionVelocity());
 }
@@ -215,7 +225,7 @@ TEST(Launch, GetLaunchWindows)
                                          IO::Astrodynamics::Coordinates::Planetodetic(-81.0 * IO::Astrodynamics::Constants::DEG_RAD, 28.5 * IO::Astrodynamics::Constants::DEG_RAD, 0.0),
                                          earth,std::string(SitePath));
     std::unique_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::Astrodynamics::OrbitalParameters::StateVector>(
-            ls.GetStateVector(IO::Astrodynamics::Frames::InertialFrames::GetICRF(), IO::Astrodynamics::Time::TDB("2021-06-02T00:00:00")));
+            ls.GetStateVector(IO::Astrodynamics::Frames::InertialFrames::ICRF(), IO::Astrodynamics::Time::TDB("2021-06-02T00:00:00")));
     IO::Astrodynamics::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams)};
     s.AddFuelTank("ft1", 1000.0, 900.0);
     s.AddEngine("sn1", "eng1", "ft1", {1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}, 450.0, 50.0);
@@ -255,7 +265,7 @@ TEST(Launch, GetLaunchWindowsByDay)
                                          IO::Astrodynamics::Coordinates::Planetodetic(-81.0 * IO::Astrodynamics::Constants::DEG_RAD, 28.5 * IO::Astrodynamics::Constants::DEG_RAD, 0.0),
                                          earth,std::string(SitePath));
     std::unique_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::Astrodynamics::OrbitalParameters::StateVector>(
-            ls.GetStateVector(IO::Astrodynamics::Frames::InertialFrames::GetICRF(), IO::Astrodynamics::Time::TDB("2021-06-02T00:00:00")));
+            ls.GetStateVector(IO::Astrodynamics::Frames::InertialFrames::ICRF(), IO::Astrodynamics::Time::TDB("2021-06-02T00:00:00")));
     IO::Astrodynamics::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams)};
     s.AddFuelTank("ft1", 1000.0, 900.0);
     s.AddEngine("sn1", "eng1", "ft1", {1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}, 450.0, 50.0);
@@ -287,7 +297,7 @@ TEST(Launch, GetSouthLaunchSiteLaunchWindowsByDay)
                                          IO::Astrodynamics::Coordinates::Planetodetic(-104 * IO::Astrodynamics::Constants::DEG_RAD, -41.0 * IO::Astrodynamics::Constants::DEG_RAD, 0.0),
                                          earth,std::string(SitePath));
     std::unique_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::Astrodynamics::OrbitalParameters::StateVector>(
-            ls.GetStateVector(IO::Astrodynamics::Frames::InertialFrames::GetICRF(), IO::Astrodynamics::Time::TDB("2021-06-02T00:00:00")));
+            ls.GetStateVector(IO::Astrodynamics::Frames::InertialFrames::ICRF(), IO::Astrodynamics::Time::TDB("2021-06-02T00:00:00")));
     IO::Astrodynamics::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams)};
     s.AddFuelTank("ft1", 1000.0, 900.0);
     s.AddEngine("sn1", "eng1", "ft1", {1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}, 450.0, 50.0);
@@ -318,7 +328,7 @@ TEST(Launch, GetSouthLaunchSiteLaunchWindows)
     auto ls = IO::Astrodynamics::Sites::LaunchSite(399001, "S1", IO::Astrodynamics::Coordinates::Planetodetic(-104.0 * IO::Astrodynamics::Constants::DEG_RAD, -41.0 * IO::Astrodynamics::Constants::DEG_RAD, 0.0),
                                          earth,std::string(SitePath));
     std::unique_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::Astrodynamics::OrbitalParameters::StateVector>(
-            ls.GetStateVector(IO::Astrodynamics::Frames::InertialFrames::GetICRF(), IO::Astrodynamics::Time::TDB("2021-06-02T00:00:00")));
+            ls.GetStateVector(IO::Astrodynamics::Frames::InertialFrames::ICRF(), IO::Astrodynamics::Time::TDB("2021-06-02T00:00:00")));
     IO::Astrodynamics::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams)};
     s.AddFuelTank("ft1", 1000.0, 900.0);
     s.AddEngine("sn1", "eng1", "ft1", {1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}, 450.0, 50.0);

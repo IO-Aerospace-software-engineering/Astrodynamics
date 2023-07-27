@@ -94,7 +94,7 @@ TEST(Site, GetStateVector)
     auto sun = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(10);
     auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399, sun);
     IO::Astrodynamics::Sites::Site s{333002, "S2", IO::Astrodynamics::Coordinates::Planetodetic(2.2 * IO::Astrodynamics::Constants::DEG_RAD, 48.0 * IO::Astrodynamics::Constants::DEG_RAD, 0.0), earth, std::string(SitePath)};
-    auto sv = s.GetStateVector(*sun, IO::Astrodynamics::Frames::InertialFrames::GetICRF(), IO::Astrodynamics::AberrationsEnum::None, IO::Astrodynamics::Time::TDB("2021-05-18 12:00:00 TDB"));
+    auto sv = s.GetStateVector(*sun, IO::Astrodynamics::Frames::InertialFrames::ICRF(), IO::Astrodynamics::AberrationsEnum::None, IO::Astrodynamics::Time::TDB("2021-05-18 12:00:00 TDB"));
     ASSERT_DOUBLE_EQ(81351872154.581024, sv.GetPosition().GetX());
     ASSERT_DOUBLE_EQ(117072190462.72804, sv.GetPosition().GetY());
     ASSERT_DOUBLE_EQ(50747426612.422821, sv.GetPosition().GetZ());
@@ -112,7 +112,7 @@ TEST(Site, ConvertToLocalFrame)
     IO::Astrodynamics::Sites::Site s{399213, "FAKE_DSS-13",
                                      IO::Astrodynamics::Coordinates::Planetodetic(-116.7944627147624 * IO::Astrodynamics::Constants::DEG_RAD, 35.2471635434595 * IO::Astrodynamics::Constants::DEG_RAD, 107.0), earth,
                                      std::string(SitePath)};
-    auto sv = s.GetStateVector(*sun, IO::Astrodynamics::Frames::InertialFrames::GetICRF(), IO::Astrodynamics::AberrationsEnum::None, IO::Astrodynamics::Time::TDB("2021-05-18 12:00:00 TDB"));
+    auto sv = s.GetStateVector(*sun, IO::Astrodynamics::Frames::InertialFrames::ICRF(), IO::Astrodynamics::AberrationsEnum::None, IO::Astrodynamics::Time::TDB("2021-05-18 12:00:00 TDB"));
     auto frm = sv.ToFrame(IO::Astrodynamics::Frames::Frames("DSS-13_TOPO"));
     ASSERT_DOUBLE_EQ(151331778648.73926, frm.GetPosition().Magnitude());
     ASSERT_DOUBLE_EQ(10363092.455799565, frm.GetVelocity().Magnitude());
@@ -202,7 +202,7 @@ TEST(Site, ReadEphemeris)
     IO::Astrodynamics::Time::TDB endDate("2021-05-17 12:11:00 TDB");
     s.BuildAndWriteEphemeris(IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB>(startDate, endDate));
 
-    auto startEphemeris = s.ReadEphemeris(IO::Astrodynamics::Frames::InertialFrames::GetICRF(), IO::Astrodynamics::AberrationsEnum::None, startDate, *earth);
+    auto startEphemeris = s.ReadEphemeris(IO::Astrodynamics::Frames::InertialFrames::ICRF(), IO::Astrodynamics::AberrationsEnum::None, startDate, *earth);
 
     ASSERT_DOUBLE_EQ(2335472.0057788552, startEphemeris.GetPosition().GetX());
     ASSERT_DOUBLE_EQ(3587825.5088150194, startEphemeris.GetPosition().GetY());

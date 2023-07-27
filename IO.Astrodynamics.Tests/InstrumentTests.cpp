@@ -44,8 +44,8 @@ TEST(Instrument, Initialization)
                                                                                                                                              IO::Astrodynamics::Math::Vector3D(1.0, 2.0, 3.0),
                                                                                                                                              IO::Astrodynamics::Math::Vector3D(4.0, 5.0, 6.0),
                                                                                                                                              IO::Astrodynamics::Time::TDB(100.0s),
-                                                                                                                                             IO::Astrodynamics::Frames::InertialFrames::GetICRF());
-    IO::Astrodynamics::OrbitalParameters::StateOrientation attitude(IO::Astrodynamics::Time::TDB(100.0s), IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+                                                                                                                                                                 IO::Astrodynamics::Frames::InertialFrames::ICRF());
+    IO::Astrodynamics::OrbitalParameters::StateOrientation attitude(IO::Astrodynamics::Time::TDB(100.0s), IO::Astrodynamics::Frames::InertialFrames::ICRF());
     IO::Astrodynamics::Body::Spacecraft::Spacecraft s{-17, "sc17", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams)};
 
     s.AddCircularFOVInstrument(-17200, "Camera200", orientation, boresight, fovvector, 1.5);
@@ -74,8 +74,8 @@ TEST(Instrument, Frame)
                                                                                                                                              IO::Astrodynamics::Math::Vector3D(1.0, 2.0, 3.0),
                                                                                                                                              IO::Astrodynamics::Math::Vector3D(4.0, 5.0, 6.0),
                                                                                                                                              IO::Astrodynamics::Time::TDB(100.0s),
-                                                                                                                                             IO::Astrodynamics::Frames::InertialFrames::GetICRF());
-    IO::Astrodynamics::OrbitalParameters::StateOrientation attitude(IO::Astrodynamics::Time::TDB(100.0s), IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+                                                                                                                                                                 IO::Astrodynamics::Frames::InertialFrames::ICRF());
+    IO::Astrodynamics::OrbitalParameters::StateOrientation attitude(IO::Astrodynamics::Time::TDB(100.0s), IO::Astrodynamics::Frames::InertialFrames::ICRF());
     IO::Astrodynamics::Body::Spacecraft::Spacecraft s{-17200, "sc17", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams)};
 
     s.AddCircularFOVInstrument(-17200, "Camera200", orientation, boresight, fovvector, 1.5);
@@ -129,8 +129,8 @@ TEST(Instrument, CircularKernel)
                                                                                                                                              IO::Astrodynamics::Math::Vector3D(1.0, 2.0, 3.0),
                                                                                                                                              IO::Astrodynamics::Math::Vector3D(4.0, 5.0, 6.0),
                                                                                                                                              IO::Astrodynamics::Time::TDB(100.0s),
-                                                                                                                                             IO::Astrodynamics::Frames::InertialFrames::GetICRF());
-    IO::Astrodynamics::OrbitalParameters::StateOrientation attitude(IO::Astrodynamics::Time::TDB(100.0s), IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+                                                                                                                                                                 IO::Astrodynamics::Frames::InertialFrames::ICRF());
+    IO::Astrodynamics::OrbitalParameters::StateOrientation attitude(IO::Astrodynamics::Time::TDB(100.0s), IO::Astrodynamics::Frames::InertialFrames::ICRF());
     IO::Astrodynamics::Body::Spacecraft::Spacecraft s{-17, "sc17", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams)};
     s.AddCircularFOVInstrument(-17200, "Camera200", orientation, boresight, fovvector, 1.5);
 
@@ -177,8 +177,8 @@ TEST(Instrument, RectangularKernel)
                                                                                                                                              IO::Astrodynamics::Math::Vector3D(1.0, 2.0, 3.0),
                                                                                                                                              IO::Astrodynamics::Math::Vector3D(4.0, 5.0, 6.0),
                                                                                                                                              IO::Astrodynamics::Time::TDB(100.0s),
-                                                                                                                                             IO::Astrodynamics::Frames::InertialFrames::GetICRF());
-    IO::Astrodynamics::OrbitalParameters::StateOrientation attitude(IO::Astrodynamics::Time::TDB(100.0s), IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+                                                                                                                                                                 IO::Astrodynamics::Frames::InertialFrames::ICRF());
+    IO::Astrodynamics::OrbitalParameters::StateOrientation attitude(IO::Astrodynamics::Time::TDB(100.0s), IO::Astrodynamics::Frames::InertialFrames::ICRF());
     IO::Astrodynamics::Body::Spacecraft::Spacecraft s{-17, "sc17", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams)};
     s.AddRectangularFOVInstrument(-17300, "Camera300", orientation, boresight, fovvector, 1.5, IO::Astrodynamics::Constants::PI2);
 
@@ -225,8 +225,8 @@ TEST(Instrument, EllipticalKernel)
                                                                                                                                              IO::Astrodynamics::Math::Vector3D(1.0, 2.0, 3.0),
                                                                                                                                              IO::Astrodynamics::Math::Vector3D(4.0, 5.0, 6.0),
                                                                                                                                              IO::Astrodynamics::Time::TDB(100.0s),
-                                                                                                                                             IO::Astrodynamics::Frames::InertialFrames::GetICRF());
-    IO::Astrodynamics::OrbitalParameters::StateOrientation attitude(IO::Astrodynamics::Time::TDB(100.0s), IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+                                                                                                                                                                 IO::Astrodynamics::Frames::InertialFrames::ICRF());
+    IO::Astrodynamics::OrbitalParameters::StateOrientation attitude(IO::Astrodynamics::Time::TDB(100.0s), IO::Astrodynamics::Frames::InertialFrames::ICRF());
     IO::Astrodynamics::Body::Spacecraft::Spacecraft s{-17, "sc17", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams)};
     s.AddEllipticalFOVInstrument(-17400, "Camera400", orientation, boresight, fovvector, 1.5, IO::Astrodynamics::Constants::PI2);
 
@@ -273,8 +273,8 @@ TEST(Instrument, Boundaries)
                                                                                                                                              IO::Astrodynamics::Math::Vector3D(1.0, 2.0, 3.0),
                                                                                                                                              IO::Astrodynamics::Math::Vector3D(4.0, 5.0, 6.0),
                                                                                                                                              IO::Astrodynamics::Time::TDB(100.0s),
-                                                                                                                                             IO::Astrodynamics::Frames::InertialFrames::GetICRF());
-    IO::Astrodynamics::OrbitalParameters::StateOrientation attitude(IO::Astrodynamics::Time::TDB(100.0s), IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+                                                                                                                                                                 IO::Astrodynamics::Frames::InertialFrames::ICRF());
+    IO::Astrodynamics::OrbitalParameters::StateOrientation attitude(IO::Astrodynamics::Time::TDB(100.0s), IO::Astrodynamics::Frames::InertialFrames::ICRF());
     IO::Astrodynamics::Body::Spacecraft::Spacecraft s{-17, "sc17", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams)};
     s.AddCircularFOVInstrument(-17200, "Camera200", orientation, boresight, fovvector, 5 * IO::Astrodynamics::Constants::DEG_RAD);
 
@@ -304,8 +304,8 @@ TEST(Instrument, Boresight)
                                                                                                                                              IO::Astrodynamics::Math::Vector3D(1.0, 2.0, 3.0),
                                                                                                                                              IO::Astrodynamics::Math::Vector3D(4.0, 5.0, 6.0),
                                                                                                                                              IO::Astrodynamics::Time::TDB(100.0s),
-                                                                                                                                             IO::Astrodynamics::Frames::InertialFrames::GetICRF());
-    IO::Astrodynamics::OrbitalParameters::StateOrientation attitude(IO::Astrodynamics::Time::TDB(100.0s), IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+                                                                                                                                                                 IO::Astrodynamics::Frames::InertialFrames::ICRF());
+    IO::Astrodynamics::OrbitalParameters::StateOrientation attitude(IO::Astrodynamics::Time::TDB(100.0s), IO::Astrodynamics::Frames::InertialFrames::ICRF());
     IO::Astrodynamics::Body::Spacecraft::Spacecraft s{-17, "sc17", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams)};
     s.AddCircularFOVInstrument(-17200, "Camera200", orientation, boresight, fovvector, 5 * IO::Astrodynamics::Constants::DEG_RAD);
 
@@ -335,8 +335,8 @@ TEST(Instrument, FOVShape)
                                                                                                                                              IO::Astrodynamics::Math::Vector3D(1.0, 2.0, 3.0),
                                                                                                                                              IO::Astrodynamics::Math::Vector3D(4.0, 5.0, 6.0),
                                                                                                                                              IO::Astrodynamics::Time::TDB(100.0s),
-                                                                                                                                             IO::Astrodynamics::Frames::InertialFrames::GetICRF());
-    IO::Astrodynamics::OrbitalParameters::StateOrientation attitude(IO::Astrodynamics::Time::TDB(100.0s), IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+                                                                                                                                                                 IO::Astrodynamics::Frames::InertialFrames::ICRF());
+    IO::Astrodynamics::OrbitalParameters::StateOrientation attitude(IO::Astrodynamics::Time::TDB(100.0s), IO::Astrodynamics::Frames::InertialFrames::ICRF());
     IO::Astrodynamics::Body::Spacecraft::Spacecraft s{-17, "sc17", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams)};
     s.AddCircularFOVInstrument(-17200, "Camera200", orientation, boresight, fovvector, 5 * IO::Astrodynamics::Constants::DEG_RAD);
 
@@ -364,8 +364,8 @@ TEST(Instrument, GetBadId)
                                                                                                                                              IO::Astrodynamics::Math::Vector3D(1.0, 2.0, 3.0),
                                                                                                                                              IO::Astrodynamics::Math::Vector3D(4.0, 5.0, 6.0),
                                                                                                                                              IO::Astrodynamics::Time::TDB(100.0s),
-                                                                                                                                             IO::Astrodynamics::Frames::InertialFrames::GetICRF());
-    IO::Astrodynamics::OrbitalParameters::StateOrientation attitude(IO::Astrodynamics::Time::TDB(100.0s), IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+                                                                                                                                                                 IO::Astrodynamics::Frames::InertialFrames::ICRF());
+    IO::Astrodynamics::OrbitalParameters::StateOrientation attitude(IO::Astrodynamics::Time::TDB(100.0s), IO::Astrodynamics::Frames::InertialFrames::ICRF());
     IO::Astrodynamics::Body::Spacecraft::Spacecraft s{-17, "sc17", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams)};
     s.AddCircularFOVInstrument(-17200, "Camera200", orientation, boresight, fovvector, 5 * IO::Astrodynamics::Constants::DEG_RAD);
 
@@ -390,8 +390,8 @@ TEST(Instrument, CreateBadId)
                                                                                                                                              IO::Astrodynamics::Math::Vector3D(1.0, 2.0, 3.0),
                                                                                                                                              IO::Astrodynamics::Math::Vector3D(4.0, 5.0, 6.0),
                                                                                                                                              IO::Astrodynamics::Time::TDB(100.0s),
-                                                                                                                                             IO::Astrodynamics::Frames::InertialFrames::GetICRF());
-    IO::Astrodynamics::OrbitalParameters::StateOrientation attitude(IO::Astrodynamics::Time::TDB(100.0s), IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+                                                                                                                                                                 IO::Astrodynamics::Frames::InertialFrames::ICRF());
+    IO::Astrodynamics::OrbitalParameters::StateOrientation attitude(IO::Astrodynamics::Time::TDB(100.0s), IO::Astrodynamics::Frames::InertialFrames::ICRF());
     IO::Astrodynamics::Body::Spacecraft::Spacecraft s{-17, "sc17", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams)};
 
 
@@ -415,8 +415,8 @@ TEST(Instrument, AlreadyExists)
                                                                                                                                              IO::Astrodynamics::Math::Vector3D(1.0, 2.0, 3.0),
                                                                                                                                              IO::Astrodynamics::Math::Vector3D(4.0, 5.0, 6.0),
                                                                                                                                              IO::Astrodynamics::Time::TDB(100.0s),
-                                                                                                                                             IO::Astrodynamics::Frames::InertialFrames::GetICRF());
-    IO::Astrodynamics::OrbitalParameters::StateOrientation attitude(IO::Astrodynamics::Time::TDB(100.0s), IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+                                                                                                                                                                 IO::Astrodynamics::Frames::InertialFrames::ICRF());
+    IO::Astrodynamics::OrbitalParameters::StateOrientation attitude(IO::Astrodynamics::Time::TDB(100.0s), IO::Astrodynamics::Frames::InertialFrames::ICRF());
     IO::Astrodynamics::Body::Spacecraft::Spacecraft s{-17, "sc17", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams)};
 
     s.AddCircularFOVInstrument(-17200, "Camera200", orientation, boresight, fovvector, 5 * IO::Astrodynamics::Constants::DEG_RAD);
@@ -446,7 +446,7 @@ TEST(Instrument, FindWindowFieldOfView)
                                                                                                                                              IO::Astrodynamics::Math::Vector3D(a, 0.0, 0.0),
                                                                                                                                              IO::Astrodynamics::Math::Vector3D(0.0, v, 0.0),
                                                                                                                                              epoch,
-                                                                                                                                             IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+                                                                                                                                                                 IO::Astrodynamics::Frames::InertialFrames::ICRF());
     IO::Astrodynamics::Body::Spacecraft::Spacecraft s{-179, "SC179", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams)};
 
     s.AddCircularFOVInstrument(-179789, "CAMERA789", orientation, boresight, fovvector, 1.5);
@@ -478,7 +478,7 @@ TEST(Instrument, FindWindowFieldOfView)
     auto q = IO::Astrodynamics::Math::Quaternion(axis_or, 0.0);
     for (size_t i = 0; i < 646; i++)
     {
-        IO::Astrodynamics::OrbitalParameters::StateOrientation s_or(q, angularVelocity_or, epoch_or, IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+        IO::Astrodynamics::OrbitalParameters::StateOrientation s_or(q, angularVelocity_or, epoch_or, IO::Astrodynamics::Frames::InertialFrames::ICRF());
         interval.push_back(s_or);
         epoch_or = epoch_or + ts;
     }
@@ -529,7 +529,7 @@ TEST(Instrument, GetBoresightAtEpoch)
                                                                                                                                              IO::Astrodynamics::Math::Vector3D(a, 0.0, 0.0),
                                                                                                                                              IO::Astrodynamics::Math::Vector3D(0.0, v, 0.0),
                                                                                                                                              epoch,
-                                                                                                                                             IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+                                                                                                                                                                 IO::Astrodynamics::Frames::InertialFrames::ICRF());
     IO::Astrodynamics::Body::Spacecraft::Spacecraft s{-179, "SC179", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams)};
 
     s.AddCircularFOVInstrument(-179789, "CAMERA789", orientation, boresight, fovvector, 1.5);
@@ -561,7 +561,7 @@ TEST(Instrument, GetBoresightAtEpoch)
     for (size_t i = 0; i < 646; i++)
     {
         auto q = IO::Astrodynamics::Math::Quaternion(axis_or, 0.0);
-        IO::Astrodynamics::OrbitalParameters::StateOrientation s_or(q, angularVelocity_or, epoch_or, IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+        IO::Astrodynamics::OrbitalParameters::StateOrientation s_or(q, angularVelocity_or, epoch_or, IO::Astrodynamics::Frames::InertialFrames::ICRF());
         interval.push_back(s_or);
         epoch_or = epoch_or + ts;
     }
@@ -570,7 +570,7 @@ TEST(Instrument, GetBoresightAtEpoch)
 
     s.WriteOrientations(orientationData);
 
-    auto results = instrument->GetBoresight(IO::Astrodynamics::Frames::InertialFrames::GetICRF(), IO::Astrodynamics::Time::TDB("2021-JUN-10 00:00:00.0000 TDB"));
+    auto results = instrument->GetBoresight(IO::Astrodynamics::Frames::InertialFrames::ICRF(), IO::Astrodynamics::Time::TDB("2021-JUN-10 00:00:00.0000 TDB"));
 
     ASSERT_NEAR(0.0, results.GetX(), 1E-07);
     ASSERT_NEAR(-1.0, results.GetY(), 1E-07);
@@ -594,8 +594,8 @@ TEST(Instrument, GetBoresightInSpacecraftFrame)
                                                                                                                                              IO::Astrodynamics::Math::Vector3D(1.0, 2.0, 3.0),
                                                                                                                                              IO::Astrodynamics::Math::Vector3D(4.0, 5.0, 6.0),
                                                                                                                                              IO::Astrodynamics::Time::TDB(100.0s),
-                                                                                                                                             IO::Astrodynamics::Frames::InertialFrames::GetICRF());
-    IO::Astrodynamics::OrbitalParameters::StateOrientation attitude(IO::Astrodynamics::Time::TDB(100.0s), IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+                                                                                                                                                                 IO::Astrodynamics::Frames::InertialFrames::ICRF());
+    IO::Astrodynamics::OrbitalParameters::StateOrientation attitude(IO::Astrodynamics::Time::TDB(100.0s), IO::Astrodynamics::Frames::InertialFrames::ICRF());
     IO::Astrodynamics::Body::Spacecraft::Spacecraft s{-17, "sc17", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams)};
 
     s.AddCircularFOVInstrument(-17200, "Camera200", orientation, boresight, fovvector, 1.5);
@@ -620,8 +620,8 @@ TEST(Instrument, GetBoresightInSpacecraftFrame2)
                                                                                                                                              IO::Astrodynamics::Math::Vector3D(1.0, 2.0, 3.0),
                                                                                                                                              IO::Astrodynamics::Math::Vector3D(4.0, 5.0, 6.0),
                                                                                                                                              IO::Astrodynamics::Time::TDB(100.0s),
-                                                                                                                                             IO::Astrodynamics::Frames::InertialFrames::GetICRF());
-    IO::Astrodynamics::OrbitalParameters::StateOrientation attitude(IO::Astrodynamics::Time::TDB(100.0s), IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+                                                                                                                                                                 IO::Astrodynamics::Frames::InertialFrames::ICRF());
+    IO::Astrodynamics::OrbitalParameters::StateOrientation attitude(IO::Astrodynamics::Time::TDB(100.0s), IO::Astrodynamics::Frames::InertialFrames::ICRF());
     IO::Astrodynamics::Body::Spacecraft::Spacecraft s{-17, "sc17", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams)};
 
     s.AddCircularFOVInstrument(-17200, "Camera200", orientation, boresight, fovvector, 1.5);

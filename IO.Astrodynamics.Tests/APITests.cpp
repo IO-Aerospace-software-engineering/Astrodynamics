@@ -115,7 +115,7 @@ TEST(API, SpacecraftPropagation)
     scenario.Spacecraft.directoryPath = spacecraftPath.c_str();
     scenario.Spacecraft.initialOrbitalParameter.centerOfMotionId = 399;
     scenario.Spacecraft.initialOrbitalParameter.epoch = 667915269.18539762;
-    scenario.Spacecraft.initialOrbitalParameter.inertialFrame = IO::Astrodynamics::Frames::InertialFrames::GetICRF().ToCharArray();
+    scenario.Spacecraft.initialOrbitalParameter.inertialFrame = IO::Astrodynamics::Frames::InertialFrames::ICRF().ToCharArray();
     scenario.Spacecraft.initialOrbitalParameter.position.x = 5056554.1874925727;
     scenario.Spacecraft.initialOrbitalParameter.position.y = 4395595.4942363985;
     scenario.Spacecraft.initialOrbitalParameter.position.z = 0.0;
@@ -151,7 +151,7 @@ TEST(API, SpacecraftPropagation)
     scenario.Spacecraft.orbitalPlaneChangingManeuvers[0].targetOrbit.velocity.z = 6933.1803797017265;
     scenario.Spacecraft.orbitalPlaneChangingManeuvers[0].targetOrbit.centerOfMotionId = 399;
     scenario.Spacecraft.orbitalPlaneChangingManeuvers[0].targetOrbit.epoch = 667915269.18539762;
-    scenario.Spacecraft.orbitalPlaneChangingManeuvers[0].targetOrbit.inertialFrame = IO::Astrodynamics::Frames::InertialFrames::GetICRF().ToCharArray();
+    scenario.Spacecraft.orbitalPlaneChangingManeuvers[0].targetOrbit.inertialFrame = IO::Astrodynamics::Frames::InertialFrames::ICRF().ToCharArray();
     scenario.Spacecraft.orbitalPlaneChangingManeuvers[0].engines[0] = "eng1";
     scenario.Spacecraft.orbitalPlaneChangingManeuvers[0].maneuverOrder = 0;
 
@@ -248,7 +248,7 @@ TEST(API, FindWindowsInFieldOfViewConstraintProxy)
             IO::Astrodynamics::Math::Vector3D(a, 0.0, 0.0),
             IO::Astrodynamics::Math::Vector3D(0.0, v, 0.0),
             epoch,
-            IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+            IO::Astrodynamics::Frames::InertialFrames::ICRF());
     IO::Astrodynamics::Body::Spacecraft::Spacecraft s{-179, "SC179", 1000.0, 3000.0, std::string(SpacecraftPath),
                                                       std::move(orbitalParams)};
 
@@ -268,7 +268,7 @@ TEST(API, FindWindowsInFieldOfViewConstraintProxy)
 
     pro.Propagate();
     auto spcframe = s.GetInstrument(-179789)->GetBoresightInSpacecraftFrame();
-    auto ICRFframe = s.GetInstrument(-179789)->GetBoresight(IO::Astrodynamics::Frames::InertialFrames::GetICRF(), epoch);
+    auto ICRFframe = s.GetInstrument(-179789)->GetBoresight(IO::Astrodynamics::Frames::InertialFrames::ICRF(), epoch);
 
     IO::Astrodynamics::API::DTO::WindowDTO windows[1000];
     IO::Astrodynamics::API::DTO::WindowDTO searchWindow{};
@@ -329,7 +329,7 @@ TEST(API, ReadSpacecraftOrientationProxy)
             IO::Astrodynamics::Math::Vector3D(0.0, 7727.0,
                                               0.0),
             startDate,
-            IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+            IO::Astrodynamics::Frames::InertialFrames::ICRF());
 
     IO::Astrodynamics::Body::Spacecraft::Spacecraft s{-172, "OrientationSpc", 1000.0, 3000.0, std::string(SpacecraftPath),
                                                       std::move(orbitalParams1)};
@@ -457,7 +457,7 @@ TEST(API, GetBodyInformationInvalidId)
 
 TEST(API, TransformFrame)
 {
-    auto res = TransformFrameProxy(IO::Astrodynamics::Frames::InertialFrames::GetICRF().GetName().c_str(), "ITRF93", 0.0);
+    auto res = TransformFrameProxy(IO::Astrodynamics::Frames::InertialFrames::ICRF().GetName().c_str(), "ITRF93", 0.0);
     ASSERT_DOUBLE_EQ(0.76713121189662548, res.Rotation.w);
     ASSERT_DOUBLE_EQ(-1.8618846012434252e-05, res.Rotation.x);
     ASSERT_DOUBLE_EQ(8.468919252183845e-07, res.Rotation.y);
@@ -506,7 +506,7 @@ TEST(API, ConvertConicOrbitalElementsToStateVector)
                                      std::pow(2.521950157430313E+06, 2));
 
     IO::Astrodynamics::API::DTO::ConicOrbitalElementsDTO conics;
-    conics.frame = IO::Astrodynamics::Frames::InertialFrames::GetICRF().ToCharArray();
+    conics.frame = IO::Astrodynamics::Frames::InertialFrames::ICRF().ToCharArray();
     conics.epoch = 663724800.00001490;//"2021-01-12T11:58:50.816" UTC
     conics.meanAnomaly = 4.541224977546975E+01 * IO::Astrodynamics::Constants::DEG_RAD;
     conics.periapsisArgument = 1.062574316262159E+02 * IO::Astrodynamics::Constants::DEG_RAD;
@@ -528,7 +528,7 @@ TEST(API, ConvertConicOrbitalElementsToStateVector)
     ASSERT_NEAR(-5.297615757935174E+03, sv.velocity.z, 1.1);
     ASSERT_EQ(663724800.00001490, sv.epoch);
     ASSERT_EQ(399, sv.centerOfMotionId);
-    ASSERT_STREQ(IO::Astrodynamics::Frames::InertialFrames::GetICRF().ToCharArray(), sv.inertialFrame);
+    ASSERT_STREQ(IO::Astrodynamics::Frames::InertialFrames::ICRF().ToCharArray(), sv.inertialFrame);
 }
 
 TEST(API, ConvertEquinoctialElementsToStateVector)
@@ -551,7 +551,7 @@ TEST(API, ConvertEquinoctialElementsToStateVector)
     double L = m0 + argp + node;
 
     IO::Astrodynamics::API::DTO::EquinoctialElementsDTO eqDTO;
-    eqDTO.frame = IO::Astrodynamics::Frames::InertialFrames::GetICRF().ToCharArray();
+    eqDTO.frame = IO::Astrodynamics::Frames::InertialFrames::ICRF().ToCharArray();
     eqDTO.declinationOfThePole = IO::Astrodynamics::Constants::PI2;
     eqDTO.rightAscensionOfThePole = -IO::Astrodynamics::Constants::PI2;
     eqDTO.ascendingNodeLongitudeRate = 0.0;
@@ -574,7 +574,7 @@ TEST(API, ConvertEquinoctialElementsToStateVector)
     ASSERT_DOUBLE_EQ(-517.51239201161684, sv.velocity.y);
     ASSERT_DOUBLE_EQ(202.52220483204573, sv.velocity.z);
     ASSERT_EQ(399, sv.centerOfMotionId);
-    ASSERT_STREQ(IO::Astrodynamics::Frames::InertialFrames::GetICRF().ToCharArray(), sv.inertialFrame);
+    ASSERT_STREQ(IO::Astrodynamics::Frames::InertialFrames::ICRF().ToCharArray(), sv.inertialFrame);
 }
 
 TEST(API, ConvertToRaDec)

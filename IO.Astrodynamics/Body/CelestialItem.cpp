@@ -27,7 +27,7 @@ IO::Astrodynamics::Body::CelestialItem::CelestialItem(const int id, const std::s
 IO::Astrodynamics::Body::CelestialItem::CelestialItem(const int id, const std::string &name, const double mass, std::shared_ptr<IO::Astrodynamics::Body::CelestialBody> &centerOfMotion) : CelestialItem(id, name, mass)
 {
     m_orbitalParametersAtEpoch = std::make_unique<IO::Astrodynamics::OrbitalParameters::StateVector>(
-            this->ReadEphemeris(IO::Astrodynamics::Frames::InertialFrames::GetICRF(), IO::Astrodynamics::AberrationsEnum::None, IO::Astrodynamics::Time::TDB(0s), *centerOfMotion));
+            this->ReadEphemeris(IO::Astrodynamics::Frames::InertialFrames::ICRF(), IO::Astrodynamics::AberrationsEnum::None, IO::Astrodynamics::Time::TDB(0s), *centerOfMotion));
     centerOfMotion->m_satellites.push_back(this);
 }
 

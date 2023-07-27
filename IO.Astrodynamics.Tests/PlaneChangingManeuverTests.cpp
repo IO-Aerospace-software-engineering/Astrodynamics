@@ -34,7 +34,7 @@ TEST(PlaneChangingManeuver, CanExecute)
                                                                                                                                                        IO::Astrodynamics::Constants::DEG_RAD,
                                                                                                                                                        0.0, 0.0,
                                                                                                                                                        IO::Astrodynamics::Time::TDB(0.0s),
-                                                                                                                                                       IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+                                                                                                                                                                           IO::Astrodynamics::Frames::InertialFrames::ICRF());
     std::shared_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParams2 = std::make_shared<IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements>(earth, 11480000.0, 0.5,
                                                                                                                                                        45.0 *
                                                                                                                                                        IO::Astrodynamics::Constants::DEG_RAD,
@@ -42,8 +42,8 @@ TEST(PlaneChangingManeuver, CanExecute)
                                                                                                                                                        IO::Astrodynamics::Constants::DEG_RAD,
                                                                                                                                                        0.0, 0.0,
                                                                                                                                                        IO::Astrodynamics::Time::TDB(0.0s),
-                                                                                                                                                       IO::Astrodynamics::Frames::InertialFrames::GetICRF());
-    IO::Astrodynamics::OrbitalParameters::StateOrientation attitude(IO::Astrodynamics::Time::TDB(0.0s), IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+                                                                                                                                                                           IO::Astrodynamics::Frames::InertialFrames::ICRF());
+    IO::Astrodynamics::OrbitalParameters::StateOrientation attitude(IO::Astrodynamics::Time::TDB(0.0s), IO::Astrodynamics::Frames::InertialFrames::ICRF());
     IO::Astrodynamics::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams1)};
 
     IO::Astrodynamics::Integrators::VVIntegrator integrator(IO::Astrodynamics::Time::TimeSpan(1.0s));
@@ -217,7 +217,7 @@ TEST(PlaneChangingManeuver, ExecuteInsuffisantDeltaV)
                                                                                                                                                        IO::Astrodynamics::Constants::DEG_RAD,
                                                                                                                                                        0.0, 0.0,
                                                                                                                                                        IO::Astrodynamics::Time::TDB(0.0s),
-                                                                                                                                                       IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+                                                                                                                                                                           IO::Astrodynamics::Frames::InertialFrames::ICRF());
     std::shared_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParams2 = std::make_shared<IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements>(earth, 11480000.0, 0.0,
                                                                                                                                                        45.0 *
                                                                                                                                                        IO::Astrodynamics::Constants::DEG_RAD,
@@ -225,8 +225,8 @@ TEST(PlaneChangingManeuver, ExecuteInsuffisantDeltaV)
                                                                                                                                                        IO::Astrodynamics::Constants::DEG_RAD,
                                                                                                                                                        0.0, 0.0,
                                                                                                                                                        IO::Astrodynamics::Time::TDB(0.0s),
-                                                                                                                                                       IO::Astrodynamics::Frames::InertialFrames::GetICRF());
-    IO::Astrodynamics::OrbitalParameters::StateOrientation attitude(IO::Astrodynamics::Time::TDB(0.0s), IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+                                                                                                                                                                           IO::Astrodynamics::Frames::InertialFrames::ICRF());
+    IO::Astrodynamics::OrbitalParameters::StateOrientation attitude(IO::Astrodynamics::Time::TDB(0.0s), IO::Astrodynamics::Frames::InertialFrames::ICRF());
     IO::Astrodynamics::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams1)};
 
     IO::Astrodynamics::Integrators::VVIntegrator integrator(IO::Astrodynamics::Time::TimeSpan(1.0s));
@@ -271,7 +271,7 @@ TEST(PlaneChangingManeuver, ExecuteDN)
                                                                                                                                                        IO::Astrodynamics::Constants::DEG_RAD,
                                                                                                                                                        0.0, 0.0,
                                                                                                                                                        IO::Astrodynamics::Time::TDB(0.0s),
-                                                                                                                                                       IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+                                                                                                                                                                           IO::Astrodynamics::Frames::InertialFrames::ICRF());
     std::shared_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParams2 = std::make_shared<IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements>(earth, 11480000.0, 0.0,
                                                                                                                                                        45.0 *
                                                                                                                                                        IO::Astrodynamics::Constants::DEG_RAD,
@@ -279,15 +279,15 @@ TEST(PlaneChangingManeuver, ExecuteDN)
                                                                                                                                                        IO::Astrodynamics::Constants::DEG_RAD,
                                                                                                                                                        0.0, 0.0,
                                                                                                                                                        IO::Astrodynamics::Time::TDB(0.0s),
-                                                                                                                                                       IO::Astrodynamics::Frames::InertialFrames::GetICRF());
-    IO::Astrodynamics::OrbitalParameters::StateOrientation attitude(IO::Astrodynamics::Time::TDB(0.0s), IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+                                                                                                                                                                           IO::Astrodynamics::Frames::InertialFrames::ICRF());
+    IO::Astrodynamics::OrbitalParameters::StateOrientation attitude(IO::Astrodynamics::Time::TDB(0.0s), IO::Astrodynamics::Frames::InertialFrames::ICRF());
     IO::Astrodynamics::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams1)};
 
     IO::Astrodynamics::Integrators::VVIntegrator integrator(IO::Astrodynamics::Time::TimeSpan(1.0s));
     IO::Astrodynamics::Propagators::Propagator prop(s, integrator, IO::Astrodynamics::Time::Window(IO::Astrodynamics::Time::TDB(100.0s), IO::Astrodynamics::Time::TDB(200.0s)));
     //Add fictive data
     prop.AddStateVector(IO::Astrodynamics::OrbitalParameters::StateVector(earth, IO::Astrodynamics::Math::Vector3D(1.0, 2.0, 3.0), IO::Astrodynamics::Math::Vector3D(4.0, 5.0, 6.0), IO::Astrodynamics::Time::TDB(4260.0s),
-                                                                IO::Astrodynamics::Frames::InertialFrames::GetICRF()));
+                                                                          IO::Astrodynamics::Frames::InertialFrames::ICRF()));
 
     s.AddFuelTank("ft1", 2000.0, 1900.0);
     s.AddEngine("sn1", "eng1", "ft1", {1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}, 450.0, 50.0);
@@ -349,7 +349,7 @@ TEST(PlaneChangingManeuver, ExecuteAN)
                                                                                                                                                        IO::Astrodynamics::Constants::DEG_RAD,
                                                                                                                                                        0.0, 0.0,
                                                                                                                                                        IO::Astrodynamics::Time::TDB(0.0s),
-                                                                                                                                                       IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+                                                                                                                                                                           IO::Astrodynamics::Frames::InertialFrames::ICRF());
     std::shared_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParams2 = std::make_shared<IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements>(earth, 11480000.0, 0.0,
                                                                                                                                                        45.0 *
                                                                                                                                                        IO::Astrodynamics::Constants::DEG_RAD,
@@ -357,15 +357,15 @@ TEST(PlaneChangingManeuver, ExecuteAN)
                                                                                                                                                        IO::Astrodynamics::Constants::DEG_RAD,
                                                                                                                                                        0.0, 0.0,
                                                                                                                                                        IO::Astrodynamics::Time::TDB(0.0s),
-                                                                                                                                                       IO::Astrodynamics::Frames::InertialFrames::GetICRF());
-    IO::Astrodynamics::OrbitalParameters::StateOrientation attitude(IO::Astrodynamics::Time::TDB(0.0s), IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+                                                                                                                                                                           IO::Astrodynamics::Frames::InertialFrames::ICRF());
+    IO::Astrodynamics::OrbitalParameters::StateOrientation attitude(IO::Astrodynamics::Time::TDB(0.0s), IO::Astrodynamics::Frames::InertialFrames::ICRF());
     IO::Astrodynamics::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams1)};
 
     IO::Astrodynamics::Integrators::VVIntegrator integrator(IO::Astrodynamics::Time::TimeSpan(1.0s));
     IO::Astrodynamics::Propagators::Propagator prop(s, integrator, IO::Astrodynamics::Time::Window(IO::Astrodynamics::Time::TDB(100.0s), IO::Astrodynamics::Time::TDB(200.0s)));
     //Add fictive data
     prop.AddStateVector(IO::Astrodynamics::OrbitalParameters::StateVector(earth, IO::Astrodynamics::Math::Vector3D(1.0, 2.0, 3.0), IO::Astrodynamics::Math::Vector3D(4.0, 5.0, 6.0), IO::Astrodynamics::Time::TDB(4260.0s),
-                                                                IO::Astrodynamics::Frames::InertialFrames::GetICRF()));
+                                                                          IO::Astrodynamics::Frames::InertialFrames::ICRF()));
 
     s.AddFuelTank("ft1", 2000.0, 1900.0);
     s.AddEngine("sn1", "eng1", "ft1", {1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}, 450.0, 50.0);
@@ -428,7 +428,7 @@ TEST(PlaneChangingManeuver, CheckOrbitalParametersToHigherInclination)
                                                                                            10.0 * IO::Astrodynamics::Constants::DEG_RAD,
                                                                                            10.0,
                                                                                            IO::Astrodynamics::Time::TDB("2021-06-02T00:00:00"),
-                                                                                           IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+                                                                                                     IO::Astrodynamics::Frames::InertialFrames::ICRF());
     //Define target orbit
     auto targetOrbit = std::make_shared<IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements>(earth,
                                                                                           6700000.0,
@@ -438,7 +438,7 @@ TEST(PlaneChangingManeuver, CheckOrbitalParametersToHigherInclination)
                                                                                           10.0 * IO::Astrodynamics::Constants::DEG_RAD,
                                                                                           10.0,
                                                                                           IO::Astrodynamics::Time::TDB("2021-06-02T00:00:00"),
-                                                                                          IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+                                                                                                    IO::Astrodynamics::Frames::InertialFrames::ICRF());
 
     //===================Compute maneuvers to reach target body================================
 
@@ -482,7 +482,7 @@ TEST(PlaneChangingManeuver, CheckOrbitalParametersToHigherInclination)
     auto startManeuver = planeAlignment.GetThrustWindow()->GetStartDate().Add(IO::Astrodynamics::Time::TimeSpan(-60.0s));
     auto endManeuver = planeAlignment.GetThrustWindow()->GetEndDate().Add(IO::Astrodynamics::Time::TimeSpan(60.0s));
 
-    auto ephemeris = spacecraft.ReadEphemeris(IO::Astrodynamics::Frames::InertialFrames::GetICRF(), IO::Astrodynamics::AberrationsEnum::None, endManeuver, *earth);
+    auto ephemeris = spacecraft.ReadEphemeris(IO::Astrodynamics::Frames::InertialFrames::ICRF(), IO::Astrodynamics::AberrationsEnum::None, endManeuver, *earth);
 
     auto p = ephemeris.GetPerigeeVector().Magnitude();
     auto e = ephemeris.GetEccentricity();
@@ -517,7 +517,7 @@ TEST(PlaneChangingManeuver, CheckOrbitalParametersToLowerInclination)
                                                                                            10.0 * IO::Astrodynamics::Constants::DEG_RAD,
                                                                                            10.0,
                                                                                            IO::Astrodynamics::Time::TDB("2021-06-02T00:00:00"),
-                                                                                           IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+                                                                                                     IO::Astrodynamics::Frames::InertialFrames::ICRF());
     //Define target orbit
     auto targetOrbit = std::make_shared<IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements>(earth,
                                                                                           6700000.0,
@@ -527,7 +527,7 @@ TEST(PlaneChangingManeuver, CheckOrbitalParametersToLowerInclination)
                                                                                           10.0 * IO::Astrodynamics::Constants::DEG_RAD,
                                                                                           10.0,
                                                                                           IO::Astrodynamics::Time::TDB("2021-06-02T00:00:00"),
-                                                                                          IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+                                                                                                    IO::Astrodynamics::Frames::InertialFrames::ICRF());
 
     //===================Compute maneuvers to reach target body================================
 
@@ -571,7 +571,7 @@ TEST(PlaneChangingManeuver, CheckOrbitalParametersToLowerInclination)
     auto startManeuver = planeAlignment.GetThrustWindow()->GetStartDate().Add(IO::Astrodynamics::Time::TimeSpan(-60.0s));
     auto endManeuver = planeAlignment.GetThrustWindow()->GetEndDate().Add(IO::Astrodynamics::Time::TimeSpan(60.0s));
 
-    auto ephemeris = spacecraft.ReadEphemeris(IO::Astrodynamics::Frames::InertialFrames::GetICRF(), IO::Astrodynamics::AberrationsEnum::None, endManeuver, *earth);
+    auto ephemeris = spacecraft.ReadEphemeris(IO::Astrodynamics::Frames::InertialFrames::ICRF(), IO::Astrodynamics::AberrationsEnum::None, endManeuver, *earth);
 
     auto p = ephemeris.GetPerigeeVector().Magnitude();
     auto e = ephemeris.GetEccentricity();

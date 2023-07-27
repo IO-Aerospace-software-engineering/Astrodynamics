@@ -183,6 +183,9 @@ var NAVTREEINDEX0 =
 "InvalidArgumentException_8cpp.html":[2,0,0,4,0],
 "InvalidArgumentException_8h.html":[2,0,0,4,1],
 "InvalidArgumentException_8h_source.html":[2,0,0,4,1],
+"JulianDate_8cpp.html":[2,0,0,20,2],
+"JulianDate_8h.html":[2,0,0,20,3],
+"JulianDate_8h_source.html":[2,0,0,20,3],
 "Kernel_8cpp.html":[2,0,0,10,8],
 "Kernel_8cpp.html#a5c9d866609170170b5d74b6e245b2cfe":[2,0,0,10,8,0],
 "Kernel_8h.html":[2,0,0,10,9],
@@ -246,8 +249,5 @@ var NAVTREEINDEX0 =
 "Parameters_8h.html#acd5107583bd93f14ab205ee2945c430e":[2,0,0,14,1,4],
 "Parameters_8h.html#aea7d63a4361591bc697bf63407ed0838":[2,0,0,14,1,5],
 "Parameters_8h.html#aeaf7b5ec930099fa6553588edfb82cea":[2,0,0,14,1,0],
-"Parameters_8h_source.html":[2,0,0,14,1],
-"PayloadDTO_8h.html":[2,0,0,0,0,22],
-"PayloadDTO_8h_source.html":[2,0,0,0,0,22],
-"Payload_8cpp.html":[2,0,0,1,0,4]
+"Parameters_8h_source.html":[2,0,0,14,1]
 };

@@ -9,7 +9,7 @@ using namespace std::chrono_literals;
 TEST(StateOrientation, InitializationByValues)
 {
 	IO::Astrodynamics::Time::TDB tdb("2020-01-01T12:00:00");
-	IO::Astrodynamics::OrbitalParameters::StateOrientation so(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, tdb,IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+	IO::Astrodynamics::OrbitalParameters::StateOrientation so(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, tdb, IO::Astrodynamics::Frames::InertialFrames::ICRF());
 	ASSERT_DOUBLE_EQ(1.0, so.GetQuaternion().GetQ0());
 	ASSERT_DOUBLE_EQ(2.0, so.GetQuaternion().GetQ1());
 	ASSERT_DOUBLE_EQ(3.0, so.GetQuaternion().GetQ2());
@@ -23,7 +23,8 @@ TEST(StateOrientation, InitializationByValues)
 TEST(StateOrientation, InitializationFromAngles)
 {
 	IO::Astrodynamics::Time::TDB tdb("2020-01-01T12:00:00");
-	IO::Astrodynamics::OrbitalParameters::StateOrientation so(IO::Astrodynamics::Math::Vector3D(1.0, 1.0, 1.0).Normalize(), IO::Astrodynamics::Constants::DEG_RAD * 40.0, IO::Astrodynamics::Math::Vector3D(5.0, 6.0, 7.0), tdb,IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+	IO::Astrodynamics::OrbitalParameters::StateOrientation so(IO::Astrodynamics::Math::Vector3D(1.0, 1.0, 1.0).Normalize(), IO::Astrodynamics::Constants::DEG_RAD * 40.0, IO::Astrodynamics::Math::Vector3D(5.0, 6.0, 7.0), tdb,
+                                                              IO::Astrodynamics::Frames::InertialFrames::ICRF());
 	ASSERT_DOUBLE_EQ(0.93969262078590843, so.GetQuaternion().GetQ0());
 	ASSERT_DOUBLE_EQ(0.19746542181734925, so.GetQuaternion().GetQ1());
 	ASSERT_DOUBLE_EQ(0.19746542181734925, so.GetQuaternion().GetQ2());
@@ -40,7 +41,7 @@ TEST(StateOrientation, InitializationFromQuaternion)
 	IO::Astrodynamics::Math::Quaternion q(IO::Astrodynamics::Math::Vector3D(1.0, 1.0, 1.0).Normalize(), IO::Astrodynamics::Constants::DEG_RAD * 40.0);
 	IO::Astrodynamics::Math::Vector3D v(5.0, 6.0, 7.0);
 
-	IO::Astrodynamics::OrbitalParameters::StateOrientation so(q, v, tdb,IO::Astrodynamics::Frames::InertialFrames::GetICRF());
+	IO::Astrodynamics::OrbitalParameters::StateOrientation so(q, v, tdb, IO::Astrodynamics::Frames::InertialFrames::ICRF());
 	ASSERT_DOUBLE_EQ(0.93969262078590843, so.GetQuaternion().GetQ0());
 	ASSERT_DOUBLE_EQ(0.19746542181734925, so.GetQuaternion().GetQ1());
 	ASSERT_DOUBLE_EQ(0.19746542181734925, so.GetQuaternion().GetQ2());
