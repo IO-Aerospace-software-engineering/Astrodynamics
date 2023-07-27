@@ -23,7 +23,7 @@ TEST(LagrangePoint, GetEphemeris)
     auto earthBarycenter = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(3, sun);
     IO::Astrodynamics::Body::LagrangePoint l1(391);
     IO::Astrodynamics::Time::TDB epoch(std::chrono::duration<double>(0.0));
-    auto res = l1.ReadEphemeris(IO::Astrodynamics::Frames::InertialFrames::Ecliptic(), IO::Astrodynamics::AberrationsEnum::None, epoch, *earthBarycenter);
+    auto res = l1.ReadEphemeris(IO::Astrodynamics::Frames::InertialFrames::EclipticJ2000(), IO::Astrodynamics::AberrationsEnum::None, epoch, *earthBarycenter);
     ASSERT_DOUBLE_EQ(265316694.670816, res.GetPosition().GetX());
     ASSERT_DOUBLE_EQ(-1448527895.507656, res.GetPosition().GetY());
     ASSERT_DOUBLE_EQ(1706.923545571044, res.GetPosition().GetZ());

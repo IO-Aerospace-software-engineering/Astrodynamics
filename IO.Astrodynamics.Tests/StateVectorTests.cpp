@@ -333,7 +333,7 @@ TEST(StateVector, ToFrame)
 	const IO::Astrodynamics::OrbitalParameters::StateVector sv(sun, IO::Astrodynamics::Math::Vector3D(-2.649903367743050E+10,1.327574173383451E+11, 5.755671847054072E+10), IO::Astrodynamics::Math::Vector3D(-2.979426007043741E+04, -5.018052308799903E+03, -2.175393802830554E+03), IO::Astrodynamics::Time::TDB(0.0s),
                                                                IO::Astrodynamics::Frames::InertialFrames::ICRF());
 
-	auto nStateVector = sv.ToFrame(IO::Astrodynamics::Frames::InertialFrames::Ecliptic());
+	auto nStateVector = sv.ToFrame(IO::Astrodynamics::Frames::InertialFrames::EclipticJ2000());
 
 	ASSERT_DOUBLE_EQ(-2.649903367743050E+10,nStateVector.GetPosition().GetX());
 	ASSERT_DOUBLE_EQ(1.446972967925493E+11,nStateVector.GetPosition().GetY());

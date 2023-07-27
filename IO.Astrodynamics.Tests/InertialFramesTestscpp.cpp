@@ -11,14 +11,14 @@ using namespace std::chrono_literals;
 TEST(InertialFrames, ToString)
 {
 	ASSERT_STREQ("J2000", IO::Astrodynamics::Frames::InertialFrames::ICRF().ToCharArray());
-	ASSERT_STREQ("ECLIPJ2000", IO::Astrodynamics::Frames::InertialFrames::Ecliptic().ToCharArray());
+	ASSERT_STREQ("ECLIPJ2000", IO::Astrodynamics::Frames::InertialFrames::EclipticJ2000().ToCharArray());
 	ASSERT_STREQ("GALACTIC", IO::Astrodynamics::Frames::InertialFrames::Galactic().ToCharArray());
 }
 
 TEST(InertialFrames, GetName)
 {
 	ASSERT_STREQ("J2000", IO::Astrodynamics::Frames::InertialFrames::ICRF().GetName().c_str());
-	ASSERT_STREQ("ECLIPJ2000", IO::Astrodynamics::Frames::InertialFrames::Ecliptic().GetName().c_str());
+	ASSERT_STREQ("ECLIPJ2000", IO::Astrodynamics::Frames::InertialFrames::EclipticJ2000().GetName().c_str());
 	ASSERT_STREQ("GALACTIC", IO::Astrodynamics::Frames::InertialFrames::Galactic().GetName().c_str());
 }
 
@@ -34,7 +34,7 @@ TEST(InertialFrames, NotEqual)
 
 TEST(InertialFrames, ToFrame6x6)
 {
-	auto mtx = IO::Astrodynamics::Frames::InertialFrames::ICRF().ToFrame6x6(IO::Astrodynamics::Frames::InertialFrames::Ecliptic(), IO::Astrodynamics::Time::TDB(0.0s));
+	auto mtx = IO::Astrodynamics::Frames::InertialFrames::ICRF().ToFrame6x6(IO::Astrodynamics::Frames::InertialFrames::EclipticJ2000(), IO::Astrodynamics::Time::TDB(0.0s));
 
 	ASSERT_DOUBLE_EQ(1.0, mtx.GetValue(0, 0));
 	ASSERT_DOUBLE_EQ(0.0, mtx.GetValue(0, 1));

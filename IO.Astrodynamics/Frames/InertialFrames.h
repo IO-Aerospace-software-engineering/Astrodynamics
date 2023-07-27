@@ -17,8 +17,11 @@ namespace IO::Astrodynamics::Frames
 
 	private:
 		static InertialFrames mICRF;
-		static InertialFrames mECLIPTIC;
+		static InertialFrames mECLIPTIC_J2000;
+		static InertialFrames mECLIPTIC_B1950;
 		static InertialFrames mGALACTIC;
+		static InertialFrames mB1950;
+		static InertialFrames mFK4;
 	public:
 		/**
 		 * @brief Construct a new Inertial Frames object
@@ -29,7 +32,10 @@ namespace IO::Astrodynamics::Frames
 
 		static IO::Astrodynamics::Frames::InertialFrames& ICRF();
 		static IO::Astrodynamics::Frames::InertialFrames& Galactic();
-		static IO::Astrodynamics::Frames::InertialFrames& Ecliptic();
+		static IO::Astrodynamics::Frames::InertialFrames& EclipticJ2000();
+		static IO::Astrodynamics::Frames::InertialFrames& EclipticB1950();
+		static IO::Astrodynamics::Frames::InertialFrames& B1950();
+		static IO::Astrodynamics::Frames::InertialFrames& FK4();
 	};
 }
 #endif // ! INERTIAL_FRAMES_H
