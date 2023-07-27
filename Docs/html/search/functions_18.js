@@ -1,5 +1,4 @@
 var searchData=
 [
-  ['z_0',['Z',['../classIO_1_1Astrodynamics_1_1Coordinate.html#abc5c0c3d05a8d7321e5090b894a58a91',1,'IO::Astrodynamics::Coordinate']]],
-  ['zenithattitude_1',['ZenithAttitude',['../classIO_1_1Astrodynamics_1_1Maneuvers_1_1Attitudes_1_1ZenithAttitude.html#a9377cacb55f40476b3387bcf548d966f',1,'IO::Astrodynamics::Maneuvers::Attitudes::ZenithAttitude::ZenithAttitude(const std::vector&lt; IO::Astrodynamics::Body::Spacecraft::Engine * &gt; &amp;engines, IO::Astrodynamics::Propagators::Propagator &amp;propagator, const IO::Astrodynamics::Time::TimeSpan &amp;attitudeHoldDuration)'],['../classIO_1_1Astrodynamics_1_1Maneuvers_1_1Attitudes_1_1ZenithAttitude.html#a967222ae1ba16b2e076df329186aeb95',1,'IO::Astrodynamics::Maneuvers::Attitudes::ZenithAttitude::ZenithAttitude(const std::vector&lt; IO::Astrodynamics::Body::Spacecraft::Engine * &gt; &amp;engines, IO::Astrodynamics::Propagators::Propagator &amp;propagator, const IO::Astrodynamics::Time::TDB &amp;minimumEpoch, const IO::Astrodynamics::Time::TimeSpan &amp;attitudeHoldDuration)']]]
+  ['y_0',['Y',['../classIO_1_1Astrodynamics_1_1Coordinate.html#a3d3a9693cacfb32b0a1794e51c4064ad',1,'IO::Astrodynamics::Coordinate']]]
 ];

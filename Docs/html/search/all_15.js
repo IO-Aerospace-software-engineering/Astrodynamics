@@ -1,16 +1,11 @@
 var searchData=
 [
-  ['value_0',['value',['../structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1DistanceConstraintDTO.html#a3b939fd08aecd42eaf36f8a73f11b27d',1,'IO::Astrodynamics::API::DTO::DistanceConstraintDTO']]],
-  ['vector3d_1',['Vector3D',['../classIO_1_1Astrodynamics_1_1Math_1_1Vector3D.html',1,'IO::Astrodynamics::Math::Vector3D'],['../classIO_1_1Astrodynamics_1_1Math_1_1Vector3D.html#a1519a99b4c1d08ee503c65a59dcdb0ea',1,'IO::Astrodynamics::Math::Vector3D::Vector3D(const Vector3D &amp;vector)=default'],['../classIO_1_1Astrodynamics_1_1Math_1_1Vector3D.html#a55f6080e00599414b9f939e198c19ee2',1,'IO::Astrodynamics::Math::Vector3D::Vector3D(double x, double y, double z)'],['../classIO_1_1Astrodynamics_1_1Math_1_1Vector3D.html#a326850e6bcc4bc0d6929444a700929b9',1,'IO::Astrodynamics::Math::Vector3D::Vector3D()=default']]],
-  ['vector3d_2ecpp_2',['Vector3D.cpp',['../Vector3D_8cpp.html',1,'']]],
-  ['vector3d_2eh_3',['Vector3D.h',['../Vector3D_8h.html',1,'']]],
-  ['vector3ddto_4',['Vector3DDTO',['../structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1Vector3DDTO.html',1,'IO::Astrodynamics::API::DTO']]],
-  ['vector3ddto_2eh_5',['Vector3DDTO.h',['../Vector3DDTO_8h.html',1,'']]],
-  ['vectorx_6',['VectorX',['../classIO_1_1Astrodynamics_1_1Math_1_1Vector3D.html#a43426505ffec69f690fce44a0f9d6b0c',1,'IO::Astrodynamics::Math::Vector3D']]],
-  ['vectory_7',['VectorY',['../classIO_1_1Astrodynamics_1_1Math_1_1Vector3D.html#a919eaca2619559d6292f322d5f9c08f4',1,'IO::Astrodynamics::Math::Vector3D']]],
-  ['vectorz_8',['VectorZ',['../classIO_1_1Astrodynamics_1_1Math_1_1Vector3D.html#a62dc850f1db3d1776e1c8bed4e2fb8c6',1,'IO::Astrodynamics::Math::Vector3D']]],
-  ['velocity_9',['velocity',['../structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1StateVectorDTO.html#a1b61f1f13eea4bb808f0935f241fb884',1,'IO::Astrodynamics::API::DTO::StateVectorDTO']]],
-  ['vvintegrator_10',['VVIntegrator',['../classIO_1_1Astrodynamics_1_1Integrators_1_1VVIntegrator.html',1,'IO::Astrodynamics::Integrators::VVIntegrator'],['../classIO_1_1Astrodynamics_1_1Integrators_1_1VVIntegrator.html#a4743eda4106946318c1c4761d404f4c8',1,'IO::Astrodynamics::Integrators::VVIntegrator::VVIntegrator(const IO::Astrodynamics::Time::TimeSpan &amp;stepDuration)'],['../classIO_1_1Astrodynamics_1_1Integrators_1_1VVIntegrator.html#a298b105225f7347b3204687b67b35c0b',1,'IO::Astrodynamics::Integrators::VVIntegrator::VVIntegrator(const IO::Astrodynamics::Time::TimeSpan &amp;stepDuration, std::vector&lt; IO::Astrodynamics::Integrators::Forces::Force * &gt; &amp;forces)']]],
-  ['vvintegrator_2ecpp_11',['VVIntegrator.cpp',['../VVIntegrator_8cpp.html',1,'']]],
-  ['vvintegrator_2eh_12',['VVIntegrator.h',['../VVIntegrator_8h.html',1,'']]]
+  ['unload_0',['Unload',['../classIO_1_1Astrodynamics_1_1Kernels_1_1KernelsLoader.html#ad9996f1f52bb546022f70aa5e792195b',1,'IO::Astrodynamics::Kernels::KernelsLoader']]],
+  ['unloadkernelsproxy_1',['UnloadKernelsProxy',['../Proxy_8cpp.html#a04cf08f304ed8d069399c098e8f20dd3',1,'UnloadKernelsProxy(const char *path):&#160;Proxy.cpp'],['../Proxy_8h.html#a3b1dfb96463e087e516d2bd1c48b33e8',1,'UnloadKernelsProxy(const char *path):&#160;Proxy.cpp']]],
+  ['unused_2',['UNUSED',['../Macros_8h.html#a86d500a34c624c2cae56bc25a31b12f3',1,'Macros.h']]],
+  ['updatefuelquantity_3',['UpdateFuelQuantity',['../classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1FuelTank.html#abbc2d255a43792c4940b37ac1515a970',1,'IO::Astrodynamics::Body::Spacecraft::FuelTank']]],
+  ['utc_4',['UTC',['../classIO_1_1Astrodynamics_1_1Time_1_1UTC.html',1,'IO::Astrodynamics::Time::UTC'],['../classIO_1_1Astrodynamics_1_1Time_1_1UTC.html#a29dac6b8d159b47fa714ed4599a689fb',1,'IO::Astrodynamics::Time::UTC::UTC(std::chrono::duration&lt; double &gt; ellapsedSecondsFromJ2000)'],['../classIO_1_1Astrodynamics_1_1Time_1_1UTC.html#af0952a64384c8d75df53aecb54645b21',1,'IO::Astrodynamics::Time::UTC::UTC(const std::string &amp;string)']]],
+  ['utc_2ecpp_5',['UTC.cpp',['../UTC_8cpp.html',1,'']]],
+  ['utc_2eh_6',['UTC.h',['../UTC_8h.html',1,'']]],
+  ['utctostringproxy_7',['UTCToStringProxy',['../Proxy_8cpp.html#af1e6f2f2b5080a1c1fdc85bbe77e1810',1,'UTCToStringProxy(double secondsFromJ2000):&#160;Proxy.cpp'],['../Proxy_8h.html#a8f3164fd10cfa0827e25add2106a71c7',1,'UTCToStringProxy(double secondsFromJ2000):&#160;Proxy.cpp']]]
 ];

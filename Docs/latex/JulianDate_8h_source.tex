@@ -1,0 +1,52 @@
+\hypertarget{JulianDate_8h_source}{}\doxysection{Julian\+Date.\+h}
+\label{JulianDate_8h_source}\index{IO.Astrodynamics/Time/JulianDate.h@{IO.Astrodynamics/Time/JulianDate.h}}
+\mbox{\hyperlink{JulianDate_8h}{Go to the documentation of this file.}}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{1 \textcolor{comment}{/*}}
+\DoxyCodeLine{2 \textcolor{comment}{ Copyright (c) 2023. Sylvain Guillet (sylvain.guillet@tutamail.com)}}
+\DoxyCodeLine{3 \textcolor{comment}{ */}}
+\DoxyCodeLine{4 }
+\DoxyCodeLine{5 \textcolor{comment}{//}}
+\DoxyCodeLine{6 \textcolor{comment}{// Created by s.guillet on 26/07/2023.}}
+\DoxyCodeLine{7 \textcolor{comment}{//}}
+\DoxyCodeLine{8 }
+\DoxyCodeLine{9 \textcolor{preprocessor}{\#ifndef IO\_JULIANDATE\_H}}
+\DoxyCodeLine{10 \textcolor{preprocessor}{\#define IO\_JULIANDATE\_H}}
+\DoxyCodeLine{11 }
+\DoxyCodeLine{12 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{DateTime_8h}{DateTime.h}}>}}
+\DoxyCodeLine{13 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{UTC_8h}{UTC.h}}>}}
+\DoxyCodeLine{14 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{TDB_8h}{TDB.h}}>}}
+\DoxyCodeLine{15 }
+\DoxyCodeLine{16 }
+\DoxyCodeLine{17 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Time}{IO::Astrodynamics::Time}}}
+\DoxyCodeLine{18 \{}
+\DoxyCodeLine{19     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1JulianDate}{JulianDate}} final : \textcolor{keyword}{public} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1DateTime}{IO::Astrodynamics::Time::DateTime}}}
+\DoxyCodeLine{20     \{}
+\DoxyCodeLine{21     \textcolor{keyword}{private}:}
+\DoxyCodeLine{22         \textcolor{keyword}{const} std::chrono::duration<double, std::ratio<86400>> m\_julianDate\{\};}
+\DoxyCodeLine{23     \textcolor{keyword}{public}:}
+\DoxyCodeLine{24         \textcolor{keyword}{explicit} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1JulianDate_ab31f091bae6d8f36f0d8b8a82a7789e4}{JulianDate}}(std::chrono::duration<\textcolor{keywordtype}{double}, std::ratio<86400>> julianDate);}
+\DoxyCodeLine{25 }
+\DoxyCodeLine{26         [[nodiscard]] \textcolor{keyword}{inline} std::chrono::duration<double, std::ratio<86400>> \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1JulianDate_af1ed9ac00f624a8095ff38498b6d759e}{GetJulianDate}}()\textcolor{keyword}{ const}}
+\DoxyCodeLine{27 \textcolor{keyword}{        }\{ \textcolor{keywordflow}{return} m\_julianDate; \}}
+\DoxyCodeLine{28 }
+\DoxyCodeLine{34         [[nodiscard]] std::string \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1JulianDate_adaf270ec4080cc63aba2f60c7637239f}{ToString}}() \textcolor{keyword}{const override};}
+\DoxyCodeLine{35 }
+\DoxyCodeLine{42         [[nodiscard]] \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1JulianDate}{IO::Astrodynamics::Time::JulianDate}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1JulianDate_a1e3ac1cd952fa11d467b1495f4502bc3}{Add}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO::Astrodynamics::Time::TimeSpan}} \&timespan) \textcolor{keyword}{const};}
+\DoxyCodeLine{43 }
+\DoxyCodeLine{50         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1JulianDate}{JulianDate}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1JulianDate_a3ebd13a029f60ae8440850ad978c30a8}{operator+}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO::Astrodynamics::Time::TimeSpan}} \&timespan) \textcolor{keyword}{const};}
+\DoxyCodeLine{51 }
+\DoxyCodeLine{58         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1JulianDate}{JulianDate}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1JulianDate_ac316849557d39ec0660eb9e6a4a618e8}{operator-\/}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO::Astrodynamics::Time::TimeSpan}} \&other) \textcolor{keyword}{const};}
+\DoxyCodeLine{59 }
+\DoxyCodeLine{66         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{TimeSpan}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1JulianDate_ac316849557d39ec0660eb9e6a4a618e8}{operator-\/}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1JulianDate}{IO::Astrodynamics::Time::JulianDate}} \&other) \textcolor{keyword}{const};}
+\DoxyCodeLine{67 }
+\DoxyCodeLine{73         [[nodiscard]] \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1UTC}{IO::Astrodynamics::Time::UTC}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1JulianDate_a1ac3b8bc3ef34979c42f91fc6bb90c83}{ToUTC}}() \textcolor{keyword}{const};}
+\DoxyCodeLine{74 }
+\DoxyCodeLine{75         [[nodiscard]] \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO::Astrodynamics::Time::TDB}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1JulianDate_aaa078872d44194b15281da8b7e54cbc3}{ToTDB}}() \textcolor{keyword}{const};}
+\DoxyCodeLine{76     \};}
+\DoxyCodeLine{77 \}}
+\DoxyCodeLine{78 }
+\DoxyCodeLine{79 }
+\DoxyCodeLine{80 \textcolor{preprocessor}{\#endif }\textcolor{comment}{//IO\_JULIANDATE\_H}}
+
+\end{DoxyCode}

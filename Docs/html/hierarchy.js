@@ -17,6 +17,7 @@ var hierarchy =
     [ "IO::Astrodynamics::Coordinates::Cylindrical", "classIO_1_1Astrodynamics_1_1Coordinates_1_1Cylindrical.html", null ],
     [ "IO::Astrodynamics::DataPoolMonitoring", "classIO_1_1Astrodynamics_1_1DataPoolMonitoring.html", null ],
     [ "IO::Astrodynamics::Time::DateTime", "classIO_1_1Astrodynamics_1_1Time_1_1DateTime.html", [
+      [ "IO::Astrodynamics::Time::JulianDate", "classIO_1_1Astrodynamics_1_1Time_1_1JulianDate.html", null ],
       [ "IO::Astrodynamics::Time::TDB", "classIO_1_1Astrodynamics_1_1Time_1_1TDB.html", null ],
       [ "IO::Astrodynamics::Time::UTC", "classIO_1_1Astrodynamics_1_1Time_1_1UTC.html", null ]
     ] ],
