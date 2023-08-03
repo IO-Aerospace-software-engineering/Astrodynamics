@@ -1,20 +1,17 @@
 # IO.Astrodynamics
-Welcome!
 
-Astrodynamics toolkit can be seen as an extension and a C++ wrapper of cspice toolkit(N 67) developped by the JPL.
+Welcome to Astrodynamics toolkit, a C++ wrapper and extension of cspice toolkit(N 67), a powerful library for space science and engineering developed by the JPL.
 
-This project has been initiated to make life easier for people who don't know cspice or need an object-oriented approach.
+This project aims to simplify the use of cspice for those who are unfamiliar with it or prefer an object-oriented approach.
 
-The goal of this project is to :
-- Allow object oriented development and provide high level objects
-- Abstract file handling (kernels, frames, ...)
-- Provide a body integrator
-- Simulate Spacecraft and impulsive maneuvers
-- Evaluate constraints like occultations, body in instrument field of view, ...
+With this project, you can:
 
-This framework has been written in C++ to offer a good performance but if you need a more productive approach you can switch immediately to the .Net version of this project [here](https://github.com/IO-Aerospace-software-engineering/Astrodynamics.Net) and you will get the best of the both worlds :
+- Develop high-level objects using object-oriented programming
+- Handle files (kernels, frames, ...) in an abstract way
+- Integrate bodies and simulate spacecrafts and impulsive maneuvers
+- Check constraints such as occultations, body in instrument field of view, etc.
 
-C++ velocity + .Net productivity = ❤️
+This framework is written in C++ for optimal performance, but if you want a more productive approach, you can switch to the .Net version of this project here, which offers the best of both worlds.C++ velocity + .Net productivity = ❤️
     
 ## Project status
 
