@@ -182,3 +182,22 @@ TEST(CelestialBody, FindBarycenterOfMotion)
     ASSERT_EQ(3, IO::Astrodynamics::Body::CelestialBody::FindBarycenterOfMotionId(391));
     ASSERT_EQ(3, IO::Astrodynamics::Body::CelestialBody::FindBarycenterOfMotionId(394));
 }
+
+TEST(CelestialBody, GetJValue)
+{
+    auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399);
+    auto j2=earth->GetJ2();
+    ASSERT_DOUBLE_EQ(0.001082616,j2);
+
+    auto j3=earth->GetJ3();
+    ASSERT_DOUBLE_EQ(-0.00000253881,j3);
+
+    auto j4=earth->GetJ4();
+    ASSERT_DOUBLE_EQ(-0.00000165597,j4);
+
+	//Moon's geophysical properties doesn't exist by default
+	auto moon = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(301);
+	auto moonj2=moon->GetJ2();
+	ASSERT_TRUE(std::isnan(moonj2));
+
+}
