@@ -293,11 +293,12 @@ double IO::Astrodynamics::Body::CelestialBody::ReadJValue(const char *valueName)
 }
 
 
-IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements
-IO::Astrodynamics::Body::CelestialBody::CreateHelioSynchronousOrbit(double semiMajorAxis, double eccentricity, IO::Astrodynamics::Time::TDB &crossEquatorAt) const
+std::shared_ptr<IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements>
+IO::Astrodynamics::Body::CelestialBody::CreateHelioSynchronousOrbit(double semiMajorAxis, double eccentricity, IO::Astrodynamics::Time::TDB &epochAtAscendingNode) const
 {
-    std::shared_ptr<CelestialItem> basePtr = std::const_pointer_cast<CelestialItem>(this->shared_from_this());
-    auto body = std::static_pointer_cast<CelestialBody>(basePtr);
+//    std::shared_ptr<CelestialItem> basePtr = std::const_pointer_cast<CelestialItem>(this->shared_from_this());
+//    auto body = std::static_pointer_cast<CelestialBody>(basePtr);
+    auto body=std::make_shared<CelestialBody>(m_id);
     double p = semiMajorAxis * (1 - eccentricity);
     double a72 = std::pow(semiMajorAxis, 3.5);
     double e2 = eccentricity * eccentricity;
@@ -305,6 +306,6 @@ IO::Astrodynamics::Body::CelestialBody::CreateHelioSynchronousOrbit(double semiM
     double sqrtGM = std::sqrt(this->GetMu());
     double re2 = this->GetRadius().GetX() * this->GetRadius().GetX();
     double i =  std::acos((2 * a72 * e22 * this->m_orbitalParametersAtEpoch->GetMeanMotion()) / (3 * sqrtGM * -m_J2 * re2));
-    IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements orbit{body, 0.0, 0.0, i, 0.0, 0.0, 0.0, crossEquatorAt, IO::Astrodynamics::Frames::InertialFrames::ICRF()};
+    return std::make_shared<IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements>(body, p, eccentricity, i, 0.0, 0.0, 0.0, epochAtAscendingNode, IO::Astrodynamics::Frames::InertialFrames::ICRF());
 }
 

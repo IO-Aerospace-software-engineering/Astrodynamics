@@ -106,7 +106,7 @@ TEST(CelestialBody, GetRadii)
     auto sun = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(10);
     IO::Astrodynamics::Time::TDB epoch("2021-Jan-01 00:00:00.0000 TDB");
     auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399, sun);
-    ASSERT_EQ(IO::Astrodynamics::Math::Vector3D(6378.1366, 6378.1366, 6356.7519), earth->GetRadius());
+    ASSERT_EQ(IO::Astrodynamics::Math::Vector3D(6378136.6, 6378136.6, 6356751.9), earth->GetRadius());
 }
 
 TEST(CelestialBody, GetFlattening)
@@ -114,7 +114,7 @@ TEST(CelestialBody, GetFlattening)
     auto sun = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(10);
     IO::Astrodynamics::Time::TDB epoch("2021-Jan-01 00:00:00.0000 TDB");
     auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399, sun);
-    ASSERT_DOUBLE_EQ(0.0033528131084554717, earth->GetFlattening());
+    ASSERT_DOUBLE_EQ(0.0033528131084554157, earth->GetFlattening());
 }
 
 TEST(CelestialBody, GetAngularVelocity)

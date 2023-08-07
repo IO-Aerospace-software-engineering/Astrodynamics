@@ -206,7 +206,7 @@ namespace IO::Astrodynamics::Body
  * @return The heliosynchronous orbit parameters.
  */
 
-        IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements
+        std::shared_ptr<IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements>
         CreateHelioSynchronousOrbit(double semiMajorAxis, double eccentricity, IO::Astrodynamics::Time::TDB &epochAtAscendingNode) const;
 
         /**
