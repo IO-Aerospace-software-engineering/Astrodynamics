@@ -209,6 +209,11 @@ namespace IO::Astrodynamics::Body
         std::shared_ptr<IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements>
         CreateHelioSynchronousOrbit(double semiMajorAxis, double eccentricity, IO::Astrodynamics::Time::TDB &epochAtAscendingNode) const;
 
+        std::shared_ptr<IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements>
+        CreatePhasedHelioSynchronousOrbit(double semiMajorAxis, double eccentricity, IO::Astrodynamics::Time::TDB &epochAtAscendingNode, int nbOrbitByDay) const;
+
+        IO::Astrodynamics::Time::TimeSpan GetTrueSolarDay(IO::Astrodynamics::Time::TDB& epoch) const;
+
         /**
  * @brief Check if the given celestial body is Sun.
  *
@@ -263,19 +268,19 @@ namespace IO::Astrodynamics::Body
 
         static bool IsMoon(int celestialBodyId);
 
-                /**
-        * @brief Check if a celestial body is a Lagrange point.
-        *
-        * This function determines whether a celestial body with the given identifier
-        * is a Lagrange point or not. Lagrange points are locations in a two-body
-        * system where a third, smaller body can remain in a stable and fixed position
-        * relative to the two larger bodies. The function takes the celestial body
-        * identifier as an input parameter and returns a boolean value indicating
-        * whether it is a Lagrange point or not.
-        *
-        * @param celestialBodyId The identifier of the celestial body to check.
-        * @return True if the celestial body is a Lagrange point, false otherwise.
-        */
+        /**
+* @brief Check if a celestial body is a Lagrange point.
+*
+* This function determines whether a celestial body with the given identifier
+* is a Lagrange point or not. Lagrange points are locations in a two-body
+* system where a third, smaller body can remain in a stable and fixed position
+* relative to the two larger bodies. The function takes the celestial body
+* identifier as an input parameter and returns a boolean value indicating
+* whether it is a Lagrange point or not.
+*
+* @param celestialBodyId The identifier of the celestial body to check.
+* @return True if the celestial body is a Lagrange point, false otherwise.
+*/
 
         static bool IsLagrangePoint(int celestialBodyId);
 

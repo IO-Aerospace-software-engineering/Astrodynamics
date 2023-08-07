@@ -11,6 +11,7 @@
 #include <Aberrations.h>
 #include <InertialFrames.h>
 #include <InvalidArgumentException.h>
+#include <GeometryFinder.h>
 
 using namespace std::chrono_literals;
 
@@ -296,16 +297,36 @@ double IO::Astrodynamics::Body::CelestialBody::ReadJValue(const char *valueName)
 std::shared_ptr<IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements>
 IO::Astrodynamics::Body::CelestialBody::CreateHelioSynchronousOrbit(double semiMajorAxis, double eccentricity, IO::Astrodynamics::Time::TDB &epochAtAscendingNode) const
 {
-//    std::shared_ptr<CelestialItem> basePtr = std::const_pointer_cast<CelestialItem>(this->shared_from_this());
-//    auto body = std::static_pointer_cast<CelestialBody>(basePtr);
-    auto body=std::make_shared<CelestialBody>(m_id);
+    auto body = std::make_shared<CelestialBody>(m_id);
     double p = semiMajorAxis * (1 - eccentricity);
     double a72 = std::pow(semiMajorAxis, 3.5);
     double e2 = eccentricity * eccentricity;
     double e22 = (1 - e2) * (1 - e2);
     double sqrtGM = std::sqrt(this->GetMu());
     double re2 = this->GetRadius().GetX() * this->GetRadius().GetX();
-    double i =  std::acos((2 * a72 * e22 * this->m_orbitalParametersAtEpoch->GetMeanMotion()) / (3 * sqrtGM * -m_J2 * re2));
-    return std::make_shared<IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements>(body, p, eccentricity, i, 0.0, 0.0, 0.0, epochAtAscendingNode, IO::Astrodynamics::Frames::InertialFrames::ICRF());
+    double i = std::acos((2 * a72 * e22 * this->m_orbitalParametersAtEpoch->GetMeanMotion()) / (3 * sqrtGM * -m_J2 * re2));
+    return std::make_shared<IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements>(body, p, eccentricity, i, 0.0, 0.0, 0.0, epochAtAscendingNode,
+                                                                                        IO::Astrodynamics::Frames::InertialFrames::ICRF());
 }
 
+std::shared_ptr<IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements>
+IO::Astrodynamics::Body::CelestialBody::CreatePhasedHelioSynchronousOrbit(double semiMajorAxis, double eccentricity, IO::Astrodynamics::Time::TDB &epochAtAscendingNode,
+                                                                          int nbOrbitByDay) const
+{
+    IO::Astrodynamics::Time::Window<Time::TDB> dayWindow{epochAtAscendingNode, epochAtAscendingNode.Add(
+            IO::Astrodynamics::Time::TimeSpan((Constants::_2PI / GetSideralRotationPeriod(epochAtAscendingNode).GetSeconds().count()) * 2.0))}
+    IO::Astrodynamics::Constraints::GeometryFinder gf;
+    gf.FindWindowsOnCoordinateConstraint(dayWindow, m_id, 10, Frames::InertialFrames::EclipticJ2000().GetName(), CoordinateSystem::)
+    return std::shared_ptr<IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements>();
+}
+
+IO::Astrodynamics::Time::TimeSpan IO::Astrodynamics::Body::CelestialBody::GetTrueSolarDay(IO::Astrodynamics::Time::TDB &epoch) const
+{
+    IO::Astrodynamics::Body::CelestialBody sun{10};
+    auto sideralRotationPeriod = GetSideralRotationPeriod(epoch);
+    auto eph0 = this->ReadEphemeris(Frames::InertialFrames::EclipticJ2000(), AberrationsEnum::LT, epoch, sun);
+    auto eph1 = this->ReadEphemeris(Frames::InertialFrames::EclipticJ2000(), AberrationsEnum::LT, epoch + sideralRotationPeriod, sun);
+    auto angle = eph0.GetPosition().GetAngle(eph1.GetPosition());
+    return sideralRotationPeriod + angle / GetAngularVelocity(epoch);
+
+}
