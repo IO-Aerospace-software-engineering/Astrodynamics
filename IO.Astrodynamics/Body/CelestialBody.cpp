@@ -299,25 +299,29 @@ IO::Astrodynamics::Body::CelestialBody::CreateHelioSynchronousOrbit(double semiM
 {
     auto body = std::make_shared<CelestialBody>(m_id);
     double p = semiMajorAxis * (1 - eccentricity);
+    double eqRadius = this->GetRadius().GetX();
+    if (p < eqRadius)
+    {
+        throw IO::Astrodynamics::Exception::SDKException("Invalid parameters, orbit perigee is lower than body radius");
+    }
     double a72 = std::pow(semiMajorAxis, 3.5);
     double e2 = eccentricity * eccentricity;
     double e22 = (1 - e2) * (1 - e2);
     double sqrtGM = std::sqrt(this->GetMu());
-    double re2 = this->GetRadius().GetX() * this->GetRadius().GetX();
+    double re2 = eqRadius * eqRadius;
     double i = std::acos((2 * a72 * e22 * this->m_orbitalParametersAtEpoch->GetMeanMotion()) / (3 * sqrtGM * -m_J2 * re2));
     return std::make_shared<IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements>(body, p, eccentricity, i, 0.0, 0.0, 0.0, epochAtAscendingNode,
                                                                                         IO::Astrodynamics::Frames::InertialFrames::ICRF());
 }
 
 std::shared_ptr<IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements>
-IO::Astrodynamics::Body::CelestialBody::CreatePhasedHelioSynchronousOrbit(double semiMajorAxis, double eccentricity, IO::Astrodynamics::Time::TDB &epochAtAscendingNode,
+IO::Astrodynamics::Body::CelestialBody::CreatePhasedHelioSynchronousOrbit(double eccentricity, IO::Astrodynamics::Time::TDB &epochAtAscendingNode,
                                                                           int nbOrbitByDay) const
 {
-    IO::Astrodynamics::Time::Window<Time::TDB> dayWindow{epochAtAscendingNode, epochAtAscendingNode.Add(
-            IO::Astrodynamics::Time::TimeSpan((Constants::_2PI / GetSideralRotationPeriod(epochAtAscendingNode).GetSeconds().count()) * 2.0))}
-    IO::Astrodynamics::Constraints::GeometryFinder gf;
-    gf.FindWindowsOnCoordinateConstraint(dayWindow, m_id, 10, Frames::InertialFrames::EclipticJ2000().GetName(), CoordinateSystem::)
-    return std::shared_ptr<IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements>();
+    IO::Astrodynamics::Time::TimeSpan trueSolarDay{GetTrueSolarDay(epochAtAscendingNode)};
+    double T = GetTrueSolarDay(epochAtAscendingNode).GetSeconds().count() / nbOrbitByDay;
+    double a = std::cbrt(((T * T) * GetMu()) / (std::pow(4 * Constants::PI, 2)));
+    return CreateHelioSynchronousOrbit(a, eccentricity, epochAtAscendingNode);
 }
 
 IO::Astrodynamics::Time::TimeSpan IO::Astrodynamics::Body::CelestialBody::GetTrueSolarDay(IO::Astrodynamics::Time::TDB &epoch) const

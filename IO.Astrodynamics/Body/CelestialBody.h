@@ -210,9 +210,9 @@ namespace IO::Astrodynamics::Body
         CreateHelioSynchronousOrbit(double semiMajorAxis, double eccentricity, IO::Astrodynamics::Time::TDB &epochAtAscendingNode) const;
 
         std::shared_ptr<IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements>
-        CreatePhasedHelioSynchronousOrbit(double semiMajorAxis, double eccentricity, IO::Astrodynamics::Time::TDB &epochAtAscendingNode, int nbOrbitByDay) const;
+        CreatePhasedHelioSynchronousOrbit(double eccentricity, IO::Astrodynamics::Time::TDB &epochAtAscendingNode, int nbOrbitByDay) const;
 
-        IO::Astrodynamics::Time::TimeSpan GetTrueSolarDay(IO::Astrodynamics::Time::TDB& epoch) const;
+        IO::Astrodynamics::Time::TimeSpan GetTrueSolarDay(IO::Astrodynamics::Time::TDB &epoch) const;
 
         /**
  * @brief Check if the given celestial body is Sun.
