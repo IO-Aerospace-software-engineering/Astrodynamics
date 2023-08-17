@@ -310,6 +310,8 @@ IO::Astrodynamics::Body::CelestialBody::CreateHelioSynchronousOrbit(double semiM
     double sqrtGM = std::sqrt(this->GetMu());
     double re2 = eqRadius * eqRadius;
     double i = std::acos((2 * a72 * e22 * this->m_orbitalParametersAtEpoch->GetMeanMotion()) / (3 * sqrtGM * -m_J2 * re2));
+
+    //TODO: Compute Longitude of right ascending node which is the angle between vernal equinox and plane defined by north axis and vector toward the sun in ICRF frame
     return std::make_shared<IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements>(body, p, eccentricity, i, 0.0, 0.0, 0.0, epochAtAscendingNode,
                                                                                         IO::Astrodynamics::Frames::InertialFrames::ICRF());
 }
