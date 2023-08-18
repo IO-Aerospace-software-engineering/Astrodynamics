@@ -215,11 +215,91 @@ TEST(CelestialBody, CreateHelioSynchronousOrbit)
     auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399, sun);
     auto res = earth->CreateHelioSynchronousOrbit(7080636.3, 0.0001724, epoch);
     ASSERT_DOUBLE_EQ(7080636.3000000054, res->GetSemiMajorAxis());
-    ASSERT_DOUBLE_EQ(98.1923322636721, res->GetInclination()* IO::Astrodynamics::Constants::RAD_DEG);
+    ASSERT_DOUBLE_EQ(98.1923322636721, res->GetInclination() * IO::Astrodynamics::Constants::RAD_DEG);
     ASSERT_DOUBLE_EQ(0.0001724, res->GetEccentricity());
-    ASSERT_DOUBLE_EQ(0.0, res->GetRightAscendingNodeLongitude());
+    ASSERT_DOUBLE_EQ(0.19913424941575958, res->GetRightAscendingNodeLongitude());
     ASSERT_DOUBLE_EQ(270.0, res->GetPeriapsisArgument() * IO::Astrodynamics::Constants::RAD_DEG);
-    ASSERT_DOUBLE_EQ(90.0, res->GetTrueAnomaly());
+    ASSERT_NEAR(90.0, res->GetTrueAnomaly() * IO::Astrodynamics::Constants::RAD_DEG, 6);
+    ASSERT_DOUBLE_EQ(epoch.GetSecondsFromJ2000().count(), res->GetEpoch().GetSecondsFromJ2000().count());
+    //Moon's geophysical properties doesn't exist by default
+    auto moon = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(301);
+    auto moonj2 = moon->GetJ2();
+    ASSERT_TRUE(std::isnan(moonj2));
+
+}
+
+TEST(CelestialBody, CreateHelioSynchronousOrbitMarch)
+{
+    IO::Astrodynamics::Time::TDB epoch("2021-MAR-22 00:00:00.0000 TDB");
+    auto sun = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(10);
+    auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399, sun);
+    auto res = earth->CreateHelioSynchronousOrbit(7080636.3, 0.0001724, epoch);
+    ASSERT_DOUBLE_EQ(7080636.299999997, res->GetSemiMajorAxis());
+    ASSERT_DOUBLE_EQ(98.1923322636721, res->GetInclination() * IO::Astrodynamics::Constants::RAD_DEG);
+    ASSERT_DOUBLE_EQ(0.0001724, res->GetEccentricity());
+    ASSERT_DOUBLE_EQ(4.7331352670103488, res->GetRightAscendingNodeLongitude());
+    ASSERT_DOUBLE_EQ(270.0, res->GetPeriapsisArgument() * IO::Astrodynamics::Constants::RAD_DEG);
+    ASSERT_NEAR(90.0, res->GetTrueAnomaly() * IO::Astrodynamics::Constants::RAD_DEG, 6);
+    ASSERT_DOUBLE_EQ(epoch.GetSecondsFromJ2000().count(), res->GetEpoch().GetSecondsFromJ2000().count());
+    //Moon's geophysical properties doesn't exist by default
+    auto moon = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(301);
+    auto moonj2 = moon->GetJ2();
+    ASSERT_TRUE(std::isnan(moonj2));
+
+}
+
+TEST(CelestialBody, CreateHelioSynchronousOrbitApril)
+{
+    IO::Astrodynamics::Time::TDB epoch("2021-APR-22 00:00:00.0000 TDB");
+    auto sun = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(10);
+    auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399, sun);
+    auto res = earth->CreateHelioSynchronousOrbit(7080636.3, 0.0001724, epoch);
+    ASSERT_NEAR(7080636.299999997, res->GetSemiMajorAxis(),6);
+    ASSERT_DOUBLE_EQ(98.1923322636721, res->GetInclination() * IO::Astrodynamics::Constants::RAD_DEG);
+    ASSERT_DOUBLE_EQ(0.0001724, res->GetEccentricity());
+    ASSERT_DOUBLE_EQ(5.229578833367329, res->GetRightAscendingNodeLongitude());
+    ASSERT_DOUBLE_EQ(270.0, res->GetPeriapsisArgument() * IO::Astrodynamics::Constants::RAD_DEG);
+    ASSERT_NEAR(90.0, res->GetTrueAnomaly() * IO::Astrodynamics::Constants::RAD_DEG, 6);
+    ASSERT_DOUBLE_EQ(epoch.GetSecondsFromJ2000().count(), res->GetEpoch().GetSecondsFromJ2000().count());
+    //Moon's geophysical properties doesn't exist by default
+    auto moon = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(301);
+    auto moonj2 = moon->GetJ2();
+    ASSERT_TRUE(std::isnan(moonj2));
+
+}
+
+TEST(CelestialBody, CreateHelioSynchronousOrbitAugust)
+{
+    IO::Astrodynamics::Time::TDB epoch("2021-AUG-22 00:00:00.0000 TDB");
+    auto sun = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(10);
+    auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399, sun);
+    auto res = earth->CreateHelioSynchronousOrbit(7080636.3, 0.0001724, epoch);
+    ASSERT_NEAR(7080636.3000000054, res->GetSemiMajorAxis(), 6);
+    ASSERT_DOUBLE_EQ(98.1923322636721, res->GetInclination() * IO::Astrodynamics::Constants::RAD_DEG);
+    ASSERT_DOUBLE_EQ(0.0001724, res->GetEccentricity());
+    ASSERT_DOUBLE_EQ(1.0642024373543861, res->GetRightAscendingNodeLongitude());
+    ASSERT_DOUBLE_EQ(270.0, res->GetPeriapsisArgument() * IO::Astrodynamics::Constants::RAD_DEG);
+    ASSERT_NEAR(90.0, res->GetTrueAnomaly() * IO::Astrodynamics::Constants::RAD_DEG, 6);
+    ASSERT_DOUBLE_EQ(epoch.GetSecondsFromJ2000().count(), res->GetEpoch().GetSecondsFromJ2000().count());
+    //Moon's geophysical properties doesn't exist by default
+    auto moon = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(301);
+    auto moonj2 = moon->GetJ2();
+    ASSERT_TRUE(std::isnan(moonj2));
+
+}
+
+TEST(CelestialBody, CreateHelioSynchronousOrbitNovember)
+{
+    IO::Astrodynamics::Time::TDB epoch("2021-Nov-22 00:00:00.0000 TDB");
+    auto sun = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(10);
+    auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399, sun);
+    auto res = earth->CreateHelioSynchronousOrbit(7080636.3, 0.0001724, epoch);
+    ASSERT_NEAR(7080636.3000000054, res->GetSemiMajorAxis(), 6);
+    ASSERT_DOUBLE_EQ(98.1923322636721, res->GetInclination() * IO::Astrodynamics::Constants::RAD_DEG);
+    ASSERT_DOUBLE_EQ(0.0001724, res->GetEccentricity());
+    ASSERT_DOUBLE_EQ(5.7140833665781239, res->GetRightAscendingNodeLongitude());
+    ASSERT_DOUBLE_EQ(270.0, res->GetPeriapsisArgument() * IO::Astrodynamics::Constants::RAD_DEG);
+    ASSERT_NEAR(90.0, res->GetTrueAnomaly() * IO::Astrodynamics::Constants::RAD_DEG, 6);
     ASSERT_DOUBLE_EQ(epoch.GetSecondsFromJ2000().count(), res->GetEpoch().GetSecondsFromJ2000().count());
     //Moon's geophysical properties doesn't exist by default
     auto moon = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(301);

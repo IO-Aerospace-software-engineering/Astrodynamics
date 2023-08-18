@@ -327,6 +327,17 @@ IO::Astrodynamics::Body::CelestialBody::CreateHelioSynchronousOrbit(double semiM
     IO::Astrodynamics::Math::Plane sunPlane{IO::Astrodynamics::Math::Vector3D::VectorZ.CrossProduct(sunVector), 0.0};
     double raanLongitude = sunPlane.GetAngle(IO::Astrodynamics::Math::Vector3D::VectorY);
 
+    if (sunVector.GetY() > 0.0)
+    {
+        raanLongitude *= -1.0;
+    }
+
+    //Make raan in range 0.0->2PI
+    if (raanLongitude < 0.0)
+    {
+        raanLongitude += Constants::_2PI;
+    }
+
     //Compute mean anomaly at ascending node
     double m = IO::Astrodynamics::OrbitalParameters::OrbitalParameters::ConvertTrueAnomalyToMeanAnomaly(Constants::PI2, eccentricity);
     return std::make_shared<IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements>(body, p, eccentricity, i, raanLongitude, Constants::PI + Constants::PI2, m,
