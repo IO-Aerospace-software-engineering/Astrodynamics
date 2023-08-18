@@ -316,7 +316,8 @@ namespace IO::Astrodynamics::OrbitalParameters
 		 * @return double 
 		 */
 		[[nodiscard]] double GetTrueLongitude(const IO::Astrodynamics::Time::TDB& epoch) const;
-		
-	};
+
+        static double ConvertTrueAnomalyToMeanAnomaly(double trueAnomaly,double eccentricity);
+    };
 }
 #endif

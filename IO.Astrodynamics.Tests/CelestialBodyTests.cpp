@@ -211,9 +211,16 @@ TEST(CelestialBody, GetJValue)
 TEST(CelestialBody, CreateHelioSynchronousOrbit)
 {
     IO::Astrodynamics::Time::TDB epoch("2021-Jan-01 00:00:00.0000 TDB");
-    auto sun=std::make_shared<IO::Astrodynamics::Body::CelestialBody>(10);
-    auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399,sun);
-    auto res = earth->CreateHelioSynchronousOrbit(7080000, 0.0001724, epoch);
+    auto sun = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(10);
+    auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399, sun);
+    auto res = earth->CreateHelioSynchronousOrbit(7080636.3, 0.0001724, epoch);
+    ASSERT_DOUBLE_EQ(7080636.3000000054, res->GetSemiMajorAxis());
+    ASSERT_DOUBLE_EQ(98.1923322636721, res->GetInclination()* IO::Astrodynamics::Constants::RAD_DEG);
+    ASSERT_DOUBLE_EQ(0.0001724, res->GetEccentricity());
+    ASSERT_DOUBLE_EQ(0.0, res->GetRightAscendingNodeLongitude());
+    ASSERT_DOUBLE_EQ(270.0, res->GetPeriapsisArgument() * IO::Astrodynamics::Constants::RAD_DEG);
+    ASSERT_DOUBLE_EQ(90.0, res->GetTrueAnomaly());
+    ASSERT_DOUBLE_EQ(epoch.GetSecondsFromJ2000().count(), res->GetEpoch().GetSecondsFromJ2000().count());
     //Moon's geophysical properties doesn't exist by default
     auto moon = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(301);
     auto moonj2 = moon->GetJ2();
@@ -230,22 +237,22 @@ TEST(CelestialBody, CreatePhasedHelioSynchronousOrbit)
 TEST(CelestialBody, TrueSolarDayAtEpoch)
 {
     IO::Astrodynamics::Time::TDB epoch("2021-Jan-01 00:00:00.0000 TDB");
-    auto sun=std::make_shared<IO::Astrodynamics::Body::CelestialBody>(10);
-    auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399,sun);
+    auto sun = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(10);
+    auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399, sun);
     auto res1 = earth->GetTrueSolarDay(epoch);
-    ASSERT_DOUBLE_EQ(86407.306035452566,res1.GetSeconds().count());
+    ASSERT_DOUBLE_EQ(86407.306035452566, res1.GetSeconds().count());
 
     IO::Astrodynamics::Time::TDB epoch2("2021-MAR-26 00:00:00.0000 TDB");
     auto res2 = earth->GetTrueSolarDay(epoch2);
-    ASSERT_DOUBLE_EQ(86400.359514701879,res2.GetSeconds().count());
+    ASSERT_DOUBLE_EQ(86400.359514701879, res2.GetSeconds().count());
 
     IO::Astrodynamics::Time::TDB epoch3("2021-JUL-25 00:00:00.0000 TDB");
     auto res3 = earth->GetTrueSolarDay(epoch3);
-    ASSERT_DOUBLE_EQ(86392.011764653842,res3.GetSeconds().count());
+    ASSERT_DOUBLE_EQ(86392.011764653842, res3.GetSeconds().count());
 
     IO::Astrodynamics::Time::TDB epoch4("2021-DEC-22 00:00:00.0000 TDB");
     auto res4 = earth->GetTrueSolarDay(epoch4);
-    ASSERT_DOUBLE_EQ(86407.114275442393,res4.GetSeconds().count());
+    ASSERT_DOUBLE_EQ(86407.114275442393, res4.GetSeconds().count());
 
 
 }

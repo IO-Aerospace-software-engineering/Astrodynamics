@@ -209,8 +209,39 @@ namespace IO::Astrodynamics::Body
         std::shared_ptr<IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements>
         CreateHelioSynchronousOrbit(double semiMajorAxis, double eccentricity, IO::Astrodynamics::Time::TDB &epochAtAscendingNode) const;
 
+        /**
+ * @brief Create a phased helio-synchronous orbit.
+ *
+ * This function creates a phased helio-synchronous orbit with the given eccentricity, epoch at ascending node,
+ * and number of orbits per day.
+ *
+ * @param eccentricity The eccentricity of the orbit.
+ * @param epochAtAscendingNode The epoch at ascending node as a reference to an instance of the TDB class from the IO::Astrodynamics::Time namespace.
+ * @param nbOrbitByDay The number of orbits per day.
+ *
+ * @return A phased helio-synchronous orbit.
+ */
+
         std::shared_ptr<IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements>
         CreatePhasedHelioSynchronousOrbit(double eccentricity, IO::Astrodynamics::Time::TDB &epochAtAscendingNode, int nbOrbitByDay) const;
+
+        /**
+ * @brief Calculates the true solar day for a given epoch time in TDB.
+ *
+ * The true solar day is the time interval between two consecutive solar noons.
+ * It is influenced by factors such as the eccentricity and obliquity of the body orbit.
+ *
+ * @param epoch The epoch time in TDB (Barycentric Dynamical Time).
+ * @return The true solar day as a floating-point number, in the same unit as the epoch time.
+ *
+ * @see IO::Astrodynamics::Time::TDB
+ *
+ * @warning The epoch time must be in TDB. Ensure that the time is properly converted to TDB before calling this function.
+ *          Failure to do so may result in incorrect results.
+ *
+ * @note This function is a const member function and does not modify the state of the object it belongs to.
+ *       It only performs calculations based on the given epoch time.
+ */
 
         IO::Astrodynamics::Time::TimeSpan GetTrueSolarDay(IO::Astrodynamics::Time::TDB &epoch) const;
 

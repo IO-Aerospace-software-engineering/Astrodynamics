@@ -37,5 +37,5 @@ TEST(Plane, GetAngleFromVector3)
     IO::Astrodynamics::Math::Vector3D vector(-0.5, 1.0, 0.0);
     IO::Astrodynamics::Math::Plane plane(IO::Astrodynamics::Math::Vector3D{1.0, 0.0, 0.0}, 0.0);
     auto res = plane.GetAngle(vector);
-    ASSERT_DOUBLE_EQ(-0.46364760900080609
+    ASSERT_DOUBLE_EQ(-0.46364760900080609,res);
 }
