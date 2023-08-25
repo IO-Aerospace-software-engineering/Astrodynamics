@@ -295,66 +295,6 @@ double IO::Astrodynamics::Body::CelestialBody::ReadJValue(const char *valueName)
 }
 
 
-std::shared_ptr<IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements>
-IO::Astrodynamics::Body::CelestialBody::CreateHelioSynchronousOrbit(double semiMajorAxis, double eccentricity, IO::Astrodynamics::Time::TDB &epochAtAscendingNode) const
-{
-    //generate involved bodies
-    auto sun = std::make_shared<CelestialBody>(10);
-    auto body = std::make_shared<CelestialBody>(m_id);
-
-    //Compute perigee radius
-    double p = semiMajorAxis * (1 - eccentricity);
-
-    //Get celestial body equatorial radius
-    double eqRadius = this->GetRadius().GetX();
-
-    //Check if orbit doesn't hit celestial body
-    if (p < eqRadius)
-    {
-        throw IO::Astrodynamics::Exception::SDKException("Invalid parameters, orbit perigee is lower than body radius");
-    }
-
-    //Compute inclination parameter
-    double a72 = std::pow(semiMajorAxis, 3.5);
-    double e2 = eccentricity * eccentricity;
-    double e22 = (1 - e2) * (1 - e2);
-    double sqrtGM = std::sqrt(this->GetMu());
-    double re2 = eqRadius * eqRadius;
-    double i = std::acos((2 * a72 * e22 * this->m_orbitalParametersAtEpoch->GetMeanMotion()) / (3 * sqrtGM * -m_J2 * re2));
-
-    //Compute longitude of ascending node to orient orbit toward the sun
-    IO::Astrodynamics::Math::Vector3D sunVector = body->ReadEphemeris(Frames::InertialFrames::ICRF(), AberrationsEnum::LT, epochAtAscendingNode, *sun).GetPosition().Reverse();
-    IO::Astrodynamics::Math::Plane sunPlane{IO::Astrodynamics::Math::Vector3D::VectorZ.CrossProduct(sunVector), 0.0};
-    double raanLongitude = sunPlane.GetAngle(IO::Astrodynamics::Math::Vector3D::VectorY);
-
-    if (sunVector.GetY() > 0.0)
-    {
-        raanLongitude *= -1.0;
-    }
-
-    //Make raan in range 0.0->2PI
-    if (raanLongitude < 0.0)
-    {
-        raanLongitude += Constants::_2PI;
-    }
-
-    //Compute mean anomaly at ascending node
-    double m = IO::Astrodynamics::OrbitalParameters::OrbitalParameters::ConvertTrueAnomalyToMeanAnomaly(Constants::PI2, eccentricity);
-    return std::make_shared<IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements>(body, p, eccentricity, i, raanLongitude, Constants::PI + Constants::PI2, m,
-                                                                                        epochAtAscendingNode,
-                                                                                        IO::Astrodynamics::Frames::InertialFrames::ICRF());
-}
-
-std::shared_ptr<IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements>
-IO::Astrodynamics::Body::CelestialBody::CreatePhasedHelioSynchronousOrbit(double eccentricity, IO::Astrodynamics::Time::TDB &epochAtAscendingNode,
-                                                                          int nbOrbitByDay) const
-{
-    IO::Astrodynamics::Time::TimeSpan trueSolarDay{GetTrueSolarDay(epochAtAscendingNode)};
-    double T = GetTrueSolarDay(epochAtAscendingNode).GetSeconds().count() / nbOrbitByDay;
-    double a = std::cbrt(((T * T) * GetMu()) / (std::pow(4 * Constants::PI, 2)));
-    return CreateHelioSynchronousOrbit(a, eccentricity, epochAtAscendingNode);
-}
-
 IO::Astrodynamics::Time::TimeSpan IO::Astrodynamics::Body::CelestialBody::GetTrueSolarDay(IO::Astrodynamics::Time::TDB &epoch) const
 {
     IO::Astrodynamics::Body::CelestialBody sun{10};

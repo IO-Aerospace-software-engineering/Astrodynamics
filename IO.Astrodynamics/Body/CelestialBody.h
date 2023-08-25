@@ -198,34 +198,6 @@ namespace IO::Astrodynamics::Body
 
 
         /**
- * Calculates the parameters for creating a heliosynchronous orbit.
- *
- * @param semiMajorAxis The semi-major axis of the orbit in meters.
- * @param eccentricity The eccentricity of the orbit.
- * @param epochAtAscendingNode The epoch time at the ascending node.
- * @return The heliosynchronous orbit parameters.
- */
-
-        std::shared_ptr<IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements>
-        CreateHelioSynchronousOrbit(double semiMajorAxis, double eccentricity, IO::Astrodynamics::Time::TDB &epochAtAscendingNode) const;
-
-        /**
- * @brief Create a phased helio-synchronous orbit.
- *
- * This function creates a phased helio-synchronous orbit with the given eccentricity, epoch at ascending node,
- * and number of orbits per day.
- *
- * @param eccentricity The eccentricity of the orbit.
- * @param epochAtAscendingNode The epoch at ascending node as a reference to an instance of the TDB class from the IO::Astrodynamics::Time namespace.
- * @param nbOrbitByDay The number of orbits per day.
- *
- * @return A phased helio-synchronous orbit.
- */
-
-        std::shared_ptr<IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements>
-        CreatePhasedHelioSynchronousOrbit(double eccentricity, IO::Astrodynamics::Time::TDB &epochAtAscendingNode, int nbOrbitByDay) const;
-
-        /**
  * @brief Calculates the true solar day for a given epoch time in TDB.
  *
  * The true solar day is the time interval between two consecutive solar noons.
