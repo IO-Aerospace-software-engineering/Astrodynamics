@@ -2,6 +2,11 @@
 \label{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody}\index{IO::Astrodynamics::Body::CelestialBody@{IO::Astrodynamics::Body::CelestialBody}}
 
 
+The \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody}{Celestial\+Body}} class represents a celestial body in astrodynamics calculations. It inherits from \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem}{IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Item}}.  
+
+
+
+
 {\ttfamily \#include $<$Celestial\+Body.\+h$>$}
 
 Inheritance diagram for IO\+::Astrodynamics\+::Body\+::Celestial\+Body\+:\begin{figure}[H]
@@ -13,87 +18,139 @@ Inheritance diagram for IO\+::Astrodynamics\+::Body\+::Celestial\+Body\+:\begin{
 \doxysubsection*{Public Member Functions}
 \begin{DoxyCompactItemize}
 \item 
-\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_a0945f0cb1316747f6f088374663e73a7}{Celestial\+Body}} (int id, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody}{IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Body}} $>$ \&center\+Of\+Motion)
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_a88bb38ec9aaf14c11d774abd646713c3}{Celestial\+Body}} (int id, std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody}{IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Body}} $>$ \&center\+Of\+Motion)
 \item 
-\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_a2530b17fe9023d491315609837479f15}{Celestial\+Body}} (int id)
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_abff41d2dfeddcc91eb4a6158e19735d9}{Celestial\+Body}} (int id)
 \item 
-double \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_a41405b0af1edb498129d20c01ea830f6}{Get\+Sphere\+Of\+Influence}} () const
-\item 
-double \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_aec93a781ea9206bf62deb13df6d8e3a8}{Get\+Hill\+Sphere}} () const
-\item 
-\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+State\+Vector}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_a1f0c8e89fc870f3402f4fd65eaaa4f2e}{Get\+Relative\+Statevector}} (const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+State\+Vector}} \&target\+State\+Vector) const
+double \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_a01e4050662db0229fb1a7d17d774343b}{Get\+Sphere\+Of\+Influence}} () const
+\begin{DoxyCompactList}\small\item\em Returns the sphere of influence for the object. \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_a636ea520544dda134891e2d568edd388}{Get\+Hill\+Sphere}} () const
+\begin{DoxyCompactList}\small\item\em Calculates the Hill Sphere of an astronomical object. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+State\+Vector}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_a96c6c1bfc79c85ed911e543f536f8d23}{Get\+Relative\+Statevector}} (const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+State\+Vector}} \&target\+State\+Vector) const
 \begin{DoxyCompactList}\small\item\em Get the Relative Statevector from this celestial body to a given target. \end{DoxyCompactList}\item 
-bool \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_a80694b37324eb168acd7c7d4bebcacda}{Is\+In\+Sphere\+Of\+Influence}} (const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+State\+Vector}} \&target\+State\+Vector) const
+bool \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_ab0c667028e4c1bdf0d687b2f78ff1f8e}{Is\+In\+Sphere\+Of\+Influence}} (const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+State\+Vector}} \&target\+State\+Vector) const
 \begin{DoxyCompactList}\small\item\em Know if a target is in sphere of influence. \end{DoxyCompactList}\item 
-bool \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_a5dac514015558b096bbd280d63b26af8}{Is\+In\+Hill\+Sphere}} (const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+State\+Vector}} \&target\+State\+Vector) const
+bool \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_a411e4a45e2cc51f788cad08912221f50}{Is\+In\+Hill\+Sphere}} (const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+State\+Vector}} \&target\+State\+Vector) const
 \begin{DoxyCompactList}\small\item\em Know if a target is in hill sphere. \end{DoxyCompactList}\item 
-const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Frames_1_1BodyFixedFrames}{IO\+::\+Astrodynamics\+::\+Frames\+::\+Body\+Fixed\+Frames}} \& \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_acd91d275b5b1558b1df431ff7512c2db}{Get\+Body\+Fixed\+Frame}} () const
+const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Frames_1_1BodyFixedFrames}{IO\+::\+Astrodynamics\+::\+Frames\+::\+Body\+Fixed\+Frames}} \& \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_a6380269af1475a90e2545e1832181787}{Get\+Body\+Fixed\+Frame}} () const
 \begin{DoxyCompactList}\small\item\em Get the \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Body}{Body}} Fixed Frame. \end{DoxyCompactList}\item 
-\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO\+::\+Astrodynamics\+::\+Math\+::\+Vector3D}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_af8aeb8c0b4ed20d06552602ac3b93ff2}{Get\+Radius}} () const
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO\+::\+Astrodynamics\+::\+Math\+::\+Vector3D}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_a3a358eb436439f704408d8bbbdbb40db}{Get\+Radius}} () const
 \begin{DoxyCompactList}\small\item\em Get the Radius. \end{DoxyCompactList}\item 
-double \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_afeb08cc508f586a1fc86d47547303de0}{Get\+Flattening}} () const
+double \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_a32e281be0a2990e79ce111d870d79338}{Get\+Flattening}} () const
 \begin{DoxyCompactList}\small\item\em Get the Flattening. \end{DoxyCompactList}\item 
-double \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_aa688ef53e0a73c28c1711f091d23048c}{Get\+Angular\+Velocity}} (const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} \&epoch) const
+double \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_a3e60ab77575b847a3cb3b6b598441de9}{Get\+Angular\+Velocity}} (const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} \&epoch) const
 \begin{DoxyCompactList}\small\item\em Get the Angular Velocity. \end{DoxyCompactList}\item 
-\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO\+::\+Astrodynamics\+::\+Time\+::\+Time\+Span}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_a1af97b634947c6fa3d401b533fa3c22f}{Get\+Sideral\+Rotation\+Period}} (const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} \&epoch) const
-\begin{DoxyCompactList}\small\item\em Get the Sideral Rotation Period. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO\+::\+Astrodynamics\+::\+Time\+::\+Time\+Span}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_a53e5a36f0e98712725b81aad4477d452}{Get\+Sideral\+Rotation\+Period}} (const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} \&epoch) const
+\begin{DoxyCompactList}\small\item\em Get the Sideral Rotation Period. \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_a07de7838b5369de6b4c9d2a26f15571e}{Get\+J2}} () const
+\begin{DoxyCompactList}\small\item\em Accessor function to get the value of the variable J2. \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_ae3393d378938e11d54b6bb41a585dc39}{Get\+J3}} () const
+\begin{DoxyCompactList}\small\item\em Get\+J3 Function. \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_aea19a0008ca1b93687fef8b89df2d14f}{Get\+J4}} () const
+\begin{DoxyCompactList}\small\item\em Retrieves the value of J4. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO\+::\+Astrodynamics\+::\+Time\+::\+Time\+Span}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_a4208410aa4b8690c408add40443810b9}{Get\+True\+Solar\+Day}} (\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} \&epoch) const
+\begin{DoxyCompactList}\small\item\em Calculates the true solar day for a given epoch time in TDB. \end{DoxyCompactList}\end{DoxyCompactItemize}
 \doxysubsection*{Static Public Member Functions}
 \begin{DoxyCompactItemize}
 \item 
-static double \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_aa18f91b2ea0f772efecf136b44e47d43}{Read\+GM}} (int id)
+static double \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_ae1ee01a91bda994d25f4d689256dad22}{Read\+GM}} (int id)
 \item 
-static bool \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_abca4fa885708091f22e7e316a6681f2b}{Is\+Sun}} (int celestial\+Body\+Id)
-\item 
-static bool \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_aca23025d98b7647b6c40db4808b191f6}{Is\+Planet}} (int celestial\+Body\+Id)
-\item 
-static bool \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_a0eb8db92976553739351810ac18ca36f}{Is\+Asteroid}} (int celestial\+Body\+Id)
-\item 
-static bool \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_ae3ead2b441c75c62527040fafde87b96}{Is\+Moon}} (int celestial\+Body\+Id)
-\item 
-static bool \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_aed9c03b91b37621fc9a68d369935685e}{Is\+Lagrange\+Point}} (int celestial\+Body\+Id)
-\item 
-static int \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_a1ec220ba85b31d60aef8ee8d255b49c7}{Find\+Center\+Of\+Motion\+Id}} (int celestial\+Body\+Naif\+Id)
-\item 
-static int \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_ad8b73ac2d7ba5dc642676e88e9b6bdd0}{Find\+Barycenter\+Of\+Motion\+Id}} (int celestial\+Body\+Naif\+Id)
-\item 
-static bool \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_a5dd305b825b4d9d4880d3e27d6f85d9a}{Is\+Barycenter}} (int celestial\+Body\+Id)
-\end{DoxyCompactItemize}
+static bool \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_a4fd39aeff7b86bb3549e82c66317e72e}{Is\+Sun}} (int celestial\+Body\+Id)
+\begin{DoxyCompactList}\small\item\em Check if the given celestial body is Sun. \end{DoxyCompactList}\item 
+static bool \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_a33160a76edf05a8d0a47b041be9b77e6}{Is\+Planet}} (int celestial\+Body\+Id)
+\begin{DoxyCompactList}\small\item\em Determines whether a celestial body is a planet based on its ID. \end{DoxyCompactList}\item 
+static bool \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_a05e28de6bc6e22e0772f494497c2ccca}{Is\+Asteroid}} (int celestial\+Body\+Id)
+\begin{DoxyCompactList}\small\item\em Checks if the given celestial body ID corresponds to an asteroid. \end{DoxyCompactList}\item 
+static bool \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_af86af8927aee0e2163112b3d3e588015}{Is\+Moon}} (int celestial\+Body\+Id)
+\begin{DoxyCompactList}\small\item\em Check if the given celestial body is a moon. \end{DoxyCompactList}\item 
+static bool \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_a2f49fa8eee681090fbde7b79403cb6c0}{Is\+Lagrange\+Point}} (int celestial\+Body\+Id)
+\begin{DoxyCompactList}\small\item\em Check if a celestial body is a Lagrange point. \end{DoxyCompactList}\item 
+static int \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_ae42ba57a40f762785f770c05137d0a9c}{Find\+Center\+Of\+Motion\+Id}} (int celestial\+Body\+Naif\+Id)
+\begin{DoxyCompactList}\small\item\em Find\+Center\+Of\+Motion\+Id -\/ Finds the center of motion ID for a given celestial body. \end{DoxyCompactList}\item 
+static int \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_a006834c646ce0855f82a96552816ae5d}{Find\+Barycenter\+Of\+Motion\+Id}} (int celestial\+Body\+Naif\+Id)
+\begin{DoxyCompactList}\small\item\em Finds the barycenter of motion ID for a given celestial body Naif ID. \end{DoxyCompactList}\item 
+static bool \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_aa346e53780de7ca66c73f01a94e296b9}{Is\+Barycenter}} (int celestial\+Body\+Id)
+\begin{DoxyCompactList}\small\item\em Determines if the given celestial body ID corresponds to a barycenter. \end{DoxyCompactList}\end{DoxyCompactItemize}
 \doxysubsection*{Additional Inherited Members}
 
 
+\doxysubsection{Detailed Description}
+The \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody}{Celestial\+Body}} class represents a celestial body in astrodynamics calculations. It inherits from \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem}{IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Item}}. 
+
+A celestial body is characterized by its sphere of influence, hill sphere, body-\/fixed frame, and certain J values. It provides methods to obtain various properties such as the relative state vector, sphere of influence, hill sphere, body-\/fixed frame, radius, flattening, angular velocity, and rotation period.
+
+It also provides static methods to check if a given celestial body is a sun, planet, asteroid, moon, or Lagrange point. It provides methods to find the center of motion id, barycenter of motion id, and to check if a given celestial body is a barycenter. 
+
 \doxysubsection{Constructor \& Destructor Documentation}
-\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_a0945f0cb1316747f6f088374663e73a7}\label{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_a0945f0cb1316747f6f088374663e73a7}} 
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_a88bb38ec9aaf14c11d774abd646713c3}\label{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_a88bb38ec9aaf14c11d774abd646713c3}} 
 \index{IO::Astrodynamics::Body::CelestialBody@{IO::Astrodynamics::Body::CelestialBody}!CelestialBody@{CelestialBody}}
 \index{CelestialBody@{CelestialBody}!IO::Astrodynamics::Body::CelestialBody@{IO::Astrodynamics::Body::CelestialBody}}
 \doxysubsubsection{\texorpdfstring{CelestialBody()}{CelestialBody()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
-{\footnotesize\ttfamily IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Body\+::\+Celestial\+Body (\begin{DoxyParamCaption}\item[{int}]{id,  }\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody}{IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Body}} $>$ \&}]{center\+Of\+Motion }\end{DoxyParamCaption})}
+{\footnotesize\ttfamily Celestial\+Body\+::\+Celestial\+Body (\begin{DoxyParamCaption}\item[{int}]{id,  }\item[{std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody}{IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Body}} $>$ \&}]{center\+Of\+Motion }\end{DoxyParamCaption})}
 
-\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_a2530b17fe9023d491315609837479f15}\label{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_a2530b17fe9023d491315609837479f15}} 
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_abff41d2dfeddcc91eb4a6158e19735d9}\label{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_abff41d2dfeddcc91eb4a6158e19735d9}} 
 \index{IO::Astrodynamics::Body::CelestialBody@{IO::Astrodynamics::Body::CelestialBody}!CelestialBody@{CelestialBody}}
 \index{CelestialBody@{CelestialBody}!IO::Astrodynamics::Body::CelestialBody@{IO::Astrodynamics::Body::CelestialBody}}
 \doxysubsubsection{\texorpdfstring{CelestialBody()}{CelestialBody()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
-{\footnotesize\ttfamily IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Body\+::\+Celestial\+Body (\begin{DoxyParamCaption}\item[{int}]{id }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [explicit]}}
+{\footnotesize\ttfamily Celestial\+Body\+::\+Celestial\+Body (\begin{DoxyParamCaption}\item[{int}]{id }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [explicit]}}
 
 
 
 \doxysubsection{Member Function Documentation}
-\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_ad8b73ac2d7ba5dc642676e88e9b6bdd0}\label{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_ad8b73ac2d7ba5dc642676e88e9b6bdd0}} 
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_a006834c646ce0855f82a96552816ae5d}\label{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_a006834c646ce0855f82a96552816ae5d}} 
 \index{IO::Astrodynamics::Body::CelestialBody@{IO::Astrodynamics::Body::CelestialBody}!FindBarycenterOfMotionId@{FindBarycenterOfMotionId}}
 \index{FindBarycenterOfMotionId@{FindBarycenterOfMotionId}!IO::Astrodynamics::Body::CelestialBody@{IO::Astrodynamics::Body::CelestialBody}}
 \doxysubsubsection{\texorpdfstring{FindBarycenterOfMotionId()}{FindBarycenterOfMotionId()}}
-{\footnotesize\ttfamily int IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Body\+::\+Find\+Barycenter\+Of\+Motion\+Id (\begin{DoxyParamCaption}\item[{int}]{celestial\+Body\+Naif\+Id }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+{\footnotesize\ttfamily int Celestial\+Body\+::\+Find\+Barycenter\+Of\+Motion\+Id (\begin{DoxyParamCaption}\item[{int}]{celestial\+Body\+Naif\+Id }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
 
-\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_a1ec220ba85b31d60aef8ee8d255b49c7}\label{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_a1ec220ba85b31d60aef8ee8d255b49c7}} 
+
+
+Finds the barycenter of motion ID for a given celestial body Naif ID. 
+
+This function calculates the barycenter of motion ID for a given celestial body Naif ID. The barycenter of motion ID represents the center of motion for a celestial body within a system.
+
+
+\begin{DoxyParams}{Parameters}
+{\em celestial\+Body\+Naif\+Id} & The Naif ID of the celestial body. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+The barycenter of motion ID for the given celestial body Naif ID. 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_ae42ba57a40f762785f770c05137d0a9c}\label{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_ae42ba57a40f762785f770c05137d0a9c}} 
 \index{IO::Astrodynamics::Body::CelestialBody@{IO::Astrodynamics::Body::CelestialBody}!FindCenterOfMotionId@{FindCenterOfMotionId}}
 \index{FindCenterOfMotionId@{FindCenterOfMotionId}!IO::Astrodynamics::Body::CelestialBody@{IO::Astrodynamics::Body::CelestialBody}}
 \doxysubsubsection{\texorpdfstring{FindCenterOfMotionId()}{FindCenterOfMotionId()}}
-{\footnotesize\ttfamily int IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Body\+::\+Find\+Center\+Of\+Motion\+Id (\begin{DoxyParamCaption}\item[{int}]{celestial\+Body\+Naif\+Id }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+{\footnotesize\ttfamily int Celestial\+Body\+::\+Find\+Center\+Of\+Motion\+Id (\begin{DoxyParamCaption}\item[{int}]{celestial\+Body\+Naif\+Id }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
 
-\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_aa688ef53e0a73c28c1711f091d23048c}\label{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_aa688ef53e0a73c28c1711f091d23048c}} 
+
+
+Find\+Center\+Of\+Motion\+Id -\/ Finds the center of motion ID for a given celestial body. 
+
+This function takes in a celestial body NAIF ID as a parameter and returns the center of motion ID. The center of motion ID represents the celestial body around which the given celestial body revolves or orbits.
+
+
+\begin{DoxyParams}{Parameters}
+{\em celestial\+Body\+Naif\+Id} & The NAIF ID of the celestial body for which the center of motion ID needs to be found.\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+The center of motion ID for the given celestial body. If no center of motion ID is found, returns -\/1.
+\end{DoxyReturn}
+\begin{DoxyNote}{Note}
+The value of NAIF ID should be a valid integer. Otherwise, the behavior of this function is undefined.
+\end{DoxyNote}
+\begin{DoxySeeAlso}{See also}
+\href{https://naif.jpl.nasa.gov/pub/naif/toolkit_docs/C/cspice/idfnc.html}{\texttt{ https\+://naif.\+jpl.\+nasa.\+gov/pub/naif/toolkit\+\_\+docs/\+C/cspice/idfnc.\+html}}
+\end{DoxySeeAlso}
+\begin{DoxyWarning}{Warning}
+This function depends on external libraries and data sources for determining the center of motion ID. It is assumed that the required libraries and data sources are properly installed and accessible. If the required resources are not available, the behavior of this function is undefined. 
+\end{DoxyWarning}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_a3e60ab77575b847a3cb3b6b598441de9}\label{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_a3e60ab77575b847a3cb3b6b598441de9}} 
 \index{IO::Astrodynamics::Body::CelestialBody@{IO::Astrodynamics::Body::CelestialBody}!GetAngularVelocity@{GetAngularVelocity}}
 \index{GetAngularVelocity@{GetAngularVelocity}!IO::Astrodynamics::Body::CelestialBody@{IO::Astrodynamics::Body::CelestialBody}}
 \doxysubsubsection{\texorpdfstring{GetAngularVelocity()}{GetAngularVelocity()}}
-{\footnotesize\ttfamily double IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Body\+::\+Get\+Angular\+Velocity (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} \&}]{epoch }\end{DoxyParamCaption}) const}
+{\footnotesize\ttfamily double Celestial\+Body\+::\+Get\+Angular\+Velocity (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} \&}]{epoch }\end{DoxyParamCaption}) const}
 
 
 
@@ -107,11 +164,11 @@ Get the Angular Velocity.
 \begin{DoxyReturn}{Returns}
 double 
 \end{DoxyReturn}
-\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_acd91d275b5b1558b1df431ff7512c2db}\label{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_acd91d275b5b1558b1df431ff7512c2db}} 
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_a6380269af1475a90e2545e1832181787}\label{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_a6380269af1475a90e2545e1832181787}} 
 \index{IO::Astrodynamics::Body::CelestialBody@{IO::Astrodynamics::Body::CelestialBody}!GetBodyFixedFrame@{GetBodyFixedFrame}}
 \index{GetBodyFixedFrame@{GetBodyFixedFrame}!IO::Astrodynamics::Body::CelestialBody@{IO::Astrodynamics::Body::CelestialBody}}
 \doxysubsubsection{\texorpdfstring{GetBodyFixedFrame()}{GetBodyFixedFrame()}}
-{\footnotesize\ttfamily const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Frames_1_1BodyFixedFrames}{IO\+::\+Astrodynamics\+::\+Frames\+::\+Body\+Fixed\+Frames}} \& IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Body\+::\+Get\+Body\+Fixed\+Frame (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+{\footnotesize\ttfamily const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Frames_1_1BodyFixedFrames}{IO\+::\+Astrodynamics\+::\+Frames\+::\+Body\+Fixed\+Frames}} \& Celestial\+Body\+::\+Get\+Body\+Fixed\+Frame (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
 
 
 
@@ -120,11 +177,11 @@ Get the \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Body}{Body}} Fixed Fram
 \begin{DoxyReturn}{Returns}
 const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Frames_1_1BodyFixedFrames}{IO\+::\+Astrodynamics\+::\+Frames\+::\+Body\+Fixed\+Frames}}\& 
 \end{DoxyReturn}
-\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_afeb08cc508f586a1fc86d47547303de0}\label{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_afeb08cc508f586a1fc86d47547303de0}} 
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_a32e281be0a2990e79ce111d870d79338}\label{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_a32e281be0a2990e79ce111d870d79338}} 
 \index{IO::Astrodynamics::Body::CelestialBody@{IO::Astrodynamics::Body::CelestialBody}!GetFlattening@{GetFlattening}}
 \index{GetFlattening@{GetFlattening}!IO::Astrodynamics::Body::CelestialBody@{IO::Astrodynamics::Body::CelestialBody}}
 \doxysubsubsection{\texorpdfstring{GetFlattening()}{GetFlattening()}}
-{\footnotesize\ttfamily double IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Body\+::\+Get\+Flattening (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+{\footnotesize\ttfamily double Celestial\+Body\+::\+Get\+Flattening (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
 
 
 
@@ -133,17 +190,71 @@ Get the Flattening.
 \begin{DoxyReturn}{Returns}
 double 
 \end{DoxyReturn}
-\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_aec93a781ea9206bf62deb13df6d8e3a8}\label{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_aec93a781ea9206bf62deb13df6d8e3a8}} 
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_a636ea520544dda134891e2d568edd388}\label{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_a636ea520544dda134891e2d568edd388}} 
 \index{IO::Astrodynamics::Body::CelestialBody@{IO::Astrodynamics::Body::CelestialBody}!GetHillSphere@{GetHillSphere}}
 \index{GetHillSphere@{GetHillSphere}!IO::Astrodynamics::Body::CelestialBody@{IO::Astrodynamics::Body::CelestialBody}}
 \doxysubsubsection{\texorpdfstring{GetHillSphere()}{GetHillSphere()}}
-{\footnotesize\ttfamily double IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Body\+::\+Get\+Hill\+Sphere (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+{\footnotesize\ttfamily double Celestial\+Body\+::\+Get\+Hill\+Sphere (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
 
-\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_af8aeb8c0b4ed20d06552602ac3b93ff2}\label{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_af8aeb8c0b4ed20d06552602ac3b93ff2}} 
+
+
+Calculates the Hill Sphere of an astronomical object. 
+
+This function calculates the Hill Sphere, which is the region around an astronomical object in which its gravitational influence dominates over that of other nearby objects. The Hill Sphere is defined by the distance from the object\textquotesingle{}s center at which a satellite can maintain a stable orbit around the object.
+
+\begin{DoxyReturn}{Returns}
+The radius of the Hill Sphere as a constant value. 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_a07de7838b5369de6b4c9d2a26f15571e}\label{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_a07de7838b5369de6b4c9d2a26f15571e}} 
+\index{IO::Astrodynamics::Body::CelestialBody@{IO::Astrodynamics::Body::CelestialBody}!GetJ2@{GetJ2}}
+\index{GetJ2@{GetJ2}!IO::Astrodynamics::Body::CelestialBody@{IO::Astrodynamics::Body::CelestialBody}}
+\doxysubsubsection{\texorpdfstring{GetJ2()}{GetJ2()}}
+{\footnotesize\ttfamily double IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Body\+::\+Get\+J2 (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Accessor function to get the value of the variable J2. 
+
+This function returns the value of the variable J2. The returned value will be constant and cannot be modified.
+
+\begin{DoxyReturn}{Returns}
+The value of variable J2. 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_ae3393d378938e11d54b6bb41a585dc39}\label{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_ae3393d378938e11d54b6bb41a585dc39}} 
+\index{IO::Astrodynamics::Body::CelestialBody@{IO::Astrodynamics::Body::CelestialBody}!GetJ3@{GetJ3}}
+\index{GetJ3@{GetJ3}!IO::Astrodynamics::Body::CelestialBody@{IO::Astrodynamics::Body::CelestialBody}}
+\doxysubsubsection{\texorpdfstring{GetJ3()}{GetJ3()}}
+{\footnotesize\ttfamily double IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Body\+::\+Get\+J3 (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Get\+J3 Function. 
+
+This function returns the value of the J3 variable.
+
+\begin{DoxyReturn}{Returns}
+The value of the J3 variable. 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_aea19a0008ca1b93687fef8b89df2d14f}\label{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_aea19a0008ca1b93687fef8b89df2d14f}} 
+\index{IO::Astrodynamics::Body::CelestialBody@{IO::Astrodynamics::Body::CelestialBody}!GetJ4@{GetJ4}}
+\index{GetJ4@{GetJ4}!IO::Astrodynamics::Body::CelestialBody@{IO::Astrodynamics::Body::CelestialBody}}
+\doxysubsubsection{\texorpdfstring{GetJ4()}{GetJ4()}}
+{\footnotesize\ttfamily double IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Body\+::\+Get\+J4 (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Retrieves the value of J4. 
+
+This function is used to get the value of J4.
+
+\begin{DoxyReturn}{Returns}
+The value of J4. 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_a3a358eb436439f704408d8bbbdbb40db}\label{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_a3a358eb436439f704408d8bbbdbb40db}} 
 \index{IO::Astrodynamics::Body::CelestialBody@{IO::Astrodynamics::Body::CelestialBody}!GetRadius@{GetRadius}}
 \index{GetRadius@{GetRadius}!IO::Astrodynamics::Body::CelestialBody@{IO::Astrodynamics::Body::CelestialBody}}
 \doxysubsubsection{\texorpdfstring{GetRadius()}{GetRadius()}}
-{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO\+::\+Astrodynamics\+::\+Math\+::\+Vector3D}} IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Body\+::\+Get\+Radius (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO\+::\+Astrodynamics\+::\+Math\+::\+Vector3D}} Celestial\+Body\+::\+Get\+Radius (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
 
 
 
@@ -152,11 +263,11 @@ Get the Radius.
 \begin{DoxyReturn}{Returns}
 \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO\+::\+Astrodynamics\+::\+Math\+::\+Vector3D}} 
 \end{DoxyReturn}
-\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_a1f0c8e89fc870f3402f4fd65eaaa4f2e}\label{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_a1f0c8e89fc870f3402f4fd65eaaa4f2e}} 
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_a96c6c1bfc79c85ed911e543f536f8d23}\label{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_a96c6c1bfc79c85ed911e543f536f8d23}} 
 \index{IO::Astrodynamics::Body::CelestialBody@{IO::Astrodynamics::Body::CelestialBody}!GetRelativeStatevector@{GetRelativeStatevector}}
 \index{GetRelativeStatevector@{GetRelativeStatevector}!IO::Astrodynamics::Body::CelestialBody@{IO::Astrodynamics::Body::CelestialBody}}
 \doxysubsubsection{\texorpdfstring{GetRelativeStatevector()}{GetRelativeStatevector()}}
-{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+State\+Vector}} IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Body\+::\+Get\+Relative\+Statevector (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+State\+Vector}} \&}]{target\+State\+Vector }\end{DoxyParamCaption}) const}
+{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+State\+Vector}} Celestial\+Body\+::\+Get\+Relative\+Statevector (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+State\+Vector}} \&}]{target\+State\+Vector }\end{DoxyParamCaption}) const}
 
 
 
@@ -170,11 +281,11 @@ Get the Relative Statevector from this celestial body to a given target.
 \begin{DoxyReturn}{Returns}
 \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+State\+Vector}} 
 \end{DoxyReturn}
-\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_a1af97b634947c6fa3d401b533fa3c22f}\label{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_a1af97b634947c6fa3d401b533fa3c22f}} 
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_a53e5a36f0e98712725b81aad4477d452}\label{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_a53e5a36f0e98712725b81aad4477d452}} 
 \index{IO::Astrodynamics::Body::CelestialBody@{IO::Astrodynamics::Body::CelestialBody}!GetSideralRotationPeriod@{GetSideralRotationPeriod}}
 \index{GetSideralRotationPeriod@{GetSideralRotationPeriod}!IO::Astrodynamics::Body::CelestialBody@{IO::Astrodynamics::Body::CelestialBody}}
 \doxysubsubsection{\texorpdfstring{GetSideralRotationPeriod()}{GetSideralRotationPeriod()}}
-{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO\+::\+Astrodynamics\+::\+Time\+::\+Time\+Span}} IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Body\+::\+Get\+Sideral\+Rotation\+Period (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} \&}]{epoch }\end{DoxyParamCaption}) const}
+{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO\+::\+Astrodynamics\+::\+Time\+::\+Time\+Span}} Celestial\+Body\+::\+Get\+Sideral\+Rotation\+Period (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} \&}]{epoch }\end{DoxyParamCaption}) const}
 
 
 
@@ -188,29 +299,95 @@ Get the Sideral Rotation Period.
 \begin{DoxyReturn}{Returns}
 \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO\+::\+Astrodynamics\+::\+Time\+::\+Time\+Span}} 
 \end{DoxyReturn}
-\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_a41405b0af1edb498129d20c01ea830f6}\label{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_a41405b0af1edb498129d20c01ea830f6}} 
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_a01e4050662db0229fb1a7d17d774343b}\label{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_a01e4050662db0229fb1a7d17d774343b}} 
 \index{IO::Astrodynamics::Body::CelestialBody@{IO::Astrodynamics::Body::CelestialBody}!GetSphereOfInfluence@{GetSphereOfInfluence}}
 \index{GetSphereOfInfluence@{GetSphereOfInfluence}!IO::Astrodynamics::Body::CelestialBody@{IO::Astrodynamics::Body::CelestialBody}}
 \doxysubsubsection{\texorpdfstring{GetSphereOfInfluence()}{GetSphereOfInfluence()}}
-{\footnotesize\ttfamily double IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Body\+::\+Get\+Sphere\+Of\+Influence (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+{\footnotesize\ttfamily float Celestial\+Body\+::\+Get\+Sphere\+Of\+Influence (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
 
-\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_a0eb8db92976553739351810ac18ca36f}\label{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_a0eb8db92976553739351810ac18ca36f}} 
+
+
+Returns the sphere of influence for the object. 
+
+The sphere of influence is a measure of the range within which the object has significant influence or control.
+
+\begin{DoxyReturn}{Returns}
+The sphere of influence as a floating-\/point value. 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_a4208410aa4b8690c408add40443810b9}\label{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_a4208410aa4b8690c408add40443810b9}} 
+\index{IO::Astrodynamics::Body::CelestialBody@{IO::Astrodynamics::Body::CelestialBody}!GetTrueSolarDay@{GetTrueSolarDay}}
+\index{GetTrueSolarDay@{GetTrueSolarDay}!IO::Astrodynamics::Body::CelestialBody@{IO::Astrodynamics::Body::CelestialBody}}
+\doxysubsubsection{\texorpdfstring{GetTrueSolarDay()}{GetTrueSolarDay()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO\+::\+Astrodynamics\+::\+Time\+::\+Time\+Span}} Celestial\+Body\+::\+Get\+True\+Solar\+Day (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} \&}]{epoch }\end{DoxyParamCaption}) const}
+
+
+
+Calculates the true solar day for a given epoch time in TDB. 
+
+The true solar day is the time interval between two consecutive solar noons. It is influenced by factors such as the eccentricity and obliquity of the body orbit.
+
+
+\begin{DoxyParams}{Parameters}
+{\em epoch} & The epoch time in TDB (Barycentric Dynamical \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Time}{Time}}). \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+The true solar day as a floating-\/point number, in the same unit as the epoch time.
+\end{DoxyReturn}
+\begin{DoxySeeAlso}{See also}
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}}
+\end{DoxySeeAlso}
+\begin{DoxyWarning}{Warning}
+The epoch time must be in TDB. Ensure that the time is properly converted to TDB before calling this function. Failure to do so may result in incorrect results.
+\end{DoxyWarning}
+\begin{DoxyNote}{Note}
+This function is a const member function and does not modify the state of the object it belongs to. It only performs calculations based on the given epoch time. 
+\end{DoxyNote}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_a05e28de6bc6e22e0772f494497c2ccca}\label{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_a05e28de6bc6e22e0772f494497c2ccca}} 
 \index{IO::Astrodynamics::Body::CelestialBody@{IO::Astrodynamics::Body::CelestialBody}!IsAsteroid@{IsAsteroid}}
 \index{IsAsteroid@{IsAsteroid}!IO::Astrodynamics::Body::CelestialBody@{IO::Astrodynamics::Body::CelestialBody}}
 \doxysubsubsection{\texorpdfstring{IsAsteroid()}{IsAsteroid()}}
-{\footnotesize\ttfamily bool IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Body\+::\+Is\+Asteroid (\begin{DoxyParamCaption}\item[{int}]{celestial\+Body\+Id }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+{\footnotesize\ttfamily bool Celestial\+Body\+::\+Is\+Asteroid (\begin{DoxyParamCaption}\item[{int}]{celestial\+Body\+Id }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
 
-\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_a5dd305b825b4d9d4880d3e27d6f85d9a}\label{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_a5dd305b825b4d9d4880d3e27d6f85d9a}} 
+
+
+Checks if the given celestial body ID corresponds to an asteroid. 
+
+This function takes a celestial body ID as input and checks if it corresponds to an asteroid. An asteroid is a small rocky object that orbits the sun, typically in the asteroid belt between Mars and Jupiter.
+
+
+\begin{DoxyParams}{Parameters}
+{\em celestial\+Body\+Id} & The ID of the celestial body to be checked. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+True if the celestial body is an asteroid, false otherwise. 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_aa346e53780de7ca66c73f01a94e296b9}\label{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_aa346e53780de7ca66c73f01a94e296b9}} 
 \index{IO::Astrodynamics::Body::CelestialBody@{IO::Astrodynamics::Body::CelestialBody}!IsBarycenter@{IsBarycenter}}
 \index{IsBarycenter@{IsBarycenter}!IO::Astrodynamics::Body::CelestialBody@{IO::Astrodynamics::Body::CelestialBody}}
 \doxysubsubsection{\texorpdfstring{IsBarycenter()}{IsBarycenter()}}
-{\footnotesize\ttfamily bool IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Body\+::\+Is\+Barycenter (\begin{DoxyParamCaption}\item[{int}]{celestial\+Body\+Id }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+{\footnotesize\ttfamily bool Celestial\+Body\+::\+Is\+Barycenter (\begin{DoxyParamCaption}\item[{int}]{celestial\+Body\+Id }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
 
-\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_a5dac514015558b096bbd280d63b26af8}\label{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_a5dac514015558b096bbd280d63b26af8}} 
+
+
+Determines if the given celestial body ID corresponds to a barycenter. 
+
+This function checks if the provided celestial body ID corresponds to a barycenter. A barycenter is the center of mass of two or more celestial bodies that are orbiting around each other.
+
+
+\begin{DoxyParams}{Parameters}
+{\em celestial\+Body\+Id} & The ID of the celestial body to check. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+True if the given celestial body ID corresponds to a barycenter, false otherwise. 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_a411e4a45e2cc51f788cad08912221f50}\label{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_a411e4a45e2cc51f788cad08912221f50}} 
 \index{IO::Astrodynamics::Body::CelestialBody@{IO::Astrodynamics::Body::CelestialBody}!IsInHillSphere@{IsInHillSphere}}
 \index{IsInHillSphere@{IsInHillSphere}!IO::Astrodynamics::Body::CelestialBody@{IO::Astrodynamics::Body::CelestialBody}}
 \doxysubsubsection{\texorpdfstring{IsInHillSphere()}{IsInHillSphere()}}
-{\footnotesize\ttfamily bool IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Body\+::\+Is\+In\+Hill\+Sphere (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+State\+Vector}} \&}]{target\+State\+Vector }\end{DoxyParamCaption}) const}
+{\footnotesize\ttfamily bool Celestial\+Body\+::\+Is\+In\+Hill\+Sphere (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+State\+Vector}} \&}]{target\+State\+Vector }\end{DoxyParamCaption}) const}
 
 
 
@@ -226,11 +403,11 @@ true
 
 false 
 \end{DoxyReturn}
-\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_a80694b37324eb168acd7c7d4bebcacda}\label{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_a80694b37324eb168acd7c7d4bebcacda}} 
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_ab0c667028e4c1bdf0d687b2f78ff1f8e}\label{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_ab0c667028e4c1bdf0d687b2f78ff1f8e}} 
 \index{IO::Astrodynamics::Body::CelestialBody@{IO::Astrodynamics::Body::CelestialBody}!IsInSphereOfInfluence@{IsInSphereOfInfluence}}
 \index{IsInSphereOfInfluence@{IsInSphereOfInfluence}!IO::Astrodynamics::Body::CelestialBody@{IO::Astrodynamics::Body::CelestialBody}}
 \doxysubsubsection{\texorpdfstring{IsInSphereOfInfluence()}{IsInSphereOfInfluence()}}
-{\footnotesize\ttfamily bool IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Body\+::\+Is\+In\+Sphere\+Of\+Influence (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+State\+Vector}} \&}]{target\+State\+Vector }\end{DoxyParamCaption}) const}
+{\footnotesize\ttfamily bool Celestial\+Body\+::\+Is\+In\+Sphere\+Of\+Influence (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+State\+Vector}} \&}]{target\+State\+Vector }\end{DoxyParamCaption}) const}
 
 
 
@@ -246,35 +423,94 @@ true
 
 false 
 \end{DoxyReturn}
-\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_aed9c03b91b37621fc9a68d369935685e}\label{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_aed9c03b91b37621fc9a68d369935685e}} 
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_a2f49fa8eee681090fbde7b79403cb6c0}\label{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_a2f49fa8eee681090fbde7b79403cb6c0}} 
 \index{IO::Astrodynamics::Body::CelestialBody@{IO::Astrodynamics::Body::CelestialBody}!IsLagrangePoint@{IsLagrangePoint}}
 \index{IsLagrangePoint@{IsLagrangePoint}!IO::Astrodynamics::Body::CelestialBody@{IO::Astrodynamics::Body::CelestialBody}}
 \doxysubsubsection{\texorpdfstring{IsLagrangePoint()}{IsLagrangePoint()}}
-{\footnotesize\ttfamily bool IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Body\+::\+Is\+Lagrange\+Point (\begin{DoxyParamCaption}\item[{int}]{celestial\+Body\+Id }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+{\footnotesize\ttfamily bool Celestial\+Body\+::\+Is\+Lagrange\+Point (\begin{DoxyParamCaption}\item[{int}]{celestial\+Body\+Id }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
 
-\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_ae3ead2b441c75c62527040fafde87b96}\label{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_ae3ead2b441c75c62527040fafde87b96}} 
+
+
+Check if a celestial body is a Lagrange point. 
+
+This function determines whether a celestial body with the given identifier is a Lagrange point or not. Lagrange points are locations in a two-\/body system where a third, smaller body can remain in a stable and fixed position relative to the two larger bodies. The function takes the celestial body identifier as an input parameter and returns a boolean value indicating whether it is a Lagrange point or not.
+
+
+\begin{DoxyParams}{Parameters}
+{\em celestial\+Body\+Id} & The identifier of the celestial body to check. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+True if the celestial body is a Lagrange point, false otherwise. 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_af86af8927aee0e2163112b3d3e588015}\label{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_af86af8927aee0e2163112b3d3e588015}} 
 \index{IO::Astrodynamics::Body::CelestialBody@{IO::Astrodynamics::Body::CelestialBody}!IsMoon@{IsMoon}}
 \index{IsMoon@{IsMoon}!IO::Astrodynamics::Body::CelestialBody@{IO::Astrodynamics::Body::CelestialBody}}
 \doxysubsubsection{\texorpdfstring{IsMoon()}{IsMoon()}}
-{\footnotesize\ttfamily bool IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Body\+::\+Is\+Moon (\begin{DoxyParamCaption}\item[{int}]{celestial\+Body\+Id }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+{\footnotesize\ttfamily bool Celestial\+Body\+::\+Is\+Moon (\begin{DoxyParamCaption}\item[{int}]{celestial\+Body\+Id }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
 
-\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_aca23025d98b7647b6c40db4808b191f6}\label{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_aca23025d98b7647b6c40db4808b191f6}} 
+
+
+Check if the given celestial body is a moon. 
+
+This function checks whether the given celestial body identified by its ID is a moon or not.
+
+
+\begin{DoxyParams}{Parameters}
+{\em celestial\+Body\+Id} & The ID of the celestial body to be checked.\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+True if the celestial body is a moon, False otherwise. 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_a33160a76edf05a8d0a47b041be9b77e6}\label{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_a33160a76edf05a8d0a47b041be9b77e6}} 
 \index{IO::Astrodynamics::Body::CelestialBody@{IO::Astrodynamics::Body::CelestialBody}!IsPlanet@{IsPlanet}}
 \index{IsPlanet@{IsPlanet}!IO::Astrodynamics::Body::CelestialBody@{IO::Astrodynamics::Body::CelestialBody}}
 \doxysubsubsection{\texorpdfstring{IsPlanet()}{IsPlanet()}}
-{\footnotesize\ttfamily bool IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Body\+::\+Is\+Planet (\begin{DoxyParamCaption}\item[{int}]{celestial\+Body\+Id }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+{\footnotesize\ttfamily bool Celestial\+Body\+::\+Is\+Planet (\begin{DoxyParamCaption}\item[{int}]{celestial\+Body\+Id }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
 
-\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_abca4fa885708091f22e7e316a6681f2b}\label{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_abca4fa885708091f22e7e316a6681f2b}} 
+
+
+Determines whether a celestial body is a planet based on its ID. 
+
+This function checks whether a given celestial body is classified as a planet based on its ID. It takes the celestial body ID as an input and returns a boolean value indicating whether it is a planet or not. A celestial body is considered a planet if its ID matches the criteria set for planets.
+
+
+\begin{DoxyParams}{Parameters}
+{\em celestial\+Body\+Id} & The ID of the celestial body to be checked.\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+True if the celestial body is a planet, otherwise false. 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_a4fd39aeff7b86bb3549e82c66317e72e}\label{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_a4fd39aeff7b86bb3549e82c66317e72e}} 
 \index{IO::Astrodynamics::Body::CelestialBody@{IO::Astrodynamics::Body::CelestialBody}!IsSun@{IsSun}}
 \index{IsSun@{IsSun}!IO::Astrodynamics::Body::CelestialBody@{IO::Astrodynamics::Body::CelestialBody}}
 \doxysubsubsection{\texorpdfstring{IsSun()}{IsSun()}}
-{\footnotesize\ttfamily bool IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Body\+::\+Is\+Sun (\begin{DoxyParamCaption}\item[{int}]{celestial\+Body\+Id }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+{\footnotesize\ttfamily bool Celestial\+Body\+::\+Is\+Sun (\begin{DoxyParamCaption}\item[{int}]{celestial\+Body\+Id }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
 
-\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_aa18f91b2ea0f772efecf136b44e47d43}\label{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_aa18f91b2ea0f772efecf136b44e47d43}} 
+
+
+Check if the given celestial body is Sun. 
+
+This function takes a celestial body identifier as input and determines whether the celestial body corresponds to the Sun.
+
+
+\begin{DoxyParams}{Parameters}
+{\em celestial\+Body\+Id} & The identifier of the celestial body to check.\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+{\ttfamily true} if the celestial body is the Sun, {\ttfamily false} otherwise.
+\end{DoxyReturn}
+\begin{DoxyNote}{Note}
+Celestial body identifiers are assumed to be unique. 
+\end{DoxyNote}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_ae1ee01a91bda994d25f4d689256dad22}\label{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_ae1ee01a91bda994d25f4d689256dad22}} 
 \index{IO::Astrodynamics::Body::CelestialBody@{IO::Astrodynamics::Body::CelestialBody}!ReadGM@{ReadGM}}
 \index{ReadGM@{ReadGM}!IO::Astrodynamics::Body::CelestialBody@{IO::Astrodynamics::Body::CelestialBody}}
 \doxysubsubsection{\texorpdfstring{ReadGM()}{ReadGM()}}
-{\footnotesize\ttfamily double IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Body\+::\+Read\+GM (\begin{DoxyParamCaption}\item[{int}]{id }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+{\footnotesize\ttfamily double Celestial\+Body\+::\+Read\+GM (\begin{DoxyParamCaption}\item[{int}]{id }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
 
 
 

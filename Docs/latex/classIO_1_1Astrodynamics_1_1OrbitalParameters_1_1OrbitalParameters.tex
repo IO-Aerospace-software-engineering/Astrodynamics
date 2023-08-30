@@ -96,6 +96,15 @@ double \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1Orbital
 \begin{DoxyCompactList}\small\item\em Get the Mean Longitude at epoch. \end{DoxyCompactList}\item 
 double \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_aa906d23de9630ce2a6c47772366ca54a}{Get\+True\+Longitude}} (const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} \&epoch) const
 \begin{DoxyCompactList}\small\item\em Get the True Longitude at epoch. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsection*{Static Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+static double \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_ae89a46e398056b01494cb4c2bf09168f}{Convert\+True\+Anomaly\+To\+Mean\+Anomaly}} (double true\+Anomaly, double eccentricity)
+\item 
+static std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1ConicOrbitalElements}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Conic\+Orbital\+Elements}} $>$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_a44cb7b4b18f4061acc03ee3c859eb0c9}{Create\+Earth\+Helio\+Synchronous\+Orbit}} (double semi\+Major\+Axis, double eccentricity, \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} \&epoch\+At\+Descending\+Node)
+\item 
+static std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1ConicOrbitalElements}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Conic\+Orbital\+Elements}} $>$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_a67689b84d4c35e42d3df7ea57ec18c5f}{Create\+Earth\+Phased\+Helio\+Synchronous\+Orbit}} (double eccentricity, \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} \&epoch\+At\+Descending\+Node, int nb\+Orbit\+By\+Day)
+\begin{DoxyCompactList}\small\item\em Creates a phased helio-\/synchronous orbit with given parameters. \end{DoxyCompactList}\end{DoxyCompactItemize}
 \doxysubsection*{Protected Attributes}
 \begin{DoxyCompactItemize}
 \item 
@@ -139,6 +148,56 @@ Construct a new Orbital \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Paramet
 
 
 \doxysubsection{Member Function Documentation}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_ae89a46e398056b01494cb4c2bf09168f}\label{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_ae89a46e398056b01494cb4c2bf09168f}} 
+\index{IO::Astrodynamics::OrbitalParameters::OrbitalParameters@{IO::Astrodynamics::OrbitalParameters::OrbitalParameters}!ConvertTrueAnomalyToMeanAnomaly@{ConvertTrueAnomalyToMeanAnomaly}}
+\index{ConvertTrueAnomalyToMeanAnomaly@{ConvertTrueAnomalyToMeanAnomaly}!IO::Astrodynamics::OrbitalParameters::OrbitalParameters@{IO::Astrodynamics::OrbitalParameters::OrbitalParameters}}
+\doxysubsubsection{\texorpdfstring{ConvertTrueAnomalyToMeanAnomaly()}{ConvertTrueAnomalyToMeanAnomaly()}}
+{\footnotesize\ttfamily double IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters\+::\+Convert\+True\+Anomaly\+To\+Mean\+Anomaly (\begin{DoxyParamCaption}\item[{double}]{true\+Anomaly,  }\item[{double}]{eccentricity }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_a44cb7b4b18f4061acc03ee3c859eb0c9}\label{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_a44cb7b4b18f4061acc03ee3c859eb0c9}} 
+\index{IO::Astrodynamics::OrbitalParameters::OrbitalParameters@{IO::Astrodynamics::OrbitalParameters::OrbitalParameters}!CreateEarthHelioSynchronousOrbit@{CreateEarthHelioSynchronousOrbit}}
+\index{CreateEarthHelioSynchronousOrbit@{CreateEarthHelioSynchronousOrbit}!IO::Astrodynamics::OrbitalParameters::OrbitalParameters@{IO::Astrodynamics::OrbitalParameters::OrbitalParameters}}
+\doxysubsubsection{\texorpdfstring{CreateEarthHelioSynchronousOrbit()}{CreateEarthHelioSynchronousOrbit()}}
+{\footnotesize\ttfamily std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1ConicOrbitalElements}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Conic\+Orbital\+Elements}} $>$ IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters\+::\+Create\+Earth\+Helio\+Synchronous\+Orbit (\begin{DoxyParamCaption}\item[{double}]{semi\+Major\+Axis,  }\item[{double}]{eccentricity,  }\item[{\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} \&}]{epoch\+At\+Descending\+Node }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Calculates the parameters for creating a heliosynchronous orbit.
+
+
+\begin{DoxyParams}{Parameters}
+{\em semi\+Major\+Axis} & The semi-\/major axis of the orbit in meters. \\
+\hline
+{\em eccentricity} & The eccentricity of the orbit. \\
+\hline
+{\em epoch\+At\+Descending\+Node} & The epoch time at the descending node. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+The heliosynchronous orbit parameters. 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_a67689b84d4c35e42d3df7ea57ec18c5f}\label{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_a67689b84d4c35e42d3df7ea57ec18c5f}} 
+\index{IO::Astrodynamics::OrbitalParameters::OrbitalParameters@{IO::Astrodynamics::OrbitalParameters::OrbitalParameters}!CreateEarthPhasedHelioSynchronousOrbit@{CreateEarthPhasedHelioSynchronousOrbit}}
+\index{CreateEarthPhasedHelioSynchronousOrbit@{CreateEarthPhasedHelioSynchronousOrbit}!IO::Astrodynamics::OrbitalParameters::OrbitalParameters@{IO::Astrodynamics::OrbitalParameters::OrbitalParameters}}
+\doxysubsubsection{\texorpdfstring{CreateEarthPhasedHelioSynchronousOrbit()}{CreateEarthPhasedHelioSynchronousOrbit()}}
+{\footnotesize\ttfamily std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1ConicOrbitalElements}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Conic\+Orbital\+Elements}} $>$ IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters\+::\+Create\+Earth\+Phased\+Helio\+Synchronous\+Orbit (\begin{DoxyParamCaption}\item[{double}]{eccentricity,  }\item[{\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} \&}]{epoch\+At\+Descending\+Node,  }\item[{int}]{nb\+Orbit\+By\+Day }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Creates a phased helio-\/synchronous orbit with given parameters. 
+
+This function creates a phased helio-\/synchronous orbit based on the provided eccentricity, epoch at ascending node, and number of orbits per day.
+
+
+\begin{DoxyParams}{Parameters}
+{\em eccentricity} & The eccentricity of the orbit (0 \texorpdfstring{$<$}{<}= eccentricity \texorpdfstring{$<$}{<} 1). \\
+\hline
+{\em epoch\+At\+Descending\+Node} & The epoch time at the descending node. \\
+\hline
+{\em nb\+Orbit\+By\+Day} & The desired number of orbits per day.\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+A phased helio-\/synchronous orbit. 
+\end{DoxyReturn}
 \mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_aa7de5a7af79a65cde523139f6c265f27}\label{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_aa7de5a7af79a65cde523139f6c265f27}} 
 \index{IO::Astrodynamics::OrbitalParameters::OrbitalParameters@{IO::Astrodynamics::OrbitalParameters::OrbitalParameters}!GetApogeeVector@{GetApogeeVector}}
 \index{GetApogeeVector@{GetApogeeVector}!IO::Astrodynamics::OrbitalParameters::OrbitalParameters@{IO::Astrodynamics::OrbitalParameters::OrbitalParameters}}

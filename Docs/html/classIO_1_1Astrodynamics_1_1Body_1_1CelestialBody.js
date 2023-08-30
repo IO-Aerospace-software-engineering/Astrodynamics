@@ -1,15 +1,19 @@
 var classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody =
 [
-    [ "CelestialBody", "classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody.html#a0945f0cb1316747f6f088374663e73a7", null ],
-    [ "CelestialBody", "classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody.html#a2530b17fe9023d491315609837479f15", null ],
-    [ "GetAngularVelocity", "classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody.html#aa688ef53e0a73c28c1711f091d23048c", null ],
-    [ "GetBodyFixedFrame", "classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody.html#acd91d275b5b1558b1df431ff7512c2db", null ],
-    [ "GetFlattening", "classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody.html#afeb08cc508f586a1fc86d47547303de0", null ],
-    [ "GetHillSphere", "classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody.html#aec93a781ea9206bf62deb13df6d8e3a8", null ],
-    [ "GetRadius", "classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody.html#af8aeb8c0b4ed20d06552602ac3b93ff2", null ],
-    [ "GetRelativeStatevector", "classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody.html#a1f0c8e89fc870f3402f4fd65eaaa4f2e", null ],
-    [ "GetSideralRotationPeriod", "classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody.html#a1af97b634947c6fa3d401b533fa3c22f", null ],
-    [ "GetSphereOfInfluence", "classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody.html#a41405b0af1edb498129d20c01ea830f6", null ],
-    [ "IsInHillSphere", "classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody.html#a5dac514015558b096bbd280d63b26af8", null ],
-    [ "IsInSphereOfInfluence", "classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody.html#a80694b37324eb168acd7c7d4bebcacda", null ]
+    [ "CelestialBody", "classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody.html#a88bb38ec9aaf14c11d774abd646713c3", null ],
+    [ "CelestialBody", "classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody.html#abff41d2dfeddcc91eb4a6158e19735d9", null ],
+    [ "GetAngularVelocity", "classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody.html#a3e60ab77575b847a3cb3b6b598441de9", null ],
+    [ "GetBodyFixedFrame", "classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody.html#a6380269af1475a90e2545e1832181787", null ],
+    [ "GetFlattening", "classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody.html#a32e281be0a2990e79ce111d870d79338", null ],
+    [ "GetHillSphere", "classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody.html#a636ea520544dda134891e2d568edd388", null ],
+    [ "GetJ2", "classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody.html#a07de7838b5369de6b4c9d2a26f15571e", null ],
+    [ "GetJ3", "classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody.html#ae3393d378938e11d54b6bb41a585dc39", null ],
+    [ "GetJ4", "classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody.html#aea19a0008ca1b93687fef8b89df2d14f", null ],
+    [ "GetRadius", "classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody.html#a3a358eb436439f704408d8bbbdbb40db", null ],
+    [ "GetRelativeStatevector", "classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody.html#a96c6c1bfc79c85ed911e543f536f8d23", null ],
+    [ "GetSideralRotationPeriod", "classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody.html#a53e5a36f0e98712725b81aad4477d452", null ],
+    [ "GetSphereOfInfluence", "classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody.html#a01e4050662db0229fb1a7d17d774343b", null ],
+    [ "GetTrueSolarDay", "classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody.html#a4208410aa4b8690c408add40443810b9", null ],
+    [ "IsInHillSphere", "classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody.html#a411e4a45e2cc51f788cad08912221f50", null ],
+    [ "IsInSphereOfInfluence", "classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody.html#ab0c667028e4c1bdf0d687b2f78ff1f8e", null ]
 ];
