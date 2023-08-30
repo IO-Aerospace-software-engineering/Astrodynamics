@@ -15,6 +15,9 @@ var NAVTREEINDEX1 =
 "PhasingManeuver_8cpp.html":[2,0,0,11,19],
 "PhasingManeuver_8h.html":[2,0,0,11,20],
 "PhasingManeuver_8h_source.html":[2,0,0,11,20],
+"Plane_8cpp.html":[2,0,0,12,2],
+"Plane_8h.html":[2,0,0,12,3],
+"Plane_8h_source.html":[2,0,0,12,3],
 "PlanetodeticDTO_8h.html":[2,0,0,0,0,25],
 "PlanetodeticDTO_8h_source.html":[2,0,0,0,0,25],
 "Planetodetic_8h.html":[2,0,0,3,6],
@@ -155,9 +158,9 @@ var NAVTREEINDEX1 =
 "Proxy_8h_source.html":[2,0,0,0,3],
 "QuaternionDTO_8h.html":[2,0,0,0,0,27],
 "QuaternionDTO_8h_source.html":[2,0,0,0,0,27],
-"Quaternion_8cpp.html":[2,0,0,12,2],
-"Quaternion_8h.html":[2,0,0,12,3],
-"Quaternion_8h_source.html":[2,0,0,12,3],
+"Quaternion_8cpp.html":[2,0,0,12,4],
+"Quaternion_8h.html":[2,0,0,12,5],
+"Quaternion_8h_source.html":[2,0,0,12,5],
 "RaDecDTO_8h.html":[2,0,0,0,0,28],
 "RaDecDTO_8h_source.html":[2,0,0,0,0,28],
 "RectangularInstrumentKernel_8cpp.html":[2,0,0,10,14],
@@ -246,8 +249,5 @@ var NAVTREEINDEX1 =
 "UTC_8cpp.html":[2,0,0,20,8],
 "UTC_8h.html":[2,0,0,20,9],
 "UTC_8h_source.html":[2,0,0,20,9],
-"VVIntegrator_8cpp.html":[2,0,0,9,5],
-"VVIntegrator_8h.html":[2,0,0,9,6],
-"VVIntegrator_8h_source.html":[2,0,0,9,6],
-"Vector3DDTO_8h.html":[2,0,0,0,0,36]
+"VVIntegrator_8cpp.html":[2,0,0,9,5]
 };

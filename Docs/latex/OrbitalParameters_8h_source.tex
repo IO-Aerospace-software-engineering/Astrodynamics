@@ -15,7 +15,7 @@
 \DoxyCodeLine{11 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Body}{IO::Astrodynamics::Body}}}
 \DoxyCodeLine{12 \{}
 \DoxyCodeLine{13     \textcolor{comment}{//Forward declaration}}
-\DoxyCodeLine{14     \textcolor{keyword}{class }CelestialBody;}
+\DoxyCodeLine{14     \textcolor{keyword}{class }\mbox{\hyperlink{classCelestialBody}{CelestialBody}};}
 \DoxyCodeLine{15 \}}
 \DoxyCodeLine{16 }
 \DoxyCodeLine{17 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1OrbitalParameters}{IO::Astrodynamics::OrbitalParameters}}}
@@ -23,97 +23,110 @@
 \DoxyCodeLine{19     \textcolor{comment}{//Forward declaration}}
 \DoxyCodeLine{20     \textcolor{keyword}{class }StateVector;}
 \DoxyCodeLine{21 }
-\DoxyCodeLine{26     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters}{OrbitalParameters}}}
-\DoxyCodeLine{27     \{}
-\DoxyCodeLine{28 }
-\DoxyCodeLine{29     \textcolor{keyword}{protected}:}
-\DoxyCodeLine{30         \textcolor{keyword}{const} std::shared\_ptr<IO::Astrodynamics::Body::CelestialBody> \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_aec93efaa820ffc31f639359de75a57c6}{m\_centerOfMotion}};}
-\DoxyCodeLine{31         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO::Astrodynamics::Time::TDB}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_a27996c1da8c99dad979f1aabeb403f75}{m\_epoch}};}
-\DoxyCodeLine{32         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Frames_1_1Frames}{IO::Astrodynamics::Frames::Frames}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_abcda4a4bd98a692acd7aff01939f6f6c}{m\_frame}};}
-\DoxyCodeLine{33 }
-\DoxyCodeLine{34     \textcolor{keyword}{public}:}
-\DoxyCodeLine{42         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_a48beed1dcd39f610b0cfdd3ba7b35909}{OrbitalParameters}}(\textcolor{keyword}{const} std::shared\_ptr<IO::Astrodynamics::Body::CelestialBody> \&centerOfMotion, \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO::Astrodynamics::Time::TDB}} epoch, \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Frames_1_1Frames}{IO::Astrodynamics::Frames::Frames}} frame);}
-\DoxyCodeLine{43 }
-\DoxyCodeLine{44         \textcolor{keyword}{virtual} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_a8e994e49254e0b187799f194f0de8b43}{\string~OrbitalParameters}}() = \textcolor{keywordflow}{default};}
-\DoxyCodeLine{45 }
-\DoxyCodeLine{51         [[nodiscard]] \textcolor{keyword}{const} std::shared\_ptr<IO::Astrodynamics::Body::CelestialBody> \&\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_ae45eb94a04baac5d531c3ecf16525693}{GetCenterOfMotion}}() \textcolor{keyword}{const};}
-\DoxyCodeLine{52 }
-\DoxyCodeLine{58         [[nodiscard]] \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO::Astrodynamics::Time::TDB}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_aa65832e512d25eccceb37e78063100ec}{GetEpoch}}() \textcolor{keyword}{const};}
-\DoxyCodeLine{59 }
-\DoxyCodeLine{65         [[nodiscard]] \textcolor{keyword}{virtual} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO::Astrodynamics::Time::TimeSpan}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_a1586cf10211aea2676395db8e18a610f}{GetPeriod}}() \textcolor{keyword}{const} = 0;}
-\DoxyCodeLine{66 }
-\DoxyCodeLine{73         [[nodiscard]] \textcolor{keyword}{virtual} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO::Astrodynamics::Time::TDB}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_ae6dd5dd7136791522d33d4de3e4da19e}{GetTimeToTrueAnomaly}}(\textcolor{keywordtype}{double} trueAnomalyTarget) \textcolor{keyword}{const};}
-\DoxyCodeLine{74 }
-\DoxyCodeLine{81         [[nodiscard]] \textcolor{keyword}{virtual} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO::Astrodynamics::Time::TDB}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_a27e0635ccd91abe3deefff865c491ee4}{GetTimeToMeanAnomaly}}(\textcolor{keywordtype}{double} meanAnomalyTarget) \textcolor{keyword}{const};}
-\DoxyCodeLine{82 }
-\DoxyCodeLine{88         [[nodiscard]] \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_a04887dcc9f43e87ea414fcde05db0f6b}{GetMeanMotion}}() \textcolor{keyword}{const};}
-\DoxyCodeLine{89 }
-\DoxyCodeLine{95         [[nodiscard]] \textcolor{keyword}{virtual} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO::Astrodynamics::Math::Vector3D}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_aeb82666267d968a5955d77183b53a948}{GetSpecificAngularMomentum}}() \textcolor{keyword}{const} = 0;}
-\DoxyCodeLine{96 }
-\DoxyCodeLine{103         [[nodiscard]] \textcolor{keyword}{virtual} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}{StateVector}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_af53be7d48c83751f1388721165b5bbb9}{ToStateVector}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO::Astrodynamics::Time::TDB}} \&epoch) \textcolor{keyword}{const} = 0;}
-\DoxyCodeLine{104 }
-\DoxyCodeLine{110         [[nodiscard]] \textcolor{keyword}{virtual} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}{StateVector}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_af0b880e2daa11029e0c037302fb05d70}{ToStateVector}}() \textcolor{keyword}{const};}
-\DoxyCodeLine{111 }
-\DoxyCodeLine{118         [[nodiscard]] \textcolor{keyword}{virtual} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}{IO::Astrodynamics::OrbitalParameters::StateVector}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_af0b880e2daa11029e0c037302fb05d70}{ToStateVector}}(\textcolor{keywordtype}{double} trueAnomaly) \textcolor{keyword}{const};}
-\DoxyCodeLine{119 }
-\DoxyCodeLine{126         [[nodiscard]] \textcolor{keywordtype}{bool} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_a52a4ebccdb352c0d86aa29c76f721411}{IsElliptical}}() \textcolor{keyword}{const};}
-\DoxyCodeLine{127 }
-\DoxyCodeLine{134         [[nodiscard]] \textcolor{keywordtype}{bool} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_a1dd5f09734f52d7061599c264986243b}{IsParabolic}}() \textcolor{keyword}{const};}
-\DoxyCodeLine{135 }
-\DoxyCodeLine{142         [[nodiscard]] \textcolor{keywordtype}{bool} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_a3304abc1dc8d631d14974dc01e23cdee}{IsHyperbolic}}() \textcolor{keyword}{const};}
-\DoxyCodeLine{143 }
-\DoxyCodeLine{150         [[nodiscard]] \textcolor{keywordtype}{bool} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_a282f524f0318876e68961ad7a4b0fdd0}{IsCircular}}() \textcolor{keyword}{const};}
-\DoxyCodeLine{151 }
-\DoxyCodeLine{157         [[nodiscard]] \textcolor{keyword}{virtual} \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_a9942caa62d75cd8ad7486f7966ee7476}{GetEccentricity}}() \textcolor{keyword}{const} = 0;}
-\DoxyCodeLine{158 }
-\DoxyCodeLine{164         [[nodiscard]] \textcolor{keyword}{virtual} \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_adf524663b31a263f4a2eda62426d401f}{GetSemiMajorAxis}}() \textcolor{keyword}{const} = 0;}
-\DoxyCodeLine{165 }
-\DoxyCodeLine{171         [[nodiscard]] \textcolor{keyword}{virtual} \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_a5ab4864ce7c3d403bc9d6c90b22a41bf}{GetInclination}}() \textcolor{keyword}{const} = 0;}
-\DoxyCodeLine{172 }
-\DoxyCodeLine{178         [[nodiscard]] \textcolor{keyword}{virtual} \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_a00c67f791757083550173af2e34fe2c2}{GetPeriapsisArgument}}() \textcolor{keyword}{const} = 0;}
-\DoxyCodeLine{179 }
-\DoxyCodeLine{185         [[nodiscard]] \textcolor{keyword}{virtual} \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_a90f9d8fdc41955b75cecea179309b177}{GetRightAscendingNodeLongitude}}() \textcolor{keyword}{const} = 0;}
-\DoxyCodeLine{186 }
-\DoxyCodeLine{192         [[nodiscard]] \textcolor{keyword}{virtual} \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_ae7c1fd9b84ebf0bd1fa9199717f86e02}{GetMeanAnomaly}}() \textcolor{keyword}{const} = 0;}
-\DoxyCodeLine{193 }
-\DoxyCodeLine{199         [[nodiscard]] \textcolor{keyword}{virtual} \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_aea4019e092658b27cdcc12b9dea03ad8}{GetTrueAnomaly}}() \textcolor{keyword}{const};}
-\DoxyCodeLine{200 }
-\DoxyCodeLine{206         [[nodiscard]] \textcolor{keyword}{virtual} \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_a06824ecd8abd7b28b4a1490ba8b963d2}{GetSpecificOrbitalEnergy}}() \textcolor{keyword}{const} = 0;}
-\DoxyCodeLine{207 }
-\DoxyCodeLine{214         [[nodiscard]] \textcolor{keyword}{virtual} \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_a828a160e1e6e1a5a640ce31d75f75a29}{GetEccentricAnomaly}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO::Astrodynamics::Time::TDB}}\& epoch) \textcolor{keyword}{const};}
-\DoxyCodeLine{215 }
-\DoxyCodeLine{222         [[nodiscard]] \textcolor{keyword}{virtual} \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_ae7c1fd9b84ebf0bd1fa9199717f86e02}{GetMeanAnomaly}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO::Astrodynamics::Time::TDB}}\& epoch) \textcolor{keyword}{const};}
-\DoxyCodeLine{223 }
-\DoxyCodeLine{230         [[nodiscard]] \textcolor{keyword}{virtual} \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_aea4019e092658b27cdcc12b9dea03ad8}{GetTrueAnomaly}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO::Astrodynamics::Time::TDB}}\& epoch) \textcolor{keyword}{const};}
-\DoxyCodeLine{231 }
-\DoxyCodeLine{237         [[nodiscard]] \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Frames_1_1Frames}{IO::Astrodynamics::Frames::Frames}} \&\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_a9a83a14834283b802a68cccb27a3b9b6}{GetFrame}}() \textcolor{keyword}{const};}
-\DoxyCodeLine{238 }
-\DoxyCodeLine{244         [[nodiscard]] \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO::Astrodynamics::Math::Vector3D}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_a38eeacbd927172770bfef7cd827b4ab1}{GetEccentricityVector}}() \textcolor{keyword}{const};}
-\DoxyCodeLine{245 }
-\DoxyCodeLine{251         [[nodiscard]] \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO::Astrodynamics::Math::Vector3D}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_a6e433b6f5edcc3d56136cf8848b77490}{GetPerigeeVector}}() \textcolor{keyword}{const};}
-\DoxyCodeLine{252 }
-\DoxyCodeLine{258         [[nodiscard]] \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO::Astrodynamics::Math::Vector3D}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_aa7de5a7af79a65cde523139f6c265f27}{GetApogeeVector}}() \textcolor{keyword}{const};}
-\DoxyCodeLine{259 }
-\DoxyCodeLine{260 }
-\DoxyCodeLine{261 }
-\DoxyCodeLine{267         [[nodiscard]] \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO::Astrodynamics::Math::Vector3D}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_a3cc0fdd2afd4e2829b8f0a66facb6383}{GetAscendingNodeVector}}() \textcolor{keyword}{const};}
-\DoxyCodeLine{268 }
-\DoxyCodeLine{274         [[nodiscard]] \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1Equatorial}{IO::Astrodynamics::Coordinates::Equatorial}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_a2c77b55aad48789fc08c7c8d55f9a017}{ToEquatorialCoordinates}}() \textcolor{keyword}{const};}
-\DoxyCodeLine{275 }
-\DoxyCodeLine{281         [[nodiscard]] \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_a084ed8667f9ef0153211a01a2928a597}{GetVelocityAtPerigee}}() \textcolor{keyword}{const};}
-\DoxyCodeLine{282 }
-\DoxyCodeLine{288         [[nodiscard]] \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_a20943eeaf212a1f76bbbc7a1642a7960}{GetVelocityAtApogee}}() \textcolor{keyword}{const};}
-\DoxyCodeLine{289 }
-\DoxyCodeLine{295         [[nodiscard]] \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_a9fd3a47134708ebcd353c0c99254a03c}{GetTrueLongitude}}() \textcolor{keyword}{const};}
-\DoxyCodeLine{296         }
-\DoxyCodeLine{302         [[nodiscard]] \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_a6a89960484947153f178218924183dc2}{GetMeanLongitude}}() \textcolor{keyword}{const};}
-\DoxyCodeLine{303 }
-\DoxyCodeLine{310         [[nodiscard]] \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_a6a89960484947153f178218924183dc2}{GetMeanLongitude}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO::Astrodynamics::Time::TDB}}\& epoch) \textcolor{keyword}{const};}
-\DoxyCodeLine{311 }
-\DoxyCodeLine{318         [[nodiscard]] \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_a9fd3a47134708ebcd353c0c99254a03c}{GetTrueLongitude}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO::Astrodynamics::Time::TDB}}\& epoch) \textcolor{keyword}{const};}
-\DoxyCodeLine{319         }
-\DoxyCodeLine{320     \};}
-\DoxyCodeLine{321 \}}
-\DoxyCodeLine{322 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{22     \textcolor{keyword}{class }ConicOrbitalElements;}
+\DoxyCodeLine{23 }
+\DoxyCodeLine{28     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters}{OrbitalParameters}}}
+\DoxyCodeLine{29     \{}
+\DoxyCodeLine{30 }
+\DoxyCodeLine{31     \textcolor{keyword}{protected}:}
+\DoxyCodeLine{32         \textcolor{keyword}{const} std::shared\_ptr<IO::Astrodynamics::Body::CelestialBody> \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_aec93efaa820ffc31f639359de75a57c6}{m\_centerOfMotion}};}
+\DoxyCodeLine{33         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO::Astrodynamics::Time::TDB}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_a27996c1da8c99dad979f1aabeb403f75}{m\_epoch}};}
+\DoxyCodeLine{34         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Frames_1_1Frames}{IO::Astrodynamics::Frames::Frames}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_abcda4a4bd98a692acd7aff01939f6f6c}{m\_frame}};}
+\DoxyCodeLine{35 }
+\DoxyCodeLine{36     \textcolor{keyword}{public}:}
+\DoxyCodeLine{44         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_a48beed1dcd39f610b0cfdd3ba7b35909}{OrbitalParameters}}(\textcolor{keyword}{const} std::shared\_ptr<IO::Astrodynamics::Body::CelestialBody> \&centerOfMotion, \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO::Astrodynamics::Time::TDB}} epoch,}
+\DoxyCodeLine{45                           \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Frames_1_1Frames}{IO::Astrodynamics::Frames::Frames}} frame);}
+\DoxyCodeLine{46 }
+\DoxyCodeLine{47         \textcolor{keyword}{virtual} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_a8e994e49254e0b187799f194f0de8b43}{\string~OrbitalParameters}}() = \textcolor{keywordflow}{default};}
+\DoxyCodeLine{48 }
+\DoxyCodeLine{54         [[nodiscard]] \textcolor{keyword}{const} std::shared\_ptr<IO::Astrodynamics::Body::CelestialBody> \&\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_ae45eb94a04baac5d531c3ecf16525693}{GetCenterOfMotion}}() \textcolor{keyword}{const};}
+\DoxyCodeLine{55 }
+\DoxyCodeLine{61         [[nodiscard]] \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO::Astrodynamics::Time::TDB}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_aa65832e512d25eccceb37e78063100ec}{GetEpoch}}() \textcolor{keyword}{const};}
+\DoxyCodeLine{62 }
+\DoxyCodeLine{68         [[nodiscard]] \textcolor{keyword}{virtual} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO::Astrodynamics::Time::TimeSpan}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_a1586cf10211aea2676395db8e18a610f}{GetPeriod}}() \textcolor{keyword}{const} = 0;}
+\DoxyCodeLine{69 }
+\DoxyCodeLine{76         [[nodiscard]] \textcolor{keyword}{virtual} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO::Astrodynamics::Time::TDB}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_ae6dd5dd7136791522d33d4de3e4da19e}{GetTimeToTrueAnomaly}}(\textcolor{keywordtype}{double} trueAnomalyTarget) \textcolor{keyword}{const};}
+\DoxyCodeLine{77 }
+\DoxyCodeLine{84         [[nodiscard]] \textcolor{keyword}{virtual} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO::Astrodynamics::Time::TDB}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_a27e0635ccd91abe3deefff865c491ee4}{GetTimeToMeanAnomaly}}(\textcolor{keywordtype}{double} meanAnomalyTarget) \textcolor{keyword}{const};}
+\DoxyCodeLine{85 }
+\DoxyCodeLine{91         [[nodiscard]] \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_a04887dcc9f43e87ea414fcde05db0f6b}{GetMeanMotion}}() \textcolor{keyword}{const};}
+\DoxyCodeLine{92 }
+\DoxyCodeLine{98         [[nodiscard]] \textcolor{keyword}{virtual} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO::Astrodynamics::Math::Vector3D}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_aeb82666267d968a5955d77183b53a948}{GetSpecificAngularMomentum}}() \textcolor{keyword}{const} = 0;}
+\DoxyCodeLine{99 }
+\DoxyCodeLine{106         [[nodiscard]] \textcolor{keyword}{virtual} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}{StateVector}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_af53be7d48c83751f1388721165b5bbb9}{ToStateVector}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO::Astrodynamics::Time::TDB}} \&epoch) \textcolor{keyword}{const} = 0;}
+\DoxyCodeLine{107 }
+\DoxyCodeLine{113         [[nodiscard]] \textcolor{keyword}{virtual} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}{StateVector}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_af0b880e2daa11029e0c037302fb05d70}{ToStateVector}}() \textcolor{keyword}{const};}
+\DoxyCodeLine{114 }
+\DoxyCodeLine{121         [[nodiscard]] \textcolor{keyword}{virtual} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}{IO::Astrodynamics::OrbitalParameters::StateVector}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_af0b880e2daa11029e0c037302fb05d70}{ToStateVector}}(\textcolor{keywordtype}{double} trueAnomaly) \textcolor{keyword}{const};}
+\DoxyCodeLine{122 }
+\DoxyCodeLine{129         [[nodiscard]] \textcolor{keywordtype}{bool} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_a52a4ebccdb352c0d86aa29c76f721411}{IsElliptical}}() \textcolor{keyword}{const};}
+\DoxyCodeLine{130 }
+\DoxyCodeLine{137         [[nodiscard]] \textcolor{keywordtype}{bool} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_a1dd5f09734f52d7061599c264986243b}{IsParabolic}}() \textcolor{keyword}{const};}
+\DoxyCodeLine{138 }
+\DoxyCodeLine{145         [[nodiscard]] \textcolor{keywordtype}{bool} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_a3304abc1dc8d631d14974dc01e23cdee}{IsHyperbolic}}() \textcolor{keyword}{const};}
+\DoxyCodeLine{146 }
+\DoxyCodeLine{153         [[nodiscard]] \textcolor{keywordtype}{bool} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_a282f524f0318876e68961ad7a4b0fdd0}{IsCircular}}() \textcolor{keyword}{const};}
+\DoxyCodeLine{154 }
+\DoxyCodeLine{160         [[nodiscard]] \textcolor{keyword}{virtual} \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_a9942caa62d75cd8ad7486f7966ee7476}{GetEccentricity}}() \textcolor{keyword}{const} = 0;}
+\DoxyCodeLine{161 }
+\DoxyCodeLine{167         [[nodiscard]] \textcolor{keyword}{virtual} \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_adf524663b31a263f4a2eda62426d401f}{GetSemiMajorAxis}}() \textcolor{keyword}{const} = 0;}
+\DoxyCodeLine{168 }
+\DoxyCodeLine{174         [[nodiscard]] \textcolor{keyword}{virtual} \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_a5ab4864ce7c3d403bc9d6c90b22a41bf}{GetInclination}}() \textcolor{keyword}{const} = 0;}
+\DoxyCodeLine{175 }
+\DoxyCodeLine{181         [[nodiscard]] \textcolor{keyword}{virtual} \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_a00c67f791757083550173af2e34fe2c2}{GetPeriapsisArgument}}() \textcolor{keyword}{const} = 0;}
+\DoxyCodeLine{182 }
+\DoxyCodeLine{188         [[nodiscard]] \textcolor{keyword}{virtual} \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_a90f9d8fdc41955b75cecea179309b177}{GetRightAscendingNodeLongitude}}() \textcolor{keyword}{const} = 0;}
+\DoxyCodeLine{189 }
+\DoxyCodeLine{195         [[nodiscard]] \textcolor{keyword}{virtual} \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_ae7c1fd9b84ebf0bd1fa9199717f86e02}{GetMeanAnomaly}}() \textcolor{keyword}{const} = 0;}
+\DoxyCodeLine{196 }
+\DoxyCodeLine{202         [[nodiscard]] \textcolor{keyword}{virtual} \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_aea4019e092658b27cdcc12b9dea03ad8}{GetTrueAnomaly}}() \textcolor{keyword}{const};}
+\DoxyCodeLine{203 }
+\DoxyCodeLine{209         [[nodiscard]] \textcolor{keyword}{virtual} \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_a06824ecd8abd7b28b4a1490ba8b963d2}{GetSpecificOrbitalEnergy}}() \textcolor{keyword}{const} = 0;}
+\DoxyCodeLine{210 }
+\DoxyCodeLine{217         [[nodiscard]] \textcolor{keyword}{virtual} \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_a828a160e1e6e1a5a640ce31d75f75a29}{GetEccentricAnomaly}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO::Astrodynamics::Time::TDB}} \&epoch) \textcolor{keyword}{const};}
+\DoxyCodeLine{218 }
+\DoxyCodeLine{225         [[nodiscard]] \textcolor{keyword}{virtual} \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_ae7c1fd9b84ebf0bd1fa9199717f86e02}{GetMeanAnomaly}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO::Astrodynamics::Time::TDB}} \&epoch) \textcolor{keyword}{const};}
+\DoxyCodeLine{226 }
+\DoxyCodeLine{233         [[nodiscard]] \textcolor{keyword}{virtual} \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_aea4019e092658b27cdcc12b9dea03ad8}{GetTrueAnomaly}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO::Astrodynamics::Time::TDB}} \&epoch) \textcolor{keyword}{const};}
+\DoxyCodeLine{234 }
+\DoxyCodeLine{240         [[nodiscard]] \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Frames_1_1Frames}{IO::Astrodynamics::Frames::Frames}} \&\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_a9a83a14834283b802a68cccb27a3b9b6}{GetFrame}}() \textcolor{keyword}{const};}
+\DoxyCodeLine{241 }
+\DoxyCodeLine{247         [[nodiscard]] \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO::Astrodynamics::Math::Vector3D}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_a38eeacbd927172770bfef7cd827b4ab1}{GetEccentricityVector}}() \textcolor{keyword}{const};}
+\DoxyCodeLine{248 }
+\DoxyCodeLine{254         [[nodiscard]] \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO::Astrodynamics::Math::Vector3D}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_a6e433b6f5edcc3d56136cf8848b77490}{GetPerigeeVector}}() \textcolor{keyword}{const};}
+\DoxyCodeLine{255 }
+\DoxyCodeLine{261         [[nodiscard]] \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO::Astrodynamics::Math::Vector3D}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_aa7de5a7af79a65cde523139f6c265f27}{GetApogeeVector}}() \textcolor{keyword}{const};}
+\DoxyCodeLine{262 }
+\DoxyCodeLine{263 }
+\DoxyCodeLine{269         [[nodiscard]] \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO::Astrodynamics::Math::Vector3D}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_a3cc0fdd2afd4e2829b8f0a66facb6383}{GetAscendingNodeVector}}() \textcolor{keyword}{const};}
+\DoxyCodeLine{270 }
+\DoxyCodeLine{276         [[nodiscard]] \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1Equatorial}{IO::Astrodynamics::Coordinates::Equatorial}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_a2c77b55aad48789fc08c7c8d55f9a017}{ToEquatorialCoordinates}}() \textcolor{keyword}{const};}
+\DoxyCodeLine{277 }
+\DoxyCodeLine{283         [[nodiscard]] \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_a084ed8667f9ef0153211a01a2928a597}{GetVelocityAtPerigee}}() \textcolor{keyword}{const};}
+\DoxyCodeLine{284 }
+\DoxyCodeLine{290         [[nodiscard]] \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_a20943eeaf212a1f76bbbc7a1642a7960}{GetVelocityAtApogee}}() \textcolor{keyword}{const};}
+\DoxyCodeLine{291 }
+\DoxyCodeLine{297         [[nodiscard]] \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_a9fd3a47134708ebcd353c0c99254a03c}{GetTrueLongitude}}() \textcolor{keyword}{const};}
+\DoxyCodeLine{298 }
+\DoxyCodeLine{304         [[nodiscard]] \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_a6a89960484947153f178218924183dc2}{GetMeanLongitude}}() \textcolor{keyword}{const};}
+\DoxyCodeLine{305 }
+\DoxyCodeLine{312         [[nodiscard]] \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_a6a89960484947153f178218924183dc2}{GetMeanLongitude}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO::Astrodynamics::Time::TDB}} \&epoch) \textcolor{keyword}{const};}
+\DoxyCodeLine{313 }
+\DoxyCodeLine{320         [[nodiscard]] \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_a9fd3a47134708ebcd353c0c99254a03c}{GetTrueLongitude}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO::Astrodynamics::Time::TDB}} \&epoch) \textcolor{keyword}{const};}
+\DoxyCodeLine{321 }
+\DoxyCodeLine{322         \textcolor{keyword}{static} \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_ae89a46e398056b01494cb4c2bf09168f}{ConvertTrueAnomalyToMeanAnomaly}}(\textcolor{keywordtype}{double} trueAnomaly, \textcolor{keywordtype}{double} eccentricity);}
+\DoxyCodeLine{323 }
+\DoxyCodeLine{324 }
+\DoxyCodeLine{334         \textcolor{keyword}{static} std::shared\_ptr<IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements>}
+\DoxyCodeLine{335         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_a44cb7b4b18f4061acc03ee3c859eb0c9}{CreateEarthHelioSynchronousOrbit}}(\textcolor{keywordtype}{double} semiMajorAxis, \textcolor{keywordtype}{double} eccentricity, \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO::Astrodynamics::Time::TDB}} \&epochAtDescendingNode);}
+\DoxyCodeLine{336 }
+\DoxyCodeLine{350         \textcolor{keyword}{static} std::shared\_ptr<IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements>}
+\DoxyCodeLine{351         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_a67689b84d4c35e42d3df7ea57ec18c5f}{CreateEarthPhasedHelioSynchronousOrbit}}(\textcolor{keywordtype}{double} eccentricity, \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO::Astrodynamics::Time::TDB}} \&epochAtDescendingNode,}
+\DoxyCodeLine{352                                           \textcolor{keywordtype}{int} nbOrbitByDay);}
+\DoxyCodeLine{353     \};}
+\DoxyCodeLine{354 }
+\DoxyCodeLine{355 }
+\DoxyCodeLine{356 \}}
+\DoxyCodeLine{357 \textcolor{preprocessor}{\#endif}}
 
 \end{DoxyCode}

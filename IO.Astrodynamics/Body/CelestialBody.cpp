@@ -11,14 +11,18 @@
 #include <Aberrations.h>
 #include <InertialFrames.h>
 #include <InvalidArgumentException.h>
+#include <GeometryFinder.h>
+#include <Plane.h>
 
 using namespace std::chrono_literals;
 
-IO::Astrodynamics::Body::CelestialBody::CelestialBody(const int id, std::shared_ptr<IO::Astrodynamics::Body::CelestialBody> &centerOfMotion) : IO::Astrodynamics::Body::CelestialItem(id, "",
-                                                                                                                                                                             ReadGM(id) /
-                                                                                                                                                                             IO::Astrodynamics::Constants::G,
-                                                                                                                                                                                      centerOfMotion),
-                                                                                                                                               m_BodyFixedFrame{""}
+IO::Astrodynamics::Body::CelestialBody::CelestialBody(const int id, std::shared_ptr<IO::Astrodynamics::Body::CelestialBody> &centerOfMotion)
+        : IO::Astrodynamics::Body::CelestialItem(id, "",
+                                                 ReadGM(id) /
+                                                 IO::Astrodynamics::Constants::G,
+                                                 centerOfMotion),
+          m_BodyFixedFrame{""},
+          m_J2{ReadJ2()}, m_J3{ReadJ3()}, m_J4{ReadJ4()}
 {
     const_cast<double &>(m_sphereOfInfluence) = IO::Astrodynamics::Body::SphereOfInfluence(m_orbitalParametersAtEpoch->GetSemiMajorAxis(),
                                                                                            m_orbitalParametersAtEpoch->GetCenterOfMotion()->GetMu(), m_mu);
@@ -49,7 +53,8 @@ IO::Astrodynamics::Body::CelestialBody::CelestialBody(const int id, std::shared_
 }
 
 IO::Astrodynamics::Body::CelestialBody::CelestialBody(const int id) : IO::Astrodynamics::Body::CelestialItem(id, "", ReadGM(id) / IO::Astrodynamics::Constants::G),
-                                                                      m_BodyFixedFrame{""}
+                                                                      m_BodyFixedFrame{""},
+                                                                      m_J2{ReadJ2()}, m_J3{ReadJ3()}, m_J4{ReadJ4()}
 {
     SpiceBoolean found;
     SpiceChar name[32];
@@ -150,7 +155,7 @@ IO::Astrodynamics::Math::Vector3D IO::Astrodynamics::Body::CelestialBody::GetRad
     SpiceDouble res[3];
     bodvcd_c(m_id, "RADII", 3, &dim, res);
 
-    return IO::Astrodynamics::Math::Vector3D{res[0], res[1], res[2]};
+    return IO::Astrodynamics::Math::Vector3D{res[0] * 1000.0, res[1] * 1000.0, res[2] * 1000.0};
 }
 
 double IO::Astrodynamics::Body::CelestialBody::GetFlattening() const
@@ -258,3 +263,45 @@ bool IO::Astrodynamics::Body::CelestialBody::IsLagrangePoint(int celestialBodyId
     return celestialBodyId == 391 || celestialBodyId == 392 || celestialBodyId == 393 || celestialBodyId == 394;
 }
 
+double IO::Astrodynamics::Body::CelestialBody::ReadJ2() const
+{
+    return ReadJValue("J2");
+}
+
+double IO::Astrodynamics::Body::CelestialBody::ReadJ3() const
+{
+    return ReadJValue("J3");
+}
+
+double IO::Astrodynamics::Body::CelestialBody::ReadJ4() const
+{
+    return ReadJValue("J4");
+}
+
+double IO::Astrodynamics::Body::CelestialBody::ReadJValue(const char *valueName) const
+{
+    if (!bodfnd_c(m_id, valueName))
+    {
+        return std::numeric_limits<double>::quiet_NaN();
+    }
+    SpiceInt dim;
+    SpiceDouble res[1];
+    bodvcd_c(m_id, valueName, 1, &dim, res);
+    if (dim == 0)
+    {
+        return std::numeric_limits<double>::quiet_NaN();
+    }
+    return res[0];
+}
+
+
+IO::Astrodynamics::Time::TimeSpan IO::Astrodynamics::Body::CelestialBody::GetTrueSolarDay(IO::Astrodynamics::Time::TDB &epoch) const
+{
+    IO::Astrodynamics::Body::CelestialBody sun{10};
+    auto sideralRotationPeriod = GetSideralRotationPeriod(epoch);
+    auto eph0 = this->ReadEphemeris(Frames::InertialFrames::EclipticJ2000(), AberrationsEnum::LT, epoch, sun);
+    auto eph1 = this->ReadEphemeris(Frames::InertialFrames::EclipticJ2000(), AberrationsEnum::LT, epoch + sideralRotationPeriod, sun);
+    auto angle = eph0.GetPosition().GetAngle(eph1.GetPosition());
+    return sideralRotationPeriod + angle / GetAngularVelocity(epoch);
+
+}

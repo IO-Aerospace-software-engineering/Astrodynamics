@@ -1,26 +1,14 @@
 var dir_9230ce8e6a400b4a0110ff1d1370189f =
 [
     [ "DateTime.cpp", "DateTime_8cpp.html", null ],
-    [ "DateTime.h", "DateTime_8h.html", [
-      [ "IO::Astrodynamics::Time::DateTime", "classIO_1_1Astrodynamics_1_1Time_1_1DateTime.html", "classIO_1_1Astrodynamics_1_1Time_1_1DateTime" ]
-    ] ],
+    [ "DateTime.h", "DateTime_8h.html", "DateTime_8h" ],
     [ "JulianDate.cpp", "JulianDate_8cpp.html", null ],
-    [ "JulianDate.h", "JulianDate_8h.html", [
-      [ "IO::Astrodynamics::Time::JulianDate", "classIO_1_1Astrodynamics_1_1Time_1_1JulianDate.html", "classIO_1_1Astrodynamics_1_1Time_1_1JulianDate" ]
-    ] ],
+    [ "JulianDate.h", "JulianDate_8h.html", "JulianDate_8h" ],
     [ "TDB.cpp", "TDB_8cpp.html", null ],
-    [ "TDB.h", "TDB_8h.html", [
-      [ "IO::Astrodynamics::Time::TDB", "classIO_1_1Astrodynamics_1_1Time_1_1TDB.html", "classIO_1_1Astrodynamics_1_1Time_1_1TDB" ]
-    ] ],
+    [ "TDB.h", "TDB_8h.html", "TDB_8h" ],
     [ "TimeSpan.cpp", "TimeSpan_8cpp.html", null ],
-    [ "TimeSpan.h", "TimeSpan_8h.html", [
-      [ "IO::Astrodynamics::Time::TimeSpan", "classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan.html", "classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan" ]
-    ] ],
+    [ "TimeSpan.h", "TimeSpan_8h.html", "TimeSpan_8h" ],
     [ "UTC.cpp", "UTC_8cpp.html", null ],
-    [ "UTC.h", "UTC_8h.html", [
-      [ "IO::Astrodynamics::Time::UTC", "classIO_1_1Astrodynamics_1_1Time_1_1UTC.html", "classIO_1_1Astrodynamics_1_1Time_1_1UTC" ]
-    ] ],
-    [ "Window.h", "Window_8h.html", [
-      [ "IO::Astrodynamics::Time::Window< T >", "classIO_1_1Astrodynamics_1_1Time_1_1Window.html", "classIO_1_1Astrodynamics_1_1Time_1_1Window" ]
-    ] ]
+    [ "UTC.h", "UTC_8h.html", "UTC_8h" ],
+    [ "Window.h", "Window_8h.html", "Window_8h" ]
 ];

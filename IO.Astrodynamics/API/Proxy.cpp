@@ -432,7 +432,7 @@ void FindWindowsOnIlluminationConstraintProxy(IO::Astrodynamics::API::DTO::Windo
 
     IO::Astrodynamics::Body::CelestialBody body(targetBody);
     SpiceDouble bodyFixedLocation[3];
-    georec_c(geodetic.longitude, geodetic.latitude, geodetic.altitude, body.GetRadius().GetX(), body.GetFlattening(),
+    georec_c(geodetic.longitude, geodetic.latitude, geodetic.altitude, body.GetRadius().GetX() * 0.001, body.GetFlattening(),
              bodyFixedLocation);
     auto abe = IO::Astrodynamics::Aberrations::ToEnum(aberration);
     auto illumination = IO::Astrodynamics::IlluminationAngle::ToIlluminationAngleType(illuminationType);
@@ -802,7 +802,7 @@ void ReadManeuverResults(IO::Astrodynamics::API::DTO::ScenarioDTO &scenarioDto,
 }
 
 void ReadInstrumentTowardTargetAttitudeResult(IO::Astrodynamics::API::DTO::ScenarioDTO &scenarioDto,
-                                 std::map<int, std::shared_ptr<IO::Astrodynamics::Maneuvers::ManeuverBase>> &maneuvers)
+                                              std::map<int, std::shared_ptr<IO::Astrodynamics::Maneuvers::ManeuverBase>> &maneuvers)
 {
     for (auto &attitude: scenarioDto.Spacecraft.pointingToAttitudes)
     {
@@ -817,7 +817,7 @@ void ReadInstrumentTowardTargetAttitudeResult(IO::Astrodynamics::API::DTO::Scena
 }
 
 void ReadRetrogradeAttitudeResult(IO::Astrodynamics::API::DTO::ScenarioDTO &scenarioDto,
-                                std::map<int, std::shared_ptr<IO::Astrodynamics::Maneuvers::ManeuverBase>> &maneuvers)
+                                  std::map<int, std::shared_ptr<IO::Astrodynamics::Maneuvers::ManeuverBase>> &maneuvers)
 {
     for (auto &attitude: scenarioDto.Spacecraft.retrogradeAttitudes)
     {
@@ -832,7 +832,7 @@ void ReadRetrogradeAttitudeResult(IO::Astrodynamics::API::DTO::ScenarioDTO &scen
 }
 
 void ReadProgradeAttitudeResult(IO::Astrodynamics::API::DTO::ScenarioDTO &scenarioDto,
-                              std::map<int, std::shared_ptr<IO::Astrodynamics::Maneuvers::ManeuverBase>> &maneuvers)
+                                std::map<int, std::shared_ptr<IO::Astrodynamics::Maneuvers::ManeuverBase>> &maneuvers)
 {
     for (auto &attitude: scenarioDto.Spacecraft.progradeAttitudes)
     {
@@ -847,7 +847,7 @@ void ReadProgradeAttitudeResult(IO::Astrodynamics::API::DTO::ScenarioDTO &scenar
 }
 
 void ReadZenithAttitudeResult(IO::Astrodynamics::API::DTO::ScenarioDTO &scenarioDto,
-                             std::map<int, std::shared_ptr<IO::Astrodynamics::Maneuvers::ManeuverBase>> &maneuvers)
+                              std::map<int, std::shared_ptr<IO::Astrodynamics::Maneuvers::ManeuverBase>> &maneuvers)
 {
     for (auto &attitude: scenarioDto.Spacecraft.zenithAttitudes)
     {
@@ -862,7 +862,7 @@ void ReadZenithAttitudeResult(IO::Astrodynamics::API::DTO::ScenarioDTO &scenario
 }
 
 void ReadNadirAttitudeResult(IO::Astrodynamics::API::DTO::ScenarioDTO &scenarioDto,
-                               std::map<int, std::shared_ptr<IO::Astrodynamics::Maneuvers::ManeuverBase>> &maneuvers)
+                             std::map<int, std::shared_ptr<IO::Astrodynamics::Maneuvers::ManeuverBase>> &maneuvers)
 {
     for (auto &attitude: scenarioDto.Spacecraft.nadirAttitudes)
     {

@@ -1,6 +1,6 @@
 var searchData=
 [
-  ['celestialbody_0',['CelestialBody',['../classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody.html',1,'IO::Astrodynamics::Body']]],
+  ['celestialbody_0',['CelestialBody',['../classCelestialBody.html',1,'CelestialBody'],['../classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody.html',1,'IO::Astrodynamics::Body::CelestialBody']]],
   ['celestialbodydto_1',['CelestialBodyDTO',['../structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1CelestialBodyDTO.html',1,'IO::Astrodynamics::API::DTO']]],
   ['celestialitem_2',['CelestialItem',['../classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem.html',1,'IO::Astrodynamics::Body']]],
   ['circularinstrumentkernel_3',['CircularInstrumentKernel',['../classIO_1_1Astrodynamics_1_1Kernels_1_1CircularInstrumentKernel.html',1,'IO::Astrodynamics::Kernels']]],
