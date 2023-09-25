@@ -14,6 +14,6 @@ cmake-build-release/
 cmake-build-release-coverage/
 cmake-build-debug/
 .vscode/
-build/lib/
+build/
 /.idea/
 build_release/
