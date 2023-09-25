@@ -29,7 +29,6 @@ IO::Astrodynamics::Integrators::Forces::OblatenessPerturbation::~OblatenessPertu
 IO::Astrodynamics::Math::Vector3D IO::Astrodynamics::Integrators::Forces::OblatenessPerturbation::Apply(const IO::Astrodynamics::Body::CelestialItem &body,
                                                                                                         const IO::Astrodynamics::OrbitalParameters::StateVector &stateVector)
 {
-    double bodyMass = body.GetMass();
     IO::Astrodynamics::Math::Vector3D position{stateVector.GetPosition()};
 
     const std::shared_ptr<IO::Astrodynamics::Body::CelestialBody> &currentBody = stateVector.GetCenterOfMotion();
