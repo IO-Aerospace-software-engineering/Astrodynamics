@@ -13,6 +13,7 @@
 #include <TLEIntegrator.h>
 #include "InertialFrames.h"
 #include "TestParameters.h"
+#include "OblatenessPerturbation.h"
 
 using namespace std::chrono_literals;
 
@@ -247,6 +248,62 @@ TEST(Propagator, PropagatorVsKepler)
     //     i++;
     // }
     // myfile.close();
+}
+
+TEST(Propagator, NodePrecession)
+{
+    auto step{IO::Astrodynamics::Time::TimeSpan(1.0s)};
+
+    std::vector<IO::Astrodynamics::Integrators::Forces::Force *> forces{};
+
+    IO::Astrodynamics::Integrators::Forces::GravityForce gravityForce;
+    forces.push_back(&gravityForce);
+    IO::Astrodynamics::Integrators::Forces::OblatenessPerturbation oblatenessPerturbation;
+    forces.push_back(&oblatenessPerturbation);
+    IO::Astrodynamics::Integrators::VVIntegrator integrator(step, forces);
+
+    IO::Astrodynamics::Time::TDB epoch("2021-Jan-01 00:00:00.0000 TDB");
+
+    auto sharedOrbitalParams = IO::Astrodynamics::OrbitalParameters::OrbitalParameters::CreateEarthHelioSynchronousOrbit(7080636.3, 0.0001724, epoch);
+    std::unique_ptr orbitalParams=std::make_unique<IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements>(sharedOrbitalParams->ToStateVector());
+    IO::Astrodynamics::Body::Spacecraft::Spacecraft spc(-127, "spc127", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams));
+
+    IO::Astrodynamics::Propagators::Propagator pro(spc, integrator, IO::Astrodynamics::Time::Window(epoch, epoch + step * 86400.0*2.0));
+
+#ifdef DEBUG
+    auto t1 = std::chrono::high_resolution_clock::now();
+#endif
+
+    pro.Propagate();
+
+#ifdef DEBUG
+    auto t2 = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double, std::milli> ms_double = t2 - t1;
+    std::cout << std::to_string(ms_double.count()) << " ms" << std::endl;
+
+    //Check performance
+    ASSERT_TRUE(4.0 > ms_double.count());
+#endif
+
+    auto sv1 = spc.ReadEphemeris(IO::Astrodynamics::Frames::InertialFrames::ICRF(), IO::Astrodynamics::AberrationsEnum::None, epoch, *sharedOrbitalParams->GetCenterOfMotion());
+
+    ASSERT_DOUBLE_EQ(6799995.6897156574, sv1.GetSemiMajorAxis());
+    ASSERT_DOUBLE_EQ(7999.9982033708893, sv1.GetEccentricity());
+    ASSERT_DOUBLE_EQ(-0.00069076103852024734, sv1.GetInclination());
+    ASSERT_DOUBLE_EQ(-8.620565236076974, sv1.GetRightAscendingNodeLongitude());
+    ASSERT_DOUBLE_EQ(7999.9913360235832, sv1.GetPeriapsisArgument());
+    ASSERT_DOUBLE_EQ(-0.001381498705046451, sv1.GetMeanAnomaly());
+    ASSERT_DOUBLE_EQ(662731201.0, sv1.GetEpoch().GetSecondsFromJ2000().count());
+
+    //Read ephemeris
+    auto sv2 = spc.ReadEphemeris(IO::Astrodynamics::Frames::InertialFrames::ICRF(), IO::Astrodynamics::AberrationsEnum::None, epoch, *sharedOrbitalParams->GetCenterOfMotion());
+    ASSERT_DOUBLE_EQ(6799995.6897156574, sv2.GetSemiMajorAxis());
+    ASSERT_DOUBLE_EQ(7999.9982033708893, sv2.GetEccentricity());
+    ASSERT_DOUBLE_EQ(-0.00069076103852024734, sv2.GetInclination());
+    ASSERT_DOUBLE_EQ(-8.620565236076974, sv2.GetRightAscendingNodeLongitude());
+    ASSERT_DOUBLE_EQ(7999.9913360235832, sv2.GetPeriapsisArgument());
+    ASSERT_DOUBLE_EQ(-0.001381498705046451, sv2.GetMeanAnomaly());
+    ASSERT_DOUBLE_EQ(662731201.0, sv2.GetEpoch().GetSecondsFromJ2000().count());
 }
 
 TEST(Propagator, PropagatorVsKepler2)
