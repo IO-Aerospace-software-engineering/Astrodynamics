@@ -29,5 +29,5 @@ TEST(OblatenessPerturbation, ApplyToBody)
     IO::Astrodynamics::Body::Spacecraft::Spacecraft spc(-12, "spc12", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams));
 
     auto force = oblatenessPerturbation.Apply(spc, *dynamic_cast<IO::Astrodynamics::OrbitalParameters::StateVector *>(spc.GetOrbitalParametersAtEpoch().get()));
-    ASSERT_EQ(IO::Astrodynamics::Math::Vector3D(-1.2315596455307994e-05, -1.7042493700493592e-14, 6.2047268316692547e-10), force);
+    ASSERT_EQ(IO::Astrodynamics::Math::Vector3D(-12.315596455307988, -1.7042493580662132e-08, 0.00062047268316692532), force);
 }

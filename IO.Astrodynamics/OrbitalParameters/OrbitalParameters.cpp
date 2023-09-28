@@ -244,14 +244,14 @@ double IO::Astrodynamics::OrbitalParameters::OrbitalParameters::GetMeanLongitude
     return res;
 }
 
-std::shared_ptr<IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements>
+std::unique_ptr<IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements>
 IO::Astrodynamics::OrbitalParameters::OrbitalParameters::CreateEarthHelioSynchronousOrbit(double semiMajorAxis, double eccentricity,
                                                                                           IO::Astrodynamics::Time::TDB &epochAtDescendingNode)
 {
     //generate involved bodies
     auto sun = std::make_shared<Body::CelestialBody>(10);
     auto earth = std::make_shared<Body::CelestialBody>(399, sun);
-    auto moon=std::make_shared<Body::CelestialBody>(301,earth);
+    auto moon = std::make_shared<Body::CelestialBody>(301, earth);
 
     //Compute perigee radius
     double p = semiMajorAxis * (1 - eccentricity);
@@ -291,12 +291,12 @@ IO::Astrodynamics::OrbitalParameters::OrbitalParameters::CreateEarthHelioSynchro
 
     //Compute mean anomaly at ascending node
     double m = IO::Astrodynamics::OrbitalParameters::OrbitalParameters::ConvertTrueAnomalyToMeanAnomaly(Constants::PI2 + Constants::_2PI, eccentricity);
-    return std::make_shared<IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements>(earth, p, eccentricity, i, raanLongitude, Constants::PI + Constants::PI2, m,
+    return std::make_unique<IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements>(earth, p, eccentricity, i, raanLongitude, Constants::PI + Constants::PI2, m,
                                                                                         epochAtDescendingNode,
                                                                                         IO::Astrodynamics::Frames::InertialFrames::ICRF());
 }
 
-std::shared_ptr<IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements>
+std::unique_ptr<IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements>
 IO::Astrodynamics::OrbitalParameters::OrbitalParameters::CreateEarthPhasedHelioSynchronousOrbit(double eccentricity, IO::Astrodynamics::Time::TDB &epochAtDescendingNode,
                                                                                                 int nbOrbitByDay)
 {

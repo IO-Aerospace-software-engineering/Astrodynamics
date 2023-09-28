@@ -1,3 +1,7 @@
+/*
+ Copyright (c) 2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
+ */
+
 #include <iostream>
 #include <fstream>
 #include <memory>
@@ -21,7 +25,15 @@ TEST(Propagator, Initialization)
 {
     IO::Astrodynamics::Integrators::VVIntegrator integrator(IO::Astrodynamics::Time::TimeSpan(1.0s));
     auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399);
-    std::unique_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::Astrodynamics::OrbitalParameters::StateVector>(earth, IO::Astrodynamics::Math::Vector3D(1.0, 2.0, 3.0), IO::Astrodynamics::Math::Vector3D(4.0, 5.0, 6.0), IO::Astrodynamics::Time::TDB(100.0s),
+    std::unique_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::Astrodynamics::OrbitalParameters::StateVector>(earth,
+                                                                                                                                                                 IO::Astrodynamics::Math::Vector3D(
+                                                                                                                                                                         1.0, 2.0,
+                                                                                                                                                                         3.0),
+                                                                                                                                                                 IO::Astrodynamics::Math::Vector3D(
+                                                                                                                                                                         4.0, 5.0,
+                                                                                                                                                                         6.0),
+                                                                                                                                                                 IO::Astrodynamics::Time::TDB(
+                                                                                                                                                                         100.0s),
                                                                                                                                                                  IO::Astrodynamics::Frames::InertialFrames::ICRF());
     IO::Astrodynamics::OrbitalParameters::StateOrientation attitude(IO::Astrodynamics::Time::TDB(100.0s), IO::Astrodynamics::Frames::InertialFrames::ICRF());
     IO::Astrodynamics::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams)};
@@ -32,7 +44,15 @@ TEST(Propagator, FindNearestLowerValue)
 {
     IO::Astrodynamics::Integrators::VVIntegrator integrator(IO::Astrodynamics::Time::TimeSpan(1.0s));
     auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399);
-    std::unique_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::Astrodynamics::OrbitalParameters::StateVector>(earth, IO::Astrodynamics::Math::Vector3D(1.0, 2.0, 3.0), IO::Astrodynamics::Math::Vector3D(4.0, 5.0, 6.0), IO::Astrodynamics::Time::TDB(100.0s),
+    std::unique_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::Astrodynamics::OrbitalParameters::StateVector>(earth,
+                                                                                                                                                                 IO::Astrodynamics::Math::Vector3D(
+                                                                                                                                                                         1.0, 2.0,
+                                                                                                                                                                         3.0),
+                                                                                                                                                                 IO::Astrodynamics::Math::Vector3D(
+                                                                                                                                                                         4.0, 5.0,
+                                                                                                                                                                         6.0),
+                                                                                                                                                                 IO::Astrodynamics::Time::TDB(
+                                                                                                                                                                         100.0s),
                                                                                                                                                                  IO::Astrodynamics::Frames::InertialFrames::ICRF());
     IO::Astrodynamics::OrbitalParameters::StateOrientation attitude(IO::Astrodynamics::Time::TDB(100.0s), IO::Astrodynamics::Frames::InertialFrames::ICRF());
     IO::Astrodynamics::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams)};
@@ -42,13 +62,17 @@ TEST(Propagator, FindNearestLowerValue)
     auto nearestEmpty = pro.FindNearestLowerStateVector(IO::Astrodynamics::Time::TDB(99.5s));
     ASSERT_FALSE(nearestEmpty);
 
-    pro.AddStateVector(IO::Astrodynamics::OrbitalParameters::StateVector(earth, IO::Astrodynamics::Math::Vector3D(1.0, 2.0, 3.0), IO::Astrodynamics::Math::Vector3D(4.0, 5.0, 6.0), IO::Astrodynamics::Time::TDB(101.0s),
+    pro.AddStateVector(IO::Astrodynamics::OrbitalParameters::StateVector(earth, IO::Astrodynamics::Math::Vector3D(1.0, 2.0, 3.0), IO::Astrodynamics::Math::Vector3D(4.0, 5.0, 6.0),
+                                                                         IO::Astrodynamics::Time::TDB(101.0s),
                                                                          IO::Astrodynamics::Frames::InertialFrames::ICRF()));
-    pro.AddStateVector(IO::Astrodynamics::OrbitalParameters::StateVector(earth, IO::Astrodynamics::Math::Vector3D(1.0, 2.0, 3.0), IO::Astrodynamics::Math::Vector3D(4.0, 5.0, 6.0), IO::Astrodynamics::Time::TDB(102.0s),
+    pro.AddStateVector(IO::Astrodynamics::OrbitalParameters::StateVector(earth, IO::Astrodynamics::Math::Vector3D(1.0, 2.0, 3.0), IO::Astrodynamics::Math::Vector3D(4.0, 5.0, 6.0),
+                                                                         IO::Astrodynamics::Time::TDB(102.0s),
                                                                          IO::Astrodynamics::Frames::InertialFrames::ICRF()));
-    pro.AddStateVector(IO::Astrodynamics::OrbitalParameters::StateVector(earth, IO::Astrodynamics::Math::Vector3D(1.0, 2.0, 3.0), IO::Astrodynamics::Math::Vector3D(4.0, 5.0, 6.0), IO::Astrodynamics::Time::TDB(103.0s),
+    pro.AddStateVector(IO::Astrodynamics::OrbitalParameters::StateVector(earth, IO::Astrodynamics::Math::Vector3D(1.0, 2.0, 3.0), IO::Astrodynamics::Math::Vector3D(4.0, 5.0, 6.0),
+                                                                         IO::Astrodynamics::Time::TDB(103.0s),
                                                                          IO::Astrodynamics::Frames::InertialFrames::ICRF()));
-    pro.AddStateVector(IO::Astrodynamics::OrbitalParameters::StateVector(earth, IO::Astrodynamics::Math::Vector3D(1.0, 2.0, 3.0), IO::Astrodynamics::Math::Vector3D(4.0, 5.0, 6.0), IO::Astrodynamics::Time::TDB(104.0s),
+    pro.AddStateVector(IO::Astrodynamics::OrbitalParameters::StateVector(earth, IO::Astrodynamics::Math::Vector3D(1.0, 2.0, 3.0), IO::Astrodynamics::Math::Vector3D(4.0, 5.0, 6.0),
+                                                                         IO::Astrodynamics::Time::TDB(104.0s),
                                                                          IO::Astrodynamics::Frames::InertialFrames::ICRF()));
 
     auto nearest = pro.FindNearestLowerStateVector(IO::Astrodynamics::Time::TDB(103.5s));
@@ -69,7 +93,15 @@ TEST(Propagator, EraseDataRange)
 {
     IO::Astrodynamics::Integrators::VVIntegrator integrator(IO::Astrodynamics::Time::TimeSpan(1.0s));
     auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399);
-    std::unique_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::Astrodynamics::OrbitalParameters::StateVector>(earth, IO::Astrodynamics::Math::Vector3D(1.0, 2.0, 3.0), IO::Astrodynamics::Math::Vector3D(4.0, 5.0, 6.0), IO::Astrodynamics::Time::TDB(100.0s),
+    std::unique_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::Astrodynamics::OrbitalParameters::StateVector>(earth,
+                                                                                                                                                                 IO::Astrodynamics::Math::Vector3D(
+                                                                                                                                                                         1.0, 2.0,
+                                                                                                                                                                         3.0),
+                                                                                                                                                                 IO::Astrodynamics::Math::Vector3D(
+                                                                                                                                                                         4.0, 5.0,
+                                                                                                                                                                         6.0),
+                                                                                                                                                                 IO::Astrodynamics::Time::TDB(
+                                                                                                                                                                         100.0s),
                                                                                                                                                                  IO::Astrodynamics::Frames::InertialFrames::ICRF());
     IO::Astrodynamics::OrbitalParameters::StateOrientation attitude(IO::Astrodynamics::Time::TDB(100.0s), IO::Astrodynamics::Frames::InertialFrames::ICRF());
     IO::Astrodynamics::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams)};
@@ -79,17 +111,23 @@ TEST(Propagator, EraseDataRange)
     auto nearestEmpty = pro.FindNearestLowerStateVector(IO::Astrodynamics::Time::TDB(99.5s));
     ASSERT_FALSE(nearestEmpty);
 
-    pro.AddStateVector(IO::Astrodynamics::OrbitalParameters::StateVector(earth, IO::Astrodynamics::Math::Vector3D(1.0, 2.0, 3.0), IO::Astrodynamics::Math::Vector3D(4.0, 5.0, 6.0), IO::Astrodynamics::Time::TDB(101.0s),
+    pro.AddStateVector(IO::Astrodynamics::OrbitalParameters::StateVector(earth, IO::Astrodynamics::Math::Vector3D(1.0, 2.0, 3.0), IO::Astrodynamics::Math::Vector3D(4.0, 5.0, 6.0),
+                                                                         IO::Astrodynamics::Time::TDB(101.0s),
                                                                          IO::Astrodynamics::Frames::InertialFrames::ICRF()));
-    pro.AddStateVector(IO::Astrodynamics::OrbitalParameters::StateVector(earth, IO::Astrodynamics::Math::Vector3D(1.0, 2.0, 3.0), IO::Astrodynamics::Math::Vector3D(4.0, 5.0, 6.0), IO::Astrodynamics::Time::TDB(102.0s),
+    pro.AddStateVector(IO::Astrodynamics::OrbitalParameters::StateVector(earth, IO::Astrodynamics::Math::Vector3D(1.0, 2.0, 3.0), IO::Astrodynamics::Math::Vector3D(4.0, 5.0, 6.0),
+                                                                         IO::Astrodynamics::Time::TDB(102.0s),
                                                                          IO::Astrodynamics::Frames::InertialFrames::ICRF()));
-    pro.AddStateVector(IO::Astrodynamics::OrbitalParameters::StateVector(earth, IO::Astrodynamics::Math::Vector3D(1.0, 2.0, 3.0), IO::Astrodynamics::Math::Vector3D(4.0, 5.0, 6.0), IO::Astrodynamics::Time::TDB(103.0s),
+    pro.AddStateVector(IO::Astrodynamics::OrbitalParameters::StateVector(earth, IO::Astrodynamics::Math::Vector3D(1.0, 2.0, 3.0), IO::Astrodynamics::Math::Vector3D(4.0, 5.0, 6.0),
+                                                                         IO::Astrodynamics::Time::TDB(103.0s),
                                                                          IO::Astrodynamics::Frames::InertialFrames::ICRF()));
-    pro.AddStateVector(IO::Astrodynamics::OrbitalParameters::StateVector(earth, IO::Astrodynamics::Math::Vector3D(1.0, 2.0, 3.0), IO::Astrodynamics::Math::Vector3D(4.0, 5.0, 6.0), IO::Astrodynamics::Time::TDB(104.0s),
+    pro.AddStateVector(IO::Astrodynamics::OrbitalParameters::StateVector(earth, IO::Astrodynamics::Math::Vector3D(1.0, 2.0, 3.0), IO::Astrodynamics::Math::Vector3D(4.0, 5.0, 6.0),
+                                                                         IO::Astrodynamics::Time::TDB(104.0s),
                                                                          IO::Astrodynamics::Frames::InertialFrames::ICRF()));
-    pro.AddStateVector(IO::Astrodynamics::OrbitalParameters::StateVector(earth, IO::Astrodynamics::Math::Vector3D(1.0, 2.0, 3.0), IO::Astrodynamics::Math::Vector3D(4.0, 5.0, 6.0), IO::Astrodynamics::Time::TDB(105.0s),
+    pro.AddStateVector(IO::Astrodynamics::OrbitalParameters::StateVector(earth, IO::Astrodynamics::Math::Vector3D(1.0, 2.0, 3.0), IO::Astrodynamics::Math::Vector3D(4.0, 5.0, 6.0),
+                                                                         IO::Astrodynamics::Time::TDB(105.0s),
                                                                          IO::Astrodynamics::Frames::InertialFrames::ICRF()));
-    pro.AddStateVector(IO::Astrodynamics::OrbitalParameters::StateVector(earth, IO::Astrodynamics::Math::Vector3D(1.0, 2.0, 3.0), IO::Astrodynamics::Math::Vector3D(4.0, 5.0, 6.0), IO::Astrodynamics::Time::TDB(106.0s),
+    pro.AddStateVector(IO::Astrodynamics::OrbitalParameters::StateVector(earth, IO::Astrodynamics::Math::Vector3D(1.0, 2.0, 3.0), IO::Astrodynamics::Math::Vector3D(4.0, 5.0, 6.0),
+                                                                         IO::Astrodynamics::Time::TDB(106.0s),
                                                                          IO::Astrodynamics::Frames::InertialFrames::ICRF()));
 
     pro.EraseDataFromEpochToEnd(IO::Astrodynamics::Time::TDB(103.5s));
@@ -126,7 +164,15 @@ TEST(Propagator, PropagateVVIntegrator)
     //  X =-2.068864826237993E+05 Y = 2.891146390982051E+05 Z = 1.515746884380044E+05
     //  VX=-8.366764389833921E-01 VY=-5.602543663174073E-01 VZ=-1.710459390585548E-01
     auto moon = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(301, earth);
-    std::unique_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::Astrodynamics::OrbitalParameters::StateVector>(earth, IO::Astrodynamics::Math::Vector3D(6800000.0, 0.0, 0.0), IO::Astrodynamics::Math::Vector3D(0.0, 8000.0, 0.0), epoch,
+    std::unique_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::Astrodynamics::OrbitalParameters::StateVector>(earth,
+                                                                                                                                                                 IO::Astrodynamics::Math::Vector3D(
+                                                                                                                                                                         6800000.0,
+                                                                                                                                                                         0.0, 0.0),
+                                                                                                                                                                 IO::Astrodynamics::Math::Vector3D(
+                                                                                                                                                                         0.0,
+                                                                                                                                                                         8000.0,
+                                                                                                                                                                         0.0),
+                                                                                                                                                                 epoch,
                                                                                                                                                                  IO::Astrodynamics::Frames::InertialFrames::ICRF());
     IO::Astrodynamics::Body::Spacecraft::Spacecraft spc(-125, "spc125", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams));
 
@@ -194,7 +240,14 @@ TEST(Propagator, PropagatorVsKepler)
     //  X =-2.068864826237993E+05 Y = 2.891146390982051E+05 Z = 1.515746884380044E+05
     //  VX=-8.366764389833921E-01 VY=-5.602543663174073E-01 VZ=-1.710459390585548E-01
     // auto moon = std::make_shared<IO::Astrodynamics::CelestialItem::CelestialBody>(301, "moon", earth);
-    std::unique_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::Astrodynamics::OrbitalParameters::StateVector>(earth, IO::Astrodynamics::Math::Vector3D(a, 0.0, 0.0), IO::Astrodynamics::Math::Vector3D(0.0, v, 0.0), epoch,
+    std::unique_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::Astrodynamics::OrbitalParameters::StateVector>(earth,
+                                                                                                                                                                 IO::Astrodynamics::Math::Vector3D(
+                                                                                                                                                                         a, 0.0,
+                                                                                                                                                                         0.0),
+                                                                                                                                                                 IO::Astrodynamics::Math::Vector3D(
+                                                                                                                                                                         0.0, v,
+                                                                                                                                                                         0.0),
+                                                                                                                                                                 epoch,
                                                                                                                                                                  IO::Astrodynamics::Frames::InertialFrames::ICRF());
     auto localOrbitalparams = dynamic_cast<IO::Astrodynamics::OrbitalParameters::StateVector *>(orbitalParams.get());
     IO::Astrodynamics::OrbitalParameters::StateOrientation attitude(IO::Astrodynamics::Time::TDB(100.0s), IO::Astrodynamics::Frames::InertialFrames::ICRF());
@@ -223,7 +276,8 @@ TEST(Propagator, PropagatorVsKepler)
     ASSERT_EQ(keplerResults.GetEpoch(), propagationResult.GetEpoch());
 
     //Check energy
-    ASSERT_NEAR(pro.GetStateVectors()[0].GetSpecificOrbitalEnergy(), pro.GetStateVectors()[duration.GetSeconds().count() / step.GetSeconds().count() - 1.0].GetSpecificOrbitalEnergy(), 1E-05);
+    ASSERT_NEAR(pro.GetStateVectors()[0].GetSpecificOrbitalEnergy(),
+                pro.GetStateVectors()[duration.GetSeconds().count() / step.GetSeconds().count() - 1.0].GetSpecificOrbitalEnergy(), 1E-05);
 
     ASSERT_NEAR(keplerResults.GetPosition().GetX(), propagationResult.GetPosition().GetX(), IO::Astrodynamics::Test::Constants::DISTANCE_ACCURACY);
     ASSERT_NEAR(keplerResults.GetPosition().GetY(), propagationResult.GetPosition().GetY(), IO::Astrodynamics::Test::Constants::DISTANCE_ACCURACY);
@@ -264,11 +318,10 @@ TEST(Propagator, NodePrecession)
 
     IO::Astrodynamics::Time::TDB epoch("2021-Jan-01 00:00:00.0000 TDB");
 
-    auto sharedOrbitalParams = IO::Astrodynamics::OrbitalParameters::OrbitalParameters::CreateEarthHelioSynchronousOrbit(7080636.3, 0.0001724, epoch);
-    std::unique_ptr orbitalParams=std::make_unique<IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements>(sharedOrbitalParams->ToStateVector());
+    auto orbitalParams = IO::Astrodynamics::OrbitalParameters::OrbitalParameters::CreateEarthHelioSynchronousOrbit(7080636.3, 0.0001724, epoch);
     IO::Astrodynamics::Body::Spacecraft::Spacecraft spc(-127, "spc127", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams));
 
-    IO::Astrodynamics::Propagators::Propagator pro(spc, integrator, IO::Astrodynamics::Time::Window(epoch, epoch + step * 86400.0*2.0));
+    IO::Astrodynamics::Propagators::Propagator pro(spc, integrator, IO::Astrodynamics::Time::Window(epoch, epoch + step * 86400.0 * 2.0));
 
 #ifdef DEBUG
     auto t1 = std::chrono::high_resolution_clock::now();
@@ -285,25 +338,26 @@ TEST(Propagator, NodePrecession)
     ASSERT_TRUE(4.0 > ms_double.count());
 #endif
 
-    auto sv1 = spc.ReadEphemeris(IO::Astrodynamics::Frames::InertialFrames::ICRF(), IO::Astrodynamics::AberrationsEnum::None, epoch, *sharedOrbitalParams->GetCenterOfMotion());
+    auto sv1 = spc.ReadEphemeris(IO::Astrodynamics::Frames::InertialFrames::ICRF(), IO::Astrodynamics::AberrationsEnum::None, epoch, *spc.GetOrbitalParametersAtEpoch()->GetCenterOfMotion());
 
-    ASSERT_DOUBLE_EQ(6799995.6897156574, sv1.GetSemiMajorAxis());
-    ASSERT_DOUBLE_EQ(7999.9982033708893, sv1.GetEccentricity());
-    ASSERT_DOUBLE_EQ(-0.00069076103852024734, sv1.GetInclination());
-    ASSERT_DOUBLE_EQ(-8.620565236076974, sv1.GetRightAscendingNodeLongitude());
-    ASSERT_DOUBLE_EQ(7999.9913360235832, sv1.GetPeriapsisArgument());
-    ASSERT_DOUBLE_EQ(-0.001381498705046451, sv1.GetMeanAnomaly());
-    ASSERT_DOUBLE_EQ(662731201.0, sv1.GetEpoch().GetSecondsFromJ2000().count());
+    ASSERT_DOUBLE_EQ(7080636.3000000259, sv1.GetSemiMajorAxis());
+    ASSERT_DOUBLE_EQ(0.00017239999999989656, sv1.GetEccentricity());
+    ASSERT_DOUBLE_EQ(98.192332263672071, sv1.GetInclination() * IO::Astrodynamics::Constants::RAD_DEG);
+    ASSERT_DOUBLE_EQ(11.409552048028507, sv1.GetRightAscendingNodeLongitude() * IO::Astrodynamics::Constants::RAD_DEG);
+    ASSERT_DOUBLE_EQ(269.99999999926399, sv1.GetPeriapsisArgument() * IO::Astrodynamics::Constants::RAD_DEG);
+    ASSERT_DOUBLE_EQ(270.0197555854142, sv1.GetMeanAnomaly() * IO::Astrodynamics::Constants::RAD_DEG);
+    ASSERT_DOUBLE_EQ(662731200.0, sv1.GetEpoch().GetSecondsFromJ2000().count());
 
     //Read ephemeris
-    auto sv2 = spc.ReadEphemeris(IO::Astrodynamics::Frames::InertialFrames::ICRF(), IO::Astrodynamics::AberrationsEnum::None, epoch, *sharedOrbitalParams->GetCenterOfMotion());
-    ASSERT_DOUBLE_EQ(6799995.6897156574, sv2.GetSemiMajorAxis());
-    ASSERT_DOUBLE_EQ(7999.9982033708893, sv2.GetEccentricity());
-    ASSERT_DOUBLE_EQ(-0.00069076103852024734, sv2.GetInclination());
-    ASSERT_DOUBLE_EQ(-8.620565236076974, sv2.GetRightAscendingNodeLongitude());
-    ASSERT_DOUBLE_EQ(7999.9913360235832, sv2.GetPeriapsisArgument());
-    ASSERT_DOUBLE_EQ(-0.001381498705046451, sv2.GetMeanAnomaly());
-    ASSERT_DOUBLE_EQ(662731201.0, sv2.GetEpoch().GetSecondsFromJ2000().count());
+    auto sv2 = spc.ReadEphemeris(IO::Astrodynamics::Frames::InertialFrames::ICRF(), IO::Astrodynamics::AberrationsEnum::None, epoch + (step * 86400.0 * 2.0)-step,
+                                 *spc.GetOrbitalParametersAtEpoch()->GetCenterOfMotion());
+    ASSERT_DOUBLE_EQ(7067533.6921579475, sv2.GetSemiMajorAxis());
+    ASSERT_DOUBLE_EQ(0.052186768521368658, sv2.GetEccentricity());
+    ASSERT_DOUBLE_EQ(98.478640566231107, sv2.GetInclination() * IO::Astrodynamics::Constants::RAD_DEG);
+    ASSERT_DOUBLE_EQ(13.376818161056985, sv2.GetRightAscendingNodeLongitude() * IO::Astrodynamics::Constants::RAD_DEG);
+    ASSERT_DOUBLE_EQ(176.6029046129419, sv2.GetPeriapsisArgument() * IO::Astrodynamics::Constants::RAD_DEG);
+    ASSERT_DOUBLE_EQ(62.159475673986215, sv2.GetMeanAnomaly() * IO::Astrodynamics::Constants::RAD_DEG);
+    ASSERT_DOUBLE_EQ(662903999.0, sv2.GetEpoch().GetSecondsFromJ2000().count());
 }
 
 TEST(Propagator, PropagatorVsKepler2)
@@ -332,7 +386,12 @@ TEST(Propagator, PropagatorVsKepler2)
     //  X =-2.068864826237993E+05 Y = 2.891146390982051E+05 Z = 1.515746884380044E+05
     //  VX=-8.366764389833921E-01 VY=-5.602543663174073E-01 VZ=-1.710459390585548E-01
     // auto moon = std::make_shared<IO::Astrodynamics::CelestialItem::CelestialBody>(301, "moon", earth);
-    std::unique_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements>(earth, 10000000.0, 0.3, 0.0, 0.0, 0.0, 0.0, startEpoch,
+    std::unique_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements>(earth,
+                                                                                                                                                                          10000000.0,
+                                                                                                                                                                          0.3, 0.0,
+                                                                                                                                                                          0.0, 0.0,
+                                                                                                                                                                          0.0,
+                                                                                                                                                                          startEpoch,
                                                                                                                                                                           IO::Astrodynamics::Frames::InertialFrames::ICRF());
     auto localOrbitalparams = dynamic_cast<IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements *>(orbitalParams.get());
     IO::Astrodynamics::Body::Spacecraft::Spacecraft spc(-12, "spc12", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams));
@@ -396,7 +455,8 @@ TEST(Propagator, PropagatorVsKepler2)
 TEST(Propagator, PropagateTLEIntegrator)
 {
     auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399);
-    std::string lines[3]{"ISS (ZARYA)", "1 25544U 98067A   21096.43776852  .00000912  00000-0  24825-4 0  9997", "2 25544  51.6463 337.6022 0002945 188.9422 344.4138 15.48860043277477"}; //2021-04-06 10:31:32.385783 TDB
+    std::string lines[3]{"ISS (ZARYA)", "1 25544U 98067A   21096.43776852  .00000912  00000-0  24825-4 0  9997",
+                         "2 25544  51.6463 337.6022 0002945 188.9422 344.4138 15.48860043277477"}; //2021-04-06 10:31:32.385783 TDB
     auto tleIntegrator = std::make_unique<IO::Astrodynamics::OrbitalParameters::TLE>(earth, lines);
     std::unique_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> tle = std::make_unique<IO::Astrodynamics::OrbitalParameters::TLE>(earth, lines);
     IO::Astrodynamics::Time::TimeSpan step{60s};
@@ -453,7 +513,8 @@ TEST(Propagator, PropagateTLEIntegrator)
 TEST(Propagator, EraseEmptyPropagator)
 {
     auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399);
-    std::string lines[3]{"ISS (ZARYA)", "1 25544U 98067A   21096.43776852  .00000912  00000-0  24825-4 0  9997", "2 25544  51.6463 337.6022 0002945 188.9422 344.4138 15.48860043277477"}; //2021-04-06 10:31:32.385783 TDB
+    std::string lines[3]{"ISS (ZARYA)", "1 25544U 98067A   21096.43776852  .00000912  00000-0  24825-4 0  9997",
+                         "2 25544  51.6463 337.6022 0002945 188.9422 344.4138 15.48860043277477"}; //2021-04-06 10:31:32.385783 TDB
     auto tleIntegrator = std::make_unique<IO::Astrodynamics::OrbitalParameters::TLE>(earth, lines);
     std::unique_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> tle = std::make_unique<IO::Astrodynamics::OrbitalParameters::TLE>(earth, lines);
     IO::Astrodynamics::Time::TimeSpan step{60s};

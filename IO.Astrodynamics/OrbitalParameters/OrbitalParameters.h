@@ -331,7 +331,7 @@ namespace IO::Astrodynamics::OrbitalParameters
  * @return The heliosynchronous orbit parameters.
  */
 
-        static std::shared_ptr<IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements>
+        static std::unique_ptr<IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements>
         CreateEarthHelioSynchronousOrbit(double semiMajorAxis, double eccentricity, IO::Astrodynamics::Time::TDB &epochAtDescendingNode);
 
         /**
@@ -347,7 +347,7 @@ namespace IO::Astrodynamics::OrbitalParameters
 * @return A phased helio-synchronous orbit.
 */
 
-        static std::shared_ptr<IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements>
+        static std::unique_ptr<IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements>
         CreateEarthPhasedHelioSynchronousOrbit(double eccentricity, IO::Astrodynamics::Time::TDB &epochAtDescendingNode,
                                           int nbOrbitByDay);
     };

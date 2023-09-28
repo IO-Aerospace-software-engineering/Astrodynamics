@@ -29,29 +29,27 @@ IO::Astrodynamics::Integrators::Forces::OblatenessPerturbation::~OblatenessPertu
 IO::Astrodynamics::Math::Vector3D IO::Astrodynamics::Integrators::Forces::OblatenessPerturbation::Apply(const IO::Astrodynamics::Body::CelestialItem &body,
                                                                                                         const IO::Astrodynamics::OrbitalParameters::StateVector &stateVector)
 {
-    IO::Astrodynamics::Math::Vector3D position{stateVector.GetPosition()};
-
     const std::shared_ptr<IO::Astrodynamics::Body::CelestialBody> &currentBody = stateVector.GetCenterOfMotion();
 
     auto fixedSv = stateVector.ToBodyFixedFrame().GetPosition();
-    const double x = fixedSv.GetX() * 0.001;
-    const double y = fixedSv.GetY() * 0.001;
-    const double z = fixedSv.GetZ() * 0.001;
+    const double x = fixedSv.GetX();
+    const double y = fixedSv.GetY();
+    const double z = fixedSv.GetZ();
 
     auto x2y2 = x * x + y * y;
-    auto r7 = std::pow(fixedSv.Magnitude()*0.001, 7);
-    auto re = currentBody->GetRadius().GetX() * 0.001;
+    auto r7 = std::pow(fixedSv.Magnitude(), 7);
+    auto re = currentBody->GetRadius().GetX();
 
     //j2 according to JGM-3
-    auto j2 = currentBody->GetJ2() * re * re * currentBody->GetMu() * 1E-09;
+    auto j2 = currentBody->GetJ2() * re * re * currentBody->GetMu();
 
     auto z2 = z * z;
 
-    double xFinal = j2 * (x / r7) * (6 * z2 - 1.5 * x2y2);
-    double yFinal = j2 * (y / r7) * (6 * z2 - 1.5 * x2y2);
-    double zFinal = j2 * (z / r7) * (3 * z2 - 4.5 * x2y2);
+    double xFixed = j2 * (x / r7) * (6 * z2 - 1.5 * x2y2);
+    double yFixed = j2 * (y / r7) * (6 * z2 - 1.5 * x2y2);
+    double zFixed = j2 * (z / r7) * (3 * z2 - 4.5 * x2y2);
 
-    IO::Astrodynamics::Math::Vector3D fixedFrameForce{xFinal, yFinal, zFinal};
+    IO::Astrodynamics::Math::Vector3D fixedFrameForce{xFixed, yFixed, zFixed};
 
-    return currentBody->GetBodyFixedFrame().TransformVector(stateVector.GetFrame(), fixedFrameForce, stateVector.GetEpoch());
+    return currentBody->GetBodyFixedFrame().TransformVector(stateVector.GetFrame(), fixedFrameForce * body.GetMass(), stateVector.GetEpoch());
 }
