@@ -5,7 +5,7 @@
 %%For: 
 %Magnification: 1.00
 %%Orientation: Portrait
-%%BoundingBox: 0 0 500 126.984123
+%%BoundingBox: 0 0 500 53.763439
 %%Pages: 0
 %%BeginSetup
 %%EndSetup
@@ -19,13 +19,13 @@
 /marginwidth 10 def
 /distx 20 def
 /disty 40 def
-/boundaspect 3.937500 def  % aspect ratio of the BoundingBox (width/height)
+/boundaspect 9.300000 def  % aspect ratio of the BoundingBox (width/height)
 /boundx 500 def
 /boundy boundx boundaspect div def
 /xspacing 0 def
 /yspacing 0 def
 /rows 2 def
-/cols 1 def
+/cols 2 def
 /scalefactor 0 def
 /boxfont /Times-Roman findfont fontheight scalefont def
 
@@ -175,6 +175,7 @@ boxfont setfont
 1 boundaspect scale
 (IO::Astrodynamics::Integrators::Forces::Force) cw
 (IO::Astrodynamics::Integrators::Forces::GravityForce) cw
+(IO::Astrodynamics::Integrators::Forces::OblatenessPerturbation) cw
 /boxwidth boxwidth marginwidth 2 mul add def
 /xspacing boxwidth distx add def
 /yspacing boxheight disty add def
@@ -186,12 +187,17 @@ boundx scalefactor div boundy scalefactor div scale
 
 % ----- classes -----
 
- (IO::Astrodynamics::Integrators::Forces::Force) 0.000000 1.000000 box
+ (IO::Astrodynamics::Integrators::Forces::Force) 0.500000 1.000000 box
  (IO::Astrodynamics::Integrators::Forces::GravityForce) 0.000000 0.000000 box
+ (IO::Astrodynamics::Integrators::Forces::OblatenessPerturbation) 1.000000 0.000000 box
 
 % ----- relations -----
 
 solid
-1 0.000000 0.250000 out
+1 0.500000 0.250000 out
+solid
+0.000000 1.000000 1.000000 conn
 solid
 0 0.000000 0.750000 in
+solid
+0 1.000000 0.750000 in

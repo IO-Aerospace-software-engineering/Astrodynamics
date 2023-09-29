@@ -33,8 +33,8 @@ var searchData=
   ['coordinate_30',['Coordinate',['../classIO_1_1Astrodynamics_1_1Coordinate.html#a68e72f1f4a870ca972f0fd2bf6ed1b12',1,'IO::Astrodynamics::Coordinate']]],
   ['coordinatesystem_31',['CoordinateSystem',['../classIO_1_1Astrodynamics_1_1CoordinateSystem.html#af2c64a74881d8edc441696e927946027',1,'IO::Astrodynamics::CoordinateSystem']]],
   ['createdoublecell_32',['CreateDoubleCell',['../classIO_1_1Astrodynamics_1_1Spice_1_1Builder.html#a377e76f7b564619324694806a088cf7e',1,'IO::Astrodynamics::Spice::Builder']]],
-  ['createearthheliosynchronousorbit_33',['CreateEarthHelioSynchronousOrbit',['../classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters.html#a44cb7b4b18f4061acc03ee3c859eb0c9',1,'IO::Astrodynamics::OrbitalParameters::OrbitalParameters']]],
-  ['createearthphasedheliosynchronousorbit_34',['CreateEarthPhasedHelioSynchronousOrbit',['../classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters.html#a67689b84d4c35e42d3df7ea57ec18c5f',1,'IO::Astrodynamics::OrbitalParameters::OrbitalParameters']]],
+  ['createearthheliosynchronousorbit_33',['CreateEarthHelioSynchronousOrbit',['../classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters.html#a7258f9ae57d9373e8ee1e11769184698',1,'IO::Astrodynamics::OrbitalParameters::OrbitalParameters']]],
+  ['createearthphasedheliosynchronousorbit_34',['CreateEarthPhasedHelioSynchronousOrbit',['../classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters.html#a3970541d51777951b5a7c4f6247e6de4',1,'IO::Astrodynamics::OrbitalParameters::OrbitalParameters']]],
   ['crossproduct_35',['CrossProduct',['../classIO_1_1Astrodynamics_1_1Math_1_1Vector3D.html#a86cc09c619c6043ab25c842d67fcad71',1,'IO::Astrodynamics::Math::Vector3D']]],
   ['cylindrical_36',['Cylindrical',['../classIO_1_1Astrodynamics_1_1CoordinateSystem.html#a8ba1d72620cf8d5b5670d03a7b07b65f',1,'IO::Astrodynamics::CoordinateSystem::Cylindrical()'],['../classIO_1_1Astrodynamics_1_1Coordinates_1_1Cylindrical.html#a5b999fc81ac63c090dc4f75513e93948',1,'IO::Astrodynamics::Coordinates::Cylindrical::Cylindrical()']]]
 ];

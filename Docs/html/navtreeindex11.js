@@ -1,5 +1,17 @@
 var NAVTREEINDEX11 =
 {
+"structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1PerigeeHeightChangingManeuverDTO.html#ad2f9f9f205579fce10e838e597db2756":[0,0,0,0,0,0,23,3],
+"structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1PerigeeHeightChangingManeuverDTO.html#ad2f9f9f205579fce10e838e597db2756":[1,0,0,0,0,0,23,3],
+"structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1PerigeeHeightChangingManeuverDTO.html#afd719a6951fd501ee0832ca2eb8db6a5":[1,0,0,0,0,0,23,6],
+"structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1PerigeeHeightChangingManeuverDTO.html#afd719a6951fd501ee0832ca2eb8db6a5":[0,0,0,0,0,0,23,6],
+"structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1PhasingManeuverDTO.html":[1,0,0,0,0,0,24],
+"structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1PhasingManeuverDTO.html":[0,0,0,0,0,0,24],
+"structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1PhasingManeuverDTO.html#a0d497a0d9f108da5a2f72e8eead27a46":[0,0,0,0,0,0,24,4],
+"structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1PhasingManeuverDTO.html#a0d497a0d9f108da5a2f72e8eead27a46":[1,0,0,0,0,0,24,4],
+"structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1PhasingManeuverDTO.html#a23194484e6b33d835c42237a06f72c5e":[1,0,0,0,0,0,24,2],
+"structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1PhasingManeuverDTO.html#a23194484e6b33d835c42237a06f72c5e":[0,0,0,0,0,0,24,2],
+"structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1PhasingManeuverDTO.html#a7bbed9a1c01a3739bd5626d43b1fe5b4":[0,0,0,0,0,0,24,3],
+"structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1PhasingManeuverDTO.html#a7bbed9a1c01a3739bd5626d43b1fe5b4":[1,0,0,0,0,0,24,3],
 "structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1PhasingManeuverDTO.html#a8348ae866db78722abf81378fa06cd4d":[0,0,0,0,0,0,24,0],
 "structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1PhasingManeuverDTO.html#a8348ae866db78722abf81378fa06cd4d":[1,0,0,0,0,0,24,0],
 "structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1PhasingManeuverDTO.html#a877e47bc303eb558391f22c7666cc290":[1,0,0,0,0,0,24,5],
@@ -237,17 +249,5 @@ var NAVTREEINDEX11 =
 "structIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverResult.html#a860626b8f778749d8189061a3cce4680":[1,0,0,0,10,8,3],
 "structIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverResult.html#a860626b8f778749d8189061a3cce4680":[0,0,0,0,12,8,3],
 "structIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverResult.html#a8622d0aafc0e260f01b92dfa752e75e1":[1,0,0,0,10,8,7],
-"structIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverResult.html#a8622d0aafc0e260f01b92dfa752e75e1":[0,0,0,0,12,8,7],
-"structIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverResult.html#a94a17400ff5536a32c5fdf7c2cf164c1":[0,0,0,0,12,8,8],
-"structIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverResult.html#a94a17400ff5536a32c5fdf7c2cf164c1":[1,0,0,0,10,8,8],
-"structIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverResult.html#aa72a05c04550f5134a88139acc34e77f":[0,0,0,0,12,8,6],
-"structIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverResult.html#aa72a05c04550f5134a88139acc34e77f":[1,0,0,0,10,8,6],
-"structIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverResult.html#abe70a7c40bc513557f821b90af9000db":[0,0,0,0,12,8,0],
-"structIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverResult.html#abe70a7c40bc513557f821b90af9000db":[1,0,0,0,10,8,0],
-"structIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverResult.html#ad0db2d734c822d4c86049529282a469c":[0,0,0,0,12,8,4],
-"structIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverResult.html#ad0db2d734c822d4c86049529282a469c":[1,0,0,0,10,8,4],
-"structIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverResult.html#aebacef47fa1b54044439ef425fd9f127":[0,0,0,0,12,8,5],
-"structIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverResult.html#aebacef47fa1b54044439ef425fd9f127":[1,0,0,0,10,8,5],
-"structIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverResult.html#af9f74d6444f9cf313170a90832f15aa2":[0,0,0,0,12,8,1],
-"structIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverResult.html#af9f74d6444f9cf313170a90832f15aa2":[1,0,0,0,10,8,1]
+"structIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverResult.html#a8622d0aafc0e260f01b92dfa752e75e1":[0,0,0,0,12,8,7]
 };

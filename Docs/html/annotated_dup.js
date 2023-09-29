@@ -99,7 +99,8 @@ var annotated_dup =
         [ "Integrators", "namespaceIO_1_1Astrodynamics_1_1Integrators.html", [
           [ "Forces", "namespaceIO_1_1Astrodynamics_1_1Integrators_1_1Forces.html", [
             [ "Force", "classIO_1_1Astrodynamics_1_1Integrators_1_1Forces_1_1Force.html", "classIO_1_1Astrodynamics_1_1Integrators_1_1Forces_1_1Force" ],
-            [ "GravityForce", "classIO_1_1Astrodynamics_1_1Integrators_1_1Forces_1_1GravityForce.html", "classIO_1_1Astrodynamics_1_1Integrators_1_1Forces_1_1GravityForce" ]
+            [ "GravityForce", "classIO_1_1Astrodynamics_1_1Integrators_1_1Forces_1_1GravityForce.html", "classIO_1_1Astrodynamics_1_1Integrators_1_1Forces_1_1GravityForce" ],
+            [ "OblatenessPerturbation", "classIO_1_1Astrodynamics_1_1Integrators_1_1Forces_1_1OblatenessPerturbation.html", "classIO_1_1Astrodynamics_1_1Integrators_1_1Forces_1_1OblatenessPerturbation" ]
           ] ],
           [ "IntegratorBase", "classIO_1_1Astrodynamics_1_1Integrators_1_1IntegratorBase.html", "classIO_1_1Astrodynamics_1_1Integrators_1_1IntegratorBase" ],
           [ "TLEIntegrator", "classIO_1_1Astrodynamics_1_1Integrators_1_1TLEIntegrator.html", "classIO_1_1Astrodynamics_1_1Integrators_1_1TLEIntegrator" ],
@@ -179,5 +180,6 @@ var annotated_dup =
         [ "StringHelpers", "classIO_1_1Astrodynamics_1_1StringHelpers.html", null ]
       ] ]
     ] ],
+    [ "Apply", "classApply.html", null ],
     [ "CelestialBody", "classCelestialBody.html", null ]
 ];

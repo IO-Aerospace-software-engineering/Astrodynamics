@@ -1,5 +1,17 @@
 var NAVTREEINDEX10 =
 {
+"structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ConicOrbitalElementsDTO.html#a75c84f7085e553937fc659d9f2e9e64e":[0,0,0,0,0,0,8,7],
+"structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ConicOrbitalElementsDTO.html#a75c84f7085e553937fc659d9f2e9e64e":[1,0,0,0,0,0,8,7],
+"structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ConicOrbitalElementsDTO.html#aa66a2d634e3042f3ae3fc7eeab548ea4":[0,0,0,0,0,0,8,5],
+"structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ConicOrbitalElementsDTO.html#aa66a2d634e3042f3ae3fc7eeab548ea4":[1,0,0,0,0,0,8,5],
+"structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ConicOrbitalElementsDTO.html#aa95b5142fb4fc74731bf6e41a8076be8":[0,0,0,0,0,0,8,9],
+"structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ConicOrbitalElementsDTO.html#aa95b5142fb4fc74731bf6e41a8076be8":[1,0,0,0,0,0,8,9],
+"structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ConicOrbitalElementsDTO.html#ab7e0b44fabc8824fcb2fe9ff12f4a999":[0,0,0,0,0,0,8,0],
+"structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ConicOrbitalElementsDTO.html#ab7e0b44fabc8824fcb2fe9ff12f4a999":[1,0,0,0,0,0,8,0],
+"structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ConicOrbitalElementsDTO.html#abc621a20a7fa0bdea673975f5a857838":[1,0,0,0,0,0,8,1],
+"structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ConicOrbitalElementsDTO.html#abc621a20a7fa0bdea673975f5a857838":[0,0,0,0,0,0,8,1],
+"structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ConicOrbitalElementsDTO.html#ad022e342b662a3088520b0cc9dab4f5c":[1,0,0,0,0,0,8,11],
+"structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ConicOrbitalElementsDTO.html#ad022e342b662a3088520b0cc9dab4f5c":[0,0,0,0,0,0,8,11],
 "structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ConicOrbitalElementsDTO.html#ad36ccfff7a3d16a9fd6b944a2fdefd25":[1,0,0,0,0,0,8,4],
 "structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ConicOrbitalElementsDTO.html#ad36ccfff7a3d16a9fd6b944a2fdefd25":[0,0,0,0,0,0,8,4],
 "structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ConicOrbitalElementsDTO.html#aed55e771d7143e0255e9a66849e30a27":[1,0,0,0,0,0,8,10],
@@ -237,17 +249,5 @@ var NAVTREEINDEX10 =
 "structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1PerigeeHeightChangingManeuverDTO.html#ab37966776a343a4710f3cf0f073c627c":[0,0,0,0,0,0,23,5],
 "structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1PerigeeHeightChangingManeuverDTO.html#ab37966776a343a4710f3cf0f073c627c":[1,0,0,0,0,0,23,5],
 "structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1PerigeeHeightChangingManeuverDTO.html#abbac685c6fddaa4593084e83d079aa1c":[1,0,0,0,0,0,23,7],
-"structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1PerigeeHeightChangingManeuverDTO.html#abbac685c6fddaa4593084e83d079aa1c":[0,0,0,0,0,0,23,7],
-"structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1PerigeeHeightChangingManeuverDTO.html#ad2f9f9f205579fce10e838e597db2756":[0,0,0,0,0,0,23,3],
-"structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1PerigeeHeightChangingManeuverDTO.html#ad2f9f9f205579fce10e838e597db2756":[1,0,0,0,0,0,23,3],
-"structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1PerigeeHeightChangingManeuverDTO.html#afd719a6951fd501ee0832ca2eb8db6a5":[1,0,0,0,0,0,23,6],
-"structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1PerigeeHeightChangingManeuverDTO.html#afd719a6951fd501ee0832ca2eb8db6a5":[0,0,0,0,0,0,23,6],
-"structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1PhasingManeuverDTO.html":[1,0,0,0,0,0,24],
-"structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1PhasingManeuverDTO.html":[0,0,0,0,0,0,24],
-"structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1PhasingManeuverDTO.html#a0d497a0d9f108da5a2f72e8eead27a46":[0,0,0,0,0,0,24,4],
-"structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1PhasingManeuverDTO.html#a0d497a0d9f108da5a2f72e8eead27a46":[1,0,0,0,0,0,24,4],
-"structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1PhasingManeuverDTO.html#a23194484e6b33d835c42237a06f72c5e":[1,0,0,0,0,0,24,2],
-"structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1PhasingManeuverDTO.html#a23194484e6b33d835c42237a06f72c5e":[0,0,0,0,0,0,24,2],
-"structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1PhasingManeuverDTO.html#a7bbed9a1c01a3739bd5626d43b1fe5b4":[0,0,0,0,0,0,24,3],
-"structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1PhasingManeuverDTO.html#a7bbed9a1c01a3739bd5626d43b1fe5b4":[1,0,0,0,0,0,24,3]
+"structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1PerigeeHeightChangingManeuverDTO.html#abbac685c6fddaa4593084e83d079aa1c":[0,0,0,0,0,0,23,7]
 };

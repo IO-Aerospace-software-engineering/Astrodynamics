@@ -2,6 +2,7 @@ var hierarchy =
 [
     [ "IO::Astrodynamics::Aberrations", "classIO_1_1Astrodynamics_1_1Aberrations.html", null ],
     [ "IO::Astrodynamics::API::DTO::ApogeeHeightChangingManeuverDTO", "structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ApogeeHeightChangingManeuverDTO.html", null ],
+    [ "Apply", "classApply.html", null ],
     [ "IO::Astrodynamics::API::DTO::ApsidalAlignmentManeuverDTO", "structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ApsidalAlignmentManeuverDTO.html", null ],
     [ "IO::Astrodynamics::Coordinates::AzimuthRange", "classIO_1_1Astrodynamics_1_1Coordinates_1_1AzimuthRange.html", null ],
     [ "IO::Astrodynamics::API::DTO::AzimuthRangeDTO", "structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1AzimuthRangeDTO.html", null ],
@@ -44,7 +45,8 @@ var hierarchy =
       ] ]
     ] ],
     [ "IO::Astrodynamics::Integrators::Forces::Force", "classIO_1_1Astrodynamics_1_1Integrators_1_1Forces_1_1Force.html", [
-      [ "IO::Astrodynamics::Integrators::Forces::GravityForce", "classIO_1_1Astrodynamics_1_1Integrators_1_1Forces_1_1GravityForce.html", null ]
+      [ "IO::Astrodynamics::Integrators::Forces::GravityForce", "classIO_1_1Astrodynamics_1_1Integrators_1_1Forces_1_1GravityForce.html", null ],
+      [ "IO::Astrodynamics::Integrators::Forces::OblatenessPerturbation", "classIO_1_1Astrodynamics_1_1Integrators_1_1Forces_1_1OblatenessPerturbation.html", null ]
     ] ],
     [ "IO::Astrodynamics::Instruments::FOVShapes", "classIO_1_1Astrodynamics_1_1Instruments_1_1FOVShapes.html", null ],
     [ "IO::Astrodynamics::Frames::FrameFile", "classIO_1_1Astrodynamics_1_1Frames_1_1FrameFile.html", [

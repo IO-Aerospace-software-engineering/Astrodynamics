@@ -25,7 +25,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">IO-Astrodynamics<span id="projectnumber">&#160;1.7.x</span>
+   <div id="projectname">IO-Astrodynamics<span id="projectnumber">&#160;1.8.x</span>
    </div>
    <div id="projectbrief">Astrodynamics framework</div>
   </td>
@@ -100,7 +100,8 @@ Inheritance diagram for IO::Astrodynamics::Integrators::Forces::Force:</div>
  <div class="center">
   <img src="classIO_1_1Astrodynamics_1_1Integrators_1_1Forces_1_1Force.png" usemap="#IO::Astrodynamics::Integrators::Forces::Force_map" alt=""/>
   <map id="IO::Astrodynamics::Integrators::Forces::Force_map" name="IO::Astrodynamics::Integrators::Forces::Force_map">
-<area href="classIO_1_1Astrodynamics_1_1Integrators_1_1Forces_1_1GravityForce.html" title="Gravity force." alt="IO::Astrodynamics::Integrators::Forces::GravityForce" shape="rect" coords="0,56,307,80"/>
+<area href="classIO_1_1Astrodynamics_1_1Integrators_1_1Forces_1_1GravityForce.html" title="Gravity force." alt="IO::Astrodynamics::Integrators::Forces::GravityForce" shape="rect" coords="0,56,364,80"/>
+<area href="classIO_1_1Astrodynamics_1_1Integrators_1_1Forces_1_1OblatenessPerturbation.html" title="This class represents a force due to oblateness perturbations acting on a celestial body." alt="IO::Astrodynamics::Integrators::Forces::OblatenessPerturbation" shape="rect" coords="374,56,738,80"/>
   </map>
 </div></div>
 <table class="memberdecls">
@@ -110,7 +111,7 @@ Public Member Functions</h2></td></tr>
 <tr class="memdesc:a84a8a786fbe4a4a1d8bd2df71af32fb3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Construct a new <a class="el" href="classIO_1_1Astrodynamics_1_1Integrators_1_1Forces_1_1Force.html" title="Force.">Force</a> object.  <a href="classIO_1_1Astrodynamics_1_1Integrators_1_1Forces_1_1Force.html#a84a8a786fbe4a4a1d8bd2df71af32fb3">More...</a><br /></td></tr>
 <tr class="separator:a84a8a786fbe4a4a1d8bd2df71af32fb3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afda289877f5fb0099bcc12812c734b3a"><td class="memItemLeft" align="right" valign="top">virtual <a class="el" href="classIO_1_1Astrodynamics_1_1Math_1_1Vector3D.html">IO::Astrodynamics::Math::Vector3D</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1Astrodynamics_1_1Integrators_1_1Forces_1_1Force.html#afda289877f5fb0099bcc12812c734b3a">Apply</a> (const <a class="el" href="classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem.html">IO::Astrodynamics::Body::CelestialItem</a> &amp;body, const <a class="el" href="classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector.html">IO::Astrodynamics::OrbitalParameters::StateVector</a> &amp;stateVector)=0</td></tr>
-<tr class="memdesc:afda289877f5fb0099bcc12812c734b3a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Apply force to body.  <a href="classIO_1_1Astrodynamics_1_1Integrators_1_1Forces_1_1Force.html#afda289877f5fb0099bcc12812c734b3a">More...</a><br /></td></tr>
+<tr class="memdesc:afda289877f5fb0099bcc12812c734b3a"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="classApply.html" title="Applies the force of oblateness perturbation on a celestial item.">Apply</a> force to body.  <a href="classIO_1_1Astrodynamics_1_1Integrators_1_1Forces_1_1Force.html#afda289877f5fb0099bcc12812c734b3a">More...</a><br /></td></tr>
 <tr class="separator:afda289877f5fb0099bcc12812c734b3a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a75d31e1599c94dfc6c8e0ddfc715441d"><td class="memItemLeft" align="right" valign="top">virtual&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIO_1_1Astrodynamics_1_1Integrators_1_1Forces_1_1Force.html#a75d31e1599c94dfc6c8e0ddfc715441d">~Force</a> ()=default</td></tr>
 <tr class="separator:a75d31e1599c94dfc6c8e0ddfc715441d"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -205,7 +206,7 @@ Public Member Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Apply force to body. </p>
+<p><a class="el" href="classApply.html" title="Applies the force of oblateness perturbation on a celestial item.">Apply</a> force to body. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">body</td><td></td></tr>
@@ -215,7 +216,7 @@ Public Member Functions</h2></td></tr>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd><a class="el" href="classIO_1_1Astrodynamics_1_1Math_1_1Vector3D.html">IO::Astrodynamics::Math::Vector3D</a> </dd></dl>
 
-<p>Implemented in <a class="el" href="classIO_1_1Astrodynamics_1_1Integrators_1_1Forces_1_1GravityForce.html#ab33d4401c13ab605609af6a7a4254b74">IO::Astrodynamics::Integrators::Forces::GravityForce</a>.</p>
+<p>Implemented in <a class="el" href="classIO_1_1Astrodynamics_1_1Integrators_1_1Forces_1_1GravityForce.html#ab33d4401c13ab605609af6a7a4254b74">IO::Astrodynamics::Integrators::Forces::GravityForce</a>, and <a class="el" href="classIO_1_1Astrodynamics_1_1Integrators_1_1Forces_1_1OblatenessPerturbation.html#a75479ea0879096dd1e5cb2e1199cbc32">IO::Astrodynamics::Integrators::Forces::OblatenessPerturbation</a>.</p>
 
 </div>
 </div>
