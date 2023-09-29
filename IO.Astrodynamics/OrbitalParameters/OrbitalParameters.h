@@ -323,32 +323,32 @@ namespace IO::Astrodynamics::OrbitalParameters
 
 
         /**
- * Calculates the parameters for creating a heliosynchronous orbit.
- *
- * @param semiMajorAxis The semi-major axis of the orbit in meters.
- * @param eccentricity The eccentricity of the orbit.
- * @param epochAtDescendingNode The epoch time at the descending node.
- * @return The heliosynchronous orbit parameters.
- */
+         * Calculates the parameters for creating a heliosynchronous orbit.
+         *
+         * @param semiMajorAxis The semi-major axis of the orbit in meters.
+         * @param eccentricity The eccentricity of the orbit.
+         * @param epochAtDescendingNode The epoch time at the descending node.
+         * @return The heliosynchronous orbit parameters.
+         */
 
         static std::unique_ptr<IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements>
-        CreateEarthHelioSynchronousOrbit(double semiMajorAxis, double eccentricity, IO::Astrodynamics::Time::TDB &epochAtDescendingNode);
+        CreateEarthHelioSynchronousOrbit(std::shared_ptr<Body::CelestialBody> earth, double semiMajorAxis, double eccentricity, IO::Astrodynamics::Time::TDB &epochAtDescendingNode);
 
         /**
-* @brief Creates a phased helio-synchronous orbit with given parameters.
-*
-* This function creates a phased helio-synchronous orbit based on the provided eccentricity,
-* epoch at ascending node, and number of orbits per day.
-*
-* @param eccentricity The eccentricity of the orbit (0 <= eccentricity < 1).
-* @param epochAtDescendingNode The epoch time at the descending node.
-* @param nbOrbitByDay The desired number of orbits per day.
-*
-* @return A phased helio-synchronous orbit.
-*/
+        * @brief Creates a phased helio-synchronous orbit with given parameters.
+        *
+        * This function creates a phased helio-synchronous orbit based on the provided eccentricity,
+        * epoch at ascending node, and number of orbits per day.
+        *
+        * @param eccentricity The eccentricity of the orbit (0 <= eccentricity < 1).
+        * @param epochAtDescendingNode The epoch time at the descending node.
+        * @param nbOrbitByDay The desired number of orbits per day.
+        *
+        * @return A phased helio-synchronous orbit.
+        */
 
         static std::unique_ptr<IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements>
-        CreateEarthPhasedHelioSynchronousOrbit(double eccentricity, IO::Astrodynamics::Time::TDB &epochAtDescendingNode,
+        CreateEarthPhasedHelioSynchronousOrbit(std::shared_ptr<Body::CelestialBody> earth, double eccentricity, IO::Astrodynamics::Time::TDB &epochAtDescendingNode,
                                           int nbOrbitByDay);
     };
 

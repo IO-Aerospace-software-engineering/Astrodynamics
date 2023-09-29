@@ -288,7 +288,7 @@ TEST(ConicOrbitalElements, CreateHelioSynchronousOrbit)
     IO::Astrodynamics::Time::TDB epoch("2021-Jan-01 00:00:00.0000 TDB");
     auto sun = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(10);
     auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399, sun);
-    auto res = IO::Astrodynamics::OrbitalParameters::OrbitalParameters::CreateEarthHelioSynchronousOrbit(7080636.3, 0.0001724, epoch);
+    auto res = IO::Astrodynamics::OrbitalParameters::OrbitalParameters::CreateEarthHelioSynchronousOrbit(earth,7080636.3, 0.0001724, epoch);
     ASSERT_DOUBLE_EQ(7080636.3000000147, res->GetSemiMajorAxis());
     ASSERT_DOUBLE_EQ(98.1923322636721, res->GetInclination() * IO::Astrodynamics::Constants::RAD_DEG);
     ASSERT_DOUBLE_EQ(0.0001724, res->GetEccentricity());
@@ -308,7 +308,7 @@ TEST(ConicOrbitalElements, CreateHelioSynchronousOrbitMarch)
     IO::Astrodynamics::Time::TDB epoch("2021-MAR-22 00:00:00.0000 TDB");
     auto sun = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(10);
     auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399, sun);
-    auto res = IO::Astrodynamics::OrbitalParameters::OrbitalParameters::CreateEarthHelioSynchronousOrbit(7080636.3, 0.0001724, epoch);
+    auto res = IO::Astrodynamics::OrbitalParameters::OrbitalParameters::CreateEarthHelioSynchronousOrbit(earth,7080636.3, 0.0001724, epoch);
     ASSERT_DOUBLE_EQ(7080636.3000000101, res->GetSemiMajorAxis());
     ASSERT_DOUBLE_EQ(98.1923322636721, res->GetInclination() * IO::Astrodynamics::Constants::RAD_DEG);
     ASSERT_DOUBLE_EQ(0.0001724, res->GetEccentricity());
@@ -328,7 +328,7 @@ TEST(ConicOrbitalElements, CreateHelioSynchronousOrbitApril)
     IO::Astrodynamics::Time::TDB epoch("2021-APR-22 00:00:00.0000 TDB");
     auto sun = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(10);
     auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399, sun);
-    auto res = IO::Astrodynamics::OrbitalParameters::OrbitalParameters::CreateEarthHelioSynchronousOrbit(7080636.3, 0.0001724, epoch);
+    auto res = IO::Astrodynamics::OrbitalParameters::OrbitalParameters::CreateEarthHelioSynchronousOrbit(earth,7080636.3, 0.0001724, epoch);
     ASSERT_NEAR(7080636.299999997, res->GetSemiMajorAxis(),6);
     ASSERT_DOUBLE_EQ(98.1923322636721, res->GetInclination() * IO::Astrodynamics::Constants::RAD_DEG);
     ASSERT_DOUBLE_EQ(0.0001724, res->GetEccentricity());
@@ -348,7 +348,7 @@ TEST(ConicOrbitalElements, CreateHelioSynchronousOrbitAugust)
     IO::Astrodynamics::Time::TDB epoch("2021-AUG-22 00:00:00.0000 TDB");
     auto sun = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(10);
     auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399, sun);
-    auto res = IO::Astrodynamics::OrbitalParameters::OrbitalParameters::CreateEarthHelioSynchronousOrbit(7080636.3, 0.0001724, epoch);
+    auto res = IO::Astrodynamics::OrbitalParameters::OrbitalParameters::CreateEarthHelioSynchronousOrbit(earth,7080636.3, 0.0001724, epoch);
     ASSERT_NEAR(7080636.3000000054, res->GetSemiMajorAxis(), 6);
     ASSERT_DOUBLE_EQ(98.1923322636721, res->GetInclination() * IO::Astrodynamics::Constants::RAD_DEG);
     ASSERT_DOUBLE_EQ(0.0001724, res->GetEccentricity());
@@ -368,7 +368,7 @@ TEST(ConicOrbitalElements, CreateHelioSynchronousOrbitNovember)
     IO::Astrodynamics::Time::TDB epoch("2021-Nov-22 00:00:00.0000 TDB");
     auto sun = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(10);
     auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399, sun);
-    auto res = IO::Astrodynamics::OrbitalParameters::OrbitalParameters::CreateEarthHelioSynchronousOrbit(7080636.3, 0.0001724, epoch);
+    auto res = IO::Astrodynamics::OrbitalParameters::OrbitalParameters::CreateEarthHelioSynchronousOrbit(earth,7080636.3, 0.0001724, epoch);
     ASSERT_NEAR(7080636.3000000054, res->GetSemiMajorAxis(), 6);
     ASSERT_DOUBLE_EQ(98.1923322636721, res->GetInclination() * IO::Astrodynamics::Constants::RAD_DEG);
     ASSERT_DOUBLE_EQ(0.0001724, res->GetEccentricity());
@@ -388,7 +388,7 @@ TEST(ConicOrbitalElements, CreatePhasedHelioSynchronousOrbit)
     IO::Astrodynamics::Time::TDB epoch("2021-Nov-22 00:00:00.0000 TDB");
     auto sun = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(10);
     auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399, sun);
-    auto res = IO::Astrodynamics::OrbitalParameters::OrbitalParameters::CreateEarthPhasedHelioSynchronousOrbit(0.0001724, epoch,14);
+    auto res = IO::Astrodynamics::OrbitalParameters::OrbitalParameters::CreateEarthPhasedHelioSynchronousOrbit(earth,0.0001724, epoch,14);
     ASSERT_NEAR(7272221.8759850441, res->GetSemiMajorAxis(), 6);
     ASSERT_DOUBLE_EQ(99.00111990363385, res->GetInclination() * IO::Astrodynamics::Constants::RAD_DEG);
     ASSERT_DOUBLE_EQ(0.0001724, res->GetEccentricity());

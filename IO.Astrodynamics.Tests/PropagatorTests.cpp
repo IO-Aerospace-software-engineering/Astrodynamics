@@ -318,7 +318,11 @@ TEST(Propagator, NodePrecession)
 
     IO::Astrodynamics::Time::TDB epoch("2021-Jan-01 00:00:00.0000 TDB");
 
-    auto orbitalParams = IO::Astrodynamics::OrbitalParameters::OrbitalParameters::CreateEarthHelioSynchronousOrbit(7080636.3, 0.0001724, epoch);
+    auto sun = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(10);
+    auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399, sun);
+    auto moon = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(301, earth);
+
+    auto orbitalParams = IO::Astrodynamics::OrbitalParameters::OrbitalParameters::CreateEarthHelioSynchronousOrbit(earth,7080636.3, 0.0001724, epoch);
     IO::Astrodynamics::Body::Spacecraft::Spacecraft spc(-127, "spc127", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams));
 
     IO::Astrodynamics::Propagators::Propagator pro(spc, integrator, IO::Astrodynamics::Time::Window(epoch, epoch + step * 86400.0 * 2.0));
@@ -338,7 +342,8 @@ TEST(Propagator, NodePrecession)
     ASSERT_TRUE(4.0 > ms_double.count());
 #endif
 
-    auto sv1 = spc.ReadEphemeris(IO::Astrodynamics::Frames::InertialFrames::ICRF(), IO::Astrodynamics::AberrationsEnum::None, epoch, *spc.GetOrbitalParametersAtEpoch()->GetCenterOfMotion());
+    auto sv1 = spc.ReadEphemeris(IO::Astrodynamics::Frames::InertialFrames::ICRF(), IO::Astrodynamics::AberrationsEnum::None, epoch,
+                                 *earth);
 
     ASSERT_DOUBLE_EQ(7080636.3000000259, sv1.GetSemiMajorAxis());
     ASSERT_DOUBLE_EQ(0.00017239999999989656, sv1.GetEccentricity());
@@ -349,8 +354,8 @@ TEST(Propagator, NodePrecession)
     ASSERT_DOUBLE_EQ(662731200.0, sv1.GetEpoch().GetSecondsFromJ2000().count());
 
     //Read ephemeris
-    auto sv2 = spc.ReadEphemeris(IO::Astrodynamics::Frames::InertialFrames::ICRF(), IO::Astrodynamics::AberrationsEnum::None, epoch + (step * 86400.0 * 2.0)-step,
-                                 *spc.GetOrbitalParametersAtEpoch()->GetCenterOfMotion());
+    auto sv2 = spc.ReadEphemeris(IO::Astrodynamics::Frames::InertialFrames::ICRF(), IO::Astrodynamics::AberrationsEnum::None, epoch + (step * 86400.0 * 2.0) - step,
+                                 *earth);
     ASSERT_DOUBLE_EQ(7067533.6921579475, sv2.GetSemiMajorAxis());
     ASSERT_DOUBLE_EQ(0.052186768521368658, sv2.GetEccentricity());
     ASSERT_DOUBLE_EQ(98.478640566231107, sv2.GetInclination() * IO::Astrodynamics::Constants::RAD_DEG);
