@@ -14,6 +14,7 @@
 #include <VVIntegrator.h>
 #include <LaunchWindow.h>
 #include "Propagator.h"
+#include "OblatenessPerturbation.h"
 
 namespace IO::Astrodynamics::Integrators
 {
@@ -47,7 +48,8 @@ namespace IO::Astrodynamics
         std::vector<const IO::Astrodynamics::Sites::Site *> m_sites;
 
         IO::Astrodynamics::Integrators::Forces::GravityForce m_gravityForce;
-        std::vector<IO::Astrodynamics::Integrators::Forces::Force *> m_forces{&m_gravityForce};
+        IO::Astrodynamics::Integrators::Forces::OblatenessPerturbation m_oblatenessPerturbation;
+        std::vector<IO::Astrodynamics::Integrators::Forces::Force *> m_forces{&m_gravityForce, &m_oblatenessPerturbation};
         const IO::Astrodynamics::Integrators::VVIntegrator m_integrator;
 
         std::unique_ptr<Propagators::Propagator> m_propagator;

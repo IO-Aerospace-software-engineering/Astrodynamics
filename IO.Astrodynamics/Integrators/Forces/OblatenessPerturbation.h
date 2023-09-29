@@ -32,13 +32,18 @@ namespace IO::Astrodynamics::Integrators::Forces
         OblatenessPerturbation();
         ~OblatenessPerturbation() override;
 
+
         /**
-         * @brief Apply force
+         * @brief Apply the celestial item body to the given state vector.
          *
-         * @param body
-         * @param stateVector
-         * @return IO::Astrodynamics::Math::Vector3D
+         * This function applies the celestial item to the given state vector, updating the state vector with the effects of the celestial item's gravitational field.
+         *
+         * @param body The celestial item to be applied.
+         * @param stateVector The state vector to be updated.
+         *
+         * @return void
          */
+
         IO::Astrodynamics::Math::Vector3D Apply(const IO::Astrodynamics::Body::CelestialItem &body, const IO::Astrodynamics::OrbitalParameters::StateVector &stateVector) override;
     };
 }

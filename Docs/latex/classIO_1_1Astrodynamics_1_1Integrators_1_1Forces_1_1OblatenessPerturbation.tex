@@ -23,7 +23,7 @@ Inheritance diagram for IO\+::Astrodynamics\+::Integrators\+::Forces\+::Oblatene
 \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Integrators_1_1Forces_1_1OblatenessPerturbation_a9b9b45d90c5fe223d2bcf72608674810}{$\sim$\+Oblateness\+Perturbation}} () override
 \item 
 \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO\+::\+Astrodynamics\+::\+Math\+::\+Vector3D}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Integrators_1_1Forces_1_1OblatenessPerturbation_a75479ea0879096dd1e5cb2e1199cbc32}{Apply}} (const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem}{IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Item}} \&body, const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+State\+Vector}} \&state\+Vector) override
-\begin{DoxyCompactList}\small\item\em \mbox{\hyperlink{classApply}{Apply}} force. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\begin{DoxyCompactList}\small\item\em \mbox{\hyperlink{classApply}{Apply}} the celestial item body to the given state vector. \end{DoxyCompactList}\end{DoxyCompactItemize}
 
 
 \doxysubsection{Detailed Description}
@@ -55,17 +55,19 @@ It inherits from the \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Integrators_1_
 
 
 
-\mbox{\hyperlink{classApply}{Apply}} force. 
+\mbox{\hyperlink{classApply}{Apply}} the celestial item body to the given state vector. 
+
+This function applies the celestial item to the given state vector, updating the state vector with the effects of the celestial item\textquotesingle{}s gravitational field.
 
 
 \begin{DoxyParams}{Parameters}
-{\em body} & \\
+{\em body} & The celestial item to be applied. \\
 \hline
-{\em state\+Vector} & \\
+{\em state\+Vector} & The state vector to be updated.\\
 \hline
 \end{DoxyParams}
 \begin{DoxyReturn}{Returns}
-\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO\+::\+Astrodynamics\+::\+Math\+::\+Vector3D}} 
+void 
 \end{DoxyReturn}
 
 
