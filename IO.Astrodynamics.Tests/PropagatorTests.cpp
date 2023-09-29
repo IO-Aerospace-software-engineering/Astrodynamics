@@ -356,12 +356,12 @@ TEST(Propagator, NodePrecession)
     //Read ephemeris
     auto sv2 = spc.ReadEphemeris(IO::Astrodynamics::Frames::InertialFrames::ICRF(), IO::Astrodynamics::AberrationsEnum::None, epoch + (step * 86400.0 * 2.0) - step,
                                  *earth);
-    ASSERT_DOUBLE_EQ(7067533.6921579475, sv2.GetSemiMajorAxis());
-    ASSERT_DOUBLE_EQ(0.052186768521368658, sv2.GetEccentricity());
-    ASSERT_DOUBLE_EQ(98.478640566231107, sv2.GetInclination() * IO::Astrodynamics::Constants::RAD_DEG);
-    ASSERT_DOUBLE_EQ(13.376818161056985, sv2.GetRightAscendingNodeLongitude() * IO::Astrodynamics::Constants::RAD_DEG);
-    ASSERT_DOUBLE_EQ(176.6029046129419, sv2.GetPeriapsisArgument() * IO::Astrodynamics::Constants::RAD_DEG);
-    ASSERT_DOUBLE_EQ(62.159475673986215, sv2.GetMeanAnomaly() * IO::Astrodynamics::Constants::RAD_DEG);
+    ASSERT_DOUBLE_EQ(7067118.6922611883, sv2.GetSemiMajorAxis());
+    ASSERT_DOUBLE_EQ(0.061058116709275446, sv2.GetEccentricity());
+    ASSERT_DOUBLE_EQ(98.328721713635034, sv2.GetInclination() * IO::Astrodynamics::Constants::RAD_DEG);
+    ASSERT_DOUBLE_EQ(13.182937015734543, sv2.GetRightAscendingNodeLongitude() * IO::Astrodynamics::Constants::RAD_DEG);
+    ASSERT_DOUBLE_EQ(117.17940166935723, sv2.GetPeriapsisArgument() * IO::Astrodynamics::Constants::RAD_DEG);
+    ASSERT_DOUBLE_EQ(125.54397178728212, sv2.GetMeanAnomaly() * IO::Astrodynamics::Constants::RAD_DEG);
     ASSERT_DOUBLE_EQ(662903999.0, sv2.GetEpoch().GetSecondsFromJ2000().count());
 }
 
