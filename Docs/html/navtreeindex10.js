@@ -1,5 +1,9 @@
 var NAVTREEINDEX10 =
 {
+"structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ConicOrbitalElementsDTO.html#a510f5c631df1f97897c908666fb27d66":[0,0,0,0,0,0,8,8],
+"structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ConicOrbitalElementsDTO.html#a510f5c631df1f97897c908666fb27d66":[1,0,0,0,0,0,8,8],
+"structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ConicOrbitalElementsDTO.html#a6d5222650ed268639fa13ab575b35402":[0,0,0,0,0,0,8,2],
+"structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ConicOrbitalElementsDTO.html#a6d5222650ed268639fa13ab575b35402":[1,0,0,0,0,0,8,2],
 "structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ConicOrbitalElementsDTO.html#a75c84f7085e553937fc659d9f2e9e64e":[0,0,0,0,0,0,8,7],
 "structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ConicOrbitalElementsDTO.html#a75c84f7085e553937fc659d9f2e9e64e":[1,0,0,0,0,0,8,7],
 "structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ConicOrbitalElementsDTO.html#aa66a2d634e3042f3ae3fc7eeab548ea4":[0,0,0,0,0,0,8,5],
@@ -245,9 +249,5 @@ var NAVTREEINDEX10 =
 "structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1PerigeeHeightChangingManeuverDTO.html#a784302e587ee8819d3101ad455f01d81":[0,0,0,0,0,0,23,2],
 "structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1PerigeeHeightChangingManeuverDTO.html#a784302e587ee8819d3101ad455f01d81":[1,0,0,0,0,0,23,2],
 "structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1PerigeeHeightChangingManeuverDTO.html#a83cb78e29188da922940d899c8514dea":[0,0,0,0,0,0,23,9],
-"structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1PerigeeHeightChangingManeuverDTO.html#a83cb78e29188da922940d899c8514dea":[1,0,0,0,0,0,23,9],
-"structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1PerigeeHeightChangingManeuverDTO.html#ab37966776a343a4710f3cf0f073c627c":[0,0,0,0,0,0,23,5],
-"structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1PerigeeHeightChangingManeuverDTO.html#ab37966776a343a4710f3cf0f073c627c":[1,0,0,0,0,0,23,5],
-"structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1PerigeeHeightChangingManeuverDTO.html#abbac685c6fddaa4593084e83d079aa1c":[1,0,0,0,0,0,23,7],
-"structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1PerigeeHeightChangingManeuverDTO.html#abbac685c6fddaa4593084e83d079aa1c":[0,0,0,0,0,0,23,7]
+"structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1PerigeeHeightChangingManeuverDTO.html#a83cb78e29188da922940d899c8514dea":[1,0,0,0,0,0,23,9]
 };

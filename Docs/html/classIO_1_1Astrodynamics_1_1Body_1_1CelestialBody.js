@@ -2,6 +2,7 @@ var classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody =
 [
     [ "CelestialBody", "classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody.html#a88bb38ec9aaf14c11d774abd646713c3", null ],
     [ "CelestialBody", "classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody.html#abff41d2dfeddcc91eb4a6158e19735d9", null ],
+    [ "ComputeGeosynchronousOrbit", "classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody.html#acf21a564477f49674f47cc97aa2b1d57", null ],
     [ "GetAngularVelocity", "classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody.html#a3e60ab77575b847a3cb3b6b598441de9", null ],
     [ "GetBodyFixedFrame", "classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody.html#a6380269af1475a90e2545e1832181787", null ],
     [ "GetFlattening", "classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody.html#a32e281be0a2990e79ce111d870d79338", null ],

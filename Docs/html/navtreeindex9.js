@@ -1,5 +1,9 @@
 var NAVTREEINDEX9 =
 {
+"functions_func_w.html":[1,3,1,22],
+"functions_func_x.html":[1,3,1,23],
+"functions_func_y.html":[1,3,1,24],
+"functions_func_z.html":[1,3,1,25],
 "functions_func_~.html":[1,3,1,26],
 "functions_g.html":[1,3,0,6],
 "functions_h.html":[1,3,0,7],
@@ -245,9 +249,5 @@ var NAVTREEINDEX9 =
 "structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ConicOrbitalElementsDTO.html#a0d15b05b9681604fe2565c71dd4c4d7c":[0,0,0,0,0,0,8,6],
 "structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ConicOrbitalElementsDTO.html#a0d15b05b9681604fe2565c71dd4c4d7c":[1,0,0,0,0,0,8,6],
 "structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ConicOrbitalElementsDTO.html#a3b25ccc4bef36960d676607e00d49b12":[0,0,0,0,0,0,8,3],
-"structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ConicOrbitalElementsDTO.html#a3b25ccc4bef36960d676607e00d49b12":[1,0,0,0,0,0,8,3],
-"structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ConicOrbitalElementsDTO.html#a510f5c631df1f97897c908666fb27d66":[0,0,0,0,0,0,8,8],
-"structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ConicOrbitalElementsDTO.html#a510f5c631df1f97897c908666fb27d66":[1,0,0,0,0,0,8,8],
-"structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ConicOrbitalElementsDTO.html#a6d5222650ed268639fa13ab575b35402":[0,0,0,0,0,0,8,2],
-"structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ConicOrbitalElementsDTO.html#a6d5222650ed268639fa13ab575b35402":[1,0,0,0,0,0,8,2]
+"structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ConicOrbitalElementsDTO.html#a3b25ccc4bef36960d676607e00d49b12":[1,0,0,0,0,0,8,3]
 };

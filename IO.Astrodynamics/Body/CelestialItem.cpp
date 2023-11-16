@@ -116,6 +116,11 @@ std::shared_ptr<IO::Astrodynamics::Body::CelestialItem> IO::Astrodynamics::Body:
     return this->shared_from_this();
 }
 
+std::shared_ptr<IO::Astrodynamics::Body::CelestialItem> IO::Astrodynamics::Body::CelestialItem::GetSharedPointer() const
+{
+    return std::const_pointer_cast<IO::Astrodynamics::Body::CelestialItem>(this->shared_from_this());
+}
+
 std::vector<IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB>>
 IO::Astrodynamics::Body::CelestialItem::FindWindowsOnDistanceConstraint(const IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB> &window,
                                                                         const CelestialItem &targetBody, const CelestialItem &observer,
@@ -177,3 +182,5 @@ IO::Astrodynamics::Body::CelestialItem::GetSubSolarPoint(const IO::Astrodynamics
 
     return IO::Astrodynamics::Coordinates::Planetographic{lon, lat, alt};
 }
+
+

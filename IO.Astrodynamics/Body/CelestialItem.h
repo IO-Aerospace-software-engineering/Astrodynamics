@@ -133,6 +133,8 @@ namespace IO::Astrodynamics::Body
         virtual bool operator!=(const IO::Astrodynamics::Body::CelestialItem &rhs) const;
 
         std::shared_ptr<IO::Astrodynamics::Body::CelestialItem> GetSharedPointer();
+        std::shared_ptr<IO::Astrodynamics::Body::CelestialItem> GetSharedPointer() const;
+
 
         /**
          * @brief Find windows when distance constraint occurs

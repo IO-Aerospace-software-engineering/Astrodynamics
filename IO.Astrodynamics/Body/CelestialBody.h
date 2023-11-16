@@ -163,13 +163,13 @@ namespace IO::Astrodynamics::Body
         IO::Astrodynamics::Time::TimeSpan GetSideralRotationPeriod(const IO::Astrodynamics::Time::TDB &epoch) const;
 
         /**
- * @brief Accessor function to get the value of the variable J2.
- *
- * This function returns the value of the variable J2.
- * The returned value will be constant and cannot be modified.
- *
- * @return The value of variable J2.
- */
+         * @brief Accessor function to get the value of the variable J2.
+         *
+         * This function returns the value of the variable J2.
+         * The returned value will be constant and cannot be modified.
+         *
+         * @return The value of variable J2.
+         */
 
         inline double GetJ2() const
         { return m_J2; }
@@ -198,92 +198,92 @@ namespace IO::Astrodynamics::Body
 
 
         /**
- * @brief Calculates the true solar day for a given epoch time in TDB.
- *
- * The true solar day is the time interval between two consecutive solar noons.
- * It is influenced by factors such as the eccentricity and obliquity of the body orbit.
- *
- * @param epoch The epoch time in TDB (Barycentric Dynamical Time).
- * @return The true solar day as a floating-point number, in the same unit as the epoch time.
- *
- * @see IO::Astrodynamics::Time::TDB
- *
- * @warning The epoch time must be in TDB. Ensure that the time is properly converted to TDB before calling this function.
- *          Failure to do so may result in incorrect results.
- *
- * @note This function is a const member function and does not modify the state of the object it belongs to.
- *       It only performs calculations based on the given epoch time.
- */
+         * @brief Calculates the true solar day for a given epoch time in TDB.
+         *
+         * The true solar day is the time interval between two consecutive solar noons.
+         * It is influenced by factors such as the eccentricity and obliquity of the body orbit.
+         *
+         * @param epoch The epoch time in TDB (Barycentric Dynamical Time).
+         * @return The true solar day as a floating-point number, in the same unit as the epoch time.
+         *
+         * @see IO::Astrodynamics::Time::TDB
+         *
+         * @warning The epoch time must be in TDB. Ensure that the time is properly converted to TDB before calling this function.
+         *          Failure to do so may result in incorrect results.
+         *
+         * @note This function is a const member function and does not modify the state of the object it belongs to.
+         *       It only performs calculations based on the given epoch time.
+         */
 
         IO::Astrodynamics::Time::TimeSpan GetTrueSolarDay(IO::Astrodynamics::Time::TDB &epoch) const;
 
         /**
- * @brief Check if the given celestial body is Sun.
- *
- * This function takes a celestial body identifier as input and
- * determines whether the celestial body corresponds to the Sun.
- *
- * @param celestialBodyId The identifier of the celestial body to check.
- *
- * @return @c true if the celestial body is the Sun, @c false otherwise.
- *
- * @note Celestial body identifiers are assumed to be unique.
- */
+         * @brief Check if the given celestial body is Sun.
+         *
+         * This function takes a celestial body identifier as input and
+         * determines whether the celestial body corresponds to the Sun.
+         *
+         * @param celestialBodyId The identifier of the celestial body to check.
+         *
+         * @return @c true if the celestial body is the Sun, @c false otherwise.
+         *
+         * @note Celestial body identifiers are assumed to be unique.
+         */
 
         static bool IsSun(int celestialBodyId);
 
         /**
- * @brief Determines whether a celestial body is a planet based on its ID.
- *
- * This function checks whether a given celestial body is classified as a planet based on its ID.
- * It takes the celestial body ID as an input and returns a boolean value indicating whether it is a planet or not.
- * A celestial body is considered a planet if its ID matches the criteria set for planets.
- *
- * @param celestialBodyId The ID of the celestial body to be checked.
- *
- * @return True if the celestial body is a planet, otherwise false.
- */
+         * @brief Determines whether a celestial body is a planet based on its ID.
+         *
+         * This function checks whether a given celestial body is classified as a planet based on its ID.
+         * It takes the celestial body ID as an input and returns a boolean value indicating whether it is a planet or not.
+         * A celestial body is considered a planet if its ID matches the criteria set for planets.
+         *
+         * @param celestialBodyId The ID of the celestial body to be checked.
+         *
+         * @return True if the celestial body is a planet, otherwise false.
+         */
 
         static bool IsPlanet(int celestialBodyId);
 
         /**
- * @brief Checks if the given celestial body ID corresponds to an asteroid.
- *
- * This function takes a celestial body ID as input and checks if it corresponds to an asteroid.
- * An asteroid is a small rocky object that orbits the sun, typically in the asteroid belt between Mars and Jupiter.
- *
- * @param celestialBodyId The ID of the celestial body to be checked.
- * @return True if the celestial body is an asteroid, false otherwise.
- */
+         * @brief Checks if the given celestial body ID corresponds to an asteroid.
+         *
+         * This function takes a celestial body ID as input and checks if it corresponds to an asteroid.
+         * An asteroid is a small rocky object that orbits the sun, typically in the asteroid belt between Mars and Jupiter.
+         *
+         * @param celestialBodyId The ID of the celestial body to be checked.
+         * @return True if the celestial body is an asteroid, false otherwise.
+         */
 
         static bool IsAsteroid(int celestialBodyId);
 
         /**
- * @brief Check if the given celestial body is a moon.
- *
- * This function checks whether the given celestial body identified by
- * its ID is a moon or not.
- *
- * @param celestialBodyId The ID of the celestial body to be checked.
- *
- * @return True if the celestial body is a moon, False otherwise.
- */
+         * @brief Check if the given celestial body is a moon.
+         *
+         * This function checks whether the given celestial body identified by
+         * its ID is a moon or not.
+         *
+         * @param celestialBodyId The ID of the celestial body to be checked.
+         *
+         * @return True if the celestial body is a moon, False otherwise.
+         */
 
         static bool IsMoon(int celestialBodyId);
 
         /**
-* @brief Check if a celestial body is a Lagrange point.
-*
-* This function determines whether a celestial body with the given identifier
-* is a Lagrange point or not. Lagrange points are locations in a two-body
-* system where a third, smaller body can remain in a stable and fixed position
-* relative to the two larger bodies. The function takes the celestial body
-* identifier as an input parameter and returns a boolean value indicating
-* whether it is a Lagrange point or not.
-*
-* @param celestialBodyId The identifier of the celestial body to check.
-* @return True if the celestial body is a Lagrange point, false otherwise.
-*/
+        * @brief Check if a celestial body is a Lagrange point.
+        *
+        * This function determines whether a celestial body with the given identifier
+        * is a Lagrange point or not. Lagrange points are locations in a two-body
+        * system where a third, smaller body can remain in a stable and fixed position
+        * relative to the two larger bodies. The function takes the celestial body
+        * identifier as an input parameter and returns a boolean value indicating
+        * whether it is a Lagrange point or not.
+        *
+        * @param celestialBodyId The identifier of the celestial body to check.
+        * @return True if the celestial body is a Lagrange point, false otherwise.
+        */
 
         static bool IsLagrangePoint(int celestialBodyId);
 
@@ -332,6 +332,24 @@ namespace IO::Astrodynamics::Body
          */
 
         static bool IsBarycenter(int celestialBodyId);
+
+        /**
+         * @brief Compute the geosynchronous orbit based on the given longitude and epoch.
+         *
+         * This function calculates the state vector of a geosynchronous orbit in body fixed frame of the current celestial body.
+         *
+         * @param longitude The desired longitude at which the geosynchronous orbit should be established.
+         * @param epoch The epoch of the orbit, expressed in TDB (Barycentric Dynamic Time).
+         * @return The calculated parameters of the geosynchronous orbit.
+         *
+         * @note The longitude is assumed to be in radian and the epoch is assumed to be in TDB.
+         *
+         * @remark The geosynchronous orbit is a circular, geocentric orbit with an inclination of zero and
+         * an argument of perigee that aligns the longitude with the position of the satellite. Therefore,
+         * all other orbital parameters are computed based on these constraints.
+         */
+
+        OrbitalParameters::StateVector ComputeGeosynchronousOrbit(double longitude, const Time::TDB& epoch) const;
 
 
     };
