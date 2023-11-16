@@ -13,6 +13,7 @@ var classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem =
     [ "GetOrbitalParametersAtEpoch", "classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem.html#a59c413813ee242c32e2401b63ca913b9", null ],
     [ "GetSatellites", "classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem.html#a41f8f9eae44b6265fcf447329a44b742", null ],
     [ "GetSharedPointer", "classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem.html#a65778cc25caacf1bb3abe93903a7b742", null ],
+    [ "GetSharedPointer", "classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem.html#a4610e816d748fd180a7334688c09c62f", null ],
     [ "GetSubObserverPoint", "classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem.html#a4e0b8a76eacffa7206e808b1aa03722c", null ],
     [ "GetSubSolarPoint", "classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem.html#a9800d724e1dbc2b87b08b698fd0d74f8", null ],
     [ "operator!=", "classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem.html#a8de979f16138b0a462d0fee0f3621040", null ],

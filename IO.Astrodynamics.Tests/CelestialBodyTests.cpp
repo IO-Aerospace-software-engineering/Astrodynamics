@@ -229,6 +229,17 @@ TEST(CelestialBody, TrueSolarDayAtEpoch)
     IO::Astrodynamics::Time::TDB epoch4("2021-DEC-22 00:00:00.0000 TDB");
     auto res4 = earth->GetTrueSolarDay(epoch4);
     ASSERT_DOUBLE_EQ(86407.114275442393, res4.GetSeconds().count());
+}
 
+TEST(CelestialBody, GeosynchronousOrbit)
+{
+    IO::Astrodynamics::Time::TDB epoch("2021-Jan-01 00:00:00.0000 TDB");
+    auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399);
+    auto svECEF = earth->ComputeGeosynchronousOrbit(0.0,epoch);
+    ASSERT_DOUBLE_EQ(42164171.959054783, svECEF.GetPosition().Magnitude());
+    ASSERT_DOUBLE_EQ(0.0, svECEF.GetVelocity().Magnitude());
 
+    auto svICRF=svECEF.ToFrame(IO::Astrodynamics::Frames::InertialFrames::ICRF());
+    ASSERT_DOUBLE_EQ(42164171.959054783, svICRF.GetPosition().Magnitude());
+    ASSERT_DOUBLE_EQ(3074.6599898708027, svICRF.GetVelocity().Magnitude());
 }

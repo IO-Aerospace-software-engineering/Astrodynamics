@@ -305,3 +305,21 @@ IO::Astrodynamics::Time::TimeSpan IO::Astrodynamics::Body::CelestialBody::GetTru
     return sideralRotationPeriod + angle / GetAngularVelocity(epoch);
 
 }
+
+IO::Astrodynamics::OrbitalParameters::StateVector IO::Astrodynamics::Body::CelestialBody::ComputeGeosynchronousOrbit(double longitude, const Time::TDB &epoch) const
+{
+    auto t = GetSideralRotationPeriod(epoch);
+    double t2 = t.GetSeconds().count() * t.GetSeconds().count();
+    double r = std::cbrt((m_mu * t2) / (4 * Constants::PI * Constants::PI));
+    SpiceDouble bodyFixedLocation[3];
+    latrec_c(r, longitude, 0.0, bodyFixedLocation);
+
+    auto celestialBody = std::dynamic_pointer_cast<IO::Astrodynamics::Body::CelestialBody>(GetSharedPointer());;
+    IO::Astrodynamics::OrbitalParameters::StateVector siteVectorState{celestialBody, IO::Astrodynamics::Math::Vector3D(bodyFixedLocation[0],
+                                                                                                                       bodyFixedLocation[1], bodyFixedLocation[2]),
+                                                                      IO::Astrodynamics::Math::Vector3D(), epoch,
+                                                                      GetBodyFixedFrame()};
+    return siteVectorState;
+}
+
+
