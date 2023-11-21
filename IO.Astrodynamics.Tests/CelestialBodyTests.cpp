@@ -209,7 +209,6 @@ TEST(CelestialBody, GetJValue)
 }
 
 
-
 TEST(CelestialBody, TrueSolarDayAtEpoch)
 {
     IO::Astrodynamics::Time::TDB epoch("2021-Jan-01 00:00:00.0000 TDB");
@@ -231,15 +230,35 @@ TEST(CelestialBody, TrueSolarDayAtEpoch)
     ASSERT_DOUBLE_EQ(86407.114275442393, res4.GetSeconds().count());
 }
 
-TEST(CelestialBody, GeosynchronousOrbit)
+TEST(CelestialBody, GeosynchronousOrbitFromLongitude)
 {
     IO::Astrodynamics::Time::TDB epoch("2021-Jan-01 00:00:00.0000 TDB");
     auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399);
-    auto svECEF = earth->ComputeGeosynchronousOrbit(0.0,epoch);
-    ASSERT_DOUBLE_EQ(42164171.959054783, svECEF.GetPosition().Magnitude());
-    ASSERT_DOUBLE_EQ(0.0, svECEF.GetVelocity().Magnitude());
-
-    auto svICRF=svECEF.ToFrame(IO::Astrodynamics::Frames::InertialFrames::ICRF());
+    auto svICRF = earth->ComputeGeosynchronousOrbit(0.0, epoch);
     ASSERT_DOUBLE_EQ(42164171.959054783, svICRF.GetPosition().Magnitude());
     ASSERT_DOUBLE_EQ(3074.6599898708027, svICRF.GetVelocity().Magnitude());
+
+    auto svECEF = svICRF.ToFrame(earth->GetBodyFixedFrame());
+    ASSERT_DOUBLE_EQ(42164171.959054783, svECEF.GetPosition().Magnitude());
+    ASSERT_NEAR(0.0, svECEF.GetVelocity().Magnitude(), 1E-09);
+}
+
+TEST(CelestialBody, GeosynchronousOrbitFromLongitudeAndLatitude)
+{
+    IO::Astrodynamics::Time::TDB epoch("2021-Jan-01 00:00:00.0000 TDB");
+    auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399);
+    auto svICRF = earth->ComputeGeosynchronousOrbit(0.0, 0.0, epoch);
+    ASSERT_DOUBLE_EQ(42164171.959054783, svICRF.GetPosition().Magnitude());
+    ASSERT_DOUBLE_EQ(3074.6599898378463, svICRF.GetVelocity().Magnitude());
+}
+
+TEST(CelestialBody, GeosynchronousOrbitFromLongitudeAndLatitude2)
+{
+    IO::Astrodynamics::Time::TDB epoch("2021-Jan-01 00:00:00.0000 TDB");
+    auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399);
+    auto svICRF = earth->ComputeGeosynchronousOrbit(1.0, 1.0, epoch);
+    ASSERT_DOUBLE_EQ(42164171.959054783, svICRF.GetPosition().Magnitude());
+    ASSERT_DOUBLE_EQ(3074.6599898378463, svICRF.GetVelocity().Magnitude());
+    ASSERT_EQ(svICRF.GetPosition(), IO::Astrodynamics::Math::Vector3D(-20992029.308446947, 8679264.3194648232, 35522140.608061761));
+    ASSERT_EQ(svICRF.GetVelocity(), IO::Astrodynamics::Math::Vector3D(-1171.3783810219425, -2842.7805399366021, 2.3544302571665758));
 }

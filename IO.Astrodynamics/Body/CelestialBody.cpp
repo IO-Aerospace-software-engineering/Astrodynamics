@@ -313,13 +313,27 @@ IO::Astrodynamics::OrbitalParameters::StateVector IO::Astrodynamics::Body::Celes
     double r = std::cbrt((m_mu * t2) / (4 * Constants::PI * Constants::PI));
     SpiceDouble bodyFixedLocation[3];
     latrec_c(r, longitude, 0.0, bodyFixedLocation);
+    Math::Vector3D bfixedPos(bodyFixedLocation[0], bodyFixedLocation[1], bodyFixedLocation[2]);
 
-    auto celestialBody = std::dynamic_pointer_cast<IO::Astrodynamics::Body::CelestialBody>(GetSharedPointer());;
-    IO::Astrodynamics::OrbitalParameters::StateVector siteVectorState{celestialBody, IO::Astrodynamics::Math::Vector3D(bodyFixedLocation[0],
-                                                                                                                       bodyFixedLocation[1], bodyFixedLocation[2]),
-                                                                      IO::Astrodynamics::Math::Vector3D(), epoch,
-                                                                      GetBodyFixedFrame()};
-    return siteVectorState;
+    auto celestialBody = std::dynamic_pointer_cast<IO::Astrodynamics::Body::CelestialBody>(GetSharedPointer());
+    IO::Astrodynamics::OrbitalParameters::StateVector sv{celestialBody, bfixedPos, IO::Astrodynamics::Math::Vector3D(), epoch, GetBodyFixedFrame()};
+    return sv.ToFrame(Frames::InertialFrames::ICRF());
+}
+
+IO::Astrodynamics::OrbitalParameters::StateVector
+IO::Astrodynamics::Body::CelestialBody::ComputeGeosynchronousOrbit(double longitude, double latitude, const IO::Astrodynamics::Time::TDB &epoch) const
+{
+    auto t = GetSideralRotationPeriod(epoch);
+    double t2 = t.GetSeconds().count() * t.GetSeconds().count();
+    double r = std::cbrt((m_mu * t2) / (4 * Constants::PI * Constants::PI));
+    SpiceDouble bodyFixedLocation[3];
+    latrec_c(r, longitude, latitude, bodyFixedLocation);
+    Math::Vector3D bfixedPos(bodyFixedLocation[0], bodyFixedLocation[1], bodyFixedLocation[2]);
+    auto icrfPos = GetBodyFixedFrame().TransformVector(Frames::InertialFrames::ICRF(), bfixedPos, epoch);
+    auto icrfRotAxis = GetBodyFixedFrame().TransformVector(Frames::InertialFrames::ICRF(), Math::Vector3D::VectorZ, epoch);
+    auto velocity = icrfRotAxis.CrossProduct(icrfPos).Normalize() * std::sqrt(m_mu / r);
+    auto celestialBody = std::dynamic_pointer_cast<IO::Astrodynamics::Body::CelestialBody>(GetSharedPointer());
+    return IO::Astrodynamics::OrbitalParameters::StateVector{celestialBody, icrfPos, velocity, epoch, GetBodyFixedFrame()};
 }
 
 
