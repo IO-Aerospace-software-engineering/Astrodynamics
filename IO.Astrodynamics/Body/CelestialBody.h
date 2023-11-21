@@ -351,6 +351,21 @@ namespace IO::Astrodynamics::Body
 
         OrbitalParameters::StateVector ComputeGeosynchronousOrbit(double longitude, const Time::TDB& epoch) const;
 
+        /**
+         * @brief Computes the geosynchronous orbit parameters for a given longitude, latitude, and epoch.
+         *
+         * This function calculates the orbital parameters for a geosynchronous orbit
+         * at a specific longitude, latitude, and epoch in time.
+         *
+         * @param longitude Longitude of the desired position on celestial body.
+         * @param latitude Latitude of the desired position on celestial body.
+         * @param epoch The epoch at which the orbital parameters should be calculated.
+         *
+         * @return void
+         */
+
+        OrbitalParameters::StateVector ComputeGeosynchronousOrbit(double longitude, double latitude, const Time::TDB& epoch) const;
+
 
     };
 

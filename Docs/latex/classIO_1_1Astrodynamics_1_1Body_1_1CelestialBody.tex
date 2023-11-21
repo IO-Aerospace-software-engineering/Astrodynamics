@@ -51,7 +51,9 @@ double \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_aea19a
 \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO\+::\+Astrodynamics\+::\+Time\+::\+Time\+Span}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_a4208410aa4b8690c408add40443810b9}{Get\+True\+Solar\+Day}} (\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} \&epoch) const
 \begin{DoxyCompactList}\small\item\em Calculates the true solar day for a given epoch time in TDB. \end{DoxyCompactList}\item 
 \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}{Orbital\+Parameters\+::\+State\+Vector}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_acf21a564477f49674f47cc97aa2b1d57}{Compute\+Geosynchronous\+Orbit}} (double longitude, const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{Time\+::\+TDB}} \&epoch) const
-\begin{DoxyCompactList}\small\item\em Compute the geosynchronous orbit based on the given longitude and epoch. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\begin{DoxyCompactList}\small\item\em Compute the geosynchronous orbit based on the given longitude and epoch. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}{Orbital\+Parameters\+::\+State\+Vector}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_a4fdff3f6594055e2c9117a97dfab5a3a}{Compute\+Geosynchronous\+Orbit}} (double longitude, double latitude, const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{Time\+::\+TDB}} \&epoch) const
+\end{DoxyCompactItemize}
 \doxysubsection*{Static Public Member Functions}
 \begin{DoxyCompactItemize}
 \item 
@@ -102,7 +104,7 @@ It also provides static methods to check if a given celestial body is a sun, pla
 \mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_acf21a564477f49674f47cc97aa2b1d57}\label{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_acf21a564477f49674f47cc97aa2b1d57}} 
 \index{IO::Astrodynamics::Body::CelestialBody@{IO::Astrodynamics::Body::CelestialBody}!ComputeGeosynchronousOrbit@{ComputeGeosynchronousOrbit}}
 \index{ComputeGeosynchronousOrbit@{ComputeGeosynchronousOrbit}!IO::Astrodynamics::Body::CelestialBody@{IO::Astrodynamics::Body::CelestialBody}}
-\doxysubsubsection{\texorpdfstring{ComputeGeosynchronousOrbit()}{ComputeGeosynchronousOrbit()}}
+\doxysubsubsection{\texorpdfstring{ComputeGeosynchronousOrbit()}{ComputeGeosynchronousOrbit()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
 {\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+State\+Vector}} Celestial\+Body\+::\+Compute\+Geosynchronous\+Orbit (\begin{DoxyParamCaption}\item[{double}]{longitude,  }\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{Time\+::\+TDB}} \&}]{epoch }\end{DoxyParamCaption}) const}
 
 
@@ -127,6 +129,12 @@ The longitude is assumed to be in radian and the epoch is assumed to be in TDB.
 \begin{DoxyRemark}{Remarks}
 The geosynchronous orbit is a circular, geocentric orbit with an inclination of zero and an argument of perigee that aligns the longitude with the position of the satellite. Therefore, all other orbital parameters are computed based on these constraints. 
 \end{DoxyRemark}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_a4fdff3f6594055e2c9117a97dfab5a3a}\label{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_a4fdff3f6594055e2c9117a97dfab5a3a}} 
+\index{IO::Astrodynamics::Body::CelestialBody@{IO::Astrodynamics::Body::CelestialBody}!ComputeGeosynchronousOrbit@{ComputeGeosynchronousOrbit}}
+\index{ComputeGeosynchronousOrbit@{ComputeGeosynchronousOrbit}!IO::Astrodynamics::Body::CelestialBody@{IO::Astrodynamics::Body::CelestialBody}}
+\doxysubsubsection{\texorpdfstring{ComputeGeosynchronousOrbit()}{ComputeGeosynchronousOrbit()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+State\+Vector}} Celestial\+Body\+::\+Compute\+Geosynchronous\+Orbit (\begin{DoxyParamCaption}\item[{double}]{longitude,  }\item[{double}]{latitude,  }\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{Time\+::\+TDB}} \&}]{epoch }\end{DoxyParamCaption}) const}
+
 \mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_a006834c646ce0855f82a96552816ae5d}\label{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_a006834c646ce0855f82a96552816ae5d}} 
 \index{IO::Astrodynamics::Body::CelestialBody@{IO::Astrodynamics::Body::CelestialBody}!FindBarycenterOfMotionId@{FindBarycenterOfMotionId}}
 \index{FindBarycenterOfMotionId@{FindBarycenterOfMotionId}!IO::Astrodynamics::Body::CelestialBody@{IO::Astrodynamics::Body::CelestialBody}}
