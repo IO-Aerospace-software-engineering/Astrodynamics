@@ -50,9 +50,11 @@ double \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_aea19a
 \begin{DoxyCompactList}\small\item\em Retrieves the value of J4. \end{DoxyCompactList}\item 
 \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO\+::\+Astrodynamics\+::\+Time\+::\+Time\+Span}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_a4208410aa4b8690c408add40443810b9}{Get\+True\+Solar\+Day}} (\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} \&epoch) const
 \begin{DoxyCompactList}\small\item\em Calculates the true solar day for a given epoch time in TDB. \end{DoxyCompactList}\item 
-\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}{Orbital\+Parameters\+::\+State\+Vector}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_acf21a564477f49674f47cc97aa2b1d57}{Compute\+Geosynchronous\+Orbit}} (double longitude, const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{Time\+::\+TDB}} \&epoch) const
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1ConicOrbitalElements}{Orbital\+Parameters\+::\+Conic\+Orbital\+Elements}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_a4a4b1c1c717f28d5649d307ae41d6b21}{Compute\+Geosynchronous\+Orbit}} (double longitude, const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{Time\+::\+TDB}} \&epoch) const
 \begin{DoxyCompactList}\small\item\em Compute the geosynchronous orbit based on the given longitude and epoch. \end{DoxyCompactList}\item 
-\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}{Orbital\+Parameters\+::\+State\+Vector}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_a4fdff3f6594055e2c9117a97dfab5a3a}{Compute\+Geosynchronous\+Orbit}} (double longitude, double latitude, const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{Time\+::\+TDB}} \&epoch) const
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1ConicOrbitalElements}{Orbital\+Parameters\+::\+Conic\+Orbital\+Elements}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_a8735c6d76ec87e60611e600b7d0a6432}{Compute\+Geosynchronous\+Orbit}} (double longitude, double latitude, const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{Time\+::\+TDB}} \&epoch) const
+\begin{DoxyCompactList}\small\item\em Computes the geosynchronous orbit parameters for a given longitude, latitude, and epoch. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO\+::\+Astrodynamics\+::\+Math\+::\+Vector3D}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_ad455a97f3a4b104f97e9d86081b480fc}{Get\+Body\+Fixed\+Position}} (double longitude, double latitude, const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} \&epoch) const
 \end{DoxyCompactItemize}
 \doxysubsection*{Static Public Member Functions}
 \begin{DoxyCompactItemize}
@@ -101,11 +103,11 @@ It also provides static methods to check if a given celestial body is a sun, pla
 
 
 \doxysubsection{Member Function Documentation}
-\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_acf21a564477f49674f47cc97aa2b1d57}\label{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_acf21a564477f49674f47cc97aa2b1d57}} 
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_a4a4b1c1c717f28d5649d307ae41d6b21}\label{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_a4a4b1c1c717f28d5649d307ae41d6b21}} 
 \index{IO::Astrodynamics::Body::CelestialBody@{IO::Astrodynamics::Body::CelestialBody}!ComputeGeosynchronousOrbit@{ComputeGeosynchronousOrbit}}
 \index{ComputeGeosynchronousOrbit@{ComputeGeosynchronousOrbit}!IO::Astrodynamics::Body::CelestialBody@{IO::Astrodynamics::Body::CelestialBody}}
 \doxysubsubsection{\texorpdfstring{ComputeGeosynchronousOrbit()}{ComputeGeosynchronousOrbit()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
-{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+State\+Vector}} Celestial\+Body\+::\+Compute\+Geosynchronous\+Orbit (\begin{DoxyParamCaption}\item[{double}]{longitude,  }\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{Time\+::\+TDB}} \&}]{epoch }\end{DoxyParamCaption}) const}
+{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1ConicOrbitalElements}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Conic\+Orbital\+Elements}} Celestial\+Body\+::\+Compute\+Geosynchronous\+Orbit (\begin{DoxyParamCaption}\item[{double}]{longitude,  }\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{Time\+::\+TDB}} \&}]{epoch }\end{DoxyParamCaption}) const}
 
 
 
@@ -129,12 +131,30 @@ The longitude is assumed to be in radian and the epoch is assumed to be in TDB.
 \begin{DoxyRemark}{Remarks}
 The geosynchronous orbit is a circular, geocentric orbit with an inclination of zero and an argument of perigee that aligns the longitude with the position of the satellite. Therefore, all other orbital parameters are computed based on these constraints. 
 \end{DoxyRemark}
-\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_a4fdff3f6594055e2c9117a97dfab5a3a}\label{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_a4fdff3f6594055e2c9117a97dfab5a3a}} 
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_a8735c6d76ec87e60611e600b7d0a6432}\label{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_a8735c6d76ec87e60611e600b7d0a6432}} 
 \index{IO::Astrodynamics::Body::CelestialBody@{IO::Astrodynamics::Body::CelestialBody}!ComputeGeosynchronousOrbit@{ComputeGeosynchronousOrbit}}
 \index{ComputeGeosynchronousOrbit@{ComputeGeosynchronousOrbit}!IO::Astrodynamics::Body::CelestialBody@{IO::Astrodynamics::Body::CelestialBody}}
 \doxysubsubsection{\texorpdfstring{ComputeGeosynchronousOrbit()}{ComputeGeosynchronousOrbit()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
-{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+State\+Vector}} Celestial\+Body\+::\+Compute\+Geosynchronous\+Orbit (\begin{DoxyParamCaption}\item[{double}]{longitude,  }\item[{double}]{latitude,  }\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{Time\+::\+TDB}} \&}]{epoch }\end{DoxyParamCaption}) const}
+{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1ConicOrbitalElements}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Conic\+Orbital\+Elements}} Celestial\+Body\+::\+Compute\+Geosynchronous\+Orbit (\begin{DoxyParamCaption}\item[{double}]{longitude,  }\item[{double}]{latitude,  }\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{Time\+::\+TDB}} \&}]{epoch }\end{DoxyParamCaption}) const}
 
+
+
+Computes the geosynchronous orbit parameters for a given longitude, latitude, and epoch. 
+
+This function calculates the orbital parameters for a geosynchronous orbit at a specific longitude, latitude, and epoch in time.
+
+
+\begin{DoxyParams}{Parameters}
+{\em longitude} & Longitude of the desired position on celestial body. \\
+\hline
+{\em latitude} & Latitude of the desired position on celestial body. \\
+\hline
+{\em epoch} & The epoch at which the orbital parameters should be calculated.\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+void 
+\end{DoxyReturn}
 \mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_a006834c646ce0855f82a96552816ae5d}\label{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_a006834c646ce0855f82a96552816ae5d}} 
 \index{IO::Astrodynamics::Body::CelestialBody@{IO::Astrodynamics::Body::CelestialBody}!FindBarycenterOfMotionId@{FindBarycenterOfMotionId}}
 \index{FindBarycenterOfMotionId@{FindBarycenterOfMotionId}!IO::Astrodynamics::Body::CelestialBody@{IO::Astrodynamics::Body::CelestialBody}}
@@ -214,6 +234,26 @@ Get the \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Body}{Body}} Fixed Fram
 
 \begin{DoxyReturn}{Returns}
 const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Frames_1_1BodyFixedFrames}{IO\+::\+Astrodynamics\+::\+Frames\+::\+Body\+Fixed\+Frames}}\& 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_ad455a97f3a4b104f97e9d86081b480fc}\label{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_ad455a97f3a4b104f97e9d86081b480fc}} 
+\index{IO::Astrodynamics::Body::CelestialBody@{IO::Astrodynamics::Body::CelestialBody}!GetBodyFixedPosition@{GetBodyFixedPosition}}
+\index{GetBodyFixedPosition@{GetBodyFixedPosition}!IO::Astrodynamics::Body::CelestialBody@{IO::Astrodynamics::Body::CelestialBody}}
+\doxysubsubsection{\texorpdfstring{GetBodyFixedPosition()}{GetBodyFixedPosition()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO\+::\+Astrodynamics\+::\+Math\+::\+Vector3D}} Celestial\+Body\+::\+Get\+Body\+Fixed\+Position (\begin{DoxyParamCaption}\item[{double}]{longitude,  }\item[{double}]{latitude,  }\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} \&}]{epoch }\end{DoxyParamCaption}) const}
+
+Calculates the fixed position of a body given its longitude, latitude, and epoch.
+
+
+\begin{DoxyParams}{Parameters}
+{\em longitude} & The longitude of the body. \\
+\hline
+{\em latitude} & The latitude of the body. \\
+\hline
+{\em epoch} & The epoch at which to calculate the fixed position. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+The fixed position of the body. 
 \end{DoxyReturn}
 \mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_a32e281be0a2990e79ce111d870d79338}\label{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody_a32e281be0a2990e79ce111d870d79338}} 
 \index{IO::Astrodynamics::Body::CelestialBody@{IO::Astrodynamics::Body::CelestialBody}!GetFlattening@{GetFlattening}}
