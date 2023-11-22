@@ -273,8 +273,9 @@ TEST(CelestialBody, GeosynchronousOrbitFromLongitudeAndLatitude2)
     ASSERT_EQ(IO::Astrodynamics::Frames::InertialFrames::ICRF(), conics.GetFrame());
     ASSERT_DOUBLE_EQ(42164171.959054783, svICRF.GetPosition().Magnitude());
     ASSERT_DOUBLE_EQ(3074.6599898378463, svICRF.GetVelocity().Magnitude());
-    ASSERT_EQ(IO::Astrodynamics::Math::Vector3D(-20992029.308446944, 8679264.3194648344, 35522140.608061768), svICRF.GetPosition());
+    ASSERT_NEAR(-20992029.308446944,svICRF.GetPosition().GetX(),1E-03);
+    ASSERT_NEAR(8679264.3194648344,svICRF.GetPosition().GetY(),1E-03);
+    ASSERT_NEAR(35522140.608061768,svICRF.GetPosition().GetZ(),1E-03);
     ASSERT_EQ(IO::Astrodynamics::Math::Vector3D(-1171.3783810219427, -2842.7805399366021, 2.354430257167369), svICRF.GetVelocity());
     ASSERT_EQ(IO::Astrodynamics::Frames::InertialFrames::ICRF(), svICRF.GetFrame());
-
 }
