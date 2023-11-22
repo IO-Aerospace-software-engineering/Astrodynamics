@@ -42,13 +42,12 @@ var searchData=
   ['frontid_39',['frontId',['../structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1OccultationConstraintDTO.html#ae3102a7329fc8bdb8143dda4d91ce421',1,'IO::Astrodynamics::API::DTO::OccultationConstraintDTO']]],
   ['fuelburned_40',['FuelBurned',['../structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ApsidalAlignmentManeuverDTO.html#afcaa6047fac81f2558bff799974769fa',1,'IO::Astrodynamics::API::DTO::ApsidalAlignmentManeuverDTO::FuelBurned()'],['../structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1CombinedManeuverDTO.html#abf9c59d9f408eefc773d193ef54b3349',1,'IO::Astrodynamics::API::DTO::CombinedManeuverDTO::FuelBurned()'],['../structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1OrbitalPlaneChangingManeuverDTO.html#a55d583b5bc3b14b97b4f982f8f481694',1,'IO::Astrodynamics::API::DTO::OrbitalPlaneChangingManeuverDTO::FuelBurned()'],['../structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1PerigeeHeightChangingManeuverDTO.html#a57fd3d9e34107b562c4c2e89db922a80',1,'IO::Astrodynamics::API::DTO::PerigeeHeightChangingManeuverDTO::FuelBurned()'],['../structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ApogeeHeightChangingManeuverDTO.html#a9f25a35a482bff4119a0804abc796aa2',1,'IO::Astrodynamics::API::DTO::ApogeeHeightChangingManeuverDTO::FuelBurned()'],['../structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1PhasingManeuverDTO.html#a0d497a0d9f108da5a2f72e8eead27a46',1,'IO::Astrodynamics::API::DTO::PhasingManeuverDTO::FuelBurned()']]],
   ['fuelflow_41',['fuelFlow',['../structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1EngineDTO.html#a0527074bcf7275c071b9597cb435f961',1,'IO::Astrodynamics::API::DTO::EngineDTO']]],
-  ['fueltank_42',['FuelTank',['../classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1FuelTank.html#ae914274744e8b6937d8a1f1ba9c31bd0',1,'IO::Astrodynamics::Body::Spacecraft::FuelTank']]],
-  ['fueltank_43',['fuelTank',['../structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1SpacecraftDTO.html#a551feb4e2b1f583c4d01fc0de43e951b',1,'IO::Astrodynamics::API::DTO::SpacecraftDTO']]],
-  ['fueltank_44',['FuelTank',['../classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1FuelTank.html',1,'IO::Astrodynamics::Body::Spacecraft']]],
-  ['fueltank_2ecpp_45',['FuelTank.cpp',['../FuelTank_8cpp.html',1,'']]],
-  ['fueltank_2eh_46',['FuelTank.h',['../FuelTank_8h.html',1,'']]],
-  ['fueltankdto_47',['FuelTankDTO',['../structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1FuelTankDTO.html',1,'IO::Astrodynamics::API::DTO']]],
-  ['fueltankdto_2eh_48',['FuelTankDTO.h',['../FuelTankDTO_8h.html',1,'']]],
-  ['fueltankserialnumber_49',['fuelTankSerialNumber',['../structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1EngineDTO.html#a48bebe5eb642287fab9f1d313465068f',1,'IO::Astrodynamics::API::DTO::EngineDTO']]],
-  ['full_50',['Full',['../classIO_1_1Astrodynamics_1_1OccultationType.html#a1499831627886bddb04400c4c70cfd80',1,'IO::Astrodynamics::OccultationType']]]
+  ['fueltank_42',['fuelTank',['../structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1SpacecraftDTO.html#a551feb4e2b1f583c4d01fc0de43e951b',1,'IO::Astrodynamics::API::DTO::SpacecraftDTO']]],
+  ['fueltank_43',['FuelTank',['../classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1FuelTank.html#ae914274744e8b6937d8a1f1ba9c31bd0',1,'IO::Astrodynamics::Body::Spacecraft::FuelTank::FuelTank()'],['../classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1FuelTank.html',1,'IO::Astrodynamics::Body::Spacecraft::FuelTank']]],
+  ['fueltank_2ecpp_44',['FuelTank.cpp',['../FuelTank_8cpp.html',1,'']]],
+  ['fueltank_2eh_45',['FuelTank.h',['../FuelTank_8h.html',1,'']]],
+  ['fueltankdto_46',['FuelTankDTO',['../structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1FuelTankDTO.html',1,'IO::Astrodynamics::API::DTO']]],
+  ['fueltankdto_2eh_47',['FuelTankDTO.h',['../FuelTankDTO_8h.html',1,'']]],
+  ['fueltankserialnumber_48',['fuelTankSerialNumber',['../structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1EngineDTO.html#a48bebe5eb642287fab9f1d313465068f',1,'IO::Astrodynamics::API::DTO::EngineDTO']]],
+  ['full_49',['Full',['../classIO_1_1Astrodynamics_1_1OccultationType.html#a1499831627886bddb04400c4c70cfd80',1,'IO::Astrodynamics::OccultationType']]]
 ];

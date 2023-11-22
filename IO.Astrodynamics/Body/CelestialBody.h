@@ -349,7 +349,7 @@ namespace IO::Astrodynamics::Body
          * all other orbital parameters are computed based on these constraints.
          */
 
-        OrbitalParameters::StateVector ComputeGeosynchronousOrbit(double longitude, const Time::TDB& epoch) const;
+        OrbitalParameters::ConicOrbitalElements ComputeGeosynchronousOrbit(double longitude, const Time::TDB &epoch) const;
 
         /**
          * @brief Computes the geosynchronous orbit parameters for a given longitude, latitude, and epoch.
@@ -364,9 +364,19 @@ namespace IO::Astrodynamics::Body
          * @return void
          */
 
-        OrbitalParameters::StateVector ComputeGeosynchronousOrbit(double longitude, double latitude, const Time::TDB& epoch) const;
+        OrbitalParameters::ConicOrbitalElements ComputeGeosynchronousOrbit(double longitude, double latitude, const Time::TDB &epoch) const;
 
 
+        /**
+         * Calculates the fixed position of a body given its longitude, latitude, and epoch.
+         *
+         * @param longitude The longitude of the body.
+         * @param latitude The latitude of the body.
+         * @param epoch The epoch at which to calculate the fixed position.
+         * @return The fixed position of the body.
+         */
+
+        IO::Astrodynamics::Math::Vector3D GetBodyFixedPosition(double longitude, double latitude, const IO::Astrodynamics::Time::TDB &epoch) const;
     };
 
     /**

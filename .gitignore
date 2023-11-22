@@ -11,8 +11,10 @@ CTestTestfile.cmake
 _deps
 out/
 cmake-build-release/
+cmake-build-release-linux/
 cmake-build-release-coverage/
 cmake-build-debug/
+cmake-build-debug-linux/
 .vscode/
 build/
 /.idea/
