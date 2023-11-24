@@ -271,7 +271,8 @@ IO::Astrodynamics::OrbitalParameters::OrbitalParameters::CreateEarthHelioSynchro
 
     //Compute longitude of ascending node to orient orbit toward the sun
     IO::Astrodynamics::Math::Vector3D sunVector = earth->ReadEphemeris(Frames::InertialFrames::ICRF(), AberrationsEnum::LT, epochAtDescendingNode, *earth->GetOrbitalParametersAtEpoch()->GetCenterOfMotion()).GetPosition().Reverse();
-    IO::Astrodynamics::Math::Plane sunPlane{IO::Astrodynamics::Math::Vector3D::VectorZ.CrossProduct(sunVector), 0.0};
+    auto zIcrf=earth->GetBodyFixedFrame().TransformVector(Frames::InertialFrames::ICRF(),Math::Vector3D::VectorZ,epochAtDescendingNode);
+    IO::Astrodynamics::Math::Plane sunPlane{zIcrf.CrossProduct(sunVector), 0.0};
     double raanLongitude = sunPlane.GetAngle(IO::Astrodynamics::Math::Vector3D::VectorY);
 
     if (sunVector.GetY() > 0.0)
@@ -286,7 +287,7 @@ IO::Astrodynamics::OrbitalParameters::OrbitalParameters::CreateEarthHelioSynchro
     }
 
     //Compute mean anomaly at ascending node
-    double m = IO::Astrodynamics::OrbitalParameters::OrbitalParameters::ConvertTrueAnomalyToMeanAnomaly(Constants::PI2 + Constants::_2PI, eccentricity);
+    double m = IO::Astrodynamics::OrbitalParameters::OrbitalParameters::ConvertTrueAnomalyToMeanAnomaly(Constants::PI + Constants::PI2, eccentricity);
     return std::make_unique<IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements>(earth, p, eccentricity, i, raanLongitude, Constants::PI + Constants::PI2, m,
                                                                                         epochAtDescendingNode,
                                                                                         IO::Astrodynamics::Frames::InertialFrames::ICRF());

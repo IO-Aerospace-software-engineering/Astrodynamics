@@ -459,8 +459,8 @@ TEST(API, GetBodyInformationWithoutJ)
     ASSERT_EQ(301, res.Id);
     ASSERT_EQ(399, res.CenterOfMotionId);
     ASSERT_STREQ("MOON", res.Name);
-    ASSERT_EQ(31000, res.FrameId);
-    ASSERT_STREQ("MOON_PA", res.FrameName);
+    ASSERT_EQ(31001, res.FrameId);
+    ASSERT_STREQ("MOON_ME", res.FrameName);
     ASSERT_DOUBLE_EQ(4902800066163.7959, res.GM);
     ASSERT_DOUBLE_EQ(1737400, res.Radii.x);
     ASSERT_DOUBLE_EQ(1737400, res.Radii.y);
