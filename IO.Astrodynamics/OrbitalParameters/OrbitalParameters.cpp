@@ -266,6 +266,7 @@ IO::Astrodynamics::OrbitalParameters::OrbitalParameters::CreateEarthHelioSynchro
     double e22 = (1 - e2) * (1 - e2);
     double sqrtGM = std::sqrt(earth->GetMu());
     double re2 = eqRadius * eqRadius;
+    double m0=earth->GetOrbitalParametersAtEpoch()->GetMeanMotion();
     double i = std::acos((2 * a72 * e22 * earth->GetOrbitalParametersAtEpoch()->GetMeanMotion()) / (3 * sqrtGM * -earth->GetJ2() * re2));
 
     //Compute longitude of ascending node to orient orbit toward the sun
