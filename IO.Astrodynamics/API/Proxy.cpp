@@ -548,6 +548,11 @@ IO::Astrodynamics::API::DTO::CelestialBodyDTO GetCelestialBodyInfoProxy(int body
         // Search CelestialItem's mass
         res.GM = IO::Astrodynamics::Body::CelestialBody::ReadGM(bodyId);
 
+        //Read J Parameters
+        res.J2 = IO::Astrodynamics::Body::CelestialBody::ReadJ2(bodyId);
+        res.J3 = IO::Astrodynamics::Body::CelestialBody::ReadJ3(bodyId);
+        res.J4 = IO::Astrodynamics::Body::CelestialBody::ReadJ4(bodyId);
+
         // Search frame
         if (!IO::Astrodynamics::Body::CelestialBody::IsBarycenter(bodyId))
         {

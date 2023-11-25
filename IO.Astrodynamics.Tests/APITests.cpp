@@ -49,12 +49,12 @@ TEST(API, SitePropagation)
 
     PropagateSiteProxy(windowTDBDto, site);
 
-    LoadKernelsProxy((sitePath+"/S134").c_str());
+    LoadKernelsProxy((sitePath + "/S134").c_str());
 
 
     IO::Astrodynamics::API::DTO::StateVectorDTO sv[25];
     ReadEphemerisProxy(windowTDBDto, 399, 399134, "J2000", "NONE", 3600, sv);
-    UnloadKernelsProxy((sitePath+"/S134").c_str());
+    UnloadKernelsProxy((sitePath + "/S134").c_str());
 
     ASSERT_DOUBLE_EQ(4054782.9648194457, sv[0].position.x);
     ASSERT_DOUBLE_EQ(-4799280.7521664528, sv[0].position.y);
@@ -155,8 +155,8 @@ TEST(API, SpacecraftPropagation)
     scenario.Spacecraft.orbitalPlaneChangingManeuvers[0].engines[0] = "eng1";
     scenario.Spacecraft.orbitalPlaneChangingManeuvers[0].maneuverOrder = 0;
 
-    scenario.Spacecraft.progradeAttitudes[0].maneuverOrder=1;
-    scenario.Spacecraft.progradeAttitudes[0].engines[0]="eng1";
+    scenario.Spacecraft.progradeAttitudes[0].maneuverOrder = 1;
+    scenario.Spacecraft.progradeAttitudes[0].engines[0] = "eng1";
 
 
     //Execute propagation
@@ -448,6 +448,26 @@ TEST(API, GetBodyInformation)
     ASSERT_DOUBLE_EQ(6378136.5999999998, res.Radii.x);
     ASSERT_DOUBLE_EQ(6378136.5999999998, res.Radii.y);
     ASSERT_DOUBLE_EQ(6356751.9000000002, res.Radii.z);
+    ASSERT_DOUBLE_EQ(0.001082616, res.J2);
+    ASSERT_DOUBLE_EQ(-2.5388099999999996e-06, res.J3);
+    ASSERT_DOUBLE_EQ(-1.6559699999999999e-06, res.J4);
+}
+
+TEST(API, GetBodyInformationWithoutJ)
+{
+    auto res = GetCelestialBodyInfoProxy(301);
+    ASSERT_EQ(301, res.Id);
+    ASSERT_EQ(399, res.CenterOfMotionId);
+    ASSERT_STREQ("MOON", res.Name);
+    ASSERT_EQ(31001, res.FrameId);
+    ASSERT_STREQ("MOON_ME", res.FrameName);
+    ASSERT_DOUBLE_EQ(4902800066163.7959, res.GM);
+    ASSERT_DOUBLE_EQ(1737400, res.Radii.x);
+    ASSERT_DOUBLE_EQ(1737400, res.Radii.y);
+    ASSERT_DOUBLE_EQ(1737400, res.Radii.z);
+    ASSERT_TRUE(std::isnan(res.J2));
+    ASSERT_TRUE(std::isnan(res.J3));
+    ASSERT_TRUE(std::isnan(res.J4));
 }
 
 TEST(API, GetBodyInformationInvalidId)

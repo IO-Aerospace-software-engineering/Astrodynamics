@@ -46,14 +46,6 @@ namespace IO::Astrodynamics::Body
         const double m_J3{};
         const double m_J4{};
 
-        double ReadJValue(const char *valueName) const;
-
-        double ReadJ2() const;
-
-        double ReadJ3() const;
-
-        double ReadJ4() const;
-
 
     public:
         /**
@@ -377,6 +369,14 @@ namespace IO::Astrodynamics::Body
          */
 
         IO::Astrodynamics::Math::Vector3D GetBodyFixedPosition(double longitude, double latitude, const IO::Astrodynamics::Time::TDB &epoch) const;
+
+        static double ReadJValue(int bodyId, const char *valueName);
+
+        static double ReadJ2(int bodyId);
+
+        static double ReadJ3(int bodyId);
+
+        static double ReadJ4(int bodyId);
     };
 
     /**
