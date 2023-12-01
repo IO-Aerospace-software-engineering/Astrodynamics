@@ -21,11 +21,6 @@ IO::Astrodynamics::Maneuvers::ApsidalAlignmentManeuver::ApsidalAlignmentManeuver
 {
 }
 
-bool IO::Astrodynamics::Maneuvers::ApsidalAlignmentManeuver::CanExecute(const IO::Astrodynamics::OrbitalParameters::OrbitalParameters &orbitalParams)
-{
-
-}
-
 void IO::Astrodynamics::Maneuvers::ApsidalAlignmentManeuver::Compute(
         const IO::Astrodynamics::OrbitalParameters::OrbitalParameters &orbitalParams)
 {

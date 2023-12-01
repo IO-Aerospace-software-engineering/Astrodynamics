@@ -7,46 +7,28 @@
 
 #include <utility>
 
-IO::Astrodynamics::Maneuvers::OrbitalPlaneChangingManeuver::OrbitalPlaneChangingManeuver(std::vector<IO::Astrodynamics::Body::Spacecraft::Engine*> engines,
-                                                                               IO::Astrodynamics::Propagators::Propagator &propagator,
-                                                                               std::shared_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> targetOrbit) : IO::Astrodynamics::Maneuvers::ManeuverBase(
+IO::Astrodynamics::Maneuvers::OrbitalPlaneChangingManeuver::OrbitalPlaneChangingManeuver(std::vector<IO::Astrodynamics::Body::Spacecraft::Engine *> engines,
+                                                                                         IO::Astrodynamics::Propagators::Propagator &propagator,
+                                                                                         std::shared_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> targetOrbit)
+        : IO::Astrodynamics::Maneuvers::ManeuverBase(
         std::move(engines), propagator), m_targetOrbit{std::move(targetOrbit)}
 {
 }
 
-IO::Astrodynamics::Maneuvers::OrbitalPlaneChangingManeuver::OrbitalPlaneChangingManeuver(std::vector<IO::Astrodynamics::Body::Spacecraft::Engine*> engines,
-                                                                               IO::Astrodynamics::Propagators::Propagator &propagator,
-                                                                               std::shared_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> targetOrbit, const IO::Astrodynamics::Time::TDB &minimumEpoch)
+IO::Astrodynamics::Maneuvers::OrbitalPlaneChangingManeuver::OrbitalPlaneChangingManeuver(std::vector<IO::Astrodynamics::Body::Spacecraft::Engine *> engines,
+                                                                                         IO::Astrodynamics::Propagators::Propagator &propagator,
+                                                                                         std::shared_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> targetOrbit,
+                                                                                         const IO::Astrodynamics::Time::TDB &minimumEpoch)
         : IO::Astrodynamics::Maneuvers::ManeuverBase(std::move(engines), propagator, minimumEpoch), m_targetOrbit{std::move(targetOrbit)}
 {
 }
 
-bool IO::Astrodynamics::Maneuvers::OrbitalPlaneChangingManeuver::CanExecute(const IO::Astrodynamics::OrbitalParameters::OrbitalParameters &orbitalParams)
-{
-    auto spacecraftSv = orbitalParams.ToStateVector();
-
-    if (std::abs(spacecraftSv.GetPosition().GetAngle(m_targetOrbit->GetSpecificAngularMomentum().CrossProduct(orbitalParams.GetSpecificAngularMomentum()))) <
-        Parameters::NodeDetectionAccuraccy)
-    {
-        m_isAscendingNode = true;
-        return true;
-    }
-
-    if (std::abs(spacecraftSv.GetPosition().GetAngle(m_targetOrbit->GetSpecificAngularMomentum().CrossProduct(orbitalParams.GetSpecificAngularMomentum()).Reverse())) <
-        Parameters::NodeDetectionAccuraccy)
-    {
-        return true;
-    }
-
-    return false;
-}
-
 void IO::Astrodynamics::Maneuvers::OrbitalPlaneChangingManeuver::Compute(const IO::Astrodynamics::OrbitalParameters::OrbitalParameters &orbitalParams)
 {
-    auto currentvectorState = orbitalParams.ToStateVector();
+    auto currentStateVector = orbitalParams.ToStateVector();
 
-    const IO::Astrodynamics::Math::Vector3D& vel = currentvectorState.GetVelocity();
-    const IO::Astrodynamics::Math::Vector3D& pos = currentvectorState.GetPosition();
+    const IO::Astrodynamics::Math::Vector3D &vel = currentStateVector.GetVelocity();
+    const IO::Astrodynamics::Math::Vector3D &pos = currentStateVector.GetPosition();
 
     //Project vector
     IO::Astrodynamics::Math::Vector3D projectedVector = vel - (pos * (vel.DotProduct(pos) / pos.DotProduct(pos)));
@@ -86,7 +68,7 @@ IO::Astrodynamics::Maneuvers::OrbitalPlaneChangingManeuver::ComputeOrientation(c
     }
 
     return IO::Astrodynamics::OrbitalParameters::StateOrientation{targetVector.To(m_spacecraft.Front), IO::Astrodynamics::Math::Vector3D(0.0, 0.0, 0.0), maneuverPoint.GetEpoch(),
-                                                        maneuverPoint.GetFrame()};
+                                                                  maneuverPoint.GetFrame()};
 }
 
 double IO::Astrodynamics::Maneuvers::OrbitalPlaneChangingManeuver::GetRelativeInclination() const
@@ -95,8 +77,19 @@ double IO::Astrodynamics::Maneuvers::OrbitalPlaneChangingManeuver::GetRelativeIn
 }
 
 IO::Astrodynamics::Math::Vector3D
-IO::Astrodynamics::Maneuvers::OrbitalPlaneChangingManeuver::ManeuverPointComputation(const IO::Astrodynamics::OrbitalParameters::OrbitalParameters &orbitalParameters)
+IO::Astrodynamics::Maneuvers::OrbitalPlaneChangingManeuver::ManeuverPointComputation(const IO::Astrodynamics::OrbitalParameters::OrbitalParameters &orbitalParams)
 {
-    return IO::Astrodynamics::Math::Vector3D();
+    auto spacecraftSv = orbitalParams.ToStateVector();
+    auto AnVector = m_targetOrbit->GetSpecificAngularMomentum().CrossProduct(orbitalParams.GetSpecificAngularMomentum()).Normalize();
+
+    if(spacecraftSv.GetPosition().GetAngle(AnVector,spacecraftSv.GetSpecificAngularMomentum())>0.0)
+    {
+        m_isAscendingNode= true;
+        return AnVector;
+    }
+
+    auto DnVector = AnVector.Reverse();
+    m_isAscendingNode= false;
+    return DnVector;
 }
 

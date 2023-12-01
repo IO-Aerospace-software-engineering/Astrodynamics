@@ -39,15 +39,6 @@ namespace IO::Astrodynamics::Maneuvers
         OrbitalPlaneChangingManeuver(std::vector<IO::Astrodynamics::Body::Spacecraft::Engine*> engines, IO::Astrodynamics::Propagators::Propagator &propagator, std::shared_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> targetOrbit, const IO::Astrodynamics::Time::TDB &minimumEpoch);
 
         /**
-         * @brief Define maneuver execution condition
-         * 
-         * @param stateVector 
-         * @return true 
-         * @return false 
-         */
-        bool CanExecute(const IO::Astrodynamics::OrbitalParameters::OrbitalParameters &orbitalParams) override;
-
-        /**
          * @brief Compute impulsive maneuver
          * 
          * @param maneuverPoint 

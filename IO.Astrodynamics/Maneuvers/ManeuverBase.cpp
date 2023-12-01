@@ -405,6 +405,7 @@ bool IO::Astrodynamics::Maneuvers::ManeuverBase::CanExecute(const IO::Astrodynam
         UpdateManeuverPoint(orbitalParams);
     }
 
+    auto angle=orbitalParams.ToStateVector().GetPosition().GetAngle(m_maneuverPointTarget.value(), orbitalParams.GetSpecificAngularMomentum());
     bool isInbound = m_maneuverPointTarget.has_value() &&
                      orbitalParams.ToStateVector().GetPosition().GetAngle(m_maneuverPointTarget.value(), orbitalParams.GetSpecificAngularMomentum()) > 0.0;
 
