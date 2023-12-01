@@ -75,3 +75,9 @@ IO::Astrodynamics::Math::Vector3D IO::Astrodynamics::Maneuvers::CombinedManeuver
 
     return targetOrbit.ToStateVector(meanAnomaly).GetVelocity() - sv.GetVelocity();
 }
+
+IO::Astrodynamics::Math::Vector3D
+IO::Astrodynamics::Maneuvers::CombinedManeuver::ManeuverPointComputation(const IO::Astrodynamics::OrbitalParameters::OrbitalParameters &orbitalParameters)
+{
+    return IO::Astrodynamics::Math::Vector3D();
+}

@@ -15,7 +15,8 @@ namespace IO::Astrodynamics::Maneuvers
 
         std::shared_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> m_targetOrbit;
         bool m_isAscendingNode{false};
-
+    protected:
+        Math::Vector3D ManeuverPointComputation(const IO::Astrodynamics::OrbitalParameters::OrbitalParameters& orbitalParameters) override;
 
     public:
         /**

@@ -4,6 +4,7 @@
 #include <Vector3D.h>
 #include <cmath>
 #include <Quaternion.h>
+#include <Plane.h>
 
 const IO::Astrodynamics::Math::Vector3D IO::Astrodynamics::Math::Vector3D::VectorX{1.0, 0.0, 0.0};
 const IO::Astrodynamics::Math::Vector3D IO::Astrodynamics::Math::Vector3D::VectorY{0.0, 1.0, 0.0};
@@ -119,4 +120,14 @@ IO::Astrodynamics::Math::Quaternion IO::Astrodynamics::Math::Vector3D::To(const 
 IO::Astrodynamics::Math::Vector3D IO::Astrodynamics::Math::Vector3D::Reverse() const
 {
     return *this * -1.0;
+}
+
+double IO::Astrodynamics::Math::Vector3D::GetAngle(const IO::Astrodynamics::Math::Vector3D &vector, const IO::Astrodynamics::Math::Plane &plane) const
+{
+    return GetAngle(vector,plane.GetNormal());
+}
+
+double IO::Astrodynamics::Math::Vector3D::GetAngle(const IO::Astrodynamics::Math::Vector3D &vector, const IO::Astrodynamics::Math::Vector3D &plane) const
+{
+    return std::atan2(CrossProduct(vector).DotProduct(plane.Normalize()), DotProduct(vector));
 }

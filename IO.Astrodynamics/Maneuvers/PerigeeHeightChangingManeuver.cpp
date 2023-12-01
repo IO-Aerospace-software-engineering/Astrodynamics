@@ -55,3 +55,9 @@ bool IO::Astrodynamics::Maneuvers::PerigeeHeightChangingManeuver::CanExecute(con
 
     return false;
 }
+
+IO::Astrodynamics::Math::Vector3D
+IO::Astrodynamics::Maneuvers::PerigeeHeightChangingManeuver::ManeuverPointComputation(const IO::Astrodynamics::OrbitalParameters::OrbitalParameters &orbitalParameters)
+{
+    return IO::Astrodynamics::Math::Vector3D();
+}

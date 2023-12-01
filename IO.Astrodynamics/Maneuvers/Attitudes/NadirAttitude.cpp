@@ -30,3 +30,9 @@ bool IO::Astrodynamics::Maneuvers::Attitudes::NadirAttitude::CanExecute([[maybe_
 {
     return true;
 }
+
+IO::Astrodynamics::Math::Vector3D
+IO::Astrodynamics::Maneuvers::Attitudes::NadirAttitude::ManeuverPointComputation(const IO::Astrodynamics::OrbitalParameters::OrbitalParameters &orbitalParameters)
+{
+    return IO::Astrodynamics::Math::Vector3D();
+}

@@ -75,3 +75,9 @@ bool IO::Astrodynamics::Maneuvers::PhasingManeuver::CanExecute(const IO::Astrody
 
     return false;
 }
+
+IO::Astrodynamics::Math::Vector3D
+IO::Astrodynamics::Maneuvers::PhasingManeuver::ManeuverPointComputation(const IO::Astrodynamics::OrbitalParameters::OrbitalParameters &orbitalParameters)
+{
+    return IO::Astrodynamics::Math::Vector3D();
+}

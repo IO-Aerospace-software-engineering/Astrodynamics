@@ -6,11 +6,11 @@
 #define MANEUVER_BASE_H
 
 #include <set>
-#include <map>
 
 #include <ManeuverResult.h>
 #include <Propagator.h>
 #include <DynamicFuelTank.h>
+#include <optional>
 
 using namespace std::chrono_literals;
 
@@ -22,7 +22,7 @@ namespace IO::Astrodynamics::Propagators
 namespace IO::Astrodynamics::Maneuvers
 {
     /**
-     * @brief Maneuverbase class used by concrete maneuvers
+     * @brief ManeuverBase class used by concrete maneuvers
      * 
      */
     class ManeuverBase
@@ -105,6 +105,9 @@ namespace IO::Astrodynamics::Maneuvers
         std::set<const IO::Astrodynamics::Body::Spacecraft::FuelTank *> m_fuelTanks;
         std::map<const IO::Astrodynamics::Body::Spacecraft::FuelTank *, IO::Astrodynamics::Maneuvers::DynamicFuelTank> m_dynamicFuelTanks;
         IO::Astrodynamics::Time::TimeSpan m_maneuverHoldDuration{0.0s};
+        std::optional<Math::Vector3D> m_maneuverPointTarget;
+        std::optional<IO::Astrodynamics::Time::TDB> m_maneuverPointUpdate;
+        std::optional<bool> m_isInbound;
 
         /**
          * @brief Construct a new Maneuver Base object
@@ -157,6 +160,8 @@ namespace IO::Astrodynamics::Maneuvers
          */
         virtual IO::Astrodynamics::OrbitalParameters::StateOrientation ComputeOrientation(const IO::Astrodynamics::OrbitalParameters::OrbitalParameters &maneuverPoint) = 0;
 
+        virtual void UpdateManeuverPoint(const IO::Astrodynamics::OrbitalParameters::OrbitalParameters &maneuverPoint);
+        virtual Math::Vector3D ManeuverPointComputation(const IO::Astrodynamics::OrbitalParameters::OrbitalParameters &maneuverPoint) = 0;
     public:
         /**
          * @brief Handle maneuver by propagator
@@ -172,7 +177,7 @@ namespace IO::Astrodynamics::Maneuvers
          * @return true 
          * @return false 
          */
-        virtual bool CanExecute(const IO::Astrodynamics::OrbitalParameters::OrbitalParameters &maneuverPoint) = 0;
+        virtual bool CanExecute(const IO::Astrodynamics::OrbitalParameters::OrbitalParameters &maneuverPoint);
 
         /**
          * @brief Try to execute maneuver at maneuver point

@@ -10,6 +10,10 @@
 #include <Plane.h>
 #include <cmath>
 
+const IO::Astrodynamics::Math::Plane IO::Astrodynamics::Math::Plane::PlaneX{{1.0, 0.0, 0.0},0.0};
+const IO::Astrodynamics::Math::Plane IO::Astrodynamics::Math::Plane::PlaneY{{0.0, 1.0, 0.0},0.0};
+const IO::Astrodynamics::Math::Plane IO::Astrodynamics::Math::Plane::PlaneZ{{0.0, 0.0, 1.0},0.0};
+
 IO::Astrodynamics::Math::Plane::Plane(IO::Astrodynamics::Math::Vector3D normal, double distance) : m_normal{normal}, m_distance{distance}
 {
 

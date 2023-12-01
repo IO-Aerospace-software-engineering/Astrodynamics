@@ -78,3 +78,10 @@ IO::Astrodynamics::Maneuvers::Attitudes::InstrumentPointingToAttitude::ComputeOr
                                                         maneuverPoint.GetFrame()};
 
 }
+
+IO::Astrodynamics::Math::Vector3D
+IO::Astrodynamics::Maneuvers::Attitudes::InstrumentPointingToAttitude::ManeuverPointComputation(const IO::Astrodynamics::OrbitalParameters::OrbitalParameters &orbitalParameters)
+{
+    return IO::Astrodynamics::Math::Vector3D();
+}
+

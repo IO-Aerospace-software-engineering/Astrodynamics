@@ -93,3 +93,10 @@ double IO::Astrodynamics::Maneuvers::OrbitalPlaneChangingManeuver::GetRelativeIn
 {
     return m_relativeInclination;
 }
+
+IO::Astrodynamics::Math::Vector3D
+IO::Astrodynamics::Maneuvers::OrbitalPlaneChangingManeuver::ManeuverPointComputation(const IO::Astrodynamics::OrbitalParameters::OrbitalParameters &orbitalParameters)
+{
+    return IO::Astrodynamics::Math::Vector3D();
+}
+

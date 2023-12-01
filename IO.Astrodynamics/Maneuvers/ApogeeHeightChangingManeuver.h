@@ -22,6 +22,7 @@ namespace IO::Astrodynamics::Maneuvers
     private:
         const double m_targetHeight;
 
+
     protected:
         /**
          * @brief Compute impulsive maneuver
@@ -38,18 +39,11 @@ namespace IO::Astrodynamics::Maneuvers
          */
         IO::Astrodynamics::OrbitalParameters::StateOrientation ComputeOrientation(const IO::Astrodynamics::OrbitalParameters::OrbitalParameters &maneuverPoint) override;
         /* data */
+
+        Math::Vector3D ManeuverPointComputation(const IO::Astrodynamics::OrbitalParameters::OrbitalParameters& orbitalParameters) override;
     public:
         ApogeeHeightChangingManeuver(std::vector<IO::Astrodynamics::Body::Spacecraft::Engine*> engines, IO::Astrodynamics::Propagators::Propagator &propagator, double targetHeight);
         ApogeeHeightChangingManeuver(std::vector<IO::Astrodynamics::Body::Spacecraft::Engine*> engines, IO::Astrodynamics::Propagators::Propagator &propagator, double targetHeight, const IO::Astrodynamics::Time::TDB &minimumEpoch);
-
-        /**
-         * @brief Evaluate if maneuver can occurs
-         * 
-         * @param stateVector Evaluated to check if condition is satisfied
-         * @return true 
-         * @return false 
-         */
-        bool CanExecute(const IO::Astrodynamics::OrbitalParameters::OrbitalParameters &orbitalParams) override;
     };
 }
 

@@ -25,3 +25,9 @@ IO::Astrodynamics::OrbitalParameters::StateOrientation IO::Astrodynamics::Maneuv
 bool IO::Astrodynamics::Maneuvers::Attitudes::ZenithAttitude::CanExecute([[maybe_unused]]const IO::Astrodynamics::OrbitalParameters::OrbitalParameters &orbitalParams) {
     return true;
 }
+
+IO::Astrodynamics::Math::Vector3D
+IO::Astrodynamics::Maneuvers::Attitudes::ZenithAttitude::ManeuverPointComputation(const IO::Astrodynamics::OrbitalParameters::OrbitalParameters &orbitalParameters)
+{
+    return IO::Astrodynamics::Math::Vector3D();
+}

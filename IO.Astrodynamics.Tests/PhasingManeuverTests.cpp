@@ -170,12 +170,11 @@ TEST(PhasingManeuver, CheckOrbitalParameters)
     ASSERT_DOUBLE_EQ(0.0, sv.GetInclination() * IO::Astrodynamics::Constants::RAD_DEG);
     ASSERT_DOUBLE_EQ(0.0, sv.GetRightAscendingNodeLongitude() * IO::Astrodynamics::Constants::RAD_DEG);
 
-    auto sv2= orbitalParams2->ToStateVector(finalManeuver.GetManeuverWindow()->GetEndDate());
-    ASSERT_NEAR(270.00202418307794, sv.ToStateVector(finalManeuver.GetManeuverWindow()->GetEndDate()).GetPeriapsisArgument() * IO::Astrodynamics::Constants::RAD_DEG, 1E-06);
-    ASSERT_DOUBLE_EQ(90.014740584602677, sv.ToStateVector(finalManeuver.GetManeuverWindow()->GetEndDate()).GetMeanAnomaly() * IO::Astrodynamics::Constants::RAD_DEG);
+    ASSERT_NEAR(270.00201753572998, sv.ToStateVector(finalManeuver.GetManeuverWindow()->GetEndDate()).GetPeriapsisArgument() * IO::Astrodynamics::Constants::RAD_DEG, 1E-06);
+    ASSERT_NEAR(89.998798485014945, sv.ToStateVector(finalManeuver.GetManeuverWindow()->GetEndDate()).GetMeanAnomaly() * IO::Astrodynamics::Constants::RAD_DEG,1E-06);
 
-    ASSERT_DOUBLE_EQ(0.016774520045733467, orbitalParams2->ToStateVector(finalManeuver.GetManeuverWindow()->GetEndDate()).GetPeriapsisArgument() * IO::Astrodynamics::Constants::RAD_DEG);
-    ASSERT_DOUBLE_EQ(6.2894372751123685e-35, orbitalParams2->ToStateVector(finalManeuver.GetManeuverWindow()->GetEndDate()).GetMeanAnomaly() * IO::Astrodynamics::Constants::RAD_DEG);
+    ASSERT_NEAR(180.00082577311201, orbitalParams2->ToStateVector(finalManeuver.GetManeuverWindow()->GetEndDate()).GetPeriapsisArgument() * IO::Astrodynamics::Constants::RAD_DEG,1E-06);
+    ASSERT_NEAR(180.0, orbitalParams2->ToStateVector(finalManeuver.GetManeuverWindow()->GetEndDate()).GetMeanAnomaly() * IO::Astrodynamics::Constants::RAD_DEG,1E-06);
 
     double longitude1 = sv.GetPeriapsisArgument() + sv.ToStateVector(finalManeuver.GetManeuverWindow()->GetEndDate()).GetMeanAnomaly();
     if (longitude1 > IO::Astrodynamics::Constants::_2PI)

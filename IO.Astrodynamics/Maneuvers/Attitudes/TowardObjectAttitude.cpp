@@ -37,3 +37,9 @@ bool IO::Astrodynamics::Maneuvers::Attitudes::TowardObjectAttitude::CanExecute([
 {
     return true;
 }
+
+IO::Astrodynamics::Math::Vector3D
+IO::Astrodynamics::Maneuvers::Attitudes::TowardObjectAttitude::ManeuverPointComputation(const IO::Astrodynamics::OrbitalParameters::OrbitalParameters &orbitalParameters)
+{
+    return IO::Astrodynamics::Math::Vector3D();
+}
