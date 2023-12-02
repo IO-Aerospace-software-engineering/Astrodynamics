@@ -23,12 +23,14 @@ IO::Astrodynamics::OrbitalParameters::StateOrientation  IO::Astrodynamics::Maneu
 
 bool  IO::Astrodynamics::Maneuvers::Attitudes::RetrogradeAttitude::CanExecute([[maybe_unused]]const IO::Astrodynamics::OrbitalParameters::OrbitalParameters &orbitalParams)
 {
+    m_maneuverPointTarget = ManeuverPointComputation(orbitalParams);
+    m_maneuverPointUpdate = orbitalParams.GetEpoch();
     return true;
 }
 
 IO::Astrodynamics::Math::Vector3D
 IO::Astrodynamics::Maneuvers::Attitudes::RetrogradeAttitude::ManeuverPointComputation(const IO::Astrodynamics::OrbitalParameters::OrbitalParameters &orbitalParameters)
 {
-    return IO::Astrodynamics::Math::Vector3D();
+    return orbitalParameters.ToStateVector().GetPosition();
 }
 

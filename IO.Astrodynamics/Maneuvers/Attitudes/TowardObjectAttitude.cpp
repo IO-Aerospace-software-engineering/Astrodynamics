@@ -35,11 +35,13 @@ IO::Astrodynamics::Maneuvers::Attitudes::TowardObjectAttitude::ComputeOrientatio
 
 bool IO::Astrodynamics::Maneuvers::Attitudes::TowardObjectAttitude::CanExecute([[maybe_unused]]const IO::Astrodynamics::OrbitalParameters::OrbitalParameters &orbitalParams)
 {
+    m_maneuverPointTarget = ManeuverPointComputation(orbitalParams);
+    m_maneuverPointUpdate = orbitalParams.GetEpoch();
     return true;
 }
 
 IO::Astrodynamics::Math::Vector3D
 IO::Astrodynamics::Maneuvers::Attitudes::TowardObjectAttitude::ManeuverPointComputation(const IO::Astrodynamics::OrbitalParameters::OrbitalParameters &orbitalParameters)
 {
-    return IO::Astrodynamics::Math::Vector3D();
+    return orbitalParameters.ToStateVector().GetPosition();
 }

@@ -5,37 +5,43 @@
 #include <InstrumentPointingToAttitude.h>
 #include <InertialFrames.h>
 
-IO::Astrodynamics::Maneuvers::Attitudes::InstrumentPointingToAttitude::InstrumentPointingToAttitude(std::vector<IO::Astrodynamics::Body::Spacecraft::Engine*> engines,
-                                                                                          IO::Astrodynamics::Propagators::Propagator &propagator,
-                                                                                          const IO::Astrodynamics::Time::TimeSpan &attitudeHoldDuration,
-                                                                                          const IO::Astrodynamics::Instruments::Instrument &instrument, const IO::Astrodynamics::Body::CelestialItem &targetBody)
-        : IO::Astrodynamics::Maneuvers::ManeuverBase(std::move(engines), propagator, attitudeHoldDuration), m_targetBody{&targetBody},m_instrument{instrument}
+IO::Astrodynamics::Maneuvers::Attitudes::InstrumentPointingToAttitude::InstrumentPointingToAttitude(std::vector<IO::Astrodynamics::Body::Spacecraft::Engine *> engines,
+                                                                                                    IO::Astrodynamics::Propagators::Propagator &propagator,
+                                                                                                    const IO::Astrodynamics::Time::TimeSpan &attitudeHoldDuration,
+                                                                                                    const IO::Astrodynamics::Instruments::Instrument &instrument,
+                                                                                                    const IO::Astrodynamics::Body::CelestialItem &targetBody)
+        : IO::Astrodynamics::Maneuvers::ManeuverBase(std::move(engines), propagator, attitudeHoldDuration), m_targetBody{&targetBody}, m_instrument{instrument}
 {
 
 }
 
-IO::Astrodynamics::Maneuvers::Attitudes::InstrumentPointingToAttitude::InstrumentPointingToAttitude(std::vector<IO::Astrodynamics::Body::Spacecraft::Engine*> engines,
-                                                                                          IO::Astrodynamics::Propagators::Propagator &propagator,
-                                                                                          const IO::Astrodynamics::Time::TimeSpan &attitudeHoldDuration,
-                                                                                          const IO::Astrodynamics::Instruments::Instrument &instrument, const IO::Astrodynamics::Sites::Site &targetSite)
+IO::Astrodynamics::Maneuvers::Attitudes::InstrumentPointingToAttitude::InstrumentPointingToAttitude(std::vector<IO::Astrodynamics::Body::Spacecraft::Engine *> engines,
+                                                                                                    IO::Astrodynamics::Propagators::Propagator &propagator,
+                                                                                                    const IO::Astrodynamics::Time::TimeSpan &attitudeHoldDuration,
+                                                                                                    const IO::Astrodynamics::Instruments::Instrument &instrument,
+                                                                                                    const IO::Astrodynamics::Sites::Site &targetSite)
         : IO::Astrodynamics::Maneuvers::ManeuverBase(std::move(engines), propagator, attitudeHoldDuration), m_targetSite{&targetSite}, m_instrument{instrument}
 {
 
 }
 
-IO::Astrodynamics::Maneuvers::Attitudes::InstrumentPointingToAttitude::InstrumentPointingToAttitude(std::vector<IO::Astrodynamics::Body::Spacecraft::Engine*> engines,
-                                                                                          IO::Astrodynamics::Propagators::Propagator &propagator, const IO::Astrodynamics::Time::TDB &minimumEpoch,
-                                                                                          const IO::Astrodynamics::Time::TimeSpan &attitudeHoldDuration,
-                                                                                          const IO::Astrodynamics::Instruments::Instrument &instrument, const IO::Astrodynamics::Body::CelestialItem &targetBody)
+IO::Astrodynamics::Maneuvers::Attitudes::InstrumentPointingToAttitude::InstrumentPointingToAttitude(std::vector<IO::Astrodynamics::Body::Spacecraft::Engine *> engines,
+                                                                                                    IO::Astrodynamics::Propagators::Propagator &propagator,
+                                                                                                    const IO::Astrodynamics::Time::TDB &minimumEpoch,
+                                                                                                    const IO::Astrodynamics::Time::TimeSpan &attitudeHoldDuration,
+                                                                                                    const IO::Astrodynamics::Instruments::Instrument &instrument,
+                                                                                                    const IO::Astrodynamics::Body::CelestialItem &targetBody)
         : IO::Astrodynamics::Maneuvers::ManeuverBase(std::move(engines), propagator, minimumEpoch, attitudeHoldDuration), m_targetBody{&targetBody}, m_instrument{instrument}
 {
 
 }
 
-IO::Astrodynamics::Maneuvers::Attitudes::InstrumentPointingToAttitude::InstrumentPointingToAttitude(std::vector<IO::Astrodynamics::Body::Spacecraft::Engine*> engines,
-                                                                                          IO::Astrodynamics::Propagators::Propagator &propagator, const IO::Astrodynamics::Time::TDB &minimumEpoch,
-                                                                                          const IO::Astrodynamics::Time::TimeSpan &attitudeHoldDuration,
-                                                                                          const IO::Astrodynamics::Instruments::Instrument &instrument, const IO::Astrodynamics::Sites::Site &targetSite)
+IO::Astrodynamics::Maneuvers::Attitudes::InstrumentPointingToAttitude::InstrumentPointingToAttitude(std::vector<IO::Astrodynamics::Body::Spacecraft::Engine *> engines,
+                                                                                                    IO::Astrodynamics::Propagators::Propagator &propagator,
+                                                                                                    const IO::Astrodynamics::Time::TDB &minimumEpoch,
+                                                                                                    const IO::Astrodynamics::Time::TimeSpan &attitudeHoldDuration,
+                                                                                                    const IO::Astrodynamics::Instruments::Instrument &instrument,
+                                                                                                    const IO::Astrodynamics::Sites::Site &targetSite)
         : IO::Astrodynamics::Maneuvers::ManeuverBase(std::move(engines), propagator, minimumEpoch, attitudeHoldDuration), m_targetSite{&targetSite}, m_instrument{instrument}
 {
 
@@ -43,6 +49,8 @@ IO::Astrodynamics::Maneuvers::Attitudes::InstrumentPointingToAttitude::Instrumen
 
 bool IO::Astrodynamics::Maneuvers::Attitudes::InstrumentPointingToAttitude::CanExecute([[maybe_unused]]const IO::Astrodynamics::OrbitalParameters::OrbitalParameters &orbitalParams)
 {
+    m_maneuverPointTarget = ManeuverPointComputation(orbitalParams);
+    m_maneuverPointUpdate = orbitalParams.GetEpoch();
     return true;
 }
 
@@ -75,13 +83,13 @@ IO::Astrodynamics::Maneuvers::Attitudes::InstrumentPointingToAttitude::ComputeOr
     auto q = targetOrientation.To(m_instrument.GetBoresightInSpacecraftFrame().Normalize());
 
     return IO::Astrodynamics::OrbitalParameters::StateOrientation{q, IO::Astrodynamics::Math::Vector3D::Zero, maneuverPoint.GetEpoch(),
-                                                        maneuverPoint.GetFrame()};
+                                                                  maneuverPoint.GetFrame()};
 
 }
 
 IO::Astrodynamics::Math::Vector3D
 IO::Astrodynamics::Maneuvers::Attitudes::InstrumentPointingToAttitude::ManeuverPointComputation(const IO::Astrodynamics::OrbitalParameters::OrbitalParameters &orbitalParameters)
 {
-    return IO::Astrodynamics::Math::Vector3D();
+    return orbitalParameters.ToStateVector().GetPosition();
 }
 
