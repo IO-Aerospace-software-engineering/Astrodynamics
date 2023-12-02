@@ -166,8 +166,8 @@ TEST(API, SpacecraftPropagation)
             std::chrono::duration<double>(scenario.Spacecraft.orbitalPlaneChangingManeuvers[0].thrustWindow.start));
     IO::Astrodynamics::Time::TDB tdbEnd(
             std::chrono::duration<double>(scenario.Spacecraft.orbitalPlaneChangingManeuvers[0].thrustWindow.end));
-    ASSERT_STREQ("2021-03-04 00:31:41.817410 (TDB)", tdbStart.ToString().c_str());
-    ASSERT_STREQ("2021-03-04 00:31:50.213069 (TDB)", tdbEnd.ToString().c_str());
+    ASSERT_STREQ("2021-03-04 00:31:45.814467 (TDB)", tdbStart.ToString().c_str());
+    ASSERT_STREQ("2021-03-04 00:31:54.216012 (TDB)", tdbEnd.ToString().c_str());
 }
 
 TEST(API, FindWindowsOnCoordinateConstraintProxy)

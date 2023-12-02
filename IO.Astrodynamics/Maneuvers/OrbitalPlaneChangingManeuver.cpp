@@ -88,8 +88,7 @@ IO::Astrodynamics::Maneuvers::OrbitalPlaneChangingManeuver::ManeuverPointComputa
         return AnVector;
     }
 
-    auto DnVector = AnVector.Reverse();
     m_isAscendingNode= false;
-    return DnVector;
+    return AnVector.Reverse();
 }
 

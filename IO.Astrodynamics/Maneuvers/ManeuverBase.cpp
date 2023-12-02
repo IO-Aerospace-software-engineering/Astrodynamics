@@ -395,11 +395,6 @@ bool IO::Astrodynamics::Maneuvers::ManeuverBase::CanExecute(const IO::Astrodynam
         return false;
     }
 
-    if (orbitalParams.IsCircular())
-    {
-        return true;
-    }
-
     if (!m_maneuverPointUpdate.has_value() || orbitalParams.GetEpoch() - m_maneuverPointUpdate.value() > IO::Astrodynamics::Parameters::ManeuverPointUpdateDelay)
     {
         UpdateManeuverPoint(orbitalParams);
