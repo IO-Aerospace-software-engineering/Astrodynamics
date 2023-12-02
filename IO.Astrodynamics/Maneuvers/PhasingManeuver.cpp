@@ -68,16 +68,18 @@ IO::Astrodynamics::OrbitalParameters::StateOrientation IO::Astrodynamics::Maneuv
 
 bool IO::Astrodynamics::Maneuvers::PhasingManeuver::CanExecute(const IO::Astrodynamics::OrbitalParameters::OrbitalParameters &orbitalParams)
 {
-    if (orbitalParams.IsCircular() || orbitalParams.GetMeanAnomaly() <= Parameters::NodeDetectionAccuraccy)
+    if (orbitalParams.IsCircular())
     {
+        m_maneuverPointTarget = orbitalParams.ToStateVector().GetPosition();
+        m_maneuverPointUpdate = orbitalParams.GetEpoch();
         return true;
     }
 
-    return false;
+    return ManeuverBase::CanExecute(orbitalParams);
 }
 
 IO::Astrodynamics::Math::Vector3D
 IO::Astrodynamics::Maneuvers::PhasingManeuver::ManeuverPointComputation(const IO::Astrodynamics::OrbitalParameters::OrbitalParameters &orbitalParameters)
 {
-    return IO::Astrodynamics::Math::Vector3D();
+    return orbitalParameters.GetPerigeeVector();
 }

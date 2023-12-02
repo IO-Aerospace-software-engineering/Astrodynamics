@@ -48,11 +48,13 @@ IO::Astrodynamics::Maneuvers::ApogeeHeightChangingManeuver::ManeuverPointComputa
     return orbitalParameters.GetPerigeeVector();
 }
 
-bool IO::Astrodynamics::Maneuvers::ApogeeHeightChangingManeuver::CanExecute(const IO::Astrodynamics::OrbitalParameters::OrbitalParameters &maneuverPoint)
+bool IO::Astrodynamics::Maneuvers::ApogeeHeightChangingManeuver::CanExecute(const IO::Astrodynamics::OrbitalParameters::OrbitalParameters &orbitalParams)
 {
-    if (maneuverPoint.IsCircular())
+    if (orbitalParams.IsCircular())
     {
+        m_maneuverPointTarget = orbitalParams.ToStateVector().GetPosition();
+        m_maneuverPointUpdate = orbitalParams.GetEpoch();
         return true;
     }
-    return ManeuverBase::CanExecute(maneuverPoint);
+    return ManeuverBase::CanExecute(orbitalParams);
 }

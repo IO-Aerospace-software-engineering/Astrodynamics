@@ -7,17 +7,18 @@
 
 #include <utility>
 
-IO::Astrodynamics::Maneuvers::PerigeeHeightChangingManeuver::PerigeeHeightChangingManeuver(std::vector<IO::Astrodynamics::Body::Spacecraft::Engine*> engines,
-                                                                                 IO::Astrodynamics::Propagators::Propagator &propagator, double targetHeight)
+IO::Astrodynamics::Maneuvers::PerigeeHeightChangingManeuver::PerigeeHeightChangingManeuver(std::vector<IO::Astrodynamics::Body::Spacecraft::Engine *> engines,
+                                                                                           IO::Astrodynamics::Propagators::Propagator &propagator, double targetHeight)
         : IO::Astrodynamics::Maneuvers::ManeuverBase(std::move(engines), propagator), m_targetHeight{targetHeight}
 {
 }
 
-IO::Astrodynamics::Maneuvers::PerigeeHeightChangingManeuver::PerigeeHeightChangingManeuver(std::vector<IO::Astrodynamics::Body::Spacecraft::Engine*> engines,
-                                                                                 IO::Astrodynamics::Propagators::Propagator &propagator, double targetHeight,
-                                                                                 const IO::Astrodynamics::Time::TDB &minimumEpoch) : IO::Astrodynamics::Maneuvers::ManeuverBase(std::move(engines), propagator,
-                                                                                                                                                            minimumEpoch),
-                                                                                                                           m_targetHeight{targetHeight}
+IO::Astrodynamics::Maneuvers::PerigeeHeightChangingManeuver::PerigeeHeightChangingManeuver(std::vector<IO::Astrodynamics::Body::Spacecraft::Engine *> engines,
+                                                                                           IO::Astrodynamics::Propagators::Propagator &propagator, double targetHeight,
+                                                                                           const IO::Astrodynamics::Time::TDB &minimumEpoch)
+        : IO::Astrodynamics::Maneuvers::ManeuverBase(std::move(engines), propagator,
+                                                     minimumEpoch),
+          m_targetHeight{targetHeight}
 {
 }
 
@@ -43,21 +44,23 @@ IO::Astrodynamics::Maneuvers::PerigeeHeightChangingManeuver::ComputeOrientation(
     }
 
     return IO::Astrodynamics::OrbitalParameters::StateOrientation{velocityVector.To(m_spacecraft.Front), IO::Astrodynamics::Math::Vector3D(0.0, 0.0, 0.0), maneuverPoint.GetEpoch(),
-                                                        maneuverPoint.GetFrame()};
+                                                                  maneuverPoint.GetFrame()};
 }
 
 bool IO::Astrodynamics::Maneuvers::PerigeeHeightChangingManeuver::CanExecute(const IO::Astrodynamics::OrbitalParameters::OrbitalParameters &orbitalParams)
 {
-    if (orbitalParams.IsCircular() || (orbitalParams.GetMeanAnomaly() >= Constants::PI && orbitalParams.GetMeanAnomaly() < Constants::PI + Parameters::NodeDetectionAccuraccy))
+    if (orbitalParams.IsCircular())
     {
+        m_maneuverPointTarget = orbitalParams.ToStateVector().GetPosition();
+        m_maneuverPointUpdate = orbitalParams.GetEpoch();
         return true;
     }
 
-    return false;
+    return ManeuverBase::CanExecute(orbitalParams);
 }
 
 IO::Astrodynamics::Math::Vector3D
 IO::Astrodynamics::Maneuvers::PerigeeHeightChangingManeuver::ManeuverPointComputation(const IO::Astrodynamics::OrbitalParameters::OrbitalParameters &orbitalParameters)
 {
-    return IO::Astrodynamics::Math::Vector3D();
+    return orbitalParameters.GetApogeeVector();
 }
