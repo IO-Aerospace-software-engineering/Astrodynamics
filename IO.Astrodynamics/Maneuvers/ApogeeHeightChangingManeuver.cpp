@@ -42,7 +42,17 @@ IO::Astrodynamics::Maneuvers::ApogeeHeightChangingManeuver::ComputeOrientation(c
                                                                   maneuverPoint.GetFrame()};
 }
 
-IO::Astrodynamics::Math::Vector3D IO::Astrodynamics::Maneuvers::ApogeeHeightChangingManeuver::ManeuverPointComputation(const IO::Astrodynamics::OrbitalParameters::OrbitalParameters &orbitalParameters)
+IO::Astrodynamics::Math::Vector3D
+IO::Astrodynamics::Maneuvers::ApogeeHeightChangingManeuver::ManeuverPointComputation(const IO::Astrodynamics::OrbitalParameters::OrbitalParameters &orbitalParameters)
 {
     return orbitalParameters.GetPerigeeVector();
+}
+
+bool IO::Astrodynamics::Maneuvers::ApogeeHeightChangingManeuver::CanExecute(const IO::Astrodynamics::OrbitalParameters::OrbitalParameters &maneuverPoint)
+{
+    if (maneuverPoint.IsCircular())
+    {
+        return true;
+    }
+    return ManeuverBase::CanExecute(maneuverPoint);
 }
