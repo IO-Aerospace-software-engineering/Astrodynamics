@@ -16,6 +16,25 @@ IO::Astrodynamics::Maneuvers::CombinedManeuver::CombinedManeuver(std::vector<IO:
 {
 }
 
+bool IO::Astrodynamics::Maneuvers::CombinedManeuver::CanExecute(const IO::Astrodynamics::OrbitalParameters::OrbitalParameters &orbitalParams)
+{
+    //Check apsidal apogee vector and node line are aligned
+    auto ANVectorDirection = orbitalParams.GetAscendingNodeVector().Normalize();
+    auto DNVectorDirection = ANVectorDirection.Reverse();
+    auto apogeeVector = orbitalParams.GetApogeeVector().Normalize();
+    if (std::abs(ANVectorDirection.DotProduct(apogeeVector)) < 0.9 && std::abs(DNVectorDirection.DotProduct(apogeeVector)) < 0.9)
+    {
+        return false;
+    }
+
+    if (orbitalParams.IsCircular() || (orbitalParams.GetMeanAnomaly() >= Constants::PI && orbitalParams.GetMeanAnomaly() < Constants::PI + Parameters::NodeDetectionAccuraccy))
+    {
+        return true;
+    }
+
+    return false;
+}
+
 void IO::Astrodynamics::Maneuvers::CombinedManeuver::Compute(const IO::Astrodynamics::OrbitalParameters::OrbitalParameters &orbitalParams)
 {
     //Compute delta V vector
