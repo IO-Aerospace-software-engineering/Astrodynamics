@@ -16,27 +16,28 @@ IO::Astrodynamics::Maneuvers::CombinedManeuver::CombinedManeuver(std::vector<IO:
 {
 }
 
-bool IO::Astrodynamics::Maneuvers::CombinedManeuver::CanExecute(const IO::Astrodynamics::OrbitalParameters::OrbitalParameters &orbitalParams)
-{
-    //Check apsidal apogee vector and node line are aligned
-    auto ANVectorDirection = orbitalParams.GetAscendingNodeVector().Normalize();
-    auto DNVectorDirection = ANVectorDirection.Reverse();
-    auto apogeeVector = orbitalParams.GetApogeeVector().Normalize();
-    if (std::abs(ANVectorDirection.DotProduct(apogeeVector)) < 0.9 && std::abs(DNVectorDirection.DotProduct(apogeeVector)) < 0.9)
-    {
-        return false;
-    }
-
-    if (orbitalParams.IsCircular() || (orbitalParams.GetMeanAnomaly() >= Constants::PI && orbitalParams.GetMeanAnomaly() < Constants::PI + Parameters::NodeDetectionAccuraccy))
-    {
-        return true;
-    }
-
-    return false;
-}
+//bool IO::Astrodynamics::Maneuvers::CombinedManeuver::CanExecute(const IO::Astrodynamics::OrbitalParameters::OrbitalParameters &orbitalParams)
+//{
+//    //Check apsidal apogee vector and node line are aligned
+//    auto ANVectorDirection = orbitalParams.GetAscendingNodeVector().Normalize();
+//    auto DNVectorDirection = ANVectorDirection.Reverse();
+//    auto apogeeVector = orbitalParams.GetApogeeVector().Normalize();
+//    if (std::abs(ANVectorDirection.DotProduct(apogeeVector)) < 0.9 && std::abs(DNVectorDirection.DotProduct(apogeeVector)) < 0.9)
+//    {
+//        return false;
+//    }
+//
+//    if (orbitalParams.IsCircular() || (orbitalParams.GetMeanAnomaly() >= Constants::PI && orbitalParams.GetMeanAnomaly() < Constants::PI + Parameters::NodeDetectionAccuraccy))
+//    {
+//        return true;
+//    }
+//
+//    return false;
+//}
 
 void IO::Astrodynamics::Maneuvers::CombinedManeuver::Compute(const IO::Astrodynamics::OrbitalParameters::OrbitalParameters &orbitalParams)
 {
+    double e=orbitalParams.GetEpoch().GetSecondsFromJ2000().count();
     //Compute delta V vector
     m_deltaV = std::make_unique<IO::Astrodynamics::Math::Vector3D>(GetDeltaV(orbitalParams.ToStateVector()));
 }
@@ -71,7 +72,7 @@ IO::Astrodynamics::Math::Vector3D IO::Astrodynamics::Maneuvers::CombinedManeuver
         e = 1 - (2 / ((sv.GetApogeeVector().Magnitude() / rp) + 1));
     }
 
-    auto targetOrbit = IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements(sv.GetCenterOfMotion(), rp, e, m_inclination, meanAnomaly, periapsisArgument, 0.0, sv.GetEpoch(), sv.GetFrame());
+    auto targetOrbit = IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements(sv.GetCenterOfMotion(), rp, e, m_inclination, 0.0, periapsisArgument, meanAnomaly, sv.GetEpoch(), sv.GetFrame());
 
     return targetOrbit.ToStateVector().GetVelocity() - sv.GetVelocity();
 }

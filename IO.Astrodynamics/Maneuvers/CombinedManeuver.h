@@ -73,7 +73,7 @@ namespace IO::Astrodynamics::Maneuvers
         CombinedManeuver(std::vector<IO::Astrodynamics::Body::Spacecraft::Engine*> engines, IO::Astrodynamics::Propagators::Propagator &propagator, double inclination, double perigeeRadius, const IO::Astrodynamics::Time::TDB &minimumEpoch);
 
         using IO::Astrodynamics::Maneuvers::ManeuverBase::GetDeltaV;
-        bool CanExecute(const IO::Astrodynamics::OrbitalParameters::OrbitalParameters &orbitalParams) override;
+//        bool CanExecute(const IO::Astrodynamics::OrbitalParameters::OrbitalParameters &orbitalParams) override;
     };
 }
 

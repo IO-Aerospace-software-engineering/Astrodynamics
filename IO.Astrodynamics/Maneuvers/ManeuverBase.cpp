@@ -415,6 +415,11 @@ bool IO::Astrodynamics::Maneuvers::ManeuverBase::CanExecute(const IO::Astrodynam
 
 void IO::Astrodynamics::Maneuvers::ManeuverBase::UpdateManeuverPoint(const IO::Astrodynamics::OrbitalParameters::OrbitalParameters &maneuverPoint)
 {
+    double e0=0.0;
+    if(m_maneuverPointUpdate.has_value()) {
+        e0 = m_maneuverPointUpdate->GetSecondsFromJ2000().count();
+    }
+    double e1=maneuverPoint.GetEpoch().GetSecondsFromJ2000().count();
     m_maneuverPointTarget = ManeuverPointComputation(maneuverPoint);
     m_maneuverPointUpdate = maneuverPoint.GetEpoch();
 }
