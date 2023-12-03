@@ -4,10 +4,13 @@
 #ifndef VECTOR3D_H
 #define VECTOR3D_H
 
-namespace IO::Astrodynamics::Math {
+namespace IO::Astrodynamics::Math
+{
+    class Plane;
     class Quaternion;
 
-    class Vector3D {
+    class Vector3D
+    {
     private:
         double const m_x{}, m_y{}, m_z{};
 
@@ -25,7 +28,8 @@ namespace IO::Astrodynamics::Math {
         /// <param name="x"></param>
         /// <param name="y"></param>
         /// <param name="z"></param>
-        Vector3D(double x, double y, double z) : m_x{x}, m_y{y}, m_z{z} {};
+        Vector3D(double x, double y, double z) : m_x{x}, m_y{y}, m_z{z}
+        {};
 
         Vector3D(const Vector3D &vector) = default;
 
@@ -37,19 +41,22 @@ namespace IO::Astrodynamics::Math {
         /// Get X
         /// </summary>
         /// <returns></returns>
-        [[nodiscard]] double GetX() const { return this->m_x; }
+        [[nodiscard]] double GetX() const
+        { return this->m_x; }
 
         /// <summary>
         /// Get Y
         /// </summary>
         /// <returns></returns>
-        [[nodiscard]] double GetY() const { return this->m_y; }
+        [[nodiscard]] double GetY() const
+        { return this->m_y; }
 
         /// <summary>
         /// Get Z
         /// </summary>
         /// <returns></returns>
-        [[nodiscard]] double GetZ() const { return this->m_z; }
+        [[nodiscard]] double GetZ() const
+        { return this->m_z; }
 
         /// <summary>
         /// Get the vector magnitude
@@ -92,6 +99,22 @@ namespace IO::Astrodynamics::Math {
         /// <param name="vector"></param>
         /// <returns></returns>
         [[nodiscard]] double GetAngle(const Vector3D &vector) const;
+
+        /**
+         * @brief Calculates the angle between two vectors in given plane.
+         *
+         * This function calculates the angle in radians between two vectors in given plane.
+         *
+         * @param vector
+         * @param plane
+         *
+         * @return The angle between two vectors in plane, in radians.
+         */
+
+        [[nodiscard]] double GetAngle(const Vector3D &vector, const Math::Plane &plane) const;
+
+
+        [[nodiscard]] double GetAngle(const Vector3D &vector, const Math::Vector3D &plane) const;
 
         /**
          * @brief Equal

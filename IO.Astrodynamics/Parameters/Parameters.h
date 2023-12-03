@@ -21,6 +21,7 @@ namespace IO::Astrodynamics::Parameters
     inline constexpr double ClockAccuracy = 16.0; //2^n
     inline const static Time::TimeSpan SitePropagationStep(60s);
     inline const static Time::TimeSpan SpacecraftPropagationStep(1s);
+    inline const static Time::TimeSpan ManeuverPointUpdateDelay(60s);
 
 }
 #endif

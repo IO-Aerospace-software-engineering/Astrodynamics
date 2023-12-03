@@ -1,3 +1,7 @@
+/*
+ Copyright (c) 2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
+ */
+
 #include <vector>
 #include <chrono>
 
@@ -21,11 +25,15 @@ using namespace std::chrono_literals;
 TEST(CombinedManeuver, CanExecute)
 {
     const auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399);
-    std::unique_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParams1 = std::make_unique<IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements>(earth, 10000000.0, 0.333333,
-                                                                                                                                                       10.0 *
-                                                                                                                                                       IO::Astrodynamics::Constants::DEG_RAD,
-                                                                                                                                                       0.0, 0.0, 0.0,
-                                                                                                                                                       IO::Astrodynamics::Time::TDB(0.0s),
+    std::unique_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParams1 = std::make_unique<IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements>(earth,
+                                                                                                                                                                           10000000.0,
+                                                                                                                                                                           0.333333,
+                                                                                                                                                                           10.0 *
+                                                                                                                                                                           IO::Astrodynamics::Constants::DEG_RAD,
+                                                                                                                                                                           0.0, 0.0,
+                                                                                                                                                                           0.0,
+                                                                                                                                                                           IO::Astrodynamics::Time::TDB(
+                                                                                                                                                                                   0.0s),
                                                                                                                                                                            IO::Astrodynamics::Frames::InertialFrames::ICRF());
 
     IO::Astrodynamics::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams1)};
@@ -45,18 +53,22 @@ TEST(CombinedManeuver, CanExecute)
 
     ASSERT_FALSE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()->ToStateVector(178.0 * IO::Astrodynamics::Constants::DEG_RAD)));
     ASSERT_FALSE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()->ToStateVector(179.0 * IO::Astrodynamics::Constants::DEG_RAD)));
-    ASSERT_TRUE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()->ToStateVector(180.0 * IO::Astrodynamics::Constants::DEG_RAD)));
+    ASSERT_TRUE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()->ToStateVector(180.000001 * IO::Astrodynamics::Constants::DEG_RAD)));
     ASSERT_FALSE(maneuver.CanExecute(s.GetOrbitalParametersAtEpoch()->ToStateVector(182.0 * IO::Astrodynamics::Constants::DEG_RAD)));
 }
 
 TEST(CombinedManeuver, TryExecuteWithPeregeeHigherThanApogee)
 {
     const auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399);
-    std::unique_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParams1 = std::make_unique<IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements>(earth, 6678000.0,
-                                                                                                                                                       0.726546824, 28.5 *
-                                                                                                                                                                    IO::Astrodynamics::Constants::DEG_RAD,
-                                                                                                                                                       0.0, 0.0, 0.0,
-                                                                                                                                                       IO::Astrodynamics::Time::TDB(0.0s),
+    std::unique_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParams1 = std::make_unique<IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements>(earth,
+                                                                                                                                                                           6678000.0,
+                                                                                                                                                                           0.726546824,
+                                                                                                                                                                           28.5 *
+                                                                                                                                                                           IO::Astrodynamics::Constants::DEG_RAD,
+                                                                                                                                                                           0.0, 0.0,
+                                                                                                                                                                           0.0,
+                                                                                                                                                                           IO::Astrodynamics::Time::TDB(
+                                                                                                                                                                                   0.0s),
                                                                                                                                                                            IO::Astrodynamics::Frames::InertialFrames::ICRF());
 
     IO::Astrodynamics::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 10000.0, std::string(SpacecraftPath), std::move(orbitalParams1)};
@@ -83,20 +95,24 @@ TEST(CombinedManeuver, TryExecuteWithPeregeeHigherThanApogee)
 
     auto res = maneuver.TryExecute(s.GetOrbitalParametersAtEpoch()->ToStateVector(180.01 * IO::Astrodynamics::Constants::DEG_RAD));
     ASSERT_TRUE(res.IsValid());
-    ASSERT_DOUBLE_EQ(1830.2350336445459, maneuver.GetDeltaV().Magnitude());
-    ASSERT_DOUBLE_EQ(-1.0262043727361105, maneuver.GetDeltaV().GetX());
-    ASSERT_DOUBLE_EQ(-1661.679969759336, maneuver.GetDeltaV().GetY());
-    ASSERT_DOUBLE_EQ(767.18896198071627, maneuver.GetDeltaV().GetZ());
+    ASSERT_NEAR(1830.234408755432, maneuver.GetDeltaV().Magnitude(), 1E-06);
+    ASSERT_NEAR(1.3018941319074089, maneuver.GetDeltaV().GetX(), 1E-06);
+    ASSERT_NEAR(-1661.679088355801, maneuver.GetDeltaV().GetY(), 1E-06);
+    ASSERT_NEAR(767.18896198071627, maneuver.GetDeltaV().GetZ(), 1E-06);
 }
 
 TEST(CombinedManeuver, TryExecuteWithPeregeeLowerThanApogee)
 {
     const auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399);
-    std::unique_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParams1 = std::make_unique<IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements>(earth, 6678000.0, 0.7266,
-                                                                                                                                                       28.5 *
-                                                                                                                                                       IO::Astrodynamics::Constants::DEG_RAD,
-                                                                                                                                                       0.0, 0.0, 0.0,
-                                                                                                                                                       IO::Astrodynamics::Time::TDB(0.0s),
+    std::unique_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParams1 = std::make_unique<IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements>(earth,
+                                                                                                                                                                           6678000.0,
+                                                                                                                                                                           0.7266,
+                                                                                                                                                                           28.5 *
+                                                                                                                                                                           IO::Astrodynamics::Constants::DEG_RAD,
+                                                                                                                                                                           0.0, 0.0,
+                                                                                                                                                                           0.0,
+                                                                                                                                                                           IO::Astrodynamics::Time::TDB(
+                                                                                                                                                                                   0.0s),
                                                                                                                                                                            IO::Astrodynamics::Frames::InertialFrames::ICRF());
 
     IO::Astrodynamics::Body::Spacecraft::Spacecraft s{-1, "sptest", 1000.0, 10000.0, std::string(SpacecraftPath), std::move(orbitalParams1)};
@@ -123,8 +139,8 @@ TEST(CombinedManeuver, TryExecuteWithPeregeeLowerThanApogee)
 
     auto res = maneuver.TryExecute(s.GetOrbitalParametersAtEpoch()->ToStateVector(180.01 * IO::Astrodynamics::Constants::DEG_RAD));
     ASSERT_TRUE(res.IsValid());
-    ASSERT_DOUBLE_EQ(1829.9651453364793, maneuver.GetDeltaV().Magnitude());
-    ASSERT_DOUBLE_EQ(-1.0261885721047042, maneuver.GetDeltaV().GetX());
-    ASSERT_DOUBLE_EQ(-1661.4570370296583, maneuver.GetDeltaV().GetY());
-    ASSERT_DOUBLE_EQ(767.02796180322059, maneuver.GetDeltaV().GetZ());
+    ASSERT_NEAR(1829.9645204299281, maneuver.GetDeltaV().Magnitude(), 1E-06);
+    ASSERT_NEAR(1.3015883307426679, maneuver.GetDeltaV().GetX(), 1E-06);
+    ASSERT_NEAR(-1661.4561558199939, maneuver.GetDeltaV().GetY(), 1E-06);
+    ASSERT_NEAR(767.02796180322059, maneuver.GetDeltaV().GetZ(), 1E-06);
 }

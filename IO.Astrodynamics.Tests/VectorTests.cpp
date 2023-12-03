@@ -3,24 +3,26 @@
  */
 
 #include <gtest/gtest.h>
-#include <Vector3D.h>
 #include <Quaternion.h>
 #include <Constants.h>
-#include <SpiceUsr.h>
+#include <Planes.h>
 
-TEST(Vector, Initialization) {
+TEST(Vector, Initialization)
+{
     IO::Astrodynamics::Math::Vector3D vector(1.0, 2.0, 3.0);
     ASSERT_DOUBLE_EQ(1.0, vector.GetX());
     ASSERT_DOUBLE_EQ(2.0, vector.GetY());
     ASSERT_DOUBLE_EQ(3.0, vector.GetZ());
 }
 
-TEST(Vector, Magnitude) {
+TEST(Vector, Magnitude)
+{
     IO::Astrodynamics::Math::Vector3D vector(2.0, 3.0, 4.0);
     ASSERT_DOUBLE_EQ(5.3851648071345037, vector.Magnitude());
 }
 
-TEST(Vector, Add) {
+TEST(Vector, Add)
+{
     IO::Astrodynamics::Math::Vector3D vector(2.0, 3.0, 4.0);
     IO::Astrodynamics::Math::Vector3D vector2(1.0, 2.0, 3.0);
     auto res = vector + vector2;
@@ -30,7 +32,8 @@ TEST(Vector, Add) {
     ASSERT_DOUBLE_EQ(7.0, res.GetZ());
 }
 
-TEST(Vector, Substract) {
+TEST(Vector, Substract)
+{
     IO::Astrodynamics::Math::Vector3D vector(2.0, 33.0, 4.0);
     IO::Astrodynamics::Math::Vector3D vector2(10.0, 2.0, -3.0);
     auto res = vector - vector2;
@@ -40,7 +43,8 @@ TEST(Vector, Substract) {
     ASSERT_DOUBLE_EQ(7.0, res.GetZ());
 }
 
-TEST(Vector, Multiply) {
+TEST(Vector, Multiply)
+{
     IO::Astrodynamics::Math::Vector3D vector(2.0, 33.0, -4.0);
 
     auto res = vector * 10;
@@ -50,7 +54,8 @@ TEST(Vector, Multiply) {
     ASSERT_DOUBLE_EQ(-40.0, res.GetZ());
 }
 
-TEST(Vector, Divide) {
+TEST(Vector, Divide)
+{
     IO::Astrodynamics::Math::Vector3D vector(2.0, 34.0, 4.0);
     auto res = vector / -2;
 
@@ -59,7 +64,8 @@ TEST(Vector, Divide) {
     ASSERT_DOUBLE_EQ(-2.0, res.GetZ());
 }
 
-TEST(Vector, CrossProduct) {
+TEST(Vector, CrossProduct)
+{
     IO::Astrodynamics::Math::Vector3D vector(2.0, 3.0, 4.0);
     IO::Astrodynamics::Math::Vector3D vector2(5.0, 6.0, 7.0);
     auto res = vector.CrossProduct(vector2);
@@ -69,7 +75,8 @@ TEST(Vector, CrossProduct) {
     ASSERT_DOUBLE_EQ(-3.0, res.GetZ());
 }
 
-TEST(Vector, DotProduct) {
+TEST(Vector, DotProduct)
+{
     IO::Astrodynamics::Math::Vector3D vector(2.0, 3.0, 4.0);
     IO::Astrodynamics::Math::Vector3D vector2(5.0, 6.0, 7.0);
     auto res = vector.DotProduct(vector2);
@@ -77,7 +84,8 @@ TEST(Vector, DotProduct) {
     ASSERT_DOUBLE_EQ(56.0, res);
 }
 
-TEST(Vector, Normalize) {
+TEST(Vector, Normalize)
+{
     IO::Astrodynamics::Math::Vector3D vector(2.0, 3.0, 4.0);
     auto res = vector.Normalize();
 
@@ -90,7 +98,8 @@ TEST(Vector, Normalize) {
     ASSERT_EQ(vectorZero.Normalize(), IO::Astrodynamics::Math::Vector3D(0, 0, 0));
 }
 
-TEST(Vector, GetAngle) {
+TEST(Vector, GetAngle)
+{
     IO::Astrodynamics::Math::Vector3D vector(2.0, 3.0, 4.0);
     IO::Astrodynamics::Math::Vector3D vector2(5.0, 6.0, 7.0);
     auto res = vector.GetAngle(vector2);
@@ -108,7 +117,48 @@ TEST(Vector, GetAngle) {
     ASSERT_DOUBLE_EQ(IO::Astrodynamics::Constants::PI2, res);
 }
 
-TEST(Vector, Rotate) {
+TEST(Vector, GetAngle2)
+{
+    IO::Astrodynamics::Math::Vector3D vector(0.0, 1.0, 0.0);
+    IO::Astrodynamics::Math::Vector3D vector2(0.0, 1.0, 0.0);
+
+    ASSERT_DOUBLE_EQ(0.0, vector.GetAngle(vector2, IO::Astrodynamics::Tests::PlaneZ));
+}
+
+TEST(Vector, GetAngle3)
+{
+    IO::Astrodynamics::Math::Vector3D vector(0.0, 1.0, 0.0);
+    IO::Astrodynamics::Math::Vector3D vector2(1.0, 1.0, 0.0);
+
+    ASSERT_NEAR(-0.78539816339744828, vector.GetAngle(vector2, IO::Astrodynamics::Tests::PlaneZ), 1E-06);
+}
+
+TEST(Vector, GetAngle4)
+{
+    IO::Astrodynamics::Math::Vector3D vector(0.0, 1.0, 0.0);
+    IO::Astrodynamics::Math::Vector3D vector2(0.0, -1.0, 0.0);
+
+    ASSERT_NEAR(IO::Astrodynamics::Constants::PI, vector.GetAngle(vector2, IO::Astrodynamics::Tests::PlaneZ),1E-06);
+}
+
+TEST(Vector, GetAngle5)
+{
+    IO::Astrodynamics::Math::Vector3D vector(0.0, 1.0, 0.0);
+    IO::Astrodynamics::Math::Vector3D vector2(-1.0, -1.0, 0.0);
+
+    ASSERT_NEAR(2.3561944901923448, vector.GetAngle(vector2, IO::Astrodynamics::Tests::PlaneZ),1E-06);
+}
+
+TEST(Vector, GetAngle6)
+{
+    IO::Astrodynamics::Math::Vector3D vector(0.0, 1.0, 0.0);
+    IO::Astrodynamics::Math::Vector3D vector2(-1.0, 0.0, 0.0);
+
+    ASSERT_NEAR(IO::Astrodynamics::Constants::PI2, vector.GetAngle(vector2),1E-06);
+}
+
+TEST(Vector, Rotate)
+{
     IO::Astrodynamics::Math::Vector3D vector(1.0, 0.0, 0.0);
     IO::Astrodynamics::Math::Quaternion q(IO::Astrodynamics::Math::Vector3D(0.0, 0.0, 1.0), IO::Astrodynamics::Constants::PI2);
     auto res = vector.Rotate(q);
@@ -146,7 +196,8 @@ TEST(Vector, Rotate) {
     ASSERT_NEAR(-0.2440169358562925, res.GetZ(), 1E-09);
 }
 
-TEST(Vector, To) {
+TEST(Vector, To)
+{
     IO::Astrodynamics::Math::Vector3D refVector(0.0, 0.0, 1.0);
     IO::Astrodynamics::Math::Vector3D vector(1.0, 0.0, 0.0);
 
@@ -159,7 +210,8 @@ TEST(Vector, To) {
     ASSERT_NEAR(1.0, vRes.GetZ(), 1e-07);
 }
 
-TEST(Vector, Reverse) {
+TEST(Vector, Reverse)
+{
     IO::Astrodynamics::Math::Vector3D refVector(1.0, 1.0, 1.0);
 
     auto vRes = refVector.Reverse();

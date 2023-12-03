@@ -28,7 +28,7 @@ namespace IO::Astrodynamics::Maneuvers::Attitudes
          * @return IO::Astrodynamics::OrbitalParameters::StateOrientation
          */
         IO::Astrodynamics::OrbitalParameters::StateOrientation ComputeOrientation(const IO::Astrodynamics::OrbitalParameters::OrbitalParameters &maneuverPoint) override;
-
+        Math::Vector3D ManeuverPointComputation(const IO::Astrodynamics::OrbitalParameters::OrbitalParameters& orbitalParameters) override;
     public:
         /**
          * @brief Construct a new Nadir Attitude object

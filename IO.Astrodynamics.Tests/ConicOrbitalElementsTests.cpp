@@ -314,7 +314,7 @@ TEST(ConicOrbitalElements, CreateHelioSynchronousOrbitMarch)
     ASSERT_DOUBLE_EQ(0.0001724, res->GetEccentricity());
     ASSERT_NEAR(4.7331352670103488, res->GetRightAscendingNodeLongitude(),1E-03);
     ASSERT_DOUBLE_EQ(270.0, res->GetPeriapsisArgument() * IO::Astrodynamics::Constants::RAD_DEG);
-    ASSERT_NEAR(270.0, res->GetTrueAnomaly() * IO::Astrodynamics::Constants::RAD_DEG, 6);
+    ASSERT_NEAR(270.0, res->GetTrueAnomaly() * IO::Astrodynamics::Constants::RAD_DEG, 1E-06);
     ASSERT_DOUBLE_EQ(epoch.GetSecondsFromJ2000().count(), res->GetEpoch().GetSecondsFromJ2000().count());
     //Moon's geophysical properties doesn't exist by default
     auto moon = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(301);
@@ -329,12 +329,12 @@ TEST(ConicOrbitalElements, CreateHelioSynchronousOrbitApril)
     auto sun = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(10);
     auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399, sun);
     auto res = IO::Astrodynamics::OrbitalParameters::OrbitalParameters::CreateEarthHelioSynchronousOrbit(earth, 7080636.3, 0.0001724, epoch);
-    ASSERT_NEAR(7080636.299999997, res->GetSemiMajorAxis(), 6);
+    ASSERT_NEAR(7080636.299999997, res->GetSemiMajorAxis(), 1E-06);
     ASSERT_DOUBLE_EQ(98.1923322636721, res->GetInclination() * IO::Astrodynamics::Constants::RAD_DEG);
     ASSERT_DOUBLE_EQ(0.0001724, res->GetEccentricity());
     ASSERT_NEAR(5.229578833367329, res->GetRightAscendingNodeLongitude(),1E-03);
     ASSERT_DOUBLE_EQ(270.0, res->GetPeriapsisArgument() * IO::Astrodynamics::Constants::RAD_DEG);
-    ASSERT_NEAR(270.0, res->GetTrueAnomaly() * IO::Astrodynamics::Constants::RAD_DEG, 6);
+    ASSERT_NEAR(270.0, res->GetTrueAnomaly() * IO::Astrodynamics::Constants::RAD_DEG, 1E-06);
     ASSERT_DOUBLE_EQ(epoch.GetSecondsFromJ2000().count(), res->GetEpoch().GetSecondsFromJ2000().count());
     //Moon's geophysical properties doesn't exist by default
     auto moon = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(301);
@@ -349,12 +349,12 @@ TEST(ConicOrbitalElements, CreateHelioSynchronousOrbitAugust)
     auto sun = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(10);
     auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399, sun);
     auto res = IO::Astrodynamics::OrbitalParameters::OrbitalParameters::CreateEarthHelioSynchronousOrbit(earth, 7080636.3, 0.0001724, epoch);
-    ASSERT_NEAR(7080636.3000000054, res->GetSemiMajorAxis(), 6);
+    ASSERT_NEAR(7080636.3000000054, res->GetSemiMajorAxis(), 1E-06);
     ASSERT_DOUBLE_EQ(98.1923322636721, res->GetInclination() * IO::Astrodynamics::Constants::RAD_DEG);
     ASSERT_DOUBLE_EQ(0.0001724, res->GetEccentricity());
     ASSERT_NEAR(1.0642024373543861, res->GetRightAscendingNodeLongitude(),1E-03);
     ASSERT_DOUBLE_EQ(270.0, res->GetPeriapsisArgument() * IO::Astrodynamics::Constants::RAD_DEG);
-    ASSERT_NEAR(270.0, res->GetTrueAnomaly() * IO::Astrodynamics::Constants::RAD_DEG, 6);
+    ASSERT_NEAR(270.0, res->GetTrueAnomaly() * IO::Astrodynamics::Constants::RAD_DEG, 1E-06);
     ASSERT_DOUBLE_EQ(epoch.GetSecondsFromJ2000().count(), res->GetEpoch().GetSecondsFromJ2000().count());
     //Moon's geophysical properties doesn't exist by default
     auto moon = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(301);
@@ -369,7 +369,7 @@ TEST(ConicOrbitalElements, CreateHelioSynchronousOrbitNovember)
     auto sun = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(10);
     auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399, sun);
     auto res = IO::Astrodynamics::OrbitalParameters::OrbitalParameters::CreateEarthHelioSynchronousOrbit(earth, 7080636.3, 0.0001724, epoch);
-    ASSERT_NEAR(7080636.3000000054, res->GetSemiMajorAxis(), 6);
+    ASSERT_NEAR(7080636.3000000054, res->GetSemiMajorAxis(), 1E-06);
     ASSERT_DOUBLE_EQ(98.1923322636721, res->GetInclination() * IO::Astrodynamics::Constants::RAD_DEG);
     ASSERT_DOUBLE_EQ(0.0001724, res->GetEccentricity());
     ASSERT_NEAR(5.7140833665781239, res->GetRightAscendingNodeLongitude(),1E-03);
@@ -389,11 +389,11 @@ TEST(ConicOrbitalElements, CreatePhasedHelioSynchronousOrbit)
     auto sun = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(10);
     auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399, sun);
     auto res = IO::Astrodynamics::OrbitalParameters::OrbitalParameters::CreateEarthPhasedHelioSynchronousOrbit(earth, 0.0001724, epoch, 14);
-    ASSERT_NEAR(7272221.8759850441, res->GetSemiMajorAxis(), 6);
+    ASSERT_NEAR(7272221.8759850441, res->GetSemiMajorAxis(), 1E-06);
     ASSERT_DOUBLE_EQ(99.00111990363385, res->GetInclination() * IO::Astrodynamics::Constants::RAD_DEG);
     ASSERT_DOUBLE_EQ(0.0001724, res->GetEccentricity());
     ASSERT_NEAR(5.7140833665781239, res->GetRightAscendingNodeLongitude(),1E-03);
     ASSERT_DOUBLE_EQ(270.0, res->GetPeriapsisArgument() * IO::Astrodynamics::Constants::RAD_DEG);
-    ASSERT_NEAR(270.0, res->GetTrueAnomaly() * IO::Astrodynamics::Constants::RAD_DEG, 6);
+    ASSERT_NEAR(270.0, res->GetTrueAnomaly() * IO::Astrodynamics::Constants::RAD_DEG, 1E-06);
     ASSERT_DOUBLE_EQ(epoch.GetSecondsFromJ2000().count(), res->GetEpoch().GetSecondsFromJ2000().count());
 }

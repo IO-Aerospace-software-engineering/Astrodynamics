@@ -10,7 +10,6 @@
 #define IO_PLANE_H
 
 #include <Vector3D.h>
-
 namespace IO::Astrodynamics::Math
 {
     class Plane
@@ -20,6 +19,9 @@ namespace IO::Astrodynamics::Math
         const double m_distance;
 
     public:
+        static const Plane PlaneX;
+        static const Plane PlaneY;
+        static const Plane PlaneZ;
         Plane(IO::Astrodynamics::Math::Vector3D normal, double distance);
 
         [[nodiscard]] inline IO::Astrodynamics::Math::Vector3D GetNormal() const

@@ -1,12 +1,5 @@
-/**
- * @file TestManeuver.h
- * @author Sylvain Guillet (sylvain.guillet@live.com)
- * @brief This class is an helper to test maneuver. You can define manually DeltaV required by maneuver
- * @version 0.x
- * @date 2021-03-12
- * 
- * @copyright Copyright (c) 2021
- * 
+/*
+ Copyright (c) 2021-2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
  */
 
 #include <ManeuverBase.h>
@@ -30,7 +23,7 @@ protected:
     void Compute(const IO::Astrodynamics::OrbitalParameters::OrbitalParameters &maneuverPoint) override;
     IO::Astrodynamics::OrbitalParameters::StateOrientation ComputeOrientation(const IO::Astrodynamics::OrbitalParameters::OrbitalParameters &maneuverPoint) override;
     bool CanExecute(const IO::Astrodynamics::OrbitalParameters::OrbitalParameters &maneuverPoint) override;
-    /* data */
+    IO::Astrodynamics::Math::Vector3D ManeuverPointComputation(const IO::Astrodynamics::OrbitalParameters::OrbitalParameters& orbitalParameters) override;
 public:
     TestManeuver(const std::vector<IO::Astrodynamics::Body::Spacecraft::Engine*> engines, IO::Astrodynamics::Propagators::Propagator &propagator);
     TestManeuver(const std::vector<IO::Astrodynamics::Body::Spacecraft::Engine*> engines, IO::Astrodynamics::Propagators::Propagator &propagator, const IO::Astrodynamics::Time::TDB &minimumEpoch);
@@ -68,3 +61,9 @@ IO::Astrodynamics::Maneuvers::ManeuverResult TestManeuver::TryExecute(const IO::
     m_deltaV = std::make_unique<IO::Astrodynamics::Math::Vector3D>(deltaV, 0, 0);
     return IO::Astrodynamics::Maneuvers::ManeuverBase::TryExecute(maneuverPoint);
 }
+
+IO::Astrodynamics::Math::Vector3D TestManeuver::ManeuverPointComputation(const IO::Astrodynamics::OrbitalParameters::OrbitalParameters &orbitalParameters)
+{
+    return IO::Astrodynamics::Math::Vector3D();
+}
+
