@@ -160,7 +160,23 @@ namespace IO::Astrodynamics::Maneuvers
          */
         virtual IO::Astrodynamics::OrbitalParameters::StateOrientation ComputeOrientation(const IO::Astrodynamics::OrbitalParameters::OrbitalParameters &maneuverPoint) = 0;
 
+        /**
+         * @brief Updates the maneuver point with new orbital parameters.
+         *
+         * This function is used to update the maneuver point with new orbital parameters.
+         *
+         * @param maneuverPoint The new orbital parameters for the maneuver point.
+         */
+
         virtual void UpdateManeuverPoint(const IO::Astrodynamics::OrbitalParameters::OrbitalParameters &maneuverPoint);
+
+        /**
+         * @brief Abstract class for maneuver point computation
+         *
+         * This class defines an interface for computing maneuver points based on
+         * the given orbital parameters.
+         */
+
         virtual Math::Vector3D ManeuverPointComputation(const IO::Astrodynamics::OrbitalParameters::OrbitalParameters &maneuverPoint) = 0;
     public:
         /**
