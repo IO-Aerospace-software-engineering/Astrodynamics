@@ -5,7 +5,7 @@
 #include <gtest/gtest.h>
 #include <Quaternion.h>
 #include <Constants.h>
-#include <Plane.h>
+#include <Planes.h>
 
 TEST(Vector, Initialization)
 {
@@ -122,7 +122,7 @@ TEST(Vector, GetAngle2)
     IO::Astrodynamics::Math::Vector3D vector(0.0, 1.0, 0.0);
     IO::Astrodynamics::Math::Vector3D vector2(0.0, 1.0, 0.0);
 
-    ASSERT_DOUBLE_EQ(0.0, vector.GetAngle(vector2, IO::Astrodynamics::Math::Plane::PlaneZ));
+    ASSERT_DOUBLE_EQ(0.0, vector.GetAngle(vector2, IO::Astrodynamics::Tests::PlaneZ));
 }
 
 TEST(Vector, GetAngle3)
@@ -130,7 +130,7 @@ TEST(Vector, GetAngle3)
     IO::Astrodynamics::Math::Vector3D vector(0.0, 1.0, 0.0);
     IO::Astrodynamics::Math::Vector3D vector2(1.0, 1.0, 0.0);
 
-    ASSERT_NEAR(-0.78539816339744828, vector.GetAngle(vector2, IO::Astrodynamics::Math::Plane::PlaneZ), 1E-06);
+    ASSERT_NEAR(-0.78539816339744828, vector.GetAngle(vector2, IO::Astrodynamics::Tests::PlaneZ), 1E-06);
 }
 
 TEST(Vector, GetAngle4)
@@ -138,7 +138,7 @@ TEST(Vector, GetAngle4)
     IO::Astrodynamics::Math::Vector3D vector(0.0, 1.0, 0.0);
     IO::Astrodynamics::Math::Vector3D vector2(0.0, -1.0, 0.0);
 
-    ASSERT_NEAR(IO::Astrodynamics::Constants::PI, vector.GetAngle(vector2, IO::Astrodynamics::Math::Plane::PlaneZ),1E-06);
+    ASSERT_NEAR(IO::Astrodynamics::Constants::PI, vector.GetAngle(vector2, IO::Astrodynamics::Tests::PlaneZ),1E-06);
 }
 
 TEST(Vector, GetAngle5)
@@ -146,7 +146,7 @@ TEST(Vector, GetAngle5)
     IO::Astrodynamics::Math::Vector3D vector(0.0, 1.0, 0.0);
     IO::Astrodynamics::Math::Vector3D vector2(-1.0, -1.0, 0.0);
 
-    ASSERT_NEAR(2.3561944901923448, vector.GetAngle(vector2, IO::Astrodynamics::Math::Plane::PlaneZ),1E-06);
+    ASSERT_NEAR(2.3561944901923448, vector.GetAngle(vector2, IO::Astrodynamics::Tests::PlaneZ),1E-06);
 }
 
 TEST(Vector, GetAngle6)
