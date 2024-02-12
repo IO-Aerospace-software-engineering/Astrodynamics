@@ -3,8 +3,10 @@
  */
 #include <Vector3D.h>
 #include <cmath>
+#include <limits>
 #include <Quaternion.h>
 #include <Plane.h>
+#include <Constants.h>
 
 const IO::Astrodynamics::Math::Vector3D IO::Astrodynamics::Math::Vector3D::VectorX{1.0, 0.0, 0.0};
 const IO::Astrodynamics::Math::Vector3D IO::Astrodynamics::Math::Vector3D::VectorY{0.0, 1.0, 0.0};
@@ -97,14 +99,16 @@ IO::Astrodynamics::Math::Quaternion IO::Astrodynamics::Math::Vector3D::To(const 
 {
     auto dot = this->DotProduct(vector);
 
-    if (dot == -1.0)//Manage 180° case
+    double angle = std::abs(this->GetAngle(vector));
+    if (std::abs(angle - IO::Astrodynamics::Constants::PI) <= std::numeric_limits<double>::epsilon())//Manage 180° case
     {
         double x = std::abs(vector.GetX());
         double y = std::abs(vector.GetY());
         double z = std::abs(vector.GetZ());
 
-        IO::Astrodynamics::Math::Vector3D axis = x < y ? (x < z ? IO::Astrodynamics::Math::Vector3D::VectorX : IO::Astrodynamics::Math::Vector3D::VectorZ) : (y < z ? IO::Astrodynamics::Math::Vector3D::VectorY
-                                                                                                                                      : IO::Astrodynamics::Math::Vector3D::VectorZ);
+        IO::Astrodynamics::Math::Vector3D axis =
+                x < y ? (x < z ? IO::Astrodynamics::Math::Vector3D::VectorX : IO::Astrodynamics::Math::Vector3D::VectorZ) : (y < z ? IO::Astrodynamics::Math::Vector3D::VectorY
+                                                                                                                                   : IO::Astrodynamics::Math::Vector3D::VectorZ);
         auto v = vector.CrossProduct(axis);
         return IO::Astrodynamics::Math::Quaternion{0.0, v.GetX(), v.GetY(), v.GetZ()};
     }
@@ -124,7 +128,7 @@ IO::Astrodynamics::Math::Vector3D IO::Astrodynamics::Math::Vector3D::Reverse() c
 
 double IO::Astrodynamics::Math::Vector3D::GetAngle(const IO::Astrodynamics::Math::Vector3D &vector, const IO::Astrodynamics::Math::Plane &plane) const
 {
-    return GetAngle(vector,plane.GetNormal());
+    return GetAngle(vector, plane.GetNormal());
 }
 
 double IO::Astrodynamics::Math::Vector3D::GetAngle(const IO::Astrodynamics::Math::Vector3D &vector, const IO::Astrodynamics::Math::Vector3D &plane) const

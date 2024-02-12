@@ -210,6 +210,32 @@ TEST(Vector, To)
     ASSERT_NEAR(1.0, vRes.GetZ(), 1e-07);
 }
 
+TEST(Vector, To2)
+{
+    IO::Astrodynamics::Math::Vector3D refVector(0.0, 1.0, 0.0);
+    IO::Astrodynamics::Math::Vector3D vector(0.0, -0.2, 0.7);
+
+    auto q = refVector.To(vector);
+
+    ASSERT_NEAR(0.52801098892805176, q.GetQ0(), 1e-07);
+    ASSERT_NEAR(0.69999999999999996, q.GetQ1(), 1e-07);
+    ASSERT_NEAR(0.0, q.GetQ2(), 1e-07);
+    ASSERT_NEAR(0.0, q.GetQ3(), 1e-07);
+}
+
+TEST(Vector, To3)
+{
+    IO::Astrodynamics::Math::Vector3D refVector(0.0, 1.0, 0.0);
+    IO::Astrodynamics::Math::Vector3D vector(0.0, 10.0, 0.0);
+
+    auto q = refVector.To(vector).Normalize();
+
+    ASSERT_NEAR(1.0, q.GetQ0(), 1e-07);
+    ASSERT_NEAR(0.0, q.GetQ1(), 1e-07);
+    ASSERT_NEAR(0.0, q.GetQ2(), 1e-07);
+    ASSERT_NEAR(0.0, q.GetQ3(), 1e-07);
+}
+
 TEST(Vector, Reverse)
 {
     IO::Astrodynamics::Math::Vector3D refVector(1.0, 1.0, 1.0);
