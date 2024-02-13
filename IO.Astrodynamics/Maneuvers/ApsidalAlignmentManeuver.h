@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2021-2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
+ Copyright (c) 2021-2024. Sylvain Guillet (sylvain.guillet@tutamail.com)
  */
 
 #ifndef APSIDAL_ALIGNMENT_MANEUVER_H
@@ -16,9 +16,6 @@ namespace IO::Astrodynamics::Maneuvers
         double m_theta{};
         bool m_isIntersectP{false};
         bool m_isIntersectQ{false};
-
-        [[nodiscard]] bool IsIntersectP(const IO::Astrodynamics::OrbitalParameters::StateVector &stateVector) const;
-        [[nodiscard]] bool IsIntersectQ(const IO::Astrodynamics::OrbitalParameters::StateVector &stateVector) const;
 
         [[nodiscard]] std::map<std::string, double> GetCoefficients(const IO::Astrodynamics::OrbitalParameters::StateVector &stateVector) const;
 
