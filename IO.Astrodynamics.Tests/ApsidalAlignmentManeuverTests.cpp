@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
+ Copyright (c) 2023-2024. Sylvain Guillet (sylvain.guillet@tutamail.com)
  */
 
 #include <gtest/gtest.h>
@@ -205,12 +205,12 @@ TEST(ApsidalAlignmentManeuver, ExecuteP)
 
     ASSERT_DOUBLE_EQ(1465.6234133089795, maneuver.GetDeltaV().Magnitude());
     ASSERT_DOUBLE_EQ(-1352.4744547815126, maneuver.GetDeltaV().GetX());
-    ASSERT_DOUBLE_EQ(564.68118332640915, maneuver.GetDeltaV().GetY());
+    ASSERT_DOUBLE_EQ(564.68118332641416, maneuver.GetDeltaV().GetY());
     ASSERT_DOUBLE_EQ(0.0, maneuver.GetDeltaV().GetZ());
 
     ASSERT_DOUBLE_EQ(6946.0140230624074, maneuver.GetThrustWindow()->GetStartDate().GetSecondsFromJ2000().count());
     ASSERT_DOUBLE_EQ(6956.7526549159793, maneuver.GetThrustWindow()->GetEndDate().GetSecondsFromJ2000().count());
-    ASSERT_DOUBLE_EQ(10.738631853571592, maneuver.GetThrustDuration().GetSeconds().count());
+    ASSERT_DOUBLE_EQ(10.738631853571601, maneuver.GetThrustDuration().GetSeconds().count());
     ASSERT_DOUBLE_EQ(536.93159267857959, maneuver.GetFuelBurned());
 }
 
