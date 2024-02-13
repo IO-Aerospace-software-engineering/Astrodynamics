@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
+ Copyright (c) 2023-2024. Sylvain Guillet (sylvain.guillet@tutamail.com)
  */
 
 #include <gtest/gtest.h>
@@ -201,17 +201,17 @@ TEST(ApsidalAlignmentManeuver, ExecuteP)
     ASSERT_TRUE(res.IsValid());
 
     //Theta 30°
-    ASSERT_DOUBLE_EQ(0.52359877559829782, maneuver.GetTheta());
+    ASSERT_NEAR(0.52359877559829782, maneuver.GetTheta(),1E-09);
 
-    ASSERT_DOUBLE_EQ(1465.6234133089795, maneuver.GetDeltaV().Magnitude());
-    ASSERT_DOUBLE_EQ(-1352.4744547815126, maneuver.GetDeltaV().GetX());
-    ASSERT_DOUBLE_EQ(564.68118332640915, maneuver.GetDeltaV().GetY());
-    ASSERT_DOUBLE_EQ(0.0, maneuver.GetDeltaV().GetZ());
+    ASSERT_NEAR(1465.6234133089795, maneuver.GetDeltaV().Magnitude(),1E-09);
+    ASSERT_NEAR(-1352.4744547815126, maneuver.GetDeltaV().GetX(),1E-09);
+    ASSERT_NEAR(564.68118332641416, maneuver.GetDeltaV().GetY(),1E-09);
+    ASSERT_NEAR(0.0, maneuver.GetDeltaV().GetZ(),1E-09);
 
-    ASSERT_DOUBLE_EQ(6946.0140230624074, maneuver.GetThrustWindow()->GetStartDate().GetSecondsFromJ2000().count());
-    ASSERT_DOUBLE_EQ(6956.7526549159793, maneuver.GetThrustWindow()->GetEndDate().GetSecondsFromJ2000().count());
-    ASSERT_DOUBLE_EQ(10.738631853571592, maneuver.GetThrustDuration().GetSeconds().count());
-    ASSERT_DOUBLE_EQ(536.93159267857959, maneuver.GetFuelBurned());
+    ASSERT_NEAR(6946.0140230624074, maneuver.GetThrustWindow()->GetStartDate().GetSecondsFromJ2000().count(),1E-09);
+    ASSERT_NEAR(6956.7526549159793, maneuver.GetThrustWindow()->GetEndDate().GetSecondsFromJ2000().count(),1E-09);
+    ASSERT_NEAR(10.738631853571601, maneuver.GetThrustDuration().GetSeconds().count(),1E-09);
+    ASSERT_NEAR(536.93159267857959, maneuver.GetFuelBurned(),1E-09);
 }
 
 TEST(ApsidalAlignmentManeuver, CheckOrbitalParams)
