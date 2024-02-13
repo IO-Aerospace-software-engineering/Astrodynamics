@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2021-2024. Sylvain Guillet (sylvain.guillet@tutamail.com)
+ Copyright (c) 2021-2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
  */
 #include <ApsidalAlignmentManeuver.h>
 #include <Parameters.h>
@@ -38,6 +38,34 @@ IO::Astrodynamics::OrbitalParameters::StateOrientation IO::Astrodynamics::Maneuv
                                                                   maneuverPoint.GetEpoch(), maneuverPoint.GetFrame()};
 }
 
+bool IO::Astrodynamics::Maneuvers::ApsidalAlignmentManeuver::IsIntersectP(
+        const IO::Astrodynamics::OrbitalParameters::StateVector &stateVector) const
+{
+    double v = GetPTrueAnomaly(stateVector);
+
+    auto v_vector = stateVector.ToStateVector(v).GetPosition();
+    if (v_vector.GetAngle(stateVector.GetPosition()) < IO::Astrodynamics::Parameters::IntersectDetectionAccuraccy)
+    {
+        return true;
+    }
+
+    return false;
+}
+
+bool IO::Astrodynamics::Maneuvers::ApsidalAlignmentManeuver::IsIntersectQ(
+        const IO::Astrodynamics::OrbitalParameters::StateVector &stateVector) const
+{
+    double v = GetQTrueAnomaly(stateVector);
+
+    auto v_vector = stateVector.ToStateVector(v).GetPosition();
+    if (v_vector.GetAngle(stateVector.GetPosition()) < IO::Astrodynamics::Parameters::IntersectDetectionAccuraccy)
+    {
+        return true;
+    }
+
+    return false;
+}
+
 double IO::Astrodynamics::Maneuvers::ApsidalAlignmentManeuver::GetTheta() const
 {
     return m_theta;
@@ -46,12 +74,7 @@ double IO::Astrodynamics::Maneuvers::ApsidalAlignmentManeuver::GetTheta() const
 double IO::Astrodynamics::Maneuvers::ApsidalAlignmentManeuver::GetTheta(
         const IO::Astrodynamics::OrbitalParameters::StateVector &stateVector) const
 {
-    double res= stateVector.GetPerigeeVector().GetAngle(m_targetOrbit->GetPerigeeVector(),stateVector.GetSpecificAngularMomentum());
-    if(res<0.0)
-    {
-        res+=Constants::_2PI;
-    }
-    return res;
+    return stateVector.GetPerigeeVector().GetAngle(m_targetOrbit->GetPerigeeVector());
 }
 
 std::map<std::string, double> IO::Astrodynamics::Maneuvers::ApsidalAlignmentManeuver::GetCoefficients(
@@ -94,7 +117,7 @@ IO::Astrodynamics::Maneuvers::ApsidalAlignmentManeuver::GetQTrueAnomaly(const IO
     double res = coef["alpha"] - std::acos((coef["C"] / coef["A"]) * std::cos(coef["alpha"]));
     if (std::isnan(res))
     {
-        throw IO::Astrodynamics::Exception::InvalidArgumentException("Apsidal alignment requires orbits intersection");
+        throw IO::Astrodynamics::Exception::InvalidArgumentException("Apsidal alignment requieres orbits intersection");
     }
 
     if (res < 0.0)
