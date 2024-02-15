@@ -33,6 +33,10 @@ IO::Astrodynamics::Maneuvers::PhasingManeuver::PhasingManeuver(std::vector<IO::A
 void IO::Astrodynamics::Maneuvers::PhasingManeuver::Compute(const IO::Astrodynamics::OrbitalParameters::OrbitalParameters &maneuverPoint)
 {
     double deltaTrueAnomaly = m_targetOrbit->GetTrueLongitude(maneuverPoint.GetEpoch()) - maneuverPoint.GetTrueLongitude();
+    if(deltaTrueAnomaly<0.0)
+    {
+        deltaTrueAnomaly+=IO::Astrodynamics::Constants::_2PI;
+    }
     double e = maneuverPoint.GetEccentricity();
 
     double E = 2 * std::atan((std::sqrt((1 - e) / (1 + e))) * std::tan(deltaTrueAnomaly / 2.0));
