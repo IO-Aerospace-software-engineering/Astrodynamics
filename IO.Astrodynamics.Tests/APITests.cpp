@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
+ Copyright (c) 2023-2024. Sylvain Guillet (sylvain.guillet@tutamail.com)
  */
 
 #include<gtest/gtest.h>
@@ -434,6 +434,80 @@ TEST(API, WriteEphemeris)
         ASSERT_EQ(svresult[i].centerOfMotionId, 399);
         ASSERT_STREQ(svresult[i].inertialFrame, "J2000");
     }
+}
+
+TEST(API, WriteOrientation)
+{
+    const auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399);
+    std::unique_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::Astrodynamics::OrbitalParameters::StateVector>(earth,
+                                                                                                                                                                 IO::Astrodynamics::Math::Vector3D(
+                                                                                                                                                                         6800000.0,
+                                                                                                                                                                         0.0, 0.0),
+                                                                                                                                                                 IO::Astrodynamics::Math::Vector3D(
+                                                                                                                                                                         0.0,
+                                                                                                                                                                         8000.0,
+                                                                                                                                                                         0.0),
+                                                                                                                                                                 IO::Astrodynamics::Time::TDB(
+                                                                                                                                                                         0.0s),
+                                                                                                                                                                 IO::Astrodynamics::Frames::InertialFrames::ICRF());
+    IO::Astrodynamics::Body::Spacecraft::Spacecraft spc(-175, "SPC000", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams));
+    const int size = 10;
+    IO::Astrodynamics::API::DTO::StateOrientationDTO sv[size];
+    for (int i = 0; i < size; ++i)
+    {
+        sv[i].orientation.w = i;
+        sv[i].orientation.x = 1 + i * 0.1;
+        sv[i].orientation.y = 1 + i * 0.2;
+        sv[i].orientation.z = 1 + i * 0.3;
+        sv[i].angularVelocity.x = 0.0;
+        sv[i].angularVelocity.y = 0.0;
+        sv[i].angularVelocity.z = 0.0;
+        sv[i].epoch = i;
+        sv[i].frame = "J2000";
+    }
+
+    //Write ephemeris file
+    WriteOrientationProxy((std::string(SpacecraftPath) + "/OrientationTestFile.ck").c_str(), -175, sv, size);
+
+    //Load ephemeris file
+    LoadKernelsProxy((std::string(SpacecraftPath) + "/OrientationTestFile.ck").c_str());
+
+    IO::Astrodynamics::API::DTO::WindowDTO window{};
+    window.start = 0.0;
+    window.end = 9.0;
+    IO::Astrodynamics::API::DTO::StateOrientationDTO soresult[size];
+    ReadOrientationProxy(window, -175, 0.0, "J2000", 1.0, soresult);
+
+    ASSERT_DOUBLE_EQ(soresult[0].orientation.w, 0.0);
+    ASSERT_DOUBLE_EQ(soresult[0].orientation.x, -0.57735026918962573);
+    ASSERT_DOUBLE_EQ(soresult[0].orientation.y, -0.57735026918962573);
+    ASSERT_DOUBLE_EQ(soresult[0].orientation.z, -0.57735026918962573);
+    ASSERT_DOUBLE_EQ(soresult[0].angularVelocity.x, 0.0);
+    ASSERT_DOUBLE_EQ(soresult[0].angularVelocity.y, 0.0);
+    ASSERT_DOUBLE_EQ(soresult[0].angularVelocity.z, 0.0);
+    ASSERT_DOUBLE_EQ(soresult[0].epoch, 0);
+    ASSERT_STREQ(soresult[0].frame, "J2000");
+
+    ASSERT_DOUBLE_EQ(soresult[4].orientation.w, 0.78386180166962049);
+    ASSERT_DOUBLE_EQ(soresult[4].orientation.x, 0.27435163058436718);
+    ASSERT_DOUBLE_EQ(soresult[4].orientation.y, 0.35273781075132921);
+    ASSERT_DOUBLE_EQ(soresult[4].orientation.z, 0.43112399091829129);
+    ASSERT_DOUBLE_EQ(soresult[4].angularVelocity.x, 0.0);
+    ASSERT_DOUBLE_EQ(soresult[4].angularVelocity.y, 0.0);
+    ASSERT_DOUBLE_EQ(soresult[4].angularVelocity.z, 0.0);
+    ASSERT_DOUBLE_EQ(soresult[4].epoch, 4);
+    ASSERT_STREQ(soresult[4].frame, "J2000");
+
+    ASSERT_DOUBLE_EQ(soresult[9].orientation.w, 0.87358057364767872);
+    ASSERT_DOUBLE_EQ(soresult[9].orientation.x, 0.18442256554784328);
+    ASSERT_DOUBLE_EQ(soresult[9].orientation.y, 0.27178062291261118);
+    ASSERT_DOUBLE_EQ(soresult[9].orientation.z, 0.359138680277379);
+    ASSERT_DOUBLE_EQ(soresult[9].angularVelocity.x, 0.0);
+    ASSERT_DOUBLE_EQ(soresult[9].angularVelocity.y, 0.0);
+    ASSERT_DOUBLE_EQ(soresult[9].angularVelocity.z, 0.0);
+    ASSERT_DOUBLE_EQ(soresult[9].epoch, 9);
+    ASSERT_STREQ(soresult[9].frame, "J2000");
+
 }
 
 TEST(API, GetBodyInformation)

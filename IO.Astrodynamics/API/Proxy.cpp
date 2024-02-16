@@ -1,9 +1,10 @@
 /*
- Copyright (c) 2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
+ Copyright (c) 2023-2024. Sylvain Guillet (sylvain.guillet@tutamail.com)
  */
 
 #include <algorithm>
 #include <iostream>
+#include <filesystem>
 
 
 #include <Proxy.h>
@@ -173,6 +174,34 @@ bool WriteEphemerisProxy(const char *filePath, int objectId, IO::Astrodynamics::
     }
 
     kernel.WriteData(states);
+    if (failed_c())
+    {
+        HandleError();
+        return false;
+    }
+    return true;
+}
+
+bool WriteOrientationProxy(const char *filePath, int objectId, IO::Astrodynamics::API::DTO::StateOrientationDTO *so,
+                           unsigned int size)
+{
+    ActivateErrorManagement();
+    std::filesystem::path path(filePath);
+    std::filesystem::path parentPath = path.parent_path();
+    IO::Astrodynamics::Kernels::OrientationKernel kernel(filePath, objectId, objectId * 1000);
+
+    std::vector<std::vector<IO::Astrodynamics::OrbitalParameters::StateOrientation>> states;
+    states.emplace_back();
+
+    states.back().reserve(size);
+    std::map<int, std::shared_ptr<IO::Astrodynamics::Body::CelestialBody>> celestialBodies;
+
+    for (unsigned int i = 0; i < size; ++i)
+    {
+        states.back().emplace_back(ToQuaternion(so[i].orientation), ToVector3D(so[i].angularVelocity), IO::Astrodynamics::Time::TDB(std::chrono::duration<double>(so[i].epoch)),
+                                   IO::Astrodynamics::Frames::Frames(so[i].frame));
+    }
+    kernel.WriteOrientations(states);
     if (failed_c())
     {
         HandleError();

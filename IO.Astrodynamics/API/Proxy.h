@@ -1,6 +1,6 @@
 
 /*
- Copyright (c) 2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
+ Copyright (c) 2023-2024. Sylvain Guillet (sylvain.guillet@tutamail.com)
  */
 
 #include <ScenarioDTO.h>
@@ -44,6 +44,16 @@ MODULE_API const char *GetSpiceVersionProxy();
  */
 MODULE_API bool
 WriteEphemerisProxy(const char *filePath, int objectId, IO::Astrodynamics::API::DTO::StateVectorDTO sv[100000], unsigned int size);
+
+/**
+ * Write orientation into binary file (ck)
+ * @param filePath
+ * @param objectId
+ * @param so
+ * @param size
+ * @return
+ */
+MODULE_API bool WriteOrientationProxy(const char *filePath, int objectId, IO::Astrodynamics::API::DTO::StateOrientationDTO so[100000], unsigned int size);
 
 /**
  * Read object ephemeris
@@ -370,18 +380,18 @@ void ReadManeuverResults(IO::Astrodynamics::API::DTO::ScenarioDTO &scenarioDto,
                          std::map<int, std::shared_ptr<IO::Astrodynamics::Maneuvers::ManeuverBase>> &maneuvers);
 
 void ReadNadirAttitudeResult(IO::Astrodynamics::API::DTO::ScenarioDTO &scenarioDto,
-                              std::map<int, std::shared_ptr<IO::Astrodynamics::Maneuvers::ManeuverBase>> &maneuvers);
-
-void ReadZenithAttitudeResult(IO::Astrodynamics::API::DTO::ScenarioDTO &scenarioDto,
                              std::map<int, std::shared_ptr<IO::Astrodynamics::Maneuvers::ManeuverBase>> &maneuvers);
 
-void ReadProgradeAttitudeResult(IO::Astrodynamics::API::DTO::ScenarioDTO &scenarioDto,
+void ReadZenithAttitudeResult(IO::Astrodynamics::API::DTO::ScenarioDTO &scenarioDto,
                               std::map<int, std::shared_ptr<IO::Astrodynamics::Maneuvers::ManeuverBase>> &maneuvers);
+
+void ReadProgradeAttitudeResult(IO::Astrodynamics::API::DTO::ScenarioDTO &scenarioDto,
+                                std::map<int, std::shared_ptr<IO::Astrodynamics::Maneuvers::ManeuverBase>> &maneuvers);
 
 void ReadRetrogradeAttitudeResult(IO::Astrodynamics::API::DTO::ScenarioDTO &scenarioDto,
-                              std::map<int, std::shared_ptr<IO::Astrodynamics::Maneuvers::ManeuverBase>> &maneuvers);
+                                  std::map<int, std::shared_ptr<IO::Astrodynamics::Maneuvers::ManeuverBase>> &maneuvers);
 
 void ReadInstrumentTowardTargetAttitudeResult(IO::Astrodynamics::API::DTO::ScenarioDTO &scenarioDto,
-                              std::map<int, std::shared_ptr<IO::Astrodynamics::Maneuvers::ManeuverBase>> &maneuvers);
+                                              std::map<int, std::shared_ptr<IO::Astrodynamics::Maneuvers::ManeuverBase>> &maneuvers);
 
 #endif
