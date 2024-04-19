@@ -11,7 +11,7 @@ With this project, you can:
 - Integrate bodies and simulate spacecrafts and impulsive maneuvers
 - Check constraints such as occultations, body in instrument field of view, etc.
 
-This framework is written in C++ for optimal performance, but if you want a more productive approach, you can switch to the .Net version of this project here, which offers the best of both worlds.C++ velocity + .Net productivity = ❤️
+This framework is written in C++ for optimal performance, but if you want a more productive approach, you can switch to the .Net version of this project [here](https://github.com/IO-Aerospace-software-engineering/Astrodynamics.Net), which offers the best of both worlds.C++ velocity + .Net productivity = ❤️
     
 ## Project status
 
