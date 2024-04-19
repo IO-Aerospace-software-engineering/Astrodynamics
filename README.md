@@ -1,5 +1,24 @@
 # IO.Astrodynamics
 
+> [!CAUTION]
+> 
+> Strategy update!
+> 
+>Developing frameworks in astrodynamics takes a lot of time and unfortunately I don't have enough to maintain two frameworks (C++ / .Net), the Web API and the web application.
+>
+> So I made the decision to mainly focus on the .Net version and remove duplicate features on next version (>= 2.*) of the C++ library.
+>
+> The .Net version [here](https://github.com/IO-Aerospace-software-engineering/Astrodynamics.Net) offers more features, performance is very good and productivity is much better.
+>
+> To be clear, **this project will continue to exist** but there will no longer be 1:1 maintenance of features.
+>
+> If your application does not support .Net, you can use the Web API [here](https://api.io-aero.space/swagger/index.html)
+>
+> Sorry for the inconvenience
+>
+> Sylvain
+
+
 Welcome to Astrodynamics toolkit, a C++ wrapper and extension of cspice toolkit(N 67), a powerful library for space science and engineering developed by the JPL.
 
 This project aims to simplify the use of cspice for those who are unfamiliar with it or prefer an object-oriented approach.
