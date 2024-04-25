@@ -134,7 +134,7 @@ void PropagateSpacecraftProxy(IO::Astrodynamics::API::DTO::ScenarioDTO &scenario
     }
     if (failed_c())
     {
-        scenarioDto.Error = strdup(HandleError());
+        throw IO::Astrodynamics::Exception::SDKException(HandleError());
     }
 }
 
