@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
+ Copyright (c) 2023-2024. Sylvain Guillet (sylvain.guillet@tutamail.com)
  */
 
 #ifndef IOSDK_LAUNCHDTO_H
@@ -25,7 +25,6 @@ namespace IO::Astrodynamics::API::DTO
         double inertialInsertionVelocity[100]{};
 
         IO::Astrodynamics::API::DTO::WindowDTO windows[100]{};
-        const char * Error{};
     };
 }
 #endif //IOSDK_LAUNCHDTO_H

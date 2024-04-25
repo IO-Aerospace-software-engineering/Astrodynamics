@@ -25,6 +25,7 @@
 #include <KernelsLoader.h>
 #include <TLE.h>
 #include <EquinoctialElements.h>
+#include <SDKException.h>
 
 #pragma region Proxy
 
@@ -65,7 +66,7 @@ void LaunchProxy(IO::Astrodynamics::API::DTO::LaunchDTO &launchDto)
     }
     if (failed_c())
     {
-        launchDto.Error = strdup(HandleError());
+        throw IO::Astrodynamics::Exception::SDKException(HandleError());
     }
 }
 
