@@ -543,7 +543,6 @@ IO::Astrodynamics::API::DTO::CelestialBodyDTO GetCelestialBodyInfoProxy(int body
 {
     ActivateErrorManagement();
     IO::Astrodynamics::API::DTO::CelestialBodyDTO res;
-    res.Error = strdup("CelestialItem not found");
 
     SpiceChar name[32];
     SpiceBoolean found{false};
@@ -596,11 +595,10 @@ IO::Astrodynamics::API::DTO::CelestialBodyDTO GetCelestialBodyInfoProxy(int body
                 res.FrameId = frcode;
             }
         }
-        res.Error = strdup("");
     }
     if (failed_c())
     {
-        res.Error = strdup(HandleError());
+        HandleError();
     }
     return res;
 }

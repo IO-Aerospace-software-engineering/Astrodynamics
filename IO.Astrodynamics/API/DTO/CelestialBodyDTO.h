@@ -16,11 +16,10 @@ namespace IO::Astrodynamics::API::DTO
         IO::Astrodynamics::API::DTO::Vector3DDTO Radii{};
         double GM{};
         char FrameName[32];
-        int FrameId{};
-        const char *Error{};
-        double J2{};
-        double J3{};
-        double J4{};
+        int FrameId{0};
+        double J2{0.0};
+        double J3{0.0};
+        double J4{0.0};
 
         void SetFrame(const char* frame)
         {
