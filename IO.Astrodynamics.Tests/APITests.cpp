@@ -12,7 +12,7 @@
 TEST(API, DTOSize)
 {
     auto size2 = sizeof(IO::Astrodynamics::API::DTO::ScenarioDTO);
-    ASSERT_EQ(19112, size2);
+    ASSERT_EQ(19856, size2);
 }
 
 TEST(API, TDBToString)
@@ -115,7 +115,7 @@ TEST(API, SpacecraftPropagation)
     scenario.Spacecraft.directoryPath = spacecraftPath.c_str();
     scenario.Spacecraft.initialOrbitalParameter.centerOfMotionId = 399;
     scenario.Spacecraft.initialOrbitalParameter.epoch = 667915269.18539762;
-    scenario.Spacecraft.initialOrbitalParameter.inertialFrame = IO::Astrodynamics::Frames::InertialFrames::ICRF().ToCharArray();
+    scenario.Spacecraft.initialOrbitalParameter.SetFrame(IO::Astrodynamics::Frames::InertialFrames::ICRF().ToCharArray());
     scenario.Spacecraft.initialOrbitalParameter.position.x = 5056554.1874925727;
     scenario.Spacecraft.initialOrbitalParameter.position.y = 4395595.4942363985;
     scenario.Spacecraft.initialOrbitalParameter.position.z = 0.0;
@@ -151,7 +151,7 @@ TEST(API, SpacecraftPropagation)
     scenario.Spacecraft.orbitalPlaneChangingManeuvers[0].targetOrbit.velocity.z = 6933.1803797017265;
     scenario.Spacecraft.orbitalPlaneChangingManeuvers[0].targetOrbit.centerOfMotionId = 399;
     scenario.Spacecraft.orbitalPlaneChangingManeuvers[0].targetOrbit.epoch = 667915269.18539762;
-    scenario.Spacecraft.orbitalPlaneChangingManeuvers[0].targetOrbit.inertialFrame = IO::Astrodynamics::Frames::InertialFrames::ICRF().ToCharArray();
+    scenario.Spacecraft.orbitalPlaneChangingManeuvers[0].targetOrbit.SetFrame(IO::Astrodynamics::Frames::InertialFrames::ICRF().ToCharArray());
     scenario.Spacecraft.orbitalPlaneChangingManeuvers[0].engines[0] = "eng1";
     scenario.Spacecraft.orbitalPlaneChangingManeuvers[0].maneuverOrder = 0;
 
@@ -408,7 +408,7 @@ TEST(API, WriteEphemeris)
         sv[i].velocity.z = i;
         sv[i].epoch = i;
         sv[i].centerOfMotionId = 399;
-        sv[i].inertialFrame = "J2000";
+        sv[i].SetFrame("J2000");
     }
 
     //Write ephemeris file
@@ -463,7 +463,7 @@ TEST(API, WriteOrientation)
         sv[i].angularVelocity.y = 0.0;
         sv[i].angularVelocity.z = 0.0;
         sv[i].epoch = i;
-        sv[i].frame = "J2000";
+        sv[i].SetFrame("J2000");
     }
 
     //Write ephemeris file

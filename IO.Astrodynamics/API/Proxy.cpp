@@ -272,7 +272,7 @@ void ReadOrientationProxy(IO::Astrodynamics::API::DTO::WindowDTO searchWindow, i
         double correctedEpoch{};
         sct2e_c(spacecraftId, sclk, &correctedEpoch);
         so[idx].epoch = correctedEpoch;
-        so[idx].frame = strdup(frame);
+        so[idx].SetFrame(frame);
         so[idx].orientation = ToQuaternionDTO(q);
         so[idx].angularVelocity.x = av[0];
         so[idx].angularVelocity.y = av[1];
@@ -550,7 +550,7 @@ IO::Astrodynamics::API::DTO::CelestialBodyDTO GetCelestialBodyInfoProxy(int body
     if (found)
     {
         res.Id = bodyId;
-        res.Name = strdup(name);
+        res.SetName(name);
         res.CenterOfMotionId = IO::Astrodynamics::Body::CelestialBody::FindCenterOfMotionId(bodyId);
         res.BarycenterOfMotionId = IO::Astrodynamics::Body::CelestialBody::FindBarycenterOfMotionId(bodyId);
 
@@ -591,7 +591,7 @@ IO::Astrodynamics::API::DTO::CelestialBodyDTO GetCelestialBodyInfoProxy(int body
             cnmfrm_c(name, lenout, &frcode, frname, &frameFound);
             if (frameFound)
             {
-                res.FrameName = strdup(frname);
+                res.SetFrame(frname);
                 res.FrameId = frcode;
             }
         }
@@ -754,7 +754,7 @@ IO::Astrodynamics::API::DTO::StateVectorDTO ReadEphemerisAtGivenEpochProxy(doubl
     stateVectorDto.centerOfMotionId = observerId;
 
     stateVectorDto.epoch = epoch;
-    stateVectorDto.inertialFrame = strdup(frame);
+    stateVectorDto.SetFrame(frame);
     stateVectorDto.position.x = sv[0] * 1000.0;
     stateVectorDto.position.y = sv[1] * 1000.0;
     stateVectorDto.position.z = sv[2] * 1000.0;

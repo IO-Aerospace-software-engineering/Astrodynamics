@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
+ Copyright (c) 2023-2024. Sylvain Guillet (sylvain.guillet@tutamail.com)
  */
 
 #include <WindowDTO.h>
@@ -92,7 +92,7 @@ static IO::Astrodynamics::API::DTO::StateVectorDTO ToStateVectorDTO(IO::Astrodyn
 {
     IO::Astrodynamics::API::DTO::StateVectorDTO dto{};
     dto.epoch = stateVector.GetEpoch().GetSecondsFromJ2000().count();
-    dto.inertialFrame = strdup(stateVector.GetFrame().ToCharArray());
+    dto.SetFrame(stateVector.GetFrame().ToCharArray());
     dto.centerOfMotionId = stateVector.GetCenterOfMotion()->GetId();
     dto.position = ToVector3DDTO(stateVector.GetPosition());
     dto.velocity = ToVector3DDTO(stateVector.GetVelocity());

@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
+ Copyright (c) 2023-2024. Sylvain Guillet (sylvain.guillet@tutamail.com)
  */
 
 //
@@ -17,7 +17,13 @@ namespace IO::Astrodynamics::API::DTO
         QuaternionDTO orientation;
         Vector3DDTO angularVelocity{};
         double epoch{};
-        const char* frame{};
+        char frame[32];
+
+        void SetFrame(const char* data)
+        {
+            std::strcpy(frame,data);
+            frame[31]='\0';
+        }
     };
 }
 #endif //IOSDK_STATEORIENTATION_H
