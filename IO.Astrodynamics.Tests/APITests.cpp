@@ -600,7 +600,7 @@ TEST(API, ConvertConicOrbitalElementsToStateVector)
                                      std::pow(2.521950157430313E+06, 2));
 
     IO::Astrodynamics::API::DTO::ConicOrbitalElementsDTO conics;
-    conics.frame = IO::Astrodynamics::Frames::InertialFrames::ICRF().ToCharArray();
+    conics.SetFrame(IO::Astrodynamics::Frames::InertialFrames::ICRF().ToCharArray());
     conics.epoch = 663724800.00001490;//"2021-01-12T11:58:50.816" UTC
     conics.meanAnomaly = 4.541224977546975E+01 * IO::Astrodynamics::Constants::DEG_RAD;
     conics.periapsisArgument = 1.062574316262159E+02 * IO::Astrodynamics::Constants::DEG_RAD;

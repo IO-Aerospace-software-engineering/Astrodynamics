@@ -115,7 +115,7 @@ ToConicOrbitalElementDTo(IO::Astrodynamics::OrbitalParameters::ConicOrbitalEleme
     dto.perifocalDistance = conicOrbitalElements.GetPerifocalDistance();
     dto.semiMajorAxis = conicOrbitalElements.GetSemiMajorAxis();
     dto.trueAnomaly = conicOrbitalElements.GetTrueAnomaly();
-    dto.frame = strdup(conicOrbitalElements.GetFrame().ToCharArray());
+    dto.SetFrame(conicOrbitalElements.GetFrame().ToCharArray());
     return dto;
 }
 
