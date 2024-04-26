@@ -16,7 +16,6 @@ namespace IO::Astrodynamics::API::DTO
         IO::Astrodynamics::API::DTO::Vector3DDTO velocity{};
         int centerOfMotionId;
         char inertialFrame[32];
-        const char* Error{};
 
         void SetFrame(const char* frame)
         {

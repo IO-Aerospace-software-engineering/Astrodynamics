@@ -663,7 +663,7 @@ IO::Astrodynamics::API::DTO::StateVectorDTO ConvertTLEToStateVectorProxy(const c
     auto svDTO = ToStateVectorDTO(sv);
     if (failed_c())
     {
-        svDTO.Error = strdup(HandleError());
+        HandleError();
     }
 
     return svDTO;
@@ -691,7 +691,7 @@ ConvertConicElementsToStateVectorProxy(IO::Astrodynamics::API::DTO::ConicOrbital
     auto svDTO = ToStateVectorDTO(sv);
     if (failed_c())
     {
-        svDTO.Error = strdup(HandleError());
+        HandleError();
     }
     return svDTO;
 }
@@ -720,7 +720,7 @@ ConvertEquinoctialElementsToStateVectorProxy(
     auto svDTO = ToStateVectorDTO(sv);
     if (failed_c())
     {
-        svDTO.Error = strdup(HandleError());
+        HandleError();
     }
     return svDTO;
 }
@@ -763,7 +763,7 @@ IO::Astrodynamics::API::DTO::StateVectorDTO ReadEphemerisAtGivenEpochProxy(doubl
 
     if (failed_c())
     {
-        stateVectorDto.Error = strdup(HandleError());
+        HandleError();
     }
     return stateVectorDto;
 }
