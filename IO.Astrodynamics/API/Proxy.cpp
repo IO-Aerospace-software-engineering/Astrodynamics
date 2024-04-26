@@ -645,7 +645,7 @@ TransformFrameProxy(const char *fromFrame, const char *toFrame, double epoch)
     xf2rav_c(convertedMtx, rotation, av);
     if (failed_c())
     {
-        frameTransformationDto.Error = strdup(HandleError());
+        HandleError();
         return frameTransformationDto;
     }
     frameTransformationDto.Rotation = ToQuaternionDTO(q);
