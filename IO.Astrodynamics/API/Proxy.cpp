@@ -1202,8 +1202,7 @@ void BuildInstrumentPointingToAttitude(IO::Astrodynamics::API::DTO::ScenarioDTO 
                 break;
             }
             engines.push_back(
-                    const_cast<IO::Astrodynamics::Body::Spacecraft::Engine *>(scenario.GetSpacecraft()->GetEngine(
-                            strdup(engine))));
+                    const_cast<IO::Astrodynamics::Body::Spacecraft::Engine *>(scenario.GetSpacecraft()->GetEngine(engine)));
         }
 
         auto instrument = scenario.GetSpacecraft()->GetInstrument(maneuver.instrumentId);
@@ -1279,8 +1278,7 @@ void BuildApogeeManeuver(IO::Astrodynamics::API::DTO::ScenarioDTO &scenarioDto, 
                 break;
             }
             engines.push_back(
-                    const_cast<IO::Astrodynamics::Body::Spacecraft::Engine *>(scenario.GetSpacecraft()->GetEngine(
-                            strdup(engine))));
+                    const_cast<IO::Astrodynamics::Body::Spacecraft::Engine *>(scenario.GetSpacecraft()->GetEngine(engine)));
         }
         maneuvers[maneuver.maneuverOrder] = std::make_shared<IO::Astrodynamics::Maneuvers::ApogeeHeightChangingManeuver>(
                 engines,
@@ -1309,8 +1307,7 @@ void BuildPerigeeManeuver(IO::Astrodynamics::API::DTO::ScenarioDTO &scenarioDto,
                 break;
             }
             engines.push_back(
-                    const_cast<IO::Astrodynamics::Body::Spacecraft::Engine *>(scenario.GetSpacecraft()->GetEngine(
-                            strdup(engine))));
+                    const_cast<IO::Astrodynamics::Body::Spacecraft::Engine *>(scenario.GetSpacecraft()->GetEngine(engine)));
         }
         maneuvers[maneuver.maneuverOrder] = std::make_shared<IO::Astrodynamics::Maneuvers::PerigeeHeightChangingManeuver>(
                 engines,
@@ -1340,8 +1337,7 @@ void BuildApsidalManeuver(IO::Astrodynamics::API::DTO::ScenarioDTO &scenarioDto,
                 break;
             }
             engines.push_back(
-                    const_cast<IO::Astrodynamics::Body::Spacecraft::Engine *>(scenario.GetSpacecraft()->GetEngine(
-                            strdup(engine))));
+                    const_cast<IO::Astrodynamics::Body::Spacecraft::Engine *>(scenario.GetSpacecraft()->GetEngine(engine)));
         }
         auto targetOrbit = std::make_shared<IO::Astrodynamics::OrbitalParameters::StateVector>(
                 celestialBodies[maneuver.targetOrbit.centerOfMotionId],
@@ -1376,8 +1372,7 @@ void BuildCombinedManeuver(IO::Astrodynamics::API::DTO::ScenarioDTO &scenarioDto
                 break;
             }
             engines.push_back(
-                    const_cast<IO::Astrodynamics::Body::Spacecraft::Engine *>(scenario.GetSpacecraft()->GetEngine(
-                            strdup(engine))));
+                    const_cast<IO::Astrodynamics::Body::Spacecraft::Engine *>(scenario.GetSpacecraft()->GetEngine(engine)));
         }
         maneuvers[maneuver.maneuverOrder] = std::make_shared<IO::Astrodynamics::Maneuvers::CombinedManeuver>(engines,
                                                                                                              scenario.GetPropagator(),
@@ -1408,8 +1403,7 @@ BuildOrbitalPlaneManeuver(IO::Astrodynamics::API::DTO::ScenarioDTO &scenarioDto,
                 break;
             }
             engines.push_back(
-                    const_cast<IO::Astrodynamics::Body::Spacecraft::Engine *>(scenario.GetSpacecraft()->GetEngine(
-                            strdup(engine))));
+                    const_cast<IO::Astrodynamics::Body::Spacecraft::Engine *>(scenario.GetSpacecraft()->GetEngine(engine)));
         }
         auto targetOrbit = std::make_shared<IO::Astrodynamics::OrbitalParameters::StateVector>(
                 celestialBodies[maneuver.targetOrbit.centerOfMotionId],
@@ -1445,8 +1439,7 @@ void BuildPhasingManeuver(IO::Astrodynamics::API::DTO::ScenarioDTO &scenarioDto,
                 break;
             }
             engines.push_back(
-                    const_cast<IO::Astrodynamics::Body::Spacecraft::Engine *>(scenario.GetSpacecraft()->GetEngine(
-                            strdup(engine))));
+                    const_cast<IO::Astrodynamics::Body::Spacecraft::Engine *>(scenario.GetSpacecraft()->GetEngine(engine)));
         }
         auto targetOrbit = std::make_shared<IO::Astrodynamics::OrbitalParameters::StateVector>(
                 celestialBodies[maneuver.targetOrbit.centerOfMotionId],
@@ -1481,8 +1474,7 @@ void BuildProgradeAttitude(IO::Astrodynamics::API::DTO::ScenarioDTO &scenarioDto
                 break;
             }
             engines.push_back(
-                    const_cast<IO::Astrodynamics::Body::Spacecraft::Engine *>(scenario.GetSpacecraft()->GetEngine(
-                            strdup(engine))));
+                    const_cast<IO::Astrodynamics::Body::Spacecraft::Engine *>(scenario.GetSpacecraft()->GetEngine(engine)));
         }
         IO::Astrodynamics::Time::TDB min(std::chrono::duration<double>(maneuver.minimumEpoch));
         IO::Astrodynamics::Time::TimeSpan hold(std::chrono::duration<double>(maneuver.attitudeHoldDuration));
@@ -1510,8 +1502,7 @@ BuildRetrogradeAttitude(IO::Astrodynamics::API::DTO::ScenarioDTO &scenarioDto, I
                 break;
             }
             engines.push_back(
-                    const_cast<IO::Astrodynamics::Body::Spacecraft::Engine *>(scenario.GetSpacecraft()->GetEngine(
-                            strdup(engine))));
+                    const_cast<IO::Astrodynamics::Body::Spacecraft::Engine *>(scenario.GetSpacecraft()->GetEngine(engine)));
         }
 
         maneuvers[maneuver.maneuverOrder] = std::make_shared<IO::Astrodynamics::Maneuvers::Attitudes::RetrogradeAttitude>(
@@ -1543,8 +1534,7 @@ void BuildNadirAttitude(IO::Astrodynamics::API::DTO::ScenarioDTO &scenarioDto, I
                 break;
             }
             engines.push_back(
-                    const_cast<IO::Astrodynamics::Body::Spacecraft::Engine *>(scenario.GetSpacecraft()->GetEngine(
-                            strdup(engine))));
+                    const_cast<IO::Astrodynamics::Body::Spacecraft::Engine *>(scenario.GetSpacecraft()->GetEngine(engine)));
         }
 
         maneuvers[maneuver.maneuverOrder] = std::make_shared<IO::Astrodynamics::Maneuvers::Attitudes::NadirAttitude>(
@@ -1576,8 +1566,7 @@ void BuildZenithAttitude(IO::Astrodynamics::API::DTO::ScenarioDTO &scenarioDto, 
                 break;
             }
             engines.push_back(
-                    const_cast<IO::Astrodynamics::Body::Spacecraft::Engine *>(scenario.GetSpacecraft()->GetEngine(
-                            strdup(engine))));
+                    const_cast<IO::Astrodynamics::Body::Spacecraft::Engine *>(scenario.GetSpacecraft()->GetEngine(engine)));
         }
 
         maneuvers[maneuver.maneuverOrder] = std::make_shared<IO::Astrodynamics::Maneuvers::Attitudes::ZenithAttitude>(
