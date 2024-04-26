@@ -791,7 +791,7 @@ IO::Astrodynamics::API::DTO::TLEElementsDTO GetTLEElementsProxy(const char *L1, 
     tleElementsDto.SecondDerivativeOfMeanMotion = tle.GetSecondDerivativeOfMeanMotion();
     if (failed_c())
     {
-        tleElementsDto.Error = strdup(HandleError());
+        HandleError();
     }
     return tleElementsDto;
 }
