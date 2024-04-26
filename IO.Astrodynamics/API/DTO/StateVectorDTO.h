@@ -1,11 +1,12 @@
 /*
- Copyright (c) 2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
+ Copyright (c) 2023-2024. Sylvain Guillet (sylvain.guillet@tutamail.com)
  */
 
 #pragma once
 
 #include <Vector3DDTO.h>
 #include <CelestialBodyDTO.h>
+#include <cstring>
 namespace IO::Astrodynamics::API::DTO
 {
     struct StateVectorDTO
@@ -14,7 +15,12 @@ namespace IO::Astrodynamics::API::DTO
         IO::Astrodynamics::API::DTO::Vector3DDTO position{};
         IO::Astrodynamics::API::DTO::Vector3DDTO velocity{};
         int centerOfMotionId;
-        const char* inertialFrame{};
-        const char* Error{};
+        char inertialFrame[32];
+
+        void SetFrame(const char* frame)
+        {
+            std::strcpy(inertialFrame,frame);
+            inertialFrame[31]='\0';
+        }
     };
 }

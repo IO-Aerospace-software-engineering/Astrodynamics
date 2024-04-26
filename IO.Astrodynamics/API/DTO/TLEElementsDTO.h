@@ -22,7 +22,6 @@ namespace IO::Astrodynamics::API::DTO
         double W{};
         double O{};
         double M{};
-        const char *Error{};
     };
 }
 #endif //IO_TLEELEMENTSDTO_H

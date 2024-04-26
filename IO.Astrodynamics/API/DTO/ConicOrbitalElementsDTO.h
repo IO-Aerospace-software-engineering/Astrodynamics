@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
+ Copyright (c) 2023-2024. Sylvain Guillet (sylvain.guillet@tutamail.com)
  */
 
 #ifndef IOSDK_CONICORBITALELEMENTSDTO_H
@@ -21,7 +21,13 @@ namespace IO::Astrodynamics::API::DTO
         double trueAnomaly{};
         double orbitalPeriod{};
         double semiMajorAxis{};
-        const char* frame{};
+        char frame[32];
+
+        void SetFrame(const char* inputFrame)
+        {
+            std::strcpy(frame,inputFrame);
+            frame[31]='\0';
+        }
 
     };
 }

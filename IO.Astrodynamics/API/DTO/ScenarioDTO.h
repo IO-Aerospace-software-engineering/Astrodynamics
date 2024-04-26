@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
+ Copyright (c) 2023-2024. Sylvain Guillet (sylvain.guillet@tutamail.com)
  */
 
 #pragma once
@@ -19,6 +19,5 @@ namespace IO::Astrodynamics::API::DTO
         SiteDTO Sites[10];
 
         int AdditionalCelestialBodiesId[10]{-1, -1, -1, -1, -1, -1, -1, -1, -1, -1};
-        const char *Error{};
     };
 }
