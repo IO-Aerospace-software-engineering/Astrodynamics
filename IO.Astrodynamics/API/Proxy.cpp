@@ -804,7 +804,7 @@ void PropagateSiteProxy(IO::Astrodynamics::API::DTO::WindowDTO windowDto, IO::As
     site.BuildAndWriteEphemeris(ToTDBWindow(windowDto));
     if (failed_c())
     {
-        siteDto.Error = strdup(HandleError());
+        HandleError();
     }
 }
 
