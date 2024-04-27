@@ -544,7 +544,7 @@ IO::Astrodynamics::API::DTO::CelestialBodyDTO GetCelestialBodyInfoProxy(int body
     ActivateErrorManagement();
     IO::Astrodynamics::API::DTO::CelestialBodyDTO res;
 
-    SpiceChar name[32];
+    SpiceChar name[32]{};
     SpiceBoolean found{false};
     bodc2n_c(bodyId, 32, name, &found);
     if (found)
