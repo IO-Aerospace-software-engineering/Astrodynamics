@@ -19,12 +19,14 @@ TEST(API, TDBToString)
 {
     auto res = TDBToStringProxy(0.0);
     ASSERT_STREQ("2000-01-01 12:00:00.000000 (TDB)", res);
+    free((void*)res);
 }
 
 TEST(API, UTCToString)
 {
     auto res = UTCToStringProxy(0.0);
     ASSERT_STREQ("2000-01-01 12:00:00.000000 (UTC)", res);
+    free((void*)res);
 }
 
 TEST(API, SitePropagation)
@@ -391,7 +393,9 @@ TEST(API, ToUTC)
 
 TEST(API, Version)
 {
-    ASSERT_STREQ("CSPICE_N0067", GetSpiceVersionProxy());
+    const char * res=GetSpiceVersionProxy();
+    ASSERT_STREQ("CSPICE_N0067", res);
+    free((void*)res);
 }
 
 TEST(API, WriteEphemeris)

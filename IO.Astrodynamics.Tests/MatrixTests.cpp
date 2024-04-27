@@ -1,3 +1,7 @@
+/*
+ Copyright (c) 2024. Sylvain Guillet (sylvain.guillet@tutamail.com)
+ */
+
 #include<gtest/gtest.h>
 #include<Matrix.h>
 #include<SDKException.h>
@@ -35,6 +39,12 @@ TEST(Matrix, Initialization)
 			ASSERT_DOUBLE_EQ(i * 3 + j, matFromArr.GetValue(i, j));
 		}
 	}
+
+    for (size_t i = 0; i < 3; i++)
+    {
+        delete[] arrayCmat[i];
+    }
+    delete[] arrayCmat;
 }
 
 TEST(Matrix, SetValue)
