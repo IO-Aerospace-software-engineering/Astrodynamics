@@ -189,52 +189,6 @@ TEST(StateVector, IsParabolic)
 	ASSERT_TRUE(sv.IsParabolic());
 }
 
-TEST(StateVector, CheckUpdateCenterOfMotionToParentBody)
-{
-	//FICTIVE
-	auto sun = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(10);			//GEOPHYSICAL PROPERTIES provided by JPL
-	auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399, sun); //GEOPHYSICAL PROPERTIES provided by JPL
-	auto moon = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(301, earth); //GEOPHYSICAL PROPERTIES provided by JPL
-
-	//Define SV with earth as center of motion but the influence body is the sun in this case at 2021-01-01 00:00:00.000000 TDB
-	IO::Astrodynamics::OrbitalParameters::StateVector sv{earth, IO::Astrodynamics::Math::Vector3D(2000000000.0, 0.0, 0.0), IO::Astrodynamics::Math::Vector3D(0.0, 3000.0, 0.0), IO::Astrodynamics::Time::TDB(662731200.000000s),
-                                                         IO::Astrodynamics::Frames::InertialFrames::ICRF()};
-	auto newSV = sv.CheckAndUpdateCenterOfMotion();
-
-	//Low accuracy due to conical propagation
-	ASSERT_EQ(10, newSV.GetCenterOfMotion()->GetId());
-	ASSERT_DOUBLE_EQ(-2.4795375379297768E+10, newSV.GetPosition().GetX());
-	ASSERT_DOUBLE_EQ(1.3270111352322429E+11, newSV.GetPosition().GetY());
-	ASSERT_DOUBLE_EQ(5.7525334752378304E+10, newSV.GetPosition().GetZ());
-
-	ASSERT_DOUBLE_EQ(-2.9765580095900841E+04, newSV.GetVelocity().GetX());
-	ASSERT_DOUBLE_EQ(-2.0753399173890839E+03, newSV.GetVelocity().GetY());
-	ASSERT_DOUBLE_EQ(-2.2009299676732885E+03, newSV.GetVelocity().GetZ());
-}
-
-TEST(StateVector, CheckUpdateCenterOfMotionToSatelliteBody)
-{
-	//FICTIVE
-	auto sun = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(10);			//GEOPHYSICAL PROPERTIES provided by JPL
-	auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399, sun); //GEOPHYSICAL PROPERTIES provided by JPL
-	auto moon = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(301, earth); //GEOPHYSICAL PROPERTIES provided by JPL
-
-	//Define SV with earth as center of motion but the influence body is the moon in this case at 2021-01-01 00:00:00.000000 TDB
-	IO::Astrodynamics::OrbitalParameters::StateVector sv{earth, IO::Astrodynamics::Math::Vector3D(-2.088864826237993E+08, 2.911146390982051E+08, 1.515746884380044E+08), IO::Astrodynamics::Math::Vector3D(-8.366764389833921E+02, -5.602543663174073E+02, -1.710459390585548E+02), IO::Astrodynamics::Time::TDB(662731200.000000s),
-                                                         IO::Astrodynamics::Frames::InertialFrames::ICRF()};
-	auto newSV = sv.CheckAndUpdateCenterOfMotion();
-
-	//Low accuracy due to conical propagation
-	ASSERT_EQ(301, newSV.GetCenterOfMotion()->GetId());
-	ASSERT_DOUBLE_EQ(-1.9999993200141788E06, newSV.GetPosition().GetX());
-	ASSERT_DOUBLE_EQ(2.0000003739118576E06, newSV.GetPosition().GetY());
-	ASSERT_DOUBLE_EQ(0.14124882221221924, newSV.GetPosition().GetZ());
-
-	ASSERT_DOUBLE_EQ(-8.8791193775250576e-07, newSV.GetVelocity().GetX());
-	ASSERT_DOUBLE_EQ(5.0141545671067433e-07, newSV.GetVelocity().GetY());
-	ASSERT_DOUBLE_EQ(3.3448974932070996e-06, newSV.GetVelocity().GetZ());
-}
-
 TEST(StateVector, Assignement)
 {
 	//FICTIVE

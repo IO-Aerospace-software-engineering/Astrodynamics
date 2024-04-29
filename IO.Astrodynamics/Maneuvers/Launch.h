@@ -8,10 +8,8 @@
 #include <memory>
 #include <limits>
 
-#include <ManeuverBase.h>
 #include <Engine.h>
 #include <Spacecraft.h>
-#include <Propagator.h>
 #include <TDB.h>
 #include <UTC.h>
 #include <LaunchSite.h>

@@ -8,13 +8,8 @@
 #include <LaunchSite.h>
 #include <Constants.h>
 #include <SDKException.h>
-#include <InertialFrames.h>
 #include <StateVector.h>
-#include <AzimuthRange.h>
-#include <Spacecraft.h>
-#include <ConicOrbitalElements.h>
 #include <LaunchWindow.h>
-#include <Scenario.h>
 #include "TestParameters.h"
 
 using namespace std::chrono_literals;

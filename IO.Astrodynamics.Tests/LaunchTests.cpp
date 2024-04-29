@@ -10,12 +10,10 @@
 #include <SDKException.h>
 #include <InertialFrames.h>
 #include <StateVector.h>
-#include <AzimuthRange.h>
 #include <Spacecraft.h>
 #include <ConicOrbitalElements.h>
 #include <Launch.h>
 #include <TLE.h>
-#include <Scenario.h>
 #include "TestParameters.h"
 
 TEST(Launch, InertialAscendingAzimuth)

@@ -37,4 +37,3 @@ FetchContent_MakeAvailable(googletest)
 # Include sub-projects.
 add_subdirectory("IO.Astrodynamics")
 add_subdirectory("IO.Astrodynamics.Tests")
-add_subdirectory("IO.Astrodynamics.Scenarios")

@@ -1,8 +1,8 @@
 /*
  Copyright (c) 2021-2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
  */
-#include <GravityForce.h>
 #include <Type.h>
+#include "StateVector.h"
 
 IO::Astrodynamics::OrbitalParameters::StateVector::StateVector(const std::shared_ptr<IO::Astrodynamics::Body::CelestialBody> &centerOfMotion, const IO::Astrodynamics::Math::Vector3D &position,
                                                      const IO::Astrodynamics::Math::Vector3D &velocity, const IO::Astrodynamics::Time::TDB &epoch, const IO::Astrodynamics::Frames::Frames &frame)
@@ -103,78 +103,6 @@ double IO::Astrodynamics::OrbitalParameters::StateVector::GetSpecificOrbitalEner
 bool IO::Astrodynamics::OrbitalParameters::StateVector::operator==(const IO::Astrodynamics::OrbitalParameters::StateVector &other) const
 {
     return m_velocity == other.m_velocity && m_position == other.m_position && m_momentum == other.m_momentum && m_epoch == other.m_epoch;
-}
-
-IO::Astrodynamics::OrbitalParameters::StateVector IO::Astrodynamics::OrbitalParameters::StateVector::CheckAndUpdateCenterOfMotion() const
-{
-    //Current parameters
-    IO::Astrodynamics::Math::Vector3D position{GetPosition()};
-    IO::Astrodynamics::Math::Vector3D velocity{GetVelocity()};
-    IO::Astrodynamics::Math::Vector3D force{IO::Astrodynamics::Integrators::Forces::ComputeForce(GetCenterOfMotion()->GetMass(), 1.0, position.Magnitude(), position.Normalize())};
-
-    //New parameters
-    std::shared_ptr<IO::Astrodynamics::Body::CelestialBody> newMajorBody{};
-    IO::Astrodynamics::Math::Vector3D newPosition{};
-    IO::Astrodynamics::Math::Vector3D newVelocity{};
-    double greaterForce = force.Magnitude();
-
-    //Each body is under sphere of influence of his major body
-    //So Spacecraft is influenced by his center of motion and his parents
-    //Eg. Sun->Earth->Moon->Spacecraft
-    std::shared_ptr<IO::Astrodynamics::Body::CelestialItem> currentBody = GetCenterOfMotion();
-    while (currentBody->GetOrbitalParametersAtEpoch())
-    {
-        //Compute vector state
-        auto sv = currentBody->ReadEphemeris(m_frame, AberrationsEnum::None, m_epoch, *currentBody->GetOrbitalParametersAtEpoch()->GetCenterOfMotion());
-        position = position + sv.GetPosition();
-        velocity = velocity + sv.GetVelocity();
-
-        //Compute force
-        force = IO::Astrodynamics::Integrators::Forces::ComputeForce(currentBody->GetOrbitalParametersAtEpoch()->GetCenterOfMotion()->GetMass(), 1.0, position.Magnitude(),
-                                                           position.Normalize());
-
-        if (force.Magnitude() > greaterForce)
-        {
-            newMajorBody = currentBody->GetOrbitalParametersAtEpoch()->GetCenterOfMotion();
-            newPosition = position;
-            newVelocity = velocity;
-            greaterForce = force.Magnitude();
-        }
-
-        //Set next parent
-        currentBody = currentBody->GetOrbitalParametersAtEpoch()->GetCenterOfMotion();
-    }
-
-    //Compute force induced by others satellites with the same center of motion
-    for (auto &&sat: GetCenterOfMotion()->GetSatellites())
-    {
-        if (!IO::Astrodynamics::Helpers::IsInstanceOf<IO::Astrodynamics::Body::CelestialBody>(sat))
-        {
-            continue;
-        }
-        auto sv = sat->ReadEphemeris(m_frame, IO::Astrodynamics::AberrationsEnum::None, m_epoch);
-
-        position = GetPosition() - sv.GetPosition();
-
-        force = IO::Astrodynamics::Integrators::Forces::ComputeForce(sat->GetOrbitalParametersAtEpoch()->GetCenterOfMotion()->GetMass(), 1.0, position.Magnitude(), position.Normalize());
-
-        //Check if center of motion has changed
-        if (force.Magnitude() > greaterForce)
-        {
-            newMajorBody = std::dynamic_pointer_cast<IO::Astrodynamics::Body::CelestialBody>(sat->GetSharedPointer());
-            newPosition = position;
-            newVelocity = GetVelocity() - sv.GetVelocity();
-            greaterForce = force.Magnitude();
-        }
-    }
-
-    //If the center of motion has changed
-    if (newMajorBody)
-    {
-        return IO::Astrodynamics::OrbitalParameters::StateVector{newMajorBody, newPosition, newVelocity, m_epoch, m_frame};
-    }
-
-    return *this;
 }
 
 IO::Astrodynamics::OrbitalParameters::StateVector IO::Astrodynamics::OrbitalParameters::StateVector::ToFrame(const IO::Astrodynamics::Frames::Frames &frame) const
