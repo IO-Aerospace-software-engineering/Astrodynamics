@@ -1,0 +1,34 @@
+\doxysection{Tools.\+h}
+\hypertarget{Tools_8h_source}{}\label{Tools_8h_source}\index{IO.Astrodynamics/Math/Tools.h@{IO.Astrodynamics/Math/Tools.h}}
+\mbox{\hyperlink{Tools_8h}{Go to the documentation of this file.}}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{00001\ \textcolor{comment}{/*}}
+\DoxyCodeLine{00002\ \textcolor{comment}{\ Copyright\ (c)\ 2023.\ Sylvain\ Guillet\ (sylvain.guillet@tutamail.com)}}
+\DoxyCodeLine{00003\ \textcolor{comment}{\ */}}
+\DoxyCodeLine{00004\ }
+\DoxyCodeLine{00005\ \textcolor{comment}{//}}
+\DoxyCodeLine{00006\ \textcolor{comment}{//\ Created\ by\ spacer\ on\ 12/1/23.}}
+\DoxyCodeLine{00007\ \textcolor{comment}{//}}
+\DoxyCodeLine{00008\ }
+\DoxyCodeLine{00009\ \textcolor{preprocessor}{\#ifndef\ IO\_TOOLS\_H}}
+\DoxyCodeLine{00010\ \textcolor{preprocessor}{\#define\ IO\_TOOLS\_H}}
+\DoxyCodeLine{00011\ }
+\DoxyCodeLine{00012\ \textcolor{preprocessor}{\#include\ <\mbox{\hyperlink{Constants_8h}{Constants.h}}>}}
+\DoxyCodeLine{00013\ \textcolor{preprocessor}{\#include\ <math.h>}}
+\DoxyCodeLine{00014\ }
+\DoxyCodeLine{00015\ \textcolor{keyword}{inline}\ \textcolor{keyword}{static}\ \textcolor{keywordtype}{double}\ AngleDifference(\textcolor{keywordtype}{double}\ angleA,\ \textcolor{keywordtype}{double}\ angleB)}
+\DoxyCodeLine{00016\ \{}
+\DoxyCodeLine{00017\ \ \ \ \ \textcolor{keywordtype}{double}\ delta\ =\ std::fmod(angleA\ -\/\ angleB\ +\ \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Constants_a24d993b00117f1609358675aeaa78f8f}{IO::Astrodynamics::Constants::\_2PI}},\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Constants_a24d993b00117f1609358675aeaa78f8f}{IO::Astrodynamics::Constants::\_2PI}});}
+\DoxyCodeLine{00018\ \ \ \ \ \textcolor{keywordflow}{if}\ (delta\ >\ \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Constants_aeb0c604a8b53fbc0d1c3b8098bd25bb8}{IO::Astrodynamics::Constants::PI}})}
+\DoxyCodeLine{00019\ \ \ \ \ \{}
+\DoxyCodeLine{00020\ \ \ \ \ \ \ \ \ delta\ =\ \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Constants_a24d993b00117f1609358675aeaa78f8f}{IO::Astrodynamics::Constants::\_2PI}}\ -\/\ delta;}
+\DoxyCodeLine{00021\ \ \ \ \ \}\ \textcolor{keywordflow}{else}\ \textcolor{keywordflow}{if}\ (delta\ <\ -\/\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Constants_aeb0c604a8b53fbc0d1c3b8098bd25bb8}{IO::Astrodynamics::Constants::PI}})}
+\DoxyCodeLine{00022\ \ \ \ \ \{}
+\DoxyCodeLine{00023\ \ \ \ \ \ \ \ \ delta\ =\ \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Constants_a24d993b00117f1609358675aeaa78f8f}{IO::Astrodynamics::Constants::\_2PI}}\ +\ delta;}
+\DoxyCodeLine{00024\ \ \ \ \ \}}
+\DoxyCodeLine{00025\ \ \ \ \ \textcolor{keywordflow}{return}\ std::abs(delta);}
+\DoxyCodeLine{00026\ \}}
+\DoxyCodeLine{00027\ }
+\DoxyCodeLine{00028\ \textcolor{preprocessor}{\#endif\ }\textcolor{comment}{//IO\_TOOLS\_H}}
+
+\end{DoxyCode}

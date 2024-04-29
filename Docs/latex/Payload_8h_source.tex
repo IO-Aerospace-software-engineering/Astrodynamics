@@ -1,38 +1,38 @@
-\hypertarget{Payload_8h_source}{}\doxysection{Payload.\+h}
-\label{Payload_8h_source}\index{IO.Astrodynamics/Body/Spacecraft/Payload.h@{IO.Astrodynamics/Body/Spacecraft/Payload.h}}
+\doxysection{Payload.\+h}
+\hypertarget{Payload_8h_source}{}\label{Payload_8h_source}\index{IO.Astrodynamics/Body/Spacecraft/Payload.h@{IO.Astrodynamics/Body/Spacecraft/Payload.h}}
 \mbox{\hyperlink{Payload_8h}{Go to the documentation of this file.}}
 \begin{DoxyCode}{0}
-\DoxyCodeLine{1 \textcolor{comment}{/*}}
-\DoxyCodeLine{2 \textcolor{comment}{ Copyright (c) 2021-\/2023. Sylvain Guillet (sylvain.guillet@tutamail.com)}}
-\DoxyCodeLine{3 \textcolor{comment}{ */}}
-\DoxyCodeLine{4 }
-\DoxyCodeLine{5 \textcolor{preprocessor}{\#ifndef PAYLOAD\_H}}
-\DoxyCodeLine{6 \textcolor{preprocessor}{\#define PAYLOAD\_H}}
-\DoxyCodeLine{7 }
-\DoxyCodeLine{8 \textcolor{preprocessor}{\#include <string>}}
-\DoxyCodeLine{9 }
-\DoxyCodeLine{10 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Body_1_1Spacecraft}{IO::Astrodynamics::Body::Spacecraft}}}
-\DoxyCodeLine{11 \{}
-\DoxyCodeLine{16     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Payload}{Payload}} final}
-\DoxyCodeLine{17     \{}
-\DoxyCodeLine{18     \textcolor{keyword}{private}:}
-\DoxyCodeLine{19         \textcolor{keyword}{const} std::string m\_serialNumber\{\};}
-\DoxyCodeLine{20         \textcolor{keyword}{const} std::string m\_name\{\};}
-\DoxyCodeLine{21         \textcolor{keyword}{const} \textcolor{keywordtype}{double} m\_mass\{\};}
-\DoxyCodeLine{22 }
-\DoxyCodeLine{23     \textcolor{keyword}{public}:}
-\DoxyCodeLine{31         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Payload_aa98a91ed71f8b1642841b0bc80dd610b}{Payload}}(\textcolor{keyword}{const} std::string \&serialNumber, \textcolor{keyword}{const} std::string\& name, \textcolor{keywordtype}{double} mass);}
-\DoxyCodeLine{32 }
-\DoxyCodeLine{38         [[nodiscard]] std::string \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Payload_a6a69edcf2d622e91cdff21862c3583a0}{GetName}}() \textcolor{keyword}{const};}
-\DoxyCodeLine{39 }
-\DoxyCodeLine{45         [[nodiscard]] \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Payload_a13903386059355d0e7e215e94f8db230}{GetMass}}() \textcolor{keyword}{const};}
-\DoxyCodeLine{46 }
-\DoxyCodeLine{52         [[nodiscard]] std::string \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Payload_a31eede1f61341c1b4c41b54db2d09059}{GetSerialNumber}}() \textcolor{keyword}{const};}
-\DoxyCodeLine{53 }
-\DoxyCodeLine{54         \textcolor{keywordtype}{bool} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Payload_aa86f398d050c79241c247e242eabfb19}{operator==}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Payload}{IO::Astrodynamics::Body::Spacecraft::Payload}} \&other)\textcolor{keyword}{ const }\{ \textcolor{keywordflow}{return} m\_serialNumber == other.m\_serialNumber; \};}
-\DoxyCodeLine{55         \textcolor{keywordtype}{bool} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Payload_a7e64cb890999286dbbee419e362e42e5}{operator!=}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Payload}{IO::Astrodynamics::Body::Spacecraft::Payload}} \&other)\textcolor{keyword}{ const }\{ \textcolor{keywordflow}{return} !(m\_serialNumber == other.m\_serialNumber); \};}
-\DoxyCodeLine{56     \};}
-\DoxyCodeLine{57 \}}
-\DoxyCodeLine{58 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00001\ \textcolor{comment}{/*}}
+\DoxyCodeLine{00002\ \textcolor{comment}{\ Copyright\ (c)\ 2021-\/2023.\ Sylvain\ Guillet\ (sylvain.guillet@tutamail.com)}}
+\DoxyCodeLine{00003\ \textcolor{comment}{\ */}}
+\DoxyCodeLine{00004\ }
+\DoxyCodeLine{00005\ \textcolor{preprocessor}{\#ifndef\ PAYLOAD\_H}}
+\DoxyCodeLine{00006\ \textcolor{preprocessor}{\#define\ PAYLOAD\_H}}
+\DoxyCodeLine{00007\ }
+\DoxyCodeLine{00008\ \textcolor{preprocessor}{\#include\ <string>}}
+\DoxyCodeLine{00009\ }
+\DoxyCodeLine{00010\ \textcolor{keyword}{namespace\ }\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Body_1_1Spacecraft}{IO::Astrodynamics::Body::Spacecraft}}}
+\DoxyCodeLine{00011\ \{}
+\DoxyCodeLine{00016\ \ \ \ \ \textcolor{keyword}{class\ }\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Payload}{Payload}}\ final}
+\DoxyCodeLine{00017\ \ \ \ \ \{}
+\DoxyCodeLine{00018\ \ \ \ \ \textcolor{keyword}{private}:}
+\DoxyCodeLine{00019\ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ std::string\ m\_serialNumber\{\};}
+\DoxyCodeLine{00020\ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ std::string\ m\_name\{\};}
+\DoxyCodeLine{00021\ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ \textcolor{keywordtype}{double}\ m\_mass\{\};}
+\DoxyCodeLine{00022\ }
+\DoxyCodeLine{00023\ \ \ \ \ \textcolor{keyword}{public}:}
+\DoxyCodeLine{00031\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Payload}{Payload}}(\textcolor{keyword}{const}\ std::string\ \&serialNumber,\ \textcolor{keyword}{const}\ std::string\&\ name,\ \textcolor{keywordtype}{double}\ mass);}
+\DoxyCodeLine{00032\ }
+\DoxyCodeLine{00038\ \ \ \ \ \ \ \ \ [[nodiscard]]\ std::string\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Payload_a6a69edcf2d622e91cdff21862c3583a0}{GetName}}()\ \textcolor{keyword}{const};}
+\DoxyCodeLine{00039\ }
+\DoxyCodeLine{00045\ \ \ \ \ \ \ \ \ [[nodiscard]]\ \textcolor{keywordtype}{double}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Payload_a13903386059355d0e7e215e94f8db230}{GetMass}}()\ \textcolor{keyword}{const};}
+\DoxyCodeLine{00046\ }
+\DoxyCodeLine{00052\ \ \ \ \ \ \ \ \ [[nodiscard]]\ std::string\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Payload_a31eede1f61341c1b4c41b54db2d09059}{GetSerialNumber}}()\ \textcolor{keyword}{const};}
+\DoxyCodeLine{00053\ }
+\DoxyCodeLine{00054\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{bool}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Payload_aa86f398d050c79241c247e242eabfb19}{operator==}}(\textcolor{keyword}{const}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Payload}{IO::Astrodynamics::Body::Spacecraft::Payload}}\ \&other)\textcolor{keyword}{\ const\ }\{\ \textcolor{keywordflow}{return}\ m\_serialNumber\ ==\ other.m\_serialNumber;\ \};}
+\DoxyCodeLine{00055\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{bool}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Payload_a7e64cb890999286dbbee419e362e42e5}{operator!=}}(\textcolor{keyword}{const}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Payload}{IO::Astrodynamics::Body::Spacecraft::Payload}}\ \&other)\textcolor{keyword}{\ const\ }\{\ \textcolor{keywordflow}{return}\ !(m\_serialNumber\ ==\ other.m\_serialNumber);\ \};}
+\DoxyCodeLine{00056\ \ \ \ \ \};}
+\DoxyCodeLine{00057\ \}}
+\DoxyCodeLine{00058\ \textcolor{preprocessor}{\#endif}}
 
 \end{DoxyCode}

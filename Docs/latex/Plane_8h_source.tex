@@ -1,43 +1,45 @@
-\hypertarget{Plane_8h_source}{}\doxysection{Plane.\+h}
-\label{Plane_8h_source}\index{IO.Astrodynamics/Math/Plane.h@{IO.Astrodynamics/Math/Plane.h}}
+\doxysection{Plane.\+h}
+\hypertarget{Plane_8h_source}{}\label{Plane_8h_source}\index{IO.Astrodynamics/Math/Plane.h@{IO.Astrodynamics/Math/Plane.h}}
 \mbox{\hyperlink{Plane_8h}{Go to the documentation of this file.}}
 \begin{DoxyCode}{0}
-\DoxyCodeLine{1 \textcolor{comment}{/*}}
-\DoxyCodeLine{2 \textcolor{comment}{ Copyright (c) 2023. Sylvain Guillet (sylvain.guillet@tutamail.com)}}
-\DoxyCodeLine{3 \textcolor{comment}{ */}}
-\DoxyCodeLine{4 }
-\DoxyCodeLine{5 \textcolor{comment}{//}}
-\DoxyCodeLine{6 \textcolor{comment}{// Created by spacer on 8/17/23.}}
-\DoxyCodeLine{7 \textcolor{comment}{//}}
-\DoxyCodeLine{8 }
-\DoxyCodeLine{9 \textcolor{preprocessor}{\#ifndef IO\_PLANE\_H}}
-\DoxyCodeLine{10 \textcolor{preprocessor}{\#define IO\_PLANE\_H}}
-\DoxyCodeLine{11 }
-\DoxyCodeLine{12 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{Vector3D_8h}{Vector3D.h}}>}}
-\DoxyCodeLine{13 }
-\DoxyCodeLine{14 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Math}{IO::Astrodynamics::Math}}}
-\DoxyCodeLine{15 \{}
-\DoxyCodeLine{16     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Plane}{Plane}}}
-\DoxyCodeLine{17     \{}
-\DoxyCodeLine{18     \textcolor{keyword}{private}:}
-\DoxyCodeLine{19         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO::Astrodynamics::Math::Vector3D}} m\_normal;}
-\DoxyCodeLine{20         \textcolor{keyword}{const} \textcolor{keywordtype}{double} m\_distance;}
-\DoxyCodeLine{21 }
-\DoxyCodeLine{22     \textcolor{keyword}{public}:}
-\DoxyCodeLine{23         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Plane_a13aa1e484476bf06280a422531aadbb4}{Plane}}(\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO::Astrodynamics::Math::Vector3D}} normal, \textcolor{keywordtype}{double} distance);}
-\DoxyCodeLine{24 }
-\DoxyCodeLine{25         [[nodiscard]] \textcolor{keyword}{inline} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO::Astrodynamics::Math::Vector3D}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Plane_a9801c091af72f39fc284e648908dc17b}{GetNormal}}()\textcolor{keyword}{ const}}
-\DoxyCodeLine{26 \textcolor{keyword}{        }\{ \textcolor{keywordflow}{return} m\_normal; \}}
-\DoxyCodeLine{27 }
-\DoxyCodeLine{28         [[nodiscard]] \textcolor{keyword}{inline} \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Plane_aecd3e4e42a5d289f531c5d677005a021}{GetDistance}}()\textcolor{keyword}{ const}}
-\DoxyCodeLine{29 \textcolor{keyword}{        }\{ \textcolor{keywordflow}{return} m\_distance; \}}
-\DoxyCodeLine{30 }
-\DoxyCodeLine{31         [[nodiscard]] \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Plane_a837ab6b5b3f5ad99d033eae583b760ad}{GetAngle}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Plane}{IO::Astrodynamics::Math::Plane}}\& plane) \textcolor{keyword}{const};}
-\DoxyCodeLine{32         [[nodiscard]] \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Plane_a837ab6b5b3f5ad99d033eae583b760ad}{GetAngle}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO::Astrodynamics::Math::Vector3D}}\& vector3D) \textcolor{keyword}{const};}
-\DoxyCodeLine{33     \};}
-\DoxyCodeLine{34 }
-\DoxyCodeLine{35 \}}
-\DoxyCodeLine{36 }
-\DoxyCodeLine{37 \textcolor{preprocessor}{\#endif }\textcolor{comment}{//IO\_PLANE\_H}}
+\DoxyCodeLine{00001\ \textcolor{comment}{/*}}
+\DoxyCodeLine{00002\ \textcolor{comment}{\ Copyright\ (c)\ 2023.\ Sylvain\ Guillet\ (sylvain.guillet@tutamail.com)}}
+\DoxyCodeLine{00003\ \textcolor{comment}{\ */}}
+\DoxyCodeLine{00004\ }
+\DoxyCodeLine{00005\ \textcolor{comment}{//}}
+\DoxyCodeLine{00006\ \textcolor{comment}{//\ Created\ by\ spacer\ on\ 8/17/23.}}
+\DoxyCodeLine{00007\ \textcolor{comment}{//}}
+\DoxyCodeLine{00008\ }
+\DoxyCodeLine{00009\ \textcolor{preprocessor}{\#ifndef\ IO\_PLANE\_H}}
+\DoxyCodeLine{00010\ \textcolor{preprocessor}{\#define\ IO\_PLANE\_H}}
+\DoxyCodeLine{00011\ }
+\DoxyCodeLine{00012\ \textcolor{preprocessor}{\#include\ <\mbox{\hyperlink{Vector3D_8h}{Vector3D.h}}>}}
+\DoxyCodeLine{00013\ \textcolor{keyword}{namespace\ }\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Math}{IO::Astrodynamics::Math}}}
+\DoxyCodeLine{00014\ \{}
+\DoxyCodeLine{00015\ \ \ \ \ \textcolor{keyword}{class\ }\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Plane}{Plane}}}
+\DoxyCodeLine{00016\ \ \ \ \ \{}
+\DoxyCodeLine{00017\ \ \ \ \ \textcolor{keyword}{private}:}
+\DoxyCodeLine{00018\ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO::Astrodynamics::Math::Vector3D}}\ m\_normal;}
+\DoxyCodeLine{00019\ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ \textcolor{keywordtype}{double}\ m\_distance;}
+\DoxyCodeLine{00020\ }
+\DoxyCodeLine{00021\ \ \ \ \ \textcolor{keyword}{public}:}
+\DoxyCodeLine{00022\ \ \ \ \ \ \ \ \ \textcolor{keyword}{static}\ \textcolor{keyword}{const}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Plane}{Plane}}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Plane_ac2d389af2f19c4cc58df26f9a3055dd7}{PlaneX}};}
+\DoxyCodeLine{00023\ \ \ \ \ \ \ \ \ \textcolor{keyword}{static}\ \textcolor{keyword}{const}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Plane}{Plane}}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Plane_a69d0a04b8a018ed0823204fd85aafd73}{PlaneY}};}
+\DoxyCodeLine{00024\ \ \ \ \ \ \ \ \ \textcolor{keyword}{static}\ \textcolor{keyword}{const}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Plane}{Plane}}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Plane_a7cabde2cfe1329c85c6f6a40d6df2cdc}{PlaneZ}};}
+\DoxyCodeLine{00025\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Plane}{Plane}}(\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO::Astrodynamics::Math::Vector3D}}\ normal,\ \textcolor{keywordtype}{double}\ distance);}
+\DoxyCodeLine{00026\ }
+\DoxyCodeLine{00027\ \ \ \ \ \ \ \ \ [[nodiscard]]\ \textcolor{keyword}{inline}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO::Astrodynamics::Math::Vector3D}}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Plane_a9801c091af72f39fc284e648908dc17b}{GetNormal}}()\textcolor{keyword}{\ const}}
+\DoxyCodeLine{00028\ \textcolor{keyword}{\ \ \ \ \ \ \ \ }\{\ \textcolor{keywordflow}{return}\ m\_normal;\ \}}
+\DoxyCodeLine{00029\ }
+\DoxyCodeLine{00030\ \ \ \ \ \ \ \ \ [[nodiscard]]\ \textcolor{keyword}{inline}\ \textcolor{keywordtype}{double}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Plane_aecd3e4e42a5d289f531c5d677005a021}{GetDistance}}()\textcolor{keyword}{\ const}}
+\DoxyCodeLine{00031\ \textcolor{keyword}{\ \ \ \ \ \ \ \ }\{\ \textcolor{keywordflow}{return}\ m\_distance;\ \}}
+\DoxyCodeLine{00032\ }
+\DoxyCodeLine{00033\ \ \ \ \ \ \ \ \ [[nodiscard]]\ \textcolor{keywordtype}{double}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Plane_a837ab6b5b3f5ad99d033eae583b760ad}{GetAngle}}(\textcolor{keyword}{const}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Plane}{IO::Astrodynamics::Math::Plane}}\&\ plane)\ \textcolor{keyword}{const};}
+\DoxyCodeLine{00034\ \ \ \ \ \ \ \ \ [[nodiscard]]\ \textcolor{keywordtype}{double}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Plane_a837ab6b5b3f5ad99d033eae583b760ad}{GetAngle}}(\textcolor{keyword}{const}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO::Astrodynamics::Math::Vector3D}}\&\ vector3D)\ \textcolor{keyword}{const};}
+\DoxyCodeLine{00035\ \ \ \ \ \};}
+\DoxyCodeLine{00036\ }
+\DoxyCodeLine{00037\ \}}
+\DoxyCodeLine{00038\ }
+\DoxyCodeLine{00039\ \textcolor{preprocessor}{\#endif\ }\textcolor{comment}{//IO\_PLANE\_H}}
 
 \end{DoxyCode}

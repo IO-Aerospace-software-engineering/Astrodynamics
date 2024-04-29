@@ -41,8 +41,8 @@ var NAVTREE =
       [ "Class Members", "functions.html", [
         [ "All", "functions.html", "functions_dup" ],
         [ "Functions", "functions_func.html", "functions_func" ],
-        [ "Variables", "functions_vars.html", "functions_vars" ],
-        [ "Related Functions", "functions_rela.html", null ]
+        [ "Variables", "functions_vars.html", null ],
+        [ "Related Symbols", "functions_rela.html", null ]
       ] ]
     ] ],
     [ "Files", "files.html", [
@@ -60,18 +60,14 @@ var NAVTREE =
 var NAVTREEINDEX =
 [
 "Aberrations_8cpp.html",
-"Parameters_8h.html#aea7d63a4361591bc697bf63407ed0838",
-"UTC_8h.html",
-"classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft.html#abe1866cbc246610634b73c475c093b4e",
-"classIO_1_1Astrodynamics_1_1Frames_1_1InertialFrames.html",
-"classIO_1_1Astrodynamics_1_1Maneuvers_1_1ApogeeHeightChangingManeuver.html#ac132f5ddf892a25cbd481df444e27ecc",
-"classIO_1_1Astrodynamics_1_1Math_1_1Matrix.html#a325144e43ceb5d624c23f83705786bca",
-"classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters.html#a5ab4864ce7c3d403bc9d6c90b22a41bf",
-"classIO_1_1Astrodynamics_1_1Sites_1_1Site.html#aaa88952123223124e504299a92f429e4",
-"functions_func_s.html",
-"structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ConicOrbitalElementsDTO.html#a0d15b05b9681604fe2565c71dd4c4d7c",
-"structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1PerigeeHeightChangingManeuverDTO.html#a784302e587ee8819d3101ad455f01d81",
-"structIO_1_1Astrodynamics_1_1Maneuvers_1_1ManeuverResult.html"
+"Proxy_8h.html#a070706fba8ff9475ca3b778c3bc1e115",
+"classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Engine.html#ae30c1409594289e78a3cf1251e14d1b8",
+"classIO_1_1Astrodynamics_1_1Coordinates_1_1SurfaceCoordinates.html",
+"classIO_1_1Astrodynamics_1_1Kernels_1_1OrientationKernel.html#a4ff5bea010061c7a8dfb38329314648c",
+"classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1EquinoctialElements.html#a21fba6b6c6000ff042c0c7ee511169b6",
+"classIO_1_1Astrodynamics_1_1Sites_1_1Site.html#a1bcc4bed543a34442f9236fa1de10f77",
+"files.html",
+"structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1EquinoctialElementsDTO.html#a5086f497986cf97f35a5fc8e4f7847b2"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';

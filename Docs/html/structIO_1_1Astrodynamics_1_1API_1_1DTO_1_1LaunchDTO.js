@@ -1,6 +1,5 @@
 var structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1LaunchDTO =
 [
-    [ "Error", "structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1LaunchDTO.html#a4ba207f321b015b01cd78efb7976e8ae", null ],
     [ "inertialAzimuth", "structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1LaunchDTO.html#aaeabe63cbb6a815a61e8df38faa002b1", null ],
     [ "inertialInsertionVelocity", "structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1LaunchDTO.html#a727eae6cc32b9accf6797f642197e3ba", null ],
     [ "initialStepSize", "structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1LaunchDTO.html#aad0761f7ece86f32c5da418e0a680181", null ],

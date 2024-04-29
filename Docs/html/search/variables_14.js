@@ -1,8 +1,10 @@
 var searchData=
 [
-  ['value_0',['value',['../structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1DistanceConstraintDTO.html#a3b939fd08aecd42eaf36f8a73f11b27d',1,'IO::Astrodynamics::API::DTO::DistanceConstraintDTO']]],
-  ['vectorx_1',['VectorX',['../classIO_1_1Astrodynamics_1_1Math_1_1Vector3D.html#a43426505ffec69f690fce44a0f9d6b0c',1,'IO::Astrodynamics::Math::Vector3D']]],
-  ['vectory_2',['VectorY',['../classIO_1_1Astrodynamics_1_1Math_1_1Vector3D.html#a919eaca2619559d6292f322d5f9c08f4',1,'IO::Astrodynamics::Math::Vector3D']]],
-  ['vectorz_3',['VectorZ',['../classIO_1_1Astrodynamics_1_1Math_1_1Vector3D.html#a62dc850f1db3d1776e1c8bed4e2fb8c6',1,'IO::Astrodynamics::Math::Vector3D']]],
-  ['velocity_4',['velocity',['../structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1StateVectorDTO.html#a1b61f1f13eea4bb808f0935f241fb884',1,'IO::Astrodynamics::API::DTO::StateVectorDTO']]]
+  ['targetbodyid_0',['TargetBodyId',['../structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1BodyVisibilityFromSiteConstraintDTO.html#a0b68cb0efe6715f8a7460839575a2630',1,'IO::Astrodynamics::API::DTO::BodyVisibilityFromSiteConstraintDTO']]],
+  ['targetid_1',['targetid',['../structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1DistanceConstraintDTO.html#a0b941665daefdc0408dd4aeb1d6b51f7',1,'IO::Astrodynamics::API::DTO::DistanceConstraintDTO::targetId'],['../structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1InFieldOfViewConstraintDTO.html#aea16f13e6bdf8b5c484f9e11f401ce5a',1,'IO::Astrodynamics::API::DTO::InFieldOfViewConstraintDTO::targetId']]],
+  ['targetorbit_2',['targetOrbit',['../structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1LaunchDTO.html#ac0b89bade562fc2a62df7f3cf9abf9e1',1,'IO::Astrodynamics::API::DTO::LaunchDTO']]],
+  ['top_3',['Top',['../classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft.html#a5cbbc132ce4f342e701522639e86e2b8',1,'IO::Astrodynamics::Body::Spacecraft::Spacecraft']]],
+  ['trueanomaly_4',['trueAnomaly',['../structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ConicOrbitalElementsDTO.html#ad022e342b662a3088520b0cc9dab4f5c',1,'IO::Astrodynamics::API::DTO::ConicOrbitalElementsDTO']]],
+  ['twilightdefinition_5',['twilightdefinition',['../structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ByDayConstraintDTO.html#ac6b48d9a56c1569508ef83ea71917051',1,'IO::Astrodynamics::API::DTO::ByDayConstraintDTO::twilightDefinition'],['../structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ByNightConstraintDTO.html#a1fcedd9687d1aff3c2dbaf53a26bb82a',1,'IO::Astrodynamics::API::DTO::ByNightConstraintDTO::twilightDefinition']]],
+  ['type_6',['type',['../structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1OccultationConstraintDTO.html#a1adb66c8f30620a021874e73da0e097f',1,'IO::Astrodynamics::API::DTO::OccultationConstraintDTO']]]
 ];

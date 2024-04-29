@@ -1,36 +1,36 @@
-\hypertarget{SpacecraftFrameFile_8h_source}{}\doxysection{Spacecraft\+Frame\+File.\+h}
-\label{SpacecraftFrameFile_8h_source}\index{IO.Astrodynamics/Frames/SpacecraftFrameFile.h@{IO.Astrodynamics/Frames/SpacecraftFrameFile.h}}
+\doxysection{Spacecraft\+Frame\+File.\+h}
+\hypertarget{SpacecraftFrameFile_8h_source}{}\label{SpacecraftFrameFile_8h_source}\index{IO.Astrodynamics/Frames/SpacecraftFrameFile.h@{IO.Astrodynamics/Frames/SpacecraftFrameFile.h}}
 \mbox{\hyperlink{SpacecraftFrameFile_8h}{Go to the documentation of this file.}}
 \begin{DoxyCode}{0}
-\DoxyCodeLine{1 \textcolor{comment}{/*}}
-\DoxyCodeLine{2 \textcolor{comment}{ Copyright (c) 2021-\/2023. Sylvain Guillet (sylvain.guillet@tutamail.com)}}
-\DoxyCodeLine{3 \textcolor{comment}{ */}}
-\DoxyCodeLine{4 \textcolor{preprocessor}{\#ifndef SPACECRAFT\_FRAME\_H}}
-\DoxyCodeLine{5 \textcolor{preprocessor}{\#define SPACECRAFT\_FRAME\_H}}
-\DoxyCodeLine{6 }
-\DoxyCodeLine{7 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{FrameFile_8h}{FrameFile.h}}>}}
-\DoxyCodeLine{8 }
-\DoxyCodeLine{9 \textcolor{comment}{//Forward declaration}}
-\DoxyCodeLine{10 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Body_1_1Spacecraft}{IO::Astrodynamics::Body::Spacecraft}} \{}
-\DoxyCodeLine{11     \textcolor{keyword}{class }Spacecraft;}
-\DoxyCodeLine{12 \}}
-\DoxyCodeLine{13 }
-\DoxyCodeLine{14 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Frames}{IO::Astrodynamics::Frames}} \{}
-\DoxyCodeLine{19     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Frames_1_1SpacecraftFrameFile}{SpacecraftFrameFile}} final : \textcolor{keyword}{public} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Frames_1_1FrameFile}{IO::Astrodynamics::Frames::FrameFile}} \{}
-\DoxyCodeLine{20     \textcolor{keyword}{private}:}
-\DoxyCodeLine{21         \textcolor{keyword}{const} \textcolor{keywordtype}{int} m\_id;}
-\DoxyCodeLine{22         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft}{IO::Astrodynamics::Body::Spacecraft::Spacecraft}} \&m\_spacecraft;}
-\DoxyCodeLine{23 }
-\DoxyCodeLine{24         \textcolor{keywordtype}{void} BuildFrame();}
-\DoxyCodeLine{25 }
-\DoxyCodeLine{31         \textcolor{keyword}{explicit} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Frames_1_1SpacecraftFrameFile}{SpacecraftFrameFile}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft}{IO::Astrodynamics::Body::Spacecraft::Spacecraft}} \&spacecraft);}
-\DoxyCodeLine{32 }
-\DoxyCodeLine{33     \textcolor{keyword}{public}:}
-\DoxyCodeLine{34         \textcolor{keyword}{friend} \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft}{IO::Astrodynamics::Body::Spacecraft::Spacecraft}};}
-\DoxyCodeLine{35 }
-\DoxyCodeLine{36         [[nodiscard]] \textcolor{keyword}{inline} \textcolor{keywordtype}{int} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Frames_1_1SpacecraftFrameFile_a5aa47113b7fe7df7fec40d5e3b8f87a6}{GetId}}()\textcolor{keyword}{ const }\{ \textcolor{keywordflow}{return} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem_a78217dde579e508225733db9b78daad8}{m\_id}}; \}}
-\DoxyCodeLine{37     \};}
-\DoxyCodeLine{38 \}}
-\DoxyCodeLine{39 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00001\ \textcolor{comment}{/*}}
+\DoxyCodeLine{00002\ \textcolor{comment}{\ Copyright\ (c)\ 2021-\/2023.\ Sylvain\ Guillet\ (sylvain.guillet@tutamail.com)}}
+\DoxyCodeLine{00003\ \textcolor{comment}{\ */}}
+\DoxyCodeLine{00004\ \textcolor{preprocessor}{\#ifndef\ SPACECRAFT\_FRAME\_H}}
+\DoxyCodeLine{00005\ \textcolor{preprocessor}{\#define\ SPACECRAFT\_FRAME\_H}}
+\DoxyCodeLine{00006\ }
+\DoxyCodeLine{00007\ \textcolor{preprocessor}{\#include\ <\mbox{\hyperlink{FrameFile_8h}{FrameFile.h}}>}}
+\DoxyCodeLine{00008\ }
+\DoxyCodeLine{00009\ \textcolor{comment}{//Forward\ declaration}}
+\DoxyCodeLine{00010\ \textcolor{keyword}{namespace\ }\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Body_1_1Spacecraft}{IO::Astrodynamics::Body::Spacecraft}}\ \{}
+\DoxyCodeLine{00011\ \ \ \ \ \textcolor{keyword}{class\ }Spacecraft;}
+\DoxyCodeLine{00012\ \}}
+\DoxyCodeLine{00013\ }
+\DoxyCodeLine{00014\ \textcolor{keyword}{namespace\ }\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Frames}{IO::Astrodynamics::Frames}}\ \{}
+\DoxyCodeLine{00019\ \ \ \ \ \textcolor{keyword}{class\ }\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Frames_1_1SpacecraftFrameFile}{SpacecraftFrameFile}}\ final\ :\ \textcolor{keyword}{public}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Frames_1_1FrameFile}{IO::Astrodynamics::Frames::FrameFile}}\ \{}
+\DoxyCodeLine{00020\ \ \ \ \ \textcolor{keyword}{private}:}
+\DoxyCodeLine{00021\ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ \textcolor{keywordtype}{int}\ m\_id;}
+\DoxyCodeLine{00022\ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft}{IO::Astrodynamics::Body::Spacecraft::Spacecraft}}\ \&m\_spacecraft;}
+\DoxyCodeLine{00023\ }
+\DoxyCodeLine{00024\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{void}\ BuildFrame();}
+\DoxyCodeLine{00025\ }
+\DoxyCodeLine{00031\ \ \ \ \ \ \ \ \ \textcolor{keyword}{explicit}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Frames_1_1SpacecraftFrameFile}{SpacecraftFrameFile}}(\textcolor{keyword}{const}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft}{IO::Astrodynamics::Body::Spacecraft::Spacecraft}}\ \&spacecraft);}
+\DoxyCodeLine{00032\ }
+\DoxyCodeLine{00033\ \ \ \ \ \textcolor{keyword}{public}:}
+\DoxyCodeLine{00034\ \ \ \ \ \ \ \ \ \textcolor{keyword}{friend}\ \textcolor{keyword}{class\ }\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft}{IO::Astrodynamics::Body::Spacecraft::Spacecraft}};}
+\DoxyCodeLine{00035\ }
+\DoxyCodeLine{00036\ \ \ \ \ \ \ \ \ [[nodiscard]]\ \textcolor{keyword}{inline}\ \textcolor{keywordtype}{int}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Frames_1_1SpacecraftFrameFile_a5aa47113b7fe7df7fec40d5e3b8f87a6}{GetId}}()\textcolor{keyword}{\ const\ }\{\ \textcolor{keywordflow}{return}\ m\_id;\ \}}
+\DoxyCodeLine{00037\ \ \ \ \ \};}
+\DoxyCodeLine{00038\ \}}
+\DoxyCodeLine{00039\ \textcolor{preprocessor}{\#endif}}
 
 \end{DoxyCode}

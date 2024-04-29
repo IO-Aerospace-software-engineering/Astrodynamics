@@ -1,65 +1,65 @@
-\hypertarget{Matrix_8h_source}{}\doxysection{Matrix.\+h}
-\label{Matrix_8h_source}\index{IO.Astrodynamics/Math/Matrix.h@{IO.Astrodynamics/Math/Matrix.h}}
+\doxysection{Matrix.\+h}
+\hypertarget{Matrix_8h_source}{}\label{Matrix_8h_source}\index{IO.Astrodynamics/Math/Matrix.h@{IO.Astrodynamics/Math/Matrix.h}}
 \mbox{\hyperlink{Matrix_8h}{Go to the documentation of this file.}}
 \begin{DoxyCode}{0}
-\DoxyCodeLine{1 \textcolor{comment}{/*}}
-\DoxyCodeLine{2 \textcolor{comment}{ Copyright (c) 2021-\/2023. Sylvain Guillet (sylvain.guillet@tutamail.com)}}
-\DoxyCodeLine{3 \textcolor{comment}{ */}}
-\DoxyCodeLine{4 \textcolor{preprocessor}{\#ifndef MATRIX\_H}}
-\DoxyCodeLine{5 \textcolor{preprocessor}{\#define MATRIX\_H}}
-\DoxyCodeLine{6 \textcolor{preprocessor}{\#include<cstddef>}}
-\DoxyCodeLine{7 \textcolor{preprocessor}{\#include<cstring>}}
-\DoxyCodeLine{8 }
-\DoxyCodeLine{9 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Math}{IO::Astrodynamics::Math}}}
-\DoxyCodeLine{10 \{}
-\DoxyCodeLine{14     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Matrix}{Matrix}}}
-\DoxyCodeLine{15     \{}
-\DoxyCodeLine{16     \textcolor{keyword}{private}:}
-\DoxyCodeLine{17         \textcolor{keywordtype}{double}** m\_data\{ \textcolor{keyword}{nullptr} \};}
-\DoxyCodeLine{18         \textcolor{keyword}{const} std::size\_t m\_colSize\{\};}
-\DoxyCodeLine{19         \textcolor{keyword}{const} std::size\_t m\_rowSize\{\};}
-\DoxyCodeLine{20 }
-\DoxyCodeLine{21     \textcolor{keyword}{public}:}
-\DoxyCodeLine{22 }
-\DoxyCodeLine{28         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Matrix_a2b889331e0cd22493e71447513d879cb}{Matrix}}(\textcolor{keyword}{const} std::size\_t rowSize, \textcolor{keyword}{const} std::size\_t colSize) :m\_colSize\{ colSize \}, m\_rowSize\{ rowSize \}}
-\DoxyCodeLine{29         \{}
-\DoxyCodeLine{30             this-\/>m\_data = \textcolor{keyword}{new} \textcolor{keywordtype}{double}* [rowSize];}
-\DoxyCodeLine{31 }
-\DoxyCodeLine{32             \textcolor{keywordflow}{for} (std::size\_t i = 0; i < rowSize; i++)}
-\DoxyCodeLine{33             \{}
-\DoxyCodeLine{34                 this-\/>m\_data[i] = \textcolor{keyword}{new} \textcolor{keywordtype}{double}[colSize] \{\};}
-\DoxyCodeLine{35             \}}
-\DoxyCodeLine{36         \}}
-\DoxyCodeLine{37 }
-\DoxyCodeLine{44         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Matrix_a8dea4b89571f15111c2737bda2fc7a51}{Matrix}}(\textcolor{keyword}{const} std::size\_t rowSize, \textcolor{keyword}{const} std::size\_t colSize, \textcolor{keywordtype}{double}** data) :\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Matrix}{Matrix}}\{ rowSize, colSize \}}
-\DoxyCodeLine{45         \{}
-\DoxyCodeLine{46             \textcolor{keywordflow}{for} (\textcolor{keywordtype}{size\_t} i = 0; i < rowSize; i++)}
-\DoxyCodeLine{47             \{}
-\DoxyCodeLine{48                 \textcolor{keywordflow}{for} (\textcolor{keywordtype}{size\_t} j = 0; j < colSize; j++)}
-\DoxyCodeLine{49                 \{}
-\DoxyCodeLine{50                     m\_data[i][j] = data[i][j];}
-\DoxyCodeLine{51                 \}}
-\DoxyCodeLine{52             \}}
-\DoxyCodeLine{53         \}}
-\DoxyCodeLine{54         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Matrix_a2b889331e0cd22493e71447513d879cb}{Matrix}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Matrix}{Matrix}}\& v);}
-\DoxyCodeLine{55         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Matrix_ad1893571b0b344ddc79413710b939b48}{\string~Matrix}}();}
-\DoxyCodeLine{56 }
-\DoxyCodeLine{63         [[nodiscard]] \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Matrix_aaec48f665d65c3bbf64a3580317f3a75}{GetValue}}(std::size\_t rowIdx, std::size\_t colIdx) \textcolor{keyword}{const};}
-\DoxyCodeLine{64 }
-\DoxyCodeLine{71         \textcolor{keywordtype}{void} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Matrix_a29ee7ae971f8bf5604061c19fb8d5ff3}{SetValue}}(std::size\_t rowIdx, std::size\_t colIdx, \textcolor{keywordtype}{double} value);}
-\DoxyCodeLine{72 }
-\DoxyCodeLine{77         [[nodiscard]] std::size\_t \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Matrix_aeccdbafdbcf97d74a5e98012d46a93f4}{GetColumsSize}}()\textcolor{keyword}{ const }\{ \textcolor{keywordflow}{return} m\_colSize; \}}
-\DoxyCodeLine{78 }
-\DoxyCodeLine{83         [[nodiscard]] std::size\_t \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Matrix_a325144e43ceb5d624c23f83705786bca}{GetRowsSize}}()\textcolor{keyword}{ const }\{ \textcolor{keywordflow}{return} m\_rowSize; \}}
-\DoxyCodeLine{84 }
-\DoxyCodeLine{90         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Matrix}{Matrix}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Matrix_a4e6684b3fe94cccc701480251e9a75e3}{Multiply}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Matrix}{Matrix}}\& matrix);}
-\DoxyCodeLine{91 }
-\DoxyCodeLine{96         [[nodiscard]] \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Matrix}{Matrix}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Matrix_a33969df8a7a57bcbc39f3c2a1dfbe984}{Transpose}}() \textcolor{keyword}{const};}
-\DoxyCodeLine{97 }
-\DoxyCodeLine{98         [[nodiscard]] \textcolor{keywordtype}{double}** \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Matrix_adf83a32a473e699b382db17c8a538d83}{GetRawData}}() \textcolor{keyword}{const};}
-\DoxyCodeLine{99     \};}
-\DoxyCodeLine{100 \}}
-\DoxyCodeLine{101 \textcolor{preprocessor}{\#endif }\textcolor{comment}{// !MATRIX\_H}}
-\DoxyCodeLine{102 }
+\DoxyCodeLine{00001\ \textcolor{comment}{/*}}
+\DoxyCodeLine{00002\ \textcolor{comment}{\ Copyright\ (c)\ 2021-\/2023.\ Sylvain\ Guillet\ (sylvain.guillet@tutamail.com)}}
+\DoxyCodeLine{00003\ \textcolor{comment}{\ */}}
+\DoxyCodeLine{00004\ \textcolor{preprocessor}{\#ifndef\ MATRIX\_H}}
+\DoxyCodeLine{00005\ \textcolor{preprocessor}{\#define\ MATRIX\_H}}
+\DoxyCodeLine{00006\ \textcolor{preprocessor}{\#include<cstddef>}}
+\DoxyCodeLine{00007\ \textcolor{preprocessor}{\#include<cstring>}}
+\DoxyCodeLine{00008\ }
+\DoxyCodeLine{00009\ \textcolor{keyword}{namespace\ }\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Math}{IO::Astrodynamics::Math}}}
+\DoxyCodeLine{00010\ \{}
+\DoxyCodeLine{00014\ \ \ \ \ \textcolor{keyword}{class\ }\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Matrix}{Matrix}}}
+\DoxyCodeLine{00015\ \ \ \ \ \{}
+\DoxyCodeLine{00016\ \ \ \ \ \textcolor{keyword}{private}:}
+\DoxyCodeLine{00017\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{double}**\ m\_data\{\ \textcolor{keyword}{nullptr}\ \};}
+\DoxyCodeLine{00018\ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ std::size\_t\ m\_colSize\{\};}
+\DoxyCodeLine{00019\ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ std::size\_t\ m\_rowSize\{\};}
+\DoxyCodeLine{00020\ }
+\DoxyCodeLine{00021\ \ \ \ \ \textcolor{keyword}{public}:}
+\DoxyCodeLine{00022\ }
+\DoxyCodeLine{00028\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Matrix_a2b889331e0cd22493e71447513d879cb}{Matrix}}(\textcolor{keyword}{const}\ std::size\_t\ rowSize,\ \textcolor{keyword}{const}\ std::size\_t\ colSize)\ :m\_colSize\{\ colSize\ \},\ m\_rowSize\{\ rowSize\ \}}
+\DoxyCodeLine{00029\ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00030\ \ \ \ \ \ \ \ \ \ \ \ \ this-\/>m\_data\ =\ \textcolor{keyword}{new}\ \textcolor{keywordtype}{double}*\ [rowSize];}
+\DoxyCodeLine{00031\ }
+\DoxyCodeLine{00032\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{for}\ (std::size\_t\ i\ =\ 0;\ i\ <\ rowSize;\ i++)}
+\DoxyCodeLine{00033\ \ \ \ \ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00034\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ this-\/>m\_data[i]\ =\ \textcolor{keyword}{new}\ \textcolor{keywordtype}{double}[colSize]\ \{\};}
+\DoxyCodeLine{00035\ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00036\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00037\ }
+\DoxyCodeLine{00044\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Matrix_a8dea4b89571f15111c2737bda2fc7a51}{Matrix}}(\textcolor{keyword}{const}\ std::size\_t\ rowSize,\ \textcolor{keyword}{const}\ std::size\_t\ colSize,\ \textcolor{keywordtype}{double}**\ data)\ :\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Matrix}{Matrix}}\{\ rowSize,\ colSize\ \}}
+\DoxyCodeLine{00045\ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00046\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{for}\ (\textcolor{keywordtype}{size\_t}\ i\ =\ 0;\ i\ <\ rowSize;\ i++)}
+\DoxyCodeLine{00047\ \ \ \ \ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00048\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{for}\ (\textcolor{keywordtype}{size\_t}\ j\ =\ 0;\ j\ <\ colSize;\ j++)}
+\DoxyCodeLine{00049\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00050\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ m\_data[i][j]\ =\ data[i][j];}
+\DoxyCodeLine{00051\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00052\ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00053\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00054\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Matrix}{Matrix}}(\textcolor{keyword}{const}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Matrix}{Matrix}}\&\ v);}
+\DoxyCodeLine{00055\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Matrix_ad1893571b0b344ddc79413710b939b48}{\string~Matrix}}();}
+\DoxyCodeLine{00056\ }
+\DoxyCodeLine{00063\ \ \ \ \ \ \ \ \ [[nodiscard]]\ \textcolor{keywordtype}{double}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Matrix_aaec48f665d65c3bbf64a3580317f3a75}{GetValue}}(std::size\_t\ rowIdx,\ std::size\_t\ colIdx)\ \textcolor{keyword}{const};}
+\DoxyCodeLine{00064\ }
+\DoxyCodeLine{00071\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Matrix_a29ee7ae971f8bf5604061c19fb8d5ff3}{SetValue}}(std::size\_t\ rowIdx,\ std::size\_t\ colIdx,\ \textcolor{keywordtype}{double}\ value);}
+\DoxyCodeLine{00072\ }
+\DoxyCodeLine{00077\ \ \ \ \ \ \ \ \ [[nodiscard]]\ std::size\_t\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Matrix_aeccdbafdbcf97d74a5e98012d46a93f4}{GetColumsSize}}()\textcolor{keyword}{\ const\ }\{\ \textcolor{keywordflow}{return}\ m\_colSize;\ \}}
+\DoxyCodeLine{00078\ }
+\DoxyCodeLine{00083\ \ \ \ \ \ \ \ \ [[nodiscard]]\ std::size\_t\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Matrix_a325144e43ceb5d624c23f83705786bca}{GetRowsSize}}()\textcolor{keyword}{\ const\ }\{\ \textcolor{keywordflow}{return}\ m\_rowSize;\ \}}
+\DoxyCodeLine{00084\ }
+\DoxyCodeLine{00090\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Matrix}{Matrix}}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Matrix_a4e6684b3fe94cccc701480251e9a75e3}{Multiply}}(\textcolor{keyword}{const}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Matrix}{Matrix}}\&\ matrix);}
+\DoxyCodeLine{00091\ }
+\DoxyCodeLine{00096\ \ \ \ \ \ \ \ \ [[nodiscard]]\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Matrix}{Matrix}}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Matrix_a33969df8a7a57bcbc39f3c2a1dfbe984}{Transpose}}()\ \textcolor{keyword}{const};}
+\DoxyCodeLine{00097\ }
+\DoxyCodeLine{00098\ \ \ \ \ \ \ \ \ [[nodiscard]]\ \textcolor{keywordtype}{double}**\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Matrix_adf83a32a473e699b382db17c8a538d83}{GetRawData}}()\ \textcolor{keyword}{const};}
+\DoxyCodeLine{00099\ \ \ \ \ \};}
+\DoxyCodeLine{00100\ \}}
+\DoxyCodeLine{00101\ \textcolor{preprocessor}{\#endif\ }\textcolor{comment}{//\ !MATRIX\_H}}
+\DoxyCodeLine{00102\ }
 
 \end{DoxyCode}

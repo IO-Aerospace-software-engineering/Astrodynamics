@@ -1,50 +1,50 @@
-\hypertarget{TimeSpan_8h_source}{}\doxysection{Time\+Span.\+h}
-\label{TimeSpan_8h_source}\index{IO.Astrodynamics/Time/TimeSpan.h@{IO.Astrodynamics/Time/TimeSpan.h}}
+\doxysection{Time\+Span.\+h}
+\hypertarget{TimeSpan_8h_source}{}\label{TimeSpan_8h_source}\index{IO.Astrodynamics/Time/TimeSpan.h@{IO.Astrodynamics/Time/TimeSpan.h}}
 \mbox{\hyperlink{TimeSpan_8h}{Go to the documentation of this file.}}
 \begin{DoxyCode}{0}
-\DoxyCodeLine{1 \textcolor{comment}{/*}}
-\DoxyCodeLine{2 \textcolor{comment}{ Copyright (c) 2021-\/2023. Sylvain Guillet (sylvain.guillet@tutamail.com)}}
-\DoxyCodeLine{3 \textcolor{comment}{ */}}
-\DoxyCodeLine{4 \textcolor{preprocessor}{\#ifndef TIMESPAN\_H}}
-\DoxyCodeLine{5 \textcolor{preprocessor}{\#define TIMESPAN\_H}}
-\DoxyCodeLine{6 \textcolor{preprocessor}{\#include<chrono>}}
-\DoxyCodeLine{7 }
-\DoxyCodeLine{8 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Time}{IO::Astrodynamics::Time}}}
-\DoxyCodeLine{9 \{}
-\DoxyCodeLine{10     \textcolor{keyword}{using namespace }std::literals::chrono\_literals;}
-\DoxyCodeLine{11     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{TimeSpan}}}
-\DoxyCodeLine{12     \{}
-\DoxyCodeLine{13     \textcolor{keyword}{private}:}
-\DoxyCodeLine{14         std::chrono::duration<double> m\_seconds\{\};}
-\DoxyCodeLine{15 }
-\DoxyCodeLine{16     \textcolor{keyword}{public}:}
-\DoxyCodeLine{17 }
-\DoxyCodeLine{18         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan_a4c40e4dee7355a27b2847d21d02de235}{TimeSpan}}();}
-\DoxyCodeLine{23         \textcolor{keyword}{explicit} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan_a4c40e4dee7355a27b2847d21d02de235}{TimeSpan}}(std::chrono::duration<double> period);}
-\DoxyCodeLine{24 }
-\DoxyCodeLine{25 }
-\DoxyCodeLine{26         \textcolor{keyword}{explicit} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan_a4c40e4dee7355a27b2847d21d02de235}{TimeSpan}}(\textcolor{keywordtype}{double} period);}
-\DoxyCodeLine{27 }
-\DoxyCodeLine{28         [[nodiscard]] std::chrono::duration<double, std::nano> \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan_acac7137c7c68b1d20b6b84579dbf4727}{GetNanoseconds}}() \textcolor{keyword}{const};}
-\DoxyCodeLine{29         [[nodiscard]] std::chrono::duration<double, std::micro> \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan_af5ea613e6e5f1614ed91aba2e6a49ef4}{GetMicroseconds}}()\textcolor{keyword}{const};}
-\DoxyCodeLine{30         [[nodiscard]] std::chrono::duration<double, std::milli> \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan_a44004e409f4c8441a79f5f80d3f85767}{GetMilliseconds}}()\textcolor{keyword}{const};}
-\DoxyCodeLine{31         [[nodiscard]] std::chrono::duration<double> \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan_ad7a98f3458c69951bacca3b4e8fe5bb9}{GetSeconds}}() \textcolor{keyword}{const};}
-\DoxyCodeLine{32         [[nodiscard]] std::chrono::duration<double, std::ratio<60>> \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan_abd447a690028408602aa7845e43d7890}{GetMinutes}}()\textcolor{keyword}{const};}
-\DoxyCodeLine{33         [[nodiscard]] std::chrono::duration<double, std::ratio<3600>> \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan_a089c0b9331b764d81d591b6600331f93}{GetHours}}()\textcolor{keyword}{const};}
-\DoxyCodeLine{34 }
-\DoxyCodeLine{35         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO::Astrodynamics::Time::TimeSpan}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan_a266c5d4923be1b90e71f21edbdab56bb}{operator+}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO::Astrodynamics::Time::TimeSpan}}\& ts) \textcolor{keyword}{const};}
-\DoxyCodeLine{36         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO::Astrodynamics::Time::TimeSpan}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan_a266c5d4923be1b90e71f21edbdab56bb}{operator+}}(\textcolor{keywordtype}{double} val) \textcolor{keyword}{const};}
-\DoxyCodeLine{37         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO::Astrodynamics::Time::TimeSpan}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan_af1ef1fd2665854a0cce543dc62716213}{operator-\/}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO::Astrodynamics::Time::TimeSpan}}\& ts) \textcolor{keyword}{const};}
-\DoxyCodeLine{38         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO::Astrodynamics::Time::TimeSpan}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan_ab3cfb1f93c3b99c314fba0108429c8d7}{operator*}}(\textcolor{keywordtype}{double} ts) \textcolor{keyword}{const};}
-\DoxyCodeLine{39         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO::Astrodynamics::Time::TimeSpan}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan_ad92125ac8c99d309720b5792ebcf6706}{operator/}}(\textcolor{keywordtype}{double} ts) \textcolor{keyword}{const};}
-\DoxyCodeLine{40         \textcolor{keywordtype}{bool} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan_a598bbd4ca3e7702e0d96aae213ea5d2b}{operator==}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO::Astrodynamics::Time::TimeSpan}}\& ts) \textcolor{keyword}{const};}
-\DoxyCodeLine{41         \textcolor{keywordtype}{bool} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan_a5096291668a810bb4e1f87cb9039fe05}{operator!=}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO::Astrodynamics::Time::TimeSpan}}\& ts) \textcolor{keyword}{const};}
-\DoxyCodeLine{42         \textcolor{keywordtype}{bool} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan_a959d2e8ad104caf8f462896578e83f32}{operator<}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO::Astrodynamics::Time::TimeSpan}}\& ts) \textcolor{keyword}{const};}
-\DoxyCodeLine{43         \textcolor{keywordtype}{bool} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan_abe46a8e4681661988286abcbc6cbac2f}{operator>}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO::Astrodynamics::Time::TimeSpan}}\& ts) \textcolor{keyword}{const};}
-\DoxyCodeLine{44         \textcolor{keywordtype}{bool} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan_a671c3b45904c1e5c091766f4aca7784e}{operator>=}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO::Astrodynamics::Time::TimeSpan}}\& ts) \textcolor{keyword}{const};}
-\DoxyCodeLine{45         \textcolor{keywordtype}{bool} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan_a2be53c69f5f82f2ab5ce003c70ad76ae}{operator<=}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO::Astrodynamics::Time::TimeSpan}}\& ts) \textcolor{keyword}{const};}
-\DoxyCodeLine{46     \};}
-\DoxyCodeLine{47 \}}
-\DoxyCodeLine{48 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00001\ \textcolor{comment}{/*}}
+\DoxyCodeLine{00002\ \textcolor{comment}{\ Copyright\ (c)\ 2021-\/2023.\ Sylvain\ Guillet\ (sylvain.guillet@tutamail.com)}}
+\DoxyCodeLine{00003\ \textcolor{comment}{\ */}}
+\DoxyCodeLine{00004\ \textcolor{preprocessor}{\#ifndef\ TIMESPAN\_H}}
+\DoxyCodeLine{00005\ \textcolor{preprocessor}{\#define\ TIMESPAN\_H}}
+\DoxyCodeLine{00006\ \textcolor{preprocessor}{\#include<chrono>}}
+\DoxyCodeLine{00007\ }
+\DoxyCodeLine{00008\ \textcolor{keyword}{namespace\ }\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Time}{IO::Astrodynamics::Time}}}
+\DoxyCodeLine{00009\ \{}
+\DoxyCodeLine{00010\ \ \ \ \ \textcolor{keyword}{using\ namespace\ }std::literals::chrono\_literals;}
+\DoxyCodeLine{00011\ \ \ \ \ \textcolor{keyword}{class\ }\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{TimeSpan}}}
+\DoxyCodeLine{00012\ \ \ \ \ \{}
+\DoxyCodeLine{00013\ \ \ \ \ \textcolor{keyword}{private}:}
+\DoxyCodeLine{00014\ \ \ \ \ \ \ \ \ std::chrono::duration<double>\ m\_seconds\{\};}
+\DoxyCodeLine{00015\ }
+\DoxyCodeLine{00016\ \ \ \ \ \textcolor{keyword}{public}:}
+\DoxyCodeLine{00017\ }
+\DoxyCodeLine{00018\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan_a4c40e4dee7355a27b2847d21d02de235}{TimeSpan}}();}
+\DoxyCodeLine{00023\ \ \ \ \ \ \ \ \ \textcolor{keyword}{explicit}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan_a4c40e4dee7355a27b2847d21d02de235}{TimeSpan}}(std::chrono::duration<double>\ period);}
+\DoxyCodeLine{00024\ }
+\DoxyCodeLine{00025\ }
+\DoxyCodeLine{00026\ \ \ \ \ \ \ \ \ \textcolor{keyword}{explicit}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan_a4c40e4dee7355a27b2847d21d02de235}{TimeSpan}}(\textcolor{keywordtype}{double}\ period);}
+\DoxyCodeLine{00027\ }
+\DoxyCodeLine{00028\ \ \ \ \ \ \ \ \ [[nodiscard]]\ std::chrono::duration<double,\ std::nano>\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan_acac7137c7c68b1d20b6b84579dbf4727}{GetNanoseconds}}()\ \textcolor{keyword}{const};}
+\DoxyCodeLine{00029\ \ \ \ \ \ \ \ \ [[nodiscard]]\ std::chrono::duration<double,\ std::micro>\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan_af5ea613e6e5f1614ed91aba2e6a49ef4}{GetMicroseconds}}()\textcolor{keyword}{const};}
+\DoxyCodeLine{00030\ \ \ \ \ \ \ \ \ [[nodiscard]]\ std::chrono::duration<double,\ std::milli>\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan_a44004e409f4c8441a79f5f80d3f85767}{GetMilliseconds}}()\textcolor{keyword}{const};}
+\DoxyCodeLine{00031\ \ \ \ \ \ \ \ \ [[nodiscard]]\ std::chrono::duration<double>\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan_ad7a98f3458c69951bacca3b4e8fe5bb9}{GetSeconds}}()\ \textcolor{keyword}{const};}
+\DoxyCodeLine{00032\ \ \ \ \ \ \ \ \ [[nodiscard]]\ std::chrono::duration<double,\ std::ratio<60>>\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan_abd447a690028408602aa7845e43d7890}{GetMinutes}}()\textcolor{keyword}{const};}
+\DoxyCodeLine{00033\ \ \ \ \ \ \ \ \ [[nodiscard]]\ std::chrono::duration<double,\ std::ratio<3600>>\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan_a089c0b9331b764d81d591b6600331f93}{GetHours}}()\textcolor{keyword}{const};}
+\DoxyCodeLine{00034\ }
+\DoxyCodeLine{00035\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO::Astrodynamics::Time::TimeSpan}}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan_a266c5d4923be1b90e71f21edbdab56bb}{operator+}}(\textcolor{keyword}{const}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO::Astrodynamics::Time::TimeSpan}}\&\ ts)\ \textcolor{keyword}{const};}
+\DoxyCodeLine{00036\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO::Astrodynamics::Time::TimeSpan}}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan_a266c5d4923be1b90e71f21edbdab56bb}{operator+}}(\textcolor{keywordtype}{double}\ val)\ \textcolor{keyword}{const};}
+\DoxyCodeLine{00037\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO::Astrodynamics::Time::TimeSpan}}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan_af1ef1fd2665854a0cce543dc62716213}{operator-\/}}(\textcolor{keyword}{const}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO::Astrodynamics::Time::TimeSpan}}\&\ ts)\ \textcolor{keyword}{const};}
+\DoxyCodeLine{00038\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO::Astrodynamics::Time::TimeSpan}}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan_ab3cfb1f93c3b99c314fba0108429c8d7}{operator*}}(\textcolor{keywordtype}{double}\ ts)\ \textcolor{keyword}{const};}
+\DoxyCodeLine{00039\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO::Astrodynamics::Time::TimeSpan}}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan_ad92125ac8c99d309720b5792ebcf6706}{operator/}}(\textcolor{keywordtype}{double}\ ts)\ \textcolor{keyword}{const};}
+\DoxyCodeLine{00040\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{bool}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan_a598bbd4ca3e7702e0d96aae213ea5d2b}{operator==}}(\textcolor{keyword}{const}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO::Astrodynamics::Time::TimeSpan}}\&\ ts)\ \textcolor{keyword}{const};}
+\DoxyCodeLine{00041\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{bool}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan_a5096291668a810bb4e1f87cb9039fe05}{operator!=}}(\textcolor{keyword}{const}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO::Astrodynamics::Time::TimeSpan}}\&\ ts)\ \textcolor{keyword}{const};}
+\DoxyCodeLine{00042\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{bool}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan_a959d2e8ad104caf8f462896578e83f32}{operator<}}(\textcolor{keyword}{const}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO::Astrodynamics::Time::TimeSpan}}\&\ ts)\ \textcolor{keyword}{const};}
+\DoxyCodeLine{00043\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{bool}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan_abe46a8e4681661988286abcbc6cbac2f}{operator>}}(\textcolor{keyword}{const}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO::Astrodynamics::Time::TimeSpan}}\&\ ts)\ \textcolor{keyword}{const};}
+\DoxyCodeLine{00044\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{bool}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan_a671c3b45904c1e5c091766f4aca7784e}{operator>=}}(\textcolor{keyword}{const}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO::Astrodynamics::Time::TimeSpan}}\&\ ts)\ \textcolor{keyword}{const};}
+\DoxyCodeLine{00045\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{bool}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan_a2be53c69f5f82f2ab5ce003c70ad76ae}{operator<=}}(\textcolor{keyword}{const}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO::Astrodynamics::Time::TimeSpan}}\&\ ts)\ \textcolor{keyword}{const};}
+\DoxyCodeLine{00046\ \ \ \ \ \};}
+\DoxyCodeLine{00047\ \}}
+\DoxyCodeLine{00048\ \textcolor{preprocessor}{\#endif}}
 
 \end{DoxyCode}

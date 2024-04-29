@@ -1,0 +1,123 @@
+\doxysection{Templates.\+cpp}
+\hypertarget{Templates_8cpp_source}{}\label{Templates_8cpp_source}\index{IO.Astrodynamics/Templates/Templates.cpp@{IO.Astrodynamics/Templates/Templates.cpp}}
+\mbox{\hyperlink{Templates_8cpp}{Go to the documentation of this file.}}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{00001\ \textcolor{comment}{/*}}
+\DoxyCodeLine{00002\ \textcolor{comment}{\ Copyright\ (c)\ 2023.\ Sylvain\ Guillet\ (sylvain.guillet@tutamail.com)}}
+\DoxyCodeLine{00003\ \textcolor{comment}{\ */}}
+\DoxyCodeLine{00004\ }
+\DoxyCodeLine{00005\ \textcolor{comment}{//}}
+\DoxyCodeLine{00006\ \textcolor{comment}{//\ Created\ by\ usr\ on\ 20/01/23.}}
+\DoxyCodeLine{00007\ \textcolor{comment}{//}}
+\DoxyCodeLine{00008\ }
+\DoxyCodeLine{00009\ \textcolor{preprocessor}{\#include\ <string>}}
+\DoxyCodeLine{00010\ }
+\DoxyCodeLine{00011\ \textcolor{keyword}{static}\ \textcolor{keyword}{const}\ std::string\ ckTemplate\ =}
+\DoxyCodeLine{00012\ \ \ \ \ \ \ \ \ \textcolor{stringliteral}{"{}KPL/FK\(\backslash\)n"{}}}
+\DoxyCodeLine{00013\ \ \ \ \ \ \ \ \ \textcolor{stringliteral}{"{}\(\backslash\)\(\backslash\)begindata\(\backslash\)n"{}}}
+\DoxyCodeLine{00014\ \ \ \ \ \ \ \ \ \textcolor{stringliteral}{"{}FRAME\_\{framename\}\_SPACECRAFT\ \ \ =\ \{frameid\}\(\backslash\)n"{}}}
+\DoxyCodeLine{00015\ \ \ \ \ \ \ \ \ \textcolor{stringliteral}{"{}FRAME\_\{frameid\}\_NAME\ \ \ \ \ \ =\ '\{framename\}\_SPACECRAFT'\(\backslash\)n"{}}}
+\DoxyCodeLine{00016\ \ \ \ \ \ \ \ \ \textcolor{stringliteral}{"{}FRAME\_\{frameid\}\_CLASS\ \ \ \ \ =\ \ 3\(\backslash\)n"{}}}
+\DoxyCodeLine{00017\ \ \ \ \ \ \ \ \ \textcolor{stringliteral}{"{}FRAME\_\{frameid\}\_CLASS\_ID\ \ =\ \{frameid\}\(\backslash\)n"{}}}
+\DoxyCodeLine{00018\ \ \ \ \ \ \ \ \ \textcolor{stringliteral}{"{}FRAME\_\{frameid\}\_CENTER\ \ \ \ =\ \{spacecraftid\}\(\backslash\)n"{}}}
+\DoxyCodeLine{00019\ \ \ \ \ \ \ \ \ \textcolor{stringliteral}{"{}CK\_\{frameid\}\_SCLK\ \ \ \ \ \ \ \ \ =\ \{spacecraftid\}\(\backslash\)n"{}}}
+\DoxyCodeLine{00020\ \ \ \ \ \ \ \ \ \textcolor{stringliteral}{"{}CK\_\{frameid\}\_SPK\ \ \ \ \ \ \ \ \ \ =\ \{spacecraftid\}\(\backslash\)n"{}}}
+\DoxyCodeLine{00021\ \ \ \ \ \ \ \ \ \textcolor{stringliteral}{"{}OBJECT\_\{spacecraftid\}\_FRAME\ \ \ \ \ \ \ =\ '\{framename\}\_SPACECRAFT'\(\backslash\)n"{}}}
+\DoxyCodeLine{00022\ \ \ \ \ \ \ \ \ \textcolor{stringliteral}{"{}NAIF\_BODY\_NAME\ \ \ \ \ \ \ \ \ \ \ \ \ \ +=\ '\{framename\}\_SPACECRAFT'\(\backslash\)n"{}}}
+\DoxyCodeLine{00023\ \ \ \ \ \ \ \ \ \textcolor{stringliteral}{"{}NAIF\_BODY\_CODE\ \ \ \ \ \ \ \ \ \ \ \ \ \ +=\ \{frameid\}\(\backslash\)n"{}}}
+\DoxyCodeLine{00024\ \ \ \ \ \ \ \ \ \textcolor{stringliteral}{"{}NAIF\_BODY\_NAME\ \ \ \ \ \ \ \ \ \ \ \ \ \ +=\ '\{spacecraftname\}'\(\backslash\)n"{}}}
+\DoxyCodeLine{00025\ \ \ \ \ \ \ \ \ \textcolor{stringliteral}{"{}NAIF\_BODY\_CODE\ \ \ \ \ \ \ \ \ \ \ \ \ \ +=\ \{spacecraftid\}\(\backslash\)n"{}}}
+\DoxyCodeLine{00026\ \ \ \ \ \ \ \ \ \textcolor{stringliteral}{"{}\(\backslash\)\(\backslash\)begintext\(\backslash\)n"{}};}
+\DoxyCodeLine{00027\ }
+\DoxyCodeLine{00028\ \textcolor{keyword}{static}\ \textcolor{keyword}{const}\ std::string\ IKCircular\ =}
+\DoxyCodeLine{00029\ \ \ \ \ \ \ \ \ \textcolor{stringliteral}{"{}KPL/IK\(\backslash\)n"{}}}
+\DoxyCodeLine{00030\ \ \ \ \ \ \ \ \ \textcolor{stringliteral}{"{}\(\backslash\)\(\backslash\)begindata\(\backslash\)n"{}}}
+\DoxyCodeLine{00031\ \ \ \ \ \ \ \ \ \textcolor{stringliteral}{"{}INS\{instrumentid\}\_FOV\_CLASS\_SPEC\ \ \ \ \ \ \ =\ 'ANGLES'\(\backslash\)n"{}}}
+\DoxyCodeLine{00032\ \ \ \ \ \ \ \ \ \textcolor{stringliteral}{"{}INS\{instrumentid\}\_FOV\_SHAPE\ \ \ \ \ \ \ \ \ \ \ \ =\ 'CIRCLE'\(\backslash\)n"{}}}
+\DoxyCodeLine{00033\ \ \ \ \ \ \ \ \ \textcolor{stringliteral}{"{}INS\{instrumentid\}\_FOV\_FRAME\ \ \ \ \ \ \ \ \ \ \ \ =\ '\{framename\}'\(\backslash\)n"{}}}
+\DoxyCodeLine{00034\ \ \ \ \ \ \ \ \ \textcolor{stringliteral}{"{}INS\{instrumentid\}\_BORESIGHT\ \ \ \ \ \ \ \ \ \ \ \ =\ (\ \{bx\},\ \{by\},\ \{bz\}\ )\(\backslash\)n"{}}}
+\DoxyCodeLine{00035\ \ \ \ \ \ \ \ \ \textcolor{stringliteral}{"{}INS\{instrumentid\}\_FOV\_REF\_VECTOR\ \ \ \ \ \ \ =\ (\ \{rx\},\ \{ry\},\ \{rz\}\ )\(\backslash\)n"{}}}
+\DoxyCodeLine{00036\ \ \ \ \ \ \ \ \ \textcolor{stringliteral}{"{}INS\{instrumentid\}\_FOV\_REF\_ANGLE\ \ \ \ \ \ \ \ =\ \{angle\}\(\backslash\)n"{}}}
+\DoxyCodeLine{00037\ \ \ \ \ \ \ \ \ \textcolor{stringliteral}{"{}INS\{instrumentid\}\_FOV\_ANGLE\_UNITS\ \ \ \ \ \ =\ 'RADIANS'\(\backslash\)n"{}}}
+\DoxyCodeLine{00038\ \ \ \ \ \ \ \ \ \textcolor{stringliteral}{"{}\(\backslash\)\(\backslash\)begintext\(\backslash\)n"{}};}
+\DoxyCodeLine{00039\ }
+\DoxyCodeLine{00040\ \textcolor{keyword}{static}\ \textcolor{keyword}{const}\ std::string\ IKEliptical\ =}
+\DoxyCodeLine{00041\ \ \ \ \ \ \ \ \ \textcolor{stringliteral}{"{}KPL/IK\(\backslash\)n"{}}}
+\DoxyCodeLine{00042\ \ \ \ \ \ \ \ \ \textcolor{stringliteral}{"{}\(\backslash\)\(\backslash\)begindata\(\backslash\)n"{}}}
+\DoxyCodeLine{00043\ \ \ \ \ \ \ \ \ \textcolor{stringliteral}{"{}INS\{instrumentid\}\_FOV\_CLASS\_SPEC\ \ \ \ \ \ \ =\ 'ANGLES'\(\backslash\)n"{}}}
+\DoxyCodeLine{00044\ \ \ \ \ \ \ \ \ \textcolor{stringliteral}{"{}INS\{instrumentid\}\_FOV\_SHAPE\ \ \ \ \ \ \ \ \ \ \ \ =\ 'ELLIPSE'\(\backslash\)n"{}}}
+\DoxyCodeLine{00045\ \ \ \ \ \ \ \ \ \textcolor{stringliteral}{"{}INS\{instrumentid\}\_FOV\_FRAME\ \ \ \ \ \ \ \ \ \ \ \ =\ '\{framename\}'\(\backslash\)n"{}}}
+\DoxyCodeLine{00046\ \ \ \ \ \ \ \ \ \textcolor{stringliteral}{"{}INS\{instrumentid\}\_BORESIGHT\ \ \ \ \ \ \ \ \ \ \ \ =\ (\ \{bx\},\ \{by\},\ \{bz\}\ )\(\backslash\)n"{}}}
+\DoxyCodeLine{00047\ \ \ \ \ \ \ \ \ \textcolor{stringliteral}{"{}INS\{instrumentid\}\_FOV\_REF\_VECTOR\ \ \ \ \ \ \ =\ (\ \{rx\},\ \{ry\},\ \{rz\}\ )\(\backslash\)n"{}}}
+\DoxyCodeLine{00048\ \ \ \ \ \ \ \ \ \textcolor{stringliteral}{"{}INS\{instrumentid\}\_FOV\_REF\_ANGLE\ \ \ \ \ \ \ \ =\ \{angle\}\(\backslash\)n"{}}}
+\DoxyCodeLine{00049\ \ \ \ \ \ \ \ \ \textcolor{stringliteral}{"{}INS\{instrumentid\}\_FOV\_CROSS\_ANGLE\ \ \ \ \ \ =\ \{cangle\}\(\backslash\)n"{}}}
+\DoxyCodeLine{00050\ \ \ \ \ \ \ \ \ \textcolor{stringliteral}{"{}INS\{instrumentid\}\_FOV\_ANGLE\_UNITS\ \ \ \ \ \ =\ 'RADIANS'\(\backslash\)n"{}}}
+\DoxyCodeLine{00051\ \ \ \ \ \ \ \ \ \textcolor{stringliteral}{"{}\(\backslash\)\(\backslash\)begintext\(\backslash\)n"{}};}
+\DoxyCodeLine{00052\ }
+\DoxyCodeLine{00053\ \textcolor{keyword}{static}\ \textcolor{keyword}{const}\ std::string\ IKRectangular\ =}
+\DoxyCodeLine{00054\ \textcolor{stringliteral}{"{}KPL/IK\(\backslash\)n"{}}}
+\DoxyCodeLine{00055\ \textcolor{stringliteral}{"{}\(\backslash\)\(\backslash\)begindata\(\backslash\)n"{}}}
+\DoxyCodeLine{00056\ \textcolor{stringliteral}{"{}INS\{instrumentid\}\_FOV\_CLASS\_SPEC\ \ \ \ \ \ \ =\ 'ANGLES'\(\backslash\)n"{}}}
+\DoxyCodeLine{00057\ \textcolor{stringliteral}{"{}INS\{instrumentid\}\_FOV\_SHAPE\ \ \ \ \ \ \ \ \ \ \ \ =\ 'RECTANGLE'\(\backslash\)n"{}}}
+\DoxyCodeLine{00058\ \textcolor{stringliteral}{"{}INS\{instrumentid\}\_FOV\_FRAME\ \ \ \ \ \ \ \ \ \ \ \ =\ '\{framename\}'\(\backslash\)n"{}}}
+\DoxyCodeLine{00059\ \textcolor{stringliteral}{"{}INS\{instrumentid\}\_BORESIGHT\ \ \ \ \ \ \ \ \ \ \ \ =\ (\ \{bx\},\ \{by\},\ \{bz\}\ )\(\backslash\)n"{}}}
+\DoxyCodeLine{00060\ \textcolor{stringliteral}{"{}INS\{instrumentid\}\_FOV\_REF\_VECTOR\ \ \ \ \ \ \ =\ (\ \{rx\},\ \{ry\},\ \{rz\}\ )\(\backslash\)n"{}}}
+\DoxyCodeLine{00061\ \textcolor{stringliteral}{"{}INS\{instrumentid\}\_FOV\_REF\_ANGLE\ \ \ \ \ \ \ \ =\ \{angle\}\(\backslash\)n"{}}}
+\DoxyCodeLine{00062\ \textcolor{stringliteral}{"{}INS\{instrumentid\}\_FOV\_CROSS\_ANGLE\ \ \ \ \ \ =\ \{cangle\}\(\backslash\)n"{}}}
+\DoxyCodeLine{00063\ \textcolor{stringliteral}{"{}INS\{instrumentid\}\_FOV\_ANGLE\_UNITS\ \ \ \ \ \ =\ 'RADIANS'\(\backslash\)n"{}}}
+\DoxyCodeLine{00064\ \textcolor{stringliteral}{"{}\(\backslash\)\(\backslash\)begintext\(\backslash\)n"{}};}
+\DoxyCodeLine{00065\ }
+\DoxyCodeLine{00066\ \textcolor{comment}{//Generic\ clock\ used\ only\ in\ pre\ mission\ design}}
+\DoxyCodeLine{00067\ \textcolor{comment}{//It's\ generated\ as\ 1957-\/01-\/01/00:00:00.0\ TDB\ and\ is\ equal\ to\ -\/1.3569552000000E+09\ TDB\ past\ seconds}}
+\DoxyCodeLine{00068\ \textcolor{comment}{//Resolution\ :\ 15.259\ us}}
+\DoxyCodeLine{00069\ \textcolor{keyword}{static}\ \textcolor{keyword}{const}\ std::string\ Sclk\ =}
+\DoxyCodeLine{00070\ \textcolor{stringliteral}{"{}KPL/SCLK\(\backslash\)n"{}}}
+\DoxyCodeLine{00071\ \textcolor{stringliteral}{"{}\(\backslash\)\(\backslash\)begindata\(\backslash\)n"{}}}
+\DoxyCodeLine{00072\ \textcolor{stringliteral}{"{}SCLK\_KERNEL\_ID\ \ \ \ \ \ \ \ \ \ \ =\ (\ @1957-\/01-\/01/00:00:00.0\ )\(\backslash\)n"{}}}
+\DoxyCodeLine{00073\ \textcolor{stringliteral}{"{}SCLK\_DATA\_TYPE\_\{id\}\ \ \ \ \ \ \ \ =\ (\ 1\ )\(\backslash\)n"{}}}
+\DoxyCodeLine{00074\ \textcolor{stringliteral}{"{}SCLK01\_TIME\_SYSTEM\_\{id\}\ \ \ \ =\ (\ 1\ )\(\backslash\)n"{}}}
+\DoxyCodeLine{00075\ \textcolor{stringliteral}{"{}SCLK01\_N\_FIELDS\_\{id\}\ \ \ \ \ \ \ =\ (\ 2\ )\(\backslash\)n"{}}}
+\DoxyCodeLine{00076\ \textcolor{stringliteral}{"{}SCLK01\_MODULI\_\{id\}\ \ \ \ \ \ \ \ \ =\ (\ 4294967296\ \{resolution\}\ )\(\backslash\)n"{}}}
+\DoxyCodeLine{00077\ \textcolor{stringliteral}{"{}SCLK01\_OFFSETS\_\{id\}\ \ \ \ \ \ \ \ =\ (\ 0\ 0\ )\(\backslash\)n"{}}}
+\DoxyCodeLine{00078\ \textcolor{stringliteral}{"{}SCLK01\_OUTPUT\_DELIM\_\{id\}\ \ \ =\ (\ 2\ )\(\backslash\)n"{}}}
+\DoxyCodeLine{00079\ \textcolor{stringliteral}{"{}SCLK\_PARTITION\_START\_\{id\}\ \ =\ (\ 0.0000000000000E+00\ )\(\backslash\)n"{}}}
+\DoxyCodeLine{00080\ \textcolor{stringliteral}{"{}SCLK\_PARTITION\_END\_\{id\}\ \ \ \ =\ (\ 2.8147497671065E+14\ )\(\backslash\)n"{}}}
+\DoxyCodeLine{00081\ \textcolor{stringliteral}{"{}SCLK01\_COEFFICIENTS\_\{id\}\ \ \ =\ (\ 0.0000000000000E+00\ \ \ \ \ -\/1.3569552000000E+09\ \ \ \ \ 1.0000000000000E+00\ )\(\backslash\)n"{}}}
+\DoxyCodeLine{00082\ \textcolor{stringliteral}{"{}\(\backslash\)\(\backslash\)begintext\(\backslash\)n"{}};}
+\DoxyCodeLine{00083\ }
+\DoxyCodeLine{00084\ \textcolor{keyword}{static}\ \textcolor{keyword}{const}\ std::string\ Tk\ =}
+\DoxyCodeLine{00085\ \textcolor{stringliteral}{"{}KPL/FK\(\backslash\)n"{}}}
+\DoxyCodeLine{00086\ \textcolor{stringliteral}{"{}\(\backslash\)\(\backslash\)begindata\(\backslash\)n"{}}}
+\DoxyCodeLine{00087\ \textcolor{stringliteral}{"{}FRAME\_\{spacecraftname\}\_\{instrumentname\}\ \ \ \ \ \ \ \ \ \ \ \ \ =\ \{instrumentid\}\(\backslash\)n"{}}}
+\DoxyCodeLine{00088\ \textcolor{stringliteral}{"{}FRAME\_\{instrumentid\}\_NAME\ \ \ \ \ \ \ \ =\ '\{framename\}'\(\backslash\)n"{}}}
+\DoxyCodeLine{00089\ \textcolor{stringliteral}{"{}FRAME\_\{instrumentid\}\_CLASS\ \ \ \ \ \ \ =\ 4\(\backslash\)n"{}}}
+\DoxyCodeLine{00090\ \textcolor{stringliteral}{"{}FRAME\_\{instrumentid\}\_CLASS\_ID\ \ \ \ =\ \{instrumentid\}\(\backslash\)n"{}}}
+\DoxyCodeLine{00091\ \textcolor{stringliteral}{"{}FRAME\_\{instrumentid\}\_CENTER\ \ \ \ \ \ =\ \{spacecraftid\}\(\backslash\)n"{}}}
+\DoxyCodeLine{00092\ \textcolor{stringliteral}{"{}TKFRAME\_\{instrumentid\}\_SPEC\ \ \ \ \ \ =\ 'ANGLES'\(\backslash\)n"{}}}
+\DoxyCodeLine{00093\ \textcolor{stringliteral}{"{}TKFRAME\_\{instrumentid\}\_RELATIVE\ \ =\ '\{spacecraftname\}\_SPACECRAFT'\(\backslash\)n"{}}}
+\DoxyCodeLine{00094\ \textcolor{stringliteral}{"{}TKFRAME\_\{instrumentid\}\_ANGLES\ \ \ \ =\ (\ \{x\},\{y\},\{z\}\ )\(\backslash\)n"{}}}
+\DoxyCodeLine{00095\ \textcolor{stringliteral}{"{}TKFRAME\_\{instrumentid\}\_AXES\ \ \ \ \ \ =\ (\ 1,\ \ \ \ 2,\ \ \ 3\ \ \ )\(\backslash\)n"{}}}
+\DoxyCodeLine{00096\ \textcolor{stringliteral}{"{}TKFRAME\_\{instrumentid\}\_UNITS\ \ \ \ \ =\ 'RADIANS'\(\backslash\)n"{}}}
+\DoxyCodeLine{00097\ \textcolor{stringliteral}{"{}NAIF\_BODY\_NAME\ \ \ \ \ \ \ \ \ \ \ \ \ \ +=\ '\{spacecraftname\}\_\{instrumentname\}'\(\backslash\)n"{}}}
+\DoxyCodeLine{00098\ \textcolor{stringliteral}{"{}NAIF\_BODY\_CODE\ \ \ \ \ \ \ \ \ \ \ \ \ \ +=\ \{instrumentid\}\(\backslash\)n"{}}}
+\DoxyCodeLine{00099\ \textcolor{stringliteral}{"{}\(\backslash\)\(\backslash\)begintext\(\backslash\)n"{}};}
+\DoxyCodeLine{00100\ }
+\DoxyCodeLine{00101\ \textcolor{keyword}{static}\ \textcolor{keyword}{const}\ std::string\ Site=}
+\DoxyCodeLine{00102\ \textcolor{stringliteral}{"{}KPL/FK\(\backslash\)n"{}}}
+\DoxyCodeLine{00103\ \textcolor{stringliteral}{"{}\(\backslash\)\(\backslash\)begindata\(\backslash\)n"{}}}
+\DoxyCodeLine{00104\ \textcolor{stringliteral}{"{}NAIF\_BODY\_NAME\ \ \ \ \ \ \ \ \ \ \ \ \ \ +=\ '\{sitename\}'\(\backslash\)n"{}}}
+\DoxyCodeLine{00105\ \textcolor{stringliteral}{"{}NAIF\_BODY\_CODE\ \ \ \ \ \ \ \ \ \ \ \ \ \ +=\ \{siteid\}\(\backslash\)n"{}}}
+\DoxyCodeLine{00106\ \textcolor{stringliteral}{"{}FRAME\_\{sitenametopo\}\ \ \ \ \ \ \ \ =\ \{frameid\}\(\backslash\)n"{}}}
+\DoxyCodeLine{00107\ \textcolor{stringliteral}{"{}FRAME\_\{frameid\}\_NAME\ \ \ \ \ \ \ \ =\ '\{sitenametopo\}'\(\backslash\)n"{}}}
+\DoxyCodeLine{00108\ \textcolor{stringliteral}{"{}FRAME\_\{frameid\}\_CLASS\ \ \ \ \ \ \ =\ 4\(\backslash\)n"{}}}
+\DoxyCodeLine{00109\ \textcolor{stringliteral}{"{}FRAME\_\{frameid\}\_CLASS\_ID\ \ \ \ =\ \{frameid\}\(\backslash\)n"{}}}
+\DoxyCodeLine{00110\ \textcolor{stringliteral}{"{}FRAME\_\{frameid\}\_CENTER\ \ \ \ \ \ =\ \{siteid\}\(\backslash\)n"{}}}
+\DoxyCodeLine{00111\ \textcolor{stringliteral}{"{}OBJECT\_\{siteid\}\_FRAME\ \ \ \ \ \ \ =\ '\{sitenametopo\}'\(\backslash\)n"{}}}
+\DoxyCodeLine{00112\ \textcolor{stringliteral}{"{}TKFRAME\_\{frameid\}\_SPEC\ \ \ \ \ \ =\ 'ANGLES'\(\backslash\)n"{}}}
+\DoxyCodeLine{00113\ \textcolor{stringliteral}{"{}TKFRAME\_\{frameid\}\_RELATIVE\ \ =\ '\{fixedframe\}'\(\backslash\)n"{}}}
+\DoxyCodeLine{00114\ \textcolor{stringliteral}{"{}TKFRAME\_\{frameid\}\_ANGLES\ \ \ \ =\ (\{long\},\{colat\},3.141592653589793116)\(\backslash\)n"{}}}
+\DoxyCodeLine{00115\ \textcolor{stringliteral}{"{}TKFRAME\_\{frameid\}\_AXES\ \ \ \ \ \ =\ (3,2,3)\(\backslash\)n"{}}}
+\DoxyCodeLine{00116\ \textcolor{stringliteral}{"{}TKFRAME\_\{frameid\}\_UNITS\ \ \ \ \ =\ 'RADIANS'\(\backslash\)n"{}}}
+\DoxyCodeLine{00117\ \textcolor{stringliteral}{"{}\(\backslash\)\(\backslash\)begintext\(\backslash\)n"{}};}
+
+\end{DoxyCode}

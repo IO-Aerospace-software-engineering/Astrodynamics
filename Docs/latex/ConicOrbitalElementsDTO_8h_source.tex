@@ -1,36 +1,43 @@
-\hypertarget{ConicOrbitalElementsDTO_8h_source}{}\doxysection{Conic\+Orbital\+Elements\+DTO.\+h}
-\label{ConicOrbitalElementsDTO_8h_source}\index{IO.Astrodynamics/API/DTO/ConicOrbitalElementsDTO.h@{IO.Astrodynamics/API/DTO/ConicOrbitalElementsDTO.h}}
+\doxysection{Conic\+Orbital\+Elements\+DTO.\+h}
+\hypertarget{ConicOrbitalElementsDTO_8h_source}{}\label{ConicOrbitalElementsDTO_8h_source}\index{IO.Astrodynamics/API/DTO/ConicOrbitalElementsDTO.h@{IO.Astrodynamics/API/DTO/ConicOrbitalElementsDTO.h}}
 \mbox{\hyperlink{ConicOrbitalElementsDTO_8h}{Go to the documentation of this file.}}
 \begin{DoxyCode}{0}
-\DoxyCodeLine{1 \textcolor{comment}{/*}}
-\DoxyCodeLine{2 \textcolor{comment}{ Copyright (c) 2023. Sylvain Guillet (sylvain.guillet@tutamail.com)}}
-\DoxyCodeLine{3 \textcolor{comment}{ */}}
-\DoxyCodeLine{4 }
-\DoxyCodeLine{5 \textcolor{preprocessor}{\#ifndef IOSDK\_CONICORBITALELEMENTSDTO\_H}}
-\DoxyCodeLine{6 \textcolor{preprocessor}{\#define IOSDK\_CONICORBITALELEMENTSDTO\_H}}
-\DoxyCodeLine{7 }
-\DoxyCodeLine{8 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1API_1_1DTO}{IO::Astrodynamics::API::DTO}}}
-\DoxyCodeLine{9 \{}
-\DoxyCodeLine{10 }
-\DoxyCodeLine{11     \textcolor{keyword}{struct }\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ConicOrbitalElementsDTO}{ConicOrbitalElementsDTO}}}
-\DoxyCodeLine{12     \{}
-\DoxyCodeLine{13         \textcolor{keywordtype}{int} \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ConicOrbitalElementsDTO_abc621a20a7fa0bdea673975f5a857838}{centerOfMotionId}}\{\};}
-\DoxyCodeLine{14         \textcolor{keywordtype}{double} \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ConicOrbitalElementsDTO_a3b25ccc4bef36960d676607e00d49b12}{epoch}}\{\};}
-\DoxyCodeLine{15         \textcolor{keywordtype}{double} \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ConicOrbitalElementsDTO_aa95b5142fb4fc74731bf6e41a8076be8}{perifocalDistance}}\{\};}
-\DoxyCodeLine{16         \textcolor{keywordtype}{double} \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ConicOrbitalElementsDTO_a6d5222650ed268639fa13ab575b35402}{eccentricity}}\{\};}
-\DoxyCodeLine{17         \textcolor{keywordtype}{double} \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ConicOrbitalElementsDTO_aa66a2d634e3042f3ae3fc7eeab548ea4}{inclination}}\{\};}
-\DoxyCodeLine{18         \textcolor{keywordtype}{double} \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ConicOrbitalElementsDTO_ab7e0b44fabc8824fcb2fe9ff12f4a999}{ascendingNodeLongitude}}\{\};}
-\DoxyCodeLine{19         \textcolor{keywordtype}{double} \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ConicOrbitalElementsDTO_a510f5c631df1f97897c908666fb27d66}{periapsisArgument}}\{\};}
-\DoxyCodeLine{20         \textcolor{keywordtype}{double} \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ConicOrbitalElementsDTO_a0d15b05b9681604fe2565c71dd4c4d7c}{meanAnomaly}}\{\};}
-\DoxyCodeLine{21         \textcolor{keywordtype}{double} \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ConicOrbitalElementsDTO_ad022e342b662a3088520b0cc9dab4f5c}{trueAnomaly}}\{\};}
-\DoxyCodeLine{22         \textcolor{keywordtype}{double} \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ConicOrbitalElementsDTO_a75c84f7085e553937fc659d9f2e9e64e}{orbitalPeriod}}\{\};}
-\DoxyCodeLine{23         \textcolor{keywordtype}{double} \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ConicOrbitalElementsDTO_aed55e771d7143e0255e9a66849e30a27}{semiMajorAxis}}\{\};}
-\DoxyCodeLine{24         \textcolor{keyword}{const} \textcolor{keywordtype}{char}* \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ConicOrbitalElementsDTO_ad36ccfff7a3d16a9fd6b944a2fdefd25}{frame}}\{\};}
-\DoxyCodeLine{25 }
-\DoxyCodeLine{26     \};}
-\DoxyCodeLine{27 \}}
-\DoxyCodeLine{28 }
-\DoxyCodeLine{29 }
-\DoxyCodeLine{30 \textcolor{preprocessor}{\#endif }\textcolor{comment}{//IOSDK\_CONICORBITALELEMENTSDTO\_H}}
+\DoxyCodeLine{00001\ \textcolor{comment}{/*}}
+\DoxyCodeLine{00002\ \textcolor{comment}{\ Copyright\ (c)\ 2023-\/2024.\ Sylvain\ Guillet\ (sylvain.guillet@tutamail.com)}}
+\DoxyCodeLine{00003\ \textcolor{comment}{\ */}}
+\DoxyCodeLine{00004\ \textcolor{preprocessor}{\#include\ <cstring>}}
+\DoxyCodeLine{00005\ }
+\DoxyCodeLine{00006\ \textcolor{preprocessor}{\#ifndef\ IOSDK\_CONICORBITALELEMENTSDTO\_H}}
+\DoxyCodeLine{00007\ \textcolor{preprocessor}{\#define\ IOSDK\_CONICORBITALELEMENTSDTO\_H}}
+\DoxyCodeLine{00008\ }
+\DoxyCodeLine{00009\ \textcolor{keyword}{namespace\ }\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1API_1_1DTO}{IO::Astrodynamics::API::DTO}}}
+\DoxyCodeLine{00010\ \{}
+\DoxyCodeLine{00011\ }
+\DoxyCodeLine{00012\ \ \ \ \ \textcolor{keyword}{struct\ }\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ConicOrbitalElementsDTO}{ConicOrbitalElementsDTO}}}
+\DoxyCodeLine{00013\ \ \ \ \ \{}
+\DoxyCodeLine{00014\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{int}\ \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ConicOrbitalElementsDTO_abc621a20a7fa0bdea673975f5a857838}{centerOfMotionId}}\{\};}
+\DoxyCodeLine{00015\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{double}\ \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ConicOrbitalElementsDTO_a3b25ccc4bef36960d676607e00d49b12}{epoch}}\{\};}
+\DoxyCodeLine{00016\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{double}\ \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ConicOrbitalElementsDTO_aa95b5142fb4fc74731bf6e41a8076be8}{perifocalDistance}}\{\};}
+\DoxyCodeLine{00017\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{double}\ \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ConicOrbitalElementsDTO_a6d5222650ed268639fa13ab575b35402}{eccentricity}}\{\};}
+\DoxyCodeLine{00018\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{double}\ \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ConicOrbitalElementsDTO_aa66a2d634e3042f3ae3fc7eeab548ea4}{inclination}}\{\};}
+\DoxyCodeLine{00019\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{double}\ \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ConicOrbitalElementsDTO_ab7e0b44fabc8824fcb2fe9ff12f4a999}{ascendingNodeLongitude}}\{\};}
+\DoxyCodeLine{00020\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{double}\ \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ConicOrbitalElementsDTO_a510f5c631df1f97897c908666fb27d66}{periapsisArgument}}\{\};}
+\DoxyCodeLine{00021\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{double}\ \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ConicOrbitalElementsDTO_a0d15b05b9681604fe2565c71dd4c4d7c}{meanAnomaly}}\{\};}
+\DoxyCodeLine{00022\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{double}\ \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ConicOrbitalElementsDTO_ad022e342b662a3088520b0cc9dab4f5c}{trueAnomaly}}\{\};}
+\DoxyCodeLine{00023\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{double}\ \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ConicOrbitalElementsDTO_a75c84f7085e553937fc659d9f2e9e64e}{orbitalPeriod}}\{\};}
+\DoxyCodeLine{00024\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{double}\ \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ConicOrbitalElementsDTO_aed55e771d7143e0255e9a66849e30a27}{semiMajorAxis}}\{\};}
+\DoxyCodeLine{00025\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{char}\ \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ConicOrbitalElementsDTO_ab089655f1db841d5143513956ef26bab}{frame}}[32];}
+\DoxyCodeLine{00026\ }
+\DoxyCodeLine{00027\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ConicOrbitalElementsDTO_ae744ab8e5e9ad5c5d30c409611e5f0d2}{SetFrame}}(\textcolor{keyword}{const}\ \textcolor{keywordtype}{char}*\ inputFrame)}
+\DoxyCodeLine{00028\ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00029\ \ \ \ \ \ \ \ \ \ \ \ \ std::strcpy(\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ConicOrbitalElementsDTO_ab089655f1db841d5143513956ef26bab}{frame}},inputFrame);}
+\DoxyCodeLine{00030\ \ \ \ \ \ \ \ \ \ \ \ \ \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ConicOrbitalElementsDTO_ab089655f1db841d5143513956ef26bab}{frame}}[31]=\textcolor{charliteral}{'\(\backslash\)0'};}
+\DoxyCodeLine{00031\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00032\ }
+\DoxyCodeLine{00033\ \ \ \ \ \};}
+\DoxyCodeLine{00034\ \}}
+\DoxyCodeLine{00035\ }
+\DoxyCodeLine{00036\ }
+\DoxyCodeLine{00037\ \textcolor{preprocessor}{\#endif\ }\textcolor{comment}{//IOSDK\_CONICORBITALELEMENTSDTO\_H}}
 
 \end{DoxyCode}

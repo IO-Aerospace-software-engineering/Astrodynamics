@@ -1,5 +1,5 @@
-\hypertarget{classIO_1_1Astrodynamics_1_1Kernels_1_1OrientationKernel}{}\doxysection{IO\+::Astrodynamics\+::Kernels\+::Orientation\+Kernel Class Reference}
-\label{classIO_1_1Astrodynamics_1_1Kernels_1_1OrientationKernel}\index{IO::Astrodynamics::Kernels::OrientationKernel@{IO::Astrodynamics::Kernels::OrientationKernel}}
+\doxysection{IO\+::Astrodynamics\+::Kernels\+::Orientation\+Kernel Class Reference}
+\hypertarget{classIO_1_1Astrodynamics_1_1Kernels_1_1OrientationKernel}{}\label{classIO_1_1Astrodynamics_1_1Kernels_1_1OrientationKernel}\index{IO::Astrodynamics::Kernels::OrientationKernel@{IO::Astrodynamics::Kernels::OrientationKernel}}
 
 
 {\ttfamily \#include $<$Orientation\+Kernel.\+h$>$}
@@ -10,12 +10,12 @@ Inheritance diagram for IO\+::Astrodynamics\+::Kernels\+::Orientation\+Kernel\+:
 \includegraphics[height=2.000000cm]{classIO_1_1Astrodynamics_1_1Kernels_1_1OrientationKernel}
 \end{center}
 \end{figure}
-\doxysubsection*{Public Member Functions}
+\doxysubsubsection*{Public Member Functions}
 \begin{DoxyCompactItemize}
 \item 
 \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1OrientationKernel_a1c96a75956ec36afd07e5a6d2c8168ce}{Orientation\+Kernel}} (std\+::string file\+Path, int spacecraft\+Id, int spacecraft\+Frame\+Id)
-\begin{DoxyCompactList}\small\item\em Construct a new Orientation \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1Kernel}{Kernel}} object. \end{DoxyCompactList}\item 
-\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1OrientationKernel_a198b2ac2bd86abd364b4b9b65438ed8d}{$\sim$\+Orientation\+Kernel}} () override=default
+\begin{DoxyCompactList}\small\item\em Construct a new Orientation \doxylink{classIO_1_1Astrodynamics_1_1Kernels_1_1Kernel}{Kernel} object. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1OrientationKernel_a198b2ac2bd86abd364b4b9b65438ed8d}{\texorpdfstring{$\sim$}{\string~}\+Orientation\+Kernel}} () override=default
 \item 
 void \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1OrientationKernel_a56c7cf23c8cb891ff0700f326a57a8fa}{Write\+Orientations}} (const std\+::vector$<$ std\+::vector$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateOrientation}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+State\+Orientation}} $>$ $>$ \&orientations)
 \begin{DoxyCompactList}\small\item\em Write orientations data. \end{DoxyCompactList}\item 
@@ -23,16 +23,50 @@ void \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1OrientationKernel_a
 \begin{DoxyCompactList}\small\item\em Get the Coverage Window. \end{DoxyCompactList}\item 
 \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateOrientation}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+State\+Orientation}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1OrientationKernel_a511b00f0bcd643def9b0176e893d8fe3}{Read\+State\+Orientation}} (const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft}{Body\+::\+Spacecraft\+::\+Spacecraft}} \&spacecraft, const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} \&epoch, const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO\+::\+Astrodynamics\+::\+Time\+::\+Time\+Span}} \&tolerance, const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Frames_1_1Frames}{IO\+::\+Astrodynamics\+::\+Frames\+::\+Frames}} \&frame) const
 \begin{DoxyCompactList}\small\item\em Read state orientations. \end{DoxyCompactList}\end{DoxyCompactItemize}
-\doxysubsection*{Friends}
+\doxysubsection*{Public Member Functions inherited from \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1Kernel}{IO\+::\+Astrodynamics\+::\+Kernels\+::\+Kernel}}}
+\begin{DoxyCompactItemize}
+\item 
+virtual \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1Kernel_a1be349e4e41b301c1fb898af31c183f1}{\texorpdfstring{$\sim$}{\string~}\+Kernel}} ()
+\item 
+std\+::string \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1Kernel_a5dec128d0d52abffa39417591999213e}{Get\+Path}} () const
+\begin{DoxyCompactList}\small\item\em Get the Path. \end{DoxyCompactList}\item 
+bool \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1Kernel_ac5ffbcfd4a68ff7ffe264bdc6e034e7a}{Is\+Loaded}} () const
+\item 
+virtual void \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1Kernel_a294596d6cdfe3bbe2158f2ada3d72a8b}{Add\+Comment}} (const std\+::string \&comment) const
+\begin{DoxyCompactList}\small\item\em Add comment to kernel. \end{DoxyCompactList}\item 
+virtual std\+::string \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1Kernel_a68b4ebf5a95ada4df97921c7208a9360}{Read\+Comment}} () const
+\begin{DoxyCompactList}\small\item\em Read comment from kernel. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsubsection*{Friends}
 \begin{DoxyCompactItemize}
 \item 
 class \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1OrientationKernel_a7900ba5f1cf425823990193aa636c59a}{IO\+::\+Astrodynamics\+::\+Body\+::\+Spacecraft\+::\+Spacecraft}}
 \end{DoxyCompactItemize}
-\doxysubsection*{Additional Inherited Members}
+\doxysubsubsection*{Additional Inherited Members}
+\doxysubsection*{Static Public Member Functions inherited from \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1Kernel}{IO\+::\+Astrodynamics\+::\+Kernels\+::\+Kernel}}}
+\begin{DoxyCompactItemize}
+\item 
+static int \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1Kernel_ae2cd668a2821a2090a9a4d64188a4f52}{Define\+Polynomial\+Degree}} (int data\+Size, int maximum\+Degree)
+\begin{DoxyCompactList}\small\item\em Define the best Lagrange polynomial degree. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsection*{Protected Member Functions inherited from \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1Kernel}{IO\+::\+Astrodynamics\+::\+Kernels\+::\+Kernel}}}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1Kernel_a30b4959e2bc74fc3b008129d6c480561}{Kernel}} (std\+::string file\+Name)
+\end{DoxyCompactItemize}
+\doxysubsection*{Protected Attributes inherited from \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1Kernel}{IO\+::\+Astrodynamics\+::\+Kernels\+::\+Kernel}}}
+\begin{DoxyCompactItemize}
+\item 
+const std\+::string \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1Kernel_a396c4c9fa87f41f7d53c38ace6fd6d45}{m\+\_\+file\+Path}}
+\item 
+std\+::string \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1Kernel_a94db167e96e440658da1b17b5b6eb3c3}{m\+\_\+comments}}
+\item 
+bool \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1Kernel_ae32c21385c131141ba849cff335cf892}{m\+\_\+is\+Loaded}} \{false\}
+\item 
+bool \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1Kernel_a9e83885d5c03240102c0466a63d1f144}{m\+\_\+file\+Exists}} \{false\}
+\end{DoxyCompactItemize}
 
 
 \doxysubsection{Constructor \& Destructor Documentation}
-\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Kernels_1_1OrientationKernel_a1c96a75956ec36afd07e5a6d2c8168ce}\label{classIO_1_1Astrodynamics_1_1Kernels_1_1OrientationKernel_a1c96a75956ec36afd07e5a6d2c8168ce}} 
+\Hypertarget{classIO_1_1Astrodynamics_1_1Kernels_1_1OrientationKernel_a1c96a75956ec36afd07e5a6d2c8168ce}\label{classIO_1_1Astrodynamics_1_1Kernels_1_1OrientationKernel_a1c96a75956ec36afd07e5a6d2c8168ce} 
 \index{IO::Astrodynamics::Kernels::OrientationKernel@{IO::Astrodynamics::Kernels::OrientationKernel}!OrientationKernel@{OrientationKernel}}
 \index{OrientationKernel@{OrientationKernel}!IO::Astrodynamics::Kernels::OrientationKernel@{IO::Astrodynamics::Kernels::OrientationKernel}}
 \doxysubsubsection{\texorpdfstring{OrientationKernel()}{OrientationKernel()}}
@@ -40,23 +74,23 @@ class \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1OrientationKernel_
 
 
 
-Construct a new Orientation \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1Kernel}{Kernel}} object. 
+Construct a new Orientation \doxylink{classIO_1_1Astrodynamics_1_1Kernels_1_1Kernel}{Kernel} object. 
 
 
 \begin{DoxyParams}{Parameters}
 {\em spacecraft} & \\
 \hline
 \end{DoxyParams}
-\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Kernels_1_1OrientationKernel_a198b2ac2bd86abd364b4b9b65438ed8d}\label{classIO_1_1Astrodynamics_1_1Kernels_1_1OrientationKernel_a198b2ac2bd86abd364b4b9b65438ed8d}} 
-\index{IO::Astrodynamics::Kernels::OrientationKernel@{IO::Astrodynamics::Kernels::OrientationKernel}!````~OrientationKernel@{$\sim$OrientationKernel}}
-\index{````~OrientationKernel@{$\sim$OrientationKernel}!IO::Astrodynamics::Kernels::OrientationKernel@{IO::Astrodynamics::Kernels::OrientationKernel}}
-\doxysubsubsection{\texorpdfstring{$\sim$OrientationKernel()}{~OrientationKernel()}}
-{\footnotesize\ttfamily IO\+::\+Astrodynamics\+::\+Kernels\+::\+Orientation\+Kernel\+::$\sim$\+Orientation\+Kernel (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [default]}}
+\Hypertarget{classIO_1_1Astrodynamics_1_1Kernels_1_1OrientationKernel_a198b2ac2bd86abd364b4b9b65438ed8d}\label{classIO_1_1Astrodynamics_1_1Kernels_1_1OrientationKernel_a198b2ac2bd86abd364b4b9b65438ed8d} 
+\index{IO::Astrodynamics::Kernels::OrientationKernel@{IO::Astrodynamics::Kernels::OrientationKernel}!````~OrientationKernel@{\texorpdfstring{$\sim$}{\string~}OrientationKernel}}
+\index{````~OrientationKernel@{\texorpdfstring{$\sim$}{\string~}OrientationKernel}!IO::Astrodynamics::Kernels::OrientationKernel@{IO::Astrodynamics::Kernels::OrientationKernel}}
+\doxysubsubsection{\texorpdfstring{\texorpdfstring{$\sim$}{\string~}OrientationKernel()}{\string~OrientationKernel()}}
+{\footnotesize\ttfamily IO\+::\+Astrodynamics\+::\+Kernels\+::\+Orientation\+Kernel\+::\texorpdfstring{$\sim$}{\string~}\+Orientation\+Kernel (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [default]}}
 
 
 
 \doxysubsection{Member Function Documentation}
-\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Kernels_1_1OrientationKernel_a4ff5bea010061c7a8dfb38329314648c}\label{classIO_1_1Astrodynamics_1_1Kernels_1_1OrientationKernel_a4ff5bea010061c7a8dfb38329314648c}} 
+\Hypertarget{classIO_1_1Astrodynamics_1_1Kernels_1_1OrientationKernel_a4ff5bea010061c7a8dfb38329314648c}\label{classIO_1_1Astrodynamics_1_1Kernels_1_1OrientationKernel_a4ff5bea010061c7a8dfb38329314648c} 
 \index{IO::Astrodynamics::Kernels::OrientationKernel@{IO::Astrodynamics::Kernels::OrientationKernel}!GetCoverageWindow@{GetCoverageWindow}}
 \index{GetCoverageWindow@{GetCoverageWindow}!IO::Astrodynamics::Kernels::OrientationKernel@{IO::Astrodynamics::Kernels::OrientationKernel}}
 \doxysubsubsection{\texorpdfstring{GetCoverageWindow()}{GetCoverageWindow()}}
@@ -73,7 +107,7 @@ IO\+::\+Astrodynamics\+::\+Time\+::\+Window$<$\+IO\+::\+Astrodynamics\+::\+Time\
 
 Implements \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1Kernel_a37d56a388d8225557f5c9dbb3414fbba}{IO\+::\+Astrodynamics\+::\+Kernels\+::\+Kernel}}.
 
-\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Kernels_1_1OrientationKernel_a511b00f0bcd643def9b0176e893d8fe3}\label{classIO_1_1Astrodynamics_1_1Kernels_1_1OrientationKernel_a511b00f0bcd643def9b0176e893d8fe3}} 
+\Hypertarget{classIO_1_1Astrodynamics_1_1Kernels_1_1OrientationKernel_a511b00f0bcd643def9b0176e893d8fe3}\label{classIO_1_1Astrodynamics_1_1Kernels_1_1OrientationKernel_a511b00f0bcd643def9b0176e893d8fe3} 
 \index{IO::Astrodynamics::Kernels::OrientationKernel@{IO::Astrodynamics::Kernels::OrientationKernel}!ReadStateOrientation@{ReadStateOrientation}}
 \index{ReadStateOrientation@{ReadStateOrientation}!IO::Astrodynamics::Kernels::OrientationKernel@{IO::Astrodynamics::Kernels::OrientationKernel}}
 \doxysubsubsection{\texorpdfstring{ReadStateOrientation()}{ReadStateOrientation()}}
@@ -93,9 +127,9 @@ Read state orientations.
 \hline
 \end{DoxyParams}
 \begin{DoxyReturn}{Returns}
-\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateOrientation}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+State\+Orientation}} 
+\doxylink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateOrientation}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+State\+Orientation} 
 \end{DoxyReturn}
-\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Kernels_1_1OrientationKernel_a56c7cf23c8cb891ff0700f326a57a8fa}\label{classIO_1_1Astrodynamics_1_1Kernels_1_1OrientationKernel_a56c7cf23c8cb891ff0700f326a57a8fa}} 
+\Hypertarget{classIO_1_1Astrodynamics_1_1Kernels_1_1OrientationKernel_a56c7cf23c8cb891ff0700f326a57a8fa}\label{classIO_1_1Astrodynamics_1_1Kernels_1_1OrientationKernel_a56c7cf23c8cb891ff0700f326a57a8fa} 
 \index{IO::Astrodynamics::Kernels::OrientationKernel@{IO::Astrodynamics::Kernels::OrientationKernel}!WriteOrientations@{WriteOrientations}}
 \index{WriteOrientations@{WriteOrientations}!IO::Astrodynamics::Kernels::OrientationKernel@{IO::Astrodynamics::Kernels::OrientationKernel}}
 \doxysubsubsection{\texorpdfstring{WriteOrientations()}{WriteOrientations()}}
@@ -112,8 +146,8 @@ Write orientations data.
 \end{DoxyParams}
 
 
-\doxysubsection{Friends And Related Function Documentation}
-\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Kernels_1_1OrientationKernel_a7900ba5f1cf425823990193aa636c59a}\label{classIO_1_1Astrodynamics_1_1Kernels_1_1OrientationKernel_a7900ba5f1cf425823990193aa636c59a}} 
+\doxysubsection{Friends And Related Symbol Documentation}
+\Hypertarget{classIO_1_1Astrodynamics_1_1Kernels_1_1OrientationKernel_a7900ba5f1cf425823990193aa636c59a}\label{classIO_1_1Astrodynamics_1_1Kernels_1_1OrientationKernel_a7900ba5f1cf425823990193aa636c59a} 
 \index{IO::Astrodynamics::Kernels::OrientationKernel@{IO::Astrodynamics::Kernels::OrientationKernel}!IO::Astrodynamics::Body::Spacecraft::Spacecraft@{IO::Astrodynamics::Body::Spacecraft::Spacecraft}}
 \index{IO::Astrodynamics::Body::Spacecraft::Spacecraft@{IO::Astrodynamics::Body::Spacecraft::Spacecraft}!IO::Astrodynamics::Kernels::OrientationKernel@{IO::Astrodynamics::Kernels::OrientationKernel}}
 \doxysubsubsection{\texorpdfstring{IO::Astrodynamics::Body::Spacecraft::Spacecraft}{IO::Astrodynamics::Body::Spacecraft::Spacecraft}}

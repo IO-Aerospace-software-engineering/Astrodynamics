@@ -5,7 +5,6 @@ var structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1TLEElementsDTO =
     [ "DragTerm", "structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1TLEElementsDTO.html#a8738814630a991c5f1308308151313b9", null ],
     [ "E", "structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1TLEElementsDTO.html#a1e7db29771b8c0ee18504ed14130b686", null ],
     [ "Epoch", "structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1TLEElementsDTO.html#a528194ad5d733c6a5086d1247be2ac13", null ],
-    [ "Error", "structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1TLEElementsDTO.html#ad5f0a11c317e9ee8fc7f0bf3e6a385e7", null ],
     [ "I", "structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1TLEElementsDTO.html#a53e02d94c2cf0d75f2562bbbabafd1d2", null ],
     [ "M", "structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1TLEElementsDTO.html#a144fdfa4c6a898ac053a0d9481486e48", null ],
     [ "O", "structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1TLEElementsDTO.html#aea90853bf71552adf75ddbd7a24e3f2a", null ],

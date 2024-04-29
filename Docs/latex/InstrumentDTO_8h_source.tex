@@ -1,38 +1,38 @@
-\hypertarget{InstrumentDTO_8h_source}{}\doxysection{Instrument\+DTO.\+h}
-\label{InstrumentDTO_8h_source}\index{IO.Astrodynamics/API/DTO/InstrumentDTO.h@{IO.Astrodynamics/API/DTO/InstrumentDTO.h}}
+\doxysection{Instrument\+DTO.\+h}
+\hypertarget{InstrumentDTO_8h_source}{}\label{InstrumentDTO_8h_source}\index{IO.Astrodynamics/API/DTO/InstrumentDTO.h@{IO.Astrodynamics/API/DTO/InstrumentDTO.h}}
 \mbox{\hyperlink{InstrumentDTO_8h}{Go to the documentation of this file.}}
 \begin{DoxyCode}{0}
-\DoxyCodeLine{1 \textcolor{comment}{/*}}
-\DoxyCodeLine{2 \textcolor{comment}{ Copyright (c) 2023. Sylvain Guillet (sylvain.guillet@tutamail.com)}}
-\DoxyCodeLine{3 \textcolor{comment}{ */}}
-\DoxyCodeLine{4 }
-\DoxyCodeLine{5 \textcolor{preprocessor}{\#ifndef IOSDK\_INSTRUMENTDTO\_H}}
-\DoxyCodeLine{6 \textcolor{preprocessor}{\#define IOSDK\_INSTRUMENTDTO\_H}}
-\DoxyCodeLine{7 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{Vector3DDTO_8h}{Vector3DDTO.h}}>}}
-\DoxyCodeLine{8 }
-\DoxyCodeLine{9 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1API_1_1DTO}{IO::Astrodynamics::API::DTO}}}
-\DoxyCodeLine{10 \{}
-\DoxyCodeLine{11     \textcolor{keyword}{struct }\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1InstrumentDTO}{InstrumentDTO}}}
-\DoxyCodeLine{12     \{}
-\DoxyCodeLine{13         \textcolor{keywordtype}{int} \textcolor{keywordtype}{id}\{\};}
-\DoxyCodeLine{14         \textcolor{keyword}{const} \textcolor{keywordtype}{char}* \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1InstrumentDTO_a0fa772f9608384c00d1cc316fe5e4064}{name}}\{\};}
-\DoxyCodeLine{15         \textcolor{keyword}{const} \textcolor{keywordtype}{char}* \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1InstrumentDTO_a26bbec6cf8e28f8d0b3dc51b2a6a6c77}{shape}}\{\};}
-\DoxyCodeLine{16         \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1Vector3DDTO}{Vector3DDTO}} \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1InstrumentDTO_adce6c4f083e7ff4a8bca53a02bb3bd9b}{orientation}}\{\};}
-\DoxyCodeLine{17         \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1Vector3DDTO}{Vector3DDTO}} \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1InstrumentDTO_a31d71b8a9cafd28ad8ecdab37f33b3a6}{boresight}}\{\};}
-\DoxyCodeLine{18         \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1Vector3DDTO}{Vector3DDTO}} \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1InstrumentDTO_a3b5ad61cf8762a233d41ca7aef1bb5ea}{fovRefVector}}\{\};}
-\DoxyCodeLine{19 }
-\DoxyCodeLine{20         \textcolor{keyword}{friend} std::ostream \&\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1InstrumentDTO_a60fd0703044a40b561fb3b8a61ee5c0f}{operator<<}}(std::ostream \&os, \textcolor{keyword}{const} \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1InstrumentDTO}{InstrumentDTO}} \&dto)}
-\DoxyCodeLine{21         \{}
-\DoxyCodeLine{22             os << \textcolor{stringliteral}{"{}id: "{}} << dto.\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1InstrumentDTO_a7a532a819d99a314b22d274c66e8c342}{id}} << \textcolor{stringliteral}{"{} name: "{}} << dto.\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1InstrumentDTO_a0fa772f9608384c00d1cc316fe5e4064}{name}} << \textcolor{stringliteral}{"{} shape: "{}} << dto.\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1InstrumentDTO_a26bbec6cf8e28f8d0b3dc51b2a6a6c77}{shape}} << \textcolor{stringliteral}{"{} orientation: "{}} << dto.\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1InstrumentDTO_adce6c4f083e7ff4a8bca53a02bb3bd9b}{orientation}} << \textcolor{stringliteral}{"{} boresight: "{}} << dto.\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1InstrumentDTO_a31d71b8a9cafd28ad8ecdab37f33b3a6}{boresight}}}
-\DoxyCodeLine{23                << \textcolor{stringliteral}{"{} fovRefVector: "{}} << dto.\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1InstrumentDTO_a3b5ad61cf8762a233d41ca7aef1bb5ea}{fovRefVector}} << \textcolor{stringliteral}{"{} fieldOfView: "{}} << dto.\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1InstrumentDTO_a6923b70e87a4ea9024f62c7c5431a056}{fieldOfView}} << \textcolor{stringliteral}{"{} crossAngle: "{}} << dto.\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1InstrumentDTO_aa58564448736cbac1532f5f7376a05d3}{crossAngle}};}
-\DoxyCodeLine{24             \textcolor{keywordflow}{return} os;}
-\DoxyCodeLine{25         \}}
-\DoxyCodeLine{26 }
-\DoxyCodeLine{27         \textcolor{keywordtype}{double} \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1InstrumentDTO_a6923b70e87a4ea9024f62c7c5431a056}{fieldOfView}}\{\};}
-\DoxyCodeLine{28         \textcolor{keywordtype}{double} \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1InstrumentDTO_aa58564448736cbac1532f5f7376a05d3}{crossAngle}}\{\};}
-\DoxyCodeLine{29     \};}
-\DoxyCodeLine{30 }
-\DoxyCodeLine{31 \}}
-\DoxyCodeLine{32 \textcolor{preprocessor}{\#endif }\textcolor{comment}{//IOSDK\_INSTRUMENTDTO\_H}}
+\DoxyCodeLine{00001\ \textcolor{comment}{/*}}
+\DoxyCodeLine{00002\ \textcolor{comment}{\ Copyright\ (c)\ 2023.\ Sylvain\ Guillet\ (sylvain.guillet@tutamail.com)}}
+\DoxyCodeLine{00003\ \textcolor{comment}{\ */}}
+\DoxyCodeLine{00004\ }
+\DoxyCodeLine{00005\ \textcolor{preprocessor}{\#ifndef\ IOSDK\_INSTRUMENTDTO\_H}}
+\DoxyCodeLine{00006\ \textcolor{preprocessor}{\#define\ IOSDK\_INSTRUMENTDTO\_H}}
+\DoxyCodeLine{00007\ \textcolor{preprocessor}{\#include\ <\mbox{\hyperlink{Vector3DDTO_8h}{Vector3DDTO.h}}>}}
+\DoxyCodeLine{00008\ }
+\DoxyCodeLine{00009\ \textcolor{keyword}{namespace\ }\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1API_1_1DTO}{IO::Astrodynamics::API::DTO}}}
+\DoxyCodeLine{00010\ \{}
+\DoxyCodeLine{00011\ \ \ \ \ \textcolor{keyword}{struct\ }\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1InstrumentDTO}{InstrumentDTO}}}
+\DoxyCodeLine{00012\ \ \ \ \ \{}
+\DoxyCodeLine{00013\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{int}\ \textcolor{keywordtype}{id}\{\};}
+\DoxyCodeLine{00014\ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ \textcolor{keywordtype}{char}*\ \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1InstrumentDTO_a0fa772f9608384c00d1cc316fe5e4064}{name}}\{\};}
+\DoxyCodeLine{00015\ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ \textcolor{keywordtype}{char}*\ \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1InstrumentDTO_a26bbec6cf8e28f8d0b3dc51b2a6a6c77}{shape}}\{\};}
+\DoxyCodeLine{00016\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1Vector3DDTO}{Vector3DDTO}}\ \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1InstrumentDTO_adce6c4f083e7ff4a8bca53a02bb3bd9b}{orientation}}\{\};}
+\DoxyCodeLine{00017\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1Vector3DDTO}{Vector3DDTO}}\ \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1InstrumentDTO_a31d71b8a9cafd28ad8ecdab37f33b3a6}{boresight}}\{\};}
+\DoxyCodeLine{00018\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1Vector3DDTO}{Vector3DDTO}}\ \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1InstrumentDTO_a3b5ad61cf8762a233d41ca7aef1bb5ea}{fovRefVector}}\{\};}
+\DoxyCodeLine{00019\ }
+\DoxyCodeLine{00020\ \ \ \ \ \ \ \ \ \textcolor{keyword}{friend}\ std::ostream\ \&\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1InstrumentDTO_a60fd0703044a40b561fb3b8a61ee5c0f}{operator<<}}(std::ostream\ \&os,\ \textcolor{keyword}{const}\ \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1InstrumentDTO}{InstrumentDTO}}\ \&dto)}
+\DoxyCodeLine{00021\ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00022\ \ \ \ \ \ \ \ \ \ \ \ \ os\ <<\ \textcolor{stringliteral}{"{}id:\ "{}}\ <<\ dto.\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1InstrumentDTO_a7a532a819d99a314b22d274c66e8c342}{id}}\ <<\ \textcolor{stringliteral}{"{}\ name:\ "{}}\ <<\ dto.\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1InstrumentDTO_a0fa772f9608384c00d1cc316fe5e4064}{name}}\ <<\ \textcolor{stringliteral}{"{}\ shape:\ "{}}\ <<\ dto.\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1InstrumentDTO_a26bbec6cf8e28f8d0b3dc51b2a6a6c77}{shape}}\ <<\ \textcolor{stringliteral}{"{}\ orientation:\ "{}}\ <<\ dto.\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1InstrumentDTO_adce6c4f083e7ff4a8bca53a02bb3bd9b}{orientation}}\ <<\ \textcolor{stringliteral}{"{}\ boresight:\ "{}}\ <<\ dto.\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1InstrumentDTO_a31d71b8a9cafd28ad8ecdab37f33b3a6}{boresight}}}
+\DoxyCodeLine{00023\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ <<\ \textcolor{stringliteral}{"{}\ fovRefVector:\ "{}}\ <<\ dto.\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1InstrumentDTO_a3b5ad61cf8762a233d41ca7aef1bb5ea}{fovRefVector}}\ <<\ \textcolor{stringliteral}{"{}\ fieldOfView:\ "{}}\ <<\ dto.\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1InstrumentDTO_a6923b70e87a4ea9024f62c7c5431a056}{fieldOfView}}\ <<\ \textcolor{stringliteral}{"{}\ crossAngle:\ "{}}\ <<\ dto.\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1InstrumentDTO_aa58564448736cbac1532f5f7376a05d3}{crossAngle}};}
+\DoxyCodeLine{00024\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ os;}
+\DoxyCodeLine{00025\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00026\ }
+\DoxyCodeLine{00027\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{double}\ \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1InstrumentDTO_a6923b70e87a4ea9024f62c7c5431a056}{fieldOfView}}\{\};}
+\DoxyCodeLine{00028\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{double}\ \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1InstrumentDTO_aa58564448736cbac1532f5f7376a05d3}{crossAngle}}\{\};}
+\DoxyCodeLine{00029\ \ \ \ \ \};}
+\DoxyCodeLine{00030\ }
+\DoxyCodeLine{00031\ \}}
+\DoxyCodeLine{00032\ \textcolor{preprocessor}{\#endif\ }\textcolor{comment}{//IOSDK\_INSTRUMENTDTO\_H}}
 
 \end{DoxyCode}

@@ -1,43 +1,43 @@
-\hypertarget{Kernel_8h_source}{}\doxysection{Kernel.\+h}
-\label{Kernel_8h_source}\index{IO.Astrodynamics/Kernels/Kernel.h@{IO.Astrodynamics/Kernels/Kernel.h}}
+\doxysection{Kernel.\+h}
+\hypertarget{Kernel_8h_source}{}\label{Kernel_8h_source}\index{IO.Astrodynamics/Kernels/Kernel.h@{IO.Astrodynamics/Kernels/Kernel.h}}
 \mbox{\hyperlink{Kernel_8h}{Go to the documentation of this file.}}
 \begin{DoxyCode}{0}
-\DoxyCodeLine{1 \textcolor{comment}{/*}}
-\DoxyCodeLine{2 \textcolor{comment}{ Copyright (c) 2021-\/2023. Sylvain Guillet (sylvain.guillet@tutamail.com)}}
-\DoxyCodeLine{3 \textcolor{comment}{ */}}
-\DoxyCodeLine{4 \textcolor{preprocessor}{\#ifndef KERNEL\_H}}
-\DoxyCodeLine{5 \textcolor{preprocessor}{\#define KERNEL\_H}}
-\DoxyCodeLine{6 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{Window_8h}{Window.h}}>}}
-\DoxyCodeLine{7 }
-\DoxyCodeLine{8 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Kernels}{IO::Astrodynamics::Kernels}}}
-\DoxyCodeLine{9 \{}
-\DoxyCodeLine{10     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1Kernel}{Kernel}}}
-\DoxyCodeLine{11     \{}
-\DoxyCodeLine{12     \textcolor{keyword}{protected}:}
-\DoxyCodeLine{13         \textcolor{keyword}{const} std::string \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1Kernel_a396c4c9fa87f41f7d53c38ace6fd6d45}{m\_filePath}};}
-\DoxyCodeLine{14         std::string \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1Kernel_a94db167e96e440658da1b17b5b6eb3c3}{m\_comments}};}
-\DoxyCodeLine{15         \textcolor{keywordtype}{bool} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1Kernel_ae32c21385c131141ba849cff335cf892}{m\_isLoaded}}\{\textcolor{keyword}{false}\};}
-\DoxyCodeLine{16         \textcolor{keywordtype}{bool} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1Kernel_a9e83885d5c03240102c0466a63d1f144}{m\_fileExists}}\{\textcolor{keyword}{false}\};}
-\DoxyCodeLine{17         \textcolor{keyword}{explicit} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1Kernel_a30b4959e2bc74fc3b008129d6c480561}{Kernel}}(std::string fileName);}
-\DoxyCodeLine{18 }
-\DoxyCodeLine{19 }
-\DoxyCodeLine{20     \textcolor{keyword}{public}:}
-\DoxyCodeLine{21         \textcolor{keyword}{virtual} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1Kernel_a1be349e4e41b301c1fb898af31c183f1}{\string~Kernel}}();}
-\DoxyCodeLine{22 }
-\DoxyCodeLine{28         [[nodiscard]] std::string \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1Kernel_a5dec128d0d52abffa39417591999213e}{GetPath}}() \textcolor{keyword}{const};}
-\DoxyCodeLine{29 }
-\DoxyCodeLine{36         [[nodiscard]] \textcolor{keywordtype}{bool} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1Kernel_ac5ffbcfd4a68ff7ffe264bdc6e034e7a}{IsLoaded}}() \textcolor{keyword}{const};}
-\DoxyCodeLine{37 }
-\DoxyCodeLine{43         [[nodiscard]] \textcolor{keyword}{virtual} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB>}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1Kernel_a37d56a388d8225557f5c9dbb3414fbba}{GetCoverageWindow}}() \textcolor{keyword}{const} = 0;}
-\DoxyCodeLine{44 }
-\DoxyCodeLine{50         \textcolor{keyword}{virtual} \textcolor{keywordtype}{void} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1Kernel_a294596d6cdfe3bbe2158f2ada3d72a8b}{AddComment}}(\textcolor{keyword}{const} std::string \&comment) \textcolor{keyword}{const};}
-\DoxyCodeLine{51 }
-\DoxyCodeLine{57         [[nodiscard]] \textcolor{keyword}{virtual} std::string \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1Kernel_a68b4ebf5a95ada4df97921c7208a9360}{ReadComment}}() \textcolor{keyword}{const};}
-\DoxyCodeLine{58 }
-\DoxyCodeLine{65         \textcolor{keyword}{static} \textcolor{keywordtype}{int} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1Kernel_ae2cd668a2821a2090a9a4d64188a4f52}{DefinePolynomialDegree}}(\textcolor{keywordtype}{int} dataSize, \textcolor{keywordtype}{int} maximumDegree) ;}
-\DoxyCodeLine{66     \};}
-\DoxyCodeLine{67 }
-\DoxyCodeLine{68 \}}
-\DoxyCodeLine{69 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00001\ \textcolor{comment}{/*}}
+\DoxyCodeLine{00002\ \textcolor{comment}{\ Copyright\ (c)\ 2021-\/2023.\ Sylvain\ Guillet\ (sylvain.guillet@tutamail.com)}}
+\DoxyCodeLine{00003\ \textcolor{comment}{\ */}}
+\DoxyCodeLine{00004\ \textcolor{preprocessor}{\#ifndef\ KERNEL\_H}}
+\DoxyCodeLine{00005\ \textcolor{preprocessor}{\#define\ KERNEL\_H}}
+\DoxyCodeLine{00006\ \textcolor{preprocessor}{\#include\ <\mbox{\hyperlink{Window_8h}{Window.h}}>}}
+\DoxyCodeLine{00007\ }
+\DoxyCodeLine{00008\ \textcolor{keyword}{namespace\ }\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Kernels}{IO::Astrodynamics::Kernels}}}
+\DoxyCodeLine{00009\ \{}
+\DoxyCodeLine{00010\ \ \ \ \ \textcolor{keyword}{class\ }\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1Kernel}{Kernel}}}
+\DoxyCodeLine{00011\ \ \ \ \ \{}
+\DoxyCodeLine{00012\ \ \ \ \ \textcolor{keyword}{protected}:}
+\DoxyCodeLine{00013\ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ std::string\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1Kernel_a396c4c9fa87f41f7d53c38ace6fd6d45}{m\_filePath}};}
+\DoxyCodeLine{00014\ \ \ \ \ \ \ \ \ std::string\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1Kernel_a94db167e96e440658da1b17b5b6eb3c3}{m\_comments}};}
+\DoxyCodeLine{00015\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{bool}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1Kernel_ae32c21385c131141ba849cff335cf892}{m\_isLoaded}}\{\textcolor{keyword}{false}\};}
+\DoxyCodeLine{00016\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{bool}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1Kernel_a9e83885d5c03240102c0466a63d1f144}{m\_fileExists}}\{\textcolor{keyword}{false}\};}
+\DoxyCodeLine{00017\ \ \ \ \ \ \ \ \ \textcolor{keyword}{explicit}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1Kernel}{Kernel}}(std::string\ fileName);}
+\DoxyCodeLine{00018\ }
+\DoxyCodeLine{00019\ }
+\DoxyCodeLine{00020\ \ \ \ \ \textcolor{keyword}{public}:}
+\DoxyCodeLine{00021\ \ \ \ \ \ \ \ \ \textcolor{keyword}{virtual}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1Kernel_a1be349e4e41b301c1fb898af31c183f1}{\string~Kernel}}();}
+\DoxyCodeLine{00022\ }
+\DoxyCodeLine{00028\ \ \ \ \ \ \ \ \ [[nodiscard]]\ std::string\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1Kernel_a5dec128d0d52abffa39417591999213e}{GetPath}}()\ \textcolor{keyword}{const};}
+\DoxyCodeLine{00029\ }
+\DoxyCodeLine{00036\ \ \ \ \ \ \ \ \ [[nodiscard]]\ \textcolor{keywordtype}{bool}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1Kernel_ac5ffbcfd4a68ff7ffe264bdc6e034e7a}{IsLoaded}}()\ \textcolor{keyword}{const};}
+\DoxyCodeLine{00037\ }
+\DoxyCodeLine{00043\ \ \ \ \ \ \ \ \ [[nodiscard]]\ \textcolor{keyword}{virtual}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB>}}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1Kernel_a37d56a388d8225557f5c9dbb3414fbba}{GetCoverageWindow}}()\ \textcolor{keyword}{const}\ =\ 0;}
+\DoxyCodeLine{00044\ }
+\DoxyCodeLine{00050\ \ \ \ \ \ \ \ \ \textcolor{keyword}{virtual}\ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1Kernel_a294596d6cdfe3bbe2158f2ada3d72a8b}{AddComment}}(\textcolor{keyword}{const}\ std::string\ \&comment)\ \textcolor{keyword}{const};}
+\DoxyCodeLine{00051\ }
+\DoxyCodeLine{00057\ \ \ \ \ \ \ \ \ [[nodiscard]]\ \textcolor{keyword}{virtual}\ std::string\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1Kernel_a68b4ebf5a95ada4df97921c7208a9360}{ReadComment}}()\ \textcolor{keyword}{const};}
+\DoxyCodeLine{00058\ }
+\DoxyCodeLine{00065\ \ \ \ \ \ \ \ \ \textcolor{keyword}{static}\ \textcolor{keywordtype}{int}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1Kernel_ae2cd668a2821a2090a9a4d64188a4f52}{DefinePolynomialDegree}}(\textcolor{keywordtype}{int}\ dataSize,\ \textcolor{keywordtype}{int}\ maximumDegree)\ ;}
+\DoxyCodeLine{00066\ \ \ \ \ \};}
+\DoxyCodeLine{00067\ }
+\DoxyCodeLine{00068\ \}}
+\DoxyCodeLine{00069\ \textcolor{preprocessor}{\#endif}}
 
 \end{DoxyCode}

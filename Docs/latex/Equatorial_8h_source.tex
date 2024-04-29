@@ -1,35 +1,35 @@
-\hypertarget{Equatorial_8h_source}{}\doxysection{Equatorial.\+h}
-\label{Equatorial_8h_source}\index{IO.Astrodynamics/Coordinates/Equatorial.h@{IO.Astrodynamics/Coordinates/Equatorial.h}}
+\doxysection{Equatorial.\+h}
+\hypertarget{Equatorial_8h_source}{}\label{Equatorial_8h_source}\index{IO.Astrodynamics/Coordinates/Equatorial.h@{IO.Astrodynamics/Coordinates/Equatorial.h}}
 \mbox{\hyperlink{Equatorial_8h}{Go to the documentation of this file.}}
 \begin{DoxyCode}{0}
-\DoxyCodeLine{1 \textcolor{comment}{/*}}
-\DoxyCodeLine{2 \textcolor{comment}{ Copyright (c) 2021-\/2023. Sylvain Guillet (sylvain.guillet@tutamail.com)}}
-\DoxyCodeLine{3 \textcolor{comment}{ */}}
-\DoxyCodeLine{4 \textcolor{preprocessor}{\#ifndef RADEC\_H}}
-\DoxyCodeLine{5 \textcolor{preprocessor}{\#define RADEC\_H}}
-\DoxyCodeLine{6 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Coordinates}{IO::Astrodynamics::Coordinates}}}
-\DoxyCodeLine{7 \{}
-\DoxyCodeLine{12     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1Equatorial}{Equatorial}}}
-\DoxyCodeLine{13     \{}
-\DoxyCodeLine{14     \textcolor{keyword}{private}:}
-\DoxyCodeLine{15         \textcolor{keyword}{const} \textcolor{keywordtype}{double} \_range, \_ra, \_dec;}
-\DoxyCodeLine{16 }
-\DoxyCodeLine{17     \textcolor{keyword}{public}:}
-\DoxyCodeLine{18 }
-\DoxyCodeLine{26         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1Equatorial_a190400f584c831024dca315fa5199192}{Equatorial}}(\textcolor{keywordtype}{double} ra, \textcolor{keywordtype}{double} dec, \textcolor{keywordtype}{double} range) : \_range\{range \}, \_ra\{ra \}, \_dec\{dec \}}
-\DoxyCodeLine{27         \{}
-\DoxyCodeLine{28 }
-\DoxyCodeLine{29         \}}
-\DoxyCodeLine{30 }
-\DoxyCodeLine{36         [[nodiscard]] \textcolor{keyword}{inline} \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1Equatorial_a4a21cc71b303d39e08aa1afca53fe298}{GetRange}}()\textcolor{keyword}{ const }\{ \textcolor{keywordflow}{return} this-\/>\_range; \}}
-\DoxyCodeLine{37 }
-\DoxyCodeLine{43         [[nodiscard]] \textcolor{keyword}{inline} \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1Equatorial_a781c3233df8d9574cabcad8751fe12ac}{GetRA}}()\textcolor{keyword}{ const }\{ \textcolor{keywordflow}{return} this-\/>\_ra; \}}
-\DoxyCodeLine{44 }
-\DoxyCodeLine{50         [[nodiscard]] \textcolor{keyword}{inline} \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1Equatorial_a2d8a59fb1e57f419a408c5a63a84bdbe}{GetDec}}()\textcolor{keyword}{ const }\{ \textcolor{keywordflow}{return} this-\/>\_dec; \}}
-\DoxyCodeLine{51     \};}
-\DoxyCodeLine{52 \}}
-\DoxyCodeLine{53 \textcolor{preprocessor}{\#endif }\textcolor{comment}{// !RADEC\_H}}
-\DoxyCodeLine{54 }
-\DoxyCodeLine{55 }
+\DoxyCodeLine{00001\ \textcolor{comment}{/*}}
+\DoxyCodeLine{00002\ \textcolor{comment}{\ Copyright\ (c)\ 2021-\/2023.\ Sylvain\ Guillet\ (sylvain.guillet@tutamail.com)}}
+\DoxyCodeLine{00003\ \textcolor{comment}{\ */}}
+\DoxyCodeLine{00004\ \textcolor{preprocessor}{\#ifndef\ RADEC\_H}}
+\DoxyCodeLine{00005\ \textcolor{preprocessor}{\#define\ RADEC\_H}}
+\DoxyCodeLine{00006\ \textcolor{keyword}{namespace\ }\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Coordinates}{IO::Astrodynamics::Coordinates}}}
+\DoxyCodeLine{00007\ \{}
+\DoxyCodeLine{00012\ \ \ \ \ \textcolor{keyword}{class\ }\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1Equatorial}{Equatorial}}}
+\DoxyCodeLine{00013\ \ \ \ \ \{}
+\DoxyCodeLine{00014\ \ \ \ \ \textcolor{keyword}{private}:}
+\DoxyCodeLine{00015\ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ \textcolor{keywordtype}{double}\ \_range,\ \_ra,\ \_dec;}
+\DoxyCodeLine{00016\ }
+\DoxyCodeLine{00017\ \ \ \ \ \textcolor{keyword}{public}:}
+\DoxyCodeLine{00018\ }
+\DoxyCodeLine{00026\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1Equatorial_a190400f584c831024dca315fa5199192}{Equatorial}}(\textcolor{keywordtype}{double}\ ra,\ \textcolor{keywordtype}{double}\ dec,\ \textcolor{keywordtype}{double}\ range)\ :\ \_range\{range\ \},\ \_ra\{ra\ \},\ \_dec\{dec\ \}}
+\DoxyCodeLine{00027\ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00028\ }
+\DoxyCodeLine{00029\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00030\ }
+\DoxyCodeLine{00036\ \ \ \ \ \ \ \ \ [[nodiscard]]\ \textcolor{keyword}{inline}\ \textcolor{keywordtype}{double}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1Equatorial_a4a21cc71b303d39e08aa1afca53fe298}{GetRange}}()\textcolor{keyword}{\ const\ }\{\ \textcolor{keywordflow}{return}\ this-\/>\_range;\ \}}
+\DoxyCodeLine{00037\ }
+\DoxyCodeLine{00043\ \ \ \ \ \ \ \ \ [[nodiscard]]\ \textcolor{keyword}{inline}\ \textcolor{keywordtype}{double}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1Equatorial_a781c3233df8d9574cabcad8751fe12ac}{GetRA}}()\textcolor{keyword}{\ const\ }\{\ \textcolor{keywordflow}{return}\ this-\/>\_ra;\ \}}
+\DoxyCodeLine{00044\ }
+\DoxyCodeLine{00050\ \ \ \ \ \ \ \ \ [[nodiscard]]\ \textcolor{keyword}{inline}\ \textcolor{keywordtype}{double}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1Equatorial_a2d8a59fb1e57f419a408c5a63a84bdbe}{GetDec}}()\textcolor{keyword}{\ const\ }\{\ \textcolor{keywordflow}{return}\ this-\/>\_dec;\ \}}
+\DoxyCodeLine{00051\ \ \ \ \ \};}
+\DoxyCodeLine{00052\ \}}
+\DoxyCodeLine{00053\ \textcolor{preprocessor}{\#endif\ }\textcolor{comment}{//\ !RADEC\_H}}
+\DoxyCodeLine{00054\ }
+\DoxyCodeLine{00055\ }
 
 \end{DoxyCode}

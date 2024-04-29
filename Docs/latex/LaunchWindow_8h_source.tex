@@ -1,49 +1,49 @@
-\hypertarget{LaunchWindow_8h_source}{}\doxysection{Launch\+Window.\+h}
-\label{LaunchWindow_8h_source}\index{IO.Astrodynamics/Maneuvers/LaunchWindow.h@{IO.Astrodynamics/Maneuvers/LaunchWindow.h}}
+\doxysection{Launch\+Window.\+h}
+\hypertarget{LaunchWindow_8h_source}{}\label{LaunchWindow_8h_source}\index{IO.Astrodynamics/Maneuvers/LaunchWindow.h@{IO.Astrodynamics/Maneuvers/LaunchWindow.h}}
 \mbox{\hyperlink{LaunchWindow_8h}{Go to the documentation of this file.}}
 \begin{DoxyCode}{0}
-\DoxyCodeLine{1 \textcolor{comment}{/*}}
-\DoxyCodeLine{2 \textcolor{comment}{ Copyright (c) 2021-\/2023. Sylvain Guillet (sylvain.guillet@tutamail.com)}}
-\DoxyCodeLine{3 \textcolor{comment}{ */}}
-\DoxyCodeLine{4 \textcolor{preprocessor}{\#ifndef LAUNCH\_WINDOW\_H}}
-\DoxyCodeLine{5 \textcolor{preprocessor}{\#define LAUNCH\_WINDOW\_H}}
-\DoxyCodeLine{6 }
-\DoxyCodeLine{7 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{LaunchSite_8h}{LaunchSite.h}}>}}
-\DoxyCodeLine{8 }
-\DoxyCodeLine{9 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Maneuvers}{IO::Astrodynamics::Maneuvers}}}
-\DoxyCodeLine{10 \{}
-\DoxyCodeLine{11     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1LaunchWindow}{LaunchWindow}} final}
-\DoxyCodeLine{12     \{}
-\DoxyCodeLine{13     \textcolor{keyword}{private}:}
-\DoxyCodeLine{14         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1LaunchSite}{IO::Astrodynamics::Sites::LaunchSite}}\& m\_launchSite;}
-\DoxyCodeLine{15         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::UTC>}} m\_window;}
-\DoxyCodeLine{16         \textcolor{keyword}{const} \textcolor{keywordtype}{double} m\_inertialAzimuth;}
-\DoxyCodeLine{17         \textcolor{keyword}{const} \textcolor{keywordtype}{double} m\_nonInertialAzimuth;}
-\DoxyCodeLine{18         }
-\DoxyCodeLine{19         \textcolor{keyword}{const} \textcolor{keywordtype}{double} m\_nonInertialInsertionVelocity;}
-\DoxyCodeLine{20         \textcolor{keyword}{const} \textcolor{keywordtype}{double} m\_inertialInsertionVelocity;}
-\DoxyCodeLine{21 }
-\DoxyCodeLine{22     \textcolor{keyword}{public}:}
-\DoxyCodeLine{33         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1LaunchWindow_ab7e6a2bd848e5e5d8d8b691395d65633}{LaunchWindow}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1LaunchSite}{IO::Astrodynamics::Sites::LaunchSite}} \&launchSite, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::UTC>}} \&window, \textcolor{keywordtype}{double} inertialAzimuth, \textcolor{keywordtype}{double} nonInertialAzimuth, \textcolor{keywordtype}{double} inertialInsertionVelocity, \textcolor{keywordtype}{double} nonInertialInsertionVelocity);}
-\DoxyCodeLine{34 }
-\DoxyCodeLine{35 \textcolor{comment}{//        LaunchWindow\& operator=(const LaunchWindow\& lw);}}
-\DoxyCodeLine{36 }
-\DoxyCodeLine{42         [[nodiscard]] \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1LaunchSite}{IO::Astrodynamics::Sites::LaunchSite}}\& \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1LaunchWindow_a1a1452646afa50b02cb9007e7e88461f}{GetLaunchSite}}() \textcolor{keyword}{const};}
-\DoxyCodeLine{43         }
-\DoxyCodeLine{49         [[nodiscard]] \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::UTC>}}\& \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1LaunchWindow_a61252f63996d681cf44247b27a02792d}{GetWindow}}() \textcolor{keyword}{const};}
-\DoxyCodeLine{50         }
-\DoxyCodeLine{56         [[nodiscard]] \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1LaunchWindow_a7c6f75b7729633d261f41f33d7440967}{GetInertialAzimuth}}() \textcolor{keyword}{const};}
-\DoxyCodeLine{57 }
-\DoxyCodeLine{63         [[nodiscard]] \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1LaunchWindow_a88bff97ecbd669785972db9d50391242}{GetNonInertialAzimuth}}() \textcolor{keyword}{const};}
-\DoxyCodeLine{64 }
-\DoxyCodeLine{70         [[nodiscard]] \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1LaunchWindow_a0cace0f6e9ec41048c8764c27d0eb1c7}{GetInertialInsertionVelocity}}() \textcolor{keyword}{const};}
-\DoxyCodeLine{71 }
-\DoxyCodeLine{77         [[nodiscard]] \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1LaunchWindow_a7670224a8d8676ccccd5011eef16e5c7}{GetNonInertialInsertionVelocity}}() \textcolor{keyword}{const};}
-\DoxyCodeLine{78 }
-\DoxyCodeLine{79     \};}
-\DoxyCodeLine{80 }
-\DoxyCodeLine{81 \} \textcolor{comment}{// namespace IO::Astrodynamics::Maneuvers}}
-\DoxyCodeLine{82 }
-\DoxyCodeLine{83 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00001\ \textcolor{comment}{/*}}
+\DoxyCodeLine{00002\ \textcolor{comment}{\ Copyright\ (c)\ 2021-\/2023.\ Sylvain\ Guillet\ (sylvain.guillet@tutamail.com)}}
+\DoxyCodeLine{00003\ \textcolor{comment}{\ */}}
+\DoxyCodeLine{00004\ \textcolor{preprocessor}{\#ifndef\ LAUNCH\_WINDOW\_H}}
+\DoxyCodeLine{00005\ \textcolor{preprocessor}{\#define\ LAUNCH\_WINDOW\_H}}
+\DoxyCodeLine{00006\ }
+\DoxyCodeLine{00007\ \textcolor{preprocessor}{\#include\ <\mbox{\hyperlink{LaunchSite_8h}{LaunchSite.h}}>}}
+\DoxyCodeLine{00008\ }
+\DoxyCodeLine{00009\ \textcolor{keyword}{namespace\ }\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Maneuvers}{IO::Astrodynamics::Maneuvers}}}
+\DoxyCodeLine{00010\ \{}
+\DoxyCodeLine{00011\ \ \ \ \ \textcolor{keyword}{class\ }\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1LaunchWindow}{LaunchWindow}}\ final}
+\DoxyCodeLine{00012\ \ \ \ \ \{}
+\DoxyCodeLine{00013\ \ \ \ \ \textcolor{keyword}{private}:}
+\DoxyCodeLine{00014\ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1LaunchSite}{IO::Astrodynamics::Sites::LaunchSite}}\&\ m\_launchSite;}
+\DoxyCodeLine{00015\ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::UTC>}}\ m\_window;}
+\DoxyCodeLine{00016\ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ \textcolor{keywordtype}{double}\ m\_inertialAzimuth;}
+\DoxyCodeLine{00017\ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ \textcolor{keywordtype}{double}\ m\_nonInertialAzimuth;}
+\DoxyCodeLine{00018\ \ \ \ \ \ \ \ \ }
+\DoxyCodeLine{00019\ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ \textcolor{keywordtype}{double}\ m\_nonInertialInsertionVelocity;}
+\DoxyCodeLine{00020\ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ \textcolor{keywordtype}{double}\ m\_inertialInsertionVelocity;}
+\DoxyCodeLine{00021\ }
+\DoxyCodeLine{00022\ \ \ \ \ \textcolor{keyword}{public}:}
+\DoxyCodeLine{00033\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1LaunchWindow}{LaunchWindow}}(\textcolor{keyword}{const}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1LaunchSite}{IO::Astrodynamics::Sites::LaunchSite}}\ \&launchSite,\ \textcolor{keyword}{const}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::UTC>}}\ \&window,\ \textcolor{keywordtype}{double}\ inertialAzimuth,\ \textcolor{keywordtype}{double}\ nonInertialAzimuth,\ \textcolor{keywordtype}{double}\ inertialInsertionVelocity,\ \textcolor{keywordtype}{double}\ nonInertialInsertionVelocity);}
+\DoxyCodeLine{00034\ }
+\DoxyCodeLine{00035\ \textcolor{comment}{//\ \ \ \ \ \ \ \ LaunchWindow\&\ operator=(const\ LaunchWindow\&\ lw);}}
+\DoxyCodeLine{00036\ }
+\DoxyCodeLine{00042\ \ \ \ \ \ \ \ \ [[nodiscard]]\ \textcolor{keyword}{const}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1LaunchSite}{IO::Astrodynamics::Sites::LaunchSite}}\&\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1LaunchWindow_a1a1452646afa50b02cb9007e7e88461f}{GetLaunchSite}}()\ \textcolor{keyword}{const};}
+\DoxyCodeLine{00043\ \ \ \ \ \ \ \ \ }
+\DoxyCodeLine{00049\ \ \ \ \ \ \ \ \ [[nodiscard]]\ \textcolor{keyword}{const}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::UTC>}}\&\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1LaunchWindow_a61252f63996d681cf44247b27a02792d}{GetWindow}}()\ \textcolor{keyword}{const};}
+\DoxyCodeLine{00050\ \ \ \ \ \ \ \ \ }
+\DoxyCodeLine{00056\ \ \ \ \ \ \ \ \ [[nodiscard]]\ \textcolor{keywordtype}{double}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1LaunchWindow_a7c6f75b7729633d261f41f33d7440967}{GetInertialAzimuth}}()\ \textcolor{keyword}{const};}
+\DoxyCodeLine{00057\ }
+\DoxyCodeLine{00063\ \ \ \ \ \ \ \ \ [[nodiscard]]\ \textcolor{keywordtype}{double}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1LaunchWindow_a88bff97ecbd669785972db9d50391242}{GetNonInertialAzimuth}}()\ \textcolor{keyword}{const};}
+\DoxyCodeLine{00064\ }
+\DoxyCodeLine{00070\ \ \ \ \ \ \ \ \ [[nodiscard]]\ \textcolor{keywordtype}{double}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1LaunchWindow_a0cace0f6e9ec41048c8764c27d0eb1c7}{GetInertialInsertionVelocity}}()\ \textcolor{keyword}{const};}
+\DoxyCodeLine{00071\ }
+\DoxyCodeLine{00077\ \ \ \ \ \ \ \ \ [[nodiscard]]\ \textcolor{keywordtype}{double}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Maneuvers_1_1LaunchWindow_a7670224a8d8676ccccd5011eef16e5c7}{GetNonInertialInsertionVelocity}}()\ \textcolor{keyword}{const};}
+\DoxyCodeLine{00078\ }
+\DoxyCodeLine{00079\ \ \ \ \ \};}
+\DoxyCodeLine{00080\ }
+\DoxyCodeLine{00081\ \}\ \textcolor{comment}{//\ namespace\ IO::Astrodynamics::Maneuvers}}
+\DoxyCodeLine{00082\ }
+\DoxyCodeLine{00083\ \textcolor{preprocessor}{\#endif}}
 
 \end{DoxyCode}

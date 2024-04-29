@@ -1,10 +1,12 @@
 var searchData=
 [
-  ['secondderivativeofmeanmotion_0',['SecondDerivativeOfMeanMotion',['../structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1TLEElementsDTO.html#abedf28bdaf1e5788cf22aa94555ff66a',1,'IO::Astrodynamics::API::DTO::TLEElementsDTO']]],
-  ['semimajoraxis_1',['semiMajorAxis',['../structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ConicOrbitalElementsDTO.html#aed55e771d7143e0255e9a66849e30a27',1,'IO::Astrodynamics::API::DTO::ConicOrbitalElementsDTO::semiMajorAxis()'],['../structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1EquinoctialElementsDTO.html#add5d8b40424b6585749a6ae3f712656c',1,'IO::Astrodynamics::API::DTO::EquinoctialElementsDTO::semiMajorAxis()']]],
-  ['serialnumber_2',['serialNumber',['../structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1EngineDTO.html#a6db490fd77950080aa029e688a66deee',1,'IO::Astrodynamics::API::DTO::EngineDTO::serialNumber()'],['../structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1FuelTankDTO.html#ad1baaaec80370f33855fad55273aa48d',1,'IO::Astrodynamics::API::DTO::FuelTankDTO::serialNumber()'],['../structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1PayloadDTO.html#ad7e4c899bbe31c09eaf4a22c19e1cb1b',1,'IO::Astrodynamics::API::DTO::PayloadDTO::serialNumber()']]],
-  ['shape_3',['shape',['../structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1InstrumentDTO.html#a26bbec6cf8e28f8d0b3dc51b2a6a6c77',1,'IO::Astrodynamics::API::DTO::InstrumentDTO']]],
-  ['sites_4',['Sites',['../structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ScenarioDTO.html#ad7817f2ad2404870e8b971530098c1af',1,'IO::Astrodynamics::API::DTO::ScenarioDTO']]],
-  ['spacecraft_5',['Spacecraft',['../structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ScenarioDTO.html#a25df2112bbde7c6400d9ed4ddb1de209',1,'IO::Astrodynamics::API::DTO::ScenarioDTO']]],
-  ['start_6',['start',['../structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1AzimuthRangeDTO.html#a4b8de03612da8543876739235e0b541d',1,'IO::Astrodynamics::API::DTO::AzimuthRangeDTO::start()'],['../structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1WindowDTO.html#a8ad028c987314a63b804a5413f01fe28',1,'IO::Astrodynamics::API::DTO::WindowDTO::start()']]]
+  ['rad_5fdeg_0',['RAD_DEG',['../namespaceIO_1_1Astrodynamics_1_1Constants.html#a1b086149452554c01c85970439ca3953',1,'IO::Astrodynamics::Constants']]],
+  ['radii_1',['Radii',['../structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1CelestialBodyDTO.html#a929fc7cd7ab37cf0cace32b51cb7a76e',1,'IO::Astrodynamics::API::DTO::CelestialBodyDTO']]],
+  ['range_2',['range',['../structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1HorizontalDTO.html#ae334950312a0de7d8322e9c1bea74a21',1,'IO::Astrodynamics::API::DTO::HorizontalDTO::range'],['../structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1RaDecDTO.html#a825d7b1745ffba3aed8e65d5d0449dde',1,'IO::Astrodynamics::API::DTO::RaDecDTO::range']]],
+  ['ranges_3',['ranges',['../structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1SiteDTO.html#ab09a115dc28559ceb63fb06bd1bd291b',1,'IO::Astrodynamics::API::DTO::SiteDTO']]],
+  ['recoverysite_4',['recoverySite',['../structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1LaunchDTO.html#a43b3629cebf8a51c96bbc027c8c9d680',1,'IO::Astrodynamics::API::DTO::LaunchDTO']]],
+  ['right_5',['Right',['../classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft.html#a34fe5d73a8ff00862dbc50db1ad7f743',1,'IO::Astrodynamics::Body::Spacecraft::Spacecraft']]],
+  ['rightascension_6',['rightAscension',['../structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1RaDecDTO.html#adf78c92d022f37a7d30f0efbc263b2d6',1,'IO::Astrodynamics::API::DTO::RaDecDTO']]],
+  ['rightascensionofthepole_7',['rightAscensionOfThePole',['../structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1EquinoctialElementsDTO.html#ad9e370e2e04906e5c2929b8d1b7b2328',1,'IO::Astrodynamics::API::DTO::EquinoctialElementsDTO']]],
+  ['rotation_8',['Rotation',['../structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1FrameTransformationDTO.html#a0b2efbbb9d99af8ab71aa6da7673847f',1,'IO::Astrodynamics::API::DTO::FrameTransformationDTO']]]
 ];

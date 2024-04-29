@@ -1,29 +1,35 @@
-\hypertarget{StateOrientationDTO_8h_source}{}\doxysection{State\+Orientation\+DTO.\+h}
-\label{StateOrientationDTO_8h_source}\index{IO.Astrodynamics/API/DTO/StateOrientationDTO.h@{IO.Astrodynamics/API/DTO/StateOrientationDTO.h}}
+\doxysection{State\+Orientation\+DTO.\+h}
+\hypertarget{StateOrientationDTO_8h_source}{}\label{StateOrientationDTO_8h_source}\index{IO.Astrodynamics/API/DTO/StateOrientationDTO.h@{IO.Astrodynamics/API/DTO/StateOrientationDTO.h}}
 \mbox{\hyperlink{StateOrientationDTO_8h}{Go to the documentation of this file.}}
 \begin{DoxyCode}{0}
-\DoxyCodeLine{1 \textcolor{comment}{/*}}
-\DoxyCodeLine{2 \textcolor{comment}{ Copyright (c) 2023. Sylvain Guillet (sylvain.guillet@tutamail.com)}}
-\DoxyCodeLine{3 \textcolor{comment}{ */}}
-\DoxyCodeLine{4 }
-\DoxyCodeLine{5 \textcolor{comment}{//}}
-\DoxyCodeLine{6 \textcolor{comment}{// Created by spacer on 3/27/23.}}
-\DoxyCodeLine{7 \textcolor{comment}{//}}
-\DoxyCodeLine{8 }
-\DoxyCodeLine{9 \textcolor{preprocessor}{\#ifndef IOSDK\_STATEORIENTATION\_H}}
-\DoxyCodeLine{10 \textcolor{preprocessor}{\#define IOSDK\_STATEORIENTATION\_H}}
-\DoxyCodeLine{11 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{QuaternionDTO_8h}{QuaternionDTO.h}}>}}
-\DoxyCodeLine{12 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{Vector3DDTO_8h}{Vector3DDTO.h}}>}}
-\DoxyCodeLine{13 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1API_1_1DTO}{IO::Astrodynamics::API::DTO}}}
-\DoxyCodeLine{14 \{}
-\DoxyCodeLine{15     \textcolor{keyword}{struct }\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1StateOrientationDTO}{StateOrientationDTO}}}
-\DoxyCodeLine{16     \{}
-\DoxyCodeLine{17         \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1QuaternionDTO}{QuaternionDTO}} \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1StateOrientationDTO_a12cef76f98965c5fec78b17229e83d34}{orientation}};}
-\DoxyCodeLine{18         \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1Vector3DDTO}{Vector3DDTO}} \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1StateOrientationDTO_ad2648099bd0d714c286169363e9c4171}{angularVelocity}}\{\};}
-\DoxyCodeLine{19         \textcolor{keywordtype}{double} \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1StateOrientationDTO_aeb7027e17dee8c2cb2193a5b0692aff7}{epoch}}\{\};}
-\DoxyCodeLine{20         \textcolor{keyword}{const} \textcolor{keywordtype}{char}* \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1StateOrientationDTO_a349d1d9960f3719219f3f0913f5d6ff8}{frame}}\{\};}
-\DoxyCodeLine{21     \};}
-\DoxyCodeLine{22 \}}
-\DoxyCodeLine{23 \textcolor{preprocessor}{\#endif }\textcolor{comment}{//IOSDK\_STATEORIENTATION\_H}}
+\DoxyCodeLine{00001\ \textcolor{comment}{/*}}
+\DoxyCodeLine{00002\ \textcolor{comment}{\ Copyright\ (c)\ 2023-\/2024.\ Sylvain\ Guillet\ (sylvain.guillet@tutamail.com)}}
+\DoxyCodeLine{00003\ \textcolor{comment}{\ */}}
+\DoxyCodeLine{00004\ }
+\DoxyCodeLine{00005\ \textcolor{comment}{//}}
+\DoxyCodeLine{00006\ \textcolor{comment}{//\ Created\ by\ spacer\ on\ 3/27/23.}}
+\DoxyCodeLine{00007\ \textcolor{comment}{//}}
+\DoxyCodeLine{00008\ }
+\DoxyCodeLine{00009\ \textcolor{preprocessor}{\#ifndef\ IOSDK\_STATEORIENTATION\_H}}
+\DoxyCodeLine{00010\ \textcolor{preprocessor}{\#define\ IOSDK\_STATEORIENTATION\_H}}
+\DoxyCodeLine{00011\ \textcolor{preprocessor}{\#include\ <\mbox{\hyperlink{QuaternionDTO_8h}{QuaternionDTO.h}}>}}
+\DoxyCodeLine{00012\ \textcolor{preprocessor}{\#include\ <\mbox{\hyperlink{Vector3DDTO_8h}{Vector3DDTO.h}}>}}
+\DoxyCodeLine{00013\ \textcolor{keyword}{namespace\ }\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1API_1_1DTO}{IO::Astrodynamics::API::DTO}}}
+\DoxyCodeLine{00014\ \{}
+\DoxyCodeLine{00015\ \ \ \ \ \textcolor{keyword}{struct\ }\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1StateOrientationDTO}{StateOrientationDTO}}}
+\DoxyCodeLine{00016\ \ \ \ \ \{}
+\DoxyCodeLine{00017\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1QuaternionDTO}{QuaternionDTO}}\ \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1StateOrientationDTO_a12cef76f98965c5fec78b17229e83d34}{orientation}};}
+\DoxyCodeLine{00018\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1Vector3DDTO}{Vector3DDTO}}\ \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1StateOrientationDTO_ad2648099bd0d714c286169363e9c4171}{angularVelocity}}\{\};}
+\DoxyCodeLine{00019\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{double}\ \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1StateOrientationDTO_aeb7027e17dee8c2cb2193a5b0692aff7}{epoch}}\{\};}
+\DoxyCodeLine{00020\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{char}\ \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1StateOrientationDTO_a16d68446a5fe24b548e5d9d755b84754}{frame}}[32];}
+\DoxyCodeLine{00021\ }
+\DoxyCodeLine{00022\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1StateOrientationDTO_a2146e2a892c81128b3548de9d3f8d644}{SetFrame}}(\textcolor{keyword}{const}\ \textcolor{keywordtype}{char}*\ data)}
+\DoxyCodeLine{00023\ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00024\ \ \ \ \ \ \ \ \ \ \ \ \ std::strcpy(\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1StateOrientationDTO_a16d68446a5fe24b548e5d9d755b84754}{frame}},data);}
+\DoxyCodeLine{00025\ \ \ \ \ \ \ \ \ \ \ \ \ \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1StateOrientationDTO_a16d68446a5fe24b548e5d9d755b84754}{frame}}[31]=\textcolor{charliteral}{'\(\backslash\)0'};}
+\DoxyCodeLine{00026\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00027\ \ \ \ \ \};}
+\DoxyCodeLine{00028\ \}}
+\DoxyCodeLine{00029\ \textcolor{preprocessor}{\#endif\ }\textcolor{comment}{//IOSDK\_STATEORIENTATION\_H}}
 
 \end{DoxyCode}

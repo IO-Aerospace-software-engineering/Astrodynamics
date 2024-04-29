@@ -1,61 +1,61 @@
-\hypertarget{SpacecraftClockKernel_8h_source}{}\doxysection{Spacecraft\+Clock\+Kernel.\+h}
-\label{SpacecraftClockKernel_8h_source}\index{IO.Astrodynamics/Kernels/SpacecraftClockKernel.h@{IO.Astrodynamics/Kernels/SpacecraftClockKernel.h}}
+\doxysection{Spacecraft\+Clock\+Kernel.\+h}
+\hypertarget{SpacecraftClockKernel_8h_source}{}\label{SpacecraftClockKernel_8h_source}\index{IO.Astrodynamics/Kernels/SpacecraftClockKernel.h@{IO.Astrodynamics/Kernels/SpacecraftClockKernel.h}}
 \mbox{\hyperlink{SpacecraftClockKernel_8h}{Go to the documentation of this file.}}
 \begin{DoxyCode}{0}
-\DoxyCodeLine{1 \textcolor{comment}{/*}}
-\DoxyCodeLine{2 \textcolor{comment}{ Copyright (c) 2021-\/2023. Sylvain Guillet (sylvain.guillet@tutamail.com)}}
-\DoxyCodeLine{3 \textcolor{comment}{ */}}
-\DoxyCodeLine{4 \textcolor{preprocessor}{\#ifndef SPACECRAFT\_CLOCK\_KERNEL\_H}}
-\DoxyCodeLine{5 \textcolor{preprocessor}{\#define SPACECRAFT\_CLOCK\_KERNEL\_H}}
-\DoxyCodeLine{6 }
-\DoxyCodeLine{7 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{Kernel_8h}{Kernel.h}}>}}
-\DoxyCodeLine{8 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{Spacecraft_8h}{Spacecraft.h}}>}}
-\DoxyCodeLine{9 }
-\DoxyCodeLine{10 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Body_1_1Spacecraft}{IO::Astrodynamics::Body::Spacecraft}}}
-\DoxyCodeLine{11 \{}
-\DoxyCodeLine{12     \textcolor{keyword}{class }Spacecraft;}
-\DoxyCodeLine{13 \}}
-\DoxyCodeLine{14 }
-\DoxyCodeLine{15 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Kernels}{IO::Astrodynamics::Kernels}}}
-\DoxyCodeLine{16 \{}
-\DoxyCodeLine{17     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1SpacecraftClockKernel}{SpacecraftClockKernel}} final : \textcolor{keyword}{public} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1Kernel}{IO::Astrodynamics::Kernels::Kernel}}}
-\DoxyCodeLine{18     \{}
-\DoxyCodeLine{19     \textcolor{keyword}{private}:}
-\DoxyCodeLine{24         \textcolor{keywordtype}{void} BuildGenericClockKernel();}
-\DoxyCodeLine{25         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft}{IO::Astrodynamics::Body::Spacecraft::Spacecraft}} \&m\_spacecraft;}
-\DoxyCodeLine{26         \textcolor{keyword}{const} \textcolor{keywordtype}{int} m\_resolution\{\};}
-\DoxyCodeLine{27 }
-\DoxyCodeLine{35         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1SpacecraftClockKernel}{SpacecraftClockKernel}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft}{IO::Astrodynamics::Body::Spacecraft::Spacecraft}} \&spacecraft, \textcolor{keywordtype}{int} resolution);}
-\DoxyCodeLine{36 }
-\DoxyCodeLine{37     \textcolor{keyword}{public}:}
-\DoxyCodeLine{38         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1SpacecraftClockKernel_a53bf513eb97ca2f62b11d036d4ac70ab}{\string~SpacecraftClockKernel}}() \textcolor{keyword}{override} = \textcolor{keywordflow}{default};}
-\DoxyCodeLine{39 }
-\DoxyCodeLine{45         [[nodiscard]] \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB>}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1SpacecraftClockKernel_a00eb37bea6264db1be919b7cd8dd58cb}{GetCoverageWindow}}() \textcolor{keyword}{const override};}
-\DoxyCodeLine{46 }
-\DoxyCodeLine{53         [[nodiscard]] \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO::Astrodynamics::Time::TDB}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1SpacecraftClockKernel_a315ab6629dec205d027ce8d97e93400e}{ConvertToTDB}}(\textcolor{keyword}{const} std::string \&clock) \textcolor{keyword}{const};}
-\DoxyCodeLine{54 }
-\DoxyCodeLine{61         [[nodiscard]] \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO::Astrodynamics::Time::TDB}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1SpacecraftClockKernel_a315ab6629dec205d027ce8d97e93400e}{ConvertToTDB}}(\textcolor{keywordtype}{double} encodedClock) \textcolor{keyword}{const};}
-\DoxyCodeLine{62 }
-\DoxyCodeLine{69         [[nodiscard]] std::string \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1SpacecraftClockKernel_a5d7de87bdd9d264f733189e331313a75}{ConvertToClockString}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO::Astrodynamics::Time::TDB}} \&epoch) \textcolor{keyword}{const};}
-\DoxyCodeLine{70 }
-\DoxyCodeLine{77         [[nodiscard]] \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1SpacecraftClockKernel_abcfeddf1c18bdc5efe2f6aa778386086}{ConvertToEncodedClock}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO::Astrodynamics::Time::TDB}} \&epoch) \textcolor{keyword}{const};}
-\DoxyCodeLine{78         [[nodiscard]] \textcolor{keyword}{static} \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1SpacecraftClockKernel_abcfeddf1c18bdc5efe2f6aa778386086}{ConvertToEncodedClock}}(\textcolor{keywordtype}{int} spacecraftId, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO::Astrodynamics::Time::TDB}} \&epoch);}
-\DoxyCodeLine{79 }
-\DoxyCodeLine{85         [[nodiscard]] \textcolor{keywordtype}{int} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1SpacecraftClockKernel_ac1ed6fca423b9c42a08086d633166522}{GetResolution}}()\textcolor{keyword}{ const}}
-\DoxyCodeLine{86 \textcolor{keyword}{        }\{}
-\DoxyCodeLine{87             \textcolor{keywordflow}{return} m\_resolution;}
-\DoxyCodeLine{88         \}}
-\DoxyCodeLine{89 }
-\DoxyCodeLine{95         [[nodiscard]] \textcolor{keywordtype}{int} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1SpacecraftClockKernel_a2563f7e8dbc0cbe5f26e094770732107}{GetTicksPerSeconds}}() \textcolor{keyword}{const};}
-\DoxyCodeLine{96 }
-\DoxyCodeLine{102         [[nodiscard]] \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1SpacecraftClockKernel_ab8e5834250119448f5644aab8fae5ef8}{GetSecondsPerTick}}() \textcolor{keyword}{const};}
-\DoxyCodeLine{103 }
-\DoxyCodeLine{104 }
-\DoxyCodeLine{105 }
-\DoxyCodeLine{106         \textcolor{keyword}{friend} \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft}{IO::Astrodynamics::Body::Spacecraft::Spacecraft}};}
-\DoxyCodeLine{107     \};}
-\DoxyCodeLine{108 \}}
-\DoxyCodeLine{109 }
-\DoxyCodeLine{110 \textcolor{preprocessor}{\#endif }\textcolor{comment}{// !SPACECRAFT\_CLOCK\_KERNEL\_H}}
+\DoxyCodeLine{00001\ \textcolor{comment}{/*}}
+\DoxyCodeLine{00002\ \textcolor{comment}{\ Copyright\ (c)\ 2021-\/2023.\ Sylvain\ Guillet\ (sylvain.guillet@tutamail.com)}}
+\DoxyCodeLine{00003\ \textcolor{comment}{\ */}}
+\DoxyCodeLine{00004\ \textcolor{preprocessor}{\#ifndef\ SPACECRAFT\_CLOCK\_KERNEL\_H}}
+\DoxyCodeLine{00005\ \textcolor{preprocessor}{\#define\ SPACECRAFT\_CLOCK\_KERNEL\_H}}
+\DoxyCodeLine{00006\ }
+\DoxyCodeLine{00007\ \textcolor{preprocessor}{\#include\ <\mbox{\hyperlink{Kernel_8h}{Kernel.h}}>}}
+\DoxyCodeLine{00008\ \textcolor{preprocessor}{\#include\ <\mbox{\hyperlink{Spacecraft_8h}{Spacecraft.h}}>}}
+\DoxyCodeLine{00009\ }
+\DoxyCodeLine{00010\ \textcolor{keyword}{namespace\ }\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Body_1_1Spacecraft}{IO::Astrodynamics::Body::Spacecraft}}}
+\DoxyCodeLine{00011\ \{}
+\DoxyCodeLine{00012\ \ \ \ \ \textcolor{keyword}{class\ }Spacecraft;}
+\DoxyCodeLine{00013\ \}}
+\DoxyCodeLine{00014\ }
+\DoxyCodeLine{00015\ \textcolor{keyword}{namespace\ }\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Kernels}{IO::Astrodynamics::Kernels}}}
+\DoxyCodeLine{00016\ \{}
+\DoxyCodeLine{00017\ \ \ \ \ \textcolor{keyword}{class\ }\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1SpacecraftClockKernel}{SpacecraftClockKernel}}\ final\ :\ \textcolor{keyword}{public}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1Kernel}{IO::Astrodynamics::Kernels::Kernel}}}
+\DoxyCodeLine{00018\ \ \ \ \ \{}
+\DoxyCodeLine{00019\ \ \ \ \ \textcolor{keyword}{private}:}
+\DoxyCodeLine{00024\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{void}\ BuildGenericClockKernel();}
+\DoxyCodeLine{00025\ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft}{IO::Astrodynamics::Body::Spacecraft::Spacecraft}}\ \&m\_spacecraft;}
+\DoxyCodeLine{00026\ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ \textcolor{keywordtype}{int}\ m\_resolution\{\};}
+\DoxyCodeLine{00027\ }
+\DoxyCodeLine{00035\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1SpacecraftClockKernel}{SpacecraftClockKernel}}(\textcolor{keyword}{const}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft}{IO::Astrodynamics::Body::Spacecraft::Spacecraft}}\ \&spacecraft,\ \textcolor{keywordtype}{int}\ resolution);}
+\DoxyCodeLine{00036\ }
+\DoxyCodeLine{00037\ \ \ \ \ \textcolor{keyword}{public}:}
+\DoxyCodeLine{00038\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1SpacecraftClockKernel_a53bf513eb97ca2f62b11d036d4ac70ab}{\string~SpacecraftClockKernel}}()\ \textcolor{keyword}{override}\ =\ \textcolor{keywordflow}{default};}
+\DoxyCodeLine{00039\ }
+\DoxyCodeLine{00045\ \ \ \ \ \ \ \ \ [[nodiscard]]\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB>}}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1SpacecraftClockKernel_a00eb37bea6264db1be919b7cd8dd58cb}{GetCoverageWindow}}()\ \textcolor{keyword}{const\ override};}
+\DoxyCodeLine{00046\ }
+\DoxyCodeLine{00053\ \ \ \ \ \ \ \ \ [[nodiscard]]\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO::Astrodynamics::Time::TDB}}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1SpacecraftClockKernel_a315ab6629dec205d027ce8d97e93400e}{ConvertToTDB}}(\textcolor{keyword}{const}\ std::string\ \&clock)\ \textcolor{keyword}{const};}
+\DoxyCodeLine{00054\ }
+\DoxyCodeLine{00061\ \ \ \ \ \ \ \ \ [[nodiscard]]\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO::Astrodynamics::Time::TDB}}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1SpacecraftClockKernel_a315ab6629dec205d027ce8d97e93400e}{ConvertToTDB}}(\textcolor{keywordtype}{double}\ encodedClock)\ \textcolor{keyword}{const};}
+\DoxyCodeLine{00062\ }
+\DoxyCodeLine{00069\ \ \ \ \ \ \ \ \ [[nodiscard]]\ std::string\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1SpacecraftClockKernel_a5d7de87bdd9d264f733189e331313a75}{ConvertToClockString}}(\textcolor{keyword}{const}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO::Astrodynamics::Time::TDB}}\ \&epoch)\ \textcolor{keyword}{const};}
+\DoxyCodeLine{00070\ }
+\DoxyCodeLine{00077\ \ \ \ \ \ \ \ \ [[nodiscard]]\ \textcolor{keywordtype}{double}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1SpacecraftClockKernel_abcfeddf1c18bdc5efe2f6aa778386086}{ConvertToEncodedClock}}(\textcolor{keyword}{const}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO::Astrodynamics::Time::TDB}}\ \&epoch)\ \textcolor{keyword}{const};}
+\DoxyCodeLine{00078\ \ \ \ \ \ \ \ \ [[nodiscard]]\ \textcolor{keyword}{static}\ \textcolor{keywordtype}{double}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1SpacecraftClockKernel_abcfeddf1c18bdc5efe2f6aa778386086}{ConvertToEncodedClock}}(\textcolor{keywordtype}{int}\ spacecraftId,\ \textcolor{keyword}{const}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO::Astrodynamics::Time::TDB}}\ \&epoch);}
+\DoxyCodeLine{00079\ }
+\DoxyCodeLine{00085\ \ \ \ \ \ \ \ \ [[nodiscard]]\ \textcolor{keywordtype}{int}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1SpacecraftClockKernel_ac1ed6fca423b9c42a08086d633166522}{GetResolution}}()\textcolor{keyword}{\ const}}
+\DoxyCodeLine{00086\ \textcolor{keyword}{\ \ \ \ \ \ \ \ }\{}
+\DoxyCodeLine{00087\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ m\_resolution;}
+\DoxyCodeLine{00088\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00089\ }
+\DoxyCodeLine{00095\ \ \ \ \ \ \ \ \ [[nodiscard]]\ \textcolor{keywordtype}{int}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1SpacecraftClockKernel_a2563f7e8dbc0cbe5f26e094770732107}{GetTicksPerSeconds}}()\ \textcolor{keyword}{const};}
+\DoxyCodeLine{00096\ }
+\DoxyCodeLine{00102\ \ \ \ \ \ \ \ \ [[nodiscard]]\ \textcolor{keywordtype}{double}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1SpacecraftClockKernel_ab8e5834250119448f5644aab8fae5ef8}{GetSecondsPerTick}}()\ \textcolor{keyword}{const};}
+\DoxyCodeLine{00103\ }
+\DoxyCodeLine{00104\ }
+\DoxyCodeLine{00105\ }
+\DoxyCodeLine{00106\ \ \ \ \ \ \ \ \ \textcolor{keyword}{friend}\ \textcolor{keyword}{class\ }\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft}{IO::Astrodynamics::Body::Spacecraft::Spacecraft}};}
+\DoxyCodeLine{00107\ \ \ \ \ \};}
+\DoxyCodeLine{00108\ \}}
+\DoxyCodeLine{00109\ }
+\DoxyCodeLine{00110\ \textcolor{preprocessor}{\#endif\ }\textcolor{comment}{//\ !SPACECRAFT\_CLOCK\_KERNEL\_H}}
 
 \end{DoxyCode}

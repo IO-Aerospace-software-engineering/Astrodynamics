@@ -1,26 +1,32 @@
-\hypertarget{StateVectorDTO_8h_source}{}\doxysection{State\+Vector\+DTO.\+h}
-\label{StateVectorDTO_8h_source}\index{IO.Astrodynamics/API/DTO/StateVectorDTO.h@{IO.Astrodynamics/API/DTO/StateVectorDTO.h}}
+\doxysection{State\+Vector\+DTO.\+h}
+\hypertarget{StateVectorDTO_8h_source}{}\label{StateVectorDTO_8h_source}\index{IO.Astrodynamics/API/DTO/StateVectorDTO.h@{IO.Astrodynamics/API/DTO/StateVectorDTO.h}}
 \mbox{\hyperlink{StateVectorDTO_8h}{Go to the documentation of this file.}}
 \begin{DoxyCode}{0}
-\DoxyCodeLine{1 \textcolor{comment}{/*}}
-\DoxyCodeLine{2 \textcolor{comment}{ Copyright (c) 2023. Sylvain Guillet (sylvain.guillet@tutamail.com)}}
-\DoxyCodeLine{3 \textcolor{comment}{ */}}
-\DoxyCodeLine{4 }
-\DoxyCodeLine{5 \textcolor{preprocessor}{\#pragma once}}
-\DoxyCodeLine{6 }
-\DoxyCodeLine{7 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{Vector3DDTO_8h}{Vector3DDTO.h}}>}}
-\DoxyCodeLine{8 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{CelestialBodyDTO_8h}{CelestialBodyDTO.h}}>}}
-\DoxyCodeLine{9 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1API_1_1DTO}{IO::Astrodynamics::API::DTO}}}
-\DoxyCodeLine{10 \{}
-\DoxyCodeLine{11     \textcolor{keyword}{struct }\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1StateVectorDTO}{StateVectorDTO}}}
-\DoxyCodeLine{12     \{}
-\DoxyCodeLine{13         \textcolor{keywordtype}{double} \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1StateVectorDTO_afe72ba8c3801040ff26468d4af86418f}{epoch}}\{0.0\};}
-\DoxyCodeLine{14         \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1Vector3DDTO}{IO::Astrodynamics::API::DTO::Vector3DDTO}} \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1StateVectorDTO_a4d0bcc48b5e71ef6219b6f6c95a90ad4}{position}}\{\};}
-\DoxyCodeLine{15         \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1Vector3DDTO}{IO::Astrodynamics::API::DTO::Vector3DDTO}} \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1StateVectorDTO_a1b61f1f13eea4bb808f0935f241fb884}{velocity}}\{\};}
-\DoxyCodeLine{16         \textcolor{keywordtype}{int} \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1StateVectorDTO_a3247aea37bed3cf5a33509e632a70da9}{centerOfMotionId}};}
-\DoxyCodeLine{17         \textcolor{keyword}{const} \textcolor{keywordtype}{char}* \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1StateVectorDTO_aae700ed0a358efd0982807900cdb225a}{inertialFrame}}\{\};}
-\DoxyCodeLine{18         \textcolor{keyword}{const} \textcolor{keywordtype}{char}* \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1StateVectorDTO_a87e4e3ac2f8c6089fd076a40021de6cf}{Error}}\{\};}
-\DoxyCodeLine{19     \};}
-\DoxyCodeLine{20 \}}
+\DoxyCodeLine{00001\ \textcolor{comment}{/*}}
+\DoxyCodeLine{00002\ \textcolor{comment}{\ Copyright\ (c)\ 2023-\/2024.\ Sylvain\ Guillet\ (sylvain.guillet@tutamail.com)}}
+\DoxyCodeLine{00003\ \textcolor{comment}{\ */}}
+\DoxyCodeLine{00004\ }
+\DoxyCodeLine{00005\ \textcolor{preprocessor}{\#pragma\ once}}
+\DoxyCodeLine{00006\ }
+\DoxyCodeLine{00007\ \textcolor{preprocessor}{\#include\ <\mbox{\hyperlink{Vector3DDTO_8h}{Vector3DDTO.h}}>}}
+\DoxyCodeLine{00008\ \textcolor{preprocessor}{\#include\ <\mbox{\hyperlink{CelestialBodyDTO_8h}{CelestialBodyDTO.h}}>}}
+\DoxyCodeLine{00009\ \textcolor{preprocessor}{\#include\ <cstring>}}
+\DoxyCodeLine{00010\ \textcolor{keyword}{namespace\ }\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1API_1_1DTO}{IO::Astrodynamics::API::DTO}}}
+\DoxyCodeLine{00011\ \{}
+\DoxyCodeLine{00012\ \ \ \ \ \textcolor{keyword}{struct\ }\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1StateVectorDTO}{StateVectorDTO}}}
+\DoxyCodeLine{00013\ \ \ \ \ \{}
+\DoxyCodeLine{00014\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{double}\ \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1StateVectorDTO_afe72ba8c3801040ff26468d4af86418f}{epoch}}\{0.0\};}
+\DoxyCodeLine{00015\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1Vector3DDTO}{IO::Astrodynamics::API::DTO::Vector3DDTO}}\ \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1StateVectorDTO_a4d0bcc48b5e71ef6219b6f6c95a90ad4}{position}}\{\};}
+\DoxyCodeLine{00016\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1Vector3DDTO}{IO::Astrodynamics::API::DTO::Vector3DDTO}}\ \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1StateVectorDTO_a1b61f1f13eea4bb808f0935f241fb884}{velocity}}\{\};}
+\DoxyCodeLine{00017\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{int}\ \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1StateVectorDTO_a3247aea37bed3cf5a33509e632a70da9}{centerOfMotionId}};}
+\DoxyCodeLine{00018\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{char}\ \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1StateVectorDTO_a2990222ad873534d237c682412630654}{inertialFrame}}[32];}
+\DoxyCodeLine{00019\ }
+\DoxyCodeLine{00020\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1StateVectorDTO_a42df5a88cd8986deea696ffaf6669512}{SetFrame}}(\textcolor{keyword}{const}\ \textcolor{keywordtype}{char}*\ frame)}
+\DoxyCodeLine{00021\ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00022\ \ \ \ \ \ \ \ \ \ \ \ \ std::strcpy(\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1StateVectorDTO_a2990222ad873534d237c682412630654}{inertialFrame}},frame);}
+\DoxyCodeLine{00023\ \ \ \ \ \ \ \ \ \ \ \ \ \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1StateVectorDTO_a2990222ad873534d237c682412630654}{inertialFrame}}[31]=\textcolor{charliteral}{'\(\backslash\)0'};}
+\DoxyCodeLine{00024\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00025\ \ \ \ \ \};}
+\DoxyCodeLine{00026\ \}}
 
 \end{DoxyCode}

@@ -1,8 +1,8 @@
-\hypertarget{classIO_1_1Astrodynamics_1_1Frames_1_1BodyFixedFrames}{}\doxysection{IO\+::Astrodynamics\+::Frames\+::Body\+Fixed\+Frames Class Reference}
-\label{classIO_1_1Astrodynamics_1_1Frames_1_1BodyFixedFrames}\index{IO::Astrodynamics::Frames::BodyFixedFrames@{IO::Astrodynamics::Frames::BodyFixedFrames}}
+\doxysection{IO\+::Astrodynamics\+::Frames\+::Body\+Fixed\+Frames Class Reference}
+\hypertarget{classIO_1_1Astrodynamics_1_1Frames_1_1BodyFixedFrames}{}\label{classIO_1_1Astrodynamics_1_1Frames_1_1BodyFixedFrames}\index{IO::Astrodynamics::Frames::BodyFixedFrames@{IO::Astrodynamics::Frames::BodyFixedFrames}}
 
 
-\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Body}{Body}} fixed frames.  
+\doxylink{namespaceIO_1_1Astrodynamics_1_1Body}{Body} fixed frames.  
 
 
 
@@ -15,19 +15,47 @@ Inheritance diagram for IO\+::Astrodynamics\+::Frames\+::Body\+Fixed\+Frames\+:\
 \includegraphics[height=2.000000cm]{classIO_1_1Astrodynamics_1_1Frames_1_1BodyFixedFrames}
 \end{center}
 \end{figure}
-\doxysubsection*{Public Member Functions}
+\doxysubsubsection*{Public Member Functions}
 \begin{DoxyCompactItemize}
 \item 
 \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Frames_1_1BodyFixedFrames_a12f359d5f0f2e53e3aece553a422f927}{Body\+Fixed\+Frames}} (const std\+::string \&name)
 \end{DoxyCompactItemize}
-\doxysubsection*{Additional Inherited Members}
+\doxysubsection*{Public Member Functions inherited from \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Frames_1_1Frames}{IO\+::\+Astrodynamics\+::\+Frames\+::\+Frames}}}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Frames_1_1Frames_aaf2ccb970e18581445d74b3733d2c81f}{Frames}} (std\+::string str\+View)
+\begin{DoxyCompactList}\small\item\em Construct a new \doxylink{classIO_1_1Astrodynamics_1_1Frames_1_1Frames}{Frames} object. \end{DoxyCompactList}\item 
+const char \texorpdfstring{$\ast$}{*} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Frames_1_1Frames_a07b1c21b50687da8ae3f8fab59d5784d}{To\+Char\+Array}} () const
+\begin{DoxyCompactList}\small\item\em Get frame name. \end{DoxyCompactList}\item 
+bool \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Frames_1_1Frames_a8ebfd1801eda35363bd5e0df2944d21f}{operator==}} (const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Frames_1_1Frames}{IO\+::\+Astrodynamics\+::\+Frames\+::\+Frames}} \&frame) const
+\begin{DoxyCompactList}\small\item\em Equality comparer. \end{DoxyCompactList}\item 
+bool \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Frames_1_1Frames_aa2a08f0fc3f0331d7be2020fabb90ec6}{operator!=}} (const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Frames_1_1Frames}{IO\+::\+Astrodynamics\+::\+Frames\+::\+Frames}} \&frame) const
+\begin{DoxyCompactList}\small\item\em Equality comparer. \end{DoxyCompactList}\item 
+bool \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Frames_1_1Frames_a6b2153d427973ef2d4466b6e985be91e}{operator==}} (\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Frames_1_1Frames}{IO\+::\+Astrodynamics\+::\+Frames\+::\+Frames}} \&frame) const
+\begin{DoxyCompactList}\small\item\em Equality comparer. \end{DoxyCompactList}\item 
+bool \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Frames_1_1Frames_a4a42f94e443ab56a3739a38e84dfe4bd}{operator!=}} (\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Frames_1_1Frames}{IO\+::\+Astrodynamics\+::\+Frames\+::\+Frames}} \&frame) const
+\begin{DoxyCompactList}\small\item\em Equality comparer. \end{DoxyCompactList}\item 
+std\+::string \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Frames_1_1Frames_a77ac739ae6848b2ca3941ed262363b06}{Get\+Name}} () const
+\begin{DoxyCompactList}\small\item\em Get the Name. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Matrix}{IO\+::\+Astrodynamics\+::\+Math\+::\+Matrix}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Frames_1_1Frames_a2e4ddd01b291b2fcf7b5e67083d9fe05}{To\+Frame6x6}} (const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Frames_1_1Frames}{Frames}} \&frame, const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} \&epoch) const
+\begin{DoxyCompactList}\small\item\em Get the 6X6 matrix to transform frame to another. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Matrix}{IO\+::\+Astrodynamics\+::\+Math\+::\+Matrix}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Frames_1_1Frames_a0495444b9a6f33740cb973c8d7fb9863}{To\+Frame3x3}} (const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Frames_1_1Frames}{Frames}} \&frame, const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} \&epoch) const
+\begin{DoxyCompactList}\small\item\em Get the 3x3 matrix to transform frame to another. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO\+::\+Astrodynamics\+::\+Math\+::\+Vector3D}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Frames_1_1Frames_a7cae9fd7b7a4fee7e3c2fc50ee777b92}{Transform\+Vector}} (const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Frames_1_1Frames}{Frames}} \&to, const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO\+::\+Astrodynamics\+::\+Math\+::\+Vector3D}} \&vector, const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} \&epoch) const
+\begin{DoxyCompactList}\small\item\em Transform vector from frame to another. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsubsection*{Additional Inherited Members}
+\doxysubsection*{Protected Attributes inherited from \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Frames_1_1Frames}{IO\+::\+Astrodynamics\+::\+Frames\+::\+Frames}}}
+\begin{DoxyCompactItemize}
+\item 
+std\+::string \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Frames_1_1Frames_adffc156f16f392cf03b6ec79d4629c89}{m\+\_\+name}}
+\end{DoxyCompactItemize}
 
 
 \doxysubsection{Detailed Description}
-\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Body}{Body}} fixed frames. 
+\doxylink{namespaceIO_1_1Astrodynamics_1_1Body}{Body} fixed frames. 
 
 \doxysubsection{Constructor \& Destructor Documentation}
-\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Frames_1_1BodyFixedFrames_a12f359d5f0f2e53e3aece553a422f927}\label{classIO_1_1Astrodynamics_1_1Frames_1_1BodyFixedFrames_a12f359d5f0f2e53e3aece553a422f927}} 
+\Hypertarget{classIO_1_1Astrodynamics_1_1Frames_1_1BodyFixedFrames_a12f359d5f0f2e53e3aece553a422f927}\label{classIO_1_1Astrodynamics_1_1Frames_1_1BodyFixedFrames_a12f359d5f0f2e53e3aece553a422f927} 
 \index{IO::Astrodynamics::Frames::BodyFixedFrames@{IO::Astrodynamics::Frames::BodyFixedFrames}!BodyFixedFrames@{BodyFixedFrames}}
 \index{BodyFixedFrames@{BodyFixedFrames}!IO::Astrodynamics::Frames::BodyFixedFrames@{IO::Astrodynamics::Frames::BodyFixedFrames}}
 \doxysubsubsection{\texorpdfstring{BodyFixedFrames()}{BodyFixedFrames()}}
