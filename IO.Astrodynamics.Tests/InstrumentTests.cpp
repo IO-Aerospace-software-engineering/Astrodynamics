@@ -7,14 +7,11 @@
 #include <Instrument.h>
 #include <filesystem>
 #include <Vector3D.h>
-#include <CircularInstrumentKernel.h>
 #include <FOVShapes.h>
-#include <SpiceUsr.h>
 #include <DataPoolMonitoring.h>
 #include <InvalidArgumentException.h>
 #include <CelestialBody.h>
 #include <InertialFrames.h>
-#include <InstrumentFrameFile.h>
 #include <Quaternion.h>
 #include <StateOrientation.h>
 #include <SpiceUsr.h>
@@ -77,33 +74,33 @@ TEST(Instrument, Frame)
 
     s.AddCircularFOVInstrument(-17200, "Camera200", orientation, boresight, fovvector, 1.5);
 
-    auto id = IO::Astrodynamics::DataPoolMonitoring::Instance().GetIntegerProperty("FRAME_SC17_CAMERA200", 1);
+    auto id = IO::Astrodynamics::DataPoolMonitoring::GetIntegerProperty("FRAME_SC17_CAMERA200", 1);
     ASSERT_EQ(-17200, id[0]);
 
-    auto name = IO::Astrodynamics::DataPoolMonitoring::Instance().GetStringProperty("FRAME_-17200_NAME", 1);
+    auto name = IO::Astrodynamics::DataPoolMonitoring::GetStringProperty("FRAME_-17200_NAME", 1);
     ASSERT_STREQ("SC17_CAMERA200", name[0].c_str());
 
-    auto classVal = IO::Astrodynamics::DataPoolMonitoring::Instance().GetIntegerProperty("FRAME_-17200_CLASS", 1);
+    auto classVal = IO::Astrodynamics::DataPoolMonitoring::GetIntegerProperty("FRAME_-17200_CLASS", 1);
     ASSERT_EQ(4, classVal[0]);
 
-    auto classid = IO::Astrodynamics::DataPoolMonitoring::Instance().GetIntegerProperty("FRAME_-17200_CLASS_ID", 1);
+    auto classid = IO::Astrodynamics::DataPoolMonitoring::GetIntegerProperty("FRAME_-17200_CLASS_ID", 1);
     ASSERT_EQ(-17200, classid[0]);
 
-    auto centerid = IO::Astrodynamics::DataPoolMonitoring::Instance().GetIntegerProperty("FRAME_-17200_CENTER", 1);
+    auto centerid = IO::Astrodynamics::DataPoolMonitoring::GetIntegerProperty("FRAME_-17200_CENTER", 1);
     ASSERT_EQ(-17200, centerid[0]);
 
-    auto spec = IO::Astrodynamics::DataPoolMonitoring::Instance().GetStringProperty("TKFRAME_-17200_SPEC", 1);
+    auto spec = IO::Astrodynamics::DataPoolMonitoring::GetStringProperty("TKFRAME_-17200_SPEC", 1);
     ASSERT_STREQ("ANGLES", spec[0].c_str());
 
-    auto relative = IO::Astrodynamics::DataPoolMonitoring::Instance().GetStringProperty("TKFRAME_-17200_RELATIVE", 1);
+    auto relative = IO::Astrodynamics::DataPoolMonitoring::GetStringProperty("TKFRAME_-17200_RELATIVE", 1);
     ASSERT_STREQ("SC17_SPACECRAFT", relative[0].c_str());
 
-    auto frameAngles = IO::Astrodynamics::DataPoolMonitoring::Instance().GetDoubleProperty("TKFRAME_-17200_ANGLES", 3);
+    auto frameAngles = IO::Astrodynamics::DataPoolMonitoring::GetDoubleProperty("TKFRAME_-17200_ANGLES", 3);
     ASSERT_DOUBLE_EQ(orientation.GetX() * -1.0, frameAngles[0]);
     ASSERT_DOUBLE_EQ(orientation.GetY() * -1.0, frameAngles[1]);
     ASSERT_DOUBLE_EQ(orientation.GetZ() * -1.0, frameAngles[2]);
 
-    auto axes = IO::Astrodynamics::DataPoolMonitoring::Instance().GetIntegerProperty("TKFRAME_-17200_AXES", 3);
+    auto axes = IO::Astrodynamics::DataPoolMonitoring::GetIntegerProperty("TKFRAME_-17200_AXES", 3);
     ASSERT_EQ(1, axes[0]);
     ASSERT_EQ(2, axes[1]);
     ASSERT_EQ(3, axes[2]);
@@ -131,29 +128,29 @@ TEST(Instrument, CircularKernel)
     IO::Astrodynamics::Body::Spacecraft::Spacecraft s{-17, "sc17", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams)};
     s.AddCircularFOVInstrument(-17200, "Camera200", orientation, boresight, fovvector, 1.5);
 
-    auto classSpec = IO::Astrodynamics::DataPoolMonitoring::Instance().GetStringProperty("INS-17200_FOV_CLASS_SPEC", 1);
+    auto classSpec = IO::Astrodynamics::DataPoolMonitoring::GetStringProperty("INS-17200_FOV_CLASS_SPEC", 1);
     ASSERT_STREQ("ANGLES", classSpec[0].c_str());
 
-    auto shape = IO::Astrodynamics::DataPoolMonitoring::Instance().GetStringProperty("INS-17200_FOV_SHAPE", 1);
+    auto shape = IO::Astrodynamics::DataPoolMonitoring::GetStringProperty("INS-17200_FOV_SHAPE", 1);
     ASSERT_STREQ("CIRCLE", shape[0].c_str());
 
-    auto frame = IO::Astrodynamics::DataPoolMonitoring::Instance().GetStringProperty("INS-17200_FOV_FRAME", 1);
+    auto frame = IO::Astrodynamics::DataPoolMonitoring::GetStringProperty("INS-17200_FOV_FRAME", 1);
     ASSERT_STREQ("SC17_CAMERA200", frame[0].c_str());
 
-    auto boresightKernel = IO::Astrodynamics::DataPoolMonitoring::Instance().GetDoubleProperty("INS-17200_BORESIGHT", 3);
+    auto boresightKernel = IO::Astrodynamics::DataPoolMonitoring::GetDoubleProperty("INS-17200_BORESIGHT", 3);
     ASSERT_DOUBLE_EQ(boresight.GetX(), boresightKernel[0]);
     ASSERT_DOUBLE_EQ(boresight.GetY(), boresightKernel[1]);
     ASSERT_DOUBLE_EQ(boresight.GetZ(), boresightKernel[2]);
 
-    auto fovVectorKernel = IO::Astrodynamics::DataPoolMonitoring::Instance().GetDoubleProperty("INS-17200_FOV_REF_VECTOR", 3);
+    auto fovVectorKernel = IO::Astrodynamics::DataPoolMonitoring::GetDoubleProperty("INS-17200_FOV_REF_VECTOR", 3);
     ASSERT_DOUBLE_EQ(fovvector.GetX(), fovVectorKernel[0]);
     ASSERT_DOUBLE_EQ(fovvector.GetY(), fovVectorKernel[1]);
     ASSERT_DOUBLE_EQ(fovvector.GetZ(), fovVectorKernel[2]);
 
-    auto angle = IO::Astrodynamics::DataPoolMonitoring::Instance().GetDoubleProperty("INS-17200_FOV_REF_ANGLE", 1);
+    auto angle = IO::Astrodynamics::DataPoolMonitoring::GetDoubleProperty("INS-17200_FOV_REF_ANGLE", 1);
     ASSERT_DOUBLE_EQ(1.5 * 0.5, angle[0]);
 
-    auto units = IO::Astrodynamics::DataPoolMonitoring::Instance().GetStringProperty("INS-17200_FOV_ANGLE_UNITS", 1);
+    auto units = IO::Astrodynamics::DataPoolMonitoring::GetStringProperty("INS-17200_FOV_ANGLE_UNITS", 1);
     ASSERT_STREQ("RADIANS", units[0].c_str());
 }
 
@@ -179,29 +176,29 @@ TEST(Instrument, RectangularKernel)
     IO::Astrodynamics::Body::Spacecraft::Spacecraft s{-17, "sc17", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams)};
     s.AddRectangularFOVInstrument(-17300, "Camera300", orientation, boresight, fovvector, 1.5, IO::Astrodynamics::Constants::PI2);
 
-    auto classSpec = IO::Astrodynamics::DataPoolMonitoring::Instance().GetStringProperty("INS-17300_FOV_CLASS_SPEC", 1);
+    auto classSpec = IO::Astrodynamics::DataPoolMonitoring::GetStringProperty("INS-17300_FOV_CLASS_SPEC", 1);
     ASSERT_STREQ("ANGLES", classSpec[0].c_str());
 
-    auto shape = IO::Astrodynamics::DataPoolMonitoring::Instance().GetStringProperty("INS-17300_FOV_SHAPE", 1);
+    auto shape = IO::Astrodynamics::DataPoolMonitoring::GetStringProperty("INS-17300_FOV_SHAPE", 1);
     ASSERT_STREQ("RECTANGLE", shape[0].c_str());
 
-    auto frame = IO::Astrodynamics::DataPoolMonitoring::Instance().GetStringProperty("INS-17300_FOV_FRAME", 1);
+    auto frame = IO::Astrodynamics::DataPoolMonitoring::GetStringProperty("INS-17300_FOV_FRAME", 1);
     ASSERT_STREQ("SC17_CAMERA300", frame[0].c_str());
 
-    auto boresightKernel = IO::Astrodynamics::DataPoolMonitoring::Instance().GetDoubleProperty("INS-17300_BORESIGHT", 3);
+    auto boresightKernel = IO::Astrodynamics::DataPoolMonitoring::GetDoubleProperty("INS-17300_BORESIGHT", 3);
     ASSERT_DOUBLE_EQ(boresight.GetX(), boresightKernel[0]);
     ASSERT_DOUBLE_EQ(boresight.GetY(), boresightKernel[1]);
     ASSERT_DOUBLE_EQ(boresight.GetZ(), boresightKernel[2]);
 
-    auto fovVectorKernel = IO::Astrodynamics::DataPoolMonitoring::Instance().GetDoubleProperty("INS-17300_FOV_REF_VECTOR", 3);
+    auto fovVectorKernel = IO::Astrodynamics::DataPoolMonitoring::GetDoubleProperty("INS-17300_FOV_REF_VECTOR", 3);
     ASSERT_DOUBLE_EQ(fovvector.GetX(), fovVectorKernel[0]);
     ASSERT_DOUBLE_EQ(fovvector.GetY(), fovVectorKernel[1]);
     ASSERT_DOUBLE_EQ(fovvector.GetZ(), fovVectorKernel[2]);
 
-    auto angle = IO::Astrodynamics::DataPoolMonitoring::Instance().GetDoubleProperty("INS-17300_FOV_REF_ANGLE", 1);
+    auto angle = IO::Astrodynamics::DataPoolMonitoring::GetDoubleProperty("INS-17300_FOV_REF_ANGLE", 1);
     ASSERT_DOUBLE_EQ(1.5, angle[0]);
 
-    auto units = IO::Astrodynamics::DataPoolMonitoring::Instance().GetStringProperty("INS-17300_FOV_ANGLE_UNITS", 1);
+    auto units = IO::Astrodynamics::DataPoolMonitoring::GetStringProperty("INS-17300_FOV_ANGLE_UNITS", 1);
     ASSERT_STREQ("RADIANS", units[0].c_str());
 }
 
@@ -227,29 +224,29 @@ TEST(Instrument, EllipticalKernel)
     IO::Astrodynamics::Body::Spacecraft::Spacecraft s{-17, "sc17", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams)};
     s.AddEllipticalFOVInstrument(-17400, "Camera400", orientation, boresight, fovvector, 1.5, IO::Astrodynamics::Constants::PI2);
 
-    auto classSpec = IO::Astrodynamics::DataPoolMonitoring::Instance().GetStringProperty("INS-17400_FOV_CLASS_SPEC", 1);
+    auto classSpec = IO::Astrodynamics::DataPoolMonitoring::GetStringProperty("INS-17400_FOV_CLASS_SPEC", 1);
     ASSERT_STREQ("ANGLES", classSpec[0].c_str());
 
-    auto shape = IO::Astrodynamics::DataPoolMonitoring::Instance().GetStringProperty("INS-17400_FOV_SHAPE", 1);
+    auto shape = IO::Astrodynamics::DataPoolMonitoring::GetStringProperty("INS-17400_FOV_SHAPE", 1);
     ASSERT_STREQ("ELLIPSE", shape[0].c_str());
 
-    auto frame = IO::Astrodynamics::DataPoolMonitoring::Instance().GetStringProperty("INS-17400_FOV_FRAME", 1);
+    auto frame = IO::Astrodynamics::DataPoolMonitoring::GetStringProperty("INS-17400_FOV_FRAME", 1);
     ASSERT_STREQ("SC17_CAMERA400", frame[0].c_str());
 
-    auto boresightKernel = IO::Astrodynamics::DataPoolMonitoring::Instance().GetDoubleProperty("INS-17400_BORESIGHT", 3);
+    auto boresightKernel = IO::Astrodynamics::DataPoolMonitoring::GetDoubleProperty("INS-17400_BORESIGHT", 3);
     ASSERT_DOUBLE_EQ(boresight.GetX(), boresightKernel[0]);
     ASSERT_DOUBLE_EQ(boresight.GetY(), boresightKernel[1]);
     ASSERT_DOUBLE_EQ(boresight.GetZ(), boresightKernel[2]);
 
-    auto fovVectorKernel = IO::Astrodynamics::DataPoolMonitoring::Instance().GetDoubleProperty("INS-17400_FOV_REF_VECTOR", 3);
+    auto fovVectorKernel = IO::Astrodynamics::DataPoolMonitoring::GetDoubleProperty("INS-17400_FOV_REF_VECTOR", 3);
     ASSERT_DOUBLE_EQ(fovvector.GetX(), fovVectorKernel[0]);
     ASSERT_DOUBLE_EQ(fovvector.GetY(), fovVectorKernel[1]);
     ASSERT_DOUBLE_EQ(fovvector.GetZ(), fovVectorKernel[2]);
 
-    auto angle = IO::Astrodynamics::DataPoolMonitoring::Instance().GetDoubleProperty("INS-17400_FOV_REF_ANGLE", 1);
+    auto angle = IO::Astrodynamics::DataPoolMonitoring::GetDoubleProperty("INS-17400_FOV_REF_ANGLE", 1);
     ASSERT_DOUBLE_EQ(1.5, angle[0]);
 
-    auto units = IO::Astrodynamics::DataPoolMonitoring::Instance().GetStringProperty("INS-17400_FOV_ANGLE_UNITS", 1);
+    auto units = IO::Astrodynamics::DataPoolMonitoring::GetStringProperty("INS-17400_FOV_ANGLE_UNITS", 1);
     ASSERT_STREQ("RADIANS", units[0].c_str());
 }
 

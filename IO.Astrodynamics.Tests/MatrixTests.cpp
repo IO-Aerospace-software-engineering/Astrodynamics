@@ -55,6 +55,8 @@ TEST(Matrix, SetValue)
 
 }
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-result"
 TEST(Matrix, OutOfrange)
 {
 	IO::Astrodynamics::Math::Matrix mat(3, 4);
@@ -63,6 +65,7 @@ TEST(Matrix, OutOfrange)
 	ASSERT_THROW(mat.GetValue(3, 2), IO::Astrodynamics::Exception::SDKException);
 	ASSERT_THROW(mat.GetValue(2, 4), IO::Astrodynamics::Exception::SDKException);
 }
+#pragma clang diagnostic pop
 
 TEST(Matrix, Multiply)
 {

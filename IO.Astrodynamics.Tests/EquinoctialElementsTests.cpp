@@ -1,9 +1,7 @@
 #include <gtest/gtest.h>
-#include <string>
 #include "TestsConstants.h"
 #include <CelestialBody.h>
 #include <EquinoctialElements.h>
-#include <OrbitalParameters.h>
 #include <SpiceUsr.h>
 #include <cmath>
 #include <Constants.h>
@@ -229,7 +227,7 @@ TEST(EquinoctialElements, GetStateVectorFrom0Eccentricity) {
     IO::Astrodynamics::OrbitalParameters::EquinoctialElements eq(earth, a, ecc, inc, argp, node, m0, 0.0, 0.0, -IO::Astrodynamics::Constants::PI2, IO::Astrodynamics::Constants::PI2, t0,
                                                                  IO::Astrodynamics::Frames::InertialFrames::ICRF());
 
-    for (size_t i = 0; i < 360; i++) {
+    for (int i = 0; i < 360; i++) {
         auto v = eq.GetTrueAnomaly(IO::Astrodynamics::Time::TDB(std::chrono::duration<double>(eq.GetPeriod().GetSeconds().count() / 360 * i)));
         ASSERT_DOUBLE_EQ(i, v * IO::Astrodynamics::Constants::RAD_DEG);
     }
