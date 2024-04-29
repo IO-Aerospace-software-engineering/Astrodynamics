@@ -7,6 +7,8 @@ var classIO_1_1Astrodynamics_1_1Math_1_1Vector3D =
     [ "CrossProduct", "classIO_1_1Astrodynamics_1_1Math_1_1Vector3D.html#a86cc09c619c6043ab25c842d67fcad71", null ],
     [ "DotProduct", "classIO_1_1Astrodynamics_1_1Math_1_1Vector3D.html#a96c23c3e1212f0fe4a8162c45a72df3a", null ],
     [ "GetAngle", "classIO_1_1Astrodynamics_1_1Math_1_1Vector3D.html#a07376a9ab927a38f0ea7442418c2e0ff", null ],
+    [ "GetAngle", "classIO_1_1Astrodynamics_1_1Math_1_1Vector3D.html#a4a766ed943e41f252562e3b92ea617a5", null ],
+    [ "GetAngle", "classIO_1_1Astrodynamics_1_1Math_1_1Vector3D.html#a233fc449b90261f9dcd0073c8c075f2d", null ],
     [ "GetX", "classIO_1_1Astrodynamics_1_1Math_1_1Vector3D.html#af2322a71e715ebfa62eca9f3190cbd81", null ],
     [ "GetY", "classIO_1_1Astrodynamics_1_1Math_1_1Vector3D.html#af9bf6f2138c3eae9c3a7453d4c3cf32d", null ],
     [ "GetZ", "classIO_1_1Astrodynamics_1_1Math_1_1Vector3D.html#ad3c15e194cef594bf219b16b1fe0ca1b", null ],

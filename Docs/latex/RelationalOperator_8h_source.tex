@@ -1,56 +1,56 @@
-\hypertarget{RelationalOperator_8h_source}{}\doxysection{Relational\+Operator.\+h}
-\label{RelationalOperator_8h_source}\index{IO.Astrodynamics/Constraints/RelationalOperator.h@{IO.Astrodynamics/Constraints/RelationalOperator.h}}
+\doxysection{Relational\+Operator.\+h}
+\hypertarget{RelationalOperator_8h_source}{}\label{RelationalOperator_8h_source}\index{IO.Astrodynamics/Constraints/RelationalOperator.h@{IO.Astrodynamics/Constraints/RelationalOperator.h}}
 \mbox{\hyperlink{RelationalOperator_8h}{Go to the documentation of this file.}}
 \begin{DoxyCode}{0}
-\DoxyCodeLine{1 \textcolor{comment}{/*}}
-\DoxyCodeLine{2 \textcolor{comment}{ Copyright (c) 2021-\/2023. Sylvain Guillet (sylvain.guillet@tutamail.com)}}
-\DoxyCodeLine{3 \textcolor{comment}{ */}}
-\DoxyCodeLine{4 \textcolor{preprocessor}{\#ifndef CONSTRAINT\_H}}
-\DoxyCodeLine{5 \textcolor{preprocessor}{\#define CONSTRAINT\_H}}
-\DoxyCodeLine{6 }
-\DoxyCodeLine{7 \textcolor{preprocessor}{\#include <string>}}
-\DoxyCodeLine{8 }
-\DoxyCodeLine{9 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Constraints}{IO::Astrodynamics::Constraints}}}
-\DoxyCodeLine{10 \{}
-\DoxyCodeLine{11     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Constraints_1_1RelationalOperator}{RelationalOperator}}}
-\DoxyCodeLine{12     \{}
-\DoxyCodeLine{13     \textcolor{keyword}{private}:}
-\DoxyCodeLine{14         \textcolor{keyword}{const} std::string m\_name;}
-\DoxyCodeLine{15         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Constraints_1_1RelationalOperator}{RelationalOperator}} mGreaterThan;}
-\DoxyCodeLine{16         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Constraints_1_1RelationalOperator}{RelationalOperator}} mLowerThan;}
-\DoxyCodeLine{17         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Constraints_1_1RelationalOperator}{RelationalOperator}} mEqual;}
-\DoxyCodeLine{18         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Constraints_1_1RelationalOperator}{RelationalOperator}} mAbsMin;}
-\DoxyCodeLine{19         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Constraints_1_1RelationalOperator}{RelationalOperator}} mAbsMax;}
-\DoxyCodeLine{20         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Constraints_1_1RelationalOperator}{RelationalOperator}} mLocalMin;}
-\DoxyCodeLine{21         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Constraints_1_1RelationalOperator}{RelationalOperator}} mLocalMax;}
-\DoxyCodeLine{22 }
-\DoxyCodeLine{23     \textcolor{keyword}{public}:}
-\DoxyCodeLine{29         \textcolor{keyword}{explicit} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Constraints_1_1RelationalOperator_a4b58faa8d0ea92caba17b7c5c6e09792}{RelationalOperator}}(std::string name);}
-\DoxyCodeLine{30 }
-\DoxyCodeLine{31         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Constraints_1_1RelationalOperator_a48a806cf38a13eb259787076476ccef9}{RelationalOperator}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Constraints_1_1RelationalOperator}{RelationalOperator}} \&relationalOperator) = \textcolor{keywordflow}{default};}
-\DoxyCodeLine{32         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Constraints_1_1RelationalOperator}{IO::Astrodynamics::Constraints::RelationalOperator}} \&\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Constraints_1_1RelationalOperator_a577754c9f4cc2cecbee7ee488349cfb7}{operator=}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Constraints_1_1RelationalOperator}{RelationalOperator}} \&other);}
-\DoxyCodeLine{33 }
-\DoxyCodeLine{39         [[nodiscard]] \textcolor{keyword}{const} \textcolor{keywordtype}{char} *\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Constraints_1_1RelationalOperator_a427d74bd2d21af3c2f1b6a7d3ac23688}{ToCharArray}}() \textcolor{keyword}{const};}
-\DoxyCodeLine{40 }
-\DoxyCodeLine{41         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Constraints_1_1RelationalOperator}{IO::Astrodynamics::Constraints::RelationalOperator}} \&\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Constraints_1_1RelationalOperator_a61fa60e49e1538aa7f4a61e8a87f3d5b}{GreaterThan}}();}
-\DoxyCodeLine{42 }
-\DoxyCodeLine{43         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Constraints_1_1RelationalOperator}{IO::Astrodynamics::Constraints::RelationalOperator}} \&\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Constraints_1_1RelationalOperator_aa1859b4691727f0b5b5bbc162717fced}{LowerThan}}();}
-\DoxyCodeLine{44 }
-\DoxyCodeLine{45         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Constraints_1_1RelationalOperator}{IO::Astrodynamics::Constraints::RelationalOperator}} \&\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Constraints_1_1RelationalOperator_a91cf3d641f81f247677cc0d48a7a1877}{Equal}}();}
-\DoxyCodeLine{46 }
-\DoxyCodeLine{47         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Constraints_1_1RelationalOperator}{IO::Astrodynamics::Constraints::RelationalOperator}} \&\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Constraints_1_1RelationalOperator_a89e34014bd4aed262996532d4da1df7b}{AbsMin}}();}
-\DoxyCodeLine{48 }
-\DoxyCodeLine{49         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Constraints_1_1RelationalOperator}{IO::Astrodynamics::Constraints::RelationalOperator}} \&\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Constraints_1_1RelationalOperator_adc3e1ab45af7b72078be25b26216db5d}{AbsMax}}();}
-\DoxyCodeLine{50 }
-\DoxyCodeLine{51         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Constraints_1_1RelationalOperator}{IO::Astrodynamics::Constraints::RelationalOperator}} \&\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Constraints_1_1RelationalOperator_a22320b627621ee6eeea58a9fae7d57ec}{LocalMin}}();}
-\DoxyCodeLine{52 }
-\DoxyCodeLine{53         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Constraints_1_1RelationalOperator}{IO::Astrodynamics::Constraints::RelationalOperator}} \&\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Constraints_1_1RelationalOperator_af7cd2371fa9e25d2ea81f2dd165fe04d}{LocalMax}}();}
-\DoxyCodeLine{54 }
-\DoxyCodeLine{55         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Constraints_1_1RelationalOperator}{IO::Astrodynamics::Constraints::RelationalOperator}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Constraints_1_1RelationalOperator_adf403fa7e5b3a26e5665ad07d24347a0}{ToRelationalOperator}}(\textcolor{keyword}{const} std::string \&relationalOperator);}
-\DoxyCodeLine{56     \};}
-\DoxyCodeLine{57 }
-\DoxyCodeLine{58 \} \textcolor{comment}{// namespace IO::Astrodynamics}}
-\DoxyCodeLine{59 }
-\DoxyCodeLine{60 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00001\ \textcolor{comment}{/*}}
+\DoxyCodeLine{00002\ \textcolor{comment}{\ Copyright\ (c)\ 2021-\/2023.\ Sylvain\ Guillet\ (sylvain.guillet@tutamail.com)}}
+\DoxyCodeLine{00003\ \textcolor{comment}{\ */}}
+\DoxyCodeLine{00004\ \textcolor{preprocessor}{\#ifndef\ CONSTRAINT\_H}}
+\DoxyCodeLine{00005\ \textcolor{preprocessor}{\#define\ CONSTRAINT\_H}}
+\DoxyCodeLine{00006\ }
+\DoxyCodeLine{00007\ \textcolor{preprocessor}{\#include\ <string>}}
+\DoxyCodeLine{00008\ }
+\DoxyCodeLine{00009\ \textcolor{keyword}{namespace\ }\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Constraints}{IO::Astrodynamics::Constraints}}}
+\DoxyCodeLine{00010\ \{}
+\DoxyCodeLine{00011\ \ \ \ \ \textcolor{keyword}{class\ }\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Constraints_1_1RelationalOperator}{RelationalOperator}}}
+\DoxyCodeLine{00012\ \ \ \ \ \{}
+\DoxyCodeLine{00013\ \ \ \ \ \textcolor{keyword}{private}:}
+\DoxyCodeLine{00014\ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ std::string\ m\_name;}
+\DoxyCodeLine{00015\ \ \ \ \ \ \ \ \ \textcolor{keyword}{static}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Constraints_1_1RelationalOperator}{RelationalOperator}}\ mGreaterThan;}
+\DoxyCodeLine{00016\ \ \ \ \ \ \ \ \ \textcolor{keyword}{static}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Constraints_1_1RelationalOperator}{RelationalOperator}}\ mLowerThan;}
+\DoxyCodeLine{00017\ \ \ \ \ \ \ \ \ \textcolor{keyword}{static}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Constraints_1_1RelationalOperator}{RelationalOperator}}\ mEqual;}
+\DoxyCodeLine{00018\ \ \ \ \ \ \ \ \ \textcolor{keyword}{static}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Constraints_1_1RelationalOperator}{RelationalOperator}}\ mAbsMin;}
+\DoxyCodeLine{00019\ \ \ \ \ \ \ \ \ \textcolor{keyword}{static}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Constraints_1_1RelationalOperator}{RelationalOperator}}\ mAbsMax;}
+\DoxyCodeLine{00020\ \ \ \ \ \ \ \ \ \textcolor{keyword}{static}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Constraints_1_1RelationalOperator}{RelationalOperator}}\ mLocalMin;}
+\DoxyCodeLine{00021\ \ \ \ \ \ \ \ \ \textcolor{keyword}{static}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Constraints_1_1RelationalOperator}{RelationalOperator}}\ mLocalMax;}
+\DoxyCodeLine{00022\ }
+\DoxyCodeLine{00023\ \ \ \ \ \textcolor{keyword}{public}:}
+\DoxyCodeLine{00029\ \ \ \ \ \ \ \ \ \textcolor{keyword}{explicit}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Constraints_1_1RelationalOperator}{RelationalOperator}}(std::string\ name);}
+\DoxyCodeLine{00030\ }
+\DoxyCodeLine{00031\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Constraints_1_1RelationalOperator_a48a806cf38a13eb259787076476ccef9}{RelationalOperator}}(\textcolor{keyword}{const}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Constraints_1_1RelationalOperator}{RelationalOperator}}\ \&relationalOperator)\ =\ \textcolor{keywordflow}{default};}
+\DoxyCodeLine{00032\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Constraints_1_1RelationalOperator}{IO::Astrodynamics::Constraints::RelationalOperator}}\ \&\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Constraints_1_1RelationalOperator_a577754c9f4cc2cecbee7ee488349cfb7}{operator=}}(\textcolor{keyword}{const}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Constraints_1_1RelationalOperator}{RelationalOperator}}\ \&other);}
+\DoxyCodeLine{00033\ }
+\DoxyCodeLine{00039\ \ \ \ \ \ \ \ \ [[nodiscard]]\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{char}\ *\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Constraints_1_1RelationalOperator_a427d74bd2d21af3c2f1b6a7d3ac23688}{ToCharArray}}()\ \textcolor{keyword}{const};}
+\DoxyCodeLine{00040\ }
+\DoxyCodeLine{00041\ \ \ \ \ \ \ \ \ \textcolor{keyword}{static}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Constraints_1_1RelationalOperator}{IO::Astrodynamics::Constraints::RelationalOperator}}\ \&\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Constraints_1_1RelationalOperator_a61fa60e49e1538aa7f4a61e8a87f3d5b}{GreaterThan}}();}
+\DoxyCodeLine{00042\ }
+\DoxyCodeLine{00043\ \ \ \ \ \ \ \ \ \textcolor{keyword}{static}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Constraints_1_1RelationalOperator}{IO::Astrodynamics::Constraints::RelationalOperator}}\ \&\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Constraints_1_1RelationalOperator_aa1859b4691727f0b5b5bbc162717fced}{LowerThan}}();}
+\DoxyCodeLine{00044\ }
+\DoxyCodeLine{00045\ \ \ \ \ \ \ \ \ \textcolor{keyword}{static}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Constraints_1_1RelationalOperator}{IO::Astrodynamics::Constraints::RelationalOperator}}\ \&\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Constraints_1_1RelationalOperator_a91cf3d641f81f247677cc0d48a7a1877}{Equal}}();}
+\DoxyCodeLine{00046\ }
+\DoxyCodeLine{00047\ \ \ \ \ \ \ \ \ \textcolor{keyword}{static}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Constraints_1_1RelationalOperator}{IO::Astrodynamics::Constraints::RelationalOperator}}\ \&\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Constraints_1_1RelationalOperator_a89e34014bd4aed262996532d4da1df7b}{AbsMin}}();}
+\DoxyCodeLine{00048\ }
+\DoxyCodeLine{00049\ \ \ \ \ \ \ \ \ \textcolor{keyword}{static}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Constraints_1_1RelationalOperator}{IO::Astrodynamics::Constraints::RelationalOperator}}\ \&\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Constraints_1_1RelationalOperator_adc3e1ab45af7b72078be25b26216db5d}{AbsMax}}();}
+\DoxyCodeLine{00050\ }
+\DoxyCodeLine{00051\ \ \ \ \ \ \ \ \ \textcolor{keyword}{static}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Constraints_1_1RelationalOperator}{IO::Astrodynamics::Constraints::RelationalOperator}}\ \&\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Constraints_1_1RelationalOperator_a22320b627621ee6eeea58a9fae7d57ec}{LocalMin}}();}
+\DoxyCodeLine{00052\ }
+\DoxyCodeLine{00053\ \ \ \ \ \ \ \ \ \textcolor{keyword}{static}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Constraints_1_1RelationalOperator}{IO::Astrodynamics::Constraints::RelationalOperator}}\ \&\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Constraints_1_1RelationalOperator_af7cd2371fa9e25d2ea81f2dd165fe04d}{LocalMax}}();}
+\DoxyCodeLine{00054\ }
+\DoxyCodeLine{00055\ \ \ \ \ \ \ \ \ \textcolor{keyword}{static}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Constraints_1_1RelationalOperator}{IO::Astrodynamics::Constraints::RelationalOperator}}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Constraints_1_1RelationalOperator_adf403fa7e5b3a26e5665ad07d24347a0}{ToRelationalOperator}}(\textcolor{keyword}{const}\ std::string\ \&relationalOperator);}
+\DoxyCodeLine{00056\ \ \ \ \ \};}
+\DoxyCodeLine{00057\ }
+\DoxyCodeLine{00058\ \}\ \textcolor{comment}{//\ namespace\ IO::Astrodynamics}}
+\DoxyCodeLine{00059\ }
+\DoxyCodeLine{00060\ \textcolor{preprocessor}{\#endif}}
 
 \end{DoxyCode}

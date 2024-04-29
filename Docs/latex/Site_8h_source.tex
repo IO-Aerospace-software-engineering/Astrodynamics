@@ -1,112 +1,112 @@
-\hypertarget{Site_8h_source}{}\doxysection{Site.\+h}
-\label{Site_8h_source}\index{IO.Astrodynamics/Sites/Site.h@{IO.Astrodynamics/Sites/Site.h}}
+\doxysection{Site.\+h}
+\hypertarget{Site_8h_source}{}\label{Site_8h_source}\index{IO.Astrodynamics/Sites/Site.h@{IO.Astrodynamics/Sites/Site.h}}
 \mbox{\hyperlink{Site_8h}{Go to the documentation of this file.}}
 \begin{DoxyCode}{0}
-\DoxyCodeLine{1 \textcolor{comment}{/*}}
-\DoxyCodeLine{2 \textcolor{comment}{ Copyright (c) 2021-\/2023. Sylvain Guillet (sylvain.guillet@tutamail.com)}}
-\DoxyCodeLine{3 \textcolor{comment}{ */}}
-\DoxyCodeLine{4 }
-\DoxyCodeLine{5 \textcolor{preprocessor}{\#ifndef SITE\_H}}
-\DoxyCodeLine{6 \textcolor{preprocessor}{\#define SITE\_H}}
-\DoxyCodeLine{7 }
-\DoxyCodeLine{8 }
-\DoxyCodeLine{9 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{Planetodetic_8h}{Planetodetic.h}}>}}
-\DoxyCodeLine{10 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{Illumination_8h}{Illumination.h}}>}}
-\DoxyCodeLine{11 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{SiteFrameFile_8h}{SiteFrameFile.h}}>}}
-\DoxyCodeLine{12 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{HorizontalCoordinates_8h}{HorizontalCoordinates.h}}>}}
-\DoxyCodeLine{13 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{IlluminationAngle_8h}{IlluminationAngle.h}}>}}
-\DoxyCodeLine{14 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{EphemerisKernel_8h}{EphemerisKernel.h}}>}}
-\DoxyCodeLine{15 }
-\DoxyCodeLine{16 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Kernels}{IO::Astrodynamics::Kernels}}}
-\DoxyCodeLine{17 \{}
-\DoxyCodeLine{18     \textcolor{keyword}{class }EphemerisKernel;}
-\DoxyCodeLine{19 \}}
-\DoxyCodeLine{20 }
-\DoxyCodeLine{21 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Sites}{IO::Astrodynamics::Sites}}}
-\DoxyCodeLine{22 \{}
-\DoxyCodeLine{27     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1Site}{Site}}}
-\DoxyCodeLine{28     \{}
-\DoxyCodeLine{29     \textcolor{keyword}{protected}:}
-\DoxyCodeLine{30         \textcolor{keyword}{const} \textcolor{keywordtype}{int} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1Site_abd34dac7930c7852659591c95e48f633}{m\_id}};}
-\DoxyCodeLine{31         \textcolor{keyword}{const} std::string \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1Site_abc5b82fb0f61bfa39fbb7223e89af9df}{m\_name}};}
-\DoxyCodeLine{32         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1Planetodetic}{IO::Astrodynamics::Coordinates::Planetodetic}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1Site_a5aabd4c4cb411d38bc097bee3d49bae6}{m\_coordinates}};}
-\DoxyCodeLine{33         \textcolor{keyword}{const} std::string \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1Site_ada45b329aad61990405daa34b216374a}{m\_filesPath}};}
-\DoxyCodeLine{34         \textcolor{keyword}{const} std::unique\_ptr<IO::Astrodynamics::Kernels::EphemerisKernel> \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1Site_aa4b02d097272611df84de25505b0d500}{m\_ephemerisKernel}};}
-\DoxyCodeLine{35 }
-\DoxyCodeLine{36         \textcolor{keyword}{const} std::shared\_ptr<IO::Astrodynamics::Body::CelestialBody> \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1Site_a6713ec5732b0acb01071b72fff4dec89}{m\_body}};}
-\DoxyCodeLine{37         \textcolor{keyword}{const} std::unique\_ptr<IO::Astrodynamics::Frames::SiteFrameFile> \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1Site_a63820cf3741c5ab4c2e1f460a2c8f8fc}{m\_frame}};}
-\DoxyCodeLine{42         \textcolor{keywordtype}{void} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1Site_a20b84f91b0adce02beef511d6b1731c1}{WriteEphemeris}}(\textcolor{keyword}{const} std::vector<OrbitalParameters::StateVector> \&states) \textcolor{keyword}{const};}
-\DoxyCodeLine{43 }
-\DoxyCodeLine{44     \textcolor{keyword}{public}:}
-\DoxyCodeLine{51         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1Site_a4f7407b2ca5c691d934738255d77ad2c}{Site}}(\textcolor{keywordtype}{int} \textcolor{keywordtype}{id}, std::string name, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1Planetodetic}{IO::Astrodynamics::Coordinates::Planetodetic}} \&coordinates,}
-\DoxyCodeLine{52              std::shared\_ptr<IO::Astrodynamics::Body::CelestialBody> body, std::string directoryPath);}
-\DoxyCodeLine{53 }
-\DoxyCodeLine{54         \textcolor{keyword}{virtual} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1Site_a71366fcfe7e06122ed44177dd833f8c8}{\string~Site}}() = \textcolor{keywordflow}{default};}
-\DoxyCodeLine{55 }
-\DoxyCodeLine{61         [[nodiscard]] \textcolor{keyword}{inline} \textcolor{keywordtype}{int} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1Site_a99ffea3c53b0dde9e9c5dc05fc2d3f08}{GetId}}()\textcolor{keyword}{ const}}
-\DoxyCodeLine{62 \textcolor{keyword}{        }\{ \textcolor{keywordflow}{return} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1Site_abd34dac7930c7852659591c95e48f633}{m\_id}}; \}}
-\DoxyCodeLine{63 }
-\DoxyCodeLine{69         [[nodiscard]] \textcolor{keyword}{inline} std::string \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1Site_abbbf37dd4e23c22c1f5a7fa1a38541bc}{GetName}}()\textcolor{keyword}{ const}}
-\DoxyCodeLine{70 \textcolor{keyword}{        }\{ \textcolor{keywordflow}{return} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1Site_abc5b82fb0f61bfa39fbb7223e89af9df}{m\_name}}; \}}
-\DoxyCodeLine{71 }
-\DoxyCodeLine{77         [[nodiscard]] \textcolor{keyword}{inline} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1Planetodetic}{IO::Astrodynamics::Coordinates::Planetodetic}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1Site_aaa88952123223124e504299a92f429e4}{GetCoordinates}}()\textcolor{keyword}{ const}}
-\DoxyCodeLine{78 \textcolor{keyword}{        }\{ \textcolor{keywordflow}{return} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1Site_a5aabd4c4cb411d38bc097bee3d49bae6}{m\_coordinates}}; \}}
-\DoxyCodeLine{79 }
-\DoxyCodeLine{85         [[nodiscard]] \textcolor{keyword}{inline} std::shared\_ptr<IO::Astrodynamics::Body::CelestialBody> \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1Site_ae2742a67574b371f7db16e6fcb365e3d}{GetBody}}()\textcolor{keyword}{ const}}
-\DoxyCodeLine{86 \textcolor{keyword}{        }\{ \textcolor{keywordflow}{return} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1Site_a6713ec5732b0acb01071b72fff4dec89}{m\_body}}; \}}
-\DoxyCodeLine{87 }
-\DoxyCodeLine{95         [[nodiscard]] \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1Equatorial}{IO::Astrodynamics::Coordinates::Equatorial}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1Site_afebf0c09d5399c746d629f2a0e79ac61}{GetRADec}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem}{IO::Astrodynamics::Body::CelestialItem}} \&body, \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_af0023a81d12385b73d78bd82e4b96ce3}{IO::Astrodynamics::AberrationsEnum}} aberrationCorrection, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO::Astrodynamics::Time::TDB}} \&epoch) \textcolor{keyword}{const};}
-\DoxyCodeLine{96 }
-\DoxyCodeLine{102         [[nodiscard]] \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}{IO::Astrodynamics::OrbitalParameters::StateVector}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1Site_a1bcc4bed543a34442f9236fa1de10f77}{GetStateVector}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Frames_1_1Frames}{IO::Astrodynamics::Frames::Frames}}\& frame, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO::Astrodynamics::Time::TDB}} \&epoch) \textcolor{keyword}{const};}
-\DoxyCodeLine{103 }
-\DoxyCodeLine{111         [[nodiscard]] \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Illumination_1_1Illumination}{IO::Astrodynamics::Illumination::Illumination}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1Site_ab5eedc003cfa2f3dd15d9075dfc85aa4}{GetIllumination}}(\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_af0023a81d12385b73d78bd82e4b96ce3}{IO::Astrodynamics::AberrationsEnum}} aberrationCorrection, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO::Astrodynamics::Time::TDB}} \&epoch) \textcolor{keyword}{const};}
-\DoxyCodeLine{112 }
-\DoxyCodeLine{120         [[nodiscard]] \textcolor{keywordtype}{bool} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1Site_a7c00a29c46928098fda833a5142b4cda}{IsDay}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO::Astrodynamics::Time::TDB}} \&epoch, \textcolor{keywordtype}{double} twilight) \textcolor{keyword}{const};}
-\DoxyCodeLine{121 }
-\DoxyCodeLine{129         [[nodiscard]] \textcolor{keywordtype}{bool} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1Site_a4e94af2d262d0a9d85424639ea8c041e}{IsNight}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO::Astrodynamics::Time::TDB}} \&epoch, \textcolor{keywordtype}{double} twilight) \textcolor{keyword}{const};}
-\DoxyCodeLine{130 }
-\DoxyCodeLine{138         [[nodiscard]] std::vector<IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::UTC>> \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1Site_a5bd78352466c6f103807fa66255d78ca}{FindDayWindows}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::UTC>}} \&searchWindow, \textcolor{keywordtype}{double} twilight) \textcolor{keyword}{const};}
-\DoxyCodeLine{139 }
-\DoxyCodeLine{147         [[nodiscard]] std::vector<IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::UTC>> \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1Site_ae17b207599c5a82a87cc283a8af0d038}{FindNightWindows}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::UTC>}} \&searchWindow, \textcolor{keywordtype}{double} twilight) \textcolor{keyword}{const};}
-\DoxyCodeLine{148 }
-\DoxyCodeLine{160         [[nodiscard]] std::vector<IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::UTC>>}
-\DoxyCodeLine{161         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1Site_a66cf237159da7f76072507f7d9a26f36}{FindWindowsOnIlluminationConstraint}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::UTC>}} \&searchWindow, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem}{IO::Astrodynamics::Body::CelestialItem}} \&observerBody,}
-\DoxyCodeLine{162                                             \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1IlluminationAngle}{IO::Astrodynamics::IlluminationAngle}} \&illuminationAngle, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Constraints_1_1RelationalOperator}{IO::Astrodynamics::Constraints::RelationalOperator}} \&constraint, \textcolor{keywordtype}{double} value) \textcolor{keyword}{const};}
-\DoxyCodeLine{163 }
-\DoxyCodeLine{171         [[nodiscard]] \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1HorizontalCoordinates}{IO::Astrodynamics::Coordinates::HorizontalCoordinates}}}
-\DoxyCodeLine{172         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1Site_a2adaf38b701393c05df25581d2e01117}{GetHorizontalCoordinates}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem}{IO::Astrodynamics::Body::CelestialItem}} \&body, \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_af0023a81d12385b73d78bd82e4b96ce3}{IO::Astrodynamics::AberrationsEnum}} aberrationCorrection, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO::Astrodynamics::Time::TDB}} \&epoch) \textcolor{keyword}{const};}
-\DoxyCodeLine{173 }
-\DoxyCodeLine{174 }
-\DoxyCodeLine{183         [[nodiscard]] \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}{IO::Astrodynamics::OrbitalParameters::StateVector}}}
-\DoxyCodeLine{184         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1Site_a1bcc4bed543a34442f9236fa1de10f77}{GetStateVector}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem}{IO::Astrodynamics::Body::CelestialItem}} \&body, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Frames_1_1Frames}{IO::Astrodynamics::Frames::Frames}}\& frame, \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_af0023a81d12385b73d78bd82e4b96ce3}{IO::Astrodynamics::AberrationsEnum}} aberrationCorrection,}
-\DoxyCodeLine{185                        \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO::Astrodynamics::Time::TDB}} \&epoch) \textcolor{keyword}{const};}
-\DoxyCodeLine{186 }
-\DoxyCodeLine{187 }
-\DoxyCodeLine{188         [[nodiscard]] std::vector<IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::UTC>>}
-\DoxyCodeLine{189         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1Site_a181ada9ec71cf0bd3826b3b5f532e7de}{FindBodyVisibilityWindows}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem}{IO::Astrodynamics::Body::CelestialItem}} \&body, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::UTC>}} \&searchWindow,}
-\DoxyCodeLine{190                                   \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_af0023a81d12385b73d78bd82e4b96ce3}{IO::Astrodynamics::AberrationsEnum}} aberrationCorrection) \textcolor{keyword}{const};}
-\DoxyCodeLine{191 }
-\DoxyCodeLine{196         [[nodiscard]] \textcolor{keyword}{inline} \textcolor{keyword}{const} std::unique\_ptr<IO::Astrodynamics::Frames::SiteFrameFile> \&\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1Site_aa18ac74a6e9fd611b867212dd2bc9ab7}{GetFrame}}()\textcolor{keyword}{ const}}
-\DoxyCodeLine{197 \textcolor{keyword}{        }\{ \textcolor{keywordflow}{return} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1Site_a63820cf3741c5ab4c2e1f460a2c8f8fc}{m\_frame}}; \}}
-\DoxyCodeLine{198 }
-\DoxyCodeLine{203         [[nodiscard]] \textcolor{keyword}{inline} std::string \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1Site_aab60b3e6eaf64ccfbfa9dd0434cfeacd}{GetFilesPath}}()\textcolor{keyword}{ const}}
-\DoxyCodeLine{204 \textcolor{keyword}{        }\{ \textcolor{keywordflow}{return} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1Site_ada45b329aad61990405daa34b216374a}{m\_filesPath}}; \}}
-\DoxyCodeLine{205 }
-\DoxyCodeLine{206 }
-\DoxyCodeLine{207 }
-\DoxyCodeLine{212         \textcolor{keywordtype}{void} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1Site_ad0ac8e4980d15fa7b586d965fb5ec98b}{BuildAndWriteEphemeris}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB>}} \&searchWindow) \textcolor{keyword}{const};}
-\DoxyCodeLine{213 }
-\DoxyCodeLine{222         [[nodiscard]] \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}{OrbitalParameters::StateVector}}}
-\DoxyCodeLine{223         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1Site_a4d147391866026f4626b7dc712b67172}{ReadEphemeris}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Frames_1_1Frames}{Frames::Frames}} \&frame, \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_af0023a81d12385b73d78bd82e4b96ce3}{AberrationsEnum}} aberration, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{Time::TDB}} \&epoch, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody}{Body::CelestialBody}} \&observer) \textcolor{keyword}{const};}
-\DoxyCodeLine{224 }
-\DoxyCodeLine{229         [[nodiscard]] \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{Time::Window<IO::Astrodynamics::Time::TDB>}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1Site_abd527d5fbc38a9223415301dc6b08d95}{GetEphemerisCoverageWindow}}() \textcolor{keyword}{const};}
-\DoxyCodeLine{230 }
-\DoxyCodeLine{235         \textcolor{keywordtype}{void} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1Site_ab84fd6756d93d605b1aef07e956f559f}{WriteEphemerisKernelComment}}(\textcolor{keyword}{const} std::string \&comment) \textcolor{keyword}{const};}
-\DoxyCodeLine{236 }
-\DoxyCodeLine{241         [[nodiscard]] std::string \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1Site_aea6869b3fc6ca270cae7143b366acf82}{ReadEphemerisKernelComment}}() \textcolor{keyword}{const};}
-\DoxyCodeLine{242     \};}
-\DoxyCodeLine{243 \}}
-\DoxyCodeLine{244 }
-\DoxyCodeLine{245 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00001\ \textcolor{comment}{/*}}
+\DoxyCodeLine{00002\ \textcolor{comment}{\ Copyright\ (c)\ 2021-\/2023.\ Sylvain\ Guillet\ (sylvain.guillet@tutamail.com)}}
+\DoxyCodeLine{00003\ \textcolor{comment}{\ */}}
+\DoxyCodeLine{00004\ }
+\DoxyCodeLine{00005\ \textcolor{preprocessor}{\#ifndef\ SITE\_H}}
+\DoxyCodeLine{00006\ \textcolor{preprocessor}{\#define\ SITE\_H}}
+\DoxyCodeLine{00007\ }
+\DoxyCodeLine{00008\ }
+\DoxyCodeLine{00009\ \textcolor{preprocessor}{\#include\ <\mbox{\hyperlink{Planetodetic_8h}{Planetodetic.h}}>}}
+\DoxyCodeLine{00010\ \textcolor{preprocessor}{\#include\ <\mbox{\hyperlink{Illumination_8h}{Illumination.h}}>}}
+\DoxyCodeLine{00011\ \textcolor{preprocessor}{\#include\ <\mbox{\hyperlink{SiteFrameFile_8h}{SiteFrameFile.h}}>}}
+\DoxyCodeLine{00012\ \textcolor{preprocessor}{\#include\ <\mbox{\hyperlink{HorizontalCoordinates_8h}{HorizontalCoordinates.h}}>}}
+\DoxyCodeLine{00013\ \textcolor{preprocessor}{\#include\ <\mbox{\hyperlink{IlluminationAngle_8h}{IlluminationAngle.h}}>}}
+\DoxyCodeLine{00014\ \textcolor{preprocessor}{\#include\ <\mbox{\hyperlink{EphemerisKernel_8h}{EphemerisKernel.h}}>}}
+\DoxyCodeLine{00015\ }
+\DoxyCodeLine{00016\ \textcolor{keyword}{namespace\ }\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Kernels}{IO::Astrodynamics::Kernels}}}
+\DoxyCodeLine{00017\ \{}
+\DoxyCodeLine{00018\ \ \ \ \ \textcolor{keyword}{class\ }EphemerisKernel;}
+\DoxyCodeLine{00019\ \}}
+\DoxyCodeLine{00020\ }
+\DoxyCodeLine{00021\ \textcolor{keyword}{namespace\ }\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Sites}{IO::Astrodynamics::Sites}}}
+\DoxyCodeLine{00022\ \{}
+\DoxyCodeLine{00027\ \ \ \ \ \textcolor{keyword}{class\ }\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1Site}{Site}}}
+\DoxyCodeLine{00028\ \ \ \ \ \{}
+\DoxyCodeLine{00029\ \ \ \ \ \textcolor{keyword}{protected}:}
+\DoxyCodeLine{00030\ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ \textcolor{keywordtype}{int}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1Site_abd34dac7930c7852659591c95e48f633}{m\_id}};}
+\DoxyCodeLine{00031\ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ std::string\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1Site_abc5b82fb0f61bfa39fbb7223e89af9df}{m\_name}};}
+\DoxyCodeLine{00032\ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1Planetodetic}{IO::Astrodynamics::Coordinates::Planetodetic}}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1Site_a5aabd4c4cb411d38bc097bee3d49bae6}{m\_coordinates}};}
+\DoxyCodeLine{00033\ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ std::string\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1Site_ada45b329aad61990405daa34b216374a}{m\_filesPath}};}
+\DoxyCodeLine{00034\ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ std::unique\_ptr<IO::Astrodynamics::Kernels::EphemerisKernel>\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1Site_aa4b02d097272611df84de25505b0d500}{m\_ephemerisKernel}};}
+\DoxyCodeLine{00035\ }
+\DoxyCodeLine{00036\ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ std::shared\_ptr<IO::Astrodynamics::Body::CelestialBody>\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1Site_a6713ec5732b0acb01071b72fff4dec89}{m\_body}};}
+\DoxyCodeLine{00037\ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ std::unique\_ptr<IO::Astrodynamics::Frames::SiteFrameFile>\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1Site_a63820cf3741c5ab4c2e1f460a2c8f8fc}{m\_frame}};}
+\DoxyCodeLine{00042\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1Site_a20b84f91b0adce02beef511d6b1731c1}{WriteEphemeris}}(\textcolor{keyword}{const}\ std::vector<OrbitalParameters::StateVector>\ \&states)\ \textcolor{keyword}{const};}
+\DoxyCodeLine{00043\ }
+\DoxyCodeLine{00044\ \ \ \ \ \textcolor{keyword}{public}:}
+\DoxyCodeLine{00051\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1Site}{Site}}(\textcolor{keywordtype}{int}\ \textcolor{keywordtype}{id},\ std::string\ name,\ \textcolor{keyword}{const}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1Planetodetic}{IO::Astrodynamics::Coordinates::Planetodetic}}\ \&coordinates,}
+\DoxyCodeLine{00052\ \ \ \ \ \ \ \ \ \ \ \ \ \ std::shared\_ptr<IO::Astrodynamics::Body::CelestialBody>\ body,\ std::string\ directoryPath);}
+\DoxyCodeLine{00053\ }
+\DoxyCodeLine{00054\ \ \ \ \ \ \ \ \ \textcolor{keyword}{virtual}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1Site_a71366fcfe7e06122ed44177dd833f8c8}{\string~Site}}()\ =\ \textcolor{keywordflow}{default};}
+\DoxyCodeLine{00055\ }
+\DoxyCodeLine{00061\ \ \ \ \ \ \ \ \ [[nodiscard]]\ \textcolor{keyword}{inline}\ \textcolor{keywordtype}{int}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1Site_a99ffea3c53b0dde9e9c5dc05fc2d3f08}{GetId}}()\textcolor{keyword}{\ const}}
+\DoxyCodeLine{00062\ \textcolor{keyword}{\ \ \ \ \ \ \ \ }\{\ \textcolor{keywordflow}{return}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1Site_abd34dac7930c7852659591c95e48f633}{m\_id}};\ \}}
+\DoxyCodeLine{00063\ }
+\DoxyCodeLine{00069\ \ \ \ \ \ \ \ \ [[nodiscard]]\ \textcolor{keyword}{inline}\ std::string\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1Site_abbbf37dd4e23c22c1f5a7fa1a38541bc}{GetName}}()\textcolor{keyword}{\ const}}
+\DoxyCodeLine{00070\ \textcolor{keyword}{\ \ \ \ \ \ \ \ }\{\ \textcolor{keywordflow}{return}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1Site_abc5b82fb0f61bfa39fbb7223e89af9df}{m\_name}};\ \}}
+\DoxyCodeLine{00071\ }
+\DoxyCodeLine{00077\ \ \ \ \ \ \ \ \ [[nodiscard]]\ \textcolor{keyword}{inline}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1Planetodetic}{IO::Astrodynamics::Coordinates::Planetodetic}}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1Site_aaa88952123223124e504299a92f429e4}{GetCoordinates}}()\textcolor{keyword}{\ const}}
+\DoxyCodeLine{00078\ \textcolor{keyword}{\ \ \ \ \ \ \ \ }\{\ \textcolor{keywordflow}{return}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1Site_a5aabd4c4cb411d38bc097bee3d49bae6}{m\_coordinates}};\ \}}
+\DoxyCodeLine{00079\ }
+\DoxyCodeLine{00085\ \ \ \ \ \ \ \ \ [[nodiscard]]\ \textcolor{keyword}{inline}\ std::shared\_ptr<IO::Astrodynamics::Body::CelestialBody>\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1Site_ae2742a67574b371f7db16e6fcb365e3d}{GetBody}}()\textcolor{keyword}{\ const}}
+\DoxyCodeLine{00086\ \textcolor{keyword}{\ \ \ \ \ \ \ \ }\{\ \textcolor{keywordflow}{return}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1Site_a6713ec5732b0acb01071b72fff4dec89}{m\_body}};\ \}}
+\DoxyCodeLine{00087\ }
+\DoxyCodeLine{00095\ \ \ \ \ \ \ \ \ [[nodiscard]]\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1Equatorial}{IO::Astrodynamics::Coordinates::Equatorial}}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1Site_afebf0c09d5399c746d629f2a0e79ac61}{GetRADec}}(\textcolor{keyword}{const}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem}{IO::Astrodynamics::Body::CelestialItem}}\ \&body,\ \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_af0023a81d12385b73d78bd82e4b96ce3}{IO::Astrodynamics::AberrationsEnum}}\ aberrationCorrection,\ \textcolor{keyword}{const}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO::Astrodynamics::Time::TDB}}\ \&epoch)\ \textcolor{keyword}{const};}
+\DoxyCodeLine{00096\ }
+\DoxyCodeLine{00102\ \ \ \ \ \ \ \ \ [[nodiscard]]\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}{IO::Astrodynamics::OrbitalParameters::StateVector}}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1Site_a1bcc4bed543a34442f9236fa1de10f77}{GetStateVector}}(\textcolor{keyword}{const}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Frames_1_1Frames}{IO::Astrodynamics::Frames::Frames}}\&\ frame,\ \textcolor{keyword}{const}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO::Astrodynamics::Time::TDB}}\ \&epoch)\ \textcolor{keyword}{const};}
+\DoxyCodeLine{00103\ }
+\DoxyCodeLine{00111\ \ \ \ \ \ \ \ \ [[nodiscard]]\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Illumination_1_1Illumination}{IO::Astrodynamics::Illumination::Illumination}}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1Site_ab5eedc003cfa2f3dd15d9075dfc85aa4}{GetIllumination}}(\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_af0023a81d12385b73d78bd82e4b96ce3}{IO::Astrodynamics::AberrationsEnum}}\ aberrationCorrection,\ \textcolor{keyword}{const}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO::Astrodynamics::Time::TDB}}\ \&epoch)\ \textcolor{keyword}{const};}
+\DoxyCodeLine{00112\ }
+\DoxyCodeLine{00120\ \ \ \ \ \ \ \ \ [[nodiscard]]\ \textcolor{keywordtype}{bool}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1Site_a7c00a29c46928098fda833a5142b4cda}{IsDay}}(\textcolor{keyword}{const}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO::Astrodynamics::Time::TDB}}\ \&epoch,\ \textcolor{keywordtype}{double}\ twilight)\ \textcolor{keyword}{const};}
+\DoxyCodeLine{00121\ }
+\DoxyCodeLine{00129\ \ \ \ \ \ \ \ \ [[nodiscard]]\ \textcolor{keywordtype}{bool}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1Site_a4e94af2d262d0a9d85424639ea8c041e}{IsNight}}(\textcolor{keyword}{const}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO::Astrodynamics::Time::TDB}}\ \&epoch,\ \textcolor{keywordtype}{double}\ twilight)\ \textcolor{keyword}{const};}
+\DoxyCodeLine{00130\ }
+\DoxyCodeLine{00138\ \ \ \ \ \ \ \ \ [[nodiscard]]\ std::vector<IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::UTC>>\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1Site_a5bd78352466c6f103807fa66255d78ca}{FindDayWindows}}(\textcolor{keyword}{const}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::UTC>}}\ \&searchWindow,\ \textcolor{keywordtype}{double}\ twilight)\ \textcolor{keyword}{const};}
+\DoxyCodeLine{00139\ }
+\DoxyCodeLine{00147\ \ \ \ \ \ \ \ \ [[nodiscard]]\ std::vector<IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::UTC>>\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1Site_ae17b207599c5a82a87cc283a8af0d038}{FindNightWindows}}(\textcolor{keyword}{const}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::UTC>}}\ \&searchWindow,\ \textcolor{keywordtype}{double}\ twilight)\ \textcolor{keyword}{const};}
+\DoxyCodeLine{00148\ }
+\DoxyCodeLine{00160\ \ \ \ \ \ \ \ \ [[nodiscard]]\ std::vector<IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::UTC>>}
+\DoxyCodeLine{00161\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1Site_a66cf237159da7f76072507f7d9a26f36}{FindWindowsOnIlluminationConstraint}}(\textcolor{keyword}{const}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::UTC>}}\ \&searchWindow,\ \textcolor{keyword}{const}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem}{IO::Astrodynamics::Body::CelestialItem}}\ \&observerBody,}
+\DoxyCodeLine{00162\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1IlluminationAngle}{IO::Astrodynamics::IlluminationAngle}}\ \&illuminationAngle,\ \textcolor{keyword}{const}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Constraints_1_1RelationalOperator}{IO::Astrodynamics::Constraints::RelationalOperator}}\ \&constraint,\ \textcolor{keywordtype}{double}\ value)\ \textcolor{keyword}{const};}
+\DoxyCodeLine{00163\ }
+\DoxyCodeLine{00171\ \ \ \ \ \ \ \ \ [[nodiscard]]\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1HorizontalCoordinates}{IO::Astrodynamics::Coordinates::HorizontalCoordinates}}}
+\DoxyCodeLine{00172\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1Site_a2adaf38b701393c05df25581d2e01117}{GetHorizontalCoordinates}}(\textcolor{keyword}{const}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem}{IO::Astrodynamics::Body::CelestialItem}}\ \&body,\ \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_af0023a81d12385b73d78bd82e4b96ce3}{IO::Astrodynamics::AberrationsEnum}}\ aberrationCorrection,\ \textcolor{keyword}{const}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO::Astrodynamics::Time::TDB}}\ \&epoch)\ \textcolor{keyword}{const};}
+\DoxyCodeLine{00173\ }
+\DoxyCodeLine{00174\ }
+\DoxyCodeLine{00183\ \ \ \ \ \ \ \ \ [[nodiscard]]\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}{IO::Astrodynamics::OrbitalParameters::StateVector}}}
+\DoxyCodeLine{00184\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1Site_a1bcc4bed543a34442f9236fa1de10f77}{GetStateVector}}(\textcolor{keyword}{const}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem}{IO::Astrodynamics::Body::CelestialItem}}\ \&body,\ \textcolor{keyword}{const}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Frames_1_1Frames}{IO::Astrodynamics::Frames::Frames}}\&\ frame,\ \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_af0023a81d12385b73d78bd82e4b96ce3}{IO::Astrodynamics::AberrationsEnum}}\ aberrationCorrection,}
+\DoxyCodeLine{00185\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO::Astrodynamics::Time::TDB}}\ \&epoch)\ \textcolor{keyword}{const};}
+\DoxyCodeLine{00186\ }
+\DoxyCodeLine{00187\ }
+\DoxyCodeLine{00188\ \ \ \ \ \ \ \ \ [[nodiscard]]\ std::vector<IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::UTC>>}
+\DoxyCodeLine{00189\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1Site_a181ada9ec71cf0bd3826b3b5f532e7de}{FindBodyVisibilityWindows}}(\textcolor{keyword}{const}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem}{IO::Astrodynamics::Body::CelestialItem}}\ \&body,\ \textcolor{keyword}{const}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::UTC>}}\ \&searchWindow,}
+\DoxyCodeLine{00190\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_af0023a81d12385b73d78bd82e4b96ce3}{IO::Astrodynamics::AberrationsEnum}}\ aberrationCorrection)\ \textcolor{keyword}{const};}
+\DoxyCodeLine{00191\ }
+\DoxyCodeLine{00196\ \ \ \ \ \ \ \ \ [[nodiscard]]\ \textcolor{keyword}{inline}\ \textcolor{keyword}{const}\ std::unique\_ptr<IO::Astrodynamics::Frames::SiteFrameFile>\ \&\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1Site_aa18ac74a6e9fd611b867212dd2bc9ab7}{GetFrame}}()\textcolor{keyword}{\ const}}
+\DoxyCodeLine{00197\ \textcolor{keyword}{\ \ \ \ \ \ \ \ }\{\ \textcolor{keywordflow}{return}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1Site_a63820cf3741c5ab4c2e1f460a2c8f8fc}{m\_frame}};\ \}}
+\DoxyCodeLine{00198\ }
+\DoxyCodeLine{00203\ \ \ \ \ \ \ \ \ [[nodiscard]]\ \textcolor{keyword}{inline}\ std::string\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1Site_aab60b3e6eaf64ccfbfa9dd0434cfeacd}{GetFilesPath}}()\textcolor{keyword}{\ const}}
+\DoxyCodeLine{00204\ \textcolor{keyword}{\ \ \ \ \ \ \ \ }\{\ \textcolor{keywordflow}{return}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1Site_ada45b329aad61990405daa34b216374a}{m\_filesPath}};\ \}}
+\DoxyCodeLine{00205\ }
+\DoxyCodeLine{00206\ }
+\DoxyCodeLine{00207\ }
+\DoxyCodeLine{00212\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1Site_ad0ac8e4980d15fa7b586d965fb5ec98b}{BuildAndWriteEphemeris}}(\textcolor{keyword}{const}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB>}}\ \&searchWindow)\ \textcolor{keyword}{const};}
+\DoxyCodeLine{00213\ }
+\DoxyCodeLine{00222\ \ \ \ \ \ \ \ \ [[nodiscard]]\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}{OrbitalParameters::StateVector}}}
+\DoxyCodeLine{00223\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1Site_a4d147391866026f4626b7dc712b67172}{ReadEphemeris}}(\textcolor{keyword}{const}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Frames_1_1Frames}{Frames::Frames}}\ \&frame,\ \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_af0023a81d12385b73d78bd82e4b96ce3}{AberrationsEnum}}\ aberration,\ \textcolor{keyword}{const}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{Time::TDB}}\ \&epoch,\ \textcolor{keyword}{const}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody}{Body::CelestialBody}}\ \&observer)\ \textcolor{keyword}{const};}
+\DoxyCodeLine{00224\ }
+\DoxyCodeLine{00229\ \ \ \ \ \ \ \ \ [[nodiscard]]\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{Time::Window<IO::Astrodynamics::Time::TDB>}}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1Site_abd527d5fbc38a9223415301dc6b08d95}{GetEphemerisCoverageWindow}}()\ \textcolor{keyword}{const};}
+\DoxyCodeLine{00230\ }
+\DoxyCodeLine{00235\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1Site_ab84fd6756d93d605b1aef07e956f559f}{WriteEphemerisKernelComment}}(\textcolor{keyword}{const}\ std::string\ \&comment)\ \textcolor{keyword}{const};}
+\DoxyCodeLine{00236\ }
+\DoxyCodeLine{00241\ \ \ \ \ \ \ \ \ [[nodiscard]]\ std::string\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Sites_1_1Site_aea6869b3fc6ca270cae7143b366acf82}{ReadEphemerisKernelComment}}()\ \textcolor{keyword}{const};}
+\DoxyCodeLine{00242\ \ \ \ \ \};}
+\DoxyCodeLine{00243\ \}}
+\DoxyCodeLine{00244\ }
+\DoxyCodeLine{00245\ \textcolor{preprocessor}{\#endif}}
 
 \end{DoxyCode}

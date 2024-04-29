@@ -25,7 +25,6 @@ var namespaceIO_1_1Astrodynamics =
     ] ],
     [ "Illumination", "namespaceIO_1_1Astrodynamics_1_1Illumination.html", "namespaceIO_1_1Astrodynamics_1_1Illumination" ],
     [ "Instruments", "namespaceIO_1_1Astrodynamics_1_1Instruments.html", "namespaceIO_1_1Astrodynamics_1_1Instruments" ],
-    [ "Integrators", "namespaceIO_1_1Astrodynamics_1_1Integrators.html", "namespaceIO_1_1Astrodynamics_1_1Integrators" ],
     [ "Kernels", "namespaceIO_1_1Astrodynamics_1_1Kernels.html", "namespaceIO_1_1Astrodynamics_1_1Kernels" ],
     [ "Maneuvers", "namespaceIO_1_1Astrodynamics_1_1Maneuvers.html", "namespaceIO_1_1Astrodynamics_1_1Maneuvers" ],
     [ "Math", "namespaceIO_1_1Astrodynamics_1_1Math.html", "namespaceIO_1_1Astrodynamics_1_1Math" ],
@@ -39,7 +38,6 @@ var namespaceIO_1_1Astrodynamics =
       [ "MaximumEphemerisLagrangePolynomialDegreeEvenSpaced", "namespaceIO_1_1Astrodynamics_1_1Parameters.html#aea7d63a4361591bc697bf63407ed0838", null ],
       [ "NodeDetectionAccuraccy", "namespaceIO_1_1Astrodynamics_1_1Parameters.html#a9f3f7e858285a71d576cd6c7d9e11033", null ]
     ] ],
-    [ "Propagators", "namespaceIO_1_1Astrodynamics_1_1Propagators.html", "namespaceIO_1_1Astrodynamics_1_1Propagators" ],
     [ "Sites", "namespaceIO_1_1Astrodynamics_1_1Sites.html", "namespaceIO_1_1Astrodynamics_1_1Sites" ],
     [ "Spice", "namespaceIO_1_1Astrodynamics_1_1Spice.html", "namespaceIO_1_1Astrodynamics_1_1Spice" ],
     [ "Time", "namespaceIO_1_1Astrodynamics_1_1Time.html", "namespaceIO_1_1Astrodynamics_1_1Time" ],
@@ -49,7 +47,6 @@ var namespaceIO_1_1Astrodynamics =
     [ "DataPoolMonitoring", "classIO_1_1Astrodynamics_1_1DataPoolMonitoring.html", "classIO_1_1Astrodynamics_1_1DataPoolMonitoring" ],
     [ "IlluminationAngle", "classIO_1_1Astrodynamics_1_1IlluminationAngle.html", "classIO_1_1Astrodynamics_1_1IlluminationAngle" ],
     [ "OccultationType", "classIO_1_1Astrodynamics_1_1OccultationType.html", "classIO_1_1Astrodynamics_1_1OccultationType" ],
-    [ "Scenario", "classIO_1_1Astrodynamics_1_1Scenario.html", "classIO_1_1Astrodynamics_1_1Scenario" ],
     [ "StringHelpers", "classIO_1_1Astrodynamics_1_1StringHelpers.html", null ],
     [ "AberrationsEnum", "namespaceIO_1_1Astrodynamics.html#af0023a81d12385b73d78bd82e4b96ce3", [
       [ "None", "namespaceIO_1_1Astrodynamics.html#af0023a81d12385b73d78bd82e4b96ce3a6adf97f83acf6453d4a6a4b1070f3754", null ],

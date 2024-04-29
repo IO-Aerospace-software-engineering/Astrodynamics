@@ -1,5 +1,5 @@
-\hypertarget{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}{}\doxysection{IO\+::Astrodynamics\+::Orbital\+Parameters\+::State\+Vector Class Reference}
-\label{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}\index{IO::Astrodynamics::OrbitalParameters::StateVector@{IO::Astrodynamics::OrbitalParameters::StateVector}}
+\doxysection{IO\+::Astrodynamics\+::Orbital\+Parameters\+::State\+Vector Class Reference}
+\hypertarget{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}{}\label{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}\index{IO::Astrodynamics::OrbitalParameters::StateVector@{IO::Astrodynamics::OrbitalParameters::StateVector}}
 
 
 State vector class.  
@@ -15,14 +15,14 @@ Inheritance diagram for IO\+::Astrodynamics\+::Orbital\+Parameters\+::State\+Vec
 \includegraphics[height=2.000000cm]{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}
 \end{center}
 \end{figure}
-\doxysubsection*{Public Member Functions}
+\doxysubsubsection*{Public Member Functions}
 \begin{DoxyCompactItemize}
 \item 
 \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector_a4ac060072106f3fcf31f666e267c21cd}{State\+Vector}} (const std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody}{IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Body}} $>$ \&center\+Of\+Motion, const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO\+::\+Astrodynamics\+::\+Math\+::\+Vector3D}} \&position, const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO\+::\+Astrodynamics\+::\+Math\+::\+Vector3D}} \&velocity, const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} \&epoch, const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Frames_1_1Frames}{IO\+::\+Astrodynamics\+::\+Frames\+::\+Frames}} \&frame)
 \begin{DoxyCompactList}\small\item\em Construct a new State Vector object. \end{DoxyCompactList}\item 
 \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector_aee86e7afa7fc1100b5bf8c7b6247f372}{State\+Vector}} (const std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody}{IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Body}} $>$ \&center\+Of\+Motion, double spice\+State\mbox{[}6\mbox{]}, const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} \&epoch, const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Frames_1_1Frames}{IO\+::\+Astrodynamics\+::\+Frames\+::\+Frames}} \&frame)
 \begin{DoxyCompactList}\small\item\em Construct a new State Vector object. \end{DoxyCompactList}\item 
-\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector_a7afbf42b4ed522f035f43842b224bdde}{$\sim$\+State\+Vector}} () override=default
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector_a7afbf42b4ed522f035f43842b224bdde}{\texorpdfstring{$\sim$}{\string~}\+State\+Vector}} () override=default
 \item 
 \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector_a847cf7c074795402c52fe9982b36410e}{State\+Vector}} (const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}{State\+Vector}} \&v)
 \item 
@@ -56,22 +56,95 @@ double \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVe
 \begin{DoxyCompactList}\small\item\em Get the Specific Orbital Energy. \end{DoxyCompactList}\item 
 bool \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector_ab1515bd37f2f37b72a0d3f2acb025719}{operator==}} (const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}{State\+Vector}} \&other) const
 \begin{DoxyCompactList}\small\item\em Compare two state vectors. \end{DoxyCompactList}\item 
-\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+State\+Vector}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector_a66253b22340d4d1ec64824914235bc33}{Check\+And\+Update\+Center\+Of\+Motion}} () const
-\begin{DoxyCompactList}\small\item\em Check and update if another body becomes the center of motion. If condition occurs the state vector is updated and returned. \end{DoxyCompactList}\item 
 \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}{State\+Vector}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector_a1eea35b13101ade9d4a245aa1846b474}{To\+State\+Vector}} () const override
 \begin{DoxyCompactList}\small\item\em Get state vector. \end{DoxyCompactList}\item 
 \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}{State\+Vector}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector_a20de61a77bbedb2a8ff253c772e6bc8c}{To\+Frame}} (const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Frames_1_1Frames}{IO\+::\+Astrodynamics\+::\+Frames\+::\+Frames}} \&frame) const
 \begin{DoxyCompactList}\small\item\em Get this state vector relative to another frame. \end{DoxyCompactList}\item 
 \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}{State\+Vector}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector_a5599342d740187250337c47c7305e99a}{To\+Body\+Fixed\+Frame}} () const
 \begin{DoxyCompactList}\small\item\em Convert state vector to body fixed frame. \end{DoxyCompactList}\end{DoxyCompactItemize}
-\doxysubsection*{Additional Inherited Members}
+\doxysubsection*{Public Member Functions inherited from \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}}}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_a48beed1dcd39f610b0cfdd3ba7b35909}{Orbital\+Parameters}} (const std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody}{IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Body}} $>$ \&center\+Of\+Motion, \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} epoch, \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Frames_1_1Frames}{IO\+::\+Astrodynamics\+::\+Frames\+::\+Frames}} frame)
+\begin{DoxyCompactList}\small\item\em Construct a new Orbital \doxylink{namespaceIO_1_1Astrodynamics_1_1Parameters}{Parameters} object. \end{DoxyCompactList}\item 
+virtual \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_a8e994e49254e0b187799f194f0de8b43}{\texorpdfstring{$\sim$}{\string~}\+Orbital\+Parameters}} ()=default
+\item 
+const std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody}{IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Body}} $>$ \& \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_ae45eb94a04baac5d531c3ecf16525693}{Get\+Center\+Of\+Motion}} () const
+\begin{DoxyCompactList}\small\item\em Get the Center Of Motion. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_aa65832e512d25eccceb37e78063100ec}{Get\+Epoch}} () const
+\begin{DoxyCompactList}\small\item\em Get the Epoch. \end{DoxyCompactList}\item 
+virtual \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_ae6dd5dd7136791522d33d4de3e4da19e}{Get\+Time\+To\+True\+Anomaly}} (double true\+Anomaly\+Target) const
+\begin{DoxyCompactList}\small\item\em Get the \doxylink{namespaceIO_1_1Astrodynamics_1_1Time}{Time} To True Anomaly. \end{DoxyCompactList}\item 
+virtual \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_a27e0635ccd91abe3deefff865c491ee4}{Get\+Time\+To\+Mean\+Anomaly}} (double mean\+Anomaly\+Target) const
+\begin{DoxyCompactList}\small\item\em Get the \doxylink{namespaceIO_1_1Astrodynamics_1_1Time}{Time} To Mean Anomaly. \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_a04887dcc9f43e87ea414fcde05db0f6b}{Get\+Mean\+Motion}} () const
+\begin{DoxyCompactList}\small\item\em Get the Mean Motion. \end{DoxyCompactList}\item 
+virtual \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+State\+Vector}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_a787f0ea3f2282e3e9434a52900cacd0a}{To\+State\+Vector}} (double true\+Anomaly) const
+\begin{DoxyCompactList}\small\item\em Get the State Vector from true anomaly. \end{DoxyCompactList}\item 
+bool \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_a52a4ebccdb352c0d86aa29c76f721411}{Is\+Elliptical}} () const
+\begin{DoxyCompactList}\small\item\em Is elliptical ? \end{DoxyCompactList}\item 
+bool \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_a1dd5f09734f52d7061599c264986243b}{Is\+Parabolic}} () const
+\begin{DoxyCompactList}\small\item\em Is parabolic ? \end{DoxyCompactList}\item 
+bool \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_a3304abc1dc8d631d14974dc01e23cdee}{Is\+Hyperbolic}} () const
+\begin{DoxyCompactList}\small\item\em Is hyperbolic ? \end{DoxyCompactList}\item 
+bool \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_a282f524f0318876e68961ad7a4b0fdd0}{Is\+Circular}} () const
+\begin{DoxyCompactList}\small\item\em Is circular ? \end{DoxyCompactList}\item 
+virtual double \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_a828a160e1e6e1a5a640ce31d75f75a29}{Get\+Eccentric\+Anomaly}} (const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} \&epoch) const
+\begin{DoxyCompactList}\small\item\em Get the Eccentric Anomaly. \end{DoxyCompactList}\item 
+virtual double \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_a325f00472789b08f859285380cc1957c}{Get\+Mean\+Anomaly}} (const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} \&epoch) const
+\begin{DoxyCompactList}\small\item\em Get the Mean Anomaly. \end{DoxyCompactList}\item 
+virtual double \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_af08febfd706f6a0366a98c7fe07ae65a}{Get\+True\+Anomaly}} (const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} \&epoch) const
+\begin{DoxyCompactList}\small\item\em Get the True Anomaly. \end{DoxyCompactList}\item 
+const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Frames_1_1Frames}{IO\+::\+Astrodynamics\+::\+Frames\+::\+Frames}} \& \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_a9a83a14834283b802a68cccb27a3b9b6}{Get\+Frame}} () const
+\begin{DoxyCompactList}\small\item\em Get the Frame. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO\+::\+Astrodynamics\+::\+Math\+::\+Vector3D}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_a38eeacbd927172770bfef7cd827b4ab1}{Get\+Eccentricity\+Vector}} () const
+\begin{DoxyCompactList}\small\item\em Get the Eccentricity Vector. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO\+::\+Astrodynamics\+::\+Math\+::\+Vector3D}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_a6e433b6f5edcc3d56136cf8848b77490}{Get\+Perigee\+Vector}} () const
+\begin{DoxyCompactList}\small\item\em Get the Perigee Vector. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO\+::\+Astrodynamics\+::\+Math\+::\+Vector3D}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_aa7de5a7af79a65cde523139f6c265f27}{Get\+Apogee\+Vector}} () const
+\begin{DoxyCompactList}\small\item\em Get the Apogee Vector. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO\+::\+Astrodynamics\+::\+Math\+::\+Vector3D}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_a3cc0fdd2afd4e2829b8f0a66facb6383}{Get\+Ascending\+Node\+Vector}} () const
+\begin{DoxyCompactList}\small\item\em Get the Ascending Node Vector. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1Equatorial}{IO\+::\+Astrodynamics\+::\+Coordinates\+::\+Equatorial}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_a2c77b55aad48789fc08c7c8d55f9a017}{To\+Equatorial\+Coordinates}} () const
+\begin{DoxyCompactList}\small\item\em Get right ascension and declination. \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_a084ed8667f9ef0153211a01a2928a597}{Get\+Velocity\+At\+Perigee}} () const
+\begin{DoxyCompactList}\small\item\em Get the Velocity at Perigee. \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_a20943eeaf212a1f76bbbc7a1642a7960}{Get\+Velocity\+At\+Apogee}} () const
+\begin{DoxyCompactList}\small\item\em Get the Velocity At Apogee. \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_a9fd3a47134708ebcd353c0c99254a03c}{Get\+True\+Longitude}} () const
+\begin{DoxyCompactList}\small\item\em Get the True Longitude. \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_a6a89960484947153f178218924183dc2}{Get\+Mean\+Longitude}} () const
+\begin{DoxyCompactList}\small\item\em Get the Mean Longitude. \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_a07c38024adfc632b1030ee6b1c5b7f98}{Get\+Mean\+Longitude}} (const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} \&epoch) const
+\begin{DoxyCompactList}\small\item\em Get the Mean Longitude at epoch. \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_aa906d23de9630ce2a6c47772366ca54a}{Get\+True\+Longitude}} (const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} \&epoch) const
+\begin{DoxyCompactList}\small\item\em Get the True Longitude at epoch. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsubsection*{Additional Inherited Members}
+\doxysubsection*{Static Public Member Functions inherited from \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}}}
+\begin{DoxyCompactItemize}
+\item 
+static double \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_ae89a46e398056b01494cb4c2bf09168f}{Convert\+True\+Anomaly\+To\+Mean\+Anomaly}} (double true\+Anomaly, double eccentricity)
+\item 
+static std\+::unique\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1ConicOrbitalElements}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Conic\+Orbital\+Elements}} $>$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_a08b8b61d339324c103d227d4e8a6a58f}{Create\+Earth\+Helio\+Synchronous\+Orbit}} (std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody}{Body\+::\+Celestial\+Body}} $>$ earth, double semi\+Major\+Axis, double eccentricity, \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} \&epoch\+At\+Descending\+Node)
+\item 
+static std\+::unique\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1ConicOrbitalElements}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Conic\+Orbital\+Elements}} $>$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_affa82ad7035f48943af803f63e588eb7}{Create\+Earth\+Phased\+Helio\+Synchronous\+Orbit}} (std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody}{Body\+::\+Celestial\+Body}} $>$ earth, double eccentricity, \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} \&epoch\+At\+Descending\+Node, int nb\+Orbit\+By\+Day)
+\begin{DoxyCompactList}\small\item\em Creates a phased helio-\/synchronous orbit with given parameters. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsection*{Protected Attributes inherited from \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}}}
+\begin{DoxyCompactItemize}
+\item 
+const std\+::shared\+\_\+ptr$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody}{IO\+::\+Astrodynamics\+::\+Body\+::\+Celestial\+Body}} $>$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_aec93efaa820ffc31f639359de75a57c6}{m\+\_\+center\+Of\+Motion}}
+\item 
+const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_a27996c1da8c99dad979f1aabeb403f75}{m\+\_\+epoch}}
+\item 
+const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Frames_1_1Frames}{IO\+::\+Astrodynamics\+::\+Frames\+::\+Frames}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_abcda4a4bd98a692acd7aff01939f6f6c}{m\+\_\+frame}}
+\end{DoxyCompactItemize}
 
 
 \doxysubsection{Detailed Description}
 State vector class. 
 
 \doxysubsection{Constructor \& Destructor Documentation}
-\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector_a4ac060072106f3fcf31f666e267c21cd}\label{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector_a4ac060072106f3fcf31f666e267c21cd}} 
+\Hypertarget{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector_a4ac060072106f3fcf31f666e267c21cd}\label{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector_a4ac060072106f3fcf31f666e267c21cd} 
 \index{IO::Astrodynamics::OrbitalParameters::StateVector@{IO::Astrodynamics::OrbitalParameters::StateVector}!StateVector@{StateVector}}
 \index{StateVector@{StateVector}!IO::Astrodynamics::OrbitalParameters::StateVector@{IO::Astrodynamics::OrbitalParameters::StateVector}}
 \doxysubsubsection{\texorpdfstring{StateVector()}{StateVector()}\hspace{0.1cm}{\footnotesize\ttfamily [1/3]}}
@@ -94,7 +167,7 @@ Construct a new State Vector object.
 {\em frame} & \\
 \hline
 \end{DoxyParams}
-\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector_aee86e7afa7fc1100b5bf8c7b6247f372}\label{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector_aee86e7afa7fc1100b5bf8c7b6247f372}} 
+\Hypertarget{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector_aee86e7afa7fc1100b5bf8c7b6247f372}\label{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector_aee86e7afa7fc1100b5bf8c7b6247f372} 
 \index{IO::Astrodynamics::OrbitalParameters::StateVector@{IO::Astrodynamics::OrbitalParameters::StateVector}!StateVector@{StateVector}}
 \index{StateVector@{StateVector}!IO::Astrodynamics::OrbitalParameters::StateVector@{IO::Astrodynamics::OrbitalParameters::StateVector}}
 \doxysubsubsection{\texorpdfstring{StateVector()}{StateVector()}\hspace{0.1cm}{\footnotesize\ttfamily [2/3]}}
@@ -115,13 +188,13 @@ Construct a new State Vector object.
 {\em frame} & \\
 \hline
 \end{DoxyParams}
-\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector_a7afbf42b4ed522f035f43842b224bdde}\label{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector_a7afbf42b4ed522f035f43842b224bdde}} 
-\index{IO::Astrodynamics::OrbitalParameters::StateVector@{IO::Astrodynamics::OrbitalParameters::StateVector}!````~StateVector@{$\sim$StateVector}}
-\index{````~StateVector@{$\sim$StateVector}!IO::Astrodynamics::OrbitalParameters::StateVector@{IO::Astrodynamics::OrbitalParameters::StateVector}}
-\doxysubsubsection{\texorpdfstring{$\sim$StateVector()}{~StateVector()}}
-{\footnotesize\ttfamily IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+State\+Vector\+::$\sim$\+State\+Vector (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [default]}}
+\Hypertarget{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector_a7afbf42b4ed522f035f43842b224bdde}\label{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector_a7afbf42b4ed522f035f43842b224bdde} 
+\index{IO::Astrodynamics::OrbitalParameters::StateVector@{IO::Astrodynamics::OrbitalParameters::StateVector}!````~StateVector@{\texorpdfstring{$\sim$}{\string~}StateVector}}
+\index{````~StateVector@{\texorpdfstring{$\sim$}{\string~}StateVector}!IO::Astrodynamics::OrbitalParameters::StateVector@{IO::Astrodynamics::OrbitalParameters::StateVector}}
+\doxysubsubsection{\texorpdfstring{\texorpdfstring{$\sim$}{\string~}StateVector()}{\string~StateVector()}}
+{\footnotesize\ttfamily IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+State\+Vector\+::\texorpdfstring{$\sim$}{\string~}\+State\+Vector (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [default]}}
 
-\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector_a847cf7c074795402c52fe9982b36410e}\label{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector_a847cf7c074795402c52fe9982b36410e}} 
+\Hypertarget{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector_a847cf7c074795402c52fe9982b36410e}\label{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector_a847cf7c074795402c52fe9982b36410e} 
 \index{IO::Astrodynamics::OrbitalParameters::StateVector@{IO::Astrodynamics::OrbitalParameters::StateVector}!StateVector@{StateVector}}
 \index{StateVector@{StateVector}!IO::Astrodynamics::OrbitalParameters::StateVector@{IO::Astrodynamics::OrbitalParameters::StateVector}}
 \doxysubsubsection{\texorpdfstring{StateVector()}{StateVector()}\hspace{0.1cm}{\footnotesize\ttfamily [3/3]}}
@@ -130,25 +203,7 @@ Construct a new State Vector object.
 
 
 \doxysubsection{Member Function Documentation}
-\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector_a66253b22340d4d1ec64824914235bc33}\label{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector_a66253b22340d4d1ec64824914235bc33}} 
-\index{IO::Astrodynamics::OrbitalParameters::StateVector@{IO::Astrodynamics::OrbitalParameters::StateVector}!CheckAndUpdateCenterOfMotion@{CheckAndUpdateCenterOfMotion}}
-\index{CheckAndUpdateCenterOfMotion@{CheckAndUpdateCenterOfMotion}!IO::Astrodynamics::OrbitalParameters::StateVector@{IO::Astrodynamics::OrbitalParameters::StateVector}}
-\doxysubsubsection{\texorpdfstring{CheckAndUpdateCenterOfMotion()}{CheckAndUpdateCenterOfMotion()}}
-{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+State\+Vector}} IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+State\+Vector\+::\+Check\+And\+Update\+Center\+Of\+Motion (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
-
-
-
-Check and update if another body becomes the center of motion. If condition occurs the state vector is updated and returned. 
-
-
-\begin{DoxyParams}{Parameters}
-{\em state\+Vector} & \\
-\hline
-\end{DoxyParams}
-\begin{DoxyReturn}{Returns}
-\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+State\+Vector}} 
-\end{DoxyReturn}
-\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector_a8a0163e75752f401c41349d1dbb4b232}\label{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector_a8a0163e75752f401c41349d1dbb4b232}} 
+\Hypertarget{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector_a8a0163e75752f401c41349d1dbb4b232}\label{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector_a8a0163e75752f401c41349d1dbb4b232} 
 \index{IO::Astrodynamics::OrbitalParameters::StateVector@{IO::Astrodynamics::OrbitalParameters::StateVector}!GetEccentricity@{GetEccentricity}}
 \index{GetEccentricity@{GetEccentricity}!IO::Astrodynamics::OrbitalParameters::StateVector@{IO::Astrodynamics::OrbitalParameters::StateVector}}
 \doxysubsubsection{\texorpdfstring{GetEccentricity()}{GetEccentricity()}}
@@ -165,7 +220,7 @@ double
 
 Implements \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_a9942caa62d75cd8ad7486f7966ee7476}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}}.
 
-\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector_a1f35dfd68c61eb63f3f5f725e0a69880}\label{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector_a1f35dfd68c61eb63f3f5f725e0a69880}} 
+\Hypertarget{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector_a1f35dfd68c61eb63f3f5f725e0a69880}\label{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector_a1f35dfd68c61eb63f3f5f725e0a69880} 
 \index{IO::Astrodynamics::OrbitalParameters::StateVector@{IO::Astrodynamics::OrbitalParameters::StateVector}!GetInclination@{GetInclination}}
 \index{GetInclination@{GetInclination}!IO::Astrodynamics::OrbitalParameters::StateVector@{IO::Astrodynamics::OrbitalParameters::StateVector}}
 \doxysubsubsection{\texorpdfstring{GetInclination()}{GetInclination()}}
@@ -182,7 +237,7 @@ double
 
 Implements \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_a5ab4864ce7c3d403bc9d6c90b22a41bf}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}}.
 
-\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector_a364cb3ea02f20bf6b860e7a49c4cde3a}\label{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector_a364cb3ea02f20bf6b860e7a49c4cde3a}} 
+\Hypertarget{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector_a364cb3ea02f20bf6b860e7a49c4cde3a}\label{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector_a364cb3ea02f20bf6b860e7a49c4cde3a} 
 \index{IO::Astrodynamics::OrbitalParameters::StateVector@{IO::Astrodynamics::OrbitalParameters::StateVector}!GetMeanAnomaly@{GetMeanAnomaly}}
 \index{GetMeanAnomaly@{GetMeanAnomaly}!IO::Astrodynamics::OrbitalParameters::StateVector@{IO::Astrodynamics::OrbitalParameters::StateVector}}
 \doxysubsubsection{\texorpdfstring{GetMeanAnomaly()}{GetMeanAnomaly()}}
@@ -199,7 +254,7 @@ double
 
 Implements \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_ae7c1fd9b84ebf0bd1fa9199717f86e02}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}}.
 
-\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector_a3a6316a8f19512b620d5aa92865394a7}\label{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector_a3a6316a8f19512b620d5aa92865394a7}} 
+\Hypertarget{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector_a3a6316a8f19512b620d5aa92865394a7}\label{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector_a3a6316a8f19512b620d5aa92865394a7} 
 \index{IO::Astrodynamics::OrbitalParameters::StateVector@{IO::Astrodynamics::OrbitalParameters::StateVector}!GetPeriapsisArgument@{GetPeriapsisArgument}}
 \index{GetPeriapsisArgument@{GetPeriapsisArgument}!IO::Astrodynamics::OrbitalParameters::StateVector@{IO::Astrodynamics::OrbitalParameters::StateVector}}
 \doxysubsubsection{\texorpdfstring{GetPeriapsisArgument()}{GetPeriapsisArgument()}}
@@ -216,7 +271,7 @@ double
 
 Implements \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_a00c67f791757083550173af2e34fe2c2}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}}.
 
-\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector_ac782bedd7a04eae8f4ec582d6289c82f}\label{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector_ac782bedd7a04eae8f4ec582d6289c82f}} 
+\Hypertarget{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector_ac782bedd7a04eae8f4ec582d6289c82f}\label{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector_ac782bedd7a04eae8f4ec582d6289c82f} 
 \index{IO::Astrodynamics::OrbitalParameters::StateVector@{IO::Astrodynamics::OrbitalParameters::StateVector}!GetPeriod@{GetPeriod}}
 \index{GetPeriod@{GetPeriod}!IO::Astrodynamics::OrbitalParameters::StateVector@{IO::Astrodynamics::OrbitalParameters::StateVector}}
 \doxysubsubsection{\texorpdfstring{GetPeriod()}{GetPeriod()}}
@@ -227,13 +282,13 @@ Implements \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1Orb
 Get the Period. 
 
 \begin{DoxyReturn}{Returns}
-\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO\+::\+Astrodynamics\+::\+Time\+::\+Time\+Span}} 
+\doxylink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO\+::\+Astrodynamics\+::\+Time\+::\+Time\+Span} 
 \end{DoxyReturn}
 
 
 Implements \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_a1586cf10211aea2676395db8e18a610f}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}}.
 
-\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector_afd51d419805ab1a5d8c8bf97a3bde713}\label{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector_afd51d419805ab1a5d8c8bf97a3bde713}} 
+\Hypertarget{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector_afd51d419805ab1a5d8c8bf97a3bde713}\label{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector_afd51d419805ab1a5d8c8bf97a3bde713} 
 \index{IO::Astrodynamics::OrbitalParameters::StateVector@{IO::Astrodynamics::OrbitalParameters::StateVector}!GetPosition@{GetPosition}}
 \index{GetPosition@{GetPosition}!IO::Astrodynamics::OrbitalParameters::StateVector@{IO::Astrodynamics::OrbitalParameters::StateVector}}
 \doxysubsubsection{\texorpdfstring{GetPosition()}{GetPosition()}}
@@ -244,9 +299,9 @@ Implements \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1Orb
 Get the Position. 
 
 \begin{DoxyReturn}{Returns}
-const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO\+::\+Astrodynamics\+::\+Math\+::\+Vector3D}}\& 
+const \doxylink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO\+::\+Astrodynamics\+::\+Math\+::\+Vector3D}\& 
 \end{DoxyReturn}
-\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector_aee06ea31e6431b9c4fef2c41ef81a160}\label{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector_aee06ea31e6431b9c4fef2c41ef81a160}} 
+\Hypertarget{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector_aee06ea31e6431b9c4fef2c41ef81a160}\label{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector_aee06ea31e6431b9c4fef2c41ef81a160} 
 \index{IO::Astrodynamics::OrbitalParameters::StateVector@{IO::Astrodynamics::OrbitalParameters::StateVector}!GetRightAscendingNodeLongitude@{GetRightAscendingNodeLongitude}}
 \index{GetRightAscendingNodeLongitude@{GetRightAscendingNodeLongitude}!IO::Astrodynamics::OrbitalParameters::StateVector@{IO::Astrodynamics::OrbitalParameters::StateVector}}
 \doxysubsubsection{\texorpdfstring{GetRightAscendingNodeLongitude()}{GetRightAscendingNodeLongitude()}}
@@ -263,7 +318,7 @@ double
 
 Implements \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_a90f9d8fdc41955b75cecea179309b177}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}}.
 
-\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector_afb9eb7ddf7d4d181d3ffbcaa66673719}\label{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector_afb9eb7ddf7d4d181d3ffbcaa66673719}} 
+\Hypertarget{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector_afb9eb7ddf7d4d181d3ffbcaa66673719}\label{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector_afb9eb7ddf7d4d181d3ffbcaa66673719} 
 \index{IO::Astrodynamics::OrbitalParameters::StateVector@{IO::Astrodynamics::OrbitalParameters::StateVector}!GetSemiMajorAxis@{GetSemiMajorAxis}}
 \index{GetSemiMajorAxis@{GetSemiMajorAxis}!IO::Astrodynamics::OrbitalParameters::StateVector@{IO::Astrodynamics::OrbitalParameters::StateVector}}
 \doxysubsubsection{\texorpdfstring{GetSemiMajorAxis()}{GetSemiMajorAxis()}}
@@ -280,7 +335,7 @@ double
 
 Implements \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_adf524663b31a263f4a2eda62426d401f}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}}.
 
-\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector_a29f77fd68134507b1f7ae8475be0d736}\label{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector_a29f77fd68134507b1f7ae8475be0d736}} 
+\Hypertarget{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector_a29f77fd68134507b1f7ae8475be0d736}\label{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector_a29f77fd68134507b1f7ae8475be0d736} 
 \index{IO::Astrodynamics::OrbitalParameters::StateVector@{IO::Astrodynamics::OrbitalParameters::StateVector}!GetSpecificAngularMomentum@{GetSpecificAngularMomentum}}
 \index{GetSpecificAngularMomentum@{GetSpecificAngularMomentum}!IO::Astrodynamics::OrbitalParameters::StateVector@{IO::Astrodynamics::OrbitalParameters::StateVector}}
 \doxysubsubsection{\texorpdfstring{GetSpecificAngularMomentum()}{GetSpecificAngularMomentum()}}
@@ -291,13 +346,13 @@ Implements \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1Orb
 Get the Specific Angular Momentum. 
 
 \begin{DoxyReturn}{Returns}
-\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO\+::\+Astrodynamics\+::\+Math\+::\+Vector3D}} 
+\doxylink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO\+::\+Astrodynamics\+::\+Math\+::\+Vector3D} 
 \end{DoxyReturn}
 
 
 Implements \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_aeb82666267d968a5955d77183b53a948}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}}.
 
-\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector_a733059b323ccc495849383adc1162dda}\label{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector_a733059b323ccc495849383adc1162dda}} 
+\Hypertarget{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector_a733059b323ccc495849383adc1162dda}\label{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector_a733059b323ccc495849383adc1162dda} 
 \index{IO::Astrodynamics::OrbitalParameters::StateVector@{IO::Astrodynamics::OrbitalParameters::StateVector}!GetSpecificOrbitalEnergy@{GetSpecificOrbitalEnergy}}
 \index{GetSpecificOrbitalEnergy@{GetSpecificOrbitalEnergy}!IO::Astrodynamics::OrbitalParameters::StateVector@{IO::Astrodynamics::OrbitalParameters::StateVector}}
 \doxysubsubsection{\texorpdfstring{GetSpecificOrbitalEnergy()}{GetSpecificOrbitalEnergy()}}
@@ -314,7 +369,7 @@ double
 
 Implements \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_a06824ecd8abd7b28b4a1490ba8b963d2}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}}.
 
-\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector_a1fd6225c2e5ee0df92b2216cda4150ca}\label{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector_a1fd6225c2e5ee0df92b2216cda4150ca}} 
+\Hypertarget{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector_a1fd6225c2e5ee0df92b2216cda4150ca}\label{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector_a1fd6225c2e5ee0df92b2216cda4150ca} 
 \index{IO::Astrodynamics::OrbitalParameters::StateVector@{IO::Astrodynamics::OrbitalParameters::StateVector}!GetTrueAnomaly@{GetTrueAnomaly}}
 \index{GetTrueAnomaly@{GetTrueAnomaly}!IO::Astrodynamics::OrbitalParameters::StateVector@{IO::Astrodynamics::OrbitalParameters::StateVector}}
 \doxysubsubsection{\texorpdfstring{GetTrueAnomaly()}{GetTrueAnomaly()}}
@@ -331,7 +386,7 @@ double
 
 Reimplemented from \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_aea4019e092658b27cdcc12b9dea03ad8}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}}.
 
-\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector_a196725c11675307780272cdf4fe2e183}\label{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector_a196725c11675307780272cdf4fe2e183}} 
+\Hypertarget{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector_a196725c11675307780272cdf4fe2e183}\label{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector_a196725c11675307780272cdf4fe2e183} 
 \index{IO::Astrodynamics::OrbitalParameters::StateVector@{IO::Astrodynamics::OrbitalParameters::StateVector}!GetVelocity@{GetVelocity}}
 \index{GetVelocity@{GetVelocity}!IO::Astrodynamics::OrbitalParameters::StateVector@{IO::Astrodynamics::OrbitalParameters::StateVector}}
 \doxysubsubsection{\texorpdfstring{GetVelocity()}{GetVelocity()}}
@@ -342,15 +397,15 @@ Reimplemented from \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameter
 Get the Velocity. 
 
 \begin{DoxyReturn}{Returns}
-const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO\+::\+Astrodynamics\+::\+Math\+::\+Vector3D}}\& 
+const \doxylink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO\+::\+Astrodynamics\+::\+Math\+::\+Vector3D}\& 
 \end{DoxyReturn}
-\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector_ab15c58e3c5df58a10684c6309c838283}\label{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector_ab15c58e3c5df58a10684c6309c838283}} 
+\Hypertarget{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector_ab15c58e3c5df58a10684c6309c838283}\label{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector_ab15c58e3c5df58a10684c6309c838283} 
 \index{IO::Astrodynamics::OrbitalParameters::StateVector@{IO::Astrodynamics::OrbitalParameters::StateVector}!operator=@{operator=}}
 \index{operator=@{operator=}!IO::Astrodynamics::OrbitalParameters::StateVector@{IO::Astrodynamics::OrbitalParameters::StateVector}}
 \doxysubsubsection{\texorpdfstring{operator=()}{operator=()}}
 {\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+State\+Vector}} \& IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+State\+Vector\+::operator= (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}{State\+Vector}} \&}]{other }\end{DoxyParamCaption})}
 
-\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector_ab1515bd37f2f37b72a0d3f2acb025719}\label{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector_ab1515bd37f2f37b72a0d3f2acb025719}} 
+\Hypertarget{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector_ab1515bd37f2f37b72a0d3f2acb025719}\label{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector_ab1515bd37f2f37b72a0d3f2acb025719} 
 \index{IO::Astrodynamics::OrbitalParameters::StateVector@{IO::Astrodynamics::OrbitalParameters::StateVector}!operator==@{operator==}}
 \index{operator==@{operator==}!IO::Astrodynamics::OrbitalParameters::StateVector@{IO::Astrodynamics::OrbitalParameters::StateVector}}
 \doxysubsubsection{\texorpdfstring{operator==()}{operator==()}}
@@ -370,7 +425,7 @@ true
 
 false 
 \end{DoxyReturn}
-\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector_a5599342d740187250337c47c7305e99a}\label{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector_a5599342d740187250337c47c7305e99a}} 
+\Hypertarget{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector_a5599342d740187250337c47c7305e99a}\label{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector_a5599342d740187250337c47c7305e99a} 
 \index{IO::Astrodynamics::OrbitalParameters::StateVector@{IO::Astrodynamics::OrbitalParameters::StateVector}!ToBodyFixedFrame@{ToBodyFixedFrame}}
 \index{ToBodyFixedFrame@{ToBodyFixedFrame}!IO::Astrodynamics::OrbitalParameters::StateVector@{IO::Astrodynamics::OrbitalParameters::StateVector}}
 \doxysubsubsection{\texorpdfstring{ToBodyFixedFrame()}{ToBodyFixedFrame()}}
@@ -381,9 +436,9 @@ false
 Convert state vector to body fixed frame. 
 
 \begin{DoxyReturn}{Returns}
-\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}{State\+Vector}} 
+\doxylink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}{State\+Vector} 
 \end{DoxyReturn}
-\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector_a20de61a77bbedb2a8ff253c772e6bc8c}\label{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector_a20de61a77bbedb2a8ff253c772e6bc8c}} 
+\Hypertarget{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector_a20de61a77bbedb2a8ff253c772e6bc8c}\label{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector_a20de61a77bbedb2a8ff253c772e6bc8c} 
 \index{IO::Astrodynamics::OrbitalParameters::StateVector@{IO::Astrodynamics::OrbitalParameters::StateVector}!ToFrame@{ToFrame}}
 \index{ToFrame@{ToFrame}!IO::Astrodynamics::OrbitalParameters::StateVector@{IO::Astrodynamics::OrbitalParameters::StateVector}}
 \doxysubsubsection{\texorpdfstring{ToFrame()}{ToFrame()}}
@@ -399,9 +454,9 @@ Get this state vector relative to another frame.
 \hline
 \end{DoxyParams}
 \begin{DoxyReturn}{Returns}
-\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}{State\+Vector}} 
+\doxylink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}{State\+Vector} 
 \end{DoxyReturn}
-\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector_a1eea35b13101ade9d4a245aa1846b474}\label{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector_a1eea35b13101ade9d4a245aa1846b474}} 
+\Hypertarget{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector_a1eea35b13101ade9d4a245aa1846b474}\label{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector_a1eea35b13101ade9d4a245aa1846b474} 
 \index{IO::Astrodynamics::OrbitalParameters::StateVector@{IO::Astrodynamics::OrbitalParameters::StateVector}!ToStateVector@{ToStateVector}}
 \index{ToStateVector@{ToStateVector}!IO::Astrodynamics::OrbitalParameters::StateVector@{IO::Astrodynamics::OrbitalParameters::StateVector}}
 \doxysubsubsection{\texorpdfstring{ToStateVector()}{ToStateVector()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
@@ -412,13 +467,13 @@ Get this state vector relative to another frame.
 Get state vector. 
 
 \begin{DoxyReturn}{Returns}
-\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}{State\+Vector}} 
+\doxylink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}{State\+Vector} 
 \end{DoxyReturn}
 
 
 Reimplemented from \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_af0b880e2daa11029e0c037302fb05d70}{IO\+::\+Astrodynamics\+::\+Orbital\+Parameters\+::\+Orbital\+Parameters}}.
 
-\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector_aaaa28e72c20825b400473358a06f50f8}\label{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector_aaaa28e72c20825b400473358a06f50f8}} 
+\Hypertarget{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector_aaaa28e72c20825b400473358a06f50f8}\label{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector_aaaa28e72c20825b400473358a06f50f8} 
 \index{IO::Astrodynamics::OrbitalParameters::StateVector@{IO::Astrodynamics::OrbitalParameters::StateVector}!ToStateVector@{ToStateVector}}
 \index{ToStateVector@{ToStateVector}!IO::Astrodynamics::OrbitalParameters::StateVector@{IO::Astrodynamics::OrbitalParameters::StateVector}}
 \doxysubsubsection{\texorpdfstring{ToStateVector()}{ToStateVector()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
@@ -434,7 +489,7 @@ Get the State Vector.
 \hline
 \end{DoxyParams}
 \begin{DoxyReturn}{Returns}
-\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}{State\+Vector}} 
+\doxylink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}{State\+Vector} 
 \end{DoxyReturn}
 
 

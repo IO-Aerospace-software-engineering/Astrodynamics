@@ -6,14 +6,9 @@
 #include "TestParameters.h"
 #include "Proxy.h"
 #include "InertialFrames.h"
-#include "NadirAttitude.h"
+#include "Spacecraft.h"
+#include "InvalidArgumentException.h"
 #include <Converters.cpp>
-
-TEST(API, DTOSize)
-{
-    auto size2 = sizeof(IO::Astrodynamics::API::DTO::ScenarioDTO);
-    ASSERT_EQ(19520, size2);
-}
 
 TEST(API, TDBToString)
 {
@@ -27,149 +22,6 @@ TEST(API, UTCToString)
     auto res = UTCToStringProxy(0.0);
     ASSERT_STREQ("2000-01-01 12:00:00.000000 (UTC)", res);
     free((void*)res);
-}
-
-TEST(API, SitePropagation)
-{
-    IO::Astrodynamics::Time::TDB start(0.0s);
-    IO::Astrodynamics::Time::TDB end(86400s);
-    IO::Astrodynamics::API::DTO::WindowDTO windowTDBDto{};
-    windowTDBDto.start = start.GetSecondsFromJ2000().count();
-    windowTDBDto.end = end.GetSecondsFromJ2000().count();
-
-    IO::Astrodynamics::API::DTO::SiteDTO site;
-
-    //Configure site
-    site.id = 399134;
-    site.name = "S134";
-    std::string sitePath(SitePath);
-    site.directoryPath = sitePath.c_str();
-    site.bodyId = 399;
-    site.coordinates.longitude = 30 * IO::Astrodynamics::Constants::DEG_RAD;
-    site.coordinates.latitude = 10 * IO::Astrodynamics::Constants::DEG_RAD;
-    site.coordinates.altitude = 1000.0;
-
-    PropagateSiteProxy(windowTDBDto, site);
-
-    LoadKernelsProxy((sitePath + "/S134").c_str());
-
-
-    IO::Astrodynamics::API::DTO::StateVectorDTO sv[25];
-    ReadEphemerisProxy(windowTDBDto, 399, 399134, "J2000", "NONE", 3600, sv);
-    UnloadKernelsProxy((sitePath + "/S134").c_str());
-
-    ASSERT_DOUBLE_EQ(4054782.9648194457, sv[0].position.x);
-    ASSERT_DOUBLE_EQ(-4799280.7521664528, sv[0].position.y);
-    ASSERT_DOUBLE_EQ(1100392.3675019771, sv[0].position.z);
-
-    ASSERT_DOUBLE_EQ(349.96683107685112, sv[0].velocity.x);
-    ASSERT_DOUBLE_EQ(295.68160031926175, sv[0].velocity.y);
-    ASSERT_DOUBLE_EQ(0.017692125392659522, sv[0].velocity.z);
-
-    ASSERT_DOUBLE_EQ(0.0, sv[0].epoch);
-    ASSERT_EQ(399, sv[0].centerOfMotionId);
-    ASSERT_STREQ("J2000", sv[0].inertialFrame);
-
-    ASSERT_DOUBLE_EQ(5675531.269242838, sv[5].position.x);
-    ASSERT_DOUBLE_EQ(2694837.2855253983, sv[5].position.y);
-    ASSERT_DOUBLE_EQ(1100645.6326860497, sv[5].position.z);
-
-    ASSERT_DOUBLE_EQ(-196.51288137429424, sv[5].velocity.x);
-    ASSERT_DOUBLE_EQ(413.86842735799422, sv[5].velocity.y);
-
-#if _WIN64
-    ASSERT_DOUBLE_EQ(0.0062996686003850494, sv[5].velocity.z);
-#else
-    ASSERT_DOUBLE_EQ(0.0062996686004048149, sv[5].velocity.z);
-#endif
-    ASSERT_DOUBLE_EQ(18000.0, sv[5].epoch);
-    ASSERT_EQ(399, sv[5].centerOfMotionId);
-    ASSERT_STREQ("J2000", sv[5].inertialFrame);
-}
-
-TEST(API, SpacecraftPropagation)
-{
-    //Configure Scenario
-    IO::Astrodynamics::API::DTO::ScenarioDTO scenario{};
-    scenario.Name = "scenatiosites";
-    scenario.Window.start = 668085625.015240;
-    scenario.Window.end = 668174469.185440;
-
-    //Add additional celestial bodies involved
-    scenario.AdditionalCelestialBodiesId[0] = 301;
-
-    std::string sitePath(SitePath);
-
-    scenario.Sites[0].id = 399033;
-    scenario.Sites[0].name = "S33";
-    scenario.Sites[0].directoryPath = sitePath.c_str();
-    scenario.Sites[0].bodyId = 399;
-    scenario.Sites[0].coordinates.longitude = 30 * IO::Astrodynamics::Constants::DEG_RAD;
-    scenario.Sites[0].coordinates.latitude = 10 * IO::Astrodynamics::Constants::DEG_RAD;
-    scenario.Sites[0].coordinates.altitude = 1000.0;
-
-    //Add and configure spacecraft
-    scenario.Spacecraft.id = -1111;
-    scenario.Spacecraft.name = "spc1";
-    scenario.Spacecraft.dryOperatingMass = 1000.0;
-    scenario.Spacecraft.maximumOperatingMass = 10000.0;
-    std::string spacecraftPath(SpacecraftPath);
-    scenario.Spacecraft.directoryPath = spacecraftPath.c_str();
-    scenario.Spacecraft.initialOrbitalParameter.centerOfMotionId = 399;
-    scenario.Spacecraft.initialOrbitalParameter.epoch = 667915269.18539762;
-    scenario.Spacecraft.initialOrbitalParameter.SetFrame(IO::Astrodynamics::Frames::InertialFrames::ICRF().ToCharArray());
-    scenario.Spacecraft.initialOrbitalParameter.position.x = 5056554.1874925727;
-    scenario.Spacecraft.initialOrbitalParameter.position.y = 4395595.4942363985;
-    scenario.Spacecraft.initialOrbitalParameter.position.z = 0.0;
-    scenario.Spacecraft.initialOrbitalParameter.velocity.x = -3708.6305608890916;
-    scenario.Spacecraft.initialOrbitalParameter.velocity.y = 4266.2914313011433;
-    scenario.Spacecraft.initialOrbitalParameter.velocity.z = 6736.8538488755494;
-
-    //Add a fuel tank to spacecraft
-    scenario.Spacecraft.fuelTank[0].id = 1;
-    scenario.Spacecraft.fuelTank[0].serialNumber = "ft1";
-    scenario.Spacecraft.fuelTank[0].capacity = 9000;
-    scenario.Spacecraft.fuelTank[0].quantity = 9000;
-
-    //Add engine to spacecraft
-    scenario.Spacecraft.engines[0].id = 1;
-    scenario.Spacecraft.engines[0].name = "eng1";
-    scenario.Spacecraft.engines[0].serialNumber = "eng1";
-    scenario.Spacecraft.engines[0].fuelTankSerialNumber = "ft1";
-    scenario.Spacecraft.engines[0].fuelFlow = 50.0;
-    scenario.Spacecraft.engines[0].isp = 450.0;
-
-    //Add payload to spacecraft
-    scenario.Spacecraft.payloads[0].serialNumber = "pl1";
-    scenario.Spacecraft.payloads[0].name = "pl1";
-    scenario.Spacecraft.payloads[0].mass = 50;
-
-    //Configure orbital maneuver
-    scenario.Spacecraft.orbitalPlaneChangingManeuvers[0].targetOrbit.position.x = 4390853.7278876612;
-    scenario.Spacecraft.orbitalPlaneChangingManeuvers[0].targetOrbit.position.y = 5110607.0005866792;
-    scenario.Spacecraft.orbitalPlaneChangingManeuvers[0].targetOrbit.position.z = 917659.86391987884;
-    scenario.Spacecraft.orbitalPlaneChangingManeuvers[0].targetOrbit.velocity.x = -4979.4693432656513;
-    scenario.Spacecraft.orbitalPlaneChangingManeuvers[0].targetOrbit.velocity.y = 3033.2639866911495;
-    scenario.Spacecraft.orbitalPlaneChangingManeuvers[0].targetOrbit.velocity.z = 6933.1803797017265;
-    scenario.Spacecraft.orbitalPlaneChangingManeuvers[0].targetOrbit.centerOfMotionId = 399;
-    scenario.Spacecraft.orbitalPlaneChangingManeuvers[0].targetOrbit.epoch = 667915269.18539762;
-    scenario.Spacecraft.orbitalPlaneChangingManeuvers[0].targetOrbit.SetFrame(IO::Astrodynamics::Frames::InertialFrames::ICRF().ToCharArray());
-    scenario.Spacecraft.orbitalPlaneChangingManeuvers[0].engines[0] = "eng1";
-    scenario.Spacecraft.orbitalPlaneChangingManeuvers[0].maneuverOrder = 0;
-
-    scenario.Spacecraft.progradeAttitudes[0].maneuverOrder = 1;
-    scenario.Spacecraft.progradeAttitudes[0].engines[0] = "eng1";
-
-
-    //Execute propagation
-    PropagateSpacecraftProxy(scenario);
-
-    IO::Astrodynamics::Time::TDB tdbStart(
-            std::chrono::duration<double>(scenario.Spacecraft.orbitalPlaneChangingManeuvers[0].thrustWindow.start));
-    IO::Astrodynamics::Time::TDB tdbEnd(
-            std::chrono::duration<double>(scenario.Spacecraft.orbitalPlaneChangingManeuvers[0].thrustWindow.end));
-    ASSERT_STREQ("2021-03-04 00:31:45.814467 (TDB)", tdbStart.ToString().c_str());
-    ASSERT_STREQ("2021-03-04 00:31:54.216012 (TDB)", tdbEnd.ToString().c_str());
 }
 
 TEST(API, FindWindowsOnCoordinateConstraintProxy)
@@ -232,60 +84,7 @@ TEST(API, FindWindowsOnOccultationConstraintProxy)
 }
 
 
-TEST(API, FindWindowsInFieldOfViewConstraintProxy)
-{
-    IO::Astrodynamics::Math::Vector3D orientation{0.0, -IO::Astrodynamics::Constants::PI2, 0.0};
-    IO::Astrodynamics::Math::Vector3D boresight{0.0, 0.0, 1.0};
-    IO::Astrodynamics::Math::Vector3D refvector{0.0, 1.0, 0.0};
 
-    auto sun = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(10);
-    auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399, sun);
-    auto moon = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(301, earth);
-    double a = 6800000.0;
-    auto v = std::sqrt(earth->GetMu() / a);
-    IO::Astrodynamics::Time::TDB epoch("2021-JUN-10 00:00:00.0000 TDB");
-
-    std::unique_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::Astrodynamics::OrbitalParameters::StateVector>(
-            earth,
-            IO::Astrodynamics::Math::Vector3D(a, 0.0, 0.0),
-            IO::Astrodynamics::Math::Vector3D(0.0, v, 0.0),
-            epoch,
-            IO::Astrodynamics::Frames::InertialFrames::ICRF());
-    IO::Astrodynamics::Body::Spacecraft::Spacecraft s{-179, "SC179", 1000.0, 3000.0, std::string(SpacecraftPath),
-                                                      std::move(orbitalParams)};
-
-    s.AddCircularFOVInstrument(-179789, "CAMERA789", orientation, boresight, refvector, 1.5);
-
-    //==========PROPAGATOR====================
-    auto step{IO::Astrodynamics::Time::TimeSpan(1.0s)};
-    IO::Astrodynamics::Time::TimeSpan duration(6447.0s);
-
-    std::vector<IO::Astrodynamics::Integrators::Forces::Force *> forces{};
-
-    IO::Astrodynamics::Integrators::Forces::GravityForce gravityForce;
-    forces.push_back(&gravityForce);
-    IO::Astrodynamics::Integrators::VVIntegrator integrator(step, forces);
-
-    IO::Astrodynamics::Propagators::Propagator pro(s, integrator, IO::Astrodynamics::Time::Window(epoch, epoch + duration));
-
-    pro.Propagate();
-    auto spcframe = s.GetInstrument(-179789)->GetBoresightInSpacecraftFrame();
-    auto ICRFframe = s.GetInstrument(-179789)->GetBoresight(IO::Astrodynamics::Frames::InertialFrames::ICRF(), epoch);
-
-    IO::Astrodynamics::API::DTO::WindowDTO windows[1000];
-    IO::Astrodynamics::API::DTO::WindowDTO searchWindow{};
-    searchWindow.start = IO::Astrodynamics::Time::TDB("2021-JUN-10 00:00:00.0000 TDB").GetSecondsFromJ2000().count();
-    searchWindow.end = IO::Astrodynamics::Time::TDB("2021-JUN-10 01:47:27.0000 TDB").GetSecondsFromJ2000().count();
-
-
-    FindWindowsInFieldOfViewConstraintProxy(searchWindow, -179, -179789, 399, "IAU_EARTH", "ELLIPSOID", "LT", 360, windows);
-
-    ASSERT_STREQ("2021-06-10 00:00:00.000000 (TDB)", ToTDBWindow(windows[0]).GetStartDate().ToString().c_str());
-    ASSERT_STREQ("2021-06-10 00:29:03.324572 (TDB)", ToTDBWindow(windows[0]).GetEndDate().ToString().c_str());
-
-    ASSERT_STREQ("2021-06-10 01:04:03.521650 (TDB)", ToTDBWindow(windows[1]).GetStartDate().ToString().c_str());
-    ASSERT_STREQ("2021-06-10 01:47:27.000000 (TDB)", ToTDBWindow(windows[1]).GetEndDate().ToString().c_str());
-}
 
 TEST(API, ReadEphemerisProxy)
 {
@@ -315,59 +114,6 @@ TEST(API, ReadEphemerisProxyException)
     IO::Astrodynamics::API::DTO::StateVectorDTO sv[5000];
     ASSERT_THROW(ReadEphemerisProxy(searchWindow, 399, 301, "J2000", "LT", 1.0, sv),
                  IO::Astrodynamics::Exception::InvalidArgumentException);
-}
-
-TEST(API, ReadSpacecraftOrientationProxy)
-{
-    auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399); //GEOPHYSICAL PROPERTIES provided by JPL
-
-    auto startDate = IO::Astrodynamics::Time::TDB("2021-01-01 13:00:00 (TDB)");
-    auto endDate = IO::Astrodynamics::Time::TDB("2021-01-01 13:01:00 (TDB)");
-
-    std::unique_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParams1 = std::make_unique<IO::Astrodynamics::OrbitalParameters::StateVector>(
-            earth,
-            IO::Astrodynamics::Math::Vector3D(6678000.0,
-                                              0.0, 0.0),
-            IO::Astrodynamics::Math::Vector3D(0.0, 7727.0,
-                                              0.0),
-            startDate,
-            IO::Astrodynamics::Frames::InertialFrames::ICRF());
-
-    IO::Astrodynamics::Body::Spacecraft::Spacecraft s{-172, "OrientationSpc", 1000.0, 3000.0, std::string(SpacecraftPath),
-                                                      std::move(orbitalParams1)};
-
-    IO::Astrodynamics::Integrators::VVIntegrator integrator(IO::Astrodynamics::Time::TimeSpan(1.0s));
-
-    IO::Astrodynamics::Propagators::Propagator prop(s, integrator, IO::Astrodynamics::Time::Window(startDate, endDate));
-
-    s.AddFuelTank("ft1", 1000.0, 900.0);
-    s.AddEngine("sn1", "eng1", "ft1", {1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}, 450.0, 50.0);
-
-    auto engine1 = s.GetEngine("sn1");
-
-    std::vector<IO::Astrodynamics::Body::Spacecraft::Engine *> engines;
-    engines.push_back(const_cast<IO::Astrodynamics::Body::Spacecraft::Engine *>(engine1));
-
-    IO::Astrodynamics::Maneuvers::Attitudes::NadirAttitude nadir(engines, prop, IO::Astrodynamics::Time::TimeSpan(10s));
-    prop.SetStandbyManeuver(&nadir);
-
-    prop.Propagate();
-    IO::Astrodynamics::API::DTO::WindowDTO searchWindow{};
-    searchWindow.start = startDate.GetSecondsFromJ2000().count();
-    searchWindow.end = endDate.GetSecondsFromJ2000().count();
-
-    IO::Astrodynamics::API::DTO::StateOrientationDTO so[10000];
-    ReadOrientationProxy(searchWindow, -172, 10.0 * std::pow(2.0, ClockAccuracy), "J2000", 10.0, so);
-    ASSERT_DOUBLE_EQ(0.70710678118654757, so[0].orientation.w);
-    ASSERT_DOUBLE_EQ(0.0, so[0].orientation.x);
-    ASSERT_DOUBLE_EQ(0.0, so[0].orientation.y);
-    ASSERT_DOUBLE_EQ(-0.70710678118654746, so[0].orientation.z);
-    ASSERT_DOUBLE_EQ(0.0, so[0].angularVelocity.x);
-    ASSERT_DOUBLE_EQ(0.0, so[0].angularVelocity.y);
-    ASSERT_DOUBLE_EQ(0.0, so[0].angularVelocity.z);
-    ASSERT_DOUBLE_EQ(searchWindow.start, so[0].epoch);
-    ASSERT_STREQ("J2000", so[0].frame);
-
 }
 
 TEST(API, ReadSpacecraftOrientationProxyException)

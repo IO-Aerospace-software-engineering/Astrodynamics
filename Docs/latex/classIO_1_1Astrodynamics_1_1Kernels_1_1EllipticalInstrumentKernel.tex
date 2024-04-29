@@ -1,5 +1,5 @@
-\hypertarget{classIO_1_1Astrodynamics_1_1Kernels_1_1EllipticalInstrumentKernel}{}\doxysection{IO\+::Astrodynamics\+::Kernels\+::Elliptical\+Instrument\+Kernel Class Reference}
-\label{classIO_1_1Astrodynamics_1_1Kernels_1_1EllipticalInstrumentKernel}\index{IO::Astrodynamics::Kernels::EllipticalInstrumentKernel@{IO::Astrodynamics::Kernels::EllipticalInstrumentKernel}}
+\doxysection{IO\+::Astrodynamics\+::Kernels\+::Elliptical\+Instrument\+Kernel Class Reference}
+\hypertarget{classIO_1_1Astrodynamics_1_1Kernels_1_1EllipticalInstrumentKernel}{}\label{classIO_1_1Astrodynamics_1_1Kernels_1_1EllipticalInstrumentKernel}\index{IO::Astrodynamics::Kernels::EllipticalInstrumentKernel@{IO::Astrodynamics::Kernels::EllipticalInstrumentKernel}}
 
 
 Elliptical instrument kernel.  
@@ -15,26 +15,83 @@ Inheritance diagram for IO\+::Astrodynamics\+::Kernels\+::Elliptical\+Instrument
 \includegraphics[height=3.000000cm]{classIO_1_1Astrodynamics_1_1Kernels_1_1EllipticalInstrumentKernel}
 \end{center}
 \end{figure}
-\doxysubsection*{Public Member Functions}
+\doxysubsubsection*{Public Member Functions}
 \begin{DoxyCompactItemize}
 \item 
 \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1EllipticalInstrumentKernel_ab52000fe7cabfe4aa6578f7314eafd20}{Elliptical\+Instrument\+Kernel}} (const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Instruments_1_1Instrument}{IO\+::\+Astrodynamics\+::\+Instruments\+::\+Instrument}} \&instrument, const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO\+::\+Astrodynamics\+::\+Math\+::\+Vector3D}} \&boresight, const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO\+::\+Astrodynamics\+::\+Math\+::\+Vector3D}} \&ref\+Vector, double angle, double cross\+Angle)
-\begin{DoxyCompactList}\small\item\em Construct a new Elliptical Instrument \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1Kernel}{Kernel}} object. \end{DoxyCompactList}\item 
-\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1EllipticalInstrumentKernel_a7d78f43b36bf8c7a0080fd6324be6874}{$\sim$\+Elliptical\+Instrument\+Kernel}} () override=default
+\begin{DoxyCompactList}\small\item\em Construct a new Elliptical Instrument \doxylink{classIO_1_1Astrodynamics_1_1Kernels_1_1Kernel}{Kernel} object. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1EllipticalInstrumentKernel_a7d78f43b36bf8c7a0080fd6324be6874}{\texorpdfstring{$\sim$}{\string~}\+Elliptical\+Instrument\+Kernel}} () override=default
 \end{DoxyCompactItemize}
-\doxysubsection*{Protected Member Functions}
+\doxysubsection*{Public Member Functions inherited from \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1InstrumentKernel}{IO\+::\+Astrodynamics\+::\+Kernels\+::\+Instrument\+Kernel}}}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1InstrumentKernel_a4c6555316d97ed38ab9bfae74609354c}{\texorpdfstring{$\sim$}{\string~}\+Instrument\+Kernel}} () override=default
+\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{IO\+::\+Astrodynamics\+::\+Time\+::\+Window}}$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} $>$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1InstrumentKernel_a75926525e4b8a5e8a62354f0b4cf2d6d}{Get\+Coverage\+Window}} () const override
+\begin{DoxyCompactList}\small\item\em Get the Coverage Window. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsection*{Public Member Functions inherited from \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1Kernel}{IO\+::\+Astrodynamics\+::\+Kernels\+::\+Kernel}}}
+\begin{DoxyCompactItemize}
+\item 
+virtual \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1Kernel_a1be349e4e41b301c1fb898af31c183f1}{\texorpdfstring{$\sim$}{\string~}\+Kernel}} ()
+\item 
+std\+::string \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1Kernel_a5dec128d0d52abffa39417591999213e}{Get\+Path}} () const
+\begin{DoxyCompactList}\small\item\em Get the Path. \end{DoxyCompactList}\item 
+bool \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1Kernel_ac5ffbcfd4a68ff7ffe264bdc6e034e7a}{Is\+Loaded}} () const
+\item 
+virtual void \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1Kernel_a294596d6cdfe3bbe2158f2ada3d72a8b}{Add\+Comment}} (const std\+::string \&comment) const
+\begin{DoxyCompactList}\small\item\em Add comment to kernel. \end{DoxyCompactList}\item 
+virtual std\+::string \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1Kernel_a68b4ebf5a95ada4df97921c7208a9360}{Read\+Comment}} () const
+\begin{DoxyCompactList}\small\item\em Read comment from kernel. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsubsection*{Protected Member Functions}
 \begin{DoxyCompactItemize}
 \item 
 void \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1EllipticalInstrumentKernel_a48052a5f5684c516130d33a953a7aea0}{Build\+Kernel}} () override
 \begin{DoxyCompactList}\small\item\em Build kernel. \end{DoxyCompactList}\end{DoxyCompactItemize}
-\doxysubsection*{Additional Inherited Members}
+\doxysubsection*{Protected Member Functions inherited from \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1InstrumentKernel}{IO\+::\+Astrodynamics\+::\+Kernels\+::\+Instrument\+Kernel}}}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1InstrumentKernel_aed5133b243312e712832e7f1e213ebaf}{Instrument\+Kernel}} (const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Instruments_1_1Instrument}{IO\+::\+Astrodynamics\+::\+Instruments\+::\+Instrument}} \&instrument, const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO\+::\+Astrodynamics\+::\+Math\+::\+Vector3D}} \&boresight, const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO\+::\+Astrodynamics\+::\+Math\+::\+Vector3D}} \&ref\+Vector, double angle)
+\begin{DoxyCompactList}\small\item\em Construct a new Instrument \doxylink{classIO_1_1Astrodynamics_1_1Kernels_1_1Kernel}{Kernel} object. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsection*{Protected Member Functions inherited from \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1Kernel}{IO\+::\+Astrodynamics\+::\+Kernels\+::\+Kernel}}}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1Kernel_a30b4959e2bc74fc3b008129d6c480561}{Kernel}} (std\+::string file\+Name)
+\end{DoxyCompactItemize}
+\doxysubsubsection*{Additional Inherited Members}
+\doxysubsection*{Static Public Member Functions inherited from \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1Kernel}{IO\+::\+Astrodynamics\+::\+Kernels\+::\+Kernel}}}
+\begin{DoxyCompactItemize}
+\item 
+static int \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1Kernel_ae2cd668a2821a2090a9a4d64188a4f52}{Define\+Polynomial\+Degree}} (int data\+Size, int maximum\+Degree)
+\begin{DoxyCompactList}\small\item\em Define the best Lagrange polynomial degree. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsection*{Protected Attributes inherited from \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1InstrumentKernel}{IO\+::\+Astrodynamics\+::\+Kernels\+::\+Instrument\+Kernel}}}
+\begin{DoxyCompactItemize}
+\item 
+const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Instruments_1_1Instrument}{IO\+::\+Astrodynamics\+::\+Instruments\+::\+Instrument}} \& \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1InstrumentKernel_abfeb5322dc27a2b20a0c195a3e109209}{m\+\_\+instrument}}
+\item 
+const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO\+::\+Astrodynamics\+::\+Math\+::\+Vector3D}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1InstrumentKernel_a01fff097aac854f3d8ac8b42c707b75a}{m\+\_\+boresight}} \{\}
+\item 
+const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO\+::\+Astrodynamics\+::\+Math\+::\+Vector3D}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1InstrumentKernel_a5a45ce4fc773ae872f32aff1943f0f31}{m\+\_\+ref\+Vector}} \{\}
+\item 
+const double \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1InstrumentKernel_a8e37fa80e71301b4082d8e42ddb69fee}{m\+\_\+angle}} \{\}
+\end{DoxyCompactItemize}
+\doxysubsection*{Protected Attributes inherited from \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1Kernel}{IO\+::\+Astrodynamics\+::\+Kernels\+::\+Kernel}}}
+\begin{DoxyCompactItemize}
+\item 
+const std\+::string \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1Kernel_a396c4c9fa87f41f7d53c38ace6fd6d45}{m\+\_\+file\+Path}}
+\item 
+std\+::string \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1Kernel_a94db167e96e440658da1b17b5b6eb3c3}{m\+\_\+comments}}
+\item 
+bool \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1Kernel_ae32c21385c131141ba849cff335cf892}{m\+\_\+is\+Loaded}} \{false\}
+\item 
+bool \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1Kernel_a9e83885d5c03240102c0466a63d1f144}{m\+\_\+file\+Exists}} \{false\}
+\end{DoxyCompactItemize}
 
 
 \doxysubsection{Detailed Description}
 Elliptical instrument kernel. 
 
 \doxysubsection{Constructor \& Destructor Documentation}
-\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Kernels_1_1EllipticalInstrumentKernel_ab52000fe7cabfe4aa6578f7314eafd20}\label{classIO_1_1Astrodynamics_1_1Kernels_1_1EllipticalInstrumentKernel_ab52000fe7cabfe4aa6578f7314eafd20}} 
+\Hypertarget{classIO_1_1Astrodynamics_1_1Kernels_1_1EllipticalInstrumentKernel_ab52000fe7cabfe4aa6578f7314eafd20}\label{classIO_1_1Astrodynamics_1_1Kernels_1_1EllipticalInstrumentKernel_ab52000fe7cabfe4aa6578f7314eafd20} 
 \index{IO::Astrodynamics::Kernels::EllipticalInstrumentKernel@{IO::Astrodynamics::Kernels::EllipticalInstrumentKernel}!EllipticalInstrumentKernel@{EllipticalInstrumentKernel}}
 \index{EllipticalInstrumentKernel@{EllipticalInstrumentKernel}!IO::Astrodynamics::Kernels::EllipticalInstrumentKernel@{IO::Astrodynamics::Kernels::EllipticalInstrumentKernel}}
 \doxysubsubsection{\texorpdfstring{EllipticalInstrumentKernel()}{EllipticalInstrumentKernel()}}
@@ -42,7 +99,7 @@ Elliptical instrument kernel.
 
 
 
-Construct a new Elliptical Instrument \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1Kernel}{Kernel}} object. 
+Construct a new Elliptical Instrument \doxylink{classIO_1_1Astrodynamics_1_1Kernels_1_1Kernel}{Kernel} object. 
 
 
 \begin{DoxyParams}{Parameters}
@@ -57,16 +114,16 @@ Construct a new Elliptical Instrument \mbox{\hyperlink{classIO_1_1Astrodynamics_
 {\em cross\+Angle} & \\
 \hline
 \end{DoxyParams}
-\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Kernels_1_1EllipticalInstrumentKernel_a7d78f43b36bf8c7a0080fd6324be6874}\label{classIO_1_1Astrodynamics_1_1Kernels_1_1EllipticalInstrumentKernel_a7d78f43b36bf8c7a0080fd6324be6874}} 
-\index{IO::Astrodynamics::Kernels::EllipticalInstrumentKernel@{IO::Astrodynamics::Kernels::EllipticalInstrumentKernel}!````~EllipticalInstrumentKernel@{$\sim$EllipticalInstrumentKernel}}
-\index{````~EllipticalInstrumentKernel@{$\sim$EllipticalInstrumentKernel}!IO::Astrodynamics::Kernels::EllipticalInstrumentKernel@{IO::Astrodynamics::Kernels::EllipticalInstrumentKernel}}
-\doxysubsubsection{\texorpdfstring{$\sim$EllipticalInstrumentKernel()}{~EllipticalInstrumentKernel()}}
-{\footnotesize\ttfamily IO\+::\+Astrodynamics\+::\+Kernels\+::\+Elliptical\+Instrument\+Kernel\+::$\sim$\+Elliptical\+Instrument\+Kernel (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [default]}}
+\Hypertarget{classIO_1_1Astrodynamics_1_1Kernels_1_1EllipticalInstrumentKernel_a7d78f43b36bf8c7a0080fd6324be6874}\label{classIO_1_1Astrodynamics_1_1Kernels_1_1EllipticalInstrumentKernel_a7d78f43b36bf8c7a0080fd6324be6874} 
+\index{IO::Astrodynamics::Kernels::EllipticalInstrumentKernel@{IO::Astrodynamics::Kernels::EllipticalInstrumentKernel}!````~EllipticalInstrumentKernel@{\texorpdfstring{$\sim$}{\string~}EllipticalInstrumentKernel}}
+\index{````~EllipticalInstrumentKernel@{\texorpdfstring{$\sim$}{\string~}EllipticalInstrumentKernel}!IO::Astrodynamics::Kernels::EllipticalInstrumentKernel@{IO::Astrodynamics::Kernels::EllipticalInstrumentKernel}}
+\doxysubsubsection{\texorpdfstring{\texorpdfstring{$\sim$}{\string~}EllipticalInstrumentKernel()}{\string~EllipticalInstrumentKernel()}}
+{\footnotesize\ttfamily IO\+::\+Astrodynamics\+::\+Kernels\+::\+Elliptical\+Instrument\+Kernel\+::\texorpdfstring{$\sim$}{\string~}\+Elliptical\+Instrument\+Kernel (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [default]}}
 
 
 
 \doxysubsection{Member Function Documentation}
-\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Kernels_1_1EllipticalInstrumentKernel_a48052a5f5684c516130d33a953a7aea0}\label{classIO_1_1Astrodynamics_1_1Kernels_1_1EllipticalInstrumentKernel_a48052a5f5684c516130d33a953a7aea0}} 
+\Hypertarget{classIO_1_1Astrodynamics_1_1Kernels_1_1EllipticalInstrumentKernel_a48052a5f5684c516130d33a953a7aea0}\label{classIO_1_1Astrodynamics_1_1Kernels_1_1EllipticalInstrumentKernel_a48052a5f5684c516130d33a953a7aea0} 
 \index{IO::Astrodynamics::Kernels::EllipticalInstrumentKernel@{IO::Astrodynamics::Kernels::EllipticalInstrumentKernel}!BuildKernel@{BuildKernel}}
 \index{BuildKernel@{BuildKernel}!IO::Astrodynamics::Kernels::EllipticalInstrumentKernel@{IO::Astrodynamics::Kernels::EllipticalInstrumentKernel}}
 \doxysubsubsection{\texorpdfstring{BuildKernel()}{BuildKernel()}}

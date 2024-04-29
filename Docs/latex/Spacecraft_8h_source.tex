@@ -1,159 +1,159 @@
-\hypertarget{Spacecraft_8h_source}{}\doxysection{Spacecraft.\+h}
-\label{Spacecraft_8h_source}\index{IO.Astrodynamics/Body/Spacecraft/Spacecraft.h@{IO.Astrodynamics/Body/Spacecraft/Spacecraft.h}}
+\doxysection{Spacecraft.\+h}
+\hypertarget{Spacecraft_8h_source}{}\label{Spacecraft_8h_source}\index{IO.Astrodynamics/Body/Spacecraft/Spacecraft.h@{IO.Astrodynamics/Body/Spacecraft/Spacecraft.h}}
 \mbox{\hyperlink{Spacecraft_8h}{Go to the documentation of this file.}}
 \begin{DoxyCode}{0}
-\DoxyCodeLine{1 \textcolor{comment}{/*}}
-\DoxyCodeLine{2 \textcolor{comment}{ Copyright (c) 2021-\/2023. Sylvain Guillet (sylvain.guillet@tutamail.com)}}
-\DoxyCodeLine{3 \textcolor{comment}{ */}}
-\DoxyCodeLine{4 \textcolor{preprocessor}{\#ifndef SPACECRAFT\_H}}
-\DoxyCodeLine{5 \textcolor{preprocessor}{\#define SPACECRAFT\_H}}
-\DoxyCodeLine{6 }
-\DoxyCodeLine{7 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{SpacecraftFrameFile_8h}{SpacecraftFrameFile.h}}>}}
-\DoxyCodeLine{8 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{SpacecraftClockKernel_8h}{SpacecraftClockKernel.h}}>}}
-\DoxyCodeLine{9 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{OrientationKernel_8h}{OrientationKernel.h}}>}}
-\DoxyCodeLine{10 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{EphemerisKernel_8h}{EphemerisKernel.h}}>}}
-\DoxyCodeLine{11 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{Payload_8h}{Payload.h}}>}}
-\DoxyCodeLine{12 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{Engine_8h}{Engine.h}}>}}
-\DoxyCodeLine{13 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{InstrumentFrameFile_8h}{InstrumentFrameFile.h}}>}}
-\DoxyCodeLine{14 }
-\DoxyCodeLine{15 \textcolor{comment}{//Forward declaration}}
-\DoxyCodeLine{16 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Instruments}{IO::Astrodynamics::Instruments}}}
-\DoxyCodeLine{17 \{}
-\DoxyCodeLine{18     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Instruments_1_1Instrument}{Instrument}};}
-\DoxyCodeLine{19 \}}
-\DoxyCodeLine{20 }
-\DoxyCodeLine{21 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Frames}{IO::Astrodynamics::Frames}}}
-\DoxyCodeLine{22 \{}
-\DoxyCodeLine{23     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Frames_1_1SpacecraftFrameFile}{SpacecraftFrameFile}};}
-\DoxyCodeLine{24 \}}
-\DoxyCodeLine{25 }
-\DoxyCodeLine{26 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Kernels}{IO::Astrodynamics::Kernels}}}
-\DoxyCodeLine{27 \{}
-\DoxyCodeLine{28     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1SpacecraftClockKernel}{SpacecraftClockKernel}};}
-\DoxyCodeLine{29 }
-\DoxyCodeLine{30     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1OrientationKernel}{OrientationKernel}};}
-\DoxyCodeLine{31 }
-\DoxyCodeLine{32     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1EphemerisKernel}{EphemerisKernel}};}
-\DoxyCodeLine{33 \}}
-\DoxyCodeLine{34 }
-\DoxyCodeLine{35 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Body_1_1Spacecraft}{IO::Astrodynamics::Body::Spacecraft}}}
-\DoxyCodeLine{36 \{}
-\DoxyCodeLine{37     \textcolor{keyword}{class }Engine;}
-\DoxyCodeLine{38 }
-\DoxyCodeLine{43     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft}{Spacecraft}} final : \textcolor{keyword}{public} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem}{CelestialItem}}}
-\DoxyCodeLine{44     \{}
-\DoxyCodeLine{45     \textcolor{keyword}{private}:}
-\DoxyCodeLine{46         \textcolor{keyword}{const} std::string m\_filesPath\{\};}
-\DoxyCodeLine{47         \textcolor{keyword}{const} std::unique\_ptr<IO::Astrodynamics::Frames::SpacecraftFrameFile> m\_frame;}
-\DoxyCodeLine{48         \textcolor{keyword}{const} std::unique\_ptr<IO::Astrodynamics::Kernels::SpacecraftClockKernel> m\_clockKernel;}
-\DoxyCodeLine{49         \textcolor{keyword}{const} std::unique\_ptr<IO::Astrodynamics::Kernels::OrientationKernel> m\_orientationKernel;}
-\DoxyCodeLine{50         \textcolor{keyword}{const} std::unique\_ptr<IO::Astrodynamics::Kernels::EphemerisKernel> m\_ephemerisKernel;}
-\DoxyCodeLine{51         std::vector<std::unique\_ptr<IO::Astrodynamics::Instruments::Instrument>> m\_instruments\{\};}
-\DoxyCodeLine{52         std::vector<std::unique\_ptr<IO::Astrodynamics::Body::Spacecraft::FuelTank>> m\_fuelTanks\{\};}
-\DoxyCodeLine{53         std::vector<std::unique\_ptr<IO::Astrodynamics::Body::Spacecraft::Engine>> m\_engines\{\};}
-\DoxyCodeLine{54         std::vector<std::unique\_ptr<IO::Astrodynamics::Body::Spacecraft::Payload>> m\_payloads\{\};}
-\DoxyCodeLine{55 }
-\DoxyCodeLine{56         \textcolor{keywordtype}{bool} HasInstrument(\textcolor{keywordtype}{int} \textcolor{keywordtype}{id});}
-\DoxyCodeLine{57 }
-\DoxyCodeLine{58         \textcolor{keyword}{const} \textcolor{keywordtype}{double} m\_maximumOperatingMass;}
-\DoxyCodeLine{59 }
-\DoxyCodeLine{60     \textcolor{keyword}{public}:}
-\DoxyCodeLine{61 }
-\DoxyCodeLine{62         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO::Astrodynamics::Math::Vector3D}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft_a5cbbc132ce4f342e701522639e86e2b8}{Top}};}
-\DoxyCodeLine{63         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO::Astrodynamics::Math::Vector3D}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft_af91d754de9a02ba334964f7c33f03622}{Front}};}
-\DoxyCodeLine{64         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO::Astrodynamics::Math::Vector3D}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft_a34fe5d73a8ff00862dbc50db1ad7f743}{Right}};}
-\DoxyCodeLine{65         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO::Astrodynamics::Math::Vector3D}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft_abfad0b008cad1aca403d1419133e84aa}{Bottom}};}
-\DoxyCodeLine{66         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO::Astrodynamics::Math::Vector3D}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft_a6b049449c5c6ef159e198928b72f3621}{Back}};}
-\DoxyCodeLine{67         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO::Astrodynamics::Math::Vector3D}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft_aeb26fb3896b821686aae41737563b87e}{Left}};}
-\DoxyCodeLine{68 }
-\DoxyCodeLine{80         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft_a162b762527447d4929a87d726ed9346f}{Spacecraft}}(\textcolor{keywordtype}{int} \textcolor{keywordtype}{id}, \textcolor{keyword}{const} std::string \&name, \textcolor{keywordtype}{double} dryOperatingMass, \textcolor{keywordtype}{double} maximumOperatingMass,}
-\DoxyCodeLine{81                    \textcolor{keyword}{const} std::string \&directoryPath,}
-\DoxyCodeLine{82                    std::unique\_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParametersAtEpoch);}
-\DoxyCodeLine{83 }
-\DoxyCodeLine{95         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft_a162b762527447d4929a87d726ed9346f}{Spacecraft}}(\textcolor{keywordtype}{int} \textcolor{keywordtype}{id}, \textcolor{keyword}{const} std::string \&name, \textcolor{keywordtype}{double} dryOperatingMass, \textcolor{keywordtype}{double} maximumOperatingMass,}
-\DoxyCodeLine{96                    std::string directoryPath,}
-\DoxyCodeLine{97                    std::unique\_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParametersAtEpoch, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO::Astrodynamics::Math::Vector3D}} \&front,}
-\DoxyCodeLine{98                    \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO::Astrodynamics::Math::Vector3D}} \&top);}
-\DoxyCodeLine{99 }
-\DoxyCodeLine{100         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft_af3b27e264a1fb9bbc8d6b6939f9b0367}{Spacecraft}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft}{Spacecraft}} \&spacecraft) = \textcolor{keyword}{delete};}
-\DoxyCodeLine{101 }
-\DoxyCodeLine{102         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft_a388b429c444a48683df5c97fff04d33a}{\string~Spacecraft}}() \textcolor{keyword}{override} = \textcolor{keywordflow}{default};}
-\DoxyCodeLine{103 }
-\DoxyCodeLine{109         \textcolor{keyword}{inline} std::string \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft_abe1866cbc246610634b73c475c093b4e}{GetFilesPath}}()\textcolor{keyword}{ const}}
-\DoxyCodeLine{110 \textcolor{keyword}{        }\{ \textcolor{keywordflow}{return} m\_filesPath; \}}
-\DoxyCodeLine{111 }
-\DoxyCodeLine{117         \textcolor{keywordtype}{void} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft_a971d5bac23de59779e180f6d6114fd5f}{WriteOrientations}}(}
-\DoxyCodeLine{118                 \textcolor{keyword}{const} std::vector<std::vector<IO::Astrodynamics::OrbitalParameters::StateOrientation>> \&orientations) \textcolor{keyword}{const};}
-\DoxyCodeLine{119 }
-\DoxyCodeLine{128         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateOrientation}{IO::Astrodynamics::OrbitalParameters::StateOrientation}}}
-\DoxyCodeLine{129         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft_a4664dfcf5f4b9dc1d62253fb4762157b}{GetOrientation}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO::Astrodynamics::Time::TDB}} \&epoch, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO::Astrodynamics::Time::TimeSpan}} \&tolerance,}
-\DoxyCodeLine{130                        \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Frames_1_1Frames}{IO::Astrodynamics::Frames::Frames}} \&frame) \textcolor{keyword}{const};}
-\DoxyCodeLine{131 }
-\DoxyCodeLine{137         \textcolor{keywordtype}{void} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft_a339a7542d6dd9f4a799250803ab9bad4}{WriteOrientationKernelComment}}(\textcolor{keyword}{const} std::string \&comment) \textcolor{keyword}{const};}
-\DoxyCodeLine{138 }
-\DoxyCodeLine{144         std::string \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft_a140a6a288194a16d19fe6b70290d5383}{ReadOrientationKernelComment}}() \textcolor{keyword}{const};}
-\DoxyCodeLine{145 }
-\DoxyCodeLine{151         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB>}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft_acc37b66aa2a7b18cb337246364d815ae}{GetOrientationsCoverageWindow}}() \textcolor{keyword}{const};}
-\DoxyCodeLine{152 }
-\DoxyCodeLine{158         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1SpacecraftClockKernel}{IO::Astrodynamics::Kernels::SpacecraftClockKernel}} \&\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft_a9f95505f318835b7f11d0782e360306e}{GetClock}}() \textcolor{keyword}{const};}
-\DoxyCodeLine{159 }
-\DoxyCodeLine{166         \textcolor{keywordtype}{void} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft_a92631b619ec6e56dfc2444d6f217a9a5}{WriteEphemeris}}(\textcolor{keyword}{const} std::vector<OrbitalParameters::StateVector> \&states) \textcolor{keyword}{const};}
-\DoxyCodeLine{167 }
-\DoxyCodeLine{177         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}{IO::Astrodynamics::OrbitalParameters::StateVector}}}
-\DoxyCodeLine{178         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft_a65f8bfa3c1f31967883b4d011ef7934a}{ReadEphemeris}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Frames_1_1Frames}{IO::Astrodynamics::Frames::Frames}} \&frame, \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_af0023a81d12385b73d78bd82e4b96ce3}{IO::Astrodynamics::AberrationsEnum}} aberration,}
-\DoxyCodeLine{179                       \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO::Astrodynamics::Time::TDB}} \&tdb, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody}{IO::Astrodynamics::Body::CelestialBody}} \&observer) \textcolor{keyword}{const override};}
-\DoxyCodeLine{180 }
-\DoxyCodeLine{186         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB>}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft_a45e919f84af4e5b56cd5efb4f342980b}{GetEphemerisCoverageWindow}}() \textcolor{keyword}{const};}
-\DoxyCodeLine{187 }
-\DoxyCodeLine{193         \textcolor{keywordtype}{void} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft_a5cbc46dc87407d3c867de907084e7495}{WriteEphemerisKernelComment}}(\textcolor{keyword}{const} std::string \&comment) \textcolor{keyword}{const};}
-\DoxyCodeLine{194 }
-\DoxyCodeLine{200         std::string \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft_a993e77ffe0029364ed3988f9af5074b3}{ReadEphemerisKernelComment}}() \textcolor{keyword}{const};}
-\DoxyCodeLine{201 }
-\DoxyCodeLine{212         \textcolor{keywordtype}{void} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft_a1c96da554ac2a7a4f18df580ccb2c32e}{AddCircularFOVInstrument}}(\textcolor{keywordtype}{int} \textcolor{keywordtype}{id}, \textcolor{keyword}{const} std::string \&name,}
-\DoxyCodeLine{213                                       \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO::Astrodynamics::Math::Vector3D}} \&orientation,}
-\DoxyCodeLine{214                                       \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO::Astrodynamics::Math::Vector3D}} \&boresight,}
-\DoxyCodeLine{215                                       \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO::Astrodynamics::Math::Vector3D}} \&fovRefVector, \textcolor{keywordtype}{double} fovAngle);}
-\DoxyCodeLine{216 }
-\DoxyCodeLine{228         \textcolor{keywordtype}{void} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft_a57fb2aa421010f8b5863c91c9a160496}{AddRectangularFOVInstrument}}(\textcolor{keywordtype}{int} \textcolor{keywordtype}{id}, \textcolor{keyword}{const} std::string \&name,}
-\DoxyCodeLine{229                                          \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO::Astrodynamics::Math::Vector3D}} \&orientation,}
-\DoxyCodeLine{230                                          \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO::Astrodynamics::Math::Vector3D}} \&boresight,}
-\DoxyCodeLine{231                                          \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO::Astrodynamics::Math::Vector3D}} \&fovRefVector, \textcolor{keywordtype}{double} fovAngle,}
-\DoxyCodeLine{232                                          \textcolor{keywordtype}{double} crossAngle);}
-\DoxyCodeLine{233 }
-\DoxyCodeLine{245         \textcolor{keywordtype}{void} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft_a14966eddc9bd5f722509e4bcb141a25f}{AddEllipticalFOVInstrument}}(\textcolor{keywordtype}{int} \textcolor{keywordtype}{id}, \textcolor{keyword}{const} std::string \&name,}
-\DoxyCodeLine{246                                         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO::Astrodynamics::Math::Vector3D}} \&orientation,}
-\DoxyCodeLine{247                                         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO::Astrodynamics::Math::Vector3D}} \&boresight,}
-\DoxyCodeLine{248                                         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO::Astrodynamics::Math::Vector3D}} \&fovRefVector, \textcolor{keywordtype}{double} fovAngle,}
-\DoxyCodeLine{249                                         \textcolor{keywordtype}{double} crossAngle);}
-\DoxyCodeLine{250 }
-\DoxyCodeLine{257         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Instruments_1_1Instrument}{IO::Astrodynamics::Instruments::Instrument}} *\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft_a7539b396ecacfc292162536249b8576e}{GetInstrument}}(\textcolor{keywordtype}{int} \textcolor{keywordtype}{id}) \textcolor{keyword}{const};}
-\DoxyCodeLine{258 }
-\DoxyCodeLine{266         \textcolor{keywordtype}{void} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft_a9563f513dddc22c0c2b3c0b83667b848}{AddFuelTank}}(\textcolor{keyword}{const} std::string \&serialNumber, \textcolor{keywordtype}{double} capacity, \textcolor{keywordtype}{double} quantity);}
-\DoxyCodeLine{267 }
-\DoxyCodeLine{280         \textcolor{keywordtype}{void}}
-\DoxyCodeLine{281         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft_aefc912ee4a5c9a28d6d8128e5d05cccb}{AddEngine}}(\textcolor{keyword}{const} std::string \&serialNumber, \textcolor{keyword}{const} std::string \&name, \textcolor{keyword}{const} std::string \&fuelTankSerialNumber,}
-\DoxyCodeLine{282                   \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{Math::Vector3D}} \&position, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{Math::Vector3D}} \&orientation, \textcolor{keywordtype}{double} isp,}
-\DoxyCodeLine{283                   \textcolor{keywordtype}{double} fuelFlow);}
-\DoxyCodeLine{284 }
-\DoxyCodeLine{292         \textcolor{keywordtype}{void} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft_a2eb2aa3d21616db91f463c063090d156}{AddPayload}}(\textcolor{keyword}{const} std::string \&serialNumber, \textcolor{keyword}{const} std::string \&name, \textcolor{keywordtype}{double} mass);}
-\DoxyCodeLine{293 }
-\DoxyCodeLine{299         \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft_ac8a2ed52b6d69fcf7eb210c60f5ab6d3}{GetMass}}() \textcolor{keyword}{const override};}
-\DoxyCodeLine{300 }
-\DoxyCodeLine{307         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Engine}{IO::Astrodynamics::Body::Spacecraft::Engine}} *\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft_ab01be80dd5b4c8018920453c3fcc50a1}{GetEngine}}(\textcolor{keyword}{const} std::string \&serialNumber) \textcolor{keyword}{const};}
-\DoxyCodeLine{308 }
-\DoxyCodeLine{315         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1FuelTank}{IO::Astrodynamics::Body::Spacecraft::FuelTank}} *\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft_acbc5a5329d61382d8ae1d932d6baf14c}{GetFueltank}}(\textcolor{keyword}{const} std::string \&serialNumber) \textcolor{keyword}{const};}
-\DoxyCodeLine{316 }
-\DoxyCodeLine{322         \textcolor{keywordtype}{void} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft_a62b6186099038a7df83c3212e43d5c2b}{ReleasePayload}}(\textcolor{keyword}{const} std::string \&serialNumber);}
-\DoxyCodeLine{323 }
-\DoxyCodeLine{329         \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft_aa3c7406ab0b11d16c2f8201204d048dd}{GetDryOperatingMass}}() \textcolor{keyword}{const};}
-\DoxyCodeLine{330 }
-\DoxyCodeLine{335         \textcolor{keyword}{const} std::unique\_ptr<IO::Astrodynamics::Frames::SpacecraftFrameFile> \&\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft_a3de95bb666f7996a5474660cc32d9ddc}{GetFrame}}() \textcolor{keyword}{const};}
-\DoxyCodeLine{336 }
-\DoxyCodeLine{337         \textcolor{keyword}{inline} \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft_ae9e2863c2d63cd998da3985a8b2c3584}{GetMaximumOperatingMass}}()\textcolor{keyword}{ const}}
-\DoxyCodeLine{338 \textcolor{keyword}{        }\{ \textcolor{keywordflow}{return} m\_maximumOperatingMass; \}}
-\DoxyCodeLine{339     \};}
-\DoxyCodeLine{340 \}}
-\DoxyCodeLine{341 }
-\DoxyCodeLine{342 \textcolor{preprocessor}{\#endif }\textcolor{comment}{// !SPACECRAFT\_H}}
+\DoxyCodeLine{00001\ \textcolor{comment}{/*}}
+\DoxyCodeLine{00002\ \textcolor{comment}{\ Copyright\ (c)\ 2021-\/2023.\ Sylvain\ Guillet\ (sylvain.guillet@tutamail.com)}}
+\DoxyCodeLine{00003\ \textcolor{comment}{\ */}}
+\DoxyCodeLine{00004\ \textcolor{preprocessor}{\#ifndef\ SPACECRAFT\_H}}
+\DoxyCodeLine{00005\ \textcolor{preprocessor}{\#define\ SPACECRAFT\_H}}
+\DoxyCodeLine{00006\ }
+\DoxyCodeLine{00007\ \textcolor{preprocessor}{\#include\ <\mbox{\hyperlink{SpacecraftFrameFile_8h}{SpacecraftFrameFile.h}}>}}
+\DoxyCodeLine{00008\ \textcolor{preprocessor}{\#include\ <\mbox{\hyperlink{SpacecraftClockKernel_8h}{SpacecraftClockKernel.h}}>}}
+\DoxyCodeLine{00009\ \textcolor{preprocessor}{\#include\ <\mbox{\hyperlink{OrientationKernel_8h}{OrientationKernel.h}}>}}
+\DoxyCodeLine{00010\ \textcolor{preprocessor}{\#include\ <\mbox{\hyperlink{EphemerisKernel_8h}{EphemerisKernel.h}}>}}
+\DoxyCodeLine{00011\ \textcolor{preprocessor}{\#include\ <\mbox{\hyperlink{Payload_8h}{Payload.h}}>}}
+\DoxyCodeLine{00012\ \textcolor{preprocessor}{\#include\ <\mbox{\hyperlink{Engine_8h}{Engine.h}}>}}
+\DoxyCodeLine{00013\ \textcolor{preprocessor}{\#include\ <\mbox{\hyperlink{InstrumentFrameFile_8h}{InstrumentFrameFile.h}}>}}
+\DoxyCodeLine{00014\ }
+\DoxyCodeLine{00015\ \textcolor{comment}{//Forward\ declaration}}
+\DoxyCodeLine{00016\ \textcolor{keyword}{namespace\ }\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Instruments}{IO::Astrodynamics::Instruments}}}
+\DoxyCodeLine{00017\ \{}
+\DoxyCodeLine{00018\ \ \ \ \ \textcolor{keyword}{class\ }\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Instruments_1_1Instrument}{Instrument}};}
+\DoxyCodeLine{00019\ \}}
+\DoxyCodeLine{00020\ }
+\DoxyCodeLine{00021\ \textcolor{keyword}{namespace\ }\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Frames}{IO::Astrodynamics::Frames}}}
+\DoxyCodeLine{00022\ \{}
+\DoxyCodeLine{00023\ \ \ \ \ \textcolor{keyword}{class\ }\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Frames_1_1SpacecraftFrameFile}{SpacecraftFrameFile}};}
+\DoxyCodeLine{00024\ \}}
+\DoxyCodeLine{00025\ }
+\DoxyCodeLine{00026\ \textcolor{keyword}{namespace\ }\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Kernels}{IO::Astrodynamics::Kernels}}}
+\DoxyCodeLine{00027\ \{}
+\DoxyCodeLine{00028\ \ \ \ \ \textcolor{keyword}{class\ }\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1SpacecraftClockKernel}{SpacecraftClockKernel}};}
+\DoxyCodeLine{00029\ }
+\DoxyCodeLine{00030\ \ \ \ \ \textcolor{keyword}{class\ }\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1OrientationKernel}{OrientationKernel}};}
+\DoxyCodeLine{00031\ }
+\DoxyCodeLine{00032\ \ \ \ \ \textcolor{keyword}{class\ }\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1EphemerisKernel}{EphemerisKernel}};}
+\DoxyCodeLine{00033\ \}}
+\DoxyCodeLine{00034\ }
+\DoxyCodeLine{00035\ \textcolor{keyword}{namespace\ }\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Body_1_1Spacecraft}{IO::Astrodynamics::Body::Spacecraft}}}
+\DoxyCodeLine{00036\ \{}
+\DoxyCodeLine{00037\ \ \ \ \ \textcolor{keyword}{class\ }Engine;}
+\DoxyCodeLine{00038\ }
+\DoxyCodeLine{00043\ \ \ \ \ \textcolor{keyword}{class\ }\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft}{Spacecraft}}\ final\ :\ \textcolor{keyword}{public}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialItem}{CelestialItem}}}
+\DoxyCodeLine{00044\ \ \ \ \ \{}
+\DoxyCodeLine{00045\ \ \ \ \ \textcolor{keyword}{private}:}
+\DoxyCodeLine{00046\ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ std::string\ m\_filesPath\{\};}
+\DoxyCodeLine{00047\ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ std::unique\_ptr<IO::Astrodynamics::Frames::SpacecraftFrameFile>\ m\_frame;}
+\DoxyCodeLine{00048\ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ std::unique\_ptr<IO::Astrodynamics::Kernels::SpacecraftClockKernel>\ m\_clockKernel;}
+\DoxyCodeLine{00049\ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ std::unique\_ptr<IO::Astrodynamics::Kernels::OrientationKernel>\ m\_orientationKernel;}
+\DoxyCodeLine{00050\ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ std::unique\_ptr<IO::Astrodynamics::Kernels::EphemerisKernel>\ m\_ephemerisKernel;}
+\DoxyCodeLine{00051\ \ \ \ \ \ \ \ \ std::vector<std::unique\_ptr<IO::Astrodynamics::Instruments::Instrument>>\ m\_instruments\{\};}
+\DoxyCodeLine{00052\ \ \ \ \ \ \ \ \ std::vector<std::unique\_ptr<IO::Astrodynamics::Body::Spacecraft::FuelTank>>\ m\_fuelTanks\{\};}
+\DoxyCodeLine{00053\ \ \ \ \ \ \ \ \ std::vector<std::unique\_ptr<IO::Astrodynamics::Body::Spacecraft::Engine>>\ m\_engines\{\};}
+\DoxyCodeLine{00054\ \ \ \ \ \ \ \ \ std::vector<std::unique\_ptr<IO::Astrodynamics::Body::Spacecraft::Payload>>\ m\_payloads\{\};}
+\DoxyCodeLine{00055\ }
+\DoxyCodeLine{00056\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{bool}\ HasInstrument(\textcolor{keywordtype}{int}\ \textcolor{keywordtype}{id});}
+\DoxyCodeLine{00057\ }
+\DoxyCodeLine{00058\ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ \textcolor{keywordtype}{double}\ m\_maximumOperatingMass;}
+\DoxyCodeLine{00059\ }
+\DoxyCodeLine{00060\ \ \ \ \ \textcolor{keyword}{public}:}
+\DoxyCodeLine{00061\ }
+\DoxyCodeLine{00062\ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO::Astrodynamics::Math::Vector3D}}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft_a5cbbc132ce4f342e701522639e86e2b8}{Top}};}
+\DoxyCodeLine{00063\ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO::Astrodynamics::Math::Vector3D}}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft_af91d754de9a02ba334964f7c33f03622}{Front}};}
+\DoxyCodeLine{00064\ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO::Astrodynamics::Math::Vector3D}}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft_a34fe5d73a8ff00862dbc50db1ad7f743}{Right}};}
+\DoxyCodeLine{00065\ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO::Astrodynamics::Math::Vector3D}}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft_abfad0b008cad1aca403d1419133e84aa}{Bottom}};}
+\DoxyCodeLine{00066\ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO::Astrodynamics::Math::Vector3D}}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft_a6b049449c5c6ef159e198928b72f3621}{Back}};}
+\DoxyCodeLine{00067\ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO::Astrodynamics::Math::Vector3D}}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft_aeb26fb3896b821686aae41737563b87e}{Left}};}
+\DoxyCodeLine{00068\ }
+\DoxyCodeLine{00080\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft}{Spacecraft}}(\textcolor{keywordtype}{int}\ \textcolor{keywordtype}{id},\ \textcolor{keyword}{const}\ std::string\ \&name,\ \textcolor{keywordtype}{double}\ dryOperatingMass,\ \textcolor{keywordtype}{double}\ maximumOperatingMass,}
+\DoxyCodeLine{00081\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ std::string\ \&directoryPath,}
+\DoxyCodeLine{00082\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ std::unique\_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters>\ orbitalParametersAtEpoch);}
+\DoxyCodeLine{00083\ }
+\DoxyCodeLine{00095\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft}{Spacecraft}}(\textcolor{keywordtype}{int}\ \textcolor{keywordtype}{id},\ \textcolor{keyword}{const}\ std::string\ \&name,\ \textcolor{keywordtype}{double}\ dryOperatingMass,\ \textcolor{keywordtype}{double}\ maximumOperatingMass,}
+\DoxyCodeLine{00096\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ std::string\ directoryPath,}
+\DoxyCodeLine{00097\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ std::unique\_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters>\ orbitalParametersAtEpoch,\ \textcolor{keyword}{const}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO::Astrodynamics::Math::Vector3D}}\ \&front,}
+\DoxyCodeLine{00098\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO::Astrodynamics::Math::Vector3D}}\ \&top);}
+\DoxyCodeLine{00099\ }
+\DoxyCodeLine{00100\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft_af3b27e264a1fb9bbc8d6b6939f9b0367}{Spacecraft}}(\textcolor{keyword}{const}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft}{Spacecraft}}\ \&spacecraft)\ =\ \textcolor{keyword}{delete};}
+\DoxyCodeLine{00101\ }
+\DoxyCodeLine{00102\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft_a388b429c444a48683df5c97fff04d33a}{\string~Spacecraft}}()\ \textcolor{keyword}{override}\ =\ \textcolor{keywordflow}{default};}
+\DoxyCodeLine{00103\ }
+\DoxyCodeLine{00109\ \ \ \ \ \ \ \ \ \textcolor{keyword}{inline}\ std::string\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft_abe1866cbc246610634b73c475c093b4e}{GetFilesPath}}()\textcolor{keyword}{\ const}}
+\DoxyCodeLine{00110\ \textcolor{keyword}{\ \ \ \ \ \ \ \ }\{\ \textcolor{keywordflow}{return}\ m\_filesPath;\ \}}
+\DoxyCodeLine{00111\ }
+\DoxyCodeLine{00117\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft_a971d5bac23de59779e180f6d6114fd5f}{WriteOrientations}}(}
+\DoxyCodeLine{00118\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ std::vector<std::vector<IO::Astrodynamics::OrbitalParameters::StateOrientation>>\ \&orientations)\ \textcolor{keyword}{const};}
+\DoxyCodeLine{00119\ }
+\DoxyCodeLine{00128\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateOrientation}{IO::Astrodynamics::OrbitalParameters::StateOrientation}}}
+\DoxyCodeLine{00129\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft_a4664dfcf5f4b9dc1d62253fb4762157b}{GetOrientation}}(\textcolor{keyword}{const}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO::Astrodynamics::Time::TDB}}\ \&epoch,\ \textcolor{keyword}{const}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO::Astrodynamics::Time::TimeSpan}}\ \&tolerance,}
+\DoxyCodeLine{00130\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Frames_1_1Frames}{IO::Astrodynamics::Frames::Frames}}\ \&frame)\ \textcolor{keyword}{const};}
+\DoxyCodeLine{00131\ }
+\DoxyCodeLine{00137\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft_a339a7542d6dd9f4a799250803ab9bad4}{WriteOrientationKernelComment}}(\textcolor{keyword}{const}\ std::string\ \&comment)\ \textcolor{keyword}{const};}
+\DoxyCodeLine{00138\ }
+\DoxyCodeLine{00144\ \ \ \ \ \ \ \ \ std::string\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft_a140a6a288194a16d19fe6b70290d5383}{ReadOrientationKernelComment}}()\ \textcolor{keyword}{const};}
+\DoxyCodeLine{00145\ }
+\DoxyCodeLine{00151\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB>}}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft_acc37b66aa2a7b18cb337246364d815ae}{GetOrientationsCoverageWindow}}()\ \textcolor{keyword}{const};}
+\DoxyCodeLine{00152\ }
+\DoxyCodeLine{00158\ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1SpacecraftClockKernel}{IO::Astrodynamics::Kernels::SpacecraftClockKernel}}\ \&\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft_a9f95505f318835b7f11d0782e360306e}{GetClock}}()\ \textcolor{keyword}{const};}
+\DoxyCodeLine{00159\ }
+\DoxyCodeLine{00166\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft_a92631b619ec6e56dfc2444d6f217a9a5}{WriteEphemeris}}(\textcolor{keyword}{const}\ std::vector<OrbitalParameters::StateVector>\ \&states)\ \textcolor{keyword}{const};}
+\DoxyCodeLine{00167\ }
+\DoxyCodeLine{00177\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}{IO::Astrodynamics::OrbitalParameters::StateVector}}}
+\DoxyCodeLine{00178\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft_a65f8bfa3c1f31967883b4d011ef7934a}{ReadEphemeris}}(\textcolor{keyword}{const}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Frames_1_1Frames}{IO::Astrodynamics::Frames::Frames}}\ \&frame,\ \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_af0023a81d12385b73d78bd82e4b96ce3}{IO::Astrodynamics::AberrationsEnum}}\ aberration,}
+\DoxyCodeLine{00179\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO::Astrodynamics::Time::TDB}}\ \&tdb,\ \textcolor{keyword}{const}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1CelestialBody}{IO::Astrodynamics::Body::CelestialBody}}\ \&observer)\ \textcolor{keyword}{const\ override};}
+\DoxyCodeLine{00180\ }
+\DoxyCodeLine{00186\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB>}}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft_a45e919f84af4e5b56cd5efb4f342980b}{GetEphemerisCoverageWindow}}()\ \textcolor{keyword}{const};}
+\DoxyCodeLine{00187\ }
+\DoxyCodeLine{00193\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft_a5cbc46dc87407d3c867de907084e7495}{WriteEphemerisKernelComment}}(\textcolor{keyword}{const}\ std::string\ \&comment)\ \textcolor{keyword}{const};}
+\DoxyCodeLine{00194\ }
+\DoxyCodeLine{00200\ \ \ \ \ \ \ \ \ std::string\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft_a993e77ffe0029364ed3988f9af5074b3}{ReadEphemerisKernelComment}}()\ \textcolor{keyword}{const};}
+\DoxyCodeLine{00201\ }
+\DoxyCodeLine{00212\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft_a1c96da554ac2a7a4f18df580ccb2c32e}{AddCircularFOVInstrument}}(\textcolor{keywordtype}{int}\ \textcolor{keywordtype}{id},\ \textcolor{keyword}{const}\ std::string\ \&name,}
+\DoxyCodeLine{00213\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO::Astrodynamics::Math::Vector3D}}\ \&orientation,}
+\DoxyCodeLine{00214\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO::Astrodynamics::Math::Vector3D}}\ \&boresight,}
+\DoxyCodeLine{00215\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO::Astrodynamics::Math::Vector3D}}\ \&fovRefVector,\ \textcolor{keywordtype}{double}\ fovAngle);}
+\DoxyCodeLine{00216\ }
+\DoxyCodeLine{00228\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft_a57fb2aa421010f8b5863c91c9a160496}{AddRectangularFOVInstrument}}(\textcolor{keywordtype}{int}\ \textcolor{keywordtype}{id},\ \textcolor{keyword}{const}\ std::string\ \&name,}
+\DoxyCodeLine{00229\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO::Astrodynamics::Math::Vector3D}}\ \&orientation,}
+\DoxyCodeLine{00230\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO::Astrodynamics::Math::Vector3D}}\ \&boresight,}
+\DoxyCodeLine{00231\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO::Astrodynamics::Math::Vector3D}}\ \&fovRefVector,\ \textcolor{keywordtype}{double}\ fovAngle,}
+\DoxyCodeLine{00232\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{double}\ crossAngle);}
+\DoxyCodeLine{00233\ }
+\DoxyCodeLine{00245\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft_a14966eddc9bd5f722509e4bcb141a25f}{AddEllipticalFOVInstrument}}(\textcolor{keywordtype}{int}\ \textcolor{keywordtype}{id},\ \textcolor{keyword}{const}\ std::string\ \&name,}
+\DoxyCodeLine{00246\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO::Astrodynamics::Math::Vector3D}}\ \&orientation,}
+\DoxyCodeLine{00247\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO::Astrodynamics::Math::Vector3D}}\ \&boresight,}
+\DoxyCodeLine{00248\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO::Astrodynamics::Math::Vector3D}}\ \&fovRefVector,\ \textcolor{keywordtype}{double}\ fovAngle,}
+\DoxyCodeLine{00249\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{double}\ crossAngle);}
+\DoxyCodeLine{00250\ }
+\DoxyCodeLine{00257\ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Instruments_1_1Instrument}{IO::Astrodynamics::Instruments::Instrument}}\ *\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft_a7539b396ecacfc292162536249b8576e}{GetInstrument}}(\textcolor{keywordtype}{int}\ \textcolor{keywordtype}{id})\ \textcolor{keyword}{const};}
+\DoxyCodeLine{00258\ }
+\DoxyCodeLine{00266\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft_a9563f513dddc22c0c2b3c0b83667b848}{AddFuelTank}}(\textcolor{keyword}{const}\ std::string\ \&serialNumber,\ \textcolor{keywordtype}{double}\ capacity,\ \textcolor{keywordtype}{double}\ quantity);}
+\DoxyCodeLine{00267\ }
+\DoxyCodeLine{00280\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{void}}
+\DoxyCodeLine{00281\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft_aefc912ee4a5c9a28d6d8128e5d05cccb}{AddEngine}}(\textcolor{keyword}{const}\ std::string\ \&serialNumber,\ \textcolor{keyword}{const}\ std::string\ \&name,\ \textcolor{keyword}{const}\ std::string\ \&fuelTankSerialNumber,}
+\DoxyCodeLine{00282\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{Math::Vector3D}}\ \&position,\ \textcolor{keyword}{const}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{Math::Vector3D}}\ \&orientation,\ \textcolor{keywordtype}{double}\ isp,}
+\DoxyCodeLine{00283\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{double}\ fuelFlow);}
+\DoxyCodeLine{00284\ }
+\DoxyCodeLine{00292\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft_a2eb2aa3d21616db91f463c063090d156}{AddPayload}}(\textcolor{keyword}{const}\ std::string\ \&serialNumber,\ \textcolor{keyword}{const}\ std::string\ \&name,\ \textcolor{keywordtype}{double}\ mass);}
+\DoxyCodeLine{00293\ }
+\DoxyCodeLine{00299\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{double}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft_ac8a2ed52b6d69fcf7eb210c60f5ab6d3}{GetMass}}()\ \textcolor{keyword}{const\ override};}
+\DoxyCodeLine{00300\ }
+\DoxyCodeLine{00307\ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Engine}{IO::Astrodynamics::Body::Spacecraft::Engine}}\ *\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft_ab01be80dd5b4c8018920453c3fcc50a1}{GetEngine}}(\textcolor{keyword}{const}\ std::string\ \&serialNumber)\ \textcolor{keyword}{const};}
+\DoxyCodeLine{00308\ }
+\DoxyCodeLine{00315\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1FuelTank}{IO::Astrodynamics::Body::Spacecraft::FuelTank}}\ *\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft_acbc5a5329d61382d8ae1d932d6baf14c}{GetFueltank}}(\textcolor{keyword}{const}\ std::string\ \&serialNumber)\ \textcolor{keyword}{const};}
+\DoxyCodeLine{00316\ }
+\DoxyCodeLine{00322\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft_a62b6186099038a7df83c3212e43d5c2b}{ReleasePayload}}(\textcolor{keyword}{const}\ std::string\ \&serialNumber);}
+\DoxyCodeLine{00323\ }
+\DoxyCodeLine{00329\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{double}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft_aa3c7406ab0b11d16c2f8201204d048dd}{GetDryOperatingMass}}()\ \textcolor{keyword}{const};}
+\DoxyCodeLine{00330\ }
+\DoxyCodeLine{00335\ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ std::unique\_ptr<IO::Astrodynamics::Frames::SpacecraftFrameFile>\ \&\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft_a3de95bb666f7996a5474660cc32d9ddc}{GetFrame}}()\ \textcolor{keyword}{const};}
+\DoxyCodeLine{00336\ }
+\DoxyCodeLine{00337\ \ \ \ \ \ \ \ \ \textcolor{keyword}{inline}\ \textcolor{keywordtype}{double}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft_ae9e2863c2d63cd998da3985a8b2c3584}{GetMaximumOperatingMass}}()\textcolor{keyword}{\ const}}
+\DoxyCodeLine{00338\ \textcolor{keyword}{\ \ \ \ \ \ \ \ }\{\ \textcolor{keywordflow}{return}\ m\_maximumOperatingMass;\ \}}
+\DoxyCodeLine{00339\ \ \ \ \ \};}
+\DoxyCodeLine{00340\ \}}
+\DoxyCodeLine{00341\ }
+\DoxyCodeLine{00342\ \textcolor{preprocessor}{\#endif\ }\textcolor{comment}{//\ !SPACECRAFT\_H}}
 
 \end{DoxyCode}

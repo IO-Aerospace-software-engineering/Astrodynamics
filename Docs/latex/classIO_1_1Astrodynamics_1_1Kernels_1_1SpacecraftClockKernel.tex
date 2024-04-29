@@ -1,5 +1,5 @@
-\hypertarget{classIO_1_1Astrodynamics_1_1Kernels_1_1SpacecraftClockKernel}{}\doxysection{IO\+::Astrodynamics\+::Kernels\+::Spacecraft\+Clock\+Kernel Class Reference}
-\label{classIO_1_1Astrodynamics_1_1Kernels_1_1SpacecraftClockKernel}\index{IO::Astrodynamics::Kernels::SpacecraftClockKernel@{IO::Astrodynamics::Kernels::SpacecraftClockKernel}}
+\doxysection{IO\+::Astrodynamics\+::Kernels\+::Spacecraft\+Clock\+Kernel Class Reference}
+\hypertarget{classIO_1_1Astrodynamics_1_1Kernels_1_1SpacecraftClockKernel}{}\label{classIO_1_1Astrodynamics_1_1Kernels_1_1SpacecraftClockKernel}\index{IO::Astrodynamics::Kernels::SpacecraftClockKernel@{IO::Astrodynamics::Kernels::SpacecraftClockKernel}}
 
 
 {\ttfamily \#include $<$Spacecraft\+Clock\+Kernel.\+h$>$}
@@ -10,10 +10,10 @@ Inheritance diagram for IO\+::Astrodynamics\+::Kernels\+::Spacecraft\+Clock\+Ker
 \includegraphics[height=2.000000cm]{classIO_1_1Astrodynamics_1_1Kernels_1_1SpacecraftClockKernel}
 \end{center}
 \end{figure}
-\doxysubsection*{Public Member Functions}
+\doxysubsubsection*{Public Member Functions}
 \begin{DoxyCompactItemize}
 \item 
-\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1SpacecraftClockKernel_a53bf513eb97ca2f62b11d036d4ac70ab}{$\sim$\+Spacecraft\+Clock\+Kernel}} () override=default
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1SpacecraftClockKernel_a53bf513eb97ca2f62b11d036d4ac70ab}{\texorpdfstring{$\sim$}{\string~}\+Spacecraft\+Clock\+Kernel}} () override=default
 \item 
 \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{IO\+::\+Astrodynamics\+::\+Time\+::\+Window}}$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} $>$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1SpacecraftClockKernel_a00eb37bea6264db1be919b7cd8dd58cb}{Get\+Coverage\+Window}} () const override
 \begin{DoxyCompactList}\small\item\em Get the Coverage Window. \end{DoxyCompactList}\item 
@@ -31,30 +31,64 @@ int \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1SpacecraftClockKerne
 \begin{DoxyCompactList}\small\item\em Get the Ticks Per Seconds. \end{DoxyCompactList}\item 
 double \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1SpacecraftClockKernel_ab8e5834250119448f5644aab8fae5ef8}{Get\+Seconds\+Per\+Tick}} () const
 \begin{DoxyCompactList}\small\item\em Get the Seconds Per Tick. \end{DoxyCompactList}\end{DoxyCompactItemize}
-\doxysubsection*{Static Public Member Functions}
+\doxysubsection*{Public Member Functions inherited from \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1Kernel}{IO\+::\+Astrodynamics\+::\+Kernels\+::\+Kernel}}}
+\begin{DoxyCompactItemize}
+\item 
+virtual \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1Kernel_a1be349e4e41b301c1fb898af31c183f1}{\texorpdfstring{$\sim$}{\string~}\+Kernel}} ()
+\item 
+std\+::string \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1Kernel_a5dec128d0d52abffa39417591999213e}{Get\+Path}} () const
+\begin{DoxyCompactList}\small\item\em Get the Path. \end{DoxyCompactList}\item 
+bool \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1Kernel_ac5ffbcfd4a68ff7ffe264bdc6e034e7a}{Is\+Loaded}} () const
+\item 
+virtual void \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1Kernel_a294596d6cdfe3bbe2158f2ada3d72a8b}{Add\+Comment}} (const std\+::string \&comment) const
+\begin{DoxyCompactList}\small\item\em Add comment to kernel. \end{DoxyCompactList}\item 
+virtual std\+::string \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1Kernel_a68b4ebf5a95ada4df97921c7208a9360}{Read\+Comment}} () const
+\begin{DoxyCompactList}\small\item\em Read comment from kernel. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsubsection*{Static Public Member Functions}
 \begin{DoxyCompactItemize}
 \item 
 static double \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1SpacecraftClockKernel_a5565389a38561de2560b20174d8166f7}{Convert\+To\+Encoded\+Clock}} (int spacecraft\+Id, const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} \&epoch)
 \end{DoxyCompactItemize}
-\doxysubsection*{Friends}
+\doxysubsection*{Static Public Member Functions inherited from \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1Kernel}{IO\+::\+Astrodynamics\+::\+Kernels\+::\+Kernel}}}
+\begin{DoxyCompactItemize}
+\item 
+static int \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1Kernel_ae2cd668a2821a2090a9a4d64188a4f52}{Define\+Polynomial\+Degree}} (int data\+Size, int maximum\+Degree)
+\begin{DoxyCompactList}\small\item\em Define the best Lagrange polynomial degree. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsubsection*{Friends}
 \begin{DoxyCompactItemize}
 \item 
 class \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1SpacecraftClockKernel_a7900ba5f1cf425823990193aa636c59a}{IO\+::\+Astrodynamics\+::\+Body\+::\+Spacecraft\+::\+Spacecraft}}
 \end{DoxyCompactItemize}
-\doxysubsection*{Additional Inherited Members}
+\doxysubsubsection*{Additional Inherited Members}
+\doxysubsection*{Protected Member Functions inherited from \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1Kernel}{IO\+::\+Astrodynamics\+::\+Kernels\+::\+Kernel}}}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1Kernel_a30b4959e2bc74fc3b008129d6c480561}{Kernel}} (std\+::string file\+Name)
+\end{DoxyCompactItemize}
+\doxysubsection*{Protected Attributes inherited from \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1Kernel}{IO\+::\+Astrodynamics\+::\+Kernels\+::\+Kernel}}}
+\begin{DoxyCompactItemize}
+\item 
+const std\+::string \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1Kernel_a396c4c9fa87f41f7d53c38ace6fd6d45}{m\+\_\+file\+Path}}
+\item 
+std\+::string \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1Kernel_a94db167e96e440658da1b17b5b6eb3c3}{m\+\_\+comments}}
+\item 
+bool \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1Kernel_ae32c21385c131141ba849cff335cf892}{m\+\_\+is\+Loaded}} \{false\}
+\item 
+bool \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1Kernel_a9e83885d5c03240102c0466a63d1f144}{m\+\_\+file\+Exists}} \{false\}
+\end{DoxyCompactItemize}
 
 
 \doxysubsection{Constructor \& Destructor Documentation}
-\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Kernels_1_1SpacecraftClockKernel_a53bf513eb97ca2f62b11d036d4ac70ab}\label{classIO_1_1Astrodynamics_1_1Kernels_1_1SpacecraftClockKernel_a53bf513eb97ca2f62b11d036d4ac70ab}} 
-\index{IO::Astrodynamics::Kernels::SpacecraftClockKernel@{IO::Astrodynamics::Kernels::SpacecraftClockKernel}!````~SpacecraftClockKernel@{$\sim$SpacecraftClockKernel}}
-\index{````~SpacecraftClockKernel@{$\sim$SpacecraftClockKernel}!IO::Astrodynamics::Kernels::SpacecraftClockKernel@{IO::Astrodynamics::Kernels::SpacecraftClockKernel}}
-\doxysubsubsection{\texorpdfstring{$\sim$SpacecraftClockKernel()}{~SpacecraftClockKernel()}}
-{\footnotesize\ttfamily IO\+::\+Astrodynamics\+::\+Kernels\+::\+Spacecraft\+Clock\+Kernel\+::$\sim$\+Spacecraft\+Clock\+Kernel (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [default]}}
+\Hypertarget{classIO_1_1Astrodynamics_1_1Kernels_1_1SpacecraftClockKernel_a53bf513eb97ca2f62b11d036d4ac70ab}\label{classIO_1_1Astrodynamics_1_1Kernels_1_1SpacecraftClockKernel_a53bf513eb97ca2f62b11d036d4ac70ab} 
+\index{IO::Astrodynamics::Kernels::SpacecraftClockKernel@{IO::Astrodynamics::Kernels::SpacecraftClockKernel}!````~SpacecraftClockKernel@{\texorpdfstring{$\sim$}{\string~}SpacecraftClockKernel}}
+\index{````~SpacecraftClockKernel@{\texorpdfstring{$\sim$}{\string~}SpacecraftClockKernel}!IO::Astrodynamics::Kernels::SpacecraftClockKernel@{IO::Astrodynamics::Kernels::SpacecraftClockKernel}}
+\doxysubsubsection{\texorpdfstring{\texorpdfstring{$\sim$}{\string~}SpacecraftClockKernel()}{\string~SpacecraftClockKernel()}}
+{\footnotesize\ttfamily IO\+::\+Astrodynamics\+::\+Kernels\+::\+Spacecraft\+Clock\+Kernel\+::\texorpdfstring{$\sim$}{\string~}\+Spacecraft\+Clock\+Kernel (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [default]}}
 
 
 
 \doxysubsection{Member Function Documentation}
-\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Kernels_1_1SpacecraftClockKernel_a5d7de87bdd9d264f733189e331313a75}\label{classIO_1_1Astrodynamics_1_1Kernels_1_1SpacecraftClockKernel_a5d7de87bdd9d264f733189e331313a75}} 
+\Hypertarget{classIO_1_1Astrodynamics_1_1Kernels_1_1SpacecraftClockKernel_a5d7de87bdd9d264f733189e331313a75}\label{classIO_1_1Astrodynamics_1_1Kernels_1_1SpacecraftClockKernel_a5d7de87bdd9d264f733189e331313a75} 
 \index{IO::Astrodynamics::Kernels::SpacecraftClockKernel@{IO::Astrodynamics::Kernels::SpacecraftClockKernel}!ConvertToClockString@{ConvertToClockString}}
 \index{ConvertToClockString@{ConvertToClockString}!IO::Astrodynamics::Kernels::SpacecraftClockKernel@{IO::Astrodynamics::Kernels::SpacecraftClockKernel}}
 \doxysubsubsection{\texorpdfstring{ConvertToClockString()}{ConvertToClockString()}}
@@ -72,7 +106,7 @@ Convert to Spacecraft clock.
 \begin{DoxyReturn}{Returns}
 std\+::string 
 \end{DoxyReturn}
-\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Kernels_1_1SpacecraftClockKernel_abcfeddf1c18bdc5efe2f6aa778386086}\label{classIO_1_1Astrodynamics_1_1Kernels_1_1SpacecraftClockKernel_abcfeddf1c18bdc5efe2f6aa778386086}} 
+\Hypertarget{classIO_1_1Astrodynamics_1_1Kernels_1_1SpacecraftClockKernel_abcfeddf1c18bdc5efe2f6aa778386086}\label{classIO_1_1Astrodynamics_1_1Kernels_1_1SpacecraftClockKernel_abcfeddf1c18bdc5efe2f6aa778386086} 
 \index{IO::Astrodynamics::Kernels::SpacecraftClockKernel@{IO::Astrodynamics::Kernels::SpacecraftClockKernel}!ConvertToEncodedClock@{ConvertToEncodedClock}}
 \index{ConvertToEncodedClock@{ConvertToEncodedClock}!IO::Astrodynamics::Kernels::SpacecraftClockKernel@{IO::Astrodynamics::Kernels::SpacecraftClockKernel}}
 \doxysubsubsection{\texorpdfstring{ConvertToEncodedClock()}{ConvertToEncodedClock()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
@@ -90,13 +124,13 @@ Convert to enoded clock.
 \begin{DoxyReturn}{Returns}
 double 
 \end{DoxyReturn}
-\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Kernels_1_1SpacecraftClockKernel_a5565389a38561de2560b20174d8166f7}\label{classIO_1_1Astrodynamics_1_1Kernels_1_1SpacecraftClockKernel_a5565389a38561de2560b20174d8166f7}} 
+\Hypertarget{classIO_1_1Astrodynamics_1_1Kernels_1_1SpacecraftClockKernel_a5565389a38561de2560b20174d8166f7}\label{classIO_1_1Astrodynamics_1_1Kernels_1_1SpacecraftClockKernel_a5565389a38561de2560b20174d8166f7} 
 \index{IO::Astrodynamics::Kernels::SpacecraftClockKernel@{IO::Astrodynamics::Kernels::SpacecraftClockKernel}!ConvertToEncodedClock@{ConvertToEncodedClock}}
 \index{ConvertToEncodedClock@{ConvertToEncodedClock}!IO::Astrodynamics::Kernels::SpacecraftClockKernel@{IO::Astrodynamics::Kernels::SpacecraftClockKernel}}
 \doxysubsubsection{\texorpdfstring{ConvertToEncodedClock()}{ConvertToEncodedClock()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
 {\footnotesize\ttfamily double IO\+::\+Astrodynamics\+::\+Kernels\+::\+Spacecraft\+Clock\+Kernel\+::\+Convert\+To\+Encoded\+Clock (\begin{DoxyParamCaption}\item[{int}]{spacecraft\+Id,  }\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} \&}]{epoch }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
 
-\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Kernels_1_1SpacecraftClockKernel_a315ab6629dec205d027ce8d97e93400e}\label{classIO_1_1Astrodynamics_1_1Kernels_1_1SpacecraftClockKernel_a315ab6629dec205d027ce8d97e93400e}} 
+\Hypertarget{classIO_1_1Astrodynamics_1_1Kernels_1_1SpacecraftClockKernel_a315ab6629dec205d027ce8d97e93400e}\label{classIO_1_1Astrodynamics_1_1Kernels_1_1SpacecraftClockKernel_a315ab6629dec205d027ce8d97e93400e} 
 \index{IO::Astrodynamics::Kernels::SpacecraftClockKernel@{IO::Astrodynamics::Kernels::SpacecraftClockKernel}!ConvertToTDB@{ConvertToTDB}}
 \index{ConvertToTDB@{ConvertToTDB}!IO::Astrodynamics::Kernels::SpacecraftClockKernel@{IO::Astrodynamics::Kernels::SpacecraftClockKernel}}
 \doxysubsubsection{\texorpdfstring{ConvertToTDB()}{ConvertToTDB()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
@@ -112,9 +146,9 @@ Convert to TDB.
 \hline
 \end{DoxyParams}
 \begin{DoxyReturn}{Returns}
-\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} 
+\doxylink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB} 
 \end{DoxyReturn}
-\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Kernels_1_1SpacecraftClockKernel_a94df9016015a4a47465518a46fe9bd4f}\label{classIO_1_1Astrodynamics_1_1Kernels_1_1SpacecraftClockKernel_a94df9016015a4a47465518a46fe9bd4f}} 
+\Hypertarget{classIO_1_1Astrodynamics_1_1Kernels_1_1SpacecraftClockKernel_a94df9016015a4a47465518a46fe9bd4f}\label{classIO_1_1Astrodynamics_1_1Kernels_1_1SpacecraftClockKernel_a94df9016015a4a47465518a46fe9bd4f} 
 \index{IO::Astrodynamics::Kernels::SpacecraftClockKernel@{IO::Astrodynamics::Kernels::SpacecraftClockKernel}!ConvertToTDB@{ConvertToTDB}}
 \index{ConvertToTDB@{ConvertToTDB}!IO::Astrodynamics::Kernels::SpacecraftClockKernel@{IO::Astrodynamics::Kernels::SpacecraftClockKernel}}
 \doxysubsubsection{\texorpdfstring{ConvertToTDB()}{ConvertToTDB()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
@@ -130,9 +164,9 @@ Convert to TDB.
 \hline
 \end{DoxyParams}
 \begin{DoxyReturn}{Returns}
-\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} 
+\doxylink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB} 
 \end{DoxyReturn}
-\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Kernels_1_1SpacecraftClockKernel_a00eb37bea6264db1be919b7cd8dd58cb}\label{classIO_1_1Astrodynamics_1_1Kernels_1_1SpacecraftClockKernel_a00eb37bea6264db1be919b7cd8dd58cb}} 
+\Hypertarget{classIO_1_1Astrodynamics_1_1Kernels_1_1SpacecraftClockKernel_a00eb37bea6264db1be919b7cd8dd58cb}\label{classIO_1_1Astrodynamics_1_1Kernels_1_1SpacecraftClockKernel_a00eb37bea6264db1be919b7cd8dd58cb} 
 \index{IO::Astrodynamics::Kernels::SpacecraftClockKernel@{IO::Astrodynamics::Kernels::SpacecraftClockKernel}!GetCoverageWindow@{GetCoverageWindow}}
 \index{GetCoverageWindow@{GetCoverageWindow}!IO::Astrodynamics::Kernels::SpacecraftClockKernel@{IO::Astrodynamics::Kernels::SpacecraftClockKernel}}
 \doxysubsubsection{\texorpdfstring{GetCoverageWindow()}{GetCoverageWindow()}}
@@ -149,7 +183,7 @@ IO\+::\+Astrodynamics\+::\+Time\+::\+Window$<$\+IO\+::\+Astrodynamics\+::\+Time\
 
 Implements \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Kernels_1_1Kernel_a37d56a388d8225557f5c9dbb3414fbba}{IO\+::\+Astrodynamics\+::\+Kernels\+::\+Kernel}}.
 
-\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Kernels_1_1SpacecraftClockKernel_ac1ed6fca423b9c42a08086d633166522}\label{classIO_1_1Astrodynamics_1_1Kernels_1_1SpacecraftClockKernel_ac1ed6fca423b9c42a08086d633166522}} 
+\Hypertarget{classIO_1_1Astrodynamics_1_1Kernels_1_1SpacecraftClockKernel_ac1ed6fca423b9c42a08086d633166522}\label{classIO_1_1Astrodynamics_1_1Kernels_1_1SpacecraftClockKernel_ac1ed6fca423b9c42a08086d633166522} 
 \index{IO::Astrodynamics::Kernels::SpacecraftClockKernel@{IO::Astrodynamics::Kernels::SpacecraftClockKernel}!GetResolution@{GetResolution}}
 \index{GetResolution@{GetResolution}!IO::Astrodynamics::Kernels::SpacecraftClockKernel@{IO::Astrodynamics::Kernels::SpacecraftClockKernel}}
 \doxysubsubsection{\texorpdfstring{GetResolution()}{GetResolution()}}
@@ -162,7 +196,7 @@ Get the Resolution.
 \begin{DoxyReturn}{Returns}
 int 
 \end{DoxyReturn}
-\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Kernels_1_1SpacecraftClockKernel_ab8e5834250119448f5644aab8fae5ef8}\label{classIO_1_1Astrodynamics_1_1Kernels_1_1SpacecraftClockKernel_ab8e5834250119448f5644aab8fae5ef8}} 
+\Hypertarget{classIO_1_1Astrodynamics_1_1Kernels_1_1SpacecraftClockKernel_ab8e5834250119448f5644aab8fae5ef8}\label{classIO_1_1Astrodynamics_1_1Kernels_1_1SpacecraftClockKernel_ab8e5834250119448f5644aab8fae5ef8} 
 \index{IO::Astrodynamics::Kernels::SpacecraftClockKernel@{IO::Astrodynamics::Kernels::SpacecraftClockKernel}!GetSecondsPerTick@{GetSecondsPerTick}}
 \index{GetSecondsPerTick@{GetSecondsPerTick}!IO::Astrodynamics::Kernels::SpacecraftClockKernel@{IO::Astrodynamics::Kernels::SpacecraftClockKernel}}
 \doxysubsubsection{\texorpdfstring{GetSecondsPerTick()}{GetSecondsPerTick()}}
@@ -175,7 +209,7 @@ Get the Seconds Per Tick.
 \begin{DoxyReturn}{Returns}
 double 
 \end{DoxyReturn}
-\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Kernels_1_1SpacecraftClockKernel_a2563f7e8dbc0cbe5f26e094770732107}\label{classIO_1_1Astrodynamics_1_1Kernels_1_1SpacecraftClockKernel_a2563f7e8dbc0cbe5f26e094770732107}} 
+\Hypertarget{classIO_1_1Astrodynamics_1_1Kernels_1_1SpacecraftClockKernel_a2563f7e8dbc0cbe5f26e094770732107}\label{classIO_1_1Astrodynamics_1_1Kernels_1_1SpacecraftClockKernel_a2563f7e8dbc0cbe5f26e094770732107} 
 \index{IO::Astrodynamics::Kernels::SpacecraftClockKernel@{IO::Astrodynamics::Kernels::SpacecraftClockKernel}!GetTicksPerSeconds@{GetTicksPerSeconds}}
 \index{GetTicksPerSeconds@{GetTicksPerSeconds}!IO::Astrodynamics::Kernels::SpacecraftClockKernel@{IO::Astrodynamics::Kernels::SpacecraftClockKernel}}
 \doxysubsubsection{\texorpdfstring{GetTicksPerSeconds()}{GetTicksPerSeconds()}}
@@ -190,8 +224,8 @@ int
 \end{DoxyReturn}
 
 
-\doxysubsection{Friends And Related Function Documentation}
-\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Kernels_1_1SpacecraftClockKernel_a7900ba5f1cf425823990193aa636c59a}\label{classIO_1_1Astrodynamics_1_1Kernels_1_1SpacecraftClockKernel_a7900ba5f1cf425823990193aa636c59a}} 
+\doxysubsection{Friends And Related Symbol Documentation}
+\Hypertarget{classIO_1_1Astrodynamics_1_1Kernels_1_1SpacecraftClockKernel_a7900ba5f1cf425823990193aa636c59a}\label{classIO_1_1Astrodynamics_1_1Kernels_1_1SpacecraftClockKernel_a7900ba5f1cf425823990193aa636c59a} 
 \index{IO::Astrodynamics::Kernels::SpacecraftClockKernel@{IO::Astrodynamics::Kernels::SpacecraftClockKernel}!IO::Astrodynamics::Body::Spacecraft::Spacecraft@{IO::Astrodynamics::Body::Spacecraft::Spacecraft}}
 \index{IO::Astrodynamics::Body::Spacecraft::Spacecraft@{IO::Astrodynamics::Body::Spacecraft::Spacecraft}!IO::Astrodynamics::Kernels::SpacecraftClockKernel@{IO::Astrodynamics::Kernels::SpacecraftClockKernel}}
 \doxysubsubsection{\texorpdfstring{IO::Astrodynamics::Body::Spacecraft::Spacecraft}{IO::Astrodynamics::Body::Spacecraft::Spacecraft}}

@@ -1,53 +1,53 @@
-\hypertarget{Aberrations_8h_source}{}\doxysection{Aberrations.\+h}
-\label{Aberrations_8h_source}\index{IO.Astrodynamics/Aberrations.h@{IO.Astrodynamics/Aberrations.h}}
+\doxysection{Aberrations.\+h}
+\hypertarget{Aberrations_8h_source}{}\label{Aberrations_8h_source}\index{IO.Astrodynamics/Aberrations.h@{IO.Astrodynamics/Aberrations.h}}
 \mbox{\hyperlink{Aberrations_8h}{Go to the documentation of this file.}}
 \begin{DoxyCode}{0}
-\DoxyCodeLine{1 \textcolor{comment}{/*}}
-\DoxyCodeLine{2 \textcolor{comment}{ Copyright (c) 2021-\/2023. Sylvain Guillet (sylvain.guillet@tutamail.com)}}
-\DoxyCodeLine{3 \textcolor{comment}{ */}}
-\DoxyCodeLine{4 \textcolor{preprocessor}{\#ifndef  ABERRATION\_H}}
-\DoxyCodeLine{5 \textcolor{preprocessor}{\#define ABERRATION\_H}}
-\DoxyCodeLine{6 }
-\DoxyCodeLine{7 \textcolor{preprocessor}{\#include <string>}}
-\DoxyCodeLine{8 \textcolor{preprocessor}{\#include <map>}}
-\DoxyCodeLine{9 }
-\DoxyCodeLine{10 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1Astrodynamics}{IO::Astrodynamics}}}
-\DoxyCodeLine{11 \{}
-\DoxyCodeLine{12     \textcolor{keyword}{enum class} \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_af0023a81d12385b73d78bd82e4b96ce3}{AberrationsEnum}}}
-\DoxyCodeLine{13     \{}
-\DoxyCodeLine{14         \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_af0023a81d12385b73d78bd82e4b96ce3a6adf97f83acf6453d4a6a4b1070f3754}{None}},}
-\DoxyCodeLine{15         \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_af0023a81d12385b73d78bd82e4b96ce3ac562607189d77eb9dfb707464c1e7b0b}{LT}},}
-\DoxyCodeLine{16         \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_af0023a81d12385b73d78bd82e4b96ce3ad73f00aebeafb26d0f4f8869cba3c480}{LTS}},}
-\DoxyCodeLine{17         \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_af0023a81d12385b73d78bd82e4b96ce3a1c2903397d8833382673bab22aa8b937}{CN}},}
-\DoxyCodeLine{18         \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_af0023a81d12385b73d78bd82e4b96ce3af32a97390abb58dc789ecfb99ef664d4}{CNS}},}
-\DoxyCodeLine{19         \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_af0023a81d12385b73d78bd82e4b96ce3aaa977c10c1d5599cdac2994345c19514}{XLT}},}
-\DoxyCodeLine{20         \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_af0023a81d12385b73d78bd82e4b96ce3af9a13af2c2a725b47596f5d562c3a2ce}{XLTS}},}
-\DoxyCodeLine{21         \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_af0023a81d12385b73d78bd82e4b96ce3aea59b3648ebcff1dbe1a35af60658e6c}{XCN}},}
-\DoxyCodeLine{22         \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_af0023a81d12385b73d78bd82e4b96ce3aaac082312f16242ee4a61b3187387e79}{XCNS}}}
-\DoxyCodeLine{23     \};}
-\DoxyCodeLine{24 }
-\DoxyCodeLine{25     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Aberrations}{Aberrations}}}
-\DoxyCodeLine{26     \{}
-\DoxyCodeLine{27     \textcolor{keyword}{private}:}
-\DoxyCodeLine{28         \textcolor{keyword}{static} \textcolor{keyword}{inline} std::map<AberrationsEnum, const char *> AberrationStrings\{}
-\DoxyCodeLine{29                 \{\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_af0023a81d12385b73d78bd82e4b96ce3a6adf97f83acf6453d4a6a4b1070f3754}{AberrationsEnum::None}}, \textcolor{stringliteral}{"{}NONE"{}}\},}
-\DoxyCodeLine{30                 \{\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_af0023a81d12385b73d78bd82e4b96ce3ac562607189d77eb9dfb707464c1e7b0b}{AberrationsEnum::LT}},   \textcolor{stringliteral}{"{}LT"{}}\},}
-\DoxyCodeLine{31                 \{\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_af0023a81d12385b73d78bd82e4b96ce3ad73f00aebeafb26d0f4f8869cba3c480}{AberrationsEnum::LTS}},  \textcolor{stringliteral}{"{}LT+S"{}}\},}
-\DoxyCodeLine{32                 \{\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_af0023a81d12385b73d78bd82e4b96ce3a1c2903397d8833382673bab22aa8b937}{AberrationsEnum::CN}},   \textcolor{stringliteral}{"{}CN"{}}\},}
-\DoxyCodeLine{33                 \{\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_af0023a81d12385b73d78bd82e4b96ce3af32a97390abb58dc789ecfb99ef664d4}{AberrationsEnum::CNS}},  \textcolor{stringliteral}{"{}CN+S"{}}\},}
-\DoxyCodeLine{34                 \{\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_af0023a81d12385b73d78bd82e4b96ce3aaa977c10c1d5599cdac2994345c19514}{AberrationsEnum::XLT}},  \textcolor{stringliteral}{"{}XLT"{}}\},}
-\DoxyCodeLine{35                 \{\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_af0023a81d12385b73d78bd82e4b96ce3af9a13af2c2a725b47596f5d562c3a2ce}{AberrationsEnum::XLTS}}, \textcolor{stringliteral}{"{}XLT+S"{}}\},}
-\DoxyCodeLine{36                 \{\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_af0023a81d12385b73d78bd82e4b96ce3aea59b3648ebcff1dbe1a35af60658e6c}{AberrationsEnum::XCN}},  \textcolor{stringliteral}{"{}XCN"{}}\},}
-\DoxyCodeLine{37                 \{\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_af0023a81d12385b73d78bd82e4b96ce3aaac082312f16242ee4a61b3187387e79}{AberrationsEnum::XCNS}}, \textcolor{stringliteral}{"{}XCN+S"{}}\}}
-\DoxyCodeLine{38         \};}
-\DoxyCodeLine{39     \textcolor{keyword}{public}:}
-\DoxyCodeLine{40         \textcolor{keyword}{static} std::string \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Aberrations_a188ee6821a04f7e1259c12ebbff64523}{ToString}}(\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_af0023a81d12385b73d78bd82e4b96ce3}{AberrationsEnum}} e);}
-\DoxyCodeLine{41 }
-\DoxyCodeLine{42         \textcolor{keyword}{static} \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_af0023a81d12385b73d78bd82e4b96ce3}{AberrationsEnum}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Aberrations_aa4515c35f41df5df10856e55ef3af847}{ToEnum}}(\textcolor{keyword}{const} std::string \&e);}
-\DoxyCodeLine{43     \};}
-\DoxyCodeLine{44 \}}
-\DoxyCodeLine{45 \textcolor{preprocessor}{\#endif }\textcolor{comment}{// ! ABERRATION\_H}}
-\DoxyCodeLine{46 }
-\DoxyCodeLine{47 }
+\DoxyCodeLine{00001\ \textcolor{comment}{/*}}
+\DoxyCodeLine{00002\ \textcolor{comment}{\ Copyright\ (c)\ 2021-\/2023.\ Sylvain\ Guillet\ (sylvain.guillet@tutamail.com)}}
+\DoxyCodeLine{00003\ \textcolor{comment}{\ */}}
+\DoxyCodeLine{00004\ \textcolor{preprocessor}{\#ifndef\ \ ABERRATION\_H}}
+\DoxyCodeLine{00005\ \textcolor{preprocessor}{\#define\ ABERRATION\_H}}
+\DoxyCodeLine{00006\ }
+\DoxyCodeLine{00007\ \textcolor{preprocessor}{\#include\ <string>}}
+\DoxyCodeLine{00008\ \textcolor{preprocessor}{\#include\ <map>}}
+\DoxyCodeLine{00009\ }
+\DoxyCodeLine{00010\ \textcolor{keyword}{namespace\ }\mbox{\hyperlink{namespaceIO_1_1Astrodynamics}{IO::Astrodynamics}}}
+\DoxyCodeLine{00011\ \{}
+\DoxyCodeLine{00012\ \ \ \ \ \textcolor{keyword}{enum\ class}\ \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_af0023a81d12385b73d78bd82e4b96ce3}{AberrationsEnum}}}
+\DoxyCodeLine{00013\ \ \ \ \ \{}
+\DoxyCodeLine{00014\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_af0023a81d12385b73d78bd82e4b96ce3a6adf97f83acf6453d4a6a4b1070f3754}{None}},}
+\DoxyCodeLine{00015\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_af0023a81d12385b73d78bd82e4b96ce3ac562607189d77eb9dfb707464c1e7b0b}{LT}},}
+\DoxyCodeLine{00016\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_af0023a81d12385b73d78bd82e4b96ce3ad73f00aebeafb26d0f4f8869cba3c480}{LTS}},}
+\DoxyCodeLine{00017\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_af0023a81d12385b73d78bd82e4b96ce3a1c2903397d8833382673bab22aa8b937}{CN}},}
+\DoxyCodeLine{00018\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_af0023a81d12385b73d78bd82e4b96ce3af32a97390abb58dc789ecfb99ef664d4}{CNS}},}
+\DoxyCodeLine{00019\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_af0023a81d12385b73d78bd82e4b96ce3aaa977c10c1d5599cdac2994345c19514}{XLT}},}
+\DoxyCodeLine{00020\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_af0023a81d12385b73d78bd82e4b96ce3af9a13af2c2a725b47596f5d562c3a2ce}{XLTS}},}
+\DoxyCodeLine{00021\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_af0023a81d12385b73d78bd82e4b96ce3aea59b3648ebcff1dbe1a35af60658e6c}{XCN}},}
+\DoxyCodeLine{00022\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_af0023a81d12385b73d78bd82e4b96ce3aaac082312f16242ee4a61b3187387e79}{XCNS}}}
+\DoxyCodeLine{00023\ \ \ \ \ \};}
+\DoxyCodeLine{00024\ }
+\DoxyCodeLine{00025\ \ \ \ \ \textcolor{keyword}{class\ }\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Aberrations}{Aberrations}}}
+\DoxyCodeLine{00026\ \ \ \ \ \{}
+\DoxyCodeLine{00027\ \ \ \ \ \textcolor{keyword}{private}:}
+\DoxyCodeLine{00028\ \ \ \ \ \ \ \ \ \textcolor{keyword}{static}\ \textcolor{keyword}{inline}\ std::map<AberrationsEnum,\ const\ char\ *>\ AberrationStrings\{}
+\DoxyCodeLine{00029\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \{\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_af0023a81d12385b73d78bd82e4b96ce3a6adf97f83acf6453d4a6a4b1070f3754}{AberrationsEnum::None}},\ \textcolor{stringliteral}{"{}NONE"{}}\},}
+\DoxyCodeLine{00030\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \{\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_af0023a81d12385b73d78bd82e4b96ce3ac562607189d77eb9dfb707464c1e7b0b}{AberrationsEnum::LT}},\ \ \ \textcolor{stringliteral}{"{}LT"{}}\},}
+\DoxyCodeLine{00031\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \{\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_af0023a81d12385b73d78bd82e4b96ce3ad73f00aebeafb26d0f4f8869cba3c480}{AberrationsEnum::LTS}},\ \ \textcolor{stringliteral}{"{}LT+S"{}}\},}
+\DoxyCodeLine{00032\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \{\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_af0023a81d12385b73d78bd82e4b96ce3a1c2903397d8833382673bab22aa8b937}{AberrationsEnum::CN}},\ \ \ \textcolor{stringliteral}{"{}CN"{}}\},}
+\DoxyCodeLine{00033\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \{\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_af0023a81d12385b73d78bd82e4b96ce3af32a97390abb58dc789ecfb99ef664d4}{AberrationsEnum::CNS}},\ \ \textcolor{stringliteral}{"{}CN+S"{}}\},}
+\DoxyCodeLine{00034\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \{\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_af0023a81d12385b73d78bd82e4b96ce3aaa977c10c1d5599cdac2994345c19514}{AberrationsEnum::XLT}},\ \ \textcolor{stringliteral}{"{}XLT"{}}\},}
+\DoxyCodeLine{00035\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \{\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_af0023a81d12385b73d78bd82e4b96ce3af9a13af2c2a725b47596f5d562c3a2ce}{AberrationsEnum::XLTS}},\ \textcolor{stringliteral}{"{}XLT+S"{}}\},}
+\DoxyCodeLine{00036\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \{\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_af0023a81d12385b73d78bd82e4b96ce3aea59b3648ebcff1dbe1a35af60658e6c}{AberrationsEnum::XCN}},\ \ \textcolor{stringliteral}{"{}XCN"{}}\},}
+\DoxyCodeLine{00037\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \{\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_af0023a81d12385b73d78bd82e4b96ce3aaac082312f16242ee4a61b3187387e79}{AberrationsEnum::XCNS}},\ \textcolor{stringliteral}{"{}XCN+S"{}}\}}
+\DoxyCodeLine{00038\ \ \ \ \ \ \ \ \ \};}
+\DoxyCodeLine{00039\ \ \ \ \ \textcolor{keyword}{public}:}
+\DoxyCodeLine{00040\ \ \ \ \ \ \ \ \ \textcolor{keyword}{static}\ std::string\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Aberrations_a188ee6821a04f7e1259c12ebbff64523}{ToString}}(\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_af0023a81d12385b73d78bd82e4b96ce3}{AberrationsEnum}}\ e);}
+\DoxyCodeLine{00041\ }
+\DoxyCodeLine{00042\ \ \ \ \ \ \ \ \ \textcolor{keyword}{static}\ \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_af0023a81d12385b73d78bd82e4b96ce3}{AberrationsEnum}}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Aberrations_aa4515c35f41df5df10856e55ef3af847}{ToEnum}}(\textcolor{keyword}{const}\ std::string\ \&e);}
+\DoxyCodeLine{00043\ \ \ \ \ \};}
+\DoxyCodeLine{00044\ \}}
+\DoxyCodeLine{00045\ \textcolor{preprocessor}{\#endif\ }\textcolor{comment}{//\ !\ ABERRATION\_H}}
+\DoxyCodeLine{00046\ }
+\DoxyCodeLine{00047\ }
 
 \end{DoxyCode}

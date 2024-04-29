@@ -4,7 +4,6 @@ var classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector =
     [ "StateVector", "classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector.html#aee86e7afa7fc1100b5bf8c7b6247f372", null ],
     [ "~StateVector", "classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector.html#a7afbf42b4ed522f035f43842b224bdde", null ],
     [ "StateVector", "classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector.html#a847cf7c074795402c52fe9982b36410e", null ],
-    [ "CheckAndUpdateCenterOfMotion", "classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector.html#a66253b22340d4d1ec64824914235bc33", null ],
     [ "GetEccentricity", "classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector.html#a8a0163e75752f401c41349d1dbb4b232", null ],
     [ "GetInclination", "classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector.html#a1f35dfd68c61eb63f3f5f725e0a69880", null ],
     [ "GetMeanAnomaly", "classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector.html#a364cb3ea02f20bf6b860e7a49c4cde3a", null ],

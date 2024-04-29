@@ -1,223 +1,132 @@
-\hypertarget{Proxy_8h_source}{}\doxysection{Proxy.\+h}
-\label{Proxy_8h_source}\index{IO.Astrodynamics/API/Proxy.h@{IO.Astrodynamics/API/Proxy.h}}
+\doxysection{Proxy.\+h}
+\hypertarget{Proxy_8h_source}{}\label{Proxy_8h_source}\index{IO.Astrodynamics/API/Proxy.h@{IO.Astrodynamics/API/Proxy.h}}
 \mbox{\hyperlink{Proxy_8h}{Go to the documentation of this file.}}
 \begin{DoxyCode}{0}
-\DoxyCodeLine{1 }
-\DoxyCodeLine{2 \textcolor{comment}{/*}}
-\DoxyCodeLine{3 \textcolor{comment}{ Copyright (c) 2023. Sylvain Guillet (sylvain.guillet@tutamail.com)}}
-\DoxyCodeLine{4 \textcolor{comment}{ */}}
-\DoxyCodeLine{5 }
-\DoxyCodeLine{6 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{ScenarioDTO_8h}{ScenarioDTO.h}}>}}
-\DoxyCodeLine{7 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{ManeuverBase_8h}{ManeuverBase.h}}>}}
-\DoxyCodeLine{8 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{Scenario_8h}{Scenario.h}}>}}
-\DoxyCodeLine{9 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{FrameTransformation_8h}{FrameTransformation.h}}>}}
-\DoxyCodeLine{10 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{ConicOrbitalElementsDTO_8h}{ConicOrbitalElementsDTO.h}}>}}
-\DoxyCodeLine{11 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{EquinoctialElementsDTO_8h}{EquinoctialElementsDTO.h}}>}}
-\DoxyCodeLine{12 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{RaDecDTO_8h}{RaDecDTO.h}}>}}
-\DoxyCodeLine{13 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{HorizontalDTO_8h}{HorizontalDTO.h}}>}}
-\DoxyCodeLine{14 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{TLEElementsDTO_8h}{TLEElementsDTO.h}}>}}
-\DoxyCodeLine{15 }
-\DoxyCodeLine{16 \textcolor{preprocessor}{\#pragma region Proxy}}
-\DoxyCodeLine{17 \textcolor{preprocessor}{\#ifdef \_\_cplusplus}}
-\DoxyCodeLine{18 \textcolor{keyword}{extern} \textcolor{stringliteral}{"{}C"{}} \{}
-\DoxyCodeLine{19 \textcolor{preprocessor}{\#endif}}
-\DoxyCodeLine{20 \textcolor{preprocessor}{\#ifdef \_WIN32}}
-\DoxyCodeLine{21 \textcolor{preprocessor}{\#  ifdef MODULE\_API\_EXPORTS}}
-\DoxyCodeLine{22 \textcolor{preprocessor}{\#    define MODULE\_API \_\_declspec(dllexport)}}
-\DoxyCodeLine{23 \textcolor{preprocessor}{\#  else}}
-\DoxyCodeLine{24 \textcolor{preprocessor}{\#    define MODULE\_API \_\_declspec(dllimport)}}
-\DoxyCodeLine{25 \textcolor{preprocessor}{\#  endif}}
-\DoxyCodeLine{26 \textcolor{preprocessor}{\#else}}
-\DoxyCodeLine{27 \textcolor{preprocessor}{\#  define MODULE\_API}}
-\DoxyCodeLine{28 \textcolor{preprocessor}{\#endif}}
-\DoxyCodeLine{29 }
-\DoxyCodeLine{30 }
-\DoxyCodeLine{35 \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\_API}} \textcolor{keyword}{const} \textcolor{keywordtype}{char} *\mbox{\hyperlink{Proxy_8h_a762431b7740df9d560ebe822564369f1}{GetSpiceVersionProxy}}();}
-\DoxyCodeLine{36 }
-\DoxyCodeLine{45 \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\_API}} \textcolor{keywordtype}{bool}}
-\DoxyCodeLine{46 \mbox{\hyperlink{Proxy_8h_ad909cf62335144449521f43a7985c569}{WriteEphemerisProxy}}(\textcolor{keyword}{const} \textcolor{keywordtype}{char} *filePath, \textcolor{keywordtype}{int} objectId, \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1StateVectorDTO}{IO::Astrodynamics::API::DTO::StateVectorDTO}} sv[100000], \textcolor{keywordtype}{unsigned} \textcolor{keywordtype}{int} size);}
-\DoxyCodeLine{47 }
-\DoxyCodeLine{58 \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\_API}} \textcolor{keywordtype}{void}}
-\DoxyCodeLine{59 \mbox{\hyperlink{Proxy_8h_a4167d00080decf1912e155d1704bce08}{ReadEphemerisProxy}}(\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1WindowDTO}{IO::Astrodynamics::API::DTO::WindowDTO}} searchWindow, \textcolor{keywordtype}{int} observerId, \textcolor{keywordtype}{int} targetId, \textcolor{keyword}{const} \textcolor{keywordtype}{char} *frame,}
-\DoxyCodeLine{60                    \textcolor{keyword}{const} \textcolor{keywordtype}{char} *aberration, \textcolor{keywordtype}{double} stepSize, \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1StateVectorDTO}{IO::Astrodynamics::API::DTO::StateVectorDTO}} stateVectors[10000]);}
-\DoxyCodeLine{61 }
-\DoxyCodeLine{62 \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\_API}} \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1StateVectorDTO}{IO::Astrodynamics::API::DTO::StateVectorDTO}} \mbox{\hyperlink{Proxy_8h_a8c66e3fd210a4a4d185538a8ec69a8c9}{ReadEphemerisAtGivenEpochProxy}}(\textcolor{keywordtype}{double} epoch, \textcolor{keywordtype}{int} observerId, \textcolor{keywordtype}{int} targetId, \textcolor{keyword}{const} \textcolor{keywordtype}{char} *frame, \textcolor{keyword}{const} \textcolor{keywordtype}{char} *aberration);}
-\DoxyCodeLine{63 }
-\DoxyCodeLine{73 \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\_API}} \textcolor{keywordtype}{void}}
-\DoxyCodeLine{74 \mbox{\hyperlink{Proxy_8h_acabfceb565c4e897f2d0c0afc36643b2}{ReadOrientationProxy}}(\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1WindowDTO}{IO::Astrodynamics::API::DTO::WindowDTO}} searchWindow, \textcolor{keywordtype}{int} spacecraftId, \textcolor{keywordtype}{double} tolerance, \textcolor{keyword}{const} \textcolor{keywordtype}{char} *frame, \textcolor{keywordtype}{double} stepSize,}
-\DoxyCodeLine{75                      \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1StateOrientationDTO}{IO::Astrodynamics::API::DTO::StateOrientationDTO}} so[10000]);}
-\DoxyCodeLine{76 }
-\DoxyCodeLine{81 \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\_API}} \textcolor{keywordtype}{void} \mbox{\hyperlink{Proxy_8h_a5d56f5b52b0e4421a47f7ccc648fe84f}{PropagateSpacecraftProxy}}(\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ScenarioDTO}{IO::Astrodynamics::API::DTO::ScenarioDTO}} \&scenarioDto);}
-\DoxyCodeLine{82 \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\_API}} \textcolor{keywordtype}{void} \mbox{\hyperlink{Proxy_8h_ad518d62c0491b1f0a777a5cb662d69f5}{PropagateSiteProxy}}(\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1WindowDTO}{IO::Astrodynamics::API::DTO::WindowDTO}} windowDto, \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1SiteDTO}{IO::Astrodynamics::API::DTO::SiteDTO}} \&site);}
-\DoxyCodeLine{83 }
-\DoxyCodeLine{84 }
-\DoxyCodeLine{89 \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\_API}} \textcolor{keywordtype}{void} \mbox{\hyperlink{Proxy_8h_a589163156d2c405e61220e8f04b914a8}{LaunchProxy}}(\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1LaunchDTO}{IO::Astrodynamics::API::DTO::LaunchDTO}} \&launchDto);}
-\DoxyCodeLine{90 }
-\DoxyCodeLine{95 \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\_API}} \textcolor{keywordtype}{bool} \mbox{\hyperlink{Proxy_8h_af05f045e002fb697be0ff9531e5ce29d}{LoadKernelsProxy}}(\textcolor{keyword}{const} \textcolor{keywordtype}{char} *path);}
-\DoxyCodeLine{96 }
-\DoxyCodeLine{101 \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\_API}} \textcolor{keywordtype}{bool} \mbox{\hyperlink{Proxy_8h_a3b1dfb96463e087e516d2bd1c48b33e8}{UnloadKernelsProxy}}(\textcolor{keyword}{const} \textcolor{keywordtype}{char} *path);}
-\DoxyCodeLine{102 }
-\DoxyCodeLine{108 \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\_API}} \textcolor{keyword}{const} \textcolor{keywordtype}{char} *\mbox{\hyperlink{Proxy_8h_a866cf6da600090959c6dc47000e75cc4}{TDBToStringProxy}}(\textcolor{keywordtype}{double} secondsFromJ2000);}
-\DoxyCodeLine{109 }
-\DoxyCodeLine{115 \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\_API}} \textcolor{keyword}{const} \textcolor{keywordtype}{char} *\mbox{\hyperlink{Proxy_8h_a8f3164fd10cfa0827e25add2106a71c7}{UTCToStringProxy}}(\textcolor{keywordtype}{double} secondsFromJ2000);}
-\DoxyCodeLine{116 }
-\DoxyCodeLine{128 \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\_API}} \textcolor{keywordtype}{void}}
-\DoxyCodeLine{129 \mbox{\hyperlink{Proxy_8h_a1830cc8624c1ffdd8d3fab23db7598e1}{FindWindowsOnDistanceConstraintProxy}}(\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1WindowDTO}{IO::Astrodynamics::API::DTO::WindowDTO}} searchWindow, \textcolor{keywordtype}{int} observerId, \textcolor{keywordtype}{int} targetId,}
-\DoxyCodeLine{130                                      \textcolor{keyword}{const} \textcolor{keywordtype}{char} *relationalOperator, \textcolor{keywordtype}{double} value, \textcolor{keyword}{const} \textcolor{keywordtype}{char} *aberration,}
-\DoxyCodeLine{131                                      \textcolor{keywordtype}{double} stepSize, \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1WindowDTO}{IO::Astrodynamics::API::DTO::WindowDTO}} windows[1000]);}
-\DoxyCodeLine{132 }
-\DoxyCodeLine{148 \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\_API}} \textcolor{keywordtype}{void} \mbox{\hyperlink{Proxy_8h_af61eee5e996932b041c02d6a3e494aac}{FindWindowsOnOccultationConstraintProxy}}(\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1WindowDTO}{IO::Astrodynamics::API::DTO::WindowDTO}} searchWindow, \textcolor{keywordtype}{int} observerId,}
-\DoxyCodeLine{149                                                         \textcolor{keywordtype}{int} targetId, \textcolor{keyword}{const} \textcolor{keywordtype}{char} *targetFrame,}
-\DoxyCodeLine{150                                                         \textcolor{keyword}{const} \textcolor{keywordtype}{char} *targetShape,}
-\DoxyCodeLine{151                                                         \textcolor{keywordtype}{int} frontBodyId, \textcolor{keyword}{const} \textcolor{keywordtype}{char} *frontFrame, \textcolor{keyword}{const} \textcolor{keywordtype}{char} *frontShape,}
-\DoxyCodeLine{152                                                         \textcolor{keyword}{const} \textcolor{keywordtype}{char} *occultationType,}
-\DoxyCodeLine{153                                                         \textcolor{keyword}{const} \textcolor{keywordtype}{char} *aberration, \textcolor{keywordtype}{double} stepSize,}
-\DoxyCodeLine{154                                                         \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1WindowDTO}{IO::Astrodynamics::API::DTO::WindowDTO}} windows[1000]);}
-\DoxyCodeLine{155 }
-\DoxyCodeLine{171 \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\_API}} \textcolor{keywordtype}{void} \mbox{\hyperlink{Proxy_8h_a6207bfab3f39d7fe0caae4b483df9d48}{FindWindowsOnCoordinateConstraintProxy}}(\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1WindowDTO}{IO::Astrodynamics::API::DTO::WindowDTO}} searchWindow, \textcolor{keywordtype}{int} observerId,}
-\DoxyCodeLine{172                                                        \textcolor{keywordtype}{int} targetId, \textcolor{keyword}{const} \textcolor{keywordtype}{char} *frame, \textcolor{keyword}{const} \textcolor{keywordtype}{char} *coordinateSystem,}
-\DoxyCodeLine{173                                                        \textcolor{keyword}{const} \textcolor{keywordtype}{char} *coordinate, \textcolor{keyword}{const} \textcolor{keywordtype}{char} *relationalOperator,}
-\DoxyCodeLine{174                                                        \textcolor{keywordtype}{double} value, \textcolor{keywordtype}{double} adjustValue, \textcolor{keyword}{const} \textcolor{keywordtype}{char} *aberration,}
-\DoxyCodeLine{175                                                        \textcolor{keywordtype}{double} stepSize, \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1WindowDTO}{IO::Astrodynamics::API::DTO::WindowDTO}} windows[1000]);}
-\DoxyCodeLine{176 }
-\DoxyCodeLine{194 \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\_API}} \textcolor{keywordtype}{void} \mbox{\hyperlink{Proxy_8h_ac2775548c2991af260257147d3bcddeb}{FindWindowsOnIlluminationConstraintProxy}}(\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1WindowDTO}{IO::Astrodynamics::API::DTO::WindowDTO}} searchWindow, \textcolor{keywordtype}{int} observerId,}
-\DoxyCodeLine{195                                                          \textcolor{keyword}{const} \textcolor{keywordtype}{char} *illuminationSource, \textcolor{keywordtype}{int} targetBody,}
-\DoxyCodeLine{196                                                          \textcolor{keyword}{const} \textcolor{keywordtype}{char} *fixedFrame,}
-\DoxyCodeLine{197                                                          \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1PlanetodeticDTO}{IO::Astrodynamics::API::DTO::PlanetodeticDTO}} geodetic,}
-\DoxyCodeLine{198                                                          \textcolor{keyword}{const} \textcolor{keywordtype}{char} *illuminationType,}
-\DoxyCodeLine{199                                                          \textcolor{keyword}{const} \textcolor{keywordtype}{char} *relationalOperator, \textcolor{keywordtype}{double} value,}
-\DoxyCodeLine{200                                                          \textcolor{keywordtype}{double} adjustValue,}
-\DoxyCodeLine{201                                                          \textcolor{keyword}{const} \textcolor{keywordtype}{char} *aberration, \textcolor{keywordtype}{double} stepSize, \textcolor{keyword}{const} \textcolor{keywordtype}{char} *method,}
-\DoxyCodeLine{202                                                          \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1WindowDTO}{IO::Astrodynamics::API::DTO::WindowDTO}} windows[1000]);}
-\DoxyCodeLine{203 }
-\DoxyCodeLine{216 \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\_API}} \textcolor{keywordtype}{void}}
-\DoxyCodeLine{217 \mbox{\hyperlink{Proxy_8h_a937e7c2e12b5beeb29690b6d5e859d25}{FindWindowsInFieldOfViewConstraintProxy}}(\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1WindowDTO}{IO::Astrodynamics::API::DTO::WindowDTO}} searchWindow, \textcolor{keywordtype}{int} observerId, \textcolor{keywordtype}{int} instrumentId,}
-\DoxyCodeLine{218                                         \textcolor{keywordtype}{int} targetId, \textcolor{keyword}{const} \textcolor{keywordtype}{char} *targetFrame, \textcolor{keyword}{const} \textcolor{keywordtype}{char} *targetShape,}
-\DoxyCodeLine{219                                         \textcolor{keyword}{const} \textcolor{keywordtype}{char} *aberration, \textcolor{keywordtype}{double} stepSize,}
-\DoxyCodeLine{220                                         \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1WindowDTO}{IO::Astrodynamics::API::DTO::WindowDTO}} windows[1000]);}
-\DoxyCodeLine{226 \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\_API}} \textcolor{keywordtype}{double} \mbox{\hyperlink{Proxy_8h_a21e5be456b638ec478bbe753d51d4d82}{ConvertTDBToUTCProxy}}(\textcolor{keywordtype}{double} tdb);}
-\DoxyCodeLine{227 }
-\DoxyCodeLine{233 \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\_API}} \textcolor{keywordtype}{double} \mbox{\hyperlink{Proxy_8h_ab9c954c87940d8be415c2f8b7696ed15}{ConvertUTCToTDBProxy}}(\textcolor{keywordtype}{double} utc);}
-\DoxyCodeLine{234 }
-\DoxyCodeLine{240 \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\_API}} \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1CelestialBodyDTO}{IO::Astrodynamics::API::DTO::CelestialBodyDTO}} \mbox{\hyperlink{Proxy_8h_a5cd3821092c4905163bd9fda786ee831}{GetCelestialBodyInfoProxy}}(\textcolor{keywordtype}{int} bodyId);}
-\DoxyCodeLine{241 }
-\DoxyCodeLine{248 \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\_API}} \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1FrameTransformationDTO}{IO::Astrodynamics::API::DTO::FrameTransformationDTO}} \mbox{\hyperlink{Proxy_8h_a119f255f7f7f5f965123d79ead91d46c}{TransformFrameProxy}}(\textcolor{keyword}{const} \textcolor{keywordtype}{char} *fromFrame, \textcolor{keyword}{const} \textcolor{keywordtype}{char} *toFrame, \textcolor{keywordtype}{double} epoch);}
-\DoxyCodeLine{249 }
-\DoxyCodeLine{257 \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\_API}} \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1StateVectorDTO}{IO::Astrodynamics::API::DTO::StateVectorDTO}} \mbox{\hyperlink{Proxy_8h_a0a91a5fad0133860714145259d6d7dca}{ConvertTLEToStateVectorProxy}}(\textcolor{keyword}{const} \textcolor{keywordtype}{char} *L1, \textcolor{keyword}{const} \textcolor{keywordtype}{char} *L2, \textcolor{keyword}{const} \textcolor{keywordtype}{char} *L3, \textcolor{keywordtype}{double} epoch);}
-\DoxyCodeLine{258 }
-\DoxyCodeLine{264 \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\_API}} \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1StateVectorDTO}{IO::Astrodynamics::API::DTO::StateVectorDTO}} \mbox{\hyperlink{Proxy_8h_adeff6dad2759bd230e7e2982af4cc803}{ConvertConicElementsToStateVectorProxy}}(\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ConicOrbitalElementsDTO}{IO::Astrodynamics::API::DTO::ConicOrbitalElementsDTO}} conicOrbitalElementsDto);}
-\DoxyCodeLine{265 }
-\DoxyCodeLine{271 \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\_API}} \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1StateVectorDTO}{IO::Astrodynamics::API::DTO::StateVectorDTO}} \mbox{\hyperlink{Proxy_8h_aef5adebc10af8b63a346df5a2a8364d0}{ConvertEquinoctialElementsToStateVectorProxy}}(\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1EquinoctialElementsDTO}{IO::Astrodynamics::API::DTO::EquinoctialElementsDTO}} equinoctialElementsDto);}
-\DoxyCodeLine{272 }
-\DoxyCodeLine{278 \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\_API}} \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1RaDecDTO}{IO::Astrodynamics::API::DTO::RaDecDTO}} \mbox{\hyperlink{Proxy_8h_ac91b73da531d42796dfdaceded511d75}{ConvertStateVectorToEquatorialCoordinatesProxy}}(\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1StateVectorDTO}{IO::Astrodynamics::API::DTO::StateVectorDTO}} stateVectorDto);}
-\DoxyCodeLine{279 \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\_API}} \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1HorizontalDTO}{IO::Astrodynamics::API::DTO::HorizontalDTO}} \mbox{\hyperlink{Proxy_8h_a5c27a3837900966cebc882c248ea09fa}{GetHorizontalCoordinates}}(\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1StateVectorDTO}{IO::Astrodynamics::API::DTO::StateVectorDTO}} stateVectorDto);}
-\DoxyCodeLine{280 \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\_API}} \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1TLEElementsDTO}{IO::Astrodynamics::API::DTO::TLEElementsDTO}} \mbox{\hyperlink{Proxy_8h_a3e30dc53c8488f6e58d694200f4d7b0b}{GetTLEElementsProxy}}(\textcolor{keyword}{const} \textcolor{keywordtype}{char} *L1, \textcolor{keyword}{const} \textcolor{keywordtype}{char} *L2, \textcolor{keyword}{const} \textcolor{keywordtype}{char} *L3);}
-\DoxyCodeLine{281 \textcolor{preprocessor}{\#ifdef \_\_cplusplus}}
-\DoxyCodeLine{282 \}}
-\DoxyCodeLine{283 \textcolor{preprocessor}{\#endif}}
-\DoxyCodeLine{284 \textcolor{preprocessor}{\#pragma endregion Proxy}}
-\DoxyCodeLine{285 }
-\DoxyCodeLine{286 \textcolor{preprocessor}{\#ifndef PROXY\_H}}
-\DoxyCodeLine{287 \textcolor{preprocessor}{\#define PROXY\_H}}
-\DoxyCodeLine{288 \textcolor{preprocessor}{\#define ERRORMSGLENGTH 1024}}
-\DoxyCodeLine{289 }
-\DoxyCodeLine{290 \textcolor{keyword}{static} \textcolor{keyword}{constexpr} \textcolor{keyword}{const} \textcolor{keywordtype}{int} lenout = 33;}
-\DoxyCodeLine{291 }
-\DoxyCodeLine{292 \textcolor{keywordtype}{char} *\mbox{\hyperlink{Proxy_8h_a070706fba8ff9475ca3b778c3bc1e115}{HandleError}}();}
-\DoxyCodeLine{293 }
-\DoxyCodeLine{294 \textcolor{keywordtype}{void} \mbox{\hyperlink{Proxy_8h_a10b4e1afbe694c70385138fa39d88fa4}{ActivateErrorManagement}}();}
-\DoxyCodeLine{295 }
-\DoxyCodeLine{296 std::map<int, std::shared\_ptr<IO::Astrodynamics::Body::CelestialBody>>}
-\DoxyCodeLine{297 \mbox{\hyperlink{Proxy_8h_a8bab14a288b25f44aff3d6ae43a650b3}{BuildCelestialBodies}}(\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ScenarioDTO}{IO::Astrodynamics::API::DTO::ScenarioDTO}} \&scenario);}
-\DoxyCodeLine{298 }
-\DoxyCodeLine{299 \textcolor{keywordtype}{void} \mbox{\hyperlink{Proxy_8h_a3381f05bb7e186b70fb2cae2909690a6}{BuildPayload}}(\textcolor{keyword}{const} \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ScenarioDTO}{IO::Astrodynamics::API::DTO::ScenarioDTO}} \&scenarioDto, \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft}{IO::Astrodynamics::Body::Spacecraft::Spacecraft}} \&spacecraft);}
-\DoxyCodeLine{300 }
-\DoxyCodeLine{301 \textcolor{keywordtype}{void}}
-\DoxyCodeLine{302 \mbox{\hyperlink{Proxy_8h_a75167eed7ac3eefb3a10af1291eb49c3}{BuildInstruments}}(\textcolor{keyword}{const} \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ScenarioDTO}{IO::Astrodynamics::API::DTO::ScenarioDTO}} \&scenarioDTO, \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft}{IO::Astrodynamics::Body::Spacecraft::Spacecraft}} \&spacecraft);}
-\DoxyCodeLine{303 }
-\DoxyCodeLine{304 \textcolor{keywordtype}{void} \mbox{\hyperlink{Proxy_8h_aced6fd9be76ec4687db680b5b560a927}{BuildEngines}}(\textcolor{keyword}{const} \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ScenarioDTO}{IO::Astrodynamics::API::DTO::ScenarioDTO}} \&scenarioDTO, \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft}{IO::Astrodynamics::Body::Spacecraft::Spacecraft}} \&spacecraft);}
-\DoxyCodeLine{305 }
-\DoxyCodeLine{306 \textcolor{keywordtype}{void}}
-\DoxyCodeLine{307 \mbox{\hyperlink{Proxy_8h_a9963486ce69bfacb5ebef8ee05389ecb}{BuildFuelTank}}(\textcolor{keyword}{const} \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ScenarioDTO}{IO::Astrodynamics::API::DTO::ScenarioDTO}} \&scenarioDTO, \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Body_1_1Spacecraft_1_1Spacecraft}{IO::Astrodynamics::Body::Spacecraft::Spacecraft}} \&spacecraft);}
-\DoxyCodeLine{308 }
-\DoxyCodeLine{309 \textcolor{keywordtype}{void} \mbox{\hyperlink{Proxy_8h_a0a53ea3098ce61da5c5d396bfb1f6468}{BuildApogeeManeuver}}(\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ScenarioDTO}{IO::Astrodynamics::API::DTO::ScenarioDTO}} \&scenarioDto, \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Scenario}{IO::Astrodynamics::Scenario}} \&scenario,}
-\DoxyCodeLine{310                          std::map<\textcolor{keywordtype}{int}, std::shared\_ptr<IO::Astrodynamics::Maneuvers::ManeuverBase>> \&maneuvers);}
-\DoxyCodeLine{311 }
-\DoxyCodeLine{312 \textcolor{keywordtype}{void} \mbox{\hyperlink{Proxy_8h_a07d04305cf10fa0fc87183895f9af4c0}{BuildPerigeeManeuver}}(\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ScenarioDTO}{IO::Astrodynamics::API::DTO::ScenarioDTO}} \&scenarioDto, \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Scenario}{IO::Astrodynamics::Scenario}} \&scenario,}
-\DoxyCodeLine{313                           std::map<\textcolor{keywordtype}{int}, std::shared\_ptr<IO::Astrodynamics::Maneuvers::ManeuverBase>> \&maneuvers);}
-\DoxyCodeLine{314 }
-\DoxyCodeLine{315 \textcolor{keywordtype}{void} \mbox{\hyperlink{Proxy_8h_ad1238418f22962872f57d1070059f299}{BuildApsidalManeuver}}(\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ScenarioDTO}{IO::Astrodynamics::API::DTO::ScenarioDTO}} \&scenarioDto, \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Scenario}{IO::Astrodynamics::Scenario}} \&scenario,}
-\DoxyCodeLine{316                           std::map<\textcolor{keywordtype}{int}, std::shared\_ptr<IO::Astrodynamics::Maneuvers::ManeuverBase>> \&maneuvers,}
-\DoxyCodeLine{317                           std::map<\textcolor{keywordtype}{int}, std::shared\_ptr<IO::Astrodynamics::Body::CelestialBody>> \&celestialBodies);}
-\DoxyCodeLine{318 }
-\DoxyCodeLine{319 \textcolor{keywordtype}{void} \mbox{\hyperlink{Proxy_8h_af4b1ac607f0f8be86ccadf1e7b8487bf}{BuildCombinedManeuver}}(\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ScenarioDTO}{IO::Astrodynamics::API::DTO::ScenarioDTO}} \&scenarioDto, \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Scenario}{IO::Astrodynamics::Scenario}} \&scenario,}
-\DoxyCodeLine{320                            std::map<\textcolor{keywordtype}{int}, std::shared\_ptr<IO::Astrodynamics::Maneuvers::ManeuverBase>> \&maneuvers);}
-\DoxyCodeLine{321 }
-\DoxyCodeLine{322 \textcolor{keywordtype}{void}}
-\DoxyCodeLine{323 \mbox{\hyperlink{Proxy_8h_a58840ba4cba973c7eae8fd09b589ff2b}{BuildOrbitalPlaneManeuver}}(\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ScenarioDTO}{IO::Astrodynamics::API::DTO::ScenarioDTO}} \&scenarioDto, \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Scenario}{IO::Astrodynamics::Scenario}} \&scenario,}
-\DoxyCodeLine{324                           std::map<\textcolor{keywordtype}{int}, std::shared\_ptr<IO::Astrodynamics::Maneuvers::ManeuverBase>> \&maneuvers,}
-\DoxyCodeLine{325                           std::map<\textcolor{keywordtype}{int}, std::shared\_ptr<IO::Astrodynamics::Body::CelestialBody>> \&celestialBodies);}
-\DoxyCodeLine{326 }
-\DoxyCodeLine{327 \textcolor{keywordtype}{void} \mbox{\hyperlink{Proxy_8h_acde78c31b8c1264a9771279641d1f5c9}{BuildPhasingManeuver}}(\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ScenarioDTO}{IO::Astrodynamics::API::DTO::ScenarioDTO}} \&scenarioDto, \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Scenario}{IO::Astrodynamics::Scenario}} \&scenario,}
-\DoxyCodeLine{328                           std::map<\textcolor{keywordtype}{int}, std::shared\_ptr<IO::Astrodynamics::Maneuvers::ManeuverBase>> \&maneuvers,}
-\DoxyCodeLine{329                           std::map<\textcolor{keywordtype}{int}, std::shared\_ptr<IO::Astrodynamics::Body::CelestialBody>> \&celestialBodies);}
-\DoxyCodeLine{330 }
-\DoxyCodeLine{331 \textcolor{keywordtype}{void} \mbox{\hyperlink{Proxy_8h_a3e7244f13a3231cc66f5030473c4355a}{BuildManeuvers}}(\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ScenarioDTO}{IO::Astrodynamics::API::DTO::ScenarioDTO}} \&scenarioDto, \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Scenario}{IO::Astrodynamics::Scenario}} \&scenario,}
-\DoxyCodeLine{332                     std::map<\textcolor{keywordtype}{int}, std::shared\_ptr<IO::Astrodynamics::Body::CelestialBody>> \&celestialBodies,}
-\DoxyCodeLine{333                     std::map<\textcolor{keywordtype}{int}, std::shared\_ptr<IO::Astrodynamics::Maneuvers::ManeuverBase>> \&maneuvers);}
-\DoxyCodeLine{334 }
-\DoxyCodeLine{335 \textcolor{keywordtype}{void} \mbox{\hyperlink{Proxy_8h_a4be6d2e53581fcd0a7d04f9468dd8f7a}{BuildProgradeAttitude}}(\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ScenarioDTO}{IO::Astrodynamics::API::DTO::ScenarioDTO}} \&scenarioDto, \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Scenario}{IO::Astrodynamics::Scenario}} \&scenario,}
-\DoxyCodeLine{336                            std::map<\textcolor{keywordtype}{int}, std::shared\_ptr<IO::Astrodynamics::Maneuvers::ManeuverBase>> \&maneuvers);}
-\DoxyCodeLine{337 }
-\DoxyCodeLine{338 \textcolor{keywordtype}{void} \mbox{\hyperlink{Proxy_8h_af25ecc6fa940fddb7de7d24006eb4e52}{BuildRetrogradeAttitude}}(\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ScenarioDTO}{IO::Astrodynamics::API::DTO::ScenarioDTO}} \&scenarioDto, \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Scenario}{IO::Astrodynamics::Scenario}} \&scenario,}
-\DoxyCodeLine{339                              std::map<\textcolor{keywordtype}{int}, std::shared\_ptr<IO::Astrodynamics::Maneuvers::ManeuverBase>> \&maneuvers);}
-\DoxyCodeLine{340 }
-\DoxyCodeLine{341 \textcolor{keywordtype}{void} \mbox{\hyperlink{Proxy_8h_a05aeed13dc37c32021ed8c152cb85769}{BuildZenithAttitude}}(\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ScenarioDTO}{IO::Astrodynamics::API::DTO::ScenarioDTO}} \&scenarioDto, \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Scenario}{IO::Astrodynamics::Scenario}} \&scenario,}
-\DoxyCodeLine{342                          std::map<\textcolor{keywordtype}{int}, std::shared\_ptr<IO::Astrodynamics::Maneuvers::ManeuverBase>> \&maneuvers);}
-\DoxyCodeLine{343 }
-\DoxyCodeLine{344 \textcolor{keywordtype}{void} \mbox{\hyperlink{Proxy_8h_aef32d6763d14534132d56ba720f59480}{BuildNadirAttitude}}(\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ScenarioDTO}{IO::Astrodynamics::API::DTO::ScenarioDTO}} \&scenarioDto, \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Scenario}{IO::Astrodynamics::Scenario}} \&scenario,}
-\DoxyCodeLine{345                         std::map<\textcolor{keywordtype}{int}, std::shared\_ptr<IO::Astrodynamics::Maneuvers::ManeuverBase>> \&maneuvers);}
-\DoxyCodeLine{346 }
-\DoxyCodeLine{347 \textcolor{keywordtype}{void} \mbox{\hyperlink{Proxy_8h_ac96702bdbd8a30e8f399361f556d99d1}{BuildInstrumentPointingToAttitude}}(\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ScenarioDTO}{IO::Astrodynamics::API::DTO::ScenarioDTO}} \&scenarioDto, \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Scenario}{IO::Astrodynamics::Scenario}} \&scenario,}
-\DoxyCodeLine{348                                        std::map<\textcolor{keywordtype}{int}, std::shared\_ptr<IO::Astrodynamics::Maneuvers::ManeuverBase>> \&maneuvers,}
-\DoxyCodeLine{349                                        std::map<\textcolor{keywordtype}{int}, std::shared\_ptr<IO::Astrodynamics::Body::CelestialBody>> \&celestialBodies);}
-\DoxyCodeLine{350 }
-\DoxyCodeLine{351 \textcolor{keywordtype}{void} \mbox{\hyperlink{Proxy_8h_afa98d3a0838bfd56c2b11111589bbbb5}{ReadApogeeManeuverResult}}(\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ScenarioDTO}{IO::Astrodynamics::API::DTO::ScenarioDTO}} \&scenarioDto,}
-\DoxyCodeLine{352                               std::map<\textcolor{keywordtype}{int}, std::shared\_ptr<IO::Astrodynamics::Maneuvers::ManeuverBase>> \&maneuvers);}
-\DoxyCodeLine{353 }
-\DoxyCodeLine{354 \textcolor{keywordtype}{void} \mbox{\hyperlink{Proxy_8h_acc147c42e49856002cd1d52ceea60600}{ReadPerigeeManeuverResult}}(\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ScenarioDTO}{IO::Astrodynamics::API::DTO::ScenarioDTO}} \&scenarioDto,}
-\DoxyCodeLine{355                                std::map<\textcolor{keywordtype}{int}, std::shared\_ptr<IO::Astrodynamics::Maneuvers::ManeuverBase>> \&maneuvers);}
-\DoxyCodeLine{356 }
-\DoxyCodeLine{357 \textcolor{keywordtype}{void} \mbox{\hyperlink{Proxy_8h_afd6fa2c901ae128e5594f523a35c4ccb}{ReadOrbitalPlaneManeuverResult}}(\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ScenarioDTO}{IO::Astrodynamics::API::DTO::ScenarioDTO}} \&scenarioDto,}
-\DoxyCodeLine{358                                     std::map<\textcolor{keywordtype}{int}, std::shared\_ptr<IO::Astrodynamics::Maneuvers::ManeuverBase>> \&maneuvers);}
-\DoxyCodeLine{359 }
-\DoxyCodeLine{360 \textcolor{keywordtype}{void} \mbox{\hyperlink{Proxy_8h_a960b64ba392ac5304caed39184676fc5}{ReadCombinedManeuverResult}}(\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ScenarioDTO}{IO::Astrodynamics::API::DTO::ScenarioDTO}} \&scenarioDto,}
-\DoxyCodeLine{361                                 std::map<\textcolor{keywordtype}{int}, std::shared\_ptr<IO::Astrodynamics::Maneuvers::ManeuverBase>> \&maneuvers);}
-\DoxyCodeLine{362 }
-\DoxyCodeLine{363 \textcolor{keywordtype}{void} \mbox{\hyperlink{Proxy_8h_a4844c879c6033d6d11cb7f28a1a514f7}{ReadApsidalAlignmentManeuverResult}}(\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ScenarioDTO}{IO::Astrodynamics::API::DTO::ScenarioDTO}} \&scenarioDto,}
-\DoxyCodeLine{364                                         std::map<\textcolor{keywordtype}{int}, std::shared\_ptr<IO::Astrodynamics::Maneuvers::ManeuverBase>> \&maneuvers);}
-\DoxyCodeLine{365 }
-\DoxyCodeLine{366 \textcolor{keywordtype}{void} \mbox{\hyperlink{Proxy_8h_adb84f00576e8bbe39ff1883f62cd8b81}{ReadPhasingManeuverResult}}(\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ScenarioDTO}{IO::Astrodynamics::API::DTO::ScenarioDTO}} \&scenarioDto,}
-\DoxyCodeLine{367                                std::map<\textcolor{keywordtype}{int}, std::shared\_ptr<IO::Astrodynamics::Maneuvers::ManeuverBase>> \&maneuvers);}
-\DoxyCodeLine{368 }
-\DoxyCodeLine{369 \textcolor{keywordtype}{void} \mbox{\hyperlink{Proxy_8h_a3eb1d8fdac1088947285a663760ab3a6}{ReadManeuverResults}}(\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ScenarioDTO}{IO::Astrodynamics::API::DTO::ScenarioDTO}} \&scenarioDto,}
-\DoxyCodeLine{370                          std::map<\textcolor{keywordtype}{int}, std::shared\_ptr<IO::Astrodynamics::Maneuvers::ManeuverBase>> \&maneuvers);}
-\DoxyCodeLine{371 }
-\DoxyCodeLine{372 \textcolor{keywordtype}{void} \mbox{\hyperlink{Proxy_8h_a27e7a29987862d3693baa6d5e2d88fa3}{ReadNadirAttitudeResult}}(\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ScenarioDTO}{IO::Astrodynamics::API::DTO::ScenarioDTO}} \&scenarioDto,}
-\DoxyCodeLine{373                               std::map<\textcolor{keywordtype}{int}, std::shared\_ptr<IO::Astrodynamics::Maneuvers::ManeuverBase>> \&maneuvers);}
-\DoxyCodeLine{374 }
-\DoxyCodeLine{375 \textcolor{keywordtype}{void} \mbox{\hyperlink{Proxy_8h_a89c552535439f5304d8eca580b0e6372}{ReadZenithAttitudeResult}}(\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ScenarioDTO}{IO::Astrodynamics::API::DTO::ScenarioDTO}} \&scenarioDto,}
-\DoxyCodeLine{376                              std::map<\textcolor{keywordtype}{int}, std::shared\_ptr<IO::Astrodynamics::Maneuvers::ManeuverBase>> \&maneuvers);}
-\DoxyCodeLine{377 }
-\DoxyCodeLine{378 \textcolor{keywordtype}{void} \mbox{\hyperlink{Proxy_8h_a1f77601604db3985c34b30b965e20838}{ReadProgradeAttitudeResult}}(\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ScenarioDTO}{IO::Astrodynamics::API::DTO::ScenarioDTO}} \&scenarioDto,}
-\DoxyCodeLine{379                               std::map<\textcolor{keywordtype}{int}, std::shared\_ptr<IO::Astrodynamics::Maneuvers::ManeuverBase>> \&maneuvers);}
-\DoxyCodeLine{380 }
-\DoxyCodeLine{381 \textcolor{keywordtype}{void} \mbox{\hyperlink{Proxy_8h_a774c92a48f56781b19e2a14e47d11849}{ReadRetrogradeAttitudeResult}}(\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ScenarioDTO}{IO::Astrodynamics::API::DTO::ScenarioDTO}} \&scenarioDto,}
-\DoxyCodeLine{382                               std::map<\textcolor{keywordtype}{int}, std::shared\_ptr<IO::Astrodynamics::Maneuvers::ManeuverBase>> \&maneuvers);}
-\DoxyCodeLine{383 }
-\DoxyCodeLine{384 \textcolor{keywordtype}{void} \mbox{\hyperlink{Proxy_8h_aacc620177c6e35a14adb8912896cff33}{ReadInstrumentTowardTargetAttitudeResult}}(\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ScenarioDTO}{IO::Astrodynamics::API::DTO::ScenarioDTO}} \&scenarioDto,}
-\DoxyCodeLine{385                               std::map<\textcolor{keywordtype}{int}, std::shared\_ptr<IO::Astrodynamics::Maneuvers::ManeuverBase>> \&maneuvers);}
-\DoxyCodeLine{386 }
-\DoxyCodeLine{387 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00001\ }
+\DoxyCodeLine{00002\ \textcolor{comment}{/*}}
+\DoxyCodeLine{00003\ \textcolor{comment}{\ Copyright\ (c)\ 2023-\/2024.\ Sylvain\ Guillet\ (sylvain.guillet@tutamail.com)}}
+\DoxyCodeLine{00004\ \textcolor{comment}{\ */}}
+\DoxyCodeLine{00005\ }
+\DoxyCodeLine{00006\ \textcolor{preprocessor}{\#include\ <\mbox{\hyperlink{FrameTransformation_8h}{FrameTransformation.h}}>}}
+\DoxyCodeLine{00007\ \textcolor{preprocessor}{\#include\ <\mbox{\hyperlink{ConicOrbitalElementsDTO_8h}{ConicOrbitalElementsDTO.h}}>}}
+\DoxyCodeLine{00008\ \textcolor{preprocessor}{\#include\ <\mbox{\hyperlink{EquinoctialElementsDTO_8h}{EquinoctialElementsDTO.h}}>}}
+\DoxyCodeLine{00009\ \textcolor{preprocessor}{\#include\ <\mbox{\hyperlink{RaDecDTO_8h}{RaDecDTO.h}}>}}
+\DoxyCodeLine{00010\ \textcolor{preprocessor}{\#include\ <\mbox{\hyperlink{HorizontalDTO_8h}{HorizontalDTO.h}}>}}
+\DoxyCodeLine{00011\ \textcolor{preprocessor}{\#include\ <\mbox{\hyperlink{TLEElementsDTO_8h}{TLEElementsDTO.h}}>}}
+\DoxyCodeLine{00012\ \textcolor{preprocessor}{\#include\ "{}\mbox{\hyperlink{CelestialBody_8h}{CelestialBody.h}}"{}}}
+\DoxyCodeLine{00013\ \textcolor{preprocessor}{\#include\ "{}\mbox{\hyperlink{StateVectorDTO_8h}{StateVectorDTO.h}}"{}}}
+\DoxyCodeLine{00014\ \textcolor{preprocessor}{\#include\ "{}\mbox{\hyperlink{StateOrientationDTO_8h}{StateOrientationDTO.h}}"{}}}
+\DoxyCodeLine{00015\ \textcolor{preprocessor}{\#include\ "{}\mbox{\hyperlink{WindowDTO_8h}{WindowDTO.h}}"{}}}
+\DoxyCodeLine{00016\ \textcolor{preprocessor}{\#include\ "{}\mbox{\hyperlink{SiteDTO_8h}{SiteDTO.h}}"{}}}
+\DoxyCodeLine{00017\ \textcolor{preprocessor}{\#include\ "{}\mbox{\hyperlink{LaunchDTO_8h}{LaunchDTO.h}}"{}}}
+\DoxyCodeLine{00018\ }
+\DoxyCodeLine{00019\ \textcolor{preprocessor}{\#pragma\ region\ Proxy}}
+\DoxyCodeLine{00020\ \textcolor{preprocessor}{\#ifdef\ \_\_cplusplus}}
+\DoxyCodeLine{00021\ \textcolor{keyword}{extern}\ \textcolor{stringliteral}{"{}C"{}}\ \{}
+\DoxyCodeLine{00022\ \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00023\ \textcolor{preprocessor}{\#ifdef\ \_WIN32}}
+\DoxyCodeLine{00024\ \textcolor{preprocessor}{\#\ \ ifdef\ MODULE\_API\_EXPORTS}}
+\DoxyCodeLine{00025\ \textcolor{preprocessor}{\#\ \ \ \ define\ MODULE\_API\ \_\_declspec(dllexport)}}
+\DoxyCodeLine{00026\ \textcolor{preprocessor}{\#\ \ else}}
+\DoxyCodeLine{00027\ \textcolor{preprocessor}{\#\ \ \ \ define\ MODULE\_API\ \_\_declspec(dllimport)}}
+\DoxyCodeLine{00028\ \textcolor{preprocessor}{\#\ \ endif}}
+\DoxyCodeLine{00029\ \textcolor{preprocessor}{\#else}}
+\DoxyCodeLine{00030\ \textcolor{preprocessor}{\#\ \ define\ MODULE\_API}}
+\DoxyCodeLine{00031\ \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00032\ }
+\DoxyCodeLine{00033\ }
+\DoxyCodeLine{00038\ \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\_API}}\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{char}\ *\mbox{\hyperlink{Proxy_8h_a762431b7740df9d560ebe822564369f1}{GetSpiceVersionProxy}}();}
+\DoxyCodeLine{00039\ }
+\DoxyCodeLine{00048\ \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\_API}}\ \textcolor{keywordtype}{bool}}
+\DoxyCodeLine{00049\ \mbox{\hyperlink{Proxy_8h_ad909cf62335144449521f43a7985c569}{WriteEphemerisProxy}}(\textcolor{keyword}{const}\ \textcolor{keywordtype}{char}\ *filePath,\ \textcolor{keywordtype}{int}\ objectId,\ \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1StateVectorDTO}{IO::Astrodynamics::API::DTO::StateVectorDTO}}\ sv[100000],\ \textcolor{keywordtype}{unsigned}\ \textcolor{keywordtype}{int}\ size);}
+\DoxyCodeLine{00050\ }
+\DoxyCodeLine{00059\ \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\_API}}\ \textcolor{keywordtype}{bool}\ \mbox{\hyperlink{Proxy_8h_a65a08b3b0b2d3834ac1549408b9f2ddb}{WriteOrientationProxy}}(\textcolor{keyword}{const}\ \textcolor{keywordtype}{char}\ *filePath,\ \textcolor{keywordtype}{int}\ objectId,\ \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1StateOrientationDTO}{IO::Astrodynamics::API::DTO::StateOrientationDTO}}\ so[100000],\ \textcolor{keywordtype}{unsigned}\ \textcolor{keywordtype}{int}\ size);}
+\DoxyCodeLine{00060\ }
+\DoxyCodeLine{00071\ \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\_API}}\ \textcolor{keywordtype}{void}}
+\DoxyCodeLine{00072\ \mbox{\hyperlink{Proxy_8h_a4167d00080decf1912e155d1704bce08}{ReadEphemerisProxy}}(\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1WindowDTO}{IO::Astrodynamics::API::DTO::WindowDTO}}\ searchWindow,\ \textcolor{keywordtype}{int}\ observerId,\ \textcolor{keywordtype}{int}\ targetId,\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{char}\ *frame,}
+\DoxyCodeLine{00073\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ \textcolor{keywordtype}{char}\ *aberration,\ \textcolor{keywordtype}{double}\ stepSize,\ \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1StateVectorDTO}{IO::Astrodynamics::API::DTO::StateVectorDTO}}\ stateVectors[10000]);}
+\DoxyCodeLine{00074\ }
+\DoxyCodeLine{00075\ \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\_API}}\ \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1StateVectorDTO}{IO::Astrodynamics::API::DTO::StateVectorDTO}}\ \mbox{\hyperlink{Proxy_8h_a8c66e3fd210a4a4d185538a8ec69a8c9}{ReadEphemerisAtGivenEpochProxy}}(\textcolor{keywordtype}{double}\ epoch,\ \textcolor{keywordtype}{int}\ observerId,\ \textcolor{keywordtype}{int}\ targetId,\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{char}\ *frame,\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{char}\ *aberration);}
+\DoxyCodeLine{00076\ }
+\DoxyCodeLine{00086\ \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\_API}}\ \textcolor{keywordtype}{void}}
+\DoxyCodeLine{00087\ \mbox{\hyperlink{Proxy_8h_acabfceb565c4e897f2d0c0afc36643b2}{ReadOrientationProxy}}(\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1WindowDTO}{IO::Astrodynamics::API::DTO::WindowDTO}}\ searchWindow,\ \textcolor{keywordtype}{int}\ spacecraftId,\ \textcolor{keywordtype}{double}\ tolerance,\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{char}\ *frame,\ \textcolor{keywordtype}{double}\ stepSize,}
+\DoxyCodeLine{00088\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1StateOrientationDTO}{IO::Astrodynamics::API::DTO::StateOrientationDTO}}\ so[10000]);}
+\DoxyCodeLine{00089\ }
+\DoxyCodeLine{00094\ \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\_API}}\ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{Proxy_8h_a589163156d2c405e61220e8f04b914a8}{LaunchProxy}}(\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1LaunchDTO}{IO::Astrodynamics::API::DTO::LaunchDTO}}\ \&launchDto);}
+\DoxyCodeLine{00095\ }
+\DoxyCodeLine{00100\ \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\_API}}\ \textcolor{keywordtype}{bool}\ \mbox{\hyperlink{Proxy_8h_af05f045e002fb697be0ff9531e5ce29d}{LoadKernelsProxy}}(\textcolor{keyword}{const}\ \textcolor{keywordtype}{char}\ *path);}
+\DoxyCodeLine{00101\ }
+\DoxyCodeLine{00106\ \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\_API}}\ \textcolor{keywordtype}{bool}\ \mbox{\hyperlink{Proxy_8h_a3b1dfb96463e087e516d2bd1c48b33e8}{UnloadKernelsProxy}}(\textcolor{keyword}{const}\ \textcolor{keywordtype}{char}\ *path);}
+\DoxyCodeLine{00107\ }
+\DoxyCodeLine{00113\ \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\_API}}\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{char}\ *\mbox{\hyperlink{Proxy_8h_a866cf6da600090959c6dc47000e75cc4}{TDBToStringProxy}}(\textcolor{keywordtype}{double}\ secondsFromJ2000);}
+\DoxyCodeLine{00114\ }
+\DoxyCodeLine{00120\ \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\_API}}\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{char}\ *\mbox{\hyperlink{Proxy_8h_a8f3164fd10cfa0827e25add2106a71c7}{UTCToStringProxy}}(\textcolor{keywordtype}{double}\ secondsFromJ2000);}
+\DoxyCodeLine{00121\ }
+\DoxyCodeLine{00133\ \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\_API}}\ \textcolor{keywordtype}{void}}
+\DoxyCodeLine{00134\ \mbox{\hyperlink{Proxy_8h_a1830cc8624c1ffdd8d3fab23db7598e1}{FindWindowsOnDistanceConstraintProxy}}(\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1WindowDTO}{IO::Astrodynamics::API::DTO::WindowDTO}}\ searchWindow,\ \textcolor{keywordtype}{int}\ observerId,\ \textcolor{keywordtype}{int}\ targetId,}
+\DoxyCodeLine{00135\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ \textcolor{keywordtype}{char}\ *relationalOperator,\ \textcolor{keywordtype}{double}\ value,\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{char}\ *aberration,}
+\DoxyCodeLine{00136\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{double}\ stepSize,\ \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1WindowDTO}{IO::Astrodynamics::API::DTO::WindowDTO}}\ windows[1000]);}
+\DoxyCodeLine{00137\ }
+\DoxyCodeLine{00153\ \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\_API}}\ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{Proxy_8h_af61eee5e996932b041c02d6a3e494aac}{FindWindowsOnOccultationConstraintProxy}}(\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1WindowDTO}{IO::Astrodynamics::API::DTO::WindowDTO}}\ searchWindow,\ \textcolor{keywordtype}{int}\ observerId,}
+\DoxyCodeLine{00154\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{int}\ targetId,\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{char}\ *targetFrame,}
+\DoxyCodeLine{00155\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ \textcolor{keywordtype}{char}\ *targetShape,}
+\DoxyCodeLine{00156\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{int}\ frontBodyId,\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{char}\ *frontFrame,\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{char}\ *frontShape,}
+\DoxyCodeLine{00157\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ \textcolor{keywordtype}{char}\ *occultationType,}
+\DoxyCodeLine{00158\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ \textcolor{keywordtype}{char}\ *aberration,\ \textcolor{keywordtype}{double}\ stepSize,}
+\DoxyCodeLine{00159\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1WindowDTO}{IO::Astrodynamics::API::DTO::WindowDTO}}\ windows[1000]);}
+\DoxyCodeLine{00160\ }
+\DoxyCodeLine{00176\ \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\_API}}\ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{Proxy_8h_a6207bfab3f39d7fe0caae4b483df9d48}{FindWindowsOnCoordinateConstraintProxy}}(\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1WindowDTO}{IO::Astrodynamics::API::DTO::WindowDTO}}\ searchWindow,\ \textcolor{keywordtype}{int}\ observerId,}
+\DoxyCodeLine{00177\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{int}\ targetId,\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{char}\ *frame,\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{char}\ *coordinateSystem,}
+\DoxyCodeLine{00178\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ \textcolor{keywordtype}{char}\ *coordinate,\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{char}\ *relationalOperator,}
+\DoxyCodeLine{00179\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{double}\ value,\ \textcolor{keywordtype}{double}\ adjustValue,\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{char}\ *aberration,}
+\DoxyCodeLine{00180\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{double}\ stepSize,\ \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1WindowDTO}{IO::Astrodynamics::API::DTO::WindowDTO}}\ windows[1000]);}
+\DoxyCodeLine{00181\ }
+\DoxyCodeLine{00199\ \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\_API}}\ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{Proxy_8h_ac2775548c2991af260257147d3bcddeb}{FindWindowsOnIlluminationConstraintProxy}}(\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1WindowDTO}{IO::Astrodynamics::API::DTO::WindowDTO}}\ searchWindow,\ \textcolor{keywordtype}{int}\ observerId,}
+\DoxyCodeLine{00200\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ \textcolor{keywordtype}{char}\ *illuminationSource,\ \textcolor{keywordtype}{int}\ targetBody,}
+\DoxyCodeLine{00201\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ \textcolor{keywordtype}{char}\ *fixedFrame,}
+\DoxyCodeLine{00202\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1PlanetodeticDTO}{IO::Astrodynamics::API::DTO::PlanetodeticDTO}}\ geodetic,}
+\DoxyCodeLine{00203\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ \textcolor{keywordtype}{char}\ *illuminationType,}
+\DoxyCodeLine{00204\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ \textcolor{keywordtype}{char}\ *relationalOperator,\ \textcolor{keywordtype}{double}\ value,}
+\DoxyCodeLine{00205\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{double}\ adjustValue,}
+\DoxyCodeLine{00206\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ \textcolor{keywordtype}{char}\ *aberration,\ \textcolor{keywordtype}{double}\ stepSize,\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{char}\ *method,}
+\DoxyCodeLine{00207\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1WindowDTO}{IO::Astrodynamics::API::DTO::WindowDTO}}\ windows[1000]);}
+\DoxyCodeLine{00208\ }
+\DoxyCodeLine{00221\ \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\_API}}\ \textcolor{keywordtype}{void}}
+\DoxyCodeLine{00222\ \mbox{\hyperlink{Proxy_8h_a937e7c2e12b5beeb29690b6d5e859d25}{FindWindowsInFieldOfViewConstraintProxy}}(\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1WindowDTO}{IO::Astrodynamics::API::DTO::WindowDTO}}\ searchWindow,\ \textcolor{keywordtype}{int}\ observerId,\ \textcolor{keywordtype}{int}\ instrumentId,}
+\DoxyCodeLine{00223\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{int}\ targetId,\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{char}\ *targetFrame,\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{char}\ *targetShape,}
+\DoxyCodeLine{00224\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ \textcolor{keywordtype}{char}\ *aberration,\ \textcolor{keywordtype}{double}\ stepSize,}
+\DoxyCodeLine{00225\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1WindowDTO}{IO::Astrodynamics::API::DTO::WindowDTO}}\ windows[1000]);}
+\DoxyCodeLine{00231\ \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\_API}}\ \textcolor{keywordtype}{double}\ \mbox{\hyperlink{Proxy_8h_a21e5be456b638ec478bbe753d51d4d82}{ConvertTDBToUTCProxy}}(\textcolor{keywordtype}{double}\ tdb);}
+\DoxyCodeLine{00232\ }
+\DoxyCodeLine{00238\ \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\_API}}\ \textcolor{keywordtype}{double}\ \mbox{\hyperlink{Proxy_8h_ab9c954c87940d8be415c2f8b7696ed15}{ConvertUTCToTDBProxy}}(\textcolor{keywordtype}{double}\ utc);}
+\DoxyCodeLine{00239\ }
+\DoxyCodeLine{00245\ \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\_API}}\ \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1CelestialBodyDTO}{IO::Astrodynamics::API::DTO::CelestialBodyDTO}}\ \mbox{\hyperlink{Proxy_8h_a5cd3821092c4905163bd9fda786ee831}{GetCelestialBodyInfoProxy}}(\textcolor{keywordtype}{int}\ bodyId);}
+\DoxyCodeLine{00246\ }
+\DoxyCodeLine{00253\ \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\_API}}\ \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1FrameTransformationDTO}{IO::Astrodynamics::API::DTO::FrameTransformationDTO}}\ \mbox{\hyperlink{Proxy_8h_a119f255f7f7f5f965123d79ead91d46c}{TransformFrameProxy}}(\textcolor{keyword}{const}\ \textcolor{keywordtype}{char}\ *fromFrame,\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{char}\ *toFrame,\ \textcolor{keywordtype}{double}\ epoch);}
+\DoxyCodeLine{00254\ }
+\DoxyCodeLine{00262\ \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\_API}}\ \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1StateVectorDTO}{IO::Astrodynamics::API::DTO::StateVectorDTO}}\ \mbox{\hyperlink{Proxy_8h_a0a91a5fad0133860714145259d6d7dca}{ConvertTLEToStateVectorProxy}}(\textcolor{keyword}{const}\ \textcolor{keywordtype}{char}\ *L1,\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{char}\ *L2,\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{char}\ *L3,\ \textcolor{keywordtype}{double}\ epoch);}
+\DoxyCodeLine{00263\ }
+\DoxyCodeLine{00269\ \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\_API}}\ \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1StateVectorDTO}{IO::Astrodynamics::API::DTO::StateVectorDTO}}\ \mbox{\hyperlink{Proxy_8h_adeff6dad2759bd230e7e2982af4cc803}{ConvertConicElementsToStateVectorProxy}}(\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ConicOrbitalElementsDTO}{IO::Astrodynamics::API::DTO::ConicOrbitalElementsDTO}}\ conicOrbitalElementsDto);}
+\DoxyCodeLine{00270\ }
+\DoxyCodeLine{00276\ \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\_API}}\ \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1StateVectorDTO}{IO::Astrodynamics::API::DTO::StateVectorDTO}}\ \mbox{\hyperlink{Proxy_8h_aef5adebc10af8b63a346df5a2a8364d0}{ConvertEquinoctialElementsToStateVectorProxy}}(\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1EquinoctialElementsDTO}{IO::Astrodynamics::API::DTO::EquinoctialElementsDTO}}\ equinoctialElementsDto);}
+\DoxyCodeLine{00277\ }
+\DoxyCodeLine{00283\ \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\_API}}\ \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1RaDecDTO}{IO::Astrodynamics::API::DTO::RaDecDTO}}\ \mbox{\hyperlink{Proxy_8h_ac91b73da531d42796dfdaceded511d75}{ConvertStateVectorToEquatorialCoordinatesProxy}}(\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1StateVectorDTO}{IO::Astrodynamics::API::DTO::StateVectorDTO}}\ stateVectorDto);}
+\DoxyCodeLine{00284\ \mbox{\hyperlink{Proxy_8h_a283b8fd63f96d196027ef6ad48c4cb85}{MODULE\_API}}\ \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1TLEElementsDTO}{IO::Astrodynamics::API::DTO::TLEElementsDTO}}\ \mbox{\hyperlink{Proxy_8h_a3e30dc53c8488f6e58d694200f4d7b0b}{GetTLEElementsProxy}}(\textcolor{keyword}{const}\ \textcolor{keywordtype}{char}\ *L1,\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{char}\ *L2,\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{char}\ *L3);}
+\DoxyCodeLine{00285\ \textcolor{preprocessor}{\#ifdef\ \_\_cplusplus}}
+\DoxyCodeLine{00286\ \}}
+\DoxyCodeLine{00287\ \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00288\ \textcolor{preprocessor}{\#pragma\ endregion\ Proxy}}
+\DoxyCodeLine{00289\ }
+\DoxyCodeLine{00290\ \textcolor{preprocessor}{\#ifndef\ PROXY\_H}}
+\DoxyCodeLine{00291\ \textcolor{preprocessor}{\#define\ PROXY\_H}}
+\DoxyCodeLine{00292\ \textcolor{preprocessor}{\#define\ ERRORMSGLENGTH\ 1024}}
+\DoxyCodeLine{00293\ }
+\DoxyCodeLine{00294\ \textcolor{keyword}{static}\ \textcolor{keyword}{constexpr}\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{int}\ lenout\ =\ 33;}
+\DoxyCodeLine{00295\ }
+\DoxyCodeLine{00296\ \textcolor{keywordtype}{char}\ *\mbox{\hyperlink{Proxy_8h_a070706fba8ff9475ca3b778c3bc1e115}{HandleError}}();}
+\DoxyCodeLine{00297\ }
+\DoxyCodeLine{00298\ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{Proxy_8h_a10b4e1afbe694c70385138fa39d88fa4}{ActivateErrorManagement}}();}
+\DoxyCodeLine{00299\ }
+\DoxyCodeLine{00300\ \textcolor{preprocessor}{\#endif}}
 
 \end{DoxyCode}

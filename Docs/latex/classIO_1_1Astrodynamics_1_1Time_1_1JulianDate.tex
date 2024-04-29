@@ -1,5 +1,5 @@
-\hypertarget{classIO_1_1Astrodynamics_1_1Time_1_1JulianDate}{}\doxysection{IO\+::Astrodynamics\+::Time\+::Julian\+Date Class Reference}
-\label{classIO_1_1Astrodynamics_1_1Time_1_1JulianDate}\index{IO::Astrodynamics::Time::JulianDate@{IO::Astrodynamics::Time::JulianDate}}
+\doxysection{IO\+::Astrodynamics\+::Time\+::Julian\+Date Class Reference}
+\hypertarget{classIO_1_1Astrodynamics_1_1Time_1_1JulianDate}{}\label{classIO_1_1Astrodynamics_1_1Time_1_1JulianDate}\index{IO::Astrodynamics::Time::JulianDate@{IO::Astrodynamics::Time::JulianDate}}
 
 
 {\ttfamily \#include $<$Julian\+Date.\+h$>$}
@@ -10,49 +10,92 @@ Inheritance diagram for IO\+::Astrodynamics\+::Time\+::Julian\+Date\+:\begin{fig
 \includegraphics[height=2.000000cm]{classIO_1_1Astrodynamics_1_1Time_1_1JulianDate}
 \end{center}
 \end{figure}
-\doxysubsection*{Public Member Functions}
+\doxysubsubsection*{Public Member Functions}
 \begin{DoxyCompactItemize}
 \item 
-\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1JulianDate_ab31f091bae6d8f36f0d8b8a82a7789e4}{Julian\+Date}} (std\+::chrono\+::duration$<$ double, std\+::ratio$<$ 86400 $>$ $>$ julian\+Date)
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1JulianDate_ab31f091bae6d8f36f0d8b8a82a7789e4}{Julian\+Date}} (std\+::chrono\+::duration$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{double}}, std\+::ratio$<$ 86400 $>$ $>$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{julian\+Date}})
 \item 
-std\+::chrono\+::duration$<$ double, std\+::ratio$<$ 86400 $>$ $>$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1JulianDate_af1ed9ac00f624a8095ff38498b6d759e}{Get\+Julian\+Date}} () const
+std\+::chrono\+::duration$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{double}}, std\+::ratio$<$ 86400 $>$ $>$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1JulianDate_af1ed9ac00f624a8095ff38498b6d759e}{Get\+Julian\+Date}} () \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{const}}
 \item 
-std\+::string \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1JulianDate_adaf270ec4080cc63aba2f60c7637239f}{To\+String}} () const override
+std\+::string \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1JulianDate_adaf270ec4080cc63aba2f60c7637239f}{To\+String}} () \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{const}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{override}}
 \begin{DoxyCompactList}\small\item\em Get string representation. \end{DoxyCompactList}\item 
-\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1JulianDate}{IO\+::\+Astrodynamics\+::\+Time\+::\+Julian\+Date}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1JulianDate_a1e3ac1cd952fa11d467b1495f4502bc3}{Add}} (const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO\+::\+Astrodynamics\+::\+Time\+::\+Time\+Span}} \&timespan) const
-\begin{DoxyCompactList}\small\item\em Add \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{Time\+Span}} to datetime. \end{DoxyCompactList}\item 
-\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1JulianDate}{Julian\+Date}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1JulianDate_a3ebd13a029f60ae8440850ad978c30a8}{operator+}} (const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO\+::\+Astrodynamics\+::\+Time\+::\+Time\+Span}} \&timespan) const
-\begin{DoxyCompactList}\small\item\em Add \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{Time\+Span}} to \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1DateTime}{Date\+Time}}. \end{DoxyCompactList}\item 
-\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1JulianDate}{Julian\+Date}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1JulianDate_ac316849557d39ec0660eb9e6a4a618e8}{operator-\/}} (const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO\+::\+Astrodynamics\+::\+Time\+::\+Time\+Span}} \&other) const
-\begin{DoxyCompactList}\small\item\em Substract \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{Time\+Span}}. \end{DoxyCompactList}\item 
-\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{Time\+Span}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1JulianDate_abde6b8c35852dca16b23b4bf9f247f53}{operator-\/}} (const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1JulianDate}{IO\+::\+Astrodynamics\+::\+Time\+::\+Julian\+Date}} \&other) const
-\begin{DoxyCompactList}\small\item\em Substract \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1DateTime}{Date\+Time}}. \end{DoxyCompactList}\item 
-\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1UTC}{IO\+::\+Astrodynamics\+::\+Time\+::\+UTC}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1JulianDate_a1ac3b8bc3ef34979c42f91fc6bb90c83}{To\+UTC}} () const
-\begin{DoxyCompactList}\small\item\em Convert to \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1UTC}{UTC}}. \end{DoxyCompactList}\item 
-\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1JulianDate_aaa078872d44194b15281da8b7e54cbc3}{To\+TDB}} () const
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1JulianDate}{IO\+::\+Astrodynamics\+::\+Time\+::\+Julian\+Date}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1JulianDate_a1e3ac1cd952fa11d467b1495f4502bc3}{Add}} (\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{const}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO\+::\+Astrodynamics\+::\+Time\+::\+Time\+Span}} \&\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{timespan}}) \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{const}}
+\begin{DoxyCompactList}\small\item\em Add \doxylink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{Time\+Span} to datetime. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1JulianDate}{Julian\+Date}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1JulianDate_a3ebd13a029f60ae8440850ad978c30a8}{operator+}} (\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{const}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO\+::\+Astrodynamics\+::\+Time\+::\+Time\+Span}} \&\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{timespan}}) \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{const}}
+\begin{DoxyCompactList}\small\item\em Add \doxylink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{Time\+Span} to \doxylink{classIO_1_1Astrodynamics_1_1Time_1_1DateTime}{Date\+Time}. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1JulianDate}{Julian\+Date}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1JulianDate_ac316849557d39ec0660eb9e6a4a618e8}{operator-\/}} (\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{const}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO\+::\+Astrodynamics\+::\+Time\+::\+Time\+Span}} \&\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{other}}) \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{const}}
+\begin{DoxyCompactList}\small\item\em Substract \doxylink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{Time\+Span}. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{Time\+Span}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1JulianDate_abde6b8c35852dca16b23b4bf9f247f53}{operator-\/}} (\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{const}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1JulianDate}{IO\+::\+Astrodynamics\+::\+Time\+::\+Julian\+Date}} \&\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{other}}) \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{const}}
+\begin{DoxyCompactList}\small\item\em Substract \doxylink{classIO_1_1Astrodynamics_1_1Time_1_1DateTime}{Date\+Time}. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1UTC}{IO\+::\+Astrodynamics\+::\+Time\+::\+UTC}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1JulianDate_a1ac3b8bc3ef34979c42f91fc6bb90c83}{To\+UTC}} () \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{const}}
+\begin{DoxyCompactList}\small\item\em Convert to \doxylink{classIO_1_1Astrodynamics_1_1Time_1_1UTC}{UTC}. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1JulianDate_aaa078872d44194b15281da8b7e54cbc3}{To\+TDB}} () \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{const}}
 \end{DoxyCompactItemize}
-\doxysubsection*{Additional Inherited Members}
+\doxysubsection*{Public Member Functions inherited from \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1DateTime}{IO\+::\+Astrodynamics\+::\+Time\+::\+Date\+Time}}}
+\begin{DoxyCompactItemize}
+\item 
+std\+::chrono\+::duration$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{double}} $>$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1DateTime_a6eeccb71b101413e98aed7dd4031e4cc}{Get\+Seconds\+From\+J2000}} () \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{const}}
+\begin{DoxyCompactList}\small\item\em Ellapsed seconds from J2000. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO\+::\+Astrodynamics\+::\+Time\+::\+Time\+Span}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1DateTime_a20f0159106d02a18f302ebee70202898}{Subtract}} (\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{const}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1DateTime}{IO\+::\+Astrodynamics\+::\+Time\+::\+Date\+Time}} \&\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{datetime}}) \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{const}}
+\begin{DoxyCompactList}\small\item\em Substract two Date\+Times. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO\+::\+Astrodynamics\+::\+Time\+::\+Time\+Span}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1DateTime_a425d6e1999be5443448c896eea5f4e1d}{operator-\/}} (\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{const}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1DateTime}{IO\+::\+Astrodynamics\+::\+Time\+::\+Date\+Time}} \&\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{other}}) \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{const}}
+\begin{DoxyCompactList}\small\item\em Substract two Date\+Times. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{bool}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1DateTime_a7569b37f7ecd260156bea97beaa4afe0}{operator==}} (\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{const}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1DateTime}{IO\+::\+Astrodynamics\+::\+Time\+::\+Date\+Time}} \&\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{other}}) \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{const}}
+\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{bool}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1DateTime_aa439294c731041302a8ac53106c8ed59}{operator!=}} (\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{const}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1DateTime}{IO\+::\+Astrodynamics\+::\+Time\+::\+Date\+Time}} \&\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{other}}) \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{const}}
+\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{bool}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1DateTime_acc69615b69ebab4ee524655417c0b3a7}{operator$>$}} (\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{const}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1DateTime}{IO\+::\+Astrodynamics\+::\+Time\+::\+Date\+Time}} \&\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{other}}) \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{const}}
+\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{bool}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1DateTime_a8f3cd2c566c6e16e2bd596192b184a2d}{operator$>$=}} (\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{const}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1DateTime}{IO\+::\+Astrodynamics\+::\+Time\+::\+Date\+Time}} \&\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{other}}) \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{const}}
+\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{bool}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1DateTime_a958ac03b0e9ff71c6f10e9934eb79fb7}{operator$<$}} (\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{const}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1DateTime}{IO\+::\+Astrodynamics\+::\+Time\+::\+Date\+Time}} \&\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{other}}) \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{const}}
+\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{bool}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1DateTime_afeb626d64f421e7f838d032833ea2222}{operator$<$=}} (\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{const}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1DateTime}{IO\+::\+Astrodynamics\+::\+Time\+::\+Date\+Time}} \&\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{other}}) \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{const}}
+\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{virtual}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{double}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1DateTime_ae08d2f155f25d96a115ae9cc650ca7a2}{To\+Julian}} () \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{const}}
+\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{double}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1DateTime_a462a5992629bd7f3f706aab80d29ab91}{Centuries\+From\+J2000}} () \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{const}}
+\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1DateTime}{Date\+Time}} \& \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1DateTime_ab28afb0e475762230f07e66b44206ae0}{operator=}} (\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{const}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1DateTime}{Date\+Time}} \&\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{datetime}})
+\end{DoxyCompactItemize}
+\doxysubsubsection*{Additional Inherited Members}
+\doxysubsection*{Protected Member Functions inherited from \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1DateTime}{IO\+::\+Astrodynamics\+::\+Time\+::\+Date\+Time}}}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1DateTime_ad2cbf6242dd5415420935fa7b7aafdf4}{Date\+Time}} ()
+\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1DateTime_a9d007d042733ddd0154e13bc22f5d345}{Date\+Time}} (\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{const}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1DateTime}{Date\+Time}} \&\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{datetime}})
+\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{virtual}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1DateTime_a1fe7817194076507d1fe77cbdae466d7}{\texorpdfstring{$\sim$}{\string~}\+Date\+Time}} ()=\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{default}}
+\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1DateTime_ae2ed84f135621a4f4cd069b4cae4957a}{Date\+Time}} (\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{const}} std\+::chrono\+::duration$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{double}} $>$ \&\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{seconds\+From\+J2000}})
+\begin{DoxyCompactList}\small\item\em Instanciate from seconds ellapsed from J2000. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsection*{Protected Attributes inherited from \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1DateTime}{IO\+::\+Astrodynamics\+::\+Time\+::\+Date\+Time}}}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{const}} std\+::chrono\+::duration$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{double}} $>$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1DateTime_afc4ed5162f31c0d44acbc031e410cba8}{m\+\_\+seconds\+From\+J2000}} \{\}
+\end{DoxyCompactItemize}
 
 
 \doxysubsection{Constructor \& Destructor Documentation}
-\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Time_1_1JulianDate_ab31f091bae6d8f36f0d8b8a82a7789e4}\label{classIO_1_1Astrodynamics_1_1Time_1_1JulianDate_ab31f091bae6d8f36f0d8b8a82a7789e4}} 
+\Hypertarget{classIO_1_1Astrodynamics_1_1Time_1_1JulianDate_ab31f091bae6d8f36f0d8b8a82a7789e4}\label{classIO_1_1Astrodynamics_1_1Time_1_1JulianDate_ab31f091bae6d8f36f0d8b8a82a7789e4} 
 \index{IO::Astrodynamics::Time::JulianDate@{IO::Astrodynamics::Time::JulianDate}!JulianDate@{JulianDate}}
 \index{JulianDate@{JulianDate}!IO::Astrodynamics::Time::JulianDate@{IO::Astrodynamics::Time::JulianDate}}
 \doxysubsubsection{\texorpdfstring{JulianDate()}{JulianDate()}}
-{\footnotesize\ttfamily IO\+::\+Astrodynamics\+::\+Time\+::\+Julian\+Date\+::\+Julian\+Date (\begin{DoxyParamCaption}\item[{std\+::chrono\+::duration$<$ double, std\+::ratio$<$ 86400 $>$ $>$}]{julian\+Date }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [explicit]}}
+{\footnotesize\ttfamily IO\+::\+Astrodynamics\+::\+Time\+::\+Julian\+Date\+::\+Julian\+Date (\begin{DoxyParamCaption}\item[{std\+::chrono\+::duration$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{double}}, std\+::ratio$<$ 86400 $>$ $>$}]{julian\+Date }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [explicit]}}
 
 
 
 \doxysubsection{Member Function Documentation}
-\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Time_1_1JulianDate_a1e3ac1cd952fa11d467b1495f4502bc3}\label{classIO_1_1Astrodynamics_1_1Time_1_1JulianDate_a1e3ac1cd952fa11d467b1495f4502bc3}} 
+\Hypertarget{classIO_1_1Astrodynamics_1_1Time_1_1JulianDate_a1e3ac1cd952fa11d467b1495f4502bc3}\label{classIO_1_1Astrodynamics_1_1Time_1_1JulianDate_a1e3ac1cd952fa11d467b1495f4502bc3} 
 \index{IO::Astrodynamics::Time::JulianDate@{IO::Astrodynamics::Time::JulianDate}!Add@{Add}}
 \index{Add@{Add}!IO::Astrodynamics::Time::JulianDate@{IO::Astrodynamics::Time::JulianDate}}
 \doxysubsubsection{\texorpdfstring{Add()}{Add()}}
-{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1JulianDate}{IO\+::\+Astrodynamics\+::\+Time\+::\+Julian\+Date}} IO\+::\+Astrodynamics\+::\+Time\+::\+Julian\+Date\+::\+Add (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO\+::\+Astrodynamics\+::\+Time\+::\+Time\+Span}} \&}]{timespan }\end{DoxyParamCaption}) const}
+{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1JulianDate}{IO\+::\+Astrodynamics\+::\+Time\+::\+Julian\+Date}} IO\+::\+Astrodynamics\+::\+Time\+::\+Julian\+Date\+::\+Add (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{const}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO\+::\+Astrodynamics\+::\+Time\+::\+Time\+Span}} \&}]{timespan }\end{DoxyParamCaption}) const}
 
 
 
-Add \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{Time\+Span}} to datetime. 
+Add \doxylink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{Time\+Span} to datetime. 
 
 
 \begin{DoxyParams}{Parameters}
@@ -60,23 +103,23 @@ Add \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{Time\+Span}} 
 \hline
 \end{DoxyParams}
 \begin{DoxyReturn}{Returns}
-\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} 
+\doxylink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB} 
 \end{DoxyReturn}
-\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Time_1_1JulianDate_af1ed9ac00f624a8095ff38498b6d759e}\label{classIO_1_1Astrodynamics_1_1Time_1_1JulianDate_af1ed9ac00f624a8095ff38498b6d759e}} 
+\Hypertarget{classIO_1_1Astrodynamics_1_1Time_1_1JulianDate_af1ed9ac00f624a8095ff38498b6d759e}\label{classIO_1_1Astrodynamics_1_1Time_1_1JulianDate_af1ed9ac00f624a8095ff38498b6d759e} 
 \index{IO::Astrodynamics::Time::JulianDate@{IO::Astrodynamics::Time::JulianDate}!GetJulianDate@{GetJulianDate}}
 \index{GetJulianDate@{GetJulianDate}!IO::Astrodynamics::Time::JulianDate@{IO::Astrodynamics::Time::JulianDate}}
 \doxysubsubsection{\texorpdfstring{GetJulianDate()}{GetJulianDate()}}
-{\footnotesize\ttfamily std\+::chrono\+::duration$<$ double, std\+::ratio$<$ 86400 $>$ $>$ IO\+::\+Astrodynamics\+::\+Time\+::\+Julian\+Date\+::\+Get\+Julian\+Date (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+{\footnotesize\ttfamily std\+::chrono\+::duration$<$ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{double}}, std\+::ratio$<$ 86400 $>$ $>$ IO\+::\+Astrodynamics\+::\+Time\+::\+Julian\+Date\+::\+Get\+Julian\+Date (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
 
-\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Time_1_1JulianDate_a3ebd13a029f60ae8440850ad978c30a8}\label{classIO_1_1Astrodynamics_1_1Time_1_1JulianDate_a3ebd13a029f60ae8440850ad978c30a8}} 
+\Hypertarget{classIO_1_1Astrodynamics_1_1Time_1_1JulianDate_a3ebd13a029f60ae8440850ad978c30a8}\label{classIO_1_1Astrodynamics_1_1Time_1_1JulianDate_a3ebd13a029f60ae8440850ad978c30a8} 
 \index{IO::Astrodynamics::Time::JulianDate@{IO::Astrodynamics::Time::JulianDate}!operator+@{operator+}}
 \index{operator+@{operator+}!IO::Astrodynamics::Time::JulianDate@{IO::Astrodynamics::Time::JulianDate}}
 \doxysubsubsection{\texorpdfstring{operator+()}{operator+()}}
-{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1JulianDate}{IO\+::\+Astrodynamics\+::\+Time\+::\+Julian\+Date}} IO\+::\+Astrodynamics\+::\+Time\+::\+Julian\+Date\+::operator+ (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO\+::\+Astrodynamics\+::\+Time\+::\+Time\+Span}} \&}]{timespan }\end{DoxyParamCaption}) const}
+{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1JulianDate}{IO\+::\+Astrodynamics\+::\+Time\+::\+Julian\+Date}} IO\+::\+Astrodynamics\+::\+Time\+::\+Julian\+Date\+::operator+ (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{const}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO\+::\+Astrodynamics\+::\+Time\+::\+Time\+Span}} \&}]{timespan }\end{DoxyParamCaption}) const}
 
 
 
-Add \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{Time\+Span}} to \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1DateTime}{Date\+Time}}. 
+Add \doxylink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{Time\+Span} to \doxylink{classIO_1_1Astrodynamics_1_1Time_1_1DateTime}{Date\+Time}. 
 
 
 \begin{DoxyParams}{Parameters}
@@ -84,17 +127,17 @@ Add \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{Time\+Span}} 
 \hline
 \end{DoxyParams}
 \begin{DoxyReturn}{Returns}
-\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} 
+\doxylink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB} 
 \end{DoxyReturn}
-\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Time_1_1JulianDate_abde6b8c35852dca16b23b4bf9f247f53}\label{classIO_1_1Astrodynamics_1_1Time_1_1JulianDate_abde6b8c35852dca16b23b4bf9f247f53}} 
+\Hypertarget{classIO_1_1Astrodynamics_1_1Time_1_1JulianDate_abde6b8c35852dca16b23b4bf9f247f53}\label{classIO_1_1Astrodynamics_1_1Time_1_1JulianDate_abde6b8c35852dca16b23b4bf9f247f53} 
 \index{IO::Astrodynamics::Time::JulianDate@{IO::Astrodynamics::Time::JulianDate}!operator-\/@{operator-\/}}
 \index{operator-\/@{operator-\/}!IO::Astrodynamics::Time::JulianDate@{IO::Astrodynamics::Time::JulianDate}}
 \doxysubsubsection{\texorpdfstring{operator-\/()}{operator-()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
-{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO\+::\+Astrodynamics\+::\+Time\+::\+Time\+Span}} IO\+::\+Astrodynamics\+::\+Time\+::\+Julian\+Date\+::operator-\/ (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1JulianDate}{IO\+::\+Astrodynamics\+::\+Time\+::\+Julian\+Date}} \&}]{other }\end{DoxyParamCaption}) const}
+{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO\+::\+Astrodynamics\+::\+Time\+::\+Time\+Span}} IO\+::\+Astrodynamics\+::\+Time\+::\+Julian\+Date\+::operator-\/ (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{const}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1JulianDate}{IO\+::\+Astrodynamics\+::\+Time\+::\+Julian\+Date}} \&}]{other }\end{DoxyParamCaption}) const}
 
 
 
-Substract \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1DateTime}{Date\+Time}}. 
+Substract \doxylink{classIO_1_1Astrodynamics_1_1Time_1_1DateTime}{Date\+Time}. 
 
 
 \begin{DoxyParams}{Parameters}
@@ -102,17 +145,17 @@ Substract \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1DateTime}{Date\+T
 \hline
 \end{DoxyParams}
 \begin{DoxyReturn}{Returns}
-\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO\+::\+Astrodynamics\+::\+Time\+::\+Time\+Span}} 
+\doxylink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO\+::\+Astrodynamics\+::\+Time\+::\+Time\+Span} 
 \end{DoxyReturn}
-\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Time_1_1JulianDate_ac316849557d39ec0660eb9e6a4a618e8}\label{classIO_1_1Astrodynamics_1_1Time_1_1JulianDate_ac316849557d39ec0660eb9e6a4a618e8}} 
+\Hypertarget{classIO_1_1Astrodynamics_1_1Time_1_1JulianDate_ac316849557d39ec0660eb9e6a4a618e8}\label{classIO_1_1Astrodynamics_1_1Time_1_1JulianDate_ac316849557d39ec0660eb9e6a4a618e8} 
 \index{IO::Astrodynamics::Time::JulianDate@{IO::Astrodynamics::Time::JulianDate}!operator-\/@{operator-\/}}
 \index{operator-\/@{operator-\/}!IO::Astrodynamics::Time::JulianDate@{IO::Astrodynamics::Time::JulianDate}}
 \doxysubsubsection{\texorpdfstring{operator-\/()}{operator-()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
-{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1JulianDate}{IO\+::\+Astrodynamics\+::\+Time\+::\+Julian\+Date}} IO\+::\+Astrodynamics\+::\+Time\+::\+Julian\+Date\+::operator-\/ (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO\+::\+Astrodynamics\+::\+Time\+::\+Time\+Span}} \&}]{other }\end{DoxyParamCaption}) const}
+{\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1JulianDate}{IO\+::\+Astrodynamics\+::\+Time\+::\+Julian\+Date}} IO\+::\+Astrodynamics\+::\+Time\+::\+Julian\+Date\+::operator-\/ (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{const}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO\+::\+Astrodynamics\+::\+Time\+::\+Time\+Span}} \&}]{other }\end{DoxyParamCaption}) const}
 
 
 
-Substract \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{Time\+Span}}. 
+Substract \doxylink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{Time\+Span}. 
 
 
 \begin{DoxyParams}{Parameters}
@@ -120,9 +163,9 @@ Substract \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{Time\+S
 \hline
 \end{DoxyParams}
 \begin{DoxyReturn}{Returns}
-\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} 
+\doxylink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB} 
 \end{DoxyReturn}
-\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Time_1_1JulianDate_adaf270ec4080cc63aba2f60c7637239f}\label{classIO_1_1Astrodynamics_1_1Time_1_1JulianDate_adaf270ec4080cc63aba2f60c7637239f}} 
+\Hypertarget{classIO_1_1Astrodynamics_1_1Time_1_1JulianDate_adaf270ec4080cc63aba2f60c7637239f}\label{classIO_1_1Astrodynamics_1_1Time_1_1JulianDate_adaf270ec4080cc63aba2f60c7637239f} 
 \index{IO::Astrodynamics::Time::JulianDate@{IO::Astrodynamics::Time::JulianDate}!ToString@{ToString}}
 \index{ToString@{ToString}!IO::Astrodynamics::Time::JulianDate@{IO::Astrodynamics::Time::JulianDate}}
 \doxysubsubsection{\texorpdfstring{ToString()}{ToString()}}
@@ -139,13 +182,13 @@ std\+::string
 
 Implements \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1DateTime_ade049fa7911b1eeaf9b853631ff121b4}{IO\+::\+Astrodynamics\+::\+Time\+::\+Date\+Time}}.
 
-\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Time_1_1JulianDate_aaa078872d44194b15281da8b7e54cbc3}\label{classIO_1_1Astrodynamics_1_1Time_1_1JulianDate_aaa078872d44194b15281da8b7e54cbc3}} 
+\Hypertarget{classIO_1_1Astrodynamics_1_1Time_1_1JulianDate_aaa078872d44194b15281da8b7e54cbc3}\label{classIO_1_1Astrodynamics_1_1Time_1_1JulianDate_aaa078872d44194b15281da8b7e54cbc3} 
 \index{IO::Astrodynamics::Time::JulianDate@{IO::Astrodynamics::Time::JulianDate}!ToTDB@{ToTDB}}
 \index{ToTDB@{ToTDB}!IO::Astrodynamics::Time::JulianDate@{IO::Astrodynamics::Time::JulianDate}}
 \doxysubsubsection{\texorpdfstring{ToTDB()}{ToTDB()}}
 {\footnotesize\ttfamily \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO\+::\+Astrodynamics\+::\+Time\+::\+TDB}} IO\+::\+Astrodynamics\+::\+Time\+::\+Julian\+Date\+::\+To\+TDB (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
 
-\mbox{\Hypertarget{classIO_1_1Astrodynamics_1_1Time_1_1JulianDate_a1ac3b8bc3ef34979c42f91fc6bb90c83}\label{classIO_1_1Astrodynamics_1_1Time_1_1JulianDate_a1ac3b8bc3ef34979c42f91fc6bb90c83}} 
+\Hypertarget{classIO_1_1Astrodynamics_1_1Time_1_1JulianDate_a1ac3b8bc3ef34979c42f91fc6bb90c83}\label{classIO_1_1Astrodynamics_1_1Time_1_1JulianDate_a1ac3b8bc3ef34979c42f91fc6bb90c83} 
 \index{IO::Astrodynamics::Time::JulianDate@{IO::Astrodynamics::Time::JulianDate}!ToUTC@{ToUTC}}
 \index{ToUTC@{ToUTC}!IO::Astrodynamics::Time::JulianDate@{IO::Astrodynamics::Time::JulianDate}}
 \doxysubsubsection{\texorpdfstring{ToUTC()}{ToUTC()}}
@@ -153,10 +196,10 @@ Implements \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1DateTime_ade049f
 
 
 
-Convert to \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1UTC}{UTC}}. 
+Convert to \doxylink{classIO_1_1Astrodynamics_1_1Time_1_1UTC}{UTC}. 
 
 \begin{DoxyReturn}{Returns}
-\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1UTC}{UTC}} 
+\doxylink{classIO_1_1Astrodynamics_1_1Time_1_1UTC}{UTC} 
 \end{DoxyReturn}
 
 

@@ -1,57 +1,57 @@
-\hypertarget{CoordinateSystem_8h_source}{}\doxysection{Coordinate\+System.\+h}
-\label{CoordinateSystem_8h_source}\index{IO.Astrodynamics/CoordinateSystem.h@{IO.Astrodynamics/CoordinateSystem.h}}
+\doxysection{Coordinate\+System.\+h}
+\hypertarget{CoordinateSystem_8h_source}{}\label{CoordinateSystem_8h_source}\index{IO.Astrodynamics/CoordinateSystem.h@{IO.Astrodynamics/CoordinateSystem.h}}
 \mbox{\hyperlink{CoordinateSystem_8h}{Go to the documentation of this file.}}
 \begin{DoxyCode}{0}
-\DoxyCodeLine{1 \textcolor{comment}{/*}}
-\DoxyCodeLine{2 \textcolor{comment}{ Copyright (c) 2021-\/2023. Sylvain Guillet (sylvain.guillet@tutamail.com)}}
-\DoxyCodeLine{3 \textcolor{comment}{ */}}
-\DoxyCodeLine{4 \textcolor{preprocessor}{\#ifndef COORDINATE\_SYSTEM\_H}}
-\DoxyCodeLine{5 \textcolor{preprocessor}{\#define COORDINATE\_SYSTEM\_H}}
-\DoxyCodeLine{6 }
-\DoxyCodeLine{7 \textcolor{preprocessor}{\#include <string>}}
-\DoxyCodeLine{8 }
-\DoxyCodeLine{9 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1Astrodynamics}{IO::Astrodynamics}}}
-\DoxyCodeLine{10 \{}
-\DoxyCodeLine{11     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1CoordinateSystem}{CoordinateSystem}}}
-\DoxyCodeLine{12     \{}
-\DoxyCodeLine{13     \textcolor{keyword}{private}:}
-\DoxyCodeLine{14         \textcolor{keyword}{const} std::string m\_name;}
-\DoxyCodeLine{15         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1CoordinateSystem}{CoordinateSystem}} mRectangular;}
-\DoxyCodeLine{16         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1CoordinateSystem}{CoordinateSystem}} mLatitudinal;}
-\DoxyCodeLine{17         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1CoordinateSystem}{CoordinateSystem}} mRA\_DEC;}
-\DoxyCodeLine{18         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1CoordinateSystem}{CoordinateSystem}} mSpherical;}
-\DoxyCodeLine{19         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1CoordinateSystem}{CoordinateSystem}} mCylindrical;}
-\DoxyCodeLine{20         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1CoordinateSystem}{CoordinateSystem}} mGeodetic;}
-\DoxyCodeLine{21         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1CoordinateSystem}{CoordinateSystem}} mPlanetographic;}
-\DoxyCodeLine{22 }
-\DoxyCodeLine{23     \textcolor{keyword}{public}:}
-\DoxyCodeLine{29         \textcolor{keyword}{explicit} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1CoordinateSystem_af2c64a74881d8edc441696e927946027}{CoordinateSystem}}(std::string name);}
-\DoxyCodeLine{30 }
-\DoxyCodeLine{31         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1CoordinateSystem_a4288decf00dbf9f187543d183d977392}{\string~CoordinateSystem}}() = \textcolor{keywordflow}{default};}
-\DoxyCodeLine{32 }
-\DoxyCodeLine{33         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1CoordinateSystem}{CoordinateSystem}} \&\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1CoordinateSystem_ae081d63b0b9646e512e052f30679575b}{operator=}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1CoordinateSystem}{CoordinateSystem}} \&other)}
-\DoxyCodeLine{34         \{}
-\DoxyCodeLine{35             \textcolor{keywordflow}{if} (\textcolor{keyword}{this} == \&other)}
-\DoxyCodeLine{36                 \textcolor{keywordflow}{return} *\textcolor{keyword}{this};}
-\DoxyCodeLine{37 }
-\DoxyCodeLine{38             \textcolor{keyword}{const\_cast<}std::string \&\textcolor{keyword}{>}(m\_name) = other.m\_name;}
-\DoxyCodeLine{39             \textcolor{keywordflow}{return} *\textcolor{keyword}{this};}
-\DoxyCodeLine{40         \}}
-\DoxyCodeLine{41 }
-\DoxyCodeLine{47         [[nodiscard]] \textcolor{keyword}{const} \textcolor{keywordtype}{char} *\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1CoordinateSystem_a1546dbec5f061423bd2a1de61bc86fa0}{ToCharArray}}() \textcolor{keyword}{const};}
-\DoxyCodeLine{48 }
-\DoxyCodeLine{49         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1CoordinateSystem}{CoordinateSystem}}\& \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1CoordinateSystem_ad3231af0a187c5bc96f546b0c4be46e9}{Rectangular}}();}
-\DoxyCodeLine{50         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1CoordinateSystem}{CoordinateSystem}}\& \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1CoordinateSystem_a3e4fd48a580e61d3712a04156bec2731}{Latitudinal}}();}
-\DoxyCodeLine{51         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1CoordinateSystem}{CoordinateSystem}}\& \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1CoordinateSystem_adc8b0a2a32cfab5f2e01944aee1028ab}{RA\_DEC}}();}
-\DoxyCodeLine{52         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1CoordinateSystem}{CoordinateSystem}}\& \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1CoordinateSystem_a71f48bbcae544e6917407aa5db34d9dd}{Spherical}}();}
-\DoxyCodeLine{53         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1CoordinateSystem}{CoordinateSystem}}\& \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1CoordinateSystem_a8ba1d72620cf8d5b5670d03a7b07b65f}{Cylindrical}}();}
-\DoxyCodeLine{54         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1CoordinateSystem}{CoordinateSystem}}\& \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1CoordinateSystem_a7d1461a4cee93864ec8d1a6120d8c123}{Geodetic}}();}
-\DoxyCodeLine{55         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1CoordinateSystem}{CoordinateSystem}}\& \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1CoordinateSystem_aed405efc1be0888d6adc3166f6618ba7}{Planetographic}}();}
-\DoxyCodeLine{56         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1CoordinateSystem}{CoordinateSystem}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1CoordinateSystem_a79265b74b743a99a34d038b0e77d6b60}{ToCoordinateSystemType}}(\textcolor{keyword}{const} std::string \&coordinateSystemType) ;}
-\DoxyCodeLine{57     \};}
-\DoxyCodeLine{58 }
-\DoxyCodeLine{59 \} \textcolor{comment}{// namespace IO::Astrodynamics}}
-\DoxyCodeLine{60 }
-\DoxyCodeLine{61 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00001\ \textcolor{comment}{/*}}
+\DoxyCodeLine{00002\ \textcolor{comment}{\ Copyright\ (c)\ 2021-\/2023.\ Sylvain\ Guillet\ (sylvain.guillet@tutamail.com)}}
+\DoxyCodeLine{00003\ \textcolor{comment}{\ */}}
+\DoxyCodeLine{00004\ \textcolor{preprocessor}{\#ifndef\ COORDINATE\_SYSTEM\_H}}
+\DoxyCodeLine{00005\ \textcolor{preprocessor}{\#define\ COORDINATE\_SYSTEM\_H}}
+\DoxyCodeLine{00006\ }
+\DoxyCodeLine{00007\ \textcolor{preprocessor}{\#include\ <string>}}
+\DoxyCodeLine{00008\ }
+\DoxyCodeLine{00009\ \textcolor{keyword}{namespace\ }\mbox{\hyperlink{namespaceIO_1_1Astrodynamics}{IO::Astrodynamics}}}
+\DoxyCodeLine{00010\ \{}
+\DoxyCodeLine{00011\ \ \ \ \ \textcolor{keyword}{class\ }\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1CoordinateSystem}{CoordinateSystem}}}
+\DoxyCodeLine{00012\ \ \ \ \ \{}
+\DoxyCodeLine{00013\ \ \ \ \ \textcolor{keyword}{private}:}
+\DoxyCodeLine{00014\ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ std::string\ m\_name;}
+\DoxyCodeLine{00015\ \ \ \ \ \ \ \ \ \textcolor{keyword}{static}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1CoordinateSystem}{CoordinateSystem}}\ mRectangular;}
+\DoxyCodeLine{00016\ \ \ \ \ \ \ \ \ \textcolor{keyword}{static}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1CoordinateSystem}{CoordinateSystem}}\ mLatitudinal;}
+\DoxyCodeLine{00017\ \ \ \ \ \ \ \ \ \textcolor{keyword}{static}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1CoordinateSystem}{CoordinateSystem}}\ mRA\_DEC;}
+\DoxyCodeLine{00018\ \ \ \ \ \ \ \ \ \textcolor{keyword}{static}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1CoordinateSystem}{CoordinateSystem}}\ mSpherical;}
+\DoxyCodeLine{00019\ \ \ \ \ \ \ \ \ \textcolor{keyword}{static}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1CoordinateSystem}{CoordinateSystem}}\ mCylindrical;}
+\DoxyCodeLine{00020\ \ \ \ \ \ \ \ \ \textcolor{keyword}{static}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1CoordinateSystem}{CoordinateSystem}}\ mGeodetic;}
+\DoxyCodeLine{00021\ \ \ \ \ \ \ \ \ \textcolor{keyword}{static}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1CoordinateSystem}{CoordinateSystem}}\ mPlanetographic;}
+\DoxyCodeLine{00022\ }
+\DoxyCodeLine{00023\ \ \ \ \ \textcolor{keyword}{public}:}
+\DoxyCodeLine{00029\ \ \ \ \ \ \ \ \ \textcolor{keyword}{explicit}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1CoordinateSystem}{CoordinateSystem}}(std::string\ name);}
+\DoxyCodeLine{00030\ }
+\DoxyCodeLine{00031\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1CoordinateSystem_a4288decf00dbf9f187543d183d977392}{\string~CoordinateSystem}}()\ =\ \textcolor{keywordflow}{default};}
+\DoxyCodeLine{00032\ }
+\DoxyCodeLine{00033\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1CoordinateSystem}{CoordinateSystem}}\ \&\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1CoordinateSystem_ae081d63b0b9646e512e052f30679575b}{operator=}}(\textcolor{keyword}{const}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1CoordinateSystem}{CoordinateSystem}}\ \&other)}
+\DoxyCodeLine{00034\ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00035\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (\textcolor{keyword}{this}\ ==\ \&other)}
+\DoxyCodeLine{00036\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ *\textcolor{keyword}{this};}
+\DoxyCodeLine{00037\ }
+\DoxyCodeLine{00038\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keyword}{const\_cast<}std::string\ \&\textcolor{keyword}{>}(m\_name)\ =\ other.m\_name;}
+\DoxyCodeLine{00039\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ *\textcolor{keyword}{this};}
+\DoxyCodeLine{00040\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00041\ }
+\DoxyCodeLine{00047\ \ \ \ \ \ \ \ \ [[nodiscard]]\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{char}\ *\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1CoordinateSystem_a1546dbec5f061423bd2a1de61bc86fa0}{ToCharArray}}()\ \textcolor{keyword}{const};}
+\DoxyCodeLine{00048\ }
+\DoxyCodeLine{00049\ \ \ \ \ \ \ \ \ \textcolor{keyword}{static}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1CoordinateSystem}{CoordinateSystem}}\&\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1CoordinateSystem_ad3231af0a187c5bc96f546b0c4be46e9}{Rectangular}}();}
+\DoxyCodeLine{00050\ \ \ \ \ \ \ \ \ \textcolor{keyword}{static}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1CoordinateSystem}{CoordinateSystem}}\&\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1CoordinateSystem_a3e4fd48a580e61d3712a04156bec2731}{Latitudinal}}();}
+\DoxyCodeLine{00051\ \ \ \ \ \ \ \ \ \textcolor{keyword}{static}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1CoordinateSystem}{CoordinateSystem}}\&\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1CoordinateSystem_adc8b0a2a32cfab5f2e01944aee1028ab}{RA\_DEC}}();}
+\DoxyCodeLine{00052\ \ \ \ \ \ \ \ \ \textcolor{keyword}{static}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1CoordinateSystem}{CoordinateSystem}}\&\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1CoordinateSystem_a71f48bbcae544e6917407aa5db34d9dd}{Spherical}}();}
+\DoxyCodeLine{00053\ \ \ \ \ \ \ \ \ \textcolor{keyword}{static}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1CoordinateSystem}{CoordinateSystem}}\&\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1CoordinateSystem_a8ba1d72620cf8d5b5670d03a7b07b65f}{Cylindrical}}();}
+\DoxyCodeLine{00054\ \ \ \ \ \ \ \ \ \textcolor{keyword}{static}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1CoordinateSystem}{CoordinateSystem}}\&\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1CoordinateSystem_a7d1461a4cee93864ec8d1a6120d8c123}{Geodetic}}();}
+\DoxyCodeLine{00055\ \ \ \ \ \ \ \ \ \textcolor{keyword}{static}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1CoordinateSystem}{CoordinateSystem}}\&\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1CoordinateSystem_aed405efc1be0888d6adc3166f6618ba7}{Planetographic}}();}
+\DoxyCodeLine{00056\ \ \ \ \ \ \ \ \ \textcolor{keyword}{static}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1CoordinateSystem}{CoordinateSystem}}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1CoordinateSystem_a79265b74b743a99a34d038b0e77d6b60}{ToCoordinateSystemType}}(\textcolor{keyword}{const}\ std::string\ \&coordinateSystemType)\ ;}
+\DoxyCodeLine{00057\ \ \ \ \ \};}
+\DoxyCodeLine{00058\ }
+\DoxyCodeLine{00059\ \}\ \textcolor{comment}{//\ namespace\ IO::Astrodynamics}}
+\DoxyCodeLine{00060\ }
+\DoxyCodeLine{00061\ \textcolor{preprocessor}{\#endif}}
 
 \end{DoxyCode}

@@ -1,67 +1,67 @@
-\hypertarget{Coordinate_8h_source}{}\doxysection{Coordinate.\+h}
-\label{Coordinate_8h_source}\index{IO.Astrodynamics/Coordinate.h@{IO.Astrodynamics/Coordinate.h}}
+\doxysection{Coordinate.\+h}
+\hypertarget{Coordinate_8h_source}{}\label{Coordinate_8h_source}\index{IO.Astrodynamics/Coordinate.h@{IO.Astrodynamics/Coordinate.h}}
 \mbox{\hyperlink{Coordinate_8h}{Go to the documentation of this file.}}
 \begin{DoxyCode}{0}
-\DoxyCodeLine{1 \textcolor{comment}{/*}}
-\DoxyCodeLine{2 \textcolor{comment}{ Copyright (c) 2021-\/2023. Sylvain Guillet (sylvain.guillet@tutamail.com)}}
-\DoxyCodeLine{3 \textcolor{comment}{ */}}
-\DoxyCodeLine{4 \textcolor{preprocessor}{\#ifndef COORDINATE\_H}}
-\DoxyCodeLine{5 \textcolor{preprocessor}{\#define COORDINATE\_H}}
-\DoxyCodeLine{6 }
-\DoxyCodeLine{7 \textcolor{preprocessor}{\#include <string>}}
-\DoxyCodeLine{8 }
-\DoxyCodeLine{9 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1Astrodynamics}{IO::Astrodynamics}}}
-\DoxyCodeLine{10 \{}
-\DoxyCodeLine{11     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinate}{Coordinate}}}
-\DoxyCodeLine{12     \{}
-\DoxyCodeLine{13     \textcolor{keyword}{private}:}
-\DoxyCodeLine{14         \textcolor{keyword}{const} std::string m\_name;}
-\DoxyCodeLine{15 }
-\DoxyCodeLine{16         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinate}{Coordinate}} mX;}
-\DoxyCodeLine{17         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinate}{Coordinate}} mY;}
-\DoxyCodeLine{18         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinate}{Coordinate}} mZ;}
-\DoxyCodeLine{19         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinate}{Coordinate}} mLongitude;}
-\DoxyCodeLine{20         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinate}{Coordinate}} mLatitude;}
-\DoxyCodeLine{21         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinate}{Coordinate}} mRadius;}
-\DoxyCodeLine{22         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinate}{Coordinate}} mRange;}
-\DoxyCodeLine{23         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinate}{Coordinate}} mRightAscension;}
-\DoxyCodeLine{24         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinate}{Coordinate}} mDeclination;}
-\DoxyCodeLine{25         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinate}{Coordinate}} mColatitude;}
-\DoxyCodeLine{26         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinate}{Coordinate}} mAltitude;}
-\DoxyCodeLine{27 }
-\DoxyCodeLine{28     \textcolor{keyword}{public}:}
-\DoxyCodeLine{29 }
-\DoxyCodeLine{35         \textcolor{keyword}{explicit} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinate_a68e72f1f4a870ca972f0fd2bf6ed1b12}{Coordinate}}(std::string name);}
-\DoxyCodeLine{36         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinate_af132cd11ecc0da396a72084a8c449e33}{\string~Coordinate}}() = \textcolor{keywordflow}{default};}
-\DoxyCodeLine{37 }
-\DoxyCodeLine{38         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinate}{Coordinate}} \&\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinate_a59cd7d7d0e7503492b2cdda824c423b6}{operator=}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinate}{Coordinate}} \&other)}
-\DoxyCodeLine{39         \{}
-\DoxyCodeLine{40             \textcolor{keywordflow}{if} (\textcolor{keyword}{this} == \&other)}
-\DoxyCodeLine{41                 \textcolor{keywordflow}{return} *\textcolor{keyword}{this};}
-\DoxyCodeLine{42 }
-\DoxyCodeLine{43             \textcolor{keyword}{const\_cast<}std::string \&\textcolor{keyword}{>}(m\_name) = other.m\_name;}
-\DoxyCodeLine{44             \textcolor{keywordflow}{return} *\textcolor{keyword}{this};}
-\DoxyCodeLine{45         \}}
-\DoxyCodeLine{46         }
-\DoxyCodeLine{47 }
-\DoxyCodeLine{53         [[nodiscard]] \textcolor{keyword}{const} \textcolor{keywordtype}{char} *\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinate_a59d3df9764ed3baff7ff00ca0dfd94cd}{ToCharArray}}() \textcolor{keyword}{const};}
-\DoxyCodeLine{54 }
-\DoxyCodeLine{55         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinate}{Coordinate}}\& \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinate_ab4799cb855c639f18b44574390325119}{Altitude}}();}
-\DoxyCodeLine{56         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinate}{Coordinate}}\& \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinate_a6a84c095818e1012b09e78de83490daf}{X}}();}
-\DoxyCodeLine{57         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinate}{Coordinate}}\& \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinate_a3d3a9693cacfb32b0a1794e51c4064ad}{Y}}();}
-\DoxyCodeLine{58         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinate}{Coordinate}}\& \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinate_abc5c0c3d05a8d7321e5090b894a58a91}{Z}}();}
-\DoxyCodeLine{59         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinate}{Coordinate}}\& \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinate_a3ece23896ae5d61df311ad3d4325778b}{Longitude}}();}
-\DoxyCodeLine{60         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinate}{Coordinate}}\& \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinate_a9b8015f8efe884209bc1ff2dcc4d435c}{Latitude}}();}
-\DoxyCodeLine{61         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinate}{Coordinate}}\& \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinate_ac907ce9de3b448f12ae30d2c21103b38}{Radius}}();}
-\DoxyCodeLine{62         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinate}{Coordinate}}\& \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinate_a32694339dbd0494a92e02d25b86d0f83}{Range}}();}
-\DoxyCodeLine{63         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinate}{Coordinate}}\& \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinate_ab6383525b4f5ca3972997cc37a591e64}{RightAscension}}();}
-\DoxyCodeLine{64         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinate}{Coordinate}}\& \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinate_a28c43f369a21ef6c7642e594e8f08a1e}{Declination}}();}
-\DoxyCodeLine{65         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinate}{Coordinate}}\& \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinate_adbfb9f0344691209ee42a7a99cf5ebc0}{Colatitude}}();}
-\DoxyCodeLine{66         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinate}{Coordinate}}\& \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinate_adc004e785fabcceb3e3aa9d834c932ff}{ToCoordinateType}}(\textcolor{keyword}{const} std::string \&coordinateType) ;}
-\DoxyCodeLine{67     \};}
-\DoxyCodeLine{68 }
-\DoxyCodeLine{69 \} \textcolor{comment}{// namespace IO::Astrodynamics}}
-\DoxyCodeLine{70 }
-\DoxyCodeLine{71 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00001\ \textcolor{comment}{/*}}
+\DoxyCodeLine{00002\ \textcolor{comment}{\ Copyright\ (c)\ 2021-\/2023.\ Sylvain\ Guillet\ (sylvain.guillet@tutamail.com)}}
+\DoxyCodeLine{00003\ \textcolor{comment}{\ */}}
+\DoxyCodeLine{00004\ \textcolor{preprocessor}{\#ifndef\ COORDINATE\_H}}
+\DoxyCodeLine{00005\ \textcolor{preprocessor}{\#define\ COORDINATE\_H}}
+\DoxyCodeLine{00006\ }
+\DoxyCodeLine{00007\ \textcolor{preprocessor}{\#include\ <string>}}
+\DoxyCodeLine{00008\ }
+\DoxyCodeLine{00009\ \textcolor{keyword}{namespace\ }\mbox{\hyperlink{namespaceIO_1_1Astrodynamics}{IO::Astrodynamics}}}
+\DoxyCodeLine{00010\ \{}
+\DoxyCodeLine{00011\ \ \ \ \ \textcolor{keyword}{class\ }\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinate}{Coordinate}}}
+\DoxyCodeLine{00012\ \ \ \ \ \{}
+\DoxyCodeLine{00013\ \ \ \ \ \textcolor{keyword}{private}:}
+\DoxyCodeLine{00014\ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ std::string\ m\_name;}
+\DoxyCodeLine{00015\ }
+\DoxyCodeLine{00016\ \ \ \ \ \ \ \ \ \textcolor{keyword}{static}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinate}{Coordinate}}\ mX;}
+\DoxyCodeLine{00017\ \ \ \ \ \ \ \ \ \textcolor{keyword}{static}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinate}{Coordinate}}\ mY;}
+\DoxyCodeLine{00018\ \ \ \ \ \ \ \ \ \textcolor{keyword}{static}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinate}{Coordinate}}\ mZ;}
+\DoxyCodeLine{00019\ \ \ \ \ \ \ \ \ \textcolor{keyword}{static}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinate}{Coordinate}}\ mLongitude;}
+\DoxyCodeLine{00020\ \ \ \ \ \ \ \ \ \textcolor{keyword}{static}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinate}{Coordinate}}\ mLatitude;}
+\DoxyCodeLine{00021\ \ \ \ \ \ \ \ \ \textcolor{keyword}{static}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinate}{Coordinate}}\ mRadius;}
+\DoxyCodeLine{00022\ \ \ \ \ \ \ \ \ \textcolor{keyword}{static}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinate}{Coordinate}}\ mRange;}
+\DoxyCodeLine{00023\ \ \ \ \ \ \ \ \ \textcolor{keyword}{static}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinate}{Coordinate}}\ mRightAscension;}
+\DoxyCodeLine{00024\ \ \ \ \ \ \ \ \ \textcolor{keyword}{static}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinate}{Coordinate}}\ mDeclination;}
+\DoxyCodeLine{00025\ \ \ \ \ \ \ \ \ \textcolor{keyword}{static}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinate}{Coordinate}}\ mColatitude;}
+\DoxyCodeLine{00026\ \ \ \ \ \ \ \ \ \textcolor{keyword}{static}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinate}{Coordinate}}\ mAltitude;}
+\DoxyCodeLine{00027\ }
+\DoxyCodeLine{00028\ \ \ \ \ \textcolor{keyword}{public}:}
+\DoxyCodeLine{00029\ }
+\DoxyCodeLine{00035\ \ \ \ \ \ \ \ \ \textcolor{keyword}{explicit}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinate}{Coordinate}}(std::string\ name);}
+\DoxyCodeLine{00036\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinate_af132cd11ecc0da396a72084a8c449e33}{\string~Coordinate}}()\ =\ \textcolor{keywordflow}{default};}
+\DoxyCodeLine{00037\ }
+\DoxyCodeLine{00038\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinate}{Coordinate}}\ \&\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinate_a59cd7d7d0e7503492b2cdda824c423b6}{operator=}}(\textcolor{keyword}{const}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinate}{Coordinate}}\ \&other)}
+\DoxyCodeLine{00039\ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00040\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (\textcolor{keyword}{this}\ ==\ \&other)}
+\DoxyCodeLine{00041\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ *\textcolor{keyword}{this};}
+\DoxyCodeLine{00042\ }
+\DoxyCodeLine{00043\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keyword}{const\_cast<}std::string\ \&\textcolor{keyword}{>}(m\_name)\ =\ other.m\_name;}
+\DoxyCodeLine{00044\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ *\textcolor{keyword}{this};}
+\DoxyCodeLine{00045\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00046\ \ \ \ \ \ \ \ \ }
+\DoxyCodeLine{00047\ }
+\DoxyCodeLine{00053\ \ \ \ \ \ \ \ \ [[nodiscard]]\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{char}\ *\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinate_a59d3df9764ed3baff7ff00ca0dfd94cd}{ToCharArray}}()\ \textcolor{keyword}{const};}
+\DoxyCodeLine{00054\ }
+\DoxyCodeLine{00055\ \ \ \ \ \ \ \ \ \textcolor{keyword}{static}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinate}{Coordinate}}\&\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinate_ab4799cb855c639f18b44574390325119}{Altitude}}();}
+\DoxyCodeLine{00056\ \ \ \ \ \ \ \ \ \textcolor{keyword}{static}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinate}{Coordinate}}\&\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinate_a6a84c095818e1012b09e78de83490daf}{X}}();}
+\DoxyCodeLine{00057\ \ \ \ \ \ \ \ \ \textcolor{keyword}{static}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinate}{Coordinate}}\&\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinate_a3d3a9693cacfb32b0a1794e51c4064ad}{Y}}();}
+\DoxyCodeLine{00058\ \ \ \ \ \ \ \ \ \textcolor{keyword}{static}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinate}{Coordinate}}\&\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinate_abc5c0c3d05a8d7321e5090b894a58a91}{Z}}();}
+\DoxyCodeLine{00059\ \ \ \ \ \ \ \ \ \textcolor{keyword}{static}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinate}{Coordinate}}\&\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinate_a3ece23896ae5d61df311ad3d4325778b}{Longitude}}();}
+\DoxyCodeLine{00060\ \ \ \ \ \ \ \ \ \textcolor{keyword}{static}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinate}{Coordinate}}\&\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinate_a9b8015f8efe884209bc1ff2dcc4d435c}{Latitude}}();}
+\DoxyCodeLine{00061\ \ \ \ \ \ \ \ \ \textcolor{keyword}{static}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinate}{Coordinate}}\&\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinate_ac907ce9de3b448f12ae30d2c21103b38}{Radius}}();}
+\DoxyCodeLine{00062\ \ \ \ \ \ \ \ \ \textcolor{keyword}{static}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinate}{Coordinate}}\&\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinate_a32694339dbd0494a92e02d25b86d0f83}{Range}}();}
+\DoxyCodeLine{00063\ \ \ \ \ \ \ \ \ \textcolor{keyword}{static}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinate}{Coordinate}}\&\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinate_ab6383525b4f5ca3972997cc37a591e64}{RightAscension}}();}
+\DoxyCodeLine{00064\ \ \ \ \ \ \ \ \ \textcolor{keyword}{static}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinate}{Coordinate}}\&\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinate_a28c43f369a21ef6c7642e594e8f08a1e}{Declination}}();}
+\DoxyCodeLine{00065\ \ \ \ \ \ \ \ \ \textcolor{keyword}{static}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinate}{Coordinate}}\&\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinate_adbfb9f0344691209ee42a7a99cf5ebc0}{Colatitude}}();}
+\DoxyCodeLine{00066\ \ \ \ \ \ \ \ \ \textcolor{keyword}{static}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinate}{Coordinate}}\&\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinate_adc004e785fabcceb3e3aa9d834c932ff}{ToCoordinateType}}(\textcolor{keyword}{const}\ std::string\ \&coordinateType)\ ;}
+\DoxyCodeLine{00067\ \ \ \ \ \};}
+\DoxyCodeLine{00068\ }
+\DoxyCodeLine{00069\ \}\ \textcolor{comment}{//\ namespace\ IO::Astrodynamics}}
+\DoxyCodeLine{00070\ }
+\DoxyCodeLine{00071\ \textcolor{preprocessor}{\#endif}}
 
 \end{DoxyCode}

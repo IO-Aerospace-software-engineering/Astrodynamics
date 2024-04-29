@@ -8,7 +8,6 @@
 #include <SDKException.h>
 #include <InertialFrames.h>
 #include <StateVector.h>
-#include <Scenario.h>
 #include "TestParameters.h"
 
 using namespace std::chrono_literals;

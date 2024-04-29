@@ -1,10 +1,17 @@
-\hypertarget{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1CelestialBodyDTO}{}\doxysection{IO\+::Astrodynamics\+::API\+::DTO\+::Celestial\+Body\+DTO Struct Reference}
-\label{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1CelestialBodyDTO}\index{IO::Astrodynamics::API::DTO::CelestialBodyDTO@{IO::Astrodynamics::API::DTO::CelestialBodyDTO}}
+\doxysection{IO\+::Astrodynamics\+::API\+::DTO\+::Celestial\+Body\+DTO Struct Reference}
+\hypertarget{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1CelestialBodyDTO}{}\label{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1CelestialBodyDTO}\index{IO::Astrodynamics::API::DTO::CelestialBodyDTO@{IO::Astrodynamics::API::DTO::CelestialBodyDTO}}
 
 
 {\ttfamily \#include $<$Celestial\+Body\+DTO.\+h$>$}
 
-\doxysubsection*{Public Attributes}
+\doxysubsubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+void \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1CelestialBodyDTO_a6d41c8f664edd0c280c71d6f1116b14f}{Set\+Frame}} (const char \texorpdfstring{$\ast$}{*}frame)
+\item 
+void \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1CelestialBodyDTO_a29fc6552c33ea0962fcc0340432e0a22}{Set\+Name}} (const char \texorpdfstring{$\ast$}{*}name)
+\end{DoxyCompactItemize}
+\doxysubsubsection*{Public Attributes}
 \begin{DoxyCompactItemize}
 \item 
 int \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1CelestialBodyDTO_a4705d051ec19f49d98f166b6c86a102e}{Id}} \{-\/1\}
@@ -13,70 +20,101 @@ int \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1CelestialBodyDTO
 \item 
 int \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1CelestialBodyDTO_aa9fcf9cc797ebd96aeb1fb2cfaeb9a31}{Barycenter\+Of\+Motion\+Id}} \{-\/1\}
 \item 
-const char $\ast$ \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1CelestialBodyDTO_af08f93cf660a111b0e346d388c4c520a}{Name}} \{\}
+char \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1CelestialBodyDTO_a79e2b6727bfcd164cf6d98ea1681e1c6}{Name}} \mbox{[}32\mbox{]}
 \item 
 \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1Vector3DDTO}{IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Vector3\+DDTO}} \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1CelestialBodyDTO_a929fc7cd7ab37cf0cace32b51cb7a76e}{Radii}} \{\}
 \item 
 double \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1CelestialBodyDTO_a488c14928918f3aa2d76416914bfe824}{GM}} \{\}
 \item 
-const char $\ast$ \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1CelestialBodyDTO_a339900194de4ef2244f22e9678328dc0}{Frame\+Name}} \{\}
+char \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1CelestialBodyDTO_a1387d5cbe55ebb040fbeddf22a2b62b8}{Frame\+Name}} \mbox{[}32\mbox{]}
 \item 
-int \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1CelestialBodyDTO_ac080b77e3ac748c93514cdb70e957e53}{Frame\+Id}} \{\}
+int \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1CelestialBodyDTO_ac080b77e3ac748c93514cdb70e957e53}{Frame\+Id}} \{0\}
 \item 
-const char $\ast$ \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1CelestialBodyDTO_ac1661cdbc58c5b594ee9ced9e00301a8}{Error}} \{\}
+double \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1CelestialBodyDTO_a13804decf0604a46eb4e6160c9d0bce6}{J2}} \{0.\+0\}
+\item 
+double \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1CelestialBodyDTO_ac4279e888b2840b88cd4f37c47cdb723}{J3}} \{0.\+0\}
+\item 
+double \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1CelestialBodyDTO_abce77f489130cf67d852bdd595dd1e0a}{J4}} \{0.\+0\}
 \end{DoxyCompactItemize}
 
 
+\doxysubsection{Member Function Documentation}
+\Hypertarget{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1CelestialBodyDTO_a6d41c8f664edd0c280c71d6f1116b14f}\label{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1CelestialBodyDTO_a6d41c8f664edd0c280c71d6f1116b14f} 
+\index{IO::Astrodynamics::API::DTO::CelestialBodyDTO@{IO::Astrodynamics::API::DTO::CelestialBodyDTO}!SetFrame@{SetFrame}}
+\index{SetFrame@{SetFrame}!IO::Astrodynamics::API::DTO::CelestialBodyDTO@{IO::Astrodynamics::API::DTO::CelestialBodyDTO}}
+\doxysubsubsection{\texorpdfstring{SetFrame()}{SetFrame()}}
+{\footnotesize\ttfamily void IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Celestial\+Body\+DTO\+::\+Set\+Frame (\begin{DoxyParamCaption}\item[{const char \texorpdfstring{$\ast$}{*}}]{frame }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\Hypertarget{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1CelestialBodyDTO_a29fc6552c33ea0962fcc0340432e0a22}\label{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1CelestialBodyDTO_a29fc6552c33ea0962fcc0340432e0a22} 
+\index{IO::Astrodynamics::API::DTO::CelestialBodyDTO@{IO::Astrodynamics::API::DTO::CelestialBodyDTO}!SetName@{SetName}}
+\index{SetName@{SetName}!IO::Astrodynamics::API::DTO::CelestialBodyDTO@{IO::Astrodynamics::API::DTO::CelestialBodyDTO}}
+\doxysubsubsection{\texorpdfstring{SetName()}{SetName()}}
+{\footnotesize\ttfamily void IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Celestial\+Body\+DTO\+::\+Set\+Name (\begin{DoxyParamCaption}\item[{const char \texorpdfstring{$\ast$}{*}}]{name }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
 \doxysubsection{Member Data Documentation}
-\mbox{\Hypertarget{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1CelestialBodyDTO_aa9fcf9cc797ebd96aeb1fb2cfaeb9a31}\label{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1CelestialBodyDTO_aa9fcf9cc797ebd96aeb1fb2cfaeb9a31}} 
+\Hypertarget{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1CelestialBodyDTO_aa9fcf9cc797ebd96aeb1fb2cfaeb9a31}\label{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1CelestialBodyDTO_aa9fcf9cc797ebd96aeb1fb2cfaeb9a31} 
 \index{IO::Astrodynamics::API::DTO::CelestialBodyDTO@{IO::Astrodynamics::API::DTO::CelestialBodyDTO}!BarycenterOfMotionId@{BarycenterOfMotionId}}
 \index{BarycenterOfMotionId@{BarycenterOfMotionId}!IO::Astrodynamics::API::DTO::CelestialBodyDTO@{IO::Astrodynamics::API::DTO::CelestialBodyDTO}}
 \doxysubsubsection{\texorpdfstring{BarycenterOfMotionId}{BarycenterOfMotionId}}
 {\footnotesize\ttfamily int IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Celestial\+Body\+DTO\+::\+Barycenter\+Of\+Motion\+Id \{-\/1\}}
 
-\mbox{\Hypertarget{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1CelestialBodyDTO_a6b3763857d7654e5d7b2b4c3530b9eee}\label{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1CelestialBodyDTO_a6b3763857d7654e5d7b2b4c3530b9eee}} 
+\Hypertarget{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1CelestialBodyDTO_a6b3763857d7654e5d7b2b4c3530b9eee}\label{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1CelestialBodyDTO_a6b3763857d7654e5d7b2b4c3530b9eee} 
 \index{IO::Astrodynamics::API::DTO::CelestialBodyDTO@{IO::Astrodynamics::API::DTO::CelestialBodyDTO}!CenterOfMotionId@{CenterOfMotionId}}
 \index{CenterOfMotionId@{CenterOfMotionId}!IO::Astrodynamics::API::DTO::CelestialBodyDTO@{IO::Astrodynamics::API::DTO::CelestialBodyDTO}}
 \doxysubsubsection{\texorpdfstring{CenterOfMotionId}{CenterOfMotionId}}
 {\footnotesize\ttfamily int IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Celestial\+Body\+DTO\+::\+Center\+Of\+Motion\+Id \{-\/1\}}
 
-\mbox{\Hypertarget{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1CelestialBodyDTO_ac1661cdbc58c5b594ee9ced9e00301a8}\label{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1CelestialBodyDTO_ac1661cdbc58c5b594ee9ced9e00301a8}} 
-\index{IO::Astrodynamics::API::DTO::CelestialBodyDTO@{IO::Astrodynamics::API::DTO::CelestialBodyDTO}!Error@{Error}}
-\index{Error@{Error}!IO::Astrodynamics::API::DTO::CelestialBodyDTO@{IO::Astrodynamics::API::DTO::CelestialBodyDTO}}
-\doxysubsubsection{\texorpdfstring{Error}{Error}}
-{\footnotesize\ttfamily const char$\ast$ IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Celestial\+Body\+DTO\+::\+Error \{\}}
-
-\mbox{\Hypertarget{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1CelestialBodyDTO_ac080b77e3ac748c93514cdb70e957e53}\label{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1CelestialBodyDTO_ac080b77e3ac748c93514cdb70e957e53}} 
+\Hypertarget{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1CelestialBodyDTO_ac080b77e3ac748c93514cdb70e957e53}\label{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1CelestialBodyDTO_ac080b77e3ac748c93514cdb70e957e53} 
 \index{IO::Astrodynamics::API::DTO::CelestialBodyDTO@{IO::Astrodynamics::API::DTO::CelestialBodyDTO}!FrameId@{FrameId}}
 \index{FrameId@{FrameId}!IO::Astrodynamics::API::DTO::CelestialBodyDTO@{IO::Astrodynamics::API::DTO::CelestialBodyDTO}}
 \doxysubsubsection{\texorpdfstring{FrameId}{FrameId}}
-{\footnotesize\ttfamily int IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Celestial\+Body\+DTO\+::\+Frame\+Id \{\}}
+{\footnotesize\ttfamily int IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Celestial\+Body\+DTO\+::\+Frame\+Id \{0\}}
 
-\mbox{\Hypertarget{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1CelestialBodyDTO_a339900194de4ef2244f22e9678328dc0}\label{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1CelestialBodyDTO_a339900194de4ef2244f22e9678328dc0}} 
+\Hypertarget{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1CelestialBodyDTO_a1387d5cbe55ebb040fbeddf22a2b62b8}\label{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1CelestialBodyDTO_a1387d5cbe55ebb040fbeddf22a2b62b8} 
 \index{IO::Astrodynamics::API::DTO::CelestialBodyDTO@{IO::Astrodynamics::API::DTO::CelestialBodyDTO}!FrameName@{FrameName}}
 \index{FrameName@{FrameName}!IO::Astrodynamics::API::DTO::CelestialBodyDTO@{IO::Astrodynamics::API::DTO::CelestialBodyDTO}}
 \doxysubsubsection{\texorpdfstring{FrameName}{FrameName}}
-{\footnotesize\ttfamily const char$\ast$ IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Celestial\+Body\+DTO\+::\+Frame\+Name \{\}}
+{\footnotesize\ttfamily char IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Celestial\+Body\+DTO\+::\+Frame\+Name\mbox{[}32\mbox{]}}
 
-\mbox{\Hypertarget{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1CelestialBodyDTO_a488c14928918f3aa2d76416914bfe824}\label{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1CelestialBodyDTO_a488c14928918f3aa2d76416914bfe824}} 
+\Hypertarget{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1CelestialBodyDTO_a488c14928918f3aa2d76416914bfe824}\label{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1CelestialBodyDTO_a488c14928918f3aa2d76416914bfe824} 
 \index{IO::Astrodynamics::API::DTO::CelestialBodyDTO@{IO::Astrodynamics::API::DTO::CelestialBodyDTO}!GM@{GM}}
 \index{GM@{GM}!IO::Astrodynamics::API::DTO::CelestialBodyDTO@{IO::Astrodynamics::API::DTO::CelestialBodyDTO}}
 \doxysubsubsection{\texorpdfstring{GM}{GM}}
 {\footnotesize\ttfamily double IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Celestial\+Body\+DTO\+::\+GM \{\}}
 
-\mbox{\Hypertarget{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1CelestialBodyDTO_a4705d051ec19f49d98f166b6c86a102e}\label{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1CelestialBodyDTO_a4705d051ec19f49d98f166b6c86a102e}} 
+\Hypertarget{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1CelestialBodyDTO_a4705d051ec19f49d98f166b6c86a102e}\label{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1CelestialBodyDTO_a4705d051ec19f49d98f166b6c86a102e} 
 \index{IO::Astrodynamics::API::DTO::CelestialBodyDTO@{IO::Astrodynamics::API::DTO::CelestialBodyDTO}!Id@{Id}}
 \index{Id@{Id}!IO::Astrodynamics::API::DTO::CelestialBodyDTO@{IO::Astrodynamics::API::DTO::CelestialBodyDTO}}
 \doxysubsubsection{\texorpdfstring{Id}{Id}}
 {\footnotesize\ttfamily int IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Celestial\+Body\+DTO\+::\+Id \{-\/1\}}
 
-\mbox{\Hypertarget{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1CelestialBodyDTO_af08f93cf660a111b0e346d388c4c520a}\label{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1CelestialBodyDTO_af08f93cf660a111b0e346d388c4c520a}} 
+\Hypertarget{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1CelestialBodyDTO_a13804decf0604a46eb4e6160c9d0bce6}\label{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1CelestialBodyDTO_a13804decf0604a46eb4e6160c9d0bce6} 
+\index{IO::Astrodynamics::API::DTO::CelestialBodyDTO@{IO::Astrodynamics::API::DTO::CelestialBodyDTO}!J2@{J2}}
+\index{J2@{J2}!IO::Astrodynamics::API::DTO::CelestialBodyDTO@{IO::Astrodynamics::API::DTO::CelestialBodyDTO}}
+\doxysubsubsection{\texorpdfstring{J2}{J2}}
+{\footnotesize\ttfamily double IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Celestial\+Body\+DTO\+::\+J2 \{0.\+0\}}
+
+\Hypertarget{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1CelestialBodyDTO_ac4279e888b2840b88cd4f37c47cdb723}\label{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1CelestialBodyDTO_ac4279e888b2840b88cd4f37c47cdb723} 
+\index{IO::Astrodynamics::API::DTO::CelestialBodyDTO@{IO::Astrodynamics::API::DTO::CelestialBodyDTO}!J3@{J3}}
+\index{J3@{J3}!IO::Astrodynamics::API::DTO::CelestialBodyDTO@{IO::Astrodynamics::API::DTO::CelestialBodyDTO}}
+\doxysubsubsection{\texorpdfstring{J3}{J3}}
+{\footnotesize\ttfamily double IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Celestial\+Body\+DTO\+::\+J3 \{0.\+0\}}
+
+\Hypertarget{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1CelestialBodyDTO_abce77f489130cf67d852bdd595dd1e0a}\label{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1CelestialBodyDTO_abce77f489130cf67d852bdd595dd1e0a} 
+\index{IO::Astrodynamics::API::DTO::CelestialBodyDTO@{IO::Astrodynamics::API::DTO::CelestialBodyDTO}!J4@{J4}}
+\index{J4@{J4}!IO::Astrodynamics::API::DTO::CelestialBodyDTO@{IO::Astrodynamics::API::DTO::CelestialBodyDTO}}
+\doxysubsubsection{\texorpdfstring{J4}{J4}}
+{\footnotesize\ttfamily double IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Celestial\+Body\+DTO\+::\+J4 \{0.\+0\}}
+
+\Hypertarget{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1CelestialBodyDTO_a79e2b6727bfcd164cf6d98ea1681e1c6}\label{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1CelestialBodyDTO_a79e2b6727bfcd164cf6d98ea1681e1c6} 
 \index{IO::Astrodynamics::API::DTO::CelestialBodyDTO@{IO::Astrodynamics::API::DTO::CelestialBodyDTO}!Name@{Name}}
 \index{Name@{Name}!IO::Astrodynamics::API::DTO::CelestialBodyDTO@{IO::Astrodynamics::API::DTO::CelestialBodyDTO}}
 \doxysubsubsection{\texorpdfstring{Name}{Name}}
-{\footnotesize\ttfamily const char$\ast$ IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Celestial\+Body\+DTO\+::\+Name \{\}}
+{\footnotesize\ttfamily char IO\+::\+Astrodynamics\+::\+API\+::\+DTO\+::\+Celestial\+Body\+DTO\+::\+Name\mbox{[}32\mbox{]}}
 
-\mbox{\Hypertarget{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1CelestialBodyDTO_a929fc7cd7ab37cf0cace32b51cb7a76e}\label{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1CelestialBodyDTO_a929fc7cd7ab37cf0cace32b51cb7a76e}} 
+\Hypertarget{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1CelestialBodyDTO_a929fc7cd7ab37cf0cace32b51cb7a76e}\label{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1CelestialBodyDTO_a929fc7cd7ab37cf0cace32b51cb7a76e} 
 \index{IO::Astrodynamics::API::DTO::CelestialBodyDTO@{IO::Astrodynamics::API::DTO::CelestialBodyDTO}!Radii@{Radii}}
 \index{Radii@{Radii}!IO::Astrodynamics::API::DTO::CelestialBodyDTO@{IO::Astrodynamics::API::DTO::CelestialBodyDTO}}
 \doxysubsubsection{\texorpdfstring{Radii}{Radii}}

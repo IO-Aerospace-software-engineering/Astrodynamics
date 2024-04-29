@@ -6,12 +6,8 @@
 #include <LaunchSite.h>
 #include <Constants.h>
 #include <SDKException.h>
-#include <InertialFrames.h>
 #include <StateVector.h>
 #include <AzimuthRange.h>
-#include <Scenario.h>
-#include <Window.h>
-#include <UTC.h>
 #include "TestParameters.h"
 
 TEST(LaunchSite, AddAzimuth)

@@ -13,11 +13,6 @@ var searchData=
   ['instrumentframefile_2eh_10',['InstrumentFrameFile.h',['../InstrumentFrameFile_8h.html',1,'']]],
   ['instrumentkernel_2ecpp_11',['InstrumentKernel.cpp',['../InstrumentKernel_8cpp.html',1,'']]],
   ['instrumentkernel_2eh_12',['InstrumentKernel.h',['../InstrumentKernel_8h.html',1,'']]],
-  ['instrumentpointingtoattitude_2ecpp_13',['InstrumentPointingToAttitude.cpp',['../InstrumentPointingToAttitude_8cpp.html',1,'']]],
-  ['instrumentpointingtoattitude_2eh_14',['InstrumentPointingToAttitude.h',['../InstrumentPointingToAttitude_8h.html',1,'']]],
-  ['instrumentpointingtoattitudedto_2eh_15',['InstrumentPointingToAttitudeDTO.h',['../InstrumentPointingToAttitudeDTO_8h.html',1,'']]],
-  ['integratorbase_2ecpp_16',['IntegratorBase.cpp',['../IntegratorBase_8cpp.html',1,'']]],
-  ['integratorbase_2eh_17',['IntegratorBase.h',['../IntegratorBase_8h.html',1,'']]],
-  ['invalidargumentexception_2ecpp_18',['InvalidArgumentException.cpp',['../InvalidArgumentException_8cpp.html',1,'']]],
-  ['invalidargumentexception_2eh_19',['InvalidArgumentException.h',['../InvalidArgumentException_8h.html',1,'']]]
+  ['invalidargumentexception_2ecpp_13',['InvalidArgumentException.cpp',['../InvalidArgumentException_8cpp.html',1,'']]],
+  ['invalidargumentexception_2eh_14',['InvalidArgumentException.h',['../InvalidArgumentException_8h.html',1,'']]]
 ];

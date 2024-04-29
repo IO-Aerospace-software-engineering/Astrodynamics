@@ -172,14 +172,6 @@ namespace IO::Astrodynamics::OrbitalParameters
          */
         bool operator==(const StateVector &other) const;
 
-        /**
-         * @brief Check and update if another body becomes the center of motion. If condition occurs the state vector is updated and returned
-         * 
-         * @param stateVector 
-         * @return IO::Astrodynamics::OrbitalParameters::StateVector
-         */
-        [[nodiscard]] IO::Astrodynamics::OrbitalParameters::StateVector CheckAndUpdateCenterOfMotion() const;
-
         using IO::Astrodynamics::OrbitalParameters::OrbitalParameters::ToStateVector;
 
         /**

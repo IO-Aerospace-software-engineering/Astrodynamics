@@ -1,91 +1,91 @@
-\hypertarget{EquinoctialElements_8h_source}{}\doxysection{Equinoctial\+Elements.\+h}
-\label{EquinoctialElements_8h_source}\index{IO.Astrodynamics/OrbitalParameters/EquinoctialElements.h@{IO.Astrodynamics/OrbitalParameters/EquinoctialElements.h}}
+\doxysection{Equinoctial\+Elements.\+h}
+\hypertarget{EquinoctialElements_8h_source}{}\label{EquinoctialElements_8h_source}\index{IO.Astrodynamics/OrbitalParameters/EquinoctialElements.h@{IO.Astrodynamics/OrbitalParameters/EquinoctialElements.h}}
 \mbox{\hyperlink{EquinoctialElements_8h}{Go to the documentation of this file.}}
 \begin{DoxyCode}{0}
-\DoxyCodeLine{1 \textcolor{comment}{/*}}
-\DoxyCodeLine{2 \textcolor{comment}{ Copyright (c) 2021-\/2023. Sylvain Guillet (sylvain.guillet@tutamail.com)}}
-\DoxyCodeLine{3 \textcolor{comment}{ */}}
-\DoxyCodeLine{4 \textcolor{preprocessor}{\#ifndef EQUINOCTIAL\_ELEMENTS\_H}}
-\DoxyCodeLine{5 \textcolor{preprocessor}{\#define EQUINOCTIAL\_ELEMENTS\_H}}
-\DoxyCodeLine{6 }
-\DoxyCodeLine{7 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{OrbitalParameters_8h}{OrbitalParameters.h}}>}}
-\DoxyCodeLine{8 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{CelestialBody_8h}{CelestialBody.h}}>}}
-\DoxyCodeLine{9 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{StateVector_8h}{StateVector.h}}>}}
-\DoxyCodeLine{10 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{TDB_8h}{TDB.h}}>}}
-\DoxyCodeLine{11 \textcolor{preprocessor}{\#include <cmath>}}
-\DoxyCodeLine{12 \textcolor{preprocessor}{\#include <memory>}}
-\DoxyCodeLine{13 }
-\DoxyCodeLine{14 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1OrbitalParameters}{IO::Astrodynamics::OrbitalParameters}}}
-\DoxyCodeLine{15 \{}
-\DoxyCodeLine{16     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1EquinoctialElements}{EquinoctialElements}} final : \textcolor{keyword}{public} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters}{OrbitalParameters}}}
-\DoxyCodeLine{17     \{}
-\DoxyCodeLine{18     \textcolor{keyword}{private}:}
-\DoxyCodeLine{19         \textcolor{keyword}{const} \textcolor{keywordtype}{double} m\_semiMajorAxis\{\};}
-\DoxyCodeLine{20         \textcolor{keyword}{const} \textcolor{keywordtype}{double} m\_h\{\};}
-\DoxyCodeLine{21         \textcolor{keyword}{const} \textcolor{keywordtype}{double} m\_k\{\};}
-\DoxyCodeLine{22         \textcolor{keyword}{const} \textcolor{keywordtype}{double} m\_p\{\};}
-\DoxyCodeLine{23         \textcolor{keyword}{const} \textcolor{keywordtype}{double} m\_q\{\};}
-\DoxyCodeLine{24         \textcolor{keyword}{const} \textcolor{keywordtype}{double} m\_L\{\};}
-\DoxyCodeLine{25         \textcolor{keyword}{const} \textcolor{keywordtype}{double} m\_periapsisLongitudeRate\{\};}
-\DoxyCodeLine{26         \textcolor{keyword}{const} \textcolor{keywordtype}{double} m\_meanAnomalyRate\{\};}
-\DoxyCodeLine{27         \textcolor{keyword}{const} \textcolor{keywordtype}{double} m\_rightAscensionOfThePole\{\};}
-\DoxyCodeLine{28         \textcolor{keyword}{const} \textcolor{keywordtype}{double} m\_declinationOfThePole\{\};}
-\DoxyCodeLine{29         \textcolor{keyword}{const} \textcolor{keywordtype}{double} m\_ascendingNodeLongitudeRate\{\};    }
-\DoxyCodeLine{30 }
-\DoxyCodeLine{31         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO::Astrodynamics::Time::TimeSpan}} m\_period;}
-\DoxyCodeLine{32         \textcolor{keywordtype}{double} m\_elements[9]\{\};}
-\DoxyCodeLine{33 }
-\DoxyCodeLine{34     \textcolor{keyword}{public}:}
-\DoxyCodeLine{35         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1EquinoctialElements_a9210cef375b15b946f4123d20954dd3c}{EquinoctialElements}}(\textcolor{keyword}{const} std::shared\_ptr<IO::Astrodynamics::Body::CelestialBody> \&centerOfMotion, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO::Astrodynamics::Time::TDB}} \&epoch, \textcolor{keywordtype}{double} semiMajorAxis, \textcolor{keywordtype}{double} h, \textcolor{keywordtype}{double} k, \textcolor{keywordtype}{double} p, \textcolor{keywordtype}{double} q, \textcolor{keywordtype}{double} L, \textcolor{keywordtype}{double} periapsisLongitudeRate, \textcolor{keywordtype}{double} ascendingNodeLongitudeRate, \textcolor{keywordtype}{double} rightAscensionOfThePole, \textcolor{keywordtype}{double} declinationOfThePole, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Frames_1_1Frames}{IO::Astrodynamics::Frames::Frames}} \&frame);}
-\DoxyCodeLine{36 }
-\DoxyCodeLine{37         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1EquinoctialElements_a9210cef375b15b946f4123d20954dd3c}{EquinoctialElements}}(\textcolor{keyword}{const} std::shared\_ptr<IO::Astrodynamics::Body::CelestialBody> \&centerOfMotion, \textcolor{keywordtype}{double} semiMajorAxis, \textcolor{keywordtype}{double} eccentricity, \textcolor{keywordtype}{double} inclination, \textcolor{keywordtype}{double} perigeeArgument, \textcolor{keywordtype}{double} longitudeAN, \textcolor{keywordtype}{double} meanAnomaly, \textcolor{keywordtype}{double} periapsisLongitudeRate, \textcolor{keywordtype}{double} ascendingNodeLongitudeRate, \textcolor{keywordtype}{double} rightAscensionOfThePole, \textcolor{keywordtype}{double} declinationOfThePole, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO::Astrodynamics::Time::TDB}} \&epoch, \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Frames_1_1Frames}{IO::Astrodynamics::Frames::Frames}} \&frame);}
-\DoxyCodeLine{38 }
-\DoxyCodeLine{43         [[nodiscard]] \textcolor{keyword}{inline} \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1EquinoctialElements_a3d44e15f10040583bef14b229e9e8e44}{GetH}}()\textcolor{keyword}{ const }\{ \textcolor{keywordflow}{return} m\_h; \}}
-\DoxyCodeLine{44 }
-\DoxyCodeLine{49         [[nodiscard]] \textcolor{keyword}{inline} \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1EquinoctialElements_aa4c49e0910573f733ff468e98e906764}{GetK}}()\textcolor{keyword}{ const }\{ \textcolor{keywordflow}{return} m\_k; \}}
-\DoxyCodeLine{50 }
-\DoxyCodeLine{55         [[nodiscard]] \textcolor{keyword}{inline} \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1EquinoctialElements_a50bd37a980a2c9df5393e2cc37b03ebb}{GetP}}()\textcolor{keyword}{ const }\{ \textcolor{keywordflow}{return} m\_p; \}}
-\DoxyCodeLine{56 }
-\DoxyCodeLine{61         [[nodiscard]] \textcolor{keyword}{inline} \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1EquinoctialElements_ae4e855644c131736dfbe0420d308b381}{GetQ}}()\textcolor{keyword}{ const }\{ \textcolor{keywordflow}{return} m\_q; \}}
-\DoxyCodeLine{62 }
-\DoxyCodeLine{67         [[nodiscard]] \textcolor{keyword}{inline} \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1EquinoctialElements_a6d70936f6e20e125c6b709e794610e82}{GetL}}()\textcolor{keyword}{ const }\{ \textcolor{keywordflow}{return} m\_L; \}}
-\DoxyCodeLine{68 }
-\DoxyCodeLine{73         [[nodiscard]] \textcolor{keyword}{inline} \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1EquinoctialElements_a2c207f153034cd828f3e6721de8bd112}{GetPeriapsisLongitudeRate}}()\textcolor{keyword}{ const }\{ \textcolor{keywordflow}{return} m\_periapsisLongitudeRate; \}}
-\DoxyCodeLine{74 }
-\DoxyCodeLine{79         [[nodiscard]] \textcolor{keyword}{inline} \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1EquinoctialElements_a8137128347654848fa25e8f08db1670c}{GetAscendingNodeLongitudeRate}}()\textcolor{keyword}{ const }\{ \textcolor{keywordflow}{return} m\_ascendingNodeLongitudeRate; \}}
-\DoxyCodeLine{80 }
-\DoxyCodeLine{85         [[nodiscard]] \textcolor{keyword}{inline} \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1EquinoctialElements_a21fba6b6c6000ff042c0c7ee511169b6}{GetMeanAnomalyRate}}()\textcolor{keyword}{ const }\{ \textcolor{keywordflow}{return} m\_meanAnomalyRate; \}}
-\DoxyCodeLine{86 }
-\DoxyCodeLine{91         [[nodiscard]] \textcolor{keyword}{inline} \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1EquinoctialElements_a9b028cccb22095c0579a46e9ba70e2c3}{GetRightAscensionOfPole}}()\textcolor{keyword}{ const }\{ \textcolor{keywordflow}{return} m\_rightAscensionOfThePole; \}}
-\DoxyCodeLine{92 }
-\DoxyCodeLine{97         [[nodiscard]] \textcolor{keyword}{inline} \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1EquinoctialElements_adacc4500e695975214f4e65a32daec74}{GetDeclinationOfPole}}()\textcolor{keyword}{ const }\{ \textcolor{keywordflow}{return} m\_declinationOfThePole; \}}
-\DoxyCodeLine{98 }
-\DoxyCodeLine{99         \textcolor{comment}{// Inherited via OrbitalParameters}}
-\DoxyCodeLine{100         [[nodiscard]] \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO::Astrodynamics::Time::TimeSpan}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1EquinoctialElements_a76870005ad5ac6c0561db7fb4a5c1cc7}{GetPeriod}}() \textcolor{keyword}{const override};}
-\DoxyCodeLine{101 }
-\DoxyCodeLine{106         [[nodiscard]] \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO::Astrodynamics::Math::Vector3D}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1EquinoctialElements_a557ceb06853cf7f9cac332019670dece}{GetSpecificAngularMomentum}}() \textcolor{keyword}{const override};}
-\DoxyCodeLine{107 }
-\DoxyCodeLine{113         [[nodiscard]] \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}{StateVector}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_af0b880e2daa11029e0c037302fb05d70}{ToStateVector}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO::Astrodynamics::Time::TDB}} \&epoch) \textcolor{keyword}{const override};}
-\DoxyCodeLine{114 }
-\DoxyCodeLine{119         [[nodiscard]] \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1EquinoctialElements_ac23ccfcfcd873da61d51ce6108e32212}{GetEccentricity}}() \textcolor{keyword}{const override};}
-\DoxyCodeLine{120 }
-\DoxyCodeLine{125         [[nodiscard]] \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1EquinoctialElements_afc9ae0422c0a41629cd5a6fd8a266704}{GetSemiMajorAxis}}()\textcolor{keyword}{ const override }\{ \textcolor{keywordflow}{return} m\_semiMajorAxis; \}}
-\DoxyCodeLine{126 }
-\DoxyCodeLine{131         [[nodiscard]] \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1EquinoctialElements_ac9d4b6f63b2cd16581ed7209678525c1}{GetInclination}}() \textcolor{keyword}{const override};}
-\DoxyCodeLine{132 }
-\DoxyCodeLine{137         [[nodiscard]] \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1EquinoctialElements_ad0a8c51d8cd1f69e8236e675236defa3}{GetPeriapsisArgument}}() \textcolor{keyword}{const override};}
-\DoxyCodeLine{138 }
-\DoxyCodeLine{143         [[nodiscard]] \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1EquinoctialElements_a29f2bf43e689a9466bf3ef806fa6e771}{GetRightAscendingNodeLongitude}}() \textcolor{keyword}{const override};}
-\DoxyCodeLine{144 }
-\DoxyCodeLine{145         \textcolor{comment}{//Get non pure virtual function accessible}}
-\DoxyCodeLine{146         \textcolor{keyword}{using} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_ae7c1fd9b84ebf0bd1fa9199717f86e02}{OrbitalParameters::GetMeanAnomaly}};}
-\DoxyCodeLine{151         [[nodiscard]] \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1EquinoctialElements_a1398984fb1d6b626c39d55f754221c05}{GetMeanAnomaly}}() \textcolor{keyword}{const override};}
-\DoxyCodeLine{152 }
-\DoxyCodeLine{157         [[nodiscard]] \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1EquinoctialElements_adbccfe408ce8f8eb952796f6ea88b73c}{GetSpecificOrbitalEnergy}}() \textcolor{keyword}{const override};}
-\DoxyCodeLine{158 }
-\DoxyCodeLine{159         \textcolor{keyword}{using} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_af0b880e2daa11029e0c037302fb05d70}{IO::Astrodynamics::OrbitalParameters::OrbitalParameters::ToStateVector}};}
-\DoxyCodeLine{160     \};}
-\DoxyCodeLine{161 \}}
-\DoxyCodeLine{162 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00001\ \textcolor{comment}{/*}}
+\DoxyCodeLine{00002\ \textcolor{comment}{\ Copyright\ (c)\ 2021-\/2023.\ Sylvain\ Guillet\ (sylvain.guillet@tutamail.com)}}
+\DoxyCodeLine{00003\ \textcolor{comment}{\ */}}
+\DoxyCodeLine{00004\ \textcolor{preprocessor}{\#ifndef\ EQUINOCTIAL\_ELEMENTS\_H}}
+\DoxyCodeLine{00005\ \textcolor{preprocessor}{\#define\ EQUINOCTIAL\_ELEMENTS\_H}}
+\DoxyCodeLine{00006\ }
+\DoxyCodeLine{00007\ \textcolor{preprocessor}{\#include\ <\mbox{\hyperlink{OrbitalParameters_8h}{OrbitalParameters.h}}>}}
+\DoxyCodeLine{00008\ \textcolor{preprocessor}{\#include\ <\mbox{\hyperlink{CelestialBody_8h}{CelestialBody.h}}>}}
+\DoxyCodeLine{00009\ \textcolor{preprocessor}{\#include\ <\mbox{\hyperlink{StateVector_8h}{StateVector.h}}>}}
+\DoxyCodeLine{00010\ \textcolor{preprocessor}{\#include\ <\mbox{\hyperlink{TDB_8h}{TDB.h}}>}}
+\DoxyCodeLine{00011\ \textcolor{preprocessor}{\#include\ <cmath>}}
+\DoxyCodeLine{00012\ \textcolor{preprocessor}{\#include\ <memory>}}
+\DoxyCodeLine{00013\ }
+\DoxyCodeLine{00014\ \textcolor{keyword}{namespace\ }\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1OrbitalParameters}{IO::Astrodynamics::OrbitalParameters}}}
+\DoxyCodeLine{00015\ \{}
+\DoxyCodeLine{00016\ \ \ \ \ \textcolor{keyword}{class\ }\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1EquinoctialElements}{EquinoctialElements}}\ final\ :\ \textcolor{keyword}{public}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters}{OrbitalParameters}}}
+\DoxyCodeLine{00017\ \ \ \ \ \{}
+\DoxyCodeLine{00018\ \ \ \ \ \textcolor{keyword}{private}:}
+\DoxyCodeLine{00019\ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ \textcolor{keywordtype}{double}\ m\_semiMajorAxis\{\};}
+\DoxyCodeLine{00020\ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ \textcolor{keywordtype}{double}\ m\_h\{\};}
+\DoxyCodeLine{00021\ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ \textcolor{keywordtype}{double}\ m\_k\{\};}
+\DoxyCodeLine{00022\ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ \textcolor{keywordtype}{double}\ m\_p\{\};}
+\DoxyCodeLine{00023\ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ \textcolor{keywordtype}{double}\ m\_q\{\};}
+\DoxyCodeLine{00024\ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ \textcolor{keywordtype}{double}\ m\_L\{\};}
+\DoxyCodeLine{00025\ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ \textcolor{keywordtype}{double}\ m\_periapsisLongitudeRate\{\};}
+\DoxyCodeLine{00026\ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ \textcolor{keywordtype}{double}\ m\_meanAnomalyRate\{\};}
+\DoxyCodeLine{00027\ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ \textcolor{keywordtype}{double}\ m\_rightAscensionOfThePole\{\};}
+\DoxyCodeLine{00028\ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ \textcolor{keywordtype}{double}\ m\_declinationOfThePole\{\};}
+\DoxyCodeLine{00029\ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ \textcolor{keywordtype}{double}\ m\_ascendingNodeLongitudeRate\{\};\ \ \ \ }
+\DoxyCodeLine{00030\ }
+\DoxyCodeLine{00031\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO::Astrodynamics::Time::TimeSpan}}\ m\_period;}
+\DoxyCodeLine{00032\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{double}\ m\_elements[9]\{\};}
+\DoxyCodeLine{00033\ }
+\DoxyCodeLine{00034\ \ \ \ \ \textcolor{keyword}{public}:}
+\DoxyCodeLine{00035\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1EquinoctialElements}{EquinoctialElements}}(\textcolor{keyword}{const}\ std::shared\_ptr<IO::Astrodynamics::Body::CelestialBody>\ \&centerOfMotion,\ \textcolor{keyword}{const}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO::Astrodynamics::Time::TDB}}\ \&epoch,\ \textcolor{keywordtype}{double}\ semiMajorAxis,\ \textcolor{keywordtype}{double}\ h,\ \textcolor{keywordtype}{double}\ k,\ \textcolor{keywordtype}{double}\ p,\ \textcolor{keywordtype}{double}\ q,\ \textcolor{keywordtype}{double}\ L,\ \textcolor{keywordtype}{double}\ periapsisLongitudeRate,\ \textcolor{keywordtype}{double}\ ascendingNodeLongitudeRate,\ \textcolor{keywordtype}{double}\ rightAscensionOfThePole,\ \textcolor{keywordtype}{double}\ declinationOfThePole,\ \textcolor{keyword}{const}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Frames_1_1Frames}{IO::Astrodynamics::Frames::Frames}}\ \&frame);}
+\DoxyCodeLine{00036\ }
+\DoxyCodeLine{00037\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1EquinoctialElements}{EquinoctialElements}}(\textcolor{keyword}{const}\ std::shared\_ptr<IO::Astrodynamics::Body::CelestialBody>\ \&centerOfMotion,\ \textcolor{keywordtype}{double}\ semiMajorAxis,\ \textcolor{keywordtype}{double}\ eccentricity,\ \textcolor{keywordtype}{double}\ inclination,\ \textcolor{keywordtype}{double}\ perigeeArgument,\ \textcolor{keywordtype}{double}\ longitudeAN,\ \textcolor{keywordtype}{double}\ meanAnomaly,\ \textcolor{keywordtype}{double}\ periapsisLongitudeRate,\ \textcolor{keywordtype}{double}\ ascendingNodeLongitudeRate,\ \textcolor{keywordtype}{double}\ rightAscensionOfThePole,\ \textcolor{keywordtype}{double}\ declinationOfThePole,\ \textcolor{keyword}{const}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO::Astrodynamics::Time::TDB}}\ \&epoch,\ \textcolor{keyword}{const}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Frames_1_1Frames}{IO::Astrodynamics::Frames::Frames}}\ \&frame);}
+\DoxyCodeLine{00038\ }
+\DoxyCodeLine{00043\ \ \ \ \ \ \ \ \ [[nodiscard]]\ \textcolor{keyword}{inline}\ \textcolor{keywordtype}{double}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1EquinoctialElements_a3d44e15f10040583bef14b229e9e8e44}{GetH}}()\textcolor{keyword}{\ const\ }\{\ \textcolor{keywordflow}{return}\ m\_h;\ \}}
+\DoxyCodeLine{00044\ }
+\DoxyCodeLine{00049\ \ \ \ \ \ \ \ \ [[nodiscard]]\ \textcolor{keyword}{inline}\ \textcolor{keywordtype}{double}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1EquinoctialElements_aa4c49e0910573f733ff468e98e906764}{GetK}}()\textcolor{keyword}{\ const\ }\{\ \textcolor{keywordflow}{return}\ m\_k;\ \}}
+\DoxyCodeLine{00050\ }
+\DoxyCodeLine{00055\ \ \ \ \ \ \ \ \ [[nodiscard]]\ \textcolor{keyword}{inline}\ \textcolor{keywordtype}{double}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1EquinoctialElements_a50bd37a980a2c9df5393e2cc37b03ebb}{GetP}}()\textcolor{keyword}{\ const\ }\{\ \textcolor{keywordflow}{return}\ m\_p;\ \}}
+\DoxyCodeLine{00056\ }
+\DoxyCodeLine{00061\ \ \ \ \ \ \ \ \ [[nodiscard]]\ \textcolor{keyword}{inline}\ \textcolor{keywordtype}{double}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1EquinoctialElements_ae4e855644c131736dfbe0420d308b381}{GetQ}}()\textcolor{keyword}{\ const\ }\{\ \textcolor{keywordflow}{return}\ m\_q;\ \}}
+\DoxyCodeLine{00062\ }
+\DoxyCodeLine{00067\ \ \ \ \ \ \ \ \ [[nodiscard]]\ \textcolor{keyword}{inline}\ \textcolor{keywordtype}{double}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1EquinoctialElements_a6d70936f6e20e125c6b709e794610e82}{GetL}}()\textcolor{keyword}{\ const\ }\{\ \textcolor{keywordflow}{return}\ m\_L;\ \}}
+\DoxyCodeLine{00068\ }
+\DoxyCodeLine{00073\ \ \ \ \ \ \ \ \ [[nodiscard]]\ \textcolor{keyword}{inline}\ \textcolor{keywordtype}{double}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1EquinoctialElements_a2c207f153034cd828f3e6721de8bd112}{GetPeriapsisLongitudeRate}}()\textcolor{keyword}{\ const\ }\{\ \textcolor{keywordflow}{return}\ m\_periapsisLongitudeRate;\ \}}
+\DoxyCodeLine{00074\ }
+\DoxyCodeLine{00079\ \ \ \ \ \ \ \ \ [[nodiscard]]\ \textcolor{keyword}{inline}\ \textcolor{keywordtype}{double}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1EquinoctialElements_a8137128347654848fa25e8f08db1670c}{GetAscendingNodeLongitudeRate}}()\textcolor{keyword}{\ const\ }\{\ \textcolor{keywordflow}{return}\ m\_ascendingNodeLongitudeRate;\ \}}
+\DoxyCodeLine{00080\ }
+\DoxyCodeLine{00085\ \ \ \ \ \ \ \ \ [[nodiscard]]\ \textcolor{keyword}{inline}\ \textcolor{keywordtype}{double}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1EquinoctialElements_a21fba6b6c6000ff042c0c7ee511169b6}{GetMeanAnomalyRate}}()\textcolor{keyword}{\ const\ }\{\ \textcolor{keywordflow}{return}\ m\_meanAnomalyRate;\ \}}
+\DoxyCodeLine{00086\ }
+\DoxyCodeLine{00091\ \ \ \ \ \ \ \ \ [[nodiscard]]\ \textcolor{keyword}{inline}\ \textcolor{keywordtype}{double}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1EquinoctialElements_a9b028cccb22095c0579a46e9ba70e2c3}{GetRightAscensionOfPole}}()\textcolor{keyword}{\ const\ }\{\ \textcolor{keywordflow}{return}\ m\_rightAscensionOfThePole;\ \}}
+\DoxyCodeLine{00092\ }
+\DoxyCodeLine{00097\ \ \ \ \ \ \ \ \ [[nodiscard]]\ \textcolor{keyword}{inline}\ \textcolor{keywordtype}{double}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1EquinoctialElements_adacc4500e695975214f4e65a32daec74}{GetDeclinationOfPole}}()\textcolor{keyword}{\ const\ }\{\ \textcolor{keywordflow}{return}\ m\_declinationOfThePole;\ \}}
+\DoxyCodeLine{00098\ }
+\DoxyCodeLine{00099\ \ \ \ \ \ \ \ \ \textcolor{comment}{//\ Inherited\ via\ OrbitalParameters}}
+\DoxyCodeLine{00100\ \ \ \ \ \ \ \ \ [[nodiscard]]\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO::Astrodynamics::Time::TimeSpan}}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1EquinoctialElements_a76870005ad5ac6c0561db7fb4a5c1cc7}{GetPeriod}}()\ \textcolor{keyword}{const\ override};}
+\DoxyCodeLine{00101\ }
+\DoxyCodeLine{00106\ \ \ \ \ \ \ \ \ [[nodiscard]]\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO::Astrodynamics::Math::Vector3D}}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1EquinoctialElements_a557ceb06853cf7f9cac332019670dece}{GetSpecificAngularMomentum}}()\ \textcolor{keyword}{const\ override};}
+\DoxyCodeLine{00107\ }
+\DoxyCodeLine{00113\ \ \ \ \ \ \ \ \ [[nodiscard]]\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}{StateVector}}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_af0b880e2daa11029e0c037302fb05d70}{ToStateVector}}(\textcolor{keyword}{const}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO::Astrodynamics::Time::TDB}}\ \&epoch)\ \textcolor{keyword}{const\ override};}
+\DoxyCodeLine{00114\ }
+\DoxyCodeLine{00119\ \ \ \ \ \ \ \ \ [[nodiscard]]\ \textcolor{keywordtype}{double}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1EquinoctialElements_ac23ccfcfcd873da61d51ce6108e32212}{GetEccentricity}}()\ \textcolor{keyword}{const\ override};}
+\DoxyCodeLine{00120\ }
+\DoxyCodeLine{00125\ \ \ \ \ \ \ \ \ [[nodiscard]]\ \textcolor{keywordtype}{double}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1EquinoctialElements_afc9ae0422c0a41629cd5a6fd8a266704}{GetSemiMajorAxis}}()\textcolor{keyword}{\ const\ override\ }\{\ \textcolor{keywordflow}{return}\ m\_semiMajorAxis;\ \}}
+\DoxyCodeLine{00126\ }
+\DoxyCodeLine{00131\ \ \ \ \ \ \ \ \ [[nodiscard]]\ \textcolor{keywordtype}{double}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1EquinoctialElements_ac9d4b6f63b2cd16581ed7209678525c1}{GetInclination}}()\ \textcolor{keyword}{const\ override};}
+\DoxyCodeLine{00132\ }
+\DoxyCodeLine{00137\ \ \ \ \ \ \ \ \ [[nodiscard]]\ \textcolor{keywordtype}{double}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1EquinoctialElements_ad0a8c51d8cd1f69e8236e675236defa3}{GetPeriapsisArgument}}()\ \textcolor{keyword}{const\ override};}
+\DoxyCodeLine{00138\ }
+\DoxyCodeLine{00143\ \ \ \ \ \ \ \ \ [[nodiscard]]\ \textcolor{keywordtype}{double}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1EquinoctialElements_a29f2bf43e689a9466bf3ef806fa6e771}{GetRightAscendingNodeLongitude}}()\ \textcolor{keyword}{const\ override};}
+\DoxyCodeLine{00144\ }
+\DoxyCodeLine{00145\ \ \ \ \ \ \ \ \ \textcolor{comment}{//Get\ non\ pure\ virtual\ function\ accessible}}
+\DoxyCodeLine{00146\ \ \ \ \ \ \ \ \ \textcolor{keyword}{using\ }\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_ae7c1fd9b84ebf0bd1fa9199717f86e02}{OrbitalParameters::GetMeanAnomaly}};}
+\DoxyCodeLine{00151\ \ \ \ \ \ \ \ \ [[nodiscard]]\ \textcolor{keywordtype}{double}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1EquinoctialElements_a1398984fb1d6b626c39d55f754221c05}{GetMeanAnomaly}}()\ \textcolor{keyword}{const\ override};}
+\DoxyCodeLine{00152\ }
+\DoxyCodeLine{00157\ \ \ \ \ \ \ \ \ [[nodiscard]]\ \textcolor{keywordtype}{double}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1EquinoctialElements_adbccfe408ce8f8eb952796f6ea88b73c}{GetSpecificOrbitalEnergy}}()\ \textcolor{keyword}{const\ override};}
+\DoxyCodeLine{00158\ }
+\DoxyCodeLine{00159\ \ \ \ \ \ \ \ \ \textcolor{keyword}{using\ }\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_af0b880e2daa11029e0c037302fb05d70}{IO::Astrodynamics::OrbitalParameters::OrbitalParameters::ToStateVector}};}
+\DoxyCodeLine{00160\ \ \ \ \ \};}
+\DoxyCodeLine{00161\ \}}
+\DoxyCodeLine{00162\ \textcolor{preprocessor}{\#endif}}
 
 \end{DoxyCode}

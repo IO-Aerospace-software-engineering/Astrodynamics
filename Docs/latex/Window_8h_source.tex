@@ -1,102 +1,102 @@
-\hypertarget{Window_8h_source}{}\doxysection{Window.\+h}
-\label{Window_8h_source}\index{IO.Astrodynamics/Time/Window.h@{IO.Astrodynamics/Time/Window.h}}
+\doxysection{Window.\+h}
+\hypertarget{Window_8h_source}{}\label{Window_8h_source}\index{IO.Astrodynamics/Time/Window.h@{IO.Astrodynamics/Time/Window.h}}
 \mbox{\hyperlink{Window_8h}{Go to the documentation of this file.}}
 \begin{DoxyCode}{0}
-\DoxyCodeLine{1 \textcolor{comment}{/*}}
-\DoxyCodeLine{2 \textcolor{comment}{ Copyright (c) 2021-\/2023. Sylvain Guillet (sylvain.guillet@tutamail.com)}}
-\DoxyCodeLine{3 \textcolor{comment}{ */}}
-\DoxyCodeLine{4 \textcolor{preprocessor}{\#ifndef WINDOW\_H}}
-\DoxyCodeLine{5 \textcolor{preprocessor}{\#define WINDOW\_H}}
-\DoxyCodeLine{6 }
-\DoxyCodeLine{7 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{DateTime_8h}{DateTime.h}}>}}
-\DoxyCodeLine{8 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{TimeSpan_8h}{TimeSpan.h}}>}}
-\DoxyCodeLine{9 \textcolor{preprocessor}{\#include <type\_traits>}}
-\DoxyCodeLine{10 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{SDKException_8h}{SDKException.h}}>}}
-\DoxyCodeLine{11 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{UTC_8h}{UTC.h}}>}}
-\DoxyCodeLine{12 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{TDB_8h}{TDB.h}}>}}
-\DoxyCodeLine{13 }
-\DoxyCodeLine{14 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Time}{IO::Astrodynamics::Time}}}
-\DoxyCodeLine{15 \{}
-\DoxyCodeLine{16 }
-\DoxyCodeLine{17     \textcolor{keyword}{template}<\textcolor{keyword}{typename} T>}
-\DoxyCodeLine{18     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{Window}}}
-\DoxyCodeLine{19     \{}
-\DoxyCodeLine{20 }
-\DoxyCodeLine{21     \textcolor{keyword}{private}:}
-\DoxyCodeLine{22         \textcolor{keyword}{static\_assert}(std::is\_base\_of<DateTime, T>::value, \textcolor{stringliteral}{"{}T must extend DateTime"{}});}
-\DoxyCodeLine{23         \textcolor{keyword}{const} T m\_start;}
-\DoxyCodeLine{24         \textcolor{keyword}{const} T m\_end;}
-\DoxyCodeLine{25         \textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{TimeSpan}} m\_length;}
-\DoxyCodeLine{26 }
-\DoxyCodeLine{27     \textcolor{keyword}{public}:}
-\DoxyCodeLine{28         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window_aa5b760da6d31e685e409f8421b8d98be}{Window}}(T startdate, \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{TimeSpan}} length) : m\_start\{startdate\}, m\_end\{m\_start + length\}, m\_length\{length\}}
-\DoxyCodeLine{29         \{\};}
-\DoxyCodeLine{30 }
-\DoxyCodeLine{31         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window_ac76e486c8957dbdd08f732b96176d7d6}{Window}}(T startdate, T endDate) : m\_start\{startdate\}, m\_end\{endDate\}, m\_length\{endDate -\/ startdate\}}
-\DoxyCodeLine{32         \{\};}
-\DoxyCodeLine{33 }
-\DoxyCodeLine{34         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window_a7f1b5ce60ab2b1522f306516bf538d09}{Window}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{Window<T>}} \&window) : m\_start\{window.m\_start\}, m\_end\{window.m\_end\}, m\_length\{window.m\_length\}}
-\DoxyCodeLine{35         \{}
-\DoxyCodeLine{36         \}}
-\DoxyCodeLine{37 }
-\DoxyCodeLine{38         T \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window_a4fbbb6e5d3102c2b09eed4936fb0a759}{GetStartDate}}()\textcolor{keyword}{ const}}
-\DoxyCodeLine{39 \textcolor{keyword}{        }\{ \textcolor{keywordflow}{return} m\_start; \}}
-\DoxyCodeLine{40 }
-\DoxyCodeLine{41         T \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window_a69c483a457b6cd6e5289da531ac12614}{GetEndDate}}()\textcolor{keyword}{ const}}
-\DoxyCodeLine{42 \textcolor{keyword}{        }\{ \textcolor{keywordflow}{return} m\_end; \}}
-\DoxyCodeLine{43 }
-\DoxyCodeLine{44         [[nodiscard]] \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{TimeSpan}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window_aae5ae4b27836ac256208549a004a11a2}{GetLength}}()\textcolor{keyword}{ const}}
-\DoxyCodeLine{45 \textcolor{keyword}{        }\{ \textcolor{keywordflow}{return} m\_length; \}}
-\DoxyCodeLine{46 }
-\DoxyCodeLine{47         \textcolor{keywordtype}{bool} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window_a42558fe50c553c699ea320ca91064e2a}{operator==}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{Window<T>}} \&window)\textcolor{keyword}{ const}}
-\DoxyCodeLine{48 \textcolor{keyword}{        }\{ \textcolor{keywordflow}{return} m\_start == window.m\_start \&\& m\_end == window.m\_end; \}}
-\DoxyCodeLine{49 }
-\DoxyCodeLine{50         \textcolor{keywordtype}{bool} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window_a7516f336746d8b7aca08ef8cf01483eb}{operator!=}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{Window<T>}} \&window)\textcolor{keyword}{ const}}
-\DoxyCodeLine{51 \textcolor{keyword}{        }\{ \textcolor{keywordflow}{return} !(*\textcolor{keyword}{this} == window); \}}
-\DoxyCodeLine{52 }
-\DoxyCodeLine{53         \textcolor{keywordtype}{bool} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window_abf1e82fd9065b8b61242d9134ea3b24a}{Intersects}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{Window<T>}} \&window)\textcolor{keyword}{ const}}
-\DoxyCodeLine{54 \textcolor{keyword}{        }\{}
-\DoxyCodeLine{55             \textcolor{keywordflow}{return} !(window.\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window_a4fbbb6e5d3102c2b09eed4936fb0a759}{GetStartDate}}() >= m\_end || window.\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window_a69c483a457b6cd6e5289da531ac12614}{GetEndDate}}() <= m\_start);}
-\DoxyCodeLine{56         \}}
-\DoxyCodeLine{57 }
-\DoxyCodeLine{58 }
-\DoxyCodeLine{59         \textcolor{keywordtype}{bool} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window_a9c1fa28cec2b9574c5bf18fd4a5d705d}{Contains}}(\textcolor{keyword}{const} T \&epoch)\textcolor{keyword}{ const}}
-\DoxyCodeLine{60 \textcolor{keyword}{        }\{}
-\DoxyCodeLine{61             \textcolor{keywordflow}{return} epoch > m\_start \&\& epoch < m\_end;}
-\DoxyCodeLine{62         \}}
-\DoxyCodeLine{63 }
-\DoxyCodeLine{64         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{Window<T>}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window_ab8045979c9faaeef3ba95c52dc30d05d}{GetIntersection}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{Window<T>}} \&window)\textcolor{keyword}{ const}}
-\DoxyCodeLine{65 \textcolor{keyword}{        }\{}
-\DoxyCodeLine{66             \textcolor{keywordflow}{if} (!\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window_abf1e82fd9065b8b61242d9134ea3b24a}{Intersects}}(window))}
-\DoxyCodeLine{67             \{}
-\DoxyCodeLine{68                 \textcolor{keywordflow}{throw} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Exception_1_1SDKException}{IO::Astrodynamics::Exception::SDKException}}(\textcolor{stringliteral}{"{}Windows don't intersect"{}});}
-\DoxyCodeLine{69             \}}
-\DoxyCodeLine{70 }
-\DoxyCodeLine{71             T min = m\_start > window.m\_start ? m\_start : window.m\_start;}
-\DoxyCodeLine{72             T max = m\_end < window.m\_end ? m\_end : window.m\_end;}
-\DoxyCodeLine{73             \textcolor{keywordflow}{return} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{Window<T>}}(min, max);}
-\DoxyCodeLine{74         \}}
-\DoxyCodeLine{75 }
-\DoxyCodeLine{76         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{Window<T>}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window_ad1ece370e58e0b1d462b8d1e26615f4b}{Merge}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{Window<T>}} \&window)\textcolor{keyword}{ const}}
-\DoxyCodeLine{77 \textcolor{keyword}{        }\{}
-\DoxyCodeLine{78             T min = m\_start < window.m\_start ? m\_start : window.m\_start;}
-\DoxyCodeLine{79             T max = m\_end > window.m\_end ? m\_end : window.m\_end;}
-\DoxyCodeLine{80             \textcolor{keywordflow}{return} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{Window<T>}}(min, max);}
-\DoxyCodeLine{81         \}}
-\DoxyCodeLine{82 }
-\DoxyCodeLine{83         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{Window<T>}} \&\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window_a9954f9bab07cbce75ab89dc8c2e7af94}{operator=}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{Window<T>}} \&window)}
-\DoxyCodeLine{84         \{}
-\DoxyCodeLine{85             \textcolor{comment}{// Guard self assignment}}
-\DoxyCodeLine{86             \textcolor{keywordflow}{if} (\textcolor{keyword}{this} == \&window)}
-\DoxyCodeLine{87                 \textcolor{keywordflow}{return} *\textcolor{keyword}{this};}
-\DoxyCodeLine{88 }
-\DoxyCodeLine{89             \textcolor{keyword}{const\_cast<}T \&\textcolor{keyword}{>}(m\_start) = window.m\_start;}
-\DoxyCodeLine{90             \textcolor{keyword}{const\_cast<}T \&\textcolor{keyword}{>}(m\_end) = window.m\_end;}
-\DoxyCodeLine{91             \textcolor{keyword}{const\_cast<}\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO::Astrodynamics::Time::TimeSpan}} \&\textcolor{keyword}{>}(m\_length) = window.m\_length;}
-\DoxyCodeLine{92             \textcolor{keywordflow}{return} *\textcolor{keyword}{this};}
-\DoxyCodeLine{93         \}}
-\DoxyCodeLine{94     \};}
-\DoxyCodeLine{95 \}}
-\DoxyCodeLine{96 \textcolor{preprocessor}{\#endif }\textcolor{comment}{// !WINDOW\_H}}
+\DoxyCodeLine{00001\ \textcolor{comment}{/*}}
+\DoxyCodeLine{00002\ \textcolor{comment}{\ Copyright\ (c)\ 2021-\/2023.\ Sylvain\ Guillet\ (sylvain.guillet@tutamail.com)}}
+\DoxyCodeLine{00003\ \textcolor{comment}{\ */}}
+\DoxyCodeLine{00004\ \textcolor{preprocessor}{\#ifndef\ WINDOW\_H}}
+\DoxyCodeLine{00005\ \textcolor{preprocessor}{\#define\ WINDOW\_H}}
+\DoxyCodeLine{00006\ }
+\DoxyCodeLine{00007\ \textcolor{preprocessor}{\#include\ <\mbox{\hyperlink{DateTime_8h}{DateTime.h}}>}}
+\DoxyCodeLine{00008\ \textcolor{preprocessor}{\#include\ <\mbox{\hyperlink{TimeSpan_8h}{TimeSpan.h}}>}}
+\DoxyCodeLine{00009\ \textcolor{preprocessor}{\#include\ <type\_traits>}}
+\DoxyCodeLine{00010\ \textcolor{preprocessor}{\#include\ <\mbox{\hyperlink{SDKException_8h}{SDKException.h}}>}}
+\DoxyCodeLine{00011\ \textcolor{preprocessor}{\#include\ <\mbox{\hyperlink{UTC_8h}{UTC.h}}>}}
+\DoxyCodeLine{00012\ \textcolor{preprocessor}{\#include\ <\mbox{\hyperlink{TDB_8h}{TDB.h}}>}}
+\DoxyCodeLine{00013\ }
+\DoxyCodeLine{00014\ \textcolor{keyword}{namespace\ }\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Time}{IO::Astrodynamics::Time}}}
+\DoxyCodeLine{00015\ \{}
+\DoxyCodeLine{00016\ }
+\DoxyCodeLine{00017\ \ \ \ \ \textcolor{keyword}{template}<\textcolor{keyword}{typename}\ T>}
+\DoxyCodeLine{00018\ \ \ \ \ \textcolor{keyword}{class\ }\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{Window}}}
+\DoxyCodeLine{00019\ \ \ \ \ \{}
+\DoxyCodeLine{00020\ }
+\DoxyCodeLine{00021\ \ \ \ \ \textcolor{keyword}{private}:}
+\DoxyCodeLine{00022\ \ \ \ \ \ \ \ \ \textcolor{keyword}{static\_assert}(std::is\_base\_of<DateTime,\ T>::value,\ \textcolor{stringliteral}{"{}T\ must\ extend\ DateTime"{}});}
+\DoxyCodeLine{00023\ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ T\ m\_start;}
+\DoxyCodeLine{00024\ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ T\ m\_end;}
+\DoxyCodeLine{00025\ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{TimeSpan}}\ m\_length;}
+\DoxyCodeLine{00026\ }
+\DoxyCodeLine{00027\ \ \ \ \ \textcolor{keyword}{public}:}
+\DoxyCodeLine{00028\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window_aa5b760da6d31e685e409f8421b8d98be}{Window}}(T\ startdate,\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{TimeSpan}}\ length)\ :\ m\_start\{startdate\},\ m\_end\{m\_start\ +\ length\},\ m\_length\{length\}}
+\DoxyCodeLine{00029\ \ \ \ \ \ \ \ \ \{\};}
+\DoxyCodeLine{00030\ }
+\DoxyCodeLine{00031\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window_ac76e486c8957dbdd08f732b96176d7d6}{Window}}(T\ startdate,\ T\ endDate)\ :\ m\_start\{startdate\},\ m\_end\{endDate\},\ m\_length\{endDate\ -\/\ startdate\}}
+\DoxyCodeLine{00032\ \ \ \ \ \ \ \ \ \{\};}
+\DoxyCodeLine{00033\ }
+\DoxyCodeLine{00034\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window_a7f1b5ce60ab2b1522f306516bf538d09}{Window}}(\textcolor{keyword}{const}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{Window<T>}}\ \&window)\ :\ m\_start\{window.m\_start\},\ m\_end\{window.m\_end\},\ m\_length\{window.m\_length\}}
+\DoxyCodeLine{00035\ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00036\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00037\ }
+\DoxyCodeLine{00038\ \ \ \ \ \ \ \ \ T\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window_a4fbbb6e5d3102c2b09eed4936fb0a759}{GetStartDate}}()\textcolor{keyword}{\ const}}
+\DoxyCodeLine{00039\ \textcolor{keyword}{\ \ \ \ \ \ \ \ }\{\ \textcolor{keywordflow}{return}\ m\_start;\ \}}
+\DoxyCodeLine{00040\ }
+\DoxyCodeLine{00041\ \ \ \ \ \ \ \ \ T\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window_a69c483a457b6cd6e5289da531ac12614}{GetEndDate}}()\textcolor{keyword}{\ const}}
+\DoxyCodeLine{00042\ \textcolor{keyword}{\ \ \ \ \ \ \ \ }\{\ \textcolor{keywordflow}{return}\ m\_end;\ \}}
+\DoxyCodeLine{00043\ }
+\DoxyCodeLine{00044\ \ \ \ \ \ \ \ \ [[nodiscard]]\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{TimeSpan}}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window_aae5ae4b27836ac256208549a004a11a2}{GetLength}}()\textcolor{keyword}{\ const}}
+\DoxyCodeLine{00045\ \textcolor{keyword}{\ \ \ \ \ \ \ \ }\{\ \textcolor{keywordflow}{return}\ m\_length;\ \}}
+\DoxyCodeLine{00046\ }
+\DoxyCodeLine{00047\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{bool}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window_a42558fe50c553c699ea320ca91064e2a}{operator==}}(\textcolor{keyword}{const}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{Window<T>}}\ \&window)\textcolor{keyword}{\ const}}
+\DoxyCodeLine{00048\ \textcolor{keyword}{\ \ \ \ \ \ \ \ }\{\ \textcolor{keywordflow}{return}\ m\_start\ ==\ window.m\_start\ \&\&\ m\_end\ ==\ window.m\_end;\ \}}
+\DoxyCodeLine{00049\ }
+\DoxyCodeLine{00050\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{bool}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window_a7516f336746d8b7aca08ef8cf01483eb}{operator!=}}(\textcolor{keyword}{const}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{Window<T>}}\ \&window)\textcolor{keyword}{\ const}}
+\DoxyCodeLine{00051\ \textcolor{keyword}{\ \ \ \ \ \ \ \ }\{\ \textcolor{keywordflow}{return}\ !(*\textcolor{keyword}{this}\ ==\ window);\ \}}
+\DoxyCodeLine{00052\ }
+\DoxyCodeLine{00053\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{bool}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window_abf1e82fd9065b8b61242d9134ea3b24a}{Intersects}}(\textcolor{keyword}{const}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{Window<T>}}\ \&window)\textcolor{keyword}{\ const}}
+\DoxyCodeLine{00054\ \textcolor{keyword}{\ \ \ \ \ \ \ \ }\{}
+\DoxyCodeLine{00055\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ !(window.\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window_a4fbbb6e5d3102c2b09eed4936fb0a759}{GetStartDate}}()\ >=\ m\_end\ ||\ window.\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window_a69c483a457b6cd6e5289da531ac12614}{GetEndDate}}()\ <=\ m\_start);}
+\DoxyCodeLine{00056\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00057\ }
+\DoxyCodeLine{00058\ }
+\DoxyCodeLine{00059\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{bool}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window_a9c1fa28cec2b9574c5bf18fd4a5d705d}{Contains}}(\textcolor{keyword}{const}\ T\ \&epoch)\textcolor{keyword}{\ const}}
+\DoxyCodeLine{00060\ \textcolor{keyword}{\ \ \ \ \ \ \ \ }\{}
+\DoxyCodeLine{00061\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ epoch\ >\ m\_start\ \&\&\ epoch\ <\ m\_end;}
+\DoxyCodeLine{00062\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00063\ }
+\DoxyCodeLine{00064\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{Window<T>}}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window_ab8045979c9faaeef3ba95c52dc30d05d}{GetIntersection}}(\textcolor{keyword}{const}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{Window<T>}}\ \&window)\textcolor{keyword}{\ const}}
+\DoxyCodeLine{00065\ \textcolor{keyword}{\ \ \ \ \ \ \ \ }\{}
+\DoxyCodeLine{00066\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (!\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window_abf1e82fd9065b8b61242d9134ea3b24a}{Intersects}}(window))}
+\DoxyCodeLine{00067\ \ \ \ \ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00068\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{throw}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Exception_1_1SDKException}{IO::Astrodynamics::Exception::SDKException}}(\textcolor{stringliteral}{"{}Windows\ don't\ intersect"{}});}
+\DoxyCodeLine{00069\ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00070\ }
+\DoxyCodeLine{00071\ \ \ \ \ \ \ \ \ \ \ \ \ T\ min\ =\ m\_start\ >\ window.m\_start\ ?\ m\_start\ :\ window.m\_start;}
+\DoxyCodeLine{00072\ \ \ \ \ \ \ \ \ \ \ \ \ T\ max\ =\ m\_end\ <\ window.m\_end\ ?\ m\_end\ :\ window.m\_end;}
+\DoxyCodeLine{00073\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{Window<T>}}(\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{min}},\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{max}});}
+\DoxyCodeLine{00074\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00075\ }
+\DoxyCodeLine{00076\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{Window<T>}}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window_ad1ece370e58e0b1d462b8d1e26615f4b}{Merge}}(\textcolor{keyword}{const}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{Window<T>}}\ \&window)\textcolor{keyword}{\ const}}
+\DoxyCodeLine{00077\ \textcolor{keyword}{\ \ \ \ \ \ \ \ }\{}
+\DoxyCodeLine{00078\ \ \ \ \ \ \ \ \ \ \ \ \ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{T}}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{min}}\ =\ m\_start\ <\ window.m\_start\ ?\ m\_start\ :\ window.m\_start;}
+\DoxyCodeLine{00079\ \ \ \ \ \ \ \ \ \ \ \ \ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{T}}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{max}}\ =\ m\_end\ >\ window.m\_end\ ?\ m\_end\ :\ window.m\_end;}
+\DoxyCodeLine{00080\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{Window<T>}}(\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{min}},\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{max}});}
+\DoxyCodeLine{00081\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00082\ }
+\DoxyCodeLine{00083\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{Window<T>}}\ \&\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window_a9954f9bab07cbce75ab89dc8c2e7af94}{operator=}}(\textcolor{keyword}{const}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{Window<T>}}\ \&window)}
+\DoxyCodeLine{00084\ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00085\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{comment}{//\ Guard\ self\ assignment}}
+\DoxyCodeLine{00086\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (\textcolor{keyword}{this}\ ==\ \&window)}
+\DoxyCodeLine{00087\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ *\textcolor{keyword}{this};}
+\DoxyCodeLine{00088\ }
+\DoxyCodeLine{00089\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keyword}{const\_cast<}\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{T}}\ \&\textcolor{keyword}{>}(m\_start)\ =\ window.m\_start;}
+\DoxyCodeLine{00090\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keyword}{const\_cast<}\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{T}}\ \&\textcolor{keyword}{>}(m\_end)\ =\ window.m\_end;}
+\DoxyCodeLine{00091\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keyword}{const\_cast<}\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO::Astrodynamics::Time::TimeSpan}}\ \&\textcolor{keyword}{>}(m\_length)\ =\ window.m\_length;}
+\DoxyCodeLine{00092\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ *\textcolor{keyword}{this};}
+\DoxyCodeLine{00093\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00094\ \ \ \ \ \};}
+\DoxyCodeLine{00095\ \}}
+\DoxyCodeLine{00096\ \textcolor{preprocessor}{\#endif\ }\textcolor{comment}{//\ !WINDOW\_H}}
 
 \end{DoxyCode}

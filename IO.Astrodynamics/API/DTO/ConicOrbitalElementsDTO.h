@@ -1,6 +1,7 @@
 /*
  Copyright (c) 2023-2024. Sylvain Guillet (sylvain.guillet@tutamail.com)
  */
+#include <cstring>
 
 #ifndef IOSDK_CONICORBITALELEMENTSDTO_H
 #define IOSDK_CONICORBITALELEMENTSDTO_H

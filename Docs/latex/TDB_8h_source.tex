@@ -1,39 +1,39 @@
-\hypertarget{TDB_8h_source}{}\doxysection{TDB.\+h}
-\label{TDB_8h_source}\index{IO.Astrodynamics/Time/TDB.h@{IO.Astrodynamics/Time/TDB.h}}
+\doxysection{TDB.\+h}
+\hypertarget{TDB_8h_source}{}\label{TDB_8h_source}\index{IO.Astrodynamics/Time/TDB.h@{IO.Astrodynamics/Time/TDB.h}}
 \mbox{\hyperlink{TDB_8h}{Go to the documentation of this file.}}
 \begin{DoxyCode}{0}
-\DoxyCodeLine{1 \textcolor{comment}{/*}}
-\DoxyCodeLine{2 \textcolor{comment}{ Copyright (c) 2021-\/2023. Sylvain Guillet (sylvain.guillet@tutamail.com)}}
-\DoxyCodeLine{3 \textcolor{comment}{ */}}
-\DoxyCodeLine{4 \textcolor{preprocessor}{\#ifndef TDB\_H}}
-\DoxyCodeLine{5 \textcolor{preprocessor}{\#define TDB\_H}}
-\DoxyCodeLine{6 }
-\DoxyCodeLine{7 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{DateTime_8h}{DateTime.h}}>}}
-\DoxyCodeLine{8 }
-\DoxyCodeLine{9 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Time}{IO::Astrodynamics::Time}}}
-\DoxyCodeLine{10 \{}
-\DoxyCodeLine{11     \textcolor{keyword}{class }UTC;}
-\DoxyCodeLine{12     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{TDB}} final : \textcolor{keyword}{public} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1DateTime}{IO::Astrodynamics::Time::DateTime}}}
-\DoxyCodeLine{13     \{}
-\DoxyCodeLine{14     \textcolor{keyword}{private}:}
-\DoxyCodeLine{15     \textcolor{keyword}{public}:}
-\DoxyCodeLine{21         \textcolor{keyword}{explicit} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB_a22ccb7cb94685150b8b06a2d917065aa}{TDB}}(std::chrono::duration<double> ellapsedSecondsFromJ2000);}
-\DoxyCodeLine{22 }
-\DoxyCodeLine{28         \textcolor{keyword}{explicit} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB_a22ccb7cb94685150b8b06a2d917065aa}{TDB}}(\textcolor{keyword}{const} std::string\& \textcolor{keywordtype}{string});}
-\DoxyCodeLine{29 }
-\DoxyCodeLine{35         [[nodiscard]] std::string \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB_a4799dce71489691a49acf69fc9ca26c9}{ToString}}() \textcolor{keyword}{const override};}
-\DoxyCodeLine{36 }
-\DoxyCodeLine{43         [[nodiscard]] \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO::Astrodynamics::Time::TDB}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB_a389229d7a65bc3aa2e4c43f43c93281e}{Add}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO::Astrodynamics::Time::TimeSpan}} \&timespan) \textcolor{keyword}{const};}
-\DoxyCodeLine{44 }
-\DoxyCodeLine{51         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO::Astrodynamics::Time::TDB}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB_a47f6387453a2c747ac8459d832f4b210}{operator+}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO::Astrodynamics::Time::TimeSpan}} \&timespan) \textcolor{keyword}{const};}
-\DoxyCodeLine{52 }
-\DoxyCodeLine{59         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO::Astrodynamics::Time::TDB}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB_a99c6fbf941baedd1bb55d975500136b4}{operator-\/}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO::Astrodynamics::Time::TimeSpan}} \&other) \textcolor{keyword}{const};}
-\DoxyCodeLine{60 }
-\DoxyCodeLine{67         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO::Astrodynamics::Time::TimeSpan}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB_a99c6fbf941baedd1bb55d975500136b4}{operator-\/}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO::Astrodynamics::Time::TDB}} \&other) \textcolor{keyword}{const};}
-\DoxyCodeLine{68 }
-\DoxyCodeLine{74         [[nodiscard]] \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1UTC}{UTC}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB_ac82a4dbde5ca2e2d54427ef98572880e}{ToUTC}}() \textcolor{keyword}{const};}
-\DoxyCodeLine{75     \};}
-\DoxyCodeLine{76 \}}
-\DoxyCodeLine{77 \textcolor{preprocessor}{\#endif }\textcolor{comment}{// !TDB\_H}}
+\DoxyCodeLine{00001\ \textcolor{comment}{/*}}
+\DoxyCodeLine{00002\ \textcolor{comment}{\ Copyright\ (c)\ 2021-\/2023.\ Sylvain\ Guillet\ (sylvain.guillet@tutamail.com)}}
+\DoxyCodeLine{00003\ \textcolor{comment}{\ */}}
+\DoxyCodeLine{00004\ \textcolor{preprocessor}{\#ifndef\ TDB\_H}}
+\DoxyCodeLine{00005\ \textcolor{preprocessor}{\#define\ TDB\_H}}
+\DoxyCodeLine{00006\ }
+\DoxyCodeLine{00007\ \textcolor{preprocessor}{\#include\ <\mbox{\hyperlink{DateTime_8h}{DateTime.h}}>}}
+\DoxyCodeLine{00008\ }
+\DoxyCodeLine{00009\ \textcolor{keyword}{namespace\ }\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Time}{IO::Astrodynamics::Time}}}
+\DoxyCodeLine{00010\ \{}
+\DoxyCodeLine{00011\ \ \ \ \ \textcolor{keyword}{class\ }UTC;}
+\DoxyCodeLine{00012\ \ \ \ \ \textcolor{keyword}{class\ }\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{TDB}}\ final\ :\ \textcolor{keyword}{public}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1DateTime}{IO::Astrodynamics::Time::DateTime}}}
+\DoxyCodeLine{00013\ \ \ \ \ \{}
+\DoxyCodeLine{00014\ \ \ \ \ \textcolor{keyword}{private}:}
+\DoxyCodeLine{00015\ \ \ \ \ \textcolor{keyword}{public}:}
+\DoxyCodeLine{00021\ \ \ \ \ \ \ \ \ \textcolor{keyword}{explicit}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{TDB}}(std::chrono::duration<double>\ ellapsedSecondsFromJ2000);}
+\DoxyCodeLine{00022\ }
+\DoxyCodeLine{00028\ \ \ \ \ \ \ \ \ \textcolor{keyword}{explicit}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{TDB}}(\textcolor{keyword}{const}\ std::string\&\ \textcolor{keywordtype}{string});}
+\DoxyCodeLine{00029\ }
+\DoxyCodeLine{00035\ \ \ \ \ \ \ \ \ [[nodiscard]]\ std::string\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB_a4799dce71489691a49acf69fc9ca26c9}{ToString}}()\ \textcolor{keyword}{const\ override};}
+\DoxyCodeLine{00036\ }
+\DoxyCodeLine{00043\ \ \ \ \ \ \ \ \ [[nodiscard]]\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO::Astrodynamics::Time::TDB}}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB_a389229d7a65bc3aa2e4c43f43c93281e}{Add}}(\textcolor{keyword}{const}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO::Astrodynamics::Time::TimeSpan}}\ \&timespan)\ \textcolor{keyword}{const};}
+\DoxyCodeLine{00044\ }
+\DoxyCodeLine{00051\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO::Astrodynamics::Time::TDB}}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB_a47f6387453a2c747ac8459d832f4b210}{operator+}}(\textcolor{keyword}{const}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO::Astrodynamics::Time::TimeSpan}}\ \&timespan)\ \textcolor{keyword}{const};}
+\DoxyCodeLine{00052\ }
+\DoxyCodeLine{00059\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO::Astrodynamics::Time::TDB}}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB_a99c6fbf941baedd1bb55d975500136b4}{operator-\/}}(\textcolor{keyword}{const}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO::Astrodynamics::Time::TimeSpan}}\ \&other)\ \textcolor{keyword}{const};}
+\DoxyCodeLine{00060\ }
+\DoxyCodeLine{00067\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan}{IO::Astrodynamics::Time::TimeSpan}}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB_a99c6fbf941baedd1bb55d975500136b4}{operator-\/}}(\textcolor{keyword}{const}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO::Astrodynamics::Time::TDB}}\ \&other)\ \textcolor{keyword}{const};}
+\DoxyCodeLine{00068\ }
+\DoxyCodeLine{00074\ \ \ \ \ \ \ \ \ [[nodiscard]]\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1UTC}{UTC}}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB_ac82a4dbde5ca2e2d54427ef98572880e}{ToUTC}}()\ \textcolor{keyword}{const};}
+\DoxyCodeLine{00075\ \ \ \ \ \};}
+\DoxyCodeLine{00076\ \}}
+\DoxyCodeLine{00077\ \textcolor{preprocessor}{\#endif\ }\textcolor{comment}{//\ !TDB\_H}}
 
 \end{DoxyCode}

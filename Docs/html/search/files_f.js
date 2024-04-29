@@ -1,27 +1,6 @@
 var searchData=
 [
-  ['parameters_2eh_0',['Parameters.h',['../Parameters_8h.html',1,'']]],
-  ['payload_2ecpp_1',['Payload.cpp',['../Payload_8cpp.html',1,'']]],
-  ['payload_2eh_2',['Payload.h',['../Payload_8h.html',1,'']]],
-  ['payloaddto_2eh_3',['PayloadDTO.h',['../PayloadDTO_8h.html',1,'']]],
-  ['perigeeheightchangingmaneuver_2ecpp_4',['PerigeeHeightChangingManeuver.cpp',['../PerigeeHeightChangingManeuver_8cpp.html',1,'']]],
-  ['perigeeheightchangingmaneuver_2eh_5',['PerigeeHeightChangingManeuver.h',['../PerigeeHeightChangingManeuver_8h.html',1,'']]],
-  ['perigeeheightchangingmaneuverdto_2eh_6',['PerigeeHeightChangingManeuverDTO.h',['../PerigeeHeightChangingManeuverDTO_8h.html',1,'']]],
-  ['phasingmaneuver_2ecpp_7',['PhasingManeuver.cpp',['../PhasingManeuver_8cpp.html',1,'']]],
-  ['phasingmaneuver_2eh_8',['PhasingManeuver.h',['../PhasingManeuver_8h.html',1,'']]],
-  ['phasingmaneuverdto_2eh_9',['PhasingManeuverDTO.h',['../PhasingManeuverDTO_8h.html',1,'']]],
-  ['plane_2ecpp_10',['Plane.cpp',['../Plane_8cpp.html',1,'']]],
-  ['plane_2eh_11',['Plane.h',['../Plane_8h.html',1,'']]],
-  ['planetodetic_2eh_12',['Planetodetic.h',['../Planetodetic_8h.html',1,'']]],
-  ['planetodeticdto_2eh_13',['PlanetodeticDTO.h',['../PlanetodeticDTO_8h.html',1,'']]],
-  ['planetographic_2eh_14',['Planetographic.h',['../Planetographic_8h.html',1,'']]],
-  ['progradeattitude_2ecpp_15',['ProgradeAttitude.cpp',['../ProgradeAttitude_8cpp.html',1,'']]],
-  ['progradeattitude_2eh_16',['ProgradeAttitude.h',['../ProgradeAttitude_8h.html',1,'']]],
-  ['progradeattitudedto_2eh_17',['ProgradeAttitudeDTO.h',['../ProgradeAttitudeDTO_8h.html',1,'']]],
-  ['propagator_2ecpp_18',['Propagator.cpp',['../Propagator_8cpp.html',1,'']]],
-  ['propagator_2eh_19',['Propagator.h',['../Propagator_8h.html',1,'']]],
-  ['propagatorexception_2ecpp_20',['PropagatorException.cpp',['../PropagatorException_8cpp.html',1,'']]],
-  ['propagatorexception_2eh_21',['PropagatorException.h',['../PropagatorException_8h.html',1,'']]],
-  ['proxy_2ecpp_22',['Proxy.cpp',['../Proxy_8cpp.html',1,'']]],
-  ['proxy_2eh_23',['Proxy.h',['../Proxy_8h.html',1,'']]]
+  ['quaternion_2ecpp_0',['Quaternion.cpp',['../Quaternion_8cpp.html',1,'']]],
+  ['quaternion_2eh_1',['Quaternion.h',['../Quaternion_8h.html',1,'']]],
+  ['quaterniondto_2eh_2',['QuaternionDTO.h',['../QuaternionDTO_8h.html',1,'']]]
 ];

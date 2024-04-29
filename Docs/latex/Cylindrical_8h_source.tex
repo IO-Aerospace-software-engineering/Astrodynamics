@@ -1,31 +1,31 @@
-\hypertarget{Cylindrical_8h_source}{}\doxysection{Cylindrical.\+h}
-\label{Cylindrical_8h_source}\index{IO.Astrodynamics/Coordinates/Cylindrical.h@{IO.Astrodynamics/Coordinates/Cylindrical.h}}
+\doxysection{Cylindrical.\+h}
+\hypertarget{Cylindrical_8h_source}{}\label{Cylindrical_8h_source}\index{IO.Astrodynamics/Coordinates/Cylindrical.h@{IO.Astrodynamics/Coordinates/Cylindrical.h}}
 \mbox{\hyperlink{Cylindrical_8h}{Go to the documentation of this file.}}
 \begin{DoxyCode}{0}
-\DoxyCodeLine{1 \textcolor{comment}{/*}}
-\DoxyCodeLine{2 \textcolor{comment}{ Copyright (c) 2021-\/2023. Sylvain Guillet (sylvain.guillet@tutamail.com)}}
-\DoxyCodeLine{3 \textcolor{comment}{ */}}
-\DoxyCodeLine{4 \textcolor{preprocessor}{\#ifndef CYLINDRICAL\_H}}
-\DoxyCodeLine{5 \textcolor{preprocessor}{\#define CYLINDRICAL\_H}}
-\DoxyCodeLine{6 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Coordinates}{IO::Astrodynamics::Coordinates}}}
-\DoxyCodeLine{7 \{}
-\DoxyCodeLine{12     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1Cylindrical}{Cylindrical}}}
-\DoxyCodeLine{13     \{}
-\DoxyCodeLine{14     \textcolor{keyword}{private}:}
-\DoxyCodeLine{15         \textcolor{keyword}{const} \textcolor{keywordtype}{double} \_radius, \_longitude, \_z;}
-\DoxyCodeLine{16 }
-\DoxyCodeLine{17     \textcolor{keyword}{public}:}
-\DoxyCodeLine{25         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1Cylindrical_a5b999fc81ac63c090dc4f75513e93948}{Cylindrical}}(\textcolor{keyword}{const} \textcolor{keywordtype}{double} radius, \textcolor{keyword}{const} \textcolor{keywordtype}{double} longitude, \textcolor{keyword}{const} \textcolor{keywordtype}{double} z) : \_radius\{radius\}, \_longitude\{longitude\}, \_z\{z\}}
-\DoxyCodeLine{26         \{}
-\DoxyCodeLine{27         \}}
-\DoxyCodeLine{28 }
-\DoxyCodeLine{34         [[nodiscard]] \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1Cylindrical_ac29e8aa591c89c7db5e35df2d57565b1}{GetRadius}}()\textcolor{keyword}{ const }\{ \textcolor{keywordflow}{return} this-\/>\_radius; \}}
-\DoxyCodeLine{35 }
-\DoxyCodeLine{41         [[nodiscard]] \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1Cylindrical_a48d74634d2ad1a8ffd7402bce852050b}{GetLongitude}}()\textcolor{keyword}{ const }\{ \textcolor{keywordflow}{return} this-\/>\_longitude; \}}
-\DoxyCodeLine{42 }
-\DoxyCodeLine{48         [[nodiscard]] \textcolor{keywordtype}{double} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1Cylindrical_a04c2a2b49f5d29be6d0bcdbac170d5e6}{GetZ}}()\textcolor{keyword}{ const }\{ \textcolor{keywordflow}{return} this-\/>\_z; \}}
-\DoxyCodeLine{49     \};}
-\DoxyCodeLine{50 \}}
-\DoxyCodeLine{51 \textcolor{preprocessor}{\#endif }\textcolor{comment}{// !CYLINDRICAL\_H}}
+\DoxyCodeLine{00001\ \textcolor{comment}{/*}}
+\DoxyCodeLine{00002\ \textcolor{comment}{\ Copyright\ (c)\ 2021-\/2023.\ Sylvain\ Guillet\ (sylvain.guillet@tutamail.com)}}
+\DoxyCodeLine{00003\ \textcolor{comment}{\ */}}
+\DoxyCodeLine{00004\ \textcolor{preprocessor}{\#ifndef\ CYLINDRICAL\_H}}
+\DoxyCodeLine{00005\ \textcolor{preprocessor}{\#define\ CYLINDRICAL\_H}}
+\DoxyCodeLine{00006\ \textcolor{keyword}{namespace\ }\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Coordinates}{IO::Astrodynamics::Coordinates}}}
+\DoxyCodeLine{00007\ \{}
+\DoxyCodeLine{00012\ \ \ \ \ \textcolor{keyword}{class\ }\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1Cylindrical}{Cylindrical}}}
+\DoxyCodeLine{00013\ \ \ \ \ \{}
+\DoxyCodeLine{00014\ \ \ \ \ \textcolor{keyword}{private}:}
+\DoxyCodeLine{00015\ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ \textcolor{keywordtype}{double}\ \_radius,\ \_longitude,\ \_z;}
+\DoxyCodeLine{00016\ }
+\DoxyCodeLine{00017\ \ \ \ \ \textcolor{keyword}{public}:}
+\DoxyCodeLine{00025\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1Cylindrical_a5b999fc81ac63c090dc4f75513e93948}{Cylindrical}}(\textcolor{keyword}{const}\ \textcolor{keywordtype}{double}\ radius,\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{double}\ longitude,\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{double}\ z)\ :\ \_radius\{radius\},\ \_longitude\{longitude\},\ \_z\{z\}}
+\DoxyCodeLine{00026\ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00027\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00028\ }
+\DoxyCodeLine{00034\ \ \ \ \ \ \ \ \ [[nodiscard]]\ \textcolor{keywordtype}{double}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1Cylindrical_ac29e8aa591c89c7db5e35df2d57565b1}{GetRadius}}()\textcolor{keyword}{\ const\ }\{\ \textcolor{keywordflow}{return}\ this-\/>\_radius;\ \}}
+\DoxyCodeLine{00035\ }
+\DoxyCodeLine{00041\ \ \ \ \ \ \ \ \ [[nodiscard]]\ \textcolor{keywordtype}{double}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1Cylindrical_a48d74634d2ad1a8ffd7402bce852050b}{GetLongitude}}()\textcolor{keyword}{\ const\ }\{\ \textcolor{keywordflow}{return}\ this-\/>\_longitude;\ \}}
+\DoxyCodeLine{00042\ }
+\DoxyCodeLine{00048\ \ \ \ \ \ \ \ \ [[nodiscard]]\ \textcolor{keywordtype}{double}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1Cylindrical_a04c2a2b49f5d29be6d0bcdbac170d5e6}{GetZ}}()\textcolor{keyword}{\ const\ }\{\ \textcolor{keywordflow}{return}\ this-\/>\_z;\ \}}
+\DoxyCodeLine{00049\ \ \ \ \ \};}
+\DoxyCodeLine{00050\ \}}
+\DoxyCodeLine{00051\ \textcolor{preprocessor}{\#endif\ }\textcolor{comment}{//\ !CYLINDRICAL\_H}}
 
 \end{DoxyCode}

@@ -1,28 +1,28 @@
-\hypertarget{Constants_8h_source}{}\doxysection{Constants.\+h}
-\label{Constants_8h_source}\index{IO.Astrodynamics/Parameters/Constants.h@{IO.Astrodynamics/Parameters/Constants.h}}
+\doxysection{Constants.\+h}
+\hypertarget{Constants_8h_source}{}\label{Constants_8h_source}\index{IO.Astrodynamics/Parameters/Constants.h@{IO.Astrodynamics/Parameters/Constants.h}}
 \mbox{\hyperlink{Constants_8h}{Go to the documentation of this file.}}
 \begin{DoxyCode}{0}
-\DoxyCodeLine{1 \textcolor{comment}{/*}}
-\DoxyCodeLine{2 \textcolor{comment}{ Copyright (c) 2021-\/2023. Sylvain Guillet (sylvain.guillet@tutamail.com)}}
-\DoxyCodeLine{3 \textcolor{comment}{ */}}
-\DoxyCodeLine{4 \textcolor{preprocessor}{\#ifndef CONSTANTS\_H}}
-\DoxyCodeLine{5 \textcolor{preprocessor}{\#define CONSTANTS\_H}}
-\DoxyCodeLine{6 }
-\DoxyCodeLine{7 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Constants}{IO::Astrodynamics::Constants}}}
-\DoxyCodeLine{8 \{}
-\DoxyCodeLine{9     \textcolor{keyword}{inline} \textcolor{keyword}{constexpr} \textcolor{keywordtype}{double} \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Constants_a7331a4fec0e0147c0e035f098f52156f}{G}}\{6.67430e-\/11\};}
-\DoxyCodeLine{10     \textcolor{keyword}{inline} \textcolor{keyword}{constexpr} \textcolor{keywordtype}{double} \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Constants_ae0f21e703b04782f568e2348fb657977}{ECCENTRIC\_ANOMALY\_ACCURACY}}\{1e-\/9\};}
-\DoxyCodeLine{11     \textcolor{keyword}{inline} \textcolor{keyword}{constexpr} \textcolor{keywordtype}{double} \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Constants_aeb0c604a8b53fbc0d1c3b8098bd25bb8}{PI}}\{3.141592653589793116\};}
-\DoxyCodeLine{12     \textcolor{keyword}{inline} \textcolor{keyword}{constexpr} \textcolor{keywordtype}{double} \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Constants_a24d993b00117f1609358675aeaa78f8f}{\_2PI}}\{2 * \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Constants_aeb0c604a8b53fbc0d1c3b8098bd25bb8}{PI}}\};}
-\DoxyCodeLine{13     \textcolor{keyword}{inline} \textcolor{keyword}{constexpr} \textcolor{keywordtype}{double} \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Constants_ac8d9eaafe066c7af97b011d64e0b4351}{PI2}}\{\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Constants_aeb0c604a8b53fbc0d1c3b8098bd25bb8}{PI}} * 0.5\};}
-\DoxyCodeLine{14     \textcolor{keyword}{inline} \textcolor{keyword}{constexpr} \textcolor{keywordtype}{double} \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Constants_a1b086149452554c01c85970439ca3953}{RAD\_DEG}}\{180.0 / \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Constants_aeb0c604a8b53fbc0d1c3b8098bd25bb8}{PI}}\};}
-\DoxyCodeLine{15     \textcolor{keyword}{inline} \textcolor{keyword}{constexpr} \textcolor{keywordtype}{double} \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Constants_a517040c849622f0b121f3ad97b879eb7}{DEG\_RAD}}\{\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Constants_aeb0c604a8b53fbc0d1c3b8098bd25bb8}{PI}} / 180.0\};}
-\DoxyCodeLine{16     \textcolor{keyword}{inline} \textcolor{keyword}{constexpr} \textcolor{keywordtype}{double} \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Constants_a2d6b6f5825c20df8c7be4ea1df0fecfe}{g0}}\{9.80665\};}
-\DoxyCodeLine{17     \textcolor{keyword}{inline} \textcolor{keyword}{constexpr} \textcolor{keywordtype}{double} \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Constants_acb881199f0f178c0e177ce08df673c45}{OfficialTwilight}}\{-\/0.8 * \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Constants_a517040c849622f0b121f3ad97b879eb7}{DEG\_RAD}}\};}
-\DoxyCodeLine{18     \textcolor{keyword}{inline} \textcolor{keyword}{constexpr} \textcolor{keywordtype}{double} \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Constants_ace6cdf6d1a245323a23b8e0b42b8b03d}{CivilTwilight}}\{-\/6.0 * \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Constants_a517040c849622f0b121f3ad97b879eb7}{DEG\_RAD}}\};}
-\DoxyCodeLine{19     \textcolor{keyword}{inline} \textcolor{keyword}{constexpr} \textcolor{keywordtype}{double} \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Constants_a8d9290a5e455f85d7bc30355fe818bac}{NauticalTwilight}}\{-\/12.0 * \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Constants_a517040c849622f0b121f3ad97b879eb7}{DEG\_RAD}}\};}
-\DoxyCodeLine{20     \textcolor{keyword}{inline} \textcolor{keyword}{constexpr} \textcolor{keywordtype}{double} \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Constants_a948ae49e9615076dd1daed0c52f0f398}{AstronomicalTwilight}}\{-\/18.0 * \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Constants_a517040c849622f0b121f3ad97b879eb7}{DEG\_RAD}}\};}
-\DoxyCodeLine{21 \}}
-\DoxyCodeLine{22 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00001\ \textcolor{comment}{/*}}
+\DoxyCodeLine{00002\ \textcolor{comment}{\ Copyright\ (c)\ 2021-\/2023.\ Sylvain\ Guillet\ (sylvain.guillet@tutamail.com)}}
+\DoxyCodeLine{00003\ \textcolor{comment}{\ */}}
+\DoxyCodeLine{00004\ \textcolor{preprocessor}{\#ifndef\ CONSTANTS\_H}}
+\DoxyCodeLine{00005\ \textcolor{preprocessor}{\#define\ CONSTANTS\_H}}
+\DoxyCodeLine{00006\ }
+\DoxyCodeLine{00007\ \textcolor{keyword}{namespace\ }\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Constants}{IO::Astrodynamics::Constants}}}
+\DoxyCodeLine{00008\ \{}
+\DoxyCodeLine{00009\ \ \ \ \ \textcolor{keyword}{inline}\ \textcolor{keyword}{constexpr}\ \textcolor{keywordtype}{double}\ \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Constants_a7331a4fec0e0147c0e035f098f52156f}{G}}\{6.67430e-\/11\};}
+\DoxyCodeLine{00010\ \ \ \ \ \textcolor{keyword}{inline}\ \textcolor{keyword}{constexpr}\ \textcolor{keywordtype}{double}\ \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Constants_ae0f21e703b04782f568e2348fb657977}{ECCENTRIC\_ANOMALY\_ACCURACY}}\{1e-\/9\};}
+\DoxyCodeLine{00011\ \ \ \ \ \textcolor{keyword}{inline}\ \textcolor{keyword}{constexpr}\ \textcolor{keywordtype}{double}\ \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Constants_aeb0c604a8b53fbc0d1c3b8098bd25bb8}{PI}}\{3.141592653589793116\};}
+\DoxyCodeLine{00012\ \ \ \ \ \textcolor{keyword}{inline}\ \textcolor{keyword}{constexpr}\ \textcolor{keywordtype}{double}\ \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Constants_a24d993b00117f1609358675aeaa78f8f}{\_2PI}}\{2\ *\ \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Constants_aeb0c604a8b53fbc0d1c3b8098bd25bb8}{PI}}\};}
+\DoxyCodeLine{00013\ \ \ \ \ \textcolor{keyword}{inline}\ \textcolor{keyword}{constexpr}\ \textcolor{keywordtype}{double}\ \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Constants_ac8d9eaafe066c7af97b011d64e0b4351}{PI2}}\{\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Constants_aeb0c604a8b53fbc0d1c3b8098bd25bb8}{PI}}\ *\ 0.5\};}
+\DoxyCodeLine{00014\ \ \ \ \ \textcolor{keyword}{inline}\ \textcolor{keyword}{constexpr}\ \textcolor{keywordtype}{double}\ \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Constants_a1b086149452554c01c85970439ca3953}{RAD\_DEG}}\{180.0\ /\ \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Constants_aeb0c604a8b53fbc0d1c3b8098bd25bb8}{PI}}\};}
+\DoxyCodeLine{00015\ \ \ \ \ \textcolor{keyword}{inline}\ \textcolor{keyword}{constexpr}\ \textcolor{keywordtype}{double}\ \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Constants_a517040c849622f0b121f3ad97b879eb7}{DEG\_RAD}}\{\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Constants_aeb0c604a8b53fbc0d1c3b8098bd25bb8}{PI}}\ /\ 180.0\};}
+\DoxyCodeLine{00016\ \ \ \ \ \textcolor{keyword}{inline}\ \textcolor{keyword}{constexpr}\ \textcolor{keywordtype}{double}\ \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Constants_a2d6b6f5825c20df8c7be4ea1df0fecfe}{g0}}\{9.80665\};}
+\DoxyCodeLine{00017\ \ \ \ \ \textcolor{keyword}{inline}\ \textcolor{keyword}{constexpr}\ \textcolor{keywordtype}{double}\ \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Constants_acb881199f0f178c0e177ce08df673c45}{OfficialTwilight}}\{-\/0.8\ *\ \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Constants_a517040c849622f0b121f3ad97b879eb7}{DEG\_RAD}}\};}
+\DoxyCodeLine{00018\ \ \ \ \ \textcolor{keyword}{inline}\ \textcolor{keyword}{constexpr}\ \textcolor{keywordtype}{double}\ \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Constants_ace6cdf6d1a245323a23b8e0b42b8b03d}{CivilTwilight}}\{-\/6.0\ *\ \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Constants_a517040c849622f0b121f3ad97b879eb7}{DEG\_RAD}}\};}
+\DoxyCodeLine{00019\ \ \ \ \ \textcolor{keyword}{inline}\ \textcolor{keyword}{constexpr}\ \textcolor{keywordtype}{double}\ \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Constants_a8d9290a5e455f85d7bc30355fe818bac}{NauticalTwilight}}\{-\/12.0\ *\ \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Constants_a517040c849622f0b121f3ad97b879eb7}{DEG\_RAD}}\};}
+\DoxyCodeLine{00020\ \ \ \ \ \textcolor{keyword}{inline}\ \textcolor{keyword}{constexpr}\ \textcolor{keywordtype}{double}\ \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Constants_a948ae49e9615076dd1daed0c52f0f398}{AstronomicalTwilight}}\{-\/18.0\ *\ \mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Constants_a517040c849622f0b121f3ad97b879eb7}{DEG\_RAD}}\};}
+\DoxyCodeLine{00021\ \}}
+\DoxyCodeLine{00022\ \textcolor{preprocessor}{\#endif}}
 
 \end{DoxyCode}

@@ -1,47 +1,47 @@
-\hypertarget{SurfaceCoordinates_8h_source}{}\doxysection{Surface\+Coordinates.\+h}
-\label{SurfaceCoordinates_8h_source}\index{IO.Astrodynamics/Coordinates/SurfaceCoordinates.h@{IO.Astrodynamics/Coordinates/SurfaceCoordinates.h}}
+\doxysection{Surface\+Coordinates.\+h}
+\hypertarget{SurfaceCoordinates_8h_source}{}\label{SurfaceCoordinates_8h_source}\index{IO.Astrodynamics/Coordinates/SurfaceCoordinates.h@{IO.Astrodynamics/Coordinates/SurfaceCoordinates.h}}
 \mbox{\hyperlink{SurfaceCoordinates_8h}{Go to the documentation of this file.}}
 \begin{DoxyCode}{0}
-\DoxyCodeLine{1 \textcolor{comment}{/*}}
-\DoxyCodeLine{2 \textcolor{comment}{ Copyright (c) 2021-\/2023. Sylvain Guillet (sylvain.guillet@tutamail.com)}}
-\DoxyCodeLine{3 \textcolor{comment}{ */}}
-\DoxyCodeLine{4 \textcolor{preprocessor}{\#ifndef SURFACE\_COORDINATES\_H}}
-\DoxyCodeLine{5 \textcolor{preprocessor}{\#define SURFACE\_COORDINATES\_H}}
-\DoxyCodeLine{6 \textcolor{preprocessor}{\#include <\mbox{\hyperlink{Vector3D_8h}{Vector3D.h}}>}}
-\DoxyCodeLine{7 \textcolor{preprocessor}{\#include <vector>}}
-\DoxyCodeLine{8 \textcolor{preprocessor}{\#include <memory>}}
-\DoxyCodeLine{9 }
-\DoxyCodeLine{10 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Coordinates}{IO::Astrodynamics::Coordinates}}}
-\DoxyCodeLine{11 \{}
-\DoxyCodeLine{16     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1SurfaceCoordinates}{SurfaceCoordinates}}}
-\DoxyCodeLine{17     \{}
-\DoxyCodeLine{18     \textcolor{keyword}{private}:}
-\DoxyCodeLine{19         std::vector<std::unique\_ptr<IO::Astrodynamics::Math::Vector3D>> m\_surfacePoints;}
-\DoxyCodeLine{20         std::vector<std::unique\_ptr<IO::Astrodynamics::Math::Vector3D>> m\_surfaceNormals;}
-\DoxyCodeLine{21 }
-\DoxyCodeLine{22     \textcolor{keyword}{public}:}
-\DoxyCodeLine{29         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1SurfaceCoordinates_a29c2dfe69ef3dc17aea7ce8cad6fa87c}{SurfaceCoordinates}}(\textcolor{keywordtype}{size\_t} longitudeSpan,\textcolor{keywordtype}{size\_t} latitudeSpan);}
-\DoxyCodeLine{30 }
-\DoxyCodeLine{36         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1SurfaceCoordinates_a29c2dfe69ef3dc17aea7ce8cad6fa87c}{SurfaceCoordinates}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1SurfaceCoordinates}{SurfaceCoordinates}}\& surfaceCoordinates);}
-\DoxyCodeLine{37 }
-\DoxyCodeLine{38         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1SurfaceCoordinates}{SurfaceCoordinates}}\& \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1SurfaceCoordinates_ae0c0551d8c3db86994c96b81c11de881}{operator=}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1SurfaceCoordinates}{SurfaceCoordinates}}\& surfaceCoordinates);}
-\DoxyCodeLine{39 }
-\DoxyCodeLine{40 }
-\DoxyCodeLine{46         [[nodiscard]] \textcolor{keyword}{const} std::vector<std::unique\_ptr<IO::Astrodynamics::Math::Vector3D>>\& \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1SurfaceCoordinates_a5da3d0dab875b47e48ff0f5620fa5b41}{GetSurfacePoints}}()\textcolor{keyword}{ const}}
-\DoxyCodeLine{47 \textcolor{keyword}{        }\{}
-\DoxyCodeLine{48             \textcolor{keywordflow}{return} m\_surfacePoints;}
-\DoxyCodeLine{49         \}}
-\DoxyCodeLine{50 }
-\DoxyCodeLine{56         [[nodiscard]] \textcolor{keyword}{const} std::vector<std::unique\_ptr<IO::Astrodynamics::Math::Vector3D>>\& \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1SurfaceCoordinates_afed30f75e7a0d2df139e7a046b1a3266}{GetSurfaceNormals}}()\textcolor{keyword}{ const}}
-\DoxyCodeLine{57 \textcolor{keyword}{        }\{}
-\DoxyCodeLine{58             \textcolor{keywordflow}{return} m\_surfaceNormals;}
-\DoxyCodeLine{59         \}}
-\DoxyCodeLine{60 }
-\DoxyCodeLine{66         \textcolor{keywordtype}{void} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1SurfaceCoordinates_a9badf3585e3f0b2de2791a678333a6fc}{AddPoint}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO::Astrodynamics::Math::Vector3D}}\& point);}
-\DoxyCodeLine{67 }
-\DoxyCodeLine{73         \textcolor{keywordtype}{void} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1SurfaceCoordinates_a46204d4d7d914892f58d5f724efb77a9}{AddNormal}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO::Astrodynamics::Math::Vector3D}}\& normal);}
-\DoxyCodeLine{74     \};}
-\DoxyCodeLine{75 \}}
-\DoxyCodeLine{76 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00001\ \textcolor{comment}{/*}}
+\DoxyCodeLine{00002\ \textcolor{comment}{\ Copyright\ (c)\ 2021-\/2023.\ Sylvain\ Guillet\ (sylvain.guillet@tutamail.com)}}
+\DoxyCodeLine{00003\ \textcolor{comment}{\ */}}
+\DoxyCodeLine{00004\ \textcolor{preprocessor}{\#ifndef\ SURFACE\_COORDINATES\_H}}
+\DoxyCodeLine{00005\ \textcolor{preprocessor}{\#define\ SURFACE\_COORDINATES\_H}}
+\DoxyCodeLine{00006\ \textcolor{preprocessor}{\#include\ <\mbox{\hyperlink{Vector3D_8h}{Vector3D.h}}>}}
+\DoxyCodeLine{00007\ \textcolor{preprocessor}{\#include\ <vector>}}
+\DoxyCodeLine{00008\ \textcolor{preprocessor}{\#include\ <memory>}}
+\DoxyCodeLine{00009\ }
+\DoxyCodeLine{00010\ \textcolor{keyword}{namespace\ }\mbox{\hyperlink{namespaceIO_1_1Astrodynamics_1_1Coordinates}{IO::Astrodynamics::Coordinates}}}
+\DoxyCodeLine{00011\ \{}
+\DoxyCodeLine{00016\ \ \ \ \ \textcolor{keyword}{class\ }\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1SurfaceCoordinates}{SurfaceCoordinates}}}
+\DoxyCodeLine{00017\ \ \ \ \ \{}
+\DoxyCodeLine{00018\ \ \ \ \ \textcolor{keyword}{private}:}
+\DoxyCodeLine{00019\ \ \ \ \ \ \ \ \ std::vector<std::unique\_ptr<IO::Astrodynamics::Math::Vector3D>>\ m\_surfacePoints;}
+\DoxyCodeLine{00020\ \ \ \ \ \ \ \ \ std::vector<std::unique\_ptr<IO::Astrodynamics::Math::Vector3D>>\ m\_surfaceNormals;}
+\DoxyCodeLine{00021\ }
+\DoxyCodeLine{00022\ \ \ \ \ \textcolor{keyword}{public}:}
+\DoxyCodeLine{00029\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1SurfaceCoordinates}{SurfaceCoordinates}}(\textcolor{keywordtype}{size\_t}\ longitudeSpan,\textcolor{keywordtype}{size\_t}\ latitudeSpan);}
+\DoxyCodeLine{00030\ }
+\DoxyCodeLine{00036\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1SurfaceCoordinates}{SurfaceCoordinates}}(\textcolor{keyword}{const}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1SurfaceCoordinates}{SurfaceCoordinates}}\&\ surfaceCoordinates);}
+\DoxyCodeLine{00037\ }
+\DoxyCodeLine{00038\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1SurfaceCoordinates}{SurfaceCoordinates}}\&\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1SurfaceCoordinates_ae0c0551d8c3db86994c96b81c11de881}{operator=}}(\textcolor{keyword}{const}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1SurfaceCoordinates}{SurfaceCoordinates}}\&\ surfaceCoordinates);}
+\DoxyCodeLine{00039\ }
+\DoxyCodeLine{00040\ }
+\DoxyCodeLine{00046\ \ \ \ \ \ \ \ \ [[nodiscard]]\ \textcolor{keyword}{const}\ std::vector<std::unique\_ptr<IO::Astrodynamics::Math::Vector3D>>\&\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1SurfaceCoordinates_a5da3d0dab875b47e48ff0f5620fa5b41}{GetSurfacePoints}}()\textcolor{keyword}{\ const}}
+\DoxyCodeLine{00047\ \textcolor{keyword}{\ \ \ \ \ \ \ \ }\{}
+\DoxyCodeLine{00048\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ m\_surfacePoints;}
+\DoxyCodeLine{00049\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00050\ }
+\DoxyCodeLine{00056\ \ \ \ \ \ \ \ \ [[nodiscard]]\ \textcolor{keyword}{const}\ std::vector<std::unique\_ptr<IO::Astrodynamics::Math::Vector3D>>\&\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1SurfaceCoordinates_afed30f75e7a0d2df139e7a046b1a3266}{GetSurfaceNormals}}()\textcolor{keyword}{\ const}}
+\DoxyCodeLine{00057\ \textcolor{keyword}{\ \ \ \ \ \ \ \ }\{}
+\DoxyCodeLine{00058\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ m\_surfaceNormals;}
+\DoxyCodeLine{00059\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00060\ }
+\DoxyCodeLine{00066\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1SurfaceCoordinates_a9badf3585e3f0b2de2791a678333a6fc}{AddPoint}}(\textcolor{keyword}{const}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO::Astrodynamics::Math::Vector3D}}\&\ point);}
+\DoxyCodeLine{00067\ }
+\DoxyCodeLine{00073\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1SurfaceCoordinates_a46204d4d7d914892f58d5f724efb77a9}{AddNormal}}(\textcolor{keyword}{const}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO::Astrodynamics::Math::Vector3D}}\&\ normal);}
+\DoxyCodeLine{00074\ \ \ \ \ \};}
+\DoxyCodeLine{00075\ \}}
+\DoxyCodeLine{00076\ \textcolor{preprocessor}{\#endif}}
 
 \end{DoxyCode}

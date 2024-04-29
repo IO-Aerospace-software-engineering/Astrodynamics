@@ -1,55 +1,55 @@
-\hypertarget{OccultationType_8h_source}{}\doxysection{Occultation\+Type.\+h}
-\label{OccultationType_8h_source}\index{IO.Astrodynamics/OccultationType.h@{IO.Astrodynamics/OccultationType.h}}
+\doxysection{Occultation\+Type.\+h}
+\hypertarget{OccultationType_8h_source}{}\label{OccultationType_8h_source}\index{IO.Astrodynamics/OccultationType.h@{IO.Astrodynamics/OccultationType.h}}
 \mbox{\hyperlink{OccultationType_8h}{Go to the documentation of this file.}}
 \begin{DoxyCode}{0}
-\DoxyCodeLine{1 \textcolor{comment}{/*}}
-\DoxyCodeLine{2 \textcolor{comment}{ Copyright (c) 2021-\/2023. Sylvain Guillet (sylvain.guillet@tutamail.com)}}
-\DoxyCodeLine{3 \textcolor{comment}{ */}}
-\DoxyCodeLine{4 \textcolor{preprocessor}{\#ifndef OCCULTATION\_TYPE\_H}}
-\DoxyCodeLine{5 \textcolor{preprocessor}{\#define OCCULTATION\_TYPE\_H}}
-\DoxyCodeLine{6 }
-\DoxyCodeLine{7 \textcolor{preprocessor}{\#include<string>}}
-\DoxyCodeLine{8 }
-\DoxyCodeLine{9 \textcolor{keyword}{namespace }\mbox{\hyperlink{namespaceIO_1_1Astrodynamics}{IO::Astrodynamics}}}
-\DoxyCodeLine{10 \{}
-\DoxyCodeLine{11     \textcolor{keyword}{class }\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OccultationType}{OccultationType}}}
-\DoxyCodeLine{12     \{}
-\DoxyCodeLine{13     \textcolor{keyword}{private}:}
-\DoxyCodeLine{14         \textcolor{keyword}{const} std::string m\_name;}
-\DoxyCodeLine{15         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OccultationType}{OccultationType}} mFull;}
-\DoxyCodeLine{16         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OccultationType}{OccultationType}} mAnnular;}
-\DoxyCodeLine{17         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OccultationType}{OccultationType}} mPartial;}
-\DoxyCodeLine{18         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OccultationType}{OccultationType}} mAny;}
-\DoxyCodeLine{19     \textcolor{keyword}{public}:}
-\DoxyCodeLine{25         \textcolor{keyword}{explicit} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OccultationType_a6c5ede995facdb8a9bea543f37d25fe6}{OccultationType}}(std::string name);}
-\DoxyCodeLine{26 }
-\DoxyCodeLine{27         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OccultationType_a8b76979f00cc905604c532ddc68c90de}{\string~OccultationType}}() = \textcolor{keywordflow}{default};}
-\DoxyCodeLine{28 }
-\DoxyCodeLine{29         \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OccultationType}{OccultationType}} \&\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OccultationType_a0b179821eb26864a13bfa1f045a4dbb8}{operator=}}(\textcolor{keyword}{const} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OccultationType}{OccultationType}} \&other)}
-\DoxyCodeLine{30         \{}
-\DoxyCodeLine{31             \textcolor{keywordflow}{if} (\textcolor{keyword}{this} == \&other)}
-\DoxyCodeLine{32                 \textcolor{keywordflow}{return} *\textcolor{keyword}{this};}
-\DoxyCodeLine{33 }
-\DoxyCodeLine{34             \textcolor{keyword}{const\_cast<}std::string \&\textcolor{keyword}{>}(m\_name) = other.m\_name;}
-\DoxyCodeLine{35             \textcolor{keywordflow}{return} *\textcolor{keyword}{this};}
-\DoxyCodeLine{36         \}}
-\DoxyCodeLine{37 }
-\DoxyCodeLine{43         [[nodiscard]] \textcolor{keyword}{const} \textcolor{keywordtype}{char} *\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OccultationType_a46503c4bc4cd709fe6349957a4e485f5}{ToCharArray}}() \textcolor{keyword}{const};}
-\DoxyCodeLine{44 }
-\DoxyCodeLine{45         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OccultationType}{IO::Astrodynamics::OccultationType}} \&\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OccultationType_a1499831627886bddb04400c4c70cfd80}{Full}}();}
-\DoxyCodeLine{46 }
-\DoxyCodeLine{47         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OccultationType}{IO::Astrodynamics::OccultationType}} \&\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OccultationType_ad930699c8bafa9844307c7025fc9301d}{Annular}}();}
-\DoxyCodeLine{48 }
-\DoxyCodeLine{49         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OccultationType}{IO::Astrodynamics::OccultationType}} \&\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OccultationType_a51b353d98afeef8bc07a1404e45c65d3}{Partial}}();}
-\DoxyCodeLine{50 }
-\DoxyCodeLine{51         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OccultationType}{IO::Astrodynamics::OccultationType}} \&\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OccultationType_a422b72f89758ef9d85e30a9e00843f59}{Any}}();}
-\DoxyCodeLine{52 }
-\DoxyCodeLine{53         \textcolor{keyword}{static} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OccultationType}{IO::Astrodynamics::OccultationType}} \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OccultationType_a6e6004c069395c55a9219bfaa2a14853}{ToOccultationType}}(\textcolor{keyword}{const} std::string \&occultationType) ;}
-\DoxyCodeLine{54     \};}
-\DoxyCodeLine{55 }
-\DoxyCodeLine{56 }
-\DoxyCodeLine{57 \} \textcolor{comment}{// namespace IO::Astrodynamics}}
-\DoxyCodeLine{58 }
-\DoxyCodeLine{59 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00001\ \textcolor{comment}{/*}}
+\DoxyCodeLine{00002\ \textcolor{comment}{\ Copyright\ (c)\ 2021-\/2023.\ Sylvain\ Guillet\ (sylvain.guillet@tutamail.com)}}
+\DoxyCodeLine{00003\ \textcolor{comment}{\ */}}
+\DoxyCodeLine{00004\ \textcolor{preprocessor}{\#ifndef\ OCCULTATION\_TYPE\_H}}
+\DoxyCodeLine{00005\ \textcolor{preprocessor}{\#define\ OCCULTATION\_TYPE\_H}}
+\DoxyCodeLine{00006\ }
+\DoxyCodeLine{00007\ \textcolor{preprocessor}{\#include<string>}}
+\DoxyCodeLine{00008\ }
+\DoxyCodeLine{00009\ \textcolor{keyword}{namespace\ }\mbox{\hyperlink{namespaceIO_1_1Astrodynamics}{IO::Astrodynamics}}}
+\DoxyCodeLine{00010\ \{}
+\DoxyCodeLine{00011\ \ \ \ \ \textcolor{keyword}{class\ }\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OccultationType}{OccultationType}}}
+\DoxyCodeLine{00012\ \ \ \ \ \{}
+\DoxyCodeLine{00013\ \ \ \ \ \textcolor{keyword}{private}:}
+\DoxyCodeLine{00014\ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ std::string\ m\_name;}
+\DoxyCodeLine{00015\ \ \ \ \ \ \ \ \ \textcolor{keyword}{static}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OccultationType}{OccultationType}}\ mFull;}
+\DoxyCodeLine{00016\ \ \ \ \ \ \ \ \ \textcolor{keyword}{static}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OccultationType}{OccultationType}}\ mAnnular;}
+\DoxyCodeLine{00017\ \ \ \ \ \ \ \ \ \textcolor{keyword}{static}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OccultationType}{OccultationType}}\ mPartial;}
+\DoxyCodeLine{00018\ \ \ \ \ \ \ \ \ \textcolor{keyword}{static}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OccultationType}{OccultationType}}\ mAny;}
+\DoxyCodeLine{00019\ \ \ \ \ \textcolor{keyword}{public}:}
+\DoxyCodeLine{00025\ \ \ \ \ \ \ \ \ \textcolor{keyword}{explicit}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OccultationType}{OccultationType}}(std::string\ name);}
+\DoxyCodeLine{00026\ }
+\DoxyCodeLine{00027\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OccultationType_a8b76979f00cc905604c532ddc68c90de}{\string~OccultationType}}()\ =\ \textcolor{keywordflow}{default};}
+\DoxyCodeLine{00028\ }
+\DoxyCodeLine{00029\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OccultationType}{OccultationType}}\ \&\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OccultationType_a0b179821eb26864a13bfa1f045a4dbb8}{operator=}}(\textcolor{keyword}{const}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OccultationType}{OccultationType}}\ \&other)}
+\DoxyCodeLine{00030\ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00031\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (\textcolor{keyword}{this}\ ==\ \&other)}
+\DoxyCodeLine{00032\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ *\textcolor{keyword}{this};}
+\DoxyCodeLine{00033\ }
+\DoxyCodeLine{00034\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keyword}{const\_cast<}std::string\ \&\textcolor{keyword}{>}(m\_name)\ =\ other.m\_name;}
+\DoxyCodeLine{00035\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ *\textcolor{keyword}{this};}
+\DoxyCodeLine{00036\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00037\ }
+\DoxyCodeLine{00043\ \ \ \ \ \ \ \ \ [[nodiscard]]\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{char}\ *\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OccultationType_a46503c4bc4cd709fe6349957a4e485f5}{ToCharArray}}()\ \textcolor{keyword}{const};}
+\DoxyCodeLine{00044\ }
+\DoxyCodeLine{00045\ \ \ \ \ \ \ \ \ \textcolor{keyword}{static}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OccultationType}{IO::Astrodynamics::OccultationType}}\ \&\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OccultationType_a1499831627886bddb04400c4c70cfd80}{Full}}();}
+\DoxyCodeLine{00046\ }
+\DoxyCodeLine{00047\ \ \ \ \ \ \ \ \ \textcolor{keyword}{static}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OccultationType}{IO::Astrodynamics::OccultationType}}\ \&\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OccultationType_ad930699c8bafa9844307c7025fc9301d}{Annular}}();}
+\DoxyCodeLine{00048\ }
+\DoxyCodeLine{00049\ \ \ \ \ \ \ \ \ \textcolor{keyword}{static}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OccultationType}{IO::Astrodynamics::OccultationType}}\ \&\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OccultationType_a51b353d98afeef8bc07a1404e45c65d3}{Partial}}();}
+\DoxyCodeLine{00050\ }
+\DoxyCodeLine{00051\ \ \ \ \ \ \ \ \ \textcolor{keyword}{static}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OccultationType}{IO::Astrodynamics::OccultationType}}\ \&\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OccultationType_a422b72f89758ef9d85e30a9e00843f59}{Any}}();}
+\DoxyCodeLine{00052\ }
+\DoxyCodeLine{00053\ \ \ \ \ \ \ \ \ \textcolor{keyword}{static}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OccultationType}{IO::Astrodynamics::OccultationType}}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OccultationType_a6e6004c069395c55a9219bfaa2a14853}{ToOccultationType}}(\textcolor{keyword}{const}\ std::string\ \&occultationType)\ ;}
+\DoxyCodeLine{00054\ \ \ \ \ \};}
+\DoxyCodeLine{00055\ }
+\DoxyCodeLine{00056\ }
+\DoxyCodeLine{00057\ \}\ \textcolor{comment}{//\ namespace\ IO::Astrodynamics}}
+\DoxyCodeLine{00058\ }
+\DoxyCodeLine{00059\ \textcolor{preprocessor}{\#endif}}
 
 \end{DoxyCode}

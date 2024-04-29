@@ -1,0 +1,135 @@
+\doxysection{Converters.\+cpp}
+\hypertarget{Converters_8cpp_source}{}\label{Converters_8cpp_source}\index{IO.Astrodynamics/API/Converters.cpp@{IO.Astrodynamics/API/Converters.cpp}}
+\mbox{\hyperlink{Converters_8cpp}{Go to the documentation of this file.}}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{00001\ \textcolor{comment}{/*}}
+\DoxyCodeLine{00002\ \textcolor{comment}{\ Copyright\ (c)\ 2023-\/2024.\ Sylvain\ Guillet\ (sylvain.guillet@tutamail.com)}}
+\DoxyCodeLine{00003\ \textcolor{comment}{\ */}}
+\DoxyCodeLine{00004\ }
+\DoxyCodeLine{00005\ \textcolor{preprocessor}{\#include\ <\mbox{\hyperlink{WindowDTO_8h}{WindowDTO.h}}>}}
+\DoxyCodeLine{00006\ \textcolor{preprocessor}{\#include\ <\mbox{\hyperlink{PlanetodeticDTO_8h}{PlanetodeticDTO.h}}>}}
+\DoxyCodeLine{00007\ \textcolor{preprocessor}{\#include\ <\mbox{\hyperlink{Quaternion_8h}{Quaternion.h}}>}}
+\DoxyCodeLine{00008\ \textcolor{preprocessor}{\#include\ <\mbox{\hyperlink{QuaternionDTO_8h}{QuaternionDTO.h}}>}}
+\DoxyCodeLine{00009\ \textcolor{preprocessor}{\#include\ <\mbox{\hyperlink{StateVectorDTO_8h}{StateVectorDTO.h}}>}}
+\DoxyCodeLine{00010\ \textcolor{preprocessor}{\#include\ <\mbox{\hyperlink{ConicOrbitalElementsDTO_8h}{ConicOrbitalElementsDTO.h}}>}}
+\DoxyCodeLine{00011\ \textcolor{preprocessor}{\#include\ <\mbox{\hyperlink{ConicOrbitalElements_8h}{ConicOrbitalElements.h}}>}}
+\DoxyCodeLine{00012\ \textcolor{preprocessor}{\#include\ <\mbox{\hyperlink{RaDecDTO_8h}{RaDecDTO.h}}>}}
+\DoxyCodeLine{00013\ }
+\DoxyCodeLine{00014\ \textcolor{keyword}{static}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::UTC>}}\ ToUTCWindow(\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1WindowDTO}{IO::Astrodynamics::API::DTO::WindowDTO}}\ \&window)}
+\DoxyCodeLine{00015\ \{}
+\DoxyCodeLine{00016\ \ \ \ \ \textcolor{keywordflow}{return}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::UTC>}}\{\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1UTC}{IO::Astrodynamics::Time::UTC}}(std::chrono::duration<double>(window.\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1WindowDTO_a8ad028c987314a63b804a5413f01fe28}{start}})),}
+\DoxyCodeLine{00017\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1UTC}{IO::Astrodynamics::Time::UTC}}(std::chrono::duration<double>(window.\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1WindowDTO_a99de4bb056e4647b4f704dbb84d53f85}{end}}))\};}
+\DoxyCodeLine{00018\ \}}
+\DoxyCodeLine{00019\ }
+\DoxyCodeLine{00020\ \textcolor{keyword}{static}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB>}}\ ToTDBWindow(\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1WindowDTO}{IO::Astrodynamics::API::DTO::WindowDTO}}\ \&window)}
+\DoxyCodeLine{00021\ \{}
+\DoxyCodeLine{00022\ \ \ \ \ \textcolor{keywordflow}{return}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB>}}\{\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO::Astrodynamics::Time::TDB}}(std::chrono::duration<double>(window.\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1WindowDTO_a8ad028c987314a63b804a5413f01fe28}{start}})),}
+\DoxyCodeLine{00023\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TDB}{IO::Astrodynamics::Time::TDB}}(std::chrono::duration<double>(window.\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1WindowDTO_a99de4bb056e4647b4f704dbb84d53f85}{end}}))\};}
+\DoxyCodeLine{00024\ \}}
+\DoxyCodeLine{00025\ }
+\DoxyCodeLine{00026\ \textcolor{keyword}{static}\ \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1WindowDTO}{IO::Astrodynamics::API::DTO::WindowDTO}}\ ToWindowDTO(\textcolor{keyword}{const}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::UTC>}}\ \&window)}
+\DoxyCodeLine{00027\ \{}
+\DoxyCodeLine{00028\ \ \ \ \ \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1WindowDTO}{IO::Astrodynamics::API::DTO::WindowDTO}}\ dto\{\};}
+\DoxyCodeLine{00029\ \ \ \ \ dto.\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1WindowDTO_a8ad028c987314a63b804a5413f01fe28}{start}}\ =\ window.\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window_a4fbbb6e5d3102c2b09eed4936fb0a759}{GetStartDate}}().GetSecondsFromJ2000().count();}
+\DoxyCodeLine{00030\ \ \ \ \ dto.end\ =\ window.\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window_a69c483a457b6cd6e5289da531ac12614}{GetEndDate}}().GetSecondsFromJ2000().count();}
+\DoxyCodeLine{00031\ \ \ \ \ \textcolor{keywordflow}{return}\ dto;}
+\DoxyCodeLine{00032\ \}}
+\DoxyCodeLine{00033\ }
+\DoxyCodeLine{00034\ \textcolor{keyword}{static}\ \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1WindowDTO}{IO::Astrodynamics::API::DTO::WindowDTO}}\ ToWindowDTO(\textcolor{keyword}{const}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window}{IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB>}}\ \&window)}
+\DoxyCodeLine{00035\ \{}
+\DoxyCodeLine{00036\ \ \ \ \ \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1WindowDTO}{IO::Astrodynamics::API::DTO::WindowDTO}}\ dto\{\};}
+\DoxyCodeLine{00037\ \ \ \ \ dto.\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1WindowDTO_a8ad028c987314a63b804a5413f01fe28}{start}}\ =\ window.\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window_a4fbbb6e5d3102c2b09eed4936fb0a759}{GetStartDate}}().GetSecondsFromJ2000().count();}
+\DoxyCodeLine{00038\ \ \ \ \ dto.end\ =\ window.\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1Window_a69c483a457b6cd6e5289da531ac12614}{GetEndDate}}().GetSecondsFromJ2000().count();}
+\DoxyCodeLine{00039\ \ \ \ \ \textcolor{keywordflow}{return}\ dto;}
+\DoxyCodeLine{00040\ \}}
+\DoxyCodeLine{00041\ }
+\DoxyCodeLine{00042\ \textcolor{keyword}{static}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO::Astrodynamics::Math::Vector3D}}\ ToVector3D(\textcolor{keyword}{const}\ \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1Vector3DDTO}{IO::Astrodynamics::API::DTO::Vector3DDTO}}\ \&vector)}
+\DoxyCodeLine{00043\ \{}
+\DoxyCodeLine{00044\ \ \ \ \ \textcolor{keywordflow}{return}\ \{vector.\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1Vector3DDTO_a0d2cb9e11aa039b4954f4e5ad1c7361e}{x}},\ vector.\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1Vector3DDTO_a5b51f354657395a289b03f17fa3dca1d}{y}},\ vector.\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1Vector3DDTO_a6c8b411eb7174ca3e03237c6e373bc4a}{z}}\};}
+\DoxyCodeLine{00045\ \}}
+\DoxyCodeLine{00046\ }
+\DoxyCodeLine{00047\ \textcolor{keyword}{static}\ \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1Vector3DDTO}{IO::Astrodynamics::API::DTO::Vector3DDTO}}\ ToVector3DDTO(\textcolor{keyword}{const}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D}{IO::Astrodynamics::Math::Vector3D}}\ \&vector)}
+\DoxyCodeLine{00048\ \{}
+\DoxyCodeLine{00049\ \ \ \ \ \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1Vector3DDTO}{IO::Astrodynamics::API::DTO::Vector3DDTO}}\ dto\{\};}
+\DoxyCodeLine{00050\ \ \ \ \ dto.\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1Vector3DDTO_a0d2cb9e11aa039b4954f4e5ad1c7361e}{x}}\ =\ vector.\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D_af2322a71e715ebfa62eca9f3190cbd81}{GetX}}();}
+\DoxyCodeLine{00051\ \ \ \ \ dto.y\ =\ vector.\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D_af9bf6f2138c3eae9c3a7453d4c3cf32d}{GetY}}();}
+\DoxyCodeLine{00052\ \ \ \ \ dto.z\ =\ vector.\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Vector3D_ad3c15e194cef594bf219b16b1fe0ca1b}{GetZ}}();}
+\DoxyCodeLine{00053\ \ \ \ \ \textcolor{keywordflow}{return}\ dto;}
+\DoxyCodeLine{00054\ \}}
+\DoxyCodeLine{00055\ }
+\DoxyCodeLine{00056\ \textcolor{keyword}{static}\ \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1Vector3DDTO}{IO::Astrodynamics::API::DTO::Vector3DDTO}}\ ToVector3DDTO(\textcolor{keyword}{const}\ \textcolor{keywordtype}{double}\ data[3])}
+\DoxyCodeLine{00057\ \{}
+\DoxyCodeLine{00058\ \ \ \ \ \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1Vector3DDTO}{IO::Astrodynamics::API::DTO::Vector3DDTO}}\ dto\{\};}
+\DoxyCodeLine{00059\ \ \ \ \ dto.\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1Vector3DDTO_a0d2cb9e11aa039b4954f4e5ad1c7361e}{x}}\ =\ data[0];}
+\DoxyCodeLine{00060\ \ \ \ \ dto.y\ =\ data[1];}
+\DoxyCodeLine{00061\ \ \ \ \ dto.z\ =\ data[2];}
+\DoxyCodeLine{00062\ \ \ \ \ \textcolor{keywordflow}{return}\ dto;}
+\DoxyCodeLine{00063\ \}}
+\DoxyCodeLine{00064\ }
+\DoxyCodeLine{00065\ \textcolor{keyword}{static}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Quaternion}{IO::Astrodynamics::Math::Quaternion}}\ ToQuaternion(\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1QuaternionDTO}{IO::Astrodynamics::API::DTO::QuaternionDTO}}\ \&dto)}
+\DoxyCodeLine{00066\ \{}
+\DoxyCodeLine{00067\ \ \ \ \ \textcolor{keywordflow}{return}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Quaternion}{IO::Astrodynamics::Math::Quaternion}}\{dto.\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1QuaternionDTO_a0fac1cc7f325ced14e95315f3fb043f8}{w}},\ dto.\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1QuaternionDTO_a73d611e544064b368c935bac32d2163c}{x}},\ dto.\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1QuaternionDTO_ae1161f2122fcdc61477ca5c99d348404}{y}},\ dto.\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1QuaternionDTO_abd7b39866312d21e8d76bd69acdee4d4}{z}}\};}
+\DoxyCodeLine{00068\ \}}
+\DoxyCodeLine{00069\ }
+\DoxyCodeLine{00070\ \textcolor{keyword}{static}\ \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1QuaternionDTO}{IO::Astrodynamics::API::DTO::QuaternionDTO}}\ ToQuaternionDTO(\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Quaternion}{IO::Astrodynamics::Math::Quaternion}}\ \&quaternion)}
+\DoxyCodeLine{00071\ \{}
+\DoxyCodeLine{00072\ \ \ \ \ \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1QuaternionDTO}{IO::Astrodynamics::API::DTO::QuaternionDTO}}\ q;}
+\DoxyCodeLine{00073\ \ \ \ \ q.\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1QuaternionDTO_a0fac1cc7f325ced14e95315f3fb043f8}{w}}\ =\ quaternion.\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Quaternion_ac672feaf87d0ec2c370f89f3824d6e59}{GetQ0}}();}
+\DoxyCodeLine{00074\ \ \ \ \ q.\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1QuaternionDTO_a73d611e544064b368c935bac32d2163c}{x}}\ =\ quaternion.\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Quaternion_af3355ac6461512cf12b7b6441fa1a9bd}{GetQ1}}();}
+\DoxyCodeLine{00075\ \ \ \ \ q.\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1QuaternionDTO_ae1161f2122fcdc61477ca5c99d348404}{y}}\ =\ quaternion.\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Quaternion_a25aa0590c3157af82b914a62e1c1e784}{GetQ2}}();}
+\DoxyCodeLine{00076\ \ \ \ \ q.\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1QuaternionDTO_abd7b39866312d21e8d76bd69acdee4d4}{z}}\ =\ quaternion.\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Math_1_1Quaternion_a17848531026c1922b6e5d332d62f398c}{GetQ3}}();}
+\DoxyCodeLine{00077\ \ \ \ \ \textcolor{keywordflow}{return}\ q;}
+\DoxyCodeLine{00078\ \}}
+\DoxyCodeLine{00079\ }
+\DoxyCodeLine{00080\ \textcolor{keyword}{static}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1Planetodetic}{IO::Astrodynamics::Coordinates::Planetodetic}}\ ToPlanetodetic(\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1PlanetodeticDTO}{IO::Astrodynamics::API::DTO::PlanetodeticDTO}}\ \&dto)}
+\DoxyCodeLine{00081\ \{}
+\DoxyCodeLine{00082\ \ \ \ \ \textcolor{keywordflow}{return}\ \mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1Planetodetic}{IO::Astrodynamics::Coordinates::Planetodetic}}\{dto.\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1PlanetodeticDTO_ae0045565a0f2988a8b9dd1927ed381cb}{longitude}},\ dto.\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1PlanetodeticDTO_a6fe55cbbe36da306c95456168709f253}{latitude}},\ dto.\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1PlanetodeticDTO_a6e1dc920d7a3793f5d222b8a27ce7a14}{altitude}}\};}
+\DoxyCodeLine{00083\ \}}
+\DoxyCodeLine{00084\ }
+\DoxyCodeLine{00085\ \textcolor{keyword}{static}\ \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1PlanetodeticDTO}{IO::Astrodynamics::API::DTO::PlanetodeticDTO}}\ ToGeodeticDTO(\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1Planetodetic}{IO::Astrodynamics::Coordinates::Planetodetic}}\ \&geodetic)}
+\DoxyCodeLine{00086\ \{}
+\DoxyCodeLine{00087\ \ \ \ \ \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1PlanetodeticDTO}{IO::Astrodynamics::API::DTO::PlanetodeticDTO}}\ dto(geodetic.\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1Planetodetic_a326b75c208b5d3e449c49b020ddf8e08}{GetLongitude}}(),\ geodetic.\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1Planetodetic_ab4a12c4acc4f5bb17c9fb7641a2a2211}{GetLatitude}}(),\ geodetic.\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1Planetodetic_a9e6fa7b3c2e3b2b62cb675f861adb734}{GetAltitude}}());}
+\DoxyCodeLine{00088\ \ \ \ \ \textcolor{keywordflow}{return}\ dto;}
+\DoxyCodeLine{00089\ \}}
+\DoxyCodeLine{00090\ }
+\DoxyCodeLine{00091\ \textcolor{keyword}{static}\ \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1StateVectorDTO}{IO::Astrodynamics::API::DTO::StateVectorDTO}}\ ToStateVectorDTO(\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector}{IO::Astrodynamics::OrbitalParameters::StateVector}}\ \&stateVector)}
+\DoxyCodeLine{00092\ \{}
+\DoxyCodeLine{00093\ \ \ \ \ \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1StateVectorDTO}{IO::Astrodynamics::API::DTO::StateVectorDTO}}\ dto\{\};}
+\DoxyCodeLine{00094\ \ \ \ \ dto.\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1StateVectorDTO_afe72ba8c3801040ff26468d4af86418f}{epoch}}\ =\ stateVector.\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_aa65832e512d25eccceb37e78063100ec}{GetEpoch}}().\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1DateTime_a6eeccb71b101413e98aed7dd4031e4cc}{GetSecondsFromJ2000}}().count();}
+\DoxyCodeLine{00095\ \ \ \ \ dto.SetFrame(stateVector.\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_a9a83a14834283b802a68cccb27a3b9b6}{GetFrame}}().\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Frames_1_1Frames_a07b1c21b50687da8ae3f8fab59d5784d}{ToCharArray}}());}
+\DoxyCodeLine{00096\ \ \ \ \ dto.centerOfMotionId\ =\ stateVector.\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_ae45eb94a04baac5d531c3ecf16525693}{GetCenterOfMotion}}()-\/>GetId();}
+\DoxyCodeLine{00097\ \ \ \ \ dto.position\ =\ ToVector3DDTO(stateVector.\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector_afd51d419805ab1a5d8c8bf97a3bde713}{GetPosition}}());}
+\DoxyCodeLine{00098\ \ \ \ \ dto.velocity\ =\ ToVector3DDTO(stateVector.\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1StateVector_a196725c11675307780272cdf4fe2e183}{GetVelocity}}());}
+\DoxyCodeLine{00099\ }
+\DoxyCodeLine{00100\ \ \ \ \ \textcolor{keywordflow}{return}\ dto;}
+\DoxyCodeLine{00101\ \}}
+\DoxyCodeLine{00102\ }
+\DoxyCodeLine{00103\ \textcolor{keyword}{static}\ \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ConicOrbitalElementsDTO}{IO::Astrodynamics::API::DTO::ConicOrbitalElementsDTO}}}
+\DoxyCodeLine{00104\ ToConicOrbitalElementDTo(\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1ConicOrbitalElements}{IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements}}\ \&conicOrbitalElements)}
+\DoxyCodeLine{00105\ \{}
+\DoxyCodeLine{00106\ \ \ \ \ \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ConicOrbitalElementsDTO}{IO::Astrodynamics::API::DTO::ConicOrbitalElementsDTO}}\ dto\{\};}
+\DoxyCodeLine{00107\ \ \ \ \ dto.\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ConicOrbitalElementsDTO_a3b25ccc4bef36960d676607e00d49b12}{epoch}}\ =\ conicOrbitalElements.\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_aa65832e512d25eccceb37e78063100ec}{GetEpoch}}().\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1DateTime_a6eeccb71b101413e98aed7dd4031e4cc}{GetSecondsFromJ2000}}().count();}
+\DoxyCodeLine{00108\ \ \ \ \ dto.centerOfMotionId\ =\ conicOrbitalElements.\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_ae45eb94a04baac5d531c3ecf16525693}{GetCenterOfMotion}}()-\/>GetId();}
+\DoxyCodeLine{00109\ \ \ \ \ dto.ascendingNodeLongitude\ =\ conicOrbitalElements.\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1ConicOrbitalElements_ab8b8034e2b43bb0c53e1a30dac842104}{GetRightAscendingNodeLongitude}}();}
+\DoxyCodeLine{00110\ \ \ \ \ dto.eccentricity\ =\ conicOrbitalElements.\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1ConicOrbitalElements_a5e73ccd1c7849b64b436e2ddef0e3c68}{GetEccentricity}}();}
+\DoxyCodeLine{00111\ \ \ \ \ dto.inclination\ =\ conicOrbitalElements.\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1ConicOrbitalElements_ad79ee1b1eb59e38bce9bb6de5923159e}{GetInclination}}();}
+\DoxyCodeLine{00112\ \ \ \ \ dto.meanAnomaly\ =\ conicOrbitalElements.\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1ConicOrbitalElements_aeb2af2d2b38be0a0ce10e5df0c782c97}{GetMeanAnomaly}}();}
+\DoxyCodeLine{00113\ \ \ \ \ dto.orbitalPeriod\ =\ conicOrbitalElements.\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1ConicOrbitalElements_a8cca90e086c2479d5916c3328ba0508e}{GetPeriod}}().\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Time_1_1TimeSpan_ad7a98f3458c69951bacca3b4e8fe5bb9}{GetSeconds}}().count();}
+\DoxyCodeLine{00114\ \ \ \ \ dto.periapsisArgument\ =\ conicOrbitalElements.\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1ConicOrbitalElements_a31541cc2345f66c1cb73f99ae0a35b63}{GetPeriapsisArgument}}();}
+\DoxyCodeLine{00115\ \ \ \ \ dto.perifocalDistance\ =\ conicOrbitalElements.\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1ConicOrbitalElements_a31c3a5603af5487f56264d5d341df435}{GetPerifocalDistance}}();}
+\DoxyCodeLine{00116\ \ \ \ \ dto.semiMajorAxis\ =\ conicOrbitalElements.\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1ConicOrbitalElements_a6b5a062ea27c89b1ad5fef3b99f5a9ec}{GetSemiMajorAxis}}();}
+\DoxyCodeLine{00117\ \ \ \ \ dto.trueAnomaly\ =\ conicOrbitalElements.\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1ConicOrbitalElements_ad3ee892439a16ad4eab3adac8787112f}{GetTrueAnomaly}}();}
+\DoxyCodeLine{00118\ \ \ \ \ dto.SetFrame(conicOrbitalElements.\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1OrbitalParameters_1_1OrbitalParameters_a9a83a14834283b802a68cccb27a3b9b6}{GetFrame}}().\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Frames_1_1Frames_a07b1c21b50687da8ae3f8fab59d5784d}{ToCharArray}}());}
+\DoxyCodeLine{00119\ \ \ \ \ \textcolor{keywordflow}{return}\ dto;}
+\DoxyCodeLine{00120\ \}}
+\DoxyCodeLine{00121\ }
+\DoxyCodeLine{00122\ \textcolor{keyword}{static}\ \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1RaDecDTO}{IO::Astrodynamics::API::DTO::RaDecDTO}}\ ToEquatorialDTO(\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1Equatorial}{IO::Astrodynamics::Coordinates::Equatorial}}\ \&raDec)}
+\DoxyCodeLine{00123\ \{}
+\DoxyCodeLine{00124\ \ \ \ \ \mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1RaDecDTO}{IO::Astrodynamics::API::DTO::RaDecDTO}}\ raDecDto;}
+\DoxyCodeLine{00125\ \ \ \ \ raDecDto.\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1RaDecDTO_a3030ee691c7b5c6838b1646ca65b96fd}{declination}}\ =\ raDec.\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1Equatorial_a2d8a59fb1e57f419a408c5a63a84bdbe}{GetDec}}();}
+\DoxyCodeLine{00126\ \ \ \ \ raDecDto.\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1RaDecDTO_adf78c92d022f37a7d30f0efbc263b2d6}{rightAscension}}\ =\ raDec.\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1Equatorial_a781c3233df8d9574cabcad8751fe12ac}{GetRA}}();}
+\DoxyCodeLine{00127\ \ \ \ \ raDecDto.\mbox{\hyperlink{structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1RaDecDTO_a825d7b1745ffba3aed8e65d5d0449dde}{range}}\ =\ raDec.\mbox{\hyperlink{classIO_1_1Astrodynamics_1_1Coordinates_1_1Equatorial_a4a21cc71b303d39e08aa1afca53fe298}{GetRange}}();}
+\DoxyCodeLine{00128\ \ \ \ \ \textcolor{keywordflow}{return}\ raDecDto;}
+\DoxyCodeLine{00129\ \}}
+
+\end{DoxyCode}
