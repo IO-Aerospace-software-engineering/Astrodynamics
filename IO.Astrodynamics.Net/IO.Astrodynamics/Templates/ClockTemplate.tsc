@@ -1,0 +1,13 @@
+KPL/SCLK
+\begindata
+SCLK_KERNEL_ID           = ( @1957-01-01/00:00:00.0 )
+SCLK_DATA_TYPE_{id}        = ( 1 )
+SCLK01_TIME_SYSTEM_{id}    = ( 1 )
+SCLK01_N_FIELDS_{id}       = ( 2 )
+SCLK01_MODULI_{id}         = ( 4294967296 {resolution} )
+SCLK01_OFFSETS_{id}        = ( 0 0 )
+SCLK01_OUTPUT_DELIM_{id}   = ( 2 )
+SCLK_PARTITION_START_{id}  = ( 0.0000000000000E+00 )
+SCLK_PARTITION_END_{id}    = ( 2.8147497671065E+14 )
+SCLK01_COEFFICIENTS_{id}   = ( 0.0000000000000E+00     -1.3569552000000E+09     1.0000000000000E+00 )
+\begintext

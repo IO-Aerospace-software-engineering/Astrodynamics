@@ -1,0 +1,720 @@
+<?xml version="1.0" encoding="UTF-8"?>
+  <!-- PDS4 XML/Schema for Name Space Id:msn_surface  Version:1.2.2.0 - Thu May 04 00:52:52 UTC 2023 -->
+  <!-- Generated from the PDS4 Information Model Version 1.20.0.0 - System Build 13.1 -->
+  <!-- *** This PDS4 product schema is an operational deliverable. *** -->
+  <!--                                                                           -->
+  <!--               Dictionary Stack                                            -->
+  <!-- 1.20.0.0 - pds: - Common Dictionary                                       -->
+  <!-- 1.2.2.0 - msn_surface: - Surface Mission Information                      -->
+  <!--                                                                           -->
+  <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+    targetNamespace="http://pds.nasa.gov/pds4/msn_surface/v1"
+    xmlns:msn_surface="http://pds.nasa.gov/pds4/msn_surface/v1"
+    xmlns:pds="http://pds.nasa.gov/pds4/pds/v1"
+    elementFormDefault="qualified"
+    attributeFormDefault="unqualified"
+    version="1.2.2.0">
+ 
+    <xs:import namespace="http://pds.nasa.gov/pds4/pds/v1" schemaLocation="PDS4_PDS_1K00.xsd"/>
+ 
+  <xs:annotation>
+    <xs:documentation>
+
+    ## CHANGE LOG ##
+    1.0.0.0
+    - Initial version
+    
+    1.1.0.0, CDC
+    - Upgraded to v1B00 of the IM.
+    - Re-classified this dictionary as a Discipline Dictionary, instead of Mission Dictionary.
+    - Renamed Surface_Mission_Parameters to Surface_Mission_Information, Command_Execution_Information to Command_Execution, and
+      Telemetry_Information to Telemetry.
+      
+    1.1.1.0, CDC
+    - Upgraded to v1D00 of the IM.
+    - Fixed bugs in download_priority attribute: removed min and max value constraints, made definition more generic.
+    
+    1.2.0.0, Trent Hare
+    - Added Observational_Intent class and attributes: campaign, goal, task, activity_notes, keyword
+    - Added command_dispatch_sclk to msn_surface:Command_Execution. Cardinality 0:1
+    - Added several telemetry attibutes for MSL/M2020
+    - Added Commanded_Parameters class with download_priority attribute
+    - Update command_source_id definition per GitHub PDS4-LDD-Issue-Repo/issues/37
+    - Added boot_counter, rtt_version attributes to Command_Execution
+    - Added activity_id, target_id attributes to Observational_Intent
+    - Update to PDS IM 1E00
+    - Update sequence_execution_count to have a min=0
+    - Update telemetry_source_start_time to ASCII_Date_Time_DOY_UTC and formation_rule
+    - Added Commanded_Parameters to Surface_Mission_Information
+    
+    1.2.1.0, Trent Hare
+    - Added "Team-generated Image" enumeration value under transport_protocol
+    
+    1.2.2.0 T.Hare
+    - Added telemetry_alternate_name
+    
+  
+    </xs:documentation>
+  </xs:annotation>
+ 
+  <xs:element name="Surface_Mission_Information" type="msn_surface:Surface_Mission_Information"> </xs:element>
+
+  <xs:complexType name="Command_Execution">
+    <xs:annotation>
+      <xs:documentation>The Command_Execution class contains information
+        about how the command that acquired this data was executed, such
+        as sequence or activity.</xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:element name="sequence_id" type="msn_surface:sequence_id" minOccurs="0" maxOccurs="1"> </xs:element>
+      <xs:element name="sequence_version_id" type="msn_surface:sequence_version_id" minOccurs="0" maxOccurs="1"> </xs:element>
+      <xs:element name="sequence_execution_count" type="msn_surface:sequence_execution_count" minOccurs="0" maxOccurs="1"> </xs:element>
+      <xs:element name="command_sequence_number" type="msn_surface:command_sequence_number" minOccurs="0" maxOccurs="1"> </xs:element>
+      <xs:element name="command_source_id" type="msn_surface:command_source_id" minOccurs="0" maxOccurs="1"> </xs:element>
+      <xs:element name="command_dispatch_sclk" type="msn_surface:command_dispatch_sclk" minOccurs="0" maxOccurs="1"> </xs:element>
+      <xs:element name="observation_id" nillable="true" type="msn_surface:observation_id" minOccurs="0" maxOccurs="1"> </xs:element>
+      <xs:element name="request_id" nillable="true" type="msn_surface:request_id" minOccurs="0" maxOccurs="1"> </xs:element>
+      <xs:element name="boot_counter" type="msn_surface:boot_counter" minOccurs="0" maxOccurs="1"> </xs:element>
+      <xs:element name="rtt_version" type="msn_surface:rtt_version" minOccurs="0" maxOccurs="1"> </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="Commanded_Parameters">
+    <xs:annotation>
+      <xs:documentation>The Commanded_Parameters class contains
+        attributes used to identify or describe the commands sent to a
+        spacecraft to perform one or more actions resulting in the
+        acquisition of the current data product. These are distinct from
+        similar values in the root Surface_Mission_Information class
+        which indicate the state of the data as
+        acquired.</xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:element name="download_priority" type="msn_surface:download_priority" minOccurs="0" maxOccurs="1"> </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="Observational_Intent">
+    <xs:annotation>
+      <xs:documentation>Describes the intent and context of the
+        observation.</xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:element name="campaign" type="msn_surface:campaign" minOccurs="0" maxOccurs="1"> </xs:element>
+      <xs:element name="goal" type="msn_surface:goal" minOccurs="0" maxOccurs="1"> </xs:element>
+      <xs:element name="task" type="msn_surface:task" minOccurs="0" maxOccurs="1"> </xs:element>
+      <xs:element name="activity_notes" type="msn_surface:activity_notes" minOccurs="0" maxOccurs="1"> </xs:element>
+      <xs:element name="keyword" type="msn_surface:keyword" minOccurs="0" maxOccurs="1"> </xs:element>
+      <xs:element name="activity_id" type="msn_surface:activity_id" minOccurs="0" maxOccurs="1"> </xs:element>
+      <xs:element name="target_id" type="msn_surface:target_id" minOccurs="0" maxOccurs="1"> </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="Surface_Mission_Information">
+    <xs:annotation>
+      <xs:documentation>The Surface_Mission_Information class contains
+        attributes specific to surface missions which apply across
+        instrument types.</xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:element name="Command_Execution" type="msn_surface:Command_Execution" minOccurs="0" maxOccurs="1"> </xs:element>
+      <xs:element name="Telemetry" type="msn_surface:Telemetry" minOccurs="0" maxOccurs="1"> </xs:element>
+      <xs:element name="Observational_Intent" type="msn_surface:Observational_Intent" minOccurs="0" maxOccurs="1"> </xs:element>
+      <xs:element name="surface_gravity" type="msn_surface:surface_gravity" minOccurs="0" maxOccurs="1"> </xs:element>
+      <xs:element name="Commanded_Parameters" type="msn_surface:Commanded_Parameters" minOccurs="0" maxOccurs="1"> </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="Telemetry">
+    <xs:annotation>
+      <xs:documentation>The Telemetry class contains downlink-related
+        attributes used primarily during mission
+        operations.</xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:element name="application_id" type="msn_surface:application_id" minOccurs="0" maxOccurs="1"> </xs:element>
+      <xs:element name="application_subtype_id" type="msn_surface:application_subtype_id" minOccurs="0" maxOccurs="1"> </xs:element>
+      <xs:element name="application_name" type="msn_surface:application_name" minOccurs="0" maxOccurs="1"> </xs:element>
+      <xs:element name="provider_id" type="msn_surface:provider_id" minOccurs="0" maxOccurs="1"> </xs:element>
+      <xs:element name="flight_software_version_id" type="msn_surface:flight_software_version_id" minOccurs="0" maxOccurs="1"> </xs:element>
+      <xs:element name="telemetry_source_name" type="msn_surface:telemetry_source_name" minOccurs="0" maxOccurs="1"> </xs:element>
+      <xs:element name="telemetry_alternate_name" type="msn_surface:telemetry_alternate_name" minOccurs="0" maxOccurs="1"> </xs:element>
+      <xs:element name="transport_protocol" type="msn_surface:transport_protocol" minOccurs="0" maxOccurs="1"> </xs:element>
+      <xs:element name="communication_session_id" type="msn_surface:communication_session_id" minOccurs="0" maxOccurs="1"> </xs:element>
+      <xs:element name="telemetry_source_start_time" type="msn_surface:telemetry_source_start_time" minOccurs="0" maxOccurs="1"> </xs:element>
+      <xs:element name="telemetry_source_sclk_start" type="msn_surface:telemetry_source_sclk_start" minOccurs="0" maxOccurs="1"> </xs:element>
+      <xs:element name="product_completion_status" type="msn_surface:product_completion_status" minOccurs="0" maxOccurs="1"> </xs:element>
+      <xs:element name="earth_received_start_date_time" type="msn_surface:earth_received_start_date_time" minOccurs="0" maxOccurs="1"> </xs:element>
+      <xs:element name="earth_received_stop_date_time" type="msn_surface:earth_received_stop_date_time" minOccurs="0" maxOccurs="1"> </xs:element>
+      <xs:element name="download_priority" type="msn_surface:download_priority" minOccurs="0" maxOccurs="1"> </xs:element>
+      <xs:element name="data_size" type="msn_surface:data_size" minOccurs="0" maxOccurs="1"> </xs:element>
+      <xs:element name="expected_packets" type="msn_surface:expected_packets" minOccurs="0" maxOccurs="1"> </xs:element>
+      <xs:element name="received_packets" type="msn_surface:received_packets" minOccurs="0" maxOccurs="1"> </xs:element>
+      <xs:element name="telemetry_source_host_name" type="msn_surface:telemetry_source_host_name" minOccurs="0" maxOccurs="1"> </xs:element>
+      <xs:element name="expected_transmission_path" type="msn_surface:expected_transmission_path" minOccurs="0" maxOccurs="1"> </xs:element>
+      <xs:element name="transmission_path" type="msn_surface:transmission_path" minOccurs="0" maxOccurs="1"> </xs:element>
+      <xs:element name="flight_software_mode" type="msn_surface:flight_software_mode" minOccurs="0" maxOccurs="1"> </xs:element>
+      <xs:element name="telemetry_source_size" type="msn_surface:telemetry_source_size" minOccurs="0" maxOccurs="1"> </xs:element>
+      <xs:element name="telemetry_source_checksum" type="msn_surface:telemetry_source_checksum" minOccurs="0" maxOccurs="1"> </xs:element>
+      <xs:element name="auto_delete_flag" type="msn_surface:auto_delete_flag" minOccurs="0" maxOccurs="1"> </xs:element>
+      <xs:element name="virtual_channel_id" type="msn_surface:virtual_channel_id" minOccurs="0" maxOccurs="1"> </xs:element>
+    </xs:sequence>
+    <!-- Begin assert statements for schematron - Enumerated Values -->
+    <!-- <xs:assert test="msn_surface:transport_protocol = ('Data Product', 'SFDU', 'Team-generated Image')"/> -->
+    <!-- End assert statements for schematron - Enumerated Values -->
+  </xs:complexType>
+
+    <xs:annotation>
+      <xs:documentation>This section contains the simpleTypes that provide more constraints
+        than those at the base data type level. The simpleTypes defined here build on the base data
+        types. This is another component of the common dictionary and therefore falls within the
+        common namespace.
+      </xs:documentation>
+    </xs:annotation>
+
+  <xs:simpleType name="activity_id">
+    <xs:annotation>
+      <xs:documentation>Identifier specifying the activity this
+        observation is a part of.</xs:documentation>
+    </xs:annotation>
+    <xs:restriction base="pds:ASCII_Short_String_Collapsed">
+     <xs:minLength value="1"/>
+     <xs:maxLength value="255"/>
+	   </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="activity_notes">
+    <xs:annotation>
+      <xs:documentation>Provides additional notes regarding the
+        activity.</xs:documentation>
+    </xs:annotation>
+    <xs:restriction base="pds:ASCII_Text_Preserved">
+     <xs:minLength value="1"/>
+	   </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="application_id">
+    <xs:annotation>
+      <xs:documentation>The application_id (often abbreviated APID)
+        attribute identifies the process, or source, which created the
+        data. This can include information such as an identification of
+        the instrument which generated the telemetry stream, its
+        operating mode at the time of data acquisition, and any onboard
+        compression of the data.</xs:documentation>
+    </xs:annotation>
+    <xs:restriction base="pds:ASCII_NonNegative_Integer">
+    	<xs:pattern value='[0-9]+'/>
+     <xs:minInclusive value="0"/>
+     <xs:maxInclusive value="18446744073709551615"/>
+	   </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="application_name">
+    <xs:annotation>
+      <xs:documentation>The application_name attribute provides the name
+        associated with the source or process which created the
+        data.</xs:documentation>
+    </xs:annotation>
+    <xs:restriction base="pds:ASCII_Short_String_Collapsed">
+     <xs:minLength value="1"/>
+     <xs:maxLength value="255"/>
+	   </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="application_subtype_id">
+    <xs:annotation>
+      <xs:documentation>The application_subtype_id attribute provides
+        further distinction (i.e., greater specificity) among
+        application_id types.</xs:documentation>
+    </xs:annotation>
+    <xs:restriction base="pds:ASCII_Short_String_Collapsed">
+     <xs:minLength value="1"/>
+     <xs:maxLength value="255"/>
+	   </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="auto_delete_flag">
+    <xs:annotation>
+      <xs:documentation>Indicates if the product was to be automatically
+        deleted onboard after it is transmitted.</xs:documentation>
+    </xs:annotation>
+    <xs:restriction base="pds:ASCII_Boolean">
+	   </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="boot_counter">
+    <xs:annotation>
+      <xs:documentation>Counter indicating the number of times the
+        spacecraft flight software has been booted. The intent is that
+        this is a global counter that can uniquely identify the current
+        FSW boot, so other counters that reset at boot time can be
+        disambiguated.</xs:documentation>
+    </xs:annotation>
+    <xs:restriction base="pds:ASCII_Short_String_Collapsed">
+     <xs:minLength value="1"/>
+     <xs:maxLength value="255"/>
+	   </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="campaign">
+    <xs:annotation>
+      <xs:documentation>Identifies the long-term observational campaign
+        of which this observation is a part.</xs:documentation>
+    </xs:annotation>
+    <xs:restriction base="pds:ASCII_Text_Preserved">
+     <xs:minLength value="1"/>
+	   </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="command_dispatch_sclk">
+    <xs:annotation>
+      <xs:documentation>Specifies the spacecraft clock time at which the
+        command execution was started.</xs:documentation>
+    </xs:annotation>
+    <xs:restriction base="pds:ASCII_Short_String_Collapsed">
+     <xs:minLength value="1"/>
+     <xs:maxLength value="255"/>
+	   </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="command_sequence_number">
+    <xs:annotation>
+      <xs:documentation>The command_sequence_number attribute provides a
+        numeric identifier for a sequence of commands sent to a
+        spacecraft or instrument.</xs:documentation>
+    </xs:annotation>
+    <xs:restriction base="pds:ASCII_NonNegative_Integer">
+    	<xs:pattern value='[0-9]+'/>
+     <xs:minInclusive value="0"/>
+     <xs:maxInclusive value="18446744073709551615"/>
+	   </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="command_source_id">
+    <xs:annotation>
+      <xs:documentation>Specifies where the command that triggered
+        acquisition of this data came from. This may be "GROUND" for
+        ground commanding, or the name of a flight software module that
+        initiated the request.</xs:documentation>
+    </xs:annotation>
+    <xs:restriction base="pds:ASCII_Short_String_Collapsed">
+     <xs:minLength value="1"/>
+     <xs:maxLength value="255"/>
+	   </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="communication_session_id">
+    <xs:annotation>
+      <xs:documentation>Identifies the communication session used to
+        acquire this data.</xs:documentation>
+    </xs:annotation>
+    <xs:restriction base="pds:ASCII_Short_String_Collapsed">
+     <xs:minLength value="1"/>
+     <xs:maxLength value="255"/>
+	   </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="data_size">
+    <xs:annotation>
+      <xs:documentation>The data_size specifies number of bytes in the
+        compressed data stream, not including headers.</xs:documentation>
+    </xs:annotation>
+    <xs:restriction base="pds:ASCII_NonNegative_Integer">
+    	<xs:pattern value='[0-9]+'/>
+     <xs:minInclusive value="0"/>
+     <xs:maxInclusive value="18446744073709551615"/>
+	   </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="download_priority">
+    <xs:annotation>
+      <xs:documentation>The download_priority attribute specifies which
+        data to downlink/transmit, based on order of importance. The
+        ranking and meaning of specific values will vary depending on
+        the mission, and should be defined in the mission software
+        interface specification (SIS).</xs:documentation>
+    </xs:annotation>
+    <xs:restriction base="pds:ASCII_NonNegative_Integer">
+    	<xs:pattern value='[0-9]+'/>
+     <xs:minInclusive value="0"/>
+     <xs:maxInclusive value="18446744073709551615"/>
+	   </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="earth_received_start_date_time">
+    <xs:annotation>
+      <xs:documentation>The earth_received_start_date_time attribute
+        provides the earliest time at which any component telemetry data
+        for a particular product was received.</xs:documentation>
+    </xs:annotation>
+    <xs:restriction base="pds:ASCII_Date_Time_YMD_UTC">
+  <!-- format="YYYY-MM-DDTHH:MM:SS.SSSSSSZ" -->
+	   </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="earth_received_stop_date_time">
+    <xs:annotation>
+      <xs:documentation>The earth_received_stop_date_time attribute
+        provides the latest time at which any component telemetry data
+        for a particular product was received.</xs:documentation>
+    </xs:annotation>
+    <xs:restriction base="pds:ASCII_Date_Time_YMD_UTC">
+  <!-- format="YYYY-MM-DDTHH:MM:SS.SSSSSSZ" -->
+	   </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="expected_packets">
+    <xs:annotation>
+      <xs:documentation>The expected_packets attribute provides the
+        total number of telemetry packets which constitute a complete
+        data product, i.e., a data product without missing
+        data.</xs:documentation>
+    </xs:annotation>
+    <xs:restriction base="pds:ASCII_NonNegative_Integer">
+    	<xs:pattern value='[0-9]+'/>
+     <xs:minInclusive value="0"/>
+     <xs:maxInclusive value="18446744073709551615"/>
+	   </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="expected_transmission_path">
+    <xs:annotation>
+      <xs:documentation>Specifies the planned transmission path (route)
+        for the telemetry data. See also transmission_path and
+        communication_session_id.</xs:documentation>
+    </xs:annotation>
+    <xs:restriction base="pds:ASCII_Short_String_Collapsed">
+     <xs:minLength value="1"/>
+     <xs:maxLength value="255"/>
+	   </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="flight_software_mode">
+    <xs:annotation>
+      <xs:documentation>Specifies the active flight software mode at the
+        time of data product creation. Interpretation of specific modes
+        is mission-dependent.</xs:documentation>
+    </xs:annotation>
+    <xs:restriction base="pds:ASCII_Short_String_Collapsed">
+     <xs:minLength value="1"/>
+     <xs:maxLength value="255"/>
+	   </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="flight_software_version_id">
+    <xs:annotation>
+      <xs:documentation>The flight_software_version_id attribute
+        identifies the version of the instrument flight software used to
+        acquire the image.</xs:documentation>
+    </xs:annotation>
+    <xs:restriction base="pds:ASCII_Short_String_Collapsed">
+     <xs:minLength value="1"/>
+     <xs:maxLength value="255"/>
+	   </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="goal">
+    <xs:annotation>
+      <xs:documentation>Identifies the goal of this
+        observation.</xs:documentation>
+    </xs:annotation>
+    <xs:restriction base="pds:ASCII_Text_Preserved">
+     <xs:minLength value="1"/>
+	   </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="keyword">
+    <xs:annotation>
+      <xs:documentation>Identifies geological characteristics of a
+        feature or target.</xs:documentation>
+    </xs:annotation>
+    <xs:restriction base="pds:ASCII_Text_Preserved">
+     <xs:minLength value="1"/>
+	   </xs:restriction>
+  </xs:simpleType>
+
+  <xs:complexType name="observation_id">
+    <xs:annotation>
+      <xs:documentation>The observation_id specifies a unique identifier
+        for a scientific observation within a data
+        set.</xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base="pds:ASCII_Short_String_Collapsed">
+        <xs:attribute name="nilReason" type="pds:nil_reason" use="optional" />
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+
+  <xs:simpleType name="product_completion_status">
+    <xs:annotation>
+      <xs:documentation>The product_completion_status attribute
+        indicates whether or not a product is complete or is in one of a
+        number of incomplete states. Sample values might indicate that
+        all portions of the product have been downlinked and received
+        correctly, that all portions have not yet been received, or that
+        the product contains transmission errors. The specific values
+        are mission-dependent.</xs:documentation>
+    </xs:annotation>
+    <xs:restriction base="pds:ASCII_Short_String_Collapsed">
+     <xs:minLength value="1"/>
+     <xs:maxLength value="255"/>
+	   </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="provider_id">
+    <xs:annotation>
+      <xs:documentation>The provider_id attribute identifies the
+        organization or subsystem that supplied the telemetry data
+        product to the producer of the raw (EDR) PDS data product. This
+        is typically (but not always) the organization responsible for
+        reassembling packetized data into a single product. These may
+        vary by mission so the permissible values should be set by the
+        mission dictionaries. </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base="pds:ASCII_Short_String_Collapsed">
+     <xs:minLength value="1"/>
+     <xs:maxLength value="255"/>
+	   </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="received_packets">
+    <xs:annotation>
+      <xs:documentation>The received_packets attribute provides the
+        total number of telemetry packets actually used to construct
+        this data product. cf. expected_packets.</xs:documentation>
+    </xs:annotation>
+    <xs:restriction base="pds:ASCII_NonNegative_Integer">
+    	<xs:pattern value='[0-9]+'/>
+     <xs:minInclusive value="0"/>
+     <xs:maxInclusive value="18446744073709551615"/>
+	   </xs:restriction>
+  </xs:simpleType>
+
+  <xs:complexType name="request_id">
+    <xs:annotation>
+      <xs:documentation>The request_id is used to group related datasets
+        together by science or engineering application or theme, such as
+        frames in a mosaic.</xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base="pds:ASCII_Short_String_Collapsed">
+        <xs:attribute name="nilReason" type="pds:nil_reason" use="optional" />
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+
+  <xs:simpleType name="rtt_version">
+    <xs:annotation>
+      <xs:documentation>Identifies the version of the Round-Trip
+        Tracking (RTT) system used to create metadata in this
+        observation</xs:documentation>
+    </xs:annotation>
+    <xs:restriction base="pds:ASCII_Short_String_Collapsed">
+     <xs:minLength value="1"/>
+     <xs:maxLength value="255"/>
+	   </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="sequence_execution_count">
+    <xs:annotation>
+      <xs:documentation>The sequence_execution_count specifies how many
+        times this sequence has executed since the last reset of the
+        flight computer.</xs:documentation>
+    </xs:annotation>
+    <xs:restriction base="pds:ASCII_NonNegative_Integer">
+    	<xs:pattern value='[0-9]+'/>
+     <xs:minInclusive value="0"/>
+     <xs:maxInclusive value="18446744073709551615"/>
+	   </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="sequence_id">
+    <xs:annotation>
+      <xs:documentation>The sequence_id identifies the command sequence
+        used to acquire this product.</xs:documentation>
+    </xs:annotation>
+    <xs:restriction base="pds:ASCII_Short_String_Collapsed">
+     <xs:minLength value="1"/>
+     <xs:maxLength value="255"/>
+	   </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="sequence_version_id">
+    <xs:annotation>
+      <xs:documentation>The sequence_version_id identifies which of
+        potentially several versions of a sequence_id were used to
+        acquire this product.</xs:documentation>
+    </xs:annotation>
+    <xs:restriction base="pds:ASCII_Short_String_Collapsed">
+     <xs:minLength value="1"/>
+     <xs:maxLength value="255"/>
+	   </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="surface_gravity_WO_Units">
+    <xs:restriction base="pds:ASCII_Real">
+     <xs:minInclusive value="0.0"/>
+     <xs:maxInclusive value="1.7976931348623157e308"/>
+	   </xs:restriction>
+  </xs:simpleType>
+
+  <xs:complexType name="surface_gravity">
+    <xs:annotation>
+      <xs:documentation>The surface_gravity attribute specifies the
+        acceleration of gravity (magnitude, not
+        direction).</xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base="msn_surface:surface_gravity_WO_Units">
+        <xs:attribute name="unit" type="pds:Units_of_Acceleration" use="required" />
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+
+  <xs:simpleType name="target_id">
+    <xs:annotation>
+      <xs:documentation>Identifier specifying the name or identifier of
+        the primary target this observation is observing. This is
+        distinct from the pds:Target class in that pds:Target typically
+        refers to a large entity such as a planet or satellite, whereas
+        this keyword is intended to capture much finer target
+        information, for example a rock name or even a specific location
+        on a rock.</xs:documentation>
+    </xs:annotation>
+    <xs:restriction base="pds:ASCII_Short_String_Collapsed">
+     <xs:minLength value="1"/>
+     <xs:maxLength value="255"/>
+	   </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="task">
+    <xs:annotation>
+      <xs:documentation>Identifies the specific task for this
+        observation.</xs:documentation>
+    </xs:annotation>
+    <xs:restriction base="pds:ASCII_Text_Preserved">
+     <xs:minLength value="1"/>
+	   </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="telemetry_alternate_name">
+    <xs:annotation>
+      <xs:documentation>The telemetry_alternate_name is similar to
+        telemetry_source_name but specifies an alternate name that may
+        be used to additionally identify the source of the telemetry
+        data in the parent class.</xs:documentation>
+    </xs:annotation>
+    <xs:restriction base="pds:ASCII_Short_String_Collapsed">
+     <xs:minLength value="1"/>
+     <xs:maxLength value="255"/>
+	   </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="telemetry_source_checksum">
+    <xs:annotation>
+      <xs:documentation>Specifies the checksum for the telemetry stream
+        from which this product was derived.</xs:documentation>
+    </xs:annotation>
+    <xs:restriction base="pds:ASCII_Integer">
+     <xs:minInclusive value="-9223372036854775808"/>
+     <xs:maxInclusive value="9223372036854775807"/>
+	   </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="telemetry_source_host_name">
+    <xs:annotation>
+      <xs:documentation>Specifies the name of the host venue that
+        provided the telemetry source data used in the creation of this
+        data set.</xs:documentation>
+    </xs:annotation>
+    <xs:restriction base="pds:ASCII_Short_String_Collapsed">
+     <xs:minLength value="1"/>
+     <xs:maxLength value="255"/>
+	   </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="telemetry_source_name">
+    <xs:annotation>
+      <xs:documentation>The telemetry_source_name specifies the name
+        source of the telemetry data described in the parent
+        class.</xs:documentation>
+    </xs:annotation>
+    <xs:restriction base="pds:ASCII_Short_String_Collapsed">
+     <xs:minLength value="1"/>
+     <xs:maxLength value="255"/>
+	   </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="telemetry_source_sclk_start">
+    <xs:annotation>
+      <xs:documentation>The telemetry_source_sclk_start attribute
+        specifies the value of the spacecraft clock (in seconds) at the
+        creation time of the source product from which this product was
+        derived.</xs:documentation>
+    </xs:annotation>
+    <xs:restriction base="pds:ASCII_Short_String_Collapsed">
+     <xs:minLength value="1"/>
+     <xs:maxLength value="255"/>
+	   </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="telemetry_source_size">
+    <xs:annotation>
+      <xs:documentation>Specifies the length in bytes of the telemetry
+        stream from which this product was derived.</xs:documentation>
+    </xs:annotation>
+    <xs:restriction base="pds:ASCII_Integer">
+     <xs:minInclusive value="-9223372036854775808"/>
+     <xs:maxInclusive value="9223372036854775807"/>
+	   </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="telemetry_source_start_time">
+    <xs:annotation>
+      <xs:documentation>The telemetry_source_start_time specifies the
+        creation time of the source product from which this product was
+        derived. It is the same as the telemetry_source_sclk_start
+        converted to Spacecraft Event Time (SCET).</xs:documentation>
+    </xs:annotation>
+    <xs:restriction base="pds:ASCII_Date_Time_DOY_UTC">
+  <!-- format="YYYY-DOYTHH:MM:SS.SSSSSSZ" -->
+	   </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="transmission_path">
+    <xs:annotation>
+      <xs:documentation>Indicates the actual transmission path (route)
+        for the telemetry data. See also expected_transmission_path and
+        communication_session_id.</xs:documentation>
+    </xs:annotation>
+    <xs:restriction base="pds:ASCII_Short_String_Collapsed">
+     <xs:minLength value="1"/>
+     <xs:maxLength value="255"/>
+	   </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="transport_protocol">
+    <xs:annotation>
+      <xs:documentation>The transport_protocol attribute specifies the
+        protocol used in the creation of the telemetry data products by
+        the subsystem which generates the telemetry stream.
+        </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base="pds:ASCII_Short_String_Collapsed">
+     <xs:minLength value="1"/>
+     <xs:maxLength value="255"/>
+	   </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="virtual_channel_id">
+    <xs:annotation>
+      <xs:documentation>Specifies the type of data flowing in the
+        telemetry virtual channel.</xs:documentation>
+    </xs:annotation>
+    <xs:restriction base="pds:ASCII_Integer">
+     <xs:minInclusive value="-9223372036854775808"/>
+     <xs:maxInclusive value="9223372036854775807"/>
+	   </xs:restriction>
+  </xs:simpleType>
+</xs:schema>

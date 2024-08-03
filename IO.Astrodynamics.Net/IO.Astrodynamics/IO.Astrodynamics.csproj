@@ -1,0 +1,69 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <ImplicitUsings>disable</ImplicitUsings>
+        <Nullable>disable</Nullable>
+        <AssemblyName>IO.Astrodynamics.Net</AssemblyName>
+        <Company>IO</Company>
+        <LangVersion>12</LangVersion>
+        <TargetFramework>net8.0</TargetFramework>
+        
+    </PropertyGroup>
+    <PropertyGroup>
+        <IsAotCompatible Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net7.0'))">true</IsAotCompatible>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <None Remove="resources\libIO.SDK.so" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <None Remove="resources\IO.SDK.dll" />
+        <None Remove="resources\IO.SDK.exp" />
+        <None Remove="resources\IO.SDK.lib" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <EmbeddedResource Include="Templates\InstrumentFrameTemplate.tf" />
+      <EmbeddedResource Include="Templates\InstrumentKernelCircularTemplate.ti" />
+      <EmbeddedResource Include="Templates\InstrumentKernelEllipticalTemplate.ti" />
+      <EmbeddedResource Include="Templates\InstrumentKernelRectangularTemplate.ti" />
+      <EmbeddedResource Include="Templates\SiteFrameTemplate.tf" />
+      <None Remove="PDS\V4\Schemas\PDS4_MSN_1K00_1300.xsd" />
+      <EmbeddedResource Include="PDS\V4\Schemas\PDS4_MSN_1K00_1300.xsd" />
+      <None Remove="PDS\V4\Schemas\PDS4_PDS_1K00.xsd" />
+      <EmbeddedResource Include="PDS\V4\Schemas\PDS4_PDS_1K00.xsd" />
+      <None Remove="PDS\V4\Schemas\PDS4_PDS_1K00.JSON" />
+      <None Remove="PDS\V4\Schemas\PDS4_MSN_1K00_1300.JSON" />
+      <None Remove="PDS\V4\Schemas\PDS4_MSN_SURFACE_1K00_1220.xsd" />
+      <EmbeddedResource Include="PDS\V4\Schemas\PDS4_MSN_SURFACE_1K00_1220.xsd">
+        <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+      </EmbeddedResource>
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Remove="resources\IO.Astrodynamics.dll" />
+      <None Remove="resources\IO.Astrodynamics.lib" />
+      <None Remove="resources\libIO.Astrodynamics.so" />
+      <Content Include="resources\IO.Astrodynamics.dll">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </Content>
+      <Content Include="resources\IO.Astrodynamics.lib">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </Content>
+      <Content Include="resources\libIO.Astrodynamics.so">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </Content>
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Remove="Templates\FrameTemplate.tf" />
+      <EmbeddedResource Include="Templates\ClockTemplate.tsc" />
+      <EmbeddedResource Include="Templates\FrameTemplate.tf" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Compile Remove="Math\VectorExtension.cs" />
+    </ItemGroup>
+
+</Project>
