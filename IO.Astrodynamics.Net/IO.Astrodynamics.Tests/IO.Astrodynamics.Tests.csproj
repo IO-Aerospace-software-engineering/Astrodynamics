@@ -1,0 +1,125 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <ImplicitUsings>disable</ImplicitUsings>
+        <Nullable>disable</Nullable>
+
+        <IsPackable>false</IsPackable>
+
+        <TargetFramework>net8.0</TargetFramework>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="BenchmarkDotNet" Version="0.13.12" />
+        <PackageReference Include="JetBrains.Annotations" Version="2023.3.0" />
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
+        <PackageReference Include="xunit" Version="2.6.6" />
+        <PackageReference Include="coverlet.collector" Version="6.0.0">
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+            <PrivateAssets>all</PrivateAssets>
+        </PackageReference>
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\IO.Astrodynamics\IO.Astrodynamics.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Remove="Data\SolarSystem\de440s.bsp" />
+      <Content Include="Data\SolarSystem\de440s.bsp">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <None Remove="Data\SolarSystem\earth_assoc_itrf93.tf" />
+      <Content Include="Data\SolarSystem\earth_assoc_itrf93.tf">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <None Remove="Data\SolarSystem\earth_fixed.tf" />
+      <Content Include="Data\SolarSystem\earth_fixed.tf">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <None Remove="Data\SolarSystem\earth_latest_high_prec.bpc" />
+      <Content Include="Data\SolarSystem\earth_latest_high_prec.bpc">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </Content>
+      <None Remove="Data\SolarSystem\earth_topo_201023.tf" />
+      <Content Include="Data\SolarSystem\earth_topo_201023.tf">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <None Remove="Data\SolarSystem\earthstns_itrf93_201023.bsp" />
+      <Content Include="Data\SolarSystem\earthstns_itrf93_201023.bsp">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <None Remove="Data\SolarSystem\geophysical.ker" />
+      <Content Include="Data\SolarSystem\geophysical.ker">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <None Remove="Data\SolarSystem\gm_de431.tpc" />
+      <None Remove="Data\SolarSystem\latest_leapseconds.tls.pc" />
+      <None Remove="Data\SolarSystem\moon_080317.tf" />
+      <Content Include="Data\SolarSystem\moon_080317.tf">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <None Remove="Data\SolarSystem\moon_assoc_me.tf" />
+      <Content Include="Data\SolarSystem\moon_assoc_me.tf">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <None Remove="Data\SolarSystem\moon_assoc_pa.tf" />
+      <None Remove="Data\SolarSystem\moon_pa_de421_1900-2050.bpc" />
+      <Content Include="Data\SolarSystem\moon_pa_de421_1900-2050.bpc">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <None Remove="Data\SolarSystem\pck00011.tpc" />
+      <Content Include="Data\SolarSystem\pck00011.tpc">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <None Remove="Data\SolarSystem\mar097.bsp" />
+      <None Remove="Data\SolarSystem\latest_leapseconds.tls" />
+      <Content Include="Data\SolarSystem\latest_leapseconds.tls">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <None Update="Data\SolarSystem\L1_de431.bsp">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+      <None Update="Data\SolarSystem\L2_de431.bsp">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+      <None Update="Data\SolarSystem\L4_de431.bsp">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+      <None Update="Data\SolarSystem\L5_de431.bsp">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+      <None Update="PDS\MissionInformation\test1_FAIL.xml">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="PDS\MissionInformation\test1_VALID.xml">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="PDS\SurfaceMissionInformation\test1_FAIL.xml">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="PDS\SurfaceMissionInformation\test1_VALID.xml">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Data\SolarSystem\EGM2008_to70_TideFree">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+      <None Remove="Data\SolarSystem\gm_de440.tpc" />
+      <Content Include="Data\SolarSystem\gm_de440.tpc">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <None Remove="Data\UserDataTest\scn100\Spacecrafts\DRAGONFLY32\Ephemeris\DRAGONFLY32.spk" />
+      <Content Include="Data\UserDataTest\scn100\Spacecrafts\DRAGONFLY32\Ephemeris\DRAGONFLY32.spk">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </Content>
+      <None Remove="Data\UserDataTest\scn100\Sites\MySite\Ephemeris\MySite.spk" />
+      <Content Include="Data\UserDataTest\scn100\Sites\MySite\Ephemeris\MySite.spk">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </Content>
+      <None Remove="Data\UserDataTest\scn100\Spacecrafts\DRAGONFLY32\Clocks\DRAGONFLY32.tsc" />
+      <Content Include="Data\UserDataTest\scn100\Spacecrafts\DRAGONFLY32\Clocks\DRAGONFLY32.tsc">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </Content>
+    </ItemGroup>
+
+</Project>

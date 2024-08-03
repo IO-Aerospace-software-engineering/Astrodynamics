@@ -1,0 +1,19 @@
+﻿<?xml version="1.0"?>
+<Project>
+    <ItemGroup Condition=" '$(OS)' == 'WINDOWS_NT'">
+        <Content Include="$(MSBuildThisFileDirectory)..\runtimes\windows10-x64\IO.Astrodynamics.dll">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            <Link>%(FileName)%(Extension)</Link>
+        </Content>
+        <Content Include="$(MSBuildThisFileDirectory)..\runtimes\windows10-x64\IO.Astrodynamics.lib">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            <Link>%(FileName)%(Extension)</Link>
+        </Content>
+    </ItemGroup>
+    <ItemGroup Condition=" '$(OS)' == 'UNIX'">
+        <Content Include="$(MSBuildThisFileDirectory)..\runtimes\linux-x64\libIO.Astrodynamics.so">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            <Link>%(FileName)%(Extension)</Link>
+        </Content>
+    </ItemGroup>
+</Project>

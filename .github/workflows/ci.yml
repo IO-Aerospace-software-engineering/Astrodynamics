@@ -1,0 +1,43 @@
+# This workflow will build a .NET project
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-net
+
+name: Astrodynamics.Net CI
+
+on:
+  pull_request:
+    branches: [ "main" ] 
+  workflow_dispatch:
+    inputs:
+          logLevel:
+            description: 'Log level'
+            required: true
+            default: 'warning'
+            type: choice
+            options:
+            - info
+            - warning
+            - debug
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [ubuntu-latest,windows-latest]
+        
+
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        working-directory: ./IO.Astrodynamics.Net
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: 8.0.x
+    - name: Restore dependencies
+      run: dotnet restore
+#    - name: Build
+#      run: dotnet build --no-restore -c Release
+    - name: Test
+      run: dotnet test --verbosity Normal -c Release

@@ -1,0 +1,33 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+    <metadata>
+        <id>IO.Astrodynamics</id>
+        <authors>Sylvain Guillet</authors>
+        <copyright>Sylvain Guillet</copyright>
+        <version>3.3.0</version>
+        <title>Astrodynamics framework</title>
+        <icon>images\dragonfly-dark-trans.png</icon>
+        <readme>docs\README.md</readme>
+        <projectUrl>https://github.com/IO-Aerospace-software-engineering/Astrodynamics.Net</projectUrl>
+        <license type="expression">LGPL-3.0-or-later</license>
+        <description>This astrodynamics framework provides tools to manipulate orbital parameters, run spacecraft propagation, evaluate impulsive maneuvers, generate fuel balance, ...</description>
+        <dependencies>
+            <group targetFramework="net8.0">
+                <dependency id="AutoMapper" version="12.0.1"/>
+            </group>            
+        </dependencies>
+        <tags>astrodynamics aerospace orbital mechanics spice space physics</tags>
+    </metadata>
+    <files>
+        <!-- binding libraries -->
+        <file src="bin/Release/net8.0/IO.Astrodynamics.Net.dll" target="lib/net8.0"/>
+        <!-- native libraries -->
+        <file src="resources/IO.Astrodynamics.dll" target="runtimes/windows10-x64"/>
+        <file src="resources/IO.Astrodynamics.lib" target="runtimes/windows10-x64"/>
+        <file src="resources/libIO.Astrodynamics.so" target="runtimes/linux-x64"/>
+        <!-- targets file -->
+        <file src="IO.Astrodynamics.targets" target="build/"/>
+        <file src="resources/dragonfly-dark-trans.png" target="images/"/>
+        <file src="../README.md" target="docs/"/>
+    </files>
+</package>

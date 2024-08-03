@@ -1,0 +1,63 @@
+<v1:Mission_Information xmlns:v1="http://pds.nasa.gov/pds4/msn/v1">
+  <!--Optional:-->
+  <v1:mission_phase_name nilReason="inapplicable anticipated">string</v1:mission_phase_name>
+  <!--Optional:-->
+  <v1:mission_phase_identifier nilReason="inapplicable">token</v1:mission_phase_identifier>
+  <!--Optional:-->
+  <v1:release_number nilReason="anticipated">10</v1:release_number>
+  <!--Optional:-->
+  <v1:product_type_name nilReason="unknown missing">token</v1:product_type_name>
+  <!--Optional:-->
+  <v1:spacecraft_clock_start nilReason="inapplicable">token</v1:spacecraft_clock_start>
+  <!--Optional:-->
+  <v1:spacecraft_clock_stop nilReason="inapplicable unknown">token</v1:spacecraft_clock_stop>
+  <!--Optional:-->
+  <v1:spacecraft_clock_partition>10</v1:spacecraft_clock_partition>
+  <!--Optional:-->
+  <v1:instrument_clock_start nilReason="unknown unknown">token</v1:instrument_clock_start>
+  <!--Optional:-->
+  <v1:instrument_start_time nilReason="anticipated anticipated">2000-01-01T20:00:00</v1:instrument_start_time>
+  <!--Optional:-->
+  <v1:Orbital_Mission>
+    <!--Optional:-->
+    <v1:start_orbit_number nilReason="anticipated inapplicable">token</v1:start_orbit_number>
+    <!--Optional:-->
+    <v1:stop_orbit_number nilReason="anticipated">token</v1:stop_orbit_number>
+  </v1:Orbital_Mission>
+  <!--Optional:-->
+  <v1:Surface_Mission>
+    <!--Optional:-->
+    <v1:start_sol_number nilReason="unknown inapplicable">10</v1:start_sol_number>
+    <!--Optional:-->
+    <v1:stop_sol_number nilReason="unknown missing">10</v1:stop_sol_number>
+    <!--Optional:-->
+    <v1:start_local_mean_solar_time>tokentoken</v1:start_local_mean_solar_time>
+    <!--Optional:-->
+    <v1:stop_local_mean_solar_time>tokentoken</v1:stop_local_mean_solar_time>
+    <!--Optional:-->
+    <v1:start_local_mean_solar_time_sol>10</v1:start_local_mean_solar_time_sol>
+    <!--Optional:-->
+    <v1:stop_local_mean_solar_time_sol>10</v1:stop_local_mean_solar_time_sol>
+    <!--Optional:-->
+    <v1:start_local_true_solar_time>tokentoken</v1:start_local_true_solar_time>
+    <!--Optional:-->
+    <v1:stop_local_true_solar_time>tokentoken</v1:stop_local_true_solar_time>
+    <!--Optional:-->
+    <v1:start_local_true_solar_time_sol>10</v1:start_local_true_solar_time_sol>
+    <!--Optional:-->
+    <v1:stop_local_true_solar_time_sol>10</v1:stop_local_true_solar_time_sol>
+    <!--Optional:-->
+    <v1:solar_longitude unit="deg">180</v1:solar_longitude>
+    <!--Optional:-->
+    <v1:year_number>10</v1:year_number>
+    <!--Optional:-->
+    <v1:year_number_reference>token</v1:year_number_reference>
+  </v1:Surface_Mission>
+  <!--Optional:-->
+  <v1:Observation_Context>
+    <!--Optional:-->
+    <v1:active_flight_computer nilReason="inapplicable">token</v1:active_flight_computer>
+    <!--Optional:-->
+    <v1:active_flight_imu nilReason="anticipated missing">token</v1:active_flight_imu>
+  </v1:Observation_Context>
+</v1:Mission_Information>

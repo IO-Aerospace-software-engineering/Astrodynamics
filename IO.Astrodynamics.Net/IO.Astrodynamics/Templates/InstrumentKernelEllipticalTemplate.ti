@@ -1,0 +1,11 @@
+KPL/IK
+\begindata
+INS{instrumentid}_FOV_CLASS_SPEC       = 'ANGLES'
+INS{instrumentid}_FOV_SHAPE            = 'ELLIPSE'
+INS{instrumentid}_FOV_FRAME            = '{framename}'
+INS{instrumentid}_BORESIGHT            = ( {bx}, {by}, {bz} )
+INS{instrumentid}_FOV_REF_VECTOR       = ( {rx}, {ry}, {rz} )
+INS{instrumentid}_FOV_REF_ANGLE        = {angle}
+INS{instrumentid}_FOV_CROSS_ANGLE      = {cangle}
+INS{instrumentid}_FOV_ANGLE_UNITS      = 'RADIANS'
+\begintext
