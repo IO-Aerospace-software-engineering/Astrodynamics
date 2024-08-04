@@ -1,4 +1,4 @@
-name: IO Astrodynamics integration
+name: IO Astrodynamics C++ CI
 
 on:
   pull_request:
