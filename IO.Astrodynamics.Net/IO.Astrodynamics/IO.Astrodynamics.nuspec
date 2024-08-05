@@ -8,7 +8,7 @@
         <title>Astrodynamics framework</title>
         <icon>images\dragonfly-dark-trans.png</icon>
         <readme>docs\README.md</readme>
-        <projectUrl>https://github.com/IO-Aerospace-software-engineering/Astrodynamics.Net</projectUrl>
+        <projectUrl>https://github.com/IO-Aerospace-software-engineering/Astrodynamics</projectUrl>
         <license type="expression">LGPL-3.0-or-later</license>
         <description>This astrodynamics framework provides tools to manipulate orbital parameters, run spacecraft propagation, evaluate impulsive maneuvers, generate fuel balance, ...</description>
         <dependencies>
@@ -28,6 +28,6 @@
         <!-- targets file -->
         <file src="IO.Astrodynamics.targets" target="build/"/>
         <file src="resources/dragonfly-dark-trans.png" target="images/"/>
-        <file src="../README.md" target="docs/"/>
+        <file src="../../README.md" target="docs/"/>
     </files>
 </package>
