@@ -3,7 +3,7 @@
 [![IO Astrodynamics deployment](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/actions/workflows/ci.yml/badge.svg)](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/actions/workflows/ci.yml)
 [![IO Astrodynamics deployment](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/actions/workflows/cd.yml/badge.svg)](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/actions/workflows/cd.yml)
 
-IO.Astrodynamics.Net is a .Net astrodynamics framework based on cspice toolkit(N 67) developped by the JPL and IO.Astrodynamics native library, it provides the best of both worlds : C++ Velocity + .Net productivity
+IO.Astrodynamics based on cspice toolkit(N 67) developped by the JPL and IO.Astrodynamics native library, it provides the best of both worlds : C++ Velocity + .Net productivity
 
 This framework provides the following features :
 
