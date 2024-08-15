@@ -13,6 +13,18 @@ This framework provides the following features :
   * Generate archive from object
   * Generate object from archive
   * Validate archive from Xml schemas
+* Spacecraft propagator
+  * Geopotentials model (Earth only)
+  * Simplified atmospheric model (Earth and Mars only)
+  * Solar radiation pressure
+  * N-body perturbation
+  * Impulsive maneuvers
+  * Fuel balance
+* Small body propagator
+  * Geopotentials model (Earth only)
+  * Simplified atmospheric model (Earth and Mars only)
+  * Solar radiation pressure
+  * N-body perturbation
 * Compute and convert orbital parameters
   * State vector
   * Two lines elements
@@ -23,17 +35,10 @@ This framework provides the following features :
   * Horizontal
   * Planetodetic
   * Planetodentric
-* Manipulate celestial items
-  * Stars
-  * Planets
-  * Moons
-  * Barycenters
-  * Lagrange points
-  * Comets and asteroids
-* Transform frames
+* Frame transformation
   * ICRF / J2000
-  * Ecliptic_J2000
-  * Ecliptic_B1950
+  * Ecliptic J2000
+  * Ecliptic B1950
   * Galactic
   * B1950
   * FK4
@@ -43,25 +48,24 @@ This framework provides the following features :
   * Fuel tank
   * Engines
   * Instrument
-* Propagate spacecraft
-  * Impulse maneuvers :
-    * Apogee height
-    * Perigee height
-    * Plane alignment
-    * Combined maneuver
-    * Apsidal alignment
-    * Phasing
-    * Fuel balance
-  * Attitudes
-    * Instrument pointing toward an object (Surface site, celestial body, spacecraft,...)
-    * Nadir
-    * Zenith
-    * Prograde
-    * Retrograde
-* Manipulate surface site on any celestial body
+* Impulse maneuvers :
+  * Apogee height
+  * Perigee height
+  * Plane alignment
+  * Combined maneuver
+  * Apsidal alignment
+  * Phasing
+* Attitudes
+  * Instrument pointing toward an object
+  * Nadir
+  * Zenith
+  * Prograde
+  * Retrograde
+  * Zenith
+* Surface site on any celestial body
 * Evaluate launch opportunities
-* Use or convert different time referential (TDB, UTC, Local)
-* Get celestial item information based on Naif kernels
+* Use or convert different time referential (Calendar, Julian, seconds from J2000, TDB, UTC, Local)
+* Get celestial body information based on Naif kernels
 * Find time windows based on distance constraints from spacecraft, celestial body or ground site
 * Find time windows based on occultation constraints from spacecraft, celestial body or ground site
 * Find time windows based on coordinate constraints from spacecraft, celestial body or ground site
@@ -73,7 +77,20 @@ This framework provides the following features :
   * Matrix
   * Quaternion
   * Lagrange interpolation
-* ...
+* Use the Framework through CLI (Command line interface)
+  * Propagate small body and visualize it with Cosmographia
+  * Sub observer point
+  * Angular separation
+  * Orientation
+  * Orbital parameters converter
+  * Frame converter
+  * Time converter
+  * Celestial body information
+  * Find time windows from coordinate constraint
+  * Find time windows from distance constraint
+  * Find time windows from occultation constraint
+  * Find time windows from field of view constraint
+  * Find time windows from illumination constraint
 
 ## Concept
 IO.Astrodynamics is based on [Spice concept](https://naif.jpl.nasa.gov/naif/spiceconcept.html)
