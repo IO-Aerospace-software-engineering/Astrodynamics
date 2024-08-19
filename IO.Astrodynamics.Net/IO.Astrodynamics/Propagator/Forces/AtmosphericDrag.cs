@@ -16,12 +16,18 @@ public class AtmosphericDrag : ForceBase
     {
         _spacecraft = spacecraft ?? throw new ArgumentNullException(nameof(spacecraft));
         _celestialBody = celestialBody ?? throw new ArgumentNullException(nameof(celestialBody));
+        if (!_celestialBody.HasAtmosphericModel)
+        {
+            throw new ArgumentException($"The celestial body {_celestialBody.Name} does not have an atmospheric model.");
+        }
+
         _areaMassRatio = _spacecraft.SectionalArea / _spacecraft.Mass;
     }
 
     public override Vector3 Apply(StateVector stateVector)
     {
-        var planetodetic = stateVector.RelativeTo(_celestialBody,Aberration.None).ToPlanetocentric(Aberration.None).ToPlanetodetic(_celestialBody!.Flattening, _celestialBody.EquatorialRadius);
+        var planetodetic = stateVector.RelativeTo(_celestialBody, Aberration.None).ToPlanetocentric(Aberration.None)
+            .ToPlanetodetic(_celestialBody!.Flattening, _celestialBody.EquatorialRadius);
         var density = _celestialBody.GetAirDensity(planetodetic.Altitude);
         return stateVector.Velocity * -0.5 * density * _areaMassRatio * _spacecraft.DragCoefficient * stateVector.Velocity.Magnitude();
     }

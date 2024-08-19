@@ -24,8 +24,9 @@ public class CelestialBody : CelestialItem, IOrientable
     public double J3 { get; }
     public double J4 { get; }
 
-
     protected AtmosphericModel AtmosphericModel { get; }
+    
+    public bool HasAtmosphericModel => AtmosphericModel != null;
 
     /// <summary>
     /// Instantiate celestial body from naif object with default parameters (Ecliptic J2000 at J2000 epoch)
