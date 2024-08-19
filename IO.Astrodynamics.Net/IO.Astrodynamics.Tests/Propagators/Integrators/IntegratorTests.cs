@@ -34,7 +34,7 @@ public class IntegratorTests
         forces.Add(new GravitationalAcceleration(moon));
         forces.Add(new GravitationalAcceleration(earth));
         forces.Add(new AtmosphericDrag(spc, earth));
-        forces.Add(new SolarRadiationPressure(spc));
+        forces.Add(new SolarRadiationPressure(spc,[earth]));
         VVIntegrator vvIntegrator = new VVIntegrator(forces, TimeSpan.FromSeconds(1.0), spc.InitialOrbitalParameters.ToStateVector());
         StateVector[] data = new StateVector[2];
         Array.Fill(data, spc.InitialOrbitalParameters.ToStateVector(), 0, 2);

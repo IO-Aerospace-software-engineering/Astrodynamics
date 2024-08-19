@@ -77,15 +77,15 @@ public class SpacecraftPropagator : IPropagator
 
         if (includeAtmosphericDrag)
         {
-            if (_originalObserver is CelestialBody body)
+            foreach (var celestialBody in CelestialItems.OfType<CelestialBody>().Where(x=>x.HasAtmosphericModel).ToArray())
             {
-                forces.Add(new AtmosphericDrag(Spacecraft, body));
+                forces.Add(new AtmosphericDrag(Spacecraft, celestialBody));
             }
         }
 
         if (includeSolarRadiationPressure)
         {
-            forces.Add(new SolarRadiationPressure(Spacecraft));
+            forces.Add(new SolarRadiationPressure(Spacecraft,CelestialItems.OfType<CelestialBody>()));
         }
 
         return forces;
