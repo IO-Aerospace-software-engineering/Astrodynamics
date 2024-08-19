@@ -99,7 +99,18 @@ public class Scenario
     [Benchmark(Description = "SpacecraftPropagator per orbit (GeoPotentials // Moon and sun perturbation // Atmospheric drag // Solar radiation) ")]
     public void Propagator()
     {
-        var res = _spacecraftPropagator.Propagate();
+        List<Vector3> points = new List<Vector3>();
+        for (int i = 0; i < 1E07; i++)
+        {
+            points.Add(new Vector3(Random.Shared.NextDouble() - Random.Shared.NextDouble(), 0.0, 0.0));
+        }
+        // List<StateVector> forces = new List<StateVector>();
+        // for (int i = 0; i < 200000; i++)
+        // {
+        //     forces.Add(new StateVector(new Vector3(6800000.0 - Random.Shared.NextDouble(), 0.0, 0.0), new Vector3(0.0, 8000.0 - Random.Shared.NextDouble(), 0.0), _earth,
+        //         DateTimeExtension.J2000, Frame.ICRF));
+        // }
+        //var res = _spacecraftPropagator.Propagate();
     }
 
     // [Benchmark(Description = "IO Vector", Baseline = true)]
