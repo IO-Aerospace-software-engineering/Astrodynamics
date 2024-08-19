@@ -61,7 +61,6 @@ This framework provides the following features :
   * Zenith
   * Prograde
   * Retrograde
-  * Zenith
 * Surface site on any celestial body
 * Evaluate launch opportunities
 * Use or convert different time referential (Calendar, Julian, seconds from J2000, TDB, UTC, Local)
