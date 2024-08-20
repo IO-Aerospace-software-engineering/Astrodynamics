@@ -44,4 +44,9 @@ public class TLEPropagator : IPropagator
         _stateOrientation[Window.EndDate] = new StateOrientation(Quaternion.Zero, Vector3.Zero, Window.EndDate, Spacecraft.InitialOrbitalParameters.Frame);
         return (_svCache, _stateOrientation.Values);
     }
+    public void Dispose()
+    {
+        _svCache = null;
+        _stateOrientation = null;
+    }
 }

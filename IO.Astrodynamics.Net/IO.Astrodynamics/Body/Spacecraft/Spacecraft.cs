@@ -347,6 +347,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
             }
 
             var res = propagator.Propagate();
+            propagator.Dispose();
             PropagationOutput = outputDirectory.CreateSubdirectory(Name);
 
             //Write frame

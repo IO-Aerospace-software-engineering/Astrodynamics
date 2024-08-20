@@ -32,6 +32,7 @@ namespace IO.Astrodynamics;
 /// </summary>
 public class API
 {
+    private static IntPtr _libHandle = IntPtr.Zero;
     private readonly List<FileSystemInfo> _kernels = [];
 
     /// <summary>
@@ -116,24 +117,33 @@ public class API
 
     [DllImport(@"IO.Astrodynamics", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
     private static extern TLEElements GetTLEElementsProxy(string line1, string line2, string line3);
+    
+    [DllImport(@"IO.Astrodynamics", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
+    private static extern void KClearProxy();
 
     private static IntPtr Resolver(string libraryName, Assembly assembly, DllImportSearchPath? searchPath)
     {
-        var libHandle = IntPtr.Zero;
+        _libHandle = IntPtr.Zero;
 
-        if (libraryName != "IO.Astrodynamics") return libHandle;
+        if (libraryName != "IO.Astrodynamics") return _libHandle;
         string sharedLibName = null;
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             sharedLibName = "resources/IO.Astrodynamics.dll";
         else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux)) sharedLibName = "resources/libIO.Astrodynamics.so";
 
         if (!string.IsNullOrEmpty(sharedLibName))
-            NativeLibrary.TryLoad(sharedLibName, typeof(API).Assembly, DllImportSearchPath.AssemblyDirectory,
-                out libHandle);
+            NativeLibrary.TryLoad(sharedLibName, typeof(API).Assembly, DllImportSearchPath.AssemblyDirectory, out _libHandle);
         else
             throw new PlatformNotSupportedException();
 
-        return libHandle;
+        return _libHandle;
+    }
+
+    public void ReleaseHandle()
+    {
+        NativeLibrary.Free(_libHandle);
+        GC.Collect();
+        GC.WaitForPendingFinalizers();
     }
 
     //Use the same lock for all cspice calls because it doesn't support multithreading.
@@ -231,6 +241,7 @@ public class API
             {
                 UnloadKernels(kernel);
             }
+            KClearProxy();
         }
     }
 

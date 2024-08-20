@@ -89,7 +89,7 @@ namespace IO.Astrodynamics.Math
             
             var mag1 = Magnitude();
             var mag2 = vector.Magnitude();
-            if (System.Math.Abs(angle-Constants.PI) < double.Epsilon) //Manage 180° case
+            if (System.Math.Abs(angle - Constants.PI) < double.Epsilon) //Manage 180° case
             {
                 double x = System.Math.Abs(vector.X);
                 double y = System.Math.Abs(vector.Y);
@@ -116,10 +116,5 @@ namespace IO.Astrodynamics.Math
         {
             return $"X : {X} Y : {Y} Z: {Z}";
         }
-
-        // public Vector3 ToVector()
-        // {
-        //     return new Vector3(stackalloc double[] { X, Y, Z, 0.0 });
-        // }
     }
 }

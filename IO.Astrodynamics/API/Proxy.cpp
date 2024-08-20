@@ -721,4 +721,9 @@ IO::Astrodynamics::API::DTO::TLEElementsDTO GetTLEElementsProxy(const char *L1, 
     return tleElementsDto;
 }
 
+void KClearProxy()
+{
+    kclear_c();
+}
+
 #pragma endregion
