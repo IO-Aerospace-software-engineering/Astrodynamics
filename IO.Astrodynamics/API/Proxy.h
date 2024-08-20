@@ -282,6 +282,7 @@ MODULE_API IO::Astrodynamics::API::DTO::StateVectorDTO ConvertEquinoctialElement
  */
 MODULE_API IO::Astrodynamics::API::DTO::RaDecDTO ConvertStateVectorToEquatorialCoordinatesProxy(IO::Astrodynamics::API::DTO::StateVectorDTO stateVectorDto);
 MODULE_API IO::Astrodynamics::API::DTO::TLEElementsDTO GetTLEElementsProxy(const char *L1, const char *L2, const char *L3);
+MODULE_API void KClearProxy();
 #ifdef __cplusplus
 }
 #endif

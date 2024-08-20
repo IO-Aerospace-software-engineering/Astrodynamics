@@ -6,7 +6,7 @@ using IO.Astrodynamics.Time;
 
 namespace IO.Astrodynamics.Propagator;
 
-public interface IPropagator
+public interface IPropagator : IDisposable
 {
     Window Window { get; }
     Spacecraft Spacecraft { get; }

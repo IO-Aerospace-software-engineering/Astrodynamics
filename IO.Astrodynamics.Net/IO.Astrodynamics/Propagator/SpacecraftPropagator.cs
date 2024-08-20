@@ -17,6 +17,12 @@ namespace IO.Astrodynamics.Propagator;
 
 public class SpacecraftPropagator : IPropagator
 {
+    public void Dispose()
+    {
+        _svCache = null;
+        _stateOrientation = null;
+    }
+
     private readonly CelestialItem _originalObserver;
     public Window Window { get; }
     public IEnumerable<CelestialItem> CelestialItems { get; }
