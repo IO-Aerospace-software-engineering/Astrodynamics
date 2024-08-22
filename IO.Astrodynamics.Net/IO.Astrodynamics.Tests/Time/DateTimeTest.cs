@@ -1,5 +1,5 @@
 using System;
-using IO.Astrodynamics.Time;
+using IO.Astrodynamics.TimeSystem;
 using Xunit;
 
 namespace IO.Astrodynamics.Tests.Time;
@@ -7,20 +7,84 @@ namespace IO.Astrodynamics.Tests.Time;
 public class DateTimeTests
 {
     [Fact]
+    public void TaiToGps()
+    {
+        var tai = new TimeSystem.Time(new DateTime(2020, 1, 1), TimeFrame.TAIFrame);
+        var gps = tai.ToGPS();
+        Assert.Equal((tai + TimeSpan.FromSeconds(19)).DateTime, gps.DateTime);
+    }
+
+    [Fact]
+    public void GpsToTai()
+    {
+        var gps = new TimeSystem.Time(new DateTime(2020, 1, 1), TimeFrame.GPSFrame);
+        var tai = gps.ToTAI();
+        Assert.Equal((gps - TimeSpan.FromSeconds(19)).DateTime, tai.DateTime);
+    }
+
+    [Fact]
+    public void TaiToTdt()
+    {
+        var tai = new TimeSystem.Time(new DateTime(2020, 1, 1), TimeFrame.TAIFrame);
+        var tdt = tai.ToTDT();
+        Assert.Equal((tai - TimeSpan.FromSeconds(32.184)).DateTime, tdt.DateTime);
+    }
+
+    [Fact]
+    public void TdtToTai()
+    {
+        var tdt = new TimeSystem.Time(new DateTime(2020, 1, 1), TimeFrame.TDTFrame);
+        var tai = tdt.ToTAI();
+        Assert.Equal((tdt + TimeSpan.FromSeconds(32.184)).DateTime, tai.DateTime);
+    }
+    
+    [Fact]
+    public void TdtToGPS()
+    {
+        var tdt = new TimeSystem.Time(new DateTime(2020, 1, 1), TimeFrame.TDTFrame);
+        var gps = tdt.ToGPS();
+        Assert.Equal((tdt + TimeSpan.FromSeconds(32.184+19.0)).DateTime, gps.DateTime);
+    }
+    
+    [Fact]
+    public void TdtConvertToGPS()
+    {
+        var tdt = new TimeSystem.Time(new DateTime(2020, 1, 1), TimeFrame.TDTFrame);
+        var gps = tdt.ConvertTo(TimeFrame.GPSFrame);
+        Assert.Equal((tdt + TimeSpan.FromSeconds(32.184+19.0)).DateTime, gps.DateTime);
+    }
+    
+    [Fact]
+    public void TaiToUtc()
+    {
+        var tai = new TimeSystem.Time(new DateTime(2020, 1, 1), TimeFrame.TAIFrame);
+        var utc = tai.ToUTC();
+        Assert.Equal(tai.DateTime.AddSeconds(-37), utc.DateTime);
+    }
+
+    [Fact]
+    public void UTCToTai()
+    {
+        var gps = new TimeSystem.Time(new DateTime(2020, 1, 1), TimeFrame.GPSFrame);
+        var tai = gps.ToTAI();
+        Assert.Equal((gps - TimeSpan.FromSeconds(19)).DateTime, tai.DateTime);
+    }
+
+    [Fact]
     public void ToTDBFromUTC()
     {
         Assert.Equal(new DateTime(1976, 12, 31, 12, 0, 47, 184, DateTimeKind.Unspecified),
-            new DateTime(1976, 12, 31, 12, 0, 0, DateTimeKind.Utc).ToTDB(),TimeSpan.FromMilliseconds(1));
+            new DateTime(1976, 12, 31, 12, 0, 0, DateTimeKind.Utc).ToTDB(), TimeSpan.FromMilliseconds(1));
         Assert.Equal(new DateTime(1977, 1, 1, 12, 0, 48, 184, DateTimeKind.Unspecified),
-            new DateTime(1977, 1, 1, 12, 0, 0, DateTimeKind.Utc).ToTDB(),TimeSpan.FromMilliseconds(1));
+            new DateTime(1977, 1, 1, 12, 0, 0, DateTimeKind.Utc).ToTDB(), TimeSpan.FromMilliseconds(1));
         Assert.Equal(new DateTime(2016, 12, 31, 12, 1, 8, 184, DateTimeKind.Unspecified),
-            new DateTime(2016, 12, 31, 12, 0, 0, DateTimeKind.Utc).ToTDB(),TimeSpan.FromMilliseconds(1));
+            new DateTime(2016, 12, 31, 12, 0, 0, DateTimeKind.Utc).ToTDB(), TimeSpan.FromMilliseconds(1));
         Assert.Equal(new DateTime(2017, 1, 1, 12, 1, 9, 184, DateTimeKind.Unspecified),
-            new DateTime(2017, 1, 1, 12, 0, 0, DateTimeKind.Utc).ToTDB(),TimeSpan.FromMilliseconds(1));
+            new DateTime(2017, 1, 1, 12, 0, 0, DateTimeKind.Utc).ToTDB(), TimeSpan.FromMilliseconds(1));
         Assert.Equal(new DateTime(2021, 12, 31, 12, 1, 9, 184, DateTimeKind.Unspecified),
-            new DateTime(2021, 12, 31, 12, 0, 0, DateTimeKind.Utc).ToTDB(),TimeSpan.FromMilliseconds(1));
+            new DateTime(2021, 12, 31, 12, 0, 0, DateTimeKind.Utc).ToTDB(), TimeSpan.FromMilliseconds(1));
         Assert.Equal(new DateTime(2022, 1, 1, 12, 1, 9, 184, DateTimeKind.Unspecified),
-            new DateTime(2022, 1, 1, 12, 0, 0, DateTimeKind.Utc).ToTDB(),TimeSpan.FromMilliseconds(1));
+            new DateTime(2022, 1, 1, 12, 0, 0, DateTimeKind.Utc).ToTDB(), TimeSpan.FromMilliseconds(1));
     }
 
     [Fact]
@@ -29,7 +93,7 @@ public class DateTimeTests
         Assert.Equal(
             new DateTime(2022, 1, 1, 12, 1, 9, 184, DateTimeKind.Unspecified) -
             TimeZoneInfo.Local.GetUtcOffset(new DateTime(2022, 1, 1, 12, 0, 0, DateTimeKind.Local)),
-            new DateTime(2022, 1, 1, 12, 0, 0, DateTimeKind.Local).ToTDB(),TimeSpan.FromMilliseconds(1));
+            new DateTime(2022, 1, 1, 12, 0, 0, DateTimeKind.Local).ToTDB(), TimeSpan.FromMilliseconds(1));
     }
 
     [Fact]
@@ -45,17 +109,17 @@ public class DateTimeTests
     public void ToUTCFromTDB()
     {
         Assert.Equal(new DateTime(1976, 12, 31, 12, 0, 0, DateTimeKind.Utc),
-            new DateTime(1976, 12, 31, 12, 0, 47, 184, DateTimeKind.Unspecified).ToUTC(),TimeSpan.FromMilliseconds(1));
+            new DateTime(1976, 12, 31, 12, 0, 47, 184, DateTimeKind.Unspecified).ToUTC(), TimeSpan.FromMilliseconds(1));
         Assert.Equal(new DateTime(1977, 1, 1, 12, 0, 0, DateTimeKind.Utc),
-            new DateTime(1977, 1, 1, 12, 0, 48, 184, DateTimeKind.Unspecified).ToUTC(),TimeSpan.FromMilliseconds(1));
+            new DateTime(1977, 1, 1, 12, 0, 48, 184, DateTimeKind.Unspecified).ToUTC(), TimeSpan.FromMilliseconds(1));
         Assert.Equal(new DateTime(2016, 12, 31, 12, 0, 0, DateTimeKind.Utc),
-            new DateTime(2016, 12, 31, 12, 1, 8, 184, DateTimeKind.Unspecified).ToUTC(),TimeSpan.FromMilliseconds(1));
+            new DateTime(2016, 12, 31, 12, 1, 8, 184, DateTimeKind.Unspecified).ToUTC(), TimeSpan.FromMilliseconds(1));
         Assert.Equal(new DateTime(2017, 1, 1, 12, 0, 0, DateTimeKind.Utc),
-            new DateTime(2017, 1, 1, 12, 1, 9, 184, DateTimeKind.Unspecified).ToUTC(),TimeSpan.FromMilliseconds(1));
+            new DateTime(2017, 1, 1, 12, 1, 9, 184, DateTimeKind.Unspecified).ToUTC(), TimeSpan.FromMilliseconds(1));
         Assert.Equal(new DateTime(2021, 12, 31, 12, 0, 0, DateTimeKind.Utc),
-            new DateTime(2021, 12, 31, 12, 1, 9, 184, DateTimeKind.Unspecified).ToUTC(),TimeSpan.FromMilliseconds(1));
+            new DateTime(2021, 12, 31, 12, 1, 9, 184, DateTimeKind.Unspecified).ToUTC(), TimeSpan.FromMilliseconds(1));
         Assert.Equal(new DateTime(2022, 1, 1, 12, 0, 0, DateTimeKind.Utc),
-            new DateTime(2022, 1, 1, 12, 1, 9, 184, DateTimeKind.Unspecified).ToUTC(),TimeSpan.FromMilliseconds(1));
+            new DateTime(2022, 1, 1, 12, 1, 9, 184, DateTimeKind.Unspecified).ToUTC(), TimeSpan.FromMilliseconds(1));
     }
 
     [Fact]
@@ -72,9 +136,9 @@ public class DateTimeTests
         Assert.Equal(new DateTime(2000, 01, 01, 12, 0, 0, 0, DateTimeKind.Unspecified),
             DateTimeExtension.CreateTDB(0.0));
         Assert.Equal(new DateTime(1990, 01, 01, 12, 0, 57, 184, DateTimeKind.Utc),
-            DateTimeExtension.CreateUTC(-315532742.816),TimeSpan.FromMilliseconds(1));
+            DateTimeExtension.CreateUTC(-315532742.816), TimeSpan.FromMilliseconds(1));
         Assert.Equal(new DateTime(2020, 01, 01, 12, 1, 9, 184, DateTimeKind.Utc),
-            DateTimeExtension.CreateUTC(631152069.184),TimeSpan.FromMilliseconds(1));
+            DateTimeExtension.CreateUTC(631152069.184), TimeSpan.FromMilliseconds(1));
     }
 
     [Fact]

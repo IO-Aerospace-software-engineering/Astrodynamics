@@ -10,7 +10,7 @@ using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.Cosmographia.Model;
 using IO.Astrodynamics.Maneuver;
 using IO.Astrodynamics.Mission;
-using IO.Astrodynamics.Time;
+using IO.Astrodynamics.TimeSystem;
 
 namespace IO.Astrodynamics.Cosmographia;
 

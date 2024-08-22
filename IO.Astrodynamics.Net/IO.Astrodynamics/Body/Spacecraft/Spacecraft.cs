@@ -7,7 +7,7 @@ using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.Propagator;
-using IO.Astrodynamics.Time;
+using IO.Astrodynamics.TimeSystem;
 using StateOrientation = IO.Astrodynamics.OrbitalParameters.StateOrientation;
 
 

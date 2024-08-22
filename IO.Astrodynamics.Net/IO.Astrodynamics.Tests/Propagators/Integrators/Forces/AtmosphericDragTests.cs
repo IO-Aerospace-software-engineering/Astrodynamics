@@ -4,7 +4,7 @@ using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.Physics;
 using IO.Astrodynamics.Propagator.Forces;
-using IO.Astrodynamics.Time;
+using IO.Astrodynamics.TimeSystem;
 using Xunit;
 using CelestialBody = IO.Astrodynamics.Body.CelestialBody;
 using Vector3 = IO.Astrodynamics.Math.Vector3;

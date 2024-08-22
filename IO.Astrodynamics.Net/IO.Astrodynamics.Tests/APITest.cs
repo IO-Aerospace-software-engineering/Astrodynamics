@@ -7,8 +7,8 @@ using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.DTO;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.Surface;
-using IO.Astrodynamics.Time;
 using IO.Astrodynamics.SolarSystemObjects;
+using IO.Astrodynamics.TimeSystem;
 using Xunit;
 using FuelTank = IO.Astrodynamics.Body.Spacecraft.FuelTank;
 using Launch = IO.Astrodynamics.Maneuver.Launch;
@@ -21,7 +21,7 @@ using Site = IO.Astrodynamics.Surface.Site;
 using Spacecraft = IO.Astrodynamics.Body.Spacecraft.Spacecraft;
 using StateOrientation = IO.Astrodynamics.OrbitalParameters.StateOrientation;
 using StateVector = IO.Astrodynamics.OrbitalParameters.StateVector;
-using Window = IO.Astrodynamics.Time.Window;
+using Window = IO.Astrodynamics.TimeSystem.Window;
 
 namespace IO.Astrodynamics.Tests;
 

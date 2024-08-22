@@ -1,7 +1,7 @@
 ﻿using System;
 using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.SolarSystemObjects;
-using IO.Astrodynamics.Time;
+using IO.Astrodynamics.TimeSystem;
 
 namespace IO.Astrodynamics.Body;
 

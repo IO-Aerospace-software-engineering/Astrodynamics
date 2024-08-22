@@ -15,7 +15,7 @@ using IO.Astrodynamics.Maneuver;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.SolarSystemObjects;
-using IO.Astrodynamics.Time;
+using IO.Astrodynamics.TimeSystem;
 using CelestialBody = IO.Astrodynamics.DTO.CelestialBody;
 using Instrument = IO.Astrodynamics.Body.Spacecraft.Instrument;
 using Launch = IO.Astrodynamics.DTO.Launch;
@@ -252,7 +252,7 @@ public class API
     /// <param name="window"></param>
     /// <param name="outputDirectory"></param>
     public IEnumerable<LaunchWindow> FindLaunchWindows(Maneuver.Launch launch,
-        in Time.Window window, DirectoryInfo outputDirectory)
+        in TimeSystem.Window window, DirectoryInfo outputDirectory)
     {
         if (launch == null) throw new ArgumentNullException(nameof(launch));
         lock (lockObject)
@@ -294,7 +294,7 @@ public class API
     /// <param name="aberration"></param>
     /// <param name="stepSize"></param>
     /// <returns></returns>
-    public IEnumerable<Time.Window> FindWindowsOnDistanceConstraint(Time.Window searchWindow, INaifObject observer,
+    public IEnumerable<TimeSystem.Window> FindWindowsOnDistanceConstraint(TimeSystem.Window searchWindow, INaifObject observer,
         INaifObject target, RelationnalOperator relationalOperator, double value, Aberration aberration,
         TimeSpan stepSize)
     {
@@ -306,7 +306,7 @@ public class API
         }
     }
 
-    public IEnumerable<Time.Window> FindWindowsOnDistanceConstraint(Time.Window searchWindow, int observerId,
+    public IEnumerable<TimeSystem.Window> FindWindowsOnDistanceConstraint(TimeSystem.Window searchWindow, int observerId,
         int targetId, RelationnalOperator relationalOperator, double value, Aberration aberration,
         TimeSpan stepSize)
     {
@@ -337,7 +337,7 @@ public class API
     /// <param name="stepSize"></param>
     /// <param name="observer"></param>
     /// <returns></returns>
-    public IEnumerable<Time.Window> FindWindowsOnOccultationConstraint(Time.Window searchWindow, INaifObject observer,
+    public IEnumerable<TimeSystem.Window> FindWindowsOnOccultationConstraint(TimeSystem.Window searchWindow, INaifObject observer,
         INaifObject target, ShapeType targetShape, INaifObject frontBody, ShapeType frontShape,
         OccultationType occultationType, Aberration aberration, TimeSpan stepSize)
     {
@@ -379,7 +379,7 @@ public class API
     /// <param name="aberration"></param>
     /// <param name="stepSize"></param>
     /// <returns></returns>
-    public IEnumerable<Time.Window> FindWindowsOnOccultationConstraint(Time.Window searchWindow, int observerId,
+    public IEnumerable<TimeSystem.Window> FindWindowsOnOccultationConstraint(TimeSystem.Window searchWindow, int observerId,
         int targetId, ShapeType targetShape, int frontBodyId, ShapeType frontShape,
         OccultationType occultationType, Aberration aberration, TimeSpan stepSize)
     {
@@ -420,7 +420,7 @@ public class API
     /// <param name="stepSize"></param>
     /// <param name="observer"></param>
     /// <returns></returns>
-    public IEnumerable<Time.Window> FindWindowsOnCoordinateConstraint(Time.Window searchWindow, INaifObject observer,
+    public IEnumerable<TimeSystem.Window> FindWindowsOnCoordinateConstraint(TimeSystem.Window searchWindow, INaifObject observer,
         INaifObject target, Frame frame, CoordinateSystem coordinateSystem, Coordinate coordinate,
         RelationnalOperator relationalOperator, double value, double adjustValue, Aberration aberration,
         TimeSpan stepSize)
@@ -460,7 +460,7 @@ public class API
     /// <param name="stepSize"></param>
     /// <returns></returns>
     /// <exception cref="ArgumentNullException"></exception>
-    public IEnumerable<Time.Window> FindWindowsOnCoordinateConstraint(Time.Window searchWindow, int observerId,
+    public IEnumerable<TimeSystem.Window> FindWindowsOnCoordinateConstraint(TimeSystem.Window searchWindow, int observerId,
         int targetId, Frame frame, CoordinateSystem coordinateSystem, Coordinate coordinate,
         RelationnalOperator relationalOperator, double value, double adjustValue, Aberration aberration,
         TimeSpan stepSize)
@@ -499,7 +499,7 @@ public class API
     /// <param name="stepSize"></param>
     /// <param name="method"></param>
     /// <returns></returns>
-    public IEnumerable<Time.Window> FindWindowsOnIlluminationConstraint(Time.Window searchWindow, INaifObject observer,
+    public IEnumerable<TimeSystem.Window> FindWindowsOnIlluminationConstraint(TimeSystem.Window searchWindow, INaifObject observer,
         INaifObject targetBody, Frame fixedFrame,
         Coordinates.Planetodetic planetodetic, IlluminationAngle illuminationType, RelationnalOperator relationalOperator,
         double value, double adjustValue, Aberration aberration, TimeSpan stepSize, INaifObject illuminationSource,
@@ -527,7 +527,7 @@ public class API
         }
     }
 
-    public IEnumerable<Time.Window> FindWindowsOnIlluminationConstraint(Time.Window searchWindow, int observerId,
+    public IEnumerable<TimeSystem.Window> FindWindowsOnIlluminationConstraint(TimeSystem.Window searchWindow, int observerId,
         int targetBodyId, Frame fixedFrame, Coordinates.Planetodetic planetodetic, IlluminationAngle illuminationType, RelationnalOperator relationalOperator,
         double value, double adjustValue, Aberration aberration, TimeSpan stepSize, int illuminationSourceId,
         string method = "Ellipsoid")
@@ -563,7 +563,7 @@ public class API
     /// <param name="aberration"></param>
     /// <param name="stepSize"></param>
     /// <returns></returns>
-    public IEnumerable<Time.Window> FindWindowsInFieldOfViewConstraint(Time.Window searchWindow, Spacecraft observer,
+    public IEnumerable<TimeSystem.Window> FindWindowsInFieldOfViewConstraint(TimeSystem.Window searchWindow, Spacecraft observer,
         Instrument instrument, INaifObject target, Frame targetFrame, ShapeType targetShape, Aberration aberration,
         TimeSpan stepSize)
     {
@@ -590,7 +590,7 @@ public class API
     /// <param name="stepSize"></param>
     /// <returns></returns>
     /// <exception cref="ArgumentNullException"></exception>
-    public IEnumerable<Time.Window> FindWindowsInFieldOfViewConstraint(Time.Window searchWindow, int observerId,
+    public IEnumerable<TimeSystem.Window> FindWindowsInFieldOfViewConstraint(TimeSystem.Window searchWindow, int observerId,
         int instrumentId, int targetId, Frame targetFrame, ShapeType targetShape, Aberration aberration, TimeSpan stepSize)
     {
         if (targetFrame == null) throw new ArgumentNullException(nameof(targetFrame));
@@ -621,7 +621,7 @@ public class API
     /// <param name="stepSize"></param>
     /// <param name="observer"></param>
     /// <returns></returns>
-    public IEnumerable<OrbitalParameters.OrbitalParameters> ReadEphemeris(Time.Window searchWindow,
+    public IEnumerable<OrbitalParameters.OrbitalParameters> ReadEphemeris(TimeSystem.Window searchWindow,
         ILocalizable observer, ILocalizable target, Frame frame,
         Aberration aberration, TimeSpan stepSize)
     {
@@ -638,7 +638,7 @@ public class API
             {
                 var start = searchWindow.StartDate + i * messageSize * stepSize;
                 var end = start + messageSize * stepSize > searchWindow.EndDate ? searchWindow.EndDate : (start + messageSize * stepSize) - stepSize;
-                var window = new Time.Window(start, end);
+                var window = new TimeSystem.Window(start, end);
                 var stateVectors = new StateVector[messageSize];
                 ReadEphemerisProxy(window.Convert(), observer.NaifId, target.NaifId, frame.Name,
                     aberration.GetDescription(), stepSize.TotalSeconds,
@@ -686,7 +686,7 @@ public class API
     /// <param name="referenceFrame"></param>
     /// <param name="stepSize"></param>
     /// <returns></returns>
-    public IEnumerable<OrbitalParameters.StateOrientation> ReadOrientation(Time.Window searchWindow,
+    public IEnumerable<OrbitalParameters.StateOrientation> ReadOrientation(TimeSystem.Window searchWindow,
         Spacecraft spacecraft, TimeSpan tolerance,
         Frame referenceFrame, TimeSpan stepSize)
     {

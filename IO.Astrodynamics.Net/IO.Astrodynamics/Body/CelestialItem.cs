@@ -5,7 +5,7 @@ using IO.Astrodynamics.Coordinates;
 using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.SolarSystemObjects;
-using Window = IO.Astrodynamics.Time.Window;
+using Window = IO.Astrodynamics.TimeSystem.Window;
 
 namespace IO.Astrodynamics.Body;
 

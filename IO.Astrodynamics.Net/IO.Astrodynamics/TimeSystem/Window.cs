@@ -1,6 +1,6 @@
 using System;
 
-namespace IO.Astrodynamics.Time;
+namespace IO.Astrodynamics.TimeSystem;
 public readonly record struct Window
 {
     public DateTime StartDate { get; }

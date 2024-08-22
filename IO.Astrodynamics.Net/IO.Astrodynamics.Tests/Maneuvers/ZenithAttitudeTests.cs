@@ -3,7 +3,7 @@ using System.Linq;
 using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
-using IO.Astrodynamics.Time;
+using IO.Astrodynamics.TimeSystem;
 using Xunit;
 using ZenithAttitude = IO.Astrodynamics.Maneuver.ZenithAttitude;
 

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using IO.Astrodynamics.Frames;
-using IO.Astrodynamics.Time;
+using IO.Astrodynamics.TimeSystem;
 
 namespace IO.Astrodynamics.Body
 {

@@ -2,14 +2,14 @@
 
 using IO.Astrodynamics.DTO;
 using IO.Astrodynamics.Math;
-using IO.Astrodynamics.Time;
+using IO.Astrodynamics.TimeSystem;
 using Launch = IO.Astrodynamics.Maneuver.Launch;
 using Planetodetic = IO.Astrodynamics.Coordinates.Planetodetic;
 using Quaternion = IO.Astrodynamics.Math.Quaternion;
 using Site = IO.Astrodynamics.Surface.Site;
 using StateOrientation = IO.Astrodynamics.OrbitalParameters.StateOrientation;
 using StateVector = IO.Astrodynamics.OrbitalParameters.StateVector;
-using Window = IO.Astrodynamics.Time.Window;
+using Window = IO.Astrodynamics.TimeSystem.Window;
 
 namespace IO.Astrodynamics.Converters;
 

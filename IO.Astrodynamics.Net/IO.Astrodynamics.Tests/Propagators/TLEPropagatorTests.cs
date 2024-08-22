@@ -7,12 +7,11 @@ using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.Propagator;
-using IO.Astrodynamics.Time;
 using Xunit;
 using CelestialBody = IO.Astrodynamics.Body.CelestialBody;
 using Spacecraft = IO.Astrodynamics.Body.Spacecraft.Spacecraft;
 using StateVector = IO.Astrodynamics.OrbitalParameters.StateVector;
-using Window = IO.Astrodynamics.Time.Window;
+using Window = IO.Astrodynamics.TimeSystem.Window;
 
 namespace IO.Astrodynamics.Tests.Propagators;
 

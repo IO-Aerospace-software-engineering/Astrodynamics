@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Linq;
 
-namespace IO.Astrodynamics.Time;
+namespace IO.Astrodynamics.TimeSystem;
 
 public static class DateTimeExtension
 {

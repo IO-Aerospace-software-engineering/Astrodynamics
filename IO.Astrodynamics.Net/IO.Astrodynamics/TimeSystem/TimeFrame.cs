@@ -1,12 +1,18 @@
 using System;
 using System.Linq;
 
-namespace IO.Astrodynamics.Time;
+namespace IO.Astrodynamics.TimeSystem;
 
-public abstract class DateTimeBase
+public abstract class TimeFrame : ITimeFrame
 {
-    private static DateTime[] LEAP_SECONDS =
-    {
+    public static TAITimeFrame TAIFrame { get; } = new TAITimeFrame();
+    public static GPSTimeFrame GPSFrame { get; } = new GPSTimeFrame();
+    public static TDTTimeFrame TDTFrame { get; } = new TDTTimeFrame();
+    public static UTCTimeFrame UTCFrame { get; } = new UTCTimeFrame();
+    const double PREVIOUS_OFFSET = 9.0; //before 1972;
+
+    internal static readonly DateTime[] LEAP_SECONDS =
+    [
         new DateTime(1972, 1, 1),
         new DateTime(1972, 7, 1),
         new DateTime(1973, 1, 1),
@@ -34,33 +40,18 @@ public abstract class DateTimeBase
         new DateTime(2009, 1, 1),
         new DateTime(2012, 7, 1),
         new DateTime(2015, 7, 1),
-        new DateTime(2017, 1, 1),
-    };
+        new DateTime(2017, 1, 1)
+    ];
 
-    public DateTime DateTime { get; }
-    public DateTimeKind Kind { get; }
-
-
-    public DateTimeBase(DateTime dateTime, DateTimeKind kind)
+    protected TimeFrame()
     {
-        DateTime = dateTime;
-        Kind = kind;
     }
 
     public TimeSpan LeapSecondsFrom(DateTime dateTime)
     {
-        return TimeSpan.FromSeconds(LEAP_SECONDS.Count(x => x < dateTime));
-    }
-    
-    public abstract TAIDateTime ToTAI();
-
-    public GPSDateTime ToGPS()
-    {
-        this.ToTAI().
+        return TimeSpan.FromSeconds(PREVIOUS_OFFSET + LEAP_SECONDS.Count(x => x < dateTime));
     }
 
-    public DateTimeBase Add(in TimeSpan timeSpan)
-    {
-        return new DateTimeBase(DateTime.Add(timeSpan), Kind);
-    }
+    public abstract Time ConvertToTAI(Time time);
+    public abstract Time ConvertFromTAI(Time time);
 }
