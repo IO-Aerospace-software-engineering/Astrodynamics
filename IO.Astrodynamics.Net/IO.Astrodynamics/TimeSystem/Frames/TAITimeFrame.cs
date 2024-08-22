@@ -2,7 +2,7 @@ namespace IO.Astrodynamics.TimeSystem.Frames;
 
 public class TAITimeFrame : TimeFrame
 {
-    internal TAITimeFrame()
+    internal TAITimeFrame(): base("TAI")
     {
         
     }

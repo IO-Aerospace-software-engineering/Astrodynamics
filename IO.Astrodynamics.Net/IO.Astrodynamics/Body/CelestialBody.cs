@@ -46,7 +46,7 @@ public class CelestialBody : CelestialItem, IOrientable
     /// <param name="geopotentialModelParameters"></param>
     /// <param name="atmosphericModel"></param>
     public CelestialBody(int naifId, GeopotentialModelParameters geopotentialModelParameters = null, AtmosphericModel atmosphericModel = null) : this(naifId, Frame.ECLIPTIC_J2000,
-        DateTimeExtension.J2000, geopotentialModelParameters, atmosphericModel)
+        TimeSystem.Time.J2000TDB, geopotentialModelParameters, atmosphericModel)
     {
     }
 
@@ -58,7 +58,7 @@ public class CelestialBody : CelestialItem, IOrientable
     /// <param name="epoch"></param>
     /// <param name="geopotentialModelParameters"></param>
     /// <param name="atmosphericModel"></param>
-    public CelestialBody(NaifObject naifObject, Frame frame, DateTime epoch, GeopotentialModelParameters geopotentialModelParameters = null, AtmosphericModel atmosphericModel = null) 
+    public CelestialBody(NaifObject naifObject, Frame frame, Time epoch, GeopotentialModelParameters geopotentialModelParameters = null, AtmosphericModel atmosphericModel = null) 
         : this(naifObject.NaifId, frame, epoch, geopotentialModelParameters, atmosphericModel)
     {
     }
@@ -71,7 +71,7 @@ public class CelestialBody : CelestialItem, IOrientable
     /// <param name="epoch"></param>
     /// <param name="geopotentialModelParameters"></param>
     /// <param name="atmosphericModel"></param>
-    public CelestialBody(int naifId, Frame frame, DateTime epoch, GeopotentialModelParameters geopotentialModelParameters = null, AtmosphericModel atmosphericModel = null) :
+    public CelestialBody(int naifId, Frame frame, Time epoch, GeopotentialModelParameters geopotentialModelParameters = null, AtmosphericModel atmosphericModel = null) :
         base(naifId, frame, epoch, geopotentialModelParameters)
     {
         PolarRadius = ExtendedInformation.Radii.Z;
@@ -152,17 +152,17 @@ public class CelestialBody : CelestialItem, IOrientable
     /// <param name="referenceFrame"></param>
     /// <param name="epoch"></param>
     /// <returns></returns>
-    public StateOrientation GetOrientation(Frame referenceFrame, in DateTime epoch)
+    public StateOrientation GetOrientation(Frame referenceFrame, in Time epoch)
     {
         return referenceFrame.ToFrame(Frame, epoch);
     }
 
-    public TimeSpan SideralRotationPeriod(DateTime epoch)
+    public TimeSpan SideralRotationPeriod(Time epoch)
     {
         return TimeSpan.FromSeconds(Constants._2PI / GetOrientation(Frame.ICRF, epoch).AngularVelocity.Magnitude());
     }
 
-    public KeplerianElements GeosynchronousOrbit(double longitude, double latitude, DateTime epoch)
+    public KeplerianElements GeosynchronousOrbit(double longitude, double latitude, Time epoch)
     {
         var sideralRotation2 = System.Math.Pow(SideralRotationPeriod(epoch).TotalSeconds, 2);
         var radius = System.Math.Cbrt((GM * sideralRotation2) / (4 * Constants.PI * Constants.PI));
@@ -184,7 +184,7 @@ public class CelestialBody : CelestialItem, IOrientable
     /// <returns>The Keplerian elements for the heliosynchronous orbit.</returns>
     /// <exception cref="System.ArgumentException">Thrown when
     /// the orbit perigee is lower than the equatorial radius.</exception>
-    public KeplerianElements HelioSynchronousOrbit(double semiMajorAxis, double eccentricity, DateTime epochAtDescendingNode)
+    public KeplerianElements HelioSynchronousOrbit(double semiMajorAxis, double eccentricity, Time epochAtDescendingNode)
     {
         CelestialBody sun = new CelestialBody(10);
         double p = semiMajorAxis * (1 - eccentricity);
@@ -234,7 +234,7 @@ public class CelestialBody : CelestialItem, IOrientable
     /// Finally, it returns the sideral rotation period plus the time it takes to rotate toward the sun using the angular velocity of
     /// the celestial body at the given epoch.
     /// </remarks>
-    public TimeSpan TrueSolarDay(DateTime epoch)
+    public TimeSpan TrueSolarDay(Time epoch)
     {
         if (!this.IsPlanet)
         {
@@ -257,7 +257,7 @@ public class CelestialBody : CelestialItem, IOrientable
     /// <param name="epochAtDescendingNode">The epoch at the descending node</param>
     /// <param name="nbOrbitPerDay">The number of orbits per day</param>
     /// <returns>The calculated Keplerian elements</returns>
-    public KeplerianElements HelioSynchronousOrbit(double eccentricity, DateTime epochAtDescendingNode, int nbOrbitPerDay)
+    public KeplerianElements HelioSynchronousOrbit(double eccentricity, Time epochAtDescendingNode, int nbOrbitPerDay)
     {
         var trueSolarDay = TrueSolarDay(epochAtDescendingNode);
         double t = trueSolarDay.TotalSeconds / nbOrbitPerDay;

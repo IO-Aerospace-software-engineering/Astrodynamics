@@ -48,7 +48,7 @@ namespace IO.Astrodynamics.Tests.Maneuvers
         [Fact]
         public void FindLaunchWindows()
         {
-            var epoch = new DateTime(2021, 6, 2);
+            var epoch = new Time(2021, 6, 2);
 
             var earth = TestHelpers.Earth;
             LaunchSite site = new LaunchSite(33, "l1", earth, new Planetodetic(-81.0 * IO.Astrodynamics.Constants.Deg2Rad, 28.5 * IO.Astrodynamics.Constants.Deg2Rad, 0.0), default,
@@ -82,7 +82,7 @@ namespace IO.Astrodynamics.Tests.Maneuvers
         [Fact]
         public void FindLaunchWindowsByDay()
         {
-            var epoch = new DateTime(2021, 6, 2);
+            var epoch = new Time(2021, 6, 2);
 
             var earth = TestHelpers.Earth;
             LaunchSite site = new LaunchSite(33, "l1", earth, new Planetodetic(-81.0 * IO.Astrodynamics.Constants.Deg2Rad, 28.5 * IO.Astrodynamics.Constants.Deg2Rad, 0.0), default,
@@ -107,7 +107,7 @@ namespace IO.Astrodynamics.Tests.Maneuvers
         [Fact]
         public void FindSouthLaunchWindowsByDay()
         {
-            var epoch = new DateTime(2021, 6, 2);
+            var epoch = new Time(2021, 6, 2);
 
             var earth = TestHelpers.Earth;
             LaunchSite site = new LaunchSite(33, "l1", earth, new Planetodetic(-104.0 * IO.Astrodynamics.Constants.Deg2Rad, -41.0 * IO.Astrodynamics.Constants.Deg2Rad, 0.0), default,
@@ -132,7 +132,7 @@ namespace IO.Astrodynamics.Tests.Maneuvers
         [Fact]
         public void FindSouthLaunchWindows()
         {
-            var epoch = new DateTime(2021, 6, 2);
+            var epoch = new Time(2021, 6, 2);
 
             var earth = TestHelpers.Earth;
             LaunchSite site = new LaunchSite(33, "l1", earth, new Planetodetic(-104.0 * IO.Astrodynamics.Constants.Deg2Rad, -41.0 * IO.Astrodynamics.Constants.Deg2Rad, 0.0),

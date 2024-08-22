@@ -66,7 +66,7 @@ public class Helpers
         return celestialItem;
     }
 
-    internal static DateTime ConvertDateTimeInput(string epoch)
+    internal static Time ConvertDateTimeInput(string epoch)
     {
         if (string.IsNullOrEmpty(epoch)) throw new ArgumentException("Value cannot be null or empty.", nameof(epoch));
         var isutc = epoch.Contains("utc", StringComparison.InvariantCultureIgnoreCase) || epoch.Contains("z", StringComparison.InvariantCultureIgnoreCase);
@@ -76,30 +76,30 @@ public class Helpers
         epoch = epoch.Replace("utc", "", StringComparison.InvariantCultureIgnoreCase).Replace("tdb", "", StringComparison.InvariantCultureIgnoreCase).Trim();
 
         //Input
-        DateTime input;
+        Time input;
         if (isjd)
         {
             epoch = epoch.Replace("jd", "", StringComparison.InvariantCultureIgnoreCase).Trim();
             double value = double.Parse(epoch, CultureInfo.InvariantCulture);
             if (isutc)
             {
-                input = DateTimeExtension.CreateUTCFromJD(value);
+                input = Time.CreateUTCFromJD(value);
             }
             else
             {
-                input = DateTimeExtension.CreateTDBFromJD(value);
+                input = Time.CreateTDBFromJD(value);
             }
         }
-        else if (!DateTime.TryParse(epoch, out input))
+        else if (!Time.TryParse(epoch, out input))
         {
             double value = double.Parse(epoch, CultureInfo.InvariantCulture);
             if (isutc)
             {
-                input = DateTimeExtension.CreateUTC(value);
+                input = Time.CreateUTC(value);
             }
             else
             {
-                input = DateTimeExtension.CreateTDB(value);
+                input = Time.CreateTDB(value);
             }
         }
 

@@ -115,7 +115,7 @@ public class TimeTests
             command.TimeConverter(new EpochParameters{Epoch = "0.0 TDB"}, true, false, false, true, false, false);
             var res = sb.ToString();
 
-            Assert.Equal($"{DateTimeExtension.JULIAN_J2000} JD TDB{Environment.NewLine}", res);
+            Assert.Equal($"{Time.JULIAN_J2000} JD TDB{Environment.NewLine}", res);
         }
     }
 
@@ -144,7 +144,7 @@ public class TimeTests
             StringBuilder sb = new StringBuilder();
             StringWriter sw = new StringWriter(sb);
             Console.SetOut(sw);
-            command.TimeConverter(new EpochParameters{Epoch = $"{DateTimeExtension.JULIAN_J2000} JD TDB" }, true, false, false, false, true, false);
+            command.TimeConverter(new EpochParameters{Epoch = $"{Time.JULIAN_J2000} JD TDB" }, true, false, false, false, true, false);
             var res = sb.ToString();
 
             Assert.Equal($"0 TDB{Environment.NewLine}", res);
@@ -160,7 +160,7 @@ public class TimeTests
             StringBuilder sb = new StringBuilder();
             StringWriter sw = new StringWriter(sb);
             Console.SetOut(sw);
-            command.TimeConverter(new EpochParameters{Epoch = $"{DateTimeExtension.JULIAN_J2000} JD TDB" }, true, false, false, false, false, true);
+            command.TimeConverter(new EpochParameters{Epoch = $"{Time.JULIAN_J2000} JD TDB" }, true, false, false, false, false, true);
             var res = sb.ToString();
 
             Assert.Equal($"2000-01-01T12:00:00.0000000 TDB{Environment.NewLine}", res);
@@ -176,7 +176,7 @@ public class TimeTests
             StringBuilder sb = new StringBuilder();
             StringWriter sw = new StringWriter(sb);
             Console.SetOut(sw);
-            command.TimeConverter(new EpochParameters{Epoch = $"{DateTimeExtension.JULIAN_J2000} JD TDB" }, false, true, false, true, false, false);
+            command.TimeConverter(new EpochParameters{Epoch = $"{Time.JULIAN_J2000} JD TDB" }, false, true, false, true, false, false);
             var res = sb.ToString();
 
             Assert.Equal($"2451544.9992571296 JD UTC{Environment.NewLine}", res);

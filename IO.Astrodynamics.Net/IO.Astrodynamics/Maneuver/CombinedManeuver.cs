@@ -3,6 +3,7 @@ using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
+using IO.Astrodynamics.TimeSystem;
 
 namespace IO.Astrodynamics.Maneuver
 {
@@ -11,7 +12,7 @@ namespace IO.Astrodynamics.Maneuver
         public double TargetPerigeeHeight { get; } = double.NaN;
         public double TargetInclination { get; } = double.NaN;
 
-        public CombinedManeuver(CelestialItem maneuverCenter, DateTime minimumEpoch, TimeSpan maneuverHoldDuration, double perigeeRadius, double inclination, Engine engine) : base(
+        public CombinedManeuver(CelestialItem maneuverCenter, Time minimumEpoch, TimeSpan maneuverHoldDuration, double perigeeRadius, double inclination, Engine engine) : base(
             maneuverCenter, minimumEpoch, maneuverHoldDuration, engine)
         {
             TargetPerigeeHeight = perigeeRadius;

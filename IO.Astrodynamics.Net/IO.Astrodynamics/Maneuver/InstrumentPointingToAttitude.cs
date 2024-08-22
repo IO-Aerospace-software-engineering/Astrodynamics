@@ -6,6 +6,7 @@ using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.Surface;
+using IO.Astrodynamics.TimeSystem;
 
 namespace IO.Astrodynamics.Maneuver;
 
@@ -14,7 +15,7 @@ public class InstrumentPointingToAttitude : Attitude
     public Instrument Instrument { get; }
     public ILocalizable Target { get; }
 
-    public InstrumentPointingToAttitude(DateTime minimumEpoch, TimeSpan maneuverHoldDuration, Instrument instrument, ILocalizable target, Engine engine) : base(
+    public InstrumentPointingToAttitude(Time minimumEpoch, TimeSpan maneuverHoldDuration, Instrument instrument, ILocalizable target, Engine engine) : base(
         target is CelestialItem t ? t : (target as Site)?.CelestialBody, minimumEpoch, maneuverHoldDuration, engine)
     {
         Instrument = instrument ?? throw new ArgumentNullException(nameof(instrument));

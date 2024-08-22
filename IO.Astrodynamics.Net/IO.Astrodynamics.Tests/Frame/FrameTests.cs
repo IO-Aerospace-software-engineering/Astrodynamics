@@ -25,15 +25,15 @@ public class FrameTests
     [Fact]
     public void ToInertialFrame()
     {
-        var so = Frames.Frame.ICRF.ToFrame(Frames.Frame.ECLIPTIC_J2000, DateTimeExtension.J2000);
+        var so = Frames.Frame.ICRF.ToFrame(Frames.Frame.ECLIPTIC_J2000, Time.J2000);
         Assert.Equal(so,
-            new StateOrientation(new Quaternion(0.9791532214288993, new Vector3(-0.20312303898231013, 0.0, 0.0)), Vector3.Zero, DateTimeExtension.J2000, Frames.Frame.ICRF));
+            new StateOrientation(new Quaternion(0.9791532214288993, new Vector3(-0.20312303898231013, 0.0, 0.0)), Vector3.Zero, Time.J2000, Frames.Frame.ICRF));
     }
 
     [Fact]
     public void ToNonInertialFrame()
     {
-        var epoch = DateTimeExtension.J2000;
+        var epoch = Time.J2000;
         var moonFrame = new Frames.Frame(PlanetsAndMoons.MOON.Frame);
         var earthFrame = new Frames.Frame(PlanetsAndMoons.EARTH.Frame);
         var q = moonFrame.ToFrame(earthFrame, epoch);

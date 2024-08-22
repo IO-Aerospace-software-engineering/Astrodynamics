@@ -63,8 +63,8 @@ namespace IO.Astrodynamics.Tests.Body
         [Fact]
         public async Task FindWindowInFieldOfView()
         {
-            DateTime start = DateTimeExtension.CreateUTC(676555130.80).ToTDB();
-            DateTime end = start.AddSeconds(6448.0);
+            Time start = Time.CreateUTC(676555130.80).ToTDB();
+            Time end = start.AddSeconds(6448.0);
 
             //Configure scenario
             Scenario scenario = new Scenario("Scenario_A", new Astrodynamics.Mission.Mission("mission06"),
@@ -91,26 +91,26 @@ namespace IO.Astrodynamics.Tests.Body
             
             //Find windows when the earth is in field of view of camera 600 
             var res = spacecraft.Instruments.First().FindWindowsInFieldOfViewConstraint(
-                new Window(DateTimeExtension.CreateTDB(676555200.0), DateTimeExtension.CreateTDB(676561646.0)), spacecraft,
+                new Window(Time.CreateTDB(676555200.0), Time.CreateTDB(676561646.0)), spacecraft,
                 TestHelpers.EarthAtJ2000, TestHelpers.EarthAtJ2000.Frame,
                 ShapeType.Ellipsoid, Aberration.LT,
                 TimeSpan.FromSeconds(360.0)).ToArray();
 
             //Read results
             Assert.Equal(2, res.Count());
-            Assert.Equal(DateTime.Parse("2021-06-10T00:00:00.0000000"), res.ElementAt(0).StartDate,TimeSpan.FromMilliseconds(1));
+            Assert.Equal(Time.Parse("2021-06-10T00:00:00.0000000"), res.ElementAt(0).StartDate,TimeSpan.FromMilliseconds(1));
             Assert.Equal("2021-06-10T00:29:06.9433499 (TDB)", res.ElementAt(0).EndDate.ToFormattedString());
             Assert.Equal("2021-06-10T01:03:53.6109902 (TDB)", res.ElementAt(1).StartDate.ToFormattedString());
             Assert.Equal("2021-06-10T01:47:26.0000000 (TDB)", res.ElementAt(1).EndDate.ToFormattedString());
 
             Assert.Throws<ArgumentNullException>(() => spacecraft.Instruments.First().FindWindowsInFieldOfViewConstraint(
-                new Window(DateTimeExtension.CreateTDB(676555200.0), DateTimeExtension.CreateTDB(676561647.0)), null,
+                new Window(Time.CreateTDB(676555200.0), Time.CreateTDB(676561647.0)), null,
                 TestHelpers.EarthAtJ2000, TestHelpers.EarthAtJ2000.Frame, ShapeType.Ellipsoid, Aberration.LT, TimeSpan.FromHours(1.0)));
             Assert.Throws<ArgumentNullException>(() => spacecraft.Instruments.First().FindWindowsInFieldOfViewConstraint(
-                new Window(DateTimeExtension.CreateTDB(676555200.0), DateTimeExtension.CreateTDB(676561647.0)), spacecraft,
+                new Window(Time.CreateTDB(676555200.0), Time.CreateTDB(676561647.0)), spacecraft,
                 null, TestHelpers.EarthAtJ2000.Frame, ShapeType.Ellipsoid, Aberration.LT, TimeSpan.FromHours(1.0)));
             Assert.Throws<ArgumentNullException>(() => spacecraft.Instruments.First().FindWindowsInFieldOfViewConstraint(
-                new Window(DateTimeExtension.CreateTDB(676555200.0), DateTimeExtension.CreateTDB(676561647.0)), spacecraft,
+                new Window(Time.CreateTDB(676555200.0), Time.CreateTDB(676561647.0)), spacecraft,
                 TestHelpers.EarthAtJ2000, null, ShapeType.Ellipsoid, Aberration.LT, TimeSpan.FromHours(1.0)));
         }
 
@@ -118,7 +118,7 @@ namespace IO.Astrodynamics.Tests.Body
         public async Task WriteFrame()
         {
             Spacecraft spc = new Spacecraft(-1001, "MySpacecraft", 1000.0, 10000.0, new Clock("clk1", 256), new StateVector(new Vector3(1.0, 2.0, 3.0), new Vector3(1.0, 2.0, 3.0),
-                TestHelpers.EarthAtJ2000, DateTime.MinValue, Frames.Frame.ICRF));
+                TestHelpers.EarthAtJ2000, Time.MinValue, Frames.Frame.ICRF));
             spc.AddCircularInstrument(-1001600, "CAM600", "mod1", 1.5, Vector3.VectorZ, Vector3.VectorY, new Vector3(0.0, -System.Math.PI * 0.5, 0.0));
             await spc.Instruments.First().WriteFrameAsync(new FileInfo("instrumentFrame.tf"));
             TextReader tr = new StreamReader("instrumentFrame.tf");
@@ -130,7 +130,7 @@ namespace IO.Astrodynamics.Tests.Body
         public async Task WriteKernel()
         {
             Spacecraft spc = new Spacecraft(-1001, "MySpacecraft", 1000.0, 10000.0, new Clock("clk1", 256), new StateVector(new Vector3(1.0, 2.0, 3.0), new Vector3(1.0, 2.0, 3.0),
-                TestHelpers.EarthAtJ2000, DateTime.MinValue, Frames.Frame.ICRF));
+                TestHelpers.EarthAtJ2000, Time.MinValue, Frames.Frame.ICRF));
             spc.AddCircularInstrument(-1001600, "CAM600", "mod1", 1.5, Vector3.VectorZ, Vector3.VectorY, new Vector3(0.0, -System.Math.PI * 0.5, 0.0));
             await spc.Instruments.First().WriteKernelAsync(new FileInfo("instrumentKernel.ti"));
             TextReader tr = new StreamReader("instrumentKernel.ti");

@@ -4,10 +4,10 @@ namespace IO.Astrodynamics.TimeSystem.Frames;
 
 public class GPSTimeFrame : TimeFrame
 {
-    internal GPSTimeFrame()
+    internal GPSTimeFrame() : base("GPS")
     {
-        
     }
+
     public override Time ConvertToTAI(Time time)
     {
         return new Time(time.Add(TimeSpan.FromSeconds(19.0)).DateTime, TAIFrame);

@@ -117,7 +117,7 @@ public class API
 
     [DllImport(@"IO.Astrodynamics", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
     private static extern TLEElements GetTLEElementsProxy(string line1, string line2, string line3);
-    
+
     [DllImport(@"IO.Astrodynamics", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
     private static extern void KClearProxy();
 
@@ -241,6 +241,7 @@ public class API
             {
                 UnloadKernels(kernel);
             }
+
             KClearProxy();
         }
     }
@@ -644,7 +645,7 @@ public class API
                     aberration.GetDescription(), stepSize.TotalSeconds,
                     stateVectors);
                 orbitalParameters.AddRange(stateVectors.Where(x => !string.IsNullOrEmpty(x.Frame)).Select(x =>
-                    new OrbitalParameters.StateVector(x.Position.Convert(), x.Velocity.Convert(), observer, DateTimeExtension.CreateTDB(x.Epoch), frame)));
+                    new OrbitalParameters.StateVector(x.Position.Convert(), x.Velocity.Convert(), observer, Time.Create(x.Epoch, TimeFrame.TDBFrame), frame)));
             }
 
             return orbitalParameters;
@@ -661,7 +662,7 @@ public class API
     /// <param name="aberration"></param>
     /// <returns></returns>
     /// <exception cref="ArgumentNullException"></exception>
-    public OrbitalParameters.OrbitalParameters ReadEphemeris(DateTime epoch, ILocalizable observer,
+    public OrbitalParameters.OrbitalParameters ReadEphemeris(Time epoch, ILocalizable observer,
         ILocalizable target, Frame frame, Aberration aberration)
     {
         ArgumentNullException.ThrowIfNull(observer);
@@ -670,10 +671,10 @@ public class API
         lock (lockObject)
         {
             if (frame == null) throw new ArgumentNullException(nameof(frame));
-            var stateVector = ReadEphemerisAtGivenEpochProxy(epoch.SecondsFromJ2000TDB(), observer.NaifId,
+            var stateVector = ReadEphemerisAtGivenEpochProxy(epoch.TimeSpanFromJ2000().TotalSeconds, observer.NaifId,
                 target.NaifId, frame.Name, aberration.GetDescription());
             return new OrbitalParameters.StateVector(stateVector.Position.Convert(), stateVector.Velocity.Convert(), observer,
-                DateTimeExtension.CreateTDB(stateVector.Epoch), frame);
+                Time.Create(stateVector.Epoch, TimeFrame.TDBFrame), frame);
         }
     }
 
@@ -699,7 +700,7 @@ public class API
                 referenceFrame.Name, stepSize.TotalSeconds,
                 stateOrientations);
             return stateOrientations.Where(x => x.Frame != null).Select(x => new OrbitalParameters.StateOrientation(
-                x.Rotation.Convert(), x.AngularVelocity.Convert(), DateTimeExtension.CreateTDB(x.Epoch), referenceFrame));
+                x.Rotation.Convert(), x.AngularVelocity.Convert(), Time.Create(x.Epoch, TimeFrame.TDBFrame), referenceFrame));
         }
     }
 
@@ -775,13 +776,13 @@ public class API
     /// <param name="epoch"></param>
     /// <returns></returns>
     /// <exception cref="ArgumentNullException"></exception>
-    public OrbitalParameters.StateOrientation TransformFrame(Frame fromFrame, Frame toFrame, DateTime epoch)
+    public OrbitalParameters.StateOrientation TransformFrame(Frame fromFrame, Frame toFrame, Time epoch)
     {
         lock (lockObject)
         {
             if (fromFrame == null) throw new ArgumentNullException(nameof(fromFrame));
             if (toFrame == null) throw new ArgumentNullException(nameof(toFrame));
-            var res = TransformFrameProxy(fromFrame.Name, toFrame.Name, epoch.ToTDB().SecondsFromJ2000TDB());
+            var res = TransformFrameProxy(fromFrame.Name, toFrame.Name, epoch.ToTDB().TimeSpanFromJ2000().TotalSeconds);
 
             return new OrbitalParameters.StateOrientation(
                 new Quaternion(res.Rotation.W, res.Rotation.X, res.Rotation.Y, res.Rotation.Z),
@@ -798,11 +799,11 @@ public class API
     /// <param name="epoch"></param>
     /// <returns></returns>
     public OrbitalParameters.StateVector ConvertTleToStateVector(string line1, string line2, string line3,
-        DateTime epoch)
+        Time epoch)
     {
         lock (lockObject)
         {
-            var res = ConvertTLEToStateVectorProxy(line1, line2, line3, epoch.SecondsFromJ2000TDB());
+            var res = ConvertTLEToStateVectorProxy(line1, line2, line3, epoch.TimeSpanFromJ2000().TotalSeconds);
             return new OrbitalParameters.StateVector(res.Position.Convert(), res.Velocity.Convert(),
                 new Body.CelestialBody(PlanetsAndMoons.EARTH, Frame.ECLIPTIC_J2000, epoch), epoch,
                 new Frame(res.Frame));
@@ -824,7 +825,7 @@ public class API
 
             return new TLE(line1, line2, line3, res.BalisticCoefficient, res.DragTerm, res.SecondDerivativeOfMeanMotion,
                 res.A, res.E, res.I, res.O, res.W, res.M,
-                DateTimeExtension.CreateTDB(res.Epoch), Frame.ICRF);
+                Time.Create(res.Epoch, TimeFrame.TDBFrame), Frame.ICRF);
         }
     }
 }

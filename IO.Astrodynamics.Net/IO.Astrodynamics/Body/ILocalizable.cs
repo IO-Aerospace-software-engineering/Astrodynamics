@@ -8,8 +8,8 @@ namespace IO.Astrodynamics.Body
     public interface ILocalizable : INaifObject
     {
         IEnumerable<OrbitalParameters.OrbitalParameters> GetEphemeris(Window searchWindow, ILocalizable observer, Frame frame, Aberration aberration, TimeSpan stepSize);
-        OrbitalParameters.OrbitalParameters GetEphemeris(DateTime epoch, ILocalizable observer, Frame frame, Aberration aberration);
-        double AngularSeparation(DateTime epoch, ILocalizable target1, ILocalizable target2, Aberration aberration);
+        OrbitalParameters.OrbitalParameters GetEphemeris(Time epoch, ILocalizable observer, Frame frame, Aberration aberration);
+        double AngularSeparation(Time epoch, ILocalizable target1, ILocalizable target2, Aberration aberration);
         OrbitalParameters.OrbitalParameters InitialOrbitalParameters { get; }
         IEnumerable<ILocalizable> GetCentersOfMotion();
         double GM { get; }

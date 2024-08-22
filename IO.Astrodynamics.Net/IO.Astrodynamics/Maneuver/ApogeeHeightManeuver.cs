@@ -3,6 +3,7 @@ using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
+using IO.Astrodynamics.TimeSystem;
 
 namespace IO.Astrodynamics.Maneuver
 {
@@ -10,12 +11,12 @@ namespace IO.Astrodynamics.Maneuver
     {
         public double TargetApogee { get; }
 
-        public ApogeeHeightManeuver(DateTime minimumEpoch, TimeSpan maneuverHoldDuration, OrbitalParameters.OrbitalParameters targetOrbit, Engine engine) : this(
+        public ApogeeHeightManeuver(Time minimumEpoch, TimeSpan maneuverHoldDuration, OrbitalParameters.OrbitalParameters targetOrbit, Engine engine) : this(
             targetOrbit.Observer as CelestialItem, minimumEpoch, maneuverHoldDuration, targetOrbit.ApogeeVector().Magnitude(), engine)
         {
         }
 
-        public ApogeeHeightManeuver(CelestialItem maneuverCenter, DateTime minimumEpoch, TimeSpan maneuverHoldDuration, double apogeeRadius, Engine engine) : base(maneuverCenter,
+        public ApogeeHeightManeuver(CelestialItem maneuverCenter, Time minimumEpoch, TimeSpan maneuverHoldDuration, double apogeeRadius, Engine engine) : base(maneuverCenter,
             minimumEpoch,
             maneuverHoldDuration, engine)
         {

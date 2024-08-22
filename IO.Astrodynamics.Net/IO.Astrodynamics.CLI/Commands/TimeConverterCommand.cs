@@ -26,7 +26,7 @@ public class TimeConverterCommand
         bool toJulian,
         [Option('e', Description = "Convert to elapsed seconds from J2000 epoch")]
         bool toSecondsFromJ2000,
-        [Option('d', Description = "Convert to DateTime (ISO 8601)")]
+        [Option('d', Description = "Convert to Time (ISO 8601)")]
         bool toDateTime)
     {
         if (!(toUTC ^ toTDB ^ toLocal))
@@ -36,7 +36,7 @@ public class TimeConverterCommand
 
         if (!(toJulian ^ toSecondsFromJ2000 ^ toDateTime))
         {
-            throw new ArgumentException("Target either Julian or SecondsFromJ2000 or DateTime . use --help for more information");
+            throw new ArgumentException("Target either Julian or SecondsFromJ2000 or Time . use --help for more information");
         }
 
         var input = Helpers.ConvertDateTimeInput(epochParameters.Epoch);

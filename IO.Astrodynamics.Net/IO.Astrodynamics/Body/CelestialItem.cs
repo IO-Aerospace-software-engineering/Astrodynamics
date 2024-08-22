@@ -5,6 +5,7 @@ using IO.Astrodynamics.Coordinates;
 using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.SolarSystemObjects;
+using IO.Astrodynamics.TimeSystem;
 using Window = IO.Astrodynamics.TimeSystem.Window;
 
 namespace IO.Astrodynamics.Body;
@@ -44,7 +45,7 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     /// <param name="frame">Initial orbital parameters frame</param>
     /// <param name="epoch">Epoch</param>
     /// <param name="geopotentialModelParameters"></param>
-    protected CelestialItem(int naifId, Frame frame, DateTime epoch, GeopotentialModelParameters geopotentialModelParameters = null)
+    protected CelestialItem(int naifId, Frame frame, Time epoch, GeopotentialModelParameters geopotentialModelParameters = null)
     {
         ExtendedInformation = API.Instance.GetCelestialBodyInfo(naifId);
 
@@ -133,7 +134,7 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     /// <param name="frame"></param>
     /// <param name="aberration"></param>
     /// <returns></returns>
-    public OrbitalParameters.OrbitalParameters GetEphemeris(DateTime epoch, ILocalizable observer, Frame frame,
+    public OrbitalParameters.OrbitalParameters GetEphemeris(Time epoch, ILocalizable observer, Frame frame,
         Aberration aberration)
     {
         return API.Instance.ReadEphemeris(epoch, observer, this, frame, aberration);
@@ -159,14 +160,14 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     /// <param name="target2"></param>
     /// <param name="aberration"></param>
     /// <returns></returns>
-    public double AngularSeparation(DateTime epoch, ILocalizable target1, ILocalizable target2, Aberration aberration)
+    public double AngularSeparation(Time epoch, ILocalizable target1, ILocalizable target2, Aberration aberration)
     {
         var target1Position = target1.GetEphemeris(epoch, this, Frame.ICRF, aberration).ToStateVector().Position;
         var target2Position = target2.GetEphemeris(epoch, this, Frame.ICRF, aberration).ToStateVector().Position;
         return target1Position.Angle(target2Position);
     }
 
-    public double AngularSeparation(DateTime epoch, ILocalizable target1, OrbitalParameters.OrbitalParameters fromPosition, Aberration aberration)
+    public double AngularSeparation(Time epoch, ILocalizable target1, OrbitalParameters.OrbitalParameters fromPosition, Aberration aberration)
     {
         var target1Position = fromPosition.RelativeTo(target1, aberration).ToStateVector().Position.Inverse();
         var target2Position = fromPosition.RelativeTo(this, aberration).ToStateVector().Position.Inverse();
@@ -219,7 +220,7 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     /// <param name="epoch"></param>
     /// <param name="aberration"></param>
     /// <returns></returns>
-    public Planetocentric SubObserverPoint(CelestialBody target, DateTime epoch, Aberration aberration)
+    public Planetocentric SubObserverPoint(CelestialBody target, Time epoch, Aberration aberration)
     {
         var position = GetEphemeris(epoch, target, target.Frame, aberration).ToStateVector().Position;
 
@@ -230,7 +231,7 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
         return new Planetocentric(lon, lat, position.Magnitude());
     }
 
-    public Planetocentric SubObserverPoint(Vector3 position, DateTime epoch, Aberration aberration)
+    public Planetocentric SubObserverPoint(Vector3 position, Time epoch, Aberration aberration)
     {
         var lon = System.Math.Atan2(position.Y, position.X);
 

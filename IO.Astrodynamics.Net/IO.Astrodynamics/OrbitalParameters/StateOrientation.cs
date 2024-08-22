@@ -5,7 +5,7 @@ using IO.Astrodynamics.TimeSystem;
 
 namespace IO.Astrodynamics.OrbitalParameters
 {
-    public record StateOrientation(Quaternion Rotation, Vector3 AngularVelocity, DateTime Epoch, Frame ReferenceFrame)
+    public record StateOrientation(Quaternion Rotation, Vector3 AngularVelocity, Time Epoch, Frame ReferenceFrame)
     {
         /// <summary>
         /// Frame from which the rotation is applied
@@ -30,7 +30,7 @@ namespace IO.Astrodynamics.OrbitalParameters
 
         public override string ToString()
         {
-            return $"Epoch : {Epoch.ToTDB().ToFormattedString()} Orientation : {Rotation} Angular velocity : {AngularVelocity} Frame : {ReferenceFrame.Name}";
+            return $"Epoch : {Epoch.ToTDB().ToString()} Orientation : {Rotation} Angular velocity : {AngularVelocity} Frame : {ReferenceFrame.Name}";
         }
     }
 }

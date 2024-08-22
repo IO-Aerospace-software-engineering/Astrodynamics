@@ -12,7 +12,7 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
 {
     public ILocalizable Observer { get; }
 
-    public DateTime Epoch { get; }
+    public Time Epoch { get; }
 
     public Frame Frame { get; }
     protected Vector3? _eccentricVector;
@@ -42,7 +42,7 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// <param name="observer"></param>
     /// <param name="epoch"></param>
     /// <param name="frame"></param>
-    protected OrbitalParameters(ILocalizable observer, in DateTime epoch, Frame frame)
+    protected OrbitalParameters(ILocalizable observer, in Time epoch, Frame frame)
     {
         Observer = observer ?? throw new ArgumentNullException(nameof(observer));
         Epoch = epoch;
@@ -170,7 +170,7 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// </summary>
     /// <param name="epoch"></param>
     /// <returns></returns>
-    public double TrueAnomaly(DateTime epoch)
+    public double TrueAnomaly(Time epoch)
     {
         return AtEpoch(epoch).TrueAnomaly();
     }
@@ -275,7 +275,7 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
         return _stateVector;
     }
 
-    public virtual StateVector ToStateVector(DateTime epoch)
+    public virtual StateVector ToStateVector(Time epoch)
     {
         return AtEpoch(epoch).ToStateVector();
     }
@@ -285,7 +285,7 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
         return ToStateVector(EpochAtMeanAnomaly(TrueAnomalyToMeanAnomaly(trueAnomaly, Eccentricity())));
     }
 
-    public DateTime EpochAtMeanAnomaly(double meanAnomaly)
+    public Time EpochAtMeanAnomaly(double meanAnomaly)
     {
         var res = meanAnomaly - MeanAnomaly();
         if (res < 0.0)
@@ -358,7 +358,7 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// </summary>
     /// <param name="epoch"></param>
     /// <returns></returns>
-    public virtual OrbitalParameters AtEpoch(DateTime epoch)
+    public virtual OrbitalParameters AtEpoch(Time epoch)
     {
         return ToKeplerianElements(epoch);
     }
@@ -378,7 +378,7 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// </summary>
     /// <param name="epoch"></param>
     /// <returns></returns>
-    public double TrueLongitude(DateTime epoch)
+    public double TrueLongitude(Time epoch)
     {
         _trueLongitude ??= (AscendingNode() + ArgumentOfPeriapsis() + TrueAnomaly(epoch)) % Constants._2PI;
         return _trueLongitude.Value;
@@ -412,9 +412,9 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
         return _isHyperbolic.Value;
     }
 
-    private KeplerianElements ToKeplerianElements(DateTime epoch)
+    private KeplerianElements ToKeplerianElements(Time epoch)
     {
-        double ellapsedTime = epoch.SecondsFromJ2000TDB() - Epoch.SecondsFromJ2000TDB();
+        double ellapsedTime = (epoch - Epoch).TotalSeconds;
         double M = MeanAnomaly() + MeanMotion() * ellapsedTime;
         while (M < 0.0)
         {

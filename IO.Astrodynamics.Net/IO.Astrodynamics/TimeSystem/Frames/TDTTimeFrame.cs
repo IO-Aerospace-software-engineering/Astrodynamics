@@ -4,10 +4,10 @@ namespace IO.Astrodynamics.TimeSystem.Frames;
 
 public class TDTTimeFrame : TimeFrame
 {
-    internal TDTTimeFrame()
+    internal TDTTimeFrame() : base("TDT")
     {
-        
     }
+
     public override Time ConvertToTAI(Time time)
     {
         return new Time(time.Add(TimeSpan.FromSeconds(-32.184)).DateTime, TAIFrame);

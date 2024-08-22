@@ -12,7 +12,7 @@ namespace IO.Astrodynamics.Maneuver;
 public abstract class Attitude : Maneuver
 {
     public StateOrientation StateOrientation { get; private set; }
-    public Attitude(CelestialItem maneuverCenter, DateTime minimumEpoch, TimeSpan maneuverHoldDuration, Engine engine) : base(maneuverCenter, minimumEpoch, maneuverHoldDuration, engine)
+    public Attitude(CelestialItem maneuverCenter, Time minimumEpoch, TimeSpan maneuverHoldDuration, Engine engine) : base(maneuverCenter, minimumEpoch, maneuverHoldDuration, engine)
     {
     }
 

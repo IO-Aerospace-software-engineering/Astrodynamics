@@ -49,7 +49,7 @@ public class TLETests
             "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
 
-        DateTime epoch = DateTimeExtension.CreateTDB(664440682.84760022);
+        Time epoch = Time.CreateTDB(664440682.84760022);
         var stateVector = tle.AtEpoch(epoch).ToStateVector();
 
         Assert.Equal(stateVector, tle.ToStateVector(epoch));

@@ -43,13 +43,13 @@ namespace IO.Astrodynamics.Surface
 
             if (double.IsNaN(planetodetic.Latitude))
             {
-                InitialOrbitalParameters = API.Instance.ReadEphemeris(DateTimeExtension.J2000, CelestialBody, this, CelestialBody.Frame, Aberration.None);
+                InitialOrbitalParameters = API.Instance.ReadEphemeris( Time.J2000TDB, CelestialBody, this, CelestialBody.Frame, Aberration.None);
                 Planetodetic = GetPlanetocentricCoordinates().ToPlanetodetic(CelestialBody.Flattening, CelestialBody.EquatorialRadius);
             }
             else
             {
                 Planetodetic = planetodetic;
-                InitialOrbitalParameters = GetEphemeris(DateTimeExtension.J2000, CelestialBody, CelestialBody.Frame, Aberration.None);
+                InitialOrbitalParameters = GetEphemeris(Time.J2000TDB, CelestialBody, CelestialBody.Frame, Aberration.None);
             }
 
             Frame = new SiteFrame(name.ToUpper() + "_TOPO", this);
@@ -92,7 +92,7 @@ namespace IO.Astrodynamics.Surface
         /// <param name="target"></param>
         /// <param name="aberration"></param>
         /// <returns></returns>
-        public Horizontal GetHorizontalCoordinates(DateTime epoch, ILocalizable target, Aberration aberration)
+        public Horizontal GetHorizontalCoordinates(Time epoch, ILocalizable target, Aberration aberration)
         {
             var position = target.GetEphemeris(epoch, this, Frame, aberration).ToStateVector().Position;
 
@@ -120,7 +120,7 @@ namespace IO.Astrodynamics.Surface
             TimeSpan stepSize)
         {
             var ephemeris = new List<OrbitalParameters.OrbitalParameters>();
-            for (DateTime i = searchWindow.StartDate; i <= searchWindow.EndDate; i += stepSize)
+            for (Time i = searchWindow.StartDate; i <= searchWindow.EndDate; i += stepSize)
             {
                 ephemeris.Add(GetEphemeris(i, observer, frame, aberration));
             }
@@ -136,7 +136,7 @@ namespace IO.Astrodynamics.Surface
         /// <param name="frame"></param>
         /// <param name="aberration"></param>
         /// <returns></returns>
-        public OrbitalParameters.OrbitalParameters GetEphemeris(DateTime epoch, ILocalizable observer, Frame frame, Aberration aberration)
+        public OrbitalParameters.OrbitalParameters GetEphemeris(Time epoch, ILocalizable observer, Frame frame, Aberration aberration)
         {
             return new StateVector(Planetodetic.ToPlanetocentric(CelestialBody.Flattening, CelestialBody.EquatorialRadius).ToCartesianCoordinates(),
                 Vector3.Zero, CelestialBody, epoch, CelestialBody.Frame).ToFrame(frame);
@@ -150,7 +150,7 @@ namespace IO.Astrodynamics.Surface
         /// <param name="target2"></param>
         /// <param name="aberration"></param>
         /// <returns></returns>
-        public double AngularSeparation(DateTime epoch, ILocalizable target1, ILocalizable target2, Aberration aberration)
+        public double AngularSeparation(Time epoch, ILocalizable target1, ILocalizable target2, Aberration aberration)
         {
             var target1Position = target1.GetEphemeris(epoch, this, Frames.Frame.ICRF, aberration).ToStateVector().Position;
             var target2Position = target2.GetEphemeris(epoch, this, Frames.Frame.ICRF, aberration).ToStateVector().Position;
@@ -246,7 +246,7 @@ namespace IO.Astrodynamics.Surface
         /// <param name="epoch"></param>
         /// <param name="aberration"></param>
         /// <returns></returns>
-        public Planetocentric SubObserverPoint(CelestialBody target, DateTime epoch, Aberration aberration)
+        public Planetocentric SubObserverPoint(CelestialBody target, Time epoch, Aberration aberration)
         {
             var position = GetEphemeris(epoch, target, target.Frame, aberration).ToStateVector().Position;
 

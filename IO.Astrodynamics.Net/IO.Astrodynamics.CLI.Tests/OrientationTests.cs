@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Text;
 using IO.Astrodynamics.CLI.Commands;
 using IO.Astrodynamics.CLI.Commands.Parameters;
+using IO.Astrodynamics.TimeSystem;
 
 namespace IO.Astrodynamics.CLI.Tests;
 
@@ -19,8 +20,8 @@ public class OrientationsTests
             command.Orientation("Data", 399,
                 new WindowParameters
                 {
-                    Begin = new DateTime(2023, 01, 01, 1, 0, 0).ToString(CultureInfo.InvariantCulture),
-                    End = new DateTime(2023, 01, 01, 1, 1, 0).ToString(CultureInfo.InvariantCulture)
+                    Begin = new Time(2023, 01, 01, 1, 0, 0).ToString(CultureInfo.InvariantCulture),
+                    End = new Time(2023, 01, 01, 1, 1, 0).ToString(CultureInfo.InvariantCulture)
                 }, TimeSpan.FromMinutes(1), "ICRF");
             var res = sb.ToString();
 
@@ -42,8 +43,8 @@ public class OrientationsTests
             command.Orientation("Data", 399,
                 new WindowParameters
                 {
-                    Begin = new DateTime(2023, 01, 01, 1, 0, 0).ToString(CultureInfo.InvariantCulture),
-                    End = new DateTime(2023, 01, 01, 1, 1, 0).ToString(CultureInfo.InvariantCulture)
+                    Begin = new Time(2023, 01, 01, 1, 0, 0).ToString(CultureInfo.InvariantCulture),
+                    End = new Time(2023, 01, 01, 1, 1, 0).ToString(CultureInfo.InvariantCulture)
                 }, TimeSpan.FromMinutes(1));
             var res = sb.ToString();
             Assert.Equal(

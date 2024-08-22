@@ -3,6 +3,7 @@
 using IO.Astrodynamics.DTO;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.TimeSystem;
+using IO.Astrodynamics.TimeSystem.Frames;
 using Launch = IO.Astrodynamics.Maneuver.Launch;
 using Planetodetic = IO.Astrodynamics.Coordinates.Planetodetic;
 using Quaternion = IO.Astrodynamics.Math.Quaternion;
@@ -37,24 +38,24 @@ public static class ProfilesConfiguration
 
     internal static DTO.StateVector Convert(this StateVector stateVector)
     {
-        return new DTO.StateVector(stateVector.Observer.NaifId, stateVector.Epoch.SecondsFromJ2000TDB(), stateVector.Frame.Name, stateVector.Position.Convert(),
+        return new DTO.StateVector(stateVector.Observer.NaifId, stateVector.Epoch.TimeSpanFromJ2000().TotalSeconds, stateVector.Frame.Name, stateVector.Position.Convert(),
             stateVector.Velocity.Convert());
     }
 
     internal static DTO.StateOrientation Convert(this StateOrientation stateOrientation)
     {
-        return new DTO.StateOrientation(stateOrientation.Rotation.Convert(), stateOrientation.AngularVelocity.Convert(), stateOrientation.Epoch.SecondsFromJ2000TDB(),
+        return new DTO.StateOrientation(stateOrientation.Rotation.Convert(), stateOrientation.AngularVelocity.Convert(), stateOrientation.Epoch.TimeSpanFromJ2000().TotalSeconds,
             stateOrientation.ReferenceFrame.Name);
     }
 
     internal static DTO.Window Convert(this Window window)
     {
-        return new DTO.Window(window.StartDate.SecondsFromJ2000TDB(), window.EndDate.SecondsFromJ2000TDB());
+        return new DTO.Window(window.StartDate.TimeSpanFromJ2000().TotalSeconds, window.EndDate.TimeSpanFromJ2000().TotalSeconds);
     }
 
     internal static Window Convert(this in DTO.Window window)
     {
-        return new Window(DateTimeExtension.CreateTDB(window.Start), DateTimeExtension.CreateTDB(window.End));
+        return new Window(Time.Create(window.Start,TimeFrame.TDBFrame), Time.Create(window.End,TimeFrame.TDBFrame));
     }
 
     internal static DTO.Planetodetic Convert(this Planetodetic planetodetic)

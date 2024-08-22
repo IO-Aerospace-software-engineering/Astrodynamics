@@ -11,7 +11,7 @@ public class TLEPropagator : IPropagator
 {
     private uint _svCacheSize;
     private StateVector[] _svCache;
-    private Dictionary<DateTime, StateOrientation> _stateOrientation = new Dictionary<DateTime, StateOrientation>();
+    private Dictionary<Time, StateOrientation> _stateOrientation = new Dictionary<Time, StateOrientation>();
     public Window Window { get; }
     public Spacecraft Spacecraft { get; }
     public TimeSpan DeltaT { get; }

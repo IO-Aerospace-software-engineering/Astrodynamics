@@ -37,7 +37,7 @@ namespace IO.Astrodynamics.OrbitalParameters
         /// <param name="observer"></param>
         /// <param name="epoch"></param>
         /// <param name="frame"></param>
-        public StateVector(in Vector3 position, in Vector3 velocity, ILocalizable observer, in DateTime epoch, Frame frame) : base(observer, epoch, frame)
+        public StateVector(in Vector3 position, in Vector3 velocity, ILocalizable observer, in Time epoch, Frame frame) : base(observer, epoch, frame)
         {
             Position = position;
             Velocity = velocity;
@@ -337,7 +337,7 @@ namespace IO.Astrodynamics.OrbitalParameters
 
         public override string ToString()
         {
-            return $"Epoch : {Epoch.ToFormattedString()} Position : {Position} Velocity : {Velocity} Frame : {Frame.Name}";
+            return $"Epoch : {Epoch.ToString()} Position : {Position} Velocity : {Velocity} Frame : {Frame.Name}";
         }
     }
 }

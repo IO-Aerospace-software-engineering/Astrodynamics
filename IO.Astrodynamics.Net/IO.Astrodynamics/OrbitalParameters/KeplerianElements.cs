@@ -26,7 +26,7 @@ namespace IO.Astrodynamics.OrbitalParameters
         /// <param name="frame"></param>
         /// <exception cref="ArgumentException"></exception>
         public KeplerianElements(double semiMajorAxis, double eccentricity, double inclination, double rigthAscendingNode, double argumentOfPeriapsis, double meanAnomaly,
-            ILocalizable observer, DateTime epoch, Frame frame) : base(observer, epoch, frame)
+            ILocalizable observer, Time epoch, Frame frame) : base(observer, epoch, frame)
         {
             if (semiMajorAxis <= 0.0)
             {
@@ -177,7 +177,7 @@ namespace IO.Astrodynamics.OrbitalParameters
 
         public override string ToString()
         {
-            return $"Epoch : {Epoch.ToFormattedString()} A : {A} Ecc. : {E} Inc. : {I} AN : {RAAN} AOP : {AOP} M : {M} Frame : {Frame.Name}" ;
+            return $"Epoch : {Epoch.ToString()} A : {A} Ecc. : {E} Inc. : {I} AN : {RAAN} AOP : {AOP} M : {M} Frame : {Frame.Name}" ;
         }
     }
 }

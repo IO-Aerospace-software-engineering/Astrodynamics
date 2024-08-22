@@ -5,12 +5,13 @@ using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
+using IO.Astrodynamics.TimeSystem;
 
 namespace IO.Astrodynamics.Maneuver;
 
 public class ProgradeAttitude : Attitude
 {
-    public ProgradeAttitude(CelestialItem maneuverCenter, DateTime minimumEpoch, TimeSpan maneuverHoldDuration, Engine engine) : base(maneuverCenter, minimumEpoch,
+    public ProgradeAttitude(CelestialItem maneuverCenter, Time minimumEpoch, TimeSpan maneuverHoldDuration, Engine engine) : base(maneuverCenter, minimumEpoch,
         maneuverHoldDuration, engine)
     {
     }

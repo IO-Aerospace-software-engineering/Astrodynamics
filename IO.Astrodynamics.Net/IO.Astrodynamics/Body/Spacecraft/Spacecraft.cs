@@ -259,7 +259,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// </summary>
         /// <param name="maneuver"></param>
         /// <param name="minimumEpoch"></param>
-        public void SetStandbyManeuver(Maneuver.Maneuver maneuver, DateTime? minimumEpoch = null)
+        public void SetStandbyManeuver(Maneuver.Maneuver maneuver, Time? minimumEpoch = null)
         {
             if (minimumEpoch > maneuver?.MinimumEpoch)
             {
@@ -300,7 +300,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// <param name="referenceFrame"></param>
         /// <param name="epoch"></param>
         /// <returns></returns>
-        public StateOrientation GetOrientation(Frame referenceFrame, in DateTime epoch)
+        public StateOrientation GetOrientation(Frame referenceFrame, in Time epoch)
         {
             return referenceFrame.ToFrame(Frame, epoch);
         }

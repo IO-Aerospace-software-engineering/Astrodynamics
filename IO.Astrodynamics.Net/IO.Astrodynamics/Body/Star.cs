@@ -14,7 +14,7 @@ public class Star : CelestialBody, IDisposable
 {
     public Star(int catalogNumber, string name, double mass, string spectralType, double visualMagnitude, double parallax, Equatorial equatorialCoordinatesAtEpoch,
         double declinationProperMotion, double rightAscensionProperMotion, double declinationSigma, double rightAscensionSigma, double declinationSigmaProperMotion,
-        double rightAscensionSigmaProperMotion, DateTime epoch) : base((int)1E+09 + catalogNumber, name, mass)
+        double rightAscensionSigmaProperMotion, Time epoch) : base((int)1E+09 + catalogNumber, name, mass)
     {
         CatalogNumber = catalogNumber;
         SpectralType = spectralType ?? throw new ArgumentNullException(nameof(spectralType));
@@ -42,7 +42,7 @@ public class Star : CelestialBody, IDisposable
 
     public double Distance { get; }
 
-    public DateTime Epoch { get; }
+    public Time Epoch { get; }
     public Equatorial EquatorialCoordinatesAtEpoch { get; }
 
     public double RightAscensionProperMotion { get; }
@@ -57,9 +57,9 @@ public class Star : CelestialBody, IDisposable
     public DirectoryInfo PropagationOutput { get; private set; }
     public bool IsPropagated => PropagationOutput != null;
 
-    public Equatorial GetEquatorialCoordinates(DateTime epoch)
+    public Equatorial GetEquatorialCoordinates(Time epoch)
     {
-        var dt = (epoch.ToJulianDate() - Epoch.ToJulianDate()) / DateTimeExtension.JULIAN_YEAR;
+        var dt = (epoch.ToJulianDate() - Epoch.ToJulianDate()) / Time.JULIAN_YEAR;
         var dec = (EquatorialCoordinatesAtEpoch.Declination + dt * DeclinationProperMotion) % Constants.PI2;
 
         var ra = (EquatorialCoordinatesAtEpoch.RightAscension + dt * RightAscensionProperMotion) % Constants._2PI;
@@ -71,15 +71,15 @@ public class Star : CelestialBody, IDisposable
         return new Equatorial(dec, ra, Distance, epoch);
     }
 
-    public double GetRightAscensionSigma(DateTime epoch)
+    public double GetRightAscensionSigma(Time epoch)
     {
-        var dt = (epoch.ToJulianDate() - Epoch.ToJulianDate()) / DateTimeExtension.JULIAN_YEAR;
+        var dt = (epoch.ToJulianDate() - Epoch.ToJulianDate()) / Time.JULIAN_YEAR;
         return System.Math.Sqrt(System.Math.Pow(RightAscensionSigma, 2) + System.Math.Pow(dt * RightAscensionSigmaProperMotion, 2)) % Constants._2PI;
     }
 
-    public double GetDeclinationSigma(DateTime epoch)
+    public double GetDeclinationSigma(Time epoch)
     {
-        var dt = (epoch.ToJulianDate() - Epoch.ToJulianDate()) / DateTimeExtension.JULIAN_YEAR;
+        var dt = (epoch.ToJulianDate() - Epoch.ToJulianDate()) / Time.JULIAN_YEAR;
         return System.Math.Sqrt(System.Math.Pow(DeclinationSigma, 2) + System.Math.Pow(dt * DeclinationSigmaProperMotion, 2)) % Constants.PI2;
     }
 
@@ -96,7 +96,7 @@ public class Star : CelestialBody, IDisposable
             ResetPropagation();
 
             List<StateVector> svs = new List<StateVector>();
-            for (DateTime epoch = timeWindow.StartDate; epoch <= timeWindow.EndDate; epoch += stepSize)
+            for (Time epoch = timeWindow.StartDate; epoch <= timeWindow.EndDate; epoch += stepSize)
             {
                 var position = GetEquatorialCoordinates(epoch).ToCartesian();
                 svs.Add(new StateVector(position, Vector3.Zero, new Barycenter(0), epoch, Frame.ICRF));

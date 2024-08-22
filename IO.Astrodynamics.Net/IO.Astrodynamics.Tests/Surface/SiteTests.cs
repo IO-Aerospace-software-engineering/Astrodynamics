@@ -23,7 +23,7 @@ namespace IO.Astrodynamics.Tests.Surface
         [Fact]
         public void StateVector()
         {
-            var epoch = new DateTime(2000, 1, 1, 12, 0, 0);
+            var epoch = new Time(2000, 1, 1, 12, 0, 0);
             CelestialBody earth = new CelestialBody(PlanetsAndMoons.EARTH);
             Site site = new Site(13, "DSS-13", earth);
 
@@ -39,7 +39,7 @@ namespace IO.Astrodynamics.Tests.Surface
         [Fact]
         public void GetHorizontalCoordinates()
         {
-            var epoch = new DateTime(2000, 1, 1, 12, 0, 0);
+            var epoch = new Time(2000, 1, 1, 12, 0, 0);
 
             Site site = new Site(13, "DSS-13", TestHelpers.EarthAtJ2000);
             var hor = site.GetHorizontalCoordinates(epoch, TestHelpers.MoonAtJ2000, Aberration.None);
@@ -51,7 +51,7 @@ namespace IO.Astrodynamics.Tests.Surface
         [Fact]
         public void GetHorizontalCoordinates2()
         {
-            var epoch = new DateTime(2000, 1, 5, 12, 0, 0);
+            var epoch = new Time(2000, 1, 5, 12, 0, 0);
 
             Site site = new Site(13, "DSS-13", TestHelpers.EarthAtJ2000);
             var hor = site.GetHorizontalCoordinates(epoch, TestHelpers.MoonAtJ2000, Aberration.None);
@@ -63,7 +63,7 @@ namespace IO.Astrodynamics.Tests.Surface
         [Fact]
         public void GetHorizontalCoordinates3()
         {
-            var epoch = new DateTime(2000, 1, 10, 12, 0, 0);
+            var epoch = new Time(2000, 1, 10, 12, 0, 0);
 
             Site site = new Site(13, "DSS-13", TestHelpers.EarthAtJ2000);
             var hor = site.GetHorizontalCoordinates(epoch, TestHelpers.MoonAtJ2000, Aberration.None);
@@ -75,7 +75,7 @@ namespace IO.Astrodynamics.Tests.Surface
         [Fact]
         public void GetHorizontalCoordinates4()
         {
-            var epoch = new DateTime(2000, 1, 15, 12, 0, 0);
+            var epoch = new Time(2000, 1, 15, 12, 0, 0);
 
             Site site = new Site(13, "DSS-13", TestHelpers.EarthAtJ2000);
             var hor = site.GetHorizontalCoordinates(epoch, TestHelpers.MoonAtJ2000, Aberration.None);
@@ -87,7 +87,7 @@ namespace IO.Astrodynamics.Tests.Surface
         [Fact]
         public void Create()
         {
-            var epoch = new DateTime(2000, 1, 15, 12, 0, 0);
+            var epoch = new Time(2000, 1, 15, 12, 0, 0);
 
             Site site = new Site(13, "DSS-13", TestHelpers.EarthAtJ2000);
             Assert.Equal(13, site.Id);
@@ -107,7 +107,7 @@ namespace IO.Astrodynamics.Tests.Surface
         [Fact]
         public void GetEphemeris()
         {
-            var epoch = new DateTime(2000, 1, 1, 12, 0, 0);
+            var epoch = new Time(2000, 1, 1, 12, 0, 0);
             CelestialBody earth = new CelestialBody(PlanetsAndMoons.EARTH);
             Site site = new Site(13, "DSS-13", earth);
 
@@ -136,7 +136,7 @@ namespace IO.Astrodynamics.Tests.Surface
         [Fact]
         public void GetVelocity()
         {
-            var epoch = new DateTime(2000, 1, 1, 12, 0, 0);
+            var epoch = new Time(2000, 1, 1, 12, 0, 0);
             CelestialBody earth = new CelestialBody(PlanetsAndMoons.EARTH);
             Site site = new Site(13, "DSS-13", earth);
 
@@ -148,7 +148,7 @@ namespace IO.Astrodynamics.Tests.Surface
         [Fact]
         public void GetAngularSepartion()
         {
-            var epoch = new DateTime(2000, 1, 1, 12, 0, 0);
+            var epoch = new Time(2000, 1, 1, 12, 0, 0);
             CelestialBody moon = new CelestialBody(PlanetsAndMoons.MOON);
             Site site = new Site(13, "DSS-13", TestHelpers.EarthAtJ2000);
 
@@ -163,7 +163,7 @@ namespace IO.Astrodynamics.Tests.Surface
             CelestialBody moon = new CelestialBody(PlanetsAndMoons.MOON);
             Site site = new Site(13, "DSS-13", TestHelpers.EarthAtJ2000);
 
-            var res = site.FindWindowsOnDistanceConstraint(new Window(DateTimeExtension.CreateTDB(220881665.18391809), DateTimeExtension.CreateTDB(228657665.18565452)),
+            var res = site.FindWindowsOnDistanceConstraint(new Window(Time.CreateTDB(220881665.18391809), Time.CreateTDB(228657665.18565452)),
                 TestHelpers.MoonAtJ2000, RelationnalOperator.Greater, 400000000, Aberration.None, TimeSpan.FromSeconds(86400.0));
             var windows = res as Window[] ?? res.ToArray();
             Assert.Equal(2, windows.Count());
@@ -179,7 +179,7 @@ namespace IO.Astrodynamics.Tests.Surface
             CelestialBody moon = new CelestialBody(PlanetsAndMoons.MOON);
             Site site = new Site(13, "DSS-13", TestHelpers.EarthAtJ2000);
 
-            var res = site.FindWindowsOnOccultationConstraint(new Window(DateTime.Parse("2005-10-03 00:00:00"), DateTime.Parse("2005-10-04 00:00:00")),
+            var res = site.FindWindowsOnOccultationConstraint(new Window(Time.Parse("2005-10-03 00:00:00"), Time.Parse("2005-10-04 00:00:00")),
                 TestHelpers.Sun, ShapeType.Ellipsoid, TestHelpers.MoonAtJ2000, ShapeType.Ellipsoid, OccultationType.Partial, Aberration.None, TimeSpan.FromSeconds(360.0));
             var windows = res as Window[] ?? res.ToArray();
             Assert.Single(windows);
@@ -192,7 +192,7 @@ namespace IO.Astrodynamics.Tests.Surface
         {
             Site site = new Site(13, "DSS-13", TestHelpers.EarthAtJ2000);
 
-            var res = site.FindWindowsOnCoordinateConstraint(new Window(DateTime.Parse("2005-10-03").ToTDB(), DateTime.Parse("2005-11-03").ToTDB()), TestHelpers.MoonAtJ2000,
+            var res = site.FindWindowsOnCoordinateConstraint(new Window(Time.Parse("2005-10-03").ToTDB(), Time.Parse("2005-11-03").ToTDB()), TestHelpers.MoonAtJ2000,
                 TestHelpers.MoonAtJ2000.Frame, CoordinateSystem.Latitudinal, Coordinate.Latitude, RelationnalOperator.Greater, 0.0, 0.0, Aberration.None,
                 TimeSpan.FromSeconds(60.0));
 
@@ -210,7 +210,7 @@ namespace IO.Astrodynamics.Tests.Surface
             Site site = new Site(13, "DSS-13", TestHelpers.EarthAtJ2000,
                 new Planetodetic(-116.79445837 * Astrodynamics.Constants.Deg2Rad, 35.24716450 * Astrodynamics.Constants.Deg2Rad, 1070.85059));
 
-            var res = site.FindWindowsOnIlluminationConstraint(new Window(DateTimeExtension.CreateTDB(674524800), DateTimeExtension.CreateTDB(674611200)), TestHelpers.Sun,
+            var res = site.FindWindowsOnIlluminationConstraint(new Window(Time.CreateTDB(674524800), Time.CreateTDB(674611200)), TestHelpers.Sun,
                 IlluminationAngle.Incidence, RelationnalOperator.Lower, System.Math.PI * 0.5 - (-0.8 * IO.Astrodynamics.Constants.Deg2Rad), 0.0, Aberration.CNS,
                 TimeSpan.FromSeconds(3600), TestHelpers.Sun);
 
@@ -263,7 +263,7 @@ namespace IO.Astrodynamics.Tests.Surface
         [Fact]
         public void WriteEphemeris()
         {
-            Window window = new Window(new DateTime(2000, 1, 1, 12, 0, 0, DateTimeKind.Unspecified), new DateTime(2000, 1, 2, 12, 0, 0, DateTimeKind.Unspecified));
+            Window window = new Window(new Time(2000, 1, 1, 12, 0, 0, DateTimeKind.Unspecified), new Time(2000, 1, 2, 12, 0, 0, DateTimeKind.Unspecified));
 
             Site site = new Site(339, "S339", TestHelpers.EarthAtJ2000, new Planetodetic(30 * Astrodynamics.Constants.Deg2Rad, 10 * Astrodynamics.Constants.Deg2Rad, 1000.0));
             var res = site.GetEphemeris(window, TestHelpers.EarthAtJ2000, Frames.Frame.ICRF, Aberration.None, TimeSpan.FromHours(1)).Select(x => x.ToStateVector());
@@ -275,7 +275,7 @@ namespace IO.Astrodynamics.Tests.Surface
                 TestHelpers.VectorComparer);
             Assert.Equal(new Vector3(349.9689414487369, 295.67943565441215, 0.00047467276487285595), orbitalParametersEnumerable.ElementAt(0).ToStateVector().Velocity,
                 TestHelpers.VectorComparer);
-            Assert.Equal(DateTimeExtension.J2000, orbitalParametersEnumerable.ElementAt(0).Epoch);
+            Assert.Equal(Time.J2000, orbitalParametersEnumerable.ElementAt(0).Epoch);
             Assert.Equal(Frames.Frame.ICRF, orbitalParametersEnumerable.ElementAt(0).Frame);
             Assert.Equal(TestHelpers.EarthAtJ2000, orbitalParametersEnumerable.ElementAt(0).Observer);
 

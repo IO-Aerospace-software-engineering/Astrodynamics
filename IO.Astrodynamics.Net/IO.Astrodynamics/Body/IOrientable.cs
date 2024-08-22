@@ -3,6 +3,7 @@
 using System;
 using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.OrbitalParameters;
+using IO.Astrodynamics.TimeSystem;
 
 namespace IO.Astrodynamics.Body;
 
@@ -16,5 +17,5 @@ public interface IOrientable
     /// <param name="referenceFrame"></param>
     /// <param name="epoch"></param>
     /// <returns></returns>
-    StateOrientation GetOrientation(Frame referenceFrame, in DateTime epoch);
+    StateOrientation GetOrientation(Frame referenceFrame, in Time epoch);
 }

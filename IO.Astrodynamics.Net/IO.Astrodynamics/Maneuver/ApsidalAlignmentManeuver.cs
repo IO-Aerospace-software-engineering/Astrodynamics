@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
+using IO.Astrodynamics.TimeSystem;
 
 
 namespace IO.Astrodynamics.Maneuver
@@ -12,7 +13,7 @@ namespace IO.Astrodynamics.Maneuver
         public bool IntersectsP { get; private set; }
         public bool IntersectsQ { get; private set; }
 
-        public ApsidalAlignmentManeuver(DateTime minimumEpoch, TimeSpan maneuverHoldDuration, OrbitalParameters.OrbitalParameters targetOrbit,
+        public ApsidalAlignmentManeuver(Time minimumEpoch, TimeSpan maneuverHoldDuration, OrbitalParameters.OrbitalParameters targetOrbit,
             Engine engine) : base(minimumEpoch, maneuverHoldDuration, targetOrbit, engine)
         {
         }

@@ -34,7 +34,7 @@ public class SpacecraftPropagator : IPropagator
 
     private uint _svCacheSize;
     private StateVector[] _svCache;
-    private Dictionary<DateTime, StateOrientation> _stateOrientation = new Dictionary<DateTime, StateOrientation>();
+    private Dictionary<Time, StateOrientation> _stateOrientation = new Dictionary<Time, StateOrientation>();
 
 
     /// <summary>

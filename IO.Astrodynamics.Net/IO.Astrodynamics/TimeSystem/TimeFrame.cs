@@ -4,7 +4,7 @@ using IO.Astrodynamics.TimeSystem.Frames;
 
 namespace IO.Astrodynamics.TimeSystem;
 
-public abstract class TimeFrame : ITimeFrame
+public abstract class TimeFrame : ITimeFrame, IEquatable<TimeFrame>
 {
     public static TAITimeFrame TAIFrame { get; } = new TAITimeFrame();
     public static GPSTimeFrame GPSFrame { get; } = new GPSTimeFrame();
@@ -45,15 +45,57 @@ public abstract class TimeFrame : ITimeFrame
         new DateTime(2017, 1, 1)
     ];
 
-    protected TimeFrame()
+    public string Name { get; }
+
+    protected TimeFrame(string name)
     {
+        Name = name ?? throw new ArgumentNullException(nameof(name));
     }
 
-    public TimeSpan LeapSecondsFrom(DateTime dateTime)
+    public TimeSpan LeapSecondsFrom(Time dateTime)
     {
-        return TimeSpan.FromSeconds(PREVIOUS_OFFSET + LEAP_SECONDS.Count(x => x < dateTime));
+        return TimeSpan.FromSeconds(PREVIOUS_OFFSET + LEAP_SECONDS.Count(x => x < dateTime.DateTime));
     }
 
     public abstract Time ConvertToTAI(Time time);
     public abstract Time ConvertFromTAI(Time time);
+
+    #region Compare
+
+    public bool Equals(TimeFrame other)
+    {
+        if (other is null) return false;
+        if (ReferenceEquals(this, other)) return true;
+        return Name == other.Name;
+    }
+
+    public override bool Equals(object obj)
+    {
+        if (obj is null) return false;
+        if (ReferenceEquals(this, obj)) return true;
+        if (obj.GetType() != GetType()) return false;
+        return Equals((TimeFrame)obj);
+    }
+
+    public override int GetHashCode()
+    {
+        return Name.GetHashCode();
+    }
+
+    public static bool operator ==(TimeFrame left, TimeFrame right)
+    {
+        return Equals(left, right);
+    }
+
+    public static bool operator !=(TimeFrame left, TimeFrame right)
+    {
+        return !Equals(left, right);
+    }
+
+    #endregion
+
+    public override string ToString()
+    {
+        return Name;
+    }
 }
