@@ -84,7 +84,7 @@ public static class DateTimeExtension
             return date;
         }
 
-        var utc= date.Kind == DateTimeKind.Local ? date.ToUniversalTime() : date.AddSeconds(-(OFFSET + LeapSeconds.Count(x => x < date)));
+        var utc = date.Kind == DateTimeKind.Local ? date.ToUniversalTime() : date.AddSeconds(-(OFFSET + LeapSeconds.Count(x => x < date)));
         return DateTime.SpecifyKind(utc, DateTimeKind.Utc);
     }
 
@@ -95,7 +95,22 @@ public static class DateTimeExtension
     /// <returns></returns>
     public static double ToJulianDate(this DateTime date)
     {
-        return date.ToOADate () + 2415018.5;//julian date at 1899-12-30 00:00:00
+        return date.ToOADate() + 2415018.5; //julian date at 1899-12-30 00:00:00
+    }
+
+    /// <summary>
+    /// Convert to julian date
+    /// </summary>
+    /// <param name="date"></param>
+    /// <returns></returns>
+    public static double ToJulianDate(this Time date)
+    {
+        return date.DateTime.ToOADate() + 2415018.5; //julian date at 1899-12-30 00:00:00
+    }
+
+    public static double Centuries(this Time date)
+    {
+        return (date.ToJulianDate() - JULIAN_J2000) / 36525.0;
     }
 
     /// <summary>
@@ -112,7 +127,7 @@ public static class DateTimeExtension
 
         return (date - J2000).TotalSeconds;
     }
-    
+
     /// <summary>
     /// Seconds from J2000 relative to UTC
     /// </summary>
@@ -127,7 +142,7 @@ public static class DateTimeExtension
 
         return (date - J2000).TotalSeconds;
     }
-    
+
     /// <summary>
     /// Seconds from J2000 relative to Local
     /// </summary>

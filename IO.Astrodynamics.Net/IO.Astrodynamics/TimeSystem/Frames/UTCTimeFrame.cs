@@ -1,4 +1,4 @@
-namespace IO.Astrodynamics.TimeSystem;
+namespace IO.Astrodynamics.TimeSystem.Frames;
 
 public class UTCTimeFrame:TimeFrame
 {

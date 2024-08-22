@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using IO.Astrodynamics.TimeSystem.Frames;
 
 namespace IO.Astrodynamics.TimeSystem;
 
@@ -9,6 +10,7 @@ public abstract class TimeFrame : ITimeFrame
     public static GPSTimeFrame GPSFrame { get; } = new GPSTimeFrame();
     public static TDTTimeFrame TDTFrame { get; } = new TDTTimeFrame();
     public static UTCTimeFrame UTCFrame { get; } = new UTCTimeFrame();
+    public static TDBTimeFrame TDBFrame { get; } = new TDBTimeFrame();
     const double PREVIOUS_OFFSET = 9.0; //before 1972;
 
     internal static readonly DateTime[] LEAP_SECONDS =

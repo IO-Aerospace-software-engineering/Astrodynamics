@@ -1,6 +1,6 @@
 using System;
 
-namespace IO.Astrodynamics.TimeSystem;
+namespace IO.Astrodynamics.TimeSystem.Frames;
 
 public class GPSTimeFrame : TimeFrame
 {
@@ -10,11 +10,11 @@ public class GPSTimeFrame : TimeFrame
     }
     public override Time ConvertToTAI(Time time)
     {
-        return new Time(time.Add(TimeSpan.FromSeconds(-19.0)).DateTime, TAIFrame);
+        return new Time(time.Add(TimeSpan.FromSeconds(19.0)).DateTime, TAIFrame);
     }
 
     public override Time ConvertFromTAI(Time time)
     {
-        return new Time(time.Add(TimeSpan.FromSeconds(19.0)).DateTime, this);
+        return new Time(time.Add(TimeSpan.FromSeconds(-19.0)).DateTime, this);
     }
 }

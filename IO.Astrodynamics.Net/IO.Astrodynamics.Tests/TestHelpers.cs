@@ -37,12 +37,21 @@ namespace IO.Astrodynamics.Tests
                 return System.Math.Abs(v1.X - v2.X) < 1E-03 && System.Math.Abs(v1.Y - v2.Y) < 1E-03 && System.Math.Abs(v1.Z - v2.Z) < 1E-03;
             }
         }
-        
+
         internal static bool StateVectorComparer(StateVector sv1, StateVector sv2)
         {
             lock (LockObj)
             {
-                return VectorComparer(sv1.Position,sv2.Position) && VectorComparer(sv1.Velocity,sv2.Velocity) && sv1.Frame==sv2.Frame && sv1.Epoch==sv2.Epoch && Equals(sv1.Observer, sv2.Observer);
+                return VectorComparer(sv1.Position, sv2.Position) && VectorComparer(sv1.Velocity, sv2.Velocity) && sv1.Frame == sv2.Frame && sv1.Epoch == sv2.Epoch &&
+                       Equals(sv1.Observer, sv2.Observer);
+            }
+        }
+
+        internal static bool TimeComparer(TimeSystem.Time v1, TimeSystem.Time v2)
+        {
+            lock (LockObj)
+            {
+                return v1.Frame == v2.Frame && System.Math.Abs((v1 - v2).TotalSeconds) < 1E-04;
             }
         }
     }

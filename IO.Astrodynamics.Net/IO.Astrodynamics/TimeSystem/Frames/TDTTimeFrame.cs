@@ -1,6 +1,6 @@
 using System;
 
-namespace IO.Astrodynamics.TimeSystem;
+namespace IO.Astrodynamics.TimeSystem.Frames;
 
 public class TDTTimeFrame : TimeFrame
 {
@@ -10,11 +10,11 @@ public class TDTTimeFrame : TimeFrame
     }
     public override Time ConvertToTAI(Time time)
     {
-        return new Time(time.Add(TimeSpan.FromSeconds(32.184)).DateTime, TAIFrame);
+        return new Time(time.Add(TimeSpan.FromSeconds(-32.184)).DateTime, TAIFrame);
     }
 
     public override Time ConvertFromTAI(Time time)
     {
-        return new Time(time.Add(TimeSpan.FromSeconds(-32.184)).DateTime, this);
+        return new Time(time.Add(TimeSpan.FromSeconds(32.184)).DateTime, this);
     }
 }
