@@ -83,14 +83,25 @@ public class Helpers
             double value = double.Parse(epoch, CultureInfo.InvariantCulture);
             if (isutc)
             {
-                input = Time.CreateUTCFromJD(value);
+                input = Time.CreateFromJD(value, TimeFrame.UTCFrame);
             }
             else
             {
-                input = Time.CreateTDBFromJD(value);
+                input = Time.CreateFromJD(value, TimeFrame.TDBFrame);
             }
         }
-        else if (!Time.TryParse(epoch, out input))
+        else if (double.TryParse(epoch, NumberStyles.Any, CultureInfo.InvariantCulture, out double doubleInput))
+        {
+            if (isutc)
+            {
+                input = Time.CreateUTC(doubleInput);
+            }
+            else
+            {
+                input = Time.CreateTDB(doubleInput);
+            }
+        }
+        else
         {
             double value = double.Parse(epoch, CultureInfo.InvariantCulture);
             if (isutc)

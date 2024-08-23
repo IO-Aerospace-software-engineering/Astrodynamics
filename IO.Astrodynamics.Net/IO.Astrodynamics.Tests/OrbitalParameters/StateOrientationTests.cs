@@ -24,25 +24,25 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
         public void RelativeToICRF()
         {
             var so = new StateOrientation(new Quaternion(Vector3.VectorX, 10.0 * IO.Astrodynamics.Constants.Deg2Rad),
-                Vector3.Zero, new TimeSystem.Time(DateTime.MaxValue,TimeFrame.TDBFrame), Frames.Frame.ECLIPTIC_J2000);
+                Vector3.Zero, TimeSystem.Time.J2000TDB, Frames.Frame.ECLIPTIC_J2000);
             var res = so.RelativeToICRF();
             Assert.NotNull(so);
 
             //Which is equal to ecliptic (23.44° + 10° relative to ecliptic)
             Assert.Equal(new Quaternion(0.9577239084752576, 0.2876889207718582, 0, 0), res.Rotation);
-            Assert.Equal(new TimeSystem.Time(DateTime.MaxValue,TimeFrame.TDBFrame), res.Epoch);
+            Assert.Equal(TimeSystem.Time.J2000TDB, res.Epoch);
             Assert.Equal(Frames.Frame.ICRF, res.ReferenceFrame);
         }
 
         [Fact]
         public void RelativeToICRF2()
         {
-            var res = Frames.Frame.ICRF.ToFrame(Frames.Frame.ICRF, new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame)).RelativeTo(Frames.Frame.ICRF);
+            var res = Frames.Frame.ICRF.ToFrame(Frames.Frame.ICRF, TimeSystem.Time.J2000TDB).RelativeTo(Frames.Frame.ICRF);
 
 
             //Which is equal to ecliptic (23.44° + 10° relative to ecliptic)
             Assert.Equal(new Quaternion(1.0, 0.0, 0, 0), res.Rotation);
-            Assert.Equal(new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame), res.Epoch);
+            Assert.Equal(TimeSystem.Time.J2000TDB, res.Epoch);
             Assert.Equal(Frames.Frame.ICRF, res.ReferenceFrame);
         }
     }

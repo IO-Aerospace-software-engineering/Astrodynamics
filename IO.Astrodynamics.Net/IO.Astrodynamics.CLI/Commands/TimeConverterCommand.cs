@@ -53,7 +53,7 @@ public class TimeConverterCommand
         }
         else
         {
-            input = input.ToUTC().ToLocalTime();
+            input = input.ToLocal();
         }
 
         string res = string.Empty;
@@ -65,20 +65,20 @@ public class TimeConverterCommand
         {
             if (toUTC)
             {
-                res = $"{input.SecondsFromJ2000UTC()}";
+                res = $"{input.TimeSpanFromJ2000().TotalSeconds}";
             }
             else if (toTDB)
             {
-                res = $"{input.SecondsFromJ2000TDB()}";
+                res = $"{input.TimeSpanFromJ2000().TotalSeconds}";
             }
             else
             {
-                res = $"{input.SecondsFromJ2000Local()}";
+                res = $"{input.TimeSpanFromJ2000().TotalSeconds}";
             }
         }
         else if (toDateTime)
         {
-            res = input.ToString("O", CultureInfo.InvariantCulture);
+            res = input.ToString();
         }
 
         Console.WriteLine($"{res} {suffix}");

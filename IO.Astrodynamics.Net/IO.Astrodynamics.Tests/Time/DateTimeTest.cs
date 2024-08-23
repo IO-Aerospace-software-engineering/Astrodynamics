@@ -76,7 +76,7 @@ public class DateTimeTests
     {
         var utc = new TimeSystem.Time(2020, 1, 1, frame: TimeFrame.UTCFrame);
         var tdt = utc.ToTDT();
-        Assert.Equal(new TimeSystem.Time("2020-01-01 00:01:09.184000"), tdt);
+        Assert.Equal(new TimeSystem.Time("2020-01-01 00:01:09.184000 TDT"), tdt);
     }
 
     [Fact]
@@ -146,7 +146,7 @@ public class DateTimeTests
         var utc = TimeSystem.Time.Create(0.0, TimeFrame.UTCFrame);
         var tdb = TimeSystem.Time.Create(0.0, TimeFrame.TDBFrame);
 
-        Assert.Equal("2000-01-01T12:00:00.0000000Z UTC", utc.ToString());
+        Assert.Equal("2000-01-01T12:00:00.0000000Z", utc.ToString());
         Assert.Equal("2000-01-01T12:00:00.0000000 TDB", tdb.ToString());
     }
 

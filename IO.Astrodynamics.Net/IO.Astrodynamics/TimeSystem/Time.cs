@@ -26,6 +26,10 @@ public readonly record struct Time : IComparable<Time>, IComparable
         {
             DateTime = System.DateTime.SpecifyKind(DateTime, DateTimeKind.Utc);
         }
+        else
+        {
+            DateTime = System.DateTime.SpecifyKind(DateTime, DateTimeKind.Unspecified);
+        }
     }
 
     public Time(int year, int month, int day, int hour = 0, int minute = 0, int second = 0, int millisecond = 0, int microseconds = 0, ITimeFrame frame = null) : this(
@@ -36,32 +40,40 @@ public readonly record struct Time : IComparable<Time>, IComparable
     public Time(string timeString)
     {
         if (string.IsNullOrEmpty(timeString)) throw new ArgumentException("Value cannot be null or empty.", nameof(timeString));
-        var kind = timeString.TakeLast(3);
-        ITimeFrame frame = null;
-        switch (kind)
-        {
-            case "UTC":
-                frame = TimeFrame.UTCFrame;
-                break;
-            case "TDB":
-                frame = TimeFrame.TDBFrame;
-                break;
-            case "TDT":
-                frame = TimeFrame.TDTFrame;
-                break;
-            case "GPS":
-                frame = TimeFrame.GPSFrame;
-                break;
-            case "TAI":
-                frame = TimeFrame.TAIFrame;
-                break;
-            default:
-                frame = TimeFrame.TDBFrame;
-                break;
-        }
 
-        DateTime = DateTime.Parse(timeString.SkipLast(4).ToString() ?? throw new InvalidOperationException("invalid time string"), CultureInfo.InvariantCulture);
-        Frame = frame;
+        if (DateTime.TryParse(timeString, out DateTime datetime))
+        {
+            DateTime = datetime;
+            Frame = datetime.Kind == DateTimeKind.Utc ? TimeFrame.UTCFrame : datetime.Kind == DateTimeKind.Local ? TimeFrame.LocalFrame : TimeFrame.TDBFrame;
+        }
+        else
+        {
+            var kind = string.Concat(timeString.TakeLast(3));
+            ITimeFrame frame = null;
+            bool hasFrame = true;
+            switch (kind)
+            {
+                case "TDB":
+                    frame = TimeFrame.TDBFrame;
+                    break;
+                case "TDT":
+                    frame = TimeFrame.TDTFrame;
+                    break;
+                case "GPS":
+                    frame = TimeFrame.GPSFrame;
+                    break;
+                case "TAI":
+                    frame = TimeFrame.TAIFrame;
+                    break;
+                default:
+                    throw new ArgumentException("Value is not a valid time frame.", nameof(timeString));
+                    break;
+            }
+
+            DateTime = DateTime.Parse(string.Concat(timeString.SkipLast(4) ?? throw new InvalidOperationException("invalid time string")),
+                CultureInfo.InvariantCulture);
+            Frame = frame;
+        }
     }
 
     public Time Add(in TimeSpan timeSpan)
@@ -160,9 +172,20 @@ public readonly record struct Time : IComparable<Time>, IComparable
         return ConvertTo(TimeFrame.TDBFrame);
     }
 
+    public Time ToLocal()
+    {
+        return ConvertTo(TimeFrame.LocalFrame);
+    }
+
     public override string ToString()
     {
-        return DateTime.ToString("O") + " " + this.Frame.ToString();
+        string suffix = string.Empty;
+        if (!string.IsNullOrEmpty(Frame.Name))
+        {
+            suffix = " " + this.Frame.ToString();
+        }
+
+        return DateTime.ToString("O") + suffix;
     }
 
     public TimeSpan TimeSpanFromJ2000()

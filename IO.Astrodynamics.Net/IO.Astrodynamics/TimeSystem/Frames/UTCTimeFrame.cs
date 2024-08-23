@@ -1,8 +1,10 @@
+using System;
+
 namespace IO.Astrodynamics.TimeSystem.Frames;
 
 public class UTCTimeFrame : TimeFrame
 {
-    internal UTCTimeFrame() : base("UTC")
+    internal UTCTimeFrame() : base(string.Empty)
     {
     }
 

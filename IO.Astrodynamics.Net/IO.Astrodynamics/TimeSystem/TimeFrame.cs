@@ -11,6 +11,7 @@ public abstract class TimeFrame : ITimeFrame, IEquatable<TimeFrame>
     public static TDTTimeFrame TDTFrame { get; } = new TDTTimeFrame();
     public static UTCTimeFrame UTCFrame { get; } = new UTCTimeFrame();
     public static TDBTimeFrame TDBFrame { get; } = new TDBTimeFrame();
+    public static LocalTimeFrame LocalFrame { get; } = new LocalTimeFrame();
     const double PREVIOUS_OFFSET = 9.0; //before 1972;
 
     internal static readonly DateTime[] LEAP_SECONDS =
