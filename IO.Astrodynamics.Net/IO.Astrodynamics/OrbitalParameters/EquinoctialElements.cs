@@ -1,7 +1,7 @@
 using System;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Frames;
-using IO.Astrodynamics.Time;
+using IO.Astrodynamics.TimeSystem;
 
 namespace IO.Astrodynamics.OrbitalParameters
 {
@@ -30,7 +30,7 @@ namespace IO.Astrodynamics.OrbitalParameters
         /// <param name="epoch">Epoch</param>
         /// <param name="frame">Reference frame</param>
         /// <returns></returns>
-        public EquinoctialElements(double p, double f, double g, double h, double k, double l0, ILocalizable observer, DateTime epoch, Frame frame) : base(observer,
+        public EquinoctialElements(double p, double f, double g, double h, double k, double l0, ILocalizable observer, Time epoch, Frame frame) : base(observer,
             epoch, frame)
         {
             P = p;
@@ -141,7 +141,7 @@ namespace IO.Astrodynamics.OrbitalParameters
 
         public override string ToString()
         {
-            return $"Epoch : {Epoch.ToFormattedString()} P : {P} F : {F} G : {G} H : {H} K {K} L0 : {L0} Frame : {Frame.Name}" ;
+            return $"Epoch : {Epoch.ToString()} P : {P} F : {F} G : {G} H : {H} K {K} L0 : {L0} Frame : {Frame.Name}" ;
         }
     }
 }

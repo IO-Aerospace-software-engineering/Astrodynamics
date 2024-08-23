@@ -10,7 +10,7 @@ using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.Cosmographia.Model;
 using IO.Astrodynamics.Maneuver;
 using IO.Astrodynamics.Mission;
-using IO.Astrodynamics.Time;
+using IO.Astrodynamics.TimeSystem;
 
 namespace IO.Astrodynamics.Cosmographia;
 
@@ -116,8 +116,8 @@ public class CosmographiaExporter
                 observationJson.items[idx] = new ObservationItems();
                 observationJson.items[idx].obsClass = "observation";
                 observationJson.items[idx].name = $"{spacecraft.Name.ToUpper()}_{maneuverByInstrument.Key.Name.ToUpper()}_OBSERVATIONS";
-                observationJson.items[idx].startTime = scenario.Window.StartDate.ToFormattedString();
-                observationJson.items[idx].endTime = scenario.Window.EndDate.ToFormattedString();
+                observationJson.items[idx].startTime = scenario.Window.StartDate.ToString();
+                observationJson.items[idx].endTime = scenario.Window.EndDate.ToString();
                 observationJson.items[idx].center = char.ToUpper(spacecraft.InitialOrbitalParameters.Observer.Name[0]) +
                                                     spacecraft.InitialOrbitalParameters.Observer.Name.Substring(1).ToLower();
                 observationJson.items[idx].trajectoryFrame = new ObservationTrajectoryFrame();
@@ -148,8 +148,8 @@ public class CosmographiaExporter
                     observationJson.items[idx].geometry.groups[groupIdx] = new ObservationGroup();
                     if (maneuver.ManeuverWindow != null)
                     {
-                        observationJson.items[idx].geometry.groups[groupIdx].startTime = maneuver.ManeuverWindow.Value.StartDate.ToFormattedString();
-                        observationJson.items[idx].geometry.groups[groupIdx].endTime = maneuver.ManeuverWindow.Value.EndDate.ToFormattedString();
+                        observationJson.items[idx].geometry.groups[groupIdx].startTime = maneuver.ManeuverWindow.Value.StartDate.ToString();
+                        observationJson.items[idx].geometry.groups[groupIdx].endTime = maneuver.ManeuverWindow.Value.EndDate.ToString();
                     }
 
                     observationJson.items[idx].geometry.groups[groupIdx].obsRate = 0;
@@ -180,8 +180,8 @@ public class CosmographiaExporter
                 sensorJson.items[idx] = new SensorItem();
                 sensorJson.items[idx].center = spacecraft.Name.ToUpper();
                 sensorJson.items[idx].name = $"{spacecraft.Name.ToUpper()}_{instrument.Name.ToUpper()}";
-                sensorJson.items[idx].startTime = scenario.Window.StartDate.ToFormattedString();
-                sensorJson.items[idx].endTime = scenario.Window.EndDate.ToFormattedString();
+                sensorJson.items[idx].startTime = scenario.Window.StartDate.ToString();
+                sensorJson.items[idx].endTime = scenario.Window.EndDate.ToString();
                 sensorJson.items[idx].parent = spacecraft.Name.ToUpper();
                 sensorJson.items[idx].sensorClass = "sensor";
 
@@ -226,8 +226,8 @@ public class CosmographiaExporter
             spacecraftJson.items[idx].center = char.ToUpper(spacecraft.InitialOrbitalParameters.Observer.Name[0]) +
                                                spacecraft.InitialOrbitalParameters.Observer.Name.Substring(1).ToLower();
             spacecraftJson.items[idx].spacecraftClass = "spacecraft";
-            spacecraftJson.items[idx].startTime = scenario.Window.StartDate.ToFormattedString();
-            spacecraftJson.items[idx].endTime = scenario.Window.EndDate.ToFormattedString();
+            spacecraftJson.items[idx].startTime = scenario.Window.StartDate.ToString();
+            spacecraftJson.items[idx].endTime = scenario.Window.EndDate.ToString();
 
             spacecraftJson.items[idx].trajectory = new SpacecraftTrajectory();
             spacecraftJson.items[idx].trajectory.center = spacecraftJson.items[idx].center;

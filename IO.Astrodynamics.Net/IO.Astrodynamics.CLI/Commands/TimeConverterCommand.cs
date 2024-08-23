@@ -3,7 +3,7 @@ using System.Globalization;
 using System.Threading.Tasks;
 using Cocona;
 using IO.Astrodynamics.CLI.Commands.Parameters;
-using IO.Astrodynamics.Time;
+using IO.Astrodynamics.TimeSystem;
 
 namespace IO.Astrodynamics.CLI.Commands;
 
@@ -26,7 +26,7 @@ public class TimeConverterCommand
         bool toJulian,
         [Option('e', Description = "Convert to elapsed seconds from J2000 epoch")]
         bool toSecondsFromJ2000,
-        [Option('d', Description = "Convert to DateTime (ISO 8601)")]
+        [Option('d', Description = "Convert to Time (ISO 8601)")]
         bool toDateTime)
     {
         if (!(toUTC ^ toTDB ^ toLocal))
@@ -36,13 +36,12 @@ public class TimeConverterCommand
 
         if (!(toJulian ^ toSecondsFromJ2000 ^ toDateTime))
         {
-            throw new ArgumentException("Target either Julian or SecondsFromJ2000 or DateTime . use --help for more information");
+            throw new ArgumentException("Target either Julian or SecondsFromJ2000 or Time . use --help for more information");
         }
 
         var input = Helpers.ConvertDateTimeInput(epochParameters.Epoch);
 
         //Output
-        string suffix = toLocal ? "" : toUTC ? "UTC" : "TDB";
         if (toTDB)
         {
             input = input.ToTDB();
@@ -53,7 +52,7 @@ public class TimeConverterCommand
         }
         else
         {
-            input = input.ToUTC().ToLocalTime();
+            input = input.ToLocal();
         }
 
         string res = string.Empty;
@@ -65,23 +64,23 @@ public class TimeConverterCommand
         {
             if (toUTC)
             {
-                res = $"{input.SecondsFromJ2000UTC()}";
+                res = $"{input.TimeSpanFromJ2000().TotalSeconds}";
             }
             else if (toTDB)
             {
-                res = $"{input.SecondsFromJ2000TDB()}";
+                res = $"{input.TimeSpanFromJ2000().TotalSeconds}";
             }
             else
             {
-                res = $"{input.SecondsFromJ2000Local()}";
+                res = $"{input.TimeSpanFromJ2000().TotalSeconds}";
             }
         }
         else if (toDateTime)
         {
-            res = input.ToString("O", CultureInfo.InvariantCulture);
+            res = input.ToString();
         }
 
-        Console.WriteLine($"{res} {suffix}");
+        Console.WriteLine($"{res}");
         return Task.CompletedTask;
     }
 }

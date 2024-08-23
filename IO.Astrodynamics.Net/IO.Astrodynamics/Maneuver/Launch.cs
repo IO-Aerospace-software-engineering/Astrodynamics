@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using IO.Astrodynamics.Surface;
-using IO.Astrodynamics.Time;
+using IO.Astrodynamics.TimeSystem;
 
 namespace IO.Astrodynamics.Maneuver
 {

@@ -3,7 +3,7 @@ using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
-using IO.Astrodynamics.Time;
+using IO.Astrodynamics.TimeSystem;
 
 namespace IO.Astrodynamics.Maneuver
 {
@@ -35,7 +35,7 @@ namespace IO.Astrodynamics.Maneuver
         /// <value>
         /// The minimum epoch value.
         /// </value>
-        public DateTime MinimumEpoch { get; internal set; }
+        public Time MinimumEpoch { get; internal set; }
 
         /// <summary>
         /// Gets the duration for which a maneuver should be held.
@@ -62,7 +62,7 @@ namespace IO.Astrodynamics.Maneuver
         private bool IsInbound { get; set; }
 
 
-        protected Maneuver(CelestialItem maneuverCenter, DateTime minimumEpoch, TimeSpan maneuverHoldDuration, Engine engine)
+        protected Maneuver(CelestialItem maneuverCenter, Time minimumEpoch, TimeSpan maneuverHoldDuration, Engine engine)
         {
             ManeuverCenter = maneuverCenter;
             MinimumEpoch = minimumEpoch;

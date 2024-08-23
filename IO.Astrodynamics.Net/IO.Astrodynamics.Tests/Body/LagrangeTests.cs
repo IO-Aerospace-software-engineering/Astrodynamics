@@ -1,7 +1,7 @@
 ﻿using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.SolarSystemObjects;
-using IO.Astrodynamics.Time;
+using IO.Astrodynamics.TimeSystem;
 using Xunit;
 
 namespace IO.Astrodynamics.Tests.Body;
@@ -25,6 +25,6 @@ public class LagrangeTests
         Assert.Equal(new Vector3(265316694.670816,  -1448527895.507656, 1706.923545571044), l1.InitialOrbitalParameters.ToStateVector().Position);
         Assert.Equal(new Vector3(298.1913805689489, 54.841903612497966, -0.0004202585222601307), l1.InitialOrbitalParameters.ToStateVector().Velocity);
         Assert.Equal(Frames.Frame.ECLIPTIC_J2000, l1.InitialOrbitalParameters.Frame);
-        Assert.Equal(DateTimeExtension.J2000, l1.InitialOrbitalParameters.Epoch);
+        Assert.Equal(TimeSystem.Time.J2000TDB, l1.InitialOrbitalParameters.Epoch);
     }
 }

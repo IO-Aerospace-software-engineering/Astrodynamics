@@ -1,5 +1,6 @@
 using System;
 using IO.Astrodynamics.OrbitalParameters;
+using IO.Astrodynamics.TimeSystem;
 
 namespace IO.Astrodynamics.Frames;
 
@@ -26,7 +27,7 @@ public class Frame : IEquatable<Frame>
         Id = id;
     }
 
-    public StateOrientation ToFrame(Frame frame, DateTime epoch)
+    public StateOrientation ToFrame(Frame frame, Time epoch)
     {
         return API.Instance.TransformFrame(this, frame, epoch);
     }

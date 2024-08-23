@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using IO.Astrodynamics.Body.Spacecraft;
-using IO.Astrodynamics.Time;
+using IO.Astrodynamics.TimeSystem;
 
 namespace IO.Astrodynamics.Mission;
 

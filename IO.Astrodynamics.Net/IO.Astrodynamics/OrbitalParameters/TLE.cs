@@ -4,6 +4,7 @@ using System;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.SolarSystemObjects;
+using IO.Astrodynamics.TimeSystem;
 
 namespace IO.Astrodynamics.OrbitalParameters;
 
@@ -32,7 +33,7 @@ public class TLE : KeplerianElements, IEquatable<TLE>
     }
 
     internal TLE(string line1, string line2, string line3, double balisticCoefficient, double dragTerm, double secondDerivativeMeanMotion, double a, double e, double i, double o,
-        double w, double m, DateTime epoch, Frame frame) : base(a, e, i, o, w, m, new CelestialBody(PlanetsAndMoons.EARTH), epoch, frame)
+        double w, double m, Time epoch, Frame frame) : base(a, e, i, o, w, m, new CelestialBody(PlanetsAndMoons.EARTH), epoch, frame)
     {
         if (frame == null) throw new ArgumentNullException(nameof(frame));
         if (string.IsNullOrEmpty(line1)) throw new ArgumentException("Value cannot be null or empty.", nameof(line1));
@@ -46,11 +47,11 @@ public class TLE : KeplerianElements, IEquatable<TLE>
         SecondDerivativeMeanMotion = secondDerivativeMeanMotion;
     }
 
-    public override OrbitalParameters AtEpoch(DateTime epoch)
+    public override OrbitalParameters AtEpoch(Time epoch)
     {
         return ToStateVector(epoch);
     }
-    public override StateVector ToStateVector(DateTime epoch)
+    public override StateVector ToStateVector(Time epoch)
     {
         return API.Instance.ConvertTleToStateVector(Line1, Line2, Line3, epoch);
     }

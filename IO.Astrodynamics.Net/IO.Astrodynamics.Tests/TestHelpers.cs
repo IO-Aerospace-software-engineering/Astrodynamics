@@ -5,7 +5,7 @@ using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.Physics;
 using IO.Astrodynamics.SolarSystemObjects;
-using IO.Astrodynamics.Time;
+using IO.Astrodynamics.TimeSystem;
 
 namespace IO.Astrodynamics.Tests
 {
@@ -13,22 +13,22 @@ namespace IO.Astrodynamics.Tests
     {
         internal static CelestialBody Sun => new(Stars.Sun);
 
-        internal static CelestialBody Earth => new(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, new DateTime(2021, 1, 1), atmosphericModel: new EarthAtmosphericModel());
+        internal static CelestialBody Earth => new(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, new TimeSystem.Time(2021, 1, 1), atmosphericModel: new EarthAtmosphericModel());
 
-        internal static CelestialBody Moon => new(PlanetsAndMoons.MOON, Frames.Frame.ICRF, new DateTime(2021, 1, 1));
+        internal static CelestialBody Moon => new(PlanetsAndMoons.MOON, Frames.Frame.ICRF, new TimeSystem.Time(2021, 1, 1));
 
-        internal static CelestialBody EarthAtJ2000 => new(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, new DateTime(2000, 1, 1, 12, 0, 0));
+        internal static CelestialBody EarthAtJ2000 => new(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, new TimeSystem.Time(2000, 1, 1, 12, 0, 0));
 
-        internal static CelestialBody EarthWithAtmAndGeoAtJ2000 => new(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, new DateTime(2000, 1, 1, 12, 0, 0),
+        internal static CelestialBody EarthWithAtmAndGeoAtJ2000 => new(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, new TimeSystem.Time(2000, 1, 1, 12, 0, 0),
             new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10), new EarthAtmosphericModel());
 
-        internal static CelestialBody MoonAtJ2000 => new(PlanetsAndMoons.MOON, Frames.Frame.ICRF, new DateTime(2000, 1, 1, 12, 0, 0));
+        internal static CelestialBody MoonAtJ2000 => new(PlanetsAndMoons.MOON, Frames.Frame.ICRF, new TimeSystem.Time(2000, 1, 1, 12, 0, 0));
 
-        internal static CelestialBody MoonAt20011214 => new(PlanetsAndMoons.MOON, Frames.Frame.ICRF, new DateTime(2001, 12, 14, 0, 0, 0));
+        internal static CelestialBody MoonAt20011214 => new(PlanetsAndMoons.MOON, Frames.Frame.ICRF, new TimeSystem.Time(2001, 12, 14, 0, 0, 0));
         private static object LockObj = new object();
 
         internal static Spacecraft Spacecraft => new Spacecraft(-666, "GenericSpacecraft", 100.0, 1000.0, new Clock("GenericClk", 65536),
-            new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 8000.0, 0.0), Earth, DateTimeExtension.J2000, Frames.Frame.ICRF));
+            new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 8000.0, 0.0), Earth, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF));
 
         internal static bool VectorComparer(Vector3 v1, Vector3 v2)
         {
@@ -37,12 +37,21 @@ namespace IO.Astrodynamics.Tests
                 return System.Math.Abs(v1.X - v2.X) < 1E-03 && System.Math.Abs(v1.Y - v2.Y) < 1E-03 && System.Math.Abs(v1.Z - v2.Z) < 1E-03;
             }
         }
-        
+
         internal static bool StateVectorComparer(StateVector sv1, StateVector sv2)
         {
             lock (LockObj)
             {
-                return VectorComparer(sv1.Position,sv2.Position) && VectorComparer(sv1.Velocity,sv2.Velocity) && sv1.Frame==sv2.Frame && sv1.Epoch==sv2.Epoch && Equals(sv1.Observer, sv2.Observer);
+                return VectorComparer(sv1.Position, sv2.Position) && VectorComparer(sv1.Velocity, sv2.Velocity) && sv1.Frame == sv2.Frame && sv1.Epoch == sv2.Epoch &&
+                       Equals(sv1.Observer, sv2.Observer);
+            }
+        }
+
+        internal static bool TimeComparer(TimeSystem.Time v1, TimeSystem.Time v2)
+        {
+            lock (LockObj)
+            {
+                return v1.Frame == v2.Frame && System.Math.Abs((v1 - v2).TotalSeconds) < 1E-03;
             }
         }
     }

@@ -13,7 +13,7 @@ using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.Physics;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.Surface;
-using IO.Astrodynamics.Time;
+using IO.Astrodynamics.TimeSystem;
 
 namespace IO.Astrodynamics.CLI;
 
@@ -66,7 +66,7 @@ public class Helpers
         return celestialItem;
     }
 
-    internal static DateTime ConvertDateTimeInput(string epoch)
+    internal static Time ConvertDateTimeInput(string epoch)
     {
         if (string.IsNullOrEmpty(epoch)) throw new ArgumentException("Value cannot be null or empty.", nameof(epoch));
         var isutc = epoch.Contains("utc", StringComparison.InvariantCultureIgnoreCase) || epoch.Contains("z", StringComparison.InvariantCultureIgnoreCase);
@@ -76,30 +76,40 @@ public class Helpers
         epoch = epoch.Replace("utc", "", StringComparison.InvariantCultureIgnoreCase).Replace("tdb", "", StringComparison.InvariantCultureIgnoreCase).Trim();
 
         //Input
-        DateTime input;
+        Time input;
         if (isjd)
         {
             epoch = epoch.Replace("jd", "", StringComparison.InvariantCultureIgnoreCase).Trim();
             double value = double.Parse(epoch, CultureInfo.InvariantCulture);
             if (isutc)
             {
-                input = DateTimeExtension.CreateUTCFromJD(value);
+                input = Time.CreateFromJD(value, TimeFrame.UTCFrame);
             }
             else
             {
-                input = DateTimeExtension.CreateTDBFromJD(value);
+                input = Time.CreateFromJD(value, TimeFrame.TDBFrame);
             }
         }
-        else if (!DateTime.TryParse(epoch, out input))
+        else if (double.TryParse(epoch, NumberStyles.Any, CultureInfo.InvariantCulture, out double doubleInput))
         {
-            double value = double.Parse(epoch, CultureInfo.InvariantCulture);
             if (isutc)
             {
-                input = DateTimeExtension.CreateUTC(value);
+                input = Time.CreateUTC(doubleInput);
             }
             else
             {
-                input = DateTimeExtension.CreateTDB(value);
+                input = Time.CreateTDB(doubleInput);
+            }
+        }
+        else
+        {
+            if (isutc)
+            {
+                input = new (epoch);
+            }
+            else
+            {
+                input = new (epoch);
             }
         }
 

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
-using IO.Astrodynamics.Time;
+using IO.Astrodynamics.TimeSystem;
 
 namespace IO.Astrodynamics.Propagator;
 
@@ -11,7 +11,7 @@ public class TLEPropagator : IPropagator
 {
     private uint _svCacheSize;
     private StateVector[] _svCache;
-    private Dictionary<DateTime, StateOrientation> _stateOrientation = new Dictionary<DateTime, StateOrientation>();
+    private Dictionary<Time, StateOrientation> _stateOrientation = new Dictionary<Time, StateOrientation>();
     public Window Window { get; }
     public Spacecraft Spacecraft { get; }
     public TimeSpan DeltaT { get; }

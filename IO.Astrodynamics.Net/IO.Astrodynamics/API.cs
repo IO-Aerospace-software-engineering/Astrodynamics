@@ -15,7 +15,7 @@ using IO.Astrodynamics.Maneuver;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.SolarSystemObjects;
-using IO.Astrodynamics.Time;
+using IO.Astrodynamics.TimeSystem;
 using CelestialBody = IO.Astrodynamics.DTO.CelestialBody;
 using Instrument = IO.Astrodynamics.Body.Spacecraft.Instrument;
 using Launch = IO.Astrodynamics.DTO.Launch;
@@ -117,7 +117,7 @@ public class API
 
     [DllImport(@"IO.Astrodynamics", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
     private static extern TLEElements GetTLEElementsProxy(string line1, string line2, string line3);
-    
+
     [DllImport(@"IO.Astrodynamics", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
     private static extern void KClearProxy();
 
@@ -137,13 +137,6 @@ public class API
             throw new PlatformNotSupportedException();
 
         return _libHandle;
-    }
-
-    public void ReleaseHandle()
-    {
-        NativeLibrary.Free(_libHandle);
-        GC.Collect();
-        GC.WaitForPendingFinalizers();
     }
 
     //Use the same lock for all cspice calls because it doesn't support multithreading.
@@ -241,6 +234,7 @@ public class API
             {
                 UnloadKernels(kernel);
             }
+
             KClearProxy();
         }
     }
@@ -252,7 +246,7 @@ public class API
     /// <param name="window"></param>
     /// <param name="outputDirectory"></param>
     public IEnumerable<LaunchWindow> FindLaunchWindows(Maneuver.Launch launch,
-        in Time.Window window, DirectoryInfo outputDirectory)
+        in TimeSystem.Window window, DirectoryInfo outputDirectory)
     {
         if (launch == null) throw new ArgumentNullException(nameof(launch));
         lock (lockObject)
@@ -294,7 +288,7 @@ public class API
     /// <param name="aberration"></param>
     /// <param name="stepSize"></param>
     /// <returns></returns>
-    public IEnumerable<Time.Window> FindWindowsOnDistanceConstraint(Time.Window searchWindow, INaifObject observer,
+    public IEnumerable<TimeSystem.Window> FindWindowsOnDistanceConstraint(TimeSystem.Window searchWindow, INaifObject observer,
         INaifObject target, RelationnalOperator relationalOperator, double value, Aberration aberration,
         TimeSpan stepSize)
     {
@@ -306,7 +300,7 @@ public class API
         }
     }
 
-    public IEnumerable<Time.Window> FindWindowsOnDistanceConstraint(Time.Window searchWindow, int observerId,
+    public IEnumerable<TimeSystem.Window> FindWindowsOnDistanceConstraint(TimeSystem.Window searchWindow, int observerId,
         int targetId, RelationnalOperator relationalOperator, double value, Aberration aberration,
         TimeSpan stepSize)
     {
@@ -337,7 +331,7 @@ public class API
     /// <param name="stepSize"></param>
     /// <param name="observer"></param>
     /// <returns></returns>
-    public IEnumerable<Time.Window> FindWindowsOnOccultationConstraint(Time.Window searchWindow, INaifObject observer,
+    public IEnumerable<TimeSystem.Window> FindWindowsOnOccultationConstraint(TimeSystem.Window searchWindow, INaifObject observer,
         INaifObject target, ShapeType targetShape, INaifObject frontBody, ShapeType frontShape,
         OccultationType occultationType, Aberration aberration, TimeSpan stepSize)
     {
@@ -379,7 +373,7 @@ public class API
     /// <param name="aberration"></param>
     /// <param name="stepSize"></param>
     /// <returns></returns>
-    public IEnumerable<Time.Window> FindWindowsOnOccultationConstraint(Time.Window searchWindow, int observerId,
+    public IEnumerable<TimeSystem.Window> FindWindowsOnOccultationConstraint(TimeSystem.Window searchWindow, int observerId,
         int targetId, ShapeType targetShape, int frontBodyId, ShapeType frontShape,
         OccultationType occultationType, Aberration aberration, TimeSpan stepSize)
     {
@@ -420,7 +414,7 @@ public class API
     /// <param name="stepSize"></param>
     /// <param name="observer"></param>
     /// <returns></returns>
-    public IEnumerable<Time.Window> FindWindowsOnCoordinateConstraint(Time.Window searchWindow, INaifObject observer,
+    public IEnumerable<TimeSystem.Window> FindWindowsOnCoordinateConstraint(TimeSystem.Window searchWindow, INaifObject observer,
         INaifObject target, Frame frame, CoordinateSystem coordinateSystem, Coordinate coordinate,
         RelationnalOperator relationalOperator, double value, double adjustValue, Aberration aberration,
         TimeSpan stepSize)
@@ -460,7 +454,7 @@ public class API
     /// <param name="stepSize"></param>
     /// <returns></returns>
     /// <exception cref="ArgumentNullException"></exception>
-    public IEnumerable<Time.Window> FindWindowsOnCoordinateConstraint(Time.Window searchWindow, int observerId,
+    public IEnumerable<TimeSystem.Window> FindWindowsOnCoordinateConstraint(TimeSystem.Window searchWindow, int observerId,
         int targetId, Frame frame, CoordinateSystem coordinateSystem, Coordinate coordinate,
         RelationnalOperator relationalOperator, double value, double adjustValue, Aberration aberration,
         TimeSpan stepSize)
@@ -499,7 +493,7 @@ public class API
     /// <param name="stepSize"></param>
     /// <param name="method"></param>
     /// <returns></returns>
-    public IEnumerable<Time.Window> FindWindowsOnIlluminationConstraint(Time.Window searchWindow, INaifObject observer,
+    public IEnumerable<TimeSystem.Window> FindWindowsOnIlluminationConstraint(TimeSystem.Window searchWindow, INaifObject observer,
         INaifObject targetBody, Frame fixedFrame,
         Coordinates.Planetodetic planetodetic, IlluminationAngle illuminationType, RelationnalOperator relationalOperator,
         double value, double adjustValue, Aberration aberration, TimeSpan stepSize, INaifObject illuminationSource,
@@ -527,7 +521,7 @@ public class API
         }
     }
 
-    public IEnumerable<Time.Window> FindWindowsOnIlluminationConstraint(Time.Window searchWindow, int observerId,
+    public IEnumerable<TimeSystem.Window> FindWindowsOnIlluminationConstraint(TimeSystem.Window searchWindow, int observerId,
         int targetBodyId, Frame fixedFrame, Coordinates.Planetodetic planetodetic, IlluminationAngle illuminationType, RelationnalOperator relationalOperator,
         double value, double adjustValue, Aberration aberration, TimeSpan stepSize, int illuminationSourceId,
         string method = "Ellipsoid")
@@ -563,7 +557,7 @@ public class API
     /// <param name="aberration"></param>
     /// <param name="stepSize"></param>
     /// <returns></returns>
-    public IEnumerable<Time.Window> FindWindowsInFieldOfViewConstraint(Time.Window searchWindow, Spacecraft observer,
+    public IEnumerable<TimeSystem.Window> FindWindowsInFieldOfViewConstraint(TimeSystem.Window searchWindow, Spacecraft observer,
         Instrument instrument, INaifObject target, Frame targetFrame, ShapeType targetShape, Aberration aberration,
         TimeSpan stepSize)
     {
@@ -590,7 +584,7 @@ public class API
     /// <param name="stepSize"></param>
     /// <returns></returns>
     /// <exception cref="ArgumentNullException"></exception>
-    public IEnumerable<Time.Window> FindWindowsInFieldOfViewConstraint(Time.Window searchWindow, int observerId,
+    public IEnumerable<TimeSystem.Window> FindWindowsInFieldOfViewConstraint(TimeSystem.Window searchWindow, int observerId,
         int instrumentId, int targetId, Frame targetFrame, ShapeType targetShape, Aberration aberration, TimeSpan stepSize)
     {
         if (targetFrame == null) throw new ArgumentNullException(nameof(targetFrame));
@@ -621,7 +615,7 @@ public class API
     /// <param name="stepSize"></param>
     /// <param name="observer"></param>
     /// <returns></returns>
-    public IEnumerable<OrbitalParameters.OrbitalParameters> ReadEphemeris(Time.Window searchWindow,
+    public IEnumerable<OrbitalParameters.OrbitalParameters> ReadEphemeris(TimeSystem.Window searchWindow,
         ILocalizable observer, ILocalizable target, Frame frame,
         Aberration aberration, TimeSpan stepSize)
     {
@@ -638,13 +632,13 @@ public class API
             {
                 var start = searchWindow.StartDate + i * messageSize * stepSize;
                 var end = start + messageSize * stepSize > searchWindow.EndDate ? searchWindow.EndDate : (start + messageSize * stepSize) - stepSize;
-                var window = new Time.Window(start, end);
+                var window = new TimeSystem.Window(start, end);
                 var stateVectors = new StateVector[messageSize];
                 ReadEphemerisProxy(window.Convert(), observer.NaifId, target.NaifId, frame.Name,
                     aberration.GetDescription(), stepSize.TotalSeconds,
                     stateVectors);
                 orbitalParameters.AddRange(stateVectors.Where(x => !string.IsNullOrEmpty(x.Frame)).Select(x =>
-                    new OrbitalParameters.StateVector(x.Position.Convert(), x.Velocity.Convert(), observer, DateTimeExtension.CreateTDB(x.Epoch), frame)));
+                    new OrbitalParameters.StateVector(x.Position.Convert(), x.Velocity.Convert(), observer, Time.Create(x.Epoch, TimeFrame.TDBFrame), frame)));
             }
 
             return orbitalParameters;
@@ -661,7 +655,7 @@ public class API
     /// <param name="aberration"></param>
     /// <returns></returns>
     /// <exception cref="ArgumentNullException"></exception>
-    public OrbitalParameters.OrbitalParameters ReadEphemeris(DateTime epoch, ILocalizable observer,
+    public OrbitalParameters.OrbitalParameters ReadEphemeris(Time epoch, ILocalizable observer,
         ILocalizable target, Frame frame, Aberration aberration)
     {
         ArgumentNullException.ThrowIfNull(observer);
@@ -670,10 +664,10 @@ public class API
         lock (lockObject)
         {
             if (frame == null) throw new ArgumentNullException(nameof(frame));
-            var stateVector = ReadEphemerisAtGivenEpochProxy(epoch.SecondsFromJ2000TDB(), observer.NaifId,
+            var stateVector = ReadEphemerisAtGivenEpochProxy(epoch.TimeSpanFromJ2000().TotalSeconds, observer.NaifId,
                 target.NaifId, frame.Name, aberration.GetDescription());
             return new OrbitalParameters.StateVector(stateVector.Position.Convert(), stateVector.Velocity.Convert(), observer,
-                DateTimeExtension.CreateTDB(stateVector.Epoch), frame);
+                Time.Create(stateVector.Epoch, TimeFrame.TDBFrame), frame);
         }
     }
 
@@ -686,7 +680,7 @@ public class API
     /// <param name="referenceFrame"></param>
     /// <param name="stepSize"></param>
     /// <returns></returns>
-    public IEnumerable<OrbitalParameters.StateOrientation> ReadOrientation(Time.Window searchWindow,
+    public IEnumerable<OrbitalParameters.StateOrientation> ReadOrientation(TimeSystem.Window searchWindow,
         Spacecraft spacecraft, TimeSpan tolerance,
         Frame referenceFrame, TimeSpan stepSize)
     {
@@ -699,7 +693,7 @@ public class API
                 referenceFrame.Name, stepSize.TotalSeconds,
                 stateOrientations);
             return stateOrientations.Where(x => x.Frame != null).Select(x => new OrbitalParameters.StateOrientation(
-                x.Rotation.Convert(), x.AngularVelocity.Convert(), DateTimeExtension.CreateTDB(x.Epoch), referenceFrame));
+                x.Rotation.Convert(), x.AngularVelocity.Convert(), Time.Create(x.Epoch, TimeFrame.TDBFrame), referenceFrame));
         }
     }
 
@@ -775,13 +769,13 @@ public class API
     /// <param name="epoch"></param>
     /// <returns></returns>
     /// <exception cref="ArgumentNullException"></exception>
-    public OrbitalParameters.StateOrientation TransformFrame(Frame fromFrame, Frame toFrame, DateTime epoch)
+    public OrbitalParameters.StateOrientation TransformFrame(Frame fromFrame, Frame toFrame, Time epoch)
     {
         lock (lockObject)
         {
             if (fromFrame == null) throw new ArgumentNullException(nameof(fromFrame));
             if (toFrame == null) throw new ArgumentNullException(nameof(toFrame));
-            var res = TransformFrameProxy(fromFrame.Name, toFrame.Name, epoch.ToTDB().SecondsFromJ2000TDB());
+            var res = TransformFrameProxy(fromFrame.Name, toFrame.Name, epoch.ToTDB().TimeSpanFromJ2000().TotalSeconds);
 
             return new OrbitalParameters.StateOrientation(
                 new Quaternion(res.Rotation.W, res.Rotation.X, res.Rotation.Y, res.Rotation.Z),
@@ -798,11 +792,11 @@ public class API
     /// <param name="epoch"></param>
     /// <returns></returns>
     public OrbitalParameters.StateVector ConvertTleToStateVector(string line1, string line2, string line3,
-        DateTime epoch)
+        Time epoch)
     {
         lock (lockObject)
         {
-            var res = ConvertTLEToStateVectorProxy(line1, line2, line3, epoch.SecondsFromJ2000TDB());
+            var res = ConvertTLEToStateVectorProxy(line1, line2, line3, epoch.TimeSpanFromJ2000().TotalSeconds);
             return new OrbitalParameters.StateVector(res.Position.Convert(), res.Velocity.Convert(),
                 new Body.CelestialBody(PlanetsAndMoons.EARTH, Frame.ECLIPTIC_J2000, epoch), epoch,
                 new Frame(res.Frame));
@@ -824,7 +818,7 @@ public class API
 
             return new TLE(line1, line2, line3, res.BalisticCoefficient, res.DragTerm, res.SecondDerivativeOfMeanMotion,
                 res.A, res.E, res.I, res.O, res.W, res.M,
-                DateTimeExtension.CreateTDB(res.Epoch), Frame.ICRF);
+                Time.Create(res.Epoch, TimeFrame.TDBFrame), Frame.ICRF);
         }
     }
 }

@@ -5,7 +5,7 @@ using IO.Astrodynamics.Math;
 using IO.Astrodynamics.Mission;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.SolarSystemObjects;
-using IO.Astrodynamics.Time;
+using IO.Astrodynamics.TimeSystem;
 using Xunit;
 
 namespace IO.Astrodynamics.Tests.Coordinates
@@ -20,7 +20,7 @@ namespace IO.Astrodynamics.Tests.Coordinates
         [Fact]
         public void Create()
         {
-            Equatorial eq = new Equatorial(1.0, 2.0, 3.0, DateTimeExtension.J2000);
+            Equatorial eq = new Equatorial(1.0, 2.0, 3.0, TimeSystem.Time.J2000TDB);
             Assert.Equal(1.0, eq.Declination);
             Assert.Equal(2.0, eq.RightAscension);
             Assert.Equal(3.0, eq.Distance);
@@ -30,8 +30,8 @@ namespace IO.Astrodynamics.Tests.Coordinates
         public void CreateFromStateVector()
         {
             Astrodynamics.Mission.Mission mission = new Astrodynamics.Mission.Mission("mission1");
-            new Scenario("scn1", mission, new Window(new DateTime(2021, 1, 1), new DateTime(2021, 1, 2)));
-            var epoch = DateTime.MinValue;
+            new Scenario("scn1", mission, new Window(new TimeSystem.Time(new DateTime(2001, 1, 1), TimeFrame.TDBFrame), new TimeSystem.Time(new DateTime(2001, 2, 1), TimeFrame.TDBFrame)));
+            var epoch = new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame);
             CelestialBody earth = new CelestialBody(PlanetsAndMoons.EARTH);
             Equatorial eq = new Equatorial(new StateVector(
                 new Vector3(-291608.38463344, -266716.83339423, -76102.48709990), new Vector3(), earth, epoch,
@@ -42,7 +42,7 @@ namespace IO.Astrodynamics.Tests.Coordinates
         [Fact]
         public void CreateFromStateVector2()
         {
-            var epoch = new DateTime(2021, 1, 1);
+            var epoch = new TimeSystem.Time(new DateTime(2021, 1, 1), TimeFrame.TDBFrame);
 
             var moon = TestHelpers.Moon;
             var earth = moon.InitialOrbitalParameters.Observer;
@@ -58,9 +58,9 @@ namespace IO.Astrodynamics.Tests.Coordinates
         {
             var moon = TestHelpers.MoonAtJ2000;
             var earth = TestHelpers.EarthAtJ2000;
-            var eq = moon.GetEphemeris(DateTimeExtension.J2000, earth, Frames.Frame.ICRF, Aberration.None).ToEquatorial();
+            var eq = moon.GetEphemeris(TimeSystem.Time.J2000TDB, earth, Frames.Frame.ICRF, Aberration.None).ToEquatorial();
 
-            Assert.Equal(new Equatorial(-0.19024413568211912, 3.8824377884372114, 402448639.8873273, DateTimeExtension.J2000), eq);
+            Assert.Equal(new Equatorial(-0.19024413568211912, 3.8824377884372114, 402448639.8873273, TimeSystem.Time.J2000TDB), eq);
             if (OperatingSystem.IsWindows())
             {
                 Assert.Equal(new Vector3(-291608384.63343555, -266716833.39423338, -76102487.09990202), eq.ToCartesian());

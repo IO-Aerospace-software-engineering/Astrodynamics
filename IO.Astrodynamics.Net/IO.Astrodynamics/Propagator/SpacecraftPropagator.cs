@@ -9,7 +9,7 @@ using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.Propagator.Forces;
 using IO.Astrodynamics.Propagator.Integrators;
 using IO.Astrodynamics.SolarSystemObjects;
-using IO.Astrodynamics.Time;
+using IO.Astrodynamics.TimeSystem;
 using Quaternion = IO.Astrodynamics.Math.Quaternion;
 using Vector3 = IO.Astrodynamics.Math.Vector3;
 
@@ -34,7 +34,7 @@ public class SpacecraftPropagator : IPropagator
 
     private uint _svCacheSize;
     private StateVector[] _svCache;
-    private Dictionary<DateTime, StateOrientation> _stateOrientation = new Dictionary<DateTime, StateOrientation>();
+    private Dictionary<Time, StateOrientation> _stateOrientation = new Dictionary<Time, StateOrientation>();
 
 
     /// <summary>

@@ -1,8 +1,8 @@
 using System;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
-using IO.Astrodynamics.Time;
 using IO.Astrodynamics.SolarSystemObjects;
+using IO.Astrodynamics.TimeSystem;
 using Xunit;
 
 namespace IO.Astrodynamics.Tests.Frame;
@@ -25,15 +25,15 @@ public class FrameTests
     [Fact]
     public void ToInertialFrame()
     {
-        var so = Frames.Frame.ICRF.ToFrame(Frames.Frame.ECLIPTIC_J2000, DateTimeExtension.J2000);
+        var so = Frames.Frame.ICRF.ToFrame(Frames.Frame.ECLIPTIC_J2000, TimeSystem.Time.J2000TDB);
         Assert.Equal(so,
-            new StateOrientation(new Quaternion(0.9791532214288993, new Vector3(-0.20312303898231013, 0.0, 0.0)), Vector3.Zero, DateTimeExtension.J2000, Frames.Frame.ICRF));
+            new StateOrientation(new Quaternion(0.9791532214288993, new Vector3(-0.20312303898231013, 0.0, 0.0)), Vector3.Zero, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF));
     }
 
     [Fact]
     public void ToNonInertialFrame()
     {
-        var epoch = DateTimeExtension.J2000;
+        var epoch = TimeSystem.Time.J2000TDB;
         var moonFrame = new Frames.Frame(PlanetsAndMoons.MOON.Frame);
         var earthFrame = new Frames.Frame(PlanetsAndMoons.EARTH.Frame);
         var q = moonFrame.ToFrame(earthFrame, epoch);

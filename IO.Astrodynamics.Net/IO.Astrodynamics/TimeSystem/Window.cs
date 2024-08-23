@@ -1,10 +1,10 @@
 using System;
 
-namespace IO.Astrodynamics.Time;
+namespace IO.Astrodynamics.TimeSystem;
 public readonly record struct Window
 {
-    public DateTime StartDate { get; }
-    public DateTime EndDate { get; }
+    public Time StartDate { get; }
+    public Time EndDate { get; }
     public TimeSpan Length { get; }
 
     /// <summary>
@@ -12,7 +12,7 @@ public readonly record struct Window
     /// </summary>
     /// <param name="startDate"></param>
     /// <param name="endDate"></param>
-    public Window(DateTime startDate, DateTime endDate)
+    public Window(Time startDate, Time endDate)
     {
         if (startDate > endDate)
         {
@@ -28,7 +28,7 @@ public readonly record struct Window
     /// </summary>
     /// <param name="startDate"></param>
     /// <param name="length"></param>
-    public Window(DateTime startDate, TimeSpan length)
+    public Window(Time startDate, TimeSpan length)
     {
         StartDate = startDate;
         EndDate = startDate + length;
@@ -42,8 +42,8 @@ public readonly record struct Window
     /// <returns></returns>
     public Window Merge(Window window)
     {
-        DateTime min = StartDate < window.StartDate ? StartDate : window.StartDate;
-        DateTime max = EndDate > window.EndDate ? EndDate : window.EndDate;
+        Time min = StartDate < window.StartDate ? StartDate : window.StartDate;
+        Time max = EndDate > window.EndDate ? EndDate : window.EndDate;
 
         return new Window(min, max);
     }
@@ -64,7 +64,7 @@ public readonly record struct Window
     /// </summary>
     /// <param name="date"></param>
     /// <returns></returns>
-    public bool Intersects(DateTime date)
+    public bool Intersects(Time date)
     {
         return date >= StartDate && date <= EndDate;
     }
@@ -81,13 +81,13 @@ public readonly record struct Window
             throw new ArgumentException("Windows don't intersect");
         }
 
-        DateTime min = StartDate > window.StartDate ? StartDate : window.StartDate;
-        DateTime max = EndDate < window.EndDate ? EndDate : window.EndDate;
+        Time min = StartDate > window.StartDate ? StartDate : window.StartDate;
+        Time max = EndDate < window.EndDate ? EndDate : window.EndDate;
         return new Window(min, max);
     }
 
     public override string ToString()
     {
-        return $"From {StartDate.ToFormattedString()} to {EndDate.ToFormattedString()} - Length {Length.ToString()}";
+        return $"From {StartDate.ToString()} to {EndDate.ToString()} - Length {Length.ToString()}";
     }
 }

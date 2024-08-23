@@ -3,7 +3,7 @@ using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.Propagator.Forces;
-using IO.Astrodynamics.Time;
+using IO.Astrodynamics.TimeSystem;
 using Xunit;
 using CelestialBody = IO.Astrodynamics.Body.CelestialBody;
 using Vector3 = IO.Astrodynamics.Math.Vector3;
@@ -23,10 +23,10 @@ public class SolarRadiationPressureTests
         var earth = new CelestialBody(399, new GeopotentialModelParameters(Path.Combine(Constants.SolarSystemKernelPath.ToString(), "EGM2008_to70_TideFree")));
         Clock clk = new Clock("My clock", 256);
         Spacecraft spc = new Spacecraft(-1001, "MySpacecraft", 100.0, 10000.0, clk,
-            new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7656.2204182967143, 0.0), earth, DateTimeExtension.J2000, Frames.Frame.ICRF));
+            new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7656.2204182967143, 0.0), earth, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF));
         SolarRadiationPressure solarRadiationPressure = new SolarRadiationPressure(spc,[earth]);
 
-        StateVector parkingOrbit = new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7656.2204182967143, 0.0), earth, DateTimeExtension.J2000,
+        StateVector parkingOrbit = new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7656.2204182967143, 0.0), earth, TimeSystem.Time.J2000TDB,
             Frames.Frame.ICRF);
         var res = solarRadiationPressure.Apply(parkingOrbit);
          Assert.Equal(new Vector3(-8.456677063948622E-09, 4.237795744348693E-08, 1.8372880484798083E-08), res);

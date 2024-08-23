@@ -2,7 +2,7 @@
 
 using System.Collections.Generic;
 using System.Linq;
-using IO.Astrodynamics.Time;
+using IO.Astrodynamics.TimeSystem;
 
 namespace IO.Astrodynamics.Body.Spacecraft;
 

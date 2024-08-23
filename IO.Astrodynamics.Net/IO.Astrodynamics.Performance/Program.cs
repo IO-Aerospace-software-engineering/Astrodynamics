@@ -6,9 +6,9 @@ class Program
 {
     static void Main(string[] args)
     {
-        // var summary = BenchmarkRunner.Run(typeof(Program).Assembly);
-        var scenario=new Scenario();
-        scenario.Propagator();
-        Console.ReadKey();
+        var summary = BenchmarkRunner.Run(typeof(Program).Assembly);
+        //var scenario=new Scenario();
+        //scenario.Propagator();
+        // Console.ReadKey();
     }
 }

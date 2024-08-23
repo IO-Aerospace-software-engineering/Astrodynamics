@@ -2,6 +2,7 @@
 using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
+using IO.Astrodynamics.TimeSystem;
 
 namespace IO.Astrodynamics.Coordinates
 {
@@ -10,9 +11,9 @@ namespace IO.Astrodynamics.Coordinates
         public double Declination { get; }
         public double RightAscension { get; }
         public double Distance { get; }
-        public DateTime Epoch { get; }
+        public Time Epoch { get; }
 
-        public Equatorial(double declination, double rightAscension, double distance, DateTime epoch)
+        public Equatorial(double declination, double rightAscension, double distance, Time epoch)
         {
             Declination = declination;
             RightAscension = rightAscension;
@@ -20,7 +21,7 @@ namespace IO.Astrodynamics.Coordinates
             Epoch = epoch;
         }
 
-        public Equatorial(double declination, double rightAscension, DateTime epoch) : this(declination, rightAscension, Double.NaN, epoch)
+        public Equatorial(double declination, double rightAscension, Time epoch) : this(declination, rightAscension, Double.NaN, epoch)
         {
         }
 

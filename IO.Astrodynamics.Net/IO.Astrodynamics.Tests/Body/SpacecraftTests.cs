@@ -8,7 +8,7 @@ using IO.Astrodynamics.Math;
 using IO.Astrodynamics.Mission;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.SolarSystemObjects;
-using IO.Astrodynamics.Time;
+using IO.Astrodynamics.TimeSystem;
 using Xunit;
 
 namespace IO.Astrodynamics.Tests.Body
@@ -26,7 +26,7 @@ namespace IO.Astrodynamics.Tests.Body
             Clock clk = new Clock("My clock", 256);
             Spacecraft spc = new Spacecraft(-1001, "MySpacecraft", 1000.0, 10000.0, clk,
                 new StateVector(new Vector3(1.0, 2.0, 3.0), new Vector3(1.0, 2.0, 3.0), TestHelpers.EarthAtJ2000,
-                    DateTime.MinValue, Frames.Frame.ICRF));
+                    new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame), Frames.Frame.ICRF));
             Assert.Equal(-1001, spc.NaifId);
             Assert.Equal("MySpacecraft", spc.Name);
             Assert.Equal(1000.0, spc.DryOperatingMass);
@@ -39,16 +39,16 @@ namespace IO.Astrodynamics.Tests.Body
             Clock clk = new Clock("My clock", 256);
             Assert.Throws<ArgumentOutOfRangeException>(() => new Spacecraft(1001, "MySpacecraft", 1000.0, 10000.0, clk,
                 new StateVector(new Vector3(1.0, 2.0, 3.0), new Vector3(1.0, 2.0, 3.0), TestHelpers.EarthAtJ2000,
-                    DateTime.MinValue, Frames.Frame.ICRF)));
+                    new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame), Frames.Frame.ICRF)));
             Assert.Throws<ArgumentException>(() => new Spacecraft(-1001, "", 1000.0, 10000.0, clk,
                 new StateVector(new Vector3(1.0, 2.0, 3.0), new Vector3(1.0, 2.0, 3.0), TestHelpers.EarthAtJ2000,
-                    DateTime.MinValue, Frames.Frame.ICRF)));
+                    new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame), Frames.Frame.ICRF)));
             Assert.Throws<ArgumentNullException>(() => new Spacecraft(-1001, "MySpacecraft", 1000.0, 10000.0, null,
                 new StateVector(new Vector3(1.0, 2.0, 3.0), new Vector3(1.0, 2.0, 3.0), TestHelpers.EarthAtJ2000,
-                    DateTime.MinValue, Frames.Frame.ICRF)));
+                    new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame), Frames.Frame.ICRF)));
             Assert.Throws<ArgumentOutOfRangeException>(() => new Spacecraft(-1001, "MySpacecraft", 10000.0, 1000.0, clk,
                 new StateVector(new Vector3(1.0, 2.0, 3.0), new Vector3(1.0, 2.0, 3.0), TestHelpers.EarthAtJ2000,
-                    DateTime.MinValue, Frames.Frame.ICRF)));
+                    new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame), Frames.Frame.ICRF)));
         }
 
         [Fact]
@@ -56,7 +56,7 @@ namespace IO.Astrodynamics.Tests.Body
         {
             CelestialBody sun = new CelestialBody(Stars.Sun);
 
-            var ke = new KeplerianElements(150000000.0, 0.0, 0.0, 0.0, 0.0, 0.0, sun, DateTime.UtcNow,
+            var ke = new KeplerianElements(150000000.0, 0.0, 0.0, 0.0, 0.0, 0.0, sun, new TimeSystem.Time(DateTime.UtcNow,TimeFrame.UTCFrame),
                 Frames.Frame.ECLIPTIC_J2000);
             Clock clk1 = new Clock("My clock", 256);
             Payload pl1 = new Payload("pl1", 300, "sn1");
@@ -74,8 +74,8 @@ namespace IO.Astrodynamics.Tests.Body
         [Fact]
         public async Task GetOrientation()
         {
-            DateTime start = DateTimeExtension.CreateUTC(676555130.80).ToTDB();
-            DateTime end = start.AddSeconds(6448.0);
+            TimeSystem.Time start =  TimeSystem.Time.Create(676555130.80,TimeFrame.UTCFrame).ToTDB();
+            TimeSystem.Time end = start.Add(TimeSpan.FromSeconds(6448.0));
 
             //Configure scenario
             Scenario scenario = new Scenario("Scenario_A", new IO.Astrodynamics.Mission.Mission("mission05"),
@@ -115,7 +115,7 @@ namespace IO.Astrodynamics.Tests.Body
         public void AddEngine()
         {
             Clock clk = new Clock("My clock", 256);
-            var ke = new KeplerianElements(150000000.0, 0.0, 0.0, 0.0, 0.0, 0.0, TestHelpers.Sun, DateTime.UtcNow,
+            var ke = new KeplerianElements(150000000.0, 0.0, 0.0, 0.0, 0.0, 0.0, TestHelpers.Sun, new TimeSystem.Time(DateTime.UtcNow,TimeFrame.UTCFrame),
                 Frames.Frame.ECLIPTIC_J2000);
             Spacecraft spc = new Spacecraft(-1001, "MySpacecraft", 1000.0, 10000.0, clk, ke);
 
@@ -132,7 +132,7 @@ namespace IO.Astrodynamics.Tests.Body
         [Fact]
         public void AddEngineWithUnknowFuelTank()
         {
-            var ke = new KeplerianElements(150000000.0, 0.0, 0.0, 0.0, 0.0, 0.0, TestHelpers.Sun, DateTime.UtcNow,
+            var ke = new KeplerianElements(150000000.0, 0.0, 0.0, 0.0, 0.0, 0.0, TestHelpers.Sun, new TimeSystem.Time(DateTime.UtcNow,TimeFrame.UTCFrame),
                 Frames.Frame.ECLIPTIC_J2000);
             Clock clk = new Clock("My clock", 256);
             Spacecraft spc = new Spacecraft(-1001, "MySpacecraft", 1000.0, 10000.0, clk, ke);
@@ -145,7 +145,7 @@ namespace IO.Astrodynamics.Tests.Body
         [Fact]
         public void AddFuelTank()
         {
-            var ke = new KeplerianElements(150000000.0, 0.0, 0.0, 0.0, 0.0, 0.0, TestHelpers.Sun, DateTime.UtcNow,
+            var ke = new KeplerianElements(150000000.0, 0.0, 0.0, 0.0, 0.0, 0.0, TestHelpers.Sun, new TimeSystem.Time(DateTime.UtcNow,TimeFrame.UTCFrame),
                 Frames.Frame.ECLIPTIC_J2000);
             Clock clk = new Clock("My clock", 256);
             Spacecraft spc = new Spacecraft(-1001, "MySpacecraft", 1000.0, 10000.0, clk, ke);
@@ -160,7 +160,7 @@ namespace IO.Astrodynamics.Tests.Body
         [Fact]
         public void AddPayload()
         {
-            var ke = new KeplerianElements(150000000.0, 0.0, 0.0, 0.0, 0.0, 0.0, TestHelpers.Sun, DateTime.UtcNow,
+            var ke = new KeplerianElements(150000000.0, 0.0, 0.0, 0.0, 0.0, 0.0, TestHelpers.Sun, new TimeSystem.Time(DateTime.UtcNow,TimeFrame.UTCFrame),
                 Frames.Frame.ECLIPTIC_J2000);
             Clock clk = new Clock("My clock", 256);
             Spacecraft spc = new Spacecraft(-1001, "MySpacecraft", 1000.0, 10000.0, clk, ke);
@@ -175,7 +175,7 @@ namespace IO.Astrodynamics.Tests.Body
         [Fact]
         public void AddInstrument()
         {
-            var ke = new KeplerianElements(150000000.0, 0.0, 0.0, 0.0, 0.0, 0.0, TestHelpers.Sun, DateTime.UtcNow,
+            var ke = new KeplerianElements(150000000.0, 0.0, 0.0, 0.0, 0.0, 0.0, TestHelpers.Sun, new TimeSystem.Time(DateTime.UtcNow,TimeFrame.UTCFrame),
                 Frames.Frame.ECLIPTIC_J2000);
             Clock clk = new Clock("My clock", 256);
             Spacecraft spc = new Spacecraft(-1001, "MySpacecraft", 1000.0, 10000.0, clk, ke);
@@ -188,7 +188,7 @@ namespace IO.Astrodynamics.Tests.Body
         [Fact]
         public void GetTotalMass()
         {
-            var ke = new KeplerianElements(150000000.0, 0.0, 0.0, 0.0, 0.0, 0.0, TestHelpers.Sun, DateTime.UtcNow,
+            var ke = new KeplerianElements(150000000.0, 0.0, 0.0, 0.0, 0.0, 0.0, TestHelpers.Sun, new TimeSystem.Time(DateTime.UtcNow,TimeFrame.UTCFrame),
                 Frames.Frame.ECLIPTIC_J2000);
             Clock clk = new Clock("My clock", 256);
 
@@ -236,7 +236,7 @@ namespace IO.Astrodynamics.Tests.Body
         [Fact]
         public void Dependancies()
         {
-            var ke = new KeplerianElements(150000000.0, 0.0, 0.0, 0.0, 0.0, 0.0, TestHelpers.Sun, DateTime.UtcNow,
+            var ke = new KeplerianElements(150000000.0, 0.0, 0.0, 0.0, 0.0, 0.0, TestHelpers.Sun, new TimeSystem.Time(DateTime.UtcNow,TimeFrame.UTCFrame),
                 Frames.Frame.ECLIPTIC_J2000);
             Clock clk1 = new Clock("My clock", 256);
             Payload pl1 = new Payload("pl1", 300, "sn1");
@@ -286,9 +286,9 @@ namespace IO.Astrodynamics.Tests.Body
         {
             var earth = TestHelpers.EarthAtJ2000;
             var sv = new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 8000.0, 0.0), earth,
-                DateTimeExtension.J2000, Frames.Frame.ICRF);
+                TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
             var sv2 = new StateVector(new Vector3(8800000.0, 0.0, 0.0), new Vector3(0.0, 7000.0, 0.0), earth,
-                DateTimeExtension.J2000, Frames.Frame.ICRF);
+                TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
             Clock clk = new Clock("My clock", 256);
             Spacecraft spc = new Spacecraft(-1001, "MySpacecraft", 1000.0, 10000.0, clk, sv);
             Assert.Equal(spc, (sv.Observer as CelestialBody)?.Satellites.First());
@@ -304,7 +304,7 @@ namespace IO.Astrodynamics.Tests.Body
         public void ComputeProperties()
         {
             Clock clk = new Clock("My clock", 256);
-            var ke = new KeplerianElements(150000000.0, 0.0, 0.0, 0.0, 0.0, 0.0, TestHelpers.Sun, DateTime.UtcNow,
+            var ke = new KeplerianElements(150000000.0, 0.0, 0.0, 0.0, 0.0, 0.0, TestHelpers.Sun, new TimeSystem.Time(DateTime.UtcNow,TimeFrame.UTCFrame),
                 Frames.Frame.ECLIPTIC_J2000);
             Spacecraft spc = new Spacecraft(-1001, "MySpacecraft", 1000.0, 10000.0, clk, ke);
 
@@ -325,7 +325,7 @@ namespace IO.Astrodynamics.Tests.Body
         [Fact]
         public void SetParent()
         {
-            var ke = new KeplerianElements(150000000.0, 0.0, 0.0, 0.0, 0.0, 0.0, TestHelpers.Sun, DateTime.UtcNow,
+            var ke = new KeplerianElements(150000000.0, 0.0, 0.0, 0.0, 0.0, 0.0, TestHelpers.Sun, new TimeSystem.Time(DateTime.UtcNow,TimeFrame.UTCFrame),
                 Frames.Frame.ECLIPTIC_J2000);
             Clock clk1 = new Clock("My clock", 256);
             Payload pl1 = new Payload("pl1", 300, "sn1");
@@ -358,7 +358,7 @@ namespace IO.Astrodynamics.Tests.Body
         {
             var moon = TestHelpers.MoonAtJ2000;
             var sv = new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 3000.0, 0.0), moon,
-                DateTimeExtension.J2000, Frames.Frame.ICRF);
+                TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
             Clock clk1 = new Clock("My clock", 256);
             var spacecraft = new Spacecraft(-845, "moonlander", 1200, 5000, clk1, sv);
             var res = spacecraft.GetCentersOfMotion();

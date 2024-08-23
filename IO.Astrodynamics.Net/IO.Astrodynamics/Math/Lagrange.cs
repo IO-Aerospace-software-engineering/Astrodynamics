@@ -1,6 +1,6 @@
 using System;
 using IO.Astrodynamics.OrbitalParameters;
-using IO.Astrodynamics.Time;
+using IO.Astrodynamics.TimeSystem;
 
 namespace IO.Astrodynamics.Math
 {
@@ -29,9 +29,9 @@ namespace IO.Astrodynamics.Math
             return result;
         }
 
-        public static StateVector Interpolate(StateVector[] data, DateTime epoch)
+        public static StateVector Interpolate(StateVector[] data, Time epoch)
         {
-            double idx = epoch.SecondsFromJ2000TDB();
+            double idx = epoch.TimeSpanFromJ2000().TotalSeconds;
             int n = data.Length;
             StateVector result = new StateVector(new Vector3(), new Vector3(), data[0].Observer, epoch, data[0].Frame); // Initialize result
 
@@ -44,7 +44,7 @@ namespace IO.Astrodynamics.Math
                 for (int j = 0; j < n; j++)
                 {
                     if (j == i) continue;
-                    var t = (idx - data[j].Epoch.SecondsFromJ2000TDB()) / (data[i].Epoch.SecondsFromJ2000TDB() - data[j].Epoch.SecondsFromJ2000TDB());
+                    var t = (idx - data[j].Epoch.TimeSpanFromJ2000().TotalSeconds) / (data[i].Epoch.TimeSpanFromJ2000().TotalSeconds - data[j].Epoch.TimeSpanFromJ2000().TotalSeconds);
                     posTerm *= t;
                     velTerm *= t;
                 }
