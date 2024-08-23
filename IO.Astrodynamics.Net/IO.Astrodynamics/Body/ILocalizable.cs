@@ -7,9 +7,9 @@ namespace IO.Astrodynamics.Body
 {
     public interface ILocalizable : INaifObject
     {
-        IEnumerable<OrbitalParameters.OrbitalParameters> GetEphemeris(Window searchWindow, ILocalizable observer, Frame frame, Aberration aberration, TimeSpan stepSize);
-        OrbitalParameters.OrbitalParameters GetEphemeris(Time epoch, ILocalizable observer, Frame frame, Aberration aberration);
-        double AngularSeparation(Time epoch, ILocalizable target1, ILocalizable target2, Aberration aberration);
+        IEnumerable<OrbitalParameters.OrbitalParameters> GetEphemeris(in Window searchWindow, ILocalizable observer, Frame frame, Aberration aberration, in TimeSpan stepSize);
+        OrbitalParameters.OrbitalParameters GetEphemeris(in Time epoch, ILocalizable observer, Frame frame, Aberration aberration);
+        double AngularSeparation(in Time epoch, ILocalizable target1, ILocalizable target2, Aberration aberration);
         OrbitalParameters.OrbitalParameters InitialOrbitalParameters { get; }
         IEnumerable<ILocalizable> GetCentersOfMotion();
         double GM { get; }
@@ -25,8 +25,8 @@ namespace IO.Astrodynamics.Body
         /// <param name="aberration"></param>
         /// <param name="stepSize"></param>
         /// <returns></returns>
-        IEnumerable<Window> FindWindowsOnDistanceConstraint(Window searchWindow, INaifObject observer, RelationnalOperator relationalOperator, double value,
-            Aberration aberration, TimeSpan stepSize);
+        IEnumerable<Window> FindWindowsOnDistanceConstraint(in Window searchWindow, INaifObject observer, RelationnalOperator relationalOperator, double value,
+            Aberration aberration, in TimeSpan stepSize);
 
         /// <summary>
         ///     Find time windows based on occultation constraint
@@ -40,8 +40,8 @@ namespace IO.Astrodynamics.Body
         /// <param name="stepSize"></param>
         /// <param name="observer"></param>
         /// <returns></returns>
-        IEnumerable<Window> FindWindowsOnOccultationConstraint(Window searchWindow, INaifObject observer, ShapeType targetShape, INaifObject frontBody,
-            ShapeType frontShape, OccultationType occultationType, Aberration aberration, TimeSpan stepSize);
+        IEnumerable<Window> FindWindowsOnOccultationConstraint(in Window searchWindow, INaifObject observer, ShapeType targetShape, INaifObject frontBody,
+            ShapeType frontShape, OccultationType occultationType, Aberration aberration, in TimeSpan stepSize);
 
         /// <summary>
         ///     Find time windows based on coordinate constraint
@@ -57,8 +57,8 @@ namespace IO.Astrodynamics.Body
         /// <param name="stepSize"></param>
         /// <param name="observer"></param>
         /// <returns></returns>
-        public IEnumerable<Window> FindWindowsOnCoordinateConstraint(Window searchWindow, INaifObject observer, Frame frame, CoordinateSystem coordinateSystem,
-            Coordinate coordinate, RelationnalOperator relationalOperator, double value, double adjustValue, Aberration aberration, TimeSpan stepSize);
+        public IEnumerable<Window> FindWindowsOnCoordinateConstraint(in Window searchWindow, INaifObject observer, Frame frame, CoordinateSystem coordinateSystem,
+            Coordinate coordinate, RelationnalOperator relationalOperator, double value, double adjustValue, Aberration aberration, in TimeSpan stepSize);
 
        
     }

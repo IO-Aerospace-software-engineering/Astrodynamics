@@ -5,7 +5,7 @@ using IO.Astrodynamics.TimeSystem;
 
 namespace IO.Astrodynamics.OrbitalParameters
 {
-    public record StateOrientation(Quaternion Rotation, Vector3 AngularVelocity, Time Epoch, Frame ReferenceFrame)
+    public record StateOrientation(Quaternion Rotation, Vector3 AngularVelocity, in Time Epoch, Frame ReferenceFrame)
     {
         /// <summary>
         /// Frame from which the rotation is applied

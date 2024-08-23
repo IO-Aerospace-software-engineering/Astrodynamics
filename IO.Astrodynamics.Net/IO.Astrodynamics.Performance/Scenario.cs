@@ -42,14 +42,14 @@ public class Scenario
         Clock clk = new Clock("My clock", 256);
         Spacecraft spc = new Spacecraft(-1001, "MySpacecraft", 100.0, 10000.0, clk,
             new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7656.2204182967143, 0.0), _earth, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF));
-        _srp = new SolarRadiationPressure(spc,[_earth]);
+        _srp = new SolarRadiationPressure(spc, [_earth]);
         _atm = new AtmosphericDrag(spc, _earth);
         List<ForceBase> forces = new List<ForceBase>();
         forces.Add(new GravitationalAcceleration(_sun));
         forces.Add(new GravitationalAcceleration(_moon));
         forces.Add(new GravitationalAcceleration(_earth));
         forces.Add(new AtmosphericDrag(spc, _earth));
-        forces.Add(new SolarRadiationPressure(spc,[_earth]));
+        forces.Add(new SolarRadiationPressure(spc, [_earth]));
         _integrator = new VVIntegrator(forces, TimeSpan.FromSeconds(1.0), new StateVector(new Vector3(6800000.0 - Random.Shared.NextDouble(), 0.0, 0.0),
             new Vector3(0.0, 8000.0 - Random.Shared.NextDouble(), 0.0), _earth,
             TimeSystem.Time.J2000TDB, Frame.ICRF));
@@ -99,18 +99,7 @@ public class Scenario
     [Benchmark(Description = "SpacecraftPropagator per orbit (GeoPotentials // Moon and sun perturbation // Atmospheric drag // Solar radiation) ")]
     public void Propagator()
     {
-        List<Vector3> points = new List<Vector3>();
-        for (int i = 0; i < 1E07; i++)
-        {
-            points.Add(new Vector3(Random.Shared.NextDouble() - Random.Shared.NextDouble(), 0.0, 0.0));
-        }
-        // List<StateVector> forces = new List<StateVector>();
-        // for (int i = 0; i < 200000; i++)
-        // {
-        //     forces.Add(new StateVector(new Vector3(6800000.0 - Random.Shared.NextDouble(), 0.0, 0.0), new Vector3(0.0, 8000.0 - Random.Shared.NextDouble(), 0.0), _earth,
-        //         TimeSystem.Time.J2000TDB, Frame.ICRF));
-        // }
-        //var res = _spacecraftPropagator.Propagate();
+        var res = _spacecraftPropagator.Propagate();
     }
 
     // [Benchmark(Description = "IO Vector", Baseline = true)]

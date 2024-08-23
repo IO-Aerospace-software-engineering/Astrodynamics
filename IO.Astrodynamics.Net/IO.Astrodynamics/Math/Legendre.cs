@@ -48,16 +48,16 @@ public class LegendreFunctions
             return double.NaN;
         }
 
+        // Precompute constants
         double pmm = 1.0;
-        if (m > 0)
+        double somx2 = System.Math.Sqrt(1.0 - x * x); // Optimized for calculation
+        double fact = 1.0;
+
+        // Calculate Pmm
+        for (int i = 1; i <= m; i++)
         {
-            double somx2 = System.Math.Sqrt((1.0 + x) * (1.0 - x));
-            double fact = 1.0;
-            for (int i = 1; i <= m; i++)
-            {
-                pmm *= -fact * somx2;
-                fact += 2.0;
-            }
+            pmm *= -fact * somx2;
+            fact += 2.0;
         }
 
         if (l == m)
@@ -65,20 +65,22 @@ public class LegendreFunctions
             return pmm;
         }
 
+        // Compute Pm+1,m
         double pmmp1 = x * (2 * m + 1) * pmm;
         if (l == m + 1)
         {
             return pmmp1;
         }
 
+        // Use iteration to compute Pll
         double pll = 0.0;
         for (int ll = m + 2; ll <= l; ll++)
         {
-            pll = (x * (2 * ll - 1) * pmmp1 - (ll + m - 1) * pmm) / (ll - m);
+            double prevPmm = pmm; // Store the previous pmm
             pmm = pmmp1;
-            pmmp1 = pll;
+            pmmp1 = (x * (2 * ll - 1) * pmm - (ll + m - 1) * prevPmm) / (ll - m);
         }
 
-        return pll;
+        return pmmp1; // The last value of pmmp1 is the desired Pll
     }
 }

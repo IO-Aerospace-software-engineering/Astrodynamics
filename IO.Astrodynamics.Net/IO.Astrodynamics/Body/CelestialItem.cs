@@ -45,7 +45,7 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     /// <param name="frame">Initial orbital parameters frame</param>
     /// <param name="epoch">Epoch</param>
     /// <param name="geopotentialModelParameters"></param>
-    protected CelestialItem(int naifId, Frame frame, Time epoch, GeopotentialModelParameters geopotentialModelParameters = null)
+    protected CelestialItem(int naifId, Frame frame, in Time epoch, GeopotentialModelParameters geopotentialModelParameters = null)
     {
         ExtendedInformation = API.Instance.GetCelestialBodyInfo(naifId);
 
@@ -66,8 +66,6 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
             InitialOrbitalParameters = GetEphemeris(epoch, new Barycenter(ExtendedInformation.BarycenterOfMotionId), frame, Aberration.None);
 
         (InitialOrbitalParameters?.Observer as CelestialItem)?._satellites.Add(this);
-
-        
     }
 
     /// <summary>
@@ -77,7 +75,8 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     /// <param name="name"></param>
     /// <param name="mass"></param>
     /// <param name="initialOrbitalParameters"></param>
-    protected CelestialItem(int naifId, string name, double mass, OrbitalParameters.OrbitalParameters initialOrbitalParameters, GeopotentialModelParameters geopotentialModelParameters = null)
+    protected CelestialItem(int naifId, string name, double mass, OrbitalParameters.OrbitalParameters initialOrbitalParameters,
+        GeopotentialModelParameters geopotentialModelParameters = null)
     {
         if (string.IsNullOrEmpty(name))
         {
@@ -119,9 +118,7 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     /// <param name="aberration"></param>
     /// <param name="stepSize"></param>
     /// <returns></returns>
-    public IEnumerable<OrbitalParameters.OrbitalParameters> GetEphemeris(Window searchWindow, ILocalizable observer,
-        Frame frame, Aberration aberration,
-        TimeSpan stepSize)
+    public IEnumerable<OrbitalParameters.OrbitalParameters> GetEphemeris(in Window searchWindow, ILocalizable observer, Frame frame, Aberration aberration, in TimeSpan stepSize)
     {
         return API.Instance.ReadEphemeris(searchWindow, observer, this, frame, aberration, stepSize);
     }
@@ -134,8 +131,7 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     /// <param name="frame"></param>
     /// <param name="aberration"></param>
     /// <returns></returns>
-    public OrbitalParameters.OrbitalParameters GetEphemeris(Time epoch, ILocalizable observer, Frame frame,
-        Aberration aberration)
+    public OrbitalParameters.OrbitalParameters GetEphemeris(in Time epoch, ILocalizable observer, Frame frame, Aberration aberration)
     {
         return API.Instance.ReadEphemeris(epoch, observer, this, frame, aberration);
     }
@@ -160,41 +156,37 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     /// <param name="target2"></param>
     /// <param name="aberration"></param>
     /// <returns></returns>
-    public double AngularSeparation(Time epoch, ILocalizable target1, ILocalizable target2, Aberration aberration)
+    public double AngularSeparation(in Time epoch, ILocalizable target1, ILocalizable target2, Aberration aberration)
     {
         var target1Position = target1.GetEphemeris(epoch, this, Frame.ICRF, aberration).ToStateVector().Position;
         var target2Position = target2.GetEphemeris(epoch, this, Frame.ICRF, aberration).ToStateVector().Position;
         return target1Position.Angle(target2Position);
     }
 
-    public double AngularSeparation(Time epoch, ILocalizable target1, OrbitalParameters.OrbitalParameters fromPosition, Aberration aberration)
+    public double AngularSeparation(in Time epoch, ILocalizable target1, OrbitalParameters.OrbitalParameters fromPosition, Aberration aberration)
     {
         var target1Position = fromPosition.RelativeTo(target1, aberration).ToStateVector().Position.Inverse();
         var target2Position = fromPosition.RelativeTo(this, aberration).ToStateVector().Position.Inverse();
         return target1Position.Angle(target2Position);
     }
 
-    public IEnumerable<Window> FindWindowsOnDistanceConstraint(Window searchWindow, INaifObject observer,
-        RelationnalOperator relationalOperator, double value,
-        Aberration aberration, TimeSpan stepSize)
+    public IEnumerable<Window> FindWindowsOnDistanceConstraint(in Window searchWindow, INaifObject observer,
+        RelationnalOperator relationalOperator, double value, Aberration aberration, in TimeSpan stepSize)
     {
         return API.Instance.FindWindowsOnDistanceConstraint(searchWindow, observer, this, relationalOperator, value,
             aberration, stepSize);
     }
 
-    public IEnumerable<Window> FindWindowsOnOccultationConstraint(Window searchWindow, INaifObject observer,
-        ShapeType targetShape, INaifObject frontBody,
-        ShapeType frontShape, OccultationType occultationType, Aberration aberration, TimeSpan stepSize)
+    public IEnumerable<Window> FindWindowsOnOccultationConstraint(in Window searchWindow, INaifObject observer,
+        ShapeType targetShape, INaifObject frontBody, ShapeType frontShape, OccultationType occultationType, Aberration aberration, in TimeSpan stepSize)
     {
         return API.Instance.FindWindowsOnOccultationConstraint(searchWindow, observer, this, targetShape, frontBody,
             frontShape, occultationType, aberration, stepSize);
     }
 
-    public IEnumerable<Window> FindWindowsOnCoordinateConstraint(Window searchWindow, INaifObject observer, Frame frame,
-        CoordinateSystem coordinateSystem,
-        Coordinate coordinate,
-        RelationnalOperator relationalOperator, double value, double adjustValue, Aberration aberration,
-        TimeSpan stepSize)
+    public IEnumerable<Window> FindWindowsOnCoordinateConstraint(in Window searchWindow, INaifObject observer, Frame frame,
+        CoordinateSystem coordinateSystem, Coordinate coordinate, RelationnalOperator relationalOperator, double value, double adjustValue, Aberration aberration,
+        in TimeSpan stepSize)
     {
         return API.Instance.FindWindowsOnCoordinateConstraint(searchWindow, observer, this, frame, coordinateSystem,
             coordinate, relationalOperator, value, adjustValue, aberration,
@@ -220,7 +212,7 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     /// <param name="epoch"></param>
     /// <param name="aberration"></param>
     /// <returns></returns>
-    public Planetocentric SubObserverPoint(CelestialBody target, Time epoch, Aberration aberration)
+    public Planetocentric SubObserverPoint(CelestialBody target, in Time epoch, Aberration aberration)
     {
         var position = GetEphemeris(epoch, target, target.Frame, aberration).ToStateVector().Position;
 
@@ -231,7 +223,7 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
         return new Planetocentric(lon, lat, position.Magnitude());
     }
 
-    public Planetocentric SubObserverPoint(Vector3 position, Time epoch, Aberration aberration)
+    public Planetocentric SubObserverPoint(in Vector3 position, in Time epoch, Aberration aberration)
     {
         var lon = System.Math.Atan2(position.Y, position.X);
 
@@ -266,7 +258,7 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
 
         return occul;
     }
-    
+
     /// <summary>
     /// Evaluate gravitational acceleration at given position
     /// </summary>
