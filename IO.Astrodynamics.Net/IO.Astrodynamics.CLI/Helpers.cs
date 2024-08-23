@@ -103,14 +103,13 @@ public class Helpers
         }
         else
         {
-            double value = double.Parse(epoch, CultureInfo.InvariantCulture);
             if (isutc)
             {
-                input = Time.CreateUTC(value);
+                input = new (epoch);
             }
             else
             {
-                input = Time.CreateTDB(value);
+                input = new (epoch);
             }
         }
 

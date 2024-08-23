@@ -139,13 +139,6 @@ public class API
         return _libHandle;
     }
 
-    public void ReleaseHandle()
-    {
-        NativeLibrary.Free(_libHandle);
-        GC.Collect();
-        GC.WaitForPendingFinalizers();
-    }
-
     //Use the same lock for all cspice calls because it doesn't support multithreading.
     private static object lockObject = new object();
 

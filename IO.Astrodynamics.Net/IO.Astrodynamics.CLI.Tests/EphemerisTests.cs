@@ -20,8 +20,8 @@ public class EphemerisTests
             command.Ephemeris("Data", 399, 10,
                 new WindowParameters
                 {
-                    Begin =  new TimeSystem.Time( new DateTime(2023, 01, 01, 1, 0, 0),TimeFrame.TDBFrame).ToString() ,
-                    End = new TimeSystem.Time( new DateTime(2023, 01, 01, 1, 1, 0),TimeFrame.TDBFrame).ToString()
+                    Begin =  new Time( new DateTime(2023, 01, 01, 1, 0, 0),TimeFrame.TDBFrame).ToString() ,
+                    End = new Time( new DateTime(2023, 01, 01, 1, 1, 0),TimeFrame.TDBFrame).ToString()
                 }, TimeSpan.FromMinutes(1), "ICRF", "LT", toKeplerian: true);
             var res = sb.ToString();
 

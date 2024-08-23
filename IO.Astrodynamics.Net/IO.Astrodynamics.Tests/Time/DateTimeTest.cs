@@ -18,7 +18,7 @@ public class DateTimeTests
     [Fact]
     public void GpsToTai()
     {
-        var gps = new TimeSystem.Time(2020, 1, 1, frame:TimeFrame.GPSFrame);
+        var gps = new TimeSystem.Time(2020, 1, 1, frame: TimeFrame.GPSFrame);
         var tai = gps.ToTAI();
         Assert.Equal((gps + TimeSpan.FromSeconds(19)).DateTime, tai.DateTime);
     }
@@ -34,7 +34,7 @@ public class DateTimeTests
     [Fact]
     public void TdtToTai()
     {
-        var tdt = new TimeSystem.Time(2020, 1, 1, frame:TimeFrame.TDTFrame);
+        var tdt = new TimeSystem.Time(2020, 1, 1, frame: TimeFrame.TDTFrame);
         var tai = tdt.ToTAI();
         Assert.Equal((tdt - TimeSpan.FromSeconds(32.184)).DateTime, tai.DateTime);
     }
@@ -80,6 +80,22 @@ public class DateTimeTests
     }
 
     [Fact]
+    public void LocalToTdt()
+    {
+        var loc = new TimeSystem.Time(2020, 1, 1, frame: TimeFrame.LocalFrame);
+        var tdt = loc.ToTDT();
+        Assert.Equal(new TimeSystem.Time("2019-12-31T23:01:09.1840000 TDT"), tdt);
+    }
+
+    [Fact]
+    public void TdtToLocal()
+    {
+        var tdt = new TimeSystem.Time(2019, 12, 31, 23, 01, 09, 184, frame: TimeFrame.TDTFrame);
+        var loc = tdt.ToLocal();
+        Assert.Equal(new TimeSystem.Time("2020-01-01 00:00:00.000000+01:00"), loc);
+    }
+
+    [Fact]
     public void ToJulianDate()
     {
         var utc = new TimeSystem.Time(2020, 1, 1, frame: TimeFrame.UTCFrame);
@@ -90,34 +106,34 @@ public class DateTimeTests
     [Fact]
     public void ToTDBFromUTC()
     {
-        Assert.Equal(new TimeSystem.Time(1976, 12, 31, 12, 0, 47, 183, 926,  TimeFrame.TDBFrame),
-            new TimeSystem.Time(1976, 12, 31, 12, 0, 0, frame:TimeFrame.UTCFrame).ToTDB(), TestHelpers.TimeComparer);
+        Assert.Equal(new TimeSystem.Time(1976, 12, 31, 12, 0, 47, 183, 926, TimeFrame.TDBFrame),
+            new TimeSystem.Time(1976, 12, 31, 12, 0, 0, frame: TimeFrame.UTCFrame).ToTDB(), TestHelpers.TimeComparer);
         Assert.Equal(new TimeSystem.Time(1977, 1, 1, 12, 0, 48, 184),
-            new TimeSystem.Time(1977, 1, 1, 12, 0, 0, frame:TimeFrame.UTCFrame).ToTDB(), TestHelpers.TimeComparer);
+            new TimeSystem.Time(1977, 1, 1, 12, 0, 0, frame: TimeFrame.UTCFrame).ToTDB(), TestHelpers.TimeComparer);
         Assert.Equal(new TimeSystem.Time(2016, 12, 31, 12, 1, 8, 184),
-            new TimeSystem.Time(2016, 12, 31, 12, 0, 0, frame:TimeFrame.UTCFrame).ToTDB(), TestHelpers.TimeComparer);
+            new TimeSystem.Time(2016, 12, 31, 12, 0, 0, frame: TimeFrame.UTCFrame).ToTDB(), TestHelpers.TimeComparer);
         Assert.Equal(new TimeSystem.Time(2017, 1, 1, 12, 1, 9, 184),
-            new TimeSystem.Time(2017, 1, 1, 12, 0, 0, frame:TimeFrame.UTCFrame).ToTDB(), TestHelpers.TimeComparer);
+            new TimeSystem.Time(2017, 1, 1, 12, 0, 0, frame: TimeFrame.UTCFrame).ToTDB(), TestHelpers.TimeComparer);
         Assert.Equal(new TimeSystem.Time(2021, 12, 31, 12, 1, 9, 184),
-            new TimeSystem.Time(2021, 12, 31, 12, 0, 0, frame:TimeFrame.UTCFrame).ToTDB(), TestHelpers.TimeComparer);
+            new TimeSystem.Time(2021, 12, 31, 12, 0, 0, frame: TimeFrame.UTCFrame).ToTDB(), TestHelpers.TimeComparer);
         Assert.Equal(new TimeSystem.Time(2022, 1, 1, 12, 1, 9, 184),
-            new TimeSystem.Time(2022, 1, 1, 12, 0, 0, frame:TimeFrame.UTCFrame).ToTDB(), TestHelpers.TimeComparer);
+            new TimeSystem.Time(2022, 1, 1, 12, 0, 0, frame: TimeFrame.UTCFrame).ToTDB(), TestHelpers.TimeComparer);
     }
 
     [Fact]
     public void ToUTCFromTDB()
     {
-        Assert.Equal(new TimeSystem.Time(1976, 12, 31, 12, 0, 0,frame: TimeFrame.UTCFrame),
+        Assert.Equal(new TimeSystem.Time(1976, 12, 31, 12, 0, 0, frame: TimeFrame.UTCFrame),
             new TimeSystem.Time(1976, 12, 31, 12, 0, 47, 184).ToUTC(), TestHelpers.TimeComparer);
-        Assert.Equal(new TimeSystem.Time(1977, 1, 1, 12, 0, 0, frame:TimeFrame.UTCFrame),
+        Assert.Equal(new TimeSystem.Time(1977, 1, 1, 12, 0, 0, frame: TimeFrame.UTCFrame),
             new TimeSystem.Time(1977, 1, 1, 12, 0, 48, 184).ToUTC(), TestHelpers.TimeComparer);
-        Assert.Equal(new TimeSystem.Time(2016, 12, 31, 12, 0, 0, frame:TimeFrame.UTCFrame),
+        Assert.Equal(new TimeSystem.Time(2016, 12, 31, 12, 0, 0, frame: TimeFrame.UTCFrame),
             new TimeSystem.Time(2016, 12, 31, 12, 1, 8, 184).ToUTC(), TestHelpers.TimeComparer);
-        Assert.Equal(new TimeSystem.Time(2017, 1, 1, 12, 0, 0, frame:TimeFrame.UTCFrame),
+        Assert.Equal(new TimeSystem.Time(2017, 1, 1, 12, 0, 0, frame: TimeFrame.UTCFrame),
             new TimeSystem.Time(2017, 1, 1, 12, 1, 9, 184).ToUTC(), TestHelpers.TimeComparer);
-        Assert.Equal(new TimeSystem.Time(2021, 12, 31, 12, 0, 0, frame:TimeFrame.UTCFrame),
+        Assert.Equal(new TimeSystem.Time(2021, 12, 31, 12, 0, 0, frame: TimeFrame.UTCFrame),
             new TimeSystem.Time(2021, 12, 31, 12, 1, 9, 184).ToUTC(), TestHelpers.TimeComparer);
-        Assert.Equal(new TimeSystem.Time(2022, 1, 1, 12, 0, 0, frame:TimeFrame.UTCFrame),
+        Assert.Equal(new TimeSystem.Time(2022, 1, 1, 12, 0, 0, frame: TimeFrame.UTCFrame),
             new TimeSystem.Time(2022, 1, 1, 12, 1, 9, 184).ToUTC(), TestHelpers.TimeComparer);
     }
 
@@ -125,8 +141,8 @@ public class DateTimeTests
     public void SecondsFromJ2000()
     {
         Assert.Equal(0.0, new TimeSystem.Time(2000, 01, 01, 12, 0, 0, 0).TimeSpanFromJ2000().TotalSeconds);
-        Assert.Equal(-315532800.000000, new TimeSystem.Time(1990, 01, 01, 12, 0, 0, 0, frame:TimeFrame.UTCFrame).TimeSpanFromJ2000().TotalSeconds);
-        Assert.Equal(631152000.0, new TimeSystem.Time(2020, 01, 01, 12, 0, 0, 0, frame:TimeFrame.UTCFrame).TimeSpanFromJ2000().TotalSeconds);
+        Assert.Equal(-315532800.000000, new TimeSystem.Time(1990, 01, 01, 12, 0, 0, 0, frame: TimeFrame.UTCFrame).TimeSpanFromJ2000().TotalSeconds);
+        Assert.Equal(631152000.0, new TimeSystem.Time(2020, 01, 01, 12, 0, 0, 0, frame: TimeFrame.UTCFrame).TimeSpanFromJ2000().TotalSeconds);
     }
 
     [Fact]
@@ -134,9 +150,9 @@ public class DateTimeTests
     {
         Assert.Equal(new TimeSystem.Time(2000, 01, 01, 12),
             TimeSystem.Time.Create(0.0, TimeFrame.TDBFrame));
-        Assert.Equal(new TimeSystem.Time(1990, 01, 01, 12, 0, 57, 184, frame:TimeFrame.UTCFrame),
+        Assert.Equal(new TimeSystem.Time(1990, 01, 01, 12, 0, 57, 184, frame: TimeFrame.UTCFrame),
             TimeSystem.Time.Create(-315532742.816, TimeFrame.UTCFrame), TestHelpers.TimeComparer);
-        Assert.Equal(new TimeSystem.Time(2020, 01, 01, 12, 1, 9, 184, frame:TimeFrame.UTCFrame),
+        Assert.Equal(new TimeSystem.Time(2020, 01, 01, 12, 1, 9, 184, frame: TimeFrame.UTCFrame),
             TimeSystem.Time.Create(631152069.184, TimeFrame.UTCFrame), TestHelpers.TimeComparer);
     }
 
@@ -160,7 +176,7 @@ public class DateTimeTests
     [Fact]
     public void ToJulian2()
     {
-        var jd = new TimeSystem.Time(1950, 1, 1, 0, 0, 0, frame:TimeFrame.UTCFrame);
+        var jd = new TimeSystem.Time(1950, 1, 1, 0, 0, 0, frame: TimeFrame.UTCFrame);
         Assert.Equal(2433282.5000000000, jd.ToJulianDate());
     }
 
@@ -182,6 +198,6 @@ public class DateTimeTests
     public void FromJulian2()
     {
         var date = TimeSystem.Time.CreateFromJD(2433282.5000000000, TimeFrame.TDBFrame);
-        Assert.Equal(new TimeSystem.Time(1950, 1, 1, 0, 0, 0, frame:TimeFrame.TDBFrame), date);
+        Assert.Equal(new TimeSystem.Time(1950, 1, 1, 0, 0, 0, frame: TimeFrame.TDBFrame), date);
     }
 }

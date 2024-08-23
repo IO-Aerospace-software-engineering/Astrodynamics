@@ -26,6 +26,10 @@ public readonly record struct Time : IComparable<Time>, IComparable
         {
             DateTime = System.DateTime.SpecifyKind(DateTime, DateTimeKind.Utc);
         }
+        else if (frame is LocalTimeFrame)
+        {
+            DateTime = System.DateTime.SpecifyKind(DateTime, DateTimeKind.Local);
+        }
         else
         {
             DateTime = System.DateTime.SpecifyKind(DateTime, DateTimeKind.Unspecified);

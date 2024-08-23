@@ -195,6 +195,8 @@ namespace IO.Astrodynamics.Tests.Mission
             }
 
             Assert.Equal(2281.6923637537593, summary.SpacecraftSummaries.First().FuelConsumption, 3);
+            Assert.Equal("Sites",summary.SiteDirectoryInfo.Name);
+            Assert.Equal("Spacecrafts",summary.SpacecraftDirectoryInfo.Name);
         }
 
         [Fact]

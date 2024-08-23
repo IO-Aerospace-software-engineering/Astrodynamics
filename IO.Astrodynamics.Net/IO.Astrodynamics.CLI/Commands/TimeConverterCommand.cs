@@ -42,7 +42,6 @@ public class TimeConverterCommand
         var input = Helpers.ConvertDateTimeInput(epochParameters.Epoch);
 
         //Output
-        string suffix = toLocal ? "" : toUTC ? "UTC" : "TDB";
         if (toTDB)
         {
             input = input.ToTDB();
@@ -81,7 +80,7 @@ public class TimeConverterCommand
             res = input.ToString();
         }
 
-        Console.WriteLine($"{res} {suffix}");
+        Console.WriteLine($"{res}");
         return Task.CompletedTask;
     }
 }
