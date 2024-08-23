@@ -67,7 +67,7 @@ public class Scenario
     public void Gravity()
     {
         var sv = new StateVector(new Vector3(6800000.0 - Random.Shared.NextDouble(), 0.0, 0.0), new Vector3(0.0, 8000.0 - Random.Shared.NextDouble(), 0.0), _earth,
-            Time.J2000, Frame.ICRF);
+            TimeSystem.Time.J2000TDB, Frame.ICRF);
         var res = _geopotential.ComputeGravitationalAcceleration(sv);
     }
 
@@ -75,7 +75,7 @@ public class Scenario
     public void SRP()
     {
         var sv = new StateVector(new Vector3(6800000.0 - Random.Shared.NextDouble(), 0.0, 0.0), new Vector3(0.0, 8000.0 - Random.Shared.NextDouble(), 0.0), _earth,
-            Time.J2000, Frame.ICRF);
+            TimeSystem.Time.J2000TDB, Frame.ICRF);
         var res = _srp.Apply(sv);
     }
 
@@ -83,7 +83,7 @@ public class Scenario
     public void AtmosphericDrag()
     {
         var sv = new StateVector(new Vector3(6800000.0 - Random.Shared.NextDouble(), 0.0, 0.0), new Vector3(0.0, 8000.0 - Random.Shared.NextDouble(), 0.0), _earth,
-            Time.J2000, Frame.ICRF);
+            TimeSystem.Time.J2000TDB, Frame.ICRF);
         var res = _atm.Apply(sv);
     }
 
@@ -92,7 +92,7 @@ public class Scenario
     public void VVIntegration()
     {
         var sv = new StateVector(new Vector3(6800000.0 - Random.Shared.NextDouble(), 0.0, 0.0), new Vector3(0.0, 8000.0 - Random.Shared.NextDouble(), 0.0), _earth,
-            Time.J2000, Frame.ICRF);
+            TimeSystem.Time.J2000TDB, Frame.ICRF);
         // var res = _integrator.Integrate(sv);
     }
 
@@ -108,7 +108,7 @@ public class Scenario
         // for (int i = 0; i < 200000; i++)
         // {
         //     forces.Add(new StateVector(new Vector3(6800000.0 - Random.Shared.NextDouble(), 0.0, 0.0), new Vector3(0.0, 8000.0 - Random.Shared.NextDouble(), 0.0), _earth,
-        //         Time.J2000, Frame.ICRF));
+        //         TimeSystem.Time.J2000TDB, Frame.ICRF));
         // }
         //var res = _spacecraftPropagator.Propagate();
     }

@@ -21,7 +21,7 @@ public class GeometryFinderTests
             var res = sb.ToString();
 
             Assert.Equal(
-                $"From 2024-03-17T05:19:00.9354395 (TDB) to 2024-03-17T05:19:00.9354395 (TDB) - Length 00:00:00{Environment.NewLine}"
+                $"From 2024-03-17T05:19:00.9354395 TDB to 2024-03-17T05:19:00.9354395 TDB - Length 00:00:00{Environment.NewLine}"
                 , res);
         }
     }
@@ -41,7 +41,7 @@ public class GeometryFinderTests
             var res = sb.ToString();
 
             Assert.Equal(
-                $"From 2024-03-19T18:04:11.9364664 (TDB) to 2024-03-19T18:04:11.9364664 (TDB) - Length 00:00:00{Environment.NewLine}"
+                $"From 2024-03-19T18:04:11.9364664 TDB to 2024-03-19T18:04:11.9364664 TDB - Length 00:00:00{Environment.NewLine}"
                 , res);
         }
     }
@@ -61,7 +61,7 @@ public class GeometryFinderTests
             var res = sb.ToString();
 
             Assert.Equal(
-                $"From 2001-12-14T20:10:15.4105881 (TDB) to 2001-12-14T21:35:49.1005208 (TDB) - Length 01:25:33.6899327{Environment.NewLine}"
+                $"From 2001-12-14T20:10:15.4105881 TDB to 2001-12-14T21:35:49.1005208 TDB - Length 01:25:33.6899327{Environment.NewLine}"
                 , res);
         }
     }
@@ -80,7 +80,7 @@ public class GeometryFinderTests
             var res = sb.ToString();
 
             Assert.Equal(
-                $"From 2021-06-10T00:00:00.0000000 (TDB) to 2021-06-10T00:29:05.3691494 (TDB) - Length 00:29:05.3691494{Environment.NewLine}From 2021-06-10T01:03:45.4719345 (TDB) to 2021-06-10T01:47:27.0000000 (TDB) - Length 00:43:41.5280655{Environment.NewLine}"
+                $"From 2021-06-10T00:00:00.0000000 TDB to 2021-06-10T00:29:05.3691494 TDB - Length 00:29:05.3691494{Environment.NewLine}From 2021-06-10T01:03:45.4719345 TDB to 2021-06-10T01:47:27.0000000 TDB - Length 00:43:41.5280655{Environment.NewLine}"
                 , res);
         }
     }
@@ -102,7 +102,7 @@ public class GeometryFinderTests
             var res = sb.ToString();
 
             Assert.Equal(
-                $"From 2021-05-17T12:00:00.0000000 (TDB) to 2021-05-17T19:36:13.5596725 (TDB) - Length 07:36:13.5596725{Environment.NewLine}From 2021-05-18T04:19:19.9753258 (TDB) to 2021-05-18T12:00:00.0000000 (TDB) - Length 07:40:40.0246742{Environment.NewLine}"
+                $"From 2021-05-17T12:00:00.0000000 TDB to 2021-05-17T19:36:13.5596725 TDB - Length 07:36:13.5596725{Environment.NewLine}From 2021-05-18T04:19:19.9753258 TDB to 2021-05-18T12:00:00.0000000 TDB - Length 07:40:40.0246742{Environment.NewLine}"
                 , res);
         }
     }

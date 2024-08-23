@@ -2,6 +2,7 @@ using System;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.SolarSystemObjects;
+using IO.Astrodynamics.TimeSystem;
 using Xunit;
 
 namespace IO.Astrodynamics.Tests.OrbitalParameters;
@@ -17,7 +18,7 @@ public class EquinoctialElementsTests
     public void Create()
     {
         CelestialBody earth = new CelestialBody( PlanetsAndMoons.EARTH);
-        var epoch = Time.UtcNow;
+        var epoch = new TimeSystem.Time(DateTime.UtcNow,TimeFrame.UTCFrame);
         EquinoctialElements equ = new EquinoctialElements(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, earth, epoch, Frames.Frame.ICRF);
         Assert.Equal(1.0, equ.P);
         Assert.Equal(2.0, equ.F);
@@ -35,7 +36,7 @@ public class EquinoctialElementsTests
     {
         CelestialBody earth = new CelestialBody( PlanetsAndMoons.EARTH);
         KeplerianElements ke = new KeplerianElements(6800.81178582, 0.00134, 51.71 * IO.Astrodynamics.Constants.Deg2Rad, 32.57 * IO.Astrodynamics.Constants.Deg2Rad,
-            105.64 * IO.Astrodynamics.Constants.Deg2Rad, 46.029 * IO.Astrodynamics.Constants.Deg2Rad, earth, Time.UtcNow, Frames.Frame.ICRF);
+            105.64 * IO.Astrodynamics.Constants.Deg2Rad, 46.029 * IO.Astrodynamics.Constants.Deg2Rad, earth, new TimeSystem.Time(DateTime.UtcNow,TimeFrame.UTCFrame), Frames.Frame.ICRF);
         EquinoctialElements equ = ke.ToEquinoctial();
         Assert.Equal(equ.SemiMajorAxis(), ke.A);
         Assert.Equal(equ.Eccentricity(), ke.E);
@@ -50,7 +51,7 @@ public class EquinoctialElementsTests
     {
         CelestialBody earth = new CelestialBody( PlanetsAndMoons.EARTH);
         KeplerianElements ke = new KeplerianElements(6800.81178582, 0.00134, 51.71 * IO.Astrodynamics.Constants.Deg2Rad, 32.57 * IO.Astrodynamics.Constants.Deg2Rad,
-            105.64 * IO.Astrodynamics.Constants.Deg2Rad, 46.029 * IO.Astrodynamics.Constants.Deg2Rad, earth, Time.UtcNow, Frames.Frame.ICRF);
+            105.64 * IO.Astrodynamics.Constants.Deg2Rad, 46.029 * IO.Astrodynamics.Constants.Deg2Rad, earth, new TimeSystem.Time(DateTime.UtcNow,TimeFrame.UTCFrame), Frames.Frame.ICRF);
         EquinoctialElements equ = ke.ToEquinoctial();
         EquinoctialElements equ2 = equ.ToEquinoctial();
         Assert.Equal(equ, equ2);

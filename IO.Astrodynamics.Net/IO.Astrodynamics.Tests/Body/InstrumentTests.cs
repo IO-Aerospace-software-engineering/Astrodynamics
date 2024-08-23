@@ -63,8 +63,8 @@ namespace IO.Astrodynamics.Tests.Body
         [Fact]
         public async Task FindWindowInFieldOfView()
         {
-            Time start = Time.CreateUTC(676555130.80).ToTDB();
-            Time end = start.AddSeconds(6448.0);
+            TimeSystem.Time start = TimeSystem.Time.CreateUTC(676555130.80).ToTDB();
+            TimeSystem.Time end = start.AddSeconds(6448.0);
 
             //Configure scenario
             Scenario scenario = new Scenario("Scenario_A", new Astrodynamics.Mission.Mission("mission06"),
@@ -88,29 +88,29 @@ namespace IO.Astrodynamics.Tests.Body
 
             //Execute scenario
             await scenario.SimulateAsync(root, false, false, TimeSpan.FromSeconds(1.0));
-            
+
             //Find windows when the earth is in field of view of camera 600 
             var res = spacecraft.Instruments.First().FindWindowsInFieldOfViewConstraint(
-                new Window(Time.CreateTDB(676555200.0), Time.CreateTDB(676561646.0)), spacecraft,
+                new Window(TimeSystem.Time.Create(676555200.0, TimeFrame.TDBFrame), TimeSystem.Time.Create(676561646.0, TimeFrame.TDBFrame)), spacecraft,
                 TestHelpers.EarthAtJ2000, TestHelpers.EarthAtJ2000.Frame,
                 ShapeType.Ellipsoid, Aberration.LT,
                 TimeSpan.FromSeconds(360.0)).ToArray();
 
             //Read results
             Assert.Equal(2, res.Count());
-            Assert.Equal(Time.Parse("2021-06-10T00:00:00.0000000"), res.ElementAt(0).StartDate,TimeSpan.FromMilliseconds(1));
-            Assert.Equal("2021-06-10T00:29:06.9433499 (TDB)", res.ElementAt(0).EndDate.ToFormattedString());
-            Assert.Equal("2021-06-10T01:03:53.6109902 (TDB)", res.ElementAt(1).StartDate.ToFormattedString());
-            Assert.Equal("2021-06-10T01:47:26.0000000 (TDB)", res.ElementAt(1).EndDate.ToFormattedString());
+            Assert.Equal(new TimeSystem.Time(DateTime.Parse("2021-06-10T00:00:00.0000000"), TimeFrame.TDBFrame), res.ElementAt(0).StartDate, TestHelpers.TimeComparer);
+            Assert.Equal("2021-06-10T00:29:06.9440325 TDB", res.ElementAt(0).EndDate.ToString());
+            Assert.Equal("2021-06-10T01:03:53.6116735 TDB", res.ElementAt(1).StartDate.ToString());
+            Assert.Equal("2021-06-10T01:47:26.0000000 TDB", res.ElementAt(1).EndDate.ToString());
 
             Assert.Throws<ArgumentNullException>(() => spacecraft.Instruments.First().FindWindowsInFieldOfViewConstraint(
-                new Window(Time.CreateTDB(676555200.0), Time.CreateTDB(676561647.0)), null,
+                new Window(TimeSystem.Time.Create(676555200.0, TimeFrame.TDBFrame), TimeSystem.Time.Create(676561647.0, TimeFrame.TDBFrame)), null,
                 TestHelpers.EarthAtJ2000, TestHelpers.EarthAtJ2000.Frame, ShapeType.Ellipsoid, Aberration.LT, TimeSpan.FromHours(1.0)));
             Assert.Throws<ArgumentNullException>(() => spacecraft.Instruments.First().FindWindowsInFieldOfViewConstraint(
-                new Window(Time.CreateTDB(676555200.0), Time.CreateTDB(676561647.0)), spacecraft,
+                new Window(TimeSystem.Time.Create(676555200.0, TimeFrame.TDBFrame), TimeSystem.Time.Create(676561647.0, TimeFrame.TDBFrame)), spacecraft,
                 null, TestHelpers.EarthAtJ2000.Frame, ShapeType.Ellipsoid, Aberration.LT, TimeSpan.FromHours(1.0)));
             Assert.Throws<ArgumentNullException>(() => spacecraft.Instruments.First().FindWindowsInFieldOfViewConstraint(
-                new Window(Time.CreateTDB(676555200.0), Time.CreateTDB(676561647.0)), spacecraft,
+                new Window(TimeSystem.Time.Create(676555200.0, TimeFrame.TDBFrame), TimeSystem.Time.Create(676561647.0, TimeFrame.TDBFrame)), spacecraft,
                 TestHelpers.EarthAtJ2000, null, ShapeType.Ellipsoid, Aberration.LT, TimeSpan.FromHours(1.0)));
         }
 
@@ -118,24 +118,28 @@ namespace IO.Astrodynamics.Tests.Body
         public async Task WriteFrame()
         {
             Spacecraft spc = new Spacecraft(-1001, "MySpacecraft", 1000.0, 10000.0, new Clock("clk1", 256), new StateVector(new Vector3(1.0, 2.0, 3.0), new Vector3(1.0, 2.0, 3.0),
-                TestHelpers.EarthAtJ2000, Time.MinValue, Frames.Frame.ICRF));
+                TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame), Frames.Frame.ICRF));
             spc.AddCircularInstrument(-1001600, "CAM600", "mod1", 1.5, Vector3.VectorZ, Vector3.VectorY, new Vector3(0.0, -System.Math.PI * 0.5, 0.0));
             await spc.Instruments.First().WriteFrameAsync(new FileInfo("instrumentFrame.tf"));
             TextReader tr = new StreamReader("instrumentFrame.tf");
             var res = await tr.ReadToEndAsync();
-            Assert.Equal($"KPL/FK{Environment.NewLine}\\begindata{Environment.NewLine}FRAME_MYSPACECRAFT_CAM600             = -1001600{Environment.NewLine}FRAME_-1001600_NAME        = 'MYSPACECRAFT_CAM600'{Environment.NewLine}FRAME_-1001600_CLASS       = 4{Environment.NewLine}FRAME_-1001600_CLASS_ID    = -1001600{Environment.NewLine}FRAME_-1001600_CENTER      = -1001{Environment.NewLine}TKFRAME_-1001600_SPEC      = 'ANGLES'{Environment.NewLine}TKFRAME_-1001600_RELATIVE  = 'MYSPACECRAFT_FRAME'{Environment.NewLine}TKFRAME_-1001600_ANGLES    = ( 0,-1.5707963267948966,0 ){Environment.NewLine}TKFRAME_-1001600_AXES      = ( 1,    2,   3   ){Environment.NewLine}TKFRAME_-1001600_UNITS     = 'RADIANS'{Environment.NewLine}NAIF_BODY_NAME              += 'MYSPACECRAFT_CAM600'{Environment.NewLine}NAIF_BODY_CODE              += -1001600{Environment.NewLine}\\begintext{Environment.NewLine}",res);
+            Assert.Equal(
+                $"KPL/FK{Environment.NewLine}\\begindata{Environment.NewLine}FRAME_MYSPACECRAFT_CAM600             = -1001600{Environment.NewLine}FRAME_-1001600_NAME        = 'MYSPACECRAFT_CAM600'{Environment.NewLine}FRAME_-1001600_CLASS       = 4{Environment.NewLine}FRAME_-1001600_CLASS_ID    = -1001600{Environment.NewLine}FRAME_-1001600_CENTER      = -1001{Environment.NewLine}TKFRAME_-1001600_SPEC      = 'ANGLES'{Environment.NewLine}TKFRAME_-1001600_RELATIVE  = 'MYSPACECRAFT_FRAME'{Environment.NewLine}TKFRAME_-1001600_ANGLES    = ( 0,-1.5707963267948966,0 ){Environment.NewLine}TKFRAME_-1001600_AXES      = ( 1,    2,   3   ){Environment.NewLine}TKFRAME_-1001600_UNITS     = 'RADIANS'{Environment.NewLine}NAIF_BODY_NAME              += 'MYSPACECRAFT_CAM600'{Environment.NewLine}NAIF_BODY_CODE              += -1001600{Environment.NewLine}\\begintext{Environment.NewLine}",
+                res);
         }
-        
+
         [Fact]
         public async Task WriteKernel()
         {
             Spacecraft spc = new Spacecraft(-1001, "MySpacecraft", 1000.0, 10000.0, new Clock("clk1", 256), new StateVector(new Vector3(1.0, 2.0, 3.0), new Vector3(1.0, 2.0, 3.0),
-                TestHelpers.EarthAtJ2000, Time.MinValue, Frames.Frame.ICRF));
+                TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame), Frames.Frame.ICRF));
             spc.AddCircularInstrument(-1001600, "CAM600", "mod1", 1.5, Vector3.VectorZ, Vector3.VectorY, new Vector3(0.0, -System.Math.PI * 0.5, 0.0));
             await spc.Instruments.First().WriteKernelAsync(new FileInfo("instrumentKernel.ti"));
             TextReader tr = new StreamReader("instrumentKernel.ti");
             var res = await tr.ReadToEndAsync();
-            Assert.Equal($"KPL/IK{Environment.NewLine}\\begindata{Environment.NewLine}INS-1001600_FOV_CLASS_SPEC       = 'ANGLES'{Environment.NewLine}INS-1001600_FOV_SHAPE            = 'CIRCLE'{Environment.NewLine}INS-1001600_FOV_FRAME            = 'MYSPACECRAFT_CAM600'{Environment.NewLine}INS-1001600_BORESIGHT            = ( 0, 0, 1 ){Environment.NewLine}INS-1001600_FOV_REF_VECTOR       = ( 0, 1, 0 ){Environment.NewLine}INS-1001600_FOV_REF_ANGLE        = 1.5{Environment.NewLine}INS-1001600_FOV_ANGLE_UNITS      = 'RADIANS'{Environment.NewLine}\\begintext{Environment.NewLine}",res);
+            Assert.Equal(
+                $"KPL/IK{Environment.NewLine}\\begindata{Environment.NewLine}INS-1001600_FOV_CLASS_SPEC       = 'ANGLES'{Environment.NewLine}INS-1001600_FOV_SHAPE            = 'CIRCLE'{Environment.NewLine}INS-1001600_FOV_FRAME            = 'MYSPACECRAFT_CAM600'{Environment.NewLine}INS-1001600_BORESIGHT            = ( 0, 0, 1 ){Environment.NewLine}INS-1001600_FOV_REF_VECTOR       = ( 0, 1, 0 ){Environment.NewLine}INS-1001600_FOV_REF_ANGLE        = 1.5{Environment.NewLine}INS-1001600_FOV_ANGLE_UNITS      = 'RADIANS'{Environment.NewLine}\\begintext{Environment.NewLine}",
+                res);
         }
     }
 }

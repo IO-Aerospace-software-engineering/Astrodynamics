@@ -12,39 +12,39 @@
 //
 //     private static Time[] LEAP_SECONDS =
 //     {
-//         new Time(1972, 1, 1),
-//         new Time(1972, 7, 1),
-//         new Time(1973, 1, 1),
-//         new Time(1974, 1, 1),
-//         new Time(1975, 1, 1),
-//         new Time(1976, 1, 1),
-//         new Time(1977, 1, 1),
-//         new Time(1978, 1, 1),
-//         new Time(1979, 1, 1),
-//         new Time(1980, 1, 1),
-//         new Time(1981, 7, 1),
-//         new Time(1982, 7, 1),
-//         new Time(1983, 7, 1),
-//         new Time(1985, 7, 1),
-//         new Time(1988, 1, 1),
-//         new Time(1990, 1, 1),
-//         new Time(1991, 1, 1),
-//         new Time(1992, 7, 1),
-//         new Time(1993, 7, 1),
-//         new Time(1994, 7, 1),
-//         new Time(1996, 1, 1),
-//         new Time(1997, 7, 1),
-//         new Time(1999, 1, 1),
-//         new Time(2006, 1, 1),
-//         new Time(2009, 1, 1),
-//         new Time(2012, 7, 1),
-//         new Time(2015, 7, 1),
-//         new Time(2017, 1, 1),
+//         new TimeSystem.Time(1972, 1, 1),
+//         new TimeSystem.Time(1972, 7, 1),
+//         new TimeSystem.Time(1973, 1, 1),
+//         new TimeSystem.Time(1974, 1, 1),
+//         new TimeSystem.Time(1975, 1, 1),
+//         new TimeSystem.Time(1976, 1, 1),
+//         new TimeSystem.Time(1977, 1, 1),
+//         new TimeSystem.Time(1978, 1, 1),
+//         new TimeSystem.Time(1979, 1, 1),
+//         new TimeSystem.Time(1980, 1, 1),
+//         new TimeSystem.Time(1981, 7, 1),
+//         new TimeSystem.Time(1982, 7, 1),
+//         new TimeSystem.Time(1983, 7, 1),
+//         new TimeSystem.Time(1985, 7, 1),
+//         new TimeSystem.Time(1988, 1, 1),
+//         new TimeSystem.Time(1990, 1, 1),
+//         new TimeSystem.Time(1991, 1, 1),
+//         new TimeSystem.Time(1992, 7, 1),
+//         new TimeSystem.Time(1993, 7, 1),
+//         new TimeSystem.Time(1994, 7, 1),
+//         new TimeSystem.Time(1996, 1, 1),
+//         new TimeSystem.Time(1997, 7, 1),
+//         new TimeSystem.Time(1999, 1, 1),
+//         new TimeSystem.Time(2006, 1, 1),
+//         new TimeSystem.Time(2009, 1, 1),
+//         new TimeSystem.Time(2012, 7, 1),
+//         new TimeSystem.Time(2015, 7, 1),
+//         new TimeSystem.Time(2017, 1, 1),
 //     };
 //
 //     private static IOrderedEnumerable<Time> LeapSeconds = LEAP_SECONDS.OrderBy(x => x);
 //
-//     // public static readonly Time J2000 = new Time(2000, 01, 01, 12, 0, 0, DateTimeKind.Unspecified);
+//     // public static readonly Time J2000 = new TimeSystem.Time(2000, 01, 01, 12, 0, 0, DateTimeKind.Unspecified);
 //
 //     
 //
@@ -172,7 +172,7 @@
 //     public static Time CreateTDBFromJD(double julianDate)
 //     {
 //         var sinceEpoch = julianDate - JULIAN_J2000;
-//         return new Time(2000, 1, 1, 12, 0, 0, DateTimeKind.Unspecified).AddDays(sinceEpoch);
+//         return new TimeSystem.Time(2000, 1, 1, 12, 0, 0, DateTimeKind.Unspecified).AddDays(sinceEpoch);
 //     }
 //
 //     /// <summary>
@@ -183,11 +183,11 @@
 //     public static Time CreateUTCFromJD(double julianDate)
 //     {
 //         var sinceEpoch = julianDate - JULIAN_J2000;
-//         return new Time(2000, 1, 1, 12, 0, 0, DateTimeKind.Utc).AddDays(sinceEpoch);
+//         return new TimeSystem.Time(2000, 1, 1, 12, 0, 0, DateTimeKind.Utc).AddDays(sinceEpoch);
 //     }
 //
-//     public static string ToFormattedString(this Time date)
+//     public static string ToString(this Time date)
 //     {
-//         return date.ToString("O") + (date.Kind == DateTimeKind.Unspecified ? " (TDB)" : string.Empty);
+//         return date.ToString("O") + (date.Kind == DateTimeKind.Unspecified ? " TDB" : string.Empty);
 //     }
 // }

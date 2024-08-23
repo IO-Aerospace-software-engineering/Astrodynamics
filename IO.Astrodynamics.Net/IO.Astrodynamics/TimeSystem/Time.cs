@@ -1,16 +1,16 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
 using IO.Astrodynamics.TimeSystem.Frames;
 
 namespace IO.Astrodynamics.TimeSystem;
 
 public readonly record struct Time : IComparable<Time>, IComparable
 {
-   
-
     public static readonly DateTime J2000 = new DateTime(2000, 01, 01, 12, 0, 0, DateTimeKind.Unspecified);
-    public static readonly Time J2000TDB = new Time(J2000, TimeFrame.TDBFrame);
-    public static readonly Time J2000UTC = new Time(J2000, TimeFrame.UTCFrame);
+    public static readonly Time J2000TDB = new TimeSystem.Time(J2000, TimeFrame.TDBFrame);
+    public static readonly Time J2000UTC = new TimeSystem.Time(J2000, TimeFrame.UTCFrame);
     public const double JULIAN_J1950 = 2433282.5;
     public const double JULIAN_J2000 = 2451545.0;
     public const double JULIAN_YEAR = 365.25;
@@ -28,9 +28,90 @@ public readonly record struct Time : IComparable<Time>, IComparable
         }
     }
 
+    public Time(int year, int month, int day, int hour = 0, int minute = 0, int second = 0, int millisecond = 0, int microseconds = 0, ITimeFrame frame = null) : this(
+        new DateTime(year, month, day, hour, minute, second, millisecond, microseconds), frame ?? TimeFrame.TDBFrame)
+    {
+    }
+
+    public Time(string timeString)
+    {
+        if (string.IsNullOrEmpty(timeString)) throw new ArgumentException("Value cannot be null or empty.", nameof(timeString));
+        var kind = timeString.TakeLast(3);
+        ITimeFrame frame = null;
+        switch (kind)
+        {
+            case "UTC":
+                frame = TimeFrame.UTCFrame;
+                break;
+            case "TDB":
+                frame = TimeFrame.TDBFrame;
+                break;
+            case "TDT":
+                frame = TimeFrame.TDTFrame;
+                break;
+            case "GPS":
+                frame = TimeFrame.GPSFrame;
+                break;
+            case "TAI":
+                frame = TimeFrame.TAIFrame;
+                break;
+            default:
+                frame = TimeFrame.TDBFrame;
+                break;
+        }
+
+        DateTime = DateTime.Parse(timeString.SkipLast(4).ToString() ?? throw new InvalidOperationException("invalid time string"), CultureInfo.InvariantCulture);
+        Frame = frame;
+    }
+
     public Time Add(in TimeSpan timeSpan)
     {
-        return new Time(DateTime.Add(timeSpan), Frame);
+        return new TimeSystem.Time(DateTime.Add(timeSpan), Frame);
+    }
+
+    public Time AddYears(int years)
+    {
+        return new Time(DateTime.AddYears(years), Frame);
+    }
+
+    public Time AddMonths(int months)
+    {
+        return new Time(DateTime.AddMonths(months), Frame);
+    }
+
+    public Time AddDays(double days)
+    {
+        return new Time(DateTime.AddDays(days), Frame);
+    }
+
+    public Time AddHours(double hours)
+    {
+        return new Time(DateTime.AddHours(hours), Frame);
+    }
+
+    public Time AddMinutes(double minutes)
+    {
+        return new Time(DateTime.AddMinutes(minutes), Frame);
+    }
+
+    public Time AddSeconds(double seconds)
+    {
+        return new Time(DateTime.AddSeconds(seconds), Frame);
+    }
+
+    public Time AddMilliseconds(double milliseconds)
+    {
+        return new Time(DateTime.AddMilliseconds(milliseconds), Frame);
+    }
+
+    public Time AddMicroseconds(double microseconds)
+    {
+        return new Time(DateTime.AddMicroseconds(microseconds), Frame);
+    }
+
+    public Time AddTicks(long ticks)
+    {
+        return new Time(DateTime.AddTicks(ticks), Frame);
     }
 
     public static Time operator +(Time left, TimeSpan right)
@@ -101,10 +182,30 @@ public readonly record struct Time : IComparable<Time>, IComparable
         if (frame is UTCTimeFrame utcFrame)
         {
             date = DateTime.SpecifyKind(date, DateTimeKind.Utc);
-            return new Time(date, TimeFrame.UTCFrame);
+            return new TimeSystem.Time(date, TimeFrame.UTCFrame);
         }
 
-        return new Time(date, frame);
+        return new TimeSystem.Time(date, frame);
+    }
+
+    /// <summary>
+    /// Create UTC from elapsed seconds from J2000
+    /// </summary>
+    /// <param name="secondsFromJ2000"></param>
+    /// <returns></returns>
+    public static Time CreateUTC(double secondsFromJ2000)
+    {
+        return Create(secondsFromJ2000, TimeFrame.UTCFrame);
+    }
+
+    /// <summary>
+    /// Create TDB from elapsed seconds from J2000
+    /// </summary>
+    /// <param name="secondsFromJ2000"></param>
+    /// <returns></returns>
+    public static Time CreateTDB(double secondsFromJ2000)
+    {
+        return Create(secondsFromJ2000, TimeFrame.TDBFrame);
     }
 
     /// <summary>
@@ -135,10 +236,11 @@ public readonly record struct Time : IComparable<Time>, IComparable
             date = DateTime.SpecifyKind(date, DateTimeKind.Utc);
         }
 
-        return new Time(date, frame);
+        return new TimeSystem.Time(date, frame);
     }
-    
+
     #region COMPARATOR
+
     public int CompareTo(Time other)
     {
         return DateTime.CompareTo(other.DateTime);
@@ -169,5 +271,6 @@ public readonly record struct Time : IComparable<Time>, IComparable
     {
         return left.CompareTo(right) >= 0;
     }
+
     #endregion
 }

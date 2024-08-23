@@ -17,7 +17,7 @@ public class StarTests
     [Fact]
     public void Create()
     {
-        var star = new Star(1, "star1", 1E+30, "spec", 2, 0.3792, new Equatorial(10, 20, Time.J2000), 4, 5, 6, 7, 8, 9, Time.J2000);
+        var star = new Star(1, "star1", 1E+30, "spec", 2, 0.3792, new Equatorial(10, 20, TimeSystem.Time.J2000TDB), 4, 5, 6, 7, 8, 9, TimeSystem.Time.J2000TDB);
         Assert.Equal(1, star.CatalogNumber);
         Assert.Equal(1000000001, star.NaifId);
         Assert.Equal("star1", star.Name);
@@ -25,8 +25,8 @@ public class StarTests
         Assert.Equal(6.674299999999999E+19, star.GM);
         Assert.Equal("spec", star.SpectralType);
         Assert.Equal(2, star.VisualMagnitude);
-        Assert.Equal(Time.J2000, star.Epoch);
-        Assert.Equal(new Equatorial(10, 20, Time.J2000), star.EquatorialCoordinatesAtEpoch);
+        Assert.Equal(TimeSystem.Time.J2000TDB, star.Epoch);
+        Assert.Equal(new Equatorial(10, 20, TimeSystem.Time.J2000TDB), star.EquatorialCoordinatesAtEpoch);
         Assert.Equal(4, star.DeclinationProperMotion);
         Assert.Equal(5, star.RightAscensionProperMotion);
         Assert.Equal(6, star.DeclinationSigma);
@@ -42,26 +42,26 @@ public class StarTests
     [Fact]
     public void GetEquatorialCoordinates()
     {
-        var star = new Star(1, "star1", 1E+30, "spec", 2, 0.3792, new Equatorial(10, 20, Time.J2000), 4, 5, 6, 7, 8, 9, Time.J2000);
-        var res = star.GetEquatorialCoordinates(new Time(2001, 1, 1, 12, 0, 0));
-        Assert.Equal(new Equatorial(1.4418429380022246, 6.160711018912988, 8.1373353929324900E+16, new Time(2001, 1, 1, 12, 0, 0)), res);
+        var star = new Star(1, "star1", 1E+30, "spec", 2, 0.3792, new Equatorial(10, 20, TimeSystem.Time.J2000TDB), 4, 5, 6, 7, 8, 9, TimeSystem.Time.J2000TDB);
+        var res = star.GetEquatorialCoordinates(new TimeSystem.Time(new DateTime(2001, 1, 1, 12, 0, 0),TimeFrame.TDBFrame));
+        Assert.Equal(new Equatorial(1.4418429380022246, 6.160711018912988, 8.1373353929324900E+16, new TimeSystem.Time(new DateTime(2001, 1, 1, 12, 0, 0),TimeFrame.TDBFrame)), res);
     }
 
     [Fact]
     public void GetEquatorialCoordinates2()
     {
         var star = new Star(1, "star1", 1E+30, "spec", 2, 0.3792,
-            new Equatorial(10 - (Astrodynamics.Constants.PI2 * 10), 20 - (Astrodynamics.Constants._2PI * 10), Time.J2000), 4, 5, 6, 7, 8,
-            9, Time.J2000);
-        var res = star.GetEquatorialCoordinates(new Time(2001, 1, 1, 12, 0, 0));
-        Assert.Equal(new Equatorial(-0.12895338879267282, 6.160711018912984, 81373353929324896, new Time(2001, 1, 1, 12, 0, 0)), res);
+            new Equatorial(10 - (Astrodynamics.Constants.PI2 * 10), 20 - (Astrodynamics.Constants._2PI * 10), TimeSystem.Time.J2000TDB), 4, 5, 6, 7, 8,
+            9, TimeSystem.Time.J2000TDB);
+        var res = star.GetEquatorialCoordinates(new TimeSystem.Time(new DateTime(2001, 1, 1, 12, 0, 0),TimeFrame.TDBFrame));
+        Assert.Equal(new Equatorial(-0.12895338879267282, 6.160711018912984, 81373353929324896, new TimeSystem.Time(new DateTime(2001, 1, 1, 12, 0, 0),TimeFrame.TDBFrame)), res);
     }
 
     [Fact]
     public void GetDeclinationSigma()
     {
-        var star = new Star(1, "star1", 1E+30, "spec", 2, 0.3792, new Equatorial(10, 20, Time.J2000), 4, 5, 6, 7, 8, 9, Time.J2000);
-        var res = star.GetDeclinationSigma(new Time(2001, 1, 1, 12, 0, 0));
+        var star = new Star(1, "star1", 1E+30, "spec", 2, 0.3792, new Equatorial(10, 20, TimeSystem.Time.J2000TDB), 4, 5, 6, 7, 8, 9, TimeSystem.Time.J2000TDB);
+        var res = star.GetDeclinationSigma(new TimeSystem.Time(new DateTime(2001, 1, 1, 12, 0, 0),TimeFrame.TDBFrame));
         Assert.Equal(0.5883685739286051, res);
     }
 
@@ -69,15 +69,15 @@ public class StarTests
     [Fact]
     public void GetRightAscensionSigma()
     {
-        var star = new Star(1, "star1", 1E+30, "spec", 2, 0.3792, new Equatorial(10, 20, Time.J2000), 4, 5, 6, 7, 8, 9, Time.J2000);
-        var res = star.GetRightAscensionSigma(new Time(2001, 1, 1, 12, 0, 0));
+        var star = new Star(1, "star1", 1E+30, "spec", 2, 0.3792, new Equatorial(10, 20, TimeSystem.Time.J2000TDB), 4, 5, 6, 7, 8, 9, TimeSystem.Time.J2000TDB);
+        var res = star.GetRightAscensionSigma(new TimeSystem.Time(new DateTime(2001, 1, 1, 12, 0, 0),TimeFrame.TDBFrame));
         Assert.Equal(5.1331621997619905, res);
     }
 
     [Fact]
     public async Task Propagate()
     {
-        var epoch = new Time(2001, 1, 1);
+        var epoch = new TimeSystem.Time(new DateTime(2001, 1, 1), TimeFrame.TDBFrame);
         var observer = new Barycenter(0);
         var star = new Star(1, "star1", 1E+30, "spec", 2, 0.3792, new Equatorial(1, 1, epoch), 0.1, 0.1, 0, 0, 0, 0, epoch);
         await star.PropagateAsync(new Window(epoch, epoch + TimeSpan.FromDays(365 * 4)), TimeSpan.FromDays(365), Constants.OutputPath);

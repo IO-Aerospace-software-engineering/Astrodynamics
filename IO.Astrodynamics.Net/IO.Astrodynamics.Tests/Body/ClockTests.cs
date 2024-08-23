@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
+using IO.Astrodynamics.TimeSystem;
 using Xunit;
 
 namespace IO.Astrodynamics.Tests.Body
@@ -28,7 +29,7 @@ namespace IO.Astrodynamics.Tests.Body
             Clock clock = new Clock("clk", 256);
             Spacecraft spc = new Spacecraft(-1001, "MySpacecraft", 1000.0, 10000.0, clock,
                 new StateVector(new Vector3(1.0, 2.0, 3.0), new Vector3(1.0, 2.0, 3.0), TestHelpers.EarthAtJ2000,
-                    Time.MinValue, Frames.Frame.ICRF));
+                    new TimeSystem.Time(DateTime.MinValue,TimeFrame.TDBFrame), Frames.Frame.ICRF));
             await clock.WriteAsync(new FileInfo("clock.tsc"));
             TextReader tr = new StreamReader("clock.tsc");
             var res = await tr.ReadToEndAsync();

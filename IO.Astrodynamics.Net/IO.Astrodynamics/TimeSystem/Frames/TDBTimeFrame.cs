@@ -17,7 +17,7 @@ public class TDBTimeFrame : TimeFrame
         var tempTAI = time.Add(TimeSpan.FromSeconds(-32.184));
         var g = this.G(time.Centuries());
         var epoch = tempTAI.DateTime.Add(TimeSpan.FromSeconds(0.001658 * System.Math.Sin(g + t3 * System.Math.Sin(g))).Negate());
-        return new Time(epoch, TAIFrame);
+        return new TimeSystem.Time(epoch, TAIFrame);
     }
 
     public override Time ConvertFromTAI(Time time)
@@ -25,7 +25,7 @@ public class TDBTimeFrame : TimeFrame
         var tdt = time.ToTDT();
         var g = this.G(tdt.Centuries());
         var epoch = tdt.DateTime.Add(TimeSpan.FromSeconds(0.001658 * System.Math.Sin(g + t3 * System.Math.Sin(g))));
-        return new Time(epoch, TDBFrame);
+        return new TimeSystem.Time(epoch, TDBFrame);
     }
 
     private double G(double t)

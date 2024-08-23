@@ -43,8 +43,8 @@ public class APITest
     public void ExecuteLaunchScenario()
     {
         //Load solar system kernels
-        var start = Time.Parse("2021-03-02 00:00:00.000000").ToTDB();
-        var end = Time.Parse("2021-03-05 00:00:00.000000").ToTDB();
+        var start = new TimeSystem.Time("2021-03-02 00:00:00.000000").ToTDB();
+        var end = new TimeSystem.Time("2021-03-05 00:00:00.000000").ToTDB();
 
         Window window = new Window(start, end);
 
@@ -68,14 +68,14 @@ public class APITest
         //Read results
         Assert.Equal(3, res.Count());
         Assert.Equal(
-            new Window(Time.Parse("2021-03-02 23:12:54.4214382", CultureInfo.InvariantCulture).ToTDB(),
-                Time.Parse("2021-03-02 23:12:54.4214382", CultureInfo.InvariantCulture).ToTDB()), res.ElementAt(0).Window);
+            new Window(new TimeSystem.Time("2021-03-02 23:12:54.4214382").ToTDB(),
+                new TimeSystem.Time("2021-03-02 23:12:54.4214382").ToTDB()), res.ElementAt(0).Window);
         Assert.Equal(
-            new Window(Time.Parse("2021-03-03 23:08:58.2431654", CultureInfo.InvariantCulture).ToTDB(),
-                Time.Parse("2021-03-03 23:08:58.2431654", CultureInfo.InvariantCulture).ToTDB()), res.ElementAt(1).Window);
+            new Window(new TimeSystem.Time("2021-03-03 23:08:58.2431654").ToTDB(),
+                new TimeSystem.Time("2021-03-03 23:08:58.2431654").ToTDB()), res.ElementAt(1).Window);
         Assert.Equal(
-            new Window(Time.Parse("2021-03-04 23:05:01.7235513", CultureInfo.InvariantCulture).ToTDB(),
-                Time.Parse("2021-03-04 23:05:01.7235513", CultureInfo.InvariantCulture).ToTDB()), res.ElementAt(2).Window);
+            new Window(new TimeSystem.Time("2021-03-04 23:05:01.7235513").ToTDB(),
+                new TimeSystem.Time("2021-03-04 23:05:01.7235513").ToTDB()), res.ElementAt(2).Window);
         Assert.Equal(47.00618445347153, res.ElementAt(0).InertialAzimuth * IO.Astrodynamics.Constants.Rad2Deg, 9);
         Assert.Equal(45.125545665662884, res.ElementAt(0).NonInertialAzimuth * IO.Astrodynamics.Constants.Rad2Deg, 9);
         Assert.Equal(8794.33812148836, res.ElementAt(0).InertialInsertionVelocity, 9);
@@ -87,24 +87,24 @@ public class APITest
     {
         //Find time windows when the moon will be 400000 km away from the Earth
         var res = API.Instance.FindWindowsOnDistanceConstraint(
-            new Window(Time.CreateTDB(220881665.18391809),
-                Time.CreateTDB(228657665.18565452)),
+            new Window(TimeSystem.Time.CreateTDB(220881665.18391809),
+                TimeSystem.Time.CreateTDB(228657665.18565452)),
             TestHelpers.EarthAtJ2000, TestHelpers.MoonAtJ2000, RelationnalOperator.Greater, 400000000, Aberration.None,
             TimeSpan.FromSeconds(86400.0));
         var windows = res as Window[] ?? res.ToArray();
         Assert.Equal(4, windows.Count());
-        Assert.Equal("2007-01-08T00:11:07.6285910 (TDB)", windows.ElementAt(0).StartDate.ToFormattedString());
-        Assert.Equal("2007-01-13T06:37:47.9481440 (TDB)", windows.ElementAt(0).EndDate.ToFormattedString());
-        Assert.Equal("2007-03-29T22:53:58.1518963 (TDB)", windows.ElementAt(3).StartDate.ToFormattedString());
-        Assert.Equal("2007-04-01T00:01:05.1856544 (TDB)", windows.ElementAt(3).EndDate.ToFormattedString());
+        Assert.Equal("2007-01-08T00:11:07.6285910 TDB", windows.ElementAt(0).StartDate.ToString());
+        Assert.Equal("2007-01-13T06:37:47.9481440 TDB", windows.ElementAt(0).EndDate.ToString());
+        Assert.Equal("2007-03-29T22:53:58.1518963 TDB", windows.ElementAt(3).StartDate.ToString());
+        Assert.Equal("2007-04-01T00:01:05.1856544 TDB", windows.ElementAt(3).EndDate.ToString());
         Assert.Throws<ArgumentNullException>(() => API.Instance.FindWindowsOnDistanceConstraint(new Window(
-                Time.CreateTDB(220881665.18391809),
-                Time.CreateTDB(228657665.18565452)), null, TestHelpers.MoonAtJ2000,
+                TimeSystem.Time.CreateTDB(220881665.18391809),
+                TimeSystem.Time.CreateTDB(228657665.18565452)), null, TestHelpers.MoonAtJ2000,
             RelationnalOperator.Greater, 400000000, Aberration.None,
             TimeSpan.FromSeconds(86400.0)));
         Assert.Throws<ArgumentNullException>(() => API.Instance.FindWindowsOnDistanceConstraint(new Window(
-                Time.CreateTDB(220881665.18391809),
-                Time.CreateTDB(228657665.18565452)), TestHelpers.EarthAtJ2000, null,
+                TimeSystem.Time.CreateTDB(220881665.18391809),
+                TimeSystem.Time.CreateTDB(228657665.18565452)), TestHelpers.EarthAtJ2000, null,
             RelationnalOperator.Greater, 400000000, Aberration.None,
             TimeSpan.FromSeconds(86400.0)));
     }
@@ -114,27 +114,27 @@ public class APITest
     {
         //Find time windows when the Sun will be occulted by the moon
         var res = API.Instance.FindWindowsOnOccultationConstraint(
-            new Window(Time.CreateTDB(61473664.183390938),
-                Time.CreateTDB(61646464.183445148)), TestHelpers.EarthAtJ2000, TestHelpers.Sun,
+            new Window(TimeSystem.Time.CreateTDB(61473664.183390938),
+                TimeSystem.Time.CreateTDB(61646464.183445148)), TestHelpers.EarthAtJ2000, TestHelpers.Sun,
             ShapeType.Ellipsoid, TestHelpers.MoonAtJ2000, ShapeType.Ellipsoid, OccultationType.Any, Aberration.LT,
             TimeSpan.FromSeconds(3600.0));
         var windows = res as Window[] ?? res.ToArray();
         Assert.Single(windows);
-        Assert.Equal("2001-12-14T20:10:15.4105881 (TDB)", windows[0].StartDate.ToFormattedString());
-        Assert.Equal("2001-12-14T21:35:49.1005208 (TDB)", windows[0].EndDate.ToFormattedString());
+        Assert.Equal("2001-12-14T20:10:15.4105881 TDB", windows[0].StartDate.ToString());
+        Assert.Equal("2001-12-14T21:35:49.1005208 TDB", windows[0].EndDate.ToString());
         Assert.Throws<ArgumentNullException>(() => API.Instance.FindWindowsOnOccultationConstraint(
-            new Window(Time.CreateTDB(61473664.183390938),
-                Time.CreateTDB(61646464.183445148)), null, TestHelpers.Sun,
+            new Window(TimeSystem.Time.CreateTDB(61473664.183390938),
+                TimeSystem.Time.CreateTDB(61646464.183445148)), null, TestHelpers.Sun,
             ShapeType.Ellipsoid, TestHelpers.MoonAtJ2000, ShapeType.Ellipsoid, OccultationType.Any, Aberration.LT,
             TimeSpan.FromSeconds(3600.0)));
         Assert.Throws<ArgumentNullException>(() => API.Instance.FindWindowsOnOccultationConstraint(
-            new Window(Time.CreateTDB(61473664.183390938),
-                Time.CreateTDB(61646464.183445148)), TestHelpers.EarthAtJ2000, null,
+            new Window(TimeSystem.Time.CreateTDB(61473664.183390938),
+                TimeSystem.Time.CreateTDB(61646464.183445148)), TestHelpers.EarthAtJ2000, null,
             ShapeType.Ellipsoid, TestHelpers.MoonAtJ2000, ShapeType.Ellipsoid, OccultationType.Any, Aberration.LT,
             TimeSpan.FromSeconds(3600.0)));
         Assert.Throws<ArgumentNullException>(() => API.Instance.FindWindowsOnOccultationConstraint(
-            new Window(Time.CreateTDB(61473664.183390938),
-                Time.CreateTDB(61646464.183445148)), TestHelpers.EarthAtJ2000, TestHelpers.Sun,
+            new Window(TimeSystem.Time.CreateTDB(61473664.183390938),
+                TimeSystem.Time.CreateTDB(61646464.183445148)), TestHelpers.EarthAtJ2000, TestHelpers.Sun,
             ShapeType.Ellipsoid, null, ShapeType.Ellipsoid, OccultationType.Any, Aberration.LT,
             TimeSpan.FromSeconds(3600.0)));
     }
@@ -147,25 +147,25 @@ public class APITest
                 35.2471635434595 * IO.Astrodynamics.Constants.Deg2Rad, 0.107));
         //Find time windows when the moon will be above the horizon relative to Deep Space Station 13
         var res = API.Instance.FindWindowsOnCoordinateConstraint(
-            new Window(Time.CreateTDB(730036800.0), Time.CreateTDB(730123200)), site,
+            new Window(TimeSystem.Time.CreateTDB(730036800.0), TimeSystem.Time.CreateTDB(730123200)), site,
             TestHelpers.MoonAtJ2000, site.Frame, CoordinateSystem.Latitudinal, Coordinate.Latitude,
             RelationnalOperator.Greater,
             0.0, 0.0, Aberration.None, TimeSpan.FromSeconds(60.0));
 
         var windows = res as Window[] ?? res.ToArray();
         Assert.Single(windows);
-        Assert.Equal("2023-02-19T14:33:08.9180986 (TDB)", windows[0].StartDate.ToFormattedString());
-        Assert.Equal("2023-02-20T00:00:00.0000000 (TDB)", windows[0].EndDate.ToFormattedString());
+        Assert.Equal("2023-02-19T14:33:08.9180986 TDB", windows[0].StartDate.ToString());
+        Assert.Equal("2023-02-20T00:00:00.0000000 TDB", windows[0].EndDate.ToString());
         Assert.Throws<ArgumentNullException>(() => API.Instance.FindWindowsOnCoordinateConstraint(
-            new Window(Time.CreateTDB(730036800.0), Time.CreateTDB(730123200)), null,
+            new Window(TimeSystem.Time.CreateTDB(730036800.0), TimeSystem.Time.CreateTDB(730123200)), null,
             TestHelpers.MoonAtJ2000, site.Frame, CoordinateSystem.Latitudinal, Coordinate.Latitude,
             RelationnalOperator.Greater, 0.0, 0.0, Aberration.None, TimeSpan.FromSeconds(60.0)));
         Assert.Throws<ArgumentNullException>(() => API.Instance.FindWindowsOnCoordinateConstraint(
-            new Window(Time.CreateTDB(730036800.0), Time.CreateTDB(730123200)), site,
+            new Window(TimeSystem.Time.CreateTDB(730036800.0), TimeSystem.Time.CreateTDB(730123200)), site,
             null, site.Frame, CoordinateSystem.Latitudinal, Coordinate.Latitude,
             RelationnalOperator.Greater, 0.0, 0.0, Aberration.None, TimeSpan.FromSeconds(60.0)));
         Assert.Throws<ArgumentNullException>(() => API.Instance.FindWindowsOnCoordinateConstraint(
-            new Window(Time.CreateTDB(730036800.0), Time.CreateTDB(730123200)), site,
+            new Window(TimeSystem.Time.CreateTDB(730036800.0), TimeSystem.Time.CreateTDB(730123200)), site,
             TestHelpers.MoonAtJ2000, null, CoordinateSystem.Latitudinal, Coordinate.Latitude,
             RelationnalOperator.Greater, 0.0, 0.0, Aberration.None, TimeSpan.FromSeconds(60.0)));
     }
@@ -175,7 +175,7 @@ public class APITest
     {
         //Find time windows when the planetodetic point is illuminated by the sun (Official twilight 0.8° bellow horizon)
         var res = API.Instance.FindWindowsOnIlluminationConstraint(
-            new Window(Time.CreateTDB(674524800), Time.CreateTDB(674611200)),
+            new Window(TimeSystem.Time.CreateTDB(674524800), TimeSystem.Time.CreateTDB(674611200)),
             TestHelpers.Sun, TestHelpers.EarthAtJ2000, new Frames.Frame("ITRF93"),
             new Planetodetic(2.2 * IO.Astrodynamics.Constants.Deg2Rad, 48.0 * IO.Astrodynamics.Constants.Deg2Rad, 0.0),
             IlluminationAngle.Incidence, RelationnalOperator.Lower,
@@ -183,12 +183,12 @@ public class APITest
             TimeSpan.FromHours(4.5), TestHelpers.Sun);
         var windows = res as Window[] ?? res.ToArray();
         Assert.Equal(2, windows.Count());
-        Assert.Equal("2021-05-17T12:00:00.0000000 (TDB)", windows[0].StartDate.ToFormattedString());
-        Assert.Equal("2021-05-17T19:35:24.9088348 (TDB)", windows[0].EndDate.ToFormattedString());
-        Assert.Equal("2021-05-18T04:18:32.4437509 (TDB)", windows[1].StartDate.ToFormattedString());
-        Assert.Equal("2021-05-18T12:00:00.0000000 (TDB)", windows[1].EndDate.ToFormattedString());
+        Assert.Equal("2021-05-17T12:00:00.0000000 TDB", windows[0].StartDate.ToString());
+        Assert.Equal("2021-05-17T19:35:24.9088348 TDB", windows[0].EndDate.ToString());
+        Assert.Equal("2021-05-18T04:18:32.4437509 TDB", windows[1].StartDate.ToString());
+        Assert.Equal("2021-05-18T12:00:00.0000000 TDB", windows[1].EndDate.ToString());
         Assert.Throws<ArgumentNullException>(() => API.Instance.FindWindowsOnIlluminationConstraint(
-            new Window(Time.CreateTDB(674524800), Time.CreateTDB(674611200)),
+            new Window(TimeSystem.Time.CreateTDB(674524800), TimeSystem.Time.CreateTDB(674611200)),
             null, TestHelpers.EarthAtJ2000, new Frames.Frame("ITRF93"),
             new Planetodetic(2.2 * IO.Astrodynamics.Constants.Deg2Rad, 48.0 * IO.Astrodynamics.Constants.Deg2Rad, 0.0),
             IlluminationAngle.Incidence, RelationnalOperator.Lower,
@@ -196,7 +196,7 @@ public class APITest
             TimeSpan.FromHours(4.5), TestHelpers.Sun));
 
         Assert.Throws<ArgumentNullException>(() => API.Instance.FindWindowsOnIlluminationConstraint(
-            new Window(Time.CreateTDB(674524800), Time.CreateTDB(674611200)),
+            new Window(TimeSystem.Time.CreateTDB(674524800), TimeSystem.Time.CreateTDB(674611200)),
             TestHelpers.Sun, null, new Frames.Frame("ITRF93"),
             new Planetodetic(2.2 * IO.Astrodynamics.Constants.Deg2Rad, 48.0 * IO.Astrodynamics.Constants.Deg2Rad, 0.0),
             IlluminationAngle.Incidence, RelationnalOperator.Lower,
@@ -204,7 +204,7 @@ public class APITest
             TimeSpan.FromHours(4.5), TestHelpers.Sun));
 
         Assert.Throws<ArgumentNullException>(() => API.Instance.FindWindowsOnIlluminationConstraint(
-            new Window(Time.CreateTDB(674524800), Time.CreateTDB(674611200)),
+            new Window(TimeSystem.Time.CreateTDB(674524800), TimeSystem.Time.CreateTDB(674611200)),
             TestHelpers.Sun, TestHelpers.EarthAtJ2000, null,
             new Planetodetic(2.2 * IO.Astrodynamics.Constants.Deg2Rad, 48.0 * IO.Astrodynamics.Constants.Deg2Rad, 0.0),
             IlluminationAngle.Incidence, RelationnalOperator.Lower,
@@ -212,7 +212,7 @@ public class APITest
             TimeSpan.FromHours(4.5), TestHelpers.Sun));
 
         Assert.Throws<ArgumentNullException>(() => API.Instance.FindWindowsOnIlluminationConstraint(
-            new Window(Time.CreateTDB(674524800), Time.CreateTDB(674611200)),
+            new Window(TimeSystem.Time.CreateTDB(674524800), TimeSystem.Time.CreateTDB(674611200)),
             TestHelpers.Sun, TestHelpers.EarthAtJ2000, new Frames.Frame("ITRF93"),
             new Planetodetic(2.2 * IO.Astrodynamics.Constants.Deg2Rad, 48.0 * IO.Astrodynamics.Constants.Deg2Rad, 0.0),
             IlluminationAngle.Incidence, RelationnalOperator.Lower,
@@ -223,7 +223,7 @@ public class APITest
     [Fact]
     public void ReadEphemeris()
     {
-        var searchWindow = new Window(Time.CreateTDB(0.0), Time.CreateTDB(100.0));
+        var searchWindow = new Window(TimeSystem.Time.CreateTDB(0.0), TimeSystem.Time.CreateTDB(100.0));
         var res = API.Instance.ReadEphemeris(searchWindow, TestHelpers.EarthAtJ2000, TestHelpers.MoonAtJ2000,
             Frames.Frame.ICRF, Aberration.LT, TimeSpan.FromSeconds(10.0)).Select(x => x.ToStateVector());
 
@@ -236,7 +236,7 @@ public class APITest
         Assert.Equal(-301.32283209101018, stateVectors[0].Velocity.Z);
         Assert.Equal(PlanetsAndMoons.EARTH.NaifId, stateVectors[0].Observer.NaifId);
         Assert.Equal(Frames.Frame.ICRF, stateVectors[0].Frame);
-        Assert.Equal(0.0, stateVectors[0].Epoch.SecondsFromJ2000TDB());
+        Assert.Equal(0.0, stateVectors[0].Epoch.TimeSpanFromJ2000().TotalSeconds);
 
         Assert.Throws<ArgumentNullException>(() => API.Instance.ReadEphemeris(searchWindow, null,
             TestHelpers.MoonAtJ2000,
@@ -261,7 +261,7 @@ public class APITest
     [Fact]
     public void ReadLongEphemeris()
     {
-        var searchWindow = new Window(Time.CreateTDB(0.0), Time.CreateTDB(15000.0));
+        var searchWindow = new Window(TimeSystem.Time.CreateTDB(0.0), TimeSystem.Time.CreateTDB(15000.0));
         var res = API.Instance.ReadEphemeris(searchWindow, TestHelpers.EarthAtJ2000, TestHelpers.MoonAtJ2000,
             Frames.Frame.ICRF, Aberration.LT, TimeSpan.FromSeconds(1.0)).Select(x => x.ToStateVector());
 
@@ -276,14 +276,14 @@ public class APITest
         Assert.Equal(-301.32283209101018, stateVectors[0].Velocity.Z);
         Assert.Equal(PlanetsAndMoons.EARTH.NaifId, stateVectors[0].Observer.NaifId);
         Assert.Equal(Frames.Frame.ICRF, stateVectors[0].Frame);
-        Assert.Equal(0.0, stateVectors[0].Epoch.SecondsFromJ2000TDB());
+        Assert.Equal(0.0, stateVectors[0].Epoch.TimeSpanFromJ2000().TotalSeconds);
     }
 
     [Fact]
     public async Task ReadOrientation()
     {
-        Time start = Time.CreateTDB(662778000.0);
-        Time end = start.AddSeconds(60.0);
+        TimeSystem.Time start = TimeSystem.Time.CreateTDB(662778000.0);
+        TimeSystem.Time end = start.AddSeconds(60.0);
         Window window = new Window(start, end);
 
         //Configure scenario
@@ -308,7 +308,7 @@ public class APITest
         spacecraft.AddPayload(new Payload("payload1", 50.0, "pay01"));
         spacecraft.AddCircularInstrument(-1794600, "CAM600", "mod1", 1.5, Vector3.VectorZ, Vector3.VectorX, Vector3.VectorX);
 
-        spacecraft.SetStandbyManeuver(new NadirAttitude(TestHelpers.EarthAtJ2000, Time.MinValue, TimeSpan.Zero,
+        spacecraft.SetStandbyManeuver(new NadirAttitude(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame), TimeSpan.Zero,
             spacecraft.Engines.First()));
 
         scenario.AddSpacecraft(spacecraft);
@@ -350,14 +350,14 @@ public class APITest
         var spacecraft = new Spacecraft(-135, "Spc1", 3000.0, 10000.0, clock, new StateVector(new Vector3(6800, 0, 0),
             new Vector3(0, 8.0, 0),
             TestHelpers.EarthAtJ2000,
-            Time.CreateTDB(0.0), Frames.Frame.ICRF));
+            TimeSystem.Time.CreateTDB(0.0), Frames.Frame.ICRF));
 
         var sv = new StateVector[size];
         for (int i = 0; i < size; ++i)
         {
             sv[i] = new StateVector(new Vector3(6800 + i, i, i), new Vector3(i, 8.0 + i * 0.001, i),
                 TestHelpers.EarthAtJ2000,
-                Time.CreateTDB(i), Frames.Frame.ICRF);
+                TimeSystem.Time.CreateTDB(i), Frames.Frame.ICRF);
         }
 
         //Write ephemeris file
@@ -383,7 +383,7 @@ public class APITest
             Assert.Equal(i, stateVectors[i].Velocity.X, 12);
             Assert.Equal(8 + i * 0.001, stateVectors[i].Velocity.Y, 12);
             Assert.Equal(i, stateVectors[i].Velocity.Z, 12);
-            Assert.Equal(i, stateVectors[i].Epoch.SecondsFromJ2000TDB());
+            Assert.Equal(i, stateVectors[i].Epoch.TimeSpanFromJ2000().TotalSeconds);
             Assert.Equal(PlanetsAndMoons.EARTH.NaifId, stateVectors[i].Observer.NaifId);
             Assert.Equal(Frames.Frame.ICRF, stateVectors[i].Frame);
         }
@@ -398,12 +398,12 @@ public class APITest
         var spacecraft = new Spacecraft(-175, "Spc1", 3000.0, 10000.0, clock, new StateVector(new Vector3(6800, 0, 0),
             new Vector3(0, 8.0, 0),
             TestHelpers.EarthAtJ2000,
-            Time.CreateTDB(0.0), Frames.Frame.ICRF));
+            TimeSystem.Time.CreateTDB(0.0), Frames.Frame.ICRF));
 
         var so = new StateOrientation[size];
         for (int i = 0; i < size; ++i)
         {
-            so[i] = new StateOrientation(new Quaternion(i, 1 + i * 0.1, 1 + i * 0.2, 1 + i * 0.3), Vector3.Zero, Time.CreateTDB(i), Frames.Frame.ICRF);
+            so[i] = new StateOrientation(new Quaternion(i, 1 + i * 0.1, 1 + i * 0.2, 1 + i * 0.3), Vector3.Zero, TimeSystem.Time.CreateTDB(i), Frames.Frame.ICRF);
         }
 
         var clockFile = new FileInfo("OrientationClockTest.tsc");
@@ -420,26 +420,26 @@ public class APITest
         //Load ephemeris file
         API.Instance.LoadKernels(file);
 
-        var window = new Window(Time.J2000, Time.J2000.AddSeconds(9.0));
+        var window = new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddSeconds(9.0));
         var stateOrientation = API.Instance.ReadOrientation(window, spacecraft, TimeSpan.Zero, Frames.Frame.ICRF, TimeSpan.FromSeconds(1.0))
             .Select(x => x).ToArray();
 
         Assert.Equal(0.0, stateOrientation[0].Rotation.W, 9);
         Assert.Equal(new Vector3(-0.57735026918962573, -0.57735026918962573, -0.57735026918962573), stateOrientation[0].Rotation.VectorPart);
         Assert.Equal(Vector3.Zero, stateOrientation[0].AngularVelocity);
-        Assert.Equal(0.0, stateOrientation[0].Epoch.SecondsFromJ2000TDB());
+        Assert.Equal(0.0, stateOrientation[0].Epoch.TimeSpanFromJ2000().TotalSeconds);
         Assert.Equal(Frames.Frame.ICRF, stateOrientation[0].ReferenceFrame);
 
         Assert.Equal(0.78386180166962049, stateOrientation[4].Rotation.W, 9);
         Assert.Equal(new Vector3(0.27435163058436718, 0.35273781075132921, 0.43112399091829129), stateOrientation[4].Rotation.VectorPart);
         Assert.Equal(Vector3.Zero, stateOrientation[4].AngularVelocity);
-        Assert.Equal(4.0, stateOrientation[4].Epoch.SecondsFromJ2000TDB());
+        Assert.Equal(4.0, stateOrientation[4].Epoch.TimeSpanFromJ2000().TotalSeconds);
         Assert.Equal(Frames.Frame.ICRF, stateOrientation[4].ReferenceFrame);
 
         Assert.Equal(0.87358057364767872, stateOrientation[9].Rotation.W, 9);
         Assert.Equal(new Vector3(0.18442256554784328, 0.27178062291261118, 0.359138680277379), stateOrientation[9].Rotation.VectorPart);
         Assert.Equal(Vector3.Zero, stateOrientation[9].AngularVelocity);
-        Assert.Equal(9.0, stateOrientation[9].Epoch.SecondsFromJ2000TDB());
+        Assert.Equal(9.0, stateOrientation[9].Epoch.TimeSpanFromJ2000().TotalSeconds);
         Assert.Equal(Frames.Frame.ICRF, stateOrientation[9].ReferenceFrame);
     }
 
@@ -488,7 +488,7 @@ public class APITest
     {
         //Get the quaternion to transform
         var res = API.Instance.TransformFrame(Frames.Frame.ICRF, new Frames.Frame(PlanetsAndMoons.EARTH.Frame),
-            Time.J2000);
+            TimeSystem.Time.J2000TDB);
         Assert.Equal(0.76713121189662548, res.Rotation.W);
         Assert.Equal(-1.8618846012434252e-05, res.Rotation.VectorPart.X);
         Assert.Equal(8.468919252183845e-07, res.Rotation.VectorPart.Y);
@@ -503,9 +503,9 @@ public class APITest
     {
         //Get the quaternion to transform
         Assert.Throws<ArgumentNullException>(() =>
-            API.Instance.TransformFrame(Frames.Frame.ICRF, null, Time.J2000));
+            API.Instance.TransformFrame(Frames.Frame.ICRF, null, TimeSystem.Time.J2000TDB));
         Assert.Throws<ArgumentNullException>(() =>
-            API.Instance.TransformFrame(null, new Frames.Frame(PlanetsAndMoons.EARTH.Frame), Time.J2000));
+            API.Instance.TransformFrame(null, new Frames.Frame(PlanetsAndMoons.EARTH.Frame), TimeSystem.Time.J2000TDB));
     }
 
     [Fact]

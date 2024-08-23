@@ -36,7 +36,7 @@ public class TLETests
         Assert.Equal(6.1615568022666061, tle.AscendingNode(), 6);
         Assert.Equal(5.6003339639830649, tle.ArgumentOfPeriapsis(), 6);
         Assert.Equal(0.68479738531249512, tle.MeanAnomaly(), 6);
-        Assert.Equal(664419082.84759104, tle.Epoch.SecondsFromJ2000TDB(), 6);
+        Assert.Equal(664419082.84759104, tle.Epoch.TimeSpanFromJ2000().TotalSeconds, 6);
         Assert.Equal(5.06539394194257e-10, tle.BalisticCoefficient, 6);
         Assert.Equal(0.0001027, tle.DragTerm, 6);
         Assert.Equal(0.0, tle.SecondDerivativeMeanMotion, 6);
@@ -49,7 +49,7 @@ public class TLETests
             "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
 
-        Time epoch = Time.CreateTDB(664440682.84760022);
+        TimeSystem.Time epoch = TimeSystem.Time.CreateTDB(664440682.84760022);
         var stateVector = tle.AtEpoch(epoch).ToStateVector();
 
         Assert.Equal(stateVector, tle.ToStateVector(epoch));
@@ -61,7 +61,7 @@ public class TLETests
         Assert.Equal(4271.5974622410786, stateVector.Velocity.Z, 3);
         Assert.Equal("J2000", stateVector.Frame.Name);
         Assert.Equal(399, stateVector.Observer.NaifId);
-        Assert.Equal(664440682.84760022, stateVector.Epoch.SecondsFromJ2000TDB(),3);
+        Assert.Equal(664440682.84760022, stateVector.Epoch.TimeSpanFromJ2000().TotalSeconds,3);
     }
 
     [Fact]
