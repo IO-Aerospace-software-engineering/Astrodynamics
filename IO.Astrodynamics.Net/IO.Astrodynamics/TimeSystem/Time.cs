@@ -45,7 +45,7 @@ public readonly record struct Time : IComparable<Time>, IComparable
     {
         if (string.IsNullOrEmpty(timeString)) throw new ArgumentException("Value cannot be null or empty.", nameof(timeString));
 
-        if (DateTime.TryParse(timeString, out DateTime datetime))
+        if (DateTime.TryParse(timeString, CultureInfo.InvariantCulture,DateTimeStyles.RoundtripKind, out DateTime datetime))
         {
             DateTime = datetime;
             Frame = datetime.Kind == DateTimeKind.Utc ? TimeFrame.UTCFrame : datetime.Kind == DateTimeKind.Local ? TimeFrame.LocalFrame : TimeFrame.TDBFrame;

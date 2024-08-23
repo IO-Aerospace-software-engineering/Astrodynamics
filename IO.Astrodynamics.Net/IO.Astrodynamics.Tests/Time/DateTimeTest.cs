@@ -200,4 +200,44 @@ public class DateTimeTests
         var date = TimeSystem.Time.CreateFromJD(2433282.5000000000, TimeFrame.TDBFrame);
         Assert.Equal(new TimeSystem.Time(1950, 1, 1, 0, 0, 0, frame: TimeFrame.TDBFrame), date);
     }
+
+    [Fact]
+    public void CreateTDTFromString()
+    {
+        var tdt = new TimeSystem.Time("2000-01-01T12:00:00.0000000 TDT");
+        var expectedTdt = new TimeSystem.Time(2000, 1, 1, 12, frame: TimeFrame.TDTFrame);
+        Assert.Equal(expectedTdt, tdt);
+    }
+    
+    [Fact]
+    public void CreateTDBFromString()
+    {
+        var source = new TimeSystem.Time("2000-01-01T12:00:00.0000000 TDB");
+        var expected = new TimeSystem.Time(2000, 1, 1, 12, frame: TimeFrame.TDBFrame);
+        Assert.Equal(expected, source);
+    }
+    
+    [Fact]
+    public void CreateTAIFromString()
+    {
+        var source = new TimeSystem.Time("2000-01-01T12:00:00.0000000 TAI");
+        var expected = new TimeSystem.Time(2000, 1, 1, 12, frame: TimeFrame.TAIFrame);
+        Assert.Equal(expected, source);
+    }
+    
+    [Fact]
+    public void CreateUTCFromString()
+    {
+        var source = new TimeSystem.Time("2000-01-01T12:00:00.0000000Z");
+        var expected = new TimeSystem.Time(2000, 1, 1, 12, frame: TimeFrame.UTCFrame);
+        Assert.Equal(expected, source);
+    }
+    
+    [Fact]
+    public void CreateGPSFromString()
+    {
+        var source = new TimeSystem.Time("2000-01-01T12:00:00.0000000 GPS");
+        var expected = new TimeSystem.Time(2000, 1, 1, 12, frame: TimeFrame.GPSFrame);
+        Assert.Equal(expected, source);
+    }
 }
