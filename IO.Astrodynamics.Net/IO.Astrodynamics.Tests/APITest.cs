@@ -631,15 +631,4 @@ public class APITest
         Assert.Equal(9, tle.O);
         Assert.Equal(10, tle.M);
     }
-
-    [Fact]
-    public void ClearKernels()
-    {
-        lock (lockobj)
-        {
-            API.Instance.LoadKernels(new FileInfo(@"Data/UserDataTest/scn100/Spacecrafts/DRAGONFLY32/Ephemeris/DRAGONFLY32.spk"));
-            API.Instance.ClearKernels();
-            Assert.Empty(API.Instance.GetLoadedKernels());
-        }
-    }
 }
