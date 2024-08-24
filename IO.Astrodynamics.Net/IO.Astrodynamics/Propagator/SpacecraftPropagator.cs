@@ -118,7 +118,6 @@ public class SpacecraftPropagator : IPropagator
 
         _stateOrientation[Window.EndDate] = new StateOrientation(_stateOrientation.Last().Value.Rotation, Vector3.Zero, Window.EndDate, Spacecraft.InitialOrbitalParameters.Frame);
 
-
         //Before return result statevectors must be converted back to original observer
         return (_svCache.Select(x => x.RelativeTo(_originalObserver, Aberration.None).ToStateVector()), _stateOrientation.Values);
     }
