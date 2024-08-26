@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using BenchmarkDotNet.Attributes;
 using IO.Astrodynamics.Body;
@@ -595,6 +596,8 @@ namespace IO.Astrodynamics.Tests.Mission
             Assert.True(deltaV < 2.7E-04);
         }
 
+        SemaphoreSlim semaphore = new SemaphoreSlim(1, 1);
+
         [Theory]
         [InlineData(1)]
         [InlineData(2)]
@@ -603,65 +606,75 @@ namespace IO.Astrodynamics.Tests.Mission
         [InlineData(20)]
         public async Task DeepSpaceMoon(int stepSize)
         {
-            var step = TimeSpan.FromMinutes(stepSize);
-            var frame = Frames.Frame.ICRF;
-            var start = TimeSystem.Time.J2000TDB;
-            var end = start.AddDays(25);
-            var earth = new CelestialBody(PlanetsAndMoons.EARTH, frame, start);
-            var moon = new CelestialBody(PlanetsAndMoons.MOON, frame, start);
-            Astrodynamics.Mission.Mission mission = new Astrodynamics.Mission.Mission("mission01");
-            Scenario scenario = new Scenario("scn01", mission, new Window(start, end));
+            await semaphore.WaitAsync();
 
-            StateVector testOrbit = moon.GetEphemeris(start, new CelestialBody(399), frame, Aberration.None).ToStateVector();
-            Clock clk = new Clock("My clock", 256);
-            Spacecraft spc = new Spacecraft(-1001, "MySpacecraft", 100.0, 10000.0, clk, testOrbit, 0.5);
-            scenario.AddSpacecraft(spc);
-            scenario.AddCelestialItem(new CelestialBody(10));
-            scenario.AddCelestialItem(new CelestialBody(399));
-            scenario.AddCelestialItem(new Barycenter(1));
-            scenario.AddCelestialItem(new Barycenter(2));
-            scenario.AddCelestialItem(new Barycenter(4));
-            scenario.AddCelestialItem(new Barycenter(5));
-            scenario.AddCelestialItem(new Barycenter(6));
-            scenario.AddCelestialItem(new Barycenter(7));
-            scenario.AddCelestialItem(new Barycenter(8));
-            var summary = await scenario.SimulateAsync(new DirectoryInfo("Simulation"), false, false, step);
-
-            var spcSV = spc.GetEphemeris(end, earth, Frames.Frame.ICRF, Aberration.None).ToStateVector();
-            var moonSV = moon.GetEphemeris(end, earth, Frames.Frame.ICRF, Aberration.None).ToStateVector();
-
-            var delta = spcSV - moonSV;
-            var deltaP = delta.Position.Magnitude();
-            var deltaV = delta.Velocity.Magnitude();
-
-            await File.AppendAllTextAsync("Accuracy.csv", $"{DateTime.Now},{step},{deltaP},{deltaV}{Environment.NewLine}");
-
-            if (stepSize == 1)
+            try
             {
-                Assert.True(deltaP < 1203);
-                Assert.True(deltaV < 2.7E-03);
+                var step = TimeSpan.FromMinutes(stepSize);
+                var frame = Frames.Frame.ICRF;
+                var start = TimeSystem.Time.J2000TDB;
+                var end = start.AddDays(25);
+                var earth = new CelestialBody(PlanetsAndMoons.EARTH, frame, start);
+                var moon = new CelestialBody(PlanetsAndMoons.MOON, frame, start);
+                Astrodynamics.Mission.Mission mission = new Astrodynamics.Mission.Mission("missionsdeepspace");
+                Scenario scenario = new Scenario("scn"+stepSize, mission, new Window(start, end));
+
+                StateVector testOrbit = moon.GetEphemeris(start, new CelestialBody(399), frame, Aberration.None).ToStateVector();
+                Clock clk = new Clock("My clock", 256);
+                Spacecraft spc = new Spacecraft(-1001, "MySpacecraft", 100.0, 10000.0, clk, testOrbit, 0.5);
+                scenario.AddSpacecraft(spc);
+                scenario.AddCelestialItem(new CelestialBody(10));
+                scenario.AddCelestialItem(new CelestialBody(399));
+                scenario.AddCelestialItem(new Barycenter(1));
+                scenario.AddCelestialItem(new Barycenter(2));
+                scenario.AddCelestialItem(new Barycenter(4));
+                scenario.AddCelestialItem(new Barycenter(5));
+                scenario.AddCelestialItem(new Barycenter(6));
+                scenario.AddCelestialItem(new Barycenter(7));
+                scenario.AddCelestialItem(new Barycenter(8));
+                var summary = await scenario.SimulateAsync(new DirectoryInfo("Simulation"), false, false, step);
+
+                var spcSV = spc.GetEphemeris(end, earth, Frames.Frame.ICRF, Aberration.None).ToStateVector();
+                var moonSV = moon.GetEphemeris(end, earth, Frames.Frame.ICRF, Aberration.None).ToStateVector();
+
+                var delta = spcSV - moonSV;
+                var deltaP = delta.Position.Magnitude();
+                var deltaV = delta.Velocity.Magnitude();
+
+                await File.AppendAllTextAsync("Accuracy.csv", $"{DateTime.Now},{step},{deltaP},{deltaV}{Environment.NewLine}");
+
+                if (stepSize == 1)
+                {
+                    Assert.True(deltaP < 1203);
+                    Assert.True(deltaV < 2.7E-03);
+                }
+                else if (stepSize == 2)
+                {
+                    Assert.True(deltaP < 1243);
+                    Assert.True(deltaV < 2.8E-03);
+                }
+                else if (stepSize == 5)
+                {
+                    Assert.True(deltaP < 1524);
+                    Assert.True(deltaV < 3.5E-03);
+                }
+                else if (stepSize == 10)
+                {
+                    Assert.True(deltaP < 2563);
+                    Assert.True(deltaV < 6.1E-03);
+                }
+                else if (stepSize == 20)
+                {
+                    Assert.True(deltaP < 6818);
+                    Assert.True(deltaV < 1.7E-02);
+                }
             }
-            else if (stepSize == 2)
+            finally
             {
-                Assert.True(deltaP < 1243);
-                Assert.True(deltaV < 2.8E-03);
-            }
-            else if (stepSize == 5)
-            {
-                Assert.True(deltaP < 1524);
-                Assert.True(deltaV < 3.5E-03);
-            }
-            else if (stepSize == 10)
-            {
-                Assert.True(deltaP < 2563);
-                Assert.True(deltaV < 6.1E-03);
-            }
-            else if (stepSize == 20)
-            {
-                Assert.True(deltaP < 6818);
-                Assert.True(deltaV < 1.7E-02);
+                semaphore.Release();
             }
         }
+
 
         [Fact]
         public async Task LowEarthOrbitAccuracy2s()
@@ -671,7 +684,7 @@ namespace IO.Astrodynamics.Tests.Mission
             var end = start.AddHours(1.8);
             var earth = new CelestialBody(PlanetsAndMoons.EARTH, frame, start);
             Astrodynamics.Mission.Mission mission = new Astrodynamics.Mission.Mission("missAccuracy");
-            
+
             StateVector testOrbit = new StateVector(new Vector3(6800000.0, 0, 0), new Vector3(0, 8000.0, 0), earth, start, frame);
             Clock clk = new Clock("My clock", 256);
 
