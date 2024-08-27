@@ -23,7 +23,7 @@ namespace IO.Astrodynamics.Performance;
 [KurtosisColumn]
 [StatisticalTestColumn]
 [ShortRunJob]
-public class Scenario
+public class VelocityScenario
 {
     private readonly GeopotentialGravitationalField _geopotential;
     private readonly SolarRadiationPressure _srp;
@@ -35,7 +35,7 @@ public class Scenario
     private readonly Propagator.SpacecraftPropagator _spacecraftPropagator;
     // IO.Astrodynamics.Tests.Mission.ScenarioTests _scenario = new IO.Astrodynamics.Tests.Mission.ScenarioTests();
 
-    public Scenario()
+    public VelocityScenario()
     {
         API.Instance.LoadKernels(new DirectoryInfo("Data"));
         _earth = new CelestialBody(399, new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 30), new EarthAtmosphericModel());

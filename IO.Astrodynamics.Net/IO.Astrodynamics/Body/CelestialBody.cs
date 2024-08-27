@@ -122,6 +122,11 @@ public class CelestialBody : CelestialItem, IOrientable
     {
         SphereOfInfluence = double.PositiveInfinity;
         if (InitialOrbitalParameters == null) return;
+        if (IsSun)
+        {
+            SphereOfInfluence = double.PositiveInfinity;
+            return;
+        }
         var mainBody = new CelestialBody(ExtendedInformation.CenterOfMotionId);
         var a = this.GetEphemeris(InitialOrbitalParameters.Epoch, mainBody, Frame.ECLIPTIC_J2000, Aberration.None).SemiMajorAxis();
         SphereOfInfluence = InitialOrbitalParameters != null ? SphereOfInluence(a, Mass, mainBody.Mass) : double.PositiveInfinity;

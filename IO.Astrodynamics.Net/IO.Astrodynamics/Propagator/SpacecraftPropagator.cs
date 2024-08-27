@@ -64,7 +64,7 @@ public class SpacecraftPropagator : IPropagator
         var initialState = Spacecraft.InitialOrbitalParameters.AtEpoch(Window.StartDate).ToStateVector().RelativeTo(ssb, Aberration.None).ToStateVector();
         Integrator = new VVIntegrator(forces, DeltaT, initialState);
 
-        _svCacheSize = (uint)Window.Length.TotalSeconds / (uint)DeltaT.TotalSeconds + 1;
+        _svCacheSize = (uint)Window.Length.TotalSeconds / (uint)DeltaT.TotalSeconds + 2;
         _svCache = new StateVector[_svCacheSize];
         _svCache[0] = initialState;
         for (int i = 1; i < _svCacheSize; i++)
@@ -117,7 +117,6 @@ public class SpacecraftPropagator : IPropagator
         }
 
         _stateOrientation[Window.EndDate] = new StateOrientation(_stateOrientation.Last().Value.Rotation, Vector3.Zero, Window.EndDate, Spacecraft.InitialOrbitalParameters.Frame);
-
 
         //Before return result statevectors must be converted back to original observer
         return (_svCache.Select(x => x.RelativeTo(_originalObserver, Aberration.None).ToStateVector()), _stateOrientation.Values);
