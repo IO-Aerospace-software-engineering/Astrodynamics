@@ -184,7 +184,7 @@ public readonly record struct Time : IComparable<Time>, IComparable
     public override string ToString()
     {
         string suffix = string.Empty;
-        if (!string.IsNullOrEmpty(Frame.Name))
+        if (!string.IsNullOrEmpty(this.Frame.ToString()))
         {
             suffix = " " + this.Frame.ToString();
         }

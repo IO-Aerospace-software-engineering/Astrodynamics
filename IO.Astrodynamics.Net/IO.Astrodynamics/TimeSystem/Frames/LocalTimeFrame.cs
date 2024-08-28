@@ -4,7 +4,7 @@ namespace IO.Astrodynamics.TimeSystem.Frames;
 
 public class LocalTimeFrame : TimeFrame
 {
-    internal LocalTimeFrame() : base(string.Empty)
+    internal LocalTimeFrame() : base("Local")
     {
     }
 
@@ -20,5 +20,10 @@ public class LocalTimeFrame : TimeFrame
         var leaps = this.LeapSecondsFrom(time);
         var epoch = DateTime.SpecifyKind(time.DateTime - leaps, DateTimeKind.Utc).ToLocalTime();
         return new TimeSystem.Time(epoch, LocalFrame);
+    }
+    
+    public override string ToString()
+    {
+        return string.Empty;
     }
 }
