@@ -4,7 +4,7 @@ namespace IO.Astrodynamics.TimeSystem.Frames;
 
 public class UTCTimeFrame : TimeFrame
 {
-    internal UTCTimeFrame() : base(string.Empty)
+    internal UTCTimeFrame() : base("UTC")
     {
     }
 
@@ -18,5 +18,10 @@ public class UTCTimeFrame : TimeFrame
     {
         var leaps = this.LeapSecondsFrom(time);
         return new TimeSystem.Time(time.DateTime - leaps, UTCFrame);
+    }
+
+    public override string ToString()
+    {
+        return string.Empty;
     }
 }
