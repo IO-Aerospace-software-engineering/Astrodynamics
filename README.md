@@ -113,25 +113,11 @@ dotnet add package IO.Astrodynamics
 ```
 ## Quick start
 ```C#
-//LET'S GO !
-//In this example we'll get the moon state vector in ICRF frame relative to the earth without aberration
-
-//Load required kernels for computation
-API.Instance.LoadKernels(new DirectoryInfo("/home/spacer/Sources/SDK.Net/IO.Astrodynamics.Tests/Data/SolarSystem"));
-
-//Create moon object
-var moon = new CelestialBody(PlanetsAndMoons.MOON.NaifId);
-
-//Get moon ephemeris
-var ephemeris = moon.GetEphemeris(DateTimeExtension.J2000, moon.InitialOrbitalParameters.CenterOfMotion, Frame.ICRF, Aberration.None).ToStateVector();
-
-//Display some informations
-Console.WriteLine($"Position : {ephemeris.Position.ToString()}");
-Console.WriteLine($"Velocity : {ephemeris.Velocity.ToString()}");
-
-//You should have the following result : 
-// Position : Vector3 { X = -291608384.6334355, Y = -266716833.39423338, Z = -76102487.09990202 }
-// Velocity : Vector3 { X = 643.5313877190328, Y = -666.0876840916304, Z = -301.32570498227307 }
+//In this example we want the ephemeris of the moon at epoch (2000-01-01T12:00Z) in ICRF frame with earth at center
+API.Instance.LoadKernels(new DirectoryInfo("Data/SolarSystem"));//replace Data/SolarSytem by your kernel path
+var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+var moon = new CelestialBody(PlanetsAndMoons.MOON);
+var ephemerid = moon.GetEphemeris(new TimeSystem.Time(new DateTime(2000, 1, 1, 12, 0, 0), TimeFrame.UTCFrame), earth, Frames.Frame.ICRF, Aberration.None);
 
 ```
 
