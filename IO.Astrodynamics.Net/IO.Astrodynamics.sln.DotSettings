@@ -6,4 +6,5 @@
 	<s:String x:Key="/Default/CodeStyle/Naming/CSharpNaming/Abbreviations/=UTC/@EntryIndexedValue">UTC</s:String>
 	<s:Boolean x:Key="/Default/Environment/Filtering/ExcludeCoverageFilters/=IO_002EAstrodynamics_002ENet_003B_002A_003BIO_002EAstrodynamics_002ESolarSystemObjects_002EAsteroids_003B_002A/@EntryIndexedValue">True</s:Boolean>
 	<s:Boolean x:Key="/Default/Environment/Filtering/ExcludeCoverageFilters/=IO_002EAstrodynamics_002ENet_003B_002A_003BIO_002EAstrodynamics_002ESolarSystemObjects_002EComets_003B_002A/@EntryIndexedValue">True</s:Boolean>
-	<s:Boolean x:Key="/Default/Environment/Filtering/ExcludeCoverageFilters/=IO_002EAstrodynamics_002ENet_003B_002A_003BIO_002EAstrodynamics_002ESolarSystemObjects_002EGroundStations_003B_002A/@EntryIndexedValue">True</s:Boolean></wpf:ResourceDictionary>
+	<s:Boolean x:Key="/Default/Environment/Filtering/ExcludeCoverageFilters/=IO_002EAstrodynamics_002ENet_003B_002A_003BIO_002EAstrodynamics_002ESolarSystemObjects_002EGroundStations_003B_002A/@EntryIndexedValue">True</s:Boolean>
+	<s:Boolean x:Key="/Default/UserDictionary/Words/=jacobian/@EntryIndexedValue">True</s:Boolean></wpf:ResourceDictionary>
