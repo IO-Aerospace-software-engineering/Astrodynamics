@@ -248,32 +248,7 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// Get the state vector
     /// </summary>
     /// <returns></returns>
-    public virtual StateVector ToStateVector()
-    {
-        if (_stateVector is null)
-        {
-            var e = Eccentricity();
-            var p = SemiMajorAxis() * (1 - e * e);
-            var v = TrueAnomaly();
-            var r0 = p / (1 + e * System.Math.Cos(v));
-            var x = r0 * System.Math.Cos(v);
-            var y = r0 * System.Math.Sin(v);
-            var dotX = -System.Math.Sqrt(Observer.GM / p) * System.Math.Sin(v);
-            var dotY = System.Math.Sqrt(Observer.GM / p) * (e + System.Math.Cos(v));
-            Matrix R3 = Matrix.CreateRotationMatrixZ(AscendingNode());
-            Matrix R1 = Matrix.CreateRotationMatrixX(Inclination());
-            Matrix R3w = Matrix.CreateRotationMatrixZ(ArgumentOfPeriapsis());
-            Matrix R = R3 * R1 * R3w;
-            double[] pos = { x, y, 0.0 };
-            double[] vel = { dotX, dotY, 0.0 };
-            double[] finalPos = pos * R;
-            double[] finalV = vel * R;
-
-            _stateVector = new StateVector(new Vector3(finalPos[0], finalPos[1], finalPos[2]), new Vector3(finalV[0], finalV[1], finalV[2]), Observer, Epoch, Frame);
-        }
-
-        return _stateVector;
-    }
+    public abstract StateVector ToStateVector();
 
     public virtual StateVector ToStateVector(Time epoch)
     {
@@ -372,7 +347,7 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
         _trueLongitude ??= (AscendingNode() + ArgumentOfPeriapsis() + TrueAnomaly()) % Constants._2PI;
         return _trueLongitude.Value;
     }
-    
+
     /// <summary>
     /// Get the true longitude at given epoch
     /// </summary>

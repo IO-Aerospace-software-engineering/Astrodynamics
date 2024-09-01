@@ -1,9 +1,13 @@
 // Copyright 2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
 
+using IO.Astrodynamics.Body;
 using IO.Astrodynamics.DTO;
+using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.TimeSystem;
 using IO.Astrodynamics.TimeSystem.Frames;
+using CelestialBody = IO.Astrodynamics.Body.CelestialBody;
+using KeplerianElements = IO.Astrodynamics.OrbitalParameters.KeplerianElements;
 using Launch = IO.Astrodynamics.Maneuver.Launch;
 using Planetodetic = IO.Astrodynamics.Coordinates.Planetodetic;
 using Quaternion = IO.Astrodynamics.Math.Quaternion;
@@ -55,7 +59,7 @@ public static class ProfilesConfiguration
 
     internal static Window Convert(this in DTO.Window window)
     {
-        return new Window(Time.Create(window.Start,TimeFrame.TDBFrame), Time.Create(window.End,TimeFrame.TDBFrame));
+        return new Window(Time.Create(window.Start, TimeFrame.TDBFrame), Time.Create(window.End, TimeFrame.TDBFrame));
     }
 
     internal static DTO.Planetodetic Convert(this Planetodetic planetodetic)
@@ -72,5 +76,19 @@ public static class ProfilesConfiguration
     {
         return new DTO.Launch(launch.LaunchSite.Convert(), launch.RecoverySite.Convert(), launch.LaunchByDay ?? false, Parameters.FindLaunchResolution.TotalSeconds,
             launch.TargetOrbit.ToStateVector().Convert(), new DTO.Window());
+    }
+
+    internal static DTO.KeplerianElements Convert(this IO.Astrodynamics.OrbitalParameters.KeplerianElements keplerianElements)
+    {
+        return new DTO.KeplerianElements(keplerianElements.Observer.NaifId, keplerianElements.Epoch.TimeSpanFromJ2000().TotalSeconds, keplerianElements.PerigeeVector().Magnitude(),
+            keplerianElements.E, keplerianElements.I, keplerianElements.RAAN, keplerianElements.AOP, keplerianElements.M, keplerianElements.Frame.Name);
+    }
+
+    internal static OrbitalParameters.KeplerianElements Convert(this DTO.KeplerianElements keplerianElements)
+    {
+        var observer = new CelestialBody(keplerianElements.CenterOfMotionId);
+        return new KeplerianElements(keplerianElements.SemiMajorAxis, keplerianElements.Eccentricity, keplerianElements.Inclination, keplerianElements.AscendingNodeLongitude,
+            keplerianElements.PeriapsisArgument, keplerianElements.MeanAnomaly, observer, Time.Create(keplerianElements.Epoch, TimeFrame.TDBFrame),
+            new Frame(keplerianElements.Frame));
     }
 }

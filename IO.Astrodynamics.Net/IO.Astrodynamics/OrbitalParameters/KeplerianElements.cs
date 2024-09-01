@@ -1,6 +1,7 @@
 using System;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Frames;
+using IO.Astrodynamics.Math;
 using IO.Astrodynamics.TimeSystem;
 
 
@@ -143,6 +144,128 @@ namespace IO.Astrodynamics.OrbitalParameters
         {
             return this;
         }
+        
+        /// <summary>
+    /// Get the state vector
+    /// </summary>
+    /// <returns></returns>
+    public override StateVector ToStateVector()
+    {
+        if (_stateVector is null)
+        {
+            // Déclaration des variables
+            double a = A;// Demi-grand axe
+            double ecc = E;
+            double inc = I;
+            double lnode = RAAN;
+            double argp = AOP;
+            double m0 = M;
+            double mu = Observer.GM;
+
+            // Gestion des exceptions
+            if (ecc < 0)
+            {
+                throw new ArgumentException("Eccentricity must be positive. Provided value: " + ecc);
+            }
+
+            if (mu <= 0)
+            {
+                throw new ArgumentException("Gravitational parameter (mu) must be positive. Provided value: " + mu);
+            }
+
+            // Calcul du rayon au périgée
+            double rp = a * (1.0 - ecc);
+
+            // Calcul des vecteurs de base orthonormés
+            double cosi = System.Math.Cos(inc);
+            double sini = System.Math.Sin(inc);
+            double cosn = System.Math.Cos(lnode);
+            double sinn = System.Math.Sin(lnode);
+            double cosw = System.Math.Cos(argp);
+            double sinw = System.Math.Sin(argp);
+            double snci = sinn * cosi;
+            double cnci = cosn * cosi;
+
+            double[] basisp = new double[3];
+            double[] basisq = new double[3];
+
+            basisp[0] = cosn * cosw - snci * sinw;
+            basisp[1] = sinn * cosw + cnci * sinw;
+            basisp[2] = sini * sinw;
+
+            basisq[0] = -cosn * sinw - snci * cosw;
+            basisq[1] = -sinn * sinw + cnci * cosw;
+            basisq[2] = sini * cosw;
+
+            // Calcul de l'état au périgée
+            double v = System.Math.Sqrt(mu * (ecc + 1.0) / rp);
+
+            double[] state = new double[6];
+            // Multiplier les vecteurs de base par les valeurs correspondantes
+            for (int i = 0; i < 3; i++)
+            {
+                state[i] = rp * basisp[i]; // Position
+                state[i + 3] = v * basisq[i]; // Vitesse
+            }
+
+            var sv = new StateVector(new Vector3(state[0], state[1], state[2]), new Vector3(state[3], state[4], state[5]), Observer, Epoch, Frame);
+
+            double ainvrs, n, period, d__1, dt;
+            if (ecc < 1)
+            {
+/*        Recall that: */
+
+/*        N ( mean motion ) is given by DSQRT( MU / A**3 ). */
+/*        But since, A = RP / ( 1 - ECC ) ... */
+
+                ainvrs = (1 - ecc) / rp;
+                n = System.Math.Sqrt(mu * ainvrs) * ainvrs;
+                period = Constants._2PI / n;
+
+/*        In general the mean anomaly is given by */
+
+/*           M  = (T - TP) * N */
+
+/*        Where TP is the time of periapse passage.  M0 is the mean */
+/*        anomaly at time T0 so that */
+/*        Thus */
+
+/*           M0 = ( T0 - TP ) * N */
+
+/*        So TP = T0-M0/N hence the time since periapse at time ET */
+/*        is given by ET - T0 + M0/N.  Finally, since elliptic orbits are */
+/*        periodic, we can mod this value by the period of the orbit. */
+
+                d__1 = m0 / n;
+                dt = d__1 % period;
+
+/*     Hyperbolas next. */
+            }
+            else if (ecc > 1)
+            {
+/*        Again, recall that: */
+
+/*        N ( mean motion ) is given by DSQRT( MU / |A**3| ). */
+/*        But since, |A| = RP / ( ECC - 1 ) ... */
+
+                ainvrs = (ecc - 1) / rp;
+                n = System.Math.Sqrt(mu * ainvrs) * ainvrs;
+                dt = m0 / n;
+
+/*     Finally, parabolas. */
+            }
+            else
+            {
+                n = System.Math.Sqrt(mu / (rp * 2)) / rp;
+                dt = m0 / n;
+            }
+
+            _stateVector = sv.AtEpoch(Epoch.AddSeconds(dt)).ToStateVector();
+            return _stateVector;
+        }
+
+        return _stateVector;
+    }
 
         public bool Equals(KeplerianElements other)
         {

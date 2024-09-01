@@ -103,6 +103,11 @@ namespace IO.Astrodynamics.OrbitalParameters
             return _trueAnomaly.Value;
         }
 
+        public override StateVector ToStateVector()
+        {
+            throw new NotImplementedException();
+        }
+
         public override EquinoctialElements ToEquinoctial()
         {
             return this;

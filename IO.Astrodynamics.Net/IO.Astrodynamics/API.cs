@@ -18,6 +18,7 @@ using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.TimeSystem;
 using CelestialBody = IO.Astrodynamics.DTO.CelestialBody;
 using Instrument = IO.Astrodynamics.Body.Spacecraft.Instrument;
+using KeplerianElements = IO.Astrodynamics.DTO.KeplerianElements;
 using Launch = IO.Astrodynamics.DTO.Launch;
 using Quaternion = IO.Astrodynamics.Math.Quaternion;
 using Spacecraft = IO.Astrodynamics.Body.Spacecraft.Spacecraft;
@@ -120,6 +121,9 @@ public class API
 
     [DllImport(@"IO.Astrodynamics", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
     private static extern void KClearProxy();
+
+    [DllImport(@"IO.Astrodynamics", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
+    private static extern DTO.KeplerianElements ConvertStateVectorToConicOrbitalElementProxy(StateVector stateVector, double mu);
 
     private static IntPtr Resolver(string libraryName, Assembly assembly, DllImportSearchPath? searchPath)
     {
@@ -819,6 +823,15 @@ public class API
             return new TLE(line1, line2, line3, res.BalisticCoefficient, res.DragTerm, res.SecondDerivativeOfMeanMotion,
                 res.A, res.E, res.I, res.O, res.W, res.M,
                 Time.Create(res.Epoch, TimeFrame.TDBFrame), Frame.ICRF);
+        }
+    }
+
+    public IO.Astrodynamics.OrbitalParameters.KeplerianElements ConvertStateVectorToConicOrbitalElement(IO.Astrodynamics.OrbitalParameters.StateVector stateVector, double mu)
+    {
+        lock (lockObject)
+        {
+            var svDto = stateVector.Convert();
+            return ConvertStateVectorToConicOrbitalElementProxy(svDto, mu).Convert();
         }
     }
 }
