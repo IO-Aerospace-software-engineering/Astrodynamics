@@ -77,10 +77,15 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// Get eccentric vector
     /// </summary>
     /// <returns></returns>
-    public virtual Vector3 EccentricityVector()
+    public Vector3 EccentricityVector()
     {
-        _eccentricVector ??= ToStateVector().EccentricityVector();
+        if (_eccentricVector.HasValue)
+        {
+            return _eccentricVector!.Value;
+        }
 
+        var sv = ToStateVector();
+        _eccentricVector = (sv.Velocity.Cross(SpecificAngularMomentum()) / Observer.GM) - sv.Position.Normalize();
         return _eccentricVector.Value;
     }
 
@@ -88,15 +93,23 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// Get eccentricity
     /// </summary>
     /// <returns></returns>
-    public abstract double Eccentricity();
+    public double Eccentricity()
+    {
+        return EccentricityVector().Magnitude();
+    }
 
     /// <summary>
     /// Get the specific angular momentum
     /// </summary>
     /// <returns></returns>
-    public virtual Vector3 SpecificAngularMomentum()
+    public Vector3 SpecificAngularMomentum()
     {
-        _specificAngularMomentum ??= ToStateVector().SpecificAngularMomentum();
+        if (_specificAngularMomentum.HasValue)
+        {
+            return _specificAngularMomentum!.Value;
+        }
+
+        _specificAngularMomentum = ToStateVector().SpecificAngularMomentum();
         return _specificAngularMomentum.Value;
     }
 
@@ -104,9 +117,14 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// Get the specific orbital energy in MJ
     /// </summary>
     /// <returns></returns>
-    public virtual double SpecificOrbitalEnergy()
+    public double SpecificOrbitalEnergy()
     {
-        _specificOrbitalEnergy ??= ToStateVector().SpecificOrbitalEnergy();
+        if (_specificOrbitalEnergy.HasValue)
+        {
+            return _specificOrbitalEnergy!.Value;
+        }
+
+        _specificOrbitalEnergy = ToStateVector().SpecificOrbitalEnergy();
         return _specificOrbitalEnergy.Value;
     }
 
@@ -114,26 +132,40 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// Get inclination
     /// </summary>
     /// <returns></returns>
-    public abstract double Inclination();
+    public double Inclination()
+    {
+        return ToKeplerianElements().I;
+    }
 
     /// <summary>
     /// Get the semi major axis
     /// </summary>
     /// <returns></returns>
-    public abstract double SemiMajorAxis();
+    public double SemiMajorAxis()
+    {
+        return ToKeplerianElements().A;
+    }
 
     /// <summary>
     /// Get vector to ascending node unitless
     /// </summary>
     /// <returns></returns>
-    public virtual Vector3 AscendingNodeVector()
+    public Vector3 AscendingNodeVector()
     {
-        if (Inclination() == 0.0)
+        if (_ascendingNodeVector.HasValue)
         {
-            return Vector3.VectorX;
+            return _ascendingNodeVector.Value;
         }
 
-        _ascendingNodeVector ??= ToStateVector().AscendingNodeVector();
+        if (Inclination() == 0.0)
+        {
+            _ascendingNodeVector = Vector3.VectorX;
+            return _ascendingNodeVector!.Value;
+        }
+
+        var h = SpecificAngularMomentum();
+        _ascendingNodeVector = new Vector3(-h.Y, h.X, 0.0);
+
         return _ascendingNodeVector.Value;
     }
 
@@ -395,7 +427,12 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
 
     public virtual KeplerianElements ToKeplerianElements()
     {
-        _keplerianElements ??= ToKeplerianElements(Epoch);
+        if (_keplerianElements is not null)
+        {
+            return _keplerianElements;
+        }
+
+        _keplerianElements = ToKeplerianElements(Epoch);
         return _keplerianElements;
     }
 
