@@ -15,26 +15,29 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     public Time Epoch { get; }
 
     public Frame Frame { get; }
-    protected Vector3? _eccentricVector;
-    protected Vector3? _specificAngularMomentum;
-    protected double? _specificOrbitalEnergy;
-    protected Vector3? _ascendingNodeVector;
-    protected Vector3? _decendingNodeVector;
+    private Vector3? _eccentricVector;
+    private Vector3? _specificAngularMomentum;
+    private double? _specificOrbitalEnergy;
+    private Vector3? _ascendingNodeVector;
+    private Vector3? _decendingNodeVector;
     protected TimeSpan? _period;
-    protected double? _meanMotion;
+    private double? _meanMotion;
     protected StateVector _stateVector;
-    protected EquinoctialElements _equinoctial;
-    protected Vector3? _perigeevector;
-    protected Vector3? _apogeeVector;
-    protected double? _trueLongitude;
-    protected double? _meanLongitude;
-    protected bool? _isCircular;
-    protected bool? _isParabolic;
-    protected bool? _isHyperbolic;
-    protected KeplerianElements _keplerianElements;
-    protected Equatorial? _equatorial;
-    protected double? _perigeeVelocity;
-    protected double? _apogeeVelocity;
+    private EquinoctialElements _equinoctial;
+    private Vector3? _perigeevector;
+    private Vector3? _apogeeVector;
+    private double? _trueLongitude;
+    private double? _meanLongitude;
+    private bool? _isCircular;
+    private bool? _isParabolic;
+    private bool? _isHyperbolic;
+    private KeplerianElements _keplerianElements;
+    private Equatorial? _equatorial;
+    private double? _perigeeVelocity;
+    private double? _apogeeVelocity;
+    private double? _ascendingNode;
+    protected double? _trueAnomaly;
+    private double? _eccentricAnomaly;
 
     /// <summary>
     /// Constructor
@@ -71,6 +74,9 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
         _equatorial = null;
         _perigeeVelocity = null;
         _apogeeVelocity = null;
+        _ascendingNode = null;
+        _trueAnomaly = null;
+        _eccentricAnomaly = null;
     }
 
     /// <summary>
@@ -95,7 +101,7 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// <returns></returns>
     public double Eccentricity()
     {
-        return EccentricityVector().Magnitude();
+        return ToKeplerianElements().E;
     }
 
     /// <summary>
@@ -109,7 +115,8 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
             return _specificAngularMomentum!.Value;
         }
 
-        _specificAngularMomentum = ToStateVector().SpecificAngularMomentum();
+        var sv = ToStateVector();
+        _specificAngularMomentum = sv.Position.Cross(sv.Velocity);
         return _specificAngularMomentum.Value;
     }
 
@@ -183,19 +190,58 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// Get ascending node angle
     /// </summary>
     /// <returns></returns>
-    public abstract double AscendingNode();
+    public double AscendingNode()
+    {
+        if (_ascendingNode.HasValue)
+        {
+            return _ascendingNode.Value;
+        }
+
+        Vector3 n = AscendingNodeVector();
+
+        if (n.Magnitude() == 0.0)
+        {
+            _ascendingNode = 0.0;
+            return _ascendingNode.Value;
+        }
+
+        var omega = System.Math.Acos(n.X / n.Magnitude());
+
+
+        if (n.Y < 0.0)
+        {
+            omega = 2 * System.Math.PI - omega;
+        }
+
+        _ascendingNode = omega;
+
+
+        return _ascendingNode.Value;
+    }
 
     /// <summary>
     /// Get the argument of periapis
     /// </summary>
     /// <returns></returns>
-    public abstract double ArgumentOfPeriapsis();
+    public double ArgumentOfPeriapsis()
+    {
+        return ToKeplerianElements().AOP;
+    }
 
     /// <summary>
     /// Get the true anomaly
     /// </summary>
     /// <returns></returns>
-    public abstract double TrueAnomaly();
+    public double TrueAnomaly()
+    {
+        if (_trueAnomaly.HasValue)
+        {
+            return _trueAnomaly.Value;
+        }
+
+        _trueAnomaly = ToStateVector().ToKeplerianElements().TrueAnomaly();
+        return _trueAnomaly.Value;
+    }
 
     /// <summary>
     /// Return true anomaly at given epoch
@@ -211,13 +257,44 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// Get the eccentric anomaly
     /// </summary>
     /// <returns></returns>
-    public abstract double EccentricAnomaly();
+    public double EccentricAnomaly()
+    {
+        if (_eccentricAnomaly.HasValue)
+        {
+            return _eccentricAnomaly.Value;
+        }
+
+        double v = TrueAnomaly();
+        double e = Eccentricity();
+
+        if (e < 1)
+        {
+            _eccentricAnomaly ??= 2 * System.Math.Atan((System.Math.Tan(v / 2.0)) / System.Math.Sqrt((1 + e) / (1 - e)));
+        }
+        else if (e > 1)
+        {
+            var term1 = (e - 1) / (e + 1);
+            var term2 = System.Math.Sqrt(term1);
+            var term3 = System.Math.Tan(v * 0.5);
+            var term4 = System.Math.Atanh(term2 * term3);
+            _eccentricAnomaly = 2 * term4;
+        }
+        else
+        {
+            _eccentricAnomaly = System.Math.Tan(v * 0.5);
+        }
+
+        return _eccentricAnomaly.Value;
+    }
 
     /// <summary>
     /// Get the mean anomaly
     /// </summary>
     /// <returns></returns>
-    public abstract double MeanAnomaly();
+    public double MeanAnomaly()
+    {
+        return ToKeplerianElements().M;
+    }
 
     /// <summary>
     /// Compute mean anomaly from true anomaly
@@ -226,27 +303,28 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// <returns></returns>
     public double MeanAnomaly(double trueAnomaly)
     {
-        return TrueAnomalyToMeanAnomaly(trueAnomaly, Eccentricity());
+        return TrueAnomalyToMeanAnomaly(trueAnomaly, Eccentricity(), this.EccentricAnomaly());
     }
 
-    public static double TrueAnomalyToMeanAnomaly(double trueAnomaly, double eccentricity)
+    public static double TrueAnomalyToMeanAnomaly(double trueAnomaly, double eccentricity, double eccentricAnomaly)
     {
         if (trueAnomaly < 0.0)
         {
             trueAnomaly += Constants._2PI;
         }
 
-        //X = cos E
-        double x = (eccentricity + System.Math.Cos(trueAnomaly)) / (1 + eccentricity * System.Math.Cos(trueAnomaly));
-        double eccAno = System.Math.Acos(x);
-        double M = eccAno - eccentricity * System.Math.Sin(eccAno);
-
-        if (trueAnomaly > Constants.PI)
+        if (eccentricity < 1)
         {
-            M = Constants._2PI - M;
+            return eccentricAnomaly - eccentricity * System.Math.Sin(eccentricAnomaly);
         }
-
-        return M;
+        else if (eccentricity > 1)
+        {
+            return eccentricity * System.Math.Sinh(eccentricAnomaly) - eccentricAnomaly;
+        }
+        else
+        {
+            return eccentricAnomaly + System.Math.Pow(eccentricAnomaly, 3) / 3.0;
+        }
     }
 
     /// <summary>
@@ -271,7 +349,27 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// <returns></returns>
     public double MeanMotion()
     {
-        _meanMotion ??= Constants._2PI / Period().TotalSeconds;
+        if (_meanMotion.HasValue)
+        {
+            return _meanMotion.Value;
+        }
+
+        var e = Eccentricity();
+
+        if (e < 1)
+        {
+            _meanMotion ??= Constants._2PI / Period().TotalSeconds;
+        }
+        else if (e > 1)
+        {
+            var ai = (e - 1) / PerigeeVector().Magnitude();
+            _meanMotion = System.Math.Sqrt(Observer.GM * ai) * ai;
+        }
+        else
+        {
+            _meanMotion = System.Math.Sqrt(Observer.GM / (PerigeeVector().Magnitude() * 2.0)) / PerigeeVector().Magnitude();
+        }
+
         return _meanMotion.Value;
     }
 
@@ -289,7 +387,7 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
 
     public virtual StateVector ToStateVector(double trueAnomaly)
     {
-        return ToStateVector(EpochAtMeanAnomaly(TrueAnomalyToMeanAnomaly(trueAnomaly, Eccentricity())));
+        return ToStateVector(EpochAtMeanAnomaly(TrueAnomalyToMeanAnomaly(trueAnomaly, Eccentricity(), EccentricAnomaly())));
     }
 
     public Time EpochAtMeanAnomaly(double meanAnomaly)

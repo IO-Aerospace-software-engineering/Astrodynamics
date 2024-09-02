@@ -1,5 +1,6 @@
 // Copyright 2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
 
+using System;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.DTO;
 using IO.Astrodynamics.Frames;
@@ -45,10 +46,11 @@ public static class ProfilesConfiguration
         return new DTO.StateVector(stateVector.Observer.NaifId, stateVector.Epoch.TimeSpanFromJ2000().TotalSeconds, stateVector.Frame.Name, stateVector.Position.Convert(),
             stateVector.Velocity.Convert());
     }
-    
+
     internal static StateVector Convert(this DTO.StateVector stateVector)
     {
-        return new StateVector(stateVector.Position.Convert(),stateVector.Velocity.Convert(),new CelestialBody(stateVector.CenterOfMotionId), Time.Create(stateVector.Epoch, TimeFrame.TDBFrame), new Frame(stateVector.Frame));
+        return new StateVector(stateVector.Position.Convert(), stateVector.Velocity.Convert(), new CelestialBody(stateVector.CenterOfMotionId),
+            Time.Create(stateVector.Epoch, TimeFrame.TDBFrame), new Frame(stateVector.Frame));
     }
 
     internal static DTO.StateOrientation Convert(this StateOrientation stateOrientation)
@@ -94,7 +96,7 @@ public static class ProfilesConfiguration
         var observer = new CelestialBody(keplerianElements.CenterOfMotionId);
         return new KeplerianElements(keplerianElements.SemiMajorAxis, keplerianElements.Eccentricity, keplerianElements.Inclination, keplerianElements.AscendingNodeLongitude,
             keplerianElements.PeriapsisArgument, keplerianElements.MeanAnomaly, observer, Time.Create(keplerianElements.Epoch, TimeFrame.TDBFrame),
-            new Frame(keplerianElements.Frame));
+            new Frame(keplerianElements.Frame), keplerianElements.TrueAnomaly, TimeSpan.FromSeconds(keplerianElements.OrbitalPeriod));
     }
 
     internal static DTO.EquinoctialElements Convert(this OrbitalParameters.EquinoctialElements equinoctialElements)

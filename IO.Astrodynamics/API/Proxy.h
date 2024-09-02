@@ -300,7 +300,7 @@ MODULE_API IO::Astrodynamics::API::DTO::StateVectorDTO ConvertConicElementsToSta
  * @return Conic orbital elements
  */
 MODULE_API IO::Astrodynamics::API::DTO::ConicOrbitalElementsDTO ConvertStateVectorToConicOrbitalElementProxy(
-    IO::Astrodynamics::API::DTO::StateVectorDTO stateVector,double mu);
+    IO::Astrodynamics::API::DTO::StateVectorDTO stateVector, double mu);
 
 /**
  * Convert equinoctial elements to state vector
@@ -318,13 +318,13 @@ MODULE_API IO::Astrodynamics::API::DTO::StateVectorDTO ConvertEquinoctialElement
 MODULE_API IO::Astrodynamics::API::DTO::RaDecDTO ConvertStateVectorToEquatorialCoordinatesProxy(
     IO::Astrodynamics::API::DTO::StateVectorDTO stateVectorDto);
 
- /**
-  * Propagate the state vector of a two-body system.
-  * @param stateVector state vector elements of the two-body system
-  * @return Propagated state vector
-  */
- MODULE_API IO::Astrodynamics::API::DTO::StateVectorDTO Propagate2BodiesProxy(
-    IO::Astrodynamics::API::DTO::StateVectorDTO stateVector);
+/**
+ * Propagate the state vector of a two-body system.
+ * @param stateVector state vector elements of the two-body system
+ * @return Propagated state vector
+ */
+MODULE_API IO::Astrodynamics::API::DTO::StateVectorDTO Propagate2BodiesProxy(
+    IO::Astrodynamics::API::DTO::StateVectorDTO stateVector, double gm, double dt);
 
 
 /**

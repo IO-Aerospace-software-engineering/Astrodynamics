@@ -745,6 +745,8 @@ IO::Astrodynamics::API::DTO::ConicOrbitalElementsDTO ConvertStateVectorToConicOr
     SpiceDouble elts[SPICE_OSCLTX_NELTS];
     oscltx_c(sv, stateVector.epoch, mu, elts);
     IO::Astrodynamics::API::DTO::ConicOrbitalElementsDTO conicOrbitalElementsDto;
+    conicOrbitalElementsDto.centerOfMotionId = stateVector.centerOfMotionId;
+    conicOrbitalElementsDto.SetFrame(stateVector.inertialFrame);
     conicOrbitalElementsDto.perifocalDistance = elts[0];
     conicOrbitalElementsDto.eccentricity = elts[1];
     conicOrbitalElementsDto.inclination = elts[2];
