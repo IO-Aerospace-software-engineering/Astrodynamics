@@ -335,7 +335,8 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// <returns></returns>
     public virtual OrbitalParameters AtEpoch(Time epoch)
     {
-        return ToKeplerianElements(epoch);
+        var sv = this.ToStateVector();
+        return API.Instance.Propagate2Bodies(sv, epoch);
     }
 
     /// <summary>
@@ -389,14 +390,7 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
 
     private KeplerianElements ToKeplerianElements(Time epoch)
     {
-        double ellapsedTime = (epoch - Epoch).TotalSeconds;
-        double M = MeanAnomaly() + MeanMotion() * ellapsedTime;
-        while (M < 0.0)
-        {
-            M += Constants._2PI;
-        }
-
-        return new KeplerianElements(SemiMajorAxis(), Eccentricity(), Inclination(), AscendingNode(), ArgumentOfPeriapsis(), M % Constants._2PI, Observer, epoch, Frame);
+        return ToStateVector(epoch).ToKeplerianElements();
     }
 
     public virtual KeplerianElements ToKeplerianElements()

@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 namespace IO.Astrodynamics.DTO;
 
 [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
-public class KeplerianElements
+public struct KeplerianElements
 {
     public int CenterOfMotionId;
     public double Epoch;

@@ -318,6 +318,15 @@ MODULE_API IO::Astrodynamics::API::DTO::StateVectorDTO ConvertEquinoctialElement
 MODULE_API IO::Astrodynamics::API::DTO::RaDecDTO ConvertStateVectorToEquatorialCoordinatesProxy(
     IO::Astrodynamics::API::DTO::StateVectorDTO stateVectorDto);
 
+ /**
+  * Propagate the state vector of a two-body system.
+  * @param stateVector state vector elements of the two-body system
+  * @return Propagated state vector
+  */
+ MODULE_API IO::Astrodynamics::API::DTO::StateVectorDTO Propagate2BodiesProxy(
+    IO::Astrodynamics::API::DTO::StateVectorDTO stateVector);
+
+
 /**
  * Get TLE elements
  * @param L1 Line 1 of TLE

@@ -45,6 +45,11 @@ public static class ProfilesConfiguration
         return new DTO.StateVector(stateVector.Observer.NaifId, stateVector.Epoch.TimeSpanFromJ2000().TotalSeconds, stateVector.Frame.Name, stateVector.Position.Convert(),
             stateVector.Velocity.Convert());
     }
+    
+    internal static StateVector Convert(this DTO.StateVector stateVector)
+    {
+        return new StateVector(stateVector.Position.Convert(),stateVector.Velocity.Convert(),new CelestialBody(stateVector.CenterOfMotionId), Time.Create(stateVector.Epoch, TimeFrame.TDBFrame), new Frame(stateVector.Frame));
+    }
 
     internal static DTO.StateOrientation Convert(this StateOrientation stateOrientation)
     {
@@ -90,5 +95,21 @@ public static class ProfilesConfiguration
         return new KeplerianElements(keplerianElements.SemiMajorAxis, keplerianElements.Eccentricity, keplerianElements.Inclination, keplerianElements.AscendingNodeLongitude,
             keplerianElements.PeriapsisArgument, keplerianElements.MeanAnomaly, observer, Time.Create(keplerianElements.Epoch, TimeFrame.TDBFrame),
             new Frame(keplerianElements.Frame));
+    }
+
+    internal static DTO.EquinoctialElements Convert(this OrbitalParameters.EquinoctialElements equinoctialElements)
+    {
+        return new EquinoctialElements(equinoctialElements.Epoch.TimeSpanFromJ2000().TotalSeconds, equinoctialElements.Observer.NaifId, equinoctialElements.Frame.Name,
+            equinoctialElements.SemiMajorAxis(), equinoctialElements.G, equinoctialElements.F,
+            equinoctialElements.K, equinoctialElements.H, equinoctialElements.L0, 0.0, -Constants.PI2, Constants.PI2, 0.0);
+    }
+
+    internal static OrbitalParameters.EquinoctialElements Convert(this DTO.EquinoctialElements equinoctialElements)
+    {
+        var observer = new CelestialBody(equinoctialElements.CenterOfMotionId);
+        var e = System.Math.Sqrt(equinoctialElements.H * equinoctialElements.H + equinoctialElements.K * equinoctialElements.K);
+        var p = equinoctialElements.SemiMajorAxis / (1 - e * e);
+        return new OrbitalParameters.EquinoctialElements(p, equinoctialElements.K, equinoctialElements.H, equinoctialElements.Q, equinoctialElements.P, equinoctialElements.L,
+            observer, Time.Create(equinoctialElements.Epoch, TimeFrame.TDBFrame), new Frame(equinoctialElements.Frame));
     }
 }

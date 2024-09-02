@@ -396,7 +396,7 @@ TEST(API, ConvertEquinoctialElementsToStateVector)
     double L = m0 + argp + node;
 
     IO::Astrodynamics::API::DTO::EquinoctialElementsDTO eqDTO;
-    eqDTO.frame = IO::Astrodynamics::Frames::InertialFrames::ICRF().ToCharArray();
+    eqDTO.SetFrame(IO::Astrodynamics::Frames::InertialFrames::ICRF().ToCharArray());
     eqDTO.declinationOfThePole = IO::Astrodynamics::Constants::PI2;
     eqDTO.rightAscensionOfThePole = -IO::Astrodynamics::Constants::PI2;
     eqDTO.ascendingNodeLongitudeRate = 0.0;

@@ -632,7 +632,7 @@ ConvertEquinoctialElementsToStateVectorProxy(
     auto centerOfMotion = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(
         equinoctialElementsDto.centerOfMotionId);
     IO::Astrodynamics::Time::TDB tdb{std::chrono::duration<double>(equinoctialElementsDto.epoch)};
-    IO::Astrodynamics::Frames::Frames frame{equinoctialElementsDto.frame};
+    IO::Astrodynamics::Frames::Frames frame{equinoctialElementsDto.inertialFrame};
 
     IO::Astrodynamics::OrbitalParameters::EquinoctialElements eq{
         centerOfMotion, tdb,
@@ -751,7 +751,7 @@ IO::Astrodynamics::API::DTO::ConicOrbitalElementsDTO ConvertStateVectorToConicOr
     conicOrbitalElementsDto.ascendingNodeLongitude = elts[3];
     conicOrbitalElementsDto.periapsisArgument = elts[4];
     conicOrbitalElementsDto.meanAnomaly = elts[5];
-    conicOrbitalElementsDto.epoch=elts[6];
+    conicOrbitalElementsDto.epoch = elts[6];
     conicOrbitalElementsDto.trueAnomaly = elts[8];
     conicOrbitalElementsDto.semiMajorAxis = elts[9];
     conicOrbitalElementsDto.orbitalPeriod = elts[10];
@@ -760,4 +760,33 @@ IO::Astrodynamics::API::DTO::ConicOrbitalElementsDTO ConvertStateVectorToConicOr
         HandleError();
     }
     return conicOrbitalElementsDto;
+}
+
+IO::Astrodynamics::API::DTO::StateVectorDTO Propagate2BodiesProxy(
+    IO::Astrodynamics::API::DTO::StateVectorDTO stateVector, double mu, double dt)
+{
+    ConstSpiceDouble sv[6] = {
+        stateVector.position.x, stateVector.position.y, stateVector.position.z,
+        stateVector.velocity.x, stateVector.velocity.y, stateVector.velocity.z
+    };
+
+    SpiceDouble result[6];
+
+    prop2b_c(mu, sv, dt, result);
+
+    IO::Astrodynamics::API::DTO::StateVectorDTO stateVectorDto;
+    stateVectorDto.position.x = result[0];
+    stateVectorDto.position.y = result[1];
+    stateVectorDto.position.z = result[2];
+    stateVectorDto.velocity.x = result[3];
+    stateVectorDto.velocity.y = result[4];
+    stateVectorDto.velocity.z = result[5];
+    stateVectorDto.epoch = stateVector.epoch + dt;
+    stateVectorDto.centerOfMotionId = stateVector.centerOfMotionId;
+    stateVectorDto.SetFrame(stateVector.inertialFrame);
+    if (failed_c())
+    {
+        HandleError();
+    }
+    return stateVectorDto;
 }

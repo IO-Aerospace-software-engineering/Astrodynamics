@@ -244,6 +244,11 @@ namespace IO.Astrodynamics.OrbitalParameters
             return this;
         }
 
+        public override KeplerianElements ToKeplerianElements()
+        {
+            return API.Instance.ConvertStateVectorToConicOrbitalElement(this);
+        }
+
         public override double MeanAnomaly()
         {
             if (_meanAnomaly.HasValue)

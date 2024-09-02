@@ -105,7 +105,7 @@ namespace IO.Astrodynamics.OrbitalParameters
 
         public override StateVector ToStateVector()
         {
-            throw new NotImplementedException();
+            return API.Instance.ConvertEquinoctialElementsToStateVector(this);
         }
 
         public override EquinoctialElements ToEquinoctial()
