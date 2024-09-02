@@ -131,7 +131,8 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
             return _specificOrbitalEnergy!.Value;
         }
 
-        _specificOrbitalEnergy = ToStateVector().SpecificOrbitalEnergy();
+        var sv= ToStateVector();
+        _specificOrbitalEnergy = System.Math.Pow(sv.Velocity.Magnitude(), 2.0) / 2.0 - (Observer.GM / sv.Position.Magnitude());
         return _specificOrbitalEnergy.Value;
     }
 

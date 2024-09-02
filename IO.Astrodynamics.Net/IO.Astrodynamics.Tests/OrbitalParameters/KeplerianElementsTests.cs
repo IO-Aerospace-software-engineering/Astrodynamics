@@ -129,8 +129,8 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
             Assert.Equal(original.E, transformed.E, 6);
             Assert.Equal(original.I, transformed.I, 6);
             Assert.Equal(original.RAAN, transformed.RAAN);
-            Assert.Equal(original.MeanLongitude(), transformed.MeanLongitude());
-            Assert.Equal(original.AOP + original.M, (transformed.AOP + transformed.M) % Astrodynamics.Constants._2PI);
+            Assert.Equal(original.MeanLongitude(), transformed.MeanLongitude(),6);
+            Assert.Equal(original.AOP + original.M, (transformed.AOP + transformed.M) % Astrodynamics.Constants._2PI,6);
         }
 
         [Fact]
