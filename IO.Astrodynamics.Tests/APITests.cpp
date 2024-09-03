@@ -442,18 +442,19 @@ TEST(API, ConvertEllipticStateToConic)
     stateVector.epoch = 2451545.0; // J2000 epoch
     stateVector.position = {6800000.0, 0.0, 0.0};
     stateVector.velocity = {0.0, 8000.0, 0.0};
-    double mu = 398600.4418; // Earth's gravitational parameter
+    stateVector.centerOfMotionId=earth->GetId();
+    stateVector.SetFrame("J2000");
 
     auto result = ConvertStateVectorToConicOrbitalElementProxy(stateVector, earth->GetMu());
 
-    EXPECT_NEAR(6800000.0, result.perifocalDistance, 1e-6);
-    EXPECT_NEAR(0.091820182092529928, result.eccentricity, 1e-6);
-    EXPECT_NEAR(0.0, result.inclination, 1e-6);
-    EXPECT_NEAR(0.0, result.ascendingNodeLongitude, 1e-6);
-    EXPECT_NEAR(0.0, result.periapsisArgument, 1e-6);
-    EXPECT_NEAR(0.0, result.meanAnomaly, 1e-6);
-    EXPECT_NEAR(0.0, result.trueAnomaly, 1e-6);
-    EXPECT_NEAR(2451545.0, result.epoch, 1e-6);
+    auto stateVector2 = ConvertConicElementsToStateVectorAtEpochProxy(result,stateVector.epoch,earth->GetMu());
+    EXPECT_NEAR(stateVector.position.x, stateVector2.position.x, 1e-6);
+    EXPECT_NEAR(stateVector.position.y, stateVector2.position.y, 1e-6);
+    EXPECT_NEAR(stateVector.position.z, stateVector2.position.z, 1e-6);
+    EXPECT_NEAR(stateVector.velocity.x, stateVector2.velocity.x, 1e-6);
+    EXPECT_NEAR(stateVector.velocity.y, stateVector2.velocity.y, 1e-6);
+    EXPECT_NEAR(stateVector.velocity.z, stateVector2.velocity.z, 1e-6);
+    EXPECT_NEAR(stateVector.epoch, stateVector2.epoch, 1e-6);
 }
 
 TEST(API, ConvertHyperbolicStateToConic)
@@ -463,6 +464,8 @@ TEST(API, ConvertHyperbolicStateToConic)
     stateVector.epoch = 2451545.0; // J2000 epoch
     stateVector.position = {6800000.0, 0.0, 0.0};
     stateVector.velocity = {0.0, 12000.0, 0.0};
+    stateVector.centerOfMotionId=earth->GetId();
+    stateVector.SetFrame("J2000");
     // double mu = 398600.4418; // Earth's gravitational parameter
 
     auto result = ConvertStateVectorToConicOrbitalElementProxy(stateVector, earth->GetMu());
@@ -470,7 +473,7 @@ TEST(API, ConvertHyperbolicStateToConic)
     result.SetFrame("J2000");
 
 
-    auto stateVector2 = ConvertConicElementsToStateVectorProxy(result);
+    auto stateVector2 = ConvertConicElementsToStateVectorAtEpochProxy(result,stateVector.epoch,earth->GetMu());
     EXPECT_NEAR(stateVector.position.x, stateVector2.position.x, 1e-6);
     EXPECT_NEAR(stateVector.position.y, stateVector2.position.y, 1e-6);
     EXPECT_NEAR(stateVector.position.z, stateVector2.position.z, 1e-6);

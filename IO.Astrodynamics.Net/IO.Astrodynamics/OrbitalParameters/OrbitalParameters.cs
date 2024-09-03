@@ -38,6 +38,7 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     private double? _ascendingNode;
     protected double? _trueAnomaly;
     private double? _eccentricAnomaly;
+    private double? _perigeeRadius;
 
     /// <summary>
     /// Constructor
@@ -77,6 +78,7 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
         _ascendingNode = null;
         _trueAnomaly = null;
         _eccentricAnomaly = null;
+        _perigeeRadius = null;
     }
 
     /// <summary>
@@ -442,6 +444,12 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
 
         _perigeevector ??= EccentricityVector().Normalize() * SemiMajorAxis() * (1.0 - Eccentricity());
         return _perigeevector.Value;
+    }
+
+    public double PerigeeRadius()
+    {
+        _perigeeRadius??= SemiMajorAxis() * (1.0 - Eccentricity());
+        return _perigeeRadius.Value;
     }
 
     /// <summary>

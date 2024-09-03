@@ -33,7 +33,7 @@ extern "C" {
  * Get the spice version
  * @return version
  */
-MODULE_API const char* GetSpiceVersionProxy();
+MODULE_API const char *GetSpiceVersionProxy();
 
 /**
  * Write ephemeris into binary file (spk)
@@ -44,7 +44,7 @@ MODULE_API const char* GetSpiceVersionProxy();
  * @return true if successful, false otherwise
  */
 MODULE_API bool
-WriteEphemerisProxy(const char* filePath, int objectId, IO::Astrodynamics::API::DTO::StateVectorDTO sv[100000],
+WriteEphemerisProxy(const char *filePath, int objectId, IO::Astrodynamics::API::DTO::StateVectorDTO sv[100000],
                     unsigned int size);
 
 /**
@@ -55,7 +55,7 @@ WriteEphemerisProxy(const char* filePath, int objectId, IO::Astrodynamics::API::
  * @param size Size of the state orientation array
  * @return true if successful, false otherwise
  */
-MODULE_API bool WriteOrientationProxy(const char* filePath, int objectId,
+MODULE_API bool WriteOrientationProxy(const char *filePath, int objectId,
                                       IO::Astrodynamics::API::DTO::StateOrientationDTO so[100000], unsigned int size);
 
 /**
@@ -69,8 +69,8 @@ MODULE_API bool WriteOrientationProxy(const char* filePath, int objectId,
  * @param stateVectors Array to store the state vectors
  */
 MODULE_API void
-ReadEphemerisProxy(IO::Astrodynamics::API::DTO::WindowDTO searchWindow, int observerId, int targetId, const char* frame,
-                   const char* aberration, double stepSize,
+ReadEphemerisProxy(IO::Astrodynamics::API::DTO::WindowDTO searchWindow, int observerId, int targetId, const char *frame,
+                   const char *aberration, double stepSize,
                    IO::Astrodynamics::API::DTO::StateVectorDTO stateVectors[10000]);
 
 /**
@@ -83,7 +83,7 @@ ReadEphemerisProxy(IO::Astrodynamics::API::DTO::WindowDTO searchWindow, int obse
  * @return State vector at the given epoch
  */
 MODULE_API IO::Astrodynamics::API::DTO::StateVectorDTO ReadEphemerisAtGivenEpochProxy(
-    double epoch, int observerId, int targetId, const char* frame, const char* aberration);
+        double epoch, int observerId, int targetId, const char *frame, const char *aberration);
 
 /**
  * Read spacecraft orientation
@@ -96,42 +96,42 @@ MODULE_API IO::Astrodynamics::API::DTO::StateVectorDTO ReadEphemerisAtGivenEpoch
  */
 MODULE_API void
 ReadOrientationProxy(IO::Astrodynamics::API::DTO::WindowDTO searchWindow, int spacecraftId, double tolerance,
-                     const char* frame, double stepSize,
+                     const char *frame, double stepSize,
                      IO::Astrodynamics::API::DTO::StateOrientationDTO so[10000]);
 
 /**
  * Evaluate launch windows
  * @param launchDto Launch data transfer object
  */
-MODULE_API void LaunchProxy(IO::Astrodynamics::API::DTO::LaunchDTO& launchDto);
+MODULE_API void LaunchProxy(IO::Astrodynamics::API::DTO::LaunchDTO &launchDto);
 
 /**
  * Load kernels
  * @param path Directory path to the kernels
  * @return true if successful, false otherwise
  */
-MODULE_API bool LoadKernelsProxy(const char* path);
+MODULE_API bool LoadKernelsProxy(const char *path);
 
 /**
  * Unload kernels
  * @param path Directory path to the kernels
  * @return true if successful, false otherwise
  */
-MODULE_API bool UnloadKernelsProxy(const char* path);
+MODULE_API bool UnloadKernelsProxy(const char *path);
 
 /**
  * Convert seconds from J2000 to formatted string (TDB)
  * @param secondsFromJ2000 Seconds from J2000
  * @return Formatted string
  */
-MODULE_API const char* TDBToStringProxy(double secondsFromJ2000);
+MODULE_API const char *TDBToStringProxy(double secondsFromJ2000);
 
 /**
  * Convert seconds from J2000 to formatted string (UTC)
  * @param secondsFromJ2000 Seconds from J2000
  * @return Formatted string
  */
-MODULE_API const char* UTCToStringProxy(double secondsFromJ2000);
+MODULE_API const char *UTCToStringProxy(double secondsFromJ2000);
 
 /**
  * Find time windows which satisfy distance constraint
@@ -146,7 +146,7 @@ MODULE_API const char* UTCToStringProxy(double secondsFromJ2000);
  */
 MODULE_API void
 FindWindowsOnDistanceConstraintProxy(IO::Astrodynamics::API::DTO::WindowDTO searchWindow, int observerId, int targetId,
-                                     const char* relationalOperator, double value, const char* aberration,
+                                     const char *relationalOperator, double value, const char *aberration,
                                      double stepSize, IO::Astrodynamics::API::DTO::WindowDTO windows[1000]);
 
 /**
@@ -166,11 +166,11 @@ FindWindowsOnDistanceConstraintProxy(IO::Astrodynamics::API::DTO::WindowDTO sear
  */
 MODULE_API void FindWindowsOnOccultationConstraintProxy(IO::Astrodynamics::API::DTO::WindowDTO searchWindow,
                                                         int observerId,
-                                                        int targetId, const char* targetFrame,
-                                                        const char* targetShape,
-                                                        int frontBodyId, const char* frontFrame, const char* frontShape,
-                                                        const char* occultationType,
-                                                        const char* aberration, double stepSize,
+                                                        int targetId, const char *targetFrame,
+                                                        const char *targetShape,
+                                                        int frontBodyId, const char *frontFrame, const char *frontShape,
+                                                        const char *occultationType,
+                                                        const char *aberration, double stepSize,
                                                         IO::Astrodynamics::API::DTO::WindowDTO windows[1000]);
 
 /**
@@ -190,9 +190,9 @@ MODULE_API void FindWindowsOnOccultationConstraintProxy(IO::Astrodynamics::API::
  */
 MODULE_API void FindWindowsOnCoordinateConstraintProxy(IO::Astrodynamics::API::DTO::WindowDTO searchWindow,
                                                        int observerId,
-                                                       int targetId, const char* frame, const char* coordinateSystem,
-                                                       const char* coordinate, const char* relationalOperator,
-                                                       double value, double adjustValue, const char* aberration,
+                                                       int targetId, const char *frame, const char *coordinateSystem,
+                                                       const char *coordinate, const char *relationalOperator,
+                                                       double value, double adjustValue, const char *aberration,
                                                        double stepSize,
                                                        IO::Astrodynamics::API::DTO::WindowDTO windows[1000]);
 
@@ -215,13 +215,13 @@ MODULE_API void FindWindowsOnCoordinateConstraintProxy(IO::Astrodynamics::API::D
  */
 MODULE_API void FindWindowsOnIlluminationConstraintProxy(IO::Astrodynamics::API::DTO::WindowDTO searchWindow,
                                                          int observerId,
-                                                         const char* illuminationSource, int targetBody,
-                                                         const char* fixedFrame,
+                                                         const char *illuminationSource, int targetBody,
+                                                         const char *fixedFrame,
                                                          IO::Astrodynamics::API::DTO::PlanetodeticDTO geodetic,
-                                                         const char* illuminationType,
-                                                         const char* relationalOperator, double value,
+                                                         const char *illuminationType,
+                                                         const char *relationalOperator, double value,
                                                          double adjustValue,
-                                                         const char* aberration, double stepSize, const char* method,
+                                                         const char *aberration, double stepSize, const char *method,
                                                          IO::Astrodynamics::API::DTO::WindowDTO windows[1000]);
 
 /**
@@ -239,8 +239,8 @@ MODULE_API void FindWindowsOnIlluminationConstraintProxy(IO::Astrodynamics::API:
 MODULE_API void
 FindWindowsInFieldOfViewConstraintProxy(IO::Astrodynamics::API::DTO::WindowDTO searchWindow, int observerId,
                                         int instrumentId,
-                                        int targetId, const char* targetFrame, const char* targetShape,
-                                        const char* aberration, double stepSize,
+                                        int targetId, const char *targetFrame, const char *targetShape,
+                                        const char *aberration, double stepSize,
                                         IO::Astrodynamics::API::DTO::WindowDTO windows[1000]);
 
 /**
@@ -272,7 +272,7 @@ MODULE_API IO::Astrodynamics::API::DTO::CelestialBodyDTO GetCelestialBodyInfoPro
  * @return Frame transformation information
  */
 MODULE_API IO::Astrodynamics::API::DTO::FrameTransformationDTO TransformFrameProxy(
-    const char* fromFrame, const char* toFrame, double epoch);
+        const char *fromFrame, const char *toFrame, double epoch);
 
 /**
  * Convert Two Line Elements (TLE) to state vector
@@ -283,7 +283,7 @@ MODULE_API IO::Astrodynamics::API::DTO::FrameTransformationDTO TransformFramePro
  * @return State vector
  */
 MODULE_API IO::Astrodynamics::API::DTO::StateVectorDTO ConvertTLEToStateVectorProxy(
-    const char* L1, const char* L2, const char* L3, double epoch);
+        const char *L1, const char *L2, const char *L3, double epoch);
 
 /**
  * Convert conic orbital elements to state vector
@@ -291,7 +291,16 @@ MODULE_API IO::Astrodynamics::API::DTO::StateVectorDTO ConvertTLEToStateVectorPr
  * @return State vector
  */
 MODULE_API IO::Astrodynamics::API::DTO::StateVectorDTO ConvertConicElementsToStateVectorProxy(
-    IO::Astrodynamics::API::DTO::ConicOrbitalElementsDTO conicOrbitalElementsDto);
+        IO::Astrodynamics::API::DTO::ConicOrbitalElementsDTO conicOrbitalElementsDto);
+
+/**
+ * Convert equinoctial elements to state vector at epoch
+ * @param equinoctialElementsDto
+ * @param epoch
+ * @return
+ */
+MODULE_API IO::Astrodynamics::API::DTO::StateVectorDTO ConvertConicElementsToStateVectorAtEpochProxy(
+        IO::Astrodynamics::API::DTO::ConicOrbitalElementsDTO equinoctialElementsDto, double epoch, double gm);
 
 /**
  * Convert state vector to conic orbital elements
@@ -300,7 +309,7 @@ MODULE_API IO::Astrodynamics::API::DTO::StateVectorDTO ConvertConicElementsToSta
  * @return Conic orbital elements
  */
 MODULE_API IO::Astrodynamics::API::DTO::ConicOrbitalElementsDTO ConvertStateVectorToConicOrbitalElementProxy(
-    IO::Astrodynamics::API::DTO::StateVectorDTO stateVector, double mu);
+        IO::Astrodynamics::API::DTO::StateVectorDTO stateVector, double mu);
 
 /**
  * Convert equinoctial elements to state vector
@@ -308,7 +317,8 @@ MODULE_API IO::Astrodynamics::API::DTO::ConicOrbitalElementsDTO ConvertStateVect
  * @return State vector
  */
 MODULE_API IO::Astrodynamics::API::DTO::StateVectorDTO ConvertEquinoctialElementsToStateVectorProxy(
-    IO::Astrodynamics::API::DTO::EquinoctialElementsDTO equinoctialElementsDto);
+        IO::Astrodynamics::API::DTO::EquinoctialElementsDTO equinoctialElementsDto);
+
 
 /**
  * Convert state vector to right ascension and declination
@@ -316,7 +326,7 @@ MODULE_API IO::Astrodynamics::API::DTO::StateVectorDTO ConvertEquinoctialElement
  * @return Right ascension and declination
  */
 MODULE_API IO::Astrodynamics::API::DTO::RaDecDTO ConvertStateVectorToEquatorialCoordinatesProxy(
-    IO::Astrodynamics::API::DTO::StateVectorDTO stateVectorDto);
+        IO::Astrodynamics::API::DTO::StateVectorDTO stateVectorDto);
 
 /**
  * Propagate the state vector of a two-body system.
@@ -324,7 +334,7 @@ MODULE_API IO::Astrodynamics::API::DTO::RaDecDTO ConvertStateVectorToEquatorialC
  * @return Propagated state vector
  */
 MODULE_API IO::Astrodynamics::API::DTO::StateVectorDTO Propagate2BodiesProxy(
-    IO::Astrodynamics::API::DTO::StateVectorDTO stateVector, double gm, double dt);
+        IO::Astrodynamics::API::DTO::StateVectorDTO stateVector, double gm, double dt);
 
 
 /**
@@ -335,7 +345,7 @@ MODULE_API IO::Astrodynamics::API::DTO::StateVectorDTO Propagate2BodiesProxy(
  * @return TLE elements
  */
 MODULE_API IO::Astrodynamics::API::DTO::TLEElementsDTO GetTLEElementsProxy(
-    const char* L1, const char* L2, const char* L3);
+        const char *L1, const char *L2, const char *L3);
 
 /**
  * Clear kernel pool
@@ -356,7 +366,7 @@ static constexpr const int lenout = 33;
  * Handle error and return error message
  * @return Error message
  */
-char* HandleError();
+char *HandleError();
 
 /**
  * Activate error management

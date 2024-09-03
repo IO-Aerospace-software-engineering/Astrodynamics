@@ -132,6 +132,12 @@ public class API
     [DllImport(@"IO.Astrodynamics", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
     private static extern StateVector Propagate2BodiesProxy(StateVector stateVector, double mu, double dt);
 
+    [DllImport(@"IO.Astrodynamics", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
+    private static extern StateVector ConvertConicElementsToStateVectorProxy(KeplerianElements keplerianElements);
+
+    [DllImport(@"IO.Astrodynamics", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
+    private static extern StateVector ConvertConicElementsToStateVectorAtEpochProxy(KeplerianElements keplerianElements, double epoch, double gm);
+
     private static IntPtr Resolver(string libraryName, Assembly assembly, DllImportSearchPath? searchPath)
     {
         _libHandle = IntPtr.Zero;
@@ -847,6 +853,23 @@ public class API
         lock (lockObject)
         {
             return ConvertEquinoctialElementsToStateVectorProxy(equinoctialElements.Convert()).Convert();
+        }
+    }
+
+    public IO.Astrodynamics.OrbitalParameters.StateVector ConvertConicElementsToStateVector(IO.Astrodynamics.OrbitalParameters.KeplerianElements keplerianElements)
+    {
+        lock (lockObject)
+        {
+            return ConvertConicElementsToStateVectorProxy(keplerianElements.Convert()).Convert();
+        }
+    }
+
+    public IO.Astrodynamics.OrbitalParameters.StateVector ConvertConicElementsToStateVector(IO.Astrodynamics.OrbitalParameters.KeplerianElements keplerianElements, Time epoch)
+    {
+        lock (lockObject)
+        {
+            return ConvertConicElementsToStateVectorAtEpochProxy(keplerianElements.Convert(), epoch.ToTDB().TimeSpanFromJ2000().TotalSeconds, keplerianElements.Observer.GM)
+                .Convert();
         }
     }
 
