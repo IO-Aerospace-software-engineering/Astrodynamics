@@ -87,7 +87,7 @@ public static class ProfilesConfiguration
 
     internal static DTO.KeplerianElements Convert(this IO.Astrodynamics.OrbitalParameters.KeplerianElements keplerianElements)
     {
-        return new DTO.KeplerianElements(keplerianElements.Observer.NaifId, keplerianElements.Epoch.TimeSpanFromJ2000().TotalSeconds, keplerianElements.PerigeeRadius(),
+        return new DTO.KeplerianElements(keplerianElements.Observer.NaifId, keplerianElements.Epoch.ToTDB().TimeSpanFromJ2000().TotalSeconds, keplerianElements.PerigeeRadius(),
             keplerianElements.E, keplerianElements.I, keplerianElements.RAAN, keplerianElements.AOP, keplerianElements.M, keplerianElements.Frame.Name);
     }
 
