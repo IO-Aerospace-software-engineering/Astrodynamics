@@ -195,29 +195,7 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// <returns></returns>
     public double AscendingNode()
     {
-        if (_ascendingNode.HasValue)
-        {
-            return _ascendingNode.Value;
-        }
-
-        Vector3 n = AscendingNodeVector();
-
-        if (n.Magnitude() == 0.0)
-        {
-            _ascendingNode = 0.0;
-            return _ascendingNode.Value;
-        }
-
-        var omega = System.Math.Acos(n.X / n.Magnitude());
-
-
-        if (n.Y < 0.0)
-        {
-            omega = 2 * System.Math.PI - omega;
-        }
-
-        _ascendingNode = omega;
-
+        _ascendingNode ??= ToKeplerianElements().RAAN;
 
         return _ascendingNode.Value;
     }
