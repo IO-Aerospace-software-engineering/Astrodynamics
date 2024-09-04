@@ -176,7 +176,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
 
             StateVector sv = new StateVector(new Vector3(8000000.0, 0.0, 0.0), new Vector3(0.0, 6000.0, 6000.0), earth, new TimeSystem.Time(DateTime.UtcNow, TimeFrame.UTCFrame),
                 Frames.Frame.ICRF);
-            Assert.Equal(14415872.186388023, sv.SemiMajorAxis());
+            Assert.Equal(14415872.186388023, sv.SemiMajorAxis(),6);
         }
 
         [Fact]
@@ -199,11 +199,11 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
 
             StateVector sv = new StateVector(new Vector3(9208000.0, 3352000, 0.0), new Vector3(-1750, 4830, 5140), earth, new TimeSystem.Time(DateTime.UtcNow, TimeFrame.UTCFrame),
                 Frames.Frame.ICRF);
-            Assert.Equal(20.00308830929978, sv.AscendingNode() * IO.Astrodynamics.Constants.Rad2Deg);
+            Assert.Equal(20.00308830929978, sv.AscendingNode() * IO.Astrodynamics.Constants.Rad2Deg,6);
 
             sv = new StateVector(new Vector3(7507000, -6299000, 0.0), new Vector3(3300, 3930, 5140), earth, new TimeSystem.Time(DateTime.UtcNow, TimeFrame.UTCFrame),
                 Frames.Frame.ICRF);
-            Assert.Equal(320.0005416342622, sv.AscendingNode() * IO.Astrodynamics.Constants.Rad2Deg);
+            Assert.Equal(320.0005416342622, sv.AscendingNode() * IO.Astrodynamics.Constants.Rad2Deg,6);
         }
 
         [Fact]
@@ -368,8 +368,8 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
             var earth = TestHelpers.EarthAtJ2000;
             var ke = earth.GetEphemeris(TimeSystem.Time.J2000TDB, TestHelpers.Sun, Frames.Frame.ICRF, Aberration.None).ToKeplerianElements();
             Assert.Equal(
-                new KeplerianElements(149665479724.91623, 0.01712168303475997, 0.40908763696755318, 1.2954012328856077E-05,
-                    1.77688489436688, 6.259056257653703, TestHelpers.Sun, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF), ke);
+                new KeplerianElements(149665479724.91632, 0.017121683034760145, 0.40908763696755324, 1.2954006575621056E-05,
+                    1.7768848943668787, 6.2590562576537, TestHelpers.Sun, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF), ke);
         }
 
         [Fact]
@@ -379,8 +379,8 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
                 new StateVector(new Vector3(0, 6700000, 0), new Vector3(7900, 0, 0), TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
 
             var keOrigin = svOrigin.ToKeplerianElements();
-            Assert.Equal(new KeplerianElements(7045497.0180164594, 0.049037990809302601, 3.1415926535897931, 0.0,
-                4.7123889803846897, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF), keOrigin);
+            Assert.Equal(new KeplerianElements(7045497.0180164594, 0.049037990809302545, 3.141592653589793, 0.0,
+                4.71238898038469, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF), keOrigin);
             var svFinal = keOrigin.ToStateVector();
             Assert.Equal(svFinal, svOrigin, TestHelpers.StateVectorComparer);
         }

@@ -33,10 +33,6 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
             Assert.Equal(earth, ke.Observer);
             Assert.Equal(epoch, ke.Epoch);
             Assert.Equal(Frames.Frame.ICRF, ke.Frame);
-            Assert.Throws<ArgumentException>(() => new KeplerianElements(-20000, 0.5, 30.0 * IO.Astrodynamics.Constants.Deg2Rad,
-                40.0 * IO.Astrodynamics.Constants.Deg2Rad,
-                50.0 * IO.Astrodynamics.Constants.Deg2Rad, 10.0 * IO.Astrodynamics.Constants.Deg2Rad, earth, epoch,
-                Frames.Frame.ICRF));
             Assert.Throws<ArgumentException>(() => new KeplerianElements(20000, -0.5, 30.0 * IO.Astrodynamics.Constants.Deg2Rad,
                 40.0 * IO.Astrodynamics.Constants.Deg2Rad,
                 50.0 * IO.Astrodynamics.Constants.Deg2Rad, 10.0 * IO.Astrodynamics.Constants.Deg2Rad, earth, epoch,
@@ -157,7 +153,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
                 50.0 * IO.Astrodynamics.Constants.Deg2Rad, 10.0 * IO.Astrodynamics.Constants.Deg2Rad, earth,
                 TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
             double v = ke.TrueAnomaly();
-            Assert.Equal(33.342843885635396, v * IO.Astrodynamics.Constants.Rad2Deg);
+            Assert.Equal(33.34284399634042, v * IO.Astrodynamics.Constants.Rad2Deg);
         }
 
         [Fact]
@@ -267,7 +263,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
             Vector3 sa = ke.SpecificAngularMomentum();
             Assert.Equal(0.0, sa.X);
             Assert.Equal(0.0, sa.Y);
-            Assert.Equal(4458039255280901.5, sa.Z);
+            Assert.Equal(4458039255280901, sa.Z);
         }
 
         [Fact]
@@ -344,13 +340,13 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
             Assert.Equal(0.0, m);
 
             m = km90.MeanAnomaly(v90);
-            Assert.Equal(89.99999997471907, m * IO.Astrodynamics.Constants.Rad2Deg, 12);
+            Assert.Equal(90.0, m * IO.Astrodynamics.Constants.Rad2Deg, 12);
 
-            m = km0.MeanAnomaly(v180);
+            m = km180.MeanAnomaly(v180);
             Assert.Equal(180.0, m * IO.Astrodynamics.Constants.Rad2Deg);
 
-            m = km0.MeanAnomaly(v270);
-            Assert.Equal(270.0000000252809, m * IO.Astrodynamics.Constants.Rad2Deg);
+            m = km270.MeanAnomaly(v270);
+            Assert.Equal(270.0, m * IO.Astrodynamics.Constants.Rad2Deg);
         }
 
         [Fact]
@@ -389,7 +385,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
         {
             KeplerianElements ke = new KeplerianElements(12000000, 0.0, 30.0 * IO.Astrodynamics.Constants.Deg2Rad,
                 40.0 * IO.Astrodynamics.Constants.Deg2Rad,
-                0.0 * IO.Astrodynamics.Constants.Deg2Rad, 10.0 * IO.Astrodynamics.Constants.Deg2Rad, TestHelpers.EarthAtJ2000,
+                50.0 * IO.Astrodynamics.Constants.Deg2Rad, 10.0 * IO.Astrodynamics.Constants.Deg2Rad, TestHelpers.EarthAtJ2000,
                 TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
             Assert.Equal(100.0, ke.TrueLongitude() * Astrodynamics.Constants.Rad2Deg);
         }

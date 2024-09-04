@@ -44,15 +44,65 @@ namespace IO.Astrodynamics.OrbitalParameters
             {
                 return _stateVector;
             }
-            _stateVector= API.Instance.ConvertEquinoctialElementsToStateVector(this);
+
+            _stateVector = API.Instance.ConvertEquinoctialElementsToStateVector(this);
             return _stateVector;
         }
-        
+
 
         public override EquinoctialElements ToEquinoctial()
         {
             return this;
         }
+
+        public override double SemiMajorAxis()
+        {
+            _semiMajorAxis ??= P / (1 - F * F - G * G);
+            return _semiMajorAxis.Value;
+        }
+
+        public override double Eccentricity()
+        {
+            _eccentricity ??= System.Math.Sqrt(F * F + G * G);
+            return _eccentricity.Value;
+        }
+
+        public override double Inclination()
+        {
+            _inclination ??= 2 * System.Math.Atan(System.Math.Sqrt(H * H + K * K));
+            return _inclination.Value;
+        }
+
+        public override double AscendingNode()
+        {
+            _ascendingNode ??= System.Math.Atan2(K, H);
+            return _ascendingNode.Value;
+        }
+
+        public override double ArgumentOfPeriapsis()
+        {
+            _periapsisArgument ??= System.Math.Atan2(G * H - F * K, F * H + G * K);
+            return _periapsisArgument.Value;
+        }
+
+        public override double MeanAnomaly()
+        {
+            _meanAnomaly ??= TrueAnomalyToMeanAnomaly(TrueAnomaly(), Eccentricity(), EccentricAnomaly(TrueAnomaly()));
+            return _meanAnomaly.Value;
+        }
+
+        public override double TrueAnomaly()
+        {
+            _trueAnomaly ??= L0 - System.Math.Atan2(G , F);
+            return _trueAnomaly.Value;
+        }
+
+        public override KeplerianElements ToKeplerianElements()
+        {
+            return new KeplerianElements(SemiMajorAxis(), Eccentricity(), Inclination(), AscendingNode(), ArgumentOfPeriapsis(), MeanAnomaly(), Observer, Epoch, Frame);
+        }
+
+        #region Operators
 
         public bool Equals(EquinoctialElements other)
         {
@@ -87,7 +137,9 @@ namespace IO.Astrodynamics.OrbitalParameters
 
         public override string ToString()
         {
-            return $"Epoch : {Epoch.ToString()} P : {P} F : {F} G : {G} H : {H} K {K} L0 : {L0} Frame : {Frame.Name}" ;
+            return $"Epoch : {Epoch.ToString()} P : {P} F : {F} G : {G} H : {H} K {K} L0 : {L0} Frame : {Frame.Name}";
         }
+
+        #endregion
     }
 }
