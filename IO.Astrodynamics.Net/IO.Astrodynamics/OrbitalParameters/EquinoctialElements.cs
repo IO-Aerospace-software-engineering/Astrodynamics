@@ -40,12 +40,7 @@ namespace IO.Astrodynamics.OrbitalParameters
 
         public override StateVector ToStateVector()
         {
-            if (_stateVector is not null)
-            {
-                return _stateVector;
-            }
-        
-            _stateVector = API.Instance.ConvertEquinoctialElementsToStateVector(this);
+            _stateVector ??= API.Instance.ConvertEquinoctialElementsToStateVector(this);
             return _stateVector;
         }
 

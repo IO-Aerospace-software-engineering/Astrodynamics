@@ -39,10 +39,174 @@ namespace IO.Astrodynamics.OrbitalParameters
             return this;
         }
 
-        public override KeplerianElements ToKeplerianElements()
+        public override double SemiMajorAxis()
         {
-            return API.Instance.ConvertStateVectorToConicOrbitalElement(this);
+            if (_semiMajorAxis.HasValue)
+            {
+                return _semiMajorAxis.Value;
+            }
+
+            if (IsParabolic() || IsHyperbolic())
+            {
+                _semiMajorAxis = double.PositiveInfinity;
+            }
+
+            _semiMajorAxis ??= -(Observer.GM / (2.0 * SpecificOrbitalEnergy()));
+
+            return _semiMajorAxis.Value;
         }
+
+        public override double Eccentricity()
+        {
+            _eccentricity ??= EccentricityVector().Magnitude();
+            return _eccentricity.Value;
+        }
+
+        public override double Inclination()
+        {
+            _inclination ??= SpecificAngularMomentum().Angle(Vector3.VectorZ);
+            return _inclination.Value;
+        }
+
+        public override double AscendingNode()
+        {
+            if (_ascendingNode.HasValue)
+            {
+                return _ascendingNode.Value;
+            }
+
+            Vector3 n = AscendingNodeVector();
+
+            if (n.Magnitude() == 0.0)
+            {
+                _ascendingNode = 0.0;
+                return _ascendingNode.Value;
+            }
+
+            var omega = System.Math.Acos(n.X / n.Magnitude());
+
+
+            if (n.Y < 0.0)
+            {
+                omega = 2 * System.Math.PI - omega;
+            }
+
+            _ascendingNode = omega;
+
+
+            return _ascendingNode.Value;
+        }
+
+        public override double ArgumentOfPeriapsis()
+        {
+            if (_periapsisArgument.HasValue)
+            {
+                return _periapsisArgument.Value;
+            }
+
+            var n = AscendingNodeVector();
+            var e = EccentricityVector();
+
+            if (e == Vector3.Zero)
+            {
+                return 0.0;
+            }
+
+            if (n == Vector3.Zero)
+            {
+                _periapsisArgument = System.Math.Atan2(e.Y, e.X);
+                if (Inclination() > Constants.PI2)
+                {
+                    _periapsisArgument = Constants._2PI - _periapsisArgument;
+                    return _periapsisArgument!.Value;
+                }
+            }
+
+            _periapsisArgument = System.Math.Acos(System.Math.Clamp((n * e) / (n.Magnitude() * e.Magnitude()), -1.0, 1.0));
+            if (e.Z < 0.0)
+            {
+                _periapsisArgument = System.Math.PI * 2.0 - _periapsisArgument;
+            }
+
+            return _periapsisArgument.Value;
+        }
+
+        public override double MeanAnomaly()
+        {
+            double ea = EccentricAnomaly(TrueAnomaly());
+            _meanAnomaly ??= ea - Eccentricity() * System.Math.Sin(ea);
+            return _meanAnomaly.Value;
+        }
+        
+        public override double TrueAnomaly()
+        {
+            if (_trueAnomaly.HasValue)
+            {
+                return _trueAnomaly.Value;
+            }
+
+            var sv = ToStateVector();
+
+            if (IsCircular())
+            {
+                if (Inclination() < 1E-03)
+                {
+                    _trueAnomaly = CircularNoInclinationTrueAnomaly();
+                    return _trueAnomaly.Value;
+                }
+
+                _trueAnomaly = CircularTrueAnomaly();
+                return _trueAnomaly.Value;
+            }
+
+            var e = EccentricityVector();
+            _trueAnomaly = System.Math.Acos((e * sv.Position) / (e.Magnitude() * sv.Position.Magnitude()));
+            if (sv.Position * sv.Velocity < 0.0)
+            {
+                _trueAnomaly = System.Math.PI * 2.0 - _trueAnomaly;
+            }
+
+            return _trueAnomaly.Value;
+        }
+
+        private double CircularTrueAnomaly()
+        {
+            var sv = ToStateVector();
+            var omega = AscendingNodeVector();
+            var v = System.Math.Acos((omega * sv.Position) / (omega.Magnitude() * sv.Position.Magnitude()));
+            if (sv.Position.Z < 0.0)
+            {
+                v = Constants._2PI - v;
+            }
+
+            v -= ArgumentOfPeriapsis();
+            if (v < 0.0)
+            {
+                v += Constants._2PI;
+            }
+
+            return v % Constants._2PI;
+        }
+
+        private double CircularNoInclinationTrueAnomaly()
+        {
+            var sv = ToStateVector();
+            var l = System.Math.Acos(sv.Position.X / sv.Position.Magnitude());
+            if (sv.Velocity.X > 0)
+            {
+                l = Constants._2PI - l;
+            }
+
+            l = l - ArgumentOfPeriapsis() - AscendingNode();
+            if (l < 0.0)
+            {
+                l += Constants._2PI;
+            }
+
+            return l % Constants._2PI;
+        }
+        
+        #region Operators
 
         public static StateVector operator +(StateVector sv1, StateVector sv2)
         {
@@ -128,5 +292,6 @@ namespace IO.Astrodynamics.OrbitalParameters
         {
             return $"Epoch : {Epoch.ToString()} Position : {Position} Velocity : {Velocity} Frame : {Frame.Name}";
         }
+        #endregion
     }
 }

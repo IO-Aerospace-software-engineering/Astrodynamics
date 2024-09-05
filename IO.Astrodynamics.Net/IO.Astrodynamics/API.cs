@@ -847,7 +847,7 @@ public class API
             return ConvertStateVectorToConicOrbitalElementProxy(svDto, stateVector.Observer.GM).Convert();
         }
     }
-
+    
     public IO.Astrodynamics.OrbitalParameters.StateVector ConvertEquinoctialElementsToStateVector(IO.Astrodynamics.OrbitalParameters.EquinoctialElements equinoctialElements)
     {
         lock (lockObject)
@@ -855,7 +855,7 @@ public class API
             return ConvertEquinoctialElementsToStateVectorProxy(equinoctialElements.Convert()).Convert();
         }
     }
-
+    
     public IO.Astrodynamics.OrbitalParameters.StateVector ConvertConicElementsToStateVector(IO.Astrodynamics.OrbitalParameters.KeplerianElements keplerianElements)
     {
         lock (lockObject)
@@ -863,7 +863,7 @@ public class API
             return ConvertConicElementsToStateVectorProxy(keplerianElements.Convert()).Convert();
         }
     }
-
+    
     public IO.Astrodynamics.OrbitalParameters.StateVector ConvertConicElementsToStateVector(IO.Astrodynamics.OrbitalParameters.KeplerianElements keplerianElements, Time epoch)
     {
         lock (lockObject)
@@ -872,7 +872,7 @@ public class API
                 .Convert();
         }
     }
-
+    
     public OrbitalParameters.StateVector Propagate2Bodies(OrbitalParameters.StateVector stateVector, TimeSpan dt)
     {
         lock (lockObject)
@@ -880,7 +880,7 @@ public class API
             return Propagate2BodiesProxy(stateVector.Convert(), stateVector.Observer.GM, dt.TotalSeconds).Convert();
         }
     }
-
+    
     public OrbitalParameters.StateVector Propagate2Bodies(OrbitalParameters.StateVector stateVector, Time targetEpoch)
     {
         return Propagate2Bodies(stateVector, targetEpoch - stateVector.Epoch);

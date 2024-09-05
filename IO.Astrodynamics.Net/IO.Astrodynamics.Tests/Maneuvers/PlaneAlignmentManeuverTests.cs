@@ -22,14 +22,15 @@ namespace IO.Astrodynamics.Tests.Maneuvers
             FuelTank fuelTank10 = new FuelTank("My fuel tank10", "ft2021", "sn0", 4000.0, 3000.0);
             Engine eng = new Engine("My engine", "model 1", "sn1", 350.0, 50.0, fuelTank10);
 
+            var targetOrbit = new KeplerianElements(double.PositiveInfinity, 1.0, 0.0, 0.0, 0.0, 0.0, TestHelpers.Sun,
+                new TimeSystem.Time(new DateTime(2021, 01, 01), TimeFrame.TDBFrame), Frames.Frame.ECLIPTIC_J2000, perigeeRadius: 6800000.0);
 
-            var targetOrbit = new KeplerianElements(150000000.0, 1.0, 0.0, 0.0, 0.0, 0.0, TestHelpers.Sun, new TimeSystem.Time(new DateTime(2021, 01, 01),TimeFrame.TDBFrame), Frames.Frame.ECLIPTIC_J2000);
-
-            PlaneAlignmentManeuver planeAlignmentManeuver = new PlaneAlignmentManeuver(new TimeSystem.Time(new DateTime(2021, 01, 01),TimeFrame.TDBFrame), TimeSpan.FromDays(1.0), targetOrbit, eng);
+            PlaneAlignmentManeuver planeAlignmentManeuver =
+                new PlaneAlignmentManeuver(new TimeSystem.Time(new DateTime(2021, 01, 01), TimeFrame.TDBFrame), TimeSpan.FromDays(1.0), targetOrbit, eng);
 
             Assert.NotNull(planeAlignmentManeuver.Engine);
             Assert.Equal(TimeSpan.FromDays(1.0), planeAlignmentManeuver.ManeuverHoldDuration);
-            Assert.Equal(new TimeSystem.Time(new DateTime(2021, 01, 01),TimeFrame.TDBFrame), planeAlignmentManeuver.MinimumEpoch);
+            Assert.Equal(new TimeSystem.Time(new DateTime(2021, 01, 01), TimeFrame.TDBFrame), planeAlignmentManeuver.MinimumEpoch);
             Assert.Equal(targetOrbit, planeAlignmentManeuver.TargetOrbit.AtEpoch(new TimeSystem.Time(2021, 01, 01)));
             Assert.Equal(eng, planeAlignmentManeuver.Engine);
         }
@@ -44,7 +45,8 @@ namespace IO.Astrodynamics.Tests.Maneuvers
             var spc = new Spacecraft(-666, "GenericSpacecraft", 1000.0, 3000.0, new Clock("GenericClk", 65536), orbitalParams);
             spc.AddFuelTank(new FuelTank("ft", "ftA", "123456", 1000.0, 900.0));
             spc.AddEngine(new Engine("eng", "engmk1", "12345", 450, 50, spc.FuelTanks.First()));
-            PlaneAlignmentManeuver planeAlignmentManeuver = new PlaneAlignmentManeuver(new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame), TimeSpan.Zero, targtOrbitalParams, spc.Engines.First());
+            PlaneAlignmentManeuver planeAlignmentManeuver =
+                new PlaneAlignmentManeuver(new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame), TimeSpan.Zero, targtOrbitalParams, spc.Engines.First());
             var dnTrueAnomaly = 2.197937654;
             var anTrueAnomaly = dnTrueAnomaly + Astrodynamics.Constants.PI;
 
@@ -65,7 +67,8 @@ namespace IO.Astrodynamics.Tests.Maneuvers
             var spc = new Spacecraft(-666, "GenericSpacecraft", 1000.0, 3000.0, new Clock("GenericClk", 65536), orbitalParams);
             spc.AddFuelTank(new FuelTank("ft", "ftA", "123456", 1000.0, 900.0));
             spc.AddEngine(new Engine("eng", "engmk1", "12345", 450, 50, spc.FuelTanks.First()));
-            PlaneAlignmentManeuver planeAlignmentManeuver = new PlaneAlignmentManeuver(new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame), TimeSpan.Zero, targtOrbitalParams, spc.Engines.First());
+            PlaneAlignmentManeuver planeAlignmentManeuver =
+                new PlaneAlignmentManeuver(new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame), TimeSpan.Zero, targtOrbitalParams, spc.Engines.First());
             var dnTrueAnomaly = 2.197937654;
             var anTrueAnomaly = dnTrueAnomaly + Astrodynamics.Constants.PI;
 
@@ -88,7 +91,8 @@ namespace IO.Astrodynamics.Tests.Maneuvers
             var spc = new Spacecraft(-666, "GenericSpacecraft", 1000.0, 3000.0, new Clock("GenericClk", 65536), orbitalParams);
             spc.AddFuelTank(new FuelTank("ft", "ftA", "123456", 2000.0, 1900.0));
             spc.AddEngine(new Engine("eng", "engmk1", "12345", 450, 50, spc.FuelTanks.First()));
-            PlaneAlignmentManeuver planeAlignmentManeuver = new PlaneAlignmentManeuver(new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame), TimeSpan.Zero, targtOrbitalParams, spc.Engines.First());
+            PlaneAlignmentManeuver planeAlignmentManeuver =
+                new PlaneAlignmentManeuver(new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame), TimeSpan.Zero, targtOrbitalParams, spc.Engines.First());
             var dnTrueAnomaly = 2.197937654;
             var anTrueAnomaly = dnTrueAnomaly + Astrodynamics.Constants.PI;
 
@@ -111,7 +115,8 @@ namespace IO.Astrodynamics.Tests.Maneuvers
             var spc = new Spacecraft(-666, "GenericSpacecraft", 1000.0, 3000.0, new Clock("GenericClk", 65536), orbitalParams);
             spc.AddFuelTank(new FuelTank("ft", "ftA", "123456", 2000.0, 1900.0));
             spc.AddEngine(new Engine("eng", "engmk1", "12345", 450, 50, spc.FuelTanks.First()));
-            PlaneAlignmentManeuver planeAlignmentManeuver = new PlaneAlignmentManeuver(new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame), TimeSpan.Zero, targtOrbitalParams, spc.Engines.First());
+            PlaneAlignmentManeuver planeAlignmentManeuver =
+                new PlaneAlignmentManeuver(new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame), TimeSpan.Zero, targtOrbitalParams, spc.Engines.First());
             var dnTrueAnomaly = 2.197937654;
             var anTrueAnomaly = dnTrueAnomaly + Astrodynamics.Constants.PI;
 
@@ -120,8 +125,8 @@ namespace IO.Astrodynamics.Tests.Maneuvers
             //Execute at ascending node
             var res = planeAlignmentManeuver.TryExecute(orbitalParams.ToStateVector(dnTrueAnomaly));
 
-            Assert.Equal(new Vector3(1485.9760225904588, -2563.040480113374, 2458.47532638175), planeAlignmentManeuver.DeltaV,TestHelpers.VectorComparer);
-            Assert.Equal(1687.9426869962549, planeAlignmentManeuver.FuelBurned,6);
+            Assert.Equal(new Vector3(1485.9760225904588, -2563.040480113374, 2458.47532638175), planeAlignmentManeuver.DeltaV, TestHelpers.VectorComparer);
+            Assert.Equal(1687.9426869962549, planeAlignmentManeuver.FuelBurned, 6);
         }
     }
 }

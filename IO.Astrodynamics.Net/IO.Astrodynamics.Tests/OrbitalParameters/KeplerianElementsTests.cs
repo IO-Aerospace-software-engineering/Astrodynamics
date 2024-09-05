@@ -95,7 +95,6 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
             Assert.Equal(-807.83831153459232, sv.Velocity.X, 3);
             Assert.Equal(-5477.6462810837966, sv.Velocity.Y, 3);
             Assert.Equal(-5297.6334029262234, sv.Velocity.Z, 3);
-            
         }
 
         [Fact]
@@ -112,7 +111,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
             StateVector sv = ke.ToStateVector(TimeSystem.Time.CreateTDB(663724800.00001490));
             Assert.Equal(-6116559.4695568951, sv.Position.X, 3);
             Assert.Equal(-1546174.6986767196, sv.Position.Y, 3);
-            Assert.Equal(2521950.1574303135,sv.Position.Z, 3);
+            Assert.Equal(2521950.1574303135, sv.Position.Z, 3);
             Assert.Equal(-807.83831153459232, sv.Velocity.X, 3);
             Assert.Equal(-5477.6462810837966, sv.Velocity.Y, 3);
             Assert.Equal(-5297.6334029262234, sv.Velocity.Z, 3);
@@ -166,7 +165,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
                 50.0 * IO.Astrodynamics.Constants.Deg2Rad, 0.0 * IO.Astrodynamics.Constants.Deg2Rad, earth,
                 TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
             double v = ke.TrueAnomaly();
-            Assert.Equal(0.0, v * IO.Astrodynamics.Constants.Rad2Deg,9);
+            Assert.Equal(0.0, v * IO.Astrodynamics.Constants.Rad2Deg, 9);
         }
 
         [Fact]
@@ -180,7 +179,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
                 TimeSystem.Time.J2000TDB,
                 Frames.Frame.ICRF);
             double v = ke.TrueAnomaly();
-            Assert.Equal(180.0, v * IO.Astrodynamics.Constants.Rad2Deg,6);
+            Assert.Equal(180.0, v * IO.Astrodynamics.Constants.Rad2Deg, 6);
         }
 
         [Fact]
@@ -193,7 +192,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
                 50.0 * IO.Astrodynamics.Constants.Deg2Rad, 300.0 * IO.Astrodynamics.Constants.Deg2Rad, earth,
                 TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
             double v = ke.TrueAnomaly();
-            Assert.Equal(241.18499907498312, v * IO.Astrodynamics.Constants.Rad2Deg,6);
+            Assert.Equal(241.18499907498312, v * IO.Astrodynamics.Constants.Rad2Deg, 6);
         }
 
         [Fact]
@@ -263,7 +262,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
             Vector3 sa = ke.SpecificAngularMomentum();
             Assert.Equal(0.0, sa.X);
             Assert.Equal(0.0, sa.Y);
-            Assert.Equal(4458039255280901.5, sa.Z);
+            Assert.Equal(4458039255280901, sa.Z);
         }
 
         [Fact]
@@ -404,11 +403,11 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
         [Fact]
         public void IsParabolic()
         {
-            KeplerianElements ke = new KeplerianElements(20000, 1.0, 30.0 * IO.Astrodynamics.Constants.Deg2Rad,
+            KeplerianElements ke = new KeplerianElements(double.PositiveInfinity, 1.0, 30.0 * IO.Astrodynamics.Constants.Deg2Rad,
                 40.0 * IO.Astrodynamics.Constants.Deg2Rad,
                 50.0 * IO.Astrodynamics.Constants.Deg2Rad, 10.0 * IO.Astrodynamics.Constants.Deg2Rad, TestHelpers.EarthAtJ2000,
                 new TimeSystem.Time(DateTime.Now, TimeFrame.TDBFrame),
-                Frames.Frame.ICRF);
+                Frames.Frame.ICRF, perigeeRadius: 6800000.0);
             Assert.True(ke.IsParabolic());
         }
 
@@ -432,6 +431,22 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
                 new TimeSystem.Time(DateTime.Now, TimeFrame.TDBFrame),
                 Frames.Frame.ICRF);
             Assert.True(ke.IsHyperbolic());
+        }
+
+        [Fact]
+        public void HyperbolicToState()
+        {
+            var ke = new KeplerianElements(-6800000.0, 1.2, 0.2, 0.3, 0.4, 0.5, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+            var sv = ke.ToStateVector();
+            var ke2 = sv.ToKeplerianElements();
+            Assert.Equal(ke.A, ke2.A, 3);
+            Assert.Equal(ke.E, ke2.E, 6);
+            Assert.Equal(ke.I, ke2.I, 6);
+            Assert.Equal(ke.RAAN, ke2.RAAN, 6);
+            Assert.Equal(ke.AOP, ke2.AOP, 6);
+            Assert.Equal(ke.M, ke2.M, 6);
+            Assert.Equal(ke.Epoch, ke2.Epoch);
+            Assert.Equal(ke.Observer, ke2.Observer);
         }
     }
 }

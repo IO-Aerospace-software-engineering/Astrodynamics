@@ -164,7 +164,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
         {
             CelestialBody earth = new CelestialBody(PlanetsAndMoons.EARTH);
 
-            StateVector sv = new StateVector(new Vector3(6800.0, 0.0, 0.0), new Vector3(0.0, 5.0, 5.0), earth, new TimeSystem.Time(DateTime.UtcNow, TimeFrame.UTCFrame),
+            StateVector sv = new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 5000.0, 5000.0), earth, new TimeSystem.Time(DateTime.UtcNow, TimeFrame.UTCFrame),
                 Frames.Frame.ICRF);
             Assert.Equal(System.Math.PI / 4.0, sv.Inclination());
         }
