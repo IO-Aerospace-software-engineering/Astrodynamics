@@ -108,7 +108,7 @@ namespace IO.Astrodynamics.OrbitalParameters
                 _stateVector = API.Instance.ConvertConicElementsToStateVector(this, this.Epoch);
                 return _stateVector;
             }
-
+        
             return _stateVector;
         }
 

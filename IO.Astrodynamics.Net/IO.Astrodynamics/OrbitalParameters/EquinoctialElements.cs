@@ -44,7 +44,7 @@ namespace IO.Astrodynamics.OrbitalParameters
             {
                 return _stateVector;
             }
-
+        
             _stateVector = API.Instance.ConvertEquinoctialElementsToStateVector(this);
             return _stateVector;
         }

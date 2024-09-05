@@ -318,25 +318,18 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// <returns></returns>
     public double EccentricAnomaly(double trueAnomaly)
     {
-        if (_eccentricAnomaly.HasValue)
-        {
-            return _eccentricAnomaly.Value;
-        }
-
         if (IsElliptical())
         {
-            _eccentricAnomaly = EllipticAnomaly(trueAnomaly);
+            return EllipticAnomaly(trueAnomaly);
         }
         else if (IsHyperbolic())
         {
-            _eccentricAnomaly = HyperbolicAnomaly(trueAnomaly);
+            return HyperbolicAnomaly(trueAnomaly);
         }
         else
         {
-            _eccentricAnomaly = ParabolicAnomaly(trueAnomaly);
+            return ParabolicAnomaly(trueAnomaly);
         }
-
-        return _eccentricAnomaly.Value;
     }
 
     /// <summary>
@@ -410,6 +403,11 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     private double EllipticAnomaly(double trueAnomaly)
     {
         var e = Eccentricity();
+        return EllipticAnomaly(trueAnomaly, e);
+    }
+
+    internal static double EllipticAnomaly(double trueAnomaly, double e)
+    {
         double sqrtTerm = System.Math.Sqrt((1 - e) / (1 + e));
         double tanE2 = System.Math.Tan(trueAnomaly / 2) * sqrtTerm;
         return 2 * System.Math.Atan(tanE2);
@@ -532,6 +530,31 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// </summary>
     /// <returns></returns>
     public abstract StateVector ToStateVector();
+    // {
+    //     if (_stateVector is null)
+    //     {
+    //         var e = Eccentricity();
+    //         var p = SemiMajorAxis() * (1 - e * e);
+    //         var v = TrueAnomaly();
+    //         var r0 = p / (1 + e * System.Math.Cos(v));
+    //         var x = r0 * System.Math.Cos(v);
+    //         var y = r0 * System.Math.Sin(v);
+    //         var dotX = -System.Math.Sqrt(Observer.GM / p) * System.Math.Sin(v);
+    //         var dotY = System.Math.Sqrt(Observer.GM / p) * (e + System.Math.Cos(v));
+    //         Matrix R3 = Matrix.CreateRotationMatrixZ(AscendingNode());
+    //         Matrix R1 = Matrix.CreateRotationMatrixX(Inclination());
+    //         Matrix R3w = Matrix.CreateRotationMatrixZ(ArgumentOfPeriapsis());
+    //         Matrix R = R3 * R1 * R3w;
+    //         double[] pos = { x, y, 0.0 };
+    //         double[] vel = { dotX, dotY, 0.0 };
+    //         double[] finalPos = pos * R;
+    //         double[] finalV = vel * R;
+    //
+    //         _stateVector = new StateVector(new Vector3(finalPos[0], finalPos[1], finalPos[2]), new Vector3(finalV[0], finalV[1], finalV[2]), Observer, Epoch, Frame);
+    //     }
+    //
+    //     return _stateVector;
+    // }
 
     public virtual StateVector ToStateVector(Time epoch)
     {
@@ -540,7 +563,7 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
 
     public virtual StateVector ToStateVector(double trueAnomaly)
     {
-        return ToStateVector(EpochAtMeanAnomaly(TrueAnomalyToMeanAnomaly(trueAnomaly, Eccentricity(), EccentricAnomaly())));
+        return ToStateVector(EpochAtMeanAnomaly(TrueAnomalyToMeanAnomaly(trueAnomaly, Eccentricity(), EccentricAnomaly(trueAnomaly))));
     }
 
     public Time EpochAtMeanAnomaly(double meanAnomaly)

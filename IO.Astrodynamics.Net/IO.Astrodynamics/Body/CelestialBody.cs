@@ -223,9 +223,8 @@ public class CelestialBody : CelestialItem, IOrientable
         }
 
         var trueAnomaly = Constants.PI + Constants.PI2;
-        double x = (eccentricity + System.Math.Cos(trueAnomaly)) / (1 + eccentricity * System.Math.Cos(trueAnomaly));
-        double eccAno = System.Math.Acos(x);
-        double m = OrbitalParameters.OrbitalParameters.TrueAnomalyToMeanAnomaly(trueAnomaly, eccentricity, eccAno);
+        
+        double m = OrbitalParameters.OrbitalParameters.TrueAnomalyToMeanAnomaly(trueAnomaly, eccentricity, OrbitalParameters.OrbitalParameters.EllipticAnomaly(trueAnomaly,eccentricity));
 
         return new KeplerianElements(semiMajorAxis, eccentricity, i, raanLongitude, Constants.PI + Constants.PI2, m, this, epochAtDescendingNode, Frame.ICRF);
     }

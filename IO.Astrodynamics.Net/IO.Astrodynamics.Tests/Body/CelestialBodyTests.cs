@@ -241,8 +241,8 @@ public class CelestialBodyTests
     public void GeosynchronousOrbit()
     {
         var orbit = TestHelpers.EarthAtJ2000.GeosynchronousOrbit(0.0, 0.0, new TimeSystem.Time(new DateTime(2021, 1, 1, 0, 0, 0, DateTimeKind.Unspecified), TimeFrame.TDBFrame));
-        Assert.Equal(42164171.961220242, orbit.ToStateVector().Position.Magnitude());
-        Assert.Equal(3074.6599900324436, orbit.ToStateVector().Velocity.Magnitude());
+        Assert.Equal(42164171.961220242, orbit.ToStateVector().Position.Magnitude(),6);
+        Assert.Equal(3074.6599900324436, orbit.ToStateVector().Velocity.Magnitude(),6);
         Assert.Equal(Frames.Frame.ICRF, orbit.Frame);
     }
 

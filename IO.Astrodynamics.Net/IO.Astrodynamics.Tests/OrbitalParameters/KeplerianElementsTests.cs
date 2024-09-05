@@ -263,7 +263,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
             Vector3 sa = ke.SpecificAngularMomentum();
             Assert.Equal(0.0, sa.X);
             Assert.Equal(0.0, sa.Y);
-            Assert.Equal(4458039255280901, sa.Z);
+            Assert.Equal(4458039255280901.5, sa.Z);
         }
 
         [Fact]
