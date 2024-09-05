@@ -50,13 +50,13 @@ namespace IO.Astrodynamics.Tests.Maneuvers
         public void CanExecute()
         {
             var orbitalParams = new KeplerianElements(14999992.500003746, 0.333333, 0.0, 0.0, 0.0, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
-            var targtOrbitalParams = new KeplerianElements(18000000.000000004, 0.5, 0.0, 0.0, 30.0 * Astrodynamics.Constants.Deg2Rad, 0.0, TestHelpers.EarthAtJ2000,
+            var targetOrbitalParams = new KeplerianElements(18000000.000000004, 0.5, 0.0, 0.0, 30.0 * Astrodynamics.Constants.Deg2Rad, 0.0, TestHelpers.EarthAtJ2000,
                 TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
             var spc = new Spacecraft(-666, "GenericSpacecraft", 1000.0, 3000.0, new Clock("GenericClk", 65536), orbitalParams);
             spc.AddFuelTank(new FuelTank("ft", "ftA", "123456", 1000.0, 900.0));
             spc.AddEngine(new Engine("eng", "engmk1", "12345", 450, 50, spc.FuelTanks.First()));
 
-            ApsidalAlignmentManeuver maneuver = new ApsidalAlignmentManeuver(new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame), TimeSpan.Zero, targtOrbitalParams, spc.Engines.First());
+            ApsidalAlignmentManeuver maneuver = new ApsidalAlignmentManeuver(new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame), TimeSpan.Zero, targetOrbitalParams, spc.Engines.First());
 
             Assert.False(maneuver.CanExecute(orbitalParams.ToStateVector(150.0 * Astrodynamics.Constants.Deg2Rad))); // P incoming
             Assert.False(maneuver.CanExecute(orbitalParams.ToStateVector(155.0 * Astrodynamics.Constants.Deg2Rad))); // P incoming
