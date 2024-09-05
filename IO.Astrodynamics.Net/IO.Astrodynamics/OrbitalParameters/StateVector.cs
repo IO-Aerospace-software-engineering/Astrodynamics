@@ -46,7 +46,7 @@ namespace IO.Astrodynamics.OrbitalParameters
                 return _semiMajorAxis.Value;
             }
 
-            if (IsParabolic() || IsHyperbolic())
+            if (IsParabolic())
             {
                 _semiMajorAxis = double.PositiveInfinity;
             }
@@ -134,7 +134,20 @@ namespace IO.Astrodynamics.OrbitalParameters
         public override double MeanAnomaly()
         {
             double ea = EccentricAnomaly(TrueAnomaly());
-            _meanAnomaly ??= ea - Eccentricity() * System.Math.Sin(ea);
+
+            if (IsElliptical())
+            {
+                _meanAnomaly ??= ea - Eccentricity() * System.Math.Sin(ea);
+            }
+            else if(IsHyperbolic())
+            {
+                _meanAnomaly ??= Eccentricity() * System.Math.Sinh(ea) - ea;
+            }
+            else
+            {
+                _meanAnomaly ??= ea + System.Math.Pow(ea, 3.0) / 3.0;
+            }
+
             return _meanAnomaly.Value;
         }
         

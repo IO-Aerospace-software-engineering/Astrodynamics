@@ -133,16 +133,16 @@ namespace IO.Astrodynamics.OrbitalParameters
         {
             return M;
         }
-
-        /// <summary>
-        /// Get the state vector
-        /// </summary>
-        /// <returns></returns>
-        public override StateVector ToStateVector()
-        {
-            _stateVector ??= API.Instance.ConvertConicElementsToStateVector(this, this.Epoch);
-            return _stateVector;
-        }
+        
+        // /// <summary>
+        // /// Get the state vector
+        // /// </summary>
+        // /// <returns></returns>
+        // public override StateVector ToStateVector()
+        // {
+        //     _stateVector ??= API.Instance.ConvertConicElementsToStateVector(this, this.Epoch);
+        //     return _stateVector;
+        // }
         
         #region Operator
 

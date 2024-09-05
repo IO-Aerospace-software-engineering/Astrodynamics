@@ -94,6 +94,7 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     }
 
     #region Kepler elements
+
     /// <summary>
     /// Get the semi major axis
     /// </summary>
@@ -129,6 +130,7 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// </summary>
     /// <returns></returns>
     public abstract double MeanAnomaly();
+
     #endregion
 
     /// <summary>
@@ -148,12 +150,19 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// <returns></returns>
     public virtual Vector3 AscendingNodeVector()
     {
+        if (_ascendingNodeVector.HasValue)
+        {
+            return _ascendingNodeVector.Value;
+        }
+
         if (Inclination() == 0.0)
         {
             return Vector3.VectorX;
         }
 
-        _ascendingNodeVector ??= ToStateVector().AscendingNodeVector();
+        var h = SpecificAngularMomentum();
+        _ascendingNodeVector = new Vector3(-h.Y, h.X, 0.0);
+
         return _ascendingNodeVector.Value;
     }
 
@@ -167,7 +176,6 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
         return _decendingNodeVector.Value;
     }
 
-    
 
     /// <summary>
     /// Get the specific angular momentum
@@ -506,6 +514,11 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
         {
             var e = Eccentricity();
             var p = SemiMajorAxis() * (1 - e * e);
+            if (IsParabolic())
+            {
+                p = 2 * PerigeeRadius();
+            }
+
             var v = TrueAnomaly();
             var r0 = p / (1 + e * System.Math.Cos(v));
             var x = r0 * System.Math.Cos(v);
@@ -595,6 +608,11 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
         _perigeeRadius ??= SemiMajorAxis() * (1.0 - Eccentricity());
         return _perigeeRadius.Value;
     }
+    
+    // public double Radius(double trueAnomaly)
+    // {
+    //     return SemiLatusRectum() / (1 + System.Math.Cos(trueAnomaly));
+    // }
 
     /// <summary>
     /// Get apogee vector
@@ -621,7 +639,13 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
         var ke = this.ToKeplerianElements();
         var deltaT = epoch - Epoch;
         var meanAnomaly = ke.MeanAnomaly() + deltaT.TotalSeconds * MeanMotion();
-        return new KeplerianElements(SemiMajorAxis(), Eccentricity(), Inclination(), AscendingNode(), ArgumentOfPeriapsis(), meanAnomaly%Constants._2PI, Observer, epoch, Frame);
+        if (meanAnomaly < 0.0)
+        {
+            meanAnomaly += Constants._2PI;
+        }
+
+        return new KeplerianElements(SemiMajorAxis(), Eccentricity(), Inclination(), AscendingNode(), ArgumentOfPeriapsis(), meanAnomaly % Constants._2PI, Observer, epoch, Frame,
+            perigeeRadius: _perigeeRadius);
     }
 
     /// <summary>
@@ -677,7 +701,7 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
         return _isHyperbolic.Value;
     }
 
-    private KeplerianElements ToKeplerianElements(Time epoch)
+    public KeplerianElements ToKeplerianElements(Time epoch)
     {
         double ellapsedTime = (epoch - Epoch).TotalSeconds;
         double M = MeanAnomaly() + MeanMotion() * ellapsedTime;
@@ -750,6 +774,15 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
         var body = Observer as CelestialBody;
         return ((CelestialBody)Observer).SubObserverPoint(ToFrame(body!.Frame).ToStateVector().Position, Epoch, aberration);
     }
+    
+    // public double SemiLatusRectum()
+    // {
+    //     var sv = ToStateVector();
+    //     var r= sv.Position.Magnitude();
+    //     var v= sv.Velocity.Magnitude();
+    //     var u= Observer.GM;
+    //     return (r * r * (v * v - (u / r))) / u;
+    // }
 
     public override bool Equals(object obj)
     {

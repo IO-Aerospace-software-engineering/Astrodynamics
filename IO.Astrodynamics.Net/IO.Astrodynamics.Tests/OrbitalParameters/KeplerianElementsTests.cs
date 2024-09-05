@@ -262,7 +262,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
             Vector3 sa = ke.SpecificAngularMomentum();
             Assert.Equal(0.0, sa.X);
             Assert.Equal(0.0, sa.Y);
-            Assert.Equal(4458039255280901, sa.Z);
+            Assert.Equal(4458039255280901.5, sa.Z);
         }
 
         [Fact]
@@ -437,6 +437,8 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
         public void HyperbolicToState()
         {
             var ke = new KeplerianElements(-6800000.0, 1.2, 0.2, 0.3, 0.4, 0.5, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+            var svref = API.Instance.ConvertConicElementsToStateVector(ke);
+            var keref = API.Instance.ConvertStateVectorToConicOrbitalElement(svref);
             var sv = ke.ToStateVector();
             var ke2 = sv.ToKeplerianElements();
             Assert.Equal(ke.A, ke2.A, 3);
