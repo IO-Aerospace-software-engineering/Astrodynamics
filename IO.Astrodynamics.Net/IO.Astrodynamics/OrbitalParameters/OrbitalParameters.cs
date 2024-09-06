@@ -605,14 +605,19 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
 
     public double PerigeeRadius()
     {
+        if (_perigeeRadius.HasValue)
+        {
+            return _perigeeRadius.Value;
+        }
+
+        if (IsParabolic())
+        {
+            _perigeeRadius = SemiLatusRectum() / (1.0 + Eccentricity());
+        }
+
         _perigeeRadius ??= SemiMajorAxis() * (1.0 - Eccentricity());
         return _perigeeRadius.Value;
     }
-    
-    // public double Radius(double trueAnomaly)
-    // {
-    //     return SemiLatusRectum() / (1 + System.Math.Cos(trueAnomaly));
-    // }
 
     /// <summary>
     /// Get apogee vector
@@ -704,14 +709,16 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     public KeplerianElements ToKeplerianElements(Time epoch)
     {
         double ellapsedTime = (epoch - Epoch).TotalSeconds;
-        double M = MeanAnomaly() + MeanMotion() * ellapsedTime;
-        while (M < 0.0)
+        double m = MeanAnomaly() + MeanMotion() * ellapsedTime;
+        while (m < 0.0)
         {
-            M += Constants._2PI;
+            m += Constants._2PI;
         }
 
-        return new KeplerianElements(SemiMajorAxis(), Eccentricity(), Inclination(), AscendingNode(), ArgumentOfPeriapsis(), M % Constants._2PI, Observer, epoch, Frame);
+        return new KeplerianElements(SemiMajorAxis(), Eccentricity(), Inclination(), AscendingNode(), ArgumentOfPeriapsis(), m % Constants._2PI, Observer, epoch, Frame,
+            perigeeRadius: PerigeeRadius());
     }
+
 
     public virtual KeplerianElements ToKeplerianElements()
     {
@@ -774,15 +781,12 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
         var body = Observer as CelestialBody;
         return ((CelestialBody)Observer).SubObserverPoint(ToFrame(body!.Frame).ToStateVector().Position, Epoch, aberration);
     }
-    
-    // public double SemiLatusRectum()
-    // {
-    //     var sv = ToStateVector();
-    //     var r= sv.Position.Magnitude();
-    //     var v= sv.Velocity.Magnitude();
-    //     var u= Observer.GM;
-    //     return (r * r * (v * v - (u / r))) / u;
-    // }
+
+    public double SemiLatusRectum()
+    {
+        var hNorm = SpecificAngularMomentum().Magnitude();
+        return hNorm * hNorm / Observer.GM;
+    }
 
     public override bool Equals(object obj)
     {

@@ -51,7 +51,7 @@ namespace IO.Astrodynamics.Maneuver
             }
 
             var targetOrbit = new KeplerianElements((TargetPerigeeHeight + apogee) * 0.5, e, TargetInclination, stateVector.AscendingNode(), periapsisArgument, meanAnomaly,
-                stateVector.Observer, stateVector.Epoch, stateVector.Frame);
+                stateVector.Observer, stateVector.Epoch, stateVector.Frame, perigeeRadius: stateVector.PerigeeRadius());
 
             return targetOrbit.ToStateVector().Velocity - stateVector.Velocity;
         }
