@@ -7,6 +7,9 @@ using IO.Astrodynamics.TimeSystem;
 
 namespace IO.Astrodynamics.OrbitalParameters
 {
+    /// <summary>
+    /// Represents the Keplerian elements of an orbit, which are a set of parameters that define the shape and orientation of an orbit.
+    /// </summary>
     public class KeplerianElements : OrbitalParameters, IEquatable<KeplerianElements>
     {
         /// <summary>

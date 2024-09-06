@@ -21,7 +21,7 @@ public class OrbitalParametersTests
                     OrbitalParametersValues = "-26499033.67742509 132757417.33833946 57556718.47053819 -29.79426007 -5.01805231 -2.17539380", CenterOfMotionId = 10,
                     OrbitalParametersEpoch = "0.0",
                     Frame = "ICRF", FromStateVector = true, FromEquinoctial = false, FromKeplerian = false, FromTLE = false
-                }, true, false, false, new EpochParameters { Epoch = "0.0" }, "ECLIPJ2000");
+                }, true, false, false, new EpochParameters { Epoch = "0.0" }, "ICRF");
             var res = sb.ToString();
 
             Assert.Equal(

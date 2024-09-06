@@ -388,15 +388,14 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
         [Fact]
         public void ToParabolicKeplerian()
         {
-            KeplerianElements ke = new KeplerianElements(Double.PositiveInfinity, 1.0, 0.0 * IO.Astrodynamics.Constants.Deg2Rad,
-                0.0 * IO.Astrodynamics.Constants.Deg2Rad,
-                0.0 * IO.Astrodynamics.Constants.Deg2Rad, 10.0 * IO.Astrodynamics.Constants.Deg2Rad, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB,
+            KeplerianElements ke = new KeplerianElements(Double.PositiveInfinity, 1.0, 10.0 * IO.Astrodynamics.Constants.Deg2Rad,
+                20.0 * IO.Astrodynamics.Constants.Deg2Rad,
+                30.0 * IO.Astrodynamics.Constants.Deg2Rad, 0.0 * IO.Astrodynamics.Constants.Deg2Rad, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB,
                 Frames.Frame.ICRF, perigeeRadius: 6800000.0);
             var sv = ke.ToStateVector();
-            var svres = API.Instance.ConvertConicElementsToStateVector(ke);
+            var svref = API.Instance.ConvertConicElementsToStateVector(ke);
             var res = sv.ToKeplerianElements();
-            var ke2 = svres.ToKeplerianElements();
-            Assert.Equal(ke, res);
+            Assert.Equal(ke, res, TestHelpers.KeplerComparer);
         }
 
         [Fact]
@@ -432,6 +431,102 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
             Assert.Equal(TestHelpers.EarthAtJ2000, svEarth.Observer);
             Assert.Equal(TimeSystem.Time.J2000TDB, svEarth.Epoch);
             Assert.Equal(Frames.Frame.ICRF, svEarth.Frame);
+        }
+
+        [Fact]
+        public void EllipticToKeplerian()
+        {
+            var originalSV = new StateVector(new Vector3(6800000.0, 1000.0, -500.0), new Vector3(200.0, 8000.0, -300.0), TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB,
+                Frames.Frame.ICRF);
+            var ke = originalSV.ToKeplerianElements();
+            var sv = ke.ToStateVector();
+            Assert.Equal(originalSV, sv, TestHelpers.StateVectorComparer);
+        }
+
+        [Fact]
+        public void ParabolicToKeplerian()
+        {
+            var ke = new KeplerianElements(double.PositiveInfinity, 1, 0.2, 0.3, 0.4, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF,
+                perigeeRadius: 6800000.0);
+            var sv = ke.ToStateVector();
+            var ke2 = sv.ToKeplerianElements();
+
+            var sv2 = ke2.ToStateVector();
+            Assert.Equal(sv, sv2, TestHelpers.StateVectorComparer);
+        }
+        
+        [Fact]
+        public void HyperbolicToKeplerian()
+        {
+            var originalSV = new StateVector(new Vector3(6800000.0, 1000.0, -500.0), new Vector3(4000.0, 10000.0, -300.0), TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB,
+                Frames.Frame.ICRF);
+            var ke = originalSV.ToKeplerianElements();
+            var sv = ke.ToStateVector();
+            Assert.Equal(originalSV, sv, TestHelpers.StateVectorComparer);
+        }
+        
+        [Fact]
+        public void EllipticToEquinoctial()
+        {
+            var originalSV = new StateVector(new Vector3(6800000.0, 1000.0, -500.0), new Vector3(200.0, 8000.0, -300.0), TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB,
+                Frames.Frame.ICRF);
+            var eq = originalSV.ToEquinoctial();
+            var sv = eq.ToStateVector();
+            Assert.Equal(originalSV, sv, TestHelpers.StateVectorComparer);
+        }
+
+        [Fact]
+        public void ParabolicToEquinoctial()
+        {
+            var ke = new KeplerianElements(double.PositiveInfinity, 1, 0.2, 0.3, 0.4, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF,
+                perigeeRadius: 6800000.0);
+            var sv = ke.ToStateVector();
+            var eq = sv.ToEquinoctial();
+
+            var sv2 = eq.ToStateVector();
+            Assert.Equal(sv, sv2, TestHelpers.StateVectorComparer);
+        }
+        
+        [Fact]
+        public void HyperbolicToEquinoctial()
+        {
+            var originalSV = new StateVector(new Vector3(6800000.0, 1000.0, -500.0), new Vector3(4000.0, 10000.0, -300.0), TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB,
+                Frames.Frame.ICRF);
+            var eq = originalSV.ToEquinoctial();
+            var sv = eq.ToStateVector();
+            Assert.Equal(originalSV, sv, TestHelpers.StateVectorComparer);
+        }
+        
+        [Fact]
+        public void EllipticToKeplerianUpdatePV()
+        {
+            var originalSV = new StateVector(new Vector3(6800000.0, 1000.0, -500.0), new Vector3(200.0, 8000.0, -300.0), TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB,
+                Frames.Frame.ICRF);
+            var ke = originalSV.ToKeplerianElements();
+            var sv = ke.ToStateVector();
+            Assert.Equal(originalSV, sv, TestHelpers.StateVectorComparer);
+        }
+
+        [Fact]
+        public void ParabolicToKeplerianUpdatePV()
+        {
+            var ke = new KeplerianElements(double.PositiveInfinity, 1, 0.2, 0.3, 0.4, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF,
+                perigeeRadius: 6800000.0);
+            var sv = ke.ToStateVector();
+            var ke2 = sv.ToKeplerianElements();
+
+            var sv2 = ke2.ToStateVector();
+            Assert.Equal(sv, sv2, TestHelpers.StateVectorComparer);
+        }
+        
+        [Fact]
+        public void HyperbolicToKeplerianUpdatePV()
+        {
+            var originalSV = new StateVector(new Vector3(6800000.0, 1000.0, -500.0), new Vector3(4000.0, 10000.0, -300.0), TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB,
+                Frames.Frame.ICRF);
+            var ke = originalSV.ToKeplerianElements();
+            var sv = ke.ToStateVector();
+            Assert.Equal(originalSV, sv, TestHelpers.StateVectorComparer);
         }
     }
 }

@@ -437,8 +437,6 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
         public void HyperbolicToState()
         {
             var ke = new KeplerianElements(-6800000.0, 1.2, 0.2, 0.3, 0.4, 0.5, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
-            var svref = API.Instance.ConvertConicElementsToStateVector(ke);
-            var keref = API.Instance.ConvertStateVectorToConicOrbitalElement(svref);
             var sv = ke.ToStateVector();
             var ke2 = sv.ToKeplerianElements();
             Assert.Equal(ke.A, ke2.A, 3);
@@ -449,6 +447,60 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
             Assert.Equal(ke.M, ke2.M, 6);
             Assert.Equal(ke.Epoch, ke2.Epoch);
             Assert.Equal(ke.Observer, ke2.Observer);
+        }
+
+        [Fact]
+        public void ParabolicToState()
+        {
+            var ke = new KeplerianElements(double.PositiveInfinity, 1, 0.2, 0.3, 0.4, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF,
+                perigeeRadius: 6800000.0);
+            var sv = ke.ToStateVector();
+            var ke2 = sv.ToKeplerianElements();
+            Assert.Equal(ke, ke2, TestHelpers.KeplerComparer);
+        }
+        
+        [Fact]
+        public void EllipticToState()
+        {
+            var ke = new KeplerianElements(6800000.0, 0.2, 0.2, 0.3, 0.4, 0.5, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+            var sv = ke.ToStateVector();
+            var ke2 = sv.ToKeplerianElements();
+            Assert.Equal(ke.A, ke2.A, 3);
+            Assert.Equal(ke.E, ke2.E, 6);
+            Assert.Equal(ke.I, ke2.I, 6);
+            Assert.Equal(ke.RAAN, ke2.RAAN, 6);
+            Assert.Equal(ke.AOP, ke2.AOP, 6);
+            Assert.Equal(ke.M, ke2.M, 6);
+            Assert.Equal(ke.Epoch, ke2.Epoch);
+            Assert.Equal(ke.Observer, ke2.Observer);
+        }
+        
+        [Fact]
+        public void HyperbolicToEquinoctial()
+        {
+            var ke = new KeplerianElements(-6800000.0, 1.2, 0.2, 0.3, 0.4, 0.5, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+            var eq = ke.ToEquinoctial();
+            var ke2 = eq.ToKeplerianElements();
+            Assert.Equal(ke, ke2, TestHelpers.KeplerComparer);
+        }
+
+        [Fact]
+        public void ParabolicToEquinoctial()
+        {
+            var ke = new KeplerianElements(double.PositiveInfinity, 1, 0.2, 0.3, 0.4, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF,
+                perigeeRadius: 6800000.0);
+            var eq = ke.ToEquinoctial();
+            var ke2 = eq.ToKeplerianElements();
+            Assert.Equal(ke, ke2, TestHelpers.KeplerComparer);
+        }
+        
+        [Fact]
+        public void EllipticToEquinoctial()
+        {
+            var ke = new KeplerianElements(6800000.0, 0.2, 0.2, 0.3, 0.4, 0.5, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+            var eq = ke.ToEquinoctial();
+            var ke2 = eq.ToKeplerianElements();
+            Assert.Equal(ke,ke2, TestHelpers.KeplerComparer);
         }
 
         [Fact]
@@ -467,7 +519,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
         {
             KeplerianElements ke = new KeplerianElements(double.PositiveInfinity, 1.0, 30.0 * IO.Astrodynamics.Constants.Deg2Rad,
                 40.0 * IO.Astrodynamics.Constants.Deg2Rad, 50.0 * IO.Astrodynamics.Constants.Deg2Rad, 10.0 * IO.Astrodynamics.Constants.Deg2Rad, TestHelpers.EarthAtJ2000,
-                new TimeSystem.Time(DateTime.Now, TimeFrame.TDBFrame), Frames.Frame.ICRF,perigeeRadius:6800000.0);
+                new TimeSystem.Time(DateTime.Now, TimeFrame.TDBFrame), Frames.Frame.ICRF, perigeeRadius: 6800000.0);
             Assert.Equal(6800000.0, ke.PerigeeRadius(), 6);
         }
     }

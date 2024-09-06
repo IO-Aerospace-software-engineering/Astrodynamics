@@ -8,12 +8,27 @@ using IO.Astrodynamics.TimeSystem;
 
 namespace IO.Astrodynamics.OrbitalParameters;
 
+/// <summary>
+/// Represents the base class for orbital parameters and provides methods for calculating various orbital elements.
+/// </summary>
 public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
 {
+    /// <summary>
+    /// Observer
+    /// </summary>
+    /// <summary>
+    /// Gets the observer associated with the orbital parameters.
+    /// </summary>
     public ILocalizable Observer { get; }
 
+    /// <summary>
+    /// Gets the epoch time at which the orbital parameters are defined.
+    /// </summary>
     public Time Epoch { get; }
 
+    /// <summary>
+    /// Gets the reference frame in which the orbital parameters are defined.
+    /// </summary>
     public Frame Frame { get; }
 
     //Data used for caching
@@ -47,12 +62,16 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     protected double? _periapsisArgument;
     protected double? _meanAnomaly;
 
+
     /// <summary>
-    /// Constructor
+    /// Initializes a new instance of the <see cref="OrbitalParameters"/> class.
     /// </summary>
-    /// <param name="observer"></param>
-    /// <param name="epoch"></param>
-    /// <param name="frame"></param>
+    /// <param name="observer">The observer associated with the orbital parameters.</param>
+    /// <param name="epoch">The epoch time at which the orbital parameters are defined.</param>
+    /// <param name="frame">The reference frame in which the orbital parameters are defined.</param>
+    /// <exception cref="ArgumentNullException">
+    /// Thrown when the observer or frame is null.
+    /// </exception>
     protected OrbitalParameters(ILocalizable observer, in Time epoch, Frame frame)
     {
         Observer = observer ?? throw new ArgumentNullException(nameof(observer));
@@ -60,6 +79,10 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
         Frame = frame ?? throw new ArgumentNullException(nameof(frame));
     }
 
+
+    /// <summary>
+    /// Resets the cached values for various orbital parameters.
+    /// </summary>
     protected virtual void ResetCache()
     {
         _eccentricVector = null;
@@ -224,13 +247,13 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
         {
             _trueAnomaly = EllipticalTrueAnomaly() % Constants._2PI;
         }
-        else if (IsHyperbolic())
-        {
-            _trueAnomaly = HyperbolicTrueAnomaly() % Constants._2PI;
-        }
         else if (IsParabolic())
         {
             _trueAnomaly = ParabolicTrueAnomaly() % Constants._2PI;
+        }
+        else if (IsHyperbolic())
+        {
+            _trueAnomaly = HyperbolicTrueAnomaly() % Constants._2PI;
         }
 
         if (_trueAnomaly < 0)
@@ -241,11 +264,19 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
         return _trueAnomaly.Value;
     }
 
+    /// <summary>
+    /// Computes the true anomaly for a parabolic orbit.
+    /// </summary>
+    /// <returns>The true anomaly in radians.</returns>
     private double ParabolicTrueAnomaly()
     {
         return 2 * System.Math.Atan(EccentricAnomaly());
     }
 
+    /// <summary>
+    /// Computes the true anomaly for a hyperbolic orbit.
+    /// </summary>
+    /// <returns>The true anomaly in radians.</returns>
     private double HyperbolicTrueAnomaly()
     {
         double e = Eccentricity();
@@ -255,6 +286,10 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
         return 2 * System.Math.Atan(tanNuOver2);
     }
 
+    /// <summary>
+    /// Computes the true anomaly for an elliptical orbit.
+    /// </summary>
+    /// <returns>The true anomaly in radians.</returns>
     private double EllipticalTrueAnomaly()
     {
         double e = Eccentricity();
@@ -289,13 +324,13 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
         {
             _eccentricAnomaly = EllipticAnomaly();
         }
-        else if (IsHyperbolic())
+        else if (IsParabolic())
         {
-            _eccentricAnomaly = HyperbolicAnomaly();
+            _eccentricAnomaly = ParabolicAnomaly();
         }
         else
         {
-            _eccentricAnomaly = ParabolicAnomaly();
+            _eccentricAnomaly = HyperbolicAnomaly();
         }
 
         return _eccentricAnomaly.Value;
@@ -313,12 +348,12 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
             return EllipticAnomaly(trueAnomaly);
         }
 
-        if (IsHyperbolic())
+        if (IsParabolic())
         {
-            return HyperbolicAnomaly(trueAnomaly);
+            return ParabolicAnomaly(trueAnomaly);
         }
 
-        return ParabolicAnomaly(trueAnomaly);
+        return HyperbolicAnomaly(trueAnomaly);
     }
 
     /// <summary>
@@ -395,6 +430,12 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
         return EllipticAnomaly(trueAnomaly, e);
     }
 
+    /// <summary>
+    /// Computes the eccentric anomaly for an elliptical orbit given the true anomaly and eccentricity.
+    /// </summary>
+    /// <param name="trueAnomaly">The true anomaly in radians.</param>
+    /// <param name="e">The eccentricity of the orbit.</param>
+    /// <returns>The eccentric anomaly in radians.</returns>
     internal static double EllipticAnomaly(double trueAnomaly, double e)
     {
         double sqrtTerm = System.Math.Sqrt((1 - e) / (1 + e));
@@ -416,6 +457,11 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
         return 2 * System.Math.Atanh(tanhH2);
     }
 
+    /// <summary>
+    /// Computes the parabolic anomaly given the true anomaly.
+    /// </summary>
+    /// <param name="trueAnomaly">The true anomaly in radians.</param>
+    /// <returns>The parabolic anomaly in radians.</returns>
     private double ParabolicAnomaly(double trueAnomaly)
     {
         return (trueAnomaly * 0.5) - System.Math.Sinh(trueAnomaly * 0.5);
@@ -431,6 +477,13 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
         return TrueAnomalyToMeanAnomaly(trueAnomaly, Eccentricity(), this.EccentricAnomaly(trueAnomaly));
     }
 
+    /// <summary>
+    /// Converts the true anomaly to the mean anomaly.
+    /// </summary>
+    /// <param name="trueAnomaly">The true anomaly in radians.</param>
+    /// <param name="eccentricity">The eccentricity of the orbit.</param>
+    /// <param name="eccentricAnomaly">The eccentric anomaly in radians.</param>
+    /// <returns>The mean anomaly in radians.</returns>
     public static double TrueAnomalyToMeanAnomaly(double trueAnomaly, double eccentricity, double eccentricAnomaly)
     {
         if (trueAnomaly < 0.0)
@@ -491,13 +544,13 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
         {
             _meanMotion = System.Math.Sqrt(Constants.G * (Observer.Mass + orbitingBodyMass) / System.Math.Pow(SemiMajorAxis(), 3));
         }
-        else if (IsHyperbolic())
+        else if (IsParabolic())
         {
-            _meanMotion = System.Math.Sqrt(Constants.G * (Observer.Mass + orbitingBodyMass) / System.Math.Pow(-SemiMajorAxis(), 3));
+            _meanMotion = 2 * System.Math.Sqrt(Constants.G * (Observer.Mass + orbitingBodyMass) / System.Math.Pow(PerigeeRadius(), 3));
         }
         else
         {
-            _meanMotion = 2 * System.Math.Sqrt(Constants.G * (Observer.Mass + orbitingBodyMass) / System.Math.Pow(PerigeeRadius(), 3));
+            _meanMotion = System.Math.Sqrt(Constants.G * (Observer.Mass + orbitingBodyMass) / System.Math.Pow(-SemiMajorAxis(), 3));
         }
 
         return _meanMotion.Value;
@@ -525,14 +578,14 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
             var y = r0 * System.Math.Sin(v);
             var dotX = -System.Math.Sqrt(Observer.GM / p) * System.Math.Sin(v);
             var dotY = System.Math.Sqrt(Observer.GM / p) * (e + System.Math.Cos(v));
-            Matrix R3 = Matrix.CreateRotationMatrixZ(AscendingNode());
-            Matrix R1 = Matrix.CreateRotationMatrixX(Inclination());
-            Matrix R3w = Matrix.CreateRotationMatrixZ(ArgumentOfPeriapsis());
-            Matrix R = R3 * R1 * R3w;
-            double[] pos = { x, y, 0.0 };
-            double[] vel = { dotX, dotY, 0.0 };
-            double[] finalPos = pos * R;
-            double[] finalV = vel * R;
+            Matrix r3 = Matrix.CreateRotationMatrixZ(AscendingNode());
+            Matrix r1 = Matrix.CreateRotationMatrixX(Inclination());
+            Matrix r3W = Matrix.CreateRotationMatrixZ(ArgumentOfPeriapsis());
+            Matrix r = r3 * r1 * r3W;
+            double[] pos = [x, y, 0.0];
+            double[] vel = [dotX, dotY, 0.0];
+            double[] finalPos = pos * r;
+            double[] finalV = vel * r;
 
             _stateVector = new StateVector(new Vector3(finalPos[0], finalPos[1], finalPos[2]), new Vector3(finalV[0], finalV[1], finalV[2]), Observer, Epoch, Frame);
         }
@@ -540,16 +593,31 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
         return _stateVector;
     }
 
+    /// <summary>
+    /// Converts the orbital parameters to a state vector at a given epoch.
+    /// </summary>
+    /// <param name="epoch">The epoch time at which to compute the state vector.</param>
+    /// <returns>The state vector at the given epoch.</returns>
     public virtual StateVector ToStateVector(Time epoch)
     {
         return AtEpoch(epoch).ToStateVector();
     }
 
-    public virtual StateVector ToStateVector(double trueAnomaly)
+    /// <summary>
+    /// Converts the orbital parameters to a state vector at a given true anomaly.
+    /// </summary>
+    /// <param name="trueAnomaly">The true anomaly at which to compute the state vector.</param>
+    /// <returns>The state vector at the given true anomaly.</returns>
+    public StateVector ToStateVector(double trueAnomaly)
     {
         return ToStateVector(EpochAtMeanAnomaly(TrueAnomalyToMeanAnomaly(trueAnomaly, Eccentricity(), EccentricAnomaly(trueAnomaly))));
     }
 
+    /// <summary>
+    /// Computes the epoch time at a given mean anomaly.
+    /// </summary>
+    /// <param name="meanAnomaly">The mean anomaly at which to compute the epoch time.</param>
+    /// <returns>The epoch time at the given mean anomaly.</returns>
     public Time EpochAtMeanAnomaly(double meanAnomaly)
     {
         var res = meanAnomaly - MeanAnomaly();
@@ -582,7 +650,7 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
             double k = System.Math.Tan(i * 0.5) * System.Math.Sin(o);
             double l0 = o + w + v;
 
-            _equinoctial = new EquinoctialElements(p, f, g, h, k, l0, Observer, Epoch, Frame);
+            _equinoctial = new EquinoctialElements(p, f, g, h, k, l0, Observer, Epoch, Frame, PerigeeRadius());
         }
 
         return _equinoctial;
@@ -603,6 +671,10 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
         return _perigeevector.Value;
     }
 
+    /// <summary>
+    /// Get perigee radius
+    /// </summary>
+    /// <returns></returns>
     public double PerigeeRadius()
     {
         if (_perigeeRadius.HasValue)
@@ -683,29 +755,53 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
         return _meanLongitude.Value;
     }
 
+
+    /// <summary>
+    /// Determines if the orbit is elliptical.
+    /// </summary>
+    /// <returns>
+    /// True if the eccentricity is between 0 and 1 (exclusive), otherwise false.
+    /// </returns>
     public bool IsElliptical()
     {
         return Eccentricity() is <= (1.0 - (1E-06)) and >= 0.0;
     }
 
+    /// <summary>
+    /// Determines if the orbit is circular.
+    /// </summary>
+    /// <returns>True if the eccentricity is less than 0.001, otherwise false.</returns>
     public bool IsCircular()
     {
         _isCircular ??= Eccentricity() < 1E-03;
         return _isCircular.Value;
     }
 
+    /// <summary>
+    /// Determines if the orbit is parabolic.
+    /// </summary>
+    /// <returns>True if the eccentricity is approximately 1.0, otherwise false.</returns>
     public bool IsParabolic()
     {
         _isParabolic ??= System.Math.Abs(Eccentricity() - 1.0) < 1E-06;
         return _isParabolic.Value;
     }
 
+    /// <summary>
+    /// Determines if the orbit is hyperbolic.
+    /// </summary>
+    /// <returns>True if the eccentricity is greater than 1.0, otherwise false.</returns>
     public bool IsHyperbolic()
     {
         _isHyperbolic ??= Eccentricity() > 1.0;
         return _isHyperbolic.Value;
     }
 
+    /// <summary>
+    /// Converts the orbital parameters to Keplerian elements at a given epoch.
+    /// </summary>
+    /// <param name="epoch">The epoch time at which to compute the Keplerian elements.</param>
+    /// <returns>The Keplerian elements at the given epoch.</returns>
     public KeplerianElements ToKeplerianElements(Time epoch)
     {
         double ellapsedTime = (epoch - Epoch).TotalSeconds;
@@ -719,7 +815,10 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
             perigeeRadius: PerigeeRadius());
     }
 
-
+    /// <summary>
+    /// Converts the orbital parameters to Keplerian elements at the current epoch.
+    /// </summary>
+    /// <returns>The Keplerian elements at the current epoch.</returns>
     public virtual KeplerianElements ToKeplerianElements()
     {
         if (_keplerianElements is not null)
@@ -731,6 +830,11 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
         return _keplerianElements;
     }
 
+    /// <summary>
+    /// Converts the orbital parameters to a different reference frame.
+    /// </summary>
+    /// <param name="frame">The reference frame to which to convert the orbital parameters.</param>
+    /// <returns>The orbital parameters in the new reference frame.</returns>
     public OrbitalParameters ToFrame(Frame frame)
     {
         if (frame == Frame)
@@ -745,24 +849,42 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
         return new StateVector(newPos, newVel, Observer, Epoch, frame);
     }
 
+    /// <summary>
+    /// Converts the orbital parameters to equatorial coordinates.
+    /// </summary>
+    /// <returns>The equatorial coordinates.</returns>
     public Equatorial ToEquatorial()
     {
         _equatorial ??= new Equatorial(ToStateVector());
         return _equatorial.Value;
     }
 
+    /// <summary>
+    /// Computes the velocity at perigee.
+    /// </summary>
+    /// <returns>The velocity at perigee.</returns>
     public double PerigeeVelocity()
     {
         _perigeeVelocity ??= System.Math.Sqrt(Observer.GM * (2 / PerigeeVector().Magnitude() - 1.0 / SemiMajorAxis()));
         return _perigeeVelocity.Value;
     }
 
+    /// <summary>
+    /// Computes the velocity at apogee.
+    /// </summary>
+    /// <returns>The velocity at apogee.</returns>
     public double ApogeeVelocity()
     {
         _apogeeVelocity ??= System.Math.Sqrt(Observer.GM * (2 / ApogeeVector().Magnitude() - 1.0 / SemiMajorAxis()));
         return _apogeeVelocity.Value;
     }
 
+    /// <summary>
+    /// Converts the orbital parameters to be relative to another localizable object.
+    /// </summary>
+    /// <param name="localizable">The localizable object to which to convert the orbital parameters.</param>
+    /// <param name="aberration">The aberration to consider in the conversion.</param>
+    /// <returns>The orbital parameters relative to the specified localizable object.</returns>
     public OrbitalParameters RelativeTo(ILocalizable localizable, Aberration aberration)
     {
         if (localizable.NaifId == this.Observer.NaifId)
@@ -776,12 +898,21 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
         return new StateVector(position, velocity, localizable, eph.Epoch, Frame);
     }
 
+    /// <summary>
+    /// Converts the orbital parameters to planetocentric coordinates.
+    /// </summary>
+    /// <param name="aberration">The aberration to consider in the conversion.</param>
+    /// <returns>The planetocentric coordinates.</returns>
     public Planetocentric ToPlanetocentric(Aberration aberration)
     {
         var body = Observer as CelestialBody;
         return ((CelestialBody)Observer).SubObserverPoint(ToFrame(body!.Frame).ToStateVector().Position, Epoch, aberration);
     }
 
+    /// <summary>
+    /// Computes the semi-latus rectum of the orbit.
+    /// </summary>
+    /// <returns>The semi-latus rectum of the orbit.</returns>
     public double SemiLatusRectum()
     {
         var hNorm = SpecificAngularMomentum().Magnitude();
