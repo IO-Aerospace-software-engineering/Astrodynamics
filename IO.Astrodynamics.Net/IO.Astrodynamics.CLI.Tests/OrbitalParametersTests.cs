@@ -18,14 +18,38 @@ public class OrbitalParametersTests
             command.Converter("Data",
                 new Commands.Parameters.OrbitalParameters
                 {
-                    OrbitalParametersValues = "-26499033.67742509 132757417.33833946 57556718.47053819 -29.79426007 -5.01805231 -2.17539380", CenterOfMotionId = 10,
+                    OrbitalParametersValues = "-26499033677.42509 132757417338.33946 57556718470.53819 -29794.26007 -5018.05231 -2175.39380", CenterOfMotionId = 10,
+                    OrbitalParametersEpoch = "0.0",
+                    Frame = "ICRF", FromStateVector = true, FromEquinoctial = false, FromKeplerian = false, FromTLE = false
+                }, true, false, false, new EpochParameters { Epoch = "0.0" }, "ICRF");
+            var res = sb.ToString();
+
+            Assert.Equal(
+                $"Epoch : 2000-01-01T12:00:00.0000000 TDB Position : X : -26499033676.707573 Y : 132757417338.4827 Z: 57556718470.538155 Velocity : X : -29794.260070027125 Y : -5018.052309838966 Z: -2175.393800000007 Frame : J2000{Environment.NewLine}",
+                res);
+        }
+    }
+    
+    [Fact]
+    public void SvToSvToDifferentFrame()
+    {
+        lock (Configuration.objLock)
+        {
+            var command = new OrbitalParametersConverterCommand();
+            StringBuilder sb = new StringBuilder();
+            StringWriter sw = new StringWriter(sb);
+            Console.SetOut(sw);
+            command.Converter("Data",
+                new Commands.Parameters.OrbitalParameters
+                {
+                    OrbitalParametersValues = "-26499033677.42509 132757417338.33946 57556718470.53819 -29794.26007 -5018.05231 -2175.39380", CenterOfMotionId = 10,
                     OrbitalParametersEpoch = "0.0",
                     Frame = "ICRF", FromStateVector = true, FromEquinoctial = false, FromKeplerian = false, FromTLE = false
                 }, true, false, false, new EpochParameters { Epoch = "0.0" }, "ECLIPJ2000");
             var res = sb.ToString();
 
             Assert.Equal(
-                $"Epoch : 2000-01-01T12:00:00.0000000 TDB Position : X : -26499033.69125964 Y : 144697296.86606458 Z: -611.1493929959834 Velocity : X : -29.796555134442006 Y : -5.456766635259731 Z: 0.00018173387892583825 Frame : ECLIPJ2000{Environment.NewLine}",
+                $"Epoch : 2000-01-01T12:00:00.0000000 TDB Position : X : -26499033676.707577 Y : 144697296792.6746 Z: -611149.4830513 Velocity : X : -29794.260070027125 Y : -5469.294939597997 Z: 0.18178668879363613 Frame : ECLIPJ2000{Environment.NewLine}",
                 res);
         }
     }
@@ -50,7 +74,7 @@ public class OrbitalParametersTests
             var res = sb.ToString();
 
             Assert.Equal(
-                $"Epoch : 2000-01-01T12:00:00.0000000 TDB A : 149665479719.88266 Ecc. : 0.017121683001766336 Inc. : 0.4090876369492606 AN : 1.2954252300503235E-05 AOP : 1.776884894312699 M : 6.259056257481824 Frame : j2000{Environment.NewLine}",
+                $"Epoch : 2000-01-01T12:00:00.0000000 TDB A : 149665479719.88266 Ecc. : 0.017121683001766336 Inc. : 0.4090876369492606 AN : 1.2954252300503235E-05 AOP : 1.776884894312699 M : 6.259056257481824 Frame : J2000{Environment.NewLine}",
                 res);
         }
     }
@@ -74,14 +98,14 @@ public class OrbitalParametersTests
             if (OperatingSystem.IsWindows())
             {
                 Assert.Equal(
-                    $"Epoch : 2000-01-01T12:00:00.0000000 TDB P : 10170000 F : 0.3535533905932738 G : 0.3535533905932738 H : 0.08450755960720442 K 0.022643732351075387 L0 : 2.589226533382245 Frame : j2000{
+                    $"Epoch : 2000-01-01T12:00:00.0000000 TDB P : 10170000 F : 0.3535533905932738 G : 0.3535533905932738 H : 0.08450755960720442 K 0.022643732351075387 L0 : 2.589226534411255 Frame : J2000{
                         Environment.NewLine}",
                     res);
             }
             else
             {
                 Assert.Equal(
-                    $"Epoch : 2000-01-01T12:00:00.0000000 TDB P : 10170000 F : 0.3535533905932738 G : 0.35355339059327373 H : 0.08450755960720442 K 0.022643732351075387 L0 : 2.589226533382245 Frame : j2000{Environment.NewLine}",
+                    $"Epoch : 2000-01-01T12:00:00.0000000 TDB P : 10170000 F : 0.3535533905932738 G : 0.35355339059327373 H : 0.08450755960720442 K 0.022643732351075387 L0 : 2.589226534411255 Frame : J2000{Environment.NewLine}",
                     res);
             }
         }
@@ -107,13 +131,13 @@ public class OrbitalParametersTests
             if (OperatingSystem.IsWindows())
             {
                 Assert.Equal(
-                    $"Epoch : 2000-01-01T12:00:00.0000000 TDB Position : X : -6116559.468933809 Y : -1546174.6944518015 Z: 2521950.161516388 Velocity : X : -807.8383114627195 Y : -5477.646280596453 Z: -5297.633402454895 Frame : j2000{Environment.NewLine}",
+                    $"Epoch : 2000-01-01T12:00:00.0000000 TDB Position : X : -6116559.469556896 Y : -1546174.69867672 Z: 2521950.1574303135 Velocity : X : -807.8383054672158 Y : -5477.646279080879 Z: -5297.633404926932 Frame : J2000{Environment.NewLine}",
                     res);
             }
             else
             {
                 Assert.Equal(
-                    $"Epoch : 2000-01-01T12:00:00.0000000 TDB Position : X : -6116559.468933809 Y : -1546174.6944518015 Z: 2521950.161516389 Velocity : X : -807.8383114627195 Y : -5477.646280596454 Z: -5297.633402454895 Frame : j2000{Environment.NewLine}",
+                    $"Epoch : 2000-01-01T12:00:00.0000000 TDB Position : X : -6116559.469556894 Y : -1546174.6986767196 Z: 2521950.1574303135 Velocity : X : -807.8383054672163 Y : -5477.64627908088 Z: -5297.633404926932 Frame : J2000{Environment.NewLine}",
                     res);
             }
         }
@@ -137,7 +161,7 @@ public class OrbitalParametersTests
             var res = sb.ToString();
 
             Assert.Equal(
-                $"Epoch : 2000-01-01T13:00:00.0000000 TDB A : 6800803.544958167 Ecc. : 0.001353139738203394 Inc. : 0.9026706683232326 AN : 0.5685593860871466 AOP : 1.85454203659022 M : 4.845168091487241 Frame : j2000{Environment.NewLine}",
+                $"Epoch : 2000-01-01T13:00:00.0000000 TDB A : 6800803.544958167 Ecc. : 0.001353139738203394 Inc. : 0.9026706683232326 AN : 0.5685593860871466 AOP : 1.85454203659022 M : 4.845168091449668 Frame : J2000{Environment.NewLine}",
                 res);
         }
     }

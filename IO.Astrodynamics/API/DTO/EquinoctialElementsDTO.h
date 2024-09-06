@@ -12,7 +12,7 @@ namespace IO::Astrodynamics::API::DTO
     {
         double epoch{};
         int centerOfMotionId{};
-        const char* frame{};
+        char inertialFrame[32];
         double semiMajorAxis{};
         double h{};
         double k{};
@@ -24,6 +24,12 @@ namespace IO::Astrodynamics::API::DTO
         double declinationOfThePole{};
         double ascendingNodeLongitudeRate{};
         double period{};
+
+        void SetFrame(const char* inputFrame)
+        {
+            std::strcpy(inertialFrame,inputFrame);
+            inertialFrame[31]='\0';
+        }
     };
 }
 

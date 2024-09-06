@@ -1,4 +1,3 @@
-
 /*
  Copyright (c) 2023-2024. Sylvain Guillet (sylvain.guillet@tutamail.com)
  */
@@ -30,7 +29,6 @@ extern "C" {
 #  define MODULE_API
 #endif
 
-
 /**
  * Get the spice version
  * @return version
@@ -39,96 +37,112 @@ MODULE_API const char *GetSpiceVersionProxy();
 
 /**
  * Write ephemeris into binary file (spk)
- * @param filePath
- * @param objectId
- * @param sv
- * @param size
- * @return
+ * @param filePath Path to the binary file
+ * @param objectId ID of the object
+ * @param sv Array of state vectors
+ * @param size Size of the state vector array
+ * @return true if successful, false otherwise
  */
 MODULE_API bool
-WriteEphemerisProxy(const char *filePath, int objectId, IO::Astrodynamics::API::DTO::StateVectorDTO sv[100000], unsigned int size);
+WriteEphemerisProxy(const char *filePath, int objectId, IO::Astrodynamics::API::DTO::StateVectorDTO sv[100000],
+                    unsigned int size);
 
 /**
  * Write orientation into binary file (ck)
- * @param filePath
- * @param objectId
- * @param so
- * @param size
- * @return
+ * @param filePath Path to the binary file
+ * @param objectId ID of the object
+ * @param so Array of state orientations
+ * @param size Size of the state orientation array
+ * @return true if successful, false otherwise
  */
-MODULE_API bool WriteOrientationProxy(const char *filePath, int objectId, IO::Astrodynamics::API::DTO::StateOrientationDTO so[100000], unsigned int size);
+MODULE_API bool WriteOrientationProxy(const char *filePath, int objectId,
+                                      IO::Astrodynamics::API::DTO::StateOrientationDTO so[100000], unsigned int size);
 
 /**
  * Read object ephemeris
- * @param searchWindow
- * @param observerId
- * @param targetId
- * @param frame
- * @param aberration
- * @param stepSize
- * @param stateVectors
+ * @param searchWindow Time window for the search
+ * @param observerId ID of the observer
+ * @param targetId ID of the target
+ * @param frame Reference frame
+ * @param aberration Aberration correction
+ * @param stepSize Step size for the search
+ * @param stateVectors Array to store the state vectors
  */
 MODULE_API void
 ReadEphemerisProxy(IO::Astrodynamics::API::DTO::WindowDTO searchWindow, int observerId, int targetId, const char *frame,
-                   const char *aberration, double stepSize, IO::Astrodynamics::API::DTO::StateVectorDTO stateVectors[10000]);
+                   const char *aberration, double stepSize,
+                   IO::Astrodynamics::API::DTO::StateVectorDTO stateVectors[10000]);
 
-MODULE_API IO::Astrodynamics::API::DTO::StateVectorDTO ReadEphemerisAtGivenEpochProxy(double epoch, int observerId, int targetId, const char *frame, const char *aberration);
+/**
+ * Read ephemeris at a given epoch
+ * @param epoch Epoch time
+ * @param observerId ID of the observer
+ * @param targetId ID of the target
+ * @param frame Reference frame
+ * @param aberration Aberration correction
+ * @return State vector at the given epoch
+ */
+MODULE_API IO::Astrodynamics::API::DTO::StateVectorDTO ReadEphemerisAtGivenEpochProxy(
+        double epoch, int observerId, int targetId, const char *frame, const char *aberration);
 
 /**
  * Read spacecraft orientation
- * @param searchWindow
- * @param spacecraftId
- * @param tolerance
- * @param frame
- * @param stepSize
- * @param so
+ * @param searchWindow Time window for the search
+ * @param spacecraftId ID of the spacecraft
+ * @param tolerance Tolerance for the search
+ * @param frame Reference frame
+ * @param stepSize Step size for the search
+ * @param so Array to store the state orientations
  */
 MODULE_API void
-ReadOrientationProxy(IO::Astrodynamics::API::DTO::WindowDTO searchWindow, int spacecraftId, double tolerance, const char *frame, double stepSize,
+ReadOrientationProxy(IO::Astrodynamics::API::DTO::WindowDTO searchWindow, int spacecraftId, double tolerance,
+                     const char *frame, double stepSize,
                      IO::Astrodynamics::API::DTO::StateOrientationDTO so[10000]);
 
 /**
  * Evaluate launch windows
- * @param launchDto
+ * @param launchDto Launch data transfer object
  */
 MODULE_API void LaunchProxy(IO::Astrodynamics::API::DTO::LaunchDTO &launchDto);
 
 /**
  * Load kernels
- * @param directoryPath
+ * @param path Directory path to the kernels
+ * @return true if successful, false otherwise
  */
 MODULE_API bool LoadKernelsProxy(const char *path);
 
 /**
  * Unload kernels
- * @param directoryPath
+ * @param path Directory path to the kernels
+ * @return true if successful, false otherwise
  */
 MODULE_API bool UnloadKernelsProxy(const char *path);
 
 /**
- * Convert secondFromJ2000 to formatted string
- * @param secondsFromJ2000
- * @return
+ * Convert seconds from J2000 to formatted string (TDB)
+ * @param secondsFromJ2000 Seconds from J2000
+ * @return Formatted string
  */
 MODULE_API const char *TDBToStringProxy(double secondsFromJ2000);
 
 /**
- * Convert secondFromJ2000 to formatted string
- * @param secondsFromJ2000
- * @return
+ * Convert seconds from J2000 to formatted string (UTC)
+ * @param secondsFromJ2000 Seconds from J2000
+ * @return Formatted string
  */
 MODULE_API const char *UTCToStringProxy(double secondsFromJ2000);
 
 /**
- * Find time windows witch satisfy distance constraint
- * @param searchWindow
- * @param observerId
- * @param targetId
- * @param relationalOperator
- * @param value
- * @param aberration
- * @param stepSize
- * @param windows
+ * Find time windows which satisfy distance constraint
+ * @param searchWindow Time window for the search
+ * @param observerId ID of the observer
+ * @param targetId ID of the target
+ * @param relationalOperator Relational operator for the constraint
+ * @param value Value for the constraint
+ * @param aberration Aberration correction
+ * @param stepSize Step size for the search
+ * @param windows Array to store the time windows
  */
 MODULE_API void
 FindWindowsOnDistanceConstraintProxy(IO::Astrodynamics::API::DTO::WindowDTO searchWindow, int observerId, int targetId,
@@ -136,21 +150,22 @@ FindWindowsOnDistanceConstraintProxy(IO::Astrodynamics::API::DTO::WindowDTO sear
                                      double stepSize, IO::Astrodynamics::API::DTO::WindowDTO windows[1000]);
 
 /**
- * Find time windows witch satisfy occultation constraint
- * @param searchWindow
- * @param observerId
- * @param targetId
- * @param targetFrame
- * @param targetShape
- * @param frontBodyId
- * @param frontFrame
- * @param frontShape
- * @param occultationType
- * @param aberration
- * @param stepSize
- * @param windows
+ * Find time windows which satisfy occultation constraint
+ * @param searchWindow Time window for the search
+ * @param observerId ID of the observer
+ * @param targetId ID of the target
+ * @param targetFrame Reference frame of the target
+ * @param targetShape Shape of the target
+ * @param frontBodyId ID of the front body
+ * @param frontFrame Reference frame of the front body
+ * @param frontShape Shape of the front body
+ * @param occultationType Type of occultation
+ * @param aberration Aberration correction
+ * @param stepSize Step size for the search
+ * @param windows Array to store the time windows
  */
-MODULE_API void FindWindowsOnOccultationConstraintProxy(IO::Astrodynamics::API::DTO::WindowDTO searchWindow, int observerId,
+MODULE_API void FindWindowsOnOccultationConstraintProxy(IO::Astrodynamics::API::DTO::WindowDTO searchWindow,
+                                                        int observerId,
                                                         int targetId, const char *targetFrame,
                                                         const char *targetShape,
                                                         int frontBodyId, const char *frontFrame, const char *frontShape,
@@ -159,44 +174,47 @@ MODULE_API void FindWindowsOnOccultationConstraintProxy(IO::Astrodynamics::API::
                                                         IO::Astrodynamics::API::DTO::WindowDTO windows[1000]);
 
 /**
- * Find time windows witch satisfy coordinate constraint
- * @param searchWindow
- * @param observerId
- * @param targetId
- * @param frame
- * @param coordinateSystem
- * @param coordinate
- * @param relationalOperator
- * @param value
- * @param adjustValue
- * @param aberration
- * @param stepSize
- * @param windows
+ * Find time windows which satisfy coordinate constraint
+ * @param searchWindow Time window for the search
+ * @param observerId ID of the observer
+ * @param targetId ID of the target
+ * @param frame Reference frame
+ * @param coordinateSystem Coordinate system
+ * @param coordinate Coordinate to be constrained
+ * @param relationalOperator Relational operator for the constraint
+ * @param value Value for the constraint
+ * @param adjustValue Adjustment value for the constraint
+ * @param aberration Aberration correction
+ * @param stepSize Step size for the search
+ * @param windows Array to store the time windows
  */
-MODULE_API void FindWindowsOnCoordinateConstraintProxy(IO::Astrodynamics::API::DTO::WindowDTO searchWindow, int observerId,
+MODULE_API void FindWindowsOnCoordinateConstraintProxy(IO::Astrodynamics::API::DTO::WindowDTO searchWindow,
+                                                       int observerId,
                                                        int targetId, const char *frame, const char *coordinateSystem,
                                                        const char *coordinate, const char *relationalOperator,
                                                        double value, double adjustValue, const char *aberration,
-                                                       double stepSize, IO::Astrodynamics::API::DTO::WindowDTO windows[1000]);
+                                                       double stepSize,
+                                                       IO::Astrodynamics::API::DTO::WindowDTO windows[1000]);
 
 /**
- * Find time windows witch satisfy illumination constraint
- * @param searchWindow
- * @param observerId
- * @param illuminationSource
- * @param targetBody
- * @param fixedFrame
- * @param geodetic
- * @param illuminationType
- * @param relationalOperator
- * @param value
- * @param adjustValue
- * @param aberration
- * @param stepSize
- * @param method
- * @param windows
+ * Find time windows which satisfy illumination constraint
+ * @param searchWindow Time window for the search
+ * @param observerId ID of the observer
+ * @param illuminationSource Source of illumination
+ * @param targetBody ID of the target body
+ * @param fixedFrame Fixed reference frame
+ * @param geodetic Geodetic coordinates
+ * @param illuminationType Type of illumination
+ * @param relationalOperator Relational operator for the constraint
+ * @param value Value for the constraint
+ * @param adjustValue Adjustment value for the constraint
+ * @param aberration Aberration correction
+ * @param stepSize Step size for the search
+ * @param method Method for the search
+ * @param windows Array to store the time windows
  */
-MODULE_API void FindWindowsOnIlluminationConstraintProxy(IO::Astrodynamics::API::DTO::WindowDTO searchWindow, int observerId,
+MODULE_API void FindWindowsOnIlluminationConstraintProxy(IO::Astrodynamics::API::DTO::WindowDTO searchWindow,
+                                                         int observerId,
                                                          const char *illuminationSource, int targetBody,
                                                          const char *fixedFrame,
                                                          IO::Astrodynamics::API::DTO::PlanetodeticDTO geodetic,
@@ -207,81 +225,131 @@ MODULE_API void FindWindowsOnIlluminationConstraintProxy(IO::Astrodynamics::API:
                                                          IO::Astrodynamics::API::DTO::WindowDTO windows[1000]);
 
 /**
- * Find time windows witch satisfy in field of view constraint
- * @param searchWindow
- * @param observerId
- * @param instrumentId
- * @param targetId
- * @param targetFrame
- * @param targetShape
- * @param aberration
- * @param stepSize
- * @param windows
+ * Find time windows which satisfy in field of view constraint
+ * @param searchWindow Time window for the search
+ * @param observerId ID of the observer
+ * @param instrumentId ID of the instrument
+ * @param targetId ID of the target
+ * @param targetFrame Reference frame of the target
+ * @param targetShape Shape of the target
+ * @param aberration Aberration correction
+ * @param stepSize Step size for the search
+ * @param windows Array to store the time windows
  */
 MODULE_API void
-FindWindowsInFieldOfViewConstraintProxy(IO::Astrodynamics::API::DTO::WindowDTO searchWindow, int observerId, int instrumentId,
+FindWindowsInFieldOfViewConstraintProxy(IO::Astrodynamics::API::DTO::WindowDTO searchWindow, int observerId,
+                                        int instrumentId,
                                         int targetId, const char *targetFrame, const char *targetShape,
                                         const char *aberration, double stepSize,
                                         IO::Astrodynamics::API::DTO::WindowDTO windows[1000]);
+
 /**
  * Convert elapsed seconds from J2000 to UTC
- * @param tdb
- * @return
+ * @param tdb Time in TDB
+ * @return Time in UTC
  */
 MODULE_API double ConvertTDBToUTCProxy(double tdb);
 
 /**
- * Convert elapsed seconds from J2000 to tdb
- * @param utc
- * @return
+ * Convert elapsed seconds from J2000 to TDB
+ * @param utc Time in UTC
+ * @return Time in TDB
  */
 MODULE_API double ConvertUTCToTDBProxy(double utc);
 
 /**
- * Get celestial body information from his id
- * @param bodyId
- * @return
+ * Get celestial body information from its ID
+ * @param bodyId ID of the celestial body
+ * @return Celestial body information
  */
 MODULE_API IO::Astrodynamics::API::DTO::CelestialBodyDTO GetCelestialBodyInfoProxy(int bodyId);
 
 /**
- * Get the transformation from a frame to another frame at given epoch
- * @param fromFrame
- * @param toFrame
- * @return
+ * Get the transformation from one frame to another at a given epoch
+ * @param fromFrame Source reference frame
+ * @param toFrame Target reference frame
+ * @param epoch Epoch time
+ * @return Frame transformation information
  */
-MODULE_API IO::Astrodynamics::API::DTO::FrameTransformationDTO TransformFrameProxy(const char *fromFrame, const char *toFrame, double epoch);
+MODULE_API IO::Astrodynamics::API::DTO::FrameTransformationDTO TransformFrameProxy(
+        const char *fromFrame, const char *toFrame, double epoch);
 
 /**
- * Convert Two line elements to state vector
- * @param L1
- * @param L2
- * @param epoch
- * @return
+ * Convert Two Line Elements (TLE) to state vector
+ * @param L1 Line 1 of TLE
+ * @param L2 Line 2 of TLE
+ * @param L3 Line 3 of TLE
+ * @param epoch Epoch time
+ * @return State vector
  */
-MODULE_API IO::Astrodynamics::API::DTO::StateVectorDTO ConvertTLEToStateVectorProxy(const char *L1, const char *L2, const char *L3, double epoch);
+MODULE_API IO::Astrodynamics::API::DTO::StateVectorDTO ConvertTLEToStateVectorProxy(
+        const char *L1, const char *L2, const char *L3, double epoch);
 
 /**
  * Convert conic orbital elements to state vector
- * @param conicOrbitalElementsDto
+ * @param conicOrbitalElementsDto Conic orbital elements
+ * @return State vector
+ */
+MODULE_API IO::Astrodynamics::API::DTO::StateVectorDTO ConvertConicElementsToStateVectorProxy(
+        IO::Astrodynamics::API::DTO::ConicOrbitalElementsDTO conicOrbitalElementsDto);
+
+/**
+ * Convert equinoctial elements to state vector at epoch
+ * @param equinoctialElementsDto
+ * @param epoch
  * @return
  */
-MODULE_API IO::Astrodynamics::API::DTO::StateVectorDTO ConvertConicElementsToStateVectorProxy(IO::Astrodynamics::API::DTO::ConicOrbitalElementsDTO conicOrbitalElementsDto);
+MODULE_API IO::Astrodynamics::API::DTO::StateVectorDTO ConvertConicElementsToStateVectorAtEpochProxy(
+        IO::Astrodynamics::API::DTO::ConicOrbitalElementsDTO equinoctialElementsDto, double epoch, double gm);
+
+/**
+ * Convert state vector to conic orbital elements
+ * @param stateVector State vector
+ * @param mu Gravitational parameter
+ * @return Conic orbital elements
+ */
+MODULE_API IO::Astrodynamics::API::DTO::ConicOrbitalElementsDTO ConvertStateVectorToConicOrbitalElementProxy(
+        IO::Astrodynamics::API::DTO::StateVectorDTO stateVector, double mu);
 
 /**
  * Convert equinoctial elements to state vector
- * @param equinoctialElementsDto
- * @return
+ * @param equinoctialElementsDto Equinoctial elements
+ * @return State vector
  */
-MODULE_API IO::Astrodynamics::API::DTO::StateVectorDTO ConvertEquinoctialElementsToStateVectorProxy(IO::Astrodynamics::API::DTO::EquinoctialElementsDTO equinoctialElementsDto);
+MODULE_API IO::Astrodynamics::API::DTO::StateVectorDTO ConvertEquinoctialElementsToStateVectorProxy(
+        IO::Astrodynamics::API::DTO::EquinoctialElementsDTO equinoctialElementsDto);
+
 
 /**
- * Convert stateVector to right ascension and declination
- * @param stateVectorDto
- * @return
+ * Convert state vector to right ascension and declination
+ * @param stateVectorDto State vector
+ * @return Right ascension and declination
  */
-MODULE_API IO::Astrodynamics::API::DTO::RaDecDTO ConvertStateVectorToEquatorialCoordinatesProxy(IO::Astrodynamics::API::DTO::StateVectorDTO stateVectorDto);
-MODULE_API IO::Astrodynamics::API::DTO::TLEElementsDTO GetTLEElementsProxy(const char *L1, const char *L2, const char *L3);
+MODULE_API IO::Astrodynamics::API::DTO::RaDecDTO ConvertStateVectorToEquatorialCoordinatesProxy(
+        IO::Astrodynamics::API::DTO::StateVectorDTO stateVectorDto);
+
+/**
+ * Propagate the state vector of a two-body system.
+ * @param stateVector state vector elements of the two-body system
+ * @return Propagated state vector
+ */
+MODULE_API IO::Astrodynamics::API::DTO::StateVectorDTO Propagate2BodiesProxy(
+        IO::Astrodynamics::API::DTO::StateVectorDTO stateVector, double gm, double dt);
+
+
+/**
+ * Get TLE elements
+ * @param L1 Line 1 of TLE
+ * @param L2 Line 2 of TLE
+ * @param L3 Line 3 of TLE
+ * @return TLE elements
+ */
+MODULE_API IO::Astrodynamics::API::DTO::TLEElementsDTO GetTLEElementsProxy(
+        const char *L1, const char *L2, const char *L3);
+
+/**
+ * Clear kernel pool
+ */
 MODULE_API void KClearProxy();
 #ifdef __cplusplus
 }
@@ -294,8 +362,15 @@ MODULE_API void KClearProxy();
 
 static constexpr const int lenout = 33;
 
+/**
+ * Handle error and return error message
+ * @return Error message
+ */
 char *HandleError();
 
+/**
+ * Activate error management
+ */
 void ActivateErrorManagement();
 
 #endif

@@ -14,14 +14,14 @@ TEST(API, TDBToString)
 {
     auto res = TDBToStringProxy(0.0);
     ASSERT_STREQ("2000-01-01 12:00:00.000000 (TDB)", res);
-    free((void*)res);
+    free((void *) res);
 }
 
 TEST(API, UTCToString)
 {
     auto res = UTCToStringProxy(0.0);
     ASSERT_STREQ("2000-01-01 12:00:00.000000 (UTC)", res);
-    free((void*)res);
+    free((void *) res);
 }
 
 TEST(API, FindWindowsOnCoordinateConstraintProxy)
@@ -58,10 +58,12 @@ TEST(API, FindWindowsOnIlluminationConstraintProxy)
     IO::Astrodynamics::API::DTO::WindowDTO searchWindow{};
     searchWindow.start = IO::Astrodynamics::Time::TDB("2021-05-17 12:00:00 TDB").GetSecondsFromJ2000().count();
     searchWindow.end = IO::Astrodynamics::Time::TDB("2021-05-18 12:00:00 TDB").GetSecondsFromJ2000().count();
-    IO::Astrodynamics::API::DTO::PlanetodeticDTO geodetic(2.2 * IO::Astrodynamics::Constants::DEG_RAD, 48.0 * IO::Astrodynamics::Constants::DEG_RAD, 0.0);
+    IO::Astrodynamics::API::DTO::PlanetodeticDTO geodetic(2.2 * IO::Astrodynamics::Constants::DEG_RAD,
+                                                          48.0 * IO::Astrodynamics::Constants::DEG_RAD, 0.0);
     FindWindowsOnIlluminationConstraintProxy(searchWindow, 10, "SUN", 399, "IAU_EARTH",
                                              geodetic, "INCIDENCE", "<",
-                                             IO::Astrodynamics::Constants::PI2 - IO::Astrodynamics::Constants::OfficialTwilight, 0.0,
+                                             IO::Astrodynamics::Constants::PI2 -
+                                             IO::Astrodynamics::Constants::OfficialTwilight, 0.0,
                                              "CN+S", 4.5 * 60 * 60, "Ellipsoid", windows);
 
     ASSERT_STREQ("2021-05-17 12:00:00.000000 (TDB)", ToTDBWindow(windows[0]).GetStartDate().ToString().c_str());
@@ -82,8 +84,6 @@ TEST(API, FindWindowsOnOccultationConstraintProxy)
     ASSERT_STREQ("2001-12-14 20:10:15.410588 (TDB)", ToTDBWindow(windows[0]).GetStartDate().ToString().c_str());
     ASSERT_STREQ("2001-12-14 21:35:49.100520 (TDB)", ToTDBWindow(windows[0]).GetEndDate().ToString().c_str());
 }
-
-
 
 
 TEST(API, ReadEphemerisProxy)
@@ -139,9 +139,9 @@ TEST(API, ToUTC)
 
 TEST(API, Version)
 {
-    const char * res=GetSpiceVersionProxy();
+    const char *res = GetSpiceVersionProxy();
     ASSERT_STREQ("CSPICE_N0067", res);
-    free((void*)res);
+    free((void *) res);
 }
 
 TEST(API, WriteEphemeris)
@@ -189,18 +189,20 @@ TEST(API, WriteEphemeris)
 TEST(API, WriteOrientation)
 {
     const auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399);
-    std::unique_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<IO::Astrodynamics::OrbitalParameters::StateVector>(earth,
-                                                                                                                                                                 IO::Astrodynamics::Math::Vector3D(
-                                                                                                                                                                         6800000.0,
-                                                                                                                                                                         0.0, 0.0),
-                                                                                                                                                                 IO::Astrodynamics::Math::Vector3D(
-                                                                                                                                                                         0.0,
-                                                                                                                                                                         8000.0,
-                                                                                                                                                                         0.0),
-                                                                                                                                                                 IO::Astrodynamics::Time::TDB(
-                                                                                                                                                                         0.0s),
-                                                                                                                                                                 IO::Astrodynamics::Frames::InertialFrames::ICRF());
-    IO::Astrodynamics::Body::Spacecraft::Spacecraft spc(-175, "SPC000", 1000.0, 3000.0, std::string(SpacecraftPath), std::move(orbitalParams));
+    std::unique_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<
+            IO::Astrodynamics::OrbitalParameters::StateVector>(earth,
+                                                               IO::Astrodynamics::Math::Vector3D(
+                                                                       6800000.0,
+                                                                       0.0, 0.0),
+                                                               IO::Astrodynamics::Math::Vector3D(
+                                                                       0.0,
+                                                                       8000.0,
+                                                                       0.0),
+                                                               IO::Astrodynamics::Time::TDB(
+                                                                       0.0s),
+                                                               IO::Astrodynamics::Frames::InertialFrames::ICRF());
+    IO::Astrodynamics::Body::Spacecraft::Spacecraft spc(-175, "SPC000", 1000.0, 3000.0, std::string(SpacecraftPath),
+                                                        std::move(orbitalParams));
     const int size = 10;
     IO::Astrodynamics::API::DTO::StateOrientationDTO sv[size];
     for (int i = 0; i < size; ++i)
@@ -257,7 +259,6 @@ TEST(API, WriteOrientation)
     ASSERT_DOUBLE_EQ(soresult[9].angularVelocity.z, 0.0);
     ASSERT_DOUBLE_EQ(soresult[9].epoch, 9);
     ASSERT_STREQ(soresult[9].frame, "J2000");
-
 }
 
 TEST(API, GetBodyInformation)
@@ -351,7 +352,7 @@ TEST(API, ConvertConicOrbitalElementsToStateVector)
 
     IO::Astrodynamics::API::DTO::ConicOrbitalElementsDTO conics;
     conics.SetFrame(IO::Astrodynamics::Frames::InertialFrames::ICRF().ToCharArray());
-    conics.epoch = 663724800.00001490;//"2021-01-12T11:58:50.816" UTC
+    conics.epoch = 663724800.00001490; //"2021-01-12T11:58:50.816" UTC
     conics.meanAnomaly = 4.541224977546975E+01 * IO::Astrodynamics::Constants::DEG_RAD;
     conics.periapsisArgument = 1.062574316262159E+02 * IO::Astrodynamics::Constants::DEG_RAD;
     conics.ascendingNodeLongitude = 3.257605322534260E+01 * IO::Astrodynamics::Constants::DEG_RAD;
@@ -375,6 +376,7 @@ TEST(API, ConvertConicOrbitalElementsToStateVector)
     ASSERT_STREQ(IO::Astrodynamics::Frames::InertialFrames::ICRF().ToCharArray(), sv.inertialFrame);
 }
 
+
 TEST(API, ConvertEquinoctialElementsToStateVector)
 {
     //keplerian elements
@@ -395,7 +397,7 @@ TEST(API, ConvertEquinoctialElementsToStateVector)
     double L = m0 + argp + node;
 
     IO::Astrodynamics::API::DTO::EquinoctialElementsDTO eqDTO;
-    eqDTO.frame = IO::Astrodynamics::Frames::InertialFrames::ICRF().ToCharArray();
+    eqDTO.SetFrame(IO::Astrodynamics::Frames::InertialFrames::ICRF().ToCharArray());
     eqDTO.declinationOfThePole = IO::Astrodynamics::Constants::PI2;
     eqDTO.rightAscensionOfThePole = -IO::Astrodynamics::Constants::PI2;
     eqDTO.ascendingNodeLongitudeRate = 0.0;
@@ -432,4 +434,52 @@ TEST(API, ConvertToRaDec)
     ASSERT_DOUBLE_EQ(222.44729949955743, ra.rightAscension * IO::Astrodynamics::Constants::RAD_DEG);
     ASSERT_DOUBLE_EQ(-10.900186051699617, ra.declination * IO::Astrodynamics::Constants::RAD_DEG);
     ASSERT_DOUBLE_EQ(402448639.88732731, ra.range);
+}
+
+TEST(API, ConvertEllipticStateToConic)
+{
+    auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399);
+    IO::Astrodynamics::API::DTO::StateVectorDTO stateVector;
+    stateVector.epoch = 2451545.0; // J2000 epoch
+    stateVector.position = {6800000.0, 0.0, 0.0};
+    stateVector.velocity = {0.0, 8000.0, 0.0};
+    stateVector.centerOfMotionId = earth->GetId();
+    stateVector.SetFrame("J2000");
+
+    auto result = ConvertStateVectorToConicOrbitalElementProxy(stateVector, earth->GetMu());
+
+    auto stateVector2 = ConvertConicElementsToStateVectorAtEpochProxy(result, stateVector.epoch, earth->GetMu());
+    EXPECT_NEAR(stateVector.position.x, stateVector2.position.x, 1e-6);
+    EXPECT_NEAR(stateVector.position.y, stateVector2.position.y, 1e-6);
+    EXPECT_NEAR(stateVector.position.z, stateVector2.position.z, 1e-6);
+    EXPECT_NEAR(stateVector.velocity.x, stateVector2.velocity.x, 1e-6);
+    EXPECT_NEAR(stateVector.velocity.y, stateVector2.velocity.y, 1e-6);
+    EXPECT_NEAR(stateVector.velocity.z, stateVector2.velocity.z, 1e-6);
+    EXPECT_NEAR(stateVector.epoch, stateVector2.epoch, 1e-6);
+}
+
+TEST(API, ConvertHyperbolicStateToConic)
+{
+    auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399);
+    IO::Astrodynamics::API::DTO::StateVectorDTO stateVector;
+    stateVector.epoch = 2451545.0; // J2000 epoch
+    stateVector.position = {6800000.0, 0.0, 0.0};
+    stateVector.velocity = {0.0, 12000.0, 0.0};
+    stateVector.centerOfMotionId = earth->GetId();
+    stateVector.SetFrame("J2000");
+    // double mu = 398600.4418; // Earth's gravitational parameter
+
+    auto result = ConvertStateVectorToConicOrbitalElementProxy(stateVector, earth->GetMu());
+    result.centerOfMotionId = 399;
+    result.SetFrame("J2000");
+
+
+    auto stateVector2 = ConvertConicElementsToStateVectorAtEpochProxy(result, stateVector.epoch, earth->GetMu());
+    EXPECT_NEAR(stateVector.position.x, stateVector2.position.x, 1e-6);
+    EXPECT_NEAR(stateVector.position.y, stateVector2.position.y, 1e-6);
+    EXPECT_NEAR(stateVector.position.z, stateVector2.position.z, 1e-6);
+    EXPECT_NEAR(stateVector.velocity.x, stateVector2.velocity.x, 1e-6);
+    EXPECT_NEAR(stateVector.velocity.y, stateVector2.velocity.y, 1e-6);
+    EXPECT_NEAR(stateVector.velocity.z, stateVector2.velocity.z, 1e-6);
+    EXPECT_NEAR(stateVector.epoch, stateVector2.epoch, 1e-6);
 }

@@ -1,16 +1,46 @@
 using System;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Frames;
+using IO.Astrodynamics.Math;
 using IO.Astrodynamics.TimeSystem;
 
 
 namespace IO.Astrodynamics.OrbitalParameters
 {
+    /// <summary>
+    /// Represents the Keplerian elements of an orbit, which are a set of parameters that define the shape and orientation of an orbit.
+    /// </summary>
     public class KeplerianElements : OrbitalParameters, IEquatable<KeplerianElements>
     {
-        private double? _eccentricAnomaly;
-        private double? _trueAnomaly;
+        /// <summary>
+        /// Semi major Axis
+        /// </summary>
+        public double A { get; }
 
+        /// <summary>
+        /// Eccentricity
+        /// </summary>
+        public double E { get; }
+
+        /// <summary>
+        /// Inclination
+        /// </summary>
+        public double I { get; }
+
+        /// <summary>
+        /// Right Ascending Node
+        /// </summary>
+        public double RAAN { get; }
+
+        /// <summary>
+        /// Argument of Periapsis
+        /// </summary>
+        public double AOP { get; }
+
+        /// <summary>
+        /// Mean Anomaly
+        /// </summary>
+        public double M { get; }
 
         /// <summary>
         /// Constructor
@@ -24,18 +54,21 @@ namespace IO.Astrodynamics.OrbitalParameters
         /// <param name="observer"></param>
         /// <param name="epoch"></param>
         /// <param name="frame"></param>
+        /// <param name="trueAnomaly"></param>
+        /// <param name="period"></param>
+        /// <param name="perigeeRadius"></param>
         /// <exception cref="ArgumentException"></exception>
         public KeplerianElements(double semiMajorAxis, double eccentricity, double inclination, double rigthAscendingNode, double argumentOfPeriapsis, double meanAnomaly,
-            ILocalizable observer, Time epoch, Frame frame) : base(observer, epoch, frame)
+            ILocalizable observer, Time epoch, Frame frame, double? trueAnomaly = null, TimeSpan? period = null, double? perigeeRadius = null) : base(observer, epoch, frame)
         {
-            if (semiMajorAxis <= 0.0)
-            {
-                throw new ArgumentException("Semi major axis must be a positive number");
-            }
-
             if (eccentricity < 0.0)
             {
                 throw new ArgumentException("Eccentricity must be a positive number");
+            }
+
+            if (System.Math.Abs(eccentricity - 1.0) < 1E-06 && (perigeeRadius is null || !double.IsPositiveInfinity(semiMajorAxis)))
+            {
+                throw new ArgumentException("To build a parabolic orbit you must set perigee radius and define semi major axis as positive infinity");
             }
 
             if (inclination is < -Constants.PI or > Constants.PI)
@@ -64,42 +97,19 @@ namespace IO.Astrodynamics.OrbitalParameters
             RAAN = rigthAscendingNode;
             AOP = argumentOfPeriapsis;
             M = meanAnomaly;
+            _period = period;
+            _trueAnomaly = trueAnomaly;
+            _perigeeRadius = perigeeRadius;
         }
 
-        public double A { get; }
-        public double E { get; }
-        public double I { get; }
-        public double RAAN { get; }
-        public double AOP { get; }
-        public double M { get; }
-
-        public override double ArgumentOfPeriapsis()
+        public override KeplerianElements ToKeplerianElements()
         {
-            return AOP;
+            return this;
         }
 
-        public override double AscendingNode()
+        public override double SemiMajorAxis()
         {
-            return RAAN;
-        }
-
-        public override double EccentricAnomaly()
-        {
-            if (_eccentricAnomaly.HasValue)
-            {
-                return _eccentricAnomaly.Value;
-            }
-
-            double tmpEA = M;
-            _eccentricAnomaly = 0.0;
-
-            while (System.Math.Abs(tmpEA - _eccentricAnomaly.Value) > 1E-09)
-            {
-                _eccentricAnomaly = tmpEA;
-                tmpEA = M + E * System.Math.Sin(_eccentricAnomaly.Value);
-            }
-
-            return _eccentricAnomaly.Value;
+            return A;
         }
 
         public override double Eccentricity()
@@ -112,37 +122,22 @@ namespace IO.Astrodynamics.OrbitalParameters
             return I;
         }
 
-        public override double SemiMajorAxis()
+        public override double AscendingNode()
         {
-            return A;
+            return RAAN;
         }
 
-        public override double TrueAnomaly()
+        public override double ArgumentOfPeriapsis()
         {
-            if (_trueAnomaly.HasValue)
-            {
-                return _trueAnomaly.Value;
-            }
-            double EA = EccentricAnomaly();
-            _trueAnomaly = System.Math.Atan2(System.Math.Sqrt(1 - E * E) * System.Math.Sin(EA), System.Math.Cos(EA) - E);
-            if (_trueAnomaly < 0.0)
-            {
-                _trueAnomaly += Constants._2PI;
-            }
-
-            _trueAnomaly %= Constants._2PI;
-            return _trueAnomaly.Value;
+            return AOP;
         }
 
         public override double MeanAnomaly()
         {
             return M;
         }
-
-        public override KeplerianElements ToKeplerianElements()
-        {
-            return this;
-        }
+        
+        #region Operator
 
         public bool Equals(KeplerianElements other)
         {
@@ -177,7 +172,8 @@ namespace IO.Astrodynamics.OrbitalParameters
 
         public override string ToString()
         {
-            return $"Epoch : {Epoch.ToString()} A : {A} Ecc. : {E} Inc. : {I} AN : {RAAN} AOP : {AOP} M : {M} Frame : {Frame.Name}" ;
+            return $"Epoch : {Epoch.ToString()} A : {A} Ecc. : {E} Inc. : {I} AN : {RAAN} AOP : {AOP} M : {M} Frame : {Frame.Name}";
         }
+        #endregion
     }
 }

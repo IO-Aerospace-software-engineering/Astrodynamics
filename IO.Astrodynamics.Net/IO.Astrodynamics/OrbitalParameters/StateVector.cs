@@ -6,27 +6,30 @@ using IO.Astrodynamics.TimeSystem;
 
 namespace IO.Astrodynamics.OrbitalParameters
 {
+    /// <summary>
+    /// Represents a state vector in orbital mechanics, including position and velocity.
+    /// </summary>
+    /// <remarks>
+    /// This class extends `OrbitalParameters` and implements `IEquatable&#60;StateVector&#62;`.
+    /// </remarks>
     public class StateVector : OrbitalParameters, IEquatable<StateVector>
     {
-        private double? _eccentricity;
-        private double? _inclination;
-        private double? _semiMajorAxis;
-        private double? _ascendingNode;
-        private double? _argumentOfPeriapsis;
-        private double? _trueAnomaly;
-        private double? _eccentricAnomaly;
-        private double? _meanAnomaly;
         private StateVector _inverse;
 
         protected override void ResetCache()
         {
             base.ResetCache();
-            _eccentricity = _inclination = _semiMajorAxis = _ascendingNode = _argumentOfPeriapsis = _trueAnomaly = _eccentricAnomaly = _meanAnomaly = null;
             _inverse = null;
         }
 
+        /// <summary>
+        /// Gets the position vector.
+        /// </summary>
         public Vector3 Position { get; private set; }
 
+        /// <summary>
+        /// Gets the velocity vector.
+        /// </summary>
         public Vector3 Velocity { get; private set; }
 
         /// <summary>
@@ -43,10 +46,26 @@ namespace IO.Astrodynamics.OrbitalParameters
             Velocity = velocity;
         }
 
-        public override Vector3 SpecificAngularMomentum()
+        public override StateVector ToStateVector()
         {
-            _specificAngularMomentum ??= Position.Cross(Velocity);
-            return _specificAngularMomentum.Value;
+            return this;
+        }
+
+        public override double SemiMajorAxis()
+        {
+            if (_semiMajorAxis.HasValue)
+            {
+                return _semiMajorAxis.Value;
+            }
+
+            if (IsParabolic())
+            {
+                _semiMajorAxis = double.PositiveInfinity;
+            }
+
+            _semiMajorAxis ??= -(Observer.GM / (2.0 * SpecificOrbitalEnergy()));
+
+            return _semiMajorAxis.Value;
         }
 
         public override double Eccentricity()
@@ -55,47 +74,10 @@ namespace IO.Astrodynamics.OrbitalParameters
             return _eccentricity.Value;
         }
 
-        public override Vector3 EccentricityVector()
-        {
-            _eccentricVector ??= (Velocity.Cross(SpecificAngularMomentum()) / Observer.GM) - Position.Normalize();
-            return _eccentricVector.Value;
-        }
-
         public override double Inclination()
         {
             _inclination ??= SpecificAngularMomentum().Angle(Vector3.VectorZ);
             return _inclination.Value;
-        }
-
-
-        public override double SpecificOrbitalEnergy()
-        {
-            _specificOrbitalEnergy ??= System.Math.Pow(Velocity.Magnitude(), 2.0) / 2.0 - (Observer.GM / Position.Magnitude());
-            return _specificOrbitalEnergy.Value;
-        }
-
-        public override double SemiMajorAxis()
-        {
-            _semiMajorAxis ??= -(Observer.GM / (2.0 * SpecificOrbitalEnergy()));
-            return _semiMajorAxis.Value;
-        }
-
-        public override Vector3 AscendingNodeVector()
-        {
-            if (_ascendingNodeVector.HasValue)
-            {
-                return _ascendingNodeVector.Value;
-            }
-
-            if (Inclination() == 0.0)
-            {
-                return Vector3.VectorX;
-            }
-
-            var h = SpecificAngularMomentum();
-            _ascendingNodeVector = new Vector3(-h.Y, h.X, 0.0);
-
-            return _ascendingNodeVector.Value;
         }
 
         public override double AscendingNode()
@@ -129,9 +111,9 @@ namespace IO.Astrodynamics.OrbitalParameters
 
         public override double ArgumentOfPeriapsis()
         {
-            if (_argumentOfPeriapsis.HasValue)
+            if (_periapsisArgument.HasValue)
             {
-                return _argumentOfPeriapsis.Value;
+                return _periapsisArgument.Value;
             }
 
             var n = AscendingNodeVector();
@@ -144,21 +126,41 @@ namespace IO.Astrodynamics.OrbitalParameters
 
             if (n == Vector3.Zero)
             {
-                _argumentOfPeriapsis = System.Math.Atan2(e.Y, e.X);
+                _periapsisArgument = System.Math.Atan2(e.Y, e.X);
                 if (Inclination() > Constants.PI2)
                 {
-                    _argumentOfPeriapsis = Constants._2PI - _argumentOfPeriapsis;
-                    return _argumentOfPeriapsis!.Value;
+                    _periapsisArgument = Constants._2PI - _periapsisArgument;
+                    return _periapsisArgument!.Value;
                 }
             }
 
-            _argumentOfPeriapsis = System.Math.Acos(System.Math.Clamp((n * e) / (n.Magnitude() * e.Magnitude()), -1.0, 1.0));
+            _periapsisArgument = System.Math.Acos(System.Math.Clamp((n * e) / (n.Magnitude() * e.Magnitude()), -1.0, 1.0));
             if (e.Z < 0.0)
             {
-                _argumentOfPeriapsis = System.Math.PI * 2.0 - _argumentOfPeriapsis;
+                _periapsisArgument = System.Math.PI * 2.0 - _periapsisArgument;
             }
 
-            return _argumentOfPeriapsis.Value;
+            return _periapsisArgument.Value;
+        }
+
+        public override double MeanAnomaly()
+        {
+            double ea = EccentricAnomaly(TrueAnomaly());
+
+            if (IsElliptical())
+            {
+                _meanAnomaly ??= ea - Eccentricity() * System.Math.Sin(ea);
+            }
+            else if (IsParabolic())
+            {
+                _meanAnomaly ??= ea + System.Math.Pow(ea, 3.0) / 3.0;
+            }
+            else if (IsHyperbolic())
+            {
+                _meanAnomaly ??= Eccentricity() * System.Math.Sinh(ea) - ea;
+            }
+
+            return _meanAnomaly.Value;
         }
 
         public override double TrueAnomaly()
@@ -168,6 +170,7 @@ namespace IO.Astrodynamics.OrbitalParameters
                 return _trueAnomaly.Value;
             }
 
+            var sv = ToStateVector();
 
             if (IsCircular())
             {
@@ -182,8 +185,11 @@ namespace IO.Astrodynamics.OrbitalParameters
             }
 
             var e = EccentricityVector();
-            _trueAnomaly = System.Math.Acos((e * Position) / (e.Magnitude() * Position.Magnitude()));
-            if (Position * Velocity < 0.0)
+            var x = (e * sv.Position) / (e.Magnitude() * sv.Position.Magnitude());
+            if (x > 1.0) x = 1.0;
+            if (x < -1.0) x = -1.0;
+            _trueAnomaly = System.Math.Acos(x);
+            if (sv.Position * sv.Velocity < 0.0)
             {
                 _trueAnomaly = System.Math.PI * 2.0 - _trueAnomaly;
             }
@@ -191,11 +197,16 @@ namespace IO.Astrodynamics.OrbitalParameters
             return _trueAnomaly.Value;
         }
 
+        /// <summary>
+        /// Calculates the true anomaly for a circular orbit.
+        /// </summary>
+        /// <returns>The true anomaly in radians.</returns>
         private double CircularTrueAnomaly()
         {
+            var sv = ToStateVector();
             var omega = AscendingNodeVector();
-            var v = System.Math.Acos((omega * Position) / (omega.Magnitude() * Position.Magnitude()));
-            if (Position.Z < 0.0)
+            var v = System.Math.Acos((omega * sv.Position) / (omega.Magnitude() * sv.Position.Magnitude()));
+            if (sv.Position.Z < 0.0)
             {
                 v = Constants._2PI - v;
             }
@@ -209,10 +220,15 @@ namespace IO.Astrodynamics.OrbitalParameters
             return v % Constants._2PI;
         }
 
+        /// <summary>
+        /// Calculates the true anomaly for a circular orbit with no inclination.
+        /// </summary>
+        /// <returns>The true anomaly in radians.</returns>
         private double CircularNoInclinationTrueAnomaly()
         {
-            var l = System.Math.Acos(Position.X / Position.Magnitude());
-            if (Velocity.X > 0)
+            var sv = ToStateVector();
+            var l = System.Math.Acos(sv.Position.X / sv.Position.Magnitude());
+            if (sv.Velocity.X > 0)
             {
                 l = Constants._2PI - l;
             }
@@ -226,35 +242,15 @@ namespace IO.Astrodynamics.OrbitalParameters
             return l % Constants._2PI;
         }
 
-        public override double EccentricAnomaly()
-        {
-            if (_eccentricAnomaly.HasValue)
-            {
-                return _eccentricAnomaly.Value;
-            }
+        #region Operators
 
-            double v = TrueAnomaly();
-            double e = Eccentricity();
-            _eccentricAnomaly ??= 2 * System.Math.Atan((System.Math.Tan(v / 2.0)) / System.Math.Sqrt((1 + e) / (1 - e)));
-            return _eccentricAnomaly.Value;
-        }
-
-        public override StateVector ToStateVector()
-        {
-            return this;
-        }
-
-        public override double MeanAnomaly()
-        {
-            if (_meanAnomaly.HasValue)
-            {
-                return _meanAnomaly.Value;
-            }
-
-            _meanAnomaly ??= EccentricAnomaly() - Eccentricity() * System.Math.Sin(EccentricAnomaly());
-            return _meanAnomaly.Value;
-        }
-
+        /// <summary>
+        /// Adds two state vectors.
+        /// </summary>
+        /// <param name="sv1">The first state vector.</param>
+        /// <param name="sv2">The second state vector.</param>
+        /// <returns>The resulting state vector after addition.</returns>
+        /// <exception cref="ArgumentException">Thrown when the state vectors have different frames or epochs.</exception>
         public static StateVector operator +(StateVector sv1, StateVector sv2)
         {
             if (sv1.Epoch != sv2.Epoch || sv1.Frame != sv2.Frame)
@@ -265,6 +261,13 @@ namespace IO.Astrodynamics.OrbitalParameters
             return new StateVector(sv1.Position + sv2.Position, sv1.Velocity + sv2.Velocity, sv2.Observer, sv1.Epoch, sv2.Frame);
         }
 
+        /// <summary>
+        /// Subtracts one state vector from another.
+        /// </summary>
+        /// <param name="sv1">The state vector to subtract from.</param>
+        /// <param name="sv2">The state vector to subtract.</param>
+        /// <returns>The resulting state vector after subtraction.</returns>
+        /// <exception cref="ArgumentException">Thrown when the state vectors have different frames or epochs.</exception>
         public static StateVector operator -(StateVector sv1, StateVector sv2)
         {
             if (sv1.Epoch != sv2.Epoch || sv1.Frame != sv2.Frame)
@@ -275,24 +278,39 @@ namespace IO.Astrodynamics.OrbitalParameters
             return new StateVector(sv1.Position - sv2.Position, sv1.Velocity - sv2.Velocity, sv2.Observer, sv1.Epoch, sv2.Frame);
         }
 
+        /// <summary>
+        /// Updates the position vector.
+        /// </summary>
+        /// <param name="position">The new position vector.</param>
         internal void UpdatePosition(in Vector3 position)
         {
             ResetCache();
             Position = position;
         }
 
+        /// <summary>
+        /// Updates the velocity vector.
+        /// </summary>
+        /// <param name="velocity">The new velocity vector.</param>
         internal void UpdateVelocity(in Vector3 velocity)
         {
             ResetCache();
             Velocity = velocity;
         }
 
-
+        /// <summary>
+        /// Converts the state vector to an array.
+        /// </summary>
+        /// <returns>An array containing the position and velocity components.</returns>
         public double[] ToArray()
         {
             return [Position.X, Position.Y, Position.Z, Velocity.X, Velocity.Y, Velocity.Z];
         }
 
+        /// <summary>
+        /// Gets the inverse of the state vector.
+        /// </summary>
+        /// <returns>The inverse state vector.</returns>
         public StateVector Inverse()
         {
             if (_inverse is not null)
@@ -339,5 +357,7 @@ namespace IO.Astrodynamics.OrbitalParameters
         {
             return $"Epoch : {Epoch.ToString()} Position : {Position} Velocity : {Velocity} Frame : {Frame.Name}";
         }
+
+        #endregion
     }
 }

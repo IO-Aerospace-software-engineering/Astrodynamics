@@ -11,6 +11,7 @@ using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.TimeSystem;
 using Xunit;
 using FuelTank = IO.Astrodynamics.Body.Spacecraft.FuelTank;
+using KeplerianElements = IO.Astrodynamics.OrbitalParameters.KeplerianElements;
 using Launch = IO.Astrodynamics.Maneuver.Launch;
 using NadirAttitude = IO.Astrodynamics.Maneuver.NadirAttitude;
 using Payload = IO.Astrodynamics.Body.Spacecraft.Payload;
@@ -24,7 +25,6 @@ using StateVector = IO.Astrodynamics.OrbitalParameters.StateVector;
 using Window = IO.Astrodynamics.TimeSystem.Window;
 
 namespace IO.Astrodynamics.Tests;
-
 
 public class APITest
 {
@@ -544,6 +544,7 @@ public class APITest
     }
 
     private static object lockobj = new Object();
+
     [Fact]
     void UnloadKernels()
     {
@@ -557,14 +558,14 @@ public class APITest
             Assert.Equal(1, @kernels.Count(x => x.FullName.Contains("scn100")));
         }
     }
-    
+
     [Fact]
     void UnloadKernels2()
     {
         lock (lockobj)
         {
             API.Instance.LoadKernels(new FileInfo(@"Data/UserDataTest/scn100/Spacecrafts/DRAGONFLY32/Clocks/DRAGONFLY32.tsc"));
-            
+
             API.Instance.UnloadKernels(new FileInfo(@"Data/UserDataTest/scn100/Spacecrafts/DRAGONFLY32/Clocks/DRAGONFLY32.tsc"));
             var kernels = API.Instance.GetLoadedKernels().ToArray();
             Assert.Equal(0, kernels.Count(x => x.FullName.Contains("DRAGONFLY32.tsc")));
@@ -630,5 +631,39 @@ public class APITest
         Assert.Equal(8, tle.W);
         Assert.Equal(9, tle.O);
         Assert.Equal(10, tle.M);
+    }
+
+    [Fact]
+    void ConvertConicToState()
+    {
+        var ke = new KeplerianElements(6800000.0, 0.1, 0.2, 0.3, 0.4, 0.5, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+        var state = API.Instance.ConvertConicElementsToStateVector(ke, TimeSystem.Time.J2000TDB);
+        var ke2 = API.Instance.ConvertStateVectorToConicOrbitalElement(state);
+        Assert.Equal(ke.A, ke2.A, 6);
+        Assert.Equal(ke.E, ke2.E, 6);
+        Assert.Equal(ke.I, ke2.I, 6);
+        Assert.Equal(ke.RAAN, ke2.RAAN, 6);
+        Assert.Equal(ke.AOP, ke2.AOP, 6);
+        Assert.Equal(ke.M, ke2.M, 6);
+        Assert.Equal(ke.Epoch, ke2.Epoch);
+        Assert.Equal(ke.Frame, ke2.Frame);
+        Assert.Equal(ke.Observer, ke2.Observer);
+    }
+    
+    [Fact]
+    void ConvertConicHyperbolicToState()
+    {
+        var ke = new KeplerianElements(-6800000.0, 1.2, 0.2, 0.3, 0.4, 0.5, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+        var state = API.Instance.ConvertConicElementsToStateVector(ke, TimeSystem.Time.J2000TDB);
+        var ke2 = API.Instance.ConvertStateVectorToConicOrbitalElement(state);
+        Assert.Equal(ke.A, ke2.A, 6);
+        Assert.Equal(ke.E, ke2.E, 6);
+        Assert.Equal(ke.I, ke2.I, 6);
+        Assert.Equal(ke.RAAN, ke2.RAAN, 6);
+        Assert.Equal(ke.AOP, ke2.AOP, 6);
+        Assert.Equal(ke.M, ke2.M, 6);
+        Assert.Equal(ke.Epoch, ke2.Epoch);
+        Assert.Equal(ke.Frame, ke2.Frame);
+        Assert.Equal(ke.Observer, ke2.Observer);
     }
 }

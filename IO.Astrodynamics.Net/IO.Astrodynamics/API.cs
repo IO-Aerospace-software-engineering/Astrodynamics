@@ -17,7 +17,9 @@ using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.TimeSystem;
 using CelestialBody = IO.Astrodynamics.DTO.CelestialBody;
+using EquinoctialElements = IO.Astrodynamics.DTO.EquinoctialElements;
 using Instrument = IO.Astrodynamics.Body.Spacecraft.Instrument;
+using KeplerianElements = IO.Astrodynamics.DTO.KeplerianElements;
 using Launch = IO.Astrodynamics.DTO.Launch;
 using Quaternion = IO.Astrodynamics.Math.Quaternion;
 using Spacecraft = IO.Astrodynamics.Body.Spacecraft.Spacecraft;
@@ -120,6 +122,21 @@ public class API
 
     [DllImport(@"IO.Astrodynamics", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
     private static extern void KClearProxy();
+
+    [DllImport(@"IO.Astrodynamics", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
+    private static extern DTO.KeplerianElements ConvertStateVectorToConicOrbitalElementProxy(DTO.StateVector stateVector, double mu);
+
+    [DllImport(@"IO.Astrodynamics", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
+    private static extern DTO.StateVector ConvertEquinoctialElementsToStateVectorProxy(DTO.EquinoctialElements equinoctialElementsDto);
+
+    [DllImport(@"IO.Astrodynamics", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
+    private static extern StateVector Propagate2BodiesProxy(StateVector stateVector, double mu, double dt);
+
+    [DllImport(@"IO.Astrodynamics", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
+    private static extern StateVector ConvertConicElementsToStateVectorProxy(KeplerianElements keplerianElements);
+
+    [DllImport(@"IO.Astrodynamics", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
+    private static extern StateVector ConvertConicElementsToStateVectorAtEpochProxy(KeplerianElements keplerianElements, double epoch, double gm);
 
     private static IntPtr Resolver(string libraryName, Assembly assembly, DllImportSearchPath? searchPath)
     {
@@ -820,5 +837,52 @@ public class API
                 res.A, res.E, res.I, res.O, res.W, res.M,
                 Time.Create(res.Epoch, TimeFrame.TDBFrame), Frame.ICRF);
         }
+    }
+
+    public IO.Astrodynamics.OrbitalParameters.KeplerianElements ConvertStateVectorToConicOrbitalElement(IO.Astrodynamics.OrbitalParameters.StateVector stateVector)
+    {
+        lock (lockObject)
+        {
+            var svDto = stateVector.Convert();
+            return ConvertStateVectorToConicOrbitalElementProxy(svDto, stateVector.Observer.GM).Convert();
+        }
+    }
+    
+    public IO.Astrodynamics.OrbitalParameters.StateVector ConvertEquinoctialElementsToStateVector(IO.Astrodynamics.OrbitalParameters.EquinoctialElements equinoctialElements)
+    {
+        lock (lockObject)
+        {
+            return ConvertEquinoctialElementsToStateVectorProxy(equinoctialElements.Convert()).Convert();
+        }
+    }
+    
+    public IO.Astrodynamics.OrbitalParameters.StateVector ConvertConicElementsToStateVector(IO.Astrodynamics.OrbitalParameters.KeplerianElements keplerianElements)
+    {
+        lock (lockObject)
+        {
+            return ConvertConicElementsToStateVectorProxy(keplerianElements.Convert()).Convert();
+        }
+    }
+    
+    public IO.Astrodynamics.OrbitalParameters.StateVector ConvertConicElementsToStateVector(IO.Astrodynamics.OrbitalParameters.KeplerianElements keplerianElements, Time epoch)
+    {
+        lock (lockObject)
+        {
+            return ConvertConicElementsToStateVectorAtEpochProxy(keplerianElements.Convert(), epoch.ToTDB().TimeSpanFromJ2000().TotalSeconds, keplerianElements.Observer.GM)
+                .Convert();
+        }
+    }
+    
+    public OrbitalParameters.StateVector Propagate2Bodies(OrbitalParameters.StateVector stateVector, TimeSpan dt)
+    {
+        lock (lockObject)
+        {
+            return Propagate2BodiesProxy(stateVector.Convert(), stateVector.Observer.GM, dt.TotalSeconds).Convert();
+        }
+    }
+    
+    public OrbitalParameters.StateVector Propagate2Bodies(OrbitalParameters.StateVector stateVector, Time targetEpoch)
+    {
+        return Propagate2Bodies(stateVector, targetEpoch - stateVector.Epoch);
     }
 }

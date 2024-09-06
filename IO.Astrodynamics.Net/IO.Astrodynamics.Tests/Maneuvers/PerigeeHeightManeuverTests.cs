@@ -81,8 +81,8 @@ namespace IO.Astrodynamics.Tests.Maneuvers
 
             var maneuverPoint = orbitalParams.ToStateVector(orbitalParams.Epoch + orbitalParams.Period() * 0.5);
             var res = maneuver.TryExecute(maneuverPoint);
-            Assert.Equal(new StateOrientation(new Quaternion(0.0,-1.0,1.2250148722424995E-16,0.0), Vector3.Zero, maneuverPoint.Epoch, maneuverPoint.Frame), res.so);
-            Assert.Equal(new Vector3( -2.9716210510169284E-13, -2425.783652387101, 0.0), maneuver.DeltaV);
+            Assert.Equal(new StateOrientation(new Quaternion(0.0,-1.0,2.724119008229059E-11,0.0), Vector3.Zero, maneuverPoint.Epoch, maneuverPoint.Frame), res.so);
+            Assert.Equal(new Vector3( -6.608123357319014E-08, -2425.783652387101, 0.0), maneuver.DeltaV);
             Assert.Equal(new Window(new TimeSystem.Time(2000, 01, 01, 12, 45, 06, 27, 303).AddTicks(8), TimeSpan.FromSeconds(16.0691385)), maneuver.ThrustWindow);
             Assert.Equal(new Window(new TimeSystem.Time(2000, 01, 01, 12, 45, 06, 27, 303).AddTicks(8), TimeSpan.FromSeconds(16.0691385)), maneuver.ManeuverWindow);
             Assert.Equal(803.45692655552136, maneuver.FuelBurned,3);
@@ -103,7 +103,7 @@ namespace IO.Astrodynamics.Tests.Maneuvers
             var res = maneuver.TryExecute(maneuverPoint);
             Assert.Equal(new StateVector(maneuverPoint.Position, maneuverPoint.Velocity, maneuverPoint.Observer, maneuverPoint.Epoch, maneuverPoint.Frame), res.sv);
             Assert.Equal(new StateOrientation(new Quaternion(1.0, 0.0, 0.0, 0.0), Vector3.Zero, maneuverPoint.Epoch, maneuverPoint.Frame), res.so);
-            Assert.Equal(new Vector3(1.7963196147880806E-13, 1466.487832468652, 0.0), maneuver.DeltaV);
+            Assert.Equal(new Vector3(1.6433062802749028E-10, 1466.487832468652, 0.0), maneuver.DeltaV);
             Assert.Equal(new Window(new TimeSystem.Time(2000, 01, 01, 23, 58, 08, 663, 658).AddTicks(2), TimeSpan.FromSeconds(10.7439713)), maneuver.ThrustWindow);
             Assert.Equal(new Window(new TimeSystem.Time(2000, 01, 01, 23, 58, 08, 663, 658).AddTicks(2), TimeSpan.FromSeconds(10.7439713)), maneuver.ManeuverWindow);
             Assert.Equal(537.19856491695327, maneuver.FuelBurned,3);

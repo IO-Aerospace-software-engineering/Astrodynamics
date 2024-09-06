@@ -25,7 +25,7 @@ public class CelestialBody : CelestialItem, IOrientable
     public double J4 { get; }
 
     protected AtmosphericModel AtmosphericModel { get; }
-    
+
     public bool HasAtmosphericModel => AtmosphericModel != null;
 
     /// <summary>
@@ -58,7 +58,7 @@ public class CelestialBody : CelestialItem, IOrientable
     /// <param name="epoch"></param>
     /// <param name="geopotentialModelParameters"></param>
     /// <param name="atmosphericModel"></param>
-    public CelestialBody(NaifObject naifObject, Frame frame, Time epoch, GeopotentialModelParameters geopotentialModelParameters = null, AtmosphericModel atmosphericModel = null) 
+    public CelestialBody(NaifObject naifObject, Frame frame, Time epoch, GeopotentialModelParameters geopotentialModelParameters = null, AtmosphericModel atmosphericModel = null)
         : this(naifObject.NaifId, frame, epoch, geopotentialModelParameters, atmosphericModel)
     {
     }
@@ -127,6 +127,7 @@ public class CelestialBody : CelestialItem, IOrientable
             SphereOfInfluence = double.PositiveInfinity;
             return;
         }
+
         var mainBody = new CelestialBody(ExtendedInformation.CenterOfMotionId);
         var a = this.GetEphemeris(InitialOrbitalParameters.Epoch, mainBody, Frame.ECLIPTIC_J2000, Aberration.None).SemiMajorAxis();
         SphereOfInfluence = InitialOrbitalParameters != null ? SphereOfInluence(a, Mass, mainBody.Mass) : double.PositiveInfinity;
@@ -221,7 +222,9 @@ public class CelestialBody : CelestialItem, IOrientable
             raanLongitude += Constants._2PI;
         }
 
-        double m = OrbitalParameters.OrbitalParameters.TrueAnomalyToMeanAnomaly(Constants.PI + Constants.PI2, eccentricity);
+        var trueAnomaly = Constants.PI + Constants.PI2;
+        
+        double m = OrbitalParameters.OrbitalParameters.TrueAnomalyToMeanAnomaly(trueAnomaly, eccentricity, OrbitalParameters.OrbitalParameters.EllipticAnomaly(trueAnomaly,eccentricity));
 
         return new KeplerianElements(semiMajorAxis, eccentricity, i, raanLongitude, Constants.PI + Constants.PI2, m, this, epochAtDescendingNode, Frame.ICRF);
     }

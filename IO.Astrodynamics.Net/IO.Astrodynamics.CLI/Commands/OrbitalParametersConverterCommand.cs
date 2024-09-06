@@ -45,12 +45,12 @@ public class OrbitalParametersConverterCommand
         //Clean inputs
         if (orbitalParameters.Frame.Equals("icrf", StringComparison.InvariantCultureIgnoreCase))
         {
-            orbitalParameters.Frame = "j2000";
+            orbitalParameters.Frame = "J2000";
         }
 
         if (targetFrame.Equals("icrf", StringComparison.InvariantCultureIgnoreCase))
         {
-            targetFrame = "j2000";
+            targetFrame = "J2000";
         }
 
         if (string.IsNullOrEmpty(targetEpoch?.Epoch))

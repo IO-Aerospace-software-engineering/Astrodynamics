@@ -47,6 +47,30 @@ namespace IO.Astrodynamics.Tests
             }
         }
 
+        internal static bool KeplerComparer(KeplerianElements k1, KeplerianElements k2)
+        {
+            lock (LockObj)
+            {
+                var tolerance = 1E-06;
+                return (double.IsPositiveInfinity(k1.A) && double.IsPositiveInfinity(k2.A) || System.Math.Abs(k1.A - k2.A) < tolerance) &&
+                       System.Math.Abs(k1.E - k2.E) < tolerance && System.Math.Abs(k1.I - k2.I) < tolerance &&
+                       System.Math.Abs(k1.RAAN - k2.RAAN) < tolerance && System.Math.Abs(k1.AOP - k2.AOP) < tolerance && System.Math.Abs(k1.M - k2.M) < tolerance &&
+                       k1.Epoch == k2.Epoch && k1.Frame == k2.Frame && Equals(k1.Observer, k2.Observer);
+            }
+        }
+        
+        internal static bool EquinoctialComparer(EquinoctialElements e1, EquinoctialElements e2)
+        {
+            lock (LockObj)
+            {
+                var tolerance = 1E-06;
+                return (double.IsPositiveInfinity(e1.SemiMajorAxis()) && double.IsPositiveInfinity(e2.SemiMajorAxis()) || System.Math.Abs(e1.SemiMajorAxis() - e2.SemiMajorAxis()) < tolerance )&& System.Math.Abs(e1.Eccentricity() - e2.Eccentricity()) < tolerance &&
+                       System.Math.Abs(e1.Inclination() - e2.Inclination()) < tolerance && System.Math.Abs(e1.AscendingNode() - e2.AscendingNode()) < tolerance &&
+                       System.Math.Abs(e1.ArgumentOfPeriapsis() - e2.ArgumentOfPeriapsis()) < tolerance && System.Math.Abs(e1.MeanAnomaly() - e2.MeanAnomaly()) < tolerance &&
+                       e1.Epoch == e2.Epoch && e1.Frame == e2.Frame && Equals(e1.Observer, e2.Observer);
+            }
+        }
+
         internal static bool TimeComparer(TimeSystem.Time v1, TimeSystem.Time v2)
         {
             lock (LockObj)

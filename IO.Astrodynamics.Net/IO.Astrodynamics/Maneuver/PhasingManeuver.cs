@@ -18,7 +18,8 @@ namespace IO.Astrodynamics.Maneuver
             RevolutionNumber = revolutionNumber;
         }
 
-        public PhasingManeuver(CelestialItem maneuverCenter, Time minimumEpoch, TimeSpan maneuverHoldDuration, double trueLongitude, uint revolutionNumber, Engine engine) : base(maneuverCenter, minimumEpoch,
+        public PhasingManeuver(CelestialItem maneuverCenter, Time minimumEpoch, TimeSpan maneuverHoldDuration, double trueLongitude, uint revolutionNumber, Engine engine) : base(
+            maneuverCenter, minimumEpoch,
             maneuverHoldDuration, engine)
         {
             TargetTrueLongitude = trueLongitude;
@@ -40,7 +41,7 @@ namespace IO.Astrodynamics.Maneuver
 
             double e = stateVector.Eccentricity();
 
-            double E = 2 * System.Math.Atan((System.Math.Sqrt((1 - e) / (1 + e))) * System.Math.Tan(deltaTrueAnomaly / 2.0));
+            double E = OrbitalParameters.OrbitalParameters.EllipticAnomaly(deltaTrueAnomaly, e);
             double t1 = stateVector.Period().TotalSeconds;
             double t = t1 / Constants._2PI * (E - e * System.Math.Sin(E));
 
