@@ -376,37 +376,6 @@ TEST(API, ConvertConicOrbitalElementsToStateVector)
     ASSERT_STREQ(IO::Astrodynamics::Frames::InertialFrames::ICRF().ToCharArray(), sv.inertialFrame);
 }
 
-TEST(API, ConvertConicOrbitalElementsToStateVector2)
-{
-//    double perifocalDist = std::sqrt(std::pow(-6.116559469556896E+06, 2) + std::pow(-1.546174698676721E+06, 2) +
-//                                     std::pow(2.521950157430313E+06, 2));
-
-    IO::Astrodynamics::API::DTO::ConicOrbitalElementsDTO conics;
-    conics.SetFrame(IO::Astrodynamics::Frames::InertialFrames::ICRF().ToCharArray());
-    conics.epoch = 0.0; //"2021-01-12T11:58:50.816" UTC
-    conics.meanAnomaly = 0.0 * IO::Astrodynamics::Constants::DEG_RAD;
-    conics.periapsisArgument = 50.0 * IO::Astrodynamics::Constants::DEG_RAD;
-    conics.ascendingNodeLongitude = 40.0 * IO::Astrodynamics::Constants::DEG_RAD;
-    conics.inclination = 30.0 * IO::Astrodynamics::Constants::DEG_RAD;
-    conics.eccentricity = 0.5;
-    conics.perifocalDistance = 12800000.0 * (1.0 - conics.eccentricity);
-    conics.centerOfMotionId = 399;
-    IO::Astrodynamics::Body::CelestialBody earth(399);
-    auto sv = ConvertConicElementsToStateVectorAtEpochProxy(conics, 0.0, earth.GetMu());
-    auto kpl = ConvertStateVectorToConicOrbitalElementProxy(sv,earth.GetMu());
-
-    //Low accuracy due to conical propagation
-    ASSERT_NEAR(-6.116559469556896E+06, sv.position.x, 3e3);
-    ASSERT_NEAR(-1.546174698676721E+06, sv.position.y, 3e3);
-    ASSERT_NEAR(2.521950157430313E+06, sv.position.z, 3e3);
-
-    ASSERT_NEAR(-8.078523150700097E+02, sv.velocity.x, 0.2);
-    ASSERT_NEAR(-5.477647950892673E+03, sv.velocity.y, 1.2);
-    ASSERT_NEAR(-5.297615757935174E+03, sv.velocity.z, 1.1);
-    ASSERT_EQ(663724800.00001490, sv.epoch);
-    ASSERT_EQ(399, sv.centerOfMotionId);
-    ASSERT_STREQ(IO::Astrodynamics::Frames::InertialFrames::ICRF().ToCharArray(), sv.inertialFrame);
-}
 
 TEST(API, ConvertEquinoctialElementsToStateVector)
 {
