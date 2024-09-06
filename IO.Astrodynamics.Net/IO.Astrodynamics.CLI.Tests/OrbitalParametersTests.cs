@@ -105,7 +105,7 @@ public class OrbitalParametersTests
             else
             {
                 Assert.Equal(
-                    $"Epoch : 2000-01-01T12:00:00.0000000 TDB P : 10170000 F : 0.3535533905932738 G : 0.35355339059327373 H : 0.08450755960720442 K 0.022643732351075387 L0 : 2.589226533382245 Frame : J2000{Environment.NewLine}",
+                    $"Epoch : 2000-01-01T12:00:00.0000000 TDB P : 10170000 F : 0.3535533905932738 G : 0.35355339059327373 H : 0.08450755960720442 K 0.022643732351075387 L0 : 2.589226534411255 Frame : J2000{Environment.NewLine}",
                     res);
             }
         }
@@ -137,7 +137,7 @@ public class OrbitalParametersTests
             else
             {
                 Assert.Equal(
-                    $"Epoch : 2000-01-01T12:00:00.0000000 TDB Position : X : -6116559.469556896 Y : -1546174.69867672 Z: 2521950.1574303135 Velocity : X : -807.8383114627195 Y : -5477.646280596454 Z: -5297.633402454895 Frame : J2000{Environment.NewLine}",
+                    $"Epoch : 2000-01-01T12:00:00.0000000 TDB Position : X : -6116559.469556894 Y : -1546174.6986767196 Z: 2521950.1574303135 Velocity : X : -807.8383054672163 Y : -5477.64627908088 Z: -5297.633404926932 Frame : J2000{Environment.NewLine}",
                     res);
             }
         }
