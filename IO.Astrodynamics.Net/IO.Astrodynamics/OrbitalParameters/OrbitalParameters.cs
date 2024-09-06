@@ -162,8 +162,13 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// <returns></returns>
     public Vector3 EccentricityVector()
     {
+        if (_eccentricVector.HasValue)
+        {
+            return _eccentricVector.Value;
+        }
+
         var sv = ToStateVector();
-        _eccentricVector ??= (sv.Velocity.Cross(SpecificAngularMomentum()) / Observer.GM) - sv.Position.Normalize();
+        _eccentricVector = (sv.Velocity.Cross(SpecificAngularMomentum()) / Observer.GM) - sv.Position.Normalize();
         return _eccentricVector.Value;
     }
 
@@ -662,9 +667,14 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// <returns></returns>
     public Vector3 PerigeeVector()
     {
+        if (_perigeevector.HasValue)
+        {
+            return _perigeevector.Value;
+        }
+
         if (Eccentricity() == 0.0)
         {
-            return Vector3.VectorX * SemiMajorAxis();
+            _perigeevector = Vector3.VectorX * SemiMajorAxis();
         }
 
         _perigeevector ??= EccentricityVector().Normalize() * SemiMajorAxis() * (1.0 - Eccentricity());
@@ -697,9 +707,14 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// <returns></returns>
     public Vector3 ApogeeVector()
     {
+        if (_apogeeVector.HasValue)
+        {
+            return _apogeeVector.Value;
+        }
+
         if (Eccentricity() == 0.0)
         {
-            return Vector3.VectorX.Inverse() * SemiMajorAxis();
+            _apogeeVector = Vector3.VectorX.Inverse() * SemiMajorAxis();
         }
 
         _apogeeVector ??= EccentricityVector().Normalize().Inverse() * SemiMajorAxis() * (1.0 + Eccentricity());

@@ -18,7 +18,7 @@ public class VelocityMath
         V2 = new Vector3(rand * 1, rand * 2, rand * 3);
     }
 
-    [Benchmark(Description = "MathNet vector")]
+    // [Benchmark(Description = "MathNet vector")]
     public void VectorMathNet()
     {
         Vector<double> res;
@@ -28,7 +28,7 @@ public class VelocityMath
         }
     }
 
-    [Benchmark(Description = "Math IO Vector", Baseline = true)]
+    // [Benchmark(Description = "Math IO Vector", Baseline = true)]
     public void VectorIO()
     {
         Vector3 res;
