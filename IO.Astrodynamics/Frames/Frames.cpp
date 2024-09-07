@@ -137,7 +137,9 @@ IO::Astrodynamics::Math::Vector3D IO::Astrodynamics::Frames::Frames::TransformVe
     return IO::Astrodynamics::Math::Vector3D{nstate[0], nstate[1], nstate[2]};
 }
 
-void IO::Astrodynamics::Frames::Frames::ConvertToJulianUTC_TT(const IO::Astrodynamics::Time::TDB& epoch, double& jd_utc1, double& jd_utc2, double& jd_tt1, double& jd_tt2)
+void IO::Astrodynamics::Frames::Frames::ConvertToJulianUTC_TT(const IO::Astrodynamics::Time::TDB& epoch,
+                                                              double& jd_utc1, double& jd_utc2, double& jd_tt1,
+                                                              double& jd_tt2)
 {
     const auto utc = epoch.ToUTC().ToString();
     int year, month, day, hour, minute;

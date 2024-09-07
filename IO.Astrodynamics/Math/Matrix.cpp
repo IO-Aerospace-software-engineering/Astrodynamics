@@ -80,6 +80,26 @@ IO::Astrodynamics::Math::Matrix IO::Astrodynamics::Math::Matrix::Multiply(const 
     return res;
 }
 
+IO::Astrodynamics::Math::Vector3D IO::Astrodynamics::Math::Matrix::Multiply(const Vector3D& matrix)
+{
+    if (m_colSize != 3)
+    {
+        throw IO::Astrodynamics::Exception::SDKException("Matrixes with incompatible size");
+    }
+
+    double vector[3] = {matrix.GetX(), matrix.GetY(), matrix.GetZ()};
+    double res[3]{};
+    for (int i = 0; i < m_rowSize; i++)
+    {
+        for (int j = 0; j < m_colSize; j++)
+        {
+            res[i] += vector[j] * m_data[i][j];
+        }
+    }
+
+    return Vector3D(res[0], res[1], res[2]);
+}
+
 IO::Astrodynamics::Math::Matrix IO::Astrodynamics::Math::Matrix::Transpose() const
 {
     //Row and columns size are switched

@@ -5,6 +5,7 @@
 #define MATRIX_H
 #include<cstddef>
 #include<cstring>
+#include <Vector3D.h>
 
 namespace IO::Astrodynamics::Math
 {
@@ -104,6 +105,7 @@ namespace IO::Astrodynamics::Math
         /// <param name="matrix"></param>
         /// <returns></returns>
         Matrix Multiply(const Matrix& matrix);
+        Vector3D Multiply(const Vector3D& matrix);
 
         /// <summary>
         /// Transpose this matrix
