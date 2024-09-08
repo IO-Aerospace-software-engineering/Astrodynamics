@@ -112,8 +112,9 @@ namespace IO::Astrodynamics::Frames
         static void ConvertToJulianUTC_TT(const IO::Astrodynamics::Time::TDB& epoch, double& jd_utc1, double& jd_utc2,
                                           double& jd_tt1, double& jd_tt2);
 
-        [[nodiscard]] static IO::Astrodynamics::Math::Matrix ToTEME(const IO::Astrodynamics::Time::TDB& epoch);
+        [[nodiscard]] static IO::Astrodynamics::Math::Matrix ToITRF(const IO::Astrodynamics::Time::TDB& epoch);
         [[nodiscard]] static IO::Astrodynamics::Math::Matrix ToGCRS(const IO::Astrodynamics::Time::TDB& epoch);
+        [[nodiscard]] static IO::Astrodynamics::Math::Matrix PolarMotion(const IO::Astrodynamics::Time::TDB& epoch);
 
         static void ExtractDateTimeComponents(const std::string& dateTimeStr,
                                                                                  int& year, int& month, int& day,

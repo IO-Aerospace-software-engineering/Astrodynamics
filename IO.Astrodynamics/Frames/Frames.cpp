@@ -159,7 +159,7 @@ void IO::Astrodynamics::Frames::Frames::ConvertToJulianUTC_TT(const IO::Astrodyn
     iauTaitt(jd_tai1, jd_tai2, &jd_tt1, &jd_tt2);
 }
 
-IO::Astrodynamics::Math::Matrix IO::Astrodynamics::Frames::Frames::ToTEME(
+IO::Astrodynamics::Math::Matrix IO::Astrodynamics::Frames::Frames::ToITRF(
     const IO::Astrodynamics::Time::TDB& epoch)
 {
     // Extract dates
@@ -170,20 +170,48 @@ IO::Astrodynamics::Math::Matrix IO::Astrodynamics::Frames::Frames::ToTEME(
     ConvertToJulianUTC_TT(epoch, jd_utc1, jd_utc2, jd_tt1, jd_tt2);
 
 
-    auto gcrs = ToGCRS(epoch);
-    auto rawMtx = gcrs.GetRawData();
-    double pnm[3][3];
-    for (size_t i = 0; i < 3; i++)
-    {
-        for (size_t j = 0; j < 3; j++)
-        {
-            pnm[i][j] = rawMtx[i][j];
-        }
-    }
+    // auto gcrs = ToGCRS(epoch);
+    // auto rawMtx = gcrs.GetRawData();
+    // double gmst[3][3];
+    // for (size_t i = 0; i < 3; i++)
+    // {
+    //     for (size_t j = 0; j < 3; j++)
+    //     {
+    //         pnm[i][j] = rawMtx[i][j];
+    //     }
+    // }
     // Rotation sidérale apparente pour obtenir le vecteur TEME
-    double gast = iauGst06(jd_utc1, jd_utc2, jd_tt1, jd_tt2, pnm);
-    iauRz(gast, pnm);
-    Math::Matrix pnmGastMtx(pnm);
+    double gast = iauGmst06(jd_utc1, jd_utc2, jd_tt1, jd_tt2);
+
+    double gastmtx[3][3]{1.0,0.0,0.0,0.0,1.0,0.0,0.0,0.0,1.0};
+    iauRz(gast, gastmtx);
+    double x, y, s;
+    iauXys06a(jd_tt1, jd_tt2, &x, &y, &s);
+
+    double pomMtx[3][3]{1.0,0.0,0.0,0.0,1.0,0.0,0.0,0.0,1.0};
+    //iauPom00(x, y, s, pomMtx);
+
+    double res[3][3];
+    mtxm_c(pomMtx, gastmtx, res);
+    Math::Matrix pnmGastMtx{res};
+    return pnmGastMtx;
+}
+
+IO::Astrodynamics::Math::Matrix IO::Astrodynamics::Frames::Frames::PolarMotion(
+    const IO::Astrodynamics::Time::TDB& epoch)
+{
+    // Extract dates
+    double jd_utc1;
+    double jd_utc2;
+    double jd_tt1;
+    double jd_tt2;
+    ConvertToJulianUTC_TT(epoch, jd_utc1, jd_utc2, jd_tt1, jd_tt2);
+
+    double x, y, s;
+    iauXys06a(jd_tt1, jd_tt2, &x, &y, &s);
+    double rpom[3][3];
+    iauPom00(x, y, s, rpom);
+    Math::Matrix pnmGastMtx(rpom);
     return pnmGastMtx;
 }
 

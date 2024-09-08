@@ -2,30 +2,49 @@
 #include <Constants.h>
 #include<gtest/gtest.h>
 #include<Frames.h>
+#include <InertialFrames.h>
+#include <Site.h>
 #include<TDB.h>
+#include <TestParameters.h>
+#include <TLE.h>
+#include <Type.h>
 
 TEST(Frames, ToTEME)
 {
-    IO::Astrodynamics::Time::TDB epoch("2000-Jan-01 00:00:00.0000 TDB");
-    auto mtx = IO::Astrodynamics::Frames::Frames::ToTEME(epoch);
-    auto identity = mtx.Multiply(mtx.Transpose());
-    ASSERT_TRUE(identity.IsIdentity());
-    ASSERT_NEAR(mtx.Determinant3X3(), 1.0, 1e-12);
+    const auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399);
+    std::string lines[3]{
+        "CZ-3C DEB", "1 39348U 10057N   24238.91466777  .00000306  00000-0  19116-2 0  9995",
+        "2 39348  20.0230 212.2863 7218258 312.9449   5.6833  2.25781763 89468"
+    };
 
-    double p[3];
-    radrec_c(1000000.0,331.5907*IO::Astrodynamics::Constants::DEG_RAD,11.85897*IO::Astrodynamics::Constants::DEG_RAD,p);
-    IO::Astrodynamics::Math::Vector3D v(p[0], p[1], p[2]);
-    auto v2 = mtx.Multiply(v);
+    IO::Astrodynamics::Time::UTC utc("2024-8-26T22:34:20.00000Z");
 
-    double v2Array[3];
-    v2Array[0] = v2.GetX();
-    v2Array[1] = v2.GetY();
-    v2Array[2] = v2.GetZ();
-    double radius,ra,dec;
-    recrad_c(v2Array,&radius,&ra,&dec);
-    ra=ra*IO::Astrodynamics::Constants::RAD_DEG;
-    dec=dec*IO::Astrodynamics::Constants::RAD_DEG;
 
+    IO::Astrodynamics::OrbitalParameters::TLE tle(earth, lines);
+    auto satSvTEME = tle.ToStateVector(utc.ToTDB());
+
+    IO::Astrodynamics::Coordinates::Planetodetic planetodetic(19.89367 * IO::Astrodynamics::Constants::DEG_RAD,
+                                                              47.91748 * IO::Astrodynamics::Constants::DEG_RAD, 984);
+
+    IO::Astrodynamics::Sites::Site site(399123, "k88", planetodetic, earth, std::string(SitePath));
+    auto siteSv = site.GetStateVector(earth->GetBodyFixedFrame(), utc.ToTDB());
+
+    IO::Astrodynamics::Math::Matrix mtxGmst = IO::Astrodynamics::Frames::Frames::ToITRF(utc.ToTDB());
+    // IO::Astrodynamics::Math::Matrix mtxPOM = IO::Astrodynamics::Frames::Frames::PolarMotion(utc.ToTDB());
+    IO::Astrodynamics::Math::Quaternion qGast(mtxGmst);
+    // IO::Astrodynamics::Math::Quaternion qPOM(mtxPOM);
+
+
+    IO::Astrodynamics::OrbitalParameters::StateVector satSvITRF(
+        earth, satSvTEME.GetPosition().Rotate(qGast),
+        satSvTEME.GetVelocity(), utc.ToTDB(),
+        earth->GetBodyFixedFrame());
+
+
+    auto diffec = satSvITRF.ToFrame(IO::Astrodynamics::Frames::InertialFrames::ICRF()) - siteSv.ToFrame(IO::Astrodynamics::Frames::InertialFrames::ICRF());
+    auto eq = diffec.ToEquatorialCoordinates();
+    double ra = eq.GetRA() * IO::Astrodynamics::Constants::RAD_DEG;
+    double dec = eq.GetDec() * IO::Astrodynamics::Constants::RAD_DEG;
 }
 
 
