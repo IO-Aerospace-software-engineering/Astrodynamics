@@ -163,6 +163,37 @@ IO::Astrodynamics::OrbitalParameters::StateVector IO::Astrodynamics::OrbitalPara
     return IO::Astrodynamics::OrbitalParameters::StateVector{m_centerOfMotion, nstate, m_epoch, frame};
 }
 
+IO::Astrodynamics::OrbitalParameters::StateVector IO::Astrodynamics::OrbitalParameters::StateVector::ToFrame(
+        const IO::Astrodynamics::Frames::Frames& frame, const Math::Matrix& mtx) const
+{
+    if (frame == this->m_frame)
+    {
+        return *this;
+    }
+
+    double v[6];
+    v[0] = m_position.GetX();
+    v[1] = m_position.GetY();
+    v[2] = m_position.GetZ();
+    v[3] = m_velocity.GetX();
+    v[4] = m_velocity.GetY();
+    v[5] = m_velocity.GetZ();
+
+    double convertedMtx[6][6];
+    for (size_t i = 0; i < 6; i++)
+    {
+        for (size_t j = 0; j < 6; j++)
+        {
+            convertedMtx[i][j] = mtx.GetValue(i, j);
+        }
+    }
+
+    double nstate[6];
+    mxvg_c(convertedMtx, v, 6, 6, nstate);
+
+    return IO::Astrodynamics::OrbitalParameters::StateVector{m_centerOfMotion, nstate, m_epoch, frame};
+}
+
 IO::Astrodynamics::OrbitalParameters::StateVector
 IO::Astrodynamics::OrbitalParameters::StateVector::ToBodyFixedFrame() const
 {

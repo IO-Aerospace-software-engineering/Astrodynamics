@@ -3,8 +3,9 @@
  */
 #ifndef MATRIX_H
 #define MATRIX_H
+
 #include<cstddef>
-#include<cstring>
+#include<string>
 #include <Vector3D.h>
 
 namespace IO::Astrodynamics::Math
@@ -15,7 +16,7 @@ namespace IO::Astrodynamics::Math
     class Matrix
     {
     private:
-        double** m_data{nullptr};
+        double **m_data{nullptr};
         const std::size_t m_colSize{};
         const std::size_t m_rowSize{};
         const double m_tolerance{1e-12};
@@ -28,7 +29,7 @@ namespace IO::Astrodynamics::Math
         /// <param name="colSize"></param>
         Matrix(const std::size_t rowSize, const std::size_t colSize) : m_colSize{colSize}, m_rowSize{rowSize}
         {
-            this->m_data = new double*[rowSize];
+            this->m_data = new double *[rowSize];
 
             for (std::size_t i = 0; i < rowSize; i++)
             {
@@ -42,7 +43,7 @@ namespace IO::Astrodynamics::Math
         /// <param name="rowSize"></param>
         /// <param name="colSize"></param>
         /// <param name="data"></param>
-        Matrix(const std::size_t rowSize, const std::size_t colSize, double** data) : Matrix{rowSize, colSize}
+        Matrix(const std::size_t rowSize, const std::size_t colSize, double **data) : Matrix{rowSize, colSize}
         {
             for (size_t i = 0; i < rowSize; i++)
             {
@@ -68,7 +69,8 @@ namespace IO::Astrodynamics::Math
             }
         }
 
-        Matrix(const Matrix& v);
+        Matrix(const Matrix &v);
+
         ~Matrix();
 
         /// <summary>
@@ -91,21 +93,24 @@ namespace IO::Astrodynamics::Math
         /// Get the matrix columns size
         /// </summary>
         /// <returns></returns>
-        [[nodiscard]] std::size_t GetColumsSize() const { return m_colSize; }
+        [[nodiscard]] std::size_t GetColumsSize() const
+        { return m_colSize; }
 
         /// <summary>
         /// Get the matirx rows size
         /// </summary>
         /// <returns></returns>
-        [[nodiscard]] std::size_t GetRowsSize() const { return m_rowSize; }
+        [[nodiscard]] std::size_t GetRowsSize() const
+        { return m_rowSize; }
 
         /// <summary>
         /// Multiply this matrix by another
         /// </summary>
         /// <param name="matrix"></param>
         /// <returns></returns>
-        Matrix Multiply(const Matrix& matrix);
-        Vector3D Multiply(const Vector3D& matrix);
+        Matrix Multiply(const Matrix &matrix);
+
+        Vector3D Multiply(const Vector3D &matrix);
 
         /// <summary>
         /// Transpose this matrix
@@ -113,11 +118,13 @@ namespace IO::Astrodynamics::Math
         /// <returns></returns>
         [[nodiscard]] Matrix Transpose() const;
 
-        [[nodiscard]] double** GetRawData() const;
+        [[nodiscard]] double **GetRawData() const;
 
         [[nodiscard]] bool IsIdentity() const;
 
         [[nodiscard]]double Determinant3X3() const;
+
+        [[nodiscard]] std::string ToString() const;
     };
 }
 #endif // !MATRIX_H

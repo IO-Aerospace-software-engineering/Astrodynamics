@@ -18,5 +18,6 @@ namespace IO::Astrodynamics::Constants
     inline constexpr double CivilTwilight{-6.0 * DEG_RAD};
     inline constexpr double NauticalTwilight{-12.0 * DEG_RAD};
     inline constexpr double AstronomicalTwilight{-18.0 * DEG_RAD};
+    inline constexpr double OMEGA_EARTH = 7.2921150e-5;
 }
 #endif

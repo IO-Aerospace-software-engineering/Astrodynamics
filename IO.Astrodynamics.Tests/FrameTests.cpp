@@ -35,9 +35,18 @@ TEST(Frames, ToTEME)
 
     IO::Astrodynamics::OrbitalParameters::StateVector satSvITRF(
             earth, satSvTEME.GetPosition().Rotate(qGast),
-            satSvTEME.GetVelocity(), utc.ToTDB(),
+            satSvTEME.GetVelocity().Rotate(qGast.Conjugate()), utc.ToTDB(),
             earth->GetBodyFixedFrame());
 
+    IO::Astrodynamics::Frames::Frames temeFrame("TEME");
+    auto satSvITRF2 = satSvTEME.ToFrame(temeFrame, mtxGmst);//GOOD
+
+    const double OMEGA_EARTH = 7.2921150e-5;
+    IO::Astrodynamics::Math::Vector3D omega_itrf(0.0, 0.0, OMEGA_EARTH);
+    auto cross = omega_itrf.CrossProduct(satSvITRF.GetPosition());
+    auto vitrf = satSvTEME.GetVelocity().Rotate(qGast);
+
+    auto resVel = vitrf - cross;//GOOD
 
     auto diffec = satSvITRF.ToFrame(IO::Astrodynamics::Frames::InertialFrames::ICRF()) - siteSv.ToFrame(IO::Astrodynamics::Frames::InertialFrames::ICRF());
     auto eq = diffec.ToEquatorialCoordinates();

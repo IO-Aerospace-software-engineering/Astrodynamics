@@ -4,6 +4,9 @@
 #include <cmath>
 #include <Matrix.h>
 #include <InvalidArgumentException.h>
+#include <ios>
+#include <sstream>
+#include <iomanip>
 
 IO::Astrodynamics::Math::Matrix::Matrix(const Matrix& v) : Matrix(v.m_rowSize, v.m_colSize)
 {
@@ -145,4 +148,27 @@ double IO::Astrodynamics::Math::Matrix::Determinant3X3() const
     return m_data[0][0] * (m_data[1][1] * m_data[2][2] - m_data[1][2] * m_data[2][1])
         - m_data[0][1] * (m_data[1][0] * m_data[2][2] - m_data[1][2] * m_data[2][0])
         + m_data[0][2] * (m_data[1][0] * m_data[2][1] - m_data[1][1] * m_data[2][0]);
+}
+
+std::string IO::Astrodynamics::Math::Matrix::ToString() const
+{
+    std::stringstream ss;
+
+    // Set precision and alignment for the output
+    ss << std::fixed << std::setprecision(6);
+
+    // Iterate through rows of the matrix
+    for (size_t i = 0; i < m_rowSize; ++i) {
+        ss << "[ ";
+        // Iterate through columns
+        for (size_t j = 0; j < m_colSize; ++j) {
+            ss << std::setw(12) << m_data[i][j]; // setw to align columns
+            if (j < m_colSize - 1) {
+                ss << ", "; // Comma between elements
+            }
+        }
+        ss << " ]\n"; // Newline at the end of each row
+    }
+
+    return ss.str(); // Return the formatted string
 }

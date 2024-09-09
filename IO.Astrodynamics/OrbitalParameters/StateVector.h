@@ -200,6 +200,8 @@ namespace IO::Astrodynamics::OrbitalParameters
          * @return StateVector
          */
         [[nodiscard]] StateVector ToBodyFixedFrame() const;
+
+        [[nodiscard]] StateVector ToFrame(const Frames::Frames &frame, const Math::Matrix &mtx) const;
     };
 }
 #endif // !STATE_VECTOR_H

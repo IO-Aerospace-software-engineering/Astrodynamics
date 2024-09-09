@@ -8,6 +8,7 @@
 #include <UTC.h>
 #include <sofa.h>
 #include <sstream>
+#include <Constants.h>
 
 #include <utility>
 
@@ -165,8 +166,32 @@ IO::Astrodynamics::Math::Matrix IO::Astrodynamics::Frames::Frames::FromTEMEToITR
     double gastmtx[3][3]{1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0};
     iauRz(gast, gastmtx);
 
-    Math::Matrix pnmGastMtx{gastmtx};
-    return pnmGastMtx;
+    Math::Matrix transform6x6(6, 6);
+    for (int i = 0; i < 3; ++i)
+    {
+        for (int j = 0; j < 3; ++j)
+        {
+            transform6x6.SetValue(i, j, gastmtx[i][j]);
+            transform6x6.SetValue(i + 3, j + 3, gastmtx[i][j]);  // Bottom-right block
+        }
+    }
+
+    // Coriolis effect (skew-symmetric matrix for Earth's angular velocity)
+    transform6x6.SetValue(3, 1, IO::Astrodynamics::Constants::OMEGA_EARTH * gastmtx[1][1]);
+    transform6x6.SetValue(3, 2, IO::Astrodynamics::Constants::OMEGA_EARTH * gastmtx[1][2]);
+    transform6x6.SetValue(4, 0, -IO::Astrodynamics::Constants::OMEGA_EARTH * gastmtx[0][0]);
+    transform6x6.SetValue(4, 2, -IO::Astrodynamics::Constants::OMEGA_EARTH * gastmtx[0][2]);
+
+    // Fill in the skew-symmetric matrix for Earth's angular velocity
+    // Bottom-left block (Omega * R_GAST)
+    transform6x6.SetValue(3, 0, IO::Astrodynamics::Constants::OMEGA_EARTH * gastmtx[1][0]);
+    transform6x6.SetValue(4, 1, -IO::Astrodynamics::Constants::OMEGA_EARTH * gastmtx[0][1]);
+
+
+
+//    Math::Matrix pnmGastMtx{gastmtx};
+    auto str = transform6x6.ToString();
+    return transform6x6;
 }
 
 IO::Astrodynamics::Math::Matrix IO::Astrodynamics::Frames::Frames::PolarMotion(const IO::Astrodynamics::Time::UTC &epoch)
