@@ -109,16 +109,14 @@ namespace IO::Astrodynamics::Frames
         [[nodiscard]] IO::Astrodynamics::Math::Vector3D TransformVector(
             const Frames& to, const IO::Astrodynamics::Math::Vector3D& vector,
             const IO::Astrodynamics::Time::TDB& epoch) const;
-        static void ConvertToJulianUTC_TT(const IO::Astrodynamics::Time::TDB& epoch, double& jd_utc1, double& jd_utc2,
-                                          double& jd_tt1, double& jd_tt2);
 
-        [[nodiscard]] static IO::Astrodynamics::Math::Matrix ToITRF(const IO::Astrodynamics::Time::TDB& epoch);
-        [[nodiscard]] static IO::Astrodynamics::Math::Matrix ToGCRS(const IO::Astrodynamics::Time::TDB& epoch);
-        [[nodiscard]] static IO::Astrodynamics::Math::Matrix PolarMotion(const IO::Astrodynamics::Time::TDB& epoch);
 
-        static void ExtractDateTimeComponents(const std::string& dateTimeStr,
-                                                                                 int& year, int& month, int& day,
-                                                                                 int& hour, int& minute, double& second);
+
+        [[nodiscard]] static IO::Astrodynamics::Math::Matrix FromTEMEToITRF(const IO::Astrodynamics::Time::UTC& epoch);
+        [[nodiscard]] static IO::Astrodynamics::Math::Matrix FromTEMEToGCRS(const IO::Astrodynamics::Time::UTC& epoch);
+        [[nodiscard]] static IO::Astrodynamics::Math::Matrix PolarMotion(const IO::Astrodynamics::Time::UTC& epoch);
+
+
     };
 }
 #endif

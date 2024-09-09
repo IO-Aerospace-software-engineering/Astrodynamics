@@ -2,6 +2,7 @@
  Copyright (c) 2021-2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
  */
 #include <DateTime.h>
+#include <sstream>
 
 IO::Astrodynamics::Time::DateTime::DateTime()
 = default;
@@ -78,4 +79,19 @@ IO::Astrodynamics::Time::DateTime &IO::Astrodynamics::Time::DateTime::operator=(
 	const_cast<std::chrono::duration<double> &>(m_secondsFromJ2000) = datetime.m_secondsFromJ2000;
 
 	return *this;
+}
+
+void IO::Astrodynamics::Time::DateTime::ExtractDateTimeComponents(const std::string &dateTimeStr,
+                                                             int &year, int &month, int &day,
+                                                             int &hour, int &minute, double &second)
+{
+    // DateTime format: YYYY-MM-DD HR:MN:SC.###### (UTC)
+    std::istringstream iss(dateTimeStr);
+    char delim; // Used to ignore the delimiters (i.e., '-', ':', and spaces)
+
+    // Parse the date (YYYY-MM-DD)
+    iss >> year >> delim >> month >> delim >> day;
+
+    // Parse the time (HR:MN:SC.######)
+    iss >> hour >> delim >> minute >> delim >> second;
 }

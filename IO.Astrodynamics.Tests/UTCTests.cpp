@@ -27,3 +27,18 @@ TEST(UTC, ToTDB)
     ASSERT_STREQ("2010-06-21 00:07:06.184395 (TDB)", utc.ToTDB().ToString().c_str());
 }
 
+
+TEST(TDB, ExtractTime)
+{
+    int year, month, day, hour, minute;
+    double second;
+    IO::Astrodynamics::Time::UTC::ExtractDateTimeComponents("2021-02-03 13:14:15.60 TDB", year, month, day,
+                                                            hour, minute, second);
+
+    ASSERT_EQ(2021, year);
+    ASSERT_EQ(2, month);
+    ASSERT_EQ(3, day);
+    ASSERT_EQ(13, hour);
+    ASSERT_EQ(14, minute);
+    ASSERT_DOUBLE_EQ(15.60, second);
+}

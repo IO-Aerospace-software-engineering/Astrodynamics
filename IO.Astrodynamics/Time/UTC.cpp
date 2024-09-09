@@ -5,6 +5,8 @@
 #include <SpiceUsr.h>
 #include <SDKException.h>
 #include <TDB.h>
+#include <sstream>
+#include "sofa.h"
 
 IO::Astrodynamics::Time::UTC::UTC(const std::chrono::duration<double> ellapsedSecondsFromJ2000) : IO::Astrodynamics::Time::DateTime(ellapsedSecondsFromJ2000)
 {
@@ -49,3 +51,26 @@ IO::Astrodynamics::Time::UTC IO::Astrodynamics::Time::UTC::operator+(const IO::A
 {
     return Add(timespan);
 }
+
+void IO::Astrodynamics::Time::UTC::ConvertToJulianUTC_TT(const IO::Astrodynamics::Time::UTC &epoch,
+                                                              double &jd_utc1, double &jd_utc2, double &jd_tt1,
+                                                              double &jd_tt2)
+{
+    const auto utc = epoch.ToString();
+    int year, month, day, hour, minute;
+    double second;
+    ExtractDateTimeComponents(utc, year, month, day, hour, minute, second);
+
+    // Variables pour les Julian Dates
+    double jd_tai1, jd_tai2;
+
+    // Convertir la date UTC en Julian Date (jd_utc1 et jd_utc2)
+    iauDtf2d("UTC", year, month, day, hour, minute, second, &jd_utc1, &jd_utc2);
+
+    // Convertir UTC en TAI
+    iauUtctai(jd_utc1, jd_utc2, &jd_tai1, &jd_tai2);
+
+    // Convertir TAI en TT
+    iauTaitt(jd_tai1, jd_tai2, &jd_tt1, &jd_tt2);
+}
+

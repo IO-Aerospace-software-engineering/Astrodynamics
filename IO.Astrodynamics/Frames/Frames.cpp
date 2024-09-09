@@ -137,92 +137,63 @@ IO::Astrodynamics::Math::Vector3D IO::Astrodynamics::Frames::Frames::TransformVe
     return IO::Astrodynamics::Math::Vector3D{nstate[0], nstate[1], nstate[2]};
 }
 
-void IO::Astrodynamics::Frames::Frames::ConvertToJulianUTC_TT(const IO::Astrodynamics::Time::TDB &epoch,
-                                                              double &jd_utc1, double &jd_utc2, double &jd_tt1,
-                                                              double &jd_tt2)
-{
-    const auto utc = epoch.ToUTC().ToString();
-    int year, month, day, hour, minute;
-    double second;
-    ExtractDateTimeComponents(utc, year, month, day, hour, minute, second);
 
-    // Variables pour les Julian Dates
-    double jd_tai1, jd_tai2;
-
-    // Convertir la date UTC en Julian Date (jd_utc1 et jd_utc2)
-    iauDtf2d("UTC", year, month, day, hour, minute, second, &jd_utc1, &jd_utc2);
-
-    // Convertir UTC en TAI
-    iauUtctai(jd_utc1, jd_utc2, &jd_tai1, &jd_tai2);
-
-    // Convertir TAI en TT
-    iauTaitt(jd_tai1, jd_tai2, &jd_tt1, &jd_tt2);
-}
-
-IO::Astrodynamics::Math::Matrix IO::Astrodynamics::Frames::Frames::ToITRF(
-        const IO::Astrodynamics::Time::TDB &epoch)
+IO::Astrodynamics::Math::Matrix IO::Astrodynamics::Frames::Frames::FromTEMEToITRF(const IO::Astrodynamics::Time::UTC &epoch)
 {
     // Extract dates
     double jd_utc1;
     double jd_utc2;
     double jd_tt1;
     double jd_tt2;
-    ConvertToJulianUTC_TT(epoch, jd_utc1, jd_utc2, jd_tt1, jd_tt2);
+    IO::Astrodynamics::Time::UTC::ConvertToJulianUTC_TT(epoch, jd_utc1, jd_utc2, jd_tt1, jd_tt2);
 
 
-     auto gcrs = ToGCRS(epoch);
-     auto rawMtx = gcrs.GetRawData();
-     double pnm[3][3];
-     for (size_t i = 0; i < 3; i++)
-     {
-         for (size_t j = 0; j < 3; j++)
-         {
-             pnm[i][j] = rawMtx[i][j];
-         }
-     }
-    // Rotation sidérale apparente pour obtenir le vecteur TEME
-    double gast = iauGst06(jd_utc1, jd_utc2, jd_tt1, jd_tt2,pnm);
+    auto gcrs = FromTEMEToGCRS(epoch);
+    auto rawMtx = gcrs.GetRawData();
+    double pnm[3][3];
+    for (size_t i = 0; i < 3; i++)
+    {
+        for (size_t j = 0; j < 3; j++)
+        {
+            pnm[i][j] = rawMtx[i][j];
+        }
+    }
+
+    // Apply apparent sideral rotation
+    double gast = iauGst06(jd_utc1, jd_utc2, jd_tt1, jd_tt2, pnm);
 
     double gastmtx[3][3]{1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0};
     iauRz(gast, gastmtx);
 
-    double x, y, s;
-    iauXys06a(jd_tt1, jd_tt2, &x, &y, &s);
-    double pomMtx[3][3]{1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0};
-    //iauPom00(-x, -y, s, pomMtx);
-
-    double res[3][3];
-    mtxm_c(pomMtx, gastmtx, res);
-    Math::Matrix pnmGastMtx{res};
+    Math::Matrix pnmGastMtx{gastmtx};
     return pnmGastMtx;
 }
 
-IO::Astrodynamics::Math::Matrix IO::Astrodynamics::Frames::Frames::PolarMotion(
-        const IO::Astrodynamics::Time::TDB &epoch)
+IO::Astrodynamics::Math::Matrix IO::Astrodynamics::Frames::Frames::PolarMotion(const IO::Astrodynamics::Time::UTC &epoch)
 {
     // Extract dates
     double jd_utc1;
     double jd_utc2;
     double jd_tt1;
     double jd_tt2;
-    ConvertToJulianUTC_TT(epoch, jd_utc1, jd_utc2, jd_tt1, jd_tt2);
+    IO::Astrodynamics::Time::UTC::ConvertToJulianUTC_TT(epoch, jd_utc1, jd_utc2, jd_tt1, jd_tt2);
 
     double x, y, s;
     iauXys06a(jd_tt1, jd_tt2, &x, &y, &s);
     double rpom[3][3];
-    iauPom00(-x, -y, s, rpom);
-    Math::Matrix pnmGastMtx(rpom);
-    return pnmGastMtx;
+    iauPom00(x, y, s, rpom);
+    Math::Matrix POMMtx(rpom);
+    return POMMtx;
 }
 
-IO::Astrodynamics::Math::Matrix IO::Astrodynamics::Frames::Frames::ToGCRS(const IO::Astrodynamics::Time::TDB &epoch)
+IO::Astrodynamics::Math::Matrix IO::Astrodynamics::Frames::Frames::FromTEMEToGCRS(const IO::Astrodynamics::Time::UTC &epoch)
 {
     // Extract dates
     double jd_utc1;
     double jd_utc2;
     double jd_tt1;
     double jd_tt2;
-    ConvertToJulianUTC_TT(epoch, jd_utc1, jd_utc2, jd_tt1, jd_tt2);
+    IO::Astrodynamics::Time::UTC::ConvertToJulianUTC_TT(epoch, jd_utc1, jd_utc2, jd_tt1, jd_tt2);
 
     // Apply precession-nutation -> GCRS
     double pnm[3][3];
@@ -232,17 +203,4 @@ IO::Astrodynamics::Math::Matrix IO::Astrodynamics::Frames::Frames::ToGCRS(const 
     return pnmMtx;
 }
 
-void IO::Astrodynamics::Frames::Frames::ExtractDateTimeComponents(const std::string &dateTimeStr,
-                                                                  int &year, int &month, int &day,
-                                                                  int &hour, int &minute, double &second)
-{
-    // DateTime format: YYYY-MM-DD HR:MN:SC.###### (UTC)
-    std::istringstream iss(dateTimeStr);
-    char delim; // Used to ignore the delimiters (i.e., '-', ':', and spaces)
 
-    // Parse the date (YYYY-MM-DD)
-    iss >> year >> delim >> month >> delim >> day;
-
-    // Parse the time (HR:MN:SC.######)
-    iss >> hour >> delim >> minute >> delim >> second;
-}
