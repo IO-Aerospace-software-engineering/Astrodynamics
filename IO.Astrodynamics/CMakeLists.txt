@@ -32,6 +32,7 @@ if (UNIX)
 else ()
     target_include_directories(${This} PUBLIC ${CMAKE_SOURCE_DIR}/external-lib/includeWindows)
     target_link_libraries(${This} ${CMAKE_SOURCE_DIR}/external-lib/cspice.lib)
+    target_link_libraries(${This} ${CMAKE_SOURCE_DIR}/external-lib/sofa.lib)
 endif ()
 
 

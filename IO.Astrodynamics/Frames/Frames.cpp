@@ -15,27 +15,27 @@ IO::Astrodynamics::Frames::Frames::Frames(std::string strView) : m_name{std::mov
 {
 }
 
-const char* IO::Astrodynamics::Frames::Frames::ToCharArray() const
+const char *IO::Astrodynamics::Frames::Frames::ToCharArray() const
 {
     return m_name.c_str();
 }
 
-bool IO::Astrodynamics::Frames::Frames::operator==(const IO::Astrodynamics::Frames::Frames& frame) const
+bool IO::Astrodynamics::Frames::Frames::operator==(const IO::Astrodynamics::Frames::Frames &frame) const
 {
     return m_name == frame.m_name;
 }
 
-bool IO::Astrodynamics::Frames::Frames::operator!=(const IO::Astrodynamics::Frames::Frames& frame) const
+bool IO::Astrodynamics::Frames::Frames::operator!=(const IO::Astrodynamics::Frames::Frames &frame) const
 {
     return !(m_name == frame.m_name);
 }
 
-bool IO::Astrodynamics::Frames::Frames::operator==(IO::Astrodynamics::Frames::Frames& frame) const
+bool IO::Astrodynamics::Frames::Frames::operator==(IO::Astrodynamics::Frames::Frames &frame) const
 {
     return m_name == frame.m_name;
 }
 
-bool IO::Astrodynamics::Frames::Frames::operator!=(IO::Astrodynamics::Frames::Frames& frame) const
+bool IO::Astrodynamics::Frames::Frames::operator!=(IO::Astrodynamics::Frames::Frames &frame) const
 {
     return !(m_name == frame.m_name);
 }
@@ -46,13 +46,13 @@ std::string IO::Astrodynamics::Frames::Frames::GetName() const
 }
 
 IO::Astrodynamics::Math::Matrix IO::Astrodynamics::Frames::Frames::ToFrame6x6(
-    const Frames& frame, const IO::Astrodynamics::Time::TDB& epoch) const
+        const Frames &frame, const IO::Astrodynamics::Time::TDB &epoch) const
 {
     SpiceDouble sform[6][6];
     sxform_c(this->m_name.c_str(), frame.m_name.c_str(), epoch.GetSecondsFromJ2000().count(), sform);
 
-    SpiceDouble** xform;
-    xform = new SpiceDouble*[6];
+    SpiceDouble **xform;
+    xform = new SpiceDouble *[6];
 
     for (int i = 0; i < 6; ++i)
     {
@@ -80,13 +80,13 @@ IO::Astrodynamics::Math::Matrix IO::Astrodynamics::Frames::Frames::ToFrame6x6(
 }
 
 IO::Astrodynamics::Math::Matrix IO::Astrodynamics::Frames::Frames::ToFrame3x3(
-    const Frames& frame, const IO::Astrodynamics::Time::TDB& epoch) const
+        const Frames &frame, const IO::Astrodynamics::Time::TDB &epoch) const
 {
     SpiceDouble sform[3][3];
     pxform_c(this->m_name.c_str(), frame.m_name.c_str(), epoch.GetSecondsFromJ2000().count(), sform);
 
-    SpiceDouble** xform;
-    xform = new SpiceDouble*[3];
+    SpiceDouble **xform;
+    xform = new SpiceDouble *[3];
 
     for (int i = 0; i < 3; ++i)
     {
@@ -114,7 +114,7 @@ IO::Astrodynamics::Math::Matrix IO::Astrodynamics::Frames::Frames::ToFrame3x3(
 }
 
 IO::Astrodynamics::Math::Vector3D IO::Astrodynamics::Frames::Frames::TransformVector(
-    const Frames& to, const IO::Astrodynamics::Math::Vector3D& vector, const IO::Astrodynamics::Time::TDB& epoch) const
+        const Frames &to, const IO::Astrodynamics::Math::Vector3D &vector, const IO::Astrodynamics::Time::TDB &epoch) const
 {
     auto mtx = ToFrame3x3(to, epoch);
     double v[3];
@@ -137,9 +137,9 @@ IO::Astrodynamics::Math::Vector3D IO::Astrodynamics::Frames::Frames::TransformVe
     return IO::Astrodynamics::Math::Vector3D{nstate[0], nstate[1], nstate[2]};
 }
 
-void IO::Astrodynamics::Frames::Frames::ConvertToJulianUTC_TT(const IO::Astrodynamics::Time::TDB& epoch,
-                                                              double& jd_utc1, double& jd_utc2, double& jd_tt1,
-                                                              double& jd_tt2)
+void IO::Astrodynamics::Frames::Frames::ConvertToJulianUTC_TT(const IO::Astrodynamics::Time::TDB &epoch,
+                                                              double &jd_utc1, double &jd_utc2, double &jd_tt1,
+                                                              double &jd_tt2)
 {
     const auto utc = epoch.ToUTC().ToString();
     int year, month, day, hour, minute;
@@ -160,7 +160,7 @@ void IO::Astrodynamics::Frames::Frames::ConvertToJulianUTC_TT(const IO::Astrodyn
 }
 
 IO::Astrodynamics::Math::Matrix IO::Astrodynamics::Frames::Frames::ToITRF(
-    const IO::Astrodynamics::Time::TDB& epoch)
+        const IO::Astrodynamics::Time::TDB &epoch)
 {
     // Extract dates
     double jd_utc1;
@@ -170,26 +170,26 @@ IO::Astrodynamics::Math::Matrix IO::Astrodynamics::Frames::Frames::ToITRF(
     ConvertToJulianUTC_TT(epoch, jd_utc1, jd_utc2, jd_tt1, jd_tt2);
 
 
-    // auto gcrs = ToGCRS(epoch);
-    // auto rawMtx = gcrs.GetRawData();
-    // double gmst[3][3];
-    // for (size_t i = 0; i < 3; i++)
-    // {
-    //     for (size_t j = 0; j < 3; j++)
-    //     {
-    //         pnm[i][j] = rawMtx[i][j];
-    //     }
-    // }
+     auto gcrs = ToGCRS(epoch);
+     auto rawMtx = gcrs.GetRawData();
+     double pnm[3][3];
+     for (size_t i = 0; i < 3; i++)
+     {
+         for (size_t j = 0; j < 3; j++)
+         {
+             pnm[i][j] = rawMtx[i][j];
+         }
+     }
     // Rotation sidérale apparente pour obtenir le vecteur TEME
-    double gast = iauGmst06(jd_utc1, jd_utc2, jd_tt1, jd_tt2);
+    double gast = iauGst06(jd_utc1, jd_utc2, jd_tt1, jd_tt2,pnm);
 
-    double gastmtx[3][3]{1.0,0.0,0.0,0.0,1.0,0.0,0.0,0.0,1.0};
+    double gastmtx[3][3]{1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0};
     iauRz(gast, gastmtx);
+
     double x, y, s;
     iauXys06a(jd_tt1, jd_tt2, &x, &y, &s);
-
-    double pomMtx[3][3]{1.0,0.0,0.0,0.0,1.0,0.0,0.0,0.0,1.0};
-    //iauPom00(x, y, s, pomMtx);
+    double pomMtx[3][3]{1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0};
+    //iauPom00(-x, -y, s, pomMtx);
 
     double res[3][3];
     mtxm_c(pomMtx, gastmtx, res);
@@ -198,7 +198,7 @@ IO::Astrodynamics::Math::Matrix IO::Astrodynamics::Frames::Frames::ToITRF(
 }
 
 IO::Astrodynamics::Math::Matrix IO::Astrodynamics::Frames::Frames::PolarMotion(
-    const IO::Astrodynamics::Time::TDB& epoch)
+        const IO::Astrodynamics::Time::TDB &epoch)
 {
     // Extract dates
     double jd_utc1;
@@ -210,12 +210,12 @@ IO::Astrodynamics::Math::Matrix IO::Astrodynamics::Frames::Frames::PolarMotion(
     double x, y, s;
     iauXys06a(jd_tt1, jd_tt2, &x, &y, &s);
     double rpom[3][3];
-    iauPom00(x, y, s, rpom);
+    iauPom00(-x, -y, s, rpom);
     Math::Matrix pnmGastMtx(rpom);
     return pnmGastMtx;
 }
 
-IO::Astrodynamics::Math::Matrix IO::Astrodynamics::Frames::Frames::ToGCRS(const IO::Astrodynamics::Time::TDB& epoch)
+IO::Astrodynamics::Math::Matrix IO::Astrodynamics::Frames::Frames::ToGCRS(const IO::Astrodynamics::Time::TDB &epoch)
 {
     // Extract dates
     double jd_utc1;
@@ -232,9 +232,9 @@ IO::Astrodynamics::Math::Matrix IO::Astrodynamics::Frames::Frames::ToGCRS(const 
     return pnmMtx;
 }
 
-void IO::Astrodynamics::Frames::Frames::ExtractDateTimeComponents(const std::string& dateTimeStr,
-                                                                  int& year, int& month, int& day,
-                                                                  int& hour, int& minute, double& second)
+void IO::Astrodynamics::Frames::Frames::ExtractDateTimeComponents(const std::string &dateTimeStr,
+                                                                  int &year, int &month, int &day,
+                                                                  int &hour, int &minute, double &second)
 {
     // DateTime format: YYYY-MM-DD HR:MN:SC.###### (UTC)
     std::istringstream iss(dateTimeStr);

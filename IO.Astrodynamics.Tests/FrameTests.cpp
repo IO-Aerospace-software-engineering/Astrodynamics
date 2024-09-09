@@ -43,8 +43,17 @@ TEST(Frames, ToTEME)
 
     auto diffec = satSvITRF.ToFrame(IO::Astrodynamics::Frames::InertialFrames::ICRF()) - siteSv.ToFrame(IO::Astrodynamics::Frames::InertialFrames::ICRF());
     auto eq = diffec.ToEquatorialCoordinates();
+    double raSkiField=331.59;
+    double decSkyField=11.859;
+
+    double raObs=331.5980;
+    double decObs=11.8474;
+
     double ra = eq.GetRA() * IO::Astrodynamics::Constants::RAD_DEG;
     double dec = eq.GetDec() * IO::Astrodynamics::Constants::RAD_DEG;
+
+    double deltaRAObs= abs(ra-raObs);
+    double deltaDecObs= abs(dec-decObs);
 }
 
 
