@@ -16,8 +16,12 @@ namespace IO::Astrodynamics::Frames
     {
 
     private:
+        static BodyFixedFrames mTeme;
     public:
         explicit BodyFixedFrames(const std::string &name);
+
+        static IO::Astrodynamics::Frames::BodyFixedFrames& TEME();
+
         
     };
 }

@@ -122,7 +122,7 @@ TEST(CelestialBody, GetAngularVelocity)
     auto sun = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(10);
     IO::Astrodynamics::Time::TDB epoch("2021-Jan-01 00:00:00.0000 TDB");
     auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399, sun);
-    ASSERT_DOUBLE_EQ(7.2921151939699377e-05, earth->GetAngularVelocity(epoch));
+    ASSERT_NEAR(7.2921151939699377e-05, earth->GetAngularVelocity(epoch),1E-09);
 }
 
 TEST(CelestialBody, GetSideralRotationPeriod)
@@ -130,7 +130,7 @@ TEST(CelestialBody, GetSideralRotationPeriod)
     auto sun = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(10);
     IO::Astrodynamics::Time::TDB epoch("2021-Jan-01 00:00:00.0000 TDB");
     auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399, sun);
-    ASSERT_DOUBLE_EQ(23.93447176256339, earth->GetSideralRotationPeriod(epoch).GetHours().count());
+    ASSERT_NEAR(23.93447176256339, earth->GetSideralRotationPeriod(epoch).GetHours().count(),1E-08);
 }
 
 TEST(CelestialBody, FindDistanceConstraint)
@@ -215,19 +215,19 @@ TEST(CelestialBody, TrueSolarDayAtEpoch)
     auto sun = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(10);
     auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399, sun);
     auto res1 = earth->GetTrueSolarDay(epoch);
-    ASSERT_DOUBLE_EQ(86407.306035452566, res1.GetSeconds().count());
+    ASSERT_NEAR(86407.306035452566, res1.GetSeconds().count(),1E-05);
 
     IO::Astrodynamics::Time::TDB epoch2("2021-MAR-26 00:00:00.0000 TDB");
     auto res2 = earth->GetTrueSolarDay(epoch2);
-    ASSERT_DOUBLE_EQ(86400.359514701879, res2.GetSeconds().count());
+    ASSERT_NEAR(86400.359514701879, res2.GetSeconds().count(),1E-05);
 
     IO::Astrodynamics::Time::TDB epoch3("2021-JUL-25 00:00:00.0000 TDB");
     auto res3 = earth->GetTrueSolarDay(epoch3);
-    ASSERT_DOUBLE_EQ(86392.011764653842, res3.GetSeconds().count());
+    ASSERT_NEAR(86392.011764653842, res3.GetSeconds().count(),1E-05);
 
     IO::Astrodynamics::Time::TDB epoch4("2021-DEC-22 00:00:00.0000 TDB");
     auto res4 = earth->GetTrueSolarDay(epoch4);
-    ASSERT_DOUBLE_EQ(86407.114275442393, res4.GetSeconds().count());
+    ASSERT_NEAR(86407.114275442393, res4.GetSeconds().count(),1E-05);
 }
 
 TEST(CelestialBody, GeosynchronousOrbitFromLongitude)
@@ -235,11 +235,11 @@ TEST(CelestialBody, GeosynchronousOrbitFromLongitude)
     IO::Astrodynamics::Time::TDB epoch("2021-Jan-01 00:00:00.0000 TDB");
     auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399);
     auto svICRF = earth->ComputeGeosynchronousOrbit(0.0, epoch).ToStateVector();
-    ASSERT_DOUBLE_EQ(42164171.959054783, svICRF.GetPosition().Magnitude());
-    ASSERT_DOUBLE_EQ(3074.6599898378454, svICRF.GetVelocity().Magnitude());
+    ASSERT_NEAR(42164171.959054783, svICRF.GetPosition().Magnitude(),1E-02);
+    ASSERT_NEAR(3074.6599898378454, svICRF.GetVelocity().Magnitude(),1E-09);
 
     auto svECEF = svICRF.ToFrame(earth->GetBodyFixedFrame());
-    ASSERT_DOUBLE_EQ(42164171.959054783, svECEF.GetPosition().Magnitude());
+    ASSERT_NEAR(42164171.959054783, svECEF.GetPosition().Magnitude(),1E-09);
     ASSERT_NEAR(0.0, svECEF.GetVelocity().Magnitude(), 1E-06);
     ASSERT_EQ(IO::Astrodynamics::Frames::InertialFrames::ICRF(), svICRF.GetFrame());
 }

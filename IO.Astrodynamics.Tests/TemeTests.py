@@ -18,9 +18,22 @@ print(t)
 print(ra)
 print(dec)
 print(satellite.at(t))
+
+print("itrf position")
+print(satellite.at(t).frame_xyz_and_velocity(itrs)[0].m)
 print("itrf velocity")
 print(satellite.at(t).frame_xyz_and_velocity(itrs)[1].m_per_s)
+
+print("icrf position")
+print(satellite.at(t).frame_xyz_and_velocity(ICRS)[0].m)
 print("icrf velocity")
 print(satellite.at(t).frame_xyz_and_velocity(ICRS)[1].m_per_s)
+
+print("teme position")
+print(satellite.at(t).frame_xyz_and_velocity(TEME)[0].m)
 print("teme velocity")
 print(satellite.at(t).frame_xyz_and_velocity(TEME)[1].m_per_s)
+
+print(32718334.75810228-32718534.030244593)
+print(-17501506.30133443- (-17501127.803996515))
+print(11592986.41571926-11592995.3105345)

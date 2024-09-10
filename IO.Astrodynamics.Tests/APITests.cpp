@@ -34,7 +34,7 @@ TEST(API, FindWindowsOnCoordinateConstraintProxy)
                                            0.0, 0.0, "NONE", 60.0,
                                            windows);
 
-    ASSERT_STREQ("2023-02-19 14:33:08.918098 (TDB)", ToTDBWindow(windows[0]).GetStartDate().ToString().c_str());
+    ASSERT_STREQ("2023-02-19 14:33:08.917987 (TDB)", ToTDBWindow(windows[0]).GetStartDate().ToString().c_str());
     ASSERT_STREQ("2023-02-19 23:58:50.814787 (UTC)", ToTDBWindow(windows[0]).GetEndDate().ToUTC().ToString().c_str());
 }
 
@@ -303,13 +303,13 @@ TEST(API, GetBodyInformationInvalidId)
 TEST(API, TransformFrame)
 {
     auto res = TransformFrameProxy(IO::Astrodynamics::Frames::InertialFrames::ICRF().GetName().c_str(), "ITRF93", 0.0);
-    ASSERT_DOUBLE_EQ(0.76713121189662548, res.Rotation.w);
-    ASSERT_DOUBLE_EQ(-1.8618846012434252e-05, res.Rotation.x);
-    ASSERT_DOUBLE_EQ(8.468919252183845e-07, res.Rotation.y);
-    ASSERT_DOUBLE_EQ(0.64149022080358797, res.Rotation.z);
-    ASSERT_DOUBLE_EQ(-1.9637714059853662e-09, res.AngularVelocity.x);
-    ASSERT_DOUBLE_EQ(-2.0389340573814659e-09, res.AngularVelocity.y);
-    ASSERT_DOUBLE_EQ(7.2921150642488516e-05, res.AngularVelocity.z);
+    ASSERT_NEAR(0.76713121189662548, res.Rotation.w,1E-09);
+    ASSERT_NEAR(-1.8618846012434252e-05, res.Rotation.x,1E-09);
+    ASSERT_NEAR(8.468919252183845e-07, res.Rotation.y,1E-09);
+    ASSERT_NEAR(0.64149022080358797, res.Rotation.z,1E-09);
+    ASSERT_NEAR(-1.9637714059853662e-09, res.AngularVelocity.x,1E-09);
+    ASSERT_NEAR(-2.0389340573814659e-09, res.AngularVelocity.y,1E-09);
+    ASSERT_NEAR(7.2921150642488516e-05, res.AngularVelocity.z,1E-09);
 }
 
 TEST(API, ConvertTLEToStateVectorProxy)

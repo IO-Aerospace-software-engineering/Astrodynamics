@@ -113,6 +113,7 @@ namespace IO::Astrodynamics::Frames
 
 
         [[nodiscard]] static IO::Astrodynamics::Math::Matrix FromTEMEToITRF(const IO::Astrodynamics::Time::UTC& epoch);
+        static IO::Astrodynamics::Math::Matrix FromITRFToTEME(const IO::Astrodynamics::Time::UTC& epoch);
         [[nodiscard]] static IO::Astrodynamics::Math::Matrix FromTEMEToGCRS(const IO::Astrodynamics::Time::UTC& epoch);
         [[nodiscard]] static IO::Astrodynamics::Math::Matrix PolarMotion(const IO::Astrodynamics::Time::UTC& epoch);
 
