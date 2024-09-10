@@ -37,9 +37,7 @@
       <Content Include="Data\SolarSystem\earth_fixed.tf">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </Content>
-      <None Remove="Data\SolarSystem\earth_latest_high_prec.bpc" />
       <None Remove="Data\SolarSystem\earth_topo_201023.tf" />
-      <Content Include="Data\SolarSystem\earth_latest_high_prec.bpc" />
       <Content Include="Data\SolarSystem\earth_topo_201023.tf">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </Content>
@@ -117,6 +115,10 @@
       <None Remove="Data\UserDataTest\scn100\Spacecrafts\DRAGONFLY32\Clocks\DRAGONFLY32.tsc" />
       <Content Include="Data\UserDataTest\scn100\Spacecrafts\DRAGONFLY32\Clocks\DRAGONFLY32.tsc">
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </Content>
+      <None Remove="Data\SolarSystem\earth_latest_high_prec.bpc" />
+      <Content Include="Data\SolarSystem\earth_latest_high_prec.bpc">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </Content>
     </ItemGroup>
 

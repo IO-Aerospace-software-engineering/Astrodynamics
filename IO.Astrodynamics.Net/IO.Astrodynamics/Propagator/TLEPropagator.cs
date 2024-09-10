@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using IO.Astrodynamics.Body.Spacecraft;
+using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.TimeSystem;
@@ -35,13 +36,13 @@ public class TLEPropagator : IPropagator
 
     public (IEnumerable<StateVector> stateVectors, IEnumerable<StateOrientation> stateOrientations) Propagate()
     {
-        _stateOrientation[Window.StartDate] = new StateOrientation(Quaternion.Zero, Vector3.Zero, Window.StartDate, Spacecraft.InitialOrbitalParameters.Frame);
+        _stateOrientation[Window.StartDate] = new StateOrientation(Quaternion.Zero, Vector3.Zero, Window.StartDate, Frame.ICRF);
         for (int i = 1; i < _svCacheSize; i++)
         {
             _svCache[i] = Spacecraft.InitialOrbitalParameters.ToStateVector(Window.StartDate.Add(DeltaT * i));
         }
 
-        _stateOrientation[Window.EndDate] = new StateOrientation(Quaternion.Zero, Vector3.Zero, Window.EndDate, Spacecraft.InitialOrbitalParameters.Frame);
+        _stateOrientation[Window.EndDate] = new StateOrientation(Quaternion.Zero, Vector3.Zero, Window.EndDate, Frame.ICRF);
         return (_svCache, _stateOrientation.Values);
     }
     public void Dispose()

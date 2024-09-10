@@ -110,7 +110,12 @@ public class TLE : KeplerianElements, IEquatable<TLE>
     /// <returns>The state vector at the given epoch.</returns>
     public override StateVector ToStateVector(Time epoch)
     {
-        return API.Instance.ConvertTleToStateVector(Line1, Line2, Line3, epoch);
+        return API.Instance.ConvertTleToStateVector(Line1, Line2, Line3, epoch).ToStateVector();
+    }
+    
+    public override StateVector ToStateVector()
+    {
+        return API.Instance.ConvertTleToStateVector(Line1, Line2, Line3, Epoch).ToStateVector();
     }
 
     /// <summary>

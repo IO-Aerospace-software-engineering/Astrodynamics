@@ -53,12 +53,38 @@ public class TLETests
         var stateVector = tle.AtEpoch(epoch).ToStateVector();
 
         Assert.Equal(stateVector, tle.ToStateVector(epoch));
-        Assert.Equal(4363669.261337338, stateVector.Position.X, 3);
-        Assert.Equal(-3627809.912410662, stateVector.Position.Y, 3);
-        Assert.Equal(-3747415.4653566754, stateVector.Position.Z, 3);
-        Assert.Equal(5805.8241824895995, stateVector.Velocity.X, 3);
-        Assert.Equal(2575.722643716163, stateVector.Velocity.Y, 3);
-        Assert.Equal(4271.5974622410786, stateVector.Velocity.Z, 3);
+        Assert.Equal(4339191.6380000003, stateVector.Position.X, 3);
+        Assert.Equal(-3648085.7441532095, stateVector.Position.Y, 3);
+        Assert.Equal(-3756144.7235531858, stateVector.Position.Z, 3);
+        Assert.Equal(5826.3339226880589, stateVector.Velocity.X, 3);
+        Assert.Equal(2548.7133804896607, stateVector.Velocity.Y, 3);
+        Assert.Equal(4259.857293770614, stateVector.Velocity.Z, 3);
+        Assert.Equal("J2000", stateVector.Frame.Name);
+        Assert.Equal(399, stateVector.Observer.NaifId);
+        Assert.Equal(664440682.84760022, stateVector.Epoch.TimeSpanFromJ2000().TotalSeconds,3);
+    }
+    
+    [Fact]
+    public void Observation()
+    {
+        TLE tle = TLE.Create("CZ-3C DEB", "1 39348U 10057N   24238.91466777  .00000306  00000-0  19116-2 0  9995",
+            "2 39348  20.0230 212.2863 7218258 312.9449   5.6833  2.25781763 89468");
+
+        TimeSystem.Time epoch = new TimeSystem.Time("2024-8-26T22:34:20.00000Z");
+        var stateVector = tle.ToStateVector(epoch);
+        // ASSERT_NEAR(resPosition.GetX(), 32718534.030244593 , 1E-06);
+        // ASSERT_NEAR(resPosition.GetY(), -17501127.803996515, 1E-06);
+        // ASSERT_NEAR(resPosition.GetZ(), 11592995.3105345   , 1E-06);
+        // ASSERT_NEAR(resVelocity.GetX(), 1808.0437338563306 , 1E-06);
+        // ASSERT_NEAR(resVelocity.GetY(), 998.49491137687698 , 1E-06);
+        // ASSERT_NEAR(resVelocity.GetZ(), 29.876025979417708 , 1E-06);
+
+        Assert.Equal(32718534.030244593 , stateVector.Position.X, 3);
+        Assert.Equal(-17501127.803996515, stateVector.Position.Y, 3);
+        Assert.Equal(11592995.3105345   , stateVector.Position.Z, 3);
+        Assert.Equal(1808.0437338563306 , stateVector.Velocity.X, 3);
+        Assert.Equal(998.49491137687698 , stateVector.Velocity.Y, 3);
+        Assert.Equal(29.876025979417708 , stateVector.Velocity.Z, 3);
         Assert.Equal("J2000", stateVector.Frame.Name);
         Assert.Equal(399, stateVector.Observer.NaifId);
         Assert.Equal(664440682.84760022, stateVector.Epoch.TimeSpanFromJ2000().TotalSeconds,3);

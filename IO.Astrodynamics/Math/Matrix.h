@@ -93,7 +93,7 @@ namespace IO::Astrodynamics::Math
         /// Get the matrix columns size
         /// </summary>
         /// <returns></returns>
-        [[nodiscard]] std::size_t GetColumsSize() const
+        [[nodiscard]] std::size_t GetColumnsSize() const
         { return m_colSize; }
 
         /// <summary>

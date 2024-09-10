@@ -808,7 +808,7 @@ public class API
     /// <param name="line3"></param>
     /// <param name="epoch"></param>
     /// <returns></returns>
-    public OrbitalParameters.StateVector ConvertTleToStateVector(string line1, string line2, string line3,
+    public OrbitalParameters.OrbitalParameters ConvertTleToStateVector(string line1, string line2, string line3,
         Time epoch)
     {
         lock (lockObject)
@@ -816,7 +816,7 @@ public class API
             var res = ConvertTLEToStateVectorProxy(line1, line2, line3, epoch.TimeSpanFromJ2000().TotalSeconds);
             return new OrbitalParameters.StateVector(res.Position.Convert(), res.Velocity.Convert(),
                 new Body.CelestialBody(PlanetsAndMoons.EARTH, Frame.ECLIPTIC_J2000, epoch), epoch,
-                new Frame(res.Frame));
+                new Frame(res.Frame)).ToFrame(Frame.ICRF);
         }
     }
 
@@ -835,7 +835,7 @@ public class API
 
             return new TLE(line1, line2, line3, res.BalisticCoefficient, res.DragTerm, res.SecondDerivativeOfMeanMotion,
                 res.A, res.E, res.I, res.O, res.W, res.M,
-                Time.Create(res.Epoch, TimeFrame.TDBFrame), Frame.ICRF);
+                Time.Create(res.Epoch, TimeFrame.TDBFrame), Frame.TEME);
         }
     }
 

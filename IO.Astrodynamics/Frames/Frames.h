@@ -111,13 +111,37 @@ namespace IO::Astrodynamics::Frames
             const IO::Astrodynamics::Time::TDB& epoch) const;
 
 
-
+        /**
+         * @brief Convert from TEME (True Equator Mean Equinox) to ITRF (International Terrestrial Reference Frame).
+         *
+         * @param epoch The epoch time in UTC.
+         * @return IO::Astrodynamics::Math::Matrix The transformation matrix.
+         */
         [[nodiscard]] static IO::Astrodynamics::Math::Matrix FromTEMEToITRF(const IO::Astrodynamics::Time::UTC& epoch);
+
+        /**
+         * @brief Convert from ITRF (International Terrestrial Reference Frame) to TEME (True Equator Mean Equinox).
+         *
+         * @param epoch The epoch time in UTC.
+         * @return IO::Astrodynamics::Math::Matrix The transformation matrix.
+         */
         static IO::Astrodynamics::Math::Matrix FromITRFToTEME(const IO::Astrodynamics::Time::UTC& epoch);
+
+        /**
+         * @brief Convert from TEME (True Equator Mean Equinox) to GCRS (Geocentric Celestial Reference System).
+         *
+         * @param epoch The epoch time in UTC.
+         * @return IO::Astrodynamics::Math::Matrix The transformation matrix.
+         */
         [[nodiscard]] static IO::Astrodynamics::Math::Matrix FromTEMEToGCRS(const IO::Astrodynamics::Time::UTC& epoch);
+
+        /**
+         * @brief Calculate the polar motion matrix.
+         *
+         * @param epoch The epoch time in UTC.
+         * @return IO::Astrodynamics::Math::Matrix The polar motion matrix.
+         */
         [[nodiscard]] static IO::Astrodynamics::Math::Matrix PolarMotion(const IO::Astrodynamics::Time::UTC& epoch);
-
-
     };
 }
 #endif

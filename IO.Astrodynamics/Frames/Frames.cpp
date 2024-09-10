@@ -2,7 +2,6 @@
  Copyright (c) 2021-2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
  */
 #include <Frames.h>
-#include <iostream>
 #include <Quaternion.h>
 #include <SpiceUsr.h>
 #include <UTC.h>

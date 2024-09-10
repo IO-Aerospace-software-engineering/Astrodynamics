@@ -9,19 +9,20 @@
 #include "Spacecraft.h"
 #include "InvalidArgumentException.h"
 #include <Converters.cpp>
+#include <TLE.h>
 
 TEST(API, TDBToString)
 {
     auto res = TDBToStringProxy(0.0);
     ASSERT_STREQ("2000-01-01 12:00:00.000000 (TDB)", res);
-    free((void *) res);
+    free((void*)res);
 }
 
 TEST(API, UTCToString)
 {
     auto res = UTCToStringProxy(0.0);
     ASSERT_STREQ("2000-01-01 12:00:00.000000 (UTC)", res);
-    free((void *) res);
+    free((void*)res);
 }
 
 TEST(API, FindWindowsOnCoordinateConstraintProxy)
@@ -139,9 +140,9 @@ TEST(API, ToUTC)
 
 TEST(API, Version)
 {
-    const char *res = GetSpiceVersionProxy();
+    const char* res = GetSpiceVersionProxy();
     ASSERT_STREQ("CSPICE_N0067", res);
-    free((void *) res);
+    free((void*)res);
 }
 
 TEST(API, WriteEphemeris)
@@ -190,17 +191,17 @@ TEST(API, WriteOrientation)
 {
     const auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399);
     std::unique_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<
-            IO::Astrodynamics::OrbitalParameters::StateVector>(earth,
-                                                               IO::Astrodynamics::Math::Vector3D(
-                                                                       6800000.0,
-                                                                       0.0, 0.0),
-                                                               IO::Astrodynamics::Math::Vector3D(
-                                                                       0.0,
-                                                                       8000.0,
-                                                                       0.0),
-                                                               IO::Astrodynamics::Time::TDB(
-                                                                       0.0s),
-                                                               IO::Astrodynamics::Frames::InertialFrames::ICRF());
+        IO::Astrodynamics::OrbitalParameters::StateVector>(earth,
+                                                           IO::Astrodynamics::Math::Vector3D(
+                                                               6800000.0,
+                                                               0.0, 0.0),
+                                                           IO::Astrodynamics::Math::Vector3D(
+                                                               0.0,
+                                                               8000.0,
+                                                               0.0),
+                                                           IO::Astrodynamics::Time::TDB(
+                                                               0.0s),
+                                                           IO::Astrodynamics::Frames::InertialFrames::ICRF());
     IO::Astrodynamics::Body::Spacecraft::Spacecraft spc(-175, "SPC000", 1000.0, 3000.0, std::string(SpacecraftPath),
                                                         std::move(orbitalParams));
     const int size = 10;
@@ -303,13 +304,42 @@ TEST(API, GetBodyInformationInvalidId)
 TEST(API, TransformFrame)
 {
     auto res = TransformFrameProxy(IO::Astrodynamics::Frames::InertialFrames::ICRF().GetName().c_str(), "ITRF93", 0.0);
-    ASSERT_NEAR(0.76713121189662548, res.Rotation.w,1E-09);
-    ASSERT_NEAR(-1.8618846012434252e-05, res.Rotation.x,1E-09);
-    ASSERT_NEAR(8.468919252183845e-07, res.Rotation.y,1E-09);
-    ASSERT_NEAR(0.64149022080358797, res.Rotation.z,1E-09);
-    ASSERT_NEAR(-1.9637714059853662e-09, res.AngularVelocity.x,1E-09);
-    ASSERT_NEAR(-2.0389340573814659e-09, res.AngularVelocity.y,1E-09);
-    ASSERT_NEAR(7.2921150642488516e-05, res.AngularVelocity.z,1E-09);
+    ASSERT_NEAR(0.76713121189662548, res.Rotation.w, 1E-09);
+    ASSERT_NEAR(-1.8618846012434252e-05, res.Rotation.x, 1E-09);
+    ASSERT_NEAR(8.468919252183845e-07, res.Rotation.y, 1E-09);
+    ASSERT_NEAR(0.64149022080358797, res.Rotation.z, 1E-09);
+    ASSERT_NEAR(-1.9637714059853662e-09, res.AngularVelocity.x, 1E-09);
+    ASSERT_NEAR(-2.0389340573814659e-09, res.AngularVelocity.y, 1E-09);
+    ASSERT_NEAR(7.2921150642488516e-05, res.AngularVelocity.z, 1E-09);
+}
+
+TEST(API, TransformFrameTeme)
+{
+    const auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399);
+    std::string lines[3]{
+        "CZ-3C DEB", "1 39348U 10057N   24238.91466777  .00000306  00000-0  19116-2 0  9995",
+        "2 39348  20.0230 212.2863 7218258 312.9449   5.6833  2.25781763 89468"
+    };
+
+    IO::Astrodynamics::Time::UTC utc("2024-8-26T22:34:20.00000Z");
+
+
+    IO::Astrodynamics::OrbitalParameters::TLE tle(earth, lines);
+    auto satSvTEME = tle.ToStateVector(utc.ToTDB());
+    auto res = TransformFrameProxy(satSvTEME.GetFrame().GetName().c_str(), "J2000",
+                                   utc.ToTDB().GetSecondsFromJ2000().count());
+    IO::Astrodynamics::Math::Quaternion q(res.Rotation.w, res.Rotation.x, res.Rotation.y, res.Rotation.z);
+    IO::Astrodynamics::Math::Vector3D v(res.AngularVelocity.x, res.AngularVelocity.y, res.AngularVelocity.z);
+
+    auto resPosition = satSvTEME.GetPosition().Rotate(q);
+    auto resVelocity = satSvTEME.GetVelocity().Rotate(q) - v.CrossProduct(resPosition);
+
+    ASSERT_NEAR(resPosition.GetX(), 32718534.030244593, 1E-06);
+    ASSERT_NEAR(resPosition.GetY(), -17501127.803996515, 1E-06);
+    ASSERT_NEAR(resPosition.GetZ(), 11592995.3105345, 1E-06);
+    ASSERT_NEAR(resVelocity.GetX(), 1808.0437338563306, 1E-06);
+    ASSERT_NEAR(resVelocity.GetY(), 998.49491137687698, 1E-06);
+    ASSERT_NEAR(resVelocity.GetZ(), 29.876025979417708, 1E-06);
 }
 
 TEST(API, ConvertTLEToStateVectorProxy)
@@ -348,7 +378,7 @@ TEST(API, GetTLEElementsProxy)
 TEST(API, ConvertConicOrbitalElementsToStateVector)
 {
     double perifocalDist = std::sqrt(std::pow(-6.116559469556896E+06, 2) + std::pow(-1.546174698676721E+06, 2) +
-                                     std::pow(2.521950157430313E+06, 2));
+        std::pow(2.521950157430313E+06, 2));
 
     IO::Astrodynamics::API::DTO::ConicOrbitalElementsDTO conics;
     conics.SetFrame(IO::Astrodynamics::Frames::InertialFrames::ICRF().ToCharArray());

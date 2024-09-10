@@ -9,12 +9,40 @@ public class Frame : IEquatable<Frame>
     public string Name { get; }
     public int? Id { get; }
 
+    /// <summary>
+    /// International Celestial Reference Frame (ICRF) at epoch J2000.
+    /// </summary>
     public static readonly Frame ICRF = new Frame("J2000");
+
+    /// <summary>
+    /// Ecliptic coordinate system at epoch B1950.
+    /// </summary>
     public static readonly Frame ECLIPTIC_B1950 = new Frame("ECLIPB1950");
+
+    /// <summary>
+    /// Ecliptic coordinate system at epoch J2000.
+    /// </summary>
     public static readonly Frame ECLIPTIC_J2000 = new Frame("ECLIPJ2000");
+
+    /// <summary>
+    /// Galactic coordinate system.
+    /// </summary>
     public static readonly Frame GALACTIC_SYSTEM2 = new Frame("GALACTIC");
+
+    /// <summary>
+    /// Equatorial coordinate system at epoch B1950.
+    /// </summary>
     public static readonly Frame B1950 = new Frame("B1950");
+
+    /// <summary>
+    /// Fourth Fundamental Catalog (FK4) coordinate system.
+    /// </summary>
     public static readonly Frame FK4 = new Frame("FK4");
+
+    /// <summary>
+    /// True Equator Mean Equinox (TEME) coordinate system.
+    /// </summary>
+    public static readonly Frame TEME = new Frame("TEME");
 
     public Frame(string name, int? id = null)
     {
