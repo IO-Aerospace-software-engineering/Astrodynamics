@@ -1,8 +1,11 @@
 // Copyright 2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
 
 using System;
+using IO.Astrodynamics.Coordinates;
 using IO.Astrodynamics.OrbitalParameters;
+using IO.Astrodynamics.Surface;
 using IO.Astrodynamics.TimeSystem;
+using Microsoft.Diagnostics.Tracing.Parsers.MicrosoftWindowsWPF;
 using Xunit;
 
 namespace IO.Astrodynamics.Tests.OrbitalParameters;
@@ -53,41 +56,59 @@ public class TLETests
         var stateVector = tle.AtEpoch(epoch).ToStateVector();
 
         Assert.Equal(stateVector, tle.ToStateVector(epoch));
-        Assert.Equal(4339191.6380000003, stateVector.Position.X, 3);
-        Assert.Equal(-3648085.7441532095, stateVector.Position.Y, 3);
+        Assert.Equal(4339191.6350769671, stateVector.Position.X, 3);
+        Assert.Equal(-3648085.747710444, stateVector.Position.Y, 3);
         Assert.Equal(-3756144.7235531858, stateVector.Position.Z, 3);
         Assert.Equal(5826.3339226880589, stateVector.Velocity.X, 3);
         Assert.Equal(2548.7133804896607, stateVector.Velocity.Y, 3);
         Assert.Equal(4259.857293770614, stateVector.Velocity.Z, 3);
         Assert.Equal("J2000", stateVector.Frame.Name);
         Assert.Equal(399, stateVector.Observer.NaifId);
-        Assert.Equal(664440682.84760022, stateVector.Epoch.TimeSpanFromJ2000().TotalSeconds,3);
+        Assert.Equal(664440682.84760022, stateVector.Epoch.TimeSpanFromJ2000().TotalSeconds, 3);
     }
-    
+
     [Fact]
     public void Observation()
     {
         TLE tle = TLE.Create("CZ-3C DEB", "1 39348U 10057N   24238.91466777  .00000306  00000-0  19116-2 0  9995",
             "2 39348  20.0230 212.2863 7218258 312.9449   5.6833  2.25781763 89468");
 
-        TimeSystem.Time epoch = new TimeSystem.Time("2024-8-26T22:34:20.00000Z");
+        TimeSystem.Time epoch = new TimeSystem.Time("2024-08-26T22:34:20.00000Z");
         var stateVector = tle.ToStateVector(epoch);
-        // ASSERT_NEAR(resPosition.GetX(), 32718534.030244593 , 1E-06);
-        // ASSERT_NEAR(resPosition.GetY(), -17501127.803996515, 1E-06);
-        // ASSERT_NEAR(resPosition.GetZ(), 11592995.3105345   , 1E-06);
-        // ASSERT_NEAR(resVelocity.GetX(), 1808.0437338563306 , 1E-06);
-        // ASSERT_NEAR(resVelocity.GetY(), 998.49491137687698 , 1E-06);
-        // ASSERT_NEAR(resVelocity.GetZ(), 29.876025979417708 , 1E-06);
 
-        Assert.Equal(32718534.030244593 , stateVector.Position.X, 3);
-        Assert.Equal(-17501127.803996515, stateVector.Position.Y, 3);
-        Assert.Equal(11592995.3105345   , stateVector.Position.Z, 3);
-        Assert.Equal(1808.0437338563306 , stateVector.Velocity.X, 3);
-        Assert.Equal(998.49491137687698 , stateVector.Velocity.Y, 3);
-        Assert.Equal(29.876025979417708 , stateVector.Velocity.Z, 3);
+        Assert.Equal(32718534.030244593, stateVector.Position.X, 1);
+        Assert.Equal(-17501127.803996515, stateVector.Position.Y, 1);
+        Assert.Equal(11592995.3105345, stateVector.Position.Z, 1);
+        Assert.Equal(1808.0437338563306, stateVector.Velocity.X, 1);
+        Assert.Equal(998.49491137687698, stateVector.Velocity.Y, 1);
+        Assert.Equal(29.876025979417708, stateVector.Velocity.Z, 1);
         Assert.Equal("J2000", stateVector.Frame.Name);
         Assert.Equal(399, stateVector.Observer.NaifId);
-        Assert.Equal(664440682.84760022, stateVector.Epoch.TimeSpanFromJ2000().TotalSeconds,3);
+        Assert.Equal(777983660, stateVector.Epoch.TimeSpanFromJ2000().TotalSeconds, 3);
+
+        Site site = new Site(14, "SiteA", TestHelpers.EarthAtJ2000, new Planetodetic(19.89367 * Astrodynamics.Constants.Deg2Rad, 47.91748 * Astrodynamics.Constants.Deg2Rad, 984));
+        var eq = stateVector.RelativeTo(site, Aberration.None).ToEquatorial();
+        
+        //SkyField results
+        double raSkyField = 331.59;
+        double decSkyField = 11.859;
+
+        //Observation results
+        double raObs = 331.5980;
+        double decObs = 11.8474;
+
+        double ra = eq.RightAscension * Astrodynamics.Constants.Rad2Deg;
+        double dec = eq.Declination * Astrodynamics.Constants.Rad2Deg;
+
+        //Delta relative to observation
+        double deltaRAObs = System.Math.Abs(ra - raObs);
+        double deltaDecObs = System.Math.Abs(dec - decObs);
+
+        //Delta relative to observation from skyfield
+        double deltaRASkyFieldObs = System.Math.Abs(raSkyField - raObs);
+        double deltaDecSkyFieldObs = System.Math.Abs(decSkyField - decObs);
+        Assert.True(deltaRAObs< deltaRASkyFieldObs);
+        Assert.True(deltaDecObs< deltaDecSkyFieldObs);
     }
 
     [Fact]

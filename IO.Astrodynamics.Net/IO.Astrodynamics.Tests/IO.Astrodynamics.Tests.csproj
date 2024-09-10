@@ -118,7 +118,7 @@
       </Content>
       <None Remove="Data\SolarSystem\earth_latest_high_prec.bpc" />
       <Content Include="Data\SolarSystem\earth_latest_high_prec.bpc">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       </Content>
     </ItemGroup>
 
