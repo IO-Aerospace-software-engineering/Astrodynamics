@@ -219,13 +219,13 @@ TEST(CelestialBody, GetJValue)
 {
     auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399);
     auto j2 = earth->GetJ2();
-    ASSERT_DOUBLE_EQ(0.001082616, j2);
+    ASSERT_DOUBLE_EQ(0.00108262998905, j2);
 
     auto j3 = earth->GetJ3();
-    ASSERT_DOUBLE_EQ(-0.00000253881, j3);
+    ASSERT_DOUBLE_EQ(-2.5321530600000001e-06, j3);
 
     auto j4 = earth->GetJ4();
-    ASSERT_DOUBLE_EQ(-0.00000165597, j4);
+    ASSERT_DOUBLE_EQ(-1.6109876100000001e-06, j4);
 
     //Moon's geophysical properties doesn't exist by default
     auto moon = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(301);

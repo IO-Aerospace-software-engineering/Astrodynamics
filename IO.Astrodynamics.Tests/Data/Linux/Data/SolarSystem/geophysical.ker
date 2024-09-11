@@ -59,36 +59,36 @@ KPL/PCK
 
 \begindata
 
-      BODY399_J2 =    1.082616D-3
-      BODY399_J3 =   -2.53881D-6
-      BODY399_J4 =   -1.65597D-6
-      
+      BODY399_J2 =     0.00108262998905D0
+      BODY399_J3 =   -0.00000253215306D0
+      BODY399_J4 =   -0.00000161098761D0
+
 \begintext
-      
+
       The next item is the square root of GM for the earth given
       in units of earth-radii**1.5/Minute
-      
+
 \begindata
-      
-      BODY399_KE =    7.43669161D-2
-      
+
+      BODY399_KE =    0.074366853168714D
+
 \begintext
-      
+
       The next two items give the top and bottom of the atmospheric
       drag model used by the type 10 ephemeris type.
 
 \begindata
-      
+
       BODY399_QO =  120.0D0
       BODY399_SO =   78.0D0
-      
+
 \begintext
-      
+
       The equatorial radius of the earth in kilometers as used by NORAD.
 
 \begindata
-      
-      BODY399_ER = 6378.135D0
+
+      BODY399_ER = 6378.137D0
       
 \begintext
 
