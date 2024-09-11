@@ -121,7 +121,7 @@ public class Helpers
     {
         if (originalFrame.Equals("icrf", StringComparison.InvariantCultureIgnoreCase))
         {
-            originalFrame = "j2000";
+            originalFrame = "J2000";
         }
 
         var inputFrame = new Frame(originalFrame);

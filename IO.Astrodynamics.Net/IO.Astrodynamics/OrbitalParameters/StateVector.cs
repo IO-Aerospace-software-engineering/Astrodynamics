@@ -51,6 +51,10 @@ namespace IO.Astrodynamics.OrbitalParameters
             return this;
         }
 
+        /// <summary>
+        /// Calculates the specific orbital energy.
+        /// </summary>
+        /// <returns></returns>
         public override double SemiMajorAxis()
         {
             if (_semiMajorAxis.HasValue)
@@ -68,18 +72,30 @@ namespace IO.Astrodynamics.OrbitalParameters
             return _semiMajorAxis.Value;
         }
 
+        /// <summary>
+        /// Calculates the eccentricity vector.
+        /// </summary>
+        /// <returns></returns>
         public override double Eccentricity()
         {
             _eccentricity ??= EccentricityVector().Magnitude();
             return _eccentricity.Value;
         }
 
+        /// <summary>
+        /// Calculates the eccentricity vector.
+        /// </summary>
+        /// <returns></returns>
         public override double Inclination()
         {
             _inclination ??= SpecificAngularMomentum().Angle(Vector3.VectorZ);
             return _inclination.Value;
         }
 
+        /// <summary>
+        /// Calculates the right ascension of the ascending node.
+        /// </summary>
+        /// <returns></returns>
         public override double AscendingNode()
         {
             if (_ascendingNode.HasValue)
@@ -109,6 +125,10 @@ namespace IO.Astrodynamics.OrbitalParameters
             return _ascendingNode.Value;
         }
 
+        /// <summary>
+        /// Calculates the argument of periapsis.
+        /// </summary>
+        /// <returns></returns>
         public override double ArgumentOfPeriapsis()
         {
             if (_periapsisArgument.HasValue)
@@ -143,6 +163,10 @@ namespace IO.Astrodynamics.OrbitalParameters
             return _periapsisArgument.Value;
         }
 
+        /// <summary>
+        /// Calculates the mean anomaly.
+        /// </summary>
+        /// <returns></returns>
         public override double MeanAnomaly()
         {
             double ea = EccentricAnomaly(TrueAnomaly());
@@ -163,6 +187,10 @@ namespace IO.Astrodynamics.OrbitalParameters
             return _meanAnomaly.Value;
         }
 
+        /// <summary>
+        /// Calculates the true anomaly.
+        /// </summary>
+        /// <returns></returns>
         public override double TrueAnomaly()
         {
             if (_trueAnomaly.HasValue)
