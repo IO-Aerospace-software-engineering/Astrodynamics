@@ -7,15 +7,21 @@ using IO.Astrodynamics.TimeSystem;
 
 namespace IO.Astrodynamics.Body;
 
+/// <summary>
+/// Represents an interface for orientable celestial objects.
+/// </summary>
 public interface IOrientable
 {
+    /// <summary>
+    /// Gets the reference frame of the orientable object.
+    /// </summary>
     Frame Frame { get; }
 
     /// <summary>
-    /// Get orientation relative to reference frame
+    /// Gets the orientation of the object relative to a reference frame at a specific epoch.
     /// </summary>
-    /// <param name="referenceFrame"></param>
-    /// <param name="epoch"></param>
-    /// <returns></returns>
+    /// <param name="referenceFrame">The reference frame to compare against.</param>
+    /// <param name="epoch">The epoch time for the orientation.</param>
+    /// <returns>The state orientation of the object.</returns>
     StateOrientation GetOrientation(Frame referenceFrame, in Time epoch);
 }

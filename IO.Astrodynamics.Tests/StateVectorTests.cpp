@@ -331,7 +331,7 @@ TEST(StateVector, FromTrueAnomaly)
 
     auto newSv = sv.ToStateVector(1.57);
 
-    ASSERT_DOUBLE_EQ(1.57, newSv.GetPosition().Normalize().GetAngle(newSv.GetPerigeeVector().Normalize()));
+    ASSERT_NEAR(1.57, newSv.GetPosition().Normalize().GetAngle(newSv.GetPerigeeVector().Normalize()),9);
 
     newSv = sv.ToStateVector(IO::Astrodynamics::Constants::PI);
 

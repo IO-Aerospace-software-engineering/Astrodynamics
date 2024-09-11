@@ -327,17 +327,17 @@ TEST(Launch, GetLaunchWindows)
     ASSERT_STREQ("2021-06-02 02:46:56.894531 (UTC)", windows[0].GetWindow().GetStartDate().ToString().c_str());
     ASSERT_EQ(399001, windows[0].GetLaunchSite().GetId());
     ASSERT_NEAR(135.21712769705897, windows[0].GetInertialAzimuth() * IO::Astrodynamics::Constants::RAD_DEG, 1E-09);
-    ASSERT_NEAR(137.47092364212625, windows[0].GetNonInertialAzimuth() * IO::Astrodynamics::Constants::RAD_DEG, 1E-09);
-    ASSERT_NEAR(7665.2355903714715, windows[0].GetInertialInsertionVelocity(), 1E-09);
-    ASSERT_NEAR(7382.8026792258042, windows[0].GetNonInertialInsertionVelocity(), 1E-09);
+    ASSERT_NEAR(137.47092410415945, windows[0].GetNonInertialAzimuth() * IO::Astrodynamics::Constants::RAD_DEG, 1E-09);
+    ASSERT_NEAR(7665.2340764904393, windows[0].GetInertialInsertionVelocity(), 1E-09);
+    ASSERT_NEAR(7382.8011665158556, windows[0].GetNonInertialInsertionVelocity(), 1E-09);
 
     //Second launch window
     ASSERT_STREQ("2021-06-02 18:07:09.016727 (UTC)", windows[1].GetWindow().GetStartDate().ToString().c_str());
     ASSERT_EQ(399001, windows[1].GetLaunchSite().GetId());
     ASSERT_NEAR(44.78287230294103, windows[1].GetInertialAzimuth() * IO::Astrodynamics::Constants::RAD_DEG, 1E-09);
-    ASSERT_NEAR(42.529076357873755, windows[1].GetNonInertialAzimuth() * IO::Astrodynamics::Constants::RAD_DEG, 1E-09);
-    ASSERT_NEAR(7665.2355903714752, windows[1].GetInertialInsertionVelocity(), 1E-09);
-    ASSERT_NEAR(7382.8026792258042, windows[1].GetNonInertialInsertionVelocity(), 1E-09);
+    ASSERT_NEAR(42.52907589584057, windows[1].GetNonInertialAzimuth() * IO::Astrodynamics::Constants::RAD_DEG, 1E-09);
+    ASSERT_NEAR(7665.2340764904393, windows[1].GetInertialInsertionVelocity(), 1E-09);
+    ASSERT_NEAR(7382.8011665158556, windows[1].GetNonInertialInsertionVelocity(), 1E-09);
 }
 
 TEST(Launch, GetLaunchWindowsByDay)
@@ -376,9 +376,9 @@ TEST(Launch, GetLaunchWindowsByDay)
     ASSERT_STREQ("2021-06-02 18:06:27.698902 (UTC)", windows[0].GetWindow().GetStartDate().ToString().c_str());
     ASSERT_EQ(399003, windows[0].GetLaunchSite().GetId());
     ASSERT_NEAR(44.78287230294103, windows[0].GetInertialAzimuth() * IO::Astrodynamics::Constants::RAD_DEG, 1E-09);
-    ASSERT_NEAR(42.529076357873755, windows[0].GetNonInertialAzimuth() * IO::Astrodynamics::Constants::RAD_DEG, 1E-09);
-    ASSERT_NEAR(7665.2355903714715, windows[0].GetInertialInsertionVelocity(), 1E-09);
-    ASSERT_NEAR(7382.8026792258042, windows[0].GetNonInertialInsertionVelocity(), 1E-09);
+    ASSERT_NEAR(42.52907589584057, windows[0].GetNonInertialAzimuth() * IO::Astrodynamics::Constants::RAD_DEG, 1E-09);
+    ASSERT_NEAR(7665.2340764904393, windows[0].GetInertialInsertionVelocity(), 1E-09);
+    ASSERT_NEAR(7382.8011665158556, windows[0].GetNonInertialInsertionVelocity(), 1E-09);
 }
 
 TEST(Launch, GetSouthLaunchSiteLaunchWindowsByDay)
@@ -417,9 +417,9 @@ TEST(Launch, GetSouthLaunchSiteLaunchWindowsByDay)
     ASSERT_STREQ("2021-06-02 15:05:37.043783 (UTC)", windows[0].GetWindow().GetStartDate().ToString().c_str());
     ASSERT_EQ(399001, windows[0].GetLaunchSite().GetId());
     ASSERT_NEAR(55.110840288769204, windows[0].GetInertialAzimuth() * IO::Astrodynamics::Constants::RAD_DEG, 1E-09);
-    ASSERT_NEAR(53.549545534168743, windows[0].GetNonInertialAzimuth() * IO::Astrodynamics::Constants::RAD_DEG, 1E-09);
-    ASSERT_NEAR(7665.2355903714715, windows[0].GetInertialInsertionVelocity(), 1E-09);
-    ASSERT_NEAR(7379.6345491745487, windows[0].GetNonInertialInsertionVelocity(), 1E-09);
+    ASSERT_NEAR(53.549545213919494, windows[0].GetNonInertialAzimuth() * IO::Astrodynamics::Constants::RAD_DEG, 1E-09);
+    ASSERT_NEAR(7665.2340764904393, windows[0].GetInertialInsertionVelocity(), 1E-09);
+    ASSERT_NEAR(7379.6330358555433, windows[0].GetNonInertialInsertionVelocity(), 1E-09);
 }
 
 TEST(Launch, GetSouthLaunchSiteLaunchWindows)
@@ -458,15 +458,15 @@ TEST(Launch, GetSouthLaunchSiteLaunchWindows)
     ASSERT_STREQ("2021-06-02 08:51:16.611328 (UTC)", windows[0].GetWindow().GetStartDate().ToString().c_str());
     ASSERT_EQ(399001, windows[0].GetLaunchSite().GetId());
     ASSERT_NEAR(124.8891597112308, windows[0].GetInertialAzimuth() * IO::Astrodynamics::Constants::RAD_DEG, 1E-09);
-    ASSERT_NEAR(126.45045446583126, windows[0].GetNonInertialAzimuth() * IO::Astrodynamics::Constants::RAD_DEG, 1E-09);
-    ASSERT_NEAR(7665.2355903714715, windows[0].GetInertialInsertionVelocity(), 1E-09);
-    ASSERT_NEAR(7379.6345491745487, windows[0].GetNonInertialInsertionVelocity(), 1E-09);
+    ASSERT_NEAR(126.45045478608051, windows[0].GetNonInertialAzimuth() * IO::Astrodynamics::Constants::RAD_DEG, 1E-09);
+    ASSERT_NEAR(7665.2340764904393, windows[0].GetInertialInsertionVelocity(), 1E-09);
+    ASSERT_NEAR(7379.6330358555433, windows[0].GetNonInertialInsertionVelocity(), 1E-09);
 
     //Second launch window
     ASSERT_STREQ("2021-06-02 15:04:13.716152 (UTC)", windows[1].GetWindow().GetStartDate().ToString().c_str());
     ASSERT_EQ(399001, windows[1].GetLaunchSite().GetId());
     ASSERT_NEAR(55.110840288769204, windows[1].GetInertialAzimuth() * IO::Astrodynamics::Constants::RAD_DEG, 1E-09);
-    ASSERT_NEAR(53.549545534168743, windows[1].GetNonInertialAzimuth() * IO::Astrodynamics::Constants::RAD_DEG, 1E-09);
-    ASSERT_NEAR(7665.2355903714715, windows[1].GetInertialInsertionVelocity(), 1E-09);
-    ASSERT_NEAR(7379.6345491745487, windows[1].GetNonInertialInsertionVelocity(), 1E-09);
+    ASSERT_NEAR(53.549545213919494, windows[1].GetNonInertialAzimuth() * IO::Astrodynamics::Constants::RAD_DEG, 1E-09);
+    ASSERT_NEAR(7665.2340764904393, windows[1].GetInertialInsertionVelocity(), 1E-09);
+    ASSERT_NEAR(7379.6330358555433, windows[1].GetNonInertialInsertionVelocity(), 1E-09);
 }

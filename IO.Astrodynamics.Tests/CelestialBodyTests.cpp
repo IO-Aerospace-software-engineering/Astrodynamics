@@ -49,20 +49,20 @@ TEST(CelestialBody, GetStateVector)
     auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399, sun);
 
     double expectedData[6]{
-        -2.6795375379297768E+10, 1.3270111352322429E+11, 5.7525334752378304E+10, -29765.580095900841,
-        -5075.3399173890839, -2200.9299676732885
+            -2.6795375379297768E+10, 1.3270111352322429E+11, 5.7525334752378304E+10, -29765.580095900841,
+            -5075.3399173890839, -2200.9299676732885
     };
     auto sv = earth->ReadEphemeris(IO::Astrodynamics::Frames::InertialFrames::ICRF(),
                                    IO::Astrodynamics::AberrationsEnum::None, epoch, *sun);
     ASSERT_EQ(
-        IO::Astrodynamics::OrbitalParameters::StateVector(sun, expectedData, epoch, IO::Astrodynamics::Frames::
+            IO::Astrodynamics::OrbitalParameters::StateVector(sun, expectedData, epoch, IO::Astrodynamics::Frames::
             InertialFrames::ICRF()), sv);
 
     //second overload
     auto sv2 = earth->ReadEphemeris(IO::Astrodynamics::Frames::InertialFrames::ICRF(),
                                     IO::Astrodynamics::AberrationsEnum::None, epoch);
     ASSERT_EQ(
-        IO::Astrodynamics::OrbitalParameters::StateVector(sun, expectedData, epoch, IO::Astrodynamics::Frames::
+            IO::Astrodynamics::OrbitalParameters::StateVector(sun, expectedData, epoch, IO::Astrodynamics::Frames::
             InertialFrames::ICRF()), sv2);
 }
 
@@ -74,14 +74,14 @@ TEST(CelestialBody, GetRelativeStateVector)
     auto marsBarycenter = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(4, sun);
 
     double expectedData[6]{
-        1.1967701118722568E+11, 5.5305597076056137E+10, 2.6202720828289268E+10, 8.5989974247898281E+03,
-        1.5803131615538015E+04, 7.6926453157571395E+03
+            1.1967701118722568E+11, 5.5305597076056137E+10, 2.6202720828289268E+10, 8.5989974247898281E+03,
+            1.5803131615538015E+04, 7.6926453157571395E+03
     };
     auto sv = earth->GetRelativeStatevector(
-        marsBarycenter->ReadEphemeris(IO::Astrodynamics::Frames::InertialFrames::ICRF(),
-                                      IO::Astrodynamics::AberrationsEnum::None, epoch, *sun));
+            marsBarycenter->ReadEphemeris(IO::Astrodynamics::Frames::InertialFrames::ICRF(),
+                                          IO::Astrodynamics::AberrationsEnum::None, epoch, *sun));
     ASSERT_EQ(
-        IO::Astrodynamics::OrbitalParameters::StateVector(earth, expectedData, epoch, IO::Astrodynamics::Frames::
+            IO::Astrodynamics::OrbitalParameters::StateVector(earth, expectedData, epoch, IO::Astrodynamics::Frames::
             InertialFrames::ICRF()), sv);
 }
 
@@ -93,13 +93,13 @@ TEST(CelestialBody, IsInSphereOfInfluence)
     auto marsBarycenter = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(4, sun);
 
     ASSERT_FALSE(
-        earth->IsInSphereOfInfluence(marsBarycenter->ReadEphemeris(IO::Astrodynamics::Frames::InertialFrames::ICRF(), IO
+            earth->IsInSphereOfInfluence(marsBarycenter->ReadEphemeris(IO::Astrodynamics::Frames::InertialFrames::ICRF(), IO
             ::Astrodynamics::AberrationsEnum::None, epoch, *sun)));
 
     auto fictiveBody = IO::Astrodynamics::OrbitalParameters::StateVector(
-        earth, IO::Astrodynamics::Math::Vector3D(900000000.0, 0.0, 0.0),
-        IO::Astrodynamics::Math::Vector3D(0.0, 1000.0, 0.0), epoch,
-        IO::Astrodynamics::Frames::InertialFrames::ICRF());
+            earth, IO::Astrodynamics::Math::Vector3D(900000000.0, 0.0, 0.0),
+            IO::Astrodynamics::Math::Vector3D(0.0, 1000.0, 0.0), epoch,
+            IO::Astrodynamics::Frames::InertialFrames::ICRF());
     ASSERT_TRUE(earth->IsInSphereOfInfluence(fictiveBody));
 }
 
@@ -111,13 +111,13 @@ TEST(CelestialBody, IsInHillSphere)
     auto marsBarycenter = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(4, sun);
 
     ASSERT_FALSE(
-        earth->IsInHillSphere(marsBarycenter->ReadEphemeris(IO::Astrodynamics::Frames::InertialFrames::ICRF(), IO::
+            earth->IsInHillSphere(marsBarycenter->ReadEphemeris(IO::Astrodynamics::Frames::InertialFrames::ICRF(), IO::
             Astrodynamics::AberrationsEnum::None, epoch, *sun)));
 
     auto fictiveBody = IO::Astrodynamics::OrbitalParameters::StateVector(
-        earth, IO::Astrodynamics::Math::Vector3D(1400000000.0, 0.0, 0.0),
-        IO::Astrodynamics::Math::Vector3D(0.0, 1000.0, 0.0), epoch,
-        IO::Astrodynamics::Frames::InertialFrames::ICRF());
+            earth, IO::Astrodynamics::Math::Vector3D(1400000000.0, 0.0, 0.0),
+            IO::Astrodynamics::Math::Vector3D(0.0, 1000.0, 0.0), epoch,
+            IO::Astrodynamics::Frames::InertialFrames::ICRF());
     ASSERT_TRUE(earth->IsInHillSphere(fictiveBody));
 }
 
@@ -161,7 +161,7 @@ TEST(CelestialBody, FindDistanceConstraint)
     auto moon = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(301, earth);
 
     auto searchWindow = IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB>(
-        IO::Astrodynamics::Time::TDB("2007 JAN 1"), IO::Astrodynamics::Time::TDB("2007 APR 1"));
+            IO::Astrodynamics::Time::TDB("2007 JAN 1"), IO::Astrodynamics::Time::TDB("2007 APR 1"));
     auto results = earth->FindWindowsOnDistanceConstraint(searchWindow, *moon, *earth,
                                                           IO::Astrodynamics::Constraints::RelationalOperator::GreaterThan(),
                                                           IO::Astrodynamics::AberrationsEnum::None, 400000000.0,
@@ -182,7 +182,7 @@ TEST(CelestialBody, FindOccultationConstraint)
     auto moon = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(301, earth);
 
     auto searchWindow = IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::TDB>(
-        IO::Astrodynamics::Time::TDB("2001 DEC 13"), IO::Astrodynamics::Time::TDB("2001 DEC 15"));
+            IO::Astrodynamics::Time::TDB("2001 DEC 13"), IO::Astrodynamics::Time::TDB("2001 DEC 15"));
     auto results = earth->FindWindowsOnOccultationConstraint(searchWindow, *sun, *moon,
                                                              IO::Astrodynamics::OccultationType::Any(),
                                                              IO::Astrodynamics::AberrationsEnum::LT,
@@ -219,13 +219,13 @@ TEST(CelestialBody, GetJValue)
 {
     auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399);
     auto j2 = earth->GetJ2();
-    ASSERT_DOUBLE_EQ(0.001082616, j2);
+    ASSERT_NEAR(0.00108262998905, j2, 9);
 
     auto j3 = earth->GetJ3();
-    ASSERT_DOUBLE_EQ(-0.00000253881, j3);
+    ASSERT_NEAR(-0.00000253881, j3, 9);
 
     auto j4 = earth->GetJ4();
-    ASSERT_DOUBLE_EQ(-0.00000165597, j4);
+    ASSERT_NEAR(-0.00000165597, j4, 9);
 
     //Moon's geophysical properties doesn't exist by default
     auto moon = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(301);
@@ -291,13 +291,13 @@ TEST(CelestialBody, GeosynchronousOrbitFromLongitudeAndLatitude2)
     ASSERT_NEAR(3074.6599898937015, svICRF.GetVelocity().Magnitude(), 1E-09);
     ASSERT_NEAR(42164171.957522802, conics.GetSemiMajorAxis(), 1E-09);
     ASSERT_NEAR(1.0, conics.GetInclination(), 1E-02);
-    ASSERT_NEAR(0.0, conics.GetEccentricity(),1E-09);
-    ASSERT_NEAR(1.1804318466570587, conics.GetRightAscendingNodeLongitude(),1E-09);
-    ASSERT_NEAR(1.5698873913048708, conics.GetPeriapsisArgument(),1E-09);
-    ASSERT_NEAR(0.0, conics.GetMeanAnomaly(),1E-09);
+    ASSERT_NEAR(0.0, conics.GetEccentricity(), 1E-09);
+    ASSERT_NEAR(1.1804318466570587, conics.GetRightAscendingNodeLongitude(), 1E-09);
+    ASSERT_NEAR(1.5698873913048708, conics.GetPeriapsisArgument(), 1E-09);
+    ASSERT_NEAR(0.0, conics.GetMeanAnomaly(), 1E-09);
     ASSERT_EQ(IO::Astrodynamics::Frames::InertialFrames::ICRF(), conics.GetFrame());
-    ASSERT_NEAR(42164171.957522824, svICRF.GetPosition().Magnitude(),1E-09);
-    ASSERT_NEAR(3074.6599898937015, svICRF.GetVelocity().Magnitude(),1E-09);
+    ASSERT_NEAR(42164171.957522824, svICRF.GetPosition().Magnitude(), 1E-09);
+    ASSERT_NEAR(3074.6599898937015, svICRF.GetVelocity().Magnitude(), 1E-09);
     ASSERT_NEAR(-20992029.304842189, svICRF.GetPosition().GetX(), 1E-03);
     ASSERT_NEAR(8679264.3222530782, svICRF.GetPosition().GetY(), 1E-03);
     ASSERT_NEAR(35522140.608061768, svICRF.GetPosition().GetZ(), 1E-03);

@@ -9,15 +9,32 @@ namespace IO.Astrodynamics.Body;
 
 public class GeopotentialGravitationalField : GravitationalField
 {
+    /// <summary>
+    /// Reader for the geopotential model.
+    /// </summary>
     private readonly GeopotentialModelReader _geopotentialModelReader;
+
+    /// <summary>
+    /// Maximum degrees for the geopotential model.
+    /// </summary>
     public double MaxDegrees { get; }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="GeopotentialGravitationalField"/> class.
+    /// </summary>
+    /// <param name="geopotentialModelFile">The stream reader for the geopotential model file.</param>
+    /// <param name="maxDegrees">The maximum degrees for the geopotential model. Default is 70.</param>
     public GeopotentialGravitationalField(StreamReader geopotentialModelFile, ushort maxDegrees = 70)
     {
         MaxDegrees = maxDegrees;
         _geopotentialModelReader = new GeopotentialModelReader(geopotentialModelFile);
     }
 
+    /// <summary>
+    /// Computes the gravitational acceleration for a given state vector.
+    /// </summary>
+    /// <param name="stateVector">The state vector for which to compute the gravitational acceleration.</param>
+    /// <returns>The gravitational acceleration as a <see cref="Vector3"/>.</returns>
     public override Vector3 ComputeGravitationalAcceleration(StateVector stateVector)
     {
         var observer = (CelestialBody)stateVector.Observer;
@@ -25,13 +42,13 @@ public class GeopotentialGravitationalField : GravitationalField
         var position = svFixedFrame.Position;
         double r = position.Magnitude();
 
-        //Theta angle in body fixed frame
+        // Theta angle in body fixed frame
         double theta = System.Math.Abs(System.Math.Asin(position.Z / r) - Constants.PI2);
 
-        //Get gravitational acceleration
+        // Get gravitational acceleration
         var gravitationalAcceleration = -base.ComputeGravitationalAcceleration(svFixedFrame).Magnitude();
 
-        //Compute spherical harmonics
+        // Compute spherical harmonics
         double eqr = observer.EquatorialRadius / r;
         double omegaN = 0.0;
         double eqrn;
@@ -53,13 +70,19 @@ public class GeopotentialGravitationalField : GravitationalField
             }
         }
 
-        //Cumulate gravity and spherical harmonics
+        // Cumulate gravity and spherical harmonics
         var localAcceleration = gravitationalAcceleration * (1 + omegaN);
 
-        //Return acceleration in original frame
+        // Return acceleration in original frame
         return (position * localAcceleration / r).Rotate(svFixedFrame.Frame.ToFrame(stateVector.Frame, stateVector.Epoch).Rotation);
     }
 
+    /// <summary>
+    /// Gets the coefficients for the given degree and order.
+    /// </summary>
+    /// <param name="n">The degree.</param>
+    /// <param name="m">The order.</param>
+    /// <returns>The <see cref="GeopotentialCoefficient"/> for the given degree and order.</returns>
     GeopotentialCoefficient GetCoefficients(ushort n, ushort m)
     {
         return _geopotentialModelReader.ReadCoefficient(n, m);

@@ -13,19 +13,54 @@ namespace IO.Astrodynamics.Body;
 
 public class CelestialBody : CelestialItem, IOrientable
 {
+    /// <summary>
+    /// Gets the polar radius of the celestial body.
+    /// </summary>
     public double PolarRadius { get; }
+
+    /// <summary>
+    /// Gets the equatorial radius of the celestial body.
+    /// </summary>
     public double EquatorialRadius { get; }
+
+    /// <summary>
+    /// Gets the flattening of the celestial body.
+    /// </summary>
     public double Flattening { get; }
 
+    /// <summary>
+    /// Gets or sets the sphere of influence of the celestial body.
+    /// </summary>
     public double SphereOfInfluence { get; private set; }
+
+    /// <summary>
+    /// Gets the reference frame of the celestial body.
+    /// </summary>
     public Frame Frame { get; }
 
+    /// <summary>
+    /// Gets the J2 coefficient of the celestial body.
+    /// </summary>
     public double J2 { get; }
+
+    /// <summary>
+    /// Gets the J3 coefficient of the celestial body.
+    /// </summary>
     public double J3 { get; }
+
+    /// <summary>
+    /// Gets the J4 coefficient of the celestial body.
+    /// </summary>
     public double J4 { get; }
 
+    /// <summary>
+    /// Gets the atmospheric model of the celestial body.
+    /// </summary>
     protected AtmosphericModel AtmosphericModel { get; }
 
+    /// <summary>
+    /// Gets a value indicating whether the celestial body has an atmospheric model.
+    /// </summary>
     public bool HasAtmosphericModel => AtmosphericModel != null;
 
     /// <summary>
@@ -223,8 +258,9 @@ public class CelestialBody : CelestialItem, IOrientable
         }
 
         var trueAnomaly = Constants.PI + Constants.PI2;
-        
-        double m = OrbitalParameters.OrbitalParameters.TrueAnomalyToMeanAnomaly(trueAnomaly, eccentricity, OrbitalParameters.OrbitalParameters.EllipticAnomaly(trueAnomaly,eccentricity));
+
+        double m = OrbitalParameters.OrbitalParameters.TrueAnomalyToMeanAnomaly(trueAnomaly, eccentricity,
+            OrbitalParameters.OrbitalParameters.EllipticAnomaly(trueAnomaly, eccentricity));
 
         return new KeplerianElements(semiMajorAxis, eccentricity, i, raanLongitude, Constants.PI + Constants.PI2, m, this, epochAtDescendingNode, Frame.ICRF);
     }

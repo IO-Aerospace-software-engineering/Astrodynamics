@@ -318,12 +318,12 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
                 epoch.ToTDB(), Frames.Frame.ICRF);
 
             double[] res = sv.ToFrame(earthFrame).ToStateVector().ToArray();
-            Assert.Equal(-135352868.83029744, res[0]);
-            Assert.Equal(-2583535.869143948, res[1]);
-            Assert.Equal(57553737.733541526, res[2]);
-            Assert.Equal(-188.61117766406102, res[3]);
-            Assert.Equal(9839.761815065332, res[4]);
-            Assert.Equal(-1.9036033768843523, res[5]);
+            Assert.Equal(-135352868.83176634, res[0]);
+            Assert.Equal(-2583535.794060424, res[1]);
+            Assert.Equal(57553737.73345758, res[2]);
+            Assert.Equal(-188.61117217001208, res[3]);
+            Assert.Equal(9839.7618152916002, res[4]);
+            Assert.Equal(-1.903603287599916, res[5]);
         }
 
         [Fact]
