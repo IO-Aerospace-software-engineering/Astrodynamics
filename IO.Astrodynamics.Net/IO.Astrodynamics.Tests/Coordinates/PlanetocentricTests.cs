@@ -29,6 +29,19 @@ public class PlanetocentricTests
         var res = plan.ToCartesianCoordinates();
         Assert.Equal(new Vector3(-55658443.24257991, -379226329.314363, -126505930.63558689), res);
     }
+    
+    [Fact]
+    public void ToCartesian2()
+    {
+        var geodetic = new Planetodetic(19.89367 * Constants.DEG_RAD, 47.91748 * Constants.DEG_RAD, 984);
+        var plan = geodetic.ToPlanetocentric(TestHelpers.EarthAtJ2000.Flattening, TestHelpers.EarthAtJ2000.EquatorialRadius);
+        var res = plan.ToCartesianCoordinates();
+
+        var centric = new Planetocentric(19.89367 * Constants.DEG_RAD, 47.91748 * Constants.DEG_RAD, 6367310.6587192528);
+        var plentodetic = centric.ToPlanetodetic(TestHelpers.EarthAtJ2000.Flattening, TestHelpers.EarthAtJ2000.EquatorialRadius);
+        var res2 = centric.ToCartesianCoordinates();
+
+    }
 
     [Fact]
     public void ToPlanetodetic()

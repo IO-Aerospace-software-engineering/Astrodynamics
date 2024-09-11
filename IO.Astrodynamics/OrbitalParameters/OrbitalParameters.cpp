@@ -9,6 +9,8 @@
 #include <utility>
 #include "OrbitalParameters.h"
 #include "Plane.h"
+#include <cmath>
+#include <Constants.h>
 
 
 IO::Astrodynamics::OrbitalParameters::OrbitalParameters::OrbitalParameters(const std::shared_ptr<IO::Astrodynamics::Body::CelestialBody> &centerOfMotion,
@@ -44,12 +46,18 @@ bool IO::Astrodynamics::OrbitalParameters::OrbitalParameters::IsCircular() const
 
 double IO::Astrodynamics::OrbitalParameters::OrbitalParameters::GetMeanMotion() const
 {
-    if (this->IsHyperbolic())
+    if (IsElliptical())
     {
-        return std::numeric_limits<double>::infinity();
+        return std::sqrt(IO::Astrodynamics::Constants::G * (m_centerOfMotion->GetMass()) / std::pow(GetSemiMajorAxis(), 3));
     }
-
-    return IO::Astrodynamics::Constants::_2PI / GetPeriod().GetSeconds().count();
+    if (IsParabolic())
+    {
+        return 2 * std::sqrt(IO::Astrodynamics::Constants::G * (m_centerOfMotion->GetMass()) / std::pow(PerigeeRadius(), 3));
+    }
+    else
+    {
+        return std::sqrt(IO::Astrodynamics::Constants::G * (m_centerOfMotion->GetMass()) / std::pow(-GetSemiMajorAxis(), 3));
+    }
 }
 
 IO::Astrodynamics::Time::TDB IO::Astrodynamics::OrbitalParameters::OrbitalParameters::GetTimeToMeanAnomaly(double meanAnomalyTarget) const
@@ -302,3 +310,24 @@ IO::Astrodynamics::OrbitalParameters::OrbitalParameters::CreateEarthPhasedHelioS
     double a = std::cbrt(((T * T) * earth->GetMu()) / (4 * Constants::PI * Constants::PI));
     return CreateEarthHelioSynchronousOrbit(earth,a, eccentricity, epochAtDescendingNode);
 }
+
+/// <summary>
+/// Computes the semi-latus rectum of the orbit.
+/// </summary>
+/// <returns>The semi-latus rectum of the orbit.</returns>
+double IO::Astrodynamics::OrbitalParameters::OrbitalParameters::SemiLatusRectum() const
+{
+    auto hNorm = GetSpecificAngularMomentum().Magnitude();
+    return hNorm * hNorm / m_centerOfMotion->GetMu();
+}
+
+double IO::Astrodynamics::OrbitalParameters::OrbitalParameters::PerigeeRadius() const
+{
+    if (this->IsParabolic())
+    {
+        return SemiLatusRectum() / (1.0 + GetEccentricity());
+    }
+
+    return GetSemiMajorAxis() * (1.0 - GetEccentricity());
+}
+

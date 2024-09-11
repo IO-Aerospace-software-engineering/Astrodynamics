@@ -33,7 +33,7 @@ namespace IO::Astrodynamics::Frames
          * 
          * @return const char* 
          */
-        [[nodiscard]] const char *ToCharArray() const;
+        [[nodiscard]] const char* ToCharArray() const;
 
         /**
          * @brief Equality comparer
@@ -42,7 +42,7 @@ namespace IO::Astrodynamics::Frames
          * @return true 
          * @return false 
          */
-        bool operator==(const IO::Astrodynamics::Frames::Frames &frame) const;
+        bool operator==(const IO::Astrodynamics::Frames::Frames& frame) const;
 
         /**
          * @brief Equality comparer
@@ -51,7 +51,7 @@ namespace IO::Astrodynamics::Frames
          * @return true 
          * @return false 
          */
-        bool operator!=(const IO::Astrodynamics::Frames::Frames &frame) const;
+        bool operator!=(const IO::Astrodynamics::Frames::Frames& frame) const;
 
         /**
          * @brief Equality comparer
@@ -60,7 +60,7 @@ namespace IO::Astrodynamics::Frames
          * @return true 
          * @return false 
          */
-        bool operator==(IO::Astrodynamics::Frames::Frames &frame) const;
+        bool operator==(IO::Astrodynamics::Frames::Frames& frame) const;
 
         /**
          * @brief Equality comparer
@@ -69,7 +69,7 @@ namespace IO::Astrodynamics::Frames
          * @return true 
          * @return false 
          */
-        bool operator!=(IO::Astrodynamics::Frames::Frames &frame) const;
+        bool operator!=(IO::Astrodynamics::Frames::Frames& frame) const;
 
         /**
          * @brief Get the Name
@@ -85,7 +85,8 @@ namespace IO::Astrodynamics::Frames
          * @param epoch 
          * @return IO::Astrodynamics::Math::Matrix
          */
-        [[nodiscard]] IO::Astrodynamics::Math::Matrix ToFrame6x6(const Frames &frame, const IO::Astrodynamics::Time::TDB &epoch) const;
+        [[nodiscard]] IO::Astrodynamics::Math::Matrix ToFrame6x6(const Frames& frame,
+                                                                 const IO::Astrodynamics::Time::TDB& epoch) const;
 
         /**
          * @brief Get the 3x3 matrix to transform frame to another
@@ -94,7 +95,8 @@ namespace IO::Astrodynamics::Frames
          * @param epoch 
          * @return IO::Astrodynamics::Math::Matrix
          */
-        [[nodiscard]] IO::Astrodynamics::Math::Matrix ToFrame3x3(const Frames &frame, const IO::Astrodynamics::Time::TDB &epoch) const;
+        [[nodiscard]] IO::Astrodynamics::Math::Matrix ToFrame3x3(const Frames& frame,
+                                                                 const IO::Astrodynamics::Time::TDB& epoch) const;
 
         /**
          * @brief Transform vector from frame to another
@@ -104,7 +106,42 @@ namespace IO::Astrodynamics::Frames
          * @param vector 
          * @return IO::Astrodynamics::Math::Vector3D
          */
-        [[nodiscard]] IO::Astrodynamics::Math::Vector3D TransformVector(const Frames &to, const IO::Astrodynamics::Math::Vector3D &vector, const IO::Astrodynamics::Time::TDB &epoch) const;
+        [[nodiscard]] IO::Astrodynamics::Math::Vector3D TransformVector(
+            const Frames& to, const IO::Astrodynamics::Math::Vector3D& vector,
+            const IO::Astrodynamics::Time::TDB& epoch) const;
+
+
+        /**
+         * @brief Convert from TEME (True Equator Mean Equinox) to ITRF (International Terrestrial Reference Frame).
+         *
+         * @param epoch The epoch time in UTC.
+         * @return IO::Astrodynamics::Math::Matrix The transformation matrix.
+         */
+        [[nodiscard]] static IO::Astrodynamics::Math::Matrix FromTEMEToITRF(const IO::Astrodynamics::Time::UTC& epoch);
+
+        /**
+         * @brief Convert from ITRF (International Terrestrial Reference Frame) to TEME (True Equator Mean Equinox).
+         *
+         * @param epoch The epoch time in UTC.
+         * @return IO::Astrodynamics::Math::Matrix The transformation matrix.
+         */
+        static IO::Astrodynamics::Math::Matrix FromITRFToTEME(const IO::Astrodynamics::Time::UTC& epoch);
+
+        /**
+         * @brief Convert from TEME (True Equator Mean Equinox) to GCRS (Geocentric Celestial Reference System).
+         *
+         * @param epoch The epoch time in UTC.
+         * @return IO::Astrodynamics::Math::Matrix The transformation matrix.
+         */
+        [[nodiscard]] static IO::Astrodynamics::Math::Matrix FromTEMEToGCRS(const IO::Astrodynamics::Time::UTC& epoch);
+
+        /**
+         * @brief Calculate the polar motion matrix.
+         *
+         * @param epoch The epoch time in UTC.
+         * @return IO::Astrodynamics::Math::Matrix The polar motion matrix.
+         */
+        [[nodiscard]] static IO::Astrodynamics::Math::Matrix PolarMotion(const IO::Astrodynamics::Time::UTC& epoch);
     };
 }
 #endif

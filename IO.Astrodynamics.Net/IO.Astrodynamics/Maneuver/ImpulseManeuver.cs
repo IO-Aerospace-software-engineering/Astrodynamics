@@ -25,6 +25,11 @@ namespace IO.Astrodynamics.Maneuver
         protected ImpulseManeuver(Time minimumEpoch, TimeSpan maneuverHoldDuration, OrbitalParameters.OrbitalParameters targetOrbit, Engine engine) : this(targetOrbit.Observer as CelestialItem, minimumEpoch,
             maneuverHoldDuration, engine)
         {
+            if(engine.FuelTank.Spacecraft!=null && engine.FuelTank.Spacecraft.InitialOrbitalParameters.Frame!=targetOrbit.Frame)
+            {
+                throw new ArgumentException("Spacecraft and target orbit must be defined in the same frame");
+            }
+            
             if (targetOrbit == null)
             {
                 throw new ArgumentException("Target orbit must be define");

@@ -20,6 +20,11 @@ namespace IO::Astrodynamics::Time
         explicit UTC(const std::string& string);
         ~UTC() override = default;
 
+        static void ConvertToJulianUTC_TT(const IO::Astrodynamics::Time::UTC& epoch, double& jd_utc1, double& jd_utc2,
+                                          double& jd_tt1, double& jd_tt2);
+
+
+
         [[nodiscard]] IO::Astrodynamics::Time::UTC Add(const IO::Astrodynamics::Time::TimeSpan &timespan) const;
 
         /**

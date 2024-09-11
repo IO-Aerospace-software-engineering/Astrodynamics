@@ -8,7 +8,7 @@
 IO::Astrodynamics::OrbitalParameters::TLE::TLE(const std::shared_ptr<IO::Astrodynamics::Body::CelestialBody> &centerOfmotion, std::string lines[3]) : OrbitalParameters(centerOfmotion,
                                                                                                                                                     Time::TDB(std::chrono::duration<double>(
                                                                                                                                                             0.0)),
-                                                                                                                                                                        IO::Astrodynamics::Frames::InertialFrames::ICRF()),
+                                                                                                                                                                        IO::Astrodynamics::Frames::BodyFixedFrames::TEME()),
                                                                                                                                   m_satelliteName{lines[0]}
 {
     //Build lines

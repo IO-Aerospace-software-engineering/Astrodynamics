@@ -59,9 +59,9 @@ KPL/PCK
 
 \begindata
 
-      BODY399_J2 =    1.082616D-3
-      BODY399_J3 =   -2.53881D-6
-      BODY399_J4 =   -1.65597D-6
+      BODY399_J2 =     0.00108262998905D0
+      BODY399_J3 =   -0.00000253215306D0
+      BODY399_J4 =   -0.00000161098761D0
       
 \begintext
       
@@ -70,7 +70,7 @@ KPL/PCK
       
 \begindata
       
-      BODY399_KE =    7.43669161D-2
+      BODY399_KE =    0.074366853168714D
       
 \begintext
       
@@ -88,7 +88,7 @@ KPL/PCK
 
 \begindata
       
-      BODY399_ER = 6378.135D0
+      BODY399_ER = 6378.137D0
       
 \begintext
 

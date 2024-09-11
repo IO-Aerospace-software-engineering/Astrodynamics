@@ -14,28 +14,90 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
 {
     protected const int TITLE_WIDTH = 32;
     protected const int VALUE_WIDTH = 32;
+
+    /// <summary>
+    /// Gets the NAIF ID of the celestial item.
+    /// </summary>
     public int NaifId { get; }
+
+    /// <summary>
+    /// Gets the name of the celestial item.
+    /// </summary>
     public string Name { get; }
+
+    /// <summary>
+    /// Gets the mass of the celestial item.
+    /// </summary>
     public double Mass { get; }
+
+    /// <summary>
+    /// Gets the standard gravitational parameter (GM) of the celestial item.
+    /// </summary>
     public double GM { get; }
 
+    /// <summary>
+    /// Gets the gravitational field of the celestial item.
+    /// </summary>
     protected GravitationalField GravitationalField { get; }
 
+    /// <summary>
+    /// Gets or sets the initial orbital parameters of the celestial item.
+    /// </summary>
     public OrbitalParameters.OrbitalParameters InitialOrbitalParameters { get; internal set; }
 
+    /// <summary>
+    /// A collection of satellites orbiting the celestial item.
+    /// </summary>
     private readonly HashSet<CelestialItem> _satellites = new();
+
+    /// <summary>
+    /// Gets a read-only collection of satellites orbiting the celestial item.
+    /// </summary>
     public IReadOnlyCollection<CelestialItem> Satellites => _satellites;
 
-    //Used for performance improvement and avoid duplicated call in Celestial celestialItem API
+    /// <summary>
+    /// Used for performance improvement and to avoid duplicated calls in the CelestialItem API.
+    /// </summary>
     protected DTO.CelestialBody ExtendedInformation;
 
+    /// <summary>
+    /// Gets a value indicating whether the celestial item is a spacecraft.
+    /// </summary>
     public bool IsSpacecraft => NaifId < 0;
+
+    /// <summary>
+    /// Gets a value indicating whether the celestial item is a barycenter.
+    /// </summary>
     public bool IsBarycenter => NaifId is >= 0 and < 10;
+
+    /// <summary>
+    /// Gets a value indicating whether the celestial item is the Sun.
+    /// </summary>
     public bool IsSun => NaifId == 10;
+
+    /// <summary>
+    /// Gets a value indicating whether the celestial item is a planet.
+    /// </summary>
     public bool IsPlanet => NaifId is > 100 and < 1000 && (NaifId % 100) == 99;
+
+    /// <summary>
+    /// Gets a value indicating whether the celestial item is a moon.
+    /// </summary>
     public bool IsMoon => NaifId is > 100 and < 1000 && (NaifId % 100) != 99;
+
+    /// <summary>
+    /// Gets a value indicating whether the celestial item is an asteroid.
+    /// </summary>
     public bool IsAsteroid => this.NaifId is > 1000 and < 1000000000;
+
+    /// <summary>
+    /// Gets a value indicating whether the celestial item is a star.
+    /// </summary>
     public bool IsStar => this.NaifId > 1000000000;
+
+    /// <summary>
+    /// Gets a value indicating whether the celestial item is a Lagrange point.
+    /// </summary>
     public bool IsLagrangePoint => this.NaifId is 391 or 392 or 393 or 394 or 395;
 
     /// <summary>

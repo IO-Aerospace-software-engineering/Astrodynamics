@@ -196,9 +196,9 @@ public class CelestialBodyTests
     {
         var moon = TestHelpers.MoonAtJ2000;
         var res = moon.SubObserverPoint(TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Aberration.None);
-        Assert.Equal(-10.898058558227296, res.Latitude * Constants.RAD_DEG);
-        Assert.Equal(-57.74660136367262, res.Longitude * Constants.RAD_DEG);
-        Assert.Equal(402448639.8873273, res.Radius);
+        Assert.Equal(-10.898058559403337, res.Latitude * Constants.RAD_DEG);
+        Assert.Equal(-57.746601395904747, res.Longitude * Constants.RAD_DEG);
+        Assert.Equal(402448639.88732719, res.Radius);
     }
 
     [Fact]
@@ -217,8 +217,8 @@ public class CelestialBodyTests
     public void GetOrientation()
     {
         var orientation = TestHelpers.EarthAtJ2000.GetOrientation(Frames.Frame.ICRF, TimeSystem.Time.J2000TDB);
-        Assert.Equal(new Vector3(-1.963771405985366E-09, -2.038934057381466E-09, 7.292115064248852E-05), orientation.AngularVelocity);
-        Assert.Equal(new Quaternion(0.7671312118966255, -1.8618846012434252E-05, 8.468919252183845E-07, 0.641490220803588), orientation.Rotation);
+        Assert.Equal(new Vector3(-1.9637713280171745E-09, -2.0389347198634933E-09, 7.29211506433339E-05), orientation.AngularVelocity);
+        Assert.Equal(new Quaternion(0.7671312120778745, -1.8618836714990174E-05, 8.468840548096465E-07, 0.6414902205868405), orientation.Rotation);
         Assert.Equal(TimeSystem.Time.J2000TDB, orientation.Epoch);
         Assert.Equal(Frames.Frame.ICRF, orientation.ReferenceFrame);
     }
@@ -227,7 +227,7 @@ public class CelestialBodyTests
     public void EarthSideralRotationPerdiod()
     {
         var duration = TestHelpers.EarthAtJ2000.SideralRotationPeriod(TimeSystem.Time.J2000TDB);
-        Assert.Equal(TimeSpan.FromTicks(861640998130), duration);
+        Assert.Equal(TimeSpan.FromTicks(861640998120), duration);
     }
 
     [Fact]
@@ -241,7 +241,7 @@ public class CelestialBodyTests
     public void GeosynchronousOrbit()
     {
         var orbit = TestHelpers.EarthAtJ2000.GeosynchronousOrbit(0.0, 0.0, new TimeSystem.Time(new DateTime(2021, 1, 1, 0, 0, 0, DateTimeKind.Unspecified), TimeFrame.TDBFrame));
-        Assert.Equal(42164171.961220242, orbit.ToStateVector().Position.Magnitude(),6);
+        Assert.Equal(42164171.95991531, orbit.ToStateVector().Position.Magnitude(),6);
         Assert.Equal(3074.6599900324436, orbit.ToStateVector().Velocity.Magnitude(),6);
         Assert.Equal(Frames.Frame.ICRF, orbit.Frame);
     }
@@ -250,16 +250,16 @@ public class CelestialBodyTests
     public void GeosynchronousOrbit2()
     {
         var orbit = TestHelpers.EarthAtJ2000.GeosynchronousOrbit(1.0, 1.0, new TimeSystem.Time(new DateTime(2021, 1, 1, 0, 0, 0, DateTimeKind.Unspecified), TimeFrame.TDBFrame));
-        Assert.Equal(42164171.961220242, orbit.ToStateVector().Position.Magnitude(), 3);
+        Assert.Equal(42164171.95991531, orbit.ToStateVector().Position.Magnitude(), 3);
         Assert.Equal(3074.6599898500763, orbit.ToStateVector().Velocity.Magnitude(), 3);
         Assert.Equal(Frames.Frame.ICRF, orbit.Frame);
-        Assert.Equal(42164171.961220235, orbit.SemiMajorAxis(), 6);
+        Assert.Equal(42164171.95991531, orbit.SemiMajorAxis(), 6);
         Assert.Equal(0.0, orbit.Eccentricity());
         Assert.Equal(1.0, orbit.Inclination(), 2);
         Assert.Equal(1.1804318466570587, orbit.AscendingNode(), 2);
         Assert.Equal(1.569, orbit.ArgumentOfPeriapsis(), 2);
         Assert.Equal(0.0, orbit.MeanAnomaly(), 2);
-        Assert.Equal(new Vector3(-20992029.309525054, 8679264.319910558, 35522140.6098861), orbit.ToStateVector().Position, TestHelpers.VectorComparer);
+        Assert.Equal(new Vector3(-20992029.30603332, 8679264.322745558, 35522140.60970795), orbit.ToStateVector().Position, TestHelpers.VectorComparer);
         Assert.Equal(new Vector3(-1171.3783810266016, -2842.7805399479103, 2.354430257176734), orbit.ToStateVector().Velocity, TestHelpers.VectorComparer);
     }
 
@@ -312,7 +312,7 @@ public class CelestialBodyTests
     {
         var epoch = new TimeSystem.Time(new DateTime(2021, 11, 22, 0, 0, 0, DateTimeKind.Unspecified), TimeFrame.TDBFrame);
         var res = TestHelpers.Earth.HelioSynchronousOrbit(0.0001724, epoch, 14);
-        Assert.Equal(7272221.876563848, res.A, 3);
+        Assert.Equal(7272221.8764740732, res.A, 3);
         Assert.Equal(0.0001724, res.E, 6);
         Assert.Equal(99.018, res.I * Astrodynamics.Constants.Rad2Deg, 3);
         Assert.Equal(327.43000000000001, res.RAAN * Astrodynamics.Constants.Rad2Deg, 3);

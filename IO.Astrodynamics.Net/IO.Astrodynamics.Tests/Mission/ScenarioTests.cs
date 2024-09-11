@@ -74,7 +74,7 @@ namespace IO.Astrodynamics.Tests.Mission
             await scenario.SimulateAsync(Constants.OutputPath, false, false, TimeSpan.FromSeconds(1.0));
             var res = site.GetEphemeris(window, TestHelpers.EarthAtJ2000, Frames.Frame.ICRF, Aberration.None, TimeSpan.FromHours(1));
             var orbitalParametersEnumerable = res as Astrodynamics.OrbitalParameters.OrbitalParameters[] ?? res.ToArray();
-            Assert.Equal(new Vector3(4054783.0920394, -4799280.902678638, 1100391.2395513842), orbitalParametersEnumerable.ElementAt(0).ToStateVector().Position,
+            Assert.Equal(new Vector3(4054783.094777816, -4799280.900382741, 1100391.2394741199), orbitalParametersEnumerable.ElementAt(0).ToStateVector().Position,
                 TestHelpers.VectorComparer);
             Assert.Equal(new Vector3(349.9689414487369, 295.67943565441215, 0.00047467276487285595), orbitalParametersEnumerable.ElementAt(0).ToStateVector().Velocity,
                 TestHelpers.VectorComparer);
@@ -82,11 +82,11 @@ namespace IO.Astrodynamics.Tests.Mission
             Assert.Equal(Frames.Frame.ICRF, orbitalParametersEnumerable.ElementAt(0).Frame);
             Assert.Equal(TestHelpers.EarthAtJ2000, orbitalParametersEnumerable.ElementAt(0).Observer);
 
-            Assert.Equal(5675531.4473050004, orbitalParametersEnumerable.ElementAt(5).ToStateVector().Position.X, 6);
-            Assert.Equal(2694837.3700879999, orbitalParametersEnumerable.ElementAt(5).ToStateVector().Position.Y, 6);
-            Assert.Equal(1100644.504743, orbitalParametersEnumerable.ElementAt(5).ToStateVector().Position.Z, 6);
+            Assert.Equal(5675531.4457497578, orbitalParametersEnumerable.ElementAt(5).ToStateVector().Position.X, 6);
+            Assert.Equal(2694837.3733771634, orbitalParametersEnumerable.ElementAt(5).ToStateVector().Position.Y, 6);
+            Assert.Equal(1100644.504707, orbitalParametersEnumerable.ElementAt(5).ToStateVector().Position.Z, 6);
             Assert.Equal(-196.510785, orbitalParametersEnumerable.ElementAt(5).ToStateVector().Velocity.X, 6);
-            Assert.Equal(413.86626653238068, orbitalParametersEnumerable.ElementAt(5).ToStateVector().Velocity.Y, 6);
+            Assert.Equal(413.86626642107882, orbitalParametersEnumerable.ElementAt(5).ToStateVector().Velocity.Y, 6);
             Assert.Equal(0.00077810438580775993, orbitalParametersEnumerable.ElementAt(5).ToStateVector().Velocity.Z, 6);
             Assert.Equal(18000.0, orbitalParametersEnumerable.ElementAt(5).Epoch.TimeSpanFromJ2000().TotalSeconds);
             Assert.Equal(Frames.Frame.ICRF, orbitalParametersEnumerable.ElementAt(5).Frame);
@@ -281,10 +281,10 @@ namespace IO.Astrodynamics.Tests.Mission
             var endSV = spacecraft.GetEphemeris(end, site, Frames.Frame.ICRF, Aberration.None);
 
             Assert.Equal(
-                new StateVector(new Vector3(-2194696.277452762, 6520464.634645089, -8851312.715000605), new Vector3(-4855.389207947987, 5010.690350306962, 2785.4343115066577),
+                new StateVector(new Vector3(-2182692.465961329, 6508982.6038953485, -8856392.227295294), new Vector3(-4821.698229810769, 5034.874626026276, 2795.6917054372543),
                     site, start, Frames.Frame.ICRF), initialSV.ToStateVector(), TestHelpers.StateVectorComparer);
             Assert.Equal(
-                new StateVector(new Vector3(-8877878.268430738, 2497878.6999986176, 1044081.578034049), new Vector3(969.7356590081705, -7707.414993293412, 1627.9865491886271),
+                new StateVector(new Vector3(-8863951.495014349, 2520945.495990021, 1054000.734434985), new Vector3(935.3860797535742, -7713.013774991017, 1625.8111171906883),
                     site, end, Frames.Frame.ICRF), endSV.ToStateVector(), TestHelpers.StateVectorComparer);
         }
 
@@ -339,60 +339,60 @@ namespace IO.Astrodynamics.Tests.Mission
 
             scenario.AddSpacecraft(spacecraft);
 
-{
-            var summary1 = await scenario.SimulateAsync(Constants.OutputPath, false, false, TimeSpan.FromSeconds(1.0));
-            
-            // Read maneuver results
-            Maneuver.Maneuver maneuver1 = spacecraft.InitialManeuver;
-            Assert.Equal(new TimeSystem.Time("2021-03-04T00:34:35.5972323 TDB"), maneuver1.ManeuverWindow!.Value.StartDate, TestHelpers.TimeComparer);
-            Assert.Equal(new TimeSystem.Time("2021-03-04T00:34:43.7323762 TDB"), maneuver1.ManeuverWindow!.Value.EndDate, TestHelpers.TimeComparer);
-            Assert.Equal(new TimeSystem.Time("2021-03-04T00:34:35.5972323 TDB"), maneuver1.ThrustWindow!.Value.StartDate, TestHelpers.TimeComparer);
-            Assert.Equal(new TimeSystem.Time("2021-03-04T00:34:43.7323762 TDB"), maneuver1.ThrustWindow!.Value.EndDate);
-            Assert.Equal(8.1349999999999998, maneuver1.ThrustWindow.Value.Length.TotalSeconds, 3);
-            Assert.Equal(new Vector3(-94.14448820356235, 104.5303929755525, -115.98378254209923), ((ImpulseManeuver)maneuver1).DeltaV, TestHelpers.VectorComparer);
-
-            Assert.Equal(406.75719484962326, maneuver1.FuelBurned, 3);
-
-            maneuver1 = maneuver1.NextManeuver;
-
-            Assert.Equal(new TimeSystem.Time("2021-03-04T01:19:18.7667342 TDB"), maneuver1.ManeuverWindow!.Value.StartDate, TestHelpers.TimeComparer);
-            Assert.Equal(new TimeSystem.Time("2021-03-04T01:19:37.1578812 TDB"), maneuver1.ManeuverWindow!.Value.EndDate, TestHelpers.TimeComparer);
-            Assert.Equal(new TimeSystem.Time("2021-03-04T01:19:18.7667342 TDB"), maneuver1.ThrustWindow!.Value.StartDate, TestHelpers.TimeComparer);
-            Assert.Equal(new TimeSystem.Time("2021-03-04T01:19:37.1578812 TDB"), maneuver1.ThrustWindow!.Value.EndDate, TestHelpers.TimeComparer);
-            Assert.Equal(18.391151799999999, maneuver1.ThrustWindow.Value.Length.TotalSeconds, 3);
-            Assert.Equal(new Vector3(-373.28620672120724, -125.30410508953423, 201.35110208737478), ((ImpulseManeuver)maneuver1).DeltaV, TestHelpers.VectorComparer);
-            Assert.Equal(919.55735422358202, maneuver1.FuelBurned, 3);
-
-            maneuver1 = maneuver1.NextManeuver;
-
-            Assert.Equal(new TimeSystem.Time("2021-03-04T04:36:07.4800315 TDB"), maneuver1.ManeuverWindow!.Value.StartDate, TestHelpers.TimeComparer);
-            Assert.Equal(new TimeSystem.Time("2021-03-04T08:19:31.1871324 TDB"), maneuver1.ManeuverWindow!.Value.EndDate, TestHelpers.TimeComparer);
-            Assert.Equal(new TimeSystem.Time("2021-03-04T04:36:07.4800315 TDB"), maneuver1.ThrustWindow!.Value.StartDate, TestHelpers.TimeComparer);
-            Assert.Equal(new TimeSystem.Time("2021-03-04T04:36:17.2926540 TDB"), maneuver1.ThrustWindow!.Value.EndDate, TestHelpers.TimeComparer);
-            Assert.Equal(9.8126244000000007, maneuver1.ThrustWindow.Value.Length.TotalSeconds, 3);
-            Assert.Equal(new Vector3(-140.06837019494708, 85.93104186864682, 195.57303801851774), ((ImpulseManeuver)maneuver1).DeltaV, TestHelpers.VectorComparer);
-            Assert.Equal(490.63122063919275, maneuver1.FuelBurned, 3);
-
-            maneuver1 = maneuver1.NextManeuver;
-
-            Assert.Equal(new TimeSystem.Time("2021-03-04T08:44:24.8248123 TDB"), maneuver1.ManeuverWindow!.Value.StartDate, TestHelpers.TimeComparer);
-            Assert.Equal(new TimeSystem.Time("2021-03-04T08:44:34.1197460 TDB"), maneuver1.ManeuverWindow!.Value.EndDate, TestHelpers.TimeComparer);
-            Assert.Equal(new TimeSystem.Time("2021-03-04T08:44:24.8248123 TDB"), maneuver1.ThrustWindow!.Value.StartDate, TestHelpers.TimeComparer);
-            Assert.Equal(new TimeSystem.Time("2021-03-04T08:44:34.1197460 TDB"), maneuver1.ThrustWindow!.Value.EndDate, TestHelpers.TimeComparer);
-            Assert.Equal(9.2949856999999998, maneuver1.ThrustWindow.Value.Length.TotalSeconds, 3);
-            Assert.Equal(new Vector3(140.54623544686248, -86.32008177793513, -196.3279176030952), ((ImpulseManeuver)maneuver1).DeltaV, TestHelpers.VectorComparer);
-            Assert.Equal(464.74671652424558, maneuver1.FuelBurned, 3);
-
-            Assert.Equal(scenario.Window, summary1.Window);
-            Assert.Single(summary1.SpacecraftSummaries);
-            var maneuverWindow1 = summary1.SpacecraftSummaries.First().ManeuverWindow;
-            if (maneuverWindow1 != null)
             {
-                Assert.Equal(new TimeSystem.Time("2021-03-04T00:34:35.5972323"), maneuverWindow1.Value.StartDate, TestHelpers.TimeComparer);
-                Assert.Equal(new TimeSystem.Time("2021-03-04T08:47:39.0152381"), maneuverWindow1.Value.EndDate, TestHelpers.TimeComparer);
-            }
+                var summary1 = await scenario.SimulateAsync(Constants.OutputPath, false, false, TimeSpan.FromSeconds(1.0));
 
-            Assert.Equal(2281.6923637537593, summary1.SpacecraftSummaries.First().FuelConsumption, 3);
+                // Read maneuver results
+                Maneuver.Maneuver maneuver1 = spacecraft.InitialManeuver;
+                Assert.Equal(new TimeSystem.Time("2021-03-04T00:34:35.5972323 TDB"), maneuver1.ManeuverWindow!.Value.StartDate, TestHelpers.TimeComparer);
+                Assert.Equal(new TimeSystem.Time("2021-03-04T00:34:43.7323762 TDB"), maneuver1.ManeuverWindow!.Value.EndDate, TestHelpers.TimeComparer);
+                Assert.Equal(new TimeSystem.Time("2021-03-04T00:34:35.5972323 TDB"), maneuver1.ThrustWindow!.Value.StartDate, TestHelpers.TimeComparer);
+                Assert.Equal(new TimeSystem.Time("2021-03-04T00:34:43.7323762 TDB"), maneuver1.ThrustWindow!.Value.EndDate);
+                Assert.Equal(8.1349999999999998, maneuver1.ThrustWindow.Value.Length.TotalSeconds, 3);
+                Assert.Equal(new Vector3(-94.14448820356235, 104.5303929755525, -115.98378254209923), ((ImpulseManeuver)maneuver1).DeltaV, TestHelpers.VectorComparer);
+
+                Assert.Equal(406.75719484962326, maneuver1.FuelBurned, 3);
+
+                maneuver1 = maneuver1.NextManeuver;
+
+                Assert.Equal(new TimeSystem.Time("2021-03-04T01:19:18.7667342 TDB"), maneuver1.ManeuverWindow!.Value.StartDate, TestHelpers.TimeComparer);
+                Assert.Equal(new TimeSystem.Time("2021-03-04T01:19:37.1578812 TDB"), maneuver1.ManeuverWindow!.Value.EndDate, TestHelpers.TimeComparer);
+                Assert.Equal(new TimeSystem.Time("2021-03-04T01:19:18.7667342 TDB"), maneuver1.ThrustWindow!.Value.StartDate, TestHelpers.TimeComparer);
+                Assert.Equal(new TimeSystem.Time("2021-03-04T01:19:37.1578812 TDB"), maneuver1.ThrustWindow!.Value.EndDate, TestHelpers.TimeComparer);
+                Assert.Equal(18.391151799999999, maneuver1.ThrustWindow.Value.Length.TotalSeconds, 3);
+                Assert.Equal(new Vector3(-373.28620672120724, -125.30410508953423, 201.35110208737478), ((ImpulseManeuver)maneuver1).DeltaV, TestHelpers.VectorComparer);
+                Assert.Equal(919.55735422358202, maneuver1.FuelBurned, 3);
+
+                maneuver1 = maneuver1.NextManeuver;
+
+                Assert.Equal(new TimeSystem.Time("2021-03-04T04:36:07.4800315 TDB"), maneuver1.ManeuverWindow!.Value.StartDate, TestHelpers.TimeComparer);
+                Assert.Equal(new TimeSystem.Time("2021-03-04T08:19:31.1871324 TDB"), maneuver1.ManeuverWindow!.Value.EndDate, TestHelpers.TimeComparer);
+                Assert.Equal(new TimeSystem.Time("2021-03-04T04:36:07.4800315 TDB"), maneuver1.ThrustWindow!.Value.StartDate, TestHelpers.TimeComparer);
+                Assert.Equal(new TimeSystem.Time("2021-03-04T04:36:17.2926540 TDB"), maneuver1.ThrustWindow!.Value.EndDate, TestHelpers.TimeComparer);
+                Assert.Equal(9.8126244000000007, maneuver1.ThrustWindow.Value.Length.TotalSeconds, 3);
+                Assert.Equal(new Vector3(-140.06837019494708, 85.93104186864682, 195.57303801851774), ((ImpulseManeuver)maneuver1).DeltaV, TestHelpers.VectorComparer);
+                Assert.Equal(490.63122063919275, maneuver1.FuelBurned, 3);
+
+                maneuver1 = maneuver1.NextManeuver;
+
+                Assert.Equal(new TimeSystem.Time("2021-03-04T08:44:24.8248123 TDB"), maneuver1.ManeuverWindow!.Value.StartDate, TestHelpers.TimeComparer);
+                Assert.Equal(new TimeSystem.Time("2021-03-04T08:44:34.1197460 TDB"), maneuver1.ManeuverWindow!.Value.EndDate, TestHelpers.TimeComparer);
+                Assert.Equal(new TimeSystem.Time("2021-03-04T08:44:24.8248123 TDB"), maneuver1.ThrustWindow!.Value.StartDate, TestHelpers.TimeComparer);
+                Assert.Equal(new TimeSystem.Time("2021-03-04T08:44:34.1197460 TDB"), maneuver1.ThrustWindow!.Value.EndDate, TestHelpers.TimeComparer);
+                Assert.Equal(9.2949856999999998, maneuver1.ThrustWindow.Value.Length.TotalSeconds, 3);
+                Assert.Equal(new Vector3(140.54623544686248, -86.32008177793513, -196.3279176030952), ((ImpulseManeuver)maneuver1).DeltaV, TestHelpers.VectorComparer);
+                Assert.Equal(464.74671652424558, maneuver1.FuelBurned, 3);
+
+                Assert.Equal(scenario.Window, summary1.Window);
+                Assert.Single(summary1.SpacecraftSummaries);
+                var maneuverWindow1 = summary1.SpacecraftSummaries.First().ManeuverWindow;
+                if (maneuverWindow1 != null)
+                {
+                    Assert.Equal(new TimeSystem.Time("2021-03-04T00:34:35.5972323"), maneuverWindow1.Value.StartDate, TestHelpers.TimeComparer);
+                    Assert.Equal(new TimeSystem.Time("2021-03-04T08:47:39.0152381"), maneuverWindow1.Value.EndDate, TestHelpers.TimeComparer);
+                }
+
+                Assert.Equal(2281.6923637537593, summary1.SpacecraftSummaries.First().FuelConsumption, 3);
             }
             API.Instance.UnloadKernels(scenario.SpacecraftDirectory);
             API.Instance.UnloadKernels(scenario.SiteDirectory);

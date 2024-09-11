@@ -32,8 +32,10 @@ namespace IO::Astrodynamics::OrbitalParameters
          * @param epoch
          * @param frame
          */
-        StateVector(const std::shared_ptr<IO::Astrodynamics::Body::CelestialBody> &centerOfMotion, const IO::Astrodynamics::Math::Vector3D &position, const IO::Astrodynamics::Math::Vector3D &velocity,
-                    const IO::Astrodynamics::Time::TDB &epoch, const IO::Astrodynamics::Frames::Frames &frame);
+        StateVector(const std::shared_ptr<IO::Astrodynamics::Body::CelestialBody>& centerOfMotion,
+                    const IO::Astrodynamics::Math::Vector3D& position,
+                    const IO::Astrodynamics::Math::Vector3D& velocity,
+                    const IO::Astrodynamics::Time::TDB& epoch, const IO::Astrodynamics::Frames::Frames& frame);
 
         // /**
         //  * @brief Construct a new State Vector object without
@@ -52,14 +54,15 @@ namespace IO::Astrodynamics::OrbitalParameters
          * @param epoch
          * @param frame
          */
-        StateVector(const std::shared_ptr<IO::Astrodynamics::Body::CelestialBody> &centerOfMotion, double spiceState[6], const IO::Astrodynamics::Time::TDB &epoch,
-                    const IO::Astrodynamics::Frames::Frames &frame);
+        StateVector(const std::shared_ptr<IO::Astrodynamics::Body::CelestialBody>& centerOfMotion, double spiceState[6],
+                    const IO::Astrodynamics::Time::TDB& epoch,
+                    const IO::Astrodynamics::Frames::Frames& frame);
 
         ~StateVector() override = default;
 
-        StateVector(const StateVector &v);
+        StateVector(const StateVector& v);
 
-        StateVector &operator=(const StateVector &other);
+        StateVector& operator=(const StateVector& other);
 
 
         /**
@@ -67,7 +70,7 @@ namespace IO::Astrodynamics::OrbitalParameters
          *
          * @return const IO::Astrodynamics::Math::Vector3D&
          */
-        [[nodiscard]] const IO::Astrodynamics::Math::Vector3D &GetPosition() const
+        [[nodiscard]] const IO::Astrodynamics::Math::Vector3D& GetPosition() const
         {
             return m_position;
         }
@@ -77,7 +80,7 @@ namespace IO::Astrodynamics::OrbitalParameters
          *
          * @return const IO::Astrodynamics::Math::Vector3D&
          */
-        [[nodiscard]] const IO::Astrodynamics::Math::Vector3D &GetVelocity() const
+        [[nodiscard]] const IO::Astrodynamics::Math::Vector3D& GetVelocity() const
         {
             return m_velocity;
         }
@@ -105,7 +108,7 @@ namespace IO::Astrodynamics::OrbitalParameters
          * @param epoch
          * @return StateVector
          */
-        [[nodiscard]] StateVector ToStateVector(const IO::Astrodynamics::Time::TDB &epoch) const override;
+        [[nodiscard]] StateVector ToStateVector(const IO::Astrodynamics::Time::TDB& epoch) const override;
 
         /**
          * @brief Get the Semi Major Axis
@@ -170,7 +173,9 @@ namespace IO::Astrodynamics::OrbitalParameters
          * @return true
          * @return false
          */
-        bool operator==(const StateVector &other) const;
+        bool operator==(const StateVector& other) const;
+
+        StateVector operator-(const StateVector& other) const;
 
         using IO::Astrodynamics::OrbitalParameters::OrbitalParameters::ToStateVector;
 
@@ -187,7 +192,7 @@ namespace IO::Astrodynamics::OrbitalParameters
          * @param frame
          * @return StateVector
          */
-        [[nodiscard]] StateVector ToFrame(const IO::Astrodynamics::Frames::Frames &frame) const;
+        [[nodiscard]] StateVector ToFrame(const IO::Astrodynamics::Frames::Frames& frame) const;
 
         /**
          * @brief Convert state vector to body fixed frame
@@ -196,7 +201,7 @@ namespace IO::Astrodynamics::OrbitalParameters
          */
         [[nodiscard]] StateVector ToBodyFixedFrame() const;
 
-
+        [[nodiscard]] StateVector ToFrame(const Frames::Frames &frame, const Math::Matrix &mtx) const;
     };
 }
 #endif // !STATE_VECTOR_H

@@ -10,7 +10,7 @@ TEST(Matrix, Initialization)
 {
 	IO::Astrodynamics::Math::Matrix mat(3, 4);
 	ASSERT_EQ(3, mat.GetRowsSize());
-	ASSERT_EQ(4, mat.GetColumsSize());
+	ASSERT_EQ(4, mat.GetColumnsSize());
 	ASSERT_EQ(0.0, mat.GetValue(0, 0));
 	ASSERT_EQ(0.0, mat.GetValue(2, 3));
 

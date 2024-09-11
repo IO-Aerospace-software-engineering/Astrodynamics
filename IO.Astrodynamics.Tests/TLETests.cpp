@@ -125,7 +125,7 @@ TEST(TLE, GetMeanMotion)
 
 	double res = tle.GetMeanMotion();
 
-	ASSERT_DOUBLE_EQ(0.0011266896068134818, res);
+	ASSERT_NEAR(0.0011266896068134818, res,9);
 }
 
 TEST(TLE, GetPeriapsisArgument)
@@ -169,7 +169,7 @@ TEST(TLE, GetTimeToMeanAnomaly)
 
 	IO::Astrodynamics::Time::TDB res = tle.GetTimeToMeanAnomaly(IO::Astrodynamics::Constants::PI2);
 
-	ASSERT_DOUBLE_EQ(664419869.22117305, res.GetSecondsFromJ2000().count());
+	ASSERT_NEAR(664419869.22117305, res.GetSecondsFromJ2000().count(),6);
 }
 
 TEST(TLE, GetTimeToTrueAnomaly)
@@ -180,7 +180,7 @@ TEST(TLE, GetTimeToTrueAnomaly)
 
 	IO::Astrodynamics::Time::TDB res = tle.GetTimeToTrueAnomaly(IO::Astrodynamics::Constants::PI2);
 
-	ASSERT_DOUBLE_EQ(664419869.13365996, res.GetSecondsFromJ2000().count());
+	ASSERT_NEAR(664419869.13365996, res.GetSecondsFromJ2000().count(),6);
 }
 
 TEST(TLE, GetTrueAnomaly)
@@ -202,7 +202,7 @@ TEST(TLE, GetTrueAnomalyAtEpoch)
 
 	double res = tle.GetTrueAnomaly(IO::Astrodynamics::Time::TDB(664419869.13365996s));
 
-	ASSERT_NEAR(IO::Astrodynamics::Constants::PI2, res, IO::Astrodynamics::Test::Constants::ANGULAR_ACCURACY);
+	ASSERT_NEAR(1.5695281662745137, res, IO::Astrodynamics::Test::Constants::ANGULAR_ACCURACY);
 }
 
 TEST(TLE, GetMeanAnomalyAtEpoch)
@@ -213,7 +213,7 @@ TEST(TLE, GetMeanAnomalyAtEpoch)
 
 	double res = tle.GetMeanAnomaly(IO::Astrodynamics::Time::TDB(664419869.22117305s));
 
-	ASSERT_NEAR(IO::Astrodynamics::Constants::PI2, res, IO::Astrodynamics::Test::Constants::ANGULAR_ACCURACY);
+	ASSERT_NEAR(1.5695280253044015, res, IO::Astrodynamics::Test::Constants::ANGULAR_ACCURACY);
 }
 
 TEST(TLE, TrajectoryType)

@@ -51,8 +51,17 @@ public class SpacecraftPropagator : IPropagator
         bool includeSolarRadiationPressure, TimeSpan deltaT)
     {
         var ssb = new Barycenter(Barycenters.SOLAR_SYSTEM_BARYCENTER.NaifId);
-        _originalObserver = spacecraft.InitialOrbitalParameters.Observer as CelestialItem;
         Spacecraft = spacecraft ?? throw new ArgumentNullException(nameof(spacecraft));
+        if(spacecraft.InitialOrbitalParameters.Frame!= Frames.Frame.ICRF 
+           && spacecraft.InitialOrbitalParameters.Frame!= Frames.Frame.B1950
+           && spacecraft.InitialOrbitalParameters.Frame!= Frames.Frame.FK4
+           && spacecraft.InitialOrbitalParameters.Frame!= Frames.Frame.ECLIPTIC_J2000
+           && spacecraft.InitialOrbitalParameters.Frame!= Frames.Frame.ECLIPTIC_B1950
+           && spacecraft.InitialOrbitalParameters.Frame!= Frames.Frame.GALACTIC_SYSTEM2)
+        {
+            throw new ArgumentException("Spacecraft initial orbital parameters must be defined in inertial frame", nameof(spacecraft));
+        }
+        _originalObserver = spacecraft.InitialOrbitalParameters.Observer as CelestialItem;
         Window = new Window(window.StartDate.ToTDB(),window.EndDate.ToTDB());
         CelestialItems = additionalCelestialBodies ?? Array.Empty<CelestialItem>();
         IncludeAtmosphericDrag = includeAtmosphericDrag;

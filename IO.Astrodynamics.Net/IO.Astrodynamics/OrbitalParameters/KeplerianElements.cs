@@ -102,36 +102,64 @@ namespace IO.Astrodynamics.OrbitalParameters
             _perigeeRadius = perigeeRadius;
         }
 
+        /// <summary>
+        /// Converts the current instance to Keplerian elements.
+        /// </summary>
+        /// <returns>The current instance as Keplerian elements.</returns>
         public override KeplerianElements ToKeplerianElements()
         {
             return this;
         }
 
+        /// <summary>
+        /// Gets the semi-major axis of the orbit.
+        /// </summary>
+        /// <returns>The semi-major axis.</returns>
         public override double SemiMajorAxis()
         {
             return A;
         }
 
+        /// <summary>
+        /// Gets the eccentricity of the orbit.
+        /// </summary>
+        /// <returns>The eccentricity.</returns>
         public override double Eccentricity()
         {
             return E;
         }
 
+        /// <summary>
+        /// Gets the inclination of the orbit.
+        /// </summary>
+        /// <returns>The inclination.</returns>
         public override double Inclination()
         {
             return I;
         }
 
+        /// <summary>
+        /// Gets the right ascension of the ascending node.
+        /// </summary>
+        /// <returns>The right ascension of the ascending node.</returns>
         public override double AscendingNode()
         {
             return RAAN;
         }
 
+        /// <summary>
+        /// Gets the argument of periapsis.
+        /// </summary>
+        /// <returns>The argument of periapsis.</returns>
         public override double ArgumentOfPeriapsis()
         {
             return AOP;
         }
 
+        /// <summary>
+        /// Gets the mean anomaly.
+        /// </summary>
+        /// <returns>The mean anomaly.</returns>
         public override double MeanAnomaly()
         {
             return M;

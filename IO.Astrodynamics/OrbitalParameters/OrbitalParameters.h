@@ -350,7 +350,12 @@ namespace IO::Astrodynamics::OrbitalParameters
         static std::unique_ptr<IO::Astrodynamics::OrbitalParameters::ConicOrbitalElements>
         CreateEarthPhasedHelioSynchronousOrbit(std::shared_ptr<Body::CelestialBody> earth, double eccentricity, IO::Astrodynamics::Time::TDB &epochAtDescendingNode,
                                           int nbOrbitByDay);
+
+        [[nodiscard]] double SemiLatusRectum() const;
+
+        [[nodiscard]] double PerigeeRadius() const;
     };
+
 
 
 }
