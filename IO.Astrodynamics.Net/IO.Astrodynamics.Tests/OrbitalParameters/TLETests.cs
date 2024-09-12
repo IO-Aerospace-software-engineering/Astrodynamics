@@ -89,6 +89,9 @@ public class TLETests
         Site site = new Site(14, "SiteA", TestHelpers.EarthAtJ2000, new Planetodetic(19.89367 * Astrodynamics.Constants.Deg2Rad, 47.91748 * Astrodynamics.Constants.Deg2Rad, 984));
         var eq = stateVector.RelativeTo(site, Aberration.None).ToEquatorial();
         
+        double ra = eq.RightAscension * Astrodynamics.Constants.Rad2Deg; //So, 331.591° is approximately 22 hours, 6 minutes, and 21.93 seconds
+        double dec = eq.Declination * Astrodynamics.Constants.Rad2Deg; //So, 11.859° is approximately 11°51'32.4"
+        
         //SkyField results
         double raSkyField = 331.59;
         double decSkyField = 11.859;
@@ -97,8 +100,7 @@ public class TLETests
         double raObs = 331.5980;
         double decObs = 11.8474;
 
-        double ra = eq.RightAscension * Astrodynamics.Constants.Rad2Deg;
-        double dec = eq.Declination * Astrodynamics.Constants.Rad2Deg;
+        
 
         //Delta relative to observation
         double deltaRAObs = System.Math.Abs(ra - raObs);
@@ -107,6 +109,8 @@ public class TLETests
         //Delta relative to observation from skyfield
         double deltaRASkyFieldObs = System.Math.Abs(raSkyField - raObs);
         double deltaDecSkyFieldObs = System.Math.Abs(decSkyField - decObs);
+        double deltaIO_SkyField_RA = System.Math.Abs(deltaRAObs - deltaRASkyFieldObs);
+        double deltaIO_SkyField_DEC = System.Math.Abs(deltaDecObs - deltaDecSkyFieldObs);
         Assert.True(deltaRAObs< deltaRASkyFieldObs);
         Assert.True(deltaDecObs< deltaDecSkyFieldObs);
     }
