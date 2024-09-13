@@ -40,6 +40,7 @@ public record StateOrientation(Quaternion Rotation, Vector3 AngularVelocity, in 
             return this;
         }
 
+        //TODO: Implement proper frame transformation without ICRF as intermediary
         return new StateOrientation(Rotation * ReferenceFrame.ToFrame(frame, Epoch).Rotation,
             AngularVelocity - Frame.ICRF.ToFrame(frame, Epoch).AngularVelocity, Epoch, frame);
     }
