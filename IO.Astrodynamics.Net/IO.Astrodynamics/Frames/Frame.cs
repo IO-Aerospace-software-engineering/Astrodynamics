@@ -79,12 +79,12 @@ public class Frame : IEquatable<Frame>
         if (!targetFrame.StateOrientationsToICRF.TryGetValue(epoch, out var targetToICRF))
         {
             targetToICRF = _dataProvider.FrameTransformation(targetFrame, ICRF, epoch);
-            targetFrame.StateOrientationsToICRF.Add(epoch, sourceToICRF);
+            targetFrame.StateOrientationsToICRF.Add(epoch, targetToICRF);
         }
 
         var rotation = targetToICRF.Rotation.Conjugate() * sourceToICRF.Rotation;
 
-        var transAV = targetToICRF.AngularVelocity.Inverse().Rotate(rotation.Conjugate());
+        var transAV = targetToICRF.AngularVelocity.Inverse().Rotate(rotation.Conjugate())+sourceToICRF.AngularVelocity;
 
         return new StateOrientation(rotation, transAV, epoch, this);
     }

@@ -43,8 +43,8 @@ public class FrameTests
         Assert.Equal(new Quaternion(0.5044792585297516, 0.20093165566257334, 0.06427003630843892, 0.8372553433086475).VectorPart, q.Rotation.VectorPart,TestHelpers.VectorComparer);
         Assert.Equal(new Quaternion(0.5044792585297516, 0.20093165566257334, 0.06427003630843892, 0.8372553433086475).W, q.Rotation.W,9);
         
-        Assert.Equal(new Vector3(1.9805391781278776E-05, 2.263201244975088E-05, 6.376864584934005E-05), q.AngularVelocity);
-        Assert.Equal(7.0504622008731998E-05, q.AngularVelocity.Magnitude());
+        Assert.Equal(new Vector3(1.9805391781278783E-05, 2.2632012449750882E-05, 6.376864584934008E-05), q.AngularVelocity);
+        Assert.Equal(7.0504622008732038E-05, q.AngularVelocity.Magnitude());
         
     }
 

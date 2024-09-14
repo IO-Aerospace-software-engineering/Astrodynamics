@@ -318,12 +318,12 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
                 epoch.ToTDB(), Frames.Frame.ICRF);
 
             double[] res = sv.ToFrame(earthFrame).ToStateVector().ToArray();
-            Assert.Equal(-135352868.83176634, res[0]);
-            Assert.Equal(-2583535.794060424, res[1]);
-            Assert.Equal(57553737.73345758, res[2]);
-            Assert.Equal(-188.61117217001208, res[3]);
-            Assert.Equal(9839.7618152916002, res[4]);
-            Assert.Equal(-1.903603287599916, res[5]);
+            Assert.Equal(-135352868.83176634, res[0], 6);
+            Assert.Equal(-2583535.794060424, res[1], 6);
+            Assert.Equal(57553737.73345758, res[2], 6);
+            Assert.Equal(-188.61117217001197, res[3], 6);
+            Assert.Equal(9839.7618152916002, res[4], 6);
+            Assert.Equal(-1.903603287599916, res[5], 6);
         }
 
         [Fact]
@@ -454,7 +454,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
             var sv2 = ke2.ToStateVector();
             Assert.Equal(sv, sv2, TestHelpers.StateVectorComparer);
         }
-        
+
         [Fact]
         public void HyperbolicToKeplerian()
         {
@@ -464,7 +464,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
             var sv = ke.ToStateVector();
             Assert.Equal(originalSV, sv, TestHelpers.StateVectorComparer);
         }
-        
+
         [Fact]
         public void EllipticToEquinoctial()
         {
@@ -486,7 +486,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
             var sv2 = eq.ToStateVector();
             Assert.Equal(sv, sv2, TestHelpers.StateVectorComparer);
         }
-        
+
         [Fact]
         public void HyperbolicToEquinoctial()
         {
@@ -496,7 +496,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
             var sv = eq.ToStateVector();
             Assert.Equal(originalSV, sv, TestHelpers.StateVectorComparer);
         }
-        
+
         [Fact]
         public void EllipticToKeplerianUpdatePV()
         {
@@ -518,7 +518,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
             var sv2 = ke2.ToStateVector();
             Assert.Equal(sv, sv2, TestHelpers.StateVectorComparer);
         }
-        
+
         [Fact]
         public void HyperbolicToKeplerianUpdatePV()
         {

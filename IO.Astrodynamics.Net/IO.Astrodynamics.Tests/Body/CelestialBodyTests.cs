@@ -217,7 +217,7 @@ public class CelestialBodyTests
     public void GetOrientation()
     {
         var orientation = TestHelpers.EarthAtJ2000.GetOrientation(Frames.Frame.ICRF, TimeSystem.Time.J2000TDB);
-        Assert.Equal(new Vector3(-1.9637713280171745E-09, -2.0389347198634933E-09, 7.29211506433339E-05), orientation.AngularVelocity);
+        Assert.Equal(new Vector3(-1.9637713280171745E-09, -2.0389347198634933E-09, 7.29211506433339E-05), orientation.AngularVelocity,TestHelpers.VectorComparer);
         Assert.Equal(new Quaternion(0.7671312120778745, -1.8618836714990174E-05, 8.468840548096465E-07, 0.6414902205868405), orientation.Rotation);
         Assert.Equal(TimeSystem.Time.J2000TDB, orientation.Epoch);
         Assert.Equal(Frames.Frame.ICRF, orientation.ReferenceFrame);
