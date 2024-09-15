@@ -1,3 +1,4 @@
+using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
@@ -8,4 +9,5 @@ namespace IO.Astrodynamics.DataProvider;
 public interface IDataProvider
 {
     public StateOrientation FrameTransformation(Frame source, Frame target, in Time date);
+    public OrbitalParameters.OrbitalParameters GetEphemeris(in Time epoch, ILocalizable observer, ILocalizable target, Frame frame, Aberration aberration);
 }

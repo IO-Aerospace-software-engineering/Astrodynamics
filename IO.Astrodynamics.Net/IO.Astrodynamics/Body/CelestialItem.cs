@@ -1,9 +1,12 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
 using IO.Astrodynamics.Coordinates;
+using IO.Astrodynamics.DataProvider;
 using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.Math;
+using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.TimeSystem;
 using Window = IO.Astrodynamics.TimeSystem.Window;
@@ -12,6 +15,8 @@ namespace IO.Astrodynamics.Body;
 
 public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
 {
+    private readonly IDataProvider _dataProvider;
+    public ConcurrentDictionary<Time, StateVector> StateVectorsRelativeToICRF { get; } = new();
     protected const int TITLE_WIDTH = 32;
     protected const int VALUE_WIDTH = 32;
 
@@ -107,8 +112,10 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     /// <param name="frame">Initial orbital parameters frame</param>
     /// <param name="epoch">Epoch</param>
     /// <param name="geopotentialModelParameters"></param>
-    protected CelestialItem(int naifId, Frame frame, in Time epoch, GeopotentialModelParameters geopotentialModelParameters = null)
+    /// <param name="dataProvider"></param>
+    protected CelestialItem(int naifId, Frame frame, in Time epoch, GeopotentialModelParameters geopotentialModelParameters = null, IDataProvider dataProvider = null)
     {
+        _dataProvider = dataProvider ?? new SpiceDataProvider();
         ExtendedInformation = API.Instance.GetCelestialBodyInfo(naifId);
 
         NaifId = naifId;
@@ -137,8 +144,10 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     /// <param name="name"></param>
     /// <param name="mass"></param>
     /// <param name="initialOrbitalParameters"></param>
+    /// <param name="geopotentialModelParameters"></param>
+    /// <param name="dataProvider"></param>
     protected CelestialItem(int naifId, string name, double mass, OrbitalParameters.OrbitalParameters initialOrbitalParameters,
-        GeopotentialModelParameters geopotentialModelParameters = null)
+        GeopotentialModelParameters geopotentialModelParameters = null, IDataProvider dataProvider = null)
     {
         if (string.IsNullOrEmpty(name))
         {
@@ -149,6 +158,8 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
         {
             throw new ArgumentException("CelestialItem can't have a negative mass");
         }
+
+        _dataProvider = dataProvider ?? new SpiceDataProvider();
 
         NaifId = naifId;
         Name = name;
@@ -195,7 +206,24 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     /// <returns></returns>
     public OrbitalParameters.OrbitalParameters GetEphemeris(in Time epoch, ILocalizable observer, Frame frame, Aberration aberration)
     {
-        return API.Instance.ReadEphemeris(epoch, observer, this, frame, aberration);
+        var targetSv = this.GetGeometricStateFromICRF(epoch).ToStateVector();
+        var observerSv = observer.GetGeometricStateFromICRF(epoch).ToStateVector();
+        var geometricState = targetSv - observerSv;
+        if (aberration == Aberration.LT)
+        {
+            var lightTime = geometricState.Position.Magnitude() / Constants.C;
+            var lightTimeCorrection = lightTime * Constants.C;
+            var correctedPosition = geometricState.Position - geometricState.Velocity * lightTimeCorrection;
+            geometricState = new StateVector(correctedPosition, geometricState.Velocity, observer, epoch, Frame.ICRF);
+        }
+
+        return geometricState.ToFrame(frame);
+    }
+
+    public OrbitalParameters.OrbitalParameters GetGeometricStateFromICRF(in Time date)
+    {
+        return StateVectorsRelativeToICRF.GetOrAdd(date,
+            x => _dataProvider.GetEphemeris(x, this, new Barycenter(Barycenters.SOLAR_SYSTEM_BARYCENTER.NaifId), Frame.ICRF, Aberration.None).ToStateVector());
     }
 
     /// <summary>

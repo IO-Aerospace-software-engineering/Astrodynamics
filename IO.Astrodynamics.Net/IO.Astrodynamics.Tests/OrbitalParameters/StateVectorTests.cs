@@ -366,10 +366,10 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
         public void ToKeplerian()
         {
             var earth = TestHelpers.EarthAtJ2000;
-            var ke = earth.GetEphemeris(TimeSystem.Time.J2000TDB, TestHelpers.Sun, Frames.Frame.ICRF, Aberration.None).ToKeplerianElements();
+            var sv = earth.GetEphemeris(TimeSystem.Time.J2000TDB, TestHelpers.Sun, Frames.Frame.ICRF, Aberration.None).ToStateVector();
             Assert.Equal(
                 new KeplerianElements(149665479724.91623, 0.01712168303475997, 0.4090876369675532, 1.2954012328856077E-05,
-                    1.77688489436688, 6.259056257653703, TestHelpers.Sun, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF), ke);
+                    1.77688489436688, 6.259056257653703, TestHelpers.Sun, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF), sv.ToKeplerianElements());
         }
 
         [Fact]
