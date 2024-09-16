@@ -908,8 +908,8 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
         }
 
         var eph = localizable.GetEphemeris(Epoch, Observer, Frame, aberration).ToStateVector();
-        var position = (eph.Position - ToStateVector().Position).Inverse();
-        var velocity = (eph.Velocity - ToStateVector().Velocity).Inverse();
+        var position = (ToStateVector().Position - eph.Position);
+        var velocity = (ToStateVector().Velocity - eph.Velocity);
         return new StateVector(position, velocity, localizable, eph.Epoch, Frame);
     }
 

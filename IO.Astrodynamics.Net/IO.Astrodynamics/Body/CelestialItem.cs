@@ -1,9 +1,12 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
 using IO.Astrodynamics.Coordinates;
+using IO.Astrodynamics.DataProvider;
 using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.Math;
+using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.TimeSystem;
 using Window = IO.Astrodynamics.TimeSystem.Window;
@@ -12,6 +15,8 @@ namespace IO.Astrodynamics.Body;
 
 public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
 {
+    private readonly IDataProvider _dataProvider;
+    public ConcurrentDictionary<Time, StateVector> StateVectorsRelativeToICRF { get; } = new();
     protected const int TITLE_WIDTH = 32;
     protected const int VALUE_WIDTH = 32;
 
@@ -107,9 +112,11 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     /// <param name="frame">Initial orbital parameters frame</param>
     /// <param name="epoch">Epoch</param>
     /// <param name="geopotentialModelParameters"></param>
-    protected CelestialItem(int naifId, Frame frame, in Time epoch, GeopotentialModelParameters geopotentialModelParameters = null)
+    /// <param name="dataProvider"></param>
+    protected CelestialItem(int naifId, Frame frame, in Time epoch, GeopotentialModelParameters geopotentialModelParameters = null, IDataProvider dataProvider = null)
     {
-        ExtendedInformation = API.Instance.GetCelestialBodyInfo(naifId);
+        _dataProvider = dataProvider ?? new SpiceDataProvider();
+        ExtendedInformation = _dataProvider.GetCelestialBodyInfo(naifId);
 
         NaifId = naifId;
         Name = string.IsNullOrEmpty(ExtendedInformation.Name)
@@ -137,8 +144,10 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     /// <param name="name"></param>
     /// <param name="mass"></param>
     /// <param name="initialOrbitalParameters"></param>
+    /// <param name="geopotentialModelParameters"></param>
+    /// <param name="dataProvider"></param>
     protected CelestialItem(int naifId, string name, double mass, OrbitalParameters.OrbitalParameters initialOrbitalParameters,
-        GeopotentialModelParameters geopotentialModelParameters = null)
+        GeopotentialModelParameters geopotentialModelParameters = null, IDataProvider dataProvider = null)
     {
         if (string.IsNullOrEmpty(name))
         {
@@ -149,6 +158,8 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
         {
             throw new ArgumentException("CelestialItem can't have a negative mass");
         }
+
+        _dataProvider = dataProvider ?? new SpiceDataProvider();
 
         NaifId = naifId;
         Name = name;
@@ -182,7 +193,15 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     /// <returns></returns>
     public IEnumerable<OrbitalParameters.OrbitalParameters> GetEphemeris(in Window searchWindow, ILocalizable observer, Frame frame, Aberration aberration, in TimeSpan stepSize)
     {
-        return API.Instance.ReadEphemeris(searchWindow, observer, this, frame, aberration, stepSize);
+        var occurences = (int)System.Math.Ceiling(searchWindow.Length / stepSize) + 1;
+        var ephemeris = new List<OrbitalParameters.OrbitalParameters>(occurences);
+        for (int i = 0; i < occurences; i++)
+        {
+            var epoch = searchWindow.StartDate + stepSize * i;
+            ephemeris.Add(GetEphemeris(epoch, observer, frame, aberration));
+        }
+
+        return ephemeris;
     }
 
     /// <summary>
@@ -195,7 +214,30 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     /// <returns></returns>
     public OrbitalParameters.OrbitalParameters GetEphemeris(in Time epoch, ILocalizable observer, Frame frame, Aberration aberration)
     {
-        return API.Instance.ReadEphemeris(epoch, observer, this, frame, aberration);
+        var targetGeometricState = this.GetGeometricStateFromICRF(epoch).ToStateVector();
+        var observerGeometricState = observer.GetGeometricStateFromICRF(epoch).ToStateVector();
+        observerGeometricState = new StateVector(targetGeometricState.Position - observerGeometricState.Position, targetGeometricState.Velocity - observerGeometricState.Velocity,
+            observer, epoch, Frame.ICRF);
+        if (aberration is Aberration.LT or Aberration.XLT)
+        {
+            var lightTime = TimeSpan.FromSeconds(observerGeometricState.Position.Magnitude() / Constants.C);
+
+            Time newEpoch;
+            if (aberration == Aberration.LT)
+                newEpoch = epoch - lightTime;
+            else
+                newEpoch = epoch + lightTime;
+
+            observerGeometricState = _dataProvider.GetEphemeris(newEpoch, this, observer, Frame.ICRF, Aberration.None).ToStateVector();
+        }
+
+        return observerGeometricState.ToFrame(frame);
+    }
+
+    public OrbitalParameters.OrbitalParameters GetGeometricStateFromICRF(in Time date)
+    {
+        return StateVectorsRelativeToICRF.GetOrAdd(date,
+            x => _dataProvider.GetEphemeris(x, this, new Barycenter(Barycenters.SOLAR_SYSTEM_BARYCENTER.NaifId), Frame.ICRF, Aberration.None).ToStateVector());
     }
 
     /// <summary>
@@ -232,11 +274,16 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
         return target1Position.Angle(target2Position);
     }
 
-    public IEnumerable<Window> FindWindowsOnDistanceConstraint(in Window searchWindow, INaifObject observer,
+    public IEnumerable<Window> FindWindowsOnDistanceConstraint(in Window searchWindow, ILocalizable observer,
         RelationnalOperator relationalOperator, double value, Aberration aberration, in TimeSpan stepSize)
     {
-        return API.Instance.FindWindowsOnDistanceConstraint(searchWindow, observer, this, relationalOperator, value,
-            aberration, stepSize);
+        Func<Time, double> calculateDistance = date =>
+        {
+            return GetEphemeris(date, observer, Frame.ICRF, aberration).ToStateVector().Position.Magnitude(); // Fonction de calcul de distance
+        };
+
+        // Appel de la méthode générique
+        return FindWindowsWithCondition(searchWindow, calculateDistance, relationalOperator, value, stepSize);
     }
 
     public IEnumerable<Window> FindWindowsOnOccultationConstraint(in Window searchWindow, INaifObject observer,
@@ -333,6 +380,136 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
         return GravitationalField.ComputeGravitationalAcceleration(sv);
     }
 
+    #region FindWindows
+
+    public bool EvaluateCondition(double actualValue, double targetValue, RelationnalOperator operatorType)
+    {
+        switch (operatorType)
+        {
+            case RelationnalOperator.Greater:
+                return actualValue > targetValue;
+            case RelationnalOperator.GreaterOrEqual:
+                return actualValue >= targetValue;
+            case RelationnalOperator.Lower:
+                return actualValue < targetValue;
+            case RelationnalOperator.LowerOrEqual:
+                return actualValue <= targetValue;
+            case RelationnalOperator.Equal:
+                return System.Math.Abs(actualValue - targetValue) < 1e-9; // Tolérance pour les flottants
+            case RelationnalOperator.NotEqual:
+                return System.Math.Abs(actualValue - targetValue) >= 1e-9; // Tolérance pour les flottants
+            default:
+                throw new ArgumentException("Invalid operator");
+        }
+    }
+
+    public IEnumerable<Window> FindWindowsWithCondition(Window searchWindow,
+        Func<Time, double> calculateValue,
+        RelationnalOperator relationalOperator, double targetValue,
+        TimeSpan stepSize)
+    {
+        List<Window> validWindows = new List<Window>();
+        var precision = TimeSpan.FromSeconds(1);
+        Time current = searchWindow.StartDate;
+        Time end = searchWindow.EndDate;
+
+        bool isInValidWindow = false;
+        Time? validWindowStart = null;
+
+        // Parcourir la plage de temps par stepSize
+        while (current <= end)
+        {
+            // Calculer la valeur actuelle à la date 'current'
+            double currentValue = calculateValue(current);
+
+            // Vérifier la condition à la date actuelle
+            if (EvaluateCondition(currentValue, targetValue, relationalOperator))
+            {
+                // Si la condition est satisfaite et qu'on n'est pas déjà dans une fenêtre valide
+                if (!isInValidWindow)
+                {
+                    // Chercher précisément le début de la fenêtre avec une recherche binaire
+                    validWindowStart = FindTransition(current - stepSize, current, calculateValue, targetValue, relationalOperator, precision);
+                    isInValidWindow = true;
+                }
+            }
+            else
+            {
+                // Si la condition n'est plus satisfaite et qu'on était dans une fenêtre valide
+                if (isInValidWindow)
+                {
+                    // Chercher précisément la fin de la fenêtre avec une recherche binaire
+                    Time validWindowEnd = FindTransition(validWindowStart.Value, current, calculateValue, targetValue, ReverseOperator(relationalOperator), precision);
+
+                    // Ajouter la fenêtre précise à la liste
+                    validWindows.Add(new Window(validWindowStart.Value, validWindowEnd));
+
+                    // Réinitialiser le marqueur
+                    isInValidWindow = false;
+                    validWindowStart = null;
+                }
+            }
+
+            // Avancer à l'intervalle suivant
+            current = current.Add(stepSize);
+        }
+
+        // Gérer le cas où la condition est satisfaite jusqu'à la fin de la plage de recherche
+        if (isInValidWindow)
+        {
+            Time validWindowEnd = FindTransition(validWindowStart.Value, end, calculateValue, targetValue, ReverseOperator(relationalOperator), precision);
+            validWindows.Add(new Window(validWindowStart.Value, validWindowEnd));
+        }
+
+        return validWindows;
+    }
+
+    private Time FindTransition(Time start, Time end, Func<Time, double> calculateValue,
+        double targetValue, RelationnalOperator relationalOperator, TimeSpan precision)
+    {
+        while ((end - start) > precision)
+        {
+            // Calculer le milieu de l'intervalle
+            Time mid = start + (end - start) / 2;
+
+            // Calculer la valeur au milieu
+            double midValue = calculateValue(mid);
+
+            // Vérifier la condition à la date 'mid'
+            if (EvaluateCondition(midValue, targetValue, relationalOperator))
+            {
+                // Si la condition est satisfaite à 'mid', on continue à chercher vers le début pour trouver la transition exacte
+                end = mid;
+            }
+            else
+            {
+                // Sinon, on cherche vers la fin
+                start = mid;
+            }
+        }
+
+        // Retourner la date où la transition a été détectée avec la précision requise
+        return start;
+    }
+
+    private RelationnalOperator ReverseOperator(RelationnalOperator op)
+    {
+        return op switch
+        {
+            RelationnalOperator.Greater => RelationnalOperator.LowerOrEqual,
+            RelationnalOperator.Lower => RelationnalOperator.GreaterOrEqual,
+            RelationnalOperator.Equal => RelationnalOperator.NotEqual,
+            RelationnalOperator.LowerOrEqual => RelationnalOperator.Greater,
+            RelationnalOperator.GreaterOrEqual => RelationnalOperator.Lower,
+            RelationnalOperator.NotEqual => RelationnalOperator.Equal,
+            _ => throw new ArgumentOutOfRangeException()
+        };
+    }
+
+    #endregion
+
+    #region Operators
+
     public override string ToString()
     {
         return $"{"Identifier :",TITLE_WIDTH} {NaifId,-VALUE_WIDTH}{Environment.NewLine}" +
@@ -370,4 +547,6 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     {
         return !Equals(left, right);
     }
+
+    #endregion
 }

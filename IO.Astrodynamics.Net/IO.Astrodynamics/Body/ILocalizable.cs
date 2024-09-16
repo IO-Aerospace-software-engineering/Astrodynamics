@@ -21,6 +21,8 @@ namespace IO.Astrodynamics.Body
         /// <returns>An enumerable of orbital parameters over the specified time window.</returns>
         IEnumerable<OrbitalParameters.OrbitalParameters> GetEphemeris(in Window searchWindow, ILocalizable observer, Frame frame, Aberration aberration, in TimeSpan stepSize);
 
+        OrbitalParameters.OrbitalParameters GetGeometricStateFromICRF(in Time date);
+        
         /// <summary>
         /// Gets the ephemeris data for the celestial object at a specific epoch.
         /// </summary>
@@ -72,7 +74,7 @@ namespace IO.Astrodynamics.Body
         /// <param name="aberration">The aberration correction to apply.</param>
         /// <param name="stepSize">The step size for the search.</param>
         /// <returns>An enumerable of time windows that satisfy the distance constraint.</returns>
-        IEnumerable<Window> FindWindowsOnDistanceConstraint(in Window searchWindow, INaifObject observer, RelationnalOperator relationalOperator, double value,
+        IEnumerable<Window> FindWindowsOnDistanceConstraint(in Window searchWindow, ILocalizable observer, RelationnalOperator relationalOperator, double value,
             Aberration aberration, in TimeSpan stepSize);
 
         /// <summary>

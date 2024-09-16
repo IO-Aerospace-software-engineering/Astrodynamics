@@ -1,4 +1,8 @@
 using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using IO.Astrodynamics.DataProvider;
+using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.TimeSystem;
 
@@ -6,8 +10,11 @@ namespace IO.Astrodynamics.Frames;
 
 public class Frame : IEquatable<Frame>
 {
+    private readonly IDataProvider _dataProvider;
     public string Name { get; }
     public int? Id { get; }
+
+    public ConcurrentDictionary<Time, StateOrientation> StateOrientationsToICRF { get; } = new();
 
     /// <summary>
     /// International Celestial Reference Frame (ICRF) at epoch J2000.
@@ -44,20 +51,34 @@ public class Frame : IEquatable<Frame>
     /// </summary>
     public static readonly Frame TEME = new Frame("TEME");
 
-    public Frame(string name, int? id = null)
+    public Frame(string name, int? id = null, IDataProvider dataProvider = null)
     {
         if (string.IsNullOrEmpty(name))
         {
             throw new ArgumentException("Frame must have a name");
         }
 
+        _dataProvider = dataProvider ?? new SpiceDataProvider();
+
         Name = name;
         Id = id;
     }
 
-    public StateOrientation ToFrame(Frame frame, Time epoch)
+    public StateOrientation ToFrame(Frame targetFrame, Time epoch)
     {
-        return API.Instance.TransformFrame(this, frame, epoch);
+        if (targetFrame == this)
+        {
+            return new StateOrientation(Quaternion.Zero, Vector3.Zero, epoch, targetFrame);
+        }
+
+        var sourceToICRF = StateOrientationsToICRF.GetOrAdd(epoch, _ => _dataProvider.FrameTransformation(this, ICRF, epoch));
+        var targetToICRF = targetFrame.StateOrientationsToICRF.GetOrAdd(epoch, _ => _dataProvider.FrameTransformation(targetFrame, ICRF, epoch));
+
+        var rotation = targetToICRF.Rotation.Conjugate() * sourceToICRF.Rotation;
+
+        var transAV = targetToICRF.AngularVelocity.Inverse().Rotate(rotation.Conjugate()) + sourceToICRF.AngularVelocity;
+
+        return new StateOrientation(rotation, transAV, epoch, this);
     }
 
     public override string ToString()

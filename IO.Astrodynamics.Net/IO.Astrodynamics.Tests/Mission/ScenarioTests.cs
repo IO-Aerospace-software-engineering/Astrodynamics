@@ -590,7 +590,7 @@ namespace IO.Astrodynamics.Tests.Mission
             var spcSV = spc.GetEphemeris(end, earth, Frames.Frame.ICRF, Aberration.None).ToStateVector();
             var moonSV = moon.GetEphemeris(end, earth, Frames.Frame.ICRF, Aberration.None).ToStateVector();
 
-            var delta = spcSV - moonSV;
+            var delta = spcSV.RelativeTo(moon, Aberration.None).ToStateVector();
             var deltaP = delta.Position.Magnitude();
             var deltaV = delta.Velocity.Magnitude();
 
@@ -639,7 +639,7 @@ namespace IO.Astrodynamics.Tests.Mission
                 var spcSV = spc.GetEphemeris(end, earth, Frames.Frame.ICRF, Aberration.None).ToStateVector();
                 var moonSV = moon.GetEphemeris(end, earth, Frames.Frame.ICRF, Aberration.None).ToStateVector();
 
-                var delta = spcSV - moonSV;
+                var delta = spcSV.RelativeTo(moon, Aberration.None).ToStateVector();
                 var deltaP = delta.Position.Magnitude();
                 var deltaV = delta.Velocity.Magnitude();
 
@@ -720,9 +720,8 @@ namespace IO.Astrodynamics.Tests.Mission
                 var summary = await scenario.SimulateAsync(new DirectoryInfo("Simulation"), false, false, step);
 
                 var spcSV = spc.GetEphemeris(end, earth, Frames.Frame.ICRF, Aberration.None).ToStateVector();
-                var moonSV = moon.GetEphemeris(end, earth, Frames.Frame.ICRF, Aberration.None).ToStateVector();
 
-                var delta = spcSV - moonSV;
+                var delta = spcSV.RelativeTo(moon, Aberration.None).ToStateVector();
                 var deltaP = delta.Position.Magnitude();
                 var deltaV = delta.Velocity.Magnitude();
 
@@ -794,10 +793,9 @@ namespace IO.Astrodynamics.Tests.Mission
                 var step = TimeSpan.FromSeconds(stepSize);
                 var summary2 = await scenario10s.SimulateAsync(new DirectoryInfo("Simulation10s"), false, false, step);
 
-                var spcRefSV = testOrbit.ToStateVector(end);
                 var spc10SV = spc10s.GetEphemeris(end, earth, Frames.Frame.ICRF, Aberration.None).ToStateVector();
 
-                var delta = spc10SV - spcRefSV;
+                var delta = spc10SV.RelativeTo(spc10s,Aberration.None).ToStateVector();
                 var deltaP = delta.Position.Magnitude();
                 var deltaV = delta.Velocity.Magnitude();
                 await File.AppendAllTextAsync("AccuracyLEO.csv", $"{DateTime.Now},{stepSize},{deltaP},{deltaV}{Environment.NewLine}");

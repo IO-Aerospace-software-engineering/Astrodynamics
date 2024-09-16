@@ -1,19 +1,24 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Coordinates;
+using IO.Astrodynamics.DataProvider;
 using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
+using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.TimeSystem;
 
 namespace IO.Astrodynamics.Surface
 {
     public class Site : ILocalizable, IEquatable<Site>, IDisposable
     {
+        private readonly IDataProvider _dataProvider;
+        public ConcurrentDictionary<Time, StateVector> StateVectorsRelativeToICRF { get; } = new ConcurrentDictionary<Time, StateVector>();
         public int Id { get; }
         public int NaifId { get; }
         public string Name { get; }
@@ -27,15 +32,17 @@ namespace IO.Astrodynamics.Surface
         public double GM { get; } = 0.0;
         public double Mass { get; } = 0.0;
 
-        public Site(int id, string name, CelestialBody celestialItem) : this(id, name, celestialItem, new Planetodetic(double.NaN, double.NaN, double.NaN))
+        public Site(int id, string name, CelestialBody celestialItem, IDataProvider dataProvider = null) : this(id, name, celestialItem,
+            new Planetodetic(double.NaN, double.NaN, double.NaN), dataProvider)
         {
         }
 
-        public Site(int id, string name, CelestialBody celestialItem, Planetodetic planetodetic)
+        public Site(int id, string name, CelestialBody celestialItem, Planetodetic planetodetic, IDataProvider dataProvider = null)
         {
             if (celestialItem == null) throw new ArgumentNullException(nameof(celestialItem));
             if (id <= 0) throw new ArgumentOutOfRangeException(nameof(id));
             if (string.IsNullOrEmpty(name)) throw new ArgumentException("Value cannot be null or empty.", nameof(name));
+            _dataProvider = dataProvider?? new SpiceDataProvider();
             Name = name;
             CelestialBody = celestialItem;
             Id = id;
@@ -43,7 +50,7 @@ namespace IO.Astrodynamics.Surface
 
             if (double.IsNaN(planetodetic.Latitude))
             {
-                InitialOrbitalParameters = API.Instance.ReadEphemeris( Time.J2000TDB, CelestialBody, this, CelestialBody.Frame, Aberration.None);
+                InitialOrbitalParameters = API.Instance.ReadEphemeris(Time.J2000TDB, CelestialBody, this, CelestialBody.Frame, Aberration.None);
                 Planetodetic = GetPlanetocentricCoordinates().ToPlanetodetic(CelestialBody.Flattening, CelestialBody.EquatorialRadius);
             }
             else
@@ -116,7 +123,8 @@ namespace IO.Astrodynamics.Surface
         /// <param name="aberration"></param>
         /// <param name="stepSize"></param>
         /// <returns></returns>
-        public IEnumerable<OrbitalParameters.OrbitalParameters> GetEphemeris(in Window searchWindow, ILocalizable observer, Frame frame, Aberration aberration, in TimeSpan stepSize)
+        public IEnumerable<OrbitalParameters.OrbitalParameters> GetEphemeris(in Window searchWindow, ILocalizable observer, Frame frame, Aberration aberration,
+            in TimeSpan stepSize)
         {
             var ephemeris = new List<OrbitalParameters.OrbitalParameters>();
             for (Time i = searchWindow.StartDate; i <= searchWindow.EndDate; i += stepSize)
@@ -125,6 +133,12 @@ namespace IO.Astrodynamics.Surface
             }
 
             return ephemeris;
+        }
+
+        public OrbitalParameters.OrbitalParameters GetGeometricStateFromICRF(in Time date)
+        {
+            return StateVectorsRelativeToICRF.GetOrAdd(date,
+                x => _dataProvider.GetEphemeris(x, this, new Barycenter(Barycenters.SOLAR_SYSTEM_BARYCENTER.NaifId), Frames.Frame.ICRF, Aberration.None).ToStateVector());
         }
 
         /// <summary>
@@ -167,7 +181,7 @@ namespace IO.Astrodynamics.Surface
         /// <param name="aberration"></param>
         /// <param name="stepSize"></param>
         /// <returns></returns>
-        public IEnumerable<Window> FindWindowsOnDistanceConstraint(in Window searchWindow, INaifObject observer, RelationnalOperator relationalOperator, double value,
+        public IEnumerable<Window> FindWindowsOnDistanceConstraint(in Window searchWindow, ILocalizable observer, RelationnalOperator relationalOperator, double value,
             Aberration aberration, in TimeSpan stepSize)
         {
             return API.Instance.FindWindowsOnDistanceConstraint(searchWindow, observer, this, relationalOperator, value, aberration, stepSize);
