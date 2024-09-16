@@ -116,7 +116,7 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     protected CelestialItem(int naifId, Frame frame, in Time epoch, GeopotentialModelParameters geopotentialModelParameters = null, IDataProvider dataProvider = null)
     {
         _dataProvider = dataProvider ?? new SpiceDataProvider();
-        ExtendedInformation = API.Instance.GetCelestialBodyInfo(naifId);
+        ExtendedInformation = _dataProvider.GetCelestialBodyInfo(naifId);
 
         NaifId = naifId;
         Name = string.IsNullOrEmpty(ExtendedInformation.Name)

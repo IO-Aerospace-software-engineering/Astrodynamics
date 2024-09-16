@@ -17,4 +17,9 @@ public class SpiceDataProvider : IDataProvider
     {
         return API.Instance.ReadEphemeris(epoch, observer,target, frame, aberration);
     }
+
+    public DTO.CelestialBody GetCelestialBodyInfo(int naifId)
+    {
+        return API.Instance.GetCelestialBodyInfo(naifId);
+    }
 }
