@@ -193,7 +193,15 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     /// <returns></returns>
     public IEnumerable<OrbitalParameters.OrbitalParameters> GetEphemeris(in Window searchWindow, ILocalizable observer, Frame frame, Aberration aberration, in TimeSpan stepSize)
     {
-        return API.Instance.ReadEphemeris(searchWindow, observer, this, frame, aberration, stepSize);
+        var occurences = (int)System.Math.Ceiling(searchWindow.Length / stepSize) + 1;
+        var ephemeris = new List<OrbitalParameters.OrbitalParameters>(occurences);
+        for (int i = 0; i < occurences; i++)
+        {
+            var epoch = searchWindow.StartDate + stepSize * i;
+            ephemeris.Add(GetEphemeris(epoch, observer, frame, aberration));
+        }
+
+        return ephemeris;
     }
 
     /// <summary>
@@ -206,18 +214,18 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     /// <returns></returns>
     public OrbitalParameters.OrbitalParameters GetEphemeris(in Time epoch, ILocalizable observer, Frame frame, Aberration aberration)
     {
-        var targetSv = this.GetGeometricStateFromICRF(epoch).ToStateVector();
-        var observerSv = observer.GetGeometricStateFromICRF(epoch).ToStateVector();
-        var geometricState = targetSv - observerSv;
+        var targetGeometricState = this.GetGeometricStateFromICRF(epoch).ToStateVector();
+        var observerGeometricState = observer.GetGeometricStateFromICRF(epoch).ToStateVector();
+        observerGeometricState = new StateVector(targetGeometricState.Position - observerGeometricState.Position, targetGeometricState.Velocity - observerGeometricState.Velocity,
+            observer, epoch, Frame.ICRF);
         if (aberration == Aberration.LT)
         {
-            var lightTime = geometricState.Position.Magnitude() / Constants.C;
-            var lightTimeCorrection = lightTime * Constants.C;
-            var correctedPosition = geometricState.Position - geometricState.Velocity * lightTimeCorrection;
-            geometricState = new StateVector(correctedPosition, geometricState.Velocity, observer, epoch, Frame.ICRF);
+            var lightTime = TimeSpan.FromSeconds(observerGeometricState.Position.Magnitude() / Constants.C);
+
+            observerGeometricState = _dataProvider.GetEphemeris(epoch - lightTime, this, observer, Frame.ICRF, Aberration.None).ToStateVector();
         }
 
-        return geometricState.ToFrame(frame);
+        return observerGeometricState.ToFrame(frame);
     }
 
     public OrbitalParameters.OrbitalParameters GetGeometricStateFromICRF(in Time date)

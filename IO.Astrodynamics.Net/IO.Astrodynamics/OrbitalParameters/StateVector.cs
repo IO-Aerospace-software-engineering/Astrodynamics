@@ -290,23 +290,6 @@ namespace IO.Astrodynamics.OrbitalParameters
         }
 
         /// <summary>
-        /// Subtracts one state vector from another.
-        /// </summary>
-        /// <param name="sv1">The state vector to subtract from.</param>
-        /// <param name="sv2">The state vector to subtract.</param>
-        /// <returns>The resulting state vector after subtraction.</returns>
-        /// <exception cref="ArgumentException">Thrown when the state vectors have different frames or epochs.</exception>
-        public static StateVector operator -(StateVector sv1, StateVector sv2)
-        {
-            if (sv1.Epoch != sv2.Epoch || sv1.Frame != sv2.Frame)
-            {
-                throw new ArgumentException("State vector must have the same frame and the same epoch");
-            }
-
-            return new StateVector(sv1.Position - sv2.Position, sv1.Velocity - sv2.Velocity, sv2.Observer, sv1.Epoch, sv2.Frame);
-        }
-
-        /// <summary>
         /// Updates the position vector.
         /// </summary>
         /// <param name="position">The new position vector.</param>

@@ -17,7 +17,7 @@ namespace IO.Astrodynamics.Surface
 {
     public class Site : ILocalizable, IEquatable<Site>, IDisposable
     {
-        private readonly IDataProvider _dataProvider = new SpiceDataProvider();
+        private readonly IDataProvider _dataProvider;
         public ConcurrentDictionary<Time, StateVector> StateVectorsRelativeToICRF { get; } = new ConcurrentDictionary<Time, StateVector>();
         public int Id { get; }
         public int NaifId { get; }
@@ -42,7 +42,7 @@ namespace IO.Astrodynamics.Surface
             if (celestialItem == null) throw new ArgumentNullException(nameof(celestialItem));
             if (id <= 0) throw new ArgumentOutOfRangeException(nameof(id));
             if (string.IsNullOrEmpty(name)) throw new ArgumentException("Value cannot be null or empty.", nameof(name));
-            _dataProvider = dataProvider;
+            _dataProvider = dataProvider?? new SpiceDataProvider();
             Name = name;
             CelestialBody = celestialItem;
             Id = id;

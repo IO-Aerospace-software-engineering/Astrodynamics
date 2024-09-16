@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using IO.Astrodynamics.DataProvider;
 using IO.Astrodynamics.Math;
@@ -13,7 +14,7 @@ public class Frame : IEquatable<Frame>
     public string Name { get; }
     public int? Id { get; }
 
-    public SortedDictionary<Time, StateOrientation> StateOrientationsToICRF { get; } = new();
+    public ConcurrentDictionary<Time, StateOrientation> StateOrientationsToICRF { get; } = new();
 
     /// <summary>
     /// International Celestial Reference Frame (ICRF) at epoch J2000.
@@ -70,21 +71,12 @@ public class Frame : IEquatable<Frame>
             return new StateOrientation(Quaternion.Zero, Vector3.Zero, epoch, targetFrame);
         }
 
-        if (!StateOrientationsToICRF.TryGetValue(epoch, out var sourceToICRF))
-        {
-            sourceToICRF = _dataProvider.FrameTransformation(this, ICRF, epoch);
-            StateOrientationsToICRF.Add(epoch, sourceToICRF);
-        }
-
-        if (!targetFrame.StateOrientationsToICRF.TryGetValue(epoch, out var targetToICRF))
-        {
-            targetToICRF = _dataProvider.FrameTransformation(targetFrame, ICRF, epoch);
-            targetFrame.StateOrientationsToICRF.Add(epoch, targetToICRF);
-        }
+        var sourceToICRF = StateOrientationsToICRF.GetOrAdd(epoch, _ => _dataProvider.FrameTransformation(this, ICRF, epoch));
+        var targetToICRF = targetFrame.StateOrientationsToICRF.GetOrAdd(epoch, _ => _dataProvider.FrameTransformation(targetFrame, ICRF, epoch));
 
         var rotation = targetToICRF.Rotation.Conjugate() * sourceToICRF.Rotation;
 
-        var transAV = targetToICRF.AngularVelocity.Inverse().Rotate(rotation.Conjugate())+sourceToICRF.AngularVelocity;
+        var transAV = targetToICRF.AngularVelocity.Inverse().Rotate(rotation.Conjugate()) + sourceToICRF.AngularVelocity;
 
         return new StateOrientation(rotation, transAV, epoch, this);
     }

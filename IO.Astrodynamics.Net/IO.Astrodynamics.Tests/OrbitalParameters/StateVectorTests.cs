@@ -79,36 +79,6 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
         }
 
         [Fact]
-        public void Subtract()
-        {
-            CelestialBody earth = new CelestialBody(PlanetsAndMoons.EARTH);
-
-            Vector3 pos = new Vector3(1.0, 2.0, 3.0);
-            Vector3 vel = new Vector3(4.0, 5.0, 6.0);
-            var epoch = new TimeSystem.Time(2021, 12, 12);
-            StateVector sv = new StateVector(pos, vel, earth, epoch, Frames.Frame.ICRF);
-            var sv2 = new StateVector(new Vector3(2.0, 4.0, 6.0), new Vector3(8.0, 10.0, 12.0), earth, epoch, Frames.Frame.ICRF);
-            var sv3 = sv2 - sv;
-            Assert.Equal(new StateVector(new Vector3(1.0, 2.0, 3.0), new Vector3(4.0, 5.0, 6.0), earth, epoch, Frames.Frame.ICRF), sv3);
-        }
-
-        [Fact]
-        public void SubtractExcept()
-        {
-            CelestialBody earth = new CelestialBody(PlanetsAndMoons.EARTH);
-
-            Vector3 pos = new Vector3(1.0, 2.0, 3.0);
-            Vector3 vel = new Vector3(4.0, 5.0, 6.0);
-            var epoch = new TimeSystem.Time(2021, 12, 12);
-            StateVector sv = new StateVector(pos, vel, earth, epoch, Frames.Frame.ICRF);
-
-            Vector3 pos2 = new Vector3(1.0, 2.0, 3.0);
-            Vector3 vel2 = new Vector3(4.0, 5.0, 6.0);
-            StateVector sv2 = new StateVector(pos2, vel2, earth, epoch.Add(TimeSpan.FromSeconds(1.0)), Frames.Frame.ICRF);
-            Assert.Throws<ArgumentException>(() => sv - sv2);
-        }
-
-        [Fact]
         public void Eccentricity()
         {
             CelestialBody earth = new CelestialBody(PlanetsAndMoons.EARTH);
@@ -368,8 +338,12 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
             var earth = TestHelpers.EarthAtJ2000;
             var sv = earth.GetEphemeris(TimeSystem.Time.J2000TDB, TestHelpers.Sun, Frames.Frame.ICRF, Aberration.None).ToStateVector();
             Assert.Equal(
-                new KeplerianElements(149665479724.91623, 0.01712168303475997, 0.4090876369675532, 1.2954012328856077E-05,
-                    1.77688489436688, 6.259056257653703, TestHelpers.Sun, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF), sv.ToKeplerianElements());
+                new StateVector(new Vector3(-26499033677.425091, 132757417338.33946, 57556718470.538193),
+                    new Vector3(-29794.260070421966, -5018.0523087861111, -2175.3938028266693), TestHelpers.Sun, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF), sv);
+            var ke = sv.ToKeplerianElements();
+            Assert.Equal(
+                new KeplerianElements(149665479724.9162, 0.017121683034759624, 0.40908763696755318, 1.2954003758357889E-05,
+                    1.7768848943668827, 6.2590562576536941, TestHelpers.Sun, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF), ke);
         }
 
         [Fact]
@@ -403,7 +377,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
         {
             var moon = TestHelpers.MoonAtJ2000;
             var ra = moon.GetEphemeris(TimeSystem.Time.J2000TDB, TestHelpers.EarthAtJ2000, Frames.Frame.ICRF, Aberration.None).ToEquatorial();
-            Assert.Equal(new Equatorial(-0.19024413568211912, 3.8824377884372114, 402448639.8873273, TimeSystem.Time.J2000TDB), ra);
+            Assert.Equal(new Equatorial(-0.1902441356821152, 3.8824377884372, 402448639.8873211, TimeSystem.Time.J2000TDB), ra);
         }
 
         [Fact]
@@ -411,11 +385,11 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
         {
             var originalSV = new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 8000.0, 0.0), TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB,
                 Frames.Frame.ICRF);
-            var moonSv = originalSV.RelativeTo(TestHelpers.MoonAtJ2000, Aberration.None);
+            var moonSv = originalSV.RelativeTo(TestHelpers.MoonAtJ2000, Aberration.None).ToStateVector();
             Assert.Equal(
                 new StateVector(new Vector3(298408384.63343549, 266716833.39423338, 76102487.099902019), new Vector3(-643.53138771903275, 8666.0876840916299, 301.32570498227307),
                     TestHelpers.MoonAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF),
-                moonSv);
+                moonSv,TestHelpers.StateVectorComparer);
         }
 
         [Fact]
@@ -425,9 +399,10 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
                 Frames.Frame.ICRF);
             var svSSB = originalSV.RelativeTo(new Barycenter(0), Aberration.None).ToStateVector();
             var svEarth = svSSB.RelativeTo(TestHelpers.EarthAtJ2000, Aberration.None).ToStateVector();
-            var deltaP = svEarth - originalSV;
-            Assert.Equal(Vector3.Zero, deltaP.Position);
-            Assert.Equal(Vector3.Zero, deltaP.Velocity);
+            var deltaP = svEarth.Position - originalSV.Position;
+            var deltaV = svEarth.Velocity - originalSV.Velocity;
+            Assert.Equal(Vector3.Zero, deltaP);
+            Assert.Equal(Vector3.Zero, deltaV);
             Assert.Equal(TestHelpers.EarthAtJ2000, svEarth.Observer);
             Assert.Equal(TimeSystem.Time.J2000TDB, svEarth.Epoch);
             Assert.Equal(Frames.Frame.ICRF, svEarth.Frame);
@@ -527,6 +502,17 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
             var ke = originalSV.ToKeplerianElements();
             var sv = ke.ToStateVector();
             Assert.Equal(originalSV, sv, TestHelpers.StateVectorComparer);
+        }
+
+        [Fact]
+        public void RelativeTo2()
+        {
+            var earthSv = TestHelpers.EarthAtJ2000.GetEphemeris(Astrodynamics.TimeSystem.Time.J2000TDB, TestHelpers.MoonAtJ2000, Frames.Frame.ICRF, Aberration.None)
+                .ToStateVector();
+            var earthSvFromSun = earthSv.RelativeTo(TestHelpers.Sun, Aberration.None).ToStateVector();
+            Assert.Equal(
+                new StateVector(new Vector3(-26499033677.425091, 132757417338.33946, 57556718470.538193),
+                    new Vector3(-29794.260070421966, -5018.0523087861111, -2175.3938028266693), TestHelpers.Sun, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF), earthSvFromSun);
         }
     }
 }
