@@ -274,33 +274,6 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
         return target1Position.Angle(target2Position);
     }
 
-    public IEnumerable<Window> FindWindowsOnDistanceConstraint(in Window searchWindow, ILocalizable observer,
-        RelationnalOperator relationalOperator, double value, Aberration aberration, in TimeSpan stepSize)
-    {
-        Func<Time, double> calculateDistance = date =>
-        {
-            return GetEphemeris(date, observer, Frame.ICRF, aberration).ToStateVector().Position.Magnitude(); // Fonction de calcul de distance
-        };
-
-        // Appel de la méthode générique
-        return FindWindowsWithCondition(searchWindow, calculateDistance, relationalOperator, value, stepSize);
-    }
-
-    public IEnumerable<Window> FindWindowsOnOccultationConstraint(in Window searchWindow, INaifObject observer,
-        ShapeType targetShape, INaifObject frontBody, ShapeType frontShape, OccultationType occultationType, Aberration aberration, in TimeSpan stepSize)
-    {
-        return API.Instance.FindWindowsOnOccultationConstraint(searchWindow, observer, this, targetShape, frontBody,
-            frontShape, occultationType, aberration, stepSize);
-    }
-
-    public IEnumerable<Window> FindWindowsOnCoordinateConstraint(in Window searchWindow, INaifObject observer, Frame frame,
-        CoordinateSystem coordinateSystem, Coordinate coordinate, RelationnalOperator relationalOperator, double value, double adjustValue, Aberration aberration,
-        in TimeSpan stepSize)
-    {
-        return API.Instance.FindWindowsOnCoordinateConstraint(searchWindow, observer, this, frame, coordinateSystem,
-            coordinate, relationalOperator, value, adjustValue, aberration,
-            stepSize);
-    }
 
     //Return all centers of motion up to the root 
     public IEnumerable<ILocalizable> GetCentersOfMotion()
@@ -382,6 +355,89 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
 
     #region FindWindows
 
+    public IEnumerable<Window> FindWindowsOnDistanceConstraint(in Window searchWindow, ILocalizable observer,
+        RelationnalOperator relationalOperator, double value, Aberration aberration, in TimeSpan stepSize)
+    {
+        Func<Time, double> calculateDistance = date => { return GetEphemeris(date, observer, Frame.ICRF, aberration).ToStateVector().Position.Magnitude(); };
+
+        return FindWindowsWithCondition(searchWindow, calculateDistance, relationalOperator, value, stepSize);
+    }
+
+    public IEnumerable<Window> FindWindowsOnOccultationConstraint(in Window searchWindow, ILocalizable observer,
+        ShapeType targetShape, INaifObject frontBody, ShapeType frontShape, OccultationType occultationType, Aberration aberration, in TimeSpan stepSize)
+    {
+        return API.Instance.FindWindowsOnOccultationConstraint(searchWindow, observer, this, targetShape, frontBody,
+            frontShape, occultationType, aberration, stepSize);
+    }
+
+    public IEnumerable<Window> FindWindowsOnCoordinateConstraint(in Window searchWindow, ILocalizable observer, Frame frame,
+        CoordinateSystem coordinateSystem, Coordinate coordinate, RelationnalOperator relationalOperator, double value, double adjustValue, Aberration aberration,
+        in TimeSpan stepSize)
+    {
+        Func<Time, double> evaluateCoordinates = null;
+        switch (coordinateSystem)
+        {
+            case CoordinateSystem.Rectangular:
+                evaluateCoordinates = date =>
+                {
+                    var stateVector = GetEphemeris(date, observer, frame, aberration).ToStateVector();
+                    return coordinate switch
+                    {
+                        Coordinate.X => stateVector.Position.X,
+                        Coordinate.Y => stateVector.Position.Y,
+                        Coordinate.Z => stateVector.Position.Z,
+                        _ => throw new ArgumentOutOfRangeException()
+                    };
+                };
+                break;
+            case CoordinateSystem.RaDec:
+                evaluateCoordinates = date =>
+                {
+                    var stateVector = GetEphemeris(date, observer, frame, aberration).ToStateVector();
+                    var equatorial = stateVector.ToEquatorial();
+                    return coordinate switch
+                    {
+                        Coordinate.Declination => equatorial.Declination,
+                        Coordinate.RightAscension => equatorial.RightAscension,
+                        Coordinate.Range => equatorial.Distance,
+                        _ => throw new ArgumentOutOfRangeException()
+                    };
+                };
+                break;
+            case CoordinateSystem.Geodetic:
+                evaluateCoordinates = date =>
+                {
+                    var stateVector = GetEphemeris(date, observer, frame, aberration).ToStateVector();
+                    var celestialBody = stateVector.Observer as CelestialBody;
+                    var geodetic = stateVector.ToPlanetocentric(aberration).ToPlanetodetic(celestialBody.Flattening, celestialBody.EquatorialRadius);
+                    return coordinate switch
+                    {
+                        Coordinate.Latitude => geodetic.Latitude,
+                        Coordinate.Longitude => geodetic.Longitude,
+                        Coordinate.Altitude => geodetic.Altitude,
+                        _ => throw new ArgumentOutOfRangeException()
+                    };
+                };
+                break;
+            case CoordinateSystem.Planetographic:
+                evaluateCoordinates = date =>
+                {
+                    var stateVector = GetEphemeris(date, observer, frame, aberration).ToStateVector();
+                    var planetographic = stateVector.ToPlanetocentric(aberration);
+                    return coordinate switch
+                    {
+                        Coordinate.Latitude => planetographic.Latitude,
+                        Coordinate.Longitude => planetographic.Longitude,
+                        Coordinate.Radius => planetographic.Radius,
+                        _ => throw new ArgumentOutOfRangeException()
+                    };
+                };
+                break;
+        }
+
+        return FindWindowsWithCondition(searchWindow, evaluateCoordinates, relationalOperator, value, stepSize);
+    }
+
     public bool EvaluateCondition(double actualValue, double targetValue, RelationnalOperator operatorType)
     {
         switch (operatorType)
@@ -395,9 +451,9 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
             case RelationnalOperator.LowerOrEqual:
                 return actualValue <= targetValue;
             case RelationnalOperator.Equal:
-                return System.Math.Abs(actualValue - targetValue) < 1e-9; // Tolérance pour les flottants
+                return System.Math.Abs(actualValue - targetValue) < 1e-9;
             case RelationnalOperator.NotEqual:
-                return System.Math.Abs(actualValue - targetValue) >= 1e-9; // Tolérance pour les flottants
+                return System.Math.Abs(actualValue - targetValue) >= 1e-9;
             default:
                 throw new ArgumentException("Invalid operator");
         }

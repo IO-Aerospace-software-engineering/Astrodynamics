@@ -199,7 +199,7 @@ namespace IO.Astrodynamics.Surface
         /// <param name="aberration"></param>
         /// <param name="stepSize"></param>
         /// <returns></returns>
-        public IEnumerable<Window> FindWindowsOnOccultationConstraint(in Window searchWindow, INaifObject target, ShapeType targetShape, INaifObject frontBody,
+        public IEnumerable<Window> FindWindowsOnOccultationConstraint(in Window searchWindow, ILocalizable target, ShapeType targetShape, INaifObject frontBody,
             ShapeType frontShape, OccultationType occultationType, Aberration aberration, in TimeSpan stepSize)
         {
             return API.Instance.FindWindowsOnOccultationConstraint(searchWindow, this, target, targetShape, frontBody, frontShape, occultationType, aberration, stepSize);
@@ -219,7 +219,7 @@ namespace IO.Astrodynamics.Surface
         /// <param name="aberration"></param>
         /// <param name="stepSize"></param>
         /// <returns></returns>
-        public IEnumerable<Window> FindWindowsOnCoordinateConstraint(in Window searchWindow, INaifObject observer, Frame frame, CoordinateSystem coordinateSystem,
+        public IEnumerable<Window> FindWindowsOnCoordinateConstraint(in Window searchWindow, ILocalizable observer, Frame frame, CoordinateSystem coordinateSystem,
             Coordinate coordinate, RelationnalOperator relationalOperator, double value, double adjustValue, Aberration aberration, in TimeSpan stepSize)
         {
             return API.Instance.FindWindowsOnCoordinateConstraint(searchWindow, observer, this, frame, coordinateSystem, coordinate, relationalOperator, value, adjustValue,
@@ -240,7 +240,7 @@ namespace IO.Astrodynamics.Surface
         /// <param name="illuminationSource"></param>
         /// <param name="method"></param>
         /// <returns></returns>
-        public IEnumerable<Window> FindWindowsOnIlluminationConstraint(in Window searchWindow, INaifObject observer, IlluminationAngle illuminationType,
+        public IEnumerable<Window> FindWindowsOnIlluminationConstraint(in Window searchWindow, ILocalizable observer, IlluminationAngle illuminationType,
             RelationnalOperator relationalOperator, double value, double adjustValue, Aberration aberration, in TimeSpan stepSize, INaifObject illuminationSource,
             string method = "Ellipsoid")
         {
