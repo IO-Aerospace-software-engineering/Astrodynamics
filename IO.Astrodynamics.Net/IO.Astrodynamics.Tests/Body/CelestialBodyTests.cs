@@ -99,14 +99,14 @@ public class CelestialBodyTests
             TestHelpers.MoonAtJ2000, RelationnalOperator.Greater, 400000000, Aberration.None, TimeSpan.FromSeconds(86400.0));
         var windows = res as Window[] ?? res.ToArray();
         Assert.Equal(4, windows.Count());
-        Assert.Equal(new TimeSystem.Time("2000-01-01 12:00:00.0000 TDB"), windows.ElementAt(0).StartDate);
-        Assert.Equal(new TimeSystem.Time("2000-01-09 00:53:37.823840 TDB"), windows.ElementAt(0).EndDate);
-        Assert.Equal(new TimeSystem.Time("2000-01-28 22:27:48.738198 TDB"), windows.ElementAt(1).StartDate);
-        Assert.Equal(new TimeSystem.Time("2000-02-04 17:08:52.385410 TDB"), windows.ElementAt(1).EndDate);
-        Assert.Equal(new TimeSystem.Time("2000-02-26 04:15:44.975366 TDB"), windows.ElementAt(2).StartDate);
-        Assert.Equal(new TimeSystem.Time("2000-03-02 17:41:33.115454 TDB"), windows.ElementAt(2).EndDate);
-        Assert.Equal(new TimeSystem.Time("2000-03-25 02:59:31.462805 TDB"), windows.ElementAt(3).StartDate);
-        Assert.Equal(new TimeSystem.Time("2000-03-30 07:01:08.077168 TDB"), windows.ElementAt(3).EndDate);
+        Assert.Equal(new TimeSystem.Time("1999-12-31T17:30:03.7353516 TDB"), windows.ElementAt(0).StartDate);
+        Assert.Equal(new TimeSystem.Time("2000-01-09T00:53:37.1295723 TDB"), windows.ElementAt(0).EndDate);
+        Assert.Equal(new TimeSystem.Time("2000-01-28T22:27:48.1640625 TDB"), windows.ElementAt(1).StartDate);
+        Assert.Equal(new TimeSystem.Time("2000-02-04T17:08:52.3502741 TDB"), windows.ElementAt(1).EndDate);
+        Assert.Equal(new TimeSystem.Time("2000-02-26T04:15:44.3847657 TDB"), windows.ElementAt(2).StartDate);
+        Assert.Equal(new TimeSystem.Time("2000-03-02T17:41:33.0589197 TDB"), windows.ElementAt(2).EndDate);
+        Assert.Equal(new TimeSystem.Time("2000-03-25T02:59:30.9960938 TDB"), windows.ElementAt(3).StartDate);
+        Assert.Equal(new TimeSystem.Time("2000-03-30T07:01:07.2974489 TDB"), windows.ElementAt(3).EndDate);
     }
 
     [Fact]
