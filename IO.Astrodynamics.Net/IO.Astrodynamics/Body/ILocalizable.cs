@@ -74,7 +74,7 @@ namespace IO.Astrodynamics.Body
         /// <param name="aberration">The aberration correction to apply.</param>
         /// <param name="stepSize">The step size for the search.</param>
         /// <returns>An enumerable of time windows that satisfy the distance constraint.</returns>
-        IEnumerable<Window> FindWindowsOnDistanceConstraint(in Window searchWindow, INaifObject observer, RelationnalOperator relationalOperator, double value,
+        IEnumerable<Window> FindWindowsOnDistanceConstraint(in Window searchWindow, ILocalizable observer, RelationnalOperator relationalOperator, double value,
             Aberration aberration, in TimeSpan stepSize);
 
         /// <summary>

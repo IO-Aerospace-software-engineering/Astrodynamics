@@ -95,14 +95,18 @@ public class CelestialBodyTests
     public void FindWindowsOnDistanceConstraint()
     {
         var res = TestHelpers.EarthAtJ2000.FindWindowsOnDistanceConstraint(
-            new Window(TimeSystem.Time.Create(220881665.18391809, TimeFrame.TDBFrame), TimeSystem.Time.Create(228657665.18565452, TimeFrame.TDBFrame)),
+            new Window(new TimeSystem.Time("2000-01-01 12:00:00.0000 TDB"), new TimeSystem.Time("2000-04-01 12:00:00.0000 TDB")),
             TestHelpers.MoonAtJ2000, RelationnalOperator.Greater, 400000000, Aberration.None, TimeSpan.FromSeconds(86400.0));
         var windows = res as Window[] ?? res.ToArray();
         Assert.Equal(4, windows.Count());
-        Assert.Equal("2007-01-08T00:11:07.6285910 TDB", windows.ElementAt(0).StartDate.ToString());
-        Assert.Equal("2007-01-13T06:37:47.9481440 TDB", windows.ElementAt(0).EndDate.ToString());
-        Assert.Equal("2007-02-04T07:02:35.2843758 TDB", windows.ElementAt(1).StartDate.ToString());
-        Assert.Equal("2007-02-10T09:31:01.8379404 TDB", windows.ElementAt(1).EndDate.ToString());
+        Assert.Equal(new TimeSystem.Time("2000-01-01 12:00:00.0000 TDB"), windows.ElementAt(0).StartDate);
+        Assert.Equal(new TimeSystem.Time("2000-01-09 00:53:37.823840 TDB"), windows.ElementAt(0).EndDate);
+        Assert.Equal(new TimeSystem.Time("2000-01-28 22:27:48.738198 TDB"), windows.ElementAt(1).StartDate);
+        Assert.Equal(new TimeSystem.Time("2000-02-04 17:08:52.385410 TDB"), windows.ElementAt(1).EndDate);
+        Assert.Equal(new TimeSystem.Time("2000-02-26 04:15:44.975366 TDB"), windows.ElementAt(2).StartDate);
+        Assert.Equal(new TimeSystem.Time("2000-03-02 17:41:33.115454 TDB"), windows.ElementAt(2).EndDate);
+        Assert.Equal(new TimeSystem.Time("2000-03-25 02:59:31.462805 TDB"), windows.ElementAt(3).StartDate);
+        Assert.Equal(new TimeSystem.Time("2000-03-30 07:01:08.077168 TDB"), windows.ElementAt(3).EndDate);
     }
 
     [Fact]

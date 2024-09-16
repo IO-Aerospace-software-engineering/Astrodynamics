@@ -218,11 +218,17 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
         var observerGeometricState = observer.GetGeometricStateFromICRF(epoch).ToStateVector();
         observerGeometricState = new StateVector(targetGeometricState.Position - observerGeometricState.Position, targetGeometricState.Velocity - observerGeometricState.Velocity,
             observer, epoch, Frame.ICRF);
-        if (aberration == Aberration.LT)
+        if (aberration is Aberration.LT or Aberration.XLT)
         {
             var lightTime = TimeSpan.FromSeconds(observerGeometricState.Position.Magnitude() / Constants.C);
 
-            observerGeometricState = _dataProvider.GetEphemeris(epoch - lightTime, this, observer, Frame.ICRF, Aberration.None).ToStateVector();
+            Time newEpoch;
+            if (aberration == Aberration.LT)
+                newEpoch = epoch - lightTime;
+            else
+                newEpoch = epoch + lightTime;
+
+            observerGeometricState = _dataProvider.GetEphemeris(newEpoch, this, observer, Frame.ICRF, Aberration.None).ToStateVector();
         }
 
         return observerGeometricState.ToFrame(frame);
@@ -268,11 +274,16 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
         return target1Position.Angle(target2Position);
     }
 
-    public IEnumerable<Window> FindWindowsOnDistanceConstraint(in Window searchWindow, INaifObject observer,
+    public IEnumerable<Window> FindWindowsOnDistanceConstraint(in Window searchWindow, ILocalizable observer,
         RelationnalOperator relationalOperator, double value, Aberration aberration, in TimeSpan stepSize)
     {
-        return API.Instance.FindWindowsOnDistanceConstraint(searchWindow, observer, this, relationalOperator, value,
-            aberration, stepSize);
+        Func<Time, double> calculateDistance = date =>
+        {
+            return GetEphemeris(date, observer, Frame.ICRF, aberration).ToStateVector().Position.Magnitude(); // Fonction de calcul de distance
+        };
+
+        // Appel de la méthode générique
+        return FindWindowsWithCondition(searchWindow, calculateDistance, relationalOperator, value, stepSize);
     }
 
     public IEnumerable<Window> FindWindowsOnOccultationConstraint(in Window searchWindow, INaifObject observer,
@@ -368,7 +379,116 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
 
         return GravitationalField.ComputeGravitationalAcceleration(sv);
     }
+    
+    #region FindWindows
+    public bool EvaluateCondition(double actualValue, double targetValue, RelationnalOperator operatorType)
+    {
+        switch (operatorType)
+        {
+            case RelationnalOperator.Greater:
+                return actualValue > targetValue;
+            case RelationnalOperator.Lower:
+                return actualValue < targetValue;
+            case RelationnalOperator.Equal:
+                return System.Math.Abs(actualValue - targetValue) < 1e-9; // Tolérance pour les flottants
+            default:
+                throw new ArgumentException("Invalid operator");
+        }
+    }
+    
+    public IEnumerable<Window> FindWindowsWithCondition(Window searchWindow, 
+        Func<Time, double> calculateValue,
+        RelationnalOperator relationalOperator, double targetValue, 
+        TimeSpan stepSize)
+    {
+    List<Window> validWindows = new List<Window>();
+    var precision= TimeSpan.FromSeconds(1); 
 
+    Time current = searchWindow.StartDate;
+    Time end = searchWindow.EndDate;
+
+    bool isInValidWindow = false;
+    Time? validWindowStart = null;
+
+    // Parcourir la plage de temps par stepSize
+    while (current <= end)
+    {
+        // Calcul de la valeur actuelle à la date 'current'
+        double currentValue = calculateValue(current);
+
+        // Vérification de la condition à la date actuelle
+        if (EvaluateCondition(currentValue, targetValue, relationalOperator))
+        {
+            // Si la condition est satisfaite et qu'on n'est pas déjà dans une fenêtre valide
+            if (!isInValidWindow)
+            {
+                // Chercher précisément le début de la fenêtre
+                validWindowStart = FindTransition(current - stepSize, current, calculateValue, targetValue, relationalOperator, precision);
+                isInValidWindow = true;
+            }
+        }
+        else
+        {
+            // Si la condition n'est pas satisfaite et qu'on était dans une fenêtre valide
+            if (isInValidWindow)
+            {
+                // Chercher précisément la fin de la fenêtre
+                Time validWindowEnd = FindTransition(current - stepSize, current, calculateValue, targetValue, relationalOperator, precision);
+
+                // Ajouter la fenêtre précise à la liste
+                validWindows.Add(new Window(validWindowStart.Value, validWindowEnd));
+
+                // Réinitialiser le marqueur
+                isInValidWindow = false;
+                validWindowStart = null;
+            }
+        }
+
+        // Avancer à l'intervalle suivant
+        current = current.Add(stepSize);
+    }
+
+    // Gérer le cas où la condition est satisfaite jusqu'à la fin de la plage de recherche
+    if (isInValidWindow)
+    {
+        Time validWindowEnd = FindTransition(current - stepSize, current, calculateValue, targetValue, relationalOperator, precision);
+        validWindows.Add(new Window(validWindowStart.Value, validWindowEnd));
+    }
+
+    return validWindows;
+}
+    
+    private Time FindTransition(Time start, Time end, Func<Time, double> calculateValue,
+        double targetValue, RelationnalOperator relationalOperator, TimeSpan precision)
+    {
+        while ((end - start) > precision)
+        {
+            // Prendre le milieu de l'intervalle
+            Time mid = start + (end - start) / 2;
+
+            // Calculer la valeur au milieu
+            double midValue = calculateValue(mid);
+
+            // Vérifier la condition à la date 'mid'
+            if (EvaluateCondition(midValue, targetValue, relationalOperator))
+            {
+                // Si la condition est satisfaite à 'mid', on continue à chercher vers le début
+                end = mid;
+            }
+            else
+            {
+                // Si la condition n'est pas satisfaite à 'mid', on continue à chercher vers la fin
+                start = mid;
+            }
+        }
+
+        // Retourner la date où la transition a été détectée avec la précision requise
+        return start;
+    }
+
+    #endregion
+
+    #region Operators
     public override string ToString()
     {
         return $"{"Identifier :",TITLE_WIDTH} {NaifId,-VALUE_WIDTH}{Environment.NewLine}" +
@@ -406,4 +526,5 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     {
         return !Equals(left, right);
     }
+    #endregion
 }
