@@ -18,6 +18,7 @@ namespace IO.Astrodynamics.Surface
     public class Site : ILocalizable, IEquatable<Site>, IDisposable
     {
         private readonly IDataProvider _dataProvider;
+        private readonly GeometryFinder _geometryFinder = new GeometryFinder();
         public ConcurrentDictionary<Time, StateVector> StateVectorsRelativeToICRF { get; } = new ConcurrentDictionary<Time, StateVector>();
         public int Id { get; }
         public int NaifId { get; }
@@ -42,7 +43,7 @@ namespace IO.Astrodynamics.Surface
             if (celestialItem == null) throw new ArgumentNullException(nameof(celestialItem));
             if (id <= 0) throw new ArgumentOutOfRangeException(nameof(id));
             if (string.IsNullOrEmpty(name)) throw new ArgumentException("Value cannot be null or empty.", nameof(name));
-            _dataProvider = dataProvider?? new SpiceDataProvider();
+            _dataProvider = dataProvider ?? new SpiceDataProvider();
             Name = name;
             CelestialBody = celestialItem;
             Id = id;
@@ -151,8 +152,9 @@ namespace IO.Astrodynamics.Surface
         /// <returns></returns>
         public OrbitalParameters.OrbitalParameters GetEphemeris(in Time epoch, ILocalizable observer, Frame frame, Aberration aberration)
         {
-            return new StateVector(Planetodetic.ToPlanetocentric(CelestialBody.Flattening, CelestialBody.EquatorialRadius).ToCartesianCoordinates(),
-                Vector3.Zero, CelestialBody, epoch, CelestialBody.Frame).ToFrame(frame);
+            var siteInFrame = new StateVector(Planetodetic.ToPlanetocentric(CelestialBody.Flattening, CelestialBody.EquatorialRadius).ToCartesianCoordinates(),
+                Vector3.Zero, CelestialBody, epoch, CelestialBody.Frame).ToFrame(frame).ToStateVector();
+            return siteInFrame.RelativeTo(observer, aberration);
         }
 
         /// <summary>
@@ -184,7 +186,12 @@ namespace IO.Astrodynamics.Surface
         public IEnumerable<Window> FindWindowsOnDistanceConstraint(in Window searchWindow, ILocalizable observer, RelationnalOperator relationalOperator, double value,
             Aberration aberration, in TimeSpan stepSize)
         {
-            return API.Instance.FindWindowsOnDistanceConstraint(searchWindow, observer, this, relationalOperator, value, aberration, stepSize);
+            Func<Time, double> calculateDistance = date =>
+            {
+                return GetEphemeris(date, observer, Frames.Frame.ICRF, aberration).ToStateVector().Position.Magnitude();
+            };
+
+            return _geometryFinder.FindWindowsWithCondition(searchWindow, calculateDistance, relationalOperator, value, stepSize);
         }
 
         /// <summary>
@@ -202,7 +209,7 @@ namespace IO.Astrodynamics.Surface
         public IEnumerable<Window> FindWindowsOnOccultationConstraint(in Window searchWindow, ILocalizable target, ShapeType targetShape, INaifObject frontBody,
             ShapeType frontShape, OccultationType occultationType, Aberration aberration, in TimeSpan stepSize)
         {
-            return API.Instance.FindWindowsOnOccultationConstraint(searchWindow, this, target, targetShape, frontBody, frontShape, occultationType, aberration, stepSize);
+            return target.FindWindowsOnOccultationConstraint(searchWindow, this, targetShape, frontBody, frontShape, occultationType, aberration, stepSize);
         }
 
         /// <summary>
@@ -222,8 +229,68 @@ namespace IO.Astrodynamics.Surface
         public IEnumerable<Window> FindWindowsOnCoordinateConstraint(in Window searchWindow, ILocalizable observer, Frame frame, CoordinateSystem coordinateSystem,
             Coordinate coordinate, RelationnalOperator relationalOperator, double value, double adjustValue, Aberration aberration, in TimeSpan stepSize)
         {
-            return API.Instance.FindWindowsOnCoordinateConstraint(searchWindow, observer, this, frame, coordinateSystem, coordinate, relationalOperator, value, adjustValue,
-                aberration, stepSize);
+            Func<Time, double> evaluateCoordinates = null;
+            switch (coordinateSystem)
+            {
+                case CoordinateSystem.Rectangular:
+                    evaluateCoordinates = date =>
+                    {
+                        var stateVector = GetEphemeris(date, observer, frame, aberration).ToStateVector();
+                        return coordinate switch
+                        {
+                            Coordinate.X => stateVector.Position.X,
+                            Coordinate.Y => stateVector.Position.Y,
+                            Coordinate.Z => stateVector.Position.Z,
+                            _ => throw new ArgumentOutOfRangeException()
+                        };
+                    };
+                    break;
+                case CoordinateSystem.RaDec:
+                    evaluateCoordinates = date =>
+                    {
+                        var stateVector = GetEphemeris(date, observer, frame, aberration).ToStateVector();
+                        var equatorial = stateVector.ToEquatorial();
+                        return coordinate switch
+                        {
+                            Coordinate.Declination => equatorial.Declination,
+                            Coordinate.RightAscension => equatorial.RightAscension,
+                            Coordinate.Range => equatorial.Distance,
+                            _ => throw new ArgumentOutOfRangeException()
+                        };
+                    };
+                    break;
+                case CoordinateSystem.Geodetic:
+                    evaluateCoordinates = date =>
+                    {
+                        var stateVector = GetEphemeris(date, observer, frame, aberration).ToStateVector();
+                        var celestialBody = stateVector.Observer as CelestialBody;
+                        var geodetic = stateVector.ToPlanetocentric(aberration).ToPlanetodetic(celestialBody.Flattening, celestialBody.EquatorialRadius);
+                        return coordinate switch
+                        {
+                            Coordinate.Latitude => geodetic.Latitude,
+                            Coordinate.Longitude => geodetic.Longitude,
+                            Coordinate.Altitude => geodetic.Altitude,
+                            _ => throw new ArgumentOutOfRangeException()
+                        };
+                    };
+                    break;
+                case CoordinateSystem.Planetographic:
+                    evaluateCoordinates = date =>
+                    {
+                        var stateVector = GetEphemeris(date, observer, frame, aberration).ToStateVector();
+                        var planetographic = stateVector.ToPlanetocentric(aberration);
+                        return coordinate switch
+                        {
+                            Coordinate.Latitude => planetographic.Latitude,
+                            Coordinate.Longitude => planetographic.Longitude,
+                            Coordinate.Radius => planetographic.Radius,
+                            _ => throw new ArgumentOutOfRangeException()
+                        };
+                    };
+                    break;
+            }
+
+            return _geometryFinder.FindWindowsWithCondition(searchWindow, evaluateCoordinates, relationalOperator, value, stepSize);
         }
 
         /// <summary>

@@ -164,13 +164,13 @@ namespace IO.Astrodynamics.Tests.Surface
             Site site = new Site(13, "DSS-13", TestHelpers.EarthAtJ2000);
 
             var res = site.FindWindowsOnDistanceConstraint(new Window(TimeSystem.Time.CreateTDB(220881665.18391809), TimeSystem.Time.CreateTDB(228657665.18565452)),
-                TestHelpers.MoonAtJ2000, RelationnalOperator.Greater, 400000000, Aberration.None, TimeSpan.FromSeconds(86400.0));
+                TestHelpers.MoonAtJ2000, RelationnalOperator.Greater, 400000000, Aberration.None, TimeSpan.FromSeconds(3600.0));
             var windows = res as Window[] ?? res.ToArray();
-            Assert.Equal(2, windows.Count());
-            Assert.Equal(new TimeSystem.Time("2007-02-03T17:02:04.4461595 TDB"), windows.ElementAt(0).StartDate, TestHelpers.TimeComparer);
-            Assert.Equal(new TimeSystem.Time("2007-02-09T10:31:41.4309832 TDB"), windows.ElementAt(0).EndDate, TestHelpers.TimeComparer);
-            Assert.Equal(new TimeSystem.Time("2007-03-30T11:09:38.6987997 TDB"), windows.ElementAt(1).StartDate, TestHelpers.TimeComparer);
-            Assert.Equal(new TimeSystem.Time("2007-04-01T00:01:05.1856544 TDB"), windows.ElementAt(1).EndDate, TestHelpers.TimeComparer);
+            Assert.Equal(24, windows.Count());
+            Assert.Equal(new TimeSystem.Time("2007-01-06T21:21:57.6253242 TDB"), windows.ElementAt(0).StartDate, TestHelpers.TimeComparer);
+            Assert.Equal(new TimeSystem.Time("2007-01-07T01:04:58.0905336 TDB"), windows.ElementAt(0).EndDate, TestHelpers.TimeComparer);
+            Assert.Equal(new TimeSystem.Time("2007-01-07T18:15:42.3323555 TDB"), windows.ElementAt(1).StartDate, TestHelpers.TimeComparer);
+            Assert.Equal(new TimeSystem.Time("2007-01-08T05:43:12.5176513 TDB"), windows.ElementAt(1).EndDate, TestHelpers.TimeComparer);
         }
 
         [Fact]
@@ -183,27 +183,27 @@ namespace IO.Astrodynamics.Tests.Surface
                 TestHelpers.Sun, ShapeType.Ellipsoid, TestHelpers.MoonAtJ2000, ShapeType.Ellipsoid, OccultationType.Partial, Aberration.None, TimeSpan.FromSeconds(360.0));
             var windows = res as Window[] ?? res.ToArray();
             Assert.Single(windows);
-            Assert.Equal("2005-10-03T08:37:48.4010840 TDB", windows.ElementAt(0).StartDate.ToString());
-            Assert.Equal("2005-10-03T10:15:20.0624047 TDB", windows.ElementAt(0).EndDate.ToString());
+            Assert.Equal("2005-10-03T08:37:48.2812500 TDB", windows.ElementAt(0).StartDate.ToString());
+            Assert.Equal("2005-10-03T10:15:20.0201799 TDB", windows.ElementAt(0).EndDate.ToString());
         }
 
-        // [Fact]
-        // public void FindWindowsOnCoordinateConstraint()
-        // {
-        //     Site site = new Site(13, "DSS-13", TestHelpers.EarthAtJ2000);
-        //
-        //     var res = site.FindWindowsOnCoordinateConstraint(new Window(new TimeSystem.Time("2005-10-03").ToTDB(), new TimeSystem.Time("2005-11-03").ToTDB()),
-        //         TestHelpers.MoonAtJ2000,
-        //         TestHelpers.MoonAtJ2000.Frame, CoordinateSystem.Latitudinal, Coordinate.Latitude, RelationnalOperator.Greater, 0.0, 0.0, Aberration.None,
-        //         TimeSpan.FromSeconds(60.0));
-        //
-        //     var windows = res as Window[] ?? res.ToArray();
-        //     Assert.Equal(2, windows.Length);
-        //     Assert.Equal(new TimeSystem.Time("2005-10-03T13:52:57.9512678 TDB"), windows[0].StartDate, TestHelpers.TimeComparer);
-        //     Assert.Equal(new TimeSystem.Time("2005-10-17T03:42:05.5379366 TDB"), windows[0].EndDate, TestHelpers.TimeComparer);
-        //     Assert.Equal(new TimeSystem.Time("2005-10-30T16:50:14.1421977 TDB"), windows[1].StartDate, TestHelpers.TimeComparer);
-        //     Assert.Equal(new TimeSystem.Time("2005-11-03T00:00:00.0000000 TDB"), windows[1].EndDate, TestHelpers.TimeComparer);
-        // }
+        [Fact]
+        public void FindWindowsOnCoordinateConstraint()
+        {
+            Site site = new Site(13, "DSS-13", TestHelpers.EarthAtJ2000);
+        
+            var res = site.FindWindowsOnCoordinateConstraint(new Window(new TimeSystem.Time("2000-01-01 12:00:00").ToTDB(), new TimeSystem.Time("2000-02-01 12:00:00").ToTDB()),
+                TestHelpers.MoonAtJ2000,
+                TestHelpers.MoonAtJ2000.Frame, CoordinateSystem.RaDec, Coordinate.Declination, RelationnalOperator.Greater, 0.0, 0.0, Aberration.None,
+                TimeSpan.FromSeconds(60.0));
+        
+            var windows = res as Window[] ?? res.ToArray();
+            Assert.Equal(2, windows.Length);
+            Assert.Equal(new TimeSystem.Time("2000-01-01T11:59:00.0000000 TDB"), windows[0].StartDate, TestHelpers.TimeComparer);
+            Assert.Equal(new TimeSystem.Time("2000-01-13T18:25:04.9051953 TDB"), windows[0].EndDate, TestHelpers.TimeComparer);
+            Assert.Equal(new TimeSystem.Time("2000-01-26T03:08:41.2500000 TDB"), windows[1].StartDate, TestHelpers.TimeComparer);
+            Assert.Equal(new TimeSystem.Time("2000-02-01T11:59:59.4752133 TDB"), windows[1].EndDate, TestHelpers.TimeComparer);
+        }
 
         [Fact]
         public void FindWindowsOnIlluminationConstraint()
