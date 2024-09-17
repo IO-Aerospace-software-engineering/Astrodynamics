@@ -312,9 +312,7 @@ namespace IO.Astrodynamics.Surface
             string method = "Ellipsoid")
         {
             return API.Instance.FindWindowsOnIlluminationConstraint(searchWindow, observer, CelestialBody, CelestialBody.Frame, Planetodetic, illuminationType, relationalOperator,
-                value,
-                adjustValue,
-                aberration, stepSize, illuminationSource, method);
+                value, adjustValue, aberration, stepSize, illuminationSource, method);
         }
 
         /// <summary>
