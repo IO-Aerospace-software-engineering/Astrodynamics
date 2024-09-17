@@ -269,9 +269,11 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
 
     public double AngularSeparation(in Time epoch, ILocalizable target1, OrbitalParameters.OrbitalParameters fromPosition, Aberration aberration)
     {
-        var target1Position = fromPosition.RelativeTo(target1, aberration).ToStateVector().Position.Inverse();
-        var target2Position = fromPosition.RelativeTo(this, aberration).ToStateVector().Position.Inverse();
-        return target1Position.Angle(target2Position);
+        var target1Position = target1.GetEphemeris(epoch, fromPosition.Observer, fromPosition.Frame, aberration).ToStateVector().Position -
+                              fromPosition.ToStateVector().Position;
+        var target2Position = this.GetEphemeris(epoch, fromPosition.Observer, fromPosition.Frame, aberration).ToStateVector().Position -
+                              fromPosition.ToStateVector().Position;
+        return target1Position.Normalize().Angle(target2Position.Normalize());
     }
 
 
@@ -314,11 +316,12 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
         return new Planetocentric(lon, lat, position.Magnitude());
     }
 
-    public OccultationType? IsOcculted(CelestialItem by, OrbitalParameters.OrbitalParameters from)
+    public OccultationType? IsOcculted(CelestialItem by, OrbitalParameters.OrbitalParameters from, Aberration aberration = Aberration.LT)
     {
-        double backSize = this.AngularSize(from.RelativeTo(this, Aberration.LT).ToStateVector().Position.Magnitude());
-        double bySize = by.AngularSize(from.RelativeTo(by, Aberration.LT).ToStateVector().Position.Magnitude());
-        var angularSeparation = this.AngularSeparation(from.Epoch, by, from, Aberration.LT);
+        double backSize = AngularSize((GetEphemeris(from.Epoch, from.Observer, from.Frame, aberration).ToStateVector().Position - from.ToStateVector().Position).Magnitude());
+        double bySize = by.AngularSize((by.GetEphemeris(from.Epoch, from.Observer, from.Frame, aberration).ToStateVector().Position - from.ToStateVector().Position)
+            .Magnitude());
+        var angularSeparation = this.AngularSeparation(from.Epoch, by, from, aberration);
         return IsOcculted(angularSeparation, backSize, bySize);
     }
 
@@ -366,8 +369,18 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     public IEnumerable<Window> FindWindowsOnOccultationConstraint(in Window searchWindow, ILocalizable observer,
         ShapeType targetShape, INaifObject frontBody, ShapeType frontShape, OccultationType occultationType, Aberration aberration, in TimeSpan stepSize)
     {
-        return API.Instance.FindWindowsOnOccultationConstraint(searchWindow, observer, this, targetShape, frontBody,
-            frontShape, occultationType, aberration, stepSize);
+        Func<Time, bool> calculateOccultation = date =>
+        {
+            var occultation = IsOcculted(frontBody as CelestialItem, new StateVector(Vector3.Zero, Vector3.Zero, observer, date, Frame.ICRF), aberration);
+            if (occultationType == OccultationType.Any)
+            {
+                return occultation is OccultationType.Partial or OccultationType.Annular or OccultationType.Full;
+            }
+
+            return occultation == occultationType;
+        };
+
+        return FindWindowsWithCondition(searchWindow, calculateOccultation, RelationnalOperator.Equal, true, stepSize);
     }
 
     public IEnumerable<Window> FindWindowsOnCoordinateConstraint(in Window searchWindow, ILocalizable observer, Frame frame,
@@ -438,30 +451,49 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
         return FindWindowsWithCondition(searchWindow, evaluateCoordinates, relationalOperator, value, stepSize);
     }
 
-    public bool EvaluateCondition(double actualValue, double targetValue, RelationnalOperator operatorType)
+    public bool EvaluateCondition<T>(T actualValue, T targetValue, RelationnalOperator operatorType)
     {
-        switch (operatorType)
+        if (actualValue is double actualDouble && targetValue is double targetDouble)
         {
-            case RelationnalOperator.Greater:
-                return actualValue > targetValue;
-            case RelationnalOperator.GreaterOrEqual:
-                return actualValue >= targetValue;
-            case RelationnalOperator.Lower:
-                return actualValue < targetValue;
-            case RelationnalOperator.LowerOrEqual:
-                return actualValue <= targetValue;
-            case RelationnalOperator.Equal:
-                return System.Math.Abs(actualValue - targetValue) < 1e-9;
-            case RelationnalOperator.NotEqual:
-                return System.Math.Abs(actualValue - targetValue) >= 1e-9;
-            default:
-                throw new ArgumentException("Invalid operator");
+            switch (operatorType)
+            {
+                case RelationnalOperator.Greater:
+                    return actualDouble > targetDouble;
+                case RelationnalOperator.GreaterOrEqual:
+                    return actualDouble >= targetDouble;
+                case RelationnalOperator.Lower:
+                    return actualDouble < targetDouble;
+                case RelationnalOperator.LowerOrEqual:
+                    return actualDouble <= targetDouble;
+                case RelationnalOperator.Equal:
+                    return System.Math.Abs(actualDouble - targetDouble) < 1e-9;
+                case RelationnalOperator.NotEqual:
+                    return System.Math.Abs(actualDouble - targetDouble) >= 1e-9;
+                default:
+                    throw new ArgumentException("Invalid operator");
+            }
+        }
+        else if (actualValue is bool actualBool && targetValue is bool targetBool)
+        {
+            switch (operatorType)
+            {
+                case RelationnalOperator.Equal:
+                    return actualBool == targetBool;
+                case RelationnalOperator.NotEqual:
+                    return actualBool != targetBool;
+                default:
+                    throw new ArgumentException("Invalid operator");
+            }
+        }
+        else
+        {
+            throw new ArgumentException("Invalid type");
         }
     }
 
-    public IEnumerable<Window> FindWindowsWithCondition(Window searchWindow,
-        Func<Time, double> calculateValue,
-        RelationnalOperator relationalOperator, double targetValue,
+    public IEnumerable<Window> FindWindowsWithCondition<T>(Window searchWindow,
+        Func<Time, T> calculateValue,
+        RelationnalOperator relationalOperator, T targetValue,
         TimeSpan stepSize)
     {
         List<Window> validWindows = new List<Window>();
@@ -476,10 +508,10 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
         while (current <= end)
         {
             // Calculer la valeur actuelle à la date 'current'
-            double currentValue = calculateValue(current);
+            T currentValue = calculateValue(current);
 
             // Vérifier la condition à la date actuelle
-            if (EvaluateCondition(currentValue, targetValue, relationalOperator))
+            if (EvaluateCondition<T>(currentValue, targetValue, relationalOperator))
             {
                 // Si la condition est satisfaite et qu'on n'est pas déjà dans une fenêtre valide
                 if (!isInValidWindow)
@@ -520,8 +552,8 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
         return validWindows;
     }
 
-    private Time FindTransition(Time start, Time end, Func<Time, double> calculateValue,
-        double targetValue, RelationnalOperator relationalOperator, TimeSpan precision)
+    private Time FindTransition<T>(Time start, Time end, Func<Time, T> calculateValue,
+        T targetValue, RelationnalOperator relationalOperator, TimeSpan precision)
     {
         while ((end - start) > precision)
         {
@@ -529,10 +561,10 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
             Time mid = start + (end - start) / 2;
 
             // Calculer la valeur au milieu
-            double midValue = calculateValue(mid);
+            T midValue = calculateValue(mid);
 
             // Vérifier la condition à la date 'mid'
-            if (EvaluateCondition(midValue, targetValue, relationalOperator))
+            if (EvaluateCondition<T>(midValue, targetValue, relationalOperator))
             {
                 // Si la condition est satisfaite à 'mid', on continue à chercher vers le début pour trouver la transition exacte
                 end = mid;

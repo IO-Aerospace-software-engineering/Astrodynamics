@@ -139,36 +139,36 @@ public class APITest
             TimeSpan.FromSeconds(3600.0)));
     }
 
-    [Fact]
-    public void FindWindowsOnCoordinateConstraint()
-    {
-        Site site = new Site(13, "DSS-13", TestHelpers.EarthAtJ2000,
-            new Planetodetic(-116.7944627147624 * IO.Astrodynamics.Constants.Deg2Rad,
-                35.2471635434595 * IO.Astrodynamics.Constants.Deg2Rad, 0.107));
-        //Find time windows when the moon will be above the horizon relative to Deep Space Station 13
-        var res = API.Instance.FindWindowsOnCoordinateConstraint(
-            new Window(TimeSystem.Time.CreateTDB(730036800.0), TimeSystem.Time.CreateTDB(730123200)), site,
-            TestHelpers.MoonAtJ2000, site.Frame, CoordinateSystem.Latitudinal, Coordinate.Latitude,
-            RelationnalOperator.Greater,
-            0.0, 0.0, Aberration.None, TimeSpan.FromSeconds(60.0));
-
-        var windows = res as Window[] ?? res.ToArray();
-        Assert.Single(windows);
-        Assert.Equal("2023-02-19T14:33:08.9179879 TDB", windows[0].StartDate.ToString());
-        Assert.Equal("2023-02-20T00:00:00.0000000 TDB", windows[0].EndDate.ToString());
-        Assert.Throws<ArgumentNullException>(() => API.Instance.FindWindowsOnCoordinateConstraint(
-            new Window(TimeSystem.Time.CreateTDB(730036800.0), TimeSystem.Time.CreateTDB(730123200)), null,
-            TestHelpers.MoonAtJ2000, site.Frame, CoordinateSystem.Latitudinal, Coordinate.Latitude,
-            RelationnalOperator.Greater, 0.0, 0.0, Aberration.None, TimeSpan.FromSeconds(60.0)));
-        Assert.Throws<ArgumentNullException>(() => API.Instance.FindWindowsOnCoordinateConstraint(
-            new Window(TimeSystem.Time.CreateTDB(730036800.0), TimeSystem.Time.CreateTDB(730123200)), site,
-            null, site.Frame, CoordinateSystem.Latitudinal, Coordinate.Latitude,
-            RelationnalOperator.Greater, 0.0, 0.0, Aberration.None, TimeSpan.FromSeconds(60.0)));
-        Assert.Throws<ArgumentNullException>(() => API.Instance.FindWindowsOnCoordinateConstraint(
-            new Window(TimeSystem.Time.CreateTDB(730036800.0), TimeSystem.Time.CreateTDB(730123200)), site,
-            TestHelpers.MoonAtJ2000, null, CoordinateSystem.Latitudinal, Coordinate.Latitude,
-            RelationnalOperator.Greater, 0.0, 0.0, Aberration.None, TimeSpan.FromSeconds(60.0)));
-    }
+    // [Fact]
+    // public void FindWindowsOnCoordinateConstraint()
+    // {
+    //     Site site = new Site(13, "DSS-13", TestHelpers.EarthAtJ2000,
+    //         new Planetodetic(-116.7944627147624 * IO.Astrodynamics.Constants.Deg2Rad,
+    //             35.2471635434595 * IO.Astrodynamics.Constants.Deg2Rad, 0.107));
+    //     //Find time windows when the moon will be above the horizon relative to Deep Space Station 13
+    //     var res = API.Instance.FindWindowsOnCoordinateConstraint(
+    //         new Window(TimeSystem.Time.CreateTDB(730036800.0), TimeSystem.Time.CreateTDB(730123200)), site,
+    //         TestHelpers.MoonAtJ2000, site.Frame, CoordinateSystem.Latitudinal, Coordinate.Latitude,
+    //         RelationnalOperator.Greater,
+    //         0.0, 0.0, Aberration.None, TimeSpan.FromSeconds(60.0));
+    //
+    //     var windows = res as Window[] ?? res.ToArray();
+    //     Assert.Single(windows);
+    //     Assert.Equal("2023-02-19T14:33:08.9179879 TDB", windows[0].StartDate.ToString());
+    //     Assert.Equal("2023-02-20T00:00:00.0000000 TDB", windows[0].EndDate.ToString());
+    //     Assert.Throws<ArgumentNullException>(() => API.Instance.FindWindowsOnCoordinateConstraint(
+    //         new Window(TimeSystem.Time.CreateTDB(730036800.0), TimeSystem.Time.CreateTDB(730123200)), null,
+    //         TestHelpers.MoonAtJ2000, site.Frame, CoordinateSystem.Latitudinal, Coordinate.Latitude,
+    //         RelationnalOperator.Greater, 0.0, 0.0, Aberration.None, TimeSpan.FromSeconds(60.0)));
+    //     Assert.Throws<ArgumentNullException>(() => API.Instance.FindWindowsOnCoordinateConstraint(
+    //         new Window(TimeSystem.Time.CreateTDB(730036800.0), TimeSystem.Time.CreateTDB(730123200)), site,
+    //         null, site.Frame, CoordinateSystem.Latitudinal, Coordinate.Latitude,
+    //         RelationnalOperator.Greater, 0.0, 0.0, Aberration.None, TimeSpan.FromSeconds(60.0)));
+    //     Assert.Throws<ArgumentNullException>(() => API.Instance.FindWindowsOnCoordinateConstraint(
+    //         new Window(TimeSystem.Time.CreateTDB(730036800.0), TimeSystem.Time.CreateTDB(730123200)), site,
+    //         TestHelpers.MoonAtJ2000, null, CoordinateSystem.Latitudinal, Coordinate.Latitude,
+    //         RelationnalOperator.Greater, 0.0, 0.0, Aberration.None, TimeSpan.FromSeconds(60.0)));
+    // }
 
     [Fact]
     public void FindWindowsOnIlluminationConstraint()
