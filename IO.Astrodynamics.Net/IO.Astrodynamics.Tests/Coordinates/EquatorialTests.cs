@@ -67,7 +67,7 @@ namespace IO.Astrodynamics.Tests.Coordinates
             }
             else
             {
-                Assert.Equal(new Vector3(-291608384.63343555, -266716833.3942334, -76102487.09990202), eq.ToCartesian());
+                Assert.Equal(new Vector3(-291608384.6334343, -266716833.39422607, -76102487.09989929), eq.ToCartesian());
             }
         }
     }

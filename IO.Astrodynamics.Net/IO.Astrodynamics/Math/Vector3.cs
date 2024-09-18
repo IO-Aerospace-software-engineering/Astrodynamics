@@ -86,7 +86,7 @@ namespace IO.Astrodynamics.Math
             {
                 return Quaternion.Zero;
             }
-            
+
             var mag1 = Magnitude();
             var mag2 = vector.Magnitude();
             if (System.Math.Abs(angle - Constants.PI) < double.Epsilon) //Manage 180° case

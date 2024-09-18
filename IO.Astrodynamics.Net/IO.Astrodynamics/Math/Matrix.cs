@@ -298,6 +298,49 @@ public readonly record struct Matrix
         return mtx;
     }
 
+
+    public Quaternion ToQuaternion()
+    {
+        double q0, q1, q2, q3;
+        double trace = _data[0, 0] + _data[1, 1] + _data[2, 2];  // Sum of diagonal elements
+        double s;
+
+        if (trace > 0)
+        {
+            s = System.Math.Sqrt(trace + 1.0) * 2; // 4 * q0
+            q0 = 0.25 * s;
+            q1 = (_data[2, 1] - _data[1, 2]) / s;
+            q2 = (_data[0, 2] - _data[2, 0]) / s;
+            q3 = (_data[1, 0] - _data[0, 1]) / s;
+        }
+        else if ((_data[0, 0] > _data[1, 1]) && (_data[0, 0] > _data[2, 2]))
+        {
+            s = System.Math.Sqrt(1.0 + _data[0, 0] - _data[1, 1] - _data[2, 2]) * 2; // 4 * q1
+            q0 = (_data[2, 1] - _data[1, 2]) / s;
+            q1 = 0.25 * s;
+            q2 = (_data[0, 1] + _data[1, 0]) / s;
+            q3 = (_data[0, 2] + _data[2, 0]) / s;
+        }
+        else if (_data[1, 1] > _data[2, 2])
+        {
+            s = System.Math.Sqrt(1.0 + _data[1, 1] - _data[0, 0] - _data[2, 2]) * 2; // 4 * q2
+            q0 = (_data[0, 2] - _data[2, 0]) / s;
+            q1 = (_data[0, 1] + _data[1, 0]) / s;
+            q2 = 0.25 * s;
+            q3 = (_data[1, 2] + _data[2, 1]) / s;
+        }
+        else
+        {
+            s = System.Math.Sqrt(1.0 + _data[2, 2] - _data[0, 0] - _data[1, 1]) * 2; // 4 * q3
+            q0 = (_data[1, 0] - _data[0, 1]) / s;
+            q1 = (_data[0, 2] + _data[2, 0]) / s;
+            q2 = (_data[1, 2] + _data[2, 1]) / s;
+            q3 = 0.25 * s;
+        }
+
+        return new Quaternion(q0, new Vector3(q1, q2, q3)).Normalize();
+    }
+
     public bool Equals(Matrix other)
     {
         if (Rows != other.Rows)

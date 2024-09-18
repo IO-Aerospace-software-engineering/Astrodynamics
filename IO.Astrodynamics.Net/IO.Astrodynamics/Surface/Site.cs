@@ -103,7 +103,7 @@ namespace IO.Astrodynamics.Surface
         public Horizontal GetHorizontalCoordinates(in Time epoch, ILocalizable target, Aberration aberration)
         {
             var position = target.GetEphemeris(epoch, this, Frame, aberration).ToStateVector().Position;
-
+            
             var az = -System.Math.Atan2(position.Y, position.X);
             if (az < 0)
             {
@@ -186,10 +186,7 @@ namespace IO.Astrodynamics.Surface
         public IEnumerable<Window> FindWindowsOnDistanceConstraint(in Window searchWindow, ILocalizable observer, RelationnalOperator relationalOperator, double value,
             Aberration aberration, in TimeSpan stepSize)
         {
-            Func<Time, double> calculateDistance = date =>
-            {
-                return GetEphemeris(date, observer, Frames.Frame.ICRF, aberration).ToStateVector().Position.Magnitude();
-            };
+            Func<Time, double> calculateDistance = date => { return GetEphemeris(date, observer, Frames.Frame.ICRF, aberration).ToStateVector().Position.Magnitude(); };
 
             return _geometryFinder.FindWindowsWithCondition(searchWindow, calculateDistance, relationalOperator, value, stepSize);
         }
