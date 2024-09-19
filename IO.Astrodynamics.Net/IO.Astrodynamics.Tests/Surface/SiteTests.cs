@@ -209,11 +209,9 @@ namespace IO.Astrodynamics.Tests.Surface
                 TimeSpan.FromSeconds(60.0));
         
             var windows = res as Window[] ?? res.ToArray();
-            Assert.Equal(2, windows.Length);
-            Assert.Equal(new TimeSystem.Time("2000-01-01T11:59:00.0000000 TDB"), windows[0].StartDate, TestHelpers.TimeComparer);
-            Assert.Equal(new TimeSystem.Time("2000-01-13T18:25:04.9051953 TDB"), windows[0].EndDate, TestHelpers.TimeComparer);
-            Assert.Equal(new TimeSystem.Time("2000-01-26T03:08:41.2500000 TDB"), windows[1].StartDate, TestHelpers.TimeComparer);
-            Assert.Equal(new TimeSystem.Time("2000-02-01T11:59:59.4752133 TDB"), windows[1].EndDate, TestHelpers.TimeComparer);
+            Assert.Single(windows);
+            Assert.Equal(new TimeSystem.Time("2000-01-07T17:57:30.0000000 TDB"), windows[0].StartDate, TestHelpers.TimeComparer);
+            Assert.Equal(new TimeSystem.Time("2000-01-21T20:19:21.6632940 TDB"), windows[0].EndDate, TestHelpers.TimeComparer);
         }
 
         [Fact]
