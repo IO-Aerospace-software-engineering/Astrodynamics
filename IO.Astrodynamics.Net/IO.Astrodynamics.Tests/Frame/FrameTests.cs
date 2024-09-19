@@ -55,8 +55,18 @@ public class FrameTests
     {
         var site = new Site(339, "TestSite", TestHelpers.EarthAtJ2000, new Planetodetic(-2.0384478466737517, 0.61517960506340708, 1073.2434632601216));
         var res = site.Frame.ToFrame(Frames.Frame.ICRF, Astrodynamics.TimeSystem.Time.J2000TDB);
-        Assert.Equal(new Quaternion(0.8786982934817297, -0.06636828545847889, -0.4550266984882365, -0.12820009118754108), res.Rotation);
-        Assert.Equal(new Vector3(5.9553215865189754E-05, 2.3226543847344109E-09, 4.2082165983713808E-05), res.AngularVelocity, TestHelpers.VectorComparer);
+        Assert.Equal(new Quaternion(0.8786982934817295, -0.06636828545847888, -0.4550266984882364, -0.12820009118754105), res.Rotation, TestHelpers.QuaternionComparer);
+        Assert.Equal(new Vector3(-5.9553215865189714E-05, -2.3226543847335639E-09, -4.2082165983713788E-05), res.AngularVelocity, TestHelpers.VelocityVectorComparer);
+    }
+
+    [Fact]
+    public void SiteFrameRelativeToMoon()
+    {
+        Site site = new Site(13, "DSS-13", TestHelpers.EarthAtJ2000);
+        // var site = new Site(339, "TestSite", TestHelpers.EarthAtJ2000, new Planetodetic(-2.0384478466737517, 0.61517960506340708, 1073.2434632601216));
+        var res = site.Frame.ToFrame(TestHelpers.MoonAtJ2000.Frame, Astrodynamics.TimeSystem.Time.J2000TDB);
+        Assert.Equal(new Quaternion(0.7944038930635089, -0.3881980140265745, -0.3544407946772864, -0.30429669676139814), res.Rotation, TestHelpers.QuaternionComparer);
+        Assert.Equal(new Vector3(-5.7424516047543196E-05, -1.0695369682206368E-06, -4.0892322780031159E-05), res.AngularVelocity, TestHelpers.VelocityVectorComparer);
     }
 
     [Fact]

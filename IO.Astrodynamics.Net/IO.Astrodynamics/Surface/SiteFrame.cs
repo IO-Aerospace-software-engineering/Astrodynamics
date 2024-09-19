@@ -56,8 +56,8 @@ public class SiteFrame : Frame
             Matrix mtx = new Matrix(rotationMatrix);
 
             var rotation = celestialBodyFrameToICRF.Rotation * mtx.ToQuaternion().Conjugate();
-            var transAV = celestialBodyFrameToICRF.AngularVelocity.Inverse().Rotate(rotation.Conjugate());
-            return new StateOrientation(rotation, transAV, epoch, this);
+            var angularVelocity = celestialBodyFrameToICRF.AngularVelocity.Rotate(rotation.Conjugate());
+            return new StateOrientation(rotation, angularVelocity, epoch, this);
         });
         return base.GetStateOrientationToICRF(epoch);
     }

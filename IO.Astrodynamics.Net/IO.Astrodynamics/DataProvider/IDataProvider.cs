@@ -9,6 +9,6 @@ namespace IO.Astrodynamics.DataProvider;
 public interface IDataProvider
 {
     StateOrientation FrameTransformation(Frame source, Frame target, in Time date);
-    OrbitalParameters.OrbitalParameters GetEphemeris(in Time epoch, ILocalizable observer, ILocalizable target, Frame frame, Aberration aberration);
+    OrbitalParameters.OrbitalParameters GetEphemeris(in Time epoch, ILocalizable target, ILocalizable observer, Frame frame, Aberration aberration);
     DTO.CelestialBody GetCelestialBodyInfo(int naifId);
 }

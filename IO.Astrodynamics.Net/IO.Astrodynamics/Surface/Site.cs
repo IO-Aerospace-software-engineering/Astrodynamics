@@ -19,7 +19,8 @@ namespace IO.Astrodynamics.Surface
     {
         private readonly IDataProvider _dataProvider;
         private readonly GeometryFinder _geometryFinder = new GeometryFinder();
-        public ConcurrentDictionary<Time, StateVector> StateVectorsRelativeToICRF { get; } = new ConcurrentDictionary<Time, StateVector>();
+        private readonly bool _isFromKernel = false;
+        private ConcurrentDictionary<Time, StateVector> _stateVectorsRelativeToICRF { get; } = new ConcurrentDictionary<Time, StateVector>();
         public int Id { get; }
         public int NaifId { get; }
         public string Name { get; }
@@ -51,7 +52,8 @@ namespace IO.Astrodynamics.Surface
 
             if (double.IsNaN(planetodetic.Latitude))
             {
-                InitialOrbitalParameters = API.Instance.ReadEphemeris(Time.J2000TDB, CelestialBody, this, CelestialBody.Frame, Aberration.None);
+                _isFromKernel = true;
+                InitialOrbitalParameters = _dataProvider.GetEphemeris(Time.J2000TDB, this, celestialItem, celestialItem.Frame, Aberration.None);
                 Planetodetic = GetPlanetocentricCoordinates().ToPlanetodetic(CelestialBody.Flattening, CelestialBody.EquatorialRadius);
             }
             else
@@ -103,7 +105,7 @@ namespace IO.Astrodynamics.Surface
         public Horizontal GetHorizontalCoordinates(in Time epoch, ILocalizable target, Aberration aberration)
         {
             var position = target.GetEphemeris(epoch, this, Frame, aberration).ToStateVector().Position;
-            
+
             var az = -System.Math.Atan2(position.Y, position.X);
             if (az < 0)
             {
@@ -138,8 +140,14 @@ namespace IO.Astrodynamics.Surface
 
         public OrbitalParameters.OrbitalParameters GetGeometricStateFromICRF(in Time date)
         {
-            return StateVectorsRelativeToICRF.GetOrAdd(date,
-                x => _dataProvider.GetEphemeris(x, this, new Barycenter(Barycenters.SOLAR_SYSTEM_BARYCENTER.NaifId), Frames.Frame.ICRF, Aberration.None).ToStateVector());
+            return _stateVectorsRelativeToICRF.GetOrAdd(date, dt =>
+            {
+                if(_isFromKernel)
+                {
+                    return _dataProvider.GetEphemeris(dt, this,new Barycenter(0), Frames.Frame.ICRF, Aberration.None).ToStateVector();
+                }
+                return GetEphemeris(dt, new Barycenter(0), Frames.Frame.ICRF, Aberration.None).ToStateVector();
+            });
         }
 
         /// <summary>
@@ -152,6 +160,10 @@ namespace IO.Astrodynamics.Surface
         /// <returns></returns>
         public OrbitalParameters.OrbitalParameters GetEphemeris(in Time epoch, ILocalizable observer, Frame frame, Aberration aberration)
         {
+            if(_isFromKernel)
+            {
+                return _dataProvider.GetEphemeris(epoch, this, observer, frame, aberration);
+            }
             var siteInFrame = new StateVector(Planetodetic.ToPlanetocentric(CelestialBody.Flattening, CelestialBody.EquatorialRadius).ToCartesianCoordinates(),
                 Vector3.Zero, CelestialBody, epoch, CelestialBody.Frame).ToFrame(frame).ToStateVector();
             return siteInFrame.RelativeTo(observer, aberration);

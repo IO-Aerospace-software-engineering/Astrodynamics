@@ -30,8 +30,8 @@ namespace IO.Astrodynamics.Tests.Surface
             var sv = site.GetEphemeris(epoch, earth, Frames.Frame.ICRF, Aberration.None).ToStateVector();
 
             Assert.Equal(
-                new StateVector(new Vector3(-4998235.412102718, 1489960.1216733272, 3660829.160850381),
-                    new Vector3(-108.65008728315213, -364.4771217776813, -0.0006384006413294877), earth, epoch,
+                new StateVector(new Vector3(-4998233.547629601, 1489959.565879058, 3660827.7952649333),
+                    new Vector3(-108.65703014473667, -364.46975244800444, -0.013117011914007314), earth, epoch,
                     Frames.Frame.ICRF), sv, TestHelpers.StateVectorComparer);
         }
 
@@ -83,6 +83,17 @@ namespace IO.Astrodynamics.Tests.Surface
             Assert.Equal(-33.61891613059521, hor.Elevation * IO.Astrodynamics.Constants.Rad2Deg, 6);
             Assert.Equal(376638211.11212999, hor.Range, 6);
         }
+        
+        [Fact]
+        public void GetHorizontalCoordinates5()
+        {
+            var epoch = new TimeSystem.Time(2000, 1, 15, 12, 0, 0);
+            var site = new Site(339, "TestSite", TestHelpers.EarthAtJ2000, new Planetodetic(-2.0384478466737517, 0.61517960506340708, 1073.2434632601216));
+            var hor = site.GetHorizontalCoordinates(epoch, TestHelpers.MoonAtJ2000, Aberration.None);
+            Assert.Equal(312.54264512355752, hor.Azimuth * IO.Astrodynamics.Constants.Rad2Deg, 6);
+            Assert.Equal(-33.61891613059521, hor.Elevation * IO.Astrodynamics.Constants.Rad2Deg, 6);
+            Assert.Equal(376638212.43274897, hor.Range, 6);
+        }
 
         [Fact]
         public void Create()
@@ -115,10 +126,10 @@ namespace IO.Astrodynamics.Tests.Surface
                 .Select(x => x.ToStateVector()).ToArray();
 
             Assert.Equal(2, sv.Length);
-            Assert.Equal(new StateVector(new Vector3(-4998235.412102718, 1489960.1216733272, 3660829.160850381),
-                new Vector3(-108.65008728315213, -364.4771217776813, -0.0006384006413294877), earth, epoch, Frames.Frame.ICRF), sv[0], TestHelpers.StateVectorComparer);
-            Assert.Equal(new StateVector(new Vector3(-5023125.755622568, 1403765.000518445, 3660827.77666849),
-                    new Vector3(-102.36463912375542, -366.2921525032654, -0.000642368076362052), earth, epoch + TimeSpan.FromDays(1.0), Frames.Frame.ICRF), sv[1],
+            Assert.Equal(new StateVector(new Vector3(-4998233.547629601, 1489959.565879058, 3660827.7952649333),
+                new Vector3(-108.65703014473667, -364.46975244800444, -0.013117011914007314), earth, epoch, Frames.Frame.ICRF), sv[0], TestHelpers.StateVectorComparer);
+            Assert.Equal(new StateVector(new Vector3(-5023123.881856798, 1403764.4769290173, 3660826.4110731576),
+                    new Vector3(-102.37160945689291, -366.2848679089919, -0.01299987338117344), earth, epoch + TimeSpan.FromDays(1.0), Frames.Frame.ICRF), sv[1],
                 TestHelpers.StateVectorComparer);
         }
 
@@ -142,7 +153,7 @@ namespace IO.Astrodynamics.Tests.Surface
 
             var sv = site.GetEphemeris(epoch, earth, Frames.Frame.ICRF, Aberration.None).ToStateVector().Velocity;
 
-            Assert.Equal(new Vector3(-108.65008748008586, -364.4771217160694, -0.0006383925320366459), sv, TestHelpers.VectorComparer);
+            Assert.Equal(new Vector3(-108.65703014473667, -364.46975244800444, -0.013117011914007314), sv, TestHelpers.VectorComparer);
         }
 
         [Fact]

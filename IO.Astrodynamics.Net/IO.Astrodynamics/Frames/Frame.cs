@@ -81,9 +81,9 @@ public class Frame : IEquatable<Frame>
 
         var rotation = targetToICRF.Rotation.Conjugate() * sourceToICRF.Rotation;
 
-        var transAV = targetToICRF.AngularVelocity.Inverse().Rotate(rotation.Conjugate()) + sourceToICRF.AngularVelocity;
+        var angularVelocity = targetToICRF.AngularVelocity.Inverse().Rotate(rotation.Conjugate()) + sourceToICRF.AngularVelocity;
 
-        return new StateOrientation(rotation, transAV, epoch, this);
+        return new StateOrientation(rotation, angularVelocity, epoch, this);
     }
 
     #region Operators

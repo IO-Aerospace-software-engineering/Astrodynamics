@@ -37,6 +37,22 @@ namespace IO.Astrodynamics.Tests
                 return System.Math.Abs(v1.X - v2.X) < 1E-03 && System.Math.Abs(v1.Y - v2.Y) < 1E-03 && System.Math.Abs(v1.Z - v2.Z) < 1E-03;
             }
         }
+        
+        internal static bool VelocityVectorComparer(Vector3 v1, Vector3 v2)
+        {
+            lock (LockObj)
+            {
+                return System.Math.Abs(v1.X - v2.X) < 1E-09 && System.Math.Abs(v1.Y - v2.Y) < 1E-09 && System.Math.Abs(v1.Z - v2.Z) < 1E-09;
+            }
+        }
+        
+        internal static bool QuaternionComparer(Quaternion q1, Quaternion q2)
+        {
+            lock (LockObj)
+            {
+                return System.Math.Abs(q1.W - q2.W) < 1E-06 && VectorComparer(q1.VectorPart, q2.VectorPart);
+            }
+        }
 
         internal static bool StateVectorComparer(StateVector sv1, StateVector sv2)
         {
