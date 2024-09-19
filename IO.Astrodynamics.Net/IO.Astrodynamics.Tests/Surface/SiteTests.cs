@@ -83,7 +83,7 @@ namespace IO.Astrodynamics.Tests.Surface
             Assert.Equal(-33.61891613059521, hor.Elevation * IO.Astrodynamics.Constants.Rad2Deg, 6);
             Assert.Equal(376638211.11212999, hor.Range, 6);
         }
-        
+
         [Fact]
         public void GetHorizontalCoordinates5()
         {
@@ -202,16 +202,35 @@ namespace IO.Astrodynamics.Tests.Surface
         public void FindWindowsOnCoordinateConstraint()
         {
             Site site = new Site(13, "DSS-13", TestHelpers.EarthAtJ2000);
-        
+
             var res = site.FindWindowsOnCoordinateConstraint(new Window(new TimeSystem.Time("2000-01-01 12:00:00").ToTDB(), new TimeSystem.Time("2000-02-01 12:00:00").ToTDB()),
                 TestHelpers.MoonAtJ2000,
                 TestHelpers.MoonAtJ2000.Frame, CoordinateSystem.RaDec, Coordinate.Declination, RelationnalOperator.Greater, 0.0, 0.0, Aberration.None,
                 TimeSpan.FromSeconds(60.0));
-        
+
             var windows = res as Window[] ?? res.ToArray();
             Assert.Single(windows);
             Assert.Equal(new TimeSystem.Time("2000-01-07T17:57:30.0000000 TDB"), windows[0].StartDate, TestHelpers.TimeComparer);
             Assert.Equal(new TimeSystem.Time("2000-01-21T20:19:21.6632940 TDB"), windows[0].EndDate, TestHelpers.TimeComparer);
+        }
+
+        [Fact]
+        public void FindWindowsWhenMoonIsVisibleFromSite()
+        {
+            Site site = new Site(13, "DSS-13", TestHelpers.EarthAtJ2000);
+
+            var res = TestHelpers.MoonAtJ2000.FindWindowsOnCoordinateConstraint(
+                new Window(new TimeSystem.Time("2000-01-01 12:00:00").ToTDB(), new TimeSystem.Time("2000-01-02 12:00:00").ToTDB()),
+                site,
+                site.Frame, CoordinateSystem.Rectangular, Coordinate.Z, RelationnalOperator.Greater, 0.0, 0.0, Aberration.None,
+                TimeSpan.FromSeconds(60.0));
+
+            var windows = res as Window[] ?? res.ToArray();
+            Assert.Equal(2, windows.Length);
+            Assert.Equal(new TimeSystem.Time("2000-01-01T11:59:00.0000000 TDB"), windows[0].StartDate, TestHelpers.TimeComparer);
+            Assert.Equal(new TimeSystem.Time("2000-01-01T21:32:59.4744873 TDB"), windows[0].EndDate, TestHelpers.TimeComparer);
+            Assert.Equal(new TimeSystem.Time("2000-01-02T11:23:57.1875000 TDB"), windows[1].StartDate, TestHelpers.TimeComparer);
+            Assert.Equal(new TimeSystem.Time("2000-01-02T11:59:59.4719697 TDB"), windows[1].EndDate, TestHelpers.TimeComparer);
         }
 
         [Fact]
