@@ -123,10 +123,10 @@ namespace IO.Astrodynamics.Mission
                     siteStepSize = TimeSpan.FromMinutes(1.0);
                 }
 
-                foreach (var site in _sites)
-                {
-                    await site.PropagateAsync(Window, siteStepSize, SiteDirectory);
-                }
+                // foreach (var site in _sites)
+                // {
+                //     await site.PropagateAsync(Window, siteStepSize, SiteDirectory);
+                // }
             }
 
             if (_stars.Count > 0)

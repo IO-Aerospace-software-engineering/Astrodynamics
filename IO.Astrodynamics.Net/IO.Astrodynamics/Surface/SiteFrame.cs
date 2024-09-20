@@ -59,6 +59,5 @@ public class SiteFrame : Frame
             var angularVelocity = celestialBodyFrameToICRF.AngularVelocity.Rotate(rotation.Conjugate());
             return new StateOrientation(rotation, angularVelocity, epoch, this);
         });
-        return base.GetStateOrientationToICRF(epoch);
     }
 }

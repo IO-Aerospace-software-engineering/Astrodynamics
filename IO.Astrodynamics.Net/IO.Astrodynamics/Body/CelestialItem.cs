@@ -225,7 +225,7 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
             var lightTime = TimeSpan.FromSeconds(observerGeometricState.Position.Magnitude() / Constants.C);
 
             Time newEpoch;
-            if (aberration == Aberration.LT)
+            if (aberration is Aberration.LT or Aberration.LTS)
                 newEpoch = epoch - lightTime;
             else
                 newEpoch = epoch + lightTime;

@@ -34,36 +34,57 @@ namespace IO.Astrodynamics.Surface
         public double GM { get; } = 0.0;
         public double Mass { get; } = 0.0;
 
-        public Site(int id, string name, CelestialBody celestialItem, IDataProvider dataProvider = null) : this(id, name, celestialItem,
-            new Planetodetic(double.NaN, double.NaN, double.NaN), dataProvider)
-        {
-        }
+        /// <summary>
+/// Initializes a new instance of the <see cref="Site"/> class with default planetodetic coordinates.
+/// </summary>
+/// <param name="userId">The unique identifier for the site.</param>
+/// <param name="name">The name of the site.</param>
+/// <param name="celestialItem">The celestial body associated with the site.</param>
+/// <param name="dataProvider">The data provider for ephemeris data. If null, a default provider is used.</param>
+/// <exception cref="ArgumentNullException">Thrown when <paramref name="celestialItem"/> is null.</exception>
+/// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="userId"/> is less than or equal to zero.</exception>
+/// <exception cref="ArgumentException">Thrown when <paramref name="name"/> is null or empty.</exception>
+public Site(int userId, string name, CelestialBody celestialItem, IDataProvider dataProvider = null) : this(userId, name, celestialItem,
+    new Planetodetic(double.NaN, double.NaN, double.NaN), dataProvider)
+{
+}
 
-        public Site(int id, string name, CelestialBody celestialItem, Planetodetic planetodetic, IDataProvider dataProvider = null)
-        {
-            if (celestialItem == null) throw new ArgumentNullException(nameof(celestialItem));
-            if (id <= 0) throw new ArgumentOutOfRangeException(nameof(id));
-            if (string.IsNullOrEmpty(name)) throw new ArgumentException("Value cannot be null or empty.", nameof(name));
-            _dataProvider = dataProvider ?? new SpiceDataProvider();
-            Name = name;
-            CelestialBody = celestialItem;
-            Id = id;
-            NaifId = celestialItem.NaifId * 1000 + id;
+        /// <summary>
+/// Initializes a new instance of the <see cref="Site"/> class.
+/// </summary>
+/// <param name="userId">The unique identifier for the site.</param>
+/// <param name="name">The name of the site.</param>
+/// <param name="celestialItem">The celestial body associated with the site.</param>
+/// <param name="planetodetic">The planetodetic coordinates of the site.</param>
+/// <param name="dataProvider">The data provider for ephemeris data. If null, a default provider is used.</param>
+/// <exception cref="ArgumentNullException">Thrown when <paramref name="celestialItem"/> is null.</exception>
+/// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="userId"/> is less than or equal to zero.</exception>
+/// <exception cref="ArgumentException">Thrown when <paramref name="name"/> is null or empty.</exception>
+public Site(int userId, string name, CelestialBody celestialItem, Planetodetic planetodetic, IDataProvider dataProvider = null)
+{
+    if (celestialItem == null) throw new ArgumentNullException(nameof(celestialItem));
+    if (userId <= 0) throw new ArgumentOutOfRangeException(nameof(userId));
+    if (string.IsNullOrEmpty(name)) throw new ArgumentException("Value cannot be null or empty.", nameof(name));
+    _dataProvider = dataProvider ?? new SpiceDataProvider();
+    Name = name;
+    CelestialBody = celestialItem;
+    Id = userId;
+    NaifId = celestialItem.NaifId * 1000 + userId;
 
-            if (double.IsNaN(planetodetic.Latitude))
-            {
-                _isFromKernel = true;
-                InitialOrbitalParameters = _dataProvider.GetEphemeris(Time.J2000TDB, this, celestialItem, celestialItem.Frame, Aberration.None);
-                Planetodetic = GetPlanetocentricCoordinates().ToPlanetodetic(CelestialBody.Flattening, CelestialBody.EquatorialRadius);
-            }
-            else
-            {
-                Planetodetic = planetodetic;
-                InitialOrbitalParameters = GetEphemeris(Time.J2000TDB, CelestialBody, CelestialBody.Frame, Aberration.None);
-            }
+    if (double.IsNaN(planetodetic.Latitude))
+    {
+        _isFromKernel = true;
+        InitialOrbitalParameters = _dataProvider.GetEphemeris(Time.J2000TDB, this, celestialItem, celestialItem.Frame, Aberration.None);
+        Planetodetic = GetPlanetocentricCoordinates().ToPlanetodetic(CelestialBody.Flattening, CelestialBody.EquatorialRadius);
+    }
+    else
+    {
+        Planetodetic = planetodetic;
+        InitialOrbitalParameters = GetEphemeris(Time.J2000TDB, CelestialBody, CelestialBody.Frame, Aberration.None);
+    }
 
-            Frame = new SiteFrame(name.ToUpper() + "_TOPO", this);
-        }
+    Frame = new SiteFrame(name.ToUpper() + "_TOPO", this);
+}
 
         /// <summary>
         /// Return known center of motions
@@ -138,6 +159,11 @@ namespace IO.Astrodynamics.Surface
             return ephemeris;
         }
 
+        /// <summary>
+        /// Get site ephemeris
+        /// </summary>
+        /// <param name="date"></param>
+        /// <returns></returns>
         public OrbitalParameters.OrbitalParameters GetGeometricStateFromICRF(in Time date)
         {
             return _stateVectorsRelativeToICRF.GetOrAdd(date, dt =>
@@ -342,17 +368,39 @@ namespace IO.Astrodynamics.Surface
             return _geometryFinder.FindWindowsWithCondition(searchWindow, evaluateIllumination, relationalOperator, value, stepSize);
         }
 
+        /// <summary>
+        /// Get illumination emission angle
+        /// </summary>
+        /// <param name="date"></param>
+        /// <param name="observer"></param>
+        /// <param name="aberration"></param>
+        /// <returns></returns>
         public double IlluminationEmission(Time date, ILocalizable observer, Aberration aberration)
         {
             return observer.GetEphemeris(date, this, Frame, aberration).ToStateVector().Position.Angle(Vector3.VectorZ);
         }
 
+        /// <summary>
+        /// Get illumination incidence angle
+        /// </summary>
+        /// <param name="date"></param>
+        /// <param name="illuminationSource"></param>
+        /// <param name="aberration"></param>
+        /// <returns></returns>
         public double IlluminationIncidence(Time date, ILocalizable illuminationSource, Aberration aberration)
         {
             var illuminationPosition = illuminationSource.GetEphemeris(date, this, this.Frame, aberration).ToStateVector().Position;
             return Vector3.VectorZ.Angle(illuminationPosition);
         }
 
+        /// <summary>
+        /// Get illumination phase angle
+        /// </summary>
+        /// <param name="date"></param>
+        /// <param name="illuminationSource"></param>
+        /// <param name="observer"></param>
+        /// <param name="aberration"></param>
+        /// <returns></returns>
         public double IlluminationPhase(Time date, ILocalizable illuminationSource, ILocalizable observer, Aberration aberration)
         {
             var illuminationPosition = illuminationSource.GetEphemeris(date, this, Frames.Frame.ICRF, aberration).ToStateVector().Position;
@@ -396,35 +444,36 @@ namespace IO.Astrodynamics.Surface
             API.Instance.WriteEphemeris(outputFile, this, stateVectors);
         }
 
-        /// <summary>
-        /// Propagate site
-        /// </summary>
-        /// <param name="window"></param>
-        /// <param name="sitesDirectory"></param>
-        /// <param name="stepSize"></param>
-        public async Task PropagateAsync(Window window, TimeSpan stepSize, DirectoryInfo sitesDirectory)
-        {
-            ResetPropagation();
-            PropagationOutput = sitesDirectory.CreateSubdirectory(Name);
-            var siteEphemeris = GetEphemeris(window, CelestialBody, Frames.Frame.ICRF, Aberration.None, stepSize).Select(x => x.ToStateVector());
-            await WriteFrameAsync(new FileInfo(Path.Combine(PropagationOutput.CreateSubdirectory("Frames").FullName, Name + ".tf")));
-            WriteEphemeris(new FileInfo(Path.Combine(PropagationOutput.CreateSubdirectory("Ephemeris").FullName, Name + ".spk")), siteEphemeris);
-            API.Instance.LoadKernels(PropagationOutput);
-        }
+        // /// <summary>
+        // /// Propagate site
+        // /// </summary>
+        // /// <param name="window"></param>
+        // /// <param name="sitesDirectory"></param>
+        // /// <param name="stepSize"></param>
+        // public async Task PropagateAsync(Window window, TimeSpan stepSize, DirectoryInfo sitesDirectory)
+        // {
+        //     ResetPropagation();
+        //     PropagationOutput = sitesDirectory.CreateSubdirectory(Name);
+        //     var siteEphemeris = GetEphemeris(window, CelestialBody, Frames.Frame.ICRF, Aberration.None, stepSize).Select(x => x.ToStateVector());
+        //     await WriteFrameAsync(new FileInfo(Path.Combine(PropagationOutput.CreateSubdirectory("Frames").FullName, Name + ".tf")));
+        //     WriteEphemeris(new FileInfo(Path.Combine(PropagationOutput.CreateSubdirectory("Ephemeris").FullName, Name + ".spk")), siteEphemeris);
+        //     API.Instance.LoadKernels(PropagationOutput);
+        // }
+        //
+        // /// <summary>
+        // /// Reset propagation elements
+        // /// </summary>
+        // private void ResetPropagation()
+        // {
+        //     if (IsPropagated)
+        //     {
+        //         API.Instance.UnloadKernels(PropagationOutput);
+        //         PropagationOutput.Delete(true);
+        //         PropagationOutput = null;
+        //     }
+        // }
 
-        /// <summary>
-        /// Reset propagation elements
-        /// </summary>
-        private void ResetPropagation()
-        {
-            if (IsPropagated)
-            {
-                API.Instance.UnloadKernels(PropagationOutput);
-                PropagationOutput.Delete(true);
-                PropagationOutput = null;
-            }
-        }
-
+        #region operators
         public bool Equals(Site other)
         {
             if (ReferenceEquals(null, other)) return false;
@@ -473,5 +522,6 @@ namespace IO.Astrodynamics.Surface
         {
             ReleaseUnmanagedResources();
         }
+        #endregion
     }
 }

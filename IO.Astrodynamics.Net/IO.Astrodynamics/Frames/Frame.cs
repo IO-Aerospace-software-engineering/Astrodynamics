@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using IO.Astrodynamics.DataProvider;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
@@ -67,6 +68,21 @@ public class Frame : IEquatable<Frame>
     public virtual StateOrientation GetStateOrientationToICRF(Time epoch)
     {
         return _stateOrientationsToICRF.GetOrAdd(epoch, _ => _dataProvider.FrameTransformation(this, ICRF, epoch));
+    }
+    
+    public bool AddStateOrientationToICRF(StateOrientation stateOrientation)
+    {
+        return _stateOrientationsToICRF.TryAdd(stateOrientation.Epoch, stateOrientation);
+    }
+    
+    public StateOrientation GetLatestStateOrientationToICRF()
+    {
+        return _stateOrientationsToICRF.Values.OrderBy(x=>x.Epoch).Last();
+    }
+    
+    public IEnumerable<StateOrientation> GetStateOrientationsToICRF()
+    {
+        return _stateOrientationsToICRF.OrderBy(x=>x.Key).Select(x=>x.Value).ToArray();
     }
 
     public StateOrientation ToFrame(Frame targetFrame, Time epoch)
