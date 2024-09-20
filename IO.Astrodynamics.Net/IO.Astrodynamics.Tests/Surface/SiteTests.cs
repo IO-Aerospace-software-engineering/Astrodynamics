@@ -240,7 +240,7 @@ namespace IO.Astrodynamics.Tests.Surface
                 new Planetodetic(-116.79445837 * Astrodynamics.Constants.Deg2Rad, 35.24716450 * Astrodynamics.Constants.Deg2Rad, 1070.85059));
 
             var res = site.FindWindowsOnIlluminationConstraint(new Window(TimeSystem.Time.CreateTDB(674524800), TimeSystem.Time.CreateTDB(674611200)), TestHelpers.Sun,
-                IlluminationAngle.Incidence, RelationnalOperator.Lower, System.Math.PI * 0.5 - (-0.8 * IO.Astrodynamics.Constants.Deg2Rad), 0.0, Aberration.CNS,
+                IlluminationAngle.Incidence, RelationnalOperator.Lower, System.Math.PI * 0.5 - (-0.8 * IO.Astrodynamics.Constants.Deg2Rad), 0.0, Aberration.LTS,
                 TimeSpan.FromSeconds(3600), TestHelpers.Sun);
 
             var windows = res as Window[] ?? res.ToArray();
@@ -329,6 +329,54 @@ namespace IO.Astrodynamics.Tests.Surface
             Assert.Equal(
                 $"KPL/FK{Environment.NewLine}\\begindata{Environment.NewLine}NAIF_BODY_NAME              += 'S33'{Environment.NewLine}NAIF_BODY_CODE              += 399033{Environment.NewLine}FRAME_S33_TOPO        = 1399033{Environment.NewLine}FRAME_1399033_NAME        = 'S33_TOPO'{Environment.NewLine}FRAME_1399033_CLASS       = 4{Environment.NewLine}FRAME_1399033_CLASS_ID    = 1399033{Environment.NewLine}FRAME_1399033_CENTER      = 399033{Environment.NewLine}OBJECT_399033_FRAME       = 'S33_TOPO'{Environment.NewLine}TKFRAME_1399033_SPEC      = 'ANGLES'{Environment.NewLine}TKFRAME_1399033_RELATIVE  = 'ITRF93'{Environment.NewLine}TKFRAME_1399033_ANGLES    = (-0.5235987755982988,-1.3962634015954636,3.141592653589793116){Environment.NewLine}TKFRAME_1399033_AXES      = (3,2,3){Environment.NewLine}TKFRAME_1399033_UNITS     = 'RADIANS'{Environment.NewLine}\\begintext{Environment.NewLine}",
                 res);
+        }
+
+        [Fact]
+        public void IlluminationIncidence()
+        {
+            Site site = new Site(13, "DSS-13", TestHelpers.EarthAtJ2000);
+            var res = site.IlluminationIncidence(TimeSystem.Time.J2000TDB, TestHelpers.Sun, Aberration.None);
+            Assert.Equal(2.1862895154418132, res);
+        }
+
+        [Fact]
+        public void IlluminationEmission()
+        {
+            Site site = new Site(13, "DSS-13", TestHelpers.EarthAtJ2000);
+            var res = site.IlluminationEmission(TimeSystem.Time.J2000TDB, TestHelpers.Sun, Aberration.None);
+            Assert.Equal(2.1862895154418132, res);
+        }
+
+        [Fact]
+        public void IlluminationPhase()
+        {
+            Site site = new Site(13, "DSS-13", TestHelpers.EarthAtJ2000);
+            var res = site.IlluminationPhase(TimeSystem.Time.J2000TDB, TestHelpers.Sun, TestHelpers.Sun, Aberration.None);
+            Assert.Equal(0.0, res);
+        }
+        
+        [Fact]
+        public void IlluminationIncidenceFromMoon()
+        {
+            Site site = new Site(13, "DSS-13", TestHelpers.EarthAtJ2000);
+            var res = site.IlluminationIncidence(TimeSystem.Time.J2000TDB, TestHelpers.Sun, Aberration.None);
+            Assert.Equal(2.1862895154418132, res);
+        }
+
+        [Fact]
+        public void IlluminationEmissionFromMoon()
+        {
+            Site site = new Site(13, "DSS-13", TestHelpers.EarthAtJ2000);
+            var res = site.IlluminationEmission(TimeSystem.Time.J2000TDB, TestHelpers.Moon, Aberration.None);
+            Assert.Equal(1.2777449825561968, res);
+        }
+
+        [Fact]
+        public void IlluminationPhaseFromMoon()
+        {
+            Site site = new Site(13, "DSS-13", TestHelpers.EarthAtJ2000);
+            var res = site.IlluminationPhase(TimeSystem.Time.J2000TDB, TestHelpers.Sun, TestHelpers.Moon, Aberration.None);
+            Assert.Equal(0.98449746814087213, res);
         }
     }
 }

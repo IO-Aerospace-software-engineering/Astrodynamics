@@ -142,10 +142,11 @@ namespace IO.Astrodynamics.Surface
         {
             return _stateVectorsRelativeToICRF.GetOrAdd(date, dt =>
             {
-                if(_isFromKernel)
+                if (_isFromKernel)
                 {
-                    return _dataProvider.GetEphemeris(dt, this,new Barycenter(0), Frames.Frame.ICRF, Aberration.None).ToStateVector();
+                    return _dataProvider.GetEphemeris(dt, this, new Barycenter(0), Frames.Frame.ICRF, Aberration.None).ToStateVector();
                 }
+
                 return GetEphemeris(dt, new Barycenter(0), Frames.Frame.ICRF, Aberration.None).ToStateVector();
             });
         }
@@ -160,10 +161,11 @@ namespace IO.Astrodynamics.Surface
         /// <returns></returns>
         public OrbitalParameters.OrbitalParameters GetEphemeris(in Time epoch, ILocalizable observer, Frame frame, Aberration aberration)
         {
-            if(_isFromKernel)
+            if (_isFromKernel)
             {
                 return _dataProvider.GetEphemeris(epoch, this, observer, frame, aberration);
             }
+
             var siteInFrame = new StateVector(Planetodetic.ToPlanetocentric(CelestialBody.Flattening, CelestialBody.EquatorialRadius).ToCartesianCoordinates(),
                 Vector3.Zero, CelestialBody, epoch, CelestialBody.Frame).ToFrame(frame).ToStateVector();
             return siteInFrame.RelativeTo(observer, aberration);
@@ -317,11 +319,44 @@ namespace IO.Astrodynamics.Surface
         /// <param name="method"></param>
         /// <returns></returns>
         public IEnumerable<Window> FindWindowsOnIlluminationConstraint(in Window searchWindow, ILocalizable observer, IlluminationAngle illuminationType,
-            RelationnalOperator relationalOperator, double value, double adjustValue, Aberration aberration, in TimeSpan stepSize, INaifObject illuminationSource,
+            RelationnalOperator relationalOperator, double value, double adjustValue, Aberration aberration, in TimeSpan stepSize, ILocalizable illuminationSource,
             string method = "Ellipsoid")
         {
-            return API.Instance.FindWindowsOnIlluminationConstraint(searchWindow, observer, CelestialBody, CelestialBody.Frame, Planetodetic, illuminationType, relationalOperator,
-                value, adjustValue, aberration, stepSize, illuminationSource, method);
+            Func<Time, double> evaluateIllumination = null;
+
+            switch (illuminationType)
+            {
+                case IlluminationAngle.Phase:
+                    evaluateIllumination = date => IlluminationPhase(date, illuminationSource, observer, aberration);
+                    break;
+                case IlluminationAngle.Incidence:
+                    evaluateIllumination = date => IlluminationIncidence(date, illuminationSource, aberration);
+                    break;
+                case IlluminationAngle.Emission:
+                    evaluateIllumination = date => IlluminationEmission(date, observer, aberration);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(illuminationType), illuminationType, null);
+            }
+
+            return _geometryFinder.FindWindowsWithCondition(searchWindow, evaluateIllumination, relationalOperator, value, stepSize);
+        }
+
+        public double IlluminationEmission(Time date, ILocalizable observer, Aberration aberration)
+        {
+            return observer.GetEphemeris(date, this, Frame, aberration).ToStateVector().Position.Angle(Vector3.VectorZ);
+        }
+
+        public double IlluminationIncidence(Time date, ILocalizable illuminationSource, Aberration aberration)
+        {
+            var illuminationPosition = illuminationSource.GetEphemeris(date, this, this.Frame, aberration).ToStateVector().Position;
+            return Vector3.VectorZ.Angle(illuminationPosition);
+        }
+
+        public double IlluminationPhase(Time date, ILocalizable illuminationSource, ILocalizable observer, Aberration aberration)
+        {
+            var illuminationPosition = illuminationSource.GetEphemeris(date, this, Frames.Frame.ICRF, aberration).ToStateVector().Position;
+            return observer.GetEphemeris(date, this, Frames.Frame.ICRF, aberration).ToStateVector().Position.Angle(illuminationPosition);
         }
 
         /// <summary>
