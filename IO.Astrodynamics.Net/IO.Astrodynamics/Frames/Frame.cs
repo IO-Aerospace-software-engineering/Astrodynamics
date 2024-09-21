@@ -72,6 +72,10 @@ public class Frame : IEquatable<Frame>
     
     public bool AddStateOrientationToICRF(StateOrientation stateOrientation)
     {
+        if(stateOrientation.ReferenceFrame!=ICRF)
+        {
+            throw new ArgumentException("State orientation must be relative to ICRF");
+        }
         return _stateOrientationsToICRF.TryAdd(stateOrientation.Epoch, stateOrientation);
     }
     

@@ -374,7 +374,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
                 API.Instance.LoadKernels(clockFile);
                 //Write Orientation
                 if (API.Instance.WriteOrientation(new FileInfo(Path.Combine(PropagationOutput.CreateSubdirectory("Orientation").FullName, Name + ".ck")), this,
-                        res.stateOrientations.Select(x => new StateOrientation(x.Rotation.Conjugate(), x.AngularVelocity.Inverse(), x.Epoch, Frame.ICRF))))
+                        res.stateOrientations))
                 {
                     API.Instance.LoadKernels(PropagationOutput);
                 }

@@ -111,21 +111,20 @@ public class SpacecraftPropagator : IPropagator
     /// <returns></returns>
     public (IEnumerable<StateVector>stateVectors, IEnumerable<StateOrientation>stateOrientations) Propagate()
     {
-        Spacecraft.Frame.AddStateOrientationToICRF(new StateOrientation(Quaternion.Zero, Vector3.Zero, _svCache.First().Epoch, Spacecraft.Frame));
+        Spacecraft.Frame.AddStateOrientationToICRF(new StateOrientation(Quaternion.Zero, Vector3.Zero, _svCache.First().Epoch, Frame.ICRF));
         for (int i = 0; i < _svCacheSize - 1; i++)
         {
             var prvSv = _svCache[i];
             if (Spacecraft.StandbyManeuver?.CanExecute(prvSv) == true)
             {
                 var res = Spacecraft.StandbyManeuver.TryExecute(prvSv);
-                var soFromIcrf = res.so.RelativeToICRF();
-                Spacecraft.Frame.AddStateOrientationToICRF(new StateOrientation(soFromIcrf.Rotation.Conjugate(), soFromIcrf.AngularVelocity.Inverse(), soFromIcrf.Epoch, Spacecraft.Frame));
+                Spacecraft.Frame.AddStateOrientationToICRF(res.so.RelativeToICRF());
             }
 
             Integrator.Integrate(_svCache, i + 1);
         }
 
-        Spacecraft.Frame.AddStateOrientationToICRF(new StateOrientation(Spacecraft.Frame.GetLatestStateOrientationToICRF().Rotation, Vector3.Zero, Window.EndDate, Spacecraft.Frame));
+        Spacecraft.Frame.AddStateOrientationToICRF(new StateOrientation(Spacecraft.Frame.GetLatestStateOrientationToICRF().Rotation, Vector3.Zero, Window.EndDate, Spacecraft.Frame.GetLatestStateOrientationToICRF().ReferenceFrame));
 
         //Before return result statevectors must be converted back to original observer
         return (_svCache.Select(x => x.RelativeTo(_originalObserver, Aberration.None).ToStateVector()), Spacecraft.Frame.GetStateOrientationsToICRF().OrderBy(x=>x.Epoch));//Return spacecraft frames
