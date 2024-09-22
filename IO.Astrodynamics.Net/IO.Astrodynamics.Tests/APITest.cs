@@ -320,6 +320,7 @@ public class APITest
         //Read spacecraft orientation
         var res = API.Instance.ReadOrientation(window, spacecraft, TimeSpan.FromSeconds(10.0), Frames.Frame.ICRF,
             TimeSpan.FromSeconds(10.0)).ToArray();
+        var resICRF=spacecraft.Frame.GetStateOrientationsToICRF().ElementAt(1).RelativeToICRF();
 
         //Read results
         Assert.Equal(0.70670859819960763, res.ElementAt(1).Rotation.W);

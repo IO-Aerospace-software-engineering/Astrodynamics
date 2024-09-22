@@ -38,6 +38,16 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
             Assert.Equal(TimeSystem.Time.J2000TDB, res.Epoch);
             Assert.Equal(Frames.Frame.ICRF, res.ReferenceFrame);
         }
+        
+        [Fact]
+        public void RelativeToICRFInSameFrame()
+        {
+            var so = new StateOrientation(new Quaternion(Vector3.VectorX, 10.0 * IO.Astrodynamics.Constants.Deg2Rad),
+                Vector3.Zero, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+            var res = so.RelativeToICRF();
+            Assert.NotNull(so);
+            Assert.Equal(so, res);
+        }
 
         [Fact]
         public void RelativeToTargetAndGoBack()
