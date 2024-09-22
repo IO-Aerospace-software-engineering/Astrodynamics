@@ -62,6 +62,14 @@ namespace IO.Astrodynamics.Tests
                        Equals(sv1.Observer, sv2.Observer);
             }
         }
+        
+        internal static bool StateOrientationComparer(StateOrientation so1, StateOrientation so2)
+        {
+            lock (LockObj)
+            {
+                return QuaternionComparer(so1.Rotation, so2.Rotation) && VectorComparer(so1.AngularVelocity, so2.AngularVelocity) && so1.Epoch == so2.Epoch && so1.ReferenceFrame == so2.ReferenceFrame;
+            }
+        }
 
         internal static bool KeplerComparer(KeplerianElements k1, KeplerianElements k2)
         {
