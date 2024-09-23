@@ -4,7 +4,9 @@ using System;
 using System.Globalization;
 using System.IO;
 using System.Threading.Tasks;
+using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.Math;
+using IO.Astrodynamics.TimeSystem;
 
 namespace IO.Astrodynamics.Body.Spacecraft;
 
@@ -13,7 +15,7 @@ public class EllipticalInstrument : Instrument
     public double CrossAngle { get; }
 
     internal EllipticalInstrument(Spacecraft spacecraft, int naifId, string name, string model, double fieldOfView, double crossAngle, Vector3 boresight, Vector3 refVector,
-        Vector3 orientation) : base(spacecraft, naifId, name, model, fieldOfView, InstrumentShape.Rectangular, boresight, refVector, orientation)
+        Vector3 orientation) : base(spacecraft, naifId, name, model, fieldOfView, InstrumentShape.Elliptical, boresight, refVector, orientation)
     {
         ArgumentOutOfRangeException.ThrowIfNegative(crossAngle);
         CrossAngle = crossAngle;
@@ -38,5 +40,35 @@ public class EllipticalInstrument : Instrument
             .Replace("{cangle}", CrossAngle.ToString(CultureInfo.InvariantCulture));
         await using var sw = new StreamWriter(outputFile.FullName);
         await sw.WriteAsync(data);
+    }
+
+    public override bool IsInFOV(Time date, ILocalizable target, Aberration aberration)
+    {
+        var cameraPostion = Spacecraft.GetEphemeris(date, new Barycenter(0), Frame.ICRF, aberration).ToStateVector();
+        var objectPosition = target.GetEphemeris(date, new Barycenter(0), Frame.ICRF, aberration).ToStateVector();
+        // Calculate the vector from the camera to the object
+        Vector3 toObject = objectPosition.Position - cameraPostion.Position;
+
+        // Project the vector onto the camera's view direction
+        double z = toObject * GetBoresightInICRFFrame();
+
+        // Check if the object is in front of the camera
+        if (z <= 0)
+            return false;
+
+        // Calculate horizontal and vertical angles
+        Vector3 projectedOntoXY = new Vector3(toObject.X, toObject.Y, 0);
+        double azimuth = System.Math.Atan2(projectedOntoXY.Magnitude(), z); // Horizontal angle
+
+        Vector3 projectedOntoYZ = new Vector3(0, toObject.Y, toObject.Z);
+        double elevation = System.Math.Atan2(projectedOntoYZ.Magnitude(), z); // Vertical angle
+
+        // Check if the object is within the camera's horizontal and vertical FOV
+        if (System.Math.Pow(azimuth / (FieldOfView / 2), 2) + System.Math.Pow(elevation / (CrossAngle / 2), 2) <= 1)
+        {
+            return true;
+        }
+
+        return false;
     }
 }

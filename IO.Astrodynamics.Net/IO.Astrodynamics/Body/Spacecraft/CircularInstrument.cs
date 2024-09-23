@@ -4,13 +4,16 @@ using System;
 using System.Globalization;
 using System.IO;
 using System.Threading.Tasks;
+using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.Math;
+using IO.Astrodynamics.TimeSystem;
 
 namespace IO.Astrodynamics.Body.Spacecraft;
 
 public class CircularInstrument : Instrument
 {
-    internal CircularInstrument(Spacecraft spacecraft, int naifId, string name, string model, double fieldOfView, Vector3 boresight, Vector3 refVector, Vector3 orientation) : base(spacecraft, naifId, name, model, fieldOfView, InstrumentShape.Circular, boresight, refVector, orientation)
+    internal CircularInstrument(Spacecraft spacecraft, int naifId, string name, string model, double fieldOfView, Vector3 boresight, Vector3 refVector, Vector3 orientation) : base(
+        spacecraft, naifId, name, model, fieldOfView, InstrumentShape.Circular, boresight, refVector, orientation)
     {
     }
 
@@ -33,4 +36,6 @@ public class CircularInstrument : Instrument
         await using var sw = new StreamWriter(outputFile.FullName);
         await sw.WriteAsync(data);
     }
+    
+    
 }

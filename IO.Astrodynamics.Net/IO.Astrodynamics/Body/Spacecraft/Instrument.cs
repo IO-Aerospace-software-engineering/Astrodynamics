@@ -124,6 +124,13 @@ namespace IO.Astrodynamics.Body.Spacecraft
             return Boresight.Rotate(q);
         }
 
+        public Vector3 GetBoresightInICRFFrame()
+        {
+            Quaternion q = Orientation == Vector3.Zero ? Quaternion.Zero : new Quaternion(Orientation.Normalize(), Orientation.Magnitude());
+            q = Spacecraft.Frame.GetStateOrientationToICRF(Time.J2000TDB).Rotation * q;
+            return Boresight.Rotate(q);
+        }
+
         public async Task WriteFrameAsync(FileInfo outputFile)
         {
             await using var stream = this.GetType().Assembly.GetManifestResourceStream("IO.Astrodynamics.Templates.InstrumentFrameTemplate.tf");
@@ -143,7 +150,39 @@ namespace IO.Astrodynamics.Body.Spacecraft
             await sw.WriteAsync(data);
         }
 
+        public virtual bool IsInFOV(Time date, ILocalizable target, Aberration aberration)
+        {
+            var cameraPostion = Spacecraft.GetEphemeris(date, new Barycenter(0), Frame.ICRF, aberration).ToStateVector();
+            var objectPosition = target.GetEphemeris(date, new Barycenter(0), Frame.ICRF, aberration).ToStateVector();
+            // Calculate the vector from the camera to the object
+            Vector3 toObject = objectPosition.Position - cameraPostion.Position;
+
+            // Project the vector onto the camera's view direction
+            double z = toObject * GetBoresightInICRFFrame();
+
+            // Check if the object is in front of the camera
+            if (z <= 0)
+                return false;
+
+            // Calculate horizontal and vertical angles
+            Vector3 projectedOntoXY = new Vector3(toObject.X, toObject.Y, 0);
+            double azimuth = System.Math.Atan2(projectedOntoXY.Magnitude(), z); // Horizontal angle
+
+            Vector3 projectedOntoYZ = new Vector3(0, toObject.Y, toObject.Z);
+            double elevation = System.Math.Atan2(projectedOntoYZ.Magnitude(), z); // Vertical angle
+
+            // Check if the object is within the camera's horizontal and vertical FOV
+            if (azimuth <= FieldOfView / 2 && elevation <= FieldOfView / 2)
+            {
+                return true;
+            }
+
+            return false;
+        }
+
         public abstract Task WriteKernelAsync(FileInfo outputFile);
+
+        #region Operators
 
         public bool Equals(Instrument other)
         {
@@ -174,5 +213,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
         {
             return !Equals(left, right);
         }
+
+        #endregion
     }
 }
