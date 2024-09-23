@@ -38,7 +38,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
             Assert.Equal(TimeSystem.Time.J2000TDB, res.Epoch);
             Assert.Equal(Frames.Frame.ICRF, res.ReferenceFrame);
         }
-        
+
         [Fact]
         public void RelativeToICRFInSameFrame()
         {
@@ -59,7 +59,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
             var resOrigin = res.RelativeTo(Frames.Frame.ECLIPTIC_J2000); //Go to the origin
             Assert.NotNull(so);
 
-            Assert.Equal(so, resOrigin,TestHelpers.StateOrientationComparer);
+            Assert.Equal(so, resOrigin, TestHelpers.StateOrientationComparer);
         }
 
         [Fact]
@@ -89,6 +89,17 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
             Assert.Equal(new Vector3(-1.9637713280161757E-09, 2.9004497224156795E-05, 6.6904658702357438E-05), res.AngularVelocity);
             Assert.Equal(TimeSystem.Time.J2000TDB, res.Epoch);
             Assert.Equal(earth.Frame, res.ReferenceFrame);
+        }
+
+        [Fact]
+        public void AtDate()
+        {
+            var so = new StateOrientation(new Quaternion(1.0, 0.1, 0.2, 0.3), new Vector3(0.1, 0, 0), TimeSystem.Time.J2000TDB, Frames.Frame.ECLIPTIC_J2000);
+            var res = so.AtDate(TimeSystem.Time.J2000TDB.AddSeconds(10));
+            Assert.Equal(new Quaternion(0.7770290602413761, 0.531216294762412, 0.02967932804162496, 0.3363840442207327), res.Rotation);
+            Assert.Equal(new Vector3(0.1, 0.0, 0.0), res.AngularVelocity);
+            Assert.Equal(TimeSystem.Time.J2000TDB.AddSeconds(10), res.Epoch);
+            Assert.Equal(Frames.Frame.ECLIPTIC_J2000, res.ReferenceFrame);
         }
     }
 }

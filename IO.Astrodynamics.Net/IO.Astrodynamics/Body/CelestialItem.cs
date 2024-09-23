@@ -243,7 +243,7 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
         return observerGeometricState.ToFrame(frame);
     }
 
-    public OrbitalParameters.OrbitalParameters GetGeometricStateFromICRF(in Time date)
+    public virtual OrbitalParameters.OrbitalParameters GetGeometricStateFromICRF(in Time date)
     {
         return StateVectorsRelativeToICRF.GetOrAdd(date,
             x => _dataProvider.GetEphemeris(x, this, new Barycenter(Barycenters.SOLAR_SYSTEM_BARYCENTER.NaifId), Frame.ICRF, Aberration.None).ToStateVector());

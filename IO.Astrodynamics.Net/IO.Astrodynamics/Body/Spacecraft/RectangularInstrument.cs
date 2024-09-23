@@ -20,7 +20,7 @@ public class RectangularInstrument : Instrument
         ArgumentOutOfRangeException.ThrowIfNegative(crossAngle);
         CrossAngle = crossAngle;
     }
-    public virtual bool IsInFOV(Time date, ILocalizable target, Aberration aberration)
+    public override bool IsInFOV(Time date, ILocalizable target, Aberration aberration)
     {
         var cameraPostion = Spacecraft.GetEphemeris(date, new Barycenter(0), Frame.ICRF, aberration).ToStateVector();
         var objectPosition = target.GetEphemeris(date, new Barycenter(0), Frame.ICRF, aberration).ToStateVector();

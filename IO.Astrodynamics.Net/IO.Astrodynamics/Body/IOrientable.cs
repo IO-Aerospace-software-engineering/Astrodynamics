@@ -10,12 +10,12 @@ namespace IO.Astrodynamics.Body;
 /// <summary>
 /// Represents an interface for orientable celestial objects.
 /// </summary>
-public interface IOrientable
+public interface IOrientable<out T> where T : Frame
 {
     /// <summary>
     /// Gets the reference frame of the orientable object.
     /// </summary>
-    Frame Frame { get; }
+    T Frame { get; }
 
     /// <summary>
     /// Gets the orientation of the object relative to a reference frame at a specific epoch.

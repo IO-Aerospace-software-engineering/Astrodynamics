@@ -13,7 +13,7 @@ using StateOrientation = IO.Astrodynamics.OrbitalParameters.StateOrientation;
 
 namespace IO.Astrodynamics.Body.Spacecraft
 {
-    public class Spacecraft : CelestialItem, IOrientable, IDisposable
+    public class Spacecraft : CelestialItem, IOrientable<SpacecraftFrame>, IDisposable
     {
         public static readonly Vector3 Front = Vector3.VectorY;
         public static readonly Vector3 Back = Front.Inverse();
@@ -43,7 +43,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
         public IReadOnlyCollection<Payload> Payloads => _payloads;
         public double DryOperatingMass => Mass;
         public double MaximumOperatingMass { get; }
-        public Frame Frame { get; }
+        public SpacecraftFrame Frame { get; }
         public double SectionalArea { get; }
         public double DragCoefficient { get; }
         public DirectoryInfo PropagationOutput { get; private set; }
@@ -379,6 +379,11 @@ namespace IO.Astrodynamics.Body.Spacecraft
                     API.Instance.LoadKernels(PropagationOutput);
                 }
             }
+        }
+
+        public override OrbitalParameters.OrbitalParameters GetGeometricStateFromICRF(in Time date)
+        {
+            return StateVectorsRelativeToICRF.GetOrAdd(date, date => this.InitialOrbitalParameters.ToStateVector(date).ToFrame(Frames.Frame.ICRF).ToStateVector());
         }
 
         /// <summary>

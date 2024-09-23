@@ -127,7 +127,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
         public Vector3 GetBoresightInICRFFrame()
         {
             Quaternion q = Orientation == Vector3.Zero ? Quaternion.Zero : new Quaternion(Orientation.Normalize(), Orientation.Magnitude());
-            q = Spacecraft.Frame.GetStateOrientationToICRF(Time.J2000TDB).Rotation * q;
+            q = Spacecraft.Frame.GetStateOrientationToICRF(Time.J2000TDB).Rotation * q.Conjugate();
             return Boresight.Rotate(q);
         }
 
@@ -158,26 +158,29 @@ namespace IO.Astrodynamics.Body.Spacecraft
             Vector3 toObject = objectPosition.Position - cameraPostion.Position;
 
             // Project the vector onto the camera's view direction
-            double z = toObject * GetBoresightInICRFFrame();
+            var boresight = GetBoresightInICRFFrame().Normalize();
 
+            var z= boresight * toObject;
             // Check if the object is in front of the camera
             if (z <= 0)
                 return false;
 
             // Calculate horizontal and vertical angles
-            Vector3 projectedOntoXY = new Vector3(toObject.X, toObject.Y, 0);
-            double azimuth = System.Math.Atan2(projectedOntoXY.Magnitude(), z); // Horizontal angle
+            
+            Vector3 projectedOntoXY_Object = new Vector3(toObject.X, toObject.Y, 0); // Projection sur le plan XY
+            Vector3 projectedOntoXY_View = new Vector3(boresight.X, boresight.Y, 0); // Projection de la caméra sur le plan XY
 
-            Vector3 projectedOntoYZ = new Vector3(0, toObject.Y, toObject.Z);
-            double elevation = System.Math.Atan2(projectedOntoYZ.Magnitude(), z); // Vertical angle
+            // Calculate azimuth with dot product and acos
+            double azimuth = System.Math.Acos(projectedOntoXY_Object.Normalize() * projectedOntoXY_View.Normalize());
 
-            // Check if the object is within the camera's horizontal and vertical FOV
-            if (azimuth <= FieldOfView / 2 && elevation <= FieldOfView / 2)
-            {
-                return true;
-            }
+            // Calculate elevation with dot product and acos
+            Vector3 projectedOntoXZ_Object = new Vector3(toObject.X, 0, toObject.Z); // Projection sur le plan XZ
+            Vector3 projectedOntoXZ_View = new Vector3(boresight.X, 0, boresight.Z); // Projection de la caméra sur le plan XZ
 
-            return false;
+            double elevation = System.Math.Acos(projectedOntoXZ_Object.Normalize() * projectedOntoXZ_View.Normalize());
+
+            // Check if the object is within the field of view
+            return azimuth <= FieldOfView && elevation <= FieldOfView;
         }
 
         public abstract Task WriteKernelAsync(FileInfo outputFile);

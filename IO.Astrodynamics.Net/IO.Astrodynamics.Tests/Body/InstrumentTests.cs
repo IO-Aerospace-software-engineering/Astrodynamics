@@ -115,6 +115,71 @@ namespace IO.Astrodynamics.Tests.Body
         }
 
         [Fact]
+        public void IsInFieldOfView()
+        {
+            TimeSystem.Time start = TimeSystem.Time.J2000TDB;
+
+            //Define parking orbit
+            StateVector parkingOrbit = new StateVector(
+                new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7656.2204182967143, 0.0), TestHelpers.EarthAtJ2000,
+                start, Frames.Frame.ICRF);
+
+            //Configure spacecraft
+            Clock clock = new Clock("clk1", 65536);
+            Spacecraft spacecraft = new Spacecraft(-179, "SC179", 1000.0, 3000.0, clock, parkingOrbit);
+            spacecraft.AddCircularInstrument(-179789, "CAMERA789", "mod1", 0.75, Vector3.VectorZ, Vector3.VectorY, new Vector3(0.0, System.Math.PI * 0.5, 0.0));
+
+            StateVector targetOrbit = new StateVector(
+                new Vector3(6790000.0, 0.0, 0.0), new Vector3(0.0, 7656.2204182967143, 0.0), TestHelpers.EarthAtJ2000,
+                start, Frames.Frame.ICRF);
+            Spacecraft target = new Spacecraft(-181, "SC181", 1000.0, 3000.0, clock, targetOrbit);
+
+            var res = spacecraft.Instruments.First().IsInFOV(start, target, Aberration.None);
+            Assert.True(res);
+        }
+
+        [Fact]
+        public void GetBoresightInICRF()
+        {
+            TimeSystem.Time start = TimeSystem.Time.J2000TDB;
+
+            //Define parking orbit
+            StateVector parkingOrbit = new StateVector(
+                new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7656.2204182967143, 0.0), TestHelpers.EarthAtJ2000,
+                start, Frames.Frame.ICRF);
+
+            //Configure spacecraft
+            Clock clock = new Clock("clk1", 65536);
+            Spacecraft spacecraft = new Spacecraft(-179, "SC179", 1000.0, 3000.0, clock, parkingOrbit);
+            spacecraft.AddCircularInstrument(-179789, "CAMERA789", "mod1", 0.75, Vector3.VectorZ, Vector3.VectorY, new Vector3(0.0, System.Math.PI * 0.5, 0.0));
+
+
+            var boresightICRF = spacecraft.Instruments.First().GetBoresightInICRFFrame();
+            Assert.Equal(new Vector3(-1.0, 0.0, 0.0), boresightICRF, TestHelpers.VectorComparer);
+        }
+        
+        [Fact]
+        public void GetBoresightInICRF2()
+        {
+            TimeSystem.Time start = TimeSystem.Time.J2000TDB;
+
+            //Define parking orbit
+            StateVector parkingOrbit = new StateVector(
+                new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7656.2204182967143, 0.0), TestHelpers.EarthAtJ2000,
+                start, Frames.Frame.ICRF);
+
+            //Configure spacecraft
+            Clock clock = new Clock("clk1", 65536);
+            Spacecraft spacecraft = new Spacecraft(-179, "SC179", 1000.0, 3000.0, clock, parkingOrbit);
+            spacecraft.AddCircularInstrument(-179789, "CAMERA789", "mod1", 0.75, Vector3.VectorZ, Vector3.VectorY, new Vector3(0.0, System.Math.PI * 0.5, 0.0));
+            spacecraft.Frame.AddStateOrientationToICRF(new StateOrientation(new Quaternion(Vector3.VectorZ, -Astrodynamics.Constants.PI2), Vector3.Zero, start, Frames.Frame.ICRF));
+
+
+            var boresightICRF = spacecraft.Instruments.First().GetBoresightInICRFFrame();
+            Assert.Equal(new Vector3(0.0, 1.0, 0.0), boresightICRF, TestHelpers.VectorComparer);
+        }
+
+        [Fact]
         public async Task WriteFrame()
         {
             Spacecraft spc = new Spacecraft(-1001, "MySpacecraft", 1000.0, 10000.0, new Clock("clk1", 256), new StateVector(new Vector3(1.0, 2.0, 3.0), new Vector3(1.0, 2.0, 3.0),

@@ -11,7 +11,7 @@ using Vector3 = IO.Astrodynamics.Math.Vector3;
 
 namespace IO.Astrodynamics.Body;
 
-public class CelestialBody : CelestialItem, IOrientable
+public class CelestialBody : CelestialItem, IOrientable<Frame>
 {
     /// <summary>
     /// Gets the polar radius of the celestial body.

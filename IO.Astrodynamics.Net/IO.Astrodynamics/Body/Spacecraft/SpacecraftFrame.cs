@@ -2,8 +2,12 @@
 
 using System;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using IO.Astrodynamics.Frames;
+using IO.Astrodynamics.Math;
+using IO.Astrodynamics.OrbitalParameters;
+using IO.Astrodynamics.TimeSystem;
 
 namespace IO.Astrodynamics.Body.Spacecraft;
 
@@ -16,6 +20,20 @@ public class SpacecraftFrame : Frame
     {
         SpacecraftId = spacecraftId;
         SpacecraftName = spacecraftName;
+    }
+
+    public override StateOrientation GetStateOrientationToICRF(Time date)
+    {
+        return _stateOrientationsToICRF.GetOrAdd(date, _ =>
+        {
+            if (_stateOrientationsToICRF.IsEmpty)
+            {
+                return new StateOrientation(Quaternion.Zero, Vector3.Zero, date, ICRF);
+            }
+
+            var latestKnown = _stateOrientationsToICRF.OrderBy(x => x.Key).Last(x => x.Key < date);
+            return latestKnown.Value.AtDate(date);
+        });
     }
 
     public async Task WriteAsync(FileInfo outputFile)

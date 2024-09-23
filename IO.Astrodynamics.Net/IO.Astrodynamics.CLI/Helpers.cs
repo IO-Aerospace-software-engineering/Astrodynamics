@@ -51,9 +51,9 @@ public class Helpers
         return localizableObject;
     }
 
-    internal static IOrientable CreateOrientable(int objectId)
+    internal static IOrientable<Frame> CreateOrientable(int objectId)
     {
-        IOrientable celestialItem;
+        IOrientable<Frame> celestialItem;
         if (int.IsPositive(objectId))
         {
             celestialItem = new CelestialBody(objectId);
