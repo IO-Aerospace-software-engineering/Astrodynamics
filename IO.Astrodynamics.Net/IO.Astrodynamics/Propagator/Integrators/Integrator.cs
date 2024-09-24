@@ -3,6 +3,7 @@
 using System.Collections.Generic;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.Propagator.Forces;
+using IO.Astrodynamics.TimeSystem;
 using Vector3 = IO.Astrodynamics.Math.Vector3;
 
 namespace IO.Astrodynamics.Propagator.Integrators;
@@ -11,7 +12,7 @@ public abstract class Integrator
 {
     public IReadOnlyCollection<ForceBase> Forces { get; }
 
-    public abstract void Integrate(StateVector[] result, int idx);
+    public abstract void Integrate(IDictionary<Time,StateVector> result, int idx);
 
     public Integrator(IEnumerable<ForceBase> forces)
     {

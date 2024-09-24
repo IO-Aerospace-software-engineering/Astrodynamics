@@ -101,6 +101,11 @@ public class Frame : IEquatable<Frame>
 
         return new StateOrientation(rotation, angularVelocity, epoch, this);
     }
+    
+    public void ClearStateOrientations()
+    {
+        _stateOrientationsToICRF.Clear();
+    }
 
     #region Operators
     public override string ToString()

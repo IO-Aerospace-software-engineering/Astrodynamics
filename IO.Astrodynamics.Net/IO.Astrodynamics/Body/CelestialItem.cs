@@ -16,7 +16,7 @@ namespace IO.Astrodynamics.Body;
 public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
 {
     private readonly IDataProvider _dataProvider;
-    public ConcurrentDictionary<Time, StateVector> StateVectorsRelativeToICRF { get; } = new();
+    public ConcurrentDictionary<Time, StateVector> StateVectorsRelativeToICRF { get; protected set; } = new();
     protected const int TITLE_WIDTH = 32;
     protected const int VALUE_WIDTH = 32;
 

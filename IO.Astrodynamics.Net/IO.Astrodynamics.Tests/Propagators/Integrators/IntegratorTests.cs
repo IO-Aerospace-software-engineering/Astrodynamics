@@ -34,12 +34,13 @@ public class IntegratorTests
         forces.Add(new GravitationalAcceleration(moon));
         forces.Add(new GravitationalAcceleration(earth));
         forces.Add(new AtmosphericDrag(spc, earth));
-        forces.Add(new SolarRadiationPressure(spc,[earth]));
+        forces.Add(new SolarRadiationPressure(spc, [earth]));
         VVIntegrator vvIntegrator = new VVIntegrator(forces, TimeSpan.FromSeconds(1.0), spc.InitialOrbitalParameters.ToStateVector());
-        StateVector[] data = new StateVector[2];
-        Array.Fill(data, spc.InitialOrbitalParameters.ToStateVector(), 0, 2);
+        Dictionary<TimeSystem.Time, StateVector> data = new Dictionary<TimeSystem.Time, StateVector>(2);
+        data[TimeSystem.Time.J2000TDB] = spc.InitialOrbitalParameters.ToStateVector();
+        data[TimeSystem.Time.J2000TDB.AddSeconds(1)] = spc.InitialOrbitalParameters.ToStateVector();
         vvIntegrator.Integrate(data, 1);
-        Assert.Equal(new Vector3(6799995.689837336, 7656.217641039796, -0.0012025735770054711), data[1].Position, TestHelpers.VectorComparer);
-        Assert.Equal(new Vector3(-8.620322602729967, 7656.210010299539, -0.002405146120787803), data[1].Velocity, TestHelpers.VectorComparer);
+        Assert.Equal(new Vector3(6799995.689837336, 7656.217641039796, -0.0012025735770054711), data[TimeSystem.Time.J2000TDB.AddSeconds(1)].Position, TestHelpers.VectorComparer);
+        Assert.Equal(new Vector3(-8.620322602729967, 7656.210010299539, -0.002405146120787803), data[TimeSystem.Time.J2000TDB.AddSeconds(1)].Velocity, TestHelpers.VectorComparer);
     }
 }

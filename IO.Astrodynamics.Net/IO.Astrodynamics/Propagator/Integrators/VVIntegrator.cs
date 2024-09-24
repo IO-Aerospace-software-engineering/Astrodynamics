@@ -2,8 +2,10 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.Propagator.Forces;
+using IO.Astrodynamics.TimeSystem;
 using Vector3 = IO.Astrodynamics.Math.Vector3;
 
 namespace IO.Astrodynamics.Propagator.Integrators;
@@ -28,17 +30,17 @@ public sealed class VVIntegrator : Integrator
         }
     }
 
-    public override void Integrate(StateVector[] result, int idx)
+    public override void Integrate(IDictionary<Time,StateVector> result, int idx)
     {
         //Set initial parameters
-        var previousElement = result[idx - 1];
+        var previousElement = result.ElementAt(idx - 1).Value;
         _position = previousElement.Position;
         _velocity = previousElement.Velocity;
 
-        result[idx].UpdateVelocity(_velocity + _acceleration * HalfDeltaTs);
-        result[idx].UpdatePosition(_position + result[idx].Velocity * DeltaTs);
-        _acceleration = ComputeAcceleration(result[idx]);
+        result.ElementAt(idx).Value.UpdateVelocity(_velocity + _acceleration * HalfDeltaTs);
+        result.ElementAt(idx).Value.UpdatePosition(_position + result.ElementAt(idx).Value.Velocity * DeltaTs);
+        _acceleration = ComputeAcceleration(result.ElementAt(idx).Value);
 
-        result[idx].UpdateVelocity(result[idx].Velocity + _acceleration * HalfDeltaTs);
+        result.ElementAt(idx).Value.UpdateVelocity(result.ElementAt(idx).Value.Velocity + _acceleration * HalfDeltaTs);
     }
 }

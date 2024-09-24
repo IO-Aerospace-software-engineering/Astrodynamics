@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -336,6 +337,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
             bool includeSolarRadiationPressure, TimeSpan propagatorStepSize, DirectoryInfo outputDirectory)
         {
             ResetPropagation();
+            StateVectorsRelativeToICRF = new ConcurrentDictionary<Time, StateVector>(-1, (int)window.Length.TotalSeconds / (int)propagatorStepSize.TotalSeconds + 2);
             IPropagator propagator;
             if (this.InitialOrbitalParameters is TLE)
             {
@@ -383,7 +385,15 @@ namespace IO.Astrodynamics.Body.Spacecraft
 
         public override OrbitalParameters.OrbitalParameters GetGeometricStateFromICRF(in Time date)
         {
-            return StateVectorsRelativeToICRF.GetOrAdd(date, date => this.InitialOrbitalParameters.ToStateVector(date).ToFrame(Frames.Frame.ICRF).ToStateVector());
+            return StateVectorsRelativeToICRF.GetOrAdd(date, date =>
+            {
+                if (StateVectorsRelativeToICRF.Count < 2)
+                {
+                    return this.InitialOrbitalParameters.ToStateVector(date).ToFrame(Frames.Frame.ICRF).ToStateVector();
+                }
+
+                return Lagrange.Interpolate(StateVectorsRelativeToICRF.Values.OrderBy(x => x.Epoch).ToArray(), date);
+            });
         }
 
         /// <summary>
@@ -396,6 +406,8 @@ namespace IO.Astrodynamics.Body.Spacecraft
                 API.Instance.UnloadKernels(PropagationOutput);
                 PropagationOutput.Delete(true);
                 PropagationOutput = null;
+                StateVectorsRelativeToICRF.Clear();
+                Frame.ClearStateOrientations();
             }
 
             _executedManeuvers.Clear();

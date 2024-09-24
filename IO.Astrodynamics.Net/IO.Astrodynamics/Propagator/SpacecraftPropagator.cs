@@ -18,10 +18,7 @@ namespace IO.Astrodynamics.Propagator;
 
 public class SpacecraftPropagator : IPropagator
 {
-    public void Dispose()
-    {
-        _svCache = null;
-    }
+    
 
     private readonly CelestialItem _originalObserver;
     public Window Window { get; }
@@ -33,7 +30,7 @@ public class SpacecraftPropagator : IPropagator
     public TimeSpan DeltaT { get; }
 
     private uint _svCacheSize;
-    private StateVector[] _svCache;
+    // private StateVector[] _svCache;
 
     /// <summary>
     /// Instantiate propagator
@@ -73,11 +70,11 @@ public class SpacecraftPropagator : IPropagator
         Integrator = new VVIntegrator(forces, DeltaT, initialState);
 
         _svCacheSize = (uint)Window.Length.TotalSeconds / (uint)DeltaT.TotalSeconds + 2;
-        _svCache = new StateVector[_svCacheSize];
-        _svCache[0] = initialState;
+        // _svCache = new StateVector[_svCacheSize];
+        spacecraft.StateVectorsRelativeToICRF[initialState.Epoch] = initialState;
         for (int i = 1; i < _svCacheSize; i++)
         {
-            _svCache[i] = new StateVector(Vector3.Zero, Vector3.Zero, initialState.Observer, Window.StartDate + (i * DeltaT), initialState.Frame);
+            spacecraft.StateVectorsRelativeToICRF[Window.StartDate + (i * DeltaT)] = new StateVector(Vector3.Zero, Vector3.Zero, initialState.Observer, Window.StartDate + (i * DeltaT), initialState.Frame);
         }
     }
 
@@ -114,14 +111,14 @@ public class SpacecraftPropagator : IPropagator
         Spacecraft.Frame.AddStateOrientationToICRF(new StateOrientation(Quaternion.Zero, Vector3.Zero, Window.StartDate, Spacecraft.InitialOrbitalParameters.Frame));
         for (int i = 0; i < _svCacheSize - 1; i++)
         {
-            var prvSv = _svCache[i];
+            var prvSv = Spacecraft.StateVectorsRelativeToICRF.ElementAt(i).Value;
             if (Spacecraft.StandbyManeuver?.CanExecute(prvSv) == true)
             {
                 var res = Spacecraft.StandbyManeuver.TryExecute(prvSv);
                 Spacecraft.Frame.AddStateOrientationToICRF(res.so);
             }
 
-            Integrator.Integrate(_svCache, i + 1);
+            Integrator.Integrate(Spacecraft.StateVectorsRelativeToICRF, i + 1);
         }
 
         var latestOrientation = Spacecraft.Frame.GetLatestStateOrientationToICRF();
@@ -129,7 +126,12 @@ public class SpacecraftPropagator : IPropagator
             latestOrientation.ReferenceFrame));
 
         //Before return result statevectors must be converted back to original observer
-        return (_svCache.Select(x => x.RelativeTo(_originalObserver, Aberration.None).ToStateVector()),
+        return (Spacecraft.StateVectorsRelativeToICRF.OrderBy(x=>x.Key).Select(x => x.Value.RelativeTo(_originalObserver, Aberration.None).ToStateVector()),
             Spacecraft.Frame.GetStateOrientationsToICRF().OrderBy(x => x.Epoch)); //Return spacecraft frames
+    }
+    
+    public void Dispose()
+    {
+        
     }
 }
