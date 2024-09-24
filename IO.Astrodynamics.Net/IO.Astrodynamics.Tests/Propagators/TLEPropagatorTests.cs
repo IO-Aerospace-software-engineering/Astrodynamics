@@ -34,8 +34,8 @@ public class TLEPropagatorTests
         var start = spc.InitialOrbitalParameters.Epoch;
         var end = start.AddDays(1.0);
         TLEPropagator propagator = new TLEPropagator(new Window(start, end), spc, TimeSpan.FromHours(1.0));
-        var res = propagator.Propagate();
-        Assert.Equal(tle.ToStateVector(start), res.stateVectors.First(x => x.Epoch == start));
-        Assert.Equal(tle.ToStateVector(end), res.stateVectors.First(x => x.Epoch == end));
+        propagator.Propagate();
+        Assert.Equal(tle.ToStateVector(start), spc.StateVectorsRelativeToICRF.Values.First(x => x.Epoch == start));
+        Assert.Equal(tle.ToStateVector(end), spc.StateVectorsRelativeToICRF.Values.First(x => x.Epoch == end));
     }
 }

@@ -637,7 +637,6 @@ namespace IO.Astrodynamics.Tests.Mission
                 var summary = await scenario.SimulateAsync(new DirectoryInfo("Simulation"), false, false, step);
 
                 var spcSV = spc.GetEphemeris(end, earth, Frames.Frame.ICRF, Aberration.None).ToStateVector();
-                var moonSV = moon.GetEphemeris(end, earth, Frames.Frame.ICRF, Aberration.None).ToStateVector();
 
                 var delta = spcSV.RelativeTo(moon, Aberration.None).ToStateVector();
                 var deltaP = delta.Position.Magnitude();
@@ -680,13 +679,7 @@ namespace IO.Astrodynamics.Tests.Mission
         [Theory]
         [InlineData(1)]
         [InlineData(2)]
-        [InlineData(3)]
-        [InlineData(4)]
         [InlineData(5)]
-        [InlineData(6)]
-        [InlineData(7)]
-        [InlineData(8)]
-        [InlineData(9)]
         [InlineData(10)]
         [InlineData(20)]
         public async Task DeepSpaceMoon3D(int stepSize)

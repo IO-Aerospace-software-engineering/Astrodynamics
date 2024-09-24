@@ -12,7 +12,7 @@ public abstract class Integrator
 {
     public IReadOnlyCollection<ForceBase> Forces { get; }
 
-    public abstract void Integrate(IDictionary<Time,StateVector> result, int idx);
+    public abstract void Integrate(StateVector[] result, int idx);
 
     public Integrator(IEnumerable<ForceBase> forces)
     {

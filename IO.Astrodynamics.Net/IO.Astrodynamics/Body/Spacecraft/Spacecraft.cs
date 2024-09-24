@@ -337,7 +337,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
             bool includeSolarRadiationPressure, TimeSpan propagatorStepSize, DirectoryInfo outputDirectory)
         {
             ResetPropagation();
-            StateVectorsRelativeToICRF = new ConcurrentDictionary<Time, StateVector>(-1, (int)window.Length.TotalSeconds / (int)propagatorStepSize.TotalSeconds + 2);
+            StateVectorsRelativeToICRF = new SortedDictionary<Time, StateVector>();
             IPropagator propagator;
             if (this.InitialOrbitalParameters is TLE)
             {
@@ -348,7 +348,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
                 propagator = new SpacecraftPropagator(window, this, additionalCelestialBodies, includeAtmosphericDrag, includeSolarRadiationPressure, propagatorStepSize);
             }
 
-            var res = propagator.Propagate();
+            propagator.Propagate();
             propagator.Dispose();
             PropagationOutput = outputDirectory.CreateSubdirectory(Name);
 
@@ -368,18 +368,26 @@ namespace IO.Astrodynamics.Body.Spacecraft
             var clockFile = new FileInfo(Path.Combine(PropagationOutput.CreateSubdirectory("Clocks").FullName, Name + ".tsc"));
             await Clock.WriteAsync(clockFile);
 
-            //Write Ephemeris
-            if (API.Instance.WriteEphemeris(new FileInfo(Path.Combine(PropagationOutput.CreateSubdirectory("Ephemeris").FullName, Name + ".spk")), this,
-                    res.stateVectors))
+            // Write Ephemeris
+             if (API.Instance.WriteEphemeris(new FileInfo(Path.Combine(PropagationOutput.CreateSubdirectory("Ephemeris").FullName, Name + ".spk")), this,
+                     StateVectorsRelativeToICRF.Values))
+             {
+                 //Clock is loaded because is needed by orientation writer
+                 API.Instance.LoadKernels(clockFile);
+                 //Write Orientation
+                 if (API.Instance.WriteOrientation(new FileInfo(Path.Combine(PropagationOutput.CreateSubdirectory("Orientation").FullName, Name + ".ck")), this,
+                         Frame.GetStateOrientationsToICRF()))
+                 {
+                     API.Instance.LoadKernels(PropagationOutput);
+                 }
+             }
+        }
+
+        public void AddStateVectorRelativeToICRF(params StateVector[] stateVectors)
+        {
+            foreach (var sv in stateVectors)
             {
-                //Clock is loaded because is needed by orientation writer
-                API.Instance.LoadKernels(clockFile);
-                //Write Orientation
-                if (API.Instance.WriteOrientation(new FileInfo(Path.Combine(PropagationOutput.CreateSubdirectory("Orientation").FullName, Name + ".ck")), this,
-                        res.stateOrientations))
-                {
-                    API.Instance.LoadKernels(PropagationOutput);
-                }
+                StateVectorsRelativeToICRF[sv.Epoch] = sv;
             }
         }
 

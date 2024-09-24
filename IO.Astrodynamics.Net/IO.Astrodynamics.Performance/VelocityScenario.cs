@@ -102,7 +102,7 @@ public class VelocityScenario
     [Benchmark(Description = "SpacecraftPropagator per orbit (GeoPotentials // Moon and sun perturbation // Atmospheric drag // Solar radiation) ")]
     public void Propagator()
     {
-        var res = _spacecraftPropagator.Propagate();
+        _spacecraftPropagator.Propagate();
     }
 
     // [Benchmark(Description = "IO Vector", Baseline = true)]

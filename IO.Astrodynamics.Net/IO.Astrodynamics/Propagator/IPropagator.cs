@@ -16,5 +16,5 @@ public interface IPropagator : IDisposable
     /// Propagate spacecraft
     /// </summary>
     /// <returns></returns>
-    (IEnumerable<StateVector>stateVectors, IEnumerable<StateOrientation>stateOrientations) Propagate();
+    void Propagate();
 }

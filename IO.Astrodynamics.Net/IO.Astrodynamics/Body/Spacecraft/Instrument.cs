@@ -11,6 +11,8 @@ namespace IO.Astrodynamics.Body.Spacecraft
 {
     public abstract class Instrument : INaifObject, IEquatable<Instrument>
     {
+        private readonly GeometryFinder _geometryFinder = new GeometryFinder();
+
         /// <summary>
         /// Naif identifier
         /// </summary>
@@ -109,13 +111,17 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// <param name="aberration"></param>
         /// <param name="stepSize"></param>
         /// <returns></returns>
-        public IEnumerable<Window> FindWindowsInFieldOfViewConstraint(Window searchWindow, Spacecraft observer, INaifObject target,
+        public IEnumerable<Window> FindWindowsInFieldOfViewConstraint(Window searchWindow, Spacecraft observer, ILocalizable target,
             Frame targetFrame, ShapeType targetShape, Aberration aberration, TimeSpan stepSize)
         {
             if (observer == null) throw new ArgumentNullException(nameof(observer));
             if (target == null) throw new ArgumentNullException(nameof(target));
             if (targetFrame == null) throw new ArgumentNullException(nameof(targetFrame));
-            return API.Instance.FindWindowsInFieldOfViewConstraint(searchWindow, observer, this, target, targetFrame, targetShape, aberration, stepSize);
+
+            Func<Time, bool> calculateInFov = date => IsInFOV(date, target, aberration);
+
+            return _geometryFinder.FindWindowsWithCondition(searchWindow, calculateInFov, RelationnalOperator.Equal, true, stepSize);
+            //return API.Instance.FindWindowsInFieldOfViewConstraint(searchWindow, observer, this, target, targetFrame, targetShape, aberration, stepSize);
         }
 
         public Vector3 GetBoresightInSpacecraftFrame()
@@ -160,13 +166,13 @@ namespace IO.Astrodynamics.Body.Spacecraft
             // Project the vector onto the camera's view direction
             var boresight = GetBoresightInICRFFrame().Normalize();
 
-            var z= boresight * toObject;
+            var z = boresight * toObject;
             // Check if the object is in front of the camera
             if (z <= 0)
                 return false;
 
             // Calculate horizontal and vertical angles
-            
+
             Vector3 projectedOntoXY_Object = new Vector3(toObject.X, toObject.Y, 0); // Projection sur le plan XY
             Vector3 projectedOntoXY_View = new Vector3(boresight.X, boresight.Y, 0); // Projection de la caméra sur le plan XY
 
