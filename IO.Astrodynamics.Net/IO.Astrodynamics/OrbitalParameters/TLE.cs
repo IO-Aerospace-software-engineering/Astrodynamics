@@ -1,10 +1,14 @@
 // Copyright 2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
 
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Frames;
+using IO.Astrodynamics.Math;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.TimeSystem;
+using One_Sgp4;
 
 namespace IO.Astrodynamics.OrbitalParameters;
 
@@ -108,14 +112,21 @@ public class TLE : KeplerianElements, IEquatable<TLE>
     /// </summary>
     /// <param name="epoch">The epoch time.</param>
     /// <returns>The state vector at the given epoch.</returns>
-    public override StateVector ToStateVector(Time epoch)
+    public override StateVector ToStateVector(Time date)
     {
-        return API.Instance.ConvertTleToStateVector(Line1, Line2, Line3, epoch).ToStateVector();
+        Tle tleItem = ParserTLE.parseTle(Line2, Line3, Line1);
+        Sgp4 sgp4Propagator = new Sgp4(tleItem, Sgp4.wgsConstant.WGS_84);
+        EpochTime epochSGP = new EpochTime(date.ToUTC().DateTime);
+        sgp4Propagator.runSgp4Cal(epochSGP, epochSGP, 0.01);
+        List<Sgp4Data> resultDataList = sgp4Propagator.getResults();
+        var position = resultDataList[0].getPositionData();
+        var velocity = resultDataList[0].getVelocityData();
+        return new StateVector(new Vector3(position.x, position.y, position.z)*1000.0, new Vector3(velocity.x, velocity.y, velocity.z)*1000.0, new CelestialBody(399), date, new Frame("TEME")).ToFrame(Frame.ICRF).ToStateVector();
     }
-    
+
     public override StateVector ToStateVector()
     {
-        return API.Instance.ConvertTleToStateVector(Line1, Line2, Line3, Epoch).ToStateVector();
+        return ToStateVector(Epoch);
     }
 
     /// <summary>

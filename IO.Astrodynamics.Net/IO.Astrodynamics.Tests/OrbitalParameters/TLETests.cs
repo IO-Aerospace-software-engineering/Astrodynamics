@@ -76,9 +76,9 @@ public class TLETests
         TimeSystem.Time epoch = new TimeSystem.Time("2024-08-26T22:34:20.00000Z");
         var stateVector = tle.ToStateVector(epoch);
 
-        Assert.Equal(32718534.030244593, stateVector.Position.X, 1);
-        Assert.Equal(-17501127.803996515, stateVector.Position.Y, 1);
-        Assert.Equal(11592995.3105345, stateVector.Position.Z, 1);
+        Assert.Equal(32718528.303724434, stateVector.Position.X, 1);
+        Assert.Equal(-17501136.957387105, stateVector.Position.Y, 1);
+        Assert.Equal(11592997.485773511, stateVector.Position.Z, 1);
         Assert.Equal(1808.0437338563306, stateVector.Velocity.X, 1);
         Assert.Equal(998.49491137687698, stateVector.Velocity.Y, 1);
         Assert.Equal(29.876025979417708, stateVector.Velocity.Z, 1);

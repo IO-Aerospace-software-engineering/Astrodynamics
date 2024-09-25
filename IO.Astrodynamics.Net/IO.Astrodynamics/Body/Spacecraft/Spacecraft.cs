@@ -397,7 +397,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
             {
                 if (StateVectorsRelativeToICRF.Count < 2)
                 {
-                    return this.InitialOrbitalParameters.ToStateVector(date).ToFrame(Frames.Frame.ICRF).ToStateVector();
+                    return this.InitialOrbitalParameters.ToStateVector(date).RelativeTo(new Barycenter(0),Aberration.None).ToFrame(Frames.Frame.ICRF).ToStateVector();
                 }
 
                 return Lagrange.Interpolate(StateVectorsRelativeToICRF.Values.OrderBy(x => x.Epoch).ToArray(), date);
