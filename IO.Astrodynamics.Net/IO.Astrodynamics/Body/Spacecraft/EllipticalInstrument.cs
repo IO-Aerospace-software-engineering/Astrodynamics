@@ -50,7 +50,7 @@ public class EllipticalInstrument : Instrument
         Vector3 toObject = objectPosition.Position - cameraPostion.Position;
 
         // Project the vector onto the camera's view direction
-        double z = toObject * GetBoresightInICRFFrame();
+        double z = toObject * GetBoresightInICRFFrame(date);
 
         // Check if the object is in front of the camera
         if (z <= 0)
@@ -64,7 +64,7 @@ public class EllipticalInstrument : Instrument
         double elevation = System.Math.Atan2(projectedOntoYZ.Magnitude(), z); // Vertical angle
 
         // Check if the object is within the camera's horizontal and vertical FOV
-        if (System.Math.Pow(azimuth / (FieldOfView / 2), 2) + System.Math.Pow(elevation / (CrossAngle / 2), 2) <= 1)
+        if (System.Math.Pow(azimuth / (FieldOfView), 2) + System.Math.Pow(elevation / (CrossAngle), 2) <= 1)
         {
             return true;
         }

@@ -28,7 +28,7 @@ public class RectangularInstrument : Instrument
         Vector3 toObject = objectPosition.Position - cameraPostion.Position;
 
         // Project the vector onto the camera's view direction
-        double z = toObject * GetBoresightInICRFFrame();
+        double z = toObject * GetBoresightInICRFFrame(date);
 
         // Check if the object is in front of the camera
         if (z <= 0)
@@ -42,7 +42,7 @@ public class RectangularInstrument : Instrument
         double elevation = System.Math.Atan2(projectedOntoYZ.Magnitude(), z); // Vertical angle
 
         // Check if the object is within the camera's horizontal and vertical FOV
-        if (azimuth <= FieldOfView / 2 && elevation <= CrossAngle / 2)
+        if (azimuth <= FieldOfView && elevation <= CrossAngle)
         {
             return true;
         }

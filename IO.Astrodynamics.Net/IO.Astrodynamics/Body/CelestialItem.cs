@@ -230,7 +230,7 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
             else
                 newEpoch = epoch + lightTime;
 
-            observerGeometricState = _dataProvider.GetEphemeris(newEpoch, this, observer, Frame.ICRF, Aberration.None).ToStateVector();
+            observerGeometricState = this.GetEphemeris(newEpoch, observer, Frame.ICRF, Aberration.None).ToStateVector();
 
             if (aberration == Aberration.LTS || aberration == Aberration.XLTS)
             {

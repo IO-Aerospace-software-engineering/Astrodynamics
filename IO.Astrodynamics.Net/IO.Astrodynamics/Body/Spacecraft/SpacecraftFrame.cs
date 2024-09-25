@@ -31,8 +31,8 @@ public class SpacecraftFrame : Frame
                 return new StateOrientation(Quaternion.Zero, Vector3.Zero, date, ICRF);
             }
 
-            var latestKnown = _stateOrientationsToICRF.OrderBy(x => x.Key).Last(x => x.Key < date);
-            return latestKnown.Value.AtDate(date);
+            var latestKnown = _stateOrientationsToICRF.OrderBy(x => x.Key).LastOrDefault(x => x.Key < date);
+            return latestKnown.Value is null ? _stateOrientationsToICRF.OrderBy(x => x.Key).First().Value : latestKnown.Value.AtDate(date);
         });
     }
 

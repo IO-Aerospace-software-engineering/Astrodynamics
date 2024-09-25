@@ -121,7 +121,6 @@ namespace IO.Astrodynamics.Body.Spacecraft
             Func<Time, bool> calculateInFov = date => IsInFOV(date, target, aberration);
 
             return _geometryFinder.FindWindowsWithCondition(searchWindow, calculateInFov, RelationnalOperator.Equal, true, stepSize);
-            //return API.Instance.FindWindowsInFieldOfViewConstraint(searchWindow, observer, this, target, targetFrame, targetShape, aberration, stepSize);
         }
 
         public Vector3 GetBoresightInSpacecraftFrame()
@@ -130,11 +129,18 @@ namespace IO.Astrodynamics.Body.Spacecraft
             return Boresight.Rotate(q);
         }
 
-        public Vector3 GetBoresightInICRFFrame()
+        public Vector3 GetBoresightInICRFFrame(in Time date)
         {
             Quaternion q = Orientation == Vector3.Zero ? Quaternion.Zero : new Quaternion(Orientation.Normalize(), Orientation.Magnitude());
-            q = Spacecraft.Frame.GetStateOrientationToICRF(Time.J2000TDB).Rotation * q.Conjugate();
+            q = Spacecraft.Frame.GetStateOrientationToICRF(date).Rotation * q.Conjugate();
             return Boresight.Rotate(q);
+        }
+
+        public Vector3 GetRefVectorInICRFFrame(in Time date)
+        {
+            Quaternion q = Orientation == Vector3.Zero ? Quaternion.Zero : new Quaternion(Orientation.Normalize(), Orientation.Magnitude());
+            q = Spacecraft.Frame.GetStateOrientationToICRF(date).Rotation * q.Conjugate();
+            return RefVector.Rotate(q);
         }
 
         public async Task WriteFrameAsync(FileInfo outputFile)
@@ -161,32 +167,33 @@ namespace IO.Astrodynamics.Body.Spacecraft
             var cameraPostion = Spacecraft.GetEphemeris(date, new Barycenter(0), Frame.ICRF, aberration).ToStateVector();
             var objectPosition = target.GetEphemeris(date, new Barycenter(0), Frame.ICRF, aberration).ToStateVector();
             // Calculate the vector from the camera to the object
+            // Compute the vector from the camera to the object
             Vector3 toObject = objectPosition.Position - cameraPostion.Position;
+            
+            // Ensure boresight and refVector are normalized
+            var boresight = GetBoresightInICRFFrame(date).Normalize();
+            double z_cam = toObject * boresight; // Dot product with forward vector
 
-            // Project the vector onto the camera's view direction
-            var boresight = GetBoresightInICRFFrame().Normalize();
-
-            var z = boresight * toObject;
             // Check if the object is in front of the camera
-            if (z <= 0)
+            if (z_cam <= 0)
                 return false;
+            
+            var refVector = GetRefVectorInICRFFrame(date).Normalize();
 
-            // Calculate horizontal and vertical angles
+            // Compute the right vector (x-axis) of the camera's coordinate system
+            Vector3 rightVector = boresight.Cross(refVector).Normalize();
 
-            Vector3 projectedOntoXY_Object = new Vector3(toObject.X, toObject.Y, 0); // Projection sur le plan XY
-            Vector3 projectedOntoXY_View = new Vector3(boresight.X, boresight.Y, 0); // Projection de la caméra sur le plan XY
+            // Project toObject onto the camera's coordinate axes
+            double x_cam = toObject * rightVector; // Dot product with right vector
+            double y_cam = toObject * refVector; // Dot product with up vector
+           
 
-            // Calculate azimuth with dot product and acos
-            double azimuth = System.Math.Acos(projectedOntoXY_Object.Normalize() * projectedOntoXY_View.Normalize());
+            // Calculate azimuth (horizontal angle) and elevation (vertical angle)
+            double azimuth = System.Math.Atan2(x_cam, z_cam);
+            double elevation = System.Math.Atan2(y_cam, z_cam);
 
-            // Calculate elevation with dot product and acos
-            Vector3 projectedOntoXZ_Object = new Vector3(toObject.X, 0, toObject.Z); // Projection sur le plan XZ
-            Vector3 projectedOntoXZ_View = new Vector3(boresight.X, 0, boresight.Z); // Projection de la caméra sur le plan XZ
-
-            double elevation = System.Math.Acos(projectedOntoXZ_Object.Normalize() * projectedOntoXZ_View.Normalize());
-
-            // Check if the object is within the field of view
-            return azimuth <= FieldOfView && elevation <= FieldOfView;
+            // Check if the object is within the horizontal and vertical field of view
+            return (System.Math.Abs(azimuth) <= FieldOfView) && (System.Math.Abs(elevation) <= FieldOfView);
         }
 
         public abstract Task WriteKernelAsync(FileInfo outputFile);
