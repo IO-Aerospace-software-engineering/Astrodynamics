@@ -24,7 +24,7 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// <summary>
     /// Gets the epoch time at which the orbital parameters are defined.
     /// </summary>
-    public Time Epoch { get; }
+    public Time Epoch { get; protected set; }
 
     /// <summary>
     /// Gets the reference frame in which the orbital parameters are defined.

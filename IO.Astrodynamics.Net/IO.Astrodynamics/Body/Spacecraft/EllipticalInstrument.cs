@@ -44,24 +44,8 @@ public class EllipticalInstrument : Instrument
 
     public override bool IsInFOV(Time date, ILocalizable target, Aberration aberration)
     {
-        var cameraPostion = Spacecraft.GetEphemeris(date, new Barycenter(0), Frame.ICRF, aberration).ToStateVector();
-        var objectPosition = target.GetEphemeris(date, new Barycenter(0), Frame.ICRF, aberration).ToStateVector();
-        // Calculate the vector from the camera to the object
-        Vector3 toObject = objectPosition.Position - cameraPostion.Position;
-
-        // Project the vector onto the camera's view direction
-        double z = toObject * GetBoresightInICRFFrame(date);
-
-        // Check if the object is in front of the camera
-        if (z <= 0)
-            return false;
-
-        // Calculate horizontal and vertical angles
-        Vector3 projectedOntoXY = new Vector3(toObject.X, toObject.Y, 0);
-        double azimuth = System.Math.Atan2(projectedOntoXY.Magnitude(), z); // Horizontal angle
-
-        Vector3 projectedOntoYZ = new Vector3(0, toObject.Y, toObject.Z);
-        double elevation = System.Math.Atan2(projectedOntoYZ.Magnitude(), z); // Vertical angle
+        var (azimuth, elevation, isInFov) = PositionInFOV(date, target, aberration);
+        if (!isInFov) return false;
 
         // Check if the object is within the camera's horizontal and vertical FOV
         if (System.Math.Pow(azimuth / (FieldOfView), 2) + System.Math.Pow(elevation / (CrossAngle), 2) <= 1)

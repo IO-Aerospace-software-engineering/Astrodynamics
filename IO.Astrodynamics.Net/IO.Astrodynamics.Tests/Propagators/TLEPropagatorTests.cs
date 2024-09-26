@@ -26,12 +26,12 @@ public class TLEPropagatorTests
     public void CheckPropagation()
     {
         Clock clk = new Clock("My clock", 256);
-        TLE tle = TLE.Create("ISS",
+        TLE tle = new TLE("ISS",
             "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
         
         Spacecraft spc = new Spacecraft(-1001, "MySpacecraft", 100.0, 10000.0, clk, tle);
-        var start = spc.InitialOrbitalParameters.Epoch;
+        var start = spc.InitialOrbitalParameters.Epoch.ToTDB();
         var end = start.AddDays(1.0);
         TLEPropagator propagator = new TLEPropagator(new Window(start, end), spc, TimeSpan.FromHours(1.0));
         propagator.Propagate();

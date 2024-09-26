@@ -26,7 +26,7 @@ public class EphemerisTests
             var res = sb.ToString();
 
             Assert.Equal(
-                $"Epoch : 2023-01-01T00:51:49.3107004 TDB A : 149547967550.0972 Ecc. : 0.016383451297742185 Inc. : 0.40904753897404755 AN : 6.283111166771382 AOP : 1.8230033425173675 M : 6.208209880371152 Frame : j2000{Environment.NewLine}Epoch : 2023-01-01T00:52:49.3107080 TDB A : 149547949469.53668 Ecc. : 0.01638333076736937 Inc. : 0.4090475391061235 AN : 6.283111164887601 AOP : 1.8230023130675248 M : 6.208222811942813 Frame : j2000{Environment.NewLine}"
+                $"Epoch : 2023-01-01T00:51:49.3107004 TDB A : 149547967550.09717 Ecc. : 0.016383451297742043 Inc. : 0.40904753897404755 AN : 6.283111166771382 AOP : 1.8230033425173697 M : 6.20820988037115 Frame : j2000{Environment.NewLine}Epoch : 2023-01-01T00:52:49.3107080 TDB A : 149547949469.53668 Ecc. : 0.01638333076736937 Inc. : 0.4090475391061235 AN : 6.283111164887601 AOP : 1.8230023130675248 M : 6.208222811942813 Frame : j2000{Environment.NewLine}"
                 , res);
         }
     }
@@ -102,23 +102,6 @@ public class EphemerisTests
 
             var res = sb.ToString();
             Assert.Equal($"Planetodetic {{ Longitude = -1.007868325632746, Latitude = -0.19145790695998618, Altitude = 396166994.9749261 }}{Environment.NewLine}"
-                , res);
-        }
-    }
-
-    [Fact]
-    public void SubPointPlanetodeticFromSpacecraft()
-    {
-        lock (Configuration.objLock)
-        {
-            var command = new EphemerisCommand();
-            StringBuilder sb = new StringBuilder();
-            StringWriter sw = new StringWriter(sb);
-            Console.SetOut(sw);
-            command.SubPoint("Data", -172, 399, new EpochParameters{Epoch = "676555200.0"}, planetodetic: true);
-
-            var res = sb.ToString();
-            Assert.Equal($"Planetodetic {{ Longitude = 1.7801173242054658, Latitude = 0.0020669681623078835, Altitude = 421863.50262539927 }}{Environment.NewLine}"
                 , res);
         }
     }

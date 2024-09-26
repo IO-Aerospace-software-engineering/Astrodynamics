@@ -266,7 +266,7 @@ namespace IO.Astrodynamics.Tests.Mission
             scenario.AddCelestialItem(TestHelpers.EarthAtJ2000);
 
             //Define parking orbit
-            TLE parkingOrbit = TLE.Create("ISS", "1 25544U 98067A   24153.17509025  .00020162  00000+0  35104-3 0  9990",
+            TLE parkingOrbit = new TLE("ISS", "1 25544U 98067A   24153.17509025  .00020162  00000+0  35104-3 0  9990",
                 "2 25544  51.6393  34.6631 0005642 260.2910 238.1766 15.50732314456064");
 
             //Create and configure spacecraft
@@ -281,10 +281,10 @@ namespace IO.Astrodynamics.Tests.Mission
             var endSV = spacecraft.GetEphemeris(end, site, Frames.Frame.ICRF, Aberration.None);
 
             Assert.Equal(
-                new StateVector(new Vector3(-2182692.465961329, 6508982.6038953485, -8856392.227295294), new Vector3(-4821.698229810769, 5034.874626026276, 2795.6917054372543),
+                new StateVector(new Vector3(-2203549.8057556152, 6530514.265792847, -8845974.357006073), new Vector3(-4836.122150244806, 5010.836806879401, 2817.6443107142204),
                     site, start, Frames.Frame.ICRF), initialSV.ToStateVector(), TestHelpers.StateVectorComparer);
             Assert.Equal(
-                new StateVector(new Vector3(-8863951.495014349, 2520945.495990021, 1054000.734434985), new Vector3(935.3860797535742, -7713.013774991017, 1625.8111171906883),
+                new StateVector(new Vector3(-8860293.65826416, 2490098.7069015503, 1059977.3478050232), new Vector3(961.7950954605913, -7714.248725439211, 1601.9044880627953),
                     site, end, Frames.Frame.ICRF), endSV.ToStateVector(), TestHelpers.StateVectorComparer);
         }
 

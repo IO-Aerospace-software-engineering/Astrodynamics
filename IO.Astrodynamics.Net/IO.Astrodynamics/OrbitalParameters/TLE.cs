@@ -15,8 +15,16 @@ namespace IO.Astrodynamics.OrbitalParameters;
 /// <summary>
 /// Represents a Two-Line Element (TLE) set of orbital parameters.
 /// </summary>
-public class TLE : KeplerianElements, IEquatable<TLE>
+public class TLE : OrbitalParameters, IEquatable<TLE>
 {
+    private readonly Tle _tleItem;
+    private readonly double _a;
+    private readonly double _e;
+    private readonly double _i;
+    private readonly double _o;
+    private readonly double _w;
+    private readonly double _m;
+
     /// <summary>
     /// Gets the first line of the TLE.
     /// </summary>
@@ -48,53 +56,40 @@ public class TLE : KeplerianElements, IEquatable<TLE>
     public double SecondDerivativeMeanMotion { get; }
 
     /// <summary>
-    /// Creates a new instance of the TLE class.
-    /// </summary>
-    /// <param name="line1">The first line of the TLE.</param>
-    /// <param name="line2">The second line of the TLE.</param>
-    /// <param name="line3">The third line of the TLE.</param>
-    /// <returns>A new instance of the TLE class.</returns>
-    /// <exception cref="ArgumentException">Thrown when any of the lines are null or empty.</exception>
-    public static TLE Create(string line1, string line2, string line3)
-    {
-        if (string.IsNullOrEmpty(line1)) throw new ArgumentException("Value cannot be null or empty.", nameof(line1));
-        if (string.IsNullOrEmpty(line2)) throw new ArgumentException("Value cannot be null or empty.", nameof(line2));
-        if (string.IsNullOrEmpty(line3)) throw new ArgumentException("Value cannot be null or empty.", nameof(line3));
-        return API.Instance.CreateTLE(line1, line2, line3);
-    }
-
-    /// <summary>
     /// Initializes a new instance of the TLE class.
     /// </summary>
     /// <param name="line1">The first line of the TLE.</param>
     /// <param name="line2">The second line of the TLE.</param>
     /// <param name="line3">The third line of the TLE.</param>
-    /// <param name="balisticCoefficient">The ballistic coefficient.</param>
-    /// <param name="dragTerm">The drag term.</param>
-    /// <param name="secondDerivativeMeanMotion">The second derivative of the mean motion.</param>
-    /// <param name="a">The semi-major axis.</param>
-    /// <param name="e">The eccentricity.</param>
-    /// <param name="i">The inclination.</param>
-    /// <param name="o">The right ascension of the ascending node.</param>
-    /// <param name="w">The argument of perigee.</param>
-    /// <param name="m">The mean anomaly.</param>
-    /// <param name="epoch">The epoch time.</param>
-    /// <param name="frame">The reference frame.</param>
     /// <exception cref="ArgumentNullException">Thrown when the frame is null.</exception>
     /// <exception cref="ArgumentException">Thrown when any of the lines are null or empty.</exception>
-    internal TLE(string line1, string line2, string line3, double balisticCoefficient, double dragTerm, double secondDerivativeMeanMotion, double a, double e, double i, double o,
-        double w, double m, Time epoch, Frame frame) : base(a, e, i, o, w, m, new CelestialBody(PlanetsAndMoons.EARTH), epoch, frame)
+    public TLE(string line1, string line2, string line3) : base(new CelestialBody(PlanetsAndMoons.EARTH), Time.J2000TDB, new Frame("TEME"))
     {
-        if (frame == null) throw new ArgumentNullException(nameof(frame));
         if (string.IsNullOrEmpty(line1)) throw new ArgumentException("Value cannot be null or empty.", nameof(line1));
         if (string.IsNullOrEmpty(line2)) throw new ArgumentException("Value cannot be null or empty.", nameof(line2));
         if (string.IsNullOrEmpty(line3)) throw new ArgumentException("Value cannot be null or empty.", nameof(line3));
         Line1 = line1;
         Line2 = line2;
         Line3 = line3;
-        BalisticCoefficient = balisticCoefficient;
-        DragTerm = dragTerm;
-        SecondDerivativeMeanMotion = secondDerivativeMeanMotion;
+
+        _tleItem = ParserTLE.parseTle(line2, line3, line1);
+        
+
+        EpochTime ep = new EpochTime(_tleItem.getEpochYear(), _tleItem.getEpochDay());
+        Epoch = new Time(ep.toDateTime(), TimeFrame.UTCFrame);
+        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var revDay = _tleItem.getMeanMotion();
+        double n = Constants._2PI / (86400.0 / revDay);
+        _a = System.Math.Cbrt(earth.GM / (n * n));
+        _e = _tleItem.getEccentriciy();
+        _i = _tleItem.getInclination() * Constants.Deg2Rad;
+        _o = _tleItem.getRightAscendingNode() * Constants.Deg2Rad;
+        _w = _tleItem.getPerigee() * Constants.Deg2Rad;
+        _m = _tleItem.getMeanAnomoly() * Constants.Deg2Rad;
+
+        BalisticCoefficient = _tleItem.getFirstMeanMotion();
+        DragTerm = _tleItem.getDrag();
+        SecondDerivativeMeanMotion = _tleItem.getSecondMeanMotion();
     }
 
     /// <summary>
@@ -114,14 +109,44 @@ public class TLE : KeplerianElements, IEquatable<TLE>
     /// <returns>The state vector at the given epoch.</returns>
     public override StateVector ToStateVector(Time date)
     {
-        Tle tleItem = ParserTLE.parseTle(Line2, Line3, Line1);
-        Sgp4 sgp4Propagator = new Sgp4(tleItem, Sgp4.wgsConstant.WGS_84);
+        var sgp4 = new Sgp4(_tleItem, Sgp4.wgsConstant.WGS_84);
         EpochTime epochSGP = new EpochTime(date.ToUTC().DateTime);
-        sgp4Propagator.runSgp4Cal(epochSGP, epochSGP, 0.01);
-        List<Sgp4Data> resultDataList = sgp4Propagator.getResults();
+        sgp4.runSgp4Cal(epochSGP, epochSGP, 0.01);
+        List<Sgp4Data> resultDataList = sgp4.getResults();
         var position = resultDataList[0].getPositionData();
         var velocity = resultDataList[0].getVelocityData();
-        return new StateVector(new Vector3(position.x, position.y, position.z)*1000.0, new Vector3(velocity.x, velocity.y, velocity.z)*1000.0, new CelestialBody(399), date, new Frame("TEME")).ToFrame(Frame.ICRF).ToStateVector();
+        return new StateVector(new Vector3(position.x, position.y, position.z) * 1000.0, new Vector3(velocity.x, velocity.y, velocity.z) * 1000.0, new CelestialBody(399), date,
+            new Frame("TEME")).ToFrame(Frame.ICRF).ToStateVector();
+    }
+
+    public override double SemiMajorAxis()
+    {
+        return _a;
+    }
+
+    public override double Eccentricity()
+    {
+        return _e;
+    }
+
+    public override double Inclination()
+    {
+        return _i;
+    }
+
+    public override double AscendingNode()
+    {
+        return _o;
+    }
+
+    public override double ArgumentOfPeriapsis()
+    {
+        return _w;
+    }
+
+    public override double MeanAnomaly()
+    {
+        return _m;
     }
 
     public override StateVector ToStateVector()

@@ -164,6 +164,15 @@ namespace IO.Astrodynamics.Body.Spacecraft
 
         public virtual bool IsInFOV(Time date, ILocalizable target, Aberration aberration)
         {
+            var (azimuth, elevation, isInFov) = PositionInFOV(date, target, aberration);
+            if (!isInFov) return false;
+
+            // Check if the object is within the horizontal and vertical field of view
+            return (System.Math.Abs(azimuth) <= FieldOfView) && (System.Math.Abs(elevation) <= FieldOfView);
+        }
+
+        protected (double azimuth, double elevation, bool isInFov) PositionInFOV(Time date, ILocalizable target, Aberration aberration)
+        {
             var cameraPostion = Spacecraft.GetEphemeris(date, new Barycenter(0), Frame.ICRF, aberration).ToStateVector();
             var objectPosition = target.GetEphemeris(date, new Barycenter(0), Frame.ICRF, aberration).ToStateVector();
             // Calculate the vector from the camera to the object
@@ -176,7 +185,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
 
             // Check if the object is in front of the camera
             if (z_cam <= 0)
-                return false;
+                return (double.NaN, double.NaN, false);
             
             var refVector = GetRefVectorInICRFFrame(date).Normalize();
 
@@ -191,9 +200,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
             // Calculate azimuth (horizontal angle) and elevation (vertical angle)
             double azimuth = System.Math.Atan2(x_cam, z_cam);
             double elevation = System.Math.Atan2(y_cam, z_cam);
-
-            // Check if the object is within the horizontal and vertical field of view
-            return (System.Math.Abs(azimuth) <= FieldOfView) && (System.Math.Abs(elevation) <= FieldOfView);
+            return (azimuth, elevation, true);
         }
 
         public abstract Task WriteKernelAsync(FileInfo outputFile);
