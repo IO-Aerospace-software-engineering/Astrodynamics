@@ -202,6 +202,12 @@ public class CelestialBody : CelestialItem, IOrientable<Frame>
     {
         return TimeSpan.FromSeconds(Constants._2PI / GetOrientation(Frame.ICRF, epoch).AngularVelocity.Magnitude());
     }
+    
+    public double AngularVelocity(Time epoch)
+    {
+        var siderealRotationPeriod = SideralRotationPeriod(epoch);
+        return (2.0 * Constants.PI) / siderealRotationPeriod.TotalSeconds;
+    }
 
     public KeplerianElements GeosynchronousOrbit(double longitude, double latitude, Time epoch)
     {

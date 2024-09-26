@@ -99,7 +99,7 @@ namespace IO.Astrodynamics.Tests
         {
             lock (LockObj)
             {
-                return v1.Frame == v2.Frame && System.Math.Abs((v1 - v2).TotalSeconds) < 1E-03;
+                return Equals(v1.Frame, v2.Frame) && System.Math.Abs((v1 - v2).TotalSeconds) < 1E-03;
             }
         }
     }

@@ -35,56 +35,56 @@ namespace IO.Astrodynamics.Surface
         public double Mass { get; } = 0.0;
 
         /// <summary>
-/// Initializes a new instance of the <see cref="Site"/> class with default planetodetic coordinates.
-/// </summary>
-/// <param name="userId">The unique identifier for the site.</param>
-/// <param name="name">The name of the site.</param>
-/// <param name="celestialItem">The celestial body associated with the site.</param>
-/// <param name="dataProvider">The data provider for ephemeris data. If null, a default provider is used.</param>
-/// <exception cref="ArgumentNullException">Thrown when <paramref name="celestialItem"/> is null.</exception>
-/// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="userId"/> is less than or equal to zero.</exception>
-/// <exception cref="ArgumentException">Thrown when <paramref name="name"/> is null or empty.</exception>
-public Site(int userId, string name, CelestialBody celestialItem, IDataProvider dataProvider = null) : this(userId, name, celestialItem,
-    new Planetodetic(double.NaN, double.NaN, double.NaN), dataProvider)
-{
-}
+        /// Initializes a new instance of the <see cref="Site"/> class with default planetodetic coordinates.
+        /// </summary>
+        /// <param name="userId">The unique identifier for the site.</param>
+        /// <param name="name">The name of the site.</param>
+        /// <param name="celestialItem">The celestial body associated with the site.</param>
+        /// <param name="dataProvider">The data provider for ephemeris data. If null, a default provider is used.</param>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="celestialItem"/> is null.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="userId"/> is less than or equal to zero.</exception>
+        /// <exception cref="ArgumentException">Thrown when <paramref name="name"/> is null or empty.</exception>
+        public Site(int userId, string name, CelestialBody celestialItem, IDataProvider dataProvider = null) : this(userId, name, celestialItem,
+            new Planetodetic(double.NaN, double.NaN, double.NaN), dataProvider)
+        {
+        }
 
         /// <summary>
-/// Initializes a new instance of the <see cref="Site"/> class.
-/// </summary>
-/// <param name="userId">The unique identifier for the site.</param>
-/// <param name="name">The name of the site.</param>
-/// <param name="celestialItem">The celestial body associated with the site.</param>
-/// <param name="planetodetic">The planetodetic coordinates of the site.</param>
-/// <param name="dataProvider">The data provider for ephemeris data. If null, a default provider is used.</param>
-/// <exception cref="ArgumentNullException">Thrown when <paramref name="celestialItem"/> is null.</exception>
-/// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="userId"/> is less than or equal to zero.</exception>
-/// <exception cref="ArgumentException">Thrown when <paramref name="name"/> is null or empty.</exception>
-public Site(int userId, string name, CelestialBody celestialItem, Planetodetic planetodetic, IDataProvider dataProvider = null)
-{
-    if (celestialItem == null) throw new ArgumentNullException(nameof(celestialItem));
-    if (userId <= 0) throw new ArgumentOutOfRangeException(nameof(userId));
-    if (string.IsNullOrEmpty(name)) throw new ArgumentException("Value cannot be null or empty.", nameof(name));
-    _dataProvider = dataProvider ?? new SpiceDataProvider();
-    Name = name;
-    CelestialBody = celestialItem;
-    Id = userId;
-    NaifId = celestialItem.NaifId * 1000 + userId;
+        /// Initializes a new instance of the <see cref="Site"/> class.
+        /// </summary>
+        /// <param name="userId">The unique identifier for the site.</param>
+        /// <param name="name">The name of the site.</param>
+        /// <param name="celestialItem">The celestial body associated with the site.</param>
+        /// <param name="planetodetic">The planetodetic coordinates of the site.</param>
+        /// <param name="dataProvider">The data provider for ephemeris data. If null, a default provider is used.</param>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="celestialItem"/> is null.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="userId"/> is less than or equal to zero.</exception>
+        /// <exception cref="ArgumentException">Thrown when <paramref name="name"/> is null or empty.</exception>
+        public Site(int userId, string name, CelestialBody celestialItem, Planetodetic planetodetic, IDataProvider dataProvider = null)
+        {
+            if (celestialItem == null) throw new ArgumentNullException(nameof(celestialItem));
+            if (userId <= 0) throw new ArgumentOutOfRangeException(nameof(userId));
+            if (string.IsNullOrEmpty(name)) throw new ArgumentException("Value cannot be null or empty.", nameof(name));
+            _dataProvider = dataProvider ?? new SpiceDataProvider();
+            Name = name;
+            CelestialBody = celestialItem;
+            Id = userId;
+            NaifId = celestialItem.NaifId * 1000 + userId;
 
-    if (double.IsNaN(planetodetic.Latitude))
-    {
-        _isFromKernel = true;
-        InitialOrbitalParameters = _dataProvider.GetEphemeris(Time.J2000TDB, this, celestialItem, celestialItem.Frame, Aberration.None);
-        Planetodetic = GetPlanetocentricCoordinates().ToPlanetodetic(CelestialBody.Flattening, CelestialBody.EquatorialRadius);
-    }
-    else
-    {
-        Planetodetic = planetodetic;
-        InitialOrbitalParameters = GetEphemeris(Time.J2000TDB, CelestialBody, CelestialBody.Frame, Aberration.None);
-    }
+            if (double.IsNaN(planetodetic.Latitude))
+            {
+                _isFromKernel = true;
+                InitialOrbitalParameters = _dataProvider.GetEphemeris(Time.J2000TDB, this, celestialItem, celestialItem.Frame, Aberration.None);
+                Planetodetic = GetPlanetocentricCoordinates().ToPlanetodetic(CelestialBody.Flattening, CelestialBody.EquatorialRadius);
+            }
+            else
+            {
+                Planetodetic = planetodetic;
+                InitialOrbitalParameters = GetEphemeris(Time.J2000TDB, CelestialBody, CelestialBody.Frame, Aberration.None);
+            }
 
-    Frame = new SiteFrame(name.ToUpper() + "_TOPO", this);
-}
+            Frame = new SiteFrame(name.ToUpper() + "_TOPO", this);
+        }
 
         /// <summary>
         /// Return known center of motions
@@ -444,36 +444,15 @@ public Site(int userId, string name, CelestialBody celestialItem, Planetodetic p
             API.Instance.WriteEphemeris(outputFile, this, stateVectors);
         }
 
-        // /// <summary>
-        // /// Propagate site
-        // /// </summary>
-        // /// <param name="window"></param>
-        // /// <param name="sitesDirectory"></param>
-        // /// <param name="stepSize"></param>
-        // public async Task PropagateAsync(Window window, TimeSpan stepSize, DirectoryInfo sitesDirectory)
-        // {
-        //     ResetPropagation();
-        //     PropagationOutput = sitesDirectory.CreateSubdirectory(Name);
-        //     var siteEphemeris = GetEphemeris(window, CelestialBody, Frames.Frame.ICRF, Aberration.None, stepSize).Select(x => x.ToStateVector());
-        //     await WriteFrameAsync(new FileInfo(Path.Combine(PropagationOutput.CreateSubdirectory("Frames").FullName, Name + ".tf")));
-        //     WriteEphemeris(new FileInfo(Path.Combine(PropagationOutput.CreateSubdirectory("Ephemeris").FullName, Name + ".spk")), siteEphemeris);
-        //     API.Instance.LoadKernels(PropagationOutput);
-        // }
-        //
-        // /// <summary>
-        // /// Reset propagation elements
-        // /// </summary>
-        // private void ResetPropagation()
-        // {
-        //     if (IsPropagated)
-        //     {
-        //         API.Instance.UnloadKernels(PropagationOutput);
-        //         PropagationOutput.Delete(true);
-        //         PropagationOutput = null;
-        //     }
-        // }
+        public IEnumerable<Window> FindDayWindows(in Window searchWindow, double twilight)
+        {
+            var sun = new CelestialBody(10);
+            return FindWindowsOnIlluminationConstraint(searchWindow, sun, IlluminationAngle.Incidence, RelationnalOperator.Lower, Constants.PI2 + twilight, 0.0,
+                Aberration.LTS, TimeSpan.FromMinutes(1.0), sun);
+        }
 
         #region operators
+
         public bool Equals(Site other)
         {
             if (ReferenceEquals(null, other)) return false;
@@ -522,6 +501,7 @@ public Site(int userId, string name, CelestialBody celestialItem, Planetodetic p
         {
             ReleaseUnmanagedResources();
         }
+
         #endregion
     }
 }
