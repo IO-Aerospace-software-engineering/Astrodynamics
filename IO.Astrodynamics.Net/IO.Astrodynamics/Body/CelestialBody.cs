@@ -11,7 +11,7 @@ using Vector3 = IO.Astrodynamics.Math.Vector3;
 
 namespace IO.Astrodynamics.Body;
 
-public class CelestialBody : CelestialItem, IOrientable
+public class CelestialBody : CelestialItem, IOrientable<Frame>
 {
     /// <summary>
     /// Gets the polar radius of the celestial body.
@@ -201,6 +201,12 @@ public class CelestialBody : CelestialItem, IOrientable
     public TimeSpan SideralRotationPeriod(Time epoch)
     {
         return TimeSpan.FromSeconds(Constants._2PI / GetOrientation(Frame.ICRF, epoch).AngularVelocity.Magnitude());
+    }
+    
+    public double AngularVelocity(Time epoch)
+    {
+        var siderealRotationPeriod = SideralRotationPeriod(epoch);
+        return (2.0 * Constants.PI) / siderealRotationPeriod.TotalSeconds;
     }
 
     public KeplerianElements GeosynchronousOrbit(double longitude, double latitude, Time epoch)

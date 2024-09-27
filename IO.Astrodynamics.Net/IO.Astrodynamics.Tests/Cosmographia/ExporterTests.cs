@@ -32,10 +32,13 @@ public class ExporterTests
     {
         Astrodynamics.Mission.Mission mission = new Astrodynamics.Mission.Mission("Cosmographia");
         Scenario scenario = new Scenario("export1", mission, new Window(TimeSystem.Time.J2000TDB.AddYears(21), TimeSystem.Time.J2000TDB.AddYears(21).AddDays(1.0)));
+        scenario.AddCelestialItem(TestHelpers.EarthAtJ2000);
+        scenario.AddCelestialItem(TestHelpers.Sun);
+        scenario.AddCelestialItem(TestHelpers.MoonAtJ2000);
         Spacecraft spacecraft = new Spacecraft(-333, "spc1", 1000.0, 2000.0, new Clock("clockspc1", 256),
             new KeplerianElements(6800000.0, 0.0, 0.0, 0.0, 0.0, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF));
         scenario.AddSpacecraft(spacecraft);
-        await scenario.SimulateAsync(Constants.OutputPath, false, false, TimeSpan.FromSeconds(1.0));
+        await scenario.SimulateAsync(false, false, TimeSpan.FromSeconds(1.0));
 
         CosmographiaExporter exporter = new CosmographiaExporter();
         await exporter.ExportAsync(scenario, new DirectoryInfo("CosmographiaExport"));
@@ -46,30 +49,36 @@ public class ExporterTests
     {
         Astrodynamics.Mission.Mission mission = new Astrodynamics.Mission.Mission("CosmographiaWM");
         Scenario scenario = new Scenario("exportWM", mission, new Window(TimeSystem.Time.J2000TDB.AddYears(21), TimeSystem.Time.J2000TDB.AddYears(21).AddHours(2.0)));
+        scenario.AddCelestialItem(TestHelpers.EarthAtJ2000);
+        scenario.AddCelestialItem(TestHelpers.Sun);
+        scenario.AddCelestialItem(TestHelpers.MoonAtJ2000);
         Spacecraft spacecraft = new Spacecraft(-334, "spcWM", 1000.0, 2000.0, new Clock("clockspcWM", 256),
             new KeplerianElements(6800000.0, 0.0, 0.0, 0.0, 0.0, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF));
         scenario.AddSpacecraft(spacecraft);
         scenario.AddCelestialItem(TestHelpers.MoonAtJ2000);
         scenario.AddCelestialItem(TestHelpers.EarthWithAtmAndGeoAtJ2000);
-        
-        await scenario.SimulateAsync(Constants.OutputPath, false, false, TimeSpan.FromSeconds(1.0));
+
+        await scenario.SimulateAsync( false, false, TimeSpan.FromSeconds(1.0));
 
         CosmographiaExporter exporter = new CosmographiaExporter();
         await exporter.ExportAsync(scenario, new DirectoryInfo("CosmographiaExport"));
     }
-    
+
     [Fact]
     public async Task ExportSimpleLongPropagationWithoutManeuver()
     {
         Astrodynamics.Mission.Mission mission = new Astrodynamics.Mission.Mission("CosmographiaLongExport");
         Scenario scenario = new Scenario("LongExport", mission, new Window(TimeSystem.Time.J2000TDB.AddYears(21), TimeSystem.Time.J2000TDB.AddYears(21).AddHours(4.0)));
+        scenario.AddCelestialItem(TestHelpers.EarthAtJ2000);
+        scenario.AddCelestialItem(TestHelpers.Sun);
+        scenario.AddCelestialItem(TestHelpers.MoonAtJ2000);
         Spacecraft spacecraft = new Spacecraft(-337, "spcLongMission", 1000.0, 2000.0, new Clock("clockSpcLongMission", 65536),
             new KeplerianElements(6800000.0, 0.0, 0.0, 0.0, 0.0, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF));
-        var a=spacecraft.InitialOrbitalParameters.ToStateVector();
+        var a = spacecraft.InitialOrbitalParameters.ToStateVector();
         var b = a.RelativeTo(TestHelpers.Sun, Aberration.None);
         scenario.AddSpacecraft(spacecraft);
-        
-        await scenario.SimulateAsync(Constants.OutputPath,false, false, TimeSpan.FromSeconds(1.0));
+
+        await scenario.SimulateAsync( false, false, TimeSpan.FromSeconds(1.0));
 
         CosmographiaExporter exporter = new CosmographiaExporter();
         await exporter.ExportAsync(scenario, new DirectoryInfo("CosmographiaExport"));
@@ -83,13 +92,16 @@ public class ExporterTests
 
         //Create a scenario for the mission
         Scenario scenario = new Scenario("EarthObservation", mission, new Window(TimeSystem.Time.J2000TDB.AddYears(21), TimeSystem.Time.J2000TDB.AddYears(21).AddDays(1.0)));
+        scenario.AddCelestialItem(TestHelpers.EarthAtJ2000);
+        scenario.AddCelestialItem(TestHelpers.Sun);
+        scenario.AddCelestialItem(TestHelpers.MoonAtJ2000);
 
         //Configure a spacecraft
         Spacecraft spacecraft = new Spacecraft(-334, "EarthExplorer", 1000.0, 2000.0, new Clock("clockspc1", 256),
             new KeplerianElements(6800000.0, 0.0, 1.0, 0.0, 0.0, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF));
 
         //Configure and attach an instrument to the spacecraft
-        spacecraft.AddRectangularInstrument(-334100, "camera_hires", "camdeluxe", 0.03,0.048, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero );
+        spacecraft.AddRectangularInstrument(-334100, "camera_hires", "camdeluxe", 0.03, 0.048, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero);
 
         //Add a fuel tank
         spacecraft.AddFuelTank(new FuelTank("fuelTank1", "fuelTankModel", "456", 2000.0, 2000.0));
@@ -113,7 +125,7 @@ public class ExporterTests
 
         //Todo fix why state orientation during maneuver returns Nan
         //Run the simulation
-        await scenario.SimulateAsync(Constants.OutputPath, false, false, TimeSpan.FromSeconds(1.0));
+        await scenario.SimulateAsync( false, false, TimeSpan.FromSeconds(1.0));
 
         //Export scenario to Cosmographia
         CosmographiaExporter exporter = new CosmographiaExporter();
@@ -132,15 +144,20 @@ public class ExporterTests
         scenario.AddSite(site);
         scenario.AddSite(site2);
         scenario.AddSite(site3);
+
+        scenario.AddCelestialItem(TestHelpers.Sun);
+        scenario.AddCelestialItem(TestHelpers.MoonAtJ2000);
+        scenario.AddCelestialItem(TestHelpers.EarthAtJ2000);
         Spacecraft spacecraft = new Spacecraft(-334, "Spacecraft", 1000.0, 2000.0, new Clock("clockspc1", 256),
             new KeplerianElements(11800000.0, 0.3, 1.0, 0.0, 0.0, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF));
         spacecraft.AddCircularInstrument(-334100, "Antenna", "antdeluxe", 0.2, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero);
         spacecraft.AddFuelTank(new FuelTank("fuelTank1", "fuelTankModel", "456", 2000.0, 2000.0));
         spacecraft.AddEngine(new Engine("engine1", "engineModel", "1234", 450, 50.0, spacecraft.FuelTanks.First()));
         scenario.AddSpacecraft(spacecraft);
-        var initialManeuver = new InstrumentPointingToAttitude(scenario.Window.StartDate.AddHours(7.25), TimeSpan.FromHours(0.5), spacecraft.Instruments.First(), site, spacecraft.Engines.First());
+        var initialManeuver = new InstrumentPointingToAttitude(scenario.Window.StartDate.AddHours(7.25), TimeSpan.FromHours(0.5), spacecraft.Instruments.First(), site,
+            spacecraft.Engines.First());
         spacecraft.SetStandbyManeuver(initialManeuver);
-        await scenario.SimulateAsync(Constants.OutputPath, false, false, TimeSpan.FromSeconds(1.0));
+        await scenario.SimulateAsync( false, false, TimeSpan.FromSeconds(1.0));
 
         CosmographiaExporter exporter = new CosmographiaExporter();
         await exporter.ExportAsync(scenario, new DirectoryInfo("CosmographiaExport"));
@@ -155,6 +172,8 @@ public class ExporterTests
 
         Astrodynamics.Mission.Mission mission = new Astrodynamics.Mission.Mission("ReachTarget");
         Scenario scenario = new Scenario("Scenario1", mission, new Window(startPropagator, end));
+        scenario.AddCelestialItem(TestHelpers.EarthAtJ2000);
+        scenario.AddCelestialItem(TestHelpers.Sun);
         scenario.AddCelestialItem(TestHelpers.MoonAtJ2000);
 
         //Define parking orbit
@@ -194,18 +213,18 @@ public class ExporterTests
         spacecraft2.AddPayload(new Payload("payload1", 50.0, "pay01"));
         spacecraft2.AddCircularInstrument(-1791602, "CAM602", "mod1", 10.0 * IO.Astrodynamics.Constants.Deg2Rad, Vector3.VectorY, Vector3.VectorX, Vector3.Zero);
 
-        var planeAlignmentManeuver = new PlaneAlignmentManeuver(new TimeSystem.Time(DateTime.MinValue,TimeFrame.TDBFrame), TimeSpan.Zero,
+        var planeAlignmentManeuver = new PlaneAlignmentManeuver(new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame), TimeSpan.Zero,
             targetOrbit, spacecraft2.Engines.First());
-        planeAlignmentManeuver.SetNextManeuver(new ApsidalAlignmentManeuver(new TimeSystem.Time(DateTime.MinValue,TimeFrame.TDBFrame),
+        planeAlignmentManeuver.SetNextManeuver(new ApsidalAlignmentManeuver(new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame),
                 TimeSpan.Zero, targetOrbit, spacecraft2.Engines.First()))
-            .SetNextManeuver(new PhasingManeuver(new TimeSystem.Time(DateTime.MinValue,TimeFrame.TDBFrame), TimeSpan.Zero, targetOrbit, 1,
+            .SetNextManeuver(new PhasingManeuver(new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame), TimeSpan.Zero, targetOrbit, 1,
                 spacecraft2.Engines.First()))
-            .SetNextManeuver(new ApogeeHeightManeuver(TestHelpers.EarthAtJ2000,new TimeSystem.Time(DateTime.MinValue,TimeFrame.TDBFrame), TimeSpan.Zero, 15866666.666666666,
+            .SetNextManeuver(new ApogeeHeightManeuver(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame), TimeSpan.Zero, 15866666.666666666,
                 spacecraft2.Engines.First()));
 
         spacecraft2.SetStandbyManeuver(planeAlignmentManeuver);
         scenario.AddSpacecraft(spacecraft2);
-        var summary = await scenario.SimulateAsync(Constants.OutputPath, false, false, TimeSpan.FromSeconds(1.0));
+        var summary = await scenario.SimulateAsync( false, false, TimeSpan.FromSeconds(1.0));
         CosmographiaExporter cosmographiaExporter = new CosmographiaExporter();
         await cosmographiaExporter.ExportAsync(scenario, new DirectoryInfo("CosmographiaExport"));
     }

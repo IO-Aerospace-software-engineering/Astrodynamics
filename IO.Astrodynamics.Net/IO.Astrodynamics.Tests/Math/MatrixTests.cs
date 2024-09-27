@@ -45,13 +45,13 @@ public class MatirxTests
 
         double[] data3 = new double[6] { 2.0, 2.0, 3.0, 4.0, 5.0, 6.0 };
         Matrix m3 = new Matrix(2, 3, data3);
-        
+
         double[] data4 = new double[6] { 2.0, 2.0, 3.0, 4.0, 5.0, 6.0 };
         Matrix m4 = new Matrix(3, 2, data3);
         Assert.Equal(m, m2);
         Assert.NotEqual(m2, m3);
-        Assert.True(m==m2);
-        Assert.True(m!=m3);
+        Assert.True(m == m2);
+        Assert.True(m != m3);
         Assert.True(m.Equals(m2));
         Assert.True(m.Equals((object)m2));
         Assert.False(m.Equals(null));
@@ -166,4 +166,124 @@ public class MatirxTests
         Assert.Equal(1.0, res.Get(1, 0));
         Assert.Equal(1.0, res.Get(2, 2));
     }
+
+    [Fact]
+    public void ToQuaternion_ShouldReturnCorrectQuaternion_WhenTraceIsPositive()
+    {
+        // Arrange
+        var matrix = new Matrix(new double[,]
+        {
+            { 2, -1, 0 },
+            { -1, 2, 0 },
+            { 0, 0, 2 }
+        });
+
+        // Act
+        var quaternion = matrix.ToQuaternion();
+
+        // Assert
+        Assert.Equal(1, quaternion.W, precision: 5);
+        Assert.Equal(0, quaternion.VectorPart.X, precision: 5);
+        Assert.Equal(0, quaternion.VectorPart.Y, precision: 5);
+        Assert.Equal(0, quaternion.VectorPart.Z, precision: 5);
+    }
+
+    [Fact]
+    public void ToQuaternionZRotationAxis()
+    {
+        // Arrange
+        var matrix = Matrix.CreateRotationMatrixZ(0.5);
+
+        // Act
+        var quaternion = matrix.ToQuaternion();
+
+        // Assert
+        Assert.Equal(0.96891242171064484, quaternion.W, precision: 5);
+        Assert.Equal(0, quaternion.VectorPart.X, precision: 5);
+        Assert.Equal(0, quaternion.VectorPart.Y, precision: 5);
+        Assert.Equal(0.24740395925452291, quaternion.VectorPart.Z, precision: 5);
+    }
+
+    [Fact]
+    public void ToQuaternionXRotationAxis()
+    {
+        // Arrange
+        var matrix = Matrix.CreateRotationMatrixX(0.5);
+
+        // Act
+        var quaternion = matrix.ToQuaternion();
+
+        // Assert
+        Assert.Equal(0.96891242171064484, quaternion.W, precision: 5);
+        Assert.Equal(0.24740395925452291, quaternion.VectorPart.X, precision: 5);
+        Assert.Equal(0, quaternion.VectorPart.Y, precision: 5);
+        Assert.Equal(0, quaternion.VectorPart.Z, precision: 5);
+    }
+
+    [Fact]
+    public void ToQuaternionYRotationAxis()
+    {
+        // Arrange
+        var matrix = Matrix.CreateRotationMatrixY(0.5);
+
+        // Act
+        var quaternion = matrix.ToQuaternion();
+
+        // Assert
+        Assert.Equal(0.96891242171064484, quaternion.W, precision: 5);
+        Assert.Equal(0, quaternion.VectorPart.X, precision: 5);
+        Assert.Equal(0.24740395925452291, quaternion.VectorPart.Y, precision: 5);
+        Assert.Equal(0.0, quaternion.VectorPart.Z, precision: 5);
+    }
+
+    [Fact]
+    public void ToQuaternionXYZRotationAxis()
+    {
+        // Arrange
+        var matrix = new Matrix(3,3);
+        matrix.Set(0, 0, 0.7652395);
+        matrix.Set(0, 1, -0.3224221);
+        matrix.Set(0, 2, 0.5571826);
+        matrix.Set(1, 0, 0.5571826);
+        matrix.Set(1, 1, 0.7652395);
+        matrix.Set(1, 2, -0.3224221);
+        matrix.Set(2, 0, -0.3224221);
+        matrix.Set(2, 1, 0.5571826);
+        matrix.Set(2, 2, 0.7652395);
+
+        // Act
+        var quaternion = matrix.ToQuaternion();
+
+        // Assert
+        Assert.Equal(0.9077057, quaternion.W, precision: 5);
+        Assert.Equal(0.2422604, quaternion.VectorPart.X, precision: 5);
+        Assert.Equal(0.2422604, quaternion.VectorPart.Y, precision: 5);
+        Assert.Equal(0.2422604, quaternion.VectorPart.Z, precision: 5);
+    }
+    
+    [Fact]
+    public void ToQuaternionMinusXYZRotationAxis()
+    {
+        // Arrange
+        var matrix = new Matrix(3,3);
+        matrix.Set(0, 0, 0.7652395);
+        matrix.Set(0, 1, 0.5571826);
+        matrix.Set(0, 2, -0.3224221);
+        matrix.Set(1, 0, -0.3224221);
+        matrix.Set(1, 1, 0.7652395);
+        matrix.Set(1, 2, 0.5571826);
+        matrix.Set(2, 0, 0.5571826);
+        matrix.Set(2, 1, -0.3224221);
+        matrix.Set(2, 2, 0.7652395);
+
+        // Act
+        var quaternion = matrix.ToQuaternion();
+
+        // Assert
+        Assert.Equal(0.9077057, quaternion.W, precision: 5);
+        Assert.Equal(-0.2422604, quaternion.VectorPart.X, precision: 5);
+        Assert.Equal(-0.2422604, quaternion.VectorPart.Y, precision: 5);
+        Assert.Equal(-0.2422604, quaternion.VectorPart.Z, precision: 5);
+    }
+
 }

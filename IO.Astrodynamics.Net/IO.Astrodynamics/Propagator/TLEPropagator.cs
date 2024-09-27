@@ -34,7 +34,7 @@ public class TLEPropagator : IPropagator
         _svCache[0] = initialState;
     }
 
-    public (IEnumerable<StateVector> stateVectors, IEnumerable<StateOrientation> stateOrientations) Propagate()
+    public void Propagate()
     {
         _stateOrientation[Window.StartDate] = new StateOrientation(Quaternion.Zero, Vector3.Zero, Window.StartDate, Frame.ICRF);
         for (int i = 1; i < _svCacheSize; i++)
@@ -43,7 +43,7 @@ public class TLEPropagator : IPropagator
         }
 
         _stateOrientation[Window.EndDate] = new StateOrientation(Quaternion.Zero, Vector3.Zero, Window.EndDate, Frame.ICRF);
-        return (_svCache, _stateOrientation.Values);
+        Spacecraft.AddStateVectorRelativeToICRF(_svCache);
     }
     public void Dispose()
     {

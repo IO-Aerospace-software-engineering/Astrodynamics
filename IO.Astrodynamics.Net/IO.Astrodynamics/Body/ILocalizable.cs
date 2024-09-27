@@ -89,7 +89,7 @@ namespace IO.Astrodynamics.Body
         /// <param name="stepSize">The step size for the search.</param>
         /// <param name="observer">The observer of the celestial object.</param>
         /// <returns>An enumerable of time windows that satisfy the occultation constraint.</returns>
-        IEnumerable<Window> FindWindowsOnOccultationConstraint(in Window searchWindow, INaifObject observer, ShapeType targetShape, INaifObject frontBody,
+        IEnumerable<Window> FindWindowsOnOccultationConstraint(in Window searchWindow, ILocalizable observer, ShapeType targetShape, INaifObject frontBody,
             ShapeType frontShape, OccultationType occultationType, Aberration aberration, in TimeSpan stepSize);
 
         /// <summary>
@@ -106,7 +106,7 @@ namespace IO.Astrodynamics.Body
         /// <param name="stepSize">The step size for the search.</param>
         /// <param name="observer">The observer of the celestial object.</param>
         /// <returns>An enumerable of time windows that satisfy the coordinate constraint.</returns>
-        public IEnumerable<Window> FindWindowsOnCoordinateConstraint(in Window searchWindow, INaifObject observer, Frame frame, CoordinateSystem coordinateSystem,
+        public IEnumerable<Window> FindWindowsOnCoordinateConstraint(in Window searchWindow, ILocalizable observer, Frame frame, CoordinateSystem coordinateSystem,
             Coordinate coordinate, RelationnalOperator relationalOperator, double value, double adjustValue, Aberration aberration, in TimeSpan stepSize);
     }
 }

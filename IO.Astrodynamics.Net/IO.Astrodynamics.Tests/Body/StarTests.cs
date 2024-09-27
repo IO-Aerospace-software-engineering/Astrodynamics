@@ -80,7 +80,7 @@ public class StarTests
         var epoch = new TimeSystem.Time(new DateTime(2001, 1, 1), TimeFrame.TDBFrame);
         var observer = new Barycenter(0);
         var star = new Star(1, "star1", 1E+30, "spec", 2, 0.3792, new Equatorial(1, 1, epoch), 0.1, 0.1, 0, 0, 0, 0, epoch);
-        await star.PropagateAsync(new Window(epoch, epoch + TimeSpan.FromDays(365 * 4)), TimeSpan.FromDays(365), Constants.OutputPath);
+        await star.PropagateAsync(new Window(epoch, epoch + TimeSpan.FromDays(365 * 4)), TimeSpan.FromDays(365));
         var eph0 = star.GetEphemeris(epoch, observer, Frames.Frame.ICRF, Aberration.None);
         var eph1 = star.GetEphemeris(epoch.Add(TimeSpan.FromDays(365)), observer, Frames.Frame.ICRF, Aberration.None);
         var eph2 = star.GetEphemeris(epoch.Add(TimeSpan.FromDays(365 + 365)), observer, Frames.Frame.ICRF, Aberration.None);
@@ -90,7 +90,7 @@ public class StarTests
 
         Assert.Equal(1.1, eph1.ToEquatorial().RightAscension, 3);
         Assert.Equal(1.1, eph1.ToEquatorial().Declination, 3);
-        Assert.Equal(8.1373353929324910E+16, eph1.ToEquatorial().Distance);
+        Assert.Equal(8.1373353929324896E+16, eph1.ToEquatorial().Distance);
 
         Assert.Equal(1.2, eph2.ToEquatorial().RightAscension, 3);
         Assert.Equal(1.2, eph2.ToEquatorial().Declination, 3);

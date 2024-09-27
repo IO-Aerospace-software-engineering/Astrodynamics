@@ -51,9 +51,9 @@ public class Helpers
         return localizableObject;
     }
 
-    internal static IOrientable CreateOrientable(int objectId)
+    internal static IOrientable<Frame> CreateOrientable(int objectId)
     {
-        IOrientable celestialItem;
+        IOrientable<Frame> celestialItem;
         if (int.IsPositive(objectId))
         {
             celestialItem = new CelestialBody(objectId);
@@ -161,7 +161,7 @@ public class Helpers
         else if (fromTLE)
         {
             var arr = orbitalParametersInput.Split(',').ToArray();
-            orbitalParameters = TLE.Create("body", arr[0], arr[1]);
+            orbitalParameters = new TLE("body", arr[0], arr[1]);
         }
 
         return orbitalParameters;

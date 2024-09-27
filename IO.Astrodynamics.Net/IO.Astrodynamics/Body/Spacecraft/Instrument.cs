@@ -11,6 +11,8 @@ namespace IO.Astrodynamics.Body.Spacecraft
 {
     public abstract class Instrument : INaifObject, IEquatable<Instrument>
     {
+        private readonly GeometryFinder _geometryFinder = new GeometryFinder();
+
         /// <summary>
         /// Naif identifier
         /// </summary>
@@ -109,19 +111,36 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// <param name="aberration"></param>
         /// <param name="stepSize"></param>
         /// <returns></returns>
-        public IEnumerable<Window> FindWindowsInFieldOfViewConstraint(Window searchWindow, Spacecraft observer, INaifObject target,
+        public IEnumerable<Window> FindWindowsInFieldOfViewConstraint(Window searchWindow, Spacecraft observer, ILocalizable target,
             Frame targetFrame, ShapeType targetShape, Aberration aberration, TimeSpan stepSize)
         {
             if (observer == null) throw new ArgumentNullException(nameof(observer));
             if (target == null) throw new ArgumentNullException(nameof(target));
             if (targetFrame == null) throw new ArgumentNullException(nameof(targetFrame));
-            return API.Instance.FindWindowsInFieldOfViewConstraint(searchWindow, observer, this, target, targetFrame, targetShape, aberration, stepSize);
+
+            Func<Time, bool> calculateInFov = date => IsInFOV(date, target, aberration);
+
+            return _geometryFinder.FindWindowsWithCondition(searchWindow, calculateInFov, RelationnalOperator.Equal, true, stepSize);
         }
 
         public Vector3 GetBoresightInSpacecraftFrame()
         {
             Quaternion q = Orientation == Vector3.Zero ? Quaternion.Zero : new Quaternion(Orientation.Normalize(), Orientation.Magnitude());
             return Boresight.Rotate(q);
+        }
+
+        public Vector3 GetBoresightInICRFFrame(in Time date)
+        {
+            Quaternion q = Orientation == Vector3.Zero ? Quaternion.Zero : new Quaternion(Orientation.Normalize(), Orientation.Magnitude());
+            q = Spacecraft.Frame.GetStateOrientationToICRF(date).Rotation * q.Conjugate();
+            return Boresight.Rotate(q);
+        }
+
+        public Vector3 GetRefVectorInICRFFrame(in Time date)
+        {
+            Quaternion q = Orientation == Vector3.Zero ? Quaternion.Zero : new Quaternion(Orientation.Normalize(), Orientation.Magnitude());
+            q = Spacecraft.Frame.GetStateOrientationToICRF(date).Rotation * q.Conjugate();
+            return RefVector.Rotate(q);
         }
 
         public async Task WriteFrameAsync(FileInfo outputFile)
@@ -143,7 +162,50 @@ namespace IO.Astrodynamics.Body.Spacecraft
             await sw.WriteAsync(data);
         }
 
+        public virtual bool IsInFOV(Time date, ILocalizable target, Aberration aberration)
+        {
+            var (azimuth, elevation, isInFov) = PositionInFOV(date, target, aberration);
+            if (!isInFov) return false;
+
+            // Check if the object is within the horizontal and vertical field of view
+            return (System.Math.Abs(azimuth) <= FieldOfView) && (System.Math.Abs(elevation) <= FieldOfView);
+        }
+
+        protected (double azimuth, double elevation, bool isInFov) PositionInFOV(Time date, ILocalizable target, Aberration aberration)
+        {
+            var cameraPostion = Spacecraft.GetEphemeris(date, new Barycenter(0), Frame.ICRF, aberration).ToStateVector();
+            var objectPosition = target.GetEphemeris(date, new Barycenter(0), Frame.ICRF, aberration).ToStateVector();
+            // Calculate the vector from the camera to the object
+            // Compute the vector from the camera to the object
+            Vector3 toObject = objectPosition.Position - cameraPostion.Position;
+            
+            // Ensure boresight and refVector are normalized
+            var boresight = GetBoresightInICRFFrame(date).Normalize();
+            double z_cam = toObject * boresight; // Dot product with forward vector
+
+            // Check if the object is in front of the camera
+            if (z_cam <= 0)
+                return (double.NaN, double.NaN, false);
+            
+            var refVector = GetRefVectorInICRFFrame(date).Normalize();
+
+            // Compute the right vector (x-axis) of the camera's coordinate system
+            Vector3 rightVector = boresight.Cross(refVector).Normalize();
+
+            // Project toObject onto the camera's coordinate axes
+            double x_cam = toObject * rightVector; // Dot product with right vector
+            double y_cam = toObject * refVector; // Dot product with up vector
+           
+
+            // Calculate azimuth (horizontal angle) and elevation (vertical angle)
+            double azimuth = System.Math.Atan2(x_cam, z_cam);
+            double elevation = System.Math.Atan2(y_cam, z_cam);
+            return (azimuth, elevation, true);
+        }
+
         public abstract Task WriteKernelAsync(FileInfo outputFile);
+
+        #region Operators
 
         public bool Equals(Instrument other)
         {
@@ -174,5 +236,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
         {
             return !Equals(left, right);
         }
+
+        #endregion
     }
 }

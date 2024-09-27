@@ -25,7 +25,13 @@ namespace IO.Astrodynamics.Math
 
         public Vector3 Normalize()
         {
-            return this / Magnitude();
+            var m = Magnitude();
+            if (m == 0)
+            {
+                return this;
+            }
+
+            return this / m;
         }
 
         public Vector3 Cross(in Vector3 vector)
@@ -86,7 +92,7 @@ namespace IO.Astrodynamics.Math
             {
                 return Quaternion.Zero;
             }
-            
+
             var mag1 = Magnitude();
             var mag2 = vector.Magnitude();
             if (System.Math.Abs(angle - Constants.PI) < double.Epsilon) //Manage 180° case

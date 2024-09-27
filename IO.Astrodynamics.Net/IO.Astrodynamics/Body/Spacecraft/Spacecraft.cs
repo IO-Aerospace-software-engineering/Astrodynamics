@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -13,7 +14,7 @@ using StateOrientation = IO.Astrodynamics.OrbitalParameters.StateOrientation;
 
 namespace IO.Astrodynamics.Body.Spacecraft
 {
-    public class Spacecraft : CelestialItem, IOrientable, IDisposable
+    public class Spacecraft : CelestialItem, IOrientable<SpacecraftFrame>
     {
         public static readonly Vector3 Front = Vector3.VectorY;
         public static readonly Vector3 Back = Front.Inverse();
@@ -43,11 +44,12 @@ namespace IO.Astrodynamics.Body.Spacecraft
         public IReadOnlyCollection<Payload> Payloads => _payloads;
         public double DryOperatingMass => Mass;
         public double MaximumOperatingMass { get; }
-        public Frame Frame { get; }
+        public SpacecraftFrame Frame { get; }
         public double SectionalArea { get; }
         public double DragCoefficient { get; }
-        public DirectoryInfo PropagationOutput { get; private set; }
-        public bool IsPropagated => PropagationOutput != null;
+
+        private bool _isPropagated;
+        public bool IsPropagated => _isPropagated;
 
         /// <summary>
         /// Spacecraft constructor
@@ -73,7 +75,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
             MaximumOperatingMass = maximumOperatingMass;
             Clock = clock ?? throw new ArgumentNullException(nameof(clock));
             Clock.AttachSpacecraft(this);
-            Frame = new SpacecraftFrame($"{name}_FRAME", naifId, name);
+            Frame = new SpacecraftFrame(this);
             SectionalArea = sectionalArea;
             DragCoefficient = dragCoeff;
         }
@@ -323,6 +325,11 @@ namespace IO.Astrodynamics.Body.Spacecraft
             await (Frame as SpacecraftFrame)!.WriteAsync(outputFile);
         }
 
+        public void WriteOrientation(FileInfo outputFile)
+        {
+            Frame.WriteOrientation(outputFile, this);
+        }
+
         /// <summary>
         /// Propagate spacecraft
         /// </summary>
@@ -331,54 +338,47 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// <param name="includeAtmosphericDrag"></param>
         /// <param name="includeSolarRadiationPressure"></param>
         /// <param name="propagatorStepSize"></param>
-        /// <param name="outputDirectory"></param>
-        public async Task PropagateAsync(Window window, IEnumerable<CelestialItem> additionalCelestialBodies, bool includeAtmosphericDrag,
-            bool includeSolarRadiationPressure, TimeSpan propagatorStepSize, DirectoryInfo outputDirectory)
+        public Task PropagateAsync(Window window, IEnumerable<CelestialItem> additionalCelestialBodies, bool includeAtmosphericDrag,
+            bool includeSolarRadiationPressure, TimeSpan propagatorStepSize)
         {
-            ResetPropagation();
-            IPropagator propagator;
-            if (this.InitialOrbitalParameters is TLE)
+            return Task.Run(() =>
             {
-                propagator = new TLEPropagator(window, this, propagatorStepSize);
-            }
-            else
-            {
-                propagator = new SpacecraftPropagator(window, this, additionalCelestialBodies, includeAtmosphericDrag, includeSolarRadiationPressure, propagatorStepSize);
-            }
-
-            var res = propagator.Propagate();
-            propagator.Dispose();
-            PropagationOutput = outputDirectory.CreateSubdirectory(Name);
-
-            //Write frame
-            await WriteFrameAsync(new FileInfo(Path.Combine(PropagationOutput.CreateSubdirectory("Frames").FullName, Name + ".tf")));
-
-
-            //write instrument frame and kernel 
-            var instrumentDirectory = PropagationOutput.CreateSubdirectory("Instruments");
-            foreach (var instrument in Instruments)
-            {
-                await instrument.WriteFrameAsync(new FileInfo(Path.Combine(instrumentDirectory.FullName, instrument.Name + ".tf")));
-                await instrument.WriteKernelAsync(new FileInfo(Path.Combine(instrumentDirectory.FullName, instrument.Name + ".ti")));
-            }
-
-            //Write clock
-            var clockFile = new FileInfo(Path.Combine(PropagationOutput.CreateSubdirectory("Clocks").FullName, Name + ".tsc"));
-            await Clock.WriteAsync(clockFile);
-
-            //Write Ephemeris
-            if (API.Instance.WriteEphemeris(new FileInfo(Path.Combine(PropagationOutput.CreateSubdirectory("Ephemeris").FullName, Name + ".spk")), this,
-                    res.stateVectors))
-            {
-                //Clock is loaded because is needed by orientation writer
-                API.Instance.LoadKernels(clockFile);
-                //Write Orientation
-                if (API.Instance.WriteOrientation(new FileInfo(Path.Combine(PropagationOutput.CreateSubdirectory("Orientation").FullName, Name + ".ck")), this,
-                        res.stateOrientations))
+                ResetPropagation();
+                IPropagator propagator;
+                if (InitialOrbitalParameters is TLE)
                 {
-                    API.Instance.LoadKernels(PropagationOutput);
+                    propagator = new TLEPropagator(window, this, propagatorStepSize);
                 }
+                else
+                {
+                    propagator = new SpacecraftPropagator(window, this, additionalCelestialBodies, includeAtmosphericDrag, includeSolarRadiationPressure, propagatorStepSize);
+                }
+
+                propagator.Propagate();
+                propagator.Dispose();
+                _isPropagated = true;
+            });
+        }
+
+        public void AddStateVectorRelativeToICRF(params StateVector[] stateVectors)
+        {
+            foreach (var sv in stateVectors)
+            {
+                _stateVectorsRelativeToICRF[sv.Epoch] = sv;
             }
+        }
+
+        public override OrbitalParameters.OrbitalParameters GetGeometricStateFromICRF(in Time date)
+        {
+            return _stateVectorsRelativeToICRF.GetOrAdd(date, date =>
+            {
+                if (_stateVectorsRelativeToICRF.Count < 2)
+                {
+                    return this.InitialOrbitalParameters.ToStateVector(date).RelativeTo(new Barycenter(0), Aberration.None).ToFrame(Frames.Frame.ICRF).ToStateVector();
+                }
+
+                return Lagrange.Interpolate(_stateVectorsRelativeToICRF.Values.OrderBy(x => x.Epoch).ToArray(), date);
+            });
         }
 
         /// <summary>
@@ -388,9 +388,9 @@ namespace IO.Astrodynamics.Body.Spacecraft
         {
             if (IsPropagated)
             {
-                API.Instance.UnloadKernels(PropagationOutput);
-                PropagationOutput.Delete(true);
-                PropagationOutput = null;
+                _isPropagated = false;
+                _stateVectorsRelativeToICRF.Clear();
+                Frame.ClearStateOrientations();
             }
 
             _executedManeuvers.Clear();
@@ -401,25 +401,6 @@ namespace IO.Astrodynamics.Body.Spacecraft
 
             InitialManeuver?.Reset();
             StandbyManeuver = InitialManeuver;
-        }
-
-        private void ReleaseUnmanagedResources()
-        {
-            if (IsPropagated)
-            {
-                API.Instance.UnloadKernels(PropagationOutput);
-            }
-        }
-
-        public void Dispose()
-        {
-            ReleaseUnmanagedResources();
-            GC.SuppressFinalize(this);
-        }
-
-        ~Spacecraft()
-        {
-            ReleaseUnmanagedResources();
         }
     }
 }

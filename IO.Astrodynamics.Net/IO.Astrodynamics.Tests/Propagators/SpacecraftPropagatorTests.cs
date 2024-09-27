@@ -30,8 +30,8 @@ public class SpacecraftPropagatorTests
         Spacecraft spc = new Spacecraft(-1001, "MySpacecraft", 100.0, 10000.0, clk, orbit);
         Propagator.SpacecraftPropagator spacecraftPropagator = new Propagator.SpacecraftPropagator(new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddDays(30)), spc,
             [new Barycenter(0)], false, false, TimeSpan.FromSeconds(100.0));
-        var res = spacecraftPropagator.Propagate();
-        var energy = res.stateVectors.Select(x => x.SpecificOrbitalEnergy());
+        spacecraftPropagator.Propagate();
+        var energy = spc.StateVectorsRelativeToICRF.Values.Select(x => x.SpecificOrbitalEnergy()).ToArray();
         var min = energy.Min();
         var max = energy.Max();
         var diff = max - min;
@@ -48,10 +48,10 @@ public class SpacecraftPropagatorTests
             spc,
             [new Barycenter(0)], false, false, TimeSpan.FromSeconds(2.0));
 
-        var res = spacecraftPropagator.Propagate();
-        var state = res.stateVectors.ElementAt(0);
-        var state1 = res.stateVectors.ElementAt(1);
-        var state2 = res.stateVectors.ElementAt(2);
-        var state3 = res.stateVectors.ElementAt(3);
+        spacecraftPropagator.Propagate();
+        var state = spc.StateVectorsRelativeToICRF.Values.ElementAt(0);
+        var state1 = spc.StateVectorsRelativeToICRF.Values.ElementAt(1);
+        var state2 = spc.StateVectorsRelativeToICRF.Values.ElementAt(2);
+        var state3 = spc.StateVectorsRelativeToICRF.Values.ElementAt(3);
     }
 }

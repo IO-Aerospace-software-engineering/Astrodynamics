@@ -13,6 +13,7 @@ namespace IO.Astrodynamics.Tests.Math
         {
             API.Instance.LoadKernels(Constants.SolarSystemKernelPath);
         }
+
         [Fact]
         public void InterpolateSquare()
         {
@@ -56,9 +57,8 @@ namespace IO.Astrodynamics.Tests.Math
         [Fact]
         public void InterpolateStateVectorSquare()
         {
-
             //Interpolate square function
-            CelestialBody earth = new CelestialBody( PlanetsAndMoons.EARTH);
+            CelestialBody earth = new CelestialBody(PlanetsAndMoons.EARTH);
             StateVector[] data = new StateVector[10];
             var start = new TimeSystem.Time(2021, 01, 01, 0, 0, 0);
             for (int i = 0; i < 10; i++)
@@ -86,7 +86,7 @@ namespace IO.Astrodynamics.Tests.Math
         public void InterpolateStateVectorCubic()
         {
             //Interpolate square function
-            CelestialBody earth = new CelestialBody( PlanetsAndMoons.EARTH);
+            CelestialBody earth = new CelestialBody(PlanetsAndMoons.EARTH);
             StateVector[] data = new StateVector[10];
             var start = new TimeSystem.Time(2021, 01, 01, 0, 0, 0);
             for (int i = 0; i < 10; i++)
@@ -117,7 +117,8 @@ namespace IO.Astrodynamics.Tests.Math
             var start = new TimeSystem.Time(2021, 01, 01, 0, 0, 0);
             for (int i = 0; i < 10; i++)
             {
-                data[i] = new StateOrientation(new Quaternion(i * i, 1000.0 + i * i, 10000.0 + i * i, 100000 + i * i), new Vector3(i * i, 0.0, 0.0), start.AddSeconds(i), Frames.Frame.ICRF);
+                data[i] = new StateOrientation(new Quaternion(i * i, 1000.0 + i * i, 10000.0 + i * i, 100000 + i * i), new Vector3(i * i, 0.0, 0.0), start.AddSeconds(i),
+                    Frames.Frame.ICRF);
             }
         }
     }

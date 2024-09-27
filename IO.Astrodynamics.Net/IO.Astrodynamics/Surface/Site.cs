@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -15,10 +16,14 @@ using IO.Astrodynamics.TimeSystem;
 
 namespace IO.Astrodynamics.Surface
 {
-    public class Site : ILocalizable, IEquatable<Site>, IDisposable
+    public class Site : ILocalizable, IEquatable<Site>
     {
         private readonly IDataProvider _dataProvider;
-        public ConcurrentDictionary<Time, StateVector> StateVectorsRelativeToICRF { get; } = new ConcurrentDictionary<Time, StateVector>();
+        private readonly GeometryFinder _geometryFinder = new GeometryFinder();
+        private readonly bool _isFromKernel = false;
+        
+        private SortedDictionary<Time,StateVector> _stateVectorsRelativeToICRF = new SortedDictionary<Time, StateVector>();
+        public ImmutableSortedDictionary<Time, StateVector> StateVectorsRelativeToICRF  => _stateVectorsRelativeToICRF.ToImmutableSortedDictionary();
         public int Id { get; }
         public int NaifId { get; }
         public string Name { get; }
@@ -32,25 +37,47 @@ namespace IO.Astrodynamics.Surface
         public double GM { get; } = 0.0;
         public double Mass { get; } = 0.0;
 
-        public Site(int id, string name, CelestialBody celestialItem, IDataProvider dataProvider = null) : this(id, name, celestialItem,
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Site"/> class with default planetodetic coordinates.
+        /// </summary>
+        /// <param name="userId">The unique identifier for the site.</param>
+        /// <param name="name">The name of the site.</param>
+        /// <param name="celestialItem">The celestial body associated with the site.</param>
+        /// <param name="dataProvider">The data provider for ephemeris data. If null, a default provider is used.</param>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="celestialItem"/> is null.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="userId"/> is less than or equal to zero.</exception>
+        /// <exception cref="ArgumentException">Thrown when <paramref name="name"/> is null or empty.</exception>
+        public Site(int userId, string name, CelestialBody celestialItem, IDataProvider dataProvider = null) : this(userId, name, celestialItem,
             new Planetodetic(double.NaN, double.NaN, double.NaN), dataProvider)
         {
         }
 
-        public Site(int id, string name, CelestialBody celestialItem, Planetodetic planetodetic, IDataProvider dataProvider = null)
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Site"/> class.
+        /// </summary>
+        /// <param name="userId">The unique identifier for the site.</param>
+        /// <param name="name">The name of the site.</param>
+        /// <param name="celestialItem">The celestial body associated with the site.</param>
+        /// <param name="planetodetic">The planetodetic coordinates of the site.</param>
+        /// <param name="dataProvider">The data provider for ephemeris data. If null, a default provider is used.</param>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="celestialItem"/> is null.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="userId"/> is less than or equal to zero.</exception>
+        /// <exception cref="ArgumentException">Thrown when <paramref name="name"/> is null or empty.</exception>
+        public Site(int userId, string name, CelestialBody celestialItem, Planetodetic planetodetic, IDataProvider dataProvider = null)
         {
             if (celestialItem == null) throw new ArgumentNullException(nameof(celestialItem));
-            if (id <= 0) throw new ArgumentOutOfRangeException(nameof(id));
+            if (userId <= 0) throw new ArgumentOutOfRangeException(nameof(userId));
             if (string.IsNullOrEmpty(name)) throw new ArgumentException("Value cannot be null or empty.", nameof(name));
-            _dataProvider = dataProvider?? new SpiceDataProvider();
+            _dataProvider = dataProvider ?? new SpiceDataProvider();
             Name = name;
             CelestialBody = celestialItem;
-            Id = id;
-            NaifId = celestialItem.NaifId * 1000 + id;
+            Id = userId;
+            NaifId = celestialItem.NaifId * 1000 + userId;
 
             if (double.IsNaN(planetodetic.Latitude))
             {
-                InitialOrbitalParameters = API.Instance.ReadEphemeris(Time.J2000TDB, CelestialBody, this, CelestialBody.Frame, Aberration.None);
+                _isFromKernel = true;
+                InitialOrbitalParameters = _dataProvider.GetEphemeris(Time.J2000TDB, this, celestialItem, celestialItem.Frame, Aberration.None);
                 Planetodetic = GetPlanetocentricCoordinates().ToPlanetodetic(CelestialBody.Flattening, CelestialBody.EquatorialRadius);
             }
             else
@@ -135,10 +162,22 @@ namespace IO.Astrodynamics.Surface
             return ephemeris;
         }
 
+        /// <summary>
+        /// Get site ephemeris
+        /// </summary>
+        /// <param name="date"></param>
+        /// <returns></returns>
         public OrbitalParameters.OrbitalParameters GetGeometricStateFromICRF(in Time date)
         {
-            return StateVectorsRelativeToICRF.GetOrAdd(date,
-                x => _dataProvider.GetEphemeris(x, this, new Barycenter(Barycenters.SOLAR_SYSTEM_BARYCENTER.NaifId), Frames.Frame.ICRF, Aberration.None).ToStateVector());
+            return _stateVectorsRelativeToICRF.GetOrAdd(date, dt =>
+            {
+                if (_isFromKernel)
+                {
+                    return _dataProvider.GetEphemeris(dt, this, new Barycenter(0), Frames.Frame.ICRF, Aberration.None).ToStateVector();
+                }
+
+                return GetEphemeris(dt, new Barycenter(0), Frames.Frame.ICRF, Aberration.None).ToStateVector();
+            });
         }
 
         /// <summary>
@@ -151,8 +190,14 @@ namespace IO.Astrodynamics.Surface
         /// <returns></returns>
         public OrbitalParameters.OrbitalParameters GetEphemeris(in Time epoch, ILocalizable observer, Frame frame, Aberration aberration)
         {
-            return new StateVector(Planetodetic.ToPlanetocentric(CelestialBody.Flattening, CelestialBody.EquatorialRadius).ToCartesianCoordinates(),
-                Vector3.Zero, CelestialBody, epoch, CelestialBody.Frame).ToFrame(frame);
+            if (_isFromKernel)
+            {
+                return _dataProvider.GetEphemeris(epoch, this, observer, frame, aberration);
+            }
+
+            var siteInFrame = new StateVector(Planetodetic.ToPlanetocentric(CelestialBody.Flattening, CelestialBody.EquatorialRadius).ToCartesianCoordinates(),
+                Vector3.Zero, CelestialBody, epoch, CelestialBody.Frame).ToFrame(frame).ToStateVector();
+            return siteInFrame.RelativeTo(observer, aberration);
         }
 
         /// <summary>
@@ -184,7 +229,9 @@ namespace IO.Astrodynamics.Surface
         public IEnumerable<Window> FindWindowsOnDistanceConstraint(in Window searchWindow, ILocalizable observer, RelationnalOperator relationalOperator, double value,
             Aberration aberration, in TimeSpan stepSize)
         {
-            return API.Instance.FindWindowsOnDistanceConstraint(searchWindow, observer, this, relationalOperator, value, aberration, stepSize);
+            Func<Time, double> calculateDistance = date => { return GetEphemeris(date, observer, Frames.Frame.ICRF, aberration).ToStateVector().Position.Magnitude(); };
+
+            return _geometryFinder.FindWindowsWithCondition(searchWindow, calculateDistance, relationalOperator, value, stepSize);
         }
 
         /// <summary>
@@ -199,10 +246,10 @@ namespace IO.Astrodynamics.Surface
         /// <param name="aberration"></param>
         /// <param name="stepSize"></param>
         /// <returns></returns>
-        public IEnumerable<Window> FindWindowsOnOccultationConstraint(in Window searchWindow, INaifObject target, ShapeType targetShape, INaifObject frontBody,
+        public IEnumerable<Window> FindWindowsOnOccultationConstraint(in Window searchWindow, ILocalizable target, ShapeType targetShape, INaifObject frontBody,
             ShapeType frontShape, OccultationType occultationType, Aberration aberration, in TimeSpan stepSize)
         {
-            return API.Instance.FindWindowsOnOccultationConstraint(searchWindow, this, target, targetShape, frontBody, frontShape, occultationType, aberration, stepSize);
+            return target.FindWindowsOnOccultationConstraint(searchWindow, this, targetShape, frontBody, frontShape, occultationType, aberration, stepSize);
         }
 
         /// <summary>
@@ -219,11 +266,71 @@ namespace IO.Astrodynamics.Surface
         /// <param name="aberration"></param>
         /// <param name="stepSize"></param>
         /// <returns></returns>
-        public IEnumerable<Window> FindWindowsOnCoordinateConstraint(in Window searchWindow, INaifObject observer, Frame frame, CoordinateSystem coordinateSystem,
+        public IEnumerable<Window> FindWindowsOnCoordinateConstraint(in Window searchWindow, ILocalizable observer, Frame frame, CoordinateSystem coordinateSystem,
             Coordinate coordinate, RelationnalOperator relationalOperator, double value, double adjustValue, Aberration aberration, in TimeSpan stepSize)
         {
-            return API.Instance.FindWindowsOnCoordinateConstraint(searchWindow, observer, this, frame, coordinateSystem, coordinate, relationalOperator, value, adjustValue,
-                aberration, stepSize);
+            Func<Time, double> evaluateCoordinates = null;
+            switch (coordinateSystem)
+            {
+                case CoordinateSystem.Rectangular:
+                    evaluateCoordinates = date =>
+                    {
+                        var stateVector = GetEphemeris(date, observer, frame, aberration).ToStateVector();
+                        return coordinate switch
+                        {
+                            Coordinate.X => stateVector.Position.X,
+                            Coordinate.Y => stateVector.Position.Y,
+                            Coordinate.Z => stateVector.Position.Z,
+                            _ => throw new ArgumentOutOfRangeException()
+                        };
+                    };
+                    break;
+                case CoordinateSystem.RaDec:
+                    evaluateCoordinates = date =>
+                    {
+                        var stateVector = GetEphemeris(date, observer, frame, aberration).ToStateVector();
+                        var equatorial = stateVector.ToEquatorial();
+                        return coordinate switch
+                        {
+                            Coordinate.Declination => equatorial.Declination,
+                            Coordinate.RightAscension => equatorial.RightAscension,
+                            Coordinate.Range => equatorial.Distance,
+                            _ => throw new ArgumentOutOfRangeException()
+                        };
+                    };
+                    break;
+                case CoordinateSystem.Geodetic:
+                    evaluateCoordinates = date =>
+                    {
+                        var stateVector = GetEphemeris(date, observer, frame, aberration).ToStateVector();
+                        var celestialBody = stateVector.Observer as CelestialBody;
+                        var geodetic = stateVector.ToPlanetocentric(aberration).ToPlanetodetic(celestialBody.Flattening, celestialBody.EquatorialRadius);
+                        return coordinate switch
+                        {
+                            Coordinate.Latitude => geodetic.Latitude,
+                            Coordinate.Longitude => geodetic.Longitude,
+                            Coordinate.Altitude => geodetic.Altitude,
+                            _ => throw new ArgumentOutOfRangeException()
+                        };
+                    };
+                    break;
+                case CoordinateSystem.Planetographic:
+                    evaluateCoordinates = date =>
+                    {
+                        var stateVector = GetEphemeris(date, observer, frame, aberration).ToStateVector();
+                        var planetographic = stateVector.ToPlanetocentric(aberration);
+                        return coordinate switch
+                        {
+                            Coordinate.Latitude => planetographic.Latitude,
+                            Coordinate.Longitude => planetographic.Longitude,
+                            Coordinate.Radius => planetographic.Radius,
+                            _ => throw new ArgumentOutOfRangeException()
+                        };
+                    };
+                    break;
+            }
+
+            return _geometryFinder.FindWindowsWithCondition(searchWindow, evaluateCoordinates, relationalOperator, value, stepSize);
         }
 
         /// <summary>
@@ -240,14 +347,67 @@ namespace IO.Astrodynamics.Surface
         /// <param name="illuminationSource"></param>
         /// <param name="method"></param>
         /// <returns></returns>
-        public IEnumerable<Window> FindWindowsOnIlluminationConstraint(in Window searchWindow, INaifObject observer, IlluminationAngle illuminationType,
-            RelationnalOperator relationalOperator, double value, double adjustValue, Aberration aberration, in TimeSpan stepSize, INaifObject illuminationSource,
+        public IEnumerable<Window> FindWindowsOnIlluminationConstraint(in Window searchWindow, ILocalizable observer, IlluminationAngle illuminationType,
+            RelationnalOperator relationalOperator, double value, double adjustValue, Aberration aberration, in TimeSpan stepSize, ILocalizable illuminationSource,
             string method = "Ellipsoid")
         {
-            return API.Instance.FindWindowsOnIlluminationConstraint(searchWindow, observer, CelestialBody, CelestialBody.Frame, Planetodetic, illuminationType, relationalOperator,
-                value,
-                adjustValue,
-                aberration, stepSize, illuminationSource, method);
+            Func<Time, double> evaluateIllumination = null;
+
+            switch (illuminationType)
+            {
+                case IlluminationAngle.Phase:
+                    evaluateIllumination = date => IlluminationPhase(date, illuminationSource, observer, aberration);
+                    break;
+                case IlluminationAngle.Incidence:
+                    evaluateIllumination = date => IlluminationIncidence(date, illuminationSource, aberration);
+                    break;
+                case IlluminationAngle.Emission:
+                    evaluateIllumination = date => IlluminationEmission(date, observer, aberration);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(illuminationType), illuminationType, null);
+            }
+
+            return _geometryFinder.FindWindowsWithCondition(searchWindow, evaluateIllumination, relationalOperator, value, stepSize);
+        }
+
+        /// <summary>
+        /// Get illumination emission angle
+        /// </summary>
+        /// <param name="date"></param>
+        /// <param name="observer"></param>
+        /// <param name="aberration"></param>
+        /// <returns></returns>
+        public double IlluminationEmission(Time date, ILocalizable observer, Aberration aberration)
+        {
+            return observer.GetEphemeris(date, this, Frame, aberration).ToStateVector().Position.Angle(Vector3.VectorZ);
+        }
+
+        /// <summary>
+        /// Get illumination incidence angle
+        /// </summary>
+        /// <param name="date"></param>
+        /// <param name="illuminationSource"></param>
+        /// <param name="aberration"></param>
+        /// <returns></returns>
+        public double IlluminationIncidence(Time date, ILocalizable illuminationSource, Aberration aberration)
+        {
+            var illuminationPosition = illuminationSource.GetEphemeris(date, this, this.Frame, aberration).ToStateVector().Position;
+            return Vector3.VectorZ.Angle(illuminationPosition);
+        }
+
+        /// <summary>
+        /// Get illumination phase angle
+        /// </summary>
+        /// <param name="date"></param>
+        /// <param name="illuminationSource"></param>
+        /// <param name="observer"></param>
+        /// <param name="aberration"></param>
+        /// <returns></returns>
+        public double IlluminationPhase(Time date, ILocalizable illuminationSource, ILocalizable observer, Aberration aberration)
+        {
+            var illuminationPosition = illuminationSource.GetEphemeris(date, this, Frames.Frame.ICRF, aberration).ToStateVector().Position;
+            return observer.GetEphemeris(date, this, Frames.Frame.ICRF, aberration).ToStateVector().Position.Angle(illuminationPosition);
         }
 
         /// <summary>
@@ -280,41 +440,22 @@ namespace IO.Astrodynamics.Surface
         /// <summary>
         /// Write ephemeris data
         /// </summary>
-        /// <param name="outputFile"></param>
-        /// <param name="stateVectors"></param>
-        public void WriteEphemeris(FileInfo outputFile, IEnumerable<StateVector> stateVectors)
-        {
-            API.Instance.WriteEphemeris(outputFile, this, stateVectors);
-        }
-
-        /// <summary>
-        /// Propagate site
-        /// </summary>
         /// <param name="window"></param>
-        /// <param name="sitesDirectory"></param>
-        /// <param name="stepSize"></param>
-        public async Task PropagateAsync(Window window, TimeSpan stepSize, DirectoryInfo sitesDirectory)
+        /// <param name="outputFile"></param>
+        public void WriteEphemeris(Window window, FileInfo outputFile)
         {
-            ResetPropagation();
-            PropagationOutput = sitesDirectory.CreateSubdirectory(Name);
-            var siteEphemeris = GetEphemeris(window, CelestialBody, Frames.Frame.ICRF, Aberration.None, stepSize).Select(x => x.ToStateVector());
-            await WriteFrameAsync(new FileInfo(Path.Combine(PropagationOutput.CreateSubdirectory("Frames").FullName, Name + ".tf")));
-            WriteEphemeris(new FileInfo(Path.Combine(PropagationOutput.CreateSubdirectory("Ephemeris").FullName, Name + ".spk")), siteEphemeris);
-            API.Instance.LoadKernels(PropagationOutput);
+            var ephemeris = GetEphemeris(window, CelestialBody, CelestialBody.Frame, Aberration.None, TimeSpan.FromMinutes(1.0));
+            _dataProvider.WriteEphemeris(outputFile,this, ephemeris.Select(x => x.ToStateVector()).ToArray());
         }
 
-        /// <summary>
-        /// Reset propagation elements
-        /// </summary>
-        private void ResetPropagation()
+        public IEnumerable<Window> FindDayWindows(in Window searchWindow, double twilight)
         {
-            if (IsPropagated)
-            {
-                API.Instance.UnloadKernels(PropagationOutput);
-                PropagationOutput.Delete(true);
-                PropagationOutput = null;
-            }
+            var sun = new CelestialBody(10);
+            return FindWindowsOnIlluminationConstraint(searchWindow, sun, IlluminationAngle.Incidence, RelationnalOperator.Lower, Constants.PI2 + twilight, 0.0,
+                Aberration.LTS, TimeSpan.FromMinutes(1.0), sun);
         }
+
+        #region operators
 
         public bool Equals(Site other)
         {
@@ -346,23 +487,6 @@ namespace IO.Astrodynamics.Surface
             return !Equals(left, right);
         }
 
-        private void ReleaseUnmanagedResources()
-        {
-            if (IsPropagated)
-            {
-                API.Instance.UnloadKernels(PropagationOutput);
-            }
-        }
-
-        public void Dispose()
-        {
-            ReleaseUnmanagedResources();
-            GC.SuppressFinalize(this);
-        }
-
-        ~Site()
-        {
-            ReleaseUnmanagedResources();
-        }
+        #endregion
     }
 }

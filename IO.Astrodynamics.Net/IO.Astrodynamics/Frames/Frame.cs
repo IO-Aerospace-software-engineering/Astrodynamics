@@ -1,6 +1,9 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.IO;
+using System.Linq;
 using IO.Astrodynamics.DataProvider;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
@@ -14,7 +17,8 @@ public class Frame : IEquatable<Frame>
     public string Name { get; }
     public int? Id { get; }
 
-    public ConcurrentDictionary<Time, StateOrientation> StateOrientationsToICRF { get; } = new();
+    protected SortedDictionary<Time,StateOrientation> _stateOrientationsToICRF = new();
+    protected ImmutableSortedDictionary<Time, StateOrientation> StateOrientationsToICRF => _stateOrientationsToICRF.ToImmutableSortedDictionary();
 
     /// <summary>
     /// International Celestial Reference Frame (ICRF) at epoch J2000.
@@ -63,6 +67,26 @@ public class Frame : IEquatable<Frame>
         Name = name;
         Id = id;
     }
+    
+    public virtual StateOrientation GetStateOrientationToICRF(Time epoch)
+    {
+        return _stateOrientationsToICRF.GetOrAdd(epoch, _ => _dataProvider.FrameTransformation(this, ICRF, epoch));
+    }
+    
+    public bool AddStateOrientationToICRF(StateOrientation stateOrientation)
+    {
+        return _stateOrientationsToICRF.TryAdd(stateOrientation.Epoch, stateOrientation);
+    }
+    
+    public StateOrientation GetLatestStateOrientationToICRF()
+    {
+        return _stateOrientationsToICRF.Values.OrderBy(x=>x.Epoch).LastOrDefault();
+    }
+    
+    public IEnumerable<StateOrientation> GetStateOrientationsToICRF()
+    {
+        return _stateOrientationsToICRF.OrderBy(x=>x.Key).Select(x=>x.Value).ToArray();
+    }
 
     public StateOrientation ToFrame(Frame targetFrame, Time epoch)
     {
@@ -71,16 +95,22 @@ public class Frame : IEquatable<Frame>
             return new StateOrientation(Quaternion.Zero, Vector3.Zero, epoch, targetFrame);
         }
 
-        var sourceToICRF = StateOrientationsToICRF.GetOrAdd(epoch, _ => _dataProvider.FrameTransformation(this, ICRF, epoch));
-        var targetToICRF = targetFrame.StateOrientationsToICRF.GetOrAdd(epoch, _ => _dataProvider.FrameTransformation(targetFrame, ICRF, epoch));
+        var sourceToICRF = GetStateOrientationToICRF(epoch);
+        var targetToICRF = targetFrame.GetStateOrientationToICRF(epoch);
 
         var rotation = targetToICRF.Rotation.Conjugate() * sourceToICRF.Rotation;
 
-        var transAV = targetToICRF.AngularVelocity.Inverse().Rotate(rotation.Conjugate()) + sourceToICRF.AngularVelocity;
+        var angularVelocity = targetToICRF.AngularVelocity.Inverse().Rotate(rotation.Conjugate()) + sourceToICRF.AngularVelocity;
 
-        return new StateOrientation(rotation, transAV, epoch, this);
+        return new StateOrientation(rotation, angularVelocity, epoch, this);
+    }
+    
+    public void ClearStateOrientations()
+    {
+        _stateOrientationsToICRF.Clear();
     }
 
+    #region Operators
     public override string ToString()
     {
         return Name;
@@ -115,4 +145,5 @@ public class Frame : IEquatable<Frame>
     {
         return !Equals(left, right);
     }
+    #endregion
 }

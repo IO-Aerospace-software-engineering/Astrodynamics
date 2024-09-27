@@ -87,21 +87,21 @@ namespace IO.Astrodynamics.Tests.Body
             var root = Constants.OutputPath;
 
             //Execute scenario
-            await scenario.SimulateAsync(root, false, false, TimeSpan.FromSeconds(1.0));
+            await scenario.SimulateAsync( false, false, TimeSpan.FromSeconds(1.0));
 
             //Find windows when the earth is in field of view of camera 600 
             var res = spacecraft.Instruments.First().FindWindowsInFieldOfViewConstraint(
                 new Window(TimeSystem.Time.Create(676555200.0, TimeFrame.TDBFrame), TimeSystem.Time.Create(676561646.0, TimeFrame.TDBFrame)), spacecraft,
                 TestHelpers.EarthAtJ2000, TestHelpers.EarthAtJ2000.Frame,
-                ShapeType.Ellipsoid, Aberration.LT,
+                ShapeType.Ellipsoid, Aberration.None,
                 TimeSpan.FromSeconds(360.0)).ToArray();
 
             //Read results
-            Assert.Equal(2, res.Count());
-            Assert.Equal(new TimeSystem.Time(DateTime.Parse("2021-06-10T00:00:00.0000000"), TimeFrame.TDBFrame), res.ElementAt(0).StartDate, TestHelpers.TimeComparer);
-            Assert.Equal("2021-06-10T00:29:06.9440325 TDB", res.ElementAt(0).EndDate.ToString());
-            Assert.Equal("2021-06-10T01:03:53.6116735 TDB", res.ElementAt(1).StartDate.ToString());
-            Assert.Equal("2021-06-10T01:47:26.0000000 TDB", res.ElementAt(1).EndDate.ToString());
+            Assert.Equal(2, res.Length);
+            Assert.Equal(new TimeSystem.Time(DateTime.Parse("2021-06-09T23:58:05.3906250"), TimeFrame.TDBFrame), res.ElementAt(0).StartDate, TestHelpers.TimeComparer);
+            Assert.Equal("2021-06-10T00:11:05.3917694 TDB", res.ElementAt(0).EndDate.ToString());
+            Assert.Equal("2021-06-10T01:21:54.1406250 TDB", res.ElementAt(1).StartDate.ToString());
+            Assert.Equal("2021-06-10T01:44:06.2898178 TDB", res.ElementAt(1).EndDate.ToString());
 
             Assert.Throws<ArgumentNullException>(() => spacecraft.Instruments.First().FindWindowsInFieldOfViewConstraint(
                 new Window(TimeSystem.Time.Create(676555200.0, TimeFrame.TDBFrame), TimeSystem.Time.Create(676561647.0, TimeFrame.TDBFrame)), null,
@@ -112,6 +112,71 @@ namespace IO.Astrodynamics.Tests.Body
             Assert.Throws<ArgumentNullException>(() => spacecraft.Instruments.First().FindWindowsInFieldOfViewConstraint(
                 new Window(TimeSystem.Time.Create(676555200.0, TimeFrame.TDBFrame), TimeSystem.Time.Create(676561647.0, TimeFrame.TDBFrame)), spacecraft,
                 TestHelpers.EarthAtJ2000, null, ShapeType.Ellipsoid, Aberration.LT, TimeSpan.FromHours(1.0)));
+        }
+
+        [Fact]
+        public void IsInFieldOfView()
+        {
+            TimeSystem.Time start = TimeSystem.Time.J2000TDB;
+
+            //Define parking orbit
+            StateVector parkingOrbit = new StateVector(
+                new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7656.2204182967143, 0.0), TestHelpers.EarthAtJ2000,
+                start, Frames.Frame.ICRF);
+
+            //Configure spacecraft
+            Clock clock = new Clock("clk1", 65536);
+            Spacecraft spacecraft = new Spacecraft(-179, "SC179", 1000.0, 3000.0, clock, parkingOrbit);
+            spacecraft.AddCircularInstrument(-179789, "CAMERA789", "mod1", 0.75, Vector3.VectorZ, Vector3.VectorY, new Vector3(0.0, System.Math.PI * 0.5, 0.0));
+
+            StateVector targetOrbit = new StateVector(
+                new Vector3(6790000.0, 0.0, 0.0), new Vector3(0.0, 7656.2204182967143, 0.0), TestHelpers.EarthAtJ2000,
+                start, Frames.Frame.ICRF);
+            Spacecraft target = new Spacecraft(-181, "SC181", 1000.0, 3000.0, clock, targetOrbit);
+
+            var res = spacecraft.Instruments.First().IsInFOV(start, target, Aberration.None);
+            Assert.True(res);
+        }
+
+        [Fact]
+        public void GetBoresightInICRF()
+        {
+            TimeSystem.Time start = TimeSystem.Time.J2000TDB;
+
+            //Define parking orbit
+            StateVector parkingOrbit = new StateVector(
+                new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7656.2204182967143, 0.0), TestHelpers.EarthAtJ2000,
+                start, Frames.Frame.ICRF);
+
+            //Configure spacecraft
+            Clock clock = new Clock("clk1", 65536);
+            Spacecraft spacecraft = new Spacecraft(-179, "SC179", 1000.0, 3000.0, clock, parkingOrbit);
+            spacecraft.AddCircularInstrument(-179789, "CAMERA789", "mod1", 0.75, Vector3.VectorZ, Vector3.VectorY, new Vector3(0.0, System.Math.PI * 0.5, 0.0));
+
+
+            var boresightICRF = spacecraft.Instruments.First().GetBoresightInICRFFrame(start);
+            Assert.Equal(new Vector3(-1.0, 0.0, 0.0), boresightICRF, TestHelpers.VectorComparer);
+        }
+        
+        [Fact]
+        public void GetBoresightInICRF2()
+        {
+            TimeSystem.Time start = TimeSystem.Time.J2000TDB;
+
+            //Define parking orbit
+            StateVector parkingOrbit = new StateVector(
+                new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7656.2204182967143, 0.0), TestHelpers.EarthAtJ2000,
+                start, Frames.Frame.ICRF);
+
+            //Configure spacecraft
+            Clock clock = new Clock("clk1", 65536);
+            Spacecraft spacecraft = new Spacecraft(-179, "SC179", 1000.0, 3000.0, clock, parkingOrbit);
+            spacecraft.AddCircularInstrument(-179789, "CAMERA789", "mod1", 0.75, Vector3.VectorZ, Vector3.VectorY, new Vector3(0.0, System.Math.PI * 0.5, 0.0));
+            spacecraft.Frame.AddStateOrientationToICRF(new StateOrientation(new Quaternion(Vector3.VectorZ, -Astrodynamics.Constants.PI2), Vector3.Zero, start, Frames.Frame.ICRF));
+
+
+            var boresightICRF = spacecraft.Instruments.First().GetBoresightInICRFFrame(start);
+            Assert.Equal(new Vector3(0.0, 1.0, 0.0), boresightICRF, TestHelpers.VectorComparer);
         }
 
         [Fact]

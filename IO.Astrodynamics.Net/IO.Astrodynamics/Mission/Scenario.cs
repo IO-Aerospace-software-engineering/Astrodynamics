@@ -25,12 +25,8 @@ namespace IO.Astrodynamics.Mission
 
         private readonly HashSet<Star> _stars = new();
         public IReadOnlyCollection<Star> Stars => _stars;
-        public DirectoryInfo RootDirectory { get; private set; }
-        public DirectoryInfo SpacecraftDirectory { get; private set; }
-        public DirectoryInfo SiteDirectory { get; private set; }
-        public DirectoryInfo StarDirectory { get; private set; }
-
-        public bool IsSimulated => RootDirectory?.Exists == true && (SpacecraftDirectory?.Exists == true || SiteDirectory?.Exists == true || StarDirectory?.Exists == true);
+        
+        public bool IsSimulated { get; private set; }
 
         /// <summary>
         /// Constructor
@@ -94,39 +90,17 @@ namespace IO.Astrodynamics.Mission
         /// <summary>
         /// Propagate this scenario
         /// </summary>
-        /// <param name="outputDirectory">Output folder used to write files</param>
         /// <param name="includeAtmosphericDrag">The drag will be computed relatively to initial spacecraft's center of motion</param>
         /// <param name="includeSolarRadiationPressure">Radiation pressure will be computed from drag coefficient defined in spacecraft</param>
         /// <param name="propagatorStepSize"></param>
         /// <exception cref="InvalidOperationException"></exception>
-        public async Task<ScenarioSummary> SimulateAsync(DirectoryInfo outputDirectory, bool includeAtmosphericDrag, bool includeSolarRadiationPressure,
+        public async Task<ScenarioSummary> SimulateAsync(bool includeAtmosphericDrag, bool includeSolarRadiationPressure,
             TimeSpan propagatorStepSize)
         {
+            IsSimulated = false;
             if (_spacecrafts.Count == 0 && _sites.Count == 0 && _stars.Count == 0)
             {
                 throw new InvalidOperationException("There is nothing to simulate");
-            }
-
-            InitializeDirectories(outputDirectory);
-            if (_sites.Count > 0)
-            {
-                //step size 1s up to 1000.0s window length
-                //step size variable from 1000.0s up to 60000s window length
-                //step size 60s after 60000s window length
-                var siteStepSize = Window.Length / 1000.0;
-                if (siteStepSize < propagatorStepSize)
-                {
-                    siteStepSize = propagatorStepSize;
-                }
-                else if (siteStepSize > TimeSpan.FromMinutes(1.0))
-                {
-                    siteStepSize = TimeSpan.FromMinutes(1.0);
-                }
-
-                foreach (var site in _sites)
-                {
-                    await site.PropagateAsync(Window, siteStepSize, SiteDirectory);
-                }
             }
 
             if (_stars.Count > 0)
@@ -146,39 +120,27 @@ namespace IO.Astrodynamics.Mission
 
                 foreach (var star in _stars)
                 {
-                    await star.PropagateAsync(Window, starStepSize, StarDirectory);
+                    await star.PropagateAsync(Window, starStepSize);
                 }
             }
 
 
             foreach (var spacecraft in _spacecrafts)
             {
-                await spacecraft.PropagateAsync(Window, _additionalCelestialBodies, includeAtmosphericDrag, includeSolarRadiationPressure, propagatorStepSize, SpacecraftDirectory);
+                await spacecraft.PropagateAsync(Window, _additionalCelestialBodies, includeAtmosphericDrag, includeSolarRadiationPressure, propagatorStepSize);
             }
 
-            ScenarioSummary scenarioSummary = new ScenarioSummary(this.Window, SiteDirectory, SpacecraftDirectory);
+            ScenarioSummary scenarioSummary = new ScenarioSummary(this.Window);
             foreach (var spacecraft in _spacecrafts)
             {
                 scenarioSummary.AddSpacecraftSummary(spacecraft.GetSummary());
             }
 
+            IsSimulated = true;
             return scenarioSummary;
         }
 
-        private void InitializeDirectories(DirectoryInfo outputDirectory)
-        {
-            RootDirectory = null;
-            SpacecraftDirectory = null;
-            SiteDirectory = null;
-            StarDirectory = null;
-
-
-            RootDirectory = outputDirectory.CreateSubdirectory(Mission.Name).CreateSubdirectory(this.Name);
-            SpacecraftDirectory = RootDirectory.CreateSubdirectory("Spacecrafts");
-            SiteDirectory = RootDirectory.CreateSubdirectory("Sites");
-            StarDirectory = RootDirectory.CreateSubdirectory("Stars");
-        }
-
+        #region Operators
         public bool Equals(Scenario other)
         {
             if (ReferenceEquals(null, other)) return false;
@@ -208,5 +170,6 @@ namespace IO.Astrodynamics.Mission
         {
             return !Equals(left, right);
         }
+        #endregion
     }
 }

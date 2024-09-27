@@ -27,15 +27,13 @@ namespace IO.Astrodynamics.Coordinates
 
         public Equatorial(StateVector stateVector)
         {
-            var sv = stateVector.ToFrame(Frame.ICRF).ToStateVector();
-
-            Distance = sv.Position.Magnitude();
-            RightAscension = System.Math.Atan2(sv.Position.Y, sv.Position.X);
+            Distance = stateVector.Position.Magnitude();
+            RightAscension = System.Math.Atan2(stateVector.Position.Y, stateVector.Position.X);
             if (RightAscension < 0)
                 RightAscension += Constants._2PI;
 
-            Declination = System.Math.Asin(sv.Position.Z / Distance);
-            Epoch = sv.Epoch;
+            Declination = System.Math.Asin(stateVector.Position.Z / Distance);
+            Epoch = stateVector.Epoch;
         }
 
         /// <summary>

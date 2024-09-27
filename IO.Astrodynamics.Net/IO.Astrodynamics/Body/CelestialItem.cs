@@ -1,7 +1,10 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Globalization;
+using System.IO;
+using System.Linq;
 using IO.Astrodynamics.Coordinates;
 using IO.Astrodynamics.DataProvider;
 using IO.Astrodynamics.Frames;
@@ -16,7 +19,9 @@ namespace IO.Astrodynamics.Body;
 public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
 {
     private readonly IDataProvider _dataProvider;
-    public ConcurrentDictionary<Time, StateVector> StateVectorsRelativeToICRF { get; } = new();
+
+    protected readonly SortedDictionary<Time, StateVector> _stateVectorsRelativeToICRF = new();
+    public ImmutableSortedDictionary<Time, StateVector> StateVectorsRelativeToICRF => _stateVectorsRelativeToICRF.ToImmutableSortedDictionary();
     protected const int TITLE_WIDTH = 32;
     protected const int VALUE_WIDTH = 32;
 
@@ -64,6 +69,8 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     /// Used for performance improvement and to avoid duplicated calls in the CelestialItem API.
     /// </summary>
     protected DTO.CelestialBody ExtendedInformation;
+
+    private readonly GeometryFinder _geometryFinder = new GeometryFinder();
 
     /// <summary>
     /// Gets a value indicating whether the celestial item is a spacecraft.
@@ -215,28 +222,36 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     public OrbitalParameters.OrbitalParameters GetEphemeris(in Time epoch, ILocalizable observer, Frame frame, Aberration aberration)
     {
         var targetGeometricState = this.GetGeometricStateFromICRF(epoch).ToStateVector();
-        var observerGeometricState = observer.GetGeometricStateFromICRF(epoch).ToStateVector();
-        observerGeometricState = new StateVector(targetGeometricState.Position - observerGeometricState.Position, targetGeometricState.Velocity - observerGeometricState.Velocity,
+        var observerGeometricStateFromSSB = observer.GetGeometricStateFromICRF(epoch).ToStateVector();
+        var observerGeometricState = new StateVector(targetGeometricState.Position - observerGeometricStateFromSSB.Position,
+            targetGeometricState.Velocity - observerGeometricStateFromSSB.Velocity,
             observer, epoch, Frame.ICRF);
-        if (aberration is Aberration.LT or Aberration.XLT)
+        if (aberration is Aberration.LT or Aberration.XLT or Aberration.LTS or Aberration.XLTS)
         {
             var lightTime = TimeSpan.FromSeconds(observerGeometricState.Position.Magnitude() / Constants.C);
 
             Time newEpoch;
-            if (aberration == Aberration.LT)
+            if (aberration is Aberration.LT or Aberration.LTS)
                 newEpoch = epoch - lightTime;
             else
                 newEpoch = epoch + lightTime;
 
-            observerGeometricState = _dataProvider.GetEphemeris(newEpoch, this, observer, Frame.ICRF, Aberration.None).ToStateVector();
+            observerGeometricState = this.GetEphemeris(newEpoch, observer, Frame.ICRF, Aberration.None).ToStateVector();
+
+            if (aberration == Aberration.LTS || aberration == Aberration.XLTS)
+            {
+                var voverc = observerGeometricStateFromSSB.Velocity.Magnitude() / Constants.C;
+                var stellarAberration = observerGeometricStateFromSSB.Velocity * voverc;
+                observerGeometricState.UpdatePosition(observerGeometricState.Position + stellarAberration);
+            }
         }
 
         return observerGeometricState.ToFrame(frame);
     }
 
-    public OrbitalParameters.OrbitalParameters GetGeometricStateFromICRF(in Time date)
+    public virtual OrbitalParameters.OrbitalParameters GetGeometricStateFromICRF(in Time date)
     {
-        return StateVectorsRelativeToICRF.GetOrAdd(date,
+        return _stateVectorsRelativeToICRF.GetOrAdd(date,
             x => _dataProvider.GetEphemeris(x, this, new Barycenter(Barycenters.SOLAR_SYSTEM_BARYCENTER.NaifId), Frame.ICRF, Aberration.None).ToStateVector());
     }
 
@@ -269,38 +284,13 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
 
     public double AngularSeparation(in Time epoch, ILocalizable target1, OrbitalParameters.OrbitalParameters fromPosition, Aberration aberration)
     {
-        var target1Position = fromPosition.RelativeTo(target1, aberration).ToStateVector().Position.Inverse();
-        var target2Position = fromPosition.RelativeTo(this, aberration).ToStateVector().Position.Inverse();
-        return target1Position.Angle(target2Position);
+        var target1Position = target1.GetEphemeris(epoch, fromPosition.Observer, fromPosition.Frame, aberration).ToStateVector().Position -
+                              fromPosition.ToStateVector().Position;
+        var target2Position = this.GetEphemeris(epoch, fromPosition.Observer, fromPosition.Frame, aberration).ToStateVector().Position -
+                              fromPosition.ToStateVector().Position;
+        return target1Position.Normalize().Angle(target2Position.Normalize());
     }
 
-    public IEnumerable<Window> FindWindowsOnDistanceConstraint(in Window searchWindow, ILocalizable observer,
-        RelationnalOperator relationalOperator, double value, Aberration aberration, in TimeSpan stepSize)
-    {
-        Func<Time, double> calculateDistance = date =>
-        {
-            return GetEphemeris(date, observer, Frame.ICRF, aberration).ToStateVector().Position.Magnitude(); // Fonction de calcul de distance
-        };
-
-        // Appel de la méthode générique
-        return FindWindowsWithCondition(searchWindow, calculateDistance, relationalOperator, value, stepSize);
-    }
-
-    public IEnumerable<Window> FindWindowsOnOccultationConstraint(in Window searchWindow, INaifObject observer,
-        ShapeType targetShape, INaifObject frontBody, ShapeType frontShape, OccultationType occultationType, Aberration aberration, in TimeSpan stepSize)
-    {
-        return API.Instance.FindWindowsOnOccultationConstraint(searchWindow, observer, this, targetShape, frontBody,
-            frontShape, occultationType, aberration, stepSize);
-    }
-
-    public IEnumerable<Window> FindWindowsOnCoordinateConstraint(in Window searchWindow, INaifObject observer, Frame frame,
-        CoordinateSystem coordinateSystem, Coordinate coordinate, RelationnalOperator relationalOperator, double value, double adjustValue, Aberration aberration,
-        in TimeSpan stepSize)
-    {
-        return API.Instance.FindWindowsOnCoordinateConstraint(searchWindow, observer, this, frame, coordinateSystem,
-            coordinate, relationalOperator, value, adjustValue, aberration,
-            stepSize);
-    }
 
     //Return all centers of motion up to the root 
     public IEnumerable<ILocalizable> GetCentersOfMotion()
@@ -341,11 +331,12 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
         return new Planetocentric(lon, lat, position.Magnitude());
     }
 
-    public OccultationType? IsOcculted(CelestialItem by, OrbitalParameters.OrbitalParameters from)
+    public OccultationType? IsOcculted(CelestialItem by, OrbitalParameters.OrbitalParameters from, Aberration aberration = Aberration.LT)
     {
-        double backSize = this.AngularSize(from.RelativeTo(this, Aberration.LT).ToStateVector().Position.Magnitude());
-        double bySize = by.AngularSize(from.RelativeTo(by, Aberration.LT).ToStateVector().Position.Magnitude());
-        var angularSeparation = this.AngularSeparation(from.Epoch, by, from, Aberration.LT);
+        double backSize = AngularSize((GetEphemeris(from.Epoch, from.Observer, from.Frame, aberration).ToStateVector().Position - from.ToStateVector().Position).Magnitude());
+        double bySize = by.AngularSize((by.GetEphemeris(from.Epoch, from.Observer, from.Frame, aberration).ToStateVector().Position - from.ToStateVector().Position)
+            .Magnitude());
+        var angularSeparation = this.AngularSeparation(from.Epoch, by, from, aberration);
         return IsOcculted(angularSeparation, backSize, bySize);
     }
 
@@ -380,130 +371,105 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
         return GravitationalField.ComputeGravitationalAcceleration(sv);
     }
 
+    public void WriteEphemeris(FileInfo outputFile)
+    {
+        _dataProvider.WriteEphemeris(outputFile, this, _stateVectorsRelativeToICRF.Values.ToArray());
+    }
+
+
     #region FindWindows
 
-    public bool EvaluateCondition(double actualValue, double targetValue, RelationnalOperator operatorType)
+    public IEnumerable<Window> FindWindowsOnDistanceConstraint(in Window searchWindow, ILocalizable observer,
+        RelationnalOperator relationalOperator, double value, Aberration aberration, in TimeSpan stepSize)
     {
-        switch (operatorType)
-        {
-            case RelationnalOperator.Greater:
-                return actualValue > targetValue;
-            case RelationnalOperator.GreaterOrEqual:
-                return actualValue >= targetValue;
-            case RelationnalOperator.Lower:
-                return actualValue < targetValue;
-            case RelationnalOperator.LowerOrEqual:
-                return actualValue <= targetValue;
-            case RelationnalOperator.Equal:
-                return System.Math.Abs(actualValue - targetValue) < 1e-9; // Tolérance pour les flottants
-            case RelationnalOperator.NotEqual:
-                return System.Math.Abs(actualValue - targetValue) >= 1e-9; // Tolérance pour les flottants
-            default:
-                throw new ArgumentException("Invalid operator");
-        }
+        Func<Time, double> calculateDistance = date => { return GetEphemeris(date, observer, Frame.ICRF, aberration).ToStateVector().Position.Magnitude(); };
+
+        return _geometryFinder.FindWindowsWithCondition(searchWindow, calculateDistance, relationalOperator, value, stepSize);
     }
 
-    public IEnumerable<Window> FindWindowsWithCondition(Window searchWindow,
-        Func<Time, double> calculateValue,
-        RelationnalOperator relationalOperator, double targetValue,
-        TimeSpan stepSize)
+    public IEnumerable<Window> FindWindowsOnOccultationConstraint(in Window searchWindow, ILocalizable observer,
+        ShapeType targetShape, INaifObject frontBody, ShapeType frontShape, OccultationType occultationType, Aberration aberration, in TimeSpan stepSize)
     {
-        List<Window> validWindows = new List<Window>();
-        var precision = TimeSpan.FromSeconds(1);
-        Time current = searchWindow.StartDate;
-        Time end = searchWindow.EndDate;
-
-        bool isInValidWindow = false;
-        Time? validWindowStart = null;
-
-        // Parcourir la plage de temps par stepSize
-        while (current <= end)
+        Func<Time, bool> calculateOccultation = date =>
         {
-            // Calculer la valeur actuelle à la date 'current'
-            double currentValue = calculateValue(current);
-
-            // Vérifier la condition à la date actuelle
-            if (EvaluateCondition(currentValue, targetValue, relationalOperator))
+            var occultation = IsOcculted(frontBody as CelestialItem, new StateVector(Vector3.Zero, Vector3.Zero, observer, date, Frame.ICRF), aberration);
+            if (occultationType == OccultationType.Any)
             {
-                // Si la condition est satisfaite et qu'on n'est pas déjà dans une fenêtre valide
-                if (!isInValidWindow)
-                {
-                    // Chercher précisément le début de la fenêtre avec une recherche binaire
-                    validWindowStart = FindTransition(current - stepSize, current, calculateValue, targetValue, relationalOperator, precision);
-                    isInValidWindow = true;
-                }
-            }
-            else
-            {
-                // Si la condition n'est plus satisfaite et qu'on était dans une fenêtre valide
-                if (isInValidWindow)
-                {
-                    // Chercher précisément la fin de la fenêtre avec une recherche binaire
-                    Time validWindowEnd = FindTransition(validWindowStart.Value, current, calculateValue, targetValue, ReverseOperator(relationalOperator), precision);
-
-                    // Ajouter la fenêtre précise à la liste
-                    validWindows.Add(new Window(validWindowStart.Value, validWindowEnd));
-
-                    // Réinitialiser le marqueur
-                    isInValidWindow = false;
-                    validWindowStart = null;
-                }
+                return occultation is OccultationType.Partial or OccultationType.Annular or OccultationType.Full;
             }
 
-            // Avancer à l'intervalle suivant
-            current = current.Add(stepSize);
-        }
-
-        // Gérer le cas où la condition est satisfaite jusqu'à la fin de la plage de recherche
-        if (isInValidWindow)
-        {
-            Time validWindowEnd = FindTransition(validWindowStart.Value, end, calculateValue, targetValue, ReverseOperator(relationalOperator), precision);
-            validWindows.Add(new Window(validWindowStart.Value, validWindowEnd));
-        }
-
-        return validWindows;
-    }
-
-    private Time FindTransition(Time start, Time end, Func<Time, double> calculateValue,
-        double targetValue, RelationnalOperator relationalOperator, TimeSpan precision)
-    {
-        while ((end - start) > precision)
-        {
-            // Calculer le milieu de l'intervalle
-            Time mid = start + (end - start) / 2;
-
-            // Calculer la valeur au milieu
-            double midValue = calculateValue(mid);
-
-            // Vérifier la condition à la date 'mid'
-            if (EvaluateCondition(midValue, targetValue, relationalOperator))
-            {
-                // Si la condition est satisfaite à 'mid', on continue à chercher vers le début pour trouver la transition exacte
-                end = mid;
-            }
-            else
-            {
-                // Sinon, on cherche vers la fin
-                start = mid;
-            }
-        }
-
-        // Retourner la date où la transition a été détectée avec la précision requise
-        return start;
-    }
-
-    private RelationnalOperator ReverseOperator(RelationnalOperator op)
-    {
-        return op switch
-        {
-            RelationnalOperator.Greater => RelationnalOperator.LowerOrEqual,
-            RelationnalOperator.Lower => RelationnalOperator.GreaterOrEqual,
-            RelationnalOperator.Equal => RelationnalOperator.NotEqual,
-            RelationnalOperator.LowerOrEqual => RelationnalOperator.Greater,
-            RelationnalOperator.GreaterOrEqual => RelationnalOperator.Lower,
-            RelationnalOperator.NotEqual => RelationnalOperator.Equal,
-            _ => throw new ArgumentOutOfRangeException()
+            return occultation == occultationType;
         };
+
+        return _geometryFinder.FindWindowsWithCondition(searchWindow, calculateOccultation, RelationnalOperator.Equal, true, stepSize);
+    }
+
+    public IEnumerable<Window> FindWindowsOnCoordinateConstraint(in Window searchWindow, ILocalizable observer, Frame frame,
+        CoordinateSystem coordinateSystem, Coordinate coordinate, RelationnalOperator relationalOperator, double value, double adjustValue, Aberration aberration,
+        in TimeSpan stepSize)
+    {
+        Func<Time, double> evaluateCoordinates = null;
+        switch (coordinateSystem)
+        {
+            case CoordinateSystem.Rectangular:
+                evaluateCoordinates = date =>
+                {
+                    var stateVector = GetEphemeris(date, observer, frame, aberration).ToStateVector();
+                    return coordinate switch
+                    {
+                        Coordinate.X => stateVector.Position.X,
+                        Coordinate.Y => stateVector.Position.Y,
+                        Coordinate.Z => stateVector.Position.Z,
+                        _ => throw new ArgumentOutOfRangeException()
+                    };
+                };
+                break;
+            case CoordinateSystem.RaDec:
+                evaluateCoordinates = date =>
+                {
+                    var stateVector = GetEphemeris(date, observer, frame, aberration).ToStateVector();
+                    var equatorial = stateVector.ToEquatorial();
+                    return coordinate switch
+                    {
+                        Coordinate.Declination => equatorial.Declination,
+                        Coordinate.RightAscension => equatorial.RightAscension,
+                        Coordinate.Range => equatorial.Distance,
+                        _ => throw new ArgumentOutOfRangeException()
+                    };
+                };
+                break;
+            case CoordinateSystem.Geodetic:
+                evaluateCoordinates = date =>
+                {
+                    var stateVector = GetEphemeris(date, observer, frame, aberration).ToStateVector();
+                    var celestialBody = stateVector.Observer as CelestialBody;
+                    var geodetic = stateVector.ToPlanetocentric(aberration).ToPlanetodetic(celestialBody.Flattening, celestialBody.EquatorialRadius);
+                    return coordinate switch
+                    {
+                        Coordinate.Latitude => geodetic.Latitude,
+                        Coordinate.Longitude => geodetic.Longitude,
+                        Coordinate.Altitude => geodetic.Altitude,
+                        _ => throw new ArgumentOutOfRangeException()
+                    };
+                };
+                break;
+            case CoordinateSystem.Planetographic:
+                evaluateCoordinates = date =>
+                {
+                    var stateVector = GetEphemeris(date, observer, frame, aberration).ToStateVector();
+                    var planetographic = stateVector.ToPlanetocentric(aberration);
+                    return coordinate switch
+                    {
+                        Coordinate.Latitude => planetographic.Latitude,
+                        Coordinate.Longitude => planetographic.Longitude,
+                        Coordinate.Radius => planetographic.Radius,
+                        _ => throw new ArgumentOutOfRangeException()
+                    };
+                };
+                break;
+        }
+
+        return _geometryFinder.FindWindowsWithCondition(searchWindow, evaluateCoordinates, relationalOperator, value, stepSize);
     }
 
     #endregion

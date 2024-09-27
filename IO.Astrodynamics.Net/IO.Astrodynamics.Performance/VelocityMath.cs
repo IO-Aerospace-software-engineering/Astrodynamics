@@ -6,16 +6,16 @@ namespace IO.Astrodynamics.Performance;
 
 public class VelocityMath
 {
-    private double rand;
-    private List<Vector<double>> vectors = new List<Vector<double>>();
-    private Vector<double> V1 = null;
-    private Vector3 V2;
+    private readonly double _rand;
+    private List<Vector<double>> _vectors = new List<Vector<double>>();
+    private readonly Vector<double> _v1;
+    private readonly Vector3 _v2;
 
     public VelocityMath()
     {
-        rand = Random.Shared.NextDouble();
-        V1 = MathNet.Numerics.LinearAlgebra.Vector<double>.Build.Dense(3, i => rand * i);
-        V2 = new Vector3(rand * 1, rand * 2, rand * 3);
+        _rand = Random.Shared.NextDouble();
+        _v1 = MathNet.Numerics.LinearAlgebra.Vector<double>.Build.Dense(3, i => _rand * i);
+        _v2 = new Vector3(_rand * 1, _rand * 2, _rand * 3);
     }
 
     // [Benchmark(Description = "MathNet vector")]
@@ -24,7 +24,7 @@ public class VelocityMath
         Vector<double> res;
         for (int i = 0; i < 1000000; i++)
         {
-            res = V1 * rand * i;
+            res = _v1 * _rand * i;
         }
     }
 
@@ -34,7 +34,7 @@ public class VelocityMath
         Vector3 res;
         for (int i = 0; i < 1000000; i++)
         {
-            res = V2 * rand * i;
+            res = _v2 * _rand * i;
         }
         
         IO.Astrodynamics.Math.Jacobian j=new IO.Astrodynamics.Math.Jacobian();

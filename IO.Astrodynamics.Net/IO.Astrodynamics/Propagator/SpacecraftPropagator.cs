@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
+using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.Propagator.Forces;
 using IO.Astrodynamics.Propagator.Integrators;
@@ -17,12 +18,6 @@ namespace IO.Astrodynamics.Propagator;
 
 public class SpacecraftPropagator : IPropagator
 {
-    public void Dispose()
-    {
-        _svCache = null;
-        _stateOrientation = null;
-    }
-
     private readonly CelestialItem _originalObserver;
     public Window Window { get; }
     public IEnumerable<CelestialItem> CelestialItems { get; }
@@ -34,8 +29,6 @@ public class SpacecraftPropagator : IPropagator
 
     private uint _svCacheSize;
     private StateVector[] _svCache;
-    private Dictionary<Time, StateOrientation> _stateOrientation = new Dictionary<Time, StateOrientation>();
-
 
     /// <summary>
     /// Instantiate propagator
@@ -52,17 +45,18 @@ public class SpacecraftPropagator : IPropagator
     {
         var ssb = new Barycenter(Barycenters.SOLAR_SYSTEM_BARYCENTER.NaifId);
         Spacecraft = spacecraft ?? throw new ArgumentNullException(nameof(spacecraft));
-        if(spacecraft.InitialOrbitalParameters.Frame!= Frames.Frame.ICRF 
-           && spacecraft.InitialOrbitalParameters.Frame!= Frames.Frame.B1950
-           && spacecraft.InitialOrbitalParameters.Frame!= Frames.Frame.FK4
-           && spacecraft.InitialOrbitalParameters.Frame!= Frames.Frame.ECLIPTIC_J2000
-           && spacecraft.InitialOrbitalParameters.Frame!= Frames.Frame.ECLIPTIC_B1950
-           && spacecraft.InitialOrbitalParameters.Frame!= Frames.Frame.GALACTIC_SYSTEM2)
+        if (spacecraft.InitialOrbitalParameters.Frame != Frames.Frame.ICRF
+            && spacecraft.InitialOrbitalParameters.Frame != Frames.Frame.B1950
+            && spacecraft.InitialOrbitalParameters.Frame != Frames.Frame.FK4
+            && spacecraft.InitialOrbitalParameters.Frame != Frames.Frame.ECLIPTIC_J2000
+            && spacecraft.InitialOrbitalParameters.Frame != Frames.Frame.ECLIPTIC_B1950
+            && spacecraft.InitialOrbitalParameters.Frame != Frames.Frame.GALACTIC_SYSTEM2)
         {
             throw new ArgumentException("Spacecraft initial orbital parameters must be defined in inertial frame", nameof(spacecraft));
         }
+
         _originalObserver = spacecraft.InitialOrbitalParameters.Observer as CelestialItem;
-        Window = new Window(window.StartDate.ToTDB(),window.EndDate.ToTDB());
+        Window = new Window(window.StartDate.ToTDB(), window.EndDate.ToTDB());
         CelestialItems = additionalCelestialBodies ?? Array.Empty<CelestialItem>();
         IncludeAtmosphericDrag = includeAtmosphericDrag;
         IncludeSolarRadiationPressure = includeSolarRadiationPressure;
@@ -92,7 +86,7 @@ public class SpacecraftPropagator : IPropagator
 
         if (includeAtmosphericDrag)
         {
-            foreach (var celestialBody in CelestialItems.OfType<CelestialBody>().Where(x=>x.HasAtmosphericModel).ToArray())
+            foreach (var celestialBody in CelestialItems.OfType<CelestialBody>().Where(x => x.HasAtmosphericModel).ToArray())
             {
                 forces.Add(new AtmosphericDrag(Spacecraft, celestialBody));
             }
@@ -100,7 +94,7 @@ public class SpacecraftPropagator : IPropagator
 
         if (includeSolarRadiationPressure)
         {
-            forces.Add(new SolarRadiationPressure(Spacecraft,CelestialItems.OfType<CelestialBody>()));
+            forces.Add(new SolarRadiationPressure(Spacecraft, CelestialItems.OfType<CelestialBody>()));
         }
 
         return forces;
@@ -110,24 +104,33 @@ public class SpacecraftPropagator : IPropagator
     /// Propagate spacecraft
     /// </summary>
     /// <returns></returns>
-    public (IEnumerable<StateVector>stateVectors, IEnumerable<StateOrientation>stateOrientations) Propagate()
+    public void Propagate()
     {
-        _stateOrientation[_svCache.First().Epoch] = new StateOrientation(Quaternion.Zero, Vector3.Zero, _svCache.First().Epoch, Spacecraft.InitialOrbitalParameters.Frame);
+        Spacecraft.Frame.AddStateOrientationToICRF(new StateOrientation(Quaternion.Zero, Vector3.Zero, Window.StartDate, Spacecraft.InitialOrbitalParameters.Frame));
         for (int i = 0; i < _svCacheSize - 1; i++)
         {
             var prvSv = _svCache[i];
             if (Spacecraft.StandbyManeuver?.CanExecute(prvSv) == true)
             {
                 var res = Spacecraft.StandbyManeuver.TryExecute(prvSv);
-                _stateOrientation[res.so.Epoch] = res.so;
+                Spacecraft.Frame.AddStateOrientationToICRF(res.so);
             }
 
             Integrator.Integrate(_svCache, i + 1);
         }
 
-        _stateOrientation[Window.EndDate] = new StateOrientation(_stateOrientation.Last().Value.Rotation, Vector3.Zero, Window.EndDate, Spacecraft.InitialOrbitalParameters.Frame);
+        var latestOrientation = Spacecraft.Frame.GetLatestStateOrientationToICRF();
+        Spacecraft.Frame.AddStateOrientationToICRF(new StateOrientation(latestOrientation.Rotation, latestOrientation.AngularVelocity, Window.EndDate,
+            latestOrientation.ReferenceFrame));
 
-        //Before return result statevectors must be converted back to original observer
-        return (_svCache.Select(x => x.RelativeTo(_originalObserver, Aberration.None).ToStateVector()), _stateOrientation.Values);
+        Spacecraft.AddStateVectorRelativeToICRF(_svCache);
+        
+        //Before return result state vectors must be converted back to original observer
+        // return (Array.Empty<StateVector>(),
+        //     Spacecraft.Frame.GetStateOrientationsToICRF().OrderBy(x => x.Epoch)); //Return spacecraft frames
+    }
+
+    public void Dispose()
+    {
     }
 }

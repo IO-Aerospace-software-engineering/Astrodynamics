@@ -39,6 +39,10 @@ namespace IO.Astrodynamics.Math
         public Quaternion Normalize()
         {
             double m = Magnitude();
+            if (m == 0)
+            {
+                return this;
+            }
             return new Quaternion(W / m, VectorPart / m);
         }
 

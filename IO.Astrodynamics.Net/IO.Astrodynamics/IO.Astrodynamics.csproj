@@ -69,6 +69,7 @@
     <ItemGroup>
       <PackageReference Include="MathNet.Filtering.Kalman" Version="0.7.0" />
       <PackageReference Include="MathNet.Numerics" Version="5.0.0" />
+      <PackageReference Include="One_Sgp4" Version="1.1.0" />
     </ItemGroup>
 
 </Project>

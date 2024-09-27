@@ -2,6 +2,7 @@
 
 using System;
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 
 namespace IO.Astrodynamics;
 
@@ -11,10 +12,12 @@ public static class Enumeration
     {
         var field = value.GetType().GetField(value.ToString());
 
-        return Attribute.GetCustomAttribute(field ?? throw new InvalidOperationException("Value unknown"), typeof(DescriptionAttribute)) is not DescriptionAttribute attribute ? value.ToString() : attribute.Description;
+        return Attribute.GetCustomAttribute(field ?? throw new InvalidOperationException("Value unknown"), typeof(DescriptionAttribute)) is not DescriptionAttribute attribute
+            ? value.ToString()
+            : attribute.Description;
     }
 
-    public static T GetValueFromDescription<T>(string description) where T : Enum
+    public static T GetValueFromDescription<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicFields)] T>(string description) where T : Enum
     {
         foreach (var field in typeof(T).GetFields())
         {

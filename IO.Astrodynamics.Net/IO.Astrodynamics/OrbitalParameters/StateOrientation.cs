@@ -44,6 +44,13 @@ namespace IO.Astrodynamics.OrbitalParameters
             return new StateOrientation(Rotation * transform.Rotation, transform.AngularVelocity - AngularVelocity, Epoch, frame);
         }
 
+        public StateOrientation AtDate(in Time date)
+        {
+            var deltaT = (date - Epoch).TotalSeconds;
+            return new StateOrientation(
+                 (new Quaternion(AngularVelocity.Normalize(), AngularVelocity.Magnitude() * deltaT).Normalize()*Rotation.Normalize()).Normalize(), AngularVelocity, date, ReferenceFrame);
+        }
+
         /// <summary>
         /// Returns a string representation of the state orientation.
         /// </summary>
