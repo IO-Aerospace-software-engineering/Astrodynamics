@@ -1,6 +1,7 @@
+using System.Collections.Generic;
+using System.IO;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Frames;
-using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.TimeSystem;
 
@@ -11,4 +12,6 @@ public interface IDataProvider
     StateOrientation FrameTransformation(Frame source, Frame target, in Time date);
     OrbitalParameters.OrbitalParameters GetEphemeris(in Time epoch, ILocalizable target, ILocalizable observer, Frame frame, Aberration aberration);
     DTO.CelestialBody GetCelestialBodyInfo(int naifId);
+    void WriteEphemeris(FileInfo outputFile,INaifObject naifObject, IEnumerable<StateVector> stateVectors);
+    void WriteOrientation(FileInfo outputFile,INaifObject naifObject, IEnumerable<StateOrientation> stateOrientations);
 }

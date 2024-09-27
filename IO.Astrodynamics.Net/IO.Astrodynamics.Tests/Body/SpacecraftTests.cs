@@ -368,21 +368,29 @@ namespace IO.Astrodynamics.Tests.Body
         [Fact]
         public void CreateSpacecraftFrame()
         {
-            var frame = new SpacecraftFrame("test", -350, "spc1");
-            Assert.Equal("test", frame.Name);
-            Assert.Equal(-350, frame.SpacecraftId);
-            Assert.Equal(-350000, frame.Id);
+            var ke = new KeplerianElements(150000000.0, 0.0, 0.0, 0.0, 0.0, 0.0, TestHelpers.Sun, new TimeSystem.Time(DateTime.UtcNow,TimeFrame.UTCFrame),
+                Frames.Frame.ECLIPTIC_J2000);
+            Clock clk1 = new Clock("My clock", 256);
+            Spacecraft spc1 = new Spacecraft(-1001, "MySpacecraft", 1000.0, 10000.0, clk1, ke);
+            var frame = new SpacecraftFrame(spc1);
+            Assert.Equal("MySpacecraft_FRAME", frame.Name);
+            Assert.Equal(-1001, frame.Spacecraft.NaifId);
+            Assert.Equal(-1001000, frame.Id);
         }
 
         [Fact]
         public async Task WriteSpacecraftFrame()
         {
-            var frame = new SpacecraftFrame("test", -350, "spc1");
+            var ke = new KeplerianElements(150000000.0, 0.0, 0.0, 0.0, 0.0, 0.0, TestHelpers.Sun, new TimeSystem.Time(DateTime.UtcNow,TimeFrame.UTCFrame),
+                Frames.Frame.ECLIPTIC_J2000);
+            Clock clk1 = new Clock("My clock", 256);
+            Spacecraft spc1 = new Spacecraft(-350, "MySpacecraft", 1000.0, 10000.0, clk1, ke);
+            var frame = new SpacecraftFrame(spc1);
             await frame.WriteAsync(new FileInfo("test.tf"));
             TextReader tr = new StreamReader("test.tf");
             var res = await tr.ReadToEndAsync();
             Assert.Equal(
-                $"KPL/FK{Environment.NewLine}\\begindata{Environment.NewLine}FRAME_TEST   = -350000{Environment.NewLine}FRAME_-350000_NAME      = 'TEST'{Environment.NewLine}FRAME_-350000_CLASS     =  3{Environment.NewLine}FRAME_-350000_CLASS_ID  = -350000{Environment.NewLine}FRAME_-350000_CENTER    = -350{Environment.NewLine}CK_-350000_SCLK         = -350{Environment.NewLine}CK_-350000_SPK          = -350{Environment.NewLine}OBJECT_-350_FRAME       = 'TEST'{Environment.NewLine}NAIF_BODY_NAME              += 'TEST'{Environment.NewLine}NAIF_BODY_CODE              += -350000{Environment.NewLine}NAIF_BODY_NAME              += 'SPC1'{Environment.NewLine}NAIF_BODY_CODE              += -350{Environment.NewLine}\\begintext{Environment.NewLine}",
+                $"KPL/FK{Environment.NewLine}\\begindata{Environment.NewLine}FRAME_MYSPACECRAFT_FRAME   = -350000{Environment.NewLine}FRAME_-350000_NAME      = 'MYSPACECRAFT_FRAME'{Environment.NewLine}FRAME_-350000_CLASS     =  3{Environment.NewLine}FRAME_-350000_CLASS_ID  = -350000{Environment.NewLine}FRAME_-350000_CENTER    = -350{Environment.NewLine}CK_-350000_SCLK         = -350{Environment.NewLine}CK_-350000_SPK          = -350{Environment.NewLine}OBJECT_-350_FRAME       = 'MYSPACECRAFT_FRAME'{Environment.NewLine}NAIF_BODY_NAME              += 'MYSPACECRAFT_FRAME'{Environment.NewLine}NAIF_BODY_CODE              += -350000{Environment.NewLine}NAIF_BODY_NAME              += 'MYSPACECRAFT'{Environment.NewLine}NAIF_BODY_CODE              += -350{Environment.NewLine}\\begintext{Environment.NewLine}",
                 res);
         }
     }

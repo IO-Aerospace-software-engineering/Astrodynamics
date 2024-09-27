@@ -316,17 +316,26 @@ public class APITest
         //Execute scenario
         var root = Constants.OutputPath.CreateSubdirectory(scenario.Mission.Name).CreateSubdirectory(scenario.Name);
         await scenario.SimulateAsync(root, false, false, TimeSpan.FromSeconds(1.0));
-
+        var ckFile = new FileInfo(scenario.SpacecraftDirectory + "/OrientationTestFile.ck");
+        var clckFile = new FileInfo(scenario.SpacecraftDirectory + "/ClckTestFile.tsc");
+        await spacecraft.Clock.WriteAsync(clckFile);
+        API.Instance.LoadKernels(clckFile);
+        
+        spacecraft.WriteOrientation(ckFile);
+        API.Instance.LoadKernels(ckFile);
         //Read spacecraft orientation
+        
         var res = API.Instance.ReadOrientation(window, spacecraft, TimeSpan.FromSeconds(10.0), Frames.Frame.ICRF,
             TimeSpan.FromSeconds(10.0)).ToArray();
-        var resICRF=spacecraft.Frame.GetStateOrientationsToICRF().ElementAt(1).RelativeToICRF();
+        var resICRF = spacecraft.Frame.GetStateOrientationsToICRF().ElementAt(1).RelativeToICRF();
+        API.Instance.UnloadKernels(ckFile);
+        API.Instance.UnloadKernels(clckFile);
 
         //Read results
         Assert.Equal(0.70670859819960763, res.ElementAt(1).Rotation.W);
         Assert.Equal(0.0, res.ElementAt(1).Rotation.VectorPart.X, 6);
         Assert.Equal(0.0, res.ElementAt(1).Rotation.VectorPart.Y, 6);
-        Assert.Equal(0.70750500000000005, res.ElementAt(1).Rotation.VectorPart.Z,6);
+        Assert.Equal(0.70750500000000005, res.ElementAt(1).Rotation.VectorPart.Z, 6);
         Assert.Equal(0.0, res.ElementAt(1).AngularVelocity.X, 6);
         Assert.Equal(0.0, res.ElementAt(1).AngularVelocity.Y, 6);
         Assert.Equal(0.0, res.ElementAt(1).AngularVelocity.Z, 6);

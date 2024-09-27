@@ -178,7 +178,7 @@ public class API
      {
          return _kernels;
      }
-
+     
      /// <summary>
      ///     Load kernel at given path
      /// </summary>
@@ -195,29 +195,29 @@ public class API
                      UnloadKernels(kernel);
                      LoadKernels(kernel);
                  }
-
+     
                  return;
              }
-
-
+     
+     
              var existingKernels = _kernels.Where(x => x.FullName.Contains(path.FullName)).ToArray();
              foreach (var existingKernel in existingKernels)
              {
                  UnloadKernels(existingKernel);
              }
-
+     
              if (path.Exists)
              {
                  if (!LoadKernelsProxy(path.FullName))
                  {
                      throw new InvalidOperationException($"Kernel {path.FullName} can't be loaded. You can have more details on standard output");
                  }
-
+     
                  _kernels.Add(path);
              }
          }
      }
-
+     
      /// <summary>
      ///     Unload kernel at given path
      /// </summary>
@@ -233,7 +233,7 @@ public class API
                  {
                      throw new InvalidOperationException($"Kernel {path.FullName} can't be unloaded. You can have more details on standard output");
                  }
-
+     
                  _kernels.RemoveAll(x => x.FullName == path.FullName);
                  foreach (var kernel in _kernels.Where(x => x.FullName.Contains(path.FullName)).ToArray())
                  {
@@ -242,7 +242,7 @@ public class API
              }
          }
      }
-
+     
      public void ClearKernels()
      {
          lock (lockObject)
@@ -251,11 +251,11 @@ public class API
              {
                  UnloadKernels(kernel);
              }
-
+     
              KClearProxy();
          }
      }
-
+     
      /// <summary>
      ///     Find launch windows
      /// </summary>
@@ -273,27 +273,27 @@ public class API
              launchDto.Window = window.Convert();
              launchDto.LaunchSite.DirectoryPath = outputDirectory.CreateSubdirectory("Sites").FullName;
              launchDto.RecoverySite.DirectoryPath = outputDirectory.CreateSubdirectory("Sites").FullName;
-
+     
              //Execute request
              LaunchProxy(ref launchDto);
-
+     
              //Filter result
              var windows = launchDto.Windows.Where(x => x.Start != 0 && x.End != 0).ToArray();
-
+     
              //Build result 
              List<LaunchWindow> launchWindows = [];
-
+     
              for (int i = 0; i < windows.Length; i++)
              {
                  launchWindows.Add(new LaunchWindow(windows[i].Convert(),
                      launchDto.InertialInsertionVelocity[i], launchDto.NonInertialInsertionVelocity[i],
                      launchDto.InertialAzimuth[i], launchDto.NonInertialAzimuth[i]));
              }
-
+     
              return launchWindows;
          }
      }
-
+     
      /// <summary>
      ///     Find time windows based on distance constraint
      /// </summary>
@@ -316,7 +316,7 @@ public class API
              return FindWindowsOnDistanceConstraint(searchWindow, observer.NaifId, target.NaifId, relationalOperator, value, aberration, stepSize);
          }
      }
-
+     
      public IEnumerable<TimeSystem.Window> FindWindowsOnDistanceConstraint(TimeSystem.Window searchWindow, int observerId,
          int targetId, RelationnalOperator relationalOperator, double value, Aberration aberration,
          TimeSpan stepSize)
@@ -328,13 +328,13 @@ public class API
              {
                  windows[i] = new Window(double.NaN, double.NaN);
              }
-
+     
              FindWindowsOnDistanceConstraintProxy(searchWindow.Convert(), observerId, targetId, relationalOperator.GetDescription(), value,
                  aberration.GetDescription(), stepSize.TotalSeconds, windows);
              return windows.Where(x => !double.IsNaN(x.Start)).Select(x => x.Convert());
          }
      }
-
+     
      /// <summary>
      ///     Find time windows based on occultation constraint
      /// </summary>
@@ -368,7 +368,7 @@ public class API
              {
                  windows[i] = new Window(double.NaN, double.NaN);
              }
-
+     
              FindWindowsOnOccultationConstraintProxy(searchWindow.Convert(), observer.NaifId, target.NaifId,
                  targetFrame, targetShape.GetDescription(),
                  frontBody.NaifId, frontFrame, frontShape.GetDescription(), occultationType.GetDescription(),
@@ -376,7 +376,7 @@ public class API
              return windows.Where(x => !double.IsNaN(x.Start)).Select(x => x.Convert());
          }
      }
-
+     
      /// <summary>
      /// Find time windows based on occultation constraint
      /// </summary>
@@ -409,13 +409,13 @@ public class API
              {
                  windows[i] = new Window(double.NaN, double.NaN);
              }
-
+     
              FindWindowsOnOccultationConstraintProxy(searchWindow.Convert(), observerId, targetId, targetFrame, targetShape.GetDescription(),
                  frontBody.NaifId, frontFrame, frontShape.GetDescription(), occultationType.GetDescription(), aberration.GetDescription(), stepSize.TotalSeconds, windows);
              return windows.Where(x => !double.IsNaN(x.Start)).Select(x => x.Convert());
          }
      }
-
+     
      /// <summary>
      ///     Find time windows based on coordinate constraint
      /// </summary>
@@ -446,7 +446,7 @@ public class API
              {
                  windows[i] = new Window(double.NaN, double.NaN);
              }
-
+     
              FindWindowsOnCoordinateConstraintProxy(searchWindow.Convert(), observer.NaifId, target.NaifId,
                  frame.Name, coordinateSystem.GetDescription(),
                  coordinate.GetDescription(), relationalOperator.GetDescription(), value, adjustValue,
@@ -454,7 +454,7 @@ public class API
              return windows.Where(x => !double.IsNaN(x.Start)).Select(x => x.Convert());
          }
      }
-
+     
      /// <summary>
      /// Find time windows based on coordinate constraint
      /// </summary>
@@ -484,7 +484,7 @@ public class API
              {
                  windows[i] = new Window(double.NaN, double.NaN);
              }
-
+     
              FindWindowsOnCoordinateConstraintProxy(searchWindow.Convert(), observerId, targetId,
                  frame.Name, coordinateSystem.GetDescription(),
                  coordinate.GetDescription(), relationalOperator.GetDescription(), value, adjustValue,
@@ -492,7 +492,7 @@ public class API
              return windows.Where(x => !double.IsNaN(x.Start)).Select(x => x.Convert());
          }
      }
-
+     
      /// <summary>
      ///     Find time windows based on illumination constraint
      /// </summary>
@@ -528,7 +528,7 @@ public class API
              {
                  windows[i] = new Window(double.NaN, double.NaN);
              }
-
+     
              FindWindowsOnIlluminationConstraintProxy(searchWindow.Convert(), observer.NaifId,
                  illuminationSource.Name, targetBody.NaifId, fixedFrame.Name,
                  planetodetic.Convert(),
@@ -537,7 +537,7 @@ public class API
              return windows.Where(x => !double.IsNaN(x.Start)).Select(x => x.Convert());
          }
      }
-
+     
      public IEnumerable<TimeSystem.Window> FindWindowsOnIlluminationConstraint(TimeSystem.Window searchWindow, int observerId,
          int targetBodyId, Frame fixedFrame, Coordinates.Planetodetic planetodetic, IlluminationAngle illuminationType, RelationnalOperator relationalOperator,
          double value, double adjustValue, Aberration aberration, TimeSpan stepSize, int illuminationSourceId,
@@ -552,7 +552,7 @@ public class API
              {
                  windows[i] = new Window(double.NaN, double.NaN);
              }
-
+     
              FindWindowsOnIlluminationConstraintProxy(searchWindow.Convert(), observerId,
                  illuminationSourceId.ToString(), targetBodyId, fixedFrame.Name,
                  planetodetic.Convert(),
@@ -561,7 +561,7 @@ public class API
              return windows.Where(x => !double.IsNaN(x.Start)).Select(x => x.Convert());
          }
      }
-
+     
      /// <summary>
      ///     Find time window when a target is in instrument's field of view
      /// </summary>
@@ -587,7 +587,7 @@ public class API
              return FindWindowsInFieldOfViewConstraint(searchWindow, observer.NaifId, instrument.NaifId, target.NaifId, targetFrame, targetShape, aberration, stepSize);
          }
      }
-
+     
      /// <summary>
      /// Find time window when a target is in instrument's field of view
      /// </summary>
@@ -612,16 +612,16 @@ public class API
              {
                  windows[i] = new Window(double.NaN, double.NaN);
              }
-
+     
              var searchWindowDto = searchWindow.Convert();
-
+     
              FindWindowsInFieldOfViewConstraintProxy(searchWindowDto, observerId, instrumentId, targetId, targetFrame.Name, targetShape.GetDescription(),
                  aberration.GetDescription(), stepSize.TotalSeconds, windows);
-
+     
              return windows.Where(x => !double.IsNaN(x.Start)).Select(x => x.Convert());
          }
      }
-
+     
      /// <summary>
      ///     Read object ephemeris for a given period
      /// </summary>
@@ -644,7 +644,7 @@ public class API
              const int messageSize = 10000;
              List<OrbitalParameters.OrbitalParameters> orbitalParameters = [];
              int occurrences = (int)(searchWindow.Length / stepSize / messageSize);
-
+     
              for (int i = 0; i <= occurrences; i++)
              {
                  var start = searchWindow.StartDate + i * messageSize * stepSize;
@@ -657,11 +657,11 @@ public class API
                  orbitalParameters.AddRange(stateVectors.Where(x => !string.IsNullOrEmpty(x.Frame)).Select(x =>
                      new OrbitalParameters.StateVector(x.Position.Convert(), x.Velocity.Convert(), observer, Time.Create(x.Epoch, TimeFrame.TDBFrame), frame)));
              }
-
+     
              return orbitalParameters;
          }
      }
-
+     
      /// <summary>
      /// Return state vector at given epoch
      /// </summary>
@@ -687,7 +687,7 @@ public class API
                  Time.Create(stateVector.Epoch, TimeFrame.TDBFrame), frame);
          }
      }
-
+     
      /// <summary>
      ///     Read spacecraft orientation for a given period
      /// </summary>
@@ -713,7 +713,7 @@ public class API
                  x.Rotation.Convert(), x.AngularVelocity.Convert(), Time.Create(x.Epoch, TimeFrame.TDBFrame), referenceFrame));
          }
      }
-
+     
      /// <summary>
      ///     Write ephemeris file
      /// </summary>
@@ -739,11 +739,11 @@ public class API
                  throw new InvalidOperationException(
                      "An error occurred while writing ephemeris. You can have more details on standard output.");
              }
-
+     
              return true;
          }
      }
-
+     
      public bool WriteOrientation(FileInfo filePath, INaifObject naifObject, IEnumerable<OrbitalParameters.StateOrientation> stateOrientations)
      {
          if (naifObject == null) throw new ArgumentNullException(nameof(naifObject));
@@ -760,11 +760,11 @@ public class API
                  throw new InvalidOperationException(
                      "An error occurred while writing orientation. You can have more details on standard output.");
              }
-
+     
              return true;
          }
      }
-
+     
      /// <summary>
      ///     Get celestial celestialItem information like radius, GM, name, associated frame, ...
      /// </summary>
@@ -777,7 +777,7 @@ public class API
              return GetCelestialBodyInfoProxy(naifId);
          }
      }
-
+     
      /// <summary>
      /// Transform a frame to another
      /// </summary>
@@ -793,13 +793,13 @@ public class API
              if (fromFrame == null) throw new ArgumentNullException(nameof(fromFrame));
              if (toFrame == null) throw new ArgumentNullException(nameof(toFrame));
              var res = TransformFrameProxy(fromFrame.Name, toFrame.Name, epoch.ToTDB().TimeSpanFromJ2000().TotalSeconds);
-
+     
              return new OrbitalParameters.StateOrientation(
                  new Quaternion(res.Rotation.W, res.Rotation.X, res.Rotation.Y, res.Rotation.Z),
                  new Vector3(res.AngularVelocity.X, res.AngularVelocity.Y, res.AngularVelocity.Z), epoch, fromFrame);
          }
      }
-
+     
      /// <summary>
      /// Convert TLE to state vector at given epoch
      /// </summary>
@@ -819,7 +819,7 @@ public class API
                  new Frame(res.Frame)).ToFrame(Frame.ICRF);
          }
      }
-
+     
      public IO.Astrodynamics.OrbitalParameters.KeplerianElements ConvertStateVectorToConicOrbitalElement(IO.Astrodynamics.OrbitalParameters.StateVector stateVector)
      {
          lock (lockObject)
@@ -828,7 +828,7 @@ public class API
              return ConvertStateVectorToConicOrbitalElementProxy(svDto, stateVector.Observer.GM).Convert();
          }
      }
-
+     
      public IO.Astrodynamics.OrbitalParameters.StateVector ConvertEquinoctialElementsToStateVector(IO.Astrodynamics.OrbitalParameters.EquinoctialElements equinoctialElements)
      {
          lock (lockObject)
@@ -836,7 +836,7 @@ public class API
              return ConvertEquinoctialElementsToStateVectorProxy(equinoctialElements.Convert()).Convert();
          }
      }
-
+     
      public IO.Astrodynamics.OrbitalParameters.StateVector ConvertConicElementsToStateVector(IO.Astrodynamics.OrbitalParameters.KeplerianElements keplerianElements)
      {
          lock (lockObject)
@@ -844,7 +844,7 @@ public class API
              return ConvertConicElementsToStateVectorProxy(keplerianElements.Convert()).Convert();
          }
      }
-
+     
      public IO.Astrodynamics.OrbitalParameters.StateVector ConvertConicElementsToStateVector(IO.Astrodynamics.OrbitalParameters.KeplerianElements keplerianElements, Time epoch)
      {
          lock (lockObject)
@@ -853,7 +853,7 @@ public class API
                  .Convert();
          }
      }
-
+     
      public OrbitalParameters.StateVector Propagate2Bodies(OrbitalParameters.StateVector stateVector, TimeSpan dt)
      {
          lock (lockObject)
@@ -861,7 +861,7 @@ public class API
              return Propagate2BodiesProxy(stateVector.Convert(), stateVector.Observer.GM, dt.TotalSeconds).Convert();
          }
      }
-
+     
      public OrbitalParameters.StateVector Propagate2Bodies(OrbitalParameters.StateVector stateVector, Time targetEpoch)
      {
          return Propagate2Bodies(stateVector, targetEpoch - stateVector.Epoch);

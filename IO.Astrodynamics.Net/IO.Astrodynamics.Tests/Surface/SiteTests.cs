@@ -295,14 +295,12 @@ namespace IO.Astrodynamics.Tests.Surface
             Window window = new Window(new TimeSystem.Time(2000, 1, 1, 12, 0, 0), new TimeSystem.Time(2000, 1, 2, 12, 0, 0));
 
             Site site = new Site(339, "S339", TestHelpers.EarthAtJ2000, new Planetodetic(30 * Astrodynamics.Constants.Deg2Rad, 10 * Astrodynamics.Constants.Deg2Rad, 1000.0));
-            var res = site.GetEphemeris(window, TestHelpers.EarthAtJ2000, Frames.Frame.ICRF, Aberration.None, TimeSpan.FromHours(1)).Select(x => x.ToStateVector());
-            site.WriteEphemeris(new FileInfo(Path.Combine(Constants.OutputPath.CreateSubdirectory("Sites").CreateSubdirectory(site.Name).FullName, "sitetest339.spk")),
-                res);
+            site.WriteEphemeris(window,new FileInfo(Path.Combine(Constants.OutputPath.CreateSubdirectory("Sites").CreateSubdirectory(site.Name).FullName,"sitetest339.spk")));
             API.Instance.LoadKernels(new FileInfo(Path.Combine(Constants.OutputPath.CreateSubdirectory("Sites").CreateSubdirectory(site.Name).FullName, "sitetest339.spk")));
             var orbitalParametersEnumerable = API.Instance.ReadEphemeris(window, site.CelestialBody, site, Frames.Frame.ICRF, Aberration.None, TimeSpan.FromHours(1));
             Assert.Equal(new Vector3(4054783.094777815, -4799280.900382741, 1100391.2394741199), orbitalParametersEnumerable.ElementAt(0).ToStateVector().Position,
                 TestHelpers.VectorComparer);
-            Assert.Equal(new Vector3(349.9689414487369, 295.67943565441215, 0.00047467276487285595), orbitalParametersEnumerable.ElementAt(0).ToStateVector().Velocity,
+            Assert.Equal(new Vector3(349.9668418905813, 295.68160979710234, 0.01769212826071784), orbitalParametersEnumerable.ElementAt(0).ToStateVector().Velocity,
                 TestHelpers.VectorComparer);
             Assert.Equal(TimeSystem.Time.J2000TDB, orbitalParametersEnumerable.ElementAt(0).Epoch);
             Assert.Equal(Frames.Frame.ICRF, orbitalParametersEnumerable.ElementAt(0).Frame);
@@ -311,9 +309,9 @@ namespace IO.Astrodynamics.Tests.Surface
             Assert.Equal(5675531.4457497578, orbitalParametersEnumerable.ElementAt(5).ToStateVector().Position.X, 6);
             Assert.Equal(2694837.3733771644, orbitalParametersEnumerable.ElementAt(5).ToStateVector().Position.Y, 6);
             Assert.Equal(1100644.5047067825, orbitalParametersEnumerable.ElementAt(5).ToStateVector().Position.Z, 6);
-            Assert.Equal(-196.510785, orbitalParametersEnumerable.ElementAt(5).ToStateVector().Velocity.X, 6);
-            Assert.Equal(413.86626642107865, orbitalParametersEnumerable.ElementAt(5).ToStateVector().Velocity.Y, 6);
-            Assert.Equal(0.00077810438580775993, orbitalParametersEnumerable.ElementAt(5).ToStateVector().Velocity.Z, 6);
+            Assert.Equal(-196.51288777966315, orbitalParametersEnumerable.ElementAt(5).ToStateVector().Velocity.X, 6);
+            Assert.Equal(413.86844022899953, orbitalParametersEnumerable.ElementAt(5).ToStateVector().Velocity.Y, 6);
+            Assert.Equal(0.0062996708938248122, orbitalParametersEnumerable.ElementAt(5).ToStateVector().Velocity.Z, 6);
             Assert.Equal(18000.0, orbitalParametersEnumerable.ElementAt(5).Epoch.TimeSpanFromJ2000().TotalSeconds);
             Assert.Equal(Frames.Frame.ICRF, orbitalParametersEnumerable.ElementAt(5).Frame);
             Assert.Equal(TestHelpers.EarthAtJ2000, orbitalParametersEnumerable.ElementAt(5).Observer);

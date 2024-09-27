@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -15,12 +16,14 @@ using IO.Astrodynamics.TimeSystem;
 
 namespace IO.Astrodynamics.Surface
 {
-    public class Site : ILocalizable, IEquatable<Site>, IDisposable
+    public class Site : ILocalizable, IEquatable<Site>
     {
         private readonly IDataProvider _dataProvider;
         private readonly GeometryFinder _geometryFinder = new GeometryFinder();
         private readonly bool _isFromKernel = false;
-        private ConcurrentDictionary<Time, StateVector> _stateVectorsRelativeToICRF { get; } = new ConcurrentDictionary<Time, StateVector>();
+        
+        private SortedDictionary<Time,StateVector> _stateVectorsRelativeToICRF = new SortedDictionary<Time, StateVector>();
+        public ImmutableSortedDictionary<Time, StateVector> StateVectorsRelativeToICRF  => _stateVectorsRelativeToICRF.ToImmutableSortedDictionary();
         public int Id { get; }
         public int NaifId { get; }
         public string Name { get; }
@@ -437,11 +440,12 @@ namespace IO.Astrodynamics.Surface
         /// <summary>
         /// Write ephemeris data
         /// </summary>
+        /// <param name="window"></param>
         /// <param name="outputFile"></param>
-        /// <param name="stateVectors"></param>
-        public void WriteEphemeris(FileInfo outputFile, IEnumerable<StateVector> stateVectors)
+        public void WriteEphemeris(Window window, FileInfo outputFile)
         {
-            API.Instance.WriteEphemeris(outputFile, this, stateVectors);
+            var ephemeris = GetEphemeris(window, CelestialBody, CelestialBody.Frame, Aberration.None, TimeSpan.FromMinutes(1.0));
+            _dataProvider.WriteEphemeris(outputFile,this, ephemeris.Select(x => x.ToStateVector()).ToArray());
         }
 
         public IEnumerable<Window> FindDayWindows(in Window searchWindow, double twilight)
@@ -481,25 +485,6 @@ namespace IO.Astrodynamics.Surface
         public static bool operator !=(Site left, Site right)
         {
             return !Equals(left, right);
-        }
-
-        private void ReleaseUnmanagedResources()
-        {
-            if (IsPropagated)
-            {
-                API.Instance.UnloadKernels(PropagationOutput);
-            }
-        }
-
-        public void Dispose()
-        {
-            ReleaseUnmanagedResources();
-            GC.SuppressFinalize(this);
-        }
-
-        ~Site()
-        {
-            ReleaseUnmanagedResources();
         }
 
         #endregion

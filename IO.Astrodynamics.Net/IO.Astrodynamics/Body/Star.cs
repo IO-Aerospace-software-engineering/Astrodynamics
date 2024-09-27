@@ -13,7 +13,7 @@ namespace IO.Astrodynamics.Body;
 /// <summary>
 /// Represents a star in the celestial system.
 /// </summary>
-public class Star : CelestialBody, IDisposable
+public class Star : CelestialBody
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="Star"/> class.
@@ -178,62 +178,13 @@ public class Star : CelestialBody, IDisposable
     {
         return Task.Run(() =>
         {
-            ResetPropagation();
-
             List<StateVector> svs = new List<StateVector>();
             for (Time epoch = timeWindow.StartDate; epoch <= timeWindow.EndDate; epoch += stepSize)
             {
                 var position = GetEquatorialCoordinates(epoch).ToCartesian();
-                svs.Add(new StateVector(position, Vector3.Zero, new Barycenter(0), epoch, Frame.ICRF));
-            }
-
-            PropagationOutput = starsOutputDirectory.CreateSubdirectory(Name);
-            var path = new FileInfo(Path.Combine(PropagationOutput.FullName, $"star_{NaifId}.spk"));
-            if (API.Instance.WriteEphemeris(path, this, svs))
-            {
-                API.Instance.LoadKernels(path);
+                _stateVectorsRelativeToICRF.Add(epoch,new StateVector(position, Vector3.Zero, new Barycenter(0), epoch, Frame.ICRF));
             }
         });
     }
 
-    /// <summary>
-    /// Resets the propagation elements.
-    /// </summary>
-    private void ResetPropagation()
-    {
-        if (IsPropagated)
-        {
-            API.Instance.UnloadKernels(PropagationOutput);
-            PropagationOutput.Delete(true);
-            PropagationOutput = null;
-        }
-    }
-
-    /// <summary>
-    /// Releases unmanaged resources.
-    /// </summary>
-    private void ReleaseUnmanagedResources()
-    {
-        if (IsPropagated)
-        {
-            API.Instance.UnloadKernels(PropagationOutput);
-        }
-    }
-
-    /// <summary>
-    /// Disposes the star and releases unmanaged resources.
-    /// </summary>
-    public void Dispose()
-    {
-        ReleaseUnmanagedResources();
-        GC.SuppressFinalize(this);
-    }
-
-    /// <summary>
-    /// Finalizes the star and releases unmanaged resources.
-    /// </summary>
-    ~Star()
-    {
-        ReleaseUnmanagedResources();
-    }
 }

@@ -1,7 +1,10 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Globalization;
+using System.IO;
+using System.Linq;
 using IO.Astrodynamics.Coordinates;
 using IO.Astrodynamics.DataProvider;
 using IO.Astrodynamics.Frames;
@@ -16,7 +19,9 @@ namespace IO.Astrodynamics.Body;
 public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
 {
     private readonly IDataProvider _dataProvider;
-    public SortedDictionary<Time, StateVector> StateVectorsRelativeToICRF { get; protected set; } = new();
+
+    protected readonly SortedDictionary<Time, StateVector> _stateVectorsRelativeToICRF = new();
+    public ImmutableSortedDictionary<Time, StateVector> StateVectorsRelativeToICRF => _stateVectorsRelativeToICRF.ToImmutableSortedDictionary();
     protected const int TITLE_WIDTH = 32;
     protected const int VALUE_WIDTH = 32;
 
@@ -218,7 +223,8 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     {
         var targetGeometricState = this.GetGeometricStateFromICRF(epoch).ToStateVector();
         var observerGeometricStateFromSSB = observer.GetGeometricStateFromICRF(epoch).ToStateVector();
-        var observerGeometricState = new StateVector(targetGeometricState.Position - observerGeometricStateFromSSB.Position, targetGeometricState.Velocity - observerGeometricStateFromSSB.Velocity,
+        var observerGeometricState = new StateVector(targetGeometricState.Position - observerGeometricStateFromSSB.Position,
+            targetGeometricState.Velocity - observerGeometricStateFromSSB.Velocity,
             observer, epoch, Frame.ICRF);
         if (aberration is Aberration.LT or Aberration.XLT or Aberration.LTS or Aberration.XLTS)
         {
@@ -234,7 +240,7 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
 
             if (aberration == Aberration.LTS || aberration == Aberration.XLTS)
             {
-                var voverc=observerGeometricStateFromSSB.Velocity.Magnitude()/Constants.C;
+                var voverc = observerGeometricStateFromSSB.Velocity.Magnitude() / Constants.C;
                 var stellarAberration = observerGeometricStateFromSSB.Velocity * voverc;
                 observerGeometricState.UpdatePosition(observerGeometricState.Position + stellarAberration);
             }
@@ -245,7 +251,7 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
 
     public virtual OrbitalParameters.OrbitalParameters GetGeometricStateFromICRF(in Time date)
     {
-        return StateVectorsRelativeToICRF.GetOrAdd(date,
+        return _stateVectorsRelativeToICRF.GetOrAdd(date,
             x => _dataProvider.GetEphemeris(x, this, new Barycenter(Barycenters.SOLAR_SYSTEM_BARYCENTER.NaifId), Frame.ICRF, Aberration.None).ToStateVector());
     }
 
@@ -364,6 +370,12 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
 
         return GravitationalField.ComputeGravitationalAcceleration(sv);
     }
+
+    public void WriteEphemeris(FileInfo outputFile)
+    {
+        _dataProvider.WriteEphemeris(outputFile, this, _stateVectorsRelativeToICRF.Values.ToArray());
+    }
+
 
     #region FindWindows
 

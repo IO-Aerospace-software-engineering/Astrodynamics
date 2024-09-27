@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.IO;
 using System.Linq;
 using IO.Astrodynamics.DataProvider;
 using IO.Astrodynamics.Math;
@@ -15,7 +17,8 @@ public class Frame : IEquatable<Frame>
     public string Name { get; }
     public int? Id { get; }
 
-    protected ConcurrentDictionary<Time, StateOrientation> _stateOrientationsToICRF = new();
+    protected SortedDictionary<Time,StateOrientation> _stateOrientationsToICRF = new();
+    protected ImmutableSortedDictionary<Time, StateOrientation> StateOrientationsToICRF => _stateOrientationsToICRF.ToImmutableSortedDictionary();
 
     /// <summary>
     /// International Celestial Reference Frame (ICRF) at epoch J2000.

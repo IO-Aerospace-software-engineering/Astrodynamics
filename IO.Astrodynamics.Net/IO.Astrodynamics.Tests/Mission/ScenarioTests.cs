@@ -520,7 +520,7 @@ namespace IO.Astrodynamics.Tests.Mission
 
             Assert.Equal(1.1, eph1.ToEquatorial().RightAscension, 3);
             Assert.Equal(1.1, eph1.ToEquatorial().Declination, 3);
-            Assert.Equal(8.1373353929324910E+16, eph1.ToEquatorial().Distance);
+            Assert.Equal(8.1373353929324896E+16, eph1.ToEquatorial().Distance);
 
             Assert.Equal(1.2, eph2.ToEquatorial().RightAscension, 3);
             Assert.Equal(1.2, eph2.ToEquatorial().Declination, 3);
