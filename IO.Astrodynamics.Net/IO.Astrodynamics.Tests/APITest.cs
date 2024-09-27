@@ -558,56 +558,52 @@ public class APITest
     [Fact]
     void UnloadKernels()
     {
-        lock (lockobj)
-        {
+        
             API.Instance.LoadKernels(new FileInfo(@"Data/UserDataTest/scn100/Sites/MySite/Ephemeris/MySite.spk"));
             API.Instance.LoadKernels(new FileInfo(@"Data/UserDataTest/scn100/Spacecrafts/DRAGONFLY32/Ephemeris/DRAGONFLY32.spk"));
             API.Instance.LoadKernels(new DirectoryInfo(@"Data/UserDataTest/scn100"));
             API.Instance.UnloadKernels(new FileInfo(@"Data/UserDataTest/scn100/Spacecrafts/DRAGONFLY32/Ephemeris/DRAGONFLY32.spk"));
             var kernels = API.Instance.GetLoadedKernels().ToArray();
             Assert.Equal(1, @kernels.Count(x => x.FullName.Contains("scn100")));
-        }
+        
     }
 
     [Fact]
     void UnloadKernels2()
     {
-        lock (lockobj)
-        {
+        
             API.Instance.LoadKernels(new FileInfo(@"Data/UserDataTest/scn100/Spacecrafts/DRAGONFLY32/Clocks/DRAGONFLY32.tsc"));
 
             API.Instance.UnloadKernels(new FileInfo(@"Data/UserDataTest/scn100/Spacecrafts/DRAGONFLY32/Clocks/DRAGONFLY32.tsc"));
             var kernels = API.Instance.GetLoadedKernels().ToArray();
             Assert.Equal(0, kernels.Count(x => x.FullName.Contains("DRAGONFLY32.tsc")));
-        }
+        
     }
 
     [Fact]
     void LoadKernels()
     {
-        lock (lockobj)
-        {
+        
             API.Instance.LoadKernels(new FileInfo(@"Data/UserDataTest/scn100/Sites/MySite/Ephemeris/MySite.spk"));
             API.Instance.LoadKernels(new FileInfo(@"Data/UserDataTest/scn100/Spacecrafts/DRAGONFLY32/Ephemeris/DRAGONFLY32.spk"));
             API.Instance.LoadKernels(new DirectoryInfo(@"Data/UserDataTest/scn100"));
 
             var kernels = API.Instance.GetLoadedKernels().ToArray();
             Assert.Equal(1, @kernels.Count(x => x.FullName.Contains("scn100")));
-        }
+        
     }
 
     [Fact]
     void LoadKernels2()
     {
-        lock (lockobj)
-        {
+      
             API.Instance.LoadKernels(new DirectoryInfo(@"Data/UserDataTest/scn100"));
             API.Instance.LoadKernels(new FileInfo(@"Data/UserDataTest/scn100/Spacecrafts/DRAGONFLY32/Ephemeris/DRAGONFLY32.spk"));
             API.Instance.LoadKernels(new FileInfo(@"Data/UserDataTest/scn100/Sites/MySite/Ephemeris/MySite.spk"));
 
             var kernels = API.Instance.GetLoadedKernels().ToArray();
             Assert.Equal(1, @kernels.Count(x => x.FullName.Contains("scn100")));
-        }
+        
     }
 
     [Fact]
