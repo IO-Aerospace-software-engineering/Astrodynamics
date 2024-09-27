@@ -17,10 +17,10 @@ public class SpacecraftFrame : Frame
     private readonly IDataProvider _dataProvider;
     public Spacecraft Spacecraft { get; }
 
-    public SpacecraftFrame(Spacecraft spacecraft, IDataProvider dataProvider = null) : base(spacecraft.Name + "_FRAME", spacecraft.NaifId * 1000)
+    public SpacecraftFrame(Spacecraft spacecraft) : base(spacecraft.Name + "_FRAME", spacecraft.NaifId * 1000)
     {
         Spacecraft = spacecraft;
-        _dataProvider = dataProvider ?? new SpiceDataProvider();
+        _dataProvider = Configuration.Instance.DataProvider;
     }
 
     public override StateOrientation GetStateOrientationToICRF(Time date)

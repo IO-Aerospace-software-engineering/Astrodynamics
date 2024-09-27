@@ -55,14 +55,14 @@ public class Frame : IEquatable<Frame>
     /// </summary>
     public static readonly Frame TEME = new Frame("TEME");
 
-    public Frame(string name, int? id = null, IDataProvider dataProvider = null)
+    public Frame(string name, int? id = null)
     {
         if (string.IsNullOrEmpty(name))
         {
             throw new ArgumentException("Frame must have a name");
         }
 
-        _dataProvider = dataProvider ?? new SpiceDataProvider();
+        _dataProvider = Configuration.Instance.DataProvider;
 
         Name = name;
         Id = id;
