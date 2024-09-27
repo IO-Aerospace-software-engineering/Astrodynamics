@@ -47,8 +47,8 @@ namespace IO.Astrodynamics.Surface
         /// <exception cref="ArgumentNullException">Thrown when <paramref name="celestialItem"/> is null.</exception>
         /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="userId"/> is less than or equal to zero.</exception>
         /// <exception cref="ArgumentException">Thrown when <paramref name="name"/> is null or empty.</exception>
-        public Site(int userId, string name, CelestialBody celestialItem, IDataProvider dataProvider = null) : this(userId, name, celestialItem,
-            new Planetodetic(double.NaN, double.NaN, double.NaN), dataProvider)
+        public Site(int userId, string name, CelestialBody celestialItem) : this(userId, name, celestialItem,
+            new Planetodetic(double.NaN, double.NaN, double.NaN))
         {
         }
 
@@ -63,12 +63,12 @@ namespace IO.Astrodynamics.Surface
         /// <exception cref="ArgumentNullException">Thrown when <paramref name="celestialItem"/> is null.</exception>
         /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="userId"/> is less than or equal to zero.</exception>
         /// <exception cref="ArgumentException">Thrown when <paramref name="name"/> is null or empty.</exception>
-        public Site(int userId, string name, CelestialBody celestialItem, Planetodetic planetodetic, IDataProvider dataProvider = null)
+        public Site(int userId, string name, CelestialBody celestialItem, Planetodetic planetodetic)
         {
             if (celestialItem == null) throw new ArgumentNullException(nameof(celestialItem));
             if (userId <= 0) throw new ArgumentOutOfRangeException(nameof(userId));
             if (string.IsNullOrEmpty(name)) throw new ArgumentException("Value cannot be null or empty.", nameof(name));
-            _dataProvider = dataProvider ?? new SpiceDataProvider();
+            _dataProvider = Configuration.Instance.DataProvider;
             Name = name;
             CelestialBody = celestialItem;
             Id = userId;

@@ -120,9 +120,9 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     /// <param name="epoch">Epoch</param>
     /// <param name="geopotentialModelParameters"></param>
     /// <param name="dataProvider"></param>
-    protected CelestialItem(int naifId, Frame frame, in Time epoch, GeopotentialModelParameters geopotentialModelParameters = null, IDataProvider dataProvider = null)
+    protected CelestialItem(int naifId, Frame frame, in Time epoch, GeopotentialModelParameters geopotentialModelParameters = null)
     {
-        _dataProvider = dataProvider ?? new SpiceDataProvider();
+        _dataProvider = Configuration.Instance.DataProvider;
         ExtendedInformation = _dataProvider.GetCelestialBodyInfo(naifId);
 
         NaifId = naifId;
@@ -154,7 +154,7 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     /// <param name="geopotentialModelParameters"></param>
     /// <param name="dataProvider"></param>
     protected CelestialItem(int naifId, string name, double mass, OrbitalParameters.OrbitalParameters initialOrbitalParameters,
-        GeopotentialModelParameters geopotentialModelParameters = null, IDataProvider dataProvider = null)
+        GeopotentialModelParameters geopotentialModelParameters = null)
     {
         if (string.IsNullOrEmpty(name))
         {
@@ -166,7 +166,7 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
             throw new ArgumentException("CelestialItem can't have a negative mass");
         }
 
-        _dataProvider = dataProvider ?? new SpiceDataProvider();
+        _dataProvider = Configuration.Instance.DataProvider;
 
         NaifId = naifId;
         Name = name;
