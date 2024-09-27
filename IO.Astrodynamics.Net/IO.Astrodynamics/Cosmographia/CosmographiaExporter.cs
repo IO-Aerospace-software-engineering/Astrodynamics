@@ -30,7 +30,7 @@ public class CosmographiaExporter
 
         missionOutputDirectory.Delete(true);
 
-        ExportRawData(scenario, missionOutputDirectory);
+        await ExportRawDataAsync(scenario, missionOutputDirectory);
 
         await ExportSpiceKernelsAsync(scenario, missionOutputDirectory);
 
@@ -75,7 +75,7 @@ public class CosmographiaExporter
             }
 
             await using var fileStream = File.Create(Path.Combine(outputDirectory.FullName, $"{bodyName.ToLower()}-features.json"));
-            await JsonSerializer.SerializeAsync(fileStream, siteJson);
+            await JsonSerializer.SerializeAsync(fileStream, siteJson, CosmographiaJsonContext.Default.SiteRootObject);
         }
     }
 
@@ -96,7 +96,7 @@ public class CosmographiaExporter
         loaderJson.require = files.ToArray();
 
         await using var fileStream = File.Create(Path.Combine(outputDirectory.FullName, $"{scenario.Mission.Name}_{scenario.Name}.json"));
-        await JsonSerializer.SerializeAsync(fileStream, loaderJson);
+        await JsonSerializer.SerializeAsync(fileStream, loaderJson, CosmographiaJsonContext.Default.LoadRootObject);
     }
 
     private async Task ExportObservations(Scenario scenario, DirectoryInfo outputDirectory)
@@ -160,7 +160,7 @@ public class CosmographiaExporter
             }
 
             await using var fileStream = File.Create(Path.Combine(outputDirectory.FullName, "observations.json"));
-            await JsonSerializer.SerializeAsync(fileStream, observationJson);
+            await JsonSerializer.SerializeAsync(fileStream, observationJson, CosmographiaJsonContext.Default.ObservationRootObject);
         }
     }
 
@@ -192,8 +192,8 @@ public class CosmographiaExporter
                                                         spacecraft.InitialOrbitalParameters.Observer.Name.Substring(1).ToLower();
                 sensorJson.items[idx].geometry.range = 100000;
                 sensorJson.items[idx].geometry.rangeTracking = true;
-                
-                _instrumentColors[instrument]=new[]
+
+                _instrumentColors[instrument] = new[]
                 {
                     spcColor[0] * (1.0 + (idx + 1) * 0.1), spcColor[1] * (1.0 + (idx + 1) * 0.1), spcColor[2] * (1.0 + (idx + 1) * 0.1)
                 };
@@ -209,7 +209,7 @@ public class CosmographiaExporter
         }
 
         await using var fileStream = File.Create(Path.Combine(outputDirectory.FullName, "sensors.json"));
-        await JsonSerializer.SerializeAsync(fileStream, sensorJson);
+        await JsonSerializer.SerializeAsync(fileStream, sensorJson, CosmographiaJsonContext.Default.SensorRootObject);
     }
 
     private async Task ExportSpacecraftsAsync(Scenario scenario, DirectoryInfo outputDirectory)
@@ -259,7 +259,7 @@ public class CosmographiaExporter
         }
 
         await using var fileStream = File.Create(Path.Combine(outputDirectory.FullName, "spacecrafts.json"));
-        await JsonSerializer.SerializeAsync(fileStream, spacecraftJson);
+        await JsonSerializer.SerializeAsync(fileStream, spacecraftJson, CosmographiaJsonContext.Default.SpacecraftRootObject);
     }
 
     private double[] GetSpacecraftColor(Spacecraft spacecraft)
@@ -287,12 +287,72 @@ public class CosmographiaExporter
         spiceJson.name = $"{scenario.Mission.Name}_{scenario.Name}";
         spiceJson.spiceKernels = files.Select(x => Path.GetRelativePath(outputDirectory.FullName, x.FullName)).ToArray();
         await using var fileStream = File.Create(Path.Combine(outputDirectory.FullName, "spice.json"));
-        await JsonSerializer.SerializeAsync(fileStream, spiceJson);
+        await JsonSerializer.SerializeAsync(fileStream, spiceJson, CosmographiaJsonContext.Default.SpiceRootObject);
     }
 
-    private void ExportRawData(Scenario scenario, DirectoryInfo outputDirectory)
+    private async Task ExportRawDataAsync(Scenario scenario, DirectoryInfo outputDirectory)
     {
-        CopyDirectory(scenario.RootDirectory, outputDirectory, true);
+        var kernelsTemp = Directory.CreateTempSubdirectory();
+        var spacecraftFolder = kernelsTemp.CreateSubdirectory("Spacecrafts");
+        var sitesFolder = kernelsTemp.CreateSubdirectory("Sites");
+        var starsFolder = kernelsTemp.CreateSubdirectory("Stars");
+        try
+        {
+            foreach (var spacecraft in scenario.Spacecrafts)
+            {
+                var spacecraftOutputDirectory = spacecraftFolder.CreateSubdirectory(spacecraft.Name);
+                var clockOutputDirectory = spacecraftOutputDirectory.CreateSubdirectory("Clocks");
+                var ephemerisOutputDirectory = spacecraftOutputDirectory.CreateSubdirectory("Ephemeris");
+                var frameOutputDirectory = spacecraftOutputDirectory.CreateSubdirectory("Frames");
+                var instrumentsOutputDirectory = spacecraftOutputDirectory.CreateSubdirectory("Instruments");
+                var orientationOutputDirectory = spacecraftOutputDirectory.CreateSubdirectory("Orientation");
+
+                var clockFile = new FileInfo(Path.Combine(clockOutputDirectory.FullName, $"{spacecraft.Name}.tsc"));
+                var frameFile = new FileInfo(Path.Combine(frameOutputDirectory.FullName, $"{spacecraft.Name}.tf"));
+
+                try
+                {
+                    await spacecraft.Clock.WriteAsync(clockFile);
+                    API.Instance.LoadKernels(clockFile);
+
+                    await spacecraft.Frame.WriteAsync(frameFile);
+                    API.Instance.LoadKernels(frameFile);
+                    var orientationFile = new FileInfo(Path.Combine(orientationOutputDirectory.FullName, $"{spacecraft.Name}.ck"));
+                    spacecraft.WriteOrientation(orientationFile);
+                    var ephemerisFile = new FileInfo(Path.Combine(ephemerisOutputDirectory.FullName, $"{spacecraft.Name}.spk"));
+                    spacecraft.WriteEphemeris(ephemerisFile);
+                }
+                finally
+                {
+                    API.Instance.UnloadKernels(clockFile);
+                    API.Instance.UnloadKernels(frameFile);
+                }
+
+                foreach (var instrument in spacecraft.Instruments)
+                {
+                    await instrument.WriteFrameAsync(new FileInfo(Path.Combine(instrumentsOutputDirectory.FullName, $"{instrument.Name}.tf")));
+                    await instrument.WriteKernelAsync(new FileInfo(Path.Combine(instrumentsOutputDirectory.FullName, $"{instrument.Name}.ti")));
+                }
+            }
+
+            foreach (var site in scenario.Sites)
+            {
+                var siteOutputDirectory = sitesFolder.CreateSubdirectory(site.Name);
+                await site.WriteFrameAsync(new FileInfo(Path.Combine(siteOutputDirectory.FullName, $"{site.Name}.tf")));
+                site.WriteEphemeris(scenario.Window, new FileInfo(Path.Combine(siteOutputDirectory.FullName, $"{site.Name}.spk")));
+            }
+
+            foreach (var star in scenario.Stars)
+            {
+                star.WriteEphemeris(new FileInfo(Path.Combine(starsFolder.FullName, $"{star.Name}.spk")));
+            }
+
+            CopyDirectory(kernelsTemp, outputDirectory, true);
+        }
+        finally
+        {
+            kernelsTemp.Delete(true);
+        }
     }
 
     static void CopyDirectory(DirectoryInfo sourceDir, DirectoryInfo destinationDir, bool recursive = false)

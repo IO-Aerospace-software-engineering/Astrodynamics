@@ -314,10 +314,10 @@ public class APITest
         scenario.AddSpacecraft(spacecraft);
 
         //Execute scenario
-        var root = Constants.OutputPath.CreateSubdirectory(scenario.Mission.Name).CreateSubdirectory(scenario.Name);
-        await scenario.SimulateAsync(root, false, false, TimeSpan.FromSeconds(1.0));
-        var ckFile = new FileInfo(scenario.SpacecraftDirectory + "/OrientationTestFile.ck");
-        var clckFile = new FileInfo(scenario.SpacecraftDirectory + "/ClckTestFile.tsc");
+        var root = Constants.OutputPath.CreateSubdirectory(scenario.Mission.Name).CreateSubdirectory(scenario.Name).CreateSubdirectory("Spacecrafts");
+        await scenario.SimulateAsync( false, false, TimeSpan.FromSeconds(1.0));
+        var ckFile = new FileInfo(root + "/OrientationTestFile.ck");
+        var clckFile = new FileInfo(root + "/ClckTestFile.tsc");
         await spacecraft.Clock.WriteAsync(clckFile);
         API.Instance.LoadKernels(clckFile);
         

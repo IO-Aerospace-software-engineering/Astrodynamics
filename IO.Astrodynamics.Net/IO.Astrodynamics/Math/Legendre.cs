@@ -73,7 +73,6 @@ public class LegendreFunctions
         }
 
         // Use iteration to compute Pll
-        double pll = 0.0;
         for (int ll = m + 2; ll <= l; ll++)
         {
             double prevPmm = pmm; // Store the previous pmm

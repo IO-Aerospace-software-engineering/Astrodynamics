@@ -87,7 +87,7 @@ namespace IO.Astrodynamics.Tests.Body
             var root = Constants.OutputPath;
 
             //Execute scenario
-            await scenario.SimulateAsync(root, false, false, TimeSpan.FromSeconds(1.0));
+            await scenario.SimulateAsync( false, false, TimeSpan.FromSeconds(1.0));
 
             //Find windows when the earth is in field of view of camera 600 
             var res = spacecraft.Instruments.First().FindWindowsInFieldOfViewConstraint(

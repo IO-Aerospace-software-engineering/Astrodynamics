@@ -54,7 +54,6 @@ public readonly record struct Time : IComparable<Time>, IComparable
         {
             var kind = string.Concat(timeString.TakeLast(3));
             ITimeFrame frame = null;
-            bool hasFrame = true;
             switch (kind)
             {
                 case "TDB":
@@ -71,7 +70,6 @@ public readonly record struct Time : IComparable<Time>, IComparable
                     break;
                 default:
                     throw new ArgumentException("Value is not a valid time frame.", nameof(timeString));
-                    break;
             }
 
             DateTime = DateTime.Parse(string.Concat(timeString.SkipLast(4) ?? throw new InvalidOperationException("invalid time string")),

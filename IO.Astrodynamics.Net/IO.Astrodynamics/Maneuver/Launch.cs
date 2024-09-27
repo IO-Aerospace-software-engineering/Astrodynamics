@@ -11,18 +11,16 @@ namespace IO.Astrodynamics.Maneuver
 {
     public class Launch
     {
-        private double m_nonInertialAscendingAzimuthLaunch = double.NaN;
-        private double m_nonInertialDescendingAzimuthLaunch = double.NaN;
-        private double m_inertialAscendingAzimuthLaunch = double.NaN;
-        private double m_inertialDescendingAzimuthLaunch = double.NaN;
-        private double m_nonInertialInsertionVelocity = double.NaN;
-        private double m_inertialInsertionVelocity = double.NaN;
-        private double m_deltaL = 0.0;
+        private double _nonInertialAscendingAzimuthLaunch = double.NaN;
+        private double _nonInertialDescendingAzimuthLaunch = double.NaN;
+        private double _inertialAscendingAzimuthLaunch = double.NaN;
+        private double _inertialDescendingAzimuthLaunch = double.NaN;
+        private double _nonInertialInsertionVelocity = double.NaN;
+        private readonly double _deltaL = 0.0;
 
         public LaunchSite LaunchSite { get; }
         public Site RecoverySite { get; }
         public OrbitalParameters.OrbitalParameters TargetOrbit { get; }
-        public Body.CelestialItem TargetCelestialItem { get; }
         public bool? LaunchByDay { get; }
         public double Twilight { get; }
 
@@ -44,7 +42,7 @@ namespace IO.Astrodynamics.Maneuver
             TargetOrbit = targetOrbit ?? throw new ArgumentNullException(nameof(targetOrbit));
             LaunchByDay = launchByDay;
             Twilight = twilight;
-            m_deltaL= System.Math.Asin(System.Math.Tan(LaunchSite.Planetodetic.Latitude) / System.Math.Tan(targetOrbit.Inclination()));
+            _deltaL= System.Math.Asin(System.Math.Tan(LaunchSite.Planetodetic.Latitude) / System.Math.Tan(targetOrbit.Inclination()));
         }
 
         /// <summary>
@@ -129,7 +127,7 @@ namespace IO.Astrodynamics.Maneuver
                         // If previous is ascending, next will be descending
                         isAscending = !isAscending;
 
-                        double deltaLDuration = (m_deltaL * 2.0) / LaunchSite.CelestialBody.AngularVelocity(date);
+                        double deltaLDuration = (_deltaL * 2.0) / LaunchSite.CelestialBody.AngularVelocity(date);
 
                         if (!isAscending)
                         {
@@ -183,7 +181,7 @@ namespace IO.Astrodynamics.Maneuver
 
         public double GetNonInertialAscendingAzimuthLaunch()
         {
-            if (double.IsNaN(m_nonInertialAscendingAzimuthLaunch))
+            if (double.IsNaN(_nonInertialAscendingAzimuthLaunch))
             {
                 double inertialInsertionVelocity = GetInertialInsertionVelocity();
                 double inertialAscendingAzimuthLaunch = GetInertialAscendingAzimuthLaunch();
@@ -194,66 +192,66 @@ namespace IO.Astrodynamics.Maneuver
                                launchSiteVelocityMagnitude;
                 double vroty = inertialInsertionVelocity * System.Math.Cos(inertialAscendingAzimuthLaunch);
 
-                m_nonInertialAscendingAzimuthLaunch = System.Math.Atan2(vrotx, vroty);
-                if (m_nonInertialAscendingAzimuthLaunch < 0.0)
+                _nonInertialAscendingAzimuthLaunch = System.Math.Atan2(vrotx, vroty);
+                if (_nonInertialAscendingAzimuthLaunch < 0.0)
                 {
-                    m_nonInertialAscendingAzimuthLaunch += Constants._2PI;
+                    _nonInertialAscendingAzimuthLaunch += Constants._2PI;
                 }
             }
 
-            return m_nonInertialAscendingAzimuthLaunch;
+            return _nonInertialAscendingAzimuthLaunch;
         }
 
         public double GetNonInertialDescendingAzimuthLaunch()
         {
-            if (double.IsNaN(m_nonInertialDescendingAzimuthLaunch))
+            if (double.IsNaN(_nonInertialDescendingAzimuthLaunch))
             {
-                m_nonInertialDescendingAzimuthLaunch = Constants.PI - GetNonInertialAscendingAzimuthLaunch();
-                if (m_nonInertialDescendingAzimuthLaunch < 0.0)
+                _nonInertialDescendingAzimuthLaunch = Constants.PI - GetNonInertialAscendingAzimuthLaunch();
+                if (_nonInertialDescendingAzimuthLaunch < 0.0)
                 {
-                    m_nonInertialDescendingAzimuthLaunch += Constants._2PI;
+                    _nonInertialDescendingAzimuthLaunch += Constants._2PI;
                 }
             }
 
-            return m_nonInertialDescendingAzimuthLaunch;
+            return _nonInertialDescendingAzimuthLaunch;
         }
 
         public double GetInertialAscendingAzimuthLaunch()
         {
-            if (double.IsNaN(m_inertialAscendingAzimuthLaunch))
+            if (double.IsNaN(_inertialAscendingAzimuthLaunch))
             {
                 double angle = TargetOrbit.Inclination();
 
                 double latitude = LaunchSite.Planetodetic.Latitude; // In radians
 
-                m_inertialAscendingAzimuthLaunch = System.Math.Asin(System.Math.Cos(angle) / System.Math.Cos(latitude));
+                _inertialAscendingAzimuthLaunch = System.Math.Asin(System.Math.Cos(angle) / System.Math.Cos(latitude));
 
-                if (m_inertialAscendingAzimuthLaunch < 0.0)
+                if (_inertialAscendingAzimuthLaunch < 0.0)
                 {
-                    m_inertialAscendingAzimuthLaunch += Constants._2PI;
+                    _inertialAscendingAzimuthLaunch += Constants._2PI;
                 }
             }
 
-            return m_inertialAscendingAzimuthLaunch;
+            return _inertialAscendingAzimuthLaunch;
         }
 
         public double GetInertialDescendingAzimuthLaunch()
         {
-            if (double.IsNaN(m_inertialDescendingAzimuthLaunch))
+            if (double.IsNaN(_inertialDescendingAzimuthLaunch))
             {
-                m_inertialDescendingAzimuthLaunch = Constants.PI - GetInertialAscendingAzimuthLaunch();
-                if (m_inertialDescendingAzimuthLaunch < 0.0)
+                _inertialDescendingAzimuthLaunch = Constants.PI - GetInertialAscendingAzimuthLaunch();
+                if (_inertialDescendingAzimuthLaunch < 0.0)
                 {
-                    m_inertialDescendingAzimuthLaunch += Constants._2PI;
+                    _inertialDescendingAzimuthLaunch += Constants._2PI;
                 }
             }
 
-            return m_inertialDescendingAzimuthLaunch;
+            return _inertialDescendingAzimuthLaunch;
         }
 
         public double GetNonInertialInsertionVelocity()
         {
-            if (double.IsNaN(m_nonInertialInsertionVelocity))
+            if (double.IsNaN(_nonInertialInsertionVelocity))
             {
                 double inertialInsertionVelocity = GetInertialInsertionVelocity();
                 double inertialAscendingAzimuthLaunch = GetInertialAscendingAzimuthLaunch();
@@ -264,10 +262,10 @@ namespace IO.Astrodynamics.Maneuver
                                launchSiteVelocityMagnitude;
                 double vroty = inertialInsertionVelocity * System.Math.Cos(inertialAscendingAzimuthLaunch);
 
-                m_nonInertialInsertionVelocity = System.Math.Sqrt(vrotx * vrotx + vroty * vroty);
+                _nonInertialInsertionVelocity = System.Math.Sqrt(vrotx * vrotx + vroty * vroty);
             }
 
-            return m_nonInertialInsertionVelocity;
+            return _nonInertialInsertionVelocity;
         }
         
         public double GetInertialInsertionVelocity()

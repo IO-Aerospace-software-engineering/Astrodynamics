@@ -172,9 +172,8 @@ public class Star : CelestialBody
     /// </summary>
     /// <param name="timeWindow">The time window for propagation.</param>
     /// <param name="stepSize">The step size for propagation.</param>
-    /// <param name="starsOutputDirectory">The output directory for the propagation results.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
-    public Task PropagateAsync(Window timeWindow, TimeSpan stepSize, DirectoryInfo starsOutputDirectory)
+    public Task PropagateAsync(Window timeWindow, TimeSpan stepSize)
     {
         return Task.Run(() =>
         {

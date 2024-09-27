@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Xml;
 using System.Xml.Serialization;
@@ -72,6 +73,7 @@ public abstract class PDSBase<T> where T : class
     /// </summary>
     /// <param name="pdsEntity"></param>
     /// <returns></returns>
+    [RequiresUnreferencedCode("The caller of this method may require access to all members of the target type.")]
     public string GenerateArchive(T pdsEntity)
     {
         XmlSerializer serializer = new XmlSerializer(typeof(T));
@@ -86,6 +88,7 @@ public abstract class PDSBase<T> where T : class
     /// <param name="file">Xml Archive</param>
     /// <returns></returns>
     /// <exception cref="ArgumentException"></exception>
+    [RequiresUnreferencedCode("The caller of this method may require access to all members of the target type.")]
     public T LoadArchive(FileInfo file)
     {
         XmlSerializer xmlSerializer = new XmlSerializer(typeof(T));

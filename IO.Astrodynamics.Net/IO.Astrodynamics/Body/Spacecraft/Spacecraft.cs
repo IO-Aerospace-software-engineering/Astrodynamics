@@ -338,24 +338,26 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// <param name="includeAtmosphericDrag"></param>
         /// <param name="includeSolarRadiationPressure"></param>
         /// <param name="propagatorStepSize"></param>
-        /// <param name="outputDirectory"></param>
-        public async Task PropagateAsync(Window window, IEnumerable<CelestialItem> additionalCelestialBodies, bool includeAtmosphericDrag,
-            bool includeSolarRadiationPressure, TimeSpan propagatorStepSize, DirectoryInfo outputDirectory)
+        public Task PropagateAsync(Window window, IEnumerable<CelestialItem> additionalCelestialBodies, bool includeAtmosphericDrag,
+            bool includeSolarRadiationPressure, TimeSpan propagatorStepSize)
         {
-            ResetPropagation();
-            IPropagator propagator;
-            if (InitialOrbitalParameters is TLE)
+            return Task.Run(() =>
             {
-                propagator = new TLEPropagator(window, this, propagatorStepSize);
-            }
-            else
-            {
-                propagator = new SpacecraftPropagator(window, this, additionalCelestialBodies, includeAtmosphericDrag, includeSolarRadiationPressure, propagatorStepSize);
-            }
+                ResetPropagation();
+                IPropagator propagator;
+                if (InitialOrbitalParameters is TLE)
+                {
+                    propagator = new TLEPropagator(window, this, propagatorStepSize);
+                }
+                else
+                {
+                    propagator = new SpacecraftPropagator(window, this, additionalCelestialBodies, includeAtmosphericDrag, includeSolarRadiationPressure, propagatorStepSize);
+                }
 
-            propagator.Propagate();
-            propagator.Dispose();
-            _isPropagated = true;
+                propagator.Propagate();
+                propagator.Dispose();
+                _isPropagated = true;
+            });
         }
 
         public void AddStateVectorRelativeToICRF(params StateVector[] stateVectors)

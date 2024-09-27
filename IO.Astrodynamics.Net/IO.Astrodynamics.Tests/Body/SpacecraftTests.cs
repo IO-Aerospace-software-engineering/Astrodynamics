@@ -104,7 +104,7 @@ namespace IO.Astrodynamics.Tests.Body
             var root = Constants.OutputPath.CreateSubdirectory(scenario.Mission.Name).CreateSubdirectory(scenario.Name);
 
             //Execute scenario
-            await scenario.SimulateAsync(root, false, false, TimeSpan.FromSeconds(1.0));
+            await scenario.SimulateAsync( false, false, TimeSpan.FromSeconds(1.0));
 
             var orientation = spacecraft.GetOrientation(Frames.Frame.ICRF, start);
             Vector3.VectorY.Rotate(orientation.Rotation);
