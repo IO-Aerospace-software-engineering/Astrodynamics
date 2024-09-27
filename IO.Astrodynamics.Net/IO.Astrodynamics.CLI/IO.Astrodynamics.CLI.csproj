@@ -9,7 +9,7 @@
         <FileVersion>0.0.1</FileVersion>
         <PackAsTool>true</PackAsTool>
         <ToolCommandName>astro</ToolCommandName>
-        <Version>0.5.0-preview-4</Version>
+        <Version>0.5.0-preview-5</Version>
         <Title>Astrodynamics command line interface</Title>
         <Authors>Sylvain Guillet</Authors>
         <Description>This CLI allows end user to exploit IO.Astrodynamics framework </Description>
