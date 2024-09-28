@@ -497,8 +497,7 @@ public class APITest
     void TransformFrame()
     {
         //Get the quaternion to transform
-        var res = API.Instance.TransformFrame(Frames.Frame.ICRF, new Frames.Frame(PlanetsAndMoons.EARTH.Frame),
-            TimeSystem.Time.J2000TDB);
+        var res = API.Instance.TransformFrame(TimeSystem.Time.J2000TDB,Frames.Frame.ICRF, new Frames.Frame(PlanetsAndMoons.EARTH.Frame));
         Assert.Equal(0.76713121207787449, res.Rotation.W, 6);
         Assert.Equal(-1.8618836714990174E-05, res.Rotation.VectorPart.X, 6);
         Assert.Equal(8.4688405480964646E-07, res.Rotation.VectorPart.Y, 6);
@@ -513,9 +512,9 @@ public class APITest
     {
         //Get the quaternion to transform
         Assert.Throws<ArgumentNullException>(() =>
-            API.Instance.TransformFrame(Frames.Frame.ICRF, null, TimeSystem.Time.J2000TDB));
+            API.Instance.TransformFrame(TimeSystem.Time.J2000TDB,Frames.Frame.ICRF, null));
         Assert.Throws<ArgumentNullException>(() =>
-            API.Instance.TransformFrame(null, new Frames.Frame(PlanetsAndMoons.EARTH.Frame), TimeSystem.Time.J2000TDB));
+            API.Instance.TransformFrame(TimeSystem.Time.J2000TDB,null, new Frames.Frame(PlanetsAndMoons.EARTH.Frame)));
     }
 
     [Fact]
