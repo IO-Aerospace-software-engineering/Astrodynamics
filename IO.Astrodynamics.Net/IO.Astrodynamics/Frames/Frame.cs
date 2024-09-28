@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using IO.Astrodynamics.DataProvider;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
@@ -17,7 +18,7 @@ public class Frame : IEquatable<Frame>
     public string Name { get; }
     public int? Id { get; }
 
-    protected SortedDictionary<Time,StateOrientation> _stateOrientationsToICRF = new();
+    protected SortedDictionary<Time, StateOrientation> _stateOrientationsToICRF = new();
     protected ImmutableSortedDictionary<Time, StateOrientation> StateOrientationsToICRF => _stateOrientationsToICRF.ToImmutableSortedDictionary();
 
     /// <summary>
@@ -67,25 +68,25 @@ public class Frame : IEquatable<Frame>
         Name = name;
         Id = id;
     }
-    
-    public virtual StateOrientation GetStateOrientationToICRF(Time epoch)
+
+    public virtual StateOrientation GetStateOrientationToICRF(Time date)
     {
-        return _stateOrientationsToICRF.GetOrAdd(epoch, _ => _dataProvider.FrameTransformation(this, ICRF, epoch));
+        return _stateOrientationsToICRF.GetOrAdd(date, dt => _dataProvider.FrameTransformation(dt, this, ICRF));
     }
-    
+
     public bool AddStateOrientationToICRF(StateOrientation stateOrientation)
     {
         return _stateOrientationsToICRF.TryAdd(stateOrientation.Epoch, stateOrientation);
     }
-    
+
     public StateOrientation GetLatestStateOrientationToICRF()
     {
-        return _stateOrientationsToICRF.Values.OrderBy(x=>x.Epoch).LastOrDefault();
+        return _stateOrientationsToICRF.Values.OrderBy(x => x.Epoch).LastOrDefault();
     }
-    
+
     public IEnumerable<StateOrientation> GetStateOrientationsToICRF()
     {
-        return _stateOrientationsToICRF.OrderBy(x=>x.Key).Select(x=>x.Value).ToArray();
+        return _stateOrientationsToICRF.OrderBy(x => x.Key).Select(x => x.Value).ToArray();
     }
 
     public StateOrientation ToFrame(Frame targetFrame, Time epoch)
@@ -104,13 +105,14 @@ public class Frame : IEquatable<Frame>
 
         return new StateOrientation(rotation, angularVelocity, epoch, this);
     }
-    
+
     public void ClearStateOrientations()
     {
         _stateOrientationsToICRF.Clear();
     }
 
     #region Operators
+
     public override string ToString()
     {
         return Name;
@@ -145,5 +147,6 @@ public class Frame : IEquatable<Frame>
     {
         return !Equals(left, right);
     }
+
     #endregion
 }

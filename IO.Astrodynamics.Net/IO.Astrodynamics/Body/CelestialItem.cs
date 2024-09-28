@@ -119,7 +119,6 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     /// <param name="frame">Initial orbital parameters frame</param>
     /// <param name="epoch">Epoch</param>
     /// <param name="geopotentialModelParameters"></param>
-    /// <param name="dataProvider"></param>
     protected CelestialItem(int naifId, Frame frame, in Time epoch, GeopotentialModelParameters geopotentialModelParameters = null)
     {
         _dataProvider = Configuration.Instance.DataProvider;

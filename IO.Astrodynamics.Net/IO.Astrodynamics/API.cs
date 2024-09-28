@@ -159,711 +159,719 @@ public class API
     //Use the same lock for all cspice calls because it doesn't support multithreading.
     private static object lockObject = new object();
 
-     /// <summary>
-     ///     Get spice toolkit version number
-     /// </summary>
-     /// <returns></returns>
-     public string GetSpiceVersion()
-     {
-         lock (lockObject)
-         {
-             var strptr = GetSpiceVersionProxy();
-             var str = Marshal.PtrToStringAnsi(strptr);
-             Marshal.FreeHGlobal(strptr);
-             return str;
-         }
-     }
+    /// <summary>
+    ///     Get spice toolkit version number
+    /// </summary>
+    /// <returns></returns>
+    public string GetSpiceVersion()
+    {
+        lock (lockObject)
+        {
+            var strptr = GetSpiceVersionProxy();
+            var str = Marshal.PtrToStringAnsi(strptr);
+            Marshal.FreeHGlobal(strptr);
+            return str;
+        }
+    }
 
-     public IEnumerable<FileSystemInfo> GetLoadedKernels()
-     {
-         return _kernels;
-     }
-     
-     /// <summary>
-     ///     Load kernel at given path
-     /// </summary>
-     /// <param name="path">Path where kernels are located. This could be a file path or a directory path</param>
-     public void LoadKernels(FileSystemInfo path)
-     {
-         if (path == null) throw new ArgumentNullException(nameof(path));
-         lock (lockObject)
-         {
-             if (_kernels.Any(x => path.FullName.Contains(x.FullName)))
-             {
-                 foreach (var kernel in _kernels.Where(x => path.FullName.Contains(x.FullName)).ToArray())
-                 {
-                     UnloadKernels(kernel);
-                     LoadKernels(kernel);
-                 }
-     
-                 return;
-             }
-     
-     
-             var existingKernels = _kernels.Where(x => x.FullName.Contains(path.FullName)).ToArray();
-             foreach (var existingKernel in existingKernels)
-             {
-                 UnloadKernels(existingKernel);
-             }
-     
-             if (path.Exists)
-             {
-                 if (!LoadKernelsProxy(path.FullName))
-                 {
-                     throw new InvalidOperationException($"Kernel {path.FullName} can't be loaded. You can have more details on standard output");
-                 }
-     
-                 _kernels.Add(path);
-             }
-         }
-     }
-     
-     /// <summary>
-     ///     Unload kernel at given path
-     /// </summary>
-     /// <param name="path">Path where kernels are located. This could be a file path or a directory path</param>
-     public void UnloadKernels(FileSystemInfo path)
-     {
-         if (path == null) return;
-         lock (lockObject)
-         {
-             if (path.Exists)
-             {
-                 if (!UnloadKernelsProxy(path.FullName))
-                 {
-                     throw new InvalidOperationException($"Kernel {path.FullName} can't be unloaded. You can have more details on standard output");
-                 }
-     
-                 _kernels.RemoveAll(x => x.FullName == path.FullName);
-                 foreach (var kernel in _kernels.Where(x => x.FullName.Contains(path.FullName)).ToArray())
-                 {
-                     UnloadKernels(kernel);
-                 }
-             }
-         }
-     }
-     
-     public void ClearKernels()
-     {
-         lock (lockObject)
-         {
-             foreach (var kernel in _kernels.ToArray())
-             {
-                 UnloadKernels(kernel);
-             }
-     
-             KClearProxy();
-         }
-     }
-     
-     /// <summary>
-     ///     Find launch windows
-     /// </summary>
-     /// <param name="launch"></param>
-     /// <param name="window"></param>
-     /// <param name="outputDirectory"></param>
-     public IEnumerable<LaunchWindow> FindLaunchWindows(Maneuver.Launch launch,
-         in TimeSystem.Window window, DirectoryInfo outputDirectory)
-     {
-         if (launch == null) throw new ArgumentNullException(nameof(launch));
-         lock (lockObject)
-         {
-             //Convert data
-             Launch launchDto = launch.Convert();
-             launchDto.Window = window.Convert();
-             launchDto.LaunchSite.DirectoryPath = outputDirectory.CreateSubdirectory("Sites").FullName;
-             launchDto.RecoverySite.DirectoryPath = outputDirectory.CreateSubdirectory("Sites").FullName;
-     
-             //Execute request
-             LaunchProxy(ref launchDto);
-     
-             //Filter result
-             var windows = launchDto.Windows.Where(x => x.Start != 0 && x.End != 0).ToArray();
-     
-             //Build result 
-             List<LaunchWindow> launchWindows = [];
-     
-             for (int i = 0; i < windows.Length; i++)
-             {
-                 launchWindows.Add(new LaunchWindow(windows[i].Convert(),
-                     launchDto.InertialInsertionVelocity[i], launchDto.NonInertialInsertionVelocity[i],
-                     launchDto.InertialAzimuth[i], launchDto.NonInertialAzimuth[i]));
-             }
-     
-             return launchWindows;
-         }
-     }
-     
-     /// <summary>
-     ///     Find time windows based on distance constraint
-     /// </summary>
-     /// <param name="searchWindow"></param>
-     /// <param name="observer"></param>
-     /// <param name="target"></param>
-     /// <param name="relationalOperator"></param>
-     /// <param name="value"></param>
-     /// <param name="aberration"></param>
-     /// <param name="stepSize"></param>
-     /// <returns></returns>
-     public IEnumerable<TimeSystem.Window> FindWindowsOnDistanceConstraint(TimeSystem.Window searchWindow, INaifObject observer,
-         INaifObject target, RelationnalOperator relationalOperator, double value, Aberration aberration,
-         TimeSpan stepSize)
-     {
-         if (observer == null) throw new ArgumentNullException(nameof(observer));
-         if (target == null) throw new ArgumentNullException(nameof(target));
-         lock (lockObject)
-         {
-             return FindWindowsOnDistanceConstraint(searchWindow, observer.NaifId, target.NaifId, relationalOperator, value, aberration, stepSize);
-         }
-     }
-     
-     public IEnumerable<TimeSystem.Window> FindWindowsOnDistanceConstraint(TimeSystem.Window searchWindow, int observerId,
-         int targetId, RelationnalOperator relationalOperator, double value, Aberration aberration,
-         TimeSpan stepSize)
-     {
-         lock (lockObject)
-         {
-             var windows = new Window[1000];
-             for (var i = 0; i < 1000; i++)
-             {
-                 windows[i] = new Window(double.NaN, double.NaN);
-             }
-     
-             FindWindowsOnDistanceConstraintProxy(searchWindow.Convert(), observerId, targetId, relationalOperator.GetDescription(), value,
-                 aberration.GetDescription(), stepSize.TotalSeconds, windows);
-             return windows.Where(x => !double.IsNaN(x.Start)).Select(x => x.Convert());
-         }
-     }
-     
-     /// <summary>
-     ///     Find time windows based on occultation constraint
-     /// </summary>
-     /// <param name="searchWindow"></param>
-     /// <param name="target"></param>
-     /// <param name="targetShape"></param>
-     /// <param name="frontBody"></param>
-     /// <param name="frontShape"></param>
-     /// <param name="occultationType"></param>
-     /// <param name="aberration"></param>
-     /// <param name="stepSize"></param>
-     /// <param name="observer"></param>
-     /// <returns></returns>
-     public IEnumerable<TimeSystem.Window> FindWindowsOnOccultationConstraint(TimeSystem.Window searchWindow, INaifObject observer,
-         INaifObject target, ShapeType targetShape, INaifObject frontBody, ShapeType frontShape,
-         OccultationType occultationType, Aberration aberration, TimeSpan stepSize)
-     {
-         if (observer == null) throw new ArgumentNullException(nameof(observer));
-         if (target == null) throw new ArgumentNullException(nameof(target));
-         if (frontBody == null) throw new ArgumentNullException(nameof(frontBody));
-         lock (lockObject)
-         {
-             string frontFrame = frontShape == ShapeType.Ellipsoid
-                 ? (frontBody as Body.CelestialBody)?.Frame.Name
-                 : string.Empty;
-             string targetFrame = targetShape == ShapeType.Ellipsoid
-                 ? (target as Body.CelestialBody)?.Frame.Name
-                 : String.Empty;
-             var windows = new Window[1000];
-             for (var i = 0; i < 1000; i++)
-             {
-                 windows[i] = new Window(double.NaN, double.NaN);
-             }
-     
-             FindWindowsOnOccultationConstraintProxy(searchWindow.Convert(), observer.NaifId, target.NaifId,
-                 targetFrame, targetShape.GetDescription(),
-                 frontBody.NaifId, frontFrame, frontShape.GetDescription(), occultationType.GetDescription(),
-                 aberration.GetDescription(), stepSize.TotalSeconds, windows);
-             return windows.Where(x => !double.IsNaN(x.Start)).Select(x => x.Convert());
-         }
-     }
-     
-     /// <summary>
-     /// Find time windows based on occultation constraint
-     /// </summary>
-     /// <param name="searchWindow"></param>
-     /// <param name="observerId"></param>
-     /// <param name="targetId"></param>
-     /// <param name="targetShape"></param>
-     /// <param name="frontBodyId"></param>
-     /// <param name="frontShape"></param>
-     /// <param name="occultationType"></param>
-     /// <param name="aberration"></param>
-     /// <param name="stepSize"></param>
-     /// <returns></returns>
-     public IEnumerable<TimeSystem.Window> FindWindowsOnOccultationConstraint(TimeSystem.Window searchWindow, int observerId,
-         int targetId, ShapeType targetShape, int frontBodyId, ShapeType frontShape,
-         OccultationType occultationType, Aberration aberration, TimeSpan stepSize)
-     {
-         lock (lockObject)
-         {
-             IO.Astrodynamics.Body.CelestialBody frontBody = new IO.Astrodynamics.Body.CelestialBody(frontBodyId);
-             IO.Astrodynamics.Body.CelestialBody targetBody = new IO.Astrodynamics.Body.CelestialBody(targetId);
-             string frontFrame = frontShape == ShapeType.Ellipsoid
-                 ? frontBody.Frame.Name
-                 : string.Empty;
-             string targetFrame = targetShape == ShapeType.Ellipsoid
-                 ? targetBody.Frame.Name
-                 : String.Empty;
-             var windows = new Window[1000];
-             for (var i = 0; i < 1000; i++)
-             {
-                 windows[i] = new Window(double.NaN, double.NaN);
-             }
-     
-             FindWindowsOnOccultationConstraintProxy(searchWindow.Convert(), observerId, targetId, targetFrame, targetShape.GetDescription(),
-                 frontBody.NaifId, frontFrame, frontShape.GetDescription(), occultationType.GetDescription(), aberration.GetDescription(), stepSize.TotalSeconds, windows);
-             return windows.Where(x => !double.IsNaN(x.Start)).Select(x => x.Convert());
-         }
-     }
-     
-     /// <summary>
-     ///     Find time windows based on coordinate constraint
-     /// </summary>
-     /// <param name="searchWindow"></param>
-     /// <param name="target"></param>
-     /// <param name="frame"></param>
-     /// <param name="coordinateSystem"></param>
-     /// <param name="coordinate"></param>
-     /// <param name="relationalOperator"></param>
-     /// <param name="value"></param>
-     /// <param name="adjustValue"></param>
-     /// <param name="aberration"></param>
-     /// <param name="stepSize"></param>
-     /// <param name="observer"></param>
-     /// <returns></returns>
-     public IEnumerable<TimeSystem.Window> FindWindowsOnCoordinateConstraint(TimeSystem.Window searchWindow, INaifObject observer,
-         INaifObject target, Frame frame, CoordinateSystem coordinateSystem, Coordinate coordinate,
-         RelationnalOperator relationalOperator, double value, double adjustValue, Aberration aberration,
-         TimeSpan stepSize)
-     {
-         if (observer == null) throw new ArgumentNullException(nameof(observer));
-         if (target == null) throw new ArgumentNullException(nameof(target));
-         if (frame == null) throw new ArgumentNullException(nameof(frame));
-         lock (lockObject)
-         {
-             var windows = new Window[1000];
-             for (var i = 0; i < 1000; i++)
-             {
-                 windows[i] = new Window(double.NaN, double.NaN);
-             }
-     
-             FindWindowsOnCoordinateConstraintProxy(searchWindow.Convert(), observer.NaifId, target.NaifId,
-                 frame.Name, coordinateSystem.GetDescription(),
-                 coordinate.GetDescription(), relationalOperator.GetDescription(), value, adjustValue,
-                 aberration.GetDescription(), stepSize.TotalSeconds, windows);
-             return windows.Where(x => !double.IsNaN(x.Start)).Select(x => x.Convert());
-         }
-     }
-     
-     /// <summary>
-     /// Find time windows based on coordinate constraint
-     /// </summary>
-     /// <param name="searchWindow"></param>
-     /// <param name="observerId"></param>
-     /// <param name="targetId"></param>
-     /// <param name="frame"></param>
-     /// <param name="coordinateSystem"></param>
-     /// <param name="coordinate"></param>
-     /// <param name="relationalOperator"></param>
-     /// <param name="value"></param>
-     /// <param name="adjustValue"></param>
-     /// <param name="aberration"></param>
-     /// <param name="stepSize"></param>
-     /// <returns></returns>
-     /// <exception cref="ArgumentNullException"></exception>
-     public IEnumerable<TimeSystem.Window> FindWindowsOnCoordinateConstraint(TimeSystem.Window searchWindow, int observerId,
-         int targetId, Frame frame, CoordinateSystem coordinateSystem, Coordinate coordinate,
-         RelationnalOperator relationalOperator, double value, double adjustValue, Aberration aberration,
-         TimeSpan stepSize)
-     {
-         if (frame == null) throw new ArgumentNullException(nameof(frame));
-         lock (lockObject)
-         {
-             var windows = new Window[1000];
-             for (var i = 0; i < 1000; i++)
-             {
-                 windows[i] = new Window(double.NaN, double.NaN);
-             }
-     
-             FindWindowsOnCoordinateConstraintProxy(searchWindow.Convert(), observerId, targetId,
-                 frame.Name, coordinateSystem.GetDescription(),
-                 coordinate.GetDescription(), relationalOperator.GetDescription(), value, adjustValue,
-                 aberration.GetDescription(), stepSize.TotalSeconds, windows);
-             return windows.Where(x => !double.IsNaN(x.Start)).Select(x => x.Convert());
-         }
-     }
-     
-     /// <summary>
-     ///     Find time windows based on illumination constraint
-     /// </summary>
-     /// <param name="searchWindow"></param>
-     /// <param name="illuminationSource"></param>
-     /// <param name="observer"></param>
-     /// <param name="targetBody"></param>
-     /// <param name="fixedFrame"></param>
-     /// <param name="planetodetic"></param>
-     /// <param name="illuminationType"></param>
-     /// <param name="relationalOperator"></param>
-     /// <param name="value"></param>
-     /// <param name="adjustValue"></param>
-     /// <param name="aberration"></param>
-     /// <param name="stepSize"></param>
-     /// <param name="method"></param>
-     /// <returns></returns>
-     public IEnumerable<TimeSystem.Window> FindWindowsOnIlluminationConstraint(TimeSystem.Window searchWindow, INaifObject observer,
-         INaifObject targetBody, Frame fixedFrame,
-         Coordinates.Planetodetic planetodetic, IlluminationAngle illuminationType, RelationnalOperator relationalOperator,
-         double value, double adjustValue, Aberration aberration, TimeSpan stepSize, INaifObject illuminationSource,
-         string method = "Ellipsoid")
-     {
-         if (observer == null) throw new ArgumentNullException(nameof(observer));
-         if (targetBody == null) throw new ArgumentNullException(nameof(targetBody));
-         if (fixedFrame == null) throw new ArgumentNullException(nameof(fixedFrame));
-         if (illuminationSource == null) throw new ArgumentNullException(nameof(illuminationSource));
-         if (method == null) throw new ArgumentNullException(nameof(method));
-         lock (lockObject)
-         {
-             var windows = new Window[1000];
-             for (var i = 0; i < 1000; i++)
-             {
-                 windows[i] = new Window(double.NaN, double.NaN);
-             }
-     
-             FindWindowsOnIlluminationConstraintProxy(searchWindow.Convert(), observer.NaifId,
-                 illuminationSource.Name, targetBody.NaifId, fixedFrame.Name,
-                 planetodetic.Convert(),
-                 illuminationType.GetDescription(), relationalOperator.GetDescription(), value, adjustValue,
-                 aberration.GetDescription(), stepSize.TotalSeconds, method, windows);
-             return windows.Where(x => !double.IsNaN(x.Start)).Select(x => x.Convert());
-         }
-     }
-     
-     public IEnumerable<TimeSystem.Window> FindWindowsOnIlluminationConstraint(TimeSystem.Window searchWindow, int observerId,
-         int targetBodyId, Frame fixedFrame, Coordinates.Planetodetic planetodetic, IlluminationAngle illuminationType, RelationnalOperator relationalOperator,
-         double value, double adjustValue, Aberration aberration, TimeSpan stepSize, int illuminationSourceId,
-         string method = "Ellipsoid")
-     {
-         if (fixedFrame == null) throw new ArgumentNullException(nameof(fixedFrame));
-         if (method == null) throw new ArgumentNullException(nameof(method));
-         lock (lockObject)
-         {
-             var windows = new Window[1000];
-             for (var i = 0; i < 1000; i++)
-             {
-                 windows[i] = new Window(double.NaN, double.NaN);
-             }
-     
-             FindWindowsOnIlluminationConstraintProxy(searchWindow.Convert(), observerId,
-                 illuminationSourceId.ToString(), targetBodyId, fixedFrame.Name,
-                 planetodetic.Convert(),
-                 illuminationType.GetDescription(), relationalOperator.GetDescription(), value, adjustValue,
-                 aberration.GetDescription(), stepSize.TotalSeconds, method, windows);
-             return windows.Where(x => !double.IsNaN(x.Start)).Select(x => x.Convert());
-         }
-     }
-     
-     /// <summary>
-     ///     Find time window when a target is in instrument's field of view
-     /// </summary>
-     /// <param name="searchWindow"></param>
-     /// <param name="observer"></param>
-     /// <param name="instrument"></param>
-     /// <param name="target"></param>
-     /// <param name="targetFrame"></param>
-     /// <param name="targetShape"></param>
-     /// <param name="aberration"></param>
-     /// <param name="stepSize"></param>
-     /// <returns></returns>
-     public IEnumerable<TimeSystem.Window> FindWindowsInFieldOfViewConstraint(TimeSystem.Window searchWindow, Spacecraft observer,
-         Instrument instrument, INaifObject target, Frame targetFrame, ShapeType targetShape, Aberration aberration,
-         TimeSpan stepSize)
-     {
-         if (observer == null) throw new ArgumentNullException(nameof(observer));
-         if (instrument == null) throw new ArgumentNullException(nameof(instrument));
-         if (target == null) throw new ArgumentNullException(nameof(target));
-         if (targetFrame == null) throw new ArgumentNullException(nameof(targetFrame));
-         lock (lockObject)
-         {
-             return FindWindowsInFieldOfViewConstraint(searchWindow, observer.NaifId, instrument.NaifId, target.NaifId, targetFrame, targetShape, aberration, stepSize);
-         }
-     }
-     
-     /// <summary>
-     /// Find time window when a target is in instrument's field of view
-     /// </summary>
-     /// <param name="searchWindow"></param>
-     /// <param name="observerId"></param>
-     /// <param name="instrumentId"></param>
-     /// <param name="targetId"></param>
-     /// <param name="targetFrame"></param>
-     /// <param name="targetShape"></param>
-     /// <param name="aberration"></param>
-     /// <param name="stepSize"></param>
-     /// <returns></returns>
-     /// <exception cref="ArgumentNullException"></exception>
-     public IEnumerable<TimeSystem.Window> FindWindowsInFieldOfViewConstraint(TimeSystem.Window searchWindow, int observerId,
-         int instrumentId, int targetId, Frame targetFrame, ShapeType targetShape, Aberration aberration, TimeSpan stepSize)
-     {
-         if (targetFrame == null) throw new ArgumentNullException(nameof(targetFrame));
-         lock (lockObject)
-         {
-             var windows = new Window[1000];
-             for (var i = 0; i < 1000; i++)
-             {
-                 windows[i] = new Window(double.NaN, double.NaN);
-             }
-     
-             var searchWindowDto = searchWindow.Convert();
-     
-             FindWindowsInFieldOfViewConstraintProxy(searchWindowDto, observerId, instrumentId, targetId, targetFrame.Name, targetShape.GetDescription(),
-                 aberration.GetDescription(), stepSize.TotalSeconds, windows);
-     
-             return windows.Where(x => !double.IsNaN(x.Start)).Select(x => x.Convert());
-         }
-     }
-     
-     /// <summary>
-     ///     Read object ephemeris for a given period
-     /// </summary>
-     /// <param name="searchWindow"></param>
-     /// <param name="target"></param>
-     /// <param name="frame"></param>
-     /// <param name="aberration"></param>
-     /// <param name="stepSize"></param>
-     /// <param name="observer"></param>
-     /// <returns></returns>
-     public IEnumerable<OrbitalParameters.OrbitalParameters> ReadEphemeris(TimeSystem.Window searchWindow,
-         ILocalizable observer, ILocalizable target, Frame frame,
-         Aberration aberration, TimeSpan stepSize)
-     {
-         ArgumentNullException.ThrowIfNull(observer);
-         ArgumentNullException.ThrowIfNull(target);
-         ArgumentNullException.ThrowIfNull(frame);
-         lock (lockObject)
-         {
-             const int messageSize = 10000;
-             List<OrbitalParameters.OrbitalParameters> orbitalParameters = [];
-             int occurrences = (int)(searchWindow.Length / stepSize / messageSize);
-     
-             for (int i = 0; i <= occurrences; i++)
-             {
-                 var start = searchWindow.StartDate + i * messageSize * stepSize;
-                 var end = start + messageSize * stepSize > searchWindow.EndDate ? searchWindow.EndDate : (start + messageSize * stepSize) - stepSize;
-                 var window = new TimeSystem.Window(start, end);
-                 var stateVectors = new StateVector[messageSize];
-                 ReadEphemerisProxy(window.Convert(), observer.NaifId, target.NaifId, frame.Name,
-                     aberration.GetDescription(), stepSize.TotalSeconds,
-                     stateVectors);
-                 orbitalParameters.AddRange(stateVectors.Where(x => !string.IsNullOrEmpty(x.Frame)).Select(x =>
-                     new OrbitalParameters.StateVector(x.Position.Convert(), x.Velocity.Convert(), observer, Time.Create(x.Epoch, TimeFrame.TDBFrame), frame)));
-             }
-     
-             return orbitalParameters;
-         }
-     }
-     
-     /// <summary>
-     /// Return state vector at given epoch
-     /// </summary>
-     /// <param name="epoch"></param>
-     /// <param name="observer"></param>
-     /// <param name="target"></param>
-     /// <param name="frame"></param>
-     /// <param name="aberration"></param>
-     /// <returns></returns>
-     /// <exception cref="ArgumentNullException"></exception>
-     public OrbitalParameters.OrbitalParameters ReadEphemeris(Time epoch, ILocalizable observer,
-         ILocalizable target, Frame frame, Aberration aberration)
-     {
-         ArgumentNullException.ThrowIfNull(observer);
-         ArgumentNullException.ThrowIfNull(target);
-         ArgumentNullException.ThrowIfNull(frame);
-         lock (lockObject)
-         {
-             if (frame == null) throw new ArgumentNullException(nameof(frame));
-             var stateVector = ReadEphemerisAtGivenEpochProxy(epoch.TimeSpanFromJ2000().TotalSeconds, observer.NaifId,
-                 target.NaifId, frame.Name, aberration.GetDescription());
-             return new OrbitalParameters.StateVector(stateVector.Position.Convert(), stateVector.Velocity.Convert(), observer,
-                 Time.Create(stateVector.Epoch, TimeFrame.TDBFrame), frame);
-         }
-     }
-     
-     /// <summary>
-     ///     Read spacecraft orientation for a given period
-     /// </summary>
-     /// <param name="searchWindow"></param>
-     /// <param name="spacecraft"></param>
-     /// <param name="tolerance"></param>
-     /// <param name="referenceFrame"></param>
-     /// <param name="stepSize"></param>
-     /// <returns></returns>
-     public IEnumerable<OrbitalParameters.StateOrientation> ReadOrientation(TimeSystem.Window searchWindow,
-         Spacecraft spacecraft, TimeSpan tolerance,
-         Frame referenceFrame, TimeSpan stepSize)
-     {
-         if (spacecraft == null) throw new ArgumentNullException(nameof(spacecraft));
-         if (referenceFrame == null) throw new ArgumentNullException(nameof(referenceFrame));
-         lock (lockObject)
-         {
-             var stateOrientations = new StateOrientation[10000];
-             ReadOrientationProxy(searchWindow.Convert(), spacecraft.NaifId, tolerance.TotalSeconds,
-                 referenceFrame.Name, stepSize.TotalSeconds,
-                 stateOrientations);
-             return stateOrientations.Where(x => x.Frame != null).Select(x => new OrbitalParameters.StateOrientation(
-                 x.Rotation.Convert(), x.AngularVelocity.Convert(), Time.Create(x.Epoch, TimeFrame.TDBFrame), referenceFrame));
-         }
-     }
-     
-     /// <summary>
-     ///     Write ephemeris file
-     /// </summary>
-     /// <param name="filePath"></param>
-     /// <param name="naifObject"></param>
-     /// <param name="stateVectors"></param>
-     /// <returns></returns>
-     public bool WriteEphemeris(FileInfo filePath, INaifObject naifObject,
-         IEnumerable<OrbitalParameters.StateVector> stateVectors)
-     {
-         if (naifObject == null) throw new ArgumentNullException(nameof(naifObject));
-         if (filePath == null) throw new ArgumentNullException(nameof(filePath));
-         if (stateVectors == null) throw new ArgumentNullException(nameof(stateVectors));
-         lock (lockObject)
-         {
-             var enumerable = stateVectors as OrbitalParameters.StateVector[] ?? stateVectors.ToArray();
-             if (!enumerable.Any())
-                 throw new ArgumentException("Value cannot be an empty collection.", nameof(stateVectors));
-             bool res = WriteEphemerisProxy(filePath.FullName, naifObject.NaifId, stateVectors.Select(x => x.Convert()).ToArray(),
-                 (uint)enumerable.Length);
-             if (res == false)
-             {
-                 throw new InvalidOperationException(
-                     "An error occurred while writing ephemeris. You can have more details on standard output.");
-             }
-     
-             return true;
-         }
-     }
-     
-     public bool WriteOrientation(FileInfo filePath, INaifObject naifObject, IEnumerable<OrbitalParameters.StateOrientation> stateOrientations)
-     {
-         if (naifObject == null) throw new ArgumentNullException(nameof(naifObject));
-         if (filePath == null) throw new ArgumentNullException(nameof(filePath));
-         if (stateOrientations == null) throw new ArgumentNullException(nameof(stateOrientations));
-         lock (lockObject)
-         {
-             var enumerable = stateOrientations as OrbitalParameters.StateOrientation[] ?? stateOrientations.ToArray();
-             if (!enumerable.Any())
-                 throw new ArgumentException("Value cannot be an empty collection.", nameof(stateOrientations));
-             bool res = WriteOrientationProxy(filePath.FullName, naifObject.NaifId, stateOrientations.Select(x => x.Convert()).ToArray(), (uint)enumerable.Length);
-             if (res == false)
-             {
-                 throw new InvalidOperationException(
-                     "An error occurred while writing orientation. You can have more details on standard output.");
-             }
-     
-             return true;
-         }
-     }
-     
-     /// <summary>
-     ///     Get celestial celestialItem information like radius, GM, name, associated frame, ...
-     /// </summary>
-     /// <param name="naifId"></param>
-     /// <returns></returns>
-     public CelestialBody GetCelestialBodyInfo(int naifId)
-     {
-         lock (lockObject)
-         {
-             return GetCelestialBodyInfoProxy(naifId);
-         }
-     }
-     
-     /// <summary>
-     /// Transform a frame to another
-     /// </summary>
-     /// <param name="fromFrame"></param>
-     /// <param name="toFrame"></param>
-     /// <param name="epoch"></param>
-     /// <returns></returns>
-     /// <exception cref="ArgumentNullException"></exception>
-     public OrbitalParameters.StateOrientation TransformFrame(Frame fromFrame, Frame toFrame, Time epoch)
-     {
-         lock (lockObject)
-         {
-             if (fromFrame == null) throw new ArgumentNullException(nameof(fromFrame));
-             if (toFrame == null) throw new ArgumentNullException(nameof(toFrame));
-             var res = TransformFrameProxy(fromFrame.Name, toFrame.Name, epoch.ToTDB().TimeSpanFromJ2000().TotalSeconds);
-     
-             return new OrbitalParameters.StateOrientation(
-                 new Quaternion(res.Rotation.W, res.Rotation.X, res.Rotation.Y, res.Rotation.Z),
-                 new Vector3(res.AngularVelocity.X, res.AngularVelocity.Y, res.AngularVelocity.Z), epoch, fromFrame);
-         }
-     }
-     
-     /// <summary>
-     /// Convert TLE to state vector at given epoch
-     /// </summary>
-     /// <param name="line1"></param>
-     /// <param name="line2"></param>
-     /// <param name="line3"></param>
-     /// <param name="epoch"></param>
-     /// <returns></returns>
-     public OrbitalParameters.OrbitalParameters ConvertTleToStateVector(string line1, string line2, string line3,
-         Time epoch)
-     {
-         lock (lockObject)
-         {
-             var res = ConvertTLEToStateVectorProxy(line1, line2, line3, epoch.ToTDB().TimeSpanFromJ2000().TotalSeconds);
-             return new OrbitalParameters.StateVector(res.Position.Convert(), res.Velocity.Convert(),
-                 new Body.CelestialBody(PlanetsAndMoons.EARTH, Frame.ECLIPTIC_J2000, epoch), epoch,
-                 new Frame(res.Frame)).ToFrame(Frame.ICRF);
-         }
-     }
-     
-     public IO.Astrodynamics.OrbitalParameters.KeplerianElements ConvertStateVectorToConicOrbitalElement(IO.Astrodynamics.OrbitalParameters.StateVector stateVector)
-     {
-         lock (lockObject)
-         {
-             var svDto = stateVector.Convert();
-             return ConvertStateVectorToConicOrbitalElementProxy(svDto, stateVector.Observer.GM).Convert();
-         }
-     }
-     
-     public IO.Astrodynamics.OrbitalParameters.StateVector ConvertEquinoctialElementsToStateVector(IO.Astrodynamics.OrbitalParameters.EquinoctialElements equinoctialElements)
-     {
-         lock (lockObject)
-         {
-             return ConvertEquinoctialElementsToStateVectorProxy(equinoctialElements.Convert()).Convert();
-         }
-     }
-     
-     public IO.Astrodynamics.OrbitalParameters.StateVector ConvertConicElementsToStateVector(IO.Astrodynamics.OrbitalParameters.KeplerianElements keplerianElements)
-     {
-         lock (lockObject)
-         {
-             return ConvertConicElementsToStateVectorProxy(keplerianElements.Convert()).Convert();
-         }
-     }
-     
-     public IO.Astrodynamics.OrbitalParameters.StateVector ConvertConicElementsToStateVector(IO.Astrodynamics.OrbitalParameters.KeplerianElements keplerianElements, Time epoch)
-     {
-         lock (lockObject)
-         {
-             return ConvertConicElementsToStateVectorAtEpochProxy(keplerianElements.Convert(), epoch.ToTDB().TimeSpanFromJ2000().TotalSeconds, keplerianElements.Observer.GM)
-                 .Convert();
-         }
-     }
-     
-     public OrbitalParameters.StateVector Propagate2Bodies(OrbitalParameters.StateVector stateVector, TimeSpan dt)
-     {
-         lock (lockObject)
-         {
-             return Propagate2BodiesProxy(stateVector.Convert(), stateVector.Observer.GM, dt.TotalSeconds).Convert();
-         }
-     }
-     
-     public OrbitalParameters.StateVector Propagate2Bodies(OrbitalParameters.StateVector stateVector, Time targetEpoch)
-     {
-         return Propagate2Bodies(stateVector, targetEpoch - stateVector.Epoch);
-     }
+    public IEnumerable<FileSystemInfo> GetLoadedKernels()
+    {
+        return _kernels;
+    }
+
+    /// <summary>
+    ///     Load kernel at given path
+    /// </summary>
+    /// <param name="path">Path where kernels are located. This could be a file path or a directory path</param>
+    public void LoadKernels(FileSystemInfo path)
+    {
+        if (path == null) throw new ArgumentNullException(nameof(path));
+        lock (lockObject)
+        {
+            if (_kernels.Any(x => path.FullName.Contains(x.FullName)))
+            {
+                foreach (var kernel in _kernels.Where(x => path.FullName.Contains(x.FullName)).ToArray())
+                {
+                    UnloadKernels(kernel);
+                    LoadKernels(kernel);
+                }
+
+                return;
+            }
+
+
+            var existingKernels = _kernels.Where(x => x.FullName.Contains(path.FullName)).ToArray();
+            foreach (var existingKernel in existingKernels)
+            {
+                UnloadKernels(existingKernel);
+            }
+
+            if (path.Exists)
+            {
+                if (!LoadKernelsProxy(path.FullName))
+                {
+                    throw new InvalidOperationException($"Kernel {path.FullName} can't be loaded. You can have more details on standard output");
+                }
+
+                _kernels.Add(path);
+            }
+        }
+    }
+
+    /// <summary>
+    ///     Unload kernel at given path
+    /// </summary>
+    /// <param name="path">Path where kernels are located. This could be a file path or a directory path</param>
+    public void UnloadKernels(FileSystemInfo path)
+    {
+        if (path == null) return;
+        lock (lockObject)
+        {
+            if (path.Exists)
+            {
+                if (!UnloadKernelsProxy(path.FullName))
+                {
+                    throw new InvalidOperationException($"Kernel {path.FullName} can't be unloaded. You can have more details on standard output");
+                }
+
+                _kernels.RemoveAll(x => x.FullName == path.FullName);
+                foreach (var kernel in _kernels.Where(x => x.FullName.Contains(path.FullName)).ToArray())
+                {
+                    UnloadKernels(kernel);
+                }
+            }
+        }
+    }
+
+    public void ClearKernels()
+    {
+        lock (lockObject)
+        {
+            foreach (var kernel in _kernels.ToArray())
+            {
+                UnloadKernels(kernel);
+            }
+
+            KClearProxy();
+        }
+    }
+
+    /// <summary>
+    ///     Find launch windows
+    /// </summary>
+    /// <param name="launch"></param>
+    /// <param name="window"></param>
+    /// <param name="outputDirectory"></param>
+    public IEnumerable<LaunchWindow> FindLaunchWindows(Maneuver.Launch launch,
+        in TimeSystem.Window window, DirectoryInfo outputDirectory)
+    {
+        if (launch == null) throw new ArgumentNullException(nameof(launch));
+        lock (lockObject)
+        {
+            //Convert data
+            Launch launchDto = launch.Convert();
+            launchDto.Window = window.Convert();
+            launchDto.LaunchSite.DirectoryPath = outputDirectory.CreateSubdirectory("Sites").FullName;
+            launchDto.RecoverySite.DirectoryPath = outputDirectory.CreateSubdirectory("Sites").FullName;
+
+            //Execute request
+            LaunchProxy(ref launchDto);
+
+            //Filter result
+            var windows = launchDto.Windows.Where(x => x.Start != 0 && x.End != 0).ToArray();
+
+            //Build result 
+            List<LaunchWindow> launchWindows = [];
+
+            for (int i = 0; i < windows.Length; i++)
+            {
+                launchWindows.Add(new LaunchWindow(windows[i].Convert(),
+                    launchDto.InertialInsertionVelocity[i], launchDto.NonInertialInsertionVelocity[i],
+                    launchDto.InertialAzimuth[i], launchDto.NonInertialAzimuth[i]));
+            }
+
+            return launchWindows;
+        }
+    }
+
+    /// <summary>
+    ///     Find time windows based on distance constraint
+    /// </summary>
+    /// <param name="searchWindow"></param>
+    /// <param name="observer"></param>
+    /// <param name="target"></param>
+    /// <param name="relationalOperator"></param>
+    /// <param name="value"></param>
+    /// <param name="aberration"></param>
+    /// <param name="stepSize"></param>
+    /// <returns></returns>
+    public IEnumerable<TimeSystem.Window> FindWindowsOnDistanceConstraint(TimeSystem.Window searchWindow, INaifObject observer,
+        INaifObject target, RelationnalOperator relationalOperator, double value, Aberration aberration,
+        TimeSpan stepSize)
+    {
+        if (observer == null) throw new ArgumentNullException(nameof(observer));
+        if (target == null) throw new ArgumentNullException(nameof(target));
+        lock (lockObject)
+        {
+            return FindWindowsOnDistanceConstraint(searchWindow, observer.NaifId, target.NaifId, relationalOperator, value, aberration, stepSize);
+        }
+    }
+
+    public IEnumerable<TimeSystem.Window> FindWindowsOnDistanceConstraint(TimeSystem.Window searchWindow, int observerId,
+        int targetId, RelationnalOperator relationalOperator, double value, Aberration aberration,
+        TimeSpan stepSize)
+    {
+        lock (lockObject)
+        {
+            var windows = new Window[1000];
+            for (var i = 0; i < 1000; i++)
+            {
+                windows[i] = new Window(double.NaN, double.NaN);
+            }
+
+            FindWindowsOnDistanceConstraintProxy(searchWindow.Convert(), observerId, targetId, relationalOperator.GetDescription(), value,
+                aberration.GetDescription(), stepSize.TotalSeconds, windows);
+            return windows.Where(x => !double.IsNaN(x.Start)).Select(x => x.Convert());
+        }
+    }
+
+    /// <summary>
+    ///     Find time windows based on occultation constraint
+    /// </summary>
+    /// <param name="searchWindow"></param>
+    /// <param name="target"></param>
+    /// <param name="targetShape"></param>
+    /// <param name="frontBody"></param>
+    /// <param name="frontShape"></param>
+    /// <param name="occultationType"></param>
+    /// <param name="aberration"></param>
+    /// <param name="stepSize"></param>
+    /// <param name="observer"></param>
+    /// <returns></returns>
+    public IEnumerable<TimeSystem.Window> FindWindowsOnOccultationConstraint(TimeSystem.Window searchWindow, INaifObject observer,
+        INaifObject target, ShapeType targetShape, INaifObject frontBody, ShapeType frontShape,
+        OccultationType occultationType, Aberration aberration, TimeSpan stepSize)
+    {
+        if (observer == null) throw new ArgumentNullException(nameof(observer));
+        if (target == null) throw new ArgumentNullException(nameof(target));
+        if (frontBody == null) throw new ArgumentNullException(nameof(frontBody));
+        lock (lockObject)
+        {
+            string frontFrame = frontShape == ShapeType.Ellipsoid
+                ? (frontBody as Body.CelestialBody)?.Frame.Name
+                : string.Empty;
+            string targetFrame = targetShape == ShapeType.Ellipsoid
+                ? (target as Body.CelestialBody)?.Frame.Name
+                : String.Empty;
+            var windows = new Window[1000];
+            for (var i = 0; i < 1000; i++)
+            {
+                windows[i] = new Window(double.NaN, double.NaN);
+            }
+
+            FindWindowsOnOccultationConstraintProxy(searchWindow.Convert(), observer.NaifId, target.NaifId,
+                targetFrame, targetShape.GetDescription(),
+                frontBody.NaifId, frontFrame, frontShape.GetDescription(), occultationType.GetDescription(),
+                aberration.GetDescription(), stepSize.TotalSeconds, windows);
+            return windows.Where(x => !double.IsNaN(x.Start)).Select(x => x.Convert());
+        }
+    }
+
+    /// <summary>
+    /// Find time windows based on occultation constraint
+    /// </summary>
+    /// <param name="searchWindow"></param>
+    /// <param name="observerId"></param>
+    /// <param name="targetId"></param>
+    /// <param name="targetShape"></param>
+    /// <param name="frontBodyId"></param>
+    /// <param name="frontShape"></param>
+    /// <param name="occultationType"></param>
+    /// <param name="aberration"></param>
+    /// <param name="stepSize"></param>
+    /// <returns></returns>
+    public IEnumerable<TimeSystem.Window> FindWindowsOnOccultationConstraint(TimeSystem.Window searchWindow, int observerId,
+        int targetId, ShapeType targetShape, int frontBodyId, ShapeType frontShape,
+        OccultationType occultationType, Aberration aberration, TimeSpan stepSize)
+    {
+        lock (lockObject)
+        {
+            IO.Astrodynamics.Body.CelestialBody frontBody = new IO.Astrodynamics.Body.CelestialBody(frontBodyId);
+            IO.Astrodynamics.Body.CelestialBody targetBody = new IO.Astrodynamics.Body.CelestialBody(targetId);
+            string frontFrame = frontShape == ShapeType.Ellipsoid
+                ? frontBody.Frame.Name
+                : string.Empty;
+            string targetFrame = targetShape == ShapeType.Ellipsoid
+                ? targetBody.Frame.Name
+                : String.Empty;
+            var windows = new Window[1000];
+            for (var i = 0; i < 1000; i++)
+            {
+                windows[i] = new Window(double.NaN, double.NaN);
+            }
+
+            FindWindowsOnOccultationConstraintProxy(searchWindow.Convert(), observerId, targetId, targetFrame, targetShape.GetDescription(),
+                frontBody.NaifId, frontFrame, frontShape.GetDescription(), occultationType.GetDescription(), aberration.GetDescription(), stepSize.TotalSeconds, windows);
+            return windows.Where(x => !double.IsNaN(x.Start)).Select(x => x.Convert());
+        }
+    }
+
+    /// <summary>
+    ///     Find time windows based on coordinate constraint
+    /// </summary>
+    /// <param name="searchWindow"></param>
+    /// <param name="target"></param>
+    /// <param name="frame"></param>
+    /// <param name="coordinateSystem"></param>
+    /// <param name="coordinate"></param>
+    /// <param name="relationalOperator"></param>
+    /// <param name="value"></param>
+    /// <param name="adjustValue"></param>
+    /// <param name="aberration"></param>
+    /// <param name="stepSize"></param>
+    /// <param name="observer"></param>
+    /// <returns></returns>
+    public IEnumerable<TimeSystem.Window> FindWindowsOnCoordinateConstraint(TimeSystem.Window searchWindow, INaifObject observer,
+        INaifObject target, Frame frame, CoordinateSystem coordinateSystem, Coordinate coordinate,
+        RelationnalOperator relationalOperator, double value, double adjustValue, Aberration aberration,
+        TimeSpan stepSize)
+    {
+        if (observer == null) throw new ArgumentNullException(nameof(observer));
+        if (target == null) throw new ArgumentNullException(nameof(target));
+        if (frame == null) throw new ArgumentNullException(nameof(frame));
+        lock (lockObject)
+        {
+            var windows = new Window[1000];
+            for (var i = 0; i < 1000; i++)
+            {
+                windows[i] = new Window(double.NaN, double.NaN);
+            }
+
+            FindWindowsOnCoordinateConstraintProxy(searchWindow.Convert(), observer.NaifId, target.NaifId,
+                frame.Name, coordinateSystem.GetDescription(),
+                coordinate.GetDescription(), relationalOperator.GetDescription(), value, adjustValue,
+                aberration.GetDescription(), stepSize.TotalSeconds, windows);
+            return windows.Where(x => !double.IsNaN(x.Start)).Select(x => x.Convert());
+        }
+    }
+
+    /// <summary>
+    /// Find time windows based on coordinate constraint
+    /// </summary>
+    /// <param name="searchWindow"></param>
+    /// <param name="observerId"></param>
+    /// <param name="targetId"></param>
+    /// <param name="frame"></param>
+    /// <param name="coordinateSystem"></param>
+    /// <param name="coordinate"></param>
+    /// <param name="relationalOperator"></param>
+    /// <param name="value"></param>
+    /// <param name="adjustValue"></param>
+    /// <param name="aberration"></param>
+    /// <param name="stepSize"></param>
+    /// <returns></returns>
+    /// <exception cref="ArgumentNullException"></exception>
+    public IEnumerable<TimeSystem.Window> FindWindowsOnCoordinateConstraint(TimeSystem.Window searchWindow, int observerId,
+        int targetId, Frame frame, CoordinateSystem coordinateSystem, Coordinate coordinate,
+        RelationnalOperator relationalOperator, double value, double adjustValue, Aberration aberration,
+        TimeSpan stepSize)
+    {
+        if (frame == null) throw new ArgumentNullException(nameof(frame));
+        lock (lockObject)
+        {
+            var windows = new Window[1000];
+            for (var i = 0; i < 1000; i++)
+            {
+                windows[i] = new Window(double.NaN, double.NaN);
+            }
+
+            FindWindowsOnCoordinateConstraintProxy(searchWindow.Convert(), observerId, targetId,
+                frame.Name, coordinateSystem.GetDescription(),
+                coordinate.GetDescription(), relationalOperator.GetDescription(), value, adjustValue,
+                aberration.GetDescription(), stepSize.TotalSeconds, windows);
+            return windows.Where(x => !double.IsNaN(x.Start)).Select(x => x.Convert());
+        }
+    }
+
+    /// <summary>
+    ///     Find time windows based on illumination constraint
+    /// </summary>
+    /// <param name="searchWindow"></param>
+    /// <param name="illuminationSource"></param>
+    /// <param name="observer"></param>
+    /// <param name="targetBody"></param>
+    /// <param name="fixedFrame"></param>
+    /// <param name="planetodetic"></param>
+    /// <param name="illuminationType"></param>
+    /// <param name="relationalOperator"></param>
+    /// <param name="value"></param>
+    /// <param name="adjustValue"></param>
+    /// <param name="aberration"></param>
+    /// <param name="stepSize"></param>
+    /// <param name="method"></param>
+    /// <returns></returns>
+    public IEnumerable<TimeSystem.Window> FindWindowsOnIlluminationConstraint(TimeSystem.Window searchWindow, INaifObject observer,
+        INaifObject targetBody, Frame fixedFrame,
+        Coordinates.Planetodetic planetodetic, IlluminationAngle illuminationType, RelationnalOperator relationalOperator,
+        double value, double adjustValue, Aberration aberration, TimeSpan stepSize, INaifObject illuminationSource,
+        string method = "Ellipsoid")
+    {
+        if (observer == null) throw new ArgumentNullException(nameof(observer));
+        if (targetBody == null) throw new ArgumentNullException(nameof(targetBody));
+        if (fixedFrame == null) throw new ArgumentNullException(nameof(fixedFrame));
+        if (illuminationSource == null) throw new ArgumentNullException(nameof(illuminationSource));
+        if (method == null) throw new ArgumentNullException(nameof(method));
+        lock (lockObject)
+        {
+            var windows = new Window[1000];
+            for (var i = 0; i < 1000; i++)
+            {
+                windows[i] = new Window(double.NaN, double.NaN);
+            }
+
+            FindWindowsOnIlluminationConstraintProxy(searchWindow.Convert(), observer.NaifId,
+                illuminationSource.Name, targetBody.NaifId, fixedFrame.Name,
+                planetodetic.Convert(),
+                illuminationType.GetDescription(), relationalOperator.GetDescription(), value, adjustValue,
+                aberration.GetDescription(), stepSize.TotalSeconds, method, windows);
+            return windows.Where(x => !double.IsNaN(x.Start)).Select(x => x.Convert());
+        }
+    }
+
+    public IEnumerable<TimeSystem.Window> FindWindowsOnIlluminationConstraint(TimeSystem.Window searchWindow, int observerId,
+        int targetBodyId, Frame fixedFrame, Coordinates.Planetodetic planetodetic, IlluminationAngle illuminationType, RelationnalOperator relationalOperator,
+        double value, double adjustValue, Aberration aberration, TimeSpan stepSize, int illuminationSourceId,
+        string method = "Ellipsoid")
+    {
+        if (fixedFrame == null) throw new ArgumentNullException(nameof(fixedFrame));
+        if (method == null) throw new ArgumentNullException(nameof(method));
+        lock (lockObject)
+        {
+            var windows = new Window[1000];
+            for (var i = 0; i < 1000; i++)
+            {
+                windows[i] = new Window(double.NaN, double.NaN);
+            }
+
+            FindWindowsOnIlluminationConstraintProxy(searchWindow.Convert(), observerId,
+                illuminationSourceId.ToString(), targetBodyId, fixedFrame.Name,
+                planetodetic.Convert(),
+                illuminationType.GetDescription(), relationalOperator.GetDescription(), value, adjustValue,
+                aberration.GetDescription(), stepSize.TotalSeconds, method, windows);
+            return windows.Where(x => !double.IsNaN(x.Start)).Select(x => x.Convert());
+        }
+    }
+
+    /// <summary>
+    ///     Find time window when a target is in instrument's field of view
+    /// </summary>
+    /// <param name="searchWindow"></param>
+    /// <param name="observer"></param>
+    /// <param name="instrument"></param>
+    /// <param name="target"></param>
+    /// <param name="targetFrame"></param>
+    /// <param name="targetShape"></param>
+    /// <param name="aberration"></param>
+    /// <param name="stepSize"></param>
+    /// <returns></returns>
+    public IEnumerable<TimeSystem.Window> FindWindowsInFieldOfViewConstraint(TimeSystem.Window searchWindow, Spacecraft observer,
+        Instrument instrument, INaifObject target, Frame targetFrame, ShapeType targetShape, Aberration aberration,
+        TimeSpan stepSize)
+    {
+        if (observer == null) throw new ArgumentNullException(nameof(observer));
+        if (instrument == null) throw new ArgumentNullException(nameof(instrument));
+        if (target == null) throw new ArgumentNullException(nameof(target));
+        if (targetFrame == null) throw new ArgumentNullException(nameof(targetFrame));
+        lock (lockObject)
+        {
+            return FindWindowsInFieldOfViewConstraint(searchWindow, observer.NaifId, instrument.NaifId, target.NaifId, targetFrame, targetShape, aberration, stepSize);
+        }
+    }
+
+    /// <summary>
+    /// Find time window when a target is in instrument's field of view
+    /// </summary>
+    /// <param name="searchWindow"></param>
+    /// <param name="observerId"></param>
+    /// <param name="instrumentId"></param>
+    /// <param name="targetId"></param>
+    /// <param name="targetFrame"></param>
+    /// <param name="targetShape"></param>
+    /// <param name="aberration"></param>
+    /// <param name="stepSize"></param>
+    /// <returns></returns>
+    /// <exception cref="ArgumentNullException"></exception>
+    public IEnumerable<TimeSystem.Window> FindWindowsInFieldOfViewConstraint(TimeSystem.Window searchWindow, int observerId,
+        int instrumentId, int targetId, Frame targetFrame, ShapeType targetShape, Aberration aberration, TimeSpan stepSize)
+    {
+        if (targetFrame == null) throw new ArgumentNullException(nameof(targetFrame));
+        lock (lockObject)
+        {
+            var windows = new Window[1000];
+            for (var i = 0; i < 1000; i++)
+            {
+                windows[i] = new Window(double.NaN, double.NaN);
+            }
+
+            var searchWindowDto = searchWindow.Convert();
+
+            FindWindowsInFieldOfViewConstraintProxy(searchWindowDto, observerId, instrumentId, targetId, targetFrame.Name, targetShape.GetDescription(),
+                aberration.GetDescription(), stepSize.TotalSeconds, windows);
+
+            return windows.Where(x => !double.IsNaN(x.Start)).Select(x => x.Convert());
+        }
+    }
+
+    /// <summary>
+    ///     Read object ephemeris for a given period
+    /// </summary>
+    /// <param name="searchWindow"></param>
+    /// <param name="target"></param>
+    /// <param name="frame"></param>
+    /// <param name="aberration"></param>
+    /// <param name="stepSize"></param>
+    /// <param name="observer"></param>
+    /// <returns></returns>
+    public IEnumerable<OrbitalParameters.OrbitalParameters> ReadEphemeris(TimeSystem.Window searchWindow,
+        ILocalizable observer, ILocalizable target, Frame frame,
+        Aberration aberration, TimeSpan stepSize)
+    {
+        ArgumentNullException.ThrowIfNull(observer);
+        ArgumentNullException.ThrowIfNull(target);
+        ArgumentNullException.ThrowIfNull(frame);
+        lock (lockObject)
+        {
+            const int messageSize = 10000;
+            List<OrbitalParameters.OrbitalParameters> orbitalParameters = [];
+            int occurrences = (int)(searchWindow.Length / stepSize / messageSize);
+
+            for (int i = 0; i <= occurrences; i++)
+            {
+                var start = searchWindow.StartDate + i * messageSize * stepSize;
+                var end = start + messageSize * stepSize > searchWindow.EndDate ? searchWindow.EndDate : (start + messageSize * stepSize) - stepSize;
+                var window = new TimeSystem.Window(start, end);
+                var stateVectors = new StateVector[messageSize];
+                ReadEphemerisProxy(window.Convert(), observer.NaifId, target.NaifId, frame.Name,
+                    aberration.GetDescription(), stepSize.TotalSeconds,
+                    stateVectors);
+                orbitalParameters.AddRange(stateVectors.Where(x => !string.IsNullOrEmpty(x.Frame)).Select(x =>
+                    new OrbitalParameters.StateVector(x.Position.Convert(), x.Velocity.Convert(), observer, Time.Create(x.Epoch, TimeFrame.TDBFrame), frame)));
+            }
+
+            return orbitalParameters;
+        }
+    }
+
+    /// <summary>
+    /// Return state vector at given epoch
+    /// </summary>
+    /// <param name="epoch"></param>
+    /// <param name="observer"></param>
+    /// <param name="target"></param>
+    /// <param name="frame"></param>
+    /// <param name="aberration"></param>
+    /// <returns></returns>
+    /// <exception cref="ArgumentNullException"></exception>
+    public OrbitalParameters.OrbitalParameters ReadEphemeris(Time epoch, ILocalizable observer,
+        ILocalizable target, Frame frame, Aberration aberration)
+    {
+        ArgumentNullException.ThrowIfNull(observer);
+        ArgumentNullException.ThrowIfNull(target);
+        ArgumentNullException.ThrowIfNull(frame);
+        lock (lockObject)
+        {
+            if (frame == null) throw new ArgumentNullException(nameof(frame));
+            var stateVector = ReadEphemerisAtGivenEpochProxy(epoch.TimeSpanFromJ2000().TotalSeconds, observer.NaifId,
+                target.NaifId, frame.Name, aberration.GetDescription());
+            return new OrbitalParameters.StateVector(stateVector.Position.Convert(), stateVector.Velocity.Convert(), observer,
+                Time.Create(stateVector.Epoch, TimeFrame.TDBFrame), frame);
+        }
+    }
+
+    /// <summary>
+    ///     Read spacecraft orientation for a given period
+    /// </summary>
+    /// <param name="searchWindow"></param>
+    /// <param name="spacecraft"></param>
+    /// <param name="tolerance"></param>
+    /// <param name="referenceFrame"></param>
+    /// <param name="stepSize"></param>
+    /// <returns></returns>
+    public IEnumerable<OrbitalParameters.StateOrientation> ReadOrientation(TimeSystem.Window searchWindow,
+        Spacecraft spacecraft, TimeSpan tolerance,
+        Frame referenceFrame, TimeSpan stepSize)
+    {
+        if (spacecraft == null) throw new ArgumentNullException(nameof(spacecraft));
+        if (referenceFrame == null) throw new ArgumentNullException(nameof(referenceFrame));
+        lock (lockObject)
+        {
+            var stateOrientations = new StateOrientation[10000];
+            ReadOrientationProxy(searchWindow.Convert(), spacecraft.NaifId, tolerance.TotalSeconds,
+                referenceFrame.Name, stepSize.TotalSeconds,
+                stateOrientations);
+            return stateOrientations.Where(x => x.Frame != null).Select(x => new OrbitalParameters.StateOrientation(
+                x.Rotation.Convert(), x.AngularVelocity.Convert(), Time.Create(x.Epoch, TimeFrame.TDBFrame), referenceFrame));
+        }
+    }
+
+    /// <summary>
+    ///     Write ephemeris file
+    /// </summary>
+    /// <param name="filePath"></param>
+    /// <param name="naifObject"></param>
+    /// <param name="stateVectors"></param>
+    /// <returns></returns>
+    public bool WriteEphemeris(FileInfo filePath, INaifObject naifObject,
+        IEnumerable<OrbitalParameters.StateVector> stateVectors)
+    {
+        if (naifObject == null) throw new ArgumentNullException(nameof(naifObject));
+        if (filePath == null) throw new ArgumentNullException(nameof(filePath));
+        if (stateVectors == null) throw new ArgumentNullException(nameof(stateVectors));
+        lock (lockObject)
+        {
+            var enumerable = stateVectors as OrbitalParameters.StateVector[] ?? stateVectors.ToArray();
+            if (!enumerable.Any())
+                throw new ArgumentException("Value cannot be an empty collection.", nameof(stateVectors));
+            bool res = WriteEphemerisProxy(filePath.FullName, naifObject.NaifId, stateVectors.Select(x => x.Convert()).ToArray(),
+                (uint)enumerable.Length);
+            if (res == false)
+            {
+                throw new InvalidOperationException(
+                    "An error occurred while writing ephemeris. You can have more details on standard output.");
+            }
+
+            return true;
+        }
+    }
+
+    public bool WriteOrientation(FileInfo filePath, INaifObject naifObject, IEnumerable<OrbitalParameters.StateOrientation> stateOrientations)
+    {
+        if (naifObject == null) throw new ArgumentNullException(nameof(naifObject));
+        if (filePath == null) throw new ArgumentNullException(nameof(filePath));
+        if (stateOrientations == null) throw new ArgumentNullException(nameof(stateOrientations));
+        lock (lockObject)
+        {
+            var enumerable = stateOrientations as OrbitalParameters.StateOrientation[] ?? stateOrientations.ToArray();
+            if (!enumerable.Any())
+                throw new ArgumentException("Value cannot be an empty collection.", nameof(stateOrientations));
+            bool res = WriteOrientationProxy(filePath.FullName, naifObject.NaifId, stateOrientations.Select(x => x.Convert()).ToArray(), (uint)enumerable.Length);
+            if (res == false)
+            {
+                throw new InvalidOperationException(
+                    "An error occurred while writing orientation. You can have more details on standard output.");
+            }
+
+            return true;
+        }
+    }
+
+    /// <summary>
+    ///     Get celestial celestialItem information like radius, GM, name, associated frame, ...
+    /// </summary>
+    /// <param name="naifId"></param>
+    /// <returns></returns>
+    public CelestialBody GetCelestialBodyInfo(int naifId)
+    {
+        lock (lockObject)
+        {
+            return GetCelestialBodyInfoProxy(naifId);
+        }
+    }
+
+    /// <summary>
+    /// Transform a frame to another
+    /// </summary>
+    /// <param name="fromFrame"></param>
+    /// <param name="toFrame"></param>
+    /// <param name="epoch"></param>
+    /// <returns></returns>
+    /// <exception cref="ArgumentNullException"></exception>
+    public OrbitalParameters.StateOrientation TransformFrame(Time epoch, Frame fromFrame, Frame toFrame)
+    {
+        lock (lockObject)
+        {
+            if (fromFrame == null) throw new ArgumentNullException(nameof(fromFrame));
+            if (toFrame == null) throw new ArgumentNullException(nameof(toFrame));
+            var res = TransformFrameProxy(fromFrame.Name, toFrame.Name, epoch.ToTDB().TimeSpanFromJ2000().TotalSeconds);
+
+            return new OrbitalParameters.StateOrientation(
+                new Quaternion(res.Rotation.W, res.Rotation.X, res.Rotation.Y, res.Rotation.Z),
+                new Vector3(res.AngularVelocity.X, res.AngularVelocity.Y, res.AngularVelocity.Z), epoch, fromFrame);
+        }
+    }
+
+    public IEnumerable<OrbitalParameters.StateOrientation> TransformFrame(TimeSystem.Window window, Frame fromFrame, Frame toFrame, TimeSpan stepSize)
+    {
+        for (Time i = window.StartDate; i < window.EndDate; i += stepSize)
+        {
+            yield return TransformFrame(i, fromFrame, toFrame);
+        }
+    }
+
+    /// <summary>
+    /// Convert TLE to state vector at given epoch
+    /// </summary>
+    /// <param name="line1"></param>
+    /// <param name="line2"></param>
+    /// <param name="line3"></param>
+    /// <param name="epoch"></param>
+    /// <returns></returns>
+    public OrbitalParameters.OrbitalParameters ConvertTleToStateVector(string line1, string line2, string line3,
+        Time epoch)
+    {
+        lock (lockObject)
+        {
+            var res = ConvertTLEToStateVectorProxy(line1, line2, line3, epoch.ToTDB().TimeSpanFromJ2000().TotalSeconds);
+            return new OrbitalParameters.StateVector(res.Position.Convert(), res.Velocity.Convert(),
+                new Body.CelestialBody(PlanetsAndMoons.EARTH, Frame.ECLIPTIC_J2000, epoch), epoch,
+                new Frame(res.Frame)).ToFrame(Frame.ICRF);
+        }
+    }
+
+    public IO.Astrodynamics.OrbitalParameters.KeplerianElements ConvertStateVectorToConicOrbitalElement(IO.Astrodynamics.OrbitalParameters.StateVector stateVector)
+    {
+        lock (lockObject)
+        {
+            var svDto = stateVector.Convert();
+            return ConvertStateVectorToConicOrbitalElementProxy(svDto, stateVector.Observer.GM).Convert();
+        }
+    }
+
+    public IO.Astrodynamics.OrbitalParameters.StateVector ConvertEquinoctialElementsToStateVector(IO.Astrodynamics.OrbitalParameters.EquinoctialElements equinoctialElements)
+    {
+        lock (lockObject)
+        {
+            return ConvertEquinoctialElementsToStateVectorProxy(equinoctialElements.Convert()).Convert();
+        }
+    }
+
+    public IO.Astrodynamics.OrbitalParameters.StateVector ConvertConicElementsToStateVector(IO.Astrodynamics.OrbitalParameters.KeplerianElements keplerianElements)
+    {
+        lock (lockObject)
+        {
+            return ConvertConicElementsToStateVectorProxy(keplerianElements.Convert()).Convert();
+        }
+    }
+
+    public IO.Astrodynamics.OrbitalParameters.StateVector ConvertConicElementsToStateVector(IO.Astrodynamics.OrbitalParameters.KeplerianElements keplerianElements, Time epoch)
+    {
+        lock (lockObject)
+        {
+            return ConvertConicElementsToStateVectorAtEpochProxy(keplerianElements.Convert(), epoch.ToTDB().TimeSpanFromJ2000().TotalSeconds, keplerianElements.Observer.GM)
+                .Convert();
+        }
+    }
+
+    public OrbitalParameters.StateVector Propagate2Bodies(OrbitalParameters.StateVector stateVector, TimeSpan dt)
+    {
+        lock (lockObject)
+        {
+            return Propagate2BodiesProxy(stateVector.Convert(), stateVector.Observer.GM, dt.TotalSeconds).Convert();
+        }
+    }
+
+    public OrbitalParameters.StateVector Propagate2Bodies(OrbitalParameters.StateVector stateVector, Time targetEpoch)
+    {
+        return Propagate2Bodies(stateVector, targetEpoch - stateVector.Epoch);
+    }
 }
