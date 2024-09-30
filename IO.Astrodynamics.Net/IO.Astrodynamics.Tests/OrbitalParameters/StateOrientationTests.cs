@@ -101,5 +101,47 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
             Assert.Equal(TimeSystem.Time.J2000TDB.AddSeconds(10), res.Epoch);
             Assert.Equal(Frames.Frame.ECLIPTIC_J2000, res.ReferenceFrame);
         }
+        
+        [Fact]
+        public void Interpolate_SameReferenceFrame_ReturnsInterpolatedState()
+        {
+            // Arrange
+            var initialOrientation = new StateOrientation(new Quaternion(1, 0, 0, 0), new Vector3(10, 20, 30), TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+            var finalOrientation = new StateOrientation(new Quaternion(0, 1, 0, 0), new Vector3(20, 30, 40), TimeSystem.Time.J2000TDB.AddSeconds(10), Frames.Frame.ICRF);
+            var date = TimeSystem.Time.J2000TDB.AddSeconds(5);
+
+            // Act
+            var result = initialOrientation.Interpolate(finalOrientation, date);
+
+            // Assert
+            Assert.Equal(new Quaternion(0.7071067811865476, 0.7071067811865476, 0, 0), result.Rotation,TestHelpers.QuaternionComparer);
+            Assert.Equal(new Vector3(15, 25, 35), result.AngularVelocity);
+            Assert.Equal(date, result.Epoch);
+            Assert.Equal(Frames.Frame.ICRF, result.ReferenceFrame);
+        }
+
+        [Fact]
+        public void Interpolate_DifferentReferenceFrames_ThrowsArgumentException()
+        {
+            // Arrange
+            var initialOrientation = new StateOrientation(new Quaternion(1, 0, 0, 0), new Vector3(0, 0, 0), TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+            var finalOrientation = new StateOrientation(new Quaternion(0, 1, 0, 0), new Vector3(0, 0, 0), TimeSystem.Time.J2000TDB.AddSeconds(10), Frames.Frame.ECLIPTIC_J2000);
+            var date = TimeSystem.Time.J2000TDB.AddSeconds(5);
+
+            // Act & Assert
+            Assert.Throws<ArgumentException>(() => initialOrientation.Interpolate(finalOrientation, date));
+        }
+
+        [Fact]
+        public void Interpolate_DateOutOfRange_ThrowsArgumentException()
+        {
+            // Arrange
+            var initialOrientation = new StateOrientation(new Quaternion(1, 0, 0, 0), new Vector3(0, 0, 0), TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+            var finalOrientation = new StateOrientation(new Quaternion(0, 1, 0, 0), new Vector3(0, 0, 0), TimeSystem.Time.J2000TDB.AddSeconds(10), Frames.Frame.ICRF);
+            var date = TimeSystem.Time.J2000TDB.AddSeconds(15);
+
+            // Act & Assert
+            Assert.Throws<ArgumentException>(() => initialOrientation.Interpolate(finalOrientation, date));
+        }
     }
 }
