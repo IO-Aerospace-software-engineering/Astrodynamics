@@ -118,6 +118,18 @@ namespace IO.Astrodynamics.Math
             return (quaternion * p * quaternion.Conjugate()).VectorPart;
         }
 
+        /// <summary>
+        /// Performs linear interpolation between this vector and the specified vector.
+        /// </summary>
+        /// <param name="vector">The target vector to interpolate towards.</param>
+        /// <param name="t">The interpolation factor, clamped between 0.0 and 1.0.</param>
+        /// <returns>A new <see cref="Vector3"/> that is the result of the linear interpolation.</returns>
+        public Vector3 LinearInterpolation(in Vector3 vector, double t)
+        {
+            t = System.Math.Clamp(t, 0.0, 1.0);
+            return this + (vector - this) * t;
+        }
+
         public override string ToString()
         {
             return $"X : {X} Y : {Y} Z: {Z}";

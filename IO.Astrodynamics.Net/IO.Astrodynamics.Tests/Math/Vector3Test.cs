@@ -192,4 +192,26 @@ public class VectorTests
         Vector3 m1 = new Vector3(10, 20, 30);
         Assert.Equal("X : 10 Y : 20 Z: 30", m1.ToString());
     }
+
+    [Fact]
+    public void LinearInterpolation()
+    {
+        Vector3 m1 = new Vector3(10, 20, 30);
+        Vector3 m2 = new Vector3(20, 40, 60);
+        var m3 = m1.LinearInterpolation(m2, 0.5);
+        Assert.Equal(15.0, m3.X);
+        Assert.Equal(30.0, m3.Y);
+        Assert.Equal(45.0, m3.Z);
+    }
+    
+    [Fact]
+    public void LinearInterpolation2()
+    {
+        Vector3 m1 = new Vector3(10, 20, 30);
+        Vector3 m2 = new Vector3(20, 40, 60);
+        var m3 = m1.LinearInterpolation(m2, 0.75);
+        Assert.Equal(17.5, m3.X);
+        Assert.Equal(35.0, m3.Y);
+        Assert.Equal(52.5, m3.Z);
+    }
 }

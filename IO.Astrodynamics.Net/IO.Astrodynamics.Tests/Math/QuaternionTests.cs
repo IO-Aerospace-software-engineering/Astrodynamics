@@ -193,5 +193,53 @@ namespace IO.Astrodynamics.Tests.Math
         {
             Assert.Equal(new Quaternion(1.0, 0.0, 0.0, 0.0), Quaternion.Zero);
         }
+
+        [Fact]
+        public void LERP()
+        {
+            Quaternion q1 = new Quaternion(Vector3.VectorX, 0.0);
+            Quaternion q2 = new Quaternion(Vector3.VectorX, IO.Astrodynamics.Constants.PI2);
+            Quaternion q3 = q1.Lerp(q2, 0.5);
+            Assert.Equal(0.92387953251128674, q3.W, 12);
+            Assert.Equal(0.38268343236508978, q3.VectorPart.X, 12);
+            Assert.Equal(0.0, q3.VectorPart.Y);
+            Assert.Equal(0.0, q3.VectorPart.Z);
+        }
+        
+        [Fact]
+        public void SLERP()
+        {
+            Quaternion q1 = new Quaternion(Vector3.VectorX, 0.0);
+            Quaternion q2 = new Quaternion(Vector3.VectorX, IO.Astrodynamics.Constants.PI2);
+            Quaternion q3 = q1.SLERP(q2, 0.5);
+            Assert.Equal(0.92387953251128674, q3.W, 12);
+            Assert.Equal(0.38268343236508978, q3.VectorPart.X, 12);
+            Assert.Equal(0.0, q3.VectorPart.Y);
+            Assert.Equal(0.0, q3.VectorPart.Z);
+        }
+
+        [Fact]
+        public void LERP2()
+        {
+            Quaternion q1 = new Quaternion(Vector3.VectorX, 0.0);
+            Quaternion q2 = new Quaternion(Vector3.VectorX, IO.Astrodynamics.Constants._2PI - IO.Astrodynamics.Constants.PI2);
+            Quaternion q3 = q1.Lerp(q2, 0.5); //Expected 135° on X
+            Assert.Equal(0.38268343236500002, q3.W, 12);
+            Assert.Equal(0.92387953251099997, q3.VectorPart.X, 12);
+            Assert.Equal(0.0, q3.VectorPart.Y);
+            Assert.Equal(0.0, q3.VectorPart.Z);
+        }
+        
+        [Fact]
+        public void SLERP2()
+        {
+            Quaternion q1 = new Quaternion(Vector3.VectorX, 0.0);
+            Quaternion q2 = new Quaternion(Vector3.VectorX, IO.Astrodynamics.Constants._2PI - IO.Astrodynamics.Constants.PI2);
+            Quaternion q3 = q1.SLERP(q2, 0.5); //Expected -45° on X
+            Assert.Equal(0.92387953251128674, q3.W, 12);
+            Assert.Equal(-0.38268343236508984, q3.VectorPart.X, 12);
+            Assert.Equal(0.0, q3.VectorPart.Y);
+            Assert.Equal(0.0, q3.VectorPart.Z);
+        }
     }
 }

@@ -1,9 +1,8 @@
-
 namespace IO.Astrodynamics.Math
 {
     public readonly record struct Quaternion
     {
-        public static Quaternion Zero = new (1, 0, 0, 0);
+        public static Quaternion Zero = new(1, 0, 0, 0);
         public double W { get; }
 
         public Vector3 VectorPart { get; }
@@ -43,6 +42,7 @@ namespace IO.Astrodynamics.Math
             {
                 return this;
             }
+
             return new Quaternion(W / m, VectorPart / m);
         }
 
@@ -89,6 +89,72 @@ namespace IO.Astrodynamics.Math
             var z = System.Math.Atan2(sinyCosp, cosyCosp);
 
             return new Vector3(x, y, z);
+        }
+
+        /// <summary>
+        /// Performs Spherical Linear Interpolation (SLERP) between the current quaternion and the specified quaternion.
+        /// </summary>
+        /// <param name="q">The target quaternion to interpolate towards.</param>
+        /// <param name="t">The interpolation factor, clamped between 0 and 1.</param>
+        /// <returns>The interpolated quaternion.</returns>
+        public Quaternion SLERP(Quaternion q, double t)
+        {
+            // Clamps the parameter t between 0 and 1
+            t = System.Math.Clamp(t, 0.0, 1.0);
+
+            // Calculates the cosine of the angle between the quaternions
+            double dot = W * q.W + VectorPart.X * q.VectorPart.X + VectorPart.Y * q.VectorPart.Y + VectorPart.Z * q.VectorPart.Z;
+
+            // If the dot product is negative, invert one of the quaternions to take the shortest path
+            if (dot < 0.0f)
+            {
+                q = new Quaternion(-q.W, -q.VectorPart.X, -q.VectorPart.Y, -q.VectorPart.Z);
+                dot = -dot;
+            }
+
+            // If the quaternions are very close, use linear interpolation to avoid numerical errors
+            const float epsilon = 0.0001f;
+            if (dot > 1.0f - epsilon)
+            {
+                // Linear interpolation
+                return Lerp(q, t);
+            }
+
+            // Calculates the angle between the quaternions
+            double theta_0 = System.Math.Acos(dot); // initial angle
+            double theta = theta_0 * t; // interpolated angle
+
+            // Calculates the intermediate quaternions
+            double sin_theta_0 = System.Math.Sin(theta_0);
+            double sin_theta = System.Math.Sin(theta);
+
+            double s1 = System.Math.Cos(theta) - dot * sin_theta / sin_theta_0;
+            double s2 = sin_theta / sin_theta_0;
+
+            // Interpolates the quaternions
+            return new Quaternion((s1 * W) + (s2 * q.W),
+                (s1 * VectorPart.X) + (s2 * q.VectorPart.X),
+                (s1 * VectorPart.Y) + (s2 * q.VectorPart.Y),
+                (s1 * VectorPart.Z) + (s2 * q.VectorPart.Z));
+        }
+
+        /// <summary>
+        /// Linearly interpolates between the current quaternion and the specified quaternion.
+        /// </summary>
+        /// <param name="q2">The target quaternion to interpolate towards.</param>
+        /// <param name="t">The interpolation factor, clamped between 0 and 1.</param>
+        /// <returns>The interpolated quaternion.</returns>
+        public Quaternion Lerp(Quaternion q2, double t)
+        {
+            t = System.Math.Clamp(t, 0.0, 1.0);
+
+            Quaternion result = new Quaternion(W + t * (q2.W - W),
+                VectorPart.X + t * (q2.VectorPart.X - VectorPart.X),
+                VectorPart.Y + t * (q2.VectorPart.Y - VectorPart.Y),
+                VectorPart.Z + t * (q2.VectorPart.Z - VectorPart.Z)
+            );
+
+            return result.Normalize();
         }
     }
 }
