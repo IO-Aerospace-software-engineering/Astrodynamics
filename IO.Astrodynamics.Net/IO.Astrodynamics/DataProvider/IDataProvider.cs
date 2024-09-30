@@ -12,8 +12,6 @@ namespace IO.Astrodynamics.DataProvider;
 public interface IDataProvider
 {
     StateOrientation FrameTransformationToICRF(in Time date, Frame source);
-    OrbitalParameters.OrbitalParameters GetEphemeris(in Time date, ILocalizable target, ILocalizable observer, Frame frame, Aberration aberration);
+    OrbitalParameters.OrbitalParameters GetEphemerisFromICRF(in Time date, ILocalizable target, Frame frame, Aberration aberration);
     DTO.CelestialBody GetCelestialBodyInfo(int naifId);
-    void WriteEphemeris(FileInfo outputFile, INaifObject naifObject, IEnumerable<StateVector> stateVectors);
-    void WriteOrientation(FileInfo outputFile, INaifObject naifObject, IEnumerable<StateOrientation> stateOrientations);
 }

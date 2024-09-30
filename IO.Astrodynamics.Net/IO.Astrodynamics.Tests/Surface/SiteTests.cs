@@ -141,7 +141,7 @@ namespace IO.Astrodynamics.Tests.Surface
 
             var sv = site.InitialOrbitalParameters.ToStateVector().Position;
 
-            Assert.Equal(new Vector3(-2351112.6050123204, -4655530.655495551, 3660912.7393973987), sv);
+            Assert.Equal(new Vector3(-2351112.6050050138, -4655530.65549371, 3660912.739397665), sv);
         }
 
         [Fact]
@@ -334,7 +334,7 @@ namespace IO.Astrodynamics.Tests.Surface
         {
             Site site = new Site(13, "DSS-13", TestHelpers.EarthAtJ2000);
             var res = site.IlluminationIncidence(TimeSystem.Time.J2000TDB, TestHelpers.Sun, Aberration.None);
-            Assert.Equal(2.1862895154418132, res);
+            Assert.Equal(2.1862895154409667, res);
         }
 
         [Fact]
@@ -342,7 +342,7 @@ namespace IO.Astrodynamics.Tests.Surface
         {
             Site site = new Site(13, "DSS-13", TestHelpers.EarthAtJ2000);
             var res = site.IlluminationEmission(TimeSystem.Time.J2000TDB, TestHelpers.Sun, Aberration.None);
-            Assert.Equal(2.1862895154418132, res);
+            Assert.Equal(2.1862895154409667, res);
         }
 
         [Fact]
@@ -358,7 +358,7 @@ namespace IO.Astrodynamics.Tests.Surface
         {
             Site site = new Site(13, "DSS-13", TestHelpers.EarthAtJ2000);
             var res = site.IlluminationIncidence(TimeSystem.Time.J2000TDB, TestHelpers.Sun, Aberration.None);
-            Assert.Equal(2.1862895154418132, res);
+            Assert.Equal(2.1862895154409667, res);
         }
 
         [Fact]
@@ -366,7 +366,7 @@ namespace IO.Astrodynamics.Tests.Surface
         {
             Site site = new Site(13, "DSS-13", TestHelpers.EarthAtJ2000);
             var res = site.IlluminationEmission(TimeSystem.Time.J2000TDB, TestHelpers.Moon, Aberration.None);
-            Assert.Equal(1.2777449825561968, res);
+            Assert.Equal(1.2777449825556335, res);
         }
 
         [Fact]

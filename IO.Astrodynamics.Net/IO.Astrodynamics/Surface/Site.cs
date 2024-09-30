@@ -21,14 +21,16 @@ namespace IO.Astrodynamics.Surface
         private readonly IDataProvider _dataProvider;
         private readonly GeometryFinder _geometryFinder = new GeometryFinder();
         private readonly bool _isFromKernel = false;
-        
-        private SortedDictionary<Time,StateVector> _stateVectorsRelativeToICRF = new SortedDictionary<Time, StateVector>();
-        public ImmutableSortedDictionary<Time, StateVector> StateVectorsRelativeToICRF  => _stateVectorsRelativeToICRF.ToImmutableSortedDictionary();
+
+        private SortedDictionary<Time, StateVector> _stateVectorsRelativeToICRF = new SortedDictionary<Time, StateVector>();
+        public ImmutableSortedDictionary<Time, StateVector> StateVectorsRelativeToICRF => _stateVectorsRelativeToICRF.ToImmutableSortedDictionary();
         public int Id { get; }
         public int NaifId { get; }
         public string Name { get; }
         public CelestialBody CelestialBody { get; }
+
         public Planetodetic Planetodetic { get; }
+
         public OrbitalParameters.OrbitalParameters InitialOrbitalParameters { get; }
         public DirectoryInfo PropagationOutput { get; private set; }
         public bool IsPropagated => PropagationOutput != null;
@@ -43,7 +45,6 @@ namespace IO.Astrodynamics.Surface
         /// <param name="userId">The unique identifier for the site.</param>
         /// <param name="name">The name of the site.</param>
         /// <param name="celestialItem">The celestial body associated with the site.</param>
-        /// <param name="dataProvider">The data provider for ephemeris data. If null, a default provider is used.</param>
         /// <exception cref="ArgumentNullException">Thrown when <paramref name="celestialItem"/> is null.</exception>
         /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="userId"/> is less than or equal to zero.</exception>
         /// <exception cref="ArgumentException">Thrown when <paramref name="name"/> is null or empty.</exception>
@@ -59,7 +60,6 @@ namespace IO.Astrodynamics.Surface
         /// <param name="name">The name of the site.</param>
         /// <param name="celestialItem">The celestial body associated with the site.</param>
         /// <param name="planetodetic">The planetodetic coordinates of the site.</param>
-        /// <param name="dataProvider">The data provider for ephemeris data. If null, a default provider is used.</param>
         /// <exception cref="ArgumentNullException">Thrown when <paramref name="celestialItem"/> is null.</exception>
         /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="userId"/> is less than or equal to zero.</exception>
         /// <exception cref="ArgumentException">Thrown when <paramref name="name"/> is null or empty.</exception>
@@ -77,7 +77,7 @@ namespace IO.Astrodynamics.Surface
             if (double.IsNaN(planetodetic.Latitude))
             {
                 _isFromKernel = true;
-                InitialOrbitalParameters = _dataProvider.GetEphemeris(Time.J2000TDB, this, celestialItem, celestialItem.Frame, Aberration.None);
+                InitialOrbitalParameters = GetEphemeris(Time.J2000TDB, celestialItem, celestialItem.Frame, Aberration.None);
                 Planetodetic = GetPlanetocentricCoordinates().ToPlanetodetic(CelestialBody.Flattening, CelestialBody.EquatorialRadius);
             }
             else
@@ -173,7 +173,7 @@ namespace IO.Astrodynamics.Surface
             {
                 if (_isFromKernel)
                 {
-                    return _dataProvider.GetEphemeris(dt, this, new Barycenter(0), Frames.Frame.ICRF, Aberration.None).ToStateVector();
+                    return _dataProvider.GetEphemerisFromICRF(dt, this, Frames.Frame.ICRF, Aberration.None).ToStateVector();
                 }
 
                 return GetEphemeris(dt, new Barycenter(0), Frames.Frame.ICRF, Aberration.None).ToStateVector();
@@ -183,20 +183,45 @@ namespace IO.Astrodynamics.Surface
         /// <summary>
         /// Get site ephemeris
         /// </summary>
-        /// <param name="epoch"></param>
+        /// <param name="date"></param>
         /// <param name="observer"></param>
         /// <param name="frame"></param>
         /// <param name="aberration"></param>
         /// <returns></returns>
-        public OrbitalParameters.OrbitalParameters GetEphemeris(in Time epoch, ILocalizable observer, Frame frame, Aberration aberration)
+        public OrbitalParameters.OrbitalParameters GetEphemeris(in Time date, ILocalizable observer, Frame frame, Aberration aberration)
         {
             if (_isFromKernel)
             {
-                return _dataProvider.GetEphemeris(epoch, this, observer, frame, aberration);
+                var observerGeometricStateFromSSB = observer.GetGeometricStateFromICRF(date).ToStateVector();
+                var targetGeometricState = GetGeometricStateFromICRF(date).ToStateVector();
+                var observerGeometricState = new StateVector(targetGeometricState.Position - observerGeometricStateFromSSB.Position,
+                    targetGeometricState.Velocity - observerGeometricStateFromSSB.Velocity,
+                    observer, date, Frames.Frame.ICRF);
+                if (aberration is Aberration.LT or Aberration.XLT or Aberration.LTS or Aberration.XLTS)
+                {
+                    var lightTime = TimeSpan.FromSeconds(observerGeometricState.Position.Magnitude() / Constants.C);
+
+                    Time newEpoch;
+                    if (aberration is Aberration.LT or Aberration.LTS)
+                        newEpoch = date - lightTime;
+                    else
+                        newEpoch = date + lightTime;
+
+                    observerGeometricState = this.GetEphemeris(newEpoch, observer, Frames.Frame.ICRF, Aberration.None).ToStateVector();
+
+                    if (aberration == Aberration.LTS || aberration == Aberration.XLTS)
+                    {
+                        var voverc = observerGeometricStateFromSSB.Velocity.Magnitude() / Constants.C;
+                        var stellarAberration = observerGeometricStateFromSSB.Velocity * voverc;
+                        observerGeometricState.UpdatePosition(observerGeometricState.Position + stellarAberration);
+                    }
+                }
+
+                return observerGeometricState.ToFrame(frame);
             }
 
             var siteInFrame = new StateVector(Planetodetic.ToPlanetocentric(CelestialBody.Flattening, CelestialBody.EquatorialRadius).ToCartesianCoordinates(),
-                Vector3.Zero, CelestialBody, epoch, CelestialBody.Frame).ToFrame(frame).ToStateVector();
+                Vector3.Zero, CelestialBody, date, CelestialBody.Frame).ToFrame(frame).ToStateVector();
             return siteInFrame.RelativeTo(observer, aberration);
         }
 
@@ -445,7 +470,7 @@ namespace IO.Astrodynamics.Surface
         public void WriteEphemeris(Window window, FileInfo outputFile)
         {
             var ephemeris = GetEphemeris(window, CelestialBody, CelestialBody.Frame, Aberration.None, TimeSpan.FromMinutes(1.0));
-            _dataProvider.WriteEphemeris(outputFile,this, ephemeris.Select(x => x.ToStateVector()).ToArray());
+            API.Instance.WriteEphemeris(outputFile, this, ephemeris.Select(x => x.ToStateVector()).ToArray());
         }
 
         public IEnumerable<Window> FindDayWindows(in Window searchWindow, double twilight)

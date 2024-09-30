@@ -251,7 +251,7 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     public virtual OrbitalParameters.OrbitalParameters GetGeometricStateFromICRF(in Time date)
     {
         return _stateVectorsRelativeToICRF.GetOrAdd(date,
-            x => _dataProvider.GetEphemeris(x, this, new Barycenter(Barycenters.SOLAR_SYSTEM_BARYCENTER.NaifId), Frame.ICRF, Aberration.None).ToStateVector());
+            x => _dataProvider.GetEphemerisFromICRF(x, this, Frame.ICRF, Aberration.None).ToStateVector());
     }
 
     /// <summary>
@@ -370,9 +370,10 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
         return GravitationalField.ComputeGravitationalAcceleration(sv);
     }
 
+    
     public void WriteEphemeris(FileInfo outputFile)
     {
-        _dataProvider.WriteEphemeris(outputFile, this, _stateVectorsRelativeToICRF.Values.ToArray());
+        API.Instance.WriteEphemeris(outputFile, this, _stateVectorsRelativeToICRF.Values.ToArray());
     }
 
 
