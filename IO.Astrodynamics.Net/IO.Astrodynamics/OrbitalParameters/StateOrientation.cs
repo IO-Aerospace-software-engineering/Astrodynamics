@@ -48,7 +48,31 @@ namespace IO.Astrodynamics.OrbitalParameters
         {
             var deltaT = (date - Epoch).TotalSeconds;
             return new StateOrientation(
-                 (new Quaternion(AngularVelocity.Normalize(), AngularVelocity.Magnitude() * deltaT).Normalize()*Rotation.Normalize()).Normalize(), AngularVelocity, date, ReferenceFrame);
+                (new Quaternion(AngularVelocity.Normalize(), AngularVelocity.Magnitude() * deltaT).Normalize() * Rotation.Normalize()).Normalize(), AngularVelocity, date,
+                ReferenceFrame);
+        }
+
+        /// <summary>
+        /// Interpolates between two state orientations.
+        /// </summary>
+        /// <param name="other"></param>
+        /// <param name="date"></param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentException"></exception>
+        public StateOrientation Interpolate(StateOrientation other, Time date)
+        {
+            if (ReferenceFrame != other.ReferenceFrame)
+            {
+                throw new ArgumentException("Cannot interpolate between two different reference frames.");
+            }
+            if(date < Epoch || date > other.Epoch)
+            {
+                throw new ArgumentException("Date is out of range.");
+            }
+            var ratio = (date - Epoch).TotalSeconds / (other.Epoch - Epoch).TotalSeconds;
+
+            return new StateOrientation(Rotation.SLERP(other.Rotation, ratio), AngularVelocity.LinearInterpolation(other.AngularVelocity, ratio),
+                Epoch + (other.Epoch - Epoch) * ratio, ReferenceFrame);
         }
 
         /// <summary>
