@@ -71,7 +71,7 @@ public class Frame : IEquatable<Frame>
 
     public virtual StateOrientation GetStateOrientationToICRF(Time date)
     {
-        return _stateOrientationsToICRF.GetOrAdd(date, dt => _dataProvider.FrameTransformation(dt, this, ICRF));
+        return _stateOrientationsToICRF.GetOrAdd(date, dt => _dataProvider.FrameTransformationToICRF(dt, this));
     }
 
     public bool AddStateOrientationToICRF(StateOrientation stateOrientation)

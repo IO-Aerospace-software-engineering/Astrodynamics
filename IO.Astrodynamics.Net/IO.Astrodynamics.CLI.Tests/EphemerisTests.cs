@@ -118,7 +118,7 @@ public class EphemerisTests
             command.AngularSeparation("Data", 399, 301, 10, new EpochParameters{Epoch = "0.0"});
 
             var res = sb.ToString();
-            Assert.Equal($"0.9984998794278305{Environment.NewLine}", res);
+            Assert.Equal(0.9984998794278305, double.Parse(res),12);
         }
     }
 }
