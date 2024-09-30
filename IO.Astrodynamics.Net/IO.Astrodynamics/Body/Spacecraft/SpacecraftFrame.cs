@@ -50,6 +50,6 @@ public class SpacecraftFrame : Frame
 
     public void WriteOrientation(FileInfo outputFile, Spacecraft spacecraft)
     {
-        _dataProvider.WriteOrientation(outputFile, spacecraft, _stateOrientationsToICRF.Values.ToArray());
+        API.Instance.WriteOrientation(outputFile, spacecraft, _stateOrientationsToICRF.Values.ToArray());
     }
 }

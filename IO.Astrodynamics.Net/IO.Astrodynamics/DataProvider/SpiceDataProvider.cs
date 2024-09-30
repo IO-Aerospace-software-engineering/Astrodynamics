@@ -19,23 +19,13 @@ public class SpiceDataProvider : IDataProvider
         return API.Instance.TransformFrame(date, source, Frame.ICRF);
     }
 
-    public OrbitalParameters.OrbitalParameters GetEphemeris(in Time date, ILocalizable target, ILocalizable observer, Frame frame, Aberration aberration)
+    public OrbitalParameters.OrbitalParameters GetEphemerisFromICRF(in Time date, ILocalizable target, Frame frame, Aberration aberration)
     {
-        return API.Instance.ReadEphemeris(date, observer, target, frame, aberration);
+        return API.Instance.ReadEphemeris(date, new Barycenter(0), target, frame, aberration);
     }
 
     CelestialBody IDataProvider.GetCelestialBodyInfo(int naifId)
     {
         return API.Instance.GetCelestialBodyInfo(naifId);
-    }
-
-    public void WriteEphemeris(FileInfo outputFile, INaifObject objectId, IEnumerable<StateVector> stateVectors)
-    {
-        API.Instance.WriteEphemeris(outputFile, objectId, stateVectors);
-    }
-
-    public void WriteOrientation(FileInfo outputFile, INaifObject objectId, IEnumerable<StateOrientation> stateOrientations)
-    {
-        API.Instance.WriteOrientation(outputFile, objectId, stateOrientations);
     }
 }
