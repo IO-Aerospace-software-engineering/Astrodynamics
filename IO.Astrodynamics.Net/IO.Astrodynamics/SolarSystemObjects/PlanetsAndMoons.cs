@@ -1,5 +1,7 @@
 // Copyright 2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
 
+using IO.Astrodynamics.Body;
+
 namespace IO.Astrodynamics.SolarSystemObjects;
 
 public static class PlanetsAndMoons
@@ -165,4 +167,13 @@ public static class PlanetsAndMoons
     public static NaifObject HYDRA = new(903, "HYDRA", "IAU_HYDRA");
     public static NaifObject KERBEROS = new(904, "KERBEROS", "IAU_KERBEROS");
     public static NaifObject STYX = new(905, "STYX", "IAU_STYX");
+
+    public static CelestialBody EARTH_BODY;
+    public static CelestialBody MOON_BODY;
+    
+    static PlanetsAndMoons()
+    {
+        EARTH_BODY = new CelestialBody(EARTH);
+        MOON_BODY = new CelestialBody(MOON);
+    }
 }

@@ -21,7 +21,7 @@ public class CelestialBodyTests
     [Fact]
     public void Create()
     {
-        CelestialBody earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        CelestialBody earth = PlanetsAndMoons.EARTH_BODY;
 
         Assert.Equal(399, earth.NaifId);
         Assert.Equal("EARTH", earth.Name);
@@ -154,8 +154,8 @@ public class CelestialBodyTests
     [Fact]
     public void Equality()
     {
-        var earth1 = new CelestialBody(PlanetsAndMoons.EARTH);
-        var earth2 = new CelestialBody(PlanetsAndMoons.EARTH);
+        var earth1 = PlanetsAndMoons.EARTH_BODY;
+        var earth2 = PlanetsAndMoons.EARTH_BODY;
         var moon = new CelestialBody(PlanetsAndMoons.MOON);
         Assert.Equal(earth1, earth2);
         Assert.NotEqual(earth1, moon);
@@ -172,7 +172,7 @@ public class CelestialBodyTests
     [Fact]
     public void GetEphemeris()
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var earth = PlanetsAndMoons.EARTH_BODY;
         var res = earth.GetEphemeris(new Window(TimeSystem.Time.J2000TDB, TimeSpan.FromDays(1.0)), TestHelpers.Sun, Frames.Frame.ICRF, Aberration.None,
             TimeSpan.FromDays(1.0)).ToArray();
         Assert.Equal(2, res.Length);

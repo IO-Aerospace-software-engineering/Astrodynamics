@@ -44,7 +44,7 @@ namespace IO.Astrodynamics.Tests.Maneuvers
                 new StateVector(new Vector3(-1.144243683349977E+06, 4.905086030671815E+06, 4.553416875193589E+06),
                     new Vector3(-5.588288926819989E+03, -4.213222250603758E+03, 3.126518392859475E+03), earth, epoch, Frames.Frame.ICRF), IO.Astrodynamics.Constants.CivilTwilight,
                 null);
-            var res = launch.FindLaunchWindows(new Window(epoch, TimeSpan.FromDays(1.0)), Constants.OutputPath);
+            var res = launch.FindLaunchWindows(new Window(epoch, TimeSpan.FromDays(1.0)));
             var launchWindows = res as LaunchWindow[] ?? res.ToArray();
             Assert.Equal(2, launchWindows.Count());
             var firstWindow = launchWindows.ElementAt(0);
@@ -78,7 +78,7 @@ namespace IO.Astrodynamics.Tests.Maneuvers
                 new StateVector(new Vector3(-1.144243683349977E+06, 4.905086030671815E+06, 4.553416875193589E+06),
                     new Vector3(-5.588288926819989E+03, -4.213222250603758E+03, 3.126518392859475E+03), earth, epoch, Frames.Frame.ICRF), IO.Astrodynamics.Constants.CivilTwilight,
                 true);
-            var res = launch.FindLaunchWindows(new Window(epoch, TimeSpan.FromDays(1.0)), Constants.OutputPath);
+            var res = launch.FindLaunchWindows(new Window(epoch, TimeSpan.FromDays(1.0)));
             Assert.Single(res);
             var firstWindow = res.ElementAt(0);
             Assert.Equal(new TimeSystem.Time("2021-06-02T18:11:31.0119753Z"), firstWindow.Window.StartDate.ToUTC(), TestHelpers.TimeComparer);
@@ -104,7 +104,7 @@ namespace IO.Astrodynamics.Tests.Maneuvers
                 new StateVector(new Vector3(-1.144243683349977E+06, 4.905086030671815E+06, 4.553416875193589E+06),
                     new Vector3(-5.588288926819989E+03, -4.213222250603758E+03, 3.126518392859475E+03), earth, epoch, Frames.Frame.ICRF), IO.Astrodynamics.Constants.CivilTwilight,
                 true);
-            var res = launch.FindLaunchWindows(new Window(epoch, TimeSpan.FromDays(1.0)), Constants.OutputPath);
+            var res = launch.FindLaunchWindows(new Window(epoch, TimeSpan.FromDays(1.0)));
             Assert.Single(res);
             var firstWindow = res.ElementAt(0);
             Assert.Equal(new TimeSystem.Time("2021-06-02T15:08:24.4541548Z"), firstWindow.Window.StartDate.ToUTC(), TestHelpers.TimeComparer);
@@ -129,7 +129,7 @@ namespace IO.Astrodynamics.Tests.Maneuvers
                 new StateVector(new Vector3(-1.144243683349977E+06, 4.905086030671815E+06, 4.553416875193589E+06),
                     new Vector3(-5.588288926819989E+03, -4.213222250603758E+03, 3.126518392859475E+03), earth, epoch, Frames.Frame.ICRF), IO.Astrodynamics.Constants.CivilTwilight,
                 null);
-            var res = launch.FindLaunchWindows(new Window(epoch, TimeSpan.FromDays(1.0)), Constants.OutputPath);
+            var res = launch.FindLaunchWindows(new Window(epoch, TimeSpan.FromDays(1.0)));
             Assert.Equal(2, res.Count());
             var firstWindow = res.ElementAt(0);
             Assert.Equal(new TimeSystem.Time("2021-06-02T08:55:43.6080970z"), firstWindow.Window.StartDate.ToUTC(), TestHelpers.TimeComparer);

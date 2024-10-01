@@ -6,6 +6,7 @@ using System.IO;
 using System.Threading.Tasks;
 using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.Math;
+using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.TimeSystem;
 
 namespace IO.Astrodynamics.Body.Spacecraft;
@@ -22,8 +23,8 @@ public class RectangularInstrument : Instrument
     }
     public override bool IsInFOV(Time date, ILocalizable target, Aberration aberration)
     {
-        var cameraPostion = Spacecraft.GetEphemeris(date, new Barycenter(0), Frame.ICRF, aberration).ToStateVector();
-        var objectPosition = target.GetEphemeris(date, new Barycenter(0), Frame.ICRF, aberration).ToStateVector();
+        var cameraPostion = Spacecraft.GetEphemeris(date, Barycenters.SOLAR_SYSTEM_BARYCENTER, Frame.ICRF, aberration).ToStateVector();
+        var objectPosition = target.GetEphemeris(date, Barycenters.SOLAR_SYSTEM_BARYCENTER, Frame.ICRF, aberration).ToStateVector();
         // Calculate the vector from the camera to the object
         Vector3 toObject = objectPosition.Position - cameraPostion.Position;
 

@@ -43,7 +43,7 @@ namespace IO.Astrodynamics.Tests.Mission
             Scenario scenario = new Scenario("Scenario", mission, new Window(new TimeSystem.Time(2021, 1, 1), new TimeSystem.Time(2021, 1, 2)));
             Assert.Equal("Scenario", scenario.Name);
             Assert.Equal(mission, scenario.Mission);
-            var site = new Site(13, "DSS-13", new CelestialBody(PlanetsAndMoons.EARTH));
+            var site = new Site(13, "DSS-13", PlanetsAndMoons.EARTH_BODY);
             scenario.AddSite(site);
             Assert.Single(scenario.Sites);
             Assert.Equal(site, scenario.Sites.First());
@@ -496,7 +496,7 @@ namespace IO.Astrodynamics.Tests.Mission
         {
             var start = new TimeSystem.Time(2001, 1, 1);
             var end = start.AddDays(365 * 4);
-            var observer = new Barycenter(0);
+            var observer = Barycenters.SOLAR_SYSTEM_BARYCENTER;
             var star = new Star(2, "star2", 1E+30, "spec", 2, 0.3792, new Equatorial(1, 1, start), 0.1, 0.1, 0, 0, 0, 0, start);
 
             Astrodynamics.Mission.Mission mission = new Astrodynamics.Mission.Mission("mission102");

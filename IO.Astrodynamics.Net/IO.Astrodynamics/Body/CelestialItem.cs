@@ -136,7 +136,7 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
             ? new GeopotentialGravitationalField(geopotentialModelParameters.GeopotentialModelPath, geopotentialModelParameters.GeopotentialDegree)
             : new GravitationalField();
 
-        if (NaifId == Barycenters.SOLAR_SYSTEM_BARYCENTER.NaifId) return;
+        if (NaifId == 0) return;
         if (IsPlanet || IsMoon || IsBarycenter || IsSun)
             InitialOrbitalParameters = GetEphemeris(epoch, new Barycenter(ExtendedInformation.BarycenterOfMotionId), frame, Aberration.None);
 

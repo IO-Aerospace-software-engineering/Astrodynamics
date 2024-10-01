@@ -6,6 +6,7 @@ using IO.Astrodynamics.Coordinates;
 using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
+using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.TimeSystem;
 
 namespace IO.Astrodynamics.Body;
@@ -181,7 +182,7 @@ public class Star : CelestialBody
             for (Time epoch = timeWindow.StartDate; epoch <= timeWindow.EndDate; epoch += stepSize)
             {
                 var position = GetEquatorialCoordinates(epoch).ToCartesian();
-                _stateVectorsRelativeToICRF.Add(epoch,new StateVector(position, Vector3.Zero, new Barycenter(0), epoch, Frame.ICRF));
+                _stateVectorsRelativeToICRF.Add(epoch,new StateVector(position, Vector3.Zero, Barycenters.SOLAR_SYSTEM_BARYCENTER, epoch, Frame.ICRF));
             }
         });
     }
