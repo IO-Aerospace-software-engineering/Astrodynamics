@@ -138,7 +138,7 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
 
         if (NaifId == 0) return;
         if (IsPlanet || IsMoon || IsBarycenter || IsSun)
-            InitialOrbitalParameters = GetEphemeris(epoch, new Barycenter(ExtendedInformation.BarycenterOfMotionId), frame, Aberration.None);
+            InitialOrbitalParameters = GetEphemeris(epoch, new Barycenter(ExtendedInformation.BarycenterOfMotionId, epoch), frame, Aberration.None);
 
         (InitialOrbitalParameters?.Observer as CelestialItem)?._satellites.Add(this);
     }
