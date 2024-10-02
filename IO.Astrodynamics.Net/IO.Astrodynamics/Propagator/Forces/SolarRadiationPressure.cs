@@ -3,13 +3,14 @@ using System.Collections.Generic;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.OrbitalParameters;
+using IO.Astrodynamics.SolarSystemObjects;
 using Vector3 = IO.Astrodynamics.Math.Vector3;
 
 namespace IO.Astrodynamics.Propagator.Forces;
 
 public class SolarRadiationPressure : ForceBase
 {
-    private readonly CelestialBody _sun = new CelestialBody(10);
+    private readonly CelestialBody _sun = Stars.SUN_BODY;
     private readonly double _areaMassRatio;
     private readonly double _term1;
     private readonly IEnumerable<CelestialBody> _occultingBodies;

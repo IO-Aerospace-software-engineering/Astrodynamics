@@ -6,6 +6,7 @@ using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
+using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.TimeSystem;
 using Xunit;
 using CelestialBody = IO.Astrodynamics.Body.CelestialBody;
@@ -26,10 +27,10 @@ public class SpacecraftPropagatorTests
     public void CheckSymplecticProperty()
     {
         Clock clk = new Clock("My clock", 256);
-        var orbit = new KeplerianElements(150000000000.0, 0, 0, 0, 0, 0, new Barycenter(0), TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+        var orbit = new KeplerianElements(150000000000.0, 0, 0, 0, 0, 0, Barycenters.SOLAR_SYSTEM_BARYCENTER, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
         Spacecraft spc = new Spacecraft(-1001, "MySpacecraft", 100.0, 10000.0, clk, orbit);
         Propagator.SpacecraftPropagator spacecraftPropagator = new Propagator.SpacecraftPropagator(new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddDays(30)), spc,
-            [new Barycenter(0)], false, false, TimeSpan.FromSeconds(100.0));
+            [Barycenters.SOLAR_SYSTEM_BARYCENTER], false, false, TimeSpan.FromSeconds(100.0));
         spacecraftPropagator.Propagate();
         var energy = spc.StateVectorsRelativeToICRF.Values.Select(x => x.SpecificOrbitalEnergy()).ToArray();
         var min = energy.Min();
@@ -42,11 +43,11 @@ public class SpacecraftPropagatorTests
     public void CheckNonFittingStepSize()
     {
         Clock clk = new Clock("My clock", 256);
-        var orbit = new KeplerianElements(150000000000.0, 0, 0, 0, 0, 0, new Barycenter(0), TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+        var orbit = new KeplerianElements(150000000000.0, 0, 0, 0, 0, 0, Barycenters.SOLAR_SYSTEM_BARYCENTER, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
         Spacecraft spc = new Spacecraft(-1001, "MySpacecraft", 100.0, 10000.0, clk, orbit);
         Propagator.SpacecraftPropagator spacecraftPropagator = new Propagator.SpacecraftPropagator(new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddSeconds(5)),
             spc,
-            [new Barycenter(0)], false, false, TimeSpan.FromSeconds(2.0));
+            [Barycenters.SOLAR_SYSTEM_BARYCENTER], false, false, TimeSpan.FromSeconds(2.0));
 
         spacecraftPropagator.Propagate();
         var state = spc.StateVectorsRelativeToICRF.Values.ElementAt(0);

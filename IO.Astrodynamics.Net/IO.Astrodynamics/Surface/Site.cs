@@ -176,7 +176,7 @@ namespace IO.Astrodynamics.Surface
                     return _dataProvider.GetEphemerisFromICRF(dt, this, Frames.Frame.ICRF, Aberration.None).ToStateVector();
                 }
 
-                return GetEphemeris(dt, new Barycenter(0), Frames.Frame.ICRF, Aberration.None).ToStateVector();
+                return GetEphemeris(dt, Barycenters.SOLAR_SYSTEM_BARYCENTER, Frames.Frame.ICRF, Aberration.None).ToStateVector();
             });
         }
 
@@ -475,7 +475,7 @@ namespace IO.Astrodynamics.Surface
 
         public IEnumerable<Window> FindDayWindows(in Window searchWindow, double twilight)
         {
-            var sun = new CelestialBody(10);
+            var sun = Stars.SUN_BODY;
             return FindWindowsOnIlluminationConstraint(searchWindow, sun, IlluminationAngle.Incidence, RelationnalOperator.Lower, Constants.PI2 + twilight, 0.0,
                 Aberration.LTS, TimeSpan.FromMinutes(1.0), sun);
         }

@@ -8,6 +8,7 @@ using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.Propagator;
+using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.TimeSystem;
 using StateOrientation = IO.Astrodynamics.OrbitalParameters.StateOrientation;
 
@@ -374,7 +375,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
             {
                 if (_stateVectorsRelativeToICRF.Count < 2)
                 {
-                    return this.InitialOrbitalParameters.ToStateVector(date).RelativeTo(new Barycenter(0), Aberration.None).ToFrame(Frames.Frame.ICRF).ToStateVector();
+                    return this.InitialOrbitalParameters.ToStateVector(date).RelativeTo(Barycenters.SOLAR_SYSTEM_BARYCENTER, Aberration.None).ToFrame(Frames.Frame.ICRF).ToStateVector();
                 }
 
                 return Lagrange.Interpolate(_stateVectorsRelativeToICRF.Values.OrderBy(x => x.Epoch).ToArray(), date);

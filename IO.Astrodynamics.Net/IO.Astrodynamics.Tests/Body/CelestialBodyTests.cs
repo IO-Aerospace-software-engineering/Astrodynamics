@@ -21,7 +21,7 @@ public class CelestialBodyTests
     [Fact]
     public void Create()
     {
-        CelestialBody earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        CelestialBody earth = PlanetsAndMoons.EARTH_BODY;
 
         Assert.Equal(399, earth.NaifId);
         Assert.Equal("EARTH", earth.Name);
@@ -154,8 +154,8 @@ public class CelestialBodyTests
     [Fact]
     public void Equality()
     {
-        var earth1 = new CelestialBody(PlanetsAndMoons.EARTH);
-        var earth2 = new CelestialBody(PlanetsAndMoons.EARTH);
+        var earth1 = PlanetsAndMoons.EARTH_BODY;
+        var earth2 = PlanetsAndMoons.EARTH_BODY;
         var moon = new CelestialBody(PlanetsAndMoons.MOON);
         Assert.Equal(earth1, earth2);
         Assert.NotEqual(earth1, moon);
@@ -172,7 +172,7 @@ public class CelestialBodyTests
     [Fact]
     public void GetEphemeris()
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var earth = PlanetsAndMoons.EARTH_BODY;
         var res = earth.GetEphemeris(new Window(TimeSystem.Time.J2000TDB, TimeSpan.FromDays(1.0)), TestHelpers.Sun, Frames.Frame.ICRF, Aberration.None,
             TimeSpan.FromDays(1.0)).ToArray();
         Assert.Equal(2, res.Length);
@@ -415,5 +415,104 @@ public class CelestialBodyTests
         MarsAtmosphericModel model = new MarsAtmosphericModel();
         Assert.Equal(0.015026759563140498, model.GetDensity(0.0));
         Assert.Equal(0.0013352044980975983, model.GetDensity(30000.0));
+    }
+    
+    [Fact]
+    public void FindBarycenterOfMotionId_ReturnsZero_ForSun()
+    {
+        var celestialItem = TestHelpers.Sun;
+        Assert.Equal(0, celestialItem.BarycenterOfMotionId);
+    }
+
+    [Fact]
+    public void FindBarycenterOfMotionId_ReturnsZero_ForBarycenter()
+    {
+        var celestialItem = new Barycenter(0);
+        Assert.Equal(0, celestialItem.BarycenterOfMotionId);
+    }
+
+    [Fact]
+    public void FindBarycenterOfMotionId_ReturnsZero_ForAsteroid()
+    {
+        var celestialItem = new CelestialBody(2000001);
+        Assert.Equal(0, celestialItem.BarycenterOfMotionId);
+    }
+
+    [Fact]
+    public void FindBarycenterOfMotionId_ReturnsCorrectValue_ForPlanet()
+    {
+        var celestialItem = TestHelpers.EarthAtJ2000;
+        Assert.Equal(3, celestialItem.BarycenterOfMotionId);
+    }
+
+    [Fact]
+    public void FindBarycenterOfMotionId_ReturnsCorrectValue_ForMoon()
+    {
+        var celestialItem = TestHelpers.MoonAtJ2000;
+        Assert.Equal(3, celestialItem.BarycenterOfMotionId);
+    }
+
+    [Fact]
+    public void FindBarycenterOfMotionId_ReturnsCorrectValue_ForLagrangePoint391()
+    {
+        var celestialItem = new LagrangePoint(LagrangePoints.L1);
+        Assert.Equal(3, celestialItem.BarycenterOfMotionId);
+    }
+
+    [Fact]
+    public void FindBarycenterOfMotionId_ReturnsZero_ForLagrangePoint394()
+    {
+        var celestialItem = new LagrangePoint(LagrangePoints.L4);
+        Assert.Equal(3, celestialItem.BarycenterOfMotionId);
+    }
+
+
+[Fact]
+    public void FindCenterOfMotionId_ReturnsZero_ForBarycenter()
+    {
+        var celestialItem = new Barycenter(0);
+        Assert.Equal(0, celestialItem.CenterOfMotionId);
+    }
+
+    [Fact]
+    public void FindCenterOfMotionId_ReturnsTen_ForSun()
+    {
+        var celestialItem = TestHelpers.Sun;
+        Assert.Equal(10, celestialItem.CenterOfMotionId);
+    }
+
+    [Fact]
+    public void FindCenterOfMotionId_ReturnsTen_ForPlanet()
+    {
+        var celestialItem = TestHelpers.EarthAtJ2000;
+        Assert.Equal(10, celestialItem.CenterOfMotionId);
+    }
+
+    [Fact]
+    public void FindCenterOfMotionId_ReturnsTen_ForAsteroid()
+    {
+        var celestialItem = new CelestialBody(2000001);
+        Assert.Equal(10, celestialItem.CenterOfMotionId);
+    }
+
+    [Fact]
+    public void FindCenterOfMotionId_ReturnsCorrectValue_ForMoon()
+    {
+        var celestialItem = TestHelpers.MoonAtJ2000;
+        Assert.Equal(399, celestialItem.CenterOfMotionId);
+    }
+
+    [Fact]
+    public void FindCenterOfMotionId_ReturnsCorrectValue_ForLagrangePoint391()
+    {
+        var celestialItem = new LagrangePoint(LagrangePoints.L1);
+        Assert.Equal(10, celestialItem.CenterOfMotionId);
+    }
+
+    [Fact]
+    public void FindCenterOfMotionId_ReturnsTen_ForLagrangePoint394()
+    {
+        var celestialItem = new LagrangePoint(LagrangePoints.L4);
+        Assert.Equal(10, celestialItem.CenterOfMotionId);
     }
 }

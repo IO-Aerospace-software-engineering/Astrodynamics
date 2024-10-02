@@ -49,9 +49,8 @@ namespace IO.Astrodynamics.Maneuver
         /// Find launch windows based on launch's constraints in the given window
         /// </summary>
         /// <param name="searchWindow"></param>
-        /// <param name="outputDirectory"></param>
         /// <returns></returns>
-        public IEnumerable<LaunchWindow> FindLaunchWindows(in Window searchWindow, DirectoryInfo outputDirectory)
+        public IEnumerable<LaunchWindow> FindLaunchWindows(in Window searchWindow)
         {
             //return API.Instance.FindLaunchWindows(this, searchWindow, outputDirectory);
             var date = searchWindow.StartDate;

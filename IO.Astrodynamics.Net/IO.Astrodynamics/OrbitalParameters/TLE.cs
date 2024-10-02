@@ -63,7 +63,7 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
     /// <param name="line3">The third line of the TLE.</param>
     /// <exception cref="ArgumentNullException">Thrown when the frame is null.</exception>
     /// <exception cref="ArgumentException">Thrown when any of the lines are null or empty.</exception>
-    public TLE(string line1, string line2, string line3) : base(new CelestialBody(PlanetsAndMoons.EARTH), Time.J2000TDB, new Frame("TEME"))
+    public TLE(string line1, string line2, string line3) : base(PlanetsAndMoons.EARTH_BODY, Time.J2000TDB, new Frame("TEME"))
     {
         if (string.IsNullOrEmpty(line1)) throw new ArgumentException("Value cannot be null or empty.", nameof(line1));
         if (string.IsNullOrEmpty(line2)) throw new ArgumentException("Value cannot be null or empty.", nameof(line2));
@@ -77,7 +77,7 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
 
         EpochTime ep = new EpochTime(_tleItem.getEpochYear(), _tleItem.getEpochDay());
         Epoch = new Time(ep.toDateTime(), TimeFrame.UTCFrame);
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var earth = PlanetsAndMoons.EARTH_BODY;
         var revDay = _tleItem.getMeanMotion();
         double n = Constants._2PI / (86400.0 / revDay);
         _a = System.Math.Cbrt(earth.GM / (n * n));
@@ -115,7 +115,7 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
         List<Sgp4Data> resultDataList = sgp4.getResults();
         var position = resultDataList[0].getPositionData();
         var velocity = resultDataList[0].getVelocityData();
-        return new StateVector(new Vector3(position.x, position.y, position.z) * 1000.0, new Vector3(velocity.x, velocity.y, velocity.z) * 1000.0, new CelestialBody(399), date,
+        return new StateVector(new Vector3(position.x, position.y, position.z) * 1000.0, new Vector3(velocity.x, velocity.y, velocity.z) * 1000.0, PlanetsAndMoons.EARTH_BODY, date,
             new Frame("TEME")).ToFrame(Frame.ICRF).ToStateVector();
     }
 

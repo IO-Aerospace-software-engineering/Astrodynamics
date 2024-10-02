@@ -95,7 +95,7 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     /// <summary>
     /// Gets a value indicating whether the celestial item is a moon.
     /// </summary>
-    public bool IsMoon => NaifId is > 100 and < 1000 && (NaifId % 100) != 99;
+    public bool IsMoon => (NaifId is > 100 and < 1000 && (NaifId % 100) != 99) && !IsLagrangePoint;
 
     /// <summary>
     /// Gets a value indicating whether the celestial item is an asteroid.
@@ -111,6 +111,16 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     /// Gets a value indicating whether the celestial item is a Lagrange point.
     /// </summary>
     public bool IsLagrangePoint => this.NaifId is 391 or 392 or 393 or 394 or 395;
+
+    /// <summary>
+    /// Gets the barycenter of motion identifier.
+    /// </summary>
+    public int BarycenterOfMotionId { get; protected set; }
+
+    /// <summary>
+    /// Gets the center of motion identifier.
+    /// </summary>
+    public int CenterOfMotionId { get; protected set; }
 
     /// <summary>
     /// Instantiate celestial item from naif id with orbital parameters at given frame and epoch
@@ -136,9 +146,12 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
             ? new GeopotentialGravitationalField(geopotentialModelParameters.GeopotentialModelPath, geopotentialModelParameters.GeopotentialDegree)
             : new GravitationalField();
 
-        if (NaifId == Barycenters.SOLAR_SYSTEM_BARYCENTER.NaifId) return;
+        BarycenterOfMotionId = FindBarycenterOfMotionId(this);
+        CenterOfMotionId = FindCenterOfMotionId(this);
+
+        if (NaifId == 0) return;
         if (IsPlanet || IsMoon || IsBarycenter || IsSun)
-            InitialOrbitalParameters = GetEphemeris(epoch, new Barycenter(ExtendedInformation.BarycenterOfMotionId), frame, Aberration.None);
+            InitialOrbitalParameters = GetEphemeris(epoch, new Barycenter(BarycenterOfMotionId, epoch), frame, Aberration.None);
 
         (InitialOrbitalParameters?.Observer as CelestialItem)?._satellites.Add(this);
     }
@@ -151,7 +164,6 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     /// <param name="mass"></param>
     /// <param name="initialOrbitalParameters"></param>
     /// <param name="geopotentialModelParameters"></param>
-    /// <param name="dataProvider"></param>
     protected CelestialItem(int naifId, string name, double mass, OrbitalParameters.OrbitalParameters initialOrbitalParameters,
         GeopotentialModelParameters geopotentialModelParameters = null)
     {
@@ -172,6 +184,9 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
         Mass = mass;
         GM = mass * Constants.G;
         InitialOrbitalParameters = initialOrbitalParameters;
+        
+        
+        
         (InitialOrbitalParameters?.Observer as CelestialBody)?._satellites.Add(this);
         GravitationalField = geopotentialModelParameters != null
             ? new GeopotentialGravitationalField(geopotentialModelParameters.GeopotentialModelPath, geopotentialModelParameters.GeopotentialDegree)
@@ -199,7 +214,7 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     /// <returns></returns>
     public IEnumerable<OrbitalParameters.OrbitalParameters> GetEphemeris(in Window searchWindow, ILocalizable observer, Frame frame, Aberration aberration, in TimeSpan stepSize)
     {
-        var occurences = (int)System.Math.Ceiling(searchWindow.Length / stepSize) + 1;
+        var occurences = (int)((searchWindow.Length / stepSize)+1);
         var ephemeris = new List<OrbitalParameters.OrbitalParameters>(occurences);
         for (int i = 0; i < occurences; i++)
         {
@@ -370,10 +385,65 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
         return GravitationalField.ComputeGravitationalAcceleration(sv);
     }
 
-    
+
     public void WriteEphemeris(FileInfo outputFile)
     {
         API.Instance.WriteEphemeris(outputFile, this, _stateVectorsRelativeToICRF.Values.ToArray());
+    }
+
+    internal static int FindBarycenterOfMotionId(CelestialItem celestialItem)
+    {
+        if (celestialItem.IsSun || celestialItem.IsBarycenter || celestialItem.IsAsteroid)
+        {
+            return 0;
+        }
+
+        if (celestialItem.IsPlanet || celestialItem.IsMoon)
+        {
+            return (int)(celestialItem.NaifId / 100);
+        }
+
+        if (celestialItem.IsLagrangePoint)
+        {
+            if (celestialItem.NaifId is 391 or 392)
+            {
+                return (int)(celestialItem.NaifId / 100);
+            }
+
+            return 0;
+        }
+
+        throw new ArgumentException("Invalid Naif Id : " + celestialItem.NaifId);
+    }
+
+    internal static int FindCenterOfMotionId(CelestialItem celestialItem)
+    {
+        if (celestialItem.IsBarycenter)
+        {
+            return 0;
+        }
+
+        if (celestialItem.IsSun || celestialItem.IsPlanet || celestialItem.IsAsteroid)
+        {
+            return 10;
+        }
+
+        if (celestialItem.IsMoon)
+        {
+            return celestialItem.NaifId - (celestialItem.NaifId % 100) + 99;
+        }
+
+        if (celestialItem.IsLagrangePoint)
+        {
+            if (celestialItem.NaifId is 391 or 392)
+            {
+                return (int)(celestialItem.NaifId / 100);
+            }
+
+            return 10;
+        }
+
+        throw new ArgumentException("Invalid Naif Id : " + celestialItem.NaifId);
     }
 
 

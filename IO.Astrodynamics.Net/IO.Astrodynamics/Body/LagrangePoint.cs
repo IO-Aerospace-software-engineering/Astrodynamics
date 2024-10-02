@@ -16,7 +16,7 @@ public class LagrangePoint : CelestialItem
     /// <param name="systemObject">The NAIF object representing the celestial system.</param>
     public LagrangePoint(NaifObject systemObject) : this(systemObject, TimeSystem.Time.J2000TDB)
     {
-        this.InitialOrbitalParameters = GetEphemeris(TimeSystem.Time.J2000TDB, new Barycenter(Barycenters.EARTH_BARYCENTER.NaifId), Frame.ECLIPTIC_J2000, Aberration.None);
+       
     }
 
     /// <summary>
@@ -26,6 +26,8 @@ public class LagrangePoint : CelestialItem
     /// <param name="epoch">The epoch time for the Lagrange point.</param>
     public LagrangePoint(NaifObject systemObject, Time epoch) : base(systemObject.NaifId, systemObject.Name, 0.0, null)
     {
-        this.InitialOrbitalParameters = GetEphemeris(epoch, new Barycenter(Barycenters.EARTH_BARYCENTER.NaifId), Frame.ECLIPTIC_J2000, Aberration.None);
+        this.InitialOrbitalParameters = GetEphemeris(epoch, Barycenters.EARTH_BARYCENTER, Frame.ECLIPTIC_J2000, Aberration.None);
+        BarycenterOfMotionId = 3;
+        CenterOfMotionId = 10;
     }
 }

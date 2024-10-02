@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Coordinates;
+using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.TimeSystem;
 using Xunit;
 
@@ -78,7 +79,7 @@ public class StarTests
     public async Task Propagate()
     {
         var epoch = new TimeSystem.Time(new DateTime(2001, 1, 1), TimeFrame.TDBFrame);
-        var observer = new Barycenter(0);
+        var observer = Barycenters.SOLAR_SYSTEM_BARYCENTER;
         var star = new Star(1, "star1", 1E+30, "spec", 2, 0.3792, new Equatorial(1, 1, epoch), 0.1, 0.1, 0, 0, 0, 0, epoch);
         await star.PropagateAsync(new Window(epoch, epoch + TimeSpan.FromDays(365 * 4)), TimeSpan.FromDays(365));
         var eph0 = star.GetEphemeris(epoch, observer, Frames.Frame.ICRF, Aberration.None);

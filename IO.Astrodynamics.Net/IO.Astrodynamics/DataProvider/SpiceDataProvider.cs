@@ -21,7 +21,7 @@ public class SpiceDataProvider : IDataProvider
 
     public OrbitalParameters.OrbitalParameters GetEphemerisFromICRF(in Time date, ILocalizable target, Frame frame, Aberration aberration)
     {
-        return API.Instance.ReadEphemeris(date, new Barycenter(0), target, frame, aberration);
+        return API.Instance.ReadEphemeris(date, Barycenters.SOLAR_SYSTEM_BARYCENTER, target, frame, aberration);
     }
 
     CelestialBody IDataProvider.GetCelestialBodyInfo(int naifId)

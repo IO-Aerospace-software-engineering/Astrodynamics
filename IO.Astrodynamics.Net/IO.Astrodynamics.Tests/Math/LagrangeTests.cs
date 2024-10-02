@@ -58,7 +58,7 @@ namespace IO.Astrodynamics.Tests.Math
         public void InterpolateStateVectorSquare()
         {
             //Interpolate square function
-            CelestialBody earth = new CelestialBody(PlanetsAndMoons.EARTH);
+            CelestialBody earth = PlanetsAndMoons.EARTH_BODY;
             StateVector[] data = new StateVector[10];
             var start = new TimeSystem.Time(2021, 01, 01, 0, 0, 0);
             for (int i = 0; i < 10; i++)
@@ -86,7 +86,7 @@ namespace IO.Astrodynamics.Tests.Math
         public void InterpolateStateVectorCubic()
         {
             //Interpolate square function
-            CelestialBody earth = new CelestialBody(PlanetsAndMoons.EARTH);
+            CelestialBody earth = PlanetsAndMoons.EARTH_BODY;
             StateVector[] data = new StateVector[10];
             var start = new TimeSystem.Time(2021, 01, 01, 0, 0, 0);
             for (int i = 0; i < 10; i++)

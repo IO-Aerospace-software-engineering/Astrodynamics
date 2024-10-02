@@ -43,7 +43,7 @@ public class SpacecraftPropagator : IPropagator
     public SpacecraftPropagator(in Window window, Spacecraft spacecraft, IEnumerable<CelestialItem> additionalCelestialBodies, bool includeAtmosphericDrag,
         bool includeSolarRadiationPressure, TimeSpan deltaT)
     {
-        var ssb = new Barycenter(Barycenters.SOLAR_SYSTEM_BARYCENTER.NaifId);
+        var ssb = Barycenters.SOLAR_SYSTEM_BARYCENTER;
         Spacecraft = spacecraft ?? throw new ArgumentNullException(nameof(spacecraft));
         if (spacecraft.InitialOrbitalParameters.Frame != Frames.Frame.ICRF
             && spacecraft.InitialOrbitalParameters.Frame != Frames.Frame.B1950

@@ -163,7 +163,7 @@ public class CelestialBody : CelestialItem, IOrientable<Frame>
             return;
         }
 
-        var mainBody = new CelestialBody(ExtendedInformation.CenterOfMotionId);
+        var mainBody = new CelestialBody(ExtendedInformation.CenterOfMotionId, Frame.ECLIPTIC_J2000, InitialOrbitalParameters.Epoch);
         var a = this.GetEphemeris(InitialOrbitalParameters.Epoch, mainBody, Frame.ECLIPTIC_J2000, Aberration.None).SemiMajorAxis();
         SphereOfInfluence = InitialOrbitalParameters != null ? SphereOfInluence(a, Mass, mainBody.Mass) : double.PositiveInfinity;
     }
@@ -202,7 +202,7 @@ public class CelestialBody : CelestialItem, IOrientable<Frame>
     {
         return TimeSpan.FromSeconds(Constants._2PI / GetOrientation(Frame.ICRF, epoch).AngularVelocity.Magnitude());
     }
-    
+
     public double AngularVelocity(Time epoch)
     {
         var siderealRotationPeriod = SideralRotationPeriod(epoch);
@@ -233,7 +233,7 @@ public class CelestialBody : CelestialItem, IOrientable<Frame>
     /// the orbit perigee is lower than the equatorial radius.</exception>
     public KeplerianElements HelioSynchronousOrbit(double semiMajorAxis, double eccentricity, Time epochAtDescendingNode)
     {
-        CelestialBody sun = new CelestialBody(10);
+        CelestialBody sun = Stars.SUN_BODY;
         double p = semiMajorAxis * (1 - eccentricity);
         if (p < EquatorialRadius)
         {
@@ -291,7 +291,7 @@ public class CelestialBody : CelestialItem, IOrientable<Frame>
             throw new InvalidOperationException("At this time, the computation of true solar day works only with planets");
         }
 
-        CelestialBody sun = new CelestialBody(10);
+        CelestialBody sun = Stars.SUN_BODY;
         var sideralRotation = SideralRotationPeriod(epoch);
         var eph0 = this.GetEphemeris(epoch, sun, Frame.ECLIPTIC_J2000, Aberration.LT).ToStateVector().Position;
         var eph1 = this.GetEphemeris(epoch + sideralRotation, sun, Frame.ECLIPTIC_J2000, Aberration.LT).ToStateVector().Position;
