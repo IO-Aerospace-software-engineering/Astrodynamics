@@ -4,7 +4,7 @@
         <id>IO.Astrodynamics</id>
         <authors>Sylvain Guillet</authors>
         <copyright>Sylvain Guillet</copyright>
-        <version>6.0.0-preview-10</version>
+        <version>6.1.0-preview-1</version>
         <title>Astrodynamics framework</title>
         <icon>images\dragonfly-dark-trans.png</icon>
         <readme>docs\README.md</readme>
@@ -21,6 +21,7 @@
     <files>
         <!-- binding libraries -->
         <file src="bin/Release/net8.0/IO.Astrodynamics.Net.dll" target="lib/net8.0"/>
+        <file src="resources/One_Sgp4.dll" target="lib/net8.0"/>
         <!-- native libraries -->
         <file src="resources/IO.Astrodynamics.dll" target="runtimes/windows10-x64"/>
         <file src="resources/IO.Astrodynamics.lib" target="runtimes/windows10-x64"/>
