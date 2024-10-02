@@ -54,6 +54,10 @@
       <Content Include="resources\libIO.Astrodynamics.so">
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       </Content>
+      <None Remove="resources\One_Sgp4.dll" />
+      <Content Include="resources\One_Sgp4.dll">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </Content>
     </ItemGroup>
 
     <ItemGroup>
@@ -69,7 +73,12 @@
     <ItemGroup>
       <PackageReference Include="MathNet.Filtering.Kalman" Version="0.7.0" />
       <PackageReference Include="MathNet.Numerics" Version="5.0.0" />
-      <PackageReference Include="One_Sgp4" Version="1.1.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Reference Include="One_Sgp4">
+        <HintPath>resources\One_Sgp4.dll</HintPath>
+      </Reference>
     </ItemGroup>
 
 </Project>
