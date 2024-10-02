@@ -163,7 +163,7 @@ public class CelestialBody : CelestialItem, IOrientable<Frame>
             return;
         }
 
-        var mainBody = new CelestialBody(ExtendedInformation.CenterOfMotionId);
+        var mainBody = new CelestialBody(ExtendedInformation.CenterOfMotionId, Frame.ECLIPTIC_J2000, InitialOrbitalParameters.Epoch);
         var a = this.GetEphemeris(InitialOrbitalParameters.Epoch, mainBody, Frame.ECLIPTIC_J2000, Aberration.None).SemiMajorAxis();
         SphereOfInfluence = InitialOrbitalParameters != null ? SphereOfInluence(a, Mass, mainBody.Mass) : double.PositiveInfinity;
     }
@@ -202,7 +202,7 @@ public class CelestialBody : CelestialItem, IOrientable<Frame>
     {
         return TimeSpan.FromSeconds(Constants._2PI / GetOrientation(Frame.ICRF, epoch).AngularVelocity.Magnitude());
     }
-    
+
     public double AngularVelocity(Time epoch)
     {
         var siderealRotationPeriod = SideralRotationPeriod(epoch);
