@@ -176,7 +176,7 @@ namespace IO.Astrodynamics.Surface
                     return _dataProvider.GetEphemerisFromICRF(dt, this, Frames.Frame.ICRF, Aberration.None).ToStateVector();
                 }
 
-                return GetEphemeris(dt, Barycenters.SOLAR_SYSTEM_BARYCENTER, Frames.Frame.ICRF, Aberration.None).ToStateVector();
+                return GetEphemeris(dt, new Barycenter(0, dt), Frames.Frame.ICRF, Aberration.None).ToStateVector();
             });
         }
 
