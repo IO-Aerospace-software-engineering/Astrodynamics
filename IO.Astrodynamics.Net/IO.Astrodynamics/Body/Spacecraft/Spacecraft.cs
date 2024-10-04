@@ -373,9 +373,13 @@ namespace IO.Astrodynamics.Body.Spacecraft
         {
             return _stateVectorsRelativeToICRF.GetOrAdd(date, date =>
             {
+                if (InitialOrbitalParameters is TLE)
+                {
+                    return InitialOrbitalParameters.ToStateVector(date).RelativeTo(new Barycenter(0,date), Aberration.None).ToFrame(Frames.Frame.ICRF).ToStateVector();;
+                }
                 if (_stateVectorsRelativeToICRF.Count < 2)
                 {
-                    return this.InitialOrbitalParameters.ToStateVector(date).RelativeTo(Barycenters.SOLAR_SYSTEM_BARYCENTER, Aberration.None).ToFrame(Frames.Frame.ICRF).ToStateVector();
+                    return this.InitialOrbitalParameters.ToStateVector(date).RelativeTo(new Barycenter(0,date), Aberration.None).ToFrame(Frames.Frame.ICRF).ToStateVector();
                 }
 
                 return Lagrange.Interpolate(_stateVectorsRelativeToICRF.Values.OrderBy(x => x.Epoch).ToArray(), date);

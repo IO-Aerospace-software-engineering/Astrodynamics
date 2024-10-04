@@ -242,25 +242,32 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
             observer, epoch, Frame.ICRF);
         if (aberration is Aberration.LT or Aberration.XLT or Aberration.LTS or Aberration.XLTS)
         {
-            var lightTime = TimeSpan.FromSeconds(observerGeometricState.Position.Magnitude() / Constants.C);
-
-            Time newEpoch;
-            if (aberration is Aberration.LT or Aberration.LTS)
-                newEpoch = epoch - lightTime;
-            else
-                newEpoch = epoch + lightTime;
-
-            observerGeometricState = this.GetEphemeris(newEpoch, observer, Frame.ICRF, Aberration.None).ToStateVector();
-
-            if (aberration == Aberration.LTS || aberration == Aberration.XLTS)
-            {
-                var voverc = observerGeometricStateFromSSB.Velocity.Magnitude() / Constants.C;
-                var stellarAberration = observerGeometricStateFromSSB.Velocity * voverc;
-                observerGeometricState.UpdatePosition(observerGeometricState.Position + stellarAberration);
-            }
+            observerGeometricState = CorrectFromAberration(epoch, observer, aberration, observerGeometricState, observerGeometricStateFromSSB);
         }
 
         return observerGeometricState.ToFrame(frame);
+    }
+
+    protected StateVector CorrectFromAberration(Time epoch, ILocalizable observer, Aberration aberration, StateVector observerGeometricState, StateVector observerGeometricStateFromSSB)
+    {
+        var lightTime = TimeSpan.FromSeconds(observerGeometricState.Position.Magnitude() / Constants.C);
+
+        Time newEpoch;
+        if (aberration is Aberration.LT or Aberration.LTS)
+            newEpoch = epoch - lightTime;
+        else
+            newEpoch = epoch + lightTime;
+
+        observerGeometricState = this.GetEphemeris(newEpoch, observer, Frame.ICRF, Aberration.None).ToStateVector();
+
+        if (aberration == Aberration.LTS || aberration == Aberration.XLTS)
+        {
+            var voverc = observerGeometricStateFromSSB.Velocity.Magnitude() / Constants.C;
+            var stellarAberration = observerGeometricStateFromSSB.Velocity * voverc;
+            observerGeometricState.UpdatePosition(observerGeometricState.Position + stellarAberration);
+        }
+
+        return observerGeometricState;
     }
 
     public virtual OrbitalParameters.OrbitalParameters GetGeometricStateFromICRF(in Time date)
