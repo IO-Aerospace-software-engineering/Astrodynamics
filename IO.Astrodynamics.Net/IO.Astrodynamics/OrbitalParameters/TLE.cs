@@ -119,7 +119,7 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
         List<Sgp4Data> resultDataList = sgp4.getResults();
         var position = resultDataList[0].getPositionData();
         var velocity = resultDataList[0].getVelocityData();
-        return new StateVector(new Vector3(position.x, position.y, position.z) * 1000.0, new Vector3(velocity.x, velocity.y, velocity.z) * 1000.0, PlanetsAndMoons.EARTH_BODY, date,
+        return new StateVector(new Vector3(position.x, position.y, position.z) * 1000.0, new Vector3(velocity.x, velocity.y, velocity.z) * 1000.0, new CelestialBody(399,Frame.ECLIPTIC_J2000, date), date,
             new Frame("TEME")).ToFrame(Frame.ICRF).ToStateVector();
     }
 
