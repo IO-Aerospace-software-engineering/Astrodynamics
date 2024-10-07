@@ -139,6 +139,59 @@ namespace IO.Astrodynamics.Mission
             IsSimulated = true;
             return scenarioSummary;
         }
+        
+        /// <summary>
+        /// Propagate this scenario
+        /// </summary>
+        /// <param name="includeAtmosphericDrag">The drag will be computed relatively to initial spacecraft's center of motion</param>
+        /// <param name="includeSolarRadiationPressure">Radiation pressure will be computed from drag coefficient defined in spacecraft</param>
+        /// <param name="propagatorStepSize"></param>
+        /// <exception cref="InvalidOperationException"></exception>
+        public ScenarioSummary Simulate(bool includeAtmosphericDrag, bool includeSolarRadiationPressure,
+            TimeSpan propagatorStepSize)
+        {
+            IsSimulated = false;
+            if (_spacecrafts.Count == 0 && _sites.Count == 0 && _stars.Count == 0)
+            {
+                throw new InvalidOperationException("There is nothing to simulate");
+            }
+
+            if (_stars.Count > 0)
+            {
+                //step size 1s up to 1000.0s window length
+                //step size variable from 1000.0s up to 60000s window length
+                //step size 60s after 60000s window length
+                var starStepSize = Window.Length / 1000.0;
+                if (starStepSize < propagatorStepSize)
+                {
+                    starStepSize = propagatorStepSize;
+                }
+                else if (starStepSize > TimeSpan.FromMinutes(1.0))
+                {
+                    starStepSize = TimeSpan.FromMinutes(1.0);
+                }
+
+                foreach (var star in _stars)
+                {
+                    star.Propagate(Window, starStepSize);
+                }
+            }
+
+
+            foreach (var spacecraft in _spacecrafts)
+            {
+                spacecraft.Propagate(Window, _additionalCelestialBodies, includeAtmosphericDrag, includeSolarRadiationPressure, propagatorStepSize);
+            }
+
+            ScenarioSummary scenarioSummary = new ScenarioSummary(this.Window);
+            foreach (var spacecraft in _spacecrafts)
+            {
+                scenarioSummary.AddSpacecraftSummary(spacecraft.GetSummary());
+            }
+
+            IsSimulated = true;
+            return scenarioSummary;
+        }
 
         #region Operators
         public bool Equals(Scenario other)

@@ -178,13 +178,23 @@ public class Star : CelestialBody
     {
         return Task.Run(() =>
         {
-            List<StateVector> svs = new List<StateVector>();
-            for (Time epoch = timeWindow.StartDate; epoch <= timeWindow.EndDate; epoch += stepSize)
-            {
-                var position = GetEquatorialCoordinates(epoch).ToCartesian();
-                _stateVectorsRelativeToICRF.Add(epoch,new StateVector(position, Vector3.Zero, Barycenters.SOLAR_SYSTEM_BARYCENTER, epoch, Frame.ICRF));
-            }
+            Propagate(timeWindow, stepSize);
         });
     }
 
+    /// <summary>
+    /// Propagates the star asynchronously.
+    /// </summary>
+    /// <param name="timeWindow">The time window for propagation.</param>
+    /// <param name="stepSize">The step size for propagation.</param>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    public void Propagate(Window timeWindow, TimeSpan stepSize)
+    {
+        List<StateVector> svs = new List<StateVector>();
+        for (Time epoch = timeWindow.StartDate; epoch <= timeWindow.EndDate; epoch += stepSize)
+        {
+            var position = GetEquatorialCoordinates(epoch).ToCartesian();
+            _stateVectorsRelativeToICRF.Add(epoch, new StateVector(position, Vector3.Zero, Barycenters.SOLAR_SYSTEM_BARYCENTER, epoch, Frame.ICRF));
+        }
+    }
 }

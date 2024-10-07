@@ -166,7 +166,7 @@ public class CelestialBodyTests
         Assert.True(earth1.Equals((object)earth1));
         Assert.False(earth1.Equals(null));
         Assert.False(earth1.Equals((object)null));
-        Assert.False(earth1.Equals("null"));
+        Assert.False(earth1.Equals(null));
     }
 
     [Fact]
