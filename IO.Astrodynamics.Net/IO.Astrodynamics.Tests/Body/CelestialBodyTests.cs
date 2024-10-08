@@ -180,6 +180,18 @@ public class CelestialBodyTests
             new StateVector(new Vector3(-29069076368.64741, 132303142494.37561, 57359794320.98976), new Vector3(-29695.854459557304, -5497.347182651619, -2382.9422283991967),
                 TestHelpers.Sun, TimeSystem.Time.J2000TDB + TimeSpan.FromDays(1.0), Frames.Frame.ICRF), res.ElementAt(1).ToStateVector(), TestHelpers.StateVectorComparer);
     }
+    
+    [Fact]
+    public void GetEphemerisLT()
+    {
+        var earth = PlanetsAndMoons.MOON_BODY;
+        var res = earth.GetEphemeris(new Window(TimeSystem.Time.J2000TDB, TimeSpan.FromDays(1.0)), TestHelpers.EarthAtJ2000, Frames.Frame.ICRF, Aberration.LT,
+            TimeSpan.FromDays(1.0)).ToArray();
+        Assert.Equal(2, res.Length);
+        Assert.Equal(
+            new StateVector(new Vector3(-291569264.4915199, -266709187.16285706, -76099155.2442627), new Vector3(643.5274874728093, -666.082425667777, -301.3230984482848),
+                TestHelpers.Earth, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF), res.ElementAt(0).ToStateVector(), TestHelpers.StateVectorComparer);
+    }
 
     [Fact]
     public void AngularSeparation()
@@ -279,7 +291,7 @@ public class CelestialBodyTests
     public void TrueSolarDayJMar()
     {
         var res1 = TestHelpers.Earth.TrueSolarDay(new TimeSystem.Time(new DateTime(2021, 3, 26, 0, 0, 0, DateTimeKind.Unspecified), TimeFrame.TDBFrame));
-        Assert.Equal(86400.359499400001, res1.TotalSeconds, 3);
+        Assert.Equal(86400.359507999994, res1.TotalSeconds, 3);
     }
 
     [Fact]
@@ -316,7 +328,7 @@ public class CelestialBodyTests
     {
         var epoch = new TimeSystem.Time(new DateTime(2021, 11, 22, 0, 0, 0, DateTimeKind.Unspecified), TimeFrame.TDBFrame);
         var res = TestHelpers.Earth.HelioSynchronousOrbit(0.0001724, epoch, 14);
-        Assert.Equal(7272221.8771249438, res.A, 3);
+        Assert.Equal(7272221.8764740741, res.A, 3);
         Assert.Equal(0.0001724, res.E, 6);
         Assert.Equal(99.018, res.I * Astrodynamics.Constants.Rad2Deg, 3);
         Assert.Equal(327.43000000000001, res.RAAN * Astrodynamics.Constants.Rad2Deg, 3);

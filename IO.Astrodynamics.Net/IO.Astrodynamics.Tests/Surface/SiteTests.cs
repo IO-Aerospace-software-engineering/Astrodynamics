@@ -245,8 +245,8 @@ namespace IO.Astrodynamics.Tests.Surface
 
             var windows = res as Window[] ?? res.ToArray();
             Assert.Single(windows);
-            Assert.Equal(new TimeSystem.Time("2021-05-17T12:51:05.6250000 TDB"), windows[0].StartDate, TestHelpers.TimeComparer);
-            Assert.Equal(new TimeSystem.Time("2021-05-18T02:55:43.5250283 TDB"), windows[0].EndDate, TestHelpers.TimeComparer);
+            Assert.Equal(new TimeSystem.Time("2021-05-17T12:42:40.2539062 TDB"), windows[0].StartDate, TestHelpers.TimeComparer);
+            Assert.Equal(new TimeSystem.Time("2021-05-18T02:47:18.6390119 TDB"), windows[0].EndDate, TestHelpers.TimeComparer);
         }
 
         [Fact]
