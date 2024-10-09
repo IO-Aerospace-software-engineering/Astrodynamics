@@ -344,21 +344,27 @@ namespace IO.Astrodynamics.Body.Spacecraft
         {
             return Task.Run(() =>
             {
-                ResetPropagation();
-                IPropagator propagator;
-                if (InitialOrbitalParameters is TLE)
-                {
-                    propagator = new TLEPropagator(window, this, propagatorStepSize);
-                }
-                else
-                {
-                    propagator = new SpacecraftPropagator(window, this, additionalCelestialBodies, includeAtmosphericDrag, includeSolarRadiationPressure, propagatorStepSize);
-                }
-
-                propagator.Propagate();
-                propagator.Dispose();
-                _isPropagated = true;
+                Propagate(window, additionalCelestialBodies, includeAtmosphericDrag, includeSolarRadiationPressure, propagatorStepSize);
             });
+        }
+
+        public void Propagate(Window window, IEnumerable<CelestialItem> additionalCelestialBodies, bool includeAtmosphericDrag,
+            bool includeSolarRadiationPressure, TimeSpan propagatorStepSize)
+        {
+            ResetPropagation();
+            IPropagator propagator;
+            if (InitialOrbitalParameters is TLE)
+            {
+                propagator = new TLEPropagator(window, this, propagatorStepSize);
+            }
+            else
+            {
+                propagator = new SpacecraftPropagator(window, this, additionalCelestialBodies, includeAtmosphericDrag, includeSolarRadiationPressure, propagatorStepSize);
+            }
+
+            propagator.Propagate();
+            propagator.Dispose();
+            _isPropagated = true;
         }
 
         public void AddStateVectorRelativeToICRF(params StateVector[] stateVectors)
@@ -373,9 +379,14 @@ namespace IO.Astrodynamics.Body.Spacecraft
         {
             return _stateVectorsRelativeToICRF.GetOrAdd(date, date =>
             {
+                if (InitialOrbitalParameters is TLE)
+                {
+                    return InitialOrbitalParameters.ToStateVector(date).RelativeTo(new Barycenter(0, date), Aberration.None).ToFrame(Frames.Frame.ICRF).ToStateVector();
+                }
+
                 if (_stateVectorsRelativeToICRF.Count < 2)
                 {
-                    return this.InitialOrbitalParameters.ToStateVector(date).RelativeTo(Barycenters.SOLAR_SYSTEM_BARYCENTER, Aberration.None).ToFrame(Frames.Frame.ICRF).ToStateVector();
+                    return this.InitialOrbitalParameters.ToStateVector(date).RelativeTo(new Barycenter(0, date), Aberration.None).ToFrame(Frames.Frame.ICRF).ToStateVector();
                 }
 
                 return Lagrange.Interpolate(_stateVectorsRelativeToICRF.Values.OrderBy(x => x.Epoch).ToArray(), date);

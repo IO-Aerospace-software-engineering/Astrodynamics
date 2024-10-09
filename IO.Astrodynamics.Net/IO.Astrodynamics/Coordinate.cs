@@ -10,7 +10,6 @@ public enum Coordinate
     [Description("Y")] Y,
     [Description("Z")] Z,
     [Description("ALTITUDE")] Altitude,
-    [Description("COLATITUDE")] Colatitude,
     [Description("DECLINATION")] Declination,
     [Description("LATITUDE")] Latitude,
     [Description("LONGITUDE")] Longitude,

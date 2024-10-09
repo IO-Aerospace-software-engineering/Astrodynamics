@@ -63,7 +63,7 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
     /// <param name="line3">The third line of the TLE.</param>
     /// <exception cref="ArgumentNullException">Thrown when the frame is null.</exception>
     /// <exception cref="ArgumentException">Thrown when any of the lines are null or empty.</exception>
-    public TLE(string line1, string line2, string line3) : base(PlanetsAndMoons.EARTH_BODY, Time.J2000TDB, new Frame("TEME"))
+    public TLE(string line1, string line2, string line3) : this(ParserTLE.parseTle(line2, line3, line1))
     {
         if (string.IsNullOrEmpty(line1)) throw new ArgumentException("Value cannot be null or empty.", nameof(line1));
         if (string.IsNullOrEmpty(line2)) throw new ArgumentException("Value cannot be null or empty.", nameof(line2));
@@ -71,13 +71,17 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
         Line1 = line1;
         Line2 = line2;
         Line3 = line3;
+    }
 
-        _tleItem = ParserTLE.parseTle(line2, line3, line1);
-        
+    private TLE(Tle tle) : this(tle, new Time(new EpochTime(tle.getEpochYear(), tle.getEpochDay()).toDateTime(), TimeFrame.UTCFrame))
+    {
+    }
 
-        EpochTime ep = new EpochTime(_tleItem.getEpochYear(), _tleItem.getEpochDay());
-        Epoch = new Time(ep.toDateTime(), TimeFrame.UTCFrame);
-        var earth = PlanetsAndMoons.EARTH_BODY;
+    private TLE(Tle tle, Time epoch) : base(new CelestialBody(399, new Frame("ITRF93"), epoch), epoch, new Frame("TEME"))
+    {
+        _tleItem = tle;
+        Epoch = epoch;
+        var earth = new CelestialBody(399, new Frame("ITRF93"), Epoch);
         var revDay = _tleItem.getMeanMotion();
         double n = Constants._2PI / (86400.0 / revDay);
         _a = System.Math.Cbrt(earth.GM / (n * n));
@@ -103,9 +107,9 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
     }
 
     /// <summary>
-    /// Converts the TLE to a state vector at a given epoch.
+    /// Converts the TLE to a state vector at a given date.
     /// </summary>
-    /// <param name="epoch">The epoch time.</param>
+    /// <param name="date"></param>
     /// <returns>The state vector at the given epoch.</returns>
     public override StateVector ToStateVector(Time date)
     {
@@ -115,7 +119,7 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
         List<Sgp4Data> resultDataList = sgp4.getResults();
         var position = resultDataList[0].getPositionData();
         var velocity = resultDataList[0].getVelocityData();
-        return new StateVector(new Vector3(position.x, position.y, position.z) * 1000.0, new Vector3(velocity.x, velocity.y, velocity.z) * 1000.0, PlanetsAndMoons.EARTH_BODY, date,
+        return new StateVector(new Vector3(position.x, position.y, position.z) * 1000.0, new Vector3(velocity.x, velocity.y, velocity.z) * 1000.0, new CelestialBody(399,Frame.ECLIPTIC_J2000, date), date,
             new Frame("TEME")).ToFrame(Frame.ICRF).ToStateVector();
     }
 
@@ -152,6 +156,12 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
     public override StateVector ToStateVector()
     {
         return ToStateVector(Epoch);
+    }
+
+    public static Time GetEpoch(string line1, string line2, string line3)
+    {
+        var tle = ParserTLE.parseTle(line2, line3, line1);
+        return new Time(new EpochTime(tle.getEpochYear(), tle.getEpochDay()).toDateTime(), TimeFrame.UTCFrame);
     }
 
     /// <summary>

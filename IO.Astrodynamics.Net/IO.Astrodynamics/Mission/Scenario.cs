@@ -139,7 +139,7 @@ namespace IO.Astrodynamics.Mission
             IsSimulated = true;
             return scenarioSummary;
         }
-
+        
         #region Operators
         public bool Equals(Scenario other)
         {
@@ -158,7 +158,7 @@ namespace IO.Astrodynamics.Mission
 
         public override int GetHashCode()
         {
-            return (Name != null ? Name.GetHashCode() : 0);
+            return Name.GetHashCode();
         }
 
         public static bool operator ==(Scenario left, Scenario right)

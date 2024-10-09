@@ -38,6 +38,7 @@ public class StarTests
         Assert.Equal(8.1373353929324900E+16, star.Distance);
         Assert.Null(star.InitialOrbitalParameters);
         Assert.Equal(0.0, star.Flattening);
+        Assert.True(star.IsStar);
     }
 
     [Fact]

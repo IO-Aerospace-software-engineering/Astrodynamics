@@ -369,7 +369,17 @@ public readonly record struct Matrix
 
     public override int GetHashCode()
     {
-        return HashCode.Combine(_data, Rows, Columns);
+        const double prime = 31.0;
+        double datahash = 1.0;
+
+        for (int i = 0; i < Rows; i++)
+        {
+            for (int j = 0; j < Columns; j++)
+            {
+                datahash = datahash * prime + _data[i,j];
+            }
+        }
+        return HashCode.Combine(datahash, Rows, Columns);
     }
 
     public static Matrix operator *(Matrix lhs, Matrix rhs)

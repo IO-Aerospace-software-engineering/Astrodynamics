@@ -40,6 +40,9 @@ public class Jacobian : NumericalJacobian
     /// <returns></returns>
     public new Matrix Evaluate(Func<double[], double>[] f, double[] x, double[] currentValues)
     {
+        if (f == null) throw new ArgumentNullException(nameof(f));
+        if (x == null) throw new ArgumentNullException(nameof(x));
+        if (currentValues == null) throw new ArgumentNullException(nameof(currentValues));
         return new Matrix(base.Evaluate(f, x, currentValues));
     }
 }

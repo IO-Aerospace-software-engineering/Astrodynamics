@@ -1,3 +1,4 @@
+using System;
 using IO.Astrodynamics.Math;
 using Xunit;
 
@@ -286,4 +287,48 @@ public class MatirxTests
         Assert.Equal(-0.2422604, quaternion.VectorPart.Z, precision: 5);
     }
 
+
+    [Fact]
+    public void GetHashCode_ReturnsSameHashCode_ForIdenticalMatrices()
+    {
+        var data1 = new double[,] { { 1, 2 }, { 3, 4 } };
+        var data2 = new double[,] { { 1, 2 }, { 3, 4 } };
+        var matrix1 = new Matrix(data1);
+        var matrix2 = new Matrix(data2);
+
+        Assert.Equal(matrix1.GetHashCode(), matrix2.GetHashCode());
+    }
+
+    [Fact]
+    public void GetHashCode_ReturnsDifferentHashCode_ForDifferentMatrices()
+    {
+        var data1 = new double[,] { { 1, 2 }, { 3, 4 } };
+        var data2 = new double[,] { { 5, 6 }, { 7, 8 } };
+        var matrix1 = new Matrix(data1);
+        var matrix2 = new Matrix(data2);
+
+        Assert.NotEqual(matrix1.GetHashCode(), matrix2.GetHashCode());
+    }
+
+    [Fact]
+    public void GetHashCode_ReturnsDifferentHashCode_ForDifferentDimensions()
+    {
+        var data1 = new double[,] { { 1, 2 }, { 3, 4 } };
+        var data2 = new double[,] { { 1, 2, 3 }, { 4, 5, 6 } };
+        var matrix1 = new Matrix(data1);
+        var matrix2 = new Matrix(data2);
+
+        Assert.NotEqual(matrix1.GetHashCode(), matrix2.GetHashCode());
+    }
+
+    [Fact]
+    public void GetHashCode_ReturnsSameHashCode_ForEmptyMatrices()
+    {
+        var data1 = new double[,] { };
+        var data2 = new double[,] { };
+        var matrix1 = new Matrix(data1);
+        var matrix2 = new Matrix(data2);
+
+        Assert.Equal(matrix1.GetHashCode(), matrix2.GetHashCode());
+    }
 }

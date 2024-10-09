@@ -132,6 +132,21 @@ namespace IO.Astrodynamics.Tests.Surface
                     new Vector3(-102.37160945689291, -366.2848679089919, -0.01299987338117344), earth, epoch + TimeSpan.FromDays(1.0), Frames.Frame.ICRF), sv[1],
                 TestHelpers.StateVectorComparer);
         }
+        
+        [Fact]
+        public void GetEphemerisLT()
+        {
+            var epoch = TimeSystem.Time.J2000TDB;
+            CelestialBody earth = PlanetsAndMoons.EARTH_BODY;
+            Site site = new Site(13, "DSS-13", earth);
+
+            var sv = site.GetEphemeris(new Window(epoch, epoch + TimeSpan.FromDays(1.0)), earth, Frames.Frame.ICRF, Aberration.LT, TimeSpan.FromDays(1.0))
+                .Select(x => x.ToStateVector()).ToArray();
+
+            Assert.Equal(2, sv.Length);
+            Assert.Equal(new StateVector(new Vector3(-4997598.156070709, 1490074.2206420898, 3660874.145385742),
+                new Vector3(-108.65761807425588, -364.46946596885664, -0.013065898133845621), earth, epoch, Frames.Frame.ICRF), sv[0], TestHelpers.StateVectorComparer);
+        }
 
         [Fact]
         public void GetPosition()
@@ -245,8 +260,8 @@ namespace IO.Astrodynamics.Tests.Surface
 
             var windows = res as Window[] ?? res.ToArray();
             Assert.Single(windows);
-            Assert.Equal(new TimeSystem.Time("2021-05-17T12:51:05.6250000 TDB"), windows[0].StartDate, TestHelpers.TimeComparer);
-            Assert.Equal(new TimeSystem.Time("2021-05-18T02:55:43.5250283 TDB"), windows[0].EndDate, TestHelpers.TimeComparer);
+            Assert.Equal(new TimeSystem.Time("2021-05-17T12:42:40.2539062 TDB"), windows[0].StartDate, TestHelpers.TimeComparer);
+            Assert.Equal(new TimeSystem.Time("2021-05-18T02:47:18.6390119 TDB"), windows[0].EndDate, TestHelpers.TimeComparer);
         }
 
         [Fact]
