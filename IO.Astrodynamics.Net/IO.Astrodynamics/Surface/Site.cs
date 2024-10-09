@@ -23,7 +23,6 @@ namespace IO.Astrodynamics.Surface
         private readonly bool _isFromKernel = false;
 
         private SortedDictionary<Time, StateVector> _stateVectorsRelativeToICRF = new SortedDictionary<Time, StateVector>();
-        public ImmutableSortedDictionary<Time, StateVector> StateVectorsRelativeToICRF => _stateVectorsRelativeToICRF.ToImmutableSortedDictionary();
         public int Id { get; }
         public int NaifId { get; }
         public string Name { get; }
@@ -32,8 +31,6 @@ namespace IO.Astrodynamics.Surface
         public Planetodetic Planetodetic { get; }
 
         public OrbitalParameters.OrbitalParameters InitialOrbitalParameters { get; }
-        public DirectoryInfo PropagationOutput { get; private set; }
-        public bool IsPropagated => PropagationOutput != null;
 
         public SiteFrame Frame { get; }
         public double GM { get; } = 0.0;
@@ -192,37 +189,47 @@ namespace IO.Astrodynamics.Surface
         {
             if (_isFromKernel)
             {
+                var targetGeometricStateFromSSB = this.GetGeometricStateFromICRF(date).ToStateVector();
                 var observerGeometricStateFromSSB = observer.GetGeometricStateFromICRF(date).ToStateVector();
-                var targetGeometricState = GetGeometricStateFromICRF(date).ToStateVector();
-                var observerGeometricState = new StateVector(targetGeometricState.Position - observerGeometricStateFromSSB.Position,
-                    targetGeometricState.Velocity - observerGeometricStateFromSSB.Velocity,
+                var relativeState = new StateVector(targetGeometricStateFromSSB.Position - observerGeometricStateFromSSB.Position,
+                    targetGeometricStateFromSSB.Velocity - observerGeometricStateFromSSB.Velocity,
                     observer, date, Frames.Frame.ICRF);
                 if (aberration is Aberration.LT or Aberration.XLT or Aberration.LTS or Aberration.XLTS)
                 {
-                    var lightTime = TimeSpan.FromSeconds(observerGeometricState.Position.Magnitude() / Constants.C);
-
-                    Time newEpoch;
-                    if (aberration is Aberration.LT or Aberration.LTS)
-                        newEpoch = date - lightTime;
-                    else
-                        newEpoch = date + lightTime;
-
-                    observerGeometricState = this.GetEphemeris(newEpoch, observer, Frames.Frame.ICRF, Aberration.None).ToStateVector();
-
-                    if (aberration == Aberration.LTS || aberration == Aberration.XLTS)
-                    {
-                        var voverc = observerGeometricStateFromSSB.Velocity.Magnitude() / Constants.C;
-                        var stellarAberration = observerGeometricStateFromSSB.Velocity * voverc;
-                        observerGeometricState.UpdatePosition(observerGeometricState.Position + stellarAberration);
-                    }
+                    relativeState = CorrectFromAberration(date, observer, aberration, relativeState, observerGeometricStateFromSSB);
                 }
 
-                return observerGeometricState.ToFrame(frame);
+                return relativeState.ToFrame(frame);
             }
 
             var siteInFrame = new StateVector(Planetodetic.ToPlanetocentric(CelestialBody.Flattening, CelestialBody.EquatorialRadius).ToCartesianCoordinates(),
                 Vector3.Zero, CelestialBody, date, CelestialBody.Frame).ToFrame(frame).ToStateVector();
             return siteInFrame.RelativeTo(observer, aberration);
+        }
+        
+        protected StateVector CorrectFromAberration(Time epoch, ILocalizable observer, Aberration aberration, StateVector relativeState,
+            StateVector observerGeometricStateFromSSB)
+        {
+            var lightTime = TimeSpan.FromSeconds(relativeState.Position.Magnitude() / Constants.C);
+
+            Time newEpoch;
+            if (aberration is Aberration.LT or Aberration.LTS)
+                newEpoch = epoch - lightTime;
+            else
+                newEpoch = epoch + lightTime;
+
+            var targetNewGeometricStateFromSSB = this.GetGeometricStateFromICRF(newEpoch).ToStateVector();
+            var correctedGeometricState = new StateVector(targetNewGeometricStateFromSSB.Position - observerGeometricStateFromSSB.Position,
+                targetNewGeometricStateFromSSB.Velocity - observerGeometricStateFromSSB.Velocity, observer, epoch, Frames.Frame.ICRF);
+
+            if (aberration == Aberration.LTS || aberration == Aberration.XLTS)
+            {
+                var voverc = observerGeometricStateFromSSB.Velocity.Magnitude() / Constants.C;
+                var stellarAberration = observerGeometricStateFromSSB.Velocity * voverc;
+                correctedGeometricState.UpdatePosition(relativeState.Position + stellarAberration);
+            }
+
+            return correctedGeometricState;
         }
 
         /// <summary>

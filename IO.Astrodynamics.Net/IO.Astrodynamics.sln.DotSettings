@@ -9,6 +9,9 @@
 	<s:String x:Key="/Default/CodeStyle/Naming/CSharpNaming/Abbreviations/=UTC/@EntryIndexedValue">UTC</s:String>
 	<s:Boolean x:Key="/Default/Environment/Filtering/ExcludeCoverageFilters/=IO_002EAstrodynamics_002ECLI_002ETests_003B_002A_003B_002A_003B_002A/@EntryIndexedValue">True</s:Boolean>
 	<s:Boolean x:Key="/Default/Environment/Filtering/ExcludeCoverageFilters/=IO_002EAstrodynamics_002ECLI_003B_002A_003B_002A_003B_002A/@EntryIndexedValue">True</s:Boolean>
+	<s:Boolean x:Key="/Default/Environment/Filtering/ExcludeCoverageFilters/=IO_002EAstrodynamics_002ENet_003B_002A_003BIO_002EAstrodynamics_002EAPI_003BClearKernels/@EntryIndexedValue">True</s:Boolean>
+	<s:Boolean x:Key="/Default/Environment/Filtering/ExcludeCoverageFilters/=IO_002EAstrodynamics_002ENet_003B_002A_003BIO_002EAstrodynamics_002ECosmographia_002EModel_002E_002A_003B_002A/@EntryIndexedValue">True</s:Boolean>
+	<s:Boolean x:Key="/Default/Environment/Filtering/ExcludeCoverageFilters/=IO_002EAstrodynamics_002ENet_003B_002A_003BIO_002EAstrodynamics_002EMath_002EMatrix_003BGetRow/@EntryIndexedValue">True</s:Boolean>
 	<s:Boolean x:Key="/Default/Environment/Filtering/ExcludeCoverageFilters/=IO_002EAstrodynamics_002ENet_003B_002A_003BIO_002EAstrodynamics_002ESolarSystemObjects_002EAsteroids_003B_002A/@EntryIndexedValue">True</s:Boolean>
 	<s:Boolean x:Key="/Default/Environment/Filtering/ExcludeCoverageFilters/=IO_002EAstrodynamics_002ENet_003B_002A_003BIO_002EAstrodynamics_002ESolarSystemObjects_002EComets_003B_002A/@EntryIndexedValue">True</s:Boolean>
 	<s:Boolean x:Key="/Default/Environment/Filtering/ExcludeCoverageFilters/=IO_002EAstrodynamics_002ENet_003B_002A_003BIO_002EAstrodynamics_002ESolarSystemObjects_002EGroundStations_003B_002A/@EntryIndexedValue">True</s:Boolean>

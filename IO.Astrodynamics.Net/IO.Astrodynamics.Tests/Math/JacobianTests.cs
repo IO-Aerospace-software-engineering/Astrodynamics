@@ -74,4 +74,73 @@ public class JacobianTests
         // Act & Assert
         Assert.Throws<IndexOutOfRangeException>(() => jacobian.Evaluate(functions, x));
     }
+
+    [Fact]
+    public void Evaluate_WithValidInputs_ReturnsExpectedMatrix()
+    {
+        // Arrange
+        var jacobian = new Jacobian();
+        Func<double[], double>[] functions =
+        {
+            x => x[0] * x[0],
+            x => x[1] * x[1]
+        };
+        double[] x = { 2.0, 3.0 };
+        double[] currentValues = { 4.0, 9.0 };
+
+        // Act
+        var result = jacobian.Evaluate(functions, x, currentValues);
+
+        // Assert
+        Assert.Equal(2, result.Rows);
+        Assert.Equal(2, result.Columns);
+    }
+
+
+    [Fact]
+    public void Evaluate_WithNullFunctionsArray_ThrowsArgumentNullException()
+    {
+        // Arrange
+        var jacobian = new Jacobian();
+        Func<double[], double>[] functions = null;
+        double[] x = { 2.0, 3.0 };
+        double[] currentValues = { 4.0, 9.0 };
+
+        // Act & Assert
+        Assert.Throws<ArgumentNullException>(() => jacobian.Evaluate(functions, x, currentValues));
+    }
+
+    [Fact]
+    public void Evaluate_WithNullXArray_ThrowsArgumentNullException()
+    {
+        // Arrange
+        var jacobian = new Jacobian();
+        Func<double[], double>[] functions =
+        {
+            x => x[0] * x[0],
+            x => x[1] * x[1]
+        };
+        double[] x = null;
+        double[] currentValues = { 4.0, 9.0 };
+
+        // Act & Assert
+        Assert.Throws<ArgumentNullException>(() => jacobian.Evaluate(functions, x, currentValues));
+    }
+
+    [Fact]
+    public void Evaluate_WithNullCurrentValuesArray_ThrowsArgumentNullException()
+    {
+        // Arrange
+        var jacobian = new Jacobian();
+        Func<double[], double>[] functions =
+        {
+            x => x[0] * x[0],
+            x => x[1] * x[1]
+        };
+        double[] x = { 2.0, 3.0 };
+        double[] currentValues = null;
+
+        // Act & Assert
+        Assert.Throws<ArgumentNullException>(() => jacobian.Evaluate(functions, x, currentValues));
+    }
 }

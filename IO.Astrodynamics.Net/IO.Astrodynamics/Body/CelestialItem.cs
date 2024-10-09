@@ -247,6 +247,15 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
         return relativeState.ToFrame(frame);
     }
 
+    /// <summary>
+    /// Correct from aberration
+    /// </summary>
+    /// <param name="epoch"></param>
+    /// <param name="observer"></param>
+    /// <param name="aberration"></param>
+    /// <param name="relativeState"></param>
+    /// <param name="observerGeometricStateFromSSB"></param>
+    /// <returns></returns>
     protected StateVector CorrectFromAberration(Time epoch, ILocalizable observer, Aberration aberration, StateVector relativeState,
         StateVector observerGeometricStateFromSSB)
     {
@@ -272,6 +281,11 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
         return correctedGeometricState;
     }
 
+    /// <summary>
+    /// Get geometric state from SSB in ICRF
+    /// </summary>
+    /// <param name="date"></param>
+    /// <returns></returns>
     public virtual OrbitalParameters.OrbitalParameters GetGeometricStateFromICRF(in Time date)
     {
         return _stateVectorsRelativeToICRF.GetOrAdd(date,
@@ -305,6 +319,14 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
         return target1Position.Angle(target2Position);
     }
 
+    /// <summary>
+    /// Compute the angular separation between two localizable objects
+    /// </summary>
+    /// <param name="epoch"></param>
+    /// <param name="target1"></param>
+    /// <param name="fromPosition"></param>
+    /// <param name="aberration"></param>
+    /// <returns></returns>
     public double AngularSeparation(in Time epoch, ILocalizable target1, OrbitalParameters.OrbitalParameters fromPosition, Aberration aberration)
     {
         var target1Position = target1.GetEphemeris(epoch, fromPosition.Observer, fromPosition.Frame, aberration).ToStateVector().Position -
@@ -315,7 +337,10 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     }
 
 
-    //Return all centers of motion up to the root 
+    /// <summary>
+    /// Get all centers of motion from Solar system barycenter to the celestialItem
+    /// </summary>
+    /// <returns></returns>
     public IEnumerable<ILocalizable> GetCentersOfMotion()
     {
         List<ILocalizable> celestialBodies = new List<ILocalizable>();
@@ -345,6 +370,13 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
         return new Planetocentric(lon, lat, position.Magnitude());
     }
 
+    /// <summary>
+    /// Get sub observer point
+    /// </summary>
+    /// <param name="position"></param>
+    /// <param name="epoch"></param>
+    /// <param name="aberration"></param>
+    /// <returns></returns>
     public Planetocentric SubObserverPoint(in Vector3 position, in Time epoch, Aberration aberration)
     {
         var lon = System.Math.Atan2(position.Y, position.X);
@@ -354,6 +386,13 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
         return new Planetocentric(lon, lat, position.Magnitude());
     }
 
+    /// <summary>
+    /// Know if the celestialItem is occulted by another celestialItem
+    /// </summary>
+    /// <param name="by"></param>
+    /// <param name="from"></param>
+    /// <param name="aberration"></param>
+    /// <returns></returns>
     public OccultationType? IsOcculted(CelestialItem by, OrbitalParameters.OrbitalParameters from, Aberration aberration = Aberration.LT)
     {
         double backSize = AngularSize((GetEphemeris(from.Epoch, from.Observer, from.Frame, aberration).ToStateVector().Position - from.ToStateVector().Position).Magnitude());
@@ -363,6 +402,13 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
         return IsOcculted(angularSeparation, backSize, bySize);
     }
 
+    /// <summary>
+    /// Know if the celestialItem is occulted by another celestialItem
+    /// </summary>
+    /// <param name="angularSeparation"></param>
+    /// <param name="backSize"></param>
+    /// <param name="bySize"></param>
+    /// <returns></returns>
     public static OccultationType IsOcculted(double angularSeparation, double backSize, double bySize)
     {
         OccultationType occul = OccultationType.None;
@@ -394,12 +440,21 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
         return GravitationalField.ComputeGravitationalAcceleration(sv);
     }
 
-
+    /// <summary>
+    /// Write ephemeris
+    /// </summary>
+    /// <param name="outputFile"></param>
     public void WriteEphemeris(FileInfo outputFile)
     {
         API.Instance.WriteEphemeris(outputFile, this, _stateVectorsRelativeToICRF.Values.ToArray());
     }
 
+    /// <summary>
+    /// Find barycenter of motion identifier
+    /// </summary>
+    /// <param name="celestialItem"></param>
+    /// <returns></returns>
+    /// <exception cref="ArgumentException"></exception>
     internal static int FindBarycenterOfMotionId(CelestialItem celestialItem)
     {
         if (celestialItem.IsSun || celestialItem.IsBarycenter || celestialItem.IsAsteroid)
@@ -425,6 +480,12 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
         throw new ArgumentException("Invalid Naif Id : " + celestialItem.NaifId);
     }
 
+    /// <summary>
+    /// Find center of motion identifier
+    /// </summary>
+    /// <param name="celestialItem"></param>
+    /// <returns></returns>
+    /// <exception cref="ArgumentException"></exception>
     internal static int FindCenterOfMotionId(CelestialItem celestialItem)
     {
         if (celestialItem.IsBarycenter)
@@ -458,6 +519,16 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
 
     #region FindWindows
 
+    /// <summary>
+    /// Find windows on distance constraint
+    /// </summary>
+    /// <param name="searchWindow"></param>
+    /// <param name="observer"></param>
+    /// <param name="relationalOperator"></param>
+    /// <param name="value"></param>
+    /// <param name="aberration"></param>
+    /// <param name="stepSize"></param>
+    /// <returns></returns>
     public IEnumerable<Window> FindWindowsOnDistanceConstraint(in Window searchWindow, ILocalizable observer,
         RelationnalOperator relationalOperator, double value, Aberration aberration, in TimeSpan stepSize)
     {
@@ -466,6 +537,18 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
         return _geometryFinder.FindWindowsWithCondition(searchWindow, calculateDistance, relationalOperator, value, stepSize);
     }
 
+    /// <summary>
+    /// Find windows on occultation constraint
+    /// </summary>
+    /// <param name="searchWindow"></param>
+    /// <param name="observer"></param>
+    /// <param name="targetShape"></param>
+    /// <param name="frontBody"></param>
+    /// <param name="frontShape"></param>
+    /// <param name="occultationType"></param>
+    /// <param name="aberration"></param>
+    /// <param name="stepSize"></param>
+    /// <returns></returns>
     public IEnumerable<Window> FindWindowsOnOccultationConstraint(in Window searchWindow, ILocalizable observer,
         ShapeType targetShape, INaifObject frontBody, ShapeType frontShape, OccultationType occultationType, Aberration aberration, in TimeSpan stepSize)
     {
@@ -483,6 +566,21 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
         return _geometryFinder.FindWindowsWithCondition(searchWindow, calculateOccultation, RelationnalOperator.Equal, true, stepSize);
     }
 
+    /// <summary>
+    /// Find windows on coordinate constraint
+    /// </summary>
+    /// <param name="searchWindow"></param>
+    /// <param name="observer"></param>
+    /// <param name="frame"></param>
+    /// <param name="coordinateSystem"></param>
+    /// <param name="coordinate"></param>
+    /// <param name="relationalOperator"></param>
+    /// <param name="value"></param>
+    /// <param name="adjustValue"></param>
+    /// <param name="aberration"></param>
+    /// <param name="stepSize"></param>
+    /// <returns></returns>
+    /// <exception cref="ArgumentOutOfRangeException"></exception>
     public IEnumerable<Window> FindWindowsOnCoordinateConstraint(in Window searchWindow, ILocalizable observer, Frame frame,
         CoordinateSystem coordinateSystem, Coordinate coordinate, RelationnalOperator relationalOperator, double value, double adjustValue, Aberration aberration,
         in TimeSpan stepSize)

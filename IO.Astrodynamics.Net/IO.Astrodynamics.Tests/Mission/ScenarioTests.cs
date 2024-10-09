@@ -820,5 +820,17 @@ namespace IO.Astrodynamics.Tests.Mission
                 semaphore.Release();
             }
         }
+        
+        [Fact]
+        public void CheckHashCode()
+        {
+            Astrodynamics.Mission.Mission mission = new Astrodynamics.Mission.Mission("mission02");
+            Scenario scenario = new Scenario("scn1", mission,
+                new Window(new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame), new TimeSystem.Time(DateTime.MaxValue, TimeFrame.TDBFrame)));
+            Scenario scenario2 = new Scenario("scn1", mission,
+                new Window(new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame), new TimeSystem.Time(DateTime.MaxValue, TimeFrame.TDBFrame)));
+
+            Assert.Equal(scenario2.GetHashCode(), scenario.GetHashCode());
+        }
     }
 }

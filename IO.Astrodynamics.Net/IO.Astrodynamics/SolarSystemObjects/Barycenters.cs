@@ -32,23 +32,4 @@ public static class Barycenters
         NEPTUNE_BARYCENTER = new Barycenter(8);
         PLUTO_BARYCENTER = new Barycenter(9);
     }
-
-    public static IEnumerable<Barycenter> GetBarycenters()
-    {
-        return new[]
-        {
-            SOLAR_SYSTEM_BARYCENTER, MERCURY_BARYCENTER, VENUS_BARYCENTER, EARTH_BARYCENTER, MARS_BARYCENTER, JUPITER_BARYCENTER, SATURN_BARYCENTER, URANUS_BARYCENTER,
-            NEPTUNE_BARYCENTER, PLUTO_BARYCENTER
-        };
-    }
-    
-    public static Barycenter GetBarycenter(int id)
-    {
-        return GetBarycenters().FirstOrDefault(b => b.NaifId == id);
-    }
-    
-    public static Barycenter GetBarycenter(string name)
-    {
-        return GetBarycenters().FirstOrDefault(b => b.Name == name);
-    }
 }

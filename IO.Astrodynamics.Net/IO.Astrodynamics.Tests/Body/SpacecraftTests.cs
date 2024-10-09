@@ -31,6 +31,7 @@ namespace IO.Astrodynamics.Tests.Body
             Assert.Equal("MySpacecraft", spc.Name);
             Assert.Equal(1000.0, spc.DryOperatingMass);
             Assert.Equal(10000.0, spc.MaximumOperatingMass);
+            Assert.True(spc.IsSpacecraft);
         }
 
         [Fact]
