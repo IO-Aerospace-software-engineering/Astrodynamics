@@ -379,7 +379,7 @@ namespace IO.Astrodynamics.Surface
         /// <param name="illuminationSource"></param>
         /// <param name="method"></param>
         /// <returns></returns>
-        public IEnumerable<Window> FindWindowsOnIlluminationConstraint(in Window searchWindow, ILocalizable observer, IlluminationAngle illuminationType,
+        public IEnumerable<Window> FindWindowsOnIlluminationConstraint(in Window searchWindow, IlluminationAngle illuminationType,
             RelationnalOperator relationalOperator, double value, double adjustValue, Aberration aberration, in TimeSpan stepSize, ILocalizable illuminationSource,
             string method = "Ellipsoid")
         {
@@ -388,13 +388,13 @@ namespace IO.Astrodynamics.Surface
             switch (illuminationType)
             {
                 case IlluminationAngle.Phase:
-                    evaluateIllumination = date => IlluminationPhase(date, illuminationSource, observer, aberration);
+                    evaluateIllumination = date => IlluminationPhase(date, illuminationSource, this, aberration);
                     break;
                 case IlluminationAngle.Incidence:
                     evaluateIllumination = date => IlluminationIncidence(date, illuminationSource, aberration);
                     break;
                 case IlluminationAngle.Emission:
-                    evaluateIllumination = date => IlluminationEmission(date, observer, aberration);
+                    evaluateIllumination = date => IlluminationEmission(date, this, aberration);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(illuminationType), illuminationType, null);
@@ -483,7 +483,7 @@ namespace IO.Astrodynamics.Surface
         public IEnumerable<Window> FindDayWindows(in Window searchWindow, double twilight)
         {
             var sun = Stars.SUN_BODY;
-            return FindWindowsOnIlluminationConstraint(searchWindow, sun, IlluminationAngle.Incidence, RelationnalOperator.Lower, Constants.PI2 + twilight, 0.0,
+            return FindWindowsOnIlluminationConstraint(searchWindow, IlluminationAngle.Incidence, RelationnalOperator.Lower, Constants.PI2 + twilight, 0.0,
                 Aberration.LTS, TimeSpan.FromMinutes(1.0), sun);
         }
 
