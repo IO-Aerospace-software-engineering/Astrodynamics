@@ -174,11 +174,10 @@ namespace IO.Astrodynamics.Body.Spacecraft
 
         protected (double azimuth, double elevation, bool isInFov) PositionInFOV(Time date, ILocalizable target, Aberration aberration)
         {
-            var cameraPostion = Spacecraft.GetEphemeris(date, Barycenters.SOLAR_SYSTEM_BARYCENTER, Frame.ICRF, aberration).ToStateVector();
-            var objectPosition = target.GetEphemeris(date, Barycenters.SOLAR_SYSTEM_BARYCENTER, Frame.ICRF, aberration).ToStateVector();
+            var objectPosition = target.GetEphemeris(date, Spacecraft, Frame.ICRF, aberration).ToStateVector();
             // Calculate the vector from the camera to the object
             // Compute the vector from the camera to the object
-            Vector3 toObject = objectPosition.Position - cameraPostion.Position;
+            Vector3 toObject = objectPosition.Position;
             
             // Ensure boresight and refVector are normalized
             var boresight = GetBoresightInICRFFrame(date).Normalize();
