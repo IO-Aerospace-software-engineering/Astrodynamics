@@ -254,7 +254,7 @@ namespace IO.Astrodynamics.Tests.Surface
             Site site = new Site(13, "DSS-13", TestHelpers.EarthAtJ2000,
                 new Planetodetic(-116.79445837 * Astrodynamics.Constants.Deg2Rad, 35.24716450 * Astrodynamics.Constants.Deg2Rad, 1070.85059));
 
-            var res = site.FindWindowsOnIlluminationConstraint(new Window(TimeSystem.Time.CreateTDB(674524800), TimeSystem.Time.CreateTDB(674611200)), TestHelpers.Sun,
+            var res = site.FindWindowsOnIlluminationConstraint(new Window(TimeSystem.Time.CreateTDB(674524800), TimeSystem.Time.CreateTDB(674611200)),
                 IlluminationAngle.Incidence, RelationnalOperator.Lower, System.Math.PI * 0.5 - (-0.8 * IO.Astrodynamics.Constants.Deg2Rad), 0.0, Aberration.LTS,
                 TimeSpan.FromSeconds(3600), TestHelpers.Sun);
 

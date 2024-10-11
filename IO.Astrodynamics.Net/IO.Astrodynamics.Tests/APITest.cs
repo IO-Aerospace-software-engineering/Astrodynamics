@@ -58,7 +58,7 @@ public class APITest
             new Vector3(-3708.6305608890916, 4266.2914313011433, 6736.8538488755494), TestHelpers.EarthAtJ2000,
             start, Frames.Frame.ICRF);
 
-        var sunset_rise = launchSite.FindWindowsOnIlluminationConstraint(window, TestHelpers.Sun, IlluminationAngle.Incidence, RelationnalOperator.Lower,
+        var sunset_rise = launchSite.FindWindowsOnIlluminationConstraint(window, IlluminationAngle.Incidence, RelationnalOperator.Lower,
             Astrodynamics.Constants.PI2 - Astrodynamics.Constants.CivilTwilight, 0.0, Aberration.CNS, TimeSpan.FromHours(6.0), TestHelpers.Sun);
         //Create launch object
         Launch launch = new Launch(launchSite, launchSite, parkingOrbit, IO.Astrodynamics.Constants.CivilTwilight,
