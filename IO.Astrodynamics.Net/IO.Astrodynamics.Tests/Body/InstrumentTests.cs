@@ -93,7 +93,7 @@ namespace IO.Astrodynamics.Tests.Body
             var res = spacecraft.Instruments.First().FindWindowsInFieldOfViewConstraint(
                 new Window(TimeSystem.Time.Create(676555200.0, TimeFrame.TDBFrame), TimeSystem.Time.Create(676561646.0, TimeFrame.TDBFrame)), spacecraft,
                 TestHelpers.EarthAtJ2000, TestHelpers.EarthAtJ2000.Frame,
-                ShapeType.Ellipsoid, Aberration.None,
+                ShapeType.Ellipsoid, Aberration.LT,
                 TimeSpan.FromSeconds(360.0)).ToArray();
 
             //Read results
