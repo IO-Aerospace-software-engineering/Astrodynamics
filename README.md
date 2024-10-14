@@ -39,6 +39,7 @@ This framework provides the following features :
   * ICRF / J2000
   * Ecliptic J2000
   * Ecliptic B1950
+  * True Equator Mean Equinox
   * Galactic
   * B1950
   * FK4
@@ -74,8 +75,12 @@ This framework provides the following features :
 * Math tools
   * Vector
   * Matrix
+  * Plane
   * Quaternion
   * Lagrange interpolation
+  * Legendre polynomials
+  * Jacobian
+  * SLERP & LERP
 * Use the Framework through CLI (Command line interface)
   * Propagate small body and visualize it with Cosmographia
   * Sub observer point
