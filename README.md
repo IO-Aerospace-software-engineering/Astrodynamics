@@ -34,7 +34,7 @@ This framework provides the following features :
   * Equatorial
   * Horizontal
   * Planetodetic
-  * Planetodentric
+  * Planetographic
 * Frame transformation
   * ICRF / J2000
   * Ecliptic J2000
