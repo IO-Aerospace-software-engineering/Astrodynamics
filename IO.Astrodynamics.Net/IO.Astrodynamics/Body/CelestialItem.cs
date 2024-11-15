@@ -12,6 +12,7 @@ using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.TimeSystem;
+using MathNet.Numerics.LinearAlgebra;
 using Window = IO.Astrodynamics.TimeSystem.Window;
 
 namespace IO.Astrodynamics.Body;
@@ -190,6 +191,21 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
         GravitationalField = geopotentialModelParameters != null
             ? new GeopotentialGravitationalField(geopotentialModelParameters.GeopotentialModelPath, geopotentialModelParameters.GeopotentialDegree)
             : new GravitationalField();
+    }
+
+    public static CelestialItem Create(int naifId)
+    {
+        if (naifId < 10)
+        {
+            return new Barycenter(naifId);
+        }
+
+        if (LagrangePoints.L1.NaifId <= naifId && naifId <= LagrangePoints.L5.NaifId)
+        {
+            return new LagrangePoint(new NaifObject(naifId, $"L{naifId - 390}", null));
+        }
+
+        return new CelestialBody(naifId);
     }
 
     internal void AddSatellite(CelestialItem celestialItem)

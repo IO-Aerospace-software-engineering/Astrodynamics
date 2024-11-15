@@ -70,12 +70,6 @@ public class CelestialBodyTests
         Assert.Equal(Frames.Frame.ECLIPTIC_J2000, moon.InitialOrbitalParameters.Frame);
     }
 
-    // [Fact]
-    // public void CreateExceptions()
-    // {
-    //     Assert.Throws<InvalidOperationException>(() => new CelestialBody(-399));
-    // }
-
     [Fact]
     public void FindOccultationsEclipse()
     {
@@ -108,22 +102,6 @@ public class CelestialBodyTests
         Assert.Equal(new TimeSystem.Time("2000-03-25T02:59:30.9960938 TDB"), windows.ElementAt(3).StartDate);
         Assert.Equal(new TimeSystem.Time("2000-03-30T07:01:07.2974489 TDB"), windows.ElementAt(3).EndDate);
     }
-
-    // [Fact]
-    // public void FindWindowsOnCoordinateConstraint()
-    // {
-    //     var res = TestHelpers.EarthAtJ2000.FindWindowsOnCoordinateConstraint(
-    //         new Window(new TimeSystem.Time(DateTime.Parse("2005-10-03"), TimeFrame.TDBFrame), new TimeSystem.Time(DateTime.Parse("2005-11-03"), TimeFrame.TDBFrame)),
-    //         TestHelpers.MoonAtJ2000, TestHelpers.MoonAtJ2000.Frame, CoordinateSystem.Latitudinal, Coordinate.Latitude, RelationnalOperator.Greater, 0.0, 0.0, Aberration.None,
-    //         TimeSpan.FromSeconds(60.0));
-    //
-    //     var windows = res as Window[] ?? res.ToArray();
-    //     Assert.Equal(2, windows.Length);
-    //     Assert.Equal("2005-10-03T17:24:29.0992341 TDB", windows[0].StartDate.ToString());
-    //     Assert.Equal("2005-10-16T17:50:20.7049530 TDB", windows[0].EndDate.ToString());
-    //     Assert.Equal("2005-10-31T00:27:02.6705884 TDB", windows[1].StartDate.ToString());
-    //     Assert.Equal("2005-11-03T00:00:00.0000000 TDB", windows[1].EndDate.ToString());
-    // }
 
     [Fact]
     public void AngularSize()
@@ -526,5 +504,33 @@ public class CelestialBodyTests
     {
         var celestialItem = new LagrangePoint(LagrangePoints.L4);
         Assert.Equal(10, celestialItem.CenterOfMotionId);
+    }
+    
+    [Fact]
+    public void Create_ReturnsBarycenter_ForNaifIdLessThan10()
+    {
+        var result = CelestialItem.Create(5);
+        Assert.IsType<Barycenter>(result);
+    }
+
+    [Fact]
+    public void Create_ReturnsLagrangePoint_ForNaifIdBetweenL1AndL5()
+    {
+        var result = CelestialItem.Create(391);
+        Assert.IsType<LagrangePoint>(result);
+    }
+
+    [Fact]
+    public void Create_ReturnsCelestialBody_ForNaifIdGreaterThan10AndNotLagrangePoint()
+    {
+        var result = CelestialItem.Create(199);
+        Assert.IsType<CelestialBody>(result);
+    }
+
+    [Fact]
+    public void Create_ReturnsLagrangePoint_WithCorrectName()
+    {
+        var result = (LagrangePoint)CelestialItem.Create(392);
+        Assert.Equal("L2", result.Name);
     }
 }
