@@ -7,6 +7,7 @@ public static class Constants
     /// </summary>
     public const double G = 6.67430e-11;
 
+    public const double AU = 149597870700.0;
     public const double Deg2Rad = System.Math.PI / 180.0;
     public const double Rad2Deg = 180.0 / System.Math.PI;
     public const double _2PI = 2.0 * System.Math.PI;
