@@ -934,6 +934,106 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
         return hNorm * hNorm / Observer.GM;
     }
 
+    /// <summary>
+    /// Computes the orbital parameters of the observed body.
+    /// </summary>
+    /// <param name="observation1"></param>
+    /// <param name="observation2"></param>
+    /// <param name="observation3"></param>
+    /// <param name="observer"></param>
+    /// <param name="expectedCenterOfMotion"></param>
+    /// <returns></returns>
+    public static OrbitalParameters CreateFromObservation_Gauss(Equatorial observation1, Equatorial observation2, Equatorial observation3, ILocalizable observer,
+        CelestialItem expectedCenterOfMotion)
+    {
+        // Step 1: Compute observer positions dynamically using ephemeris
+        Vector3 observer1 = observer
+            .GetEphemeris(observation1.Epoch, expectedCenterOfMotion, Frame.ICRF, Aberration.None)
+            .ToStateVector()
+            .Position;
+
+        Vector3 observer2 = observer
+            .GetEphemeris(observation2.Epoch, expectedCenterOfMotion, Frame.ICRF, Aberration.None)
+            .ToStateVector()
+            .Position;
+
+        Vector3 observer3 = observer
+            .GetEphemeris(observation3.Epoch, expectedCenterOfMotion, Frame.ICRF, Aberration.None)
+            .ToStateVector()
+            .Position;
+
+        // Gravitational parameter of the expected central body
+        double mu = expectedCenterOfMotion.GM;
+
+        // Step 2: Convert equatorial coordinates to unit direction vectors
+        Vector3 rhoHat1 = observation1.ToCartesian().Normalize();
+        Vector3 rhoHat2 = observation2.ToCartesian().Normalize();
+        Vector3 rhoHat3 = observation3.ToCartesian().Normalize();
+
+        // Step 3: Extract observation times
+        Time t1 = observation1.Epoch;
+        Time t2 = observation2.Epoch;
+        Time t3 = observation3.Epoch;
+
+        // Step 4: Compute scalar coefficients A, B, E
+        double tau1 = (t1 - t2).TotalSeconds;
+        double tau3 = (t3 - t2).TotalSeconds;
+
+        double c1 = tau3 / (tau3 - tau1);
+        double c3 = -tau1 / (tau3 - tau1);
+
+        Vector3 p1 = rhoHat2.Cross(rhoHat3);
+        Vector3 p2 = rhoHat1.Cross(rhoHat3);
+        Vector3 p3 = rhoHat1.Cross(rhoHat2);
+
+        double d0 = rhoHat1 * p1;
+        double d11 = observer1 * p1;
+        double d12 = observer1 * p2;
+        double d13 = observer1 * p3;
+        double d21 = observer2 * p1;
+        double d22 = observer2 * p2;
+        double d23 = observer2 * p3;
+        double d31 = observer3 * p1;
+        double d32 = observer3 * p2;
+        double d33 = observer3 * p3;
+
+        double A = c1 * d21 - d22 + c3 * d23;
+        double B = c1 * d11 - d12 + c3 * d13;
+        double E = -2 * (rhoHat2 * observer2);
+
+        // Step 5: Solve the polynomial for rho2
+        double R2Squared = observer2.Magnitude() * observer2.Magnitude();
+        double polynomialA = A * A + A * E + R2Squared;
+        double polynomialB = 2 * A * B + B * E;
+        double polynomialC = B * B - mu;
+
+        double rho2 = Solver.SolveQuadratic(polynomialA, polynomialB, polynomialC);
+
+        // Step 6: Compute rho1 and rho3
+        double rho1 = (-1 / d0) * (d11 + d12 * rho2 + d13 * System.Math.Pow(rho2, 2));
+        double rho3 = (-1 / d0) * (d31 + d32 * rho2 + d33 * System.Math.Pow(rho2, 2));
+
+        // Step 7: Compute position vectors
+        Vector3 r1 = rhoHat1 * rho1 + observer1;
+        Vector3 r2 = rhoHat2 * rho2 + observer2;
+        Vector3 r3 = rhoHat3 * rho3 + observer3;
+
+        // Step 8: Compute Lagrange coefficients
+        double f1 = 1 - (mu * tau1 * tau1) / (2 * System.Math.Pow(r2.Magnitude(), 3));
+        double f3 = 1 - (mu * tau3 * tau3) / (2 * System.Math.Pow(r2.Magnitude(), 3));
+        double g1 = tau1 - (System.Math.Pow(tau1, 3) * mu) / (6 * System.Math.Pow(r2.Magnitude(), 3));
+        double g3 = tau3 - (System.Math.Pow(tau3, 3) * mu) / (6 * System.Math.Pow(r2.Magnitude(), 3));
+
+        // Step 9: Compute velocity vector using full Lagrange formulation
+        Vector3 v2 = (r1 * f3 - r3 * f1) / (f3 * g1 - f1 * g3);
+
+        // Step 10: Convert position and velocity to Keplerian elements
+        var stateVector = new StateVector(r2, v2, observer, t2, Frame.ICRF);
+        return stateVector.ToKeplerianElements();
+    }
+
+    #region Operators
+
     public override bool Equals(object obj)
     {
         return Equals(obj as OrbitalParameters);
@@ -959,4 +1059,6 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     {
         return !(left == right);
     }
+
+    #endregion
 }
