@@ -947,23 +947,23 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
         CelestialItem expectedCenterOfMotion)
     {
         // Step 1: Compute observer positions dynamically using ephemeris
-        Vector3 observer1 = observer
+        Vector3 R1 = observer
             .GetEphemeris(observation1.Epoch, expectedCenterOfMotion, Frame.ICRF, Aberration.None)
             .ToStateVector()
-            .Position;
+            .Position/1000.0;
 
-        Vector3 observer2 = observer
+        Vector3 R2 = observer
             .GetEphemeris(observation2.Epoch, expectedCenterOfMotion, Frame.ICRF, Aberration.None)
             .ToStateVector()
-            .Position;
+            .Position/1000.0;
 
-        Vector3 observer3 = observer
+        Vector3 R3 = observer
             .GetEphemeris(observation3.Epoch, expectedCenterOfMotion, Frame.ICRF, Aberration.None)
             .ToStateVector()
-            .Position;
+            .Position/1000.0;
 
         // Gravitational parameter of the expected central body
-        double mu = expectedCenterOfMotion.GM;
+        double mu = expectedCenterOfMotion.GM/1E09;
 
         // Step 2: Convert equatorial coordinates to unit direction vectors
         Vector3 rhoHat1 = observation1.ToCartesian().Normalize();
@@ -976,47 +976,78 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
         Time t3 = observation3.Epoch;
 
         // Step 4: Compute scalar coefficients A, B, E
-        double tau1 = (t1 - t2).TotalSeconds;
-        double tau3 = (t3 - t2).TotalSeconds;
-
-        double c1 = tau3 / (tau3 - tau1);
-        double c3 = -tau1 / (tau3 - tau1);
+        double tau1 = (t1 - t2).TotalDays;
+        double tau3 = (t3 - t2).TotalDays;
+        double tau = tau3 - tau1;
 
         Vector3 p1 = rhoHat2.Cross(rhoHat3);
         Vector3 p2 = rhoHat1.Cross(rhoHat3);
         Vector3 p3 = rhoHat1.Cross(rhoHat2);
 
         double d0 = rhoHat1 * p1;
-        double d11 = observer1 * p1;
-        double d12 = observer1 * p2;
-        double d13 = observer1 * p3;
-        double d21 = observer2 * p1;
-        double d22 = observer2 * p2;
-        double d23 = observer2 * p3;
-        double d31 = observer3 * p1;
-        double d32 = observer3 * p2;
-        double d33 = observer3 * p3;
+        double d11 = R1 * p1;
+        double d12 = R1 * p2;
+        double d13 = R1 * p3;
+        double d21 = R2 * p1;
+        double d22 = R2 * p2;
+        double d23 = R2 * p3;
+        double d31 = R3 * p1;
+        double d32 = R3 * p2;
+        double d33 = R3 * p3;
 
-        double A = c1 * d21 - d22 + c3 * d23;
-        double B = c1 * d11 - d12 + c3 * d13;
-        double E = -2 * (rhoHat2 * observer2);
+        double A = (1.0 / d0) * (-d12 * (tau3 / tau) + d22 + d32 * (tau1 / tau));
+        double B = (1.0 / (6.0 * d0)) * (d12 * (tau3 * tau3 - tau * tau) * (tau3 / tau) + d32 * (tau * tau - tau1 * tau1) * (tau1 / tau));
+        double E = R2 * rhoHat2;
 
         // Step 5: Solve the polynomial for rho2
-        double R2Squared = observer2.Magnitude() * observer2.Magnitude();
-        double polynomialA = A * A + A * E + R2Squared;
-        double polynomialB = 2 * A * B + B * E;
-        double polynomialC = B * B - mu;
+        double R2Squared = R2 * R2;
+        double polynomialA = -(A * A + 2.0 * A * E + R2Squared);
+        double polynomialB = -2.0 * mu * B * (A + E);
+        double polynomialC = -(mu * mu) * (B * B);
 
-        double rho2 = Solver.SolveQuadratic(polynomialA, polynomialB, polynomialC);
+
+        double _r2 = 3E+08;
+        double ar2 = _r2 * polynomialA;
+        double br2 = _r2 * polynomialB;
+        //double[] coefficients = { polynomialC, 0, 0, polynomialB, 0, 0, polynomialA, 0, 1 }; // From lowest to highest power
+// Determine the largest coefficient magnitude
+        double maxCoefficient = System.Math.Max(System.Math.Abs(polynomialA), System.Math.Max(System.Math.Abs(polynomialB), System.Math.Abs(polynomialC)));
+
+// Normalize coefficients by dividing all of them by the largest coefficient
+        double scaledPolynomialA = polynomialA / maxCoefficient;
+        double scaledPolynomialB = polynomialB / maxCoefficient;
+        double scaledPolynomialC = polynomialC / maxCoefficient;
+
+// Now construct the polynomial with normalized coefficients
+        double[] coefficients = { polynomialC, 0, 0, polynomialB, 0, 0, polynomialA, 0, 1.0 };
+        // Solve for roots
+        var roots = MathNet.Numerics.FindRoots.Polynomial(coefficients);
+        double rho2 = 0.0;
+        foreach (var root in roots)
+        {
+            if (root is { Imaginary: 0, Real: > 0 })
+            {
+                rho2 = root.Real;
+                break;
+            }
+        }
+        Func<double, double> function = r2 => System.Math.Pow(r2, 8) + polynomialA * System.Math.Pow(r2, 6) + polynomialB * System.Math.Pow(r2, 3) + polynomialC;
+        
+        // Define the derivative f'(r2)
+        Func<double, double> derivative = r2 => 8.0 * System.Math.Pow(r2, 7.0) + 6.0 * polynomialA * System.Math.Pow(r2, 5.0) + 3.0 * polynomialB * System.Math.Pow(r2, 2.0);
+        
+        // Initial guess for r2
+        
+        rho2 = NewtonRaphson.Solve(function, derivative, 400000.0,1.0,1000);
 
         // Step 6: Compute rho1 and rho3
         double rho1 = (-1 / d0) * (d11 + d12 * rho2 + d13 * System.Math.Pow(rho2, 2));
         double rho3 = (-1 / d0) * (d31 + d32 * rho2 + d33 * System.Math.Pow(rho2, 2));
 
         // Step 7: Compute position vectors
-        Vector3 r1 = rhoHat1 * rho1 + observer1;
-        Vector3 r2 = rhoHat2 * rho2 + observer2;
-        Vector3 r3 = rhoHat3 * rho3 + observer3;
+        Vector3 r1 = rhoHat1 * rho1 + R1;
+        Vector3 r2 = rhoHat2 * rho2 + R2;
+        Vector3 r3 = rhoHat3 * rho3 + R3;
 
         // Step 8: Compute Lagrange coefficients
         double f1 = 1 - (mu * tau1 * tau1) / (2 * System.Math.Pow(r2.Magnitude(), 3));
