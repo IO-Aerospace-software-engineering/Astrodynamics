@@ -32,17 +32,21 @@ public class NewtonRaphson
             double fDerivative = derivative(x);
 
             if (System.Math.Abs(fDerivative) < 1e-12) // Avoid division by zero or near-zero derivatives
-                throw new Exception("Derivative too small; method fails.");
+                throw new Exception($"Derivative too small (f'(x) = {fDerivative}) at iteration {i}. Adjust initial guess or problem scaling.");
 
             // Update the root estimate using Newton-Raphson formula
             double xNew = x - fValue / fDerivative;
 
-            // Check for convergence
-            if (System.Math.Abs(xNew - x) < tolerance)
+            // Check for convergence (absolute and relative tolerance)
+            if (System.Math.Abs(xNew - x) < tolerance || System.Math.Abs(xNew - x) < tolerance * System.Math.Abs(xNew))
                 return xNew;
+
+            if (double.IsNaN(xNew) || double.IsInfinity(xNew))
+                throw new Exception("Newton-Raphson method diverged.");
 
             x = xNew;
         }
+
 
         throw new Exception("Newton-Raphson method did not converge within the maximum number of iterations.");
     }

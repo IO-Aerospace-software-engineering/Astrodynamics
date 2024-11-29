@@ -950,20 +950,20 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
         Vector3 R1 = observer
             .GetEphemeris(observation1.Epoch, expectedCenterOfMotion, Frame.ICRF, Aberration.None)
             .ToStateVector()
-            .Position/1000.0;
+            .Position / 1000.0;
 
         Vector3 R2 = observer
             .GetEphemeris(observation2.Epoch, expectedCenterOfMotion, Frame.ICRF, Aberration.None)
             .ToStateVector()
-            .Position/1000.0;
+            .Position / 1000.0;
 
         Vector3 R3 = observer
             .GetEphemeris(observation3.Epoch, expectedCenterOfMotion, Frame.ICRF, Aberration.None)
             .ToStateVector()
-            .Position/1000.0;
+            .Position / 1000.0;
 
         // Gravitational parameter of the expected central body
-        double mu = expectedCenterOfMotion.GM/1E09;
+        double mu = expectedCenterOfMotion.GM / 1E09;
 
         // Step 2: Convert equatorial coordinates to unit direction vectors
         Vector3 rhoHat1 = observation1.ToCartesian().Normalize();
@@ -976,8 +976,8 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
         Time t3 = observation3.Epoch;
 
         // Step 4: Compute scalar coefficients A, B, E
-        double tau1 = (t1 - t2).TotalDays;
-        double tau3 = (t3 - t2).TotalDays;
+        double tau1 = (t1 - t2).TotalSeconds;
+        double tau3 = (t3 - t2).TotalSeconds;
         double tau = tau3 - tau1;
 
         Vector3 p1 = rhoHat2.Cross(rhoHat3);
@@ -996,7 +996,10 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
         double d33 = R3 * p3;
 
         double A = (1.0 / d0) * (-d12 * (tau3 / tau) + d22 + d32 * (tau1 / tau));
-        double B = (1.0 / (6.0 * d0)) * (d12 * (tau3 * tau3 - tau * tau) * (tau3 / tau) + d32 * (tau * tau - tau1 * tau1) * (tau1 / tau));
+        double B = (1.0 / (6.0 * d0)) *
+                   (d12 * ((System.Math.Pow(tau3, 2) - System.Math.Pow(tau, 2)) * (tau3 / tau)) +
+                    d32 * ((System.Math.Pow(tau, 2) - System.Math.Pow(tau1, 2)) * (tau1 / tau)));
+
         double E = R2 * rhoHat2;
 
         // Step 5: Solve the polynomial for rho2
@@ -1005,44 +1008,40 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
         double polynomialB = -2.0 * mu * B * (A + E);
         double polynomialC = -(mu * mu) * (B * B);
 
+        //Func<double, double> function = r2 => System.Math.Pow(r2, 8) + polynomialA * System.Math.Pow(r2, 6) + polynomialB * System.Math.Pow(r2, 3) + polynomialC;
 
-        double _r2 = 3E+08;
-        double ar2 = _r2 * polynomialA;
-        double br2 = _r2 * polynomialB;
-        //double[] coefficients = { polynomialC, 0, 0, polynomialB, 0, 0, polynomialA, 0, 1 }; // From lowest to highest power
-// Determine the largest coefficient magnitude
-        double maxCoefficient = System.Math.Max(System.Math.Abs(polynomialA), System.Math.Max(System.Math.Abs(polynomialB), System.Math.Abs(polynomialC)));
-
-// Normalize coefficients by dividing all of them by the largest coefficient
-        double scaledPolynomialA = polynomialA / maxCoefficient;
-        double scaledPolynomialB = polynomialB / maxCoefficient;
-        double scaledPolynomialC = polynomialC / maxCoefficient;
-
-// Now construct the polynomial with normalized coefficients
-        double[] coefficients = { polynomialC, 0, 0, polynomialB, 0, 0, polynomialA, 0, 1.0 };
-        // Solve for roots
-        var roots = MathNet.Numerics.FindRoots.Polynomial(coefficients);
-        double rho2 = 0.0;
-        foreach (var root in roots)
-        {
-            if (root is { Imaginary: 0, Real: > 0 })
-            {
-                rho2 = root.Real;
-                break;
-            }
-        }
-        Func<double, double> function = r2 => System.Math.Pow(r2, 8) + polynomialA * System.Math.Pow(r2, 6) + polynomialB * System.Math.Pow(r2, 3) + polynomialC;
-        
         // Define the derivative f'(r2)
-        Func<double, double> derivative = r2 => 8.0 * System.Math.Pow(r2, 7.0) + 6.0 * polynomialA * System.Math.Pow(r2, 5.0) + 3.0 * polynomialB * System.Math.Pow(r2, 2.0);
-        
+        //Func<double, double> derivative = r2 => 8.0 * System.Math.Pow(r2, 7.0) + 6.0 * polynomialA * System.Math.Pow(r2, 5.0) + 3.0 * polynomialB * System.Math.Pow(r2, 2.0);
+
         // Initial guess for r2
+        //double rho2 = NewtonRaphson.Solve(function, derivative, 400000.0, 1E-12, 1000);
         
-        rho2 = NewtonRaphson.Solve(function, derivative, 400000.0,1.0,1000);
+        Func<double, double> function = r2 => System.Math.Pow(r2, 8) + polynomialA * System.Math.Pow(r2, 6) + 
+                                              polynomialB * System.Math.Pow(r2, 3) + polynomialC;
+
+// You don't need the derivative anymore!
+// Note: You'll need to choose appropriate a and b values that bracket your root
+        double rho2 = BisectionMethod.Solve(function, a: 300000, b: 500000.0, tolerance: 1E-12, maxIterations: 1000);
 
         // Step 6: Compute rho1 and rho3
-        double rho1 = (-1 / d0) * (d11 + d12 * rho2 + d13 * System.Math.Pow(rho2, 2));
-        double rho3 = (-1 / d0) * (d31 + d32 * rho2 + d33 * System.Math.Pow(rho2, 2));
+        double rho1 = (1 / d0) * (
+            (6 * (d31 * tau1 / tau3 + d21 * tau / tau3) * System.Math.Pow(rho2, 3) +
+             mu * d31 * (tau * tau - tau1 * tau1) * tau1 / tau3) /
+            (6 * System.Math.Pow(rho2, 3) + mu * (tau * tau - tau3 * tau3)) -
+            d11
+        );
+
+// Calculate ρ₃ (rho3)
+        double rho3 = (1 / d0) * (
+            (6 * (d13 * tau3 / tau1 - d23 * tau / tau1) * System.Math.Pow(rho2, 3) +
+             mu * d13 * (tau * tau - tau3 * tau3) * tau3 / tau1) /
+            (6 * System.Math.Pow(rho2, 3) + mu * (tau * tau - tau1 * tau1)) -
+            d33
+        );
+
+// Calculate ρ₂ (rho2)
+        rho2 = A + (mu * B) / System.Math.Pow(rho2, 3);
+
 
         // Step 7: Compute position vectors
         Vector3 r1 = rhoHat1 * rho1 + R1;

@@ -20,9 +20,9 @@ public class FindOrbitalParametersFromObservations
         var e2 = new TimeSystem.Time(2024, 1, 2);
         var e3 = new TimeSystem.Time(2024, 1, 3);
         var mars = new CelestialBody(301);
-        var obs1 = mars.GetEphemeris(e1, site, Frames.Frame.ICRF, Aberration.LT);
-        var obs2 = mars.GetEphemeris(e2, site, Frames.Frame.ICRF, Aberration.LT);
-        var obs3 = mars.GetEphemeris(e3, site, Frames.Frame.ICRF, Aberration.LT);
+        var obs1 = mars.GetEphemeris(e1, site, Frames.Frame.ICRF, Aberration.None);
+        var obs2 = mars.GetEphemeris(e2, site, Frames.Frame.ICRF, Aberration.None);
+        var obs3 = mars.GetEphemeris(e3, site, Frames.Frame.ICRF, Aberration.None);
         var orbitalParams =
             Astrodynamics.OrbitalParameters.OrbitalParameters.CreateFromObservation_Gauss(obs1.ToEquatorial(), obs2.ToEquatorial(), obs3.ToEquatorial(), site, PlanetsAndMoons.EARTH_BODY);
         Assert.Equal(obs2.ToKeplerianElements(), orbitalParams.ToKeplerianElements());
