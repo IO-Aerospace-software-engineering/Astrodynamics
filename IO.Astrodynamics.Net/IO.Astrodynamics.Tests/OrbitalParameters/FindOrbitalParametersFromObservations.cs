@@ -16,9 +16,9 @@ public class FindOrbitalParametersFromObservations
     public void Create()
     {
         Site site = new Site(13, "DSS-13", TestHelpers.EarthAtJ2000);
-        var e1 = new TimeSystem.Time(2024, 1, 1);
+        var e1 = new TimeSystem.Time(2023, 12, 31);
         var e2 = new TimeSystem.Time(2024, 1, 2);
-        var e3 = new TimeSystem.Time(2024, 1, 3);
+        var e3 = new TimeSystem.Time(2024, 1, 4);
         var moon = new CelestialBody(301);
         var obs1 = moon.GetEphemeris(e1, site, Frames.Frame.ICRF, Aberration.LT);
         var obs2 = moon.GetEphemeris(e2, site, Frames.Frame.ICRF, Aberration.LT);

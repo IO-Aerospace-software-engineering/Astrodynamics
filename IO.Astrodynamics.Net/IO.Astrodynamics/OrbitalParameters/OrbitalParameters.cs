@@ -949,17 +949,17 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     {
         // Step 1: Compute observer positions dynamically using ephemeris
         Vector3 R1 = observer
-            .GetEphemeris(observation1.Epoch, PlanetsAndMoons.EARTH_BODY, Frame.ICRF, Aberration.LT)
+            .GetEphemeris(observation1.Epoch, expectedCenterOfMotion, Frame.ICRF, Aberration.LT)
             .ToStateVector()
             .Position / 1000.0;
 
         Vector3 R2 = observer
-            .GetEphemeris(observation2.Epoch, PlanetsAndMoons.EARTH_BODY, Frame.ICRF, Aberration.LT)
+            .GetEphemeris(observation2.Epoch, expectedCenterOfMotion, Frame.ICRF, Aberration.LT)
             .ToStateVector()
             .Position / 1000.0;
 
         Vector3 R3 = observer
-            .GetEphemeris(observation3.Epoch, PlanetsAndMoons.EARTH_BODY, Frame.ICRF, Aberration.LT)
+            .GetEphemeris(observation3.Epoch, expectedCenterOfMotion, Frame.ICRF, Aberration.LT)
             .ToStateVector()
             .Position / 1000.0;
 
