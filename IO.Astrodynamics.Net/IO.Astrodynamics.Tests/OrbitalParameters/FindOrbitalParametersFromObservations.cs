@@ -18,29 +18,29 @@ public class FindOrbitalParametersFromObservations
     [Fact]
     public void GeosynchronousObject()
     {
-        var timespan = TimeSpan.FromHours(2.0);
-        Site site = new Site(80, "MyStation", TestHelpers.EarthAtJ2000, new Planetodetic(0.0, 45.0*Constants.DEG_RAD, 0.0));
+        var timespan = TimeSpan.FromMinutes(120.0);
+        Site site = new Site(80, "MyStation", TestHelpers.EarthAtJ2000, new Planetodetic(0.0, 45.0 * Constants.DEG_RAD, 0.0));
 
         var e2 = new TimeSystem.Time(2024, 1, 2);
 
         var e1 = e2 - timespan;
         var e3 = e2 + timespan;
         var referenceOrbit = new KeplerianElements(
-            semiMajorAxis: 42164000.0, // km
+            semiMajorAxis: 42164000.0, // m
             eccentricity: 0.0,
-            inclination: 15.0*Constants.DEG_RAD,
-            rigthAscendingNode: 45.0*Constants.DEG_RAD,
+            inclination: 15.0 * Constants.DEG_RAD,
+            rigthAscendingNode: 45.0 * Constants.DEG_RAD,
             argumentOfPeriapsis: 0.0,
-            meanAnomaly: 45.0*Constants.DEG_RAD, // Décalage de 45 degrés
+            meanAnomaly: 45.0 * Constants.DEG_RAD, // Décalage de 45 degrés
             observer: TestHelpers.EarthAtJ2000,
             frame: Frames.Frame.ICRF,
             epoch: e2
         );
-        var obs1 = referenceOrbit.AtEpoch(e1).RelativeTo(site, Aberration.None);
-        var obs2 = referenceOrbit.AtEpoch(e2).RelativeTo(site, Aberration.None);
-        var obs3 = referenceOrbit.AtEpoch(e3).RelativeTo(site, Aberration.None);
+        var obs1 = referenceOrbit.AtEpoch(e1).RelativeTo(site, Aberration.LT);
+        var obs2 = referenceOrbit.AtEpoch(e2).RelativeTo(site, Aberration.LT);
+        var obs3 = referenceOrbit.AtEpoch(e3).RelativeTo(site, Aberration.LT);
         var orbitalParams =
             Astrodynamics.OrbitalParameters.OrbitalParameters.CreateFromObservation_Gauss(obs1.ToEquatorial(), obs2.ToEquatorial(), obs3.ToEquatorial(), site,
-                PlanetsAndMoons.EARTH_BODY);
+                PlanetsAndMoons.EARTH_BODY, 42000000.0);
     }
 }

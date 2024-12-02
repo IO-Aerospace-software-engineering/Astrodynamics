@@ -943,28 +943,29 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// <param name="observation3"></param>
     /// <param name="observer"></param>
     /// <param name="expectedCenterOfMotion"></param>
+    /// <param name="d"></param>
     /// <returns></returns>
     public static OrbitalParameters CreateFromObservation_Gauss(Equatorial observation1, Equatorial observation2, Equatorial observation3, ILocalizable observer,
-        CelestialItem expectedCenterOfMotion)
+        CelestialItem expectedCenterOfMotion, double expectedSemiMajorAxis)
     {
         // Step 1: Compute observer positions dynamically using ephemeris
         Vector3 R1 = observer
             .GetEphemeris(observation1.Epoch, expectedCenterOfMotion, Frame.ICRF, Aberration.LT)
             .ToStateVector()
-            .Position / 1000.0;
+            .Position;
 
         Vector3 R2 = observer
             .GetEphemeris(observation2.Epoch, expectedCenterOfMotion, Frame.ICRF, Aberration.LT)
             .ToStateVector()
-            .Position / 1000.0;
+            .Position;
 
         Vector3 R3 = observer
             .GetEphemeris(observation3.Epoch, expectedCenterOfMotion, Frame.ICRF, Aberration.LT)
             .ToStateVector()
-            .Position / 1000.0;
+            .Position;
 
         // Gravitational parameter of the expected central body
-        double mu = expectedCenterOfMotion.GM / 1E09;
+        double mu = expectedCenterOfMotion.GM;
 
         // Step 2: Convert equatorial coordinates to unit direction vectors
         Vector3 rhoHat1 = observation1.ToCartesian().Normalize();
@@ -1015,24 +1016,27 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
         Func<double, double> derivative = r2 => 8.0 * System.Math.Pow(r2, 7.0) + 6.0 * polynomialA * System.Math.Pow(r2, 5.0) + 3.0 * polynomialB * System.Math.Pow(r2, 2.0);
 
         // Initial guess for r2
-        double root_distance = NewtonRaphson.Solve(function, derivative, 40000.0, 1E-12, 1000);
+        double root_distance = NewtonRaphson.Solve(function, derivative, expectedSemiMajorAxis, 1E-12, 1000);
 
 
         // Step 6: Compute rho1 and rho3
-        double rho1 = (1 / d0) * (
-            (6 * (d31 * tau1 / tau3 + d21 * tau / tau3) * System.Math.Pow(root_distance, 3) +
-             mu * d31 * (tau * tau - tau1 * tau1) * tau1 / tau3) /
-            (6 * System.Math.Pow(root_distance, 3) + mu * (tau * tau - tau3 * tau3)) -
-            d11
-        );
+        double r23= System.Math.Pow(root_distance, 3);
+        double numerator = 6 * r23 * (d31 * (tau1 / tau3) + d21) +
+                           mu * d31 * (tau3 * tau3 - tau * tau) * (tau1 / tau3);
+
+        double denominator = 6 * r23 + mu * (tau3 * tau3 - tau1 * tau1);
+
+        double rho1 = (1 / d0) * ((numerator / denominator) - d11);
+
 
         // Calculate ρ₃ (rho3)
-        double rho3 = (1 / d0) * (
-            (6 * (d13 * tau3 / tau1 - d23 * tau / tau1) * System.Math.Pow(root_distance, 3) +
-             mu * d13 * (tau * tau - tau3 * tau3) * tau3 / tau1) /
-            (6 * System.Math.Pow(root_distance, 3) + mu * (tau * tau - tau1 * tau1)) -
-            d33
-        );
+        double numerator3 = 6 * r23 * (d13 * (tau3 / tau1) - d23) +
+                            mu * d13 * (tau1 * tau1 - tau * tau) * (tau3 / tau1);
+
+        double denominator3 = 6 * r23 + mu * (tau3 * tau3 - tau1 * tau1);
+
+        double rho3 = (1 / d0) * ((numerator3 / denominator3) - d33);
+
 
         // Calculate ρ₂ (rho2)
         double rho2 = A + (mu * B) / System.Math.Pow(root_distance, 3);
@@ -1053,7 +1057,7 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
         Vector3 v2 = (r1 * f3 - r3 * f1) / (f3 * g1 - f1 * g3);
 
         // Step 10: Convert position and velocity to Keplerian elements
-        var stateVector = new StateVector(r2 * 1000.0, v2 * 1000.0, expectedCenterOfMotion, t2, Frame.ICRF);
+        var stateVector = new StateVector(r2, v2, expectedCenterOfMotion, t2, Frame.ICRF);
         return stateVector.ToKeplerianElements();
     }
 
