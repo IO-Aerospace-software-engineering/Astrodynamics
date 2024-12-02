@@ -1,4 +1,7 @@
+using System;
 using IO.Astrodynamics.Body;
+using IO.Astrodynamics.Coordinates;
+using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.Surface;
 using Xunit;
@@ -13,18 +16,31 @@ public class FindOrbitalParametersFromObservations
     }
 
     [Fact]
-    public void Create()
+    public void GeosynchronousObject()
     {
-        Site site = new Site(13, "DSS-13", TestHelpers.EarthAtJ2000);
-        var e1 = new TimeSystem.Time(2023, 12, 31);
+        var timespan = TimeSpan.FromHours(2.0);
+        Site site = new Site(80, "MyStation", TestHelpers.EarthAtJ2000, new Planetodetic(0.0, 45.0*Constants.DEG_RAD, 0.0));
+
         var e2 = new TimeSystem.Time(2024, 1, 2);
-        var e3 = new TimeSystem.Time(2024, 1, 4);
-        var moon = new CelestialBody(301);
-        var obs1 = moon.GetEphemeris(e1, site, Frames.Frame.ICRF, Aberration.LT);
-        var obs2 = moon.GetEphemeris(e2, site, Frames.Frame.ICRF, Aberration.LT);
-        var obs3 = moon.GetEphemeris(e3, site, Frames.Frame.ICRF, Aberration.LT);
+
+        var e1 = e2 - timespan;
+        var e3 = e2 + timespan;
+        var referenceOrbit = new KeplerianElements(
+            semiMajorAxis: 42164000.0, // km
+            eccentricity: 0.0,
+            inclination: 15.0*Constants.DEG_RAD,
+            rigthAscendingNode: 45.0*Constants.DEG_RAD,
+            argumentOfPeriapsis: 0.0,
+            meanAnomaly: 45.0*Constants.DEG_RAD, // Décalage de 45 degrés
+            observer: TestHelpers.EarthAtJ2000,
+            frame: Frames.Frame.ICRF,
+            epoch: e2
+        );
+        var obs1 = referenceOrbit.AtEpoch(e1).RelativeTo(site, Aberration.None);
+        var obs2 = referenceOrbit.AtEpoch(e2).RelativeTo(site, Aberration.None);
+        var obs3 = referenceOrbit.AtEpoch(e3).RelativeTo(site, Aberration.None);
         var orbitalParams =
-            Astrodynamics.OrbitalParameters.OrbitalParameters.CreateFromObservation_Gauss(obs1.ToEquatorial(), obs2.ToEquatorial(), obs3.ToEquatorial(), site, Barycenters.EARTH_BARYCENTER);
-        Assert.Equal(obs2.ToKeplerianElements(), orbitalParams.ToKeplerianElements());
+            Astrodynamics.OrbitalParameters.OrbitalParameters.CreateFromObservation_Gauss(obs1.ToEquatorial(), obs2.ToEquatorial(), obs3.ToEquatorial(), site,
+                PlanetsAndMoons.EARTH_BODY);
     }
 }

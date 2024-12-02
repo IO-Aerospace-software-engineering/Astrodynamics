@@ -964,7 +964,7 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
             .Position / 1000.0;
 
         // Gravitational parameter of the expected central body
-        double mu = expectedCenterOfMotion.GM / 1E09* System.Math.Pow(86400.0, 2);
+        double mu = expectedCenterOfMotion.GM / 1E09;
 
         // Step 2: Convert equatorial coordinates to unit direction vectors
         Vector3 rhoHat1 = observation1.ToCartesian().Normalize();
@@ -977,8 +977,8 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
         Time t3 = observation3.Epoch;
 
         // Step 4: Compute scalar coefficients A, B, E
-        double tau1 = (t1 - t2).TotalDays;
-        double tau3 = (t3 - t2).TotalDays;
+        double tau1 = (t1 - t2).TotalSeconds;
+        double tau3 = (t3 - t2).TotalSeconds;
         double tau = tau3 - tau1;
 
         Vector3 p1 = rhoHat2.Cross(rhoHat3);
@@ -1015,33 +1015,27 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
         Func<double, double> derivative = r2 => 8.0 * System.Math.Pow(r2, 7.0) + 6.0 * polynomialA * System.Math.Pow(r2, 5.0) + 3.0 * polynomialB * System.Math.Pow(r2, 2.0);
 
         // Initial guess for r2
-        double rho2 = NewtonRaphson.Solve(function, derivative, 400000.0, 1E-12, 1000);
-        
-        //Func<double, double> function = r2 => System.Math.Pow(r2, 8) + polynomialA * System.Math.Pow(r2, 6) + 
-                                              //polynomialB * System.Math.Pow(r2, 3) + polynomialC;
+        double root_distance = NewtonRaphson.Solve(function, derivative, 40000.0, 1E-12, 1000);
 
-// You don't need the derivative anymore!
-// Note: You'll need to choose appropriate a and b values that bracket your root
-        //double rho2 = BisectionMethod.Solve(function, a: 300000, b: 500000.0, tolerance: 1E-12, maxIterations: 1000);
 
         // Step 6: Compute rho1 and rho3
         double rho1 = (1 / d0) * (
-            (6 * (d31 * tau1 / tau3 + d21 * tau / tau3) * System.Math.Pow(rho2, 3) +
+            (6 * (d31 * tau1 / tau3 + d21 * tau / tau3) * System.Math.Pow(root_distance, 3) +
              mu * d31 * (tau * tau - tau1 * tau1) * tau1 / tau3) /
-            (6 * System.Math.Pow(rho2, 3) + mu * (tau * tau - tau3 * tau3)) -
+            (6 * System.Math.Pow(root_distance, 3) + mu * (tau * tau - tau3 * tau3)) -
             d11
         );
 
-// Calculate ρ₃ (rho3)
+        // Calculate ρ₃ (rho3)
         double rho3 = (1 / d0) * (
-            (6 * (d13 * tau3 / tau1 - d23 * tau / tau1) * System.Math.Pow(rho2, 3) +
+            (6 * (d13 * tau3 / tau1 - d23 * tau / tau1) * System.Math.Pow(root_distance, 3) +
              mu * d13 * (tau * tau - tau3 * tau3) * tau3 / tau1) /
-            (6 * System.Math.Pow(rho2, 3) + mu * (tau * tau - tau1 * tau1)) -
+            (6 * System.Math.Pow(root_distance, 3) + mu * (tau * tau - tau1 * tau1)) -
             d33
         );
 
-// Calculate ρ₂ (rho2)
-        rho2 = A + (mu * B) / System.Math.Pow(rho2, 3);
+        // Calculate ρ₂ (rho2)
+        double rho2 = A + (mu * B) / System.Math.Pow(root_distance, 3);
 
 
         // Step 7: Compute position vectors
@@ -1058,32 +1052,9 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
         // Step 9: Compute velocity vector using full Lagrange formulation
         Vector3 v2 = (r1 * f3 - r3 * f1) / (f3 * g1 - f1 * g3);
 
-        Console.WriteLine($"rho2:  {rho2}");
-        Console.WriteLine($"r2 magnitude:  {r2.Magnitude()}");
-        Console.WriteLine($"mu:  {mu}");
-        
-        Vector3 rho2_vector = rhoHat2 * rho2;
-        Vector3 R2_vector = R2;
-        Vector3 rr2 = rho2_vector + R2_vector;
-
-        Console.WriteLine($"rho2_vector magnitude: {rho2_vector.Magnitude()}");
-        Console.WriteLine($"R2_vector magnitude: {R2_vector.Magnitude()}");
-        Console.WriteLine($"Angle between vectors: {System.Math.Acos(rho2_vector.Normalize() * R2_vector.Normalize()) * 180.0/System.Math.PI} degrees");
-        Console.WriteLine($"R2: X={R2.X}, Y={R2.Y}, Z={R2.Z}");
-        Console.WriteLine("Lagrange Coefficients:");
-        Console.WriteLine($"f1: {f1}, f3: {f3}");
-        Console.WriteLine($"g1: {g1}, g3: {g3}");
-
-// Print velocity components
-        Console.WriteLine($"v2: X={v2.X}, Y={v2.Y}, Z={v2.Z}");
-        Console.WriteLine($"|v2|: {v2.Magnitude()}");
-        Console.WriteLine($"tau1: {tau1}, tau3: {tau3}");
-        Console.WriteLine($"r1: X={r1.X}, Y={r1.Y}, Z={r1.Z}");
-        Console.WriteLine($"r3: X={r3.X}, Y={r3.Y}, Z={r3.Z}");
         // Step 10: Convert position and velocity to Keplerian elements
-        var stateVector = new StateVector(r2*1000.0, v2/86.4, expectedCenterOfMotion, t2, Frame.ICRF);
+        var stateVector = new StateVector(r2 * 1000.0, v2 * 1000.0, expectedCenterOfMotion, t2, Frame.ICRF);
         return stateVector.ToKeplerianElements();
-        
     }
 
     #region Operators
