@@ -18,7 +18,7 @@ public class FindOrbitalParametersFromObservations
     [Fact]
     public void GeosynchronousObject()
     {
-        var timespan = TimeSpan.FromMinutes(120.0);
+        var timespan = TimeSpan.FromMinutes(15.0);
         Site site = new Site(80, "MyStation", TestHelpers.EarthAtJ2000, new Planetodetic(0.0, 45.0 * Constants.DEG_RAD, 0.0));
 
         var e2 = new TimeSystem.Time(2024, 1, 2);
@@ -42,5 +42,9 @@ public class FindOrbitalParametersFromObservations
         var orbitalParams =
             Astrodynamics.OrbitalParameters.OrbitalParameters.CreateFromObservation_Gauss(obs1.ToEquatorial(), obs2.ToEquatorial(), obs3.ToEquatorial(), site,
                 PlanetsAndMoons.EARTH_BODY, 42000000.0);
+        Console.WriteLine($"Expected position : {referenceOrbit.ToStateVector().Position}");
+        Console.WriteLine($"Computed position : {orbitalParams.ToStateVector().Position}");
+        Console.WriteLine($"Delta : {orbitalParams.ToStateVector().Position-referenceOrbit.ToStateVector().Position}");
+        Console.WriteLine($"Delta range in percent = {100.0*(orbitalParams.ToStateVector().Position-referenceOrbit.ToStateVector().Position).Magnitude()/referenceOrbit.ToStateVector().Position.Magnitude()} %");
     }
 }

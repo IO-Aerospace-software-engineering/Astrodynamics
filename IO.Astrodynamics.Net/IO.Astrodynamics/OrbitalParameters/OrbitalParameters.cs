@@ -1057,8 +1057,7 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
         Vector3 v2 = (r1 * f3 - r3 * f1) / (f3 * g1 - f1 * g3);
 
         // Step 10: Convert position and velocity to Keplerian elements
-        var stateVector = new StateVector(r2, v2, expectedCenterOfMotion, t2, Frame.ICRF);
-        return stateVector.ToKeplerianElements();
+        return new StateVector(r2, v2, expectedCenterOfMotion, t2, Frame.ICRF);
     }
 
     #region Operators
