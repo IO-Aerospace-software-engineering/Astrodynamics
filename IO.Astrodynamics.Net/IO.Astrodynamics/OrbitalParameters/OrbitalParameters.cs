@@ -1020,26 +1020,25 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
 
 
         // Step 6: Compute rho1 and rho3
-        double r23= System.Math.Pow(root_distance, 3);
-        double numerator = 6 * r23 * (d31 * (tau1 / tau3) + d21) +
-                           mu * d31 * (tau3 * tau3 - tau * tau) * (tau1 / tau3);
+        double r23 = System.Math.Pow(root_distance, 3);
+        double numerator = 6 * (d31 * (tau1 / tau3) + d21 * (tau / tau3)) * r23 +
+                           mu * d31 * (tau * tau - tau1 * tau1) * (tau1 / tau3);
 
-        double denominator = 6 * r23 + mu * (tau3 * tau3 - tau1 * tau1);
+        double denominator = 6 * r23 + mu * (tau * tau - tau3 * tau3);
 
         double rho1 = (1 / d0) * ((numerator / denominator) - d11);
 
 
         // Calculate ρ₃ (rho3)
-        double numerator3 = 6 * r23 * (d13 * (tau3 / tau1) - d23) +
-                            mu * d13 * (tau1 * tau1 - tau * tau) * (tau3 / tau1);
+        double numerator3 = 6 * (d13 * (tau3 / tau1) - d23 * (tau / tau1)) * r23 + mu * d13 * (tau * tau - tau3 * tau3) * (tau3 / tau1);
 
-        double denominator3 = 6 * r23 + mu * (tau3 * tau3 - tau1 * tau1);
+        double denominator3 = 6 * r23 + mu * (tau * tau - tau1 * tau1);
 
         double rho3 = (1 / d0) * ((numerator3 / denominator3) - d33);
 
 
         // Calculate ρ₂ (rho2)
-        double rho2 = A + (mu * B) / System.Math.Pow(root_distance, 3);
+        double rho2 = A + (mu * B) / r23;
 
 
         // Step 7: Compute position vectors
@@ -1047,14 +1046,26 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
         Vector3 r2 = rhoHat2 * rho2 + R2;
         Vector3 r3 = rhoHat3 * rho3 + R3;
 
-        // Step 8: Compute Lagrange coefficients
-        double f1 = 1 - (mu * tau1 * tau1) / (2 * System.Math.Pow(r2.Magnitude(), 3));
-        double f3 = 1 - (mu * tau3 * tau3) / (2 * System.Math.Pow(r2.Magnitude(), 3));
-        double g1 = tau1 - (System.Math.Pow(tau1, 3) * mu) / (6 * System.Math.Pow(r2.Magnitude(), 3));
-        double g3 = tau3 - (System.Math.Pow(tau3, 3) * mu) / (6 * System.Math.Pow(r2.Magnitude(), 3));
+        // Calculate higher-order terms for f1 and f3
+        double r2Cubed = System.Math.Pow(r2.Magnitude(), 3);
+        double r2Sixth = System.Math.Pow(r2.Magnitude(), 6);
+
+        double f1 = 1 - (mu * System.Math.Pow(tau1, 2)) / (2 * r2Cubed) +
+                    (mu * mu * System.Math.Pow(tau1, 4)) / (24 * r2Sixth);
+
+        double f3 = 1 - (mu * System.Math.Pow(tau3, 2)) / (2 * r2Cubed) +
+                    (mu * mu * System.Math.Pow(tau3, 4)) / (24 * r2Sixth);
+
+// Calculate higher-order terms for g1 and g3
+        double g1 = tau1 - (mu * System.Math.Pow(tau1, 3)) / (6 * r2Cubed) +
+                    (mu * mu * System.Math.Pow(tau1, 5)) / (120 * r2Sixth);
+
+        double g3 = tau3 - (mu * System.Math.Pow(tau3, 3)) / (6 * r2Cubed) +
+                    (mu * mu * System.Math.Pow(tau3, 5)) / (120 * r2Sixth);
+
 
         // Step 9: Compute velocity vector using full Lagrange formulation
-        Vector3 v2 = (r1 * f3 - r3 * f1) / (f3 * g1 - f1 * g3);
+        Vector3 v2 = (r1 * -f3 + r3 * f1) * (1 / (f1 * g3 - f3 * g1));
 
         // Step 10: Convert position and velocity to Keplerian elements
         return new StateVector(r2, v2, expectedCenterOfMotion, t2, Frame.ICRF);
