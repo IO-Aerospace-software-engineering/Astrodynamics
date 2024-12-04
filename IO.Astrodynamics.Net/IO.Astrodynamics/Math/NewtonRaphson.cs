@@ -50,4 +50,36 @@ public class NewtonRaphson
 
         throw new Exception("Newton-Raphson method did not converge within the maximum number of iterations.");
     }
+    
+    public static double BoundedNewtonRaphson(Func<double, double> f, Func<double, double> df, 
+        double x0, double min, double max, double tolerance, int maxIterations)
+    {
+        double x = x0;
+        for (int i = 0; i < maxIterations; i++)
+        {
+            double fx = f(x);
+            if (System.Math.Abs(fx) < tolerance)
+                return x;
+
+            double dfx = df(x);
+            if (System.Math.Abs(dfx) < 1e-10)
+                break;
+
+            double step = fx / dfx;
+            double newX = x - step;
+        
+            // Bound the solution
+            if (newX < min)
+                newX = min;
+            else if (newX > max)
+                newX = max;
+
+            if (System.Math.Abs(newX - x) < tolerance)
+                return newX;
+
+            x = newX;
+        }
+    
+        throw new Exception("Failed to converge within maximum iterations");
+    }
 }
