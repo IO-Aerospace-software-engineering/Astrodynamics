@@ -21,8 +21,17 @@ public class InitialOrbitDetermination
     public static OrbitalParameters CreateFromObservation_Gauss(Equatorial observation1, Equatorial observation2, Equatorial observation3, ILocalizable observer,
         CelestialItem expectedCenterOfMotion, double expectedRangeFromObserver)
     {
+        Console.WriteLine($"obs1 declination = {observation1.Declination * Constants.Rad2Deg}");
+        Console.WriteLine($"obs1 right ascension = {observation1.RightAscension * Constants.Rad2Deg}");
+        Console.WriteLine($"obs2 declination = {observation2.Declination * Constants.Rad2Deg}");
+        Console.WriteLine($"obs2 right ascension = {observation2.RightAscension * Constants.Rad2Deg}");
+        Console.WriteLine($"obs3 declination = {observation3.Declination * Constants.Rad2Deg}");
+        Console.WriteLine($"obs3 right ascension = {observation3.RightAscension * Constants.Rad2Deg}");
+
+
         var distanceScale = expectedCenterOfMotion.IsSun ? Constants.AU : 1E03;
-        double mu = expectedCenterOfMotion.GM / (distanceScale * distanceScale * distanceScale);
+        var secondsPerDay = 86400.0;
+        double mu = expectedCenterOfMotion.GM * System.Math.Pow(secondsPerDay, 2) / System.Math.Pow(distanceScale, 3);
         // Step 1: Compute observer positions with improved scaling
         Vector3 R1 = observer
             .GetEphemeris(observation1.Epoch, expectedCenterOfMotion, Frame.ICRF, Aberration.LT)
@@ -39,17 +48,25 @@ public class InitialOrbitDetermination
             .ToStateVector()
             .Position / distanceScale;
 
+        Console.WriteLine($"R1={R1 * distanceScale / 1000.0}");
+        Console.WriteLine($"R2={R2 * distanceScale / 1000.0}");
+        Console.WriteLine($"R3={R3 * distanceScale / 1000.0}");
+
         // Improved scaling factor based on expected range
         // double scaleR = expectedRangeFromObserver / distanceScale;
 
+
+        Console.WriteLine($"obs1 cartesian = {observation1.ToCartesian()}");
+        Console.WriteLine($"obs2 cartesian = {observation2.ToCartesian()}");
+        Console.WriteLine($"obs3 cartesian = {observation3.ToCartesian()}");
         // Step 2: Convert equatorial coordinates to unit direction vectors
         Vector3 rhoHat1 = observation1.ToCartesian().Normalize();
         Vector3 rhoHat2 = observation2.ToCartesian().Normalize();
         Vector3 rhoHat3 = observation3.ToCartesian().Normalize();
 
         // Step 3: Time differences with improved precision
-        double tau1 = (observation1.Epoch - observation2.Epoch).TotalSeconds;
-        double tau3 = (observation3.Epoch - observation2.Epoch).TotalSeconds;
+        double tau1 = (observation1.Epoch - observation2.Epoch).TotalDays;
+        double tau3 = (observation3.Epoch - observation2.Epoch).TotalDays;
         double tau = tau3 - tau1;
 
         // Step 4: Compute determinants with improved numerical stability
@@ -57,11 +74,6 @@ public class InitialOrbitDetermination
         Vector3 p2 = rhoHat1.Cross(rhoHat3);
 
         double d0 = rhoHat1 * p1;
-
-        // Scale all position vectors consistently
-        // Vector3 R1Scaled = R1 / distanceScale;
-        // Vector3 R2Scaled = R2 / distanceScale;
-        // Vector3 R3Scaled = R3 / distanceScale;
 
         // Compute determinants with scaled positions
         double d12 = R1 * p2;
@@ -97,7 +109,7 @@ public class InitialOrbitDetermination
         double r23 = System.Math.Pow(root_distance, 3);
 
         // Calculate ρ₂ (rho2)
-        double rho2 =  (A + (mu * B) / r23);
+        double rho2 = (A + (mu * B) / r23);
 
         // Step 7: Compute position vectors
         Vector3 r2 = rhoHat2 * rho2 + R2;
