@@ -71,13 +71,13 @@ public class InitialOrbitDeterminationTests
     [Fact]
     public void PlanetObject()
     {
-        for (int i = 7; i <= 15; i++)
+        for (int i = 1; i <= 7; i++)
         {
             var timespan = TimeSpan.FromDays(i);
             Site site = new Site(13, "DSS-13", TestHelpers.EarthAtJ2000);
 
             //var site = TestHelpers.EarthAtJ2000;
-            var e2 = new TimeSystem.Time(2024, 1, 2);
+            var e2 = new TimeSystem.Time(2023, 3, 2);
 
             var e1 = e2 - timespan;
             var e3 = e2 + timespan;
