@@ -1,6 +1,7 @@
 using System;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Coordinates;
+using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.Surface;
@@ -70,44 +71,44 @@ public class InitialOrbitDeterminationTests
     [Fact]
     public void PlanetObject()
     {
-        for (int i = 1; i <= 7; i++)
+        for (int i = 7; i <= 15; i++)
         {
             var timespan = TimeSpan.FromDays(i);
-            // Site site = new Site(13, "DSS-13", TestHelpers.EarthAtJ2000);
+            Site site = new Site(13, "DSS-13", TestHelpers.EarthAtJ2000);
 
-            var site = TestHelpers.EarthAtJ2000;
+            //var site = TestHelpers.EarthAtJ2000;
             var e2 = new TimeSystem.Time(2024, 1, 2);
 
             var e1 = e2 - timespan;
             var e3 = e2 + timespan;
-            var target = new CelestialBody(499);
+            var target = new Barycenter(4);
             var obs1 = target.GetEphemeris(e1, site, Frames.Frame.ICRF, Aberration.LT);
             var obs2 = target.GetEphemeris(e2, site, Frames.Frame.ICRF, Aberration.LT);
             var obs3 = target.GetEphemeris(e3, site, Frames.Frame.ICRF, Aberration.LT);
             var referenceOrbit = target.GetEphemeris(e2, TestHelpers.Sun, Frames.Frame.ICRF, Aberration.LT);
             var orbitalParams =
                 InitialOrbitDetermination.CreateFromObservation_Gauss(obs1.ToEquatorial(), obs2.ToEquatorial(), obs3.ToEquatorial(), site,
-                    Stars.SUN_BODY, 362140430644.05371);
-            //Console.WriteLine($@"Test N°{i}");
-            // Console.WriteLine($@"Time span between two observations : {timespan}");
-            // Console.WriteLine($@"Expected position : {referenceOrbit.ToStateVector().Position}");
-            // Console.WriteLine($@"Computed position : {orbitalParams.ToStateVector().Position}");
-            // Console.WriteLine($@"Delta : {orbitalParams.ToStateVector().Position - referenceOrbit.ToStateVector().Position}");
+                    Stars.SUN_BODY, 350000000000.58063);
+            Console.WriteLine($@"Test N°{i}");
+            Console.WriteLine($@"Time span between two observations : {timespan}");
+            Console.WriteLine($@"Expected position : {referenceOrbit.ToStateVector().Position}");
+            Console.WriteLine($@"Computed position : {orbitalParams.ToStateVector().Position}");
+            Console.WriteLine($@"Delta : {orbitalParams.ToStateVector().Position - referenceOrbit.ToStateVector().Position}");
             var deltaRange = 100.0 * (orbitalParams.ToStateVector().Position - referenceOrbit.ToStateVector().Position).Magnitude() /
                              referenceOrbit.ToStateVector().Position.Magnitude();
             Console.WriteLine(
                 $@"Time span:{timespan} Delta range in percent = {deltaRange} %");
-            // Console.WriteLine($@"Delta range in meters = {(orbitalParams.ToStateVector().Position - referenceOrbit.ToStateVector().Position).Magnitude()} m");
-            // Console.WriteLine($@"Expected keplerian elements : {referenceOrbit.ToString()}");
-            // Console.WriteLine($@"computed keplerian elements : {orbitalParams.ToKeplerianElements().ToString()}");
-            // Console.WriteLine($@"Expected velocity : {referenceOrbit.ToStateVector().Velocity}");
-            // Console.WriteLine($@"Computed velocity : {orbitalParams.ToStateVector().Velocity}");
-            // var deltaVelocity = 100.0 * (orbitalParams.ToStateVector().Velocity - referenceOrbit.ToStateVector().Velocity).Magnitude() /
-            //                     referenceOrbit.ToStateVector().Velocity.Magnitude();
-            // Console.WriteLine(
-            //     $@"Delta velocity in percent = {deltaVelocity} %");
-            // Assert.True(deltaRange < 0.02);
-            // Assert.True(deltaVelocity < 0.02);
+            Console.WriteLine($@"Delta range in meters = {(orbitalParams.ToStateVector().Position - referenceOrbit.ToStateVector().Position).Magnitude()} m");
+            Console.WriteLine($@"Expected keplerian elements : {referenceOrbit.ToString()}");
+            Console.WriteLine($@"computed keplerian elements : {orbitalParams.ToKeplerianElements().ToString()}");
+            Console.WriteLine($@"Expected velocity : {referenceOrbit.ToStateVector().Velocity}");
+            Console.WriteLine($@"Computed velocity : {orbitalParams.ToStateVector().Velocity}");
+            var deltaVelocity = 100.0 * (orbitalParams.ToStateVector().Velocity - referenceOrbit.ToStateVector().Velocity).Magnitude() /
+                                referenceOrbit.ToStateVector().Velocity.Magnitude();
+            Console.WriteLine(
+                $@"Delta velocity in percent = {deltaVelocity} %");
+            //Assert.True(deltaRange < 0.02);
+            //Assert.True(deltaVelocity < 0.02);
         }
     }
 
@@ -123,5 +124,11 @@ public class InitialOrbitDeterminationTests
         var obs3 = new Equatorial(76.1 * Astrodynamics.Constants.Deg2Rad, 165.75 * Astrodynamics.Constants.Deg2Rad, 7250000.0, ut3);
         var orbitalParams =
             InitialOrbitDetermination.CreateFromObservation_Gauss(obs1, obs2, obs3, site, PlanetsAndMoons.EARTH_BODY, 7250000.0);
+        StateVector referenceOrbit = new(new Vector3(3520477.0118993367, -4310404.2221997585, 4645118.5764311915),
+            new Vector3(-4026.2486947722973, 2615.67401249017, 5468.113004203227),
+            TestHelpers.EarthAtJ2000, ut2, Frames.Frame.ICRF);
+        Assert.Equal(referenceOrbit, orbitalParams.ToStateVector(), TestHelpers.StateVectorComparer);
+        var deltaRange = 100.0 * (orbitalParams.ToStateVector().Position - referenceOrbit.ToStateVector().Position).Magnitude() /
+                         referenceOrbit.ToStateVector().Position.Magnitude();
     }
 }
