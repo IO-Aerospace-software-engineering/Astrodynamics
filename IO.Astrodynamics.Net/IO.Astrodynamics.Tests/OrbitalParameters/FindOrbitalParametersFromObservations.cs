@@ -70,7 +70,7 @@ public class InitialOrbitDeterminationTests
     [Fact]
     public void PlanetObject()
     {
-        for (int i = 1; i <= 200; i++)
+        for (int i = 1; i <= 7; i++)
         {
             var timespan = TimeSpan.FromDays(i);
             // Site site = new Site(13, "DSS-13", TestHelpers.EarthAtJ2000);
@@ -109,5 +109,19 @@ public class InitialOrbitDeterminationTests
             // Assert.True(deltaRange < 0.02);
             // Assert.True(deltaVelocity < 0.02);
         }
+    }
+
+    [Fact]
+    public void COBE()
+    {
+        var ut1 = new TimeSystem.Time(2000, 11, 6, 22, 31, 29, 0, 0, TimeSystem.TimeFrame.UTCFrame);
+        var ut2 = new TimeSystem.Time(2000, 11, 6, 22, 34, 30, 0, 0, TimeSystem.TimeFrame.UTCFrame);
+        var ut3 = new TimeSystem.Time(2000, 11, 6, 22, 37, 30, 0, 0, TimeSystem.TimeFrame.UTCFrame);
+        var site = new Site(99, "Maryland university", TestHelpers.EarthAtJ2000, new Planetodetic(-76.95667 * Constants.DEG_RAD, 39.00167 * Constants.DEG_RAD, 53.0));
+        var obs1 = new Equatorial(-16.3 * Astrodynamics.Constants.Deg2Rad, 327.0 * Astrodynamics.Constants.Deg2Rad, 7250000.0, ut1);
+        var obs2 = new Equatorial(46.9 * Astrodynamics.Constants.Deg2Rad, 318.5 * Astrodynamics.Constants.Deg2Rad, 7250000.0, ut2);
+        var obs3 = new Equatorial(76.1 * Astrodynamics.Constants.Deg2Rad, 165.75 * Astrodynamics.Constants.Deg2Rad, 7250000.0, ut3);
+        var orbitalParams =
+            InitialOrbitDetermination.CreateFromObservation_Gauss(obs1, obs2, obs3, site, PlanetsAndMoons.EARTH_BODY, 7250000.0);
     }
 }

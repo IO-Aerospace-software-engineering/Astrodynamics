@@ -30,8 +30,8 @@ public class InitialOrbitDetermination
 
 
         var distanceScale = expectedCenterOfMotion.IsSun ? Constants.AU : 1E03;
-        var secondsPerDay = 86400.0;
-        double mu = expectedCenterOfMotion.GM * System.Math.Pow(secondsPerDay, 2) / System.Math.Pow(distanceScale, 3);
+        //var secondsPerDay = 86400.0;
+        double mu = expectedCenterOfMotion.GM / System.Math.Pow(distanceScale, 3);
         // Step 1: Compute observer positions with improved scaling
         Vector3 R1 = observer
             .GetEphemeris(observation1.Epoch, expectedCenterOfMotion, Frame.ICRF, Aberration.LT)
@@ -48,9 +48,9 @@ public class InitialOrbitDetermination
             .ToStateVector()
             .Position / distanceScale;
 
-        Console.WriteLine($"R1={R1 * distanceScale / 1000.0}");
-        Console.WriteLine($"R2={R2 * distanceScale / 1000.0}");
-        Console.WriteLine($"R3={R3 * distanceScale / 1000.0}");
+        Console.WriteLine($"R1={R1 / 1000.0}");
+        Console.WriteLine($"R2={R2 / 1000.0}");
+        Console.WriteLine($"R3={R3 / 1000.0}");
 
         // Improved scaling factor based on expected range
         // double scaleR = expectedRangeFromObserver / distanceScale;
@@ -65,32 +65,30 @@ public class InitialOrbitDetermination
         Vector3 rhoHat3 = observation3.ToCartesian().Normalize();
 
         // Step 3: Time differences with improved precision
-        double tau1 = (observation1.Epoch - observation2.Epoch).TotalDays;
-        double tau3 = (observation3.Epoch - observation2.Epoch).TotalDays;
+        double tau1 = (observation1.Epoch - observation2.Epoch).TotalSeconds;
+        double tau3 = (observation3.Epoch - observation2.Epoch).TotalSeconds;
         double tau = tau3 - tau1;
 
         // Step 4: Compute determinants with improved numerical stability
         Vector3 p1 = rhoHat2.Cross(rhoHat3);
         Vector3 p2 = rhoHat1.Cross(rhoHat3);
 
-        double d0 = rhoHat1 * p1;
-
         // Compute determinants with scaled positions
+        double d0 = rhoHat1 * p1;
         double d12 = R1 * p2;
         double d22 = R2 * p2;
-        double d32 = R3 * p2;
+        double d32 = R3 * p2; //Todo may be a mistake
 
         // Step 5: Compute scaled coefficients with improved numerical stability
         double A = (1.0 / d0) * (-d12 * (tau3 / tau) + d22 + d32 * (tau1 / tau));
-        double B = (1.0 / (6.0 * d0)) *
-                   (d12 * ((System.Math.Pow(tau3, 2) - System.Math.Pow(tau, 2)) * (tau3 / tau)) +
-                    d32 * ((System.Math.Pow(tau, 2) - System.Math.Pow(tau1, 2)) * (tau1 / tau)));
+        double B = (1.0 / (6.0 * d0 * tau)) *
+                   (-d12 * tau3 * (tau * tau - tau3 * tau3) + d32 * tau1 * (tau * tau - tau1 * tau1));
 
         // Step 6: Solve eighth-degree polynomial with improved coefficients
         double E = R2 * rhoHat2;
         double polynomialA = -(A * A + 2.0 * A * E + R2.MagnitudeSquared());
         double polynomialB = -2.0 * mu * B * (A + E);
-        double polynomialC = -mu * mu * B * B;
+        double polynomialC = -(mu * mu) * (B * B);
 
         Func<double, double> function = r2 => System.Math.Pow(r2, 8) + polynomialA * System.Math.Pow(r2, 6) +
                                               polynomialB * System.Math.Pow(r2, 3) + polynomialC;
@@ -100,7 +98,7 @@ public class InitialOrbitDetermination
                                                 3.0 * polynomialB * System.Math.Pow(r2, 2);
 
         // Use improved initial guess based on expected range
-        double scaledInitialGuess = expectedRangeFromObserver / distanceScale;
+        double scaledInitialGuess = expectedRangeFromObserver/distanceScale;
         double root_distance = NewtonRaphson.Solve(function, derivative, scaledInitialGuess, 1E-12, 1000);
 
         // Rescale the root and compute final position and velocity
@@ -109,16 +107,16 @@ public class InitialOrbitDetermination
         double r23 = System.Math.Pow(root_distance, 3);
 
         // Calculate ρ₂ (rho2)
-        double rho2 = (A + (mu * B) / r23);
+        double rho2 = A + ((mu * B) / r23);
 
         // Step 7: Compute position vectors
-        Vector3 r2 = rhoHat2 * rho2 + R2;
+        Vector3 r2 = R2 + rhoHat2 * rho2;
 
         // Step 9: Compute velocity vector using full Lagrange formulation
         Vector3 v2 = ComputeVelocity_Gauss(observation1, observation2, observation3, observer, root_distance, R1, R2, R3, mu);
 
         // Step 10: Convert position and velocity to Keplerian elements
-        return new StateVector(r2 * distanceScale, v2 * distanceScale, expectedCenterOfMotion, observation2.Epoch, Frame.ICRF);
+        return new StateVector(r2, v2, expectedCenterOfMotion, observation2.Epoch, Frame.ICRF);
     }
 
     public static Vector3 ComputeVelocity_Gauss(Equatorial observation1, Equatorial observation2, Equatorial observation3, ILocalizable observer, double root_distance, Vector3 R1,
