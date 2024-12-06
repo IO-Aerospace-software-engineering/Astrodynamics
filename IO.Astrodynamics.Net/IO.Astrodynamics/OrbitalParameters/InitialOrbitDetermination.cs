@@ -21,16 +21,16 @@ public class InitialOrbitDetermination
     public static OrbitalParameters CreateFromObservation_Gauss(Equatorial observation1, Equatorial observation2, Equatorial observation3, ILocalizable observer,
         CelestialItem expectedCenterOfMotion, double expectedRangeFromObserver)
     {
-        Console.WriteLine($"obs1 declination = {observation1.Declination}");
-        Console.WriteLine($"obs1 right ascension = {observation1.RightAscension}");
-        Console.WriteLine($"obs2 declination = {observation2.Declination}");
-        Console.WriteLine($"obs2 right ascension = {observation2.RightAscension}");
-        Console.WriteLine($"obs3 declination = {observation3.Declination}");
-        Console.WriteLine($"obs3 right ascension = {observation3.RightAscension}");
+        // Console.WriteLine($"obs1 declination = {observation1.Declination}");
+        // Console.WriteLine($"obs1 right ascension = {observation1.RightAscension}");
+        // Console.WriteLine($"obs2 declination = {observation2.Declination}");
+        // Console.WriteLine($"obs2 right ascension = {observation2.RightAscension}");
+        // Console.WriteLine($"obs3 declination = {observation3.Declination}");
+        // Console.WriteLine($"obs3 right ascension = {observation3.RightAscension}");
 
-
+        // var secondsPerDay = 86400.0;
         var distanceScale = expectedCenterOfMotion.IsSun ? Constants.AU : 1E03;
-        //var secondsPerDay = 86400.0;
+
         double mu = expectedCenterOfMotion.GM / System.Math.Pow(distanceScale, 3);
         // Step 1: Compute observer positions with improved scaling
         Vector3 R1 = observer
@@ -48,21 +48,23 @@ public class InitialOrbitDetermination
             .ToStateVector()
             .Position / distanceScale;
 
-        Console.WriteLine($"R1={R1 * distanceScale / 1000.0}");
-        Console.WriteLine($"R2={R2 * distanceScale / 1000.0}");
-        Console.WriteLine($"R3={R3 * distanceScale / 1000.0}");
+        // Console.WriteLine($"R1={R1 * distanceScale / 1000.0}");
+        // Console.WriteLine($"R2={R2 * distanceScale / 1000.0}");
+        // Console.WriteLine($"R3={R3 * distanceScale / 1000.0}");
 
         // Improved scaling factor based on expected range
         // double scaleR = expectedRangeFromObserver / distanceScale;
 
 
-        Console.WriteLine($"obs1 cartesian = {observation1.ToCartesian()}");
-        Console.WriteLine($"obs2 cartesian = {observation2.ToCartesian()}");
-        Console.WriteLine($"obs3 cartesian = {observation3.ToCartesian()}");
+        // Console.WriteLine($"obs1 cartesian = {observation1.ToCartesian()}");
+        // Console.WriteLine($"obs2 cartesian = {observation2.ToCartesian()}");
+        // Console.WriteLine($"obs3 cartesian = {observation3.ToCartesian()}");
         // Step 2: Convert equatorial coordinates to unit direction vectors
         Vector3 rhoHat1 = observation1.ToDirection();
         Vector3 rhoHat2 = observation2.ToDirection();
         Vector3 rhoHat3 = observation3.ToDirection();
+
+        CheckGeometricConditions(rhoHat1, rhoHat2, rhoHat3, expectedRangeFromObserver);
 
         // Step 3: Time differences with improved precision
         double tau1 = (observation1.Epoch - observation2.Epoch).TotalSeconds;
@@ -73,9 +75,9 @@ public class InitialOrbitDetermination
         Vector3 p1 = rhoHat2.Cross(rhoHat3);
         Vector3 p2 = rhoHat1.Cross(rhoHat3);
         Vector3 p3 = rhoHat1.Cross(rhoHat2);
-        Console.WriteLine($"p1={p1}");
-        Console.WriteLine($"p2={p2}");
-        Console.WriteLine($"p3={p3}");
+        // Console.WriteLine($"p1={p1}");
+        // Console.WriteLine($"p2={p2}");
+        // Console.WriteLine($"p3={p3}");
 
         double d0 = rhoHat1 * p1;
         double d11 = R1 * p1;
@@ -87,16 +89,16 @@ public class InitialOrbitDetermination
         double d31 = R3 * p1;
         double d32 = R3 * p2;
         double d33 = R3 * p3;
-        Console.WriteLine($"d0={d0}");
-        Console.WriteLine($"d11={d11}");
-        Console.WriteLine($"d12={d12}");
-        Console.WriteLine($"d13={d13}");
-        Console.WriteLine($"d21={d21}");
-        Console.WriteLine($"d22={d22}");
-        Console.WriteLine($"d23={d23}");
-        Console.WriteLine($"d31={d31}");
-        Console.WriteLine($"d32={d32}");
-        Console.WriteLine($"d33={d33}");
+        // Console.WriteLine($"d0={d0}");
+        // Console.WriteLine($"d11={d11}");
+        // Console.WriteLine($"d12={d12}");
+        // Console.WriteLine($"d13={d13}");
+        // Console.WriteLine($"d21={d21}");
+        // Console.WriteLine($"d22={d22}");
+        // Console.WriteLine($"d23={d23}");
+        // Console.WriteLine($"d31={d31}");
+        // Console.WriteLine($"d32={d32}");
+        // Console.WriteLine($"d33={d33}");
 
 
         // Step 5: Compute scaled coefficients with improved numerical stability
@@ -106,10 +108,10 @@ public class InitialOrbitDetermination
 
         // Step 6: Solve eighth-degree polynomial with improved coefficients
         double E = R2 * rhoHat2;
-        Console.WriteLine($"A={A}");
-        Console.WriteLine($"B={B}");
-        Console.WriteLine($"E={E}");
-        
+        // Console.WriteLine($"A={A}");
+        // Console.WriteLine($"B={B}");
+        // Console.WriteLine($"E={E}");
+
         double polynomialA = -(A * A + 2.0 * A * E + R2.MagnitudeSquared());
         double polynomialB = -2.0 * mu * B * (A + E);
         double polynomialC = -(mu * mu) * (B * B);
@@ -148,10 +150,10 @@ public class InitialOrbitDetermination
 
         // Calculate ρ₂ (rho2)
         double rho2 = A + ((mu * B) / r23);
-        Console.WriteLine($"rho1={rho1}");
-        Console.WriteLine($"rho2={rho2}");
-        Console.WriteLine($"rho3={rho3}");
-        
+        // Console.WriteLine($"rho1={rho1}");
+        // Console.WriteLine($"rho2={rho2}");
+        // Console.WriteLine($"rho3={rho3}");
+
         // Step 7: Compute position vectors
         Vector3 r1 = rhoHat1 * rho1 + R1;
         Vector3 r2 = rhoHat2 * rho2 + R2;
@@ -180,5 +182,29 @@ public class InitialOrbitDetermination
 
         // Step 10: Convert position and velocity to Keplerian elements
         return new StateVector(r2 * distanceScale, v2 * distanceScale, expectedCenterOfMotion, observation2.Epoch, Frame.ICRF);
+    }
+
+    private static void CheckGeometricConditions(Vector3 rhoHat1, Vector3 rhoHat2, Vector3 rhoHat3, double expectedDistance)
+    {
+        double distanceThreshold = 50_000_000.0;
+        double angle12 = System.Math.Acos(rhoHat1 * rhoHat2) * (180.0 / System.Math.PI);
+        double angle23 = System.Math.Acos(rhoHat2 * rhoHat3) * (180.0 / System.Math.PI);
+        double angle13 = System.Math.Acos(rhoHat1 * rhoHat3) * (180.0 / System.Math.PI);
+        Vector3 normal = rhoHat1.Cross(rhoHat2);
+        double coplanarity = System.Math.Abs(normal * rhoHat3);
+
+        Console.WriteLine($"Angle between rhoHat1 and rhoHat2: {angle12} degrees");
+        Console.WriteLine($"Angle between rhoHat2 and rhoHat3: {angle23} degrees");
+        Console.WriteLine($"Angle between rhoHat1 and rhoHat3: {angle13} degrees");
+        Console.WriteLine($"Coplanarity measure: {coplanarity}");
+
+        // Dynamic thresholds based on distance
+        double maxArcAngle = expectedDistance < distanceThreshold ? 120.0 : 15.0; // Higher threshold for LEO/MEO
+        double coplanarityThreshold = expectedDistance < distanceThreshold ? 0.0 : 1.527e-5; // More lenient for closer objects
+
+        if (angle13 > maxArcAngle)
+            throw new ArgumentException($"Total arc too large (>{maxArcAngle}°) for object at {expectedDistance/1000.0:N0} km, check observation times and reduce time span");
+        if (coplanarity < coplanarityThreshold)
+            throw new ArgumentException($"Observations too close to coplanar for object at {expectedDistance/1000.0:N0} km");
     }
 }

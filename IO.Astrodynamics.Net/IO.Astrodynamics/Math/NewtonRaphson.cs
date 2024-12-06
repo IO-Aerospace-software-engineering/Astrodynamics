@@ -31,7 +31,7 @@ public class NewtonRaphson
             double fValue = function(x);
             double fDerivative = derivative(x);
             // Inside NewtonRaphson.Solve:
-            Console.WriteLine($"Iteration {i}: r = {x}, f(r) = {fValue}, f'(r) = {fDerivative}");
+            //Console.WriteLine($"Iteration {i}: r = {x}, f(r) = {fValue}, f'(r) = {fDerivative}");
 
             if (System.Math.Abs(fDerivative) < 1e-12) // Avoid division by zero or near-zero derivatives
                 throw new Exception($"Derivative too small (f'(x) = {fDerivative}) at iteration {i}. Adjust initial guess or problem scaling.");
