@@ -47,22 +47,23 @@ public class InitialOrbitDeterminationTests
                     PlanetsAndMoons.EARTH_BODY, 42000000.0);
             Console.WriteLine($@"Test N°{i}");
             Console.WriteLine($@"Time span between two observations : {timespan}");
-            Console.WriteLine($@"Expected position : {referenceOrbit.ToStateVector().Position}");
-            Console.WriteLine($@"Computed position : {orbitalParams.ToStateVector().Position}");
-            Console.WriteLine($@"Delta : {orbitalParams.ToStateVector().Position - referenceOrbit.ToStateVector().Position}");
-            var deltaRange = 100.0 * (orbitalParams.ToStateVector().Position - referenceOrbit.ToStateVector().Position).Magnitude() /
+            // Console.WriteLine($@"Expected position : {referenceOrbit.ToStateVector().Position}");
+            // Console.WriteLine($@"Computed position : {orbitalParams.OrbitalParameters.ToStateVector().Position}");
+            // Console.WriteLine($@"Delta : {orbitalParams.OrbitalParameters.ToStateVector().Position - referenceOrbit.ToStateVector().Position}");
+            var deltaRange = 100.0 * (orbitalParams.OrbitalParameters.ToStateVector().Position - referenceOrbit.ToStateVector().Position).Magnitude() /
                              referenceOrbit.ToStateVector().Position.Magnitude();
             Console.WriteLine(
                 $@"Delta range in percent = {deltaRange} %");
-            Console.WriteLine($@"Delta range in meters = {(orbitalParams.ToStateVector().Position - referenceOrbit.ToStateVector().Position).Magnitude()} m");
-            Console.WriteLine($@"Expected keplerian elements : {referenceOrbit.ToString()}");
-            Console.WriteLine($@"computed keplerian elements : {orbitalParams.ToKeplerianElements().ToString()}");
-            Console.WriteLine($@"Expected velocity : {referenceOrbit.ToStateVector().Velocity}");
-            Console.WriteLine($@"Computed velocity : {orbitalParams.ToStateVector().Velocity}");
-            var deltaVelocity = 100.0 * (orbitalParams.ToStateVector().Velocity - referenceOrbit.ToStateVector().Velocity).Magnitude() /
+            // Console.WriteLine($@"Delta range in meters = {(orbitalParams.OrbitalParameters.ToStateVector().Position - referenceOrbit.ToStateVector().Position).Magnitude()} m");
+            // Console.WriteLine($@"Expected keplerian elements : {referenceOrbit.ToString()}");
+            // Console.WriteLine($@"computed keplerian elements : {orbitalParams.OrbitalParameters.ToKeplerianElements().ToString()}");
+            // Console.WriteLine($@"Expected velocity : {referenceOrbit.ToStateVector().Velocity}");
+            // Console.WriteLine($@"Computed velocity : {orbitalParams.OrbitalParameters.ToStateVector().Velocity}");
+            var deltaVelocity = 100.0 * (orbitalParams.OrbitalParameters.ToStateVector().Velocity - referenceOrbit.ToStateVector().Velocity).Magnitude() /
                                 referenceOrbit.ToStateVector().Velocity.Magnitude();
             Console.WriteLine(
                 $@"Delta velocity in percent = {deltaVelocity} %");
+            Console.WriteLine(orbitalParams);
             Assert.True(deltaRange < 0.02);
             Assert.True(deltaVelocity < 0.02);
         }
@@ -94,7 +95,7 @@ public class InitialOrbitDeterminationTests
             // Console.WriteLine($@"Expected position : {referenceOrbit.ToStateVector().Position}");
             // Console.WriteLine($@"Computed position : {orbitalParams.ToStateVector().Position}");
             // Console.WriteLine($@"Delta : {orbitalParams.ToStateVector().Position - referenceOrbit.ToStateVector().Position}");
-            var deltaRange = 100.0 * (orbitalParams.ToStateVector().Position - referenceOrbit.ToStateVector().Position).Magnitude() /
+            var deltaRange = 100.0 * (orbitalParams.OrbitalParameters.ToStateVector().Position - referenceOrbit.ToStateVector().Position).Magnitude() /
                              referenceOrbit.ToStateVector().Position.Magnitude();
             Console.WriteLine(
                 $@"Delta range in percent = {deltaRange} %");
@@ -103,11 +104,13 @@ public class InitialOrbitDeterminationTests
             // Console.WriteLine($@"computed keplerian elements : {orbitalParams.ToKeplerianElements().ToString()}");
             // Console.WriteLine($@"Expected velocity : {referenceOrbit.ToStateVector().Velocity}");
             // Console.WriteLine($@"Computed velocity : {orbitalParams.ToStateVector().Velocity}");
-            var deltaVelocity = 100.0 * (orbitalParams.ToStateVector().Velocity - referenceOrbit.ToStateVector().Velocity).Magnitude() /
+            var deltaVelocity = 100.0 * (orbitalParams.OrbitalParameters.ToStateVector().Velocity - referenceOrbit.ToStateVector().Velocity).Magnitude() /
                                 referenceOrbit.ToStateVector().Velocity.Magnitude();
             Console.WriteLine(
                 $@"Delta velocity in percent = {deltaVelocity} %");
+            Console.WriteLine(orbitalParams);
             Console.WriteLine(Environment.NewLine);
+            
             //Assert.True(deltaRange < 0.02);
             //Assert.True(deltaVelocity < 0.02);
         }
@@ -128,8 +131,9 @@ public class InitialOrbitDeterminationTests
         StateVector referenceOrbit = new(new Vector3(3520477.0118993367, -4310404.2221997585, 4645118.5764311915),
             new Vector3(-4026.2486947722973, 2615.67401249017, 5468.113004203227),
             TestHelpers.EarthAtJ2000, ut2, Frames.Frame.ICRF);
-        Assert.Equal(referenceOrbit, orbitalParams.ToStateVector(), TestHelpers.StateVectorComparer);
-        var deltaRange = 100.0 * (orbitalParams.ToStateVector().Position - referenceOrbit.ToStateVector().Position).Magnitude() /
+        Assert.Equal(referenceOrbit, orbitalParams.OrbitalParameters.ToStateVector(), TestHelpers.StateVectorComparer);
+        var deltaRange = 100.0 * (orbitalParams.OrbitalParameters.ToStateVector().Position - referenceOrbit.ToStateVector().Position).Magnitude() /
                          referenceOrbit.ToStateVector().Position.Magnitude();
+        Console.WriteLine(orbitalParams);
     }
 }

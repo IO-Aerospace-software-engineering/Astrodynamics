@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Coordinates;
 using IO.Astrodynamics.Frames;
@@ -18,7 +19,7 @@ public class InitialOrbitDetermination
     /// <param name="observer"></param>
     /// <param name="expectedRangeFromObserver"></param>
     /// <returns></returns>
-    public static OrbitalParameters CreateFromObservation_Gauss(Equatorial observation1, Equatorial observation2, Equatorial observation3, ILocalizable observer,
+    public static OrbitDetermination CreateFromObservation_Gauss(Equatorial observation1, Equatorial observation2, Equatorial observation3, ILocalizable observer,
         CelestialItem expectedCenterOfMotion, double expectedRangeFromObserver)
     {
         // Console.WriteLine($"obs1 declination = {observation1.Declination}");
@@ -64,7 +65,7 @@ public class InitialOrbitDetermination
         Vector3 rhoHat2 = observation2.ToDirection();
         Vector3 rhoHat3 = observation3.ToDirection();
 
-        CheckGeometricConditions(rhoHat1, rhoHat2, rhoHat3, expectedRangeFromObserver);
+        var score = CheckObservationQuality(new []{R1,R2,R3},new []{rhoHat1, rhoHat2, rhoHat3}, new []{observation1.Epoch, observation2.Epoch, observation3.Epoch});
 
         // Step 3: Time differences with improved precision
         double tau1 = (observation1.Epoch - observation2.Epoch).TotalSeconds;
@@ -181,30 +182,68 @@ public class InitialOrbitDetermination
         Vector3 v2 = (r1 * -f3 + r3 * f1) * (1 / (f1 * g3 - f3 * g1));
 
         // Step 10: Convert position and velocity to Keplerian elements
-        return new StateVector(r2 * distanceScale, v2 * distanceScale, expectedCenterOfMotion, observation2.Epoch, Frame.ICRF);
+        var sv = new StateVector(r2 * distanceScale, v2 * distanceScale, expectedCenterOfMotion, observation2.Epoch, Frame.ICRF);
+        return new OrbitDetermination(sv, score.GlobalReliability, score.GeometricReliability, score.TemporalSpacingReliability, score.CenterOfMotionReliability);
     }
 
-    private static void CheckGeometricConditions(Vector3 rhoHat1, Vector3 rhoHat2, Vector3 rhoHat3, double expectedDistance)
+    private static QualityMetrics CheckObservationQuality (Vector3[] observerPositions, // Vecteurs unitaires de position de l'observateur
+        Vector3[] apparentDirections, // Vecteurs unitaires de direction apparente
+        Time[] observationTimes)
     {
-        double distanceThreshold = 50_000_000.0;
-        double angle12 = System.Math.Acos(rhoHat1 * rhoHat2) * (180.0 / System.Math.PI);
-        double angle23 = System.Math.Acos(rhoHat2 * rhoHat3) * (180.0 / System.Math.PI);
-        double angle13 = System.Math.Acos(rhoHat1 * rhoHat3) * (180.0 / System.Math.PI);
-        Vector3 normal = rhoHat1.Cross(rhoHat2);
-        double coplanarity = System.Math.Abs(normal * rhoHat3);
+        if (observerPositions.Length != 3 || apparentDirections.Length != 3 || observationTimes.Length != 3)
+            throw new ArgumentException("Exactly 3 observations are required");
 
-        Console.WriteLine($"Angle between rhoHat1 and rhoHat2: {angle12} degrees");
-        Console.WriteLine($"Angle between rhoHat2 and rhoHat3: {angle23} degrees");
-        Console.WriteLine($"Angle between rhoHat1 and rhoHat3: {angle13} degrees");
-        Console.WriteLine($"Coplanarity measure: {coplanarity}");
+        var sightLines = apparentDirections.Select(dir => dir.Normalize()).ToList();
 
-        // Dynamic thresholds based on distance
-        double maxArcAngle = expectedDistance < distanceThreshold ? 120.0 : 15.0; // Higher threshold for LEO/MEO
-        double coplanarityThreshold = expectedDistance < distanceThreshold ? 0.0 : 1.527e-5; // More lenient for closer objects
+        // geometrics quality
+        var normal = sightLines[0].Cross(sightLines[1]).Normalize();
+        var geometricQuality = 1 - System.Math.Abs(normal * sightLines[2]);
 
-        if (angle13 > maxArcAngle)
-            throw new ArgumentException($"Total arc too large (>{maxArcAngle}°) for object at {expectedDistance/1000.0:N0} km, check observation times and reduce time span");
-        if (coplanarity < coplanarityThreshold)
-            throw new ArgumentException($"Observations too close to coplanar for object at {expectedDistance/1000.0:N0} km");
+        // temporal quality
+        TimeSpan totalDuration = observationTimes[2] - observationTimes[0];
+        TimeSpan idealSpacing = totalDuration / 2;
+        TimeSpan middleSpacing = observationTimes[1] - observationTimes[0];
+        double temporalQuality = 1 - System.Math.Abs(middleSpacing.TotalSeconds - idealSpacing.TotalSeconds) / totalDuration.TotalSeconds;
+
+        // center of motion quality
+        var centerOfMotionQuality = 0.0;
+        for (int i = 0; i < 3; i++)
+        {
+            var observerDirection = observerPositions[i].Normalize();
+            var angle = System.Math.Abs(sightLines[i] * observerDirection);
+            const double optimalAngle = 0.25; // 1 - 0.75
+            var normalizedDistance = System.Math.Abs(angle - optimalAngle);
+            var quality = System.Math.Exp(-3 * normalizedDistance); // Le -5 contrôle la "largeur" de la courbe
+    
+            centerOfMotionQuality += quality;
+        }
+
+        centerOfMotionQuality /= 3;
+
+        const double W_GEOMETRIC = 0.25;
+        const double W_TEMPORAL = 0.15;
+        const double W_CENTER = 0.6;
+
+        var globalQuality =
+            W_GEOMETRIC * geometricQuality +
+            W_TEMPORAL * temporalQuality +
+            W_CENTER * centerOfMotionQuality;
+
+        return new QualityMetrics
+        {
+            GeometricReliability = geometricQuality,
+            TemporalSpacingReliability = temporalQuality,
+            CenterOfMotionReliability = centerOfMotionQuality,
+            GlobalReliability = globalQuality
+        };
+    }
+
+    public record QualityMetrics
+    {
+        public double GeometricReliability { get; init; }
+        public double TemporalSpacingReliability { get; init; }
+        public double CenterOfMotionReliability { get; init; }
+        public double GlobalReliability { get; init; }
     }
 }
+
