@@ -8,9 +8,9 @@ public record OrbitDetermination
     public double Reliability { get; }
     public double GeometricReliability { get; }
     public double TemporalReliability { get; }
-    public double HeliocentricQualityReliability { get; }
+    public double CenterOfMotionQualityReliability { get; }
 
-    public OrbitDetermination(OrbitalParameters orbitalParameters, double reliability, double geometricReliability, double temporalReliability, double heliocentricReliability)
+    public OrbitDetermination(OrbitalParameters orbitalParameters, double reliability, double geometricReliability, double temporalReliability, double centerOfMotionReliability)
     {
         if (orbitalParameters == null) throw new ArgumentNullException(nameof(orbitalParameters));
         ArgumentOutOfRangeException.ThrowIfNegative(reliability);
@@ -19,10 +19,10 @@ public record OrbitDetermination
             throw new ArgumentOutOfRangeException(nameof(reliability), "Reliability must be between 0 and 1.");
         }
 
-        ArgumentOutOfRangeException.ThrowIfNegative(heliocentricReliability);
-        if (heliocentricReliability > 1)
+        ArgumentOutOfRangeException.ThrowIfNegative(centerOfMotionReliability);
+        if (centerOfMotionReliability > 1)
         {
-            throw new ArgumentOutOfRangeException(nameof(heliocentricReliability), "Heliocentric Quality Reliability must be between 0 and 1.");
+            throw new ArgumentOutOfRangeException(nameof(centerOfMotionReliability), "Center of motion quality Reliability must be between 0 and 1.");
         }
 
         ArgumentOutOfRangeException.ThrowIfNegative(temporalReliability);
@@ -41,14 +41,14 @@ public record OrbitDetermination
         Reliability = reliability;
         GeometricReliability = geometricReliability;
         TemporalReliability = temporalReliability;
-        HeliocentricQualityReliability = heliocentricReliability;
+        CenterOfMotionQualityReliability = centerOfMotionReliability;
     }
 
-    override public string ToString()
+    public override string ToString()
     {
         return $"Reliability : {Reliability * 100}%\n" +
-               $"Geometric Reliability : {GeometricReliability * 100}%\n" +
-               $"Temporal Reliability : {TemporalReliability * 100}%\n" +
-               $"Heliocentric Quality Reliability : {HeliocentricQualityReliability * 100}%";
+               $"Geometric reliability : {GeometricReliability * 100}%\n" +
+               $"Temporal reliability : {TemporalReliability * 100}%\n" +
+               $"Center of motion reliability : {CenterOfMotionQualityReliability * 100}%";
     }
 }

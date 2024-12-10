@@ -65,7 +65,7 @@ public class InitialOrbitDetermination
         Vector3 rhoHat2 = observation2.ToDirection();
         Vector3 rhoHat3 = observation3.ToDirection();
 
-        var score = CheckObservationQuality(new []{R1,R2,R3},new []{rhoHat1, rhoHat2, rhoHat3}, new []{observation1.Epoch, observation2.Epoch, observation3.Epoch});
+        var score = CheckObservationQuality(new[] { R1, R2, R3 }, new[] { rhoHat1, rhoHat2, rhoHat3 }, new[] { observation1.Epoch, observation2.Epoch, observation3.Epoch });
 
         // Step 3: Time differences with improved precision
         double tau1 = (observation1.Epoch - observation2.Epoch).TotalSeconds;
@@ -186,7 +186,7 @@ public class InitialOrbitDetermination
         return new OrbitDetermination(sv, score.GlobalReliability, score.GeometricReliability, score.TemporalSpacingReliability, score.CenterOfMotionReliability);
     }
 
-    private static QualityMetrics CheckObservationQuality (Vector3[] observerPositions, // Vecteurs unitaires de position de l'observateur
+    private static QualityMetrics CheckObservationQuality(Vector3[] observerPositions, // Vecteurs unitaires de position de l'observateur
         Vector3[] apparentDirections, // Vecteurs unitaires de direction apparente
         Time[] observationTimes)
     {
@@ -197,7 +197,26 @@ public class InitialOrbitDetermination
 
         // geometrics quality
         var normal = sightLines[0].Cross(sightLines[1]).Normalize();
-        var geometricQuality = 1 - System.Math.Abs(normal * sightLines[2]);
+        // Calcul de la qualité géométrique
+        var coplanarity = 1 - System.Math.Abs(normal * sightLines[2]);
+
+        // Calcul des angles entre observations successives
+        var angle1 = System.Math.Acos(sightLines[0] * sightLines[1]);
+        var angle2 = System.Math.Acos(sightLines[1] * sightLines[2]);
+
+        // Normalisation des angles (diviser par pi/2 pour avoir une valeur entre 0 et 1)
+        var normalizedAngle1 = angle1 / (System.Math.PI / 2);
+        var normalizedAngle2 = angle2 / (System.Math.PI / 2);
+
+        // On veut des angles ni trop petits ni trop grands (idéalement autour de 45°)
+        const double geometricOptimalAngle = 0.5; // 45° normalisé
+        var angleQuality1 = 1 - System.Math.Abs(normalizedAngle1 - geometricOptimalAngle);
+        var angleQuality2 = 1 - System.Math.Abs(normalizedAngle2 - geometricOptimalAngle);
+
+        // Combiner les mesures
+        // La qualité géométrique finale est le produit de la coplanarité
+        // et de la qualité des angles
+        var geometricQuality = coplanarity * System.Math.Min(angleQuality1, angleQuality2);
 
         // temporal quality
         TimeSpan totalDuration = observationTimes[2] - observationTimes[0];
@@ -214,7 +233,7 @@ public class InitialOrbitDetermination
             const double optimalAngle = 0.25; // 1 - 0.75
             var normalizedDistance = System.Math.Abs(angle - optimalAngle);
             var quality = System.Math.Exp(-3 * normalizedDistance); // Le -5 contrôle la "largeur" de la courbe
-    
+
             centerOfMotionQuality += quality;
         }
 
@@ -246,4 +265,3 @@ public class InitialOrbitDetermination
         public double GlobalReliability { get; init; }
     }
 }
-
