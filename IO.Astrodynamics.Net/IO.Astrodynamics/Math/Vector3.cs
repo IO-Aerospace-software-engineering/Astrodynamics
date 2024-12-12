@@ -20,7 +20,12 @@ namespace IO.Astrodynamics.Math
 
         public double Magnitude()
         {
-            return System.Math.Sqrt(X * X + Y * Y + Z * Z);
+            return System.Math.Sqrt(MagnitudeSquared());
+        }
+        
+        public double MagnitudeSquared()
+        {
+            return X * X + Y * Y + Z * Z;
         }
 
         public Vector3 Normalize()

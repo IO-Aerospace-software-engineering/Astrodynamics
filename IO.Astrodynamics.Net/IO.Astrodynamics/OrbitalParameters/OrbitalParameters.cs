@@ -4,6 +4,7 @@ using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Coordinates;
 using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.Math;
+using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.TimeSystem;
 
 namespace IO.Astrodynamics.OrbitalParameters;
@@ -934,6 +935,10 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
         return hNorm * hNorm / Observer.GM;
     }
 
+    
+
+    #region Operators
+
     public override bool Equals(object obj)
     {
         return Equals(obj as OrbitalParameters);
@@ -959,4 +964,6 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     {
         return !(left == right);
     }
+
+    #endregion
 }

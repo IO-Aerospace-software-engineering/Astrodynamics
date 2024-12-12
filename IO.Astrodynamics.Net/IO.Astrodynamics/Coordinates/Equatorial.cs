@@ -47,5 +47,13 @@ namespace IO.Astrodynamics.Coordinates
             double z = Distance * System.Math.Sin(Declination);
             return new Vector3(x, y, z);
         }
+
+        public Vector3 ToDirection()
+        {
+            double x = System.Math.Cos(Declination) * System.Math.Cos(RightAscension);
+            double y = System.Math.Cos(Declination) * System.Math.Sin(RightAscension);
+            double z = System.Math.Sin(Declination);
+            return new Vector3(x, y, z);
+        }
     }
 }

@@ -200,7 +200,7 @@ namespace IO.Astrodynamics.OrbitalParameters
 
         public override string ToString()
         {
-            return $"Epoch : {Epoch.ToString()} A : {A} Ecc. : {E} Inc. : {I} AN : {RAAN} AOP : {AOP} M : {M} Frame : {Frame.Name}";
+            return $"Epoch : {Epoch.ToString()} A : {A}, Ecc. : {E}, Inc. : {I}, AN : {RAAN}, AOP : {AOP}, M : {M}, Frame : {Frame.Name}";
         }
         #endregion
     }
