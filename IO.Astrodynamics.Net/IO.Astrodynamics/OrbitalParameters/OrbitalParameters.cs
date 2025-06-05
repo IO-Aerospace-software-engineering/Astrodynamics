@@ -935,7 +935,41 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
         return hNorm * hNorm / Observer.GM;
     }
 
-    
+    /// <summary>
+    /// Computes the time to reach a given radius.
+    /// </summary>
+    /// <param name="radius"></param>
+    /// <returns></returns>
+    public Time TimeToRadius(double radius)
+    {
+        // Extract orbital elements
+        double e = Eccentricity(); // Eccentricity
+
+        // Semi-latus rectum
+        double p = SemiLatusRectum();
+
+        // Compute the true anomaly at the radius
+        double cosNuRad = System.Math.Clamp((p / radius - 1) / e, -1.0, 1.0);
+        double nuRad = System.Math.Acos(cosNuRad);
+
+        return EpochAtMeanAnomaly(TrueAnomalyToMeanAnomaly(nuRad, e, EccentricAnomaly(nuRad)));
+    }
+
+    /// <summary>
+    /// Computes the time to reach the sphere of influence of the center of motion.
+    /// </summary>
+    /// <returns></returns>
+    /// <exception cref="InvalidOperationException">The observer must be a celestial body to compute the time to the sphere of influence.</exception>
+    public Time TimeToSphereOfInfluence()
+    {
+        var centerOfMotion = Observer as CelestialBody;
+        if (centerOfMotion is null)
+        {
+            throw new InvalidOperationException("The observer must be a celestial body to compute the time to the sphere of influence.");
+        }
+
+        return TimeToRadius(centerOfMotion.SphereOfInfluence);
+    }
 
     #region Operators
 

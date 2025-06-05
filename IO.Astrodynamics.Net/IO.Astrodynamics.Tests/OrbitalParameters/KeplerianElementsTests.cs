@@ -458,7 +458,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
             var ke2 = sv.ToKeplerianElements();
             Assert.Equal(ke, ke2, TestHelpers.KeplerComparer);
         }
-        
+
         [Fact]
         public void EllipticToState()
         {
@@ -474,7 +474,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
             Assert.Equal(ke.Epoch, ke2.Epoch);
             Assert.Equal(ke.Observer, ke2.Observer);
         }
-        
+
         [Fact]
         public void HyperbolicToEquinoctial()
         {
@@ -493,14 +493,14 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
             var ke2 = eq.ToKeplerianElements();
             Assert.Equal(ke, ke2, TestHelpers.KeplerComparer);
         }
-        
+
         [Fact]
         public void EllipticToEquinoctial()
         {
             var ke = new KeplerianElements(6800000.0, 0.2, 0.2, 0.3, 0.4, 0.5, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
             var eq = ke.ToEquinoctial();
             var ke2 = eq.ToKeplerianElements();
-            Assert.Equal(ke,ke2, TestHelpers.KeplerComparer);
+            Assert.Equal(ke, ke2, TestHelpers.KeplerComparer);
         }
 
         [Fact]
@@ -521,6 +521,32 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
                 40.0 * IO.Astrodynamics.Constants.Deg2Rad, 50.0 * IO.Astrodynamics.Constants.Deg2Rad, 10.0 * IO.Astrodynamics.Constants.Deg2Rad, TestHelpers.EarthAtJ2000,
                 new TimeSystem.Time(DateTime.Now, TimeFrame.TDBFrame), Frames.Frame.ICRF, perigeeRadius: 6800000.0);
             Assert.Equal(6800000.0, ke.PerigeeRadius(), 6);
+        }
+
+        [Fact]
+        public void TimeToApogeeRadius()
+        {
+            var epoch = TimeSystem.Time.J2000TDB;
+            KeplerianElements ke = new KeplerianElements(8000000.0, 0.5, 30.0 * IO.Astrodynamics.Constants.Deg2Rad,
+                40.0 * IO.Astrodynamics.Constants.Deg2Rad, 50.0 * IO.Astrodynamics.Constants.Deg2Rad, 0.0, TestHelpers.EarthAtJ2000,
+                epoch, Frames.Frame.ICRF);
+            var orbitalPeriod = ke.Period();
+            var expectedApogeeTime = epoch + 0.5 * orbitalPeriod;
+            var apogeeRadius = ke.ApogeeVector().Magnitude();
+            Assert.Equal(expectedApogeeTime, ke.TimeToRadius(apogeeRadius), TestHelpers.TimeComparer);
+        }
+
+        [Fact]
+        public void TimeToPerigeeRadius()
+        {
+            var epoch = TimeSystem.Time.J2000TDB;
+            KeplerianElements ke = new KeplerianElements(8000000.0, 0.5, 30.0 * IO.Astrodynamics.Constants.Deg2Rad,
+                40.0 * IO.Astrodynamics.Constants.Deg2Rad, 50.0 * IO.Astrodynamics.Constants.Deg2Rad, Astrodynamics.Constants.PI, TestHelpers.EarthAtJ2000,
+                epoch, Frames.Frame.ICRF);
+            var orbitalPeriod = ke.Period();
+            var expectedApogeeTime = epoch + 0.5 * orbitalPeriod;
+            var perigeeRadius = ke.PerigeeVector().Magnitude();
+            Assert.Equal(expectedApogeeTime, ke.TimeToRadius(perigeeRadius), TestHelpers.TimeComparer);
         }
     }
 }
