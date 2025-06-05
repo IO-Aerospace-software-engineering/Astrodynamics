@@ -15,7 +15,7 @@ This framework provides the following features :
   * Validate archive from Xml schemas
 * Spacecraft propagator
   * Geopotentials model (Earth's Geopotentials is embedded but others can be provided)
-  * Simplified atmospheric model (Earth and Mars only)
+  * Simplified atmospheric model (Earth and Mars built-in)
   * Solar radiation pressure
   * N-body perturbation
   * Impulsive maneuvers
