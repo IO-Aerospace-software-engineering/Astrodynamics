@@ -165,8 +165,7 @@ namespace IO.Astrodynamics.OrbitalParameters
             return M;
         }
         
-        
-        
+
         #region Operator
 
         public bool Equals(KeplerianElements other)
