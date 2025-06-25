@@ -1,4 +1,5 @@
 using IO.Astrodynamics.Math;
+using IO.Astrodynamics.PDS.V4.MissionInformation;
 using System.Collections.Generic;
 
 namespace IO.Astrodynamics.Maneuver;
@@ -121,5 +122,33 @@ public class LambertSolver
             double tof = (x - m_lambda * z - d / y) / E;
             return tof;
         }
+    }
+
+    /// <summary>
+    /// Calculates the first, second, and third derivatives of the time of flight function with respect to the input
+    /// parameter <paramref name="x"/>.
+    /// </summary>
+    /// <remarks>The method assumes that <paramref name="x"/> is within the range [-1, 1]. Values outside this
+    /// range may result in undefined behavior due to the mathematical constraints of the calculation.</remarks>
+    /// <param name="x">The input parameter for which the derivatives are calculated. Must be in the range [-1, 1].</param>
+    /// <param name="timeOfFlight">The time of flight value used in the derivative calculations.</param>
+    /// <returns>A tuple containing the first, second, and third derivatives of the time of flight function: <list type="bullet">
+    /// <item><description><c>firstDerivative</c>: The first derivative.</description></item>
+    /// <item><description><c>secondDerivative</c>: The second derivative.</description></item>
+    /// <item><description><c>thirdDerivative</c>: The third derivative.</description></item> </list></returns>
+    public (double firstDerivative, double secondDerivative, double thirdDerivative) TimeOfFlightDerivatives(double x, double timeOfFlight)
+    {
+        double lambdaSquared = m_lambda * m_lambda;
+        double lambdaCubed = lambdaSquared * m_lambda;
+        double oneMinusXSquared = 1.0 - x * x;
+        double y = System.Math.Sqrt(1.0 - lambdaSquared * oneMinusXSquared);
+        double ySquared = y * y;
+        double yCubed = ySquared * y;
+
+        double firstDerivative = 1.0 / oneMinusXSquared * (3.0 * timeOfFlight * x - 2.0 + 2.0 * lambdaCubed * x / y);
+        double secondDerivative = 1.0 / oneMinusXSquared * (3.0 * timeOfFlight + 5.0 * x * firstDerivative + 2.0 * (1.0 - lambdaSquared) * lambdaCubed / yCubed);
+        double thirdDerivative = 1.0 / oneMinusXSquared * (7.0 * x * secondDerivative + 8.0 * firstDerivative - 6.0 * (1.0 - lambdaSquared) * lambdaSquared * lambdaCubed * x / yCubed / ySquared);
+
+        return (firstDerivative, secondDerivative, thirdDerivative);
     }
 }
