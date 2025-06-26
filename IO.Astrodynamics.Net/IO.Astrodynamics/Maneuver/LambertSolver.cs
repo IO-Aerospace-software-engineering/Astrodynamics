@@ -4,6 +4,9 @@ using System.Collections.Generic;
 
 namespace IO.Astrodynamics.Maneuver;
 
+/// <summary>
+/// Represents a solver for the Lambert problem, which calculates the velocity vectors required to transfer between two points in space
+/// </summary>
 public class LambertSolver
 {
     public Vector3 R1 { get; }
@@ -32,14 +35,11 @@ public class LambertSolver
         V2 = new List<Vector3>();
         X = new List<double>();
         Iters = new List<int>();
-
     }
 
     public void Solve(bool isCounterClockwise)
     {
-        // Conversion de la logique du constructeur C++ ici
-        // Utiliser Vector3.Normalize, Vector3.Cross, Vector3.Magnitude, etc.
-        // Remplir V1, V2, X, Iters, Nmax
+        
     }
 
     /// <summary>
@@ -48,7 +48,7 @@ public class LambertSolver
     /// <param name="x">The x parameter (related to the geometry of the transfer).</param>
     /// <param name="N">The number of full revolutions.</param>
     /// <returns>The computed time of flight.</returns>
-    public double XToTimeOfFlight(double x, int N)
+    private double XToTimeOfFlight(double x, int N)
     {
         double a = 1.0 / (1.0 - x * x);
         double tof;
@@ -67,6 +67,7 @@ public class LambertSolver
             if (m_lambda < 0.0) beta = -beta;
             tof = (-a * System.Math.Sqrt(-a) * ((beta - System.Math.Sinh(beta)) - (alpha - System.Math.Sinh(alpha)))) / 2.0;
         }
+
         return tof;
     }
 
@@ -76,7 +77,7 @@ public class LambertSolver
     /// <param name="x">The x parameter (related to the geometry of the transfer).</param>
     /// <param name="N">The number of full revolutions.</param>
     /// <returns>The computed time of flight.</returns>
-    public double XToTimeOfFlightGeneral(double x, int N)
+    private double XToTimeOfFlightGeneral(double x, int N)
     {
         const double battinThreshold = 0.01;
         const double lagrangeThreshold = 0.2;
@@ -119,6 +120,7 @@ public class LambertSolver
                 double f = y * (z - m_lambda * x);
                 d = System.Math.Log(f + g);
             }
+
             double tof = (x - m_lambda * z - d / y) / E;
             return tof;
         }
@@ -136,7 +138,7 @@ public class LambertSolver
     /// <item><description><c>firstDerivative</c>: The first derivative.</description></item>
     /// <item><description><c>secondDerivative</c>: The second derivative.</description></item>
     /// <item><description><c>thirdDerivative</c>: The third derivative.</description></item> </list></returns>
-    public (double firstDerivative, double secondDerivative, double thirdDerivative) TimeOfFlightDerivatives(double x, double timeOfFlight)
+    private (double firstDerivative, double secondDerivative, double thirdDerivative) TimeOfFlightDerivatives(double x, double timeOfFlight)
     {
         double lambdaSquared = m_lambda * m_lambda;
         double lambdaCubed = lambdaSquared * m_lambda;
@@ -147,8 +149,72 @@ public class LambertSolver
 
         double firstDerivative = 1.0 / oneMinusXSquared * (3.0 * timeOfFlight * x - 2.0 + 2.0 * lambdaCubed * x / y);
         double secondDerivative = 1.0 / oneMinusXSquared * (3.0 * timeOfFlight + 5.0 * x * firstDerivative + 2.0 * (1.0 - lambdaSquared) * lambdaCubed / yCubed);
-        double thirdDerivative = 1.0 / oneMinusXSquared * (7.0 * x * secondDerivative + 8.0 * firstDerivative - 6.0 * (1.0 - lambdaSquared) * lambdaSquared * lambdaCubed * x / yCubed / ySquared);
+        double thirdDerivative = 1.0 / oneMinusXSquared *
+                                 (7.0 * x * secondDerivative + 8.0 * firstDerivative - 6.0 * (1.0 - lambdaSquared) * lambdaSquared * lambdaCubed * x / yCubed / ySquared);
 
         return (firstDerivative, secondDerivative, thirdDerivative);
+    }
+
+    
+    /// <summary>
+    /// Solves the Lambert problem using Halley's method for root-finding.
+    /// This method iteratively refines the value of the parameter `x` to match the target time of flight `T`.
+    /// </summary>
+    /// <param name="T">The target time of flight.</param>
+    /// <param name="x0">The initial guess for the parameter `x`.</param>
+    /// <param name="N">The number of full revolutions in the transfer orbit.</param>
+    /// <param name="eps">The convergence tolerance for the solution.</param>
+    /// <param name="iterMax">The maximum number of iterations allowed.</param>
+    /// <returns>
+    /// A tuple containing:
+    /// <list type="bullet">
+    /// <item><description><c>x</c>: The converged value of the parameter `x`.</description></item>
+    /// <item><description><c>iterations</c>: The number of iterations performed.</description></item>
+    /// </list>
+    /// </returns>
+    /// <remarks>
+    /// Halley's method is a third-order iterative method for solving nonlinear equations.
+    /// It uses the first, second, and third derivatives of the function to achieve faster convergence.
+    /// </remarks>
+    private (double x, int iterations) HalleySolver(double T, double x0, int N, double eps, int iterMax)
+    {
+        // Initialize the parameter `x` with the initial guess `x0`.
+        double x = x0;
+        int it = 0; // Iteration counter.
+        double err = 1.0; // Error metric for convergence.
+        double xnew = 0.0; // Variable to store the updated value of `x`.
+        double tof = 0.0, delta = 0.0; // Variables for time of flight and difference calculation.
+    
+        // Iterative loop to refine the value of `x` until convergence or maximum iterations are reached.
+        while ((err > eps) && (it < iterMax))
+        {
+            // Compute the time of flight for the current value of `x`.
+            tof = XToTimeOfFlightGeneral(x, N);
+    
+            // Compute the first, second, and third derivatives of the time of flight function.
+            var (firstDv, secondDv, thirdDv) = TimeOfFlightDerivatives(x, tof);
+    
+            // Calculate the difference between the computed and target time of flight.
+            delta = tof - T;
+    
+            // Compute the square of the first derivative for use in the update formula.
+            double DT2 = firstDv * firstDv;
+    
+            // Update the value of `x` using Halley's method formula.
+            xnew = x - delta * (DT2 - delta * secondDv / 2.0) /
+                (firstDv * (DT2 - delta * secondDv) + thirdDv * delta * delta / 6.0);
+    
+            // Calculate the error as the absolute difference between the old and new values of `x`.
+            err = System.Math.Abs(x - xnew);
+    
+            // Update `x` with the new value.
+            x = xnew;
+    
+            // Increment the iteration counter.
+            it++;
+        }
+    
+        // Return the converged value of `x` and the number of iterations performed.
+        return (x, it);
     }
 }
