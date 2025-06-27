@@ -2,7 +2,7 @@ using IO.Astrodynamics.Math;
 using IO.Astrodynamics.PDS.V4.MissionInformation;
 using System.Collections.Generic;
 
-namespace IO.Astrodynamics.Maneuver;
+namespace IO.Astrodynamics.Maneuver.Lambert;
 
 /// <summary>
 /// Represents a solver for the Lambert problem, which calculates the velocity vectors required to transfer between two points in space
