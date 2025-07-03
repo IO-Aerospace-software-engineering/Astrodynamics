@@ -5,28 +5,28 @@ namespace IO.Astrodynamics.Maneuver.Lambert;
 
 public class LambertResult
 {
-    public IReadOnlyCollection<LambertSolution> Solutions { get; }
+    public IReadOnlyCollection<LambertSolution> Solutions => _solutions.AsReadOnly();
     private List<LambertSolution> _solutions { get; }
-    public int MaxRevolutions { get; }
-    
-    public LambertResult(int maxRevolutions)
+    public ushort MaxRevolutions { get; }
+
+    public LambertResult(ushort maxRevolutions)
     {
         MaxRevolutions = maxRevolutions;
-        Solutions = new List<LambertSolution>();
+        _solutions = new List<LambertSolution>((int)maxRevolutions * 2 + 1);
     }
-    
+
     public void AddSolution(LambertSolution solution)
     {
         _solutions.Add(solution);
     }
-    
+
     public LambertSolution GetZeroRevolutionSolution()
     {
-        return Solutions.FirstOrDefault(s => s.Revolutions == 0);
+        return _solutions.FirstOrDefault(s => s.Revolutions == 0);
     }
-    
-    public IEnumerable<LambertSolution> GetMultiRevolutionSolutions(int revolutions)
+
+    public IEnumerable<LambertSolution> GetMultiRevolutionSolutions(uint revolutions)
     {
-        return Solutions.Where(s => s.Revolutions == revolutions);
+        return _solutions.Where(s => s.Revolutions == revolutions);
     }
 }

@@ -147,7 +147,7 @@ namespace IO.Astrodynamics.Tests.Mission
             var summary = await scenario.SimulateAsync( false, false, TimeSpan.FromSeconds(1.0));
 
             // Read maneuver results
-            Maneuver.Maneuver maneuver1 = spacecraft.InitialManeuver;
+            Astrodynamics.Maneuver.Maneuver maneuver1 = spacecraft.InitialManeuver;
             Assert.Equal(new TimeSystem.Time("2021-03-04T00:34:35.5972323 TDB"), maneuver1.ManeuverWindow!.Value.StartDate, TestHelpers.TimeComparer);
             Assert.Equal(new TimeSystem.Time("2021-03-04T00:34:43.7323762 TDB"), maneuver1.ManeuverWindow!.Value.EndDate, TestHelpers.TimeComparer);
             Assert.Equal(new TimeSystem.Time("2021-03-04T00:34:35.5972323 TDB"), maneuver1.ThrustWindow!.Value.StartDate, TestHelpers.TimeComparer);
@@ -341,7 +341,7 @@ namespace IO.Astrodynamics.Tests.Mission
                 var summary1 = await scenario.SimulateAsync( false, false, TimeSpan.FromSeconds(1.0));
 
                 // Read maneuver results
-                Maneuver.Maneuver maneuver1 = spacecraft.InitialManeuver;
+                Astrodynamics.Maneuver.Maneuver maneuver1 = spacecraft.InitialManeuver;
                 Assert.Equal(new TimeSystem.Time("2021-03-04T00:34:35.5972323 TDB"), maneuver1.ManeuverWindow!.Value.StartDate, TestHelpers.TimeComparer);
                 Assert.Equal(new TimeSystem.Time("2021-03-04T00:34:43.7323762 TDB"), maneuver1.ManeuverWindow!.Value.EndDate, TestHelpers.TimeComparer);
                 Assert.Equal(new TimeSystem.Time("2021-03-04T00:34:35.5972323 TDB"), maneuver1.ThrustWindow!.Value.StartDate, TestHelpers.TimeComparer);
@@ -394,7 +394,7 @@ namespace IO.Astrodynamics.Tests.Mission
             }
             var summary2 = await scenario.SimulateAsync( false, false, TimeSpan.FromSeconds(1.0));
             // Read maneuver results
-            Maneuver.Maneuver maneuver2 = spacecraft.InitialManeuver;
+            Astrodynamics.Maneuver.Maneuver maneuver2 = spacecraft.InitialManeuver;
             Assert.Equal(new TimeSystem.Time("2021-03-04T00:34:35.5972323 TDB"), maneuver2.ManeuverWindow!.Value.StartDate, TestHelpers.TimeComparer);
             Assert.Equal(new TimeSystem.Time("2021-03-04T00:34:43.7323762 TDB"), maneuver2.ManeuverWindow!.Value.EndDate, TestHelpers.TimeComparer);
             Assert.Equal(new TimeSystem.Time("2021-03-04T00:34:35.5972323 TDB"), maneuver2.ThrustWindow!.Value.StartDate, TestHelpers.TimeComparer);
