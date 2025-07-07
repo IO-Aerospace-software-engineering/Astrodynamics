@@ -5,7 +5,7 @@ using IO.Astrodynamics.Maneuver.Lambert;
 using IO.Astrodynamics.Math;
 using Xunit;
 
-namespace IO.Astrodynamics.Tests.Maneuver.Lambert
+namespace IO.Astrodynamics.Tests.Maneuvers.Lambert
 {
     public class LambertResultTests
     {

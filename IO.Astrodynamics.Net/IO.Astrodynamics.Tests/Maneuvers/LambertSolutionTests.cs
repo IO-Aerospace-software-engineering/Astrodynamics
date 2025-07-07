@@ -2,7 +2,7 @@
 using IO.Astrodynamics.Maneuver.Lambert;
 using IO.Astrodynamics.Math;
 
-namespace IO.Astrodynamics.Tests.Maneuver.Lambert;
+namespace IO.Astrodynamics.Tests.Maneuvers.Lambert;
 
 public class LambertSolutionTests
 {

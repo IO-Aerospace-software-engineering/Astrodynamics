@@ -14,9 +14,6 @@ namespace IO.Astrodynamics.Maneuver.Lambert;
 /// </summary>
 public class LambertSolver
 {
-    // Autres membres privés nécessaires
-    private double m_lambda;
-
     public LambertSolver()
     {
 
@@ -59,12 +56,12 @@ public class LambertSolver
             throw new ArgumentException("The angular momentum vector has no z component, cannot define transfer direction.");
 
         double lambda2 = 1.0 - c / s;
-        m_lambda = System.Math.Sqrt(lambda2);
+        double lambda = System.Math.Sqrt(lambda2);
 
         Vector3 it1, it2;
         if (ih.Z < 0.0)
         {
-            m_lambda = -m_lambda;
+            lambda = -lambda;
             it1 = ir1.Cross(ih);
             it2 = ir2.Cross(ih);
         }
@@ -78,17 +75,17 @@ public class LambertSolver
 
         if (isRetrograde)
         {
-            m_lambda = -m_lambda;
+            lambda = -lambda;
             it1 = it1.Inverse();
             it2 = it2.Inverse();
         }
 
-        double lambda3 = m_lambda * lambda2;
+        double lambda3 = lambda * lambda2;
         double T = System.Math.Sqrt(2.0 * mu / (s * s * s)) * tof;
 
         // 6. Détermination du nombre maximal de révolutions
         ushort Nmax = (ushort)(T / System.Math.PI);
-        double T00 = System.Math.Acos(m_lambda) + m_lambda * System.Math.Sqrt(1.0 - lambda2);
+        double T00 = System.Math.Acos(lambda) + lambda * System.Math.Sqrt(1.0 - lambda2);
         double T0 = T00 + Nmax * System.Math.PI;
         double T1 = 2.0 / 3.0 * (1.0 - lambda3);
 
@@ -100,13 +97,13 @@ public class LambertSolver
             double x_old = 0.0, x_new = 0.0;
             while (true)
             {
-                var (DT, DDT, DDDT) = TimeOfFlightDerivatives(x_old, Tmin);
+                var (DT, DDT, DDDT) = TimeOfFlightDerivatives(x_old, Tmin, lambda);
                 if (DT != 0.0)
                     x_new = x_old - DT * DDT / (DDT * DDT - DT * DDDT / 2.0);
                 err = System.Math.Abs(x_old - x_new);
                 if (err < 1e-13 || it > 12)
                     break;
-                Tmin = XToTimeOfFlightGeneral(x_new, Nmax);
+                Tmin = XToTimeOfFlightGeneral(x_new, Nmax, lambda);
                 x_old = x_new;
                 it++;
             }
@@ -127,7 +124,7 @@ public class LambertSolver
         else
             x0 = System.Math.Pow((T / T00), 0.69314718055994529 / System.Math.Log(T1 / T00)) - 1.0;
 
-        var (xZero, iterZero) = HalleySolver(T, x0, 0, 1e-5, 15);
+        var (xZero, iterZero) = HalleySolver(T, x0, 0, 1e-5, 15,lambda);
 
         // 8. Compute velocity vectors and other parameters for each solution
         double gamma = System.Math.Sqrt(mu * s / 2.0);
@@ -135,7 +132,7 @@ public class LambertSolver
         double sigma = System.Math.Sqrt(1 - rho * rho);
 
         // 8.1 - Direct transfer solution (0 revolutions)
-        result.AddSolution(ComputeSolution((uint)iterZero, lambda2, sigma, xZero, gamma, rho, R1, R2, ir1, ir2, it1, it2));
+        result.AddSolution(ComputeSolution((uint)iterZero, lambda, lambda2, sigma, xZero, gamma, rho, R1, R2, ir1, ir2, it1, it2));
 
         // 8.2 - Multi-revolution solutions (left/right)
         for (int i = 1; i <= Nmax; ++i)
@@ -143,27 +140,27 @@ public class LambertSolver
             // Left branch
             double tmp = System.Math.Pow((i * Constants._2PI) / (8.0 * T), 2.0 / 3.0);
             double xLeft = (tmp - 1) / (tmp + 1);
-            var (xL, itL) = HalleySolver(T, xLeft, i, 1e-8, 15);
+            var (xL, itL) = HalleySolver(T, xLeft, i, 1e-8, 15,lambda);
 
-            result.AddSolution(ComputeSolution((uint)itL, lambda2, sigma, xL, gamma, rho, R1, R2, ir1, ir2, it1, it2, (uint)i, LambertBranch.Left));
+            result.AddSolution(ComputeSolution((uint)itL, lambda, lambda2, sigma, xL, gamma, rho, R1, R2, ir1, ir2, it1, it2, (uint)i, LambertBranch.Left));
 
             // Right branch
             tmp = System.Math.Pow((8.0 * T) / (i * System.Math.PI), 2.0 / 3.0);
             double xRight = (tmp - 1) / (tmp + 1);
-            var (xR, itR) = HalleySolver(T, xRight, i, 1e-8, 15);
+            var (xR, itR) = HalleySolver(T, xRight, i, 1e-8, 15, lambda);
 
-            result.AddSolution(ComputeSolution((uint)itR, lambda2, sigma, xR, gamma, rho, R1, R2, ir1, ir2, it1, it2, (uint)i, LambertBranch.Right));
+            result.AddSolution(ComputeSolution((uint)itR, lambda, lambda2, sigma, xR, gamma, rho, R1, R2, ir1, ir2, it1, it2, (uint)i, LambertBranch.Right));
         }
 
         return result;
     }
 
-    private LambertSolution ComputeSolution(uint it, double lambda2, double sigma, double x, double gamma, double rho, double r1, double r2, in Vector3 ir1, in Vector3 ir2, Vector3 it1, Vector3 it2, uint i = 0, LambertBranch? branch = null)
+    private LambertSolution ComputeSolution(uint it, double lambda, double lambda2, double sigma, double x, double gamma, double rho, double r1, double r2, in Vector3 ir1, in Vector3 ir2, Vector3 it1, Vector3 it2, uint i = 0, LambertBranch? branch = null)
     {
         double y = System.Math.Sqrt(1.0 - lambda2 + lambda2 * x * x);
-        double vr1 = gamma * ((m_lambda * y - x) - rho * (m_lambda * y + x)) / r1;
-        double vr2 = -gamma * ((m_lambda * y - x) + rho * (m_lambda * y + x)) / r2;
-        double vt = gamma * sigma * (y + m_lambda * x);
+        double vr1 = gamma * ((lambda * y - x) - rho * (lambda * y + x)) / r1;
+        double vr2 = -gamma * ((lambda * y - x) + rho * (lambda * y + x)) / r2;
+        double vt = gamma * sigma * (y + lambda * x);
         double vt1 = vt / r1;
         double vt2 = vt / r2;
 
@@ -179,7 +176,7 @@ public class LambertSolver
     /// <param name="x">The x parameter (related to the geometry of the transfer).</param>
     /// <param name="N">The number of full revolutions.</param>
     /// <returns>The computed time of flight.</returns>
-    private double XToTimeOfFlight(double x, int N)
+    private double XToTimeOfFlight(double x, int N,double lambda)
     {
         double a = 1.0 / (1.0 - x * x);
         double tof;
@@ -187,15 +184,15 @@ public class LambertSolver
         if (a > 0) // Elliptic case
         {
             double alpha = 2.0 * System.Math.Acos(x);
-            double beta = 2.0 * System.Math.Asin(System.Math.Sqrt(m_lambda * m_lambda / a));
-            if (m_lambda < 0.0) beta = -beta;
+            double beta = 2.0 * System.Math.Asin(System.Math.Sqrt(lambda * lambda / a));
+            if (lambda < 0.0) beta = -beta;
             tof = (a * System.Math.Sqrt(a) * ((alpha - System.Math.Sin(alpha)) - (beta - System.Math.Sin(beta)) + 2.0 * System.Math.PI * N)) / 2.0;
         }
         else // Hyperbolic case
         {
             double alpha = 2.0 * System.Math.Acosh(x);
-            double beta = 2.0 * System.Math.Asinh(System.Math.Sqrt(-m_lambda * m_lambda / a));
-            if (m_lambda < 0.0) beta = -beta;
+            double beta = 2.0 * System.Math.Asinh(System.Math.Sqrt(-lambda * lambda / a));
+            if (lambda < 0.0) beta = -beta;
             tof = (-a * System.Math.Sqrt(-a) * ((beta - System.Math.Sinh(beta)) - (alpha - System.Math.Sinh(alpha)))) / 2.0;
         }
 
@@ -208,7 +205,7 @@ public class LambertSolver
     /// <param name="x">The x parameter (related to the geometry of the transfer).</param>
     /// <param name="N">The number of full revolutions.</param>
     /// <returns>The computed time of flight.</returns>
-    private double XToTimeOfFlightGeneral(double x, int N)
+    private double XToTimeOfFlightGeneral(double x, int N,double lambda)
     {
         const double battinThreshold = 0.01;
         const double lagrangeThreshold = 0.2;
@@ -217,10 +214,10 @@ public class LambertSolver
         if (dist < lagrangeThreshold && dist > battinThreshold)
         {
             // Use Lagrange time of flight expression
-            return XToTimeOfFlight(x, N);
+            return XToTimeOfFlight(x, N, lambda);
         }
 
-        double K = m_lambda * m_lambda;
+        double K = lambda * lambda;
         double E = x * x - 1.0;
         double rho = System.Math.Abs(E);
         double z = System.Math.Sqrt(1 + K * E);
@@ -228,18 +225,18 @@ public class LambertSolver
         if (dist < battinThreshold)
         {
             // Use Battin series time of flight expression
-            double eta = z - m_lambda * x;
-            double S1 = 0.5 * (1.0 - m_lambda - x * eta);
+            double eta = z - lambda * x;
+            double S1 = 0.5 * (1.0 - lambda - x * eta);
             double Q = SpecialFunctions.Hypergeometric(S1, 1e-11);
             Q = 4.0 / 3.0 * Q;
-            double tof = (eta * eta * eta * Q + 4.0 * m_lambda * eta) / 2.0 + N * System.Math.PI / System.Math.Pow(rho, 1.5);
+            double tof = (eta * eta * eta * Q + 4.0 * lambda * eta) / 2.0 + N * System.Math.PI / System.Math.Pow(rho, 1.5);
             return tof;
         }
         else
         {
             // Use Lancaster time of flight expression
             double y = System.Math.Sqrt(rho);
-            double g = x * z - m_lambda * E;
+            double g = x * z - lambda * E;
             double d;
             if (E < 0)
             {
@@ -248,11 +245,11 @@ public class LambertSolver
             }
             else
             {
-                double f = y * (z - m_lambda * x);
+                double f = y * (z - lambda * x);
                 d = System.Math.Log(f + g);
             }
 
-            double tof = (x - m_lambda * z - d / y) / E;
+            double tof = (x - lambda * z - d / y) / E;
             return tof;
         }
     }
@@ -269,10 +266,10 @@ public class LambertSolver
     /// <item><description><c>firstDerivative</c>: The first derivative.</description></item>
     /// <item><description><c>secondDerivative</c>: The second derivative.</description></item>
     /// <item><description><c>thirdDerivative</c>: The third derivative.</description></item> </list></returns>
-    private (double firstDerivative, double secondDerivative, double thirdDerivative) TimeOfFlightDerivatives(double x, double timeOfFlight)
+    private (double firstDerivative, double secondDerivative, double thirdDerivative) TimeOfFlightDerivatives(double x, double timeOfFlight, double lambda)
     {
-        double lambdaSquared = m_lambda * m_lambda;
-        double lambdaCubed = lambdaSquared * m_lambda;
+        double lambdaSquared = lambda * lambda;
+        double lambdaCubed = lambdaSquared * lambda;
         double oneMinusXSquared = 1.0 - x * x;
         double y = System.Math.Sqrt(1.0 - lambdaSquared * oneMinusXSquared);
         double ySquared = y * y;
@@ -307,7 +304,7 @@ public class LambertSolver
     /// Halley's method is a third-order iterative method for solving nonlinear equations.
     /// It uses the first, second, and third derivatives of the function to achieve faster convergence.
     /// </remarks>
-    private (double x, int iterations) HalleySolver(double T, double x0, int N, double eps, int iterMax)
+    private (double x, int iterations) HalleySolver(double T, double x0, int N, double eps, int iterMax,double lambda)
     {
         // Initialize the parameter `x` with the initial guess `x0`.
         double x = x0;
@@ -320,10 +317,10 @@ public class LambertSolver
         while ((err > eps) && (it < iterMax))
         {
             // Compute the time of flight for the current value of `x`.
-            tof = XToTimeOfFlightGeneral(x, N);
+            tof = XToTimeOfFlightGeneral(x, N,lambda);
 
             // Compute the first, second, and third derivatives of the time of flight function.
-            var (firstDv, secondDv, thirdDv) = TimeOfFlightDerivatives(x, tof);
+            var (firstDv, secondDv, thirdDv) = TimeOfFlightDerivatives(x, tof,lambda);
 
             // Calculate the difference between the computed and target time of flight.
             delta = tof - T;
