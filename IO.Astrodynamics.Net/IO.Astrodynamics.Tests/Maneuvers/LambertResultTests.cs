@@ -16,7 +16,7 @@ namespace IO.Astrodynamics.Tests.Maneuvers.Lambert
             double x = 0.5;
             uint iterations = 10;
             LambertBranch? branch = revolutions == 0 ? null : LambertBranch.Left;
-            return new LambertSolution(revolutions, v1, v2, x, iterations, branch);
+            return new LambertSolution(revolutions, v1, v2, x, iterations, v1, v2, branch);
         }
 
         [Fact]

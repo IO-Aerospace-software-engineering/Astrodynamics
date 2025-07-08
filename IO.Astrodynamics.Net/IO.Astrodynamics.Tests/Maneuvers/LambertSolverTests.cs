@@ -11,12 +11,13 @@ namespace IO.Astrodynamics.Tests.Maneuvers.Lambert;
 
 class DummyBody : CelestialItem
 {
-    public DummyBody(double mass) : base(999, "dummy", 0, null) { }
+    public DummyBody(double mass) : base(999, "dummy", 0, null)
+    {
+    }
 }
 
 public class LambertSolverTests
 {
-
     public LambertSolverTests()
     {
         API.Instance.LoadKernels(Constants.SolarSystemKernelPath);
@@ -166,7 +167,6 @@ public class LambertSolverTests
         var spcSV1 = new StateVector(new Vector3(7000000.0, 0.0, 0.0), zeroRev.V1, earth, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
         var spcSVAtAfter3Days = spcSV1.AtEpoch(arrivalTime).ToStateVector();
         Assert.Equal(op2.Position, spcSVAtAfter3Days.Position, TestHelpers.VectorComparer);
-
     }
 
     [Fact]
@@ -191,7 +191,13 @@ public class LambertSolverTests
 
         var spcSV1 = new StateVector(new Vector3(7000000.0, 0.0, 0.0), zeroRev.V1, earth, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
         var spcSVAtAfter3Days = spcSV1.AtEpoch(arrivalTime).ToStateVector();
+        // Assert that the position at arrival time matches the expected position
         Assert.Equal(op2.Position, spcSVAtAfter3Days.Position, TestHelpers.VectorComparer);
-
+        
+        // Assert that the velocity at arrival time matches the expected velocity
+        Assert.Equal(op2.Velocity, spcSVAtAfter3Days.Velocity + zeroRev.DeltaV2, TestHelpers.VectorComparer);
+        
+        // Assert that the velocity at departure time matches the expected velocity
+        Assert.Equal(zeroRev.DeltaV1, zeroRev.V1 - op1.Velocity, TestHelpers.VectorComparer);
     }
 }
