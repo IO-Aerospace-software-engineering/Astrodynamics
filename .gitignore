@@ -19,3 +19,5 @@ cmake-build-debug-linux/
 build/
 /.idea/
 build_release/
+/.vs
+/IO.Astrodynamics.Net/IO.Astrodynamics/pykep
