@@ -258,7 +258,7 @@ public class LambertSolver
         double rho = System.Math.Abs(e);
         double z = System.Math.Sqrt(1 + k * e);
 
-        if (dist < battinThreshold)
+        if (dist < BattinThreshold)
         {
             // Use Battin series time of flight expression
             double eta = z - lambda * x;
