@@ -16,8 +16,8 @@ namespace IO.Astrodynamics.Math
         /// <returns>The computed value of the hypergeometric series, accurate to within the specified tolerance.</returns>
         public static double Hypergeometric(double z, double tol)
         {
-            if (tol < 0) {
-                throw new ArgumentOutOfRangeException(nameof(tol), "Input tol must be non-negative.");
+            if (tol <= 0) {
+                throw new ArgumentOutOfRangeException(nameof(tol), "Input tol must be positive and non-zero.");
             }
             double sum = 1.0;
             double term = 1.0;

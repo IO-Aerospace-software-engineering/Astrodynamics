@@ -10,6 +10,8 @@ namespace IO.Astrodynamics.Maneuver.Lambert;
 /// </summary>
 public class LambertSolver
 {
+    const double BattinThreshold = 0.01;
+    const double LagrangeThreshold = 0.2;
     /// <summary>
     /// Solves the Lambert problem to find the velocity vectors required to transfer between two points in space.
     /// </summary>
@@ -242,11 +244,10 @@ public class LambertSolver
     /// <returns>The computed time of flight.</returns>
     private double XToTimeOfFlightGeneral(double x, int n, double lambda)
     {
-        const double battinThreshold = 0.01;
-        const double lagrangeThreshold = 0.2;
+        
         double dist = System.Math.Abs(x - 1);
 
-        if (dist < lagrangeThreshold && dist > battinThreshold)
+        if (dist < LagrangeThreshold && dist > BattinThreshold)
         {
             // Use Lagrange time of flight expression
             return XToTimeOfFlight(x, n, lambda);
