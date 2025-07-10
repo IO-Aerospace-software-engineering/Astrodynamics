@@ -50,6 +50,7 @@ This framework provides the following features :
   * Engines
   * Instrument
 * Impulse maneuvers :
+  * Lambert transfer 
   * Apogee height
   * Perigee height
   * Plane alignment
