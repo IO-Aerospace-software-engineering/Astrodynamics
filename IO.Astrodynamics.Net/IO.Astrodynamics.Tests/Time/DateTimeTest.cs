@@ -84,15 +84,26 @@ public class DateTimeTests
     {
         var loc = new TimeSystem.Time(2020, 1, 1, frame: TimeFrame.LocalFrame);
         var tdt = loc.ToTDT();
-        Assert.Equal(new TimeSystem.Time("2019-12-31T23:01:09.1840000 TDT"), tdt);
+        // Calculating expected TDT based on the system's local offset at 2020-01-01
+        var localDateTime = new DateTime(2020, 1, 1, 0, 0, 0, DateTimeKind.Local);
+        var offset = TimeZoneInfo.Local.GetUtcOffset(localDateTime);
+        // UTC = Local - offset
+        var utcDateTime = localDateTime - offset;
+        // TDT = UTC + 69.184s (37 leap seconds + 32.184)
+        var tdtDateTime = utcDateTime.AddSeconds(37 + 32.184);
+        var expectedTdt = new TimeSystem.Time(tdtDateTime, TimeFrame.TDTFrame);
+        Assert.Equal(expectedTdt.DateTime, tdt.DateTime,TimeSpan.FromMilliseconds(1));
     }
 
     [Fact]
     public void TdtToLocal()
     {
         var tdt = new TimeSystem.Time(2019, 12, 31, 23, 01, 09, 184, frame: TimeFrame.TDTFrame);
-        var loc = tdt.ToLocal();
-        Assert.Equal(new TimeSystem.Time("2020-01-01 00:00:00.000000+01:00"), loc);
+        var utcDateTime = tdt.DateTime.AddSeconds(-69.184);
+        var localOffset = TimeZoneInfo.Local.GetUtcOffset(utcDateTime);
+        var localDateTime = utcDateTime + localOffset;
+        var expectedLocal = new TimeSystem.Time(localDateTime, TimeFrame.LocalFrame);
+        Assert.Equal(expectedLocal.DateTime, tdt.ToLocal().DateTime, TimeSpan.FromMilliseconds(1));
     }
 
     [Fact]
