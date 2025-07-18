@@ -13,6 +13,7 @@ This framework provides the following features :
   * Generate archive from object
   * Generate object from archive
   * Validate archive from Xml schemas
+* Orbit prediction from observation
 * Spacecraft propagator
   * Geopotentials model (Earth's Geopotentials is embedded but others can be provided)
   * Simplified atmospheric model (Earth and Mars built-in)
