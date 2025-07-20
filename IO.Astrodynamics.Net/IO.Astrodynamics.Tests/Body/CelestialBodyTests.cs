@@ -160,6 +160,18 @@ public class CelestialBodyTests
     }
     
     [Fact]
+    public void GetEphemerisUTC()
+    {
+        var earth = PlanetsAndMoons.EARTH_BODY;
+        var res = earth.GetEphemeris(new Window(TimeSystem.Time.J2000UTC, TimeSpan.FromDays(1.0)), TestHelpers.Sun, Frames.Frame.ICRF, Aberration.None,
+            TimeSpan.FromDays(1.0)).ToArray();
+        Assert.Equal(2, res.Length);
+        Assert.Equal(
+            new StateVector(new Vector3(-29069076368.647408, 132303142494.37561, 57359794320.98976), new Vector3(-29695.854459557304, -5497.347182651618, -2382.9422283991967),
+                TestHelpers.Sun, TimeSystem.Time.J2000UTC + TimeSpan.FromDays(1.0), Frames.Frame.ICRF), res.ElementAt(1).ToStateVector(), TestHelpers.StateVectorComparer);
+    }
+    
+    [Fact]
     public void GetEphemerisLT()
     {
         var earth = PlanetsAndMoons.MOON_BODY;
