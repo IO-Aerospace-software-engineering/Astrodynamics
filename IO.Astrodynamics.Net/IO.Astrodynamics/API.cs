@@ -655,7 +655,7 @@ public class API
                     aberration.GetDescription(), stepSize.TotalSeconds,
                     stateVectors);
                 orbitalParameters.AddRange(stateVectors.Where(x => !string.IsNullOrEmpty(x.Frame)).Select(x =>
-                    new OrbitalParameters.StateVector(x.Position.Convert(), x.Velocity.Convert(), observer, Time.CreateTDB(x.Epoch), frame)));
+                    new OrbitalParameters.StateVector(x.Position.Convert(), x.Velocity.Convert(), observer, Time.CreateTDB(x.Epoch).ConvertTo(searchWindow.StartDate.Frame), frame)));
             }
 
             return orbitalParameters;

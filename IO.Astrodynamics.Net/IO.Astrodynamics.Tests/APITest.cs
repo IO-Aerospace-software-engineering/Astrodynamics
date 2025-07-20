@@ -401,11 +401,11 @@ public class APITest
             Frames.Frame.ICRF, Aberration.LT, TimeSpan.FromSeconds(10.0)).Select(x => x.ToStateVector());
 
         var stateVectors = res as StateVector[] ?? res.ToArray();
-        Assert.Equal(new Vector3(-291527956.43918961,-266751935.44410169,-76118494.33777481), stateVectors[0].Position,TestHelpers.VectorComparer);
+        Assert.Equal(new Vector3(-291527956.4143643,-266751935.53610146,-76118494.37190592), stateVectors[0].Position,TestHelpers.VectorComparer);
         Assert.Equal(new Vector3(643.6475664431179,-665.9766990302671,-301.2930723673155), stateVectors[0].Velocity,TestHelpers.VectorComparer);
         Assert.Equal(PlanetsAndMoons.EARTH.NaifId, stateVectors[0].Observer.NaifId);
         Assert.Equal(Frames.Frame.ICRF, stateVectors[0].Frame);
-        Assert.Equal(64.183927400000002, stateVectors[0].Epoch.TimeSpanFromJ2000().TotalSeconds,6);
+        Assert.Equal(0, stateVectors[0].Epoch.TimeSpanFromJ2000().TotalSeconds,6);
 
         Assert.Throws<ArgumentNullException>(() => API.Instance.ReadEphemeris(searchWindow, null,
             TestHelpers.MoonAtJ2000,
