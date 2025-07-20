@@ -392,6 +392,40 @@ public class APITest
             TestHelpers.EarthAtJ2000, TestHelpers.MoonAtJ2000,
             null, Aberration.LT));
     }
+    
+     [Fact]
+    public void ReadEphemerisUTC()
+    {
+        var searchWindow = new Window(TimeSystem.Time.CreateUTC(0.0), TimeSystem.Time.CreateUTC(100.0));
+        var res = API.Instance.ReadEphemeris(searchWindow, TestHelpers.EarthAtJ2000, TestHelpers.MoonAtJ2000,
+            Frames.Frame.ICRF, Aberration.LT, TimeSpan.FromSeconds(10.0)).Select(x => x.ToStateVector());
+
+        var stateVectors = res as StateVector[] ?? res.ToArray();
+        Assert.Equal(new Vector3(-291527956.4143643,-266751935.53610146,-76118494.37190592), stateVectors[0].Position,TestHelpers.VectorComparer);
+        Assert.Equal(new Vector3(643.6475664431179,-665.9766990302671,-301.2930723673155), stateVectors[0].Velocity,TestHelpers.VectorComparer);
+        Assert.Equal(PlanetsAndMoons.EARTH.NaifId, stateVectors[0].Observer.NaifId);
+        Assert.Equal(Frames.Frame.ICRF, stateVectors[0].Frame);
+        Assert.Equal(0, stateVectors[0].Epoch.TimeSpanFromJ2000().TotalSeconds,6);
+
+        Assert.Throws<ArgumentNullException>(() => API.Instance.ReadEphemeris(searchWindow, null,
+            TestHelpers.MoonAtJ2000,
+            Frames.Frame.ICRF, Aberration.LT, TimeSpan.FromSeconds(10.0)).Select(x => x.ToStateVector()));
+        Assert.Throws<ArgumentNullException>(() => API.Instance.ReadEphemeris(searchWindow, TestHelpers.EarthAtJ2000,
+            null,
+            Frames.Frame.ICRF, Aberration.LT, TimeSpan.FromSeconds(10.0)).Select(x => x.ToStateVector()));
+        Assert.Throws<ArgumentNullException>(() => API.Instance.ReadEphemeris(searchWindow, TestHelpers.EarthAtJ2000,
+            TestHelpers.MoonAtJ2000,
+            null, Aberration.LT, TimeSpan.FromSeconds(10.0)).Select(x => x.ToStateVector()));
+        Assert.Throws<ArgumentNullException>(() => API.Instance.ReadEphemeris(searchWindow.StartDate, null,
+            TestHelpers.MoonAtJ2000,
+            Frames.Frame.ICRF, Aberration.LT));
+        Assert.Throws<ArgumentNullException>(() => API.Instance.ReadEphemeris(searchWindow.StartDate,
+            TestHelpers.EarthAtJ2000, null,
+            Frames.Frame.ICRF, Aberration.LT));
+        Assert.Throws<ArgumentNullException>(() => API.Instance.ReadEphemeris(searchWindow.StartDate,
+            TestHelpers.EarthAtJ2000, TestHelpers.MoonAtJ2000,
+            null, Aberration.LT));
+    }
 
     [Fact]
     public void ReadLongEphemeris()
