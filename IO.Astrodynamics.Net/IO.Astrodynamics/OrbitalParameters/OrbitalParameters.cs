@@ -971,6 +971,21 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
         return TimeToRadius(centerOfMotion.SphereOfInfluence);
     }
 
+    public TLE ToTLE(int noradId, string name, string cosparId,ushort revolutionsAtEpoch, char classification = 'U', int epochYear = 0, double epochDay = 0.0, double firstDerivativeMeanMotion = 0.0,
+        double secondDerivativeMeanMotion = 0.0, double bstarDragTerm = 0.0001)
+    {
+        var keplerianElements = this.ToKeplerianElements();
+        var a = keplerianElements.SemiMajorAxis();
+        var e = keplerianElements.Eccentricity();
+        var i = keplerianElements.Inclination();
+        var o = keplerianElements.AscendingNode();
+        var w = keplerianElements.ArgumentOfPeriapsis();
+        var m = keplerianElements.MeanAnomaly();
+        var n = keplerianElements.MeanMotion();
+
+        return TLE.Create(keplerianElements,name, noradId,cosparId,revolutionsAtEpoch,classification,bstarDragTerm,firstDerivativeMeanMotion,secondDerivativeMeanMotion);
+    }
+
     #region Operators
 
     public override bool Equals(object obj)

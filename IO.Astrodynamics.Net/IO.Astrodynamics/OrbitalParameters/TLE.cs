@@ -73,6 +73,81 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
         Line3 = line3;
     }
 
+    public static TLE Create(KeplerianElements kep,string name, int noradId, string cosparId, ushort revolutionsAtEpoch, char classification = 'U', double bstar = 0.0001, double nDot = 0.0,
+        double nDDot = 0.0)
+    {
+        if (kep == null) throw new ArgumentNullException(nameof(kep));
+        if (name == null) throw new ArgumentNullException(nameof(name));
+        if (string.IsNullOrWhiteSpace(cosparId)) throw new ArgumentException("Value cannot be null or whitespace.", nameof(cosparId));
+        if (cosparId.Length < 6 || cosparId.Length > 8)
+        {
+            throw new ArgumentException("COSPAR ID must be between 6 and 8 characters long.", nameof(cosparId));
+        }
+
+        ArgumentOutOfRangeException.ThrowIfNegative(revolutionsAtEpoch);
+        ArgumentOutOfRangeException.ThrowIfNegative(noradId);
+
+        // 1. Convert elements to TLE units
+        double iDeg = kep.I * Constants.Rad2Deg;
+        double raanDeg = kep.RAAN * Constants.Rad2Deg;
+        double argpDeg = kep.AOP * Constants.Rad2Deg;
+        double mDeg = kep.M * Constants.Rad2Deg;
+        double meanMotion = kep.MeanMotion() * 86400.0 / Constants._2PI;
+
+        // 2. Epoch: YYDDD.DDDDDDDD
+        var epochDt = kep.Epoch.DateTime;
+        int year = epochDt.Year % 100;
+        int dayOfYear = epochDt.DayOfYear;
+        double fracDay = (epochDt.TimeOfDay.TotalSeconds / 86400.0);
+        string epochStr = $"{year:00}{dayOfYear:000}{fracDay:0.00000000}".PadRight(14);
+
+        // 3. Eccentricity: 7 digits, no decimal
+        string eStr = kep.E.ToString("0.0000000").Substring(2, 7);
+
+        // 4. nDot, nDDot, BSTAR: TLE scientific notation
+        string nDotStr = nDot.ToString("+0.00000000;-0.00000000").Replace(",", ".").PadLeft(10);
+        string nDDotStr = FormatTleExponent(nDDot, 5);
+        string bstarStr = FormatTleExponent(bstar, 5);
+
+        // 7. Line 3 (optional, usually satellite name)
+        string line1 = name;
+        
+        // 5. Line 1
+        string line2 = $"1 {noradId:00000}{classification} {cosparId,-8} {epochStr} {nDotStr} {nDDotStr} {bstarStr} 0 9999";
+        line2 += ComputeTleChecksum(line2);
+
+        // 6. Line 2
+        string line3 = $"2 {noradId:00000} {iDeg,8:0.0000} {raanDeg,8:0.0000} {eStr} {argpDeg,8:0.0000} {mDeg,8:0.0000} {meanMotion,11:0.00000000}{revolutionsAtEpoch:00000}";
+        line3 += ComputeTleChecksum(line3);
+
+        return new TLE(ParserTLE.parseTle(line1, line2, line3));
+
+        // Helper for TLE scientific notation (e.g.  34123-4)
+        static string FormatTleExponent(double value, int width)
+        {
+            if (value == 0.0) return new string('0', width) + "-0";
+            string s = value.ToString("0.0000E+0", System.Globalization.CultureInfo.InvariantCulture);
+            s = s.Replace("E+", "").Replace("E", "");
+            int expIdx = s.IndexOfAny(['+', '-'], 1);
+            string mant = s.Substring(0, expIdx).Replace(".", "").PadLeft(width, '0');
+            string exp = s.Substring(expIdx);
+            return $"{mant}{exp}";
+        }
+
+        // TLE checksum: sum of all digits + 1 for each '-' (mod 10)
+        static int ComputeTleChecksum(string line)
+        {
+            int sum = 0;
+            foreach (char c in line.Take(68))
+            {
+                if (char.IsDigit(c)) sum += c - '0';
+                if (c == '-') sum += 1;
+            }
+
+            return sum % 10;
+        }
+    }
+
     private TLE(Tle tle) : this(tle, new Time(new EpochTime(tle.getEpochYear(), tle.getEpochDay()).toDateTime(), TimeFrame.UTCFrame))
     {
     }
@@ -119,7 +194,8 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
         List<Sgp4Data> resultDataList = sgp4.getResults();
         var position = resultDataList[0].getPositionData();
         var velocity = resultDataList[0].getVelocityData();
-        return new StateVector(new Vector3(position.x, position.y, position.z) * 1000.0, new Vector3(velocity.x, velocity.y, velocity.z) * 1000.0, new CelestialBody(399,Frame.ECLIPTIC_J2000, date), date,
+        return new StateVector(new Vector3(position.x, position.y, position.z) * 1000.0, new Vector3(velocity.x, velocity.y, velocity.z) * 1000.0,
+            new CelestialBody(399, Frame.ECLIPTIC_J2000, date), date,
             new Frame("TEME")).ToFrame(Frame.ICRF).ToStateVector();
     }
 
