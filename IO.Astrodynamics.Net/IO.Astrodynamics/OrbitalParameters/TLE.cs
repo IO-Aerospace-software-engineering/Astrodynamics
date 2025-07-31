@@ -36,9 +36,9 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
     public string Line2 { get; }
 
     /// <summary>
-    /// Gets the third line of the TLE.
+    /// Gets the name of the TLE.
     /// </summary>
-    public string Line3 { get; }
+    public string Name { get; }
 
     /// <summary>
     /// Gets the ballistic coefficient.
@@ -58,30 +58,36 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
     /// <summary>
     /// Initializes a new instance of the TLE class.
     /// </summary>
-    /// <param name="line1">The first line of the TLE.</param>
-    /// <param name="line2">The second line of the TLE.</param>
-    /// <param name="line3">The third line of the TLE.</param>
+    /// <param name="name">Line 1 - TLE Name</param>
+    /// <param name="line1">the first line</param>
+    /// <param name="line2">the second line</param>
     /// <exception cref="ArgumentNullException">Thrown when the frame is null.</exception>
     /// <exception cref="ArgumentException">Thrown when any of the lines are null or empty.</exception>
-    public TLE(string line1, string line2, string line3) : this(ParserTLE.parseTle(line2, line3, line1))
+    public TLE(string name, string line1, string line2) : this(ParserTLE.parseTle(line1, line2, name))
     {
         if (string.IsNullOrEmpty(line1)) throw new ArgumentException("Value cannot be null or empty.", nameof(line1));
         if (string.IsNullOrEmpty(line2)) throw new ArgumentException("Value cannot be null or empty.", nameof(line2));
-        if (string.IsNullOrEmpty(line3)) throw new ArgumentException("Value cannot be null or empty.", nameof(line3));
+        if (string.IsNullOrEmpty(name)) throw new ArgumentException("Value cannot be null or empty.", nameof(name));
         Line1 = line1;
         Line2 = line2;
-        Line3 = line3;
+        Name = name;
     }
 
-    public static TLE Create(KeplerianElements kep,string name, int noradId, string cosparId, ushort revolutionsAtEpoch, char classification = 'U', double bstar = 0.0001, double nDot = 0.0,
-        double nDDot = 0.0)
+    public static TLE Create(KeplerianElements kep, string name, int noradId, string cosparId, ushort revolutionsAtEpoch, char classification = 'U', double bstar = 0.0001,
+        double nDot = 0.0,
+        double nDDot = 0.0, ushort elementSetNumber = 9999)
     {
         if (kep == null) throw new ArgumentNullException(nameof(kep));
         if (name == null) throw new ArgumentNullException(nameof(name));
         if (string.IsNullOrWhiteSpace(cosparId)) throw new ArgumentException("Value cannot be null or whitespace.", nameof(cosparId));
         if (cosparId.Length < 6 || cosparId.Length > 8)
         {
-            throw new ArgumentException("COSPAR ID must be between 6 and 8 characters long.", nameof(cosparId));
+            throw new ArgumentException("COSPAR Identifier must be between 6 and 8 characters long.", nameof(cosparId));
+        }
+
+        if (elementSetNumber > 9999)
+        {
+            throw new ArgumentOutOfRangeException(nameof(elementSetNumber), "Element set number must be between 0 and 9999.");
         }
 
         ArgumentOutOfRangeException.ThrowIfNegative(revolutionsAtEpoch);
@@ -99,44 +105,47 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
         int year = epochDt.Year % 100;
         int dayOfYear = epochDt.DayOfYear;
         double fracDay = (epochDt.TimeOfDay.TotalSeconds / 86400.0);
-        string epochStr = $"{year:00}{dayOfYear:000}{fracDay:0.00000000}".PadRight(14);
+        string epochStr = $"{year:00}{dayOfYear:000}{fracDay:.00000000}".PadRight(14);
 
         // 3. Eccentricity: 7 digits, no decimal
         string eStr = kep.E.ToString("0.0000000").Substring(2, 7);
 
         // 4. nDot, nDDot, BSTAR: TLE scientific notation
-        string nDotStr = nDot.ToString("+0.00000000;-0.00000000").Replace(",", ".").PadLeft(10);
+        string nDotStr = nDot.ToString(" .00000000;-.00000000").Replace(",", ".").PadLeft(10);
         string nDDotStr = FormatTleExponent(nDDot, 5);
         string bstarStr = FormatTleExponent(bstar, 5);
 
-        // 7. Line 3 (optional, usually satellite name)
-        string line1 = name;
-        
         // 5. Line 1
-        string line2 = $"1 {noradId:00000}{classification} {cosparId,-8} {epochStr} {nDotStr} {nDDotStr} {bstarStr} 0 9999";
-        line2 += ComputeTleChecksum(line2);
+        string line1 = $"1 {noradId:00000}{classification} {cosparId,-8} {epochStr} {nDotStr} {nDDotStr} {bstarStr} 0 {elementSetNumber,4}";
+        line1 += ComputeTleChecksum(line1);
 
         // 6. Line 2
-        string line3 = $"2 {noradId:00000} {iDeg,8:0.0000} {raanDeg,8:0.0000} {eStr} {argpDeg,8:0.0000} {mDeg,8:0.0000} {meanMotion,11:0.00000000}{revolutionsAtEpoch:00000}";
-        line3 += ComputeTleChecksum(line3);
+        string line2 = $"2 {noradId:00000} {iDeg,8:0.0000} {raanDeg,8:0.0000} {eStr} {argpDeg,8:0.0000} {mDeg,8:0.0000} {meanMotion,11:0.00000000}{revolutionsAtEpoch,5}";
+        line2 += ComputeTleChecksum(line2);
 
-        return new TLE(ParserTLE.parseTle(line1, line2, line3));
+        return new TLE(name, line1, line2);
 
         // Helper for TLE scientific notation (e.g.  34123-4)
         static string FormatTleExponent(double value, int width)
         {
-            if (value == 0.0) return new string('0', width) + "-0";
+            if (value == 0.0) return ' ' + new string('0', width) + "-0";
             string s = value.ToString("0.0000E+0", System.Globalization.CultureInfo.InvariantCulture);
             s = s.Replace("E+", "").Replace("E", "");
             int expIdx = s.IndexOfAny(['+', '-'], 1);
             string mant = s.Substring(0, expIdx).Replace(".", "").PadLeft(width, '0');
             string exp = s.Substring(expIdx);
-            return $"{mant}{exp}";
+            var sign = value < 0 ? '-' : ' ';
+            return $"{sign}{mant}{exp}";
         }
 
         // TLE checksum: sum of all digits + 1 for each '-' (mod 10)
         static int ComputeTleChecksum(string line)
         {
+            if (line.Length != 68)
+            {
+                throw new ArgumentException("TLE line must be exactly 69 characters long.", nameof(line));
+            }
+
             int sum = 0;
             foreach (char c in line.Take(68))
             {
@@ -249,7 +258,7 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
     {
         if (ReferenceEquals(null, other)) return false;
         if (ReferenceEquals(this, other)) return true;
-        return base.Equals(other) && Line1 == other.Line1 && Line2 == other.Line2 && Line3 == other.Line3;
+        return base.Equals(other) && Line1 == other.Line1 && Line2 == other.Line2 && Name == other.Name;
     }
 
     /// <summary>
@@ -271,7 +280,7 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
     /// <returns>A hash code for the current TLE.</returns>
     public override int GetHashCode()
     {
-        return HashCode.Combine(base.GetHashCode(), Line1, Line2, Line3);
+        return HashCode.Combine(base.GetHashCode(), Line1, Line2, Name);
     }
 
     /// <summary>

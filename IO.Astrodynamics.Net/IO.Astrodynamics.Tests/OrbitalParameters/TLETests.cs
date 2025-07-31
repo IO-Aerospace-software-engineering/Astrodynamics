@@ -153,6 +153,9 @@ public class TLETests
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
         var kep = tle.ToKeplerianElements();
 
-        var newtle = TLE.Create(kep, "ISS", 25544, "98067A", 25703, 'U', 0.0010270, 0.00016717, 0.0);
+        var newtle = TLE.Create(kep, "ISS", 25544, "98067A", 2570, 'U', 0.0010270, 0.00016717, elementSetNumber: 905);
+        Assert.Equal(tle.Name, newtle.Name);
+        Assert.Equal(tle.Line1, newtle.Line1);
+        Assert.Equal(tle.Line2, newtle.Line2);
     }
 }
