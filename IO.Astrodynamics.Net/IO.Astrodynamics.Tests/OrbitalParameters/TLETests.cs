@@ -2,6 +2,7 @@
 
 using System;
 using System.IO;
+using System.Linq;
 using IO.Astrodynamics.Coordinates;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.Surface;
@@ -144,6 +145,30 @@ public class TLETests
             "1 25544U 98067A   21021.53488036  .00016717  00000-0  10270-3 0  9054",
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703"));
     }
+    
+    [Fact]
+    public void InvalidLine1()
+    {
+        Assert.ThrowsAny<Exception>(() => new TLE("ISS",
+            "",
+            "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703"));
+    }
+    
+    [Fact]
+    public void InvalidLine2()
+    {
+        Assert.ThrowsAny<Exception>(() => new TLE("ISS",
+            "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
+            ""));
+    }
+    
+    [Fact]
+    public void InvalidName()
+    {
+        Assert.Throws<InvalidDataException>(() => new TLE("",
+            "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
+            "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703"));
+    }
 
     [Fact]
     public void CreateFromKeplerian()
@@ -157,5 +182,53 @@ public class TLETests
         Assert.Equal(tle.Name, newtle.Name);
         Assert.Equal(tle.Line1, newtle.Line1);
         Assert.Equal(tle.Line2, newtle.Line2);
+    }
+
+
+    [Fact]
+    public void Create_InvalidCosparId_ThrowsArgumentException()
+    {
+        var kep = new KeplerianElements(0.1, 0.2, 0.3, 0.4, 0.5, 0.6, TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.UtcNow, TimeFrame.UTCFrame), Frames.Frame.ICRF);
+        string name = "TestSatellite";
+        ushort noradId = 12345;
+        string cosparId = "123";
+        ushort revolutionsAtEpoch = 904;
+
+        Assert.Throws<ArgumentException>(() => TLE.Create(kep, name, noradId, cosparId, revolutionsAtEpoch));
+    }
+
+    [Fact]
+    public void Create_InvalidElementSetNumber_ThrowsArgumentOutOfRangeException()
+    {
+        var kep = new KeplerianElements(0.1, 0.2, 0.3, 0.4, 0.5, 0.6, TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.UtcNow, TimeFrame.UTCFrame), Frames.Frame.ICRF);
+        string name = "TestSatellite";
+        ushort noradId = 12345;
+        string cosparId = "98067A";
+        ushort revolutionsAtEpoch = 904;
+
+        Assert.Throws<ArgumentOutOfRangeException>(() => TLE.Create(kep, name, noradId, cosparId, revolutionsAtEpoch, 'U', 0.0001, 0.0, 0.0, 10000));
+    }
+    
+    [Fact]
+    public void Create_InvalidKeplerianElements_ThrowsNullArgumentException()
+    {
+        string name = "TestSatellite";
+        ushort noradId = 12345;
+        string cosparId = "98067A";
+        ushort revolutionsAtEpoch = 904;
+
+        Assert.Throws<ArgumentNullException>(() => TLE.Create(null, name, noradId, cosparId, revolutionsAtEpoch, 'U', 0.0001, 0.0, 0.0, 10000));
+    }
+    
+    [Fact]
+    public void Create_InvalidName_ThrowsNullArgumentException()
+    {
+        var kep = new KeplerianElements(0.1, 0.2, 0.3, 0.4, 0.5, 0.6, TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.UtcNow, TimeFrame.UTCFrame), Frames.Frame.ICRF);
+        string name = "";
+        ushort noradId = 12345;
+        string cosparId = "98067A";
+        ushort revolutionsAtEpoch = 904;
+
+        Assert.Throws<ArgumentOutOfRangeException>(() => TLE.Create(kep, name, noradId, cosparId, revolutionsAtEpoch, 'U', 0.0001, 0.0, 0.0, 10000));
     }
 }

@@ -971,19 +971,40 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
         return TimeToRadius(centerOfMotion.SphereOfInfluence);
     }
 
-    public TLE ToTLE(int noradId, string name, string cosparId,ushort revolutionsAtEpoch, char classification = 'U', int epochYear = 0, double epochDay = 0.0, double firstDerivativeMeanMotion = 0.0,
-        double secondDerivativeMeanMotion = 0.0, double bstarDragTerm = 0.0001)
+    /// <summary>
+    /// Converts the orbital parameters to a TLE (Two-Line Element) format.
+    /// This method fits the TLE from the current state vector and returns a TLE object.
+    /// </summary>
+    /// <param name="noradId">The NORAD ID of the satellite.</param>
+    /// <param name="name">The name of the satellite.</param>
+    /// <param name="cosparId">The COSPAR ID of the satellite.</param>
+    /// <param name="revolutionsAtEpoch">The number of revolutions at the epoch.</param>
+    /// <param name="classification">The classification of the satellite (default is 'U' for unclassified).</param>
+    /// <param name="firstDerivativeMeanMotion">
+    /// The first derivative of the mean motion (default is 0.0).
+    /// </param>
+    /// <param name="secondDerivativeMeanMotion">
+    /// The second derivative of the mean motion (default is 0.0).
+    /// </param>
+    /// <param name="bstarDragTerm">
+    /// The BSTAR drag term, representing atmospheric drag (default is 0.0001).
+    /// </param>
+    /// <param name="tol">
+    /// The tolerance for the fitting process (default is 1E-03).
+    /// </param>
+    /// <param name="maxIterations">
+    /// The maximum number of iterations for the fitting process (default is 15).
+    /// </param>
+    /// <returns>
+    /// A TLE object representing the orbital parameters in Two-Line Element format.
+    /// </returns>
+    public TLE ToTLE(ushort noradId, string name, string cosparId, ushort revolutionsAtEpoch, char classification = 'U',
+        double firstDerivativeMeanMotion = 0.0,
+        double secondDerivativeMeanMotion = 0.0, double bstarDragTerm = 0.0001, double tol = 1E-03, ushort maxIterations = 15)
     {
-        var keplerianElements = this.ToKeplerianElements();
-        var a = keplerianElements.SemiMajorAxis();
-        var e = keplerianElements.Eccentricity();
-        var i = keplerianElements.Inclination();
-        var o = keplerianElements.AscendingNode();
-        var w = keplerianElements.ArgumentOfPeriapsis();
-        var m = keplerianElements.MeanAnomaly();
-        var n = keplerianElements.MeanMotion();
+        TLEFitter.FitTleFromStateVector(this, noradId, name, cosparId, revolutionsAtEpoch, tol, maxIterations);
 
-        return TLE.Create(keplerianElements,name, noradId,cosparId,revolutionsAtEpoch,classification,bstarDragTerm,firstDerivativeMeanMotion,secondDerivativeMeanMotion);
+        return TLE.Create(this, name, noradId, cosparId, revolutionsAtEpoch, classification, bstarDragTerm, firstDerivativeMeanMotion, secondDerivativeMeanMotion);
     }
 
     #region Operators

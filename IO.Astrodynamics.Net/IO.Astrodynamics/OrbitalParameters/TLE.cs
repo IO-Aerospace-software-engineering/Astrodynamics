@@ -61,7 +61,6 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
     /// <param name="name">Line 1 - TLE Name</param>
     /// <param name="line1">the first line</param>
     /// <param name="line2">the second line</param>
-    /// <exception cref="ArgumentNullException">Thrown when the frame is null.</exception>
     /// <exception cref="ArgumentException">Thrown when any of the lines are null or empty.</exception>
     public TLE(string name, string line1, string line2) : this(ParserTLE.parseTle(line1, line2, name))
     {
@@ -73,14 +72,15 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
         Name = name;
     }
 
-    public static TLE Create(KeplerianElements kep, string name, int noradId, string cosparId, ushort revolutionsAtEpoch, char classification = 'U', double bstar = 0.0001,
+    public static TLE Create(OrbitalParameters orbitalParams, string name, ushort noradId, string cosparId, ushort revolutionsAtEpoch, char classification = 'U',
+        double bstar = 0.0001,
         double nDot = 0.0,
         double nDDot = 0.0, ushort elementSetNumber = 9999)
     {
-        if (kep == null) throw new ArgumentNullException(nameof(kep));
+        if (orbitalParams == null) throw new ArgumentNullException(nameof(orbitalParams));
         if (name == null) throw new ArgumentNullException(nameof(name));
         if (string.IsNullOrWhiteSpace(cosparId)) throw new ArgumentException("Value cannot be null or whitespace.", nameof(cosparId));
-        if (cosparId.Length < 6 || cosparId.Length > 8)
+        if (cosparId.Length is < 6 or > 8)
         {
             throw new ArgumentException("COSPAR Identifier must be between 6 and 8 characters long.", nameof(cosparId));
         }
@@ -90,10 +90,8 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
             throw new ArgumentOutOfRangeException(nameof(elementSetNumber), "Element set number must be between 0 and 9999.");
         }
 
-        ArgumentOutOfRangeException.ThrowIfNegative(revolutionsAtEpoch);
-        ArgumentOutOfRangeException.ThrowIfNegative(noradId);
-
         // 1. Convert elements to TLE units
+        var kep = orbitalParams.ToKeplerianElements();
         double iDeg = kep.I * Constants.Rad2Deg;
         double raanDeg = kep.RAAN * Constants.Rad2Deg;
         double argpDeg = kep.AOP * Constants.Rad2Deg;
@@ -241,12 +239,6 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
     public override StateVector ToStateVector()
     {
         return ToStateVector(Epoch);
-    }
-
-    public static Time GetEpoch(string line1, string line2, string line3)
-    {
-        var tle = ParserTLE.parseTle(line2, line3, line1);
-        return new Time(new EpochTime(tle.getEpochYear(), tle.getEpochDay()).toDateTime(), TimeFrame.UTCFrame);
     }
 
     /// <summary>
