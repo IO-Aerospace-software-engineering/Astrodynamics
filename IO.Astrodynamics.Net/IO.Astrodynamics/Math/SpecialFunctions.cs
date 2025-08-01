@@ -36,5 +36,30 @@ namespace IO.Astrodynamics.Math
             }
             return sum;
         }
+        
+        /// <summary>
+        /// Normalizes an angle to the range [0, 2π).
+        /// This method ensures that the angle is always non-negative and within the specified range.
+        /// If the input angle is negative, it adds 2π to bring it into the desired range.
+        /// </summary>
+        /// <param name="angle"></param>
+        /// <returns></returns>
+        public static double NormalizeAngle(double angle)
+        {
+            angle %= Constants._2PI;
+            if (angle < 0)
+                angle += Constants._2PI;
+            return angle;
+        }
+        
+        public static double NormalizeAngleDifference(double angleDiff)
+        {
+            angleDiff %= (Constants._2PI);
+            if (angleDiff > Constants.PI)
+                angleDiff -= 2 * Constants.PI;
+            else if (angleDiff < -Constants.PI)
+                angleDiff += 2 * Constants.PI;
+            return angleDiff;
+        }
     }
 }

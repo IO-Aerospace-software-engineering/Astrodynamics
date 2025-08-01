@@ -32,6 +32,8 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// </summary>
     public Frame Frame { get; }
 
+    private TLEMeanElementsConverter _tleMeanElementsConverter;
+
     //Data used for caching
     private Vector3? _eccentricVector;
     private Vector3? _specificAngularMomentum;
@@ -78,6 +80,7 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
         Observer = observer ?? throw new ArgumentNullException(nameof(observer));
         Epoch = epoch;
         Frame = frame ?? throw new ArgumentNullException(nameof(frame));
+        _tleMeanElementsConverter = new TLEMeanElementsConverter();
     }
 
 
@@ -995,16 +998,17 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// <param name="maxIterations">
     /// The maximum number of iterations for the fitting process (default is 15).
     /// </param>
+    /// <param name="elementSetNumber">Element set number (default is 9999)</param>
     /// <returns>
     /// A TLE object representing the orbital parameters in Two-Line Element format.
     /// </returns>
     public TLE ToTLE(ushort noradId, string name, string cosparId, ushort revolutionsAtEpoch, char classification = 'U',
         double firstDerivativeMeanMotion = 0.0,
-        double secondDerivativeMeanMotion = 0.0, double bstarDragTerm = 0.0001, double tol = 1E-03, ushort maxIterations = 15)
+        double secondDerivativeMeanMotion = 0.0, double bstarDragTerm = 0.0001, double tol = 1, ushort maxIterations = 15, ushort elementSetNumber = 9999)
     {
-        TLEFitter.FitTleFromStateVector(this, noradId, name, cosparId, revolutionsAtEpoch, tol, maxIterations);
-
-        return TLE.Create(this, name, noradId, cosparId, revolutionsAtEpoch, classification, bstarDragTerm, firstDerivativeMeanMotion, secondDerivativeMeanMotion);
+        var meanElements = _tleMeanElementsConverter.Convert(this, noradId, name, cosparId, revolutionsAtEpoch, bstarDragTerm, tol, maxIterations);
+        return TLE.Create(meanElements, name, noradId, cosparId, revolutionsAtEpoch, classification, bstarDragTerm, firstDerivativeMeanMotion, secondDerivativeMeanMotion,
+            elementSetNumber);
     }
 
     #region Operators

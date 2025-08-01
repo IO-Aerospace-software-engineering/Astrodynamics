@@ -4,6 +4,7 @@ using System;
 using System.IO;
 using System.Linq;
 using IO.Astrodynamics.Coordinates;
+using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.Surface;
 using IO.Astrodynamics.TimeSystem;
@@ -145,7 +146,7 @@ public class TLETests
             "1 25544U 98067A   21021.53488036  .00016717  00000-0  10270-3 0  9054",
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703"));
     }
-    
+
     [Fact]
     public void InvalidLine1()
     {
@@ -153,7 +154,7 @@ public class TLETests
             "",
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703"));
     }
-    
+
     [Fact]
     public void InvalidLine2()
     {
@@ -161,7 +162,7 @@ public class TLETests
             "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
             ""));
     }
-    
+
     [Fact]
     public void InvalidName()
     {
@@ -208,7 +209,7 @@ public class TLETests
 
         Assert.Throws<ArgumentOutOfRangeException>(() => TLE.Create(kep, name, noradId, cosparId, revolutionsAtEpoch, 'U', 0.0001, 0.0, 0.0, 10000));
     }
-    
+
     [Fact]
     public void Create_InvalidKeplerianElements_ThrowsNullArgumentException()
     {
@@ -219,7 +220,7 @@ public class TLETests
 
         Assert.Throws<ArgumentNullException>(() => TLE.Create(null, name, noradId, cosparId, revolutionsAtEpoch, 'U', 0.0001, 0.0, 0.0, 10000));
     }
-    
+
     [Fact]
     public void Create_InvalidName_ThrowsNullArgumentException()
     {
@@ -230,5 +231,25 @@ public class TLETests
         ushort revolutionsAtEpoch = 904;
 
         Assert.Throws<ArgumentOutOfRangeException>(() => TLE.Create(kep, name, noradId, cosparId, revolutionsAtEpoch, 'U', 0.0001, 0.0, 0.0, 10000));
+    }
+
+    [Fact]
+    public void ToTLE_ValidOrbit_ReturnsValidTLE()
+    {
+        var epoch = new TimeSystem.Time(new DateTime(2024, 1, 1), TimeFrame.UTCFrame);
+        var sv = new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 8000.0, 0.0), TestHelpers.EarthAtJ2000, epoch, Frames.Frame.ICRF);
+        var tle = sv.ToTLE(25666, "TestSatellite", "98067A", 0, 'U', 0.0001, 0.0, 0.0, 1);
+        Assert.NotNull(tle);
+        Assert.Equal("TestSatellite", tle.Name);
+        var computedSV = tle.ToStateVector();
+        Assert.Equal(sv.Position.X, computedSV.Position.X, (x, y) => System.Math.Abs(x - y) < 1);
+        Assert.Equal(sv.Position.Y, computedSV.Position.Y, (x, y) => System.Math.Abs(x - y) < 2);
+        Assert.Equal(sv.Position.Z, computedSV.Position.Z, (x, y) => System.Math.Abs(x - y) < 6);
+        Assert.Equal(sv.Velocity.X, computedSV.Velocity.X, (x, y) => System.Math.Abs(x - y) < 1e-2);
+        Assert.Equal(sv.Velocity.Y, computedSV.Velocity.Y, (x, y) => System.Math.Abs(x - y) < 1e-3);
+        Assert.Equal(sv.Velocity.Z, computedSV.Velocity.Z, (x, y) => System.Math.Abs(x - y) < 1e-3);
+        Assert.Equal(sv.Epoch.TimeSpanFromJ2000().TotalSeconds, computedSV.Epoch.TimeSpanFromJ2000().TotalSeconds, 3);
+        Assert.Equal(sv.Frame.Name, computedSV.Frame.Name);
+        Assert.Equal(sv.Observer.NaifId, computedSV.Observer.NaifId);
     }
 }

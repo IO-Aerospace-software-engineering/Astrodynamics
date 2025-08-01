@@ -118,11 +118,11 @@ public class NewtonRaphson
     /// <param name="a"></param>
     /// <param name="b"></param>
     /// <returns></returns>
-    internal static double[] SolveLinearSystem(double[,] a, double[] b)
+    private static double[] SolveLinearSystem(double[,] a, double[] b)
     {
         var matrix = MathNet.Numerics.LinearAlgebra.Matrix<double>.Build.DenseOfArray(a);
         var vector = MathNet.Numerics.LinearAlgebra.Vector<double>.Build.DenseOfArray(b);
-        var solution = matrix.Solve(vector);
+        var solution = matrix.Svd(true).Solve(vector);
         return solution.ToArray();
     }
 }
