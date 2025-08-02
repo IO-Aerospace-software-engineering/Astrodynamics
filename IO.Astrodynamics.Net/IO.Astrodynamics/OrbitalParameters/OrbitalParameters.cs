@@ -32,7 +32,7 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// </summary>
     public Frame Frame { get; }
 
-    private MeanElementsConverter _meanElementsConverter;
+    private static readonly MeanElementsConverter _sharedMeanElementsConverter = new();
 
     //Data used for caching
     private Vector3? _eccentricVector;
@@ -80,7 +80,6 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
         Observer = observer ?? throw new ArgumentNullException(nameof(observer));
         Epoch = epoch;
         Frame = frame ?? throw new ArgumentNullException(nameof(frame));
-        _meanElementsConverter = new MeanElementsConverter();
     }
 
 
@@ -996,16 +995,16 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     public TLE.TLE ToTLE(TLE.Configuration config)
     {
         ArgumentNullException.ThrowIfNull(config);
-        var meanElements = _meanElementsConverter.Convert(this, config.NoradId, 
-            config.Name, config.CosparId, config.RevolutionsAtEpoch, 
+        var meanElements = _sharedMeanElementsConverter.Convert(this, config.NoradId,
+            config.Name, config.CosparId, config.RevolutionsAtEpoch,
             config.BstarDragTerm, config.Tolerance, config.MaxIterations);
-    
-        return TLE.TLE.Create(meanElements, config.Name, config.NoradId, 
-            config.CosparId, config.RevolutionsAtEpoch, config.Classification, 
-            config.BstarDragTerm, config.FirstDerivativeMeanMotion, 
+
+        return TLE.TLE.Create(meanElements, config.Name, config.NoradId,
+            config.CosparId, config.RevolutionsAtEpoch, config.Classification,
+            config.BstarDragTerm, config.FirstDerivativeMeanMotion,
             config.SecondDerivativeMeanMotion, config.ElementSetNumber);
     }
-    
+
     #region Operators
 
     public override bool Equals(object obj)

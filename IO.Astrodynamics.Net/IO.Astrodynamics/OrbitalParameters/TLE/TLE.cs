@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Text;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.Math;
@@ -117,15 +118,52 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
         string nDDotStr = FormatTleExponent(nDDot, 5);
         string bstarStr = FormatTleExponent(bstar, 5);
 
-        // 5. Line 1
-        string line1 = $"1 {noradId:00000}{(char)classification} {cosparId,-8} {epochStr} {nDotStr} {nDDotStr} {bstarStr} 0 {elementSetNumber,4}";
-        line1 += ComputeTleChecksum(line1);
+        // StringBuilder pré-dimensionné pour éviter les réallocations
+        var line1Builder = new StringBuilder(69);
+        var line2Builder = new StringBuilder(69);
+        
+        // Construction Line 1 sans allocations intermédiaires
+        line1Builder.Append("1 ")
+            .Append(noradId.ToString("00000"))
+            .Append((char)classification)
+            .Append(' ')
+            .Append(cosparId.PadRight(8))
+            .Append(' ')
+            .Append(epochStr)
+            .Append(' ')
+            .Append(nDotStr)
+            .Append(' ')
+            .Append(nDDotStr)
+            .Append(' ')
+            .Append(bstarStr)
+            .Append(" 0 ")
+            .Append(elementSetNumber.ToString().PadLeft(4));
+    
+        // Calculer checksum sur la string actuelle
+        string line1Temp = line1Builder.ToString();
+        line1Builder.Append(ComputeTleChecksum(line1Temp));
 
-        // 6. Line 2
-        string line2 = $"2 {noradId:00000} {iDeg,8:0.0000} {raanDeg,8:0.0000} {eStr} {argpDeg,8:0.0000} {mDeg,8:0.0000} {meanMotion,11:0.00000000}{revolutionsAtEpoch,5}";
-        line2 += ComputeTleChecksum(line2);
+        // Construction Line 2
+        line2Builder.Append("2 ")
+            .Append(noradId.ToString("00000"))
+            .Append(' ')
+            .Append(iDeg.ToString("0.0000").PadLeft(8))
+            .Append(' ')
+            .Append(raanDeg.ToString("0.0000").PadLeft(8))
+            .Append(' ')
+            .Append(eStr)
+            .Append(' ')
+            .Append(argpDeg.ToString("0.0000").PadLeft(8))
+            .Append(' ')
+            .Append(mDeg.ToString("0.0000").PadLeft(8))
+            .Append(' ')
+            .Append(meanMotion.ToString("0.00000000").PadLeft(11))
+            .Append(revolutionsAtEpoch.ToString().PadLeft(5));
+    
+        string line2Temp = line2Builder.ToString();
+        line2Builder.Append(ComputeTleChecksum(line2Temp));
 
-        return new TLE(name, line1, line2);
+        return new TLE(name, line1Builder.ToString(), line2Builder.ToString());
 
         // Helper for TLE scientific notation (e.g.  34123-4)
         static string FormatTleExponent(double value, int width)
