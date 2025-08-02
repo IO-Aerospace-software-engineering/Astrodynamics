@@ -2,13 +2,12 @@
 
 using System;
 using System.IO;
-using System.Linq;
 using IO.Astrodynamics.Coordinates;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
+using IO.Astrodynamics.OrbitalParameters.TLE;
 using IO.Astrodynamics.Surface;
 using IO.Astrodynamics.TimeSystem;
-using Microsoft.Diagnostics.Tracing.Parsers.MicrosoftWindowsWPF;
 using Xunit;
 
 namespace IO.Astrodynamics.Tests.OrbitalParameters;
@@ -111,8 +110,6 @@ public class TLETests
         //Delta relative to observation from skyfield
         double deltaRASkyFieldObs = System.Math.Abs(raSkyField - raObs);
         double deltaDecSkyFieldObs = System.Math.Abs(decSkyField - decObs);
-        double deltaIO_SkyField_RA = System.Math.Abs(deltaRAObs - deltaRASkyFieldObs);
-        double deltaIO_SkyField_DEC = System.Math.Abs(deltaDecObs - deltaDecSkyFieldObs);
         Assert.True(deltaRAObs < deltaRASkyFieldObs);
         Assert.True(deltaDecObs < deltaDecSkyFieldObs);
     }
@@ -179,7 +176,7 @@ public class TLETests
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
         var kep = tle.ToKeplerianElements();
 
-        var newtle = TLE.Create(kep, "ISS", 25544, "98067A", 2570, 'U', 0.0010270, 0.00016717, elementSetNumber: 905);
+        var newtle = TLE.Create(kep, "ISS", 25544, "98067A", 2570, Classification.Unclassified, 0.0010270, 0.00016717, elementSetNumber: 905);
         Assert.Equal(tle.Name, newtle.Name);
         Assert.Equal(tle.Line1, newtle.Line1);
         Assert.Equal(tle.Line2, newtle.Line2);
@@ -207,7 +204,7 @@ public class TLETests
         string cosparId = "98067A";
         ushort revolutionsAtEpoch = 904;
 
-        Assert.Throws<ArgumentOutOfRangeException>(() => TLE.Create(kep, name, noradId, cosparId, revolutionsAtEpoch, 'U', 0.0001, 0.0, 0.0, 10000));
+        Assert.Throws<ArgumentOutOfRangeException>(() => TLE.Create(kep, name, noradId, cosparId, revolutionsAtEpoch, Classification.Unclassified, 0.0001, 0.0, 0.0, 10000));
     }
 
     [Fact]
@@ -218,7 +215,7 @@ public class TLETests
         string cosparId = "98067A";
         ushort revolutionsAtEpoch = 904;
 
-        Assert.Throws<ArgumentNullException>(() => TLE.Create(null, name, noradId, cosparId, revolutionsAtEpoch, 'U', 0.0001, 0.0, 0.0, 10000));
+        Assert.Throws<ArgumentNullException>(() => TLE.Create(null, name, noradId, cosparId, revolutionsAtEpoch, Classification.Unclassified, 0.0001, 0.0, 0.0, 10000));
     }
 
     [Fact]
@@ -230,7 +227,7 @@ public class TLETests
         string cosparId = "98067A";
         ushort revolutionsAtEpoch = 904;
 
-        Assert.Throws<ArgumentOutOfRangeException>(() => TLE.Create(kep, name, noradId, cosparId, revolutionsAtEpoch, 'U', 0.0001, 0.0, 0.0, 10000));
+        Assert.Throws<ArgumentOutOfRangeException>(() => TLE.Create(kep, name, noradId, cosparId, revolutionsAtEpoch, Classification.Unclassified, 0.0001, 0.0, 0.0, 10000));
     }
 
     [Fact]
@@ -238,7 +235,8 @@ public class TLETests
     {
         var epoch = new TimeSystem.Time(new DateTime(2024, 1, 1), TimeFrame.UTCFrame);
         var sv = new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 8000.0, 0.0), TestHelpers.EarthAtJ2000, epoch, Frames.Frame.ICRF);
-        var tle = sv.ToTLE(25666, "TestSatellite", "98067A", 0, 'U', 0.0001, 0.0, 0.0, 1);
+        var config = new Astrodynamics.OrbitalParameters.TLE.Configuration(25666, "TestSatellite", "98067A");
+        var tle = sv.ToTLE(config);
         Assert.NotNull(tle);
         Assert.Equal("TestSatellite", tle.Name);
         var computedSV = tle.ToStateVector();

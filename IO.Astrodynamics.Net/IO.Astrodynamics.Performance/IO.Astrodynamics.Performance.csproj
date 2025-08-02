@@ -87,6 +87,10 @@
       <Content Update="Data\SolarSystem\latest_leapseconds.tls">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </Content>
+      <Content Include="..\..\..\..\Downloads\earth_latest_high_prec.bpc">
+        <Link>Data/SolarSystem/earth_latest_high_prec.bpc</Link>
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </Content>
     </ItemGroup>
 
     <ItemGroup>
@@ -117,9 +121,6 @@
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </None>
       <None Update="Data\SolarSystem\earth_fixed.tf">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </None>
-      <None Update="Data\SolarSystem\earth_latest_high_prec.bpc">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </None>
       <None Update="Data\SolarSystem\earth_topo_201023.tf">
