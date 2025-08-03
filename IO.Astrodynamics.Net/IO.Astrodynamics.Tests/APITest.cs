@@ -108,7 +108,7 @@ public class APITest
             RelationnalOperator.Greater, 400000000, Aberration.None,
             TimeSpan.FromSeconds(86400.0)));
     }
-    
+
     [Fact]
     public void FindWindowsOnDistanceConstraintFromIdsProxy()
     {
@@ -165,7 +165,7 @@ public class APITest
             ShapeType.Ellipsoid, null, ShapeType.Ellipsoid, OccultationType.Any, Aberration.LT,
             TimeSpan.FromSeconds(3600.0)));
     }
-    
+
     [Fact]
     public void FindWindowsOnOccultationConstraintFromIDs()
     {
@@ -245,6 +245,7 @@ public class APITest
             System.Math.PI * 0.5 - (-0.8 * IO.Astrodynamics.Constants.Deg2Rad), 0.0, Aberration.CNS,
             TimeSpan.FromHours(4.5), null));
     }
+
     [Fact]
     public void FindWindowsOnCoordinateConstraint()
     {
@@ -257,7 +258,7 @@ public class APITest
             TestHelpers.MoonAtJ2000, site.Frame, CoordinateSystem.Rectangular, Coordinate.Z,
             RelationnalOperator.Greater,
             0.0, 0.0, Aberration.None, TimeSpan.FromSeconds(60.0));
-    
+
         var windows = res as Window[] ?? res.ToArray();
         Assert.Single(windows);
         Assert.Equal("2023-02-19T14:33:08.9179878 TDB", windows[0].StartDate.ToString());
@@ -275,7 +276,7 @@ public class APITest
             TestHelpers.MoonAtJ2000, null, CoordinateSystem.Rectangular, Coordinate.Z,
             RelationnalOperator.Greater, 0.0, 0.0, Aberration.None, TimeSpan.FromSeconds(60.0)));
     }
-    
+
     [Fact]
     public void FindWindowsOnCoordinateConstraintFromIds()
     {
@@ -287,7 +288,7 @@ public class APITest
             new Window(TimeSystem.Time.CreateTDB(730036800.0), TimeSystem.Time.CreateTDB(730123200)), site.NaifId,
             TestHelpers.MoonAtJ2000.NaifId, site.Frame, CoordinateSystem.Rectangular, Coordinate.Z,
             RelationnalOperator.Greater, 0.0, 0.0, Aberration.None, TimeSpan.FromSeconds(60.0));
-    
+
         var windows = res as Window[] ?? res.ToArray();
         Assert.Single(windows);
         Assert.Equal("2023-02-19T14:33:08.9179878 TDB", windows[0].StartDate.ToString());
@@ -305,6 +306,7 @@ public class APITest
             TestHelpers.MoonAtJ2000, null, CoordinateSystem.Rectangular, Coordinate.Z,
             RelationnalOperator.Greater, 0.0, 0.0, Aberration.None, TimeSpan.FromSeconds(60.0)));
     }
+
     [Fact]
     public void FromIDs()
     {
@@ -392,8 +394,8 @@ public class APITest
             TestHelpers.EarthAtJ2000, TestHelpers.MoonAtJ2000,
             null, Aberration.LT));
     }
-    
-     [Fact]
+
+    [Fact]
     public void ReadEphemerisUTC()
     {
         var searchWindow = new Window(TimeSystem.Time.CreateUTC(0.0), TimeSystem.Time.CreateUTC(100.0));
@@ -401,11 +403,11 @@ public class APITest
             Frames.Frame.ICRF, Aberration.LT, TimeSpan.FromSeconds(10.0)).Select(x => x.ToStateVector());
 
         var stateVectors = res as StateVector[] ?? res.ToArray();
-        Assert.Equal(new Vector3(-291527956.4143643,-266751935.53610146,-76118494.37190592), stateVectors[0].Position,TestHelpers.VectorComparer);
-        Assert.Equal(new Vector3(643.6475664431179,-665.9766990302671,-301.2930723673155), stateVectors[0].Velocity,TestHelpers.VectorComparer);
+        Assert.Equal(new Vector3(-291527956.4143643, -266751935.53610146, -76118494.37190592), stateVectors[0].Position, TestHelpers.VectorComparer);
+        Assert.Equal(new Vector3(643.6475664431179, -665.9766990302671, -301.2930723673155), stateVectors[0].Velocity, TestHelpers.VectorComparer);
         Assert.Equal(PlanetsAndMoons.EARTH.NaifId, stateVectors[0].Observer.NaifId);
         Assert.Equal(Frames.Frame.ICRF, stateVectors[0].Frame);
-        Assert.Equal(0, stateVectors[0].Epoch.TimeSpanFromJ2000().TotalSeconds,6);
+        Assert.Equal(0, stateVectors[0].Epoch.TimeSpanFromJ2000().TotalSeconds, 6);
 
         Assert.Throws<ArgumentNullException>(() => API.Instance.ReadEphemeris(searchWindow, null,
             TestHelpers.MoonAtJ2000,
@@ -484,16 +486,16 @@ public class APITest
 
         //Execute scenario
         var root = Constants.OutputPath.CreateSubdirectory(scenario.Mission.Name).CreateSubdirectory(scenario.Name).CreateSubdirectory("Spacecrafts");
-        await scenario.SimulateAsync( false, false, TimeSpan.FromSeconds(1.0));
+        await scenario.SimulateAsync(false, false, TimeSpan.FromSeconds(1.0));
         var ckFile = new FileInfo(root + "/OrientationTestFile.ck");
         var clckFile = new FileInfo(root + "/ClckTestFile.tsc");
         await spacecraft.Clock.WriteAsync(clckFile);
         API.Instance.LoadKernels(clckFile);
-        
+
         spacecraft.WriteOrientation(ckFile);
         API.Instance.LoadKernels(ckFile);
         //Read spacecraft orientation
-        
+
         var res = API.Instance.ReadOrientation(window, spacecraft, TimeSpan.FromSeconds(10.0), Frames.Frame.ICRF,
             TimeSpan.FromSeconds(10.0)).ToArray();
         var resICRF = spacecraft.Frame.GetStateOrientationsToICRF().ElementAt(1).RelativeToICRF();
@@ -666,7 +668,7 @@ public class APITest
     void TransformFrame()
     {
         //Get the quaternion to transform
-        var res = API.Instance.TransformFrame(TimeSystem.Time.J2000TDB,Frames.Frame.ICRF, new Frames.Frame(PlanetsAndMoons.EARTH.Frame));
+        var res = API.Instance.TransformFrame(TimeSystem.Time.J2000TDB, Frames.Frame.ICRF, new Frames.Frame(PlanetsAndMoons.EARTH.Frame));
         Assert.Equal(0.76713121207787449, res.Rotation.W, 6);
         Assert.Equal(-1.8618836714990174E-05, res.Rotation.VectorPart.X, 6);
         Assert.Equal(8.4688405480964646E-07, res.Rotation.VectorPart.Y, 6);
@@ -675,12 +677,13 @@ public class APITest
         Assert.Equal(-2.0389347198634933E-09, res.AngularVelocity.Y, 6);
         Assert.Equal(7.2921150643333896E-05, res.AngularVelocity.Z, 6);
     }
-    
+
     [Fact]
     void TransformFrameWindows()
     {
         //Get the quaternion to transform
-        var res = API.Instance.TransformFrame(new TimeSystem.Window(TimeSystem.Time.J2000TDB,TimeSystem.Time.J2000TDB.AddDays(1.0)),Frames.Frame.ICRF, new Frames.Frame(PlanetsAndMoons.EARTH.Frame),TimeSpan.FromDays(1.0));
+        var res = API.Instance.TransformFrame(new TimeSystem.Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddDays(1.0)), Frames.Frame.ICRF,
+            new Frames.Frame(PlanetsAndMoons.EARTH.Frame), TimeSpan.FromDays(1.0));
         Assert.Equal(0.76713121207787449, res.First().Rotation.W, 6);
         Assert.Equal(-1.8618836714990174E-05, res.First().Rotation.VectorPart.X, 6);
         Assert.Equal(8.4688405480964646E-07, res.First().Rotation.VectorPart.Y, 6);
@@ -695,9 +698,9 @@ public class APITest
     {
         //Get the quaternion to transform
         Assert.Throws<ArgumentNullException>(() =>
-            API.Instance.TransformFrame(TimeSystem.Time.J2000TDB,Frames.Frame.ICRF, null));
+            API.Instance.TransformFrame(TimeSystem.Time.J2000TDB, Frames.Frame.ICRF, null));
         Assert.Throws<ArgumentNullException>(() =>
-            API.Instance.TransformFrame(TimeSystem.Time.J2000TDB,null, new Frames.Frame(PlanetsAndMoons.EARTH.Frame)));
+            API.Instance.TransformFrame(TimeSystem.Time.J2000TDB, null, new Frames.Frame(PlanetsAndMoons.EARTH.Frame)));
     }
 
     [Fact]
@@ -740,52 +743,44 @@ public class APITest
     [Fact]
     void UnloadKernels()
     {
-        
-            API.Instance.LoadKernels(new FileInfo(@"Data/UserDataTest/scn100/Sites/MySite/Ephemeris/MySite.spk"));
-            API.Instance.LoadKernels(new FileInfo(@"Data/UserDataTest/scn100/Spacecrafts/DRAGONFLY32/Ephemeris/DRAGONFLY32.spk"));
-            API.Instance.LoadKernels(new DirectoryInfo(@"Data/UserDataTest/scn100"));
-            API.Instance.UnloadKernels(new FileInfo(@"Data/UserDataTest/scn100/Spacecrafts/DRAGONFLY32/Ephemeris/DRAGONFLY32.spk"));
-            var kernels = API.Instance.GetLoadedKernels().ToArray();
-            Assert.Equal(1, @kernels.Count(x => x.FullName.Contains("scn100")));
-        
+        API.Instance.LoadKernels(new FileInfo(@"Data/UserDataTest/scn100/Sites/MySite/Ephemeris/MySite.spk"));
+        API.Instance.LoadKernels(new FileInfo(@"Data/UserDataTest/scn100/Spacecrafts/DRAGONFLY32/Ephemeris/DRAGONFLY32.spk"));
+        API.Instance.LoadKernels(new DirectoryInfo(@"Data/UserDataTest/scn100"));
+        API.Instance.UnloadKernels(new FileInfo(@"Data/UserDataTest/scn100/Spacecrafts/DRAGONFLY32/Ephemeris/DRAGONFLY32.spk"));
+        var kernels = API.Instance.GetLoadedKernels().ToArray();
+        Assert.Equal(1, @kernels.Count(x => x.FullName.Contains("scn100")));
     }
 
     [Fact]
     void UnloadKernels2()
     {
-        
-            API.Instance.LoadKernels(new FileInfo(@"Data/UserDataTest/scn100/Spacecrafts/DRAGONFLY32/Clocks/DRAGONFLY32.tsc"));
+        API.Instance.LoadKernels(new FileInfo(@"Data/UserDataTest/scn100/Spacecrafts/DRAGONFLY32/Clocks/DRAGONFLY32.tsc"));
 
-            API.Instance.UnloadKernels(new FileInfo(@"Data/UserDataTest/scn100/Spacecrafts/DRAGONFLY32/Clocks/DRAGONFLY32.tsc"));
-            var kernels = API.Instance.GetLoadedKernels().ToArray();
-            Assert.Equal(0, kernels.Count(x => x.FullName.Contains("DRAGONFLY32.tsc")));
-        
+        API.Instance.UnloadKernels(new FileInfo(@"Data/UserDataTest/scn100/Spacecrafts/DRAGONFLY32/Clocks/DRAGONFLY32.tsc"));
+        var kernels = API.Instance.GetLoadedKernels().ToArray();
+        Assert.Equal(0, kernels.Count(x => x.FullName.Contains("DRAGONFLY32.tsc")));
     }
 
     [Fact]
     void LoadKernels()
     {
-        
-            API.Instance.LoadKernels(new FileInfo(@"Data/UserDataTest/scn100/Sites/MySite/Ephemeris/MySite.spk"));
-            API.Instance.LoadKernels(new FileInfo(@"Data/UserDataTest/scn100/Spacecrafts/DRAGONFLY32/Ephemeris/DRAGONFLY32.spk"));
-            API.Instance.LoadKernels(new DirectoryInfo(@"Data/UserDataTest/scn100"));
+        API.Instance.LoadKernels(new FileInfo(@"Data/UserDataTest/scn100/Sites/MySite/Ephemeris/MySite.spk"));
+        API.Instance.LoadKernels(new FileInfo(@"Data/UserDataTest/scn100/Spacecrafts/DRAGONFLY32/Ephemeris/DRAGONFLY32.spk"));
+        API.Instance.LoadKernels(new DirectoryInfo(@"Data/UserDataTest/scn100"));
 
-            var kernels = API.Instance.GetLoadedKernels().ToArray();
-            Assert.Equal(1, @kernels.Count(x => x.FullName.Contains("scn100")));
-        
+        var kernels = API.Instance.GetLoadedKernels().ToArray();
+        Assert.Equal(1, @kernels.Count(x => x.FullName.Contains("scn100")));
     }
 
     [Fact]
     void LoadKernels2()
     {
-      
-            API.Instance.LoadKernels(new DirectoryInfo(@"Data/UserDataTest/scn100"));
-            API.Instance.LoadKernels(new FileInfo(@"Data/UserDataTest/scn100/Spacecrafts/DRAGONFLY32/Ephemeris/DRAGONFLY32.spk"));
-            API.Instance.LoadKernels(new FileInfo(@"Data/UserDataTest/scn100/Sites/MySite/Ephemeris/MySite.spk"));
+        API.Instance.LoadKernels(new DirectoryInfo(@"Data/UserDataTest/scn100"));
+        API.Instance.LoadKernels(new FileInfo(@"Data/UserDataTest/scn100/Spacecrafts/DRAGONFLY32/Ephemeris/DRAGONFLY32.spk"));
+        API.Instance.LoadKernels(new FileInfo(@"Data/UserDataTest/scn100/Sites/MySite/Ephemeris/MySite.spk"));
 
-            var kernels = API.Instance.GetLoadedKernels().ToArray();
-            Assert.Equal(1, @kernels.Count(x => x.FullName.Contains("scn100")));
-        
+        var kernels = API.Instance.GetLoadedKernels().ToArray();
+        Assert.Equal(1, @kernels.Count(x => x.FullName.Contains("scn100")));
     }
 
     [Fact]
@@ -819,6 +814,15 @@ public class APITest
         Assert.Equal(8, tle.W);
         Assert.Equal(9, tle.O);
         Assert.Equal(10, tle.M);
+    }
+
+    [Fact]
+    void ConvertTLE()
+    {
+        var res = API.Instance.ConvertTleToStateVector("ISS",
+            "1 25544U 98067A   24001.00000000  .00016717  00000-0  10270-3 0  9054",
+            "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703", new TimeSystem.Time(2024, 1, 1, frame: TimeFrame.UTCFrame));
+        
     }
 
     [Fact]

@@ -78,6 +78,24 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
         Name = name;
     }
 
+    
+    /// <summary>
+    /// Creates a new TLE from orbital parameters and metadata.
+    /// </summary>
+    /// <param name="orbitalParams">The orbital parameters to convert to TLE format.</param>
+    /// <param name="name">The name/title of the satellite or object.</param>
+    /// <param name="noradId">The NORAD catalog number (5 digits).</param>
+    /// <param name="cosparId">The COSPAR international designator (6-8 characters).</param>
+    /// <param name="revolutionsAtEpoch">The revolution number at epoch.</param>
+    /// <param name="classification">The security classification of the object (default: Unclassified).</param>
+    /// <param name="bstar">The ballistic coefficient (drag term) in units of 1/earth radii (default: 0.0001).</param>
+    /// <param name="nDot">The first derivative of mean motion in revolutions/day² (default: 0.0).</param>
+    /// <param name="nDDot">The second derivative of mean motion in revolutions/day³ (default: 0.0).</param>
+    /// <param name="elementSetNumber">The element set number (default: 9999).</param>
+    /// <returns>A new TLE instance constructed from the provided parameters.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when orbitalParams or name is null.</exception>
+    /// <exception cref="ArgumentException">Thrown when cosparId is null, whitespace, or not between 6-8 characters.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when elementSetNumber exceeds the maximum allowed value.</exception>
     public static TLE Create(OrbitalParameters orbitalParams, string name, ushort noradId, string cosparId, ushort revolutionsAtEpoch,
         Classification classification = Classification.Unclassified, double bstar = 0.0001, double nDot = 0.0, double nDDot = 0.0, ushort elementSetNumber = MAX_ELEMENT_SET_NUMBER)
     {
@@ -121,7 +139,7 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
         // StringBuilder pré-dimensionné pour éviter les réallocations
         var line1Builder = new StringBuilder(69);
         var line2Builder = new StringBuilder(69);
-        
+
         // Construction Line 1 sans allocations intermédiaires
         line1Builder.Append("1 ")
             .Append(noradId.ToString("00000"))
@@ -138,7 +156,7 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
             .Append(bstarStr)
             .Append(" 0 ")
             .Append(elementSetNumber.ToString().PadLeft(4));
-    
+
         // Calculer checksum sur la string actuelle
         string line1Temp = line1Builder.ToString();
         line1Builder.Append(ComputeTleChecksum(line1Temp));
@@ -159,44 +177,44 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
             .Append(' ')
             .Append(meanMotion.ToString("0.00000000").PadLeft(11))
             .Append(revolutionsAtEpoch.ToString().PadLeft(5));
-    
+
         string line2Temp = line2Builder.ToString();
         line2Builder.Append(ComputeTleChecksum(line2Temp));
 
         return new TLE(name, line1Builder.ToString(), line2Builder.ToString());
+    }
 
-        // Helper for TLE scientific notation (e.g.  34123-4)
-        static string FormatTleExponent(double value, int width)
+    // Helper for TLE scientific notation (e.g.  34123-4)
+    static string FormatTleExponent(double value, int width)
+    {
+        if (System.Math.Abs(value) < 1e-15)
+            return ' ' + new string('0', width) + "-0";
+
+        var scientificNotation = value.ToString("0.0000E+0", CultureInfo.InvariantCulture);
+        var parts = scientificNotation.Split('E');
+        var mantissa = parts[0].Replace(".", "").PadLeft(width, '0');
+        var exponent = parts[1];
+        var sign = value < 0 ? '-' : ' ';
+
+        return $"{sign}{mantissa}{exponent}";
+    }
+
+    // TLE checksum: sum of all digits + 1 for each '-' (mod 10)
+    private static int ComputeTleChecksum(string line)
+    {
+        if (line.Length != CHECKSUM_LENGTH)
         {
-            if (System.Math.Abs(value) < 1e-15)
-                return ' ' + new string('0', width) + "-0";
-
-            var scientificNotation = value.ToString("0.0000E+0", CultureInfo.InvariantCulture);
-            var parts = scientificNotation.Split('E');
-            var mantissa = parts[0].Replace(".", "").PadLeft(width, '0');
-            var exponent = parts[1];
-            var sign = value < 0 ? '-' : ' ';
-
-            return $"{sign}{mantissa}{exponent}";
+            throw new ArgumentException("TLE line must be exactly 68 characters long.", nameof(line));
         }
 
-        // TLE checksum: sum of all digits + 1 for each '-' (mod 10)
-        static int ComputeTleChecksum(string line)
+        int sum = 0;
+        foreach (char c in line.Take(CHECKSUM_LENGTH))
         {
-            if (line.Length != CHECKSUM_LENGTH)
-            {
-                throw new ArgumentException("TLE line must be exactly 68 characters long.", nameof(line));
-            }
-
-            int sum = 0;
-            foreach (char c in line.Take(CHECKSUM_LENGTH))
-            {
-                if (char.IsDigit(c)) sum += c - '0';
-                if (c == '-') sum += 1;
-            }
-
-            return sum % 10;
+            if (char.IsDigit(c)) sum += c - '0';
+            if (c == '-') sum += 1;
         }
+
+        return sum % 10;
     }
 
     private TLE(Tle tle) : this(tle, new Time(new EpochTime(tle.getEpochYear(), tle.getEpochDay()).toDateTime(), TimeFrame.UTCFrame))
