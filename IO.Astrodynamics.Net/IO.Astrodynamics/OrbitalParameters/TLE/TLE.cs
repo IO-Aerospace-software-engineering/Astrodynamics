@@ -178,7 +178,7 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
         // Parse line 1 for additional parameters
         FirstDerivationMeanMotion = ParseTleDouble(line1.Substring(33, 10));
         SecondDerivativeMeanMotion = ParseTleExponent(line1.Substring(44, 8));
-        BalisticCoefficient = ParseTleExponent(line1.Substring(53, 8));
+        BallisticCoefficient = ParseTleExponent(line1.Substring(53, 8));
     }
 
     /// <summary>
