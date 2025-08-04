@@ -6,9 +6,7 @@ using System.Linq;
 using System.Text;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Frames;
-using IO.Astrodynamics.Math;
 using IO.Astrodynamics.TimeSystem;
-using IO.Astrodynamics.TimeSystem.Frames;
 
 namespace IO.Astrodynamics.OrbitalParameters.TLE;
 
@@ -17,7 +15,6 @@ namespace IO.Astrodynamics.OrbitalParameters.TLE;
 /// </summary>
 public class TLE : OrbitalParameters, IEquatable<TLE>
 {
-    private const int CHECKSUM_LENGTH = 68;
     private const double MAX_ECCENTRICITY = 0.9999999;
     private const int MAX_ELEMENT_SET_NUMBER = 9999;
     private KeplerianElements _meanKeplerianElements;
@@ -490,11 +487,9 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
     /// making it easier to perform various analyses such as predicting the satellite's position,
     /// calculating orbital maneuvers, and understanding the dynamics of the orbit.
     /// </remarks>
-    /// <seealso cref="ToStateVector"/>
+    /// <seealso cref="ToStateVector(IO.Astrodynamics.TimeSystem.Time)"/>
     /// <seealso cref="KeplerianElements"/>
-    /// <seealso cref="OrbitalParameters.ToKeplerianElements"/>
-    /// <seealso cref="API.Instance.ConvertTleToStateVector(string, string, string, Time)"/>
-    /// <seealso cref="StateVector.ToKeplerianElements"/>
+    /// <seealso cref="OrbitalParameters.ToKeplerianElements(IO.Astrodynamics.TimeSystem.Time)"/>
     /// <seealso cref="Frame.ICRF"/>
     /// <seealso cref="StateVector.ToFrame(Frame)"/>
     /// <seealso cref="StateVector.ToStateVector()"/>
@@ -519,9 +514,6 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
     /// <seealso cref="Constants.Rad2Deg"/>
     /// <seealso cref="Constants.Deg2Rad"/>
     /// <seealso cref="Constants._2PI"/>
-    /// <seealso cref="Constants.GM"/>
-    /// <seealso cref="Constants.EarthRadius"/>
-    /// <seealso cref="Constants.EarthGravitationalParameter"/> 
     /// </summary>
     /// <returns></returns>
     public override KeplerianElements ToKeplerianElements()
@@ -535,6 +527,27 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
         return _keplerianElements;
     }
 
+    /// <summary>
+    /// Converts the TLE to Equinoctial elements.
+    /// This method computes the Equinoctial elements from the state vector derived from the TLE.
+    /// If the Equinoctial elements have already been computed, it returns the cached value.
+    /// This is useful for performance optimization, as the conversion can be computationally expensive.
+    /// The Equinoctial elements provide an alternative representation of the orbit that is often more
+    /// convenient for certain types of orbital maneuvers and analyses.
+    /// The method first checks if the Equinoctial elements have already been computed and cached.
+    /// If they have, it returns the cached value to avoid redundant calculations.
+    /// If the Equinoctial elements have not been computed yet, it converts the TLE to a state vector
+    /// using the `ToStateVector` method, and then converts that state vector to Equinoctial elements.
+    /// This ensures that the TLE is accurately represented in the Equinoctial format,
+    /// which is essential for certain types of orbital analyses and calculations.
+    /// <remarks>
+    /// This method is particularly useful when working with TLE data, as it allows for easy
+    /// conversion to a more usable form for orbital mechanics calculations.
+    /// The Equinoctial elements provide a clear and concise representation of the orbit,
+    /// making it easier to perform various analyses such as predicting the satellite's position,
+    /// calculating orbital maneuvers, and understanding the dynamics of the orbit.
+    /// </remarks>
+    /// </summary>
     public override EquinoctialElements ToEquinoctial()
     {
         if (_equinoctial == null)
@@ -545,6 +558,17 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
         return _equinoctial;
     }
 
+    /// <summary>
+    /// Converts the TLE to mean Keplerian elements.
+    /// This method computes the mean Keplerian elements from the TLE parameters.
+    /// If the mean Keplerian elements have already been computed, it returns the cached value.
+    /// This is useful for performance optimization, as the conversion can be computationally expensive.
+    /// The mean Keplerian elements provide a standard representation of the orbit that is often used
+    /// for long-term predictions and analyses.
+    /// The method first checks if the mean Keplerian elements have already been computed and cached.
+    /// If they have, it returns the cached value to avoid redundant calculations.
+    /// </summary>
+    /// <returns></returns>
     public KeplerianElements ToMeanKeplerianElements()
     {
         if (_meanKeplerianElements == null)
