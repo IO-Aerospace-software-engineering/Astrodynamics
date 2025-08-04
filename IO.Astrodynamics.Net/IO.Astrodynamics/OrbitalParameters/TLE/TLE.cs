@@ -331,7 +331,7 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
         string line1Temp = line1Builder.ToString();
         line1Builder.Append(ComputeTleChecksum(line1Temp));
 
-        // Construction Line 2
+        // Construction Line 2 sans allocations intermédiaires
         line2Builder.Append("2 ")
             .Append(noradId.ToString("00000"))
             .Append(' ')
