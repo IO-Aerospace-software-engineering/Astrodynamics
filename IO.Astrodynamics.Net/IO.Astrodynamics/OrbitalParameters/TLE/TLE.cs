@@ -568,7 +568,11 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
     /// The method first checks if the mean Keplerian elements have already been computed and cached.
     /// If they have, it returns the cached value to avoid redundant calculations.
     /// </summary>
-    /// <returns></returns>
+    /// <returns>
+    /// A <see cref="KeplerianElements"/> object representing the mean orbital elements
+    /// (semi-major axis, eccentricity, inclination, right ascension of the ascending node,
+    /// argument of periapsis, and mean anomaly) derived from the TLE parameters at the epoch.
+    /// </returns>
     public KeplerianElements ToMeanKeplerianElements()
     {
         if (_meanKeplerianElements == null)
