@@ -306,7 +306,7 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
         string nDDotStr = FormatTleExponent(nDDot, 5);
         string bstarStr = FormatTleExponent(bstar, 5);
 
-        // StringBuilder pré-dimensionné pour éviter les réallocations
+        // Pre-sized StringBuilder to avoid reallocations
         var line1Builder = new StringBuilder(69);
         var line2Builder = new StringBuilder(69);
 
