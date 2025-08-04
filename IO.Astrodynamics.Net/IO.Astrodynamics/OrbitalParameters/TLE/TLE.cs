@@ -458,7 +458,7 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
     /// <summary>
     /// Converts the TLE to a state vector at a given date.
     /// </summary>
-    /// <param name="date"></param>
+    /// <param name="date">The epoch time at which to compute the state vector.</param>
     /// <returns>The state vector at the given epoch.</returns>
     public override StateVector ToStateVector(Time date)
     {
