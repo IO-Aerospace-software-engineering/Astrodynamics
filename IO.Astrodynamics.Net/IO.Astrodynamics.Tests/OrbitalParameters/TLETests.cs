@@ -42,7 +42,7 @@ public class TLETests
         Assert.Equal(0.68479738531249512, tle.MeanMeanAnomaly, 6);
         Assert.Equal(664419082.84759152, tle.Epoch.ToTDB().TimeSpanFromJ2000().TotalSeconds, 6);
         Assert.Equal(0.00016716999999999999, tle.FirstDerivationMeanMotion, 6);
-        Assert.Equal(0.0001027, tle.BalisticCoefficient, 6);
+        Assert.Equal(0.0001027, tle.BallisticCoefficient, 6);
         Assert.Equal(0.0, tle.SecondDerivativeMeanMotion, 6);
     }
 
@@ -510,7 +510,7 @@ public class TLETests
 
         // Test derived parameters
         Assert.True(tle.FirstDerivationMeanMotion != 0); // Should have some drag for ISS
-        Assert.True(tle.BalisticCoefficient > 0); // Should be positive
+        Assert.True(tle.BallisticCoefficient > 0); // Should be positive
         Assert.Equal(0.0, tle.SecondDerivativeMeanMotion); // Usually zero for most satellites
     }
 
