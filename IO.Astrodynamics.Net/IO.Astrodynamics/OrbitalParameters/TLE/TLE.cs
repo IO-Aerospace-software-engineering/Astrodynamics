@@ -466,20 +466,8 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
     }
 
     /// <summary>
-    /// Converts the TLE to Keplerian elements.
-    /// This method computes the Keplerian elements from the state vector derived from the TLE.
-    /// If the Keplerian elements have already been computed, it returns the cached value.
-    /// This is useful for performance optimization, as the conversion can be computationally expensive.
-    /// The Keplerian elements include parameters such as semi-major axis, eccentricity, inclination,
-    /// right ascension of the ascending node, argument of periapsis, and mean anomaly.
-    /// These parameters describe the orbit of the satellite in a standard form that is widely used in
-    /// astrodynamics and orbital mechanics.
-    /// The method first checks if the Keplerian elements have already been computed and cached.
-    /// If they have, it returns the cached value to avoid redundant calculations.
-    /// If the Keplerian elements have not been computed yet, it converts the TLE to a state vector
-    /// using the `ToStateVector` method, and then converts that state vector to Keplerian elements.
-    /// This ensures that the TLE is accurately represented in the standard Keplerian format,
-    /// which is essential for further orbital analysis and calculations.
+    /// Converts the TLE to Keplerian elements, using cached values if available.
+    /// </summary>
     /// <remarks>
     /// This method is particularly useful when working with TLE data, as it allows for easy
     /// conversion to a more usable form for orbital mechanics calculations.
