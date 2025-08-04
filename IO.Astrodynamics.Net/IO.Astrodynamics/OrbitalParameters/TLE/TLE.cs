@@ -40,7 +40,7 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
     /// It is typically a small value, indicating the amount of drag experienced by the satellite.
     /// For example, a value of 0.0001 means that the satellite experiences a drag force equivalent to 0.0001 times the gravitational force at the Earth's surface.
     /// </summary>
-    public double BalisticCoefficient { get; }
+    public double BallisticCoefficient { get; }
 
     /// <summary>
     /// Gets the first derivative of the mean motion (in revolutions per day squared).
