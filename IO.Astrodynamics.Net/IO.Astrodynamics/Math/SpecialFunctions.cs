@@ -16,9 +16,11 @@ namespace IO.Astrodynamics.Math
         /// <returns>The computed value of the hypergeometric series, accurate to within the specified tolerance.</returns>
         public static double Hypergeometric(double z, double tol)
         {
-            if (tol <= 0) {
+            if (tol <= 0)
+            {
                 throw new ArgumentOutOfRangeException(nameof(tol), "Input tol must be positive and non-zero.");
             }
+
             double sum = 1.0;
             double term = 1.0;
             double error = 1.0;
@@ -34,7 +36,38 @@ namespace IO.Astrodynamics.Math
                 term = nextTerm;
                 iteration++;
             }
+
             return sum;
+        }
+
+        /// <summary>
+        /// Normalizes an angle to the range [0, 2π).
+        /// This method ensures that the angle is always non-negative and within the specified range.
+        /// If the input angle is negative, it adds 2π to bring it into the desired range.
+        /// </summary>
+        /// <param name="angle"></param>
+        /// <returns></returns>
+        public static double NormalizeAngle(double angle)
+        {
+            angle %= Constants._2PI;
+            if (angle < 0)
+                angle += Constants._2PI;
+            return angle;
+        }
+
+        /// <summary>
+        /// Normalizes an angle difference to the range [-π, π].
+        /// </summary>
+        /// <param name="angleDiff">The angle difference to normalize, in radians.</param>
+        /// <returns>The normalized angle difference in the range [-π, π].</returns>
+        public static double NormalizeAngleDifference(double angleDiff)
+        {
+            angleDiff %= (Constants._2PI);
+            if (angleDiff > Constants.PI)
+                angleDiff -= 2 * Constants.PI;
+            else if (angleDiff < -Constants.PI)
+                angleDiff += 2 * Constants.PI;
+            return angleDiff;
         }
     }
 }

@@ -1,4 +1,6 @@
 using System;
+using System.Linq;
+using IO.Astrodynamics.OrbitalParameters;
 
 namespace IO.Astrodynamics.Math;
 
@@ -51,6 +53,33 @@ public class NewtonRaphson
         throw new Exception("Newton-Raphson method did not converge within the maximum number of iterations.");
     }
     
+    public static double[] SolveVector(
+        Func<double[], double[]> costFunc,
+        Func<double[], double[,]> jacobianFunc,
+        double[] initialGuess,
+        double tolerance = 1e-6,
+        int maxIterations = 100)
+    {
+        var x = (double[])initialGuess.Clone();
+        for (int iter = 0; iter < maxIterations; iter++)
+        {
+            double[] fx = costFunc(x);
+            double norm = System.Math.Sqrt(fx.Sum(v => v * v));
+            if (norm < tolerance)
+                return x;
+
+            double[,] J = jacobianFunc(x);
+
+            // Solve J * dx = -f(x)
+            double[] minusFx = fx.Select(v => -v).ToArray();
+            double[] dx = SolveLinearSystem(J, minusFx);
+
+            for (int k = 0; k < x.Length; k++)
+                x[k] += dx[k];
+        }
+        throw new Exception("Vector Newton-Raphson did not converge.");
+    }
+    
     public static double BoundedNewtonRaphson(Func<double, double> f, Func<double, double> df, 
         double x0, double min, double max, double tolerance, int maxIterations)
     {
@@ -81,5 +110,19 @@ public class NewtonRaphson
         }
     
         throw new Exception("Failed to converge within maximum iterations");
+    }
+    
+    /// <summary>
+    /// Solves the linear system of equations A * x = b for x, where A is a matrix and b is a vector.
+    /// </summary>
+    /// <param name="a">The coefficient matrix A of size (n x n).</param>
+    /// <param name="b">The right-hand side vector b of length n.</param>
+    /// <returns>An array containing the solution vector x.</returns>
+    private static double[] SolveLinearSystem(double[,] a, double[] b)
+    {
+        var matrix = MathNet.Numerics.LinearAlgebra.Matrix<double>.Build.DenseOfArray(a);
+        var vector = MathNet.Numerics.LinearAlgebra.Vector<double>.Build.DenseOfArray(b);
+        var solution = matrix.Svd(true).Solve(vector);
+        return solution.ToArray();
     }
 }

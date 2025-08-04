@@ -76,27 +76,12 @@ namespace IO.Astrodynamics.OrbitalParameters
                 throw new ArgumentException("Inclination must be in range [-PI,PI] ");
             }
 
-            if (rigthAscendingNode is < 0.0 or > Constants._2PI)
-            {
-                throw new ArgumentException("Rigth ascending node must be in range [0.0,2*PI] ");
-            }
-
-            if (argumentOfPeriapsis is < 0.0 or > Constants._2PI)
-            {
-                throw new ArgumentException("Argument of periapsis must be in range [0.0,2*PI] ");
-            }
-
-            if (meanAnomaly is < 0.0 or > Constants._2PI)
-            {
-                throw new ArgumentException("Mean anomaly must be in range [0.0,2*PI] ");
-            }
-
             A = semiMajorAxis;
             E = eccentricity;
             I = inclination;
-            RAAN = rigthAscendingNode;
-            AOP = argumentOfPeriapsis;
-            M = meanAnomaly;
+            RAAN = SpecialFunctions.NormalizeAngle(rigthAscendingNode);
+            AOP = SpecialFunctions.NormalizeAngle(argumentOfPeriapsis);
+            M = SpecialFunctions.NormalizeAngle(meanAnomaly);
             _period = period;
             _trueAnomaly = trueAnomaly;
             _perigeeRadius = perigeeRadius;
@@ -164,6 +149,8 @@ namespace IO.Astrodynamics.OrbitalParameters
         {
             return M;
         }
+        
+        
         
         #region Operator
 

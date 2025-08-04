@@ -4,6 +4,7 @@ using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
+using IO.Astrodynamics.OrbitalParameters.TLE;
 using IO.Astrodynamics.TimeSystem;
 
 namespace IO.Astrodynamics.Propagator;

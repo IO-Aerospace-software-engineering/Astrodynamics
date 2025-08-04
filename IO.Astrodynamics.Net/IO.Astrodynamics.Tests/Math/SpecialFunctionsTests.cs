@@ -37,5 +37,45 @@ namespace IO.Astrodynamics.Tests.Math
             double result = SpecialFunctions.Hypergeometric(0.01, 1e-14);
             Assert.InRange(result, 1.012, 1.014);
         }
+        
+        [Fact]
+        public void NormalizeAngle_PositiveAngleWithinRange_ReturnsSameAngle()
+        {
+            double angle = System.Math.PI;
+            double result = SpecialFunctions.NormalizeAngle(angle);
+            Assert.Equal(System.Math.PI, result, 6);
+        }
+        
+        [Fact]
+        public void NormalizeAngle_PositiveAngleExceeding2PI_WrapsToRange()
+        {
+            double angle = 3 * System.Math.PI;
+            double result = SpecialFunctions.NormalizeAngle(angle);
+            Assert.Equal(System.Math.PI, result, 6);
+        }
+        
+        [Fact]
+        public void NormalizeAngle_NegativeAngle_WrapsToPositiveRange()
+        {
+            double angle = -System.Math.PI;
+            double result = SpecialFunctions.NormalizeAngle(angle);
+            Assert.Equal(System.Math.PI, result, 6);
+        }
+        
+        [Fact]
+        public void NormalizeAngle_ZeroAngle_ReturnsZero()
+        {
+            double angle = 0;
+            double result = SpecialFunctions.NormalizeAngle(angle);
+            Assert.Equal(0, result, 6);
+        }
+        
+        [Fact]
+        public void NormalizeAngle_NegativeMultipleOf2PI_ReturnsZero()
+        {
+            double angle = -2 * System.Math.PI;
+            double result = SpecialFunctions.NormalizeAngle(angle);
+            Assert.Equal(0, result, 6);
+        }
     }
 }

@@ -75,10 +75,4 @@
       <PackageReference Include="MathNet.Numerics" Version="5.0.0" />
     </ItemGroup>
 
-    <ItemGroup>
-      <Reference Include="One_Sgp4">
-        <HintPath>resources\One_Sgp4.dll</HintPath>
-      </Reference>
-    </ItemGroup>
-
 </Project>

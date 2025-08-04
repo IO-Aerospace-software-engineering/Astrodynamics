@@ -4,8 +4,8 @@ using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Coordinates;
 using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.Math;
-using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.TimeSystem;
+using IO.Astrodynamics.OrbitalParameters.TLE;
 
 namespace IO.Astrodynamics.OrbitalParameters;
 
@@ -32,6 +32,8 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// </summary>
     public Frame Frame { get; }
 
+    private static readonly MeanElementsConverter _sharedMeanElementsConverter = new();
+
     //Data used for caching
     private Vector3? _eccentricVector;
     private Vector3? _specificAngularMomentum;
@@ -41,7 +43,7 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     protected TimeSpan? _period;
     private double? _meanMotion;
     protected StateVector _stateVector;
-    private EquinoctialElements _equinoctial;
+    protected EquinoctialElements _equinoctial;
     private Vector3? _perigeevector;
     private Vector3? _apogeeVector;
     private double? _trueLongitude;
@@ -969,6 +971,38 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
         }
 
         return TimeToRadius(centerOfMotion.SphereOfInfluence);
+    }
+
+    /// <summary>
+    /// Converts the current orbital parameters into a TLE (Two-Line Element) representation
+    /// using the provided configuration.
+    /// </summary>
+    /// <param name="config">
+    /// A <see cref="Astrodynamics.OrbitalParameters.TLE.Configuration"/> object containing the necessary parameters for TLE generation,
+    /// such as NORAD ID, satellite name, COSPAR ID, and other optional settings.
+    /// </param>
+    /// <returns>
+    /// A <see cref="TLE"/> object representing the orbital parameters in TLE format.
+    /// </returns>
+    /// <remarks>
+    /// This method uses the <see cref="MeanElementsConverter"/> to compute the mean orbital elements
+    /// from the current orbital parameters. The resulting TLE includes metadata such as the satellite's
+    /// classification, drag term, and epoch information.
+    /// </remarks>
+    /// <exception cref="ArgumentNullException">
+    /// Thrown if the <paramref name="config"/> parameter is null.
+    /// </exception>
+    public TLE.TLE ToTLE(TLE.Configuration config)
+    {
+        ArgumentNullException.ThrowIfNull(config);
+        var meanElements = _sharedMeanElementsConverter.Convert(this, config.NoradId,
+            config.Name, config.CosparId, config.RevolutionsAtEpoch,
+            config.BstarDragTerm, config.Tolerance, config.MaxIterations);
+
+        return TLE.TLE.Create(meanElements, config.Name, config.NoradId,
+            config.CosparId, config.RevolutionsAtEpoch, config.Classification,
+            config.BstarDragTerm, config.FirstDerivativeMeanMotion,
+            config.SecondDerivativeMeanMotion, config.ElementSetNumber);
     }
 
     #region Operators
