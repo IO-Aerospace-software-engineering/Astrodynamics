@@ -515,7 +515,11 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
     /// <seealso cref="Constants.Deg2Rad"/>
     /// <seealso cref="Constants._2PI"/>
     /// </summary>
-    /// <returns></returns>
+    /// <returns>
+    /// A <see cref="KeplerianElements"/> object representing the classical orbital elements
+    /// (semi-major axis, eccentricity, inclination, argument of perigee, right ascension of the ascending node, and true anomaly)
+    /// derived from the current TLE instance.
+    /// </returns>
     public override KeplerianElements ToKeplerianElements()
     {
         if (_keplerianElements == null)
