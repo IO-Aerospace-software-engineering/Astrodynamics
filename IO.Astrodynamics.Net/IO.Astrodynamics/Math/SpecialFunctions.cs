@@ -16,9 +16,11 @@ namespace IO.Astrodynamics.Math
         /// <returns>The computed value of the hypergeometric series, accurate to within the specified tolerance.</returns>
         public static double Hypergeometric(double z, double tol)
         {
-            if (tol <= 0) {
+            if (tol <= 0)
+            {
                 throw new ArgumentOutOfRangeException(nameof(tol), "Input tol must be positive and non-zero.");
             }
+
             double sum = 1.0;
             double term = 1.0;
             double error = 1.0;
@@ -34,9 +36,10 @@ namespace IO.Astrodynamics.Math
                 term = nextTerm;
                 iteration++;
             }
+
             return sum;
         }
-        
+
         /// <summary>
         /// Normalizes an angle to the range [0, 2π).
         /// This method ensures that the angle is always non-negative and within the specified range.
@@ -51,7 +54,19 @@ namespace IO.Astrodynamics.Math
                 angle += Constants._2PI;
             return angle;
         }
-        
+
+        /// <summary>
+        /// Normalizes the difference between two angles to the range [-π, π].
+        /// This method ensures that the angle difference is within the specified range, which is useful for
+        /// angle comparisons and calculations in orbital mechanics.
+        /// The method takes the modulo of the angle difference with 2π and adjusts it to ensure it falls within the range.
+        /// If the resulting angle difference is greater than π, it subtracts 2π to bring it within the range.
+        /// If it is less than -π, it adds 2π to bring it within the range.
+        /// This normalization is particularly useful in applications where angle differences need to be compared or used in calculations, such as in orbital mechanics.
+        /// The method returns the normalized angle difference, which can be used directly in further calculations or comparisons.
+        /// </summary>
+        /// <param name="angleDiff"></param>
+        /// <returns></returns>
         public static double NormalizeAngleDifference(double angleDiff)
         {
             angleDiff %= (Constants._2PI);

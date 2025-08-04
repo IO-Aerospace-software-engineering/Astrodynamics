@@ -20,13 +20,7 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
     private const int CHECKSUM_LENGTH = 68;
     private const double MAX_ECCENTRICITY = 0.9999999;
     private const int MAX_ELEMENT_SET_NUMBER = 9999;
-
-    private readonly double _a;
-    private readonly double _e;
-    private readonly double _i;
-    private readonly double _o;
-    private readonly double _w;
-    private readonly double _m;
+    private KeplerianElements _meanKeplerianElements;
 
     /// <summary>
     /// Gets the first line of the TLE.
@@ -44,7 +38,10 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
     public string Name { get; }
 
     /// <summary>
-    /// Gets the ballistic coefficient.
+    /// Gets the ballistic coefficient (drag term) in units of 1/earth radii.
+    /// This value is used to model atmospheric drag effects on the satellite's orbit.
+    /// It is typically a small value, indicating the amount of drag experienced by the satellite.
+    /// For example, a value of 0.0001 means that the satellite experiences a drag force equivalent to 0.0001 times the gravitational force at the Earth's surface.
     /// </summary>
     public double BalisticCoefficient { get; }
 
@@ -73,6 +70,79 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
     public double SecondDerivativeMeanMotion { get; }
 
     /// <summary>
+    /// Gets the mean semi-major axis of the orbit in meters.
+    /// This value represents the average distance from the center of the Earth to the satellite's orbit.
+    /// It is a key parameter in determining the size of the orbit and is calculated based on
+    /// the mean motion and gravitational parameters of the Earth.
+    /// For example, a value of 7000 kilometers means that the average distance from the
+    /// center of the Earth to the satellite's orbit is 7000 kilometers.
+    /// This parameter is crucial for understanding the satellite's orbital characteristics,
+    /// including its altitude and orbital period.
+    /// </summary>
+    public double MeanSemiMajorAxis { get; }
+
+    /// <summary>
+    /// Gets the mean eccentricity of the orbit.
+    /// This value represents the shape of the orbit, where 0 is a circular orbit and
+    /// values close to 1 indicate highly elliptical orbits.
+    /// It is a dimensionless quantity that describes how much the orbit deviates from being circular.
+    /// For example, a value of 0.1 means that the orbit is slightly elliptical,
+    /// while a value of 0.9 indicates a highly elliptical orbit.
+    /// This parameter is crucial for understanding the orbital dynamics and behavior of the satellite,
+    /// including its speed at different points in the orbit and the variation in altitude.
+    /// </summary>
+    public double MeanEccentricity { get; }
+
+    /// <summary>
+    /// Gets the mean inclination of the orbit in radians.
+    /// </summary>
+    public double MeanInclination { get; }
+
+    /// <summary>
+    /// Gets the mean right ascension of the ascending node in radians.
+    /// This value represents the angle from the vernal equinox to the ascending node of the orbit,
+    /// which is the point where the satellite crosses the equatorial plane from south to north.
+    /// It is a crucial parameter for understanding the orientation of the orbit in space.
+    /// For example, a value of 0 radians means that the ascending node is aligned with the vernal equinox,
+    /// while a value of π/2 radians means that the ascending node is 90 degrees away from the vernal equinox.
+    /// This parameter is essential for predicting the satellite's position and velocity at any point in its orbit,
+    /// as well as for understanding the orbital dynamics and behavior of the satellite.
+    /// </summary>
+    public double MeanAscendingNode { get; }
+
+    /// <summary>
+    /// Gets the mean argument of periapsis in radians.
+    /// This value represents the angle from the ascending node to the periapsis of the orbit,
+    /// which is the point in the orbit closest to the Earth.
+    /// It is a crucial parameter for understanding the orientation of the orbit in space.
+    /// For example, a value of 0 radians means that the periapsis is aligned with the ascending node,
+    /// while a value of π/2 radians means that the periapsis is 90 degrees away from the ascending node.
+    /// This parameter is essential for predicting the satellite's position and velocity at any point in its orbit,
+    /// as well as for understanding the orbital dynamics and behavior of the satellite.
+    /// </summary>
+    public double MeanArgumentOfPeriapsis { get; }
+
+    /// <summary>
+    /// Gets the mean mean anomaly in radians.
+    /// This value represents the angle from the periapsis to the current position of the satellite
+    /// in its orbit, measured in the direction of the satellite's motion.
+    /// It is a crucial parameter for understanding the satellite's position in its orbit.
+    /// For example, a value of 0 radians means that the satellite is at the periapsis,
+    /// while a value of π radians means that the satellite is at the apoapsis (the point in the orbit farthest from the Earth).
+    /// This parameter is essential for predicting the satellite's position and velocity at any point in its orbit,
+    /// as well as for understanding the orbital dynamics and behavior of the satellite.
+    /// </summary>
+    /// <remarks>
+    /// The mean anomaly is a key parameter in orbital mechanics, as it allows for the calculation
+    /// of the satellite's position at any given time. It is used in conjunction with other
+    /// orbital elements to determine the satellite's trajectory and predict its future positions.
+    /// The mean anomaly is particularly useful for calculating the satellite's position in elliptical orbits,
+    /// where the position varies significantly over time.
+    /// </remarks>
+    /// <seealso cref="MeanMeanAnomaly"/>   
+    public double MeanMeanAnomaly { get; }
+
+    /// <summary>
     /// Initializes a new instance of the TLE class.
     /// </summary>
     /// <param name="name">Line 1 - TLE Name</param>
@@ -80,15 +150,16 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
     /// <param name="line2">the second line</param>
     /// <exception cref="ArgumentException">Thrown when any of the lines are null or empty.</exception>
     /// <exception cref="InvalidOperationException">Thrown when checksum validation fails.</exception>
-    public TLE(string name, string line1, string line2) : base(new CelestialBody(399, new Frame("ITRF93"), ExtractEpochFromTLE(line1)), ExtractEpochFromTLE(line1), new Frame("TEME"))
+    public TLE(string name, string line1, string line2) : base(new CelestialBody(399, new Frame("ITRF93"), ExtractEpochFromTLE(line1)), ExtractEpochFromTLE(line1),
+        new Frame("TEME"))
     {
         if (string.IsNullOrEmpty(line1)) throw new ArgumentException("Value cannot be null or empty.", nameof(line1));
         if (string.IsNullOrEmpty(line2)) throw new ArgumentException("Value cannot be null or empty.", nameof(line2));
         if (string.IsNullOrEmpty(name)) throw new ArgumentException("Value cannot be null or empty.", nameof(name));
-        
+
         // Validate TLE format and checksums
         ValidateTleFormat(line1, line2);
-        
+
         Line1 = line1;
         Line2 = line2;
         Name = name;
@@ -100,12 +171,12 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
         // Parse line 2 for orbital elements
         var meanMotion = double.Parse(line2.Substring(52, 11));
         double n = Constants._2PI / (86400.0 / meanMotion);
-        _a = System.Math.Cbrt(earth.GM / (n * n));
-        _e = double.Parse("0." + line2.Substring(26, 7));
-        _i = double.Parse(line2.Substring(8, 8)) * Constants.Deg2Rad;
-        _o = double.Parse(line2.Substring(17, 8)) * Constants.Deg2Rad;
-        _w = double.Parse(line2.Substring(34, 8)) * Constants.Deg2Rad;
-        _m = double.Parse(line2.Substring(43, 8)) * Constants.Deg2Rad;
+        MeanSemiMajorAxis = System.Math.Cbrt(earth.GM / (n * n));
+        MeanEccentricity = double.Parse("0." + line2.Substring(26, 7));
+        MeanInclination = double.Parse(line2.Substring(8, 8)) * Constants.Deg2Rad;
+        MeanAscendingNode = double.Parse(line2.Substring(17, 8)) * Constants.Deg2Rad;
+        MeanArgumentOfPeriapsis = double.Parse(line2.Substring(34, 8)) * Constants.Deg2Rad;
+        MeanMeanAnomaly = double.Parse(line2.Substring(43, 8)) * Constants.Deg2Rad;
 
         // Parse line 1 for additional parameters
         FirstDerivationMeanMotion = ParseTleDouble(line1.Substring(33, 10));
@@ -215,7 +286,7 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
         }
 
         // 1. Convert elements to TLE units
-        var kep = orbitalParams.ToKeplerianElements();
+        var kep = orbitalParams is TLE tle ? tle.ToMeanKeplerianElements() : orbitalParams.ToKeplerianElements();
         double iDeg = kep.I * Constants.Rad2Deg;
         double raanDeg = kep.RAAN * Constants.Rad2Deg;
         double argpDeg = kep.AOP * Constants.Rad2Deg;
@@ -311,17 +382,17 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
     private static void ValidateTleFormat(string line1, string line2)
     {
         // Validate line length
-        if (line1.Length != 69) 
+        if (line1.Length != 69)
             throw new ArgumentException($"TLE line 1 must be exactly 69 characters long, got {line1.Length}: {line1}");
-        if (line2.Length != 69) 
+        if (line2.Length != 69)
             throw new ArgumentException($"TLE line 2 must be exactly 69 characters long, got {line2.Length}: {line2}");
-        
+
         // Validate line numbers
-        if (line1[0] != '1') 
+        if (line1[0] != '1')
             throw new ArgumentException($"TLE line 1 must start with '1', got '{line1[0]}': {line1}");
-        if (line2[0] != '2') 
+        if (line2[0] != '2')
             throw new ArgumentException($"TLE line 2 must start with '2', got '{line2[0]}': {line2}");
-        
+
         // Validate checksums
         ValidateLineChecksum(line1, 1);
         ValidateLineChecksum(line2, 2);
@@ -337,16 +408,16 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
     {
         // Extract the first 68 characters (excluding the checksum)
         string lineWithoutChecksum = line.Substring(0, 68);
-        
+
         // Compute the expected checksum
         int computedChecksum = ComputeTleChecksum(lineWithoutChecksum);
-        
+
         // Get the actual checksum from the last character
         if (!char.IsDigit(line[68]))
             throw new InvalidOperationException($"Invalid checksum character in line {lineNumber}: '{line[68]}' in {line}");
-            
+
         int actualChecksum = line[68] - '0';
-        
+
         // Compare checksums
         if (computedChecksum != actualChecksum)
         {
@@ -367,9 +438,9 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
         int sum = 0;
         foreach (char c in line)
         {
-            if (char.IsDigit(c)) 
+            if (char.IsDigit(c))
                 sum += c - '0';
-            else if (c == '-') 
+            else if (c == '-')
                 sum += 1;
             // All other characters (letters, spaces, etc.) contribute 0 to the sum
         }
@@ -394,52 +465,151 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
     /// <returns>The state vector at the given epoch.</returns>
     public override StateVector ToStateVector(Time date)
     {
-        // var sgp4 = new Sgp4(_tleItem, Sgp4.wgsConstant.WGS_84);
-        // EpochTime epochSGP = new EpochTime(date.ToUTC().DateTime);
-        // sgp4.runSgp4Cal(epochSGP, epochSGP, 0.01);
-        // List<Sgp4Data> resultDataList = sgp4.getResults();
-        // var position = resultDataList[0].getPositionData();
-        // var velocity = resultDataList[0].getVelocityData();
-        // return new StateVector(new Vector3(position.x, position.y, position.z) * 1000.0, new Vector3(velocity.x, velocity.y, velocity.z) * 1000.0,
-        //     new CelestialBody(399, Frame.ECLIPTIC_J2000, date), date,
-        //     new Frame("TEME")).ToFrame(Frame.ICRF).ToStateVector();
-
         return API.Instance.ConvertTleToStateVector(Name, Line1, Line2, date).ToFrame(Frame.ICRF).ToStateVector();
+    }
+
+    /// <summary>
+    /// Converts the TLE to Keplerian elements.
+    /// This method computes the Keplerian elements from the state vector derived from the TLE.
+    /// If the Keplerian elements have already been computed, it returns the cached value.
+    /// This is useful for performance optimization, as the conversion can be computationally expensive.
+    /// The Keplerian elements include parameters such as semi-major axis, eccentricity, inclination,
+    /// right ascension of the ascending node, argument of periapsis, and mean anomaly.
+    /// These parameters describe the orbit of the satellite in a standard form that is widely used in
+    /// astrodynamics and orbital mechanics.
+    /// The method first checks if the Keplerian elements have already been computed and cached.
+    /// If they have, it returns the cached value to avoid redundant calculations.
+    /// If the Keplerian elements have not been computed yet, it converts the TLE to a state vector
+    /// using the `ToStateVector` method, and then converts that state vector to Keplerian elements.
+    /// This ensures that the TLE is accurately represented in the standard Keplerian format,
+    /// which is essential for further orbital analysis and calculations.
+    /// <remarks>
+    /// This method is particularly useful when working with TLE data, as it allows for easy
+    /// conversion to a more usable form for orbital mechanics calculations.
+    /// The Keplerian elements provide a clear and concise representation of the orbit,
+    /// making it easier to perform various analyses such as predicting the satellite's position,
+    /// calculating orbital maneuvers, and understanding the dynamics of the orbit.
+    /// </remarks>
+    /// <seealso cref="ToStateVector"/>
+    /// <seealso cref="KeplerianElements"/>
+    /// <seealso cref="OrbitalParameters.ToKeplerianElements"/>
+    /// <seealso cref="API.Instance.ConvertTleToStateVector(string, string, string, Time)"/>
+    /// <seealso cref="StateVector.ToKeplerianElements"/>
+    /// <seealso cref="Frame.ICRF"/>
+    /// <seealso cref="StateVector.ToFrame(Frame)"/>
+    /// <seealso cref="StateVector.ToStateVector()"/>
+    /// <remarks>
+    /// This method is part of the TLE class, which represents a Two-Line Element set of orbital parameters.
+    /// TLEs are commonly used in satellite tracking and orbital mechanics to describe the orbits of satellites.
+    /// The TLE format consists of two lines of text, each containing specific orbital parameters
+    /// and metadata about the satellite.
+    /// The TLE class provides methods to convert these parameters into various formats,
+    /// including state vectors and Keplerian elements, which are essential for performing
+    /// orbital calculations and analyses.
+    /// </remarks>
+    /// <seealso cref="OrbitalParameters"/>
+    /// <seealso cref="TLE"/>
+    /// <seealso cref="API"/>
+    /// <seealso cref="API.Instance"/>
+    /// <seealso cref="Frame"/>
+    /// <seealso cref="Time"/>
+    /// <seealso cref="StateVector"/>
+    /// <seealso cref="CelestialBody"/>
+    /// <seealso cref="Constants"/>
+    /// <seealso cref="Constants.Rad2Deg"/>
+    /// <seealso cref="Constants.Deg2Rad"/>
+    /// <seealso cref="Constants._2PI"/>
+    /// <seealso cref="Constants.GM"/>
+    /// <seealso cref="Constants.EarthRadius"/>
+    /// <seealso cref="Constants.EarthGravitationalParameter"/> 
+    /// </summary>
+    /// <returns></returns>
+    public override KeplerianElements ToKeplerianElements()
+    {
+        if (_keplerianElements == null)
+        {
+            // Convert TLE to Keplerian elements using the state vector
+            _keplerianElements = ToStateVector().ToKeplerianElements();
+        }
+
+        return _keplerianElements;
+    }
+
+    public override EquinoctialElements ToEquinoctial()
+    {
+        if (_equinoctial == null)
+        {
+            _equinoctial = ToStateVector().ToEquinoctial();
+        }
+
+        return _equinoctial;
+    }
+
+    public KeplerianElements ToMeanKeplerianElements()
+    {
+        if (_meanKeplerianElements == null)
+        {
+            _meanKeplerianElements = new KeplerianElements(MeanSemiMajorAxis, MeanEccentricity, MeanInclination,
+                MeanAscendingNode, MeanArgumentOfPeriapsis, MeanMeanAnomaly, Observer, Epoch, Frame);
+        }
+
+        return _meanKeplerianElements;
     }
 
     public override double SemiMajorAxis()
     {
-        return _a;
+        return ToKeplerianElements().A;
     }
 
     public override double Eccentricity()
     {
-        return _e;
+        return ToKeplerianElements().E;
     }
 
     public override double Inclination()
     {
-        return _i;
+        return ToKeplerianElements().I;
     }
 
     public override double AscendingNode()
     {
-        return _o;
+        return ToKeplerianElements().RAAN;
     }
 
     public override double ArgumentOfPeriapsis()
     {
-        return _w;
+        return ToKeplerianElements().AOP;
     }
 
     public override double MeanAnomaly()
     {
-        return _m;
+        return ToKeplerianElements().M;
     }
 
     public override StateVector ToStateVector()
     {
-        return ToStateVector(Epoch);
+        if (_stateVector == null)
+        {
+            _stateVector = ToStateVector(Epoch);
+        }
+
+        return _stateVector;
+    }
+
+    public override string ToString()
+    {
+        var sb = new StringBuilder();
+        sb.AppendLine($"Name: {Name}");
+        sb.AppendLine($"Line 1: {Line1}");
+        sb.AppendLine($"Line 2: {Line2}");
+        sb.AppendLine($"Epoch: {Epoch}");
+        sb.AppendLine($"Mean Semi-Major Axis: {MeanSemiMajorAxis} m");
+        sb.AppendLine($"Mean Eccentricity: {MeanEccentricity}");
+        sb.AppendLine($"Mean Inclination: {MeanInclination} rad");
+        sb.AppendLine($"Mean Ascending Node: {MeanAscendingNode} rad");
+        sb.AppendLine($"Mean Argument of Periapsis: {MeanArgumentOfPeriapsis} rad");
+        sb.AppendLine($"Mean Mean Anomaly: {MeanMeanAnomaly} rad");
+        return sb.ToString();
     }
 
     /// <summary>

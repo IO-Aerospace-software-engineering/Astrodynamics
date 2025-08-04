@@ -43,7 +43,7 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     protected TimeSpan? _period;
     private double? _meanMotion;
     protected StateVector _stateVector;
-    private EquinoctialElements _equinoctial;
+    protected EquinoctialElements _equinoctial;
     private Vector3? _perigeevector;
     private Vector3? _apogeeVector;
     private double? _trueLongitude;
