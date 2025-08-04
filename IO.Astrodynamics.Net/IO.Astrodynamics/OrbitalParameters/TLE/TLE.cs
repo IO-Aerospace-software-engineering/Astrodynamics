@@ -462,7 +462,7 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
     /// <returns>The state vector at the given epoch.</returns>
     public override StateVector ToStateVector(Time date)
     {
-        return API.Instance.ConvertTleToStateVector(Name, Line1, Line2, date).ToFrame(Frame.ICRF).ToStateVector();
+        return API.Instance.ConvertTleToStateVector(Name, Line1, Line2, date).ToStateVector();
     }
 
     /// <summary>

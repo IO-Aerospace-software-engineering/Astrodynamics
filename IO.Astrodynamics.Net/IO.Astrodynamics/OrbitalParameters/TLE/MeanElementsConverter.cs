@@ -45,7 +45,7 @@ namespace IO.Astrodynamics.OrbitalParameters.TLE
                 var testTle = TLE.Create(currentKep, name, noradId, cosparId, revAtEpoch, Classification.Unclassified, bstar);
 
                 // Propagate the TLE to get osculating elements at the same epoch
-                var propagatedState = testTle.ToStateVector(targetState.Epoch).ToFrame(Frame.TEME);
+                var propagatedState = testTle.ToStateVector(targetState.Epoch);
                 var propagatedKep = propagatedState.ToKeplerianElements();
 
                 // Compute residuals (difference between target and propagated)

@@ -54,9 +54,9 @@ public class TLETests
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
 
         TimeSystem.Time epoch = TimeSystem.Time.CreateTDB(664440682.84760022);
-        var stateVector = tle.AtEpoch(epoch).ToStateVector();
+        var stateVector = tle.AtEpoch(epoch).ToStateVector().ToFrame(Frames.Frame.ICRF) as StateVector;
 
-        Assert.Equal(stateVector, tle.ToStateVector(epoch));
+        Assert.Equal(stateVector, tle.ToStateVector(epoch).ToFrame(Frames.Frame.ICRF) as StateVector);
         // Adjusted tolerances to account for SGP4/SDP4 propagator differences
         // Position tolerance: ~30m (acceptable for orbital mechanics)
         Assert.True(System.Math.Abs(stateVector.Position.X - 4339206.6119421758) < 30.0,
@@ -81,7 +81,7 @@ public class TLETests
             "2 39348  20.0230 212.2863 7218258 312.9449   5.6833  2.25781763 89468");
 
         TimeSystem.Time epoch = new TimeSystem.Time("2024-08-26T22:34:20.00000Z");
-        var stateVector = tle.ToStateVector(epoch);
+        var stateVector = tle.ToStateVector(epoch).ToFrame(Frames.Frame.ICRF);
 
         // Assert.Equal(32718528.303724434, stateVector.Position.X, 1);
         // Assert.Equal(-17501136.957387105, stateVector.Position.Y, 1);
@@ -245,7 +245,7 @@ public class TLETests
         var tle = sv.ToTLE(config);
         Assert.NotNull(tle);
         Assert.Equal("TestSatellite", tle.Name);
-        var computedSV = tle.ToStateVector();
+        var computedSV = tle.ToStateVector().ToFrame(Frames.Frame.ICRF).ToStateVector();
         Assert.Equal(sv.Position.X, computedSV.Position.X, (x, y) => System.Math.Abs(x - y) < 0.5);
         Assert.Equal(sv.Position.Y, computedSV.Position.Y, (x, y) => System.Math.Abs(x - y) < 2);
         Assert.Equal(sv.Position.Z, computedSV.Position.Z, (x, y) => System.Math.Abs(x - y) < 6);

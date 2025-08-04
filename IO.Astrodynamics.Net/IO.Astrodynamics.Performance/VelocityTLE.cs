@@ -7,6 +7,7 @@ using IO.Astrodynamics.TimeSystem;
 
 namespace IO.Astrodynamics.Performance;
 
+[MemoryDiagnoser]
 public class VelocityTLE
 {
     private Time _epoch;
