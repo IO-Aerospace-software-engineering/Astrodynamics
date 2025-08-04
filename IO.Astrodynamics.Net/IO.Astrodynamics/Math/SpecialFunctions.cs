@@ -56,17 +56,10 @@ namespace IO.Astrodynamics.Math
         }
 
         /// <summary>
-        /// Normalizes the difference between two angles to the range [-π, π].
-        /// This method ensures that the angle difference is within the specified range, which is useful for
-        /// angle comparisons and calculations in orbital mechanics.
-        /// The method takes the modulo of the angle difference with 2π and adjusts it to ensure it falls within the range.
-        /// If the resulting angle difference is greater than π, it subtracts 2π to bring it within the range.
-        /// If it is less than -π, it adds 2π to bring it within the range.
-        /// This normalization is particularly useful in applications where angle differences need to be compared or used in calculations, such as in orbital mechanics.
-        /// The method returns the normalized angle difference, which can be used directly in further calculations or comparisons.
+        /// Normalizes an angle difference to the range [-π, π].
         /// </summary>
-        /// <param name="angleDiff"></param>
-        /// <returns></returns>
+        /// <param name="angleDiff">The angle difference to normalize, in radians.</param>
+        /// <returns>The normalized angle difference in the range [-π, π].</returns>
         public static double NormalizeAngleDifference(double angleDiff)
         {
             angleDiff %= (Constants._2PI);
