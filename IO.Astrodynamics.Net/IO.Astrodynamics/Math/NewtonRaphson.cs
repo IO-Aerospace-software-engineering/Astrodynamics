@@ -113,11 +113,11 @@ public class NewtonRaphson
     }
     
     /// <summary>
-    /// 
+    /// Solves the linear system of equations A * x = b for x, where A is a matrix and b is a vector.
     /// </summary>
-    /// <param name="a"></param>
-    /// <param name="b"></param>
-    /// <returns></returns>
+    /// <param name="a">The coefficient matrix A of size (n x n).</param>
+    /// <param name="b">The right-hand side vector b of length n.</param>
+    /// <returns>An array containing the solution vector x.</returns>
     private static double[] SolveLinearSystem(double[,] a, double[] b)
     {
         var matrix = MathNet.Numerics.LinearAlgebra.Matrix<double>.Build.DenseOfArray(a);
