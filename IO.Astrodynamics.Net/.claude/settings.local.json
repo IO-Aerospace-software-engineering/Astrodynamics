@@ -1,9 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "Bash(dotnet --info)"
-    ],
-    "deny": [],
-    "ask": []
-  }
-}
