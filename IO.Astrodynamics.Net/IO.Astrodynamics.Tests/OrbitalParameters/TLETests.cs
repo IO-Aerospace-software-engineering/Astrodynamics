@@ -602,43 +602,61 @@ public class TLETests
         var transverseErrorRms = System.Math.Sqrt(testResults.Average(r => r.TransverseError * r.TransverseError));
         var normalErrorRms = System.Math.Sqrt(testResults.Average(r => r.NormalError * r.NormalError));
         
-        var maxRadialError = testResults.Max(r => System.Math.Abs(r.RadialError));
-        var maxTransverseError = testResults.Max(r => System.Math.Abs(r.TransverseError));
-        var maxNormalError = testResults.Max(r => System.Math.Abs(r.NormalError));
-        
-        // Initial offset (at t0) should be minimal
+        // Initial offset (at t0) should be minimal but account for TLE fitting limitations
         var initialResult = testResults.First();
-        Assert.True(initialResult.Position3DError < 10000, // Within 10 km initially
+        Assert.True(initialResult.Position3DError < 600, // Within 600 m initially (TLE fitting accuracy limit)
             $"Initial position error too large: {initialResult.Position3DError:F2} m");
-        Assert.True(initialResult.Velocity3DError < 10, // Within 10 m/s initially  
+        Assert.True(initialResult.Velocity3DError < 0.4, // Within 0.4 m/s initially  
             $"Initial velocity error too large: {initialResult.Velocity3DError:F4} m/s");
         
         // Verify that the modelled TLE behaves "like a real one" under SGP4
-        // These tolerances reflect typical TLE fitting accuracy limits
-        Assert.True(position3DErrorsRms < 50000, // RMS position error < 50 km over 24h
+        // Very precise tolerances based on actual TLE representation performance
+        Assert.True(position3DErrorsRms < 1090, // RMS position error < 1.1 km over 24h
             $"Position RMS error too large: {position3DErrorsRms:F2} m");
-        Assert.True(velocity3DErrorsRms < 50, // RMS velocity error < 50 m/s over 24h
+        Assert.True(velocity3DErrorsRms < 1.14, // RMS velocity error < 1.14 m/s over 24h
             $"Velocity RMS error too large: {velocity3DErrorsRms:F4} m/s");
         
-        // Max errors should be reasonable
-        Assert.True(maxPosition3DError < 200000, // Max position error < 200 km
+        // Max errors should reflect tight TLE propagation validation
+        Assert.True(maxPosition3DError < 2660, // Max position error < 2.66 km
             $"Max position error too large: {maxPosition3DError:F2} m");
-        Assert.True(maxVelocity3DError < 200, // Max velocity error < 200 m/s
+        Assert.True(maxVelocity3DError < 2.7, // Max velocity error < 2.7 m/s
             $"Max velocity error too large: {maxVelocity3DError:F4} m/s");
         
-        // RTN error checks - these are more stringent as they separate different error types
-        Assert.True(radialErrorRms < 25000, // Radial RMS < 25 km
+        // RTN error checks - very precise orbital coordinate validation
+        Assert.True(radialErrorRms < 235, // Radial RMS < 235 m
             $"Radial RMS error too large: {radialErrorRms:F2} m");
-        Assert.True(transverseErrorRms < 25000, // Transverse RMS < 25 km  
+        Assert.True(transverseErrorRms < 1061, // Transverse RMS < 1.06 km  
             $"Transverse RMS error too large: {transverseErrorRms:F2} m");
-        Assert.True(normalErrorRms < 5000, // Normal RMS < 5 km (usually smallest)
+        Assert.True(normalErrorRms < 12, // Normal RMS < 12 m (should be smallest)
             $"Normal RMS error too large: {normalErrorRms:F2} m");
         
         // Verify test executed over full duration
         Assert.Equal(24.0, testResults.Count / 6.0, 1.0); // Should have ~144 data points (every 10 min for 24h)
         Assert.True(testResults.Last().ElapsedHours >= 23.5, "Test should run for nearly 24 hours");
         
-        // Output summary for debugging/analysis (removed console output for test cleanliness)
+        // Output summary for debugging/analysis
+        System.Console.WriteLine($"=== TLE COMPARISON ACCURACY REPORT ===");
+        System.Console.WriteLine($"Test Configuration: 24h propagation, 10min intervals, SGP4 model");
+        System.Console.WriteLine($"Reference: ISS Space-Track TLE vs Modelled TLE from osculating state");
+        System.Console.WriteLine($"");
+        System.Console.WriteLine($"INITIAL OFFSET (t=0):");
+        System.Console.WriteLine($"  Position Error: {initialResult.Position3DError:F1} m");
+        System.Console.WriteLine($"  Velocity Error: {initialResult.Velocity3DError:F3} m/s");
+        System.Console.WriteLine($"");
+        System.Console.WriteLine($"24-HOUR STATISTICAL PERFORMANCE:");
+        System.Console.WriteLine($"  Position RMS Error: {position3DErrorsRms:F1} m");
+        System.Console.WriteLine($"  Position Max Error: {maxPosition3DError:F1} m");
+        System.Console.WriteLine($"  Velocity RMS Error: {velocity3DErrorsRms:F3} m/s");
+        System.Console.WriteLine($"  Velocity Max Error: {maxVelocity3DError:F3} m/s");
+        System.Console.WriteLine($"");
+        System.Console.WriteLine($"RTN COORDINATE ANALYSIS:");
+        System.Console.WriteLine($"  Radial RMS Error: {radialErrorRms:F1} m");
+        System.Console.WriteLine($"  Transverse RMS Error: {transverseErrorRms:F1} m");
+        System.Console.WriteLine($"  Normal RMS Error: {normalErrorRms:F1} m");
+        System.Console.WriteLine($"");
+        System.Console.WriteLine($"VALIDATION STATUS: PASSED - All metrics within acceptable limits");
+        System.Console.WriteLine($"Data Points: {testResults.Count} measurements over {testResults.Last().ElapsedHours:F1} hours");
+        System.Console.WriteLine($"==========================================");
     }
     
     /// <summary>
