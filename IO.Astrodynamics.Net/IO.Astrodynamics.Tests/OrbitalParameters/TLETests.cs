@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Coordinates;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
@@ -10,13 +11,17 @@ using IO.Astrodynamics.OrbitalParameters.TLE;
 using IO.Astrodynamics.Surface;
 using IO.Astrodynamics.TimeSystem;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace IO.Astrodynamics.Tests.OrbitalParameters;
 
 public class TLETests
 {
-    public TLETests()
+    private readonly ITestOutputHelper _testOutputHelper;
+
+    public TLETests(ITestOutputHelper testOutputHelper)
     {
+        _testOutputHelper = testOutputHelper;
         API.Instance.LoadKernels(Constants.SolarSystemKernelPath);
     }
 
@@ -535,6 +540,59 @@ public class TLETests
     }
 
     [Fact]
+    public void TLEFitting()
+    {
+        var epoch = new IO.Astrodynamics.TimeSystem.Time(new DateTime(2025, 08, 25, 11, 55, 44, 305), TimeFrame.UTCFrame);
+
+        CelestialBody observer = new CelestialBody(399);
+
+// Create a state vector with position (in meters) and velocity (in meters per second)
+
+//Original TLE:
+        //1 25544U 98067A   25237.49704057  .00011679  00000-0  21103-3 0  9999
+        //2 25544  51.6352 323.5450 0003284 269.6475  90.4138 15.50171099525917
+        var sv = new StateVector(
+            new Vector3(5465479.168061836, -4037598.9299125164, 3.8812307310800365), // Position vector (X, Y, Z)
+            new Vector3(2821.2352501830983, 3825.849951628489, 6009.392701926987), // Velocity vector (X, Y, Z)
+            observer, // Gravitational parameter for Earth
+            epoch, // Epoch of the state vector
+            Frames.Frame.TEME // Reference frame (TEME)
+        );
+
+// Configure the TLE parameters
+        var config = new IO.Astrodynamics.OrbitalParameters.TLE.Configuration(
+            25544, // NORAD ID
+            "ISS (ZARYA)", // Satellite name
+            "98067A", // COSPAR ID
+            BstarDragTerm:0.0021103 // B* drag term
+            );
+
+// Convert the state vector to a TLE
+        var tle = sv.ToTLE(config);
+
+// Convert the TLE to a string representation
+        var res = tle.ToString();
+
+// Output the TLE string
+        _testOutputHelper.WriteLine(res);
+        
+        var newSv = tle.ToStateVector().ToFrame(Frames.Frame.TEME).ToStateVector();
+        var deltaP=newSv.Position - sv.Position;
+        var deltaV=newSv.Velocity - sv.Velocity;
+        var deltaPErr=deltaP.Magnitude();
+        var deltaVErr=deltaV.Magnitude();
+        _testOutputHelper.WriteLine($"DeltaP: {deltaPErr} m");
+        _testOutputHelper.WriteLine($"DeltaV: {deltaVErr} m/s");
+        Assert.Equal(sv.Position.X, newSv.Position.X, (x, y) => System.Math.Abs(x - y) < 1000);
+        Assert.Equal(sv.Position.Y, newSv.Position.Y, (x, y) => System.Math.Abs(x - y) < 1000);
+        Assert.Equal(sv.Position.Z, newSv.Position.Z, (x, y) => System.Math.Abs(x - y) < 1000);
+        Assert.Equal(sv.Velocity.X, newSv.Velocity.X, (x, y) => System.Math.Abs(x - y) < 1);
+        Assert.Equal(sv.Velocity.Y, newSv.Velocity.Y, (x, y) => System.Math.Abs(x - y) < 1);
+        Assert.Equal(sv.Velocity.Z, newSv.Velocity.Z, (x, y) => System.Math.Abs(x - y) < 1);
+        
+    }
+
+    [Fact]
     public void TLE_SGP4_ComparisonScenarioTest()
     {
         // Test realistic Space-Track TLE data for ISS
@@ -544,40 +602,40 @@ public class TLETests
 
         // Take the epoch of the Space-Track TLE as t0
         var t0 = spaceTrackTLE.Epoch;
-        
+
         // Generate osculating state vector at t0 from the Space-Track TLE
         var osculatingState = spaceTrackTLE.ToStateVector(t0).ToFrame(Frames.Frame.ICRF) as StateVector;
-        
+
         // Create modelled TLE from the osculating state at t0 with same B* as Space-Track TLE
         var tleConfig = new IO.Astrodynamics.OrbitalParameters.TLE.Configuration(25544, "ISS (ZARYA) MODEL", "98067A");
         var modelledTLE = osculatingState.ToTLE(tleConfig);
-        
+
         // Update modelled TLE B* to match Space-Track TLE (this requires manual setting)
         // For this test, we'll work with what we have since B* setting might not be directly accessible
-        
+
         // Test comparison metrics
         var testResults = new List<TleComparisonResult>();
         var timeStep = TimeSpan.FromMinutes(10); // 10-minute intervals
         var testDuration = TimeSpan.FromHours(24); // 24 hours
         var currentTime = t0;
         var endTime = t0.Add(testDuration);
-        
+
         while (currentTime <= endTime)
         {
             // Propagate both TLEs using SGP4
             var spaceTrackState = spaceTrackTLE.ToStateVector(currentTime).ToFrame(Frames.Frame.ICRF) as StateVector;
             var modelledState = modelledTLE.ToStateVector(currentTime).ToFrame(Frames.Frame.ICRF) as StateVector;
-            
+
             // Calculate 3D position and velocity errors
             var positionError = (spaceTrackState.Position - modelledState.Position);
             var velocityError = (spaceTrackState.Velocity - modelledState.Velocity);
-            
+
             var position3DError = positionError.Magnitude();
             var velocity3DError = velocityError.Magnitude();
-            
+
             // Calculate RTN errors (Radial/Transverse/Normal)
             var rtnErrors = CalculateRtnErrors(spaceTrackState, modelledState);
-            
+
             testResults.Add(new TleComparisonResult
             {
                 Epoch = currentTime,
@@ -588,40 +646,40 @@ public class TLETests
                 NormalError = rtnErrors.Normal,
                 ElapsedHours = (currentTime - t0).TotalHours
             });
-            
+
             currentTime = currentTime.Add(timeStep);
         }
-        
+
         // Calculate RMS and Max errors
         var position3DErrorsRms = System.Math.Sqrt(testResults.Average(r => r.Position3DError * r.Position3DError));
         var velocity3DErrorsRms = System.Math.Sqrt(testResults.Average(r => r.Velocity3DError * r.Velocity3DError));
         var maxPosition3DError = testResults.Max(r => r.Position3DError);
         var maxVelocity3DError = testResults.Max(r => r.Velocity3DError);
-        
+
         var radialErrorRms = System.Math.Sqrt(testResults.Average(r => r.RadialError * r.RadialError));
         var transverseErrorRms = System.Math.Sqrt(testResults.Average(r => r.TransverseError * r.TransverseError));
         var normalErrorRms = System.Math.Sqrt(testResults.Average(r => r.NormalError * r.NormalError));
-        
+
         // Initial offset (at t0) should be minimal but account for TLE fitting limitations
         var initialResult = testResults.First();
         Assert.True(initialResult.Position3DError < 600, // Within 600 m initially (TLE fitting accuracy limit)
             $"Initial position error too large: {initialResult.Position3DError:F2} m");
         Assert.True(initialResult.Velocity3DError < 0.4, // Within 0.4 m/s initially  
             $"Initial velocity error too large: {initialResult.Velocity3DError:F4} m/s");
-        
+
         // Verify that the modelled TLE behaves "like a real one" under SGP4
         // Very precise tolerances based on actual TLE representation performance
         Assert.True(position3DErrorsRms < 1090, // RMS position error < 1.1 km over 24h
             $"Position RMS error too large: {position3DErrorsRms:F2} m");
         Assert.True(velocity3DErrorsRms < 1.14, // RMS velocity error < 1.14 m/s over 24h
             $"Velocity RMS error too large: {velocity3DErrorsRms:F4} m/s");
-        
+
         // Max errors should reflect tight TLE propagation validation
         Assert.True(maxPosition3DError < 2660, // Max position error < 2.66 km
             $"Max position error too large: {maxPosition3DError:F2} m");
         Assert.True(maxVelocity3DError < 2.7, // Max velocity error < 2.7 m/s
             $"Max velocity error too large: {maxVelocity3DError:F4} m/s");
-        
+
         // RTN error checks - very precise orbital coordinate validation
         Assert.True(radialErrorRms < 235, // Radial RMS < 235 m
             $"Radial RMS error too large: {radialErrorRms:F2} m");
@@ -629,36 +687,36 @@ public class TLETests
             $"Transverse RMS error too large: {transverseErrorRms:F2} m");
         Assert.True(normalErrorRms < 12, // Normal RMS < 12 m (should be smallest)
             $"Normal RMS error too large: {normalErrorRms:F2} m");
-        
+
         // Verify test executed over full duration
         Assert.Equal(24.0, testResults.Count / 6.0, 1.0); // Should have ~144 data points (every 10 min for 24h)
         Assert.True(testResults.Last().ElapsedHours >= 23.5, "Test should run for nearly 24 hours");
-        
+
         // Output summary for debugging/analysis
-        System.Console.WriteLine($"=== TLE COMPARISON ACCURACY REPORT ===");
-        System.Console.WriteLine($"Test Configuration: 24h propagation, 10min intervals, SGP4 model");
-        System.Console.WriteLine($"Reference: ISS Space-Track TLE vs Modelled TLE from osculating state");
-        System.Console.WriteLine($"");
-        System.Console.WriteLine($"INITIAL OFFSET (t=0):");
-        System.Console.WriteLine($"  Position Error: {initialResult.Position3DError:F1} m");
-        System.Console.WriteLine($"  Velocity Error: {initialResult.Velocity3DError:F3} m/s");
-        System.Console.WriteLine($"");
-        System.Console.WriteLine($"24-HOUR STATISTICAL PERFORMANCE:");
-        System.Console.WriteLine($"  Position RMS Error: {position3DErrorsRms:F1} m");
-        System.Console.WriteLine($"  Position Max Error: {maxPosition3DError:F1} m");
-        System.Console.WriteLine($"  Velocity RMS Error: {velocity3DErrorsRms:F3} m/s");
-        System.Console.WriteLine($"  Velocity Max Error: {maxVelocity3DError:F3} m/s");
-        System.Console.WriteLine($"");
-        System.Console.WriteLine($"RTN COORDINATE ANALYSIS:");
-        System.Console.WriteLine($"  Radial RMS Error: {radialErrorRms:F1} m");
-        System.Console.WriteLine($"  Transverse RMS Error: {transverseErrorRms:F1} m");
-        System.Console.WriteLine($"  Normal RMS Error: {normalErrorRms:F1} m");
-        System.Console.WriteLine($"");
-        System.Console.WriteLine($"VALIDATION STATUS: PASSED - All metrics within acceptable limits");
-        System.Console.WriteLine($"Data Points: {testResults.Count} measurements over {testResults.Last().ElapsedHours:F1} hours");
-        System.Console.WriteLine($"==========================================");
+        _testOutputHelper.WriteLine($"=== TLE COMPARISON ACCURACY REPORT ===");
+        _testOutputHelper.WriteLine($"Test Configuration: 24h propagation, 10min intervals, SGP4 model");
+        _testOutputHelper.WriteLine($"Reference: ISS Space-Track TLE vs Modelled TLE from osculating state");
+        _testOutputHelper.WriteLine($"");
+        _testOutputHelper.WriteLine($"INITIAL OFFSET (t=0):");
+        _testOutputHelper.WriteLine($"  Position Error: {initialResult.Position3DError:F1} m");
+        _testOutputHelper.WriteLine($"  Velocity Error: {initialResult.Velocity3DError:F3} m/s");
+        _testOutputHelper.WriteLine($"");
+        _testOutputHelper.WriteLine($"24-HOUR STATISTICAL PERFORMANCE:");
+        _testOutputHelper.WriteLine($"  Position RMS Error: {position3DErrorsRms:F1} m");
+        _testOutputHelper.WriteLine($"  Position Max Error: {maxPosition3DError:F1} m");
+        _testOutputHelper.WriteLine($"  Velocity RMS Error: {velocity3DErrorsRms:F3} m/s");
+        _testOutputHelper.WriteLine($"  Velocity Max Error: {maxVelocity3DError:F3} m/s");
+        _testOutputHelper.WriteLine($"");
+        _testOutputHelper.WriteLine($"RTN COORDINATE ANALYSIS:");
+        _testOutputHelper.WriteLine($"  Radial RMS Error: {radialErrorRms:F1} m");
+        _testOutputHelper.WriteLine($"  Transverse RMS Error: {transverseErrorRms:F1} m");
+        _testOutputHelper.WriteLine($"  Normal RMS Error: {normalErrorRms:F1} m");
+        _testOutputHelper.WriteLine($"");
+        _testOutputHelper.WriteLine($"VALIDATION STATUS: PASSED - All metrics within acceptable limits");
+        _testOutputHelper.WriteLine($"Data Points: {testResults.Count} measurements over {testResults.Last().ElapsedHours:F1} hours");
+        _testOutputHelper.WriteLine($"==========================================");
     }
-    
+
     /// <summary>
     /// Calculate RTN (Radial/Transverse/Normal) coordinate errors between two state vectors
     /// </summary>
@@ -667,25 +725,25 @@ public class TLETests
         // RTN coordinate system construction from reference state
         var position = reference.Position;
         var velocity = reference.Velocity;
-        
+
         // Radial unit vector (pointing outward from Earth center)
         var radialUnit = position.Normalize();
-        
+
         // Normal unit vector (perpendicular to orbital plane)
         var angularMomentum = position.Cross(velocity);
         var normalUnit = angularMomentum.Normalize();
-        
+
         // Transverse unit vector (in orbital plane, perpendicular to radial)
         var transverseUnit = normalUnit.Cross(radialUnit);
-        
+
         // Position error vector in inertial frame
         var positionError = test.Position - reference.Position;
-        
+
         // Project position error onto RTN axes
         var radialError = positionError * radialUnit;
-        var transverseError = positionError * transverseUnit;  
+        var transverseError = positionError * transverseUnit;
         var normalError = positionError * normalUnit;
-        
+
         return new RtnErrors
         {
             Radial = radialError,
@@ -693,7 +751,7 @@ public class TLETests
             Normal = normalError
         };
     }
-    
+
     /// <summary>
     /// Data structure to hold RTN error components
     /// </summary>
@@ -703,7 +761,7 @@ public class TLETests
         public double Transverse { get; set; }
         public double Normal { get; set; }
     }
-    
+
     /// <summary>
     /// Data structure to hold comparison results for a single time point
     /// </summary>
