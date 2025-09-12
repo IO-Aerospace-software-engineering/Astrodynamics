@@ -297,9 +297,10 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
         double fracDay = (epochDt.TimeOfDay.TotalSeconds / 86400.0);
         string epochStr = $"{year:00}{dayOfYear:000}{fracDay:.00000000}".PadRight(14);
 
-        // 3. Eccentricity: 7 digits, no decimal
-        string eStr = System.Math.Min(MAX_ECCENTRICITY, System.Math.Max(0.0, kep.E))
-            .ToString("0.0000000").Substring(2, 7);
+        // 3. Eccentricity: 7 digits, no decimal  
+        // Clamp eccentricity to valid range but preserve small positive values
+        double clampedE = System.Math.Min(MAX_ECCENTRICITY, System.Math.Max(1e-7, kep.E));
+        string eStr = clampedE.ToString("0.0000000").Substring(2, 7);
 
         // 4. nDot, nDDot, BSTAR: TLE scientific notation
         string nDotStr = nDot.ToString(" .00000000;-.00000000").Replace(",", ".").PadLeft(10);

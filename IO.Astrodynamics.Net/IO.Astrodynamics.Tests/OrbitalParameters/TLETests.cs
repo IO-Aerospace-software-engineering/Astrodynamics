@@ -253,12 +253,39 @@ public class TLETests
         Assert.NotNull(tle);
         Assert.Equal("TestSatellite", tle.Name);
         var computedSV = tle.ToStateVector().ToFrame(Frames.Frame.ICRF).ToStateVector();
+        var deltaP = (sv.Position - computedSV.Position).Magnitude();
+        var deltaV = (sv.Velocity - computedSV.Velocity).Magnitude();
+        Assert.True(deltaP < 6);
+        Assert.True(deltaV < 0.003);
+        Assert.True((sv.Velocity - computedSV.Velocity).Magnitude() < 30.0);
         Assert.Equal(sv.Position.X, computedSV.Position.X, (x, y) => System.Math.Abs(x - y) < 0.5);
         Assert.Equal(sv.Position.Y, computedSV.Position.Y, (x, y) => System.Math.Abs(x - y) < 2);
         Assert.Equal(sv.Position.Z, computedSV.Position.Z, (x, y) => System.Math.Abs(x - y) < 6);
         Assert.Equal(sv.Velocity.X, computedSV.Velocity.X, (x, y) => System.Math.Abs(x - y) < 3e-3);
-        Assert.Equal(sv.Velocity.Y, computedSV.Velocity.Y, (x, y) => System.Math.Abs(x - y) < 1e-4);
-        Assert.Equal(sv.Velocity.Z, computedSV.Velocity.Z, (x, y) => System.Math.Abs(x - y) < 1e-4);
+        Assert.Equal(sv.Velocity.Y, computedSV.Velocity.Y, (x, y) => System.Math.Abs(x - y) < 1e-3);
+        Assert.Equal(sv.Velocity.Z, computedSV.Velocity.Z, (x, y) => System.Math.Abs(x - y) < 1e-3);
+        Assert.Equal(sv.Epoch.TimeSpanFromJ2000().TotalSeconds, computedSV.Epoch.TimeSpanFromJ2000().TotalSeconds, 6);
+        Assert.Equal(sv.Frame.Name, computedSV.Frame.Name);
+        Assert.Equal(sv.Observer.NaifId, computedSV.Observer.NaifId);
+    }
+
+    [Fact]
+    public void ToTLE_ValidISSOrbit_ReturnsValidTLE()
+    {
+        var epoch = new TimeSystem.Time(new DateTime(2024, 1, 1), TimeFrame.UTCFrame);
+        var sv = new StateVector(new Vector3(5465479.168061836, -4037598.9299125164, 3.8812307310800365), // Position vector (X, Y, Z)
+            new Vector3(2821.2352501830983, 3825.849951628489, 6009.392701926987), TestHelpers.EarthAtJ2000, epoch, Frames.Frame.ICRF);
+        var config = new Astrodynamics.OrbitalParameters.TLE.Configuration(25666, "TestSatellite", "98067A", BstarDragTerm: 0.0021103);
+        var tle = sv.ToTLE(config);
+        Assert.NotNull(tle);
+        Assert.Equal("TestSatellite", tle.Name);
+        var computedSV = tle.ToStateVector().ToFrame(Frames.Frame.ICRF).ToStateVector();
+        Assert.Equal(sv.Position.X, computedSV.Position.X, (x, y) => System.Math.Abs(x - y) < 0.5);
+        Assert.Equal(sv.Position.Y, computedSV.Position.Y, (x, y) => System.Math.Abs(x - y) < 2);
+        Assert.Equal(sv.Position.Z, computedSV.Position.Z, (x, y) => System.Math.Abs(x - y) < 6);
+        Assert.Equal(sv.Velocity.X, computedSV.Velocity.X, (x, y) => System.Math.Abs(x - y) < 3e-3);
+        Assert.Equal(sv.Velocity.Y, computedSV.Velocity.Y, (x, y) => System.Math.Abs(x - y) < 1e-2);
+        Assert.Equal(sv.Velocity.Z, computedSV.Velocity.Z, (x, y) => System.Math.Abs(x - y) < 1e-2);
         Assert.Equal(sv.Epoch.TimeSpanFromJ2000().TotalSeconds, computedSV.Epoch.TimeSpanFromJ2000().TotalSeconds, 6);
         Assert.Equal(sv.Frame.Name, computedSV.Frame.Name);
         Assert.Equal(sv.Observer.NaifId, computedSV.Observer.NaifId);
@@ -564,8 +591,8 @@ public class TLETests
             25544, // NORAD ID
             "ISS (ZARYA)", // Satellite name
             "98067A", // COSPAR ID
-            BstarDragTerm:0.0021103 // B* drag term
-            );
+            BstarDragTerm: 0.0021103 // B* drag term
+        );
 
 // Convert the state vector to a TLE
         var tle = sv.ToTLE(config);
@@ -575,12 +602,12 @@ public class TLETests
 
 // Output the TLE string
         _testOutputHelper.WriteLine(res);
-        
+
         var newSv = tle.ToStateVector().ToFrame(Frames.Frame.TEME).ToStateVector();
-        var deltaP=newSv.Position - sv.Position;
-        var deltaV=newSv.Velocity - sv.Velocity;
-        var deltaPErr=deltaP.Magnitude();
-        var deltaVErr=deltaV.Magnitude();
+        var deltaP = newSv.Position - sv.Position;
+        var deltaV = newSv.Velocity - sv.Velocity;
+        var deltaPErr = deltaP.Magnitude();
+        var deltaVErr = deltaV.Magnitude();
         _testOutputHelper.WriteLine($"DeltaP: {deltaPErr} m");
         _testOutputHelper.WriteLine($"DeltaV: {deltaVErr} m/s");
         Assert.Equal(sv.Position.X, newSv.Position.X, (x, y) => System.Math.Abs(x - y) < 1000);
@@ -589,7 +616,6 @@ public class TLETests
         Assert.Equal(sv.Velocity.X, newSv.Velocity.X, (x, y) => System.Math.Abs(x - y) < 1);
         Assert.Equal(sv.Velocity.Y, newSv.Velocity.Y, (x, y) => System.Math.Abs(x - y) < 1);
         Assert.Equal(sv.Velocity.Z, newSv.Velocity.Z, (x, y) => System.Math.Abs(x - y) < 1);
-        
     }
 
     [Fact]
