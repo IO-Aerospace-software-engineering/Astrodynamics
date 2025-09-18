@@ -8,6 +8,10 @@ using IO.Astrodynamics.TimeSystem;
 namespace IO.Astrodynamics.Performance;
 
 [MemoryDiagnoser]
+[SkewnessColumn]
+[KurtosisColumn]
+[StatisticalTestColumn]
+[ShortRunJob]
 public class VelocityTLE
 {
     private Time _epoch;

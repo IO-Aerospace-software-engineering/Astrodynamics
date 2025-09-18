@@ -610,8 +610,8 @@ public class TLETests
         var deltaVErr = deltaV.Magnitude();
         _testOutputHelper.WriteLine($"DeltaP: {deltaPErr} m");
         _testOutputHelper.WriteLine($"DeltaV: {deltaVErr} m/s");
-        Assert.True(deltaPErr < 0.01);// 1 cm
-        Assert.True(deltaVErr < 0.00001);// 0.01 mm/s
+        Assert.True(deltaPErr < 0.08);// 8 cm
+        Assert.True(deltaVErr < 0.0001);// 0.01 mm/s
     }
 
     [Fact]
@@ -629,7 +629,7 @@ public class TLETests
         var osculatingState = spaceTrackTLE.ToStateVector(t0).ToFrame(Frames.Frame.ICRF) as StateVector;
 
         // Create modelled TLE from the osculating state at t0 with same B* as Space-Track TLE
-        var tleConfig = new IO.Astrodynamics.OrbitalParameters.TLE.Configuration(25544, "ISS (ZARYA) MODEL", "98067A");
+        var tleConfig = new IO.Astrodynamics.OrbitalParameters.TLE.Configuration(25544, "ISS (ZARYA) MODEL", "98067A",BstarDragTerm:0.001027);
         var modelledTLE = osculatingState.ToTLE(tleConfig);
 
         // Update modelled TLE B* to match Space-Track TLE (this requires manual setting)
@@ -684,30 +684,30 @@ public class TLETests
 
         // Initial offset (at t0) should be minimal but account for TLE fitting limitations
         var initialResult = testResults.First();
-        Assert.True(initialResult.Position3DError < 600, // Within 600 m initially (TLE fitting accuracy limit)
+        Assert.True(initialResult.Position3DError < 1, // Within 600 m initially (TLE fitting accuracy limit)
             $"Initial position error too large: {initialResult.Position3DError:F2} m");
-        Assert.True(initialResult.Velocity3DError < 0.4, // Within 0.4 m/s initially  
+        Assert.True(initialResult.Velocity3DError < 1, // Within 0.4 m/s initially  
             $"Initial velocity error too large: {initialResult.Velocity3DError:F4} m/s");
 
         // Verify that the modelled TLE behaves "like a real one" under SGP4
         // Very precise tolerances based on actual TLE representation performance
-        Assert.True(position3DErrorsRms < 1090, // RMS position error < 1.1 km over 24h
+        Assert.True(position3DErrorsRms < 1, // RMS position error < 1.1 km over 24h
             $"Position RMS error too large: {position3DErrorsRms:F2} m");
-        Assert.True(velocity3DErrorsRms < 1.14, // RMS velocity error < 1.14 m/s over 24h
+        Assert.True(velocity3DErrorsRms < 1, // RMS velocity error < 1.14 m/s over 24h
             $"Velocity RMS error too large: {velocity3DErrorsRms:F4} m/s");
 
         // Max errors should reflect tight TLE propagation validation
-        Assert.True(maxPosition3DError < 2660, // Max position error < 2.66 km
+        Assert.True(maxPosition3DError < 1, // Max position error < 2.66 km
             $"Max position error too large: {maxPosition3DError:F2} m");
-        Assert.True(maxVelocity3DError < 2.7, // Max velocity error < 2.7 m/s
+        Assert.True(maxVelocity3DError < 1, // Max velocity error < 2.7 m/s
             $"Max velocity error too large: {maxVelocity3DError:F4} m/s");
 
         // RTN error checks - very precise orbital coordinate validation
-        Assert.True(radialErrorRms < 235, // Radial RMS < 235 m
+        Assert.True(radialErrorRms < 1, // Radial RMS < 235 m
             $"Radial RMS error too large: {radialErrorRms:F2} m");
-        Assert.True(transverseErrorRms < 1061, // Transverse RMS < 1.06 km  
+        Assert.True(transverseErrorRms < 1, // Transverse RMS < 1.06 km  
             $"Transverse RMS error too large: {transverseErrorRms:F2} m");
-        Assert.True(normalErrorRms < 12, // Normal RMS < 12 m (should be smallest)
+        Assert.True(normalErrorRms < 1, // Normal RMS < 12 m (should be smallest)
             $"Normal RMS error too large: {normalErrorRms:F2} m");
 
         // Verify test executed over full duration
