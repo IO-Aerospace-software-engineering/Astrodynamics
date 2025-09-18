@@ -17,12 +17,12 @@ public class VelocityTLE
     {
         API.Instance.LoadKernels(new DirectoryInfo("Data"));
         _epoch = new TimeSystem.Time(new DateTime(2024, 1, 1), TimeFrame.UTCFrame);
-        _sv = new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 8000.0, 0.0), CelestialItem.Create(399), _epoch, Frames.Frame.ICRF);
+        _sv = new StateVector(new Vector3(6800000.0, 1000.0, 0.0), new Vector3(100.0, 8000.0, 0.0), CelestialItem.Create(399), _epoch, Frames.Frame.ICRF);
     }
 
     [Benchmark(Description = "Convert StateVector to TLE")]
     public void ComputeTLE()
     {
-        var tle = _sv.ToTLE(new OrbitalParameters.TLE.Configuration(25666, "TestSatellite", "98067A"));
+        var tle = _sv.ToTLE(new OrbitalParameters.TLE.Configuration(25666, "TestSatellite", "98067A",MaxIterations:20000));
     }
 }

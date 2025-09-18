@@ -610,12 +610,8 @@ public class TLETests
         var deltaVErr = deltaV.Magnitude();
         _testOutputHelper.WriteLine($"DeltaP: {deltaPErr} m");
         _testOutputHelper.WriteLine($"DeltaV: {deltaVErr} m/s");
-        Assert.Equal(sv.Position.X, newSv.Position.X, (x, y) => System.Math.Abs(x - y) < 1000);
-        Assert.Equal(sv.Position.Y, newSv.Position.Y, (x, y) => System.Math.Abs(x - y) < 1000);
-        Assert.Equal(sv.Position.Z, newSv.Position.Z, (x, y) => System.Math.Abs(x - y) < 1000);
-        Assert.Equal(sv.Velocity.X, newSv.Velocity.X, (x, y) => System.Math.Abs(x - y) < 1);
-        Assert.Equal(sv.Velocity.Y, newSv.Velocity.Y, (x, y) => System.Math.Abs(x - y) < 1);
-        Assert.Equal(sv.Velocity.Z, newSv.Velocity.Z, (x, y) => System.Math.Abs(x - y) < 1);
+        Assert.True(deltaPErr < 0.01);// 1 cm
+        Assert.True(deltaVErr < 0.00001);// 0.01 mm/s
     }
 
     [Fact]

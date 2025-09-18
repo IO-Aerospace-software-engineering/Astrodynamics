@@ -503,7 +503,6 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
     /// <seealso cref="Constants.Rad2Deg"/>
     /// <seealso cref="Constants.Deg2Rad"/>
     /// <seealso cref="Constants._2PI"/>
-    /// </summary>
     /// <returns>
     /// A <see cref="KeplerianElements"/> object representing the classical orbital elements
     /// (semi-major axis, eccentricity, inclination, argument of perigee, right ascension of the ascending node, and true anomaly)
