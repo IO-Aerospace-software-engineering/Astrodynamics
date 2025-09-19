@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Coordinates;
@@ -595,7 +596,10 @@ public class TLETests
         );
 
 // Convert the state vector to a TLE
+        var sw= Stopwatch.StartNew();
         var tle = sv.ToTLE(config);
+        sw.Stop();
+        _testOutputHelper.WriteLine($"TLE fitting took: {sw.ElapsedMilliseconds} ms");
 
 // Convert the TLE to a string representation
         var res = tle.ToString();
@@ -610,8 +614,8 @@ public class TLETests
         var deltaVErr = deltaV.Magnitude();
         _testOutputHelper.WriteLine($"DeltaP: {deltaPErr} m");
         _testOutputHelper.WriteLine($"DeltaV: {deltaVErr} m/s");
-        Assert.True(deltaPErr < 0.08);// 8 cm
-        Assert.True(deltaVErr < 0.0001);// 0.01 mm/s
+        Assert.True(deltaPErr < 0.02);// 2 cm
+        Assert.True(deltaVErr < 0.00001);// 0.001 mm/s
     }
 
     [Fact]
