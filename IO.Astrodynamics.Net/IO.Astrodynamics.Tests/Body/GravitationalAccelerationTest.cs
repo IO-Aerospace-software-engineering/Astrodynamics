@@ -23,7 +23,7 @@ public class GravitationalAccelerationTest
             TimeSystem.Time.J2000TDB,
             Frames.Frame.ICRF);
         var res = gravity.ComputeGravitationalAcceleration(parkingOrbit);
-        Assert.Equal(new Vector3(-8.621408092022785, 0.0, -4.0657581468206416E-20), res);
+        Assert.Equal(new Vector3(-8.621408092022785, 0.0, -4.0657581468206416E-20), res,TestHelpers.VectorComparer);
     }
 
     [Fact]

@@ -997,7 +997,7 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
         ArgumentNullException.ThrowIfNull(config);
         var meanElements = _sharedMeanElementsConverter.Convert(this, config.NoradId,
             config.Name, config.CosparId, config.RevolutionsAtEpoch,
-            config.BstarDragTerm, config.Tolerance, config.MaxIterations);
+            config.BstarDragTerm, config.MaxIterations);
 
         return TLE.TLE.Create(meanElements, config.Name, config.NoradId,
             config.CosparId, config.RevolutionsAtEpoch, config.Classification,

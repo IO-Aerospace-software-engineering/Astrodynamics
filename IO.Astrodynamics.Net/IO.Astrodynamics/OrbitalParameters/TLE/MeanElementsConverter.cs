@@ -11,205 +11,9 @@ namespace IO.Astrodynamics.OrbitalParameters.TLE
     /// </summary>
     public class MeanElementsConverter
     {
-        /// <summary>
-        /// Default convergence threshold
-        /// </summary>
-        private const double DefaultThreshold = 1.0e-10;
-
-        /// <summary>
-        /// Default maximum iterations
-        /// </summary>
-        private const int DefaultMaxIterations = 100;
-
-        /// <summary>
-        /// Default damping factor
-        /// </summary>
-        private const double DefaultDamping = 1.0;
-
-        private readonly double _threshold;
-        private readonly double _damping;
-        private readonly int _maxIterations;
-        private int _iterationsPerformed;
-
-        /// <summary>
-        /// Constructor with configurable parameters following approach
-        /// </summary>
-        /// <param name="threshold">Convergence threshold</param>
-        /// <param name="damping">Damping factor for iteration stability</param>
-        /// <param name="maxIterations">Maximum number of iterations</param>
-        public MeanElementsConverter(double threshold = DefaultThreshold,
-            double damping = DefaultDamping,
-            int maxIterations = DefaultMaxIterations)
-        {
-            _threshold = threshold;
-            _damping = damping;
-            _maxIterations = maxIterations;
-        }
-
-        /// <summary>
-        /// Gets the number of iterations performed in the last conversion
-        /// </summary>
-        public int IterationsPerformed => _iterationsPerformed;
-
-        /// <summary>
-        /// Convert osculating orbital elements to mean elements using exact approach
-        /// </summary>
-        /// <param name="osculating">Osculating orbital parameters</param>
-        /// <returns>Mean orbital parameters</returns>
-        public OrbitalParameters ConvertToMean(OrbitalParameters osculating)
-        {
-            if (osculating == null) throw new ArgumentNullException(nameof(osculating));
-
-            // Sanity check - ensure orbit is outside reference sphere (Brillouin sphere)
-            var semiMajorAxis = osculating.SemiMajorAxis();
-            var celestialBody = osculating.Observer as CelestialBody;
-            var referenceRadius = celestialBody?.EquatorialRadius ?? 6378136.6;
-
-            if (semiMajorAxis < referenceRadius)
-            {
-                throw new InvalidOperationException($"Trajectory inside Brillouin sphere: {semiMajorAxis} < {referenceRadius}");
-            }
-
-            // Get equinoctial osculating parameters (preprocessing step)
-            var equinoctial = Preprocessing(osculating);
-
-            double sma = equinoctial.SemiMajorAxis();
-            double ex = equinoctial.EquinoctialEx();
-            double ey = equinoctial.EquinoctialEy();
-            double hx = equinoctial.Hx();
-            double hy = equinoctial.Hy();
-            double lv = equinoctial.Lv();
-
-            // Set threshold for each parameter
-            double thresholdA = _threshold * System.Math.Abs(sma);
-            double thresholdE = _threshold * (1.0 + System.Math.Sqrt(ex * ex + ey * ey)); // Using hypot equivalent
-            double thresholdH = _threshold * (1.0 + System.Math.Sqrt(hx * hx + hy * hy)); // Using hypot equivalent
-            double thresholdLv = _threshold * System.Math.PI;
-
-            // Rough initialization of mean parameters
-            var mean = Initialize(equinoctial);
-
-            _iterationsPerformed = 0;
-            while (_iterationsPerformed < _maxIterations)
-            {
-                _iterationsPerformed++;
-
-                // Update osculating parameters from current mean parameters
-                var updated = MeanToOsculating(mean);
-
-                // Calculate residuals
-                double deltaA = sma - updated.SemiMajorAxis();
-                double deltaEx = ex - updated.EquinoctialEx();
-                double deltaEy = ey - updated.EquinoctialEy();
-                double deltaHx = hx - updated.Hx();
-                double deltaHy = hy - updated.Hy();
-                double deltaLv = SpecialFunctions.NormalizeAngle(lv - updated.Lv()); // Exact normalization
-
-                // Check convergence
-                if (System.Math.Abs(deltaA) < thresholdA &&
-                    System.Math.Abs(deltaEx) < thresholdE &&
-                    System.Math.Abs(deltaEy) < thresholdE &&
-                    System.Math.Abs(deltaHx) < thresholdH &&
-                    System.Math.Abs(deltaHy) < thresholdH &&
-                    System.Math.Abs(deltaLv) < thresholdLv)
-                {
-                    // Convergence achieved
-                    return Postprocessing(osculating, mean);
-                }
-
-                // Update mean parameters with damping
-                sma += _damping * deltaA;
-                ex += _damping * deltaEx;
-                ey += _damping * deltaEy;
-                hx += _damping * deltaHx;
-                hy += _damping * deltaHy;
-                lv += _damping * deltaLv;
-
-                // Update mean orbit (create new EquinoctialOrbit equivalent)
-                // Convert back to P, F, G, H, K, L0 format
-                double p = sma * (1.0 - ex * ex - ey * ey);
-                mean = new EquinoctialElements(
-                    p, // P = a(1-ex²-ey²)
-                    ex, // F = ex
-                    ey, // G = ey  
-                    hx, // H = hx
-                    hy, // K = hy
-                    lv, // L0 = lv
-                    osculating.Observer,
-                    osculating.Epoch,
-                    osculating.Frame);
-            }
-
-            throw new InvalidOperationException($"Unable to compute mean parameters after {_maxIterations} iterations");
-        }
-
-        /// <summary>
-        /// Preprocessing step: convert to equinoctial elements
-        /// </summary>
-        /// <param name="osculating">Input orbital parameters</param>
-        /// <returns>Equinoctial elements</returns>
-        protected virtual EquinoctialElements Preprocessing(OrbitalParameters osculating)
-        {
-            if (osculating is EquinoctialElements equinoctial)
-                return equinoctial;
-
-            return osculating.ToEquinoctial();
-        }
-
-        /// <summary>
-        /// Initialize mean elements (rough approximation)
-        /// </summary>
-        /// <param name="equinoctial">Target equinoctial elements</param>
-        /// <returns>Initial mean elements</returns>
-        protected virtual EquinoctialElements Initialize(EquinoctialElements equinoctial)
-        {
-            // Simple initialization: use osculating elements as initial guess
-            return new EquinoctialElements(
-                equinoctial.P,
-                equinoctial.F,
-                equinoctial.G,
-                equinoctial.H,
-                equinoctial.K,
-                equinoctial.L0,
-                equinoctial.Observer,
-                equinoctial.Epoch,
-                equinoctial.Frame);
-        }
-
-        /// <summary>
-        /// Convert mean to osculating elements
-        /// </summary>
-        /// <param name="mean">Mean equinoctial elements</param>
-        /// <returns>Osculating equinoctial elements</returns>
-        protected virtual EquinoctialElements MeanToOsculating(EquinoctialElements mean)
-        {
-            // For TLE fitting, we need to propagate through SGP4/SDP4 model
-            // Convert to TLE and back to get osculating elements
-            try
-            {
-                var keplerianMean = mean.ToKeplerianElements();
-                var tempTle = TLE.Create(keplerianMean, "TEMP", 9999, "99999A", 0, Classification.Unclassified, 0.0001);
-                var osculatingState = tempTle.ToStateVector(mean.Epoch);
-                return osculatingState.ToEquinoctial();
-            }
-            catch
-            {
-                // Fallback: assume mean = osculating for simple cases
-                return mean;
-            }
-        }
-
-        /// <summary>
-        /// Postprocessing step: convert result back to desired format
-        /// </summary>
-        /// <param name="osculating">Original osculating elements</param>
-        /// <param name="mean">Computed mean elements</param>
-        /// <returns>Final mean orbital parameters</returns>
-        protected virtual OrbitalParameters Postprocessing(OrbitalParameters osculating, EquinoctialElements mean)
-        {
-            // For TLE fitting, return Keplerian elements
-            return mean.ToKeplerianElements();
-        }
+        const double SAFETY_ALTITUDE = 120000.0; // 120 km minimum altitude for LEO
+        const double EQUATORIAL_RADIUS_EARTH = 6378136.6; // meters
+        const double POSITION_TOLERANCE = 1E+04; // 10 km position tolerance for best-effort fallback
 
         /// <summary>
         /// Fit a TLE from a state vector using the upgraded
@@ -221,7 +25,6 @@ namespace IO.Astrodynamics.OrbitalParameters.TLE
             string cosparId,
             ushort revAtEpoch = 0,
             double bstar = 0.0001,
-            double tol = 1,
             int maxIter = 200)
         {
             if (osculatingElements == null) throw new ArgumentNullException(nameof(osculatingElements));
@@ -260,24 +63,29 @@ namespace IO.Astrodynamics.OrbitalParameters.TLE
             double bestPositionError = double.MaxValue;
             OrbitalParameters bestTle = null;
 
-            // Compute threshold based on orbital period and epsilon
-            var n = System.Math.Sqrt(osculatingElements.Observer.GM / System.Math.Pow(targetEquinoctial.SemiMajorAxis(), 3));
-            var threshold = epsilon * 2 * System.Math.PI / n; // Period-based threshold
+            // Compute thresholds based on orbit size and speed (meters and m/s)
+            var mu = osculatingElements.Observer.GM;
+            var aGuess = targetEquinoctial.SemiMajorAxis();
+            var vScale = System.Math.Sqrt(mu / aGuess);
+            var positionThreshold = epsilon * aGuess; // e.g., 1e-10 * a ~ sub-millimeter for LEO
+            var velocityThreshold = epsilon * vScale; // consistent velocity scale
 
             for (int iter = 0; iter < maxIterations; iter++)
             {
                 try
                 {
                     // Convert current equinoctial back to Keplerian for TLE creation
-                    var currentKep = currentEquinoctial.ToKeplerianElements();
-                    var testTle = TLE.Create(currentKep, name, noradId, cosparId, revAtEpoch, Classification.Unclassified, bstar);
+                    var testTle = TLE.Create(currentEquinoctial, name, noradId, cosparId, revAtEpoch, Classification.Unclassified, bstar);
 
                     // Propagate TLE and convert back to equinoctial for comparison
                     var propagatedState = testTle.ToStateVector(osculatingElements.Epoch);
                     var propagatedEquinoctial = propagatedState.ToEquinoctial();
 
-                    // Compute position error for convergence check
-                    var positionError = (osculatingElements.Position - propagatedState.Position).Magnitude();
+                    // Compute position/velocity errors for convergence check
+                    var posVec = osculatingElements.Position - propagatedState.Position;
+                    var velVec = osculatingElements.Velocity - propagatedState.Velocity;
+                    var positionError = posVec.Magnitude();
+                    var velocityError = velVec.Magnitude();
 
                     if (positionError < bestPositionError)
                     {
@@ -285,8 +93,8 @@ namespace IO.Astrodynamics.OrbitalParameters.TLE
                         bestTle = testTle;
                     }
 
-                    // Check convergence using position/velocity criteria
-                    if (positionError < threshold)
+                    // Check convergence using position AND velocity criteria
+                    if (positionError < positionThreshold && velocityError < velocityThreshold)
                     {
                         return testTle;
                     }
@@ -294,21 +102,48 @@ namespace IO.Astrodynamics.OrbitalParameters.TLE
                     // Compute residuals in equinoctial space (no singularities!)
                     var residuals = ComputeEquinoctialResiduals(targetEquinoctial, propagatedEquinoctial);
 
+                    // Basic component-wise scaling to account for units and coupling
+                    // Scale P residual by semi-major axis to keep steps moderate
+                    var pScale = System.Math.Max(1.0, aGuess);
+                    var fScale = 1.0; // dimensionless
+                    var gScale = 1.0; // dimensionless
+                    var hScale = 1.0; // dimensionless
+                    var kScale = 1.0; // dimensionless
+                    var lScale = 1.0; // radians
+
                     // Fixed-point correction with adaptive scaling
                     var adaptiveScale = scale * System.Math.Max(0.1, 1.0 - (double)iter / maxIterations);
 
                     // Apply corrections to equinoctial elements
-                    var newP = currentEquinoctial.P - adaptiveScale * residuals[0];
-                    var newF = currentEquinoctial.F - adaptiveScale * residuals[1];
-                    var newG = currentEquinoctial.G - adaptiveScale * residuals[2];
-                    var newH = currentEquinoctial.H - adaptiveScale * residuals[3];
-                    var newK = currentEquinoctial.K - adaptiveScale * residuals[4];
-                    var newL0 = SpecialFunctions.NormalizeAngle(currentEquinoctial.L0 - adaptiveScale * residuals[5]);
+                    var newP = currentEquinoctial.P - adaptiveScale * (residuals[0] / pScale) * pScale;
+                    var newF = currentEquinoctial.F - adaptiveScale * (residuals[1] / fScale) * fScale;
+                    var newG = currentEquinoctial.G - adaptiveScale * (residuals[2] / gScale) * gScale;
+                    var newH = currentEquinoctial.H - adaptiveScale * (residuals[3] / hScale) * hScale;
+                    var newK = currentEquinoctial.K - adaptiveScale * (residuals[4] / kScale) * kScale;
+                    var newL0 = SpecialFunctions.NormalizeAngle(currentEquinoctial.L0 - adaptiveScale * (residuals[5] / lScale) * lScale);
 
-                    // Apply physical constraints
+                    // Enforce physical constraints via perigee constraint using P,F,G
+                    // a = P/(1-e^2), rp = a(1-e) must be >= minRadius + safetyAltitude
+                    var e2 = newF * newF + newG * newG;
+                    var e = System.Math.Sqrt(System.Math.Max(0.0, System.Math.Min(e2, 0.999999))); // keep e < 1
                     var celestialBody = osculatingElements.Observer as CelestialBody;
-                    var minRadius = celestialBody?.EquatorialRadius ?? 6378136.6;
-                    newP = System.Math.Max(newP, minRadius + 100000); // Ensure minimum altitude
+                    var minBodyRadius = celestialBody?.EquatorialRadius ?? EQUATORIAL_RADIUS_EARTH;
+
+                    // Recompute a from P and e, then check perigee
+                    var denom = System.Math.Max(1e-12, 1.0 - e * e);
+                    var aNow = newP / denom;
+                    var rp = aNow * (1.0 - e);
+                    var rpMin = minBodyRadius + SAFETY_ALTITUDE;
+                    if (rp < rpMin)
+                    {
+                        // Increase a to satisfy perigee constraint while keeping e
+                        var aReq = rpMin / (1.0 - e);
+                        newP = aReq * (1.0 - e * e);
+                        aNow = aReq;
+                    }
+
+                    // Update semi-major axis guess for scaling next iteration
+                    aGuess = aNow;
 
                     // Create new equinoctial elements for next iteration
                     currentEquinoctial = new EquinoctialElements(
@@ -322,7 +157,7 @@ namespace IO.Astrodynamics.OrbitalParameters.TLE
             }
 
             // Return best solution found
-            if (bestTle != null && bestPositionError < 10000.0) // Accept up to 10km error for very problematic cases
+            if (bestTle != null && bestPositionError < POSITION_TOLERANCE) // Accept up to 10km error for very problematic cases
             {
                 return bestTle;
             }
@@ -336,15 +171,15 @@ namespace IO.Astrodynamics.OrbitalParameters.TLE
         /// </summary>
         private static double[] ComputeEquinoctialResiduals(EquinoctialElements target, EquinoctialElements propagated)
         {
-            return new double[]
-            {
+            return
+            [
                 propagated.P - target.P,
                 propagated.F - target.F,
                 propagated.G - target.G,
                 propagated.H - target.H,
                 propagated.K - target.K,
                 SpecialFunctions.NormalizeAngleDifference(propagated.L0 - target.L0)
-            };
+            ];
         }
     }
 }
