@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dotnet --version)",
+      "Bash(dotnet build:*)",
+      "Bash(dotnet test:*)",
+      "WebSearch",
+      "WebFetch(domain:www.astrodynamicstandards.com)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

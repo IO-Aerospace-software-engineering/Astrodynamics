@@ -46,7 +46,21 @@ namespace IO.Astrodynamics.Math
 
         public double Angle(in Vector3 vector)
         {
-            return System.Math.Acos(this * vector / (Magnitude() * vector.Magnitude()));
+            var mag1 = Magnitude();
+            var mag2 = vector.Magnitude();
+            
+            // Handle zero vectors
+            if (mag1 == 0.0 || mag2 == 0.0)
+            {
+                return 0.0; // Angle is undefined, return 0 by convention
+            }
+            
+            var dotProduct = (this * vector) / (mag1 * mag2);
+            
+            // Clamp to [-1, 1] to handle floating-point precision errors
+            dotProduct = System.Math.Clamp(dotProduct, -1.0, 1.0);
+            
+            return System.Math.Acos(dotProduct);
         }
 
         public double Angle(in Vector3 vector, in Plane plane)

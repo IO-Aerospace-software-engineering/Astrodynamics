@@ -67,6 +67,36 @@ namespace IO.Astrodynamics.OrbitalParameters
         public double L0 { get; }
 
         /// <summary>
+        /// Gets the equinoctial ex parameter (equivalent to F in some conventions).
+        /// </summary>
+        /// <returns>The equinoctial ex parameter.</returns>
+        public double EquinoctialEx() => F;
+
+        /// <summary>
+        /// Gets the equinoctial ey parameter (equivalent to G in some conventions).
+        /// </summary>
+        /// <returns>The equinoctial ey parameter.</returns>
+        public double EquinoctialEy() => G;
+
+        /// <summary>
+        /// Gets the hx parameter (equivalent to H in some conventions).
+        /// </summary>
+        /// <returns>The hx parameter.</returns>
+        public double Hx() => H;
+
+        /// <summary>
+        /// Gets the hy parameter (equivalent to K in some conventions).
+        /// </summary>
+        /// <returns>The hy parameter.</returns>
+        public double Hy() => K;
+
+        /// <summary>
+        /// Gets the lv parameter (equivalent to L0 in some conventions).
+        /// </summary>
+        /// <returns>The lv parameter.</returns>
+        public double Lv() => L0;
+
+        /// <summary>
         /// Converts the current instance to equinoctial elements.
         /// </summary>
         /// <returns>The current instance of <see cref="EquinoctialElements"/>.</returns>

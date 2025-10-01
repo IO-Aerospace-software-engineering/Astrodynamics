@@ -165,15 +165,15 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
         var epoch = ExtractEpochFromTLE(line1);
         var earth = new CelestialBody(399, new Frame("ITRF93"), epoch);
 
-        // Parse line 2 for orbital elements
-        var meanMotion = double.Parse(line2.Substring(52, 11));
+        // Parse line 2 for orbital elements - FIXED: Use InvariantCulture
+        var meanMotion = double.Parse(line2.Substring(52, 11), CultureInfo.InvariantCulture);
         double n = Constants._2PI / (86400.0 / meanMotion);
         MeanSemiMajorAxis = System.Math.Cbrt(earth.GM / (n * n));
-        MeanEccentricity = double.Parse("0." + line2.Substring(26, 7));
-        MeanInclination = double.Parse(line2.Substring(8, 8)) * Constants.Deg2Rad;
-        MeanAscendingNode = double.Parse(line2.Substring(17, 8)) * Constants.Deg2Rad;
-        MeanArgumentOfPeriapsis = double.Parse(line2.Substring(34, 8)) * Constants.Deg2Rad;
-        MeanMeanAnomaly = double.Parse(line2.Substring(43, 8)) * Constants.Deg2Rad;
+        MeanEccentricity = double.Parse("0." + line2.Substring(26, 7), CultureInfo.InvariantCulture);
+        MeanInclination = double.Parse(line2.Substring(8, 8), CultureInfo.InvariantCulture) * Constants.Deg2Rad;
+        MeanAscendingNode = double.Parse(line2.Substring(17, 8), CultureInfo.InvariantCulture) * Constants.Deg2Rad;
+        MeanArgumentOfPeriapsis = double.Parse(line2.Substring(34, 8), CultureInfo.InvariantCulture) * Constants.Deg2Rad;
+        MeanMeanAnomaly = double.Parse(line2.Substring(43, 8), CultureInfo.InvariantCulture) * Constants.Deg2Rad;
 
         // Parse line 1 for additional parameters
         FirstDerivationMeanMotion = ParseTleDouble(line1.Substring(33, 10));
@@ -194,8 +194,8 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
         // Extract epoch from positions 18-32 (0-based indexing): YYDDD.DDDDDDDD
         string epochStr = line1.Substring(18, 14);
 
-        // Parse year (YY format)
-        int year = int.Parse(epochStr.Substring(0, 2));
+        // Parse year (YY format) - FIXED: Use InvariantCulture
+        int year = int.Parse(epochStr.Substring(0, 2), CultureInfo.InvariantCulture);
         // Convert 2-digit year to 4-digit (pivot at 57: 57-99 = 1957-1999, 00-56 = 2000-2056)
         if (year < 57)
             year += 2000;
@@ -243,7 +243,7 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
         string exponentStr = value.Substring(6, 2);
 
         double mantissa = double.Parse("0." + mantissaStr, CultureInfo.InvariantCulture);
-        int exponent = int.Parse(exponentStr);
+        int exponent = int.Parse(exponentStr, CultureInfo.InvariantCulture);
 
         double result = mantissa * System.Math.Pow(10, exponent);
         return sign == '-' ? -result : result;
@@ -295,14 +295,16 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
         int year = epochDt.Year % 100;
         int dayOfYear = epochDt.DayOfYear;
         double fracDay = (epochDt.TimeOfDay.TotalSeconds / 86400.0);
-        string epochStr = $"{year:00}{dayOfYear:000}{fracDay:.00000000}".PadRight(14);
+        string epochStr = fracDay.ToString("0.00000000", CultureInfo.InvariantCulture);
+        epochStr = $"{year:00}{dayOfYear:000}{epochStr.Substring(1)}"; // Remove "0." and prepend year/day
 
-        // 3. Eccentricity: 7 digits, no decimal
-        string eStr = System.Math.Min(MAX_ECCENTRICITY, System.Math.Max(0.0, kep.E))
-            .ToString("0.0000000").Substring(2, 7);
+        // 3. Eccentricity: 7 digits, no decimal  
+        // Clamp eccentricity to valid range but preserve small positive values
+        double clampedE = System.Math.Min(MAX_ECCENTRICITY, System.Math.Max(1e-7, kep.E));
+        string eStr = clampedE.ToString("0.0000000", CultureInfo.InvariantCulture).Substring(2, 7);
 
-        // 4. nDot, nDDot, BSTAR: TLE scientific notation
-        string nDotStr = nDot.ToString(" .00000000;-.00000000").Replace(",", ".").PadLeft(10);
+        // 4. nDot, nDDot, BSTAR: TLE scientific notation - FIXED: Use InvariantCulture
+        string nDotStr = nDot.ToString(" .00000000;-.00000000", CultureInfo.InvariantCulture).PadLeft(10);
         string nDDotStr = FormatTleExponent(nDDot, 5);
         string bstarStr = FormatTleExponent(bstar, 5);
 
@@ -331,21 +333,21 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
         string line1Temp = line1Builder.ToString();
         line1Builder.Append(ComputeTleChecksum(line1Temp));
 
-        // Construction Line 2 sans allocations intermédiaires
+        // Construction Line 2 sans allocations intermédiaires - FIXED: Use InvariantCulture
         line2Builder.Append("2 ")
             .Append(noradId.ToString("00000"))
             .Append(' ')
-            .Append(iDeg.ToString("0.0000").PadLeft(8))
+            .Append(iDeg.ToString("0.0000", CultureInfo.InvariantCulture).PadLeft(8))
             .Append(' ')
-            .Append(raanDeg.ToString("0.0000").PadLeft(8))
+            .Append(raanDeg.ToString("0.0000", CultureInfo.InvariantCulture).PadLeft(8))
             .Append(' ')
             .Append(eStr)
             .Append(' ')
-            .Append(argpDeg.ToString("0.0000").PadLeft(8))
+            .Append(argpDeg.ToString("0.0000", CultureInfo.InvariantCulture).PadLeft(8))
             .Append(' ')
-            .Append(mDeg.ToString("0.0000").PadLeft(8))
+            .Append(mDeg.ToString("0.0000", CultureInfo.InvariantCulture).PadLeft(8))
             .Append(' ')
-            .Append(meanMotion.ToString("0.00000000").PadLeft(11))
+            .Append(meanMotion.ToString("0.00000000", CultureInfo.InvariantCulture).PadLeft(11))
             .Append(revolutionsAtEpoch.ToString().PadLeft(5));
 
         string line2Temp = line2Builder.ToString();
@@ -502,7 +504,6 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
     /// <seealso cref="Constants.Rad2Deg"/>
     /// <seealso cref="Constants.Deg2Rad"/>
     /// <seealso cref="Constants._2PI"/>
-    /// </summary>
     /// <returns>
     /// A <see cref="KeplerianElements"/> object representing the classical orbital elements
     /// (semi-major axis, eccentricity, inclination, argument of perigee, right ascension of the ascending node, and true anomaly)

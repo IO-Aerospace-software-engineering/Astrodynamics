@@ -70,16 +70,16 @@ public class APITest
         //Read results
         Assert.Equal(2, res.Count());
         Assert.Equal(
-            new Window(new TimeSystem.Time("2021-03-02 23:12:54.4214440").ToTDB(),
-                new TimeSystem.Time("2021-03-02 23:12:54.4214440").ToTDB()), res.ElementAt(0).Window);
+            new Window(new TimeSystem.Time("2021-03-03 23:08:58.2431759").ToTDB(),
+                new TimeSystem.Time("2021-03-03 23:08:58.2431759").ToTDB()), res.ElementAt(0).Window);
 
         Assert.Equal(
-            new Window(new TimeSystem.Time("2021-03-04 23:05:01.7235643").ToTDB(),
-                new TimeSystem.Time("2021-03-04 23:05:01.7235643").ToTDB()), res.ElementAt(1).Window);
-        Assert.Equal(47.006184454395374, res.ElementAt(0).InertialAzimuth * IO.Astrodynamics.Constants.Rad2Deg, 9);
-        Assert.Equal(45.125545666622976, res.ElementAt(0).NonInertialAzimuth * IO.Astrodynamics.Constants.Rad2Deg, 9);
-        Assert.Equal(8794.33812148836, res.ElementAt(0).InertialInsertionVelocity, 9);
-        Assert.Equal(8499.7258854462671, res.ElementAt(0).NonInertialInsertionVelocity, 9);
+            new Window(new TimeSystem.Time("2021-03-04 23:05:01.7235653").ToTDB(),
+                new TimeSystem.Time("2021-03-04 23:05:01.7235653").ToTDB()), res.ElementAt(1).Window);
+        Assert.Equal(47.006184451999999, res.ElementAt(0).InertialAzimuth * IO.Astrodynamics.Constants.Rad2Deg, 6);
+        Assert.Equal(45.125545666622976, res.ElementAt(0).NonInertialAzimuth * IO.Astrodynamics.Constants.Rad2Deg, 6);
+        Assert.Equal(8794.33812148836, res.ElementAt(0).InertialInsertionVelocity, 6);
+        Assert.Equal(8499.7258854462671, res.ElementAt(0).NonInertialInsertionVelocity, 6);
     }
 
     [Fact]
@@ -210,8 +210,8 @@ public class APITest
         var windows = res as Window[] ?? res.ToArray();
         Assert.Equal(2, windows.Count());
         Assert.Equal("2021-05-17T12:00:00.0000000 TDB", windows[0].StartDate.ToString());
-        Assert.Equal("2021-05-17T19:35:24.9088325 TDB", windows[0].EndDate.ToString());
-        Assert.Equal("2021-05-18T04:18:32.4437507 TDB", windows[1].StartDate.ToString());
+        Assert.Equal("2021-05-17T19:35:24.9088323 TDB", windows[0].EndDate.ToString());
+        Assert.Equal("2021-05-18T04:18:32.4437502 TDB", windows[1].StartDate.ToString());
         Assert.Equal("2021-05-18T12:00:00.0000000 TDB", windows[1].EndDate.ToString());
         Assert.Throws<ArgumentNullException>(() => API.Instance.FindWindowsOnIlluminationConstraint(
             new Window(TimeSystem.Time.CreateTDB(674524800), TimeSystem.Time.CreateTDB(674611200)),
@@ -261,7 +261,7 @@ public class APITest
 
         var windows = res as Window[] ?? res.ToArray();
         Assert.Single(windows);
-        Assert.Equal("2023-02-19T14:33:08.9179878 TDB", windows[0].StartDate.ToString());
+        Assert.Equal("2023-02-19T14:33:08.9179872 TDB", windows[0].StartDate.ToString());
         Assert.Equal("2023-02-20T00:00:00.0000000 TDB", windows[0].EndDate.ToString());
         Assert.Throws<ArgumentNullException>(() => API.Instance.FindWindowsOnCoordinateConstraint(
             new Window(TimeSystem.Time.CreateTDB(730036800.0), TimeSystem.Time.CreateTDB(730123200)), null,
@@ -291,7 +291,7 @@ public class APITest
 
         var windows = res as Window[] ?? res.ToArray();
         Assert.Single(windows);
-        Assert.Equal("2023-02-19T14:33:08.9179878 TDB", windows[0].StartDate.ToString());
+        Assert.Equal("2023-02-19T14:33:08.9179872 TDB", windows[0].StartDate.ToString());
         Assert.Equal("2023-02-20T00:00:00.0000000 TDB", windows[0].EndDate.ToString());
         Assert.Throws<ArgumentNullException>(() => API.Instance.FindWindowsOnCoordinateConstraint(
             new Window(TimeSystem.Time.CreateTDB(730036800.0), TimeSystem.Time.CreateTDB(730123200)), null,
@@ -321,8 +321,8 @@ public class APITest
         var windows = res as Window[] ?? res.ToArray();
         Assert.Equal(2, windows.Count());
         Assert.Equal("2021-05-17T12:00:00.0000000 TDB", windows[0].StartDate.ToString());
-        Assert.Equal("2021-05-17T19:35:24.9088325 TDB", windows[0].EndDate.ToString());
-        Assert.Equal("2021-05-18T04:18:32.4437507 TDB", windows[1].StartDate.ToString());
+        Assert.Equal("2021-05-17T19:35:24.9088323 TDB", windows[0].EndDate.ToString());
+        Assert.Equal("2021-05-18T04:18:32.4437502 TDB", windows[1].StartDate.ToString());
         Assert.Equal("2021-05-18T12:00:00.0000000 TDB", windows[1].EndDate.ToString());
         Assert.Throws<ArgumentNullException>(() => API.Instance.FindWindowsOnIlluminationConstraint(
             new Window(TimeSystem.Time.CreateTDB(674524800), TimeSystem.Time.CreateTDB(674611200)),

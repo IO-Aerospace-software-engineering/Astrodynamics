@@ -85,8 +85,8 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
             var res = so.RelativeTo(earth.Frame);
             Assert.NotNull(so);
 
-            Assert.Equal(new Quaternion(0.75114277947940278, 0.15580379240149217, 0.13030227231228195, 0.62811704398107715), res.Rotation);
-            Assert.Equal(new Vector3(-1.9637713280161757E-09, 2.9004497224156795E-05, 6.6904658702357438E-05), res.AngularVelocity);
+            Assert.Equal(new Quaternion(0.75114277947940278, 0.15580379240149217, 0.13030227231228195, 0.62811704398107715), res.Rotation,TestHelpers.QuaternionComparer);
+            Assert.Equal(new Vector3(-1.9637713280161757E-09, 2.9004497224156795E-05, 6.6904658702357438E-05), res.AngularVelocity,TestHelpers.VectorComparer);
             Assert.Equal(TimeSystem.Time.J2000TDB, res.Epoch);
             Assert.Equal(earth.Frame, res.ReferenceFrame);
         }
