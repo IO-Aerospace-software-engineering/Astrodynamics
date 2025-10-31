@@ -276,43 +276,51 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
         {
             throw new ArgumentException("COSPAR Identifier must be between 6 and 8 characters long.", nameof(cosparId));
         }
-
         if (elementSetNumber > MAX_ELEMENT_SET_NUMBER)
         {
             throw new ArgumentOutOfRangeException(nameof(elementSetNumber), $"Element set number must be between 0 and {MAX_ELEMENT_SET_NUMBER}.");
         }
 
-        // 1. Convert elements to TLE units
+        // Convert elements to TLE units
         var kep = orbitalParams is TLE tle ? tle.ToMeanKeplerianElements() : orbitalParams.ToKeplerianElements();
-        double iDeg = kep.I * Constants.Rad2Deg;
-        double raanDeg = kep.RAAN * Constants.Rad2Deg;
-        double argpDeg = kep.AOP * Constants.Rad2Deg;
-        double mDeg = kep.M * Constants.Rad2Deg;
+        
+        // Convert and normalize angles - single pass, no redundant calculations
+        double iDeg = System.Math.Clamp(kep.I * Constants.Rad2Deg, 0.0, 180.0);
+        if (double.IsNaN(iDeg)) iDeg = 0.0;
+        
+        double raanDeg = NormalizeAngle(kep.RAAN * Constants.Rad2Deg);
+        double argpDeg = NormalizeAngle(kep.AOP * Constants.Rad2Deg);
+        double mDeg = NormalizeAngle(kep.M * Constants.Rad2Deg);
+        
         double meanMotion = kep.MeanMotion() * 86400.0 / Constants._2PI;
 
-        // 2. Epoch: YYDDD.DDDDDDDD
+        // Format epoch: YYDDD.DDDDDDDD - optimized with Span
         var epochDt = kep.Epoch.DateTime;
         int year = epochDt.Year % 100;
         int dayOfYear = epochDt.DayOfYear;
-        double fracDay = (epochDt.TimeOfDay.TotalSeconds / 86400.0);
-        string epochStr = fracDay.ToString("0.00000000", CultureInfo.InvariantCulture);
-        epochStr = $"{year:00}{dayOfYear:000}{epochStr.Substring(1)}"; // Remove "0." and prepend year/day
+        double fracDay = epochDt.TimeOfDay.TotalSeconds / 86400.0;
+        
+        // Pre-allocate for epoch string: YY + DDD + . + 8 decimals = 14 chars
+        Span<char> epochSpan = stackalloc char[14];
+        year.TryFormat(epochSpan, out int pos1, "00", CultureInfo.InvariantCulture);
+        dayOfYear.TryFormat(epochSpan.Slice(2), out int pos2, "000", CultureInfo.InvariantCulture);
+        
+        // Format fractional day directly into span
+        string fracDayStr = fracDay.ToString("0.00000000", CultureInfo.InvariantCulture);
+        fracDayStr.AsSpan(1, 9).CopyTo(epochSpan.Slice(5)); // Copy ".DDDDDDDD"
+        string epochStr = new string(epochSpan);
 
-        // 3. Eccentricity: 7 digits, no decimal  
-        // Clamp eccentricity to valid range but preserve small positive values
-        double clampedE = System.Math.Min(MAX_ECCENTRICITY, System.Math.Max(1e-7, kep.E));
+        // Format eccentricity: 7 digits, no decimal point
+        double clampedE = System.Math.Clamp(kep.E, 1e-7, MAX_ECCENTRICITY);
         string eStr = clampedE.ToString("0.0000000", CultureInfo.InvariantCulture).Substring(2, 7);
 
-        // 4. nDot, nDDot, BSTAR: TLE scientific notation - FIXED: Use InvariantCulture
+        // Format derivatives and drag term
         string nDotStr = nDot.ToString(" .00000000;-.00000000", CultureInfo.InvariantCulture).PadLeft(10);
         string nDDotStr = FormatTleExponent(nDDot, 5);
         string bstarStr = FormatTleExponent(bstar, 5);
 
-        // Pre-sized StringBuilder to avoid reallocations
+        // Build line 1 - use single ToString call
         var line1Builder = new StringBuilder(69);
-        var line2Builder = new StringBuilder(69);
-
-        // Construction Line 1 sans allocations intermédiaires
         line1Builder.Append("1 ")
             .Append(noradId.ToString("00000"))
             .Append((char)classification)
@@ -329,11 +337,12 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
             .Append(" 0 ")
             .Append(elementSetNumber.ToString().PadLeft(4));
 
-        // Calculer checksum sur la string actuelle
-        string line1Temp = line1Builder.ToString();
-        line1Builder.Append(ComputeTleChecksum(line1Temp));
+        // Compute checksum on the builder's content without creating intermediate string
+        int checksum1 = ComputeTleChecksumFromBuilder(line1Builder);
+        line1Builder.Append(checksum1);
 
-        // Construction Line 2 sans allocations intermédiaires - FIXED: Use InvariantCulture
+        // Build line 2
+        var line2Builder = new StringBuilder(69);
         line2Builder.Append("2 ")
             .Append(noradId.ToString("00000"))
             .Append(' ')
@@ -350,10 +359,55 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
             .Append(meanMotion.ToString("0.00000000", CultureInfo.InvariantCulture).PadLeft(11))
             .Append(revolutionsAtEpoch.ToString().PadLeft(5));
 
-        string line2Temp = line2Builder.ToString();
-        line2Builder.Append(ComputeTleChecksum(line2Temp));
+        int checksum2 = ComputeTleChecksumFromBuilder(line2Builder);
+        line2Builder.Append(checksum2);
 
         return new TLE(name, line1Builder.ToString(), line2Builder.ToString());
+    }
+
+    /// <summary>
+    /// Normalizes an angle to [0, 360) range with single-pass validation
+    /// </summary>
+    private static double NormalizeAngle(double angleDeg)
+    {
+        if (double.IsNaN(angleDeg) || double.IsInfinity(angleDeg)) 
+            return 0.0;
+
+        // Normalize to [0, 360)
+        angleDeg = angleDeg % 360.0;
+        if (angleDeg < 0.0) 
+            angleDeg += 360.0;
+
+        // Edge case: very close to 360
+        if (angleDeg >= 360.0 - 1e-10)
+            return 0.0;
+
+        // Check if formatting to 4 decimals would produce 360.0
+        // More efficient than Math.Round: direct comparison
+        if (angleDeg >= 359.99995)
+            return 0.0;
+
+        return angleDeg;
+    }
+
+    /// <summary>
+    /// Computes TLE checksum directly from StringBuilder without intermediate string allocation
+    /// </summary>
+    private static int ComputeTleChecksumFromBuilder(StringBuilder builder)
+    {
+        int sum = 0;
+        int length = builder.Length;
+        
+        for (int i = 0; i < length; i++)
+        {
+            char c = builder[i];
+            if (char.IsDigit(c))
+                sum += c - '0';
+            else if (c == '-')
+                sum += 1;
+        }
+        
+        return sum % 10;
     }
 
     // Helper for TLE scientific notation (e.g.  34123-4)
