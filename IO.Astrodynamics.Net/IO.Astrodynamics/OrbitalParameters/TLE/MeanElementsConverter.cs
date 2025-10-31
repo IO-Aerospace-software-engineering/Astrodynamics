@@ -14,6 +14,8 @@ namespace IO.Astrodynamics.OrbitalParameters.TLE
         const double SAFETY_ALTITUDE = 120000.0; // 120 km minimum altitude for LEO
         const double EQUATORIAL_RADIUS_EARTH = 6378136.6; // meters
         const double POSITION_TOLERANCE = 1E+04; // 10 km position tolerance for best-effort fallback
+        const int MAX_NON_IMPROVING_ITERATIONS = 50;  // Increased from 20
+        const int MIN_ITERATIONS_BEFORE_EARLY_EXIT = 50;  // Don't exit early before 50 iterations
 
         /// <summary>
         /// Fit a TLE from a state vector using the upgraded
@@ -90,8 +92,7 @@ namespace IO.Astrodynamics.OrbitalParameters.TLE
             
             // Track non-improving iterations for early exit (but only after some minimum iterations)
             int nonImprovingIterations = 0;
-            const int maxNonImprovingIterations = 50;  // Increased from 20
-            const int minIterationsBeforeEarlyExit = 50;  // Don't exit early before 50 iterations
+            
 
             for (int iter = 0; iter < maxIterations; iter++)
             {
@@ -120,7 +121,7 @@ namespace IO.Astrodynamics.OrbitalParameters.TLE
                     {
                         nonImprovingIterations++;
                         // Early exit only after minimum iterations and if really not improving
-                        if (iter >= minIterationsBeforeEarlyExit && nonImprovingIterations >= maxNonImprovingIterations)
+                        if (iter >= MIN_ITERATIONS_BEFORE_EARLY_EXIT && nonImprovingIterations >= MAX_NON_IMPROVING_ITERATIONS)
                         {
                             break;
                         }
@@ -141,11 +142,7 @@ namespace IO.Astrodynamics.OrbitalParameters.TLE
                     // Fixed-point correction with adaptive scaling
                     var adaptiveScale = scale * System.Math.Max(0.1, 1.0 - (double)iter / maxIterations);
 
-                    // Scale P residual by semi-major axis to keep steps moderate
-                    var pScale = System.Math.Max(1.0, aGuess);
-
                     // Apply corrections to equinoctial elements
-                    // P needs special scaling because it has units of length
                     var newP = currentEquinoctial.P - adaptiveScale * residuals[0];
                     var newF = currentEquinoctial.F - adaptiveScale * residuals[1];
                     var newG = currentEquinoctial.G - adaptiveScale * residuals[2];
