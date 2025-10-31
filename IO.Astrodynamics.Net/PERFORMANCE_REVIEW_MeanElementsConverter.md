@@ -143,7 +143,7 @@ else
 }
 ```
 
-**Impact:** Reduces wasted iterations by up to 90% for problematic cases (e.g., 200 ? 30 iterations).
+**Impact:** Reduces wasted iterations by up to 90% for problematic cases (e.g., 200 → 30 iterations).
 
 ---
 
