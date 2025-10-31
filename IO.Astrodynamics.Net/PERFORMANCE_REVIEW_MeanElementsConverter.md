@@ -198,8 +198,8 @@ catch (Exception ex)
 
 ### Unit Tests to Add:
 1. **Convergence test**: Verify algorithm still converges for typical LEO orbit
-2. **Edge case test**: Test with near-circular orbit (e ? 0)
-3. **Edge case test**: Test with near-equatorial orbit (i ? 0)
+2. **Edge case test**: Test with near-circular orbit (e ≈ 0)
+3. **Edge case test**: Test with near-equatorial orbit (i ≈ 0)
 4. **Regression test**: Ensure output TLE matches previous version within tolerance
 5. **Performance test**: Measure execution time before/after optimization
 
