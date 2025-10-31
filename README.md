@@ -17,6 +17,7 @@ Important: The C++ layer is feature-frozen and exists only for communication wit
   - Spacecraft propagator: geopotential models, simplified atmospheres (Earth, Mars), solar radiation pressure, n-body perturbations, impulsive maneuvers, fuel balance
   - Small-body propagator: geopotential (Earth), simplified atmospheres (Earth, Mars), SRP, n-body
 - Orbital parameters: compute/convert State Vector, TLE, Equinoctial, Keplerian
+- Compute TLE from osculating elements
 - Frames and coordinates: ICRF/J2000, Ecliptic (J2000/B1950), TEME, Galactic, FK4, body-fixed/ITRF93, Equatorial/Horizontal/Planetodetic/Planetographic
 - Spacecraft configuration: clocks, fuel tanks, engines, instruments
 - Impulsive maneuvers: Lambert transfers, apogee/perigee height changes, plane/apsidal alignment, phasing, combined maneuvers
