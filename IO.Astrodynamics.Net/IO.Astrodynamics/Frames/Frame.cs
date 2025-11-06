@@ -24,39 +24,44 @@ public class Frame : IEquatable<Frame>
     /// <summary>
     /// International Celestial Reference Frame (ICRF) at epoch J2000.
     /// </summary>
-    public static readonly Frame ICRF = new Frame("J2000");
+    public static readonly Frame ICRF = new Frame("J2000", isInertial: true);
 
     /// <summary>
     /// Ecliptic coordinate system at epoch B1950.
     /// </summary>
-    public static readonly Frame ECLIPTIC_B1950 = new Frame("ECLIPB1950");
+    public static readonly Frame ECLIPTIC_B1950 = new Frame("ECLIPB1950", isInertial: true);
 
     /// <summary>
     /// Ecliptic coordinate system at epoch J2000.
     /// </summary>
-    public static readonly Frame ECLIPTIC_J2000 = new Frame("ECLIPJ2000");
+    public static readonly Frame ECLIPTIC_J2000 = new Frame("ECLIPJ2000", isInertial: true);
 
     /// <summary>
     /// Galactic coordinate system.
     /// </summary>
-    public static readonly Frame GALACTIC_SYSTEM2 = new Frame("GALACTIC");
+    public static readonly Frame GALACTIC_SYSTEM2 = new Frame("GALACTIC", isInertial: true);
 
     /// <summary>
     /// Equatorial coordinate system at epoch B1950.
     /// </summary>
-    public static readonly Frame B1950 = new Frame("B1950");
+    public static readonly Frame B1950 = new Frame("B1950", isInertial: true);
 
     /// <summary>
     /// Fourth Fundamental Catalog (FK4) coordinate system.
     /// </summary>
-    public static readonly Frame FK4 = new Frame("FK4");
+    public static readonly Frame FK4 = new Frame("FK4", isInertial: true);
 
     /// <summary>
     /// True Equator Mean Equinox (TEME) coordinate system.
     /// </summary>
-    public static readonly Frame TEME = new Frame("TEME");
+    public static readonly Frame TEME = new Frame("TEME", isInertial: true);
 
-    public Frame(string name, int? id = null)
+    /// <summary>
+    /// Indicates whether the frame is inertial. 
+    /// </summary>
+    public bool IsInertial { get; }
+
+    public Frame(string name, int? id = null, bool isInertial = false)
     {
         if (string.IsNullOrEmpty(name))
         {
@@ -67,6 +72,7 @@ public class Frame : IEquatable<Frame>
 
         Name = name;
         Id = id;
+        IsInertial = isInertial;
     }
 
     public virtual StateOrientation GetStateOrientationToICRF(Time date)

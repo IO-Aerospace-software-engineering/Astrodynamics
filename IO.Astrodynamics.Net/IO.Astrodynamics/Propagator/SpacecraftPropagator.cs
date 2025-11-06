@@ -45,12 +45,7 @@ public class SpacecraftPropagator : IPropagator
     {
         var ssb = Barycenters.SOLAR_SYSTEM_BARYCENTER;
         Spacecraft = spacecraft ?? throw new ArgumentNullException(nameof(spacecraft));
-        if (spacecraft.InitialOrbitalParameters.Frame != Frames.Frame.ICRF
-            && spacecraft.InitialOrbitalParameters.Frame != Frames.Frame.B1950
-            && spacecraft.InitialOrbitalParameters.Frame != Frames.Frame.FK4
-            && spacecraft.InitialOrbitalParameters.Frame != Frames.Frame.ECLIPTIC_J2000
-            && spacecraft.InitialOrbitalParameters.Frame != Frames.Frame.ECLIPTIC_B1950
-            && spacecraft.InitialOrbitalParameters.Frame != Frames.Frame.GALACTIC_SYSTEM2)
+        if (!spacecraft.InitialOrbitalParameters.Frame.IsInertial)
         {
             throw new ArgumentException("Spacecraft initial orbital parameters must be defined in inertial frame", nameof(spacecraft));
         }
