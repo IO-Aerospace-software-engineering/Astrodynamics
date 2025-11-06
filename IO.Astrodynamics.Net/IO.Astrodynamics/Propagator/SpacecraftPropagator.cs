@@ -101,11 +101,49 @@ public class SpacecraftPropagator : IPropagator
     /// <returns></returns>
     public void Propagate()
     {
+        InitializePropagation();
+
+        if (Spacecraft.StandbyManeuver == null)
+        {
+            PropagateWithoutManeuvers();
+        }
+        else
+        {
+            PropagateWithManeuvers();
+        }
+
+        FinalizePropagation();
+    }
+
+    /// <summary>
+    /// Initialize propagation by setting initial orientation
+    /// </summary>
+    private void InitializePropagation()
+    {
         Spacecraft.Frame.AddStateOrientationToICRF(new StateOrientation(Quaternion.Zero, Vector3.Zero, Window.StartDate, Spacecraft.InitialOrbitalParameters.Frame));
+    }
+
+    /// <summary>
+    /// Finalize propagation by updating final orientation and state vectors
+    /// </summary>
+    private void FinalizePropagation()
+    {
+        var latestOrientation = Spacecraft.Frame.GetLatestStateOrientationToICRF();
+        Spacecraft.Frame.AddStateOrientationToICRF(new StateOrientation(latestOrientation.Rotation, latestOrientation.AngularVelocity, Window.EndDate,
+            latestOrientation.ReferenceFrame));
+
+        Spacecraft.AddStateVectorRelativeToICRF(_svCache);
+    }
+
+    /// <summary>
+    /// Propagate spacecraft with maneuver operations
+    /// </summary>
+    private void PropagateWithManeuvers()
+    {
         for (int i = 0; i < _svCacheSize - 1; i++)
         {
             var prvSv = _svCache[i];
-            if (Spacecraft.StandbyManeuver?.CanExecute(prvSv) == true)
+            if (Spacecraft.StandbyManeuver.CanExecute(prvSv))
             {
                 var res = Spacecraft.StandbyManeuver.TryExecute(prvSv);
                 Spacecraft.Frame.AddStateOrientationToICRF(res.so);
@@ -113,12 +151,17 @@ public class SpacecraftPropagator : IPropagator
 
             Integrator.Integrate(_svCache, i + 1);
         }
+    }
 
-        var latestOrientation = Spacecraft.Frame.GetLatestStateOrientationToICRF();
-        Spacecraft.Frame.AddStateOrientationToICRF(new StateOrientation(latestOrientation.Rotation, latestOrientation.AngularVelocity, Window.EndDate,
-            latestOrientation.ReferenceFrame));
-
-        Spacecraft.AddStateVectorRelativeToICRF(_svCache);
+    /// <summary>
+    /// Propagate spacecraft without maneuver operations (optimized for no standby maneuvers)
+    /// </summary>
+    private void PropagateWithoutManeuvers()
+    {
+        for (int i = 0; i < _svCacheSize - 1; i++)
+        {
+            Integrator.Integrate(_svCache, i + 1);
+        }
     }
 
     public void Dispose()
