@@ -310,6 +310,28 @@ namespace IO.Astrodynamics.OrbitalParameters
         }
 
         /// <summary>
+        /// Fast update of position without cache reset (for propagator use only).
+        /// Cache must be reset manually after propagation completes if orbital elements are needed.
+        /// </summary>
+        /// <param name="position">The new position vector.</param>
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        internal void FastUpdatePosition(in Vector3 position)
+        {
+            Position = position;
+        }
+
+        /// <summary>
+        /// Fast update of velocity without cache reset (for propagator use only).
+        /// Cache must be reset manually after propagation completes if orbital elements are needed.
+        /// </summary>
+        /// <param name="velocity">The new velocity vector.</param>
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        internal void FastUpdateVelocity(in Vector3 velocity)
+        {
+            Velocity = velocity;
+        }
+
+        /// <summary>
         /// Converts the state vector to an array.
         /// </summary>
         /// <returns>An array containing the position and velocity components.</returns>

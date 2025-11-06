@@ -37,10 +37,16 @@ public sealed class VVIntegrator : Integrator
         _position = previousElement.Position;
         _velocity = previousElement.Velocity;
 
-        result[idx].UpdateVelocity(_velocity + _acceleration * HalfDeltaTs);
-        result[idx].UpdatePosition(_position + result[idx].Velocity * DeltaTs);
-        _acceleration = ComputeAcceleration(result[idx]);
+        // Cache current state vector to reduce array accesses
+        var currentState = result[idx];
 
-        result[idx].UpdateVelocity(result[idx].Velocity + _acceleration * HalfDeltaTs);
+        // Use fast update methods to skip expensive cache reset during propagation
+        var halfStepVelocity = _velocity + _acceleration * HalfDeltaTs;
+        currentState.FastUpdateVelocity(halfStepVelocity);
+        currentState.FastUpdatePosition(_position + halfStepVelocity * DeltaTs);
+
+        _acceleration = ComputeAcceleration(currentState);
+
+        currentState.FastUpdateVelocity(halfStepVelocity + _acceleration * HalfDeltaTs);
     }
 }

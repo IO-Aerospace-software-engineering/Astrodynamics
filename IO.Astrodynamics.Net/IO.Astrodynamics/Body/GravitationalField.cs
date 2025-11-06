@@ -20,6 +20,12 @@ public class GravitationalField
         CelestialItem centerOfMotion = stateVector.Observer as CelestialItem;
         var position = stateVector.Position;
 
-        return position.Normalize() * (-centerOfMotion.GM / System.Math.Pow(position.Magnitude(), 2.0));
+        // Optimized: compute magnitude once instead of twice (once in Normalize, once in Pow)
+        // Formula: a = -GM * r / |r|^3
+        var magnitudeSquared = position.MagnitudeSquared();
+        var magnitude = System.Math.Sqrt(magnitudeSquared);
+        var magnitude3 = magnitude * magnitudeSquared;
+
+        return position * (-centerOfMotion.GM / magnitude3);
     }
 }

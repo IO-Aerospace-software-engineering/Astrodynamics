@@ -33,7 +33,13 @@ public class SolarRadiationPressure : ForceBase
         }
 
         var position = stateVector.RelativeTo(_sun, Aberration.LT).ToStateVector().Position;
-        var term2 = position / System.Math.Pow(position.Magnitude(), 3.0);
-        return term2 * _term1 * _areaMassRatio;
+
+        // Optimized: compute magnitude once instead of using Pow
+        // Formula: position / |position|^3
+        var magnitudeSquared = position.MagnitudeSquared();
+        var magnitude = System.Math.Sqrt(magnitudeSquared);
+        var magnitude3 = magnitude * magnitudeSquared;
+
+        return position * (_term1 * _areaMassRatio / magnitude3);
     }
 }

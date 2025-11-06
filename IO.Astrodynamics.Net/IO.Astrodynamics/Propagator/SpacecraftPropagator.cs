@@ -143,7 +143,7 @@ public class SpacecraftPropagator : IPropagator
         for (int i = 0; i < _svCacheSize - 1; i++)
         {
             var prvSv = _svCache[i];
-            if (Spacecraft.StandbyManeuver.CanExecute(prvSv))
+            if (Spacecraft.StandbyManeuver?.CanExecute(prvSv) == true)
             {
                 var res = Spacecraft.StandbyManeuver.TryExecute(prvSv);
                 Spacecraft.Frame.AddStateOrientationToICRF(res.so);

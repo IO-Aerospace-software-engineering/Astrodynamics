@@ -1,3 +1,5 @@
+using System.Runtime.CompilerServices;
+
 namespace IO.Astrodynamics.Math
 {
     public readonly record struct Vector3
@@ -18,11 +20,13 @@ namespace IO.Astrodynamics.Math
             Z = z;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public double Magnitude()
         {
             return System.Math.Sqrt(MagnitudeSquared());
         }
-        
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public double MagnitudeSquared()
         {
             return X * X + Y * Y + Z * Z;
@@ -78,26 +82,31 @@ namespace IO.Astrodynamics.Math
             return this * -1.0;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Vector3 operator *(in Vector3 v, double value)
         {
             return new Vector3(v.X * value, v.Y * value, v.Z * value);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double operator *(in Vector3 v, in Vector3 value)
         {
             return v.X * value.X + v.Y * value.Y + v.Z * value.Z;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Vector3 operator /(in Vector3 v, double value)
         {
             return new Vector3(v.X / value, v.Y / value, v.Z / value);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Vector3 operator +(in Vector3 v1, in Vector3 v2)
         {
             return new Vector3(v1.X + v2.X, v1.Y + v2.Y, v1.Z + v2.Z);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Vector3 operator -(in Vector3 v1, in Vector3 v2)
         {
             return new Vector3(v1.X - v2.X, v1.Y - v2.Y, v1.Z - v2.Z);
