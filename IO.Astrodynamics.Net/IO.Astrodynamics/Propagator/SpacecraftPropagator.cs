@@ -119,10 +119,6 @@ public class SpacecraftPropagator : IPropagator
             latestOrientation.ReferenceFrame));
 
         Spacecraft.AddStateVectorRelativeToICRF(_svCache);
-        
-        //Before return result state vectors must be converted back to original observer
-        // return (Array.Empty<StateVector>(),
-        //     Spacecraft.Frame.GetStateOrientationsToICRF().OrderBy(x => x.Epoch)); //Return spacecraft frames
     }
 
     public void Dispose()
