@@ -1,6 +1,7 @@
 ﻿<?xml version="1.0"?>
 <Project>
-    <ItemGroup Condition=" '$(OS)' == 'WINDOWS_NT'">
+    <!-- Windows runtime - when RuntimeIdentifier is explicitly set to Windows -->
+    <ItemGroup Condition="$(RuntimeIdentifier.StartsWith('win'))">
         <Content Include="$(MSBuildThisFileDirectory)..\runtimes\windows10-x64\IO.Astrodynamics.dll">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
             <Link>%(FileName)%(Extension)</Link>
@@ -10,7 +11,28 @@
             <Link>%(FileName)%(Extension)</Link>
         </Content>
     </ItemGroup>
-    <ItemGroup Condition=" '$(OS)' == 'UNIX'">
+
+    <!-- Linux runtime - when RuntimeIdentifier is explicitly set to Linux -->
+    <ItemGroup Condition="$(RuntimeIdentifier.StartsWith('linux'))">
+        <Content Include="$(MSBuildThisFileDirectory)..\runtimes\linux-x64\libIO.Astrodynamics.so">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            <Link>%(FileName)%(Extension)</Link>
+        </Content>
+    </ItemGroup>
+
+    <!-- Fallback for local development - when no RuntimeIdentifier is set, use build machine OS -->
+    <ItemGroup Condition="'$(RuntimeIdentifier)' == '' AND '$(OS)' == 'Windows_NT'">
+        <Content Include="$(MSBuildThisFileDirectory)..\runtimes\windows10-x64\IO.Astrodynamics.dll">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            <Link>%(FileName)%(Extension)</Link>
+        </Content>
+        <Content Include="$(MSBuildThisFileDirectory)..\runtimes\windows10-x64\IO.Astrodynamics.lib">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            <Link>%(FileName)%(Extension)</Link>
+        </Content>
+    </ItemGroup>
+
+    <ItemGroup Condition="'$(RuntimeIdentifier)' == '' AND '$(OS)' == 'Unix'">
         <Content Include="$(MSBuildThisFileDirectory)..\runtimes\linux-x64\libIO.Astrodynamics.so">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
             <Link>%(FileName)%(Extension)</Link>
