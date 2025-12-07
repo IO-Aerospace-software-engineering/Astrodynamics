@@ -12,7 +12,7 @@
         <license type="expression">LGPL-3.0-or-later</license>
         <description>This astrodynamics framework provides tools to manipulate orbital parameters, run spacecraft propagation, evaluate impulsive maneuvers, generate fuel balance, ...</description>
         <dependencies>
-            <group targetFramework="net8.0">
+            <group targetFramework="net10.0">
                 <dependency id="AutoMapper" version="12.0.1"/>
             </group>            
         </dependencies>
@@ -20,8 +20,8 @@
     </metadata>
     <files>
         <!-- binding libraries -->
-        <file src="bin/Release/net8.0/IO.Astrodynamics.Net.dll" target="lib/net8.0"/>
-        <file src="resources/One_Sgp4.dll" target="lib/net8.0"/>
+        <file src="bin/Release/net10.0/IO.Astrodynamics.Net.dll" target="lib/net10.0"/>
+        <file src="resources/One_Sgp4.dll" target="lib/net10.0"/>
         <!-- native libraries -->
         <file src="resources/IO.Astrodynamics.dll" target="runtimes/windows10-x64"/>
         <file src="resources/IO.Astrodynamics.lib" target="runtimes/windows10-x64"/>
@@ -32,3 +32,4 @@
         <file src="../../README.md" target="docs/"/>
     </files>
 </package>
+
