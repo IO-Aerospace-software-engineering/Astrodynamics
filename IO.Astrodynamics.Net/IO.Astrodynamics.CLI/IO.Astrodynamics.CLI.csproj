@@ -31,7 +31,7 @@
     <ItemGroup>
       <None Update="dragonfly-dark-trans.png">
         <Pack>True</Pack>
-        <PackagePath></PackagePath>
+        <PackagePath>.</PackagePath>
       </None>
     </ItemGroup>
 
