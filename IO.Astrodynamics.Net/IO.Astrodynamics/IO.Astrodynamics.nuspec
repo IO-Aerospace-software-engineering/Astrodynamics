@@ -4,7 +4,7 @@
         <id>IO.Astrodynamics</id>
         <authors>Sylvain Guillet</authors>
         <copyright>Sylvain Guillet</copyright>
-        <version>7.0.4</version>
+        <version>7.1.0</version>
         <title>Astrodynamics framework</title>
         <icon>images\dragonfly-dark-trans.png</icon>
         <readme>docs\README.md</readme>
@@ -14,14 +14,20 @@
         <dependencies>
             <group targetFramework="net8.0">
                 <dependency id="AutoMapper" version="12.0.1"/>
+            </group>
+            <group targetFramework="net10.0">
+                <dependency id="AutoMapper" version="12.0.1"/>
             </group>            
         </dependencies>
         <tags>astrodynamics aerospace orbital mechanics spice space physics</tags>
     </metadata>
     <files>
-        <!-- binding libraries -->
+        <!-- binding libraries .NET 8.0 -->
         <file src="bin/Release/net8.0/IO.Astrodynamics.Net.dll" target="lib/net8.0"/>
         <file src="resources/One_Sgp4.dll" target="lib/net8.0"/>
+        <!-- binding libraries .NET 10.0 -->
+        <file src="bin/Release/net10.0/IO.Astrodynamics.Net.dll" target="lib/net10.0"/>
+        <file src="resources/One_Sgp4.dll" target="lib/net10.0"/>
         <!-- native libraries -->
         <file src="resources/IO.Astrodynamics.dll" target="runtimes/windows10-x64"/>
         <file src="resources/IO.Astrodynamics.lib" target="runtimes/windows10-x64"/>
@@ -32,3 +38,4 @@
         <file src="../../README.md" target="docs/"/>
     </files>
 </package>
+
