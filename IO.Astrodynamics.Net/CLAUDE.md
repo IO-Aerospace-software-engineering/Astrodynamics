@@ -4,13 +4,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-IO.Astrodynamics.Net is a .NET 8 astrodynamics framework for orbital mechanics calculations, ephemeris computations, and space mission planning. It consists of:
+IO.Astrodynamics.Net is a .NET 8/10 astrodynamics framework for orbital mechanics calculations, ephemeris computations, and space mission planning. It consists of:
 
 - **IO.Astrodynamics**: Core framework library with orbital mechanics algorithms
 - **IO.Astrodynamics.CLI**: Command-line interface tool (`astro`) for astrodynamics operations
 - **IO.Astrodynamics.Tests**: Unit tests using xUnit framework
 - **IO.Astrodynamics.CLI.Tests**: CLI tests
 - **IO.Astrodynamics.Performance**: Performance benchmarking using BenchmarkDotNet
+- **nrlmsise-00-cmake/**: Reference C implementation of the NRLMSISE-00 atmospheric model (not part of the .NET solution). This directory contains the original C source code, data, and tests that will serve as the reference for creating a C# implementation of the NRLMSISE-00 algorithm. The model computes atmospheric density and temperature profiles for Earth.
 
 ## Key Commands
 
@@ -30,6 +31,12 @@ dotnet test IO.Astrodynamics.CLI.Tests/IO.Astrodynamics.CLI.Tests.csproj
 
 # Run with coverage
 dotnet test --collect:"XPlat Code Coverage"
+
+# Run a single test by fully qualified name
+dotnet test --filter "FullyQualifiedName~IO.Astrodynamics.Tests.ClassName.TestName"
+
+# Run tests matching a pattern
+dotnet test --filter "DisplayName~TLE"
 ```
 
 ### CLI Tool
@@ -66,6 +73,7 @@ dotnet tool install --global --add-source ./IO.Astrodynamics.CLI/bin/Debug IO.As
 
 **External Dependencies**
 - MathNet.Numerics: Linear algebra operations
+- MathNet.Filtering.Kalman: Kalman filtering for state estimation
 - Cocona: CLI framework (CLI project only)
 - xUnit + BenchmarkDotNet: Testing and benchmarking
 
