@@ -33,7 +33,7 @@ namespace IO.Astrodynamics.Physics.NRLMSISE_00
         ///
         /// This corresponds to the reference model's "PT" coefficient block.
         /// </remarks>
-        static readonly double[] PT = [
+        internal static readonly double[] PT = [
      9.86573E-01, 1.62228E-02, 1.55270E-02,-1.04323E-01,-3.75801E-03,
     -1.18538E-03,-1.24043E-01, 4.56820E-03, 8.76018E-03,-1.36235E-01,
     -3.52427E-02, 8.84181E-03,-5.92127E-03,-8.61650E+00, 0.00000E+00,
@@ -81,7 +81,7 @@ namespace IO.Astrodynamics.Physics.NRLMSISE_00
         /// 0 = He, 1 = O, 2 = N2, 3 = TLB (temperature at lower boundary used by density routine),
         /// 4 = O2, 5 = Ar, 6 = H, 7 = N, 8 = Hot O.
         /// </remarks>
-        static readonly double[][] PD = [
+        internal static readonly double[][] PD = [
  /*  HE DENSITY */ [
      1.09979E+00,-4.88060E-02,-1.97501E-01,-9.10280E-02,-6.96558E-03,
      2.42136E-02, 3.91333E-01,-7.20068E-03,-3.22718E-02, 1.41508E+00,
@@ -372,7 +372,7 @@ namespace IO.Astrodynamics.Physics.NRLMSISE_00
         /// It modulates parts of the composition/temperature coupling and transition behavior
         /// between regions of the atmosphere.
         /// </remarks>
-        static readonly double[] PS = [
+        internal static readonly double[] PS = [
       9.56827E-01, 6.20637E-02, 3.18433E-02, 0.00000E+00, 0.00000E+00,
      3.94900E-02, 0.00000E+00, 0.00000E+00,-9.24882E-03,-7.94023E-03,
      0.00000E+00, 0.00000E+00, 0.00000E+00, 1.74712E+02, 0.00000E+00,
@@ -412,7 +412,7 @@ namespace IO.Astrodynamics.Physics.NRLMSISE_00
         /// Reference name: PDL. Used by the model's turbopause/transition-region logic that
         /// blends fully mixed and diffusive equilibrium profiles.
         /// </remarks>
-        static readonly double[][] PDL = [
+        internal static readonly double[][] PDL = [
    [ 1.09930E+00, 3.90631E+00, 3.07165E+00, 9.86161E-01, 1.63536E+01,
      4.63830E+00, 1.00000E+00, 0.00000E+00, 0.00000E+00, 0.00000E+00,
      0.00000E+00, 0.00000E+00, 0.00000E+00, 0.00000E+00, 0.00000E+00,
@@ -431,7 +431,7 @@ namespace IO.Astrodynamics.Physics.NRLMSISE_00
         /// Reference name: PTM. Defines lower-atmosphere boundary temperatures used by the model
         /// (e.g., "mesopause"/lower boundary for profile stitching).
         /// </remarks>
-        static readonly double[] PTM = [
+        internal static readonly double[] PTM = [
      1.04130E+03, 3.86000E+02, 1.95000E+02, 1.66728E+01, 2.13000E+02,
      1.20000E+02, 2.40000E+02, 1.87000E+02,-2.00000E+00, 0.00000E+00
 ];
@@ -442,7 +442,7 @@ namespace IO.Astrodynamics.Physics.NRLMSISE_00
         /// Reference name: PDM. Sets baseline lower-boundary densities and related parameters used
         /// to anchor the constituent profiles below the thermosphere.
         /// </remarks>
-        static readonly double[][] PDM = [
+        internal static readonly double[][] PDM = [
 [    2.45600E+07, 6.71072E-06, 1.00000E+02, 0.00000E+00, 1.10000E+02,
      1.00000E+01, 0.00000E+00, 0.00000E+00, 0.00000E+00, 0.00000E+00 ],
 [    8.59400E+10, 1.00000E+00, 1.05000E+02,-8.00000E+00, 1.10000E+02,
@@ -469,7 +469,7 @@ namespace IO.Astrodynamics.Physics.NRLMSISE_00
         /// These tables define temperature profile adjustments in the lower/middle atmosphere
         /// used when stitching the lower-atmosphere model to the thermospheric temperature model.
         /// </remarks>
-        static readonly double[][] PTL = new double[4][] {
+        internal static readonly double[][] PTL = new double[4][] {
 /* TN1(2) */ [
      1.00858E+00, 4.56011E-02,-2.22972E-02,-5.44388E-02, 5.23136E-04,
     -1.88849E-02, 5.23707E-02,-9.43646E-03, 6.31707E-03,-7.80460E-02,
@@ -563,7 +563,7 @@ namespace IO.Astrodynamics.Physics.NRLMSISE_00
         /// Reference name: PMA. Contains multiple blocks (TN2/TN3/TSL/TSLG/TGN*)
         /// used by the lower/middle atmosphere parameterizations.
         /// </remarks>
-        static readonly double[][] PMA = [
+        internal static readonly double[][] PMA = [
 /* TN2(2) */ [
      9.81637E-01,-1.41317E-03, 3.87323E-02, 0.00000E+00, 0.00000E+00,
      0.00000E+00, 0.00000E+00, 0.00000E+00, 0.00000E+00,-3.58707E-02,
@@ -783,7 +783,7 @@ namespace IO.Astrodynamics.Physics.NRLMSISE_00
         /// Reference name: SAM. Applied as a weighting/masking array for semiannual terms in the
         /// temperature/density expansions.
         /// </remarks>
-        static readonly double[] SAM = [
+        internal static readonly double[] SAM = [
      1.00000E+00, 1.00000E+00, 1.00000E+00, 1.00000E+00, 1.00000E+00,
      1.00000E+00, 1.00000E+00, 1.00000E+00, 1.00000E+00, 1.00000E+00,
      1.00000E+00, 1.00000E+00, 1.00000E+00, 1.00000E+00, 1.00000E+00,
@@ -813,7 +813,7 @@ namespace IO.Astrodynamics.Physics.NRLMSISE_00
         /// Reference name: PAVGM. Provides average temperatures/parameters used by the model for
         /// the middle-atmosphere baseline (used when computing departures from climatology).
         /// </remarks>
-        static readonly double[] PAVGM = {
+        internal static readonly double[] PAVGM = {
      2.61000E+02, 2.64000E+02, 2.29000E+02, 2.17000E+02, 2.17000E+02,
      2.23000E+02, 2.86760E+02,-2.93940E+00, 2.50000E+00, 0.00000E+00 };
 
