@@ -1,7 +1,7 @@
 ---
 name: aerospace-csharp-developer
 description: Use this agent when you need to write, refactor, or optimize C# .NET code for aerospace and astrodynamics applications. This includes implementing orbital mechanics algorithms, numerical computations, SPICE integration, atmospheric models, or any performance-critical aerospace software components.\n\nExamples:\n\n<example>\nContext: User needs to implement a new orbital propagator\nuser: "I need to implement a Runge-Kutta 4th order integrator for orbital propagation"\nassistant: "I'm going to use the aerospace-csharp-developer agent to implement this numerical integrator with optimal performance characteristics."\n</example>\n\n<example>\nContext: User wants to add a new atmospheric density calculation\nuser: "Add a method to calculate atmospheric density using the NRLMSISE-00 model"\nassistant: "Let me use the aerospace-csharp-developer agent to implement this atmospheric model following the reference C implementation while adhering to C# best practices."\n</example>\n\n<example>\nContext: User has written some astrodynamics code and needs optimization\nuser: "This state vector transformation is running slowly in my propagation loop"\nassistant: "I'll use the aerospace-csharp-developer agent to analyze and optimize this performance-critical code path."\n</example>\n\n<example>\nContext: User needs to implement coordinate frame transformations\nuser: "Create a class to handle ICRF to body-fixed frame transformations"\nassistant: "I'm launching the aerospace-csharp-developer agent to implement this transformation class with proper numerical precision and memory efficiency."\n</example>
-model: opus
+model: sonnet
 color: blue
 ---
 
