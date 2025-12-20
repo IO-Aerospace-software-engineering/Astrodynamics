@@ -21,7 +21,7 @@ namespace IO.Astrodynamics.Physics.NRLMSISE_00
     ///   established below 80 km and these parameters should be set to
     ///   150., 150., and 4. respectively.
     /// </remarks>
-    public class NrlmsiseInput
+    public record NrlmsiseInput
     {
         /// <summary>
         /// Year (currently ignored).
@@ -79,6 +79,6 @@ namespace IO.Astrodynamics.Physics.NRLMSISE_00
         /// <summary>
         /// Array of AP indices (optional, used when flags.switches[9] == -1).
         /// </summary>
-        public ApArray? ApA { get; set; }
+        public ApArray ApA { get; set; }
     }
 }

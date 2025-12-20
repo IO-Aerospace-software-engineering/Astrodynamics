@@ -34,7 +34,7 @@ namespace IO.Astrodynamics.Physics.NRLMSISE_00
     ///     for drag" and is the sum of the mass densities of all species
     ///     in this model, INCLUDING anomalous oxygen.
     /// </remarks>
-    public class NrlmsiseOutput
+    public record NrlmsiseOutput
     {
         /// <summary>
         /// Densities (9 elements).

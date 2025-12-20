@@ -10,10 +10,6 @@ namespace IO.Astrodynamics.Physics.NRLMSISE_00
     /// Earth's atmosphere from ground to thermospheric heights. Below 72.5 km
     /// the model is primarily based on the MAP Handbook tabulation. Above 72.5 km
     /// NRLMSISE-00 is essentially a revised MSIS-86 model.
-    ///
-    /// This is a direct 1:1 conversion of the C implementation by Dominik Brodowski,
-    /// which itself was based on the FORTRAN version by Mike Picone, Alan Hedin,
-    /// and Doug Drob.
     /// </remarks>
     public class NRLMSISE00
     {
