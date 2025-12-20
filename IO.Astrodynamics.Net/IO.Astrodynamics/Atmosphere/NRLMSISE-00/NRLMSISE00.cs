@@ -824,8 +824,8 @@ namespace IO.Astrodynamics.Atmosphere.NRLMSISE_00
         {
             // Convert SI input units to internal units (km, degrees)
             double altKm = input.Alt / 1000.0;  // meters to kilometers
-            double glatDeg = input.GLat * 180.0 / System.Math.PI;  // radians to degrees
-            double glongDeg = input.GLong * 180.0 / System.Math.PI;  // radians to degrees
+            double glatDeg = input.GLat * Constants.Rad2Deg;  // radians to degrees
+            double glongDeg = input.GLong * Constants.Rad2Deg;  // radians to degrees
 
             // Store original values
             double origAlt = input.Alt;
@@ -1169,8 +1169,8 @@ namespace IO.Astrodynamics.Atmosphere.NRLMSISE_00
         {
             // Convert SI input units to internal units (km, degrees)
             double altKm = input.Alt / 1000.0;  // meters to kilometers
-            double glatDeg = input.GLat * 180.0 / System.Math.PI;  // radians to degrees
-            double glongDeg = input.GLong * 180.0 / System.Math.PI;  // radians to degrees
+            double glatDeg = input.GLat * Constants.Rad2Deg;  // radians to degrees
+            double glongDeg = input.GLong * Constants.Rad2Deg;  // radians to degrees
 
             // Store original values
             double origAlt = input.Alt;
@@ -1364,7 +1364,7 @@ namespace IO.Astrodynamics.Atmosphere.NRLMSISE_00
         public void Ghp7(NrlmsiseInput input, NrlmsiseFlags flags, NrlmsiseOutput output, double press)
         {
             // Convert input GLat from radians to degrees for initial calculation
-            double glatDeg = input.GLat * 180.0 / System.Math.PI;
+            double glatDeg = input.GLat * Constants.Rad2Deg;
 
             double bm = 1.3806E-19;
             double rgas = 831.4;
