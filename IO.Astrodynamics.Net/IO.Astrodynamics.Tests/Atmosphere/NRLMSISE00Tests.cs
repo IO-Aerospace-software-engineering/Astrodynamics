@@ -1,6 +1,6 @@
 using System;
 using Xunit;
-using IO.Astrodynamics.Physics.NRLMSISE_00;
+using IO.Astrodynamics.Atmosphere.NRLMSISE_00;
 
 namespace IO.Astrodynamics.Tests.Atmosphere
 {

@@ -1,4 +1,4 @@
-namespace IO.Astrodynamics.Physics.NRLMSISE_00
+namespace IO.Astrodynamics.Atmosphere.NRLMSISE_00
 {
     /// <summary>
     /// Output values from NRLMSISE-00 model.

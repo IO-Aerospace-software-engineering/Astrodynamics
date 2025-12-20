@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace IO.Astrodynamics.Physics.NRLMSISE_00
+namespace IO.Astrodynamics.Atmosphere.NRLMSISE_00
 {
     /// <summary>
     /// Static coefficient tables for the NRLMSISE-00 empirical atmosphere model.

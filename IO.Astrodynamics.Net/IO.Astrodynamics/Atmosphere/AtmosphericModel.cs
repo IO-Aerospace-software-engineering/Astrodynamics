@@ -1,6 +1,6 @@
 // Copyright 2024. Sylvain Guillet (sylvain.guillet@tutamail.com)
 
-namespace IO.Astrodynamics.Physics;
+namespace IO.Astrodynamics.Atmosphere;
 
 public abstract class AtmosphericModel
 {

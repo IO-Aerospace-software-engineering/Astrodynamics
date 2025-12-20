@@ -2,7 +2,7 @@
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.OrbitalParameters;
-using IO.Astrodynamics.Physics;
+using IO.Astrodynamics.Atmosphere;
 using IO.Astrodynamics.Propagator.Forces;
 using IO.Astrodynamics.TimeSystem;
 using Xunit;
