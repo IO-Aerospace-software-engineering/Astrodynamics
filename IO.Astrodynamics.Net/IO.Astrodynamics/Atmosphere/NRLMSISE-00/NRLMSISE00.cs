@@ -476,7 +476,8 @@ namespace IO.Astrodynamics.Atmosphere.NRLMSISE_00
         /// </summary>
         private double G0(double a, double[] p)
         {
-            return (a - 4.0 + (p[25] - 1.0) * (a - 4.0 + (System.Math.Exp(-System.Math.Sqrt(p[24] * p[24]) * (a - 4.0)) - 1.0) / System.Math.Sqrt(p[24] * p[24])));
+            double absP24 = System.Math.Abs(p[24]);
+            return (a - 4.0 + (p[25] - 1.0) * (a - 4.0 + (System.Math.Exp(-absP24 * (a - 4.0)) - 1.0) / absP24));
         }
 
         /// <summary>

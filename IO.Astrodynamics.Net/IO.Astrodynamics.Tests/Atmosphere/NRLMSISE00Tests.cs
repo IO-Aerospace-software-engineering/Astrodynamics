@@ -7,16 +7,9 @@ namespace IO.Astrodynamics.Tests.Atmosphere
     /// <summary>
     /// Unit tests for the NRLMSISE-00 atmospheric model.
     /// </summary>
-    /// <remarks>
-    /// These tests validate the C# implementation against the reference C implementation
-    /// using expected output values from the DOCUMENTATION file in nrlmsise-00-cmake.
-    ///
-    /// Test data is from the official NRLMSISE-00 test suite (nrlmsise-00_test.c).
-    /// Expected values are from lines 159-192 of the DOCUMENTATION file.
-    /// </remarks>
     public class NRLMSISE00Tests
     {
-        private const double Tolerance = 1e-5; // Relative tolerance for comparing scientific notation values (0.001%)
+        private const double Tolerance = 1e-6; // Relative tolerance for comparing scientific notation values (0.000001%)
 
         /// <summary>
         /// Helper method to compare expected and actual values with relative tolerance.
