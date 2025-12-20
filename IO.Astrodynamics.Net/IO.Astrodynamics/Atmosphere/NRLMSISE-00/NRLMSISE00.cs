@@ -813,14 +813,60 @@ namespace IO.Astrodynamics.Atmosphere.NRLMSISE_00
         }
 
         /// <summary>
-        /// GTS7 - Thermospheric portion of NRLMSISE-00.
+        /// GTS7 - Thermospheric portion of NRLMSISE-00 (public wrapper).
         /// </summary>
         /// <remarks>
         /// See GTD7 for more extensive comments.
-        /// alt > 72.5 km!
+        /// alt > 72500 m! (72.5 km internally)
+        /// Input uses SI units (meters, radians), output uses SI units (m^-3, kg/m^3, K).
         /// </remarks>
         public void Gts7(NrlmsiseInput input, NrlmsiseFlags flags, NrlmsiseOutput output)
         {
+            // Convert SI input units to internal units (km, degrees)
+            double altKm = input.Alt / 1000.0;  // meters to kilometers
+            double glatDeg = input.GLat * 180.0 / System.Math.PI;  // radians to degrees
+            double glongDeg = input.GLong * 180.0 / System.Math.PI;  // radians to degrees
+
+            // Store original values
+            double origAlt = input.Alt;
+            double origGLat = input.GLat;
+            double origGLong = input.GLong;
+
+            // Temporarily set input to internal units
+            input.Alt = altKm;
+            input.GLat = glatDeg;
+            input.GLong = glongDeg;
+
+            // Call internal method that works with internal units
+            Gts7Internal(input, flags, output);
+
+            // Restore original input values
+            input.Alt = origAlt;
+            input.GLat = origGLat;
+            input.GLong = origGLong;
+
+            // Convert output from internal units to SI units
+            // Number densities: cm^-3 to m^-3 (multiply by 1E6)
+            for (int i = 0; i < 9; i++)
+            {
+                if (i != 5)  // Skip mass density
+                    output.D[i] = output.D[i] * 1.0E6;
+            }
+            // Mass density: g/cm^3 to kg/m^3 (multiply by 1000)
+            output.D[5] = output.D[5] * 1000.0;
+        }
+
+        /// <summary>
+        /// Gts7Internal - Thermospheric portion of NRLMSISE-00 (internal implementation).
+        /// </summary>
+        /// <remarks>
+        /// Works with internal units: altitude in km, latitude/longitude in degrees,
+        /// number densities in cm^-3, mass density in g/cm^3, temperature in K.
+        /// This method performs no unit conversions - it assumes inputs are already in internal units.
+        /// </remarks>
+        private void Gts7Internal(NrlmsiseInput input, NrlmsiseFlags flags, NrlmsiseOutput output)
+        {
+
             double[] zn1 = { 120.0, 110.0, 100.0, 90.0, 72.5 };
             int mn1 = 5;
             double dgtr = 1.74533E-2;
@@ -1104,18 +1150,12 @@ namespace IO.Astrodynamics.Atmosphere.NRLMSISE_00
             double zsho = Scalh(zmho, 16.0, tho);
             output.D[8] = dd * System.Math.Exp(-zsht / zsho * (System.Math.Exp(-(z - zmho) / zsht) - 1.0));
 
-            // total mass density
+            // total mass density (internal units: g/cm^3)
             output.D[5] = 1.66E-24 * (4.0 * output.D[0] + 16.0 * output.D[1] + 28.0 * output.D[2] + 32.0 * output.D[3] + 40.0 * output.D[4] + output.D[6] + 14.0 * output.D[7]);
 
             // temperature
             z = System.Math.Sqrt(input.Alt * input.Alt);
             double ddum = Densu(z, 1.0, tinf, tlb, 0.0, 0.0, ref output.T[1], Data.PTM[5], s, mn1, zn1, _mesoTn1, _mesoTgn1);
-            if (flags.Sw[0] != 0)
-            {
-                for (int i = 0; i < 9; i++)
-                    output.D[i] = output.D[i] * 1.0E6;
-                output.D[5] = output.D[5] / 1000;
-            }
         }
 
         /// <summary>
@@ -1123,9 +1163,25 @@ namespace IO.Astrodynamics.Atmosphere.NRLMSISE_00
         /// </summary>
         /// <remarks>
         /// Neutral atmosphere empirical model from the surface to lower exosphere.
+        /// Input uses SI units (meters, radians), output uses SI units (m^-3, kg/m^3, K).
         /// </remarks>
         public void Gtd7(NrlmsiseInput input, NrlmsiseFlags flags, NrlmsiseOutput output)
         {
+            // Convert SI input units to internal units (km, degrees)
+            double altKm = input.Alt / 1000.0;  // meters to kilometers
+            double glatDeg = input.GLat * 180.0 / System.Math.PI;  // radians to degrees
+            double glongDeg = input.GLong * 180.0 / System.Math.PI;  // radians to degrees
+
+            // Store original values
+            double origAlt = input.Alt;
+            double origGLat = input.GLat;
+            double origGLong = input.GLong;
+
+            // Temporarily set input to internal units
+            input.Alt = altKm;
+            input.GLat = glatDeg;
+            input.GLong = glongDeg;
+
             int mn3 = 5;
             double[] zn3 = { 32.5, 20.0, 15.0, 10.0, 0.0 };
             int mn2 = 4;
@@ -1152,15 +1208,11 @@ namespace IO.Astrodynamics.Atmosphere.NRLMSISE_00
             double tmp = input.Alt;
             input.Alt = altt;
             NrlmsiseOutput soutput = new NrlmsiseOutput();
-            Gts7(input, flags, soutput);
+            Gts7Internal(input, flags, soutput);
             altt = input.Alt;
             input.Alt = tmp;
 
-            double dm28m;
-            if (flags.Sw[0] != 0)
-                dm28m = _dm28 * 1.0E6;
-            else
-                dm28m = _dm28;
+            double dm28m = _dm28;  // Internal units (g/cm^3)
 
             output.T[0] = soutput.T[0];
             output.T[1] = soutput.T[1];
@@ -1168,6 +1220,21 @@ namespace IO.Astrodynamics.Atmosphere.NRLMSISE_00
             {
                 for (int i = 0; i < 9; i++)
                     output.D[i] = soutput.D[i];
+
+                // Restore original input values
+                input.Alt = origAlt;
+                input.GLat = origGLat;
+                input.GLong = origGLong;
+
+                // Convert output from internal units to SI units
+                // Number densities: cm^-3 to m^-3 (multiply by 1E6)
+                for (int i = 0; i < 9; i++)
+                {
+                    if (i != 5)  // Skip mass density
+                        output.D[i] = output.D[i] * 1.0E6;
+                }
+                // Mass density: g/cm^3 to kg/m^3 (multiply by 1000)
+                output.D[5] = output.D[5] * 1000.0;
                 return;
             }
 
@@ -1229,15 +1296,27 @@ namespace IO.Astrodynamics.Atmosphere.NRLMSISE_00
             // Atomic nitrogen density
             output.D[7] = 0;
 
-            // Total mass density
+            // Total mass density (internal units: g/cm^3)
             output.D[5] = 1.66E-24 * (4.0 * output.D[0] + 16.0 * output.D[1] + 28.0 * output.D[2] + 32.0 * output.D[3] + 40.0 * output.D[4] + output.D[6] + 14.0 * output.D[7]);
-
-            if (flags.Sw[0] != 0)
-                output.D[5] = output.D[5] / 1000;
 
             // temperature at altitude
             _dd = Densm(input.Alt, 1.0, 0, ref tz, mn3, zn3, _mesoTn3, _mesoTgn3, mn2, zn2, _mesoTn2, _mesoTgn2);
             output.T[1] = tz;
+
+            // Restore original input values
+            input.Alt = origAlt;
+            input.GLat = origGLat;
+            input.GLong = origGLong;
+
+            // Convert output from internal units to SI units
+            // Number densities: cm^-3 to m^-3 (multiply by 1E6)
+            for (int i = 0; i < 9; i++)
+            {
+                if (i != 5)  // Skip mass density
+                    output.D[i] = output.D[i] * 1.0E6;
+            }
+            // Mass density: g/cm^3 to kg/m^3 (multiply by 1000)
+            output.D[5] = output.D[5] * 1000.0;
         }
 
         /// <summary>
@@ -1246,31 +1325,54 @@ namespace IO.Astrodynamics.Atmosphere.NRLMSISE_00
         /// <remarks>
         /// This version returns effective total mass density for drag calculations,
         /// which includes anomalous oxygen.
+        /// Input uses SI units (meters, radians), output uses SI units (m^-3, kg/m^3, K).
         /// </remarks>
         public void Gtd7d(NrlmsiseInput input, NrlmsiseFlags flags, NrlmsiseOutput output)
         {
             Gtd7(input, flags, output);
-            output.D[5] = 1.66E-24 * (4.0 * output.D[0] + 16.0 * output.D[1] + 28.0 * output.D[2] + 32.0 * output.D[3] + 40.0 * output.D[4] + output.D[6] + 14.0 * output.D[7] + 16.0 * output.D[8]);
-            if (flags.Sw[0] != 0)
-                output.D[5] = output.D[5] / 1000;
+
+            // Convert number densities back to internal units temporarily for mass density calculation
+            // m^-3 to cm^-3 (divide by 1E6)
+            double d0_cm3 = output.D[0] / 1.0E6;
+            double d1_cm3 = output.D[1] / 1.0E6;
+            double d2_cm3 = output.D[2] / 1.0E6;
+            double d3_cm3 = output.D[3] / 1.0E6;
+            double d4_cm3 = output.D[4] / 1.0E6;
+            double d6_cm3 = output.D[6] / 1.0E6;
+            double d7_cm3 = output.D[7] / 1.0E6;
+            double d8_cm3 = output.D[8] / 1.0E6;
+
+            // Calculate mass density in internal units (g/cm^3), including anomalous oxygen
+            double rho_gcm3 = 1.66E-24 * (4.0 * d0_cm3 + 16.0 * d1_cm3 + 28.0 * d2_cm3 +
+                                          32.0 * d3_cm3 + 40.0 * d4_cm3 + d6_cm3 +
+                                          14.0 * d7_cm3 + 16.0 * d8_cm3);
+
+            // Convert to SI units: g/cm^3 to kg/m^3 (multiply by 1000)
+            output.D[5] = rho_gcm3 * 1000.0;
         }
 
         /// <summary>
         /// GHP7 - NRLMSISE-00 model for a given pressure level.
         /// </summary>
-        /// <param name="input">Input parameters (altitude will be iteratively updated).</param>
+        /// <remarks>
+        /// Input uses SI units (meters, radians), output uses SI units (m^-3, kg/m^3, K).
+        /// </remarks>
+        /// <param name="input">Input parameters (altitude in meters will be iteratively updated).</param>
         /// <param name="flags">Model flags.</param>
         /// <param name="output">Output densities and temperatures.</param>
         /// <param name="press">Pressure level in millibars.</param>
         public void Ghp7(NrlmsiseInput input, NrlmsiseFlags flags, NrlmsiseOutput output, double press)
         {
+            // Convert input GLat from radians to degrees for initial calculation
+            double glatDeg = input.GLat * 180.0 / System.Math.PI;
+
             double bm = 1.3806E-19;
             double rgas = 831.4;
             double test = 0.00043;
             int ltest = 12;
 
             double pl = System.Math.Log10(press);
-            double zi;
+            double zi;  // Altitude in km (internal units)
             if (pl >= -5.0)
             {
                 if (pl > 2.5)
@@ -1286,7 +1388,7 @@ namespace IO.Astrodynamics.Atmosphere.NRLMSISE_00
                 else
                     zi = 25.3 * (0.11 - pl);
 
-                double cl = input.GLat / 90.0;
+                double cl = glatDeg / 90.0;
                 double cl2 = cl * cl;
                 double cd;
                 if (input.Doy < 182)
@@ -1313,13 +1415,20 @@ namespace IO.Astrodynamics.Atmosphere.NRLMSISE_00
             do
             {
                 l++;
-                input.Alt = zi;
+                // Convert zi from km to meters for Gtd7 call
+                input.Alt = zi * 1000.0;
                 Gtd7(input, flags, output);
-                zi = input.Alt;
+                // Convert back to km for internal calculations
+                zi = input.Alt / 1000.0;
+
+                // Calculate total number density (output.D is now in m^-3)
                 double xn = output.D[0] + output.D[1] + output.D[2] + output.D[3] + output.D[4] + output.D[6] + output.D[7];
-                double p = bm * xn * output.T[1];
-                if (flags.Sw[0] != 0)
-                    p = p * 1.0E-6;
+                // Calculate pressure (note: xn is in m^-3, bm converts to appropriate units)
+                // bm * (particles/m^3) * K gives pressure in appropriate units
+                // Need to convert from m^-3 to cm^-3 for pressure calculation
+                double xn_cm3 = xn / 1.0E6;  // Convert m^-3 to cm^-3
+                double p = bm * xn_cm3 * output.T[1];
+
                 double diff = pl - System.Math.Log10(p);
                 if (System.Math.Sqrt(diff * diff) < test)
                     return;
@@ -1327,9 +1436,13 @@ namespace IO.Astrodynamics.Atmosphere.NRLMSISE_00
                 {
                     throw new InvalidOperationException($"ERROR: ghp7 not converging for press {press}, diff {diff}");
                 }
-                double xm = output.D[5] / xn / 1.66E-24;
-                if (flags.Sw[0] != 0)
-                    xm = xm * 1.0E3;
+
+                // Calculate mean molecular mass
+                // output.D[5] is now in kg/m^3, xn is in m^-3
+                // Convert to get mean mass in amu
+                double rho_gcm3 = output.D[5] / 1000.0;  // kg/m^3 to g/cm^3
+                double xm = rho_gcm3 / xn_cm3 / 1.66E-24;
+
                 double g = _gsurf / (System.Math.Pow(1.0 + zi / _re, 2.0));
                 double sh = rgas * output.T[1] / (xm * g);
 

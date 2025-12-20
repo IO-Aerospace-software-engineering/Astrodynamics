@@ -1,27 +1,27 @@
 namespace IO.Astrodynamics.Atmosphere.NRLMSISE_00
 {
     /// <summary>
-    /// Output values from NRLMSISE-00 model.
+    /// Output values from NRLMSISE-00 model using SI units.
     /// </summary>
     /// <remarks>
-    /// OUTPUT VARIABLES:
-    ///   d[0] - HE NUMBER DENSITY(CM-3)
-    ///   d[1] - O NUMBER DENSITY(CM-3)
-    ///   d[2] - N2 NUMBER DENSITY(CM-3)
-    ///   d[3] - O2 NUMBER DENSITY(CM-3)
-    ///   d[4] - AR NUMBER DENSITY(CM-3)
-    ///   d[5] - TOTAL MASS DENSITY(GM/CM3) [includes d[8] in gtd7d]
-    ///   d[6] - H NUMBER DENSITY(CM-3)
-    ///   d[7] - N NUMBER DENSITY(CM-3)
-    ///   d[8] - Anomalous oxygen NUMBER DENSITY(CM-3)
-    ///   t[0] - EXOSPHERIC TEMPERATURE
-    ///   t[1] - TEMPERATURE AT ALT
+    /// OUTPUT VARIABLES (SI UNITS):
+    ///   d[0] - HE NUMBER DENSITY (m^-3)
+    ///   d[1] - O NUMBER DENSITY (m^-3)
+    ///   d[2] - N2 NUMBER DENSITY (m^-3)
+    ///   d[3] - O2 NUMBER DENSITY (m^-3)
+    ///   d[4] - AR NUMBER DENSITY (m^-3)
+    ///   d[5] - TOTAL MASS DENSITY (kg/m^3) [includes d[8] in gtd7d]
+    ///   d[6] - H NUMBER DENSITY (m^-3)
+    ///   d[7] - N NUMBER DENSITY (m^-3)
+    ///   d[8] - Anomalous oxygen NUMBER DENSITY (m^-3)
+    ///   t[0] - EXOSPHERIC TEMPERATURE (K)
+    ///   t[1] - TEMPERATURE AT ALT (K)
     ///
-    ///   O, H, and N are set to zero below 72.5 km
+    ///   O, H, and N are set to zero below 72500 m
     ///
     ///   t[0], Exospheric temperature, is set to global average for
-    ///   altitudes below 120 km. The 120 km gradient is left at global
-    ///   average value for altitudes below 72 km.
+    ///   altitudes below 120000 m. The 120000 m gradient is left at global
+    ///   average value for altitudes below 72000 m.
     ///
     ///   d[5], TOTAL MASS DENSITY, is NOT the same for subroutines GTD7 and GTD7D
     ///
@@ -37,13 +37,13 @@ namespace IO.Astrodynamics.Atmosphere.NRLMSISE_00
     public record NrlmsiseOutput
     {
         /// <summary>
-        /// Densities (9 elements).
-        /// Indices 0-4, 6-8 are species densities, index 5 is total mass density.
+        /// Densities (9 elements) in SI units.
+        /// Indices 0-4, 6-8 are species number densities (m^-3), index 5 is total mass density (kg/m^3).
         /// </summary>
         public double[] D { get; set; } = new double[9];
 
         /// <summary>
-        /// Temperatures (2 elements).
+        /// Temperatures (2 elements) in Kelvin.
         /// Index 0 is exospheric temperature, index 1 is temperature at altitude.
         /// </summary>
         public double[] T { get; set; } = new double[2];

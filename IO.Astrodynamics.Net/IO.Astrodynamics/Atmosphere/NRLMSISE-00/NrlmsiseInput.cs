@@ -1,14 +1,14 @@
 namespace IO.Astrodynamics.Atmosphere.NRLMSISE_00
 {
     /// <summary>
-    /// Input parameters for NRLMSISE-00 model.
+    /// Input parameters for NRLMSISE-00 model using SI units.
     /// </summary>
     /// <remarks>
     /// NOTES ON INPUT VARIABLES:
     ///   UT, Local Time, and Longitude are used independently in the
     ///   model and are not of equal importance for every situation.
     ///   For the most physically realistic calculation these three
-    ///   variables should be consistent (lst=sec/3600 + g_long/15).
+    ///   variables should be consistent (lst=sec/3600 + g_long_rad/(15*pi/180)).
     ///   The Equation of Time departures from the above formula
     ///   for apparent local time can be included if available but
     ///   are of minor importance.
@@ -18,7 +18,7 @@ namespace IO.Astrodynamics.Atmosphere.NRLMSISE_00
     ///   from the Sun rather than the radio flux at 1 AU.
     ///
     ///   f107, f107A, and ap effects are neither large nor well
-    ///   established below 80 km and these parameters should be set to
+    ///   established below 80000 m and these parameters should be set to
     ///   150., 150., and 4. respectively.
     /// </remarks>
     public record NrlmsiseInput
@@ -39,17 +39,17 @@ namespace IO.Astrodynamics.Atmosphere.NRLMSISE_00
         public double Sec { get; set; }
 
         /// <summary>
-        /// Altitude in kilometers.
+        /// Altitude in meters (SI unit).
         /// </summary>
         public double Alt { get; set; }
 
         /// <summary>
-        /// Geodetic latitude in degrees.
+        /// Geodetic latitude in radians (SI unit).
         /// </summary>
         public double GLat { get; set; }
 
         /// <summary>
-        /// Geodetic longitude in degrees.
+        /// Geodetic longitude in radians (SI unit).
         /// </summary>
         public double GLong { get; set; }
 

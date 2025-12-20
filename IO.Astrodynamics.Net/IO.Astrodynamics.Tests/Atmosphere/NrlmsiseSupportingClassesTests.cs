@@ -6,6 +6,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere
     /// <summary>
     /// Comprehensive unit tests for NRLMSISE-00 supporting classes:
     /// NrlmsiseInput, NrlmsiseOutput, ApArray, and NrlmsiseFlags.
+    /// Note: These classes use SI units (meters, radians, m^-3, kg/m^3).
     /// </summary>
     public class NrlmsiseSupportingClassesTests
     {
@@ -260,9 +261,9 @@ namespace IO.Astrodynamics.Tests.Atmosphere
             {
                 Doy = 366,           // Leap year max
                 Sec = 86400.0,       // Seconds in a day
-                Alt = 10000.0,       // Very high altitude
-                GLat = 90.0,         // North pole
-                GLong = 180.0,       // Date line
+                Alt = 10000.0,       // Arbitrary test altitude (meters in SI)
+                GLat = 90.0,         // Arbitrary test latitude (radians in SI)
+                GLong = 180.0,       // Arbitrary test longitude (radians in SI)
                 Lst = 24.0,          // End of day
                 F107A = 500.0,       // Very high solar activity
                 F107 = 500.0,
@@ -891,7 +892,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere
             var flags = new NrlmsiseFlags();
 
             // Act - Configure some switches as documented
-            flags.Switches[0] = 0;   // Output in meters and kilograms (standard)
+            flags.Switches[0] = 0;   // Reserved (previously unit control, now always SI)
             flags.Switches[1] = 1;   // F10.7 effect on mean (on)
             flags.Switches[7] = 1;   // diurnal (on)
             flags.Switches[8] = 1;   // semidiurnal (on)
