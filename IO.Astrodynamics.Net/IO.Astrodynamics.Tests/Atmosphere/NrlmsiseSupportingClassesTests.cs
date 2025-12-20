@@ -37,26 +37,35 @@ namespace IO.Astrodynamics.Tests.Atmosphere
 
         /// <summary>
         /// Tests that all properties of NrlmsiseInput can be set and retrieved correctly.
+        /// Init-only properties must be set using object initializer syntax.
+        /// Mutable properties (Alt, GLat, GLong) can be set after construction.
         /// </summary>
         [Fact]
         public void NrlmsiseInput_SetAndGetAllProperties_WorksCorrectly()
         {
             // Arrange
             var apArray = new ApArray();
-            var input = new NrlmsiseInput();
 
-            // Act
-            input.Year = 2025;
-            input.Doy = 172;
-            input.Sec = 43200.0;
+            // Act - Init-only properties set during construction
+            var input = new NrlmsiseInput
+            {
+                Year = 2025,
+                Doy = 172,
+                Sec = 43200.0,
+                Alt = 300.0,  // Initial value
+                GLat = 40.0,  // Initial value
+                GLong = -70.0,  // Initial value
+                Lst = 12.5,
+                F107A = 150.0,
+                F107 = 155.0,
+                Ap = 4.0,
+                ApA = apArray
+            };
+
+            // Mutable properties can still be modified after construction
             input.Alt = 400.0;
             input.GLat = 45.5;
             input.GLong = -75.3;
-            input.Lst = 12.5;
-            input.F107A = 150.0;
-            input.F107 = 155.0;
-            input.Ap = 4.0;
-            input.ApA = apArray;
 
             // Assert
             Assert.Equal(2025, input.Year);
@@ -581,17 +590,16 @@ namespace IO.Astrodynamics.Tests.Atmosphere
         }
 
         /// <summary>
-        /// Tests that ApArray can replace its entire array.
+        /// Tests that ApArray can be created with a custom array using object initializer.
         /// </summary>
         [Fact]
-        public void ApArray_ReplaceEntireArray_WorksCorrectly()
+        public void ApArray_WithCustomArray_WorksCorrectly()
         {
             // Arrange
-            var apArray = new ApArray();
             var newArray = new double[] { 10, 20, 30, 40, 50, 60, 70 };
 
-            // Act
-            apArray.A = newArray;
+            // Act - use object initializer syntax for init-only property
+            var apArray = new ApArray { A = newArray };
 
             // Assert
             Assert.Same(newArray, apArray.A);
@@ -674,7 +682,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere
         public void NrlmsiseFlags_DefaultConstructor_InitializesSwitchesCorrectly()
         {
             // Arrange & Act
-            var flags = new NrlmsiseFlags();
+            var flags = NrlmsiseFlags.CreateStandard();
 
             // Assert
             Assert.Equal(0, flags.Switches[0]);
@@ -691,7 +699,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere
         public void NrlmsiseFlags_ArraySizes_AllInitializedToTwentyFourElements()
         {
             // Arrange & Act
-            var flags = new NrlmsiseFlags();
+            var flags = NrlmsiseFlags.CreateStandard();
 
             // Assert
             Assert.Equal(24, flags.Switches.Length);
@@ -706,7 +714,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere
         public void NrlmsiseFlags_ModifySwitchValues_WorksCorrectly()
         {
             // Arrange
-            var flags = new NrlmsiseFlags();
+            var flags = NrlmsiseFlags.CreateStandard();
 
             // Act
             flags.Switches[0] = 1;  // Change from 0 to 1
@@ -726,8 +734,8 @@ namespace IO.Astrodynamics.Tests.Atmosphere
         public void NrlmsiseFlags_IndependentInstances_HaveIndependentArrays()
         {
             // Arrange
-            var flags1 = new NrlmsiseFlags();
-            var flags2 = new NrlmsiseFlags();
+            var flags1 = NrlmsiseFlags.CreateStandard();
+            var flags2 = NrlmsiseFlags.CreateStandard();
 
             // Act
             flags1.Switches[5] = 2;
@@ -750,7 +758,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere
         public void NrlmsiseFlags_SwAndSwcArrays_InitializedToZeros()
         {
             // Arrange & Act
-            var flags = new NrlmsiseFlags();
+            var flags = NrlmsiseFlags.CreateStandard();
 
             // Assert
             for (int i = 0; i < 24; i++)
@@ -767,7 +775,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere
         public void NrlmsiseFlags_SetSwAndSwcValues_WorksCorrectly()
         {
             // Arrange
-            var flags = new NrlmsiseFlags();
+            var flags = NrlmsiseFlags.CreateStandard();
 
             // Act
             flags.Sw[0] = 1.5;
@@ -789,7 +797,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere
         public void NrlmsiseFlags_ReplaceEntireArrays_WorksCorrectly()
         {
             // Arrange
-            var flags = new NrlmsiseFlags();
+            var flags = NrlmsiseFlags.CreateStandard();
             var newSwitches = new int[24];
             var newSw = new double[24];
             var newSwc = new double[24];
@@ -822,7 +830,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere
         public void NrlmsiseFlags_Switch0_SpecificallySetToZero()
         {
             // Arrange & Act
-            var flags = new NrlmsiseFlags();
+            var flags = NrlmsiseFlags.CreateStandard();
 
             // Assert
             Assert.Equal(0, flags.Switches[0]);
@@ -835,7 +843,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere
         public void NrlmsiseFlags_Switches1To23_AllSetToOne()
         {
             // Arrange & Act
-            var flags = new NrlmsiseFlags();
+            var flags = NrlmsiseFlags.CreateStandard();
 
             // Assert
             for (int i = 1; i < 24; i++)
@@ -851,7 +859,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere
         public void NrlmsiseFlags_SwitchMode2_AcceptedCorrectly()
         {
             // Arrange
-            var flags = new NrlmsiseFlags();
+            var flags = NrlmsiseFlags.CreateStandard();
 
             // Act
             flags.Switches[5] = 2;  // Mode 2: main effects off, cross terms on
@@ -867,7 +875,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere
         public void NrlmsiseFlags_AllSwitchesOff_SetCorrectly()
         {
             // Arrange
-            var flags = new NrlmsiseFlags();
+            var flags = NrlmsiseFlags.CreateStandard();
 
             // Act
             for (int i = 0; i < 24; i++)
@@ -889,7 +897,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere
         public void NrlmsiseFlags_DocumentedSwitchConfigurations_SetCorrectly()
         {
             // Arrange
-            var flags = new NrlmsiseFlags();
+            var flags = NrlmsiseFlags.CreateStandard();
 
             // Act - Configure some switches as documented
             flags.Switches[0] = 0;   // Reserved (previously unit control, now always SI)

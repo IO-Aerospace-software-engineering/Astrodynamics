@@ -1,7 +1,7 @@
 namespace IO.Astrodynamics.Atmosphere.NRLMSISE_00
 {
     /// <summary>
-    /// Array containing magnetic activity values.
+    /// Record containing magnetic activity values.
     /// </summary>
     /// <remarks>
     /// Array containing the following magnetic values:
@@ -13,11 +13,11 @@ namespace IO.Astrodynamics.Atmosphere.NRLMSISE_00
     ///  5 : Average of eight 3 hr AP indices from 12 to 33 hrs prior to current time
     ///  6 : Average of eight 3 hr AP indices from 36 to 57 hrs prior to current time
     /// </remarks>
-    public class ApArray
+    public record ApArray
     {
         /// <summary>
         /// Magnetic activity values (7 elements).
         /// </summary>
-        public double[] A { get; set; } = new double[7];
+        public double[] A { get; init; } = new double[7];
     }
 }

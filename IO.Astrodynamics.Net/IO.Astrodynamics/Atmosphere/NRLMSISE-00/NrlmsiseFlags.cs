@@ -9,6 +9,9 @@ namespace IO.Astrodynamics.Atmosphere.NRLMSISE_00
     ///
     /// Standard values are 0 for switch 0 and 1 for switches 1 to 23.
     /// The arrays sw and swc are set internally based on switches.
+    ///
+    /// Use <see cref="CreateStandard"/> to create an instance with standard switch values,
+    /// or use the default constructor to create an instance with custom initialization.
     /// </remarks>
     public class NrlmsiseFlags
     {
@@ -19,7 +22,7 @@ namespace IO.Astrodynamics.Atmosphere.NRLMSISE_00
         /// switches[i]:
         ///  i - explanation
         /// -----------------
-        ///  0 - output in meters and kilograms instead of centimeters and grams
+        ///  0 - Reserved (previously unit control, now always SI units)
         ///  1 - F10.7 effect on mean
         ///  2 - time independent
         ///  3 - symmetrical annual
@@ -58,16 +61,34 @@ namespace IO.Astrodynamics.Atmosphere.NRLMSISE_00
         public double[] Swc { get; set; } = new double[24];
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="NrlmsiseFlags"/> class with standard values.
+        /// Initializes a new instance of the <see cref="NrlmsiseFlags"/> class.
         /// </summary>
+        /// <remarks>
+        /// Creates an instance with all switches set to 0. For standard initialization,
+        /// use <see cref="CreateStandard"/> instead.
+        /// </remarks>
         public NrlmsiseFlags()
         {
-            // Standard values: 0 for switch 0, 1 for switches 1-23
-            Switches[0] = 0;
+            // Arrays are initialized to zeros by default
+        }
+
+        /// <summary>
+        /// Creates a new instance of <see cref="NrlmsiseFlags"/> with standard switch values.
+        /// </summary>
+        /// <returns>A new instance with standard values: 0 for switch 0, 1 for switches 1-23.</returns>
+        /// <remarks>
+        /// This is the recommended way to create flags for normal NRLMSISE-00 usage.
+        /// Standard configuration enables all atmospheric variations except switch 0 (reserved).
+        /// </remarks>
+        public static NrlmsiseFlags CreateStandard()
+        {
+            var flags = new NrlmsiseFlags();
+            flags.Switches[0] = 0;
             for (int i = 1; i < 24; i++)
             {
-                Switches[i] = 1;
+                flags.Switches[i] = 1;
             }
+            return flags;
         }
     }
 }

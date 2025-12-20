@@ -40,12 +40,20 @@ namespace IO.Astrodynamics.Atmosphere.NRLMSISE_00
         /// Densities (9 elements) in SI units.
         /// Indices 0-4, 6-8 are species number densities (m^-3), index 5 is total mass density (kg/m^3).
         /// </summary>
-        public double[] D { get; set; } = new double[9];
+        /// <remarks>
+        /// Note: This property uses 'init' (not 'set') to prevent reassignment of the array reference.
+        /// However, the NRLMSISE-00 algorithm can still write results into the array elements.
+        /// </remarks>
+        public double[] D { get; init; } = new double[9];
 
         /// <summary>
         /// Temperatures (2 elements) in Kelvin.
         /// Index 0 is exospheric temperature, index 1 is temperature at altitude.
         /// </summary>
-        public double[] T { get; set; } = new double[2];
+        /// <remarks>
+        /// Note: This property uses 'init' (not 'set') to prevent reassignment of the array reference.
+        /// However, the NRLMSISE-00 algorithm can still write results into the array elements.
+        /// </remarks>
+        public double[] T { get; init; } = new double[2];
     }
 }

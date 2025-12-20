@@ -51,7 +51,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere
                 F107 = 150,
                 Ap = 4
             };
-            var flags = new NrlmsiseFlags();
+            var flags = NrlmsiseFlags.CreateStandard();
             var output = new NrlmsiseOutput();
 
             model.Gtd7(input, flags, output);
@@ -90,7 +90,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere
                 F107 = 150,
                 Ap = 4
             };
-            var flags = new NrlmsiseFlags();
+            var flags = NrlmsiseFlags.CreateStandard();
             var output = new NrlmsiseOutput();
 
             model.Gtd7(input, flags, output);
@@ -129,7 +129,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere
                 F107 = 150,
                 Ap = 4
             };
-            var flags = new NrlmsiseFlags();
+            var flags = NrlmsiseFlags.CreateStandard();
             var output = new NrlmsiseOutput();
 
             model.Gtd7(input, flags, output);
@@ -168,7 +168,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere
                 F107 = 150,
                 Ap = 4
             };
-            var flags = new NrlmsiseFlags();
+            var flags = NrlmsiseFlags.CreateStandard();
             var output = new NrlmsiseOutput();
 
             model.Gtd7(input, flags, output);
@@ -207,7 +207,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere
                 F107 = 150,
                 Ap = 4
             };
-            var flags = new NrlmsiseFlags();
+            var flags = NrlmsiseFlags.CreateStandard();
             var output = new NrlmsiseOutput();
 
             model.Gtd7(input, flags, output);
@@ -246,7 +246,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere
                 F107 = 150,
                 Ap = 4
             };
-            var flags = new NrlmsiseFlags();
+            var flags = NrlmsiseFlags.CreateStandard();
             var output = new NrlmsiseOutput();
 
             model.Gtd7(input, flags, output);
@@ -285,7 +285,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere
                 F107 = 150,
                 Ap = 4
             };
-            var flags = new NrlmsiseFlags();
+            var flags = NrlmsiseFlags.CreateStandard();
             var output = new NrlmsiseOutput();
 
             model.Gtd7(input, flags, output);
@@ -324,7 +324,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere
                 F107 = 150,
                 Ap = 4
             };
-            var flags = new NrlmsiseFlags();
+            var flags = NrlmsiseFlags.CreateStandard();
             var output = new NrlmsiseOutput();
 
             model.Gtd7(input, flags, output);
@@ -363,7 +363,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere
                 F107 = 180,
                 Ap = 4
             };
-            var flags = new NrlmsiseFlags();
+            var flags = NrlmsiseFlags.CreateStandard();
             var output = new NrlmsiseOutput();
 
             model.Gtd7(input, flags, output);
@@ -402,7 +402,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere
                 F107 = 150,
                 Ap = 40
             };
-            var flags = new NrlmsiseFlags();
+            var flags = NrlmsiseFlags.CreateStandard();
             var output = new NrlmsiseOutput();
 
             model.Gtd7(input, flags, output);
@@ -454,7 +454,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere
                 F107 = 150,
                 Ap = 4
             };
-            var flags = new NrlmsiseFlags();
+            var flags = NrlmsiseFlags.CreateStandard();
             var output = new NrlmsiseOutput();
 
             model.Gtd7(input, flags, output);
@@ -497,7 +497,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere
                 Ap = 4,
                 ApA = apArray
             };
-            var flags = new NrlmsiseFlags();
+            var flags = NrlmsiseFlags.CreateStandard();
             flags.Switches[9] = -1;
             var output = new NrlmsiseOutput();
 
@@ -542,7 +542,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere
                 Ap = 4,
                 ApA = apArray
             };
-            var flags = new NrlmsiseFlags();
+            var flags = NrlmsiseFlags.CreateStandard();
             flags.Switches[9] = -1;
             var output = new NrlmsiseOutput();
 
@@ -586,7 +586,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere
                 F107 = 150,
                 Ap = 4
             };
-            var flags = new NrlmsiseFlags();
+            var flags = NrlmsiseFlags.CreateStandard();
             var output = new NrlmsiseOutput();
 
             // Act
@@ -624,7 +624,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere
                 F107 = 150,
                 Ap = 4
             };
-            var flags = new NrlmsiseFlags();
+            var flags = NrlmsiseFlags.CreateStandard();
             var output = new NrlmsiseOutput();
 
             // Act
@@ -658,7 +658,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere
                 F107 = 150,
                 Ap = 4
             };
-            var flags = new NrlmsiseFlags();
+            var flags = NrlmsiseFlags.CreateStandard();
             var output = new NrlmsiseOutput();
 
             // Act
@@ -692,7 +692,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere
                 F107 = 150,
                 Ap = 4
             };
-            var flags = new NrlmsiseFlags();
+            var flags = NrlmsiseFlags.CreateStandard();
             var output = new NrlmsiseOutput();
 
             // Act
@@ -732,7 +732,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere
                 F107 = 150,
                 Ap = 4
             };
-            var flags = new NrlmsiseFlags();
+            var flags = NrlmsiseFlags.CreateStandard();
             var outputGtd7 = new NrlmsiseOutput();
             var outputGtd7d = new NrlmsiseOutput();
 
@@ -774,7 +774,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere
                 F107 = 150,
                 Ap = 4
             };
-            var flags = new NrlmsiseFlags();
+            var flags = NrlmsiseFlags.CreateStandard();
             var outputGtd7 = new NrlmsiseOutput();
             var outputGtd7d = new NrlmsiseOutput();
 
@@ -807,7 +807,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere
                 F107 = 150,
                 Ap = 4
             };
-            var flags = new NrlmsiseFlags();
+            var flags = NrlmsiseFlags.CreateStandard();
             flags.Switches[0] = 1; // m/kg units
             var output = new NrlmsiseOutput();
 
@@ -844,7 +844,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere
                 F107 = 150,
                 Ap = 4
             };
-            var flags = new NrlmsiseFlags();
+            var flags = NrlmsiseFlags.CreateStandard();
             var output = new NrlmsiseOutput();
 
             // Act
@@ -876,7 +876,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere
                 F107 = 150,
                 Ap = 4
             };
-            var flags = new NrlmsiseFlags();
+            var flags = NrlmsiseFlags.CreateStandard();
             var output = new NrlmsiseOutput();
 
             // Act
@@ -908,7 +908,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere
                 F107 = 150,
                 Ap = 4
             };
-            var flags = new NrlmsiseFlags();
+            var flags = NrlmsiseFlags.CreateStandard();
             var output = new NrlmsiseOutput();
 
             // Act
@@ -940,7 +940,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere
                 F107 = 150,
                 Ap = 4
             };
-            var flags = new NrlmsiseFlags();
+            var flags = NrlmsiseFlags.CreateStandard();
             flags.Switches[0] = 1; // m/kg units
             var output = new NrlmsiseOutput();
 
@@ -977,7 +977,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere
                 F107 = 150,
                 Ap = 4
             };
-            var flags = new NrlmsiseFlags();
+            var flags = NrlmsiseFlags.CreateStandard();
             var output = new NrlmsiseOutput();
 
             // Act
@@ -1010,7 +1010,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere
                 F107 = 150,
                 Ap = 4
             };
-            var flags = new NrlmsiseFlags();
+            var flags = NrlmsiseFlags.CreateStandard();
             var output = new NrlmsiseOutput();
 
             // Act
@@ -1045,7 +1045,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere
                 F107 = 150,
                 Ap = 4
             };
-            var flags = new NrlmsiseFlags();
+            var flags = NrlmsiseFlags.CreateStandard();
             var output = new NrlmsiseOutput();
 
             // Act
@@ -1077,7 +1077,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere
                 F107 = 150,
                 Ap = 4
             };
-            var flags = new NrlmsiseFlags();
+            var flags = NrlmsiseFlags.CreateStandard();
             var output = new NrlmsiseOutput();
 
             // Act
@@ -1109,7 +1109,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere
                 F107 = 150,
                 Ap = 4
             };
-            var flags = new NrlmsiseFlags();
+            var flags = NrlmsiseFlags.CreateStandard();
             var output = new NrlmsiseOutput();
 
             // Act
@@ -1141,7 +1141,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere
                 F107 = 150,
                 Ap = 4
             };
-            var flags = new NrlmsiseFlags();
+            var flags = NrlmsiseFlags.CreateStandard();
             var output = new NrlmsiseOutput();
 
             // Act
@@ -1173,7 +1173,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere
                 F107 = 150,
                 Ap = 4
             };
-            var flags = new NrlmsiseFlags();
+            var flags = NrlmsiseFlags.CreateStandard();
             var output = new NrlmsiseOutput();
 
             // Act
@@ -1205,7 +1205,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere
                 F107 = 65,
                 Ap = 4
             };
-            var flags = new NrlmsiseFlags();
+            var flags = NrlmsiseFlags.CreateStandard();
             var output = new NrlmsiseOutput();
 
             // Act
@@ -1238,7 +1238,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere
                 F107 = 300,
                 Ap = 4
             };
-            var flags = new NrlmsiseFlags();
+            var flags = NrlmsiseFlags.CreateStandard();
             var output = new NrlmsiseOutput();
 
             // Act
@@ -1271,7 +1271,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere
                 F107 = 150,
                 Ap = 0 // Zero geomagnetic activity
             };
-            var flags = new NrlmsiseFlags();
+            var flags = NrlmsiseFlags.CreateStandard();
             var output = new NrlmsiseOutput();
 
             // Act
@@ -1303,7 +1303,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere
                 F107 = 150,
                 Ap = 400 // Extreme geomagnetic activity
             };
-            var flags = new NrlmsiseFlags();
+            var flags = NrlmsiseFlags.CreateStandard();
             var output = new NrlmsiseOutput();
 
             // Act
@@ -1340,7 +1340,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere
                 F107 = 150,
                 Ap = 4
             };
-            var flags = new NrlmsiseFlags();
+            var flags = NrlmsiseFlags.CreateStandard();
             // Turn off all switches except 0
             for (int i = 1; i < 24; i++)
                 flags.Switches[i] = 0;
@@ -1375,7 +1375,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere
                 F107 = 150,
                 Ap = 4
             };
-            var flags = new NrlmsiseFlags();
+            var flags = NrlmsiseFlags.CreateStandard();
             flags.Switches[1] = 0; // Disable F10.7 effect
             var output = new NrlmsiseOutput();
 
@@ -1408,7 +1408,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere
                 F107 = 150,
                 Ap = 4
             };
-            var flags = new NrlmsiseFlags();
+            var flags = NrlmsiseFlags.CreateStandard();
             flags.Switches[7] = 0; // Disable diurnal variation
             var output = new NrlmsiseOutput();
 
@@ -1441,7 +1441,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere
                 F107 = 150,
                 Ap = 4
             };
-            var flags = new NrlmsiseFlags();
+            var flags = NrlmsiseFlags.CreateStandard();
             flags.Switches[8] = 0; // Disable semidiurnal variation
             var output = new NrlmsiseOutput();
 
@@ -1474,7 +1474,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere
                 F107 = 150,
                 Ap = 4
             };
-            var flags = new NrlmsiseFlags();
+            var flags = NrlmsiseFlags.CreateStandard();
             flags.Switches[14] = 0; // Disable terdiurnal variation
             var output = new NrlmsiseOutput();
 
@@ -1507,7 +1507,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere
                 F107 = 150,
                 Ap = 4
             };
-            var flags = new NrlmsiseFlags();
+            var flags = NrlmsiseFlags.CreateStandard();
             flags.Switches[15] = 0; // Disable departures from diffusive equilibrium
             var output = new NrlmsiseOutput();
 
@@ -1549,7 +1549,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere
                 Ap = 4,
                 ApA = apArray
             };
-            var flags = new NrlmsiseFlags();
+            var flags = NrlmsiseFlags.CreateStandard();
             flags.Switches[9] = -1; // Use ApArray
             var output = new NrlmsiseOutput();
 
@@ -1592,7 +1592,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere
                 Ap = 4,
                 ApA = apArray
             };
-            var flags = new NrlmsiseFlags();
+            var flags = NrlmsiseFlags.CreateStandard();
             flags.Switches[9] = -1; // Use ApArray
             var output = new NrlmsiseOutput();
 
@@ -1630,7 +1630,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere
                 Ap = 4,
                 ApA = apArray
             };
-            var flags = new NrlmsiseFlags();
+            var flags = NrlmsiseFlags.CreateStandard();
             flags.Switches[9] = -1; // Use ApArray
             var output = new NrlmsiseOutput();
 
@@ -1668,7 +1668,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere
                 F107 = 150,
                 Ap = 4
             };
-            var flags = new NrlmsiseFlags();
+            var flags = NrlmsiseFlags.CreateStandard();
             var output = new NrlmsiseOutput();
 
             // Act
@@ -1700,7 +1700,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere
                 F107 = 150,
                 Ap = 4
             };
-            var flags = new NrlmsiseFlags();
+            var flags = NrlmsiseFlags.CreateStandard();
             var output = new NrlmsiseOutput();
 
             // Act
@@ -1734,7 +1734,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere
                 F107 = 150,
                 Ap = 4
             };
-            var flags = new NrlmsiseFlags();
+            var flags = NrlmsiseFlags.CreateStandard();
             var output = new NrlmsiseOutput();
 
             // Act
@@ -1767,7 +1767,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere
                 F107 = 150,
                 Ap = 4
             };
-            var flags = new NrlmsiseFlags();
+            var flags = NrlmsiseFlags.CreateStandard();
             var output = new NrlmsiseOutput();
 
             // Act
@@ -1799,7 +1799,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere
                 F107 = 150,
                 Ap = 4
             };
-            var flags = new NrlmsiseFlags();
+            var flags = NrlmsiseFlags.CreateStandard();
             flags.Switches[2] = 0; // Time-independent mode
             var output = new NrlmsiseOutput();
 
@@ -1832,7 +1832,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere
                 F107 = 150,
                 Ap = 4
             };
-            var flags = new NrlmsiseFlags();
+            var flags = NrlmsiseFlags.CreateStandard();
             var output = new NrlmsiseOutput();
 
             // Act
