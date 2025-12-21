@@ -880,11 +880,11 @@ namespace IO.Astrodynamics.Tests.Atmosphere
             var output = new NrlmsiseOutput();
 
             // Act
-            model.Ghp7(input, flags, output, 1.0); // 1 mb
+            double calculatedAlt = model.Ghp7(input, flags, output, 1.0); // 1 mb
 
             // Assert - altitude should be around 48 km (48000 m) for 1 mb
-            Assert.True(input.Alt > 40000 && input.Alt < 60000,
-                       $"Altitude for 1 mb should be around 48000 m, got {input.Alt}");
+            Assert.True(calculatedAlt > 40000 && calculatedAlt < 60000,
+                       $"Altitude for 1 mb should be around 48000 m, got {calculatedAlt}");
         }
 
         /// <summary>
@@ -912,11 +912,11 @@ namespace IO.Astrodynamics.Tests.Atmosphere
             var output = new NrlmsiseOutput();
 
             // Act
-            model.Ghp7(input, flags, output, 0.001); // 0.001 mb
+            double calculatedAlt = model.Ghp7(input, flags, output, 0.001); // 0.001 mb
 
             // Assert - altitude should be around 96 km (96000 m) for 0.001 mb
-            Assert.True(input.Alt > 90000 && input.Alt < 110000,
-                       $"Altitude for 0.001 mb should be around 96000 m, got {input.Alt}");
+            Assert.True(calculatedAlt > 90000 && calculatedAlt < 110000,
+                       $"Altitude for 0.001 mb should be around 96000 m, got {calculatedAlt}");
         }
 
         /// <summary>

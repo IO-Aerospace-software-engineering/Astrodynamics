@@ -37,8 +37,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere
 
         /// <summary>
         /// Tests that all properties of NrlmsiseInput can be set and retrieved correctly.
-        /// Init-only properties must be set using object initializer syntax.
-        /// Mutable properties (Alt, GLat, GLong) can be set after construction.
+        /// All properties use init-only setters and must be set using object initializer syntax.
         /// </summary>
         [Fact]
         public void NrlmsiseInput_SetAndGetAllProperties_WorksCorrectly()
@@ -46,15 +45,15 @@ namespace IO.Astrodynamics.Tests.Atmosphere
             // Arrange
             var apArray = new ApArray();
 
-            // Act - Init-only properties set during construction
+            // Act - All properties set during construction using object initializer
             var input = new NrlmsiseInput
             {
                 Year = 2025,
                 Doy = 172,
                 Sec = 43200.0,
-                Alt = 300.0,  // Initial value
-                GLat = 40.0,  // Initial value
-                GLong = -70.0,  // Initial value
+                Alt = 400.0,
+                GLat = 45.5,
+                GLong = -75.3,
                 Lst = 12.5,
                 F107A = 150.0,
                 F107 = 155.0,
@@ -62,12 +61,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere
                 ApA = apArray
             };
 
-            // Mutable properties can still be modified after construction
-            input.Alt = 400.0;
-            input.GLat = 45.5;
-            input.GLong = -75.3;
-
-            // Assert
+            // Assert - All properties are immutable after construction
             Assert.Equal(2025, input.Year);
             Assert.Equal(172, input.Doy);
             Assert.Equal(43200.0, input.Sec);
@@ -537,7 +531,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere
         {
             // Arrange
             var apArray = new ApArray();
-            var expectedValues = new double[] { 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0 };
+            var expectedValues = new [] { 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0 };
 
             // Act
             for (int i = 0; i < 7; i++)

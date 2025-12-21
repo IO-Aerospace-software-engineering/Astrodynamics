@@ -41,29 +41,17 @@ namespace IO.Astrodynamics.Atmosphere.NRLMSISE_00
         /// <summary>
         /// Altitude in meters (SI unit).
         /// </summary>
-        /// <remarks>
-        /// Note: This property uses 'set' (not 'init') because the NRLMSISE-00 algorithm
-        /// temporarily modifies it during internal calculations, then restores the original value.
-        /// </remarks>
-        public double Alt { get; set; }
+        public double Alt { get; init; }
 
         /// <summary>
         /// Geodetic latitude in radians (SI unit).
         /// </summary>
-        /// <remarks>
-        /// Note: This property uses 'set' (not 'init') because the NRLMSISE-00 algorithm
-        /// temporarily modifies it during internal calculations, then restores the original value.
-        /// </remarks>
-        public double GLat { get; set; }
+        public double GLat { get; init; }
 
         /// <summary>
         /// Geodetic longitude in radians (SI unit).
         /// </summary>
-        /// <remarks>
-        /// Note: This property uses 'set' (not 'init') because the NRLMSISE-00 algorithm
-        /// temporarily modifies it during internal calculations, then restores the original value.
-        /// </remarks>
-        public double GLong { get; set; }
+        public double GLong { get; init; }
 
         /// <summary>
         /// Local apparent solar time in hours.

@@ -822,28 +822,16 @@ namespace IO.Astrodynamics.Atmosphere.NRLMSISE_00
         /// </remarks>
         public void Gts7(NrlmsiseInput input, NrlmsiseFlags flags, NrlmsiseOutput output)
         {
-            // Convert SI input units to internal units (km, degrees)
-            double altKm = input.Alt / 1000.0;  // meters to kilometers
-            double glatDeg = input.GLat * Constants.Rad2Deg;  // radians to degrees
-            double glongDeg = input.GLong * Constants.Rad2Deg;  // radians to degrees
+            // Convert SI input units to internal units (km, degrees) and create a modified copy
+            var internalInput = input with
+            {
+                Alt = input.Alt / 1000.0,  // meters to kilometers
+                GLat = input.GLat * Constants.Rad2Deg,  // radians to degrees
+                GLong = input.GLong * Constants.Rad2Deg  // radians to degrees
+            };
 
-            // Store original values
-            double origAlt = input.Alt;
-            double origGLat = input.GLat;
-            double origGLong = input.GLong;
-
-            // Temporarily set input to internal units
-            input.Alt = altKm;
-            input.GLat = glatDeg;
-            input.GLong = glongDeg;
-
-            // Call internal method that works with internal units
-            Gts7Internal(input, flags, output);
-
-            // Restore original input values
-            input.Alt = origAlt;
-            input.GLat = origGLat;
-            input.GLong = origGLong;
+            // Call internal method that works with internal units (input remains unchanged)
+            Gts7Internal(internalInput, flags, output);
 
             // Convert output from internal units to SI units
             // Number densities: cm^-3 to m^-3 (multiply by 1E6)
@@ -1167,20 +1155,13 @@ namespace IO.Astrodynamics.Atmosphere.NRLMSISE_00
         /// </remarks>
         public void Gtd7(NrlmsiseInput input, NrlmsiseFlags flags, NrlmsiseOutput output)
         {
-            // Convert SI input units to internal units (km, degrees)
-            double altKm = input.Alt / 1000.0;  // meters to kilometers
-            double glatDeg = input.GLat * Constants.Rad2Deg;  // radians to degrees
-            double glongDeg = input.GLong * Constants.Rad2Deg;  // radians to degrees
-
-            // Store original values
-            double origAlt = input.Alt;
-            double origGLat = input.GLat;
-            double origGLong = input.GLong;
-
-            // Temporarily set input to internal units
-            input.Alt = altKm;
-            input.GLat = glatDeg;
-            input.GLong = glongDeg;
+            // Convert SI input units to internal units (km, degrees) and create a modified copy
+            var internalInput = input with
+            {
+                Alt = input.Alt / 1000.0,  // meters to kilometers
+                GLat = input.GLat * Constants.Rad2Deg,  // radians to degrees
+                GLong = input.GLong * Constants.Rad2Deg  // radians to degrees
+            };
 
             int mn3 = 5;
             double[] zn3 = { 32.5, 20.0, 15.0, 10.0, 0.0 };
@@ -1191,7 +1172,7 @@ namespace IO.Astrodynamics.Atmosphere.NRLMSISE_00
             Tselec(flags);
 
             // Latitude variation of gravity (none for sw[2]=0)
-            double xlat = input.GLat;
+            double xlat = internalInput.GLat;
             if (flags.Sw[2] == 0)
                 xlat = 45.0;
             Glatf(xlat, out _gsurf, out _re);
@@ -1200,31 +1181,24 @@ namespace IO.Astrodynamics.Atmosphere.NRLMSISE_00
 
             // THERMOSPHERE / MESOSPHERE (above zn2[0])
             double altt;
-            if (input.Alt > zn2[0])
-                altt = input.Alt;
+            if (internalInput.Alt > zn2[0])
+                altt = internalInput.Alt;
             else
                 altt = zn2[0];
 
-            double tmp = input.Alt;
-            input.Alt = altt;
+            // Create a copy with the adjusted altitude for the thermosphere calculation
+            var thermosphereInput = internalInput with { Alt = altt };
             NrlmsiseOutput soutput = new NrlmsiseOutput();
-            Gts7Internal(input, flags, soutput);
-            altt = input.Alt;
-            input.Alt = tmp;
+            Gts7Internal(thermosphereInput, flags, soutput);
 
             double dm28m = _dm28;  // Internal units (g/cm^3)
 
             output.T[0] = soutput.T[0];
             output.T[1] = soutput.T[1];
-            if (input.Alt >= zn2[0])
+            if (internalInput.Alt >= zn2[0])
             {
                 for (int i = 0; i < 9; i++)
                     output.D[i] = soutput.D[i];
-
-                // Restore original input values
-                input.Alt = origAlt;
-                input.GLat = origGLat;
-                input.GLong = origGLong;
 
                 // Convert output from internal units to SI units
                 // Number densities: cm^-3 to m^-3 (multiply by 1E6)
@@ -1243,35 +1217,35 @@ namespace IO.Astrodynamics.Atmosphere.NRLMSISE_00
             // Inverse temperature a linear function of spherical harmonics
             _mesoTgn2[0] = _mesoTgn1[1];
             _mesoTn2[0] = _mesoTn1[4];
-            _mesoTn2[1] = Data.PMA[0][0] * Data.PAVGM[0] / (1.0 - flags.Sw[20] * Glob7s(Data.PMA[0], input, flags));
-            _mesoTn2[2] = Data.PMA[1][0] * Data.PAVGM[1] / (1.0 - flags.Sw[20] * Glob7s(Data.PMA[1], input, flags));
-            _mesoTn2[3] = Data.PMA[2][0] * Data.PAVGM[2] / (1.0 - flags.Sw[20] * flags.Sw[22] * Glob7s(Data.PMA[2], input, flags));
-            _mesoTgn2[1] = Data.PAVGM[8] * Data.PMA[9][0] * (1.0 + flags.Sw[20] * flags.Sw[22] * Glob7s(Data.PMA[9], input, flags)) * _mesoTn2[3] * _mesoTn2[3] / (System.Math.Pow(Data.PMA[2][0] * Data.PAVGM[2], 2.0));
+            _mesoTn2[1] = Data.PMA[0][0] * Data.PAVGM[0] / (1.0 - flags.Sw[20] * Glob7s(Data.PMA[0], internalInput, flags));
+            _mesoTn2[2] = Data.PMA[1][0] * Data.PAVGM[1] / (1.0 - flags.Sw[20] * Glob7s(Data.PMA[1], internalInput, flags));
+            _mesoTn2[3] = Data.PMA[2][0] * Data.PAVGM[2] / (1.0 - flags.Sw[20] * flags.Sw[22] * Glob7s(Data.PMA[2], internalInput, flags));
+            _mesoTgn2[1] = Data.PAVGM[8] * Data.PMA[9][0] * (1.0 + flags.Sw[20] * flags.Sw[22] * Glob7s(Data.PMA[9], internalInput, flags)) * _mesoTn2[3] * _mesoTn2[3] / (System.Math.Pow(Data.PMA[2][0] * Data.PAVGM[2], 2.0));
             _mesoTn3[0] = _mesoTn2[3];
 
-            if (input.Alt <= zn3[0])
+            if (internalInput.Alt <= zn3[0])
             {
                 // LOWER STRATOSPHERE AND TROPOSPHERE (below zn3[0])
                 // Temperature at nodes and gradients at end nodes
                 // Inverse temperature a linear function of spherical harmonics
                 _mesoTgn3[0] = _mesoTgn2[1];
-                _mesoTn3[1] = Data.PMA[3][0] * Data.PAVGM[3] / (1.0 - flags.Sw[22] * Glob7s(Data.PMA[3], input, flags));
-                _mesoTn3[2] = Data.PMA[4][0] * Data.PAVGM[4] / (1.0 - flags.Sw[22] * Glob7s(Data.PMA[4], input, flags));
-                _mesoTn3[3] = Data.PMA[5][0] * Data.PAVGM[5] / (1.0 - flags.Sw[22] * Glob7s(Data.PMA[5], input, flags));
-                _mesoTn3[4] = Data.PMA[6][0] * Data.PAVGM[6] / (1.0 - flags.Sw[22] * Glob7s(Data.PMA[6], input, flags));
-                _mesoTgn3[1] = Data.PMA[7][0] * Data.PAVGM[7] * (1.0 + flags.Sw[22] * Glob7s(Data.PMA[7], input, flags)) * _mesoTn3[4] * _mesoTn3[4] / (System.Math.Pow(Data.PMA[6][0] * Data.PAVGM[6], 2.0));
+                _mesoTn3[1] = Data.PMA[3][0] * Data.PAVGM[3] / (1.0 - flags.Sw[22] * Glob7s(Data.PMA[3], internalInput, flags));
+                _mesoTn3[2] = Data.PMA[4][0] * Data.PAVGM[4] / (1.0 - flags.Sw[22] * Glob7s(Data.PMA[4], internalInput, flags));
+                _mesoTn3[3] = Data.PMA[5][0] * Data.PAVGM[5] / (1.0 - flags.Sw[22] * Glob7s(Data.PMA[5], internalInput, flags));
+                _mesoTn3[4] = Data.PMA[6][0] * Data.PAVGM[6] / (1.0 - flags.Sw[22] * Glob7s(Data.PMA[6], internalInput, flags));
+                _mesoTgn3[1] = Data.PMA[7][0] * Data.PAVGM[7] * (1.0 + flags.Sw[22] * Glob7s(Data.PMA[7], internalInput, flags)) * _mesoTn3[4] * _mesoTn3[4] / (System.Math.Pow(Data.PMA[6][0] * Data.PAVGM[6], 2.0));
             }
 
             // LINEAR TRANSITION TO FULL MIXING BELOW zn2[0]
             double dmc = 0;
-            if (input.Alt > zmix)
-                dmc = 1.0 - (zn2[0] - input.Alt) / (zn2[0] - zmix);
+            if (internalInput.Alt > zmix)
+                dmc = 1.0 - (zn2[0] - internalInput.Alt) / (zn2[0] - zmix);
             double dz28 = soutput.D[2];
 
             // N2 density
             double dmr = soutput.D[2] / dm28m - 1.0;
             double tz = 0;
-            output.D[2] = Densm(input.Alt, dm28m, xmm, ref tz, mn3, zn3, _mesoTn3, _mesoTgn3, mn2, zn2, _mesoTn2, _mesoTgn2);
+            output.D[2] = Densm(internalInput.Alt, dm28m, xmm, ref tz, mn3, zn3, _mesoTn3, _mesoTgn3, mn2, zn2, _mesoTn2, _mesoTgn2);
             output.D[2] = output.D[2] * (1.0 + dmr * dmc);
 
             // HE density
@@ -1300,13 +1274,8 @@ namespace IO.Astrodynamics.Atmosphere.NRLMSISE_00
             output.D[5] = 1.66E-24 * (4.0 * output.D[0] + 16.0 * output.D[1] + 28.0 * output.D[2] + 32.0 * output.D[3] + 40.0 * output.D[4] + output.D[6] + 14.0 * output.D[7]);
 
             // temperature at altitude
-            _dd = Densm(input.Alt, 1.0, 0, ref tz, mn3, zn3, _mesoTn3, _mesoTgn3, mn2, zn2, _mesoTn2, _mesoTgn2);
+            _dd = Densm(internalInput.Alt, 1.0, 0, ref tz, mn3, zn3, _mesoTn3, _mesoTgn3, mn2, zn2, _mesoTn2, _mesoTgn2);
             output.T[1] = tz;
-
-            // Restore original input values
-            input.Alt = origAlt;
-            input.GLat = origGLat;
-            input.GLong = origGLong;
 
             // Convert output from internal units to SI units
             // Number densities: cm^-3 to m^-3 (multiply by 1E6)
@@ -1356,12 +1325,15 @@ namespace IO.Astrodynamics.Atmosphere.NRLMSISE_00
         /// </summary>
         /// <remarks>
         /// Input uses SI units (meters, radians), output uses SI units (m^-3, kg/m^3, K).
+        /// The calculated altitude for the given pressure is returned in the output.
+        /// Note: The input altitude is used as an initial guess but is not modified.
         /// </remarks>
-        /// <param name="input">Input parameters (altitude in meters will be iteratively updated).</param>
+        /// <param name="input">Input parameters.</param>
         /// <param name="flags">Model flags.</param>
         /// <param name="output">Output densities and temperatures.</param>
         /// <param name="press">Pressure level in millibars.</param>
-        public void Ghp7(NrlmsiseInput input, NrlmsiseFlags flags, NrlmsiseOutput output, double press)
+        /// <returns>Calculated altitude in meters for the given pressure level.</returns>
+        public double Ghp7(NrlmsiseInput input, NrlmsiseFlags flags, NrlmsiseOutput output, double press)
         {
             // Convert input GLat from radians to degrees for initial calculation
             double glatDeg = input.GLat * Constants.Rad2Deg;
@@ -1415,11 +1387,9 @@ namespace IO.Astrodynamics.Atmosphere.NRLMSISE_00
             do
             {
                 l++;
-                // Convert zi from km to meters for Gtd7 call
-                input.Alt = zi * 1000.0;
-                Gtd7(input, flags, output);
-                // Convert back to km for internal calculations
-                zi = input.Alt / 1000.0;
+                // Create input copy with current altitude estimate
+                var iterationInput = input with { Alt = zi * 1000.0 };  // Convert zi from km to meters
+                Gtd7(iterationInput, flags, output);
 
                 // Calculate total number density (output.D is now in m^-3)
                 double xn = output.D[0] + output.D[1] + output.D[2] + output.D[3] + output.D[4] + output.D[6] + output.D[7];
@@ -1431,7 +1401,7 @@ namespace IO.Astrodynamics.Atmosphere.NRLMSISE_00
 
                 double diff = pl - System.Math.Log10(p);
                 if (System.Math.Sqrt(diff * diff) < test)
-                    return;
+                    return zi * 1000.0;  // Return calculated altitude in meters
                 if (l == ltest)
                 {
                     throw new InvalidOperationException($"ERROR: ghp7 not converging for press {press}, diff {diff}");
