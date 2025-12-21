@@ -19,5 +19,13 @@ namespace IO.Astrodynamics.Atmosphere.NRLMSISE_00
         /// Magnetic activity values (7 elements).
         /// </summary>
         public double[] A { get; init; } = new double[7];
+
+        /// <summary>
+        /// Creates a default ApArray with nominal quiet geomagnetic conditions (all values = 4.0).
+        /// </summary>
+        public static ApArray Default => new ApArray
+        {
+            A = new double[] { 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0 }
+        };
     }
 }

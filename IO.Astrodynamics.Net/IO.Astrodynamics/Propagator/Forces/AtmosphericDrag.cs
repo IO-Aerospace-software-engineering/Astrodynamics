@@ -1,4 +1,5 @@
 ﻿using System;
+using IO.Astrodynamics.Atmosphere;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.Math;
@@ -28,7 +29,16 @@ public class AtmosphericDrag : ForceBase
     {
         var planetodetic = stateVector.RelativeTo(_celestialBody, Aberration.None).ToPlanetocentric(Aberration.None)
             .ToPlanetodetic(_celestialBody!.Flattening, _celestialBody.EquatorialRadius);
-        var density = _celestialBody.GetAirDensity(planetodetic.Altitude);
+
+        // Create rich atmospheric context with time and position for complex models
+        var context = AtmosphericContext.FromPlanetodetic(
+            planetodetic.Altitude,
+            planetodetic.Latitude,
+            planetodetic.Longitude,
+            stateVector.Epoch
+        );
+
+        var density = _celestialBody.GetAirDensity(context);
         return stateVector.Velocity * -0.5 * density * _areaMassRatio * _spacecraft.DragCoefficient * stateVector.Velocity.Magnitude();
     }
 }
