@@ -13,7 +13,6 @@ namespace IO.Astrodynamics.Atmosphere.NRLMSISE_00
     /// </remarks>
     public class NRLMSISE00
     {
-        // Shared variables (static in C version)
         private double _gsurf;
         private double _re;
         private double _dd;
