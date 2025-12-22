@@ -54,7 +54,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere
             var flags = NrlmsiseFlags.CreateStandard();
             var output = new NrlmsiseOutput();
 
-            model.Gtd7(input, flags, output);
+            model.Calculate(input, flags, output);
 
             // Expected values from DOCUMENTATION line 159 (converted to SI units)
             AssertScientificEqual(6.665177E+05 * 1E6, output.D[0], "HE");
@@ -93,7 +93,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere
             var flags = NrlmsiseFlags.CreateStandard();
             var output = new NrlmsiseOutput();
 
-            model.Gtd7(input, flags, output);
+            model.Calculate(input, flags, output);
 
             // Expected values from DOCUMENTATION line 161 (converted to SI units)
             AssertScientificEqual(3.407293E+06 * 1E6, output.D[0], "HE");
@@ -132,7 +132,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere
             var flags = NrlmsiseFlags.CreateStandard();
             var output = new NrlmsiseOutput();
 
-            model.Gtd7(input, flags, output);
+            model.Calculate(input, flags, output);
 
             // Expected values from DOCUMENTATION line 163 (converted to SI units)
             AssertScientificEqual(1.123767E+05 * 1E6, output.D[0], "HE");
@@ -171,7 +171,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere
             var flags = NrlmsiseFlags.CreateStandard();
             var output = new NrlmsiseOutput();
 
-            model.Gtd7(input, flags, output);
+            model.Calculate(input, flags, output);
 
             // Expected values from DOCUMENTATION line 165 (converted to SI units)
             AssertScientificEqual(5.411554E+07 * 1E6, output.D[0], "HE");
@@ -210,7 +210,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere
             var flags = NrlmsiseFlags.CreateStandard();
             var output = new NrlmsiseOutput();
 
-            model.Gtd7(input, flags, output);
+            model.Calculate(input, flags, output);
 
             // Expected values from DOCUMENTATION line 167 (converted to SI units)
             AssertScientificEqual(1.851122E+06 * 1E6, output.D[0], "HE");
@@ -249,7 +249,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere
             var flags = NrlmsiseFlags.CreateStandard();
             var output = new NrlmsiseOutput();
 
-            model.Gtd7(input, flags, output);
+            model.Calculate(input, flags, output);
 
             // Expected values from DOCUMENTATION line 169 (converted to SI units)
             AssertScientificEqual(8.673095E+05 * 1E6, output.D[0], "HE");
@@ -288,7 +288,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere
             var flags = NrlmsiseFlags.CreateStandard();
             var output = new NrlmsiseOutput();
 
-            model.Gtd7(input, flags, output);
+            model.Calculate(input, flags, output);
 
             // Expected values from DOCUMENTATION line 171 (converted to SI units)
             AssertScientificEqual(5.776251E+05 * 1E6, output.D[0], "HE");
@@ -327,7 +327,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere
             var flags = NrlmsiseFlags.CreateStandard();
             var output = new NrlmsiseOutput();
 
-            model.Gtd7(input, flags, output);
+            model.Calculate(input, flags, output);
 
             // Expected values from DOCUMENTATION line 173 (converted to SI units)
             AssertScientificEqual(3.740304E+05 * 1E6, output.D[0], "HE");
@@ -366,7 +366,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere
             var flags = NrlmsiseFlags.CreateStandard();
             var output = new NrlmsiseOutput();
 
-            model.Gtd7(input, flags, output);
+            model.Calculate(input, flags, output);
 
             // Expected values from DOCUMENTATION line 175 (converted to SI units)
             AssertScientificEqual(6.748339E+05 * 1E6, output.D[0], "HE");
@@ -405,7 +405,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere
             var flags = NrlmsiseFlags.CreateStandard();
             var output = new NrlmsiseOutput();
 
-            model.Gtd7(input, flags, output);
+            model.Calculate(input, flags, output);
 
             // Expected values from DOCUMENTATION line 177 (converted to SI units)
             AssertScientificEqual(5.528601E+05 * 1E6, output.D[0], "HE");
@@ -457,7 +457,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere
             var flags = NrlmsiseFlags.CreateStandard();
             var output = new NrlmsiseOutput();
 
-            model.Gtd7(input, flags, output);
+            model.Calculate(input, flags, output);
 
             AssertScientificEqual(he, output.D[0], "HE");
             AssertScientificEqual(o, output.D[1], "O");
@@ -501,7 +501,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere
             flags.Switches[9] = -1;
             var output = new NrlmsiseOutput();
 
-            model.Gtd7(input, flags, output);
+            model.Calculate(input, flags, output);
 
             // Expected values from DOCUMENTATION line 189 (converted to SI units)
             AssertScientificEqual(5.196477E+05 * 1E6, output.D[0], "HE");
@@ -546,7 +546,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere
             flags.Switches[9] = -1;
             var output = new NrlmsiseOutput();
 
-            model.Gtd7(input, flags, output);
+            model.Calculate(input, flags, output);
 
             // Expected values from DOCUMENTATION line 191 (converted to SI units)
             AssertScientificEqual(4.260860E+07 * 1E6, output.D[0], "HE");
@@ -590,7 +590,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere
             var output = new NrlmsiseOutput();
 
             // Act
-            model.Gts7(input, flags, output);
+            model.CalculateThermosphere(input, flags, output);
 
             // Assert
             Assert.True(output.D[0] > 0, "HE density should be positive");
@@ -628,7 +628,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere
             var output = new NrlmsiseOutput();
 
             // Act
-            model.Gts7(input, flags, output);
+            model.CalculateThermosphere(input, flags, output);
 
             // Assert - densities should be very low at 2000 km (around 1E-11 to 1E-12 kg/m^3)
             Assert.True(output.D[0] > 0, "HE density should be positive");
@@ -662,7 +662,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere
             var output = new NrlmsiseOutput();
 
             // Act
-            model.Gts7(input, flags, output);
+            model.CalculateThermosphere(input, flags, output);
 
             // Assert
             Assert.True(output.D[0] > 0, "HE density should be positive");
@@ -696,7 +696,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere
             var output = new NrlmsiseOutput();
 
             // Act
-            model.Gtd7(input, flags, output);
+            model.Calculate(input, flags, output);
 
             // Assert - output should always be in SI units
             // Number densities should be reasonable values in m^-3 (large numbers, e.g., 1E11 to 1E12)
@@ -737,8 +737,8 @@ namespace IO.Astrodynamics.Tests.Atmosphere
             var outputGtd7d = new NrlmsiseOutput();
 
             // Act
-            model.Gtd7(input, flags, outputGtd7);
-            model.Gtd7d(input, flags, outputGtd7d);
+            model.Calculate(input, flags, outputGtd7);
+            model.CalculateWithDrag(input, flags, outputGtd7d);
 
             // Assert - Gtd7d should include anomalous oxygen (D[8]) in mass density
             // D[5] in Gtd7d (kg/m^3) = 1.66E-27 * (4*D[0] + 16*D[1] + 28*D[2] + 32*D[3] + 40*D[4] + D[6] + 14*D[7] + 16*D[8])
@@ -779,8 +779,8 @@ namespace IO.Astrodynamics.Tests.Atmosphere
             var outputGtd7d = new NrlmsiseOutput();
 
             // Act
-            model.Gtd7(input, flags, outputGtd7);
-            model.Gtd7d(input, flags, outputGtd7d);
+            model.Calculate(input, flags, outputGtd7);
+            model.CalculateWithDrag(input, flags, outputGtd7d);
 
             // Assert - at low altitudes, anomalous oxygen should be negligible
             Assert.True(System.Math.Abs(outputGtd7d.D[8]) < 1E-30, "Anomalous oxygen should be negligible at 100 km");
@@ -812,7 +812,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere
             var output = new NrlmsiseOutput();
 
             // Act
-            model.Gtd7d(input, flags, output);
+            model.CalculateWithDrag(input, flags, output);
 
             // Assert
             Assert.True(output.D[5] > 0, "Mass density should be positive");
@@ -848,7 +848,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere
             var output = new NrlmsiseOutput();
 
             // Act
-            model.Ghp7(input, flags, output, 1000.0); // 1000 mb = sea level
+            model.FindAltitudeAtPressure(input, flags, output, 1000.0); // 1000 mb = sea level
 
             // Assert - altitude should converge to near 0 m for 1000 mb
             Assert.True(input.Alt < 5000, $"Altitude for 1000 mb should be near 0 m, got {input.Alt}");
@@ -880,7 +880,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere
             var output = new NrlmsiseOutput();
 
             // Act
-            double calculatedAlt = model.Ghp7(input, flags, output, 1.0); // 1 mb
+            double calculatedAlt = model.FindAltitudeAtPressure(input, flags, output, 1.0); // 1 mb
 
             // Assert - altitude should be around 48 km (48000 m) for 1 mb
             Assert.True(calculatedAlt > 40000 && calculatedAlt < 60000,
@@ -912,7 +912,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere
             var output = new NrlmsiseOutput();
 
             // Act
-            double calculatedAlt = model.Ghp7(input, flags, output, 0.001); // 0.001 mb
+            double calculatedAlt = model.FindAltitudeAtPressure(input, flags, output, 0.001); // 0.001 mb
 
             // Assert - altitude should be around 96 km (96000 m) for 0.001 mb
             Assert.True(calculatedAlt > 90000 && calculatedAlt < 110000,
@@ -945,7 +945,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere
             var output = new NrlmsiseOutput();
 
             // Act
-            model.Ghp7(input, flags, output, 1.0); // 1 mb
+            model.FindAltitudeAtPressure(input, flags, output, 1.0); // 1 mb
 
             // Assert
             Assert.True(input.Alt > 40000 && input.Alt < 60000,
@@ -981,7 +981,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere
             var output = new NrlmsiseOutput();
 
             // Act
-            model.Gtd7(input, flags, output);
+            model.Calculate(input, flags, output);
 
             // Assert
             Assert.True(output.D[0] > 0, "HE density should be positive at north pole");
@@ -1014,7 +1014,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere
             var output = new NrlmsiseOutput();
 
             // Act
-            model.Gtd7(input, flags, output);
+            model.Calculate(input, flags, output);
 
             // Assert
             Assert.True(output.D[0] > 0, "HE density should be positive at south pole");
@@ -1049,7 +1049,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere
             var output = new NrlmsiseOutput();
 
             // Act
-            model.Gtd7(input, flags, output);
+            model.Calculate(input, flags, output);
 
             // Assert
             Assert.True(output.D[0] > 0, "HE density should be positive");
@@ -1081,7 +1081,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere
             var output = new NrlmsiseOutput();
 
             // Act
-            model.Gtd7(input, flags, output);
+            model.Calculate(input, flags, output);
 
             // Assert
             Assert.True(output.D[0] > 0, "HE density should be positive on DOY 1");
@@ -1113,7 +1113,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere
             var output = new NrlmsiseOutput();
 
             // Act
-            model.Gtd7(input, flags, output);
+            model.Calculate(input, flags, output);
 
             // Assert
             Assert.True(output.D[0] > 0, "HE density should be positive on DOY 366");
@@ -1145,7 +1145,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere
             var output = new NrlmsiseOutput();
 
             // Act
-            model.Gtd7(input, flags, output);
+            model.Calculate(input, flags, output);
 
             // Assert
             Assert.True(output.D[0] > 0, "HE density should be positive at midnight");
@@ -1177,7 +1177,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere
             var output = new NrlmsiseOutput();
 
             // Act
-            model.Gtd7(input, flags, output);
+            model.Calculate(input, flags, output);
 
             // Assert
             Assert.True(output.D[0] > 0, "HE density should be positive at noon");
@@ -1209,7 +1209,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere
             var output = new NrlmsiseOutput();
 
             // Act
-            model.Gtd7(input, flags, output);
+            model.Calculate(input, flags, output);
 
             // Assert
             Assert.True(output.D[0] > 0, "HE density should be positive at low solar activity");
@@ -1242,7 +1242,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere
             var output = new NrlmsiseOutput();
 
             // Act
-            model.Gtd7(input, flags, output);
+            model.Calculate(input, flags, output);
 
             // Assert
             Assert.True(output.D[0] > 0, "HE density should be positive at high solar activity");
@@ -1275,7 +1275,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere
             var output = new NrlmsiseOutput();
 
             // Act
-            model.Gtd7(input, flags, output);
+            model.Calculate(input, flags, output);
 
             // Assert
             Assert.True(output.D[0] > 0, "HE density should be positive at Ap=0");
@@ -1307,7 +1307,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere
             var output = new NrlmsiseOutput();
 
             // Act
-            model.Gtd7(input, flags, output);
+            model.Calculate(input, flags, output);
 
             // Assert
             Assert.True(output.D[0] > 0, "HE density should be positive at Ap=400");
@@ -1347,7 +1347,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere
             var output = new NrlmsiseOutput();
 
             // Act
-            model.Gtd7(input, flags, output);
+            model.Calculate(input, flags, output);
 
             // Assert
             Assert.True(output.D[0] > 0, "HE density should be positive");
@@ -1380,7 +1380,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere
             var output = new NrlmsiseOutput();
 
             // Act
-            model.Gtd7(input, flags, output);
+            model.Calculate(input, flags, output);
 
             // Assert
             Assert.True(output.D[0] > 0, "HE density should be positive");
@@ -1413,7 +1413,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere
             var output = new NrlmsiseOutput();
 
             // Act
-            model.Gtd7(input, flags, output);
+            model.Calculate(input, flags, output);
 
             // Assert
             Assert.True(output.D[0] > 0, "HE density should be positive");
@@ -1446,7 +1446,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere
             var output = new NrlmsiseOutput();
 
             // Act
-            model.Gtd7(input, flags, output);
+            model.Calculate(input, flags, output);
 
             // Assert
             Assert.True(output.D[0] > 0, "HE density should be positive");
@@ -1479,7 +1479,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere
             var output = new NrlmsiseOutput();
 
             // Act
-            model.Gtd7(input, flags, output);
+            model.Calculate(input, flags, output);
 
             // Assert
             Assert.True(output.D[0] > 0, "HE density should be positive");
@@ -1512,7 +1512,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere
             var output = new NrlmsiseOutput();
 
             // Act
-            model.Gtd7(input, flags, output);
+            model.Calculate(input, flags, output);
 
             // Assert
             Assert.True(output.D[0] > 0, "HE density should be positive");
@@ -1554,7 +1554,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere
             var output = new NrlmsiseOutput();
 
             // Act
-            model.Gtd7(input, flags, output);
+            model.Calculate(input, flags, output);
 
             // Assert
             Assert.True(output.D[0] > 0, "HE density should be positive");
@@ -1597,7 +1597,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere
             var output = new NrlmsiseOutput();
 
             // Act
-            model.Gtd7(input, flags, output);
+            model.Calculate(input, flags, output);
 
             // Assert
             Assert.True(output.D[0] > 0, "HE density should be positive");
@@ -1635,7 +1635,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere
             var output = new NrlmsiseOutput();
 
             // Act
-            model.Gtd7(input, flags, output);
+            model.Calculate(input, flags, output);
 
             // Assert
             Assert.True(output.D[0] > 0, "HE density should be positive");
@@ -1672,7 +1672,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere
             var output = new NrlmsiseOutput();
 
             // Act
-            model.Gts7(input, flags, output);
+            model.CalculateThermosphere(input, flags, output);
 
             // Assert
             Assert.True(output.D[0] > 0, "HE density should be positive");
@@ -1704,7 +1704,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere
             var output = new NrlmsiseOutput();
 
             // Act
-            model.Gtd7(input, flags, output);
+            model.Calculate(input, flags, output);
 
             // Assert
             Assert.True(output.D[0] > 0, "HE density should be positive");
@@ -1738,7 +1738,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere
             var output = new NrlmsiseOutput();
 
             // Act
-            model.Gtd7(input, flags, output);
+            model.Calculate(input, flags, output);
 
             // Assert
             Assert.True(output.D[0] > 0, "HE density should be positive");
@@ -1771,7 +1771,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere
             var output = new NrlmsiseOutput();
 
             // Act
-            model.Gtd7(input, flags, output);
+            model.Calculate(input, flags, output);
 
             // Assert
             Assert.True(output.D[0] > 0, "HE density should be positive");
@@ -1804,7 +1804,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere
             var output = new NrlmsiseOutput();
 
             // Act
-            model.Gtd7(input, flags, output);
+            model.Calculate(input, flags, output);
 
             // Assert - model uses 45 degrees latitude when sw[2]=0
             Assert.True(output.D[0] > 0, "HE density should be positive");
@@ -1836,7 +1836,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere
             var output = new NrlmsiseOutput();
 
             // Act
-            model.Gtd7(input, flags, output);
+            model.Calculate(input, flags, output);
 
             // Assert
             Assert.True(output.D[0] > 0, "HE density should be positive");

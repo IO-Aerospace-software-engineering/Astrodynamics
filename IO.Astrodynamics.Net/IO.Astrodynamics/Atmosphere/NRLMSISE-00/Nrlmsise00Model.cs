@@ -151,7 +151,7 @@ public class Nrlmsise00Model : IAtmosphericModel
         // Thread-safe call to model
         lock (_lock)
         {
-            _model.Gtd7(input, _flags, output);
+            _model.Calculate(input, _flags, output);
         }
 
         return output;

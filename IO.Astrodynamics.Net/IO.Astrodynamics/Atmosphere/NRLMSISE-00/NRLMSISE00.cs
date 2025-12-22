@@ -15,7 +15,6 @@ namespace IO.Astrodynamics.Atmosphere.NRLMSISE_00
     {
         private double _gsurf;
         private double _re;
-        private double _dd;
         private double _dm04, _dm16, _dm28, _dm32, _dm40, _dm01, _dm14;
         private readonly double[] _mesoTn1 = new double[5];
         private readonly double[] _mesoTn2 = new double[4];
@@ -812,14 +811,14 @@ namespace IO.Astrodynamics.Atmosphere.NRLMSISE_00
         }
 
         /// <summary>
-        /// GTS7 - Thermospheric portion of NRLMSISE-00 (public wrapper).
+        /// Calculates the thermospheric portion of NRLMSISE-00 (public wrapper).
         /// </summary>
         /// <remarks>
-        /// See GTD7 for more extensive comments.
-        /// alt > 72500 m! (72.5 km internally)
+        /// See Calculate for more extensive comments.
+        /// Altitude must be > 72500 m (72.5 km internally).
         /// Input uses SI units (meters, radians), output uses SI units (m^-3, kg/m^3, K).
         /// </remarks>
-        public void Gts7(NrlmsiseInput input, NrlmsiseFlags flags, NrlmsiseOutput output)
+        public void CalculateThermosphere(NrlmsiseInput input, NrlmsiseFlags flags, NrlmsiseOutput output)
         {
             // Convert SI input units to internal units (km, degrees) and create a modified copy
             var internalInput = input with
@@ -1146,13 +1145,13 @@ namespace IO.Astrodynamics.Atmosphere.NRLMSISE_00
         }
 
         /// <summary>
-        /// GTD7 - NRLMSISE-00 model.
+        /// Calculates atmospheric densities and temperature using the NRLMSISE-00 model.
         /// </summary>
         /// <remarks>
         /// Neutral atmosphere empirical model from the surface to lower exosphere.
         /// Input uses SI units (meters, radians), output uses SI units (m^-3, kg/m^3, K).
         /// </remarks>
-        public void Gtd7(NrlmsiseInput input, NrlmsiseFlags flags, NrlmsiseOutput output)
+        public void Calculate(NrlmsiseInput input, NrlmsiseFlags flags, NrlmsiseOutput output)
         {
             // Convert SI input units to internal units (km, degrees) and create a modified copy
             var internalInput = input with
@@ -1273,7 +1272,6 @@ namespace IO.Astrodynamics.Atmosphere.NRLMSISE_00
             output.D[5] = 1.66E-24 * (4.0 * output.D[0] + 16.0 * output.D[1] + 28.0 * output.D[2] + 32.0 * output.D[3] + 40.0 * output.D[4] + output.D[6] + 14.0 * output.D[7]);
 
             // temperature at altitude
-            _dd = Densm(internalInput.Alt, 1.0, 0, ref tz, mn3, zn3, _mesoTn3, _mesoTgn3, mn2, zn2, _mesoTn2, _mesoTgn2);
             output.T[1] = tz;
 
             // Convert output from internal units to SI units
@@ -1281,23 +1279,23 @@ namespace IO.Astrodynamics.Atmosphere.NRLMSISE_00
             for (int i = 0; i < 9; i++)
             {
                 if (i != 5)  // Skip mass density
-                    output.D[i] = output.D[i] * 1.0E6;
+                    output.D[i] *= 1.0E6;
             }
             // Mass density: g/cm^3 to kg/m^3 (multiply by 1000)
-            output.D[5] = output.D[5] * 1000.0;
+            output.D[5] *= 1000.0;
         }
 
         /// <summary>
-        /// GTD7D - NRLMSISE-00 model with drag density.
+        /// Calculates atmospheric densities and temperature with drag density using the NRLMSISE-00 model.
         /// </summary>
         /// <remarks>
         /// This version returns effective total mass density for drag calculations,
         /// which includes anomalous oxygen.
         /// Input uses SI units (meters, radians), output uses SI units (m^-3, kg/m^3, K).
         /// </remarks>
-        public void Gtd7d(NrlmsiseInput input, NrlmsiseFlags flags, NrlmsiseOutput output)
+        public void CalculateWithDrag(NrlmsiseInput input, NrlmsiseFlags flags, NrlmsiseOutput output)
         {
-            Gtd7(input, flags, output);
+            Calculate(input, flags, output);
 
             // Convert number densities back to internal units temporarily for mass density calculation
             // m^-3 to cm^-3 (divide by 1E6)
@@ -1320,19 +1318,19 @@ namespace IO.Astrodynamics.Atmosphere.NRLMSISE_00
         }
 
         /// <summary>
-        /// GHP7 - NRLMSISE-00 model for a given pressure level.
+        /// Finds the altitude corresponding to a given pressure level using the NRLMSISE-00 model.
         /// </summary>
         /// <remarks>
         /// Input uses SI units (meters, radians), output uses SI units (m^-3, kg/m^3, K).
-        /// The calculated altitude for the given pressure is returned in the output.
+        /// The calculated altitude for the given pressure is returned.
         /// Note: The input altitude is used as an initial guess but is not modified.
         /// </remarks>
-        /// <param name="input">Input parameters.</param>
+        /// <param name="input">Input parameters (altitude is used as initial guess).</param>
         /// <param name="flags">Model flags.</param>
-        /// <param name="output">Output densities and temperatures.</param>
+        /// <param name="output">Output densities and temperatures at the calculated altitude.</param>
         /// <param name="press">Pressure level in millibars.</param>
         /// <returns>Calculated altitude in meters for the given pressure level.</returns>
-        public double Ghp7(NrlmsiseInput input, NrlmsiseFlags flags, NrlmsiseOutput output, double press)
+        public double FindAltitudeAtPressure(NrlmsiseInput input, NrlmsiseFlags flags, NrlmsiseOutput output, double press)
         {
             // Convert input GLat from radians to degrees for initial calculation
             double glatDeg = input.GLat * Constants.Rad2Deg;
@@ -1388,7 +1386,7 @@ namespace IO.Astrodynamics.Atmosphere.NRLMSISE_00
                 l++;
                 // Create input copy with current altitude estimate
                 var iterationInput = input with { Alt = zi * 1000.0 };  // Convert zi from km to meters
-                Gtd7(iterationInput, flags, output);
+                Calculate(iterationInput, flags, output);
 
                 // Calculate total number density (output.D is now in m^-3)
                 double xn = output.D[0] + output.D[1] + output.D[2] + output.D[3] + output.D[4] + output.D[6] + output.D[7];
