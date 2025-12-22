@@ -79,5 +79,14 @@ namespace IO.Astrodynamics.Tests
         {
             return Equals(v1.Frame, v2.Frame) && System.Math.Abs((v1 - v2).TotalSeconds) < 1E-03;
         }
+        
+        /// <summary>
+        /// Helper method to normalize whitespace in strings for comparison.
+        /// Removes all whitespace characters (spaces, tabs, newlines, carriage returns, etc.)
+        /// </summary>
+        internal static string NormalizeWhitespace(string input)
+        {
+            return System.Text.RegularExpressions.Regex.Replace(input, @"\s+", "");
+        }
     }
 }

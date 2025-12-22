@@ -30,6 +30,8 @@ namespace IO.Astrodynamics.Tests.Atmosphere
             }
         }
 
+        
+
         /// <summary>
         /// Test Case 1: Standard conditions at 400 km altitude.
         /// DOY=172, UT=29000s, ALT=400000m, LAT=1.047198rad, LONG=-1.221730rad, LST=16h, F107A=150, F107=150, AP=4
@@ -68,6 +70,24 @@ namespace IO.Astrodynamics.Tests.Atmosphere
             AssertScientificEqual(2.667273E+04 * 1E6, output.D[8], "ANM O");
             AssertScientificEqual(1.250540E+03, output.T[0], "TINF");
             AssertScientificEqual(1.241416E+03, output.T[1], "TG");
+
+            var stringOutput = output.ToString();
+            var expected = @"NRLMSISE-00 Atmospheric Model Output:
+Densities:
+  He (Helium):          6.665E+011 m^-3
+  O (Oxygen):           1.139E+014 m^-3
+  N2 (Nitrogen):        1.998E+013 m^-3
+  O2 (Dioxygen):        4.023E+011 m^-3
+  Ar (Argon):           3.557E+009 m^-3
+  Total Mass Density:   4.075E-012 kg/m^3
+  H (Hydrogen):         3.475E+010 m^-3
+  N (Nitrogen):         4.096E+012 m^-3
+  Anomalous O:          2.667E+010 m^-3
+
+Temperatures:
+  Exospheric:           1250.54 K
+  At Altitude:          1241.42 K";
+            Assert.Equal(TestHelpers.NormalizeWhitespace(expected), TestHelpers.NormalizeWhitespace(stringOutput));
         }
 
         /// <summary>
@@ -427,18 +447,18 @@ namespace IO.Astrodynamics.Tests.Atmosphere
         /// </summary>
         [Theory]
         [InlineData(0, 1.375488E+14 * 1E6, 0.000000E+00, 2.049687E+19 * 1E6, 5.498695E+18 * 1E6, 2.451733E+17 * 1E6,
-                    1.261066E-03 * 1000, 0.000000E+00, 0.000000E+00, 0.000000E+00, 1.027318E+03, 2.814648E+02)]
+            1.261066E-03 * 1000, 0.000000E+00, 0.000000E+00, 0.000000E+00, 1.027318E+03, 2.814648E+02)]
         [InlineData(10000, 4.427443E+13 * 1E6, 0.000000E+00, 6.597567E+18 * 1E6, 1.769929E+18 * 1E6, 7.891680E+16 * 1E6,
-                     4.059139E-04 * 1000, 0.000000E+00, 0.000000E+00, 0.000000E+00, 1.027318E+03, 2.274180E+02)]
+            4.059139E-04 * 1000, 0.000000E+00, 0.000000E+00, 0.000000E+00, 1.027318E+03, 2.274180E+02)]
         [InlineData(30000, 2.127829E+12 * 1E6, 0.000000E+00, 3.170791E+17 * 1E6, 8.506280E+16 * 1E6, 3.792741E+15 * 1E6,
-                     1.950822E-05 * 1000, 0.000000E+00, 0.000000E+00, 0.000000E+00, 1.027318E+03, 2.374389E+02)]
+            1.950822E-05 * 1000, 0.000000E+00, 0.000000E+00, 0.000000E+00, 1.027318E+03, 2.374389E+02)]
         [InlineData(50000, 1.412184E+11 * 1E6, 0.000000E+00, 2.104370E+16 * 1E6, 5.645392E+15 * 1E6, 2.517142E+14 * 1E6,
-                     1.294709E-06 * 1000, 0.000000E+00, 0.000000E+00, 0.000000E+00, 1.027318E+03, 2.795551E+02)]
+            1.294709E-06 * 1000, 0.000000E+00, 0.000000E+00, 0.000000E+00, 1.027318E+03, 2.795551E+02)]
         [InlineData(70000, 1.254884E+10 * 1E6, 0.000000E+00, 1.874533E+15 * 1E6, 4.923051E+14 * 1E6, 2.239685E+13 * 1E6,
-                     1.147668E-07 * 1000, 0.000000E+00, 0.000000E+00, 0.000000E+00, 1.027318E+03, 2.190732E+02)]
+            1.147668E-07 * 1000, 0.000000E+00, 0.000000E+00, 0.000000E+00, 1.027318E+03, 2.190732E+02)]
         public void TestCase11to15_LowerAtmosphere(double altitude, double he, double o, double n2, double o2,
-                                                     double ar, double rho, double h, double n, double anmO,
-                                                     double tinf, double tg)
+            double ar, double rho, double h, double n, double anmO,
+            double tinf, double tg)
         {
             var model = new NRLMSISE00();
             var input = new NrlmsiseInput
@@ -884,7 +904,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere
 
             // Assert - altitude should be around 48 km (48000 m) for 1 mb
             Assert.True(calculatedAlt > 40000 && calculatedAlt < 60000,
-                       $"Altitude for 1 mb should be around 48000 m, got {calculatedAlt}");
+                $"Altitude for 1 mb should be around 48000 m, got {calculatedAlt}");
         }
 
         /// <summary>
@@ -916,7 +936,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere
 
             // Assert - altitude should be around 96 km (96000 m) for 0.001 mb
             Assert.True(calculatedAlt > 90000 && calculatedAlt < 110000,
-                       $"Altitude for 0.001 mb should be around 96000 m, got {calculatedAlt}");
+                $"Altitude for 0.001 mb should be around 96000 m, got {calculatedAlt}");
         }
 
         /// <summary>
@@ -949,7 +969,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere
 
             // Assert
             Assert.True(input.Alt > 40000 && input.Alt < 60000,
-                       $"Altitude for 1 mb should be around 48000 m, got {input.Alt}");
+                $"Altitude for 1 mb should be around 48000 m, got {input.Alt}");
         }
 
         #endregion
@@ -1570,13 +1590,13 @@ namespace IO.Astrodynamics.Tests.Atmosphere
             // Arrange
             var model = new NRLMSISE00();
             var apArray = new ApArray();
-            apArray.A[0] = 4;   // Daily Ap
-            apArray.A[1] = 10;  // 3 hr ap index for current time
-            apArray.A[2] = 15;  // 3 hr ap index for 3 hrs before current time
-            apArray.A[3] = 20;  // 3 hr ap index for 6 hrs before current time
-            apArray.A[4] = 25;  // 3 hr ap index for 9 hrs before current time
-            apArray.A[5] = 30;  // Average of eight 3 hr ap indices from 12 to 33 hrs
-            apArray.A[6] = 35;  // Average of eight 3 hr ap indices from 36 to 57 hrs
+            apArray.A[0] = 4; // Daily Ap
+            apArray.A[1] = 10; // 3 hr ap index for current time
+            apArray.A[2] = 15; // 3 hr ap index for 3 hrs before current time
+            apArray.A[3] = 20; // 3 hr ap index for 6 hrs before current time
+            apArray.A[4] = 25; // 3 hr ap index for 9 hrs before current time
+            apArray.A[5] = 30; // Average of eight 3 hr ap indices from 12 to 33 hrs
+            apArray.A[6] = 35; // Average of eight 3 hr ap indices from 36 to 57 hrs
 
             var input = new NrlmsiseInput
             {

@@ -55,5 +55,27 @@ namespace IO.Astrodynamics.Atmosphere.NRLMSISE_00
         /// However, the NRLMSISE-00 algorithm can still write results into the array elements.
         /// </remarks>
         public double[] T { get; init; } = new double[2];
+
+        /// <summary>
+        /// Returns a human-readable string representation of the NRLMSISE-00 output.
+        /// </summary>
+        public override string ToString()
+        {
+            return $@"NRLMSISE-00 Atmospheric Model Output:
+Densities:
+  He (Helium):          {D[0]:E3} m^-3
+  O (Oxygen):           {D[1]:E3} m^-3
+  N2 (Nitrogen):        {D[2]:E3} m^-3
+  O2 (Dioxygen):        {D[3]:E3} m^-3
+  Ar (Argon):           {D[4]:E3} m^-3
+  Total Mass Density:   {D[5]:E3} kg/m^3
+  H (Hydrogen):         {D[6]:E3} m^-3
+  N (Nitrogen):         {D[7]:E3} m^-3
+  Anomalous O:          {D[8]:E3} m^-3
+
+Temperatures:
+  Exospheric:           {T[0]:F2} K
+  At Altitude:          {T[1]:F2} K";
+        }
     }
 }
