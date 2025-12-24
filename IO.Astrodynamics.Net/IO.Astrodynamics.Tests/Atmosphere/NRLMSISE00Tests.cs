@@ -611,9 +611,10 @@ Temperatures:
 
         /// <summary>
         /// Test Gts7 at very high altitude (2000 km) in exosphere.
+        /// At this altitude, temperature approaches the exospheric temperature.
         /// </summary>
         [Fact]
-        public void Gts7_VeryHighAltitude2000km_ReturnsLowDensities()
+        public void Gts7_VeryHighAltitude2000km_ReturnsValidDensities()
         {
             // Arrange
             var model = new NRLMSISE00();
@@ -622,7 +623,7 @@ Temperatures:
                 Year = 0,
                 Doy = 172,
                 Sec = 29000,
-                Alt = 2000000,
+                Alt = 2000000, // 2000 km
                 GLat = 60 * System.Math.PI / 180.0,
                 GLong = -70 * System.Math.PI / 180.0,
                 Lst = 16,
@@ -636,11 +637,18 @@ Temperatures:
             // Act
             model.CalculateThermosphere(input, flags, output);
 
-            // Assert - densities should be very low at 2000 km (around 1E-11 to 1E-12 kg/m^3)
+            // Assert - densities should be positive
             Assert.True(output.D[0] > 0, "HE density should be positive");
-            // Densities at 2000 km are extremely low; just verify positive value
             Assert.True(output.D[5] > 0, "Total mass density should be positive");
-            Assert.True(output.T[0] > 500, "Exospheric temperature should be high");
+
+            // Temperature at 2000 km should approach exospheric temperature
+            Assert.True(output.T[1] > 0, "Temperature at altitude should be positive");
+            Assert.True(output.T[0] > 0, "Exospheric temperature should be positive");
+
+            // Temperature at altitude should be within ~10% of TINF at 2000 km
+            double relDiff = System.Math.Abs(output.T[0] - output.T[1]) / output.T[0];
+            Assert.True(relDiff < 0.10,
+                $"At 2000 km, temperature ({output.T[1]:F1} K) should be within 10% of TINF ({output.T[0]:F1} K)");
         }
 
         /// <summary>
@@ -679,11 +687,12 @@ Temperatures:
         /// <summary>
         /// Test that Gtd7 always returns values in SI units (m^-3, kg/m^3).
         /// Note: Switches[0] is now ignored - the API always uses SI units.
+        /// Uses same conditions as TestCase01 and verifies exact expected values.
         /// </summary>
         [Fact]
         public void Gtd7_AlwaysReturnsSIUnits()
         {
-            // Arrange
+            // Arrange - same conditions as TestCase01
             var model = new NRLMSISE00();
             var input = new NrlmsiseInput
             {
@@ -702,12 +711,15 @@ Temperatures:
 
             // Act
             var output = model.Calculate(input, flags);
-            // Number densities should be reasonable values in m^-3 (large numbers, e.g., 1E11 to 1E12)
-            Assert.True(output.D[0] > 1E10, "HE density in m^-3 should be > 1E10");
-            Assert.True(output.D[0] < 1E13, "HE density in m^-3 should be < 1E13");
-            // Mass density should be reasonable value in kg/m^3 (small numbers, e.g., 1E-12 to 1E-11)
-            Assert.True(output.D[5] > 1E-13, "Mass density in kg/m^3 should be > 1E-13");
-            Assert.True(output.D[5] < 1E-10, "Mass density in kg/m^3 should be < 1E-10");
+
+            // Assert - verify exact expected SI unit values (from TestCase01)
+            // Number densities in m^-3 (should match DOCUMENTATION values * 1E6)
+            AssertScientificEqual(6.665177E+05 * 1E6, output.D[0], "HE density (m^-3)");
+            AssertScientificEqual(1.138806E+08 * 1E6, output.D[1], "O density (m^-3)");
+            // Mass density in kg/m^3 (should match DOCUMENTATION value * 1000)
+            AssertScientificEqual(4.074714E-15 * 1000, output.D[5], "Mass density (kg/m^3)");
+            // Temperature in Kelvin
+            AssertScientificEqual(1.250540E+03, output.T[0], "Exospheric temperature (K)");
         }
 
         #endregion
@@ -756,6 +768,8 @@ Temperatures:
 
         /// <summary>
         /// Test Gtd7d at low altitude where anomalous oxygen is negligible.
+        /// At 100 km, anomalous oxygen should be essentially zero, so Calculate and
+        /// CalculateWithDrag should return the same mass density.
         /// </summary>
         [Fact]
         public void Gtd7d_LowAltitude100km_AnomalousOxygenNegligible()
@@ -778,11 +792,17 @@ Temperatures:
             var flags = NrlmsiseFlags.CreateStandard();
 
             // Act
-            var outputGtd7 = model.Calculate(input, flags);
-            var outputGtd7d = model.CalculateWithDrag(input, flags);
+            var outputStandard = model.Calculate(input, flags);
+            var outputWithDrag = model.CalculateWithDrag(input, flags);
 
             // Assert - at low altitudes, anomalous oxygen should be negligible
-            Assert.True(System.Math.Abs(outputGtd7d.D[8]) < 1E-30, "Anomalous oxygen should be negligible at 100 km");
+            Assert.True(System.Math.Abs(outputWithDrag.D[8]) < 1E-30,
+                $"Anomalous oxygen should be negligible at 100 km, got {outputWithDrag.D[8]:E3}");
+
+            // Since anomalous oxygen is negligible, both methods should give same mass density
+            double relDiff = System.Math.Abs(outputWithDrag.D[5] - outputStandard.D[5]) / outputStandard.D[5];
+            Assert.True(relDiff < 1E-10,
+                $"Mass densities should be equal when anomalous O is negligible. Standard: {outputStandard.D[5]:E6}, WithDrag: {outputWithDrag.D[5]:E6}");
         }
 
         /// <summary>
@@ -823,6 +843,7 @@ Temperatures:
 
         /// <summary>
         /// Test Ghp7 method for pressure level at 1000 millibars (sea level).
+        /// Standard atmosphere: 1000 mb should correspond to ~110m altitude.
         /// </summary>
         [Fact]
         public void Ghp7_PressureLevel1000mb_ConvergesToSeaLevel()
@@ -845,14 +866,18 @@ Temperatures:
             var flags = NrlmsiseFlags.CreateStandard();
 
             // Act
-            var output = model.FindAltitudeAtPressure(input, flags, 1000.0); // 1000 mb = sea level
-            Assert.True(output.altitude < 5000, $"Altitude for 1000 mb should be near 0 m, got {output.altitude}");
-            Assert.True(output.altitude >= 0, "Altitude should be non-negative");
-            Assert.NotNull(output.atmosphere);
+            var result = model.FindAltitudeAtPressure(input, flags, 1000.0); // 1000 mb = sea level
+
+            // Assert - 1000 mb should be within ~500m of sea level
+            Assert.True(result.altitude < 1000, $"Altitude for 1000 mb should be near 0 m, got {result.altitude}");
+            Assert.True(result.altitude >= -500, "Altitude should be near sea level");
+            Assert.NotNull(result.atmosphere);
+            Assert.True(result.atmosphere.D[5] > 1E-3, "Mass density at sea level should be > 1 g/m^3");
         }
 
         /// <summary>
         /// Test Ghp7 method for pressure level at 1 millibar (high altitude).
+        /// Standard atmosphere: 1 mb corresponds to ~48 km altitude.
         /// </summary>
         [Fact]
         public void Ghp7_PressureLevel1mb_ConvergesToHighAltitude()
@@ -873,18 +898,21 @@ Temperatures:
                 Ap = 4
             };
             var flags = NrlmsiseFlags.CreateStandard();
-            var output = new NrlmsiseOutput();
 
             // Act
-            var calculatedAlt = model.FindAltitudeAtPressure(input, flags, 1.0); // 1 mb
+            var result = model.FindAltitudeAtPressure(input, flags, 1.0); // 1 mb
 
-            // Assert - altitude should be around 48 km (48000 m) for 1 mb
-            Assert.True(calculatedAlt.altitude is > 40000 and < 60000,
-                $"Altitude for 1 mb should be around 48000 m, got {calculatedAlt}");
+            // Assert - altitude should be around 48 km (48000 m) for 1 mb, ±5%
+            double expectedAlt = 48000.0;
+            double tolerance = 0.05; // 5% tolerance
+            Assert.True(result.altitude > expectedAlt * (1 - tolerance) && result.altitude < expectedAlt * (1 + tolerance),
+                $"Altitude for 1 mb should be around {expectedAlt} m (±5%), got {result.altitude}");
+            Assert.True(result.atmosphere.D[5] > 0, "Mass density should be positive");
         }
 
         /// <summary>
         /// Test Ghp7 method for very low pressure (0.001 mb).
+        /// Standard atmosphere: 0.001 mb corresponds to ~96 km altitude.
         /// </summary>
         [Fact]
         public void Ghp7_PressureLevel0Point001mb_ConvergesToVeryHighAltitude()
@@ -905,18 +933,20 @@ Temperatures:
                 Ap = 4
             };
             var flags = NrlmsiseFlags.CreateStandard();
-            var output = new NrlmsiseOutput();
 
             // Act
-            var calculatedAlt = model.FindAltitudeAtPressure(input, flags, 0.001); // 0.001 mb
+            var result = model.FindAltitudeAtPressure(input, flags, 0.001); // 0.001 mb
 
-            // Assert - altitude should be around 96 km (96000 m) for 0.001 mb
-            Assert.True(calculatedAlt.altitude > 90000 && calculatedAlt.altitude < 110000,
-                $"Altitude for 0.001 mb should be around 96000 m, got {calculatedAlt}");
+            // Assert - altitude should be around 96 km (96000 m) for 0.001 mb, ±5%
+            double expectedAlt = 96000.0;
+            double tolerance = 0.05; // 5% tolerance
+            Assert.True(result.altitude > expectedAlt * (1 - tolerance) && result.altitude < expectedAlt * (1 + tolerance),
+                $"Altitude for 0.001 mb should be around {expectedAlt} m (±5%), got {result.altitude}");
+            Assert.True(result.atmosphere.T[1] > 0, "Temperature should be positive");
         }
 
         /// <summary>
-        /// Test Ghp7 with meters/kg output units.
+        /// Test Ghp7 with meters/kg output units - should produce same result as without.
         /// </summary>
         [Fact]
         public void Ghp7_WithMetersKilogramOutput_ConvergesCorrectly()
@@ -940,9 +970,13 @@ Temperatures:
             flags.Switches[0] = 1; // m/kg units
 
             // Act
-            var res = model.FindAltitudeAtPressure(input, flags, 1.0); // 1 mb
-            Assert.True(res.altitude is > 40000 and < 60000,
-                $"Altitude for 1 mb should be around 48000 m, got {res.altitude}");
+            var result = model.FindAltitudeAtPressure(input, flags, 1.0); // 1 mb
+
+            // Assert - should be same as without switch (48km ±5%)
+            double expectedAlt = 48000.0;
+            double tolerance = 0.05; // 5% tolerance
+            Assert.True(result.altitude > expectedAlt * (1 - tolerance) && result.altitude < expectedAlt * (1 + tolerance),
+                $"Altitude for 1 mb should be around {expectedAlt} m (±5%), got {result.altitude}");
         }
 
         #endregion
@@ -1169,13 +1203,14 @@ Temperatures:
 
         /// <summary>
         /// Test with very low solar activity (F107A = 65).
+        /// Higher solar activity leads to higher thermospheric temperatures and densities.
         /// </summary>
         [Fact]
-        public void Gtd7_VeryLowSolarActivity_ReturnsValidDensities()
+        public void Gtd7_VeryLowSolarActivity_ReturnsLowerTemperatureAndDensity()
         {
             // Arrange
             var model = new NRLMSISE00();
-            var input = new NrlmsiseInput
+            var baseInput = new NrlmsiseInput
             {
                 Year = 0,
                 Doy = 172,
@@ -1184,30 +1219,35 @@ Temperatures:
                 GLat = 45 * System.Math.PI / 180.0,
                 GLong = 0,
                 Lst = 12,
-                F107A = 65, // Very low solar activity
-                F107 = 65,
+                F107A = 150, // Moderate solar activity (baseline)
+                F107 = 150,
                 Ap = 4
             };
+            var lowInput = baseInput with { F107A = 65, F107 = 65 }; // Very low solar activity
             var flags = NrlmsiseFlags.CreateStandard();
 
             // Act
-            var output = model.Calculate(input, flags);
+            var outputBaseline = model.Calculate(baseInput, flags);
+            var outputLow = model.Calculate(lowInput, flags);
 
-            // Assert
-            Assert.True(output.D[0] > 0, "HE density should be positive at low solar activity");
-            Assert.True(output.D[2] > 0, "N2 density should be positive at low solar activity");
-            Assert.True(output.T[0] < 1000, "Temperature should be lower at low solar activity");
+            // Assert - low solar activity should give lower temperature and density
+            Assert.True(outputLow.T[0] < outputBaseline.T[0],
+                $"Exospheric temp at low F10.7 ({outputLow.T[0]:F1} K) should be < baseline ({outputBaseline.T[0]:F1} K)");
+            Assert.True(outputLow.D[5] < outputBaseline.D[5],
+                $"Mass density at low F10.7 ({outputLow.D[5]:E3}) should be < baseline ({outputBaseline.D[5]:E3})");
+            Assert.True(outputLow.T[0] < 1000, "Temperature should be below 1000 K at low solar activity");
         }
 
         /// <summary>
         /// Test with very high solar activity (F107A = 300).
+        /// Higher solar activity leads to higher thermospheric temperatures and densities.
         /// </summary>
         [Fact]
-        public void Gtd7_VeryHighSolarActivity_ReturnsHigherDensities()
+        public void Gtd7_VeryHighSolarActivity_ReturnsHigherTemperatureAndDensity()
         {
             // Arrange
             var model = new NRLMSISE00();
-            var input = new NrlmsiseInput
+            var baseInput = new NrlmsiseInput
             {
                 Year = 0,
                 Doy = 172,
@@ -1216,19 +1256,23 @@ Temperatures:
                 GLat = 45 * System.Math.PI / 180.0,
                 GLong = 0,
                 Lst = 12,
-                F107A = 300, // Very high solar activity
-                F107 = 300,
+                F107A = 150, // Moderate solar activity (baseline)
+                F107 = 150,
                 Ap = 4
             };
+            var highInput = baseInput with { F107A = 300, F107 = 300 }; // Very high solar activity
             var flags = NrlmsiseFlags.CreateStandard();
 
             // Act
-            var output = model.Calculate(input, flags);
+            var outputBaseline = model.Calculate(baseInput, flags);
+            var outputHigh = model.Calculate(highInput, flags);
 
-            // Assert
-            Assert.True(output.D[0] > 0, "HE density should be positive at high solar activity");
-            Assert.True(output.D[2] > 0, "N2 density should be positive at high solar activity");
-            Assert.True(output.T[0] > 1000, "Temperature should be higher at high solar activity");
+            // Assert - high solar activity should give higher temperature and density
+            Assert.True(outputHigh.T[0] > outputBaseline.T[0],
+                $"Exospheric temp at high F10.7 ({outputHigh.T[0]:F1} K) should be > baseline ({outputBaseline.T[0]:F1} K)");
+            Assert.True(outputHigh.D[5] > outputBaseline.D[5],
+                $"Mass density at high F10.7 ({outputHigh.D[5]:E3}) should be > baseline ({outputBaseline.D[5]:E3})");
+            Assert.True(outputHigh.T[0] > 1000, "Temperature should be above 1000 K at high solar activity");
         }
 
         /// <summary>
@@ -1747,34 +1791,44 @@ Temperatures:
 
         /// <summary>
         /// Test with time-independent mode (Switch 2 = 0) and latitude variation disabled.
+        /// When sw[2]=0, the model uses a constant latitude of 45 degrees for gravity calculations.
         /// </summary>
         [Fact]
         public void Gtd7_TimeIndependentMode_UsesConstantLatitude()
         {
             // Arrange
             var model = new NRLMSISE00();
-            var input = new NrlmsiseInput
+            var baseInput = new NrlmsiseInput
             {
                 Year = 0,
                 Doy = 172,
                 Sec = 29000,
                 Alt = 400000,
-                GLat = 60 * System.Math.PI / 180.0, // Should be overridden to 45 degrees (π/4 rad)
+                GLat = 60 * System.Math.PI / 180.0, // 60 degrees, will be overridden
                 GLong = 0,
                 Lst = 12,
                 F107A = 150,
                 F107 = 150,
                 Ap = 4
             };
-            var flags = NrlmsiseFlags.CreateStandard();
-            flags.Switches[2] = 0; // Time-independent mode
 
-            // Act
-            var output = model.Calculate(input, flags);
+            var flagsTimeIndependent = NrlmsiseFlags.CreateStandard();
+            flagsTimeIndependent.Switches[2] = 0; // Time-independent mode (uses 45° lat)
 
-            // Assert - model uses 45 degrees latitude when sw[2]=0
-            Assert.True(output.D[0] > 0, "HE density should be positive");
-            Assert.True(output.D[2] > 0, "N2 density should be positive");
+            var flagsNormal = NrlmsiseFlags.CreateStandard();
+
+            // Act - calculate with switch[2]=0 at 60° latitude
+            var outputTimeIndep60 = model.Calculate(baseInput, flagsTimeIndependent);
+            // Calculate with normal mode at 60° latitude (for comparison)
+            var outputNormal60 = model.Calculate(baseInput, flagsNormal);
+
+            // Assert - time-independent mode at 60° should behave like 45° for gravity
+            // The temperature should be affected since gravity affects scale height
+            Assert.True(outputTimeIndep60.D[0] > 0, "HE density should be positive");
+            Assert.True(outputTimeIndep60.D[5] > 0, "Mass density should be positive");
+
+            // The 60° input with sw[2]=0 should differ from normal 60° (verifies the switch has effect)
+            Assert.NotEqual(outputTimeIndep60.D[5], outputNormal60.D[5]);
         }
 
         /// <summary>
