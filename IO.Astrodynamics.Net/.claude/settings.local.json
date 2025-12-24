@@ -5,7 +5,14 @@
       "Bash(dotnet build:*)",
       "Bash(dotnet test:*)",
       "WebSearch",
-      "WebFetch(domain:www.astrodynamicstandards.com)"
+      "WebFetch(domain:www.astrodynamicstandards.com)",
+      "Read(//tmp/test-rid/TestRID/**)",
+      "Bash(ls:*)",
+      "Bash(cat:*)",
+      "Bash(mkdir:*)",
+      "Bash(python3:*)",
+      "Bash(find:*)",
+      "Bash(dotnet clean:*)"
     ],
     "deny": [],
     "ask": []

@@ -212,6 +212,20 @@ public readonly record struct Time : IComparable<Time>, IComparable
 
         return new TimeSystem.Time(date, frame);
     }
+    
+    /// <summary>
+    /// Create time from year, day of year, and seconds of day
+    /// </summary>
+    /// <param name="year"></param>
+    /// <param name="doy"></param>
+    /// <param name="sec"></param>
+    /// <returns></returns>
+    public static Time Create(int year, int doy, double sec)
+    {
+        var baseDate = new DateTime(year == 0 ? 2000 : year, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+        var date = baseDate.AddDays(doy - 1).AddSeconds(sec);
+        return new Time(date, TimeFrame.UTCFrame);
+    }
 
     /// <summary>
     /// Create UTC from elapsed seconds from J2000

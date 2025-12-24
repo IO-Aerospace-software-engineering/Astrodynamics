@@ -11,7 +11,7 @@ using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.OrbitalParameters.TLE;
-using IO.Astrodynamics.Physics;
+using IO.Astrodynamics.Atmosphere;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.Surface;
 using IO.Astrodynamics.TimeSystem;
@@ -129,16 +129,16 @@ public class Helpers
         var inputEpoch = Helpers.ConvertDateTimeInput(epoch);
 
         GeopotentialModelParameters geopotentialModelParameters = null;
-        AtmosphericModel atmosphericModel = null;
+        IAtmosphericModel atmosphericModel = null;
         if (centerofMotion == PlanetsAndMoons.EARTH.NaifId)
         {
             Stream sr = typeof(PropagateCommand).Assembly.GetManifestResourceStream("IO.Astrodynamics.CLI.Data.EGM2008_to100_TideFree.txt");
             geopotentialModelParameters = new GeopotentialModelParameters(sr, geopotentialDegrees);
-            atmosphericModel = new EarthAtmosphericModel();
+            atmosphericModel = new EarthStandardAtmosphere();
         }
         else if (centerofMotion == PlanetsAndMoons.MARS.NaifId)
         {
-            atmosphericModel = new MarsAtmosphericModel();
+            atmosphericModel = new MarsStandardAtmosphere();
         }
 
         var inputCenterOfMotion = new CelestialBody(centerofMotion, geopotentialModelParameters, atmosphericModel);

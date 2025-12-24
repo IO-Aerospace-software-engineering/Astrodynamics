@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using IO.Astrodynamics.Atmosphere;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;

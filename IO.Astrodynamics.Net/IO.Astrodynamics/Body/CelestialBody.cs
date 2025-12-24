@@ -3,7 +3,7 @@ using System.Globalization;
 using IO.Astrodynamics.Coordinates;
 using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.OrbitalParameters;
-using IO.Astrodynamics.Physics;
+using IO.Astrodynamics.Atmosphere;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.TimeSystem;
 using Vector3 = IO.Astrodynamics.Math.Vector3;
@@ -56,7 +56,7 @@ public class CelestialBody : CelestialItem, IOrientable<Frame>
     /// <summary>
     /// Gets the atmospheric model of the celestial body.
     /// </summary>
-    protected AtmosphericModel AtmosphericModel { get; }
+    protected IAtmosphericModel AtmosphericModel { get; }
 
     /// <summary>
     /// Gets a value indicating whether the celestial body has an atmospheric model.
@@ -69,7 +69,7 @@ public class CelestialBody : CelestialItem, IOrientable<Frame>
     /// <param name="naifObject"></param>
     /// <param name="geopotentialModelParameters"></param>
     /// <param name="atmosphericModel"></param>
-    public CelestialBody(NaifObject naifObject, GeopotentialModelParameters geopotentialModelParameters = null, AtmosphericModel atmosphericModel = null) : this(naifObject.NaifId,
+    public CelestialBody(NaifObject naifObject, GeopotentialModelParameters geopotentialModelParameters = null, IAtmosphericModel atmosphericModel = null) : this(naifObject.NaifId,
         geopotentialModelParameters, atmosphericModel)
     {
     }
@@ -80,7 +80,7 @@ public class CelestialBody : CelestialItem, IOrientable<Frame>
     /// <param name="naifId"></param>
     /// <param name="geopotentialModelParameters"></param>
     /// <param name="atmosphericModel"></param>
-    public CelestialBody(int naifId, GeopotentialModelParameters geopotentialModelParameters = null, AtmosphericModel atmosphericModel = null) : this(naifId, Frame.ECLIPTIC_J2000,
+    public CelestialBody(int naifId, GeopotentialModelParameters geopotentialModelParameters = null, IAtmosphericModel atmosphericModel = null) : this(naifId, Frame.ECLIPTIC_J2000,
         TimeSystem.Time.J2000TDB, geopotentialModelParameters, atmosphericModel)
     {
     }
@@ -93,7 +93,7 @@ public class CelestialBody : CelestialItem, IOrientable<Frame>
     /// <param name="epoch"></param>
     /// <param name="geopotentialModelParameters"></param>
     /// <param name="atmosphericModel"></param>
-    public CelestialBody(NaifObject naifObject, Frame frame, Time epoch, GeopotentialModelParameters geopotentialModelParameters = null, AtmosphericModel atmosphericModel = null)
+    public CelestialBody(NaifObject naifObject, Frame frame, Time epoch, GeopotentialModelParameters geopotentialModelParameters = null, IAtmosphericModel atmosphericModel = null)
         : this(naifObject.NaifId, frame, epoch, geopotentialModelParameters, atmosphericModel)
     {
     }
@@ -106,7 +106,7 @@ public class CelestialBody : CelestialItem, IOrientable<Frame>
     /// <param name="epoch"></param>
     /// <param name="geopotentialModelParameters"></param>
     /// <param name="atmosphericModel"></param>
-    public CelestialBody(int naifId, Frame frame, Time epoch, GeopotentialModelParameters geopotentialModelParameters = null, AtmosphericModel atmosphericModel = null) :
+    public CelestialBody(int naifId, Frame frame, Time epoch, GeopotentialModelParameters geopotentialModelParameters = null, IAtmosphericModel atmosphericModel = null) :
         base(naifId, frame, epoch, geopotentialModelParameters)
     {
         PolarRadius = ExtendedInformation.Radii.Z;
@@ -317,33 +317,75 @@ public class CelestialBody : CelestialItem, IOrientable<Frame>
 
 
     /// <summary>
-    /// Get temperature at given altitude
+    /// Get temperature at given altitude (simple API for backward compatibility).
     /// </summary>
-    /// <param name="altitude"></param>
-    /// <returns></returns>
+    /// <param name="altitude">Altitude in meters.</param>
+    /// <returns>Temperature in Celsius.</returns>
+    /// <remarks>
+    /// For simple atmospheric models, this is sufficient.
+    /// For complex models requiring time/position context, use GetAirTemperature(IAtmosphericContext).
+    /// </remarks>
     public double GetAirTemperature(double altitude)
     {
-        return AtmosphericModel?.GetTemperature(altitude) ?? double.NaN;
+        return GetAirTemperature(AtmosphericContext.FromAltitude(altitude));
     }
 
     /// <summary>
-    /// Get air pressure at given altitude
+    /// Get temperature with full atmospheric context.
     /// </summary>
-    /// <param name="altitude"></param>
-    /// <returns></returns>
+    /// <param name="context">Atmospheric context with altitude, position, and time.</param>
+    /// <returns>Temperature in Celsius.</returns>
+    public double GetAirTemperature(IAtmosphericContext context)
+    {
+        return AtmosphericModel?.GetTemperature(context) ?? double.NaN;
+    }
+
+    /// <summary>
+    /// Get air pressure at given altitude (simple API for backward compatibility).
+    /// </summary>
+    /// <param name="altitude">Altitude in meters.</param>
+    /// <returns>Pressure in kPa.</returns>
+    /// <remarks>
+    /// For simple atmospheric models, this is sufficient.
+    /// For complex models requiring time/position context, use GetAirPressure(IAtmosphericContext).
+    /// </remarks>
     public double GetAirPressure(double altitude)
     {
-        return AtmosphericModel?.GetPressure(altitude) ?? 0.0;
+        return GetAirPressure(AtmosphericContext.FromAltitude(altitude));
     }
 
     /// <summary>
-    /// Get air density at given altitude
+    /// Get air pressure with full atmospheric context.
     /// </summary>
-    /// <param name="altitude"></param>
-    /// <returns></returns>
+    /// <param name="context">Atmospheric context with altitude, position, and time.</param>
+    /// <returns>Pressure in kPa.</returns>
+    public double GetAirPressure(IAtmosphericContext context)
+    {
+        return AtmosphericModel?.GetPressure(context) ?? 0.0;
+    }
+
+    /// <summary>
+    /// Get air density at given altitude (simple API for backward compatibility).
+    /// </summary>
+    /// <param name="altitude">Altitude in meters.</param>
+    /// <returns>Density in kg/m³.</returns>
+    /// <remarks>
+    /// For simple atmospheric models, this is sufficient.
+    /// For complex models requiring time/position context, use GetAirDensity(IAtmosphericContext).
+    /// </remarks>
     public double GetAirDensity(double altitude)
     {
-        return AtmosphericModel?.GetDensity(altitude) ?? 0.0;
+        return GetAirDensity(AtmosphericContext.FromAltitude(altitude));
+    }
+
+    /// <summary>
+    /// Get air density with full atmospheric context.
+    /// </summary>
+    /// <param name="context">Atmospheric context with altitude, position, and time.</param>
+    /// <returns>Density in kg/m³.</returns>
+    public double GetAirDensity(IAtmosphericContext context)
+    {
+        return AtmosphericModel?.GetDensity(context) ?? 0.0;
     }
 
     public override string ToString()

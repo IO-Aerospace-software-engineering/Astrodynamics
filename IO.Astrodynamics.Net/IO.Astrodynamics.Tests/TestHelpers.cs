@@ -3,7 +3,7 @@ using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
-using IO.Astrodynamics.Physics;
+using IO.Astrodynamics.Atmosphere;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.TimeSystem;
 
@@ -78,6 +78,15 @@ namespace IO.Astrodynamics.Tests
         internal static bool TimeComparer(TimeSystem.Time v1, TimeSystem.Time v2)
         {
             return Equals(v1.Frame, v2.Frame) && System.Math.Abs((v1 - v2).TotalSeconds) < 1E-03;
+        }
+        
+        /// <summary>
+        /// Helper method to normalize whitespace in strings for comparison.
+        /// Removes all whitespace characters (spaces, tabs, newlines, carriage returns, etc.)
+        /// </summary>
+        internal static string NormalizeWhitespace(string input)
+        {
+            return System.Text.RegularExpressions.Regex.Replace(input, @"\s+", "");
         }
     }
 }
