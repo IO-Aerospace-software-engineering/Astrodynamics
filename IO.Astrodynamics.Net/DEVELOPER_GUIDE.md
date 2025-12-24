@@ -1369,6 +1369,542 @@ catch (ArgumentException ex)
 
 ---
 
+## Advanced Scenarios
+
+This section presents complete, real-world scenarios demonstrating how to combine multiple framework capabilities.
+
+### Mission and Scenario Management
+
+The framework provides `Mission` and `Scenario` classes for organizing complex simulations involving multiple spacecraft, ground sites, and celestial bodies.
+
+```csharp
+using IO.Astrodynamics.Mission;
+using IO.Astrodynamics.Body.Spacecraft;
+using IO.Astrodynamics.Surface;
+
+// Create a mission
+var mission = new Mission("LunarExplorer");
+
+// Create a scenario with a time window
+var start = new Time(2024, 1, 1);
+var end = start.AddDays(7);
+var scenario = new Scenario("Phase1", mission, new Window(start, end));
+
+// Add celestial bodies to the scenario
+var earth = PlanetsAndMoons.EARTH_BODY;
+var moon = new CelestialBody(PlanetsAndMoons.MOON);
+var sun = new CelestialBody(Stars.Sun);
+
+scenario.AddCelestialItem(earth);
+scenario.AddCelestialItem(moon);
+scenario.AddCelestialItem(sun);
+
+// Add ground stations
+var goldstone = new Site(13, "DSS-13", earth);
+var madrid = new Site(65, "DSS-65", earth);
+scenario.AddSite(goldstone);
+scenario.AddSite(madrid);
+```
+
+### Spacecraft Rendezvous Mission
+
+A complete scenario with a chaser spacecraft executing maneuvers to reach a target spacecraft:
+
+```csharp
+using IO.Astrodynamics.Body.Spacecraft;
+using IO.Astrodynamics.Maneuver;
+using IO.Astrodynamics.OrbitalParameters;
+
+var earth = PlanetsAndMoons.EARTH_BODY;
+var start = new Time(2024, 3, 1);
+var end = start.AddHours(12);
+
+// Create mission and scenario
+var mission = new Mission("Rendezvous");
+var scenario = new Scenario("RendezvousPhase", mission, new Window(start, end));
+scenario.AddCelestialItem(earth);
+
+// Define target spacecraft orbit
+var targetOrbit = new StateVector(
+    new Vector3(4390853.7, 5110607.0, 917659.9),
+    new Vector3(-4979.5, 3033.3, 6933.2),
+    earth, start, Frames.Frame.ICRF
+);
+
+// Define chaser spacecraft initial orbit (parking orbit)
+var chaserOrbit = new StateVector(
+    new Vector3(5056554.2, 4395595.5, 0.0),
+    new Vector3(-3708.6, 4266.3, 6736.9),
+    earth, start, Frames.Frame.ICRF
+);
+
+// Create target spacecraft
+var targetClock = new Clock("TargetClock", 65536);
+var target = new Spacecraft(-1001, "Target", 500.0, 1000.0, targetClock, targetOrbit);
+scenario.AddSpacecraft(target);
+
+// Create chaser spacecraft with propulsion
+var chaserClock = new Clock("ChaserClock", 65536);
+var chaser = new Spacecraft(-1002, "Chaser", 1000.0, 10000.0, chaserClock, chaserOrbit);
+
+// Add fuel tank and engine
+var fuelTank = new FuelTank("MainTank", "Model1", "SN001", 9000.0, 9000.0);
+var engine = new Engine("MainEngine", "Model1", "SN001", 450.0, 50.0, fuelTank);
+chaser.AddFuelTank(fuelTank);
+chaser.AddEngine(engine);
+
+// Chain maneuvers: plane alignment -> apsidal alignment -> phasing -> circularization
+var maneuver1 = new PlaneAlignmentManeuver(
+    new Time(DateTime.MinValue, TimeFrame.TDBFrame),
+    TimeSpan.Zero, targetOrbit, engine
+);
+
+maneuver1
+    .SetNextManeuver(new ApsidalAlignmentManeuver(
+        new Time(DateTime.MinValue, TimeFrame.TDBFrame),
+        TimeSpan.Zero, targetOrbit, engine))
+    .SetNextManeuver(new PhasingManeuver(
+        new Time(DateTime.MinValue, TimeFrame.TDBFrame),
+        TimeSpan.Zero, targetOrbit, 1, engine))
+    .SetNextManeuver(new ApogeeHeightManeuver(
+        earth, new Time(DateTime.MinValue, TimeFrame.TDBFrame),
+        TimeSpan.Zero, targetOrbit.SemiMajorAxis(), engine));
+
+// Set the maneuver sequence
+chaser.SetStandbyManeuver(maneuver1);
+scenario.AddSpacecraft(chaser);
+
+// Run the simulation
+var summary = await scenario.SimulateAsync(
+    includeAtmosphericDrag: false,
+    includeSolarRadiationPressure: false,
+    TimeSpan.FromSeconds(1.0)
+);
+
+// Read maneuver results
+var executedManeuver = chaser.InitialManeuver;
+Console.WriteLine($"Maneuver 1 start: {executedManeuver.ManeuverWindow?.StartDate}");
+Console.WriteLine($"Maneuver 1 delta-V: {((ImpulseManeuver)executedManeuver).DeltaV.Magnitude():F1} m/s");
+Console.WriteLine($"Fuel burned: {executedManeuver.FuelBurned:F1} kg");
+Console.WriteLine($"Total fuel consumption: {summary.SpacecraftSummaries.First().FuelConsumption:F1} kg");
+```
+
+### Lambert Transfer (Interplanetary or Lunar)
+
+Compute transfer trajectories using Lambert's problem solver:
+
+```csharp
+using IO.Astrodynamics.Maneuver.Lambert;
+
+var earth = PlanetsAndMoons.EARTH_BODY;
+var moon = new CelestialBody(PlanetsAndMoons.MOON);
+
+// Define departure state (LEO)
+var departureEpoch = Time.J2000TDB;
+var departureState = new StateVector(
+    new Vector3(7000000.0, 0.0, 0.0),
+    new Vector3(0.0, 8000.0, 0.0),
+    earth, departureEpoch, Frames.Frame.ICRF
+);
+
+// Define arrival (Moon position in 3 days)
+var arrivalEpoch = departureEpoch.AddDays(3);
+var moonState = moon.GetEphemeris(arrivalEpoch, earth, Frames.Frame.ICRF, Aberration.None)
+    .ToStateVector();
+
+// Solve Lambert's problem
+var solver = new LambertSolver();
+var result = solver.Solve(
+    isRetrograde: false,
+    departureState,
+    moonState,
+    earth,
+    maxRevolutions: 0
+);
+
+// Get the zero-revolution solution
+var solution = result.GetZeroRevolutionSolution();
+
+Console.WriteLine($"Departure velocity: {solution.V1.Magnitude():F1} m/s");
+Console.WriteLine($"Arrival velocity: {solution.V2.Magnitude():F1} m/s");
+Console.WriteLine($"Departure delta-V: {solution.DeltaV1.Magnitude():F1} m/s");
+Console.WriteLine($"Arrival delta-V: {solution.DeltaV2.Magnitude():F1} m/s");
+
+// Create the transfer trajectory
+var transferOrbit = new StateVector(
+    departureState.Position,
+    solution.V1,
+    earth, departureEpoch, Frames.Frame.ICRF
+);
+
+// Verify arrival position
+var finalState = transferOrbit.AtEpoch(arrivalEpoch).ToStateVector();
+Console.WriteLine($"Position error: {(finalState.Position - moonState.Position).Magnitude():F1} m");
+```
+
+### Launch Window Computation
+
+Find optimal launch windows to reach a target orbit:
+
+```csharp
+using IO.Astrodynamics.Maneuver;
+using IO.Astrodynamics.Surface;
+using IO.Astrodynamics.Coordinates;
+
+var earth = PlanetsAndMoons.EARTH_BODY;
+var searchStart = new Time(2024, 6, 2);
+
+// Create launch site (Kennedy Space Center)
+var launchSite = new LaunchSite(
+    id: 33,
+    name: "KSC",
+    body: earth,
+    coordinates: new Planetodetic(
+        -81.0 * Constants.Deg2Rad,   // Longitude
+        28.5 * Constants.Deg2Rad,    // Latitude
+        0.0                           // Altitude
+    ),
+    azimuthRange: new AzimuthRange(0.0, 2 * Math.PI)  // All azimuths allowed
+);
+
+// Create recovery site
+var recoverySite = new Site(34, "Recovery", earth,
+    new Planetodetic(-81.0 * Constants.Deg2Rad, 28.5 * Constants.Deg2Rad, 0.0));
+
+// Define target orbit (ISS-like)
+var targetOrbit = new StateVector(
+    new Vector3(-1.144E+06, 4.905E+06, 4.553E+06),
+    new Vector3(-5.588E+03, -4.213E+03, 3.126E+03),
+    earth, searchStart, Frames.Frame.ICRF
+);
+
+// Create launch scenario
+var launch = new Launch(
+    launchSite,
+    recoverySite,
+    targetOrbit,
+    twilight: Constants.CivilTwilight,  // Only launch during daylight
+    launchByDay: true
+);
+
+// Search for launch windows over 24 hours
+var searchWindow = new Window(searchStart, TimeSpan.FromDays(1.0));
+var windows = launch.FindLaunchWindows(searchWindow).ToArray();
+
+foreach (var lw in windows)
+{
+    Console.WriteLine($"Launch window: {lw.Window.StartDate}");
+    Console.WriteLine($"  Inertial azimuth: {lw.InertialAzimuth * Constants.Rad2Deg:F2}°");
+    Console.WriteLine($"  Non-inertial azimuth: {lw.NonInertialAzimuth * Constants.Rad2Deg:F2}°");
+    Console.WriteLine($"  Insertion velocity: {lw.InertialInsertionVelocity:F1} m/s");
+}
+```
+
+### Geometry Finder: Occultations and Eclipses
+
+Search for eclipse and occultation events:
+
+```csharp
+var earth = PlanetsAndMoons.EARTH_BODY;
+var moon = new CelestialBody(PlanetsAndMoons.MOON);
+var sun = new CelestialBody(Stars.Sun);
+
+// Search window: year 2024
+var searchWindow = new Window(
+    new Time(2024, 1, 1),
+    new Time(2024, 12, 31)
+);
+
+// Find lunar eclipses (Moon occulted by Earth as seen from Sun)
+var lunarEclipses = sun.FindWindowsOnOccultationConstraint(
+    searchWindow,
+    occultingBody: earth,
+    occultingShape: ShapeType.Ellipsoid,
+    occultedBody: moon,
+    occultedShape: ShapeType.Ellipsoid,
+    occultationType: OccultationType.Any,
+    aberration: Aberration.None,
+    stepSize: TimeSpan.FromHours(1)
+).ToArray();
+
+Console.WriteLine($"Found {lunarEclipses.Length} lunar eclipses in 2024:");
+foreach (var eclipse in lunarEclipses)
+{
+    Console.WriteLine($"  {eclipse.StartDate} to {eclipse.EndDate}");
+    Console.WriteLine($"  Duration: {eclipse.Length.TotalMinutes:F1} minutes");
+}
+
+// Find distance constraint windows (Moon farther than 400,000 km from Earth)
+var farMoonWindows = earth.FindWindowsOnDistanceConstraint(
+    searchWindow,
+    moon,
+    RelationnalOperator.Greater,
+    400000000,  // 400,000 km in meters
+    Aberration.None,
+    TimeSpan.FromHours(24)
+).ToArray();
+
+Console.WriteLine($"\nMoon > 400,000 km from Earth:");
+foreach (var w in farMoonWindows.Take(5))
+{
+    Console.WriteLine($"  {w.StartDate.ToUTC()} to {w.EndDate.ToUTC()}");
+}
+```
+
+### Instrument Field of View Analysis
+
+Find windows when a target is visible in an instrument's field of view:
+
+```csharp
+using IO.Astrodynamics.Body.Spacecraft;
+
+var earth = PlanetsAndMoons.EARTH_BODY;
+var start = new Time(2024, 6, 10);
+var end = start.AddHours(2);
+
+// Create mission and scenario
+var mission = new Mission("EarthObservation");
+var scenario = new Scenario("Observation", mission, new Window(start, end));
+scenario.AddCelestialItem(earth);
+
+// Define spacecraft orbit
+var orbit = new StateVector(
+    new Vector3(6800000.0, 0.0, 0.0),
+    new Vector3(0.0, 7656.2, 0.0),
+    earth, start, Frames.Frame.ICRF
+);
+
+// Create spacecraft with camera
+var clock = new Clock("Clock1", 65536);
+var spacecraft = new Spacecraft(-179, "Observer", 1000.0, 3000.0, clock, orbit);
+
+// Add camera instrument (circular FOV, 43° half-angle, pointing nadir)
+spacecraft.AddCircularInstrument(
+    naifId: -179100,
+    name: "MainCamera",
+    model: "HighRes",
+    fieldOfView: 0.75,                    // ~43° half-angle
+    boresight: Vector3.VectorZ,           // Boresight along Z
+    refVector: Vector3.VectorY,           // Reference vector
+    orientation: new Vector3(0, Math.PI / 2, 0)  // Point toward nadir
+);
+
+scenario.AddSpacecraft(spacecraft);
+
+// Simulate
+await scenario.SimulateAsync(false, false, TimeSpan.FromSeconds(1.0));
+
+// Find windows when Earth is in the camera's field of view
+var visibilityWindows = spacecraft.Instruments.First()
+    .FindWindowsInFieldOfViewConstraint(
+        new Window(start, end),
+        spacecraft,
+        earth,
+        earth.Frame,
+        ShapeType.Ellipsoid,
+        Aberration.LT,
+        TimeSpan.FromSeconds(60)
+    ).ToArray();
+
+Console.WriteLine($"Earth visibility windows:");
+foreach (var window in visibilityWindows)
+{
+    Console.WriteLine($"  {window.StartDate} to {window.EndDate}");
+    Console.WriteLine($"  Duration: {window.Length.TotalSeconds:F0} seconds");
+}
+
+// Check if a specific target is in FOV at a given time
+bool isVisible = spacecraft.Instruments.First()
+    .IsInFOV(start.AddMinutes(30), earth, Aberration.LT);
+Console.WriteLine($"Earth in FOV at T+30min: {isVisible}");
+```
+
+### Export to Cosmographia
+
+Export simulation results for visualization in Cosmographia:
+
+```csharp
+using IO.Astrodynamics.Cosmographia;
+
+// After running a scenario simulation...
+var mission = new Mission("Visualization");
+var scenario = new Scenario("Demo", mission, new Window(start, end));
+// ... add celestial items, spacecraft, run simulation ...
+await scenario.SimulateAsync(false, false, TimeSpan.FromSeconds(1.0));
+
+// Export to Cosmographia
+var exporter = new CosmographiaExporter();
+await exporter.ExportAsync(scenario, new DirectoryInfo("CosmographiaExport"));
+
+// This creates:
+// - SPK files for spacecraft trajectories
+// - CK files for spacecraft orientations
+// - FK files for reference frames
+// - JSON catalog for Cosmographia import
+```
+
+### TLE-Based Spacecraft Tracking
+
+Track satellites using Two-Line Element sets:
+
+```csharp
+using IO.Astrodynamics.OrbitalParameters.TLE;
+
+var earth = PlanetsAndMoons.EARTH_BODY;
+
+// Parse ISS TLE
+var issTLE = new TLE(
+    "ISS (ZARYA)",
+    "1 25544U 98067A   24153.17509025  .00020162  00000+0  35104-3 0  9990",
+    "2 25544  51.6393  34.6631 0005642 260.2910 238.1766 15.50732314456064"
+);
+
+// Create spacecraft from TLE
+var clock = new Clock("ISSClock", 65536);
+var iss = new Spacecraft(-25544, "ISS", 420000.0, 1000.0, clock, issTLE);
+
+// Track from a ground station
+var goldstone = new Site(13, "DSS-13", earth);
+
+var trackStart = new Time(2024, 6, 3);
+var trackEnd = trackStart.AddDays(1);
+
+// Get ISS position relative to ground station over time
+Console.WriteLine("ISS tracking from Goldstone:");
+for (var t = trackStart; t < trackEnd; t = t.AddMinutes(10))
+{
+    var horizontal = goldstone.GetHorizontalCoordinates(t, iss, Aberration.LT);
+
+    if (horizontal.Elevation > 0)  // Above horizon
+    {
+        Console.WriteLine($"{t.ToUTC()}: " +
+            $"Az={horizontal.Azimuth * Constants.Rad2Deg:F1}° " +
+            $"El={horizontal.Elevation * Constants.Rad2Deg:F1}° " +
+            $"Range={horizontal.Range / 1000:F0} km");
+    }
+}
+
+// Find visibility windows from ground station
+var visibilityWindows = goldstone.FindWindowsOnDistanceConstraint(
+    new Window(trackStart, trackEnd),
+    iss,
+    RelationnalOperator.Less,
+    2000000,  // Within 2000 km
+    Aberration.LT,
+    TimeSpan.FromMinutes(1)
+);
+```
+
+### Deep Space Propagation with Multiple Perturbations
+
+High-fidelity propagation including gravitational effects from multiple bodies:
+
+```csharp
+var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Time.J2000TDB);
+var moon = new CelestialBody(PlanetsAndMoons.MOON, Frames.Frame.ICRF, Time.J2000TDB);
+var sun = new CelestialBody(Stars.Sun);
+
+var start = Time.J2000TDB;
+var end = start.AddDays(25);
+
+var mission = new Mission("DeepSpaceTest");
+var scenario = new Scenario("LunarFlyby", mission, new Window(start, end));
+
+// Start at Moon's position to test N-body accuracy
+var moonState = moon.GetEphemeris(start, earth, Frames.Frame.ICRF, Aberration.None)
+    .ToStateVector();
+
+var clock = new Clock("Clock", 256);
+var spacecraft = new Spacecraft(-1001, "Probe", 100.0, 10000.0, clock, moonState);
+
+scenario.AddSpacecraft(spacecraft);
+
+// Add gravitational perturbations from multiple bodies
+scenario.AddCelestialItem(sun);
+scenario.AddCelestialItem(earth);
+scenario.AddCelestialItem(new Barycenter(5));  // Jupiter barycenter
+scenario.AddCelestialItem(new Barycenter(6));  // Saturn barycenter
+
+// Propagate with 5-minute step for accuracy
+var summary = await scenario.SimulateAsync(
+    includeAtmosphericDrag: false,
+    includeSolarRadiationPressure: false,
+    TimeSpan.FromMinutes(5)
+);
+
+// Compare spacecraft to Moon position at end
+var spcFinal = spacecraft.GetEphemeris(end, earth, Frames.Frame.ICRF, Aberration.None)
+    .ToStateVector();
+var moonFinal = moon.GetEphemeris(end, earth, Frames.Frame.ICRF, Aberration.None)
+    .ToStateVector();
+
+var positionError = (spcFinal.Position - moonFinal.Position).Magnitude();
+var velocityError = (spcFinal.Velocity - moonFinal.Velocity).Magnitude();
+
+Console.WriteLine($"25-day propagation accuracy:");
+Console.WriteLine($"  Position error: {positionError:F1} m");
+Console.WriteLine($"  Velocity error: {velocityError:F4} m/s");
+```
+
+### Earth Observation with Attitude Maneuvers
+
+Point instruments at ground targets during observation passes:
+
+```csharp
+using IO.Astrodynamics.Maneuver;
+
+var earth = PlanetsAndMoons.EARTH_BODY;
+var start = new Time(2024, 1, 1);
+var end = start.AddDays(1);
+
+var mission = new Mission("EarthObs");
+var scenario = new Scenario("TargetPointing", mission, new Window(start, end));
+scenario.AddCelestialItem(earth);
+
+// Define orbit
+var orbit = new KeplerianElements(
+    11800000.0, 0.3, 1.0, 0.0, 0.0, 0.0,
+    earth, start, Frames.Frame.ICRF
+);
+
+// Create spacecraft
+var clock = new Clock("Clock", 256);
+var spacecraft = new Spacecraft(-334, "Observer", 1000.0, 2000.0, clock, orbit);
+
+// Add antenna instrument
+spacecraft.AddCircularInstrument(-334100, "Antenna", "HighGain",
+    0.2, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero);
+
+// Add propulsion
+var tank = new FuelTank("Tank1", "Model", "SN1", 2000.0, 2000.0);
+var engine = new Engine("Engine1", "Model", "SN1", 450, 50.0, tank);
+spacecraft.AddFuelTank(tank);
+spacecraft.AddEngine(engine);
+
+// Create ground target
+var groundStation = new Site(14, "DSS-14", earth);
+scenario.AddSite(groundStation);
+scenario.AddSpacecraft(spacecraft);
+
+// Configure attitude maneuver to point antenna at ground station
+var pointingManeuver = new InstrumentPointingToAttitude(
+    start.AddHours(7.25),           // Start time
+    TimeSpan.FromHours(0.5),        // Duration
+    spacecraft.Instruments.First(), // Instrument to point
+    groundStation,                  // Target
+    engine                          // Engine for attitude control
+);
+
+spacecraft.SetStandbyManeuver(pointingManeuver);
+
+// Simulate
+await scenario.SimulateAsync(false, false, TimeSpan.FromSeconds(1.0));
+
+Console.WriteLine($"Pointing maneuver executed at: {pointingManeuver.ManeuverWindow?.StartDate}");
+```
+
+---
+
 ## Version Information
 
 - Framework: .NET 8.0 / .NET 10.0
