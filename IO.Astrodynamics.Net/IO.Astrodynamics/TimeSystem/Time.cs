@@ -218,7 +218,7 @@ public readonly record struct Time : IComparable<Time>, IComparable
     /// </summary>
     /// <param name="year">Calendar year (0 defaults to 2000)</param>
     /// <param name="doy">Day of year (1-366)</param>
-    /// <param name="sec">Seconds within the day (0-86400)</param>
+    /// <param name="sec">Seconds within the day (0-86399)</param>
     /// <returns></returns>
     public static Time Create(int year, int doy, double sec)
     {
