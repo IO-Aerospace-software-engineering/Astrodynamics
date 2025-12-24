@@ -1,1971 +1,1378 @@
-# IO.Astrodynamics Framework - Developer Guide
-
-## Table of Contents
-
-1. [Introduction](#introduction)
-2. [What IO.Astrodynamics Does](#what-ioastrodynamics-does)
-3. [What IO.Astrodynamics Doesn't Do](#what-ioastrodynamics-doesnt-do)
-4. [Quick Start](#quick-start)
-5. [Core Features](#core-features)
-   - [Working with Time Systems](#working-with-time-systems)
-   - [Celestial Bodies and Solar System Objects](#celestial-bodies-and-solar-system-objects)
-   - [Orbital Parameters](#orbital-parameters)
-   - [State Vectors and Propagation](#state-vectors-and-propagation)
-   - [Spacecraft Modeling](#spacecraft-modeling)
-   - [Maneuvers and Orbital Changes](#maneuvers-and-orbital-changes)
-   - [Launch Windows](#launch-windows)
-   - [Atmospheric Modeling](#atmospheric-modeling)
-   - [Reference Frames and Coordinates](#reference-frames-and-coordinates)
-   - [Ephemeris Calculations](#ephemeris-calculations)
-   - [Occultations and Illumination](#occultations-and-illumination)
-   - [Field of View and Visibility](#field-of-view-and-visibility)
-6. [Real-World Examples](#real-world-examples)
-7. [FAQ and Common Issues](#faq-and-common-issues)
-
----
+# IO.Astrodynamics.Net Developer Guide
 
 ## Introduction
 
-**IO.Astrodynamics** is a comprehensive .NET framework for astrodynamics, orbital mechanics, and space mission planning. Built on NASA's proven SPICE toolkit, it provides high-fidelity calculations for orbital mechanics, ephemeris computations, spacecraft modeling, and mission analysis.
+IO.Astrodynamics.Net is a .NET 8/10 astrodynamics framework for orbital mechanics calculations, ephemeris computations, and space mission planning. Built on NASA's CSPICE toolkit, it provides high-precision calculations for spacecraft trajectory analysis, celestial body ephemerides, and mission planning.
 
-### Key Characteristics
+### What IO.Astrodynamics Does
 
-- **High-Fidelity**: Uses NASA's SPICE (CSPICE) for precise ephemeris and geometry calculations
-- **.NET Native**: Full C# implementation targeting .NET 8/10
-- **Thread-Safe**: Safe for concurrent operations with proper locking mechanisms
-- **Production-Ready**: 95%+ test coverage with comprehensive unit tests
-- **Cross-Platform**: Works on Windows, Linux, and macOS
+- **Orbital Mechanics**: Compute orbital elements (Keplerian, equinoctial), state vectors, orbital periods, anomalies
+- **Ephemeris Computation**: Read and write SPICE kernel files for celestial bodies and spacecraft
+- **Time Systems**: Handle multiple time frames (UTC, TDB, TAI, TDT, GPS, Local)
+- **Reference Frames**: Transform between inertial and body-fixed frames (ICRF, ECLIPTIC, IAU frames)
+- **Spacecraft Modeling**: Define spacecraft with instruments, engines, fuel tanks, and payloads
+- **Orbital Propagation**: Propagate orbits using numerical integration with perturbation models
+- **Maneuver Planning**: Compute delta-V requirements, launch windows, Lambert transfers
+- **Geometry Finding**: Search for occultations, eclipses, visibility windows, illumination conditions
+- **Atmospheric Modeling**: Compute atmospheric density, temperature, pressure (Earth and Mars)
+- **TLE Processing**: Parse, propagate (SGP4/SDP4), and generate Two-Line Element sets
+- **Ground Site Operations**: Compute azimuth, elevation, range for tracking stations
 
-### Target Audience
+### What IO.Astrodynamics Does NOT Do
 
-This framework is designed for:
-- Aerospace engineers building mission planning tools
-- Scientists performing orbital mechanics analysis
-- Developers creating space simulation software
-- Researchers studying celestial mechanics
+- Real-time telemetry processing
+- Hardware control or flight software
+- Launch vehicle design or structural analysis
+- Thermal analysis
+- Power system modeling
+- Communication link budgets (beyond basic geometry)
+- Detailed attitude control system design
 
----
+## Standards and Units
 
-## What IO.Astrodynamics Does
+### Unit System
 
-IO.Astrodynamics provides comprehensive capabilities for astrodynamics calculations:
+IO.Astrodynamics uses the **International System of Units (SI)** throughout:
 
-### Orbital Mechanics & Propagation
-- **Orbital Element Representations**: Keplerian, Equinoctial, TLE (Two-Line Elements), State Vectors with conversions between all types
-- **Orbit Propagation**: 2-body analytical propagation and N-body numerical integration
-- **Numerical Integrators**: VV (Velocity Verlet) integrator for high-precision propagation
-- **TLE Propagation**: SGP4/SDP4 propagation from Two-Line Element sets
-- **Initial Orbit Determination**: Gauss method from optical observations (right ascension/declination)
-- **Orbit Queries**: Period, apogee, perigee, mean motion, eccentric anomaly, true anomaly calculations
+| Quantity | Unit | Symbol |
+|----------|------|--------|
+| Length | Meters | m |
+| Mass | Kilograms | kg |
+| Time | Seconds | s |
+| Angle | Radians | rad |
+| Velocity | Meters per second | m/s |
+| Acceleration | Meters per second squared | m/s² |
+| Gravitational parameter (GM) | m³/s² | m³/s² |
+| Temperature | Celsius | °C |
+| Pressure | Kilopascals | kPa |
+| Density | Kilograms per cubic meter | kg/m³ |
 
-### Spacecraft Systems
-- **Spacecraft Modeling**: Complete spacecraft definition with mass properties, dry mass tracking
-- **Propulsion Systems**: Multi-tank fuel management, engines with ISP and thrust characteristics
-- **Instruments & Sensors**: FOV modeling (circular, elliptical, rectangular) with boresight and orientation
-- **Spacecraft Clocks**: Onboard clock simulation for time tagging
-- **Payloads**: Custom payload definitions
-- **Attitude Control**: Prograde, retrograde, nadir, zenith, instrument pointing, custom quaternion attitudes
-- **Spacecraft Frames**: Body-fixed reference frames for each spacecraft
+### Physical Constants
 
-### Orbital Maneuvers
-- **Impulsive Maneuvers**: Instantaneous delta-V application
-- **Apogee/Perigee Maneuvers**: Orbit circularization and altitude changes
-- **Apsidal Alignment**: Argument of periapsis modifications
-- **Plane Changes**: Inclination and RAAN modifications
-- **Phasing Maneuvers**: Orbital phasing for rendezvous
-- **Combined Maneuvers**: Optimized simultaneous altitude and plane changes
-- **Low Thrust Maneuvers**: Continuous thrust trajectory optimization
-- **Lambert Solvers**: Two-point boundary value problem solver for transfer trajectories
-- **Launch Windows**: Optimal launch opportunity calculations with azimuth and velocity
-- **Maneuver Execution**: TryExecute with fuel consumption tracking and attitude computation
+Defined in `IO.Astrodynamics.Constants`:
 
-### Ephemeris & SPICE Integration
-- **High-Precision Ephemeris**: Read position and velocity of any object relative to any observer
-- **SPICE Kernel Management**: Load/unload kernels (SPK, PCK, LSK, FK, IK, CK, SCLK)
-- **Ephemeris Writing**: Generate SPICE SPK kernels from state vectors
-- **Orientation Writing**: Generate SPICE CK kernels from attitude data
-- **Batch Ephemeris Reading**: Efficient bulk ephemeris queries over time windows
-- **Frame Transformations**: Transform state vectors between any reference frames
-- **Aberration Corrections**: None, Light-Time, Light-Time+Stellar, Transmission cases
-- **NAIF ID Management**: Support for official and custom NAIF body IDs
+```csharp
+public const double G = 6.67430e-11;           // Gravitational constant (m³/kg/s²)
+public const double AU = 149597870700.0;       // Astronomical Unit (m)
+public const double C = 299792458.0;           // Speed of light (m/s)
+public const double g0 = 9.80665;              // Standard gravity (m/s²)
+public const double Deg2Rad = Math.PI / 180.0; // Degrees to radians
+public const double Rad2Deg = 180.0 / Math.PI; // Radians to degrees
+```
 
-### Geometry Finders (Event Search)
-- **Distance Constraints**: Find when distance between bodies meets conditions (>, <, =, ≥, ≤, ≠)
-- **Occultation Searches**: Detect eclipses, transits, occultations (full, annular, partial, any)
-- **Coordinate Constraints**: Search for specific coordinate values (latitude, longitude, altitude, RA, Dec, range, etc.)
-- **Illumination Constraints**: Solar illumination angle searches (incidence, emission, phase angles)
-- **Field of View Searches**: Determine when targets are visible in instrument FOV
-- **Custom Geometry Searches**: Generic window finder with user-defined conditions
-- **High-Precision Refinement**: Binary search refinement for event timing
+### Reference Standards
 
-### Time Systems & Windows
-- **Time Frames**: UTC, TDB (Barycentric Dynamical), TAI (Atomic), GPS, TDT (Terrestrial Dynamical), Local Time
-- **Time Conversions**: Seamless conversion between all time systems with leap second handling
-- **Time Windows**: Period definitions for searches and analysis
-- **Julian Date Support**: J2000 epoch reference and Julian date calculations
-- **Epoch Arithmetic**: Add/subtract time spans, compute durations
+- **Time**: IERS Conventions, leap seconds from NAIF LSK kernels
+- **Ephemerides**: JPL Development Ephemeris (DE series)
+- **Reference Frames**: IAU/IAG standards, IERS conventions
+- **Atmospheric Models**: U.S. Standard Atmosphere 1976, NRLMSISE-00
+- **TLE Propagation**: SGP4/SDP4 (AFSPC compatibility)
 
-### Coordinate Systems & Reference Frames
-- **Reference Frames**: ICRF, J2000, Galactic, body-fixed frames, custom frames
-- **Planetodetic Coordinates**: Latitude, longitude, altitude (geodetic)
-- **Planetocentric Coordinates**: Spherical coordinates relative to body center
-- **Horizontal Coordinates**: Azimuth, elevation, range (observer-local)
-- **Equatorial Coordinates**: Right ascension, declination (celestial sphere)
-- **Cartesian Conversions**: Convert between all coordinate systems
-- **Frame Transformations**: State vector and orientation transformations with angular velocity
+### NAIF ID Codes
 
-### Atmospheric Modeling
-- **Earth Standard Atmosphere**: U.S. Standard Atmosphere 1976 (valid 0-86 km)
-- **NRLMSISE-00**: High-fidelity empirical model (valid 0-2000+ km)
-  - Temperature, pressure, density from ground to exosphere
-  - Space weather effects (F10.7 solar flux, Ap geomagnetic index)
-  - Configurable switches for atmospheric variations
-  - Direct access for advanced users (Calculate, CalculateThermosphere, etc.)
-  - Altitude finding at target pressure
-- **Mars Standard Atmosphere**: Simplified analytical Mars atmosphere model
-- **Context Support**: Full atmospheric context (altitude, lat/lon, time, local solar time)
-- **Atmospheric Drag Calculations**: Integration with propagator forces
-
-### Gravitational Models & Forces
-- **Geopotential Models**: High resolution Spherical harmonic gravity models
-- **Geopotential Coefficients**: Read and apply coefficient files
-- **N-Body Gravity**: Multi-body gravitational acceleration
-- **Atmospheric Drag**: Altitude-dependent drag force with coefficient and area
-- **Solar Radiation Pressure**: SRP force modeling with reflectivity coefficients
-- **Custom Forces**: Extensible force model framework
-- **Gravitational Parameters**: GM (gravitational parameter) for all bodies
-
-### Celestial Bodies & Solar System Objects
-- **Planets & Moons**: All major planets and 200+ moons with physical properties
-- **Barycenters**: Solar system, planetary system barycenters
-- **Lagrange Points**: L1-L5 for Earth-Moon, Sun-Earth systems
-- **Asteroids**: Support for asteroid ephemeris
-- **Comets**: Support for comet ephemeris
-- **Stars**: Sun and stellar objects
-- **Ground Stations**: Site definitions with coordinates
-- **Launch Sites**: Launch complex modeling with azimuth constraints
-- **Body Properties**: Mass, radius, GM, flattening, frame information
-
-### Mathematical Utilities
-- **Vector Mathematics**: Vector3 operations (dot, cross, magnitude, normalization)
-- **Quaternion Mathematics**: Rotations, conjugates, SLERP interpolation
-- **Matrix Operations**: Matrix multiplication, inversion, transpose
-- **Plane Geometry**: Plane definitions and intersections
-- **Numerical Solvers**:
-  - Newton-Raphson method
-  - Bisection method
-  - Jacobian matrix computation
-- **Interpolation**: Lagrange polynomial interpolation
-- **Special Functions**: Legendre polynomials, special mathematical functions
-- **Angle Utilities**: Conversions between degrees/radians, angle normalization
-
-### Mission Planning & Simulation
-- **Mission Scenarios**: Complete mission timeline definition
-- **Scenario Simulation**: Execute missions with propagation and maneuvers
-- **Launch Analysis**: Launch window calculations with azimuth and insertion velocity
-- **Recovery Site Planning**: Splashdown and landing site prediction
-- **Mission Summaries**: Automated reporting of scenario results
-- **Multi-Spacecraft Missions**: Coordinate multiple spacecraft in single scenario
-
-### Data Export & Interoperability
-- **Cosmographia Export**: 3D visualization scene generation for Cosmographia tool
-  - Spacecraft trajectories
-  - Sensor FOV visualization
-  - Ground site markers
-  - Observation windows
-- **SPICE Kernel Generation**: Create SPK (ephemeris) and CK (orientation) kernels
-- **PDS V4 Export**: Planetary Data System archive-compliant metadata
-- **JSON Serialization**: Export mission data in JSON format
-- **Profile Management**: Configuration profiles for different mission types
-
-### Physics & Astrodynamics Calculations
-- **Tsiolkovsky Equation**: Rocket equation calculations for delta-V and mass ratios
-- **Orbital Energy**: Specific orbital energy computation
-- **Angular Momentum**: Orbital angular momentum vectors
-- **Vis-Viva Equation**: Velocity at any point in orbit
-- **Sphere of Influence**: SOI calculations for multi-body transfers
-- **Escape Velocity**: Body escape velocity calculations
-- **Circular Velocity**: Local circular orbit velocity
+Celestial bodies use NAIF (Navigation and Ancillary Information Facility) ID codes:
+- Sun: 10
+- Mercury: 199, Venus: 299, Earth: 399, Mars: 499, etc.
+- Moon: 301
+- Barycenters: 0 (Solar System), 3 (Earth-Moon), etc.
 
 ---
 
-## What IO.Astrodynamics Doesn't Do
-
-To set proper expectations, here's what this framework does **not** provide:
-
-### Not Included
-
-- **Trajectory Visualization**: No built-in GUI or 3D rendering (use Cosmographia exporter for visualization)
-- **Orbit Determination from Real Telemetry**: No TLE fetching from APIs or real-time telemetry processing
-- **Astrochemistry/Spectroscopy**: Pure mechanics focus, no chemical or spectral analysis
-- **Attitude Dynamics Simulation**: Only kinematic attitudes, no full dynamics with moments of inertia
-- **Re-entry Heating Calculations**: No thermal analysis or material stress calculations
-- **Communication Link Budget**: No RF propagation or antenna gain calculations
-- **Ground Segment Operations**: No mission control system features
-- **Real-Time Operations**: Not designed for closed-loop real-time spacecraft control
-
-### Design Philosophy
-
-IO.Astrodynamics focuses on:
-- **Accuracy** over speed (though performance is optimized)
-- **Precision** over approximations (uses proven NASA algorithms)
-- **Completeness** over simplicity (comprehensive feature set)
-- **Library** over application (you build the application)
-
----
-
-## Quick Start
+## Quick Start Guide
 
 ### Installation
 
-```bash
-# Build from source
-git clone <repository-url>
-cd IO.Astrodynamics.Net
-dotnet build IO.Astrodynamics.sln
+Add the IO.Astrodynamics NuGet package to your project:
 
-# Or install as NuGet package (if published)
+```bash
 dotnet add package IO.Astrodynamics
 ```
 
-### Prerequisites
+### Loading SPICE Kernels
 
-1. **SPICE Kernels**: Download required ephemeris kernels from [NAIF](https://naif.jpl.nasa.gov/naif/data.html)
-2. **.NET 8 or 10**: Ensure you have the SDK installed
-
-### Your First Program
+Before any computation, load the required SPICE kernel files:
 
 ```csharp
-using System;
-using System.IO;
 using IO.Astrodynamics;
-using IO.Astrodynamics.Body;
-using IO.Astrodynamics.SolarSystemObjects;
-using IO.Astrodynamics.TimeSystem;
 
-// Load SPICE kernels (required for all operations)
+// Load kernels from a directory
 API.Instance.LoadKernels(new DirectoryInfo("path/to/kernels"));
 
-// Get Earth and Moon as CelestialBody objects
-var earth = PlanetsAndMoons.EARTH_BODY;
-var moon = new CelestialBody(PlanetsAndMoons.MOON, Frames.Frame.ICRF,
-    new TimeSystem.Time(2000, 1, 1, 12, 0, 0));
-
-// Define epoch in TDB (used for ephemeris calculations)
-var epoch = new TimeSystem.Time(2000, 1, 1, 12, 0, 0);  // Defaults to TDB
-
-// Get Moon's state vector relative to Earth
-var ephemeris = moon.GetEphemeris(epoch, earth, Frames.Frame.ICRF, Aberration.None);
-
-Console.WriteLine($"Moon position: {ephemeris.Position}");
-Console.WriteLine($"Moon velocity: {ephemeris.Velocity}");
+// Or load a specific kernel file
+API.Instance.LoadKernels(new FileInfo("de440.bsp"));
 ```
 
-### Essential Patterns
-
-**Always load kernels first:**
-```csharp
-API.Instance.LoadKernels(new DirectoryInfo("Data/SolarSystem"));
-```
-
-**Use appropriate time frames:**
-```csharp
-// Create time in specific frame
-var utcTime = new TimeSystem.Time(2025, 1, 1, frame: TimeFrame.UTCFrame);
-var tdbTime = utcTime.ToTDB();  // Convert to TDB for ephemeris calculations
-
-// Create from string (auto-detects frame from suffix)
-var fromString = new TimeSystem.Time("2025-01-01T12:00:00.0000000Z");  // UTC
-var tdbFromString = new TimeSystem.Time("2025-01-01T12:00:00.0000000 TDB");
-
-// Create from elapsed seconds since J2000
-var fromSeconds = TimeSystem.Time.CreateTDB(0.0);  // J2000 epoch
-```
-
-**Specify reference frames explicitly:**
-```csharp
-var state = new StateVector(position, velocity, earth, epoch, Frames.Frame.ICRF);
-```
-
----
-
-## Core Features
-
-### Working with Time Systems
-
-Astrodynamics requires precise time handling. IO.Astrodynamics supports multiple time systems used in space operations.
-
-#### Time Systems Available
-
-- **UTC**: Coordinated Universal Time (includes leap seconds)
-- **TDB**: Barycentric Dynamical Time (for ephemeris calculations)
-- **TAI**: International Atomic Time (monotonic, no leap seconds)
-- **GPS**: GPS Time
-- **TDT/TT**: Terrestrial Dynamical Time
-- **Local Time**: Site-specific local time
-
-#### Basic Time Operations
-
-```csharp
-using IO.Astrodynamics.TimeSystem;
-
-// Create time using year, month, day, hour, minute, second components
-var utcTime = new TimeSystem.Time(2025, 1, 15, 10, 30, 0, frame: TimeFrame.UTCFrame);
-
-// Create time from DateTime
-var fromDateTime = new TimeSystem.Time(new DateTime(2025, 1, 15, 10, 30, 0), TimeFrame.UTCFrame);
-
-// Create from elapsed seconds since J2000
-var tdbFromSeconds = TimeSystem.Time.CreateTDB(631152000.0);
-var utcFromSeconds = TimeSystem.Time.CreateUTC(631152000.0);
-
-// Convert between time systems
-var tdbTime = utcTime.ToTDB();
-var taiTime = utcTime.ToTAI();
-var gpsTime = utcTime.ToGPS();
-var tdtTime = utcTime.ToTDT();
-
-// Time arithmetic
-var futureTime = utcTime.Add(TimeSpan.FromDays(7));
-var futureTime2 = utcTime.AddSeconds(3600.0);
-var duration = futureTime - utcTime;
-
-// Parse from string (format includes time frame suffix)
-var parsedUtc = new TimeSystem.Time("2025-01-15T10:30:00.0000000Z");  // UTC
-var parsedTdb = new TimeSystem.Time("2025-01-15T10:30:00.0000000 TDB");  // TDB
-var parsedTai = new TimeSystem.Time("2025-01-15T10:30:00.0000000 TAI");  // TAI
-
-// Get seconds since J2000
-var secondsFromJ2000 = utcTime.TimeSpanFromJ2000().TotalSeconds;
-
-// Convert to Julian date
-var julianDate = utcTime.ToJulianDate();
-```
-
-#### Time Windows
-
-Time windows represent intervals for search operations:
-
-```csharp
-using IO.Astrodynamics.TimeSystem;
-
-var start = new TimeSystem.Time(2025, 1, 1, frame: TimeFrame.TDBFrame);
-var end = new TimeSystem.Time(2025, 12, 31, frame: TimeFrame.TDBFrame);
-var searchWindow = new Window(start, end);
-
-// Access window boundaries
-TimeSystem.Time windowStart = searchWindow.StartDate;
-TimeSystem.Time windowEnd = searchWindow.EndDate;
-
-// Get window duration
-TimeSpan duration = searchWindow.Length;
-```
-
-#### Real-World Example: Mission Timeline
-
-```csharp
-// Mars mission timeline planning
-var launchWindowStart = new TimeSystem.Time(2026, 9, 1, frame: TimeFrame.UTCFrame);
-var launchWindowEnd = new TimeSystem.Time(2026, 10, 31, frame: TimeFrame.UTCFrame);
-var launchWindow = new Window(launchWindowStart.ToTDB(), launchWindowEnd.ToTDB());
-
-var marsArrival = launchWindow.StartDate.Add(TimeSpan.FromDays(210)); // ~7 month cruise
-Console.WriteLine($"Expected Mars arrival: {marsArrival}");
-```
-
----
-
-### Celestial Bodies and Solar System Objects
-
-Access planets, moons, asteroids, and other solar system objects.
-
-#### Built-in Solar System Objects
-
-```csharp
-using IO.Astrodynamics.Body;
-using IO.Astrodynamics.SolarSystemObjects;
-
-// Major bodies - EARTH_BODY returns a CelestialBody directly
-var earth = PlanetsAndMoons.EARTH_BODY;
-
-// Sun (from Stars namespace)
-var sun = new CelestialBody(Stars.Sun);
-
-// Create CelestialBody with specific frame and epoch
-var epoch = new TimeSystem.Time(2000, 1, 1, 12, 0, 0);
-var moon = new CelestialBody(PlanetsAndMoons.MOON, Frames.Frame.ICRF, epoch);
-var mars = new CelestialBody(PlanetsAndMoons.MARS, Frames.Frame.ICRF, epoch);
-var jupiter = new CelestialBody(PlanetsAndMoons.JUPITER, Frames.Frame.ICRF, epoch);
-
-// Moons
-var europa = new CelestialBody(PlanetsAndMoons.EUROPA, Frames.Frame.ICRF, epoch);
-var titan = new CelestialBody(PlanetsAndMoons.TITAN, Frames.Frame.ICRF, epoch);
-
-// Barycenters
-var earthMoonBarycenter = new Barycenter(Barycenters.EARTH_BARYCENTER);
-var solarSystemBarycenter = new Barycenter(Barycenters.SOLAR_SYSTEM_BARYCENTER);
-
-// Lagrange points
-var l1 = new LagrangePoint(LagrangePoints.EARTH_MOON_L1);
-var l2 = new LagrangePoint(LagrangePoints.EARTH_MOON_L2);
-```
-
-#### Body Properties
-
-```csharp
-// Physical properties
-double mass = earth.Mass;           // kg
-double radius = earth.EquatorialRadius;  // m (equatorial radius)
-double mu = earth.GM;               // Gravitational parameter (m³/s²)
-double flattening = earth.Flattening;
-int naifId = earth.NaifId;          // NAIF ID (399 for Earth)
-
-// Get body-fixed frame
-var earthFixedFrame = earth.Frame;
-```
-
-#### Ground Stations and Sites
-
-```csharp
-using IO.Astrodynamics.Surface;
-using IO.Astrodynamics.Coordinates;
-
-// Site using known DSS station (requires SPICE station kernels)
-var dss13 = new Site(13, "DSS-13", earth);
-
-// Site with custom coordinates (note: Planetodetic takes longitude, latitude, altitude)
-var customSite = new Site(
-    399001,                          // Custom NAIF ID
-    "Kennedy Space Center",
-    earth,
-    new Planetodetic(
-        -80.6480 * IO.Astrodynamics.Constants.Deg2Rad,  // Longitude (radians)
-        28.5721 * IO.Astrodynamics.Constants.Deg2Rad,   // Latitude (radians)
-        0.0                                              // Altitude (meters)
-    )
-);
-
-// Launch site
-var launchSite = new LaunchSite(
-    399002,
-    "Launch Complex 39A",
-    earth,
-    new Planetodetic(
-        -80.6041 * IO.Astrodynamics.Constants.Deg2Rad,  // Longitude
-        28.6083 * IO.Astrodynamics.Constants.Deg2Rad,   // Latitude
-        0.0
-    )
-);
-```
-
-#### Real-World Example: Distance Between Bodies
-
-```csharp
-// Calculate Earth-Mars distance
-var epoch = new TimeSystem.Time(2025, 1, 16, frame: TimeFrame.TDBFrame);
-var earth = PlanetsAndMoons.EARTH_BODY;
-var mars = new CelestialBody(PlanetsAndMoons.MARS, Frames.Frame.ICRF, epoch);
-
-var marsState = mars.GetEphemeris(epoch, earth, Frames.Frame.ICRF, Aberration.LT);
-double distance = marsState.Position.Magnitude();  // meters
-double distanceKm = distance / 1000.0;
-double distanceAU = distance / IO.Astrodynamics.Constants.AU;
-
-Console.WriteLine($"Earth-Mars distance: {distanceKm:F0} km ({distanceAU:F3} AU)");
-```
-
----
-
-### Orbital Parameters
-
-IO.Astrodynamics supports multiple representations of orbital elements.
-
-#### Keplerian Elements
-
-Classical orbital elements (semi-major axis, eccentricity, inclination, etc.)
-
-```csharp
-using IO.Astrodynamics.OrbitalParameters;
-using IO.Astrodynamics.Math;
-
-var earth = PlanetsAndMoons.EARTH_BODY;
-var epoch = new TimeSystem.Time(DateTime.Now, TimeFrame.TDBFrame);
-
-// Create from Keplerian elements (a, e, i, RAAN, AOP, mean anomaly)
-var keplerianElements = new KeplerianElements(
-    7000000.0,                                    // Semi-major axis (meters)
-    0.001,                                        // Eccentricity
-    51.6 * IO.Astrodynamics.Constants.Deg2Rad,   // Inclination (radians)
-    0.0,                                          // RAAN (radians)
-    0.0,                                          // Argument of periapsis (radians)
-    0.0,                                          // Mean anomaly (radians)
-    earth,                                        // Observer (central body)
-    epoch,                                        // Epoch
-    Frames.Frame.ICRF                            // Reference frame
-);
-
-// Access orbital properties via methods
-double sma = keplerianElements.SemiMajorAxis();
-double ecc = keplerianElements.Eccentricity();
-double inc = keplerianElements.Inclination();
-TimeSpan period = keplerianElements.Period();
-double apogee = keplerianElements.ApogeeVector().Magnitude();
-double perigee = keplerianElements.PerigeeVector().Magnitude();
-double meanMotion = keplerianElements.MeanMotion();
-```
-
-#### State Vectors
-
-Cartesian position and velocity representation.
-
-```csharp
-using IO.Astrodynamics.OrbitalParameters;
-using IO.Astrodynamics.Math;
-
-var earth = PlanetsAndMoons.EARTH_BODY;
-var epoch = TimeSystem.Time.J2000TDB;
-
-// Create from position and velocity vectors
-var position = new Vector3(6800000.0, 0.0, 0.0);  // meters
-var velocity = new Vector3(0.0, 7656.0, 0.0);     // m/s
-
-var stateVector = new StateVector(
-    position,
-    velocity,
-    earth,
-    epoch,
-    Frames.Frame.ICRF
-);
-
-// Convert to Keplerian
-var keplerian = stateVector.ToKeplerianElements();
-Console.WriteLine($"Semi-major axis: {keplerian.SemiMajorAxis() / 1000.0:F2} km");
-Console.WriteLine($"Eccentricity: {keplerian.Eccentricity():F6}");
-
-// Propagate to future epoch
-var futureEpoch = epoch.Add(TimeSpan.FromHours(1));
-var futureState = stateVector.AtEpoch(futureEpoch).ToStateVector();
-```
-
-#### Two-Line Elements (TLE)
-
-Standard format for distributing Earth satellite orbital data.
-
-```csharp
-using IO.Astrodynamics.OrbitalParameters.TLE;
-
-// Parse TLE data (e.g., from Celestrak)
-string line1 = "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054";
-string line2 = "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703";
-
-var tle = new TLE("ISS", line1, line2);
-
-// Access TLE mean elements
-double meanSma = tle.MeanSemiMajorAxis;
-double meanEcc = tle.MeanEccentricity;
-double meanInc = tle.MeanInclination;
-double meanRaan = tle.MeanAscendingNode;
-var tleEpoch = tle.Epoch;
-
-// Convert TLE to state vector at specific epoch
-var targetEpoch = TimeSystem.Time.CreateTDB(664440682.84760022);
-var stateFromTLE = tle.ToStateVector(targetEpoch).ToFrame(Frames.Frame.ICRF);
-
-// Propagate TLE to new epoch
-var propagated = tle.AtEpoch(targetEpoch);
-```
-
-#### Equinoctial Elements
-
-Non-singular orbital elements useful for low eccentricity and inclination.
-
-```csharp
-// Convert from Keplerian to Equinoctial
-var equinoctialElements = keplerianElements.ToEquinoctialElements();
-
-// Access equinoctial element properties via methods
-double sma = equinoctialElements.SemiMajorAxis();
-double ecc = equinoctialElements.Eccentricity();
-double inc = equinoctialElements.Inclination();
-```
-
-#### Real-World Example: ISS Orbit Analysis
-
-```csharp
-// Typical ISS orbital parameters from TLE
-var issTle = new TLE("ISS",
-    "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
-    "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
-
-// Or create Keplerian elements directly
-var earth = PlanetsAndMoons.EARTH_BODY;
-var issOrbit = new KeplerianElements(
-    6793000.0,                                     // ~420 km altitude
-    0.0001,                                        // Nearly circular
-    51.64 * IO.Astrodynamics.Constants.Deg2Rad,   // ISS inclination
-    0.0, 0.0, 0.0,
-    earth,
-    TimeSystem.Time.J2000TDB,
-    Frames.Frame.ICRF
-);
-
-// Calculate orbital period
-var period = issOrbit.Period();
-Console.WriteLine($"ISS orbital period: {period.TotalMinutes:F1} minutes");
-
-// Get apogee and perigee altitudes
-double apogeeAlt = issOrbit.ApogeeVector().Magnitude() - earth.EquatorialRadius;
-double perigeeAlt = issOrbit.PerigeeVector().Magnitude() - earth.EquatorialRadius;
-Console.WriteLine($"Apogee altitude: {apogeeAlt / 1000:F1} km");
-Console.WriteLine($"Perigee altitude: {perigeeAlt / 1000:F1} km");
-```
-
----
-
-### State Vectors and Propagation
-
-Propagate orbits forward in time using numerical integration.
-
-#### Basic Propagation
-
-```csharp
-using IO.Astrodynamics.OrbitalParameters;
-using IO.Astrodynamics.Math;
-
-var earth = PlanetsAndMoons.EARTH_BODY;
-var epoch = TimeSystem.Time.J2000TDB;
-
-// Initial orbit
-var initialState = new StateVector(
-    new Vector3(6800000.0, 0.0, 0.0),
-    new Vector3(0.0, 7656.0, 0.0),
-    earth,
-    epoch,
-    Frames.Frame.ICRF
-);
-
-// Propagate forward using 2-body Keplerian motion
-var futureEpoch = epoch.Add(TimeSpan.FromDays(1));
-var futureState = initialState.AtEpoch(futureEpoch).ToStateVector();
-
-Console.WriteLine($"Position after 1 day: {futureState.Position}");
-```
-
-#### Propagation with Scenario
-
-```csharp
-using IO.Astrodynamics.Mission;
-using IO.Astrodynamics.Body.Spacecraft;
-
-var earth = PlanetsAndMoons.EARTH_BODY;
-var start = new TimeSystem.Time(2021, 3, 2, 0, 0, 0).ToTDB();
-var end = start.Add(TimeSpan.FromDays(3));
-
-// Create mission scenario
-var scenario = new Scenario("Propagation_Test",
-    new IO.Astrodynamics.Mission.Mission("TestMission"),
-    new Window(start, end));
-
-// Define orbit
-var orbit = new StateVector(
-    new Vector3(6800000.0, 0.0, 0.0),
-    new Vector3(0.0, 7656.0, 0.0),
-    earth,
-    start,
-    Frames.Frame.ICRF
-);
-
-// Create spacecraft (dryMass, maxOperatingMass)
-var spacecraft = new Spacecraft(-178, "TESTSAT", 1000.0, 3000.0,
-    new Clock("clk1", 65536), orbit);
-
-scenario.AddSpacecraft(spacecraft);
-
-// Execute scenario simulation
-await scenario.SimulateAsync(false, false, TimeSpan.FromSeconds(60.0));
-```
-
-#### Real-World Example: Satellite Altitude Tracking
-
-```csharp
-var earth = PlanetsAndMoons.EARTH_BODY;
-var epoch = TimeSystem.Time.J2000TDB;
-
-// Low Earth orbit satellite
-var leo = new StateVector(
-    new Vector3(6600000.0, 0.0, 0.0),  // ~220 km altitude
-    new Vector3(0.0, 7780.0, 0.0),
-    earth,
-    epoch,
-    Frames.Frame.ICRF
-);
-
-// Track altitude over 30 days using 2-body propagation
-for (int day = 0; day < 30; day++)
-{
-    var nextEpoch = epoch.Add(TimeSpan.FromDays(day));
-    var currentState = leo.AtEpoch(nextEpoch).ToStateVector();
-
-    double altitude = currentState.Position.Magnitude() - earth.EquatorialRadius;
-    Console.WriteLine($"Day {day}: Altitude = {altitude / 1000:F1} km");
-}
-```
-
----
-
-### Spacecraft Modeling
-
-Model spacecraft with engines, fuel tanks, instruments, and sensors.
-
-#### Basic Spacecraft
-
-```csharp
-using IO.Astrodynamics.Body.Spacecraft;
-
-var earth = PlanetsAndMoons.EARTH_BODY;
-var epoch = TimeSystem.Time.J2000TDB;
-
-var orbit = new StateVector(
-    new Vector3(6800000.0, 0.0, 0.0),
-    new Vector3(0.0, 7656.0, 0.0),
-    earth,
-    epoch,
-    Frames.Frame.ICRF
-);
-
-// Create spacecraft: (naifId, name, dryOperatingMass, maxOperatingMass, clock, orbit)
-// Note: dryMass comes BEFORE maxMass in the constructor
-var spacecraft = new Spacecraft(
-    -1001,                           // NAIF ID (must be negative for spacecraft)
-    "ExplorerSat",                   // Name
-    1000.0,                          // Dry operating mass (kg)
-    3000.0,                          // Maximum operating mass (kg)
-    new Clock("SC_CLOCK", 65536),    // Onboard clock
-    orbit                            // Initial orbital parameters
-);
-```
-
-#### Propulsion System
-
-```csharp
-// Add fuel tank: (name, model, serialNumber, capacity, quantity)
-var fuelTank = new FuelTank("Main Tank", "TankModel-500", "TK-001", 2000.0, 2000.0);
-spacecraft.AddFuelTank(fuelTank);
-
-// Add engine: (name, model, serialNumber, isp, fuelFlow, fuelTank)
-// Note: Engine must be added AFTER the fuel tank it uses
-var engine = new Engine("Main Engine", "EngineModel-450", "EN-001", 450.0, 50.0, fuelTank);
-spacecraft.AddEngine(engine);
-
-// Add payload
-spacecraft.AddPayload(new Payload("Science Package", 150.0, "PL-001"));
-```
-
-#### Instruments and Sensors
-
-Instruments are added via spacecraft methods, not created as separate objects:
-
-```csharp
-// Add circular instrument (camera, telescope)
-// Parameters: naifId, name, model, fieldOfView, boresight, refVector, orientation
-spacecraft.AddCircularInstrument(
-    -1001600,                        // Instrument NAIF ID
-    "HighResCam",                    // Name
-    "CAM-2000",                      // Model
-    1.5,                             // Field of view (radians)
-    Vector3.VectorZ,                 // Boresight direction
-    Vector3.VectorX,                 // Reference vector
-    Vector3.VectorX                  // Orientation (Euler angles)
-);
-
-// Add rectangular instrument
-// Uses AddRectangularInstrument with cross-angle and along-track angle
-```
-
-#### Real-World Example: Earth Observation Satellite
-
-```csharp
-var earth = PlanetsAndMoons.EARTH_BODY;
-var epoch = TimeSystem.Time.J2000TDB;
-
-// Create sun-synchronous orbit
-var ssoOrbit = new KeplerianElements(
-    7078000.0,                                     // ~700 km altitude
-    0.001,                                         // Nearly circular
-    98.2 * IO.Astrodynamics.Constants.Deg2Rad,    // Sun-synchronous inclination
-    0.0, 0.0, 0.0,
-    earth,
-    epoch,
-    Frames.Frame.ICRF
-);
-
-// Create Earth observation satellite (dryMass, maxMass)
-var eoSat = new Spacecraft(-200, "EarthObserver", 700.0, 1000.0,
-    new Clock("EO_CLK", 65536), ssoOrbit);
-
-// Add fuel tank and engine
-eoSat.AddFuelTank(new FuelTank("ft1", "model1", "sn1", 300.0, 300.0));
-eoSat.AddEngine(new Engine("engine1", "model1", "sn1", 300.0, 10.0,
-    eoSat.FuelTanks.First()));
-
-// Add nadir-pointing camera instrument
-eoSat.AddCircularInstrument(-200600, "MultiSpectralImager", "MSI-3000",
-    0.087,                           // ~5° FOV in radians
-    Vector3.VectorZ,                 // Boresight
-    Vector3.VectorY,                 // Reference
-    new Vector3(0.0, System.Math.PI * 0.5, 0.0)  // Nadir orientation
-);
-
-// Calculate ground swath width
-double altitude = ssoOrbit.SemiMajorAxis() - earth.EquatorialRadius;
-double fovHalfAngle = 0.087 / 2.0;
-double swathWidth = 2.0 * altitude * System.Math.Tan(fovHalfAngle);
-Console.WriteLine($"Ground swath width: {swathWidth / 1000:F1} km");
-```
-
----
-
-### Maneuvers and Orbital Changes
-
-Plan and execute orbital maneuvers.
-
-#### Combined Maneuver
-
-Simultaneous altitude and plane change (optimized).
-
-```csharp
-using IO.Astrodynamics.Maneuver;
-using IO.Astrodynamics.Body.Spacecraft;
-
-var earth = PlanetsAndMoons.EARTH_BODY;
-var epoch = TimeSystem.Time.J2000TDB;
-
-// Create elliptical orbit
-var orbitalParams = new KeplerianElements(
-    24420999.959422689,                           // Semi-major axis
-    0.726546824,                                  // Eccentricity (elliptical)
-    28.5 * IO.Astrodynamics.Constants.Deg2Rad,   // Inclination
-    0.0, 0.0, 0.0,
-    earth,
-    epoch,
-    Frames.Frame.ICRF
-);
-
-// Create spacecraft with propulsion
-var spc = new Spacecraft(-666, "GenericSpacecraft", 1000.0, 10000.0,
-    new Clock("GenericClk", 65536), orbitalParams);
-spc.AddFuelTank(new FuelTank("ft", "ftA", "123456", 9000.0, 9000.0));
-spc.AddEngine(new Engine("eng", "engmk1", "12345", 450, 50, spc.FuelTanks.First()));
-
-// CombinedManeuver: (observer, minimumEpoch, holdDuration, targetPerigeeHeight, targetInclination, engine)
-var maneuver = new CombinedManeuver(
-    earth,
-    new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame),
-    TimeSpan.Zero,
-    42164000.0,                                   // Target perigee height (GEO radius)
-    0.0,                                          // Target inclination (equatorial)
-    spc.Engines.First()
-);
-
-// Execute at apogee
-var apogeeEpoch = orbitalParams.Epoch.Add(orbitalParams.Period() * 0.5);
-var maneuverPoint = orbitalParams.ToStateVector(apogeeEpoch);
-
-// Check if maneuver can execute, then execute
-if (maneuver.CanExecute(maneuverPoint))
-{
-    var (newState, orientation) = maneuver.TryExecute(maneuverPoint);
-    Console.WriteLine($"Delta-V required: {maneuver.DeltaV.Magnitude():F1} m/s");
-    Console.WriteLine($"Fuel burned: {maneuver.FuelBurned:F1} kg");
-    Console.WriteLine($"Maneuver window: {maneuver.ManeuverWindow}");
-}
-```
-
-#### Attitude Maneuvers
-
-```csharp
-// Attitude maneuvers define spacecraft orientation
-// They are typically used in mission scenarios
-
-// Nadir pointing (for Earth observation)
-var nadirAttitude = new NadirAttitude(epoch, earth, engine);
-
-// Prograde attitude
-var progradeAttitude = new ProgradeAttitude(epoch, engine);
-
-// Retrograde attitude (for deorbit burns)
-var retrogradeAttitude = new RetrogradeAttitude(epoch, engine);
-
-// Zenith pointing (away from Earth)
-var zenithAttitude = new ZenithAttitude(epoch, earth, engine);
-```
-
-#### Real-World Example: Geostationary Transfer Orbit (GTO) to GEO
-
-```csharp
-var earth = PlanetsAndMoons.EARTH_BODY;
-var epoch = TimeSystem.Time.J2000TDB;
-
-// Initial GTO orbit after launch
-var gto = new KeplerianElements(
-    24420999.959422689,                           // GTO semi-major axis
-    0.726546824,                                  // Highly elliptical
-    28.5 * IO.Astrodynamics.Constants.Deg2Rad,   // Cape Canaveral launch inclination
-    0.0,
-    0.0,
-    0.0,
-    earth,
-    epoch,
-    Frames.Frame.ICRF
-);
-
-// Create satellite with propulsion (dryMass, maxMass)
-var comSat = new Spacecraft(-300, "CommSat", 1500.0, 4500.0,
-    new Clock("CS_CLK", 65536), gto);
-comSat.AddFuelTank(new FuelTank("Main", "TK-500", "001", 3000.0, 3000.0));
-comSat.AddEngine(new Engine("Apogee Motor", "AM-450", "001", 450.0, 50.0,
-    comSat.FuelTanks.First()));
-
-// Combined maneuver: Circularize + reduce inclination
-var circularizeBurn = new CombinedManeuver(
-    earth,
-    new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame),
-    TimeSpan.Zero,
-    42164000.0,    // Raise perigee to GEO altitude
-    0.0,           // Target equatorial inclination
-    comSat.Engines.First()
-);
-
-// Execute at apogee
-var apogeeEpoch = gto.Epoch.Add(gto.Period() * 0.5);
-var maneuverPoint = gto.ToStateVector(apogeeEpoch);
-var (finalState, finalOrientation) = circularizeBurn.TryExecute(maneuverPoint);
-
-Console.WriteLine($"Apogee burn delta-V: {circularizeBurn.DeltaV.Magnitude():F0} m/s");
-Console.WriteLine($"Fuel required: {circularizeBurn.FuelBurned:F0} kg");
-```
-
----
-
-### Launch Windows
-
-Calculate optimal launch opportunities.
-
-#### Launch Planning with API
-
-```csharp
-using IO.Astrodynamics.Maneuver;
-using IO.Astrodynamics.Surface;
-
-var earth = PlanetsAndMoons.EARTH_BODY;
-var start = new TimeSystem.Time("2021-03-02 00:00:00.000000").ToTDB();
-var end = new TimeSystem.Time("2021-03-05 00:00:00.000000").ToTDB();
-var window = new Window(start, end);
-
-// Define launch site (longitude, latitude, altitude)
-var launchSite = new LaunchSite(399303, "LaunchSite",
-    earth,
-    new Planetodetic(
-        -81.0 * IO.Astrodynamics.Constants.Deg2Rad,   // Longitude
-        28.5 * IO.Astrodynamics.Constants.Deg2Rad,    // Latitude
-        0.0                                            // Altitude
-    ));
-
-// Define target parking orbit
-var parkingOrbit = new StateVector(
-    new Vector3(5056554.1874925727, 4395595.4942363985, 0.0),
-    new Vector3(-3708.6305608890916, 4266.2914313011433, 6736.8538488755494),
-    earth,
-    start,
-    Frames.Frame.ICRF
-);
-
-// Create launch object
-var launch = new Launch(launchSite, launchSite, parkingOrbit,
-    IO.Astrodynamics.Constants.CivilTwilight, true);
-
-// Find launch windows using API
-var launchWindows = API.Instance.FindLaunchWindows(launch, window,
-    new DirectoryInfo("output")).ToArray();
-
-foreach (var lw in launchWindows)
-{
-    Console.WriteLine($"Launch window: {lw.Window}");
-    Console.WriteLine($"Inertial azimuth: {lw.InertialAzimuth * IO.Astrodynamics.Constants.Rad2Deg:F2}°");
-    Console.WriteLine($"Insertion velocity: {lw.InertialInsertionVelocity:F2} m/s");
-}
-```
-
-#### Real-World Example: Interplanetary Distance
-
-```csharp
-// Check Earth-Mars distance for launch window planning
-var epoch = new TimeSystem.Time(2026, 9, 15, frame: TimeFrame.TDBFrame);
-var sun = new CelestialBody(Stars.Sun);
-var earth = PlanetsAndMoons.EARTH_BODY;
-var mars = new CelestialBody(PlanetsAndMoons.MARS, Frames.Frame.ICRF, epoch);
-
-var earthState = earth.GetEphemeris(epoch, sun, Frames.Frame.ICRF, Aberration.None);
-var marsState = mars.GetEphemeris(epoch, sun, Frames.Frame.ICRF, Aberration.None);
-
-// Calculate relative position
-var earthToMars = marsState.Position - earthState.Position;
-double distance = earthToMars.Magnitude();
-double distanceAU = distance / IO.Astrodynamics.Constants.AU;
-
-Console.WriteLine($"Earth-Mars distance: {distanceAU:F3} AU");
-
-// Mars launch windows occur approximately every 26 months
-// Optimal when distance is near minimum (~0.5 AU)
-```
-
----
-
-### Atmospheric Modeling
-
-Calculate atmospheric properties for Earth and Mars.
-
-#### Earth Standard Atmosphere
-
-Simple model valid to ~86 km altitude.
-
-```csharp
-using IO.Astrodynamics.Atmosphere;
-
-// Create context with altitude only
-var context = AtmosphericContext.FromAltitude(50000.0); // 50 km
-
-// Use standard atmosphere model
-var stdAtm = new EarthStandardAtmosphere();
-
-double temperature = stdAtm.GetTemperature(context); // Celsius
-double pressure = stdAtm.GetPressure(context);       // kPa
-double density = stdAtm.GetDensity(context);         // kg/m³
-
-Console.WriteLine($"At 50 km altitude:");
-Console.WriteLine($"  Temperature: {temperature:F1}°C");
-Console.WriteLine($"  Pressure: {pressure:F3} kPa");
-Console.WriteLine($"  Density: {density:F6} kg/m³");
-```
-
-#### NRLMSISE-00 Model
-
-High-fidelity empirical model for 0-2000+ km altitude with space weather effects.
-
-```csharp
-using IO.Astrodynamics.Atmosphere.NRLMSISE_00;
-
-// Create full context with time and position
-var fullContext = new AtmosphericContext
-{
-    Altitude = 400000.0,  // 400 km (ISS altitude)
-    Epoch = new TimeSystem.Time(2025, 3, 21, 12, 0, 0, frame: TimeFrame.UTCFrame),
-    GeodeticLatitude = 45.0 * IO.Astrodynamics.Constants.Deg2Rad,
-    GeodeticLongitude = 0.0
-};
-
-// Create space weather data
-var spaceWeather = new SpaceWeather(150.0, 150.0, 15.0);  // F107, F107A, Ap
-
-// Create NRLMSISE-00 model with space weather
-var nrlmsise = new Nrlmsise00Model(spaceWeather);
-
-// Or use default nominal conditions
-var nrlmsiseDefault = new Nrlmsise00Model();  // Uses F107=150, F107A=150, Ap=4
-
-double temp = nrlmsise.GetTemperature(fullContext);  // Celsius
-double pres = nrlmsise.GetPressure(fullContext);     // kPa
-double dens = nrlmsise.GetDensity(fullContext);      // kg/m³
-
-Console.WriteLine($"At 400 km (ISS altitude):");
-Console.WriteLine($"  Temperature: {temp:F1}°C");
-Console.WriteLine($"  Pressure: {pres:E3} kPa");
-Console.WriteLine($"  Density: {dens:E6} kg/m³");
-```
-
-#### Mars Standard Atmosphere
-
-```csharp
-// Mars atmospheric model
-var marsAtm = new MarsStandardAtmosphere();
-var marsContext = AtmosphericContext.FromAltitude(10000.0); // 10 km
-
-double marsTemp = marsAtm.GetTemperature(marsContext);
-double marsPres = marsAtm.GetPressure(marsContext);
-double marsDens = marsAtm.GetDensity(marsContext);
-```
-
-#### Real-World Example: Atmospheric Drag Calculation
-
-```csharp
-// Calculate drag force on ISS
-double altitude = 420000.0; // meters
-var atmContext = AtmosphericContext.FromAltitude(altitude);
-var atmosphere = new EarthStandardAtmosphere();
-
-double density = atmosphere.GetDensity(atmContext);
-
-// ISS properties
-double crossSectionalArea = 500.0;  // m² (approximate)
-double dragCoefficient = 2.2;
-double velocity = 7660.0;           // m/s (orbital velocity)
-
-// Drag force: F = 0.5 * ρ * v² * Cd * A
-double dragForce = 0.5 * density * velocity * velocity * dragCoefficient * crossSectionalArea;
-double dragAcceleration = dragForce / 420000.0; // ISS mass ~420,000 kg
-
-Console.WriteLine($"Atmospheric density at {altitude/1000:F0} km: {density:E6} kg/m³");
-Console.WriteLine($"Drag force: {dragForce:F2} N");
-Console.WriteLine($"Drag acceleration: {dragAcceleration:E6} m/s²");
-
-// Calculate altitude loss per orbit
-double orbitalPeriod = 5520.0; // seconds (~92 minutes)
-double altitudeLossPerOrbit = 0.5 * dragAcceleration * orbitalPeriod * orbitalPeriod;
-Console.WriteLine($"Altitude loss per orbit: ~{altitudeLossPerOrbit:F1} m");
-```
-
----
-
-### Reference Frames and Coordinates
-
-Work with various coordinate systems and reference frames.
-
-#### Reference Frames
-
-```csharp
-using IO.Astrodynamics.Frames;
-
-// Inertial frames
-Frame icrf = Frame.ICRF;          // International Celestial Reference Frame
-Frame j2000 = Frame.GALACTIC;     // Galactic frame
-
-// Body-fixed frames (rotate with the body)
-Frame earthFixed = earth.Frame;   // ITRF (Earth-fixed)
-Frame marsFixed = mars.Frame;     // Mars body-fixed
-
-// Transform between frames
-var stateInICRF = someState;
-var stateInEarthFixed = stateInICRF.ToFrame(earthFixed, epoch);
-```
-
-#### Coordinate Systems
-
-**Planetodetic (Geodetic) Coordinates:**
-
-```csharp
-using IO.Astrodynamics.Coordinates;
-
-// IMPORTANT: Planetodetic constructor takes (longitude, latitude, altitude)
-var geodetic = new Planetodetic(
-    -80.5 * IO.Astrodynamics.Constants.Deg2Rad,   // Longitude (radians)
-    28.5 * IO.Astrodynamics.Constants.Deg2Rad,    // Latitude (radians)
-    100000.0                                       // Altitude (meters)
-);
-
-// Access properties
-double lon = geodetic.Longitude;  // radians
-double lat = geodetic.Latitude;   // radians
-double alt = geodetic.Altitude;   // meters
-```
-
-**Planetocentric Coordinates:**
-
-```csharp
-// Spherical coordinates (longitude, latitude, radius)
-var planetocentric = new Planetocentric(
-    0.0,                                           // Longitude (radians)
-    45.0 * IO.Astrodynamics.Constants.Deg2Rad,    // Latitude (radians)
-    6878000.0                                      // Radius from center (meters)
-);
-```
-
-**Horizontal Coordinates (Azimuth/Elevation/Range):**
-
-```csharp
-// Horizontal coordinates from site observation
-// Get horizontal coordinates using Site.GetHorizontalCoordinates()
-var earth = PlanetsAndMoons.EARTH_BODY;
-var epoch = new TimeSystem.Time(2000, 1, 1, 12, 0, 0);
-var moon = new CelestialBody(PlanetsAndMoons.MOON, Frames.Frame.ICRF, epoch);
-
-var site = new Site(13, "DSS-13", earth);
-var hor = site.GetHorizontalCoordinates(epoch, moon, Aberration.None);
-
-Console.WriteLine($"Azimuth: {hor.Azimuth * IO.Astrodynamics.Constants.Rad2Deg:F2}°");
-Console.WriteLine($"Elevation: {hor.Elevation * IO.Astrodynamics.Constants.Rad2Deg:F2}°");
-Console.WriteLine($"Range: {hor.Range / 1000.0:F1} km");
-```
-
-#### Real-World Example: Ground Station Visibility
-
-```csharp
-var earth = PlanetsAndMoons.EARTH_BODY;
-var epoch = new TimeSystem.Time(2000, 1, 1, 12, 0, 0);
-var moon = new CelestialBody(PlanetsAndMoons.MOON, Frames.Frame.ICRF, epoch);
-
-// Create site with coordinates (longitude, latitude, altitude)
-var groundStation = new Site(
-    399001,
-    "Tracking Station",
-    earth,
-    new Planetodetic(
-        -106.0 * IO.Astrodynamics.Constants.Deg2Rad,  // Longitude
-        35.0 * IO.Astrodynamics.Constants.Deg2Rad,    // Latitude
-        2000.0                                         // Altitude
-    )
-);
-
-// Get horizontal coordinates to target
-var horizontal = groundStation.GetHorizontalCoordinates(epoch, moon, Aberration.None);
-
-Console.WriteLine($"Azimuth: {horizontal.Azimuth * IO.Astrodynamics.Constants.Rad2Deg:F2}°");
-Console.WriteLine($"Elevation: {horizontal.Elevation * IO.Astrodynamics.Constants.Rad2Deg:F2}°");
-Console.WriteLine($"Range: {horizontal.Range / 1000.0:F1} km");
-
-if (horizontal.Elevation > 10.0 * Constants.Deg2Rad)
-{
-    Console.WriteLine("Satellite is visible (above 10° elevation)");
-}
-```
-
----
-
-### Ephemeris Calculations
-
-High-precision position and velocity calculations.
-
-#### Basic Ephemeris Query
-
-```csharp
-// Get position and velocity of Moon relative to Earth
-var moonState = moon.GetEphemeris(
-    epoch: epoch,
-    observer: earth,
-    frame: Frames.Frame.ICRF,
-    aberration: Aberration.LT  // Correct for light travel time
-);
-
-Console.WriteLine($"Position: {moonState.Position}");
-Console.WriteLine($"Velocity: {moonState.Velocity}");
-```
-
-#### Aberration Corrections
-
-```csharp
-// No correction (geometric position)
-Aberration.None
-
-// Light-time correction (apparent position)
-Aberration.LT
-
-// Light-time + stellar aberration
-Aberration.LTS
-
-// Transmission case (for transmitting to a moving target)
-Aberration.XLT    // Transmission light-time
-Aberration.XLTS   // Transmission light-time + stellar
-```
-
-#### Writing Custom Ephemeris
-
-```csharp
-// Create ephemeris file for spacecraft
-var states = new List<StateVector>();
-for (int i = 0; i < 100; i++)
-{
-    var t = epoch + TimeSpan.FromMinutes(i * 10);
-    states.Add(spacecraft.GetEphemeris(t, earth, Frames.Frame.ICRF, Aberration.None).ToStateVector());
-}
-
-// Write to SPICE SPK kernel
-API.Instance.WriteEphemeris("spacecraft_ephemeris.bsp", spacecraft.NaifId, states.ToArray());
-```
-
-#### Real-World Example: Satellite Ground Track
-
-```csharp
-// Calculate ground track of satellite over 1 orbit
-var groundTrack = new List<Planetodetic>();
-
-var orbitPeriod = satelliteOrbit.Period();
-int numPoints = 100;
-var timeStep = orbitPeriod / numPoints;
-
-for (int i = 0; i <= numPoints; i++)
-{
-    var t = epoch + timeStep * i;
-    var state = satelliteOrbit.ToStateVector(t);
-
-    // Transform to Earth-fixed frame
-    var stateEarthFixed = state.ToFrame(earth.Frame, t);
-
-    // Convert to lat/lon
-    var geodetic = Planetodetic.FromCartesian(stateEarthFixed.Position, earth);
-    groundTrack.Add(geodetic);
-
-    Console.WriteLine($"Time: {t}, Lat: {geodetic.Latitude * Constants.Rad2Deg:F2}°, " +
-                      $"Lon: {geodetic.Longitude * Constants.Rad2Deg:F2}°");
-}
-```
-
----
-
-### Occultations and Illumination
-
-Calculate eclipses, shadows, and illumination conditions.
-
-#### Eclipse Detection (Occultation Search)
+### Basic Example: Compute Earth Position
 
 ```csharp
 using IO.Astrodynamics;
-
-var earth = PlanetsAndMoons.EARTH_BODY;
-var sun = new CelestialBody(Stars.Sun);
-var moon = new CelestialBody(PlanetsAndMoons.MOON, Frames.Frame.ICRF,
-    new TimeSystem.Time(2001, 12, 14));
-
-// Define search window
-var searchWindow = new Window(
-    TimeSystem.Time.CreateTDB(61473664.183390938),
-    TimeSystem.Time.CreateTDB(61646464.183445148)
-);
-
-// Find when the Sun is occulted by the Moon (solar eclipse as seen from Earth)
-var eclipseWindows = API.Instance.FindWindowsOnOccultationConstraint(
-    searchWindow,
-    earth,                      // Observer
-    sun,                        // Target being occulted
-    ShapeType.Ellipsoid,        // Target shape
-    moon,                       // Front body (occluding)
-    ShapeType.Ellipsoid,        // Front body shape
-    OccultationType.Any,        // Any occultation type
-    Aberration.LT,              // Light-time correction
-    TimeSpan.FromSeconds(3600)  // Step size
-);
-
-foreach (var window in eclipseWindows)
-{
-    Console.WriteLine($"Eclipse: {window.StartDate} to {window.EndDate}");
-    Console.WriteLine($"Duration: {window.Length.TotalMinutes:F1} minutes");
-}
-```
-
-#### Distance Constraint Search
-
-```csharp
-// Find when Moon is more than 400,000 km from Earth
-var distanceWindows = API.Instance.FindWindowsOnDistanceConstraint(
-    new Window(
-        TimeSystem.Time.CreateTDB(220881665.18391809),
-        TimeSystem.Time.CreateTDB(228657665.18565452)
-    ),
-    earth,
-    moon,
-    RelationnalOperator.Greater,    // Distance > value
-    400000000,                      // 400,000 km in meters
-    Aberration.None,
-    TimeSpan.FromSeconds(86400)     // 1 day step
-);
-
-foreach (var window in distanceWindows)
-{
-    Console.WriteLine($"Moon far: {window.StartDate} to {window.EndDate}");
-}
-```
-
-#### Real-World Example: Solar Panel Power Generation
-
-```csharp
-// Calculate solar panel power over one orbit
-var orbit = satelliteOrbit;
-var orbitPeriod = orbit.Period();
-var numSteps = 50;
-
-for (int i = 0; i <= numSteps; i++)
-{
-    var t = epoch + (orbitPeriod * i / numSteps);
-    var satState = orbit.ToStateVector(t);
-
-    // Check if spacecraft is in Earth's shadow
-    var sunState = sun.GetEphemeris(t, earth, Frames.Frame.ICRF, Aberration.None);
-    var satStateFromEarth = satState;
-
-    // Simplified eclipse check: if Earth is between sat and sun
-    var earthToSat = satStateFromEarth.Position;
-    var earthToSun = sunState.Position;
-
-    double angle = Vector3.Angle(earthToSat, earthToSun);
-    bool inSunlight = angle > Math.PI / 2;
-
-    // Solar panel area and efficiency
-    double panelArea = 20.0; // m²
-    double efficiency = 0.25; // 25%
-    double solarConstant = 1361.0; // W/m² at Earth distance
-
-    double power = inSunlight ? solarConstant * panelArea * efficiency : 0.0;
-
-    Console.WriteLine($"T+{(t - epoch).TotalMinutes:F0}min: " +
-                      $"Power = {power:F0}W {(inSunlight ? "(sunlight)" : "(eclipse)")}");
-}
-```
-
----
-
-### Field of View and Visibility
-
-Calculate instrument visibility and target tracking.
-
-#### FOV Constraint Search
-
-```csharp
-using IO.Astrodynamics.Mission;
-using IO.Astrodynamics.Body.Spacecraft;
-
-var earth = PlanetsAndMoons.EARTH_BODY;
-var start = TimeSystem.Time.CreateUTC(676555130.80).ToTDB();
-var end = start.AddSeconds(6448.0);
-
-// Create scenario
-var scenario = new Scenario("FOV_Test",
-    new IO.Astrodynamics.Mission.Mission("TestMission"),
-    new Window(start, end));
-scenario.AddCelestialItem(earth);
-
-// Create spacecraft with instrument
-var orbit = new StateVector(
-    new Vector3(6800000.0, 0.0, 0.0),
-    new Vector3(0.0, 7656.2204182967143, 0.0),
-    earth, start, Frames.Frame.ICRF
-);
-
-var spacecraft = new Spacecraft(-179, "SC179", 1000.0, 3000.0,
-    new Clock("clk1", 65536), orbit);
-spacecraft.AddCircularInstrument(-179789, "CAMERA789", "mod1", 0.75,
-    Vector3.VectorZ, Vector3.VectorY,
-    new Vector3(0.0, System.Math.PI * 0.5, 0.0));
-scenario.AddSpacecraft(spacecraft);
-
-// Execute scenario
-await scenario.SimulateAsync(false, false, TimeSpan.FromSeconds(1.0));
-
-// Find windows when Earth is in camera FOV
-var fovWindows = spacecraft.Instruments.First().FindWindowsInFieldOfViewConstraint(
-    new Window(TimeSystem.Time.CreateTDB(676555200.0), TimeSystem.Time.CreateTDB(676561646.0)),
-    spacecraft,
-    earth,
-    earth.Frame,
-    ShapeType.Ellipsoid,
-    Aberration.LT,
-    TimeSpan.FromSeconds(360.0)
-).ToArray();
-
-foreach (var window in fovWindows)
-{
-    Console.WriteLine($"Target visible: {window.StartDate} to {window.EndDate}");
-}
-```
-
-#### Real-World Example: Ground Station Visibility Check
-
-```csharp
-var earth = PlanetsAndMoons.EARTH_BODY;
-var epoch = new TimeSystem.Time(2000, 1, 1, 12, 0, 0);
-var moon = new CelestialBody(PlanetsAndMoons.MOON, Frames.Frame.ICRF, epoch);
-
-// Ground station (using known DSS station)
-var groundStation = new Site(13, "DSS-13", earth);
-
-// Or create with custom coordinates (longitude, latitude, altitude)
-var customStation = new Site(
-    399003,
-    "Mission Control",
-    earth,
-    new Planetodetic(
-        -80.6 * IO.Astrodynamics.Constants.Deg2Rad,   // Longitude
-        28.5 * IO.Astrodynamics.Constants.Deg2Rad,    // Latitude
-        10.0                                           // Altitude
-    )
-);
-
-// Get horizontal coordinates to check visibility
-var horizontal = groundStation.GetHorizontalCoordinates(epoch, moon, Aberration.None);
-
-Console.WriteLine($"Azimuth: {horizontal.Azimuth * IO.Astrodynamics.Constants.Rad2Deg:F1}°");
-Console.WriteLine($"Elevation: {horizontal.Elevation * IO.Astrodynamics.Constants.Rad2Deg:F1}°");
-Console.WriteLine($"Range: {horizontal.Range / 1000:F0} km");
-
-if (horizontal.Elevation > 10.0 * IO.Astrodynamics.Constants.Deg2Rad)
-{
-    Console.WriteLine("Target is visible (above 10° elevation)");
-}
-```
-
----
-
-## Real-World Examples
-
-### Example 1: Mars Mission Planning
-
-Complete end-to-end Mars transfer trajectory.
-
-```csharp
-using System;
-using System.IO;
-using IO.Astrodynamics;
 using IO.Astrodynamics.Body;
-using IO.Astrodynamics.Body.Spacecraft;
-using IO.Astrodynamics.Maneuver;
-using IO.Astrodynamics.OrbitalParameters;
-using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.TimeSystem;
+using IO.Astrodynamics.SolarSystemObjects;
 
 // Load kernels
 API.Instance.LoadKernels(new DirectoryInfo("Data/SolarSystem"));
 
-// Define mission parameters
+// Create celestial bodies
 var earth = PlanetsAndMoons.EARTH_BODY;
 var sun = new CelestialBody(Stars.Sun);
 
-// Launch date (2026 launch opportunity)
-var launchDate = new TimeSystem.Time(2026, 9, 15, frame: TimeFrame.UTCFrame);
-var mars = new CelestialBody(PlanetsAndMoons.MARS, Frames.Frame.ICRF, launchDate);
+// Define epoch
+var epoch = new Time(2024, 6, 21, 12, 0, 0);
 
-// Get Earth and Mars states at launch
-var earthAtLaunch = earth.GetEphemeris(launchDate, sun, Frames.Frame.ICRF, Aberration.None);
-var marsAtArrival = mars.GetEphemeris(
-    launchDate + TimeSpan.FromDays(210),  // 7-month cruise
-    sun,
-    Frames.Frame.ICRF,
-    Aberration.None
-);
+// Get Earth's state vector relative to the Sun
+var stateVector = earth.GetEphemeris(epoch, sun, Frames.Frame.ICRF, Aberration.None)
+    .ToStateVector();
 
-// Create interplanetary spacecraft (dryMass, maxMass)
-var spacecraft = new Spacecraft(
-    -500,
-    "Mars Explorer",
-    2000.0,  // Dry mass
-    5000.0,  // Max mass (includes fuel)
-    new Clock("ME_CLK", 65536),
-    new StateVector(earthAtLaunch.Position, earthAtLaunch.Velocity, sun, launchDate, Frames.Frame.ICRF)
-);
-
-// Add propulsion
-var fuelTank = new FuelTank("Main Tank", "TK-3000", "001", 3000.0, 3000.0);
-var engine = new Engine("Main Engine", "EN-450", "001", 450.0, 50.0, fuelTank);
-spacecraft.AddFuelTank(fuelTank);
-spacecraft.AddEngine(engine);
-
-// Calculate transfer orbit using Lambert solver
-// (would use Lambert class for detailed trajectory)
-
-Console.WriteLine("=== Mars Mission Profile ===");
-Console.WriteLine($"Launch date: {launchDate}");
-Console.WriteLine($"Earth position: {earthAtLaunch.Position.Magnitude() / 1e9:F3} billion km from Sun");
-Console.WriteLine($"Mars position at arrival: {marsAtArrival.Position.Magnitude() / 1e9:F3} billion km from Sun");
-
-double transferDistance = (marsAtArrival.Position - earthAtLaunch.Position).Magnitude();
-Console.WriteLine($"Transfer distance: {transferDistance / 1e9:F1} billion km");
-
-// Estimate delta-V requirements
-double departureV = 33000.0;  // m/s (approximate for Trans-Mars Injection)
-double arrivalV = 5500.0;     // m/s (Mars Orbit Insertion)
-double totalDeltaV = departureV + arrivalV;
-
-Console.WriteLine($"\nDelta-V Budget:");
-Console.WriteLine($"  Trans-Mars Injection: {departureV:F0} m/s");
-Console.WriteLine($"  Mars Orbit Insertion: {arrivalV:F0} m/s");
-Console.WriteLine($"  Total: {totalDeltaV:F0} m/s");
-
-// Calculate fuel requirements using Tsiolkovsky equation
-// m_fuel = m_dry * (exp(Δv / (Isp * g0)) - 1)
-double isp = 450.0;
-double g0 = 9.80665;
-double massRatio = Math.Exp(totalDeltaV / (isp * g0));
-double fuelRequired = spacecraft.DryOperatingMass * (massRatio - 1);
-
-Console.WriteLine($"\nFuel Requirements:");
-Console.WriteLine($"  Mass ratio: {massRatio:F2}");
-Console.WriteLine($"  Fuel required: {fuelRequired:F0} kg");
-Console.WriteLine($"  Fuel available: {fuelTank.Quantity:F0} kg");
-Console.WriteLine($"  Margin: {(fuelTank.Quantity - fuelRequired) / fuelRequired * 100:F1}%");
+Console.WriteLine($"Position: {stateVector.Position}");
+Console.WriteLine($"Velocity: {stateVector.Velocity}");
 ```
 
-### Example 2: Satellite Constellation Design
-
-Design a communications constellation like Starlink.
+### Basic Example: Create an Orbit
 
 ```csharp
-using System.Collections.Generic;
+using IO.Astrodynamics.OrbitalParameters;
+using IO.Astrodynamics.Math;
 
-// Constellation parameters (Starlink-like)
-int numPlanes = 6;
-int satsPerPlane = 10;
-double altitude = 550000.0;  // 550 km
-double inclination = 53.0 * Constants.Deg2Rad;
+var earth = PlanetsAndMoons.EARTH_BODY;
+var epoch = new Time(2024, 1, 1, 0, 0, 0);
 
-var constellation = new List<Spacecraft>();
-
-// Create constellation
-for (int plane = 0; plane < numPlanes; plane++)
-{
-    double raan = plane * (360.0 / numPlanes) * Constants.Deg2Rad;
-
-    for (int sat = 0; sat < satsPerPlane; sat++)
-    {
-        double meanAnomaly = sat * (360.0 / satsPerPlane) * Constants.Deg2Rad;
-
-        // KeplerianElements: (semiMajorAxis, eccentricity, inclination, raan, aop, meanAnomaly, observer, epoch, frame)
-        var orbit = new KeplerianElements(
-            earth.EquatorialRadius + altitude,  // Semi-major axis
-            0.0001,                              // Eccentricity
-            inclination,                         // Inclination
-            raan,                                // Right ascension of ascending node
-            0.0,                                 // Argument of periapsis
-            meanAnomaly,                         // Mean anomaly (distributes satellites in plane)
-            earth,
-            epoch,
-            Frames.Frame.ICRF
-        );
-
-        // Spacecraft constructor: (naifId, name, dryMass, maxMass, clock, orbit)
-        var spacecraft = new Spacecraft(
-            -(1000 + plane * 100 + sat),
-            $"ConstellationSat-{plane}-{sat}",
-            250.0,   // Dry mass
-            260.0,   // Max mass (includes fuel)
-            new Clock($"SAT_{plane}_{sat}_CLK", 65536),
-            orbit
-        );
-
-        constellation.Add(spacecraft);
-    }
-}
-
-Console.WriteLine($"Created constellation: {numPlanes} planes × {satsPerPlane} sats = {constellation.Count} satellites");
-Console.WriteLine($"Altitude: {altitude / 1000:F0} km");
-Console.WriteLine($"Inclination: {inclination * Constants.Rad2Deg:F1}°");
-
-// Calculate coverage metrics
-var period = constellation[0].InitialOrbitalParameters.Period();
-Console.WriteLine($"Orbital period: {period.TotalMinutes:F1} minutes");
-
-// Minimum elevation angle for coverage
-double minElevation = 25.0 * Constants.Deg2Rad;
-double swathWidth = 2.0 * altitude * Math.Tan(Math.PI / 2 - minElevation);
-Console.WriteLine($"Ground swath width per satellite: {swathWidth / 1000:F0} km");
-```
-
-### Example 3: Orbital Debris Conjunction Analysis
-
-Detect close approaches between satellites and debris.
-
-```csharp
-// Primary satellite (dryMass, maxMass)
-var primarySat = new Spacecraft(
-    -600,
-    "OperationalSatellite",
-    900.0,   // Dry mass
-    1000.0,  // Max mass
-    new Clock("OPSAT_CLK", 65536),
-    new KeplerianElements(
-        7000000.0, 0.001, 51.6 * Constants.Deg2Rad,
-        0.0, 0.0, 0.0, earth, epoch, Frames.Frame.ICRF
-    )
+// Create from Keplerian elements
+var orbit = new KeplerianElements(
+    a: 7000000.0,                        // Semi-major axis (m)
+    e: 0.001,                            // Eccentricity
+    i: 51.6 * Constants.Deg2Rad,         // Inclination (rad)
+    raan: 100.0 * Constants.Deg2Rad,     // RAAN (rad)
+    aop: 90.0 * Constants.Deg2Rad,       // Argument of periapsis (rad)
+    m: 0.0,                              // Mean anomaly (rad)
+    observer: earth,
+    epoch: epoch,
+    frame: Frames.Frame.ICRF
 );
 
-// Debris object (from TLE)
-string debrisLine1 = "1 12345U 80001A   25015.50000000  .00000000  00000-0  00000-0 0    10";
-string debrisLine2 = "2 12345  51.5000  10.0000 0010000  90.0000 270.0000 15.50000000    08";
-var debrisTLE = new TLE("Debris Object", debrisLine1, debrisLine2);
-var debrisOrbit = debrisTLE.ToStateVector(earth, Frames.Frame.ICRF);
+// Convert to state vector
+var sv = orbit.ToStateVector();
+Console.WriteLine($"Orbital Period: {orbit.Period().TotalHours:F2} hours");
+```
 
-// Search for close approaches over 7 days
-var conjunctionSearchWindow = new Window(epoch, epoch + TimeSpan.FromDays(7));
+### Basic Example: Parse a TLE
 
-double minDistance = double.MaxValue;
-Time closestApproachTime = epoch;
+```csharp
+using IO.Astrodynamics.OrbitalParameters.TLE;
 
-// Check every minute
-for (var t = epoch; t < conjunctionSearchWindow.EndDate; t += TimeSpan.FromMinutes(1))
-{
-    var satState = primarySat.InitialOrbitalParameters.ToStateVector(t);
-    var debrisState = debrisOrbit.AtEpoch(t);
+var tle = new TLE("ISS (ZARYA)",
+    "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
+    "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
 
-    var relativePosition = debrisState.Position - satState.Position;
-    double distance = relativePosition.Magnitude();
+// Propagate to a specific time
+var epoch = new Time(2021, 1, 21, 12, 0, 0);
+var sv = tle.ToStateVector(epoch);
 
-    if (distance < minDistance)
-    {
-        minDistance = distance;
-        closestApproachTime = t;
-    }
-}
-
-Console.WriteLine("=== Conjunction Analysis ===");
-Console.WriteLine($"Closest approach: {closestApproachTime}");
-Console.WriteLine($"Miss distance: {minDistance / 1000:F3} km");
-
-if (minDistance < 5000.0)  // 5 km warning threshold
-{
-    Console.WriteLine("WARNING: Close approach detected!");
-    Console.WriteLine("Recommend collision avoidance maneuver assessment.");
-}
+Console.WriteLine($"ISS Position: {sv.Position}");
 ```
 
 ---
 
-## FAQ and Common Issues
+## API Reference
 
-### General Questions
+### IO.Astrodynamics (Core)
 
-**Q: Do I need to download SPICE kernels separately?**
+#### API
 
-A: Yes. SPICE kernels are not included with the framework due to size. Download from [NAIF](https://naif.jpl.nasa.gov/naif/data.html):
-- Planetary ephemeris (SPK): `de440.bsp` or similar
-- Leap seconds (LSK): `naif0012.tls` or latest
-- Planetary constants (PCK): `pck00011.tpc` or latest
+Singleton class providing access to SPICE operations.
 
-**Q: Which time system should I use?**
+| Method | Description |
+|--------|-------------|
+| `LoadKernels(FileSystemInfo path)` | Load SPICE kernel(s) from file or directory |
+| `UnloadKernels(FileSystemInfo path)` | Unload SPICE kernel(s) |
+| `ClearKernels()` | Unload all kernels |
+| `GetLoadedKernels()` | Get list of currently loaded kernels |
+| `GetSpiceVersion()` | Get SPICE toolkit version |
 
-A:
-- **TDB (Barycentric Dynamical Time)**: For ephemeris calculations and orbital mechanics
-- **UTC**: For human-readable times and mission planning
-- **TAI**: When you need monotonic time without leap seconds
-- Always convert UTC → TDB for calculations, then TDB → UTC for display
-
-**Q: What coordinate frame should I use for orbital mechanics?**
-
-A: Use **ICRF** (International Celestial Reference Frame) for most orbital mechanics. It's an inertial frame aligned with J2000 but more precisely defined. Use body-fixed frames only when working with surface coordinates.
-
-**Q: How accurate are the calculations?**
-
-A: Accuracy depends on:
-- SPICE kernels: Planetary ephemeris accurate to meters
-- Orbital propagation: Integrator-dependent, typically sub-meter for short durations
-- Atmospheric models: NRLMSISE-00 accurate to ~15% in thermosphere
-- TLE propagation: Accuracy degrades; best for near-term predictions (<7 days)
-
-**Q: Is this framework thread-safe?**
-
-A: The native SPICE calls use internal locking, but you should avoid concurrent modifications to the same objects. Reading ephemeris from multiple threads is safe.
-
-### Common Errors
-
-**Error: "Kernel not loaded" or "Insufficient ephemeris data"**
-
-**Solution:**
 ```csharp
-// Always load kernels at startup
-API.Instance.LoadKernels(new DirectoryInfo("path/to/kernels"));
+// Load all kernels from a directory
+API.Instance.LoadKernels(new DirectoryInfo("kernels/"));
 
-// Verify kernels are loaded
-// Check that your kernel directory contains:
-// - SPK files (ephemeris)
-// - LSK files (leap seconds)
-// - PCK files (planetary constants)
+// Check loaded kernels
+foreach (var kernel in API.Instance.GetLoadedKernels())
+    Console.WriteLine(kernel);
 ```
 
-**Error: "Frame not recognized"**
+#### Configuration
 
-**Solution:** Ensure you're using built-in frames or have loaded frame kernels:
+Configure framework-wide settings.
+
+| Method | Description |
+|--------|-------------|
+| `SetDataProvider(IDataProvider provider)` | Set the data provider (SPICE or Memory) |
+
 ```csharp
-// Use standard frames
-Frames.Frame.ICRF
-earth.Frame  // Body-fixed frames from CelestialBody
+// Use memory data provider for testing
+Configuration.Instance.SetDataProvider(new MemoryDataProvider());
 ```
 
-**Error: "Time out of bounds for ephemeris"**
+---
 
-**Solution:** Your requested time is outside the range of loaded kernels:
+### IO.Astrodynamics.TimeSystem
+
+#### Time
+
+Represents a precise instant in time with time frame awareness.
+
+| Constructor / Method | Description |
+|---------------------|-------------|
+| `Time(int year, int month, int day)` | Create from date (defaults to TDB) |
+| `Time(int year, int month, int day, int hour, int minute, int second)` | Create from date and time |
+| `Time(DateTime dateTime, ITimeFrame frame)` | Create from DateTime with specified frame |
+| `Time(string iso8601)` | Parse from ISO 8601 string |
+| `Create(double secondsFromJ2000, ITimeFrame frame)` | Create from seconds since J2000 |
+| `CreateTDB(double secondsFromJ2000)` | Create TDB time from J2000 seconds |
+| `CreateUTC(double secondsFromJ2000)` | Create UTC time from J2000 seconds |
+| `ToTDB()` | Convert to TDB time frame |
+| `ToUTC()` | Convert to UTC time frame |
+| `ToTAI()` | Convert to TAI time frame |
+| `ToJulianDate()` | Get Julian Date |
+| `TimeSpanFromJ2000()` | Get TimeSpan from J2000 epoch |
+| `Add(TimeSpan span)` | Add duration |
+| `AddDays(double days)` | Add days |
+| `AddHours(double hours)` | Add hours |
+| `AddSeconds(double seconds)` | Add seconds |
+
 ```csharp
-// Check kernel coverage
-// Most planetary kernels cover ~1900-2100
-// TLE ephemeris is only valid near the epoch
+// Create times
+var t1 = new Time(2024, 6, 21, 12, 0, 0);
+var t2 = new Time("2024-06-21T12:00:00.000 UTC");
+var t3 = Time.CreateTDB(788400000.0);  // Seconds from J2000
 
-// Use appropriate time ranges
-var epoch = new TimeSystem.Time(2025, 1, 1, frame: TimeFrame.UTCFrame);
-// Not: years before 1900 or after 2100 (outside kernel coverage)
+// Convert between time frames
+var tdb = t1.ToTDB();
+var utc = tdb.ToUTC();
+
+// Arithmetic
+var t4 = t1.AddDays(1.0);
+var duration = t4 - t1;  // TimeSpan
 ```
 
-**Error: "Insufficient fuel" exception during maneuver**
+#### Window
 
-**Solution:**
+Represents a time interval.
+
+| Constructor / Method | Description |
+|---------------------|-------------|
+| `Window(Time start, Time end)` | Create from start and end times |
+| `Window(Time start, TimeSpan duration)` | Create from start time and duration |
+| `StartDate` | Get start time |
+| `EndDate` | Get end time |
+| `Length` | Get window duration |
+| `Merge(Window other)` | Merge two overlapping windows |
+| `Intersects(Window other)` | Check if windows overlap |
+| `Intersects(Time time)` | Check if time is within window |
+| `GetIntersection(Window other)` | Get overlapping portion |
+
 ```csharp
-// Check fuel before executing maneuver
-if (spacecraft.FuelTanks.Sum(t => t.Quantity) >= maneuver.FuelRequired)
+var window = new Window(
+    new Time(2024, 1, 1),
+    new Time(2024, 1, 31)
+);
+
+Console.WriteLine($"Duration: {window.Length.TotalDays} days");
+
+// Check intersection
+var t = new Time(2024, 1, 15);
+if (window.Intersects(t))
+    Console.WriteLine("Time is within window");
+```
+
+---
+
+### IO.Astrodynamics.Body
+
+#### CelestialBody
+
+Represents a natural celestial body (planet, moon, star).
+
+| Property | Description |
+|----------|-------------|
+| `NaifId` | NAIF ID code |
+| `Name` | Body name |
+| `GM` | Gravitational parameter (m³/s²) |
+| `Mass` | Mass (kg) |
+| `EquatorialRadius` | Equatorial radius (m) |
+| `PolarRadius` | Polar radius (m) |
+| `Flattening` | Flattening coefficient |
+| `Frame` | Body-fixed reference frame |
+| `SphereOfInfluence` | Sphere of influence radius (m) |
+| `InitialOrbitalParameters` | Initial orbital state |
+
+| Method | Description |
+|--------|-------------|
+| `GetEphemeris(Time epoch, ILocalizable observer, Frame frame, Aberration aberration)` | Get state at epoch |
+| `GetEphemeris(Window window, ILocalizable observer, Frame frame, Aberration aberration, TimeSpan step)` | Get states over window |
+| `GetOrientation(Frame referenceFrame, Time epoch)` | Get body orientation |
+| `SideralRotationPeriod(Time epoch)` | Get sidereal rotation period |
+| `TrueSolarDay(Time epoch)` | Get true solar day duration |
+| `GeosynchronousOrbit(double longitude, double latitude, Time epoch)` | Compute geosynchronous orbit |
+| `HelioSynchronousOrbit(double sma, double ecc, Time epochAtDescendingNode)` | Compute helio-synchronous orbit |
+| `FindWindowsOnDistanceConstraint(...)` | Find windows when distance constraint met |
+| `FindWindowsOnOccultationConstraint(...)` | Find occultation/eclipse windows |
+| `AngularSeparation(Time epoch, ILocalizable target1, ILocalizable target2, Aberration aberration)` | Compute angular separation |
+| `SubObserverPoint(CelestialBody target, Time epoch, Aberration aberration)` | Get sub-observer point |
+
+```csharp
+// Use predefined bodies
+var earth = PlanetsAndMoons.EARTH_BODY;
+var moon = new CelestialBody(PlanetsAndMoons.MOON);
+var sun = new CelestialBody(Stars.Sun);
+
+// Get ephemeris
+var state = earth.GetEphemeris(Time.J2000TDB, sun, Frames.Frame.ICRF, Aberration.None);
+var sv = state.ToStateVector();
+
+// Compute geosynchronous orbit
+var geoOrbit = earth.GeosynchronousOrbit(0.0, 0.0, new Time(2024, 1, 1));
+
+// Find lunar eclipses
+var eclipses = sun.FindWindowsOnOccultationConstraint(
+    new Window(new Time(2024, 1, 1), new Time(2024, 12, 31)),
+    earth, ShapeType.Ellipsoid, moon, ShapeType.Ellipsoid,
+    OccultationType.Any, Aberration.None, TimeSpan.FromHours(1));
+```
+
+#### CelestialItem
+
+Base class for celestial objects (bodies, spacecraft).
+
+| Method | Description |
+|--------|-------------|
+| `GetGeometricStateFromICRF(Time date)` | Get geometric state in ICRF |
+| `AngularSize(double distance)` | Compute angular diameter at distance |
+| `IsOcculted(CelestialItem by, OrbitalParameters from, Aberration aberration)` | Check if occulted |
+| `WriteEphemeris(FileInfo outputFile)` | Write ephemeris to SPK file |
+
+---
+
+### IO.Astrodynamics.OrbitalParameters
+
+#### StateVector
+
+Cartesian position and velocity state.
+
+| Constructor | Description |
+|------------|-------------|
+| `StateVector(Vector3 position, Vector3 velocity, CelestialItem observer, Time epoch, Frame frame)` | Create state vector |
+
+| Property | Description |
+|----------|-------------|
+| `Position` | Position vector (m) |
+| `Velocity` | Velocity vector (m/s) |
+| `Observer` | Central body |
+| `Epoch` | Time of state |
+| `Frame` | Reference frame |
+
+| Method | Description |
+|--------|-------------|
+| `SemiMajorAxis()` | Compute semi-major axis (m) |
+| `Eccentricity()` | Compute eccentricity |
+| `Inclination()` | Compute inclination (rad) |
+| `AscendingNode()` | Compute RAAN (rad) |
+| `ArgumentOfPeriapsis()` | Compute argument of periapsis (rad) |
+| `TrueAnomaly()` | Compute true anomaly (rad) |
+| `MeanAnomaly()` | Compute mean anomaly (rad) |
+| `EccentricAnomaly()` | Compute eccentric anomaly (rad) |
+| `Period()` | Compute orbital period |
+| `MeanMotion()` | Compute mean motion (rad/s) |
+| `SpecificOrbitalEnergy()` | Compute vis-viva energy (m²/s²) |
+| `SpecificAngularMomentum()` | Compute specific angular momentum vector |
+| `EccentricityVector()` | Compute eccentricity vector |
+| `AscendingNodeVector()` | Compute ascending node vector |
+| `PerigeeVector()` | Compute perigee position vector |
+| `ApogeeVector()` | Compute apogee position vector |
+| `PerigeeVelocity()` | Compute velocity at perigee (m/s) |
+| `ApogeeVelocity()` | Compute velocity at apogee (m/s) |
+| `ToKeplerianElements()` | Convert to Keplerian elements |
+| `ToEquinoctial()` | Convert to equinoctial elements |
+| `ToEquatorial()` | Convert to equatorial coordinates |
+| `ToFrame(Frame frame)` | Transform to different reference frame |
+| `RelativeTo(ILocalizable target, Aberration aberration)` | Transform to different center |
+| `Inverse()` | Invert position and velocity |
+| `ToTLE(TLE.Configuration config)` | Convert to TLE format |
+
+```csharp
+var earth = PlanetsAndMoons.EARTH_BODY;
+var epoch = new Time(2024, 1, 1);
+
+// Create state vector
+var sv = new StateVector(
+    new Vector3(6800000.0, 0.0, 0.0),      // Position (m)
+    new Vector3(0.0, 8000.0, 0.0),         // Velocity (m/s)
+    earth, epoch, Frames.Frame.ICRF
+);
+
+// Compute orbital elements
+Console.WriteLine($"Semi-major axis: {sv.SemiMajorAxis():F0} m");
+Console.WriteLine($"Eccentricity: {sv.Eccentricity():F6}");
+Console.WriteLine($"Inclination: {sv.Inclination() * Constants.Rad2Deg:F2}°");
+Console.WriteLine($"Period: {sv.Period().TotalMinutes:F2} min");
+
+// Convert to Keplerian elements
+var kep = sv.ToKeplerianElements();
+
+// Transform to different frame
+var svEcliptic = sv.ToFrame(Frames.Frame.ECLIPTIC_J2000);
+```
+
+#### KeplerianElements
+
+Classical Keplerian orbital elements.
+
+| Constructor | Description |
+|------------|-------------|
+| `KeplerianElements(double a, double e, double i, double raan, double aop, double m, CelestialItem observer, Time epoch, Frame frame)` | Create from elements |
+| `KeplerianElements(..., double perigeeRadius)` | Create parabolic orbit with perigee radius |
+
+| Property | Description |
+|----------|-------------|
+| `A` | Semi-major axis (m) |
+| `E` | Eccentricity |
+| `I` | Inclination (rad) |
+| `RAAN` | Right ascension of ascending node (rad) |
+| `AOP` | Argument of periapsis (rad) |
+| `M` | Mean anomaly (rad) |
+
+| Method | Description |
+|--------|-------------|
+| `ToStateVector()` | Convert to state vector at epoch |
+| `ToStateVector(Time epoch)` | Convert at specified epoch |
+| `ToStateVector(double trueAnomaly)` | Convert at specified true anomaly |
+| `ToEquinoctial()` | Convert to equinoctial elements |
+| `TrueAnomaly()` | Compute true anomaly (rad) |
+| `TrueAnomaly(Time epoch)` | Compute true anomaly at epoch |
+| `EccentricAnomaly()` | Compute eccentric anomaly (rad) |
+| `Period()` | Get orbital period |
+| `PerigeeRadius()` | Get perigee radius (m) |
+| `ApogeeRadius()` | Get apogee radius (m) |
+| `PerigeeVector()` | Get perigee position vector |
+| `ApogeeVector()` | Get apogee position vector |
+| `IsCircular()` | Check if orbit is circular (e ≈ 0) |
+| `IsElliptical()` | Check if orbit is elliptical |
+| `IsParabolic()` | Check if orbit is parabolic (e = 1) |
+| `IsHyperbolic()` | Check if orbit is hyperbolic (e > 1) |
+| `AtEpoch(Time epoch)` | Get elements at different epoch |
+| `TimeToRadius(double radius)` | Find time to reach specific radius |
+
+```csharp
+var earth = PlanetsAndMoons.EARTH_BODY;
+var epoch = new Time(2024, 1, 1);
+
+// Create Keplerian elements (ISS-like orbit)
+var kep = new KeplerianElements(
+    a: 6800000.0,                        // Semi-major axis (m)
+    e: 0.001,                            // Eccentricity
+    i: 51.6 * Constants.Deg2Rad,         // Inclination
+    raan: 100.0 * Constants.Deg2Rad,     // RAAN
+    aop: 90.0 * Constants.Deg2Rad,       // Argument of periapsis
+    m: 0.0,                              // Mean anomaly (at perigee)
+    observer: earth,
+    epoch: epoch,
+    frame: Frames.Frame.ICRF
+);
+
+// Get state at later time
+var futureState = kep.ToStateVector(epoch.AddHours(1.5));
+
+// Propagate using 2-body mechanics
+var laterKep = kep.AtEpoch(epoch.AddDays(1));
+```
+
+#### EquinoctialElements
+
+Equinoctial orbital elements (avoid singularities for circular/equatorial orbits).
+
+| Property | Description |
+|----------|-------------|
+| `SemiMajorAxis()` | Semi-major axis (m) |
+| `Eccentricity()` | Eccentricity |
+| `Inclination()` | Inclination (rad) |
+| `AscendingNode()` | RAAN (rad) |
+| `ArgumentOfPeriapsis()` | Argument of periapsis (rad) |
+
+| Method | Description |
+|--------|-------------|
+| `ToStateVector()` | Convert to state vector |
+| `ToKeplerianElements()` | Convert to Keplerian elements |
+| `EquinoctialEx()` | Get Ex component |
+| `EquinoctialEy()` | Get Ey component |
+| `Hx()` | Get Hx component |
+| `Hy()` | Get Hy component |
+| `Lv()` | Get true longitude (rad) |
+
+```csharp
+var sv = new StateVector(...);
+var equinoctial = sv.ToEquinoctial();
+
+// Access equinoctial components
+Console.WriteLine($"Ex: {equinoctial.EquinoctialEx()}");
+Console.WriteLine($"Ey: {equinoctial.EquinoctialEy()}");
+Console.WriteLine($"Lv: {equinoctial.Lv() * Constants.Rad2Deg}°");
+```
+
+---
+
+### IO.Astrodynamics.OrbitalParameters.TLE
+
+#### TLE
+
+Two-Line Element set for Earth-orbiting objects.
+
+| Constructor | Description |
+|------------|-------------|
+| `TLE(string name, string line1, string line2)` | Parse from standard 3-line format |
+
+| Property | Description |
+|----------|-------------|
+| `Name` | Object name |
+| `Line1` | First line of TLE |
+| `Line2` | Second line of TLE |
+| `Epoch` | Epoch of elements |
+| `MeanSemiMajorAxis` | Mean semi-major axis (m) |
+| `MeanEccentricity` | Mean eccentricity |
+| `MeanInclination` | Mean inclination (rad) |
+| `MeanAscendingNode` | Mean RAAN (rad) |
+| `MeanArgumentOfPeriapsis` | Mean argument of periapsis (rad) |
+| `MeanMeanAnomaly` | Mean mean anomaly (rad) |
+| `BallisticCoefficient` | B* drag coefficient |
+| `FirstDerivationMeanMotion` | First derivative of mean motion |
+| `SecondDerivativeMeanMotion` | Second derivative of mean motion |
+
+| Method | Description |
+|--------|-------------|
+| `ToStateVector()` | Propagate to TLE epoch (SGP4/SDP4) |
+| `ToStateVector(Time epoch)` | Propagate to specified epoch |
+| `ToKeplerianElements()` | Get osculating Keplerian elements |
+| `ToMeanKeplerianElements()` | Get mean Keplerian elements |
+| `AtEpoch(Time epoch)` | Get propagated orbital parameters |
+| `Create(OrbitalParameters params, string name, ushort noradId, string cosparId, ...)` | Create TLE from orbital parameters |
+
+```csharp
+// Parse TLE
+var tle = new TLE("ISS (ZARYA)",
+    "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
+    "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
+
+// Get current state (SGP4 propagation)
+var now = new Time(2021, 1, 21, 12, 0, 0);
+var sv = tle.ToStateVector(now);
+
+// Access TLE parameters
+Console.WriteLine($"NORAD ID: 25544");
+Console.WriteLine($"Inclination: {tle.MeanInclination * Constants.Rad2Deg:F4}°");
+Console.WriteLine($"Eccentricity: {tle.MeanEccentricity:F7}");
+
+// Create TLE from state vector
+var epoch = new Time(2024, 1, 1);
+var state = new StateVector(...);
+var config = new TLE.Configuration(99999, "MY_SAT", "24001A");
+var newTle = state.ToTLE(config);
+```
+
+---
+
+### IO.Astrodynamics.Frames
+
+#### Frame
+
+Reference frame for spatial transformations.
+
+| Static Properties | Description |
+|------------------|-------------|
+| `Frame.ICRF` | International Celestial Reference Frame (J2000) |
+| `Frame.ECLIPTIC_J2000` | Ecliptic plane at J2000 |
+| `Frame.TEME` | True Equator Mean Equinox (for TLE) |
+
+| Constructor | Description |
+|------------|-------------|
+| `Frame(string name)` | Create frame by name (e.g., "IAU_EARTH", "ITRF93") |
+
+| Method | Description |
+|--------|-------------|
+| `ToFrame(Frame target, Time epoch)` | Get transformation to another frame |
+| `GetStateOrientationToICRF(Time date)` | Get orientation relative to ICRF |
+
+```csharp
+// Use predefined frames
+var icrf = Frames.Frame.ICRF;
+var ecliptic = Frames.Frame.ECLIPTIC_J2000;
+
+// Create body-fixed frame
+var earthFrame = new Frames.Frame("IAU_EARTH");
+
+// Transform state vector
+var svICRF = new StateVector(..., frame: icrf);
+var svEcliptic = svICRF.ToFrame(ecliptic);
+
+// Get frame transformation
+var rotation = icrf.ToFrame(ecliptic, Time.J2000TDB);
+```
+
+---
+
+### IO.Astrodynamics.Surface
+
+#### Site
+
+Ground-based observation site.
+
+| Constructor | Description |
+|------------|-------------|
+| `Site(int id, string name, CelestialBody body)` | Create site from SPICE data |
+| `Site(int id, string name, CelestialBody body, Planetodetic coordinates)` | Create site with explicit coordinates |
+
+| Property | Description |
+|----------|-------------|
+| `Id` | Site identifier |
+| `Name` | Site name |
+| `NaifId` | NAIF ID (bodyId * 1000 + siteId) |
+| `CelestialBody` | Parent body |
+| `InitialOrbitalParameters` | Site position as orbital parameters |
+
+| Method | Description |
+|--------|-------------|
+| `GetHorizontalCoordinates(Time epoch, ILocalizable target, Aberration aberration)` | Get azimuth, elevation, range |
+| `GetEphemeris(Time epoch, CelestialBody observer, Frame frame, Aberration aberration)` | Get site state |
+| `GetEphemeris(Window window, CelestialBody observer, Frame frame, Aberration aberration, TimeSpan step)` | Get site states |
+| `AngularSeparation(Time epoch, ILocalizable target1, ILocalizable target2, Aberration aberration)` | Compute angular separation |
+| `FindWindowsOnDistanceConstraint(...)` | Find distance constraint windows |
+| `FindWindowsOnOccultationConstraint(...)` | Find occultation windows |
+| `FindWindowsOnIlluminationConstraint(...)` | Find illumination windows |
+| `FindDayWindows(Window searchWindow, double twilight)` | Find daylight windows |
+| `IlluminationIncidence(Time date, ILocalizable source, Aberration aberration)` | Get solar incidence angle |
+| `WriteFrameAsync(FileInfo outputFile)` | Write site frame kernel |
+
+```csharp
+var earth = PlanetsAndMoons.EARTH_BODY;
+
+// Create site from SPICE data (DSS-13 Goldstone)
+var goldstone = new Site(13, "DSS-13", earth);
+
+// Create site with explicit coordinates
+var mySite = new Site(100, "MySite", earth,
+    new Planetodetic(
+        longitude: -117.0 * Constants.Deg2Rad,
+        latitude: 34.0 * Constants.Deg2Rad,
+        altitude: 1000.0  // meters
+    ));
+
+// Get horizontal coordinates to Moon
+var epoch = new Time(2024, 1, 1, 12, 0, 0);
+var moon = new CelestialBody(PlanetsAndMoons.MOON);
+var horizontal = mySite.GetHorizontalCoordinates(epoch, moon, Aberration.LT);
+
+Console.WriteLine($"Azimuth: {horizontal.Azimuth * Constants.Rad2Deg:F2}°");
+Console.WriteLine($"Elevation: {horizontal.Elevation * Constants.Rad2Deg:F2}°");
+Console.WriteLine($"Range: {horizontal.Range / 1000:F0} km");
+
+// Find visibility windows
+var windows = mySite.FindWindowsOnDistanceConstraint(
+    new Window(new Time(2024, 1, 1), new Time(2024, 1, 2)),
+    moon, RelationnalOperator.Less, 400000000, Aberration.LT, TimeSpan.FromMinutes(10));
+```
+
+#### LaunchSite
+
+Specialized site for launch operations.
+
+| Constructor | Description |
+|------------|-------------|
+| `LaunchSite(int id, string name, CelestialBody body, IEnumerable<AzimuthRange> allowedAzimuths)` | Create with azimuth constraints |
+
+| Method | Description |
+|--------|-------------|
+| `IsAzimuthAllowed(double azimuth)` | Check if launch azimuth is allowed |
+
+```csharp
+var launchSite = new LaunchSite(100, "MyLaunchSite", earth,
+    new[] { new AzimuthRange(45 * Constants.Deg2Rad, 135 * Constants.Deg2Rad) });
+
+if (launchSite.IsAzimuthAllowed(90 * Constants.Deg2Rad))
+    Console.WriteLine("East launch is allowed");
+```
+
+---
+
+### IO.Astrodynamics.Coordinates
+
+#### Planetodetic
+
+Geodetic coordinates (longitude, latitude, altitude).
+
+| Constructor | Description |
+|------------|-------------|
+| `Planetodetic(double longitude, double latitude, double altitude)` | Create coordinates |
+
+| Property | Description |
+|----------|-------------|
+| `Longitude` | Longitude (rad) |
+| `Latitude` | Latitude (rad) |
+| `Altitude` | Altitude above reference ellipsoid (m) |
+
+| Method | Description |
+|--------|-------------|
+| `ToPlanetocentric(double flattening, double equatorialRadius)` | Convert to planetocentric |
+
+```csharp
+// Create geodetic coordinates
+var coords = new Planetodetic(
+    longitude: -122.0 * Constants.Deg2Rad,
+    latitude: 37.0 * Constants.Deg2Rad,
+    altitude: 100.0
+);
+```
+
+#### Planetocentric
+
+Planetocentric coordinates.
+
+| Method | Description |
+|--------|-------------|
+| `ToPlanetodetic(double flattening, double equatorialRadius)` | Convert to planetodetic |
+| `ToCartesianCoordinates()` | Convert to Cartesian |
+| `RadiusFromPlanetocentricLatitude(double equatorialRadius, double flattening)` | Get radius at latitude |
+
+#### Equatorial
+
+Right ascension and declination.
+
+| Property | Description |
+|----------|-------------|
+| `RightAscension` | Right ascension (rad) |
+| `Declination` | Declination (rad) |
+| `Distance` | Distance from observer (m) |
+| `Epoch` | Epoch of coordinates |
+
+| Method | Description |
+|--------|-------------|
+| `ToCartesian()` | Convert to Cartesian vector |
+| `ToDirection()` | Get unit direction vector |
+
+```csharp
+// Get equatorial coordinates
+var moon = new CelestialBody(PlanetsAndMoons.MOON);
+var sv = moon.GetEphemeris(epoch, earth, Frames.Frame.ICRF, Aberration.None).ToStateVector();
+var eq = sv.ToEquatorial();
+
+Console.WriteLine($"RA: {eq.RightAscension * Constants.Rad2Deg:F4}°");
+Console.WriteLine($"Dec: {eq.Declination * Constants.Rad2Deg:F4}°");
+```
+
+#### Horizontal
+
+Azimuth, elevation, range (topocentric).
+
+| Property | Description |
+|----------|-------------|
+| `Azimuth` | Azimuth from north (rad) |
+| `Elevation` | Elevation above horizon (rad) |
+| `Range` | Distance to target (m) |
+
+---
+
+### IO.Astrodynamics.Body.Spacecraft
+
+#### Spacecraft
+
+Represents a spacecraft with components.
+
+| Constructor | Description |
+|------------|-------------|
+| `Spacecraft(int naifId, string name, double dryMass, double maximumThrustPower, Clock clock, OrbitalParameters orbit)` | Create spacecraft |
+
+| Property | Description |
+|----------|-------------|
+| `NaifId` | NAIF ID (negative) |
+| `Name` | Spacecraft name |
+| `DryMass` | Mass without fuel (kg) |
+| `MaximumThrustPower` | Maximum thrust power (W) |
+| `Clock` | Onboard clock |
+| `InitialOrbitalParameters` | Initial orbit |
+| `StateVectorsRelativeToICRF` | Propagated states |
+
+| Method | Description |
+|--------|-------------|
+| `AddCircularInstrument(...)` | Add circular FOV instrument |
+| `AddRectangularInstrument(...)` | Add rectangular FOV instrument |
+| `AddEllipticalInstrument(...)` | Add elliptical FOV instrument |
+| `AddEngine(Engine engine)` | Add propulsion engine |
+| `AddFuelTank(FuelTank fuelTank)` | Add fuel tank |
+| `AddPayload(Payload payload)` | Add payload |
+| `GetTotalMass()` | Get total mass including fuel |
+| `GetTotalFuel()` | Get total fuel mass |
+| `GetTotalISP()` | Get combined specific impulse |
+| `GetTotalFuelFlow()` | Get combined fuel flow rate |
+| `SetStandbyManeuver(Maneuver maneuver, Time? minEpoch)` | Set maneuver to execute |
+| `Propagate(Window window, IEnumerable<CelestialItem> bodies, bool drag, bool srp, TimeSpan step)` | Propagate orbit |
+| `PropagateAsync(...)` | Propagate orbit asynchronously |
+| `GetOrientation(Frame frame, Time epoch)` | Get spacecraft orientation |
+| `WriteOrientation(FileInfo file)` | Write orientation kernel |
+
+```csharp
+var earth = PlanetsAndMoons.EARTH_BODY;
+var epoch = new Time(2024, 1, 1);
+
+// Define initial orbit
+var orbit = new KeplerianElements(
+    7000000, 0.001, 51.6 * Constants.Deg2Rad, 0, 0, 0,
+    earth, epoch, Frames.Frame.ICRF
+);
+
+// Create spacecraft
+var clock = new Clock("MainClock", 256);
+var spacecraft = new Spacecraft(-1001, "MySat", 500.0, 1000.0, clock, orbit);
+
+// Add components
+var engine = new Engine("MainEngine", "RCS", 500.0, 300.0);  // thrust, ISP
+var tank = new FuelTank("MainTank", "Propellant", "Tank1", 200.0, 100.0);  // capacity, initial
+spacecraft.AddEngine(engine);
+spacecraft.AddFuelTank(tank);
+engine.SetFuelTank(tank);
+
+// Add instrument
+spacecraft.AddCircularInstrument(-1001001, "Camera", "Imager",
+    10 * Constants.Deg2Rad,              // FOV
+    new Vector3(1, 0, 0),                // Boresight
+    new Vector3(0, 1, 0),                // Reference vector
+    new Vector3(0, 0, 0)                 // Orientation
+);
+
+// Propagate
+spacecraft.Propagate(
+    new Window(epoch, epoch.AddDays(1)),
+    new[] { earth },
+    includeAtmosphericDrag: false,
+    includeSolarRadiationPressure: false,
+    TimeSpan.FromSeconds(60)
+);
+
+// Access propagated states
+foreach (var sv in spacecraft.StateVectorsRelativeToICRF.Values.Take(5))
 {
-    maneuver.TryExecute(currentState);
+    Console.WriteLine($"{sv.Epoch}: {sv.Position.Magnitude():F0} m");
 }
-else
+```
+
+#### Engine
+
+Propulsion engine.
+
+| Constructor | Description |
+|------------|-------------|
+| `Engine(string name, string model, double thrust, double isp)` | Create engine |
+
+| Property | Description |
+|----------|-------------|
+| `Name` | Engine name |
+| `Model` | Engine model |
+| `Thrust` | Thrust force (N) |
+| `ISP` | Specific impulse (s) |
+| `FuelFlow` | Fuel flow rate (kg/s) |
+
+| Method | Description |
+|--------|-------------|
+| `SetFuelTank(FuelTank tank)` | Associate fuel tank |
+| `Ignite(Vector3 deltaV)` | Execute burn |
+
+#### FuelTank
+
+Fuel storage tank.
+
+| Constructor | Description |
+|------------|-------------|
+| `FuelTank(string name, string model, string serialNumber, double capacity, double initialFuel)` | Create tank |
+
+| Property | Description |
+|----------|-------------|
+| `Capacity` | Maximum capacity (kg) |
+| `InitialQuantity` | Initial fuel mass (kg) |
+| `Quantity` | Current fuel mass (kg) |
+
+#### Instrument
+
+Base class for spacecraft instruments.
+
+| Method | Description |
+|--------|-------------|
+| `IsInFOV(Time date, ILocalizable target, Aberration aberration)` | Check if target in FOV |
+| `FindWindowsInFieldOfViewConstraint(...)` | Find visibility windows |
+| `GetBoresightInSpacecraftFrame()` | Get boresight in spacecraft frame |
+| `GetBoresightInICRFFrame(Time date)` | Get boresight in ICRF |
+
+---
+
+### IO.Astrodynamics.Maneuver
+
+#### Launch
+
+Launch window computation.
+
+| Constructor | Description |
+|------------|-------------|
+| `Launch(LaunchSite site, LaunchSite recoverySite, OrbitalParameters targetOrbit, double inclination)` | Create launch scenario |
+
+| Method | Description |
+|--------|-------------|
+| `FindLaunchWindows(Window searchWindow)` | Find launch opportunities |
+| `GetInertialAscendingAzimuthLaunch()` | Get ascending node launch azimuth |
+| `GetInertialDescendingAzimuthLaunch()` | Get descending node launch azimuth |
+| `GetInertialInsertionVelocity()` | Get required insertion velocity |
+
+#### Maneuver (Base class)
+
+Base class for orbital maneuvers.
+
+| Method | Description |
+|--------|-------------|
+| `CanExecute(StateVector stateVector)` | Check if maneuver can execute |
+| `TryExecute(StateVector stateVector)` | Execute maneuver if conditions met |
+| `SetNextManeuver(Maneuver maneuver)` | Chain maneuvers |
+
+#### Attitude maneuvers
+
+- `ProgradeAttitude`: Orient along velocity vector
+- `RetrogradeAttitude`: Orient opposite to velocity
+- `ZenithAttitude`: Orient away from central body
+- `NadirAttitude`: Orient toward central body
+- `InstrumentPointingAttitude`: Point instrument at target
+
+#### Impulse maneuvers
+
+- `ApogeeHeightManeuver`: Change apogee altitude
+- `PerigeeHeightManeuver`: Change perigee altitude
+- `PlaneAlignmentManeuver`: Change orbital plane
+- `ApsidalAlignmentManeuver`: Rotate line of apsides
+- `PhasingManeuver`: Change orbital period for phasing
+- `CombinedManeuver`: Execute combined plane change and height change
+
+---
+
+### IO.Astrodynamics.Maneuver.Lambert
+
+#### LambertSolver
+
+Solve Lambert's problem for transfer orbits.
+
+| Method | Description |
+|--------|-------------|
+| `Solve(bool isRetrograde, OrbitalParameters initial, OrbitalParameters target, CelestialItem center, ushort maxRevolution)` | Solve Lambert problem |
+
+```csharp
+var earth = PlanetsAndMoons.EARTH_BODY;
+var epoch = new Time(2024, 1, 1);
+
+// Define departure and arrival states
+var departure = new StateVector(...);
+var arrival = new StateVector(...);
+
+// Solve Lambert problem
+var solver = new LambertSolver();
+var result = solver.Solve(false, departure, arrival, earth, 0);
+
+// Get zero-revolution solution
+var solution = result.GetZeroRevolutionSolution();
+Console.WriteLine($"Delta-V at departure: {solution.DepartureVelocity.Magnitude():F1} m/s");
+Console.WriteLine($"Delta-V at arrival: {solution.ArrivalVelocity.Magnitude():F1} m/s");
+```
+
+---
+
+### IO.Astrodynamics.Propagator
+
+#### SpacecraftPropagator
+
+Numerical orbit propagator with perturbations.
+
+| Constructor | Description |
+|------------|-------------|
+| `SpacecraftPropagator(Window window, Spacecraft spacecraft, IEnumerable<CelestialItem> bodies, bool drag, bool srp, TimeSpan step)` | Create propagator |
+
+| Method | Description |
+|--------|-------------|
+| `Propagate()` | Execute propagation |
+
+#### TLEPropagator
+
+SGP4/SDP4 propagator for TLE elements.
+
+| Constructor | Description |
+|------------|-------------|
+| `TLEPropagator(Window window, TLE tle, TimeSpan step)` | Create propagator |
+
+| Method | Description |
+|--------|-------------|
+| `Propagate()` | Execute propagation |
+
+---
+
+### IO.Astrodynamics.Atmosphere
+
+#### IAtmosphericModel
+
+Interface for atmospheric models.
+
+| Method | Description |
+|--------|-------------|
+| `GetTemperature(IAtmosphericContext context)` | Get temperature (°C) |
+| `GetPressure(IAtmosphericContext context)` | Get pressure (kPa) |
+| `GetDensity(IAtmosphericContext context)` | Get density (kg/m³) |
+
+#### EarthStandardAtmosphere
+
+U.S. Standard Atmosphere 1976 model.
+
+```csharp
+var model = new EarthStandardAtmosphere();
+var context = AtmosphericContext.FromAltitude(10000);  // 10 km
+
+var temp = model.GetTemperature(context);    // °C
+var pressure = model.GetPressure(context);    // kPa
+var density = model.GetDensity(context);      // kg/m³
+```
+
+#### Nrlmsise00Model
+
+NRLMSISE-00 empirical atmosphere model (0-2000+ km).
+
+| Constructor | Description |
+|------------|-------------|
+| `Nrlmsise00Model(SpaceWeather weather)` | Create with space weather data |
+
+```csharp
+var spaceWeather = new SpaceWeather { F107 = 150, F107A = 150, Ap = 4 };
+var model = new Nrlmsise00Model(spaceWeather);
+
+var context = new AtmosphericContext
 {
-    Console.WriteLine($"Insufficient fuel: {maneuver.FuelRequired:F1} kg required, " +
-                      $"{spacecraft.FuelTanks.Sum(t => t.Quantity):F1} kg available");
-}
+    Altitude = 400000,  // 400 km
+    Epoch = new Time(2024, 6, 21, 12, 0, 0),
+    GeodeticLatitude = 0,
+    GeodeticLongitude = 0
+};
+
+var density = model.GetDensity(context);
+Console.WriteLine($"Density at 400 km: {density:E3} kg/m³");
 ```
 
-### Performance Tips
+#### MarsStandardAtmosphere
 
-**Tip 1: Minimize kernel loads**
+Mars atmospheric model.
+
 ```csharp
-// Load once at application startup
-// DON'T reload in loops or frequently called methods
-API.Instance.LoadKernels(kernelPath);  // Once per application lifetime
+var mars = new CelestialBody(PlanetsAndMoons.MARS);
+var model = new MarsStandardAtmosphere();
+var context = AtmosphericContext.FromAltitude(50000);
+var density = model.GetDensity(context);
 ```
 
-**Tip 2: Reuse objects**
+---
+
+### IO.Astrodynamics.Math
+
+#### Vector3
+
+3D vector operations.
+
+| Constructor | Description |
+|------------|-------------|
+| `Vector3(double x, double y, double z)` | Create vector |
+
+| Property | Description |
+|----------|-------------|
+| `X`, `Y`, `Z` | Components |
+| `Zero` | Zero vector |
+| `VectorX`, `VectorY`, `VectorZ` | Unit vectors |
+
+| Method | Description |
+|--------|-------------|
+| `Magnitude()` | Get vector length |
+| `MagnitudeSquared()` | Get squared length |
+| `Normalize()` | Get unit vector |
+| `Cross(Vector3 other)` | Cross product |
+| `Angle(Vector3 other)` | Angle between vectors (rad) |
+| `Inverse()` | Negate vector |
+| `To(Vector3 other)` | Vector from this to other |
+| `Rotate(Quaternion q)` | Rotate by quaternion |
+| `LinearInterpolation(Vector3 other, double t)` | Linear interpolation |
+
+| Operators | Description |
+|-----------|-------------|
+| `+`, `-` | Vector addition/subtraction |
+| `*` (double) | Scalar multiplication |
+| `*` (Vector3) | Dot product |
+| `/` | Scalar division |
+
 ```csharp
-// Create bodies once and reuse
-var earth = PlanetsAndMoons.EARTH_BODY;  // Create once
-var moon = new CelestialBody(PlanetsAndMoons.MOON);  // Reuse
+var v1 = new Vector3(1, 0, 0);
+var v2 = new Vector3(0, 1, 0);
 
-// Don't recreate in loops
-for (int i = 0; i < 1000; i++)
-{
-    // Good: Reuse earth
-    var state = satellite.GetEphemeris(epoch, earth, Frames.Frame.ICRF, Aberration.None);
-}
+var cross = v1.Cross(v2);           // (0, 0, 1)
+var dot = v1 * v2;                  // 0
+var angle = v1.Angle(v2);           // π/2
+var sum = v1 + v2;                  // (1, 1, 0)
+var scaled = v1 * 2.0;              // (2, 0, 0)
 ```
 
-**Tip 3: Choose appropriate step sizes**
+#### Quaternion
+
+Rotation representation.
+
+| Constructor | Description |
+|------------|-------------|
+| `Quaternion(double w, double x, double y, double z)` | Create quaternion |
+
+| Method | Description |
+|--------|-------------|
+| `Magnitude()` | Get magnitude |
+| `Normalize()` | Get unit quaternion |
+| `Conjugate()` | Get conjugate |
+| `ToEuler()` | Convert to Euler angles |
+| `SLERP(Quaternion q, double t)` | Spherical linear interpolation |
+| `Lerp(Quaternion q, double t)` | Linear interpolation |
+
+#### Matrix
+
+Matrix operations.
+
+| Constructor | Description |
+|------------|-------------|
+| `Matrix(double[,] data)` | Create from 2D array |
+
+| Method | Description |
+|--------|-------------|
+| `Get(int row, int col)` | Get element |
+| `Set(int row, int col, double value)` | Set element |
+| `Multiply(Matrix other)` | Matrix multiplication |
+| `Multiply(double[] vector)` | Matrix-vector multiplication |
+| `Inverse()` | Get inverse matrix |
+| `ToQuaternion()` | Convert rotation matrix to quaternion |
+| `CreateRotationMatrixX(double angle)` | Create X-axis rotation |
+| `CreateRotationMatrixY(double angle)` | Create Y-axis rotation |
+| `CreateRotationMatrixZ(double angle)` | Create Z-axis rotation |
+
+#### Lagrange
+
+Lagrange interpolation.
+
+| Method | Description |
+|--------|-------------|
+| `Interpolate((double x, double y)[] data, double idx)` | Interpolate value |
+| `Interpolate(StateVector[] stateVectors, Time date, int k)` | Interpolate state vector |
+
+---
+
+### IO.Astrodynamics.Physics
+
+#### Tsiolkovski
+
+Tsiolkovsky rocket equation calculations.
+
+| Method | Description |
+|--------|-------------|
+| `DeltaV(double isp, double initialMass, double finalMass)` | Compute delta-V (m/s) |
+| `DeltaT(double isp, double initialMass, double fuelFlow, double deltaV)` | Compute burn duration (s) |
+| `DeltaM(double isp, double initialMass, double deltaV)` | Compute fuel required (kg) |
+
 ```csharp
-// For searches, use reasonable step sizes
-// Too small: Slow performance
-// Too large: May miss events
+double isp = 300;          // seconds
+double m0 = 1000;          // kg initial
+double mf = 800;           // kg final
 
-// For LEO (90-minute period): 10-60 second steps
-API.Instance.FindWindowsInFieldOfViewConstraint(..., stepSize: 30.0);
+double deltaV = Tsiolkovski.DeltaV(isp, m0, mf);
+Console.WriteLine($"Delta-V: {deltaV:F1} m/s");
 
-// For deep space: larger steps acceptable
-API.Instance.FindWindowsOnOccultationConstraint(..., stepSize: 300.0);
+double fuelNeeded = Tsiolkovski.DeltaM(isp, m0, 500);  // 500 m/s delta-V
+Console.WriteLine($"Fuel needed: {fuelNeeded:F1} kg");
 ```
 
-**Tip 4: Use appropriate propagation methods**
+---
+
+### IO.Astrodynamics.DataProvider
+
+#### SpiceDataProvider
+
+Default data provider using SPICE kernels.
+
+#### MemoryDataProvider
+
+In-memory data provider for testing.
+
+| Method | Description |
+|--------|-------------|
+| `AddCelestialBodyInfo(params CelestialBody[] bodies)` | Add celestial body data |
+| `AddStateVector(int naifId, Time date, StateVector sv)` | Add state vector |
+| `AddStateOrientationToICRF(Frame frame, Time date, StateOrientation orientation)` | Add orientation |
+
 ```csharp
-// For short durations (<hours), simple propagation is fine
-var futureState = currentState.AtEpoch(epoch + TimeSpan.FromMinutes(10));
+// For testing without SPICE kernels
+var memoryProvider = new MemoryDataProvider();
+Configuration.Instance.SetDataProvider(memoryProvider);
 
-// For long durations or high-fidelity, use numerical integrators
-// with perturbation forces
-var propagator = new VVIntegrator();
-// Configure forces (gravity, drag, SRP, etc.)
+memoryProvider.AddCelestialBodyInfo(customEarth);
+memoryProvider.AddStateVector(399, epoch, earthState);
 ```
 
-### Best Practices
+---
 
-**1. Always specify units in comments:**
+## Enumerations
+
+### Aberration
+
+Light-time and stellar aberration corrections.
+
+| Value | Description |
+|-------|-------------|
+| `None` | No correction |
+| `LT` | Light-time correction |
+| `LTS` | Light-time + stellar aberration |
+| `CN` | Converged Newtonian light-time |
+| `CNS` | CN + stellar aberration |
+| `XLT` | Transmission light-time |
+| `XCN` | Transmission converged Newtonian |
+
+### RelationnalOperator
+
+Comparison operators for geometry finding.
+
+| Value | Description |
+|-------|-------------|
+| `Greater` | Value > threshold |
+| `Less` | Value < threshold |
+| `Equal` | Value = threshold |
+| `AbsMin` | Absolute minimum |
+| `AbsMax` | Absolute maximum |
+| `LocalMin` | Local minimum |
+| `LocalMax` | Local maximum |
+
+### OccultationType
+
+Types of occultation events.
+
+| Value | Description |
+|-------|-------------|
+| `Full` | Total occultation |
+| `Partial` | Partial occultation |
+| `Annular` | Annular occultation |
+| `Any` | Any type of occultation |
+
+### ShapeType
+
+Body shape models.
+
+| Value | Description |
+|-------|-------------|
+| `Ellipsoid` | Ellipsoidal model |
+| `Point` | Point mass model |
+
+---
+
+## Predefined Objects
+
+### SolarSystemObjects.PlanetsAndMoons
+
+| Object | Description |
+|--------|-------------|
+| `EARTH` | Earth NAIF object (399) |
+| `EARTH_BODY` | Earth CelestialBody |
+| `MOON` | Moon NAIF object (301) |
+| `MOON_BODY` | Moon CelestialBody |
+| `MERCURY`, `VENUS`, `MARS`, `JUPITER`, `SATURN`, `URANUS`, `NEPTUNE` | Planets |
+
+### SolarSystemObjects.Barycenters
+
+| Object | Description |
+|--------|-------------|
+| `SOLAR_SYSTEM_BARYCENTER` | Solar system barycenter (0) |
+| `EARTH_MOON_BARYCENTER` | Earth-Moon barycenter (3) |
+| `MARS_BARYCENTER` | Mars system barycenter (4) |
+
+### SolarSystemObjects.Stars
+
+| Object | Description |
+|--------|-------------|
+| `Sun` | Sun NAIF object (10) |
+
+---
+
+## Best Practices
+
+### Kernel Management
+
 ```csharp
-double altitude = 550000.0;  // meters
-double inclination = 51.6 * Constants.Deg2Rad;  // radians (converted from degrees)
-double isp = 450.0;  // seconds
+// Load all required kernels at startup
+API.Instance.LoadKernels(new DirectoryInfo("kernels"));
+
+// Required kernel types:
+// - LSK (leap seconds): naif0012.tls
+// - SPK (ephemeris): de440.bsp, mar097.bsp
+// - PCK (planetary constants): pck00010.tpc
+// - FK (frames): earth_assoc_itrf93.tf
+
+// Clean up when done
+API.Instance.ClearKernels();
 ```
 
-**2. Use meaningful NAIF IDs:**
+### Time Handling
+
 ```csharp
-// Negative IDs for spacecraft (avoids conflicts with planetary bodies)
-// Use organized numbering scheme:
-// -100xxx: Earth satellites
-// -200xxx: Mars satellites
-// -300xxx: Deep space probes
-var spacecraft = new Spacecraft(-100001, "EarthSat1", ...);
+// Always be explicit about time frames
+var utc = new Time(2024, 1, 1, 12, 0, 0);       // Defaults to TDB
+var explicit = new Time(new DateTime(2024, 1, 1), TimeFrame.UTCFrame);
+
+// Convert as needed
+var tdb = utc.ToTDB();
+var tai = utc.ToTAI();
+
+// Use TDB for dynamical calculations
+var state = earth.GetEphemeris(epoch.ToTDB(), sun, Frame.ICRF, Aberration.None);
 ```
 
-**3. Check maneuver feasibility:**
+### Reference Frame Awareness
+
 ```csharp
-// Before executing maneuver
-if (maneuver.CanExecute(currentState))
-{
-    var (newState, orientation) = maneuver.TryExecute(currentState);
-    // Use newState
-}
+// ICRF/J2000: Inertial frame for most calculations
+var sv = new StateVector(..., frame: Frames.Frame.ICRF);
+
+// Body-fixed frames for surface operations
+var earthFrame = new Frames.Frame("IAU_EARTH");
+var bodyFixed = sv.ToFrame(earthFrame);
+
+// TEME for TLE propagation (handled automatically)
+var tleSv = tle.ToStateVector();  // Returns in TEME
+var icrfSv = tleSv.ToFrame(Frames.Frame.ICRF);
 ```
 
-**4. Handle aberration appropriately:**
-```csharp
-// For display/visualization: use geometric (None)
-var ephemeris = body.GetEphemeris(epoch, observer, frame, Aberration.None);
+### Error Handling
 
-// For observations: use light-time correction
-var ephemeris = body.GetEphemeris(epoch, observer, frame, Aberration.LT);
-
-// For stellar observations: use light-time + stellar aberration
-var ephemeris = star.GetEphemeris(epoch, observer, frame, Aberration.LTS);
-```
-
-**5. Validate inputs:**
-```csharp
-// Check for physically impossible orbits
-if (keplerianElements.Eccentricity() >= 1.0)
-{
-    throw new ArgumentException("Eccentricity must be < 1.0 for elliptical orbits");
-}
-
-if (keplerianElements.SemiMajorAxis() < earth.EquatorialRadius)
-{
-    throw new ArgumentException("Orbit intersects Earth surface");
-}
-```
-
-### Debugging Tips
-
-**Enable detailed error messages:**
 ```csharp
 try
 {
-    // Your astrodynamics code
+    var state = body.GetEphemeris(epoch, observer, frame, Aberration.None);
 }
-catch (Exception ex)
+catch (InvalidOperationException ex)
 {
-    Console.WriteLine($"Error: {ex.Message}");
-    Console.WriteLine($"Stack trace: {ex.StackTrace}");
-    // Check inner exceptions for SPICE errors
-    if (ex.InnerException != null)
-    {
-        Console.WriteLine($"Inner: {ex.InnerException.Message}");
-    }
+    // Likely kernel not loaded or epoch out of coverage
+    Console.WriteLine($"Ephemeris error: {ex.Message}");
 }
-```
-
-**Verify orbital elements:**
-```csharp
-// Print orbital elements for debugging
-Console.WriteLine($"SMA: {orbit.SemiMajorAxis() / 1000:F1} km");
-Console.WriteLine($"ECC: {orbit.Eccentricity():F6}");
-Console.WriteLine($"INC: {orbit.Inclination() * Constants.Rad2Deg:F2}°");
-Console.WriteLine($"Period: {orbit.Period().TotalMinutes:F1} min");
-Console.WriteLine($"Apogee: {orbit.Apogee() / 1000:F1} km");
-Console.WriteLine($"Perigee: {orbit.Perigee() / 1000:F1} km");
-```
-
-**Check for NaN values:**
-```csharp
-if (double.IsNaN(result) || double.IsInfinity(result))
+catch (ArgumentException ex)
 {
-    Console.WriteLine("WARNING: Invalid calculation result");
-    // Check inputs for validity
+    // Invalid parameters
+    Console.WriteLine($"Parameter error: {ex.Message}");
 }
 ```
 
 ---
 
-## Additional Resources
+## Version Information
 
-- **SPICE Toolkit Documentation**: https://naif.jpl.nasa.gov/naif/documentation.html
-- **Orbital Mechanics References**:
-  - Vallado, "Fundamentals of Astrodynamics and Applications"
-  - Curtis, "Orbital Mechanics for Engineering Students"
-- **NRLMSISE-00 Model**: https://www.brodo.de/space/nrlmsise/
-- **Celestrak (TLE data)**: https://celestrak.org/
+- Framework: .NET 8.0 / .NET 10.0
+- SPICE Toolkit: CSPICE N0067
+- License: LGPL 3.0
 
----
-
-## Contributing
-
-Found an issue? Have a suggestion? See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
-
-## License
-
-LGPL-3.0 License. See [LICENSE](https://www.gnu.org/licenses/lgpl-3.0.fr.html) for details.
-
----
-
-**Happy orbiting!**
+Contact : [contact@io-aerospace.org](contact@io-aerospace.org)
