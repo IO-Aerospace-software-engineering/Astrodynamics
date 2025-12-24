@@ -125,6 +125,7 @@ namespace IO.Astrodynamics.Atmosphere.NRLMSISE_00
                 if (dd == 0)
                     return dm;
             }
+
             double ylog = a * System.Math.Log(dm / dd);
             if (ylog < -10)
                 return dd;
@@ -152,6 +153,7 @@ namespace IO.Astrodynamics.Atmosphere.NRLMSISE_00
                     else
                         xx = xa[khi];
                 }
+
                 double h = xa[khi] - xa[klo];
                 double a = (xa[khi] - xx) / h;
                 double b = (xx - xa[klo]) / h;
@@ -163,6 +165,7 @@ namespace IO.Astrodynamics.Atmosphere.NRLMSISE_00
                 klo++;
                 khi++;
             }
+
             y = yi;
         }
 
@@ -181,13 +184,14 @@ namespace IO.Astrodynamics.Atmosphere.NRLMSISE_00
                 else
                     klo = k;
             }
+
             double h = xa[khi] - xa[klo];
             if (h == 0.0)
                 throw new InvalidOperationException("Bad XA input to splint");
             double a = (xa[khi] - x) / h;
             double b = (x - xa[klo]) / h;
             double yi = a * ya[klo] + b * ya[khi] +
-                       ((a * a * a - a) * y2a[klo] + (b * b * b - b) * y2a[khi]) * h * h / 6.0;
+                        ((a * a * a - a) * y2a[klo] + (b * b * b - b) * y2a[khi]) * h * h / 6.0;
             y = yi;
         }
 
@@ -207,15 +211,17 @@ namespace IO.Astrodynamics.Atmosphere.NRLMSISE_00
                 y2[0] = -0.5;
                 u[0] = (3.0 / (x[1] - x[0])) * ((y[1] - y[0]) / (x[1] - x[0]) - yp1);
             }
+
             for (int i = 1; i < n - 1; i++)
             {
                 double sig = (x[i] - x[i - 1]) / (x[i + 1] - x[i - 1]);
                 double p = sig * y2[i - 1] + 2.0;
                 y2[i] = (sig - 1.0) / p;
                 u[i] = (6.0 * ((y[i + 1] - y[i]) / (x[i + 1] - x[i]) -
-                              (y[i] - y[i - 1]) / (x[i] - x[i - 1])) /
-                       (x[i + 1] - x[i - 1]) - sig * u[i - 1]) / p;
+                               (y[i] - y[i - 1]) / (x[i] - x[i - 1])) /
+                    (x[i + 1] - x[i - 1]) - sig * u[i - 1]) / p;
             }
+
             double qn, un;
             if (ypn > 0.99E30)
             {
@@ -228,6 +234,7 @@ namespace IO.Astrodynamics.Atmosphere.NRLMSISE_00
                 un = (3.0 / (x[n - 1] - x[n - 2])) *
                      (ypn - (y[n - 1] - y[n - 2]) / (x[n - 1] - x[n - 2]));
             }
+
             y2[n - 1] = (un - qn * u[n - 2]) / (qn * y2[n - 2] + 1.0);
             for (int k = n - 2; k >= 0; k--)
                 y2[k] = y2[k] * y2[k + 1] + u[k];
@@ -245,7 +252,7 @@ namespace IO.Astrodynamics.Atmosphere.NRLMSISE_00
         /// DENSM - Calculate temperature and density profiles for lower atmosphere.
         /// </summary>
         private double Densm(double alt, double d0, double xm, ref double tz, int mn3, double[] zn3,
-                            double[] tn3, double[] tgn3, int mn2, double[] zn2, double[] tn2, double[] tgn2)
+            double[] tn3, double[] tgn3, int mn2, double[] zn2, double[] tn2, double[] tgn2)
         {
             double[] xs = new double[10];
             double[] ys = new double[10];
@@ -281,6 +288,7 @@ namespace IO.Astrodynamics.Atmosphere.NRLMSISE_00
                 xs[k] = Zeta(zn2[k], z1) / zgdif;
                 ys[k] = 1.0 / tn2[k];
             }
+
             double yd1 = -tgn2[0] / (t1 * t1) * zgdif;
             double yd2 = -tgn2[1] / (t2 * t2) * zgdif * System.Math.Pow((_re + z2) / (_re + z1), 2.0);
 
@@ -331,6 +339,7 @@ namespace IO.Astrodynamics.Atmosphere.NRLMSISE_00
                 xs[k] = Zeta(zn3[k], z1) / zgdif;
                 ys[k] = 1.0 / tn3[k];
             }
+
             yd1 = -tgn3[0] / (t1 * t1) * zgdif;
             yd2 = -tgn3[1] / (t2 * t2) * zgdif * System.Math.Pow((_re + z2) / (_re + z1), 2.0);
 
@@ -359,15 +368,15 @@ namespace IO.Astrodynamics.Atmosphere.NRLMSISE_00
 
             if (xm == 0.0)
                 return tz;
-            else
-                return densmTmp;
+
+            return densmTmp;
         }
 
         /// <summary>
         /// DENSU - Calculate temperature and density profiles for MSIS models (new lower thermo polynomial).
         /// </summary>
         private double Densu(double alt, double dlb, double tinf, double tlb, double xm, double alpha,
-                            ref double tz, double zlb, double s2, int mn1, double[] zn1, double[] tn1, double[] tgn1)
+            ref double tz, double zlb, double s2, int mn1, double[] zn1, double[] tn1, double[] tgn1)
         {
             double rgas = 831.4;
             double densuTemp = 1.0;
@@ -422,6 +431,7 @@ namespace IO.Astrodynamics.Atmosphere.NRLMSISE_00
                     xs[k] = Zeta(zn1[k], z1) / zgdif;
                     ys[k] = 1.0 / tn1[k];
                 }
+
                 // end node derivatives
                 double yd1 = -tgn1[0] / (t1 * t1) * zgdif;
                 double yd2 = -tgn1[1] / (t2 * t2) * zgdif * System.Math.Pow((_re + z2) / (_re + z1), 2.0);
@@ -492,8 +502,9 @@ namespace IO.Astrodynamics.Atmosphere.NRLMSISE_00
         private double Sg0(double ex, double[] p, double[] ap)
         {
             return (G0(ap[1], p) + (G0(ap[2], p) * ex + G0(ap[3], p) * ex * ex +
-                    G0(ap[4], p) * System.Math.Pow(ex, 3.0) + (G0(ap[5], p) * System.Math.Pow(ex, 4.0) +
-                    G0(ap[6], p) * System.Math.Pow(ex, 12.0)) * (1.0 - System.Math.Pow(ex, 8.0)) / (1.0 - ex))) / Sumex(ex);
+                                    G0(ap[4], p) * System.Math.Pow(ex, 3.0) + (G0(ap[5], p) * System.Math.Pow(ex, 4.0) +
+                                                                               G0(ap[6], p) * System.Math.Pow(ex, 12.0)) * (1.0 - System.Math.Pow(ex, 8.0)) / (1.0 - ex))) /
+                   Sumex(ex);
         }
 
         /// <summary>
@@ -588,7 +599,7 @@ namespace IO.Astrodynamics.Atmosphere.NRLMSISE_00
                 double t71 = (p[11] * _plg[1, 2]) * cd14 * flags.Swc[5];
                 double t72 = (p[12] * _plg[1, 2]) * cd14 * flags.Swc[5];
                 t[6] = f2 * ((p[3] * _plg[1, 1] + p[4] * _plg[1, 3] + p[27] * _plg[1, 5] + t71) *
-                       _ctloc + (p[6] * _plg[1, 1] + p[7] * _plg[1, 3] + p[28] * _plg[1, 5] + t72) * _stloc);
+                    _ctloc + (p[6] * _plg[1, 1] + p[7] * _plg[1, 3] + p[28] * _plg[1, 5] + t72) * _stloc);
             }
 
             // SEMIDIURNAL
@@ -597,14 +608,14 @@ namespace IO.Astrodynamics.Atmosphere.NRLMSISE_00
                 double t81 = (p[23] * _plg[2, 3] + p[35] * _plg[2, 5]) * cd14 * flags.Swc[5];
                 double t82 = (p[33] * _plg[2, 3] + p[36] * _plg[2, 5]) * cd14 * flags.Swc[5];
                 t[7] = f2 * ((p[5] * _plg[2, 2] + p[41] * _plg[2, 4] + t81) * _c2tloc +
-                       (p[8] * _plg[2, 2] + p[42] * _plg[2, 4] + t82) * _s2tloc);
+                             (p[8] * _plg[2, 2] + p[42] * _plg[2, 4] + t82) * _s2tloc);
             }
 
             // TERDIURNAL
             if (flags.Sw[14] != 0)
             {
                 t[13] = f2 * ((p[39] * _plg[3, 3] + (p[93] * _plg[3, 4] + p[46] * _plg[3, 6]) * cd14 * flags.Swc[5]) * _s3tloc +
-                        (p[40] * _plg[3, 3] + (p[94] * _plg[3, 4] + p[48] * _plg[3, 6]) * cd14 * flags.Swc[5]) * _c3tloc);
+                              (p[40] * _plg[3, 3] + (p[94] * _plg[3, 4] + p[48] * _plg[3, 6]) * cd14 * flags.Swc[5]) * _c3tloc);
             }
 
             // magnetic activity based on daily ap
@@ -623,9 +634,9 @@ namespace IO.Astrodynamics.Atmosphere.NRLMSISE_00
                     if (flags.Sw[9] != 0)
                     {
                         t[8] = _apt[0] * (p[50] + p[96] * _plg[0, 2] + p[54] * _plg[0, 4] +
-                               (p[125] * _plg[0, 1] + p[126] * _plg[0, 3] + p[127] * _plg[0, 5]) * cd14 * flags.Swc[5] +
-                               (p[128] * _plg[1, 1] + p[129] * _plg[1, 3] + p[130] * _plg[1, 5]) * flags.Swc[7] *
-                               System.Math.Cos(hr * (tloc - p[131])));
+                                          (p[125] * _plg[0, 1] + p[126] * _plg[0, 3] + p[127] * _plg[0, 5]) * cd14 * flags.Swc[5] +
+                                          (p[128] * _plg[1, 1] + p[129] * _plg[1, 3] + p[130] * _plg[1, 5]) * flags.Swc[7] *
+                                          System.Math.Cos(hr * (tloc - p[131])));
                     }
                 }
             }
@@ -640,9 +651,9 @@ namespace IO.Astrodynamics.Atmosphere.NRLMSISE_00
                 if (flags.Sw[9] != 0)
                 {
                     t[8] = _apdf * (p[32] + p[45] * _plg[0, 2] + p[34] * _plg[0, 4] +
-                           (p[100] * _plg[0, 1] + p[101] * _plg[0, 3] + p[102] * _plg[0, 5]) * cd14 * flags.Swc[5] +
-                           (p[121] * _plg[1, 1] + p[122] * _plg[1, 3] + p[123] * _plg[1, 5]) * flags.Swc[7] *
-                           System.Math.Cos(hr * (tloc - p[124])));
+                                    (p[100] * _plg[0, 1] + p[101] * _plg[0, 3] + p[102] * _plg[0, 5]) * cd14 * flags.Swc[5] +
+                                    (p[121] * _plg[1, 1] + p[122] * _plg[1, 3] + p[123] * _plg[1, 5]) * flags.Swc[7] *
+                                    System.Math.Cos(hr * (tloc - p[124])));
                 }
             }
 
@@ -793,7 +804,7 @@ namespace IO.Astrodynamics.Atmosphere.NRLMSISE_00
             if (!((flags.Sw[10] == 0) || (flags.Sw[11] == 0) || (input.GLong <= -1000.0)))
             {
                 t[10] = (1.0 + _plg[0, 1] * (p[80] * flags.Swc[5] * System.Math.Cos(dr * (input.Doy - p[81])) +
-                         p[85] * flags.Swc[6] * System.Math.Cos(2.0 * dr * (input.Doy - p[86]))) +
+                                             p[85] * flags.Swc[6] * System.Math.Cos(2.0 * dr * (input.Doy - p[86]))) +
                          p[83] * flags.Swc[3] * System.Math.Cos(dr * (input.Doy - p[84])) +
                          p[87] * flags.Swc[4] * System.Math.Cos(2.0 * dr * (input.Doy - p[88]))) *
                         ((p[64] * _plg[1, 2] + p[65] * _plg[1, 4] + p[66] * _plg[1, 6] +
@@ -823,9 +834,9 @@ namespace IO.Astrodynamics.Atmosphere.NRLMSISE_00
             // Convert SI input units to internal units (km, degrees) and create a modified copy
             var internalInput = input with
             {
-                Alt = input.Alt / 1000.0,  // meters to kilometers
-                GLat = input.GLat * Constants.Rad2Deg,  // radians to degrees
-                GLong = input.GLong * Constants.Rad2Deg  // radians to degrees
+                Alt = input.Alt / 1000.0, // meters to kilometers
+                GLat = input.GLat * Constants.Rad2Deg, // radians to degrees
+                GLong = input.GLong * Constants.Rad2Deg // radians to degrees
             };
 
             // Call internal method that works with internal units (input remains unchanged)
@@ -835,9 +846,10 @@ namespace IO.Astrodynamics.Atmosphere.NRLMSISE_00
             // Number densities: cm^-3 to m^-3 (multiply by 1E6)
             for (int i = 0; i < 9; i++)
             {
-                if (i != 5)  // Skip mass density
+                if (i != 5) // Skip mass density
                     output.D[i] = output.D[i] * 1.0E6;
             }
+
             // Mass density: g/cm^3 to kg/m^3 (multiply by 1000)
             output.D[5] = output.D[5] * 1000.0;
         }
@@ -852,7 +864,6 @@ namespace IO.Astrodynamics.Atmosphere.NRLMSISE_00
         /// </remarks>
         private void Gts7Internal(NrlmsiseInput input, NrlmsiseFlags flags, NrlmsiseOutput output)
         {
-
             double[] zn1 = { 120.0, 110.0, 100.0, 90.0, 72.5 };
             int mn1 = 5;
             double dgtr = 1.74533E-2;
@@ -891,7 +902,8 @@ namespace IO.Astrodynamics.Atmosphere.NRLMSISE_00
                 _mesoTn1[2] = Data.PTM[2] * Data.PTL[1][0] / (1.0 - flags.Sw[18] * Glob7s(Data.PTL[1], input, flags));
                 _mesoTn1[3] = Data.PTM[7] * Data.PTL[2][0] / (1.0 - flags.Sw[18] * Glob7s(Data.PTL[2], input, flags));
                 _mesoTn1[4] = Data.PTM[4] * Data.PTL[3][0] / (1.0 - flags.Sw[18] * flags.Sw[20] * Glob7s(Data.PTL[3], input, flags));
-                _mesoTgn1[1] = Data.PTM[8] * Data.PMA[8][0] * (1.0 + flags.Sw[18] * flags.Sw[20] * Glob7s(Data.PMA[8], input, flags)) * _mesoTn1[4] * _mesoTn1[4] / (System.Math.Pow(Data.PTM[4] * Data.PTL[3][0], 2.0));
+                _mesoTgn1[1] = Data.PTM[8] * Data.PMA[8][0] * (1.0 + flags.Sw[18] * flags.Sw[20] * Glob7s(Data.PMA[8], input, flags)) * _mesoTn1[4] * _mesoTn1[4] /
+                               (System.Math.Pow(Data.PTM[4] * Data.PTL[3][0], 2.0));
             }
             else
             {
@@ -1022,6 +1034,7 @@ namespace IO.Astrodynamics.Atmosphere.NRLMSISE_00
                     double zc32 = Data.PDM[3][4] * Data.PDL[1][6];
                     output.D[3] = output.D[3] * Ccor(z, rl, hc32, zc32);
                 }
+
                 // Correction for general departure from diffusive equilibrium above Zlb
                 double hcc32 = Data.PDM[3][7] * Data.PDL[1][22];
                 double hcc232 = Data.PDM[3][7] * Data.PDL[0][22];
@@ -1151,14 +1164,14 @@ namespace IO.Astrodynamics.Atmosphere.NRLMSISE_00
         /// Neutral atmosphere empirical model from the surface to lower exosphere.
         /// Input uses SI units (meters, radians), output uses SI units (m^-3, kg/m^3, K).
         /// </remarks>
-        public void Calculate(NrlmsiseInput input, NrlmsiseFlags flags, NrlmsiseOutput output)
+        public NrlmsiseOutput Calculate(NrlmsiseInput input, NrlmsiseFlags flags)
         {
             // Convert SI input units to internal units (km, degrees) and create a modified copy
             var internalInput = input with
             {
-                Alt = input.Alt / 1000.0,  // meters to kilometers
-                GLat = input.GLat * Constants.Rad2Deg,  // radians to degrees
-                GLong = input.GLong * Constants.Rad2Deg  // radians to degrees
+                Alt = input.Alt / 1000.0, // meters to kilometers
+                GLat = input.GLat * Constants.Rad2Deg, // radians to degrees
+                GLong = input.GLong * Constants.Rad2Deg // radians to degrees
             };
 
             int mn3 = 5;
@@ -1189,8 +1202,9 @@ namespace IO.Astrodynamics.Atmosphere.NRLMSISE_00
             NrlmsiseOutput soutput = new NrlmsiseOutput();
             Gts7Internal(thermosphereInput, flags, soutput);
 
-            double dm28m = _dm28;  // Internal units (g/cm^3)
+            double dm28m = _dm28; // Internal units (g/cm^3)
 
+            NrlmsiseOutput output = new NrlmsiseOutput();
             output.T[0] = soutput.T[0];
             output.T[1] = soutput.T[1];
             if (internalInput.Alt >= zn2[0])
@@ -1202,12 +1216,13 @@ namespace IO.Astrodynamics.Atmosphere.NRLMSISE_00
                 // Number densities: cm^-3 to m^-3 (multiply by 1E6)
                 for (int i = 0; i < 9; i++)
                 {
-                    if (i != 5)  // Skip mass density
-                        output.D[i] = output.D[i] * 1.0E6;
+                    if (i != 5) // Skip mass density
+                        output.D[i] *= 1.0E6;
                 }
+
                 // Mass density: g/cm^3 to kg/m^3 (multiply by 1000)
-                output.D[5] = output.D[5] * 1000.0;
-                return;
+                output.D[5] *= 1000.0;
+                return output;
             }
 
             // LOWER MESOSPHERE/UPPER STRATOSPHERE (between zn3[0] and zn2[0])
@@ -1218,7 +1233,8 @@ namespace IO.Astrodynamics.Atmosphere.NRLMSISE_00
             _mesoTn2[1] = Data.PMA[0][0] * Data.PAVGM[0] / (1.0 - flags.Sw[20] * Glob7s(Data.PMA[0], internalInput, flags));
             _mesoTn2[2] = Data.PMA[1][0] * Data.PAVGM[1] / (1.0 - flags.Sw[20] * Glob7s(Data.PMA[1], internalInput, flags));
             _mesoTn2[3] = Data.PMA[2][0] * Data.PAVGM[2] / (1.0 - flags.Sw[20] * flags.Sw[22] * Glob7s(Data.PMA[2], internalInput, flags));
-            _mesoTgn2[1] = Data.PAVGM[8] * Data.PMA[9][0] * (1.0 + flags.Sw[20] * flags.Sw[22] * Glob7s(Data.PMA[9], internalInput, flags)) * _mesoTn2[3] * _mesoTn2[3] / (System.Math.Pow(Data.PMA[2][0] * Data.PAVGM[2], 2.0));
+            _mesoTgn2[1] = Data.PAVGM[8] * Data.PMA[9][0] * (1.0 + flags.Sw[20] * flags.Sw[22] * Glob7s(Data.PMA[9], internalInput, flags)) * _mesoTn2[3] * _mesoTn2[3] /
+                           (System.Math.Pow(Data.PMA[2][0] * Data.PAVGM[2], 2.0));
             _mesoTn3[0] = _mesoTn2[3];
 
             if (internalInput.Alt <= zn3[0])
@@ -1231,7 +1247,8 @@ namespace IO.Astrodynamics.Atmosphere.NRLMSISE_00
                 _mesoTn3[2] = Data.PMA[4][0] * Data.PAVGM[4] / (1.0 - flags.Sw[22] * Glob7s(Data.PMA[4], internalInput, flags));
                 _mesoTn3[3] = Data.PMA[5][0] * Data.PAVGM[5] / (1.0 - flags.Sw[22] * Glob7s(Data.PMA[5], internalInput, flags));
                 _mesoTn3[4] = Data.PMA[6][0] * Data.PAVGM[6] / (1.0 - flags.Sw[22] * Glob7s(Data.PMA[6], internalInput, flags));
-                _mesoTgn3[1] = Data.PMA[7][0] * Data.PAVGM[7] * (1.0 + flags.Sw[22] * Glob7s(Data.PMA[7], internalInput, flags)) * _mesoTn3[4] * _mesoTn3[4] / (System.Math.Pow(Data.PMA[6][0] * Data.PAVGM[6], 2.0));
+                _mesoTgn3[1] = Data.PMA[7][0] * Data.PAVGM[7] * (1.0 + flags.Sw[22] * Glob7s(Data.PMA[7], internalInput, flags)) * _mesoTn3[4] * _mesoTn3[4] /
+                               (System.Math.Pow(Data.PMA[6][0] * Data.PAVGM[6], 2.0));
             }
 
             // LINEAR TRANSITION TO FULL MIXING BELOW zn2[0]
@@ -1278,11 +1295,14 @@ namespace IO.Astrodynamics.Atmosphere.NRLMSISE_00
             // Number densities: cm^-3 to m^-3 (multiply by 1E6)
             for (int i = 0; i < 9; i++)
             {
-                if (i != 5)  // Skip mass density
+                if (i != 5) // Skip mass density
                     output.D[i] *= 1.0E6;
             }
+
             // Mass density: g/cm^3 to kg/m^3 (multiply by 1000)
             output.D[5] *= 1000.0;
+
+            return output;
         }
 
         /// <summary>
@@ -1293,9 +1313,9 @@ namespace IO.Astrodynamics.Atmosphere.NRLMSISE_00
         /// which includes anomalous oxygen.
         /// Input uses SI units (meters, radians), output uses SI units (m^-3, kg/m^3, K).
         /// </remarks>
-        public void CalculateWithDrag(NrlmsiseInput input, NrlmsiseFlags flags, NrlmsiseOutput output)
+        public NrlmsiseOutput CalculateWithDrag(NrlmsiseInput input, NrlmsiseFlags flags)
         {
-            Calculate(input, flags, output);
+            NrlmsiseOutput output = Calculate(input, flags);
 
             // Convert number densities back to internal units temporarily for mass density calculation
             // m^-3 to cm^-3 (divide by 1E6)
@@ -1315,6 +1335,8 @@ namespace IO.Astrodynamics.Atmosphere.NRLMSISE_00
 
             // Convert to SI units: g/cm^3 to kg/m^3 (multiply by 1000)
             output.D[5] = rho_gcm3 * 1000.0;
+
+            return output;
         }
 
         /// <summary>
@@ -1330,7 +1352,7 @@ namespace IO.Astrodynamics.Atmosphere.NRLMSISE_00
         /// <param name="output">Output densities and temperatures at the calculated altitude.</param>
         /// <param name="press">Pressure level in millibars.</param>
         /// <returns>Calculated altitude in meters for the given pressure level.</returns>
-        public double FindAltitudeAtPressure(NrlmsiseInput input, NrlmsiseFlags flags, NrlmsiseOutput output, double press)
+        public (double altitude, NrlmsiseOutput atmosphere) FindAltitudeAtPressure(NrlmsiseInput input, NrlmsiseFlags flags, double press)
         {
             // Convert input GLat from radians to degrees for initial calculation
             double glatDeg = input.GLat * Constants.Rad2Deg;
@@ -1341,7 +1363,7 @@ namespace IO.Astrodynamics.Atmosphere.NRLMSISE_00
             int ltest = 12;
 
             double pl = System.Math.Log10(press);
-            double zi;  // Altitude in km (internal units)
+            double zi; // Altitude in km (internal units)
             if (pl >= -5.0)
             {
                 if (pl > 2.5)
@@ -1385,20 +1407,19 @@ namespace IO.Astrodynamics.Atmosphere.NRLMSISE_00
             {
                 l++;
                 // Create input copy with current altitude estimate
-                var iterationInput = input with { Alt = zi * 1000.0 };  // Convert zi from km to meters
-                Calculate(iterationInput, flags, output);
-
+                var iterationInput = input with { Alt = zi * 1000.0 }; // Convert zi from km to meters
+                var output = Calculate(iterationInput, flags);
                 // Calculate total number density (output.D is now in m^-3)
                 double xn = output.D[0] + output.D[1] + output.D[2] + output.D[3] + output.D[4] + output.D[6] + output.D[7];
                 // Calculate pressure (note: xn is in m^-3, bm converts to appropriate units)
                 // bm * (particles/m^3) * K gives pressure in appropriate units
                 // Need to convert from m^-3 to cm^-3 for pressure calculation
-                double xn_cm3 = xn / 1.0E6;  // Convert m^-3 to cm^-3
+                double xn_cm3 = xn / 1.0E6; // Convert m^-3 to cm^-3
                 double p = bm * xn_cm3 * output.T[1];
 
                 double diff = pl - System.Math.Log10(p);
                 if (System.Math.Sqrt(diff * diff) < test)
-                    return zi * 1000.0;  // Return calculated altitude in meters
+                    return (zi * 1000.0, output); // Return calculated altitude in meters
                 if (l == ltest)
                 {
                     throw new InvalidOperationException($"ERROR: ghp7 not converging for press {press}, diff {diff}");
@@ -1407,7 +1428,7 @@ namespace IO.Astrodynamics.Atmosphere.NRLMSISE_00
                 // Calculate mean molecular mass
                 // output.D[5] is now in kg/m^3, xn is in m^-3
                 // Convert to get mean mass in amu
-                double rho_gcm3 = output.D[5] / 1000.0;  // kg/m^3 to g/cm^3
+                double rho_gcm3 = output.D[5] / 1000.0; // kg/m^3 to g/cm^3
                 double xm = rho_gcm3 / xn_cm3 / 1.66E-24;
 
                 double g = _gsurf / (System.Math.Pow(1.0 + zi / _re, 2.0));

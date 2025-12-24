@@ -30,7 +30,6 @@ namespace IO.Astrodynamics.Tests.Atmosphere
             }
         }
 
-        
 
         /// <summary>
         /// Test Case 1: Standard conditions at 400 km altitude.
@@ -54,9 +53,8 @@ namespace IO.Astrodynamics.Tests.Atmosphere
                 Ap = 4
             };
             var flags = NrlmsiseFlags.CreateStandard();
-            var output = new NrlmsiseOutput();
 
-            model.Calculate(input, flags, output);
+            var output = model.Calculate(input, flags);
 
             // Expected values from DOCUMENTATION line 159 (converted to SI units)
             AssertScientificEqual(6.665177E+05 * 1E6, output.D[0], "HE");
@@ -111,9 +109,8 @@ Temperatures:
                 Ap = 4
             };
             var flags = NrlmsiseFlags.CreateStandard();
-            var output = new NrlmsiseOutput();
 
-            model.Calculate(input, flags, output);
+            var output = model.Calculate(input, flags);
 
             // Expected values from DOCUMENTATION line 161 (converted to SI units)
             AssertScientificEqual(3.407293E+06 * 1E6, output.D[0], "HE");
@@ -150,9 +147,8 @@ Temperatures:
                 Ap = 4
             };
             var flags = NrlmsiseFlags.CreateStandard();
-            var output = new NrlmsiseOutput();
 
-            model.Calculate(input, flags, output);
+            var output = model.Calculate(input, flags);
 
             // Expected values from DOCUMENTATION line 163 (converted to SI units)
             AssertScientificEqual(1.123767E+05 * 1E6, output.D[0], "HE");
@@ -189,9 +185,8 @@ Temperatures:
                 Ap = 4
             };
             var flags = NrlmsiseFlags.CreateStandard();
-            var output = new NrlmsiseOutput();
 
-            model.Calculate(input, flags, output);
+            var output = model.Calculate(input, flags);
 
             // Expected values from DOCUMENTATION line 165 (converted to SI units)
             AssertScientificEqual(5.411554E+07 * 1E6, output.D[0], "HE");
@@ -228,9 +223,8 @@ Temperatures:
                 Ap = 4
             };
             var flags = NrlmsiseFlags.CreateStandard();
-            var output = new NrlmsiseOutput();
 
-            model.Calculate(input, flags, output);
+            var output = model.Calculate(input, flags);
 
             // Expected values from DOCUMENTATION line 167 (converted to SI units)
             AssertScientificEqual(1.851122E+06 * 1E6, output.D[0], "HE");
@@ -267,9 +261,8 @@ Temperatures:
                 Ap = 4
             };
             var flags = NrlmsiseFlags.CreateStandard();
-            var output = new NrlmsiseOutput();
 
-            model.Calculate(input, flags, output);
+            var output = model.Calculate(input, flags);
 
             // Expected values from DOCUMENTATION line 169 (converted to SI units)
             AssertScientificEqual(8.673095E+05 * 1E6, output.D[0], "HE");
@@ -306,9 +299,8 @@ Temperatures:
                 Ap = 4
             };
             var flags = NrlmsiseFlags.CreateStandard();
-            var output = new NrlmsiseOutput();
 
-            model.Calculate(input, flags, output);
+            var output = model.Calculate(input, flags);
 
             // Expected values from DOCUMENTATION line 171 (converted to SI units)
             AssertScientificEqual(5.776251E+05 * 1E6, output.D[0], "HE");
@@ -345,9 +337,8 @@ Temperatures:
                 Ap = 4
             };
             var flags = NrlmsiseFlags.CreateStandard();
-            var output = new NrlmsiseOutput();
 
-            model.Calculate(input, flags, output);
+            var output = model.Calculate(input, flags);
 
             // Expected values from DOCUMENTATION line 173 (converted to SI units)
             AssertScientificEqual(3.740304E+05 * 1E6, output.D[0], "HE");
@@ -384,9 +375,8 @@ Temperatures:
                 Ap = 4
             };
             var flags = NrlmsiseFlags.CreateStandard();
-            var output = new NrlmsiseOutput();
 
-            model.Calculate(input, flags, output);
+            var output = model.Calculate(input, flags);
 
             // Expected values from DOCUMENTATION line 175 (converted to SI units)
             AssertScientificEqual(6.748339E+05 * 1E6, output.D[0], "HE");
@@ -423,9 +413,8 @@ Temperatures:
                 Ap = 40
             };
             var flags = NrlmsiseFlags.CreateStandard();
-            var output = new NrlmsiseOutput();
 
-            model.Calculate(input, flags, output);
+            var output = model.Calculate(input, flags);
 
             // Expected values from DOCUMENTATION line 177 (converted to SI units)
             AssertScientificEqual(5.528601E+05 * 1E6, output.D[0], "HE");
@@ -475,9 +464,8 @@ Temperatures:
                 Ap = 4
             };
             var flags = NrlmsiseFlags.CreateStandard();
-            var output = new NrlmsiseOutput();
 
-            model.Calculate(input, flags, output);
+            var output = model.Calculate(input, flags);
 
             AssertScientificEqual(he, output.D[0], "HE");
             AssertScientificEqual(o, output.D[1], "O");
@@ -519,9 +507,8 @@ Temperatures:
             };
             var flags = NrlmsiseFlags.CreateStandard();
             flags.Switches[9] = -1;
-            var output = new NrlmsiseOutput();
 
-            model.Calculate(input, flags, output);
+            var output = model.Calculate(input, flags);
 
             // Expected values from DOCUMENTATION line 189 (converted to SI units)
             AssertScientificEqual(5.196477E+05 * 1E6, output.D[0], "HE");
@@ -564,9 +551,8 @@ Temperatures:
             };
             var flags = NrlmsiseFlags.CreateStandard();
             flags.Switches[9] = -1;
-            var output = new NrlmsiseOutput();
 
-            model.Calculate(input, flags, output);
+            var output = model.Calculate(input, flags);
 
             // Expected values from DOCUMENTATION line 191 (converted to SI units)
             AssertScientificEqual(4.260860E+07 * 1E6, output.D[0], "HE");
@@ -713,12 +699,9 @@ Temperatures:
                 Ap = 4
             };
             var flags = NrlmsiseFlags.CreateStandard();
-            var output = new NrlmsiseOutput();
 
             // Act
-            model.Calculate(input, flags, output);
-
-            // Assert - output should always be in SI units
+            var output = model.Calculate(input, flags);
             // Number densities should be reasonable values in m^-3 (large numbers, e.g., 1E11 to 1E12)
             Assert.True(output.D[0] > 1E10, "HE density in m^-3 should be > 1E10");
             Assert.True(output.D[0] < 1E13, "HE density in m^-3 should be < 1E13");
@@ -753,12 +736,10 @@ Temperatures:
                 Ap = 4
             };
             var flags = NrlmsiseFlags.CreateStandard();
-            var outputGtd7 = new NrlmsiseOutput();
-            var outputGtd7d = new NrlmsiseOutput();
 
             // Act
-            model.Calculate(input, flags, outputGtd7);
-            model.CalculateWithDrag(input, flags, outputGtd7d);
+            var outputGtd7 = model.Calculate(input, flags);
+            var outputGtd7d = model.CalculateWithDrag(input, flags);
 
             // Assert - Gtd7d should include anomalous oxygen (D[8]) in mass density
             // D[5] in Gtd7d (kg/m^3) = 1.66E-27 * (4*D[0] + 16*D[1] + 28*D[2] + 32*D[3] + 40*D[4] + D[6] + 14*D[7] + 16*D[8])
@@ -795,12 +776,10 @@ Temperatures:
                 Ap = 4
             };
             var flags = NrlmsiseFlags.CreateStandard();
-            var outputGtd7 = new NrlmsiseOutput();
-            var outputGtd7d = new NrlmsiseOutput();
 
             // Act
-            model.Calculate(input, flags, outputGtd7);
-            model.CalculateWithDrag(input, flags, outputGtd7d);
+            var outputGtd7 = model.Calculate(input, flags);
+            var outputGtd7d = model.CalculateWithDrag(input, flags);
 
             // Assert - at low altitudes, anomalous oxygen should be negligible
             Assert.True(System.Math.Abs(outputGtd7d.D[8]) < 1E-30, "Anomalous oxygen should be negligible at 100 km");
@@ -829,10 +808,9 @@ Temperatures:
             };
             var flags = NrlmsiseFlags.CreateStandard();
             flags.Switches[0] = 1; // m/kg units
-            var output = new NrlmsiseOutput();
 
             // Act
-            model.CalculateWithDrag(input, flags, output);
+            var output = model.CalculateWithDrag(input, flags);
 
             // Assert
             Assert.True(output.D[5] > 0, "Mass density should be positive");
@@ -865,14 +843,12 @@ Temperatures:
                 Ap = 4
             };
             var flags = NrlmsiseFlags.CreateStandard();
-            var output = new NrlmsiseOutput();
 
             // Act
-            model.FindAltitudeAtPressure(input, flags, output, 1000.0); // 1000 mb = sea level
-
-            // Assert - altitude should converge to near 0 m for 1000 mb
-            Assert.True(input.Alt < 5000, $"Altitude for 1000 mb should be near 0 m, got {input.Alt}");
-            Assert.True(input.Alt >= 0, "Altitude should be non-negative");
+            var output = model.FindAltitudeAtPressure(input, flags, 1000.0); // 1000 mb = sea level
+            Assert.True(output.altitude < 5000, $"Altitude for 1000 mb should be near 0 m, got {output.altitude}");
+            Assert.True(output.altitude >= 0, "Altitude should be non-negative");
+            Assert.NotNull(output.atmosphere);
         }
 
         /// <summary>
@@ -900,10 +876,10 @@ Temperatures:
             var output = new NrlmsiseOutput();
 
             // Act
-            double calculatedAlt = model.FindAltitudeAtPressure(input, flags, output, 1.0); // 1 mb
+            var calculatedAlt = model.FindAltitudeAtPressure(input, flags, 1.0); // 1 mb
 
             // Assert - altitude should be around 48 km (48000 m) for 1 mb
-            Assert.True(calculatedAlt > 40000 && calculatedAlt < 60000,
+            Assert.True(calculatedAlt.altitude is > 40000 and < 60000,
                 $"Altitude for 1 mb should be around 48000 m, got {calculatedAlt}");
         }
 
@@ -932,10 +908,10 @@ Temperatures:
             var output = new NrlmsiseOutput();
 
             // Act
-            double calculatedAlt = model.FindAltitudeAtPressure(input, flags, output, 0.001); // 0.001 mb
+            var calculatedAlt = model.FindAltitudeAtPressure(input, flags, 0.001); // 0.001 mb
 
             // Assert - altitude should be around 96 km (96000 m) for 0.001 mb
-            Assert.True(calculatedAlt > 90000 && calculatedAlt < 110000,
+            Assert.True(calculatedAlt.altitude > 90000 && calculatedAlt.altitude < 110000,
                 $"Altitude for 0.001 mb should be around 96000 m, got {calculatedAlt}");
         }
 
@@ -962,14 +938,11 @@ Temperatures:
             };
             var flags = NrlmsiseFlags.CreateStandard();
             flags.Switches[0] = 1; // m/kg units
-            var output = new NrlmsiseOutput();
 
             // Act
-            model.FindAltitudeAtPressure(input, flags, output, 1.0); // 1 mb
-
-            // Assert
-            Assert.True(input.Alt > 40000 && input.Alt < 60000,
-                $"Altitude for 1 mb should be around 48000 m, got {input.Alt}");
+            var res = model.FindAltitudeAtPressure(input, flags, 1.0); // 1 mb
+            Assert.True(res.altitude is > 40000 and < 60000,
+                $"Altitude for 1 mb should be around 48000 m, got {res.altitude}");
         }
 
         #endregion
@@ -998,12 +971,9 @@ Temperatures:
                 Ap = 4
             };
             var flags = NrlmsiseFlags.CreateStandard();
-            var output = new NrlmsiseOutput();
 
             // Act
-            model.Calculate(input, flags, output);
-
-            // Assert
+            var output = model.Calculate(input, flags);
             Assert.True(output.D[0] > 0, "HE density should be positive at north pole");
             Assert.True(output.D[2] > 0, "N2 density should be positive at north pole");
             Assert.True(output.T[1] > 0, "Temperature should be positive at north pole");
@@ -1031,10 +1001,9 @@ Temperatures:
                 Ap = 4
             };
             var flags = NrlmsiseFlags.CreateStandard();
-            var output = new NrlmsiseOutput();
 
             // Act
-            model.Calculate(input, flags, output);
+            var output = model.Calculate(input, flags);
 
             // Assert
             Assert.True(output.D[0] > 0, "HE density should be positive at south pole");
@@ -1066,12 +1035,9 @@ Temperatures:
                 Ap = 4
             };
             var flags = NrlmsiseFlags.CreateStandard();
-            var output = new NrlmsiseOutput();
 
             // Act
-            model.Calculate(input, flags, output);
-
-            // Assert
+            var output = model.Calculate(input, flags);
             Assert.True(output.D[0] > 0, "HE density should be positive");
             Assert.True(output.D[2] > 0, "N2 density should be positive");
         }
@@ -1098,10 +1064,10 @@ Temperatures:
                 Ap = 4
             };
             var flags = NrlmsiseFlags.CreateStandard();
-            var output = new NrlmsiseOutput();
 
+            
             // Act
-            model.Calculate(input, flags, output);
+            var output=model.Calculate(input, flags);
 
             // Assert
             Assert.True(output.D[0] > 0, "HE density should be positive on DOY 1");
@@ -1130,10 +1096,9 @@ Temperatures:
                 Ap = 4
             };
             var flags = NrlmsiseFlags.CreateStandard();
-            var output = new NrlmsiseOutput();
 
             // Act
-            model.Calculate(input, flags, output);
+            var output=model.Calculate(input, flags);
 
             // Assert
             Assert.True(output.D[0] > 0, "HE density should be positive on DOY 366");
@@ -1162,10 +1127,9 @@ Temperatures:
                 Ap = 4
             };
             var flags = NrlmsiseFlags.CreateStandard();
-            var output = new NrlmsiseOutput();
 
             // Act
-            model.Calculate(input, flags, output);
+            var output = model.Calculate(input, flags);
 
             // Assert
             Assert.True(output.D[0] > 0, "HE density should be positive at midnight");
@@ -1194,10 +1158,9 @@ Temperatures:
                 Ap = 4
             };
             var flags = NrlmsiseFlags.CreateStandard();
-            var output = new NrlmsiseOutput();
 
             // Act
-            model.Calculate(input, flags, output);
+            var output = model.Calculate(input, flags);
 
             // Assert
             Assert.True(output.D[0] > 0, "HE density should be positive at noon");
@@ -1226,10 +1189,9 @@ Temperatures:
                 Ap = 4
             };
             var flags = NrlmsiseFlags.CreateStandard();
-            var output = new NrlmsiseOutput();
 
             // Act
-            model.Calculate(input, flags, output);
+            var output = model.Calculate(input, flags);
 
             // Assert
             Assert.True(output.D[0] > 0, "HE density should be positive at low solar activity");
@@ -1259,10 +1221,9 @@ Temperatures:
                 Ap = 4
             };
             var flags = NrlmsiseFlags.CreateStandard();
-            var output = new NrlmsiseOutput();
 
             // Act
-            model.Calculate(input, flags, output);
+            var output = model.Calculate(input, flags);
 
             // Assert
             Assert.True(output.D[0] > 0, "HE density should be positive at high solar activity");
@@ -1292,10 +1253,9 @@ Temperatures:
                 Ap = 0 // Zero geomagnetic activity
             };
             var flags = NrlmsiseFlags.CreateStandard();
-            var output = new NrlmsiseOutput();
 
             // Act
-            model.Calculate(input, flags, output);
+            var output = model.Calculate(input, flags);
 
             // Assert
             Assert.True(output.D[0] > 0, "HE density should be positive at Ap=0");
@@ -1324,10 +1284,9 @@ Temperatures:
                 Ap = 400 // Extreme geomagnetic activity
             };
             var flags = NrlmsiseFlags.CreateStandard();
-            var output = new NrlmsiseOutput();
 
             // Act
-            model.Calculate(input, flags, output);
+            var output = model.Calculate(input, flags);
 
             // Assert
             Assert.True(output.D[0] > 0, "HE density should be positive at Ap=400");
@@ -1364,10 +1323,9 @@ Temperatures:
             // Turn off all switches except 0
             for (int i = 1; i < 24; i++)
                 flags.Switches[i] = 0;
-            var output = new NrlmsiseOutput();
 
             // Act
-            model.Calculate(input, flags, output);
+            var output = model.Calculate(input, flags);
 
             // Assert
             Assert.True(output.D[0] > 0, "HE density should be positive");
@@ -1397,10 +1355,9 @@ Temperatures:
             };
             var flags = NrlmsiseFlags.CreateStandard();
             flags.Switches[1] = 0; // Disable F10.7 effect
-            var output = new NrlmsiseOutput();
 
             // Act
-            model.Calculate(input, flags, output);
+            var output = model.Calculate(input, flags);
 
             // Assert
             Assert.True(output.D[0] > 0, "HE density should be positive");
@@ -1430,10 +1387,9 @@ Temperatures:
             };
             var flags = NrlmsiseFlags.CreateStandard();
             flags.Switches[7] = 0; // Disable diurnal variation
-            var output = new NrlmsiseOutput();
 
             // Act
-            model.Calculate(input, flags, output);
+            var output = model.Calculate(input, flags);
 
             // Assert
             Assert.True(output.D[0] > 0, "HE density should be positive");
@@ -1463,10 +1419,9 @@ Temperatures:
             };
             var flags = NrlmsiseFlags.CreateStandard();
             flags.Switches[8] = 0; // Disable semidiurnal variation
-            var output = new NrlmsiseOutput();
 
             // Act
-            model.Calculate(input, flags, output);
+            var output = model.Calculate(input, flags);
 
             // Assert
             Assert.True(output.D[0] > 0, "HE density should be positive");
@@ -1496,10 +1451,9 @@ Temperatures:
             };
             var flags = NrlmsiseFlags.CreateStandard();
             flags.Switches[14] = 0; // Disable terdiurnal variation
-            var output = new NrlmsiseOutput();
 
             // Act
-            model.Calculate(input, flags, output);
+            var output = model.Calculate(input, flags);
 
             // Assert
             Assert.True(output.D[0] > 0, "HE density should be positive");
@@ -1529,10 +1483,9 @@ Temperatures:
             };
             var flags = NrlmsiseFlags.CreateStandard();
             flags.Switches[15] = 0; // Disable departures from diffusive equilibrium
-            var output = new NrlmsiseOutput();
 
             // Act
-            model.Calculate(input, flags, output);
+            var output = model.Calculate(input, flags);
 
             // Assert
             Assert.True(output.D[0] > 0, "HE density should be positive");
@@ -1571,10 +1524,9 @@ Temperatures:
             };
             var flags = NrlmsiseFlags.CreateStandard();
             flags.Switches[9] = -1; // Use ApArray
-            var output = new NrlmsiseOutput();
 
             // Act
-            model.Calculate(input, flags, output);
+            var output = model.Calculate(input, flags);
 
             // Assert
             Assert.True(output.D[0] > 0, "HE density should be positive");
@@ -1614,10 +1566,9 @@ Temperatures:
             };
             var flags = NrlmsiseFlags.CreateStandard();
             flags.Switches[9] = -1; // Use ApArray
-            var output = new NrlmsiseOutput();
 
             // Act
-            model.Calculate(input, flags, output);
+            var output = model.Calculate(input, flags);
 
             // Assert
             Assert.True(output.D[0] > 0, "HE density should be positive");
@@ -1652,10 +1603,9 @@ Temperatures:
             };
             var flags = NrlmsiseFlags.CreateStandard();
             flags.Switches[9] = -1; // Use ApArray
-            var output = new NrlmsiseOutput();
 
             // Act
-            model.Calculate(input, flags, output);
+            var output = model.Calculate(input, flags);
 
             // Assert
             Assert.True(output.D[0] > 0, "HE density should be positive");
@@ -1721,10 +1671,9 @@ Temperatures:
                 Ap = 4
             };
             var flags = NrlmsiseFlags.CreateStandard();
-            var output = new NrlmsiseOutput();
 
             // Act
-            model.Calculate(input, flags, output);
+            var output = model.Calculate(input, flags);
 
             // Assert
             Assert.True(output.D[0] > 0, "HE density should be positive");
@@ -1755,10 +1704,9 @@ Temperatures:
                 Ap = 4
             };
             var flags = NrlmsiseFlags.CreateStandard();
-            var output = new NrlmsiseOutput();
 
             // Act
-            model.Calculate(input, flags, output);
+            var output = model.Calculate(input, flags);
 
             // Assert
             Assert.True(output.D[0] > 0, "HE density should be positive");
@@ -1788,10 +1736,9 @@ Temperatures:
                 Ap = 4
             };
             var flags = NrlmsiseFlags.CreateStandard();
-            var output = new NrlmsiseOutput();
 
             // Act
-            model.Calculate(input, flags, output);
+            var output = model.Calculate(input, flags);
 
             // Assert
             Assert.True(output.D[0] > 0, "HE density should be positive");
@@ -1821,10 +1768,9 @@ Temperatures:
             };
             var flags = NrlmsiseFlags.CreateStandard();
             flags.Switches[2] = 0; // Time-independent mode
-            var output = new NrlmsiseOutput();
 
             // Act
-            model.Calculate(input, flags, output);
+            var output = model.Calculate(input, flags);
 
             // Assert - model uses 45 degrees latitude when sw[2]=0
             Assert.True(output.D[0] > 0, "HE density should be positive");
@@ -1853,10 +1799,9 @@ Temperatures:
                 Ap = 4
             };
             var flags = NrlmsiseFlags.CreateStandard();
-            var output = new NrlmsiseOutput();
 
             // Act
-            model.Calculate(input, flags, output);
+            var output = model.Calculate(input, flags);
 
             // Assert
             Assert.True(output.D[0] > 0, "HE density should be positive");

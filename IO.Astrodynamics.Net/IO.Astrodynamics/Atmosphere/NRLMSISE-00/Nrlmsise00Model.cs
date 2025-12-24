@@ -80,7 +80,7 @@ public class Nrlmsise00Model : IAtmosphericModel
 
         // Sum number densities (particles/m³) from all species except total mass density
         double totalNumberDensity = output.D[0] + output.D[1] + output.D[2] +
-                                   output.D[3] + output.D[4] + output.D[6] + output.D[7];
+                                    output.D[3] + output.D[4] + output.D[6] + output.D[7];
 
         double pressurePa = totalNumberDensity * kB * output.T[1]; // Pressure in Pascals
         return pressurePa / 1000.0; // Convert to kPa
@@ -146,12 +146,12 @@ public class Nrlmsise00Model : IAtmosphericModel
             ApA = _spaceWeather.ApArray ?? ApArray.Default
         };
 
-        var output = new NrlmsiseOutput();
+        NrlmsiseOutput output;
 
         // Thread-safe call to model
         lock (_lock)
         {
-            _model.Calculate(input, _flags, output);
+            output = _model.Calculate(input, _flags);
         }
 
         return output;
