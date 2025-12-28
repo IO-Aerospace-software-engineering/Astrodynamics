@@ -10,7 +10,9 @@
 | 3.x.x   | :x:  |
 | 4.x.x   | :x:  |
 | 5.x.x   | :x:  |
-| 6.x.x   | :heavy_check_mark:  |
+| 6.x.x   | :x:  |
+| 7.x.x   | :heavy_check_mark:  |
+| 8.x.x   | :heavy_check_mark:  |
 
 
 ## Reporting a Vulnerability
