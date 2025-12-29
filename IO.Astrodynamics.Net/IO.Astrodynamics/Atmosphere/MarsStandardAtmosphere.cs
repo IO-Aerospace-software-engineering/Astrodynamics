@@ -11,6 +11,21 @@ namespace IO.Astrodynamics.Atmosphere;
 public class MarsStandardAtmosphere : IAtmosphericModel
 {
     /// <summary>
+    /// Get complete atmospheric data at given context.
+    /// </summary>
+    /// <param name="context">Atmospheric context (only altitude is used).</param>
+    /// <returns>Atmosphere record with temperature, pressure, and density.</returns>
+    public Atmosphere GetAtmosphere(IAtmosphericContext context)
+    {
+        return new Atmosphere
+        {
+            Temperature = GetTemperature(context),
+            Pressure = GetPressure(context),
+            Density = GetDensity(context)
+        };
+    }
+
+    /// <summary>
     /// Get temperature at given atmospheric context.
     /// </summary>
     /// <param name="context">Atmospheric context (only altitude is used).</param>

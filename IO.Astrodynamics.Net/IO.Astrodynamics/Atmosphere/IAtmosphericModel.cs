@@ -13,6 +13,13 @@ namespace IO.Astrodynamics.Atmosphere;
 public interface IAtmosphericModel
 {
     /// <summary>
+    /// Get complete atmospheric data at given context.
+    /// </summary>
+    /// <param name="context">Atmospheric context containing position, time, and environmental data.</param>
+    /// <returns>Atmosphere record with temperature, pressure, density, and optional model-specific details.</returns>
+    Atmosphere GetAtmosphere(IAtmosphericContext context);
+
+    /// <summary>
     /// Get temperature at given atmospheric context.
     /// </summary>
     /// <param name="context">Atmospheric context containing position, time, and environmental data.</param>

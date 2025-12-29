@@ -1,3 +1,5 @@
+using System.Globalization;
+
 namespace IO.Astrodynamics.Atmosphere.NRLMSISE_00
 {
     /// <summary>
@@ -61,21 +63,23 @@ namespace IO.Astrodynamics.Atmosphere.NRLMSISE_00
         /// </summary>
         public override string ToString()
         {
-            return $@"NRLMSISE-00 Atmospheric Model Output:
+            return string.Format(CultureInfo.InvariantCulture,
+                @"NRLMSISE-00 Atmospheric Model Output:
 Densities:
-  He (Helium):          {D[0]:E3} m^-3
-  O (Oxygen):           {D[1]:E3} m^-3
-  N2 (Nitrogen):        {D[2]:E3} m^-3
-  O2 (Dioxygen):        {D[3]:E3} m^-3
-  Ar (Argon):           {D[4]:E3} m^-3
-  Total Mass Density:   {D[5]:E3} kg/m^3
-  H (Hydrogen):         {D[6]:E3} m^-3
-  N (Nitrogen):         {D[7]:E3} m^-3
-  Anomalous O:          {D[8]:E3} m^-3
+  He (Helium):          {0:E3} m^-3
+  O (Oxygen):           {1:E3} m^-3
+  N2 (Nitrogen):        {2:E3} m^-3
+  O2 (Dioxygen):        {3:E3} m^-3
+  Ar (Argon):           {4:E3} m^-3
+  Total Mass Density:   {5:E3} kg/m^3
+  H (Hydrogen):         {6:E3} m^-3
+  N (Nitrogen):         {7:E3} m^-3
+  Anomalous O:          {8:E3} m^-3
 
 Temperatures:
-  Exospheric:           {T[0]:F2} K
-  At Altitude:          {T[1]:F2} K";
+  Exospheric:           {9:F2} K
+  At Altitude:          {10:F2} K",
+                D[0], D[1], D[2], D[3], D[4], D[5], D[6], D[7], D[8], T[0], T[1]);
         }
     }
 }

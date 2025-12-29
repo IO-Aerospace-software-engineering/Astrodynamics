@@ -4,6 +4,7 @@ using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.Atmosphere;
 using IO.Astrodynamics.Propagator.Forces;
+using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.TimeSystem;
 using Xunit;
 using CelestialBody = IO.Astrodynamics.Body.CelestialBody;
@@ -21,8 +22,9 @@ public class AtmosphericDragTests
     [Fact]
     public void ComputeAcceleration()
     {
-        var earth = new CelestialBody(399, new GeopotentialModelParameters(Path.Combine(Constants.SolarSystemKernelPath.ToString(), "EGM2008_to70_TideFree")),
-            new EarthAtmosphericModel());
+        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, TimeSystem.Time.J2000TDB,
+            new GeopotentialModelParameters(Path.Combine(Constants.SolarSystemKernelPath.ToString(), "EGM2008_to70_TideFree")),
+            new EarthStandardAtmosphere());
         Clock clk = new Clock("My clock", 256);
         Spacecraft spc = new Spacecraft(-1001, "MySpacecraft", 100.0, 10000.0, clk,
             new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7656.2204182967143, 0.0), earth,

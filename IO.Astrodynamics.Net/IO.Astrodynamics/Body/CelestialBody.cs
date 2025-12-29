@@ -4,6 +4,7 @@ using IO.Astrodynamics.Coordinates;
 using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.Atmosphere;
+using IO.Astrodynamics.Atmosphere.NRLMSISE_00;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.TimeSystem;
 using Vector3 = IO.Astrodynamics.Math.Vector3;
@@ -62,6 +63,11 @@ public class CelestialBody : CelestialItem, IOrientable<Frame>
     /// Gets a value indicating whether the celestial body has an atmospheric model.
     /// </summary>
     public bool HasAtmosphericModel => AtmosphericModel != null;
+
+    /// <summary>
+    /// NRLMSISE-00 model instance for Earth with full atmospheric context.
+    /// </summary>
+    private Nrlmsise00Model _nrlmsiseModel;
 
     /// <summary>
     /// Instantiate celestial body from naif object with default parameters (Ecliptic J2000 at J2000 epoch)
@@ -386,6 +392,57 @@ public class CelestialBody : CelestialItem, IOrientable<Frame>
     public double GetAirDensity(IAtmosphericContext context)
     {
         return AtmosphericModel?.GetDensity(context) ?? 0.0;
+    }
+
+    /// <summary>
+    /// Get complete atmospheric data at given altitude (simple API).
+    /// </summary>
+    /// <param name="altitude">Altitude in meters.</param>
+    /// <returns>Atmosphere record with temperature, pressure, and density.</returns>
+    /// <remarks>
+    /// Uses the standard atmospheric model configured for this celestial body.
+    /// For Earth with full context (geodetic coordinates and time), use GetAtmosphere(AtmosphericContext).
+    /// </remarks>
+    public Atmosphere.Atmosphere GetAtmosphere(double altitude)
+    {
+        return GetAtmosphere(AtmosphericContext.FromAltitude(altitude));
+    }
+
+    /// <summary>
+    /// Get complete atmospheric data with full atmospheric context.
+    /// </summary>
+    /// <param name="context">Atmospheric context with altitude, and optionally position and time.</param>
+    /// <returns>Atmosphere record with temperature, pressure, density, and optional model-specific details.</returns>
+    /// <remarks>
+    /// For Earth: If the context includes geodetic coordinates (latitude, longitude) and epoch,
+    /// the NRLMSISE-00 model will be used automatically, providing additional molecular density data.
+    /// Otherwise, the standard atmospheric model is used.
+    /// For other bodies: The configured standard atmospheric model is used.
+    /// </remarks>
+    public Atmosphere.Atmosphere GetAtmosphere(AtmosphericContext context)
+    {
+        // For Earth with full context, use NRLMSISE-00 model
+        if (NaifId == 399 && 
+            context.GeodeticLatitude.HasValue && 
+            context.GeodeticLongitude.HasValue && 
+            context.Epoch.HasValue)
+        {
+            _nrlmsiseModel ??= new Nrlmsise00Model();
+            return _nrlmsiseModel.GetAtmosphere(context);
+        }
+
+        // Use standard atmospheric model
+        if (AtmosphericModel == null)
+        {
+            return new Atmosphere.Atmosphere
+            {
+                Temperature = double.NaN,
+                Pressure = 0.0,
+                Density = 0.0
+            };
+        }
+
+        return AtmosphericModel.GetAtmosphere(context);
     }
 
     public override string ToString()
