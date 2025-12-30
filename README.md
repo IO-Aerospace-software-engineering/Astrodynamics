@@ -14,8 +14,13 @@ Important: The C++ layer is feature-frozen and exists only for communication wit
 - Export simulations to Cosmographia
 - Manage PDS archives (generate, materialize objects, validate against XML schemas)
 - Ephemerides and propagation
-  - Spacecraft propagator: geopotential models, simplified atmospheres (Earth, Mars), solar radiation pressure, n-body perturbations, impulsive maneuvers, fuel balance
-  - Small-body propagator: geopotential (Earth), simplified atmospheres (Earth, Mars), SRP, n-body
+  - Spacecraft propagator: geopotential models, atmospheric drag (Earth, Mars), solar radiation pressure, n-body perturbations, impulsive maneuvers, fuel balance
+  - Small-body propagator: geopotential (Earth), atmospheric drag (Earth, Mars), SRP, n-body
+- Atmospheric modeling
+  - Unified API via `IAtmosphericModel` interface with `Atmosphere` result record
+  - Earth: U.S. Standard Atmosphere 1976 (simple), NRLMSISE-00 (high-fidelity with space weather)
+  - Mars: Standard analytical model
+  - Automatic model selection (Earth uses NRLMSISE-00 when full context available)
 - Orbital parameters: compute/convert State Vector, TLE, Equinoctial, Keplerian
 - Compute TLE from osculating elements
 - Frames and coordinates: ICRF/J2000, Ecliptic (J2000/B1950), TEME, Galactic, FK4, body-fixed/ITRF93, Equatorial/Horizontal/Planetodetic/Planetographic

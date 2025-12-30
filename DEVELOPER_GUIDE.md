@@ -1013,63 +1013,206 @@ SGP4/SDP4 propagator for TLE elements.
 
 ### IO.Astrodynamics.Atmosphere
 
+The atmosphere subsystem provides a unified interface for atmospheric modeling across different planets and model complexities.
+
+#### Architecture Overview
+
+```
+IAtmosphericModel (Interface)
+├── EarthStandardAtmosphere (U.S. Standard 1976, altitude-only)
+├── MarsStandardAtmosphere (Simple Mars model, altitude-only)
+└── Nrlmsise00Model (High-fidelity Earth model, requires full context)
+
+IAtmosphericContext (Interface)
+└── AtmosphericContext (Record with factory methods)
+
+Atmosphere (Result Record)
+├── Temperature (°C)
+├── Pressure (kPa)
+├── Density (kg/m³)
+└── Details: IAtmosphericDetails (optional model-specific data)
+    └── NrlmsiseDetails (molecular densities, exospheric temp)
+```
+
 #### IAtmosphericModel
 
-Interface for atmospheric models.
+Unified interface for all atmospheric models.
 
 | Method | Description |
 |--------|-------------|
+| `GetAtmosphere(IAtmosphericContext context)` | Get complete atmospheric data (returns `Atmosphere` record) |
 | `GetTemperature(IAtmosphericContext context)` | Get temperature (°C) |
 | `GetPressure(IAtmosphericContext context)` | Get pressure (kPa) |
 | `GetDensity(IAtmosphericContext context)` | Get density (kg/m³) |
 
+#### Atmosphere
+
+Result record containing atmospheric properties.
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `Temperature` | `double` | Temperature in Celsius |
+| `Pressure` | `double` | Pressure in kPa |
+| `Density` | `double` | Total mass density in kg/m³ |
+| `Details` | `IAtmosphericDetails` | Optional model-specific details (null for simple models) |
+
+#### AtmosphericContext
+
+Context record for atmospheric calculations.
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `Altitude` | `double` | Altitude above reference surface (m) - required |
+| `GeodeticLatitude` | `double?` | Geodetic latitude (rad) - optional |
+| `GeodeticLongitude` | `double?` | Geodetic longitude (rad) - optional |
+| `Epoch` | `Time?` | Time of calculation - optional |
+
+| Factory Method | Description |
+|----------------|-------------|
+| `FromAltitude(double altitude)` | Create simple context with altitude only |
+| `FromPlanetodetic(altitude, latitude, longitude, epoch)` | Create full context |
+
 #### EarthStandardAtmosphere
 
-U.S. Standard Atmosphere 1976 model.
+U.S. Standard Atmosphere 1976 model. Simple analytical model valid up to ~86 km. Uses only altitude from context.
 
 ```csharp
 var model = new EarthStandardAtmosphere();
 var context = AtmosphericContext.FromAltitude(10000);  // 10 km
 
-var temp = model.GetTemperature(context);    // °C
+// Get individual values
+var temp = model.GetTemperature(context);     // °C
 var pressure = model.GetPressure(context);    // kPa
 var density = model.GetDensity(context);      // kg/m³
+
+// Or get complete atmospheric data
+var atmosphere = model.GetAtmosphere(context);
+Console.WriteLine($"T={atmosphere.Temperature:F1}°C, P={atmosphere.Pressure:F3} kPa, ρ={atmosphere.Density:E3} kg/m³");
 ```
 
 #### Nrlmsise00Model
 
-NRLMSISE-00 empirical atmosphere model (0-2000+ km).
+NRLMSISE-00 empirical atmosphere model (0-2000+ km). Requires full context with position and time. Thread-safe for concurrent use.
 
 | Constructor | Description |
 |------------|-------------|
-| `Nrlmsise00Model(SpaceWeather weather)` | Create with space weather data |
+| `Nrlmsise00Model()` | Create with nominal conditions (F10.7=150, Ap=4) |
+| `Nrlmsise00Model(SpaceWeather weather)` | Create with custom space weather |
+| `Nrlmsise00Model(NrlmsiseFlags flags, SpaceWeather weather)` | Create with custom flags and weather |
 
 ```csharp
+// Use nominal conditions
+var model = new Nrlmsise00Model();
+
+// Or specify space weather
 var spaceWeather = new SpaceWeather { F107 = 150, F107A = 150, Ap = 4 };
 var model = new Nrlmsise00Model(spaceWeather);
 
-var context = new AtmosphericContext
-{
-    Altitude = 400000,  // 400 km
-    Epoch = new Time(2024, 6, 21, 12, 0, 0),
-    GeodeticLatitude = 0,
-    GeodeticLongitude = 0
-};
+// Or use preset conditions
+var solarMinModel = new Nrlmsise00Model(SpaceWeather.SolarMinimum);
+var solarMaxModel = new Nrlmsise00Model(SpaceWeather.SolarMaximum);
 
-var density = model.GetDensity(context);
-Console.WriteLine($"Density at 400 km: {density:E3} kg/m³");
+// Full context required
+var context = AtmosphericContext.FromPlanetodetic(
+    altitude: 400000,                           // 400 km
+    geodeticLatitude: 0,                        // Equator (rad)
+    geodeticLongitude: 0,                       // Prime meridian (rad)
+    epoch: new Time(2024, 6, 21, 12, 0, 0)
+);
+
+var atmosphere = model.GetAtmosphere(context);
+Console.WriteLine($"Density at 400 km: {atmosphere.Density:E3} kg/m³");
+
+// Access model-specific details via pattern matching
+if (atmosphere.Details is NrlmsiseDetails details)
+{
+    Console.WriteLine($"Atomic Oxygen: {details.AtomicOxygenDensity:E3} m⁻³");
+    Console.WriteLine($"Molecular Nitrogen: {details.NitrogenDensity:E3} m⁻³");
+    Console.WriteLine($"Exospheric Temp: {details.ExosphericTemperature:F0} K");
+}
 ```
+
+#### NrlmsiseDetails
+
+Model-specific details for NRLMSISE-00 results.
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `HeliumDensity` | `double` | He number density (m⁻³) |
+| `AtomicOxygenDensity` | `double` | O number density (m⁻³) |
+| `NitrogenDensity` | `double` | N₂ number density (m⁻³) |
+| `MolecularOxygenDensity` | `double` | O₂ number density (m⁻³) |
+| `ArgonDensity` | `double` | Ar number density (m⁻³) |
+| `HydrogenDensity` | `double` | H number density (m⁻³, zero below 72.5 km) |
+| `AtomicNitrogenDensity` | `double` | N number density (m⁻³, zero below 72.5 km) |
+| `AnomalousOxygenDensity` | `double` | Anomalous oxygen density (m⁻³) |
+| `ExosphericTemperature` | `double` | Exospheric temperature (K) |
+
+#### SpaceWeather
+
+Space weather data for NRLMSISE-00.
+
+| Property | Description |
+|----------|-------------|
+| `F107` | Daily 10.7 cm solar radio flux |
+| `F107A` | 81-day average of F10.7 |
+| `Ap` | Daily magnetic index |
+| `ApArray` | Optional 7-element AP history array |
+
+| Static Property | F107 | Ap | Description |
+|-----------------|------|-----|-------------|
+| `Nominal` | 150 | 4 | Typical quiet conditions |
+| `SolarMinimum` | 70 | 4 | Solar minimum conditions |
+| `SolarMaximum` | 250 | 15 | Solar maximum conditions |
+| `Moderate` | 150 | 7 | Moderate activity |
 
 #### MarsStandardAtmosphere
 
-Mars atmospheric model.
+Simple Mars atmospheric model using altitude only.
 
 ```csharp
-var mars = new CelestialBody(PlanetsAndMoons.MARS);
 var model = new MarsStandardAtmosphere();
-var context = AtmosphericContext.FromAltitude(50000);
-var density = model.GetDensity(context);
+var context = AtmosphericContext.FromAltitude(50000);  // 50 km
+var atmosphere = model.GetAtmosphere(context);
+Console.WriteLine($"Mars atmosphere: ρ={atmosphere.Density:E3} kg/m³");
 ```
+
+#### CelestialBody Integration
+
+`CelestialBody` provides convenient `GetAtmosphere` methods that automatically select the best available model.
+
+```csharp
+var earth = PlanetsAndMoons.EARTH_BODY;
+
+// Simple: altitude-only (uses EarthStandardAtmosphere)
+var atm1 = earth.GetAtmosphere(10000);  // 10 km altitude
+
+// Full context: automatically uses NRLMSISE-00 for Earth
+var context = AtmosphericContext.FromPlanetodetic(
+    altitude: 400000,
+    geodeticLatitude: 45 * Constants.Deg2Rad,
+    geodeticLongitude: -75 * Constants.Deg2Rad,
+    epoch: new Time(2024, 6, 21, 12, 0, 0)
+);
+var atm2 = earth.GetAtmosphere(context);
+
+// Access NRLMSISE-00 specific data
+if (atm2.Details is NrlmsiseDetails details)
+{
+    Console.WriteLine($"O₂ density: {details.MolecularOxygenDensity:E3} m⁻³");
+}
+```
+
+#### Model Selection Guidelines
+
+| Scenario | Recommended Model |
+|----------|-------------------|
+| Quick calculations below 86 km | `EarthStandardAtmosphere` |
+| High-altitude modeling (> 100 km) | `Nrlmsise00Model` |
+| Time-varying density (drag analysis) | `Nrlmsise00Model` |
+| Space weather effects | `Nrlmsise00Model` |
+| Mars atmospheric entry | `MarsStandardAtmosphere` |
+| Via `CelestialBody` with full context | Automatic NRLMSISE-00 |
 
 ---
 
