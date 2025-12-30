@@ -7,6 +7,8 @@ A modern .NET astrodynamics toolkit powered by NASA/JPL NAIF SPICE. IO.Astrodyna
 
 Important: The C++ layer is feature-frozen and exists only for communication with SPICE. All new features and APIs will land in the .NET projects.
 
+**[Developer Guide](DEVELOPER_GUIDE.md)** - Comprehensive API reference with code examples, units, and best practices.
+
 
 ## What you can do
 
