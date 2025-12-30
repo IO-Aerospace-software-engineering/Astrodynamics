@@ -399,25 +399,25 @@ public class CelestialBodyTests
     [Fact]
     public void MarsAirTemperature()
     {
-        MarsAtmosphericModel model = new MarsAtmosphericModel();
-        Assert.Equal(-31.00, model.GetTemperature(0.0), 9);
-        Assert.Equal(-90.00, model.GetTemperature(30000.0), 9);
+        MarsStandardAtmosphere model = new MarsStandardAtmosphere();
+        Assert.Equal(-31.00, model.GetTemperature(AtmosphericContext.FromAltitude(0.0)), 9);
+        Assert.Equal(-90.00, model.GetTemperature(AtmosphericContext.FromAltitude(30000.0)), 9);
     }
 
     [Fact]
     public void MarsAirPressure()
     {
-        MarsAtmosphericModel model = new MarsAtmosphericModel();
-        Assert.Equal(0.699, model.GetPressure(0.0));
-        Assert.Equal(0.046976653405085077, model.GetPressure(30000.0));
+        MarsStandardAtmosphere model = new MarsStandardAtmosphere();
+        Assert.Equal(0.699, model.GetPressure(AtmosphericContext.FromAltitude(0.0)));
+        Assert.Equal(0.046976653405085077, model.GetPressure(AtmosphericContext.FromAltitude(30000.0)));
     }
 
     [Fact]
     public void MarsAirDensity()
     {
-        MarsAtmosphericModel model = new MarsAtmosphericModel();
-        Assert.Equal(0.015026759563140498, model.GetDensity(0.0));
-        Assert.Equal(0.0013352044980975983, model.GetDensity(30000.0));
+        MarsStandardAtmosphere model = new MarsStandardAtmosphere();
+        Assert.Equal(0.015026759563140498, model.GetDensity(AtmosphericContext.FromAltitude(0.0)));
+        Assert.Equal(0.0013352044980975983, model.GetDensity(AtmosphericContext.FromAltitude(30000.0)));
     }
     
     [Fact]

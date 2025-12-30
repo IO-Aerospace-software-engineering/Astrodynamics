@@ -12,6 +12,7 @@ using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.Atmosphere;
 using IO.Astrodynamics.Propagator.Forces;
 using IO.Astrodynamics.Propagator.Integrators;
+using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.TimeSystem;
 using Vector3 = IO.Astrodynamics.Math.Vector3;
 
@@ -38,9 +39,10 @@ public class VelocityScenario
     public VelocityScenario()
     {
         API.Instance.LoadKernels(new DirectoryInfo("Data"));
-        _earth = new CelestialBody(399, new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 30), new EarthAtmosphericModel());
-        _moon = new CelestialBody(301);
-        _sun = new CelestialBody(10);
+        _earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, TimeSystem.Time.J2000TDB,
+            new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 30), new EarthStandardAtmosphere());
+        _moon = new CelestialBody(PlanetsAndMoons.MOON);
+        _sun = new CelestialBody(Stars.Sun);
         _geopotential = new GeopotentialGravitationalField(new StreamReader("Data/SolarSystem/EGM2008_to70_TideFree"));
         Clock clk = new Clock("My clock", 256);
         Spacecraft spc = new Spacecraft(-1001, "MySpacecraft", 100.0, 10000.0, clk,

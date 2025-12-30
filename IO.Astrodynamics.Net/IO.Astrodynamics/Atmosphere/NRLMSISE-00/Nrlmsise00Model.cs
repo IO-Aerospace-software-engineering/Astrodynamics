@@ -55,6 +55,43 @@ public class Nrlmsise00Model : IAtmosphericModel
     }
 
     /// <summary>
+    /// Get complete atmospheric data at given context including molecular density details.
+    /// </summary>
+    /// <param name="context">Atmospheric context with altitude, position, and time.</param>
+    /// <returns>Atmosphere record with temperature, pressure, density, and NRLMSISE-00 specific details.</returns>
+    /// <exception cref="ArgumentException">Thrown if context lacks required epoch or geodetic position.</exception>
+    public Atmosphere GetAtmosphere(IAtmosphericContext context)
+    {
+        var output = ComputeAtmosphere(context);
+        const double kB = 1.380649e-23; // Boltzmann constant (J/K)
+
+        // Sum number densities (particles/m³) from all species except total mass density
+        double totalNumberDensity = output.D[0] + output.D[1] + output.D[2] +
+                                    output.D[3] + output.D[4] + output.D[6] + output.D[7];
+
+        double pressurePa = totalNumberDensity * kB * output.T[1];
+
+        return new Atmosphere
+        {
+            Temperature = output.T[1] - Constants.Kelvin,
+            Pressure = pressurePa / 1000.0,
+            Density = output.D[5],
+            Details = new NrlmsiseDetails
+            {
+                HeliumDensity = output.D[0],
+                AtomicOxygenDensity = output.D[1],
+                NitrogenDensity = output.D[2],
+                MolecularOxygenDensity = output.D[3],
+                ArgonDensity = output.D[4],
+                HydrogenDensity = output.D[6],
+                AtomicNitrogenDensity = output.D[7],
+                AnomalousOxygenDensity = output.D[8],
+                ExosphericTemperature = output.T[0]
+            }
+        };
+    }
+
+    /// <summary>
     /// Get temperature at given atmospheric context.
     /// </summary>
     /// <param name="context">Atmospheric context with altitude, position, and time.</param>
@@ -74,11 +111,9 @@ public class Nrlmsise00Model : IAtmosphericModel
     /// <exception cref="ArgumentException">Thrown if context lacks required epoch or geodetic position.</exception>
     public double GetPressure(IAtmosphericContext context)
     {
-        // NRLMSISE-00 doesn't directly provide pressure, compute from ideal gas law
         var output = ComputeAtmosphere(context);
         const double kB = 1.380649e-23; // Boltzmann constant (J/K)
 
-        // Sum number densities (particles/m³) from all species except total mass density
         double totalNumberDensity = output.D[0] + output.D[1] + output.D[2] +
                                     output.D[3] + output.D[4] + output.D[6] + output.D[7];
 
