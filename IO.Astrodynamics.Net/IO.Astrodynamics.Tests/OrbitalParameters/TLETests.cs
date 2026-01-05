@@ -189,8 +189,9 @@ public class TLETests
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
 
         var meanElements = tle.ToMeanKeplerianElements();
+        // BSTAR value 0.0001027 corresponds to TLE field " 10270-3" (0.10270 × 10^-3)
         var newtle = TLE.Create(
-            meanElements, "ISS", 25544, "98067A", 2570, Classification.Unclassified, 0.0010270, 0.00016717, elementSetNumber: 905);
+            meanElements, "ISS", 25544, "98067A", 2570, Classification.Unclassified, 0.0001027, 0.00016717, elementSetNumber: 905);
         Assert.Equal(tle.Name, newtle.Name);
         Assert.Equal(tle.Line1, newtle.Line1);
         Assert.Equal(tle.Line2, newtle.Line2);
@@ -276,7 +277,8 @@ public class TLETests
         var epoch = new TimeSystem.Time(new DateTime(2024, 1, 1), TimeFrame.UTCFrame);
         var sv = new StateVector(new Vector3(5465479.168061836, -4037598.9299125164, 3.8812307310800365), // Position vector (X, Y, Z)
             new Vector3(2821.2352501830983, 3825.849951628489, 6009.392701926987), TestHelpers.EarthAtJ2000, epoch, Frames.Frame.ICRF);
-        var config = new Astrodynamics.OrbitalParameters.TLE.Configuration(25666, "TestSatellite", "98067A", BstarDragTerm: 0.0021103);
+        // BSTAR " 21103-3" = 0.21103 × 10^-3 = 0.00021103
+        var config = new Astrodynamics.OrbitalParameters.TLE.Configuration(25666, "TestSatellite", "98067A", BstarDragTerm: 0.00021103);
         var tle = sv.ToTLE(config);
         Assert.NotNull(tle);
         Assert.Equal("TestSatellite", tle.Name);
@@ -567,6 +569,45 @@ public class TLETests
         Assert.True(epochSeconds >= year2020Seconds && epochSeconds <= year2025Seconds);
     }
 
+    [Theory]
+    [InlineData(-0.0001, "-10000-3")]
+    [InlineData(0.0001, " 10000-3")]
+    [InlineData(0.0001027, " 10270-3")]
+    [InlineData(-0.0001027, "-10270-3")]
+    [InlineData(0.00001, " 10000-4")]
+    [InlineData(0.001, " 10000-2")]
+    [InlineData(0.01, " 10000-1")]
+    [InlineData(0.1, " 10000+0")]
+    [InlineData(0.00012345, " 12345-3")]
+    [InlineData(-0.00012345, "-12345-3")]
+    public void BStarConversion_RoundTrip_PreservesValue(double bstarValue, string expectedTleField)
+    {
+        // Arrange: Create a simple orbit to use as base for TLE creation
+        var epoch = new TimeSystem.Time(new DateTime(2024, 1, 1), TimeFrame.UTCFrame);
+        var kep = new KeplerianElements(
+            7000000.0, // Semi-major axis (m)
+            0.001,     // Eccentricity
+            0.9,       // Inclination (rad)
+            0.0,       // RAAN
+            0.0,       // Argument of periapsis
+            0.0,       // Mean anomaly
+            TestHelpers.EarthAtJ2000,
+            epoch,
+            Frames.Frame.ICRF);
+
+        // Act: Create TLE with specific BSTAR value
+        var tle = TLE.Create(kep, "TEST", 12345, "24001A", 100,
+            Classification.Unclassified, bstarValue);
+
+        // Assert: BSTAR field in Line1 should match expected format
+        // BSTAR is at positions 53-60 (8 characters) in line 1
+        var actualBstarField = tle.Line1.Substring(53, 8);
+        Assert.Equal(expectedTleField, actualBstarField);
+
+        // Assert: Parsed BSTAR should equal original value (within floating point tolerance)
+        Assert.Equal(bstarValue, tle.BallisticCoefficient, 10);
+    }
+
     [Fact]
     public void TLEFitting()
     {
@@ -588,11 +629,12 @@ public class TLETests
         );
 
 // Configure the TLE parameters
+        // BSTAR " 21103-3" = 0.21103 × 10^-3 = 0.00021103
         var config = new IO.Astrodynamics.OrbitalParameters.TLE.Configuration(
             25544, // NORAD ID
             "ISS (ZARYA)", // Satellite name
             "98067A", // COSPAR ID
-            BstarDragTerm: 0.0021103 // B* drag term
+            BstarDragTerm: 0.00021103 // B* drag term
         );
 
 // Convert the state vector to a TLE
@@ -633,7 +675,8 @@ public class TLETests
         var osculatingState = spaceTrackTLE.ToStateVector(t0).ToFrame(Frames.Frame.ICRF) as StateVector;
 
         // Create modelled TLE from the osculating state at t0 with same B* as Space-Track TLE
-        var tleConfig = new IO.Astrodynamics.OrbitalParameters.TLE.Configuration(25544, "ISS (ZARYA) MODEL", "98067A",BstarDragTerm:0.001027);
+        // BSTAR " 10270-3" = 0.10270 × 10^-3 = 0.0001027
+        var tleConfig = new IO.Astrodynamics.OrbitalParameters.TLE.Configuration(25544, "ISS (ZARYA) MODEL", "98067A",BstarDragTerm:0.0001027);
         var modelledTLE = osculatingState.ToTLE(tleConfig);
 
         // Update modelled TLE B* to match Space-Track TLE (this requires manual setting)
