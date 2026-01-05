@@ -411,16 +411,25 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
     }
 
     // Helper for TLE scientific notation (e.g.  34123-4)
+    // TLE format: [sign][5-digit mantissa][signed exponent]
+    // The mantissa represents 0.XXXXX (value between 0.1 and 1)
+    // Example: " 10270-3" means +0.10270 × 10^-3 = 0.00010270
     static string FormatTleExponent(double value, int width)
     {
         if (System.Math.Abs(value) < 1e-15)
             return ' ' + new string('0', width) + "-0";
 
-        var scientificNotation = value.ToString("0.0000E+0", CultureInfo.InvariantCulture);
+        var sign = value < 0 ? '-' : ' ';
+        var absValue = System.Math.Abs(value);
+
+        var scientificNotation = absValue.ToString("0.0000E+0", CultureInfo.InvariantCulture);
         var parts = scientificNotation.Split('E');
         var mantissa = parts[0].Replace(".", "").PadLeft(width, '0');
-        var exponent = parts[1];
-        var sign = value < 0 ? '-' : ' ';
+
+        // TLE format uses 0.XXXXX mantissa (0.1 to 1), C# uses X.XXXX (1 to 10)
+        // So we must increment the exponent by 1 to compensate
+        int exponentValue = int.Parse(parts[1], CultureInfo.InvariantCulture) + 1;
+        string exponent = exponentValue >= 0 ? $"+{exponentValue}" : exponentValue.ToString();
 
         return $"{sign}{mantissa}{exponent}";
     }
