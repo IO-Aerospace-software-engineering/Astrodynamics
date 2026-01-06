@@ -148,7 +148,7 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
     /// <exception cref="ArgumentException">Thrown when any of the lines are null or empty.</exception>
     /// <exception cref="InvalidOperationException">Thrown when checksum validation fails.</exception>
     public TLE(string name, string line1, string line2) : base(new CelestialBody(399, new Frame("ITRF93"), ExtractEpochFromTLE(line1)), ExtractEpochFromTLE(line1),
-        new Frame("TEME"))
+        new Frame("TEME"), OrbitalElementsType.Mean)
     {
         if (string.IsNullOrEmpty(line1)) throw new ArgumentException("Value cannot be null or empty.", nameof(line1));
         if (string.IsNullOrEmpty(line2)) throw new ArgumentException("Value cannot be null or empty.", nameof(line2));
@@ -166,9 +166,11 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
         var earth = new CelestialBody(399, new Frame("ITRF93"), epoch);
 
         // Parse line 2 for orbital elements - FIXED: Use InvariantCulture
-        var meanMotion = double.Parse(line2.Substring(52, 11), CultureInfo.InvariantCulture);
-        double n = Constants._2PI / (86400.0 / meanMotion);
+        var meanMotionRevPerDay = double.Parse(line2.Substring(52, 11), CultureInfo.InvariantCulture);
+        double n = meanMotionRevPerDay * Constants._2PI / 86400.0; // Convert rev/day to rad/s
         MeanSemiMajorAxis = System.Math.Cbrt(earth.GM / (n * n));
+
+        // Cache mean motion to preserve precision for TLE recreation
         MeanEccentricity = double.Parse("0." + line2.Substring(26, 7), CultureInfo.InvariantCulture);
         MeanInclination = double.Parse(line2.Substring(8, 8), CultureInfo.InvariantCulture) * Constants.Deg2Rad;
         MeanAscendingNode = double.Parse(line2.Substring(17, 8), CultureInfo.InvariantCulture) * Constants.Deg2Rad;
@@ -252,7 +254,7 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
     /// <summary>
     /// Creates a new TLE from orbital parameters and metadata.
     /// </summary>
-    /// <param name="orbitalParams">The orbital parameters to convert to TLE format.</param>
+    /// <param name="meanElements">The orbital parameters to convert to TLE format.</param>
     /// <param name="name">The name/title of the satellite or object.</param>
     /// <param name="noradId">The NORAD catalog number (5 digits).</param>
     /// <param name="cosparId">The COSPAR international designator (6-8 characters).</param>
@@ -266,7 +268,21 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
     /// <exception cref="ArgumentNullException">Thrown when orbitalParams or name is null.</exception>
     /// <exception cref="ArgumentException">Thrown when cosparId is null, whitespace, or not between 6-8 characters.</exception>
     /// <exception cref="ArgumentOutOfRangeException">Thrown when elementSetNumber exceeds the maximum allowed value.</exception>
-    public static TLE Create(OrbitalParameters orbitalParams, string name, ushort noradId, string cosparId, ushort revolutionsAtEpoch,
+    public static TLE Create(OrbitalParameters meanElements, string name, ushort noradId, string cosparId, ushort revolutionsAtEpoch,
+        Classification classification = Classification.Unclassified, double bstar = 0.0001, double nDot = 0.0, double nDDot = 0.0, ushort elementSetNumber = MAX_ELEMENT_SET_NUMBER)
+    {
+        if (meanElements == null) throw new ArgumentNullException(nameof(meanElements));
+        if (meanElements.ElementsType != OrbitalElementsType.Mean)
+            throw new ArgumentException("Orbital parameters must be mean elements. Use KeplerianElements.FromOMM() or ensure ElementsType is Mean.", nameof(meanElements));
+
+        return CreateInternal(meanElements, name, noradId, cosparId, revolutionsAtEpoch, classification, bstar, nDot, nDDot, elementSetNumber);
+    }
+
+    /// <summary>
+    /// Internal method for creating TLE from orbital parameters during the fitting process.
+    /// This method does not validate ElementsType, allowing iterative convergence from osculating to mean elements.
+    /// </summary>
+    internal static TLE CreateInternal(OrbitalParameters orbitalParams, string name, ushort noradId, string cosparId, ushort revolutionsAtEpoch,
         Classification classification = Classification.Unclassified, double bstar = 0.0001, double nDot = 0.0, double nDDot = 0.0, ushort elementSetNumber = MAX_ELEMENT_SET_NUMBER)
     {
         if (orbitalParams == null) throw new ArgumentNullException(nameof(orbitalParams));
@@ -276,6 +292,7 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
         {
             throw new ArgumentException("COSPAR Identifier must be between 6 and 8 characters long.", nameof(cosparId));
         }
+
         if (elementSetNumber > MAX_ELEMENT_SET_NUMBER)
         {
             throw new ArgumentOutOfRangeException(nameof(elementSetNumber), $"Element set number must be between 0 and {MAX_ELEMENT_SET_NUMBER}.");
@@ -283,15 +300,17 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
 
         // Convert elements to TLE units
         var kep = orbitalParams is TLE tle ? tle.ToMeanKeplerianElements() : orbitalParams.ToKeplerianElements();
-        
+
         // Convert and normalize angles - single pass, no redundant calculations
         double iDeg = System.Math.Clamp(kep.I * Constants.Rad2Deg, 0.0, 180.0);
         if (double.IsNaN(iDeg)) iDeg = 0.0;
-        
+
         double raanDeg = NormalizeAngle(kep.RAAN * Constants.Rad2Deg);
         double argpDeg = NormalizeAngle(kep.AOP * Constants.Rad2Deg);
         double mDeg = NormalizeAngle(kep.M * Constants.Rad2Deg);
-        
+
+        // For mean elements, use cached mean motion to preserve precision from OMM
+        // MeanMotion() returns cached value (rad/s) if available, otherwise computes from semi-major axis
         double meanMotion = kep.MeanMotion() * 86400.0 / Constants._2PI;
 
         // Format epoch: YYDDD.DDDDDDDD - optimized with Span
@@ -299,12 +318,12 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
         int year = epochDt.Year % 100;
         int dayOfYear = epochDt.DayOfYear;
         double fracDay = epochDt.TimeOfDay.TotalSeconds / 86400.0;
-        
+
         // Pre-allocate for epoch string: YY + DDD + . + 8 decimals = 14 chars
         Span<char> epochSpan = stackalloc char[14];
         year.TryFormat(epochSpan, out int pos1, "00", CultureInfo.InvariantCulture);
         dayOfYear.TryFormat(epochSpan.Slice(2), out int pos2, "000", CultureInfo.InvariantCulture);
-        
+
         // Format fractional day directly into span
         string fracDayStr = fracDay.ToString("0.00000000", CultureInfo.InvariantCulture);
         fracDayStr.AsSpan(1, 9).CopyTo(epochSpan.Slice(5)); // Copy ".DDDDDDDD"
@@ -370,12 +389,12 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
     /// </summary>
     private static double NormalizeAngle(double angleDeg)
     {
-        if (double.IsNaN(angleDeg) || double.IsInfinity(angleDeg)) 
+        if (double.IsNaN(angleDeg) || double.IsInfinity(angleDeg))
             return 0.0;
 
         // Normalize to [0, 360)
         angleDeg = angleDeg % 360.0;
-        if (angleDeg < 0.0) 
+        if (angleDeg < 0.0)
             angleDeg += 360.0;
 
         // Edge case: very close to 360
@@ -397,7 +416,7 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
     {
         int sum = 0;
         int length = builder.Length;
-        
+
         for (int i = 0; i < length; i++)
         {
             char c = builder[i];
@@ -406,7 +425,7 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
             else if (c == '-')
                 sum += 1;
         }
-        
+
         return sum % 10;
     }
 
@@ -634,7 +653,8 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
         if (_meanKeplerianElements == null)
         {
             _meanKeplerianElements = new KeplerianElements(MeanSemiMajorAxis, MeanEccentricity, MeanInclination,
-                MeanAscendingNode, MeanArgumentOfPeriapsis, MeanMeanAnomaly, Observer, Epoch, Frame);
+                MeanAscendingNode, MeanArgumentOfPeriapsis, MeanMeanAnomaly, Observer, Epoch, Frame,
+                null, null, null, OrbitalElementsType.Mean);
         }
 
         return _meanKeplerianElements;

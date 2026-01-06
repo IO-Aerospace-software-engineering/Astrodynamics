@@ -32,6 +32,11 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// </summary>
     public Frame Frame { get; }
 
+    /// <summary>
+    /// Gets the type of orbital elements (osculating or mean).
+    /// </summary>
+    public OrbitalElementsType ElementsType { get; }
+
     private static readonly MeanElementsConverter _sharedMeanElementsConverter = new();
 
     //Data used for caching
@@ -41,7 +46,7 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     private Vector3? _ascendingNodeVector;
     private Vector3? _decendingNodeVector;
     protected TimeSpan? _period;
-    private double? _meanMotion;
+    protected double? _meanMotion;
     protected StateVector _stateVector;
     protected EquinoctialElements _equinoctial;
     private Vector3? _perigeevector;
@@ -72,14 +77,17 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// <param name="observer">The observer associated with the orbital parameters.</param>
     /// <param name="epoch">The epoch time at which the orbital parameters are defined.</param>
     /// <param name="frame">The reference frame in which the orbital parameters are defined.</param>
+    /// <param name="elementsType">The type of orbital elements (osculating or mean). Defaults to osculating.</param>
     /// <exception cref="ArgumentNullException">
     /// Thrown when the observer or frame is null.
     /// </exception>
-    protected OrbitalParameters(ILocalizable observer, in Time epoch, Frame frame)
+    protected OrbitalParameters(ILocalizable observer, in Time epoch, Frame frame,
+        OrbitalElementsType elementsType = OrbitalElementsType.Osculating)
     {
         Observer = observer ?? throw new ArgumentNullException(nameof(observer));
         Epoch = epoch;
         Frame = frame ?? throw new ArgumentNullException(nameof(frame));
+        ElementsType = elementsType;
     }
 
 
