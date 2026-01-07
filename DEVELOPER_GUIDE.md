@@ -353,6 +353,17 @@ Base class for celestial objects (bodies, spacecraft).
 
 ### IO.Astrodynamics.OrbitalParameters
 
+#### OrbitalElementsType (enum)
+
+Discriminant for orbital element types.
+
+| Value | Description |
+|-------|-------------|
+| `Osculating` | Instantaneous (true) orbital elements |
+| `Mean` | Time-averaged elements (e.g., TLE mean elements) |
+
+All orbital parameter classes (`StateVector`, `KeplerianElements`, `EquinoctialElements`, `TLE`) have an `ElementsType` property indicating whether elements are osculating or mean. Most conversions preserve the elements type. **Important:** Mean elements cannot be directly converted to `StateVector` as they require a propagation model (e.g., SGP4 for TLE).
+
 #### StateVector
 
 Cartesian position and velocity state.
@@ -423,12 +434,17 @@ var svEcliptic = sv.ToFrame(Frames.Frame.ECLIPTIC_J2000);
 
 #### KeplerianElements
 
-Classical Keplerian orbital elements.
+Classical Keplerian orbital elements (osculating or mean).
 
 | Constructor | Description |
 |------------|-------------|
 | `KeplerianElements(double a, double e, double i, double raan, double aop, double m, CelestialItem observer, Time epoch, Frame frame)` | Create from elements |
 | `KeplerianElements(..., double perigeeRadius)` | Create parabolic orbit with perigee radius |
+| `KeplerianElements(..., OrbitalElementsType elementsType)` | Create with explicit element type |
+
+| Factory Method | Description |
+|----------------|-------------|
+| `FromOMM(double meanMotion, double e, double i, double raan, double aop, double m, ILocalizable observer, Time epoch, Frame frame)` | Create mean elements from OMM data (units: rev/day for mean motion, degrees for angles) |
 
 | Property | Description |
 |----------|-------------|
@@ -438,6 +454,7 @@ Classical Keplerian orbital elements.
 | `RAAN` | Right ascension of ascending node (rad) |
 | `AOP` | Argument of periapsis (rad) |
 | `M` | Mean anomaly (rad) |
+| `ElementsType` | Type indicator (Osculating or Mean) |
 
 | Method | Description |
 |--------|-------------|
@@ -464,7 +481,7 @@ Classical Keplerian orbital elements.
 var earth = PlanetsAndMoons.EARTH_BODY;
 var epoch = new Time(2024, 1, 1);
 
-// Create Keplerian elements (ISS-like orbit)
+// Create osculating Keplerian elements (ISS-like orbit)
 var kep = new KeplerianElements(
     a: 6800000.0,                        // Semi-major axis (m)
     e: 0.001,                            // Eccentricity
@@ -482,6 +499,24 @@ var futureState = kep.ToStateVector(epoch.AddHours(1.5));
 
 // Propagate using 2-body mechanics
 var laterKep = kep.AtEpoch(epoch.AddDays(1));
+
+// Create mean Keplerian elements from OMM data
+// FromOMM accepts OMM native units: rev/day for mean motion, degrees for angles
+var meanKep = KeplerianElements.FromOMM(
+    meanMotion: 15.49309423,             // rev/day
+    eccentricity: 0.0000493,
+    inclination: 51.6423,                // degrees
+    raan: 353.0312,                      // degrees
+    argumentOfPeriapsis: 320.8755,       // degrees
+    meanAnomaly: 39.2360,                // degrees
+    observer: earth,
+    epoch: epoch,
+    frame: Frames.Frame.TEME
+);
+
+Console.WriteLine($"Elements type: {meanKep.ElementsType}"); // Mean
+// Note: Mean elements cannot be directly converted to StateVector
+// Use TLE.ToOsculating() or TLE.ToStateVector() for SGP4-based conversion
 ```
 
 #### EquinoctialElements
@@ -522,7 +557,7 @@ Console.WriteLine($"Lv: {equinoctial.Lv() * Constants.Rad2Deg}°");
 
 #### TLE
 
-Two-Line Element set for Earth-orbiting objects.
+Two-Line Element set for Earth-orbiting objects. TLE stores **mean** orbital elements that must be propagated using SGP4/SDP4 to obtain physical position/velocity.
 
 | Constructor | Description |
 |------------|-------------|
@@ -534,6 +569,7 @@ Two-Line Element set for Earth-orbiting objects.
 | `Line1` | First line of TLE |
 | `Line2` | Second line of TLE |
 | `Epoch` | Epoch of elements |
+| `ElementsType` | Always returns `OrbitalElementsType.Mean` |
 | `MeanSemiMajorAxis` | Mean semi-major axis (m) |
 | `MeanEccentricity` | Mean eccentricity |
 | `MeanInclination` | Mean inclination (rad) |
@@ -546,10 +582,12 @@ Two-Line Element set for Earth-orbiting objects.
 
 | Method | Description |
 |--------|-------------|
-| `ToStateVector()` | Propagate to TLE epoch (SGP4/SDP4) |
-| `ToStateVector(Time epoch)` | Propagate to specified epoch |
-| `ToKeplerianElements()` | Get osculating Keplerian elements |
-| `ToMeanKeplerianElements()` | Get mean Keplerian elements |
+| `ToStateVector()` | Propagate to TLE epoch using SGP4/SDP4 (returns osculating state) |
+| `ToStateVector(Time epoch)` | Propagate to specified epoch using SGP4/SDP4 |
+| `ToOsculating()` | Convert to osculating StateVector at TLE epoch (via SGP4) |
+| `ToOsculating(Time epoch)` | Convert to osculating StateVector at specified epoch (via SGP4) |
+| `ToKeplerianElements()` | Get osculating Keplerian elements (via SGP4) |
+| `ToMeanKeplerianElements()` | Get mean Keplerian elements directly from TLE data |
 | `AtEpoch(Time epoch)` | Get propagated orbital parameters |
 | `Create(OrbitalParameters params, string name, ushort noradId, string cosparId, ...)` | Create TLE from orbital parameters |
 
@@ -559,14 +597,24 @@ var tle = new TLE("ISS (ZARYA)",
     "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
     "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
 
-// Get current state (SGP4 propagation)
-var now = new Time(2021, 1, 21, 12, 0, 0);
-var sv = tle.ToStateVector(now);
+// TLE always stores mean elements
+Console.WriteLine($"Elements type: {tle.ElementsType}"); // Mean
 
-// Access TLE parameters
+// Get osculating state at TLE epoch (SGP4 propagation)
+var sv = tle.ToOsculating();
+
+// Or propagate to specific time
+var now = new Time(2021, 1, 21, 12, 0, 0);
+var svAtTime = tle.ToStateVector(now);
+
+// Access TLE mean parameters
 Console.WriteLine($"NORAD ID: 25544");
 Console.WriteLine($"Inclination: {tle.MeanInclination * Constants.Rad2Deg:F4}°");
 Console.WriteLine($"Eccentricity: {tle.MeanEccentricity:F7}");
+
+// Get mean Keplerian elements (preserves mean motion precision)
+var meanKep = tle.ToMeanKeplerianElements();
+Console.WriteLine($"Mean motion: {meanKep.MeanMotion()} rad/s");
 
 // Create TLE from state vector
 var epoch = new Time(2024, 1, 1);

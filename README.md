@@ -23,8 +23,9 @@ Important: The C++ layer is feature-frozen and exists only for communication wit
   - Earth: U.S. Standard Atmosphere 1976 (simple), NRLMSISE-00 (high-fidelity with space weather)
   - Mars: Standard analytical model
   - Automatic model selection (Earth uses NRLMSISE-00 when full context available)
-- Orbital parameters: compute/convert State Vector, TLE, Equinoctial, Keplerian
-- Compute TLE from osculating elements
+- Orbital parameters: compute/convert State Vector, TLE, Equinoctial, Keplerian (mean and osculating)
+- Mean elements support: OMM data import, TLE creation with precision preservation
+- Compute TLE from state vectors with SGP4-compatible fitting
 - Frames and coordinates: ICRF/J2000, Ecliptic (J2000/B1950), TEME, Galactic, FK4, body-fixed/ITRF93, Equatorial/Horizontal/Planetodetic/Planetographic
 - Spacecraft configuration: clocks, fuel tanks, engines, instruments
 - Impulsive maneuvers: Lambert transfers, apogee/perigee height changes, plane/apsidal alignment, phasing, combined maneuvers

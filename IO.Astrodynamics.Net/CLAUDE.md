@@ -64,7 +64,8 @@ dotnet tool install --global --add-source ./IO.Astrodynamics.CLI/bin/Debug IO.As
 
 **Key Namespaces**
 - `IO.Astrodynamics.Body`: Celestial bodies, spacecraft, instruments
-- `IO.Astrodynamics.OrbitalParameters`: State vectors, Keplerian elements, TLE
+- `IO.Astrodynamics.OrbitalParameters`: State vectors, Keplerian elements, TLE, mean/osculating elements
+- `IO.Astrodynamics.OrbitalParameters.TLE`: Two-Line Element sets and OMM support
 - `IO.Astrodynamics.Maneuver`: Lambert solvers, launch windows, maneuver planning
 - `IO.Astrodynamics.Frames`: Reference frames and transformations
 - `IO.Astrodynamics.TimeSystem`: Time frames (UTC, TDB, TAI, etc.)
@@ -76,6 +77,85 @@ dotnet tool install --global --add-source ./IO.Astrodynamics.CLI/bin/Debug IO.As
 - MathNet.Filtering.Kalman: Kalman filtering for state estimation
 - Cocona: CLI framework (CLI project only)
 - xUnit + BenchmarkDotNet: Testing and benchmarking
+
+### Orbital Elements: Mean vs Osculating
+
+The framework distinguishes between two types of orbital elements using `OrbitalElementsType`:
+
+**OrbitalElementsType Enum**
+- `Osculating`: Instantaneous Keplerian orbit at a specific epoch (default)
+- `Mean`: Averaged elements used by analytical propagators (TLE/SGP4, OMM)
+
+**Key Concepts**
+- **Osculating elements** represent the instantaneous two-body orbit that would result if all perturbations vanished. They can be directly converted to position/velocity (StateVector).
+- **Mean elements** are averaged over time to remove short-periodic variations. They require a specific propagator (SGP4/SDP4) to compute actual position/velocity.
+
+**Important Conversion Rules**
+1. **Mean elements CANNOT be directly converted to StateVector** - attempting to call `ToStateVector()` on mean KeplerianElements throws `InvalidOperationException`
+2. **TLE overrides this behavior** - `TLE.ToStateVector()` uses SGP4/SDP4 propagation internally
+3. **ElementsType propagates** through conversions (e.g., mean KeplerianElements → mean EquinoctialElements)
+
+**Creating Mean Elements from OMM Data**
+```csharp
+// FromOMM accepts OMM native units: rev/day for mean motion, degrees for angles
+var meanKep = KeplerianElements.FromOMM(
+    meanMotion: 15.49309423,        // rev/day
+    eccentricity: 0.0000493,
+    inclination: 51.6423,           // degrees
+    raan: 353.0312,                 // degrees
+    argumentOfPeriapsis: 320.8755,  // degrees
+    meanAnomaly: 39.2360,           // degrees
+    observer: earth,
+    epoch: epoch,
+    frame: Frame.TEME);
+
+// The mean motion is cached internally to preserve precision
+// when converting back to TLE format
+Assert.Equal(OrbitalElementsType.Mean, meanKep.ElementsType);
+
+// This would throw InvalidOperationException:
+// var sv = meanKep.ToStateVector();  // ERROR!
+```
+
+**Working with TLE**
+```csharp
+// Parse TLE - elements are mean by definition
+var tle = new TLE("ISS",
+    "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
+    "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
+
+Assert.Equal(OrbitalElementsType.Mean, tle.ElementsType);
+
+// Get osculating state vector via SGP4 propagation
+var osculating = tle.ToOsculating();           // At TLE epoch
+var osculatingLater = tle.ToOsculating(epoch); // At specific epoch
+Assert.Equal(OrbitalElementsType.Osculating, osculating.ElementsType);
+
+// Get mean Keplerian elements (for creating new TLEs)
+var meanKep = tle.ToMeanKeplerianElements();
+Assert.Equal(OrbitalElementsType.Mean, meanKep.ElementsType);
+
+// Create TLE from mean elements (preserves mean motion precision)
+var newTle = TLE.Create(meanKep, "ISS", 25544, "98067A", 2570,
+    Classification.Unclassified, bstar: 0.0001027);
+```
+
+**Mean Motion Precision Preservation**
+When converting OMM → KeplerianElements → TLE, mean motion is cached to avoid precision loss from round-trip conversions:
+```
+OMM: meanMotion = 15.49309423 rev/day
+  → FromOMM() caches original mean motion
+  → MeanMotion() returns cached value (not recomputed from semi-major axis)
+  → TLE output: 15.49309423 rev/day (EXACT)
+```
+
+**Osculating vs Mean Accessors in TLE**
+| Accessor | Returns | Use Case |
+|----------|---------|----------|
+| `MeanSemiMajorAxis`, `MeanEccentricity`, etc. | Mean elements | Creating TLEs, orbit comparison |
+| `SemiMajorAxis()`, `Eccentricity()`, etc. | Osculating (via SGP4) | Physical calculations |
+| `ToOsculating()` | Osculating StateVector | Position/velocity calculations |
+| `ToMeanKeplerianElements()` | Mean KeplerianElements | TLE creation |
 
 ### Atmospheric Modeling
 
@@ -170,6 +250,10 @@ Test data files are in `Data/SolarSystem/` and copied to output directory.
 3. **Native Resources**: Properly free unmanaged memory returned from native calls
 4. **Time Systems**: Be explicit about time frames when working with epochs
 5. **Coordinate Systems**: Always specify reference frames for state vectors and transformations
+6. **Mean vs Osculating Elements**: Always check `ElementsType` when working with orbital parameters:
+   - Use `ToOsculating()` for TLE position/velocity calculations
+   - Never call `ToStateVector()` directly on mean KeplerianElements
+   - Use `TLE.Create()` only with mean elements (validates `ElementsType.Mean`)
 
 ## Code Quality Standards
 
