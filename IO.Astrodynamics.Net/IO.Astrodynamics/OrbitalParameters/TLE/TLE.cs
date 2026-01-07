@@ -1,6 +1,7 @@
 // Copyright 2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
 
 using System;
+using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
 using System.Text;
@@ -148,7 +149,7 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
     /// <exception cref="ArgumentException">Thrown when any of the lines are null or empty.</exception>
     /// <exception cref="InvalidOperationException">Thrown when checksum validation fails.</exception>
     public TLE(string name, string line1, string line2) : base(new CelestialBody(399, new Frame("ITRF93"), ExtractEpochFromTLE(line1)), ExtractEpochFromTLE(line1),
-        new Frame("TEME"))
+        new Frame("TEME"), OrbitalElementsType.Mean)
     {
         if (string.IsNullOrEmpty(line1)) throw new ArgumentException("Value cannot be null or empty.", nameof(line1));
         if (string.IsNullOrEmpty(line2)) throw new ArgumentException("Value cannot be null or empty.", nameof(line2));
@@ -166,9 +167,11 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
         var earth = new CelestialBody(399, new Frame("ITRF93"), epoch);
 
         // Parse line 2 for orbital elements - FIXED: Use InvariantCulture
-        var meanMotion = double.Parse(line2.Substring(52, 11), CultureInfo.InvariantCulture);
-        double n = Constants._2PI / (86400.0 / meanMotion);
+        var meanMotionRevPerDay = double.Parse(line2.Substring(52, 11), CultureInfo.InvariantCulture);
+        double n = meanMotionRevPerDay * Constants._2PI / 86400.0; // Convert rev/day to rad/s
         MeanSemiMajorAxis = System.Math.Cbrt(earth.GM / (n * n));
+
+        // Cache mean motion to preserve precision for TLE recreation
         MeanEccentricity = double.Parse("0." + line2.Substring(26, 7), CultureInfo.InvariantCulture);
         MeanInclination = double.Parse(line2.Substring(8, 8), CultureInfo.InvariantCulture) * Constants.Deg2Rad;
         MeanAscendingNode = double.Parse(line2.Substring(17, 8), CultureInfo.InvariantCulture) * Constants.Deg2Rad;
@@ -252,7 +255,7 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
     /// <summary>
     /// Creates a new TLE from orbital parameters and metadata.
     /// </summary>
-    /// <param name="orbitalParams">The orbital parameters to convert to TLE format.</param>
+    /// <param name="meanElements">The orbital parameters to convert to TLE format.</param>
     /// <param name="name">The name/title of the satellite or object.</param>
     /// <param name="noradId">The NORAD catalog number (5 digits).</param>
     /// <param name="cosparId">The COSPAR international designator (6-8 characters).</param>
@@ -266,7 +269,21 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
     /// <exception cref="ArgumentNullException">Thrown when orbitalParams or name is null.</exception>
     /// <exception cref="ArgumentException">Thrown when cosparId is null, whitespace, or not between 6-8 characters.</exception>
     /// <exception cref="ArgumentOutOfRangeException">Thrown when elementSetNumber exceeds the maximum allowed value.</exception>
-    public static TLE Create(OrbitalParameters orbitalParams, string name, ushort noradId, string cosparId, ushort revolutionsAtEpoch,
+    public static TLE Create(OrbitalParameters meanElements, string name, ushort noradId, string cosparId, ushort revolutionsAtEpoch,
+        Classification classification = Classification.Unclassified, double bstar = 0.0001, double nDot = 0.0, double nDDot = 0.0, ushort elementSetNumber = MAX_ELEMENT_SET_NUMBER)
+    {
+        if (meanElements == null) throw new ArgumentNullException(nameof(meanElements));
+        if (meanElements.ElementsType != OrbitalElementsType.Mean)
+            throw new ArgumentException("Orbital parameters must be mean elements. Use KeplerianElements.FromOMM() or ensure ElementsType is Mean.", nameof(meanElements));
+
+        return CreateInternal(meanElements, name, noradId, cosparId, revolutionsAtEpoch, classification, bstar, nDot, nDDot, elementSetNumber);
+    }
+
+    /// <summary>
+    /// Internal method for creating TLE from orbital parameters during the fitting process.
+    /// This method does not validate ElementsType, allowing iterative convergence from osculating to mean elements.
+    /// </summary>
+    internal static TLE CreateInternal(OrbitalParameters orbitalParams, string name, ushort noradId, string cosparId, ushort revolutionsAtEpoch,
         Classification classification = Classification.Unclassified, double bstar = 0.0001, double nDot = 0.0, double nDDot = 0.0, ushort elementSetNumber = MAX_ELEMENT_SET_NUMBER)
     {
         if (orbitalParams == null) throw new ArgumentNullException(nameof(orbitalParams));
@@ -276,6 +293,7 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
         {
             throw new ArgumentException("COSPAR Identifier must be between 6 and 8 characters long.", nameof(cosparId));
         }
+
         if (elementSetNumber > MAX_ELEMENT_SET_NUMBER)
         {
             throw new ArgumentOutOfRangeException(nameof(elementSetNumber), $"Element set number must be between 0 and {MAX_ELEMENT_SET_NUMBER}.");
@@ -283,15 +301,17 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
 
         // Convert elements to TLE units
         var kep = orbitalParams is TLE tle ? tle.ToMeanKeplerianElements() : orbitalParams.ToKeplerianElements();
-        
+
         // Convert and normalize angles - single pass, no redundant calculations
         double iDeg = System.Math.Clamp(kep.I * Constants.Rad2Deg, 0.0, 180.0);
         if (double.IsNaN(iDeg)) iDeg = 0.0;
-        
+
         double raanDeg = NormalizeAngle(kep.RAAN * Constants.Rad2Deg);
         double argpDeg = NormalizeAngle(kep.AOP * Constants.Rad2Deg);
         double mDeg = NormalizeAngle(kep.M * Constants.Rad2Deg);
-        
+
+        // For mean elements, use cached mean motion to preserve precision from OMM
+        // MeanMotion() returns cached value (rad/s) if available, otherwise computes from semi-major axis
         double meanMotion = kep.MeanMotion() * 86400.0 / Constants._2PI;
 
         // Format epoch: YYDDD.DDDDDDDD - optimized with Span
@@ -299,12 +319,12 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
         int year = epochDt.Year % 100;
         int dayOfYear = epochDt.DayOfYear;
         double fracDay = epochDt.TimeOfDay.TotalSeconds / 86400.0;
-        
+
         // Pre-allocate for epoch string: YY + DDD + . + 8 decimals = 14 chars
         Span<char> epochSpan = stackalloc char[14];
         year.TryFormat(epochSpan, out int pos1, "00", CultureInfo.InvariantCulture);
         dayOfYear.TryFormat(epochSpan.Slice(2), out int pos2, "000", CultureInfo.InvariantCulture);
-        
+
         // Format fractional day directly into span
         string fracDayStr = fracDay.ToString("0.00000000", CultureInfo.InvariantCulture);
         fracDayStr.AsSpan(1, 9).CopyTo(epochSpan.Slice(5)); // Copy ".DDDDDDDD"
@@ -370,12 +390,12 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
     /// </summary>
     private static double NormalizeAngle(double angleDeg)
     {
-        if (double.IsNaN(angleDeg) || double.IsInfinity(angleDeg)) 
+        if (double.IsNaN(angleDeg) || double.IsInfinity(angleDeg))
             return 0.0;
 
         // Normalize to [0, 360)
         angleDeg = angleDeg % 360.0;
-        if (angleDeg < 0.0) 
+        if (angleDeg < 0.0)
             angleDeg += 360.0;
 
         // Edge case: very close to 360
@@ -397,7 +417,7 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
     {
         int sum = 0;
         int length = builder.Length;
-        
+
         for (int i = 0; i < length; i++)
         {
             char c = builder[i];
@@ -406,7 +426,7 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
             else if (c == '-')
                 sum += 1;
         }
-        
+
         return sum % 10;
     }
 
@@ -517,98 +537,126 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
     /// <returns>The orbital parameters at the given epoch.</returns>
     public override OrbitalParameters AtEpoch(Time epoch)
     {
-        return ToStateVector(epoch);
+        return ToOsculating(epoch);
     }
 
     /// <summary>
-    /// Converts the TLE to a state vector at a given date.
+    /// Converts the TLE mean elements to osculating orbital parameters at the TLE epoch
+    /// using the SGP4/SDP4 propagator.
+    /// </summary>
+    /// <returns>
+    /// A <see cref="StateVector"/> representing the osculating (instantaneous) orbital state
+    /// at the TLE epoch. This can be further converted to <see cref="KeplerianElements"/> 
+    /// or <see cref="EquinoctialElements"/> using the standard conversion methods.
+    /// </returns>
+    /// <remarks>
+    /// This is the correct way to obtain physical position and velocity from TLE data.
+    /// The SGP4/SDP4 propagator properly accounts for perturbations that are implicit
+    /// in the mean elements representation.
+    /// </remarks>
+    public StateVector ToOsculating()
+    {
+        return ToOsculating(Epoch);
+    }
+
+    /// <summary>
+    /// Converts the TLE mean elements to osculating orbital parameters at a given epoch
+    /// using the SGP4/SDP4 propagator.
+    /// </summary>
+    /// <param name="epoch">The epoch time at which to compute the osculating state.</param>
+    /// <returns>
+    /// A <see cref="StateVector"/> representing the osculating (instantaneous) orbital state
+    /// at the specified epoch. This can be further converted to <see cref="KeplerianElements"/> 
+    /// or <see cref="EquinoctialElements"/> using the standard conversion methods.
+    /// </returns>
+    /// <remarks>
+    /// This is the correct way to obtain physical position and velocity from TLE data.
+    /// The SGP4/SDP4 propagator properly accounts for perturbations that are implicit
+    /// in the mean elements representation.
+    /// </remarks>
+    public StateVector ToOsculating(Time epoch)
+    {
+        return API.Instance.ConvertTleToStateVector(Name, Line1, Line2, epoch).ToStateVector();
+    }
+
+    /// <summary>
+    /// Converts the TLE to a state vector at a given date using the SGP4/SDP4 propagator.
     /// </summary>
     /// <param name="date">The epoch time at which to compute the state vector.</param>
     /// <returns>The state vector at the given epoch.</returns>
+    /// <remarks>
+    /// <para>
+    /// <strong>Prefer using <see cref="ToOsculating(Time)"/> for clearer intent.</strong>
+    /// </para>
+    /// This method overrides the base class to use the SGP4/SDP4 propagator,
+    /// which is the correct way to convert TLE mean elements to osculating state vectors.
+    /// </remarks>
     public override StateVector ToStateVector(Time date)
     {
-        return API.Instance.ConvertTleToStateVector(Name, Line1, Line2, date).ToStateVector();
+        return ToOsculating(date);
     }
 
     /// <summary>
-    /// Converts the TLE to Keplerian elements, using cached values if available.
+    /// Converts the TLE to a state vector at the TLE epoch using the SGP4/SDP4 propagator.
     /// </summary>
+    /// <returns>The state vector at the TLE epoch.</returns>
     /// <remarks>
-    /// This method is particularly useful when working with TLE data, as it allows for easy
-    /// conversion to a more usable form for orbital mechanics calculations.
-    /// The Keplerian elements provide a clear and concise representation of the orbit,
-    /// making it easier to perform various analyses such as predicting the satellite's position,
-    /// calculating orbital maneuvers, and understanding the dynamics of the orbit.
+    /// <para>
+    /// <strong>Prefer using <see cref="ToOsculating()"/> for clearer intent.</strong>
+    /// </para>
+    /// This method overrides the base class to use the SGP4/SDP4 propagator,
+    /// which is the correct way to convert TLE mean elements to osculating state vectors.
     /// </remarks>
-    /// <seealso cref="ToStateVector(IO.Astrodynamics.TimeSystem.Time)"/>
-    /// <seealso cref="KeplerianElements"/>
-    /// <seealso cref="OrbitalParameters.ToKeplerianElements(IO.Astrodynamics.TimeSystem.Time)"/>
-    /// <seealso cref="Frame.ICRF"/>
-    /// <seealso cref="StateVector.ToFrame(Frame)"/>
-    /// <seealso cref="StateVector.ToStateVector()"/>
-    /// <remarks>
-    /// This method is part of the TLE class, which represents a Two-Line Element set of orbital parameters.
-    /// TLEs are commonly used in satellite tracking and orbital mechanics to describe the orbits of satellites.
-    /// The TLE format consists of two lines of text, each containing specific orbital parameters
-    /// and metadata about the satellite.
-    /// The TLE class provides methods to convert these parameters into various formats,
-    /// including state vectors and Keplerian elements, which are essential for performing
-    /// orbital calculations and analyses.
-    /// </remarks>
-    /// <seealso cref="OrbitalParameters"/>
-    /// <seealso cref="TLE"/>
-    /// <seealso cref="API"/>
-    /// <seealso cref="API.Instance"/>
-    /// <seealso cref="Frame"/>
-    /// <seealso cref="Time"/>
-    /// <seealso cref="StateVector"/>
-    /// <seealso cref="CelestialBody"/>
-    /// <seealso cref="Constants"/>
-    /// <seealso cref="Constants.Rad2Deg"/>
-    /// <seealso cref="Constants.Deg2Rad"/>
-    /// <seealso cref="Constants._2PI"/>
+    public override StateVector ToStateVector()
+    {
+        if (_stateVector == null)
+        {
+            _stateVector = ToOsculating(Epoch);
+        }
+
+        return _stateVector;
+    }
+
+    /// <summary>
+    /// Converts the TLE to osculating Keplerian elements.
+    /// </summary>
     /// <returns>
-    /// A <see cref="KeplerianElements"/> object representing the classical orbital elements
-    /// (semi-major axis, eccentricity, inclination, argument of perigee, right ascension of the ascending node, and true anomaly)
-    /// derived from the current TLE instance.
+    /// Osculating <see cref="KeplerianElements"/> derived from the SGP4-propagated state vector.
     /// </returns>
+    /// <remarks>
+    /// <para>
+    /// <strong>Consider using <see cref="ToOsculating()"/>.ToKeplerianElements() for clearer intent,
+    /// or <see cref="ToMeanKeplerianElements()"/> if you need mean elements.</strong>
+    /// </para>
+    /// This returns osculating (instantaneous) elements, not the mean elements stored in the TLE.
+    /// </remarks>
     public override KeplerianElements ToKeplerianElements()
     {
         if (_keplerianElements == null)
         {
-            // Convert TLE to Keplerian elements using the state vector
-            _keplerianElements = ToStateVector().ToKeplerianElements();
+            _keplerianElements = ToOsculating().ToKeplerianElements();
         }
 
         return _keplerianElements;
     }
 
     /// <summary>
-    /// Converts the TLE to Equinoctial elements.
-    /// This method computes the Equinoctial elements from the state vector derived from the TLE.
-    /// If the Equinoctial elements have already been computed, it returns the cached value.
-    /// This is useful for performance optimization, as the conversion can be computationally expensive.
-    /// The Equinoctial elements provide an alternative representation of the orbit that is often more
-    /// convenient for certain types of orbital maneuvers and analyses.
-    /// The method first checks if the Equinoctial elements have already been computed and cached.
-    /// If they have, it returns the cached value to avoid redundant calculations.
-    /// If the Equinoctial elements have not been computed yet, it converts the TLE to a state vector
-    /// using the `ToStateVector` method, and then converts that state vector to Equinoctial elements.
-    /// This ensures that the TLE is accurately represented in the Equinoctial format,
-    /// which is essential for certain types of orbital analyses and calculations.
-    /// <remarks>
-    /// This method is particularly useful when working with TLE data, as it allows for easy
-    /// conversion to a more usable form for orbital mechanics calculations.
-    /// The Equinoctial elements provide a clear and concise representation of the orbit,
-    /// making it easier to perform various analyses such as predicting the satellite's position,
-    /// calculating orbital maneuvers, and understanding the dynamics of the orbit.
-    /// </remarks>
+    /// Converts the TLE to osculating Equinoctial elements.
     /// </summary>
+    /// <returns>
+    /// Osculating <see cref="EquinoctialElements"/> derived from the SGP4-propagated state vector.
+    /// </returns>
+    /// <remarks>
+    /// <para>
+    /// <strong>Consider using <see cref="ToOsculating()"/>.ToEquinoctial() for clearer intent.</strong>
+    /// </para>
+    /// This returns osculating (instantaneous) elements, not mean elements.
+    /// </remarks>
     public override EquinoctialElements ToEquinoctial()
     {
         if (_equinoctial == null)
         {
-            _equinoctial = ToStateVector().ToEquinoctial();
+            _equinoctial = ToOsculating().ToEquinoctial();
         }
 
         return _equinoctial;
@@ -616,25 +664,29 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
 
     /// <summary>
     /// Converts the TLE to mean Keplerian elements.
-    /// This method computes the mean Keplerian elements from the TLE parameters.
-    /// If the mean Keplerian elements have already been computed, it returns the cached value.
-    /// This is useful for performance optimization, as the conversion can be computationally expensive.
-    /// The mean Keplerian elements provide a standard representation of the orbit that is often used
-    /// for long-term predictions and analyses.
-    /// The method first checks if the mean Keplerian elements have already been computed and cached.
-    /// If they have, it returns the cached value to avoid redundant calculations.
     /// </summary>
+    /// <remarks>
+    /// These are the mean elements as stored in the TLE, suitable for:
+    /// <list type="bullet">
+    /// <item>Creating new TLEs via <see cref="Create"/></item>
+    /// <item>Comparing TLEs</item>
+    /// <item>Long-term orbit analysis</item>
+    /// </list>
+    /// <para>
+    /// Do NOT use these for position/velocity calculations - use <see cref="ToOsculating()"/> instead.
+    /// </para>
+    /// </remarks>
     /// <returns>
-    /// A <see cref="KeplerianElements"/> object representing the mean orbital elements
-    /// (semi-major axis, eccentricity, inclination, right ascension of the ascending node,
-    /// argument of periapsis, and mean anomaly) derived from the TLE parameters at the epoch.
+    /// A <see cref="KeplerianElements"/> object with <see cref="OrbitalElementsType.Mean"/> 
+    /// representing the mean orbital elements from the TLE.
     /// </returns>
     public KeplerianElements ToMeanKeplerianElements()
     {
         if (_meanKeplerianElements == null)
         {
             _meanKeplerianElements = new KeplerianElements(MeanSemiMajorAxis, MeanEccentricity, MeanInclination,
-                MeanAscendingNode, MeanArgumentOfPeriapsis, MeanMeanAnomaly, Observer, Epoch, Frame);
+                MeanAscendingNode, MeanArgumentOfPeriapsis, MeanMeanAnomaly, Observer, Epoch, Frame,
+                null, null, null, OrbitalElementsType.Mean);
         }
 
         return _meanKeplerianElements;
@@ -668,16 +720,6 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
     public override double MeanAnomaly()
     {
         return ToKeplerianElements().M;
-    }
-
-    public override StateVector ToStateVector()
-    {
-        if (_stateVector == null)
-        {
-            _stateVector = ToStateVector(Epoch);
-        }
-
-        return _stateVector;
     }
 
     public override string ToString()

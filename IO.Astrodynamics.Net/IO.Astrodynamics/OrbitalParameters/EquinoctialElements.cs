@@ -23,9 +23,10 @@ namespace IO.Astrodynamics.OrbitalParameters
         /// <param name="epoch">The epoch.</param>
         /// <param name="frame">The reference frame.</param>
         /// <param name="perigeeRadius">The perigee radius (optional).</param>
+        /// <param name="elementsType">The type of orbital elements (osculating or mean). Defaults to osculating.</param>
         public EquinoctialElements(double p, double f, double g, double h, double k, double l0, ILocalizable observer, Time epoch, Frame frame,
-            double? perigeeRadius = null) : base(observer,
-            epoch, frame)
+            double? perigeeRadius = null, OrbitalElementsType elementsType = OrbitalElementsType.Osculating) : base(observer,
+            epoch, frame, elementsType)
         {
             P = p;
             F = f;
@@ -195,7 +196,7 @@ namespace IO.Astrodynamics.OrbitalParameters
         public override KeplerianElements ToKeplerianElements()
         {
             return new KeplerianElements(SemiMajorAxis(), Eccentricity(), Inclination(), AscendingNode(), ArgumentOfPeriapsis(), MeanAnomaly(), Observer, Epoch, Frame,
-                perigeeRadius: _perigeeRadius);
+                perigeeRadius: _perigeeRadius, elementsType: ElementsType);
         }
 
         #region Operators

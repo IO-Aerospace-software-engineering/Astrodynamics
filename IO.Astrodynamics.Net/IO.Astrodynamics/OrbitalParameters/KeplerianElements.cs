@@ -57,9 +57,11 @@ namespace IO.Astrodynamics.OrbitalParameters
         /// <param name="trueAnomaly"></param>
         /// <param name="period"></param>
         /// <param name="perigeeRadius"></param>
+        /// <param name="elementsType">Type of orbital elements (osculating or mean). Defaults to osculating.</param>
         /// <exception cref="ArgumentException"></exception>
         public KeplerianElements(double semiMajorAxis, double eccentricity, double inclination, double rigthAscendingNode, double argumentOfPeriapsis, double meanAnomaly,
-            ILocalizable observer, Time epoch, Frame frame, double? trueAnomaly = null, TimeSpan? period = null, double? perigeeRadius = null) : base(observer, epoch, frame)
+            ILocalizable observer, Time epoch, Frame frame, double? trueAnomaly = null, TimeSpan? period = null, double? perigeeRadius = null,
+            OrbitalElementsType elementsType = OrbitalElementsType.Osculating) : base(observer, epoch, frame, elementsType)
         {
             if (eccentricity < 0.0)
             {
@@ -85,6 +87,92 @@ namespace IO.Astrodynamics.OrbitalParameters
             _period = period;
             _trueAnomaly = trueAnomaly;
             _perigeeRadius = perigeeRadius;
+        }
+
+        /// <summary>
+        /// Private constructor for creating mean Keplerian elements from mean motion.
+        /// Semi-major axis is computed from mean motion using Kepler's third law.
+        /// </summary>
+        /// <param name="meanMotion">Mean motion in rad/s</param>
+        /// <param name="eccentricity">Eccentricity</param>
+        /// <param name="inclination">Inclination in radians</param>
+        /// <param name="rightAscendingNode">Right ascension of ascending node in radians</param>
+        /// <param name="argumentOfPeriapsis">Argument of periapsis in radians</param>
+        /// <param name="meanAnomaly">Mean anomaly in radians</param>
+        /// <param name="observer">Central body</param>
+        /// <param name="epoch">Epoch time</param>
+        /// <param name="frame">Reference frame</param>
+        /// <param name="elementsType">Type of orbital elements</param>
+        private KeplerianElements(double meanMotion, double eccentricity, double inclination, double rightAscendingNode,
+            double argumentOfPeriapsis, double meanAnomaly, ILocalizable observer, Time epoch, Frame frame,
+            OrbitalElementsType elementsType)
+            : base(observer, epoch, frame, elementsType)
+        {
+            if (eccentricity < 0.0)
+            {
+                throw new ArgumentException("Eccentricity must be a positive number");
+            }
+
+            if (inclination is < -Constants.PI or > Constants.PI)
+            {
+                throw new ArgumentException("Inclination must be in range [-PI,PI] ");
+            }
+
+            // Compute semi-major axis from mean motion using Kepler's third law: n = sqrt(GM/a^3)
+            A = System.Math.Cbrt(Constants.G * observer.Mass / (meanMotion * meanMotion));
+            E = eccentricity;
+            I = inclination;
+            RAAN = SpecialFunctions.NormalizeAngle(rightAscendingNode);
+            AOP = SpecialFunctions.NormalizeAngle(argumentOfPeriapsis);
+            M = SpecialFunctions.NormalizeAngle(meanAnomaly);
+
+            // Cache the original mean motion to preserve precision
+            _meanMotion = meanMotion;
+        }
+
+        /// <summary>
+        /// Creates mean Keplerian elements from OMM (Orbit Mean-elements Message) data.
+        /// This factory method accepts values in OMM native units and handles all conversions internally.
+        /// The resulting elements will have <see cref="OrbitalParameters.ElementsType"/> set to <see cref="OrbitalElementsType.Mean"/>.
+        /// </summary>
+        /// <param name="meanMotion">Mean motion in revolutions per day</param>
+        /// <param name="eccentricity">Eccentricity (dimensionless)</param>
+        /// <param name="inclination">Inclination in degrees</param>
+        /// <param name="raan">Right ascension of ascending node in degrees</param>
+        /// <param name="argumentOfPeriapsis">Argument of periapsis in degrees</param>
+        /// <param name="meanAnomaly">Mean anomaly in degrees</param>
+        /// <param name="observer">Central body (typically Earth)</param>
+        /// <param name="epoch">Epoch time</param>
+        /// <param name="frame">Reference frame (typically TEME for TLE-compatible OMM)</param>
+        /// <returns>Mean Keplerian elements with preserved mean motion precision</returns>
+        /// <exception cref="ArgumentException">Thrown when eccentricity is negative or inclination is out of range</exception>
+        public static KeplerianElements FromOMM(
+            double meanMotion,
+            double eccentricity,
+            double inclination,
+            double raan,
+            double argumentOfPeriapsis,
+            double meanAnomaly,
+            ILocalizable observer,
+            Time epoch,
+            Frame frame)
+        {
+            // Convert OMM units to internal units
+            // Mean motion: rev/day -> rad/s
+            double meanMotionRadPerSec = meanMotion * Constants._2PI / 86400.0;
+
+            // Angles: degrees -> radians
+            return new KeplerianElements(
+                meanMotionRadPerSec,
+                eccentricity,
+                inclination * Constants.Deg2Rad,
+                raan * Constants.Deg2Rad,
+                argumentOfPeriapsis * Constants.Deg2Rad,
+                meanAnomaly * Constants.Deg2Rad,
+                observer,
+                epoch,
+                frame,
+                OrbitalElementsType.Mean);
         }
 
         /// <summary>

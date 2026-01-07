@@ -213,7 +213,8 @@ public class TLETests
     [Fact]
     public void Create_InvalidElementSetNumber_ThrowsArgumentOutOfRangeException()
     {
-        var kep = new KeplerianElements(0.1, 0.2, 0.3, 0.4, 0.5, 0.6, TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.UtcNow, TimeFrame.UTCFrame), Frames.Frame.ICRF);
+        var kep = new KeplerianElements(0.1, 0.2, 0.3, 0.4, 0.5, 0.6, TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.UtcNow, TimeFrame.UTCFrame), Frames.Frame.ICRF,
+            elementsType: OrbitalElementsType.Mean);
         string name = "TestSatellite";
         ushort noradId = 12345;
         string cosparId = "98067A";
@@ -236,7 +237,8 @@ public class TLETests
     [Fact]
     public void Create_InvalidName_ThrowsNullArgumentException()
     {
-        var kep = new KeplerianElements(0.1, 0.2, 0.3, 0.4, 0.5, 0.6, TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.UtcNow, TimeFrame.UTCFrame), Frames.Frame.ICRF);
+        var kep = new KeplerianElements(0.1, 0.2, 0.3, 0.4, 0.5, 0.6, TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.UtcNow, TimeFrame.UTCFrame), Frames.Frame.ICRF,
+            elementsType: OrbitalElementsType.Mean);
         string name = "";
         ushort noradId = 12345;
         string cosparId = "98067A";
@@ -520,7 +522,7 @@ public class TLETests
             0.0, // Mean anomaly
             TestHelpers.EarthAtJ2000,
             epoch,
-            Frames.Frame.ICRF);
+            Frames.Frame.ICRF, elementsType: OrbitalElementsType.Mean);
 
         var tle = TLE.Create(kep, "TEST_SAT", 65535, "21001A", 1000,
             Classification.Unclassified, 0.0001, 0.000001, 0.0, 100);
@@ -586,14 +588,14 @@ public class TLETests
         var epoch = new TimeSystem.Time(new DateTime(2024, 1, 1), TimeFrame.UTCFrame);
         var kep = new KeplerianElements(
             7000000.0, // Semi-major axis (m)
-            0.001,     // Eccentricity
-            0.9,       // Inclination (rad)
-            0.0,       // RAAN
-            0.0,       // Argument of periapsis
-            0.0,       // Mean anomaly
+            0.001, // Eccentricity
+            0.9, // Inclination (rad)
+            0.0, // RAAN
+            0.0, // Argument of periapsis
+            0.0, // Mean anomaly
             TestHelpers.EarthAtJ2000,
             epoch,
-            Frames.Frame.ICRF);
+            Frames.Frame.ICRF, elementsType: OrbitalElementsType.Mean);
 
         // Act: Create TLE with specific BSTAR value
         var tle = TLE.Create(kep, "TEST", 12345, "24001A", 100,
@@ -626,6 +628,7 @@ public class TLETests
             observer, // Gravitational parameter for Earth
             epoch, // Epoch of the state vector
             Frames.Frame.TEME // Reference frame (TEME)
+            
         );
 
 // Configure the TLE parameters
@@ -638,7 +641,7 @@ public class TLETests
         );
 
 // Convert the state vector to a TLE
-        var sw= Stopwatch.StartNew();
+        var sw = Stopwatch.StartNew();
         var tle = sv.ToTLE(config);
         sw.Stop();
         _testOutputHelper.WriteLine($"TLE fitting took: {sw.ElapsedMilliseconds} ms");
@@ -656,8 +659,8 @@ public class TLETests
         var deltaVErr = deltaV.Magnitude();
         _testOutputHelper.WriteLine($"DeltaP: {deltaPErr} m");
         _testOutputHelper.WriteLine($"DeltaV: {deltaVErr} m/s");
-        Assert.True(deltaPErr < 0.02);// 2 cm
-        Assert.True(deltaVErr < 0.00001);// 0.001 mm/s
+        Assert.True(deltaPErr < 0.02); // 2 cm
+        Assert.True(deltaVErr < 0.00001); // 0.001 mm/s
     }
 
     [Fact]
@@ -676,7 +679,7 @@ public class TLETests
 
         // Create modelled TLE from the osculating state at t0 with same B* as Space-Track TLE
         // BSTAR " 10270-3" = 0.10270 × 10^-3 = 0.0001027
-        var tleConfig = new IO.Astrodynamics.OrbitalParameters.TLE.Configuration(25544, "ISS (ZARYA) MODEL", "98067A",BstarDragTerm:0.0001027);
+        var tleConfig = new IO.Astrodynamics.OrbitalParameters.TLE.Configuration(25544, "ISS (ZARYA) MODEL", "98067A", BstarDragTerm: 0.0001027);
         var modelledTLE = osculatingState.ToTLE(tleConfig);
 
         // Update modelled TLE B* to match Space-Track TLE (this requires manual setting)
@@ -843,5 +846,286 @@ public class TLETests
         public double TransverseError { get; set; }
         public double NormalError { get; set; }
         public double ElapsedHours { get; set; }
+    }
+
+    [Fact]
+    public void TLE_HasMeanElementsType()
+    {
+        var tle = new TLE("ISS",
+            "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
+            "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
+
+        Assert.Equal(OrbitalElementsType.Mean, tle.ElementsType);
+    }
+
+    [Fact]
+    public void StateVector_HasOsculatingElementsType()
+    {
+        var epoch = new TimeSystem.Time(new DateTime(2024, 1, 1), TimeFrame.UTCFrame);
+        var sv = new StateVector(
+            new Vector3(6778137.0, 0.0, 0.0),
+            new Vector3(0.0, 7668.0, 0.0),
+            TestHelpers.EarthAtJ2000,
+            epoch,
+            Frames.Frame.ICRF);
+
+        Assert.Equal(OrbitalElementsType.Osculating, sv.ElementsType);
+    }
+
+    [Fact]
+    public void KeplerianElements_Default_HasOsculatingElementsType()
+    {
+        var epoch = new TimeSystem.Time(new DateTime(2024, 1, 1), TimeFrame.UTCFrame);
+        var kep = new KeplerianElements(
+            7000000.0, 0.001, 0.9, 0.0, 0.0, 0.0,
+            TestHelpers.EarthAtJ2000, epoch, Frames.Frame.ICRF);
+
+        Assert.Equal(OrbitalElementsType.Osculating, kep.ElementsType);
+    }
+
+    [Fact]
+    public void FromOMM_CreatesValidMeanElements()
+    {
+        // OMM data (typical ISS-like orbit)
+        double meanMotion = 15.49309423; // rev/day
+        double eccentricity = 0.0000493;
+        double inclination = 51.6423; // degrees
+        double raan = 353.0312; // degrees
+        double argumentOfPeriapsis = 320.8755; // degrees
+        double meanAnomaly = 39.2360; // degrees
+        var epoch = new TimeSystem.Time(new DateTime(2021, 1, 20, 12, 50, 14), TimeFrame.UTCFrame);
+
+        var meanKep = KeplerianElements.FromOMM(
+            meanMotion, eccentricity, inclination, raan,
+            argumentOfPeriapsis, meanAnomaly,
+            TestHelpers.EarthAtJ2000, epoch, Frames.Frame.TEME);
+
+        // Verify elements type is Mean
+        Assert.Equal(OrbitalElementsType.Mean, meanKep.ElementsType);
+
+        // Verify angular elements are converted correctly (degrees to radians)
+        Assert.Equal(inclination * Astrodynamics.Constants.Deg2Rad, meanKep.I, 10);
+        Assert.Equal(raan * Astrodynamics.Constants.Deg2Rad, meanKep.RAAN, 10);
+        Assert.Equal(argumentOfPeriapsis * Astrodynamics.Constants.Deg2Rad, meanKep.AOP, 10);
+        Assert.Equal(meanAnomaly * Astrodynamics.Constants.Deg2Rad, meanKep.M, 10);
+
+        // Verify eccentricity is preserved
+        Assert.Equal(eccentricity, meanKep.E, 10);
+
+        // Verify mean motion is preserved (convert back to rev/day)
+        double meanMotionRadPerSec = meanKep.MeanMotion();
+        double meanMotionRevPerDay = meanMotionRadPerSec * 86400.0 / Astrodynamics.Constants._2PI;
+        Assert.Equal(meanMotion, meanMotionRevPerDay, 10);
+    }
+
+    [Fact]
+    public void FromOMM_ToTLE_PreservesMeanMotionPrecision()
+    {
+        // This test verifies the original user request: OMM → TLE without precision loss
+        // Use exact ISS TLE values
+        double meanMotion = 15.49309423; // rev/day (exact from TLE)
+        double eccentricity = 0.0000493;
+        double inclination = 51.6423; // degrees
+        double raan = 353.0312; // degrees
+        double argumentOfPeriapsis = 320.8755; // degrees
+        double meanAnomaly = 39.2360; // degrees
+        var epoch = new TimeSystem.Time(new DateTime(2021, 1, 20, 12, 50, 14), TimeFrame.UTCFrame);
+
+        // Create mean elements from OMM data
+        var meanKep = KeplerianElements.FromOMM(
+            meanMotion, eccentricity, inclination, raan,
+            argumentOfPeriapsis, meanAnomaly,
+            TestHelpers.EarthAtJ2000, epoch, Frames.Frame.TEME);
+
+        // Create TLE from mean elements
+        var tle = TLE.Create(meanKep, "ISS", 25544, "98067A", 25703,
+            Classification.Unclassified, 0.0001027, 0.00016717);
+
+        // Extract mean motion from the generated TLE Line 2 (positions 52-63)
+        var tleMeanMotionStr = tle.Line2.Substring(52, 11);
+        var tleMeanMotion = double.Parse(tleMeanMotionStr, System.Globalization.CultureInfo.InvariantCulture);
+
+        // The mean motion should be preserved exactly (within TLE format precision)
+        // TLE format has 8 decimal places for mean motion
+        Assert.Equal(meanMotion, tleMeanMotion, 8);
+
+        _testOutputHelper.WriteLine($"Original mean motion: {meanMotion:F8} rev/day");
+        _testOutputHelper.WriteLine($"TLE mean motion:      {tleMeanMotion:F8} rev/day");
+        _testOutputHelper.WriteLine($"Difference:           {System.Math.Abs(meanMotion - tleMeanMotion):E} rev/day");
+    }
+
+    [Fact]
+    public void FromOMM_RoundTrip_TLE_PreservesAllElements()
+    {
+        // Start with an existing TLE
+        var originalTle = new TLE("ISS",
+            "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
+            "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
+
+        // Extract OMM-like data from the TLE
+        double meanMotion = 15.49309423; // From Line 2
+        double eccentricity = originalTle.MeanEccentricity;
+        double inclination = originalTle.MeanInclination * Astrodynamics.Constants.Rad2Deg;
+        double raan = originalTle.MeanAscendingNode * Astrodynamics.Constants.Rad2Deg;
+        double argumentOfPeriapsis = originalTle.MeanArgumentOfPeriapsis * Astrodynamics.Constants.Rad2Deg;
+        double meanAnomaly = originalTle.MeanMeanAnomaly * Astrodynamics.Constants.Rad2Deg;
+
+        // Create mean Keplerian elements from OMM data
+        var meanKep = KeplerianElements.FromOMM(
+            meanMotion, eccentricity, inclination, raan,
+            argumentOfPeriapsis, meanAnomaly,
+            new CelestialBody(399), originalTle.Epoch, Frames.Frame.TEME);
+
+        // Create new TLE from mean elements
+        // Note: Original TLE has revolution count 2570 (not 25703 - the 3 is the checksum)
+        var newTle = TLE.Create(meanKep, "ISS", 25544, "98067A", 2570,
+            Classification.Unclassified, 0.0001027, 0.00016717, 0.0, 905);
+
+        // Compare TLE lines - they should be identical
+        Assert.Equal(originalTle.Line1, newTle.Line1);
+        Assert.Equal(originalTle.Line2, newTle.Line2);
+    }
+
+    [Fact]
+    public void ToMeanKeplerianElements_HasMeanElementsType()
+    {
+        var tle = new TLE("ISS",
+            "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
+            "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
+
+        var meanKep = tle.ToMeanKeplerianElements();
+
+        // ToMeanKeplerianElements should return elements with Mean type
+        Assert.Equal(OrbitalElementsType.Mean, meanKep.ElementsType);
+    }
+
+    [Fact]
+    public void MeanElements_ToEquinoctial_PreservesElementsType()
+    {
+        // OMM data (typical ISS-like orbit)
+        double meanMotion = 15.49309423; // rev/day
+        double eccentricity = 0.0000493;
+        double inclination = 51.6423; // degrees
+        double raan = 353.0312; // degrees
+        double argumentOfPeriapsis = 320.8755; // degrees
+        double meanAnomaly = 39.2360; // degrees
+        var epoch = new TimeSystem.Time(new DateTime(2021, 1, 20, 12, 50, 14), TimeFrame.UTCFrame);
+
+        var meanKep = KeplerianElements.FromOMM(
+            meanMotion, eccentricity, inclination, raan,
+            argumentOfPeriapsis, meanAnomaly,
+            TestHelpers.EarthAtJ2000, epoch, Frames.Frame.TEME);
+
+        // Convert to equinoctial
+        var equinoctial = meanKep.ToEquinoctial();
+
+        // Verify the ElementsType is preserved
+        Assert.Equal(OrbitalElementsType.Mean, equinoctial.ElementsType);
+    }
+
+    [Fact]
+    public void OsculatingElements_ToEquinoctial_PreservesElementsType()
+    {
+        var epoch = new TimeSystem.Time(new DateTime(2024, 1, 1), TimeFrame.UTCFrame);
+        var sv = new StateVector(
+            new Vector3(6778137.0, 0.0, 0.0),
+            new Vector3(0.0, 7668.0, 0.0),
+            TestHelpers.EarthAtJ2000,
+            epoch,
+            Frames.Frame.ICRF);
+
+        // Convert to equinoctial
+        var equinoctial = sv.ToEquinoctial();
+
+        // StateVector is inherently osculating, so equinoctial should also be osculating
+        Assert.Equal(OrbitalElementsType.Osculating, equinoctial.ElementsType);
+    }
+
+    [Fact]
+    public void MeanKeplerianElements_ToStateVector_ThrowsInvalidOperationException()
+    {
+        // Create mean elements from OMM data
+        double meanMotion = 15.49309423; // rev/day
+        double eccentricity = 0.0000493;
+        double inclination = 51.6423; // degrees
+        double raan = 353.0312; // degrees
+        double argumentOfPeriapsis = 320.8755; // degrees
+        double meanAnomaly = 39.2360; // degrees
+        var epoch = new TimeSystem.Time(new DateTime(2021, 1, 20, 12, 50, 14), TimeFrame.UTCFrame);
+
+        var meanKep = KeplerianElements.FromOMM(
+            meanMotion, eccentricity, inclination, raan,
+            argumentOfPeriapsis, meanAnomaly,
+            TestHelpers.EarthAtJ2000, epoch, Frames.Frame.TEME);
+
+        // Attempting to convert mean elements to StateVector should throw
+        var exception = Assert.Throws<InvalidOperationException>(() => meanKep.ToStateVector());
+        Assert.Contains("mean elements", exception.Message.ToLower());
+        Assert.Contains("sgp4", exception.Message.ToLower());
+    }
+
+    [Fact]
+    public void MeanKeplerianElements_ToStateVectorAtEpoch_ThrowsInvalidOperationException()
+    {
+        var meanMotion = 15.49309423;
+        var epoch = new TimeSystem.Time(new DateTime(2021, 1, 20, 12, 50, 14), TimeFrame.UTCFrame);
+
+        var meanKep = KeplerianElements.FromOMM(
+            meanMotion, 0.0001, 51.6, 0.0, 0.0, 0.0,
+            TestHelpers.EarthAtJ2000, epoch, Frames.Frame.TEME);
+
+        var futureEpoch = epoch.Add(TimeSpan.FromHours(1));
+
+        // Attempting to convert mean elements to StateVector at epoch should throw
+        var exception = Assert.Throws<InvalidOperationException>(() => meanKep.ToStateVector(futureEpoch));
+        Assert.Contains("mean elements", exception.Message.ToLower());
+    }
+
+    [Fact]
+    public void TLE_ToOsculating_ReturnsValidStateVector()
+    {
+        var tle = new TLE("ISS",
+            "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
+            "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
+
+        // ToOsculating() should work and return valid osculating state vector
+        var osculating = tle.ToOsculating();
+
+        Assert.NotNull(osculating);
+        Assert.Equal(OrbitalElementsType.Osculating, osculating.ElementsType);
+        Assert.True(osculating.Position.Magnitude() > 6000000); // Reasonable orbital radius
+        Assert.True(osculating.Velocity.Magnitude() > 7000); // Reasonable orbital velocity
+    }
+
+    [Fact]
+    public void TLE_ToOsculatingAtEpoch_ReturnsValidStateVector()
+    {
+        var tle = new TLE("ISS",
+            "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
+            "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
+
+        var futureEpoch = tle.Epoch.Add(TimeSpan.FromHours(1));
+
+        // ToOsculating(epoch) should work and return valid osculating state vector
+        var osculating = tle.ToOsculating(futureEpoch);
+
+        Assert.NotNull(osculating);
+        Assert.Equal(OrbitalElementsType.Osculating, osculating.ElementsType);
+        Assert.Equal(futureEpoch.TimeSpanFromJ2000().TotalSeconds, osculating.Epoch.TimeSpanFromJ2000().TotalSeconds, 3);
+    }
+
+    [Fact]
+    public void TLE_ToStateVector_StillWorksViaSGP4()
+    {
+        // TLE.ToStateVector() should still work because TLE overrides it to use SGP4
+        var tle = new TLE("ISS",
+            "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
+            "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
+
+        // This should NOT throw because TLE.ToStateVector() uses SGP4
+        var sv = tle.ToStateVector();
+
+        Assert.NotNull(sv);
+        Assert.Equal(OrbitalElementsType.Osculating, sv.ElementsType);
     }
 }

@@ -99,7 +99,8 @@ namespace IO.Astrodynamics.OrbitalParameters.TLE
                 try
                 {
                     // Convert current equinoctial back to Keplerian for TLE creation
-                    var testTle = TLE.Create(currentEquinoctial, name, noradId, cosparId, revAtEpoch, Classification.Unclassified, bstar);
+                    // Use internal method since we're iteratively fitting from osculating elements
+                    var testTle = TLE.CreateInternal(currentEquinoctial, name, noradId, cosparId, revAtEpoch, Classification.Unclassified, bstar);
 
                     // Propagate TLE and convert back to equinoctial for comparison
                     var propagatedState = testTle.ToStateVector(epoch);
