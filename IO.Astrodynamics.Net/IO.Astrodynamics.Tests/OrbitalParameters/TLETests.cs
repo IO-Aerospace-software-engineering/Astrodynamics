@@ -998,4 +998,134 @@ public class TLETests
         // ToMeanKeplerianElements should return elements with Mean type
         Assert.Equal(OrbitalElementsType.Mean, meanKep.ElementsType);
     }
+
+    [Fact]
+    public void MeanElements_ToEquinoctial_PreservesElementsType()
+    {
+        // OMM data (typical ISS-like orbit)
+        double meanMotion = 15.49309423; // rev/day
+        double eccentricity = 0.0000493;
+        double inclination = 51.6423; // degrees
+        double raan = 353.0312; // degrees
+        double argumentOfPeriapsis = 320.8755; // degrees
+        double meanAnomaly = 39.2360; // degrees
+        var epoch = new TimeSystem.Time(new DateTime(2021, 1, 20, 12, 50, 14), TimeFrame.UTCFrame);
+
+        var meanKep = KeplerianElements.FromOMM(
+            meanMotion, eccentricity, inclination, raan,
+            argumentOfPeriapsis, meanAnomaly,
+            TestHelpers.EarthAtJ2000, epoch, Frames.Frame.TEME);
+
+        // Convert to equinoctial
+        var equinoctial = meanKep.ToEquinoctial();
+
+        // Verify the ElementsType is preserved
+        Assert.Equal(OrbitalElementsType.Mean, equinoctial.ElementsType);
+    }
+
+    [Fact]
+    public void OsculatingElements_ToEquinoctial_PreservesElementsType()
+    {
+        var epoch = new TimeSystem.Time(new DateTime(2024, 1, 1), TimeFrame.UTCFrame);
+        var sv = new StateVector(
+            new Vector3(6778137.0, 0.0, 0.0),
+            new Vector3(0.0, 7668.0, 0.0),
+            TestHelpers.EarthAtJ2000,
+            epoch,
+            Frames.Frame.ICRF);
+
+        // Convert to equinoctial
+        var equinoctial = sv.ToEquinoctial();
+
+        // StateVector is inherently osculating, so equinoctial should also be osculating
+        Assert.Equal(OrbitalElementsType.Osculating, equinoctial.ElementsType);
+    }
+
+    [Fact]
+    public void MeanKeplerianElements_ToStateVector_ThrowsInvalidOperationException()
+    {
+        // Create mean elements from OMM data
+        double meanMotion = 15.49309423; // rev/day
+        double eccentricity = 0.0000493;
+        double inclination = 51.6423; // degrees
+        double raan = 353.0312; // degrees
+        double argumentOfPeriapsis = 320.8755; // degrees
+        double meanAnomaly = 39.2360; // degrees
+        var epoch = new TimeSystem.Time(new DateTime(2021, 1, 20, 12, 50, 14), TimeFrame.UTCFrame);
+
+        var meanKep = KeplerianElements.FromOMM(
+            meanMotion, eccentricity, inclination, raan,
+            argumentOfPeriapsis, meanAnomaly,
+            TestHelpers.EarthAtJ2000, epoch, Frames.Frame.TEME);
+
+        // Attempting to convert mean elements to StateVector should throw
+        var exception = Assert.Throws<InvalidOperationException>(() => meanKep.ToStateVector());
+        Assert.Contains("mean elements", exception.Message.ToLower());
+        Assert.Contains("sgp4", exception.Message.ToLower());
+    }
+
+    [Fact]
+    public void MeanKeplerianElements_ToStateVectorAtEpoch_ThrowsInvalidOperationException()
+    {
+        var meanMotion = 15.49309423;
+        var epoch = new TimeSystem.Time(new DateTime(2021, 1, 20, 12, 50, 14), TimeFrame.UTCFrame);
+
+        var meanKep = KeplerianElements.FromOMM(
+            meanMotion, 0.0001, 51.6, 0.0, 0.0, 0.0,
+            TestHelpers.EarthAtJ2000, epoch, Frames.Frame.TEME);
+
+        var futureEpoch = epoch.Add(TimeSpan.FromHours(1));
+
+        // Attempting to convert mean elements to StateVector at epoch should throw
+        var exception = Assert.Throws<InvalidOperationException>(() => meanKep.ToStateVector(futureEpoch));
+        Assert.Contains("mean elements", exception.Message.ToLower());
+    }
+
+    [Fact]
+    public void TLE_ToOsculating_ReturnsValidStateVector()
+    {
+        var tle = new TLE("ISS",
+            "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
+            "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
+
+        // ToOsculating() should work and return valid osculating state vector
+        var osculating = tle.ToOsculating();
+
+        Assert.NotNull(osculating);
+        Assert.Equal(OrbitalElementsType.Osculating, osculating.ElementsType);
+        Assert.True(osculating.Position.Magnitude() > 6000000); // Reasonable orbital radius
+        Assert.True(osculating.Velocity.Magnitude() > 7000); // Reasonable orbital velocity
+    }
+
+    [Fact]
+    public void TLE_ToOsculatingAtEpoch_ReturnsValidStateVector()
+    {
+        var tle = new TLE("ISS",
+            "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
+            "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
+
+        var futureEpoch = tle.Epoch.Add(TimeSpan.FromHours(1));
+
+        // ToOsculating(epoch) should work and return valid osculating state vector
+        var osculating = tle.ToOsculating(futureEpoch);
+
+        Assert.NotNull(osculating);
+        Assert.Equal(OrbitalElementsType.Osculating, osculating.ElementsType);
+        Assert.Equal(futureEpoch.TimeSpanFromJ2000().TotalSeconds, osculating.Epoch.TimeSpanFromJ2000().TotalSeconds, 3);
+    }
+
+    [Fact]
+    public void TLE_ToStateVector_StillWorksViaSGP4()
+    {
+        // TLE.ToStateVector() should still work because TLE overrides it to use SGP4
+        var tle = new TLE("ISS",
+            "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
+            "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
+
+        // This should NOT throw because TLE.ToStateVector() uses SGP4
+        var sv = tle.ToStateVector();
+
+        Assert.NotNull(sv);
+        Assert.Equal(OrbitalElementsType.Osculating, sv.ElementsType);
+    }
 }

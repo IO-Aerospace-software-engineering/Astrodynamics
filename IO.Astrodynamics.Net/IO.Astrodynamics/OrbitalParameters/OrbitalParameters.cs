@@ -577,8 +577,21 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// Get the state vector
     /// </summary>
     /// <returns></returns>
+    /// <exception cref="InvalidOperationException">
+    /// Thrown when attempting to convert mean elements directly to a state vector.
+    /// Mean elements require a specific propagator (e.g., SGP4/SDP4) for accurate position calculations.
+    /// For TLE data, use <see cref="TLE.TLE.ToOsculating()"/> or <see cref="TLE.TLE.ToOsculating(Time)"/> instead.
+    /// </exception>
     public virtual StateVector ToStateVector()
     {
+        if (ElementsType == OrbitalElementsType.Mean)
+        {
+            throw new InvalidOperationException(
+                "Cannot convert mean elements directly to a state vector. " +
+                "Mean elements require a specific propagator (e.g., SGP4/SDP4) for accurate position calculations. " +
+                "For TLE data, use TLE.ToOsculating() instead.");
+        }
+
         if (_stateVector is null)
         {
             var e = Eccentricity();
@@ -614,8 +627,20 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// </summary>
     /// <param name="epoch">The epoch time at which to compute the state vector.</param>
     /// <returns>The state vector at the given epoch.</returns>
+    /// <exception cref="InvalidOperationException">
+    /// Thrown when attempting to convert mean elements directly to a state vector.
+    /// Mean elements require a specific propagator (e.g., SGP4/SDP4) for accurate position calculations.
+    /// </exception>
     public virtual StateVector ToStateVector(Time epoch)
     {
+        if (ElementsType == OrbitalElementsType.Mean)
+        {
+            throw new InvalidOperationException(
+                "Cannot convert mean elements directly to a state vector. " +
+                "Mean elements require a specific propagator (e.g., SGP4/SDP4) for accurate position calculations. " +
+                "For TLE data, use TLE.ToOsculating(epoch) instead.");
+        }
+
         return AtEpoch(epoch).ToStateVector();
     }
 
@@ -666,7 +691,7 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
             double k = System.Math.Tan(i * 0.5) * System.Math.Sin(o);
             double l0 = o + w + v;
 
-            _equinoctial = new EquinoctialElements(p, f, g, h, k, l0, Observer, Epoch, Frame, PerigeeRadius());
+            _equinoctial = new EquinoctialElements(p, f, g, h, k, l0, Observer, Epoch, Frame, PerigeeRadius(), ElementsType);
         }
 
         return _equinoctial;
