@@ -1,0 +1,413 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            xmlns:ndm="urn:ccsds:schema:ndmxml"
+            targetNamespace="urn:ccsds:schema:ndmxml"
+            elementFormDefault="qualified" 
+            attributeFormDefault="unqualified">
+
+<!--********************************************************************-->
+<!-- NOTE: This is version 4.0, Rev 0 of the NDM/XML Schema (11/06/2022.-->
+<!-- If this schema changed in Rev 0, it is noted below, else no change.-->
+<!--********************************************************************-->
+
+<!--********************************************************************-->
+<!-- NOTE: This is version 4.0 of the NDM/XML Schema (05/19/2023).      -->
+<!-- This component of the schema is the "OCM" module, which contains   -->
+<!-- elements that are used exclusively in the Orbit Comprehensive      -->
+<!-- Message (OCM).                                                     -->
+<!--                                                                    -->
+<!-- Compatible document versions are:                                  -->
+<!--    NDM/XML 505.0-B-3   Blue Book (05/2023)                         -->
+<!--    ODM     502.0-B-3   Blue Book (04/2023)                         -->
+<!--                                                                    -->
+<!-- *********************  BLUE BOOK CHANGE LOG  ********************* -->
+<!-- 08/30/2020:      : Initial draft OCM schema                        -->
+<!-- 08/12/2021: 3.0.0: Updated for NDM/XML 3.0 changes (common, etc.)  -->
+<!-- 09/15/2022; 3.0.0: Final tweaks from Agency Review Disposition     -->
+<!--********************************************************************-->
+
+<!--********************************************************************-->
+<!-- Include common schemas                                             -->
+<!--********************************************************************-->
+
+<xsd:include schemaLocation="./ndmxml-4.0.0-common-4.0.xsd"/>
+
+<!--********************************************************************-->
+<!-- An OCM consists of a "header" and a "body".  The header is a       -->
+<!-- construct that is shared by all NDM's, found in the "common" schema-->
+<!--********************************************************************-->
+
+<xsd:complexType name="ocmType">
+   <xsd:sequence>
+      <xsd:element name="header" type="ndm:odmHeader"/>
+      <xsd:element name="body"   type="ndm:ocmBody"/>       
+   </xsd:sequence>
+   <xsd:attribute name="id"        use="required" fixed="CCSDS_OCM_VERS"/>
+   <xsd:attribute name="version"   use="required" fixed="3.0"/>
+</xsd:complexType>
+
+
+<!--********************************************************************-->
+<!-- The OCM "body" consists of a single "segment", described below.    -->
+<!--********************************************************************-->
+
+<xsd:complexType name="ocmBody">
+   <xsd:sequence>
+      <xsd:element name="segment" type="ndm:ocmSegment" 
+         minOccurs="1" maxOccurs="1"/>
+   </xsd:sequence>
+</xsd:complexType>
+
+
+<!--********************************************************************-->
+<!-- The OCM "segment" consists of a "metadata" section and a "data"    -->
+<!-- section.  Note that the segment construct is structurally not      -->
+<!-- strictly necessary in the OCM due to the lack of alternating       -->
+<!-- metadata and data sections, but for symmetry with other NDM/XML    -->
+<!-- messages the segment structure is included.                        -->
+<!--********************************************************************-->
+
+<xsd:complexType name="ocmSegment">
+   <xsd:sequence>
+      <xsd:element name="metadata" type="ndm:ocmMetadata"/>
+      <xsd:element name="data" type="ndm:ocmData"/>
+   </xsd:sequence>
+</xsd:complexType>
+
+
+<!--********************************************************************-->
+<!-- OCM Metadata Section                                               -->
+<!--********************************************************************-->
+
+<xsd:complexType name="ocmMetadata">
+   <xsd:sequence>
+      <xsd:element name="COMMENT" type="xsd:string" 
+         minOccurs="0" maxOccurs="unbounded"/>
+      <xsd:element name="OBJECT_NAME" type="xsd:string" minOccurs="0"/>
+      <xsd:element name="INTERNATIONAL_DESIGNATOR" type="xsd:string" minOccurs="0"/>
+      <xsd:element name="CATALOG_NAME" type="xsd:string" minOccurs="0"/>
+      <xsd:element name="OBJECT_DESIGNATOR" type="xsd:string" minOccurs="0"/>
+      <xsd:element name="ALTERNATE_NAMES" type="xsd:string" minOccurs="0"/>
+      <xsd:element name="ORIGINATOR_POC" type="xsd:string" minOccurs="0"/>
+      <xsd:element name="ORIGINATOR_POSITION" type="xsd:string" minOccurs="0"/>
+      <xsd:element name="ORIGINATOR_PHONE" type="xsd:string" minOccurs="0"/>
+      <xsd:element name="ORIGINATOR_EMAIL" type="xsd:string" minOccurs="0"/>
+      <xsd:element name="ORIGINATOR_ADDRESS" type="xsd:string" minOccurs="0"/>
+      <xsd:element name="TECH_ORG" type="xsd:string" minOccurs="0"/>
+      <xsd:element name="TECH_POC" type="xsd:string" minOccurs="0"/>
+      <xsd:element name="TECH_POSITION" type="xsd:string" minOccurs="0"/>
+      <xsd:element name="TECH_PHONE" type="xsd:string" minOccurs="0"/>
+      <xsd:element name="TECH_EMAIL" type="xsd:string" minOccurs="0"/>
+      <xsd:element name="TECH_ADDRESS" type="xsd:string" minOccurs="0"/>
+      <xsd:element name="PREVIOUS_MESSAGE_ID" type="xsd:string" minOccurs="0"/>
+      <xsd:element name="NEXT_MESSAGE_ID" type="xsd:string" minOccurs="0"/>
+      <xsd:element name="ADM_MSG_LINK" type="xsd:string" minOccurs="0"/>
+      <xsd:element name="CDM_MSG_LINK" type="xsd:string" minOccurs="0"/>
+      <xsd:element name="PRM_MSG_LINK" type="xsd:string" minOccurs="0"/>
+      <xsd:element name="RDM_MSG_LINK" type="xsd:string" minOccurs="0"/>
+      <xsd:element name="TDM_MSG_LINK" type="xsd:string" minOccurs="0"/>
+      <xsd:element name="OPERATOR" type="xsd:string" minOccurs="0"/>
+      <xsd:element name="OWNER" type="xsd:string" minOccurs="0"/>
+      <xsd:element name="COUNTRY" type="xsd:string" minOccurs="0"/>
+      <xsd:element name="CONSTELLATION" type="xsd:string" minOccurs="0"/>
+      <xsd:element name="OBJECT_TYPE" type="ndm:objectDescriptionType" minOccurs="0"/>
+      <xsd:element name="TIME_SYSTEM" type="xsd:string" />
+      <xsd:element name="EPOCH_TZERO" type="ndm:epochType"/>
+      <xsd:element name="OPS_STATUS" type="xsd:string" minOccurs="0"/>
+      <xsd:element name="ORBIT_CATEGORY" type="xsd:string" minOccurs="0"/>
+      <xsd:element name="OCM_DATA_ELEMENTS" type="xsd:string" minOccurs="0"/>
+      <xsd:element name="SCLK_OFFSET_AT_EPOCH" type="ndm:timeOffsetType" minOccurs="0"/>
+      <xsd:element name="SCLK_SEC_PER_SI_SEC" type="ndm:durationType" minOccurs="0"/>
+      <xsd:element name="PREVIOUS_MESSAGE_EPOCH" type="ndm:epochType" minOccurs="0"/>
+      <xsd:element name="NEXT_MESSAGE_EPOCH" type="ndm:epochType" minOccurs="0"/>
+      <xsd:element name="START_TIME"  type="ndm:epochType" minOccurs="0"/>
+      <xsd:element name="STOP_TIME"   type="ndm:epochType" minOccurs="0"/>
+      <xsd:element name="TIME_SPAN"   type="ndm:dayIntervalTypeUO" minOccurs="0"/>
+      <xsd:element name="TAIMUTC_AT_TZERO" type="ndm:timeOffsetType"
+         minOccurs="0"/>
+      <xsd:element name="NEXT_LEAP_EPOCH" type="ndm:epochType" minOccurs="0"/>
+      <xsd:element name="NEXT_LEAP_TAIMUTC" type="ndm:timeOffsetType" minOccurs="0"/>
+      <xsd:element name="UT1MUTC_AT_TZERO" type="ndm:timeOffsetType"
+         minOccurs="0"/>
+      <xsd:element name="EOP_SOURCE" type="xsd:string" minOccurs="0"/>
+      <xsd:element name="INTERP_METHOD_EOP" type="xsd:string" minOccurs="0"/>
+      <xsd:element name="CELESTIAL_SOURCE" type="xsd:string" minOccurs="0"/>
+   </xsd:sequence>
+</xsd:complexType>
+
+
+<!--********************************************************************-->
+<!-- OCM Data Section                                                   -->
+<!--********************************************************************-->
+
+<xsd:complexType name="ocmData">
+   <xsd:sequence>
+      <xsd:element name="traj" type="ndm:ocmTrajStateType" 
+         minOccurs="0" maxOccurs="unbounded" />
+      <xsd:element name="phys" type="ndm:ocmPhysicalDescriptionType" minOccurs="0" />
+      <xsd:element name="cov" type="ndm:ocmCovarianceMatrixType" 
+         minOccurs="0" maxOccurs="unbounded" />
+      <xsd:element name="man" type="ndm:ocmManeuverParametersType"
+         minOccurs="0" maxOccurs="unbounded"/>
+      <xsd:element name="pert" type="ndm:ocmPerturbationsType" minOccurs="0" />
+      <xsd:element name="od" type="ndm:ocmOdParametersType" minOccurs="0" />
+      <xsd:element name="user" type="ndm:userDefinedType" minOccurs="0" />
+   </xsd:sequence>
+</xsd:complexType>
+
+
+<!--********************************************************************-->
+<!-- Orbit State Time History Section                                   -->
+<!--********************************************************************-->
+
+<xsd:complexType name="ocmTrajStateType">
+   <xsd:sequence>
+      <xsd:element name="COMMENT" type="xsd:string"
+         minOccurs="0" maxOccurs="unbounded"/>
+      <xsd:element name="TRAJ_ID" type="xsd:string" minOccurs="0" />
+      <xsd:element name="TRAJ_PREV_ID" type="xsd:string" minOccurs="0" />
+      <xsd:element name="TRAJ_NEXT_ID" type="xsd:string" minOccurs="0" />
+      <xsd:element name="TRAJ_BASIS" type="ndm:trajBasisType"  minOccurs="0" />
+      <xsd:element name="TRAJ_BASIS_ID" type="xsd:string"  minOccurs="0" />
+      <xsd:element name="INTERPOLATION" type="xsd:string"  minOccurs="0" />
+      <xsd:element name="INTERPOLATION_DEGREE" type="xsd:positiveInteger"  minOccurs="0" />
+      <xsd:element name="PROPAGATOR" type="xsd:string" minOccurs="0"/>
+      <xsd:element name="CENTER_NAME" type="xsd:string"/>
+      <xsd:element name="TRAJ_REF_FRAME" type="xsd:string"/>
+      <xsd:element name="TRAJ_FRAME_EPOCH" type="ndm:epochType" minOccurs="0"/>
+      <xsd:element name="USEABLE_START_TIME" type="ndm:epochType" minOccurs="0"/>
+      <xsd:element name="USEABLE_STOP_TIME"  type="ndm:epochType" minOccurs="0"/>
+      <xsd:element name="ORB_REVNUM" type="ndm:nonNegativeDouble"  minOccurs="0" />
+      <xsd:element name="ORB_REVNUM_BASIS" type="ndm:revNumBasisType"  minOccurs="0" />
+      <xsd:element name="TRAJ_TYPE" type="xsd:string"/>
+      <xsd:element name="ORB_AVERAGING" type="xsd:string" minOccurs="0"/>
+      <xsd:element name="TRAJ_UNITS" type="xsd:string" minOccurs="0"/>
+      <xsd:element name="trajLine" type="xsd:string" maxOccurs="unbounded"/>
+   </xsd:sequence>
+</xsd:complexType>
+      
+
+
+<!--********************************************************************-->
+<!-- OCM Space Object Physical Characteristics Section                  -->
+<!--********************************************************************-->
+
+<xsd:complexType name="ocmPhysicalDescriptionType">
+   <xsd:sequence>
+      <xsd:element name="COMMENT" type="xsd:string"
+         minOccurs="0" maxOccurs="unbounded"/>
+      <xsd:element name="MANUFACTURER" type="xsd:string" minOccurs="0"/>
+      <xsd:element name="BUS_MODEL" type="xsd:string" minOccurs="0"/>
+      <xsd:element name="DOCKED_WITH" type="xsd:string" minOccurs="0"/>
+      <xsd:element name="DRAG_CONST_AREA" type="ndm:areaType" minOccurs="0" />
+      <xsd:element name="DRAG_COEFF_NOM" type="ndm:positiveDouble" 
+         minOccurs="0" />
+      <xsd:element name="DRAG_UNCERTAINTY" type="ndm:percentageTypeUO" 
+         minOccurs="0" />
+      <xsd:element name="INITIAL_WET_MASS" type="ndm:massType" minOccurs="0"/>
+      <xsd:element name="WET_MASS" type="ndm:massType"  minOccurs="0"/>
+      <xsd:element name="DRY_MASS" type="ndm:massType"  minOccurs="0"/>
+      <xsd:element name="OEB_PARENT_FRAME" type="xsd:string" 
+         minOccurs="0" />
+      <xsd:element name="OEB_PARENT_FRAME_EPOCH" type="ndm:epochType" 
+         minOccurs="0" />
+      <xsd:element name="OEB_Q1" type="xsd:double" minOccurs="0"/>
+      <xsd:element name="OEB_Q2" type="xsd:double" minOccurs="0"/>
+      <xsd:element name="OEB_Q3" type="xsd:double" minOccurs="0"/>
+      <xsd:element name="OEB_QC" type="xsd:double" minOccurs="0"/>
+      <xsd:element name="OEB_MAX" type="ndm:lengthTypeUO"
+         minOccurs="0" />
+      <xsd:element name="OEB_INT" type="ndm:lengthTypeUO"
+         minOccurs="0" />
+      <xsd:element name="OEB_MIN" type="ndm:lengthTypeUO"
+         minOccurs="0" />
+      <xsd:element name="AREA_ALONG_OEB_MAX" type="ndm:areaType"
+         minOccurs="0" />
+      <xsd:element name="AREA_ALONG_OEB_INT" type="ndm:areaType"
+         minOccurs="0" />
+      <xsd:element name="AREA_ALONG_OEB_MIN" type="ndm:areaType"
+         minOccurs="0" />
+      <xsd:element name="AREA_MIN_FOR_PC" type="ndm:areaType" minOccurs="0" />
+      <xsd:element name="AREA_MAX_FOR_PC" type="ndm:areaType" minOccurs="0" />
+      <xsd:element name="AREA_TYP_FOR_PC" type="ndm:areaType" minOccurs="0" />
+      <xsd:element name="RCS" type="ndm:areaType" minOccurs="0" />
+      <xsd:element name="RCS_MIN" type="ndm:areaType" minOccurs="0" />
+      <xsd:element name="RCS_MAX" type="ndm:areaType" minOccurs="0" />
+      <xsd:element name="SRP_CONST_AREA" type="ndm:areaType" 
+         minOccurs="0" />
+      <xsd:element name="SOLAR_RAD_COEFF" type="xsd:double" minOccurs="0"/>
+      <xsd:element name="SOLAR_RAD_UNCERTAINTY" type="ndm:percentageTypeUO"
+         minOccurs="0" />
+      <xsd:element name="VM_ABSOLUTE" type="xsd:double" minOccurs="0"/>
+      <xsd:element name="VM_APPARENT_MIN" type="xsd:double" minOccurs="0"/>
+      <xsd:element name="VM_APPARENT" type="xsd:double" minOccurs="0"/>
+      <xsd:element name="VM_APPARENT_MAX" type="xsd:double" minOccurs="0"/>
+      <xsd:element name="REFLECTANCE" type="ndm:probabilityType" minOccurs="0"/>
+      <xsd:element name="ATT_CONTROL_MODE" type="xsd:string" minOccurs="0"  />
+      <xsd:element name="ATT_ACTUATOR_TYPE" type="xsd:string" minOccurs="0"  />
+      <xsd:element name="ATT_KNOWLEDGE" type="ndm:angleType" minOccurs="0"  />
+      <xsd:element name="ATT_CONTROL" type="ndm:angleType" minOccurs="0"  />
+      <xsd:element name="ATT_POINTING" type="ndm:angleType" minOccurs="0"  />
+      <xsd:element name="AVG_MANEUVER_FREQ" type="ndm:maneuverFreqType"  minOccurs="0" />
+      <xsd:element name="MAX_THRUST" type="ndm:thrustType" minOccurs="0" />
+      <xsd:element name="DV_BOL" type="ndm:velocityTypeUO" minOccurs="0" />
+      <xsd:element name="DV_REMAINING" type="ndm:velocityTypeUO" minOccurs="0" />
+      <xsd:element name="IXX" type="ndm:momentType" minOccurs="0" />
+      <xsd:element name="IYY" type="ndm:momentType" minOccurs="0" />
+      <xsd:element name="IZZ" type="ndm:momentType" minOccurs="0" />
+      <xsd:element name="IXY" type="ndm:momentType" minOccurs="0" />
+      <xsd:element name="IXZ" type="ndm:momentType" minOccurs="0" />
+      <xsd:element name="IYZ" type="ndm:momentType" minOccurs="0" />
+   </xsd:sequence>
+</xsd:complexType>
+
+
+<!--********************************************************************-->
+<!-- Covariance Time History                                            -->
+<!--********************************************************************-->
+
+<xsd:complexType name="ocmCovarianceMatrixType">
+   <xsd:sequence>
+      <xsd:element name="COMMENT" type="xsd:string" minOccurs="0" maxOccurs="unbounded"/>
+      <xsd:element name="COV_ID" type="xsd:string"  minOccurs="0" />
+      <xsd:element name="COV_PREV_ID" type="xsd:string"  minOccurs="0" />
+      <xsd:element name="COV_NEXT_ID" type="xsd:string"  minOccurs="0" />
+      <xsd:element name="COV_BASIS" type="ndm:covBasisType"  minOccurs="0" />
+      <xsd:element name="COV_BASIS_ID" type="xsd:string"  minOccurs="0" />
+      <xsd:element name="COV_REF_FRAME" type="xsd:string" />
+      <xsd:element name="COV_FRAME_EPOCH" type="ndm:epochType" minOccurs="0"/>
+      <xsd:element name="COV_SCALE_MIN" type="xsd:double"  minOccurs="0" />
+      <xsd:element name="COV_SCALE_MAX" type="xsd:double"  minOccurs="0" />
+      <xsd:element name="COV_CONFIDENCE" type="ndm:percentageTypeUO"  minOccurs="0" />
+      <xsd:element name="COV_TYPE" type="xsd:string" />
+      <xsd:element name="COV_ORDERING" type="ndm:covOrderType" />
+      <xsd:element name="COV_UNITS" type="xsd:string" minOccurs="0"/>
+      <xsd:element name="covLine" type="xsd:string" minOccurs="1" maxOccurs="unbounded"/>
+   </xsd:sequence>
+</xsd:complexType>
+
+
+<!--********************************************************************-->
+<!-- OCM Maneuver Section                                               -->
+<!--********************************************************************-->
+
+<xsd:complexType name="ocmManeuverParametersType">
+   <xsd:sequence>
+      <xsd:element name="COMMENT" type="xsd:string" minOccurs="0" maxOccurs="unbounded"/>
+      <xsd:element name="MAN_ID" type="xsd:string" />
+      <xsd:element name="MAN_PREV_ID" type="xsd:string"  minOccurs="0" />
+      <xsd:element name="MAN_NEXT_ID" type="xsd:string"  minOccurs="0" />
+      <xsd:element name="MAN_BASIS" type="ndm:manBasisType"  minOccurs="0" />
+      <xsd:element name="MAN_BASIS_ID" type="xsd:string"  minOccurs="0" />
+      <xsd:element name="MAN_DEVICE_ID" type="xsd:string" />
+      <xsd:element name="MAN_PREV_EPOCH" type="ndm:epochType"  minOccurs="0" />
+      <xsd:element name="MAN_NEXT_EPOCH" type="ndm:epochType"  minOccurs="0" />
+      <xsd:element name="MAN_PURPOSE" type="xsd:string"  minOccurs="0" />
+      <xsd:element name="MAN_PRED_SOURCE" type="xsd:string"  minOccurs="0" />
+      <xsd:element name="MAN_REF_FRAME" type="xsd:string" />
+      <xsd:element name="MAN_FRAME_EPOCH" type="ndm:epochType" minOccurs="0"/>
+      <xsd:element name="GRAV_ASSIST_NAME" type="xsd:string" minOccurs="0" />
+      <xsd:element name="DC_TYPE" type="ndm:manDCType" />
+      <xsd:element name="DC_WIN_OPEN" type="ndm:epochType" minOccurs="0"/>
+      <xsd:element name="DC_WIN_CLOSE" type="ndm:epochType" minOccurs="0"/>
+      <xsd:element name="DC_MIN_CYCLES" type="xsd:nonNegativeInteger" minOccurs="0"/>
+      <xsd:element name="DC_MAX_CYCLES" type="xsd:positiveInteger" minOccurs="0"/>
+      <xsd:element name="DC_EXEC_START" type="ndm:epochType" minOccurs="0"/>
+      <xsd:element name="DC_EXEC_STOP" type="ndm:epochType" minOccurs="0"/>
+      <xsd:element name="DC_REF_TIME" type="ndm:epochType" minOccurs="0"/>
+      <xsd:element name="DC_TIME_PULSE_DURATION" type="ndm:durationType"  minOccurs="0" />
+      <xsd:element name="DC_TIME_PULSE_PERIOD" type="ndm:durationType"  minOccurs="0" />
+      <xsd:element name="DC_REF_DIR"  type="ndm:vec3Double" minOccurs="0"/>
+      <xsd:element name="DC_BODY_FRAME"  type="xsd:string" minOccurs="0"/>
+      <xsd:element name="DC_BODY_TRIGGER"  type="ndm:vec3Double" minOccurs="0"/>
+      <xsd:element name="DC_PA_START_ANGLE" type="ndm:angleType" minOccurs="0"/>
+      <xsd:element name="DC_PA_STOP_ANGLE" type="ndm:angleType" minOccurs="0"/>
+      <xsd:element name="MAN_COMPOSITION" type="xsd:string" />
+      <xsd:element name="MAN_UNITS" type="xsd:string" minOccurs="0"/>
+      <xsd:element name="manLine" type="xsd:string"  minOccurs="1" maxOccurs="unbounded"/>
+   </xsd:sequence>
+</xsd:complexType>
+
+
+<!--********************************************************************-->
+<!-- OCM Perturbations Section                                          -->
+<!--********************************************************************-->
+
+<xsd:complexType name="ocmPerturbationsType">
+   <xsd:sequence>
+      <xsd:element name="COMMENT" type="xsd:string"
+         minOccurs="0" maxOccurs="unbounded"/>
+      <xsd:element name="ATMOSPHERIC_MODEL" type="xsd:string" minOccurs="0"  />
+      <xsd:element name="GRAVITY_MODEL" type="xsd:string" minOccurs="0" />
+      <xsd:element name="EQUATORIAL_RADIUS" type="ndm:positionTypeUO" minOccurs="0"  />
+      <xsd:element name="GM" type="ndm:gmType" minOccurs="0" />
+      <xsd:element name="N_BODY_PERTURBATIONS" type="xsd:string" minOccurs="0"/>
+      <xsd:element name="CENTRAL_BODY_ROTATION" type="ndm:angleRateType" minOccurs="0"/>
+      <xsd:element name="OBLATE_FLATTENING" type="ndm:positiveDouble" minOccurs="0"  />
+      <xsd:element name="OCEAN_TIDES_MODEL" type="xsd:string" minOccurs="0"  />
+      <xsd:element name="SOLID_TIDES_MODEL" type="xsd:string" minOccurs="0"  />
+      <xsd:element name="REDUCTION_THEORY" type="xsd:string" minOccurs="0"  />
+      <xsd:element name="ALBEDO_MODEL" type="xsd:string" minOccurs="0"  />
+      <xsd:element name="ALBEDO_GRID_SIZE" type="xsd:positiveInteger" minOccurs="0"  />
+      <xsd:element name="SHADOW_MODEL" type="xsd:string" minOccurs="0"  />
+      <xsd:element name="SHADOW_BODIES" type="xsd:string" minOccurs="0"  />
+      <xsd:element name="SRP_MODEL" type="xsd:string" minOccurs="0"  />
+      <xsd:element name="SW_DATA_SOURCE" type="xsd:string" minOccurs="0"/>
+      <xsd:element name="SW_DATA_EPOCH" type="ndm:epochType" minOccurs="0"/>
+      <xsd:element name="SW_INTERP_METHOD" type="xsd:string" minOccurs="0" />
+      <xsd:element name="FIXED_GEOMAG_KP" type="ndm:geomagType" minOccurs="0" />
+      <xsd:element name="FIXED_GEOMAG_AP" type="ndm:geomagType" minOccurs="0" />
+      <xsd:element name="FIXED_GEOMAG_DST" type="ndm:geomagType" minOccurs="0" />
+      <xsd:element name="FIXED_F10P7" type="ndm:solarFluxType" minOccurs="0"  />
+      <xsd:element name="FIXED_F10P7_MEAN" type="ndm:solarFluxType" minOccurs="0"  />
+      <xsd:element name="FIXED_M10P7" type="ndm:solarFluxType" minOccurs="0"  />
+      <xsd:element name="FIXED_M10P7_MEAN" type="ndm:solarFluxType" minOccurs="0"  />
+      <xsd:element name="FIXED_S10P7" type="ndm:solarFluxType" minOccurs="0"  />
+      <xsd:element name="FIXED_S10P7_MEAN" type="ndm:solarFluxType" minOccurs="0"  />
+      <xsd:element name="FIXED_Y10P7" type="ndm:solarFluxType" minOccurs="0"  />
+      <xsd:element name="FIXED_Y10P7_MEAN" type="ndm:solarFluxType" minOccurs="0"  />
+   </xsd:sequence>
+</xsd:complexType>
+
+
+<!--********************************************************************-->
+<!-- Orbit Determination Section                                        -->
+<!--********************************************************************-->
+
+<xsd:complexType name="ocmOdParametersType">
+   <xsd:sequence>
+      <xsd:element name="COMMENT" type="xsd:string" minOccurs="0"
+         maxOccurs="unbounded"/>
+      <xsd:element name="OD_ID" type="xsd:string" />
+      <xsd:element name="OD_PREV_ID" type="xsd:string"  minOccurs="0" />
+      <xsd:element name="OD_METHOD" type="xsd:string" />
+      <xsd:element name="OD_EPOCH" type="ndm:epochType"/>
+      <xsd:element name="DAYS_SINCE_FIRST_OBS" type="ndm:dayIntervalTypeUO" minOccurs="0"/>
+      <xsd:element name="DAYS_SINCE_LAST_OBS" type="ndm:dayIntervalTypeUO" minOccurs="0"/>
+      <xsd:element name="RECOMMENDED_OD_SPAN" type="ndm:dayIntervalTypeUO" minOccurs="0"/>
+      <xsd:element name="ACTUAL_OD_SPAN" type="ndm:dayIntervalTypeUO" minOccurs="0"/>
+      <xsd:element name="OBS_AVAILABLE" type="xsd:positiveInteger" minOccurs="0"/>
+      <xsd:element name="OBS_USED" type="xsd:positiveInteger" minOccurs="0"/>
+      <xsd:element name="TRACKS_AVAILABLE" type="xsd:positiveInteger" minOccurs="0"/>
+      <xsd:element name="TRACKS_USED" type="xsd:positiveInteger" minOccurs="0"/>
+      <xsd:element name="MAXIMUM_OBS_GAP" type="ndm:dayIntervalTypeUO" minOccurs="0"/>
+      <xsd:element name="OD_EPOCH_EIGMAJ" type="ndm:lengthTypeUO" minOccurs="0"/>
+      <xsd:element name="OD_EPOCH_EIGINT" type="ndm:lengthTypeUO" minOccurs="0"/>
+      <xsd:element name="OD_EPOCH_EIGMIN" type="ndm:lengthTypeUO" minOccurs="0"/>
+      <xsd:element name="OD_MAX_PRED_EIGMAJ" type="ndm:lengthTypeUO" minOccurs="0"/>
+      <xsd:element name="OD_MIN_PRED_EIGMIN" type="ndm:lengthTypeUO" minOccurs="0"/>
+      <xsd:element name="OD_CONFIDENCE" type="ndm:percentageTypeUO" minOccurs="0"/>
+      <xsd:element name="GDOP" type="ndm:nonNegativeDouble" minOccurs="0"/>
+      <xsd:element name="SOLVE_N" type="xsd:positiveInteger" minOccurs="0"/>
+      <xsd:element name="SOLVE_STATES" type="xsd:string" minOccurs="0"/>
+      <xsd:element name="CONSIDER_N" type="xsd:positiveInteger" minOccurs="0"/>
+      <xsd:element name="CONSIDER_PARAMS" type="xsd:string" minOccurs="0"/>
+      <xsd:element name="SEDR" type="ndm:wkgType" minOccurs="0"/>
+      <xsd:element name="SENSORS_N" type="xsd:positiveInteger" minOccurs="0"/>
+      <xsd:element name="SENSORS" type="xsd:string" minOccurs="0"/>
+      <xsd:element name="WEIGHTED_RMS" type="ndm:nonNegativeDouble" minOccurs="0"/>
+      <xsd:element name="DATA_TYPES" type="xsd:string" minOccurs="0"/>
+   </xsd:sequence>
+</xsd:complexType>
+
+</xsd:schema>

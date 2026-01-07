@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            xmlns:ndm="urn:ccsds:schema:ndmxml"
+            targetNamespace="urn:ccsds:schema:ndmxml"
+            elementFormDefault="qualified" 
+            attributeFormDefault="unqualified">
+
+<!--********************************************************************-->
+<!-- NOTE: This is version 4.0, Rev 0 of the NDM/XML Schema (11/06/2022.-->
+<!-- If this schema changed in Rev 0, it is noted below, else no change.-->
+<!--********************************************************************-->
+
+<!--********************************************************************-->
+<!-- NOTE: This is version 4.0 of the NDM/XML Schema (05/19/2023).      -->
+<!-- This component of the schema is the "namespace" module, which      -->
+<!-- imports the namespace with its generic name from the URL containing-->
+<!-- the desired version of the lower level schema.  The identified     -->
+<!-- URL contains those elements exported by the namespace allowing that-->
+<!-- only those whose visibility is required outside the namespace are  -->
+<!-- accessible.                                                        -->
+<!--                                                                    -->
+<!-- Compatible document versions are:                                  -->
+<!--    NDM/XML 505.0-B-3   Blue Book (05/2023)                         -->
+<!--    ADM     504.0-B-2   Blue Book (07/2023)                         -->
+<!--    CDM     508.0-B-2   Blue Book (06/2013)                         -->
+<!--    ODM     502.0-B-3   Blue Book (04/2023)                         -->
+<!--    RDM     508.1-B-1   Blue Book (11/2019)                         -->
+<!--    TDM     503.0-B-2   Blue Book (06/2020)                         -->
+<!--                                                                    -->
+<!--********************************************************************-->
+<!-- Structural note... this schema is structured so that the structural-->
+<!-- elements of an NDM are developed in separate modules, i.e., there  -->
+<!-- are separate schemas for the AEM, APM, OEM, OMM OPM, TDM, CDM, RDM,-->
+<!-- etc., each of which is maintained separately.  This facilitates the--> 
+<!-- process of applying updates that correlate with the foundation     -->
+<!-- documents.                                                         -->
+<!-- ********************** BLUE BOOK CHANGE LOG  ********************* -->
+<!-- 06/17/2013:  Updated for CDM Blue Book 1.0                         -->
+<!-- 09/03/2019: Rev C: Added RDM schema in preparation for publication.-->
+<!-- 05/17/2020: Rev D: Changed TDM schema to tdm-2.0 in preparation of -->
+<!--                    schema set for introduction of the TDM V.2      -->
+<!-- 07/23/2020: 2.0.0: Updated for NDM/XML 2.0 changes (common, etc.)  -->
+<!-- 08/12/2021: 3.0.0: Updated for NDM/XML 3.0 changes (common, etc.)  -->
+<!-- 12/04/2022: 4.0.0: Updated for NDM/XML 4.0 changes (common, etc.)  -->
+<!-- 05/19/2023: 4.0.0: Preparations for ADM B-2 publication            -->
+<!--********************************************************************-->
+<!--********************************************************************-->
+<!-- Includes for all schemas: ACM, AEM, APM, CDM, OCM, OEM, OMM, OPM,  -->
+<!-- RDM, TDM, NDM, Common                                              -->
+<!--********************************************************************-->
+<xsd:include schemaLocation="./ndmxml-4.0.0-acm-2.0.xsd"/>
+<xsd:include schemaLocation="./ndmxml-4.0.0-aem-2.0.xsd"/>
+<xsd:include schemaLocation="./ndmxml-4.0.0-apm-2.0.xsd"/>
+<xsd:include schemaLocation="./ndmxml-4.0.0-cdm-1.0.xsd"/>
+<xsd:include schemaLocation="./ndmxml-4.0.0-ocm-3.0.xsd"/>
+<xsd:include schemaLocation="./ndmxml-4.0.0-oem-3.0.xsd"/>
+<xsd:include schemaLocation="./ndmxml-4.0.0-omm-3.0.xsd"/>
+<xsd:include schemaLocation="./ndmxml-4.0.0-opm-3.0.xsd"/>
+<xsd:include schemaLocation="./ndmxml-4.0.0-rdm-1.0.xsd"/>
+<xsd:include schemaLocation="./ndmxml-4.0.0-tdm-2.0.xsd"/>
+<xsd:include schemaLocation="./ndmxml-4.0.0-ndm-4.0.xsd"/>
+<xsd:include schemaLocation="./ndmxml-4.0.0-common-4.0.xsd"/>
+</xsd:schema>

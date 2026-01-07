@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            xmlns:ndm="urn:ccsds:schema:ndmxml"
+            targetNamespace="urn:ccsds:schema:ndmxml"
+            elementFormDefault="qualified" 
+            attributeFormDefault="unqualified">
+
+<!--********************************************************************-->
+<!-- NOTE: This is version 4.0, Rev 0 of the NDM/XML Schema (11/06/2022.-->
+<!-- If this schema changed in Rev 0, it is noted below, else no change.-->
+<!--********************************************************************-->
+
+<!--********************************************************************-->
+<!-- NOTE: This is version 4.0.0 of the NDM/XML Schema (05/2023).       -->
+<!-- This component of the schema is the "APM" module, which contains   -->
+<!-- elements that are used exclusively in the Attitude Parameter       -->
+<!-- Message (APM).                                                     -->
+<!--                                                                    -->
+<!-- Compatible document versions are:                                  -->
+<!--    ADM     504.0-B-2   Blue      (To be published circa 07/2023)   -->
+<!--                                                                    -->
+<!-- *********************  BLUE BOOK CHANGE LOG  ********************* -->
+<!-- 03/14/2010: Original implemementation of schemas.                  -->
+<!-- 10/13/2017: Modified to include revA common schemas                -->
+<!-- 08/29/2018: Rev B: Modified to remove revision version from file   -->
+<!--                    names, since file names on SANA were static     -->
+<!--                    and the schemas basically did not work.         -->
+<!-- 07/23/2020: 2.0.0: Updated for NDM/XML 2.0 changes (common, etc.)  -->
+<!-- 08/12/2021: 3.0.0: Updated for NDM/XML 3.0 changes (common, etc.)  -->
+<!-- 12/04/2022: 4.0.0: Updated for NDM/XML 4.0 changes (common, etc.)  -->
+<!-- 05/19/2023: 4.0.0: Preparations for ADM B-2 publication            -->
+<!--********************************************************************-->
+<!-- Include schema containing common data types, etc.                  -->
+<!--********************************************************************-->
+<xsd:include schemaLocation="./ndmxml-4.0.0-common-4.0.xsd"/>
+<!--********************************************************************-->
+
+<!--********************************************************************-->
+<!-- An APM consists of a "header" and a "body".  The header is a       -->
+<!-- construct that is shared by all NDM's, found in the "common" schema-->
+<!--********************************************************************-->
+<xsd:complexType name="apmType">
+   <xsd:sequence>
+      <xsd:element name="header" type="ndm:admHeader"/>
+      <xsd:element name="body" type="ndm:apmBody"/>
+   </xsd:sequence>
+   <xsd:attribute  name="id"       use="required"  fixed="CCSDS_APM_VERS"/>
+   <xsd:attribute  name="version"  use="required"  fixed="2.0"/>
+</xsd:complexType>
+
+
+<!--********************************************************************-->
+<!-- The APM "body" consists of a single "segment", described below.    -->
+<!--********************************************************************-->
+<xsd:complexType name="apmBody">
+   <xsd:sequence>
+      <xsd:element name="segment" type="ndm:apmSegment" 
+         minOccurs="1" maxOccurs="1"/>
+   </xsd:sequence>
+</xsd:complexType>
+
+
+<!--********************************************************************-->
+<!-- The APM "segment" consists of a "metadata" section and a "data"    -->
+<!-- section.  Structurally it is necessary in order to ensure proper   -->
+<!-- relationship between the alignment of metadata and data sections.  -->
+<!--********************************************************************-->  
+<xsd:complexType name="apmSegment">
+   <xsd:sequence>
+      <xsd:element name="metadata" type="ndm:apmMetadata"/>
+      <xsd:element name="data" type="ndm:apmData"/>
+   </xsd:sequence>
+</xsd:complexType>
+
+
+<!--********************************************************************-->
+<!-- APM Metadata Section                                               -->
+<!--********************************************************************-->
+<xsd:complexType name="apmMetadata">
+   <xsd:sequence>
+      <xsd:element name="COMMENT" type="xsd:string" 
+         minOccurs="0" maxOccurs="unbounded"/>
+      <xsd:element name="OBJECT_NAME" type="xsd:string"/>
+      <xsd:element name="OBJECT_ID" type="xsd:string"/>
+      <xsd:element name="CENTER_NAME" type="xsd:string" minOccurs="0"/>
+      <xsd:element name="TIME_SYSTEM" type="ndm:timeSystemType"/>
+   </xsd:sequence>
+</xsd:complexType>
+
+
+<!--********************************************************************-->
+<!-- APM Data Section                                                   -->
+<!--********************************************************************-->
+<xsd:complexType name="apmData">
+   <xsd:sequence>
+      <xsd:element name="COMMENT" type="xsd:string"
+         minOccurs="0" maxOccurs="unbounded"/>
+      <xsd:element name="EPOCH" type="ndm:epochType"/>
+      <xsd:element name="quaternionState" type="ndm:quaternionStateType"
+         minOccurs="0" maxOccurs="unbounded"/>
+      <xsd:element name="eulerAngleState" type="ndm:eulerAngleStateType" 
+         minOccurs="0" maxOccurs="unbounded"/>
+      <xsd:element name="angularVelocity" type="ndm:angVelStateType"
+         minOccurs="0" maxOccurs="unbounded"/>
+      <xsd:element name="spin" type="ndm:spinStateType" 
+         minOccurs="0" maxOccurs="unbounded"/>
+      <xsd:element name="inertia" type="ndm:inertiaStateType" 
+         minOccurs="0" maxOccurs="unbounded"/>
+      <xsd:element name="maneuverParameters"   
+         type="ndm:attManeuverStateType" minOccurs="0" maxOccurs="unbounded"/>
+   </xsd:sequence>
+</xsd:complexType>
+
+
+</xsd:schema>

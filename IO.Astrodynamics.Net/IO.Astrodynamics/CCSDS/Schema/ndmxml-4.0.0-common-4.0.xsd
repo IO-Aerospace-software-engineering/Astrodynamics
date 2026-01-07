@@ -1,0 +1,1747 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            xmlns:ndm="urn:ccsds:schema:ndmxml"
+            targetNamespace="urn:ccsds:schema:ndmxml"
+            elementFormDefault="qualified" 
+            attributeFormDefault="unqualified">
+
+<!--********************************************************************-->
+<!-- NOTE: This is version 4.0, Rev 0 of the NDM/XML Schema (11/06/2022.-->
+<!-- If this schema changed in Rev 0, it is noted below, else no change.-->
+<!--********************************************************************-->
+
+<!--********************************************************************-->
+<!-- NOTE: This is version 4.0.0 of the NDM/XML Schema (05/2023)        -->
+<!-- This component of the schema is the "Navigation WG common" module, -->
+<!-- which contains only simple types and complex types used by the     -->
+<!-- constituent schemas that make up Navigation Data Messages:         -->
+<!-- ACM, AEM, APM, CDM, OCM, OEM, OMM, OPM, RDM, TDM.                  -->
+<!--                                                                    -->
+<!-- Compatible document versions are:                                  -->
+<!--    NDM/XML 505.0-B-4 Blue Book   (xx/2023)                         -->
+<!--    ADM     504.0-B-2 Blue Book   (07/2023)                         -->
+<!--    CDM     508.0-B-1 Blue Book   (06/2013)                         -->
+<!--    ODM     502.0-B-3 Blue Book   (04/2023)                         -->
+<!--    RDM     508.1-B-1 Blue Book   (11/2019)                         -->
+<!--    TDM     503.0-B-2 Blue Book   (06/2020)                         -->
+<!--                                                                    -->
+<!-- *********************  BLUE BOOK CHANGE LOG  ********************* -->
+<!-- 03/14/2010: Original implemementation of schemas.                  -->
+<!-- 01/08/2013  Rev 0: Updated for CDM                                 -->
+<!-- 10/13/2017: Rev A: Corrected units errors in covariance matrix.    -->
+<!--                    Modified to include revA common schemas.        -->
+<!-- 08/29/2018: Rev B: Modified to remove revision version from file   -->
+<!--                    names, since file names on SANA were static     -->
+<!--                    and the schemas basically did not work. Also    -->
+<!--                    corrected error in OEM covariance matrix.       -->
+<!-- 08/16/2019: Rev C: Merged all "CCSDS common" schema components     -->
+<!--                    with this schema. Now only "NAVWG common".      -->
+<!--                    The "CCSDS Common" is temporarily empty schema. -->
+<!-- 07/23/2020: 2.0.0: Updated for NDM/XML 2.0 changes (common, etc.)  -->
+<!-- 08/12/2021: 3.0.0: Updated for NDM/XML 3.0 changes (common, etc.)  -->
+<!-- 09/15/2022: 3.0.0: Updated for NDM/XML 3.0, ODM 3.0 changes        -->
+<!-- 12/04/2022: 4.0.0: Updated for NDM/XML 4.0 changes (common, etc.)  -->
+<!-- 05/19/2023: 4.0.0: Preparations for ADM B-2 publication            -->
+<!--********************************************************************-->
+
+<!--********************************************************************-->
+<!-- Simple Types and Complex Types shared in the various NDM messages  -->
+<!--********************************************************************-->
+
+<!--********************************************************************-->
+<!-- Header specifications for all Navigation Data Messages             -->
+<!-- Ultimately the header should be largely generic for all messages.  -->
+<!--********************************************************************-->
+<xsd:complexType name="ndmHeader">
+   <xsd:sequence>
+      <xsd:element name="COMMENT" type="xsd:string" 
+         minOccurs="0" maxOccurs="unbounded"/>
+      <xsd:element name="CREATION_DATE" type="ndm:epochType"/>
+      <xsd:element name="ORIGINATOR" type="xsd:string"/>
+   </xsd:sequence>
+</xsd:complexType>
+
+
+<xsd:complexType name="admHeader">
+   <xsd:sequence>
+      <xsd:element name="COMMENT" type="xsd:string"
+         minOccurs="0" maxOccurs="unbounded"/>
+     <xsd:element name="CLASSIFICATION" type="xsd:string"
+         minOccurs="0"/>
+      <xsd:element name="CREATION_DATE" type="ndm:epochType"/>
+      <xsd:element name="ORIGINATOR" type="xsd:string"/>
+      <xsd:element name="MESSAGE_ID" type="xsd:string" minOccurs="0"/>
+   </xsd:sequence>
+</xsd:complexType>
+
+
+<xsd:complexType name="odmHeader">
+   <xsd:sequence>
+      <xsd:element name="COMMENT" type="xsd:string"
+         minOccurs="0" maxOccurs="unbounded"/>
+      <xsd:element name="CLASSIFICATION" type="xsd:string" 
+         minOccurs="0"/>
+      <xsd:element name="CREATION_DATE" type="ndm:epochType"/>
+      <xsd:element name="ORIGINATOR" type="xsd:string"/>
+      <xsd:element name="MESSAGE_ID" type="xsd:string" minOccurs="0"/>
+   </xsd:sequence>
+</xsd:complexType>
+
+<!--********************************************************************-->
+<!-- End Generic Header specifications                                  -->
+<!--********************************************************************-->
+
+
+<!--********************************************************************-->
+<!-- DATA TYPES POTENTIALLY COMMON TO MULTIPLE MESSAGES                 -->
+<!--********************************************************************-->
+
+<xsd:complexType name="accType">
+   <xsd:simpleContent>
+      <xsd:extension base="xsd:double">
+         <xsd:attribute name="units" type="ndm:accUnits" use="optional"/>
+      </xsd:extension>
+   </xsd:simpleContent>
+</xsd:complexType>
+
+
+<xsd:simpleType name="accUnits">
+   <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="km/s**2"/>
+   </xsd:restriction>
+</xsd:simpleType>
+
+
+<!--********************************************************************-->
+<!-- Angle related Simple Types and Complex Types                       -->
+<!--********************************************************************-->
+
+<xsd:complexType name="angleType">
+   <xsd:simpleContent>
+      <xsd:extension base="ndm:angleRange">
+         <xsd:attribute name="units" type="ndm:angleUnits" use="optional"/>
+      </xsd:extension>
+   </xsd:simpleContent>
+</xsd:complexType>
+
+
+<xsd:simpleType name="angleUnits">
+   <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="deg"/>
+   </xsd:restriction>
+</xsd:simpleType>
+
+
+<xsd:simpleType name="angleRange">
+   <xsd:restriction base="xsd:double">
+      <xsd:minInclusive value="-360.0"/>
+      <xsd:maxExclusive value="360.0"/>
+   </xsd:restriction>
+</xsd:simpleType>
+
+
+<xsd:complexType name="angleRateType">
+   <xsd:simpleContent>
+      <xsd:extension base="xsd:double">
+         <xsd:attribute name="units"
+            type="ndm:angleRateUnits" use="optional"/>
+      </xsd:extension>
+   </xsd:simpleContent>
+</xsd:complexType>
+
+
+<xsd:simpleType name="angleRateUnits">
+   <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="deg/s"/>
+   </xsd:restriction>
+</xsd:simpleType>
+
+
+<xsd:complexType name="angMomentumType">
+   <xsd:simpleContent>
+      <xsd:extension base="xsd:double">
+         <xsd:attribute name="units" type="ndm:angMomentumUnits" use="optional"/>
+      </xsd:extension>
+   </xsd:simpleContent>
+</xsd:complexType>
+
+
+<xsd:complexType name="targetMomentumType">
+   <xsd:simpleContent>
+      <xsd:extension base="ndm:vec3Double">
+         <xsd:attribute name="units" type="ndm:angMomentumUnits" use="optional"/>
+      </xsd:extension>
+   </xsd:simpleContent>
+</xsd:complexType>
+
+
+<xsd:simpleType name="angMomentumUnits">
+   <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="N*m*s"/>
+   </xsd:restriction>
+</xsd:simpleType>
+
+
+<xsd:complexType name="angVelComponentType">
+   <xsd:simpleContent>
+      <xsd:extension base="xsd:double">
+         <xsd:attribute name="units" type="ndm:angleRateUnits" use="optional"/>
+       </xsd:extension>
+   </xsd:simpleContent>
+</xsd:complexType>
+
+
+<xsd:simpleType name="angVelFrameType">
+   <xsd:restriction base="xsd:string">
+   </xsd:restriction>
+</xsd:simpleType>
+
+
+<xsd:complexType name="angVelType">
+   <xsd:sequence>
+      <xsd:element name="ANGVEL_X"  type="ndm:angVelComponentType"/>
+      <xsd:element name="ANGVEL_Y"  type="ndm:angVelComponentType"/>
+      <xsd:element name="ANGVEL_Z"  type="ndm:angVelComponentType"/>
+   </xsd:sequence>
+</xsd:complexType>
+
+<!--********************************************************************-->
+<!-- End Angle related Simple Types and Complex Types                   -->
+<!--********************************************************************-->
+
+<xsd:complexType name="areaType">
+   <xsd:simpleContent>
+      <xsd:extension base="ndm:nonNegativeDouble">
+         <xsd:attribute name="units" type="ndm:areaUnits" use="optional"/>
+      </xsd:extension>
+   </xsd:simpleContent>
+</xsd:complexType>
+
+
+<xsd:simpleType name="areaUnits">
+   <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="m**2"/>
+   </xsd:restriction>
+</xsd:simpleType>
+
+
+<xsd:complexType name="dayIntervalTypeUR">
+   <xsd:simpleContent>
+      <xsd:extension base="ndm:positiveDouble">
+         <xsd:attribute name="units" type="ndm:dayIntervalUnits" use="required"/>
+      </xsd:extension>
+   </xsd:simpleContent>
+</xsd:complexType>
+
+
+<xsd:complexType name="dayIntervalTypeUO">
+   <xsd:simpleContent>
+      <xsd:extension base="ndm:nonNegativeDouble">
+         <xsd:attribute name="units" type="ndm:dayIntervalUnits" use="optional"/>
+      </xsd:extension>
+   </xsd:simpleContent>
+</xsd:complexType>
+
+
+<xsd:simpleType name="dayIntervalUnits">
+   <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="d"/>
+   </xsd:restriction>
+</xsd:simpleType>
+
+
+<xsd:complexType name="deltamassType">
+   <xsd:simpleContent>
+      <xsd:extension base="ndm:negativeDouble">
+         <xsd:attribute name="units" type="ndm:massUnits" use="optional"/>
+      </xsd:extension>
+   </xsd:simpleContent>
+</xsd:complexType>
+
+
+<xsd:complexType name="deltamassTypeZ">
+<!-- Type Z for deltamass that allows value of zero (attitude maneuvers) -->
+   <xsd:simpleContent>
+      <xsd:extension base="ndm:nonPositiveDouble">
+         <xsd:attribute name="units" type="ndm:massUnits" use="optional"/>
+      </xsd:extension>
+   </xsd:simpleContent>
+</xsd:complexType>
+
+
+<xsd:complexType name="frequencyType">
+   <xsd:simpleContent>
+      <xsd:extension base="ndm:positiveDouble">
+         <xsd:attribute name="units" type="ndm:frequencyUnits" use="optional"/>
+      </xsd:extension>
+   </xsd:simpleContent>
+</xsd:complexType>
+
+
+<xsd:simpleType name="frequencyUnits">
+   <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="Hz"/>
+   </xsd:restriction>
+</xsd:simpleType>
+
+
+<xsd:complexType name="gmType">
+   <xsd:simpleContent>
+      <xsd:extension base="ndm:positiveDouble">
+         <xsd:attribute name="units" type="ndm:gmUnits" use="optional"/>
+      </xsd:extension>
+   </xsd:simpleContent>
+</xsd:complexType>
+
+
+<xsd:simpleType name="gmUnits">
+   <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="km**3/s**2"/>
+      <xsd:enumeration value="KM**3/S**2"/>
+   </xsd:restriction>
+</xsd:simpleType>
+
+
+<xsd:complexType name="inclinationType">
+   <xsd:simpleContent>
+      <xsd:extension base="ndm:inclinationRange">
+         <xsd:attribute name="units" type="ndm:angleUnits" use="optional"/>
+      </xsd:extension>
+   </xsd:simpleContent>
+</xsd:complexType>
+
+
+<xsd:simpleType name="inclinationRange">
+   <xsd:restriction base="ndm:angleRange">
+      <xsd:minInclusive value="0.0"/>
+      <xsd:maxInclusive value="180.0"/>
+   </xsd:restriction>
+</xsd:simpleType>
+
+
+<xsd:complexType name="lengthTypeUR">
+   <xsd:simpleContent>
+      <xsd:extension base="xsd:double">
+         <xsd:attribute name="units" type="ndm:lengthUnits" use="required"/>
+      </xsd:extension>
+   </xsd:simpleContent>
+</xsd:complexType>
+
+
+<xsd:complexType name="lengthTypeUO">
+   <xsd:simpleContent>
+      <xsd:extension base="xsd:double">
+         <xsd:attribute name="units" type="ndm:lengthUnits" use="optional"/>
+      </xsd:extension>
+   </xsd:simpleContent>
+</xsd:complexType>
+
+
+<xsd:simpleType name="lengthUnits">
+   <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="m"/>
+   </xsd:restriction>
+</xsd:simpleType>
+
+
+<xsd:complexType name="massType">
+   <xsd:simpleContent>
+      <xsd:extension base="ndm:nonNegativeDouble">
+         <xsd:attribute name="units" type="ndm:massUnits" use="optional"/>
+      </xsd:extension>
+   </xsd:simpleContent>
+</xsd:complexType>
+
+
+<xsd:simpleType name="massUnits">
+   <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="kg"/>
+   </xsd:restriction>
+</xsd:simpleType>
+
+
+<xsd:complexType name="momentType">
+   <xsd:simpleContent>
+      <xsd:extension base="xsd:double">
+         <xsd:attribute name="units" type="ndm:momentUnits" use="optional"/>
+      </xsd:extension>
+   </xsd:simpleContent>
+</xsd:complexType>
+
+
+<xsd:simpleType name="momentUnits">
+   <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="kg*m**2"/>
+   </xsd:restriction>
+</xsd:simpleType>
+
+
+<xsd:complexType name="wkgType">
+   <xsd:simpleContent>
+      <xsd:extension base="ndm:nonNegativeDouble">
+         <xsd:attribute name="units" type="ndm:wkgUnits" use="required"/>
+      </xsd:extension>
+   </xsd:simpleContent>
+</xsd:complexType>
+
+
+<xsd:simpleType name="wkgUnits">
+   <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="W/kg"/>
+   </xsd:restriction>
+</xsd:simpleType>
+
+
+<xsd:simpleType name="objectDescriptionType">
+<!-- "OBJECT_TYPE" is used in ODM, RDM, CDM -->
+   <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="PAYLOAD"/>
+      <xsd:enumeration value="payload"/>
+      <xsd:enumeration value="ROCKET BODY"/>
+      <xsd:enumeration value="rocket body"/>
+      <xsd:enumeration value="DEBRIS"/>
+      <xsd:enumeration value="debris"/>
+      <xsd:enumeration value="UNKNOWN"/>
+      <xsd:enumeration value="unknown"/>
+      <xsd:enumeration value="OTHER"/>
+      <xsd:enumeration value="other"/>
+   </xsd:restriction>
+</xsd:simpleType>
+
+
+<xsd:complexType name="odParametersType">
+   <xsd:sequence>
+      <xsd:element name="COMMENT" type="xsd:string" minOccurs="0"
+         maxOccurs="unbounded"/>
+      <xsd:element name="TIME_LASTOB_START" type="ndm:epochType" minOccurs="0"/>
+      <xsd:element name="TIME_LASTOB_END" type="ndm:epochType" minOccurs="0"/>
+      <xsd:element name="RECOMMENDED_OD_SPAN" type="ndm:dayIntervalTypeUO"
+         minOccurs="0"/>
+      <xsd:element name="ACTUAL_OD_SPAN" type="ndm:dayIntervalTypeUO"
+         minOccurs="0"/>
+      <xsd:element name="OBS_AVAILABLE" type="xsd:positiveInteger"
+         minOccurs="0"/>
+      <xsd:element name="OBS_USED" type="xsd:positiveInteger" minOccurs="0"/>
+      <xsd:element name="TRACKS_AVAILABLE" type="xsd:positiveInteger"
+         minOccurs="0"/>
+      <xsd:element name="TRACKS_USED" type="xsd:positiveInteger" minOccurs="0"/>
+      <xsd:element name="RESIDUALS_ACCEPTED" type="ndm:percentageTypeUO" minOccurs="0"/>
+      <xsd:element name="WEIGHTED_RMS" type="ndm:nonNegativeDouble"
+         minOccurs="0"/>
+   </xsd:sequence>
+</xsd:complexType>
+
+
+<xsd:complexType name="spacecraftParametersType">
+   <xsd:sequence>
+      <xsd:element name="COMMENT" type="xsd:string" minOccurs="0" maxOccurs="unbounded"/>
+      <xsd:element name="MASS" type="ndm:massType" minOccurs="0" />
+      <xsd:element name="SOLAR_RAD_AREA" type="ndm:areaType" minOccurs="0" />
+      <xsd:element name="SOLAR_RAD_COEFF" type="ndm:nonNegativeDouble" minOccurs="0" />
+      <xsd:element name="DRAG_AREA" type="ndm:areaType" minOccurs="0" />
+      <xsd:element name="DRAG_COEFF" type="ndm:nonNegativeDouble" minOccurs="0" />
+   </xsd:sequence>
+</xsd:complexType>
+
+
+<xsd:complexType name="stateVectorType">
+   <xsd:sequence>
+      <xsd:element name="COMMENT" type="xsd:string"
+         minOccurs="0" maxOccurs="unbounded"/>
+      <xsd:element name="EPOCH" type="ndm:epochType"/>
+      <xsd:element name="X" type="ndm:positionTypeUO"/>
+      <xsd:element name="Y" type="ndm:positionTypeUO"/>
+      <xsd:element name="Z" type="ndm:positionTypeUO"/>
+      <xsd:element name="X_DOT" type="ndm:velocityTypeUO"/>
+      <xsd:element name="Y_DOT" type="ndm:velocityTypeUO"/>
+      <xsd:element name="Z_DOT" type="ndm:velocityTypeUO"/>
+   </xsd:sequence>
+</xsd:complexType>
+
+
+<xsd:complexType name="stateVectorAccType">
+   <xsd:sequence>
+      <xsd:element name="EPOCH" type="ndm:epochType"/>
+      <xsd:element name="X" type="ndm:positionTypeUO"/>
+      <xsd:element name="Y" type="ndm:positionTypeUO"/>
+      <xsd:element name="Z" type="ndm:positionTypeUO"/>
+      <xsd:element name="X_DOT" type="ndm:velocityTypeUO"/>
+      <xsd:element name="Y_DOT" type="ndm:velocityTypeUO"/>
+      <xsd:element name="Z_DOT" type="ndm:velocityTypeUO"/>
+      <xsd:element name="X_DDOT" type="ndm:accType" minOccurs="0"/>
+      <xsd:element name="Y_DDOT" type="ndm:accType" minOccurs="0"/>
+      <xsd:element name="Z_DDOT" type="ndm:accType" minOccurs="0"/>
+   </xsd:sequence>
+</xsd:complexType>
+
+
+<xsd:complexType name="quaternionType">
+   <xsd:sequence>
+      <xsd:element name="Q1" type="ndm:quaternionComponentType"/>
+      <xsd:element name="Q2" type="ndm:quaternionComponentType"/>
+      <xsd:element name="Q3" type="ndm:quaternionComponentType"/>
+      <xsd:element name="QC" type="ndm:quaternionComponentType"/>
+   </xsd:sequence>
+</xsd:complexType>
+
+
+<xsd:simpleType name="quaternionComponentType">
+   <xsd:restriction base="xsd:double">
+      <xsd:minInclusive value="-1.0"/>
+      <xsd:maxInclusive value="1.0"/>
+   </xsd:restriction>
+</xsd:simpleType>
+
+
+<xsd:complexType name="quaternionDotType">
+   <xsd:sequence>
+      <xsd:element name="Q1_DOT" type="ndm:quaternionDotComponentType"/>
+      <xsd:element name="Q2_DOT" type="ndm:quaternionDotComponentType"/>
+      <xsd:element name="Q3_DOT" type="ndm:quaternionDotComponentType"/>
+      <xsd:element name="QC_DOT" type="ndm:quaternionDotComponentType"/>
+   </xsd:sequence>
+</xsd:complexType>
+
+
+<xsd:complexType name="quaternionDotComponentType">
+   <xsd:simpleContent>
+      <xsd:extension base="xsd:double">
+         <xsd:attribute name="units" type="ndm:quaternionDotUnits" use="optional"/>
+      </xsd:extension>
+   </xsd:simpleContent>
+</xsd:complexType>
+
+
+<xsd:simpleType name="quaternionDotUnits">
+   <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="1/s"/>
+   </xsd:restriction>
+</xsd:simpleType>
+
+
+<xsd:simpleType name="rotseqType">
+   <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="XYX"/>
+      <xsd:enumeration value="XYZ"/>
+      <xsd:enumeration value="XZX"/>
+      <xsd:enumeration value="XZY"/>
+      <xsd:enumeration value="YXY"/>
+      <xsd:enumeration value="YXZ"/>
+      <xsd:enumeration value="YZX"/>
+      <xsd:enumeration value="YZY"/>
+      <xsd:enumeration value="ZXY"/>
+      <xsd:enumeration value="ZXZ"/>
+      <xsd:enumeration value="ZYX"/>
+      <xsd:enumeration value="ZYZ"/>
+   </xsd:restriction>
+</xsd:simpleType>
+
+<!--********************************************************************-->
+<!-- Alphabetized to Here                                               -->
+<!--********************************************************************-->
+
+
+<xsd:complexType name="ms2Type">
+   <xsd:simpleContent>
+      <xsd:extension base="xsd:double">
+         <xsd:attribute name="units" type="ndm:ms2Units" use="required"/>
+      </xsd:extension>
+   </xsd:simpleContent>
+</xsd:complexType>
+
+<xsd:simpleType name="ms2Units">
+   <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="m/s**2"/>
+   </xsd:restriction>
+</xsd:simpleType>
+
+
+<xsd:complexType name="km2Type">
+   <xsd:simpleContent>
+      <xsd:extension base="xsd:double">
+         <xsd:attribute name="units" type="ndm:km2Units" use="optional"/>
+      </xsd:extension>
+   </xsd:simpleContent>
+</xsd:complexType>
+
+<xsd:simpleType name="km2Units">
+   <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="km**2"/>
+   </xsd:restriction>
+</xsd:simpleType>
+
+
+<xsd:complexType name="km2sType">
+   <xsd:simpleContent>
+      <xsd:extension base="xsd:double">
+         <xsd:attribute name="units" type="ndm:km2sUnits" use="optional"/>
+      </xsd:extension>
+   </xsd:simpleContent>
+</xsd:complexType>
+
+<xsd:simpleType name="km2sUnits">
+   <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="km**2/s"/>
+   </xsd:restriction>
+</xsd:simpleType>
+
+
+<xsd:complexType name="km2s2Type">
+   <xsd:simpleContent>
+      <xsd:extension base="xsd:double">
+         <xsd:attribute name="units" type="ndm:km2s2Units" use="optional"/>
+      </xsd:extension>
+   </xsd:simpleContent>
+</xsd:complexType>
+
+<xsd:simpleType name="km2s2Units">
+   <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="km**2/s**2"/>
+   </xsd:restriction>
+</xsd:simpleType>
+
+
+<xsd:simpleType name="adMethodType">
+<!-- Used in ADM/ACM -->
+   <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="EKF"/>
+      <xsd:enumeration value="ekf"/>
+      <xsd:enumeration value="TRIAD"/>
+      <xsd:enumeration value="triad"/>
+      <xsd:enumeration value="QUEST"/>
+      <xsd:enumeration value="quest"/>
+      <xsd:enumeration value="BATCH"/>
+      <xsd:enumeration value="batch"/>
+      <xsd:enumeration value="Q_METHOD"/>
+      <xsd:enumeration value="q_method"/>
+      <xsd:enumeration value="FILTER_SMOOTHER"/>
+      <xsd:enumeration value="filter_smoother"/>
+      <xsd:enumeration value="OTHER"/>
+      <xsd:enumeration value="other"/>
+   </xsd:restriction>
+</xsd:simpleType>
+
+
+<!--********************************************************************-->
+<!-- Position/Velocity/Acceleration related Simple Types/Complex Types  -->
+<!--********************************************************************-->
+
+<xsd:complexType name="distanceType">
+   <xsd:simpleContent>
+      <xsd:extension base="xsd:double">
+         <xsd:attribute name="units" type="ndm:positionUnits" use="optional"/>
+      </xsd:extension>
+   </xsd:simpleContent>
+</xsd:complexType>
+
+
+<xsd:complexType name="positionTypeUO">
+   <xsd:simpleContent>
+      <xsd:extension base="xsd:double">
+         <xsd:attribute name="units" type="ndm:positionUnits" use="optional"/>
+      </xsd:extension>
+   </xsd:simpleContent>
+</xsd:complexType>
+
+
+<xsd:complexType name="positionTypeUR">
+    <xsd:simpleContent>
+        <xsd:extension base="xsd:double">
+            <xsd:attribute name="units" type="ndm:positionUnits" use="required" />
+        </xsd:extension>
+    </xsd:simpleContent>
+</xsd:complexType>
+
+
+<xsd:simpleType name="positionUnits">
+   <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="km"/>
+   </xsd:restriction>
+</xsd:simpleType>
+
+
+<xsd:complexType name="velocityTypeUO">
+   <xsd:simpleContent>
+      <xsd:extension base="xsd:double">
+         <xsd:attribute name="units" type="ndm:velocityUnits" use="optional"/>
+      </xsd:extension>
+   </xsd:simpleContent>
+</xsd:complexType>
+
+
+<xsd:complexType name="velocityTypeUR">
+    <xsd:simpleContent>
+        <xsd:extension base="xsd:double">
+            <xsd:attribute name="units" type="ndm:velocityUnits" use="required" />
+        </xsd:extension>
+    </xsd:simpleContent>
+</xsd:complexType>
+
+
+<xsd:simpleType name="velocityUnits">
+   <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="km/s"/>
+   </xsd:restriction>
+</xsd:simpleType>
+
+
+<xsd:simpleType name="vecDouble">
+   <xsd:list itemType="xsd:double"/>
+</xsd:simpleType>
+
+
+<xsd:simpleType name="vec3Double">
+   <xsd:restriction base="ndm:vecDouble">
+      <xsd:length value="3"/>
+   </xsd:restriction>
+</xsd:simpleType>
+
+
+<xsd:simpleType name="vec4Double">
+   <xsd:restriction base="ndm:vecDouble">
+      <xsd:length value="4"/>
+   </xsd:restriction>
+</xsd:simpleType>
+
+
+<xsd:simpleType name="vec6Double">
+   <xsd:restriction base="ndm:vecDouble">
+      <xsd:length value="6"/>
+   </xsd:restriction>
+</xsd:simpleType>
+
+
+<xsd:simpleType name="vec9Double">
+   <xsd:restriction base="ndm:vecDouble">
+      <xsd:length value="9"/>
+   </xsd:restriction>
+</xsd:simpleType>
+
+
+<!--********************************************************************-->
+<!-- Time related Simple Types and Complex Types                        -->
+<!--********************************************************************-->
+
+<xsd:complexType name="durationType">
+   <xsd:simpleContent>
+      <xsd:extension base="ndm:nonNegativeDouble">
+         <xsd:attribute name="units" type="ndm:timeUnits" use="optional"/>
+      </xsd:extension>
+   </xsd:simpleContent>
+</xsd:complexType>
+
+
+<xsd:complexType name="relTimeType">
+   <xsd:simpleContent>
+      <xsd:extension base="xsd:double">
+         <xsd:attribute name="units" type="ndm:timeUnits" use="optional"/>
+      </xsd:extension>
+   </xsd:simpleContent>
+</xsd:complexType>
+
+
+<xsd:simpleType name="epochType">
+<!--********************************************************************-->
+<!-- NOTE:  convoluted structure for "epochType" is necessary in order  -->
+<!-- to convey the "yyyy-dddThh:mm:ss.d->dZ" structure.  There is no    -->
+<!-- built-in type in the XML Schema language that describes this       -->
+<!-- structure. In the pattern, "\p{Nd}" represents a numeric digit.    -->
+<!--********************************************************************-->
+
+   <xsd:restriction base="xsd:string">
+      <xsd:pattern
+         value="\-?\d{4}\d*-((\d{2}\-\d{2})|\d{3})T\d{2}:\d{2}:\d{2}(\.\d*)?(Z|[+|\-]\d{2}:\d{2})?|[+|\-]?\d*(\.\d*)?"/>
+   </xsd:restriction>
+</xsd:simpleType>
+
+
+<xsd:simpleType name="timeUnits">
+   <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="s"/>
+   </xsd:restriction>
+</xsd:simpleType>
+
+
+<xsd:complexType name="timeOffsetType">
+   <xsd:simpleContent>
+      <xsd:extension base="xsd:double">
+         <xsd:attribute name="units" type="ndm:timeUnits" use="optional"/>
+      </xsd:extension>
+   </xsd:simpleContent>
+</xsd:complexType>
+
+
+<xsd:simpleType name="timeSystemType">
+   <xsd:restriction base="xsd:string">
+   </xsd:restriction>
+</xsd:simpleType>
+
+
+<!--********************************************************************-->
+<!-- Miscellaneous Numerical Simple Types and Complex Types             -->
+<!--********************************************************************-->
+
+
+<xsd:simpleType name="negativeDouble">
+   <xsd:restriction base="xsd:double">
+      <xsd:maxExclusive value="0.0"/>
+   </xsd:restriction>
+</xsd:simpleType>
+
+
+<xsd:simpleType name="nonNegativeDouble">
+   <xsd:restriction base="xsd:double">
+      <xsd:minInclusive value="0.0"/>
+   </xsd:restriction>
+</xsd:simpleType>
+
+
+<xsd:simpleType name="nonPositiveDouble">
+   <xsd:restriction base="xsd:double">
+      <xsd:maxInclusive value="0.0"/>
+   </xsd:restriction>
+</xsd:simpleType>
+
+
+<xsd:simpleType name="positiveDouble">
+   <xsd:restriction base="xsd:double">
+      <xsd:minExclusive value="0.0"/>
+   </xsd:restriction>
+</xsd:simpleType>
+
+
+<xsd:simpleType name="probabilityType">
+   <xsd:restriction base="ndm:nonNegativeDouble">
+      <xsd:minInclusive value="0.0" />
+      <xsd:maxInclusive value="1.0" />
+   </xsd:restriction>
+</xsd:simpleType>
+
+
+<xsd:complexType name="percentageTypeUO">
+   <xsd:simpleContent>
+      <xsd:extension base="ndm:range100Type">
+         <xsd:attribute name="units" type="ndm:percentageUnits" use="optional"/>
+      </xsd:extension>
+   </xsd:simpleContent>
+</xsd:complexType>
+      
+         
+<xsd:complexType name="percentageTypeUR">
+   <xsd:simpleContent>
+      <xsd:extension base="ndm:range100Type">
+         <xsd:attribute name="units" type="ndm:percentageUnits" use="required"/>
+      </xsd:extension>
+   </xsd:simpleContent>
+</xsd:complexType>
+
+
+<xsd:simpleType name="range100Type">
+   <xsd:restriction base="xsd:double">
+      <xsd:minInclusive value="0.0" />
+      <xsd:maxInclusive value="100.0" />
+   </xsd:restriction>
+</xsd:simpleType>
+      
+      
+<xsd:simpleType name="percentageUnits">
+   <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="%"/>
+   </xsd:restriction>
+</xsd:simpleType>
+      
+      
+<!--********************************************************************-->
+<!-- Miscellaneous Non-Numeric Simple Types and Complex Types           -->
+<!--********************************************************************-->
+
+<xsd:simpleType name="yesNoType">
+   <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="YES"/>
+      <xsd:enumeration value="yes"/>
+      <xsd:enumeration value="NO"/>
+      <xsd:enumeration value="no"/>
+   </xsd:restriction>
+</xsd:simpleType>
+
+
+<!--********************************************************************-->
+<!-- OCM/ACM Simple Types and Complex Types                             -->
+<!--********************************************************************-->
+
+<xsd:simpleType name="trajBasisType">
+   <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="PREDICTED"/> 
+      <xsd:enumeration value="DETERMINED"/> 
+      <xsd:enumeration value="TELEMETRY"/> 
+      <xsd:enumeration value="SIMULATED"/> 
+      <xsd:enumeration value="OTHER"/> 
+   </xsd:restriction>
+</xsd:simpleType>
+
+
+<xsd:simpleType name="revNumBasisType"> 		      
+   <xsd:restriction base="xsd:nonNegativeInteger">           
+      <xsd:enumeration value="0"/>      		    
+      <xsd:enumeration value="1"/>      		   
+   </xsd:restriction>   				 
+</xsd:simpleType>  
+
+
+<xsd:simpleType name="covBasisType">
+   <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="PREDICTED"/>
+      <xsd:enumeration value="DETERMINED"/>
+      <xsd:enumeration value="EMPIRICAL"/>
+      <xsd:enumeration value="SIMULATED"/>
+      <xsd:enumeration value="OTHER"/>
+   </xsd:restriction>
+</xsd:simpleType>
+
+
+<xsd:simpleType name="manBasisType">
+   <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="CANDIDATE"/>
+      <xsd:enumeration value="PLANNED"/>
+      <xsd:enumeration value="ANTICIPATED"/>
+      <xsd:enumeration value="TELEMETRY"/>
+      <xsd:enumeration value="DETERMINED"/>
+      <xsd:enumeration value="SIMULATED"/>
+      <xsd:enumeration value="OTHER"/>
+   </xsd:restriction>
+</xsd:simpleType>
+
+
+<xsd:simpleType name="manDCType">
+   <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="CONTINUOUS"/>
+      <xsd:enumeration value="TIME"/>
+      <xsd:enumeration value="TIME_AND_ANGLE"/>
+   </xsd:restriction>
+</xsd:simpleType>
+
+
+<xsd:complexType name="maneuverFreqType">
+   <xsd:simpleContent>
+      <xsd:extension base="xsd:double">
+         <xsd:attribute name="units" type="ndm:numPerYearUnits"/>
+      </xsd:extension>
+   </xsd:simpleContent>
+</xsd:complexType>
+
+
+<xsd:simpleType name="numPerYearUnits">
+   <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="#/yr"/>
+   </xsd:restriction>
+</xsd:simpleType>
+      
+
+<xsd:complexType name="thrustType">
+   <xsd:simpleContent>
+      <xsd:extension base="xsd:double">
+         <xsd:attribute name="units" type="ndm:thrustUnits" use="optional"/>
+      </xsd:extension>
+   </xsd:simpleContent>
+</xsd:complexType>
+
+
+<xsd:simpleType name="thrustUnits">
+   <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="N"/>
+   </xsd:restriction>
+</xsd:simpleType>
+
+<!--********************************************************************-->
+<!-- Miscellaneous ODM Data Types and related Unit Types                -->
+<!--********************************************************************-->
+
+<xsd:simpleType name="covOrderType">
+    <xsd:restriction base="xsd:string">
+        <xsd:enumeration value="LTM" />
+        <xsd:enumeration value="UTM" />
+        <xsd:enumeration value="FULL" />
+        <xsd:enumeration value="LTMWCC" />
+        <xsd:enumeration value="UTMWCC" />
+    </xsd:restriction>
+</xsd:simpleType>
+
+
+<xsd:complexType name="geomagType">
+   <xsd:simpleContent>
+      <xsd:extension base="xsd:double">
+         <xsd:attribute name="units" type="ndm:geomagUnits" use="optional"/>
+      </xsd:extension>
+   </xsd:simpleContent>
+</xsd:complexType>
+
+
+<xsd:simpleType name="geomagUnits">
+   <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="nT"/>
+   </xsd:restriction>
+</xsd:simpleType>
+
+
+<xsd:complexType name="solarFluxType">
+   <xsd:simpleContent>
+      <xsd:extension base="xsd:double">
+         <xsd:attribute name="units" type="ndm:solarFluxUnits" use="optional"/>
+      </xsd:extension>
+   </xsd:simpleContent>
+</xsd:complexType>
+
+
+<xsd:simpleType name="solarFluxUnits">
+   <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="SFU"/>
+      <xsd:enumeration value="10**4 Jansky"/>
+      <xsd:enumeration value="10**-22 W/(m**2/Hz)"/>
+      <xsd:enumeration value="10**-19 erg/(s*cm**2*Hz)"/>
+   </xsd:restriction>
+</xsd:simpleType>
+
+<!--********************************************************************-->
+<!-- Start of ODM covariance type definitions                           -->
+<!--********************************************************************-->
+
+  <xsd:group name="covarianceMatrixElementsGroup">
+    <xsd:sequence>
+      <xsd:element name="CX_X" type="ndm:positionCovarianceType"/>
+      <xsd:element name="CY_X" type="ndm:positionCovarianceType"/>
+      <xsd:element name="CY_Y" type="ndm:positionCovarianceType"/>
+      <xsd:element name="CZ_X" type="ndm:positionCovarianceType"/>
+      <xsd:element name="CZ_Y" type="ndm:positionCovarianceType"/>
+      <xsd:element name="CZ_Z" type="ndm:positionCovarianceType"/>
+      <xsd:element name="CX_DOT_X" type="ndm:positionVelocityCovarianceType"/>
+      <xsd:element name="CX_DOT_Y" type="ndm:positionVelocityCovarianceType"/>
+      <xsd:element name="CX_DOT_Z" type="ndm:positionVelocityCovarianceType"/>
+      <xsd:element name="CX_DOT_X_DOT" type="ndm:velocityCovarianceType"/>
+      <xsd:element name="CY_DOT_X" type="ndm:positionVelocityCovarianceType"/>
+      <xsd:element name="CY_DOT_Y" type="ndm:positionVelocityCovarianceType"/>
+      <xsd:element name="CY_DOT_Z" type="ndm:positionVelocityCovarianceType"/>
+      <xsd:element name="CY_DOT_X_DOT" type="ndm:velocityCovarianceType"/>
+      <xsd:element name="CY_DOT_Y_DOT" type="ndm:velocityCovarianceType"/>
+      <xsd:element name="CZ_DOT_X" type="ndm:positionVelocityCovarianceType"/>
+      <xsd:element name="CZ_DOT_Y" type="ndm:positionVelocityCovarianceType"/>
+      <xsd:element name="CZ_DOT_Z" type="ndm:positionVelocityCovarianceType"/>
+      <xsd:element name="CZ_DOT_X_DOT" type="ndm:velocityCovarianceType"/>
+      <xsd:element name="CZ_DOT_Y_DOT" type="ndm:velocityCovarianceType"/>
+      <xsd:element name="CZ_DOT_Z_DOT" type="ndm:velocityCovarianceType"/>
+    </xsd:sequence>
+  </xsd:group>
+
+   <xsd:complexType name="opmCovarianceMatrixAbstractType" abstract="true">
+      <xsd:sequence>
+         <xsd:element name="COMMENT" type="xsd:string" minOccurs="0" maxOccurs="unbounded"/>
+         <xsd:element name="COV_REF_FRAME" type="xsd:string" minOccurs="0"/>
+      </xsd:sequence>
+   </xsd:complexType>
+
+   <xsd:complexType name="oemCovarianceMatrixAbstractType" abstract="true">
+      <xsd:sequence>
+         <xsd:element name="COMMENT" type="xsd:string" minOccurs="0" maxOccurs="unbounded"/>
+         <xsd:element name="EPOCH" type="ndm:epochType" minOccurs="1"/>
+         <xsd:element name="COV_REF_FRAME" type="xsd:string" minOccurs="0"/>
+      </xsd:sequence>
+   </xsd:complexType>
+
+   <xsd:complexType name="oemCovarianceMatrixType" mixed="false">
+    <xsd:complexContent>
+      <xsd:extension base="ndm:oemCovarianceMatrixAbstractType">
+        <xsd:sequence>
+          <xsd:group ref="ndm:covarianceMatrixElementsGroup" />
+        </xsd:sequence>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+
+  <xsd:complexType name="opmCovarianceMatrixType" mixed="false">
+    <xsd:complexContent>
+      <xsd:extension base="ndm:opmCovarianceMatrixAbstractType">
+        <xsd:group ref="ndm:covarianceMatrixElementsGroup" />
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+
+  <xsd:complexType name="positionCovarianceType">
+    <xsd:simpleContent>
+      <xsd:extension base="xsd:double">
+        <xsd:attribute name="units" type="ndm:positionCovarianceUnits" use="optional"/>
+      </xsd:extension>
+    </xsd:simpleContent>
+  </xsd:complexType>
+
+  <xsd:simpleType name="positionCovarianceUnits">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="km**2"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+
+  <xsd:complexType name="velocityCovarianceType">
+    <xsd:simpleContent>
+      <xsd:extension base="xsd:double">
+        <xsd:attribute name="units" type="ndm:velocityCovarianceUnits" use="optional"/>
+      </xsd:extension>
+    </xsd:simpleContent>
+  </xsd:complexType>
+
+  <xsd:simpleType name="velocityCovarianceUnits">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="km**2/s**2"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+
+  <xsd:complexType name="positionVelocityCovarianceType">
+    <xsd:simpleContent>
+      <xsd:extension base="xsd:double">
+        <xsd:attribute name="units" type="ndm:positionVelocityCovarianceUnits" use="optional"/>
+      </xsd:extension>
+    </xsd:simpleContent>
+  </xsd:complexType>
+
+  <xsd:simpleType name="positionVelocityCovarianceUnits">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="km**2/s"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+
+<!--********************************************************************-->
+<!-- End of ODM covariance type definitions                             -->
+<!--********************************************************************-->
+
+<!--*****************************************************************-->
+<!-- Complex types unique to the RDM                                 -->
+<!--*****************************************************************-->
+
+    <xsd:complexType name="atmosphericReentryParametersType">
+        <xsd:sequence>
+            <xsd:element name="COMMENT" type="xsd:string" minOccurs="0" maxOccurs="unbounded" />
+            <xsd:element name="ORBIT_LIFETIME" type="ndm:dayIntervalTypeUR" />
+            <xsd:element name="REENTRY_ALTITUDE" type="ndm:positionTypeUR" />
+            <xsd:element name="ORBIT_LIFETIME_WINDOW_START" type="ndm:dayIntervalTypeUR" minOccurs="0" maxOccurs="1" />
+            <xsd:element name="ORBIT_LIFETIME_WINDOW_END" type="ndm:dayIntervalTypeUR" minOccurs="0" maxOccurs="1" />
+            <xsd:element name="NOMINAL_REENTRY_EPOCH" type="ndm:epochType" minOccurs="0" />
+            <xsd:element name="REENTRY_WINDOW_START" type="ndm:epochType" minOccurs="0" />
+            <xsd:element name="REENTRY_WINDOW_END" type="ndm:epochType" minOccurs="0" />
+            <xsd:element name="ORBIT_LIFETIME_CONFIDENCE_LEVEL" type="ndm:percentageTypeUR" minOccurs="0" maxOccurs="1" />
+        </xsd:sequence>
+    </xsd:complexType>
+
+
+    <xsd:complexType name="groundImpactParametersType">
+        <xsd:sequence>
+            <xsd:element name="COMMENT" type="xsd:string" minOccurs="0" maxOccurs="unbounded" />
+            <xsd:element name="PROBABILITY_OF_IMPACT" type="ndm:probabilityType" minOccurs="0" />
+            <xsd:element name="PROBABILITY_OF_BURN_UP" type="ndm:probabilityType" minOccurs="0" />
+            <xsd:element name="PROBABILITY_OF_BREAK_UP" type="ndm:probabilityType" minOccurs="0" />
+            <xsd:element name="PROBABILITY_OF_LAND_IMPACT" type="ndm:probabilityType" minOccurs="0" />
+            <xsd:element name="PROBABILITY_OF_CASUALTY" type="ndm:probabilityType" minOccurs="0" />
+            <xsd:element name="NOMINAL_IMPACT_EPOCH" type="ndm:epochType" minOccurs="0" />
+            <xsd:element name="IMPACT_WINDOW_START" type="ndm:epochType" minOccurs="0" />
+            <xsd:element name="IMPACT_WINDOW_END" type="ndm:epochType" minOccurs="0" />
+            <xsd:element name="IMPACT_REF_FRAME" type="xsd:string" minOccurs="0" />
+            <xsd:element name="NOMINAL_IMPACT_LON" type="ndm:lonType" minOccurs="0" />
+            <xsd:element name="NOMINAL_IMPACT_LAT" type="ndm:latType" minOccurs="0" />
+            <xsd:element name="NOMINAL_IMPACT_ALT" type="ndm:altType" minOccurs="0" />
+            <xsd:element name="IMPACT_1_CONFIDENCE" type="ndm:percentageTypeUR" minOccurs="0" />
+            <xsd:element name="IMPACT_1_START_LON" type="ndm:lonType" minOccurs="0" />
+            <xsd:element name="IMPACT_1_START_LAT" type="ndm:latType" minOccurs="0" />
+            <xsd:element name="IMPACT_1_STOP_LON" type="ndm:lonType" minOccurs="0" />
+            <xsd:element name="IMPACT_1_STOP_LAT" type="ndm:latType" minOccurs="0" />
+            <xsd:element name="IMPACT_1_CROSS_TRACK" type="ndm:distanceType" minOccurs="0" />
+            <xsd:element name="IMPACT_2_CONFIDENCE" type="ndm:percentageTypeUR" minOccurs="0" />
+            <xsd:element name="IMPACT_2_START_LON" type="ndm:lonType" minOccurs="0" />
+            <xsd:element name="IMPACT_2_START_LAT" type="ndm:latType" minOccurs="0" />
+            <xsd:element name="IMPACT_2_STOP_LON" type="ndm:lonType" minOccurs="0" />
+            <xsd:element name="IMPACT_2_STOP_LAT" type="ndm:latType" minOccurs="0" />
+            <xsd:element name="IMPACT_2_CROSS_TRACK" type="ndm:distanceType" minOccurs="0" />
+            <xsd:element name="IMPACT_3_CONFIDENCE" type="ndm:percentageTypeUR" minOccurs="0" />
+            <xsd:element name="IMPACT_3_START_LON" type="ndm:lonType" minOccurs="0" />
+            <xsd:element name="IMPACT_3_START_LAT" type="ndm:latType" minOccurs="0" />
+            <xsd:element name="IMPACT_3_STOP_LON" type="ndm:lonType" minOccurs="0" />
+            <xsd:element name="IMPACT_3_STOP_LAT" type="ndm:latType" minOccurs="0" />
+            <xsd:element name="IMPACT_3_CROSS_TRACK" type="ndm:distanceType" minOccurs="0" />
+        </xsd:sequence>
+    </xsd:complexType>
+
+
+    <xsd:complexType name="rdmSpacecraftParametersType">
+        <xsd:sequence>
+            <xsd:element name="COMMENT" type="xsd:string" minOccurs="0" maxOccurs="unbounded" />
+            <xsd:element name="WET_MASS" type="ndm:massType" minOccurs="0" />
+            <xsd:element name="DRY_MASS" type="ndm:massType" minOccurs="0" />
+            <xsd:element name="HAZARDOUS_SUBSTANCES" type="xsd:string" minOccurs="0" />
+            <xsd:element name="SOLAR_RAD_AREA" type="ndm:areaType" minOccurs="0" />
+            <xsd:element name="SOLAR_RAD_COEFF" type="ndm:nonNegativeDouble" minOccurs="0" />
+            <xsd:element name="DRAG_AREA" type="ndm:areaType" minOccurs="0" />
+            <xsd:element name="DRAG_COEFF" type="ndm:nonNegativeDouble" minOccurs="0" />
+            <xsd:element name="RCS" type="ndm:areaType" minOccurs="0" />
+            <xsd:element name="BALLISTIC_COEFF" type="ndm:ballisticCoeffType" minOccurs="0" />
+            <xsd:element name="THRUST_ACCELERATION" type="ndm:ms2Type" minOccurs="0" />
+        </xsd:sequence>
+    </xsd:complexType>
+
+
+    <xsd:complexType name="altType">
+        <xsd:simpleContent>
+            <xsd:extension base="ndm:altRange">
+                <xsd:attribute name="units" type="ndm:lengthUnits" />
+            </xsd:extension>
+        </xsd:simpleContent>
+    </xsd:complexType>
+
+
+    <xsd:complexType name="ballisticCoeffType">
+        <xsd:simpleContent>
+            <xsd:extension base="ndm:nonNegativeDouble">
+                <xsd:attribute name="units" type="ndm:ballisticCoeffUnitsType" />
+            </xsd:extension>
+        </xsd:simpleContent>
+    </xsd:complexType>
+
+
+    <xsd:complexType name="latType">
+        <xsd:simpleContent>
+            <xsd:extension base="ndm:latRange">
+                <xsd:attribute name="units" type="ndm:latLonUnits" use="required" />
+            </xsd:extension>
+        </xsd:simpleContent>
+    </xsd:complexType>
+
+
+    <xsd:complexType name="lonType">
+        <xsd:simpleContent>
+            <xsd:extension base="ndm:lonRange">
+                <xsd:attribute name="units" type="ndm:latLonUnits" use="required" />
+            </xsd:extension>
+        </xsd:simpleContent>
+    </xsd:complexType>
+
+
+<!--********************************************************************-->
+<!-- Simple types and relate units unique to the RDM.                   -->
+<!--********************************************************************-->
+
+    <xsd:simpleType name="ballisticCoeffUnitsType">
+        <xsd:restriction base="xsd:string">
+            <xsd:enumeration value="kg/m**2" />
+        </xsd:restriction>
+    </xsd:simpleType>
+
+
+    <xsd:simpleType name="latRange">
+        <xsd:restriction base="xsd:double">
+            <xsd:minInclusive value="-90.0" />
+            <xsd:maxInclusive value="90.0" />
+        </xsd:restriction>
+    </xsd:simpleType>
+
+
+    <xsd:simpleType name="altRange">
+        <xsd:restriction base="xsd:double">
+            <xsd:minInclusive value="-430.5" />
+            <xsd:maxInclusive value="8848" />
+        </xsd:restriction>
+    </xsd:simpleType>
+
+
+    <xsd:simpleType name="lonRange">
+        <xsd:restriction base="xsd:double">
+            <xsd:minInclusive value="-180.0" />
+            <xsd:maxInclusive value="180.0" />
+        </xsd:restriction>
+    </xsd:simpleType>
+
+
+    <xsd:simpleType name="latLonUnits">
+        <xsd:restriction base="xsd:string">
+            <xsd:enumeration value="deg" />
+        </xsd:restriction>
+    </xsd:simpleType>
+
+
+    <xsd:simpleType name="controlledType">
+        <xsd:restriction base="xsd:string">
+            <xsd:enumeration value="YES" />
+            <xsd:enumeration value="yes" />
+            <xsd:enumeration value="NO" />
+            <xsd:enumeration value="no" />
+            <xsd:enumeration value="UNKNOWN" />
+            <xsd:enumeration value="unknown" />
+        </xsd:restriction>
+    </xsd:simpleType>
+
+
+    <xsd:simpleType name="disintegrationType">
+        <xsd:restriction base="xsd:string">
+            <xsd:enumeration value="NONE" />
+            <xsd:enumeration value="MASS-LOSS" />
+            <xsd:enumeration value="BREAK-UP" />
+            <xsd:enumeration value="MASS-LOSS + BREAK-UP" />
+        </xsd:restriction>
+    </xsd:simpleType>
+
+
+    <xsd:simpleType name="impactUncertaintyType">
+        <xsd:restriction base="xsd:string">
+            <xsd:enumeration value="NONE" />
+            <xsd:enumeration value="ANALYTICAL" />
+            <xsd:enumeration value="STOCHASTIC" />
+            <xsd:enumeration value="EMPIRICAL" />
+        </xsd:restriction>
+    </xsd:simpleType>
+
+
+    <xsd:simpleType name="reentryUncertaintyMethodType">
+        <xsd:restriction base="xsd:string">
+            <xsd:enumeration value="NONE" />
+            <xsd:enumeration value="ANALYTICAL" />
+            <xsd:enumeration value="STOCHASTIC" />
+            <xsd:enumeration value="EMPIRICAL" />
+        </xsd:restriction>
+    </xsd:simpleType>
+
+
+<!--********************************************************************-->
+<!-- SIMPLE TYPES AND COMPLEX TYPES UNIQUE TO THE ADM and related units -->
+<!--********************************************************************-->
+<!--********************************************************************-->
+<!-- Miscellaneous ACM Data Types                                       -->
+<!--********************************************************************-->
+
+<xsd:simpleType name="acmAttitudeType">
+   <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="QUATERNION"/>
+      <xsd:enumeration value="quaternion"/>
+      <xsd:enumeration value="EULER_ANGLES"/>
+      <xsd:enumeration value="euler_angles"/>
+      <xsd:enumeration value="DCM"/>
+      <xsd:enumeration value="dcm"/>
+      <xsd:enumeration value="ANGVEL"/>
+      <xsd:enumeration value="angvel"/>
+      <xsd:enumeration value="Q_DOT"/>
+      <xsd:enumeration value="q_dot"/>
+      <xsd:enumeration value="EULER_RATE"/>
+      <xsd:enumeration value="euler_rate"/>
+      <xsd:enumeration value="GYRO_BIAS"/>
+      <xsd:enumeration value="gyro_bias"/>
+   </xsd:restriction>
+</xsd:simpleType>
+ 
+
+<xsd:simpleType name="attRateType">
+   <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="ANGVEL"/>
+      <xsd:enumeration value="angvel"/>
+      <xsd:enumeration value="Q_DOT"/>
+      <xsd:enumeration value="q_dot"/>
+      <xsd:enumeration value="EULER_RATE"/>
+      <xsd:enumeration value="euler_rate"/>
+      <xsd:enumeration value="GYRO_BIAS"/>
+      <xsd:enumeration value="gyro_bias"/>
+   </xsd:restriction>
+</xsd:simpleType>
+
+
+<xsd:simpleType name="attBasisType">
+   <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="PREDICTED"/>
+      <xsd:enumeration value="predicted"/>
+      <xsd:enumeration value="DETERMINED_GND"/>
+      <xsd:enumeration value="determined_gnd"/>
+      <xsd:enumeration value="DETERMINED_OBC"/>
+      <xsd:enumeration value="determined_obc"/>
+      <xsd:enumeration value="SIMULATED"/>
+      <xsd:enumeration value="simulated"/>
+   </xsd:restriction>
+</xsd:simpleType>
+
+
+<xsd:simpleType name="acmCovarianceLineType">
+   <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="ANGLE"/>
+      <xsd:enumeration value="angle"/>
+      <xsd:enumeration value="ANGLE_GYROBIAS"/>
+      <xsd:enumeration value="angle_gyrobias"/>
+      <xsd:enumeration value="ANGLE_ANGVEL"/>
+      <xsd:enumeration value="angle_angvel"/>
+      <xsd:enumeration value="QUATERNION"/>
+      <xsd:enumeration value="quaternion"/>
+      <xsd:enumeration value="QUATERNION_GYROBIAS"/>
+      <xsd:enumeration value="quaternion_gyrobias"/>
+      <xsd:enumeration value="QUATERNION_ANGVEL"/>
+      <xsd:enumeration value="quaternion_angvel"/>
+   </xsd:restriction>
+</xsd:simpleType>
+
+
+<xsd:complexType name="cpType">
+   <xsd:simpleContent>
+      <xsd:extension base="ndm:vec3Double">
+         <xsd:attribute name="units" type="ndm:lengthUnits" use="optional"/>
+      </xsd:extension>
+   </xsd:simpleContent>
+</xsd:complexType>
+
+
+<xsd:complexType name="sigmaUType">
+   <xsd:simpleContent>
+      <xsd:extension base="xsd:double">
+         <xsd:attribute name="units" type="ndm:sigmaUUnits" use="optional"/>
+      </xsd:extension>
+   </xsd:simpleContent>
+</xsd:complexType>
+
+
+<xsd:simpleType name="sigmaUUnits">
+   <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="deg/s**1.5"/>
+   </xsd:restriction>
+</xsd:simpleType>
+
+
+<xsd:complexType name="sigmaVType">
+   <xsd:simpleContent>
+      <xsd:extension base="xsd:double">
+         <xsd:attribute name="units" type="ndm:sigmaVUnits" use="optional"/>
+      </xsd:extension>
+   </xsd:simpleContent>
+</xsd:complexType>
+
+
+<xsd:simpleType name="sigmaVUnits">
+   <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="deg/s**0.5"/>
+   </xsd:restriction>
+</xsd:simpleType>
+
+
+
+<!--********************************************************************-->
+<!-- "Logical Blocks" used in the APM                                   -->
+<!--********************************************************************-->
+
+<xsd:complexType name="quaternionStateType">
+   <xsd:sequence>
+      <xsd:element name="COMMENT" type="xsd:string" 
+         minOccurs="0" maxOccurs="unbounded"/>
+      <xsd:element name="REF_FRAME_A" type="xsd:string"/>
+      <xsd:element name="REF_FRAME_B" type="xsd:string"/>
+      <xsd:element name="quaternion" type="ndm:quaternionType"/>
+      <xsd:element name="quaternionDot" type="ndm:quaternionDotType"
+         minOccurs="0"/>
+   </xsd:sequence>
+</xsd:complexType> 
+
+
+<!--********************************************************************-->
+<!-- NOTE:  For some spacecraft, the "eulerAngleStateType" and          -->
+<!-- "spinType" described in the next 2 sections may                    -->
+<!-- appear in the same APM, according to the AACS design of the        -->
+<!-- spacecraft.                                                        -->    
+<!--********************************************************************-->
+<xsd:complexType name="eulerAngleStateType">
+   <xsd:sequence>
+      <xsd:element name="COMMENT" type="xsd:string" 
+         minOccurs="0" maxOccurs="unbounded"/>
+      <xsd:element name="REF_FRAME_A" type="xsd:string"/>
+      <xsd:element name="REF_FRAME_B" type="xsd:string"/>
+      <xsd:element name="EULER_ROT_SEQ" type="ndm:rotseqType"/>
+      <xsd:element name="ANGLE_1" type="ndm:angleType"/>
+      <xsd:element name="ANGLE_2" type="ndm:angleType"/>
+      <xsd:element name="ANGLE_3" type="ndm:angleType"/>
+      <xsd:element name="ANGLE_1_DOT" type="ndm:angleRateType" minOccurs="0" />
+      <xsd:element name="ANGLE_2_DOT" type="ndm:angleRateType" minOccurs="0" />
+      <xsd:element name="ANGLE_3_DOT" type="ndm:angleRateType" minOccurs="0" />
+   </xsd:sequence>   
+</xsd:complexType>
+
+
+<xsd:complexType name="angVelStateType">
+   <xsd:sequence>
+      <xsd:element name="COMMENT" type="xsd:string"
+         minOccurs="0" maxOccurs="unbounded"/>
+      <xsd:element name="REF_FRAME_A" type="xsd:string"/>
+      <xsd:element name="REF_FRAME_B" type="xsd:string"/>
+      <xsd:element name="ANGVEL_FRAME" type="ndm:angVelFrameType"/>
+      <xsd:element name="ANGVEL_X"  type="ndm:angVelComponentType"/>
+      <xsd:element name="ANGVEL_Y"  type="ndm:angVelComponentType"/>
+      <xsd:element name="ANGVEL_Z"  type="ndm:angVelComponentType"/>
+   </xsd:sequence>
+</xsd:complexType>
+
+
+<xsd:complexType name="spinStateType">
+   <xsd:sequence>
+      <xsd:element name="COMMENT" type="xsd:string" 
+         minOccurs="0" maxOccurs="unbounded"/>
+      <xsd:element name="REF_FRAME_A" type="xsd:string"/>
+      <xsd:element name="REF_FRAME_B" type="xsd:string"/>
+      <xsd:element name="SPIN_ALPHA" type="ndm:angleType"/>
+      <xsd:element name="SPIN_DELTA" type="ndm:angleType"/>
+      <xsd:element name="SPIN_ANGLE" type="ndm:angleType"/>
+      <xsd:element name="SPIN_ANGLE_VEL" type="ndm:angleRateType"/>
+      <xsd:choice minOccurs="0">
+         <xsd:sequence>
+            <xsd:element name="NUTATION" type="ndm:angleType" />
+            <xsd:element name="NUTATION_PER" type="ndm:durationType" />
+            <xsd:element name="NUTATION_PHASE" type="ndm:angleType" />
+         </xsd:sequence>
+         <xsd:sequence>
+            <xsd:element name="MOMENTUM_ALPHA" type="ndm:angleType" />
+            <xsd:element name="MOMENTUM_DELTA" type="ndm:angleType" />
+            <xsd:element name="NUTATION_VEL" type="ndm:angleRateType" />
+         </xsd:sequence>
+      </xsd:choice>
+   </xsd:sequence>   
+</xsd:complexType> 
+
+
+<xsd:complexType name="inertiaStateType">
+   <xsd:sequence>
+      <xsd:element name="COMMENT" type="xsd:string" 
+         minOccurs="0" maxOccurs="unbounded"/>
+      <xsd:element name="INERTIA_REF_FRAME" type="xsd:string"/>
+      <xsd:element name="IXX" type="ndm:momentType"/>
+      <xsd:element name="IYY" type="ndm:momentType"/>
+      <xsd:element name="IZZ" type="ndm:momentType"/>
+      <xsd:element name="IXY" type="ndm:momentType"/>
+      <xsd:element name="IXZ" type="ndm:momentType"/>
+      <xsd:element name="IYZ" type="ndm:momentType"/>
+   </xsd:sequence>    
+</xsd:complexType> 
+
+
+<xsd:complexType name="attManeuverStateType">
+   <xsd:sequence>
+      <xsd:element name="COMMENT" type="xsd:string" 
+         minOccurs="0" maxOccurs="unbounded"/>
+      <xsd:element name="MAN_EPOCH_START" type="ndm:epochType"/>
+      <xsd:element name="MAN_DURATION" type="ndm:durationType"/>
+      <xsd:element name="MAN_REF_FRAME" type="xsd:string"/>
+      <xsd:element name="MAN_TOR_X" type="ndm:torqueType"/>
+      <xsd:element name="MAN_TOR_Y" type="ndm:torqueType"/>
+      <xsd:element name="MAN_TOR_Z" type="ndm:torqueType"/>
+      <xsd:element name="MAN_DELTA_MASS" type="ndm:deltamassTypeZ" minOccurs="0"/>
+   </xsd:sequence>    
+</xsd:complexType> 
+
+
+<!--********************************************************************-->
+<!-- Simple Types and Complex Types Unique to the APM.                  -->
+<!--********************************************************************-->
+
+
+<xsd:simpleType name="apmRateFrameType">
+   <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="EULER_FRAME_A"/>
+      <xsd:enumeration value="EULER_FRAME_B"/>
+   </xsd:restriction>
+</xsd:simpleType>
+
+
+<xsd:complexType name="torqueType">
+   <xsd:simpleContent>
+      <xsd:extension base="xsd:double">
+         <xsd:attribute name="units" type="ndm:torqueUnits" use="optional"/>
+      </xsd:extension>
+   </xsd:simpleContent>
+</xsd:complexType>
+
+
+<xsd:simpleType name="torqueUnits">
+   <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="N*m"/>
+   </xsd:restriction>
+</xsd:simpleType>
+
+
+<xsd:complexType name="sensorNoiseType">
+   <xsd:simpleContent>
+      <xsd:extension base="xsd:string">
+         <xsd:attribute name="units" type="ndm:angleUnits" use="optional"/>
+      </xsd:extension>
+   </xsd:simpleContent>
+</xsd:complexType>
+
+
+<!--********************************************************************-->
+<!-- SIMPLE TYPES AND COMPLEX TYPES UNIQUE TO THE AEM                   -->
+<!--********************************************************************-->
+
+<xsd:simpleType name="attitudeTypeType">
+   <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="quaternion"/>
+      <xsd:enumeration value="QUATERNION"/>
+      <xsd:enumeration value="quaternion/derivative"/>
+      <xsd:enumeration value="QUATERNION/DERIVATIVE"/>
+      <xsd:enumeration value="quaternion/angvel"/>
+      <xsd:enumeration value="QUATERNION/ANGVEL"/>
+      <xsd:enumeration value="euler_angle"/>
+      <xsd:enumeration value="EULER_ANGLE"/>
+      <xsd:enumeration value="euler_angle/derivative"/>
+      <xsd:enumeration value="EULER_ANGLE/DERIVATIVE"/>
+      <xsd:enumeration value="euler_angle/angvel"/>
+      <xsd:enumeration value="EULER_ANGLE/ANGVEL"/>
+      <xsd:enumeration value="spin"/>
+      <xsd:enumeration value="SPIN"/>
+      <xsd:enumeration value="spin/nutation"/>
+      <xsd:enumeration value="SPIN/NUTATION"/>
+      <xsd:enumeration value="spin/nutation_mom"/>
+      <xsd:enumeration value="SPIN/NUTATION_MOM"/>
+   </xsd:restriction>
+</xsd:simpleType>
+
+
+<!--********************************************************************-->
+<!-- "Ephemeris Line Types" used in the AEM                             -->
+<!--********************************************************************-->
+
+<xsd:complexType name="attitudeStateType">
+   <xsd:choice>
+      <xsd:element name="quaternionEphemeris" type="ndm:quaternionEphemerisType"/>
+      <xsd:element name="quaternionDerivative" type="ndm:quaternionDerivativeType"/>
+      <xsd:element name="quaternionAngVel" type="ndm:quaternionAngVelType"/>
+      <xsd:element name="eulerAngle" type="ndm:eulerAngleType"/>
+      <xsd:element name="eulerAngleDerivative" type="ndm:eulerAngleDerivativeType"/>
+      <xsd:element name="eulerAngleAngVel" type="ndm:eulerAngleAngVelType"/>
+      <xsd:element name="spin" type="ndm:spinType"/>
+      <xsd:element name="spinNutation" type="ndm:spinNutationType"/>
+      <xsd:element name="spinNutationMom" type="ndm:spinNutationMomType"/>
+   </xsd:choice>
+</xsd:complexType>
+
+
+<!-- type 1 AEM data: Quaternion Type -->
+<xsd:complexType name="quaternionEphemerisType">
+   <xsd:sequence>
+      <xsd:element name="EPOCH" type="ndm:epochType"/>
+      <xsd:element name="quaternion" type="ndm:quaternionType"/>
+   </xsd:sequence>
+</xsd:complexType>
+
+
+<!-- type 2 AEM data: Quaternion Derivative Type -->
+<xsd:complexType name="quaternionDerivativeType">
+   <xsd:sequence>
+      <xsd:element name="EPOCH" type="ndm:epochType"/>
+      <xsd:element name="quaternion" type="ndm:quaternionType"/>   
+      <xsd:element name="quaternionDot" type="ndm:quaternionDotType"/> 
+   </xsd:sequence>
+</xsd:complexType>
+
+
+<!-- type 3 AEM data:  Quaternion Angular Velocity Type -->
+<xsd:complexType name="quaternionAngVelType">
+   <xsd:sequence>
+      <xsd:element name="EPOCH" type="ndm:epochType"/>
+      <xsd:element name="quaternion" type="ndm:quaternionType"/>      
+      <xsd:element name="angVel" type="ndm:angVelType"/>
+   </xsd:sequence>
+</xsd:complexType>
+
+
+<!-- type 4 AEM data:  Euler Angle Type -->
+<xsd:complexType name="eulerAngleType">
+   <xsd:sequence>
+      <xsd:element name="EPOCH" type="ndm:epochType"/> 
+      <xsd:element name="ANGLE_1" type="ndm:angleType"/>
+      <xsd:element name="ANGLE_2" type="ndm:angleType"/>
+      <xsd:element name="ANGLE_3" type="ndm:angleType"/>
+   </xsd:sequence>
+</xsd:complexType>
+
+
+<!-- type 5 AEM data:  Euler Angle Derivative Type -->
+<xsd:complexType name="eulerAngleDerivativeType">
+   <xsd:sequence>
+      <xsd:element name="EPOCH" type="ndm:epochType"/>      
+      <xsd:element name="ANGLE_1" type="ndm:angleType"/>
+      <xsd:element name="ANGLE_2" type="ndm:angleType"/>
+      <xsd:element name="ANGLE_3" type="ndm:angleType"/>
+      <xsd:element name="ANGLE_1_DOT" type="ndm:angleRateType" />
+      <xsd:element name="ANGLE_2_DOT" type="ndm:angleRateType" />
+      <xsd:element name="ANGLE_3_DOT" type="ndm:angleRateType" />
+   </xsd:sequence>
+</xsd:complexType>
+
+
+<!-- type 6 AEM data:  Euler Angle / Angular Velocity Type -->
+<xsd:complexType name="eulerAngleAngVelType">
+   <xsd:sequence>
+      <xsd:element name="EPOCH" type="ndm:epochType"/>
+      <xsd:element name="ANGLE_1" type="ndm:angleType"/>
+      <xsd:element name="ANGLE_2" type="ndm:angleType"/>
+      <xsd:element name="ANGLE_3" type="ndm:angleType"/>
+      <xsd:element name="ANGVEL_X"  type="ndm:angVelComponentType"/>
+      <xsd:element name="ANGVEL_Y"  type="ndm:angVelComponentType"/>
+      <xsd:element name="ANGVEL_Z"  type="ndm:angVelComponentType"/>
+   </xsd:sequence>
+</xsd:complexType>
+
+
+<!-- type 7 AEM data:  Spin Type -->
+<xsd:complexType name="spinType">
+   <xsd:sequence>
+      <xsd:element name="EPOCH" type="ndm:epochType"/>
+      <xsd:element name="SPIN_ALPHA" type="ndm:angleType"/>
+      <xsd:element name="SPIN_DELTA" type="ndm:angleType"/>
+      <xsd:element name="SPIN_ANGLE" type="ndm:angleType"/>
+      <xsd:element name="SPIN_ANGLE_VEL" type="ndm:angleRateType"/>
+   </xsd:sequence>
+</xsd:complexType>
+
+
+<!-- type 8 AEM data:  Spin Nutation Type -->
+<xsd:complexType name="spinNutationType">
+   <xsd:sequence>
+      <xsd:element name="EPOCH" type="ndm:epochType"/>
+      <xsd:element name="SPIN_ALPHA" type="ndm:angleType"/>
+      <xsd:element name="SPIN_DELTA" type="ndm:angleType"/>
+      <xsd:element name="SPIN_ANGLE" type="ndm:angleType"/>
+      <xsd:element name="SPIN_ANGLE_VEL" type="ndm:angleRateType"/>
+      <xsd:element name="NUTATION" type="ndm:angleType"/>
+      <xsd:element name="NUTATION_PER" type="ndm:durationType"/>
+      <xsd:element name="NUTATION_PHASE" type="ndm:angleType"/>
+   </xsd:sequence>
+</xsd:complexType>
+
+
+<!-- type 9 AEM data:  Spin Nutation/Momentum Type -->
+<xsd:complexType name="spinNutationMomType">
+   <xsd:sequence>
+      <xsd:element name="EPOCH" type="ndm:epochType"/>
+      <xsd:element name="SPIN_ALPHA" type="ndm:angleType"/>
+      <xsd:element name="SPIN_DELTA" type="ndm:angleType"/>
+      <xsd:element name="SPIN_ANGLE" type="ndm:angleType"/>
+      <xsd:element name="SPIN_ANGLE_VEL" type="ndm:angleRateType"/>
+      <xsd:element name="MOMENTUM_ALPHA" type="ndm:angleType"/>
+      <xsd:element name="MOMENTUM_DELTA" type="ndm:angleType"/>
+      <xsd:element name="NUTATION_VEL" type="ndm:angleRateType"/>
+   </xsd:sequence>
+</xsd:complexType>
+
+
+<!--********************************************************************-->
+<!-- USER DEFINED PARAMETERS                                            -->
+<!--********************************************************************-->
+
+<xsd:complexType name="userDefinedType">
+   <xsd:sequence maxOccurs="unbounded">
+       <xsd:element name="COMMENT" type="xsd:string" minOccurs="0" maxOccurs="unbounded" />
+       <xsd:element name="USER_DEFINED" type="ndm:userDefinedParameterType" minOccurs="0" maxOccurs="unbounded" />
+    </xsd:sequence>
+</xsd:complexType>
+
+
+<xsd:complexType name="userDefinedParameterType">
+   <xsd:simpleContent>
+      <xsd:extension base="xsd:string">
+         <xsd:attribute name="parameter" type="xsd:string" use="required"/>
+      </xsd:extension>
+   </xsd:simpleContent>
+</xsd:complexType>
+
+
+</xsd:schema>
