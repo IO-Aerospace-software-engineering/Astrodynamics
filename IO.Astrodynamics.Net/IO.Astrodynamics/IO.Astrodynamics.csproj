@@ -76,7 +76,21 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="CCSDS\Schema\" />
+      <!-- CCSDS NDM/XML Schemas (embedded resources for validation) -->
+      <EmbeddedResource Include="CCSDS\Schema\ndmxml-4.0.0-common-4.0.xsd" />
+      <EmbeddedResource Include="CCSDS\Schema\ndmxml-4.0.0-omm-3.0.xsd" />
+      <EmbeddedResource Include="CCSDS\Schema\ndmxml-4.0.0-opm-3.0.xsd" />
+      <EmbeddedResource Include="CCSDS\Schema\ndmxml-4.0.0-oem-3.0.xsd" />
+      <EmbeddedResource Include="CCSDS\Schema\ndmxml-4.0.0-aem-2.0.xsd" />
+      <EmbeddedResource Include="CCSDS\Schema\ndmxml-4.0.0-apm-2.0.xsd" />
+      <EmbeddedResource Include="CCSDS\Schema\ndmxml-4.0.0-cdm-1.0.xsd" />
+      <EmbeddedResource Include="CCSDS\Schema\ndmxml-4.0.0-tdm-2.0.xsd" />
+      <EmbeddedResource Include="CCSDS\Schema\ndmxml-4.0.0-rdm-1.0.xsd" />
+      <EmbeddedResource Include="CCSDS\Schema\ndmxml-4.0.0-ndm-4.0.xsd" />
+      <EmbeddedResource Include="CCSDS\Schema\ndmxml-4.0.0-master-4.0.xsd" />
+      <EmbeddedResource Include="CCSDS\Schema\ndmxml-4.0.0-namespace-4.0.xsd" />
+      <EmbeddedResource Include="CCSDS\Schema\ndmxml-4.0.0-acm-2.0.xsd" />
+      <EmbeddedResource Include="CCSDS\Schema\ndmxml-4.0.0-ocm-3.0.xsd" />
     </ItemGroup>
 
 </Project>

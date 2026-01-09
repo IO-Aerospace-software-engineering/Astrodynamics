@@ -124,6 +124,10 @@
       <Content Include="Data\SolarSystem\earth_latest_high_prec.bpc">
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       </Content>
+      <None Remove="CCSDS\H2ADEB.omm" />
+      <Content Include="CCSDS\H2ADEB.omm">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
     </ItemGroup>
 
 </Project>
