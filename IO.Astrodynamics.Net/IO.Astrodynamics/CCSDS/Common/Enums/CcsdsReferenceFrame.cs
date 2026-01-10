@@ -5,95 +5,74 @@ using System.ComponentModel;
 namespace IO.Astrodynamics.CCSDS.Common.Enums;
 
 /// <summary>
-/// CCSDS reference frames used in Navigation Data Messages.
+/// CCSDS reference frames supported by the IO.Astrodynamics framework.
 /// </summary>
 /// <remarks>
-/// As defined in CCSDS 500.0-G-4 and related standards.
-/// Note: CCSDS allows any string for REF_FRAME, but these are the standard values.
+/// The CCSDS OMM schema allows any string for REF_FRAME, but this enum
+/// is restricted to frames that can be processed by the framework.
+/// Maps to IO.Astrodynamics.Frames.Frame instances.
 /// </remarks>
 public enum CcsdsReferenceFrame
 {
     /// <summary>
-    /// Earth Mean Equator and Equinox of J2000 (equivalent to ICRF for most purposes)
-    /// </summary>
-    [Description("EME2000")]
-    EME2000,
-
-    /// <summary>
-    /// Geocentric Celestial Reference Frame (IAU standard, equivalent to ICRF)
-    /// </summary>
-    [Description("GCRF")]
-    GCRF,
-
-    /// <summary>
-    /// Greenwich Rotating Coordinates (Earth body-fixed, rotating)
-    /// </summary>
-    [Description("GRC")]
-    GRC,
-
-    /// <summary>
-    /// International Celestial Reference Frame (IERS standard)
+    /// International Celestial Reference Frame (IERS standard).
+    /// Maps to Frame.ICRF (J2000).
     /// </summary>
     [Description("ICRF")]
     ICRF,
 
     /// <summary>
-    /// International Terrestrial Reference Frame (Earth body-fixed)
+    /// Earth Mean Equator and Equinox of J2000.
+    /// Equivalent to ICRF for most purposes. Maps to Frame.ICRF.
     /// </summary>
-    [Description("ITRF")]
-    ITRF,
+    [Description("EME2000")]
+    EME2000,
 
     /// <summary>
-    /// International Terrestrial Reference Frame 1993 (specific realization)
+    /// Geocentric Celestial Reference Frame (IAU standard).
+    /// Equivalent to ICRF. Maps to Frame.ICRF.
     /// </summary>
-    [Description("ITRF93")]
-    ITRF93,
+    [Description("GCRF")]
+    GCRF,
 
     /// <summary>
-    /// International Terrestrial Reference Frame 1997 (specific realization)
-    /// </summary>
-    [Description("ITRF97")]
-    ITRF97,
-
-    /// <summary>
-    /// International Terrestrial Reference Frame 2000 (specific realization)
-    /// </summary>
-    [Description("ITRF2000")]
-    ITRF2000,
-
-    /// <summary>
-    /// Mean of Date frame (precessing equator and equinox)
-    /// </summary>
-    [Description("MCI")]
-    MCI,
-
-    /// <summary>
-    /// True Equator Mean Equinox (used by SGP4/SDP4)
+    /// True Equator Mean Equinox frame (used by SGP4/SDP4).
+    /// Maps to Frame.TEME.
     /// </summary>
     [Description("TEME")]
     TEME,
 
     /// <summary>
-    /// True of Date frame (true equator and equinox)
+    /// International Terrestrial Reference Frame 1993 (Earth body-fixed).
     /// </summary>
-    [Description("TOD")]
-    TOD,
+    [Description("ITRF93")]
+    ITRF93,
 
     /// <summary>
-    /// Radial-Transverse-Normal (satellite local orbital frame)
+    /// Ecliptic coordinate system at epoch J2000.
+    /// Maps to Frame.ECLIPTIC_J2000.
     /// </summary>
-    [Description("RTN")]
-    RTN,
+    [Description("ECLIPJ2000")]
+    ECLIPJ2000,
 
     /// <summary>
-    /// Tangent-Normal-Cross (TNW frame)
+    /// Ecliptic coordinate system at epoch B1950.
+    /// Maps to Frame.ECLIPTIC_B1950.
     /// </summary>
-    [Description("TNW")]
-    TNW,
+    [Description("ECLIPB1950")]
+    ECLIPB1950,
 
     /// <summary>
-    /// User-defined reference frame
+    /// Equatorial coordinate system at epoch B1950.
+    /// Maps to Frame.B1950.
     /// </summary>
-    [Description("CUSTOM")]
-    Custom
+    [Description("B1950")]
+    B1950,
+
+    /// <summary>
+    /// Fourth Fundamental Catalog (FK4) coordinate system.
+    /// Maps to Frame.FK4.
+    /// </summary>
+    [Description("FK4")]
+    FK4
 }

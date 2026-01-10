@@ -5,82 +5,47 @@ using System.ComponentModel;
 namespace IO.Astrodynamics.CCSDS.Common.Enums;
 
 /// <summary>
-/// CCSDS time systems used in Navigation Data Messages.
+/// CCSDS time systems supported by the IO.Astrodynamics framework.
 /// </summary>
 /// <remarks>
-/// As defined in CCSDS 505.0-B-3 (NDM/XML) and related standards.
+/// The CCSDS OMM schema allows any string for TIME_SYSTEM, but this enum
+/// is restricted to time systems that can be processed by the framework.
+/// Maps to IO.Astrodynamics.TimeSystem.TimeFrame instances.
 /// </remarks>
 public enum CcsdsTimeSystem
 {
     /// <summary>
-    /// Greenwich Mean Sidereal Time
+    /// Coordinated Universal Time.
+    /// Maps to TimeFrame.UTCFrame. Standard for TLE/SGP4 data.
     /// </summary>
-    [Description("GMST")]
-    GMST,
+    [Description("UTC")]
+    UTC,
 
     /// <summary>
-    /// Global Positioning System time
-    /// </summary>
-    [Description("GPS")]
-    GPS,
-
-    /// <summary>
-    /// Mission Elapsed Time
-    /// </summary>
-    [Description("MET")]
-    MET,
-
-    /// <summary>
-    /// Mission Relative Time
-    /// </summary>
-    [Description("MRT")]
-    MRT,
-
-    /// <summary>
-    /// Spacecraft Clock (SCLK requires clock ID)
-    /// </summary>
-    [Description("SCLK")]
-    SCLK,
-
-    /// <summary>
-    /// International Atomic Time
+    /// International Atomic Time.
+    /// Maps to TimeFrame.TAIFrame.
     /// </summary>
     [Description("TAI")]
     TAI,
 
     /// <summary>
-    /// Barycentric Coordinate Time
-    /// </summary>
-    [Description("TCB")]
-    TCB,
-
-    /// <summary>
-    /// Geocentric Coordinate Time
-    /// </summary>
-    [Description("TCG")]
-    TCG,
-
-    /// <summary>
-    /// Barycentric Dynamical Time
+    /// Barycentric Dynamical Time.
+    /// Maps to TimeFrame.TDBFrame.
     /// </summary>
     [Description("TDB")]
     TDB,
 
     /// <summary>
-    /// Terrestrial Time (formerly TDT)
+    /// Terrestrial Time (formerly TDT - Terrestrial Dynamical Time).
+    /// Maps to TimeFrame.TDTFrame.
     /// </summary>
     [Description("TT")]
     TT,
 
     /// <summary>
-    /// Universal Time 1
+    /// Global Positioning System time.
+    /// Maps to TimeFrame.GPSFrame.
     /// </summary>
-    [Description("UT1")]
-    UT1,
-
-    /// <summary>
-    /// Coordinated Universal Time
-    /// </summary>
-    [Description("UTC")]
-    UTC
+    [Description("GPS")]
+    GPS
 }
