@@ -183,6 +183,139 @@ public class Omm
         return $"OMM[{ObjectName}, {ObjectId}, {Epoch:O}{tleMarker}]";
     }
 
+    #region Framework Integration
+
+    /// <summary>
+    /// Converts this OMM to a TLE (Two-Line Element) set.
+    /// </summary>
+    /// <returns>A new TLE instance with the same orbital elements.</returns>
+    /// <exception cref="InvalidOperationException">
+    /// Thrown when the OMM does not contain TLE parameters (NORAD catalog ID required)
+    /// or when required mean motion is not available.
+    /// </exception>
+    /// <remarks>
+    /// <para>
+    /// This conversion requires TLE parameters to be present in the OMM,
+    /// including the NORAD catalog ID which is mandatory for TLE format.
+    /// </para>
+    /// <para>
+    /// The object ID (international designator) is used as the COSPAR ID in the TLE.
+    /// </para>
+    /// </remarks>
+    public OrbitalParameters.TLE.TLE ToTle()
+    {
+        // Validate TLE compatibility
+        if (!IsTleCompatible)
+            throw new InvalidOperationException("OMM does not contain TLE parameters. Cannot convert to TLE.");
+
+        var tleParams = Data.TleParameters;
+
+        if (!tleParams.NoradCatalogId.HasValue)
+            throw new InvalidOperationException("NORAD catalog ID is required to create a TLE.");
+
+        var meanElements = Data.MeanElements;
+
+        if (!meanElements.MeanMotion.HasValue)
+            throw new InvalidOperationException("Mean motion is required to create a TLE. OMM uses semi-major axis instead.");
+
+        // Validate BSTAR is present (required for SGP4)
+        if (!tleParams.BStar.HasValue)
+            throw new InvalidOperationException("BSTAR drag term is required for TLE. OMM uses BTerm instead.");
+
+        // Create mean Keplerian elements from OMM data
+        var epoch = new TimeSystem.Time(meanElements.Epoch, TimeSystem.TimeFrame.UTCFrame);
+        var earth = new Body.CelestialBody(399, new Frames.Frame("ITRF93"), epoch);
+
+        var keplerianElements = OrbitalParameters.KeplerianElements.FromOMM(
+            meanElements.MeanMotion.Value,
+            meanElements.Eccentricity,
+            meanElements.Inclination,
+            meanElements.RightAscensionOfAscendingNode,
+            meanElements.ArgumentOfPericenter,
+            meanElements.MeanAnomaly,
+            earth,
+            epoch,
+            Frames.Frame.TEME);
+
+        // Extract TLE parameters
+        var noradId = (ushort)tleParams.NoradCatalogId.Value;
+        // Convert OMM Object ID (e.g., "1998-067A") to TLE COSPAR format (e.g., "98067A")
+        var cosparId = ConvertObjectIdToCosparId(ObjectId);
+        var revolutionsAtEpoch = (ushort)(tleParams.RevolutionNumberAtEpoch ?? 0);
+
+        // Parse classification
+        var classification = OrbitalParameters.TLE.Classification.Unclassified;
+        if (!string.IsNullOrEmpty(tleParams.ClassificationType))
+        {
+            classification = tleParams.ClassificationType.ToUpperInvariant() switch
+            {
+                "C" => OrbitalParameters.TLE.Classification.Classified,
+                "S" => OrbitalParameters.TLE.Classification.Secret,
+                _ => OrbitalParameters.TLE.Classification.Unclassified
+            };
+        }
+
+        var bstar = tleParams.BStar.Value;
+        var nDot = tleParams.MeanMotionDot;
+        var nDDot = tleParams.MeanMotionDDot ?? 0.0;
+        var elementSetNumber = (ushort)(tleParams.ElementSetNumber ?? 999);
+
+        return OrbitalParameters.TLE.TLE.Create(
+            keplerianElements,
+            ObjectName,
+            noradId,
+            cosparId,
+            revolutionsAtEpoch,
+            classification,
+            bstar,
+            nDot,
+            nDDot,
+            elementSetNumber);
+    }
+
+    /// <summary>
+    /// Converts an OMM Object ID (international designator) to TLE COSPAR format.
+    /// </summary>
+    /// <param name="objectId">The OMM Object ID (e.g., "1998-067A").</param>
+    /// <returns>The TLE COSPAR ID (e.g., "98067A").</returns>
+    /// <remarks>
+    /// OMM format: YYYY-NNNP (e.g., "1998-067A")
+    /// TLE format: YYNNNP (e.g., "98067A")
+    /// - YY: Last two digits of launch year
+    /// - NNN: Sequential launch number
+    /// - P: Piece identifier (A, B, C, etc.)
+    /// </remarks>
+    private static string ConvertObjectIdToCosparId(string objectId)
+    {
+        if (string.IsNullOrWhiteSpace(objectId))
+            throw new ArgumentException("Object ID cannot be null or empty.", nameof(objectId));
+
+        // Remove hyphen if present
+        var cleanId = objectId.Replace("-", "");
+
+        // If in full year format (e.g., "1998067A" = 8 chars with 4-digit year), remove century prefix
+        // This must be checked before the 6-8 char check to handle "YYYY-NNNP" format
+        if (cleanId.Length >= 7 && char.IsDigit(cleanId[0]) && char.IsDigit(cleanId[1]) &&
+            char.IsDigit(cleanId[2]) && char.IsDigit(cleanId[3]))
+        {
+            // Check if first 4 chars form a valid year (1957-2056)
+            if (int.TryParse(cleanId.Substring(0, 4), out var year4) && year4 >= 1957 && year4 <= 2099)
+            {
+                // Remove first two digits (century)
+                return cleanId.Substring(2);
+            }
+        }
+
+        // If already in TLE format (6-7 chars starting with 2-digit year), return as-is
+        if (cleanId.Length >= 6 && cleanId.Length <= 7)
+            return cleanId;
+
+        // Return original if we can't parse it
+        return cleanId;
+    }
+
+    #endregion
+
     #region Factory Methods (Load)
 
     /// <summary>

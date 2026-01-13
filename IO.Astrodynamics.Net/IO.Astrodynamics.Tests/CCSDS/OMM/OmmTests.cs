@@ -5,6 +5,7 @@ using System.IO;
 using System.Text;
 using IO.Astrodynamics.CCSDS.Common;
 using IO.Astrodynamics.CCSDS.OMM;
+using IO.Astrodynamics.OrbitalParameters;
 using Xunit;
 
 namespace IO.Astrodynamics.Tests.CCSDS.OMM
@@ -12,6 +13,11 @@ namespace IO.Astrodynamics.Tests.CCSDS.OMM
     public class OmmTests
     {
         private readonly DateTime _testEpoch = new DateTime(2024, 1, 15, 12, 0, 0, DateTimeKind.Utc);
+
+        public OmmTests()
+        {
+            API.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+        }
 
         [Fact]
         public void Constructor_Succeeds()
@@ -582,6 +588,144 @@ namespace IO.Astrodynamics.Tests.CCSDS.OMM
             Assert.Contains("Error 2", ex.Message);
             Assert.Contains("Error 3", ex.Message);
             Assert.Contains("more error(s)", ex.Message);
+        }
+
+        #endregion
+
+        #region Framework Integration Tests
+
+        [Fact]
+        public void ToTle_ValidOmm_ConvertsTle()
+        {
+            // Load OMM from file
+            var omm = Omm.LoadFromFile(IssOmmPath, validateSchema: false);
+
+            // Convert to TLE
+            var tle = omm.ToTle();
+
+            // Verify TLE properties
+            Assert.NotNull(tle);
+            Assert.Equal("ISS (ZARYA)", tle.Name);
+            Assert.Equal(OrbitalElementsType.Mean, tle.ElementsType);
+
+            // Verify orbital elements are preserved (within tolerance for unit conversions)
+            const double Deg2Rad = System.Math.PI / 180.0;
+            Assert.Equal(omm.Data.MeanElements.Eccentricity, tle.MeanEccentricity, 7);
+            Assert.Equal(omm.Data.MeanElements.Inclination * Deg2Rad, tle.MeanInclination, 6);
+            Assert.Equal(omm.Data.MeanElements.RightAscensionOfAscendingNode * Deg2Rad, tle.MeanAscendingNode, 6);
+            Assert.Equal(omm.Data.MeanElements.ArgumentOfPericenter * Deg2Rad, tle.MeanArgumentOfPeriapsis, 6);
+            Assert.Equal(omm.Data.MeanElements.MeanAnomaly * Deg2Rad, tle.MeanMeanAnomaly, 6);
+
+            // Verify TLE parameters (TLE format has limited precision for these values)
+            Assert.Equal(omm.Data.TleParameters.BStar.Value, tle.BallisticCoefficient, 6);
+            Assert.Equal(omm.Data.TleParameters.MeanMotionDot, tle.FirstDerivationMeanMotion, 6);
+        }
+
+        [Fact]
+        public void ToTle_WithoutTleParameters_ThrowsInvalidOperationException()
+        {
+            var omm = CreateMinimalOmm("TEST SAT", "2024-001A");
+
+            Assert.Throws<InvalidOperationException>(() => omm.ToTle());
+        }
+
+        [Fact]
+        public void ToTle_WithoutNoradCatalogId_ThrowsInvalidOperationException()
+        {
+            var omm = Omm.CreateForTle(
+                "TEST SAT", "2024-001A", _testEpoch,
+                15.5, 0.0001, 51.6, 120.0, 90.0, 45.0,
+                0.0001, 0.00001, 0.0,
+                noradCatalogId: null);  // No NORAD ID
+
+            Assert.Throws<InvalidOperationException>(() => omm.ToTle());
+        }
+
+        [Fact]
+        public void ToTle_TleLinesHaveCorrectFormat()
+        {
+            var omm = Omm.LoadFromFile(IssOmmPath, validateSchema: false);
+
+            var tle = omm.ToTle();
+
+            // Verify TLE line format
+            Assert.Equal(69, tle.Line1.Length);
+            Assert.Equal(69, tle.Line2.Length);
+            Assert.Equal('1', tle.Line1[0]);
+            Assert.Equal('2', tle.Line2[0]);
+        }
+
+        [Fact]
+        public void ToTle_RoundTrip_OmmToTleToOmm_PreservesData()
+        {
+            // Load OMM
+            var originalOmm = Omm.LoadFromFile(IssOmmPath, validateSchema: false);
+
+            // Convert to TLE
+            var tle = originalOmm.ToTle();
+
+            // Convert back to OMM
+            var reconvertedOmm = tle.ToOmm();
+
+            // Verify key data preserved
+            Assert.Equal(originalOmm.ObjectName, reconvertedOmm.ObjectName);
+            Assert.Equal(originalOmm.ObjectId, reconvertedOmm.ObjectId);
+
+            // Verify mean elements (precision limited to 4 decimal places by TLE format)
+            // TLE line 2 allocates 8 chars per angle field (e.g., " 51.6330"), allowing only 4 decimals
+            Assert.Equal(originalOmm.Data.MeanElements.Eccentricity, reconvertedOmm.Data.MeanElements.Eccentricity, 7);
+            Assert.Equal(originalOmm.Data.MeanElements.Inclination, reconvertedOmm.Data.MeanElements.Inclination, 4);
+            Assert.Equal(originalOmm.Data.MeanElements.RightAscensionOfAscendingNode,
+                reconvertedOmm.Data.MeanElements.RightAscensionOfAscendingNode, 4);
+            Assert.Equal(originalOmm.Data.MeanElements.ArgumentOfPericenter,
+                reconvertedOmm.Data.MeanElements.ArgumentOfPericenter, 4);
+            Assert.Equal(originalOmm.Data.MeanElements.MeanAnomaly,
+                reconvertedOmm.Data.MeanElements.MeanAnomaly, 4);
+
+            // Verify TLE parameters (TLE format has limited precision)
+            Assert.Equal(originalOmm.Data.TleParameters.NoradCatalogId, reconvertedOmm.Data.TleParameters.NoradCatalogId);
+            Assert.Equal(originalOmm.Data.TleParameters.BStar.Value, reconvertedOmm.Data.TleParameters.BStar.Value, 6);
+            Assert.Equal(originalOmm.Data.TleParameters.ClassificationType, reconvertedOmm.Data.TleParameters.ClassificationType);
+        }
+
+        [Fact]
+        public void ToTle_FullRoundTrip_SaveAndReloadProducesSameTle()
+        {
+            // This test validates the complete chain:
+            // iss.omm → OMM → TLE → OMM → save to file → load from file → TLE
+            // The final TLE should match the intermediate TLE (proving serialization works)
+
+            // Step 1: Load original OMM and convert to TLE
+            var originalOmm = Omm.LoadFromFile(IssOmmPath, validateSchema: false);
+            var tle1 = originalOmm.ToTle();
+
+            // Step 2: Convert TLE back to OMM
+            var reconvertedOmm = tle1.ToOmm();
+
+            // Step 3: Save reconverted OMM to a temp file
+            var tempFile = Path.GetTempFileName();
+            try
+            {
+                reconvertedOmm.SaveToFile(tempFile, validateBeforeSave: false);
+
+                // Step 4: Load the saved file
+                var reloadedOmm = Omm.LoadFromFile(tempFile, validateSchema: false, validateContent: false);
+
+                // Step 5: Convert reloaded OMM to TLE
+                var tle2 = reloadedOmm.ToTle();
+
+                // Step 6: Compare TLE lines - they should be identical
+                // This proves that save/load preserves all data needed for TLE generation
+                Assert.Equal(tle1.Line1, tle2.Line1);
+                Assert.Equal(tle1.Line2, tle2.Line2);
+                Assert.Equal(tle1.Name, tle2.Name);
+            }
+            finally
+            {
+                // Cleanup temp file
+                if (File.Exists(tempFile))
+                    File.Delete(tempFile);
+            }
         }
 
         #endregion

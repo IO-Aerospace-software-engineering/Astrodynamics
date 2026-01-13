@@ -793,4 +793,129 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
     {
         return !Equals(left, right);
     }
+
+    #region OMM Conversion
+
+    /// <summary>
+    /// Converts this TLE to a CCSDS Orbit Mean-elements Message (OMM).
+    /// </summary>
+    /// <param name="originator">Optional originator for the OMM header. Defaults to "IO.Astrodynamics".</param>
+    /// <returns>A new OMM instance representing this TLE.</returns>
+    /// <remarks>
+    /// <para>
+    /// The resulting OMM is configured for SGP4 propagation with TEME reference frame and UTC time system.
+    /// </para>
+    /// <para>
+    /// The international designator (COSPAR ID) is extracted from TLE line 1.
+    /// </para>
+    /// </remarks>
+    public CCSDS.OMM.Omm ToOmm(string originator = null)
+    {
+        // Create header
+        var header = originator != null
+            ? CCSDS.Common.CcsdsHeader.Create(originator)
+            : CCSDS.Common.CcsdsHeader.CreateDefault();
+
+        // Extract COSPAR ID (international designator) from line 1 positions 9-16
+        // TLE format: "98067A" -> OMM format: "1998-067A"
+        var tleCosparId = Line1.Substring(9, 8).Trim();
+        var objectId = ConvertCosparIdToObjectId(tleCosparId);
+
+        // Create metadata for SGP4/TEME configuration
+        var metadata = CCSDS.OMM.OmmMetadata.CreateForSgp4(Name, objectId);
+
+        // Create mean elements
+        // Convert angles from radians to degrees, mean motion from rad/s to rev/day
+        var meanMotionRevPerDay = MeanMotion() * 86400.0 / Constants._2PI;
+
+        var meanElements = CCSDS.OMM.MeanElements.CreateWithMeanMotion(
+            Epoch.DateTime,
+            meanMotionRevPerDay,
+            MeanEccentricity,
+            MeanInclination * Constants.Rad2Deg,
+            MeanAscendingNode * Constants.Rad2Deg,
+            MeanArgumentOfPeriapsis * Constants.Rad2Deg,
+            MeanMeanAnomaly * Constants.Rad2Deg);
+
+        // Extract NORAD catalog ID from line 1 positions 2-6
+        var noradCatIdStr = Line1.Substring(2, 5).Trim();
+        int? noradCatId = int.TryParse(noradCatIdStr, CultureInfo.InvariantCulture, out var id) ? id : null;
+
+        // Extract element set number from line 1 positions 64-67
+        var elementSetNoStr = Line1.Substring(64, 4).Trim();
+        int? elementSetNo = int.TryParse(elementSetNoStr, CultureInfo.InvariantCulture, out var esn) ? esn : null;
+
+        // Extract revolution number at epoch from line 2 positions 63-67
+        var revAtEpochStr = Line2.Substring(63, 5).Trim();
+        int? revAtEpoch = int.TryParse(revAtEpochStr, CultureInfo.InvariantCulture, out var rev) ? rev : null;
+
+        // Extract classification from line 1 position 7
+        var classChar = Line1[7].ToString().ToUpperInvariant();
+
+        // Create TLE parameters with BSTAR and MEAN_MOTION_DDOT (standard SGP4)
+        var tleParams = CCSDS.OMM.TleParameters.CreateWithBStarAndDDot(
+            BallisticCoefficient,
+            FirstDerivationMeanMotion,
+            SecondDerivativeMeanMotion,
+            ephemerisType: 0,
+            classificationType: classChar,
+            noradCatalogId: noradCatId,
+            elementSetNumber: elementSetNo,
+            revolutionNumberAtEpoch: revAtEpoch);
+
+        // Create data section
+        var data = CCSDS.OMM.OmmData.CreateForTle(meanElements, tleParams);
+
+        return new CCSDS.OMM.Omm(header, metadata, data);
+    }
+
+    /// <summary>
+    /// Gets the mean motion in radians per second.
+    /// </summary>
+    /// <returns>Mean motion in rad/s.</returns>
+    /// <remarks>
+    /// This is computed from the mean semi-major axis using Kepler's third law:
+    /// n = sqrt(GM/a³)
+    /// </remarks>
+    public double MeanMotion()
+    {
+        return System.Math.Sqrt(Observer.GM / (MeanSemiMajorAxis * MeanSemiMajorAxis * MeanSemiMajorAxis));
+    }
+
+    /// <summary>
+    /// Converts a TLE COSPAR ID to OMM Object ID format.
+    /// </summary>
+    /// <param name="cosparId">The TLE COSPAR ID (e.g., "98067A").</param>
+    /// <returns>The OMM Object ID (e.g., "1998-067A").</returns>
+    /// <remarks>
+    /// TLE format: YYNNNP (e.g., "98067A")
+    /// OMM format: YYYY-NNNP (e.g., "1998-067A")
+    /// - YY: Last two digits of launch year (converted to YYYY using 57 pivot)
+    /// - NNN: Sequential launch number
+    /// - P: Piece identifier (A, B, C, etc.)
+    /// </remarks>
+    private static string ConvertCosparIdToObjectId(string cosparId)
+    {
+        if (string.IsNullOrWhiteSpace(cosparId) || cosparId.Length < 6)
+            return cosparId;
+
+        // Check if it's already in OMM format (contains hyphen or 9+ chars)
+        if (cosparId.Contains('-') || cosparId.Length >= 9)
+            return cosparId;
+
+        // Parse year (first 2 chars)
+        if (!int.TryParse(cosparId.Substring(0, 2), CultureInfo.InvariantCulture, out var year2))
+            return cosparId;
+
+        // Convert 2-digit year to 4-digit (pivot at 57: 57-99 = 1957-1999, 00-56 = 2000-2056)
+        var year4 = year2 < 57 ? 2000 + year2 : 1900 + year2;
+
+        // Extract launch number (next 3 chars) and piece (remaining)
+        var launchNumber = cosparId.Substring(2, 3);
+        var piece = cosparId.Length > 5 ? cosparId.Substring(5) : "";
+
+        return $"{year4}-{launchNumber}{piece}";
+    }
+
+    #endregion
 }

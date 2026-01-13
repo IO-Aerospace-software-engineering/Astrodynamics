@@ -99,13 +99,17 @@ public class OmmWriter
             OmitXmlDeclaration = false
         };
 
-        using var stringWriter = new StringWriter();
-        using (var writer = XmlWriter.Create(stringWriter, settings))
+        // Use MemoryStream + StreamReader to ensure UTF-8 encoding in XML declaration
+        // (StringWriter always uses UTF-16 regardless of XmlWriterSettings.Encoding)
+        using var memoryStream = new MemoryStream();
+        using (var writer = XmlWriter.Create(memoryStream, settings))
         {
             doc.Save(writer);
         }
 
-        return stringWriter.ToString();
+        memoryStream.Position = 0;
+        using var reader = new StreamReader(memoryStream, Encoding.UTF8);
+        return reader.ReadToEnd();
     }
 
     private XDocument CreateDocument(Omm omm)
