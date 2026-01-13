@@ -66,6 +66,7 @@ dotnet tool install --global --add-source ./IO.Astrodynamics.CLI/bin/Debug IO.As
 - `IO.Astrodynamics.Body`: Celestial bodies, spacecraft, instruments
 - `IO.Astrodynamics.OrbitalParameters`: State vectors, Keplerian elements, TLE, mean/osculating elements
 - `IO.Astrodynamics.OrbitalParameters.TLE`: Two-Line Element sets and OMM support
+- `IO.Astrodynamics.CCSDS.OMM`: CCSDS Orbit Mean-elements Message support (read/write/validate/convert)
 - `IO.Astrodynamics.Maneuver`: Lambert solvers, launch windows, maneuver planning
 - `IO.Astrodynamics.Frames`: Reference frames and transformations
 - `IO.Astrodynamics.TimeSystem`: Time frames (UTC, TDB, TAI, etc.)
@@ -156,6 +157,58 @@ OMM: meanMotion = 15.49309423 rev/day
 | `SemiMajorAxis()`, `Eccentricity()`, etc. | Osculating (via SGP4) | Physical calculations |
 | `ToOsculating()` | Osculating StateVector | Position/velocity calculations |
 | `ToMeanKeplerianElements()` | Mean KeplerianElements | TLE creation |
+
+### CCSDS OMM (Orbit Mean-elements Message)
+
+The `IO.Astrodynamics.CCSDS.OMM` namespace provides full support for CCSDS Orbit Mean-elements Message format (CCSDS 502.0-B-3, NDM/XML Blue Book).
+
+**Key Classes**
+- `Omm`: Main class representing a complete OMM document
+- `OmmReader`: Parses OMM from XML files/strings/streams
+- `OmmWriter`: Writes OMM to XML files/strings/streams
+- `OmmValidator`: Validates OMM content for CCSDS compliance
+- `MeanElements`, `TleParameters`, `OmmMetadata`: Data structures
+
+**Loading and Saving OMM**
+```csharp
+// Load OMM from file (with optional validation)
+var omm = Omm.LoadFromFile("satellite.omm", validateSchema: true, validateContent: true);
+
+// Access data
+Console.WriteLine($"Object: {omm.ObjectName}");
+Console.WriteLine($"COSPAR ID: {omm.ObjectId}");  // Format: "1998-067A"
+Console.WriteLine($"Mean Motion: {omm.Data.MeanElements.MeanMotion} rev/day");
+
+// Save OMM to file
+omm.SaveToFile("output.omm", validateBeforeSave: true, wrapInNdm: true, indent: true);
+```
+
+**OMM ↔ TLE Bidirectional Conversion**
+```csharp
+// OMM to TLE (for SGP4 propagation)
+var omm = Omm.LoadFromFile("iss.omm");
+if (omm.IsTleCompatible)
+{
+    var tle = omm.ToTle();
+    var stateVector = tle.ToStateVector();  // Propagate with SGP4
+}
+
+// TLE to OMM (for archiving/sharing)
+var tle = new TLE("ISS", line1, line2);
+var omm = tle.ToOmm(originator: "My Organization");
+omm.SaveToFile("iss.omm");
+```
+
+**COSPAR ID Format Handling**
+- OMM uses full format: `"1998-067A"` (9 chars with hyphen)
+- TLE uses abbreviated format: `"98067A"` (6-8 chars)
+- Conversion is automatic in `ToTle()` and `ToOmm()` methods
+
+**TLE Precision Limitations**
+When converting OMM → TLE → OMM, expect some precision loss:
+- Angles: ~4 decimal places (TLE format constraint)
+- BSTAR: ~6 decimal places
+- Mean motion is preserved exactly (cached internally)
 
 ### Atmospheric Modeling
 
@@ -254,6 +307,11 @@ Test data files are in `Data/SolarSystem/` and copied to output directory.
    - Use `ToOsculating()` for TLE position/velocity calculations
    - Never call `ToStateVector()` directly on mean KeplerianElements
    - Use `TLE.Create()` only with mean elements (validates `ElementsType.Mean`)
+7. **CCSDS OMM Handling**: When working with OMM files:
+   - Use `Omm.LoadFromFile()` with validation for production code
+   - Check `IsTleCompatible` before calling `ToTle()`
+   - Use `TLE.ToOmm()` to convert TLE data for CCSDS-compliant archiving
+   - COSPAR ID format conversion is automatic (OMM: "1998-067A" ↔ TLE: "98067A")
 
 ## Code Quality Standards
 

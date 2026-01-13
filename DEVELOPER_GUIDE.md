@@ -625,6 +625,190 @@ var newTle = state.ToTLE(config);
 
 ---
 
+### IO.Astrodynamics.CCSDS.OMM
+
+The CCSDS OMM (Orbit Mean-elements Message) module provides support for reading, writing, and converting OMM files conforming to CCSDS 502.0-B-3 (ODM Blue Book) and CCSDS 505.0-B-3 (NDM/XML Blue Book).
+
+#### Omm
+
+Represents a complete CCSDS Orbit Mean-elements Message.
+
+| Factory Method | Description |
+|----------------|-------------|
+| `LoadFromFile(string filePath, bool validateSchema, bool validateContent)` | Load OMM from XML file |
+| `LoadFromString(string xml, bool validateSchema, bool validateContent)` | Load OMM from XML string |
+| `LoadFromStream(Stream stream, bool validateSchema, bool validateContent)` | Load OMM from stream |
+| `CreateForSgp4(string objectName, string objectId, DateTime epoch, ...)` | Create OMM for SGP4 propagation |
+
+| Property | Description |
+|----------|-------------|
+| `Header` | CCSDS header with originator and creation date |
+| `Metadata` | Object metadata (name, ID, reference frame, time system) |
+| `Data` | Orbital data (mean elements, TLE parameters, spacecraft parameters) |
+| `ObjectName` | Shortcut to metadata object name |
+| `ObjectId` | Shortcut to metadata object ID (COSPAR ID format: "1998-067A") |
+| `IsTleCompatible` | True if OMM contains TLE parameters for conversion |
+
+| Method | Description |
+|--------|-------------|
+| `SaveToFile(string filePath, bool validateBeforeSave, bool wrapInNdm, bool indent)` | Save OMM to XML file |
+| `SaveToString(bool validateBeforeSave, bool wrapInNdm, bool indent)` | Save OMM to XML string |
+| `ToTle()` | Convert OMM to TLE (requires TLE parameters in data) |
+| `Validate()` | Validate OMM content and return validation result |
+
+```csharp
+using IO.Astrodynamics.CCSDS.OMM;
+
+// Load OMM from file
+var omm = Omm.LoadFromFile("satellite.omm", validateSchema: true, validateContent: true);
+
+Console.WriteLine($"Object: {omm.ObjectName}");
+Console.WriteLine($"COSPAR ID: {omm.ObjectId}");
+Console.WriteLine($"Epoch: {omm.Data.MeanElements.Epoch}");
+Console.WriteLine($"Mean Motion: {omm.Data.MeanElements.MeanMotion} rev/day");
+
+// Convert OMM to TLE for propagation
+if (omm.IsTleCompatible)
+{
+    var tle = omm.ToTle();
+    var stateVector = tle.ToStateVector();  // Propagate with SGP4
+    Console.WriteLine($"Position: {stateVector.Position}");
+}
+
+// Create OMM programmatically
+var newOmm = Omm.CreateForSgp4(
+    objectName: "MY_SATELLITE",
+    objectId: "2024-001A",
+    epoch: DateTime.UtcNow,
+    meanMotion: 15.5,           // rev/day
+    eccentricity: 0.001,
+    inclination: 51.6,          // degrees
+    raan: 100.0,                // degrees
+    argumentOfPericenter: 90.0, // degrees
+    meanAnomaly: 0.0,           // degrees
+    bstar: 0.0001,
+    meanMotionDot: 0.00001,
+    meanMotionDDot: 0.0
+);
+
+// Save to file
+newOmm.SaveToFile("output.omm", validateBeforeSave: true);
+```
+
+#### TLE.ToOmm() - Convert TLE to OMM
+
+The `TLE` class provides a `ToOmm()` method for converting TLE data to CCSDS OMM format:
+
+```csharp
+using IO.Astrodynamics.OrbitalParameters.TLE;
+using IO.Astrodynamics.CCSDS.OMM;
+
+// Parse TLE
+var tle = new TLE("ISS (ZARYA)",
+    "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
+    "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
+
+// Convert to OMM
+var omm = tle.ToOmm(originator: "My Organization");
+
+// Save to file for sharing/archiving
+omm.SaveToFile("iss.omm");
+
+// Or get as XML string
+var xml = omm.SaveToString();
+```
+
+#### Round-Trip Conversion
+
+OMM and TLE can be converted back and forth. Note that TLE format has precision limitations (4 decimal places for angles, limited BSTAR precision):
+
+```csharp
+// Load OMM
+var originalOmm = Omm.LoadFromFile("satellite.omm", validateSchema: false);
+
+// Convert to TLE
+var tle = originalOmm.ToTle();
+
+// Use TLE for propagation
+var sv = tle.ToStateVector(new Time(2024, 6, 15, 12, 0, 0));
+
+// Convert back to OMM
+var newOmm = tle.ToOmm();
+
+// Save new OMM
+newOmm.SaveToFile("satellite_updated.omm");
+
+// Note: Due to TLE precision limitations, some values may differ slightly
+// from the original OMM (typically 4-6 decimal places for angles)
+```
+
+#### OmmWriter / OmmReader
+
+Low-level classes for reading and writing OMM XML files:
+
+```csharp
+// OmmWriter for custom output options
+var writer = new OmmWriter
+{
+    WrapInNdmContainer = true,  // Wrap in <ndm> element
+    IndentOutput = true         // Pretty-print XML
+};
+
+var xml = writer.WriteToString(omm);
+writer.WriteToFile(omm, "output.omm");
+
+// OmmReader for parsing
+var reader = new OmmReader();
+var omm = reader.ReadFromFile("input.omm");
+```
+
+#### OmmValidator
+
+Validates OMM content for physical constraints and CCSDS compliance:
+
+```csharp
+var validator = new OmmValidator();
+var result = validator.Validate(omm);
+
+if (result.IsValid)
+{
+    Console.WriteLine("OMM is valid");
+}
+else
+{
+    foreach (var error in result.Errors)
+    {
+        Console.WriteLine($"Error at {error.Path}: {error.Message}");
+    }
+}
+
+// Warnings are also available
+foreach (var warning in result.Warnings)
+{
+    Console.WriteLine($"Warning: {warning.Message}");
+}
+```
+
+#### COSPAR ID Format Conversion
+
+OMM uses full COSPAR ID format ("1998-067A") while TLE uses abbreviated format ("98067A"). The conversion is handled automatically:
+
+| Format | Example | Used In |
+|--------|---------|---------|
+| Full COSPAR ID | 1998-067A | OMM ObjectId |
+| TLE COSPAR ID | 98067A | TLE Line 1 |
+
+```csharp
+// OMM automatically converts COSPAR ID format during ToTle()
+var omm = Omm.LoadFromFile("iss.omm");  // ObjectId: "1998-067A"
+var tle = omm.ToTle();                   // Uses "98067A" internally
+
+// TLE.ToOmm() converts back to full format
+var newOmm = tle.ToOmm();                // ObjectId: "1998-067A"
+```
+
+---
+
 ### IO.Astrodynamics.Frames
 
 #### Frame
