@@ -73,13 +73,20 @@ namespace IO.Astrodynamics.Tests.CCSDS.Common
 
         [Theory]
         [InlineData(MeanElementTheory.SGP4, "SGP4")]
-        [InlineData(MeanElementTheory.SGP4XP, "SGP4-XP")]
-        [InlineData(MeanElementTheory.DSST, "DSST")]
-        [InlineData(MeanElementTheory.USM, "USM")]
         public void MeanElementTheory_HasCorrectDescriptions(MeanElementTheory theory, string expectedDescription)
         {
             var description = GetEnumDescription(theory);
             Assert.Equal(expectedDescription, description);
+        }
+
+        [Fact]
+        public void MeanElementTheory_ContainsAllExpectedValues()
+        {
+            var values = Enum.GetValues<MeanElementTheory>();
+
+            // Only SGP4 is supported (includes SDP4 for deep space)
+            Assert.Contains(MeanElementTheory.SGP4, values);
+            Assert.Single(values);
         }
 
         [Theory]

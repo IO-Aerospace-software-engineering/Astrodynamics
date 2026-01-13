@@ -356,6 +356,36 @@ public class OmmValidatorTests
             w.Message.Contains("not supported"));
     }
 
+    [Fact]
+    public void Validate_UnsupportedMeanElementTheory_ReturnsWarning()
+    {
+        var metadata = new OmmMetadata(
+            objectName: "TEST SAT",
+            objectId: "2020-001A",
+            centerName: "EARTH",
+            referenceFrame: "TEME",
+            timeSystem: "UTC",
+            meanElementTheory: "DSST");  // Not supported by framework
+
+        var meanElements = MeanElements.CreateWithMeanMotion(
+            epoch: DateTime.UtcNow,
+            meanMotion: 15.5,
+            eccentricity: 0.001,
+            inclination: 51.6,
+            raan: 100.0,
+            argOfPericenter: 200.0,
+            meanAnomaly: 50.0);
+
+        var omm = new Omm(CcsdsHeader.CreateDefault(), metadata, new OmmData(meanElements));
+
+        var result = _validator.Validate(omm);
+
+        Assert.True(result.IsValid);  // Warning, not error
+        Assert.Contains(result.Warnings, w =>
+            w.Path == "Metadata.MeanElementTheory" &&
+            w.Message.Contains("not supported"));
+    }
+
     #endregion
 
     #region Header Validation Tests

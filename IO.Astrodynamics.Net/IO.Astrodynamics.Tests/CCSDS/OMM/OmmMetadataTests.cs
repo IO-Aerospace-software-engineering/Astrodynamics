@@ -91,9 +91,9 @@ namespace IO.Astrodynamics.Tests.CCSDS.OMM
         public void Constructor_ParsesKnownMeanElementTheory()
         {
             var metadata = new OmmMetadata(
-                "ISS", "1998-067A", "EARTH", "TEME", "UTC", "SGP4-XP");
+                "ISS", "1998-067A", "EARTH", "TEME", "UTC", "SGP4");
 
-            Assert.Equal(MeanElementTheory.SGP4XP, metadata.MeanElementTheoryEnum);
+            Assert.Equal(MeanElementTheory.SGP4, metadata.MeanElementTheoryEnum);
         }
 
         [Fact]

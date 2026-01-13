@@ -316,15 +316,28 @@ public class OmmValidator
                 "Metadata.TimeSystem");
         }
 
+        // Validate mean element theory
+        if (string.IsNullOrWhiteSpace(metadata.MeanElementTheory))
+        {
+            result.AddError(RequiredField, "MEAN_ELEMENT_THEORY is required.", "Metadata.MeanElementTheory");
+        }
+        else if (!metadata.MeanElementTheoryEnum.HasValue)
+        {
+            result.AddWarning(InvalidValue,
+                $"Mean element theory '{metadata.MeanElementTheory}' is not supported by the framework. " +
+                "Supported theory: SGP4.",
+                "Metadata.MeanElementTheory");
+        }
+
         // Validate reference frame and mean element theory consistency
         var theoryEnum = metadata.MeanElementTheoryEnum;
-        if (theoryEnum == MeanElementTheory.SGP4 || theoryEnum == MeanElementTheory.SGP4XP)
+        if (theoryEnum == MeanElementTheory.SGP4)
         {
             var frameEnum = metadata.ReferenceFrameEnum;
             if (frameEnum.HasValue && frameEnum.Value != CcsdsReferenceFrame.TEME)
             {
                 result.AddWarning(InconsistentData,
-                    $"SGP4/SGP4-XP theory typically uses TEME reference frame, but {metadata.ReferenceFrame} was specified.",
+                    $"SGP4 theory typically uses TEME reference frame, but {metadata.ReferenceFrame} was specified.",
                     "Metadata.ReferenceFrame");
             }
 
@@ -333,7 +346,7 @@ public class OmmValidator
             if (timeSystemEnum.HasValue && timeSystemEnum.Value != CcsdsTimeSystem.UTC)
             {
                 result.AddWarning(InconsistentData,
-                    $"SGP4/SGP4-XP theory typically uses UTC time system, but {metadata.TimeSystem} was specified.",
+                    $"SGP4 theory typically uses UTC time system, but {metadata.TimeSystem} was specified.",
                     "Metadata.TimeSystem");
             }
         }
@@ -607,14 +620,12 @@ public class OmmValidator
                 "Data.TleParameters.ClassificationType");
         }
 
-        // Mean element theory should be SGP4 or SGP4-XP when TLE parameters are present
+        // Mean element theory should be SGP4 when TLE parameters are present
         var theoryEnum = metadata.MeanElementTheoryEnum;
-        if (theoryEnum.HasValue &&
-            theoryEnum.Value != MeanElementTheory.SGP4 &&
-            theoryEnum.Value != MeanElementTheory.SGP4XP)
+        if (theoryEnum.HasValue && theoryEnum.Value != MeanElementTheory.SGP4)
         {
             result.AddWarning(InconsistentData,
-                $"TLE parameters present but mean element theory is {metadata.MeanElementTheory}. Expected SGP4 or SGP4-XP.",
+                $"TLE parameters present but mean element theory is {metadata.MeanElementTheory}. Expected SGP4.",
                 "Metadata.MeanElementTheory");
         }
     }

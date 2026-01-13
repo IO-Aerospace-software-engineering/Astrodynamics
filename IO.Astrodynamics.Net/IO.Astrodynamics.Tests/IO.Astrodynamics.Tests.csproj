@@ -128,6 +128,10 @@
       <Content Include="CCSDS\H2ADEB.omm">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </Content>
+      <None Remove="CCSDS\iss.omm" />
+      <Content Include="CCSDS\iss.omm">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
     </ItemGroup>
 
 </Project>
