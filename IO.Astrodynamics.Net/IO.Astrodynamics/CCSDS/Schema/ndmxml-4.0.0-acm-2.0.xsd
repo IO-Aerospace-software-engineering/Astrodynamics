@@ -1,0 +1,257 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            xmlns:ndm="urn:ccsds:schema:ndmxml"
+            targetNamespace="urn:ccsds:schema:ndmxml"
+            elementFormDefault="qualified" 
+            attributeFormDefault="unqualified">
+
+<!--********************************************************************-->
+<!-- NOTE: This is version 4.0, Rev 0 of the NDM/XML Schema (11/06/2022.-->
+<!-- If this schema changed in Rev 0, it is noted below, else no change.-->
+<!--********************************************************************-->
+
+<!--********************************************************************-->
+<!-- NOTE: This is version 4.0 of the NDM/XML Schema (05/19/2023).      -->
+<!-- This component of the schema is the "ACM" module, which contains   -->
+<!-- elements that are used exclusively in the Attitude Comprehensive   -->
+<!-- Message (ACM).                                                     -->
+<!--                                                                    -->
+<!-- Compatible document versions are:                                  -->
+<!--    ADM     504.0-B-2   Blue      (To be published circa 07/2023)   -->
+<!--                                                                    -->
+<!-- *********************  BLUE BOOK CHANGE LOG  ********************* -->
+<!-- 12/04/2022: 4.0.0: New message type added to NDM/XML schema set    -->
+<!-- 05/19/2023: 4.0.0: Preparations for ADM B-2 publication            -->
+<!--********************************************************************-->
+
+<!--********************************************************************-->
+<!-- Include common schemas                                             -->
+<!--********************************************************************-->
+
+<xsd:include schemaLocation="./ndmxml-4.0.0-common-4.0.xsd"/>
+
+
+<!--********************************************************************-->
+<!-- An ACM consists of a "header" and a "body".  The header is a       -->
+<!-- construct that is shared by all NDM's, found in the "common" schema-->
+<!--********************************************************************-->
+
+<xsd:complexType name="acmType">
+   <xsd:sequence>
+      <xsd:element name="header" type="ndm:admHeader"/>
+      <xsd:element name="body"   type="ndm:acmBody"/>       
+   </xsd:sequence>
+   <xsd:attribute name="id"        use="required" fixed="CCSDS_ACM_VERS"/>
+   <xsd:attribute name="version"   use="required" fixed="2.0"/>
+</xsd:complexType>
+
+
+<!--********************************************************************-->
+<!-- The ACM "body" consists of a single "segment", described below.    -->
+<!--********************************************************************-->
+
+<xsd:complexType name="acmBody">
+   <xsd:sequence>
+      <xsd:element name="segment" type="ndm:acmSegment" 
+         minOccurs="1" maxOccurs="1"/>
+   </xsd:sequence>
+</xsd:complexType>
+
+
+<!--********************************************************************-->
+<!-- The ACM "segment" consists of a "metadata" section and a "data"    -->
+<!-- section.  Note that the segment construct is structurally not      -->
+<!-- strictly necessary in the ACM due to the lack of alternating       -->
+<!-- metadata and data sections, but for symmetry with other NDM/XML    -->
+<!-- messages the segment structure is included.                        -->
+<!--********************************************************************-->
+
+<xsd:complexType name="acmSegment">
+   <xsd:sequence>
+      <xsd:element name="metadata" type="ndm:acmMetadata"/>
+      <xsd:element name="data" type="ndm:acmData"/>
+   </xsd:sequence>
+</xsd:complexType>
+
+
+<!--********************************************************************-->
+<!-- ACM Metadata Section                                               -->
+<!--********************************************************************-->
+
+<xsd:complexType name="acmMetadata">
+   <xsd:sequence>
+      <xsd:element name="COMMENT" type="xsd:string" 
+         minOccurs="0" maxOccurs="unbounded"/>
+      <xsd:element name="OBJECT_NAME" type="xsd:string"/>
+      <xsd:element name="INTERNATIONAL_DESIGNATOR" type="xsd:string" minOccurs="0"/>
+      <xsd:element name="CATALOG_NAME" type="xsd:string" minOccurs="0"/>
+      <xsd:element name="OBJECT_DESIGNATOR" type="xsd:string" minOccurs="0"/>
+      <xsd:element name="ORIGINATOR_POC" type="xsd:string" minOccurs="0"/>
+      <xsd:element name="ORIGINATOR_POSITION" type="xsd:string" minOccurs="0"/>
+      <xsd:element name="ORIGINATOR_PHONE" type="xsd:string" minOccurs="0"/>
+      <xsd:element name="ORIGINATOR_EMAIL" type="xsd:string" minOccurs="0"/>
+      <xsd:element name="ORIGINATOR_ADDRESS" type="xsd:string" minOccurs="0"/>
+      <xsd:element name="ODM_MSG_LINK" type="xsd:string" minOccurs="0"/>
+      <xsd:element name="CENTER_NAME" type="xsd:string" minOccurs="0"/>
+      <xsd:element name="TIME_SYSTEM" type="xsd:string"/>
+      <xsd:element name="EPOCH_TZERO" type="ndm:epochType"/>
+      <xsd:element name="ACM_DATA_ELEMENTS" type="xsd:string" minOccurs="0"/>
+      <xsd:element name="START_TIME"  type="ndm:epochType" minOccurs="0"/>
+      <xsd:element name="STOP_TIME"   type="ndm:epochType" minOccurs="0"/>
+      <xsd:element name="TAIMUTC_AT_TZERO" type="ndm:timeOffsetType" minOccurs="0"/>
+      <xsd:element name="NEXT_LEAP_EPOCH" type="ndm:epochType" minOccurs="0"/>
+      <xsd:element name="NEXT_LEAP_TAIMUTC" type="ndm:timeOffsetType" minOccurs="0"/>
+   </xsd:sequence>
+</xsd:complexType>
+
+
+<!--********************************************************************-->
+<!-- ACM Data Section                                                   -->
+<!--********************************************************************-->
+
+<xsd:complexType name="acmData">
+   <xsd:sequence>
+      <xsd:element name="att" type="ndm:acmAttitudeStateType" 
+         minOccurs="0" maxOccurs="unbounded" />
+      <xsd:element name="phys" type="ndm:acmPhysicalDescriptionType" minOccurs="0" />
+      <xsd:element name="cov" type="ndm:acmCovarianceMatrixType" 
+         minOccurs="0" maxOccurs="unbounded" />
+      <xsd:element name="man" type="ndm:acmManeuverParametersType"
+         minOccurs="0" maxOccurs="unbounded"/>
+      <xsd:element name="ad" type="ndm:acmAdParametersType" minOccurs="0" />
+      <xsd:element name="user" type="ndm:userDefinedType" minOccurs="0" />
+   </xsd:sequence>
+</xsd:complexType>
+
+
+<!--********************************************************************-->
+<!-- Attitude State Time History Section                                -->
+<!--********************************************************************-->
+
+<xsd:complexType name="acmAttitudeStateType">
+   <xsd:sequence>
+      <xsd:element name="COMMENT" type="xsd:string"
+         minOccurs="0" maxOccurs="unbounded"/>
+      <xsd:element name="ATT_ID" type="xsd:string" minOccurs="0" />
+      <xsd:element name="ATT_PREV_ID" type="xsd:string" minOccurs="0" />
+      <xsd:element name="ATT_BASIS" type="ndm:attBasisType"  minOccurs="0" />
+      <xsd:element name="ATT_BASIS_ID" type="xsd:string"  minOccurs="0" />
+      <xsd:element name="REF_FRAME_A" type="xsd:string" />
+      <xsd:element name="REF_FRAME_B" type="xsd:string" />
+      <xsd:element name="NUMBER_STATES" type="xsd:positiveInteger" />
+      <xsd:element name="ATT_TYPE" type="ndm:acmAttitudeType" />
+      <xsd:element name="EULER_ROT_SEQ" type="ndm:rotseqType" minOccurs="0"/>
+      <xsd:element name="RATE_TYPE" type="ndm:attRateType" minOccurs="0" />
+      <xsd:element name="attLine" type="xsd:string" maxOccurs="unbounded"/>
+   </xsd:sequence>
+</xsd:complexType>
+
+
+<!--********************************************************************-->
+<!-- ACM Space Object Physical Characteristics Section                  -->
+<!--********************************************************************-->
+
+<xsd:complexType name="acmPhysicalDescriptionType">
+   <xsd:sequence>
+      <xsd:element name="COMMENT" type="xsd:string"
+         minOccurs="0" maxOccurs="unbounded"/>
+      <xsd:element name="DRAG_COEFF" type="xsd:double" minOccurs="0"/>
+      <xsd:element name="WET_MASS" type="ndm:massType" minOccurs="0"/>
+      <xsd:element name="DRY_MASS" type="ndm:massType" minOccurs="0"/>
+      <xsd:element name="CP_REF_FRAME" type="xsd:string" minOccurs="0"/>
+      <xsd:element name="CP"  type="ndm:cpType" minOccurs="0"/>
+      <xsd:element name="INERTIA_REF_FRAME" type="xsd:string" minOccurs="0"/>
+      <xsd:element name="IXX" type="ndm:momentType" minOccurs="0" />
+      <xsd:element name="IYY" type="ndm:momentType" minOccurs="0" />
+      <xsd:element name="IZZ" type="ndm:momentType" minOccurs="0" />
+      <xsd:element name="IXY" type="ndm:momentType" minOccurs="0" />
+      <xsd:element name="IXZ" type="ndm:momentType" minOccurs="0" />
+      <xsd:element name="IYZ" type="ndm:momentType" minOccurs="0" />
+   </xsd:sequence>
+</xsd:complexType>
+
+
+<!--********************************************************************-->
+<!-- ACM Covariance Time History                                        -->
+<!--********************************************************************-->
+
+<xsd:complexType name="acmCovarianceMatrixType">
+   <xsd:sequence>
+      <xsd:element name="COMMENT" type="xsd:string" minOccurs="0" maxOccurs="unbounded"/>
+      <xsd:element name="COV_ID" type="xsd:string"  minOccurs="0" />
+      <xsd:element name="COV_PREV_ID" type="xsd:string"  minOccurs="0" />
+      <xsd:element name="COV_BASIS" type="ndm:attBasisType"  minOccurs="0" />
+      <xsd:element name="COV_BASIS_ID" type="xsd:string"  minOccurs="0" />
+      <xsd:element name="COV_REF_FRAME" type="xsd:string" minOccurs="0"/>
+      <xsd:element name="COV_TYPE" type="ndm:acmCovarianceLineType" />
+      <xsd:element name="covLine" type="xsd:string" minOccurs="1" maxOccurs="unbounded"/>
+   </xsd:sequence>
+</xsd:complexType>
+
+
+<!--********************************************************************-->
+<!-- ACM Maneuver Section                                               -->
+<!--********************************************************************-->
+
+<xsd:complexType name="acmManeuverParametersType">
+   <xsd:sequence>
+      <xsd:element name="COMMENT" type="xsd:string" minOccurs="0" maxOccurs="unbounded"/>
+      <xsd:element name="MAN_ID" type="xsd:string" minOccurs="0" />
+      <xsd:element name="MAN_PREV_ID" type="xsd:string"  minOccurs="0" />
+      <xsd:element name="MAN_PURPOSE" type="xsd:string" />
+      <xsd:element name="MAN_BEGIN_TIME" type="ndm:relTimeType" />
+      <xsd:choice>
+         <xsd:element name="MAN_END_TIME" type="ndm:relTimeType" />
+         <xsd:element name="MAN_DURATION" type="ndm:durationType" />
+      </xsd:choice>
+      <xsd:element name="ACTUATOR_USED" type="xsd:string" minOccurs="0" />
+      <xsd:choice>
+         <xsd:sequence>
+            <xsd:element name="TARGET_MOMENTUM" type="ndm:targetMomentumType"  minOccurs="0" />
+            <xsd:element name="TARGET_MOM_FRAME" type="xsd:string"  minOccurs="0" />
+         </xsd:sequence>
+         <xsd:element name="TARGET_ATTITUDE" type="ndm:vec4Double"  minOccurs="0" />
+         <xsd:element name="TARGET_SPINRATE" type="ndm:angleRateType"  minOccurs="0" />
+      </xsd:choice>
+   </xsd:sequence>
+</xsd:complexType>
+
+
+<!--********************************************************************-->
+<!-- Attitude Determination Section                                     -->
+<!--********************************************************************-->
+
+<xsd:complexType name="acmAdParametersType">
+   <xsd:sequence>
+      <xsd:element name="COMMENT" type="xsd:string" minOccurs="0"
+         maxOccurs="unbounded"/>
+      <xsd:element name="AD_ID" type="xsd:string" minOccurs="0" />
+      <xsd:element name="AD_PREV_ID" type="xsd:string"  minOccurs="0" />
+      <xsd:element name="AD_METHOD" type="ndm:adMethodType" minOccurs="0"/>
+      <xsd:element name="ATTITUDE_SOURCE" type="xsd:string" minOccurs="0" />
+      <xsd:element name="NUMBER_STATES" type="xsd:positiveInteger" minOccurs="0" />
+      <xsd:element name="ATTITUDE_STATES" type="ndm:acmAttitudeType" />
+      <xsd:element name="EULER_ROT_SEQ" type="ndm:rotseqType" minOccurs="0"/>
+      <xsd:element name="COV_TYPE" type="ndm:acmCovarianceLineType" minOccurs="0" />
+      <xsd:element name="REF_FRAME_A" type="xsd:string" />
+      <xsd:element name="REF_FRAME_B" type="xsd:string" />
+      <xsd:element name="RATE_STATES" type="ndm:attRateType" minOccurs="0" />
+      <xsd:element name="SIGMA_U" type="ndm:sigmaUType" minOccurs="0" />
+      <xsd:element name="SIGMA_V" type="ndm:sigmaVType" minOccurs="0" />
+      <xsd:element name="RATE_PROCESS_NOISE_STDDEV" type="ndm:sigmaUType" minOccurs="0" />
+      <xsd:element name="sensorData" type="ndm:sensorDataType" minOccurs="0" maxOccurs="unbounded"/>
+   </xsd:sequence>
+</xsd:complexType>
+
+
+<xsd:complexType name="sensorDataType">
+   <xsd:sequence>
+      <xsd:element name="SENSOR_NUMBER" type="xsd:positiveInteger" minOccurs="0"/>
+      <xsd:element name="SENSOR_USED" type="xsd:string" minOccurs="0"/>
+      <xsd:element name="NUMBER_SENSOR_NOISE_COVARIANCE" type="xsd:positiveInteger" minOccurs="0"/>
+      <xsd:element name="SENSOR_NOISE_STDDEV" type="ndm:sensorNoiseType" minOccurs="0"/>
+      <xsd:element name="SENSOR_FREQUENCY" type="ndm:frequencyType" minOccurs="0"/>
+  </xsd:sequence>
+</xsd:complexType>
+
+</xsd:schema>
