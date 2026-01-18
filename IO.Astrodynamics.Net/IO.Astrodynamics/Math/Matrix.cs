@@ -396,4 +396,165 @@ public readonly record struct Matrix
     {
         return rhs.Multiply(lhs);
     }
+
+    /// <summary>
+    /// Returns the transpose of this matrix.
+    /// </summary>
+    /// <returns>A new matrix that is the transpose of this matrix.</returns>
+    public Matrix Transpose()
+    {
+        var result = new Matrix(Columns, Rows);
+        for (int i = 0; i < Rows; i++)
+        {
+            for (int j = 0; j < Columns; j++)
+            {
+                result.Set(j, i, _data[i, j]);
+            }
+        }
+        return result;
+    }
+
+    /// <summary>
+    /// Creates a 3x3 rotation matrix from a quaternion.
+    /// </summary>
+    /// <param name="q">The quaternion representing the rotation.</param>
+    /// <returns>A 3x3 rotation matrix.</returns>
+    public static Matrix FromQuaternion(Quaternion q)
+    {
+        var qn = q.Normalize();
+        double w = qn.W;
+        double x = qn.VectorPart.X;
+        double y = qn.VectorPart.Y;
+        double z = qn.VectorPart.Z;
+
+        var m = new Matrix(3, 3);
+
+        // Row 0
+        m.Set(0, 0, 1 - 2 * (y * y + z * z));
+        m.Set(0, 1, 2 * (x * y - w * z));
+        m.Set(0, 2, 2 * (x * z + w * y));
+
+        // Row 1
+        m.Set(1, 0, 2 * (x * y + w * z));
+        m.Set(1, 1, 1 - 2 * (x * x + z * z));
+        m.Set(1, 2, 2 * (y * z - w * x));
+
+        // Row 2
+        m.Set(2, 0, 2 * (x * z - w * y));
+        m.Set(2, 1, 2 * (y * z + w * x));
+        m.Set(2, 2, 1 - 2 * (x * x + y * y));
+
+        return m;
+    }
+
+    /// <summary>
+    /// Creates a 6x6 block diagonal matrix from two 3x3 matrices.
+    /// </summary>
+    /// <param name="upperLeft">The upper-left 3x3 block.</param>
+    /// <param name="lowerRight">The lower-right 3x3 block.</param>
+    /// <returns>A 6x6 block diagonal matrix.</returns>
+    public static Matrix CreateBlockDiagonal(Matrix upperLeft, Matrix lowerRight)
+    {
+        if (upperLeft.Rows != 3 || upperLeft.Columns != 3 ||
+            lowerRight.Rows != 3 || lowerRight.Columns != 3)
+        {
+            throw new ArgumentException("Both matrices must be 3x3.");
+        }
+
+        var result = new Matrix(6, 6);
+
+        // Copy upper-left block
+        for (int i = 0; i < 3; i++)
+        {
+            for (int j = 0; j < 3; j++)
+            {
+                result.Set(i, j, upperLeft.Get(i, j));
+            }
+        }
+
+        // Copy lower-right block
+        for (int i = 0; i < 3; i++)
+        {
+            for (int j = 0; j < 3; j++)
+            {
+                result.Set(i + 3, j + 3, lowerRight.Get(i, j));
+            }
+        }
+
+        // Off-diagonal blocks are already 0
+
+        return result;
+    }
+
+    /// <summary>
+    /// Converts the matrix to a 2D double array.
+    /// </summary>
+    /// <returns>A 2D array containing the matrix data.</returns>
+    public double[,] ToArray()
+    {
+        return (double[,])_data.Clone();
+    }
+
+    /// <summary>
+    /// Transforms a 6x6 covariance matrix using the given rotation.
+    /// </summary>
+    /// <param name="covariance">The 6x6 covariance matrix to transform.</param>
+    /// <param name="rotation">The quaternion representing the rotation from current frame to target frame.</param>
+    /// <returns>The transformed 6x6 covariance matrix.</returns>
+    /// <remarks>
+    /// The transformation is performed using the formula P' = T · P · T^T,
+    /// where T is a 6×6 block-diagonal matrix with the 3×3 rotation matrix R in both diagonal blocks.
+    /// This is the standard formula for transforming a state covariance matrix between reference frames.
+    /// </remarks>
+    /// <exception cref="ArgumentException">Thrown when covariance is not 6x6.</exception>
+    public static Matrix TransformCovariance(Matrix covariance, Quaternion rotation)
+    {
+        if (covariance.Rows != 6 || covariance.Columns != 6)
+        {
+            throw new ArgumentException("Covariance matrix must be 6x6.", nameof(covariance));
+        }
+
+        // Get the 3×3 rotation matrix from the quaternion
+        var R = FromQuaternion(rotation);
+
+        // Build the 6×6 block-diagonal transformation matrix T = [R 0; 0 R]
+        var T = CreateBlockDiagonal(R, R);
+
+        // Compute P' = T * P * T^T
+        return T.Multiply(covariance).Multiply(T.Transpose());
+    }
+
+    /// <summary>
+    /// Creates a 6x6 identity matrix suitable for covariance initialization.
+    /// </summary>
+    /// <returns>A 6x6 identity matrix.</returns>
+    public static Matrix Identity6x6()
+    {
+        var result = new Matrix(6, 6);
+        for (int i = 0; i < 6; i++)
+        {
+            result.Set(i, i, 1.0);
+        }
+        return result;
+    }
+
+    /// <summary>
+    /// Checks if this matrix is symmetric within the specified tolerance.
+    /// </summary>
+    /// <param name="tolerance">The tolerance for floating-point comparison.</param>
+    /// <returns>True if the matrix is symmetric, false otherwise.</returns>
+    public bool IsSymmetric(double tolerance = 1e-10)
+    {
+        if (Rows != Columns) return false;
+
+        for (int i = 0; i < Rows; i++)
+        {
+            for (int j = i + 1; j < Columns; j++)
+            {
+                if (System.Math.Abs(_data[i, j] - _data[j, i]) > tolerance)
+                    return false;
+            }
+        }
+        return true;
+    }
 }

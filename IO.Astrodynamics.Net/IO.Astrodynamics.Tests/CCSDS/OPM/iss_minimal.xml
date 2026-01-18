@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ndm xmlns="urn:ccsds:schema:ndmxml">
+  <opm id="CCSDS_OPM_VERS" version="3.0">
+    <header>
+      <CREATION_DATE>2024-01-15T12:00:00.000</CREATION_DATE>
+      <ORIGINATOR>IO.Astrodynamics</ORIGINATOR>
+    </header>
+    <body>
+      <segment>
+        <metadata>
+          <OBJECT_NAME>ISS (ZARYA)</OBJECT_NAME>
+          <OBJECT_ID>1998-067A</OBJECT_ID>
+          <CENTER_NAME>EARTH</CENTER_NAME>
+          <REF_FRAME>ICRF</REF_FRAME>
+          <TIME_SYSTEM>UTC</TIME_SYSTEM>
+        </metadata>
+        <data>
+          <stateVector>
+            <EPOCH>2024-01-15T12:00:00.000</EPOCH>
+            <X units="km">6778.137</X>
+            <Y units="km">0.0</Y>
+            <Z units="km">0.0</Z>
+            <X_DOT units="km/s">0.0</X_DOT>
+            <Y_DOT units="km/s">7.5</Y_DOT>
+            <Z_DOT units="km/s">0.0</Z_DOT>
+          </stateVector>
+        </data>
+      </segment>
+    </body>
+  </opm>
+</ndm>

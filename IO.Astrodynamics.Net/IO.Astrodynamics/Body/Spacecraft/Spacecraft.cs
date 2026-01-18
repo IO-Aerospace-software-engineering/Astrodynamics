@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using IO.Astrodynamics.CCSDS.Common;
+using IO.Astrodynamics.CCSDS.OPM;
 using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
@@ -50,6 +52,24 @@ namespace IO.Astrodynamics.Body.Spacecraft
         public double SectionalArea { get; }
         public double DragCoefficient { get; }
 
+        /// <summary>
+        /// Gets the COSPAR international designator (e.g., "1998-067A").
+        /// </summary>
+        /// <remarks>
+        /// This is used for CCSDS OPM OBJECT_ID field.
+        /// Format: YYYY-NNNP where YYYY is launch year, NNN is launch number, P is piece.
+        /// </remarks>
+        public string CosparId { get; }
+
+        /// <summary>
+        /// Gets the solar radiation pressure coefficient (Cr).
+        /// </summary>
+        /// <remarks>
+        /// Typical values range from 1.0 (absorbing surface) to 2.0 (reflecting surface).
+        /// Default is 1.0.
+        /// </remarks>
+        public double SolarRadiationCoeff { get; }
+
         private bool _isPropagated;
         public bool IsPropagated => _isPropagated;
 
@@ -62,24 +82,29 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// <param name="maximumOperatingMass"></param>
         /// <param name="clock"></param>
         /// <param name="initialOrbitalParameters"></param>
-        /// <param name="sectionalArea">Mean sectional area</param>
+        /// <param name="sectionalArea">Mean sectional area (used for both drag and solar radiation pressure)</param>
         /// <param name="dragCoeff">Drag coefficient</param>
+        /// <param name="cosparId">COSPAR international designator (e.g., "1998-067A")</param>
+        /// <param name="solarRadiationCoeff">Solar radiation pressure coefficient (Cr), default 1.0</param>
         /// <exception cref="ArgumentOutOfRangeException"></exception>
         /// <exception cref="ArgumentNullException"></exception>
         public Spacecraft(int naifId, string name, double mass, double maximumOperatingMass, Clock clock, OrbitalParameters.OrbitalParameters initialOrbitalParameters,
-            double sectionalArea = 1.0, double dragCoeff = 0.3) : base(
+            double sectionalArea = 1.0, double dragCoeff = 0.3, string cosparId = null, double solarRadiationCoeff = 1.0) : base(
             naifId, name, mass, initialOrbitalParameters)
         {
             if (maximumOperatingMass < mass) throw new ArgumentOutOfRangeException(nameof(maximumOperatingMass));
             if (naifId >= 0) throw new ArgumentOutOfRangeException(nameof(naifId));
             ArgumentOutOfRangeException.ThrowIfNegative(dragCoeff);
             ArgumentOutOfRangeException.ThrowIfNegativeOrZero(sectionalArea);
+            ArgumentOutOfRangeException.ThrowIfNegative(solarRadiationCoeff);
             MaximumOperatingMass = maximumOperatingMass;
             Clock = clock ?? throw new ArgumentNullException(nameof(clock));
             Clock.AttachSpacecraft(this);
             Frame = new SpacecraftFrame(this);
             SectionalArea = sectionalArea;
             DragCoefficient = dragCoeff;
+            CosparId = cosparId;
+            SolarRadiationCoeff = solarRadiationCoeff;
         }
 
         /// <summary>
@@ -392,6 +417,101 @@ namespace IO.Astrodynamics.Body.Spacecraft
 
                 return Lagrange.Interpolate(_stateVectorsRelativeToICRF.Values.OrderBy(x => x.Epoch).ToArray(), date);
             });
+        }
+
+        /// <summary>
+        /// Creates a CCSDS OPM (Orbit Parameter Message) from this spacecraft's current state.
+        /// </summary>
+        /// <param name="originator">The message originator. If null, uses "IO.Astrodynamics".</param>
+        /// <param name="epoch">The epoch for the state vector. If null, uses the initial orbital parameters epoch.</param>
+        /// <param name="includeKeplerianElements">If true, includes optional Keplerian elements in the OPM.</param>
+        /// <param name="includeSpacecraftParameters">If true, includes spacecraft parameters (mass, drag, SRP).</param>
+        /// <param name="includeManeuvers">If true, includes executed maneuvers in the OPM.</param>
+        /// <returns>A new OPM instance representing this spacecraft's state.</returns>
+        /// <exception cref="InvalidOperationException">Thrown when CosparId is not set.</exception>
+        public Opm ToOpm(string originator = null, Time? epoch = null, bool includeKeplerianElements = true, bool includeSpacecraftParameters = true, bool includeManeuvers = true)
+        {
+            if (string.IsNullOrWhiteSpace(CosparId))
+            {
+                throw new InvalidOperationException("CosparId must be set to create an OPM. Use the spacecraft constructor's cosparId parameter.");
+            }
+
+            // Get the state vector at the specified epoch (or initial epoch)
+            var targetEpoch = epoch ?? InitialOrbitalParameters.Epoch;
+            var stateVector = InitialOrbitalParameters.ToStateVector(targetEpoch);
+
+            // Create header
+            var header = originator != null
+                ? CcsdsHeader.Create(originator)
+                : CcsdsHeader.Create("IO.Astrodynamics");
+
+            // Create metadata
+            var metadata = new OpmMetadata(
+                objectName: Name,
+                objectId: CosparId,
+                centerName: stateVector.Observer.Name,
+                referenceFrame: stateVector.Frame.Name,
+                timeSystem: "UTC");
+
+            // Create state vector DTO (converts m to km, m/s to km/s)
+            var opmStateVector = OpmStateVector.FromStateVector(stateVector);
+
+            // Create optional Keplerian elements
+            OpmKeplerianElements keplerianElements = null;
+            if (includeKeplerianElements)
+            {
+                var kep = stateVector.ToKeplerianElements();
+                // GM in km³/s² (framework uses m³/s², so divide by 1e9)
+                var gmKm3S2 = kep.Observer.GM / 1e9;
+
+                keplerianElements = OpmKeplerianElements.CreateWithTrueAnomaly(
+                    semiMajorAxis: kep.SemiMajorAxis() / 1000.0, // m to km
+                    eccentricity: kep.Eccentricity(),
+                    inclination: kep.Inclination() * Constants.Rad2Deg,
+                    raan: kep.AscendingNode() * Constants.Rad2Deg,
+                    aop: kep.ArgumentOfPeriapsis() * Constants.Rad2Deg,
+                    trueAnomaly: kep.TrueAnomaly() * Constants.Rad2Deg,
+                    gm: gmKm3S2);
+            }
+
+            // Convert covariance from framework units (m²) to CCSDS units (km²)
+            CovarianceMatrix covariance = null;
+            if (stateVector.Covariance.HasValue)
+            {
+                covariance = CovarianceMatrix.FromMatrixWithUnitConversion(stateVector.Covariance.Value);
+            }
+
+            // Convert executed maneuvers if requested
+            IReadOnlyList<OpmManeuverParameters> maneuvers = null;
+            if (includeManeuvers && ExecutedManeuvers.Count > 0)
+            {
+                var maneuverList = new List<OpmManeuverParameters>();
+                foreach (var maneuver in ExecutedManeuvers.OrderBy(m => m.ThrustWindow?.StartDate))
+                {
+                    if (maneuver is Maneuver.ImpulseManeuver impulseManeuver && impulseManeuver.ThrustWindow.HasValue)
+                    {
+                        maneuverList.Add(impulseManeuver.ToOpmManeuverParameters(stateVector.Frame.Name));
+                    }
+                }
+                if (maneuverList.Count > 0)
+                {
+                    maneuvers = maneuverList;
+                }
+            }
+
+            // Build OPM data with all optional components
+            var data = new OpmData(
+                stateVector: opmStateVector,
+                keplerianElements: keplerianElements,
+                mass: includeSpacecraftParameters ? GetTotalMass() : null,
+                solarRadiationPressureArea: includeSpacecraftParameters ? SectionalArea : null,
+                solarRadiationCoefficient: includeSpacecraftParameters ? SolarRadiationCoeff : null,
+                dragArea: includeSpacecraftParameters ? SectionalArea : null,
+                dragCoefficient: includeSpacecraftParameters ? DragCoefficient : null,
+                covariance: covariance,
+                maneuvers: maneuvers);
+
+            return new Opm(header, metadata, data);
         }
 
         /// <summary>

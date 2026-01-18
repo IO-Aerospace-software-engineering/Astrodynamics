@@ -132,6 +132,18 @@
       <Content Include="CCSDS\iss.omm">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </Content>
+      <None Remove="CCSDS\OPM\iss_minimal.xml" />
+      <Content Include="CCSDS\OPM\iss_minimal.xml">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <None Remove="CCSDS\OPM\satellite_complete.xml" />
+      <Content Include="CCSDS\OPM\satellite_complete.xml">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <None Remove="CCSDS\OPM\invalid_missing_epoch.xml" />
+      <Content Include="CCSDS\OPM\invalid_missing_epoch.xml">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
     </ItemGroup>
 
 </Project>

@@ -886,6 +886,10 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// </summary>
     /// <param name="frame">The reference frame to which to convert the orbital parameters.</param>
     /// <returns>The orbital parameters in the new reference frame.</returns>
+    /// <remarks>
+    /// If the orbital parameters have an associated covariance matrix, it is also transformed
+    /// using the formula P' = T · P · T^T, where T is the 6×6 block-diagonal rotation matrix.
+    /// </remarks>
     public OrbitalParameters ToFrame(Frame frame)
     {
         if (frame == Frame)
@@ -897,7 +901,15 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
         var orientation = Frame.ToFrame(frame, Epoch);
         var newPos = icrfSv.Position.Rotate(orientation.Rotation);
         var newVel = icrfSv.Velocity.Rotate(orientation.Rotation) - orientation.AngularVelocity.Cross(newPos);
-        return new StateVector(newPos, newVel, Observer, Epoch, frame);
+
+        // Transform covariance if present
+        Matrix? transformedCovariance = null;
+        if (icrfSv.Covariance.HasValue)
+        {
+            transformedCovariance = Matrix.TransformCovariance(icrfSv.Covariance.Value, orientation.Rotation);
+        }
+
+        return new StateVector(newPos, newVel, Observer, Epoch, frame, transformedCovariance);
     }
 
     /// <summary>
