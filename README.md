@@ -25,6 +25,7 @@ Important: The C++ layer is feature-frozen and exists only for communication wit
   - Automatic model selection (Earth uses NRLMSISE-00 when full context available)
 - Orbital parameters: compute/convert State Vector, TLE, Equinoctial, Keplerian (mean and osculating)
 - CCSDS OMM support: read/write CCSDS Orbit Mean-elements Messages (NDM/XML format), bidirectional OMM↔TLE conversion
+- CCSDS OPM support: read/write CCSDS Orbit Parameter Messages with state vectors, Keplerian elements, covariance, maneuvers, and user-defined parameters; bidirectional OPM↔Spacecraft conversion
 - Mean elements support: OMM data import, TLE creation with precision preservation
 - Compute TLE from state vectors with SGP4-compatible fitting
 - Frames and coordinates: ICRF/J2000, Ecliptic (J2000/B1950), TEME, Galactic, FK4, body-fixed/ITRF93, Equatorial/Horizontal/Planetodetic/Planetographic
