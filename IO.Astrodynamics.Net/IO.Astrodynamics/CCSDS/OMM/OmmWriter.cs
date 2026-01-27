@@ -19,7 +19,7 @@ namespace IO.Astrodynamics.CCSDS.OMM;
 /// </remarks>
 public class OmmWriter
 {
-    private const string CcsdsSchemaLocation = "https://sanaregistry.org/r/ndmxml_unqualified/ndmxml-3.0.0-master-3.0.xsd";
+    private const string CcsdsSchemaLocation = "https://sanaregistry.org/r/ndmxml_unqualified/ndmxml-4.0.0-master-4.0.xsd";
     private static readonly XNamespace XsiNamespace = "http://www.w3.org/2001/XMLSchema-instance";
 
     /// <summary>

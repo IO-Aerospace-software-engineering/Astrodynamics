@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Generic;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
+using IO.Astrodynamics.CCSDS.OPM;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.Physics;
@@ -66,6 +68,46 @@ namespace IO.Astrodynamics.Maneuver
         {
             DeltaV = Vector3.Zero;
             base.Reset();
+        }
+
+        /// <summary>
+        /// Converts this executed maneuver to CCSDS OPM maneuver parameters.
+        /// </summary>
+        /// <param name="referenceFrame">The reference frame for delta-V components. Defaults to "EME2000".
+        /// Note: Delta-V is stored in the inertial frame (e.g., ICRF/EME2000), not in a local orbital frame.</param>
+        /// <param name="comments">Optional comments to include with the maneuver.</param>
+        /// <returns>An OpmManeuverParameters instance representing this maneuver.</returns>
+        /// <exception cref="InvalidOperationException">Thrown if the maneuver has not been executed (ThrustWindow not set).</exception>
+        /// <remarks>
+        /// <para>
+        /// This method exports the executed maneuver data for CCSDS OPM archival. The delta-V components
+        /// are converted from the framework's m/s to CCSDS km/s units.
+        /// </para>
+        /// <para>
+        /// The delta-V is expressed in the inertial frame (EME2000/ICRF) by default. For local orbital frames
+        /// (RSW, RTN, TNW), additional transformation would be needed based on the spacecraft state at the
+        /// maneuver epoch.
+        /// </para>
+        /// </remarks>
+        public OpmManeuverParameters ToOpmManeuverParameters(string referenceFrame = "EME2000", IReadOnlyList<string> comments = null)
+        {
+            if (!ThrustWindow.HasValue)
+            {
+                throw new InvalidOperationException("Cannot convert to OPM maneuver parameters: maneuver has not been executed (ThrustWindow not set).");
+            }
+
+            // Convert delta-V from m/s to km/s
+            var deltaVKmPerSec = DeltaV / 1000.0;
+
+            return new OpmManeuverParameters(
+                manEpochIgnition: ThrustWindow.Value.StartDate.DateTime,
+                manDuration: ThrustWindow.Value.Length.TotalSeconds,
+                manDeltaMass: -FuelBurned, // OPM uses negative values for expelled mass
+                manRefFrame: referenceFrame,
+                manDv1: deltaVKmPerSec.X,
+                manDv2: deltaVKmPerSec.Y,
+                manDv3: deltaVKmPerSec.Z,
+                comments: comments);
         }
     }
 }

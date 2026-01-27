@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using IO.Astrodynamics.Math;
 
 namespace IO.Astrodynamics.CCSDS.Common;
 
@@ -191,6 +192,87 @@ public class CovarianceMatrix
     }
 
     /// <summary>
+    /// Converts the covariance to a Matrix object for mathematical operations.
+    /// </summary>
+    /// <returns>A 6x6 Matrix representing the covariance.</returns>
+    public Matrix ToMatrix()
+    {
+        return new Matrix(ToFullMatrix());
+    }
+
+    /// <summary>
+    /// Creates a CovarianceMatrix from a Matrix object.
+    /// </summary>
+    /// <param name="matrix">A 6x6 Matrix representing the covariance.</param>
+    /// <param name="referenceFrame">Reference frame for the covariance (optional).</param>
+    /// <param name="comments">Comments associated with the covariance (optional).</param>
+    /// <returns>A new CovarianceMatrix instance.</returns>
+    /// <exception cref="ArgumentException">Thrown when matrix is not 6x6.</exception>
+    public static CovarianceMatrix FromMatrix(Matrix matrix, string referenceFrame = null, IReadOnlyList<string> comments = null)
+    {
+        if (matrix.Rows != 6 || matrix.Columns != 6)
+            throw new ArgumentException("Matrix must be 6x6.", nameof(matrix));
+
+        return FromFullMatrix(matrix.ToArray(), referenceFrame, comments);
+    }
+
+    /// <summary>
+    /// Creates a CovarianceMatrix from a framework Matrix with unit conversion (m² → km²).
+    /// </summary>
+    /// <param name="matrixInMeters">A 6x6 Matrix with covariance in framework units (m², m²/s, m²/s²).</param>
+    /// <param name="referenceFrame">Reference frame for the covariance (optional).</param>
+    /// <param name="comments">Comments associated with the covariance (optional).</param>
+    /// <returns>A new CovarianceMatrix instance in CCSDS units (km², km²/s, km²/s²).</returns>
+    /// <remarks>
+    /// Converts from framework units (m², m²/s, m²/s²) to CCSDS units (km², km²/s, km²/s²).
+    /// All elements are divided by 10⁶ (1000² for position, 1000² for velocity).
+    /// </remarks>
+    public static CovarianceMatrix FromMatrixWithUnitConversion(Matrix matrixInMeters, string referenceFrame = null, IReadOnlyList<string> comments = null)
+    {
+        if (matrixInMeters.Rows != 6 || matrixInMeters.Columns != 6)
+            throw new ArgumentException("Matrix must be 6x6.", nameof(matrixInMeters));
+
+        // Convert m² to km² (divide by 10⁶)
+        const double conversionFactor = 1e-6;
+        var scaled = new double[6, 6];
+        var source = matrixInMeters.ToArray();
+        for (int i = 0; i < 6; i++)
+        {
+            for (int j = 0; j < 6; j++)
+            {
+                scaled[i, j] = source[i, j] * conversionFactor;
+            }
+        }
+
+        return FromFullMatrix(scaled, referenceFrame, comments);
+    }
+
+    /// <summary>
+    /// Converts this CovarianceMatrix to a framework Matrix with unit conversion (km² → m²).
+    /// </summary>
+    /// <returns>A 6x6 Matrix in framework units (m², m²/s, m²/s²).</returns>
+    /// <remarks>
+    /// Converts from CCSDS units (km², km²/s, km²/s²) to framework units (m², m²/s, m²/s²).
+    /// All elements are multiplied by 10⁶.
+    /// </remarks>
+    public Matrix ToMatrixWithUnitConversion()
+    {
+        // Convert km² to m² (multiply by 10⁶)
+        const double conversionFactor = 1e6;
+        var source = ToFullMatrix();
+        var scaled = new double[6, 6];
+        for (int i = 0; i < 6; i++)
+        {
+            for (int j = 0; j < 6; j++)
+            {
+                scaled[i, j] = source[i, j] * conversionFactor;
+            }
+        }
+
+        return new Matrix(scaled);
+    }
+
+    /// <summary>
     /// Converts the covariance to a full symmetric 6x6 matrix.
     /// </summary>
     /// <returns>A 6x6 covariance matrix.</returns>
@@ -259,4 +341,5 @@ public class CovarianceMatrix
         var vel = VelocitySigma;
         return $"Covariance[PosσX={pos.SigmaX:E2} km, VelσX={vel.SigmaXDot:E2} km/s, Frame={ReferenceFrame ?? "N/A"}]";
     }
+
 }

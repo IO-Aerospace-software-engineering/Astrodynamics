@@ -12,7 +12,9 @@
       "Bash(mkdir:*)",
       "Bash(python3:*)",
       "Bash(find:*)",
-      "Bash(dotnet clean:*)"
+      "Bash(dotnet clean:*)",
+      "Bash(git stash:*)",
+      "Bash(grep:*)"
     ],
     "deny": [],
     "ask": []

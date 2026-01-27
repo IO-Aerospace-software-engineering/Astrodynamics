@@ -33,17 +33,46 @@ namespace IO.Astrodynamics.OrbitalParameters
         public Vector3 Velocity { get; private set; }
 
         /// <summary>
+        /// Gets the 6x6 covariance matrix representing uncertainty in position and velocity.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// Optional. When set, represents the 6x6 position-velocity covariance matrix.
+        /// Units should be consistent with StateVector: m² for position, m²/s for cross-terms, m²/s² for velocity.
+        /// </para>
+        /// <para>
+        /// The matrix layout is:
+        /// <code>
+        ///     X       Y       Z       X_DOT   Y_DOT   Z_DOT
+        /// X   σ²x
+        /// Y   σxy     σ²y
+        /// Z   σxz     σyz     σ²z
+        /// X'  σxẋ     σyẋ     σzẋ     σ²ẋ
+        /// Y'  σxẏ     σyẏ     σzẏ     σẋẏ     σ²ẏ
+        /// Z'  σxż     σyż     σzż     σẋż     σẏż     σ²ż
+        /// </code>
+        /// </para>
+        /// <para>
+        /// To transform covariance between frames, use <see cref="Matrix.TransformCovariance"/>.
+        /// </para>
+        /// </remarks>
+        public Matrix? Covariance { get; }
+
+        /// <summary>
         /// Constructor
         /// </summary>
-        /// <param name="position"></param>
-        /// <param name="velocity"></param>
-        /// <param name="observer"></param>
-        /// <param name="epoch"></param>
-        /// <param name="frame"></param>
-        public StateVector(in Vector3 position, in Vector3 velocity, ILocalizable observer, in Time epoch, Frame frame) : base(observer, epoch, frame)
+        /// <param name="position">The position vector in meters.</param>
+        /// <param name="velocity">The velocity vector in meters per second.</param>
+        /// <param name="observer">The observer (central body).</param>
+        /// <param name="epoch">The epoch time.</param>
+        /// <param name="frame">The reference frame.</param>
+        /// <param name="covariance">Optional 6x6 covariance matrix representing state uncertainty (m², m²/s, m²/s²).</param>
+        public StateVector(in Vector3 position, in Vector3 velocity, ILocalizable observer, in Time epoch, Frame frame,
+            Matrix? covariance = null) : base(observer, epoch, frame)
         {
             Position = position;
             Velocity = velocity;
+            Covariance = covariance;
         }
 
         public override StateVector ToStateVector()
@@ -321,7 +350,7 @@ namespace IO.Astrodynamics.OrbitalParameters
         /// <summary>
         /// Gets the inverse of the state vector.
         /// </summary>
-        /// <returns>The inverse state vector.</returns>
+        /// <returns>The inverse state vector with preserved covariance.</returns>
         public StateVector Inverse()
         {
             if (_inverse is not null)
@@ -329,7 +358,7 @@ namespace IO.Astrodynamics.OrbitalParameters
                 return _inverse;
             }
 
-            _inverse ??= new StateVector(Position.Inverse(), Velocity.Inverse(), Observer, Epoch, Frame);
+            _inverse ??= new StateVector(Position.Inverse(), Velocity.Inverse(), Observer, Epoch, Frame, Covariance);
             return _inverse;
         }
 

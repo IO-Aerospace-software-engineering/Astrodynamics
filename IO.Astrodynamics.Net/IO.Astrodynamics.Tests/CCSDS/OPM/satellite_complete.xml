@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ndm xmlns="urn:ccsds:schema:ndmxml">
+  <opm id="CCSDS_OPM_VERS" version="3.0">
+    <header>
+      <COMMENT>Test OPM with all optional elements</COMMENT>
+      <CREATION_DATE>2024-06-15T10:30:00.000</CREATION_DATE>
+      <ORIGINATOR>IO.Astrodynamics Test Suite</ORIGINATOR>
+    </header>
+    <body>
+      <segment>
+        <metadata>
+          <COMMENT>Metadata comment line 1</COMMENT>
+          <COMMENT>Metadata comment line 2</COMMENT>
+          <OBJECT_NAME>TEST SATELLITE</OBJECT_NAME>
+          <OBJECT_ID>2024-001A</OBJECT_ID>
+          <CENTER_NAME>EARTH</CENTER_NAME>
+          <REF_FRAME>ICRF</REF_FRAME>
+          <TIME_SYSTEM>UTC</TIME_SYSTEM>
+        </metadata>
+        <data>
+          <COMMENT>Data section comment</COMMENT>
+          <stateVector>
+            <COMMENT>State vector at epoch</COMMENT>
+            <EPOCH>2024-06-15T10:30:00.000</EPOCH>
+            <X units="km">-4453.783586</X>
+            <Y units="km">5038.203756</Y>
+            <Z units="km">-426.384456</Z>
+            <X_DOT units="km/s">-3.540234</X_DOT>
+            <Y_DOT units="km/s">-3.942346</Y_DOT>
+            <Z_DOT units="km/s">5.234789</Z_DOT>
+          </stateVector>
+          <keplerianElements>
+            <COMMENT>Keplerian elements at same epoch</COMMENT>
+            <SEMI_MAJOR_AXIS units="km">6878.137</SEMI_MAJOR_AXIS>
+            <ECCENTRICITY>0.0001234</ECCENTRICITY>
+            <INCLINATION units="deg">51.6420</INCLINATION>
+            <RA_OF_ASC_NODE units="deg">120.4567</RA_OF_ASC_NODE>
+            <ARG_OF_PERICENTER units="deg">90.1234</ARG_OF_PERICENTER>
+            <TRUE_ANOMALY units="deg">45.6789</TRUE_ANOMALY>
+            <GM units="km**3/s**2">398600.4418</GM>
+          </keplerianElements>
+          <spacecraftParameters>
+            <COMMENT>Spacecraft physical parameters</COMMENT>
+            <MASS units="kg">1500.0</MASS>
+            <SOLAR_RAD_AREA units="m**2">25.5</SOLAR_RAD_AREA>
+            <SOLAR_RAD_COEFF>1.8</SOLAR_RAD_COEFF>
+            <DRAG_AREA units="m**2">22.0</DRAG_AREA>
+            <DRAG_COEFF>2.2</DRAG_COEFF>
+          </spacecraftParameters>
+          <covarianceMatrix>
+            <COMMENT>Position/velocity covariance</COMMENT>
+            <COV_REF_FRAME>ICRF</COV_REF_FRAME>
+            <CX_X units="km**2">1.0e-6</CX_X>
+            <CY_X units="km**2">0.0</CY_X>
+            <CY_Y units="km**2">1.0e-6</CY_Y>
+            <CZ_X units="km**2">0.0</CZ_X>
+            <CZ_Y units="km**2">0.0</CZ_Y>
+            <CZ_Z units="km**2">1.0e-6</CZ_Z>
+            <CX_DOT_X units="km**2/s">0.0</CX_DOT_X>
+            <CX_DOT_Y units="km**2/s">0.0</CX_DOT_Y>
+            <CX_DOT_Z units="km**2/s">0.0</CX_DOT_Z>
+            <CX_DOT_X_DOT units="km**2/s**2">1.0e-9</CX_DOT_X_DOT>
+            <CY_DOT_X units="km**2/s">0.0</CY_DOT_X>
+            <CY_DOT_Y units="km**2/s">0.0</CY_DOT_Y>
+            <CY_DOT_Z units="km**2/s">0.0</CY_DOT_Z>
+            <CY_DOT_X_DOT units="km**2/s**2">0.0</CY_DOT_X_DOT>
+            <CY_DOT_Y_DOT units="km**2/s**2">1.0e-9</CY_DOT_Y_DOT>
+            <CZ_DOT_X units="km**2/s">0.0</CZ_DOT_X>
+            <CZ_DOT_Y units="km**2/s">0.0</CZ_DOT_Y>
+            <CZ_DOT_Z units="km**2/s">0.0</CZ_DOT_Z>
+            <CZ_DOT_X_DOT units="km**2/s**2">0.0</CZ_DOT_X_DOT>
+            <CZ_DOT_Y_DOT units="km**2/s**2">0.0</CZ_DOT_Y_DOT>
+            <CZ_DOT_Z_DOT units="km**2/s**2">1.0e-9</CZ_DOT_Z_DOT>
+          </covarianceMatrix>
+          <maneuverParameters>
+            <COMMENT>Orbit raising maneuver</COMMENT>
+            <MAN_EPOCH_IGNITION>2024-06-15T14:00:00.000</MAN_EPOCH_IGNITION>
+            <MAN_DURATION units="s">180.0</MAN_DURATION>
+            <MAN_DELTA_MASS units="kg">-25.0</MAN_DELTA_MASS>
+            <MAN_REF_FRAME>RSW</MAN_REF_FRAME>
+            <MAN_DV_1 units="km/s">0.05</MAN_DV_1>
+            <MAN_DV_2 units="km/s">0.0</MAN_DV_2>
+            <MAN_DV_3 units="km/s">0.0</MAN_DV_3>
+          </maneuverParameters>
+          <maneuverParameters>
+            <COMMENT>Plane change maneuver</COMMENT>
+            <MAN_EPOCH_IGNITION>2024-06-16T08:30:00.000</MAN_EPOCH_IGNITION>
+            <MAN_DURATION units="s">120.0</MAN_DURATION>
+            <MAN_DELTA_MASS units="kg">-15.0</MAN_DELTA_MASS>
+            <MAN_REF_FRAME>RSW</MAN_REF_FRAME>
+            <MAN_DV_1 units="km/s">0.0</MAN_DV_1>
+            <MAN_DV_2 units="km/s">0.0</MAN_DV_2>
+            <MAN_DV_3 units="km/s">0.02</MAN_DV_3>
+          </maneuverParameters>
+        </data>
+      </segment>
+    </body>
+  </opm>
+</ndm>

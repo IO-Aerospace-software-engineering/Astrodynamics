@@ -67,6 +67,7 @@ dotnet tool install --global --add-source ./IO.Astrodynamics.CLI/bin/Debug IO.As
 - `IO.Astrodynamics.OrbitalParameters`: State vectors, Keplerian elements, TLE, mean/osculating elements
 - `IO.Astrodynamics.OrbitalParameters.TLE`: Two-Line Element sets and OMM support
 - `IO.Astrodynamics.CCSDS.OMM`: CCSDS Orbit Mean-elements Message support (read/write/validate/convert)
+- `IO.Astrodynamics.CCSDS.OPM`: CCSDS Orbit Parameter Message support (read/write/validate/convert)
 - `IO.Astrodynamics.Maneuver`: Lambert solvers, launch windows, maneuver planning
 - `IO.Astrodynamics.Frames`: Reference frames and transformations
 - `IO.Astrodynamics.TimeSystem`: Time frames (UTC, TDB, TAI, etc.)
@@ -210,6 +211,117 @@ When converting OMM → TLE → OMM, expect some precision loss:
 - BSTAR: ~6 decimal places
 - Mean motion is preserved exactly (cached internally)
 
+### CCSDS OPM (Orbit Parameter Message)
+
+The `IO.Astrodynamics.CCSDS.OPM` namespace provides full support for CCSDS Orbit Parameter Message format (CCSDS 502.0-B-3, NDM/XML 505.0-B-3).
+
+**Key Classes**
+- `Opm`: Main class representing a complete OPM document
+- `OpmReader`: Parses OPM from XML files/strings/streams
+- `OpmWriter`: Writes OPM to XML files/strings/streams (with units attributes per CCSDS standard)
+- `OpmValidator`: Validates OPM content for CCSDS compliance
+- `OpmData`, `OpmStateVector`, `OpmKeplerianElements`, `OpmMetadata`: Data structures
+- `OpmManeuverParameters`: Maneuver data (epoch, duration, delta-V, delta-mass)
+- `OpmUserDefinedParameters`: Custom user-defined parameters
+- `CovarianceMatrix`: 6x6 position-velocity covariance in CCSDS format
+
+**Loading and Saving OPM**
+```csharp
+// Load OPM from file (with optional validation)
+var opm = Opm.LoadFromFile("spacecraft.opm", validateSchema: true, validateContent: true);
+
+// Access data
+Console.WriteLine($"Object: {opm.ObjectName}");
+Console.WriteLine($"COSPAR ID: {opm.ObjectId}");  // Format: "1998-067A"
+Console.WriteLine($"Position: {opm.Data.StateVector.X}, {opm.Data.StateVector.Y}, {opm.Data.StateVector.Z} km");
+
+// Save OPM to file
+opm.SaveToFile("output.opm", validateBeforeSave: true, wrapInNdm: true, indent: true);
+```
+
+**OPM ↔ Spacecraft Bidirectional Conversion**
+```csharp
+// Spacecraft to OPM (for archiving/sharing)
+var spacecraft = new Spacecraft(-1000, "ISS", 420000.0, 500000.0, clock, stateVector,
+    1600.0, 2.2, "1998-067A", 1.5);
+var opm = spacecraft.ToOpm(
+    originator: "My Organization",
+    includeKeplerianElements: true,
+    includeSpacecraftParameters: true,
+    includeManeuvers: true);  // Includes executed maneuvers
+opm.SaveToFile("iss.opm");
+
+// OPM to Spacecraft (for mission operations)
+var opm = Opm.LoadFromFile("iss.opm");
+var spacecraft = opm.ToSpacecraft(
+    naifId: -1000,
+    maximumOperatingMass: 500000.0,
+    clock: new Clock("OnboardClock", 256),
+    observer: earth);  // Optional, defaults to Earth
+```
+
+**OPM ↔ StateVector Conversion**
+```csharp
+// OPM to StateVector (simple conversion)
+var opm = Opm.LoadFromFile("spacecraft.opm");
+var stateVector = opm.ToStateVector(observer: earth);
+// Units converted: km → m, km/s → m/s
+
+// StateVector to OPM
+var opm = Opm.CreateFromStateVector("SAT-1", "2024-001A", stateVector,
+    originator: "Mission Control");
+```
+
+**Maneuver Integration**
+```csharp
+// Executed maneuvers are automatically included in ToOpm()
+var spacecraft = CreateSpacecraftWithManeuvers();
+// ... propagate and execute maneuvers ...
+
+var opm = spacecraft.ToOpm(includeManeuvers: true);
+// OPM will contain OpmManeuverParameters for each executed ImpulseManeuver
+
+// Manual maneuver export from ImpulseManeuver
+if (maneuver is ImpulseManeuver impulseManeuver && impulseManeuver.ThrustWindow.HasValue)
+{
+    var opmManeuver = impulseManeuver.ToOpmManeuverParameters(referenceFrame: "EME2000");
+    // Contains: epoch, duration, delta-mass, delta-V (km/s)
+}
+```
+
+**User-Defined Parameters**
+```csharp
+// Create OPM with custom parameters
+var userParams = new OpmUserDefinedParameters(
+    new Dictionary<string, string>
+    {
+        ["MISSION_ID"] = "STS-001",
+        ["OPERATOR"] = "NASA"
+    },
+    comments: new[] { "Custom mission parameters" });
+
+var data = new OpmData(stateVector, userDefinedParameters: userParams);
+```
+
+**Covariance Matrix Support**
+```csharp
+// OPM with covariance (units: km², km²/s, km²/s²)
+var covariance = new CovarianceMatrix(
+    cxX: 1.0e-6, cyX: 0.0, cyY: 1.0e-6, czX: 0.0, czY: 0.0, czZ: 1.0e-6,
+    cxDotX: 0.0, cxDotY: 0.0, cxDotZ: 0.0, cxDotXDot: 1.0e-9,
+    cyDotX: 0.0, cyDotY: 0.0, cyDotZ: 0.0, cyDotXDot: 0.0, cyDotYDot: 1.0e-9,
+    czDotX: 0.0, czDotY: 0.0, czDotZ: 0.0, czDotXDot: 0.0, czDotYDot: 0.0, czDotZDot: 1.0e-9,
+    referenceFrame: "ICRF");
+
+var data = new OpmData(stateVector, covariance: covariance);
+```
+
+**Unit Handling**
+- OPM uses CCSDS units: km, km/s, deg, kg, m², km², km²/s, km²/s²
+- Framework uses SI units: m, m/s, rad, kg, m²
+- Conversions are automatic in `ToStateVector()`, `ToSpacecraft()`, and `ToOpm()`
+- XML output includes `units` attributes on all numeric elements per CCSDS standard
+
 ### Atmospheric Modeling
 
 The framework provides a unified atmospheric modeling system with support for multiple planets and models of varying complexity.
@@ -312,6 +424,14 @@ Test data files are in `Data/SolarSystem/` and copied to output directory.
    - Check `IsTleCompatible` before calling `ToTle()`
    - Use `TLE.ToOmm()` to convert TLE data for CCSDS-compliant archiving
    - COSPAR ID format conversion is automatic (OMM: "1998-067A" ↔ TLE: "98067A")
+8. **CCSDS OPM Handling**: When working with OPM files:
+   - Use `Opm.LoadFromFile()` with validation for production code
+   - Use `Spacecraft.ToOpm()` for archiving spacecraft state with maneuvers
+   - Use `Opm.ToSpacecraft()` to restore spacecraft (requires naifId, clock, maxMass)
+   - Use `Opm.ToStateVector()` for simple state vector extraction
+   - Unit conversions (km↔m, deg↔rad) are automatic
+   - Maneuver conversion is one-way: Spacecraft→OPM (OPM maneuvers are archival only)
+   - User-defined parameters support custom mission-specific data
 
 ## Code Quality Standards
 
