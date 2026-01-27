@@ -186,6 +186,20 @@ public class Opm
     /// </summary>
     /// <param name="observer">The central body (observer). If null, Earth is used.</param>
     /// <returns>A new StateVector instance with the OPM data.</returns>
+    /// <remarks>
+    /// <para>
+    /// If the OPM contains a covariance matrix with a reference frame that differs from the state vector
+    /// reference frame (e.g., covariance in RTN while state vector in ICRF), the covariance is included
+    /// as-is without frame transformation. The caller is responsible for frame transformation if needed.
+    /// </para>
+    /// <para>
+    /// Common covariance frame combinations:
+    /// <list type="bullet">
+    /// <item>State in ICRF, Covariance in ICRF: No transformation needed</item>
+    /// <item>State in ICRF, Covariance in RTN/RSW: Requires transformation for proper uncertainty propagation</item>
+    /// </list>
+    /// </para>
+    /// </remarks>
     public StateVector ToStateVector(ILocalizable observer = null)
     {
         // Default to Earth if no observer specified
@@ -199,9 +213,32 @@ public class Opm
         var frame = GetFrame();
 
         // Convert covariance from CCSDS units (km²) to framework units (m²)
+        // Note: If covariance is in a different frame than the state vector, the caller
+        // must handle frame transformation. Check CovarianceReferenceFrameConsistent property.
         Matrix? covariance = Data.Covariance?.ToMatrixWithUnitConversion();
 
         return Data.StateVector.ToStateVector(observer, frame, covariance);
+    }
+
+    /// <summary>
+    /// Gets a value indicating whether the covariance reference frame is consistent with the state vector frame.
+    /// </summary>
+    /// <remarks>
+    /// Returns true if no covariance is present, or if the covariance reference frame matches
+    /// the metadata reference frame. Returns false if the frames differ, which may require
+    /// frame transformation for proper uncertainty propagation.
+    /// </remarks>
+    public bool CovarianceReferenceFrameConsistent
+    {
+        get
+        {
+            if (!HasCovariance || string.IsNullOrEmpty(Data.Covariance.ReferenceFrame))
+                return true;
+
+            // Compare covariance frame with metadata frame (case-insensitive)
+            return string.Equals(Data.Covariance.ReferenceFrame, Metadata.ReferenceFrame,
+                StringComparison.OrdinalIgnoreCase);
+        }
     }
 
     /// <summary>

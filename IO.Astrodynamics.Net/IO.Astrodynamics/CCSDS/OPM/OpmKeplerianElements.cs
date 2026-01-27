@@ -89,10 +89,18 @@ public class OpmKeplerianElements
         double gm,
         IReadOnlyList<string> comments)
     {
-        if (semiMajorAxis <= 0)
-            throw new ArgumentOutOfRangeException(nameof(semiMajorAxis), "Semi-major axis must be positive.");
         if (eccentricity < 0)
             throw new ArgumentOutOfRangeException(nameof(eccentricity), "Eccentricity cannot be negative.");
+
+        // Semi-major axis validation depends on orbit type:
+        // - Elliptical orbits (e < 1): SMA must be positive
+        // - Parabolic orbits (e = 1): SMA is infinite (not typically used in OPM)
+        // - Hyperbolic orbits (e > 1): SMA is negative by convention
+        if (eccentricity < 1 && semiMajorAxis <= 0)
+            throw new ArgumentOutOfRangeException(nameof(semiMajorAxis), "Semi-major axis must be positive for elliptical orbits (e < 1).");
+        if (eccentricity > 1 && semiMajorAxis >= 0)
+            throw new ArgumentOutOfRangeException(nameof(semiMajorAxis), "Semi-major axis must be negative for hyperbolic orbits (e > 1).");
+
         if (inclination < 0 || inclination > 180)
             throw new ArgumentOutOfRangeException(nameof(inclination), "Inclination must be between 0 and 180 degrees.");
         if (gm <= 0)
@@ -116,7 +124,7 @@ public class OpmKeplerianElements
     /// <summary>
     /// Creates Keplerian elements with true anomaly.
     /// </summary>
-    /// <param name="semiMajorAxis">Semi-major axis in km.</param>
+    /// <param name="semiMajorAxis">Semi-major axis in km. Positive for elliptical orbits (e &lt; 1), negative for hyperbolic orbits (e &gt; 1).</param>
     /// <param name="eccentricity">Eccentricity (>= 0).</param>
     /// <param name="inclination">Inclination in degrees (0-180).</param>
     /// <param name="raan">Right ascension of ascending node in degrees.</param>
@@ -143,7 +151,7 @@ public class OpmKeplerianElements
     /// <summary>
     /// Creates Keplerian elements with mean anomaly.
     /// </summary>
-    /// <param name="semiMajorAxis">Semi-major axis in km.</param>
+    /// <param name="semiMajorAxis">Semi-major axis in km. Positive for elliptical orbits (e &lt; 1), negative for hyperbolic orbits (e &gt; 1).</param>
     /// <param name="eccentricity">Eccentricity (>= 0).</param>
     /// <param name="inclination">Inclination in degrees (0-180).</param>
     /// <param name="raan">Right ascension of ascending node in degrees.</param>

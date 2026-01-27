@@ -232,7 +232,7 @@ public class OpmValidator
 
         ValidateHeader(opm.Header, result);
         ValidateMetadata(opm.Metadata, result);
-        ValidateData(opm.Data, result);
+        ValidateData(opm.Data, opm.Metadata, result);
 
         return result;
     }
@@ -294,7 +294,7 @@ public class OpmValidator
         }
     }
 
-    private void ValidateData(OpmData data, OpmValidationResult result)
+    private void ValidateData(OpmData data, OpmMetadata metadata, OpmValidationResult result)
     {
         // Validate state vector (required)
         ValidateStateVector(data.StateVector, result);
@@ -315,6 +315,7 @@ public class OpmValidator
         if (data.HasCovariance)
         {
             ValidateCovarianceMatrix(data.Covariance, result);
+            ValidateCovarianceFrameConsistency(metadata, data.Covariance, result);
         }
 
         // Validate maneuvers (if present)
@@ -335,7 +336,9 @@ public class OpmValidator
         if (!ValidatePhysicalConstraints)
             return;
 
-        // Basic sanity checks for position (typical LEO to GEO range)
+        // Basic sanity checks for position
+        // Note: These thresholds are based on typical Earth-orbit ranges.
+        // For other central bodies (Moon, Mars, etc.), these warnings may not apply.
         var positionMagnitude = System.Math.Sqrt(
             stateVector.X * stateVector.X +
             stateVector.Y * stateVector.Y +
@@ -344,18 +347,20 @@ public class OpmValidator
         if (positionMagnitude < 100) // Less than 100 km
         {
             result.AddWarning(PhysicalConstraint,
-                $"Position magnitude ({positionMagnitude:F1} km) is unusually small (inside Earth?).",
+                $"Position magnitude ({positionMagnitude:F1} km) is unusually small for Earth-orbit satellites. " +
+                "This may be valid for orbits around smaller bodies (Moon, asteroids).",
                 "Data.StateVector.Position");
         }
 
         if (positionMagnitude > 1e8) // More than 100 million km
         {
             result.AddWarning(PhysicalConstraint,
-                $"Position magnitude ({positionMagnitude:E2} km) is unusually large.",
+                $"Position magnitude ({positionMagnitude:E2} km) is unusually large for planetary orbits.",
                 "Data.StateVector.Position");
         }
 
         // Basic sanity checks for velocity
+        // Note: These thresholds are based on typical Earth-orbit ranges.
         var velocityMagnitude = System.Math.Sqrt(
             stateVector.XDot * stateVector.XDot +
             stateVector.YDot * stateVector.YDot +
@@ -364,14 +369,15 @@ public class OpmValidator
         if (velocityMagnitude < 0.1) // Less than 0.1 km/s
         {
             result.AddWarning(PhysicalConstraint,
-                $"Velocity magnitude ({velocityMagnitude:F4} km/s) is unusually small.",
+                $"Velocity magnitude ({velocityMagnitude:F4} km/s) is unusually small for orbital motion. " +
+                "This may be valid for orbits around smaller bodies or distant heliocentric orbits.",
                 "Data.StateVector.Velocity");
         }
 
         if (velocityMagnitude > 100) // More than 100 km/s
         {
             result.AddWarning(PhysicalConstraint,
-                $"Velocity magnitude ({velocityMagnitude:F2} km/s) is unusually large (exceeds escape velocity from most bodies).",
+                $"Velocity magnitude ({velocityMagnitude:F2} km/s) is unusually large (exceeds escape velocity from most solar system bodies).",
                 "Data.StateVector.Velocity");
         }
     }
@@ -395,11 +401,19 @@ public class OpmValidator
                 "Data.KeplerianElements.Inclination");
         }
 
-        // Semi-major axis must be positive for elliptical orbits
+        // Semi-major axis validation depends on orbit type:
+        // - Elliptical orbits (e < 1): SMA must be positive
+        // - Hyperbolic orbits (e > 1): SMA must be negative
         if (keplerian.Eccentricity < 1 && keplerian.SemiMajorAxis <= 0)
         {
             result.AddError(InvalidRange,
-                "Semi-major axis must be positive for elliptical orbits.",
+                "Semi-major axis must be positive for elliptical orbits (e < 1).",
+                "Data.KeplerianElements.SemiMajorAxis");
+        }
+        else if (keplerian.Eccentricity > 1 && keplerian.SemiMajorAxis >= 0)
+        {
+            result.AddError(InvalidRange,
+                "Semi-major axis must be negative for hyperbolic orbits (e > 1).",
                 "Data.KeplerianElements.SemiMajorAxis");
         }
 
@@ -470,6 +484,19 @@ public class OpmValidator
             result.AddError(InvalidRange, "Variance CY_DOT_Y_DOT cannot be negative.", "Data.Covariance.CY_DOT_Y_DOT");
         if (covariance.CzDotZDot < 0)
             result.AddError(InvalidRange, "Variance CZ_DOT_Z_DOT cannot be negative.", "Data.Covariance.CZ_DOT_Z_DOT");
+    }
+
+    private void ValidateCovarianceFrameConsistency(OpmMetadata metadata, CovarianceMatrix covariance, OpmValidationResult result)
+    {
+        // Check if covariance frame differs from state vector frame
+        if (!string.IsNullOrEmpty(covariance.ReferenceFrame) &&
+            !string.Equals(covariance.ReferenceFrame, metadata.ReferenceFrame, StringComparison.OrdinalIgnoreCase))
+        {
+            result.AddWarning(InconsistentData,
+                $"Covariance reference frame '{covariance.ReferenceFrame}' differs from state vector frame '{metadata.ReferenceFrame}'. " +
+                "Frame transformation may be required for proper uncertainty propagation.",
+                "Data.Covariance.ReferenceFrame");
+        }
     }
 
     private void ValidateManeuver(OpmManeuverParameters maneuver, int index, OpmValidationResult result)

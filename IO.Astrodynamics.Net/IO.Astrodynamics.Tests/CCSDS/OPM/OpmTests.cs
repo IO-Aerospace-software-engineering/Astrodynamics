@@ -182,6 +182,74 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
             Assert.False(opm.HasManeuvers);
         }
 
+        [Fact]
+        public void CovarianceReferenceFrameConsistent_NoCovariance_ReturnsTrue()
+        {
+            var opm = CreateMinimalOpm("ISS", "1998-067A");
+
+            Assert.True(opm.CovarianceReferenceFrameConsistent);
+        }
+
+        [Fact]
+        public void CovarianceReferenceFrameConsistent_SameFrame_ReturnsTrue()
+        {
+            var header = CcsdsHeader.CreateDefault();
+            var metadata = new OpmMetadata("ISS", "1998-067A", "EARTH", "ICRF", "UTC");
+            var stateVector = new OpmStateVector(_testEpoch, 6778.137, 0.0, 0.0, 0.0, 7.5, 0.0);
+            var covariance = new CovarianceMatrix(
+                cxX: 1.0e-6,
+                cyX: 0.0, cyY: 1.0e-6,
+                czX: 0.0, czY: 0.0, czZ: 1.0e-6,
+                cxDotX: 0.0, cxDotY: 0.0, cxDotZ: 0.0, cxDotXDot: 1.0e-9,
+                cyDotX: 0.0, cyDotY: 0.0, cyDotZ: 0.0, cyDotXDot: 0.0, cyDotYDot: 1.0e-9,
+                czDotX: 0.0, czDotY: 0.0, czDotZ: 0.0, czDotXDot: 0.0, czDotYDot: 0.0, czDotZDot: 1.0e-9,
+                referenceFrame: "ICRF"); // Same as metadata reference frame
+            var data = new OpmData(stateVector, covariance: covariance);
+            var opm = new Opm(header, metadata, data);
+
+            Assert.True(opm.CovarianceReferenceFrameConsistent);
+        }
+
+        [Fact]
+        public void CovarianceReferenceFrameConsistent_DifferentFrame_ReturnsFalse()
+        {
+            var header = CcsdsHeader.CreateDefault();
+            var metadata = new OpmMetadata("ISS", "1998-067A", "EARTH", "ICRF", "UTC");
+            var stateVector = new OpmStateVector(_testEpoch, 6778.137, 0.0, 0.0, 0.0, 7.5, 0.0);
+            var covariance = new CovarianceMatrix(
+                cxX: 1.0e-6,
+                cyX: 0.0, cyY: 1.0e-6,
+                czX: 0.0, czY: 0.0, czZ: 1.0e-6,
+                cxDotX: 0.0, cxDotY: 0.0, cxDotZ: 0.0, cxDotXDot: 1.0e-9,
+                cyDotX: 0.0, cyDotY: 0.0, cyDotZ: 0.0, cyDotXDot: 0.0, cyDotYDot: 1.0e-9,
+                czDotX: 0.0, czDotY: 0.0, czDotZ: 0.0, czDotXDot: 0.0, czDotYDot: 0.0, czDotZDot: 1.0e-9,
+                referenceFrame: "RTN"); // Different from metadata reference frame (ICRF)
+            var data = new OpmData(stateVector, covariance: covariance);
+            var opm = new Opm(header, metadata, data);
+
+            Assert.False(opm.CovarianceReferenceFrameConsistent);
+        }
+
+        [Fact]
+        public void CovarianceReferenceFrameConsistent_CaseInsensitive_ReturnsTrue()
+        {
+            var header = CcsdsHeader.CreateDefault();
+            var metadata = new OpmMetadata("ISS", "1998-067A", "EARTH", "ICRF", "UTC");
+            var stateVector = new OpmStateVector(_testEpoch, 6778.137, 0.0, 0.0, 0.0, 7.5, 0.0);
+            var covariance = new CovarianceMatrix(
+                cxX: 1.0e-6,
+                cyX: 0.0, cyY: 1.0e-6,
+                czX: 0.0, czY: 0.0, czZ: 1.0e-6,
+                cxDotX: 0.0, cxDotY: 0.0, cxDotZ: 0.0, cxDotXDot: 1.0e-9,
+                cyDotX: 0.0, cyDotY: 0.0, cyDotZ: 0.0, cyDotXDot: 0.0, cyDotYDot: 1.0e-9,
+                czDotX: 0.0, czDotY: 0.0, czDotZ: 0.0, czDotXDot: 0.0, czDotYDot: 0.0, czDotZDot: 1.0e-9,
+                referenceFrame: "icrf"); // Lowercase version of ICRF
+            var data = new OpmData(stateVector, covariance: covariance);
+            var opm = new Opm(header, metadata, data);
+
+            Assert.True(opm.CovarianceReferenceFrameConsistent);
+        }
+
         #endregion
 
         #region Factory Methods Tests
@@ -239,6 +307,55 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
             var result = opm.Validate();
 
             Assert.True(result.IsValid);
+        }
+
+        [Fact]
+        public void Validate_CovarianceFrameMismatch_AddsWarning()
+        {
+            var header = CcsdsHeader.CreateDefault();
+            var metadata = new OpmMetadata("ISS", "1998-067A", "EARTH", "ICRF", "UTC");
+            var stateVector = new OpmStateVector(_testEpoch, 6778.137, 0.0, 0.0, 0.0, 7.5, 0.0);
+            var covariance = new CovarianceMatrix(
+                cxX: 1.0e-6,
+                cyX: 0.0, cyY: 1.0e-6,
+                czX: 0.0, czY: 0.0, czZ: 1.0e-6,
+                cxDotX: 0.0, cxDotY: 0.0, cxDotZ: 0.0, cxDotXDot: 1.0e-9,
+                cyDotX: 0.0, cyDotY: 0.0, cyDotZ: 0.0, cyDotXDot: 0.0, cyDotYDot: 1.0e-9,
+                czDotX: 0.0, czDotY: 0.0, czDotZ: 0.0, czDotXDot: 0.0, czDotYDot: 0.0, czDotZDot: 1.0e-9,
+                referenceFrame: "RTN"); // Different from metadata reference frame (ICRF)
+            var data = new OpmData(stateVector, covariance: covariance);
+            var opm = new Opm(header, metadata, data);
+
+            var result = opm.Validate();
+
+            // Should be valid but have a warning
+            Assert.True(result.IsValid);
+            Assert.True(result.WarningCount > 0);
+            Assert.Contains(result.Warnings, w => w.Message.Contains("Covariance reference frame"));
+        }
+
+        [Fact]
+        public void Validate_CovarianceFrameMatch_NoWarning()
+        {
+            var header = CcsdsHeader.CreateDefault();
+            var metadata = new OpmMetadata("ISS", "1998-067A", "EARTH", "ICRF", "UTC");
+            var stateVector = new OpmStateVector(_testEpoch, 6778.137, 0.0, 0.0, 0.0, 7.5, 0.0);
+            var covariance = new CovarianceMatrix(
+                cxX: 1.0e-6,
+                cyX: 0.0, cyY: 1.0e-6,
+                czX: 0.0, czY: 0.0, czZ: 1.0e-6,
+                cxDotX: 0.0, cxDotY: 0.0, cxDotZ: 0.0, cxDotXDot: 1.0e-9,
+                cyDotX: 0.0, cyDotY: 0.0, cyDotZ: 0.0, cyDotXDot: 0.0, cyDotYDot: 1.0e-9,
+                czDotX: 0.0, czDotY: 0.0, czDotZ: 0.0, czDotXDot: 0.0, czDotYDot: 0.0, czDotZDot: 1.0e-9,
+                referenceFrame: "ICRF"); // Same as metadata reference frame
+            var data = new OpmData(stateVector, covariance: covariance);
+            var opm = new Opm(header, metadata, data);
+
+            var result = opm.Validate();
+
+            // Should be valid with no covariance frame warnings
+            Assert.True(result.IsValid);
+            Assert.DoesNotContain(result.Warnings, w => w.Message.Contains("Covariance reference frame"));
         }
 
         #endregion

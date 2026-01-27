@@ -78,17 +78,70 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
         #region Validation Tests
 
         [Fact]
-        public void CreateWithTrueAnomaly_NegativeSemiMajorAxis_ThrowsArgumentOutOfRangeException()
+        public void CreateWithTrueAnomaly_NegativeSemiMajorAxis_EllipticalOrbit_ThrowsArgumentOutOfRangeException()
         {
+            // For elliptical orbits (e < 1), semi-major axis must be positive
             Assert.Throws<ArgumentOutOfRangeException>(() =>
-                OpmKeplerianElements.CreateWithTrueAnomaly(-6778.137, 0.0001, 51.6, 120.0, 90.0, 45.0, 398600.4418));
+                OpmKeplerianElements.CreateWithTrueAnomaly(-6778.137, 0.5, 51.6, 120.0, 90.0, 45.0, 398600.4418));
         }
 
         [Fact]
-        public void CreateWithTrueAnomaly_ZeroSemiMajorAxis_ThrowsArgumentOutOfRangeException()
+        public void CreateWithTrueAnomaly_ZeroSemiMajorAxis_EllipticalOrbit_ThrowsArgumentOutOfRangeException()
         {
+            // For elliptical orbits (e < 1), semi-major axis must be positive
             Assert.Throws<ArgumentOutOfRangeException>(() =>
-                OpmKeplerianElements.CreateWithTrueAnomaly(0.0, 0.0001, 51.6, 120.0, 90.0, 45.0, 398600.4418));
+                OpmKeplerianElements.CreateWithTrueAnomaly(0.0, 0.5, 51.6, 120.0, 90.0, 45.0, 398600.4418));
+        }
+
+        [Fact]
+        public void CreateWithTrueAnomaly_HyperbolicOrbit_NegativeSemiMajorAxis_Succeeds()
+        {
+            // For hyperbolic orbits (e > 1), semi-major axis must be negative
+            var kep = OpmKeplerianElements.CreateWithTrueAnomaly(
+                semiMajorAxis: -25000.0,  // Negative for hyperbolic
+                eccentricity: 1.5,         // e > 1 for hyperbolic
+                inclination: 30.0,
+                raan: 45.0,
+                aop: 60.0,
+                trueAnomaly: 90.0,
+                gm: 398600.4418);
+
+            Assert.Equal(-25000.0, kep.SemiMajorAxis, 3);
+            Assert.Equal(1.5, kep.Eccentricity, 6);
+        }
+
+        [Fact]
+        public void CreateWithTrueAnomaly_HyperbolicOrbit_PositiveSemiMajorAxis_ThrowsArgumentOutOfRangeException()
+        {
+            // For hyperbolic orbits (e > 1), semi-major axis must be negative
+            Assert.Throws<ArgumentOutOfRangeException>(() =>
+                OpmKeplerianElements.CreateWithTrueAnomaly(25000.0, 1.5, 51.6, 120.0, 90.0, 45.0, 398600.4418));
+        }
+
+        [Fact]
+        public void CreateWithTrueAnomaly_HyperbolicOrbit_ZeroSemiMajorAxis_ThrowsArgumentOutOfRangeException()
+        {
+            // For hyperbolic orbits (e > 1), semi-major axis must be negative (not zero)
+            Assert.Throws<ArgumentOutOfRangeException>(() =>
+                OpmKeplerianElements.CreateWithTrueAnomaly(0.0, 1.5, 51.6, 120.0, 90.0, 45.0, 398600.4418));
+        }
+
+        [Fact]
+        public void CreateWithMeanAnomaly_HyperbolicOrbit_NegativeSemiMajorAxis_Succeeds()
+        {
+            // For hyperbolic orbits (e > 1), semi-major axis must be negative
+            var kep = OpmKeplerianElements.CreateWithMeanAnomaly(
+                semiMajorAxis: -50000.0,
+                eccentricity: 2.0,
+                inclination: 45.0,
+                raan: 90.0,
+                aop: 180.0,
+                meanAnomaly: 30.0,
+                gm: 398600.4418);
+
+            Assert.Equal(-50000.0, kep.SemiMajorAxis, 3);
+            Assert.Equal(2.0, kep.Eccentricity, 6);
+            Assert.True(kep.UsesMeanAnomaly);
         }
 
         [Fact]

@@ -429,6 +429,17 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// <param name="includeManeuvers">If true, includes executed maneuvers in the OPM.</param>
         /// <returns>A new OPM instance representing this spacecraft's state.</returns>
         /// <exception cref="InvalidOperationException">Thrown when CosparId is not set.</exception>
+        /// <remarks>
+        /// <para>
+        /// Maneuver delta-V components are exported in the same inertial reference frame as the state vector
+        /// (typically ICRF or EME2000). This is the frame in which the framework stores maneuver data.
+        /// </para>
+        /// <para>
+        /// If you need maneuvers in an orbital frame (RSW, RTN, TNW), you must perform the frame transformation
+        /// yourself before or after the OPM export. The OPM standard supports both inertial and orbital frames
+        /// for maneuver representation via the MAN_REF_FRAME field.
+        /// </para>
+        /// </remarks>
         public Opm ToOpm(string originator = null, Time? epoch = null, bool includeKeplerianElements = true, bool includeSpacecraftParameters = true, bool includeManeuvers = true)
         {
             if (string.IsNullOrWhiteSpace(CosparId))

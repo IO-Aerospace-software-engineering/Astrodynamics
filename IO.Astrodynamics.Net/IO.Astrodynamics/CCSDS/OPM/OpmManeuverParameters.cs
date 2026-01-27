@@ -110,7 +110,8 @@ public class OpmManeuverParameters
         if (manDuration < 0)
             throw new ArgumentOutOfRangeException(nameof(manDuration), "Maneuver duration cannot be negative.");
         if (manDeltaMass > 0)
-            throw new ArgumentOutOfRangeException(nameof(manDeltaMass), "Maneuver delta mass must be <= 0 (mass is expelled).");
+            throw new ArgumentOutOfRangeException(nameof(manDeltaMass),
+                "Maneuver delta mass must be non-positive. Use negative values for expelled mass (e.g., -25.0 kg means 25 kg of propellant burned).");
         if (string.IsNullOrWhiteSpace(manRefFrame))
             throw new ArgumentException("Maneuver reference frame is required.", nameof(manRefFrame));
 
