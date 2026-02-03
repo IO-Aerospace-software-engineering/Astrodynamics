@@ -149,7 +149,6 @@ public class LambertSolverTests
     {
         var solver = new LambertSolver();
         var earth = TestHelpers.EarthAtJ2000;
-        var moon = TestHelpers.MoonAtJ2000;
         var arrivalTime = TimeSystem.Time.J2000UTC.AddDays(3);
         var op1 = new StateVector(new Vector3(7000000.0, 0.0, 0.0), new Vector3(0.0, 8000.0, 0.0), earth, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
         var op2 = TestHelpers.MoonAtJ2000.GetEphemeris(arrivalTime, earth, Frames.Frame.ICRF, Aberration.None).ToStateVector();
@@ -162,7 +161,7 @@ public class LambertSolverTests
         Assert.True(zeroRev.V1.Magnitude() > 0);
         Assert.True(zeroRev.V2.Magnitude() > 0);
         Assert.Equal(10612.452251221264, zeroRev.V1.Magnitude(), 0.1);
-        Assert.Equal(836.56102104630997, zeroRev.V2.Magnitude(), 0.1);
+        Assert.Equal(836.11866771492487, zeroRev.V2.Magnitude(), 0.1);
 
         var spcSV1 = new StateVector(new Vector3(7000000.0, 0.0, 0.0), zeroRev.V1, earth, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
         var spcSVAtAfter3Days = spcSV1.AtEpoch(arrivalTime).ToStateVector();
@@ -187,7 +186,7 @@ public class LambertSolverTests
         Assert.True(zeroRev.V1.Magnitude() > 0);
         Assert.True(zeroRev.V2.Magnitude() > 0);
         Assert.Equal(10612.331907535654, zeroRev.V1.Magnitude(), 0.1);
-        Assert.Equal(835.03297730216718, zeroRev.V2.Magnitude(), 0.1);
+        Assert.Equal(834.59136063948517, zeroRev.V2.Magnitude(), 0.1);
 
         var spcSV1 = new StateVector(new Vector3(7000000.0, 0.0, 0.0), zeroRev.V1, earth, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
         var spcSVAtAfter3Days = spcSV1.AtEpoch(arrivalTime).ToStateVector();

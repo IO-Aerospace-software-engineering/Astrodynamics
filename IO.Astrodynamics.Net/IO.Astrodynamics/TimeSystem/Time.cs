@@ -140,7 +140,15 @@ public readonly record struct Time : IComparable<Time>, IComparable
 
     public static TimeSpan operator -(Time left, Time right)
     {
-        return left.DateTime.Subtract(right.DateTime);
+        if (left.Frame.Equals(right.Frame))
+        {
+            return left.DateTime.Subtract(right.DateTime);
+        }
+        // Convert both times to TAI to ensure correct physical time difference
+        // when the times are in different frames (e.g., UTC vs TDB)
+        var leftTai = left.ToTAI();
+        var rightTai = right.ToTAI();
+        return leftTai.DateTime.Subtract(rightTai.DateTime);
     }
 
     public Time ConvertTo(ITimeFrame targetReference)
@@ -250,7 +258,6 @@ public readonly record struct Time : IComparable<Time>, IComparable
     /// <summary>
     /// Convert to julian date
     /// </summary>
-    /// <param name="date"></param>
     /// <returns></returns>
     public double ToJulianDate()
     {
@@ -282,7 +289,15 @@ public readonly record struct Time : IComparable<Time>, IComparable
 
     public int CompareTo(Time other)
     {
-        return DateTime.CompareTo(other.DateTime);
+        // Convert both times to TAI to ensure correct physical time comparison
+        // when the times are in different frames (e.g., UTC vs TDB)
+        if (this.Frame.Equals(other.Frame))
+        {
+            return this.DateTime.CompareTo(other.DateTime);
+        }
+        var thisTai = this.ToTAI();
+        var otherTai = other.ToTAI();
+        return thisTai.DateTime.CompareTo(otherTai.DateTime);
     }
 
     public int CompareTo(object obj)
