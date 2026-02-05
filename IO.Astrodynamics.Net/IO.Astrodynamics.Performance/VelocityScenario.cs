@@ -27,12 +27,9 @@ namespace IO.Astrodynamics.Performance;
 public class VelocityScenario
 {
     private readonly GeopotentialGravitationalField _geopotential;
-    private readonly SolarRadiationPressure _srp;
-    private readonly AtmosphericDrag _atm;
     private readonly CelestialBody _earth;
     private readonly CelestialBody _sun;
     private readonly CelestialBody _moon;
-    private readonly VVIntegrator _integrator;
     private readonly Propagator.SpacecraftPropagator _spacecraftPropagator;
     // IO.Astrodynamics.Tests.Mission.ScenarioTests _scenario = new IO.Astrodynamics.Tests.Mission.ScenarioTests();
 
@@ -77,20 +74,20 @@ public class VelocityScenario
     }
 
     // [Benchmark(Description = "Solar radiation pressure")]
-    public void SRP()
-    {
-        var sv = new StateVector(new Vector3(6800000.0 - Random.Shared.NextDouble(), 0.0, 0.0), new Vector3(0.0, 8000.0 - Random.Shared.NextDouble(), 0.0), _earth,
-            TimeSystem.Time.J2000TDB, Frame.ICRF);
-        var res = _srp.Apply(sv);
-    }
+    // public void SRP()
+    // {
+    //     var sv = new StateVector(new Vector3(6800000.0 - Random.Shared.NextDouble(), 0.0, 0.0), new Vector3(0.0, 8000.0 - Random.Shared.NextDouble(), 0.0), _earth,
+    //         TimeSystem.Time.J2000TDB, Frame.ICRF);
+    //     var res = _srp.Apply(sv);
+    // }
 
     // [Benchmark(Description = "Atmospheric drag")]
-    public void AtmosphericDrag()
-    {
-        var sv = new StateVector(new Vector3(6800000.0 - Random.Shared.NextDouble(), 0.0, 0.0), new Vector3(0.0, 8000.0 - Random.Shared.NextDouble(), 0.0), _earth,
-            TimeSystem.Time.J2000TDB, Frame.ICRF);
-        var res = _atm.Apply(sv);
-    }
+    // public void AtmosphericDrag()
+    // {
+    //     var sv = new StateVector(new Vector3(6800000.0 - Random.Shared.NextDouble(), 0.0, 0.0), new Vector3(0.0, 8000.0 - Random.Shared.NextDouble(), 0.0), _earth,
+    //         TimeSystem.Time.J2000TDB, Frame.ICRF);
+    //     var res = _atm.Apply(sv);
+    // }
 
 
     // [Benchmark(Description = "VV integrator")]

@@ -80,8 +80,6 @@ public class LambertSolverTests
         var zeroRev = result.GetZeroRevolutionSolution();
         Assert.NotNull(zeroRev);
         Assert.Equal(0u, zeroRev.Revolutions);
-        Assert.NotNull(zeroRev.V1);
-        Assert.NotNull(zeroRev.V2);
     }
 
     [Theory]

@@ -69,11 +69,12 @@ public abstract class PDSBase<T> where T : class
     }
 
     /// <summary>
-    /// Generate xml data from pds entity 
+    /// Generate xml data from pds entity
     /// </summary>
     /// <param name="pdsEntity"></param>
     /// <returns></returns>
     [RequiresUnreferencedCode("The caller of this method may require access to all members of the target type.")]
+    [RequiresDynamicCode("XML serialization requires dynamic code generation")]
     public string GenerateArchive(T pdsEntity)
     {
         XmlSerializer serializer = new XmlSerializer(typeof(T));
@@ -89,6 +90,7 @@ public abstract class PDSBase<T> where T : class
     /// <returns></returns>
     /// <exception cref="ArgumentException"></exception>
     [RequiresUnreferencedCode("The caller of this method may require access to all members of the target type.")]
+    [RequiresDynamicCode("XML serialization requires dynamic code generation")]
     public T LoadArchive(FileInfo file)
     {
         XmlSerializer xmlSerializer = new XmlSerializer(typeof(T));

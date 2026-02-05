@@ -184,7 +184,7 @@ public class TimeTests
     }
 
     [Fact]
-    public void Exceptions()
+    public async Task Exceptions()
     {
         lock (Configuration.objLock)
         {
@@ -192,18 +192,15 @@ public class TimeTests
             StringBuilder sb = new StringBuilder();
             StringWriter sw = new StringWriter(sb);
             Console.SetOut(sw);
-            Assert.ThrowsAsync<ArgumentException>(() => command.TimeConverter(new EpochParameters { Epoch = "2020-01-01T12:00:00Z" }, false, false, false, true, false, true))
-                .Wait();
-            Assert.ThrowsAsync<ArgumentException>(() => command.TimeConverter(new EpochParameters { Epoch = "2020-01-01T12:00:00Z" }, true, true, false, true, false, true)).Wait();
-            Assert.ThrowsAsync<ArgumentException>(() => command.TimeConverter(new EpochParameters { Epoch = "2020-01-01T12:00:00Z" }, true, false, false, false, false, false))
-                .Wait();
-            Assert.ThrowsAsync<ArgumentException>(() => command.TimeConverter(new EpochParameters { Epoch = "2020-01-01T12:00:00Z" }, true, false, false, true, true, false))
-                .Wait();
-            Assert.ThrowsAsync<ArgumentException>(() => command.TimeConverter(new EpochParameters { Epoch = "2020-01-01T12:00:00Z" }, true, false, false, true, false, true))
-                .Wait();
-            Assert.ThrowsAsync<ArgumentException>(() => command.TimeConverter(new EpochParameters { Epoch = "2020-01-01T12:00:00Z" }, true, false, false, false, true, true))
-                .Wait();
         }
+
+        var command2 = new TimeConverterCommand();
+        await Assert.ThrowsAsync<ArgumentException>(() => command2.TimeConverter(new EpochParameters { Epoch = "2020-01-01T12:00:00Z" }, false, false, false, true, false, true));
+        await Assert.ThrowsAsync<ArgumentException>(() => command2.TimeConverter(new EpochParameters { Epoch = "2020-01-01T12:00:00Z" }, true, true, false, true, false, true));
+        await Assert.ThrowsAsync<ArgumentException>(() => command2.TimeConverter(new EpochParameters { Epoch = "2020-01-01T12:00:00Z" }, true, false, false, false, false, false));
+        await Assert.ThrowsAsync<ArgumentException>(() => command2.TimeConverter(new EpochParameters { Epoch = "2020-01-01T12:00:00Z" }, true, false, false, true, true, false));
+        await Assert.ThrowsAsync<ArgumentException>(() => command2.TimeConverter(new EpochParameters { Epoch = "2020-01-01T12:00:00Z" }, true, false, false, true, false, true));
+        await Assert.ThrowsAsync<ArgumentException>(() => command2.TimeConverter(new EpochParameters { Epoch = "2020-01-01T12:00:00Z" }, true, false, false, false, true, true));
     }
 
     [Fact]

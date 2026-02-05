@@ -44,7 +44,7 @@ public record SpaceWeather
     /// Contains Ap indices at various time intervals before current time.
     /// If null, uses default quiet conditions (all values = 4.0).
     /// </remarks>
-    public ApArray? ApArray { get; init; }
+    public ApArray ApArray { get; init; }
 
     /// <summary>
     /// Creates space weather data representing nominal quiet conditions (solar minimum).

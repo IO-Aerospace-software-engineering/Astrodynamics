@@ -167,44 +167,38 @@ public class OrbitalParametersTests
     }
 
     [Fact]
-    public void Exceptions()
+    public async Task Exceptions()
     {
-        lock (Configuration.objLock)
-        {
-            var command = new OrbitalParametersConverterCommand();
-            StringBuilder sb = new StringBuilder();
-            StringWriter sw = new StringWriter(sb);
-            Console.SetOut(sw);
-            Assert.ThrowsAsync<ArgumentException>(() =>
-                command.Converter("Data", new Commands.Parameters.OrbitalParameters
-                {
-                    OrbitalParametersValues = "6800000.0 0.0 0.0 0.0 7000.0 0.0", CenterOfMotionId = 10, OrbitalParametersEpoch = "0.0", Frame = "ICRF",
-                    FromStateVector = true,
-                    FromKeplerian = true, FromEquinoctial = false, FromTLE = false
-                }, true, false, false, new EpochParameters())).Wait();
-            Assert.ThrowsAsync<ArgumentException>(() =>
-                command.Converter("Data", new Commands.Parameters.OrbitalParameters
-                {
-                    OrbitalParametersValues = "6800000.0 0.0 0.0 0.0 7000.0 0.0", CenterOfMotionId = 10, OrbitalParametersEpoch = "0.0", Frame = "ICRF",
-                    FromStateVector = false,
-                    FromKeplerian = false, FromEquinoctial = false, FromTLE = false
-                }, true, false, false, new EpochParameters())).Wait();
-            Assert.ThrowsAsync<ArgumentException>(() =>
-                command.Converter("Data", new Commands.Parameters.OrbitalParameters
-                {
-                    OrbitalParametersValues = "6800000.0 0.0 0.0 0.0 7000.0 0.0", CenterOfMotionId = 10, OrbitalParametersEpoch = "0.0",
-                    Frame = "ICRF",
-                    FromStateVector = true,
-                    FromKeplerian = false, FromEquinoctial = false, FromTLE = false
-                }, false, false, false, new EpochParameters())).Wait();
-            Assert.ThrowsAsync<ArgumentException>(() =>
-                command.Converter("Data", new Commands.Parameters.OrbitalParameters
-                {
-                    OrbitalParametersValues = "6800000.0 0.0 0.0 0.0 7000.0 0.0", CenterOfMotionId = 10, OrbitalParametersEpoch = "0.0",
-                    Frame = "ICRF",
-                    FromStateVector = true,
-                    FromKeplerian = false, FromEquinoctial = false, FromTLE = false
-                }, true, true, false, new EpochParameters())).Wait();
-        }
+        var command = new OrbitalParametersConverterCommand();
+        await Assert.ThrowsAsync<ArgumentException>(() =>
+            command.Converter("Data", new Commands.Parameters.OrbitalParameters
+            {
+                OrbitalParametersValues = "6800000.0 0.0 0.0 0.0 7000.0 0.0", CenterOfMotionId = 10, OrbitalParametersEpoch = "0.0", Frame = "ICRF",
+                FromStateVector = true,
+                FromKeplerian = true, FromEquinoctial = false, FromTLE = false
+            }, true, false, false, new EpochParameters()));
+        await Assert.ThrowsAsync<ArgumentException>(() =>
+            command.Converter("Data", new Commands.Parameters.OrbitalParameters
+            {
+                OrbitalParametersValues = "6800000.0 0.0 0.0 0.0 7000.0 0.0", CenterOfMotionId = 10, OrbitalParametersEpoch = "0.0", Frame = "ICRF",
+                FromStateVector = false,
+                FromKeplerian = false, FromEquinoctial = false, FromTLE = false
+            }, true, false, false, new EpochParameters()));
+        await Assert.ThrowsAsync<ArgumentException>(() =>
+            command.Converter("Data", new Commands.Parameters.OrbitalParameters
+            {
+                OrbitalParametersValues = "6800000.0 0.0 0.0 0.0 7000.0 0.0", CenterOfMotionId = 10, OrbitalParametersEpoch = "0.0",
+                Frame = "ICRF",
+                FromStateVector = true,
+                FromKeplerian = false, FromEquinoctial = false, FromTLE = false
+            }, false, false, false, new EpochParameters()));
+        await Assert.ThrowsAsync<ArgumentException>(() =>
+            command.Converter("Data", new Commands.Parameters.OrbitalParameters
+            {
+                OrbitalParametersValues = "6800000.0 0.0 0.0 0.0 7000.0 0.0", CenterOfMotionId = 10, OrbitalParametersEpoch = "0.0",
+                Frame = "ICRF",
+                FromStateVector = true,
+                FromKeplerian = false, FromEquinoctial = false, FromTLE = false
+            }, true, true, false, new EpochParameters()));
     }
 }

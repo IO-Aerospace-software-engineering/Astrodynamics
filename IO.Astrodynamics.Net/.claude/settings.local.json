@@ -30,7 +30,8 @@
       "WebFetch(domain:skuld.bmsc.washington.edu)",
       "WebFetch(domain:en.wikipedia.org)",
       "WebFetch(domain:johannesbuchner.github.io)",
-      "WebFetch(domain:www.scratchapixel.com)"
+      "WebFetch(domain:www.scratchapixel.com)",
+      "Bash(tee:*)"
     ],
     "deny": [],
     "ask": []

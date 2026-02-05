@@ -7,7 +7,8 @@
         <Company>IO</Company>
         <LangVersion>12</LangVersion>
         <TargetFrameworks>net8.0;net10.0</TargetFrameworks>
-        
+        <!-- Suppress CS8981 for auto-generated PDS model classes with lowercase type names -->
+        <NoWarn>$(NoWarn);CS8981</NoWarn>
     </PropertyGroup>
     <PropertyGroup>
         <IsAotCompatible Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net7.0'))">true</IsAotCompatible>
