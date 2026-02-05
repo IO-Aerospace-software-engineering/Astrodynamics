@@ -74,7 +74,7 @@ public class OrbitalParametersTests
             var res = sb.ToString();
 
             Assert.Equal(
-                $"Epoch : 2000-01-01T12:00:00.0000000 TDB A : 149665479719.88266 Ecc. : 0.017121683001766336 Inc. : 0.4090876369492606 AN : 1.2954252300503235E-05 AOP : 1.776884894312699 M : 6.259056257481824 Frame : J2000{Environment.NewLine}",
+                $"Epoch : 2000-01-01T12:00:00.0000000 TDB A : 149665479719.88266, Ecc. : 0.017121683001766336, Inc. : 0.4090876369492606, AN : 1.2954252300503235E-05, AOP : 1.776884894312699, M : 6.259056257481824, Frame : J2000{Environment.NewLine}",
                 res);
         }
     }
@@ -161,7 +161,7 @@ public class OrbitalParametersTests
             var res = sb.ToString();
 
             Assert.Equal(
-                $"Epoch : 2000-01-01T13:00:00.0000000 TDB A : 6800803.544958167 Ecc. : 0.001353139738203394 Inc. : 0.9026706683232326 AN : 0.5685593860871466 AOP : 1.85454203659022 M : 4.845168091449668 Frame : J2000{Environment.NewLine}",
+                $"Epoch : 2000-01-01T13:00:00.0000000 TDB A : 6800803.544958167, Ecc. : 0.001353139738203394, Inc. : 0.9026706683232326, AN : 0.5685593860871466, AOP : 1.85454203659022, M : 4.845168091449668, Frame : J2000{Environment.NewLine}",
                 res);
         }
     }
