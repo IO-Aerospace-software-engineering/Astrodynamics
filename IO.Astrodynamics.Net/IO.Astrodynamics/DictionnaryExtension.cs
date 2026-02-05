@@ -8,14 +8,26 @@ namespace IO.Astrodynamics;
 
 public static class DictionnaryExtension
 {
-    public static TU GetOrAdd<T,TU>(this IDictionary<T, TU> dictionary, in T key,Func<T,TU> add)
+    private static readonly object _lock = new object();
+    
+    public static TU GetOrAdd<T,TU>(this IDictionary<T, TU> dictionary, in T key, Func<T,TU> add)
     {
-        if(dictionary.TryGetValue(key, out var value))
+        // For ConcurrentDictionary, use its built-in thread-safe GetOrAdd
+        if (dictionary is ConcurrentDictionary<T, TU> concurrentDict)
         {
-            return value;
+            return concurrentDict.GetOrAdd(key, add);
         }
-        var newValue = add(key);
-        dictionary[key] = newValue;
-        return newValue;
+        
+        // For other dictionaries, use locking to ensure thread-safety
+        lock (_lock)
+        {
+            if (dictionary.TryGetValue(key, out var value))
+            {
+                return value;
+            }
+            var newValue = add(key);
+            dictionary[key] = newValue;
+            return newValue;
+        }
     }
 }
