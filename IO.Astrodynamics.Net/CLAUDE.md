@@ -68,7 +68,7 @@ dotnet tool install --global --add-source ./IO.Astrodynamics.CLI/bin/Debug IO.As
 - `IO.Astrodynamics.OrbitalParameters.TLE`: Two-Line Element sets and OMM support
 - `IO.Astrodynamics.CCSDS.OMM`: CCSDS Orbit Mean-elements Message support (read/write/validate/convert)
 - `IO.Astrodynamics.CCSDS.OPM`: CCSDS Orbit Parameter Message support (read/write/validate/convert)
-- `IO.Astrodynamics.Maneuver`: Lambert solvers, launch windows, maneuver planning
+- `IO.Astrodynamics.Maneuver`: Lambert solvers, launch windows, maneuver planning, attitude maneuvers
 - `IO.Astrodynamics.Frames`: Reference frames and transformations
 - `IO.Astrodynamics.TimeSystem`: Time frames (UTC, TDB, TAI, etc.)
 - `IO.Astrodynamics.Propagator`: Orbital propagation and integration
@@ -399,6 +399,102 @@ var atm = earth.GetAtmosphere(context);  // Uses NRLMSISE-00 automatically
 - Use `CelestialBody.GetAtmosphere(context)` with full context for automatic NRLMSISE-00 selection
 - Use `MarsStandardAtmosphere` for preliminary Mars mission analysis
 
+### Attitude Maneuvers
+
+The framework provides a family of attitude maneuvers for spacecraft orientation control. All inherit from the abstract `Attitude` base class.
+
+**Available Attitude Maneuvers**
+- `NadirAttitude`: Points toward nadir (center of central body)
+- `ZenithAttitude`: Points toward zenith (away from central body)
+- `ProgradeAttitude`: Velocity-direction pointing
+- `RetrogradeAttitude`: Anti-velocity pointing
+- `InstrumentPointingToAttitude`: Single-vector instrument pointing at a target
+- `TriadAttitude`: Two-vector fully-constrained attitude (eliminates roll ambiguity)
+
+**TRIAD Attitude Determination**
+
+The `TriadAttitude` class implements the TRIAD algorithm for fully-constrained 3-DOF attitude determination using two non-collinear observation vectors. Unlike single-vector pointing (which leaves roll unconstrained), TRIAD provides a unique, unambiguous spacecraft orientation.
+
+**Key Concepts**
+- **Primary constraint**: Aligns a spacecraft body vector with the direction to a primary target
+- **Secondary constraint**: Constrains roll by orienting a secondary body vector toward a secondary target (as much as possible while maintaining primary constraint)
+- **Minimum vector separation**: Default 5 degrees; prevents numerical instability from near-collinear vectors
+
+**Spacecraft Body Frame Convention**
+- Front (+Y): `Spacecraft.Front`
+- Right (+X): `Spacecraft.Right`
+- Up (+Z): `Spacecraft.Up`
+- Down (-Z): `Spacecraft.Down`
+
+**Constructor Options**
+
+1. **Single Instrument**: Uses instrument's boresight (primary) and refVector (secondary)
+```csharp
+// Point camera boresight at Earth, constrain roll using camera refVector toward Sun
+var attitude = new TriadAttitude(
+    minimumEpoch, holdDuration,
+    camera, earth, sun,  // instrument, primaryTarget, secondaryTarget
+    engine);
+```
+
+2. **Dual Instruments**: Different instruments for primary and secondary pointing
+```csharp
+// Point nadir camera at Earth, star tracker at reference star
+var attitude = new TriadAttitude(
+    minimumEpoch, holdDuration,
+    nadirCamera, earth,
+    starTracker, referenceStar,
+    engine);
+```
+
+3. **Explicit Body Vectors**: Direct spacecraft frame vectors
+```csharp
+// Point spacecraft Front at Moon, keep Up toward Sun
+var attitude = new TriadAttitude(
+    minimumEpoch, holdDuration,
+    Spacecraft.Front, moon,
+    Spacecraft.Up, sun,
+    engine);
+```
+
+**Use Case Examples**
+
+*Earth Observation with Sun Tracking*
+```csharp
+// Keep nadir sensor pointed at Earth while orienting solar panels toward Sun
+var earthObservation = new TriadAttitude(
+    epoch, TimeSpan.FromMinutes(30),
+    Spacecraft.Down, earth,    // Primary: nadir pointing
+    Spacecraft.Up, sun,        // Secondary: solar panel toward Sun
+    engine);
+```
+
+*Instrument Pointing with Roll Constraint*
+```csharp
+// Point telescope at target star, constrain roll using reference star
+var observation = new TriadAttitude(
+    epoch, TimeSpan.FromHours(2),
+    telescope, targetStar,
+    rollSensor, referenceStar,
+    engine);
+```
+
+**Instrument Enhancements**
+
+The `Instrument` class now provides:
+- `GetBoresightInSpacecraftFrame()`: Returns instrument boresight vector in spacecraft body frame
+- `GetRefVectorInSpacecraftFrame()`: Returns instrument reference vector in spacecraft body frame (new in this release)
+
+Both methods transform the instrument-frame vectors to the spacecraft body frame, enabling direct use with TRIAD constructors.
+
+**Matrix Utility**
+
+The `Matrix` class includes a new static method for attitude computation:
+```csharp
+// Create 3x3 matrix from column vectors (used in TRIAD algorithm)
+var rotationMatrix = Matrix.FromColumnVectors(col0, col1, col2);
+```
+
 ### Testing Approach
 
 All test classes load SPICE kernels in constructor:
@@ -432,6 +528,12 @@ Test data files are in `Data/SolarSystem/` and copied to output directory.
    - Unit conversions (km↔m, deg↔rad) are automatic
    - Maneuver conversion is one-way: Spacecraft→OPM (OPM maneuvers are archival only)
    - User-defined parameters support custom mission-specific data
+9. **Attitude Maneuvers**: When implementing attitude control:
+   - Use `TriadAttitude` for fully-constrained orientation (eliminates roll ambiguity)
+   - Use single-vector attitudes (`NadirAttitude`, `InstrumentPointingToAttitude`) only when roll is unconstrained
+   - Ensure body vectors and reference vectors are not collinear (minimum 5 degrees separation)
+   - Use `Spacecraft.Front`, `Spacecraft.Up`, etc. for standard body frame directions
+   - Use `Instrument.GetBoresightInSpacecraftFrame()` and `GetRefVectorInSpacecraftFrame()` for instrument-based pointing
 
 ## Code Quality Standards
 

@@ -31,7 +31,7 @@ Important: The C++ layer is feature-frozen and exists only for communication wit
 - Frames and coordinates: ICRF/J2000, Ecliptic (J2000/B1950), TEME, Galactic, FK4, body-fixed/ITRF93, Equatorial/Horizontal/Planetodetic/Planetographic
 - Spacecraft configuration: clocks, fuel tanks, engines, instruments
 - Impulsive maneuvers: Lambert transfers, apogee/perigee height changes, plane/apsidal alignment, phasing, combined maneuvers
-- Attitudes: instrument pointing, nadir/zenith, prograde/retrograde
+- Attitudes: instrument pointing, nadir/zenith, prograde/retrograde, TRIAD (fully-constrained 3-DOF)
 - Time systems: Calendar, Julian, TDB, UTC, local; conversions included
 - Event finding: distance, occultation, coordinate, illumination constraints; instrument field-of-view windows
 - Kernel management utilities
@@ -160,8 +160,26 @@ Sponsor: https://github.com/sponsors/IO-Aerospace-software-engineering
 - Please read CONTRIBUTING.md and follow the code of conduct.
 
 
+## Disclaimer
+
+**THIS SOFTWARE IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND.**
+
+IO.Astrodynamics is distributed under the GNU Lesser General Public License v2.1 (LGPL-2.1). By using this software, you acknowledge and agree that:
+
+- The software is provided without any warranty, express or implied, including but not limited to the implied warranties of merchantability and fitness for a particular purpose
+- The authors and contributors are not liable for any damages, losses, or consequences arising from the use or inability to use this software
+- **Users are solely responsible for validating all results** before use in any application
+- This software is **NOT certified for flight-critical, safety-critical, or life-critical applications**
+- Independent verification and validation (IV&V) is required before use in operational mission planning or spacecraft operations
+- Results should be cross-checked against authoritative sources (e.g., JPL Horizons, STK, GMAT) for critical applications
+
+The algorithms implemented are based on publicly available literature and the NAIF SPICE toolkit. While we strive for accuracy, computational results may contain errors. **You assume all risk** associated with using this software.
+
+See the [LICENSE](LICENSE) file for complete terms.
+
+
 ## License and acknowledgments
 
-- License: See LICENSE
+- License: LGPL-2.1 (see LICENSE)
 - Security: See SECURITY.md
 - Built on NASA/JPL NAIF SPICE. SPICE is developed by the Navigation and Ancillary Information Facility (NAIF) at JPL.

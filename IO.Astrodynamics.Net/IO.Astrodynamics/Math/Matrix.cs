@@ -557,4 +557,26 @@ public readonly record struct Matrix
         }
         return true;
     }
+
+    /// <summary>
+    /// Creates a 3x3 matrix from three column vectors.
+    /// </summary>
+    /// <param name="col0">The first column vector.</param>
+    /// <param name="col1">The second column vector.</param>
+    /// <param name="col2">The third column vector.</param>
+    /// <returns>A 3x3 matrix with the specified column vectors.</returns>
+    public static Matrix FromColumnVectors(Vector3 col0, Vector3 col1, Vector3 col2)
+    {
+        var m = new Matrix(3, 3);
+        m.Set(0, 0, col0.X);
+        m.Set(1, 0, col0.Y);
+        m.Set(2, 0, col0.Z);
+        m.Set(0, 1, col1.X);
+        m.Set(1, 1, col1.Y);
+        m.Set(2, 1, col1.Z);
+        m.Set(0, 2, col2.X);
+        m.Set(1, 2, col2.Y);
+        m.Set(2, 2, col2.Z);
+        return m;
+    }
 }
