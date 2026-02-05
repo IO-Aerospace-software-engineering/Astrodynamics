@@ -206,7 +206,9 @@ public class TimeTests
     [Fact]
     public void Compare()
     {
-        Assert.Equal(0, Time.J2000TDB.CompareTo(Time.J2000UTC));
+        // J2000TDB and J2000UTC represent the same calendar date but different physical instants
+        // When converted to TAI, they differ, so they are not equal
+        Assert.Equal(-1, Time.J2000TDB.CompareTo(Time.J2000UTC));
         Assert.Equal(0, Time.J2000TDB.CompareTo(Time.J2000TDB));
         Assert.Equal(1, Time.J2000TDB.CompareTo(Time.J2000TDB.AddMonths(-1)));
         Assert.Equal(1, Time.J2000TDB.CompareTo(Time.J2000TDB.AddMilliseconds(-1)));
