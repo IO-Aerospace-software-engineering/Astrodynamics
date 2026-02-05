@@ -1380,7 +1380,33 @@ Base class for orbital maneuvers.
 - `RetrogradeAttitude`: Orient opposite to velocity
 - `ZenithAttitude`: Orient away from central body
 - `NadirAttitude`: Orient toward central body
-- `InstrumentPointingAttitude`: Point instrument at target
+- `InstrumentPointingAttitude`: Point instrument at target (single-vector, roll unconstrained)
+- `TriadAttitude`: Fully-constrained 3-DOF attitude using TRIAD algorithm (eliminates roll ambiguity)
+
+**TRIAD Attitude Determination**
+
+The `TriadAttitude` class uses two non-collinear observation vectors to fully constrain spacecraft attitude. Unlike single-vector pointing, TRIAD eliminates roll ambiguity by constraining all three degrees of freedom.
+
+```csharp
+// Point spacecraft Front at Moon, keep Up toward Sun
+var attitude = new TriadAttitude(
+    minimumEpoch, TimeSpan.FromMinutes(30),
+    Spacecraft.Front, moon,    // Primary: Front points at Moon
+    Spacecraft.Up, sun,        // Secondary: Up toward Sun (roll constraint)
+    engine);
+
+// Using instruments
+var attitude = new TriadAttitude(
+    minimumEpoch, holdDuration,
+    camera,                    // Uses camera boresight (primary) and refVector (secondary)
+    earth, sun,                // Primary target, secondary target
+    engine);
+```
+
+Key features:
+- Minimum 5-degree separation required between body vectors and reference vectors
+- Uses spacecraft body frame: Front (+Y), Right (+X), Up (+Z)
+- Three constructor overloads: single instrument, dual instruments, explicit vectors
 
 #### Impulse maneuvers
 
@@ -2486,12 +2512,107 @@ await scenario.SimulateAsync(false, false, TimeSpan.FromSeconds(1.0));
 Console.WriteLine($"Pointing maneuver executed at: {pointingManeuver.ManeuverWindow?.StartDate}");
 ```
 
+### TRIAD Attitude for Multi-Target Pointing
+
+Use TRIAD attitude when you need fully-constrained orientation (e.g., pointing at target while maintaining solar panel alignment):
+
+```csharp
+using IO.Astrodynamics.Maneuver;
+
+var earth = PlanetsAndMoons.EARTH_BODY;
+var sun = PlanetsAndMoons.SUN;
+var start = new Time(2024, 6, 21, 12, 0, 0);
+var end = start.AddHours(2);
+
+var mission = new Mission("ObservationMission");
+var scenario = new Scenario("DualPointing", mission, new Window(start, end));
+scenario.AddCelestialItem(earth);
+scenario.AddCelestialItem(sun);
+
+// Create spacecraft in LEO
+var orbit = new KeplerianElements(
+    6778000.0, 0.001, 51.6 * Constants.Deg2Rad, 0.0, 0.0, 0.0,
+    earth, start, Frames.Frame.ICRF
+);
+
+var clock = new Clock("Clock", 256);
+var spacecraft = new Spacecraft(-500, "Observer", 500.0, 1000.0, clock, orbit);
+
+// Add Earth observation camera (points down via boresight)
+spacecraft.AddCircularInstrument(-500100, "EarthCam", "NadirCamera",
+    0.5, -Vector3.VectorZ, Vector3.VectorY, Vector3.Zero);  // Boresight: -Z (nadir), refVector: +Y
+
+// Add propulsion
+var tank = new FuelTank("Tank1", "Model", "SN1", 100.0, 100.0);
+var engine = new Engine("Engine1", "Model", "SN1", 220, 10.0, tank);
+spacecraft.AddFuelTank(tank);
+spacecraft.AddEngine(engine);
+
+scenario.AddSpacecraft(spacecraft);
+
+// Configure TRIAD attitude:
+// - Primary: Spacecraft Down (-Z) points at Earth (nadir)
+// - Secondary: Spacecraft Up (+Z) oriented toward Sun (for solar panels)
+var triadManeuver = new TriadAttitude(
+    start,                          // Start time
+    TimeSpan.FromHours(1.5),        // Hold duration
+    Spacecraft.Down, earth,         // Primary constraint: nadir pointing
+    Spacecraft.Up, sun,             // Secondary constraint: solar panel toward Sun
+    engine
+);
+
+spacecraft.SetStandbyManeuver(triadManeuver);
+
+// Simulate with high time resolution for attitude dynamics
+await scenario.SimulateAsync(false, false, TimeSpan.FromSeconds(1.0));
+
+Console.WriteLine($"TRIAD maneuver executed at: {triadManeuver.ManeuverWindow?.StartDate}");
+Console.WriteLine("Spacecraft maintains nadir pointing with roll constrained toward Sun");
+```
+
+**When to use TRIAD vs single-vector attitude:**
+- Use `InstrumentPointingToAttitude`, `NadirAttitude`, etc. when roll is unconstrained (simpler, faster)
+- Use `TriadAttitude` when you need specific roll orientation (solar panels, thermal control, dual instruments)
+
+---
+
+## Disclaimer and Validation
+
+**THIS SOFTWARE IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND.**
+
+### Important Notice for Developers
+
+When integrating IO.Astrodynamics into your applications:
+
+1. **Validate all results** - Cross-check computed values against authoritative sources (JPL Horizons, STK, GMAT) before relying on them for critical decisions
+
+2. **Understand limitations** - The software implements standard algorithms but may not account for all perturbations or edge cases relevant to your specific application
+
+3. **Not certified for flight** - This software is NOT certified for flight-critical, safety-critical, or life-critical applications. Independent verification and validation (IV&V) is required before operational use
+
+4. **SPICE kernel quality** - Results depend on the accuracy of loaded SPICE kernels. Ensure you use appropriate, up-to-date kernels for your application
+
+5. **Numerical precision** - Be aware of floating-point precision limits, especially for long propagations or highly elliptical orbits
+
+6. **Time system awareness** - Ensure correct time system usage (UTC, TDB, etc.) as mixing time systems can introduce significant errors
+
+### Recommended Validation Approach
+
+```csharp
+// Example: Validate against JPL Horizons for critical calculations
+var computed = moon.GetEphemeris(epoch, earth, Frame.ICRF, Aberration.None);
+// Compare computed.Position with Horizons data
+// Acceptable tolerance depends on your application requirements
+```
+
+See the [LICENSE](../LICENSE) file for complete warranty disclaimer terms.
+
 ---
 
 ## Version Information
 
 - Framework: .NET 8.0 / .NET 10.0
 - SPICE Toolkit: CSPICE N0067
-- License: LGPL 3.0
+- License: LGPL-2.1
 
-Contact : [contact@io-aerospace.org](contact@io-aerospace.org)
+Contact: [contact@io-aerospace.org](mailto:contact@io-aerospace.org)
