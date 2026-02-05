@@ -1,4 +1,4 @@
-﻿using System;
+﻿﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -22,7 +22,7 @@ namespace IO.Astrodynamics.Surface
         private readonly GeometryFinder _geometryFinder = new GeometryFinder();
         private readonly bool _isFromKernel = false;
 
-        private SortedDictionary<Time, StateVector> _stateVectorsRelativeToICRF = new SortedDictionary<Time, StateVector>();
+        private ConcurrentDictionary<Time, StateVector> _stateVectorsRelativeToICRF = new ConcurrentDictionary<Time, StateVector>();
         public int Id { get; }
         public int NaifId { get; }
         public string Name { get; }

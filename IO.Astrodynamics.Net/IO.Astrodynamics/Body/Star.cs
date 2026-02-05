@@ -1,4 +1,4 @@
-﻿using System;
+﻿﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
@@ -194,7 +194,7 @@ public class Star : CelestialBody
         for (Time epoch = timeWindow.StartDate; epoch <= timeWindow.EndDate; epoch += stepSize)
         {
             var position = GetEquatorialCoordinates(epoch).ToCartesian();
-            _stateVectorsRelativeToICRF.Add(epoch, new StateVector(position, Vector3.Zero, Barycenters.SOLAR_SYSTEM_BARYCENTER, epoch, Frame.ICRF));
+            _stateVectorsRelativeToICRF.TryAdd(epoch, new StateVector(position, Vector3.Zero, Barycenters.SOLAR_SYSTEM_BARYCENTER, epoch, Frame.ICRF));
         }
     }
 }

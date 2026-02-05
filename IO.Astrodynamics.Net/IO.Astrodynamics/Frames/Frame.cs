@@ -18,7 +18,7 @@ public class Frame : IEquatable<Frame>
     public string Name { get; }
     public int? Id { get; }
 
-    protected SortedDictionary<Time, StateOrientation> _stateOrientationsToICRF = new();
+    protected ConcurrentDictionary<Time, StateOrientation> _stateOrientationsToICRF = new();
     protected ImmutableSortedDictionary<Time, StateOrientation> StateOrientationsToICRF => _stateOrientationsToICRF.ToImmutableSortedDictionary();
 
     /// <summary>

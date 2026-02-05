@@ -27,13 +27,40 @@ public class SpacecraftFrame : Frame
     {
         return _stateOrientationsToICRF.GetOrAdd(date, _ =>
         {
-            if (_stateOrientationsToICRF.Count == 0)
+            if (_stateOrientationsToICRF.IsEmpty)
             {
                 return new StateOrientation(Quaternion.Zero, Vector3.Zero, date, ICRF);
             }
 
-            var latestKnown = _stateOrientationsToICRF.OrderBy(x => x.Key).LastOrDefault(x => x.Key < date);
-            return latestKnown.Value is null ? _stateOrientationsToICRF.OrderBy(x => x.Key).First().Value : latestKnown.Value.AtDate(date);
+            // Find the latest known state before the requested date without full sorting
+            StateOrientation latestValue = null;
+            Time latestKey = default;
+            foreach (var kvp in _stateOrientationsToICRF)
+            {
+                if (kvp.Key < date && (latestValue is null || kvp.Key > latestKey))
+                {
+                    latestKey = kvp.Key;
+                    latestValue = kvp.Value;
+                }
+            }
+            
+            if (latestValue is not null)
+            {
+                return latestValue.AtDate(date);
+            }
+            
+            // No state before date, return the earliest one
+            StateOrientation earliest = null;
+            Time earliestKey = default;
+            foreach (var kvp in _stateOrientationsToICRF)
+            {
+                if (earliest is null || kvp.Key < earliestKey)
+                {
+                    earliestKey = kvp.Key;
+                    earliest = kvp.Value;
+                }
+            }
+            return earliest!;
         });
     }
 
@@ -50,6 +77,6 @@ public class SpacecraftFrame : Frame
 
     public void WriteOrientation(FileInfo outputFile, Spacecraft spacecraft)
     {
-        API.Instance.WriteOrientation(outputFile, spacecraft, _stateOrientationsToICRF.Values.ToArray());
+        API.Instance.WriteOrientation(outputFile, spacecraft, _stateOrientationsToICRF.Values.OrderBy(x => x.Epoch).ToArray());
     }
 }

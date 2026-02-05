@@ -21,7 +21,7 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
 {
     private readonly IDataProvider _dataProvider;
 
-    protected readonly SortedDictionary<Time, StateVector> _stateVectorsRelativeToICRF = new();
+    protected readonly ConcurrentDictionary<Time, StateVector> _stateVectorsRelativeToICRF = new();
     public ImmutableSortedDictionary<Time, StateVector> StateVectorsRelativeToICRF => _stateVectorsRelativeToICRF.ToImmutableSortedDictionary();
     protected const int TITLE_WIDTH = 32;
     protected const int VALUE_WIDTH = 32;
@@ -462,7 +462,7 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     /// <param name="outputFile"></param>
     public void WriteEphemeris(FileInfo outputFile)
     {
-        API.Instance.WriteEphemeris(outputFile, this, _stateVectorsRelativeToICRF.Values.ToArray());
+        API.Instance.WriteEphemeris(outputFile, this, _stateVectorsRelativeToICRF.Values.OrderBy(x => x.Epoch).ToArray());
     }
 
     /// <summary>
