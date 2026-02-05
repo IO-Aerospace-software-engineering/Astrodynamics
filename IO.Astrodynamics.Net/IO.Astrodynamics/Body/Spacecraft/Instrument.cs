@@ -130,6 +130,12 @@ namespace IO.Astrodynamics.Body.Spacecraft
             return Boresight.Rotate(q);
         }
 
+        public Vector3 GetRefVectorInSpacecraftFrame()
+        {
+            Quaternion q = Orientation == Vector3.Zero ? Quaternion.Zero : new Quaternion(Orientation.Normalize(), Orientation.Magnitude());
+            return RefVector.Rotate(q);
+        }
+
         public Vector3 GetBoresightInICRFFrame(in Time date)
         {
             Quaternion q = Orientation == Vector3.Zero ? Quaternion.Zero : new Quaternion(Orientation.Normalize(), Orientation.Magnitude());

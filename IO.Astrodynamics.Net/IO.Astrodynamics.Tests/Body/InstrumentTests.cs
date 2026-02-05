@@ -180,6 +180,36 @@ namespace IO.Astrodynamics.Tests.Body
         }
 
         [Fact]
+        public void GetRefVectorInSpacecraftFrame()
+        {
+            var spc = TestHelpers.Spacecraft;
+
+            // Instrument with no orientation - refVector should remain unchanged
+            spc.AddCircularInstrument(-1600, "inst1", "model", 1.57, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero);
+            var refVector1 = spc.Instruments.First().GetRefVectorInSpacecraftFrame();
+            Assert.Equal(Vector3.VectorY, refVector1, TestHelpers.VectorComparer);
+
+            // Instrument with 90-degree rotation around Z - refVector (X) should rotate to +Y
+            spc.AddCircularInstrument(-1700, "inst2", "model", 1.57, Vector3.VectorZ, Vector3.VectorX,
+                new Vector3(0.0, 0.0, Astrodynamics.Constants.PI2));
+            var refVector2 = spc.Instruments.ElementAt(1).GetRefVectorInSpacecraftFrame();
+            Assert.Equal(new Vector3(0.0, 1.0, 0.0), refVector2, TestHelpers.VectorComparer);
+        }
+
+        [Fact]
+        public void GetRefVectorInSpacecraftFrame_WithOrientation()
+        {
+            var spc = TestHelpers.Spacecraft;
+
+            // Instrument with 90-degree rotation around Y axis
+            // Original refVector is VectorX, rotating 90 deg around Y maps X -> -Z
+            spc.AddCircularInstrument(-1600, "inst", "model", 1.57, Vector3.VectorZ, Vector3.VectorX,
+                new Vector3(0.0, Astrodynamics.Constants.PI2, 0.0));
+            var refVector = spc.Instruments.First().GetRefVectorInSpacecraftFrame();
+            Assert.Equal(new Vector3(0.0, 0.0, -1.0), refVector, TestHelpers.VectorComparer);
+        }
+
+        [Fact]
         public async Task WriteFrame()
         {
             Spacecraft spc = new Spacecraft(-1001, "MySpacecraft", 1000.0, 10000.0, new Clock("clk1", 256), new StateVector(new Vector3(1.0, 2.0, 3.0), new Vector3(1.0, 2.0, 3.0),
