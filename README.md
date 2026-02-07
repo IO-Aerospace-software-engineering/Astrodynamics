@@ -16,7 +16,7 @@ Important: The C++ layer is feature-frozen and exists only for communication wit
 - Export simulations to Cosmographia
 - Manage PDS archives (generate, materialize objects, validate against XML schemas)
 - Ephemerides and propagation
-  - Spacecraft propagator: geopotential models, atmospheric drag (Earth, Mars), solar radiation pressure, n-body perturbations, impulsive maneuvers, fuel balance
+  - Spacecraft propagator: EGM2008 geopotential gravity (up to degree/order 70, validated against STK HPOP), atmospheric drag (Earth, Mars), solar radiation pressure, n-body perturbations, impulsive maneuvers, fuel balance
   - Small-body propagator: geopotential (Earth), atmospheric drag (Earth, Mars), SRP, n-body
 - Atmospheric modeling
   - Unified API via `IAtmosphericModel` interface with `Atmosphere` result record
@@ -35,7 +35,7 @@ Important: The C++ layer is feature-frozen and exists only for communication wit
 - Time systems: Calendar, Julian, TDB, UTC, local; conversions included
 - Event finding: distance, occultation, coordinate, illumination constraints; instrument field-of-view windows
 - Kernel management utilities
-- Math helpers: vectors, matrices, planes, quaternions, Jacobians, interpolation (Lagrange), Legendre polynomials, SLERP/LERP
+- Math helpers: vectors, matrices, planes, quaternions, Jacobians, interpolation (Lagrange), geodesy-normalized Legendre functions with derivatives, SLERP/LERP
 - Use via CLI for common tasks (props, conversions, info queries)
 
 

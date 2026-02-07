@@ -65,6 +65,7 @@ public const double Rad2Deg = 180.0 / Math.PI; // Radians to degrees
 - **Time**: IERS Conventions, leap seconds from NAIF LSK kernels
 - **Ephemerides**: JPL Development Ephemeris (DE series)
 - **Reference Frames**: IAU/IAG standards, IERS conventions
+- **Gravity Models**: EGM2008 (Earth Gravitational Model 2008), geodesy-normalized spherical harmonics up to degree/order 70
 - **Atmospheric Models**: U.S. Standard Atmosphere 1976, NRLMSISE-00
 - **TLE Propagation**: SGP4/SDP4 (AFSPC compatibility)
 
@@ -302,6 +303,7 @@ Represents a natural celestial body (planet, moon, star).
 | `Flattening` | Flattening coefficient |
 | `Frame` | Body-fixed reference frame |
 | `SphereOfInfluence` | Sphere of influence radius (m) |
+| `GravitationalField` | Gravity model (point-mass or geopotential) |
 | `InitialOrbitalParameters` | Initial orbital state |
 
 | Method | Description |
@@ -1453,7 +1455,7 @@ Console.WriteLine($"Delta-V at arrival: {solution.ArrivalVelocity.Magnitude():F1
 
 #### SpacecraftPropagator
 
-Numerical orbit propagator with perturbations.
+Numerical orbit propagator using a Velocity-Verlet (symplectic) integrator with configurable perturbation models.
 
 | Constructor | Description |
 |------------|-------------|
@@ -1462,6 +1464,37 @@ Numerical orbit propagator with perturbations.
 | Method | Description |
 |--------|-------------|
 | `Propagate()` | Execute propagation |
+
+**Force Models:**
+- **Gravitational acceleration** from each body in the `bodies` list. If a body has a `GeopotentialModelParameters`, the full spherical harmonic model (EGM2008) is used; otherwise point-mass gravity is applied.
+- **Atmospheric drag** (when `drag` is true): uses the body's atmospheric model
+- **Solar radiation pressure** (when `srp` is true): cannonball model with eclipse detection
+
+**Geopotential usage:**
+
+```csharp
+// Create Earth with degree-10 EGM2008 geopotential
+var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, epoch,
+    new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10));
+
+// Initial state in ICRF
+var orbit = new StateVector(
+    new Vector3(6800000.0, 0, 0),
+    new Vector3(0, 7500.0, 0),
+    earth, epoch, Frames.Frame.ICRF);
+
+var spacecraft = new Spacecraft(-1001, "Sat", 100.0, 10000.0, clock, orbit);
+
+// Propagate with geopotential, Moon, and Sun perturbations
+var propagator = new SpacecraftPropagator(
+    new Window(epoch, epoch.AddDays(1)),
+    spacecraft,
+    [earth, PlanetsAndMoons.MOON_BODY, Stars.SUN_BODY],
+    false, false, TimeSpan.FromSeconds(1.0));
+propagator.Propagate();
+```
+
+**Accuracy:** With degree-10 EGM2008, Moon, and Sun perturbations, 24h LEO propagation achieves sub-kilometer position accuracy compared to STK HPOP reference solutions.
 
 #### TLEPropagator
 
@@ -1474,6 +1507,74 @@ SGP4/SDP4 propagator for TLE elements.
 | Method | Description |
 |--------|-------------|
 | `Propagate()` | Execute propagation |
+
+---
+
+### Geopotential Gravity Models
+
+The framework supports high-fidelity Earth gravity modeling using spherical harmonic expansion with the EGM2008 model (up to degree/order 70).
+
+#### GeopotentialModelParameters
+
+Configuration for enabling geopotential gravity on a `CelestialBody`.
+
+| Constructor | Description |
+|------------|-------------|
+| `GeopotentialModelParameters(string path, ushort degree = 60)` | Load model from file path |
+| `GeopotentialModelParameters(Stream stream, ushort degree = 60)` | Load model from stream |
+
+| Property | Description |
+|----------|-------------|
+| `GeopotentialModelPath` | Stream reader for the model file |
+| `GeopotentialDegree` | Maximum degree/order to use |
+
+#### GeopotentialGravitationalField
+
+Computes the full 3D gravitational acceleration including spherical harmonic perturbations using the Montenbruck & Gill spherical coordinate gradient formulation.
+
+| Property | Description |
+|----------|-------------|
+| `MaxDegree` | Maximum harmonic degree |
+
+| Method | Description |
+|--------|-------------|
+| `ComputeGravitationalAcceleration(StateVector sv)` | Compute full 3D acceleration including harmonics |
+
+**Algorithm:**
+1. Transform position to body-fixed frame
+2. Compute geocentric latitude, longitude, and radius
+3. Evaluate geodesy-normalized associated Legendre functions and derivatives via stable recursion
+4. Sum radial, latitudinal, and longitudinal gradient components over all harmonic degrees/orders
+5. Transform spherical acceleration to body-fixed Cartesian, then rotate to inertial frame
+
+**Normalization convention:** Geodesy (fully-normalized) without Condon-Shortley phase:
+`P_bar_nm = sqrt((2 - delta_0m)(2n+1)(n-m)!/(n+m)!) * P_nm`
+
+**Supported model file:** EGM2008 (tide-free), included as `Data/SolarSystem/EGM2008_to70_TideFree`. The file provides coefficients C_nm and S_nm from degree 2 to degree 70.
+
+**Thread safety:** `GeopotentialGravitationalField` is **not** thread-safe. Pre-allocated buffers (Legendre tables, trig arrays) are reused across calls. Create a separate `CelestialBody` instance per thread when propagating concurrently.
+
+**Degree selection guidelines:**
+
+| Degree | Use Case | Typical LEO Accuracy (24h) |
+|--------|----------|---------------------------|
+| 2 | J2-only, fast preliminary analysis | ~10 km |
+| 10 | Good accuracy for most LEO missions | < 1 km vs STK HPOP |
+| 20-30 | High-fidelity geodesy applications | Sub-100 m |
+| 70 | Maximum available (EGM2008_to70) | Highest fidelity |
+
+```csharp
+// Degree-10 geopotential (good balance of accuracy and speed)
+var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, epoch,
+    new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10));
+
+// Degree-2 (J2-only) for quick analysis
+var earthJ2 = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, epoch,
+    new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 2));
+
+// Point-mass only (no geopotential)
+var earthPointMass = new CelestialBody(PlanetsAndMoons.EARTH);
+```
 
 ---
 
@@ -2453,6 +2554,43 @@ var velocityError = (spcFinal.Velocity - moonFinal.Velocity).Magnitude();
 Console.WriteLine($"25-day propagation accuracy:");
 Console.WriteLine($"  Position error: {positionError:F1} m");
 Console.WriteLine($"  Velocity error: {velocityError:F4} m/s");
+```
+
+### High-Fidelity LEO Propagation with Geopotential
+
+Propagate a LEO satellite with EGM2008 spherical harmonics, Moon, and Sun perturbations:
+
+```csharp
+var epoch = new Time(2025, 8, 25, 11, 55, 44, frame: TimeFrame.UTCFrame);
+
+// Earth with degree-10 EGM2008 geopotential
+var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, epoch,
+    new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10));
+
+// LEO orbit (~400 km altitude)
+var orbit = new StateVector(
+    new Vector3(5442162.59, -4068949.85, -13456.85),   // Position (m)
+    new Vector3(2858.20, 3809.79, 6002.13),             // Velocity (m/s)
+    earth, epoch, Frames.Frame.ICRF);
+
+var clock = new Clock("Clock", 256);
+var spacecraft = new Spacecraft(-1001, "LEOSat", 100.0, 10000.0, clock, orbit);
+
+var propagator = new SpacecraftPropagator(
+    new Window(epoch, epoch.AddDays(1)),
+    spacecraft,
+    [earth, PlanetsAndMoons.MOON_BODY, Stars.SUN_BODY],
+    false, false,
+    TimeSpan.FromSeconds(1.0));
+
+propagator.Propagate();
+
+// Get final state relative to Earth
+var finalState = spacecraft.StateVectorsRelativeToICRF.Values.Last()
+    .RelativeTo(earth, Aberration.None) as StateVector;
+
+Console.WriteLine($"Position after 24h: ({finalState.Position.X/1000:F3}, " +
+    $"{finalState.Position.Y/1000:F3}, {finalState.Position.Z/1000:F3}) km");
 ```
 
 ### Earth Observation with Attitude Maneuvers
