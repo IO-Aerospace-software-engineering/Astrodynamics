@@ -32,7 +32,9 @@
       "WebFetch(domain:johannesbuchner.github.io)",
       "WebFetch(domain:www.scratchapixel.com)",
       "Bash(tee:*)",
-      "Bash(xargs cat:*)"
+      "Bash(xargs cat:*)",
+      "WebFetch(domain:shtools.github.io)",
+      "WebFetch(domain:degenerateconic.com)"
     ],
     "deny": [],
     "ask": []

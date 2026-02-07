@@ -71,8 +71,11 @@ dotnet tool install --global --add-source ./IO.Astrodynamics.CLI/bin/Debug IO.As
 - `IO.Astrodynamics.Maneuver`: Lambert solvers, launch windows, maneuver planning, attitude maneuvers
 - `IO.Astrodynamics.Frames`: Reference frames and transformations
 - `IO.Astrodynamics.TimeSystem`: Time frames (UTC, TDB, TAI, etc.)
-- `IO.Astrodynamics.Propagator`: Orbital propagation and integration
+- `IO.Astrodynamics.Propagator`: Orbital propagation and integration (Velocity-Verlet symplectic integrator)
+- `IO.Astrodynamics.Propagator.Forces`: Force models (gravitational, atmospheric drag, solar radiation pressure)
 - `IO.Astrodynamics.Atmosphere`: Atmospheric density, temperature, and pressure models for Earth and Mars
+- `IO.Astrodynamics.Math`: Vectors, matrices, quaternions, Legendre functions
+- `IO.Astrodynamics.Physics`: Geopotential model reader, coefficients
 
 **External Dependencies**
 - MathNet.Numerics: Linear algebra operations
@@ -399,6 +402,36 @@ var atm = earth.GetAtmosphere(context);  // Uses NRLMSISE-00 automatically
 - Use `CelestialBody.GetAtmosphere(context)` with full context for automatic NRLMSISE-00 selection
 - Use `MarsStandardAtmosphere` for preliminary Mars mission analysis
 
+### Geopotential Gravity Model
+
+The framework supports spherical harmonic gravity modeling using EGM2008 coefficients (up to degree/order 70).
+
+**Key Classes**
+- `GeopotentialModelParameters`: Configuration (model file path + max degree)
+- `GeopotentialGravitationalField`: Computes full 3D acceleration via Montenbruck & Gill formulation
+- `GeopotentialModelReader`: Parses EGM2008 coefficient files
+- `GeopotentialCoefficient`: Holds C_nm, S_nm coefficients for a single (n,m) pair
+- `LegendreFunctions`: Geodesy-normalized associated Legendre functions and derivatives
+
+**Conventions**
+- Geodesy normalization: `sqrt((2-delta_0m)(2n+1)(n-m)!/(n+m)!)` — no Condon-Shortley phase
+- Coefficients: fully-normalized C_nm and S_nm from EGM2008 (tide-free)
+- Model file starts at degree 2 (degrees 0 and 1 are absent; handled as zeros)
+
+**Usage**
+```csharp
+// Create Earth with degree-10 geopotential
+var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, epoch,
+    new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10));
+
+// The propagator automatically uses the geopotential model when present
+var propagator = new SpacecraftPropagator(window, spacecraft,
+    [earth, PlanetsAndMoons.MOON_BODY, Stars.SUN_BODY],
+    false, false, TimeSpan.FromSeconds(1.0));
+```
+
+**Thread Safety:** `GeopotentialGravitationalField` is NOT thread-safe (pre-allocated buffers). Create separate `CelestialBody` instances for concurrent propagation.
+
 ### Attitude Maneuvers
 
 The framework provides a family of attitude maneuvers for spacecraft orientation control. All inherit from the abstract `Attitude` base class.
@@ -534,6 +567,13 @@ Test data files are in `Data/SolarSystem/` and copied to output directory.
    - Ensure body vectors and reference vectors are not collinear (minimum 5 degrees separation)
    - Use `Spacecraft.Front`, `Spacecraft.Up`, etc. for standard body frame directions
    - Use `Instrument.GetBoresightInSpacecraftFrame()` and `GetRefVectorInSpacecraftFrame()` for instrument-based pointing
+10. **Geopotential Gravity**: When working with spherical harmonic gravity models:
+   - Pass `GeopotentialModelParameters` to `CelestialBody` constructor to enable geopotential
+   - Use degree 10 for typical LEO accuracy; degree 2 for J2-only analysis
+   - EGM2008 model file: `Data/SolarSystem/EGM2008_to70_TideFree` (degrees 2-70)
+   - `GeopotentialGravitationalField` is NOT thread-safe — one instance per thread
+   - Legendre functions use geodesy normalization without Condon-Shortley phase
+   - The model file starts at degree 2; degrees 0 and 1 are handled as zeros internally
 
 ## Code Quality Standards
 

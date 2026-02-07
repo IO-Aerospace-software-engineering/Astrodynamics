@@ -167,13 +167,37 @@ public class LegendreFunctions
 
         if (nearPole)
         {
-            // At poles, derivatives require special handling
+            // At poles (cosφ ≈ 0), all derivatives for m=0 and m≥2 are zero.
+            // For m=1, use the same value/sub-diagonal/general recursion differentiated at the pole.
+            // At the pole, P̄_nm = 0 for all m≥1, so the recursion simplifies to:
+            //   dP̄_11/dφ = -√3 · sinφ
+            //   dP̄_21/dφ = √5 · sinφ · dP̄_11/dφ
+            //   dP̄_n1/dφ = a_n1 · sinφ · dP̄_{n-1,1}/dφ - b_n1 · dP̄_{n-2,1}/dφ   (n≥3)
             for (int n = 1; n <= maxDegree; n++)
             {
                 for (int m = 0; m <= n; m++)
                 {
                     dP[n][m] = 0.0;
                 }
+            }
+
+            if (maxDegree >= 1)
+            {
+                dP[1][1] = -System.Math.Sqrt(3.0) * sinPhi;
+            }
+
+            if (maxDegree >= 2)
+            {
+                dP[2][1] = System.Math.Sqrt(5.0) * sinPhi * dP[1][1];
+            }
+
+            for (int n = 3; n <= maxDegree; n++)
+            {
+                double n2 = (double)n * n;
+                double a_n1 = System.Math.Sqrt((4.0 * n2 - 1.0) / (n2 - 1.0));
+                double b_n1 = System.Math.Sqrt((2.0 * n + 1.0) * ((n - 1.0) * (n - 1.0) - 1.0) /
+                                                ((2.0 * n - 3.0) * (n2 - 1.0)));
+                dP[n][1] = a_n1 * sinPhi * dP[n - 1][1] - b_n1 * dP[n - 2][1];
             }
         }
         else

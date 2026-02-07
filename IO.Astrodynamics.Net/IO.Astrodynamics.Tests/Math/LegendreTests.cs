@@ -134,6 +134,88 @@ namespace IO.Astrodynamics.Tests.Math
         }
 
         [Fact]
+        public void LegendreDerivativeAtNorthPole()
+        {
+            // At exact north pole (φ = π/2, sinφ=+1, cosφ=0), the m=1 derivatives
+            // follow: dP̄_n1/dφ = -√(n(n+1)(2n+1)/2)
+            // All m=0 and m≥2 derivatives are zero.
+            int maxDegree = 6;
+            double sinPhi = 1.0;
+            double cosPhi = 0.0;
+
+            var (P, dP) = LegendreFunctions.AllocateLegendreTable(maxDegree);
+            LegendreFunctions.ComputeGeodesyNormalizedLegendreTable(maxDegree, sinPhi, cosPhi, P, dP);
+
+            for (int n = 1; n <= maxDegree; n++)
+            {
+                Assert.Equal(0.0, dP[n][0], 12);
+
+                double expected = -System.Math.Sqrt(n * (n + 1) * (2.0 * n + 1) / 2.0);
+                Assert.Equal(expected, dP[n][1], 10);
+
+                for (int m = 2; m <= n; m++)
+                {
+                    Assert.Equal(0.0, dP[n][m], 12);
+                }
+            }
+        }
+
+        [Fact]
+        public void LegendreDerivativeAtSouthPole()
+        {
+            // At south pole (sinφ=-1), the sign pattern for m=1 depends on n:
+            //   dP̄_n1/dφ = (-1)^(n+1) · √(n(n+1)(2n+1)/2)
+            int maxDegree = 6;
+            double sinPhi = -1.0;
+            double cosPhi = 0.0;
+
+            var (P, dP) = LegendreFunctions.AllocateLegendreTable(maxDegree);
+            LegendreFunctions.ComputeGeodesyNormalizedLegendreTable(maxDegree, sinPhi, cosPhi, P, dP);
+
+            // Compute expected via recursion (same as implementation but independent check)
+            double[] expectedDp = new double[maxDegree + 1];
+            expectedDp[1] = -System.Math.Sqrt(3.0) * sinPhi; // +√3
+            if (maxDegree >= 2)
+                expectedDp[2] = System.Math.Sqrt(5.0) * sinPhi * expectedDp[1]; // -√15
+            for (int n = 3; n <= maxDegree; n++)
+            {
+                double n2 = (double)n * n;
+                double a = System.Math.Sqrt((4.0 * n2 - 1.0) / (n2 - 1.0));
+                double b = System.Math.Sqrt((2.0 * n + 1.0) * ((n - 1.0) * (n - 1.0) - 1.0) /
+                                            ((2.0 * n - 3.0) * (n2 - 1.0)));
+                expectedDp[n] = a * sinPhi * expectedDp[n - 1] - b * expectedDp[n - 2];
+            }
+
+            for (int n = 1; n <= maxDegree; n++)
+            {
+                Assert.Equal(0.0, dP[n][0], 12);
+                Assert.Equal(expectedDp[n], dP[n][1], 10);
+                for (int m = 2; m <= n; m++)
+                {
+                    Assert.Equal(0.0, dP[n][m], 12);
+                }
+            }
+        }
+
+        [Fact]
+        public void LegendreDerivativeNearPoleContinuity()
+        {
+            // Verify the general formula at near-pole matches the pole limit
+            // dP̄_21/dφ at north pole = -√15
+            int maxDegree = 4;
+            double poleLimit_n2_m1 = -System.Math.Sqrt(15.0);
+
+            double phi = System.Math.PI / 2.0 - 1e-10;
+            double sinPhi = System.Math.Sin(phi);
+            double cosPhi = System.Math.Cos(phi);
+
+            var (P, dP) = LegendreFunctions.AllocateLegendreTable(maxDegree);
+            LegendreFunctions.ComputeGeodesyNormalizedLegendreTable(maxDegree, sinPhi, cosPhi, P, dP);
+
+            Assert.Equal(poleLimit_n2_m1, dP[2][1], 4);
+        }
+
+        [Fact]
         public void LegendreSouthernHemisphere()
         {
             // Verify that P̄_nm(-sinφ) has correct sign for odd-degree terms

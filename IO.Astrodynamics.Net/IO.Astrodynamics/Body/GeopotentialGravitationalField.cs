@@ -1,5 +1,6 @@
 // Copyright 2024. Sylvain Guillet (sylvain.guillet@tutamail.com)
 
+using System.Collections.Generic;
 using System.IO;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
@@ -7,6 +8,14 @@ using IO.Astrodynamics.Physics;
 
 namespace IO.Astrodynamics.Body;
 
+/// <summary>
+/// Computes gravitational acceleration including spherical harmonic (geopotential) perturbations.
+/// <para>
+/// <b>Thread safety:</b> This class is <b>not</b> thread-safe. Internal buffers (Legendre tables,
+/// trig arrays) are reused across calls for performance. Create a separate instance per thread
+/// when propagating multiple spacecraft concurrently.
+/// </para>
+/// </summary>
 public class GeopotentialGravitationalField : GravitationalField
 {
     /// <summary>
@@ -56,9 +65,9 @@ public class GeopotentialGravitationalField : GravitationalField
                 {
                     _coefficients[n][m] = _geopotentialModelReader.ReadCoefficient((ushort)n, (ushort)m);
                 }
-                catch
+                catch (KeyNotFoundException)
                 {
-                    // Coefficient not available in model — use zeros
+                    // Coefficient not available in model (e.g. n=0,1 absent from EGM2008) — use zeros
                     _coefficients[n][m] = new GeopotentialCoefficient((ushort)n, (ushort)m, 0.0, 0.0, 0.0, 0.0);
                 }
             }
