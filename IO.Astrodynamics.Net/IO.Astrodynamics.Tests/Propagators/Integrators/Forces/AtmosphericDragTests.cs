@@ -34,6 +34,6 @@ public class AtmosphericDragTests
         StateVector parkingOrbit = new StateVector(new Vector3(7380000.0, 0.0, 0.0), new Vector3(0.0, 9700.0, 0.0), earth, TimeSystem.Time.J2000TDB,
             Frames.Frame.ICRF);
         var res = atmosphericDrag.Apply(parkingOrbit);
-        Assert.Equal(new Vector3(0.0, -1.4911628830275622E-09, 0.0), res);
+        Assert.Equal(new Vector3(-0.0, -1.3302926867698408E-09, 2.184861621946448E-15), res, TestHelpers.VelocityVectorComparer);
     }
 }

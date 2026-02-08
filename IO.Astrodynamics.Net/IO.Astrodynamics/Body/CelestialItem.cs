@@ -445,6 +445,69 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     }
 
     /// <summary>
+    /// Compute the shadow fraction caused by an occluding body.
+    /// Returns a value in [0, 1] where 0 = full illumination and 1 = total eclipse.
+    /// </summary>
+    /// <param name="angularSeparation">Angular separation between the light source and occluding body as seen from the observer (radians)</param>
+    /// <param name="backSize">Angular diameter of the background body (light source) as seen from the observer (radians)</param>
+    /// <param name="bySize">Angular diameter of the occluding body as seen from the observer (radians)</param>
+    /// <returns>Shadow fraction in [0, 1]</returns>
+    public static double ShadowFraction(double angularSeparation, double backSize, double bySize)
+    {
+        double rSun = backSize * 0.5;  // angular radius of light source
+        double rOcc = bySize * 0.5;    // angular radius of occluding body
+        double d = angularSeparation;  // angular separation between centers
+
+        // No occultation
+        if (d >= rSun + rOcc)
+        {
+            return 0.0;
+        }
+
+        // Total eclipse: occluding body completely covers the light source
+        if (d <= rOcc - rSun && rOcc >= rSun)
+        {
+            return 1.0;
+        }
+
+        // Annular eclipse: occluding body fully inside the light source disc
+        if (d <= rSun - rOcc && rOcc < rSun)
+        {
+            return (rOcc * rOcc) / (rSun * rSun);
+        }
+
+        // Partial eclipse: two-circle intersection area / sun disc area
+        double r1Sq = rSun * rSun;
+        double r2Sq = rOcc * rOcc;
+        double dSq = d * d;
+
+        double part1 = r1Sq * System.Math.Acos((dSq + r1Sq - r2Sq) / (2.0 * d * rSun));
+        double part2 = r2Sq * System.Math.Acos((dSq + r2Sq - r1Sq) / (2.0 * d * rOcc));
+        double part3 = 0.5 * System.Math.Sqrt((-d + rSun + rOcc) * (d + rSun - rOcc) * (d - rSun + rOcc) * (d + rSun + rOcc));
+
+        double intersectionArea = part1 + part2 - part3;
+        double sunArea = System.Math.PI * r1Sq;
+
+        return intersectionArea / sunArea;
+    }
+
+    /// <summary>
+    /// Compute the shadow fraction caused by an occluding body on this celestial item as seen from a given position.
+    /// Returns a value in [0, 1] where 0 = full illumination and 1 = total eclipse.
+    /// </summary>
+    /// <param name="by">The occluding body</param>
+    /// <param name="from">The observer's orbital parameters</param>
+    /// <param name="aberration">Aberration correction</param>
+    /// <returns>Shadow fraction in [0, 1]</returns>
+    public double ShadowFraction(CelestialItem by, OrbitalParameters.OrbitalParameters from, Aberration aberration = Aberration.LT)
+    {
+        double backSize = AngularSize((GetEphemeris(from.Epoch, from.Observer, from.Frame, aberration).ToStateVector().Position - from.ToStateVector().Position).Magnitude());
+        double bySize = by.AngularSize((by.GetEphemeris(from.Epoch, from.Observer, from.Frame, aberration).ToStateVector().Position - from.ToStateVector().Position).Magnitude());
+        var angularSeparation = this.AngularSeparation(from.Epoch, by, from, aberration);
+        return ShadowFraction(angularSeparation, backSize, bySize);
+    }
+
+    /// <summary>
     /// Evaluate gravitational acceleration at given position
     /// </summary>
     /// <param name="orbitalParameters"></param>

@@ -89,7 +89,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// <exception cref="ArgumentOutOfRangeException"></exception>
         /// <exception cref="ArgumentNullException"></exception>
         public Spacecraft(int naifId, string name, double mass, double maximumOperatingMass, Clock clock, OrbitalParameters.OrbitalParameters initialOrbitalParameters,
-            double sectionalArea = 1.0, double dragCoeff = 0.3, string cosparId = null, double solarRadiationCoeff = 1.0) : base(
+            double sectionalArea = 1.0, double dragCoeff = 2.2, string cosparId = null, double solarRadiationCoeff = 1.0) : base(
             naifId, name, mass, initialOrbitalParameters)
         {
             if (maximumOperatingMass < mass) throw new ArgumentOutOfRangeException(nameof(maximumOperatingMass));

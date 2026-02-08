@@ -373,6 +373,46 @@ public class CelestialBodyTests
     }
 
     [Fact]
+    public void ShadowFractionNone()
+    {
+        // No occultation: angular separation larger than sum of radii
+        Assert.Equal(0.0, CelestialItem.ShadowFraction(3.0, 2.0, 4.0));
+        Assert.Equal(0.0, CelestialItem.ShadowFraction(3.0, 4.0, 2.0));
+    }
+
+    [Fact]
+    public void ShadowFractionFull()
+    {
+        // Total eclipse: occluding body completely covers the light source
+        Assert.Equal(1.0, CelestialItem.ShadowFraction(0.5, 2.0, 4.0));
+    }
+
+    [Fact]
+    public void ShadowFractionAnnular()
+    {
+        // Annular eclipse: occluding body fully inside the sun disc
+        // rOcc = 1.0, rSun = 2.0, fraction = (1.0^2)/(2.0^2) = 0.25
+        Assert.Equal(0.25, CelestialItem.ShadowFraction(0.5, 4.0, 2.0));
+    }
+
+    [Fact]
+    public void ShadowFractionPartial()
+    {
+        // Partial eclipse: between no occultation and full/annular
+        var fraction = CelestialItem.ShadowFraction(2.0, 2.0, 4.0);
+        Assert.True(fraction > 0.0);
+        Assert.True(fraction < 1.0);
+    }
+
+    [Fact]
+    public void ShadowFractionEdge()
+    {
+        // Edge case: exactly touching (d = rSun + rOcc)
+        // rSun = 1.0, rOcc = 2.0, d = 3.0 -> no occultation
+        Assert.Equal(0.0, CelestialItem.ShadowFraction(3.0, 2.0, 4.0));
+    }
+
+    [Fact]
     public void EarthAirTemperature()
     {
         Assert.Equal(15.04, TestHelpers.EarthWithAtmAndGeoAtJ2000.GetAirTemperature(0.0), 9);
