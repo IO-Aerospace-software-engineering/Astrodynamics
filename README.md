@@ -16,7 +16,7 @@ Important: The C++ layer is feature-frozen and exists only for communication wit
 - Export simulations to Cosmographia
 - Manage PDS archives (generate, materialize objects, validate against XML schemas)
 - Ephemerides and propagation
-  - Spacecraft propagator: EGM2008 geopotential gravity (up to degree/order 70, validated against STK HPOP), atmospheric drag (Earth, Mars), solar radiation pressure, n-body perturbations, impulsive maneuvers, fuel balance
+  - Spacecraft propagator: EGM2008 geopotential gravity (up to degree/order 70, validated against STK HPOP), atmospheric drag with co-rotation (Earth, Mars), solar radiation pressure with Cr and continuous shadow fraction, n-body perturbations, dynamic mass, impulsive maneuvers, fuel balance
   - Small-body propagator: geopotential (Earth), atmospheric drag (Earth, Mars), SRP, n-body
 - Atmospheric modeling
   - Unified API via `IAtmosphericModel` interface with `Atmosphere` result record

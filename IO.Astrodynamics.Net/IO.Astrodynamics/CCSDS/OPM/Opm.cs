@@ -253,7 +253,7 @@ public class Opm
     /// OPM provides: OBJECT_NAME (name), OBJECT_ID (cosparId), stateVector, and optionally spacecraftParameters.
     /// The caller must provide naifId, maximumOperatingMass, and clock as these are not part of the CCSDS OPM standard.
     /// If spacecraftParameters is not present in the OPM, default values are used for mass (1.0 kg),
-    /// sectionalArea (1.0 m²), dragCoeff (0.3), and solarRadiationCoeff (1.0).
+    /// sectionalArea (1.0 m²), dragCoeff (2.2), and solarRadiationCoeff (1.0).
     /// </remarks>
     /// <exception cref="ArgumentNullException">Thrown when clock is null.</exception>
     /// <exception cref="ArgumentOutOfRangeException">Thrown when naifId is non-negative or maximumOperatingMass is invalid.</exception>
@@ -268,7 +268,7 @@ public class Opm
         // Extract spacecraft parameters from OPM (with defaults if not present)
         double mass = Data.Mass ?? 1.0;
         double sectionalArea = Data.DragArea ?? 1.0;
-        double dragCoeff = Data.DragCoefficient ?? 0.3;
+        double dragCoeff = Data.DragCoefficient ?? 2.2;
         double solarRadCoeff = Data.SolarRadiationCoefficient ?? 1.0;
 
         // Ensure maximumOperatingMass is at least equal to mass

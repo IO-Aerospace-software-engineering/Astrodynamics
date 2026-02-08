@@ -333,7 +333,7 @@ public class CelestialBodyTests
     public void GeopotentialModelReader()
     {
         GeopotentialModelReader geopotentialModelReader =
-            new GeopotentialModelReader(new StreamReader(Path.Combine(Constants.SolarSystemKernelPath.ToString(), "EGM2008_to70_TideFree")));
+            new GeopotentialModelReader(new StreamReader(new FileStream(Path.Combine(Constants.SolarSystemKernelPath.ToString(), "EGM2008_to70_TideFree"), FileMode.Open, FileAccess.Read, FileShare.Read)));
         Assert.Equal(new GeopotentialCoefficient(4, 1, -0.536157389388867E-06, -0.473567346518086E-06, 0.4568074333E-11, 0.4684043490E-11),
             geopotentialModelReader.ReadCoefficient(4, 1));
     }
@@ -342,7 +342,7 @@ public class CelestialBodyTests
     public void GeopotentialModelReaderException()
     {
         GeopotentialModelReader geopotentialModelReader =
-            new GeopotentialModelReader(new StreamReader(Path.Combine(Constants.SolarSystemKernelPath.ToString(), "EGM2008_to70_TideFree")));
+            new GeopotentialModelReader(new StreamReader(new FileStream(Path.Combine(Constants.SolarSystemKernelPath.ToString(), "EGM2008_to70_TideFree"), FileMode.Open, FileAccess.Read, FileShare.Read)));
         Assert.Throws<ArgumentException>(() => geopotentialModelReader.ReadCoefficient(4, 5));
     }
 
@@ -370,6 +370,46 @@ public class CelestialBodyTests
     public void IsOccultedAnnular()
     {
         Assert.Equal(OccultationType.Annular, CelestialItem.IsOcculted(1.0, 4.0, 2.0));
+    }
+
+    [Fact]
+    public void ShadowFractionNone()
+    {
+        // No occultation: angular separation larger than sum of radii
+        Assert.Equal(0.0, CelestialItem.ShadowFraction(3.0, 2.0, 4.0));
+        Assert.Equal(0.0, CelestialItem.ShadowFraction(3.0, 4.0, 2.0));
+    }
+
+    [Fact]
+    public void ShadowFractionFull()
+    {
+        // Total eclipse: occluding body completely covers the light source
+        Assert.Equal(1.0, CelestialItem.ShadowFraction(0.5, 2.0, 4.0));
+    }
+
+    [Fact]
+    public void ShadowFractionAnnular()
+    {
+        // Annular eclipse: occluding body fully inside the sun disc
+        // rOcc = 1.0, rSun = 2.0, fraction = (1.0^2)/(2.0^2) = 0.25
+        Assert.Equal(0.25, CelestialItem.ShadowFraction(0.5, 4.0, 2.0));
+    }
+
+    [Fact]
+    public void ShadowFractionPartial()
+    {
+        // Partial eclipse: between no occultation and full/annular
+        var fraction = CelestialItem.ShadowFraction(2.0, 2.0, 4.0);
+        Assert.True(fraction > 0.0);
+        Assert.True(fraction < 1.0);
+    }
+
+    [Fact]
+    public void ShadowFractionEdge()
+    {
+        // Edge case: exactly touching (d = rSun + rOcc)
+        // rSun = 1.0, rOcc = 2.0, d = 3.0 -> no occultation
+        Assert.Equal(0.0, CelestialItem.ShadowFraction(3.0, 2.0, 4.0));
     }
 
     [Fact]

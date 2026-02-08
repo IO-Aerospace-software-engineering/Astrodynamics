@@ -787,7 +787,7 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
             Assert.Equal(1.0, spacecraft.Mass); // Default mass when not specified
             Assert.Equal(500000.0, spacecraft.MaximumOperatingMass);
             Assert.Equal(1.0, spacecraft.SectionalArea); // Default
-            Assert.Equal(0.3, spacecraft.DragCoefficient); // Default
+            Assert.Equal(2.2, spacecraft.DragCoefficient); // Default
             Assert.Equal(1.0, spacecraft.SolarRadiationCoeff); // Default
             Assert.Same(clock, spacecraft.Clock);
         }

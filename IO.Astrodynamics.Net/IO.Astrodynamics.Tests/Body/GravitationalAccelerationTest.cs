@@ -18,7 +18,7 @@ public class GravitationalAccelerationTest
     public void ComputeGeopotentialGravityAcceleration()
     {
         GeopotentialGravitationalField gravity =
-            new GeopotentialGravitationalField(new StreamReader(Path.Combine(Constants.SolarSystemKernelPath.ToString(), "EGM2008_to70_TideFree")));
+            new GeopotentialGravitationalField(new StreamReader(new FileStream(Path.Combine(Constants.SolarSystemKernelPath.ToString(), "EGM2008_to70_TideFree"), FileMode.Open, FileAccess.Read, FileShare.Read)));
         StateVector parkingOrbit = new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7656.2204182967143, 0.0), TestHelpers.EarthWithAtmAndGeoAtJ2000,
             TimeSystem.Time.J2000TDB,
             Frames.Frame.ICRF);
@@ -47,7 +47,7 @@ public class GravitationalAccelerationTest
         // Position at ~45° latitude exercises tesseral harmonic terms
         GeopotentialGravitationalField gravity =
             new GeopotentialGravitationalField(
-                new StreamReader(Path.Combine(Constants.SolarSystemKernelPath.ToString(), "EGM2008_to70_TideFree")));
+                new StreamReader(new FileStream(Path.Combine(Constants.SolarSystemKernelPath.ToString(), "EGM2008_to70_TideFree"), FileMode.Open, FileAccess.Read, FileShare.Read)));
 
         // r=6800km, 45° latitude: x=r*cos(45°), y=0, z=r*sin(45°)
         double r = 6800000.0;
@@ -77,7 +77,7 @@ public class GravitationalAccelerationTest
         // Southern hemisphere test: odd-degree zonal harmonics (J3, J5) should cause asymmetry
         GeopotentialGravitationalField gravity =
             new GeopotentialGravitationalField(
-                new StreamReader(Path.Combine(Constants.SolarSystemKernelPath.ToString(), "EGM2008_to70_TideFree")));
+                new StreamReader(new FileStream(Path.Combine(Constants.SolarSystemKernelPath.ToString(), "EGM2008_to70_TideFree"), FileMode.Open, FileAccess.Read, FileShare.Read)));
 
         double r = 6800000.0;
         double component = r / System.Math.Sqrt(2.0);
@@ -117,7 +117,7 @@ public class GravitationalAccelerationTest
         // Position with longitude exercises S_nm sine terms
         GeopotentialGravitationalField gravity =
             new GeopotentialGravitationalField(
-                new StreamReader(Path.Combine(Constants.SolarSystemKernelPath.ToString(), "EGM2008_to70_TideFree")));
+                new StreamReader(new FileStream(Path.Combine(Constants.SolarSystemKernelPath.ToString(), "EGM2008_to70_TideFree"), FileMode.Open, FileAccess.Read, FileShare.Read)));
 
         double r = 6800000.0;
         double component = r / System.Math.Sqrt(2.0);
@@ -147,7 +147,7 @@ public class GravitationalAccelerationTest
         // Use degree 2 only, which is dominated by J2 (C20 term)
         GeopotentialGravitationalField gravity =
             new GeopotentialGravitationalField(
-                new StreamReader(Path.Combine(Constants.SolarSystemKernelPath.ToString(), "EGM2008_to70_TideFree")),
+                new StreamReader(new FileStream(Path.Combine(Constants.SolarSystemKernelPath.ToString(), "EGM2008_to70_TideFree"), FileMode.Open, FileAccess.Read, FileShare.Read)),
                 maxDegrees: 2);
 
         // Position in body-fixed frame at equator (φ=0)

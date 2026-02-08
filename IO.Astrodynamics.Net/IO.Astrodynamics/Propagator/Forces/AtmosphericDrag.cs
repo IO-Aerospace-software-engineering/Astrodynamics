@@ -1,7 +1,8 @@
-﻿using System;
+using System;
 using IO.Astrodynamics.Atmosphere;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
+using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
 
@@ -11,7 +12,6 @@ public class AtmosphericDrag : ForceBase
 {
     private readonly Spacecraft _spacecraft;
     private readonly CelestialBody _celestialBody;
-    private readonly double _areaMassRatio;
 
     public AtmosphericDrag(Spacecraft spacecraft, CelestialBody celestialBody)
     {
@@ -21,14 +21,22 @@ public class AtmosphericDrag : ForceBase
         {
             throw new ArgumentException($"The celestial body {_celestialBody.Name} does not have an atmospheric model.");
         }
-
-        _areaMassRatio = _spacecraft.SectionalArea / _spacecraft.Mass;
     }
 
     public override Vector3 Apply(StateVector stateVector)
     {
-        var planetodetic = stateVector.RelativeTo(_celestialBody, Aberration.None).ToPlanetocentric(Aberration.None)
-            .ToPlanetodetic(_celestialBody!.Flattening, _celestialBody.EquatorialRadius);
+        // Get body-centered state vector (position and velocity relative to the celestial body)
+        var bodyCentered = stateVector.RelativeTo(_celestialBody, Aberration.None).ToStateVector();
+
+        // Get the angular velocity of the body's rotation in ICRF
+        var omega = _celestialBody.GetOrientation(Frame.ICRF, stateVector.Epoch).AngularVelocity;
+
+        // Compute atmosphere-relative velocity: v_rel = v_body_centered - omega x r_body_centered
+        var vRel = bodyCentered.Velocity - omega.Cross(bodyCentered.Position);
+
+        // Compute planetodetic coordinates for density lookup
+        var planetodetic = bodyCentered.ToPlanetocentric(Aberration.None)
+            .ToPlanetodetic(_celestialBody.Flattening, _celestialBody.EquatorialRadius);
 
         // Create rich atmospheric context with time and position for complex models
         var context = AtmosphericContext.FromPlanetodetic(
@@ -39,6 +47,7 @@ public class AtmosphericDrag : ForceBase
         );
 
         var density = _celestialBody.GetAirDensity(context);
-        return stateVector.Velocity * -0.5 * density * _areaMassRatio * _spacecraft.DragCoefficient * stateVector.Velocity.Magnitude();
+        var areaMassRatio = _spacecraft.SectionalArea / _spacecraft.GetTotalMass();
+        return vRel * -0.5 * density * areaMassRatio * _spacecraft.DragCoefficient * vRel.Magnitude();
     }
 }

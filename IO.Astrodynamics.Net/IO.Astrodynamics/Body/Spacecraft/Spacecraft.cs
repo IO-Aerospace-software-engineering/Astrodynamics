@@ -83,13 +83,13 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// <param name="clock"></param>
         /// <param name="initialOrbitalParameters"></param>
         /// <param name="sectionalArea">Mean sectional area (used for both drag and solar radiation pressure)</param>
-        /// <param name="dragCoeff">Drag coefficient</param>
+        /// <param name="dragCoeff">Drag coefficient (Cd), default 2.2 for satellites in free-molecular flow</param>
         /// <param name="cosparId">COSPAR international designator (e.g., "1998-067A")</param>
         /// <param name="solarRadiationCoeff">Solar radiation pressure coefficient (Cr), default 1.0</param>
         /// <exception cref="ArgumentOutOfRangeException"></exception>
         /// <exception cref="ArgumentNullException"></exception>
         public Spacecraft(int naifId, string name, double mass, double maximumOperatingMass, Clock clock, OrbitalParameters.OrbitalParameters initialOrbitalParameters,
-            double sectionalArea = 1.0, double dragCoeff = 0.3, string cosparId = null, double solarRadiationCoeff = 1.0) : base(
+            double sectionalArea = 1.0, double dragCoeff = 2.2, string cosparId = null, double solarRadiationCoeff = 1.0) : base(
             naifId, name, mass, initialOrbitalParameters)
         {
             if (maximumOperatingMass < mass) throw new ArgumentOutOfRangeException(nameof(maximumOperatingMass));

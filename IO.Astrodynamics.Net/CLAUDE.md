@@ -432,6 +432,45 @@ var propagator = new SpacecraftPropagator(window, spacecraft,
 
 **Thread Safety:** `GeopotentialGravitationalField` is NOT thread-safe (pre-allocated buffers). Create separate `CelestialBody` instances for concurrent propagation.
 
+### Force Models (Propagator Perturbations)
+
+The `IO.Astrodynamics.Propagator.Forces` namespace provides configurable perturbation models used by the `SpacecraftPropagator`.
+
+**Atmospheric Drag (`AtmosphericDrag`)**
+- Uses **atmosphere-relative velocity**: body-centered velocity minus co-rotation (`v_rel = v_body - omega x r_body`)
+- The body's angular velocity is obtained via `CelestialBody.GetOrientation(Frame.ICRF, epoch).AngularVelocity`
+- **Dynamic mass**: area/mass ratio is computed per step using `Spacecraft.GetTotalMass()` (dry + fuel + payload)
+- Drag coefficient default is **2.2** (appropriate for satellites in free-molecular flow)
+
+```csharp
+// Atmospheric drag requires a CelestialBody with an atmospheric model
+var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, epoch,
+    geopotentialParams, new EarthStandardAtmosphere());
+var drag = new AtmosphericDrag(spacecraft, earth);
+```
+
+**Solar Radiation Pressure (`SolarRadiationPressure`)**
+- Cannonball model: `F = (L_sun / 4*pi*c) * Cr * (A/m) * r_hat / r^2`
+- Includes **reflectivity coefficient Cr** from `Spacecraft.SolarRadiationCoeff` (range 1.0–2.0, default 1.0)
+- **Continuous shadow model**: uses `ShadowFraction` (two-circle overlap area) instead of binary eclipse check
+  - Handles none, partial, annular, and total eclipse geometries
+  - SRP is scaled by `(1 - maxShadowFraction)` across all occluding bodies
+- **Dynamic mass**: area/mass ratio recomputed each step via `GetTotalMass()`
+- Occluding bodies are materialized to `CelestialBody[]` (avoids IEnumerable re-evaluation)
+
+```csharp
+// SRP with Cr = 1.5
+var spacecraft = new Spacecraft(-1001, "Sat", 100.0, 10000.0, clock, orbit,
+    sectionalArea: 10.0, solarRadiationCoeff: 1.5);
+var srp = new SolarRadiationPressure(spacecraft, [earth]);
+```
+
+**Shadow Fraction (`CelestialItem.ShadowFraction`)**
+- Static method: `ShadowFraction(double angularSeparation, double backSize, double bySize)` → `[0, 1]`
+- Instance method: `ShadowFraction(CelestialItem by, OrbitalParameters from, Aberration aberration)` → `[0, 1]`
+- Returns 0.0 for full illumination, 1.0 for total eclipse
+- Uses the standard two-circle intersection area formula for partial eclipses
+
 ### Attitude Maneuvers
 
 The framework provides a family of attitude maneuvers for spacecraft orientation control. All inherit from the abstract `Attitude` base class.
@@ -574,6 +613,13 @@ Test data files are in `Data/SolarSystem/` and copied to output directory.
    - `GeopotentialGravitationalField` is NOT thread-safe — one instance per thread
    - Legendre functions use geodesy normalization without Condon-Shortley phase
    - The model file starts at degree 2; degrees 0 and 1 are handled as zeros internally
+11. **Force Models (Drag & SRP)**: When working with atmospheric drag or solar radiation pressure:
+   - Default drag coefficient (Cd) is **2.2** (free-molecular flow for satellites), not 0.3
+   - Atmospheric drag uses **atmosphere-relative velocity** (body-centered velocity minus co-rotation)
+   - SRP includes **Cr coefficient** from `Spacecraft.SolarRadiationCoeff` (default 1.0, range 1.0–2.0)
+   - SRP uses **continuous shadow fraction** (partial/annular eclipses reduce SRP proportionally)
+   - Both forces use **dynamic mass** via `GetTotalMass()` (accounts for fuel consumption during propagation)
+   - Use `CelestialItem.ShadowFraction()` for eclipse geometry calculations
 
 ## Code Quality Standards
 
