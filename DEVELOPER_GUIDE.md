@@ -1226,15 +1226,18 @@ Represents a spacecraft with components.
 
 | Constructor | Description |
 |------------|-------------|
-| `Spacecraft(int naifId, string name, double dryMass, double maximumThrustPower, Clock clock, OrbitalParameters orbit)` | Create spacecraft |
+| `Spacecraft(int naifId, string name, double dryMass, double maxMass, Clock clock, OrbitalParameters orbit, double sectionalArea = 1.0, double dragCoeff = 2.2, string cosparId = null, double solarRadiationCoeff = 1.0)` | Create spacecraft |
 
 | Property | Description |
 |----------|-------------|
 | `NaifId` | NAIF ID (negative) |
 | `Name` | Spacecraft name |
-| `DryMass` | Mass without fuel (kg) |
-| `MaximumThrustPower` | Maximum thrust power (W) |
+| `DryOperatingMass` | Mass without fuel (kg) |
+| `MaximumOperatingMass` | Maximum operating mass (kg) |
 | `Clock` | Onboard clock |
+| `SectionalArea` | Mean cross-sectional area for drag and SRP (m²) |
+| `DragCoefficient` | Drag coefficient Cd (default 2.2) |
+| `SolarRadiationCoeff` | Solar radiation pressure coefficient Cr (default 1.0, range 1.0–2.0) |
 | `InitialOrbitalParameters` | Initial orbit |
 | `StateVectorsRelativeToICRF` | Propagated states |
 
@@ -1467,8 +1470,8 @@ Numerical orbit propagator using a Velocity-Verlet (symplectic) integrator with 
 
 **Force Models:**
 - **Gravitational acceleration** from each body in the `bodies` list. If a body has a `GeopotentialModelParameters`, the full spherical harmonic model (EGM2008) is used; otherwise point-mass gravity is applied.
-- **Atmospheric drag** (when `drag` is true): uses the body's atmospheric model
-- **Solar radiation pressure** (when `srp` is true): cannonball model with eclipse detection
+- **Atmospheric drag** (when `drag` is true): uses the body's atmospheric model with atmosphere-relative velocity (accounts for body co-rotation). Default Cd = 2.2 (free-molecular flow). Mass ratio is dynamic (tracks fuel consumption via `GetTotalMass()`).
+- **Solar radiation pressure** (when `srp` is true): cannonball model with reflectivity coefficient Cr (`Spacecraft.SolarRadiationCoeff`, default 1.0). Uses continuous shadow fraction for partial/annular eclipse geometry instead of binary eclipse detection. Mass ratio is dynamic.
 
 **Geopotential usage:**
 
