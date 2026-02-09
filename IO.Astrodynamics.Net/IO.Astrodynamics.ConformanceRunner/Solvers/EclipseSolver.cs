@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.ConformanceRunner.Models;
 using IO.Astrodynamics.ConformanceRunner.Utilities;
@@ -20,19 +21,29 @@ public class EclipseSolver : ICategorySolver
         var frame = FrameMapper.Map(caseInput.Metadata.ReferenceFrame);
         var epoch = new Time(inputs.Epoch);
 
-        // Resolve bodies
+        // Resolve bodies using the framework's CelestialBody
         var earth = BodyResolver.Resolve(inputs.OccultingBody);
         var sun = BodyResolver.Resolve(inputs.LightSource);
 
-        // Build orbit
+        // Build orbit from inputs and convert to Keplerian elements (for two-body propagation)
         var sv = BuildStateVector(inputs.Orbit, earth, epoch, frame);
+        var kep = sv.ToKeplerianElements();
 
         // Parse search window
         var windowStart = new Time(inputs.SearchWindow.Start);
         var windowEnd = new Time(inputs.SearchWindow.End);
 
-        // Search for first eclipse
-        var result = FindFirstEclipse(sv, earth, sun, windowStart, windowEnd, frame);
+        // Use the framework's FindWindowsOnOccultationConstraint on the Sun,
+        // searching for when it is occulted by Earth as seen from the spacecraft orbit.
+        // First, find Any occultation windows, then determine the specific type.
+        var searchWindow = new Window(windowStart, windowEnd);
+
+        // Use GeometryFinder-based window search via CelestialItem.FindWindowsOnOccultationConstraint
+        // The observer needs to be a localizable object — use the spacecraft orbit position.
+        // Since FindWindowsOnOccultationConstraint uses a zero-position StateVector relative to
+        // the observer, we need to use the framework's IsOcculted instance method instead,
+        // which properly checks occultation from an arbitrary orbital position.
+        var result = FindFirstEclipseUsingFramework(kep, earth, sun, searchWindow);
 
         if (result == null)
         {
@@ -54,140 +65,53 @@ public class EclipseSolver : ICategorySolver
         };
     }
 
-    private static EclipseResult? FindFirstEclipse(
-        StateVector initialSv,
-        CelestialBody occultingBody,
-        CelestialBody lightSource,
-        Time windowStart,
-        Time windowEnd,
-        Frame frame)
-    {
-        // Get the Keplerian elements for two-body propagation
-        var kep = initialSv.ToKeplerianElements();
-
-        // Coarse scan: step through at 10-second intervals
-        var stepSeconds = 10.0;
-        var totalSeconds = (windowEnd - windowStart).TotalSeconds;
-        var steps = (int)(totalSeconds / stepSeconds) + 1;
-
-        OccultationType prevType = OccultationType.None;
-        Time? entryCandidate = null;
-        OccultationType entryType = OccultationType.None;
-
-        for (int i = 0; i <= steps; i++)
-        {
-            var t = windowStart + TimeSpan.FromSeconds(System.Math.Min(i * stepSeconds, totalSeconds));
-            var currentType = ComputeOccultation(kep, t, occultingBody, lightSource, frame);
-
-            if (prevType == OccultationType.None && currentType != OccultationType.None)
-            {
-                // Transition into eclipse — bisect to find entry
-                var prevT = i > 0 ? windowStart + TimeSpan.FromSeconds((i - 1) * stepSeconds) : windowStart;
-                var entryTime = BisectTransition(kep, prevT, t, occultingBody, lightSource, frame, searchForEntry: true);
-                entryCandidate = entryTime;
-                entryType = currentType;
-            }
-            else if (prevType != OccultationType.None && currentType == OccultationType.None && entryCandidate.HasValue)
-            {
-                // Transition out of eclipse — bisect to find exit
-                var prevT = windowStart + TimeSpan.FromSeconds((i - 1) * stepSeconds);
-                var exitTime = BisectTransition(kep, prevT, t, occultingBody, lightSource, frame, searchForEntry: false);
-
-                // Determine the eclipse type at the midpoint
-                var midTime = entryCandidate.Value + TimeSpan.FromSeconds((exitTime - entryCandidate.Value).TotalSeconds / 2.0);
-                var midType = ComputeOccultation(kep, midTime, occultingBody, lightSource, frame);
-                if (midType == OccultationType.None) midType = entryType;
-
-                return new EclipseResult
-                {
-                    Entry = entryCandidate.Value,
-                    Exit = exitTime,
-                    Type = midType
-                };
-            }
-
-            prevType = currentType;
-        }
-
-        // If we're still in eclipse at window end
-        if (entryCandidate.HasValue && prevType != OccultationType.None)
-        {
-            var midTime = entryCandidate.Value + TimeSpan.FromSeconds((windowEnd - entryCandidate.Value).TotalSeconds / 2.0);
-            var midType = ComputeOccultation(kep, midTime, occultingBody, lightSource, frame);
-            if (midType == OccultationType.None) midType = entryType;
-
-            return new EclipseResult
-            {
-                Entry = entryCandidate.Value,
-                Exit = windowEnd,
-                Type = midType
-            };
-        }
-
-        return null;
-    }
-
-    private static Time BisectTransition(
+    /// <summary>
+    /// Uses the framework's CelestialItem.IsOcculted instance method and GeometryFinder
+    /// to find the first eclipse window from the spacecraft's orbital position.
+    /// </summary>
+    private static EclipseResult? FindFirstEclipseUsingFramework(
         KeplerianElements kep,
-        Time tBefore,
-        Time tAfter,
         CelestialBody occultingBody,
         CelestialBody lightSource,
-        Frame frame,
-        bool searchForEntry)
+        Window searchWindow)
     {
-        // Binary search to ~1ms precision
-        var lo = tBefore;
-        var hi = tAfter;
+        // Use GeometryFinder to search for occultation windows.
+        // The framework's GeometryFinder.FindWindowsWithCondition does coarse+bisect search.
+        var geometryFinder = new GeometryFinder();
 
-        for (int iter = 0; iter < 50; iter++)
+        // Define the occultation check using the framework's IsOcculted instance method
+        Func<Time, bool> isOcculted = date =>
         {
-            var midSeconds = (lo - tBefore).TotalSeconds + ((hi - lo).TotalSeconds / 2.0);
-            var mid = tBefore + TimeSpan.FromSeconds((lo - tBefore).TotalSeconds + (hi - lo).TotalSeconds / 2.0);
+            var sv = kep.ToStateVector(date);
+            var occType = lightSource.IsOcculted(occultingBody, sv, Aberration.LT);
+            return occType is OccultationType.Full or OccultationType.Partial or OccultationType.Annular;
+        };
 
-            var midType = ComputeOccultation(kep, mid, occultingBody, lightSource, frame);
-            bool isInEclipse = midType != OccultationType.None;
+        // Use framework's GeometryFinder with 60s step size for coarse scan
+        var windows = geometryFinder.FindWindowsWithCondition(
+            searchWindow,
+            isOcculted,
+            RelationnalOperator.Equal,
+            true,
+            TimeSpan.FromSeconds(60.0));
 
-            if (searchForEntry)
-            {
-                // Looking for entry: eclipse starts somewhere in [lo, hi]
-                // lo is NOT in eclipse, hi IS in eclipse
-                if (isInEclipse)
-                    hi = mid;
-                else
-                    lo = mid;
-            }
-            else
-            {
-                // Looking for exit: eclipse ends somewhere in [lo, hi]
-                // lo IS in eclipse, hi is NOT in eclipse
-                if (isInEclipse)
-                    lo = mid;
-                else
-                    hi = mid;
-            }
+        var windowList = windows.ToArray();
+        if (windowList.Length == 0)
+            return null;
 
-            if ((hi - lo).TotalSeconds < 0.001)
-                break;
-        }
+        var firstWindow = windowList[0];
 
-        return searchForEntry ? hi : lo;
-    }
+        // Determine eclipse type at midpoint using the framework's IsOcculted
+        var midTime = firstWindow.StartDate + TimeSpan.FromSeconds(firstWindow.Length.TotalSeconds / 2.0);
+        var midSv = kep.ToStateVector(midTime);
+        var eclipseType = lightSource.IsOcculted(occultingBody, midSv, Aberration.LT) ?? OccultationType.None;
 
-    private static OccultationType ComputeOccultation(
-        KeplerianElements kep,
-        Time t,
-        CelestialBody occultingBody,
-        CelestialBody lightSource,
-        Frame frame)
-    {
-        // Two-body propagation to time t
-        var sv = kep.ToStateVector(t);
-
-        // Use the instance method on CelestialItem
-        var occultation = lightSource.IsOcculted(occultingBody, sv);
-
-        return occultation ?? OccultationType.None;
+        return new EclipseResult
+        {
+            Entry = firstWindow.StartDate,
+            Exit = firstWindow.EndDate,
+            Type = eclipseType
+        };
     }
 
     private static string MapEclipseType(OccultationType type)

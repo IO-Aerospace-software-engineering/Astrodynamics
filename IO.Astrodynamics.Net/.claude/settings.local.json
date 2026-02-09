@@ -37,7 +37,9 @@
       "WebFetch(domain:degenerateconic.com)",
       "Bash(dotnet sln:*)",
       "Bash(dotnet run:*)",
-      "Bash(echo:*)"
+      "Bash(echo:*)",
+      "WebFetch(domain:docs.json-everything.net)",
+      "Bash(dotnet restore:*)"
     ],
     "deny": [],
     "ask": []

@@ -19,6 +19,7 @@ public class Runner
     private readonly string _conformanceTestsPath;
     private readonly string _spiceKernelsPath;
     private readonly Dictionary<string, ICategorySolver> _solvers;
+    private readonly SchemaValidator _schemaValidator;
 
     public Runner(string conformanceTestsPath, string spiceKernelsPath)
     {
@@ -29,6 +30,7 @@ public class Runner
             ["pointing_triad"] = new TriadSolver(),
             ["eclipse"] = new EclipseSolver()
         };
+        _schemaValidator = new SchemaValidator(conformanceTestsPath);
     }
 
     public RunnerReport Run()
@@ -117,15 +119,40 @@ public class Runner
                 };
             }
 
+            var inputYaml = File.ReadAllText(inputsPath);
+            var expectedJson = File.ReadAllText(expectedPath);
+
+            // Validate inputs against case schema
+            var inputsError = _schemaValidator.ValidateInputs(inputYaml);
+            if (inputsError != null)
+            {
+                return new ResultEntry
+                {
+                    CaseId = Path.GetFileName(caseDir),
+                    Status = "ERROR",
+                    Message = inputsError
+                };
+            }
+
+            // Validate expected result against expected schema
+            var expectedError = _schemaValidator.ValidateExpected(expectedJson);
+            if (expectedError != null)
+            {
+                return new ResultEntry
+                {
+                    CaseId = Path.GetFileName(caseDir),
+                    Status = "ERROR",
+                    Message = expectedError
+                };
+            }
+
             var yamlDeserializer = new DeserializerBuilder()
                 .WithNamingConvention(UnderscoredNamingConvention.Instance)
                 .Build();
 
-            var inputYaml = File.ReadAllText(inputsPath);
             var caseInput = yamlDeserializer.Deserialize<CaseInput>(inputYaml);
             caseId = caseInput.Id ?? Path.GetFileName(caseDir);
 
-            var expectedJson = File.ReadAllText(expectedPath);
             var expected = JsonSerializer.Deserialize<ExpectedResult>(expectedJson);
 
             // Check for SKIP

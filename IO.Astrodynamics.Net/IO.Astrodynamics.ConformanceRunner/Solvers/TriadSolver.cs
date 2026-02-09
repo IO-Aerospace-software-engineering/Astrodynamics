@@ -1,9 +1,12 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using IO.Astrodynamics.Body;
+using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.ConformanceRunner.Models;
 using IO.Astrodynamics.ConformanceRunner.Utilities;
 using IO.Astrodynamics.Frames;
+using IO.Astrodynamics.Maneuver;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.TimeSystem;
@@ -26,44 +29,45 @@ public class TriadSolver : ICategorySolver
         // Build spacecraft state vector from orbit
         var sv = BuildStateVector(inputs.Orbit, earth, epoch, frame);
 
-        // Resolve target bodies
+        // Resolve target bodies using the framework
         var primaryTarget = BodyResolver.Resolve(inputs.PrimaryTarget);
         var secondaryTarget = BodyResolver.Resolve(inputs.SecondaryTarget);
-
-        // Compute inertial reference vectors from ephemeris
-        var primaryEph = primaryTarget.GetEphemeris(epoch, sv.Observer, sv.Frame, Aberration.LT);
-        var secondaryEph = secondaryTarget.GetEphemeris(epoch, sv.Observer, sv.Frame, Aberration.LT);
-
-        var primaryRefVec = (primaryEph.ToStateVector().Position - sv.Position).Normalize();
-        var secondaryRefVec = (secondaryEph.ToStateVector().Position - sv.Position).Normalize();
 
         // Parse body vectors
         var primaryBodyVec = new Vector3(inputs.PrimaryBodyVector[0], inputs.PrimaryBodyVector[1], inputs.PrimaryBodyVector[2]);
         var secondaryBodyVec = new Vector3(inputs.SecondaryBodyVector[0], inputs.SecondaryBodyVector[1], inputs.SecondaryBodyVector[2]);
 
-        // TRIAD algorithm (same as TriadAttitude.ComputeOrientation)
-        // Reference frame triad
-        var t1R = primaryRefVec;
-        var t2R = t1R.Cross(secondaryRefVec).Normalize();
-        var t3R = t1R.Cross(t2R);
+        // Create a minimal Spacecraft with engine/fuel tank (required by TriadAttitude)
+        var spacecraft = new Spacecraft(-999, "ConformanceTestSC", 100.0, 1000.0,
+            new Clock("ConfClk", 65536), sv);
+        spacecraft.AddFuelTank(new FuelTank("ft", "ftA", "000000", 500.0, 400.0));
+        spacecraft.AddEngine(new Engine("eng", "engA", "000000", 300, 50, spacecraft.FuelTanks.First()));
 
-        // Body frame triad
-        var t1B = primaryBodyVec.Normalize();
-        var t2B = t1B.Cross(secondaryBodyVec).Normalize();
-        var t3B = t1B.Cross(t2B);
+        // Use the framework's TriadAttitude with explicit body vectors constructor
+        var triadAttitude = new TriadAttitude(
+            new Time(DateTime.MinValue, TimeFrame.TDBFrame),
+            TimeSpan.FromSeconds(10.0),
+            primaryBodyVec,
+            primaryTarget,
+            secondaryBodyVec,
+            secondaryTarget,
+            spacecraft.Engines.First());
 
-        // Attitude: body→inertial
-        var mRef = Matrix.FromColumnVectors(t1R, t2R, t3R);
-        var mBody = Matrix.FromColumnVectors(t1B, t2B, t3B);
-        var attitude = mRef.Multiply(mBody.Transpose());
-        var attitudeQuat = attitude.ToQuaternion();
+        // Execute the framework's TRIAD algorithm via TryExecute
+        var (_, stateOrientation) = triadAttitude.TryExecute(sv);
+        var attitudeQuat = stateOrientation.Rotation;
 
-        // Convert to conformance format (scalar-last, canonicalized)
+        // Convert to conformance format (scalar-first, canonicalized)
         var quatArray = UnitConversion.QuaternionToArray(attitudeQuat);
 
-        // FOV check: uses primary target direction (already computed)
+        // FOV check: rotate boresight axis by the framework-computed attitude quaternion
         var axisBody = new Vector3(inputs.FieldOfView.AxisBody[0], inputs.FieldOfView.AxisBody[1], inputs.FieldOfView.AxisBody[2]);
         var boresightInertial = axisBody.Rotate(attitudeQuat);
+
+        // Compute primary target direction using the framework's ephemeris
+        var primaryEph = primaryTarget.GetEphemeris(epoch, sv.Observer, sv.Frame, Aberration.LT);
+        var primaryRefVec = (primaryEph.ToStateVector().Position - sv.Position).Normalize();
+
         var angle = boresightInertial.Angle(primaryRefVec);
         var halfAngleRad = UnitConversion.DegToRad(inputs.FieldOfView.HalfAngleDeg);
         var targetInFov = angle <= halfAngleRad;

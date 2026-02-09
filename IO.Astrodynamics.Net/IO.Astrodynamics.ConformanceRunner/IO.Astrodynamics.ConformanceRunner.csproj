@@ -13,6 +13,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <PackageReference Include="JsonSchema.Net" Version="7.3.0" />
       <PackageReference Include="YamlDotNet" Version="16.3.0" />
     </ItemGroup>
 
