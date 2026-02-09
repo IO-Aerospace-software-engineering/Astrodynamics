@@ -34,7 +34,10 @@
       "Bash(tee:*)",
       "Bash(xargs cat:*)",
       "WebFetch(domain:shtools.github.io)",
-      "WebFetch(domain:degenerateconic.com)"
+      "WebFetch(domain:degenerateconic.com)",
+      "Bash(dotnet sln:*)",
+      "Bash(dotnet run:*)",
+      "Bash(echo:*)"
     ],
     "deny": [],
     "ask": []
