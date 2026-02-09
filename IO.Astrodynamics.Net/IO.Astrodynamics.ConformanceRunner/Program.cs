@@ -120,7 +120,7 @@ public static class Program
             };
             var triadResult = new TriadSolver().Solve(triadInput);
             var q = (double[])triadResult["attitude_quaternion"];
-            Console.WriteLine($"OK  q=[{q[0]:F8}, {q[1]:F8}, {q[2]:F8}, {q[3]:F8}]  fov={triadResult["target_in_fov"]}");
+            Console.WriteLine($"OK  q=[{q[0]:R}, {q[1]:R}, {q[2]:R}, {q[3]:R}]  fov={triadResult["target_in_fov"]}");
 
             // Eclipse solver
             Console.Write("Eclipse solver... ");
@@ -147,7 +147,8 @@ public static class Program
                 }
             };
             var eclipseResult = new EclipseSolver().Solve(eclipseInput);
-            Console.WriteLine($"OK  entry={eclipseResult["eclipse_entry"]}  exit={eclipseResult["eclipse_exit"]}  duration={eclipseResult["eclipse_duration_s"]}s  type={eclipseResult["eclipse_type"]}");
+            Console.WriteLine($"OK  penumbra=[{eclipseResult["penumbra_entry"]} → {eclipseResult["penumbra_exit"]}]  umbra=[{eclipseResult["umbra_entry"]} → {eclipseResult["umbra_exit"]}]");
+            Console.WriteLine($"          penumbra_dur={eclipseResult["penumbra_duration_s"]}s  umbra_dur={eclipseResult["umbra_duration_s"]}s");
 
             Console.WriteLine();
             Console.WriteLine("All smoke tests PASSED!");

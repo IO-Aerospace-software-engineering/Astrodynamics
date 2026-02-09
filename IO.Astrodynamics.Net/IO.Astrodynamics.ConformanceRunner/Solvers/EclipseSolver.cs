@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using IO.Astrodynamics.Body;
+using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.ConformanceRunner.Models;
 using IO.Astrodynamics.ConformanceRunner.Utilities;
 using IO.Astrodynamics.Frames;
@@ -21,107 +22,81 @@ public class EclipseSolver : ICategorySolver
         var frame = FrameMapper.Map(caseInput.Metadata.ReferenceFrame);
         var epoch = new Time(inputs.Epoch);
 
-        // Resolve bodies using the framework's CelestialBody
-        var earth = BodyResolver.Resolve(inputs.OccultingBody);
-        var sun = BodyResolver.Resolve(inputs.LightSource);
+        var occultingBody = BodyResolver.Resolve(inputs.OccultingBody);
+        var lightSource = BodyResolver.Resolve(inputs.LightSource);
 
-        // Build orbit from inputs and convert to Keplerian elements (for two-body propagation)
-        var sv = BuildStateVector(inputs.Orbit, earth, epoch, frame);
-        var kep = sv.ToKeplerianElements();
+        var sv = BuildStateVector(inputs.Orbit, occultingBody, epoch, frame);
 
-        // Parse search window
         var windowStart = new Time(inputs.SearchWindow.Start);
         var windowEnd = new Time(inputs.SearchWindow.End);
-
-        // Use the framework's FindWindowsOnOccultationConstraint on the Sun,
-        // searching for when it is occulted by Earth as seen from the spacecraft orbit.
-        // First, find Any occultation windows, then determine the specific type.
         var searchWindow = new Window(windowStart, windowEnd);
 
-        // Use GeometryFinder-based window search via CelestialItem.FindWindowsOnOccultationConstraint
-        // The observer needs to be a localizable object — use the spacecraft orbit position.
-        // Since FindWindowsOnOccultationConstraint uses a zero-position StateVector relative to
-        // the observer, we need to use the framework's IsOcculted instance method instead,
-        // which properly checks occultation from an arbitrary orbital position.
-        var result = FindFirstEclipseUsingFramework(kep, earth, sun, searchWindow);
+        // Create spacecraft and propagate over the search window
+        var spacecraft = new Spacecraft(-999, "ConformanceTestSC", 100.0, 1000.0,
+            new Clock("ConfClk", 65536), sv);
 
-        if (result == null)
+        var moon = BodyResolver.Resolve("Moon");
+        spacecraft.Propagate(searchWindow,
+            new CelestialItem[] { occultingBody, lightSource, moon },
+            false, false, TimeSpan.FromSeconds(1.0));
+
+        var stepSize = TimeSpan.FromSeconds(60.0);
+
+        // Search for ANY occultation (penumbra boundary) using the framework's method
+        var penumbraWindows = lightSource.FindWindowsOnOccultationConstraint(
+            searchWindow, spacecraft,
+            ShapeType.Ellipsoid, occultingBody, ShapeType.Ellipsoid,
+            OccultationType.Any, Aberration.LT, stepSize).ToArray();
+
+        if (penumbraWindows.Length == 0)
+        {
+            return NullResult();
+        }
+
+        var penumbra = penumbraWindows[0];
+
+        // Search for FULL occultation (umbra boundary) within the penumbra window
+        var umbraWindows = lightSource.FindWindowsOnOccultationConstraint(
+            penumbra, spacecraft,
+            ShapeType.Ellipsoid, occultingBody, ShapeType.Ellipsoid,
+            OccultationType.Full, Aberration.LT, stepSize).ToArray();
+
+        if (umbraWindows.Length == 0)
         {
             return new Dictionary<string, object>
             {
-                ["eclipse_entry"] = (object)null,
-                ["eclipse_exit"] = (object)null,
-                ["eclipse_duration_s"] = (object)null,
-                ["eclipse_type"] = (object)null
+                ["penumbra_entry"] = penumbra.StartDate.ToString(),
+                ["umbra_entry"] = (object)null,
+                ["umbra_exit"] = (object)null,
+                ["penumbra_exit"] = penumbra.EndDate.ToString(),
+                ["penumbra_duration_s"] = penumbra.Length.TotalSeconds,
+                ["umbra_duration_s"] = (object)null
             };
         }
 
+        var umbra = umbraWindows[0];
+
         return new Dictionary<string, object>
         {
-            ["eclipse_entry"] = result.Value.Entry.ToString(),
-            ["eclipse_exit"] = result.Value.Exit.ToString(),
-            ["eclipse_duration_s"] = (result.Value.Exit - result.Value.Entry).TotalSeconds,
-            ["eclipse_type"] = MapEclipseType(result.Value.Type)
+            ["penumbra_entry"] = penumbra.StartDate.ToString(),
+            ["umbra_entry"] = umbra.StartDate.ToString(),
+            ["umbra_exit"] = umbra.EndDate.ToString(),
+            ["penumbra_exit"] = penumbra.EndDate.ToString(),
+            ["penumbra_duration_s"] = penumbra.Length.TotalSeconds - umbra.Length.TotalSeconds,
+            ["umbra_duration_s"] = umbra.Length.TotalSeconds
         };
     }
 
-    /// <summary>
-    /// Uses the framework's CelestialItem.IsOcculted instance method and GeometryFinder
-    /// to find the first eclipse window from the spacecraft's orbital position.
-    /// </summary>
-    private static EclipseResult? FindFirstEclipseUsingFramework(
-        KeplerianElements kep,
-        CelestialBody occultingBody,
-        CelestialBody lightSource,
-        Window searchWindow)
+    private static Dictionary<string, object> NullResult()
     {
-        // Use GeometryFinder to search for occultation windows.
-        // The framework's GeometryFinder.FindWindowsWithCondition does coarse+bisect search.
-        var geometryFinder = new GeometryFinder();
-
-        // Define the occultation check using the framework's IsOcculted instance method
-        Func<Time, bool> isOcculted = date =>
+        return new Dictionary<string, object>
         {
-            var sv = kep.ToStateVector(date);
-            var occType = lightSource.IsOcculted(occultingBody, sv, Aberration.LT);
-            return occType is OccultationType.Full or OccultationType.Partial or OccultationType.Annular;
-        };
-
-        // Use framework's GeometryFinder with 60s step size for coarse scan
-        var windows = geometryFinder.FindWindowsWithCondition(
-            searchWindow,
-            isOcculted,
-            RelationnalOperator.Equal,
-            true,
-            TimeSpan.FromSeconds(60.0));
-
-        var windowList = windows.ToArray();
-        if (windowList.Length == 0)
-            return null;
-
-        var firstWindow = windowList[0];
-
-        // Determine eclipse type at midpoint using the framework's IsOcculted
-        var midTime = firstWindow.StartDate + TimeSpan.FromSeconds(firstWindow.Length.TotalSeconds / 2.0);
-        var midSv = kep.ToStateVector(midTime);
-        var eclipseType = lightSource.IsOcculted(occultingBody, midSv, Aberration.LT) ?? OccultationType.None;
-
-        return new EclipseResult
-        {
-            Entry = firstWindow.StartDate,
-            Exit = firstWindow.EndDate,
-            Type = eclipseType
-        };
-    }
-
-    private static string MapEclipseType(OccultationType type)
-    {
-        return type switch
-        {
-            OccultationType.Full => "umbra",
-            OccultationType.Partial => "penumbra",
-            OccultationType.Annular => "annular",
-            _ => "none"
+            ["penumbra_entry"] = (object)null,
+            ["umbra_entry"] = (object)null,
+            ["umbra_exit"] = (object)null,
+            ["penumbra_exit"] = (object)null,
+            ["penumbra_duration_s"] = (object)null,
+            ["umbra_duration_s"] = (object)null
         };
     }
 
@@ -153,12 +128,5 @@ public class EclipseSolver : ICategorySolver
         }
 
         throw new ArgumentException("Unknown orbit type");
-    }
-
-    private struct EclipseResult
-    {
-        public Time Entry;
-        public Time Exit;
-        public OccultationType Type;
     }
 }

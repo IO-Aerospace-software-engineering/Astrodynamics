@@ -239,14 +239,10 @@ public class Runner
                     pass = ToleranceComparer.ExactMatch(computedBool, goldenBool, out maxAbsDelta, out maxRelDelta);
                     break;
 
-                case "eclipse_type":
-                    var computedType = (string)computedVal;
-                    var goldenType = goldenVal.GetString();
-                    pass = ToleranceComparer.ExactMatch(computedType, goldenType, out maxAbsDelta, out maxRelDelta);
-                    break;
-
-                case "eclipse_entry":
-                case "eclipse_exit":
+                case "penumbra_entry":
+                case "umbra_entry":
+                case "umbra_exit":
+                case "penumbra_exit":
                     var computedTimeStr = (string)computedVal;
                     var goldenTimeStr = goldenVal.GetString();
                     var computedTime = new Time(computedTimeStr);
@@ -255,7 +251,8 @@ public class Runner
                     pass = ToleranceComparer.CompareTime(computedTime, goldenTime, timeTol, out maxAbsDelta, out maxRelDelta);
                     break;
 
-                case "eclipse_duration_s":
+                case "penumbra_duration_s":
+                case "umbra_duration_s":
                     var computedDur = Convert.ToDouble(computedVal);
                     var goldenDur = goldenVal.GetDouble();
                     var durTol = ToleranceComparer.ResolveTolerance(metricName, toleranceConfig?.Defaults, caseOverrides);
