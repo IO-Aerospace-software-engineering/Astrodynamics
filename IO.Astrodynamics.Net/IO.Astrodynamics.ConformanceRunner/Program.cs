@@ -107,14 +107,14 @@ public static class Program
                         ["type"] = "keplerian", ["a_km"] = 7000.0, ["e"] = 0.001,
                         ["i_deg"] = 28.5, ["raan_deg"] = 45.0, ["argp_deg"] = 0.0, ["ma_deg"] = 0.0
                     },
-                    ["primary_target"] = "Sun",
-                    ["secondary_target"] = "Moon",
-                    ["primary_body_vector"] = new List<object> { 0.0, 1.0, 0.0 },
-                    ["secondary_body_vector"] = new List<object> { 0.0, 0.0, 1.0 },
+                    ["primary_target"] = "Moon",
+                    ["secondary_target"] = "Sun",
+                    ["primary_body_vector"] = new List<object> { 0.0, 0.0, 1.0 },
+                    ["secondary_body_vector"] = new List<object> { 0.0, 1.0, 0.0 },
                     ["field_of_view"] = new Dictionary<object, object>
                     {
                         ["half_angle_deg"] = 15.0,
-                        ["axis_body"] = new List<object> { 0.0, 1.0, 0.0 }
+                        ["axis_body"] = new List<object> { 0.0, 0.0, 1.0 }
                     }
                 }
             };

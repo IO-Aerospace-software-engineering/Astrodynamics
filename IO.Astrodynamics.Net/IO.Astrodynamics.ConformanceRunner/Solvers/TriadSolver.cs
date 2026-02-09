@@ -23,54 +23,51 @@ public class TriadSolver : ICategorySolver
         var frame = FrameMapper.Map(caseInput.Metadata.ReferenceFrame);
         var epoch = new Time(inputs.Epoch);
 
-        // Resolve observer (Earth)
         var earth = BodyResolver.Resolve("Earth");
-
-        // Build spacecraft state vector from orbit
         var sv = BuildStateVector(inputs.Orbit, earth, epoch, frame);
 
-        // Resolve target bodies using the framework
         var primaryTarget = BodyResolver.Resolve(inputs.PrimaryTarget);
         var secondaryTarget = BodyResolver.Resolve(inputs.SecondaryTarget);
 
-        // Parse body vectors
-        var primaryBodyVec = new Vector3(inputs.PrimaryBodyVector[0], inputs.PrimaryBodyVector[1], inputs.PrimaryBodyVector[2]);
-        var secondaryBodyVec = new Vector3(inputs.SecondaryBodyVector[0], inputs.SecondaryBodyVector[1], inputs.SecondaryBodyVector[2]);
+        // Parse body vectors (instrument boresight and clock/refVector)
+        var boresight = new Vector3(inputs.PrimaryBodyVector[0], inputs.PrimaryBodyVector[1], inputs.PrimaryBodyVector[2]);
+        var refVector = new Vector3(inputs.SecondaryBodyVector[0], inputs.SecondaryBodyVector[1], inputs.SecondaryBodyVector[2]);
 
-        // Create a minimal Spacecraft with engine/fuel tank (required by TriadAttitude)
+        // Create spacecraft with instrument, engine and fuel tank
         var spacecraft = new Spacecraft(-999, "ConformanceTestSC", 100.0, 1000.0,
             new Clock("ConfClk", 65536), sv);
         spacecraft.AddFuelTank(new FuelTank("ft", "ftA", "000000", 500.0, 400.0));
         spacecraft.AddEngine(new Engine("eng", "engA", "000000", 300, 50, spacecraft.FuelTanks.First()));
 
-        // Use the framework's TriadAttitude with explicit body vectors constructor
+        // Create a circular instrument with the boresight and clock directions
+        var fovRad = UnitConversion.DegToRad(inputs.FieldOfView.HalfAngleDeg);
+        spacecraft.AddCircularInstrument(-99900, "ConfInst", "ConfModel",
+            fovRad, boresight, refVector, Vector3.Zero);
+
+        // Use the single-instrument TriadAttitude constructor:
+        // boresight → primary target, clock/refVector → secondary target
         var triadAttitude = new TriadAttitude(
             new Time(DateTime.MinValue, TimeFrame.TDBFrame),
             TimeSpan.FromSeconds(10.0),
-            primaryBodyVec,
+            spacecraft.Instruments.First(),
             primaryTarget,
-            secondaryBodyVec,
             secondaryTarget,
             spacecraft.Engines.First());
 
-        // Execute the framework's TRIAD algorithm via TryExecute
+        // Execute the framework's TRIAD algorithm
         var (_, stateOrientation) = triadAttitude.TryExecute(sv);
         var attitudeQuat = stateOrientation.Rotation;
-
-        // Convert to conformance format (scalar-first, canonicalized)
         var quatArray = UnitConversion.QuaternionToArray(attitudeQuat);
 
-        // FOV check: rotate boresight axis by the framework-computed attitude quaternion
-        var axisBody = new Vector3(inputs.FieldOfView.AxisBody[0], inputs.FieldOfView.AxisBody[1], inputs.FieldOfView.AxisBody[2]);
-        var boresightInertial = axisBody.Rotate(attitudeQuat);
+        // FOV check: rotate instrument boresight by the attitude quaternion
+        var boresightInertial = boresight.Rotate(attitudeQuat);
 
-        // Compute primary target direction using the framework's ephemeris
+        // Compute primary target direction from ephemeris
         var primaryEph = primaryTarget.GetEphemeris(epoch, sv.Observer, sv.Frame, Aberration.LT);
         var primaryRefVec = (primaryEph.ToStateVector().Position - sv.Position).Normalize();
 
         var angle = boresightInertial.Angle(primaryRefVec);
-        var halfAngleRad = UnitConversion.DegToRad(inputs.FieldOfView.HalfAngleDeg);
-        var targetInFov = angle <= halfAngleRad;
+        var targetInFov = angle <= fovRad;
 
         return new Dictionary<string, object>
         {
