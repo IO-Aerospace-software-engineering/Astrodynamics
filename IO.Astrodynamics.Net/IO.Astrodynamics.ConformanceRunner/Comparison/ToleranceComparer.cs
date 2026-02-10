@@ -18,23 +18,26 @@ public static class ToleranceComparer
     }
 
     /// <summary>
-    /// Compare quaternion arrays (element-wise). Returns max deltas across all components.
+    /// Compare quaternions by rotation angle distance.
+    /// Both arrays are scalar-first [w, x, y, z].
+    /// Handles q vs -q ambiguity via |dot|.
+    /// Reports angular distance in radians as the delta.
     /// </summary>
     public static bool CompareQuaternion(double[] computed, double[] golden, TolerancePair tol, out double maxAbsDelta, out double maxRelDelta)
     {
-        maxAbsDelta = 0;
-        maxRelDelta = 0;
-        bool allPass = true;
-
+        // 4D dot product — |dot| = 1 means identical rotation, 0 means 180° apart
+        double dot = 0;
         for (int i = 0; i < 4; i++)
-        {
-            bool pass = Passes(computed[i], golden[i], tol, out double abs, out double rel);
-            maxAbsDelta = System.Math.Max(maxAbsDelta, abs);
-            maxRelDelta = System.Math.Max(maxRelDelta, rel);
-            if (!pass) allPass = false;
-        }
+            dot += computed[i] * golden[i];
 
-        return allPass;
+        // Angular distance in radians (handles q/-q ambiguity via |dot|)
+        double absDot = System.Math.Min(System.Math.Abs(dot), 1.0);
+        double angularDistance = 2.0 * System.Math.Acos(absDot);
+
+        maxAbsDelta = angularDistance;
+        maxRelDelta = angularDistance; // no meaningful relative delta for angles
+
+        return angularDistance <= tol.AbsTol || angularDistance <= tol.RelTol;
     }
 
     /// <summary>
