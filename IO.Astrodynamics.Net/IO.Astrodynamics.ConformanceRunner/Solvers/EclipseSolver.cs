@@ -35,9 +35,8 @@ public class EclipseSolver : ICategorySolver
         var spacecraft = new Spacecraft(-999, "ConformanceTestSC", 100.0, 1000.0,
             new Clock("ConfClk", 65536), sv);
 
-        var moon = BodyResolver.Resolve("Moon");
         spacecraft.Propagate(searchWindow,
-            new CelestialItem[] { occultingBody, lightSource, moon },
+            [occultingBody],
             false, false, TimeSpan.FromSeconds(1.0));
 
         var stepSize = TimeSpan.FromSeconds(60.0);
@@ -65,10 +64,10 @@ public class EclipseSolver : ICategorySolver
         {
             return new Dictionary<string, object>
             {
-                ["penumbra_entry"] = penumbra.StartDate.ToString(),
+                ["penumbra_entry"] = penumbra.StartDate.ToUTC().ToString(),
                 ["umbra_entry"] = (object)null,
                 ["umbra_exit"] = (object)null,
-                ["penumbra_exit"] = penumbra.EndDate.ToString(),
+                ["penumbra_exit"] = penumbra.EndDate.ToUTC().ToString(),
                 ["penumbra_duration_s"] = penumbra.Length.TotalSeconds,
                 ["umbra_duration_s"] = (object)null
             };
@@ -78,10 +77,10 @@ public class EclipseSolver : ICategorySolver
 
         return new Dictionary<string, object>
         {
-            ["penumbra_entry"] = penumbra.StartDate.ToString(),
-            ["umbra_entry"] = umbra.StartDate.ToString(),
-            ["umbra_exit"] = umbra.EndDate.ToString(),
-            ["penumbra_exit"] = penumbra.EndDate.ToString(),
+            ["penumbra_entry"] = penumbra.StartDate.ToUTC().ToString(),
+            ["umbra_entry"] = umbra.StartDate.ToUTC().ToString(),
+            ["umbra_exit"] = umbra.EndDate.ToUTC().ToString(),
+            ["penumbra_exit"] = penumbra.EndDate.ToUTC().ToString(),
             ["penumbra_duration_s"] = penumbra.Length.TotalSeconds - umbra.Length.TotalSeconds,
             ["umbra_duration_s"] = umbra.Length.TotalSeconds
         };
