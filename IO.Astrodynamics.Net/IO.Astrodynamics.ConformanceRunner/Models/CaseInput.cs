@@ -95,3 +95,22 @@ public class SearchWindow
     public string Start { get; set; }
     public string End { get; set; }
 }
+
+public class PropagatorInputs
+{
+    public string Epoch { get; set; }
+    public object Orbit { get; set; }
+    public SearchWindow PropagationWindow { get; set; }
+    public string CentralBody { get; set; }
+    public int GeopotentialDegree { get; set; }
+    public string GeopotentialModel { get; set; }
+    public List<string> PerturbationBodies { get; set; }
+    public PropagatorForceModel ForceModel { get; set; }
+    public double StepSizeS { get; set; }
+}
+
+public class PropagatorForceModel
+{
+    public bool Drag { get; set; }
+    public bool Srp { get; set; }
+}

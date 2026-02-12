@@ -150,6 +150,42 @@ public static class Program
             Console.WriteLine($"OK  penumbra=[{eclipseResult["penumbra_entry"]} → {eclipseResult["penumbra_exit"]}]  umbra=[{eclipseResult["umbra_entry"]} → {eclipseResult["umbra_exit"]}]");
             Console.WriteLine($"          penumbra_dur={eclipseResult["penumbra_duration_s"]}s  umbra_dur={eclipseResult["umbra_duration_s"]}s");
 
+            // Propagator solver
+            Console.Write("Propagator solver... ");
+            var propagatorInput = new CaseInput
+            {
+                Id = "smoke_propagator",
+                Category = "propagator",
+                Metadata = new CaseMetadata { ReferenceFrame = "ICRF", TimeScale = "UTC", EphemerisKernel = "de440s.bsp" },
+                Inputs = new Dictionary<string, object>
+                {
+                    ["epoch"] = "2025-08-25T11:55:44.000 UTC",
+                    ["orbit"] = new Dictionary<object, object>
+                    {
+                        ["type"] = "state_vector",
+                        ["position_km"] = new List<object> { 5442.1625926801835, -4068.9498468206248, -13.456851447751518 },
+                        ["velocity_km_s"] = new List<object> { 2.8581975428173836, 3.8097859312745794, 6.0021266931226886 }
+                    },
+                    ["propagation_window"] = new Dictionary<object, object>
+                    {
+                        ["start"] = "2025-08-25T11:55:44.000 UTC",
+                        ["end"] = "2025-08-26T11:55:44.000 UTC"
+                    },
+                    ["central_body"] = "Earth",
+                    ["geopotential_degree"] = 10,
+                    ["geopotential_model"] = "EGM2008_to70_TideFree",
+                    ["perturbation_bodies"] = new List<object> { "Moon", "Sun" },
+                    ["force_model"] = new Dictionary<object, object>
+                    {
+                        ["drag"] = false,
+                        ["srp"] = false
+                    },
+                    ["step_size_s"] = 1.0
+                }
+            };
+            var propagatorResult = new PropagatorSolver(kernelsPath).Solve(propagatorInput);
+            Console.WriteLine($"OK  final_pos_km=({propagatorResult["final_x_km"]:F6}, {propagatorResult["final_y_km"]:F6}, {propagatorResult["final_z_km"]:F6})");
+
             Console.WriteLine();
             Console.WriteLine("All smoke tests PASSED!");
             return 0;

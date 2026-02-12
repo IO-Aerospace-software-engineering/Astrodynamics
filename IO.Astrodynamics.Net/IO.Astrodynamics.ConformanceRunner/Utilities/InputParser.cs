@@ -52,6 +52,40 @@ public static class InputParser
         return result;
     }
 
+    public static PropagatorInputs ParsePropagatorInputs(Dictionary<string, object> inputs)
+    {
+        var result = new PropagatorInputs
+        {
+            Epoch = GetString(inputs, "epoch"),
+            CentralBody = GetString(inputs, "central_body"),
+            GeopotentialDegree = (int)ToDouble(inputs["geopotential_degree"]),
+            GeopotentialModel = GetString(inputs, "geopotential_model"),
+            StepSizeS = ToDouble(inputs["step_size_s"])
+        };
+
+        var orbit = inputs["orbit"] as Dictionary<object, object>;
+        result.Orbit = ParseOrbit(orbit);
+
+        var pw = inputs["propagation_window"] as Dictionary<object, object>;
+        result.PropagationWindow = new SearchWindow
+        {
+            Start = pw["start"]?.ToString(),
+            End = pw["end"]?.ToString()
+        };
+
+        var fm = inputs["force_model"] as Dictionary<object, object>;
+        result.ForceModel = new PropagatorForceModel
+        {
+            Drag = Convert.ToBoolean(fm["drag"]),
+            Srp = Convert.ToBoolean(fm["srp"])
+        };
+
+        var bodies = inputs["perturbation_bodies"] as List<object>;
+        result.PerturbationBodies = bodies?.ConvertAll(b => b.ToString()) ?? new List<string>();
+
+        return result;
+    }
+
     private static object ParseOrbit(Dictionary<object, object> orbit)
     {
         var type = orbit["type"]?.ToString();

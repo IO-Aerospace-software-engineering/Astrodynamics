@@ -28,7 +28,8 @@ public class Runner
         _solvers = new Dictionary<string, ICategorySolver>
         {
             ["pointing_triad"] = new TriadSolver(),
-            ["eclipse"] = new EclipseSolver()
+            ["eclipse"] = new EclipseSolver(),
+            ["propagator"] = new PropagatorSolver(spiceKernelsPath)
         };
         _schemaValidator = new SchemaValidator(conformanceTestsPath);
     }
@@ -257,6 +258,20 @@ public class Runner
                     var goldenDur = goldenVal.GetDouble();
                     var durTol = ToleranceComparer.ResolveTolerance(metricName, toleranceConfig?.Defaults, caseOverrides);
                     pass = ToleranceComparer.Passes(computedDur, goldenDur, durTol, out maxAbsDelta, out maxRelDelta);
+                    break;
+
+                case "final_x_km":
+                case "final_y_km":
+                case "final_z_km":
+                    var posTol = ToleranceComparer.ResolveTolerance("position_km", toleranceConfig?.Defaults, caseOverrides);
+                    pass = ToleranceComparer.Passes(Convert.ToDouble(computedVal), goldenVal.GetDouble(), posTol, out maxAbsDelta, out maxRelDelta);
+                    break;
+
+                case "final_vx_km_s":
+                case "final_vy_km_s":
+                case "final_vz_km_s":
+                    var velTol = ToleranceComparer.ResolveTolerance("velocity_km_s", toleranceConfig?.Defaults, caseOverrides);
+                    pass = ToleranceComparer.Passes(Convert.ToDouble(computedVal), goldenVal.GetDouble(), velTol, out maxAbsDelta, out maxRelDelta);
                     break;
 
                 default:
