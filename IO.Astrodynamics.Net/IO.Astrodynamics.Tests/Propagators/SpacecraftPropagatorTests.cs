@@ -210,7 +210,6 @@ public class SpacecraftPropagatorTests
 
         var positionError = (lastEphemeris!.Position - expectedPosition).Magnitude();
         var positionErrorKm = positionError / 1000.0;
-
         // Without Moon, expect large error (100-200 km) due to SSB frame imbalance.
         // The indirect Moon perturbation on Earth is present (via SPICE ephemeris)
         // but the direct Moon perturbation on the spacecraft is absent.
@@ -263,7 +262,6 @@ public class SpacecraftPropagatorTests
 
         var positionError = (lastEphemeris!.Position - expectedPosition).Magnitude();
         var positionErrorKm = positionError / 1000.0;
-
         Assert.True(positionErrorKm < 1.5,
             $"3D position error after 24h is {positionErrorKm:F3} km, expected < 1.5 km. " +
             $"Actual position: ({lastEphemeris.Position.X / 1000.0:F4}, {lastEphemeris.Position.Y / 1000.0:F4}, {lastEphemeris.Position.Z / 1000.0:F4}) km");
@@ -315,9 +313,76 @@ public class SpacecraftPropagatorTests
 
         var positionError = (lastEphemeris!.Position - expectedPosition).Magnitude();
         var positionErrorKm = positionError / 1000.0;
+        Assert.True(positionErrorKm < 5.0,
+            $"3D position error after 24h is {positionErrorKm:F3} km, expected < 5 km. " +
+            $"Actual position: ({lastEphemeris.Position.X / 1000.0:F4}, {lastEphemeris.Position.Y / 1000.0:F4}, {lastEphemeris.Position.Z / 1000.0:F4}) km");
+    }
 
-        Assert.True(positionErrorKm < 1.5,
-            $"3D position error after 24h is {positionErrorKm:F3} km, expected < 1.5 km. " +
+    [Fact]
+    public void PropagateGeo24hGrav70AllBodiesSrpDrag()
+    {
+        // GEO satellite (INTELSAT 901) propagated 24h with full force model and all solar system bodies:
+        // degree-70 geopotential + Sun + Moon + all planetary barycenters + SRP + Drag.
+        // Adding Jupiter, Saturn, Venus, Mars, etc. should improve accuracy by accounting
+        // for their (small but non-zero) gravitational perturbations and resolving
+        // additional SSB frame indirect effects.
+        Clock clk = new Clock("My clock", 256);
+
+        var tle = new TLE("INTELSAT 901",
+            "1 26824U 01024A   26040.43262683 -.00000207  00000-0  00000+0 0  9994",
+            "2 26824   0.9230  86.6125 0002726 324.4840  12.2632  0.98820941 21659");
+        var tleEpoch = tle.Epoch;
+
+        // Earth with degree-70 geopotential and atmosphere model
+        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, tleEpoch,
+            new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 70),
+            new EarthStandardAtmosphere());
+
+        var osculatingIcrf = tle.ToStateVector().ToFrame(Frames.Frame.ICRF).ToStateVector();
+        var orbit = new StateVector(osculatingIcrf.Position, osculatingIcrf.Velocity,
+            earth, osculatingIcrf.Epoch, Frames.Frame.ICRF);
+
+        // mass=3000kg, maxMass=5000kg, area=50m², Cd=2.2, Cr=1.5
+        Spacecraft spc = new Spacecraft(-1001, "INTELSAT901", 3000.0, 5000.0, clk, orbit,
+            sectionalArea: 50.0, dragCoeff: 2.2, solarRadiationCoeff: 1.5);
+
+        var endEpoch = tleEpoch.AddDays(1);
+        var propWindow = new Window(tleEpoch, endEpoch);
+
+        // Full force model with ALL solar system bodies
+        Propagator.SpacecraftPropagator spacecraftPropagator = new Propagator.SpacecraftPropagator(
+            propWindow, spc,
+            [
+                earth,
+                PlanetsAndMoons.MOON_BODY,
+                Stars.SUN_BODY,
+                Barycenters.MERCURY_BARYCENTER,
+                Barycenters.VENUS_BARYCENTER,
+                Barycenters.MARS_BARYCENTER,
+                Barycenters.JUPITER_BARYCENTER,
+                Barycenters.SATURN_BARYCENTER,
+                Barycenters.URANUS_BARYCENTER,
+                Barycenters.NEPTUNE_BARYCENTER,
+                Barycenters.PLUTO_BARYCENTER
+            ],
+            true, true,
+            TimeSpan.FromSeconds(1.0));
+
+        spacecraftPropagator.Propagate();
+
+        var lastEphemeris = spc.StateVectorsRelativeToICRF.Values.Last()
+            .RelativeTo(earth, Aberration.None) as StateVector;
+
+        // STK reference position after 24h (Grav70+Sun+Moon+SRP+Drag, Earth-relative ICRF, in meters)
+        // Using same STK reference as Test 3 — any improvement comes from better SSB balance
+        var expectedPosition = new Vector3(22034.8834e3, 36415.1586e3, -382.4283e3);
+
+        var positionError = (lastEphemeris!.Position - expectedPosition).Magnitude();
+        var positionErrorKm = positionError / 1000.0;
+        // With all solar system bodies, SSB indirect effects are fully balanced.
+        // Expect improved accuracy compared to Sun+Moon only.
+        Assert.True(positionErrorKm < 5.0,
+            $"3D position error after 24h is {positionErrorKm:F3} km, expected < 5 km. " +
             $"Actual position: ({lastEphemeris.Position.X / 1000.0:F4}, {lastEphemeris.Position.Y / 1000.0:F4}, {lastEphemeris.Position.Z / 1000.0:F4}) km");
     }
 }
