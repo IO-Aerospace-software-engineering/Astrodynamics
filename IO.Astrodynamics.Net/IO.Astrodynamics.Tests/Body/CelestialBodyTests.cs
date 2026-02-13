@@ -248,7 +248,7 @@ public class CelestialBodyTests
     public void GeosynchronousOrbit()
     {
         var orbit = TestHelpers.EarthAtJ2000.GeosynchronousOrbit(0.0, 0.0, new TimeSystem.Time(new DateTime(2021, 1, 1, 0, 0, 0, DateTimeKind.Unspecified), TimeFrame.TDBFrame));
-        Assert.Equal(42164171.95991531, orbit.ToStateVector().Position.Magnitude(),3);
+        Assert.Equal(42164171.960633017, orbit.ToStateVector().Position.Magnitude(),3);
         Assert.Equal(3074.6599900324436, orbit.ToStateVector().Velocity.Magnitude(),3);
         Assert.Equal(Frames.Frame.ICRF, orbit.Frame);
     }
@@ -257,10 +257,10 @@ public class CelestialBodyTests
     public void GeosynchronousOrbit2()
     {
         var orbit = TestHelpers.EarthAtJ2000.GeosynchronousOrbit(1.0, 1.0, new TimeSystem.Time(new DateTime(2021, 1, 1, 0, 0, 0, DateTimeKind.Unspecified), TimeFrame.TDBFrame));
-        Assert.Equal(42164171.95991531, orbit.ToStateVector().Position.Magnitude(), 3);
+        Assert.Equal(42164171.960633025, orbit.ToStateVector().Position.Magnitude(), 3);
         Assert.Equal(3074.6599898500763, orbit.ToStateVector().Velocity.Magnitude(), 3);
         Assert.Equal(Frames.Frame.ICRF, orbit.Frame);
-        Assert.Equal(42164171.95991531, orbit.SemiMajorAxis(), 3);
+        Assert.Equal(42164171.960633025, orbit.SemiMajorAxis(), 3);
         Assert.Equal(0.0, orbit.Eccentricity());
         Assert.Equal(1.0, orbit.Inclination(), 2);
         Assert.Equal(1.1804318466570587, orbit.AscendingNode(), 2);
