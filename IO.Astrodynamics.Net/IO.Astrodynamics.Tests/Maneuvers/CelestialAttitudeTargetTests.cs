@@ -64,4 +64,14 @@ public class CelestialAttitudeTargetTests
         var target = new CelestialAttitudeTarget(TestHelpers.MoonAtJ2000);
         Assert.Equal("MOON", target.Name);
     }
+
+    [Fact]
+    public void GetDirection_NullObserverState_ThrowsArgumentNullException()
+    {
+        // Arrange
+        var target = new CelestialAttitudeTarget(TestHelpers.MoonAtJ2000);
+
+        // Act & Assert
+        Assert.Throws<ArgumentNullException>(() => target.GetDirection(null));
+    }
 }

@@ -29,9 +29,9 @@ Important: The C++ layer is feature-frozen and exists only for communication wit
 - Mean elements support: OMM data import, TLE creation with precision preservation
 - Compute TLE from state vectors with SGP4-compatible fitting
 - Frames and coordinates: ICRF/J2000, Ecliptic (J2000/B1950), TEME, Galactic, FK4, body-fixed/ITRF93, Equatorial/Horizontal/Planetodetic/Planetographic
-- Spacecraft configuration: clocks, fuel tanks, engines, instruments
+- Spacecraft configuration: clocks, fuel tanks, engines, instruments, configurable body axes
 - Impulsive maneuvers: Lambert transfers, apogee/perigee height changes, plane/apsidal alignment, phasing, combined maneuvers
-- Attitudes: instrument pointing, nadir/zenith, prograde/retrograde, TRIAD (fully-constrained 3-DOF)
+- Attitudes: instrument pointing, nadir/zenith, prograde/retrograde, normal/anti-normal, TRIAD (fully-constrained 3-DOF with orbital direction and celestial targets), configurable body axes
 - Time systems: Calendar, Julian, TDB, UTC, local; conversions included
 - Event finding: distance, occultation, coordinate, illumination constraints; instrument field-of-view windows
 - Kernel management utilities

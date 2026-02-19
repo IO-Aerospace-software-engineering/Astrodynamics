@@ -1,3 +1,5 @@
+// Copyright 2024. Sylvain Guillet (sylvain.guillet@tutamail.com)
+
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
 

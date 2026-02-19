@@ -1,3 +1,5 @@
+// Copyright 2024. Sylvain Guillet (sylvain.guillet@tutamail.com)
+
 namespace IO.Astrodynamics.Maneuver;
 
 /// <summary>

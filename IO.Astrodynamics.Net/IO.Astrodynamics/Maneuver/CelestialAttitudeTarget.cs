@@ -1,3 +1,5 @@
+// Copyright 2024. Sylvain Guillet (sylvain.guillet@tutamail.com)
+
 using System;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Math;

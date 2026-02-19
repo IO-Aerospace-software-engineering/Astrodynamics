@@ -10,7 +10,7 @@ IO.Astrodynamics.Net is a .NET 8/10 astrodynamics framework for orbital mechanic
 - **Ephemeris Computation**: Read and write SPICE kernel files for celestial bodies and spacecraft
 - **Time Systems**: Handle multiple time frames (UTC, TDB, TAI, TDT, GPS, Local)
 - **Reference Frames**: Transform between inertial and body-fixed frames (ICRF, ECLIPTIC, IAU frames)
-- **Spacecraft Modeling**: Define spacecraft with instruments, engines, fuel tanks, and payloads
+- **Spacecraft Modeling**: Define spacecraft with instruments, engines, fuel tanks, payloads, and configurable body axes
 - **Orbital Propagation**: Propagate orbits using numerical integration with perturbation models
 - **Maneuver Planning**: Compute delta-V requirements, launch windows, Lambert transfers
 - **Geometry Finding**: Search for occultations, eclipses, visibility windows, illumination conditions
@@ -26,7 +26,7 @@ IO.Astrodynamics.Net is a .NET 8/10 astrodynamics framework for orbital mechanic
 - Thermal analysis
 - Power system modeling
 - Communication link budgets (beyond basic geometry)
-- Detailed attitude control system design
+- Detailed attitude control system design (attitude determination/planning is supported; closed-loop control is not)
 
 ## Standards and Units
 
@@ -1226,7 +1226,7 @@ Represents a spacecraft with components.
 
 | Constructor | Description |
 |------------|-------------|
-| `Spacecraft(int naifId, string name, double dryMass, double maxMass, Clock clock, OrbitalParameters orbit, double sectionalArea = 1.0, double dragCoeff = 2.2, string cosparId = null, double solarRadiationCoeff = 1.0)` | Create spacecraft |
+| `Spacecraft(int naifId, string name, double dryMass, double maxMass, Clock clock, OrbitalParameters orbit, double sectionalArea = 1.0, double dragCoeff = 2.2, string cosparId = null, double solarRadiationCoeff = 1.0, Vector3? bodyFront = null, Vector3? bodyRight = null, Vector3? bodyUp = null)` | Create spacecraft |
 
 | Property | Description |
 |----------|-------------|
@@ -1240,6 +1240,12 @@ Represents a spacecraft with components.
 | `SolarRadiationCoeff` | Solar radiation pressure coefficient Cr (default 1.0, range 1.0–2.0) |
 | `InitialOrbitalParameters` | Initial orbit |
 | `StateVectorsRelativeToICRF` | Propagated states |
+| `BodyFront` | Instance body front axis (default: +Y, same as `Spacecraft.Front`) |
+| `BodyRight` | Instance body right axis (default: +X, same as `Spacecraft.Right`) |
+| `BodyUp` | Instance body up axis (default: +Z, same as `Spacecraft.Up`) |
+| `BodyBack` / `BodyLeft` / `BodyDown` | Computed inverses of body axes |
+
+**Configurable body axes**: Pass `bodyFront`, `bodyRight`, `bodyUp` to the constructor to override the default body frame. Custom axes must be orthogonal and right-handed (`bodyRight.Cross(bodyFront) == bodyUp`). All attitude maneuvers automatically use per-instance body axes via `GetBodyFront()`.
 
 | Method | Description |
 |--------|-------------|
@@ -1385,8 +1391,12 @@ Base class for orbital maneuvers.
 - `RetrogradeAttitude`: Orient opposite to velocity
 - `ZenithAttitude`: Orient away from central body
 - `NadirAttitude`: Orient toward central body
+- `NormalAttitude`: Orient along orbital normal (h = r × v)
+- `AntiNormalAttitude`: Orient opposite to orbital normal (−h)
 - `InstrumentPointingAttitude`: Point instrument at target (single-vector, roll unconstrained)
 - `TriadAttitude`: Fully-constrained 3-DOF attitude using TRIAD algorithm (eliminates roll ambiguity)
+
+All attitude maneuvers support configurable body axes via `GetBodyFront()`, which reads per-instance axes from `Spacecraft.BodyFront` with fallback to the static default `Spacecraft.Front` (+Y).
 
 **TRIAD Attitude Determination**
 
@@ -1406,12 +1416,29 @@ var attitude = new TriadAttitude(
     camera,                    // Uses camera boresight (primary) and refVector (secondary)
     earth, sun,                // Primary target, secondary target
     engine);
+
+// Using IAttitudeTarget (orbital directions and/or celestial bodies)
+var attitude = new TriadAttitude(
+    earth, epoch, duration,
+    Spacecraft.Front, OrbitalDirectionTarget.Prograde,       // Primary: prograde pointing
+    Spacecraft.Up, new CelestialAttitudeTarget(sun),         // Secondary: solar panel toward Sun
+    engine);
+
+// Factory methods for common operational attitudes
+var lvlh = TriadAttitude.CreateLVLH(earth, epoch, duration, engine);
+var sunTrack = TriadAttitude.CreateProgradeWithSunTracking(earth, epoch, duration, sun, engine);
 ```
+
+**IAttitudeTarget system**: The `IAttitudeTarget` interface enables orbital directions and celestial bodies to be used interchangeably as TRIAD targets:
+- `OrbitalDirectionTarget` — predefined static instances: `.Prograde`, `.Retrograde`, `.Nadir`, `.Zenith`, `.Normal`, `.AntiNormal`
+- `CelestialAttitudeTarget` — wraps `ILocalizable`, computes direction via ephemeris with light-time correction
+- `OrbitalDirection` enum: `Prograde`, `Retrograde`, `Nadir`, `Zenith`, `Normal`, `AntiNormal`
 
 Key features:
 - Minimum 5-degree separation required between body vectors and reference vectors
-- Uses spacecraft body frame: Front (+Y), Right (+X), Up (+Z)
-- Three constructor overloads: single instrument, dual instruments, explicit vectors
+- Uses spacecraft body frame: Front (+Y), Right (+X), Up (+Z) — or per-instance `BodyFront`, `BodyRight`, `BodyUp`
+- Four constructor overloads: single instrument, dual instruments, explicit vectors, IAttitudeTarget
+- Factory methods: `CreateLVLH()`, `CreateProgradeWithSunTracking()`
 
 #### Impulse maneuvers
 
@@ -2712,8 +2739,25 @@ Console.WriteLine("Spacecraft maintains nadir pointing with roll constrained tow
 ```
 
 **When to use TRIAD vs single-vector attitude:**
-- Use `InstrumentPointingToAttitude`, `NadirAttitude`, etc. when roll is unconstrained (simpler, faster)
+- Use `InstrumentPointingToAttitude`, `NadirAttitude`, `NormalAttitude`, etc. when roll is unconstrained (simpler, faster)
+- Use `NormalAttitude` / `AntiNormalAttitude` for plane-change burns (h = r × v)
 - Use `TriadAttitude` when you need specific roll orientation (solar panels, thermal control, dual instruments)
+- Use `TriadAttitude` with `IAttitudeTarget` to mix orbital directions and celestial targets:
+
+```csharp
+// LVLH attitude using factory method
+var lvlh = TriadAttitude.CreateLVLH(earth, epoch, duration, engine);
+
+// Prograde with sun tracking using factory method
+var sunTrack = TriadAttitude.CreateProgradeWithSunTracking(earth, epoch, duration, sun, engine);
+
+// Custom: nadir pointing with normal constraint (using OrbitalDirectionTarget)
+var customLvlh = new TriadAttitude(
+    earth, epoch, duration,
+    Spacecraft.Down, OrbitalDirectionTarget.Nadir,
+    Spacecraft.Front, OrbitalDirectionTarget.Prograde,
+    engine);
+```
 
 ---
 

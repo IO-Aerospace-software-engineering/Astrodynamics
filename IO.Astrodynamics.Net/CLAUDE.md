@@ -68,7 +68,7 @@ dotnet tool install --global --add-source ./IO.Astrodynamics.CLI/bin/Debug IO.As
 - `IO.Astrodynamics.OrbitalParameters.TLE`: Two-Line Element sets and OMM support
 - `IO.Astrodynamics.CCSDS.OMM`: CCSDS Orbit Mean-elements Message support (read/write/validate/convert)
 - `IO.Astrodynamics.CCSDS.OPM`: CCSDS Orbit Parameter Message support (read/write/validate/convert)
-- `IO.Astrodynamics.Maneuver`: Lambert solvers, launch windows, maneuver planning, attitude maneuvers
+- `IO.Astrodynamics.Maneuver`: Lambert solvers, launch windows, maneuver planning, attitude maneuvers, IAttitudeTarget system (orbital direction targets, celestial attitude targets)
 - `IO.Astrodynamics.Frames`: Reference frames and transformations
 - `IO.Astrodynamics.TimeSystem`: Time frames (UTC, TDB, TAI, etc.)
 - `IO.Astrodynamics.Propagator`: Orbital propagation and integration (Velocity-Verlet symplectic integrator)
@@ -480,6 +480,8 @@ The framework provides a family of attitude maneuvers for spacecraft orientation
 - `ZenithAttitude`: Points toward zenith (away from central body)
 - `ProgradeAttitude`: Velocity-direction pointing
 - `RetrogradeAttitude`: Anti-velocity pointing
+- `NormalAttitude`: Orbital normal pointing (h = r × v)
+- `AntiNormalAttitude`: Anti-normal pointing (−h)
 - `InstrumentPointingToAttitude`: Single-vector instrument pointing at a target
 - `TriadAttitude`: Two-vector fully-constrained attitude (eliminates roll ambiguity)
 
@@ -493,10 +495,29 @@ The `TriadAttitude` class implements the TRIAD algorithm for fully-constrained 3
 - **Minimum vector separation**: Default 5 degrees; prevents numerical instability from near-collinear vectors
 
 **Spacecraft Body Frame Convention**
+
+Default body axes (static fields, backward-compatible):
 - Front (+Y): `Spacecraft.Front`
 - Right (+X): `Spacecraft.Right`
 - Up (+Z): `Spacecraft.Up`
 - Down (-Z): `Spacecraft.Down`
+
+**Configurable Body Axes** — per-instance overrides for non-standard body frames (e.g., +X forward):
+- `BodyFront`, `BodyRight`, `BodyUp` — instance properties (default to static values)
+- `BodyBack`, `BodyLeft`, `BodyDown` — computed inverses
+- Passed via optional constructor parameters: `bodyFront`, `bodyRight`, `bodyUp`
+- Validation enforces orthogonality and right-handedness when custom axes are provided
+- All attitude maneuvers use `GetBodyFront()` (protected helper on `Maneuver` base class) which reads per-instance axes with static fallback
+
+```csharp
+// Spacecraft with +X as front (e.g., matching a SPICE FK convention)
+var spacecraft = new Spacecraft(-1001, "Sat", 1000, 5000, clock, orbit,
+    bodyFront: Vector3.VectorX, bodyRight: Vector3.VectorY.Inverse(), bodyUp: Vector3.VectorZ);
+
+// All attitude maneuvers automatically use BodyFront instead of Spacecraft.Front
+var prograde = new ProgradeAttitude(earth, epoch, duration, engine);
+// → orients spacecraft.BodyFront (+X) along velocity vector
+```
 
 **Constructor Options**
 
@@ -529,6 +550,47 @@ var attitude = new TriadAttitude(
     engine);
 ```
 
+4. **IAttitudeTarget (orbital directions and/or celestial bodies)**: Uses `IAttitudeTarget` interface for polymorphic targets
+```csharp
+// Point prograde with solar panels toward Sun
+var attitude = new TriadAttitude(
+    earth, epoch, duration,
+    Spacecraft.Front, OrbitalDirectionTarget.Prograde,
+    Spacecraft.Up, new CelestialAttitudeTarget(sun),
+    engine);
+
+// Full LVLH attitude (nadir pointing with prograde constraint)
+var lvlh = new TriadAttitude(
+    earth, epoch, duration,
+    Spacecraft.Down, OrbitalDirectionTarget.Nadir,
+    Spacecraft.Front, OrbitalDirectionTarget.Prograde,
+    engine);
+```
+
+**IAttitudeTarget System**
+
+The `IAttitudeTarget` interface enables orbital directions and celestial bodies to be used interchangeably as TRIAD targets:
+- `IAttitudeTarget.GetDirection(StateVector)` — returns a unit vector in the inertial frame
+- `IAttitudeTarget.Name` — human-readable target name
+
+**Implementations:**
+- `OrbitalDirectionTarget` — computes direction from state vector (prograde, nadir, normal, etc.)
+  - Predefined static instances: `OrbitalDirectionTarget.Prograde`, `.Retrograde`, `.Nadir`, `.Zenith`, `.Normal`, `.AntiNormal`
+- `CelestialAttitudeTarget` — wraps `ILocalizable`, computes direction via ephemeris with `Aberration.LT`
+
+**`OrbitalDirection` enum**: `Prograde`, `Retrograde`, `Nadir`, `Zenith`, `Normal`, `AntiNormal`
+
+**Factory Methods**
+
+Convenience factories for common operational attitudes:
+```csharp
+// LVLH: Front→Prograde, Down→Nadir
+var lvlh = TriadAttitude.CreateLVLH(earth, epoch, duration, engine);
+
+// Prograde with sun tracking: Front→Prograde, Up→Sun
+var sunTrack = TriadAttitude.CreateProgradeWithSunTracking(earth, epoch, duration, sun, engine);
+```
+
 **Use Case Examples**
 
 *Earth Observation with Sun Tracking*
@@ -549,6 +611,12 @@ var observation = new TriadAttitude(
     telescope, targetStar,
     rollSensor, referenceStar,
     engine);
+```
+
+*Plane-Change Attitude (Normal Pointing)*
+```csharp
+// Orient for plane-change burn: front along orbital normal
+var normalAttitude = new NormalAttitude(earth, epoch, duration, engine);
 ```
 
 **Instrument Enhancements**
@@ -602,9 +670,14 @@ Test data files are in `Data/SolarSystem/` and copied to output directory.
    - User-defined parameters support custom mission-specific data
 9. **Attitude Maneuvers**: When implementing attitude control:
    - Use `TriadAttitude` for fully-constrained orientation (eliminates roll ambiguity)
-   - Use single-vector attitudes (`NadirAttitude`, `InstrumentPointingToAttitude`) only when roll is unconstrained
+   - Use single-vector attitudes (`NadirAttitude`, `ProgradeAttitude`, `NormalAttitude`, etc.) only when roll is unconstrained
+   - Use `NormalAttitude` / `AntiNormalAttitude` for plane-change burns (h = r × v)
    - Ensure body vectors and reference vectors are not collinear (minimum 5 degrees separation)
-   - Use `Spacecraft.Front`, `Spacecraft.Up`, etc. for standard body frame directions
+   - Use `Spacecraft.Front`, `Spacecraft.Up`, etc. for standard body frame directions; use instance `BodyFront`, `BodyRight`, `BodyUp` for non-standard frames
+   - Custom body axes must be orthogonal and right-handed (`BodyRight.Cross(BodyFront) == BodyUp`)
+   - All attitude maneuvers use `GetBodyFront()` which reads per-instance axes with static fallback
+   - Use `IAttitudeTarget` with `TriadAttitude` to mix orbital directions (`OrbitalDirectionTarget.Prograde`, etc.) and celestial targets (`CelestialAttitudeTarget`)
+   - Use factory methods `TriadAttitude.CreateLVLH()` and `CreateProgradeWithSunTracking()` for common operational attitudes
    - Use `Instrument.GetBoresightInSpacecraftFrame()` and `GetRefVectorInSpacecraftFrame()` for instrument-based pointing
 10. **Geopotential Gravity**: When working with spherical harmonic gravity models:
    - Pass `GeopotentialModelParameters` to `CelestialBody` constructor to enable geopotential

@@ -73,7 +73,7 @@ namespace IO.Astrodynamics.Maneuver
             ManeuverCenter = maneuverCenter;
             MinimumEpoch = minimumEpoch;
             ManeuverHoldDuration = maneuverHoldDuration;
-            Engine = engine;
+            Engine = engine ?? throw new ArgumentNullException(nameof(engine));
         }
 
         public Maneuver SetNextManeuver(Maneuver maneuver)

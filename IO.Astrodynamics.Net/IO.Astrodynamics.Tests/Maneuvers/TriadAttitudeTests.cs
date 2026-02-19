@@ -929,6 +929,60 @@ public class TriadAttitudeTests
         Assert.Equal(TestHelpers.Sun, maneuver.SecondaryTarget);
     }
 
+    [Fact]
+    public void Execute_IAttitudeTargetVsILocalizable_SameQuaternion()
+    {
+        // Create two TriadAttitude instances targeting Moon (primary) and Sun (secondary).
+        // One uses the ILocalizable constructor, the other the IAttitudeTarget constructor
+        // with CelestialAttitudeTarget wrappers and the SAME maneuver center.
+        // The ILocalizable constructor uses GetManeuverCenter(primaryTarget) = MoonAtJ2000,
+        // so we must also pass MoonAtJ2000 as maneuverCenter to the IAttitudeTarget constructor.
+        var (spc, orbitalParams) = CreateTestSpacecraft();
+
+        // ILocalizable constructor — maneuverCenter is set internally to MoonAtJ2000
+        var localizableManeuver = new TriadAttitude(
+            new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame),
+            TimeSpan.FromSeconds(10.0),
+            Spacecraft.Front,
+            TestHelpers.MoonAtJ2000,
+            Spacecraft.Up,
+            TestHelpers.Sun,
+            spc.Engines.First());
+
+        // IAttitudeTarget constructor with CelestialAttitudeTarget wrappers.
+        // Use MoonAtJ2000 as maneuverCenter to match the ILocalizable path.
+        var attitudeTargetManeuver = new TriadAttitude(
+            TestHelpers.MoonAtJ2000,
+            new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame),
+            TimeSpan.FromSeconds(10.0),
+            Spacecraft.Front,
+            new CelestialAttitudeTarget(TestHelpers.MoonAtJ2000),
+            Spacecraft.Up,
+            new CelestialAttitudeTarget(TestHelpers.Sun),
+            spc.Engines.First());
+
+        localizableManeuver.TryExecute(orbitalParams);
+        attitudeTargetManeuver.TryExecute(orbitalParams);
+
+        var q1 = localizableManeuver.StateOrientation.Rotation;
+        var q2 = attitudeTargetManeuver.StateOrientation.Rotation;
+
+        // Account for quaternion double-cover: q and -q represent the same rotation
+        double dot = q1.W * q2.W + q1.VectorPart.X * q2.VectorPart.X +
+                     q1.VectorPart.Y * q2.VectorPart.Y + q1.VectorPart.Z * q2.VectorPart.Z;
+        double sign = dot >= 0 ? 1.0 : -1.0;
+
+        const double tolerance = 1e-10;
+        Assert.True(System.Math.Abs(sign * q2.W - q1.W) < tolerance,
+            $"IAttitudeTarget and ILocalizable should produce same quaternion W. Got {q1.W} vs {sign * q2.W}");
+        Assert.True(System.Math.Abs(sign * q2.VectorPart.X - q1.VectorPart.X) < tolerance,
+            $"IAttitudeTarget and ILocalizable should produce same quaternion X. Got {q1.VectorPart.X} vs {sign * q2.VectorPart.X}");
+        Assert.True(System.Math.Abs(sign * q2.VectorPart.Y - q1.VectorPart.Y) < tolerance,
+            $"IAttitudeTarget and ILocalizable should produce same quaternion Y. Got {q1.VectorPart.Y} vs {sign * q2.VectorPart.Y}");
+        Assert.True(System.Math.Abs(sign * q2.VectorPart.Z - q1.VectorPart.Z) < tolerance,
+            $"IAttitudeTarget and ILocalizable should produce same quaternion Z. Got {q1.VectorPart.Z} vs {sign * q2.VectorPart.Z}");
+    }
+
     #endregion
 
     #region Factory Method Tests
@@ -997,6 +1051,58 @@ public class TriadAttitudeTests
             TimeSpan.FromSeconds(10.0),
             null,
             spc.Engines.First()));
+    }
+
+    [Fact]
+    public void CreateLVLH_MatchesManualConstruction()
+    {
+        // The CreateLVLH factory should produce the same result as manually constructing
+        // a TriadAttitude with Down→Nadir, Front→Prograde.
+        var (spc, orbitalParams) = CreateTestSpacecraft();
+
+        var factoryManeuver = TriadAttitude.CreateLVLH(
+            TestHelpers.EarthAtJ2000,
+            new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame),
+            TimeSpan.FromSeconds(10.0),
+            spc.Engines.First());
+
+        var manualManeuver = new TriadAttitude(
+            TestHelpers.EarthAtJ2000,
+            new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame),
+            TimeSpan.FromSeconds(10.0),
+            Spacecraft.Down,
+            OrbitalDirectionTarget.Nadir,
+            Spacecraft.Front,
+            OrbitalDirectionTarget.Prograde,
+            spc.Engines.First());
+
+        // Both should have the same body vectors
+        Assert.Equal(Spacecraft.Down, factoryManeuver.PrimaryBodyVector);
+        Assert.Equal(Spacecraft.Front, factoryManeuver.SecondaryBodyVector);
+        Assert.Equal(manualManeuver.PrimaryBodyVector, factoryManeuver.PrimaryBodyVector);
+        Assert.Equal(manualManeuver.SecondaryBodyVector, factoryManeuver.SecondaryBodyVector);
+
+        // Execute both on the same state vector and verify identical quaternions
+        factoryManeuver.TryExecute(orbitalParams);
+        manualManeuver.TryExecute(orbitalParams);
+
+        var q1 = factoryManeuver.StateOrientation.Rotation;
+        var q2 = manualManeuver.StateOrientation.Rotation;
+
+        // Account for quaternion double-cover
+        double dot = q1.W * q2.W + q1.VectorPart.X * q2.VectorPart.X +
+                     q1.VectorPart.Y * q2.VectorPart.Y + q1.VectorPart.Z * q2.VectorPart.Z;
+        double sign = dot >= 0 ? 1.0 : -1.0;
+
+        const double tolerance = 1e-10;
+        Assert.True(System.Math.Abs(sign * q2.W - q1.W) < tolerance,
+            $"Factory and manual LVLH quaternion W should match. Got {q1.W} vs {sign * q2.W}");
+        Assert.True(System.Math.Abs(sign * q2.VectorPart.X - q1.VectorPart.X) < tolerance,
+            $"Factory and manual LVLH quaternion X should match. Got {q1.VectorPart.X} vs {sign * q2.VectorPart.X}");
+        Assert.True(System.Math.Abs(sign * q2.VectorPart.Y - q1.VectorPart.Y) < tolerance,
+            $"Factory and manual LVLH quaternion Y should match. Got {q1.VectorPart.Y} vs {sign * q2.VectorPart.Y}");
+        Assert.True(System.Math.Abs(sign * q2.VectorPart.Z - q1.VectorPart.Z) < tolerance,
+            $"Factory and manual LVLH quaternion Z should match. Got {q1.VectorPart.Z} vs {sign * q2.VectorPart.Z}");
     }
 
     #endregion
