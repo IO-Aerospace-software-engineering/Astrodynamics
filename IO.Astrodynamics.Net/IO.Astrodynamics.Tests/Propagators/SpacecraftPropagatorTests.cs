@@ -161,8 +161,8 @@ public class SpacecraftPropagatorTests
         // (differences due to force model details: drag, SRP, higher-degree terms, etc.)
         // 3D position error vs STK HPOP reference should be < 1 km over 24h
         // Residual ~0.26 km is from integrator differences (VV vs RK7/8) and force model details
-        Assert.True(positionError < 1000.0,
-            $"3D position error after 24h is {positionError / 1000.0:F3} km, expected < 1 km. " +
+        Assert.True(positionError < 300.0,
+            $"3D position error after 24h is {positionError / 1000.0:F3} km, expected < 300 m. " +
             $"Actual position: ({lastEphemeris.Position.X / 1000.0:F6}, {lastEphemeris.Position.Y / 1000.0:F6}, {lastEphemeris.Position.Z / 1000.0:F6}) km");
     }
 

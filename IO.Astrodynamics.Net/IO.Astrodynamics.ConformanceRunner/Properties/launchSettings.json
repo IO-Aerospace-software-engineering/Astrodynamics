@@ -2,11 +2,11 @@
   "profiles": {
     "ConformanceRunner": {
       "commandName": "Project",
-      "commandLineArgs": "/home/sw/CLionProjects/conformance-tests /home/sw/CLionProjects/Astrodynamics/IO.Astrodynamics.Net/IO.Astrodynamics.Tests/Data/SolarSystem /tmp/conformance-report.json"
+      "commandLineArgs": "/home/sw/Sources/conformance-tests /home/sw/Sources/Astrodynamics/IO.Astrodynamics.Net/IO.Astrodynamics.Tests/Data/SolarSystem /tmp/conformance-report.json"
     },
     "SmokeTest": {
       "commandName": "Project",
-      "commandLineArgs": "--smoke-test /home/sw/CLionProjects/Astrodynamics/IO.Astrodynamics.Net/IO.Astrodynamics.Tests/Data/SolarSystem"
+      "commandLineArgs": "--smoke-test /home/sw/Sources/Astrodynamics/IO.Astrodynamics.Net/IO.Astrodynamics.Tests/Data/SolarSystem"
     }
   }
 }

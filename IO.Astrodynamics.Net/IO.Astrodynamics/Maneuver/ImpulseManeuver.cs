@@ -61,7 +61,7 @@ namespace IO.Astrodynamics.Maneuver
             Engine.FuelTank.Spacecraft.SetStandbyManeuver(this.NextManeuver, ManeuverWindow.Value.EndDate);
 
             //return computed state vector and state orientation
-            return (stateVector, new StateOrientation(Spacecraft.Front.To(DeltaV), Vector3.Zero, stateVector.Epoch, stateVector.Frame));
+            return (stateVector, new StateOrientation(GetBodyFront().To(DeltaV), Vector3.Zero, stateVector.Epoch, stateVector.Frame));
         }
 
         internal override void Reset()

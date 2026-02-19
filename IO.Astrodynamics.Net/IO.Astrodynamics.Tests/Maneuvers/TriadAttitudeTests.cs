@@ -723,4 +723,281 @@ public class TriadAttitudeTests
     }
 
     #endregion
+
+    #region IAttitudeTarget Tests
+
+    [Fact]
+    public void Constructor_WithAttitudeTargets_CreatesValidManeuver()
+    {
+        var (spc, orbitalParams) = CreateTestSpacecraft();
+
+        var maneuver = new TriadAttitude(
+            TestHelpers.EarthAtJ2000,
+            new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame),
+            TimeSpan.FromHours(1.0),
+            Spacecraft.Front,
+            OrbitalDirectionTarget.Prograde,
+            Spacecraft.Up,
+            new CelestialAttitudeTarget(TestHelpers.Sun),
+            spc.Engines.First());
+
+        Assert.NotNull(maneuver);
+        Assert.Equal(Spacecraft.Front, maneuver.PrimaryBodyVector);
+        Assert.Equal(Spacecraft.Up, maneuver.SecondaryBodyVector);
+        Assert.NotNull(maneuver.PrimaryAttitudeTarget);
+        Assert.NotNull(maneuver.SecondaryAttitudeTarget);
+    }
+
+    [Fact]
+    public void Constructor_WithAttitudeTargets_NullManeuverCenter_ThrowsArgumentNullException()
+    {
+        var (spc, _) = CreateTestSpacecraft();
+
+        Assert.Throws<ArgumentNullException>(() => new TriadAttitude(
+            null,
+            new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame),
+            TimeSpan.FromHours(1.0),
+            Spacecraft.Front,
+            OrbitalDirectionTarget.Prograde,
+            Spacecraft.Up,
+            new CelestialAttitudeTarget(TestHelpers.Sun),
+            spc.Engines.First()));
+    }
+
+    [Fact]
+    public void Constructor_WithAttitudeTargets_NullPrimaryTarget_ThrowsArgumentNullException()
+    {
+        var (spc, _) = CreateTestSpacecraft();
+
+        Assert.Throws<ArgumentNullException>(() => new TriadAttitude(
+            TestHelpers.EarthAtJ2000,
+            new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame),
+            TimeSpan.FromHours(1.0),
+            Spacecraft.Front,
+            null,
+            Spacecraft.Up,
+            new CelestialAttitudeTarget(TestHelpers.Sun),
+            spc.Engines.First()));
+    }
+
+    [Fact]
+    public void Constructor_WithAttitudeTargets_NullSecondaryTarget_ThrowsArgumentNullException()
+    {
+        var (spc, _) = CreateTestSpacecraft();
+
+        Assert.Throws<ArgumentNullException>(() => new TriadAttitude(
+            TestHelpers.EarthAtJ2000,
+            new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame),
+            TimeSpan.FromHours(1.0),
+            Spacecraft.Front,
+            OrbitalDirectionTarget.Prograde,
+            Spacecraft.Up,
+            null,
+            spc.Engines.First()));
+    }
+
+    [Fact]
+    public void Execute_ProgradeWithSunTracking()
+    {
+        var (spc, orbitalParams) = CreateTestSpacecraft();
+
+        var maneuver = new TriadAttitude(
+            TestHelpers.EarthAtJ2000,
+            new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame),
+            TimeSpan.FromSeconds(10.0),
+            Spacecraft.Front,
+            OrbitalDirectionTarget.Prograde,
+            Spacecraft.Up,
+            new CelestialAttitudeTarget(TestHelpers.Sun),
+            spc.Engines.First());
+
+        maneuver.TryExecute(orbitalParams);
+
+        // Verify Front aligns with velocity direction
+        var rotatedFront = Spacecraft.Front.Rotate(maneuver.StateOrientation.Rotation).Normalize();
+        var localSv = orbitalParams.RelativeTo(TestHelpers.EarthAtJ2000, Aberration.None).ToStateVector();
+        var progradeDir = localSv.Velocity.Normalize();
+
+        double alignment = rotatedFront * progradeDir;
+        Assert.True(alignment > 0.9999, $"Front should align with prograde. Alignment: {alignment}");
+
+        // Verify Up is in Sun-facing half-space
+        var rotatedUp = Spacecraft.Up.Rotate(maneuver.StateOrientation.Rotation).Normalize();
+        var sunEphemeris = TestHelpers.Sun.GetEphemeris(orbitalParams.Epoch, orbitalParams.Observer, orbitalParams.Frame, Aberration.LT);
+        var sunDirection = (sunEphemeris.ToStateVector().Position - orbitalParams.Position).Normalize();
+        Assert.True(rotatedUp * sunDirection > 0.0, "Up should be in Sun-facing half-space");
+    }
+
+    [Fact]
+    public void Execute_NadirWithNormalConstraint_LVLH()
+    {
+        var (spc, orbitalParams) = CreateTestSpacecraft();
+
+        var maneuver = new TriadAttitude(
+            TestHelpers.EarthAtJ2000,
+            new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame),
+            TimeSpan.FromSeconds(10.0),
+            Spacecraft.Down,
+            OrbitalDirectionTarget.Nadir,
+            Spacecraft.Front,
+            OrbitalDirectionTarget.Prograde,
+            spc.Engines.First());
+
+        maneuver.TryExecute(orbitalParams);
+
+        // Verify Down aligns with nadir
+        var localSv = orbitalParams.RelativeTo(TestHelpers.EarthAtJ2000, Aberration.None).ToStateVector();
+        var rotatedDown = Spacecraft.Down.Rotate(maneuver.StateOrientation.Rotation).Normalize();
+        var nadirDir = localSv.Position.Inverse().Normalize();
+
+        double nadirAlignment = rotatedDown * nadirDir;
+        Assert.True(nadirAlignment > 0.9999, $"Down should align with nadir. Alignment: {nadirAlignment}");
+
+        // Verify Front is in prograde half-space
+        var rotatedFront = Spacecraft.Front.Rotate(maneuver.StateOrientation.Rotation).Normalize();
+        var progradeDir = localSv.Velocity.Normalize();
+        Assert.True(rotatedFront * progradeDir > 0.0, "Front should be in prograde half-space");
+    }
+
+    [Fact]
+    public void Execute_MixedTargets_CelestialPrimaryOrbitalSecondary()
+    {
+        var (spc, orbitalParams) = CreateTestSpacecraft();
+
+        var maneuver = new TriadAttitude(
+            TestHelpers.EarthAtJ2000,
+            new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame),
+            TimeSpan.FromSeconds(10.0),
+            Vector3.VectorZ,
+            new CelestialAttitudeTarget(TestHelpers.MoonAtJ2000),
+            Vector3.VectorX,
+            OrbitalDirectionTarget.Normal,
+            spc.Engines.First());
+
+        maneuver.TryExecute(orbitalParams);
+
+        // Verify primary pointing
+        var moonEphemeris = TestHelpers.MoonAtJ2000.GetEphemeris(orbitalParams.Epoch, orbitalParams.Observer, orbitalParams.Frame, Aberration.LT);
+        var moonDirection = (moonEphemeris.ToStateVector().Position - orbitalParams.Position).Normalize();
+        var pointingVector = Vector3.VectorZ.Rotate(maneuver.StateOrientation.Rotation).Normalize();
+
+        double alignment = pointingVector * moonDirection;
+        Assert.True(alignment > 0.9999, $"Primary should point at Moon. Alignment: {alignment}");
+
+        // Verify quaternion is normalized
+        var q = maneuver.StateOrientation.Rotation;
+        double magnitude = System.Math.Sqrt(q.W * q.W + q.VectorPart.X * q.VectorPart.X +
+                                            q.VectorPart.Y * q.VectorPart.Y + q.VectorPart.Z * q.VectorPart.Z);
+        Assert.True(System.Math.Abs(magnitude - 1.0) < 1e-10, "Quaternion should be normalized");
+    }
+
+    [Fact]
+    public void Execute_CollinearOrbitalDirections_ThrowsInvalidOperationException()
+    {
+        var (spc, orbitalParams) = CreateTestSpacecraft();
+
+        var maneuver = new TriadAttitude(
+            TestHelpers.EarthAtJ2000,
+            new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame),
+            TimeSpan.FromSeconds(10.0),
+            Spacecraft.Front,
+            OrbitalDirectionTarget.Nadir,
+            Spacecraft.Up,
+            OrbitalDirectionTarget.Zenith,  // Opposite of nadir — collinear!
+            spc.Engines.First());
+
+        Assert.Throws<InvalidOperationException>(() => maneuver.TryExecute(orbitalParams));
+    }
+
+    [Fact]
+    public void Execute_CelestialAttitudeTarget_MapsToILocalizable()
+    {
+        var (spc, _) = CreateTestSpacecraft();
+
+        var maneuver = new TriadAttitude(
+            TestHelpers.EarthAtJ2000,
+            new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame),
+            TimeSpan.FromHours(1.0),
+            Vector3.VectorZ,
+            new CelestialAttitudeTarget(TestHelpers.MoonAtJ2000),
+            Vector3.VectorX,
+            new CelestialAttitudeTarget(TestHelpers.Sun),
+            spc.Engines.First());
+
+        // CelestialAttitudeTarget should map back to PrimaryTarget/SecondaryTarget
+        Assert.Equal(TestHelpers.MoonAtJ2000, maneuver.PrimaryTarget);
+        Assert.Equal(TestHelpers.Sun, maneuver.SecondaryTarget);
+    }
+
+    #endregion
+
+    #region Factory Method Tests
+
+    [Fact]
+    public void CreateLVLH_CreatesValidManeuver()
+    {
+        var (spc, orbitalParams) = CreateTestSpacecraft();
+
+        var maneuver = TriadAttitude.CreateLVLH(
+            TestHelpers.EarthAtJ2000,
+            new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame),
+            TimeSpan.FromSeconds(10.0),
+            spc.Engines.First());
+
+        Assert.NotNull(maneuver);
+        Assert.Equal(Spacecraft.Down, maneuver.PrimaryBodyVector);
+        Assert.Equal(Spacecraft.Front, maneuver.SecondaryBodyVector);
+
+        // Execute and verify
+        maneuver.TryExecute(orbitalParams);
+
+        var localSv = orbitalParams.RelativeTo(TestHelpers.EarthAtJ2000, Aberration.None).ToStateVector();
+        var rotatedDown = Spacecraft.Down.Rotate(maneuver.StateOrientation.Rotation).Normalize();
+        var nadirDir = localSv.Position.Inverse().Normalize();
+
+        double alignment = rotatedDown * nadirDir;
+        Assert.True(alignment > 0.9999, $"LVLH Down should align with nadir. Alignment: {alignment}");
+    }
+
+    [Fact]
+    public void CreateProgradeWithSunTracking_CreatesValidManeuver()
+    {
+        var (spc, orbitalParams) = CreateTestSpacecraft();
+
+        var maneuver = TriadAttitude.CreateProgradeWithSunTracking(
+            TestHelpers.EarthAtJ2000,
+            new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame),
+            TimeSpan.FromSeconds(10.0),
+            TestHelpers.Sun,
+            spc.Engines.First());
+
+        Assert.NotNull(maneuver);
+        Assert.Equal(Spacecraft.Front, maneuver.PrimaryBodyVector);
+        Assert.Equal(Spacecraft.Up, maneuver.SecondaryBodyVector);
+
+        // Execute and verify
+        maneuver.TryExecute(orbitalParams);
+
+        var localSv = orbitalParams.RelativeTo(TestHelpers.EarthAtJ2000, Aberration.None).ToStateVector();
+        var rotatedFront = Spacecraft.Front.Rotate(maneuver.StateOrientation.Rotation).Normalize();
+        var progradeDir = localSv.Velocity.Normalize();
+
+        double alignment = rotatedFront * progradeDir;
+        Assert.True(alignment > 0.9999, $"Front should align with prograde. Alignment: {alignment}");
+    }
+
+    [Fact]
+    public void CreateProgradeWithSunTracking_NullSun_ThrowsArgumentNullException()
+    {
+        var (spc, _) = CreateTestSpacecraft();
+
+        Assert.Throws<ArgumentNullException>(() => TriadAttitude.CreateProgradeWithSunTracking(
+            TestHelpers.EarthAtJ2000,
+            new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame),
+            TimeSpan.FromSeconds(10.0),
+            null,
+            spc.Engines.First()));
+    }
+
+    #endregion
 }

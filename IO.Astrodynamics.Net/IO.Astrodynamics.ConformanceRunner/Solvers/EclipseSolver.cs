@@ -8,6 +8,7 @@ using IO.Astrodynamics.ConformanceRunner.Utilities;
 using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
+using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.TimeSystem;
 
 namespace IO.Astrodynamics.ConformanceRunner.Solvers;
@@ -36,7 +37,10 @@ public class EclipseSolver : ICategorySolver
             new Clock("ConfClk", 65536), sv);
 
         spacecraft.Propagate(searchWindow,
-            [occultingBody],
+            [
+                occultingBody, lightSource, PlanetsAndMoons.MOON_BODY, Barycenters.JUPITER_BARYCENTER, Barycenters.MARS_BARYCENTER, Barycenters.MERCURY_BARYCENTER,
+                Barycenters.SATURN_BARYCENTER, Barycenters.URANUS_BARYCENTER, Barycenters.VENUS_BARYCENTER
+            ],
             false, false, TimeSpan.FromSeconds(1.0));
 
         var stepSize = TimeSpan.FromSeconds(60.0);

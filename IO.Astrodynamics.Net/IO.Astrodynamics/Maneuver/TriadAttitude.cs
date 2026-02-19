@@ -35,41 +35,37 @@ namespace IO.Astrodynamics.Maneuver;
 public class TriadAttitude : Attitude
 {
     /// <summary>
-    /// Primary target that the primary body vector should point at.
+    /// Primary target that the primary body vector should point at (celestial body).
+    /// Null when using IAttitudeTarget-based targeting.
     /// </summary>
     public ILocalizable PrimaryTarget { get; }
 
     /// <summary>
-    /// Secondary target used to eliminate roll ambiguity around the primary pointing axis.
-    /// The secondary body vector will be oriented toward this target as much as possible
-    /// while maintaining the primary pointing constraint.
+    /// Secondary target used to eliminate roll ambiguity around the primary pointing axis (celestial body).
+    /// Null when using IAttitudeTarget-based targeting.
     /// </summary>
     public ILocalizable SecondaryTarget { get; }
 
     /// <summary>
+    /// Primary attitude target (orbital direction or celestial body).
+    /// Null when using ILocalizable-based targeting.
+    /// </summary>
+    public IAttitudeTarget PrimaryAttitudeTarget { get; }
+
+    /// <summary>
+    /// Secondary attitude target (orbital direction or celestial body).
+    /// Null when using ILocalizable-based targeting.
+    /// </summary>
+    public IAttitudeTarget SecondaryAttitudeTarget { get; }
+
+    /// <summary>
     /// Primary direction in spacecraft body frame that should point toward PrimaryTarget.
     /// </summary>
-    /// <remarks>
-    /// Common choices include:
-    /// <list type="bullet">
-    ///   <item><description><see cref="Spacecraft.Front"/> (+Y) - for forward-pointing instruments</description></item>
-    ///   <item><description><see cref="Spacecraft.Down"/> (-Z) - for nadir-pointing sensors</description></item>
-    ///   <item><description>Instrument boresight via <see cref="Instrument.GetBoresightInSpacecraftFrame"/></description></item>
-    /// </list>
-    /// </remarks>
     public Vector3 PrimaryBodyVector { get; }
 
     /// <summary>
     /// Secondary direction in spacecraft body frame used to constrain roll.
     /// </summary>
-    /// <remarks>
-    /// Common choices include:
-    /// <list type="bullet">
-    ///   <item><description><see cref="Spacecraft.Up"/> (+Z) - for keeping solar panels toward Sun</description></item>
-    ///   <item><description><see cref="Spacecraft.Right"/> (+X) - for specific instrument alignment</description></item>
-    ///   <item><description>Instrument refVector via <see cref="Instrument.GetRefVectorInSpacecraftFrame"/></description></item>
-    /// </list>
-    /// </remarks>
     public Vector3 SecondaryBodyVector { get; }
 
     /// <summary>
@@ -85,13 +81,6 @@ public class TriadAttitude : Attitude
     /// Creates a TRIAD attitude maneuver using an instrument's boresight and reference vector.
     /// The boresight points at the primary target, while the reference vector constrains roll toward the secondary target.
     /// </summary>
-    /// <param name="minimumEpoch">Earliest epoch when the maneuver can execute.</param>
-    /// <param name="maneuverHoldDuration">Duration to hold the attitude after achieving it.</param>
-    /// <param name="instrument">Instrument defining boresight (primary) and refVector (secondary) body vectors.</param>
-    /// <param name="primaryTarget">Target for boresight to point at.</param>
-    /// <param name="secondaryTarget">Target for roll constraint (eliminates roll ambiguity).</param>
-    /// <param name="engine">Engine used for the maneuver.</param>
-    /// <param name="minimumVectorSeparation">Minimum angle between vectors in radians (default: 5 degrees).</param>
     public TriadAttitude(
         Time minimumEpoch,
         TimeSpan maneuverHoldDuration,
@@ -116,14 +105,6 @@ public class TriadAttitude : Attitude
     /// <summary>
     /// Creates a TRIAD attitude maneuver using two different instruments pointing at two targets.
     /// </summary>
-    /// <param name="minimumEpoch">Earliest epoch when the maneuver can execute.</param>
-    /// <param name="maneuverHoldDuration">Duration to hold the attitude after achieving it.</param>
-    /// <param name="primaryInstrument">Instrument whose boresight should point at primary target.</param>
-    /// <param name="primaryTarget">Target for primary instrument boresight.</param>
-    /// <param name="secondaryInstrument">Instrument whose boresight constrains roll.</param>
-    /// <param name="secondaryTarget">Target for secondary instrument boresight.</param>
-    /// <param name="engine">Engine used for the maneuver.</param>
-    /// <param name="minimumVectorSeparation">Minimum angle between vectors in radians (default: 5 degrees).</param>
     public TriadAttitude(
         Time minimumEpoch,
         TimeSpan maneuverHoldDuration,
@@ -148,34 +129,8 @@ public class TriadAttitude : Attitude
     }
 
     /// <summary>
-    /// Creates a TRIAD attitude maneuver using explicit body frame vectors.
+    /// Creates a TRIAD attitude maneuver using explicit body frame vectors and ILocalizable targets.
     /// </summary>
-    /// <param name="minimumEpoch">Earliest epoch when the maneuver can execute.</param>
-    /// <param name="maneuverHoldDuration">Duration to hold the attitude after achieving it.</param>
-    /// <param name="primaryBodyVector">
-    /// Primary direction in spacecraft body frame that will point at the primary target.
-    /// Use spacecraft directions like <see cref="Spacecraft.Front"/> (+Y), <see cref="Spacecraft.Down"/> (-Z),
-    /// or custom vectors.
-    /// </param>
-    /// <param name="primaryTarget">Target for primary body vector to point at.</param>
-    /// <param name="secondaryBodyVector">
-    /// Secondary direction in body frame for roll constraint.
-    /// Use spacecraft directions like <see cref="Spacecraft.Up"/> (+Z), <see cref="Spacecraft.Right"/> (+X),
-    /// or custom vectors. Must not be collinear with primaryBodyVector.
-    /// </param>
-    /// <param name="secondaryTarget">Target for secondary body vector constraint.</param>
-    /// <param name="engine">Engine used for the maneuver.</param>
-    /// <param name="minimumVectorSeparation">Minimum angle between vectors in radians (default: 5 degrees).</param>
-    /// <example>
-    /// <code>
-    /// // Point spacecraft Front at Moon, keep Up toward Sun
-    /// var attitude = new TriadAttitude(
-    ///     epoch, TimeSpan.FromMinutes(10),
-    ///     Spacecraft.Front, moon,
-    ///     Spacecraft.Up, sun,
-    ///     engine);
-    /// </code>
-    /// </example>
     public TriadAttitude(
         Time minimumEpoch,
         TimeSpan maneuverHoldDuration,
@@ -202,6 +157,98 @@ public class TriadAttitude : Attitude
         ValidateBodyVectors();
     }
 
+    /// <summary>
+    /// Creates a TRIAD attitude maneuver using explicit body frame vectors and IAttitudeTarget targets.
+    /// This constructor supports orbital directions (prograde, nadir, normal, etc.) as well as celestial bodies.
+    /// </summary>
+    /// <param name="maneuverCenter">The central body for this maneuver (required for orbital direction computation).</param>
+    /// <param name="minimumEpoch">Earliest epoch when the maneuver can execute.</param>
+    /// <param name="maneuverHoldDuration">Duration to hold the attitude after achieving it.</param>
+    /// <param name="primaryBodyVector">Primary direction in spacecraft body frame.</param>
+    /// <param name="primaryTarget">Primary attitude target (orbital direction or celestial body).</param>
+    /// <param name="secondaryBodyVector">Secondary direction in body frame for roll constraint.</param>
+    /// <param name="secondaryTarget">Secondary attitude target (orbital direction or celestial body).</param>
+    /// <param name="engine">Engine used for the maneuver.</param>
+    /// <param name="minimumVectorSeparation">Minimum angle between vectors in radians (default: 5 degrees).</param>
+    /// <example>
+    /// <code>
+    /// // Prograde with sun tracking
+    /// var attitude = new TriadAttitude(
+    ///     earth, epoch, TimeSpan.FromMinutes(30),
+    ///     Spacecraft.Front, OrbitalDirectionTarget.Prograde,
+    ///     Spacecraft.Up, new CelestialAttitudeTarget(sun),
+    ///     engine);
+    /// </code>
+    /// </example>
+    public TriadAttitude(
+        CelestialItem maneuverCenter,
+        Time minimumEpoch,
+        TimeSpan maneuverHoldDuration,
+        Vector3 primaryBodyVector,
+        IAttitudeTarget primaryTarget,
+        Vector3 secondaryBodyVector,
+        IAttitudeTarget secondaryTarget,
+        Engine engine,
+        double minimumVectorSeparation = DefaultMinimumSeparation)
+        : base(maneuverCenter ?? throw new ArgumentNullException(nameof(maneuverCenter)), minimumEpoch, maneuverHoldDuration, engine)
+    {
+        PrimaryAttitudeTarget = primaryTarget ?? throw new ArgumentNullException(nameof(primaryTarget));
+        SecondaryAttitudeTarget = secondaryTarget ?? throw new ArgumentNullException(nameof(secondaryTarget));
+        MinimumVectorSeparation = minimumVectorSeparation;
+
+        if (primaryBodyVector.Magnitude() < double.Epsilon)
+            throw new ArgumentException("Primary body vector cannot be zero.", nameof(primaryBodyVector));
+        if (secondaryBodyVector.Magnitude() < double.Epsilon)
+            throw new ArgumentException("Secondary body vector cannot be zero.", nameof(secondaryBodyVector));
+
+        PrimaryBodyVector = primaryBodyVector;
+        SecondaryBodyVector = secondaryBodyVector;
+
+        // Map CelestialAttitudeTarget back to ILocalizable properties for compatibility
+        if (primaryTarget is CelestialAttitudeTarget celestialPrimary)
+            PrimaryTarget = celestialPrimary.Target;
+        if (secondaryTarget is CelestialAttitudeTarget celestialSecondary)
+            SecondaryTarget = celestialSecondary.Target;
+
+        ValidateBodyVectors();
+    }
+
+    /// <summary>
+    /// Creates an LVLH (Local Vertical Local Horizontal) attitude.
+    /// Primary: spacecraft Down toward nadir. Secondary: spacecraft Front toward prograde.
+    /// </summary>
+    public static TriadAttitude CreateLVLH(
+        CelestialItem maneuverCenter,
+        Time minimumEpoch,
+        TimeSpan maneuverHoldDuration,
+        Engine engine)
+    {
+        return new TriadAttitude(
+            maneuverCenter, minimumEpoch, maneuverHoldDuration,
+            Spacecraft.Down, OrbitalDirectionTarget.Nadir,
+            Spacecraft.Front, OrbitalDirectionTarget.Prograde,
+            engine);
+    }
+
+    /// <summary>
+    /// Creates a prograde attitude with sun tracking for solar panel orientation.
+    /// Primary: spacecraft Front toward prograde. Secondary: spacecraft Up toward Sun.
+    /// </summary>
+    public static TriadAttitude CreateProgradeWithSunTracking(
+        CelestialItem maneuverCenter,
+        Time minimumEpoch,
+        TimeSpan maneuverHoldDuration,
+        ILocalizable sun,
+        Engine engine)
+    {
+        if (sun == null) throw new ArgumentNullException(nameof(sun));
+        return new TriadAttitude(
+            maneuverCenter, minimumEpoch, maneuverHoldDuration,
+            Spacecraft.Front, OrbitalDirectionTarget.Prograde,
+            Spacecraft.Up, new CelestialAttitudeTarget(sun),
+            engine);
+    }
+
     private static CelestialItem GetManeuverCenter(ILocalizable target)
     {
         return target is CelestialItem t ? t : (target as Site)?.CelestialBody;
@@ -225,12 +272,24 @@ public class TriadAttitude : Attitude
     /// <returns>Quaternion representing the spacecraft orientation.</returns>
     protected override Quaternion ComputeOrientation(StateVector stateVector)
     {
-        // Get reference frame vectors from ephemeris
-        var primaryEphemeris = PrimaryTarget.GetEphemeris(stateVector.Epoch, stateVector.Observer, stateVector.Frame, Aberration.LT);
-        var secondaryEphemeris = SecondaryTarget.GetEphemeris(stateVector.Epoch, stateVector.Observer, stateVector.Frame, Aberration.LT);
+        Vector3 primaryRefVector;
+        Vector3 secondaryRefVector;
 
-        var primaryRefVector = (primaryEphemeris.ToStateVector().Position - stateVector.Position).Normalize();
-        var secondaryRefVector = (secondaryEphemeris.ToStateVector().Position - stateVector.Position).Normalize();
+        if (PrimaryAttitudeTarget != null && SecondaryAttitudeTarget != null)
+        {
+            // IAttitudeTarget path — supports orbital directions and celestial bodies
+            primaryRefVector = PrimaryAttitudeTarget.GetDirection(stateVector);
+            secondaryRefVector = SecondaryAttitudeTarget.GetDirection(stateVector);
+        }
+        else
+        {
+            // ILocalizable ephemeris path — original behavior
+            var primaryEphemeris = PrimaryTarget.GetEphemeris(stateVector.Epoch, stateVector.Observer, stateVector.Frame, Aberration.LT);
+            var secondaryEphemeris = SecondaryTarget.GetEphemeris(stateVector.Epoch, stateVector.Observer, stateVector.Frame, Aberration.LT);
+
+            primaryRefVector = (primaryEphemeris.ToStateVector().Position - stateVector.Position).Normalize();
+            secondaryRefVector = (secondaryEphemeris.ToStateVector().Position - stateVector.Position).Normalize();
+        }
 
         // Validate reference vectors are not collinear
         double refAngle = primaryRefVector.Angle(secondaryRefVector);

@@ -394,5 +394,76 @@ namespace IO.Astrodynamics.Tests.Body
                 $"KPL/FK{Environment.NewLine}\\begindata{Environment.NewLine}FRAME_MYSPACECRAFT_FRAME   = -350000{Environment.NewLine}FRAME_-350000_NAME      = 'MYSPACECRAFT_FRAME'{Environment.NewLine}FRAME_-350000_CLASS     =  3{Environment.NewLine}FRAME_-350000_CLASS_ID  = -350000{Environment.NewLine}FRAME_-350000_CENTER    = -350{Environment.NewLine}CK_-350000_SCLK         = -350{Environment.NewLine}CK_-350000_SPK          = -350{Environment.NewLine}OBJECT_-350_FRAME       = 'MYSPACECRAFT_FRAME'{Environment.NewLine}NAIF_BODY_NAME              += 'MYSPACECRAFT_FRAME'{Environment.NewLine}NAIF_BODY_CODE              += -350000{Environment.NewLine}NAIF_BODY_NAME              += 'MYSPACECRAFT'{Environment.NewLine}NAIF_BODY_CODE              += -350{Environment.NewLine}\\begintext{Environment.NewLine}",
                 res);
         }
+        #region Body Axes Tests
+
+        [Fact]
+        public void DefaultBodyAxes_MatchStaticConstants()
+        {
+            Clock clk = new Clock("My clock", 256);
+            Spacecraft spc = new Spacecraft(-1001, "SC", 100.0, 1000.0, clk,
+                new StateVector(new Vector3(1.0, 2.0, 3.0), new Vector3(1.0, 2.0, 3.0), TestHelpers.EarthAtJ2000,
+                    new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame), Frames.Frame.ICRF));
+
+            Assert.Equal(Vector3.VectorY, spc.BodyFront);
+            Assert.Equal(Vector3.VectorX, spc.BodyRight);
+            Assert.Equal(Vector3.VectorZ, spc.BodyUp);
+            Assert.Equal(Vector3.VectorY.Inverse(), spc.BodyBack);
+            Assert.Equal(Vector3.VectorX.Inverse(), spc.BodyLeft);
+            Assert.Equal(Vector3.VectorZ.Inverse(), spc.BodyDown);
+        }
+
+        [Fact]
+        public void CustomBodyAxes_XForward()
+        {
+            Clock clk = new Clock("My clock", 256);
+            // +X forward, -Y right, +Z up (right-handed: Right x Front = Up → -Y x X = Z ✓)
+            Spacecraft spc = new Spacecraft(-1002, "SC", 100.0, 1000.0, clk,
+                new StateVector(new Vector3(1.0, 2.0, 3.0), new Vector3(1.0, 2.0, 3.0), TestHelpers.EarthAtJ2000,
+                    new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame), Frames.Frame.ICRF),
+                bodyFront: Vector3.VectorX, bodyRight: Vector3.VectorY.Inverse(), bodyUp: Vector3.VectorZ);
+
+            Assert.Equal(Vector3.VectorX, spc.BodyFront);
+            Assert.Equal(Vector3.VectorY.Inverse(), spc.BodyRight);
+            Assert.Equal(Vector3.VectorZ, spc.BodyUp);
+        }
+
+        [Fact]
+        public void CustomBodyAxes_NonOrthogonal_ThrowsArgumentException()
+        {
+            Clock clk = new Clock("My clock", 256);
+            Assert.Throws<ArgumentException>(() => new Spacecraft(-1003, "SC", 100.0, 1000.0, clk,
+                new StateVector(new Vector3(1.0, 2.0, 3.0), new Vector3(1.0, 2.0, 3.0), TestHelpers.EarthAtJ2000,
+                    new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame), Frames.Frame.ICRF),
+                bodyFront: new Vector3(1.0, 1.0, 0.0), bodyRight: Vector3.VectorX, bodyUp: Vector3.VectorZ));
+        }
+
+        [Fact]
+        public void CustomBodyAxes_LeftHanded_ThrowsArgumentException()
+        {
+            Clock clk = new Clock("My clock", 256);
+            // Left-handed: swap right to make X x Y = -Z (not +Z)
+            Assert.Throws<ArgumentException>(() => new Spacecraft(-1004, "SC", 100.0, 1000.0, clk,
+                new StateVector(new Vector3(1.0, 2.0, 3.0), new Vector3(1.0, 2.0, 3.0), TestHelpers.EarthAtJ2000,
+                    new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame), Frames.Frame.ICRF),
+                bodyFront: Vector3.VectorY, bodyRight: Vector3.VectorX.Inverse(), bodyUp: Vector3.VectorZ));
+        }
+
+        [Fact]
+        public void CustomBodyAxes_NormalizesInput()
+        {
+            Clock clk = new Clock("My clock", 256);
+            // Non-unit vectors should be normalized: (2,0,0) → (1,0,0)
+            // Right-handed: -Y x X = Z
+            Spacecraft spc = new Spacecraft(-1005, "SC", 100.0, 1000.0, clk,
+                new StateVector(new Vector3(1.0, 2.0, 3.0), new Vector3(1.0, 2.0, 3.0), TestHelpers.EarthAtJ2000,
+                    new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame), Frames.Frame.ICRF),
+                bodyFront: new Vector3(2.0, 0.0, 0.0), bodyRight: new Vector3(0.0, -2.0, 0.0), bodyUp: new Vector3(0.0, 0.0, 2.0));
+
+            Assert.True(System.Math.Abs(spc.BodyFront.Magnitude() - 1.0) < 1e-10);
+            Assert.True(System.Math.Abs(spc.BodyRight.Magnitude() - 1.0) < 1e-10);
+            Assert.True(System.Math.Abs(spc.BodyUp.Magnitude() - 1.0) < 1e-10);
+        }
+
+        #endregion
     }
 }
